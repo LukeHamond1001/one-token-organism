@@ -161,7 +161,7 @@ choice, habituating per symbol) minus a cost that grows with fatigue.
 
 ## 5. Physiology (the disclosed constants)
 
-symbol cost 0.12 · fatigue and stress half-life 240 ticks · mood half-life 1200 ticks
+symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fatigue and stress half-life 240 ticks · mood half-life 1200 ticks
 · wake switch 12,000 ticks · eligibility 12 × 0.8 · store fade 0.9/night ·
 store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps at 1e-5 (a slow PFC, so its states stay forecastable) ·
