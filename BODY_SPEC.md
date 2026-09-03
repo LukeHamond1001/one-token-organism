@@ -35,10 +35,9 @@ thing that changes while it lives is what the world says to it.
 readout: the mouth reads it by cosine. No vocabulary softmax is ever trained.
 
 **Hippocampus (episodic store).** Slots of (key, value, strength, who). The
-key is the decaying bag (0.8 per symbol) of the last symbols' embeddings plus
-the speaker sense, two bags, each fading 0.8 per tick (a pause ends a context, as
-working memory does): the world's symbols in the world's bag, its own in its
-own. A memory is written under the world's bag alone (corollary discharge:
+context is two decaying bags of embeddings, content alone, each fading 0.8
+per tick (a pause ends a context, as working memory does): the world's
+symbols in the world's bag, its own in its own. A memory is written under the world's bag alone (corollary discharge:
 the hearing of self-produced sound is suppressed, so the world's sequence is
 stored under the world's context, never under its own babble). A memory is
 read with the world's bag plus its own bag in full (the efference copy: the
@@ -74,11 +73,16 @@ its input maps follow the temporal-difference error taken with both ends
 live, so each band learns to hold what predicts reward at its own horizon
 (dopamine shaping working memory).
 
-**Cortex.** A small transformer over the last W steps of [embedding, face,
-bundle] producing the stream C (no speaker sense in the
-stream: it hears its own symbols as it hears the world's, so what it learned
-after the world's "d" applies after its own; the speaker sense lives in the
-hippocampal key and the corollary discharge); from C, `latent_pred`
+**Cortex.** A small transformer over the last W ticks, one position per
+tick, of [the world's embedding + 0.5 × its own embedding in the same tick,
+face, bundle] producing the stream C. All the sounds of a tick superpose in
+one time step, its own attenuated by corollary discharge (measured in cortex
+at a third to a half); a quiet listener's stream is then exactly the format
+of the dreams the night trains on (with two positions per tick, the world's
+then its own, the stream read "d . o . g ." awake and "d o g" asleep, and the
+cortex forecast "d" after everything awake: run 17). No speaker sense in the
+stream beyond the attenuation: what it learned after the world's "d" applies
+after its own; from C, `latent_pred`
 forecasts the next embedding it will receive and `pfc_pred` forecasts the
 next bundle. Its lessons are prediction: the squared error to the unit
 embedding received (stop-grad; the minimiser is the conditional mean of the
@@ -202,6 +206,13 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   readout is a dot product. No prior is added: the unconditional mean is
   already the heard distribution, and a separate log prior counted it twice
   (with it the space, the commonest symbol, won every flat context: run 15).
+- **The crowd.** A speaker embedding summed into every symbol of a bag was a
+  constant every key shared, pushing every cosine toward 1: keys sharing only
+  " ll " with "dog will " sat at 0.966 against the exact key's 0.998, and six
+  of them outvoted it. The bags are content alone. And a memory merges into
+  the best-matching slot among those that say the same: judged by the single
+  best key, a slot with the same key and another value blocked the merge, and
+  each hearing of "ball on" added a voter (run 17, day 6).
 - **The recall's confidence.** The store's read is the attended mean of unit
   values, and its norm is the agreement among the memories attended. The
   largest attention weight is not: once the key carried its own bag, duplicate

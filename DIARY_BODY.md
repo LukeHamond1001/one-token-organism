@@ -1748,3 +1748,44 @@ first letter the store continues (o after g, i after m, n after o) at confidence
 1. The test itself had to learn the design: read before the body answers, since the
 tiny body says "g" as the cue's space enters, and with that g in its query the store
 rightly recalls "o". Eleven checks pass. Run 17 from birth.
+
+## Run 17, and the shape of a tick (2026-09-03)
+
+Run 17 on the corollary-discharge keys: day 1, 427 smiles and the cues completed with
+the words themselves, the first letter said as the cue's last symbol enters (the fast
+caregiver's record began a tick late; fixed). Night 1 took the gauge from 0.00 to 0.59.
+The day-6 probe: first letters 7 of 8 by store and mouth alike, second letters 8 of 8,
+the sampled mouth 27 of 48 started and 19 of 48 full (scared → "dog had milk", give →
+"milk then", why dog up? → "because", six of six each). Milestone 3 is met every day by
+the hippocampus and the efference copy: the body echoes what it heard. Then by day 9
+the gate stood at 0.997, every chain ran into "ball under", the smiles fell to 96, and
+one night lowered the gauge from 0.62 to 0.41.
+
+Three findings from the probe, all measured on the day-6 body.
+
+The crowd. For "dog will " the true key matched at cosine 0.998 with weight 0.42, and
+six slots at 0.966, identical to each other (mutual cosine 1.000), all "ball " then "o",
+took 0.08 each and outvoted it. Two causes. A speaker embedding had been summed into
+every symbol of the bag: a constant every key shared, which pushed every cosine toward
+1, so keys sharing only " ll " with "dog will " sat at 0.966. The bags are content
+alone now. And the merge judged by the single best-matching key: a slot with the same
+key and the value "u" (ball under) sat first among the ties, blocked the merge, and each
+hearing of "ball on" added a voter. A memory now merges into the best-matching slot
+among those that say the same.
+
+The shape of a tick. The gauge said the cortex alone forecast 0.83 of the dreams' next
+symbols; typed "dog will go" awake, the same cortex forecast "d" after nearly every
+symbol. The window was the difference: awake, every world symbol was followed by the
+body's own entry, mostly a rest, so the stream read "d · o · g ·", while the dreams the
+night trains on read "d o g". The cortex had learned one format and lived in another.
+Biology's time step is the tick, and all the sounds of a tick superpose: a position is
+now the world's embedding plus half its own (corollary discharge in the stream). A quiet
+listener's stream is the dream's format exactly; its own voice is an attenuated
+superposition the day's lesson teaches it to see through.
+
+The bags were also fading twice a tick, once at the world's step and once at its own
+(0.64 a tick where the spec said 0.8); a tick fades them once now.
+
+Ten checks pass; the tiny night lifts its gauge 0.27 to 0.71. Commit 1b759ac. Run 18 from
+birth, with a new instrument in the day-6 probe: the cortex alone along typed lines under
+the dream construction and under life's, which must now agree.
