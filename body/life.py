@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
     bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
-    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.5, dream_recover=0.9, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.15, gate_vigor=1.0, gate_every=24,
     read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
@@ -330,10 +330,11 @@ class Life:
             for j in starts:
                 bag = self.store.K[j].clone(); ids = []
                 adapt = torch.ones(self.store.n(), device=self.dev)      # neural adaptation: a recalled memory tires
+                s_floor = float(self.cfg["store_floor_rel"]) * float(self.store.S.mean())
                 for _ in range(int(self.cfg["dream_max"])):
                     pred, conf, win = self.store.read(bag, adapt=adapt)
-                    if conf < floor:
-                        break
+                    if conf < floor or (win >= 0 and float(self.store.S[win] * adapt[win]) < s_floor):
+                        break                                             # unsure, or the memory is exhausted
                     lg = self.m.readout(pred).clone(); lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
                     nid = int(lg.argmax())
                     ids.append(nid)
