@@ -1522,6 +1522,22 @@ API is unreliable; agent caregivers can take over on the same protocol.
 Probes between days: `python3 -m body.probe data/body2.pt`. The day
 log: `data/body2_caregiver.jsonl`.
 
+**Day 1 and night 1 (10:28 to 11:50).** Forty-seven events at a line or
+cue a minute; two smiles ("oN" taken as "on", after which the match was
+made exact). The waking lesson's forecasts rose through the day (next
+symbol 0.03 to 0.08 in cosine, next state 0.015 to 0.17) while the
+readout stayed nearly flat (top symbol 4 to 6 percent) and the gate
+held near its birth rate at fatigue 10. Night 1 at 11:19 took ten
+seconds: sixteen dreams of mean length 18.8, recognizably its lines
+with stutters (" dddog ddoger biger iger", "red ddog dddogoger iger",
+"rst "), NREM loss 1.25 to 0.75 over 24 rounds, REM five steps, and
+the gauge from 0.007 to 0.537: after one night the cortex alone
+forecasts more than half of its dreams' next symbols. The probe after
+it: greedy and alone the mouth runs on "g" (the letter-frequency
+stage), the sampled mouth is still noise (quiet 0.8), no cue started.
+The readout's top symbol rose to 12 percent and the waking forecast of
+the next symbol to 0.21 within minutes of waking.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with
