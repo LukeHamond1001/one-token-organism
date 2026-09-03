@@ -62,8 +62,10 @@ class Life:
         # optimizers: the day's (the cortex and its forecasts), the striatum's (the gate), the critic's
         self.opt_day = torch.optim.Adam(self.m.parameters(), lr=float(self.cfg["live_lr"]))
         self.opt_gate = torch.optim.SGD(self.m.mouth_gate.parameters(), lr=float(self.cfg["gate_lr"]))
-        self.opt_value = torch.optim.Adam(list(self.m.value.parameters()) + list(self.m.band_gate.parameters()),
-                                          lr=float(self.cfg["value_lr"]))
+        # the critic's optimizer: the value heads, the Go/NoGo gates, and the bands' own input maps (the
+        # PFC learns to hold what predicts reward at its timescale; the stream stays detached)
+        self.opt_value = torch.optim.Adam(list(self.m.value.parameters()) + list(self.m.band_gate.parameters())
+                                          + list(self.m.band_in.parameters()), lr=float(self.cfg["value_lr"]))
         self.opt_face = torch.optim.Adam(self.m.face_head.parameters(), lr=float(self.cfg["face_lr"]))
 
     # ---------------- feelings ----------------
@@ -139,7 +141,13 @@ class Life:
             m.train()
             v_prev_live = m.values(self._bands_prev.detach()) if getattr(self, "_bands_prev", None) is not None else None
             if v_prev_live is not None:
-                td = torch.stack([r + gam[b] * v_now[b].detach() - v_prev_live[b] for b in range(len(gam))])
+                # the PFC's own lesson: the band states just reached, recomputed live through one update
+                # from the previous states (the stream detached), so the input maps learn what to hold;
+                # the temporal-difference error is taken with both ends live (the bands' representation
+                # follows the reward error, as dopamine shapes prefrontal working memory)
+                bands_live = m.band_update(self._bands_prev.detach(), C1.detach())
+                v_live = m.values(bands_live)
+                td = torch.stack([r + gam[b] * v_live[b] - v_prev_live[b] for b in range(len(gam))])
                 loss_v = (td ** 2).mean()
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
