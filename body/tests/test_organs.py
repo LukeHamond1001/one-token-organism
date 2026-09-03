@@ -35,6 +35,8 @@ def test_corollary_discharge():
     assert life.store.n() >= 5, "the world's symbols were not stored"
     assert int((life.store.W == 1).sum()) == 0, "the body's own symbols were stored (corollary discharge failed)"
     assert float(life.store.S[world].mean()) > 0, "the world's symbols carry no strength"
+    Es = torch.nn.functional.normalize(life.m.E.weight[life.sil], dim=0)
+    assert float((life.store.V @ Es).max()) < 0.99, "the world's quiet was stored as a memory"
     print("1 corollary discharge: ok", life.store.n(), "slots, none the body's own")
 
 

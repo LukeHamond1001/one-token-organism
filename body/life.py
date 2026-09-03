@@ -86,8 +86,8 @@ class Life:
             if who == 1:
                 surp = 0.0                                  # corollary discharge: its own symbol was foretold
             # the hippocampus: write what came next under the context before it
-            if learn_store and who == 0 and self.bag.norm() > 1e-6:
-                self.store.write(self.bag, ex, surp * (1.0 + abs(dopamine)), who)
+            if learn_store and who == 0 and x != self.sil and self.bag.norm() > 1e-6:
+                self.store.write(self.bag, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
             # the context moves on
             self.bag = float(self.cfg["bag_decay"]) * self.bag + ex + m.who_emb.weight[who]
             read, conf, _ = self.store.read(self.bag)
