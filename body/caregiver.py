@@ -121,19 +121,21 @@ class Caregiver:
         self.finalized = max(self.finalized, end - 1)
 
     def on_token(self, tok, a, b):
-        wall = self.tobs.get(b, time.time()); low = tok.lower(); ctx = self.ctx(a, b)
-        if len(tok) >= 3 and len(set(low)) == 1:
-            if low[0].isalpha():
-                self.letter_runs[low[0]] = self.letter_runs.get(low[0], 0) + 1
-                if self.letter_runs[low[0]] >= 3 and low[0] not in self.expanded and low[0] in EXPAND:
-                    self.expanded.add(low[0]); self.pending_expand = EXPAND[low[0]]
-            elif low[0] != " " and time.time() - self.last_frown > 60:
+        wall = self.tobs.get(b, time.time()); ctx = self.ctx(a, b)
+        low = tok if tok == "I" else (tok if tok.islower() else "")   # a word is the word as written: "oN" is not "on"
+        if len(tok) >= 3 and len(set(tok.lower())) == 1:
+            L = tok[0].lower()
+            if tok[0].isalpha():
+                self.letter_runs[L] = self.letter_runs.get(L, 0) + 1
+                if self.letter_runs[L] >= 3 and L not in self.expanded and L in EXPAND:
+                    self.expanded.add(L); self.pending_expand = EXPAND[L]
+            elif tok[0] != " " and time.time() - self.last_frown > 60:
                 self.frown(tok, ctx); return
         c = self.cue
-        if c and wall <= c["until"] and not c["done"] and len(tok) >= 2:
-            if low in [x.lower() for x in c["full"]]:
+        if c and wall <= c["until"] and not c["done"] and len(tok) >= 2 and low:
+            if low in c["full"]:
                 c["done"] = True; self.smile(tok, ctx, "cue completion: " + c["text"]); return
-            if low[:2] in [x[:2].lower() for x in c["full"]] and time.time() - wall < 3.5:
+            if low[:2] in [x[:2] for x in c["full"]] and time.time() - wall < 3.5:
                 c["done"] = True; self.smile(tok, ctx, "cue prefix: " + c["text"]); return
         if low in KNOWN2:
             age = time.time() - wall
