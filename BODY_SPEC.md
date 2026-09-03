@@ -36,12 +36,18 @@ readout: the mouth reads it by cosine. No vocabulary softmax is ever trained.
 
 **Hippocampus (episodic store).** Slots of (key, value, strength, who). The
 key is the decaying bag (0.8 per symbol) of the last symbols' embeddings plus
-the speaker sense, two bags summed: the world's,
-decaying per world symbol (a pause or its own babble leaves the world's context as
-it was, so a key does not depend on how much it babbled while listening), and its
-own, decaying per tick, at 0.5 (corollary discharge attenuates self-produced
-input; measured: 0.3 to 0.5 keeps every cue's recall, 0.7 loses one, and 0.5
-moves the key after its own first letter half the time) and quiet only fading it; the value is the embedding of the symbol that came next. Write: a new
+the speaker sense, two bags, each fading 0.8 per tick (a pause ends a context, as
+working memory does): the world's symbols in the world's bag, its own in its
+own. A memory is written under the world's bag alone (corollary discharge:
+the hearing of self-produced sound is suppressed, so the world's sequence is
+stored under the world's context, never under its own babble). A memory is
+read with the world's bag plus its own bag in full (the efference copy: the
+sequencing system knows what it just said). Measured on the collision test:
+own symbols in the key at 0.6 broke recall by content; at 0.5 in the query,
+the stale key (the cue alone) outmatched the continuation key after its own
+first letter, cosine 0.96 to 0.94, and the mouth stuttered the first letter
+(run 16, day 2); clean keys with the full efference copy in the query recall
+every cue and continue after every own first letter at confidence about 1 and quiet only fading it; the value is the embedding of the symbol that came next. Write: a new
 slot or a merge into the nearest slot; strength = surprise × (1 + dopamine),
 own symbols carry zero surprise (corollary discharge: what the mouth wrote
 was foretold). Read: attention over keys by content alone at the organ's own temperature

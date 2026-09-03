@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=0.5, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
@@ -101,18 +101,19 @@ class Life:
             if who == 0 and x != self.sil:
                 self.heard *= float(self.cfg["heard_decay"]); self.heard[x] += 1.0
             # the hippocampus: write what came next under the context before it
-            if learn_store and who == 0 and x != self.sil and self.bag.norm() > 1e-6:
-                self.store.write(self.bag, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
-            # the context moves on: the world's bag decays per world symbol (a pause and its own babble
-            # leave the world's context as it was), its own bag decays with time (its babble fades, its
-            # last own symbol is what remains)
+            if learn_store and who == 0 and x != self.sil and self.key.norm() > 1e-6:
+                self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
+            # the context moves on: both bags fade with time (a pause ends a context, as working memory
+            # does), the world's symbols entering the world's bag, its own symbols its own
+            self.bag_w = float(self.cfg["bag_decay"]) * self.bag_w
             self.bag_o = float(self.cfg["bag_decay"]) * self.bag_o
             if x != self.sil:
                 if who == 0:
-                    self.bag_w = float(self.cfg["bag_decay"]) * self.bag_w + ex + m.who_emb.weight[0]
+                    self.bag_w = self.bag_w + ex + m.who_emb.weight[0]
                 else:
                     self.bag_o = self.bag_o + ex + m.who_emb.weight[1]
             read, conf, _ = self.store.read(self.bag)
+            self._read = read                                  # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
             self.win.append({"x": int(x), "who": int(who), "face": face, "bundle": self.bands.clone(),
                              "read": read.clone(), "r": float(r)})
@@ -125,8 +126,18 @@ class Life:
 
     @property
     def bag(self):
-        """the memory key: the world's context plus its own, attenuated (corollary discharge)"""
+        """the read query: the world's context plus the efference copy of what it just said (the plan
+        is known to the sequencing system in full; it is the hearing of it that is suppressed)"""
         return self.bag_w + float(self.cfg["bag_own_weight"]) * self.bag_o
+
+    @property
+    def key(self):
+        """the write key: the world's context alone. Corollary discharge suppresses the response to
+        self-produced sound, so a memory of the world's sequence is stored under the world's context,
+        never under its own babble (own symbols in the key at 0.6 broke recall by content; at 0.5 the
+        stale key, the cue alone, outmatched the continuation key after its own first letter, cosine
+        0.96 to 0.94, and the mouth stuttered the first letter: run 16, day 2)"""
+        return self.bag_w
 
     def _window_tensors(self, win=None):
         win = list(self.win if win is None else win)
@@ -158,6 +169,7 @@ class Life:
         # --- the ear's half: the world's symbol (or its quiet) enters ---
         v_before = m.values(self.bands.detach()) if self.v_prev is None else self.v_prev
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
+        self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
         with torch.no_grad():
             v_now = m.values(self.bands)

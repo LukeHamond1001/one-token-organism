@@ -63,11 +63,13 @@ def test_recall_is_by_content():
     for _ in range(6):
         say(life, "give milk", 2)                       # the most reinforced memory
     def recall(cue):
-        # the query as life makes it: the cue typed, the body's own symbols interleaved as they come
+        # the query as life makes it: the cue typed while the body babbles (its babble is in the read
+        # query but never in a key); the recall taken as the cue's last symbol entered, before the
+        # body answers (with its own answer in the query the store rightly continues)
         life.type_text(cue)
         while life.queue:
             life.tick()
-        pred, conf, _ = life.store.read(life.bag)
+        pred = life._read_world; conf = float(pred.norm())
         for _ in range(6):
             life.tick()
         return TOK.decode([life.m.nearest(pred)]), conf
@@ -76,6 +78,21 @@ def test_recall_is_by_content():
     assert got["ball "][0] == "o", f"'ball ' recalled {got['ball ']}"
     assert got["give "][0] == "m", f"'give ' recalled {got['give ']}"
     print("2b recall is by content:", {k: (v[0], round(v[1], 2)) for k, v in got.items()})
+    # continuation: with its own first letter in the query (the efference copy), the store recalls the
+    # second letter, not the first again
+    seq = {}
+    for cue, first, second in (("dog will ", "g", "o"), ("give ", "m", "i"), ("ball ", "o", "n")):
+        life.type_text(cue)
+        while life.queue:
+            life.tick()
+        with torch.no_grad():
+            life._step(TOK.token_to_id(first), 1, learn_store=False)
+        pred, conf, _ = life.store.read(life.bag)
+        seq[cue] = (TOK.decode([life.m.nearest(pred)]), round(conf, 2), second)
+        for _ in range(6):
+            life.tick()
+    assert all(v[0] == v[2] for v in seq.values()), f"after its own first letter the store did not continue: {seq}"
+    print("2c the store continues after its own first letter:", seq)
 
 
 def test_dreams_are_its_lines():

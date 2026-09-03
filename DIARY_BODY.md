@@ -1718,3 +1718,33 @@ noise. The forecast head is born near zero (norm 0.1): the default init gave a n
 
 Ten tests pass; the tiny body's night now moves its gauge 0.13 to 0.65 where the
 cosine-trained tiny body's did not move at all. Run 16 from birth.
+
+## The stutter (2026-09-03, run 16)
+
+Run 16 on the two calibrations: twelve smiles on day 1 with whole words among them
+(bigger, milk, will), the gauge over 0.5 after night 2 where run 7 needed six nights,
+and on day 2 the mouth began 6 of 8 cues with the right letter. Then it stuttered it:
+"bbbbbb" for "where ball? ", "dd ddd" for "big dog bigger ".
+
+The mathematics, with the key a decayed bag: the world's context W has norm about 1.67
+(0.8 per symbol). After its own first letter b at weight w, the query is W + w·b. The
+stale key is W itself, cosine |W|/|W + w·b|; the continuation key is 0.8·W + b. At
+w = 0.5 the stale key wins, 0.96 to 0.94, and the mouth says b again; at w = 1 the
+continuation wins, 0.99 to 0.86, decisively at temperature 0.02. Full weight had been
+ruled out because its own babble in the keys broke recall by content at 0.6.
+
+The two weights are two different things, and biology keeps them apart. Corollary
+discharge suppresses the hearing of self-produced sound: a memory of the world's
+sequence is stored under the world's context alone, never under its own babble. The
+efference copy is the sequencing system's full knowledge of what it just said: a memory
+is read with the world's context plus its own symbols in full. Both bags fade with time
+(0.8 per tick): a pause ends a context, as working memory does. The persistence I had
+given the world's bag this morning was a mistake: typing is one symbol per tick, so the
+world's weights in a key never depended on the babble between them, and a persistent
+bag stored every line's first letters under the previous line's tail.
+
+On the collision test with a continuation check: every cue recalled, and after its own
+first letter the store continues (o after g, i after m, n after o) at confidence about
+1. The test itself had to learn the design: read before the body answers, since the
+tiny body says "g" as the cue's space enters, and with that g in its query the store
+rightly recalls "o". Eleven checks pass. Run 17 from birth.
