@@ -1871,3 +1871,13 @@ bounded by fatigue becomes arithmetic rather than hope.
 
 Run 20 carries the REM fix alone in a second slot (its day-6 probe measures that); run
 21 carries both. Run 19 retired at day 7 with its measurement taken.
+
+## Run 20 at day 6: the night holds (2026-09-03)
+
+Run 20 carries the REM fix alone. Six nights, gauge after NREM and after REM identical
+every night: 0.75, 0.76, 0.82, 0.86, 0.88, 0.88. The day-6 probe: the sampled mouth
+started 48 of 48 cues and completed 47 in full. "scared " gives "ball under", "first milk
+then " gives "ball under", "give " gives "book then", six of six. The cortex alone,
+without the store, forecasts 53 of 82 next symbols awake against 59 under the dream
+construction, and 22 of 26 on "why dog up? because big dog". The gate sat at 0.98: the
+effort cost of run 21 is the remaining measurement.
