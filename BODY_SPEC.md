@@ -114,11 +114,47 @@ symbol cost 0.12 · fatigue and stress half-life 240 ticks · mood half-life 120
 store forget floor 0.1 × mean strength · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-own-reward weight 0.5, credit baseline 0.98 (the striatum learns from the
+own-reward weight 0.5, tonic drive 0.15, vigor weight 1.0, credit baseline 0.98 (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.5 per recall, recovery 0.7 per step (a recalled memory
 tires, so a dream moves on) · readout sharpness 10 (to become an organ) ·
 band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
+
+## 5b. Mathematics (the user: "not only biology, also your math")
+
+- **The gate's rule.** A sign-following update Δz ∝ Σ A_t has expectation
+  mean(A) − baseline → 0: it is vigor, not a policy. The three-factor rule
+  Δz ∝ Σ A_t (a_t − p_t) has expectation cov(credit, acting), which is what
+  a policy must learn. Both are kept: policy plus vigor (tonic dopamine).
+  The credit is taken against a running baseline (dopamine is an error),
+  which leaves the expectation unbiased and lowers its variance.
+- **Birth economics.** With a flat readout the confidence drive is ≈ 0 and
+  acting pays −cost: cov < 0, silence. A tonic drive w0 = 0.15 > cost 0.12
+  makes acting pay when fresh; the fatigue-scaled cost c(f) = 0.12(1 + f/10)
+  sets the equilibrium fatigue f* = 10(w0 + w q)/0.12 − 10 (≈ 5 at birth):
+  babble in bouts bounded by fatigue, smiles opening the contexts that earned
+  them (cov > 0 there).
+- **The lexicon.** If the embedding table is both input and target of the
+  latent lesson, all rows drifting together makes prediction trivial
+  (collapse) and the store's saved values go stale. The lexicon is fixed:
+  107 random unit vectors in 256 dimensions, pairwise cosines ≈ 0.06 ± 0.06,
+  so the loss has no trivial solution and the cosine readout at sharpness 10
+  gives p(top) ≈ 0.99 for an aligned forecast. Representations are learned
+  in the cortex.
+- **SIGReg placement.** The next-symbol forecast must hit discrete fixed
+  targets; regularizing it toward a Gaussian fights the lesson. The collapse
+  risk is in the bundle forecast, where prediction and target both derive
+  from the stream (C constant ⇒ bundles constant ⇒ trivial forecast), so
+  SIGReg goes on the stream there, and nowhere else.
+- **The PFC's lesson.** TD with both ends live is residual-gradient TD,
+  which converges to a biased fixed point (the Bellman residual); TD with a
+  detached target and the previous state recomputed live one tick later is
+  semi-gradient TD(0) with a learned state map, the standard convergent
+  form. The bands' input maps learn from it; the stream stays detached.
+- **The store's read.** Attention over unit keys at temperature 0.05 with
+  log-strength bias: for the right key (cos ≈ 1) against a near context
+  (cos ≈ 0.5) the logit gap is 10, so recall is decisive; equal keys share.
+  Merge at cos > 0.97 on both key and value: the same memory, stronger.
 
 ## 6. The environment (raw)
 

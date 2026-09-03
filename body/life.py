@@ -16,7 +16,7 @@ PHYSIOLOGY = dict(
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
     bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.5, dream_recover=0.7, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
-    gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_every=24,
+    gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.15, gate_vigor=1.0, gate_every=24,
     read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
 )
 
@@ -99,6 +99,7 @@ class Life:
                              "read": read.clone(), "r": float(r)})
             C = self._stream_now()
             self.bands = m.band_update(self.bands, C)
+            self._C_last = C
             pred = m.latent_pred(C)
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
@@ -141,13 +142,14 @@ class Life:
             m.train()
             v_prev_live = m.values(self._bands_prev.detach()) if getattr(self, "_bands_prev", None) is not None else None
             if v_prev_live is not None:
-                # the PFC's own lesson: the band states just reached, recomputed live through one update
-                # from the previous states (the stream detached), so the input maps learn what to hold;
-                # the temporal-difference error is taken with both ends live (the bands' representation
-                # follows the reward error, as dopamine shapes prefrontal working memory)
-                bands_live = m.band_update(self._bands_prev.detach(), C1.detach())
-                v_live = m.values(bands_live)
-                td = torch.stack([r + gam[b] * v_live[b] - v_prev_live[b] for b in range(len(gam))])
+                # SEMI-GRADIENT TD, the convergent form: the target r + gamma V(s_now) is detached; the
+                # value of the previous state is recomputed live through one band update from the state
+                # before it (the stream detached), so the heads AND the bands' input maps learn what the
+                # previous state should have carried (dopamine shaping prefrontal working memory)
+                if getattr(self, "_bands_pp", None) is not None and getattr(self, "_C_prev", None) is not None:
+                    bands_prev_live = m.band_update(self._bands_pp.detach(), self._C_prev.detach())
+                    v_prev_live = m.values(bands_prev_live)
+                td = torch.stack([r + gam[b] * v_now[b].detach() - v_prev_live[b] for b in range(len(gam))])
                 loss_v = (td ** 2).mean()
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
@@ -198,6 +200,8 @@ class Life:
             self._step(nxt, 1, r=0.0, dopamine=delta)          # its own symbol enters the stream
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
+        self._bands_pp = getattr(self, "_bands_prev", None)
+        self._C_prev = getattr(self, "_C_last", None)
         self._bands_prev = self.bands.clone()
         # --- feelings from dopamine ---
         self.mood = max(-6.0, min(6.0, self.mood + float(self.cfg["mood_gain"]) * delta))
@@ -244,15 +248,18 @@ class Life:
         if n < 4:
             return
         cost = float(self.cfg["symbol_cost"]); f0 = float(self.cfg["gate_fatigue"]); w_int = float(self.cfg["gate_int"])
+        tonic = float(self.cfg["gate_tonic"]); vig = float(self.cfg["gate_vigor"])
         feats = torch.stack([b[0] for b in buf[:n]]).to(self.dev)
+        acts = torch.tensor([1.0 if b[1] else 0.0 for b in buf[:n]])
         G = torch.zeros(n)
         for t in range(n):
             g = sum((dec ** k) * float(buf[t + k][2]) for k in range(K))     # the dopamine that followed
             if buf[t][1]:
-                g += w_int * float(buf[t][3]) - cost * (1.0 + float(buf[t][4]) / f0)
+                # acting pays a tonic drive (babble is its own reward, not contingent on confidence) plus
+                # the belief it had in its choice (habituating), minus a cost that grows with fatigue
+                g += tonic + w_int * float(buf[t][3]) - cost * (1.0 + float(buf[t][4]) / f0)
             G[t] = g
-        # the striatum learns from the error against what it expected: a constant cost, or a constant
-        # drive, teaches nothing; a burst, a dip, rising fatigue do. The baseline is a running mean.
+        # the credit is taken against a running baseline (dopamine is an error, not a value)
         base = getattr(self, "_g_base", None)
         if base is None:
             base = float(G.mean())
@@ -262,7 +269,12 @@ class Life:
             return
         self.m.mouth_gate.train()
         z = self.m.mouth_gate(feats).squeeze(-1)
-        loss = -(A.to(self.dev) * z).mean()                 # bursts push Go, dips push NoGo, whatever it did
+        p = torch.sigmoid(z).detach()
+        # THE THREE-FACTOR RULE: credit x (action - p) has expectation cov(credit, acting), what a policy
+        # must learn (Go for acts that paid, NoGo for acts that cost); plus vigor: the average credit
+        # itself, tonic dopamine setting the rate of acting whatever it did
+        elig = (acts.to(self.dev) - p) + vig
+        loss = -(A.to(self.dev) * elig * z).mean()
         self.opt_gate.zero_grad(set_to_none=True); loss.backward()
         torch.nn.utils.clip_grad_norm_(self.m.mouth_gate.parameters(), 1.0)
         self.opt_gate.step(); self.m.mouth_gate.eval()
@@ -287,8 +299,8 @@ class Life:
             u = m.inputs(xs, whos, faces, bundles, reads)
             C = m.stream(u)
             pred = m.latent_pred(C[:-1])
-            ll, lc = m.latent_loss(pred, xs[1:], w=w, sig=float(self.cfg["sigreg"]))
-            fl, fc = m.forecast_loss(C[:-1], bundles[1:], sig=0.0)
+            ll, lc = m.latent_loss(pred, xs[1:], w=w)
+            fl, fc = m.forecast_loss(C[:-1], bundles[1:], sig=float(self.cfg["sigreg"]))   # SIGReg on the stream
             loss = (ll + fl) * (1.0 + self.stress / 10.0)      # stress raises plasticity
             if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
@@ -387,7 +399,7 @@ class Life:
                     for ids in dreams:
                         xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=True)
                         C = m.stream(m.inputs(xs, whos, faces, bundles, reads))
-                        ll, _ = m.latent_loss(m.latent_pred(C), y, sig=sig)
+                        ll, _ = m.latent_loss(m.latent_pred(C), y, sig=sig, C=C)
                         if not bool(torch.isfinite(ll.detach())):
                             continue
                         (ll / len(dreams)).backward(); tot += float(ll.detach()) / len(dreams); ok += 1
@@ -423,7 +435,8 @@ class Life:
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n()
             self.bands.zero_(); self.bag.zero_(); self.win.clear(); self.pred_prev = None
-            self._bands_prev = None; self.v_prev = None; self.stream.clear(); self.gate_buf.clear()
+            self._bands_prev = None; self._bands_pp = None; self._C_prev = None; self._C_last = None; self.v_prev = None
+            self.stream.clear(); self.gate_buf.clear()
             self.fatigue = 0.0
             self.sleep_pressure = 0
             self.nights += 1; self.day_n += 1

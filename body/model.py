@@ -149,6 +149,9 @@ class Organs(nn.Module):
         # THE LEXICON: one table, input and readout (cosine); no vocabulary softmax is trained
         self.E = nn.Embedding(self.vocab, d)
         nn.init.normal_(self.E.weight, std=1.0 / math.sqrt(d))
+        with torch.no_grad():
+            self.E.weight.copy_(F.normalize(self.E.weight, dim=-1))
+        self.E.weight.requires_grad_(False)               # a fixed lexicon: no trivial solution to predicting it
         self.who_emb = nn.Embedding(2, d)                 # the speaker sense: 0 the world, 1 the body
         nn.init.normal_(self.who_emb.weight, std=0.3 / math.sqrt(d))
         self.face_in = nn.Linear(2, d)                    # the caregiver's face and its change, as a sense
@@ -230,10 +233,12 @@ class Organs(nn.Module):
         return [1.0 - 1.0 / float(t) if t > 1 else 0.0 for t in self.clocks]
 
     # ---- the lessons ----
-    def latent_loss(self, pred, target_ids, w=None, sig=0.0):
+    def latent_loss(self, pred, target_ids, w=None, sig=0.0, C=None):
         """one minus the cosine between the forecast of the next embedding and the embedding
-        received (stop-grad), weighted by w [T] (the world's symbols), plus SIGReg on the forecasts"""
-        En = F.normalize(self.E.weight, dim=-1).detach()
+        received (a fixed lexicon: the target set is discrete and near-orthogonal, so the loss has
+        no trivial solution), weighted by w [T] (the world's symbols). SIGReg, if asked, goes on the
+        stream C, never on a forecast that must hit discrete targets."""
+        En = self.E.weight.detach()
         tgt = En[target_ids]
         cos = F.cosine_similarity(pred.float(), tgt.float(), dim=-1)
         if w is None:
@@ -241,8 +246,8 @@ class Organs(nn.Module):
         w = w.to(cos.dtype)
         loss = ((1.0 - cos) * w).sum() / w.sum().clamp(min=1e-6)
         cmean = float((cos.detach() * w).sum() / w.sum().clamp(min=1e-6))
-        if sig > 0:
-            loss = loss + float(sig) * sigreg(F.normalize(pred, dim=-1).float())
+        if sig > 0 and C is not None:
+            loss = loss + float(sig) * sigreg(F.normalize(C, dim=-1).float())
         return loss, cmean
 
     def forecast_loss(self, C, bundles_next, sig=0.0):
