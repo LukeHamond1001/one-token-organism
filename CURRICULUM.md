@@ -98,7 +98,11 @@ and follows the child's attention rather than a schedule.
   when its night is done; the page shows "asleep". Never post its night.
   Plan the day around it: the roped lines and the pre-night cues in the
   first ninety minutes, then wait for it to wake, then the post-night
-  cues and the save.
+  cues and the save. Its fatigue is part of its life and survives a
+  restart of the serve (day 20 began at 4,502 of 12,000): read
+  "sleep_pressure" and "wake_ticks" at the start, the pressure rises one
+  per tick at two ticks a second, and plan the pre-night cues inside the
+  minutes that remain.
 - **Tests are clean, and now safer.** A cue is a new line plus a fragment,
   then nothing; never two tests back to back. Since day 9 a cue no longer
   stores quiet under the fragment while the mouth is answering, so up to

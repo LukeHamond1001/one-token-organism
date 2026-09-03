@@ -14,6 +14,7 @@ Endpoints: GET / (the page), GET /state?since=N, GET /pulse;
 POST /type {"text"}, /face {"expr"}, /sleep, /save, /reset.
 """
 import collections
+from os import environ as _os_env
 import json
 import math
 import os
@@ -424,6 +425,68 @@ class Diary(O.Organism):
         return {"uptake": (round(hits_all / n_all, 3) if n_all else None), "symbols": n_all,
                 "uptake_rich": (round(hits_w / n_w, 3) if n_w else None), "symbols_rich": n_w}
 
+    def _night_lessons(self, traces, scale, a, m, F, cos_log, sig):
+        """the night's three lessons (NREM, REM, the value ladder), counted into _night_counts"""
+        nrem = rem = 0
+        batch = bool(int(getattr(a, "night_batch", 0) or 0))
+        _dbg = bool(_os_env.get("IGA_NIGHT_DEBUG"))
+        for _r in range(int(getattr(a, "night_rounds", 2) or 0)):
+            if batch:
+                self.opt.zero_grad(set_to_none=True)
+            _tot = 0.0
+            for ids in traces:
+                # NREM: the hippocampus leads — its read is on, driving the council as by day —
+                # and the lesson lands on the cortex's OWN logits, memory's vote left out, so
+                # the trunk must come to carry the trace itself
+                lg, y = self._student(ids, mem_on=bool(int(getattr(a, "nrem_mem", 1))))
+                own = getattr(m, "_last_logits_own", None)
+                own = lg if own is None else own
+                if not batch:
+                    self.opt.zero_grad(set_to_none=True)
+                loss = F.cross_entropy(own[0].float(), y) * scale
+                self._pop_side_losses()
+                if batch:
+                    # many replays, one consolidation: the gradients of every trace in the
+                    # round are summed (mean over traces) and the weights move once
+                    (loss / len(traces)).backward()
+                else:
+                    loss.backward(); self.opt.step(); self.n_steps += 1; nrem += 1
+                _tot += float(loss.detach()) / len(traces)
+            if batch:
+                self.opt.step(); self.n_steps += 1; nrem += 1
+            if _dbg:
+                print(f"[night] round {_r} CE {_tot:.3f} lr {[g['lr'] for g in self.opt.param_groups]} batch {batch}", flush=True)
+        rem_traces = traces[:int(getattr(a, "night_rem", 8) or 0)]
+        if batch:
+            self.opt.zero_grad(set_to_none=True)
+        for ids in rem_traces:
+            # REM: the hippocampus is silent — memory set aside, the PFC (the bands) drives —
+            # and the cortex stream forecasts the band states it receives next along the trace
+            self._student(ids, mem_on=False)
+            loss, cosv = m.rem_pfc_loss(sigreg=sig, slot_from=1) if hasattr(m, "rem_pfc_loss") else (None, None)
+            self._pop_side_losses()
+            if loss is None:
+                continue
+            if batch:
+                # many dreams, one consolidation (a single dream's step at the night's rate
+                # undid NREM's lesson: measured 2026-09-03 01:40)
+                (loss * scale / len(rem_traces)).backward(); rem += 1
+            else:
+                self.opt.zero_grad(set_to_none=True)
+                (loss * scale).backward(); self.opt.step(); self.n_steps += 1; rem += 1
+            cos_log.append(cosv)
+        if batch and rem:
+            self.opt.step(); self.n_steps += 1
+        # the value ladder replays the day's lived pairs once more (reward at every timescale)
+        vw = float(getattr(a, "value_w", 0.5) or 0.0)
+        vsteps = 0
+        if vw > 0 and hasattr(m, "buffered_value_loss"):
+            bl = m.buffered_value_loss(self.st)
+            if bl is not None:
+                self.opt.zero_grad(set_to_none=True)
+                (vw * bl).backward(); self.opt.step(); self.n_steps += 1; vsteps = 1
+        self._night_counts = (nrem, rem, vsteps)
+
     def _dream_night(self):
         """THE NIGHT (2026-09-02, the user's law). The cortex learns only from hippocampal
         traces, and nothing is kept on its behalf: a dream starts where the store itself is
@@ -451,39 +514,27 @@ class Diary(O.Organism):
         scale = float(getattr(a, "night_scale", 1.0) or 1.0)
         nrem = rem = 0
         m.train()
-        for _ in range(int(getattr(a, "night_rounds", 2) or 0)):
-            for ids in traces:
-                # NREM: the hippocampus leads — its read is on, driving the council as by day —
-                # and the lesson lands on the cortex's OWN logits, memory's vote left out, so
-                # the trunk must come to carry the trace itself
-                lg, y = self._student(ids, mem_on=True)
-                own = getattr(m, "_last_logits_own", None)
-                own = lg if own is None else own
-                self.opt.zero_grad(set_to_none=True)
-                loss = F.cross_entropy(own[0].float(), y) * scale
-                self._pop_side_losses()
-                loss.backward(); self.opt.step(); self.n_steps += 1; nrem += 1
-        cos_log = []
-        sig = float(getattr(a, "night_sigreg", 0.1) or 0.0)
-        for ids in traces[:int(getattr(a, "night_rem", 8) or 0)]:
-            # REM: the hippocampus is silent — memory set aside, the PFC (the bands) drives —
-            # and the cortex stream forecasts the band states it receives next along the trace
-            self._student(ids, mem_on=False)
-            loss, cosv = m.rem_pfc_loss(sigreg=sig, slot_from=1) if hasattr(m, "rem_pfc_loss") else (None, None)
-            self._pop_side_losses()
-            if loss is None:
-                continue
-            self.opt.zero_grad(set_to_none=True)
-            (loss * scale).backward(); self.opt.step(); self.n_steps += 1; rem += 1
-            cos_log.append(cosv)
-        # the value ladder replays the day's lived pairs once more (reward at every timescale)
-        vw = float(getattr(a, "value_w", 0.5) or 0.0)
-        vsteps = 0
-        if vw > 0 and hasattr(m, "buffered_value_loss"):
-            bl = m.buffered_value_loss(self.st)
-            if bl is not None:
-                self.opt.zero_grad(set_to_none=True)
-                (vw * bl).backward(); self.opt.step(); self.n_steps += 1; vsteps = 1
+        # sleep's plasticity is its own physiology: the optimizer runs at --night-lr while it
+        # sleeps (the live rate when unset) and is restored before it wakes, whatever happens
+        _lr0 = [g["lr"] for g in self.opt.param_groups]
+        _nlr = getattr(a, "night_lr", None)
+        _opt_day = self.opt
+        if str(getattr(a, "night_opt", "shared")) == "own":
+            # sleep's plasticity has its own state: a fresh optimizer for this night alone,
+            # at the night's rate, freed at waking (the day's moments are untouched)
+            self.opt = torch.optim.Adam(m.parameters(), lr=float(_nlr or a.live_lr))
+        elif _nlr:
+            for g in self.opt.param_groups:
+                g["lr"] = float(_nlr)
+        try:
+            self._night_lessons(traces, scale, a, m, F, cos_log := [], sig := float(getattr(a, "night_sigreg", 0.1) or 0.0))
+        finally:
+            if self.opt is not _opt_day:
+                del self.opt
+            self.opt = _opt_day
+            for g, lr0 in zip(self.opt.param_groups, _lr0):
+                g["lr"] = lr0
+        nrem, rem, vsteps = self._night_counts
         m.eval()
         gauge_after = self._gauge(traces)
         dec = lambda ids: self.tok.decode(list(ids))
@@ -501,6 +552,10 @@ class Diary(O.Organism):
             self.night()
         except Exception as e:
             self.last = {"error": "night: " + str(e)[:160], "tick": self.ticks}
+            # a night that failed (memory, a fault) must not be retried on every tick: the body
+            # stays awake with half a day's pressure and tries again later
+            self.sleep_pressure = int(self.wake_ticks * 0.5)
+            print(f"[diary] night failed at tick {self.ticks}: {str(e)[:200]}", flush=True)
 
     def night(self):
         self.awake_ticks = False

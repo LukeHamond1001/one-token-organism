@@ -623,6 +623,145 @@ day's lines nearly whole). The trunk-alone test on the day's saved body:
 a run of "u" to every cue, memory on or off, the free-running favourite
 unchanged in kind. Saved with 69 live steps.
 
+## Day 20 (Opus, consolidation with a night in the middle)
+
+The serve had been restarted after day 19's retention test, and the
+body's sleep pressure came back with it at 4,502 of 12,000: fatigue is
+part of its life and survives a restart, so its waking window was
+sixty-two minutes, not ninety-five. The caregiver measured the pressure's
+rate from the page clock, put all eight pre-night cues in the first
+fifty minutes and pulled "bye" forward; two line families got two
+passes instead of three. Twenty-nine lines, sixteen cues, one event
+about every two minutes, the page polled every two seconds throughout,
+nothing broken. It slept at 22:23 with the pressure at 12,000 and woke
+113 seconds later. The night (its fifth): forty-eight starts, forty
+traces of mean length 5.4, "give m", "big dog ", "scared bal", "dog
+wild", " wilgo a"; eighty NREM steps, eight REM steps with cosine 0.539
+(0.02, 0.48, 0.47, 0.54 over the four nights that had it); the rich
+gauge 0.346 to 0.442. The number that carries across nights is the
+gauge before the lesson, the trunk's agreement with fresh dreams of the
+same material: 0.07, 0.31, 0.35 on nights three, four and five.
+
+Awake it wrote one known word all day, "go" at 22:57 in its own quiet a
+minute after the last cue, smiled at within three seconds, though after
+the day's save; 231 of its 232 clusters were babble ("wilgu" on waking,
+"og" eight times). Before the night every cue drew the same top symbol,
+"u" at 0.19; after it the top symbol moved for the first time in a
+session, "w" 0.33 after "dog will ", "r" 0.31 after "where ball? ", "a"
+0.71 after "first milk then ". No cue was completed. With no smile
+until the last minute, doses stayed at zero, stress rose from 4.9 to
+6.3 and mood sank to -3.07, below anything before the night (the night
+had reset it to -0.32).
+
+The retention test on the saved body (23:12, serve stopped, MPS,
+greedy): the trunk alone answers every cue with a run of "a", the
+free-running favourite having moved from "u" to "a", a new letter and
+not a new kind of thing. The instrument's memory-on column, which runs
+memory at the old raised voice of four (its default, kept for
+comparison), completed cues for the first time: "dog will " to "go",
+"scared " to "ball", "big dog bigger " to " dog", "why dog up? " to
+"bc", "where ball" to "und", "give " to "mu"; on day 19 the same column
+gave runs of "u". So the frames are in the store, and memory's vote at
+four times its strength now beats the trunk's attractor where yesterday
+it did not. At the serve's own strength (boost 1, no entropy gain) the
+greedy mouth with memory on still writes the "a" run, and the sampled
+mouth as it lives (temperature 1, silence a choice, eight samples per
+cue, twelve cues) began no answer in 96 tries: memory's honest vote is
+about two logits, and the trunk's attractor is taller than that. The
+page shows noise because that is what the belief holds; the reading
+that will change it is the trunk's own, night by night.
+
+**The night's length is not the lever (23:20-23:55, on the copy, serve
+stopped).** Two more nights were run on the day's saved body: one of
+two rounds over its traces (35 traces, seventy NREM steps, gauge 0.377
+to 0.434, REM cosine 0.58) and one of eight rounds (36 traces, 288
+steps, 0.396 to 0.438, cosine 0.50). Four times the steps bought
+nothing: the gauge lands at 0.44 either way, and the sampled mouth
+after the eight-round night, seeded the same way, drew nearly the same
+symbols as before it, "ahpevbuaaopu" for "oc%evbuaaopu", and again
+began no answer in 96 tries. The free-running trunk's run of "a"
+deepened instead: after either night, memory even at the old fourfold
+voice gets one letter in before "a" takes over ("g" for go, " do" for
+dog, "m" for milk). The cortex is at the stage a from-nothing language
+model passes through first, the letter frequencies ("a" is the
+commonest letter in its frames, "u" was before), and at 1e-5 with
+seventy steps a night it moves through that stage a hair at a time.
+Biology's night is a third of its life and its replay runs at sleep's
+own plasticity, not the waking rate; ours is two minutes of a hundred
+at the day's rate. A night at ten times the rate was run next.
+
+**Nor is the rate (00:05).** The same two-round night at 1e-4 instead
+of 1e-5, on the same traces, took the gauge from 0.377 down to 0.245,
+and the sampled mouth afterwards was "a" with a few letters between
+("aaaaaaaaaaaa" for "what? "); memory on or off, greedy, "a" to every
+cue. Ten times the rate deepens the attractor it was meant to break.
+The two hand constants of the night, its length and its rate, are
+therefore not what holds it, and the plateau at 0.44 while the loss
+keeps falling points at the lesson itself: in NREM as built the
+hippocampal read is on while the cortex learns a trace, so the cortex
+can lower its loss by listening to the notebook rather than carrying the
+trace, and the gauge, which is taken with the notebook closed, stops
+moving. The same two nights were run with the read off during the
+lesson (the traces still the hippocampus's own replay, as the user's law
+requires); the result is below.
+
+**The read is not it either (00:20).** With the read off during the
+lesson, two rounds moved the gauge not at all (0.393 to 0.393; 56
+symbols). Put beside the read-on night's rise of 0.377 to 0.434, which
+is three symbols of fifty-three, the honest reading is that a night of
+seventy single-trace steps at 1e-5 barely moves the cortex either way,
+and the gauge's rises have been a few argmax flips. At 1e-4 the same
+single-trace steps wreck it: one trace of five symbols is a batch of
+one, and a step that size at ten times the rate is noise with a large
+coefficient. Biology consolidates many replays into each change of a
+synapse. So the next night tried on the copy sums the gradients of
+every trace in a round into one step (a flag, `--night-batch 1`),
+sixteen rounds at 1e-4, REM off to isolate the lesson.
+
+**Batched, with the day's optimizer: nothing (00:45).** Sixteen clean
+steps at 1e-4, each the mean gradient over all 34 traces, left the
+gauge exactly where it was (0.393 to 0.393). Together with the
+single-trace results this points at the optimizer's state rather than
+the lesson: the day's doses push the loss to three nats and more, and
+their large gradients sit in Adam's second moment, so every night step,
+whose gradient is small and clean, is divided by them and comes out
+tiny; a single trace's noisy gradient is the only thing large enough
+to move the weights, and it moves them the wrong way. Sleep's
+plasticity needs its own state. A night with a fresh optimizer of its
+own (`--night-opt own`, freed at waking), batched, sixteen rounds at
+1e-4, was run next.
+
+**Found (01:00).** A diagnostic on the copy, a fresh optimizer and
+batched steps at 1e-4, printed what the nights had hidden: the lesson
+lands. Twelve steps took the loss over the traces from 2.34 to 1.63
+nats and the gauge from 0.41 to 0.49, four more of fifty-one symbols
+carried. All 474M parameters are trainable and 440M receive gradient,
+but the head takes 93 percent of the gradient's norm and the council's
+first layers most of the rest; the deep trunk gets a trickle. So this
+is a slow cortex, not a broken one: what it learns first is what a
+from-nothing language model learns first, letter frequencies and
+pairs in the head, and the twenty-nine layers behind it wake slowly.
+Under the day's optimizer none of that could show, because the doses'
+large gradients sit in Adam's second moment and divide every night
+step to nothing. The one earlier own-optimizer night that seemed to
+fail (0.375 to 0.354) is within the gauge's two-hit noise on a
+different set of traces. The night to serve is therefore: its own
+optimizer, one step per round over all the traces, forty-eight rounds
+at 1e-4, REM as before, tested on the copy before the restart.
+
+**REM was undoing it (01:40).** Through the real night path, twelve
+batched rounds with the night's own optimizer took the loss from 2.40
+to 1.66 and the gauge from 0.393 to 0.464 with REM off; with REM on,
+the same NREM lesson landed (2.37 to 1.60) and the gauge came out at
+0.353 from 0.412. REM's eight steps were one dream each at the night's
+rate, the very regime that had wrecked NREM (0.377 to 0.245), and the
+forecast loss with SIGReg reshapes the cortex stream the head reads.
+So REM is batched the same way, one step over its dreams, and the
+night to serve is: its own optimizer, one step per round over all the
+traces in NREM and one step over the dreams in REM, twenty-four rounds
+at 1e-4 (about seven minutes of a hundred-minute day), REM eight,
+SIGReg 0.1. Disclosed constants: the rate, the rounds, the batching.
+
 ## The night, remade (2026-09-02): the cortex learns only from hippocampal traces
 
 The user's law, in two sentences: the neocortex trains only on what the
@@ -942,8 +1081,20 @@ python3 scripts/diary.py data/organism_diary_0p5b.pt data/tok_char.json --dev mp
     --temp 1.0 --store-read-beta 0 --store-boost 1 --store-boost-min 0.15 \
     --live-lr 1e-5 --store-decay 0.9 --save data/organism_diary_0p5b.pt --diary-period 0.5 \
     --diary-cost 0.12 --cort-k 1.0 --value-w 0.5 --wake-ticks 12000 \
-    --night-rounds 2 --night-rem 8 --night-sigreg 0.1 --night-starts 48
+    --night-rounds 24 --night-rem 8 --night-sigreg 0.1 --night-starts 48 \
+    --night-opt own --night-batch 1 --night-lr 1e-4
 ```
+
+The night's flags since day 21 (2026-09-03, measured on the day-20
+copy, above): sleep's plasticity has its own optimizer state
+(`--night-opt own`, freed at waking), many replays make one change
+(`--night-batch 1`: one step per round over all the traces in NREM and
+one step over the dreams in REM), at sleep's own rate (`--night-lr
+1e-4`) for twenty-four rounds, about eight minutes. Under the day's
+optimizer and single-trace steps at 1e-5 the night had been inert
+(two or three argmax flips of fifty), and REM's single-dream steps at
+the higher rate undid NREM. `IGA_NIGHT_DEBUG=1` prints each round's
+loss. `--night-scale` is inert under Adam and left at 1.
 
 The live rate is ten times the word body's on purpose: the first thing
 frowns must teach a newborn mouth is silence, which is the cheapest

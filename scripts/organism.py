@@ -2709,6 +2709,19 @@ def build_parser():
                     help="REM's collapse guard: SIGReg weight on the cortex stream")
     ap.add_argument("--night-scale", type=float, default=1.0,
                     help="the night's loss scale over the live rate")
+    ap.add_argument("--nrem-mem", type=int, default=1,
+                    help="the diary's night: 1 = the hippocampal read stays on while the cortex learns a trace (the cortex "
+                         "may learn to listen), 0 = the read is off during the lesson (the trace itself is the hippocampus's "
+                         "replay; the cortex must carry it)")
+    ap.add_argument("--night-batch", type=int, default=0,
+                    help="the diary's night: 0 = one plasticity step per trace (as built), 1 = one step per round over "
+                         "all the traces (many replays, one consolidation)")
+    ap.add_argument("--night-opt", default="shared",
+                    help="the diary's night: 'shared' = the day's optimizer and its moments carry the night (as built); "
+                         "'own' = a fresh optimizer each night (sleep's plasticity has its own state), freed at waking")
+    ap.add_argument("--night-lr", type=float, default=None,
+                    help="the diary's night: the optimizer's rate while it sleeps (default: the live rate; "
+                         "sleep's plasticity is its own physiology)")
     ap.add_argument("--wake-ticks", type=int, default=12000,
                     help="the diary: waking ticks until sleep pressure flips the switch (12000 = 100 minutes)")
     ap.add_argument("--value-w", type=float, default=0.5,
