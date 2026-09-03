@@ -443,17 +443,30 @@ class Diary(O.Organism):
                 own = lg if own is None else own
                 if not batch:
                     self.opt.zero_grad(set_to_none=True)
-                loss = F.cross_entropy(own[0].float(), y) * scale
+                own0 = own[0].float()
+                if int(getattr(a, "night_sil_mask", 0) or 0):
+                    # a dream holds no rest, so rest is not a candidate in it: the silence logit is
+                    # taken out of the softmax and receives no lesson (measured 2026-09-03: with it
+                    # in, every night pushed rest down and the mouth filled its ticks at stress 11)
+                    own0 = own0.clone(); own0[:, self.sil] = -1e4
+                    keep = y != self.sil
+                    loss = (F.cross_entropy(own0[keep], y[keep]) if bool(keep.any()) else own0.sum() * 0.0) * scale
+                else:
+                    loss = F.cross_entropy(own0, y) * scale
                 self._pop_side_losses()
+                if not bool(torch.isfinite(loss.detach())):
+                    # a dream whose lesson is not a number teaches nothing (never a NaN step)
+                    self.opt.zero_grad(set_to_none=True)
+                    continue
                 if batch:
                     # many replays, one consolidation: the gradients of every trace in the
                     # round are summed (mean over traces) and the weights move once
                     (loss / len(traces)).backward()
                 else:
-                    loss.backward(); self.opt.step(); self.n_steps += 1; nrem += 1
+                    loss.backward(); self._night_step(); nrem += 1
                 _tot += float(loss.detach()) / len(traces)
             if batch:
-                self.opt.step(); self.n_steps += 1; nrem += 1
+                self._night_step(); nrem += 1
             if _dbg:
                 print(f"[night] round {_r} CE {_tot:.3f} lr {[g['lr'] for g in self.opt.param_groups]} batch {batch}", flush=True)
         rem_traces = traces[:int(getattr(a, "night_rem", 8) or 0)]
@@ -467,25 +480,36 @@ class Diary(O.Organism):
             self._pop_side_losses()
             if loss is None:
                 continue
+            if not bool(torch.isfinite(loss.detach())):
+                continue                                 # never a NaN step (night 7, 2026-09-03: REM went NaN)
             if batch:
                 # many dreams, one consolidation (a single dream's step at the night's rate
                 # undid NREM's lesson: measured 2026-09-03 01:40)
                 (loss * scale / len(rem_traces)).backward(); rem += 1
             else:
                 self.opt.zero_grad(set_to_none=True)
-                (loss * scale).backward(); self.opt.step(); self.n_steps += 1; rem += 1
+                (loss * scale).backward(); self._night_step(); rem += 1
             cos_log.append(cosv)
         if batch and rem:
-            self.opt.step(); self.n_steps += 1
+            self._night_step()
         # the value ladder replays the day's lived pairs once more (reward at every timescale)
         vw = float(getattr(a, "value_w", 0.5) or 0.0)
         vsteps = 0
         if vw > 0 and hasattr(m, "buffered_value_loss"):
             bl = m.buffered_value_loss(self.st)
-            if bl is not None:
+            if bl is not None and bool(torch.isfinite(bl.detach())):
                 self.opt.zero_grad(set_to_none=True)
-                (vw * bl).backward(); self.opt.step(); self.n_steps += 1; vsteps = 1
+                (vw * bl).backward(); self._night_step(); vsteps = 1
         self._night_counts = (nrem, rem, vsteps)
+
+    def _night_step(self):
+        """one change of the weights in the night: the gradient is clipped to a norm of 1 and a
+        step whose gradient is not a number is not taken (night 7, 2026-09-03, left the body NaN)"""
+        gn = torch.nn.utils.clip_grad_norm_(self.m.parameters(), 1.0)
+        if bool(torch.isfinite(gn)):
+            self.opt.step()
+        self.opt.zero_grad(set_to_none=True)
+        self.n_steps += 1
 
     def _dream_night(self):
         """THE NIGHT (2026-09-02, the user's law). The cortex learns only from hippocampal
@@ -536,6 +560,18 @@ class Diary(O.Organism):
                 g["lr"] = lr0
         nrem, rem, vsteps = self._night_counts
         m.eval()
+        with torch.no_grad():
+            _finite = all(bool(torch.isfinite(p).all()) for p in m.parameters())
+        if not _finite:
+            # the night broke the weights: it is discarded, the body wakes as it slept (the file on
+            # disk is the last save, before this night) — plumbing against a numerical failure
+            sd = torch.load(a.save, map_location="cpu", weights_only=False)
+            m.load_state_dict(sd["model"]); del sd
+            m.eval()
+            print(f"[diary] night {self.nights + 1}: weights not finite after the lessons; reloaded {a.save}", flush=True)
+            self._night_discarded = True
+        else:
+            self._night_discarded = False
         gauge_after = self._gauge(traces)
         dec = lambda ids: self.tok.decode(list(ids))
         return {"starts": len(starts), "traces": len(traces), "empty": empty,
@@ -543,6 +579,7 @@ class Diary(O.Organism):
                 "examples": [dec(i_)[:32] for i_ in traces[:8]],
                 "nrem_steps": nrem, "rem_steps": rem, "value_steps": vsteps,
                 "rem_cos": (round(sum(cos_log) / len(cos_log), 3) if cos_log else None),
+                "discarded": bool(getattr(self, "_night_discarded", False)),
                 "gauge": {"before": gauge_before, "after": gauge_after}}
 
     def _sleep_now(self):

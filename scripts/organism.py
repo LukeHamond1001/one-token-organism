@@ -2719,6 +2719,9 @@ def build_parser():
     ap.add_argument("--night-opt", default="shared",
                     help="the diary's night: 'shared' = the day's optimizer and its moments carry the night (as built); "
                          "'own' = a fresh optimizer each night (sleep's plasticity has its own state), freed at waking")
+    ap.add_argument("--night-sil-mask", type=int, default=0,
+                    help="the diary's night: 1 = the choice to rest (silence) is not a candidate in a dream's softmax, so the "
+                         "night neither teaches nor unteaches rest (a dream holds no rest; by day only stamina does); 0 = as built")
     ap.add_argument("--night-lr", type=float, default=None,
                     help="the diary's night: the optimizer's rate while it sleeps (default: the live rate; "
                          "sleep's plasticity is its own physiology)")

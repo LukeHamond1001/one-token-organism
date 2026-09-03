@@ -804,6 +804,54 @@ is the thing to watch on day 22; if the quiet keeps falling and stress
 keeps rising, the night's strength or the symbol's cost is the
 physiology to revisit, and it is the user's call.
 
+**The mechanism, read off the page on day 22 (04:10).** In its last
+six hundred ticks it rested 440 times, wrote a space 132 times and a
+letter 28 times: a quarter of its ticks written, at 0.12 stress per
+symbol and a two-minute half-life, is a stress of eleven, which is
+where it sat. The stress lean gives silence ten logits at that level
+and silence still loses, because a dream trace never contains rest, and
+the night's cross-entropy pushes every symbol that is not the target
+down on every step, silence with them. Six inert nights never did this;
+one night that reaches the weights did. The candidate physiology,
+built and disclosed, not yet served: rest is not a candidate in a
+dream's softmax (`--night-sil-mask 1`), so the night neither teaches
+nor unteaches it, and by day stamina alone decides, as the user's law
+has it. To be measured on the day-22 copy with the serve stopped
+before day 23: the gauge should hold and the sampled mouth's quiet
+should stop falling.
+
+**Night 7 broke the body (04:36 to 04:43, day 22).** The seventh
+night, the second of the rebuilt kind, ended with the REM cosine not a
+number and the gauge at 0.0 of eighty-eight symbols; the tick loop died
+on the first sample from it, and the night's autosave wrote the body to
+disk with 454 of 540 tensors non-finite. The rebuilt night moves the
+weights, and a night that moves them can also break them: the copy's
+nights and night 6 were finite, night 7 was not, and with the loss
+unlogged on the serve the first non-finite step cannot be named (the
+REM cosine has its epsilon; SIGReg takes cosines of a projected
+stream, and a stream that has overflowed gives it nothing). Restored at
+04:50 from the night-6 backup of 02:54, so day 22's fifty minutes are
+lost to the body (its page rows and the caregiver's diary remain); the
+broken file is kept as `organism_diary_0p5b.nan_night7.pt`. Guards,
+plumbing not law: a lesson that is not a number is skipped, every
+night step clips the gradient to a norm of one, and a night that
+leaves any weight non-finite is discarded and the body reloaded from
+disk as it slept, reported as "discarded" in the night's record. The
+silence mask and the guards were tested together on the restored copy
+before the serve came back.
+
+On the restored copy (05:00): the masked, guarded night ran finite,
+loss 2.17 to 1.18, gauge 0.403 to 0.548 (nine more of sixty-two
+symbols carried, the largest rise of any night), "give milk" and
+"scared b" dreamt; the sampled mouth still chose no rest in the probe
+before or after it (the mask stops the fall, it cannot undo night 6),
+and the free-running letter moved to "e". The serve came back at 05:17
+with `--night-sil-mask 1` and the guards, the body rested (pressure
+41), and day 22 was run again from an empty page. A bookkeeping quirk
+found on the way: the night's backup is written before the count of
+nights is incremented, so a restored body reads one night fewer than
+it has had.
+
 ## The night, remade (2026-09-02): the cortex learns only from hippocampal traces
 
 The user's law, in two sentences: the neocortex trains only on what the
@@ -1124,7 +1172,7 @@ python3 scripts/diary.py data/organism_diary_0p5b.pt data/tok_char.json --dev mp
     --live-lr 1e-5 --store-decay 0.9 --save data/organism_diary_0p5b.pt --diary-period 0.5 \
     --diary-cost 0.12 --cort-k 1.0 --value-w 0.5 --wake-ticks 12000 \
     --night-rounds 24 --night-rem 8 --night-sigreg 0.1 --night-starts 48 \
-    --night-opt own --night-batch 1 --night-lr 1e-4
+    --night-opt own --night-batch 1 --night-lr 1e-4 --night-sil-mask 1
 ```
 
 The night's flags since day 21 (2026-09-03, measured on the day-20
