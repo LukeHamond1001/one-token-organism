@@ -314,16 +314,28 @@ class Life:
             return None
         xs, whos, faces, bundles, reads = self._window_tensors(win)
         T = xs.shape[0]
-        w = torch.tensor([1.0 if (whos[t + 1] == 0 and int(xs[t + 1]) != self.sil) else 0.0 for t in range(T - 1)], device=self.dev)
+        # THE TARGET IS THE WORLD'S NEXT SYMBOL at every position: its own symbols and rests are inputs
+        # only (one predicts the environment; one's own actions are not the environment). With the
+        # immediate next input as the target, the forecast the mouth reads (made as the world's symbol
+        # enters) was never trained, since what follows it is always its own step: measured on run 9,
+        # day 10, as an off-by-one ("a" after "where ball? ", "o" after "big dog bigger ").
+        nxt = [-1] * T; last = -1
+        for t in range(T - 1, -1, -1):
+            nxt[t] = last
+            if int(whos[t]) == 0 and int(xs[t]) != self.sil:
+                last = t
+        tgt_pos = [max(0, i) for i in nxt]
+        w = torch.tensor([1.0 if i >= 0 else 0.0 for i in nxt], device=self.dev)
         if float(w.sum()) < 1:
             return None
+        y = xs[torch.tensor(tgt_pos, device=self.dev)]
         m = self.m; m.train()
         try:
             self.opt_day.zero_grad(set_to_none=True)
             u = m.inputs(xs, whos, faces, bundles, reads)
             C = m.stream(u)
-            pred = m.latent_pred(C[:-1])
-            ll, lc = m.latent_loss(pred, xs[1:], w=w)
+            pred = m.latent_pred(C)
+            ll, lc = m.latent_loss(pred, y, w=w)
             fl, fc = m.forecast_loss(C[:-1], bundles[1:], sig=float(self.cfg["sigreg"]))   # SIGReg on the stream
             loss = (ll + fl) * (1.0 + self.stress / 10.0)      # stress raises plasticity
             if not bool(torch.isfinite(loss.detach())):

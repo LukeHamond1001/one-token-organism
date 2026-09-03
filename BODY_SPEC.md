@@ -67,8 +67,10 @@ forecasts the next embedding it will receive and `pfc_pred` forecasts the
 next bundle. Its lessons are prediction: one minus the cosine to the
 embedding received (stop-grad), one minus the cosine to the bundle received
 (stop-grad), SIGReg on the forecasts as the collapse guard. It learns awake
-(every K ticks on the last window, the world's symbols as targets, its own
-symbols inputs only) and asleep (below). It never learns from reward.
+(every K ticks on the last window, the target at every position being the
+next symbol the world will say; its own symbols and rests are inputs only,
+never targets, and never shift the target: one predicts the environment, and
+one's own actions are not the environment) and asleep (below). It never learns from reward.
 
 **Mouth.** Whether to act is the basal ganglia's: a gate on [C, fatigue,
 mood, stress] giving p(act); zero weights and a birth bias at birth. What to
