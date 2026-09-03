@@ -45,7 +45,11 @@ strength × 0.1 are forgotten (relative, not a constant).
 16384 ticks: leaky integrators of the stream, each with a learned input map,
 updated at its clock. Each band has a value head (the critic at that
 timescale) and a Go/NoGo gate learned from the value's error. The bands'
-states form the bundle the cortex reads and must foresee.
+states form the bundle the cortex reads and must foresee. The PFC learns by
+day and in the night's value replay, never in REM (where it is the judge):
+its input maps follow the temporal-difference error taken with both ends
+live, so each band learns to hold what predicts reward at its own horizon
+(dopamine shaping working memory).
 
 **Cortex.** A small transformer over the last W steps of [embedding, speaker,
 face, bundle, hippocampal read] producing the stream C; from C, `latent_pred`
