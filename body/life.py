@@ -20,6 +20,7 @@ PHYSIOLOGY = dict(
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
+    diff_horizon=1024,    # bands with clocks at or above this learn average-reward TD (no discount, the reward rate as baseline)
 )
 
 
@@ -48,6 +49,8 @@ class Life:
         self.pred_prev = None                              # the forecast made at the last step (surprise)
         self.v_prev = None                                 # V_b of the previous tick's states
         self.v_buf = {b: collections.deque(maxlen=int(self.cfg["v_buf"])) for b in range(nb)}
+        self.rbar = torch.zeros(nb)                              # the reward rate at each clock (the differential bands' baseline)
+        self._differential = [int(c) >= int(self.cfg["diff_horizon"]) for c in self.m.clocks]
         # feelings and clocks
         self.fatigue = 0.0; self.stress = 0.0; self.mood = 0.0
         self._t_feel = time.time()
@@ -218,7 +221,16 @@ class Life:
                 if getattr(self, "_bands_pp", None) is not None and getattr(self, "_C_prev", None) is not None:
                     bands_prev_live = m.band_update(self._bands_pp.detach(), self._C_prev.detach())
                     v_prev_live = m.values(bands_prev_live)
-                td = torch.stack([r + gam[b] * v_now[b].detach() - v_prev_live[b] for b in range(len(gam))])
+                # DISCOUNTED TD below the differential horizon, AVERAGE-REWARD (differential) TD at and
+                # above it: with the discount near 1 the bootstrapped value ran away (the slowest band
+                # read 7000 against a true return near 85, correlation -0.995: run 21, day 20). The
+                # baseline is the reward rate estimated at the band's own clock, tonic dopamine.
+                td = torch.stack([(r + gam[b] * v_now[b].detach() - v_prev_live[b]) if not self._differential[b]
+                                  else (r - float(self.rbar[b]) + v_now[b].detach() - v_prev_live[b]) for b in range(len(gam))])
+                with torch.no_grad():
+                    for b in range(len(gam)):
+                        if self._differential[b]:
+                            self.rbar[b] += (1.0 / float(m.clocks[b])) * float(td[b].detach())
                 loss_v = (td ** 2).mean()
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
@@ -613,7 +625,7 @@ class Life:
             with torch.no_grad():
                 vn = m.value[b](hn).squeeze(-1)
             vp = m.value[b](hp).squeeze(-1)
-            terms.append(((R + gam[b] * vn - vp) ** 2).mean())
+            terms.append((((R - float(self.rbar[b]) + vn - vp) if self._differential[b] else (R + gam[b] * vn - vp)) ** 2).mean())
         if terms:
             self.opt_value.zero_grad(set_to_none=True)
             torch.stack(terms).mean().backward(); self.opt_value.step()
@@ -650,7 +662,7 @@ class Life:
                          "window": self.m.window, "clocks": list(self.m.clocks)},
                 "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure, "heard": self.heard.cpu(),
                          "fatigue": self.fatigue, "stress": self.stress, "mood": self.mood, "n_bursts": self.n_bursts,
-                         "sym_freq": self.sym_freq, "last_night": self.last_night}}
+                         "sym_freq": self.sym_freq, "last_night": self.last_night, "rbar": self.rbar.clone()}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -670,6 +682,8 @@ class Life:
             if k in L:
                 setattr(life, k, L[k])
         life.sym_freq = dict(L.get("sym_freq") or {})
+        if L.get("rbar") is not None:
+            life.rbar = L["rbar"].clone()
         if L.get("heard") is not None:
             life.heard = L["heard"].to(device)
         return life
