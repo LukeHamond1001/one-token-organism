@@ -221,8 +221,22 @@ class Diary(O.Organism):
                 # sound it expected; the drive to babble, and to speak when it knows what it is
                 # about to say). Absolute, 0..1: a reward relative to its own running mean fed on
                 # runs of babble (measured 2026-09-03 08:10: one smile, then 98 percent acting).
+                # HABITUATION (2026-09-03 09:05, after the flood): the reward is scaled by how
+                # rarely this symbol was just chosen — a run pays less each time, a fresh symbol
+                # pays in full (stimulus-specific adaptation; what keeps babble varied).
                 # Never a lesson on content.
-                int_t = float(pr[nxt])
+                hab = float(getattr(self.a, "gate_habit", 0.9) or 0.0)
+                freq = getattr(self, "_sym_freq", None)
+                if freq is None:
+                    freq = self._sym_freq = {}
+                novelty = 1.0 - freq.get(nxt, 0.0) if hab > 0 else 1.0
+                int_t = float(pr[nxt]) * max(0.0, novelty)
+                if hab > 0:
+                    for k_ in list(freq.keys()):
+                        freq[k_] *= hab
+                        if freq[k_] < 1e-3:
+                            del freq[k_]
+                    freq[nxt] = freq.get(nxt, 0.0) + (1.0 - hab)
         else:
             nxt = int(torch.multinomial(pr, 1, generator=self.gen))
             acted = nxt != self.sil
