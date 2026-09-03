@@ -86,6 +86,11 @@ and follows the child's attention rather than a schedule.
   twice). A long chain from memory can spend the whole budget in one
   reply (64 symbols to stress 8 on day 12): that is the stamina law
   working, not a run.
+- **PROPOSED, awaiting the user's word (2026-09-03): answer babble in
+  kind.** Biology's one contingent response we lack: when a known word
+  of its own is smiled at, the caregiver repeats it back once and then
+  expands it into a known frame ("go" -> "go", then "dog go"), as a
+  parent does. Page-only, no reading of its insides. Not in force.
 - **A run of spaces is breath, not a mark.** Frown only at a run of a
   repeated non-letter mark that is not the space (day 22): the space is
   its most frequent symbol and its pacing, and a frown at it would be a
