@@ -121,8 +121,9 @@ steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
 own-reward weight 0.5, tonic drive 0.15, vigor weight 1.0, credit baseline 0.98 (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
-recall adaptation 0.5 per recall, recovery 0.7 per step (a recalled memory
-tires, so a dream moves on) · readout sharpness 10 (to become an organ) ·
+recall adaptation 0.5 x activation per step, recovery 0.9 per step (recalled
+memories tire in proportion to how much they fired, so a cycle tires as a
+whole and the dream moves on) · readout sharpness 10 (to become an organ) ·
 band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 
 ## 5b. Mathematics (the user: "not only biology, also your math")

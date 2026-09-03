@@ -59,6 +59,7 @@ class Store:
         logits = sims / self.temp + torch.log(S + 1e-6)
         w = torch.softmax(logits, 0)
         pred = F.normalize(w @ self.V, dim=0)
+        self._last_w = w
         return pred, float(w.max()), int(w.argmax())
 
     @torch.no_grad()
