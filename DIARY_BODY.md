@@ -1580,6 +1580,19 @@ measurement and a fix, each fix a line in the spec's mathematics:
 The slow lineage on port 8018 kept its hourly days for comparison and
 for the page; it will be reborn from the settled recipe.
 
+**Milestone 3 (2026-09-03, 15:45, run 10, day 14, tick 168,210).** After
+the caregiver typed "dog will " the body wrote "go", and the caregiver's
+page-only rule recorded a cue completion and smiled. The same day it
+wrote "dog", its first three-letter word, and "ba" after "give "; the
+next day "baa" after "where ball? ". Run 10 carried every fix through
+the world's-next-symbol target but not the two forecast fixes found
+after it (recall to the forecast, the cortex on its own error), so its
+answer came through recall and sampling with an off-by-one still in its
+cortex; by then its cortex carried its dreams at 0.87 argmax. One
+completion in a day of sixteen cues: the first, not fluency. The body
+is kept as `data/body2_run10_day15.pt`. Run 14, with the forecast fixes,
+is the candidate for the settled recipe.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with
