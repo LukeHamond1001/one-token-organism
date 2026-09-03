@@ -761,6 +761,13 @@ night to serve is: its own optimizer, one step per round over all the
 traces in NREM and one step over the dreams in REM, twenty-four rounds
 at 1e-4 (about seven minutes of a hundred-minute day), REM eight,
 SIGReg 0.1. Disclosed constants: the rate, the rounds, the batching.
+After that one night on the copy the free-running trunk still writes
+"a" to every cue, memory on or off, and the sampled mouth began no
+answer in 96 tries; but its samples moved for the first time ("o
+peobumaopu" where every earlier night had left "oc%evbuaaopu"), which
+is what a night that reaches the weights looks like from outside. The
+serve was restarted at 01:43 with the night above; the body's pressure
+carried over at 5,255 of 12,000.
 
 ## The night, remade (2026-09-02): the cortex learns only from hippocampal traces
 
