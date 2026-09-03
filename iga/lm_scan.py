@@ -428,6 +428,14 @@ class ScanLM(nn.Module):
         # next state it will receive from the PFC — one linear forecast per council
         # slot (the hippocampus read and every band), read from the cortex stream and
         # scored against the bundle the council hands over at the next symbol
+        # THE MOUTH'S GO/NO-GO (2026-09-03, the user's word): whether to act is the basal
+        # ganglia's decision, separate from what to say (the cortex). A gate reads the cortex
+        # stream at the last position plus interoception (stress, mood) and gives p(act); the
+        # content softmax never holds rest. It learns as an actor from dopamine minus the
+        # cost of a symbol (the serve's lesson, local to the gate). Zero weights, a bias for
+        # the birth rate of acting: what it does at first is the physiology, not a policy.
+        self.mouth_gate = nn.Linear(d + 2, 1)
+        nn.init.zeros_(self.mouth_gate.weight); nn.init.constant_(self.mouth_gate.bias, -1.1)
         self.pfc_pred = nn.ModuleDict({str(i): nn.Linear(d, d)
                                        for i in range(1 + len(self.ukeys))})
         self._last_bundle = None

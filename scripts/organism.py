@@ -2722,6 +2722,18 @@ def build_parser():
     ap.add_argument("--night-sil-mask", type=int, default=0,
                     help="the diary's night: 1 = the choice to rest (silence) is not a candidate in a dream's softmax, so the "
                          "night neither teaches nor unteaches rest (a dream holds no rest; by day only stamina does); 0 = as built")
+    ap.add_argument("--gate", type=int, default=1,
+                    help="the diary's mouth: 1 = the go/no-go gate decides whether to act and the content softmax never holds "
+                         "rest (the stress lean is gone); 0 = rest is a token in the content softmax, stress leans it (as before)")
+    ap.add_argument("--gate-cost", type=float, default=0.12,
+                    help="the diary's gate: the cost of one spoken symbol in the gate's dopamine (reward units; a smile is 2)")
+    ap.add_argument("--gate-lr", type=float, default=1e-3,
+                    help="the diary's gate: the striatum's own plasticity rate (the gate head only)")
+    ap.add_argument("--gate-int", type=float, default=0.5,
+                    help="the diary's gate: weight of its own reward at a symbol it spoke (the belief it had in what it "
+                         "chose, against its running mean) in the gate's dopamine — the drive to babble; never a lesson on content")
+    ap.add_argument("--gate-every", type=int, default=24,
+                    help="the diary's gate: ticks between the gate's lessons (the eligibility window is twelve ticks)")
     ap.add_argument("--night-lr", type=float, default=None,
                     help="the diary's night: the optimizer's rate while it sleeps (default: the live rate; "
                          "sleep's plasticity is its own physiology)")

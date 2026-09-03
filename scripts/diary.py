@@ -74,8 +74,67 @@ class Diary(O.Organism):
         self.nights = int(_ex.get("nights", 0) or 0) if isinstance(_ex, dict) else 0
         self.asleep = False
         self.last_night = None
+        # THE MOUTH'S GO/NO-GO (2026-09-03): the gate organ (in the model, saved with the body)
+        # has the striatum's own plasticity: a small optimizer of its own, a lesson every few
+        # ticks on detached features, credit = dopamine minus the cost of acting
+        self.gate_on = bool(int(getattr(a, "gate", 1))) and hasattr(self.m, "mouth_gate")
+        self.gate_buf = collections.deque(maxlen=96)     # (feat [d+2] cpu, acted, dopamine at that tick)
+        self.opt_gate = torch.optim.Adam(self.m.mouth_gate.parameters(), lr=float(getattr(a, "gate_lr", 1e-3))) \
+            if self.gate_on else None
+        self._gate_p = None
+        self._gate_last = None
         self.m.reset_bag(self.st) if hasattr(self.m, "reset_bag") else None
         threading.Thread(target=self._loop, daemon=True).start()
+
+    def _gate_feat(self):
+        """what the gate reads: the cortex stream at the last position (detached, normalized)
+        and interoception (stress, mood)"""
+        C = getattr(self.m, "_last_C_live", None)
+        if C is None:
+            f = torch.zeros(self.m.d, device=self.dev)
+        else:
+            with torch.no_grad():
+                f = self.m.lnf(C[0, -1].float().detach()).to(self.dev)
+        io = torch.tensor([self.cortisol / 10.0, self.mood / 6.0], device=self.dev, dtype=f.dtype)
+        return torch.cat([f, io]).detach()
+
+    def _gate_lesson(self):
+        """the actor's lesson: each choice to act or rest in the buffer takes credit from the
+        dopamine that followed it (twelve ticks, 0.8 per tick) minus the cost of a symbol if it
+        acted, and the gate is pushed toward what paid — the striatum's local rule, on detached
+        cortex features (no force reaches the council)"""
+        buf = list(self.gate_buf)
+        if len(buf) < 16:
+            return
+        cost = float(getattr(self.a, "gate_cost", 0.12) or 0.0)
+        w_int = float(getattr(self.a, "gate_int", 1.0) or 0.0)
+        n = len(buf) - 12                                 # only choices whose eligibility window is complete
+        feats = torch.stack([b[0] for b in buf[:n]]).to(self.dev)
+        acts = torch.tensor([1.0 if b[1] else 0.0 for b in buf[:n]], device=self.dev)
+        G = torch.zeros(n, device=self.dev)
+        for t in range(n):
+            g = 0.0
+            for k_ in range(12):
+                g += (0.8 ** k_) * float(buf[t + k_][2])   # the world's dopamine that followed
+            if buf[t][1]:
+                g += w_int * float(buf[t][3]) - cost      # its own reward at the symbol, and the symbol's cost
+            G[t] = g
+        if float(G.abs().max()) < 1e-4:
+            return
+        self.m.mouth_gate.train()
+        z = self.m.mouth_gate(feats).squeeze(-1)
+        logp = -torch.nn.functional.binary_cross_entropy_with_logits(z, acts, reduction="none")   # log pi(a_t)
+        loss = -(G.detach() * logp).mean()
+        self.opt_gate.zero_grad(set_to_none=True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.m.mouth_gate.parameters(), 1.0)
+        self.opt_gate.step()
+        self.m.mouth_gate.eval()
+        self._gate_last = {"n": n, "credit_mean": round(float(G.mean()), 4), "acted": round(float(acts.mean()), 3),
+                           "int_mean": round(float(sum(b[3] for b in buf[:n] if b[1]) / max(1, sum(1 for b in buf[:n] if b[1]))), 4),
+                           "tick": self.ticks}
+        for _ in range(min(len(self.gate_buf), int(getattr(self.a, "gate_every", 24) or 24))):
+            self.gate_buf.popleft()
 
     # ---- the clock ----
     def _loop(self):
@@ -123,14 +182,37 @@ class Diary(O.Organism):
         _lv = getattr(self.m, "_last_votes", None)
         own_ent = float(getattr(self.m, "_last_own_ent", 0.0) or 0.0)
         mem_max = float(_lv[0][0]) if _lv and _lv[0] else 0.0
-        if self.cortisol > 0:                      # speaking costs: stress favours silence
+        p_act = None
+        if self.gate_on:
+            # WHETHER to act is the gate's (basal ganglia): the content softmax never holds rest,
+            # and no stress lean is written by hand — stress is an input the gate can learn from
+            with torch.no_grad():
+                feat = self._gate_feat()
+                p_act = float(torch.sigmoid(self.m.mouth_gate(feat.unsqueeze(0)))[0, 0])
+            v[self.sil] = float("-inf")
+        elif self.cortisol > 0:                    # the old brake: stress leans the content softmax to silence
             v[self.sil] = v[self.sil] + float(getattr(self.a, "cort_k", 0.5)) * self.cortisol
         # no hand-written voice for memory (removed 2026-09-02): its vote is already in the
         # logits as the organ reads it, and the mouth chooses from that belief alone
         p1 = torch.softmax(v, -1)
         ent = float(-(p1 * (p1 + 1e-9).log()).sum() / math.log(max(2, p1.numel())))
         pr = torch.softmax(v / max(0.02, float(self.a.temp)), -1).cpu()
-        nxt = int(torch.multinomial(pr, 1, generator=self.gen))
+        int_t = 0.0
+        if self.gate_on:
+            acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
+            nxt = int(torch.multinomial(pr, 1, generator=self.gen)) if acted else self.sil
+            if acted:
+                # its own reward at the symbol: the belief it had in what it chose, against its
+                # running mean (producing the sound it expected; the drive to babble, and to
+                # speak when it knows what it is about to say). Never a lesson on content.
+                lp = float(torch.log(pr[nxt].clamp(min=1e-9)))
+                mu = getattr(self, "_int_mu", None)
+                int_t = 0.0 if mu is None else max(-2.0, min(2.0, lp - mu))
+                self._int_mu = lp if mu is None else 0.98 * mu + 0.02 * lp
+        else:
+            nxt = int(torch.multinomial(pr, 1, generator=self.gen))
+            acted = nxt != self.sil
+        self._gate_p = p_act
         backed = bool(_lv and _lv[1] and int(_lv[1][0]) == nxt and nxt != self.sil
                       and mem_max >= float(getattr(self.a, "store_boost_min", 0.0) or 0.0))
         with torch.no_grad():
@@ -166,6 +248,14 @@ class Diary(O.Organism):
                 item[1] += delta * (0.8 ** k_)
         if abs(delta) >= 0.5:
             self._dose_choices(level=int(pl[0, 0]) if pl is not None else 0)
+        if self.gate_on:
+            # [features, acted, the world's dopamine this tick, its own reward at the symbol]
+            self.gate_buf.append([feat.detach().cpu(), acted, float(delta), int_t])
+            if len(self.gate_buf) >= 16 + 12 and self.ticks % int(getattr(self.a, "gate_every", 24) or 24) == 0:
+                try:
+                    self._gate_lesson()
+                except Exception as e:
+                    self._gate_last = {"error": str(e)[:120], "tick": self.ticks}
         self.ticks += 1
         self.sleep_pressure += 1
         if self.sleep_pressure >= self.wake_ticks and len(self.day_buf) >= 65:
@@ -184,7 +274,8 @@ class Diary(O.Organism):
                      "felt": felt, "said": self.tok.decode([nxt]) if nxt != self.sil else "", "backed": backed,
                      "own": ([self.tok.decode([self.m._last_own_top[0]]) if self.m._last_own_top[0] >= 11 else "<sil>",
                               round(self.m._last_own_top[1], 3)] if getattr(self.m, "_last_own_top", None) else None),
-                     "dose": getattr(self, "_last_dose", None), "doses": getattr(self, "n_doses", 0)}
+                     "dose": getattr(self, "_last_dose", None), "doses": getattr(self, "n_doses", 0),
+                     "gate": (None if p_act is None else round(p_act, 3)), "gate_lesson": getattr(self, "_gate_last", None)}
 
     def _dose_choices(self, level=0):
         """the only teacher is your face on what it actually did. GRADED (2026-09-02, no
@@ -218,7 +309,12 @@ class Diary(O.Organism):
         y = torch.tensor([ids[1:]], device=self.dev)
         w = torch.zeros(1, len(ids) - 1, device=self.dev)
         for j, c in wts.items():
+            if self.gate_on and ids[j] == self.sil:
+                continue                                  # a rest is the gate's choice, not content
             w[0, j - 1] = c
+        if self.gate_on and float(w.abs().sum()) < 1e-6:
+            for it in items: it[1] = 0.0
+            return
         pl_t = torch.zeros(1, len(ids) - 1, dtype=torch.long, device=self.dev)
         if level:
             pl_t[0, -1] = int(level)                  # the felt face, as the reward it was, at the tick it was felt

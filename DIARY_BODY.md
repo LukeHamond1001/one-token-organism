@@ -1149,6 +1149,44 @@ on scratch copies and nothing else. The one constant is the switch,
 the environment made for the body is gone: what it hears is the
 caregiver's, when it sleeps is its own.
 
+## The mouth's go/no-go (2026-09-03, the user's word: "do it")
+
+Rest had been a token in the same softmax as the letters, and two
+hand-written things hung off that: the night's silence mask, and the
+stress lean (one logit toward silence per unit of stress, a constant).
+Biology separates the two decisions. Whether to act is the basal
+ganglia's go/no-go, driven by arousal, fatigue and expected reward;
+what to say is the cortex. Built as an organ, saved with the body and
+grafted onto the living one at load:
+
+- **The gate** reads the cortex stream at the last position (detached,
+  normalized) and interoception (stress, mood) and gives p(act). Zero
+  weights at birth and a bias for the birth rate of acting (0.25):
+  what it does at first is physiology, not a policy. The content
+  softmax never holds rest; if the gate says act, the cortex says what.
+- **Its lesson** is the actor's, local to the gate (no force reaches
+  the council): every choice to act or rest takes the dopamine that
+  followed it (twelve ticks, 0.8 per tick), plus, if it acted, its own
+  reward at the symbol minus the symbol's cost, and the gate is pushed
+  toward what paid. A lesson every twenty-four ticks on the buffer,
+  with the striatum's own rate (`--gate-lr 1e-3`), gradient clipped.
+- **Its own reward** at a symbol is the belief it had in what it chose,
+  against its running mean: producing the sound it expected, the drive
+  to babble, and the reason to speak when it knows what it is about to
+  say. It never touches content. Weight `--gate-int 0.5`, disclosed.
+- **The cost** of a symbol (`--gate-cost 0.12`, the same number that
+  raises stress) is what the gate feels for acting; stress itself is
+  an input it may learn to use, no longer a lean written by hand.
+
+Measured on the tiny body (07:10): with the cost alone the gate closed
+to 0.6 percent acting in 450 ticks, the honest economics of a raw
+environment and why infants need a drive; with the drive at weight 1
+it flew to 96 percent and stress 23; at 0.5 it drifted from 25 to 4
+percent at ten times the serving rate. The real body's equilibrium is
+its own confidence, and is measured on a copy before serving. Flags
+`--gate 0` restores the old mouth. The dose lesson on content skips
+rest ticks now (a rest is the gate's choice).
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with
