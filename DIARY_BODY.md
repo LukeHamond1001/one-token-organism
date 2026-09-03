@@ -1847,3 +1847,27 @@ nothing can collapse the stream; the function stays, the term is zero.
 
 Ten checks pass; the scratch night now reads 0.66, 0.84, 0.84. Run 20 from birth once
 run 19's day-6 probe has measured the lag code and the dot-product read.
+
+## Run 19 at day 6, and the price of a word (2026-09-03)
+
+The day-6 probe of run 19 (lag code, dot-product read): first letters 7 of 8 by the
+store, second letters 8 of 8, and the sampled mouth started 48 of 48 cues and completed
+40 in full: "dog will " gives "go in", "where ball? " gives "ball under", "I had " gives
+"milk then", "big dog bigger " gives "dog up? because", "why dog up? " gives "because big
+dog", six of six each. No stutters. The cortex alone, without the store, forecasts 53 of
+82 next symbols awake against 58 under the dream construction: the tick fix holds, and
+consolidation is visible at day 6.
+
+What the body cannot do is stop. Gate 0.96 to 0.97 through days 2 to 6, fatigue pinned
+at its ceiling of 40, and every answer chains into the next line it once heard after
+that one. Mood only 0.3 to 0.9: the smiles are predicted and dopamine is small, so the
+reward flood is not the reason. The arithmetic is. The cost of a symbol was linear in
+fatigue, 0.12 (1 + fatigue/10), which is 0.59 at the ceiling, and a confident, varied
+recitation earns the tonic 0.25 plus a novelty term near 0.45 whatever the caregiver
+does. A linear cost never beats that drive at any fatigue the body can reach. Effort
+cost is convex in every account of it; with (fatigue/10)² the cost passes the drive near
+fatigue 22, a duty cycle of about a half, and the spec's promise of babble in bouts
+bounded by fatigue becomes arithmetic rather than hope.
+
+Run 20 carries the REM fix alone in a second slot (its day-6 probe measures that); run
+21 carries both. Run 19 retired at day 7 with its measurement taken.

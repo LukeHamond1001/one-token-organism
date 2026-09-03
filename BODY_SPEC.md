@@ -238,6 +238,15 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   and the mouth chained across lines through the pauses (run 17); as a dot
   product the confidence falls with the pause (0.88, 0.81 at six ticks, 0.30 at
   twelve).
+- **Effort is convex.** The gate's cost per symbol was linear in fatigue,
+  0.12 (1 + fatigue/10): at fatigue's ceiling (about 40 at a duty cycle near 1,
+  production 0.12 a symbol against a half-life of 240 ticks) that is 0.59, and a
+  confident, varied recitation earns a tonic 0.25 plus a novelty term near 0.45
+  whatever the caregiver does. So the gate sat at 0.97 all day and the mouth
+  never paused (run 19, days 2 to 6; mood only 0.3 to 0.9, the smiles being
+  predicted). Effort cost in biology is convex; with (fatigue/10)² the cost
+  passes the drive near fatigue 22, a duty cycle of about a half, and the mouth
+  speaks in bouts bounded by fatigue, as §5b promised.
 - **The recall's confidence.** The store's read is the attended mean of unit
   values, and its norm is the agreement among the memories attended. The
   largest attention weight is not: once the key carried its own bag, duplicate

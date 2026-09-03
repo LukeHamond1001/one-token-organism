@@ -316,8 +316,10 @@ class Life:
             g = sum((dec ** k) * float(buf[t + k][2]) for k in range(K))     # the dopamine that followed
             if buf[t][1]:
                 # acting pays a tonic drive (babble is its own reward, not contingent on confidence) plus
-                # the belief it had in its choice (habituating), minus a cost that grows with fatigue
-                g += tonic + w_int * float(buf[t][3]) - cost * (1.0 + float(buf[t][4]) / f0)
+                # the belief it had in its choice (habituating), minus an effort cost convex in fatigue
+                # (linear, 0.59 at fatigue's ceiling never beat a confident recitation's drive of 0.7:
+                # run 19, gate 0.97 all day, fatigue pinned at 40; convex, the mouth speaks in bouts)
+                g += tonic + w_int * float(buf[t][3]) - cost * (1.0 + (float(buf[t][4]) / f0) ** 2)
             G[t] = g
         # the credit is taken against a running baseline (dopamine is an error, not a value)
         base = getattr(self, "_g_base", None)
