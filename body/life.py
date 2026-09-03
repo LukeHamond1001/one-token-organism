@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
     bag_decay=0.8, bag_own_weight=0.3, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
-    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
@@ -66,8 +66,11 @@ class Life:
         self.opt_gate = torch.optim.SGD(self.m.mouth_gate.parameters(), lr=float(self.cfg["gate_lr"]))
         # the critic's optimizer: the value heads, the Go/NoGo gates, and the bands' own input maps (the
         # PFC learns to hold what predicts reward at its timescale; the stream stays detached)
-        self.opt_value = torch.optim.Adam(list(self.m.value.parameters()) + list(self.m.band_gate.parameters())
-                                          + list(self.m.band_in.parameters()), lr=float(self.cfg["value_lr"]))
+        # the heads and gates learn at the critic's rate; the bands' input maps at the cortex's slow rate,
+        # so the states the cortex must forecast do not run away from it (a fast PFC undid REM: day 3, run 5)
+        self.opt_value = torch.optim.Adam([
+            {"params": list(self.m.value.parameters()) + list(self.m.band_gate.parameters()), "lr": float(self.cfg["value_lr"])},
+            {"params": list(self.m.band_in.parameters()), "lr": float(self.cfg["band_lr"])}])
         self.opt_face = torch.optim.Adam(self.m.face_head.parameters(), lr=float(self.cfg["face_lr"]))
 
     # ---------------- feelings ----------------
