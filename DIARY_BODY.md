@@ -1936,3 +1936,6 @@ corpus's patterns ("big ball bigger ", "where dog? ", "why ball up? "): nothing 
 one partial success where the frame carries the answer: "why ball up? " gives "because
 bi…". Twenty-two fixed lines cannot teach "big X bigger X"; that needs the cortex free of
 the invariance, a wider world, and time. Recorded as the honest state.
+
+The reborn body's first night, 17:49: forty dreams ("dog will go inder dog up", "g dog
+bigger dog up?"), gauge 0.09 before, 0.76 after NREM, 0.76 after REM, 192 slots kept.
