@@ -2727,8 +2727,8 @@ def build_parser():
                          "rest (the stress lean is gone); 0 = rest is a token in the content softmax, stress leans it (as before)")
     ap.add_argument("--gate-cost", type=float, default=0.12,
                     help="the diary's gate: the cost of one spoken symbol in the gate's dopamine (reward units; a smile is 2)")
-    ap.add_argument("--gate-lr", type=float, default=1e-3,
-                    help="the diary's gate: the striatum's own plasticity rate (the gate head only)")
+    ap.add_argument("--gate-lr", type=float, default=0.05,
+                    help="the diary's gate: the striatum's own plasticity rate (plain Hebbian steps on the gate head only)")
     ap.add_argument("--gate-int", type=float, default=0.5,
                     help="the diary's gate: weight of its own reward at a symbol it spoke (the belief it had in what it "
                          "chose, 0..1) in the gate's dopamine — the drive to babble; never a lesson on content")

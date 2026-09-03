@@ -1253,6 +1253,22 @@ body pays more per act and babble comes in bouts rather than floods.
 Measured again on the copy before serving; the user's word for the
 split ("do it", 08:00) folds it into the same restart.
 
+**The lesson had to be the striatum's, not a policy gradient (08:20).**
+With the absolute drive and the fatigue-scaled cost, the policy
+gradient failed the other way: after the one smile the gate closed to
+nothing and stayed there, because a smile's dopamine lands on every
+choice in its window and three quarters of those were rests, so the
+smile taught resting, and a closed gate never acts again to learn
+otherwise. The striatum does not credit that way: a burst strengthens
+Go for the context it came in, whatever the body happened to do, and a
+dip strengthens NoGo (D1 and D2, the opponent pathways). Built so: the
+gate's logit moves with the sign of the credit at each tick, plain
+Hebbian steps on unit-norm features (`--gate-lr 0.05`). On the copy it
+held 25 percent acting through twelve hundred ticks, nudged up after
+the smile, drifted down as fatigue passed sixteen; no runaway, no
+collapse. Served at 08:15 with the split; the gate is grafted at load
+with zero weights, so the body wakes into it at its birth rate.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with
@@ -1276,8 +1292,15 @@ python3 scripts/diary.py data/organism_diary_0p5b.pt data/tok_char.json --dev mp
     --live-lr 1e-5 --store-decay 0.9 --save data/organism_diary_0p5b.pt --diary-period 0.5 \
     --diary-cost 0.12 --cort-k 1.0 --value-w 0.5 --wake-ticks 12000 \
     --night-rounds 24 --night-rem 8 --night-sigreg 0.1 --night-starts 48 \
-    --night-opt own --night-batch 1 --night-lr 1e-4 --night-sil-mask 1
+    --night-opt own --night-batch 1 --night-lr 1e-4 --night-sil-mask 1 \
+    --gate 1 --gate-lr 0.05 --gate-int 0.5 --gate-cost 0.12 --gate-fatigue 10 \
+    --gate-every 24 --affect split
 ```
+
+Since day 23 (2026-09-03 08:15): the mouth's go/no-go gate and the
+three feelings (fatigue, stress, mood), both above. The stress lean is
+gone; the silence mask stays harmless (rest is never in the content
+softmax now).
 
 The night's flags since day 21 (2026-09-03, measured on the day-20
 copy, above): sleep's plasticity has its own optimizer state

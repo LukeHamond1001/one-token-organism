@@ -87,7 +87,8 @@ class Diary(O.Organism):
         self.affect_split = str(getattr(a, "affect", "old")) == "split"
         self.stress = 0.0
         self.gate_buf = collections.deque(maxlen=96)     # (feat [d+2] cpu, acted, dopamine at that tick)
-        self.opt_gate = torch.optim.Adam(self.m.mouth_gate.parameters(), lr=float(getattr(a, "gate_lr", 1e-3))) \
+        # the striatum's rule is local and plain: Hebbian steps (SGD) on normalized features
+        self.opt_gate = torch.optim.SGD(self.m.mouth_gate.parameters(), lr=float(getattr(a, "gate_lr", 0.05))) \
             if self.gate_on else None
         self._gate_p = None
         self._gate_last = None
@@ -102,7 +103,7 @@ class Diary(O.Organism):
             f = torch.zeros(self.m.d, device=self.dev)
         else:
             with torch.no_grad():
-                f = self.m.lnf(C[0, -1].float().detach()).to(self.dev)
+                f = self.m.lnf(C[0, -1].float().detach()).to(self.dev) / math.sqrt(float(self.m.d))   # unit norm
         io = torch.tensor([self.cortisol / 10.0, self.mood / 6.0, self.stress / 10.0], device=self.dev, dtype=f.dtype)
         return torch.cat([f, io]).detach()
 
@@ -132,10 +133,13 @@ class Diary(O.Organism):
             G[t] = g
         if float(G.abs().max()) < 1e-4:
             return
+        # THE OPPONENT RULE (D1/D2): a burst strengthens Go for the context it came in, whatever
+        # the body happened to do; a dip strengthens NoGo. The gate's logit moves with the sign
+        # of the credit at each tick (a policy gradient instead credited the rests that filled a
+        # smile's window and closed the gate for good: measured 2026-09-03 08:20)
         self.m.mouth_gate.train()
         z = self.m.mouth_gate(feats).squeeze(-1)
-        logp = -torch.nn.functional.binary_cross_entropy_with_logits(z, acts, reduction="none")   # log pi(a_t)
-        loss = -(G.detach() * logp).mean()
+        loss = -(G.detach() * z).mean()
         self.opt_gate.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.m.mouth_gate.parameters(), 1.0)
