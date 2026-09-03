@@ -19,7 +19,11 @@ def fresh(path, tok, mem_on):
     life = Life.load(path, tok, device="cpu", save_path=None)
     life.save_path = None
     if not mem_on:
+        # THE CORTEX ALONE: no hippocampus at all. Emptied only at load, the store took the cue's own
+        # symbols as memories while the cue was typed and then echoed the cue's last word: the
+        # 'alone' column's loops ("will will will", runs 17 to 22) were that, not the cortex.
         life.store.K = life.store.K[:0]; life.store.V = life.store.V[:0]; life.store.S = life.store.S[:0]; life.store.W = life.store.W[:0]
+        life.cfg["store_off"] = True
     life.cfg["wake_ticks"] = 10 ** 9
     life.cfg["wake_every"] = 10 ** 9; life.cfg["gate_every"] = 10 ** 9   # no lessons during a probe
     return life

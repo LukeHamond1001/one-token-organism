@@ -102,6 +102,8 @@ class Life:
             if who == 0 and x != self.sil:
                 self.heard *= float(self.cfg["heard_decay"]); self.heard[x] += 1.0
             # the hippocampus: write what came next under the context before it
+            if self.cfg.get("store_off"):
+                learn_store = False                              # an instrument: the cortex alone, no hippocampus
             if learn_store and who == 0 and x != self.sil and self.key.norm() > 1e-6:
                 self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
             # the context moves on: both bags fade with time (a pause ends a context, as working memory
@@ -119,17 +121,31 @@ class Life:
                     self.bag_o = torch.zeros_like(self.bag_o); self.n_own = 0
                 else:
                     self.bag_o = m.shift(self.bag_o) + ex; self.n_own += 1
-            read, conf, _ = self.store.read(self.bag)
+            read, conf, _ = (self.store.read(self.bag) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
             self._read = read                                  # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
-            if who == 0 or not self.win:
-                # the world's half opens the tick's position (its own half, arriving first only in an
-                # instrument, opens one with the world quiet)
-                self.win.append({"x": int(x) if who == 0 else self.sil, "xo": int(x) if who == 1 else self.sil,
-                                 "face": face, "bundle": self.bands.clone(), "read": read.clone(), "r": float(r)})
+            # THE TICK'S POSITION. The world's symbol opens it. The world's quiet opens nothing yet: the
+            # forecast the mouth reads is then the one made at the last filled position, the one
+            # holding its own last symbol, which is trained to foresee what follows that symbol. (Read
+            # at a freshly appended rest, the forecast was of what follows a pause, and alone the mouth
+            # looped on the cue's last word: runs 20 to 22.) Its own half then fills the open position
+            # or, the world quiet, opens one of its own; a tick with nothing sounded leaves a rest.
+            entry = {"face": face, "bundle": self.bands.clone(), "read": read.clone(), "r": float(r)}
+            if who == 0:
+                if x != self.sil or not self.win:
+                    self.win.append({"x": int(x), "xo": self.sil, **entry}); self._pos_open = True
+                else:
+                    self._pos_open = False
             else:
-                self.win[-1]["xo"] = int(x)                    # its own sound joins the same time step
-            C = self._stream_now()
+                if getattr(self, "_pos_open", False):
+                    self.win[-1]["xo"] = int(x)                # its own sound joins the world's time step
+                else:
+                    self.win.append({"x": self.sil, "xo": int(x), **entry})
+                self._pos_open = False
+            if who == 0 and not self._pos_open and getattr(self, "_C_last", None) is not None:
+                C = self._C_last                               # the last filled position's stream, and its forecast
+            else:
+                C = self._stream_now()
             self.bands = m.band_update(self.bands, C)
             self._C_last = C
             pred = m.forecast(C, read)
@@ -371,12 +387,7 @@ class Life:
         m = self.m; m.train()
         try:
             self.opt_day.zero_grad(set_to_none=True)
-            # THE LESSON HEARS THE WORLD ONLY (corollary discharge: no learning from self-produced
-            # sound). Its own symbols in the lesson's inputs, never predictive of the world's next
-            # symbol, taught the cortex to ignore its own voice, and alone it could not chain its own
-            # speech (run 20, day 15). Unlearned about, its own "g" is heard as the world's "g".
-            xos_none = torch.full_like(whos, self.sil)
-            u = m.inputs(xs, xos_none, faces, bundles, reads)
+            u = m.inputs(xs, whos, faces, bundles, reads)     # the window as lived: its own sound in it, attenuated
             C = m.stream(u)
             # the cortex is trained on ITS OWN forecast, day and night alike (predictive coding: each
             # area learns from its own error); recall is a parallel contribution the mouth reads, never
