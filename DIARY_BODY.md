@@ -1503,6 +1503,25 @@ python3 scripts/diary.py data/organism_diary_0p5b.pt data/tok_char.json --dev mp
     --cortex latent --read-sharp 10 --rem-generate 1 --rem-steps 8
 ```
 
+## The second body (2026-09-03, from scratch)
+
+The user's word at 10:15: "stop what we are doing now and start from
+scratch." The first lineage is archived (`data/organism_diary_0p5b.pt`
+and its night backups, never to be overwritten). The second body is
+built from BODY_SPEC.md in `body/`: 6.5 million parameters, born at
+10:27 as `data/body2.pt`, served on port 8018 at four ticks a second (a
+day of 12,000 ticks is fifty minutes; a night about a minute). Nine
+organ tests pass in four seconds (`python3 -m body.tests.test_organs`).
+Two lessons the tests taught at birth: the striatum learns from the
+error against a baseline (a constant cost had closed the gate), and a
+recalled memory must tire or dreams loop. The feelings recover on the
+body's own clock (half-lives in ticks). Days are given by the raw
+caregiver as a script (`body/caregiver.py`: page-only rules, a line or
+cue every sixty seconds, smiles within three seconds) while the agent
+API is unreliable; agent caregivers can take over on the same protocol.
+Probes between days: `python3 -m body.probe data/body2.pt`. The day
+log: `data/body2_caregiver.jsonl`.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with
