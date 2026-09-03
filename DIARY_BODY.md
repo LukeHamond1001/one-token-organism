@@ -1981,3 +1981,22 @@ page ("dog will go", "book then ball", "milk then ball", "ball under", "dog up? 
 "because" once as "cared ball"), and the second night 0.52 to 0.86 with 210 slots kept.
 Run 23 at day 15, with the store: 44 of 48 in full; the cortex's trace 59 of 82, where
 run 21 had 61 at the same day.
+
+## Run 23, twenty days (2026-09-03, night)
+
+The settled recipe with the mouth's read at the last filled position. Twenty nights held
+(0.73 to 0.89), gate 0.47 to 0.56, cues completed daily. Day 20: with the store, 47 of 48
+cues started and 43 in full; the cortex's next-symbol trace 61 of 82, the plateau run 21
+reached; the cortex alone, no hippocampus, opens "dog will " with "go" and "big dog
+bigger " with "big dog dog" and little else, where run 21's cortex alone at the same day
+completed five of eight. The honest range for the cortex alone at day 20 is one to five
+cues of eight, varying by run, on a next-symbol accuracy of three quarters that does not
+vary. The read fix did no harm and stays; the served body took it at its day-3 boundary.
+
+What is settled tonight: grounded reward at two timescales (the face's dopamine on the
+gate, the PFC ladder's values on its clocks), a hippocampus that stores the world's
+sequences under the world's context and completes them through the efference copy, a
+cortex that consolidates them at night and holds them awake, a mouth that speaks in
+bouts, and no rule anywhere that authors a word. What is not: generalization beyond the
+twenty-two lines, and a cortex that carries its own speech as reliably as the
+hippocampus does. Those are the next measurements, not the next guesses.
