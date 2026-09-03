@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=0.3, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
-    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=10.0, sharp_base=5.0, sharp_gain=5.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
@@ -366,8 +366,9 @@ class Life:
                 s_floor = float(self.cfg["store_floor_rel"]) * float(self.store.S.mean())
                 for _ in range(int(self.cfg["dream_max"])):
                     pred, conf, win = self.store.read(bag, adapt=adapt)
-                    if conf < floor or (win >= 0 and float(self.store.S[win] * adapt[win]) < s_floor):
-                        break                                             # unsure, or the memory is exhausted
+                    if conf < floor or (win >= 0 and (float(self.store.S[win] * adapt[win]) < s_floor
+                                                      or float(adapt[win]) < float(self.cfg["dream_exhaust"]))):
+                        break                                             # unsure, or the memory is exhausted (a slot fires at most twice)
                     lg = self.m.readout(pred).clone(); lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
                     nid = int(lg.argmax())
                     ids.append(nid)

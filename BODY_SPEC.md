@@ -134,8 +134,9 @@ own-reward weight 0.5, tonic drive 0.25, vigor weight 1.0, credit baseline 0.9 p
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
-recall is unsure or the recalled memory's adapted strength falls below the
-store's forget floor: a cycle exhausts itself) · readout sharpness 5 + 5 × mood/6 (decisiveness from tonic dopamine) ·
+recall is unsure, or the recalled memory's adapted strength falls below the
+store's forget floor, or the memory has fired to a tenth of itself (a slot
+fires at most twice in a dream): a cycle exhausts itself) · readout sharpness 5 + 5 × mood/6 (decisiveness from tonic dopamine) ·
 band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 
 ## 5b. Mathematics (the user: "not only biology, also your math")
