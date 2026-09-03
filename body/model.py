@@ -54,8 +54,11 @@ class Store:
         adapt [n] (optional) multiplies strengths: the recall adaptation a dream runs under"""
         if self.n() == 0:
             return torch.zeros(self.d, device=self.dev), 0.0, -1
-        qn = F.normalize(q.to(self.dev).float(), dim=0)
-        sims = self.K @ qn                                              # [n]
+        # A DOT PRODUCT, not a cosine: the keys are unit directions, the query is the context as it is,
+        # so its norm is the inverse temperature of the recall. Normalised, a context faded to nothing
+        # (norm 0.01 after 24 quiet ticks) still recalled at confidence 0.87, its faint tail amplified
+        # into a full direction, and the mouth chained across lines through the pauses (run 17).
+        sims = self.K @ q.to(self.dev).float()                          # [n]
         S = self.S if adapt is None else self.S * adapt
         # RECALL BY CONTENT: the match decides; strength decides how long a memory lasts and which are
         # replayed (with it in the read, the most-reinforced memory won every cue: measured 2026-09-03)
@@ -109,12 +112,12 @@ class Store:
         return dropped
 
     @torch.no_grad()
-    def self_confidence(self):
+    def self_confidence(self, qnorm=1.0):
         """the store's own mean read confidence, querying each slot with its own key (the reference
         a dream is judged against: it stops when recall is half as sure as a memory of its own)"""
         if self.n() == 0:
             return 0.0
-        logits = (self.K @ self.K.t()) / self.temp
+        logits = (float(qnorm) * self.K @ self.K.t()) / self.temp     # each slot read by its own key at a full context's norm
         w = torch.softmax(logits, 1)
         return float((w @ self.V).norm(dim=1).mean())
 
@@ -168,6 +171,12 @@ class Organs(nn.Module):
         self.who_emb = nn.Embedding(2, d)                 # (unused since the two-bag key; kept for old bodies' files)
         nn.init.normal_(self.who_emb.weight, std=0.3 / math.sqrt(d))
         self.sil_id = None                                # set by Life: the rest symbol
+        # THE LAG CODE of the hippocampal context: a fixed permutation of the dimensions. Each symbol
+        # shifts the whole context through it before entering at lag 0, so "l" at lag 0 and "l" at lag 1
+        # are different directions (theta sequence coding; the mathematics of holographic reduced
+        # representations). A bag was blind to order and count: after its own "ball" it recalled the
+        # "bal" key at 0.976 against the "ball" key at 0.962 and stuttered the l (run 18, day 1).
+        self.register_buffer("perm", torch.randperm(d))
         self.own_gain = 0.5                               # corollary discharge on its own sound in the stream
         self.face_in = nn.Linear(2, d)                    # the caregiver's face and its change, as a sense
         nn.init.zeros_(self.face_in.weight); nn.init.zeros_(self.face_in.bias)
@@ -220,6 +229,10 @@ class Organs(nn.Module):
             own = (xos != self.sil_id).to(u.dtype).unsqueeze(-1)
             u = u + float(self.own_gain) * own * self.E(xos)
         return self.in_ln(u)
+
+    def shift(self, v):
+        """the context one lag older: v permuted (the last dimension)"""
+        return v.index_select(-1, self.perm)
 
     def forecast(self, C, reads, conf=1.0):
         """what the mouth reads: the cortex's own forecast (the conditional mean, its norm its certainty)

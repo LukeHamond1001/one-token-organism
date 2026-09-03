@@ -43,7 +43,7 @@ class Life:
         # summed into the memory key; a pause moves neither. Decayed per tick, the babble between the
         # world's symbols shifted the world's weights in every key (collision test at own weight 0.6).
         self.bag_w = torch.zeros(d, device=device)
-        self.bag_o = torch.zeros(d, device=device)
+        self.bag_o = torch.zeros(d, device=device); self.n_own = 0
         self.win = collections.deque(maxlen=W)            # per tick: dict(x the world's, xo its own, face, bundle, read, r)
         self.pred_prev = None                              # the forecast made at the last step (surprise)
         self.v_prev = None                                 # V_b of the previous tick's states
@@ -113,9 +113,12 @@ class Life:
                 self.bag_o = float(self.cfg["bag_decay"]) * self.bag_o
             if x != self.sil:
                 if who == 0:
-                    self.bag_w = self.bag_w + ex
+                    # a world symbol: the world's context shifts a lag and takes it; what it said since
+                    # the last world symbol leaves the query (it is not in any key)
+                    self.bag_w = m.shift(self.bag_w) + ex
+                    self.bag_o = torch.zeros_like(self.bag_o); self.n_own = 0
                 else:
-                    self.bag_o = self.bag_o + ex
+                    self.bag_o = m.shift(self.bag_o) + ex; self.n_own += 1
             read, conf, _ = self.store.read(self.bag)
             self._read = read                                  # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
@@ -135,9 +138,14 @@ class Life:
 
     @property
     def bag(self):
-        """the read query: the world's context plus the efference copy of what it just said (the plan
-        is known to the sequencing system in full; it is the hearing of it that is suppressed)"""
-        return self.bag_w + float(self.cfg["bag_own_weight"]) * self.bag_o
+        """the read query: the world's context, shifted by as many lags as it has said since, plus the
+        efference copy of what it said (the plan is known to the sequencing system in full; it is the
+        hearing of it that is suppressed): the query after its own "b" is the key the world's "b"
+        would have made"""
+        w = self.bag_w
+        for _ in range(min(int(self.n_own), 64)):
+            w = self.m.shift(w)
+        return w + float(self.cfg["bag_own_weight"]) * self.bag_o
 
     @property
     def key(self):
@@ -388,7 +396,7 @@ class Life:
         is half as sure as a memory of its own (relative to the store, not a constant)"""
         n = int(self.cfg["night_starts"] if n is None else n)
         starts = self.store.sample_starts(n, gen=self.gen)
-        ref = self.store.self_confidence()
+        d_ = float(self.cfg["bag_decay"]); ref = self.store.self_confidence(qnorm=(1.0 / (1.0 - d_ * d_)) ** 0.5)   # a full context's norm
         floor = float(self.cfg["dream_floor_rel"]) * ref
         out = []
         a_hit, a_rec = float(self.cfg["dream_adapt"]), float(self.cfg["dream_recover"])
@@ -412,7 +420,7 @@ class Life:
                     adapt = adapt * (1.0 - (1.0 - a_hit) * self.store._last_w)
                     if win >= 0:
                         adapt[win] *= a_hit
-                    bag = float(self.cfg["bag_decay"]) * bag + self.m.E.weight[nid]
+                    bag = float(self.cfg["bag_decay"]) * self.m.shift(bag) + self.m.E.weight[nid]
                 if len(ids) >= 2:
                     out.append(ids)
         return out
@@ -425,7 +433,7 @@ class Life:
         xos = torch.full((len(xs),), self.sil, dtype=torch.long, device=self.dev)   # a dream: no own sound
         with torch.no_grad():
             for x in xs:
-                bag = float(self.cfg["bag_decay"]) * bag + (m.E.weight[x] if x != self.sil else 0.0)
+                bag = float(self.cfg["bag_decay"]) * (m.shift(bag) if x != self.sil else bag) + (m.E.weight[x] if x != self.sil else 0.0)
                 rd = self.store.read(bag)[0] if mem_on else torch.zeros(m.d, device=self.dev)
                 reads.append(rd); bundles.append(bands.clone())
                 n = len(reads)
@@ -520,7 +528,7 @@ class Life:
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n()
-            self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.win.clear(); self.pred_prev = None
+            self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._bands_pp = None; self._C_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None
             self.fatigue = 0.0
@@ -553,7 +561,7 @@ class Life:
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
                     xs.append(int(lg.argmax()))
             with torch.no_grad():
-                bag = float(self.cfg["bag_decay"]) * bag + (m.E.weight[xs[step]] if xs[step] != self.sil else 0.0)
+                bag = float(self.cfg["bag_decay"]) * (m.shift(bag) if xs[step] != self.sil else bag) + (m.E.weight[xs[step]] if xs[step] != self.sil else 0.0)
             reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
             n = step + 1
             u = m.inputs(torch.tensor(xs[:n], device=self.dev), torch.full((n,), self.sil, dtype=torch.long, device=self.dev),
@@ -627,7 +635,9 @@ class Life:
         blob = torch.load(path, map_location="cpu", weights_only=False)
         a = blob["arch"]
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]))
-        organs.load_state_dict(blob["organs"])
+        missing = organs.load_state_dict(blob["organs"], strict=False)
+        if missing.missing_keys:
+            print("load: organs without", missing.missing_keys, "(an older recipe; born fresh where missing)")
         c = dict(blob.get("cfg") or {}); c.update(cfg or {})
         life = cls(organs, tok, cfg=c, device=device, seed=seed, save_path=save_path or path)
         life.store.load_state_dict(blob["store"])

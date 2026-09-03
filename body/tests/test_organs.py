@@ -47,7 +47,7 @@ def test_store_recalls():
     # the cue: the context 'give ' should recall 'm'
     life.bag_w.zero_(); life.bag_o.zero_()
     for ch in "give ":
-        life.bag_w = life.cfg["bag_decay"] * life.bag_w + life.m.E.weight[TOK.token_to_id(ch)]
+        life.bag_w = life.cfg["bag_decay"] * life.m.shift(life.bag_w) + life.m.E.weight[TOK.token_to_id(ch)]
     pred, conf, _ = life.store.read(life.bag)
     top = TOK.decode([life.m.nearest(pred)])
     assert top == "m", f"the store recalled {top!r} after 'give ', not 'm'"
@@ -79,7 +79,11 @@ def test_recall_is_by_content():
     assert got["give "][0] == "m", f"'give ' recalled {got['give ']}"
     print("2b recall is by content:", {k: (v[0], round(v[1], 2)) for k, v in got.items()})
     # continuation: with its own first letter in the query (the efference copy), the store recalls the
-    # second letter, not the first again
+    # second letter, not the first again. The mouth is held quiet here: the instrument says the first
+    # letter, and under the lag code "g g" is not "g"
+    with torch.no_grad():
+        life.m.mouth_gate.bias.fill_(-30.0)
+    life.cfg["gate_floor"] = 0.0
     seq = {}
     for cue, first, second in (("dog will ", "g", "o"), ("give ", "m", "i"), ("ball ", "o", "n")):
         life.type_text(cue)
