@@ -147,7 +147,7 @@ recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
 recall is unsure, or the recalled memory's adapted strength falls below the
 store's forget floor, or the memory has fired to a tenth of itself (a slot
-fires at most twice in a dream): a cycle exhausts itself) · readout sharpness 10 + 10 × mood/6 on the dot product forecast · lexicon (decisiveness from tonic dopamine; a sure forecast of norm 1 beats the heard prior's largest log-gap, an unsure one of small norm lets the prior babble) ·
+fires at most twice in a dream): a cycle exhausts itself) · readout sharpness 25 + 25 × mood/6 on the dot product forecast · lexicon, no prior (decisiveness from tonic dopamine; the lexicon's pairwise cosines of about 0.06 set the floor: at 25 a symbol at probability 0.5 outweighs fifty strangers at their noise) ·
 band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 
 ## 5b. Mathematics (the user: "not only biology, also your math")
@@ -189,10 +189,22 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   nothing, so at the mouth a flat forecast and a sure one weighed the same and
   the prior's commonest letter ('l') won every tie (run 14). Trained by squared
   error to unit targets, the forecast is the conditional mean of the next
-  embedding: norm 1 when one symbol follows, small when many can. The mouth
-  reads sharpness × (forecast · E) + log prior, the forecast being the cortex's
-  mean plus the recall's unit direction times its confidence: two calibrated
-  votes, and their agreement is sharp because the readout is a dot product.
+  embedding: norm 1 when one symbol follows, small when many can, and
+  forecast · E_k is its probability of symbol k. The mouth reads
+  sharpness × (forecast · E), the forecast being the cortex's mean plus the
+  recall: two calibrated votes, and their agreement is sharp because the
+  readout is a dot product. No prior is added: the unconditional mean is
+  already the heard distribution, and a separate log prior counted it twice
+  (with it the space, the commonest symbol, won every flat context: run 15).
+- **The recall's confidence.** The store's read is the attended mean of unit
+  values, and its norm is the agreement among the memories attended. The
+  largest attention weight is not: once the key carried its own bag, duplicate
+  slots of one line no longer merged and split the mass eight ways at 0.11,
+  every one of them saying the same letter (run 15, day 5). The store's own
+  reference (the dream floor) is the same norm, each slot read by its own key.
+- **Born unsure.** The forecast head starts near zero (weights at 4e-4), a
+  forecast of norm about 0.1: the mouth babbles noise until the first lessons,
+  rather than one deterministic junk symbol from an init of norm 4 to 9.
 - **SIGReg placement.** The next-symbol forecast must hit discrete fixed
   targets; regularizing it toward a Gaussian fights the lesson. The collapse
   risk is in the bundle forecast, where prediction and target both derive

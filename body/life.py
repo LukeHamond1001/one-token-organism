@@ -18,7 +18,7 @@ PHYSIOLOGY = dict(
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
-    read_sharp=10.0, sharp_base=10.0, sharp_gain=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
+    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
 )
 
@@ -119,7 +119,7 @@ class Life:
             C = self._stream_now()
             self.bands = m.band_update(self.bands, C)
             self._C_last = C
-            pred = m.forecast(C, read, conf=conf)
+            pred = m.forecast(C, read)
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
 
@@ -209,8 +209,7 @@ class Life:
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
-            prior = self.heard / self.heard.sum().clamp(min=1.0)
-            logits = m.readout(pred1, prior=prior).clone(); logits[self.bans] = float("-inf"); logits[self.sil] = float("-inf")
+            logits = m.readout(pred1).clone(); logits[self.bans] = float("-inf"); logits[self.sil] = float("-inf")
             probs = torch.softmax(logits, -1)
             ent = float(-(probs * (probs + 1e-9).log()).sum() / math.log(probs.numel()))
             if acted:

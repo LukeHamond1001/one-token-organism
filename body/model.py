@@ -50,7 +50,7 @@ class Store:
 
     @torch.no_grad()
     def read(self, q, adapt=None):
-        """q [d] -> (predicted next embedding [d] (unit) or zeros, confidence in 0..1, winner index);
+        """q [d] -> (the recalled next embedding [d], its norm the confidence in 0..1, winner index);
         adapt [n] (optional) multiplies strengths: the recall adaptation a dream runs under"""
         if self.n() == 0:
             return torch.zeros(self.d, device=self.dev), 0.0, -1
@@ -63,9 +63,12 @@ class Store:
         if self.read_strength > 0 or adapt is not None:
             logits = logits + (self.read_strength if adapt is None else 1.0) * torch.log(S + 1e-6) * (1.0 if adapt is not None else 1.0)
         w = torch.softmax(logits, 0)
-        pred = F.normalize(w @ self.V, dim=0)
+        # the recall is the attended mean of unit values: its norm is the agreement among the memories
+        # attended, the calibrated confidence (the largest weight understated it once duplicate slots
+        # that no longer merge split the mass eight ways at conf 0.11, all of them saying 'g': run 15)
+        pred = w @ self.V
         self._last_w = w
-        return pred, float(w.max()), int(w.argmax())
+        return pred, float(pred.norm()), int(w.argmax())
 
     @torch.no_grad()
     def write(self, k, v, strength, who, merge_cos=0.97):
@@ -107,9 +110,9 @@ class Store:
         a dream is judged against: it stops when recall is half as sure as a memory of its own)"""
         if self.n() == 0:
             return 0.0
-        logits = (self.K @ self.K.t()) / self.temp + torch.log(self.S + 1e-6).unsqueeze(0)
+        logits = (self.K @ self.K.t()) / self.temp
         w = torch.softmax(logits, 1)
-        return float(w.max(1).values.mean())
+        return float((w @ self.V).norm(dim=1).mean())
 
     @torch.no_grad()
     def sample_starts(self, n, gen=None):
@@ -175,6 +178,9 @@ class Organs(nn.Module):
         self.lnf = nn.LayerNorm(d)
         # its forecasts: the next embedding it will receive, and the next bundle
         self.latent_pred = nn.Linear(d, d)
+        # born unsure: a forecast of norm about 0.1 (the default init gave norm 4 to 9 of pure noise,
+        # a deterministic junk symbol at the mouth until the first lessons shrank it)
+        nn.init.normal_(self.latent_pred.weight, std=4e-4); nn.init.zeros_(self.latent_pred.bias)
         self.pfc_pred = nn.ModuleList([nn.Linear(d, d) for _ in range(nb)])
         # THE PFC LADDER: leaky integrators of the stream at each clock, each with a learned input
         # map, a Go/NoGo gate on its own update, and a value head (the critic at that timescale)
@@ -207,17 +213,12 @@ class Organs(nn.Module):
         return self.in_ln(u)
 
     def forecast(self, C, reads, conf=1.0):
-        """what the mouth reads: the cortex's own forecast (its norm its certainty) plus the hippocampus's
-        recall as a unit direction through its pathway, weighted by the recall's confidence. Two
-        calibrated votes; agreement adds, and the readout's dot product makes agreement sharp. Recall is NOT an input to the stream (entered there it looked like the
+        """what the mouth reads: the cortex's own forecast (the conditional mean, its norm its certainty)
+        plus the hippocampus's recall through its pathway (the attended mean of memories, its norm
+        their agreement). Two calibrated votes; agreement adds, and the readout's dot product makes
+        agreement sharp. Recall is NOT an input to the stream (entered there it looked like the
         current symbol and the trunk advanced it a step); the night trains the cortex with recall off."""
-        own = self.latent_pred(C)                             # calibrated: its norm is its certainty
-        rec = self.store_in(reads)
-        rn = rec.norm(dim=-1, keepdim=True)
-        rec = torch.where(rn > 1e-6, rec / rn.clamp(min=1e-6), rec)
-        if torch.is_tensor(conf):
-            conf = conf.to(rec.dtype).unsqueeze(-1) if conf.dim() == 1 else conf
-        return own + float(conf) * rec if not torch.is_tensor(conf) else own + conf * rec
+        return self.latent_pred(C) + self.store_in(reads)     # both calibrated: each norm its certainty
 
     def stream(self, u):
         """u [T, d] -> C [T, d], the cortex stream (causal over the window)"""
@@ -229,15 +230,15 @@ class Organs(nn.Module):
         return self.lnf(x[0])
 
     def readout(self, pred, prior=None):
-        """the lexicon read: logits [.., vocab] = sharpness x (pred . E) + log prior. The forecast is the
-        conditional mean of the next unit embedding (trained by squared error), so its norm is its
-        certainty: a sure forecast overrides the prior, an unsure one lets the prior babble. The prior
-        is the symbols it has heard (perceptual narrowing; Bayes: prior x likelihood)."""
+        """the lexicon read: logits [.., vocab] = sharpness x (pred . E). The forecast is the conditional
+        mean of the next unit embedding (trained by squared error), so pred . E_k is its probability of
+        symbol k, and its norm its certainty: a sure forecast is read decisively, an unsure one babbles
+        the symbols it has heard in their proportions (the unconditional mean IS the heard distribution,
+        so a separate prior counted it twice: with it the commonest symbol, the space, won every flat
+        context on run 15). The pairwise cosines of the lexicon (about 0.06) put a floor on the
+        sharpness: at 25, a symbol at probability 0.5 outweighs fifty strangers at their noise."""
         En = F.normalize(self.E.weight, dim=-1)
-        lg = float(self.read_sharp) * pred @ En.t()          # a dot product: the forecast's norm is its certainty
-        if prior is not None:
-            lg = lg + torch.log(prior + 1e-4).to(lg.dtype)
-        return lg
+        return float(self.read_sharp) * pred @ En.t()
 
     def nearest(self, pred):
         return int(self.readout(pred).argmax(-1))

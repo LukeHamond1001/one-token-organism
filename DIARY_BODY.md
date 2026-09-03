@@ -1655,3 +1655,66 @@ memory's votes, and the trunk's own top symbol with memory set aside (the
 measurement that will show the day the trunk itself begins to propose
 letters). Reflexes it drops: the breath, the hush, the end-is-an-end
 rule, the bag reset (silence fades the bag instead).
+
+## The forecast's norm is its certainty (2026-09-03)
+
+Run 14's day-6 sequence probe: the store's first letters 6/8, the mouth's 1/8, and the
+mouth's wrong answers were all 'l' or 'g'. 'l' does not follow a space in any line the
+body has heard. It is the commonest letter it has heard. The readout adds log(heard
+prior) to sharpness × cosine, and with the cortex trained by one minus the cosine, the
+forecast's norm meant nothing: a flat forecast and a sure one read the same, and the
+prior's commonest letter won every tie. Adding a unit recall to a unit cortex forecast
+does not help either: two directions of equal weight, and the readout normalised the sum.
+
+The mathematics wants calibration. Train the forecast by squared error to the unit
+embedding received and its minimiser is the conditional mean of the next embedding:
+norm 1 when one symbol follows, small when many can. Read the lexicon by the dot
+product, sharpness × (forecast · E) + log prior, sharpness 10 + 10 × mood/6: a sure
+forecast beats the prior's largest log-gap (about 4.6), an unsure one lets the prior
+babble, as a baby babbles its language's sounds. What the mouth reads is the cortex's
+calibrated forecast plus the recall's unit direction times its confidence: two
+calibrated votes, and their agreement is sharp because the readout is a dot product.
+
+The second finding of the same probe: after its own first letter the store kept
+recalling the first letter. Its own symbols entered the key at 0.3 and the key barely
+moved. Raising the weight to 0.6 broke the collision test, and the reason was the real
+pollution mechanism: the bag decayed per tick, so the babble between the world's
+symbols shifted the world's weights in every key by however much it happened to
+babble while listening. The context is now two bags summed into the key: the world's,
+decaying per world symbol (a pause or its own babble leaves the world's context as it
+was), and its own, decaying per tick (its babble fades with time, its last own symbol is
+what remains). Measured on the collision test with a continuation check: own weight
+0.3 to 0.5 keeps every cue's recall, 0.7 loses one, and 0.5 moves the key after its own
+first letter half the time. 0.5 it is.
+
+Ten organ tests pass. Commit ea479e6. Run 15 from birth on this recipe; the day-6
+sequence probe is the test: the mouth's first letter should follow the store's.
+Run 10, the control, finished twenty days with its cues still babble.
+
+## Two calibrations more (2026-09-03, run 15)
+
+Run 15 on the calibrated recipe: milestone 1 two nights earlier than run 7 (gauge 0.52
+after night 4), then day 5 fell to two smiles and the mouth said mostly spaces. The
+day-5 sequence probe: the store right on 5 of 8 first letters at confidence 0.11 to
+0.17, the mouth a space on 6 of 8.
+
+Both are the same kind of error as the last one, a quantity read off the wrong
+measure. The store's confidence was the largest attention weight; with the key now
+carrying its own bag, the eight slots of one line no longer merge (their own-bag
+parts differ), so the mass splits eight ways to 0.11, every slot saying 'g'. The
+recall is the attended mean of unit values, and the norm of that mean is the
+agreement: eight slots saying 'g' give norm 0.98. That is the confidence, and the
+store's own reference for the dream floor is measured the same way.
+
+The space: the readout added log(heard prior) to the forecast's dot products. But a
+forecast trained by squared error to unit targets is the conditional mean, whose dot
+with E_k is the probability of k; the unconditional mean is the heard distribution
+itself. Adding the prior counted frequency twice, and in every flat context the space,
+the commonest symbol, won. The prior is gone; the sharpness rises to 25 + 25 × mood/6
+because the dots are now probabilities, not cosines, and the lexicon's pairwise
+cosines of 0.06 need a symbol at probability 0.5 to outweigh fifty strangers at their
+noise. The forecast head is born near zero (norm 0.1): the default init gave a norm of
+4 to 9 of pure noise, one deterministic junk symbol until the first lessons.
+
+Ten tests pass; the tiny body's night now moves its gauge 0.13 to 0.65 where the
+cosine-trained tiny body's did not move at all. Run 16 from birth.

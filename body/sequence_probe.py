@@ -24,8 +24,7 @@ def quiet_life(path, tok):
 
 
 def forecast(L, p):
-    prior = L.heard / L.heard.sum().clamp(min=1.0)
-    lg = L.m.readout(p, prior=prior).clone(); lg[L.bans] = float("-inf"); lg[L.sil] = float("-inf")
+    lg = L.m.readout(p).clone(); lg[L.bans] = float("-inf"); lg[L.sil] = float("-inf")
     return L.tok.decode([int(lg.argmax())])
 
 
@@ -40,7 +39,7 @@ def main():
             L.tick()
         # the forecast made as the cue's last symbol entered (what the mouth reads)
         with torch.no_grad():
-            C = L._stream_now(); rd, cf, _ = L.store.read(L.bag); p0 = m.forecast(C, rd, conf=cf)
+            C = L._stream_now(); rd, cf, _ = L.store.read(L.bag); p0 = m.forecast(C, rd)
         c0 = forecast(L, p0); n0 = float(m.latent_pred(C).norm())          # the cortex's certainty
         pred, conf, _ = L.store.read(L.bag); s0 = tok.decode([m.nearest(pred)])
         # its own first letter of the answer enters, then the forecast again
