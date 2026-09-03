@@ -1269,6 +1269,152 @@ the smile, drifted down as fatigue passed sixteen; no runaway, no
 collapse. Served at 08:15 with the split; the gate is grafted at load
 with zero weights, so the body wakes into it at its birth rate.
 
+## The review (2026-09-03, the user's request: "any other changes? complete review")
+
+Read against the user's law: one system that creates reward and
+receives it at short and long timescales; no hand-written rule that
+decides behaviour or content for the body; physiology disclosed;
+organs that learn; a raw environment. Two passes: the live code path
+(every constant and rule active for this body) and biology (what the
+body has, what it lacks). The Opus audit agent was knocked out twice
+by API overloads, so the code pass is the supervisor's own reading.
+
+**The live path, inventoried.** What runs for this body on a tick, at a
+dose, at night, and what does not:
+
+- **The cortex** (29 ScanBlocks, d 1024, PFC-first: the council
+  deliberates on the raw symbol, the trunk decodes the bundles). Learns
+  at night (NREM cross-entropy on traces, batched, own optimizer, rate
+  1e-4, 24 rounds, rest masked; REM forecast of the band states, one
+  batched step, SIGReg 0.1) and at doses (rate 1e-5, credit-scaled,
+  blame to three nats, content only). ORGAN. The head takes most of the
+  gradient; the deep trunk wakes slowly. Nothing to change; instrument.
+- **The routing organ** (route mode, `route_cap` 0.125, `ponder_aux`
+  0.5): about one symbol in eight gets an extra council cycle and a
+  deeper decode, the threshold self-tuned as a running quantile, the
+  deep logits trained at half weight. ORGAN, learned; active; not
+  previously disclosed here. Biology: variable deliberation. Keep.
+- **The planner and imagination** (`plan_cand` 4, `imag_k` 4): four
+  candidate plans gated by a learned softmax, rolled four steps forward
+  and mixed into the cortex stream through two zero-initialized gates,
+  trained by a foresight loss (cosine to the future stream at fixed
+  horizons) whenever the body trains. ORGAN, active in every forward,
+  its gates still near zero; not previously disclosed here; the cost is
+  compute. Biology: prospection. It overlaps REM's forecast organ
+  (`pfc_pred`); one of the two is redundant. Candidate: measure the
+  gates and the foresight fidelity; retire whichever does not learn.
+- **The hippocampus** (content-keyed store, RFF lift, delta rule; keys =
+  the bag of the last eight symbols with decay 0.7 and the speaker
+  sense; values = the next symbol; writes amortized every four forwards
+  with the pending symbols buffered, none lost). Write strength:
+  bookkeeping marks never stored (`kc_skip` 11, PLUMBING); the write
+  gated by surprise against its running mean (`write_surprise` 1.0,
+  PHYSIOLOGY: novelty encodes); the mouth's own symbols carry zero
+  surprise (corollary discharge, PHYSIOLOGY); dopamine and the body's
+  own prediction success multiply the write (`dopamine` 1.0,
+  `intrinsic_w` 0.5, PHYSIOLOGY: salience). The store fades 0.9 a night
+  (PHYSIOLOGY). Its read reaches the mouth two ways: a learned council
+  slot (`store_in`, ORGAN) and a direct vote added to the logits at the
+  organ's own strength (`store_boost` 1, `read_beta` 0). The direct vote
+  is the one shortcut here: biology's hippocampus drives cortex, not the
+  mouth. Candidate, later: retire it once the cortex listens (measure
+  cue completion with and without it).
+- **The night's selection** (`_dream_starts`: the store's strongest key
+  directions by low-rank SVD, 48 starts, 40 Adam steps at 0.05 to find
+  each key's preimage; `_dream_trace`: winner-take-all with neural
+  adaptation 0.5 per repeat recovering by 0.7, stop floor
+  `store_boost_min` 0.15). PHYSIOLOGY and PLUMBING; disclosed. The stop
+  floor is the one number that decides how long a dream runs; a
+  learned or relative floor (the vote against the store's own mean)
+  would remove the constant. Candidate, low priority.
+- **The inherited night** (`Organism.sleep`, written for the earlier
+  bodies): for this body its candidate lists are empty (no taught
+  facts, no study, no conscience file), the pursuit and the retention
+  curve never engage, the page replay is off (`night_no_page`), so no
+  NREM pass of the old kind runs. What still runs: the store decays
+  and the working state resets to a fresh wake (PHYSIOLOGY), the
+  autosave and the night backup (PLUMBING), an empty report card.
+  LEGACY, verified inert except those. Candidate: strip the dead
+  branches from the diary's night for legibility; no behaviour change.
+- **The reward system.** The face enters as press levels (reward table
+  0, +1, +2, -1, -2: PHYSIOLOGY); the fast band's signed prediction
+  error is dopamine; every choice of the last twelve ticks takes it at
+  0.8 per tick (eligibility, PHYSIOLOGY); a burst of at least 0.5 pays
+  a dose (a budget for the backward pass, PLUMBING, disclosed); the
+  lesson is graded by credit, clipped at plus or minus two, blame to
+  three nats (PHYSIOLOGY, disclosed). The value ladder learns TD at
+  every band from lived pairs (32 kept per band) at doses and once a
+  night (`value_w` 0.5); the band gates learn Go/NoGo from the value's
+  error (`bg_w` 0.01); the face organ forecasts the caregiver's face at
+  every tick (`face_lr` 2e-5). ORGANS. Reward created inside: a dose
+  without a face was seen on day 22 (07:29). Nothing here is a rule.
+- **The mouth.** Content sampled at temperature 1 from its belief
+  (bookkeeping marks and the newline barred, PLUMBING); whether to act
+  is the gate's (ORGAN, above), with its own reward at a symbol (the
+  belief it had in its choice, weight 0.5), a cost 0.12 per symbol that
+  grows with fatigue (`/10`), the opponent rule at rate 0.05, a lesson
+  every 24 ticks. PHYSIOLOGY, all disclosed. Temperature 1 is itself a
+  choice; biology's action selection is sharper than the belief, and a
+  learned decisiveness (tonic dopamine, vigor) would be the organ.
+  Candidate, later, once the cortex has beliefs worth sharpening.
+- **The feelings** (split): fatigue up 0.12 a symbol with a two-minute
+  half-life; stress 0.5 per unit of dopamine dip, two-minute half-life;
+  mood 0.25 per unit of dopamine, ten-minute half-life; sleep pressure
+  one per tick, the switch at 12,000. PHYSIOLOGY, disclosed. Stress does
+  nothing yet but inform the gate.
+- **Numerical plumbing.** Atomic saves; night backups (three kept); a
+  non-finite lesson skipped, gradients clipped at one in the night and
+  in the gate, a night that leaves a weight non-finite discarded and the
+  body reloaded; a failed night retried after half a day, not every
+  tick; the night counted before its autosave. One remaining hazard:
+  the serve's memory during the night (a second optimizer, the machine
+  swapping; night 8 took 32 minutes).
+
+**Rules found.** None that decide content or behaviour for the body.
+The three constants closest to the line, each disclosed: the dose
+burst threshold (0.5), the dream stop floor (0.15), and temperature 1.
+
+**Undisclosed before this review, now disclosed:** the routing organ,
+the planner and imagination, the surprise-gated write, the write
+cadence, the reward table, the inherited night's inert branches.
+
+**Biology's side: what the body lacks, ranked.**
+
+1. **REM as generation.** REM forecasts along hippocampal traces; the
+   cortex never runs free. Biology's REM is the cortex generating from
+   memory with the hippocampus decoupled, which is also where the
+   free-running attractor ("a", "u", "r") would be worked on and where
+   old memories would be interleaved as the store fades. Depends on the
+   cortex being able to generate anything but one letter; the nights
+   are now moving it. Build when the trunk-alone probe first gives a
+   frame.
+2. **Stress as a modulator.** Acute stress should raise plasticity and
+   exploration; ours only informs the gate. Candidate: stress scales the
+   dose's rate and the gate's temperature. Measure first.
+3. **Interleaving.** With the store fading 0.9 a night, frames older
+   than about ten days leave the dreams; only the cortex's own
+   generations can supply them (item 1).
+4. **The direct memory vote** on the logits (above): retire once the
+   cortex listens.
+5. **The planner** overlapping REM's forecast organ: keep one.
+6. **Action selection sharper than the belief** (learned decisiveness):
+   later.
+7. **The environment.** The smile is the only contingent response. A
+   parent also answers babble in kind (repeats "ba ba", expands a word
+   into a phrase); the curriculum's expansion covers letter runs only.
+   This is the environment, the user's call.
+
+**Two things measured this morning that bear on the review.** With the
+gate live, the body earned six felt smiles in its first twenty minutes
+of day 23 (four times the previous day's rate) and its mood went
+positive for the first time in three days; and the gate is opening,
+0.25 to 0.45 by 08:44 with fatigue at 16, because its belief in what it
+writes is near one, so the drive outweighs a cost that only doubles at
+fatigue ten. The fatigue-scaled cost bounds it near fatigue thirty.
+Whether that is a healthy babbling bout or a flood is the day's
+question; the weight of the drive (0.5) is the disclosed constant to
+lower if it floods.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with
