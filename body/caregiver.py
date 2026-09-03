@@ -179,9 +179,9 @@ class Caregiver:
             if d is not None and d.get("queued", 0) == 0:
                 break
             time.sleep(0.4)
-        tick_end = (self.state.get("last") or {}).get("tick")
+        tick_end = self.maxtick                            # the page's own tick count (survives a serve restart)
         self.watch(12.4)
-        its = "".join((self.its.get(t) or "_") for t in range((tick_end or 0), (tick_end or 0) + 25) if self.its.get(t) is not None)
+        its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
         self.row({"action": kind, "text": text, "gate_wait_s": round(gw, 1), "its_after": its, "ts": iso(t_start),
                   "fatigue": la.get("fatigue"), "stress": la.get("stress"), "mood": la.get("mood"), "gate": la.get("gate"),
