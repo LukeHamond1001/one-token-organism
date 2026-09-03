@@ -1,5 +1,10 @@
 # BODY_SPEC — the second body, from the first body's lessons
 
+> The user's law (2026-09-03): an architecture with grounded reward, received
+> at short and long timescales, no cheats inside the architecture or the
+> environment; the environment raw; and perfect mathematics and biology to get
+> there. Every change below is checked against this sentence.
+
 Written 2026-09-03 after the first lineage (twenty-three days of THE DIARY on a
 0.5B body from nothing) was stopped on the user's word: "stop what we are doing
 now and start from scratch." Everything below is either PHYSIOLOGY (a constant
