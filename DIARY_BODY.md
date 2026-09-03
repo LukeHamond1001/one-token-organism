@@ -1939,3 +1939,14 @@ the invariance, a wider world, and time. Recorded as the honest state.
 
 The reborn body's first night, 17:49: forty dreams ("dog will go inder dog up", "g dog
 bigger dog up?"), gauge 0.09 before, 0.76 after NREM, 0.76 after REM, 192 slots kept.
+
+## Run 21, twenty days (2026-09-03, night)
+
+The settled recipe's long run is in. Twenty nights, every one of them held (the gauge
+after REM equal to the gauge after NREM, 0.73 on night 1, 0.90 on night 20); the gate
+0.48 to 0.58 every day; 190 to 280 smiles a day. Day 20's probe: the sampled mouth
+started 46 of 48 cues and completed 46 in full, the cortex alone awake 60 of 82 next
+symbols (55 at day 6, 61 at day 15, a plateau near three quarters), "dog will go" at 9
+of 10 and "why dog up? because big dog" at 23 of 26. The unheard cues: still nothing.
+The body is a faithful echo of its world with a cortex that has learned the world's
+sequences and cannot yet use them for its own speech; run 22 is the test of that.
