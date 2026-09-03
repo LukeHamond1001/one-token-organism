@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from .model import Organs, Store, CLOCKS
 
 PHYSIOLOGY = dict(
-    symbol_cost=0.12, fatigue_half_life_s=120.0, stress_half_life_s=120.0, mood_half_life_s=600.0,
+    symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
     bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.5, dream_recover=0.7, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
@@ -68,10 +68,11 @@ class Life:
 
     # ---------------- feelings ----------------
     def _decay_feelings(self):
-        now = time.time(); dt = max(0.0, now - self._t_feel); self._t_feel = now
-        self.fatigue *= 0.5 ** (dt / float(self.cfg["fatigue_half_life_s"]))
-        self.stress *= 0.5 ** (dt / float(self.cfg["stress_half_life_s"]))
-        self.mood *= 0.5 ** (dt / float(self.cfg["mood_half_life_s"]))
+        """feelings recover on the body's own clock (per tick), so its physiology does not change
+        with the speed the serve happens to run at"""
+        self.fatigue *= 0.5 ** (1.0 / float(self.cfg["fatigue_half_life"]))
+        self.stress *= 0.5 ** (1.0 / float(self.cfg["stress_half_life"]))
+        self.mood *= 0.5 ** (1.0 / float(self.cfg["mood_half_life"]))
 
     # ---------------- one step of the body ----------------
     def _step(self, x, who, r=0.0, learn_store=True, dopamine=0.0):

@@ -12,7 +12,7 @@ from body.life import Life  # noqa: E402
 
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 CFG = dict(wake_ticks=400, wake_every=8, gate_every=8, night_rounds=6, night_starts=12, rem_dreams=4, rem_steps=4,
-           fatigue_half_life_s=1e9, stress_half_life_s=1e9, mood_half_life_s=1e9)   # feelings do not decay in the tests
+           fatigue_half_life=1e9, stress_half_life=1e9, mood_half_life=1e9)   # feelings do not decay in the tests
 
 
 def tiny(seed=0, **kw):
