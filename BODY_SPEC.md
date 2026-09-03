@@ -119,7 +119,7 @@ symbol cost 0.12 · fatigue and stress half-life 240 ticks · mood half-life 120
 store forget floor 0.1 × mean strength · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-own-reward weight 0.5, tonic drive 0.15, vigor weight 1.0, credit baseline 0.98, spontaneous-activity floor p(act) ≥ 0.05 (the striatum learns from the
+own-reward weight 0.5, tonic drive 0.25, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
@@ -140,10 +140,19 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   act carries negative credit, so the gate can be driven shut and stay shut
   (fast day 3: p = 0.000). Biology's spontaneous activity never stops: p(act)
   = 0.05 + 0.95 σ(z). The floor is physiology; the learned part sits above it.
+- **Scale of the gate's features (fast day 3, second failure).** The stream
+  C has norm ≈ √d = 16 after LayerNorm; Hebbian steps on it moved the gate's
+  logit by tens per lesson and a stale baseline (0.98 per lesson, ≈ 1,200
+  ticks) kept the credit negative for hundreds of lessons after the night
+  reset fatigue, so vigor drove the gate to its floor with no reward in
+  sight. The feature is C/√d (unit scale), the baseline forgets in ten
+  lessons and resets with the night, and the tonic drive is 0.25 so the
+  no-reward equilibrium is babble, not silence.
 - **Birth economics.** With a flat readout the confidence drive is ≈ 0 and
-  acting pays −cost: cov < 0, silence. A tonic drive w0 = 0.15 > cost 0.12
+  acting pays −cost: cov < 0, silence. A tonic drive w0 = 0.25 > cost 0.12
   makes acting pay when fresh; the fatigue-scaled cost c(f) = 0.12(1 + f/10)
-  sets the equilibrium fatigue f* = 10(w0 + w q)/0.12 − 10 (≈ 5 at birth):
+  sets the equilibrium fatigue f* = 10(w0 + w q)/0.12 − 10 (≈ 12 at birth, an
+  acting rate near 0.3, an infant's babble):
   babble in bouts bounded by fatigue, smiles opening the contexts that earned
   them (cov > 0 there).
 - **The lexicon.** If the embedding table is both input and target of the

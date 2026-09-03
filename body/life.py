@@ -15,8 +15,8 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
     bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
-    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
-    gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.15, gate_vigor=1.0, gate_every=24,
+    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
+    gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
@@ -178,7 +178,8 @@ class Life:
         its_face = float(f_pred.detach())
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
         with torch.no_grad():
-            feat = torch.cat([C1.detach(), torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0], device=self.dev)])
+            feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
+                              torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
@@ -450,7 +451,7 @@ class Life:
             rep["store_slots"] = self.store.n()
             self.bands.zero_(); self.bag.zero_(); self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._bands_pp = None; self._C_prev = None; self._C_last = None; self.v_prev = None
-            self.stream.clear(); self.gate_buf.clear()
+            self.stream.clear(); self.gate_buf.clear(); self._g_base = None
             self.fatigue = 0.0
             self.sleep_pressure = 0
             self.nights += 1; self.day_n += 1
