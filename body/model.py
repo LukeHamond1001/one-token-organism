@@ -197,9 +197,14 @@ class Organs(nn.Module):
 
     # ---- the cortex over a window ----
     def inputs(self, xs, whos, faces, bundles, reads):
-        """xs [T] long, whos [T] long, faces [T, 2], bundles [T, nb, d], reads [T, d] -> u [T, d]"""
-        u = self.E(xs) + self.who_emb(whos) + self.face_in(faces) \
+        """xs [T] long, whos [T] long, faces [T, 2], bundles [T, nb, d], reads [T, d] -> u [T, d].
+        The cortex hears its own symbols as it hears the world's (a sound is a sound): the speaker
+        sense lives in the hippocampal key and the corollary discharge, not in the stream, so what
+        it learned after the world's "d" applies after its own (run 7: runs of one letter otherwise)."""
+        u = self.E(xs) + self.face_in(faces) \
             + self.bundle_in(bundles.reshape(bundles.shape[0], -1)) + self.store_in(reads)
+        if getattr(self, "cortex_who", False):
+            u = u + self.who_emb(whos)
         return self.in_ln(u)
 
     def stream(self, u):
@@ -211,10 +216,15 @@ class Organs(nn.Module):
             x = blk(x, mask)
         return self.lnf(x[0])
 
-    def readout(self, pred):
-        """the lexicon read by cosine: logits [.., vocab] = sharpness x cos(pred, E)"""
+    def readout(self, pred, prior=None):
+        """the lexicon read by cosine: logits [.., vocab] = sharpness x cos(pred, E) + log prior, the
+        prior being the symbols it has heard (perceptual narrowing: the mouth's candidates are the
+        world's sounds; Bayes: prior x likelihood)"""
         En = F.normalize(self.E.weight, dim=-1)
-        return float(self.read_sharp) * F.normalize(pred, dim=-1) @ En.t()
+        lg = float(self.read_sharp) * F.normalize(pred, dim=-1) @ En.t()
+        if prior is not None:
+            lg = lg + torch.log(prior + 1e-4).to(lg.dtype)
+        return lg
 
     def nearest(self, pred):
         return int(self.readout(pred).argmax(-1))

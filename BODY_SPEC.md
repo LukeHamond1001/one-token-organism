@@ -58,8 +58,11 @@ its input maps follow the temporal-difference error taken with both ends
 live, so each band learns to hold what predicts reward at its own horizon
 (dopamine shaping working memory).
 
-**Cortex.** A small transformer over the last W steps of [embedding, speaker,
-face, bundle, hippocampal read] producing the stream C; from C, `latent_pred`
+**Cortex.** A small transformer over the last W steps of [embedding, face,
+bundle, hippocampal read] producing the stream C (no speaker sense in the
+stream: it hears its own symbols as it hears the world's, so what it learned
+after the world's "d" applies after its own; the speaker sense lives in the
+hippocampal key and the corollary discharge); from C, `latent_pred`
 forecasts the next embedding it will receive and `pfc_pred` forecasts the
 next bundle. Its lessons are prediction: one minus the cosine to the
 embedding received (stop-grad), one minus the cosine to the bundle received
@@ -69,8 +72,9 @@ symbols inputs only) and asleep (below). It never learns from reward.
 
 **Mouth.** Whether to act is the basal ganglia's: a gate on [C, fatigue,
 mood, stress] giving p(act); zero weights and a birth bias at birth. What to
-say is the lexicon read by cosine from the forecast, logits = s × cosine,
-sampled. s is decisiveness driven by tonic dopamine: s = 5 + 5 × mood/6
+say is the lexicon read by cosine from the forecast, logits = s × cosine +
+log prior, the prior being a slow tally of the symbols the world has said
+(perceptual narrowing; Bayes), sampled. s is decisiveness driven by tonic dopamine: s = 5 + 5 × mood/6
 (songbirds: vocal variability is high when unrewarded and falls as reward
 comes), so babble is varied at birth and sharpens as smiles arrive. The gate learns by the opponent rule
 (a dopamine burst strengthens Go for the context whatever it did, a dip
@@ -121,7 +125,7 @@ choice, habituating per symbol) minus a cost that grows with fatigue.
 
 symbol cost 0.12 · fatigue and stress half-life 240 ticks · mood half-life 1200 ticks
 · wake switch 12,000 ticks · eligibility 12 × 0.8 · store fade 0.9/night ·
-store forget floor 0.1 × mean strength · night rate 1e-4, rounds 24, REM
+store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps at 1e-5 (a slow PFC, so its states stay forecastable) ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
 own-reward weight 0.5, tonic drive 0.25, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
@@ -192,7 +196,7 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   |eligibility|, about 0.05 × 2 × 2 = 0.2 in logit at the extreme; the night's
   optimizer starts fresh each night so its first steps are ≈ rate in
   magnitude, and every step is clipped at norm 1.
-- **The store's read.** Attention over unit keys at temperature 0.05 with
+- **The store's read.** Attention over unit keys at temperature 0.02 (measured on run 7's body: 7 of 8 cues right at 0.02–0.03, diffuse at 0.05) with
   log-strength bias: for the right key (cos ≈ 1) against a near context
   (cos ≈ 0.5) the logit gap is 10, so recall is decisive; equal keys share.
   Merge at cos > 0.97 on both key and value: the same memory, stronger.

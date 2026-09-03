@@ -13,7 +13,7 @@ from .model import Organs, Store, CLOCKS
 
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
-    wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
+    wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=0.3, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
@@ -53,6 +53,7 @@ class Life:
         # the mouth's gate
         self.gate_buf = collections.deque(maxlen=96)
         self.sym_freq = {}
+        self.heard = torch.zeros(self.m.vocab, device=device)   # the symbols the world has said (a slow tally)
         self._gate_last = None; self._wake_last = None
         self.n_bursts = 0
         # the page and the two hands
@@ -93,6 +94,8 @@ class Life:
                 surp = float(1.0 - F.cosine_similarity(self.pred_prev, ex, dim=0))
             if who == 1:
                 surp = 0.0                                  # corollary discharge: its own symbol was foretold
+            if who == 0 and x != self.sil:
+                self.heard *= float(self.cfg["heard_decay"]); self.heard[x] += 1.0
             # the hippocampus: write what came next under the context before it
             if learn_store and who == 0 and x != self.sil and self.bag.norm() > 1e-6:
                 self.store.write(self.bag, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
@@ -197,7 +200,8 @@ class Life:
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
-            logits = m.readout(pred1).clone(); logits[self.bans] = float("-inf"); logits[self.sil] = float("-inf")
+            prior = self.heard / self.heard.sum().clamp(min=1.0)
+            logits = m.readout(pred1, prior=prior).clone(); logits[self.bans] = float("-inf"); logits[self.sil] = float("-inf")
             probs = torch.softmax(logits, -1)
             ent = float(-(probs * (probs + 1e-9).log()).sum() / math.log(probs.numel()))
             if acted:
@@ -560,7 +564,7 @@ class Life:
         blob = {"organs": self.m.state_dict(), "store": self.store.state_dict(), "cfg": self.cfg,
                 "arch": {"vocab": self.m.vocab, "d": self.m.d, "layers": len(self.m.blocks), "heads": self.m.blocks[0].attn.num_heads,
                          "window": self.m.window, "clocks": list(self.m.clocks)},
-                "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure,
+                "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure, "heard": self.heard.cpu(),
                          "fatigue": self.fatigue, "stress": self.stress, "mood": self.mood, "n_bursts": self.n_bursts,
                          "sym_freq": self.sym_freq, "last_night": self.last_night}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
@@ -580,6 +584,8 @@ class Life:
             if k in L:
                 setattr(life, k, L[k])
         life.sym_freq = dict(L.get("sym_freq") or {})
+        if L.get("heard") is not None:
+            life.heard = L["heard"].to(device)
         return life
 
     @classmethod
