@@ -1789,3 +1789,35 @@ The bags were also fading twice a tick, once at the world's step and once at its
 Ten checks pass; the tiny night lifts its gauge 0.27 to 0.71. Commit 1b759ac. Run 18 from
 birth, with a new instrument in the day-6 probe: the cortex alone along typed lines under
 the dream construction and under life's, which must now agree.
+
+## Run 18: the tick confirmed, and order (2026-09-03)
+
+Run 18 on one position per tick. The day-6 trace, the cortex alone along typed lines
+under the dream construction and under life's, scored right (my first scoring compared
+life's forecasts against the wrong offset): "dog will go" 8 of 10 awake, "why dog up?
+because big dog" 18 of 26, the same as in the dream construction. The cortex the night
+trains now lives in the format it dreams in. The sampled mouth started 45 of 48 cues and
+completed "dog will go" 6 of 6.
+
+What it could not do was stop repeating a letter: "balll", "boookkk", "bbaall". The
+decode after its own "ball": the query was nine-tenths "l", the key for the second l of
+"ball" matched at 0.976 and the key after "ball" at 0.962. A bag of symbols cannot tell
+"bal" from "ball"; the difference is a weight, and a little extra context tips it. The
+hippocampus is not blind to order: theta sequence coding gives each lag its own code.
+The mathematics of that is the lag code of holographic reduced representations: each
+symbol shifts the whole context through a fixed permutation of the dimensions before it
+enters at lag 0, so "l" at lag 0 and "l" at lag 1 are orthogonal directions and "bal"
+and "ball" are far apart. The read query shifts the world's context by as many lags as
+the body has said since, and what it said leaves the query when the world speaks again.
+
+And the fade diagnostic on run 17's body: with the cosine read a context faded to norm
+0.01 by 24 quiet ticks still recalled "m" at confidence 0.87, the faint tail of the last
+line amplified into a full direction, which is how the chains ran across lines through
+the pauses. The store reads by dot product now, keys unit, the query as it is: its norm
+is the inverse temperature of recall, and confidence falls with the pause (0.88 at the
+cue, 0.81 six ticks later, 0.30 at twelve).
+
+Ten checks pass, the collision test now at confidence 1.0 for every cue and the
+continuation check too. Commit 0022416. Run 19 from birth. Open: a night that lowers the
+gauge while its loss falls (run 17 night 9, run 18 night 6), and the gate near 1.0 when
+smiles flood.

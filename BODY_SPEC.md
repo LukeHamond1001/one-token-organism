@@ -35,9 +35,18 @@ thing that changes while it lives is what the world says to it.
 readout: the mouth reads it by cosine. No vocabulary softmax is ever trained.
 
 **Hippocampus (episodic store).** Slots of (key, value, strength, who). The
-context is two decaying bags of embeddings, content alone, each fading 0.8
-per tick (a pause ends a context, as working memory does): the world's
-symbols in the world's bag, its own in its own. A memory is written under the world's bag alone (corollary discharge:
+context is a lag code: two decaying contexts of embeddings, content alone,
+each fading 0.8 per tick (a pause ends a context, as working memory does), and
+each symbol shifts the whole context through a fixed permutation of the
+dimensions before entering at lag 0, so a symbol at lag 0 and the same symbol
+at lag 1 are different directions (theta sequence coding; the mathematics of
+holographic reduced representations). The world's symbols enter the world's
+context, its own enter its own, and the read query shifts the world's context
+by as many lags as it has said since (the query after its own "b" is the key
+the world's "b" would have made); what it said leaves the query when the world
+speaks again. The store reads by dot product: keys are unit directions, the
+query is the context as it is, so its norm is the inverse temperature of
+recall and a faded context recalls faintly. A memory is written under the world's bag alone (corollary discharge:
 the hearing of self-produced sound is suppressed, so the world's sequence is
 stored under the world's context, never under its own babble). A memory is
 read with the world's bag plus its own bag in full (the efference copy: the
@@ -213,6 +222,16 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   the best-matching slot among those that say the same: judged by the single
   best key, a slot with the same key and another value blocked the merge, and
   each hearing of "ball on" added a voter (run 17, day 6).
+- **Order.** A bag of symbols is blind to order and count: after its own
+  "ball" the query was nine-tenths "l", the "bal" key matched at 0.976 and
+  the "ball" key at 0.962, and the mouth stuttered the l (run 18: "balll",
+  "boookkk"). Under the lag code "l" at lag 0 and at lag 1 are orthogonal
+  directions and "bal" and "ball" are far apart. And the read is a dot product,
+  not a cosine: normalised, a context faded to norm 0.01 by 24 quiet ticks still
+  recalled at confidence 0.87, its faint tail amplified into a full direction,
+  and the mouth chained across lines through the pauses (run 17); as a dot
+  product the confidence falls with the pause (0.88, 0.81 at six ticks, 0.30 at
+  twelve).
 - **The recall's confidence.** The store's read is the attended mean of unit
   values, and its norm is the agreement among the memories attended. The
   largest attention weight is not: once the key carried its own bag, duplicate
