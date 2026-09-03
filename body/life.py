@@ -364,14 +364,19 @@ class Life:
                 torch.zeros(T, 2, device=self.dev), torch.stack(bundles), torch.stack(reads), torch.tensor(ids, device=self.dev))
 
     def gauge(self, dreams):
-        """the cortex alone (store off), teacher-forced on the dreams: the share of next symbols it forecasts itself"""
-        hits = n = 0
+        """the cortex alone (store off), teacher-forced on the dreams: the share of next symbols it
+        forecasts itself (argmax), and the mean cosine of its forecast to the embedding received
+        (the finer instrument: it moves before the argmax does)"""
+        hits = n = 0; cos_sum = 0.0
         with torch.no_grad():
             for ids in dreams:
                 xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
                 C = self.m.stream(self.m.inputs(xs, whos, faces, bundles, reads))
-                lg = self.m.readout(self.m.latent_pred(C)); lg[:, self.bans] = float("-inf"); lg[:, self.sil] = float("-inf")
+                pred = self.m.latent_pred(C)
+                lg = self.m.readout(pred); lg[:, self.bans] = float("-inf"); lg[:, self.sil] = float("-inf")
                 hits += int((lg.argmax(-1) == y).sum()); n += int(y.numel())
+                cos_sum += float(F.cosine_similarity(pred, self.m.E.weight[y], dim=-1).sum())
+        self._gauge_cos = (round(cos_sum / n, 3) if n else None)
         return (round(hits / n, 3) if n else None), n
 
     def _night_step(self, opt):
@@ -392,7 +397,7 @@ class Life:
             if not dreams:
                 rep["note"] = "the store holds nothing to dream"
             else:
-                before, nsym = self.gauge(dreams)
+                before, nsym = self.gauge(dreams); before_cos = self._gauge_cos
                 opt = torch.optim.Adam(m.parameters(), lr=float(self.cfg["night_lr"]))   # sleep's own plasticity
                 sig = float(self.cfg["sigreg"])
                 m.train()
@@ -429,11 +434,12 @@ class Life:
                 if not finite and self.save_path and os.path.exists(self.save_path):
                     sd = torch.load(self.save_path, map_location="cpu", weights_only=False)
                     m.load_state_dict(sd["organs"]); m.to(self.dev)
-                after, _ = self.gauge(dreams)
+                after, _ = self.gauge(dreams); after_cos = self._gauge_cos
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
                             "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
                             "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None),
-                            "gauge": {"before": before, "after": after, "symbols": nsym}})
+                            "gauge": {"before": before, "after": after, "symbols": nsym,
+                                      "cos_before": before_cos, "cos_after": after_cos}})
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n()
