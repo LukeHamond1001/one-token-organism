@@ -373,9 +373,12 @@ class Life:
                     nid = int(lg.argmax())
                     ids.append(nid)
                     adapt = 1.0 - a_rec * (1.0 - adapt)                   # recovery toward 1
-                    # every recalled slot tires in proportion to how much it fired (neural adaptation),
-                    # so a cycle of a few slots tires as a whole and the dream moves on
+                    # the recalled memory tires fully each time it fires, and every slot tires in
+                    # proportion to how much it fired (neural adaptation), so a cycle exhausts itself
+                    # even when the attention is spread over near-duplicate memories of one context
                     adapt = adapt * (1.0 - (1.0 - a_hit) * self.store._last_w)
+                    if win >= 0:
+                        adapt[win] *= a_hit
                     bag = float(self.cfg["bag_decay"]) * bag + self.m.E.weight[nid] + self.m.who_emb.weight[0]
                 if len(ids) >= 2:
                     out.append(ids)
