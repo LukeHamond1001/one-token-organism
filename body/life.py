@@ -30,6 +30,7 @@ class Life:
         self.cfg = dict(PHYSIOLOGY); self.cfg.update(cfg or {})
         self.m.read_sharp = float(self.cfg["read_sharp"])
         self.sil = tok.token_to_id("<pad>")
+        self.m.sil_id = self.sil                          # the cortex's inputs know its rest
         self.nl = tok.token_to_id("\n")
         self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
@@ -43,7 +44,7 @@ class Life:
         # world's symbols shifted the world's weights in every key (collision test at own weight 0.6).
         self.bag_w = torch.zeros(d, device=device)
         self.bag_o = torch.zeros(d, device=device)
-        self.win = collections.deque(maxlen=W)            # per step: dict(x, who, face, bundle, read, r)
+        self.win = collections.deque(maxlen=W)            # per tick: dict(x the world's, xo its own, face, bundle, read, r)
         self.pred_prev = None                              # the forecast made at the last step (surprise)
         self.v_prev = None                                 # V_b of the previous tick's states
         self.v_buf = {b: collections.deque(maxlen=int(self.cfg["v_buf"])) for b in range(nb)}
@@ -105,18 +106,26 @@ class Life:
                 self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
             # the context moves on: both bags fade with time (a pause ends a context, as working memory
             # does), the world's symbols entering the world's bag, its own symbols its own
-            self.bag_w = float(self.cfg["bag_decay"]) * self.bag_w
-            self.bag_o = float(self.cfg["bag_decay"]) * self.bag_o
+            # (the bags are content alone: a speaker embedding summed into every key was a constant all
+            # keys shared, which pushed every cosine toward 1 and let strangers crowd an exact match)
+            if who == 0:
+                self.bag_w = float(self.cfg["bag_decay"]) * self.bag_w
+                self.bag_o = float(self.cfg["bag_decay"]) * self.bag_o
             if x != self.sil:
                 if who == 0:
-                    self.bag_w = self.bag_w + ex + m.who_emb.weight[0]
+                    self.bag_w = self.bag_w + ex
                 else:
-                    self.bag_o = self.bag_o + ex + m.who_emb.weight[1]
+                    self.bag_o = self.bag_o + ex
             read, conf, _ = self.store.read(self.bag)
             self._read = read                                  # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
-            self.win.append({"x": int(x), "who": int(who), "face": face, "bundle": self.bands.clone(),
-                             "read": read.clone(), "r": float(r)})
+            if who == 0 or not self.win:
+                # the world's half opens the tick's position (its own half, arriving first only in an
+                # instrument, opens one with the world quiet)
+                self.win.append({"x": int(x) if who == 0 else self.sil, "xo": int(x) if who == 1 else self.sil,
+                                 "face": face, "bundle": self.bands.clone(), "read": read.clone(), "r": float(r)})
+            else:
+                self.win[-1]["xo"] = int(x)                    # its own sound joins the same time step
             C = self._stream_now()
             self.bands = m.band_update(self.bands, C)
             self._C_last = C
@@ -142,7 +151,7 @@ class Life:
     def _window_tensors(self, win=None):
         win = list(self.win if win is None else win)
         xs = torch.tensor([w["x"] for w in win], device=self.dev)
-        whos = torch.tensor([w["who"] for w in win], device=self.dev)
+        whos = torch.tensor([w["xo"] for w in win], device=self.dev)   # its own symbols, one per tick
         faces = torch.stack([w["face"] for w in win])
         bundles = torch.stack([w["bundle"] for w in win])
         reads = torch.stack([w["read"] for w in win])
@@ -342,7 +351,7 @@ class Life:
         nxt = [-1] * T; last = -1
         for t in range(T - 1, -1, -1):
             nxt[t] = last
-            if int(whos[t]) == 0 and int(xs[t]) != self.sil:
+            if int(xs[t]) != self.sil:
                 last = t
         tgt_pos = [max(0, i) for i in nxt]
         w = torch.tensor([1.0 if i >= 0 else 0.0 for i in nxt], device=self.dev)
@@ -403,7 +412,7 @@ class Life:
                     adapt = adapt * (1.0 - (1.0 - a_hit) * self.store._last_w)
                     if win >= 0:
                         adapt[win] *= a_hit
-                    bag = float(self.cfg["bag_decay"]) * bag + self.m.E.weight[nid] + self.m.who_emb.weight[0]
+                    bag = float(self.cfg["bag_decay"]) * bag + self.m.E.weight[nid]
                 if len(ids) >= 2:
                     out.append(ids)
         return out
@@ -413,17 +422,19 @@ class Life:
         m = self.m
         bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag_w)
         xs = [self.sil] + list(ids[:-1]); reads, bundles = [], []
+        xos = torch.full((len(xs),), self.sil, dtype=torch.long, device=self.dev)   # a dream: no own sound
         with torch.no_grad():
             for x in xs:
-                bag = float(self.cfg["bag_decay"]) * bag + ((m.E.weight[x] + m.who_emb.weight[0]) if x != self.sil else 0.0)
+                bag = float(self.cfg["bag_decay"]) * bag + (m.E.weight[x] if x != self.sil else 0.0)
                 rd = self.store.read(bag)[0] if mem_on else torch.zeros(m.d, device=self.dev)
                 reads.append(rd); bundles.append(bands.clone())
-                u = m.inputs(torch.tensor(xs[:len(reads)], device=self.dev), torch.zeros(len(reads), dtype=torch.long, device=self.dev),
-                             torch.zeros(len(reads), 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
+                n = len(reads)
+                u = m.inputs(torch.tensor(xs[:n], device=self.dev), xos[:n],
+                             torch.zeros(n, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
                 C = m.stream(u)[-1]
                 bands = m.band_update(bands, C)
         T = len(xs)
-        return (torch.tensor(xs, device=self.dev), torch.zeros(T, dtype=torch.long, device=self.dev),
+        return (torch.tensor(xs, device=self.dev), xos,
                 torch.zeros(T, 2, device=self.dev), torch.stack(bundles), torch.stack(reads), torch.tensor(ids, device=self.dev))
 
     def gauge(self, dreams):
@@ -532,20 +543,21 @@ class Life:
         if len(ids) < k + 1:
             return None, None
         bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag_w)
-        xs = [self.sil] + list(ids[:k]); whos = [0] * len(xs)
+        xs = [self.sil] + list(ids[:k])
         reads, bundles, Cs, bnext = [], [], [], []
         for step in range(len(xs) + L):
             if step >= len(xs):
-                # its own next symbol, read off its forecast (no gradient through the choice)
+                # its imagined next symbol, read off its forecast (no gradient through the choice),
+                # heard as the world's in the next time step
                 with torch.no_grad():
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
-                    xs.append(int(lg.argmax())); whos.append(1)
-            x = xs[-1] if step >= len(reads) else xs[step]
+                    xs.append(int(lg.argmax()))
             with torch.no_grad():
-                bag = float(self.cfg["bag_decay"]) * bag + ((m.E.weight[xs[step]] + m.who_emb.weight[whos[step]]) if xs[step] != self.sil else 0.0)
+                bag = float(self.cfg["bag_decay"]) * bag + (m.E.weight[xs[step]] if xs[step] != self.sil else 0.0)
             reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
-            u = m.inputs(torch.tensor(xs[:step + 1], device=self.dev), torch.tensor(whos[:step + 1], device=self.dev),
-                         torch.zeros(step + 1, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
+            n = step + 1
+            u = m.inputs(torch.tensor(xs[:n], device=self.dev), torch.full((n,), self.sil, dtype=torch.long, device=self.dev),
+                         torch.zeros(n, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
             C = m.stream(u)[-1]
             Cs.append(C)
             with torch.no_grad():

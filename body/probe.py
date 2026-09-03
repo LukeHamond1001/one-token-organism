@@ -28,11 +28,18 @@ def fresh(path, tok, mem_on):
 def run(path, tok, cue, ticks, mem_on, greedy, seed=0):
     life = fresh(path, tok, mem_on)
     life.gen.manual_seed(seed)
-    for ch in cue:
+    # the answer begins in the tick the cue's last symbol enters (the body reads the forecast made as
+    # it enters and may act in that same tick), so the record starts there
+    for ch in cue[:-1]:
         life.type_text(ch)
     while life.queue:
         life.tick()
+    life.type_text(cue[-1])
     out = []
+    while life.queue:
+        life.tick()
+        s = life.last.get("said", "")
+        out.append(tok.token_to_id(s) if s else life.sil)
     for _ in range(ticks):
         if greedy:
             # the mouth alone, memory as set, always acting, taking its best guess

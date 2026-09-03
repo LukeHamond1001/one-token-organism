@@ -47,7 +47,7 @@ def test_store_recalls():
     # the cue: the context 'give ' should recall 'm'
     life.bag_w.zero_(); life.bag_o.zero_()
     for ch in "give ":
-        life.bag_w = life.cfg["bag_decay"] * life.bag_w + life.m.E.weight[TOK.token_to_id(ch)] + life.m.who_emb.weight[0]
+        life.bag_w = life.cfg["bag_decay"] * life.bag_w + life.m.E.weight[TOK.token_to_id(ch)]
     pred, conf, _ = life.store.read(life.bag)
     top = TOK.decode([life.m.nearest(pred)])
     assert top == "m", f"the store recalled {top!r} after 'give ', not 'm'"

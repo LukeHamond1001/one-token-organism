@@ -77,9 +77,13 @@ class Store:
         k = F.normalize(k.to(self.dev).float(), dim=0); v = F.normalize(v.to(self.dev).float(), dim=0)
         if self.n() > 0:
             sims = self.K @ k
-            j = int(sims.argmax())
-            if float(sims[j]) > merge_cos and float(self.V[j] @ v) > merge_cos:
-                self.S[j] += float(strength)                             # the same memory, stronger
+            # the same memory, stronger: the best-matching slot AMONG THOSE THAT SAY THE SAME (judged by
+            # the single best key, a slot with the same key and another value blocked the merge, and each
+            # hearing of "ball on" added a voter: six identical slots outvoted an exact match, run 17)
+            same = (sims > merge_cos) & ((self.V @ v) > merge_cos)
+            if bool(same.any()):
+                j = int(torch.where(same, sims, torch.full_like(sims, -2.0)).argmax())
+                self.S[j] += float(strength)
                 return True
         self.K = torch.cat([self.K, k.unsqueeze(0)]); self.V = torch.cat([self.V, v.unsqueeze(0)])
         self.S = torch.cat([self.S, torch.tensor([float(strength)], device=self.dev)])
@@ -161,8 +165,10 @@ class Organs(nn.Module):
         with torch.no_grad():
             self.E.weight.copy_(F.normalize(self.E.weight, dim=-1))
         self.E.weight.requires_grad_(False)               # a fixed lexicon: no trivial solution to predicting it
-        self.who_emb = nn.Embedding(2, d)                 # the speaker sense: 0 the world, 1 the body
+        self.who_emb = nn.Embedding(2, d)                 # (unused since the two-bag key; kept for old bodies' files)
         nn.init.normal_(self.who_emb.weight, std=0.3 / math.sqrt(d))
+        self.sil_id = None                                # set by Life: the rest symbol
+        self.own_gain = 0.5                               # corollary discharge on its own sound in the stream
         self.face_in = nn.Linear(2, d)                    # the caregiver's face and its change, as a sense
         nn.init.zeros_(self.face_in.weight); nn.init.zeros_(self.face_in.bias)
         # THE HIPPOCAMPAL PATHWAY: the store's recall reaches the cortex through one learned map,
@@ -202,14 +208,17 @@ class Organs(nn.Module):
         self.register_buffer("_mask", torch.triu(torch.ones(self.window, self.window, dtype=torch.bool), 1))
 
     # ---- the cortex over a window ----
-    def inputs(self, xs, whos, faces, bundles, reads):
-        """xs [T] long, whos [T] long, faces [T, 2], bundles [T, nb, d], reads [T, d] -> u [T, d].
-        The cortex hears its own symbols as it hears the world's (a sound is a sound): the speaker
-        sense lives in the hippocampal key and the corollary discharge, not in the stream, so what
-        it learned after the world's "d" applies after its own (run 7: runs of one letter otherwise)."""
+    def inputs(self, xs, xos, faces, bundles, reads):
+        """one position per tick: xs [T] the world's symbol (or its quiet), xos [T] its own symbol in
+        the same tick (or its quiet), faces [T, 2], bundles [T, nb, d], reads [T, d] -> u [T, d].
+        All the sounds of a tick superpose in one time step, its own attenuated by corollary discharge
+        (own_gain; measured in cortex at a third to a half). With two positions per tick (the world's,
+        then its own, mostly a rest) the stream read "d . o . g ." awake and "d o g" in the dreams
+        the night trains on, and the cortex forecast "d" after everything awake (run 17, day 6)."""
         u = self.E(xs) + self.face_in(faces) + self.bundle_in(bundles.reshape(bundles.shape[0], -1))
-        if getattr(self, "cortex_who", False):
-            u = u + self.who_emb(whos)
+        if xos is not None and self.sil_id is not None:
+            own = (xos != self.sil_id).to(u.dtype).unsqueeze(-1)
+            u = u + float(self.own_gain) * own * self.E(xos)
         return self.in_ln(u)
 
     def forecast(self, C, reads, conf=1.0):

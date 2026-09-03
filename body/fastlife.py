@@ -111,10 +111,12 @@ class FastCaregiver:
         if kind == "cue":
             self.cue = {"text": text, "until": self.L.ticks + 96, "full": ANSWERS.get(text, []), "done": False}
         self.L.type_text(text)
-        t_start = self.L.ticks
+        t_start = self.L.ticks; its = []
         while self.L.queue:
             self.step()
-        t_end = self.L.ticks; its = []
+            if not self.L.queue:                                # the tick the last symbol entered: its answer may begin here
+                its.append(self.L.last.get("said", "") or "_")
+        t_end = self.L.ticks
         for _ in range(24):
             self.step(); its.append(self.L.last.get("said", "") or "_")
         self.row({"action": kind, "text": text, "its_after": "".join(its), "own": self.L.last.get("own"), "gate": self.L.last.get("gate"),
@@ -173,7 +175,7 @@ def summarize(log, night, day):
     g = night.get("gauge", {}) if night else {}
     print(f"day {day}: smiles {len(smiles)} ({', '.join(sorted(set(r['on'] for r in smiles)))[:60]}) | cues {len(cues)}: "
           + " ".join(repr(r['its_after'].replace('_', '')[:6]) for r in cues[-8:])
-          + f" | night: dreams {night.get('dreams')} len {night.get('mean_len')} gauge {g.get('before')}->{g.get('after')} "
+          + f" | night: dreams {night.get('dreams')} len {night.get('mean_len')} nrem {(night.get('nrem_loss') or ['?'])[0]}->{(night.get('nrem_loss') or ['?'])[-1]} gauge {g.get('before')}->{g.get('after')} "
           f"cos {g.get('cos_before')}->{g.get('cos_after')} rem {night.get('rem_cos_first')}->{night.get('rem_cos')} discarded {night.get('discarded')} "
           f"| gate {cues[-1].get('gate') if cues else None} store {night.get('store_slots')} | dreams e.g. {[e[:14] for e in (night.get('examples') or [])[:3]]}", flush=True)
 
