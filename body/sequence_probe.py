@@ -40,8 +40,8 @@ def main():
             L.tick()
         # the forecast made as the cue's last symbol entered (what the mouth reads)
         with torch.no_grad():
-            C = L._stream_now(); p0 = m.forecast(C, L.store.read(L.bag)[0])
-        c0 = forecast(L, p0)
+            C = L._stream_now(); rd, cf, _ = L.store.read(L.bag); p0 = m.forecast(C, rd, conf=cf)
+        c0 = forecast(L, p0); n0 = float(m.latent_pred(C).norm())          # the cortex's certainty
         pred, conf, _ = L.store.read(L.bag); s0 = tok.decode([m.nearest(pred)])
         # its own first letter of the answer enters, then the forecast again
         with torch.no_grad():
@@ -49,8 +49,8 @@ def main():
         c1 = forecast(L, p1)
         pred2, conf2, _ = L.store.read(L.bag); s1 = tok.decode([m.nearest(pred2)])
         right_store += int(s0 == ans[0]); right_cortex += int(c0 == ans[0]); right_seq += int(c1 == ans[1])
-        print(f"{cue!r:>18} want {ans[0]!r}: store {s0!r}({conf:.2f}) cortex {c0!r} | after own {ans[0]!r} want {ans[1]!r}: store {s1!r}({conf2:.2f}) cortex {c1!r}")
-    print(f"first letter: store {right_store}/{len(CASES)} cortex {right_cortex}/{len(CASES)} | second letter (cortex, after its own first): {right_seq}/{len(CASES)}")
+        print(f"{cue!r:>18} want {ans[0]!r}: store {s0!r}({conf:.2f}) mouth {c0!r} (cortex norm {n0:.2f}) | after own {ans[0]!r} want {ans[1]!r}: store {s1!r}({conf2:.2f}) mouth {c1!r}")
+    print(f"first letter: store {right_store}/{len(CASES)} mouth {right_cortex}/{len(CASES)} | second letter (mouth, after its own first): {right_seq}/{len(CASES)}")
 
 
 if __name__ == "__main__":

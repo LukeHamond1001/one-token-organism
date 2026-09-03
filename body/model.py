@@ -206,13 +206,18 @@ class Organs(nn.Module):
             u = u + self.who_emb(whos)
         return self.in_ln(u)
 
-    def forecast(self, C, reads):
-        """the forecast of the next embedding: the cortex's own, plus the hippocampus's recall through
-        its pathway. The recall is NOT an input to the stream: entered there (identity at birth) it
-        looked like the current symbol and the trunk advanced it one step, so the mouth read the
-        second letter of every answer (run 10, day 6). Recall contributes to the prediction, as
-        CA1's output does, and the night trains the cortex with the recall off."""
-        return self.latent_pred(C) + self.store_in(reads)
+    def forecast(self, C, reads, conf=1.0):
+        """what the mouth reads: the cortex's own forecast (its norm its certainty) plus the hippocampus's
+        recall as a unit direction through its pathway, weighted by the recall's confidence. Two
+        calibrated votes; agreement adds, and the readout's dot product makes agreement sharp. Recall is NOT an input to the stream (entered there it looked like the
+        current symbol and the trunk advanced it a step); the night trains the cortex with recall off."""
+        own = self.latent_pred(C)                             # calibrated: its norm is its certainty
+        rec = self.store_in(reads)
+        rn = rec.norm(dim=-1, keepdim=True)
+        rec = torch.where(rn > 1e-6, rec / rn.clamp(min=1e-6), rec)
+        if torch.is_tensor(conf):
+            conf = conf.to(rec.dtype).unsqueeze(-1) if conf.dim() == 1 else conf
+        return own + float(conf) * rec if not torch.is_tensor(conf) else own + conf * rec
 
     def stream(self, u):
         """u [T, d] -> C [T, d], the cortex stream (causal over the window)"""
@@ -224,11 +229,12 @@ class Organs(nn.Module):
         return self.lnf(x[0])
 
     def readout(self, pred, prior=None):
-        """the lexicon read by cosine: logits [.., vocab] = sharpness x cos(pred, E) + log prior, the
-        prior being the symbols it has heard (perceptual narrowing: the mouth's candidates are the
-        world's sounds; Bayes: prior x likelihood)"""
+        """the lexicon read: logits [.., vocab] = sharpness x (pred . E) + log prior. The forecast is the
+        conditional mean of the next unit embedding (trained by squared error), so its norm is its
+        certainty: a sure forecast overrides the prior, an unsure one lets the prior babble. The prior
+        is the symbols it has heard (perceptual narrowing; Bayes: prior x likelihood)."""
         En = F.normalize(self.E.weight, dim=-1)
-        lg = float(self.read_sharp) * F.normalize(pred, dim=-1) @ En.t()
+        lg = float(self.read_sharp) * pred @ En.t()          # a dot product: the forecast's norm is its certainty
         if prior is not None:
             lg = lg + torch.log(prior + 1e-4).to(lg.dtype)
         return lg
@@ -257,9 +263,9 @@ class Organs(nn.Module):
 
     # ---- the lessons ----
     def latent_loss(self, pred, target_ids, w=None, sig=0.0, C=None):
-        """one minus the cosine between the forecast of the next embedding and the embedding
+        """the squared error between the forecast of the next embedding and the unit embedding
         received (a fixed lexicon: the target set is discrete and near-orthogonal, so the loss has
-        no trivial solution), weighted by w [T] (the world's symbols). SIGReg, if asked, goes on the
+        no trivial solution), weighted by w [T] (the world's symbols); cmean reports the cosine. SIGReg, if asked, goes on the
         stream C, never on a forecast that must hit discrete targets."""
         En = self.E.weight.detach()
         tgt = En[target_ids]
@@ -267,7 +273,12 @@ class Organs(nn.Module):
         if w is None:
             w = torch.ones_like(cos)
         w = w.to(cos.dtype)
-        loss = ((1.0 - cos) * w).sum() / w.sum().clamp(min=1e-6)
+        # squared error to the unit target: the minimiser is the conditional mean of the next embedding,
+        # whose norm is the certainty (1 when one symbol follows, small when many can). The cosine loss
+        # left the norm meaningless, so a flat forecast and a sure one read the same at the mouth and
+        # the prior's commonest letter won every tie (run 14, day 6: 'l' after every cue).
+        se = 0.5 * ((pred.float() - tgt.float()) ** 2).sum(-1)
+        loss = (se * w).sum() / w.sum().clamp(min=1e-6)
         cmean = float((cos.detach() * w).sum() / w.sum().clamp(min=1e-6))
         if sig > 0 and C is not None:
             loss = loss + float(sig) * sigreg(F.normalize(C, dim=-1).float())

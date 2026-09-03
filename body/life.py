@@ -14,11 +14,11 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=0.3, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
+    bag_decay=0.8, bag_own_weight=0.5, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
-    read_sharp=10.0, sharp_base=5.0, sharp_gain=5.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
+    read_sharp=10.0, sharp_base=10.0, sharp_gain=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
 )
 
@@ -38,7 +38,11 @@ class Life:
         nb, d, W = len(self.m.clocks), self.m.d, self.m.window
         # working state
         self.bands = torch.zeros(nb, d, device=device)
-        self.bag = torch.zeros(d, device=device)
+        # THE CONTEXT: two bags, the world's (decaying per world symbol) and its own (per own symbol),
+        # summed into the memory key; a pause moves neither. Decayed per tick, the babble between the
+        # world's symbols shifted the world's weights in every key (collision test at own weight 0.6).
+        self.bag_w = torch.zeros(d, device=device)
+        self.bag_o = torch.zeros(d, device=device)
         self.win = collections.deque(maxlen=W)            # per step: dict(x, who, face, bundle, read, r)
         self.pred_prev = None                              # the forecast made at the last step (surprise)
         self.v_prev = None                                 # V_b of the previous tick's states
@@ -99,15 +103,15 @@ class Life:
             # the hippocampus: write what came next under the context before it
             if learn_store and who == 0 and x != self.sil and self.bag.norm() > 1e-6:
                 self.store.write(self.bag, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
-            # the context moves on: a symbol enters it, quiet only fades it (a pause is not content)
-            if x == self.sil:
-                self.bag = float(self.cfg["bag_decay"]) * self.bag
-            else:
-                # its own symbols enter the context attenuated (corollary discharge: self-produced input
-                # is suppressed; measured in cortex at a third to a half), so its babble does not drown
-                # the world's words in the memory's keys, yet its own first letter still shifts recall
-                wgt = float(self.cfg["bag_own_weight"]) if who == 1 else 1.0
-                self.bag = float(self.cfg["bag_decay"]) * self.bag + wgt * (ex + m.who_emb.weight[who])
+            # the context moves on: the world's bag decays per world symbol (a pause and its own babble
+            # leave the world's context as it was), its own bag decays with time (its babble fades, its
+            # last own symbol is what remains)
+            self.bag_o = float(self.cfg["bag_decay"]) * self.bag_o
+            if x != self.sil:
+                if who == 0:
+                    self.bag_w = float(self.cfg["bag_decay"]) * self.bag_w + ex + m.who_emb.weight[0]
+                else:
+                    self.bag_o = self.bag_o + ex + m.who_emb.weight[1]
             read, conf, _ = self.store.read(self.bag)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
             self.win.append({"x": int(x), "who": int(who), "face": face, "bundle": self.bands.clone(),
@@ -115,9 +119,14 @@ class Life:
             C = self._stream_now()
             self.bands = m.band_update(self.bands, C)
             self._C_last = C
-            pred = m.forecast(C, read)
+            pred = m.forecast(C, read, conf=conf)
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
+
+    @property
+    def bag(self):
+        """the memory key: the world's context plus its own, attenuated (corollary discharge)"""
+        return self.bag_w + float(self.cfg["bag_own_weight"]) * self.bag_o
 
     def _window_tensors(self, win=None):
         win = list(self.win if win is None else win)
@@ -365,7 +374,7 @@ class Life:
         a_hit, a_rec = float(self.cfg["dream_adapt"]), float(self.cfg["dream_recover"])
         with torch.no_grad():
             for j in starts:
-                bag = self.store.K[j].clone(); ids = []
+                bag = self.store.K[j].clone(); ids = []                 # a dream's context: per symbol, as the keys are
                 adapt = torch.ones(self.store.n(), device=self.dev)      # neural adaptation: a recalled memory tires
                 s_floor = float(self.cfg["store_floor_rel"]) * float(self.store.S.mean())
                 for _ in range(int(self.cfg["dream_max"])):
@@ -391,7 +400,7 @@ class Life:
     def _dream_inputs(self, ids, mem_on):
         """a dream as a window: fresh bands (a night's working state), the store leading if mem_on"""
         m = self.m
-        bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag)
+        bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag_w)
         xs = [self.sil] + list(ids[:-1]); reads, bundles = [], []
         with torch.no_grad():
             for x in xs:
@@ -489,7 +498,7 @@ class Life:
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n()
-            self.bands.zero_(); self.bag.zero_(); self.win.clear(); self.pred_prev = None
+            self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._bands_pp = None; self._C_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None
             self.fatigue = 0.0
@@ -511,7 +520,7 @@ class Life:
         L = int(self.cfg["rem_steps"])
         if len(ids) < k + 1:
             return None, None
-        bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag)
+        bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag_w)
         xs = [self.sil] + list(ids[:k]); whos = [0] * len(xs)
         reads, bundles, Cs, bnext = [], [], [], []
         for step in range(len(xs) + L):

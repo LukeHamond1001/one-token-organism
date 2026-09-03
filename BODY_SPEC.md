@@ -36,15 +36,20 @@ readout: the mouth reads it by cosine. No vocabulary softmax is ever trained.
 
 **Hippocampus (episodic store).** Slots of (key, value, strength, who). The
 key is the decaying bag (0.8 per symbol) of the last symbols' embeddings plus
-the speaker sense, its own symbols entering at 0.3 (corollary discharge
-attenuates self-produced input) and quiet only fading it; the value is the embedding of the symbol that came next. Write: a new
+the speaker sense, two bags summed: the world's,
+decaying per world symbol (a pause or its own babble leaves the world's context as
+it was, so a key does not depend on how much it babbled while listening), and its
+own, decaying per tick, at 0.5 (corollary discharge attenuates self-produced
+input; measured: 0.3 to 0.5 keeps every cue's recall, 0.7 loses one, and 0.5
+moves the key after its own first letter half the time) and quiet only fading it; the value is the embedding of the symbol that came next. Write: a new
 slot or a merge into the nearest slot; strength = surprise × (1 + dopamine),
 own symbols carry zero surprise (corollary discharge: what the mouth wrote
 was foretold). Read: attention over keys by content alone at the organ's own temperature
 (strength decides durability and replay, never which memory a cue retrieves),
 returning a predicted next embedding. Its recall reaches the mouth's forecast through ONE
 path, `store_in`, identity at birth: what the mouth reads = the cortex's
-forecast + recall. The cortex is trained on its own forecast alone, day and
+forecast, whose norm is its certainty, + the recall as a unit direction weighted
+by its confidence: two calibrated votes. The cortex is trained on its own forecast alone, day and
 night (predictive coding: each area learns from its own error); recall is
 never a term in that error (with the sum in the loss the day taught only the
 residual the store missed and undid the night).
@@ -69,9 +74,10 @@ stream: it hears its own symbols as it hears the world's, so what it learned
 after the world's "d" applies after its own; the speaker sense lives in the
 hippocampal key and the corollary discharge); from C, `latent_pred`
 forecasts the next embedding it will receive and `pfc_pred` forecasts the
-next bundle. Its lessons are prediction: one minus the cosine to the
-embedding received (stop-grad), one minus the cosine to the bundle received
-(stop-grad), SIGReg on the forecasts as the collapse guard. It learns awake
+next bundle. Its lessons are prediction: the squared error to the unit
+embedding received (stop-grad; the minimiser is the conditional mean of the
+next embedding, so the forecast's norm is its certainty), one minus the cosine
+to the bundle received (stop-grad), SIGReg on the stream as the collapse guard. It learns awake
 (every K ticks on the last window, the target at every position being the
 next symbol the world will say; its own symbols and rests are inputs only,
 never targets, and never shift the target: one predicts the environment, and
@@ -141,7 +147,7 @@ recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
 recall is unsure, or the recalled memory's adapted strength falls below the
 store's forget floor, or the memory has fired to a tenth of itself (a slot
-fires at most twice in a dream): a cycle exhausts itself) · readout sharpness 5 + 5 × mood/6 (decisiveness from tonic dopamine) ·
+fires at most twice in a dream): a cycle exhausts itself) · readout sharpness 10 + 10 × mood/6 on the dot product forecast · lexicon (decisiveness from tonic dopamine; a sure forecast of norm 1 beats the heard prior's largest log-gap, an unsure one of small norm lets the prior babble) ·
 band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 
 ## 5b. Mathematics (the user: "not only biology, also your math")
@@ -176,9 +182,17 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   latent lesson, all rows drifting together makes prediction trivial
   (collapse) and the store's saved values go stale. The lexicon is fixed:
   107 random unit vectors in 256 dimensions, pairwise cosines ≈ 0.06 ± 0.06,
-  so the loss has no trivial solution and the cosine readout at sharpness 10
-  gives p(top) ≈ 0.99 for an aligned forecast. Representations are learned
+  so the loss has no trivial solution and the readout at sharpness 10 gives
+  p(top) ≈ 0.99 for an aligned forecast of norm 1. Representations are learned
   in the cortex.
+- **Calibration.** Trained by one minus the cosine, a forecast's norm meant
+  nothing, so at the mouth a flat forecast and a sure one weighed the same and
+  the prior's commonest letter ('l') won every tie (run 14). Trained by squared
+  error to unit targets, the forecast is the conditional mean of the next
+  embedding: norm 1 when one symbol follows, small when many can. The mouth
+  reads sharpness × (forecast · E) + log prior, the forecast being the cortex's
+  mean plus the recall's unit direction times its confidence: two calibrated
+  votes, and their agreement is sharp because the readout is a dot product.
 - **SIGReg placement.** The next-symbol forecast must hit discrete fixed
   targets; regularizing it toward a Gaussian fights the lesson. The collapse
   risk is in the bundle forecast, where prediction and target both derive
