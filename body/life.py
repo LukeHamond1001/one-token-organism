@@ -17,6 +17,7 @@ PHYSIOLOGY = dict(
     bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.15, gate_vigor=1.0, gate_every=24,
+    gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
 )
@@ -179,7 +180,8 @@ class Life:
         with torch.no_grad():
             feat = torch.cat([C1.detach(), torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
-            p_act = float(torch.sigmoid(z))
+            fl = float(self.cfg["gate_floor"])
+            p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
             logits = m.readout(pred1).clone(); logits[self.bans] = float("-inf"); logits[self.sil] = float("-inf")
             probs = torch.softmax(logits, -1)
@@ -272,7 +274,8 @@ class Life:
             return
         self.m.mouth_gate.train()
         z = self.m.mouth_gate(feats).squeeze(-1)
-        p = torch.sigmoid(z).detach()
+        fl = float(self.cfg["gate_floor"])
+        p = (fl + (1.0 - fl) * torch.sigmoid(z)).detach()
         # THE THREE-FACTOR RULE: credit x (action - p) has expectation cov(credit, acting), what a policy
         # must learn (Go for acts that paid, NoGo for acts that cost); plus vigor: the average credit
         # itself, tonic dopamine setting the rate of acting whatever it did

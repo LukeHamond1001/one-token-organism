@@ -119,7 +119,7 @@ symbol cost 0.12 · fatigue and stress half-life 240 ticks · mood half-life 120
 store forget floor 0.1 × mean strength · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-own-reward weight 0.5, tonic drive 0.15, vigor weight 1.0, credit baseline 0.98 (the striatum learns from the
+own-reward weight 0.5, tonic drive 0.15, vigor weight 1.0, credit baseline 0.98, spontaneous-activity floor p(act) ≥ 0.05 (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
@@ -135,6 +135,11 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   a policy must learn. Both are kept: policy plus vigor (tonic dopamine).
   The credit is taken against a running baseline (dopamine is an error),
   which leaves the expectation unbiased and lowers its variance.
+- **The absorbing state.** A policy gradient has zero expected update when
+  p(act) → 0 (no acts are sampled), and above the fatigue equilibrium every
+  act carries negative credit, so the gate can be driven shut and stay shut
+  (fast day 3: p = 0.000). Biology's spontaneous activity never stops: p(act)
+  = 0.05 + 0.95 σ(z). The floor is physiology; the learned part sits above it.
 - **Birth economics.** With a flat readout the confidence drive is ≈ 0 and
   acting pays −cost: cov < 0, silence. A tonic drive w0 = 0.15 > cost 0.12
   makes acting pay when fresh; the fatigue-scaled cost c(f) = 0.12(1 + f/10)

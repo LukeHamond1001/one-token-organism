@@ -118,6 +118,7 @@ def test_gate():
         life.tick(); life.fatigue = max(life.fatigue, 40.0)
     p_tired = life.last["gate"]
     assert p_tired < p_reward, f"fatigue did not close the gate: {p_reward} -> {p_tired}"
+    assert p_tired >= life.cfg["gate_floor"] - 1e-6, "the gate fell below spontaneous activity"
     print("6 the gate: quiet", round(p_quiet, 3), "after reward", round(p_reward, 3), "tired", round(p_tired, 3))
 
 
