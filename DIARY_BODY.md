@@ -1447,6 +1447,62 @@ not written in the window. Smoked on the tiny body (the world's
 cross-entropy fell 5.07 to 4.89 across two lessons). To be measured on
 the copy and served on the user's word; it reverses an earlier law.
 
+## The rebuild (2026-09-03, the user: "stop and pause and make all these changes")
+
+The days paused after night 9 (the counter's seventh) while the
+architecture was brought to what biology does, all behind flags,
+measured on the day's copy before serving:
+
+- **The latent cortex** (`--cortex latent`). The cortex predicts the
+  embedding it receives next, one after the other, not the word: a
+  forecast organ `latent_pred` on the stream, the target the next
+  symbol's embedding (stop-grad), one minus the cosine as the loss,
+  SIGReg on the forecasts as the collapse guard; the same lesson at
+  night on the traces and by day in the waking lesson. Cross-entropy is
+  retired, and with it the trained head: the mouth reads the lexicon
+  itself, logits = sharpness x cosine between the forecast and each
+  embedding (`--read-sharp 10`, a physiology constant standing in for a
+  learned decisiveness). The readout starts from scratch, so the first
+  babble under it is flat.
+- **Generative REM** (`--rem-generate 1`, `--rem-steps 8`). From each
+  dream's first three symbols the cortex runs free on its own readout,
+  the hippocampus decoupled, and learns to forecast the band state it
+  will receive at its own next step (targets stop-grad, SIGReg on the
+  stream). The rollout is the body's own, not the store's: the
+  free-running attractor is worked on here, and old material comes back
+  through what the cortex itself brings up.
+- **Reward where biology puts it.** Under the latent cortex a dose no
+  longer pulls content toward a rewarded symbol; the dose forward still
+  teaches the value ladder, the basal ganglia's band gates and the
+  face. Reward reaches behaviour through the mouth's gate, the store's
+  dopamine-scaled writes, and the ladder.
+- **Stress as a modulator** (`--wake-mod 1`): the waking lesson's
+  weight grows with stress/10 (acute stress encodes harder) and the
+  gate's logit is divided by the same (stress flattens the choice:
+  exploration). Chronic stress's withdrawal already emerges through the
+  gate reading it.
+- **The waking cortex** and **the habituating drive**, both above, go
+  live with the rest.
+- **The lean night** (`_rest`): the inherited `Organism.sleep`, with
+  the earlier bodies' pursuits, report cards and conscience (all inert
+  here), is no longer called; the night's plumbing is written out in
+  full: the store fades, the working state wakes fresh, the day's
+  buffers clear, fatigue rests, the body is saved and backed up.
+
+Proposed launch line (served only after the copy test):
+
+```bash
+python3 scripts/diary.py data/organism_diary_0p5b.pt data/tok_char.json --dev mps --port 8018 \
+    --temp 1.0 --store-read-beta 0 --store-boost 1 --store-boost-min 0.15 \
+    --live-lr 1e-5 --store-decay 0.9 --save data/organism_diary_0p5b.pt --diary-period 0.5 \
+    --diary-cost 0.12 --cort-k 1.0 --value-w 0.5 --wake-ticks 12000 \
+    --night-rounds 24 --night-rem 8 --night-sigreg 0.1 --night-starts 48 \
+    --night-opt own --night-batch 1 --night-lr 1e-4 --night-sil-mask 1 \
+    --gate 1 --gate-lr 0.05 --gate-int 0.5 --gate-habit 0.9 --gate-cost 0.12 --gate-fatigue 10 \
+    --gate-every 24 --affect split --wake-mod 1 --wake-lesson 1 --wake-every 24 --wake-window 32 \
+    --cortex latent --read-sharp 10 --rem-generate 1 --rem-steps 8
+```
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with

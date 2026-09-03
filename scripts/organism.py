@@ -2732,6 +2732,21 @@ def build_parser():
     ap.add_argument("--gate-int", type=float, default=0.5,
                     help="the diary's gate: weight of its own reward at a symbol it spoke (the belief it had in what it "
                          "chose, 0..1) in the gate's dopamine — the drive to babble; never a lesson on content")
+    ap.add_argument("--cortex", default="ce",
+                    help="the diary's cortex: 'ce' = it learns symbol identities by cross-entropy through a trained head (as "
+                         "built); 'latent' = it predicts the next embedding it receives (stop-grad target, SIGReg guard) and the "
+                         "mouth reads the lexicon by cosine (the user's law, 2026-09-03: predict embeddings, not words)")
+    ap.add_argument("--read-sharp", type=float, default=10.0,
+                    help="the diary's latent cortex: sharpness of the cosine readout (logit = sharpness x cosine); a physiology "
+                         "constant standing in for a learned decisiveness")
+    ap.add_argument("--rem-generate", type=int, default=0,
+                    help="the diary's night: 1 = REM runs the cortex free from each dream's first symbols on its own readout, "
+                         "hippocampus decoupled, and learns to forecast its own next band state along the rollout; 0 = REM along "
+                         "the hippocampal trace (as built)")
+    ap.add_argument("--rem-steps", type=int, default=8, help="the diary's generative REM: free-running steps per dream")
+    ap.add_argument("--wake-mod", type=int, default=1,
+                    help="the diary: 1 = stress modulates plasticity and exploration (the waking lesson's weight and the gate's "
+                         "flatness both grow with stress/10); 0 = off")
     ap.add_argument("--wake-lesson", type=int, default=0,
                     help="the diary: 1 = the cortex learns by day too — every --wake-every ticks one step on the last "
                          "--wake-window symbols at the live rate: next-symbol prediction of what the world wrote (its own "

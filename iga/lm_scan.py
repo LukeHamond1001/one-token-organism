@@ -435,6 +435,14 @@ class ScanLM(nn.Module):
         # cost of a symbol (the serve's lesson, local to the gate). Zero weights, a bias for
         # the birth rate of acting: what it does at first is the physiology, not a policy.
         self.mouth_gate = nn.Linear(d + 3, 1)          # cortex stream + fatigue, mood, stress
+        # THE LATENT CORTEX (2026-09-03, the user: the cortex predicts the embeddings it receives,
+        # one after the other, not words). latent_pred forecasts the next input embedding from
+        # the stream; with latent_readout on, the mouth's logits are cosine similarities between
+        # that forecast and the embedding table, times a sharpness (the readout is the lexicon
+        # itself, there is no vocabulary softmax to train); the lesson is latent_loss below.
+        self.latent_pred = nn.Linear(d, d)
+        self.latent_readout = False
+        self.read_sharp = 10.0
         nn.init.zeros_(self.mouth_gate.weight); nn.init.constant_(self.mouth_gate.bias, -1.1)
         self.pfc_pred = nn.ModuleDict({str(i): nn.Linear(d, d)
                                        for i in range(1 + len(self.ukeys))})
@@ -1452,7 +1460,13 @@ class ScanLM(nn.Module):
                     imag = torch.stack(roll).mean(0).reshape(B, T,
                                                              self.d)
                     C = C + self.imag_gate * imag
-        logits = self.head(self.lnf(C))
+        _lnC = self.lnf(C)
+        _lat = self.latent_pred(_lnC)                     # the forecast of the next embedding [B, T, d]
+        self._last_latent_pred = _lat
+        if getattr(self, "latent_readout", False):
+            logits = float(self.read_sharp) * nn.functional.normalize(_lat, dim=-1) @ lg_E.t()
+        else:
+            logits = self.head(_lnC)
         logits_own = logits                               # the cortex's belief before memory
         self._last_logits_own = logits_own                # NREM learns on this: the trunk's own voice, memory's vote left out
         with torch.no_grad():
@@ -1528,7 +1542,8 @@ class ScanLM(nn.Module):
         self._route_aux = None
         if getattr(self, "_route_deep", None) is not None and self.ponder_aux > 0 and self.training:
             C_deep, idx = self._route_deep
-            lg_deep = self.head(self.lnf(C_deep))
+            lg_deep = (float(self.read_sharp) * nn.functional.normalize(self.latent_pred(self.lnf(C_deep)), dim=-1) @ lg_E.t()) \
+                if getattr(self, "latent_readout", False) else self.head(self.lnf(C_deep))
             if rd_full is not None:
                 lg_deep = lg_deep + rd_full.reshape(B * T, -1)[idx]
             self._route_aux = (lg_deep, idx)
@@ -1805,6 +1820,29 @@ class ScanLM(nn.Module):
         c = self._face_loss
         self._face_loss = None
         return c
+
+    def latent_loss(self, y, sigreg=0.0, w=None):
+        """the latent cortex's lesson on the last forward: one minus the cosine between the
+        forecast of the next embedding and the embedding actually received (stop-grad), averaged
+        (weighted by w [B, T] when given), plus SIGReg on the normalized forecasts as the
+        collapse guard. y [B, T] long: the symbols received. Returns (loss, mean cosine)."""
+        lat = getattr(self, "_last_latent_pred", None)
+        if lat is None:
+            return None, None
+        E = nn.functional.normalize(self.embed.weight, dim=-1).detach()
+        tgt = E[y.to(E.device)]                                     # [B, T, d], stop-grad
+        cos = nn.functional.cosine_similarity(lat.float(), tgt.float(), dim=-1)   # [B, T]
+        if w is not None:
+            w = w.to(cos.device, cos.dtype)
+            loss = ((1.0 - cos) * w).sum() / w.sum().clamp(min=1e-6)
+            cmean = float((cos.detach() * w).sum() / w.sum().clamp(min=1e-6))
+        else:
+            loss = (1.0 - cos).mean()
+            cmean = float(cos.detach().mean())
+        if sigreg > 0.0:
+            B, T, d = lat.shape
+            loss = loss + float(sigreg) * self._sigreg(nn.functional.normalize(lat, dim=-1).reshape(B * T, d).float())
+        return loss, cmean
 
     def pop_bg_loss(self):
         """The basal-ganglia actor term, already weighted by bg_w (None at bg_w=0)."""

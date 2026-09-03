@@ -78,6 +78,11 @@ class Diary(O.Organism):
         # has the striatum's own plasticity: a small optimizer of its own, a lesson every few
         # ticks on detached features, credit = dopamine minus the cost of acting
         self.gate_on = bool(int(getattr(a, "gate", 1))) and hasattr(self.m, "mouth_gate")
+        # THE LATENT CORTEX (2026-09-03, the user's law): under --cortex latent the cortex
+        # predicts the next embedding it receives and the mouth reads the lexicon by cosine
+        self.latent = str(getattr(a, "cortex", "ce")) == "latent" and hasattr(self.m, "latent_pred")
+        self.m.latent_readout = bool(self.latent)
+        self.m.read_sharp = float(getattr(a, "read_sharp", 10.0) or 10.0)
         # FATIGUE, STRESS, MOOD (2026-09-03, the user's question "is stamina in the wrong category?"):
         # under --affect split the effort cost is fatigue (it recovers with rest and never touches
         # mood by itself), stress is a leaky integral of the world's dopamine dips (expectations
@@ -121,7 +126,13 @@ class Diary(O.Organism):
             own = getattr(m, "_last_logits_own", None)
             own = lg if own is None else own
             ce = torch.nn.functional.cross_entropy(own[0].float(), y[0], reduction="none")
-            loss = (ce * tgt_world[0]).sum() / tgt_world.sum()
+            if getattr(self, "latent", False):
+                ll, _lc = m.latent_loss(y, sigreg=float(getattr(self.a, "night_sigreg", 0.1) or 0.0), w=tgt_world)
+                loss = ll if ll is not None else (ce * 0.0).sum()
+            else:
+                loss = (ce * tgt_world[0]).sum() / tgt_world.sum()
+            if int(getattr(self.a, "wake_mod", 1) or 0):
+                loss = loss * (1.0 + self.stress / 10.0)      # stress raises plasticity (acute stress encodes harder)
             fw = float(getattr(self.a, "wake_forecast", 1.0) or 0.0)
             fl, cosv = (None, None)
             if fw > 0 and hasattr(m, "rem_pfc_loss"):
@@ -252,7 +263,10 @@ class Diary(O.Organism):
             # and no stress lean is written by hand — stress is an input the gate can learn from
             with torch.no_grad():
                 feat = self._gate_feat()
-                p_act = float(torch.sigmoid(self.m.mouth_gate(feat.unsqueeze(0)))[0, 0])
+                z_act = self.m.mouth_gate(feat.unsqueeze(0))[0, 0]
+                if int(getattr(self.a, "wake_mod", 1) or 0):
+                    z_act = z_act / (1.0 + self.stress / 10.0)     # stress flattens the choice: exploration
+                p_act = float(torch.sigmoid(z_act))
             v[self.sil] = float("-inf")
         elif self.cortisol > 0:                    # the old brake: stress leans the content softmax to silence
             v[self.sil] = v[self.sil] + float(getattr(self.a, "cort_k", 0.5)) * self.cortisol
@@ -421,6 +435,10 @@ class Diary(O.Organism):
             up = (ce * torch.relu(w[0])).sum()
             down = (torch.relu(3.0 - ce) * torch.relu(-w[0])).sum()   # blame pushes the symbol's loss to at least 3 nats
             loss = (up + down) / w.abs().sum().clamp(min=1e-3)
+            if getattr(self, "latent", False):
+                # under the latent cortex reward does not pull content: it acts through the gate,
+                # the store's write and the value ladder; the dose forward still teaches those
+                loss = loss.detach() * 0.0
             vl = self.m.pop_value_loss() if hasattr(self.m, "pop_value_loss") else None
             bl = self.m.buffered_value_loss(self.st) if hasattr(self.m, "buffered_value_loss") else None
             if vw > 0:
@@ -633,7 +651,12 @@ class Diary(O.Organism):
                 if not batch:
                     self.opt.zero_grad(set_to_none=True)
                 own0 = own[0].float()
-                if int(getattr(a, "night_sil_mask", 0) or 0):
+                if getattr(self, "latent", False):
+                    # THE LATENT LESSON: the cortex is pulled toward the embedding the trace hands it
+                    # next (stop-grad), SIGReg guarding against collapse; no vocabulary softmax
+                    ll, _lc = m.latent_loss(y.unsqueeze(0), sigreg=sig)
+                    loss = (ll if ll is not None else own0.sum() * 0.0) * scale
+                elif int(getattr(a, "night_sil_mask", 0) or 0):
                     # a dream holds no rest, so rest is not a candidate in it: the silence logit is
                     # taken out of the softmax and receives no lesson (measured 2026-09-03: with it
                     # in, every night pushed rest down and the mouth filled its ticks at stress 11)
@@ -661,6 +684,23 @@ class Diary(O.Organism):
         rem_traces = traces[:int(getattr(a, "night_rem", 8) or 0)]
         if batch:
             self.opt.zero_grad(set_to_none=True)
+        if int(getattr(a, "rem_generate", 0) or 0):
+            # GENERATIVE REM (2026-09-03, the user's law): the cortex runs free from each dream's
+            # first symbols on its own readout, the hippocampus decoupled, and learns to forecast
+            # the band state it will receive at its own next step (targets stop-grad, SIGReg on
+            # the stream). This is where the free-running attractor is worked on and where old
+            # material is interleaved: the rollout is the body's own, not the store's.
+            for ids in rem_traces:
+                loss, cosv = self._rem_rollout(ids, sig)
+                if loss is None or not bool(torch.isfinite(loss.detach())):
+                    continue
+                if batch:
+                    (loss * scale / len(rem_traces)).backward(); rem += 1
+                else:
+                    self.opt.zero_grad(set_to_none=True)
+                    (loss * scale).backward(); self._night_step(); rem += 1
+                cos_log.append(cosv)
+            rem_traces = []
         for ids in rem_traces:
             # REM: the hippocampus is silent — memory set aside, the PFC (the bands) drives —
             # and the cortex stream forecasts the band states it receives next along the trace
@@ -690,6 +730,84 @@ class Diary(O.Organism):
                 self.opt.zero_grad(set_to_none=True)
                 (vw * bl).backward(); self._night_step(); vsteps = 1
         self._night_counts = (nrem, rem, vsteps)
+
+    def _rem_rollout(self, ids, sig, k=3):
+        """the cortex free-running from a dream's first k symbols, memory set aside: at each of
+        --rem-steps steps its own readout's top symbol is what it says next (its own hand), and the
+        forecast made from its stream at step t is scored against the band bundle it receives at
+        t+1 (detached). Returns (loss, mean cosine) or (None, None)."""
+        m = self.m
+        L = int(getattr(self.a, "rem_steps", 8) or 8)
+        if len(ids) < k + 1:
+            return None, None
+        st = m.init_state(1, self.dev); m.reset_bag(st); st["mouth_floor"] = False
+        ro, wo = m.store_read_off, getattr(m, "store_write_off", False)
+        m.store_read_off, m.store_write_off = True, True
+        terms, cos_all, streams = [], [], []
+        try:
+            x = torch.tensor([[self.sil] + list(ids[:k])], device=self.dev)
+            lg, st, _ = m(x, st, who=torch.zeros_like(x))
+            C_prev = m._last_C_rem[:, -1]                          # [1, d], live
+            nxt = int(lg[0, -1].float().argmax())
+            for _ in range(L):
+                xs = torch.tensor([[nxt]], device=self.dev)
+                lg, st, _ = m(xs, st, who=torch.ones_like(xs))     # its own hand
+                Bd = m._last_bundle                                # [1, 1, S, d], detached
+                if Bd is None or C_prev is None:
+                    break
+                S = Bd.shape[2]
+                for s_ in range(1, S):
+                    pred = m.pfc_pred[str(s_)](C_prev)             # [1, d]
+                    cos = torch.nn.functional.cosine_similarity(pred, Bd[:, -1, s_].to(pred.dtype), dim=-1)
+                    terms.append((1.0 - cos).mean()); cos_all.append(float(cos.detach().mean()))
+                streams.append(m.lnf(m._last_C_rem[:, -1]))
+                C_prev = m._last_C_rem[:, -1]
+                v = lg[0, -1].float().clone(); v[self._bans] = float("-inf"); v[self.sil] = float("-inf")
+                nxt = int(v.argmax())
+        finally:
+            m.store_read_off, m.store_write_off = ro, wo
+        if not terms:
+            return None, None
+        loss = torch.stack(terms).mean()
+        if sig > 0 and len(streams) >= 4:
+            loss = loss + float(sig) * m._sigreg(torch.cat(streams, 0).float())
+        return loss, (sum(cos_all) / len(cos_all))
+
+    def _rest(self):
+        """the night's plumbing, lean (the inherited Organism.sleep carried the earlier bodies'
+        pursuits, report cards and conscience, all inert here): the store fades, the working state
+        wakes fresh, the body is saved and backed up."""
+        import scripts.organism as _O
+        a = self.a
+        lived = len(self.day_buf)
+        old_M, store_carried = None, None
+        if a.store_decay > 0 and isinstance(self.st, dict) and self.st.get("M"):
+            old_M = {k_: v_.detach() * a.store_decay for k_, v_ in self.st["M"].items()}
+        src = self.state_meta.get("st_live") or self.state_meta.get("st")
+        self.st = _O._to_dev(src if self.state_meta.get("st_live") else _O._lane0(src), self.dev) \
+            if src is not None else self.m.init_state(1, self.dev)
+        self._flush_working(self.st)
+        if old_M is not None and isinstance(self.st, dict) and self.st.get("M"):
+            for k_, v_ in self.st["M"].items():
+                ov = old_M.get(k_)
+                if ov is not None and ov.shape == v_.shape:
+                    self.st["M"][k_] = ov.to(v_.device, v_.dtype)
+            store_carried = round(float(sum(v_.abs().sum() for v_ in old_M.values())), 1)
+        self.session, self.last_q = [], None
+        self.day_buf, self.day_faces, self.day_who = [], [], []
+        self.day_n += 1
+        if not getattr(self, "affect_split", False):
+            self.mood = 0.0                                  # the old affect: a fresh wake
+        self.cortisol = 0.0                                  # rested
+        self.stream.clear()
+        saved = None
+        if a.save:
+            try:
+                saved = self.save().get("saved")
+                self._night_backup()
+            except Exception as e:
+                return {"error": "save: " + str(e)[:160], "lived_tokens": lived}
+        return {"lived_tokens": lived, "store_carried": store_carried, "autosaved": saved}
 
     def _night_step(self):
         """one change of the weights in the night: the gradient is clipped to a norm of 1 and a
@@ -794,7 +912,7 @@ class Diary(O.Organism):
                 _p0 = self.sleep_pressure
                 self.sleep_pressure = 0                  # before the night's autosave: a restored body wakes rested
                 self.nights += 1                         # counted before the autosave, so a restored body knows its nights
-                res = self.sleep()
+                res = self._rest()
                 if not (isinstance(res, dict) and not res.get("error")):
                     self.sleep_pressure = _p0
                     self.nights -= 1

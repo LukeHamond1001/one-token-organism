@@ -29,6 +29,9 @@ def main():
     ap.add_argument("--store-read-beta", type=float, default=1.0)
     ap.add_argument("--sil-decay", type=float, default=None)
     ap.add_argument("--store-boost-min", type=float, default=0.15)
+    ap.add_argument("--latent", type=int, default=0,
+                    help="1 = the body's cortex is latent: read the lexicon by cosine (set --read-sharp to the serve's)")
+    ap.add_argument("--read-sharp", type=float, default=10.0)
     ap.add_argument("--voice", type=float, default=0.0,
                     help="0 = memory at the organ's own strength (the serve now); 8 = the old raised voice, for comparison")
     a = ap.parse_args()
@@ -44,6 +47,7 @@ def main():
         m.kc_sil_decay = float(a.sil_decay)
     m.store_boost = float(a.store_boost)
     m.read_beta = float(a.store_read_beta)
+    m.latent_readout = bool(a.latent); m.read_sharp = float(a.read_sharp)
     src = state.get("st_live") or state.get("st")
     base = _to_dev(src if state.get("st_live") else _lane0(src), a.dev) if src is not None \
         else m.init_state(1, a.dev)
