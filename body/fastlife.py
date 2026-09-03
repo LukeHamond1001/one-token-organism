@@ -175,7 +175,7 @@ def summarize(log, night, day):
     g = night.get("gauge", {}) if night else {}
     print(f"day {day}: smiles {len(smiles)} ({', '.join(sorted(set(r['on'] for r in smiles)))[:60]}) | cues {len(cues)}: "
           + " ".join(repr(r['its_after'].replace('_', '')[:6]) for r in cues[-8:])
-          + f" | night: dreams {night.get('dreams')} len {night.get('mean_len')} nrem {(night.get('nrem_loss') or ['?'])[0]}->{(night.get('nrem_loss') or ['?'])[-1]} gauge {g.get('before')}->{g.get('after')} "
+          + f" | night: dreams {night.get('dreams')} len {night.get('mean_len')} nrem {(night.get('nrem_loss') or ['?'])[0]}->{(night.get('nrem_loss') or ['?'])[-1]} gauge {g.get('before')}->{g.get('after_nrem')}->{g.get('after')} "
           f"cos {g.get('cos_before')}->{g.get('cos_after')} rem {night.get('rem_cos_first')}->{night.get('rem_cos')} discarded {night.get('discarded')} "
           f"| gate {cues[-1].get('gate') if cues else None} store {night.get('store_slots')} | dreams e.g. {[e[:14] for e in (night.get('examples') or [])[:3]]}", flush=True)
 

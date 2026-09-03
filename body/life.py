@@ -498,6 +498,7 @@ class Life:
                         (ll / len(dreams)).backward(); tot += float(ll.detach()) / len(dreams); ok += 1
                     if ok:
                         self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
+                mid, _ = self.gauge(dreams); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
                 # REM: the cortex runs free from each dream's first symbols on its own readout,
                 # a quarter of the night in rounds (biology's share), each round one batched step
                 rem_cos = []; rem_steps = 0
@@ -523,8 +524,8 @@ class Life:
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
                             "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
                             "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None),
-                            "gauge": {"before": before, "after": after, "symbols": nsym,
-                                      "cos_before": before_cos, "cos_after": after_cos}})
+                            "gauge": {"before": before, "after_nrem": mid, "after": after, "symbols": nsym,
+                                      "cos_before": before_cos, "cos_after_nrem": mid_cos, "cos_after": after_cos}})
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n()
