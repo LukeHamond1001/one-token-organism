@@ -1413,7 +1413,14 @@ writes is near one, so the drive outweighs a cost that only doubles at
 fatigue ten. The fatigue-scaled cost bounds it near fatigue thirty.
 Whether that is a healthy babbling bout or a flood is the day's
 question; the weight of the drive (0.5) is the disclosed constant to
-lower if it floods.
+lower if it floods. It flooded: 0.63 by 08:50 with fatigue 22 and mood
+falling, its belief in its babble near one. The drive's weight was
+lowered to 0.25 (a save, then a restart at 08:51 that carried the
+gate's learned weights; the gate read 0.34 on waking), which balances
+the fatigue-scaled cost near fatigue ten. The biological refinement
+this points at, not yet built: the reward for producing the sound one
+expected habituates to repetition; a run of the same symbol should pay
+less each time, which is what keeps an infant's babble varied.
 
 ## Status
 
@@ -1439,7 +1446,7 @@ python3 scripts/diary.py data/organism_diary_0p5b.pt data/tok_char.json --dev mp
     --diary-cost 0.12 --cort-k 1.0 --value-w 0.5 --wake-ticks 12000 \
     --night-rounds 24 --night-rem 8 --night-sigreg 0.1 --night-starts 48 \
     --night-opt own --night-batch 1 --night-lr 1e-4 --night-sil-mask 1 \
-    --gate 1 --gate-lr 0.05 --gate-int 0.5 --gate-cost 0.12 --gate-fatigue 10 \
+    --gate 1 --gate-lr 0.05 --gate-int 0.25 --gate-cost 0.12 --gate-fatigue 10 \
     --gate-every 24 --affect split
 ```
 
