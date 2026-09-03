@@ -42,8 +42,12 @@ slot or a merge into the nearest slot; strength = surprise × (1 + dopamine),
 own symbols carry zero surprise (corollary discharge: what the mouth wrote
 was foretold). Read: attention over keys by content alone at the organ's own temperature
 (strength decides durability and replay, never which memory a cue retrieves),
-returning a predicted next embedding. Its recall reaches the forecast through ONE
-learned path, `store_in`, identity at birth: forecast = cortex + recall.
+returning a predicted next embedding. Its recall reaches the mouth's forecast through ONE
+path, `store_in`, identity at birth: what the mouth reads = the cortex's
+forecast + recall. The cortex is trained on its own forecast alone, day and
+night (predictive coding: each area learns from its own error); recall is
+never a term in that error (with the sum in the loss the day taught only the
+residual the store missed and undid the night).
 Recall is not an input to the cortex's stream (entered there it looked like
 the current symbol and the trunk advanced it a step; the mouth read the
 second letter of every answer). No direct vote on the mouth. Fade: strengths × 0.9 each night; slots below the store's own mean

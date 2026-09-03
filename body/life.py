@@ -334,7 +334,11 @@ class Life:
             self.opt_day.zero_grad(set_to_none=True)
             u = m.inputs(xs, whos, faces, bundles, reads)
             C = m.stream(u)
-            pred = m.forecast(C, reads)
+            # the cortex is trained on ITS OWN forecast, day and night alike (predictive coding: each
+            # area learns from its own error); recall is a parallel contribution the mouth reads, never
+            # a term in the cortex's error (with the sum in the loss the day taught only the residual
+            # the store missed and undid the night: run 13, day 4)
+            pred = m.latent_pred(C)
             ll, lc = m.latent_loss(pred, y, w=w)
             fl, fc = m.forecast_loss(C[:-1], bundles[1:], sig=float(self.cfg["sigreg"]))   # SIGReg on the stream
             loss = (ll + fl) * (1.0 + self.stress / 10.0)      # stress raises plasticity
