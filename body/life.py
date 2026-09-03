@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
-    bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
+    bag_decay=0.8, bag_own_weight=0.3, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
@@ -93,8 +93,15 @@ class Life:
             # the hippocampus: write what came next under the context before it
             if learn_store and who == 0 and x != self.sil and self.bag.norm() > 1e-6:
                 self.store.write(self.bag, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
-            # the context moves on
-            self.bag = float(self.cfg["bag_decay"]) * self.bag + ex + m.who_emb.weight[who]
+            # the context moves on: a symbol enters it, quiet only fades it (a pause is not content)
+            if x == self.sil:
+                self.bag = float(self.cfg["bag_decay"]) * self.bag
+            else:
+                # its own symbols enter the context attenuated (corollary discharge: self-produced input
+                # is suppressed; measured in cortex at a third to a half), so its babble does not drown
+                # the world's words in the memory's keys, yet its own first letter still shifts recall
+                wgt = float(self.cfg["bag_own_weight"]) if who == 1 else 1.0
+                self.bag = float(self.cfg["bag_decay"]) * self.bag + wgt * (ex + m.who_emb.weight[who])
             read, conf, _ = self.store.read(self.bag)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
             self.win.append({"x": int(x), "who": int(who), "face": face, "bundle": self.bands.clone(),
@@ -358,7 +365,7 @@ class Life:
         xs = [self.sil] + list(ids[:-1]); reads, bundles = [], []
         with torch.no_grad():
             for x in xs:
-                bag = float(self.cfg["bag_decay"]) * bag + m.E.weight[x] + m.who_emb.weight[0]
+                bag = float(self.cfg["bag_decay"]) * bag + ((m.E.weight[x] + m.who_emb.weight[0]) if x != self.sil else 0.0)
                 rd = self.store.read(bag)[0] if mem_on else torch.zeros(m.d, device=self.dev)
                 reads.append(rd); bundles.append(bands.clone())
                 u = m.inputs(torch.tensor(xs[:len(reads)], device=self.dev), torch.zeros(len(reads), dtype=torch.long, device=self.dev),
@@ -482,7 +489,7 @@ class Life:
                     xs.append(int(lg.argmax())); whos.append(1)
             x = xs[-1] if step >= len(reads) else xs[step]
             with torch.no_grad():
-                bag = float(self.cfg["bag_decay"]) * bag + m.E.weight[xs[step]] + m.who_emb.weight[whos[step]]
+                bag = float(self.cfg["bag_decay"]) * bag + ((m.E.weight[xs[step]] + m.who_emb.weight[whos[step]]) if xs[step] != self.sil else 0.0)
             reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
             u = m.inputs(torch.tensor(xs[:step + 1], device=self.dev), torch.tensor(whos[:step + 1], device=self.dev),
                          torch.zeros(step + 1, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))

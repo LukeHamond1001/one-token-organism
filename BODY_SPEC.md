@@ -35,11 +35,13 @@ thing that changes while it lives is what the world says to it.
 readout: the mouth reads it by cosine. No vocabulary softmax is ever trained.
 
 **Hippocampus (episodic store).** Slots of (key, value, strength, who). The
-key is the decaying bag of the last symbols' embeddings plus the speaker
-sense; the value is the embedding of the symbol that came next. Write: a new
+key is the decaying bag (0.8 per symbol) of the last symbols' embeddings plus
+the speaker sense, its own symbols entering at 0.3 (corollary discharge
+attenuates self-produced input) and quiet only fading it; the value is the embedding of the symbol that came next. Write: a new
 slot or a merge into the nearest slot; strength = surprise × (1 + dopamine),
 own symbols carry zero surprise (corollary discharge: what the mouth wrote
-was foretold). Read: attention over keys at the organ's own temperature,
+was foretold). Read: attention over keys by content alone at the organ's own temperature
+(strength decides durability and replay, never which memory a cue retrieves),
 returning a predicted next embedding. It reaches the cortex through ONE
 learned path, the slot `store_in`, initialized to identity (the pathway
 exists at birth; the cortex learns to modulate it). No direct vote on the

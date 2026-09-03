@@ -37,8 +37,9 @@ class Store:
     completion); write = a new slot or a merge into a near-identical one; fade = strengths
     shrink each night and slots far below the store's own mean are forgotten."""
 
-    def __init__(self, d, cap=8192, temp=0.05, device="cpu"):
+    def __init__(self, d, cap=8192, temp=0.05, device="cpu", read_strength=0.0):
         self.d, self.cap, self.temp, self.dev = d, int(cap), float(temp), device
+        self.read_strength = float(read_strength)      # weight of log-strength in the read: 0 = recall by content alone
         self.K = torch.zeros(0, d, device=device)
         self.V = torch.zeros(0, d, device=device)
         self.S = torch.zeros(0, device=device)
@@ -56,7 +57,11 @@ class Store:
         qn = F.normalize(q.to(self.dev).float(), dim=0)
         sims = self.K @ qn                                              # [n]
         S = self.S if adapt is None else self.S * adapt
-        logits = sims / self.temp + torch.log(S + 1e-6)
+        # RECALL BY CONTENT: the match decides; strength decides how long a memory lasts and which are
+        # replayed (with it in the read, the most-reinforced memory won every cue: measured 2026-09-03)
+        logits = sims / self.temp
+        if self.read_strength > 0 or adapt is not None:
+            logits = logits + (self.read_strength if adapt is None else 1.0) * torch.log(S + 1e-6) * (1.0 if adapt is not None else 1.0)
         w = torch.softmax(logits, 0)
         pred = F.normalize(w @ self.V, dim=0)
         self._last_w = w

@@ -54,6 +54,30 @@ def test_store_recalls():
     print("2 the store recalls: 'give ' ->", repr(top), "conf", round(conf, 3))
 
 
+def test_recall_is_by_content():
+    """three lines with shared endings: each cue recalls its own continuation, not the strongest memory"""
+    life = tiny()
+    for _ in range(2):
+        for line in ["dog will go", "ball on", "give milk"]:
+            say(life, line, 2)
+    for _ in range(6):
+        say(life, "give milk", 2)                       # the most reinforced memory
+    def recall(cue):
+        # the query as life makes it: the cue typed, the body's own symbols interleaved as they come
+        life.type_text(cue)
+        while life.queue:
+            life.tick()
+        pred, conf, _ = life.store.read(life.bag)
+        for _ in range(6):
+            life.tick()
+        return TOK.decode([life.m.nearest(pred)]), conf
+    got = {cue: recall(cue) for cue in ("dog will ", "ball ", "give ")}
+    assert got["dog will "][0] == "g", f"'dog will ' recalled {got['dog will ']}"
+    assert got["ball "][0] == "o", f"'ball ' recalled {got['ball ']}"
+    assert got["give "][0] == "m", f"'give ' recalled {got['give ']}"
+    print("2b recall is by content:", {k: (v[0], round(v[1], 2)) for k, v in got.items()})
+
+
 def test_dreams_are_its_lines():
     life = tiny()
     for line in ["dog will go", "give milk", "scared ball"]:
@@ -160,7 +184,7 @@ def test_guards():
 
 if __name__ == "__main__":
     t0 = time.time()
-    tests = [test_corollary_discharge, test_store_recalls, test_dreams_are_its_lines, test_night_moves_the_cortex,
+    tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards]
     failed = 0
     for t in tests:
