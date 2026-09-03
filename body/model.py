@@ -177,7 +177,7 @@ class Organs(nn.Module):
         # representations). A bag was blind to order and count: after its own "ball" it recalled the
         # "bal" key at 0.976 against the "ball" key at 0.962 and stuttered the l (run 18, day 1).
         self.register_buffer("perm", torch.randperm(d))
-        self.own_gain = 0.5                               # corollary discharge on its own sound in the stream
+        self.own_gain = 1.0                               # its own sound heard as the world's (superposed when both sound)
         self.face_in = nn.Linear(2, d)                    # the caregiver's face and its change, as a sense
         nn.init.zeros_(self.face_in.weight); nn.init.zeros_(self.face_in.bias)
         # THE HIPPOCAMPAL PATHWAY: the store's recall reaches the cortex through one learned map,
@@ -224,10 +224,20 @@ class Organs(nn.Module):
         (own_gain; measured in cortex at a third to a half). With two positions per tick (the world's,
         then its own, mostly a rest) the stream read "d . o . g ." awake and "d o g" in the dreams
         the night trains on, and the cortex forecast "d" after everything awake (run 17, day 6)."""
-        u = self.E(xs) + self.face_in(faces) + self.bundle_in(bundles.reshape(bundles.shape[0], -1))
+        e = self.E(xs)
         if xos is not None and self.sil_id is not None:
-            own = (xos != self.sil_id).to(u.dtype).unsqueeze(-1)
-            u = u + float(self.own_gain) * own * self.E(xos)
+            # A SOUND IS A SOUND: the tick's input is whatever sounded, its own voice heard as the
+            # world's is (the rest only when nothing sounded; both superposed when both sounded).
+            # Attenuated and superposed on a rest, and present in the day's lesson where it never
+            # predicted the target, its own voice became a learned invariance: the cortex alone ignored
+            # its own symbols entirely and could not chain its own speech (run 20, day 15: identical
+            # output at gain 0.5, 1.0, or replaced). Corollary discharge suppresses LEARNING from
+            # self-produced sound, not the hearing of it: the lessons see the world's symbols only.
+            own = (xos != self.sil_id).unsqueeze(-1)
+            quiet = (xs == self.sil_id).unsqueeze(-1)
+            eo = self.E(xos)
+            e = torch.where(own & quiet, eo, e) + (own & ~quiet).to(e.dtype) * float(self.own_gain) * eo
+        u = e + self.face_in(faces) + self.bundle_in(bundles.reshape(bundles.shape[0], -1))
         return self.in_ln(u)
 
     def shift(self, v):

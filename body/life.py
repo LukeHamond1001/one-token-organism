@@ -371,7 +371,12 @@ class Life:
         m = self.m; m.train()
         try:
             self.opt_day.zero_grad(set_to_none=True)
-            u = m.inputs(xs, whos, faces, bundles, reads)
+            # THE LESSON HEARS THE WORLD ONLY (corollary discharge: no learning from self-produced
+            # sound). Its own symbols in the lesson's inputs, never predictive of the world's next
+            # symbol, taught the cortex to ignore its own voice, and alone it could not chain its own
+            # speech (run 20, day 15). Unlearned about, its own "g" is heard as the world's "g".
+            xos_none = torch.full_like(whos, self.sil)
+            u = m.inputs(xs, xos_none, faces, bundles, reads)
             C = m.stream(u)
             # the cortex is trained on ITS OWN forecast, day and night alike (predictive coding: each
             # area learns from its own error); recall is a parallel contribution the mouth reads, never
