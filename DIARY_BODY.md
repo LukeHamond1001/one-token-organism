@@ -1538,6 +1538,48 @@ stage), the sampled mouth is still noise (quiet 0.8), no cue started.
 The readout's top symbol rose to 12 percent and the waking forecast of
 the next symbol to 0.21 within minutes of waking.
 
+## The fast days (2026-09-03, 12:30 to 13:35)
+
+`body/fastlife.py` runs the same body and the same raw rules on the
+body's own clock in one process: a day in about a minute, a night in
+ten seconds. Eight runs from birth in an hour, each ended by a
+measurement and a fix, each fix a line in the spec's mathematics:
+
+- **Run 3:** the gate went to zero and stayed: a policy gradient's
+  absorbing state (no acts, no gradient). Spontaneous activity as a
+  floor, p(act) ≥ 0.05.
+- **Run 4:** the gate sat at the floor. The stream feature had norm 16
+  (Hebbian steps of tens of logits) and a stale baseline kept the credit
+  negative for hundreds of lessons after the night reset fatigue. Unit
+  features, a baseline that forgets in ten lessons and resets with the
+  night, a tonic drive that makes babble the no-reward equilibrium.
+  Then the probe showed the hippocampus recalling "l" after "dog will ":
+  strength in the read let the most-reinforced memory answer every cue;
+  quiet ticks were writing pause timing into the keys; its own babble
+  polluted them. Recall by content alone, quiet only fading the context,
+  own symbols entering at a third; a collision test.
+- **Run 5:** REM's retention vanished on night 3: the PFC's input maps
+  learning at the critic's rate moved the states everything forecasts.
+  A slow PFC (the cortex's rate).
+- **Run 6:** the cortex's own forecast plateaued at 0.30 while the night's
+  loss fell: NREM fed the store's recall as input and the cortex learned
+  to copy it. NREM with the read off.
+- **Run 7 (12 days, every fix in):** the cortex alone, after each night,
+  0.26, 0.31, 0.28, 0.27, 0.33, 0.51, 0.70, 0.69, 0.73, 0.70, 0.70, 0.76
+  argmax on its dreams (cosine 0.23 to 0.76), retained between nights;
+  REM rising within every night; smiles 0, 0, 0, 0, 0, 1, 0, 5, 0, 1, 3, 0
+  (go, on, all); by day 8 the cue replies carry the frames' letters
+  ("all" after "scared "). The mouth alternates between a space attractor
+  and an "l" attractor: at a fixed sharpness of 10 the readout is nearly
+  greedy on a blended forecast, so babble has no variety.
+- **Run 8 (20 days, running):** decisiveness from tonic dopamine, the
+  readout's sharpness 5 + 5 × mood/6 (songbirds: vocal variability high
+  when unrewarded, falling as reward comes), replacing the last stand-in
+  constant of the mouth.
+
+The slow lineage on port 8018 kept its hourly days for comparison and
+for the page; it will be reborn from the settled recipe.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with
