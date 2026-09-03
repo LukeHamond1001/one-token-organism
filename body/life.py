@@ -421,7 +421,10 @@ class Life:
                 for _ in range(int(self.cfg["night_rounds"])):
                     opt.zero_grad(set_to_none=True); tot = 0.0; ok = 0
                     for ids in dreams:
-                        xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=True)
+                        # the hippocampus replays the sequence; the cortex must carry it itself (the read
+                        # is not an input to the lesson, or the cortex learns to copy the recall and the
+                        # gauge, taken alone, stays flat: run 6, day 4)
+                        xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
                         C = m.stream(m.inputs(xs, whos, faces, bundles, reads))
                         ll, _ = m.latent_loss(m.latent_pred(C), y, sig=sig, C=C)
                         if not bool(torch.isfinite(ll.detach())):

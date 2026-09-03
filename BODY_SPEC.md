@@ -103,7 +103,9 @@ choice, habituating per symbol) minus a cost that grows with fatigue.
 - NREM: dreams start where the store is strongest (slots sampled by strength);
   each dream is pattern completion (value → next key → read → ...) until the
   read's confidence falls below the store's own mean; the cortex learns the
-  latent lesson on every dream, all dreams summed into one step per round,
+  latent lesson on every dream with the store's read OFF as input (the
+  hippocampus supplies the sequence, the plasticity is intra-cortical; with the
+  read on, the cortex learned to copy it and carried nothing alone), all dreams summed into one step per round,
   R rounds, sleep's own optimizer and rate.
 - REM: from each dream's first symbols the cortex runs free on its own
   readout, hippocampus decoupled, and learns to forecast the bundle it
