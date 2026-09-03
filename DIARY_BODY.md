@@ -1950,3 +1950,28 @@ symbols (55 at day 6, 61 at day 15, a plateau near three quarters), "dog will go
 of 10 and "why dog up? because big dog" at 23 of 26. The unheard cues: still nothing.
 The body is a faithful echo of its world with a cortex that has learned the world's
 sequences and cannot yet use them for its own speech; run 22 is the test of that.
+
+## The instrument that echoed (2026-09-03, late)
+
+Run 22 at day 6 answered no: the cortex alone still looped, and its next-symbol trace was
+lower (48 of 82). Then two readings of the same body and cue disagreed: the trace said
+the cortex forecast "d" after "dog will ", the probe's alone column said "w". The probe's
+store held eight slots. "Memory off" emptied the store at load, and the cue's own typing
+wrote the cue back into it; the loops were that store echoing the cue's own words, "will"
+after "dog ". Every "alone" loop since run 17 was the instrument. The variants that gave
+identical output at gains 0.5, 1.0 and replaced did so because the store dominated all
+three. Memory off now means no writes and no reads.
+
+Measured honestly, the cortex alone of run 21 at day 20, no hippocampus at all: "dog
+will " gives "go up? because", "scared " gives "ball onder", "where ball? " gives "ball
+onder", "first milk then " gives "ball ball", "why dog up? " gives "because big". At day
+6 the same recipe's cortex could not ("inder dog up?"). That is the answer to the
+question that mattered: the cortex takes over from the hippocampus across days, under
+the lesson as it was. Run 22's change, its own voice at full weight and the lessons
+hearing the world only, made the cortex alone worse at day 6 ("big big big") and is
+reverted, on measurement, with an apology to the diary for the entry before this one.
+
+Two things stay from the cycle. The honest probe. And the mouth's read at a quiet-world
+tick: the forecast made at the last filled position, the one holding its own last symbol,
+which is trained to foresee what follows it; a freshly appended rest foresaw what follows
+a pause. Commit aca73c0; run 23 from birth on the settled recipe plus that read.
