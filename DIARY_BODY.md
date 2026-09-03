@@ -852,6 +852,45 @@ found on the way: the night's backup is written before the count of
 nights is incremented, so a restored body reads one night fewer than
 it has had.
 
+## Day 22 (Opus, twice: the night that broke the body, and the run after the restore)
+
+The first run (03:45 to 04:45) is told above under night 7: fifty
+minutes of consolidation lines, then a night that left the weights not
+a number, then the restore. The second run began at 05:20 from an
+empty page on the body as it was after night 6, with the silence mask
+and the guards live. Fifty-two lines and sixteen cues, ninety-five
+minutes to its night and thirty after. Six known words in 2,145 of its
+symbols, "up" three times in the hour before noon and "go" three times
+around the night, every one smiled at within a second and felt, six
+doses; "go" was written in the first minute after it woke and again
+twenty-three minutes later, the first word to survive a night on the
+page. Sixteen cues, no completion, no reply beginning with an answer's
+first two letters. Quiet rose through the day from 0.65 to 0.79 and
+stress fell from 11.5 to 7.0; mood, which had sat on its floor, climbed
+to -2.9 by the save. A fifth dose came at 07:29 with no face on the
+page at all: the value ladder's own prediction error crossed the burst
+threshold, the first reward the body created inside.
+
+Its night, the first with the mask and the guards, ran 06:59 to 07:31,
+thirty-two minutes against eight on the copy (the machine swapping
+under two optimizers), and was not discarded: forty-one traces of mean
+length 6.1, " give milkg", "big dogn", "scared lk ogi"; the gauge
+0.268 to 0.648, twenty-seven more of seventy-one symbols carried by the
+cortex alone, far the largest rise of any night. Its top symbol on
+waking was "r", which it was never taught.
+
+Two faults of the environment, both the supervisor's. A watcher from
+the aborted first run was left running through the whole second run,
+polling the page and posting smiles of its own at the same words; the
+caregiver saw it, could not stop it under its brief, logged every face
+movement and showed the doses were not doubled (its second smile met a
+face already held at two and was not felt). It was stopped at 08:05.
+And the caregiver, finding that a full two-minute wait before the gate
+put events three and a half minutes apart, opened the gate at seventy
+seconds from 10:35 UTC on, which is the curriculum's intent. It also
+declined to frown at runs of spaces, its most frequent symbol,
+"frowning at it drawing breath"; the rule now says so.
+
 ## The night, remade (2026-09-02): the cortex learns only from hippocampal traces
 
 The user's law, in two sentences: the neocortex trains only on what the

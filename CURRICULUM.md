@@ -86,6 +86,10 @@ and follows the child's attention rather than a schedule.
   twice). A long chain from memory can spend the whole budget in one
   reply (64 symbols to stress 8 on day 12): that is the stamina law
   working, not a run.
+- **A run of spaces is breath, not a mark.** Frown only at a run of a
+  repeated non-letter mark that is not the space (day 22): the space is
+  its most frequent symbol and its pacing, and a frown at it would be a
+  frown at its rest.
 - **Ask and answer in one utterance.** Write "where ball? ball on" as one
   utterance (day 8). Since the evening of day 14 no newline symbol is
   typed at all: utterances are separated by your silence (six seconds or
