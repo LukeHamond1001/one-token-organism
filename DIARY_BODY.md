@@ -1975,3 +1975,9 @@ Two things stay from the cycle. The honest probe. And the mouth's read at a quie
 tick: the forecast made at the last filled position, the one holding its own last symbol,
 which is trained to foresee what follows it; a freshly appended rest foresaw what follows
 a pause. Commit aca73c0; run 23 from birth on the settled recipe plus that read.
+
+The reborn body's second day at human pace: 196 smiles, every cue answered from the
+page ("dog will go", "book then ball", "milk then ball", "ball under", "dog up? scared",
+"because" once as "cared ball"), and the second night 0.52 to 0.86 with 210 slots kept.
+Run 23 at day 15, with the store: 44 of 48 in full; the cortex's trace 59 of 82, where
+run 21 had 61 at the same day.
