@@ -115,7 +115,7 @@ class Life:
             C = self._stream_now()
             self.bands = m.band_update(self.bands, C)
             self._C_last = C
-            pred = m.latent_pred(C)
+            pred = m.forecast(C, read)
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
 
@@ -334,7 +334,7 @@ class Life:
             self.opt_day.zero_grad(set_to_none=True)
             u = m.inputs(xs, whos, faces, bundles, reads)
             C = m.stream(u)
-            pred = m.latent_pred(C)
+            pred = m.forecast(C, reads)
             ll, lc = m.latent_loss(pred, y, w=w)
             fl, fc = m.forecast_loss(C[:-1], bundles[1:], sig=float(self.cfg["sigreg"]))   # SIGReg on the stream
             loss = (ll + fl) * (1.0 + self.stress / 10.0)      # stress raises plasticity

@@ -201,11 +201,18 @@ class Organs(nn.Module):
         The cortex hears its own symbols as it hears the world's (a sound is a sound): the speaker
         sense lives in the hippocampal key and the corollary discharge, not in the stream, so what
         it learned after the world's "d" applies after its own (run 7: runs of one letter otherwise)."""
-        u = self.E(xs) + self.face_in(faces) \
-            + self.bundle_in(bundles.reshape(bundles.shape[0], -1)) + self.store_in(reads)
+        u = self.E(xs) + self.face_in(faces) + self.bundle_in(bundles.reshape(bundles.shape[0], -1))
         if getattr(self, "cortex_who", False):
             u = u + self.who_emb(whos)
         return self.in_ln(u)
+
+    def forecast(self, C, reads):
+        """the forecast of the next embedding: the cortex's own, plus the hippocampus's recall through
+        its pathway. The recall is NOT an input to the stream: entered there (identity at birth) it
+        looked like the current symbol and the trunk advanced it one step, so the mouth read the
+        second letter of every answer (run 10, day 6). Recall contributes to the prediction, as
+        CA1's output does, and the night trains the cortex with the recall off."""
+        return self.latent_pred(C) + self.store_in(reads)
 
     def stream(self, u):
         """u [T, d] -> C [T, d], the cortex stream (causal over the window)"""

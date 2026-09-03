@@ -42,10 +42,11 @@ slot or a merge into the nearest slot; strength = surprise × (1 + dopamine),
 own symbols carry zero surprise (corollary discharge: what the mouth wrote
 was foretold). Read: attention over keys by content alone at the organ's own temperature
 (strength decides durability and replay, never which memory a cue retrieves),
-returning a predicted next embedding. It reaches the cortex through ONE
-learned path, the slot `store_in`, initialized to identity (the pathway
-exists at birth; the cortex learns to modulate it). No direct vote on the
-mouth. Fade: strengths × 0.9 each night; slots below the store's own mean
+returning a predicted next embedding. Its recall reaches the forecast through ONE
+learned path, `store_in`, identity at birth: forecast = cortex + recall.
+Recall is not an input to the cortex's stream (entered there it looked like
+the current symbol and the trunk advanced it a step; the mouth read the
+second letter of every answer). No direct vote on the mouth. Fade: strengths × 0.9 each night; slots below the store's own mean
 strength × 0.1 are forgotten (relative, not a constant).
 
 **PFC (the band ladder).** Bands with clocks 1, 4, 16, 64, 256, 1024, 4096,
@@ -59,7 +60,7 @@ live, so each band learns to hold what predicts reward at its own horizon
 (dopamine shaping working memory).
 
 **Cortex.** A small transformer over the last W steps of [embedding, face,
-bundle, hippocampal read] producing the stream C (no speaker sense in the
+bundle] producing the stream C (no speaker sense in the
 stream: it hears its own symbols as it hears the world's, so what it learned
 after the world's "d" applies after its own; the speaker sense lives in the
 hippocampal key and the corollary discharge); from C, `latent_pred`

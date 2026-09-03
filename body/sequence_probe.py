@@ -40,7 +40,7 @@ def main():
             L.tick()
         # the forecast made as the cue's last symbol entered (what the mouth reads)
         with torch.no_grad():
-            C = L._stream_now(); p0 = m.latent_pred(C)
+            C = L._stream_now(); p0 = m.forecast(C, L.store.read(L.bag)[0])
         c0 = forecast(L, p0)
         pred, conf, _ = L.store.read(L.bag); s0 = tok.decode([m.nearest(pred)])
         # its own first letter of the answer enters, then the forecast again
