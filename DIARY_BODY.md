@@ -1418,9 +1418,14 @@ falling, its belief in its babble near one. The drive's weight was
 lowered to 0.25 (a save, then a restart at 08:51 that carried the
 gate's learned weights; the gate read 0.34 on waking), which balances
 the fatigue-scaled cost near fatigue ten. The biological refinement
-this points at, not yet built: the reward for producing the sound one
-expected habituates to repetition; a run of the same symbol should pay
-less each time, which is what keeps an infant's babble varied.
+this points at, built at 09:05 on the user's word (`--gate-habit 0.9`):
+the reward for producing the sound one expected habituates to
+repetition. The gate keeps a per-symbol memory of how often each symbol
+was just chosen (decaying 0.9 per act); its own reward at a symbol is
+scaled by one minus that, so a run pays less each time and a fresh
+symbol pays in full, which is what keeps an infant's babble varied. To
+be measured on the day-23 copy at drive weights 0.5 and 0.25 before it
+is served for day 24.
 
 ## Status
 
