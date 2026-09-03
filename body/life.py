@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.05,
-    bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, sigreg=0.1,
+    bag_decay=0.7, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.5, dream_recover=0.7, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_every=24,
     read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
@@ -385,16 +385,18 @@ class Life:
                         (ll / len(dreams)).backward(); tot += float(ll.detach()) / len(dreams); ok += 1
                     if ok:
                         self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
-                # REM: the cortex runs free from each dream's first symbols on its own readout
-                rem_cos = []
-                opt.zero_grad(set_to_none=True)
-                for ids in dreams[:int(self.cfg["rem_dreams"])]:
-                    fl, fc = self._rem_rollout(ids, sig)
-                    if fl is None or not bool(torch.isfinite(fl.detach())):
-                        continue
-                    (fl / max(1, min(len(dreams), int(self.cfg["rem_dreams"])))).backward(); rem_cos.append(fc)
-                if rem_cos:
-                    self._night_step(opt)
+                # REM: the cortex runs free from each dream's first symbols on its own readout,
+                # a quarter of the night in rounds (biology's share), each round one batched step
+                rem_cos = []; rem_steps = 0
+                for _ in range(int(self.cfg["rem_rounds"])):
+                    opt.zero_grad(set_to_none=True); rc = []
+                    for ids in dreams[:int(self.cfg["rem_dreams"])]:
+                        fl, fc = self._rem_rollout(ids, sig)
+                        if fl is None or not bool(torch.isfinite(fl.detach())):
+                            continue
+                        (fl / max(1, min(len(dreams), int(self.cfg["rem_dreams"])))).backward(); rc.append(fc)
+                    if rc:
+                        self._night_step(opt); rem_steps += 1; rem_cos.append(sum(rc) / len(rc))
                 # the value ladder replays its lived pairs once
                 self._value_replay()
                 m.eval()
@@ -406,7 +408,8 @@ class Life:
                     m.load_state_dict(sd["organs"]); m.to(self.dev)
                 after, _ = self.gauge(dreams)
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
-                            "rem_steps": len(rem_cos), "rem_cos": (round(sum(rem_cos) / len(rem_cos), 3) if rem_cos else None),
+                            "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
+                            "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None),
                             "gauge": {"before": before, "after": after, "symbols": nsym}})
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))

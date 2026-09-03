@@ -108,7 +108,7 @@ choice, habituating per symbol) minus a cost that grows with fatigue.
 symbol cost 0.12 · fatigue and stress half-life 240 ticks · mood half-life 1200 ticks
 · wake switch 12,000 ticks · eligibility 12 × 0.8 · store fade 0.9/night ·
 store forget floor 0.1 × mean strength · night rate 1e-4, rounds 24, REM
-steps 8, SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 ·
+steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
 own-reward weight 0.5, credit baseline 0.98 (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
