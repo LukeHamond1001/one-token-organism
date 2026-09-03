@@ -1905,3 +1905,34 @@ Born at 16:58 from the settled recipe, 6.5M parameters, an empty store, on the p
 port 8018 at a quarter second a tick, the scripted raw caregiver at its side at human
 pace. Smiles on "up", "dog", "in", "go" within the first half hour, and then the cue
 "scared " completed with "ball": milestone 3 on the served body, day 1, no chance in it.
+
+## Day 15, and the invariance (2026-09-03, night)
+
+Runs 20 and 21 at day 15. Run 21 (the settled recipe): the sampled mouth started 48 of 48
+cues and completed 47 in full; the cortex alone awake 61 of 82 next symbols, up from 55
+at day 6, with "why dog up? because big dog" at 24 of 26. Run 20 (no effort cost):
+42 of 48 full, the cortex alone 56 of 82, flat since day 6.
+
+What the cortex alone cannot do is chain its own speech: without the store it loops,
+"will will will", "red red red", "up? up? up?". The measurement on run 20's day-15
+body: its own symbols entered the stream at half weight superposed on a rest, and the
+cortex alone gave identical output whether that weight was 0.5, 1.0, or its own sound
+replaced the rest outright. Identical: the cortex's forecast did not depend on its own
+symbols at all. That is a learned invariance, and the day's lesson taught it. Its own
+symbols sat in the lesson's inputs while the target was always the world's next symbol,
+which they never predict, so the cortex learned to ignore its own voice, and what it
+learned after the world's "g" could not apply after its own.
+
+Biology's corollary discharge suppresses learning from self-produced sound, not the
+hearing of it. So the lessons now hear the world's symbols only, and life hears its own
+sound as it hears the world's: the tick's input is whatever sounded, its own voice
+replacing the rest when the world is quiet, superposed when both sound. Unlearned
+about, its own "g" is the world's "g" to the cortex. Commit a914f08; run 22 from birth,
+and the alone column of its day-6 probe is the test.
+
+The first generalization probe, eight cues never heard whose answers follow the
+corpus's patterns ("big ball bigger ", "where dog? ", "why ball up? "): nothing at day
+15 on either run. The store returns the nearest heard chain, "ball under" for most, with
+one partial success where the frame carries the answer: "why ball up? " gives "because
+bi…". Twenty-two fixed lines cannot teach "big X bigger X"; that needs the cortex free of
+the invariance, a wider world, and time. Recorded as the honest state.
