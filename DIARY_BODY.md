@@ -1881,3 +1881,20 @@ then " gives "ball under", "give " gives "book then", six of six. The cortex alo
 without the store, forecasts 53 of 82 next symbols awake against 59 under the dream
 construction, and 22 of 26 on "why dog up? because big dog". The gate sat at 0.98: the
 effort cost of run 21 is the remaining measurement.
+
+## Run 21 at day 6, and the recipe is settled (2026-09-03)
+
+Run 21 carries the REM fix and the convex effort cost. The economy: gate 0.52 to 0.55
+every day, fatigue settled at 22, where the arithmetic said the cost would meet the
+drive, mood 0.3 to 0.6, smiles 207 to 283 a day where run 20's mouth earned 440 by never
+pausing. The nights: 0.73, 0.86, 0.82, 0.83, 0.88, 0.89, REM leaving every one of them
+where NREM put it. The day-6 probe: first letters 6 of 8, second letters 8 of 8, the
+sampled mouth started 47 of 48 cues and completed 37 in full, quiet half the ticks, the
+answers now in bouts ("ball under", "milk then", "dog up? because", "because big dog");
+the cortex alone awake 55 of 82 next symbols.
+
+Every flaw measured today has its fix, its test, its paragraph and its run. The recipe
+of commit e9be497 is the one the served body is reborn from: the old slow body, seven
+nights on a recipe four fixes behind, is archived as data/body2_oldrecipe_n7.pt. Runs 20
+and 21 continue to twenty days for the question that matters next: whether the cortex
+takes over from the hippocampus, measured by the cortex alone at days 15 and 20.
