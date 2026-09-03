@@ -434,7 +434,7 @@ class ScanLM(nn.Module):
         # content softmax never holds rest. It learns as an actor from dopamine minus the
         # cost of a symbol (the serve's lesson, local to the gate). Zero weights, a bias for
         # the birth rate of acting: what it does at first is the physiology, not a policy.
-        self.mouth_gate = nn.Linear(d + 2, 1)
+        self.mouth_gate = nn.Linear(d + 3, 1)          # cortex stream + fatigue, mood, stress
         nn.init.zeros_(self.mouth_gate.weight); nn.init.constant_(self.mouth_gate.bias, -1.1)
         self.pfc_pred = nn.ModuleDict({str(i): nn.Linear(d, d)
                                        for i in range(1 + len(self.ukeys))})

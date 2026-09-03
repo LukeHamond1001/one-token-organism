@@ -1187,6 +1187,21 @@ its own confidence, and is measured on a copy before serving. Flags
 `--gate 0` restores the old mouth. The dose lesson on content skips
 rest ticks now (a rest is the gate's choice).
 
+**Fatigue, stress, mood (the user's question, 07:35: "is stamina in the
+wrong category?").** It was. The effort variable rose with every symbol
+and was charged as stress: it braked the mouth and dragged mood at
+every symbol, so a body that merely wrote a lot looked miserable.
+Biology keeps three things apart, and `--affect split` builds them:
+fatigue is the effort cost (up 0.12 a symbol, a two-minute half-life,
+the gate's cost and one of its inputs, never touching mood by itself);
+stress is a leaky integral of the world's dopamine dips, expectations
+that failed (0.5 per unit of dip, the same half-life); mood is a leaky
+integral of dopamine itself, both signs (0.25 per unit, the mood
+half-life as before). The gate reads all three. Under the old affect
+nothing changes; the page's "cort" stays the effort variable for the
+caregiver's logs, and "fatigue", "stress", "affect" are added. Built
+behind the flag, default old, awaiting the user's word.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with

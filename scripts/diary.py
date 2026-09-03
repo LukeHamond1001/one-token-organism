@@ -78,6 +78,14 @@ class Diary(O.Organism):
         # has the striatum's own plasticity: a small optimizer of its own, a lesson every few
         # ticks on detached features, credit = dopamine minus the cost of acting
         self.gate_on = bool(int(getattr(a, "gate", 1))) and hasattr(self.m, "mouth_gate")
+        # FATIGUE, STRESS, MOOD (2026-09-03, the user's question "is stamina in the wrong category?"):
+        # under --affect split the effort cost is fatigue (it recovers with rest and never touches
+        # mood by itself), stress is a leaky integral of the world's dopamine dips (expectations
+        # that failed), and mood is a leaky integral of dopamine, both signs. Constants disclosed:
+        # stress +0.5 per unit of dip, mood +0.25 per unit of dopamine, both with the fatigue's
+        # half-life of two minutes for stress and ten for mood.
+        self.affect_split = str(getattr(a, "affect", "old")) == "split"
+        self.stress = 0.0
         self.gate_buf = collections.deque(maxlen=96)     # (feat [d+2] cpu, acted, dopamine at that tick)
         self.opt_gate = torch.optim.Adam(self.m.mouth_gate.parameters(), lr=float(getattr(a, "gate_lr", 1e-3))) \
             if self.gate_on else None
@@ -95,7 +103,7 @@ class Diary(O.Organism):
         else:
             with torch.no_grad():
                 f = self.m.lnf(C[0, -1].float().detach()).to(self.dev)
-        io = torch.tensor([self.cortisol / 10.0, self.mood / 6.0], device=self.dev, dtype=f.dtype)
+        io = torch.tensor([self.cortisol / 10.0, self.mood / 6.0, self.stress / 10.0], device=self.dev, dtype=f.dtype)
         return torch.cat([f, io]).detach()
 
     def _gate_lesson(self):
@@ -220,10 +228,12 @@ class Diary(O.Organism):
             _, self.st, _ = self.m(torch.tensor([[nxt]], device=self.dev), self.st, affect=aff, who=self.who1)
         self._prev_mouth = nxt
         if nxt != self.sil:
-            # speaking costs: each symbol adds stress (half-life 120 s); stress
-            # favours silence (a physiological brake) and weighs a little on mood
+            # speaking costs: each symbol adds to the effort variable (half-life 120 s). Under the old
+            # affect it is called stress, brakes the mouth and weighs on mood; under the split it is
+            # fatigue, the gate's cost and input, and mood is dopamine's business
             self.cortisol += float(getattr(self.a, "diary_cost", 0.08))     # the cost of one symbol
-            self.mood = max(-6.0, min(6.0, self.mood - 0.002 * self.cortisol))
+            if not self.affect_split:
+                self.mood = max(-6.0, min(6.0, self.mood - 0.002 * self.cortisol))
         self.stream.append((u, 0))
         self.stream.append((nxt, 2 if (backed and u == self.sil) else 1))
         # the day's record, as lived: both hands, silence included (a run of silence is kept
@@ -233,7 +243,7 @@ class Diary(O.Organism):
         if nxt != self.sil or self.day_buf[-1] != self.sil:
             self._who_now = 1; self.day_buf.append(nxt); self._rec_face(1); self._who_now = 0
         self.credit.append([nxt, 0.0, bool(backed and u == self.sil)])   # every tick is a choice, silence included; memory-backed noted
-        if felt:
+        if felt and not self.affect_split:
             self.mood = max(-6.0, min(6.0, self.mood + 0.5 * felt))
         # DOPAMINE DOSES (2026-09-02, the user's aim: reward at every timescale): the fast
         # band's prediction error of the world's reward is the dopamine. At a felt face it
@@ -243,6 +253,12 @@ class Diary(O.Organism):
         # (|error| at least 0.5, the size of half a small smile) pays the lesson.
         rs = getattr(self.m, "_rpe_signed", None)
         delta = delta_ear + (float(rs[0, -1]) if rs is not None and rs.numel() else 0.0)   # both halves of the tick
+        if self.affect_split:
+            # mood is the leaky integral of dopamine, stress that of its dips: feelings from the
+            # one reward system, not from effort
+            self.mood = max(-6.0, min(6.0, self.mood + 0.25 * delta))
+            self.stress = min(30.0, self.stress + 0.5 * max(0.0, -delta))
+            self.stress *= 0.5 ** (self.period / 120.0)
         if abs(delta) >= 1e-3:
             for k_, item in enumerate(reversed(list(self.credit)[-12:])):
                 item[1] += delta * (0.8 ** k_)
@@ -275,7 +291,8 @@ class Diary(O.Organism):
                      "own": ([self.tok.decode([self.m._last_own_top[0]]) if self.m._last_own_top[0] >= 11 else "<sil>",
                               round(self.m._last_own_top[1], 3)] if getattr(self.m, "_last_own_top", None) else None),
                      "dose": getattr(self, "_last_dose", None), "doses": getattr(self, "n_doses", 0),
-                     "gate": (None if p_act is None else round(p_act, 3)), "gate_lesson": getattr(self, "_gate_last", None)}
+                     "gate": (None if p_act is None else round(p_act, 3)), "gate_lesson": getattr(self, "_gate_last", None),
+                     "fatigue": round(self.cortisol, 2), "stress": round(self.stress, 2), "affect": ("split" if self.affect_split else "old")}
 
     def _dose_choices(self, level=0):
         """the only teacher is your face on what it actually did. GRADED (2026-09-02, no

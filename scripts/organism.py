@@ -2732,6 +2732,10 @@ def build_parser():
     ap.add_argument("--gate-int", type=float, default=0.5,
                     help="the diary's gate: weight of its own reward at a symbol it spoke (the belief it had in what it "
                          "chose, against its running mean) in the gate's dopamine — the drive to babble; never a lesson on content")
+    ap.add_argument("--affect", default="old",
+                    help="the diary's feelings: 'old' = the effort cost is called stress and drags mood at every symbol; "
+                         "'split' = fatigue (the effort cost, recovers with rest), stress (a leaky integral of the world's "
+                         "dopamine dips), mood (a leaky integral of dopamine) — biology's three, each its own physiology")
     ap.add_argument("--gate-every", type=int, default=24,
                     help="the diary's gate: ticks between the gate's lessons (the eligibility window is twelve ticks)")
     ap.add_argument("--night-lr", type=float, default=None,
