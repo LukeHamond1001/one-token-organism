@@ -95,6 +95,55 @@ class Diary(O.Organism):
         self.m.reset_bag(self.st) if hasattr(self.m, "reset_bag") else None
         threading.Thread(target=self._loop, daemon=True).start()
 
+    def _wake_lesson(self):
+        """THE WAKING CORTEX (2026-09-03, the user: the cortex should always be predicting the next
+        state it receives): one step on the last window of the stream at the live rate —
+        cross-entropy on the symbols the world wrote (the mouth's own are inputs, never targets:
+        what it wrote itself was foretold by its efference copy), plus the forecast of the next
+        band state with SIGReg, the same organ REM trains. A non-finite lesson is skipped; the
+        gradient is clipped."""
+        seq = list(self.stream)[-int(getattr(self.a, "wake_window", 32) or 32):]
+        if len(seq) < 8:
+            return None
+        ids = [i for i, _ in seq]; who = [w for _, w in seq]
+        x = torch.tensor([ids[:-1]], device=self.dev); wx = torch.tensor([who[:-1]], device=self.dev)
+        y = torch.tensor([ids[1:]], device=self.dev)
+        tgt_world = torch.tensor([[1.0 if w == 0 and t != self.sil else 0.0 for t, w in zip(ids[1:], who[1:])]],
+                                 device=self.dev)   # the world's symbols only, and not its quiet
+        if float(tgt_world.sum()) < 1:
+            return None
+        m = self.m
+        m.train()
+        try:
+            self.opt.zero_grad(set_to_none=True)
+            st_d = m.init_state(1, self.dev)
+            lg, st_d, _ = m(x, st_d, None, who=wx)
+            own = getattr(m, "_last_logits_own", None)
+            own = lg if own is None else own
+            ce = torch.nn.functional.cross_entropy(own[0].float(), y[0], reduction="none")
+            loss = (ce * tgt_world[0]).sum() / tgt_world.sum()
+            fw = float(getattr(self.a, "wake_forecast", 1.0) or 0.0)
+            fl, cosv = (None, None)
+            if fw > 0 and hasattr(m, "rem_pfc_loss"):
+                fl, cosv = m.rem_pfc_loss(sigreg=float(getattr(self.a, "night_sigreg", 0.1) or 0.0), slot_from=1)
+                if fl is not None and bool(torch.isfinite(fl.detach())):
+                    loss = loss + fw * fl
+            self._pop_side_losses()
+            if not bool(torch.isfinite(loss.detach())):
+                self.opt.zero_grad(set_to_none=True)
+                return {"skipped": "non-finite", "tick": self.ticks}
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+            self.opt.step(); self.n_steps += 1
+            self.opt.zero_grad(set_to_none=True)
+            out = {"ce_world": round(float((ce * tgt_world[0]).sum() / tgt_world.sum()), 3),
+                   "n_world": int(tgt_world.sum()), "forecast_cos": (None if cosv is None else round(float(cosv), 3)),
+                   "tick": self.ticks}
+        finally:
+            m.eval()
+        self._wake_last = out
+        return out
+
     def _gate_feat(self):
         """what the gate reads: the cortex stream at the last position (detached, normalized)
         and interoception (stress, mood)"""
@@ -284,6 +333,12 @@ class Diary(O.Organism):
                 item[1] += delta * (0.8 ** k_)
         if abs(delta) >= 0.5:
             self._dose_choices(level=int(pl[0, 0]) if pl is not None else 0)
+        if int(getattr(self.a, "wake_lesson", 0) or 0) and self.ticks > 0 \
+                and self.ticks % int(getattr(self.a, "wake_every", 24) or 24) == 0:
+            try:
+                self._wake_lesson()
+            except Exception as e:
+                self._wake_last = {"error": str(e)[:120], "tick": self.ticks}
         if self.gate_on:
             # [features, acted, the world's dopamine this tick, its own reward at the symbol, fatigue then]
             self.gate_buf.append([feat.detach().cpu(), acted, float(delta), int_t, float(self.cortisol)])
@@ -312,7 +367,8 @@ class Diary(O.Organism):
                               round(self.m._last_own_top[1], 3)] if getattr(self.m, "_last_own_top", None) else None),
                      "dose": getattr(self, "_last_dose", None), "doses": getattr(self, "n_doses", 0),
                      "gate": (None if p_act is None else round(p_act, 3)), "gate_lesson": getattr(self, "_gate_last", None),
-                     "fatigue": round(self.cortisol, 2), "stress": round(self.stress, 2), "affect": ("split" if self.affect_split else "old")}
+                     "fatigue": round(self.cortisol, 2), "stress": round(self.stress, 2), "affect": ("split" if self.affect_split else "old"),
+                     "wake": getattr(self, "_wake_last", None)}
 
     def _dose_choices(self, level=0):
         """the only teacher is your face on what it actually did. GRADED (2026-09-02, no

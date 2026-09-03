@@ -1427,6 +1427,26 @@ symbol pays in full, which is what keeps an infant's babble varied. To
 be measured on the day-23 copy at drive weights 0.5 and 0.25 before it
 is served for day 24.
 
+## The waking cortex (2026-09-03, built on the user's question, not yet served)
+
+"Shouldn't the cortex always be predicting the next state it receives,
+on everything?" Yes: that is what a cortex is, waking and sleeping. In
+this body it predicted at every tick but learned from the error only
+at doses by day, since the law that the cortex learns only from
+hippocampal traces (a reaction to day 1, when it learned its own
+babble) had removed the waking lesson. Built behind `--wake-lesson 1`,
+default off: every twenty-four ticks one step on the last thirty-two
+symbols at the live rate, the day's optimizer; cross-entropy on the
+symbols the world wrote, the mouth's own symbols inputs but never
+targets (corollary discharge: what it wrote itself was foretold by its
+efference copy) and its quiet never a target; plus the forecast of its
+next band state with SIGReg, the same organ REM trains, so the cortex
+learns the consequences of its own actions in its latent state while
+awake. Guards as in the night. Nothing is learned when the world has
+not written in the window. Smoked on the tiny body (the world's
+cross-entropy fell 5.07 to 4.89 across two lessons). To be measured on
+the copy and served on the user's word; it reverses an earlier law.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with

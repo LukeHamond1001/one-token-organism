@@ -2732,6 +2732,15 @@ def build_parser():
     ap.add_argument("--gate-int", type=float, default=0.5,
                     help="the diary's gate: weight of its own reward at a symbol it spoke (the belief it had in what it "
                          "chose, 0..1) in the gate's dopamine — the drive to babble; never a lesson on content")
+    ap.add_argument("--wake-lesson", type=int, default=0,
+                    help="the diary: 1 = the cortex learns by day too — every --wake-every ticks one step on the last "
+                         "--wake-window symbols at the live rate: next-symbol prediction of what the world wrote (its own "
+                         "symbols are inputs, never targets: corollary discharge) plus the forecast of its next band state "
+                         "(the REM organ, awake); 0 = the cortex learns by day only at doses (as built)")
+    ap.add_argument("--wake-every", type=int, default=24, help="the diary: ticks between waking lessons")
+    ap.add_argument("--wake-window", type=int, default=32, help="the diary: symbols in a waking lesson")
+    ap.add_argument("--wake-forecast", type=float, default=1.0,
+                    help="the diary: weight of the band-state forecast (with SIGReg --night-sigreg) in the waking lesson")
     ap.add_argument("--gate-habit", type=float, default=0.9,
                     help="the diary's gate: habituation of its own reward — a per-symbol memory of how often it was just "
                          "chosen (this decay per act); a repeated symbol pays less, a fresh one pays in full; 0 = off")
