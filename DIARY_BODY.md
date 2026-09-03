@@ -1241,6 +1241,18 @@ nothing changes; the page's "cort" stays the effort variable for the
 caregiver's logs, and "fatigue", "stress", "affect" are added. Built
 behind the flag, default old, awaiting the user's word.
 
+**On the real body's copy (08:10, gate and split together).** With the
+drive defined as confidence relative to its own running mean, the gate
+held 25 percent acting for four hundred ticks and then, after one
+smile, flew to 98 percent with fatigue at 34: a run of babble is
+predictable, predictability was the reward, and the run fed itself.
+Two corrections, both biology's: the drive is the absolute belief it
+had in its choice (0 to 1, no running mean to chase), and the cost of
+a symbol grows with fatigue, `cost * (1 + fatigue / 10)`, so a tired
+body pays more per act and babble comes in bouts rather than floods.
+Measured again on the copy before serving; the user's word for the
+split ("do it", 08:00) folds it into the same restart.
+
 ## Status
 
 - model: speaker channel, ear-writes by speaker, running bag with

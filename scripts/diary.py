@@ -116,6 +116,7 @@ class Diary(O.Organism):
             return
         cost = float(getattr(self.a, "gate_cost", 0.12) or 0.0)
         w_int = float(getattr(self.a, "gate_int", 1.0) or 0.0)
+        f0 = float(getattr(self.a, "gate_fatigue", 10.0) or 0.0)
         n = len(buf) - 12                                 # only choices whose eligibility window is complete
         feats = torch.stack([b[0] for b in buf[:n]]).to(self.dev)
         acts = torch.tensor([1.0 if b[1] else 0.0 for b in buf[:n]], device=self.dev)
@@ -125,7 +126,9 @@ class Diary(O.Organism):
             for k_ in range(12):
                 g += (0.8 ** k_) * float(buf[t + k_][2])   # the world's dopamine that followed
             if buf[t][1]:
-                g += w_int * float(buf[t][3]) - cost      # its own reward at the symbol, and the symbol's cost
+                # its own reward at the symbol, and the symbol's cost, which a tired body pays more
+                c_t = cost * (1.0 + (float(buf[t][4]) / f0 if f0 > 0 else 0.0))
+                g += w_int * float(buf[t][3]) - c_t
             G[t] = g
         if float(G.abs().max()) < 1e-4:
             return
@@ -210,13 +213,12 @@ class Diary(O.Organism):
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
             nxt = int(torch.multinomial(pr, 1, generator=self.gen)) if acted else self.sil
             if acted:
-                # its own reward at the symbol: the belief it had in what it chose, against its
-                # running mean (producing the sound it expected; the drive to babble, and to
-                # speak when it knows what it is about to say). Never a lesson on content.
-                lp = float(torch.log(pr[nxt].clamp(min=1e-9)))
-                mu = getattr(self, "_int_mu", None)
-                int_t = 0.0 if mu is None else max(-2.0, min(2.0, lp - mu))
-                self._int_mu = lp if mu is None else 0.98 * mu + 0.02 * lp
+                # its own reward at the symbol: the belief it had in what it chose (producing the
+                # sound it expected; the drive to babble, and to speak when it knows what it is
+                # about to say). Absolute, 0..1: a reward relative to its own running mean fed on
+                # runs of babble (measured 2026-09-03 08:10: one smile, then 98 percent acting).
+                # Never a lesson on content.
+                int_t = float(pr[nxt])
         else:
             nxt = int(torch.multinomial(pr, 1, generator=self.gen))
             acted = nxt != self.sil
@@ -265,8 +267,8 @@ class Diary(O.Organism):
         if abs(delta) >= 0.5:
             self._dose_choices(level=int(pl[0, 0]) if pl is not None else 0)
         if self.gate_on:
-            # [features, acted, the world's dopamine this tick, its own reward at the symbol]
-            self.gate_buf.append([feat.detach().cpu(), acted, float(delta), int_t])
+            # [features, acted, the world's dopamine this tick, its own reward at the symbol, fatigue then]
+            self.gate_buf.append([feat.detach().cpu(), acted, float(delta), int_t, float(self.cortisol)])
             if len(self.gate_buf) >= 16 + 12 and self.ticks % int(getattr(self.a, "gate_every", 24) or 24) == 0:
                 try:
                     self._gate_lesson()

@@ -2731,7 +2731,10 @@ def build_parser():
                     help="the diary's gate: the striatum's own plasticity rate (the gate head only)")
     ap.add_argument("--gate-int", type=float, default=0.5,
                     help="the diary's gate: weight of its own reward at a symbol it spoke (the belief it had in what it "
-                         "chose, against its running mean) in the gate's dopamine — the drive to babble; never a lesson on content")
+                         "chose, 0..1) in the gate's dopamine — the drive to babble; never a lesson on content")
+    ap.add_argument("--gate-fatigue", type=float, default=10.0,
+                    help="the diary's gate: the cost of a symbol grows with fatigue, cost * (1 + fatigue / this); "
+                         "0 = a flat cost (a tired body pays more per act: babble comes in bouts)")
     ap.add_argument("--affect", default="old",
                     help="the diary's feelings: 'old' = the effort cost is called stress and drags mood at every symbol; "
                          "'split' = fatigue (the effort cost, recovers with rest), stress (a leaky integral of the world's "
