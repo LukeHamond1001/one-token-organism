@@ -74,8 +74,8 @@ choice, habituating per symbol) minus a cost that grows with fatigue.
 
 ## 3. One reward system
 
-- The face becomes dopamine as the fast band's signed prediction error of
-  reward. Dopamine spreads over the last twelve ticks (0.8 per tick).
+- The face becomes dopamine as the signed prediction error of the band
+  whose discount matches dopamine's (clock 16, γ 0.9375; §5b). Dopamine spreads over the last twelve ticks (0.8 per tick).
 - Dopamine acts on: the store's write strength (encoding), the gate (acting),
   the value ladder at every band (expectation at every timescale, learned by
   TD as the bands tick and replayed each night), the Go/NoGo band gates, and
@@ -151,6 +151,21 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   detached target and the previous state recomputed live one tick later is
   semi-gradient TD(0) with a learned state map, the standard convergent
   form. The bands' input maps learn from it; the stream stays detached.
+- **Dopamine's horizon.** The error of the clock-1 band (γ = 0) is "reward
+  now minus what was predicted for now": a smile foreseen three ticks ahead
+  never fires before it lands, so no reward is ever created inside. Dopamine
+  is the TD error of the clock-16 band, γ = 1 − 1/16 = 0.9375 per tick, a
+  horizon of about four seconds at four ticks a second, matching dopamine's
+  discount of ~0.9–0.98 per hundred milliseconds. The eligibility window
+  (12 ticks at 0.8) is a separate discount, as λ is from γ.
+- **The bands.** s ← s + (g/τ)(tanh(Wc) − s) is a stable leaky integrator
+  for g/τ ≤ 1 (g ∈ (0,1), τ ≥ 1), time constant τ/g, states bounded in
+  (−1, 1); value heads are linear on bounded states. Per-band γ_b = 1 − 1/τ_b
+  gives each critic the horizon of its own clock.
+- **Bounded steps.** The gate's step per lesson is ≤ rate × |credit| ×
+  |eligibility|, about 0.05 × 2 × 2 = 0.2 in logit at the extreme; the night's
+  optimizer starts fresh each night so its first steps are ≈ rate in
+  magnitude, and every step is clipped at norm 1.
 - **The store's read.** Attention over unit keys at temperature 0.05 with
   log-strength bias: for the right key (cos ≈ 1) against a near context
   (cos ≈ 0.5) the logit gap is 10, so recall is decisive; equal keys share.

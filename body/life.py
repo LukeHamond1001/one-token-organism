@@ -18,6 +18,7 @@ PHYSIOLOGY = dict(
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.5, dream_recover=0.7, gate_baseline=0.98, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.15, gate_vigor=1.0, gate_every=24,
     read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
+    dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
 )
 
 
@@ -159,7 +160,9 @@ class Life:
                 self.opt_value.zero_grad(set_to_none=True)
                 (loss_v + 0.01 * loss_g).backward()
                 self.opt_value.step()
-                delta = float(td[0].detach())              # dopamine: the fast band's signed error
+                # DOPAMINE: the TD error of the band whose discount matches dopamine's (clock 16,
+                # gamma 0.9375): an expected reward fires before it lands, a missed one dips
+                delta = float(td[int(self.cfg["dopamine_band"])].detach())
                 for b in range(len(gam)):
                     self.v_buf[b].append((self._bands_prev[b].detach().cpu(), r, self.bands[b].detach().cpu()))
             else:
