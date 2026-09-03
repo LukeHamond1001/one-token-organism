@@ -109,8 +109,11 @@ symbol cost 0.12 · fatigue and stress half-life 120 s · mood half-life 600 s
 store forget floor 0.1 × mean strength · night rate 1e-4, rounds 24, REM
 steps 8, SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-own-reward weight 0.5 · readout sharpness 10 (to become an organ) · band
-clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
+own-reward weight 0.5, credit baseline 0.98 (the striatum learns from the
+error against what it expected: a constant cost teaches nothing) · dream
+recall adaptation 0.5 per recall, recovery 0.7 per step (a recalled memory
+tires, so a dream moves on) · readout sharpness 10 (to become an organ) ·
+band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 
 ## 6. The environment (raw)
 
