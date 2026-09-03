@@ -1898,3 +1898,10 @@ of commit e9be497 is the one the served body is reborn from: the old slow body, 
 nights on a recipe four fixes behind, is archived as data/body2_oldrecipe_n7.pt. Runs 20
 and 21 continue to twenty days for the question that matters next: whether the cortex
 takes over from the hippocampus, measured by the cortex alone at days 15 and 20.
+
+## The reborn body's first day (2026-09-03, evening)
+
+Born at 16:58 from the settled recipe, 6.5M parameters, an empty store, on the page at
+port 8018 at a quarter second a tick, the scripted raw caregiver at its side at human
+pace. Smiles on "up", "dog", "in", "go" within the first half hour, and then the cue
+"scared " completed with "ball": milestone 3 on the served body, day 1, no chance in it.
