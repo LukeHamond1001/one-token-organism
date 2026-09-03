@@ -76,11 +76,15 @@ strength × 0.1 are forgotten (relative, not a constant).
 16384 ticks: leaky integrators of the stream, each with a learned input map,
 updated at its clock. Each band has a value head (the critic at that
 timescale) and a Go/NoGo gate learned from the value's error. The bands'
-states form the bundle the cortex reads and must foresee. The PFC learns by
-day and in the night's value replay, never in REM (where it is the judge):
-its input maps follow the temporal-difference error taken with both ends
-live, so each band learns to hold what predicts reward at its own horizon
-(dopamine shaping working memory).
+states form the bundle the cortex reads and the PFC's forecast heads must
+foresee. Each area learns from its own error: the cortex's trunk from the
+next embedding it receives, the PFC's input maps from the temporal-difference
+error taken with both ends live (so each band learns to hold what predicts
+reward at its own horizon: dopamine shaping working memory), the PFC's
+forecast heads from the bundle that follows the stream, by day and in REM,
+with the stream detached: the heads learn from the cortex, they do not
+rewrite it (through the trunk, six REM rounds undid a third of NREM's gain on
+the next-symbol forecast: measured on run 19).
 
 **Cortex.** A small transformer over the last W ticks, one position per
 tick, of [the world's embedding + 0.5 × its own embedding in the same tick,
@@ -145,8 +149,10 @@ choice, habituating per symbol) minus a cost that grows with fatigue.
   read on, the cortex learned to copy it and carried nothing alone), all dreams summed into one step per round,
   R rounds, sleep's own optimizer and rate.
 - REM: from each dream's first symbols the cortex runs free on its own
-  readout, hippocampus decoupled, and learns to forecast the bundle it
-  receives at its own next step (stop-grad, SIGReg).
+  readout, hippocampus decoupled, and the PFC's forecast heads learn to
+  foresee the bundle that follows the free-running stream (the stream
+  detached: the trunk is the night's NREM work, and REM through the trunk
+  undid it).
 - The value ladder replays its lived pairs once. The store fades. Working
   state wakes fresh. Save and back up.
 - PLUMBING: a non-finite lesson is skipped; gradients clipped; a night that
@@ -241,11 +247,14 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 - **Born unsure.** The forecast head starts near zero (weights at 4e-4), a
   forecast of norm about 0.1: the mouth babbles noise until the first lessons,
   rather than one deterministic junk symbol from an init of norm 4 to 9.
-- **SIGReg placement.** The next-symbol forecast must hit discrete fixed
-  targets; regularizing it toward a Gaussian fights the lesson. The collapse
-  risk is in the bundle forecast, where prediction and target both derive
-  from the stream (C constant ⇒ bundles constant ⇒ trivial forecast), so
-  SIGReg goes on the stream there, and nowhere else.
+- **SIGReg retired.** The next-symbol forecast must hit discrete fixed
+  targets; regularizing it toward a Gaussian fights the lesson. The one
+  collapse risk was the bundle forecast, where prediction and target both
+  derived from the stream (C constant ⇒ bundles constant ⇒ trivial forecast),
+  so SIGReg stood on the stream there. With that objective detached from the
+  trunk nothing can collapse the stream, and the guard has nothing to guard:
+  the function stays, the term is zero. (REM without SIGReg dropped the gauge
+  exactly as with it, 0.85 to 0.78; the stream detached held 0.85.)
 - **The PFC's lesson.** TD with both ends live is residual-gradient TD,
   which converges to a biased fixed point (the Bellman residual); TD with a
   detached target and the previous state recomputed live one tick later is

@@ -1821,3 +1821,29 @@ Ten checks pass, the collision test now at confidence 1.0 for every cue and the
 continuation check too. Commit 0022416. Run 19 from birth. Open: a night that lowers the
 gauge while its loss falls (run 17 night 9, run 18 night 6), and the gate near 1.0 when
 smiles flood.
+
+## REM through the trunk (2026-09-03, run 19)
+
+Run 19 on the lag code: no stutters from day 1 ("ball? ", "ball u", "milk t", "dog up",
+"becaus"), and the nights: +0.39, −0.11, −0.05, +0.23 on the gauge. A night that lowers
+the gauge while its own loss falls had happened on runs 17 and 18 too. The instrument
+law: a scratch copy of run 19's day-2 body slept four times.
+
+The night as it was: gauge 0.66, after NREM 0.85, after REM 0.78. The same night
+without REM: 0.85 stays. REM without SIGReg: 0.78 again, so SIGReg was not the cause.
+REM with the stream detached, the PFC's forecast heads learning alone: 0.85 stays. The
+PFC's forecast objective, trained through the cortex's trunk for six rounds at the
+night's rate, undid a third of what NREM had consolidated. Two objectives on one trunk
+in alternation, not jointly, oscillate.
+
+The principle was already written for the cortex: each area learns from its own error.
+The PFC's forecast heads learn from the stream; they do not rewrite it, in REM and in
+the day's lesson alike. Your question of this morning, whether both the PFC and the
+neocortex should learn in REM, is answered by the measurement: the cortex cannot serve
+the PFC's objective in REM without losing its own, and the dorsolateral PFC is in any
+case the part of the brain that REM switches off. And SIGReg, the collapse guard, is
+retired: with the fixed lexicon as the target and the bundle objective off the trunk,
+nothing can collapse the stream; the function stays, the term is zero.
+
+Ten checks pass; the scratch night now reads 0.66, 0.84, 0.84. Run 20 from birth once
+run 19's day-6 probe has measured the lag code and the dot-product read.

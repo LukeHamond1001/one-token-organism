@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.1,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
@@ -377,7 +377,7 @@ class Life:
             # the store missed and undid the night: run 13, day 4)
             pred = m.latent_pred(C)
             ll, lc = m.latent_loss(pred, y, w=w)
-            fl, fc = m.forecast_loss(C[:-1], bundles[1:], sig=float(self.cfg["sigreg"]))   # SIGReg on the stream
+            fl, fc = m.forecast_loss(C[:-1].detach(), bundles[1:], sig=0.0)   # the PFC's heads learn from the stream, not through it
             loss = (ll + fl) * (1.0 + self.stress / 10.0)      # stress raises plasticity
             if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
@@ -492,7 +492,8 @@ class Life:
                         # gauge, taken alone, stays flat: run 6, day 4)
                         xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
                         C = m.stream(m.inputs(xs, whos, faces, bundles, reads))
-                        ll, _ = m.latent_loss(m.latent_pred(C), y, sig=sig, C=C)
+                        ll, _ = m.latent_loss(m.latent_pred(C), y)          # no SIGReg: with a fixed lexicon and the PFC's
+                                                                             # objective off the trunk, nothing can collapse
                         if not bool(torch.isfinite(ll.detach())):
                             continue
                         (ll / len(dreams)).backward(); tot += float(ll.detach()) / len(dreams); ok += 1
@@ -572,11 +573,15 @@ class Life:
             with torch.no_grad():
                 bands = m.band_update(bands, C.detach())
             bnext.append(bands.clone())
-        # the stream at t forecasts the bundle handed over at t+1, along the free-running part
-        C_free = torch.stack(Cs[len(ids[:k]):-1]); B_next = torch.stack(bnext[len(ids[:k]):-1])
+        # the stream at t forecasts the bundle handed over at t+1, along the free-running part. THE
+        # STREAM IS DETACHED: the PFC's forecast heads learn from the cortex, they do not rewrite it
+        # (each area learns from its own error). Trained through the trunk, six REM rounds undid a third
+        # of NREM's gain on the next-symbol forecast (scratch night on run 19's day-2 body: gauge 0.66 ->
+        # 0.85 after NREM -> 0.78 after REM, 0.85 with the stream detached; SIGReg was not the cause).
+        C_free = torch.stack(Cs[len(ids[:k]):-1]).detach(); B_next = torch.stack(bnext[len(ids[:k]):-1])
         if C_free.shape[0] < 2:
             return None, None
-        return m.forecast_loss(C_free, B_next, sig=sig)
+        return m.forecast_loss(C_free, B_next, sig=0.0)
 
     def _value_replay(self):
         m = self.m; gam = m.gammas()
