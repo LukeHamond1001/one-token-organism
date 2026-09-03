@@ -70,8 +70,9 @@ symbols inputs only) and asleep (below). It never learns from reward.
 **Mouth.** Whether to act is the basal ganglia's: a gate on [C, fatigue,
 mood, stress] giving p(act); zero weights and a birth bias at birth. What to
 say is the lexicon read by cosine from the forecast, logits = s × cosine,
-sampled. s is a physiology constant until it becomes an organ (a learned
-decisiveness driven by tonic dopamine). The gate learns by the opponent rule
+sampled. s is decisiveness driven by tonic dopamine: s = 5 + 5 × mood/6
+(songbirds: vocal variability is high when unrewarded and falls as reward
+comes), so babble is varied at birth and sharpens as smiles arrive. The gate learns by the opponent rule
 (a dopamine burst strengthens Go for the context whatever it did, a dip
 strengthens NoGo), plus its own reward at a symbol (the belief it had in its
 choice, habituating per symbol) minus a cost that grows with fatigue.
@@ -128,7 +129,7 @@ error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
 recall is unsure or the recalled memory's adapted strength falls below the
-store's forget floor: a cycle exhausts itself) · readout sharpness 10 (to become an organ) ·
+store's forget floor: a cycle exhausts itself) · readout sharpness 5 + 5 × mood/6 (decisiveness from tonic dopamine) ·
 band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 
 ## 5b. Mathematics (the user: "not only biology, also your math")

@@ -18,7 +18,7 @@ PHYSIOLOGY = dict(
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
-    read_sharp=10.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
+    read_sharp=10.0, sharp_base=5.0, sharp_gain=5.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
 )
 
@@ -187,6 +187,9 @@ class Life:
             self.opt_face.zero_grad(set_to_none=True); lf.backward(); self.opt_face.step()
         its_face = float(f_pred.detach())
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
+        # DECISIVENESS from tonic dopamine (songbirds: variability is high when unrewarded and falls as
+        # reward comes; mood is the body's tonic dopamine): the readout's sharpness = base + gain x mood/6
+        m.read_sharp = float(self.cfg["sharp_base"]) + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
         with torch.no_grad():
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
                               torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0], device=self.dev)])

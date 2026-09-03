@@ -156,7 +156,10 @@ def test_feelings_follow_dopamine():
     assert life.mood > m0, f"a smile did not lift mood: {m0} -> {life.mood}"
     life.set_face(-2.0); life.tick(); life.tick(); life.set_face(0.0); life.tick()
     assert life.stress > 0, "a frown did not raise stress"
-    print("7 feelings follow dopamine: mood", round(m0, 3), "->", round(life.mood, 3), "stress", round(life.stress, 3))
+    life.mood = 0.0; life.tick(); s0 = life.m.read_sharp
+    life.mood = 6.0; life.tick(); s1 = life.m.read_sharp
+    assert abs(s0 - life.cfg["sharp_base"]) < 1e-6 and s1 > s0, f"decisiveness did not follow mood: {s0} {s1}"
+    print("7 feelings follow dopamine: mood", round(m0, 3), "->", round(life.mood, 3), "stress", round(life.stress, 3), "| sharpness", s0, "->", s1)
 
 
 def test_sleep_by_fatigue():
