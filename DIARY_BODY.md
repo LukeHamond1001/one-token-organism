@@ -769,6 +769,41 @@ is what a night that reaches the weights looks like from outside. The
 serve was restarted at 01:43 with the night above; the body's pressure
 carried over at 5,255 of 12,000.
 
+## Day 21 (Opus, the first day with a night that reaches the weights)
+
+Twenty-one lines and sixteen cues at the two-minute pace, the pressure
+carried over from the restart, the night at 02:40 as predicted. Two
+known words in 2,225 of its symbols: "had", six minutes after the
+"I had " cue, unsmiled because it came while the caregiver's own
+letters were entering and the rule held the face at zero (the rule is
+amended for day 22: a parent can smile mid-sentence); and "hi", smiled
+within two seconds and felt, the day's one dose. Eleven runs of "a",
+all after the night, the third expanded once into "all gone". No cue
+completed before or after the night, though the trunk's own top symbol
+now differs by cue ("g" 0.59 after "big dog bigger ", "w" after
+"give ", a space at 0.90 after "first milk then ").
+
+Its sixth night, the first of the rebuilt kind, took 13 minutes 41
+seconds (the copy's eight; the machine was at seven to twelve percent
+free memory and swapped): thirty-six traces of mean length 5.6, "give
+milk" dreamt whole, "scared b", "big dog", " hadb"; twenty-four
+batched NREM steps, one batched REM step over eight dreams (cosine
+0.36), the gauge 0.284 to 0.351 on seventy-four symbols. It woke at
+stress 1.2 and mood 0.
+
+Then the afternoon went hard. Its quiet fell from 0.84 in the morning
+to 0.76 after the night, it rarely gave six seconds of silence (nine of
+the caregiver's events waited out the full ninety-second cap), stress
+ran 8.6 to 11.4 for the whole hour and mood sat on its floor of -6.0
+at the save. The likely mechanism is plain: the dream traces hold
+symbols and no quiet, so a night that now reaches the weights teaches
+the mouth to fill its ticks, and every filled tick costs stress. By
+day only stamina teaches silence, as the user's law has it. Whether
+the two settle into a balance or the nights drive the quiet to nothing
+is the thing to watch on day 22; if the quiet keeps falling and stress
+keeps rising, the night's strength or the symbol's cost is the
+physiology to revisit, and it is the user's call.
+
 ## The night, remade (2026-09-02): the cortex learns only from hippocampal traces
 
 The user's law, in two sentences: the neocortex trains only on what the
