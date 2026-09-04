@@ -459,12 +459,22 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   read it, and the instrument that judged the critics one day at a time
   read one swing per day at those horizons. The instrument now pools the
   frozen head's readings over ten chained days, for the ventral head and
-  the pinned 1024- and 4096-tick bands alike. The candidate the math has
-  not excluded: the average-reward head (vcrit_diff: its level the body's
-  own reward rate over the horizon, not a weight to learn; its error
-  r − r̄ + V′ − V) with the trace at λ = 1 − 1/1024 and the horizon rate
-  (value_lr × 16/1024), measured against TD(0), the discounted trace at
-  the shared rate, and the discounted trace at the horizon rate.
+  the pinned 1024- and 4096-tick bands alike. Four rules over ten chained
+  days, pooled: TD(0) at the shared rate +0.19, the discounted trace at the
+  shared rate +0.01, the average-reward trace (vcrit_diff) at the horizon
+  rate −0.22, the discounted trace at the horizon rate −0.10; the ladder's
+  own slow heads near zero. THE CEILING (scratchpad/vceil_fit.py, a ridge
+  fit of the return on the saved states held out day by day): all eight
+  bands +0.38, the slow bands alone +0.51, the fast bands alone +0.33. The
+  learned heads sit at a third of what the states allow; the remedy is a
+  head on the slow bands learned with the trace at a slow rate, measured
+  the same way. And the parent's attention, read from the bands at +0.89,
+  correlates +0.03 with the return: a known word raises it as readily as a
+  word past the answer lowers it, so the run-on's consequence under the
+  parent who wants a reply is near a tenth of a smile, below any critic's
+  reach. The reply needs a parent whose reply is withheld while the child
+  runs on, or a body that feels the world's words as reward when they come
+  (the dopamine of information); both wait for the user's word.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the

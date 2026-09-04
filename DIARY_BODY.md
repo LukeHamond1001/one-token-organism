@@ -3458,3 +3458,33 @@ chains (whose bodies lived different days) the size of the readings themselves. 
 at that horizon, learned by any of the four rules, reads the return beyond noise on run
 67's body. Whether any linear head could is the ceiling instrument's question, its chain
 at day 4 of 6.
+
+**The ceiling, 16:50.** Six chained days on run 67's day-20 body with no ventral credit,
+the ladder's states, the return at horizon 1024 and the parent's attention saved every
+fourth tick (21,560 samples), a ridge fit of the return on the states held out day by
+day: all eight bands +0.37, +0.38, +0.32 at three strengths (by day +0.51, +0.29, +0.53,
+−0.20, +0.50, +0.63 at the middle one); the slow bands alone (1024, 4096, 16384 ticks)
++0.51 (+0.77, +0.49, +0.61, −0.01, +0.52, +0.70); the fast bands alone +0.33. That is the
+ceiling of any linear head on this body, and the learned heads sit at a third of it:
++0.19 for the best, near zero for the ladder's own slow heads, which read only the slow
+bands and could reach +0.51 if learned right; the fast bands in the ventral head added
+overfit, not foresight. So the long critic's defect is its lesson, and the remedy is a
+head on the slow bands with the trace at a slow rate, to be measured the same way. The
+second line changes the question of the reply. The parent's attention against the
+return: +0.13, +0.11, +0.11, +0.20, −0.24, −0.13, a mean of +0.03; the attention read
+from the eight bands, held out: +0.92, +0.92, +0.86, +0.81, +0.95, +0.92, a mean of
++0.89. The body knows the parent's attention almost exactly, and the attention foretells
+nothing, because a known word raises it by 0.05 or 0.10 as readily as a word past the
+answer lowers it by 0.04, and it saturates at 1. The two smiles I recounted at 15:55
+assumed the attention stayed low; it recovers within a word or two. The consequence of a
+run-on under the parent who wants a reply is near a tenth of a smile, the first
+arithmetic right for the wrong reason, and no critic can be asked to find it. The
+environment's rule as written is a token gesture. Biology's parent does more: a child
+who talks over its parent gets no reply until it stops, and the reply itself is what the
+child wants (infants work for a contingent voice, Goldstein and West 2003). Two honest
+roads, both grounded: the environment's, the parent's reply withheld while the child
+runs on, and the architecture's, the world's words felt as reward when they come (the
+dopamine of information, Bromberg-Martin and Hikosaka 2009), so that a turn given up
+pays in what is heard. Neither is taken without the user's word. Runs 85 and 86, the
+acceptance pair on the settled recipe with the parent who wants a reply, born 16:39 for
+forty days.
