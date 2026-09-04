@@ -2572,3 +2572,46 @@ not compose on its own yet (2 of 32; but "alone" starves it of the read it was r
 with, so the trace, 60 to 70 of 82 teacher-forced, is its fairer measure). What this does
 not test: a continuation that depends on a word before the last ("first milk then " ball
 against "first up then " in); that is the next rung.
+
+## The seam (2026-09-04, 02:50)
+
+The mouth's fusions have a cause. On the served body's day-10 copy, the forecast after
+"dog will go down" is the letter g at probability 1.0; after "you will go in", g again;
+after "all gone", r at 0.88. Those are the first letters of the teacher's next utterances
+("give ...", "go ...", and lines beginning with r), and they are the body's "downg",
+"ing", "gonere", "dogive", "willittl": it finishes a word and goes on into the seam
+between one utterance and the next, because for the cortex there is no seam. The window
+holds a position for every symbol and none for the world's quiet; the waking lesson's
+target is the next world symbol wherever it is, so the last letter of a line is taught
+to foresee the first letter of the line that came forty seconds later; the store never
+writes the quiet ("the world's quiet is not a memory"), so a line's end has no
+continuation to recall and the nearest other slot answers instead; and a dream may not
+rest (silence banned in its readout), so every dream runs off the end of its memory into
+whatever slot is nearest, and the night trains the cortex on those splices. Four organs
+agreeing that an utterance has no end. The taught-line yardstick on the same copy: 93 of
+96 started, 60 finished, against 77 finished two days earlier; the difference is fusions.
+
+An utterance's end is an event in any auditory cortex (the offset response: cells that
+fire when a sound stops), and the page had the symbol for it already, the tokenizer's
+<eot_human>, the end of the human's turn, banned from the mouth and never used. THE
+OFFSET: after offset_ticks (12, three seconds) of quiet on both sides following the
+world's utterance, the world's turn-end enters once as a world symbol. It is then what
+every organ already does with a world symbol: the store writes it under the line's
+context (the line's end is a memory), the waking lesson targets it after the last letter,
+the bags take it and fade, the mouth's forecast at a line's end points at it and may not
+say it (so the belief in whatever else it might say is small, and the gate's own lesson
+finds that ends do not pay), and a dream ends where its memory recalls it, no longer
+splicing. The body's own turn-end is not marked yet (a corollary of the same kind, for
+later). Nothing is a rule about words: it is the perception of a pause. Test 15 of 15.
+Off by default until measured: runs 41 and 42 (seeds 41, 42, the parent world, offset
+12) against runs 35 and 36 at days 6, 15 and 20 on the mouth's yardstick (started
+against finished, where fusions show), the trace, and the taught-line and unheard
+yardsticks on the fast world's own corpus. If it holds, the served body takes it at a
+boundary. Commit 0c676db.
+
+Day 11 on the served body (the planner's report): 49 utterances, no new word ("happy
+dog", "sad dog" from the base set), every cue answered ("why dog up? " because, "big
+dog " bigger, "dog will go " down twice, "give big " ball, "dog had " ball, "where
+ball? " ball), 90 smiles, the parent never away, its attention 0.3 to 0.93. Night 11:
+loss 0.20 to 0.10, gauge 0.78 to 0.89, and the dreams "g will go ing ", "go up then
+ing ": the seam, dreamed.
