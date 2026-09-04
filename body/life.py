@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.0,
-    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, dream_onset_share=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
@@ -270,8 +270,14 @@ class Life:
         r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
         # --- the ear's half: the world's symbol (or its quiet) enters ---
         v_before = m.values(self.bands.detach()) if self.v_prev is None else self.v_prev
-        if first_after_pause and off > 0:
-            self._start_pending = True                            # the next memory the store keeps begins an utterance
+        if off > 0 and u != self.sil:
+            # THE START MARK falls on the memory whose context holds the utterance's first symbol: the second
+            # symbol's, whatever the pause did to the bag (a short pause left the first symbol a memory under a faded
+            # context and a long one no memory at all, so the mark fell a symbol apart between the two, runs 53/54)
+            if first_after_pause:
+                self._start_armed = True; self._start_pending = False
+            elif getattr(self, "_start_armed", False):
+                self._start_pending = True; self._start_armed = False
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
@@ -516,14 +522,19 @@ class Life:
         """dreams start where the store is strongest and run by pattern completion until the recall
         is half as sure as a memory of its own (relative to the store, not a constant)"""
         n = int(self.cfg["night_starts"] if n is None else n)
-        starts = self.store.sample_starts(n, gen=self.gen)
+        starts = self.store.sample_starts(n, gen=self.gen, onset_share=float(self.cfg.get("dream_onset_share", 0.0)))
         d_ = float(self.cfg["bag_decay"]); ref = self.store.self_confidence(qnorm=(1.0 / (1.0 - d_ * d_)) ** 0.5)   # a full context's norm
         floor = float(self.cfg["dream_floor_rel"]) * ref
         out = []
         a_hit, a_rec = float(self.cfg["dream_adapt"]), float(self.cfg["dream_recover"])
         with torch.no_grad():
             for j in starts:
-                bag = self.store.K[j].clone(); ids = []                 # a dream's context: per symbol, as the keys are
+                bag = self.store.K[j].clone()                           # a dream's context: per symbol, as the keys are
+                # the dream begins with the context's own last symbol, read from the key (a key is the bag before the
+                # memory's symbol, its newest term whole): at an onset that is the utterance's first symbol, which the
+                # store never kept as a memory of its own (dreams began 'og will go', and the cortex lost every line's
+                # first symbols: its trace fell from 60 to 38 of 82, runs 53/54)
+                ids = [self.m.nearest(bag)]
                 adapt = torch.ones(self.store.n(), device=self.dev)      # neural adaptation: a recalled memory tires
                 s_floor = float(self.cfg["store_floor_rel"]) * float(self.store.S.mean())
                 for _ in range(int(self.cfg["dream_max"])):
@@ -545,7 +556,7 @@ class Life:
                     if win >= 0:
                         adapt[win] *= a_hit
                     bag = float(self.cfg["bag_decay"]) * self.m.shift(bag) + self.m.E.weight[nid]
-                if len(ids) >= 2:
+                if len(ids) >= 3:
                     out.append(ids)
         return out
 

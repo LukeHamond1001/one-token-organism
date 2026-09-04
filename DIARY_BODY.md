@@ -2863,3 +2863,28 @@ cues 94 and 64 of 96; the unheard combinations 101 and 79 of 128; the cortex alo
 lines 70 and 63 of 82 (its best); the page's fused share on day 16 0.14 (0.21 on day
 15, 0.10 before). The offset alone, three days on, has not moved the fusions; the marks
 begin tonight.
+
+**Day 6 of runs 53 and 54, 07:25.** The marks' first cost. The mouth at its best (46 and
+47 of 48 finished; 82 and 83 of 128 unheard combinations, against 87 and 73 on runs 47
+and 48), the night's gauge 0.8, forty-eight dreams a night of nine symbols, ending at
+their lines' ends ('hy dog up? ', 'ig dog bigger ', 'irst up then i'). But the cortex
+alone within lines: 40 and 40 of 82 on run 53, 36 and 33 on run 54, where runs 47 and 48
+at day 6 read 63 and 51, 62 and 59. Two things in those dreams. Every one begins at its
+line's second symbol, because the first enters under a context faded to nothing after a
+long pause and the store keeps no memory of it, so the night taught the cortex 'og
+will go' forty-eight times and the trace's typed lines begin with 'd'. And a night drawn
+from onsets alone has as many windows as the store has onsets, about fifteen, where the
+recipe's random draw gave the cortex fragments from every position. Two changes, 07:35,
+both readings of what the store already holds. A dream begins with its context's own
+last symbol read from the key: a key is the bag before the memory's symbol, its newest
+term whole, so at an onset the key names the line's first symbol (the store never kept
+the symbol, but it kept the context it made). For that to hold after any pause, the
+start mark falls on the memory whose context holds the first symbol, the second
+symbol's, whether the first was kept under a faded context (a short pause) or not (a
+long one); before, the mark fell a symbol apart between the two. And a night draws half
+its dreams from onsets and half from any memory by strength, replay from the beginning
+and replay from anywhere. On the test's scratch body the dreams are now 'dog will
+go<eot>', 'where bal', 'give mi'. Sixteen tests pass. Runs 57 and 58 carry both changes;
+runs 59 and 60 the first symbol with onsets alone, so the two are measured apart; all at
+the recipe otherwise, their day 6 due at about 08:00. Runs 53 to 56 continue as they were
+(their processes hold the old code) for their days 15, 20 and 40.

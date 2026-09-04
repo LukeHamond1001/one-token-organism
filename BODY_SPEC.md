@@ -73,14 +73,20 @@ second letter of every answer). No direct vote on the mouth. Fade: strengths × 
 strength × 0.1 are forgotten (relative, not a constant). Each slot carries
 two marks the waking recall never reads: an end mark, set when the world's
 quiet after an utterance is perceived (the offset) on the slot that holds the
-utterance's last symbol under its context; and a start mark, set on the first
-memory the store keeps after a pause (a line's first symbol enters under a
-context faded to nothing and is not kept; its second symbol is). Dreams are
-drawn from the start-marked slots and end where they recall an end-marked
-one: a dream is an utterance, from its onset to its end, as replay runs
-through an episode. (With ends alone, dreams drawn from strong mid-line slots
-were four symbols long and the night's gauge lagged at 0.5; with the start
-mark on the wrong slot, two.)
+utterance's last symbol under its context; and a start mark, set on the
+memory whose context holds the utterance's first symbol (the second symbol's;
+the first symbol itself enters under whatever the pause left of the old
+context, nothing after a long one, and a memory of its own or none). Half
+the night's dreams are drawn from the start-marked slots (with replacement
+when the starts are fewer) and half from any slot by strength; a dream
+begins with its context's own last symbol, read from the key (a key is the
+bag before the memory's symbol, its newest term whole: at an onset that is
+the line's first symbol), and ends where it recalls an end-marked memory:
+replay runs from an episode's onset, or from anywhere, to its end. (With
+ends alone, dreams drawn from strong mid-line slots were four symbols long
+and the night's gauge lagged at 0.5; with the start mark on the wrong slot,
+two; drawn from onsets alone and without the first symbol, 'og will go', the
+cortex alone within lines fell from 60 to 38 of 82 on two seeds, runs 53/54.)
 
 **PFC (the band ladder).** Bands with clocks 1, 4, 16, 64, 256, 1024, 4096,
 16384 ticks: leaky integrators of the stream, each through an input map

@@ -158,17 +158,27 @@ class Store:
         return float((w @ self.V).norm(dim=1).mean())
 
     @torch.no_grad()
-    def sample_starts(self, n, gen=None):
-        """dream starts: slots drawn by strength, without replacement"""
+    def sample_starts(self, n, gen=None, onset_share=0.0):
+        """dream starts: a share of the night's dreams from the utterance onsets the store knows (an episode replayed
+        from its beginning; with fewer onsets than dreams the draw is with replacement: ten onsets gave ten short
+        dreams a night and the cortex's trace fell from 60 to 36 of 82, run 54) and the rest from any memory by
+        strength, without replacement (replay from anywhere: onsets alone gave a night fifteen windows and the
+        cortex's trace fell to 38 of 82 on two seeds, runs 53/54)"""
         if self.n() == 0:
             return []
-        starts = torch.nonzero(self.Bs).flatten()                 # utterance onsets, when the store knows them
-        pool = starts if starts.numel() >= 1 else torch.arange(self.n(), device=self.dev)
-        p = self.S[pool] / self.S[pool].sum()
-        # a night replays an episode many times: with fewer onsets than dreams, the draw is with replacement
-        # (ten onsets gave ten short dreams a night and the cortex's trace fell from 60 to 36 of 82, run 54)
-        idx = torch.multinomial(p.cpu(), int(n), replacement=bool(pool.numel() < int(n)), generator=gen)
-        return [int(pool[i]) for i in idx]
+        n = int(n); out = []
+        starts = torch.nonzero(self.Bs).flatten()
+        n_on = int(round(n * float(onset_share))) if starts.numel() >= 1 else 0
+        if n_on > 0:
+            p = self.S[starts] / self.S[starts].sum()
+            idx = torch.multinomial(p.cpu(), n_on, replacement=bool(starts.numel() < n_on), generator=gen)
+            out += [int(starts[i]) for i in idx]
+        n_any = n - n_on
+        if n_any > 0:
+            p = self.S / self.S.sum()
+            idx = torch.multinomial(p.cpu(), n_any, replacement=bool(self.n() < n_any), generator=gen)
+            out += [int(i) for i in idx]
+        return out
 
     def state_dict(self):
         return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "temp": self.temp}

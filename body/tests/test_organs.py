@@ -321,9 +321,12 @@ def test_offset():
     for _ in range(8):
         life.tick()
     j = int(torch.nonzero(life.store.Bs).flatten()[-1]); v = TOK.decode([life.m.nearest(life.store.V[j])])
-    assert v in ("w", "h"), f"after a long pause the start mark fell on {v!r}, not the line's first kept symbol"
+    k = TOK.decode([life.m.nearest(life.store.K[j])])
+    assert (k, v) == ("w", "h"), f"after a long pause the start mark fell on {k!r}->{v!r}, not the second symbol under the first"
     d2 = life.dreams(12)
     assert any(len(ids) >= 8 and ids[-1] == life.eot for ids in d2), f"no whole line dreamed from a start to an end: {[len(i) for i in d2]}"
+    w = TOK.token_to_id("w")
+    assert any(ids[0] == w and len(ids) >= 6 for ids in d2), "no dream began with the line's first symbol, read from the onset's key"
     for ids in d2:
         assert life.eot not in ids[:-1], "the offset inside a dream"
     print("15 the offset: once per pause, the line's end foreseen, the memory marked at both ends, a dream a whole line, nothing in the stream")
