@@ -3575,3 +3575,22 @@ big ', 'where ball? ' 'ball under', 'I had ' 'milk then ball', 'first milk then 
 (86), the unheard combinations 100 and 88 of 128, the run-on 9.2; run 85's day-20
 instruments pending. Runs 87 and 88 at day 6: the mouths 48 and 46, 48 and 44; the
 run-on 9.2 and 9.3; the gates 0.51 and 0.53.
+
+**The day-30 boundary, 18:58.** Day 29, an eighteen-minute session after the teacherless
+gap: 68 smiles, 4 turnings-away, 35 words 'talked over', 13 'past its answer', the
+attention 0.48 at the end; 'dog will go ' answered 'down'. After night 29: the fixed
+cues 34 and 28 of 48, the taught-line cues 96 and 61 of 96, the unheard combinations 94
+and 75 of 128, the cortex alone 52 and 50 of 82; day 28's fused share 0.13. Two days
+under the parent who wants a reply left the yardsticks flat (34 and 31, 34 and 29, 34
+and 28 on the fixed cues; 65, 62, 61 on the taught lines) and the smiles a third down.
+At 18:45 the revert fired: from day 30 the typist is the earlier parent again (--reply
+0). Runs 85 and 86 at day 20, the value instrument: on run 86 the pinned 1024- and
+4096-tick bands +0.43 and +0.67 and the ventral head, born before the mask and reading
+all eight bands, −0.57 over four days; on run 85 the pinned slow bands −0.13 and −0.18
+and the ventral head −0.14. The ladder's own differential slow heads swing by body and by
+day; the discounted slow-band head with a bias is the one that read +0.46 every day on
+run 67, and runs 87 and 88, born with the mask, answer near 22:00 whether it holds on
+fresh bodies. Runs 85 and 86 at days 24 to 26: gates 0.46 to 0.56, smiles 76 to 137. Runs
+87 and 88 at day 14: gates 0.51 and 0.49, smiles 66 and 67. The second body's day 2: 322
+smiles by its evening, 'why dog up? ' answered 'because big do', 'I had ' 'milk then
+bal', 'first milk then ' 'ball undere'.
