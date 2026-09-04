@@ -3099,3 +3099,16 @@ parameters, 49 ms a tick with its waking lessons, a night of about 280 s; 512 wi
 deep, 32M parameters, 127 ms a tick, a night of about 1080 s. The 1024 and 1280 shapes
 and the Mac's GPU follow. Runs 55 and 56 at day 35: the gate 0.40 and 0.35, down from
 0.53 at day 30, wandering rather than settling; day 40 reads at about 11:50.
+
+**The day-22 boundary, 11:55.** After night 21: the fixed cues 42 and 38 of 48; the
+taught-line cues 94 and 77 of 96; the unheard combinations 110 and 100 of 128, the best
+of the record (79, 97, 93, 83, 88 on days 17 to 21); the cortex alone 59 and 60 of 82.
+The seam probe, the cortex alone: 0.99 after 'dog will go down', 0.98 after 'give big
+ball', 0.00 after the other four ('you will go in' 0.93 the day before, 'all gone' 0.88):
+the end's certainty on a given line moves with the day's lessons, two to four of six
+lines above 0.7 on any morning since day 19, none before. The page's fused share on day
+21: 0.10 (0.21 on day 15; 0.14, 0.20, 0.18, 0.19, 0.14 since). Day 21's teacher: 35
+utterances, five cues typed, 'dog will ' go, 'bigger dog ' up, 'first milk then ' ball,
+'why dog ' up, 'where ball? ' ball with a garbled finish, 94 smiles, no frown, the
+parent's attention 0.50 to 1.0, mean 0.86. Day 22's teacher is on the earlier parent
+still; the switch waits on runs 67 and 68.
