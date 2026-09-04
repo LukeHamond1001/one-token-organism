@@ -2443,3 +2443,9 @@ the corpus also allows but says it fused to the next. Three days of a teacher's 
 taken from the page at a human pace, are in it and come back on demand. The instrument
 is scratchpad/taught_probe.py; it runs on any saved body with the corpus file. What it
 does not test is the unheard combination; that remains the open capability.
+
+At the day-9 boundary, 01:04: the raised body saved, the three slowest value heads
+reborn at zero (their norms had been 14, 155 and 666, weights from the diverging days
+before the pinned ladder), the running means with them, nothing else touched, and the
+serve reloaded on the same body, nights 9, 271 slots. The day-10 yardstick before the
+day: 46 of 48 started, 44 finished. Day 10 under the parent began at 01:05.
