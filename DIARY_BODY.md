@@ -2700,7 +2700,7 @@ finished (57 at day 13, 60 at day 10, 77 after day 8), the unheard combinations 
 earlier-word pairs, or a low draw at day 13: the sampled yardsticks draw four samples a
 cue and swing. The offset's own effect on the seam reads from the day-15 boundary on.
 
-## The ventral critic (2026-09-04, 05:05)
+## The ventral critic (2026-09-04, 04:55)
 
 Your law again, and the long timescale's honest gap in the architecture. Runs 37 and 38
 fed the 1024-tick band's error to the mouth and nothing moved, and the mathematics says
