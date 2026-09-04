@@ -450,11 +450,21 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   band, 1 for the slowest) starving the bias and the slow bands, the very
   directions a 1024-tick value lives in. The ventral credit is withdrawn
   (vcrit_w 0) until a head at that horizon reads right; the theorem stands
-  and the trace is kept behind its flag. The deeper arithmetic: the run-on's
-  consequence under the parent who wants a reply is a fifth of a smile over
-  the next thousand ticks against a return of six to fifteen with a spread
-  of several, a shift no critic can find in three hundred cues. A real
-  parent's attention is on its face; that is an environment decision.
+  and the trace is kept behind its flag. The arithmetic of the consequence,
+  corrected the same afternoon: a ten-symbol run-on takes the parent's
+  attention from 0.7 to 0.3, and the next seven known words lose about two
+  smiles over the following minutes, against a return of six to fifteen
+  with a spread near five, a shift a dozen cues can show. The long-timescale
+  reward is in the environment as it stands; it is the critic that has not
+  read it, and the instrument that judged the critics one day at a time
+  read one swing per day at those horizons. The instrument now pools the
+  frozen head's readings over ten chained days, for the ventral head and
+  the pinned 1024- and 4096-tick bands alike. The candidate the math has
+  not excluded: the average-reward head (vcrit_diff: its level the body's
+  own reward rate over the horizon, not a weight to learn; its error
+  r − r̄ + V′ − V) with the trace at λ = 1 − 1/1024 and the horizon rate
+  (value_lr × 16/1024), measured against TD(0), the discounted trace at
+  the shared rate, and the discounted trace at the horizon rate.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the

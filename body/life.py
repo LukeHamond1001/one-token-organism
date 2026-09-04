@@ -51,6 +51,10 @@ PHYSIOLOGY = dict(
     # the critic averages the return over tau horizons, whatever the features' scale. With the trace on, the trace is
     # the input. 0 = the optimizer's lesson above (Adam at the shared rate: run 67's runaway); candidate 4
     vcrit_tau=0.0,
+    # THE AVERAGE-REWARD FORM: the head's level is the body's own reward rate over its horizon, rbar / (1 - gamma), not a
+    # weight to learn (at the horizon rate a learned level took forty days); its error is r - rbar + V' - V and its trace
+    # decays at lambda alone. 0 = discounted with a bias; 1 = differential
+    vcrit_diff=0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -345,7 +349,12 @@ class Life:
                 with torch.no_grad():
                     vl_now = m.value_long(self.bands)
                 gl = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
-                td_long = r + gl * vl_now.detach() - m.value_long(self._bands_prev.detach())
+                if int(self.cfg.get("vcrit_diff", 0)):
+                    td_long = (r - float(self.rbar)) + vl_now.detach() - m.value_long(self._bands_prev.detach())
+                    gl_tr = 1.0                                       # the trace decays at lambda alone
+                else:
+                    td_long = r + gl * vl_now.detach() - m.value_long(self._bands_prev.detach())
+                    gl_tr = gl
                 lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
                 with torch.no_grad():
                     x_prev = torch.cat([(self._bands_prev.detach() - m.band_mu).reshape(-1), torch.ones(1, device=self.dev)])
@@ -353,7 +362,7 @@ class Life:
                         # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
                         # decays at gamma * lambda; the error captures it
                         tr = getattr(self, "_vtrace", None)
-                        self._vtrace = (gl * lam * tr if tr is not None else torch.zeros_like(x_prev)) + x_prev
+                        self._vtrace = (gl_tr * lam * tr if tr is not None else torch.zeros_like(x_prev)) + x_prev
                     e_in = self._vtrace if lam > 0.0 else x_prev
                 if tau > 0.0:
                     # THE NORMALIZED STEP at the critic's time constant: the input's energy tracked over a horizon

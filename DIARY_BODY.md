@@ -3394,3 +3394,27 @@ to arithmetic: the attention is on the face, at once. That is the environment de
 already put to the user. Recipe as it stands: the tonic form, the marks and the onset
 dreams, the offset, the ventral credit 0, the parent who wants a reply measured and
 harmless (runs 63, 64, 67, 68) and ready for the served body at a boundary.
+
+**The consequence, recounted, 15:55.** The user restated the law: grounded reward at the
+short and the long timescale, no cheats in the architecture or the environment, perfect
+math and biology. The entry above got the arithmetic wrong by a factor of ten. The
+parent who wants a reply takes 0.04 of attention per symbol past the answer, so a
+ten-symbol run-on takes it from 0.7 to 0.3, and a known word's smile comes with
+probability equal to the attention: the next seven known words, the body's usual count
+over a thousand ticks, lose about two smiles, not a fifth of one. Two smiles in a
+return of six to fifteen with a spread near five is a shift a dozen cues can show. So
+the long-timescale reward is in the environment as it stands, and what has not read it
+is the critic; every head at that horizon on run 67's body read noise or the wrong
+sign, and the instrument that judged them read one swing per day. The environment
+needs no change; the proposal of the attention on the face is withdrawn as unneeded
+until a right critic has failed. Two instruments corrected: the readings now pooled
+over ten chained days (the ventral head frozen at each day's start, and the pinned 1024-
+and 4096-tick bands with it), and the form the math has not excluded added: the
+average-reward head, its level the body's own reward rate over the horizon rather than
+a weight (a weight took forty days at the horizon rate), its error r − r̄ + V′ − V, the
+trace at λ = 1 − 1/1024, Adam at the horizon rate (vcrit_diff; 16 of 16 tests). Four
+ten-day chains born 15:51 on run 67's day-20 body: TD(0) and the discounted trace at
+the shared rate, the average-reward trace and the discounted trace at the horizon rate;
+the pooled readings from day 3, the tenth day near 18:30. The two earlier ten-day
+chains at the shared rate, frozen per day: TD(0) +0.33, +0.26, −0.10, +0.65, +0.37,
+−0.21, −0.07; the trace −0.75, +0.20, +0.52, −0.37, +0.51, −0.24, +0.43, −0.06.
