@@ -2987,3 +2987,16 @@ dog up? ' 'because', 112 smiles, no frown, the parent never away, its attention 
 1.0. Runs 53 and 54 to day 20, onset dreams without the first symbol: the mouth 44 and 44
 of 48 finished, the cortex alone within lines 44 and 43, 44 and 40 of 82 at day 20 (42
 and 43, 41 and 37 at day 15), never recovering; the unheard combinations 82 and 77.
+
+**The day-19 boundary, 09:25.** After night 18, the served body's first night of dreams
+from the first symbol: the fixed cues 47 and 46 of 48; the taught-line cues 95 and 80 of
+96; the unheard combinations 101 and 93 of 128; the cortex alone within lines 68 and 63
+of 82, back from 62 and 59 after the onset-only night to the day-17 level (70 and 63), as
+on the fast seeds. The seam probe, the cortex alone: 0.97 after 'dog will go down', 1.00
+after 'you will go in', 0.97 after 'give big ball', 0.03 after 'all gone', 0.00 after
+'scared dog' (0.87 the day before) and 'little dog had milk'. Three of six lines at the
+end's certainty after two marked nights, none at the day-17 boundary. With the store in
+the forecast 0.00 to 0.04 everywhere: the store's next symbol from the lines that
+continue ('dog will go down' is 'dog will go' and 'down' both) holds its confidence, as
+the corpus makes it right to. The page's fused share on day 18: 0.18 (0.20, 0.14, 0.21
+before). Day 19's teacher is feeding on the onset form; days 20 and 21 are armed.
