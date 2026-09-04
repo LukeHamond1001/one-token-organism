@@ -2740,3 +2740,17 @@ needs a critic with a definite horizon. So the ventral critic is now discounted 
 ticks (vcrit_gamma 1 - 1/1024), bounded, convergent on fixed features, same features,
 same credit weight; commit 90b422d, test 16 holds. Runs 51 and 52 (seeds 51, 52)
 measure it, 05:26.
+
+The day-15 boundary, the first after a day and a night under the offset: the fixed cues
+45 of 48 started, 39 finished; the taught-line cues 93 and 66 of 96 (95 and 75 at day
+14); the unheard combinations 99 and 78 of 128 (106 and 96). The page's own count for
+day 14: 105 words said after the teacher's utterances, 74% known (53 to 67% on days 12
+and 13), 10% fused (8 to 10%). Night 14's dreams still spliced ("irst milk then ball go
+d", " go up then inder dog up", 17 symbols long): the cortex that ends a dream has to
+have unlearned a seam it held at probability 1.0, and one day of lessons does not do
+that. No verdict from one boundary; the yardsticks draw four to six samples a cue and
+swing by twenty between days. Days 16 to 18 read it. Day 14's teacher (the planner's
+report): 42 utterances, "give little book" against "give big ball", "ball will go down"
+against "dog will go up", all six cues answered ("why dog up? " because big dog, "give
+big " ball, "I had " milk), 106 smiles, the parent never away, its attention closing at
+0.93.
