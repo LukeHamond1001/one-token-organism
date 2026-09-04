@@ -3269,7 +3269,7 @@ The marked nights have been unteaching the raised body's seam on the page itself
 and now visibly. Runs 73 to 76 at days 8 and 9: the gates 0.49, 0.21, 0.41, 0.41, one
 seed closing under the parent who wants a reply, 29 smiles on its day 8.
 
-**The effort's scale, 15:00.** Runs 73 to 76, the effort in the reward at the old cost
+**The effort's scale, 14:50.** Runs 73 to 76, the effort in the reward at the old cost
 of 0.12 a symbol convex in fatigue and no tonic drive, read at days 10 and 11: the gates
 0.36, 0.18, 0.30 and 0.41, three of four sliding, run 74 mute with six smiles on its day
 10 and its cues fusing ('bookwh', 'dogiv', 'byere'), against 0.35 to 0.54 over forty
@@ -3294,7 +3294,7 @@ parent's attention is on its face, and the still-face experiments say the infant
 its withdrawal at once. That would be an environment change (the attention visible on
 the face row), and it waits for the user's word.
 
-**The knife-edge, and the ventral critic's sign, 15:40.** Runs 81 to 84, the effort in
+**The knife-edge, and the ventral critic's sign, 14:58.** Runs 81 to 84, the effort in
 the reward at 0.03 a symbol: the gates 0.90, 0.97, 0.92 and 0.97 on their first day,
 where at 0.12 they slid to 0.2 by day 10. Stopped at day 1; the reading is complete. Once
 the critics predict the cost, the gate's rate goes to wherever a word's chance of a smile
