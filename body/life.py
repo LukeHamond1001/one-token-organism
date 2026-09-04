@@ -27,12 +27,13 @@ PHYSIOLOGY = dict(
     # striatum's vigor). gate_level_w 0 = off until measured (runs 39/40)
     gate_level_band=5, gate_level_w=0.0,
     # THE OFFSET: the world's quiet after its utterance is an event. After offset_ticks of the world's quiet, once per
-    # pause, the line's end becomes a memory (the store: the line's context -> the turn-end, <eot_human>) and the
+    # pause, the line's end (the turn-end, <eot_human>, the tokenizer's end of the human's turn) becomes the waking
     # lesson's target for the line's last symbol (the cortex learns "then quiet" instead of the next line's first
-    # letter); a dream ends where its memory recalls it; the mouth may never say it. Nothing enters the stream: as a
-    # stream symbol it wiped the body's own context mid-answer (a world symbol clears the own bag; runs 43/44, day 1,
-    # "go n Z"). 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next
-    # line's first letter at probability 1, the mouth's "downg"; served body, day 10)
+    # letter); a dream ends where the cortex expects it; the mouth may never say it. Nothing enters the stream (as a
+    # stream symbol it wiped the body's own context mid-answer: runs 43/44, day 1, "go n Z") and the store does not
+    # hold it (written there, the quiet after a cue blended with the answer and the mouth read junk: runs 45/46).
+    # 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next line's
+    # first letter at probability 1, the mouth's "downg"; served body, day 10)
     offset_ticks=0,       # 0 = off until measured; the candidate is 8 (two seconds at four ticks a second: within a line the world
     # types a symbol a tick; and 8 + the lesson's cadence of 24 keeps the ended position inside the lesson's 32)
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
@@ -58,7 +59,7 @@ class Life:
         self.nl = tok.token_to_id("\n")
         self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
         self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
-        self._last_world = -10 ** 9; self._offset_done = True; self._key_end = None
+        self._last_world = -10 ** 9; self._offset_done = True
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.save_path = save_path
@@ -155,7 +156,6 @@ class Life:
                     # the last world symbol leaves the query (it is not in any key)
                     self.bag_w = m.shift(self.bag_w) + ex
                     self.bag_o = torch.zeros_like(self.bag_o); self.n_own = 0
-                    self._key_end = self.bag_w.clone()           # the context the world's quiet will come under
                 else:
                     self.bag_o = m.shift(self.bag_o) + ex; self.n_own += 1
             read, conf, _ = (self.store.read(self.bag) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
@@ -190,16 +190,11 @@ class Life:
         return C, pred, surp, conf
 
     def _offset(self):
-        """THE OFFSET (§2): the world's quiet after its utterance, once per pause. The line's end becomes a
-        memory, its context -> the turn-end, with the surprise of the quiet as its strength; and the last
-        world position is marked ended, so the waking lesson's target there is the turn-end and not the
-        next line's first letter. Nothing enters the stream; the bags and the mouth's context stand."""
-        m = self.m
-        with torch.no_grad():
-            if self._key_end is not None and float(self._key_end.norm()) > 1e-6 and not self.cfg.get("store_off"):
-                e = m.E.weight[self.eot]
-                surp = float(1.0 - F.cosine_similarity(self.pred_prev, e, dim=0)) if self.pred_prev is not None else 1.0
-                self.store.write(self._key_end, e, surp * (1.0 + abs(float(getattr(self, "_dopa", 0.0)))), 0)
+        """THE OFFSET (§2): the world's quiet after its utterance, once per pause. The last world position is
+        marked ended, so the waking lesson's target there is the turn-end and not the next line's first letter;
+        a dream ends where the cortex, so taught, expects the quiet. Nothing enters the stream, the bags and the
+        mouth's context stand, and the store keeps only what the world said next: written there too, the quiet
+        after a cue blended with the answer's memory and the mouth read junk (runs 45 and 46, day 1)."""
         for w in reversed(self.win):
             if w["x"] != self.sil:
                 w["end"] = True; break
@@ -514,9 +509,13 @@ class Life:
                     if conf < floor or (win >= 0 and (float(self.store.S[win] * adapt[win]) < s_floor
                                                       or float(adapt[win]) < float(self.cfg["dream_exhaust"]))):
                         break                                             # unsure, or the memory is exhausted (a slot fires at most twice)
+                    if int(self.cfg.get("offset_ticks", 0)) > 0 and len(ids) >= 2:
+                        # THE OFFSET in the night: the cortex alone, over the dream so far, expects the quiet
+                        xs_, xo_, fc_, bu_, rd_, _ = self._dream_inputs(ids + [ids[-1]], mem_on=False)
+                        C_ = self.m.stream(self.m.inputs(xs_, xo_, fc_, bu_, rd_))[-1]
+                        if int(self.m.readout(self.m.latent_pred(C_)).argmax()) == self.eot:
+                            ids.append(self.eot); break                   # the dream ends where the world went quiet
                     lg = self.m.readout(pred).clone()
-                    if int(self.cfg.get("offset_ticks", 0)) > 0 and int(lg.argmax()) == self.eot:
-                        ids.append(self.eot); break                       # the memory ends where the world went quiet
                     lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
                     nid = int(lg.argmax())
                     ids.append(nid)

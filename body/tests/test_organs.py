@@ -270,9 +270,9 @@ def test_level_input():
 
 
 def test_offset():
-    """the offset: after a line and eight ticks of the world's quiet, once per pause, the line's end is a memory
-    (its context -> the turn-end), the lesson's target after the last letter is the turn-end, a dream ends on it,
-    and nothing enters the stream: no position holds it, the bags stand, the mouth never says it"""
+    """the offset: after a line and eight ticks of the world's quiet, once per pause, the line's last position is
+    marked ended and the lesson's target there is the turn-end; a dream ends where the cortex expects it; nothing
+    enters the stream or the store; the bags stand"""
     life = tiny(offset_ticks=8, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m
     with torch.no_grad():
         m.mouth_gate.bias.fill_(-30.0)
@@ -282,17 +282,15 @@ def test_offset():
     n0 = life.store.n(); bag0 = life.bag_w.clone()
     for _ in range(7):
         life.tick()
-    assert life.store.n() == n0, "the offset came before eight quiet ticks"
+    assert not any(w.get("end") for w in life.win), "the offset came before eight quiet ticks"
     life.tick()
-    assert life.store.n() == n0 + 1 and int(m.readout(life.store.V[-1]).argmax()) == life.eot, "the line's end was not stored at eight quiet ticks"
-    assert all(w["x"] != life.eot and w["xo"] != life.eot for w in life.win), "the turn-end entered the stream"
     assert [w for w in life.win if w["x"] != life.sil][-1].get("end"), "the line's last position is not marked ended"
+    assert sum(1 for w in life.win if w.get("end")) == 1, "more than one position ended"
+    assert life.store.n() == n0, "the offset wrote the store"
+    assert all(w["x"] != life.eot and w["xo"] != life.eot for w in life.win), "the turn-end entered the stream"
     assert torch.allclose(life.bag_w, bag0 * (life.cfg["bag_decay"] ** 8)), "the offset moved the world's bag"
     for _ in range(40):
         life._wake_lesson()                                            # the lesson while the ended line is in its window
-    for _ in range(30):
-        life.tick()
-    assert life.store.n() == n0 + 1, "the offset fired more than once in one pause"
     life2 = tiny(offset_ticks=8, gate_floor=0.0); life2.m.load_state_dict(m.state_dict())
     with torch.no_grad():
         life2.m.mouth_gate.bias.fill_(-30.0)
@@ -303,10 +301,10 @@ def test_offset():
         C = life2._stream_now(); p = life2.m.forecast(C, torch.zeros(m.d)); lg = life2.m.readout(p)
     assert int(lg.argmax()) == life.eot, f"after the line the cortex does not foresee the turn's end: {int(lg.argmax())}"
     dreams = life.dreams(12)
-    assert dreams and any(ids[-1] == life.eot for ids in dreams), "no dream ended where the world went quiet"
+    assert dreams and any(ids[-1] == life.eot for ids in dreams), "no dream ended where the cortex expects the quiet"
     for ids in dreams:
         assert life.eot not in ids[:-1], "the offset inside a dream"
-    print("15 the offset: once per pause, the line's end stored, foreseen after the line, a dream's end, nothing in the stream")
+    print("15 the offset: once per pause, the line's end foreseen, a dream's end, nothing in the stream or the store")
 
 
 def test_feelings_follow_dopamine():
