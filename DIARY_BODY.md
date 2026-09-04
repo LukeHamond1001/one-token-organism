@@ -2721,3 +2721,22 @@ and 50 (seeds 49, 50, the parent world, the offset the recipe, vcrit_w 1) measur
 the mouth's yardstick, unheard combinations, engagement (smiles, the parent's turns
 away, its hit rate), and at day 20 the corrected value instrument with the ventral
 critic's own line against band 5's, judged at 1024 ticks.
+
+Runs 49 and 50 (the ventral critic as a differential head, its error in the credit at
+weight 1), stopped at day 12 and 11. Run 49's mouth held (44 of 48 at day 6, all 44
+finished; gate 0.5 to 0.6); run 50's gate closed, 0.43 at day 3, 0.34 at day 9, 0.18 at
+day 10, its cue answers shrinking to "bal", "be". The credit probe on their day-6 copies
+(scratchpad/credit_probe.py, one fast day): the ventral value swung from -137 to +15
+across the day on run 49 and from -60 to -5 on run 50, spreads of 59 and 24, against
+returns whose spread at 1024 ticks is 5 to 10; the twelve-tick sum of its error after an
+act was +0.31 on run 49 against +0.08 after a rest, and +0.07 against +0.03 on run 50,
+ten times the fast error's +0.03. The mathematics: a differential (average-reward) head
+over features that can move within a tick computes the relative value proper, the
+integral of reward above its long-run average, and in a world whose reward rate wanders
+through the day (the parent's attention, the habituation) that integral swings by a
+hundred; the ladder's slow heads never showed it only because their features cannot
+express a swing. The relative value is the right object for the day; the mouth's credit
+needs a critic with a definite horizon. So the ventral critic is now discounted at 1024
+ticks (vcrit_gamma 1 - 1/1024), bounded, convergent on fixed features, same features,
+same credit weight; commit 90b422d, test 16 holds. Runs 51 and 52 (seeds 51, 52)
+measure it, 05:26.
