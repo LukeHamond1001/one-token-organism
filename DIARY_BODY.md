@@ -2065,3 +2065,6 @@ alone it says "bbiiiiiii". Run 26 retired at day 6; the rate stays at 1e-5. The 
 underneath is whether the stream carries reward-predictive information at all, and the
 instrument for that reads the return from the stream itself integrated at each clock,
 with no learned projection in the way.
+
+The reborn body's third night: gauge 0.74 before, 0.90 after, 213 slots kept; days 4 to 6
+queued at human pace.
