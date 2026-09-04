@@ -3090,3 +3090,12 @@ probe. Day 20's teacher: 42 utterances, seven cues, seven answered ('first milk 
 ball, 'why dog up? ' because, 'why dog up? because ' big, 'dog will go ' down, 'you will
 go ' down, 'big dog bigger ' dog, 'where ball? ' ball), each run on into the parent's
 lines, 109 smiles, the parent's attention 0.69 rising to 1.0. Days 22 to 24 are armed.
+
+**Night 21, and the scale probe's first shapes, 11:35.** Night 21 of the served body:
+forty-eight dreams, mean length 8.2, 395 symbols, the gauge 0.88 to 0.90. The scale probe
+on the loaded machine (eight fast runs beside it, so every figure is inflated, the served
+body's real ticks being about a fifth of these): the served shape, 256 wide and 6 deep, 6M
+parameters, 49 ms a tick with its waking lessons, a night of about 280 s; 512 wide and 8
+deep, 32M parameters, 127 ms a tick, a night of about 1080 s. The 1024 and 1280 shapes
+and the Mac's GPU follow. Runs 55 and 56 at day 35: the gate 0.40 and 0.35, down from
+0.53 at day 30, wandering rather than settling; day 40 reads at about 11:50.
