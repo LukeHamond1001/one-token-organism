@@ -40,6 +40,11 @@ PHYSIOLOGY = dict(
     # a recency tracker reads the return with the wrong sign (run 67's body: TD(0) +0.65 on its first day, −0.28 after
     # twenty; the trace −0.75 after one). Each head at its own clock: 0 = the shared value_lr; candidate value_lr x 16/1024
     vcrit_lr=0.0,
+    # THE CRITIC'S TIME CONSTANT: the normalized rule (each step corrects a fixed fraction of the error along its input,
+    # the input's energy tracked over a horizon) with the fraction set by a time constant in horizons, (1 - gamma) / tau:
+    # the critic averages the return over tau horizons, whatever the features' scale. With the trace on, the trace is
+    # the input. 0 = the optimizer's lesson above (Adam at the shared rate: run 67's runaway); candidate 4
+    vcrit_tau=0.0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -333,16 +338,27 @@ class Life:
                 # the target detached; linear on fixed features, convergent)
                 with torch.no_grad():
                     vl_now = m.value_long(self.bands)
-                td_long = r + float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)) * vl_now.detach() - m.value_long(self._bands_prev.detach())
-                lam = float(self.cfg.get("vcrit_lambda", 0.0))
-                if lam > 0.0:
-                    # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
-                    # decays at gamma * lambda; the error captures it. The surrogate's gradient is -error x trace.
-                    with torch.no_grad():
-                        x_prev = torch.cat([(self._bands_prev.detach() - m.band_mu).reshape(-1), torch.ones(1, device=self.dev)])
+                gl = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+                td_long = r + gl * vl_now.detach() - m.value_long(self._bands_prev.detach())
+                lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
+                with torch.no_grad():
+                    x_prev = torch.cat([(self._bands_prev.detach() - m.band_mu).reshape(-1), torch.ones(1, device=self.dev)])
+                    if lam > 0.0:
+                        # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
+                        # decays at gamma * lambda; the error captures it
                         tr = getattr(self, "_vtrace", None)
-                        self._vtrace = (float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)) * lam * tr if tr is not None else torch.zeros_like(x_prev)) + x_prev
-                    loss_vl = -(td_long.detach() * (m.vcrit.weight[0] @ self._vtrace[:-1] + m.vcrit.bias[0] * self._vtrace[-1]))
+                        self._vtrace = (gl * lam * tr if tr is not None else torch.zeros_like(x_prev)) + x_prev
+                    e_in = self._vtrace if lam > 0.0 else x_prev
+                if tau > 0.0:
+                    # THE NORMALIZED STEP at the critic's time constant: the input's energy tracked over a horizon
+                    with torch.no_grad():
+                        en = float((e_in * e_in).sum())
+                        self._vcrit_energy = en if getattr(self, "_vcrit_energy", None) is None else (1.0 - (1.0 - gl)) * self._vcrit_energy + (1.0 - gl) * en
+                        step = ((1.0 - gl) / tau) / (self._vcrit_energy + 1e-6) * float(td_long.detach())
+                        m.vcrit.weight += step * e_in[:-1].unsqueeze(0); m.vcrit.bias += step * e_in[-1:]
+                    loss_vl = td_long.detach() * 0.0
+                elif lam > 0.0:
+                    loss_vl = -(td_long.detach() * (m.vcrit.weight[0] @ self._vtrace[:-1] + m.vcrit.bias[0] * self._vtrace[-1]))   # gradient -error x trace
                 else:
                     loss_vl = td_long ** 2
                 loss_v = (td ** 2).mean() + loss_vl

@@ -3353,3 +3353,23 @@ captured the ventral error, and the ventral error was wrong-signed and growing, 
 could not help and did not; the four stopped at day 6, to be repeated once the critic
 reads right. Two of them (78 and 79) had begun the slide of the effort form at 0.12 by
 day 6 (smiles 85 and 38, gates 0.59 and 0.49), consistent with runs 73 to 76.
+
+**The day-26 boundary, 15:45.** After night 25: the fixed cues 42 and 38 of 48 (day 25:
+42 and 38); the taught-line cues 94 and 56 of 96, the slide stopped where it was (55, 56);
+the unheard combinations 91 and 74 of 128 (95 and 79); the cortex alone 58 and 59 of 82.
+The seam probe: the cortex alone 0.47 after 'dog will go down' (0.90 a day before), 1.00
+after 'give big ball', 0.02 and 0.00 after the rest; with the store 0.17 after 'give big
+ball'. The page's fused share on day 25: 0.15, up from 0.07; the record since day 17:
+0.20, 0.18, 0.19, 0.14, 0.10, 0.16, 0.12, 0.07, 0.15, a noisy fall. Day 26 began at
+15:38. The chained critic instrument, the shared rate: TD(0) frozen at the day's start
++0.33, +0.26, −0.10 on days 2 to 4 with the weights' norm 37, 47, 54; the trace −0.75,
++0.20 on days 2 and 3 with 30, 38; the control with no ventral credit in the gate 240,
+253, 235 rewards a day against 245, 216, 248 with it, so the credit with a fresh critic
+neither adds nor costs smiles, and run 67's 91 was its trained critic's runaway. At the
+horizon rate under Adam the critic moved a twentieth of its level in a day, too slow to
+judge, so that pair was stopped; the rate under Adam is a weight speed, not a fraction
+of the error corrected. The normalized rule instead (each step corrects a fixed
+fraction of the error along its input, the input's energy tracked over a horizon; the
+feature energy measured at 101 a tick, 15 a band, 1 for the slowest), the fraction set
+by a time constant in horizons, (1 − γ)/τ: behind vcrit_tau, 16 of 16 tests; TD(0) and
+the trace at τ = 4 born 15:42 on the same chained days.
