@@ -3138,3 +3138,16 @@ parent), the ventral credit at 1, the tonic drive and the effort cost at 0, born
 the gate on the grounded credit, the spontaneous floor and its own performance error.
 Adopted if the mouth survives in both worlds and the run-on shrinks in the new one. Runs
 65 and 66 stopped at day 13 (the end as a rest under the new parent: neutral).
+
+**Night 22, and the scale probe's cpu shapes, 12:30.** Night 22 of the served body:
+forty-eight dreams, mean length 8.8, 424 symbols, the gauge 0.91 to 0.92, 391 s asleep
+on the loaded machine. The scale probe on cpu, eight fast runs beside it (every figure
+two to three times what an idle machine would read): 256 wide and 6 deep, 6M parameters,
+49 ms a tick with its lessons, a night of about 280 s; 512 and 8, 32M, 127 ms, about
+1080 s; 1024 and 12, 179M, 319 ms, about 3900 s; 1280 and 24, 515M, 805 ms, about 12300
+s. On the Mac's GPU the two small shapes read slower than cpu (107 and 134 ms a tick, the
+overhead of the device dominating small matrices), the nights 350 and 565 s; the two
+large shapes follow. Read against the page's 250 ms a tick: on this machine idle, the
+32M body fits with a night of six minutes, the 179M body sits at the budget's edge with a
+night near twenty-five minutes (an infant's third of life asleep, which the day's 12,000
+ticks would allow), and the half-billion shape needs the GPU or a slower tick.
