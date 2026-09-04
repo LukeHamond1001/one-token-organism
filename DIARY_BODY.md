@@ -2699,3 +2699,25 @@ finished (57 at day 13, 60 at day 10, 77 after day 8), the unheard combinations 
 128 started and 96 finished (72 at day 13, 75 at day 10). Night 13 and a day on the
 earlier-word pairs, or a low draw at day 13: the sampled yardsticks draw four samples a
 cue and swing. The offset's own effect on the seam reads from the day-15 boundary on.
+
+## The ventral critic (2026-09-04, 05:05)
+
+Your law again, and the long timescale's honest gap in the architecture. Runs 37 and 38
+fed the 1024-tick band's error to the mouth and nothing moved, and the mathematics says
+why: that head reads a state that moves a thousandth per tick, so an act's effect on
+the long-run prospect cannot appear in its error inside the mouth's twelve ticks of
+eligibility; its error was the fast error plus noise. The ladder ties each head's
+horizon to its state's clock. Biology does not: the ventral striatum predicts far ahead
+from the cue it sees now. So, THE VENTRAL CRITIC: one relative (average-reward) value
+head over the whole ladder, every band's state centered on its running mean, learned
+awake by the same semi-gradient differential TD as the slow bands (linear on fixed
+features, convergent), zero at birth, no bias, born fresh in an older body. Its error
+r - rbar + V(s') - V(s) moves within a tick of an act, because the fast bands do, and
+carries the parent's engagement, because the slow bands do; if babble lowers the
+long-run prospect and an answer raises it, this error says so at the act, and with
+vcrit_w it enters the mouth's credit beside the fast error. Nothing about words, nothing
+from the caregiver's insides. Test 16 of 16 (commit cb328f0). Off by default; runs 49
+and 50 (seeds 49, 50, the parent world, the offset the recipe, vcrit_w 1) measure it:
+the mouth's yardstick, unheard combinations, engagement (smiles, the parent's turns
+away, its hit rate), and at day 20 the corrected value instrument with the ventral
+critic's own line against band 5's, judged at 1024 ticks.
