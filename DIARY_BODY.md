@@ -2238,3 +2238,9 @@ ladder rests on its theorem and the body is none the worse for it. The recipe is
 as of tonight: d3dd681, the salience input present at zero. Run 29 goes to twenty for the
 record. The served body took it at its day-6 boundary at 21:35, nights 5, 214 slots,
 and the teacher's first day began.
+
+Run 29 at day 20: every band bounded to the end, the relative values at −10, 3 and 2
+with spreads of 14, 9 and 4, the TD error 0.26 at every band, no state near the
+ceiling; the mouth started 48 of 48 cues and finished 47; the cortex's trace 57 of 82
+awake and 65 under the dream construction. Twenty days without a runaway anywhere in the
+ladder, for the first time. Body kept as data/body2_run29_day20.pt.
