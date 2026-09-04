@@ -170,7 +170,7 @@ symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fati
 store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps fixed at birth · the reward rate and the differential bands' state means at 1/1024 a tick ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-own-reward weight 0.5, innate drive 0.70 (the error form; 0.25 under the older value form, bodies saved without a form key keeping it), expectation rate 0.1 per act of the syllable, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
+own-reward weight 0.5, innate drive 0.25 (the value form; the error form, measured on two seeds and not adopted, carried 0.70; bodies saved without a form key load as the value form), expectation rate 0.1 per act of the syllable, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
@@ -274,8 +274,16 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   the recall ("gog will gog") in every sample, the other seven at 5 or 6
   of 6; the credit decides whether the mouth speaks, not which symbol, so
   this reads as the seed's memory, but one seed cannot settle it. The
-  value form remains the recipe (innate drive 0.25); the error form is kept
-  in the code and a second seed decides (run 34).
+  value form remains the recipe (innate drive 0.25). The second seed (run 34)
+  decided: 38 of 48 at day 20 against the value form's 46 to 47; the error
+  form is kept in the code and not adopted.
+- **The slow error in the gate's credit.** The mouth's credit is the fast
+  band's error; adding the 1024-tick band's error to it (runs 37 and 38, the
+  parent world, weight 1) left the mouth where it was (44 and 42 of 48 at day
+  20) and emptied the slow critics: corr(V, G) at 256/1024/4096/16384 of
+  -0.36/0.00/-0.05/-0.68 and -0.27/0.84/-0.58/-0.78 against the recipe's
+  0.47/0.84/0.91 and 0.42/0.55/0.39 under the same parent (runs 35, 36). The
+  slow error routed into the gate is spent there; the weight stays zero.
 - **The recall's confidence.** The store's read is the attended mean of unit
   values, and its norm is the agreement among the memories attended. The
   largest attention weight is not: once the key carried its own bag, duplicate
