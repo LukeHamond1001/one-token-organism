@@ -2692,3 +2692,10 @@ ball" against "first up then in"), every one of its seven cues drawing the expec
 gauge 0.81 to 0.90, dreams "w dog will go down", "bigger dog up? because b", " gonen ba"
 (the seam still dreamed, the last night before the offset). The day-14 yardstick before
 the day: the fixed cues 45 of 48 started, 42 finished.
+
+The day-14 boundary yardsticks, on the body as saved at 04:33 (before any lesson under
+the offset, so not the offset's doing): the taught-line cues 95 of 96 started and 75
+finished (57 at day 13, 60 at day 10, 77 after day 8), the unheard combinations 106 of
+128 started and 96 finished (72 at day 13, 75 at day 10). Night 13 and a day on the
+earlier-word pairs, or a low draw at day 13: the sampled yardsticks draw four samples a
+cue and swing. The offset's own effect on the seam reads from the day-15 boundary on.
