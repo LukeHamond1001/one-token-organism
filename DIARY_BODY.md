@@ -2933,3 +2933,44 @@ onsets the store knows, with replacement when the night has more dreams than the
 has onsets. The mixed draw is removed (commit below). The served body, restarted at 08:08
 on the mixed form, takes the onset form at the day-18 boundary; runs 59 and 60 carry the
 recipe to day 20 with instruments at 15 and 20, runs 57 and 58 the mixed form beside them.
+
+**The run-on, measured, 09:00.** With the seam's cure in hand for the world's lines, the
+body's own turn: after a cue's answer, every body runs on. An instrument on the fast
+caregiver logs (scratchpad/runon.py: in the twenty-five ticks after a cue, the symbols
+the body adds after its first word, and the rest it takes right after that word), days
+5 to 10: runs 47 and 48 (the recipe) 9.7 and 9.8 symbols per cue, resting 1.8 and 2.1
+ticks first; runs 53 and 54 (the marks) 9.9 and 9.5; runs 57 to 60 9.3 to 10.6; runs 51,
+52, 55 and 56 (the ventral credit at weight 1) 8.6, 9.1, 7.9 and 8.8. Days 11 to 16 the
+same. The long credit trims the run-on by a tenth; nothing stops it.
+
+Three reasons, each measured. (1) The store's vote: after a heard line's end the store
+recalls the next symbol at confidence 1.0 from other lines sharing the last words ('will
+go' continues in 'you will go in'; 'milk' in 'first milk then ball'), and the corpora make
+this a true memory, not a generalization error: every cue is a prefix of a longer line and
+'dog will go' is both a line and the prefix of 'dog will go down', so the body's 'go
+down' is the parent's own line. The cortex's forecast of the end, 1.00 alone on run 59
+after 'dog will go', cannot outvote it. (2) The short credit: the smile lands one to six
+ticks after the answer, and the body rests under two ticks before its next symbol, so the
+answer's reward credits the run-on's first symbols too, act or rest alike; the gate gets
+no consistent push and babbles at its base rate, nine or ten symbols in twenty-five ticks.
+(3) The long credit: the fast parent's attention (fastlife.py, on the user's word of
+2026-09-03) rises 0.05 at every known word the body says, the run-on's 'down' and 'in'
+included, and falls 0.04 only at a non-word. A run-on of known words is rewarded at both
+timescales by this caregiver, and the ventral critic, reading it rightly, trims only the
+non-words. No honest architecture suppresses what its environment rewards. Whether the
+parent should want a reply rather than a monologue (attention that falls when the child
+talks past its answer or over the parent's turn) is an environment decision and waits
+on the user's word; I have not touched the caregiver.
+
+Two honest changes on the body's side, both small. The forecast's vote for the turn's end
+is a symbol the mouth can never say; banned outright, a sure forecast of the end raised
+the proposal's salience and then the next-best symbol was said in its place. Now, behind
+a flag (end_rest, off in the recipe), that vote is the mouth's vote for the rest, and a
+mouth that draws the rest has not acted. A rest probe on run 59's day-6 body
+(scratchpad/rest_probe.py) says what it would do: at six of the eight cues the store's
+answer holds the mass (1.00), at 'give ' and 'scared ' (three and two answers, the store
+at 0.68 and 0.70) the end takes the first tick and the answer follows; after heard lines
+nothing changes, the store's next symbol holding 1.00. Runs 61 and 62 measure it from
+birth. And the night's gauge, which banned the end, counted every dream's last target as
+a miss (a ceiling near 0.9 on ten-symbol dreams); it counts the end now, so gauges from
+the served body's next restart read a tenth higher than before for the same cortex.

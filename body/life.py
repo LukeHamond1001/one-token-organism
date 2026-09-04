@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.0,
-    dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, end_rest=0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
@@ -352,12 +352,22 @@ class Life:
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
-            logits = m.readout(pred1).clone(); logits[self.bans] = float("-inf"); logits[self.sil] = float("-inf")
+            logits = m.readout(pred1).clone()
+            if self.cfg.get("end_rest"):
+                # THE END IS A REST: the forecast's vote for the turn's end (a symbol the mouth can never say) is its
+                # vote for silence; banned outright, a sure forecast of the end raised the proposal's salience and then
+                # the next-best symbol was said in its place
+                logits[self.sil] = logits[self.eot]
+            else:
+                logits[self.sil] = float("-inf")
+            logits[self.bans] = float("-inf")
             probs = torch.softmax(logits, -1)
             ent = float(-(probs * (probs + 1e-9).log()).sum() / math.log(probs.numel()))
             if acted:
                 nxt = int(torch.multinomial(probs.cpu(), 1, generator=self.gen))
                 p_choice = float(probs[nxt])
+                if nxt == self.sil:
+                    acted, p_choice = False, 0.0                  # it chose the rest: the turn is the other's
             else:
                 nxt, p_choice = self.sil, 0.0
         int_t = 0.0
@@ -590,8 +600,8 @@ class Life:
                 xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
                 C = self.m.stream(self.m.inputs(xs, whos, faces, bundles, reads))
                 pred = self.m.latent_pred(C)
-                lg = self.m.readout(pred); lg[:, self.bans] = float("-inf"); lg[:, self.sil] = float("-inf")
-                hits += int((lg.argmax(-1) == y).sum()); n += int(y.numel())
+                lg = self.m.readout(pred); lg[:, [b for b in self.bans if b != self.eot]] = float("-inf"); lg[:, self.sil] = float("-inf")
+                hits += int((lg.argmax(-1) == y).sum()); n += int(y.numel())   # a dream's end (the turn's) counts as a target
                 cos_sum += float(F.cosine_similarity(pred, self.m.E.weight[y], dim=-1).sum())
         self._gauge_cos = (round(cos_sum / n, 3) if n else None)
         return (round(hits / n, 3) if n else None), n
