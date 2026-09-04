@@ -3112,3 +3112,29 @@ utterances, five cues typed, 'dog will ' go, 'bigger dog ' up, 'first milk then 
 'why dog ' up, 'where ball? ' ball with a garbled finish, 94 smiles, no frown, the
 parent's attention 0.50 to 1.0, mean 0.86. Day 22's teacher is on the earlier parent
 still; the switch waits on runs 67 and 68.
+
+**The arithmetic of the run-on, 12:20.** Runs 55 and 56 at day 40, the ventral credit at
+weight 1 under the earlier parent: the gate 0.525 and 0.358 (0.40 and 0.35 at day 35,
+0.53 at day 30, wandering between 0.35 and 0.54 across forty days), the mouth 47 and 40
+of 48, the unheard combinations 76 and 84. No collapse, and under the new parent the
+long return is the parent's only road to the gate (runs 63 and 64 at weight 0: the
+run-on unmoved at days 6 and 10). Weight 1 is the recipe. Runs 67 and 68 (the new parent,
+weight 1) at day 6: the mouth 44 and 40 of 48, the unheard 84, the run-on 10.1 and 9.1
+symbols per cue. The long credit on did not move it either. So the credit was read
+directly. A probe without a parent (scratchpad/runon_credit.py) read the ventral error at
+a tenth to a unit per tick, not the thousandth I had argued, and negative through both
+the answer and the run-on: with no parent the errors are the missing smile, the wrong
+instrument. A lived day (scratchpad/runon_credit2.py: a copy of run 67's day-6 body under
+the fast parent, the gate's own credit recorded each tick) read the right one. Per tick
+of grounded credit, the dopamine of the next twelve ticks as the gate sums it: the
+answer's letters +0.105, the run-on's letters −0.018, resting after the answer +0.070.
+The contingency is in the credit: a rest after the answer beats a run-on letter by 0.09
+a tick. And the gate adds to every act a tonic drive of 0.25 less an effort cost of 0.12,
+"babble is its own reward", a designer's constant from run 19's day, which pays +0.13 per
+act and reverses the order. The run-on has stood at ten symbols per cue on every recipe
+and every parent because an intrinsic term outweighs the grounded one. Under the law the
+intrinsic act credit goes. Runs 69 and 70 (the new parent) and 71 and 72 (the earlier
+parent), the ventral credit at 1, the tonic drive and the effort cost at 0, born 12:18:
+the gate on the grounded credit, the spontaneous floor and its own performance error.
+Adopted if the mouth survives in both worlds and the run-on shrinks in the new one. Runs
+65 and 66 stopped at day 13 (the end as a rest under the new parent: neutral).

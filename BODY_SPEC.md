@@ -364,7 +364,12 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   from 0.55 to 0.38 over its last week (the differential form's collapse,
   slower), and its own content at 1024 ticks reads +0.20 and -0.24. Weight 0
   in the recipe until forty days on two seeds (runs 55/56) say whether the
-  drift settles.
+  drift settles. They said: the gate wandered between 0.35 and 0.54 across
+  forty days with the mouth at 40 to 47 of 48 and the unheard combinations
+  72 to 87, no collapse; and under the parent who wants a reply the long
+  return is the only path by which the parent's attention reaches the gate
+  (runs 63/64 at weight 0: the run-on unmoved). Weight 1 is the recipe
+  (2026-09-04, 12:20).
 - **The run-on, and the end as a rest.** After a cue's answer every body
   runs on, nine or ten symbols in the next twenty-five ticks, resting under
   two first, on every recipe of this record (runs 47 to 60); the ventral
@@ -382,6 +387,20 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   recipe until runs 61/62 read), a mouth that draws the rest having not
   acted; and the night's gauge counts a dream's end as a target (it banned
   the end and read a ceiling near 0.9 before 2026-09-04 09:00).
+- **The tonic drive, measured.** The gate's lesson adds to every act a tonic
+  drive of 0.25 ("babble is its own reward") less an effort cost of 0.12
+  convex in fatigue, beside the grounded credit, the dopamine of the next
+  twelve ticks. In a lived day under the parent who wants a reply, with the
+  ventral credit at weight 1 (run 67's day-6 body, scratchpad/runon_credit2.py):
+  the answer's letters earned +0.105 grounded credit per tick, the run-on's
+  letters −0.018, and resting after the answer +0.070. The parent's
+  contingency is there, resting beating the run-on by 0.09 a tick, and the
+  tonic drive's net +0.13 per act reverses it; so the run-on stood at ten
+  symbols per cue on every recipe and every parent. Under the law the
+  intrinsic act credit goes: runs 69/70 (the new parent) and 71/72 (the
+  earlier parent) carry the gate on the grounded credit, the spontaneous floor
+  and the body's own performance error alone. Adopted only if the mouth
+  survives in both worlds and the run-on shrinks in the new one.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the

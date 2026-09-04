@@ -26,7 +26,7 @@ PHYSIOLOGY = dict(
     # (average-reward) head over fast features it computed the day-scale relative value, swinging by a hundred within a
     # day (runs 49/50: the integral of reward above its wandering average), and that drift entered the mouth's twelve-tick
     # credit ten times the size of the fast error and shut one seed's gate. 0 = off until measured (runs 51/52; candidate 1.0)
-    vcrit_w=0.0, vcrit_gamma=1.0 - 1.0 / 1024,
+    vcrit_w=1.0, vcrit_gamma=1.0 - 1.0 / 1024,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
