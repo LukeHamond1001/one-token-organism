@@ -55,6 +55,7 @@ PHYSIOLOGY = dict(
     # weight to learn (at the horizon rate a learned level took forty days); its error is r - rbar + V' - V and its trace
     # decays at lambda alone. 0 = discounted with a bias; 1 = differential
     vcrit_diff=0,
+    vcrit_bands="",       # the bands the ventral head reads, e.g. "5,6,7"; "" = all eight
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -89,6 +90,12 @@ class Life:
         self.m = organs.to(device); self.m.eval()
         self.tok = tok; self.dev = device
         self.cfg = dict(PHYSIOLOGY); self.cfg.update(cfg or {})
+        vb = str(self.cfg.get("vcrit_bands", "") or "").strip()
+        if vb:
+            with torch.no_grad():
+                organs.vcrit_mask.zero_()
+                for b_ in vb.split(","):
+                    organs.vcrit_mask[int(b_)] = 1.0
         self.m.read_sharp = float(self.cfg["read_sharp"])
         self.sil = tok.token_to_id("<pad>")
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
@@ -357,7 +364,7 @@ class Life:
                     gl_tr = gl
                 lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
                 with torch.no_grad():
-                    x_prev = torch.cat([(self._bands_prev.detach() - m.band_mu).reshape(-1), torch.ones(1, device=self.dev)])
+                    x_prev = torch.cat([((self._bands_prev.detach() - m.band_mu) * m.vcrit_mask[:, None]).reshape(-1), torch.ones(1, device=self.dev)])
                     if lam > 0.0:
                         # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
                         # decays at gamma * lambda; the error captures it

@@ -269,6 +269,9 @@ class Organs(nn.Module):
         # bias is born at zero. Its lesson may carry an eligibility trace at its own horizon (vcrit_lambda).
         self.vcrit = nn.Linear(nb * d, 1, bias=True)
         nn.init.zeros_(self.vcrit.weight); nn.init.zeros_(self.vcrit.bias)
+        # which bands feed it (vcrit_bands): all by default; the ceiling instrument of 2026-09-04 read +0.51 for the
+        # slow bands alone against +0.38 for all eight, the fast bands adding overfit
+        self.register_buffer("vcrit_mask", torch.ones(nb))
         # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream, the feelings, and the
         # salience of the mouth's proposal (the forecast's certainty, as the striatum reads the
         # strength of a cortical request for action)
@@ -359,7 +362,7 @@ class Organs(nn.Module):
 
     def value_long(self, states):
         """the ventral critic's relative value over every band's state, each centered on its running mean"""
-        return ((states - self.band_mu).reshape(-1) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
+        return (((states - self.band_mu) * self.vcrit_mask[:, None]).reshape(-1) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
 
     def values(self, states):
         """V_b(s_b) for every band: [nb]"""
