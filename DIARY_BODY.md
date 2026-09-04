@@ -2456,3 +2456,29 @@ world): the mouth unchanged, 44 and 42 of 48 full; the slow critics empty. corr(
 -0.78 (the 0.84 with V's spread twice G's). The recipe under the same parent read
 0.47/0.84/0.91 and 0.42/0.55/0.39 (runs 35, 36). The slow error in the gate's credit
 takes from the critics without giving to the mouth: not adopted, on two seeds, twice.
+
+## The level (2026-09-04, 01:20)
+
+The slow critics have content under the parent (runs 35 and 36), and nothing in the
+body reads them. What reads a slow value in an animal: the Pavlovian side of the
+striatum, where a cue that promises reward at a long horizon invigorates whatever
+the animal is doing (general Pavlovian-instrumental transfer, the amygdala's value
+onto the ventral striatum's vigor; Niv's tonic dopamine as the opportunity cost of
+time is the same fact from the rate side). The body's mood is the rate side already,
+a leaky integral of the fast error over 1200 ticks, read by the gate; it is backward-
+looking, what came. The 1024-tick critic is forward-looking, what this moment promises,
+and it knows the parent: 0.84 with the realized return at that horizon.
+
+So the gate gains a fifth feeling: the slow band's value of the moment, divided by its
+own running root mean square (divisive normalization, the canonical cortical operation,
+with a semi-saturation of one reward unit so a newborn's noise reads small), clipped
+at five, weighted by its own three-factor lesson like every other input. No rule says
+which way: if speaking pays more when the parent is engaged, the lesson finds a
+positive weight and the body speaks into engagement and rests through the still face;
+if not, the weight stays where it is. The scale is a buffer per band (born at one, rate
+1/1024, the band means' rate); older bodies load with it fresh and the new weight at
+zero, so the served body is untouched by the code. Off by default (gate_level_w 0);
+runs 39 and 40 (seeds 39, 40, the parent world, weight 1) measure it against runs 35
+and 36 at days 6, 15 and 20: the mouth's yardstick, the smiles and the parent's
+attention per day, the slow critics' correlation, and the gate's learned weight on the
+level. Tests 14 of 14. Commit 237cc49.
