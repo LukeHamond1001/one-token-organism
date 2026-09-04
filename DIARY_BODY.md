@@ -2679,3 +2679,16 @@ combinations 95 of 128 started, 72 finished (99 and 75 at day 10). Day 12's teac
 ("where ball? " ball, "I had " milk, "dog will " go, "why dog " up, "give big " ball,
 "first up then " in), 113 smiles, the parent never away. Day 13 under way with the
 earlier-word emphasis in its lines ("give little book", "ball will go down").
+
+At the day-13 boundary, 04:33: the raised body saved (data/body2_before_offset_day13.pt
+keeps it as it was), the serve restarted with the offset (offset-ticks 8), nights 13,
+267 slots. From day 14 its waking lessons target the turn-end after each of the
+teacher's lines, and its dreams end where the cortex expects the quiet. Day 13's teacher
+(the planner's report): 42 utterances on the earlier-word pairs ("give big ball" against
+"give little book", "dog will go down" against "ball will go down", "first milk then
+ball" against "first up then in"), every one of its seven cues drawing the expected word
+("first up then " in, a cue completion at attention 1.0; "where ball? ball " under;
+"little dog had " milk), 88 smiles, the parent never away. Night 13: loss 0.17 to 0.09,
+gauge 0.81 to 0.90, dreams "w dog will go down", "bigger dog up? because b", " gonen ba"
+(the seam still dreamed, the last night before the offset). The day-14 yardstick before
+the day: the fixed cues 45 of 48 started, 42 finished.
