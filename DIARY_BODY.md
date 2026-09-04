@@ -2835,3 +2835,18 @@ kept memory, dreams drawn from whatever starts the store has, ended at end-marke
 memories, the cortex's rule retired. On a scratch body: "g will go", " under", "will
 go", each ending at its end; the tests' night moves the gauge 0.18 to 0.77 on those
 dreams. Commit 2f33e26. Runs 53 to 56 relaunched a third time, 06:47, with this form.
+
+The baseline instrument on runs 47 and 48's day-20 bodies (the offset recipe, corrected
+instrument, four days each) carries a finding. Those bodies were saved before the ventral
+critic existed, so on the instrument's scratch copies the head is born at zero and learns
+only within each instrument day, awake, by its own TD; and it reads the 1024-tick return
+at +0.32, +0.64, +0.61, +0.23 (mean +0.45) on run 47 and +0.44, +0.52, +0.39, +0.07
+(+0.35) on run 48, where band 5, the ladder's own 1024-tick head with twenty days of
+training, reads -0.02 and +0.02, and band 4 at 256 ticks +0.40 and +0.34. A day's
+learning on the whole ladder outreads twenty days on the slow band alone: the long
+return is linearly there in the union of fast and slow states and not in the slow
+state by itself. The ventral critic is the best long-horizon critic in this record, and
+it is an organ, not a rule: it stays in the recipe as a learning head (its error into
+the mouth's credit still at weight 0 until runs 55 and 56 say whether the gate's drift
+settles). Clause 2's form is now the ladder plus the ventral critic; its content at 1024
+ticks about 0.4.
