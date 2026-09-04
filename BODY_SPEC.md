@@ -264,6 +264,26 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   trunk nothing can collapse the stream, and the guard has nothing to guard:
   the function stays, the term is zero. (REM without SIGReg dropped the gauge
   exactly as with it, 0.85 to 0.78; the stream detached held 0.85.)
+- **The ladder, measured.** An instrument (one fast day on a copy; the reward
+  and every band's value per tick; the realized return at each band's own
+  horizon) on run 21's day-20 body: at horizons 1 to 256 ticks the value equals
+  the mean return and correlates with the realized return at about zero (the
+  critics learned constants); at 1024 to 16384 the values diverge (the slowest
+  read 7072 against a true return near 85, correlation −0.995: semi-gradient TD
+  with bootstrapping as the discount nears 1); a ridge fit from each band's
+  state to its return, held out, reads nothing (R² at or below zero) up to 1024
+  ticks. Two corrections. The band update was s += (g/clock)(target − s), a
+  write rate capped at one over the clock, so the slow bands filled over hours
+  from the night's fresh state; it is now the gated working memory of the
+  basal-ganglia model: s += g (target − s), then s *= 1 − 1/clock, the gate
+  loading and the clock forgetting, the gate's rest at a write rate of one over
+  the clock so an untrained band is the leaky average it was. And bands with
+  clocks at or above 1024 ticks learn average-reward (differential) TD,
+  δ = r − r̄_b + V(s') − V(s), r̄_b the reward rate estimated at the band's own
+  clock (tonic dopamine), in the tick's lesson and the night's replay; the
+  discounted bands keep discounted TD. Open after this: whether the bands'
+  states come to carry reward-predictive features at all (the input maps learn
+  at 1e-5), measured by the same instrument on run 25.
 - **The PFC's lesson.** TD with both ends live is residual-gradient TD,
   which converges to a biased fixed point (the Bellman residual); TD with a
   detached target and the previous state recomputed live one tick later is

@@ -2000,3 +2000,34 @@ cortex that consolidates them at night and holds them awake, a mouth that speaks
 bouts, and no rule anywhere that authors a word. What is not: generalization beyond the
 twenty-two lines, and a cortex that carries its own speech as reliably as the
 hippocampus does. Those are the next measurements, not the next guesses.
+
+## The ladder, measured (2026-09-03, late night)
+
+Your law again, and the one claim in it I had never measured: reward at long timescales.
+The PFC ladder has eight bands at clocks 1 to 16384 ticks, each with a value head trained
+by TD. Whether the slow ones learn anything was an assumption. An instrument: one fast day
+on a copy of run 21's day-20 body, the reward and every band's value recorded per tick,
+the realized return computed at each band's own horizon.
+
+The result. At horizons 1 to 256 ticks the value equals the mean return and correlates
+with the realized return at 0.10, 0.02, −0.11, −0.23, −0.03: the critics learned
+constants, so dopamine has been reward minus a baseline, not an anticipation. At 1024 to
+16384 ticks the values diverge, the slowest reading 7072 against a true return near 85
+with correlation −0.995, the known instability of semi-gradient TD with bootstrapping as
+the discount nears one. And a ridge fit from each band's state to its return, held out,
+reads nothing up to 1024 ticks; the slow bands' positive fit is the ramp of a state that
+fills at one over its clock across the day against a return-to-go that shrinks.
+
+Two corrections, both from the biology and the mathematics rather than from a knob. The
+band update wrote at rate gate over clock, so a slow band could never load; it is now the
+gated working memory of the basal-ganglia model, the gate loading the band and the clock
+forgetting it, with the gate's rest set so an untrained band is exactly the leaky average
+it was. And the bands at or above 1024 ticks learn average-reward TD, the reward rate at
+their own clock as the baseline, which is what tonic dopamine is. Ten checks pass;
+commit 1ec4dbf; run 25 carries it, and the same instrument on its day-6 body is the test.
+Beneath both sits the open question the instrument also raised: whether the bands' input
+maps, learning at 1e-5, ever come to carry a feature that predicts reward.
+
+Run 24, in parallel, is the ablation your law asked for: the gate's novelty term removed.
+Days 1 to 3: the gate at 0.27 to 0.29 instead of 0.55, smiles 48 to 83 a day instead of
+about 300, and the cues still completed. The term buys babble, not answers.
