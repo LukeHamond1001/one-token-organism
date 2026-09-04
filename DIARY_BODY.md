@@ -3488,3 +3488,15 @@ dopamine of information, Bromberg-Martin and Hikosaka 2009), so that a turn give
 pays in what is heard. Neither is taken without the user's word. Runs 85 and 86, the
 acceptance pair on the settled recipe with the parent who wants a reply, born 16:39 for
 forty days.
+
+**The restart, 17:07.** At day 27's end the served body was saved and backed up
+(data/body2_before_recipe_day27.pt), the serve restarted on the working tree (the ventral
+head's mask and bias born at zero and unused, the ventral credit 0 as before) and
+reloaded at tick 327,272, night 27, store 259; the typist for days 28 to 30 launched with
+the parent who wants a reply. Nothing else in the served body's recipe changed. Day 27's
+teacher: 49 utterances in 7 rounds, 7 cues landed, 5 answered right ('where ball? ' →
+'ball under', 'dog will go ' → 'down', 'give big ' → 'ball', 'big dog ' → 'bigger'), 113
+smiles, no frown, no turning away, the attention 0.55 to 1.0. The slow-band heads at
+their day 6, pooled from day 2: the trace at the horizon rate +0.25, TD(0) at the shared
+rate +0.31, the trace at the shared rate +0.26, all positive against the ceiling of
++0.51. Runs 85 and 86 at day 5: gates 0.54 and 0.51, smiles 143 and 91.
