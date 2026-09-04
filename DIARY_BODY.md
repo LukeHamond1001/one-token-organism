@@ -3016,3 +3016,21 @@ born under this parent at 09:43, twenty days, instruments and the run-on at days
 and 20; runs 59 and 60 are the same body under the earlier parent. The served typist
 keeps the earlier parent (the switch off) until the fresh seeds read: the question is
 whether the run-on shrinks while the mouth and the unheard combinations hold.
+
+**Runs 61 and 62 at day 6, night 19, and the machine, 09:50.** The end as a rest, from
+birth on two seeds: the mouth 44 and 45 of 48 (runs 59 and 60, the same body without it:
+45 and 48), the unheard combinations 72 and 80 (74), the run-on 9.5 and 10.0 symbols per
+cue (9.9 and 10.6), the cortex alone 47 and 46 of 82 (51 and 51). Neutral where the rest
+probe said it would be: the store's next symbol holds every heard line's end, so the
+cortex's vote for the rest is never the forecast's. It stays off in the recipe. Under
+the parent who wants a reply the body must find a way to stop, and the rest vote is one
+of two (the other the gate's own credit), so runs 65 and 66 carry the new parent with the
+end as a rest beside runs 63 and 64 without it; runs 61 and 62 stopped at day 6 to make
+room, and runs 57 and 58 (the mixed draw, no longer the recipe) at day 15: 45 and 35 of
+48 on the mouth there, 59 and 58, 59 and 52 on the cortex. Night 19 of the served body,
+its first on the onset form and the first with the dream's end counted by the gauge:
+forty-eight dreams ('big dog ', 'I had ', 'first milk then', 'dog will'), mean length 9.5,
+454 symbols, the gauge 0.84 to 0.92. Run 63's first day under the new parent: 51 smiles
+where the earlier parent gave a hundred, the run-on's words earning none; run 64's 103;
+both still run on (9.8 and 10.6 symbols per cue) on day 1, as they must before any
+learning.
