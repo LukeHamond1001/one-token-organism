@@ -2068,3 +2068,27 @@ with no learned projection in the way.
 
 The reborn body's third night: gauge 0.74 before, 0.90 after, 213 slots kept; days 4 to 6
 queued at human pace.
+
+## The stream ceiling (2026-09-03, late)
+
+The last instrument of the night reads the return from the cortex's stream itself, now
+and integrated at each clock, with no learned projection in the way, on run 21's day-20
+body: R² about zero at every horizon from 1 to 256 ticks (0.001, 0.011, −0.098, −0.471,
+−0.129), and the 0.81 at 1024 ticks is the time-of-day artifact once more. The stream,
+read linearly, does not carry the reward at short horizons.
+
+So the ladder's constants are not only the projections' fault. The values could not
+learn what the state does not carry, and the state cannot carry what the reward does
+not depend on. In this world the reward is about three hundred smiles a day at isolated
+known words, each within twelve ticks at the caregiver's jitter, against eight
+completions of a cue. Nothing in the stream at a horizon of four or sixteen ticks
+predicts the next smile better than its rate, and nothing at a thousand predicts the
+day's tally better than the time of day. Your second criterion, reward at long
+timescales, is met by the architecture's form and not yet by any measurement, and the
+measurement says the environment does not pose the problem the ladder exists to solve.
+
+What stays: the ladder's two corrections (no divergence, no harm), the instrument, and
+the honest statement. What it asks for is a world whose reward depends on longer
+history than a word, which is the environment's design and yours to give: a caregiver
+who smiles for an answer more than for a word is the nearest such world, and it is the
+proposal already written in CURRICULUM.md, not in force.

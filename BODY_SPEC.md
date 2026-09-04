@@ -283,7 +283,18 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   clock (tonic dopamine), in the tick's lesson and the night's replay; the
   discounted bands keep discounted TD. Open after this: whether the bands'
   states come to carry reward-predictive features at all (the input maps learn
-  at 1e-5), measured by the same instrument on run 25.
+  at 1e-5), measured by the same instrument on run 25. Measured: run 25's day-6
+  body shows no divergence and no harm, but the states still read nothing; run
+  26 (input maps at 1e-3) saturated the tanh and hurt the cortex, and is
+  reverted; and the stream itself, read linearly at each clock with no
+  projection, carries the return at no horizon from 1 to 256 ticks (R² ≈ 0 held
+  out). In this world the reward is about three hundred smiles a day at
+  isolated known words, jittered within twelve ticks, against eight cue
+  completions: no state predicts the next smile better than its rate. Reward at
+  long timescales is a form the architecture has and a measurement the
+  environment has not yet posed; a world whose reward depends on longer history
+  than a word is the environment's design (CURRICULUM.md, the proposal not in
+  force).
 - **The PFC's lesson.** TD with both ends live is residual-gradient TD,
   which converges to a biased fixed point (the Bellman residual); TD with a
   detached target and the previous state recomputed live one tick later is
