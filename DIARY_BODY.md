@@ -2227,3 +2227,14 @@ typed, "big dog will " a cue with the answer computed from two hearings of "big 
 go", the body completing it, an unheard prefix treated as a line. The served body's day 6
 is the teacher's first, after tonight's boundary reload to the pinned ladder; the fixed
 eight cues remain the yardstick before each day and after each night.
+
+## Run 29 at day 15: settled (2026-09-03, night)
+
+The pinned ladder through fifteen nights: every band bounded, the three relative values
+at −5, 5 and 2 with spreads of 11, 11 and 4, the TD error 0.25 at every band, no state
+near the ceiling. The mouth started 48 of 48 cues and finished 43; the cortex's trace 62
+of 82 awake and 64 under the dream construction, the best of any run at any day. The
+ladder rests on its theorem and the body is none the worse for it. The recipe is settled
+as of tonight: d3dd681, the salience input present at zero. Run 29 goes to twenty for the
+record. The served body took it at its day-6 boundary at 21:35, nights 5, 214 slots,
+and the teacher's first day began.
