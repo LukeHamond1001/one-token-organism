@@ -21,9 +21,12 @@ PHYSIOLOGY = dict(
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
     # horizons of the discount gradient, driving vigor; the fast band's error selects the act). gate_slow_w 0 = off (runs 37/38)
     gate_slow_band=5, gate_slow_w=0.0,
-    # THE VENTRAL CRITIC in the mouth's credit: its error (the act's effect on the long-run prospect, at the reward rate's
-    # horizon) added to the fast band's error with weight vcrit_w. 0 = off until measured (runs 49/50; candidate 1.0)
-    vcrit_w=0.0,
+    # THE VENTRAL CRITIC in the mouth's credit: its error (the act's effect on the long-run prospect) added to the fast
+    # band's error with weight vcrit_w. Its horizon is definite, discounted at vcrit_gamma (1024 ticks): as a differential
+    # (average-reward) head over fast features it computed the day-scale relative value, swinging by a hundred within a
+    # day (runs 49/50: the integral of reward above its wandering average), and that drift entered the mouth's twelve-tick
+    # credit ten times the size of the fast error and shut one seed's gate. 0 = off until measured (runs 51/52; candidate 1.0)
+    vcrit_w=0.0, vcrit_gamma=1.0 - 1.0 / 1024,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -290,10 +293,11 @@ class Life:
                 td = torch.stack([(r + gam[b] * v_now[b].detach() - v_prev_live[b]) if not self._differential[b]
                                   else (r - float(self.rbar) + v_now[b].detach() - v_prev_live[b]) for b in range(len(gam))])
                 self.rbar += (1.0 / float(self.cfg["diff_horizon"])) * (r - self.rbar)   # the reward rate, tonic dopamine
-                # THE VENTRAL CRITIC: differential TD over the whole ladder's states (semi-gradient, the target detached)
+                # THE VENTRAL CRITIC: discounted TD at a definite long horizon over the whole ladder's states (semi-gradient,
+                # the target detached; linear on fixed features, convergent)
                 with torch.no_grad():
                     vl_now = m.value_long(self.bands)
-                td_long = r - float(self.rbar) + vl_now.detach() - m.value_long(self._bands_prev.detach())
+                td_long = r + float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)) * vl_now.detach() - m.value_long(self._bands_prev.detach())
                 loss_v = (td ** 2).mean() + td_long ** 2
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
