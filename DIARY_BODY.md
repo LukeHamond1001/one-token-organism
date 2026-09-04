@@ -2378,3 +2378,18 @@ started and 43 finished, the cortex's trace 60 awake and 69 under the dream cons
 on fifty-four rewards a day. The middle of the ladder now carries the parent's attention
 as a value, learned from nothing but the face and the page. Body kept as
 data/body2_run35_day20.pt.
+
+## Two seeds (2026-09-04, after midnight)
+
+Run 36, the parent world's second seed, at day 15: the critics against their returns at
+0.23, 0.72 and 0.54 at 256, 1024 and 4096 ticks, the slowest band at −0.51, every band
+bounded, the body 45 of 48 started and 42 finished, the cortex's trace 56 awake and 65
+under the dream construction. With run 35's 0.59, 0.75 and 0.78 at day 15 and 0.47, 0.84
+and 0.91 at day 20, the finding holds on two bodies: the second clause of the law is met.
+The reward is grounded in the face; the fast critic reads it at seconds; the slow critics,
+under a world that has a slow structure, read it at minutes; and none of it is a cheat, the
+parent reading only the page and the body reading only the parent's behavior. Written
+into BODY_SPEC.md §5b. What remains for the ladder is what the body does with it: the
+mouth's gate takes its credit from the fast band's error alone, and a body that could feel
+the parent's attention waning would have a reason to answer. That is the next honest
+question, and it is architecture, not environment.

@@ -323,7 +323,24 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   head has no bias and reads its state centered on a running mean of the
   states at the reward rate's horizon (adaptation), and the gradient's
   persistent direction is gone. Linear heads on fixed features under
-  on-policy TD converge (Tsitsiklis and Van Roy). In this world the reward is about three hundred smiles a day at
+  on-policy TD converge (Tsitsiklis and Van Roy). Bounded through twenty
+  days on every seed since (runs 29, 31 to 36).
+- **Reward at long timescales has content only where the world has it.**
+  Under the flat rules (a smile within seconds of any known word, a flat
+  smile at a cue's completion) the critics at 256 to 4096 ticks correlate
+  with their realized returns at about zero on every body (run 29 at day
+  15: −0.11, −0.47, −0.34), and a smile that grows at an answer (run 33) does
+  not change that: the reward is a rate, and a cue's timing is the
+  caregiver's schedule. Under the parent (attention that rises at answers
+  and known words, falls at babble, drifts down in silence, and sets the
+  chance of a smile, the pace, and the still face; CURRICULUM.md, on the
+  user's word of 2026-09-03), the same critics read 0.47, 0.84 and 0.91 at
+  256, 1024 and 4096 ticks on run 35's twentieth day and 0.23, 0.72 and 0.54
+  on run 36's fifteenth, the slowest band near or below zero on both (so not
+  the time-of-day artifact), every band bounded, the mouth at 42 to 46 of 48.
+  The parent's attention is a quantity the body can only read through the
+  parent's behavior, and the middle of the ladder learned to carry it as a
+  value from nothing but the face and the page. In this world the reward is about three hundred smiles a day at
   isolated known words, jittered within twelve ticks, against eight cue
   completions: no state predicts the next smile better than its rate. Reward at
   long timescales is a form the architecture has and a measurement the
