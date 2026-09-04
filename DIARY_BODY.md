@@ -2344,3 +2344,12 @@ takes it from day 9, gated on run 35's sixth day looking sane.
 Run 33 to twenty days, the answer-weighted smile alone: 43 of 48, the trace 62 awake and
 67 dreaming, the ceiling at 256 back at zero; the 0.20 of day 15 was noise. Run 34, the
 error form's second seed, at day 15: bounded, the mouth's number still computing.
+
+Run 34, the error form's second seed, to twenty days: 47, 38 and 45 of 48 at days 6, 15
+and 20, the cortex's trace 60, 62 and 63 awake, the ladder bounded throughout. With run
+31's 46, 44 and 39, the error form has one day under forty in each of two seeds where the
+value form, in five measurements over two seeds, never fell below 43. Its traces run a
+little higher; its mouth runs a little less steady; the drive it replaced was a constant
+by day 20 in any case. The recipe keeps the value form. The error form stays in the code
+as what it is: the songbird's mathematics, measured, not adopted. Bodies kept as
+data/body2_run34_day6/15/20.pt.
