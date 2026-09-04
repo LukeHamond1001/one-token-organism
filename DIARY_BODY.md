@@ -2370,3 +2370,11 @@ states stay negative at 64 and 256, which says the signal is slow, a matter of m
 not of one day's linear fit; the critics that learned it over fifteen days are the
 measurement. One seed; run 36's fifteenth day is the check. If it holds, the second clause
 of the law, reward at long timescales, is met in form and in content for the first time.
+
+Run 35 to twenty days under the parent: the critics' correlations with their own returns
+grew as the days went, 0.47 at 256 ticks, 0.84 at 1024, 0.91 at 4096, the slowest band
+at −0.26 and so no artifact, every band bounded, the TD error 0.17; the mouth 46 of 48
+started and 43 finished, the cortex's trace 60 awake and 69 under the dream construction,
+on fifty-four rewards a day. The middle of the ladder now carries the parent's attention
+as a value, learned from nothing but the face and the page. Body kept as
+data/body2_run35_day20.pt.
