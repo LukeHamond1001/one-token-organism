@@ -3238,3 +3238,20 @@ ventral credit at 1, the new parent): the mouth 45 and 47, the run-on 9.7 and 9.
 The fast runs print a day line on odd days for some seeds and even for others; the
 waiters accept either now. Days 16 and 20 of runs 73 to 76 decide whether the form is
 the recipe and whether the run-on keeps falling; the served body waits for that reading.
+
+**The synaptic tag, 14:55.** The last candidate for the parent's contingency reaching the
+gate: every act or rest leaves a tag on the gate's weights, (act − p) times the gate's
+input, decaying at the ventral critic's own horizon, and the ventral error captures the
+tags as it arrives over the following minutes (Frey and Morris's synaptic tagging and
+capture: a tag set by activity, captured by later dopamine). Its expected update is the
+sum over acts of (act − p) times the long return that followed less the critic's
+estimate: the policy gradient at the critic's horizon, where the lesson's twelve-tick sum
+could not reach the parent's attention. Behind a flag (gate_slow_lr); the night clears
+the tags. On a lived stretch of run 74's day-6 body (scratchpad/tag_probe.py, 3584
+ticks): the tag's norm 19 on average, 58 at most, the ventral error 0.82 a tick, so at a
+rate of one millionth a day's captured updates move the weights by at most 0.18 against
+a norm of 3.7. Runs 77 and 78 at one millionth and 79 and 80 at four millionths, the
+parent who wants a reply, the effort in the reward, born 14:52, read against runs 73 and
+74 at days 6, 16 and 20. Day 24's teacher: 49 utterances, seven cues, seven answered,
+'big dog ' holding two continuations (bigger, will), 82 smiles, the parent's attention
+flat near 0.71 all day.

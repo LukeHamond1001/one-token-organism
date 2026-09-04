@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.0,
-    dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
@@ -340,6 +340,17 @@ class Life:
                 delta = r; delta_slow = r; delta_long = r; vlong = 0.0
             m.eval()
         self._dopa = delta
+        # THE SYNAPTIC TAG: every act (or rest) leaves a tag on the gate's weights, (act - p) x the gate's input, that
+        # decays at the ventral critic's own horizon; the ventral error, as it arrives over the following minutes,
+        # captures the tags (Frey and Morris 1997: a tag set by activity, captured by later dopamine). The expected
+        # update is the sum over acts of (act - p) x (the long return that followed minus the critic's estimate): the
+        # policy gradient at the critic's horizon, where the twelve-tick sum of the lesson could not reach the parent's
+        # attention. gate_slow_lr 0 = off.
+        slr = float(self.cfg.get("gate_slow_lr", 0.0))
+        if slr > 0.0 and getattr(self, "_gate_tag", None) is not None:
+            with torch.no_grad():
+                m.mouth_gate.weight += slr * delta_long * self._gate_tag[:-1].unsqueeze(0)
+                m.mouth_gate.bias += slr * delta_long * self._gate_tag[-1:]
         # --- its face learns from yours (a readout) ---
         with torch.enable_grad():
             f_pred = m.face_head(C1.detach()).squeeze() * 6.0
@@ -401,6 +412,12 @@ class Life:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
         self._bands_prev = self.bands.clone()
         self._acted_last = bool(acted)
+        if float(self.cfg.get("gate_slow_lr", 0.0)) > 0.0:
+            with torch.no_grad():
+                g_ = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+                tag_in = torch.cat([feat.detach(), torch.ones(1, device=self.dev)])
+                prev = getattr(self, "_gate_tag", None)
+                self._gate_tag = ((g_ * prev) if prev is not None else torch.zeros_like(tag_in)) + (float(acted) - p_act) * tag_in
         # --- feelings from dopamine ---
         self.mood = max(-6.0, min(6.0, self.mood + float(self.cfg["mood_gain"]) * delta))
         self.stress = min(30.0, self.stress + float(self.cfg["stress_gain"]) * max(0.0, -delta))
@@ -685,7 +702,7 @@ class Life:
             rep["store_slots"] = self.store.n()
             self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
-            self.stream.clear(); self.gate_buf.clear(); self._g_base = None
+            self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None
             self.fatigue = 0.0
             self.sleep_pressure = 0
             self.nights += 1; self.day_n += 1
