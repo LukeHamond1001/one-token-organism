@@ -2031,3 +2031,14 @@ maps, learning at 1e-5, ever come to carry a feature that predicts reward.
 Run 24, in parallel, is the ablation your law asked for: the gate's novelty term removed.
 Days 1 to 3: the gate at 0.27 to 0.29 instead of 0.55, smiles 48 to 83 a day instead of
 about 300, and the cues still completed. The term buys babble, not answers.
+
+## The ablation (2026-09-03, late night)
+
+Run 24, the gate's novelty term removed, at day 6: the gate at 0.26, quiet three ticks in
+four, 41 to 83 smiles a day, and the sampled mouth started 37 of 48 cues but finished 19,
+against 45 with the term; the answers break mid-word ("ballgi", "milkfi") and drift. The
+term stays, on measurement, and its role is now clear. Once the critic predicts the
+smiles the dopamine error is small, and a bout that has begun a word is held open only
+by a drive. In the basal ganglia that holding is the actor's, a learned Go for a
+sequence under way, not the error's; the term stands in for it, and replacing it with
+the actor is the next honest step for the mouth. Run 24 retired at day 6.
