@@ -2797,3 +2797,27 @@ the other). The head stays in the code, its weight 0 in the recipe; whether the 
 settles or collapses needs forty days on two seeds, and the credit's two horizons may
 want the ventral share smaller than one. The engagement gain is the first thing in this
 record that the long timescale has bought.
+
+## The boundary marks (2026-09-04, 06:40)
+
+The raised body could not unlearn its seam: after two days under the offset its
+turn-end probability after a line was still 0.00 (the seam letter gone, a space in its
+place), its night-15 dreams still spliced ("dog will go down inder d"), and the night's
+lesson on spliced dreams runs at ten times the waking rate. The dream ends where the
+cortex expects the quiet, and this cortex, taught the seam for thirteen days, does not
+expect it yet; a body born with the offset never had the fight (its untrained cortex
+ended dreams early from night 1, run 47's at seven symbols). The hippocampus knows where
+an episode ended without asking the cortex: THE BOUNDARY MARK. When the offset fires,
+the slot that holds the utterance's last symbol under its context (found by the same
+match a merge uses) is marked; a dream that recalls a marked slot ends there, whatever
+the cortex thinks; the waking recall never reads the mark. And the first symbol after a
+perceived pause marks its slot as a start, and dreams are drawn from starts: with end
+marks alone, runs 53 and 54's dreams were four to six symbols long (a dream drawn from a
+strong mid-line slot met an end at once) and the night's gauge lagged at 0.5 where the
+offset runs stood at 0.8 by day 2. Replay runs from an episode's onset. Commits 2edbcff
+and 3ddda26; test 15 now asks that an untaught dream end at the memory's boundary and
+that a dream run from a start to an end. Runs 53 and 54 relaunched with both marks
+(the recipe's new baseline), runs 55 and 56 (forty days, the ventral credit) relaunched
+too, since their first form carried end marks without starts. The served body takes the
+marks at the end of day 16 (mark_boundary.sh armed); its night 16 is the first that can
+replay whole lines and end them.
