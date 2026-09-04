@@ -2850,3 +2850,16 @@ it is an organ, not a rule: it stays in the recipe as a learning head (its error
 the mouth's credit still at weight 0 until runs 55 and 56 say whether the gate's drift
 settles). Clause 2's form is now the ladder plus the ventral critic; its content at 1024
 ticks about 0.4.
+
+At the day-16 boundary, 07:14: the raised body saved (data/body2_before_mark_day16.pt
+keeps it as it was), the serve restarted on the code with the marks, nights 16, 265
+slots. Its old memories carry no marks; the lines of day 17 will, and night 17 is the
+first that replays whole utterances and ends them. Day 16's teacher (the planner's
+report): 49 utterances on the three earlier-word pairs, eight cues all taken up, four
+clean completions ("bigger dog " up, "why dog up? because " big, "I saw " dog, "big dog
+bigger " dog), 122 smiles, no frown, the parent never away, attention 0.53 to 1.0. The
+day-17 boundary yardsticks: the fixed cues 46 of 48 started, 42 finished; the taught-line
+cues 94 and 64 of 96; the unheard combinations 101 and 79 of 128; the cortex alone within
+lines 70 and 63 of 82 (its best); the page's fused share on day 16 0.14 (0.21 on day
+15, 0.10 before). The offset alone, three days on, has not moved the fusions; the marks
+begin tonight.
