@@ -2125,3 +2125,9 @@ slow bands, replaces the per-band estimates. Ten checks pass; run 28 carries it.
 Run 28 at day 6, one reward rate shared by the slow bands: every band bounded, the
 slowest at −5 with a spread of 2 where run 27's ran to 643, the fast bands the constants
 this world allows. No divergence anywhere in the ladder for the first time.
+
+Run 27 at day 15, the per-band reward rates still in it: the slowest band's value at −1036
+with a spread of 610, as the mathematics of its baseline predicted; the seven others
+bounded; the body at 46 of 48 started and 45 in full, and the cortex's trace at 61 of 82
+awake and 67 under the dream construction, the best yet. Run 28, with the one shared
+rate, is the recipe's test.
