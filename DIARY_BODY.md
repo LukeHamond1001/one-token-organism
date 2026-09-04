@@ -3211,3 +3211,15 @@ grounded credit holds the run-on at ten; no intrinsic term at all, with the cost
 too, lets the smiles' surprises open the gate until nothing stops it. Runs 73 to 76 carry
 the effort in the reward; at day 1 their gates read 0.49, 0.59, 0.47 and 0.59, neither
 saturated nor shut. Runs 63, 64, 69 and 70 stopped.
+
+**The day-24 boundary, 13:50.** After night 23 (the gauge 0.92 before and after, the night
+finding nothing left to teach): the fixed cues 45 and 39 of 48; the taught-line cues 94
+and 59 of 96 (80, 67, 77, 77, 67 on days 19 to 23, a slide to watch: the store fades a
+tenth a night and the teachers favour variety over the older lines); the unheard
+combinations 107 and 89 of 128; the cortex alone 61 and 57 of 82. The seam probe: the
+cortex alone 0.96 after 'dog will go down', 1.00 after 'give big ball', 0.23 after 'you
+will go in'; with the store 0.59 after 'give big ball', the second morning the fused
+forecast gives the end. The page's fused share on day 23: 0.12. Day 23's teacher: 35
+utterances, five cues, four answered ('why dog up? ' because big dog, 'dog will go '
+down, 'where ball? ' ball under, 'little dog had ' milk then ba), 89 smiles, the parent's
+attention at 1.0 through the middle of the day and 0.40 at its close.
