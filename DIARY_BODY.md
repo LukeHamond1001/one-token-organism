@@ -3418,3 +3418,29 @@ the shared rate, the average-reward trace and the discounted trace at the horizo
 the pooled readings from day 3, the tenth day near 18:30. The two earlier ten-day
 chains at the shared rate, frozen per day: TD(0) +0.33, +0.26, −0.10, +0.65, +0.37,
 −0.21, −0.07; the trace −0.75, +0.20, +0.52, −0.37, +0.51, −0.24, +0.43, −0.06.
+
+**The day-27 boundary, 16:25.** After night 26: the fixed cues 42 and 39 of 48; the
+taught-line cues 94 and 61 of 96, back up from 56; the unheard combinations 107 and 90 of
+128, up from 91 and 74; the cortex alone 60 and 58 of 82. The seam probe: the cortex
+alone 0.53 after 'dog will go down', 1.00 after 'give big ball', 0.01 and 0.00 after
+the rest; with the store 0.56 after 'give big ball'. The page's fused share on day 26:
+0.12. Day 26's teacher: 35 utterances in 5 rounds, 8 cues on the page all answered
+right ('why dog up? ' → 'because' twice, 'give big ' → 'ball', 'first milk then ' →
+'ball', 'where ball? ' → 'ball', 'little dog had ' → 'milk', 'big dog bigger ' → 'dog',
+'why dog up? because ' → 'big'), 102 smiles, no frown, no turning away, the attention
+from 0.55 to 1.0 and 0.8 to 0.94 at the end; the queue holds a backlog from earlier days
+that the typist works through beside the day's rows. Day 27's session began 16:17; the
+restart on the parent who wants a reply is armed at its end, and the planners for days
+28 to 30 are spawned with the new rule in their brief. The four pooled chains at their
+day 6 (frozen, pooled over days 2 to 6): TD(0) at the shared rate +0.32, the discounted
+trace at the shared rate +0.17, the average-reward trace at the horizon rate −0.21
+(negative every day), the discounted trace at the horizon rate −0.02 (+0.34, +0.05,
++0.48, −0.42, +0.51 by day); the pinned bands pooled −0.20 to +0.36. No form is a
+critic yet, and every form swings by the day, which raises the prior question: how
+much of the four-minute return is foreseeable from the body's state at all. The
+ceiling instrument (scratchpad/vceil_fit.py): a six-day chain with no ventral credit
+saving the ladder's states, the return and the parent's attention every fourth tick;
+then the leave-one-day-out ridge fit of the return on the states (the ceiling of any
+linear head), the attention's own correlation with the return, the slow bands' share
+against the fast bands', and how well the eight bands read the attention. Born 16:20,
+read near 17:45.
