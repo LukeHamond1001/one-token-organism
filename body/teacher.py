@@ -83,8 +83,8 @@ class Corpus:
 
 
 class Teacher(Caregiver):
-    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0, answer_levels=1):
-        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels)
+    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0, answer_levels=1, parent=0):
+        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels, parent=parent)
         self.corpus, self.planner = corpus, planner
         self.said_today = []                                  # (text, kind, its_after)
 
@@ -145,11 +145,18 @@ class Teacher(Caregiver):
             if item is None:
                 self.watch(3.0); continue
             text, kind = item
+            if self.parent and self.expand_next and kind == "line":
+                holds = [l for l in self.corpus.heard_lines(HEARD_FOR_CUE) if self.expand_next in l.split()]
+                if holds:
+                    text = self.rng.choice(holds)                  # answering its word with a line that holds it
+                self.expand_next = None
             if prev is not None:
-                while time.time() < prev + self.period:
-                    self.watch(min(3.0, prev + self.period - time.time()))
+                while time.time() < prev + self.pace():
+                    self.watch(min(3.0, prev + self.pace() - time.time()))
                     if (self.state or {}).get("asleep"):
                         break
+            while self.parent and time.time() < self.away_until and not (self.state or {}).get("asleep"):
+                self.watch(2.0)
             prev = time.time()
             if not self.event(text, kind):
                 slept = True; break
@@ -183,7 +190,7 @@ class Teacher(Caregiver):
         except Exception as e:
             self.row({"action": "save", "error": repr(e)[:120]})
         self.watch(60)
-        self.row({"action": "session_end", "teacher": self.planner.name, "smiles": self.smiles, "frowns": self.frowns,
+        self.row({"action": "session_end", "teacher": self.planner.name, "smiles": self.smiles, "frowns": self.frowns, "aways": self.aways, "e": round(self.e, 3),
                   "calls": getattr(self.planner, "calls", 0), "known": len(self.corpus.known()), "lines_heard": len(self.corpus.heard_lines())})
 
 
@@ -307,7 +314,7 @@ def main():
     ap.add_argument("--model", default="claude-sonnet-5"); ap.add_argument("--budget", type=int, default=120)
     ap.add_argument("--period", type=float, default=60.0); ap.add_argument("--quiet", type=float, default=3.0)
     ap.add_argument("--cap", type=float, default=45.0); ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--answer-levels", type=int, default=1)
+    ap.add_argument("--answer-levels", type=int, default=1); ap.add_argument("--parent", type=int, default=0)
     a = ap.parse_args()
     for k in range(a.days):
         day = a.day + k
@@ -315,7 +322,7 @@ def main():
         planner = {"claude": lambda: ClaudePlanner(a.model, a.budget, rng), "queue": lambda: QueuePlanner(a.queue, rng),
                    "fixed": lambda: FixedPlanner(rng)}[a.planner]()
         corpus = Corpus(a.corpus)
-        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels)
+        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent)
         t.run_day()
 
 

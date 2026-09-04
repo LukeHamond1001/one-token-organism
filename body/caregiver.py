@@ -30,9 +30,15 @@ def iso(t=None):
 
 
 class Caregiver:
-    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1):
+    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1, parent=0):
         self.base, self.day, self.log = base, day, log
         self.answer_levels = int(answer_levels)          # 2: the smile at a cue's completion grows, 2 then 4 (CURRICULUM.md)
+        # THE PARENT (the user's word of 2026-09-03): attention that moves, decided from the page alone. e rises at an
+        # answer or a known word (more at a word new today), falls at babble, drifts down in silence (150 s); a known
+        # word is smiled at with probability e, less for the fiftieth "dog"; the parent talks faster when engaged,
+        # answers a smiled word with a line that holds it, and below a floor turns away for 50 s (the still face).
+        self.parent = int(parent); self.e = 0.6; self.word_count = {}; self.away_until = 0.0; self.aways = 0
+        self.expand_next = None; self._e_t = time.time()
         self.period, self.quiet_needed, self.cap = period, quiet, cap
         self.rng = random.Random(seed)
         self.cursor = 0; self.its = {}; self.tobs = {}; self.maxtick = -1; self.finalized = -1
@@ -55,7 +61,19 @@ class Caregiver:
             f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
     # ---- the page ----
+    def pace(self):
+        return self.period * (1.6 - self.e) if self.parent else self.period
+
+    def _attend(self):
+        now = time.time(); dt = now - self._e_t; self._e_t = now
+        self.e += (0.3 - self.e) * min(1.0, dt / 150.0)   # attention drifts down in silence
+        if self.e < 0.15 and now >= self.away_until:
+            self.away_until = now + 50.0; self.aways += 1
+            self.row({"action": "away", "e": round(self.e, 3)}); self.e = 0.35
+
     def poll(self):
+        if self.parent:
+            self._attend()
         try:
             d = self.req("/state?since=%d" % self.cursor)
         except Exception as e:
@@ -98,7 +116,7 @@ class Caregiver:
             la = {}
         self.face(0)
         self.smiles += 1; self.last_smile = time.time(); self.last_word = on
-        self.row({"action": "smile", "on": on, "context": ctx, "why": why, "levels": levels, "ts": iso(t0),
+        self.row({"action": "smile", "on": on, "context": ctx, "why": why, "levels": levels, "e": round(self.e, 3), "ts": iso(t0),
                   "doses_before": db, "doses_after": la.get("doses"), "mood": la.get("mood"), "gate": la.get("gate")})
 
     def frown(self, on, ctx):
@@ -137,20 +155,31 @@ class Caregiver:
                     self.expanded.add(L); self.pending_expand = EXPAND[L]
             elif tok[0] != " " and time.time() - self.last_frown > 60:
                 self.frown(tok, ctx); return
+        if self.parent and time.time() < self.away_until:
+            return                                                # the parent is turned away
         c = self.cue
         if c and wall <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
-                c["done"] = True; self.smile(tok, ctx, "cue completion: " + c["text"]); return
+                c["done"] = True; self.e = min(1.0, self.e + 0.25); self.smile(tok, ctx, "cue completion: " + c["text"]); return
             if low[:2] in [x[:2] for x in c["full"]] and time.time() - wall < 3.5:
-                c["done"] = True; self.smile(tok, ctx, "cue prefix: " + c["text"]); return
+                c["done"] = True; self.e = min(1.0, self.e + 0.15); self.smile(tok, ctx, "cue prefix: " + c["text"]); return
         if low in KNOWN2:
             age = time.time() - wall
             if self.last_word == low and time.time() - self.last_smile < 12:
                 self.row({"action": "withheld", "on": tok, "why": "same word twice", "context": ctx})
             elif age <= 3.2 and time.time() - self.last_smile >= 2.0:
+                if self.parent:
+                    n = self.word_count.get(low, 0); self.word_count[low] = n + 1
+                    p = self.e * (0.95 ** max(0, n - 5))         # attention, and the fiftieth "dog"
+                    self.e = min(1.0, self.e + (0.1 if n == 0 else 0.05))
+                    if self.rng.random() > p:
+                        self.row({"action": "missed", "on": tok, "why": "distracted", "e": round(self.e, 3), "context": ctx}); return
+                    self.expand_next = low
                 self.smile(tok, ctx, "known word")
             else:
                 self.row({"action": "missed", "on": tok, "why": "late %.1fs" % age, "context": ctx})
+        elif self.parent and low and len(low) >= 3 and low not in KNOWN2 and not any(w.startswith(low) for w in KNOWN2):
+            self.e = max(0.0, self.e - 0.04)                      # babble wears the parent's attention
 
     def watch(self, seconds):
         t0 = time.time()
@@ -214,9 +243,16 @@ class Caregiver:
             if self.pending_expand:
                 text2 = self.pending_expand; self.pending_expand = None
                 self.event(text2, "line")
+            if self.parent and self.expand_next and kind == "line":
+                holds = [l for l in lines if self.expand_next in l.split()]
+                if holds:
+                    text = self.rng.choice(holds)                  # answering its word with a line that holds it
+                self.expand_next = None
             if prev is not None:
-                while time.time() < prev + self.period:
-                    self.watch(min(3.0, prev + self.period - time.time()))
+                while time.time() < prev + self.pace():
+                    self.watch(min(3.0, prev + self.pace() - time.time()))
+            while self.parent and time.time() < self.away_until:
+                self.watch(2.0)
             prev = time.time()
             if not self.event(text, kind):
                 slept = True; break
@@ -253,7 +289,7 @@ class Caregiver:
         except Exception as e:
             self.row({"action": "save", "error": repr(e)[:120]})
         self.watch(120)
-        self.row({"action": "session_end", "smiles": self.smiles, "frowns": self.frowns})
+        self.row({"action": "session_end", "smiles": self.smiles, "frowns": self.frowns, "aways": self.aways, "e": round(self.e, 3)})
 
 
 def main():
@@ -266,10 +302,11 @@ def main():
     ap.add_argument("--cap", type=float, default=90.0)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--answer-levels", type=int, default=1)
+    ap.add_argument("--parent", type=int, default=0)
     ap.add_argument("--lines", default="dog will go|I will go up|you will go in|scared dog|scared ball|what? scared dog|give milk|give ball|give book|ball under|ball on|where ball? ball under|I had milk|you had ball|dog had ball|first milk then ball|first up then in|big dog bigger dog|bigger dog up|I saw dog|you saw dog|why dog up? because big dog")
     ap.add_argument("--cues", default="dog will |scared |give |where ball? |I had |first milk then |big dog bigger |why dog up? ")
     a = ap.parse_args()
-    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels)
+    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels, parent=a.parent)
     cg.run_day([x for x in a.lines.split("|") if x], [x for x in a.cues.split("|") if x])
 
 

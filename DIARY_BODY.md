@@ -2322,3 +2322,25 @@ awake and 68 under the dream construction; every band bounded; and the ridge cei
 zero at 64. One seed, one day, a small number, in the direction the arithmetic gave:
 an answer worth twice a word makes the minute after a cue a little more legible to a
 critic. Day 20 for the record; the raised body's own test after teacher day 8 stands.
+
+## The parent (2026-09-03, near midnight)
+
+Your word: mold the caregiver to a real parent. What a real parent has that the rule table
+lacked is attention that moves. So the caregiver, in both its forms, now carries an
+engagement decided from the page alone: it rises at an answer and at a known word, more
+at a word new that day, falls at babble, drifts down in silence over a few minutes; and
+the parent behaves by it. A known word gets its smile with probability e, a distracted
+parent misses words, and a parent tires of the fiftieth "dog"; the parent talks faster
+when engaged and slower when not; it answers a smiled word with a line that holds it; and
+below a floor it turns away for a while, the still face, until it comes back. The answer
+smile is always given and grows. Nothing reads the body's insides, and the body reads the
+parent's attention only as every child does, through what the parent does. The
+mathematics of it: a minute's smiles now depend on the body's own last minutes, so a
+critic at 256 or 1024 ticks has something in the body's state to predict, which is the
+content the long-timescale ladder has lacked in every world so far. Run 35 measures it
+in the fast world (the parent and the growing smile, the settled recipe); the raised body
+takes it from day 9, gated on run 35's sixth day looking sane.
+
+Run 33 to twenty days, the answer-weighted smile alone: 43 of 48, the trace 62 awake and
+67 dreaming, the ceiling at 256 back at zero; the 0.20 of day 15 was noise. Run 34, the
+error form's second seed, at day 15: bounded, the mouth's number still computing.
