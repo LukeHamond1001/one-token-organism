@@ -269,6 +269,45 @@ def test_level_input():
     print("14 the level: feature in", round(min(lv), 3), "..", round(max(lv), 3), "| scale", round(sc, 3), "| an older body loads")
 
 
+def test_offset():
+    """the offset: after a line and twelve quiet ticks the world's turn-end enters once as a world event; the store
+    keeps it as the line's end, the lesson's target after the last letter is it, a dream ends on it, the mouth never says it"""
+    life = tiny(offset_ticks=12, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m
+    with torch.no_grad():
+        m.mouth_gate.bias.fill_(-30.0)                                 # quiet (no spontaneous floor either), so the pause is the world's alone
+    life.type_text("dog will go")
+    while life.queue:
+        life.tick()
+    for _ in range(11):
+        life.tick()
+    assert life.win[-1]["x"] != life.eot, "the offset came before twelve quiet ticks"
+    life.tick()
+    assert life.win[-1]["x"] == life.eot, "the offset did not enter after twelve quiet ticks"
+    for _ in range(30):
+        life.tick()
+    assert sum(1 for w in life.win if w["x"] == life.eot) == 1, "the offset entered more than once in one pause"
+    v = life.store.V[-1]; assert int(m.readout(v).argmax()) == life.eot, "the store did not keep the line's end"
+    for _ in range(40):
+        life._wake_lesson()
+    life2 = tiny(offset_ticks=12, gate_floor=0.0); life2.m.load_state_dict(m.state_dict())
+    with torch.no_grad():
+        life2.m.mouth_gate.bias.fill_(-30.0)
+    life2.type_text("dog will go")
+    while life2.queue:
+        life2.tick()
+    with torch.no_grad():
+        C = life2._stream_now(); p = life2.m.forecast(C, torch.zeros(m.d)); lg = life2.m.readout(p)
+    assert int(lg.argmax()) == life.eot, f"after the line the cortex does not foresee the turn's end: {int(lg.argmax())}"
+    dreams = life.dreams(12)
+    assert dreams and any(ids[-1] == life.eot for ids in dreams), "no dream ended where the world went quiet"
+    for ids in dreams:
+        assert life.eot not in ids[:-1], "the offset inside a dream"
+    for _ in range(50):
+        life.tick()
+    assert all(w["xo"] != life.eot for w in life.win), "the mouth said the offset"
+    print("15 the offset: once per pause, kept by the store, foreseen after the line, a dream's end, never spoken")
+
+
 def test_feelings_follow_dopamine():
     life = tiny()
     for _ in range(60):
@@ -311,7 +350,7 @@ def test_guards():
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
-             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input]
+             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset]
     failed = 0
     for t in tests:
         try:

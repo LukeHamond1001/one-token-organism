@@ -26,6 +26,11 @@ PHYSIOLOGY = dict(
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
     # striatum's vigor). gate_level_w 0 = off until measured (runs 39/40)
     gate_level_band=5, gate_level_w=0.0,
+    # THE OFFSET: the world's quiet after its utterance is an event (the auditory offset response): after offset_ticks of
+    # quiet on both sides, the end of the world's turn (<eot_human>) enters once as a world symbol, stored, forecast,
+    # a dream's natural end, never spoken. 0 = off (before it, the cortex learned the seam between utterances: after
+    # "dog will go down" the next line's first letter at probability 1, the mouth's "downg"; served body, day 10)
+    offset_ticks=0,       # 0 = off until measured (runs 41/42); the candidate value is 12 (three seconds at four ticks a second)
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
     # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
     # gate_tonic 0.70 (the mean the value form gives a grown body): run 31 matched the value form's seeds at days 6 and 15 and
@@ -47,7 +52,9 @@ class Life:
         self.sil = tok.token_to_id("<pad>")
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
         self.nl = tok.token_to_id("\n")
+        self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
         self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
+        self._last_world = -10 ** 9; self._last_own = -10 ** 9; self._offset_done = True
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.save_path = save_path
@@ -216,6 +223,12 @@ class Life:
         m = self.m
         self._decay_feelings()
         u = self.queue.popleft() if self.queue else self.sil
+        # THE OFFSET: a pause on both sides after the world's utterance, once, is the end of its turn
+        off = int(self.cfg.get("offset_ticks", 0))
+        if u == self.sil and off > 0 and not self._offset_done and self.ticks - self._last_world >= off and self.ticks - self._last_own >= off:
+            u = self.eot; self._offset_done = True
+        if u != self.sil:
+            self._last_world = self.ticks; self._offset_done = (u == self.eot)
         # the face: a change is felt; a held face is silence; easing off is not an event
         lvl = max(-6, min(6, int(self.face_now)))
         felt = 0
@@ -323,6 +336,7 @@ class Life:
                         del self.sym_freq[k_]
                 self.sym_freq[nxt] = self.sym_freq.get(nxt, 0.0) + (1.0 - hab)
             self.fatigue += float(self.cfg["symbol_cost"])
+            self._last_own = self.ticks
             self._step(nxt, 1, r=0.0, dopamine=delta)          # its own symbol enters the stream
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
@@ -476,7 +490,10 @@ class Life:
                     if conf < floor or (win >= 0 and (float(self.store.S[win] * adapt[win]) < s_floor
                                                       or float(adapt[win]) < float(self.cfg["dream_exhaust"]))):
                         break                                             # unsure, or the memory is exhausted (a slot fires at most twice)
-                    lg = self.m.readout(pred).clone(); lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
+                    lg = self.m.readout(pred).clone()
+                    if int(self.cfg.get("offset_ticks", 0)) > 0 and int(lg.argmax()) == self.eot:
+                        ids.append(self.eot); break                       # the memory ends where the world went quiet
+                    lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
                     nid = int(lg.argmax())
                     ids.append(nid)
                     adapt = 1.0 - a_rec * (1.0 - adapt)                   # recovery toward 1
