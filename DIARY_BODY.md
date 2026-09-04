@@ -2172,3 +2172,10 @@ of the runaway's end. The mouth, meanwhile: run 28 at day 15 completed 44 of 48.
 
 The reborn body's day 5 at human pace on the shared rate; its bands will be read before
 the fix is applied at a boundary, once run 29 has measured it.
+
+Run 28 at day 20: 48 of 48 cues started and 47 in full, the cortex's trace 60 of 82 awake
+and 61 under the dream construction, back from day 15's 55. Its value column is not the
+old recipe's record: the instrument's day ran under the pinned ladder, the body's old
+heads reading states now centered, so the two runaway bands read −29 and −448 with the
+means still catching up, not the thousands of day 15. Body kept as
+data/body2_run28_day20.pt.
