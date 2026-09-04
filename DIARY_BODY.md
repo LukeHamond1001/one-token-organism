@@ -3151,3 +3151,14 @@ large shapes follow. Read against the page's 250 ms a tick: on this machine idle
 32M body fits with a night of six minutes, the 179M body sits at the budget's edge with a
 night near twenty-five minutes (an infant's third of life asleep, which the day's 12,000
 ticks would allow), and the half-billion shape needs the GPU or a slower tick.
+
+**The day-23 boundary, 13:10.** After night 22: the fixed cues 46 and 42 of 48; the
+taught-line cues 94 and 67 of 96; the unheard combinations 106 and 92 of 128; the cortex
+alone 61 and 59 of 82. The seam probe: the cortex alone 0.92 after 'dog will go down',
+1.00 after 'give big ball', 0.00 to 0.02 after the other four; and with the store in the
+forecast, 0.67 after 'give big ball', the first morning on which the fused forecast, the
+one the mouth reads, gives the turn's end at all (0.00 to 0.07 on every line since the
+offset began). The page's fused share on day 22: 0.16. Day 22's teacher: 35 utterances,
+seven cues, seven answered ('why dog ' up, 'give big ' ball, 'first milk then ' ball,
+'big dog ' bigger, 'where ball? ' ball, 'bigger dog ' up, 'you saw ' dog), 98 smiles,
+the parent's attention 0.56 to 1.0, at 0.8 to 1.0 whenever a cue was completed.
