@@ -2121,3 +2121,7 @@ within a day, so the undiscounted value integrated raw reward. The baseline must
 converge faster than the value drifts, and there is one reward rate in any case: tonic
 dopamine. One running mean of the reward at the differential horizon, shared by the
 slow bands, replaces the per-band estimates. Ten checks pass; run 28 carries it.
+
+Run 28 at day 6, one reward rate shared by the slow bands: every band bounded, the
+slowest at −5 with a spread of 2 where run 27's ran to 643, the fast bands the constants
+this world allows. No divergence anywhere in the ladder for the first time.
