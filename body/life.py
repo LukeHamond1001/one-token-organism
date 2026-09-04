@@ -66,7 +66,7 @@ class Life:
         self.nl = tok.token_to_id("\n")
         self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
         self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
-        self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None
+        self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None; self._start_pending = False
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.save_path = save_path
@@ -151,6 +151,8 @@ class Life:
             if learn_store and who == 0 and x != self.sil and self.key.norm() > 1e-6:
                 self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
                 self._last_write = (self.key.clone(), ex.clone())                    # for the boundary mark at the offset
+                if getattr(self, "_start_pending", False):
+                    self.store.mark_start(self.key, ex); self._start_pending = False  # the utterance's first kept memory
             # the context moves on: both bags fade with time (a pause ends a context, as working memory
             # does), the world's symbols entering the world's bag, its own symbols its own
             # (the bags are content alone: a speaker embedding summed into every key was a constant all
@@ -267,9 +269,9 @@ class Life:
         r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
         # --- the ear's half: the world's symbol (or its quiet) enters ---
         v_before = m.values(self.bands.detach()) if self.v_prev is None else self.v_prev
+        if first_after_pause and off > 0:
+            self._start_pending = True                            # the next memory the store keeps begins an utterance
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
-        if first_after_pause and off > 0 and self._last_write is not None and not self.cfg.get("store_off"):
-            self.store.mark_start(*self._last_write)              # the memory of an utterance's first symbol
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
         with torch.no_grad():
