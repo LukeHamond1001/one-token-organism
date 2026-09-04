@@ -2135,3 +2135,14 @@ rate, is the recipe's test.
 The reborn body's fourth night: gauge 0.85 before, 0.90 after, 213 slots kept. At the
 day-5 boundary the serve reloads so the body takes the settled ladder (one shared reward
 rate for the slow bands); its words and its store are untouched by that.
+
+Run 27 at day 20, the per-band rates to the end: 47 of 48 cues started and 46 in full,
+the cortex's trace 60 of 82 awake and 63 under the dream construction, the best twentieth
+day of any run (run 21 had 46 and 60, run 23 had 43 and 61). The ladder as the baseline
+mathematics predicted: the slowest band's value at −402 with a spread of 248, back from
+−1036 at day 15 as its one-in-16384 baseline crept toward the rate, and the two bands
+above it biased below their returns the same way. The slowest band's near-perfect
+correlation is the time-of-day artifact again, not a reading of reward. Body kept as
+data/body2_run27_day20.pt. Run 28 carries the one shared rate and is at day 14 with the
+gauge 0.90 and the gate 0.53; its day-15 instrument decides whether that ladder stays
+bounded.
