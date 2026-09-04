@@ -3293,3 +3293,29 @@ reaches the body only as the chance of its next smile, a weak and delayed conseq
 parent's attention is on its face, and the still-face experiments say the infant feels
 its withdrawal at once. That would be an environment change (the attention visible on
 the face row), and it waits for the user's word.
+
+**The knife-edge, and the ventral critic's sign, 15:40.** Runs 81 to 84, the effort in
+the reward at 0.03 a symbol: the gates 0.90, 0.97, 0.92 and 0.97 on their first day,
+where at 0.12 they slid to 0.2 by day 10. Stopped at day 1; the reading is complete. Once
+the critics predict the cost, the gate's rate goes to wherever a word's chance of a smile
+balances its cost, and that is mute at one scale and babble at the other, with no
+homeostat between; the old form's tonic drive against the convex fatigue was the
+homeostat, the mouth speaking in bouts at the fatigue where the two balance, whatever the
+parent did. So the effort form is set aside as the mouth's credit, and the tonic form
+stays the recipe (gate_tonic 0.25, the cost in the act's credit), stable for forty days
+on runs 55 and 56. Run 67's value instrument at day 20, the last lines: the ventral
+critic itself, the whole-ladder head at horizon 1024 whose error the gate's credit
+carries at weight 1, reads the return that followed at −0.40, −0.23, −0.20 and −0.28
+over its four days, anti-correlated, while the pinned band at 4096 reads +0.86 and the
+band at 1024 +0.31. That is not a surprise but a theorem: TD(0) bootstrapped over a
+thousand steps sits at a fixed point whose error the horizon amplifies, by (1 − λγ)/(1 −
+γ), a thousandfold at λ = 0 (Tsitsiklis and Van Roy 1997), so a head on the ladder's
+states can land with the wrong sign; and the gate has been carrying that sign into its
+credit since the ventral critic was adopted. The fix biology and the math share: an
+eligibility trace on the critic's own weights decaying at the critic's horizon (TD(λ)
+with λ = γ, the factor falling to two), the backward view of the discounted return, the
+synaptic tag on the critic's side. Drafted behind vcrit_lambda (0 = TD(0); the discounted
+head gains a bias for its level, born at zero in older bodies; the night clears the
+trace); 16 of 16 tests. Measured first the cheap way: four chained instrument days on run
+67's day-20 body with the ventral critic born at zero and carried from day to day, TD(0)
+against the trace (scratchpad/vtrace_probe.py), then on fresh seeds if it reads right.

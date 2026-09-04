@@ -419,7 +419,27 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   tiring a syllable is against a smile, and biology's answer is very: an
   infant babbles for hours. Runs 81 to 84 (the new parent) carry the effort
   at 0.03 a symbol, a word a tenth of a smile, 81/82 with the synaptic tag
-  at four millionths and 83/84 without; adopted on the same terms.
+  at four millionths and 83/84 without: the gates 0.90 to 0.97 on day 1, the
+  babble the cost of 0.12 had turned to muteness. A knife-edge: once the
+  critics predict the cost, the gate's rate goes to wherever a word's chance
+  of a smile balances its cost, with no homeostat between mute and babble;
+  the tonic drive against the convex fatigue was the homeostat, the mouth
+  speaking in bouts at the fatigue where the two balance. The effort form is
+  set aside; the tonic form stays the recipe.
+- **The critic's eligibility trace.** Run 67's value instrument at day 20:
+  the ventral critic, the whole-ladder head at horizon 1024 whose error the
+  gate's credit carries, read the return that followed at −0.28 (four days,
+  −0.40 to −0.20) while the pinned 4096-tick band read +0.86. A theorem, not
+  a surprise: TD(0) bootstrapped over a thousand steps sits at a fixed point
+  whose error the horizon amplifies by (1 − λγ)/(1 − γ), a thousandfold at
+  λ = 0 (Tsitsiklis and Van Roy 1997). TD(λ) with the trace of the critic's
+  inputs decaying at its own horizon (λ = γ, the factor two), the backward
+  view of the discounted return, captured by the error as it arrives: the
+  synaptic tag on the critic's side. Behind vcrit_lambda (0 = TD(0)); the
+  discounted head gains a bias for its level, born at zero in older bodies;
+  the night clears the trace. Measured on run 67's day-20 body with the
+  critic born at zero, four chained days, TD(0) against the trace, then on
+  fresh seeds; adopted on the same terms.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the

@@ -265,8 +265,10 @@ class Organs(nn.Module):
         # its error moves with the act itself (the fast bands change within a tick) while it predicts the long run
         # (the reward rate's horizon). The ladder's own slow heads read states that move a thousandth per tick and
         # cannot register an act (runs 37/38); the ventral striatum reads the cue it sees now and predicts far.
-        self.vcrit = nn.Linear(nb * d, 1, bias=False)
-        nn.init.zeros_(self.vcrit.weight)
+        # Discounted, so it has a level (the reward rate over its horizon) that the bias holds; an older body's
+        # bias is born at zero. Its lesson may carry an eligibility trace at its own horizon (vcrit_lambda).
+        self.vcrit = nn.Linear(nb * d, 1, bias=True)
+        nn.init.zeros_(self.vcrit.weight); nn.init.zeros_(self.vcrit.bias)
         # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream, the feelings, and the
         # salience of the mouth's proposal (the forecast's certainty, as the striatum reads the
         # strength of a cortical request for action)
@@ -357,7 +359,7 @@ class Organs(nn.Module):
 
     def value_long(self, states):
         """the ventral critic's relative value over every band's state, each centered on its running mean"""
-        return ((states - self.band_mu).reshape(-1) @ self.vcrit.weight[0])
+        return ((states - self.band_mu).reshape(-1) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
 
     def values(self, states):
         """V_b(s_b) for every band: [nb]"""

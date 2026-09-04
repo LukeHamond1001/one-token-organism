@@ -27,6 +27,14 @@ PHYSIOLOGY = dict(
     # day (runs 49/50: the integral of reward above its wandering average), and that drift entered the mouth's twelve-tick
     # credit ten times the size of the fast error and shut one seed's gate. 0 = off until measured (runs 51/52; candidate 1.0)
     vcrit_w=1.0, vcrit_gamma=1.0 - 1.0 / 1024,
+    # THE CRITIC'S ELIGIBILITY TRACE: TD(0) bootstrapped over a thousand steps sits at a fixed point whose error the
+    # horizon amplifies (Tsitsiklis and Van Roy: by (1 - lambda gamma) / (1 - gamma), a thousandfold at lambda 0), and
+    # run 67's ventral critic read the return that followed at -0.28 over four days while the pinned 4096-tick band
+    # read +0.86. TD(lambda) with the trace decaying at the critic's own horizon (lambda = gamma, the factor near 2)
+    # is the backward view of the discounted return itself: a trace of the critic's inputs on its weights, captured
+    # by the error as it arrives (the synaptic tag on the critic's side). 0 = TD(0); candidate 1 - 1/1024 (the night
+    # clears the trace)
+    vcrit_lambda=0.0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -320,7 +328,18 @@ class Life:
                 with torch.no_grad():
                     vl_now = m.value_long(self.bands)
                 td_long = r + float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)) * vl_now.detach() - m.value_long(self._bands_prev.detach())
-                loss_v = (td ** 2).mean() + td_long ** 2
+                lam = float(self.cfg.get("vcrit_lambda", 0.0))
+                if lam > 0.0:
+                    # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
+                    # decays at gamma * lambda; the error captures it. The surrogate's gradient is -error x trace.
+                    with torch.no_grad():
+                        x_prev = torch.cat([(self._bands_prev.detach() - m.band_mu).reshape(-1), torch.ones(1, device=self.dev)])
+                        tr = getattr(self, "_vtrace", None)
+                        self._vtrace = (float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)) * lam * tr if tr is not None else torch.zeros_like(x_prev)) + x_prev
+                    loss_vl = -(td_long.detach() * (m.vcrit.weight[0] @ self._vtrace[:-1] + m.vcrit.bias[0] * self._vtrace[-1]))
+                else:
+                    loss_vl = td_long ** 2
+                loss_v = (td ** 2).mean() + loss_vl
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
                                      for b in range(len(gam))])
@@ -702,7 +721,7 @@ class Life:
             rep["store_slots"] = self.store.n()
             self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
-            self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None
+            self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None
             self.fatigue = 0.0
             self.sleep_pressure = 0
             self.nights += 1; self.day_n += 1
