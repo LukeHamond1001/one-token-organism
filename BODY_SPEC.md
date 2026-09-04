@@ -115,8 +115,11 @@ log prior, the prior being a slow tally of the symbols the world has said
 (songbirds: vocal variability is high when unrewarded and falls as reward
 comes), so babble is varied at birth and sharpens as smiles arrive. The gate learns by the opponent rule
 (a dopamine burst strengthens Go for the context whatever it did, a dip
-strengthens NoGo), plus its own reward at a symbol (the belief it had in its
-choice, habituating per symbol) minus a cost that grows with fatigue.
+strengthens NoGo), plus an innate drive to act and its own performance
+dopamine at a symbol (the belief it had in its choice minus that syllable's
+usual belief, a running mean per symbol: the songbird's performance error,
+positive when it did better than usual, habituating as the expectation
+catches up) minus a cost that grows with fatigue.
 
 **Face organ.** Its face is a forecast of the caregiver's, learned every tick
 (head only). A readout, not a lever.
@@ -167,7 +170,7 @@ symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fati
 store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps fixed at birth · the reward rate and the differential bands' state means at 1/1024 a tick ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-own-reward weight 0.5, tonic drive 0.25, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
+own-reward weight 0.5, innate drive 0.70 (the error form; 0.25 under the older value form, bodies saved without a form key keeping it), expectation rate 0.1 per act of the syllable, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
@@ -195,7 +198,8 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   ticks) kept the credit negative for hundreds of lessons after the night
   reset fatigue, so vigor drove the gate to its floor with no reward in
   sight. The feature is C/√d (unit scale), the baseline forgets in ten
-  lessons and resets with the night, and the tonic drive is 0.25 so the
+  lessons and resets with the night, and the innate drive (0.25 under the
+  value form, 0.70 under the error form) is above the fresh cost so the
   no-reward equilibrium is babble, not silence.
 - **Birth economics.** With a flat readout the confidence drive is ≈ 0 and
   acting pays −cost: cov < 0, silence. A tonic drive w0 = 0.25 > cost 0.12
@@ -248,6 +252,30 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   predicted). Effort cost in biology is convex; with (fatigue/10)² the cost
   passes the drive near fatigue 22, a duty cycle of about a half, and the mouth
   speaks in bouts bounded by fatigue, as §5b promised.
+- **The intrinsic credit is an error.** Removed, the mouth breaks its words
+  (runs 24 and 30: 19 and 21 of 48 cues finished against 45; the gate at
+  0.26): once the critic predicts the smiles the external dopamine is small,
+  and only an internal drive holds a bout open. Biology has it: dopamine
+  neurons of a singing bird encode its performance error against its own
+  expectation (Gadagkar et al. 2016), and deafened birds do not learn. The
+  first form, belief × novelty habituating by repetition, was a value, and on a
+  grown body it is a near-constant 0.90 per act (run 29, day 20: mean 0.90,
+  spread 0.10), a drive rather than a signal. The form now is the error,
+  belief minus the syllable's usual belief (a running mean per symbol at 0.1
+  per act), zero-mean once expectations catch up, negative for a production
+  below par; the innate drive carries the mean the value form had (0.25 +
+  0.5 × 0.90 = 0.70). Run 31 against two seeds of the value form: day 6, 46 of
+  48 finished against 46 and 44, the cortex's trace 63 awake against 56 and
+  59; day 15, 44 against 43 and 46, the trace 63 against 62 and 59; the ladder
+  bounded throughout. A newborn under the error form opens its gate to about
+  0.7 before fatigue balances it (babbling); its first day's smiles matched
+  the value form's. At day 20 it finished 39 of 48 against the value form's
+  46 to 47 on three seeds: one cue, "dog will ", collapsed to a stutter of
+  the recall ("gog will gog") in every sample, the other seven at 5 or 6
+  of 6; the credit decides whether the mouth speaks, not which symbol, so
+  this reads as the seed's memory, but one seed cannot settle it. The
+  value form remains the recipe (innate drive 0.25); the error form is kept
+  in the code and a second seed decides (run 34).
 - **The recall's confidence.** The store's read is the attended mean of unit
   values, and its norm is the agreement among the memories attended. The
   largest attention weight is not: once the key carried its own bag, duplicate

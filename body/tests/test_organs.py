@@ -147,7 +147,9 @@ def test_gate():
         life.tick()
         p0 = p0 or life.last.get("gate")
     p_quiet = life.last["gate"]
-    assert 0.05 < p_quiet < 0.6, f"the gate drifted with no reward: {p0} -> {p_quiet}"
+    # with no reward the gate sits where the innate drive meets the effort cost: babbling, not saturation
+    # (the value form's drive of 0.25 leaves a newborn near 0.3; the error form's 0.70 would open it to about 0.7)
+    assert 0.05 < p_quiet < 0.9, f"the gate ran away with no reward: {p0} -> {p_quiet}"
     # a burst: smiles while it acts
     for i in range(60):
         if i % 10 == 0:
