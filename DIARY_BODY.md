@@ -2408,3 +2408,14 @@ form but kept the weights; the states are fixed and fine. At the day-9 boundary 
 heads are born fresh, the running means with them, and nothing else is touched. Run 36
 to its end: 0.42, 0.55 and 0.39 at the three horizons on its twentieth day, 41 of 48,
 the trace 64 awake and 66 dreaming.
+
+## The first parent day (2026-09-04, 00:55)
+
+The raised body's ninth day, its first under the parent: 35 utterances, 7 cues from the
+teacher's own lines, every one answered with an accepted word ("I will " with "go down",
+"where ball? " with "ball go down", "little dog had " with "milk gone"), 108 smiles where
+the flat rules gave two hundred, 123 words the parent let pass unsmiled, no turning away,
+the parent's attention between 0.42 and 1.0 across the day. The night after it: gauge
+0.78 to 0.90, 269 slots kept, dreams of "because big dog" and "go up then". The body is
+raised now in the world that has a slow structure; the instrument on it after day 12 will
+say whether its own slow critics come to read the parent, as the fast bodies' did.
