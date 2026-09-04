@@ -2615,3 +2615,11 @@ dog " bigger, "dog will go " down twice, "give big " ball, "dog had " ball, "whe
 ball? " ball), 90 smiles, the parent never away, its attention 0.3 to 0.93. Night 11:
 loss 0.20 to 0.10, gauge 0.78 to 0.89, and the dreams "g will go ing ", "go up then
 ing ": the seam, dreamed.
+
+The offset's first form asked for quiet on both sides, the world's and the body's, and
+a fast body that babbles at a gate of 0.5 never gives it twelve ticks: after six days
+run 41's store held two turn-end memories and the tally of the symbol read about one.
+The world's turn ends when the world stops, whatever the body is saying, so the rule is
+the world's quiet alone (commit 2474b39, test 15 holds). Runs 41 and 42 were the recipe
+in effect and are stopped at day 6 (44 of 48 on the mouth, the recipe's number); runs 43
+and 44 are born with the offset that fires (03:00).
