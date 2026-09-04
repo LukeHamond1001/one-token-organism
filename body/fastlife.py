@@ -33,6 +33,16 @@ CUES = ["dog will ", "scared ", "give ", "where ball? ", "I had ", "first milk t
 # after the teacher): at a cue's completion the smile grows, 2 then 4, and the body feels each rise as an event (its
 # felt reward is clipped at 2 per event, so a bigger smile must be a growing one). 1 = the flat smile of every word.
 ANSWER_LEVELS = int(os.environ.get("ANSWER_LEVELS", "1"))
+# THE PARENT (on the user's word of 2026-09-03, "mold the caregiver to a real parent"): attention that moves.
+# An engagement level e, decided from the page alone, rises at an answer or a known word (more at a word new
+# today), falls at babble and drifts down in silence; and the parent behaves by it: a known word gets its
+# smile with probability e (a distracted parent misses words; a parent stops cheering the hundredth "dog"), the
+# parent talks faster when engaged and slower when not, poses more cues when engaged, answers a smiled word
+# with a line that holds it, and below a floor turns away for a while (the still face) until it comes back.
+# A minute's smiles then depend on the body's own last minutes, which is what a critic at long horizons needs.
+# 0 = the flat rules. Nothing reads the body's insides; the answer smile is always given.
+PARENT = int(os.environ.get("PARENT", "0"))
+E0, E_FLOOR, E_TAU, E_AWAY, AWAY_TICKS = 0.6, 0.3, 600.0, 0.15, 200   # start, resting level, decay ticks, still-face
 
 
 class FastCaregiver:
@@ -46,14 +56,23 @@ class FastCaregiver:
         self.tok_start = None; self.tok_buf = []
         self.last_write_tick = -1
         self.face_plan = []                                   # (tick, level): the growing smile's next rise
+        self.e = E0; self.said_today = {}; self.away_until = -1; self.aways = 0; self.expand_next = None
 
     def row(self, obj):
         obj = dict(obj); obj.setdefault("day", self.day); obj.setdefault("tick", self.L.ticks)
         self.log.append(obj)
 
     # one tick of the world: the face as set, then the body ticks, then the page is read
+    def pace(self):
+        return int(self.period * (1.6 - self.e)) if PARENT else self.period
+
     def step(self):
         L = self.L
+        if PARENT:
+            self.e += (E_FLOOR - self.e) / E_TAU                 # attention drifts down in silence
+            if self.e < E_AWAY and L.ticks >= self.away_until:
+                self.away_until = L.ticks + AWAY_TICKS; self.aways += 1
+                self.row({"action": "away", "e": round(self.e, 3)}); self.e = 0.35
         if self.face_plan and L.ticks >= self.face_plan[0][0]:
             _, v = self.face_plan.pop(0); self.face_val = float(v); L.set_face(v)
         if L.ticks >= self.face_until and self.face_val != 0.0:
@@ -82,7 +101,7 @@ class FastCaregiver:
         if levels >= 2:
             self.face_plan = [(self.L.ticks + self.smile_ticks // 2, 4.0)]
         self.words.append((self.L.ticks, on, why))
-        self.row({"action": "smile", "on": on, "why": why, "levels": levels, "gate": self.L.last.get("gate"), "mood": round(self.L.mood, 3)})
+        self.row({"action": "smile", "on": on, "why": why, "levels": levels, "e": round(self.e, 3), "gate": self.L.last.get("gate"), "mood": round(self.L.mood, 3)})
 
     def on_token(self, tok, a, b):
         t = self.L.ticks
@@ -95,17 +114,28 @@ class FastCaregiver:
                 self.set_face(-2.0, self.smile_ticks); self.frowns += 1; self.last_frown_tick = t
                 self.row({"action": "frown", "on": tok}); return
         low = tok if (tok == "I" or tok.islower()) else ""
+        if PARENT and t < self.away_until:
+            return                                                # the parent is turned away
         c = self.cue
         if c and t <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
-                c["done"] = True; self.smile(tok, "cue completion: " + c["text"]); return
+                c["done"] = True; self.e = min(1.0, self.e + 0.25); self.smile(tok, "cue completion: " + c["text"]); return
             if low[:2] in [x[:2] for x in c["full"]]:
-                c["done"] = True; self.smile(tok, "cue prefix: " + c["text"]); return
+                c["done"] = True; self.e = min(1.0, self.e + 0.15); self.smile(tok, "cue prefix: " + c["text"]); return
         if low in KNOWN2 and t - b <= self.react:
             if self.last_word == low and t - self.last_smile_tick < 48:
                 return
             if t - self.last_smile_tick >= 8:
+                if PARENT:
+                    n = self.said_today.get(low, 0); self.said_today[low] = n + 1
+                    p = self.e * (0.95 ** max(0, n - 5))        # attention, and the fiftieth "dog" (0.1 by then)
+                    self.e = min(1.0, self.e + (0.1 if n == 0 else 0.05))
+                    if self.rng.random() > p:
+                        self.row({"action": "missed", "on": tok, "why": "distracted", "e": round(self.e, 3)}); return
+                    self.expand_next = low
                 self.smile(tok, "known word")
+        elif PARENT and low and len(low) >= 3 and low not in KNOWN2 and not any(w.startswith(low) for w in KNOWN2):
+            self.e = max(0.0, self.e - 0.04)                      # babble wears the parent's attention
 
     def wait_gate(self):
         t0 = self.L.ticks
@@ -146,14 +176,26 @@ class FastCaregiver:
             plan.append(("line", line))
             if i % 2 == 1 and ci < len(CUES):
                 plan.append(("cue", CUES[ci])); ci += 1
-        last_t = None; slept = False
-        for kind, text in plan:
+        last_t = None; slept = False; pi = 0
+        while pi < len(plan) or (PARENT and L.sleep_pressure < L.cfg["wake_ticks"] - 600):
+            if pi < len(plan):
+                kind, text = plan[pi]; pi += 1
+            else:
+                kind, text = "line", self.rng.choice(LINES)          # an engaged parent keeps talking till the night
             while self.pending:
                 self.event(self.pending.pop(0), "line")
+            if PARENT and self.expand_next and kind == "line":
+                holds = [l for l in LINES if self.expand_next in l.split()]
+                if holds:
+                    text = self.rng.choice(holds)                  # answering its word with a line that holds it
+                self.expand_next = None
             if last_t is not None:
-                while L.ticks < last_t + self.period:
+                while L.ticks < last_t + self.pace():
                     if L.sleep_pressure >= L.cfg["wake_ticks"]:
                         break
+                    self.step()
+            if PARENT and L.ticks < self.away_until:
+                while L.ticks < self.away_until:
                     self.step()
             last_t = L.ticks
             if not self.event(text, kind):
@@ -176,7 +218,7 @@ class FastCaregiver:
                 last_t = L.ticks; self.event(text, kind)
                 if kind == "line":
                     j += 1
-        self.row({"action": "day_end", "smiles": self.smiles, "frowns": self.frowns, "words": self.words[-20:]})
+        self.row({"action": "day_end", "smiles": self.smiles, "frowns": self.frowns, "aways": self.aways, "e": round(self.e, 3), "words": self.words[-20:]})
         return night
 
 
