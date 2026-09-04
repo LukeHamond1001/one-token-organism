@@ -201,13 +201,8 @@ class Organs(nn.Module):
         # map, a Go/NoGo gate on its own update, and a value head (the critic at that timescale)
         self.band_in = nn.ModuleList([nn.Linear(d, d) for _ in range(nb)])
         self.band_gate = nn.ModuleList([nn.Linear(d, 1) for _ in range(nb)])
-        for b, g in enumerate(self.band_gate):
-            # the gate's rest: a write rate of one over the clock, so a band born untrained is the leaky
-            # average it was; the gate CAN open fully (the basal-ganglia model of prefrontal working
-            # memory: the gate loads, the clock forgets). With the write rate capped at gate over
-            # clock, the two slowest bands could not fill within a day (state norms 0.06 and 0.02 at
-            # day 20 of run 21) and their value heads read a bias alone.
-            nn.init.zeros_(g.weight); nn.init.constant_(g.bias, math.log(1.0 / max(1.0, float(self.clocks[b]) - 1.0)) if self.clocks[b] > 1 else 8.0)
+        for g in self.band_gate:
+            nn.init.zeros_(g.weight); nn.init.constant_(g.bias, 2.0)      # open at birth (sigmoid 0.88)
         self.value = nn.ModuleList([nn.Linear(d, 1) for _ in range(nb)])
         for v in self.value:
             nn.init.zeros_(v.weight); nn.init.zeros_(v.bias)            # V = 0 at birth: the error IS the reward
@@ -281,10 +276,13 @@ class Organs(nn.Module):
         out = []
         for b, tau in enumerate(self.clocks):
             s = states[b]
-            g = torch.sigmoid(self.band_gate[b](s.detach()))            # Go/NoGo: the gate loads the band
+            g = torch.sigmoid(self.band_gate[b](s.detach()))            # Go/NoGo on its own update
             target = torch.tanh(self.band_in[b](c))
-            s = s + g * (target - s)                                     # written in proportion to the gate
-            out.append(s * (1.0 - 1.0 / float(tau)) if tau > 1 else s)  # and forgotten at the clock
+            # the leaky average at the clock, the gate scaling its rate. A gated write (the gate loading
+            # the band in full, the clock forgetting) let the states jump as the gates learned, and the
+            # bootstrapped values on jumping features diverged by day 15 (run 25: three bands in the
+            # hundreds with TD errors in the thousands); reverted on measurement.
+            out.append(s + (g / float(tau)) * (target - s))
         return torch.stack(out)
 
     def values(self, states):
