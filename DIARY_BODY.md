@@ -2767,3 +2767,33 @@ the lesson comes every 24), and each end is its own context, so a seam held at 1
 thirteen days comes undone over days. Runs 47 and 48, born with the offset, had their
 dreams ending at line ends by day 2; the raised body's night 14 still spliced. The
 day-16, 17 and 18 boundaries read the unlearning; the probe runs on each copy.
+
+## The ventral critic, discounted: runs 51 and 52 (2026-09-04, 06:30)
+
+Twenty days each, the offset the recipe, the ventral critic discounted at 1024 ticks
+and its error in the mouth's credit at weight 1.
+
+    yardstick                      run 51            run 52            offset runs 47, 48
+    fixed cues finished, d6/15/20  38 / 46 / 42      43 / 39 / 43      46/45/43, 47/45/47
+    unheard finished at day 20     81 of 128         101 of 128        87, 73
+    smiles a day, days 11-20       106               124               84, 88
+    known words said a day         275               271               230, 221
+    the parent away, times a day   0.2               0.2               1.9, 2.6
+    its hit rate                   0.39              0.46              0.36, 0.40
+    the gate, days 13 to 20        0.49 -> 0.38      0.55 -> 0.56      0.45 to 0.55
+    critic at 1024, day 20, 4 days ventral -0.24     ventral +0.20     (baseline running)
+                                   band 5  -0.45     band 5  -0.15
+
+The fixed cues equal; the unheard combinations the best of any run on one seed and in
+range on the other; and the engagement is the finding: a fifth to a third more known
+words and smiles a day, the parent turning away a tenth as often, on both seeds. That is
+the long-timescale reward reaching the mouth: the ventral critic's error after an act
+reads +0.10 against +0.01 after a rest (the credit probe on run 51's day-6 copy), the
+act's effect on the long-run prospect, and the body speaks more where speaking keeps the
+parent. Against it: run 51's gate drifted from 0.55 to 0.38 over its last week, the
+shape run 50 collapsed by (0.18 by day 10) under the differential form, slower here; and
+the critics' own content at 1024 is no better than band 5's (+0.20 on one seed, -0.24 on
+the other). The head stays in the code, its weight 0 in the recipe; whether the drift
+settles or collapses needs forty days on two seeds, and the credit's two horizons may
+want the ventral share smaller than one. The engagement gain is the first thing in this
+record that the long timescale has bought.
