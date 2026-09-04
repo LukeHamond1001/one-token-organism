@@ -17,6 +17,7 @@ PHYSIOLOGY = dict(
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
+    gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
@@ -268,8 +269,9 @@ class Life:
         # reward comes; mood is the body's tonic dopamine): the readout's sharpness = base + gain x mood/6
         m.read_sharp = float(self.cfg["sharp_base"]) + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
         with torch.no_grad():
+            sal = float(self.cfg["gate_salience"]) * float(pred1.norm())      # the proposal's salience
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
-                              torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0], device=self.dev)])
+                              torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0, sal], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
@@ -677,6 +679,10 @@ class Life:
         blob = torch.load(path, map_location="cpu", weights_only=False)
         a = blob["arch"]
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]))
+        w = blob["organs"].get("mouth_gate.weight")
+        if w is not None and w.shape[1] < organs.mouth_gate.weight.shape[1]:
+            # an older body's gate had no salience input: that input's weight is born at zero
+            blob["organs"]["mouth_gate.weight"] = torch.cat([w, torch.zeros(w.shape[0], organs.mouth_gate.weight.shape[1] - w.shape[1])], 1)
         missing = organs.load_state_dict(blob["organs"], strict=False)
         if missing.missing_keys:
             print("load: organs without", missing.missing_keys, "(an older recipe; born fresh where missing)")

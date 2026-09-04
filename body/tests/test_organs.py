@@ -197,6 +197,25 @@ def test_ladder_pinned():
     print("11 the ladder: input maps fixed, differential values centered and bias-free")
 
 
+def test_older_gate_loads():
+    """a body saved before the gate read the proposal's salience loads, that input born at zero"""
+    import os, tempfile
+    life = tiny(); m = life.m
+    with torch.no_grad():
+        m.mouth_gate.weight.normal_()
+    path = os.path.join(tempfile.mkdtemp(), "old.pt"); life.save_path = path; life.save()
+    blob = torch.load(path, weights_only=False)
+    blob["organs"]["mouth_gate.weight"] = blob["organs"]["mouth_gate.weight"][:, :-1].clone()
+    torch.save(blob, path)
+    life2 = Life.load(path, TOK, save_path=None)
+    w2 = life2.m.mouth_gate.weight
+    assert w2.shape == m.mouth_gate.weight.shape and float(w2[0, -1]) == 0.0, "the older gate did not load with a zero salience weight"
+    assert torch.allclose(w2[:, :-1], m.mouth_gate.weight[:, :-1]), "the older gate's weights changed on load"
+    for _ in range(20):
+        life2.tick()
+    print("12 an older gate loads: salience weight born at zero, ticks")
+
+
 def test_feelings_follow_dopamine():
     life = tiny()
     for _ in range(60):
@@ -239,7 +258,7 @@ def test_guards():
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
-             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned]
+             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads]
     failed = 0
     for t in tests:
         try:

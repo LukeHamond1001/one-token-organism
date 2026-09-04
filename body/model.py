@@ -216,8 +216,10 @@ class Organs(nn.Module):
         # mean of the states (adaptation): the gradient's persistent direction is gone.
         self.register_buffer("diff", torch.zeros(nb, dtype=torch.bool))
         self.register_buffer("band_mu", torch.zeros(nb, d))
-        # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream and the feelings
-        self.mouth_gate = nn.Linear(d + 3, 1)
+        # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream, the feelings, and the
+        # salience of the mouth's proposal (the forecast's certainty, as the striatum reads the
+        # strength of a cortical request for action)
+        self.mouth_gate = nn.Linear(d + 4, 1)
         nn.init.zeros_(self.mouth_gate.weight)
         nn.init.constant_(self.mouth_gate.bias, math.log(birth_act / (1.0 - birth_act)))
         # ITS FACE: a forecast of the caregiver's face (a readout)
