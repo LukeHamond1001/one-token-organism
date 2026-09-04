@@ -2754,3 +2754,16 @@ report): 42 utterances, "give little book" against "give big ball", "ball will g
 against "dog will go up", all six cues answered ("why dog up? " because big dog, "give
 big " ball, "I had " milk), 106 smiles, the parent never away, its attention closing at
 0.93.
+
+The seam on the raised body, measured (scratchpad/seam_probe.py): on the day-14 copy,
+before any offset lesson, the cortex alone after "dog will go down" forecast g at 1.0
+and after "you will go in" g at 1.0; on the day-15 copy, after one day under the offset,
+a space at 1.0 and d at 0.92, the turn-end itself still at 0.00. On a scratch copy of
+the day-15 body, one ended line and twenty waking lessons take the turn-end's
+probability at the line's last symbol from 0.00 to 0.93, forty to 1.00: the lesson
+works on the big body. In life each utterance's end sits inside the lesson's window of
+32 positions for at most two lessons (the offset fires 8 ticks after the last symbol,
+the lesson comes every 24), and each end is its own context, so a seam held at 1.0 for
+thirteen days comes undone over days. Runs 47 and 48, born with the offset, had their
+dreams ending at line ends by day 2; the raised body's night 14 still spliced. The
+day-16, 17 and 18 boundaries read the unlearning; the probe runs on each copy.
