@@ -3556,3 +3556,22 @@ typing takes fewer ticks); on the served body's page the typing is slow and the 
 talks through it. Day 29's boundary and its totals decide whether the served body stays
 under this parent or returns to the earlier one while the gate is given a way to read
 the consequence (runs 87 and 88).
+
+**The day-29 boundary, 18:23.** Day 28 closed at 74 smiles, 13 turnings-away and the
+attention 0.40; after night 28 the fixed cues 34 and 29 of 48 (34 and 31 the day
+before), the taught-line cues 96 and 62 of 96 (65), the unheard combinations 93 and 75
+of 128 (92 and 76), the cortex alone 53 and 50 of 82 (59 and 57). Flat to a little down,
+on a day that gave the body a third fewer smiles. The parent who wants a reply, as
+written, costs the served body what shapes its gate and teaches it nothing it can learn
+(the ceiling instrument: a tenth of a smile a run-on, and the attention it wears
+recovers within a word), so at day 29's end the typist returns to the earlier parent
+(scratchpad/revert_reply.sh 29 31, armed); the rule stays on the fast seeds, runs 85 to
+88, where it is measured. An hour's incident: the served body's day script waited on any
+scripted caregiver and the second body's caregiver on 8019 matched, so the served body
+had no teacher from 18:00 to 18:19; the waits are now scoped to each body's port. The
+second body's day 1 on the flat rules: 230 smiles, 'why dog up? ' answered 'because
+big ', 'where ball? ' 'ball under', 'I had ' 'milk then ball', 'first milk then '
+'ball'; its first night at 18:07. Runs 85 and 86 at day 20: the mouths 48 and 42 of 48
+(86), the unheard combinations 100 and 88 of 128, the run-on 9.2; run 85's day-20
+instruments pending. Runs 87 and 88 at day 6: the mouths 48 and 46, 48 and 44; the
+run-on 9.2 and 9.3; the gates 0.51 and 0.53.
