@@ -2295,3 +2295,22 @@ which symbol, so this reads as one seed's memory, not the form; but one seed is 
 seed, and a recipe is not changed on a hope. The value form stays the recipe, the error
 form stays in the code, and run 34, its second seed, decides at day 20. The raised body
 keeps its own form; a saved body without a form key now loads as what it was.
+
+## Run 33 at day 6: the ceiling does not move (2026-09-03, late night)
+
+The answer-weighted smile in the fast world, the settled recipe under a smile that grows
+at a cue's completion: at day 6 the body is what it was (48 of 48 cues started, 46
+finished, the trace 57 awake) and the ridge ceiling at 64 and 256 ticks is what it was,
+zero (−0.06 and 0.01). The mathematics had said as much and now says why more exactly.
+Doubled, the sixteen completions of a day are a fifth of its reward; the rest is the
+hundred-odd word smiles, each a coin the caregiver's refractory rules toss. And the
+completions come when the caregiver chooses to pose a cue, every four minutes or so by
+its own clock, not by anything the body can read in itself a minute ahead. A critic at
+256 ticks predicting reward from the body's state is asked to predict the caregiver's
+schedule. That is the environment's structure, not the ladder's failing: reward at long
+horizons has content only where the reward RATE over minutes depends on something the
+body carries, and in this world it does not. The form of the world that would give it
+content is a caregiver whose attention wanes with babble and returns with answers, so
+that a minute's smiles depend on the body's own last minutes; the biology of it is the
+engaged parent, and it is page-only. It is not built and not proposed tonight; run 33
+goes to day 15 for the record, and the raised body's test after teacher day 8 stands.
