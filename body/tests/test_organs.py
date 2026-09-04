@@ -270,7 +270,7 @@ def test_level_input():
 
 
 def test_offset():
-    """the offset: after a line and twelve quiet ticks the world's turn-end enters once as a world event; the store
+    """the offset: after a line and twelve ticks of the world's quiet its turn-end enters once as a world event; the store
     keeps it as the line's end, the lesson's target after the last letter is it, a dream ends on it, the mouth never says it"""
     life = tiny(offset_ticks=12, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m
     with torch.no_grad():

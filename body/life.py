@@ -27,7 +27,7 @@ PHYSIOLOGY = dict(
     # striatum's vigor). gate_level_w 0 = off until measured (runs 39/40)
     gate_level_band=5, gate_level_w=0.0,
     # THE OFFSET: the world's quiet after its utterance is an event (the auditory offset response): after offset_ticks of
-    # quiet on both sides, the end of the world's turn (<eot_human>) enters once as a world symbol, stored, forecast,
+    # the world's quiet, the end of the world's turn (<eot_human>) enters once as a world symbol, stored, forecast,
     # a dream's natural end, never spoken. 0 = off (before it, the cortex learned the seam between utterances: after
     # "dog will go down" the next line's first letter at probability 1, the mouth's "downg"; served body, day 10)
     offset_ticks=0,       # 0 = off until measured (runs 41/42); the candidate value is 12 (three seconds at four ticks a second)
@@ -223,9 +223,11 @@ class Life:
         m = self.m
         self._decay_feelings()
         u = self.queue.popleft() if self.queue else self.sil
-        # THE OFFSET: a pause on both sides after the world's utterance, once, is the end of its turn
+        # THE OFFSET: the world quiet for offset_ticks after its utterance, once, is the end of its turn (whatever
+        # the body is saying meanwhile: with the body's silence required too, a babbling body never let it fire;
+        # run 41 held two turn-end memories after six days)
         off = int(self.cfg.get("offset_ticks", 0))
-        if u == self.sil and off > 0 and not self._offset_done and self.ticks - self._last_world >= off and self.ticks - self._last_own >= off:
+        if u == self.sil and off > 0 and not self._offset_done and self.ticks - self._last_world >= off:
             u = self.eot; self._offset_done = True
         if u != self.sil:
             self._last_world = self.ticks; self._offset_done = (u == self.eot)
