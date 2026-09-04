@@ -3344,3 +3344,12 @@ on-topic ('where ball? ' → 'under', 'you will go ' → 'down'), 87 smiles, 92 
 almost all 'distracted', the attention from 0.65 to 1.0 by mid-day, a dip to 0.37
 before the night, 0.74 at the end; no new word; the planner disclosed checking each
 appended line's JSON by reading back that one line, which decided nothing.
+
+**The tag at day 6, 15:50.** Runs 77 to 80, the synaptic tag on the gate at one and four
+millionths, the parent who wants a reply, the effort in the reward at 0.12: the mouths 48
+and 48, 48 and 48, 47 and 43, 42 and 42 of 48; the run-on on days 4 to 6: 9.5, 10.7, 8.3
+and 8.3 symbols per cue, against 8.1 to 9.2 on runs 73 and 74 without the tag. The tag
+captured the ventral error, and the ventral error was wrong-signed and growing, so it
+could not help and did not; the four stopped at day 6, to be repeated once the critic
+reads right. Two of them (78 and 79) had begun the slide of the effort form at 0.12 by
+day 6 (smiles 85 and 38, gates 0.59 and 0.49), consistent with runs 73 to 76.
