@@ -365,6 +365,23 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   slower), and its own content at 1024 ticks reads +0.20 and -0.24. Weight 0
   in the recipe until forty days on two seeds (runs 55/56) say whether the
   drift settles.
+- **The run-on, and the end as a rest.** After a cue's answer every body
+  runs on, nine or ten symbols in the next twenty-five ticks, resting under
+  two first, on every recipe of this record (runs 47 to 60); the ventral
+  credit at weight 1 trims a tenth. Measured causes: the store's next symbol
+  after a line at confidence 1.0 from other lines sharing its last words,
+  a true memory in corpora where every cue is a prefix of a longer line; the
+  smile landing one to six ticks after the answer, crediting the run-on's
+  first symbols, act or rest alike; and the fast parent's attention rising at
+  every known word the body says and falling only at non-words, so a run-on
+  of known words is rewarded at both timescales. The architecture does not
+  suppress what its environment rewards; whether the parent should want a
+  reply rather than a monologue is an environment decision, on the user's
+  word. On the body's side: the forecast's vote for the turn's end, a symbol
+  the mouth can never say, is its vote for the rest (end_rest; off in the
+  recipe until runs 61/62 read), a mouth that draws the rest having not
+  acted; and the night's gauge counts a dream's end as a target (it banned
+  the end and read a ceiling near 0.9 before 2026-09-04 09:00).
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the
@@ -516,6 +533,14 @@ answer a smiled word by repeating it and expanding it into a frame.
   smiles, the parent's turns away, its attention at the day's end and at
   smiles, the misses by kind, known words said, the parent's hit rate; and
   from saved copies the gate's weights on its feelings.
+- The seam probe (scratchpad/seam_probe.py): after a heard line, the
+  probability the forecast gives the turn's end, the cortex alone and with
+  the store, and the next speakable symbols. The rest probe
+  (scratchpad/rest_probe.py): at each cue and after each line, the forecast's
+  mass on the answer's first letter against its mass on the end read as a
+  rest. The run-on (scratchpad/runon.py, from the caregiver's log): in the
+  twenty-five ticks after a cue, the symbols the body adds after its first
+  word, and the rest it takes right after that word.
 
 ## 8. Tests (each fails when its organ stops doing its job)
 
