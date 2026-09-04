@@ -55,7 +55,11 @@ PHYSIOLOGY = dict(
     # weight to learn (at the horizon rate a learned level took forty days); its error is r - rbar + V' - V and its trace
     # decays at lambda alone. 0 = discounted with a bias; 1 = differential
     vcrit_diff=0,
-    vcrit_bands="",       # the bands the ventral head reads, e.g. "5,6,7"; "" = all eight
+    # THE VENTRAL HEAD READS THE SLOW BANDS (adopted 2026-09-04): on run 67's body over nine frozen days, TD(0) at the
+    # shared rate on bands 5-7 read the return at horizon 1024 at +0.46 (+0.38 to +0.51 every day) against a ceiling of
+    # +0.51, its weights settling near 89; the same rule over all eight bands +0.19 with weights running to 78, the fast
+    # bands' overfit. The trace forms on the slow bands: erratic (+0.33 pooled) or weak (+0.12). "" = all eight
+    vcrit_bands="5,6,7",
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the

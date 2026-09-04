@@ -3522,3 +3522,21 @@ staging the first body had. The slow-band heads at day 7, pooled from day 2: the
 the horizon rate +0.11, TD(0) at the shared rate +0.32, the trace at the shared rate
 +0.26. Runs 85 and 86 at day 6: the mouths 45 and 45, 46 and 41 of 48; the run-on 9.6
 and 9.2 per cue; the unheard combinations 88 and 76, 91 and 66 of 128.
+
+**The slow-band head, 17:30.** Three ten-day chains on run 67's body with the ventral head
+reading bands 5 to 7 alone (1024, 4096 and 16384 ticks), frozen at each day's start
+against the return at horizon 1024: TD(0) at the shared rate +0.51, +0.38, +0.43, +0.51,
++0.46, +0.44, +0.46, +0.46, +0.49, a mean of +0.46 and none below +0.38, its weights'
+norm 24, 42, 56, 62, 70, 76, 81, 85, 88, 89, settling; the trace at the shared rate +0.58,
+−0.13, +0.41, −0.05, +0.47, +0.07, +0.09, −0.01, +0.63, erratic; the trace at the horizon
+rate +0.34, +0.19, −0.25, +0.38, +0.06, −0.39, +0.11, +0.19, +0.55, weak and small. The
+ceiling for the slow bands was +0.51. So the head that reads the long return is the
+simplest one: TD(0) on the slow bands, which the ladder's principle already held (each
+horizon its own features), and the ventral head's defect was letting the fast bands in,
+whose energy bought recency and not foresight. Adopted as the ventral head's
+definition (vcrit_bands 5,6,7; 16 of 16 tests); its weight in the gate's credit stays 0
+until the gate is shown to profit from it. Its error on the slow features is the
+reward less the long expectation, a baselined reward, which is what the synaptic tag
+on the gate needs to capture: runs 87 and 88, the settled recipe with the slow-band head
+at weight 1 and the tag at four millionths, the parent who wants a reply, born 17:32 for
+twenty days, read at days 6, 16 and 20 against runs 85 and 86.

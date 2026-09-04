@@ -468,7 +468,14 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   bands +0.38, the slow bands alone +0.51, the fast bands alone +0.33. The
   learned heads sit at a third of what the states allow; the remedy is a
   head on the slow bands learned with the trace at a slow rate, measured
-  the same way. And the parent's attention, read from the bands at +0.89,
+  the same way. Measured (scratchpad/vpool_E/F/G.out): TD(0) at the shared
+  rate on bands 5 to 7 alone reads +0.46 on nine frozen days (+0.38 to
+  +0.51, none below), its weights settling near 89, against the ceiling of
+  +0.51; the trace on the slow bands erratic (+0.33 pooled, −0.13 to +0.63
+  by day), the trace at the horizon rate weak (+0.12). The ventral head now
+  reads the slow bands (vcrit_bands "5,6,7"); its weight in the gate's
+  credit stays 0 until the gate is shown to profit from it, measured with
+  the synaptic tag (runs 87/88). And the parent's attention, read from the bands at +0.89,
   correlates +0.03 with the return: a known word raises it as readily as a
   word past the answer lowers it, so the run-on's consequence under the
   parent who wants a reply is near a tenth of a smile, below any critic's
