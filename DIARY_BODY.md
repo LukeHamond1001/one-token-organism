@@ -2259,3 +2259,27 @@ seed spread. Run 31: 47 started, 46 finished, the trace 63 awake and 69 under th
 construction, the best sixth day of any run on the cortex's own measure, and the relative
 values the tightest yet (spreads of 1, 2 and 1). Day 15 decides whether the error form
 becomes the recipe.
+
+## The answer-weighted smile, on the word (2026-09-03, late night)
+
+Your word, with its condition: the answer-weighted smile goes in if the slow critics still
+read nothing after the teacher's days. The mathematics says what to expect first. At the
+64- to 256-tick horizons a cue's completion is one smile among five or six word smiles, so
+a critic reading the state cannot tell a rich minute from a poor one; even the teacher's
+cues are drowned unless an answer is worth more than a word. And the body's physiology
+caps a felt smile at 2 per event, a held face is silence, so a bigger smile must be a
+smile that grows: the face rises to 2 and then to 4, and the body feels each rise. That is
+a caregiver's face and nothing else; the body is untouched, and the rules still read the
+page alone. Built into both caregivers behind a switch, off until measured (test 13: the
+growing smile is felt as [2, 4], a word's as [2]). Run 33 measures it in the fast world
+from run 32's slot at day 15, the settled recipe under the answer-weighted smile, its
+value instrument's day under the same smile: the number to watch is the ridge ceiling at
+the 64- and 256-tick horizons, zero in every run so far. The served body's own gate stays
+the one you set: the value instrument after teacher day 8, and the switch turns on at a
+boundary only if that reads nothing.
+
+Two clarifications asked and answered tonight. It is not a cheat: the caregiver reads the
+page only, nothing writes the body's words, the body still has to say the answer; what it
+is, is a curriculum decision, a world shaped so that reward depends on history, and it is
+written here as that. And the teachers are Sonnet, not Opus, one small decision every
+seven minutes; Opus on the word.
