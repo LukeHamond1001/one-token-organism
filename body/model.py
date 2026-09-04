@@ -164,9 +164,10 @@ class Store:
             return []
         starts = torch.nonzero(self.Bs).flatten()                 # utterance onsets, when the store knows them
         pool = starts if starts.numel() >= 1 else torch.arange(self.n(), device=self.dev)
-        n = min(int(n), int(pool.numel()))
         p = self.S[pool] / self.S[pool].sum()
-        idx = torch.multinomial(p.cpu(), n, replacement=False, generator=gen)
+        # a night replays an episode many times: with fewer onsets than dreams, the draw is with replacement
+        # (ten onsets gave ten short dreams a night and the cortex's trace fell from 60 to 36 of 82, run 54)
+        idx = torch.multinomial(p.cpu(), int(n), replacement=bool(pool.numel() < int(n)), generator=gen)
         return [int(pool[i]) for i in idx]
 
     def state_dict(self):
