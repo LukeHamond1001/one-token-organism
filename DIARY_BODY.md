@@ -2393,3 +2393,18 @@ into BODY_SPEC.md §5b. What remains for the ladder is what the body does with i
 mouth's gate takes its credit from the fast band's error alone, and a body that could feel
 the parent's attention waning would have a reason to answer. That is the next honest
 question, and it is architecture, not environment.
+
+## The raised body's own test, and a repair (2026-09-04, 00:20)
+
+After teacher day 8, the instrument on the raised body itself, in the flat world it was
+raised in: its critics against their returns at 0.01, −0.04 and −0.25 at 256, 1024 and
+4096 ticks. Nothing, as your condition foresaw, and so the growing smile is in force for
+it, and the parent with it, from day 9 (the day-9 yardstick before it: 46 of 48 started,
+44 finished; the cortex's trace 63 awake, 66 dreaming). The same instrument found the
+thing to repair: the two slowest value heads read values in the hundreds with a TD error
+of 1.0 where a body born under the pinned ladder reads 0.17. They are the heads trained
+under the diverging ladder in its first five days, before the day-6 reload pinned the
+form but kept the weights; the states are fixed and fine. At the day-9 boundary those
+heads are born fresh, the running means with them, and nothing else is touched. Run 36
+to its end: 0.42, 0.55 and 0.39 at the three horizons on its twentieth day, 41 of 48,
+the trace 64 awake and 66 dreaming.
