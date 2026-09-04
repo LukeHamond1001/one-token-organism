@@ -45,6 +45,7 @@ class Store:
         self.S = torch.zeros(0, device=device)
         self.W = torch.zeros(0, dtype=torch.long, device=device)
         self.B = torch.zeros(0, dtype=torch.bool, device=device)   # THE BOUNDARY: this slot's symbol ended the world's utterance
+        self.Bs = torch.zeros(0, dtype=torch.bool, device=device)  # and this slot's symbol began one (the first after a pause)
 
     def n(self):
         return int(self.K.shape[0])
@@ -93,28 +94,46 @@ class Store:
         self.S = torch.cat([self.S, torch.tensor([float(strength)], device=self.dev)])
         self.W = torch.cat([self.W, torch.tensor([int(who)], device=self.dev)])
         self.B = torch.cat([self.B, torch.zeros(1, dtype=torch.bool, device=self.dev)])
+        self.Bs = torch.cat([self.Bs, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         if self.n() > self.cap:                                         # the weakest gives way
             keep = torch.argsort(self.S, descending=True)[: self.cap]
             self._keep(keep)
         return True
 
     @torch.no_grad()
-    def mark_boundary(self, k, v, merge_cos=0.97):
-        """THE BOUNDARY: the slot that holds this context -> this symbol (the same match as a merge) ended the
-        world's utterance; a dream that recalls it ends there (the memory's own event boundary)"""
+    def _find(self, k, v, merge_cos=0.97):
         if self.n() == 0:
-            return False
+            return -1
         k = F.normalize(k.to(self.dev).float(), dim=0); v = F.normalize(v.to(self.dev).float(), dim=0)
         sims = self.K @ k
         same = (sims > merge_cos) & ((self.V @ v) > merge_cos)
         if not bool(same.any()):
+            return -1
+        return int(torch.where(same, sims, torch.full_like(sims, -2.0)).argmax())
+
+    @torch.no_grad()
+    def mark_boundary(self, k, v, merge_cos=0.97):
+        """THE BOUNDARY: the slot that holds this context -> this symbol (the same match as a merge) ended the
+        world's utterance; a dream that recalls it ends there (the memory's own event boundary)"""
+        j = self._find(k, v, merge_cos)
+        if j < 0:
             return False
-        j = int(torch.where(same, sims, torch.full_like(sims, -2.0)).argmax())
         self.B[j] = True
         return True
 
+    @torch.no_grad()
+    def mark_start(self, k, v, merge_cos=0.97):
+        """the slot that holds the first symbol after a pause began an utterance: dreams start at starts (replay
+        runs from an episode's onset)"""
+        j = self._find(k, v, merge_cos)
+        if j < 0:
+            return False
+        self.Bs[j] = True
+        return True
+
     def _keep(self, idx):
-        self.K, self.V, self.S, self.W, self.B = self.K[idx], self.V[idx], self.S[idx], self.W[idx], self.B[idx]
+        self.K, self.V, self.S, self.W = self.K[idx], self.V[idx], self.S[idx], self.W[idx]
+        self.B, self.Bs = self.B[idx], self.Bs[idx]
 
     @torch.no_grad()
     def fade(self, f=0.9, floor_rel=0.1):
@@ -143,18 +162,21 @@ class Store:
         """dream starts: slots drawn by strength, without replacement"""
         if self.n() == 0:
             return []
-        n = min(int(n), self.n())
-        p = self.S / self.S.sum()
+        starts = torch.nonzero(self.Bs).flatten()                 # utterance onsets, when the store knows them
+        pool = starts if starts.numel() >= 4 else torch.arange(self.n(), device=self.dev)
+        n = min(int(n), int(pool.numel()))
+        p = self.S[pool] / self.S[pool].sum()
         idx = torch.multinomial(p.cpu(), n, replacement=False, generator=gen)
-        return [int(i) for i in idx]
+        return [int(pool[i]) for i in idx]
 
     def state_dict(self):
-        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "temp": self.temp}
+        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "temp": self.temp}
 
     def load_state_dict(self, sd):
         self.K = sd["K"].to(self.dev); self.V = sd["V"].to(self.dev)
         self.S = sd["S"].to(self.dev); self.W = sd["W"].to(self.dev)
         self.B = sd["B"].to(self.dev) if "B" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
+        self.Bs = sd["Bs"].to(self.dev) if "Bs" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.temp = float(sd.get("temp", self.temp))
 
 

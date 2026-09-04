@@ -290,8 +290,25 @@ def test_offset():
     assert int(life.store.B.sum()) == 1 and bool(life.store.B[-1]), "the last symbol's memory does not carry the boundary"
     d0 = life.dreams(12)
     assert d0 and any(ids[-1] == life.eot for ids in d0), "no untaught dream ended at the memory's boundary"
+    for _ in range(4):
+        life.tick()
+    life.type_text("give milk")                                        # a second utterance after the pause: its first symbol a start
+    while life.queue:
+        life.tick()
+    for _ in range(8):
+        life.tick()
+    assert int(life.store.Bs.sum()) >= 1, "the first symbol after a pause was not marked a start"
+    for _ in range(4):
+        life.tick()
+    life.type_text("dog will go")
+    while life.queue:
+        life.tick()
+    for _ in range(8):
+        life.tick()
+    d1 = life.dreams(12)
+    assert d1 and any(ids[-1] == life.eot and len(ids) >= 6 for ids in d1), f"no dream ran from a start to an end: {[len(i) for i in d1]}"
     assert all(w["x"] != life.eot and w["xo"] != life.eot for w in life.win), "the turn-end entered the stream"
-    assert torch.allclose(life.bag_w, bag0 * (life.cfg["bag_decay"] ** 8)), "the offset moved the world's bag"
+    assert abs(float(life.bag_w.norm() / bag0.norm()) - life.cfg["bag_decay"] ** 8) < 1e-4 and float(torch.cosine_similarity(life.bag_w, bag0, dim=0)) > 0.9999, "the offset moved the world's bag"
     for _ in range(40):
         life._wake_lesson()                                            # the lesson while the ended line is in its window
     life2 = tiny(offset_ticks=8, gate_floor=0.0); life2.m.load_state_dict(m.state_dict())

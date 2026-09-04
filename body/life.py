@@ -254,6 +254,7 @@ class Life:
         off = int(self.cfg.get("offset_ticks", 0))
         if u == self.sil and off > 0 and not self._offset_done and self.ticks - self._last_world >= off:
             self._offset(); self._offset_done = True
+        first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
         if u != self.sil:
             self._last_world = self.ticks; self._offset_done = False
         # the face: a change is felt; a held face is silence; easing off is not an event
@@ -267,6 +268,8 @@ class Life:
         # --- the ear's half: the world's symbol (or its quiet) enters ---
         v_before = m.values(self.bands.detach()) if self.v_prev is None else self.v_prev
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
+        if first_after_pause and off > 0 and self._last_write is not None and not self.cfg.get("store_off"):
+            self.store.mark_start(*self._last_write)              # the memory of an utterance's first symbol
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
         with torch.no_grad():
