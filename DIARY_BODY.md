@@ -3077,3 +3077,16 @@ is where it was. Runs 67 and 68 (the ventral credit at 1) are at day 1. The scal
 (scratchpad/scale_probe.py) runs meanwhile on the user's question of a local live
 scale-up: tick and night times for bodies of 256, 512, 1024 and 1280 width on cpu and
 on the Mac's GPU, the machine carrying eight fast runs while it measures.
+
+**The day-21 boundary, 11:20.** After night 20: the fixed cues 42 and 37 of 48; the
+taught-line cues 95 and 77 of 96; the unheard combinations 99 and 88 of 128; the cortex
+alone 60 and 61 of 82. The seam probe, the cortex alone: 0.96 after 'dog will go down',
+0.93 after 'you will go in', 0.88 after 'all gone', 0.68 after 'give big ball', 0.00
+after 'scared dog' and 'little dog had milk'; with the store 0.00 to 0.01. The page's
+fused share on day 20: 0.14 (0.19, 0.18, 0.20, 0.14 before). The fixed cues' finished
+count over days 17 to 21, 42, 47, 46, 40, 37, reads the run-on as much as the answer: an
+answer run into its next word without a space ('goinder') is not a finished 'go' to the
+probe. Day 20's teacher: 42 utterances, seven cues, seven answered ('first milk then '
+ball, 'why dog up? ' because, 'why dog up? because ' big, 'dog will go ' down, 'you will
+go ' down, 'big dog bigger ' dog, 'where ball? ' ball), each run on into the parent's
+lines, 109 smiles, the parent's attention 0.69 rising to 1.0. Days 22 to 24 are armed.
