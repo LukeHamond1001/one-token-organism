@@ -2431,3 +2431,15 @@ slow band's error; as a per-act credit it is noise, and it muddies the very crit
 carry the parent. Biology's vigor is not an error but a level, tonic dopamine as the
 reward rate (Niv 2007); that is the form still standing, unbuilt. The switch stays off.
 Runs 37 and 38 go to twenty for the record.
+
+## The second yardstick (2026-09-04, 01:05)
+
+Cues drawn from the teacher's own lines, heard at least twice and none of the eight the
+body was born on, twenty-four of them, on the raised body after day 8: 93 of 96 started,
+77 finished. The misses are mostly the scorer's: "why dog " answered "up? because", "where
+" answered "ball? ball", "all " answered "gone" run into the next word; the honest ones are
+the prefixes with three or four continuations ("dog ", "you will go "), where it picks one
+the corpus also allows but says it fused to the next. Three days of a teacher's lines,
+taken from the page at a human pace, are in it and come back on demand. The instrument
+is scratchpad/taught_probe.py; it runs on any saved body with the corpus file. What it
+does not test is the unheard combination; that remains the open capability.
