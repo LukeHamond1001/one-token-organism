@@ -2201,3 +2201,29 @@ as dopamine habituates to a repeated stimulus. The formula stays on that ground;
 mathematics asks is that it be an error, performance against the syllable's expected
 performance, with the innate drive and the reward rate's vigor carrying the rate of
 acting. That is run 31, after run 30's day-6 record.
+
+## The teacher (2026-09-03, night)
+
+Run 30's record at day 6, the intrinsic credit gone and the gate reading the forecast's
+certainty: 44 of 48 cues started and 21 finished, run 24's number again, the ladder
+bounded under the pinned form, the gate at 0.26 through nine days. Retired at day 9. The
+external dopamine alone cannot hold a word open in this world; the intrinsic performance
+dopamine stays, as written above.
+
+On your word, the teacher. Not a script with twenty-two lines but a caregiver whose speech
+is planned by Claude, one utterance a minute at the body's human pace, and whose reward
+rules are the raw ones still: a smile within seconds of a known word, at a cue's completion
+or its first two letters, a frown at a run of marks, decided from the page and its face
+row only. Two honest generalizations of those rules so the world can grow: a word is known
+once the teacher has typed it three times, and a cue's answers are the continuations of
+the lines the body has actually heard at least twice, computed from what was typed, never
+listed by hand. The planner sees only the page, what was typed and what came back, never
+the body's insides; it may bring one new word a day, said in three lines, and it varies
+the phrasings around the same words, which is the road to the thirty-two novel cues the
+body has never completed. Two planners: the Anthropic SDK with a daily call budget, in a
+shell where the key is exported (never here), and a queue file that a Claude Code subagent
+fills, which needs no key and starts tonight. Tested on a scratch serve: the queue's lines
+typed, "big dog will " a cue with the answer computed from two hearings of "big dog will
+go", the body completing it, an unheard prefix treated as a line. The served body's day 6
+is the teacher's first, after tonight's boundary reload to the pinned ladder; the fixed
+eight cues remain the yardstick before each day and after each night.
