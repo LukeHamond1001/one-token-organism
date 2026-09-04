@@ -2449,3 +2449,10 @@ reborn at zero (their norms had been 14, 155 and 666, weights from the diverging
 before the pinned ladder), the running means with them, nothing else touched, and the
 serve reloaded on the same body, nights 9, 271 slots. The day-10 yardstick before the
 day: 46 of 48 started, 44 finished. Day 10 under the parent began at 01:05.
+
+Runs 37 and 38 at day 20 (the slow band's error added to the gate's credit, the parent
+world): the mouth unchanged, 44 and 42 of 48 full; the slow critics empty. corr(V, G) at
+256/1024/4096/16384: run 37 -0.36 / 0.00 / -0.05 / -0.68; run 38 -0.27 / 0.84 / -0.58 /
+-0.78 (the 0.84 with V's spread twice G's). The recipe under the same parent read
+0.47/0.84/0.91 and 0.42/0.55/0.39 (runs 35, 36). The slow error in the gate's credit
+takes from the critics without giving to the mouth: not adopted, on two seeds, twice.
