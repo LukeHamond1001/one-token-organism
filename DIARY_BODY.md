@@ -2551,3 +2551,24 @@ falling to 0.4 by the night. Night 10: loss 0.30 to 0.12, gauge 0.73 to 0.87, dr
 planners feeding for a while (the first day-11 subagent, which I had taken for dead
 when it ended its turn to wait on a monitor, woke when the day began and queued two
 rows before I stopped it); one planner since, with the foreground-wait rule.
+
+## The unheard combination (2026-09-04, 03:15)
+
+The capability the record kept calling open, measured with an instrument that hand-lists
+nothing (scratchpad/unheard_probe.py): from the corpus the teacher's typing built, lines
+heard at least twice; a word Y whose heard continuation is settled (one word follows it in
+at least two lines and at least twice as often as any other); a word X that begins some
+heard line; the cue "X Y " where the pair "X Y" occurs in no line the body has heard; the
+answer Y's continuation; 32 such cues from a fixed seed. On the served body's day-10 copy:
+the sampled mouth with its memory started 99 of 128 and finished 75, greedy with memory
+26 of 32, the cortex alone 2 of 32. "little big " gives dog, "first why " dog, "where
+because " big, "what? you " will, "dog first " milk. The misses are the fusions ("dogive",
+"willittl") and three cues whose Y is "I" ("milk I ", "what? I ", "all I ", wanting had).
+Run 35's day-20 body, raised on the twenty-two fixed lines, reads 60 of 128 on the same
+cues. The composition runs through the store: its key is a decaying bag of the last
+symbols, so an unheard prefix reads as its last word and recalls that word's continuation,
+pattern completion on a partial cue, which is what a hippocampus is for. The cortex does
+not compose on its own yet (2 of 32; but "alone" starves it of the read it was raised
+with, so the trace, 60 to 70 of 82 teacher-forced, is its fairer measure). What this does
+not test: a continuation that depends on a word before the last ("first milk then " ball
+against "first up then " in); that is the next rung.
