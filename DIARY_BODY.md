@@ -2974,3 +2974,16 @@ nothing changes, the store's next symbol holding 1.00. Runs 61 and 62 measure it
 birth. And the night's gauge, which banned the end, counted every dream's last target as
 a miss (a ceiling near 0.9 on ten-symbol dreams); it counts the end now, so gauges from
 the served body's next restart read a tenth higher than before for the same cortex.
+
+**Night 18 and the day-18 boundary, 09:05.** Night 18 (08:46, 110 s), the served body's
+first with dreams from the first symbol (the mixed form it was restarted on at 08:08):
+forty-eight dreams, 'scared ', 'big dog bi', 'why dog', 'dog will', 'you wi', mean length
+7.7, 368 symbols, the gauge 0.60 to 0.77 (night 17: 0.73 to 0.86 on onset dreams without
+their first symbols; the new material is new to the cortex, and the gauge still banned
+the end). The serve restarted at 09:01 on the onset form (commit 47e17d0 and after;
+data/body2_before_onset_day18.pt keeps the body as it was; nights 18, 261 slots). Day
+18's teacher: 35 utterances planned, five cues, 'first up then ' answered 'in' and 'why
+dog up? ' 'because', 112 smiles, no frown, the parent never away, its attention 0.62 to
+1.0. Runs 53 and 54 to day 20, onset dreams without the first symbol: the mouth 44 and 44
+of 48 finished, the cortex alone within lines 44 and 43, 44 and 40 of 82 at day 20 (42
+and 43, 41 and 37 at day 15), never recovering; the unheard combinations 82 and 77.
