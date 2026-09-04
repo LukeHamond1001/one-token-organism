@@ -2314,3 +2314,11 @@ content is a caregiver whose attention wanes with babble and returns with answer
 that a minute's smiles depend on the body's own last minutes; the biology of it is the
 engaged parent, and it is page-only. It is not built and not proposed tonight; run 33
 goes to day 15 for the record, and the raised body's test after teacher day 8 stands.
+
+Run 33 at day 15, the answer-weighted smile in the fast world: 48 of 48 cues started and
+48 finished, the first perfect fifteenth day of any run; the cortex's trace 64 of 82
+awake and 68 under the dream construction; every band bounded; and the ridge ceiling at
+256 ticks at 0.20 where the flat smile's runs read 0.10 or less at that horizon, still
+zero at 64. One seed, one day, a small number, in the direction the arithmetic gave:
+an answer worth twice a word makes the minute after a cue a little more legible to a
+critic. Day 20 for the record; the raised body's own test after teacher day 8 stands.
