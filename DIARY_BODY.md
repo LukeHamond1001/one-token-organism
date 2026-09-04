@@ -3444,3 +3444,17 @@ then the leave-one-day-out ridge fit of the return on the states (the ceiling of
 linear head), the attention's own correlation with the return, the slow bands' share
 against the fast bands', and how well the eight bands read the attention. Born 16:20,
 read near 17:45.
+
+**The four chains at ten days, 16:40.** Pooled over days 2 to 10 (111 thousand ticks
+each), the head frozen at each day's start against the return at horizon 1024: TD(0) at
+the shared rate +0.19 (by day +0.33, +0.26, −0.10, +0.65, +0.37, −0.24, +0.43, −0.06,
++0.43; its weights' norm 22 to 78); the discounted trace at the shared rate +0.01 (−0.75,
++0.20, +0.52, −0.37, +0.51, −0.21, −0.07, −0.60, +0.06); the average-reward trace at the
+horizon rate −0.22 (−0.23, −0.39, −0.29, −0.09, −0.21, +0.07, +0.05, −0.08, −0.60; its
+norm 0.04 to 0.26); the discounted trace at the horizon rate −0.10 (+0.34, +0.05, +0.48,
+−0.42, +0.30, +0.40, +0.09, −0.48, +0.27; its norm 0.5 to 4.5). The pinned 1024-tick
+band pooled −0.14 to +0.18 and the 4096-tick band −0.01 to +0.36, the spread between
+chains (whose bodies lived different days) the size of the readings themselves. No head
+at that horizon, learned by any of the four rules, reads the return beyond noise on run
+67's body. Whether any linear head could is the ceiling instrument's question, its chain
+at day 4 of 6.
