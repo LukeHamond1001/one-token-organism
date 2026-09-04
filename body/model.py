@@ -163,7 +163,7 @@ class Store:
         if self.n() == 0:
             return []
         starts = torch.nonzero(self.Bs).flatten()                 # utterance onsets, when the store knows them
-        pool = starts if starts.numel() >= 4 else torch.arange(self.n(), device=self.dev)
+        pool = starts if starts.numel() >= 1 else torch.arange(self.n(), device=self.dev)
         n = min(int(n), int(pool.numel()))
         p = self.S[pool] / self.S[pool].sum()
         idx = torch.multinomial(p.cpu(), n, replacement=False, generator=gen)

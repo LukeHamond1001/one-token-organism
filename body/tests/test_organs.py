@@ -271,8 +271,9 @@ def test_level_input():
 
 def test_offset():
     """the offset: after a line and eight ticks of the world's quiet, once per pause, the line's last position is
-    marked ended and the lesson's target there is the turn-end; a dream ends where the cortex expects it; nothing
-    enters the stream or the store; the bags stand"""
+    marked ended and the lesson's target there is the turn-end; the store's slot for that symbol carries the boundary
+    mark and the first memory kept after a pause the start mark; a dream runs from a start to an end; nothing enters
+    the stream; the bags stand"""
     life = tiny(offset_ticks=8, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m
     with torch.no_grad():
         m.mouth_gate.bias.fill_(-30.0)
@@ -292,34 +293,6 @@ def test_offset():
     assert int(life.store.B.sum()) == 1 and bool(life.store.B[-1]), "the last symbol's memory does not carry the boundary"
     d0 = life.dreams(12)
     assert d0 and any(ids[-1] == life.eot for ids in d0), "no untaught dream ended at the memory's boundary"
-    for _ in range(4):
-        life.tick()
-    life.type_text("give milk")                                        # a second utterance after the pause: its first symbol a start
-    while life.queue:
-        life.tick()
-    for _ in range(8):
-        life.tick()
-    assert int(life.store.Bs.sum()) >= 1, "the first symbol after a pause was not marked a start"
-    for _ in range(4):
-        life.tick()
-    life.type_text("dog will go")
-    while life.queue:
-        life.tick()
-    for _ in range(8):
-        life.tick()
-    d1 = life.dreams(12)
-    assert d1 and any(ids[-1] == life.eot and len(ids) >= 6 for ids in d1), f"no dream ran from a start to an end: {[len(i) for i in d1]}"
-    for _ in range(300):                                               # a long pause: the first symbol's context has faded to nothing
-        life.tick()
-    life.type_text("where ball? ball under")
-    while life.queue:
-        life.tick()
-    for _ in range(8):
-        life.tick()
-    j = int(torch.nonzero(life.store.Bs).flatten()[-1]); v = TOK.decode([life.m.nearest(life.store.V[j])])
-    assert v in ("w", "h"), f"after a long pause the start mark fell on {v!r}, not the line's first kept symbol"
-    d2 = life.dreams(12)
-    assert any(len(ids) >= 8 and ids[-1] == life.eot for ids in d2), f"no whole line dreamed after a long pause: {[len(i) for i in d2]}"
     for _ in range(40):
         life._wake_lesson()                                            # the lesson while the ended line is in its window
     life2 = tiny(offset_ticks=8, gate_floor=0.0); life2.m.load_state_dict(m.state_dict())
@@ -331,11 +304,29 @@ def test_offset():
     with torch.no_grad():
         C = life2._stream_now(); p = life2.m.forecast(C, torch.zeros(m.d)); lg = life2.m.readout(p)
     assert int(lg.argmax()) == life.eot, f"after the line the cortex does not foresee the turn's end: {int(lg.argmax())}"
-    dreams = life.dreams(12)
-    assert dreams and any(ids[-1] == life.eot for ids in dreams), "no dream ended where the cortex expects the quiet"
-    for ids in dreams:
+    # starts: a second utterance after the pause, and one after a long pause (its first symbol's context faded to nothing)
+    for _ in range(4):
+        life.tick()
+    life.type_text("give milk")
+    while life.queue:
+        life.tick()
+    for _ in range(8):
+        life.tick()
+    assert int(life.store.Bs.sum()) >= 1, "the first symbol after a pause was not marked a start"
+    for _ in range(300):
+        life.tick()
+    life.type_text("where ball? ball under")
+    while life.queue:
+        life.tick()
+    for _ in range(8):
+        life.tick()
+    j = int(torch.nonzero(life.store.Bs).flatten()[-1]); v = TOK.decode([life.m.nearest(life.store.V[j])])
+    assert v in ("w", "h"), f"after a long pause the start mark fell on {v!r}, not the line's first kept symbol"
+    d2 = life.dreams(12)
+    assert any(len(ids) >= 8 and ids[-1] == life.eot for ids in d2), f"no whole line dreamed from a start to an end: {[len(i) for i in d2]}"
+    for ids in d2:
         assert life.eot not in ids[:-1], "the offset inside a dream"
-    print("15 the offset: once per pause, the line's end foreseen, the memory marked, a dream's end, nothing in the stream")
+    print("15 the offset: once per pause, the line's end foreseen, the memory marked at both ends, a dream a whole line, nothing in the stream")
 
 
 def test_ventral_critic():
