@@ -241,6 +241,34 @@ def test_older_gate_loads():
     print("12 an older gate loads: salience weight born at zero, ticks")
 
 
+def test_level_input():
+    """the level: the gate reads the slow critic's value of the moment through that value's own running scale;
+    the feature stays bounded, the scale follows the value, and a body saved without the scale loads with it born at one"""
+    import math, os, tempfile
+    life = tiny(gate_level_w=1.0, gate_every=10 ** 9, wake_every=10 ** 9); m = life.m; lb = int(life.cfg["gate_level_band"])
+    assert m.mouth_gate.weight.shape[1] == m.d + 5, "the gate does not read five feelings"
+    with torch.no_grad():
+        m.value[lb].weight.normal_(std=1.0)                       # a critic with an opinion
+    lv = []
+    for t in range(200):
+        if t % 20 == 0:
+            life.set_face(2.0)
+        elif t % 20 == 2:
+            life.set_face(0.0)
+        life.tick(); lv.append(life.last["level"])
+    assert all(math.isfinite(x) and abs(x) <= 5.0 for x in lv), f"the level left its bounds: {lv[:10]}"
+    assert max(abs(x) for x in lv) > 0.0, "the level read nothing from an opinionated critic"
+    sc = float(m.v_scale[lb])
+    assert math.isfinite(sc) and sc > 0.0 and sc != 1.0, f"the value's scale did not follow the value: {sc}"
+    path = os.path.join(tempfile.mkdtemp(), "old.pt"); life.save_path = path; life.save()
+    blob = torch.load(path, weights_only=False); del blob["organs"]["v_scale"]; torch.save(blob, path)
+    life2 = Life.load(path, TOK, save_path=None)
+    assert float(life2.m.v_scale[lb]) == 1.0, "an older body's value scale was not born at one"
+    for _ in range(20):
+        life2.tick()
+    print("14 the level: feature in", round(min(lv), 3), "..", round(max(lv), 3), "| scale", round(sc, 3), "| an older body loads")
+
+
 def test_feelings_follow_dopamine():
     life = tiny()
     for _ in range(60):
@@ -283,7 +311,7 @@ def test_guards():
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
-             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice]
+             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input]
     failed = 0
     for t in tests:
         try:

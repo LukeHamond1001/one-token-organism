@@ -21,6 +21,11 @@ PHYSIOLOGY = dict(
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
     # horizons of the discount gradient, driving vigor; the fast band's error selects the act). gate_slow_w 0 = off (runs 37/38)
     gate_slow_band=5, gate_slow_w=0.0,
+    # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
+    # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
+    # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
+    # striatum's vigor). gate_level_w 0 = off until measured (runs 39/40)
+    gate_level_band=5, gate_level_w=0.0,
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
     # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
     # gate_tonic 0.70 (the mean the value form gives a grown body): run 31 matched the value form's seeds at days 6 and 15 and
@@ -226,6 +231,11 @@ class Life:
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
         with torch.no_grad():
             v_now = m.values(self.bands)
+            # THE LEVEL: the slow critic's value of this moment, read by the gate below, scaled by its own
+            # running root mean square (divisive normalization; born at one so a newborn's noise reads small)
+            lb = int(self.cfg["gate_level_band"]); vb = float(v_now[lb])
+            m.v_scale[lb] += (1.0 / float(self.cfg["diff_horizon"])) * (vb * vb - float(m.v_scale[lb]))
+            level = float(self.cfg["gate_level_w"]) * max(-5.0, min(5.0, vb / (1.0 + math.sqrt(max(0.0, float(m.v_scale[lb]))))))
         gam = m.gammas()
         with torch.enable_grad():
             m.train()
@@ -280,7 +290,7 @@ class Life:
         with torch.no_grad():
             sal = float(self.cfg["gate_salience"]) * float(pred1.norm())      # the proposal's salience
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
-                              torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0, sal], device=self.dev)])
+                              torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0, sal, level], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
@@ -347,7 +357,7 @@ class Life:
                      "mood": round(self.mood, 2), "cort": round(self.fatigue, 2), "fatigue": round(self.fatigue, 2),
                      "stress": round(self.stress, 2), "ent": round(ent, 2), "felt": felt,
                      "said": (self.tok.decode([int(nxt)]) if nxt != self.sil else ""),
-                     "gate": round(p_act, 3), "dopamine": round(delta, 3), "doses": self.n_bursts,
+                     "gate": round(p_act, 3), "dopamine": round(delta, 3), "doses": self.n_bursts, "level": round(level, 3),
                      "store": self.store.n(), "store_conf": round(conf1, 3), "surprise": round(surp1, 3),
                      "own": [self.tok.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
                      "gate_lesson": self._gate_last, "wake": self._wake_last}
@@ -699,7 +709,7 @@ class Life:
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]))
         w = blob["organs"].get("mouth_gate.weight")
         if w is not None and w.shape[1] < organs.mouth_gate.weight.shape[1]:
-            # an older body's gate had no salience input: that input's weight is born at zero
+            # an older body's gate had fewer inputs (no salience, no level): those weights are born at zero
             blob["organs"]["mouth_gate.weight"] = torch.cat([w, torch.zeros(w.shape[0], organs.mouth_gate.weight.shape[1] - w.shape[1])], 1)
         missing = organs.load_state_dict(blob["organs"], strict=False)
         if missing.missing_keys:
