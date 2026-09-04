@@ -2623,3 +2623,20 @@ The world's turn ends when the world stops, whatever the body is saying, so the 
 the world's quiet alone (commit 2474b39, test 15 holds). Runs 41 and 42 were the recipe
 in effect and are stopped at day 6 (44 of 48 on the mouth, the recipe's number); runs 43
 and 44 are born with the offset that fires (03:00).
+
+Runs 43 and 44 (the offset as a stream symbol, on the world's quiet alone) showed on
+their first day what a symbol in the stream costs: the cues answered "go n Z", "Kill /",
+"bookHt". The turn-end entered eight to twelve ticks after a cue, in the middle of the
+body's answer, and a world symbol clears the body's own bag (its efference copy of what
+it has said since the world's last symbol), so the answer lost its own context and went
+to junk; and the untrained symbol sat in the window the cortex reads. Stopped at day 2.
+The third form (commit 000e0e8, 03:05): the offset is a memory and a target, not a
+stimulus. After eight ticks of the world's quiet, once per pause, the store writes the
+turn-end under the line's context (the world's bag as it stood after the last symbol,
+the surprise of the quiet as the strength), and the line's last position in the window
+is marked ended, so the waking lesson's target there is the turn-end instead of the
+next line's first letter; a dream still ends where its memory recalls the turn-end.
+Nothing enters the stream, the bags stand, the mouth's context stands. Eight ticks,
+because the window keeps a rest position per quiet tick (it rolls by time), the lesson
+comes every 24 ticks over the last 32 positions, and 8 + 24 keeps the ended position
+inside it. Runs 45 and 46 (seeds 45, 46, the parent world) measure it.
