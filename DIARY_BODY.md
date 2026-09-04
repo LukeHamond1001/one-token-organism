@@ -3034,3 +3034,17 @@ forty-eight dreams ('big dog ', 'I had ', 'first milk then', 'dog will'), mean l
 where the earlier parent gave a hundred, the run-on's words earning none; run 64's 103;
 both still run on (9.8 and 10.6 symbols per cue) on day 1, as they must before any
 learning.
+
+**The day-20 boundary, 10:05.** After night 19 (the onset form): the fixed cues 47 and 40
+of 48; the taught-line cues 95 and 67 of 96; the unheard combinations 98 and 83 of 128;
+the cortex alone 63 and 60 of 82. Against days 17 to 19 (42, 47, 46 finished; 64, 78, 80;
+79, 97, 93; 70/63, 62/59, 68/63) a day's swing on one body, back at the day-17 level from
+day 19's highs, and the machine was carrying ten fast runs through day 19, which pace the
+serve's ticks against the typist's clock. The seam probe, the cortex alone: 0.76 after
+'dog will go down', 0.86 after 'you will go in', 0.97 after 'all gone' (0.03 the day
+before), 0.97 after 'give big ball', 0.00 after 'scared dog' and 'little dog had milk'.
+Four of six lines now, against three at day 19 and none at day 17. With the store 0.00
+to 0.07. The page's fused share on day 19: 0.19. Day 19's teacher: 35 utterances, six
+cues, five answered cleanly ('why dog up? ' because, 'first milk then ' ball, 'big dog '
+will, 'dog will ' go, 'where ball? ' ball on the second try), 94 smiles, the parent's
+attention 0.53 to 1.0, mean 0.81.
