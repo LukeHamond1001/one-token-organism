@@ -2821,3 +2821,17 @@ that a dream run from a start to an end. Runs 53 and 54 relaunched with both mar
 too, since their first form carried end marks without starts. The served body takes the
 marks at the end of day 16 (mark_boundary.sh armed); its night 16 is the first that can
 replay whole lines and end them.
+
+The marks took four forms in an hour, each measured on a first night. Ends alone:
+dreams of four to six symbols, the night's gauge 0.5 (a dream drawn from a strong
+mid-line slot meets an end at once). Starts marked on the first symbol after a pause:
+dreams of two symbols, eighteen a night, gauge 0.17, because a line's first symbol
+enters under a context faded to nothing and the store's write rule (a key's norm
+above nothing) never keeps it, so the mark fell on the previous line's end. Starts
+marked on the first memory the store keeps after the pause: right, but drawn only when
+four or more starts exist, and the cortex's own expectation of the quiet still ending
+dreams, which on a young cortex cut them at two. The final form: starts on the first
+kept memory, dreams drawn from whatever starts the store has, ended at end-marked
+memories, the cortex's rule retired. On a scratch body: "g will go", " under", "will
+go", each ending at its end; the tests' night moves the gauge 0.18 to 0.77 on those
+dreams. Commit 2f33e26. Runs 53 to 56 relaunched a third time, 06:47, with this form.

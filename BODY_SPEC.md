@@ -70,12 +70,17 @@ residual the store missed and undid the night).
 Recall is not an input to the cortex's stream (entered there it looked like
 the current symbol and the trunk advanced it a step; the mouth read the
 second letter of every answer). No direct vote on the mouth. Fade: strengths × 0.9 each night; slots below the store's own mean
-strength × 0.1 are forgotten (relative, not a constant). Each slot carries a
-boundary mark: when the world's quiet after an utterance is perceived (the
-offset), the slot that holds the utterance's last symbol under its context
-is marked, and a dream that recalls a marked slot ends there, the memory's
-own event boundary (a hippocampal memory knows where its episode ended);
-the mark is not read by the waking recall.
+strength × 0.1 are forgotten (relative, not a constant). Each slot carries
+two marks the waking recall never reads: an end mark, set when the world's
+quiet after an utterance is perceived (the offset) on the slot that holds the
+utterance's last symbol under its context; and a start mark, set on the first
+memory the store keeps after a pause (a line's first symbol enters under a
+context faded to nothing and is not kept; its second symbol is). Dreams are
+drawn from the start-marked slots and end where they recall an end-marked
+one: a dream is an utterance, from its onset to its end, as replay runs
+through an episode. (With ends alone, dreams drawn from strong mid-line slots
+were four symbols long and the night's gauge lagged at 0.5; with the start
+mark on the wrong slot, two.)
 
 **PFC (the band ladder).** Bands with clocks 1, 4, 16, 64, 256, 1024, 4096,
 16384 ticks: leaky integrators of the stream, each through an input map
@@ -326,8 +331,10 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   lesson on spliced dreams, at ten times the waking rate, re-taught the seam
   each night. A body born with the offset never had that fight (its untrained
   cortex ended dreams early from night 1). So the store's slots carry the
-  boundary mark and a dream ends at a marked memory whatever the cortex
-  expects; the night then teaches the line's end at its own rate. Measured
+  boundary marks and a dream runs from a start-marked memory to an end-marked
+  one whatever the cortex expects (the cortex's own expectation of the quiet,
+  used first to end dreams, ended a young body's at two symbols and is
+  retired); the night then teaches the line's end at its own rate. Measured
   on runs 53/54 (fresh seeds) and on the raised body from day 17.
 - **The ventral critic.** The ladder's slow heads read states that move a
   thousandth per tick, so an act's effect on the long-run prospect cannot
