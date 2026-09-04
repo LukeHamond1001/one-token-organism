@@ -215,7 +215,9 @@ class QueuePlanner:
     name = "queue"
 
     def __init__(self, path, rng):
-        self.path, self.rng = path, rng; self.pos = 0; self.buf = []; self.calls = 0
+        self.path, self.rng = path, rng; self.buf = []; self.calls = 0
+        # a new day's planner starts at the file's end: yesterday's rows were yesterday's speech
+        self.pos = os.path.getsize(path) if os.path.exists(path) else 0
 
     def next(self, teacher):
         if os.path.exists(self.path):
