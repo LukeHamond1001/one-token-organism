@@ -44,6 +44,7 @@ class Store:
         self.V = torch.zeros(0, d, device=device)
         self.S = torch.zeros(0, device=device)
         self.W = torch.zeros(0, dtype=torch.long, device=device)
+        self.B = torch.zeros(0, dtype=torch.bool, device=device)   # THE BOUNDARY: this slot's symbol ended the world's utterance
 
     def n(self):
         return int(self.K.shape[0])
@@ -91,13 +92,29 @@ class Store:
         self.K = torch.cat([self.K, k.unsqueeze(0)]); self.V = torch.cat([self.V, v.unsqueeze(0)])
         self.S = torch.cat([self.S, torch.tensor([float(strength)], device=self.dev)])
         self.W = torch.cat([self.W, torch.tensor([int(who)], device=self.dev)])
+        self.B = torch.cat([self.B, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         if self.n() > self.cap:                                         # the weakest gives way
             keep = torch.argsort(self.S, descending=True)[: self.cap]
             self._keep(keep)
         return True
 
+    @torch.no_grad()
+    def mark_boundary(self, k, v, merge_cos=0.97):
+        """THE BOUNDARY: the slot that holds this context -> this symbol (the same match as a merge) ended the
+        world's utterance; a dream that recalls it ends there (the memory's own event boundary)"""
+        if self.n() == 0:
+            return False
+        k = F.normalize(k.to(self.dev).float(), dim=0); v = F.normalize(v.to(self.dev).float(), dim=0)
+        sims = self.K @ k
+        same = (sims > merge_cos) & ((self.V @ v) > merge_cos)
+        if not bool(same.any()):
+            return False
+        j = int(torch.where(same, sims, torch.full_like(sims, -2.0)).argmax())
+        self.B[j] = True
+        return True
+
     def _keep(self, idx):
-        self.K, self.V, self.S, self.W = self.K[idx], self.V[idx], self.S[idx], self.W[idx]
+        self.K, self.V, self.S, self.W, self.B = self.K[idx], self.V[idx], self.S[idx], self.W[idx], self.B[idx]
 
     @torch.no_grad()
     def fade(self, f=0.9, floor_rel=0.1):
@@ -132,11 +149,12 @@ class Store:
         return [int(i) for i in idx]
 
     def state_dict(self):
-        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "temp": self.temp}
+        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "temp": self.temp}
 
     def load_state_dict(self, sd):
         self.K = sd["K"].to(self.dev); self.V = sd["V"].to(self.dev)
         self.S = sd["S"].to(self.dev); self.W = sd["W"].to(self.dev)
+        self.B = sd["B"].to(self.dev) if "B" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.temp = float(sd.get("temp", self.temp))
 
 

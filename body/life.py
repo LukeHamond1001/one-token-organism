@@ -35,7 +35,8 @@ PHYSIOLOGY = dict(
     # THE OFFSET: the world's quiet after its utterance is an event. After offset_ticks of the world's quiet, once per
     # pause, the line's end (the turn-end, <eot_human>, the tokenizer's end of the human's turn) becomes the waking
     # lesson's target for the line's last symbol (the cortex learns "then quiet" instead of the next line's first
-    # letter); a dream ends where the cortex expects it; the mouth may never say it. Nothing enters the stream (as a
+    # letter); the store's slot for that symbol carries a boundary mark, and a dream ends where it recalls a marked slot
+    # or where the cortex expects the quiet; the mouth may never say it. Nothing enters the stream (as a
     # stream symbol it wiped the body's own context mid-answer: runs 43/44, day 1, "go n Z") and the store does not
     # hold it (written there, the quiet after a cue blended with the answer and the mouth read junk: runs 45/46).
     # 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next line's
@@ -65,7 +66,7 @@ class Life:
         self.nl = tok.token_to_id("\n")
         self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
         self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
-        self._last_world = -10 ** 9; self._offset_done = True
+        self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.save_path = save_path
@@ -149,6 +150,7 @@ class Life:
                 learn_store = False                              # an instrument: the cortex alone, no hippocampus
             if learn_store and who == 0 and x != self.sil and self.key.norm() > 1e-6:
                 self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
+                self._last_write = (self.key.clone(), ex.clone())                    # for the boundary mark at the offset
             # the context moves on: both bags fade with time (a pause ends a context, as working memory
             # does), the world's symbols entering the world's bag, its own symbols its own
             # (the bags are content alone: a speaker embedding summed into every key was a constant all
@@ -204,6 +206,8 @@ class Life:
         for w in reversed(self.win):
             if w["x"] != self.sil:
                 w["end"] = True; break
+        if self._last_write is not None and not self.cfg.get("store_off"):
+            self.store.mark_boundary(*self._last_write)                # the memory of the last symbol carries the boundary
 
     @property
     def bag(self):
@@ -531,6 +535,8 @@ class Life:
                     lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
                     nid = int(lg.argmax())
                     ids.append(nid)
+                    if int(self.cfg.get("offset_ticks", 0)) > 0 and win >= 0 and bool(self.store.B[win]):
+                        ids.append(self.eot); break                       # the memory ends where the world went quiet
                     adapt = 1.0 - a_rec * (1.0 - adapt)                   # recovery toward 1
                     # the recalled memory tires fully each time it fires, and every slot tires in
                     # proportion to how much it fired (neural adaptation), so a cycle exhausts itself

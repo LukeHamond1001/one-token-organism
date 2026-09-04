@@ -287,6 +287,9 @@ def test_offset():
     assert [w for w in life.win if w["x"] != life.sil][-1].get("end"), "the line's last position is not marked ended"
     assert sum(1 for w in life.win if w.get("end")) == 1, "more than one position ended"
     assert life.store.n() == n0, "the offset wrote the store"
+    assert int(life.store.B.sum()) == 1 and bool(life.store.B[-1]), "the last symbol's memory does not carry the boundary"
+    d0 = life.dreams(12)
+    assert d0 and any(ids[-1] == life.eot for ids in d0), "no untaught dream ended at the memory's boundary"
     assert all(w["x"] != life.eot and w["xo"] != life.eot for w in life.win), "the turn-end entered the stream"
     assert torch.allclose(life.bag_w, bag0 * (life.cfg["bag_decay"] ** 8)), "the offset moved the world's bag"
     for _ in range(40):
@@ -304,7 +307,7 @@ def test_offset():
     assert dreams and any(ids[-1] == life.eot for ids in dreams), "no dream ended where the cortex expects the quiet"
     for ids in dreams:
         assert life.eot not in ids[:-1], "the offset inside a dream"
-    print("15 the offset: once per pause, the line's end foreseen, a dream's end, nothing in the stream or the store")
+    print("15 the offset: once per pause, the line's end foreseen, the memory marked, a dream's end, nothing in the stream")
 
 
 def test_ventral_critic():
