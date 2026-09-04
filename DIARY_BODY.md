@@ -2042,3 +2042,15 @@ smiles the dopamine error is small, and a bout that has begun a word is held ope
 by a drive. In the basal ganglia that holding is the actor's, a learned Go for a
 sequence under way, not the error's; the term stands in for it, and replacing it with
 the actor is the next honest step for the mouth. Run 24 retired at day 6.
+
+## Run 25 at day 6: the divergence gone, the constants not (2026-09-03, night)
+
+The same instrument on run 25's day-6 body, the gated write and the average-reward TD in
+place. The divergence is gone: the slowest band reads 70 against a return of 89 where it
+read 7072, and every band is bounded. The body is unharmed: 47 of 48 cues started, 45 in
+full, the gate at 0.52. But the states still carry almost nothing that predicts reward,
+the ridge ceiling near zero at every horizon and the correlations 0.08 to 0.16, so the
+critics remain near constants. What remains suspect is the rate at which the bands'
+input maps learn, 1e-5, set when the PFC's objectives still ran through the cortex's
+trunk and moved its forecast targets. They no longer do. Run 26 raises it to 1e-3, the
+one change, and the instrument on its day-6 body decides.
