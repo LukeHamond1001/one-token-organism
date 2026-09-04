@@ -3255,3 +3255,16 @@ parent who wants a reply, the effort in the reward, born 14:52, read against run
 74 at days 6, 16 and 20. Day 24's teacher: 49 utterances, seven cues, seven answered,
 'big dog ' holding two continuations (bigger, will), 82 smiles, the parent's attention
 flat near 0.71 all day.
+
+**The day-25 boundary, 15:15.** After night 24: the fixed cues 42 and 38 of 48; the
+taught-line cues 95 and 55 of 96 (the slide goes on: 80, 67, 77, 77, 67, 59, 55 since day
+19; the corpus branches as the teachers add phrasings, 'dog will go' now heard on to
+'down', 'in' and 'up', and the yardstick counts one next word as right, so part of the
+slide may be the yardstick's, to be checked); the unheard combinations 95 and 79 of 128;
+the cortex alone 61 and 58 of 82. The seam probe: the cortex alone 0.90 after 'dog will
+go down', 1.00 after 'give big ball', 0.00 after the other four; with the store 0.19
+after 'give big ball'. The page's fused share on day 24: 0.07, the lowest of the record
+and half of a week ago: 0.20, 0.18, 0.19, 0.14, 0.10, 0.16, 0.12, 0.07 on days 17 to 24.
+The marked nights have been unteaching the raised body's seam on the page itself, slowly
+and now visibly. Runs 73 to 76 at days 8 and 9: the gates 0.49, 0.21, 0.41, 0.41, one
+seed closing under the parent who wants a reply, 29 smiles on its day 8.
