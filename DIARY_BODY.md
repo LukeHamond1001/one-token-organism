@@ -2918,3 +2918,18 @@ keeps the body as it was; nights 17, 265 slots): the served body now dreams from
 first symbol and half from anywhere, which is the recipe as of cb7591f, and the raised
 body's cortex, down from 70 to 62 on the trace after one onset-only night, is the
 patient. Day 18's teacher started 08:14.
+
+**Day 6 of runs 57 to 60, 08:45: the first symbol is the whole of it.** With the first
+symbol read from the onset's key, onsets alone (runs 59 and 60): the mouth 48 and 45 of 48,
+the cortex alone within lines 54 and 51 on both seeds, the unheard combinations 74 (run 60;
+run 59 pending), dreams 'first milk the', 'big dog bigger', 'why dog up? '. Half the night
+from any memory besides (runs 57 and 58): the mouth 46 and 41, the cortex 61 and 53, 59
+and 48, the unheard 78 and 72. Against the onset dreams without the first symbol (runs 53
+and 54: 40 and 40, 36 and 33) the first symbol recovers the cortex to the recipe's level
+in life (runs 47 and 48 read 51 and 59 there); the mixed draw adds a few hits in the dream
+construction and costs the mouth two to four, inside seed noise. The law chooses the
+simpler form: a dream is an utterance from its first symbol to its end, drawn from the
+onsets the store knows, with replacement when the night has more dreams than the store
+has onsets. The mixed draw is removed (commit below). The served body, restarted at 08:08
+on the mixed form, takes the onset form at the day-18 boundary; runs 59 and 60 carry the
+recipe to day 20 with instruments at 15 and 20, runs 57 and 58 the mixed form beside them.
