@@ -2353,3 +2353,20 @@ little higher; its mouth runs a little less steady; the drive it replaced was a 
 by day 20 in any case. The recipe keeps the value form. The error form stays in the code
 as what it is: the songbird's mathematics, measured, not adopted. Bodies kept as
 data/body2_run34_day6/15/20.pt.
+
+## Run 35 at day 15: the slow critics read something (2026-09-03, midnight)
+
+The parent world's fifteenth day, and the number that has been zero in every world so
+far moved: the critics' values against the realized returns at their own horizons,
+correlation 0.59 at 256 ticks, 0.75 at 1024, 0.78 at 4096, where the flat worlds read
+zero or below at every one of those (run 29 at day 15: −0.11, −0.47, −0.34), and the
+slowest band at −0.13, so this is not the time-of-day artifact that gave the slowest band
+its false 0.99. Under a parent whose attention moves with the body's own behavior, the
+reward rate over minutes is a thing in the world, and the ladder's middle bands have
+learned to carry it. The body is none the worse: 47 of 48 cues started, 46 finished, the
+cortex's trace 60 awake and 66 under the dream construction, on sixty rewards a day
+where the flat world gave a hundred and twenty. The ridge ceilings from a single day's
+states stay negative at 64 and 256, which says the signal is slow, a matter of minutes,
+not of one day's linear fit; the critics that learned it over fifteen days are the
+measurement. One seed; run 36's fifteenth day is the check. If it holds, the second clause
+of the law, reward at long timescales, is met in form and in content for the first time.
