@@ -3162,3 +3162,16 @@ offset began). The page's fused share on day 22: 0.16. Day 22's teacher: 35 utte
 seven cues, seven answered ('why dog ' up, 'give big ' ball, 'first milk then ' ball,
 'big dog ' bigger, 'where ball? ' ball, 'bigger dog ' up, 'you saw ' dog), 98 smiles,
 the parent's attention 0.56 to 1.0, at 0.8 to 1.0 whenever a cue was completed.
+
+**The scale probe, complete, 13:08.** On the Mac's GPU, the machine at a load of twenty to
+thirty with eight fast runs and the probe: 1024 wide and 12 deep, 179M parameters, 251
+ms a tick with its lessons and a night of about 850 s; 1280 and 24, 515M, 720 ms and
+about 5700 s. Against cpu at the same load, 319 and 805 ms, 3900 and 12300 s: the GPU
+halves the large nights and holds the tick near the page's 250 ms for the 179M body,
+and the two small shapes are slower on it than on cpu, the device's overhead outweighing
+their matrices. An idle machine would read all of these at a third to a half. So, live
+and local: the 32M body fits today at four ticks a second on cpu with a night of six to
+ten minutes; the 179M body fits on the GPU with a night of a quarter hour, an infant's
+share of sleep; the half-billion shape fits only at two ticks a second, which is the
+serve's own default period, with a night of an hour and a half. The scale-up's order
+stands: 512 wide first, on its own port, from birth, tonight.
