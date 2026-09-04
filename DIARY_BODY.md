@@ -2651,3 +2651,31 @@ fourth form (commit e875775, 03:10): the offset marks the line's last position, 
 waking lesson's target there is the turn-end, and a dream ends where the cortex alone,
 run over the dream so far, expects the quiet; the stream, the bags and the store are
 untouched. Runs 47 and 48 (seeds 47, 48) measure it.
+
+## The offset holds (2026-09-04, 04:25)
+
+Runs 47 and 48, the fourth form, twenty days in the parent world:
+
+    day   run 47 mouth   run 48 mouth   recipe seeds (35, 36, 39, 40)
+     6      46 of 48       47 of 48      40, 46, 46, 46
+    15      45             45            46, 42, 44, 43
+    20      43             47            43, 41, 40, 46
+
+Unheard combinations at day 20 (the fast world's corpus): 87 and 73 of 128 against the
+recipe's 76 and 80. The cortex alone within typed lines: run 47 at 51, 53, 56 of 82
+(below the recipe's 56 to 64), run 48 at 59, 61, 59 (in range); the trace instrument
+scores inside lines only, so run 47's is a real small cost on one seed, not the seam.
+Dreams shorter (10 to 17 symbols against 15 to 18) and ending where their lines end
+("will go in", "ecause big", "e ball? ba"); the gauge after the night 0.80 to 0.92.
+No first day's junk, no fusion learned from the seam. The offset is the recipe
+(offset_ticks 8; commit below); the served body takes it at the end of day 13 through
+the serve's physiology flag, the boundary armed (scratchpad/offset_boundary.sh 13).
+
+The served body at the day-13 boundary, before the offset: the fixed cues 46 of 48
+started, 43 finished; the taught-line yardstick 92 of 96 started, 57 finished (77 after
+day 8, 60 at day 10: the fusions growing as the seam is learned); the unheard
+combinations 95 of 128 started, 72 finished (99 and 75 at day 10). Day 12's teacher
+(the planner's report): 42 utterances, five clean completions of eight cues reached
+("where ball? " ball, "I had " milk, "dog will " go, "why dog " up, "give big " ball,
+"first up then " in), 113 smiles, the parent never away. Day 13 under way with the
+earlier-word emphasis in its lines ("give little book", "ball will go down").

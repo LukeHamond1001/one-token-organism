@@ -170,7 +170,7 @@ symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fati
 store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps fixed at birth · the reward rate and the differential bands' state means at 1/1024 a tick ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-the level input's weight 0 (off until runs 39/40 measure it; its scale a running root mean square at 1/1024, semi-saturation 1, clip 5), own-reward weight 0.5, innate drive 0.25 (the value form; the error form, measured on two seeds and not adopted, carried 0.70; bodies saved without a form key load as the value form), expectation rate 0.1 per act of the syllable, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
+the offset 8 ticks (the world's turn-end as the lesson's target after 8 ticks of the world's quiet; runs 47/48), the level input's weight 0 (off until runs 39/40 measure it; its scale a running root mean square at 1/1024, semi-saturation 1, clip 5), own-reward weight 0.5, innate drive 0.25 (the value form; the error form, measured on two seeds and not adopted, carried 0.70; bodies saved without a form key load as the value form), expectation rate 0.1 per act of the syllable, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
@@ -284,6 +284,29 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   1024-tick critic read -0.19 and +0.27 at day 20 against the recipe's +0.26
   and +0.14 under the same parent (runs 35, 36; all within one day's spread).
   The slow error routed into the gate buys nothing; the weight stays zero.
+- **The seam, and the offset.** The window holds a position per symbol and
+  a rest per quiet tick, the waking lesson's target is the next world symbol
+  wherever it stands, the store never writes the world's quiet, and a dream
+  may not rest: four organs agreeing that an utterance has no end, and the
+  cortex learned the seam between utterances (the served body at day 10:
+  after "dog will go down" the next line's first letter at probability 1.0,
+  the mouth's "downg", "dogive", "ing"). THE OFFSET: after offset_ticks (8)
+  of the world's quiet, once per pause, the line's last position is marked
+  ended and the waking lesson's target there is the world's turn-end
+  (<eot_human>, the tokenizer's own symbol for it); a dream ends where the
+  cortex alone, over the dream so far, expects the quiet; the mouth may never
+  say it. Nothing enters the stream and the store keeps only what the world
+  said next: three earlier forms failed on their first days (as a stream
+  symbol on both sides' quiet it never fired under babble, run 41; as a stream
+  symbol on the world's quiet it wiped the body's own context mid-answer, a
+  world symbol clearing the own bag, runs 43/44, "go n Z"; written into the
+  store it blended the quiet after a cue with the answer and the mouth read
+  junk, runs 45/46). The fourth form, runs 47 and 48 (the parent world): the
+  mouth 46/45/43 and 47/45/47 of 48 at days 6/15/20 against the recipe's four
+  seeds at 40 to 46, 42 to 46 and 40 to 46; unheard combinations at day 20
+  87 and 73 of 128 against 76 and 80; the cortex alone within lines 51 to 61
+  of 82 against 56 to 64 (run 47 lower, run 48 in range); dreams shorter and
+  ending where their lines end. The recipe (2026-09-04).
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the

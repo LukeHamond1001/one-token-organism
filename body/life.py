@@ -34,8 +34,8 @@ PHYSIOLOGY = dict(
     # hold it (written there, the quiet after a cue blended with the answer and the mouth read junk: runs 45/46).
     # 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next line's
     # first letter at probability 1, the mouth's "downg"; served body, day 10)
-    offset_ticks=0,       # 0 = off until measured; the candidate is 8 (two seconds at four ticks a second: within a line the world
-    # types a symbol a tick; and 8 + the lesson's cadence of 24 keeps the ended position inside the lesson's 32)
+    offset_ticks=8,       # THE RECIPE (runs 47/48): two seconds at four ticks a second; within a line the world types a symbol a
+    # tick, and 8 + the lesson's cadence of 24 keeps the ended position inside the lesson's 32. 0 = off
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
     # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
     # gate_tonic 0.70 (the mean the value form gives a grown body): run 31 matched the value form's seeds at days 6 and 15 and
