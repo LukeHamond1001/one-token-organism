@@ -270,26 +270,30 @@ def test_level_input():
 
 
 def test_offset():
-    """the offset: after a line and twelve ticks of the world's quiet its turn-end enters once as a world event; the store
-    keeps it as the line's end, the lesson's target after the last letter is it, a dream ends on it, the mouth never says it"""
-    life = tiny(offset_ticks=12, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m
+    """the offset: after a line and eight ticks of the world's quiet, once per pause, the line's end is a memory
+    (its context -> the turn-end), the lesson's target after the last letter is the turn-end, a dream ends on it,
+    and nothing enters the stream: no position holds it, the bags stand, the mouth never says it"""
+    life = tiny(offset_ticks=8, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m
     with torch.no_grad():
-        m.mouth_gate.bias.fill_(-30.0)                                 # quiet (no spontaneous floor either), so the pause is the world's alone
+        m.mouth_gate.bias.fill_(-30.0)
     life.type_text("dog will go")
     while life.queue:
         life.tick()
-    for _ in range(11):
+    n0 = life.store.n(); bag0 = life.bag_w.clone()
+    for _ in range(7):
         life.tick()
-    assert life.win[-1]["x"] != life.eot, "the offset came before twelve quiet ticks"
+    assert life.store.n() == n0, "the offset came before eight quiet ticks"
     life.tick()
-    assert life.win[-1]["x"] == life.eot, "the offset did not enter after twelve quiet ticks"
+    assert life.store.n() == n0 + 1 and int(m.readout(life.store.V[-1]).argmax()) == life.eot, "the line's end was not stored at eight quiet ticks"
+    assert all(w["x"] != life.eot and w["xo"] != life.eot for w in life.win), "the turn-end entered the stream"
+    assert [w for w in life.win if w["x"] != life.sil][-1].get("end"), "the line's last position is not marked ended"
+    assert torch.allclose(life.bag_w, bag0 * (life.cfg["bag_decay"] ** 8)), "the offset moved the world's bag"
+    for _ in range(40):
+        life._wake_lesson()                                            # the lesson while the ended line is in its window
     for _ in range(30):
         life.tick()
-    assert sum(1 for w in life.win if w["x"] == life.eot) == 1, "the offset entered more than once in one pause"
-    v = life.store.V[-1]; assert int(m.readout(v).argmax()) == life.eot, "the store did not keep the line's end"
-    for _ in range(40):
-        life._wake_lesson()
-    life2 = tiny(offset_ticks=12, gate_floor=0.0); life2.m.load_state_dict(m.state_dict())
+    assert life.store.n() == n0 + 1, "the offset fired more than once in one pause"
+    life2 = tiny(offset_ticks=8, gate_floor=0.0); life2.m.load_state_dict(m.state_dict())
     with torch.no_grad():
         life2.m.mouth_gate.bias.fill_(-30.0)
     life2.type_text("dog will go")
@@ -302,10 +306,7 @@ def test_offset():
     assert dreams and any(ids[-1] == life.eot for ids in dreams), "no dream ended where the world went quiet"
     for ids in dreams:
         assert life.eot not in ids[:-1], "the offset inside a dream"
-    for _ in range(50):
-        life.tick()
-    assert all(w["xo"] != life.eot for w in life.win), "the mouth said the offset"
-    print("15 the offset: once per pause, kept by the store, foreseen after the line, a dream's end, never spoken")
+    print("15 the offset: once per pause, the line's end stored, foreseen after the line, a dream's end, nothing in the stream")
 
 
 def test_feelings_follow_dopamine():

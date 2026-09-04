@@ -26,11 +26,15 @@ PHYSIOLOGY = dict(
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
     # striatum's vigor). gate_level_w 0 = off until measured (runs 39/40)
     gate_level_band=5, gate_level_w=0.0,
-    # THE OFFSET: the world's quiet after its utterance is an event (the auditory offset response): after offset_ticks of
-    # the world's quiet, the end of the world's turn (<eot_human>) enters once as a world symbol, stored, forecast,
-    # a dream's natural end, never spoken. 0 = off (before it, the cortex learned the seam between utterances: after
-    # "dog will go down" the next line's first letter at probability 1, the mouth's "downg"; served body, day 10)
-    offset_ticks=0,       # 0 = off until measured (runs 41/42); the candidate value is 12 (three seconds at four ticks a second)
+    # THE OFFSET: the world's quiet after its utterance is an event. After offset_ticks of the world's quiet, once per
+    # pause, the line's end becomes a memory (the store: the line's context -> the turn-end, <eot_human>) and the
+    # lesson's target for the line's last symbol (the cortex learns "then quiet" instead of the next line's first
+    # letter); a dream ends where its memory recalls it; the mouth may never say it. Nothing enters the stream: as a
+    # stream symbol it wiped the body's own context mid-answer (a world symbol clears the own bag; runs 43/44, day 1,
+    # "go n Z"). 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next
+    # line's first letter at probability 1, the mouth's "downg"; served body, day 10)
+    offset_ticks=0,       # 0 = off until measured; the candidate is 8 (two seconds at four ticks a second: within a line the world
+    # types a symbol a tick; and 8 + the lesson's cadence of 24 keeps the ended position inside the lesson's 32)
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
     # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
     # gate_tonic 0.70 (the mean the value form gives a grown body): run 31 matched the value form's seeds at days 6 and 15 and
@@ -54,7 +58,7 @@ class Life:
         self.nl = tok.token_to_id("\n")
         self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
         self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
-        self._last_world = -10 ** 9; self._last_own = -10 ** 9; self._offset_done = True
+        self._last_world = -10 ** 9; self._offset_done = True; self._key_end = None
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.save_path = save_path
@@ -151,6 +155,7 @@ class Life:
                     # the last world symbol leaves the query (it is not in any key)
                     self.bag_w = m.shift(self.bag_w) + ex
                     self.bag_o = torch.zeros_like(self.bag_o); self.n_own = 0
+                    self._key_end = self.bag_w.clone()           # the context the world's quiet will come under
                 else:
                     self.bag_o = m.shift(self.bag_o) + ex; self.n_own += 1
             read, conf, _ = (self.store.read(self.bag) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
@@ -183,6 +188,21 @@ class Life:
             pred = m.forecast(C, read)
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
+
+    def _offset(self):
+        """THE OFFSET (§2): the world's quiet after its utterance, once per pause. The line's end becomes a
+        memory, its context -> the turn-end, with the surprise of the quiet as its strength; and the last
+        world position is marked ended, so the waking lesson's target there is the turn-end and not the
+        next line's first letter. Nothing enters the stream; the bags and the mouth's context stand."""
+        m = self.m
+        with torch.no_grad():
+            if self._key_end is not None and float(self._key_end.norm()) > 1e-6 and not self.cfg.get("store_off"):
+                e = m.E.weight[self.eot]
+                surp = float(1.0 - F.cosine_similarity(self.pred_prev, e, dim=0)) if self.pred_prev is not None else 1.0
+                self.store.write(self._key_end, e, surp * (1.0 + abs(float(getattr(self, "_dopa", 0.0)))), 0)
+        for w in reversed(self.win):
+            if w["x"] != self.sil:
+                w["end"] = True; break
 
     @property
     def bag(self):
@@ -223,14 +243,14 @@ class Life:
         m = self.m
         self._decay_feelings()
         u = self.queue.popleft() if self.queue else self.sil
-        # THE OFFSET: the world quiet for offset_ticks after its utterance, once, is the end of its turn (whatever
-        # the body is saying meanwhile: with the body's silence required too, a babbling body never let it fire;
-        # run 41 held two turn-end memories after six days)
+        # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
+        # saying meanwhile (with the body's silence required too, a babbling body never let it fire: run 41 held
+        # two turn-end memories after six days)
         off = int(self.cfg.get("offset_ticks", 0))
         if u == self.sil and off > 0 and not self._offset_done and self.ticks - self._last_world >= off:
-            u = self.eot; self._offset_done = True
+            self._offset(); self._offset_done = True
         if u != self.sil:
-            self._last_world = self.ticks; self._offset_done = (u == self.eot)
+            self._last_world = self.ticks; self._offset_done = False
         # the face: a change is felt; a held face is silence; easing off is not an event
         lvl = max(-6, min(6, int(self.face_now)))
         felt = 0
@@ -338,7 +358,6 @@ class Life:
                         del self.sym_freq[k_]
                 self.sym_freq[nxt] = self.sym_freq.get(nxt, 0.0) + (1.0 - hab)
             self.fatigue += float(self.cfg["symbol_cost"])
-            self._last_own = self.ticks
             self._step(nxt, 1, r=0.0, dopamine=delta)          # its own symbol enters the stream
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
@@ -445,9 +464,12 @@ class Life:
                 last = t
         tgt_pos = [max(0, i) for i in nxt]
         w = torch.tensor([1.0 if i >= 0 else 0.0 for i in nxt], device=self.dev)
+        y = xs[torch.tensor(tgt_pos, device=self.dev)].clone()
+        for t in range(T):
+            if win[t].get("end"):                                  # THE OFFSET: after this symbol the world went quiet
+                y[t] = self.eot; w[t] = 1.0
         if float(w.sum()) < 1:
             return None
-        y = xs[torch.tensor(tgt_pos, device=self.dev)]
         m = self.m; m.train()
         try:
             self.opt_day.zero_grad(set_to_none=True)
