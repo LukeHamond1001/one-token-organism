@@ -438,8 +438,23 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   synaptic tag on the critic's side. Behind vcrit_lambda (0 = TD(0)); the
   discounted head gains a bias for its level, born at zero in older bodies;
   the night clears the trace. Measured on run 67's day-20 body with the
-  critic born at zero, four chained days, TD(0) against the trace, then on
-  fresh seeds; adopted on the same terms.
+  critic born at zero and carried over chained days, judged frozen at each
+  day's start: TD(0) at the shared rate +0.33, +0.26, −0.10 on days 2 to 4
+  as its weights' norm grew 37, 47, 54 (the runaway that brought run 67's
+  head to −0.28); the trace −0.75, +0.20, +0.52; and a control with no
+  ventral credit in the gate earning the same smiles (240 to 253 a day
+  against 216 to 248), so run 67's 91 was the trained head's noise in the
+  gate's credit. Adam at the horizon rate moved a twentieth of the level in
+  a day; the normalized step at a time constant of four horizons
+  (vcrit_tau) moved nothing, the total feature energy (101 a tick, 15 a
+  band, 1 for the slowest) starving the bias and the slow bands, the very
+  directions a 1024-tick value lives in. The ventral credit is withdrawn
+  (vcrit_w 0) until a head at that horizon reads right; the theorem stands
+  and the trace is kept behind its flag. The deeper arithmetic: the run-on's
+  consequence under the parent who wants a reply is a fifth of a smile over
+  the next thousand ticks against a return of six to fifteen with a spread
+  of several, a shift no critic can find in three hundred cues. A real
+  parent's attention is on its face; that is an environment decision.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the

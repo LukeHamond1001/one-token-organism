@@ -26,7 +26,13 @@ PHYSIOLOGY = dict(
     # (average-reward) head over fast features it computed the day-scale relative value, swinging by a hundred within a
     # day (runs 49/50: the integral of reward above its wandering average), and that drift entered the mouth's twelve-tick
     # credit ten times the size of the fast error and shut one seed's gate. 0 = off until measured (runs 51/52; candidate 1.0)
-    vcrit_w=1.0, vcrit_gamma=1.0 - 1.0 / 1024,
+    # Adopted at 1.0 on runs 55/56's forty days (the gate held, the mouth held) and WITHDRAWN 2026-09-04 on the value
+    # instrument: run 67's trained head read the return at its own horizon at -0.28 over four days, its weights running
+    # away under Adam at the shared rate (a fresh head +0.33, +0.26, -0.10 on days 2 to 4 as its norm grew 37, 47, 54),
+    # and the day's smiles under the trained head 91 against 240 with the credit absent. A head over all eight bands at
+    # horizon 1024 is fed by the fast bands' energy and learns recency, wrong-signed in a world that reverts; the trace
+    # (vcrit_lambda) and the normalized step (vcrit_tau) did not cure it in a day. 0 until a right-signed head exists.
+    vcrit_w=0.0, vcrit_gamma=1.0 - 1.0 / 1024,
     # THE CRITIC'S ELIGIBILITY TRACE: TD(0) bootstrapped over a thousand steps sits at a fixed point whose error the
     # horizon amplifies (Tsitsiklis and Van Roy: by (1 - lambda gamma) / (1 - gamma), a thousandfold at lambda 0), and
     # run 67's ventral critic read the return that followed at -0.28 over four days while the pinned 4096-tick band

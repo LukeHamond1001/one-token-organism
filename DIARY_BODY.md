@@ -3373,3 +3373,24 @@ fraction of the error along its input, the input's energy tracked over a horizon
 feature energy measured at 101 a tick, 15 a band, 1 for the slowest), the fraction set
 by a time constant in horizons, (1 − γ)/τ: behind vcrit_tau, 16 of 16 tests; TD(0) and
 the trace at τ = 4 born 15:42 on the same chained days.
+
+**The ventral credit withdrawn, 16:05.** The time-constant pair at four horizons learned
+nothing in a day (the weights' norm 0.01 and 0.00): the normalized step divides by the
+total feature energy, 101 a tick of which the fast bands hold 15 each and the slowest 1,
+so the bias and the slow bands, the directions a 1024-tick value lives in, get a
+hundredth of the correction and the fast features the rest, the recency failure by
+another road. The shared-rate TD(0) head reached −0.10 on its fourth day with its norm
+at 54; the trace read −0.75, +0.20, +0.52; the control with no ventral credit earned
+240, 253, 235, 214 rewards a day against 245, 216, 248, 215 with it. So the ventral
+critic's error at weight 1 in the gate's credit, adopted on runs 55 and 56's forty days,
+is withdrawn (vcrit_w 0; the served body's process has held 0 since its 09:01 restart,
+so nothing served changes); the trace and the time constant stay behind their flags,
+the theorem stands. The arithmetic that closes the question for now: under the parent
+who wants a reply a five-symbol run-on lowers the next known word's smile chance from
+0.6 to 0.4, a fifth of a smile over the next thousand ticks, against a return of six to
+fifteen with a spread of several; a critic cannot find that shift in three hundred
+cues, and the gate cannot learn what no critic can find. A real parent does not leave it
+to arithmetic: the attention is on the face, at once. That is the environment decision
+already put to the user. Recipe as it stands: the tonic form, the marks and the onset
+dreams, the offset, the ventral credit 0, the parent who wants a reply measured and
+harmless (runs 63, 64, 67, 68) and ready for the served body at a boundary.
