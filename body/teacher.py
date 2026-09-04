@@ -83,8 +83,8 @@ class Corpus:
 
 
 class Teacher(Caregiver):
-    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0, answer_levels=1, parent=0):
-        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels, parent=parent)
+    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0, answer_levels=1, parent=0, reply=0):
+        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels, parent=parent, reply=reply)
         self.corpus, self.planner = corpus, planner
         self.said_today = []                                  # (text, kind, its_after)
 
@@ -93,6 +93,9 @@ class Teacher(Caregiver):
         import body.caregiver as C
         C.KNOWN2 = self.corpus.known()                        # the scripted rule, over the grown vocabulary
         return super().on_token(tok, a, b)
+
+    def lines(self):
+        return self.corpus.heard_lines()                      # what continues a cue: the lines it has heard
 
     def event(self, text, kind):
         if kind == "cue":
@@ -104,6 +107,8 @@ class Teacher(Caregiver):
             return False
         if kind == "cue":
             self.cue = {"text": text, "until": time.time() + 90, "full": ans, "done": False}
+        self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
+        self.typing_span = (self.maxtick + 1, 10 ** 9)         # the parent's turn: from its first symbol to its last
         self.req("/type", {"text": text}); t_start = time.time()
         self.corpus.typed(text if kind == "line" else text.strip())
         while True:
@@ -112,6 +117,7 @@ class Teacher(Caregiver):
                 break
             time.sleep(0.4)
         tick_end = self.maxtick
+        self.typing_span = (self.typing_span[0], tick_end)
         self.watch(12.4)
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
@@ -315,6 +321,7 @@ def main():
     ap.add_argument("--period", type=float, default=60.0); ap.add_argument("--quiet", type=float, default=3.0)
     ap.add_argument("--cap", type=float, default=45.0); ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--answer-levels", type=int, default=1); ap.add_argument("--parent", type=int, default=0)
+    ap.add_argument("--reply", type=int, default=0)           # the parent wants a reply (the user's word of 2026-09-04)
     a = ap.parse_args()
     for k in range(a.days):
         day = a.day + k
@@ -322,7 +329,7 @@ def main():
         planner = {"claude": lambda: ClaudePlanner(a.model, a.budget, rng), "queue": lambda: QueuePlanner(a.queue, rng),
                    "fixed": lambda: FixedPlanner(rng)}[a.planner]()
         corpus = Corpus(a.corpus)
-        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent)
+        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply)
         t.run_day()
 
 

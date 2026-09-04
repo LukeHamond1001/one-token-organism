@@ -3000,3 +3000,19 @@ the forecast 0.00 to 0.04 everywhere: the store's next symbol from the lines tha
 continue ('dog will go down' is 'dog will go' and 'down' both) holds its confidence, as
 the corpus makes it right to. The page's fused share on day 18: 0.18 (0.20, 0.14, 0.21
 before). Day 19's teacher is feeding on the onset form; days 20 and 21 are armed.
+
+**The parent wants a reply, 09:45.** The user's word, "permission granted", on the
+environment decision. The rule, in both caregivers (fastlife.py's FastCaregiver and
+caregiver.py's, which the served typist subclasses), decided from the page alone: once
+the parent's cue is answered, each further word the child adds before the parent's next
+turn wears the parent's attention by the babble cost, 0.04, and gets no smile, unless
+the words go on completing the cued line ('where ball? ' 'ball under' is a reply, 'ball
+dog' is not; the parent knows its own lines, the typist the corpus's heard lines); and a
+word said over the parent's own typing does the same, logged 'talked over'. The answer
+smile stands. On a fake body: 'dog will ' answered 'go' smiled, 'down' and 'in' past it
+cost, 'ball' over the typing cost; 'where ball? ' 'ball' smiled, 'under' passed. Runs 63
+and 64, the recipe body (onset dreams with the first symbol, the ventral credit at 0),
+born under this parent at 09:43, twenty days, instruments and the run-on at days 6, 15
+and 20; runs 59 and 60 are the same body under the earlier parent. The served typist
+keeps the earlier parent (the switch off) until the fresh seeds read: the question is
+whether the run-on shrinks while the mouth and the unheard combinations hold.

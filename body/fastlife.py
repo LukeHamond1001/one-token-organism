@@ -42,6 +42,11 @@ ANSWER_LEVELS = int(os.environ.get("ANSWER_LEVELS", "1"))
 # A minute's smiles then depend on the body's own last minutes, which is what a critic at long horizons needs.
 # 0 = the flat rules. Nothing reads the body's insides; the answer smile is always given.
 PARENT = int(os.environ.get("PARENT", "0"))
+# THE PARENT WANTS A REPLY (on the user's word of 2026-09-04): once its cue is answered, each further word the child
+# adds before the parent's next turn wears its attention and gets no smile, unless the words go on completing the
+# cued line ('where ball? ' 'ball under'); and a word said over the parent's own typing does the same. Decided from
+# the page alone; the answer smile is always given. Measured first on fresh seeds (runs 63/64) before the served body.
+REPLY = int(os.environ.get("REPLY", "0"))
 E0, E_FLOOR, E_TAU, E_AWAY, AWAY_TICKS = 0.6, 0.3, 600.0, 0.15, 200   # start, resting level, decay ticks, still-face
 
 
@@ -57,6 +62,8 @@ class FastCaregiver:
         self.last_write_tick = -1
         self.face_plan = []                                   # (tick, level): the growing smile's next rise
         self.e = E0; self.said_today = {}; self.away_until = -1; self.aways = 0; self.expand_next = None
+        self.reply_cue = None; self.reply_tokens = []; self.answered = False; self.past = False   # the reply to a cue
+        self.typing_span = (-1, -1)                                                            # the parent's own turn, in ticks
 
     def row(self, obj):
         obj = dict(obj); obj.setdefault("day", self.day); obj.setdefault("tick", self.L.ticks)
@@ -116,12 +123,25 @@ class FastCaregiver:
         low = tok if (tok == "I" or tok.islower()) else ""
         if PARENT and t < self.away_until:
             return                                                # the parent is turned away
+        if PARENT and REPLY:
+            ts, te = self.typing_span
+            if a < te and b >= ts:                                # said over the parent's own turn
+                self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3)}); return
         c = self.cue
         if c and t <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
-                c["done"] = True; self.e = min(1.0, self.e + 0.25); self.smile(tok, "cue completion: " + c["text"]); return
+                c["done"] = True; self.answered = True; self.reply_tokens.append(low)
+                self.e = min(1.0, self.e + 0.25); self.smile(tok, "cue completion: " + c["text"]); return
             if low[:2] in [x[:2] for x in c["full"]]:
-                c["done"] = True; self.e = min(1.0, self.e + 0.15); self.smile(tok, "cue prefix: " + c["text"]); return
+                c["done"] = True; self.answered = True; self.reply_tokens.append(low)
+                self.e = min(1.0, self.e + 0.15); self.smile(tok, "cue prefix: " + c["text"]); return
+        if PARENT and REPLY and self.answered:
+            # past its answer: the parent asked and got a speech (the words may go on completing the cued line)
+            said = (self.reply_cue + " ".join(self.reply_tokens + [tok])).strip()
+            if self.past or not any(l.startswith(said) for l in LINES):
+                self.past = True; self.e = max(0.0, self.e - 0.04)
+                self.row({"action": "missed", "on": tok, "why": "past its answer", "e": round(self.e, 3)}); return
+            self.reply_tokens.append(tok)
         if low in KNOWN2 and t - b <= self.react:
             if self.last_word == low and t - self.last_smile_tick < 48:
                 return
@@ -151,13 +171,16 @@ class FastCaregiver:
             return False
         if kind == "cue":
             self.cue = {"text": text, "until": self.L.ticks + 96, "full": ANSWERS.get(text, []), "done": False}
+        self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.L.type_text(text)
         t_start = self.L.ticks; its = []
+        self.typing_span = (t_start + 1, 10 ** 9)                  # the parent's turn: from its first symbol to its last
         while self.L.queue:
             self.step()
             if not self.L.queue:                                # the tick the last symbol entered: its answer may begin here
                 its.append(self.L.last.get("said", "") or "_")
         t_end = self.L.ticks
+        self.typing_span = (t_start + 1, t_end)
         for _ in range(24):
             self.step(); its.append(self.L.last.get("said", "") or "_")
         self.row({"action": kind, "text": text, "its_after": "".join(its), "own": self.L.last.get("own"), "gate": self.L.last.get("gate"),

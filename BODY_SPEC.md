@@ -506,6 +506,18 @@ never at quiet, never at babble; a run of one letter expanded once at its
 third return; no newline; it sleeps on its own. Proposed, awaiting the word:
 answer a smiled word by repeating it and expanding it into a frame.
 
+THE PARENT WANTS A REPLY (the user's word of 2026-09-04, "permission
+granted"): once its cue is answered, each further word the child adds before
+the parent's next turn wears the parent's attention (the babble cost, 0.04)
+and gets no smile, unless the words go on completing the cued line ('where
+ball? ' 'ball under'); a word said over the parent's own typing does the
+same. The answer smile is always given; nothing reads the body's insides.
+Under the earlier parent a run-on of known words was rewarded at both
+timescales (the run-on bullet in §5b); this is the environment's long
+contingency for turn-taking, the ventral critic's to read. Measured first on
+fresh seeds (runs 63/64, REPLY=1 in fastlife; --reply 1 in the served
+typist) before the served body takes it at a day boundary.
+
 ## 7. Instruments (the supervisor's, never the caregiver's)
 
 - The gauge: the cortex alone (store off), teacher-forced on the night's

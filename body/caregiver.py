@@ -30,7 +30,7 @@ def iso(t=None):
 
 
 class Caregiver:
-    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1, parent=0):
+    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1, parent=0, reply=0):
         self.base, self.day, self.log = base, day, log
         self.answer_levels = int(answer_levels)          # 2: the smile at a cue's completion grows, 2 then 4 (CURRICULUM.md)
         # THE PARENT (the user's word of 2026-09-03): attention that moves, decided from the page alone. e rises at an
@@ -38,6 +38,11 @@ class Caregiver:
         # word is smiled at with probability e, less for the fiftieth "dog"; the parent talks faster when engaged,
         # answers a smiled word with a line that holds it, and below a floor turns away for 50 s (the still face).
         self.parent = int(parent); self.e = 0.6; self.word_count = {}; self.away_until = 0.0; self.aways = 0
+        # THE PARENT WANTS A REPLY (the user's word of 2026-09-04): once its cue is answered, each further word the
+        # child adds before the parent's next turn wears its attention and gets no smile, unless the words go on
+        # completing the cued line; a word said over the parent's own typing does the same. The answer smile stands.
+        self.reply = int(reply); self.reply_cue = None; self.reply_tokens = []; self.answered = False; self.past = False
+        self.typing_span = (-1, -1)                       # the parent's own turn, in ticks
         self.expand_next = None; self._e_t = time.time()
         self.period, self.quiet_needed, self.cap = period, quiet, cap
         self.rng = random.Random(seed)
@@ -144,6 +149,9 @@ class Caregiver:
             self.on_token("".join(self.its.get(k, "") for k in range(a, b + 1)), a, b)
         self.finalized = max(self.finalized, end - 1)
 
+    def lines(self):
+        return [c + a for c, ans in ANSWERS.items() for a in ans]   # the lines this parent knows (the teacher reads the corpus)
+
     def on_token(self, tok, a, b):
         wall = self.tobs.get(b, time.time()); ctx = self.ctx(a, b)
         low = tok if tok == "I" else (tok if tok.islower() else "")   # a word is the word as written: "oN" is not "on"
@@ -157,12 +165,25 @@ class Caregiver:
                 self.frown(tok, ctx); return
         if self.parent and time.time() < self.away_until:
             return                                                # the parent is turned away
+        if self.parent and self.reply:
+            ts, te = self.typing_span
+            if a < te and b >= ts:                                # said over the parent's own turn
+                self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx}); return
         c = self.cue
         if c and wall <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
-                c["done"] = True; self.e = min(1.0, self.e + 0.25); self.smile(tok, ctx, "cue completion: " + c["text"]); return
+                c["done"] = True; self.answered = True; self.reply_tokens.append(low)
+                self.e = min(1.0, self.e + 0.25); self.smile(tok, ctx, "cue completion: " + c["text"]); return
             if low[:2] in [x[:2] for x in c["full"]] and time.time() - wall < 3.5:
-                c["done"] = True; self.e = min(1.0, self.e + 0.15); self.smile(tok, ctx, "cue prefix: " + c["text"]); return
+                c["done"] = True; self.answered = True; self.reply_tokens.append(low)
+                self.e = min(1.0, self.e + 0.15); self.smile(tok, ctx, "cue prefix: " + c["text"]); return
+        if self.parent and self.reply and self.answered:
+            # past its answer: the parent asked and got a speech (the words may go on completing the cued line)
+            said = ((self.reply_cue or "") + " ".join(self.reply_tokens + [tok])).strip()
+            if self.past or not any(l.startswith(said) for l in self.lines()):
+                self.past = True; self.e = max(0.0, self.e - 0.04)
+                self.row({"action": "missed", "on": tok, "why": "past its answer", "e": round(self.e, 3), "context": ctx}); return
+            self.reply_tokens.append(tok)
         if low in KNOWN2:
             age = time.time() - wall
             if self.last_word == low and time.time() - self.last_smile < 12:
@@ -210,6 +231,8 @@ class Caregiver:
         last_before = self.state.get("last") or {}
         if kind == "cue":
             self.cue = {"text": text, "until": time.time() + 90, "full": ANSWERS.get(text, []), "done": False}
+        self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
+        self.typing_span = (self.maxtick + 1, 10 ** 9)     # the parent's turn: from its first symbol to its last
         self.req("/type", {"text": text}); t_start = time.time()
         while True:
             d = self.poll(); self.scan()
@@ -217,6 +240,7 @@ class Caregiver:
                 break
             time.sleep(0.4)
         tick_end = self.maxtick                            # the page's own tick count (survives a serve restart)
+        self.typing_span = (self.typing_span[0], tick_end)
         self.watch(12.4)
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
@@ -302,11 +326,11 @@ def main():
     ap.add_argument("--cap", type=float, default=90.0)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--answer-levels", type=int, default=1)
-    ap.add_argument("--parent", type=int, default=0)
+    ap.add_argument("--parent", type=int, default=0); ap.add_argument("--reply", type=int, default=0)
     ap.add_argument("--lines", default="dog will go|I will go up|you will go in|scared dog|scared ball|what? scared dog|give milk|give ball|give book|ball under|ball on|where ball? ball under|I had milk|you had ball|dog had ball|first milk then ball|first up then in|big dog bigger dog|bigger dog up|I saw dog|you saw dog|why dog up? because big dog")
     ap.add_argument("--cues", default="dog will |scared |give |where ball? |I had |first milk then |big dog bigger |why dog up? ")
     a = ap.parse_args()
-    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels, parent=a.parent)
+    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply)
     cg.run_day([x for x in a.lines.split("|") if x], [x for x in a.cues.split("|") if x])
 
 
