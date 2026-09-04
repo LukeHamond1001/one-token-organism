@@ -2092,3 +2092,15 @@ the honest statement. What it asks for is a world whose reward depends on longer
 history than a word, which is the environment's design and yours to give: a caregiver
 who smiles for an answer more than for a word is the nearest such world, and it is the
 proposal already written in CURRICULUM.md, not in force.
+
+## The gated write reverted (2026-09-03, night)
+
+Run 25 at day 15: with the store, 44 of 48 cues in full, unharmed; but three mid bands'
+values had blown up, means in the hundreds with standard deviations near 2000 and TD
+errors in the thousands. Gates that learn to open fully make the states jump, and
+bootstrapped values on jumping features diverge: the deadly triad again, features
+non-stationary this time. The gated write goes back to the leaky average at the clock,
+on measurement; the average-reward TD stays, having removed the first divergence, and
+the slow bands' slow filling is harmless once their values are bounded. Commit 4730e38;
+run 27 carries the settled ladder, with the instrument at days 6, 15 and 20 for
+stability. Ten checks pass.
