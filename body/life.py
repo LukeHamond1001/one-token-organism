@@ -18,6 +18,9 @@ PHYSIOLOGY = dict(
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
+    # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
+    # horizons of the discount gradient, driving vigor; the fast band's error selects the act). gate_slow_w 0 = off (runs 37/38)
+    gate_slow_band=5, gate_slow_w=0.0,
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
     # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
     # gate_tonic 0.70 (the mean the value form gives a grown body): run 31 matched the value form's seeds at days 6 and 15 and
@@ -257,10 +260,11 @@ class Life:
                 # DOPAMINE: the TD error of the band whose discount matches dopamine's (clock 16,
                 # gamma 0.9375): an expected reward fires before it lands, a missed one dips
                 delta = float(td[int(self.cfg["dopamine_band"])].detach())
+                delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
                 for b in range(len(gam)):
                     self.v_buf[b].append((self._bands_prev[b].detach().cpu(), r, self.bands[b].detach().cpu()))
             else:
-                delta = r
+                delta = r; delta_slow = r
             m.eval()
         self._dopa = delta
         # --- its face learns from yours (a readout) ---
@@ -319,7 +323,7 @@ class Life:
         if abs(delta) >= float(self.cfg["burst"]):
             self.n_bursts += 1
         # --- the gate's buffer and lesson ---
-        self.gate_buf.append([feat.cpu(), acted, delta, int_t, self.fatigue])
+        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow, int_t, self.fatigue])
         if self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0 and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:
                 self._gate_lesson()
