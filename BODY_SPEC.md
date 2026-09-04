@@ -105,10 +105,13 @@ to the bundle received (stop-grad), SIGReg on the stream as the collapse guard. 
 (every K ticks on the last window, the target at every position being the
 next symbol the world will say; its own symbols and rests are inputs only,
 never targets, and never shift the target: one predicts the environment, and
-one's own actions are not the environment) and asleep (below). It never learns from reward.
+one's own actions are not the environment; and where the world fell quiet for
+offset_ticks after a symbol, the target at that symbol is the world's turn-end,
+<eot_human>, the offset, so a line has an end and the next line's first letter
+is not learned as its continuation) and asleep (below). It never learns from reward.
 
 **Mouth.** Whether to act is the basal ganglia's: a gate on [C, fatigue,
-mood, stress] giving p(act); zero weights and a birth bias at birth. What to
+mood, stress, salience, the level] (the last two present at zero) giving p(act); zero weights and a birth bias at birth. What to
 say is the lexicon read by cosine from the forecast, logits = s × cosine +
 log prior, the prior being a slow tally of the symbols the world has said
 (perceptual narrowing; Bayes), sampled. s is decisiveness driven by tonic dopamine: s = 5 + 5 × mood/6
