@@ -3320,7 +3320,7 @@ trace); 16 of 16 tests. Measured first the cheap way: four chained instrument da
 67's day-20 body with the ventral critic born at zero and carried from day to day, TD(0)
 against the trace (scratchpad/vtrace_probe.py), then on fresh seeds if it reads right.
 
-**The critic's rate, 15:25.** The chained instrument on run 67's day-20 body, the ventral
+**The critic's rate, 15:18.** The chained instrument on run 67's day-20 body, the ventral
 critic born at zero, the other organs fresh each day, the critic carried, judged frozen at
 each day's start against the return that followed at its own horizon: TD(0) after one day
 +0.33 (learning through its first day +0.65), the trace after one day −0.75 (learning
@@ -3333,7 +3333,7 @@ so it reads worse, and twenty days of TD(0) at that rate came to −0.28 the sam
 the theorem was not the whole story: a head at horizon 1024 needs its own clock, the
 learning rate scaled by the horizon as each band's is by its own (the ladder's principle),
 value_lr × 16/1024. Behind vcrit_lr (0 = the shared rate); 16 of 16 tests. Two more
-instruments at that rate, TD(0) and the trace, born 15:20, read at days 2 to 5; and the
+instruments at that rate, TD(0) and the trace, born 15:15, read at days 2 to 5; and the
 control with no ventral credit in the gate at all, whose first day earned 240 rewards
 against 245 with the credit and a fresh critic, so the 91 of run 67's trained critic is
 the trained critic's own doing, to be confirmed on its later days. Runs 77 to 80 at day
@@ -3345,7 +3345,7 @@ almost all 'distracted', the attention from 0.65 to 1.0 by mid-day, a dip to 0.3
 before the night, 0.74 at the end; no new word; the planner disclosed checking each
 appended line's JSON by reading back that one line, which decided nothing.
 
-**The tag at day 6, 15:50.** Runs 77 to 80, the synaptic tag on the gate at one and four
+**The tag at day 6, 15:25.** Runs 77 to 80, the synaptic tag on the gate at one and four
 millionths, the parent who wants a reply, the effort in the reward at 0.12: the mouths 48
 and 48, 48 and 48, 47 and 43, 42 and 42 of 48; the run-on on days 4 to 6: 9.5, 10.7, 8.3
 and 8.3 symbols per cue, against 8.1 to 9.2 on runs 73 and 74 without the tag. The tag
@@ -3354,14 +3354,14 @@ could not help and did not; the four stopped at day 6, to be repeated once the c
 reads right. Two of them (78 and 79) had begun the slide of the effort form at 0.12 by
 day 6 (smiles 85 and 38, gates 0.59 and 0.49), consistent with runs 73 to 76.
 
-**The day-26 boundary, 15:45.** After night 25: the fixed cues 42 and 38 of 48 (day 25:
+**The day-26 boundary, 15:29.** After night 25: the fixed cues 42 and 38 of 48 (day 25:
 42 and 38); the taught-line cues 94 and 56 of 96, the slide stopped where it was (55, 56);
 the unheard combinations 91 and 74 of 128 (95 and 79); the cortex alone 58 and 59 of 82.
 The seam probe: the cortex alone 0.47 after 'dog will go down' (0.90 a day before), 1.00
 after 'give big ball', 0.02 and 0.00 after the rest; with the store 0.17 after 'give big
 ball'. The page's fused share on day 25: 0.15, up from 0.07; the record since day 17:
 0.20, 0.18, 0.19, 0.14, 0.10, 0.16, 0.12, 0.07, 0.15, a noisy fall. Day 26 began at
-15:38. The chained critic instrument, the shared rate: TD(0) frozen at the day's start
+15:25. The chained critic instrument, the shared rate: TD(0) frozen at the day's start
 +0.33, +0.26, −0.10 on days 2 to 4 with the weights' norm 37, 47, 54; the trace −0.75,
 +0.20 on days 2 and 3 with 30, 38; the control with no ventral credit in the gate 240,
 253, 235 rewards a day against 245, 216, 248 with it, so the credit with a fresh critic
@@ -3372,9 +3372,9 @@ of the error corrected. The normalized rule instead (each step corrects a fixed
 fraction of the error along its input, the input's energy tracked over a horizon; the
 feature energy measured at 101 a tick, 15 a band, 1 for the slowest), the fraction set
 by a time constant in horizons, (1 − γ)/τ: behind vcrit_tau, 16 of 16 tests; TD(0) and
-the trace at τ = 4 born 15:42 on the same chained days.
+the trace at τ = 4 born 15:28 on the same chained days.
 
-**The ventral credit withdrawn, 16:05.** The time-constant pair at four horizons learned
+**The ventral credit withdrawn, 15:33.** The time-constant pair at four horizons learned
 nothing in a day (the weights' norm 0.01 and 0.00): the normalized step divides by the
 total feature energy, 101 a tick of which the fast bands hold 15 each and the slowest 1,
 so the bias and the slow bands, the directions a 1024-tick value lives in, get a
