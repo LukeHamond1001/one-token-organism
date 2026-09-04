@@ -2244,3 +2244,18 @@ with spreads of 14, 9 and 4, the TD error 0.26 at every band, no state near the
 ceiling; the mouth started 48 of 48 cues and finished 47; the cortex's trace 57 of 82
 awake and 65 under the dream construction. Twenty days without a runaway anywhere in the
 ladder, for the first time. Body kept as data/body2_run29_day20.pt.
+
+## Run 31 at day 6: the credit as an error (2026-09-03, late night)
+
+Two runs born together at 21:50: run 32, the settled recipe under a second seed, to know
+how far two bodies of one recipe fall apart before any change is judged; and run 31, the
+intrinsic credit as the songbird's performance error, the forecast's belief in what it
+said against that syllable's usual belief, habituating as the expectation catches up,
+with the innate drive at 0.70 so the mean credit is what the value form gave a grown body
+(0.25 and half of 0.90, measured on run 29's twentieth day). At day 6, every band bounded
+in both. Run 32: 48 of 48 started, 44 finished, the cortex's trace 59 of 82 awake and 65
+under the dream construction; against run 29's 46 finished and 56 and 60, that is the
+seed spread. Run 31: 47 started, 46 finished, the trace 63 awake and 69 under the dream
+construction, the best sixth day of any run on the cortex's own measure, and the relative
+values the tightest yet (spreads of 1, 2 and 1). Day 15 decides whether the error form
+becomes the recipe.
