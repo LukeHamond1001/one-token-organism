@@ -3175,3 +3175,26 @@ ten minutes; the 179M body fits on the GPU with a night of a quarter hour, an in
 share of sleep; the half-billion shape fits only at two ticks a second, which is the
 serve's own default period, with a night of an hour and a half. The scale-up's order
 stands: 512 wide first, on its own port, from birth, tonight.
+
+**The gate without the intrinsic credit saturates; the effort into the reward, 13:25.**
+Runs 69 to 72, the tonic drive and the effort cost at zero: the gate 0.87 to 0.96 on day
+1 and 0.94 to 0.98 by day 4, in both worlds; run 72 under the earlier parent 291 smiles
+on day 1. The arithmetic, once more. The gate's credit is the critics' error. When a
+smile is predicted, the error at the smile is nothing, so the act that earned it is not
+credited again; the actor is held where it is by whatever the critics do not predict.
+The tonic drive and the effort cost were both outside the prediction, added to the act's
+own sum, and they cancelled to +0.13. With both gone what remains outside the prediction
+is the surprise of smiles, positive on average early in a day, and the vigor term, which
+moves the rate of acting by that average: the gate rises until it acts every tick. And
+the earlier form had its own flaw: an effort cost outside the critics is never predicted
+away, so with the drive gone every act, the answer's letters included, stood at a loss.
+The clean form is a single reward stream: the felt face less the effort of the last
+act, convex in fatigue, entering the ear's half of the next tick so that both critics
+predict it and the gate reads their error alone. No tonic drive. That is actor-critic
+as written, the effort a homeostatic cost the body feels, and it is behind a flag
+(cost_in_reward) until measured: runs 73 and 74 (the new parent) and 75 and 76 (the
+earlier), born 13:24. Run 64 at day 20 under the new parent with the recipe's gate: the
+mouth 47 and 45 of 48, the cortex alone 59 and 59, the unheard combinations 80, the
+run-on 9.8 symbols per cue over days 18 to 20, twenty days without a change. The fast
+runs print a day line on even days only, so every instrument waiter set on day 15 had
+stalled; they read day 16 now, and runs 63 and 64 stop after their day-20 reading.

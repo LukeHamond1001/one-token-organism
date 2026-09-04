@@ -399,8 +399,16 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   symbols per cue on every recipe and every parent. Under the law the
   intrinsic act credit goes: runs 69/70 (the new parent) and 71/72 (the
   earlier parent) carry the gate on the grounded credit, the spontaneous floor
-  and the body's own performance error alone. Adopted only if the mouth
-  survives in both worlds and the run-on shrinks in the new one.
+  and the body's own performance error alone. They read: the gate saturated,
+  0.87 to 0.98 by day 4 in both worlds. The arithmetic: once a critic predicts
+  a smile, the act that earned it gets no more error, so the gate's level is
+  held by whatever sits outside the prediction; the drive and the cost both
+  did, cancelling; with both gone only the smiles' surprises and the vigor
+  remained, which push up. The clean form, THE EFFORT IN THE REWARD
+  (cost_in_reward): the cost of the last act, convex in fatigue, is part of
+  the next tick's felt reward, both critics predict it, and the gate reads
+  their error alone, with no tonic drive. Runs 73/74 (the new parent) and
+  75/76 (the earlier) measure it; adopted on the same terms.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the

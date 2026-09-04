@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.0,
-    dream_max=24, dream_floor_rel=0.5, end_rest=0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
@@ -268,6 +268,12 @@ class Life:
                 felt = lvl
             self.level = lvl
         r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
+        if self.cfg.get("cost_in_reward") and getattr(self, "_acted_last", False):
+            # THE EFFORT IN THE REWARD: the cost of the last act is felt as the next tick's reward, so both critics
+            # predict it and the gate reads their error alone. Added to the act's credit outside the critics (the
+            # earlier form, with a tonic drive of 0.25 cancelling it) it was never predicted away and, with the drive
+            # gone, held every act at a loss; with both gone the gate saturated at 0.98 (runs 69-72).
+            r -= float(self.cfg["symbol_cost"]) * (1.0 + (self.fatigue / float(self.cfg["gate_fatigue"])) ** 2)
         # --- the ear's half: the world's symbol (or its quiet) enters ---
         v_before = m.values(self.bands.detach()) if self.v_prev is None else self.v_prev
         if off > 0 and u != self.sil:
@@ -394,6 +400,7 @@ class Life:
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
         self._bands_prev = self.bands.clone()
+        self._acted_last = bool(acted)
         # --- feelings from dopamine ---
         self.mood = max(-6.0, min(6.0, self.mood + float(self.cfg["mood_gain"]) * delta))
         self.stress = min(30.0, self.stress + float(self.cfg["stress_gain"]) * max(0.0, -delta))
@@ -450,8 +457,9 @@ class Life:
                 # acting pays a tonic drive (babble is its own reward, not contingent on confidence) plus
                 # the belief it had in its choice (habituating), minus an effort cost convex in fatigue
                 # (linear, 0.59 at fatigue's ceiling never beat a confident recitation's drive of 0.7:
-                # run 19, gate 0.97 all day, fatigue pinned at 40; convex, the mouth speaks in bouts)
-                g += tonic + w_int * float(buf[t][3]) - cost * (1.0 + (float(buf[t][4]) / f0) ** 2)
+                # run 19, gate 0.97 all day, fatigue pinned at 40; convex, the mouth speaks in bouts).
+                # With the effort in the reward (cost_in_reward) the cost is the critics' to predict, not the act's
+                g += tonic + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else cost * (1.0 + (float(buf[t][4]) / f0) ** 2))
             G[t] = g
         # the credit is taken against a running baseline (dopamine is an error, not a value)
         base = getattr(self, "_g_base", None)
