@@ -2054,3 +2054,14 @@ critics remain near constants. What remains suspect is the rate at which the ban
 input maps learn, 1e-5, set when the PFC's objectives still ran through the cortex's
 trunk and moved its forecast targets. They no longer do. Run 26 raises it to 1e-3, the
 one change, and the instrument on its day-6 body decides.
+
+## Run 26: rate is not the lever (2026-09-03, night)
+
+The bands' input maps at 1e-3, the one change. At day 6 the states sit at the tanh
+ceiling, norm 16 on six of eight bands: the maps saturated under the TD gradient and
+the states became sign patterns, the critics constants again. And the saturated bundles
+are the cortex's input too: its next-symbol trace fell to 33 of 82 from about 52, and
+alone it says "bbiiiiiii". Run 26 retired at day 6; the rate stays at 1e-5. The question
+underneath is whether the stream carries reward-predictive information at all, and the
+instrument for that reads the return from the stream itself integrated at each clock,
+with no learned projection in the way.
