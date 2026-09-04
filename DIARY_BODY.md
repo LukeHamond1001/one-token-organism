@@ -3268,3 +3268,28 @@ and half of a week ago: 0.20, 0.18, 0.19, 0.14, 0.10, 0.16, 0.12, 0.07 on days 1
 The marked nights have been unteaching the raised body's seam on the page itself, slowly
 and now visibly. Runs 73 to 76 at days 8 and 9: the gates 0.49, 0.21, 0.41, 0.41, one
 seed closing under the parent who wants a reply, 29 smiles on its day 8.
+
+**The effort's scale, 15:00.** Runs 73 to 76, the effort in the reward at the old cost
+of 0.12 a symbol convex in fatigue and no tonic drive, read at days 10 and 11: the gates
+0.36, 0.18, 0.30 and 0.41, three of four sliding, run 74 mute with six smiles on its day
+10 and its cues fusing ('bookwh', 'dogiv', 'byere'), against 0.35 to 0.54 over forty
+days on the tonic form. The arithmetic says why: at the rate the old form set, fatigue
+rests near 21, where the convex cost makes a symbol 0.64 and a word more than its smile;
+the tonic drive of 0.25 was paying for that, and with it gone every act is a loss the
+critics learn to predict and the gate learns to avoid, a body that saves its breath. Not
+a flaw of the form but of its scale, the one free number: how tiring a syllable is
+against a smile. Biology's answer is very little, an infant babbles for hours; at 0.03 a
+symbol a word costs a tenth of a smile and fatigue rests near 5, where the convexity is
+mild. Runs 73 to 76 stopped (their run-on on days 8 to 11 recorded above the gate's
+slide); runs 81 to 84 born 14:50 at 0.03 under the parent who wants a reply, 81 and 82
+with the synaptic tag at four millionths, 83 and 84 without, read at days 6, 16 and 20
+against runs 77 to 80 (the tag at the old cost, whose gates will slide the same way by
+day 8, so their day-6 reading is the one that counts). Run 67's value instrument under
+the new parent at day 20: the 4096-tick band's correlation with what followed 0.86, the
+1024-tick band 0.31, the 256-tick 0.32; the parent's contingency is foreseen at the
+long horizons, and it is the gate that has not been reading it. The parent's attention
+reaches the body only as the chance of its next smile, a weak and delayed consequence
+(a five-symbol run-on lowers the next known word's smile chance from 0.6 to 0.4); a real
+parent's attention is on its face, and the still-face experiments say the infant feels
+its withdrawal at once. That would be an environment change (the attention visible on
+the face row), and it waits for the user's word.

@@ -408,7 +408,18 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   (cost_in_reward): the cost of the last act, convex in fatigue, is part of
   the next tick's felt reward, both critics predict it, and the gate reads
   their error alone, with no tonic drive. Runs 73/74 (the new parent) and
-  75/76 (the earlier) measure it; adopted on the same terms.
+  75/76 (the earlier) measured it at the cost the old form used, 0.12 a
+  symbol convex in fatigue: the run-on fell to eight or nine in both worlds
+  (the effort's doing, not the parent's), and the gates slid, 0.36, 0.18, 0.30
+  and 0.41 by day 11, one seed mute with six smiles on its day 10. The
+  arithmetic: at the rate the old form set, fatigue rests near 21, where a
+  symbol costs 0.64 and a word more than its smile; the tonic drive had paid
+  that, and with it gone every act is a loss the critics learn to predict
+  and the gate learns to avoid. The scale is the one free number, how
+  tiring a syllable is against a smile, and biology's answer is very: an
+  infant babbles for hours. Runs 81 to 84 (the new parent) carry the effort
+  at 0.03 a symbol, a word a tenth of a smile, 81/82 with the synaptic tag
+  at four millionths and 83/84 without; adopted on the same terms.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the
