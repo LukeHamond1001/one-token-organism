@@ -2419,3 +2419,15 @@ the parent's attention between 0.42 and 1.0 across the day. The night after it: 
 0.78 to 0.90, 269 slots kept, dreams of "because big dog" and "go up then". The body is
 raised now in the world that has a slow structure; the instrument on it after day 12 will
 say whether its own slow critics come to read the parent, as the fast bodies' did.
+
+## The slow error in the gate: not the form (2026-09-04, 01:00)
+
+Runs 37 and 38, the parent world with the 1024-tick band's error added to the gate's
+credit, at day 15: mouths 42 and 42 of 48 against 46 and 42 without; the cortex's trace
+64 and 63 awake, a little above; smiles a day about the same; and the slow critics'
+correlations with their returns weaker, 0.48, 0.51 and −0.50 and −0.05, 0.41 and −0.16
+against 0.59, 0.75, 0.78 and 0.23, 0.72, 0.54 at the same day. A slow band's error is a
+slow band's error; as a per-act credit it is noise, and it muddies the very critics that
+carry the parent. Biology's vigor is not an error but a level, tonic dopamine as the
+reward rate (Niv 2007); that is the form still standing, unbuilt. The switch stays off.
+Runs 37 and 38 go to twenty for the record.
