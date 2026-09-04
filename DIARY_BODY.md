@@ -2283,3 +2283,15 @@ page only, nothing writes the body's words, the body still has to say the answer
 is, is a curriculum decision, a world shaped so that reward depends on history, and it is
 written here as that. And the teachers are Sonnet, not Opus, one small decision every
 seven minutes; Opus on the word.
+
+## Run 31 at day 20: not yet (2026-09-03, late night)
+
+The error form to twenty days: the ladder bounded, the cortex's trace 65 of 82 awake, the
+best of any run, and the mouth 47 of 48 started but 39 finished, where the value form's
+three seeds finished 46 to 47. The loss is one cue: "dog will " answers "gog will gog" in
+every sample, a stutter the recall fell into between day 15 ("go in") and day 20, the
+other seven cues at 5 or 6 of 6. The credit decides whether the mouth speaks and never
+which symbol, so this reads as one seed's memory, not the form; but one seed is one
+seed, and a recipe is not changed on a hope. The value form stays the recipe, the error
+form stays in the code, and run 34, its second seed, decides at day 20. The raised body
+keeps its own form; a saved body without a form key now loads as what it was.
