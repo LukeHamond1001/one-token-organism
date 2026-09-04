@@ -2146,3 +2146,29 @@ correlation is the time-of-day artifact again, not a reading of reward. Body kep
 data/body2_run27_day20.pt. Run 28 carries the one shared rate and is at day 14 with the
 gauge 0.90 and the gate 0.53; its day-15 instrument decides whether that ladder stays
 bounded.
+
+## Run 28 at day 15: the ladder pinned (2026-09-03, late night)
+
+The one shared reward rate did what its mathematics said: the slowest band, which ran to
+643 and −1036 under its own rate, sits at −8 with a spread of 4 at day 15. And two bands
+above it, bounded at day 6, ran away instead: −1294 and −2147, their states at the tanh
+ceiling (norms 14.6 and 11.5 where a bounded band's is 3 to 5), the cortex's trace down
+to 55 of 82 from run 27's 61, since the bundles feed the cortex. Each fix had moved the
+runaway to another band. The diagnosis, at last, is not a rate. Two things. The bands'
+input maps learned from the critic's own bootstrapped error, which is the deadly triad,
+semi-gradient TD through nonlinear features with no guarantee, and at every rate they
+ran until the tanh saturated (1e-3 by day 6, 1e-5 by day 15); and they had nothing to
+learn, since the stream read at every clock carries no reward in this world. And a
+differential value is relative, defined up to a constant, and a linear head over raw
+states has two directions that constant can walk in under the optimizer, its bias and
+the states' mean; walk they did. So the maps are born and kept, like the lexicon, and a
+differential head has no bias and reads its state centered on a running mean of the
+states at the reward rate's horizon (adaptation, the oldest trick of a neuron). Linear
+heads on fixed features under on-policy TD converge; that is the theorem the ladder now
+stands on. Eleven checks pass (the eleventh: maps fixed, relative values centered and
+bias-free); an old body loads with its mask and its means born fresh. Run 29 is born on
+it, twenty days, instruments at days 6, 15 and 20. Run 28 goes to twenty for the record
+of the runaway's end. The mouth, meanwhile: run 28 at day 15 completed 44 of 48.
+
+The reborn body's day 5 at human pace on the shared rate; its bands will be read before
+the fix is applied at a boundary, once run 29 has measured it.

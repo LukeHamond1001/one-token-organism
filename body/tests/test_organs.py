@@ -167,6 +167,36 @@ def test_gate():
     print("6 the gate: quiet", round(p_quiet, 3), "after reward", round(p_reward, 3), "tired", round(p_tired, 3))
 
 
+def test_ladder_pinned():
+    """the critic's features are fixed, and a differential head has no constant to walk in"""
+    life = tiny()
+    m = life.m
+    w0 = [p.detach().clone() for p in m.band_in.parameters()]
+    assert bool(m.diff[-1]) and not bool(m.diff[0]), "the differential mask is not set from the horizon"
+    for i in range(200):
+        if i % 20 == 0:
+            life.set_face(2.0)
+        if i % 20 == 3:
+            life.set_face(0.0)
+        life.tick()
+    for a, b in zip(w0, m.band_in.parameters()):
+        assert torch.equal(a, b.detach()), "the bands' input maps moved: the critic trained its own features"
+    b = int(torch.nonzero(m.diff)[0])
+    assert float(m.band_mu[b].norm()) > 0, "the running mean of a differential band's states did not move"
+    states = torch.randn(50, m.d)
+    with torch.no_grad():
+        m.band_mu[b] = states.mean(0); m.value[b].weight.normal_()
+    v = torch.stack([m.value_of(b, s_) for s_ in states])
+    with torch.no_grad():
+        m.value[b].bias.fill_(100.0)
+    v2 = torch.stack([m.value_of(b, s_) for s_ in states])
+    assert torch.allclose(v, v2), "a differential head has a bias"
+    assert abs(float(v.mean())) < 1e-4 * (1.0 + float(v.abs().max())), "the relative value is not centered"
+    v_disc = float(m.value_of(0, states[0])); m.value[0].bias.data += 1.0
+    assert abs(float(m.value_of(0, states[0])) - v_disc - 1.0) < 1e-4, "a discounted head lost its bias"
+    print("11 the ladder: input maps fixed, differential values centered and bias-free")
+
+
 def test_feelings_follow_dopamine():
     life = tiny()
     for _ in range(60):
@@ -209,7 +239,7 @@ def test_guards():
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
-             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards]
+             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned]
     failed = 0
     for t in tests:
         try:

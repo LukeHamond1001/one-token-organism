@@ -55,6 +55,8 @@ class Life:
         # its undiscounted value integrated raw reward (run 27, day 6: 643 against a return of 131).
         self.rbar = 0.0
         self._differential = [int(c) >= int(self.cfg["diff_horizon"]) for c in self.m.clocks]
+        with torch.no_grad():
+            self.m.diff[:] = torch.tensor(self._differential, dtype=torch.bool, device=self.m.diff.device)
         # feelings and clocks
         self.fatigue = 0.0; self.stress = 0.0; self.mood = 0.0
         self._t_feel = time.time()
@@ -77,13 +79,15 @@ class Life:
         # optimizers: the day's (the cortex and its forecasts), the striatum's (the gate), the critic's
         self.opt_day = torch.optim.Adam(self.m.parameters(), lr=float(self.cfg["live_lr"]))
         self.opt_gate = torch.optim.SGD(self.m.mouth_gate.parameters(), lr=float(self.cfg["gate_lr"]))
-        # the critic's optimizer: the value heads, the Go/NoGo gates, and the bands' own input maps (the
-        # PFC learns to hold what predicts reward at its timescale; the stream stays detached)
-        # the heads and gates learn at the critic's rate; the bands' input maps at the cortex's slow rate,
-        # so the states the cortex must forecast do not run away from it (a fast PFC undid REM: day 3, run 5)
-        self.opt_value = torch.optim.Adam([
-            {"params": list(self.m.value.parameters()) + list(self.m.band_gate.parameters()), "lr": float(self.cfg["value_lr"])},
-            {"params": list(self.m.band_in.parameters()), "lr": float(self.cfg["band_lr"])}])
+        # the critic's optimizer: the value heads and the Go/NoGo gates. The bands' input maps are fixed
+        # (born): trained by the critic's own bootstrapped error they are the deadly triad, and at any
+        # rate they ran away (1e-3: saturated by day 6, run 26; 1e-5: saturated by day 15, run 28) while
+        # learning nothing this world offers to learn (the stream carries no reward at their horizons).
+        # Linear heads on fixed features under on-policy TD converge (Tsitsiklis and Van Roy).
+        self.opt_value = torch.optim.Adam(list(self.m.value.parameters()) + list(self.m.band_gate.parameters()),
+                                          lr=float(self.cfg["value_lr"]))
+        for p_ in self.m.band_in.parameters():
+            p_.requires_grad_(False)
         self.opt_face = torch.optim.Adam(self.m.face_head.parameters(), lr=float(self.cfg["face_lr"]))
 
     # ---------------- feelings ----------------
@@ -218,13 +222,16 @@ class Life:
             m.train()
             v_prev_live = m.values(self._bands_prev.detach()) if getattr(self, "_bands_prev", None) is not None else None
             if v_prev_live is not None:
-                # SEMI-GRADIENT TD, the convergent form: the target r + gamma V(s_now) is detached; the
-                # value of the previous state is recomputed live through one band update from the state
-                # before it (the stream detached), so the heads AND the bands' input maps learn what the
-                # previous state should have carried (dopamine shaping prefrontal working memory)
-                if getattr(self, "_bands_pp", None) is not None and getattr(self, "_C_prev", None) is not None:
-                    bands_prev_live = m.band_update(self._bands_pp.detach(), self._C_prev.detach())
-                    v_prev_live = m.values(bands_prev_live)
+                # SEMI-GRADIENT TD, the convergent form: the target r + gamma V(s_now) is detached and
+                # only the heads learn; the bands' states are fixed features of the stream (their input
+                # maps are born, not trained by this error). The differential heads read their states
+                # centered on a running mean at the reward rate's horizon (adaptation), so the relative
+                # value's free constant has no direction to walk in.
+                with torch.no_grad():
+                    eta = 1.0 / float(self.cfg["diff_horizon"])
+                    for b in range(len(gam)):
+                        if self._differential[b]:
+                            m.band_mu[b] += eta * (self._bands_prev[b].detach() - m.band_mu[b])
                 # DISCOUNTED TD below the differential horizon, AVERAGE-REWARD (differential) TD at and
                 # above it: with the discount near 1 the bootstrapped value ran away (the slowest band
                 # read 7000 against a true return near 85, correlation -0.995: run 21, day 20). The
@@ -289,8 +296,6 @@ class Life:
             self._step(nxt, 1, r=0.0, dopamine=delta)          # its own symbol enters the stream
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
-        self._bands_pp = getattr(self, "_bands_prev", None)
-        self._C_prev = getattr(self, "_C_last", None)
         self._bands_prev = self.bands.clone()
         # --- feelings from dopamine ---
         self.mood = max(-6.0, min(6.0, self.mood + float(self.cfg["mood_gain"]) * delta))
@@ -562,7 +567,7 @@ class Life:
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n()
             self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
-            self._bands_prev = None; self._bands_pp = None; self._C_prev = None; self._C_last = None; self.v_prev = None
+            self._bands_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None
             self.fatigue = 0.0
             self.sleep_pressure = 0
@@ -624,8 +629,8 @@ class Life:
             hp = torch.stack([p[0] for p in pairs]).to(self.dev); R = torch.tensor([p[1] for p in pairs], device=self.dev)
             hn = torch.stack([p[2] for p in pairs]).to(self.dev)
             with torch.no_grad():
-                vn = m.value[b](hn).squeeze(-1)
-            vp = m.value[b](hp).squeeze(-1)
+                vn = m.value_of(b, hn)
+            vp = m.value_of(b, hp)
             terms.append((((R - float(self.rbar) + vn - vp) if self._differential[b] else (R + gam[b] * vn - vp)) ** 2).mean())
         if terms:
             self.opt_value.zero_grad(set_to_none=True)

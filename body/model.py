@@ -197,8 +197,10 @@ class Organs(nn.Module):
         # a deterministic junk symbol at the mouth until the first lessons shrank it)
         nn.init.normal_(self.latent_pred.weight, std=4e-4); nn.init.zeros_(self.latent_pred.bias)
         self.pfc_pred = nn.ModuleList([nn.Linear(d, d) for _ in range(nb)])
-        # THE PFC LADDER: leaky integrators of the stream at each clock, each with a learned input
-        # map, a Go/NoGo gate on its own update, and a value head (the critic at that timescale)
+        # THE PFC LADDER: leaky integrators of the stream at each clock, each with a fixed input map
+        # (born, like the lexicon, and never trained by the critic's error: features that learn from a
+        # bootstrapped error are the deadly triad, and they saturated by day 15 in run 28), a Go/NoGo
+        # gate on its own update, and a value head (the critic at that timescale)
         self.band_in = nn.ModuleList([nn.Linear(d, d) for _ in range(nb)])
         self.band_gate = nn.ModuleList([nn.Linear(d, 1) for _ in range(nb)])
         for g in self.band_gate:
@@ -206,6 +208,14 @@ class Organs(nn.Module):
         self.value = nn.ModuleList([nn.Linear(d, 1) for _ in range(nb)])
         for v in self.value:
             nn.init.zeros_(v.weight); nn.init.zeros_(v.bias)            # V = 0 at birth: the error IS the reward
+        # THE RELATIVE VALUE PINNED: a differential band (its clock at or beyond the differential
+        # horizon; the mask is set by the life) is a relative value, defined up to a constant, and a
+        # linear head over raw states has two directions that constant can walk in: its bias, and the
+        # states' mean. Both walked (run 28, day 15: two bands past a thousand with their states at the
+        # tanh ceiling). So a differential head has no bias and reads its state centered on a running
+        # mean of the states (adaptation): the gradient's persistent direction is gone.
+        self.register_buffer("diff", torch.zeros(nb, dtype=torch.bool))
+        self.register_buffer("band_mu", torch.zeros(nb, d))
         # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream and the feelings
         self.mouth_gate = nn.Linear(d + 3, 1)
         nn.init.zeros_(self.mouth_gate.weight)
@@ -285,9 +295,16 @@ class Organs(nn.Module):
             out.append(s + (g / float(tau)) * (target - s))
         return torch.stack(out)
 
+    def value_of(self, b, s):
+        """V_b(s): a linear head; a differential band's head has no bias and reads the state centered
+        on the running mean (band_mu), so the relative value has no constant to learn"""
+        if bool(self.diff[b]):
+            return (s - self.band_mu[b]) @ self.value[b].weight[0]
+        return self.value[b](s).squeeze(-1)
+
     def values(self, states):
         """V_b(s_b) for every band: [nb]"""
-        return torch.stack([self.value[b](states[b]).squeeze(-1) for b in range(len(self.clocks))])
+        return torch.stack([self.value_of(b, states[b]) for b in range(len(self.clocks))])
 
     def gammas(self):
         return [1.0 - 1.0 / float(t) if t > 1 else 0.0 for t in self.clocks]

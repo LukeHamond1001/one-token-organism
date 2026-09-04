@@ -73,14 +73,15 @@ second letter of every answer). No direct vote on the mouth. Fade: strengths × 
 strength × 0.1 are forgotten (relative, not a constant).
 
 **PFC (the band ladder).** Bands with clocks 1, 4, 16, 64, 256, 1024, 4096,
-16384 ticks: leaky integrators of the stream, each with a learned input map,
-updated at its clock. Each band has a value head (the critic at that
-timescale) and a Go/NoGo gate learned from the value's error. The bands'
-states form the bundle the cortex reads and the PFC's forecast heads must
-foresee. Each area learns from its own error: the cortex's trunk from the
-next embedding it receives, the PFC's input maps from the temporal-difference
-error taken with both ends live (so each band learns to hold what predicts
-reward at its own horizon: dopamine shaping working memory), the PFC's
+16384 ticks: leaky integrators of the stream, each through an input map
+fixed at birth (like the lexicon), updated at its clock. Each band has a value
+head (the critic at that timescale) and a Go/NoGo gate learned from the
+value's error; the critic's error trains no features (features trained by a
+bootstrapped error are the deadly triad, and they saturated: run 28, day 15).
+The bands' states form the bundle the cortex reads and the PFC's forecast
+heads must foresee. Each area learns from its own error: the cortex's trunk
+from the next embedding it receives, the PFC's heads and gates from the
+temporal-difference error on the bands' states, the PFC's
 forecast heads from the bundle that follows the stream, by day and in REM,
 with the stream detached: the heads learn from the cortex, they do not
 rewrite it (through the trunk, six REM rounds undid a third of NREM's gain on
@@ -164,7 +165,7 @@ choice, habituating per symbol) minus a cost that grows with fatigue.
 symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fatigue and stress half-life 240 ticks · mood half-life 1200 ticks
 · wake switch 12,000 ticks · eligibility 12 × 0.8 · store fade 0.9/night ·
 store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
-steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps at 1e-5 (a slow PFC, so its states stay forecastable) ·
+steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps fixed at birth · the reward rate and the differential bands' state means at 1/1024 a tick ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
 own-reward weight 0.5, tonic drive 0.25, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
@@ -272,23 +273,29 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   read 7072 against a true return near 85, correlation −0.995: semi-gradient TD
   with bootstrapping as the discount nears 1); a ridge fit from each band's
   state to its return, held out, reads nothing (R² at or below zero) up to 1024
-  ticks. Two corrections. The band update was s += (g/clock)(target − s), a
-  write rate capped at one over the clock, so the slow bands filled over hours
-  from the night's fresh state; it is now the gated working memory of the
-  basal-ganglia model: s += g (target − s), then s *= 1 − 1/clock, the gate
-  loading and the clock forgetting, the gate's rest at a write rate of one over
-  the clock so an untrained band is the leaky average it was. And bands with
-  clocks at or above 1024 ticks learn average-reward (differential) TD,
-  δ = r − r̄_b + V(s') − V(s), r̄_b the reward rate estimated at the band's own
-  clock (tonic dopamine), in the tick's lesson and the night's replay; the
-  discounted bands keep discounted TD. Open after this: whether the bands'
-  states come to carry reward-predictive features at all (the input maps learn
-  at 1e-5), measured by the same instrument on run 25. Measured: run 25's day-6
-  body shows no divergence and no harm, but the states still read nothing; run
-  26 (input maps at 1e-3) saturated the tanh and hurt the cortex, and is
-  reverted; and the stream itself, read linearly at each clock with no
-  projection, carries the return at no horizon from 1 to 256 ticks (R² ≈ 0 held
-  out). In this world the reward is about three hundred smiles a day at
+  ticks. The corrections, each measured. Bands with clocks at or above 1024
+  ticks learn average-reward (differential) TD, δ = r − r̄ + V(s') − V(s), in
+  the tick's lesson and the night's replay; the discounted bands keep
+  discounted TD. The reward rate r̄ is one running mean of the reward at the
+  differential horizon (tonic dopamine), shared: estimated per band at the
+  band's own clock, the slowest could not track the rate within a day and its
+  value integrated raw reward (run 27). A gated write of the bands
+  (s += g (target − s), the clock forgetting) let the states jump as the gates
+  learned and the values on them diverged by day 15 (run 25); the update is
+  the leaky average s += (g/clock)(target − s). The bands' input maps are fixed
+  at birth: trained by the critic's bootstrapped error they are the deadly
+  triad, and they ran away at every rate (1e-3: saturated by day 6 and hurt
+  the cortex, run 26; 1e-5: two bands' states at the tanh ceiling by day 15
+  with values past a thousand, run 28) while learning nothing this world
+  offers, since the stream itself, read linearly at each clock with no
+  projection, carries the return at no horizon from 1 to 256 ticks (R² ≈ 0
+  held out). And a differential value is relative, defined up to a constant,
+  and a linear head over raw states has two directions for that constant to
+  walk in under the optimizer, its bias and the states' mean; so a differential
+  head has no bias and reads its state centered on a running mean of the
+  states at the reward rate's horizon (adaptation), and the gradient's
+  persistent direction is gone. Linear heads on fixed features under
+  on-policy TD converge (Tsitsiklis and Van Roy). In this world the reward is about three hundred smiles a day at
   isolated known words, jittered within twelve ticks, against eight cue
   completions: no state predicts the next smile better than its rate. Reward at
   long timescales is a form the architecture has and a measurement the
@@ -297,9 +304,10 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   force).
 - **The PFC's lesson.** TD with both ends live is residual-gradient TD,
   which converges to a biased fixed point (the Bellman residual); TD with a
-  detached target and the previous state recomputed live one tick later is
-  semi-gradient TD(0) with a learned state map, the standard convergent
-  form. The bands' input maps learn from it; the stream stays detached.
+  detached target is semi-gradient TD(0), convergent with linear heads on
+  fixed features. With the state map learned through the same error it was
+  semi-gradient TD with nonlinear function approximation, no guarantee, and
+  it diverged (runs 21, 25, 27, 28); the map is now born and kept.
 - **Dopamine's horizon.** The error of the clock-1 band (γ = 0) is "reward
   now minus what was predicted for now": a smile foreseen three ticks ahead
   never fires before it lands, so no reward is ever created inside. Dopamine
