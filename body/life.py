@@ -18,6 +18,8 @@ PHYSIOLOGY = dict(
     dream_max=24, dream_floor_rel=0.5, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
+    gate_int_form="value",  # the intrinsic credit: "value" = belief x novelty (habituating by repetition); "error" = belief minus
+                            # the syllable's usual belief (the songbird's performance error, Gadagkar 2016), run 31
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
@@ -67,7 +69,7 @@ class Life:
         self.face_now = 0.0; self.level = 0; self.face_prev = 0.0
         # the mouth's gate
         self.gate_buf = collections.deque(maxlen=96)
-        self.sym_freq = {}
+        self.sym_freq = {}; self.perf = {}                      # habituation tables of the intrinsic credit (per symbol)
         self.heard = torch.zeros(self.m.vocab, device=device)   # the symbols the world has said (a slow tally)
         self._gate_last = None; self._wake_last = None
         self.n_bursts = 0
@@ -287,13 +289,22 @@ class Life:
         int_t = 0.0
         if acted:
             hab = float(self.cfg["gate_habit"])
-            novelty = 1.0 - self.sym_freq.get(nxt, 0.0)
-            int_t = p_choice * max(0.0, novelty)
-            for k_ in list(self.sym_freq):
-                self.sym_freq[k_] *= hab
-                if self.sym_freq[k_] < 1e-3:
-                    del self.sym_freq[k_]
-            self.sym_freq[nxt] = self.sym_freq.get(nxt, 0.0) + (1.0 - hab)
+            if str(self.cfg.get("gate_int_form", "value")) == "error":
+                # THE PERFORMANCE ERROR: the forecast's belief in what it said against that syllable's usual
+                # belief (a running mean per symbol), positive when it did better than usual, negative when
+                # worse, habituating as the expectation catches up (Gadagkar 2016: dopamine neurons encode
+                # the singing bird's performance error, and deafened birds do not learn)
+                pbar = self.perf.get(nxt, 0.0)
+                int_t = p_choice - pbar
+                self.perf[nxt] = pbar + (1.0 - hab) * (p_choice - pbar)
+            else:
+                novelty = 1.0 - self.sym_freq.get(nxt, 0.0)
+                int_t = p_choice * max(0.0, novelty)
+                for k_ in list(self.sym_freq):
+                    self.sym_freq[k_] *= hab
+                    if self.sym_freq[k_] < 1e-3:
+                        del self.sym_freq[k_]
+                self.sym_freq[nxt] = self.sym_freq.get(nxt, 0.0) + (1.0 - hab)
             self.fatigue += float(self.cfg["symbol_cost"])
             self._step(nxt, 1, r=0.0, dopamine=delta)          # its own symbol enters the stream
         else:
@@ -670,7 +681,7 @@ class Life:
                          "window": self.m.window, "clocks": list(self.m.clocks)},
                 "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure, "heard": self.heard.cpu(),
                          "fatigue": self.fatigue, "stress": self.stress, "mood": self.mood, "n_bursts": self.n_bursts,
-                         "sym_freq": self.sym_freq, "last_night": self.last_night, "rbar": float(self.rbar)}}
+                         "sym_freq": self.sym_freq, "perf": {int(k): float(v) for k, v in self.perf.items()}, "last_night": self.last_night, "rbar": float(self.rbar)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -694,6 +705,7 @@ class Life:
             if k in L:
                 setattr(life, k, L[k])
         life.sym_freq = dict(L.get("sym_freq") or {})
+        life.perf = {int(k): float(v) for k, v in (L.get("perf") or {}).items()}
         if L.get("rbar") is not None:
             rb = L["rbar"]; life.rbar = float(rb.mean()) if torch.is_tensor(rb) else float(rb)
         if L.get("heard") is not None:
