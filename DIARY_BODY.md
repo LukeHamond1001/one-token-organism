@@ -2483,7 +2483,7 @@ and 36 at days 6, 15 and 20: the mouth's yardstick, the smiles and the parent's
 attention per day, the slow critics' correlation, and the gate's learned weight on the
 level. Tests 14 of 14. Commit 237cc49.
 
-## The instrument, corrected (2026-09-04, 02:50)
+## The instrument, corrected (2026-09-04, 02:05)
 
 Runs 39 and 40 ran to twenty days with the level in the gate. The mouth: 46 and 46
 of 48 at day 6, 44 and 43 at day 15, 40 and 46 at day 20 (the recipe's two seeds: 43
@@ -2552,7 +2552,7 @@ planners feeding for a while (the first day-11 subagent, which I had taken for d
 when it ended its turn to wait on a monitor, woke when the day began and queued two
 rows before I stopped it); one planner since, with the foreground-wait rule.
 
-## The unheard combination (2026-09-04, 03:15)
+## The unheard combination (2026-09-04, 02:25)
 
 The capability the record kept calling open, measured with an instrument that hand-lists
 nothing (scratchpad/unheard_probe.py): from the corpus the teacher's typing built, lines
