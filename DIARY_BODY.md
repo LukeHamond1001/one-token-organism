@@ -2482,3 +2482,72 @@ runs 39 and 40 (seeds 39, 40, the parent world, weight 1) measure it against run
 and 36 at days 6, 15 and 20: the mouth's yardstick, the smiles and the parent's
 attention per day, the slow critics' correlation, and the gate's learned weight on the
 level. Tests 14 of 14. Commit 237cc49.
+
+## The instrument, corrected (2026-09-04, 02:50)
+
+Runs 39 and 40 ran to twenty days with the level in the gate. The mouth: 46 and 46
+of 48 at day 6, 44 and 43 at day 15, 40 and 46 at day 20 (the recipe's two seeds: 43
+and 41). Smiles a day over days 11 to 20: 109 and 114 against 103 and 83; the parent
+away 1.5 and 0.9 times a day against 1.5 and 3.5; its hit rate 0.44 and 0.43 against
+0.42 and 0.39. Seed noise, no gain. The gate's own lesson on the level: -0.72 and
+-0.27 at day 6, -0.62 and +0.12 at day 15, -0.03 and -0.07 at day 20. The striatum
+read the slow critic and found nothing in it to act on; the weight went to zero by
+itself. Not adopted; the input stays in the code at zero, like the salience.
+
+Then the yardstick itself. Runs 39 and 40's day-15 critics read nothing (-0.19 and
+-0.33 at 1024 ticks against the recipe's 0.75 and 0.72), and before calling that the
+level's doing I asked how sure a single instrument day is. A day of 7200 ticks holds
+seven independent windows of the 1024-tick return, its last 2000 ticks carry returns
+truncated at the day's end, and the "ridge ceiling" (a held-out linear read of the
+band's state) came out negative on the very bodies whose heads read 0.75: not a
+ceiling, an overfit of 256 collinear dimensions on a handful of effective samples.
+So the instrument was rebuilt (value_probe2.py): four days on fresh copies of the same
+body, each day twice the plan (44 lines, 16 cues, 14376 ticks), a different caregiver
+seed and order per day, the return's truncated tail cut off (only ticks with at least
+86% of their horizon ahead count), and the spread across days reported. The old
+estimator on the same days agrees with the new one within 0.1: the old readings were
+not the truncation, they were one short day's luck. Under it, the day-20 bodies:
+
+    run  variant                    256 ticks     1024 ticks    4096 ticks
+    35   recipe                    +0.29 (0.12)  +0.26 (0.24)  +0.52 (0.29)
+    36   recipe                    +0.38 (0.11)  +0.14 (0.14)  -0.00 (0.28)
+    37   slow error in the gate    +0.08 (0.29)  -0.19 (0.21)  +0.04 (0.12)
+    38   slow error in the gate    +0.43 (0.13)  +0.27 (0.30)  -0.55 (0.15)
+    39   the level                 +0.30 (0.17)  -0.15 (0.13)  -0.57 (0.03)
+    40   the level                 +0.36 (0.10)  -0.04 (0.23)  -0.22 (0.20)
+
+What stands: the 256-tick critic reads its return on every body, about 0.3 to 0.4.
+The 1024-tick critic reads a little on the recipe, 0.26 and 0.14, and about nothing
+on the four variants; the difference is inside one day's spread and is not a verdict
+on the variants, only no help from them. The 4096-tick horizon cannot be judged by a
+day of any length we can run: its return falls through the day as the parent
+habituates while the band's state climbs as it integrates the day, and the two trend
+against each other whatever the body knows (run 39: four days at -0.57 with a spread
+of 0.03, the trend, not the critic). "The second yardstick" and "The first parent
+day" above quoted 0.84 and 0.91 at 1024 and 4096 for run 35: those were one short
+day's readings and are withdrawn; the content the parent gives the slow critics is
+real and small, 0.2 or so at 1024, and the claim that clause 2 was met on two seeds
+rests on that, not on 0.9.
+
+Where the long timescale stands, then, in words: the reward exists at every horizon,
+the critics are bounded everywhere, the fast ones are right, the 1024-tick one is a
+little right where the world has slow structure, and nothing the body does depends on
+the slow ones, because two routes into the mouth (the slow error as credit, runs 37
+and 38; the slow value as an input, runs 39 and 40) neither helped the mouth nor
+sharpened the critics. In this world the long horizon has nothing to teach that the
+short one does not: a smile follows a word within ticks, the parent's turning away
+follows babble within a minute, and the slow value is a smoothed copy of the fast.
+For a long timescale to matter, the world must hold a consequence that arrives only
+later; that is the environment's side, and the environment is not changed without
+the user's word.
+
+The served body, meanwhile: day 10 under the parent (the day-10 planner's report):
+seven batches, the new word "going" in seven lines (dog going up, ball going down,
+big dog going down...), every cue it reached answered: "dog will " with go, "where
+ball? " with ball, "bigger dog " with up, "first up then " with in, "why dog " with
+"up? because"; 109 smiles, no frowns, the parent never away, its attention 0.7 to 1.0
+falling to 0.4 by the night. Night 10: loss 0.30 to 0.12, gauge 0.73 to 0.87, dreams
+"dog will go downg", "dog up? because big dog". Day 11 began at 01:55 with two
+planners feeding for a while (the first day-11 subagent, which I had taken for dead
+when it ended its turn to wait on a monitor, woke when the day began and queued two
+rows before I stopped it); one planner since, with the foreground-wait rule.
