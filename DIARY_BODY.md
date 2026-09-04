@@ -3067,3 +3067,13 @@ Runs 55 and 56 at day 30 under the earlier parent: the gate 0.535 and 0.534 (0.4
 20, the drift gone), the mouth 44 and 42 of 48, the unheard combinations 77 and 72. Night
 20 of the served body: forty-eight dreams, mean length 9.4, the gauge 0.91 before the
 lesson and 0.92 after, the cortex arriving at the night already knowing its lines.
+
+**Runs 63 and 65 at day 6, 11:10.** Run 63 (the new parent, the ventral credit at 0): the
+mouth 45 and 38 of 48, the cortex alone 55 and 45 of 82, the unheard combinations 79 of
+128, the run-on 10.8 symbols per cue. Run 65 (the new parent with the end as a rest): 47
+and 35, 50 and 44, the run-on 9.4. The mouth finishes fewer answers under the quieter
+parent (38 and 35 against 44 to 48), as fewer lines are heard in a day, and the run-on
+is where it was. Runs 67 and 68 (the ventral credit at 1) are at day 1. The scale probe
+(scratchpad/scale_probe.py) runs meanwhile on the user's question of a local live
+scale-up: tick and night times for bodies of 256, 512, 1024 and 1280 width on cpu and
+on the Mac's GPU, the machine carrying eight fast runs while it measures.
