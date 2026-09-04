@@ -54,8 +54,20 @@ and follows the child's attention rather than a schedule.
   relax to 0 after each reply and smile 0 -> 2 once at the first taught
   word or expansion (day 12: five smiles set from a held 2 to 2 were
   never felt, and trust bled 7.9 to 7.2 until the face was relaxed). A
-  correct completion after a cue earns the same smile, before and after
-  the night alike. Since day 14 the night starts its dreams from what
+  correct completion after a cue earned the same smile as a word, before
+  and after the night alike, until 2026-09-03. **The answer-weighted
+  smile, on the user's word of 2026-09-03 with its condition:** if the
+  slow critics still read nothing after the teacher's days (the ridge
+  ceiling at the 64- and 256-tick horizons at zero), a cue's completion
+  is smiled at with a face that GROWS, 2 and then 4, which the body feels
+  as two events (its felt smile is capped at 2 per event; a held face is
+  silence). A word's smile stays flat. It is a curriculum decision, a
+  world in which reward depends on what came before, so that the
+  critics at long horizons have something to predict; it is not a cheat,
+  since the caregiver still reads the page alone and the body still has
+  to say the answer. Measured first in the fast world (run 33); applied
+  to the raised body at a boundary only on that measurement
+  (--answer-levels 2 in body/caregiver.py and body/teacher.py; ANSWER_LEVELS=2 for body/fastlife.py). Since day 14 the night starts its dreams from what
   the memory itself holds most strongly and replays that into the
   weights; no index of lines or moments is kept, and your smiles play
   no part in it. So no smile is needed for quiet, and none should be given:
