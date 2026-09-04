@@ -70,7 +70,12 @@ residual the store missed and undid the night).
 Recall is not an input to the cortex's stream (entered there it looked like
 the current symbol and the trunk advanced it a step; the mouth read the
 second letter of every answer). No direct vote on the mouth. Fade: strengths × 0.9 each night; slots below the store's own mean
-strength × 0.1 are forgotten (relative, not a constant).
+strength × 0.1 are forgotten (relative, not a constant). Each slot carries a
+boundary mark: when the world's quiet after an utterance is perceived (the
+offset), the slot that holds the utterance's last symbol under its context
+is marked, and a dream that recalls a marked slot ends there, the memory's
+own event boundary (a hippocampal memory knows where its episode ended);
+the mark is not read by the waking recall.
 
 **PFC (the band ladder).** Bands with clocks 1, 4, 16, 64, 256, 1024, 4096,
 16384 ticks: leaky integrators of the stream, each through an input map
@@ -79,7 +84,11 @@ head (the critic at that timescale) and a Go/NoGo gate learned from the
 value's error; the critic's error trains no features (features trained by a
 bootstrapped error are the deadly triad, and they saturated: run 28, day 15).
 The bands' states form the bundle the cortex reads and the PFC's forecast
-heads must foresee. Each area learns from its own error: the cortex's trunk
+heads must foresee. Beside the ladder's heads, the ventral critic: one value
+head over all the bands' states (each centered on its running mean),
+discounted at 1024 ticks, so that its error moves with the act itself (the
+fast bands change within a tick) while it predicts the long run; its error
+may enter the mouth's credit (vcrit_w; 0 in the recipe, §5b). Each area learns from its own error: the cortex's trunk
 from the next embedding it receives, the PFC's heads and gates from the
 temporal-difference error on the bands' states, the PFC's
 forecast heads from the bundle that follows the stream, by day and in REM,
@@ -173,7 +182,7 @@ symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fati
 store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
 steps 8 in 6 rounds (a quarter of the night), SIGReg 0.1 · waking lesson every 24 ticks on 32 symbols at 1e-5 · value heads and Go/NoGo gates at 1e-3, the bands' input maps fixed at birth · the reward rate and the differential bands' state means at 1/1024 a tick ·
 gate rate 0.05, birth p(act) 0.25, habituation 0.9/act, fatigue scaling /10,
-the offset 8 ticks (the world's turn-end as the lesson's target after 8 ticks of the world's quiet; runs 47/48), the level input's weight 0 (off until runs 39/40 measure it; its scale a running root mean square at 1/1024, semi-saturation 1, clip 5), own-reward weight 0.5, innate drive 0.25 (the value form; the error form, measured on two seeds and not adopted, carried 0.70; bodies saved without a form key load as the value form), expectation rate 0.1 per act of the syllable, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
+the offset 8 ticks (the world's turn-end as the lesson's target after 8 ticks of the world's quiet; runs 47/48), the ventral critic discounted at 1 - 1/1024 with weight 0 in the mouth's credit (runs 51/52; 55/56 pending), the level input's weight 0 (off until runs 39/40 measure it; its scale a running root mean square at 1/1024, semi-saturation 1, clip 5), own-reward weight 0.5, innate drive 0.25 (the value form; the error form, measured on two seeds and not adopted, carried 0.70; bodies saved without a form key load as the value form), expectation rate 0.1 per act of the syllable, vigor weight 1.0, credit baseline 0.9 per lesson (reset at the night), spontaneous-activity floor p(act) ≥ 0.05, the stream feature scaled by 1/√d (the striatum learns from the
 error against what it expected: a constant cost teaches nothing) · dream
 recall adaptation 0.2 x activation per step, recovery 0.97 per step (recalled
 memories tire in proportion to how much they fired; a dream ends when its
@@ -310,6 +319,37 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   87 and 73 of 128 against 76 and 80; the cortex alone within lines 51 to 61
   of 82 against 56 to 64 (run 47 lower, run 48 in range); dreams shorter and
   ending where their lines end. The recipe (2026-09-04).
+- **The boundary mark, and the raised body's night.** A body raised for
+  thirteen days without the offset held the seam at probability 1.0, and one
+  day's offset lessons could not undo it: its dreams still spliced (the
+  cortex that would end them had not learned the quiet), and the night's
+  lesson on spliced dreams, at ten times the waking rate, re-taught the seam
+  each night. A body born with the offset never had that fight (its untrained
+  cortex ended dreams early from night 1). So the store's slots carry the
+  boundary mark and a dream ends at a marked memory whatever the cortex
+  expects; the night then teaches the line's end at its own rate. Measured
+  on runs 53/54 (fresh seeds) and on the raised body from day 17.
+- **The ventral critic.** The ladder's slow heads read states that move a
+  thousandth per tick, so an act's effect on the long-run prospect cannot
+  show in their error within the mouth's twelve ticks of eligibility (runs
+  37/38 fed that error and nothing moved). Biology's long-horizon critic
+  predicts far ahead from the cue it sees now. The ventral critic: one head
+  over the whole ladder. As a differential (average-reward) head it computed
+  the day-scale relative value, the integral of reward above its wandering
+  average, swinging by a hundred within a day, and that swing entered the
+  credit ten times the fast error's size and shut one seed's gate (runs
+  49/50); discounted at 1024 ticks it is bounded (spread 6 against returns'
+  5 to 10) and its error after an act reads +0.10 against +0.01 after a rest.
+  With its error in the credit at weight 1 (runs 51/52): the fixed cues
+  equal (42, 43 of 48 at day 20), unheard combinations 81 and 101 of 128
+  (the second the best of any run), and engagement up on both seeds: 275 and
+  271 known words a day against 230 and 221, 106 and 124 smiles against 84
+  and 88, the parent away 0.2 times a day against 1.9 and 2.6. The first
+  thing the long timescale has bought. Against it, one seed's gate drifted
+  from 0.55 to 0.38 over its last week (the differential form's collapse,
+  slower), and its own content at 1024 ticks reads +0.20 and -0.24. Weight 0
+  in the recipe until forty days on two seeds (runs 55/56) say whether the
+  drift settles.
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the
