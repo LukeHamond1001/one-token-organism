@@ -2131,3 +2131,7 @@ with a spread of 610, as the mathematics of its baseline predicted; the seven ot
 bounded; the body at 46 of 48 started and 45 in full, and the cortex's trace at 61 of 82
 awake and 67 under the dream construction, the best yet. Run 28, with the one shared
 rate, is the recipe's test.
+
+The reborn body's fourth night: gauge 0.85 before, 0.90 after, 213 slots kept. At the
+day-5 boundary the serve reloads so the body takes the settled ladder (one shared reward
+rate for the slow bands); its words and its store are untouched by that.
