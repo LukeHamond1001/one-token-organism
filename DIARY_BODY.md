@@ -3048,3 +3048,22 @@ to 0.07. The page's fused share on day 19: 0.19. Day 19's teacher: 35 utterances
 cues, five answered cleanly ('why dog up? ' because, 'first milk then ' ball, 'big dog '
 will, 'dog will ' go, 'where ball? ' ball on the second try), 94 smiles, the parent's
 attention 0.53 to 1.0, mean 0.81.
+
+**Day 6 under the parent who wants a reply, 10:45.** Run 64: the mouth 47 and 44 of 48,
+the cortex alone 47 and 41 of 82 (a quieter parent talks less: the store 202 at day 6),
+the run-on 10.0 symbols per cue over days 4 to 6, resting 2.0 ticks first. Unchanged
+from the earlier parent (runs 59 and 60: 9.9 and 10.6). The arithmetic, now measured
+rather than argued. Under the earlier parent the run-on's words earned known-word smiles,
+a positive short credit at the gate. Under the new parent they earn nothing: the answer's
+smile lands on the tick after the answer's last letter, before the run-on begins (the
+body rests two ticks first), so the run-on's acts get no credit from it, and the parent's
+attention costs them nothing at the gate, because the attention reaches the body only
+through the long return, and runs 63 and 64 carry the ventral credit at weight 0. A gate
+with zero credit keeps its base rate; only a negative credit closes it. So the test of the
+new parent is the test of the long credit: runs 67 and 68, the same parent with the
+ventral credit at weight 1, born 10:44; runs 59 and 60 stopped at day 20 (their copies
+taken; run 59's day-20 line: the mouth's 'go up ', 'ball u', 'dog up' still running on).
+Runs 55 and 56 at day 30 under the earlier parent: the gate 0.535 and 0.534 (0.45 at day
+20, the drift gone), the mouth 44 and 42 of 48, the unheard combinations 77 and 72. Night
+20 of the served body: forty-eight dreams, mean length 9.4, the gauge 0.91 before the
+lesson and 0.92 after, the cortex arriving at the night already knowing its lines.
