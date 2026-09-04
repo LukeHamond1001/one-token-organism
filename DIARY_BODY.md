@@ -3198,3 +3198,16 @@ mouth 47 and 45 of 48, the cortex alone 59 and 59, the unheard combinations 80, 
 run-on 9.8 symbols per cue over days 18 to 20, twenty days without a change. The fast
 runs print a day line on even days only, so every instrument waiter set on day 15 had
 stalled; they read day 16 now, and runs 63 and 64 stop after their day-20 reading.
+
+**Runs 63 and 69 at their last readings, 13:37.** Run 63 at day 20 (the new parent, the
+recipe's gate, the ventral credit at 0): the mouth 46 and 45 of 48, the cortex alone 53
+and 53, the unheard combinations 86, the run-on 9.7 symbols per cue; run 64 the same day:
+47 and 45, 59 and 59, 80, 9.8. Twenty days under the parent who wants a reply, and the
+run-on where it was on day 1, on both seeds. Run 69 at day 6 (the new parent, no
+intrinsic act credit): the mouth 48 and 48 of 48, the cortex alone 53 and 49, the run-on
+20.2 symbols per cue with a rest of a tenth of a tick, the saturated gate speaking every
+tick. The two ends of the same arithmetic: an intrinsic drive that outweighs the
+grounded credit holds the run-on at ten; no intrinsic term at all, with the cost gone
+too, lets the smiles' surprises open the gate until nothing stops it. Runs 73 to 76 carry
+the effort in the reward; at day 1 their gates read 0.49, 0.59, 0.47 and 0.59, neither
+saturated nor shut. Runs 63, 64, 69 and 70 stopped.
