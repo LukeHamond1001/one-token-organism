@@ -2640,3 +2640,14 @@ Nothing enters the stream, the bags stand, the mouth's context stands. Eight tic
 because the window keeps a rest position per quiet tick (it rolls by time), the lesson
 comes every 24 ticks over the last 32 positions, and 8 + 24 keeps the ended position
 inside it. Runs 45 and 46 (seeds 45, 46, the parent world) measure it.
+
+Runs 45 and 46 (the third form) on their first two days: "go in"", "bookpD", "dogldo",
+"ballDu", "gogive", "milkgi", junk and fusions where the recipe's first days answer
+cleanly. The cause is the store. A cue is the world going quiet too, so "then quiet" was
+written under the cue's context and blended in the recall with the answer's memory; with
+the turn-end banned from the mouth, the blended vector reads as whatever stray symbol it
+happens to lean toward. The store keeps what the world said next and nothing else. The
+fourth form (commit e875775, 03:10): the offset marks the line's last position, the
+waking lesson's target there is the turn-end, and a dream ends where the cortex alone,
+run over the dream so far, expects the quiet; the stream, the bags and the store are
+untouched. Runs 47 and 48 (seeds 47, 48) measure it.
