@@ -2179,3 +2179,25 @@ old recipe's record: the instrument's day ran under the pinned ladder, the body'
 heads reading states now centered, so the two runaway bands read −29 and −448 with the
 means still catching up, not the thousands of day 15. Body kept as
 data/body2_run28_day20.pt.
+
+## Run 29 at day 6: the ladder holds (2026-09-03, night)
+
+The pinned ladder's first instrument, run 29 at day 6: every band bounded, the three
+relative values centered where they were made to sit (0.1, 1.8 and 0.7, spreads of 7,
+6 and 2, against run 28's thousands), the TD error 0.26 at every band, no state at the
+ceiling. The mouth started 48 of 48 cues and finished 46, the cortex's trace 56 of 82
+awake and 60 under the dream construction, the best sixth day of any run. Day 15 is the
+test of the nights. The served body takes this ladder at its day-6 boundary, armed.
+
+Run 30 through day 5, the gate reading the forecast's certainty with the intrinsic
+credit gone: the gate at 0.29, forty-five smiles a day, the salience weight at 0.003
+after two days, the answers coming letter by letter with rests between. The feature sits
+between 0.8 and 1.9 whatever the moment, so the gate has little to read in it, and the
+external dopamine alone, small once the critic predicts the smiles, holds no bout open.
+The intrinsic credit is not a placeholder for an actor after all. It is the songbird's
+own performance dopamine (Gadagkar 2016: dopamine neurons encode the bird's performance
+error against its template, and deafened birds do not learn), habituating per syllable
+as dopamine habituates to a repeated stimulus. The formula stays on that ground; what
+mathematics asks is that it be an error, performance against the syllable's expected
+performance, with the innate drive and the reward rate's vigor carrying the rate of
+acting. That is run 31, after run 30's day-6 record.
