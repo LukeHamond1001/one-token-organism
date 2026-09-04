@@ -83,8 +83,8 @@ class Corpus:
 
 
 class Teacher(Caregiver):
-    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0):
-        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed)
+    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0, answer_levels=1):
+        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels)
         self.corpus, self.planner = corpus, planner
         self.said_today = []                                  # (text, kind, its_after)
 
@@ -305,6 +305,7 @@ def main():
     ap.add_argument("--model", default="claude-sonnet-5"); ap.add_argument("--budget", type=int, default=120)
     ap.add_argument("--period", type=float, default=60.0); ap.add_argument("--quiet", type=float, default=3.0)
     ap.add_argument("--cap", type=float, default=45.0); ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--answer-levels", type=int, default=1)
     a = ap.parse_args()
     for k in range(a.days):
         day = a.day + k
@@ -312,7 +313,7 @@ def main():
         planner = {"claude": lambda: ClaudePlanner(a.model, a.budget, rng), "queue": lambda: QueuePlanner(a.queue, rng),
                    "fixed": lambda: FixedPlanner(rng)}[a.planner]()
         corpus = Corpus(a.corpus)
-        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day)
+        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels)
         t.run_day()
 
 

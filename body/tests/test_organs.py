@@ -197,6 +197,29 @@ def test_ladder_pinned():
     print("11 the ladder: input maps fixed, differential values centered and bias-free")
 
 
+def test_answer_smile_felt_twice():
+    """the answer-weighted smile: a face that grows 2 then 4 is felt as two events, a flat smile as one"""
+    import body.fastlife as FL
+    import random
+    life = tiny(gate_every=10 ** 9, wake_every=10 ** 9)
+    cg = FL.FastCaregiver(life, 1, [], random.Random(0), smile_ticks=6)
+    FL.ANSWER_LEVELS = 2
+    felt = []
+    cg.smile("go", "cue completion: dog will ")
+    for _ in range(8):
+        cg.step(); felt.append(life.last["felt"])
+    two = [f for f in felt if f > 0]
+    cg.smile("dog", "known word")
+    felt2 = []
+    for _ in range(8):
+        cg.step(); felt2.append(life.last["felt"])
+    one = [f for f in felt2 if f > 0]
+    FL.ANSWER_LEVELS = 1
+    assert two == [2, 4], f"an answer's growing smile was not felt twice: {felt}"
+    assert one == [2], f"a word's flat smile was not felt once: {felt2}"
+    print("13 the answer-weighted smile: felt", two, "vs a word's", one)
+
+
 def test_older_gate_loads():
     """a body saved before the gate read the proposal's salience loads, that input born at zero"""
     import os, tempfile
@@ -258,7 +281,7 @@ def test_guards():
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
-             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads]
+             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice]
     failed = 0
     for t in tests:
         try:

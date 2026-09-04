@@ -12,6 +12,7 @@ run of a repeated non-letter mark that is not the space. Never at rest, never at
 """
 import argparse
 import json
+import os
 import random
 import sys
 import time
@@ -28,6 +29,10 @@ LINES = ["dog will go", "I will go up", "you will go in", "scared dog", "scared 
          "first milk then ball", "first up then in", "big dog bigger dog", "bigger dog up", "I saw dog", "you saw dog",
          "why dog up? because big dog"]
 CUES = ["dog will ", "scared ", "give ", "where ball? ", "I had ", "first milk then ", "big dog bigger ", "why dog up? "]
+# THE ANSWER-WEIGHTED SMILE (CURRICULUM.md, in force on the user's word of 2026-09-03 if the slow critics read nothing
+# after the teacher): at a cue's completion the smile grows, 2 then 4, and the body feels each rise as an event (its
+# felt reward is clipped at 2 per event, so a bigger smile must be a growing one). 1 = the flat smile of every word.
+ANSWER_LEVELS = int(os.environ.get("ANSWER_LEVELS", "1"))
 
 
 class FastCaregiver:
@@ -40,6 +45,7 @@ class FastCaregiver:
         self.cue = None; self.smiles = 0; self.frowns = 0; self.words = []
         self.tok_start = None; self.tok_buf = []
         self.last_write_tick = -1
+        self.face_plan = []                                   # (tick, level): the growing smile's next rise
 
     def row(self, obj):
         obj = dict(obj); obj.setdefault("day", self.day); obj.setdefault("tick", self.L.ticks)
@@ -48,8 +54,10 @@ class FastCaregiver:
     # one tick of the world: the face as set, then the body ticks, then the page is read
     def step(self):
         L = self.L
+        if self.face_plan and L.ticks >= self.face_plan[0][0]:
+            _, v = self.face_plan.pop(0); self.face_val = float(v); L.set_face(v)
         if L.ticks >= self.face_until and self.face_val != 0.0:
-            self.face_val = 0.0; L.set_face(0.0)
+            self.face_val = 0.0; L.set_face(0.0); self.face_plan = []
         L.tick()
         sym = L.last.get("said", "")
         t = L.ticks
@@ -69,9 +77,12 @@ class FastCaregiver:
         self.face_val = float(v); self.L.set_face(v); self.face_until = self.L.ticks + ticks
 
     def smile(self, on, why):
+        levels = ANSWER_LEVELS if why.startswith("cue") else 1
         self.set_face(2.0, self.smile_ticks); self.smiles += 1; self.last_smile_tick = self.L.ticks; self.last_word = on
+        if levels >= 2:
+            self.face_plan = [(self.L.ticks + self.smile_ticks // 2, 4.0)]
         self.words.append((self.L.ticks, on, why))
-        self.row({"action": "smile", "on": on, "why": why, "gate": self.L.last.get("gate"), "mood": round(self.L.mood, 3)})
+        self.row({"action": "smile", "on": on, "why": why, "levels": levels, "gate": self.L.last.get("gate"), "mood": round(self.L.mood, 3)})
 
     def on_token(self, tok, a, b):
         t = self.L.ticks

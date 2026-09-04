@@ -30,8 +30,9 @@ def iso(t=None):
 
 
 class Caregiver:
-    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0):
+    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1):
         self.base, self.day, self.log = base, day, log
+        self.answer_levels = int(answer_levels)          # 2: the smile at a cue's completion grows, 2 then 4 (CURRICULUM.md)
         self.period, self.quiet_needed, self.cap = period, quiet, cap
         self.rng = random.Random(seed)
         self.cursor = 0; self.its = {}; self.tobs = {}; self.maxtick = -1; self.finalized = -1
@@ -85,14 +86,19 @@ class Caregiver:
 
     def smile(self, on, ctx, why):
         db = (self.state.get("last") or {}).get("doses")
-        self.face(2); t0 = time.time(); time.sleep(1.2)
+        levels = self.answer_levels if why.startswith("cue") else 1
+        self.face(2); t0 = time.time()
+        if levels >= 2:
+            time.sleep(0.6); self.face(4); time.sleep(0.6)
+        else:
+            time.sleep(1.2)
         try:
             la = self.req("/state?since=%d" % max(self.cursor - 2, 0)).get("last", {})
         except Exception:
             la = {}
         self.face(0)
         self.smiles += 1; self.last_smile = time.time(); self.last_word = on
-        self.row({"action": "smile", "on": on, "context": ctx, "why": why, "ts": iso(t0),
+        self.row({"action": "smile", "on": on, "context": ctx, "why": why, "levels": levels, "ts": iso(t0),
                   "doses_before": db, "doses_after": la.get("doses"), "mood": la.get("mood"), "gate": la.get("gate")})
 
     def frown(self, on, ctx):
@@ -259,10 +265,11 @@ def main():
     ap.add_argument("--quiet", type=float, default=6.0)
     ap.add_argument("--cap", type=float, default=90.0)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--answer-levels", type=int, default=1)
     ap.add_argument("--lines", default="dog will go|I will go up|you will go in|scared dog|scared ball|what? scared dog|give milk|give ball|give book|ball under|ball on|where ball? ball under|I had milk|you had ball|dog had ball|first milk then ball|first up then in|big dog bigger dog|bigger dog up|I saw dog|you saw dog|why dog up? because big dog")
     ap.add_argument("--cues", default="dog will |scared |give |where ball? |I had |first milk then |big dog bigger |why dog up? ")
     a = ap.parse_args()
-    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed)
+    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels)
     cg.run_day([x for x in a.lines.split("|") if x], [x for x in a.cues.split("|") if x])
 
 
