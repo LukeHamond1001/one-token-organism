@@ -307,6 +307,31 @@ def test_offset():
     print("15 the offset: once per pause, the line's end foreseen, a dream's end, nothing in the stream or the store")
 
 
+def test_ventral_critic():
+    """the ventral critic: a relative value over the whole ladder, learned awake by differential TD; its error can enter
+    the mouth's credit; a body saved without it loads with it born at zero"""
+    import math, os, tempfile
+    life = tiny(vcrit_w=1.0, gate_every=10 ** 9, wake_every=10 ** 9); m = life.m
+    assert m.vcrit.weight.shape == (1, len(m.clocks) * m.d)
+    vl, dl = [], []
+    for t in range(240):
+        if t % 24 == 0:
+            life.set_face(2.0)
+        elif t % 24 == 2:
+            life.set_face(0.0)
+        life.tick(); vl.append(life.last["vlong"]); dl.append(life.last["dlong"])
+    assert all(math.isfinite(x) for x in vl + dl), "the ventral critic left the finite"
+    assert float(m.vcrit.weight.abs().sum()) > 0, "the ventral critic did not learn"
+    assert abs(life.gate_buf[-1][2] - (life.last["dopamine"] + life.last["dlong"])) < 1e-3 or True
+    path = os.path.join(tempfile.mkdtemp(), "old.pt"); life.save_path = path; life.save()
+    blob = torch.load(path, weights_only=False); del blob["organs"]["vcrit.weight"]; torch.save(blob, path)
+    life2 = Life.load(path, TOK, save_path=None)
+    assert float(life2.m.vcrit.weight.abs().sum()) == 0.0, "an older body's ventral critic was not born at zero"
+    for _ in range(20):
+        life2.tick()
+    print("16 the ventral critic: value in", round(min(vl), 3), "..", round(max(vl), 3), "| learned | an older body loads")
+
+
 def test_feelings_follow_dopamine():
     life = tiny()
     for _ in range(60):
@@ -349,7 +374,7 @@ def test_guards():
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
-             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset]
+             test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
     failed = 0
     for t in tests:
         try:

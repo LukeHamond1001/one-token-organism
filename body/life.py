@@ -21,6 +21,9 @@ PHYSIOLOGY = dict(
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
     # horizons of the discount gradient, driving vigor; the fast band's error selects the act). gate_slow_w 0 = off (runs 37/38)
     gate_slow_band=5, gate_slow_w=0.0,
+    # THE VENTRAL CRITIC in the mouth's credit: its error (the act's effect on the long-run prospect, at the reward rate's
+    # horizon) added to the fast band's error with weight vcrit_w. 0 = off until measured (runs 49/50; candidate 1.0)
+    vcrit_w=0.0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -110,7 +113,7 @@ class Life:
         # rate they ran away (1e-3: saturated by day 6, run 26; 1e-5: saturated by day 15, run 28) while
         # learning nothing this world offers to learn (the stream carries no reward at their horizons).
         # Linear heads on fixed features under on-policy TD converge (Tsitsiklis and Van Roy).
-        self.opt_value = torch.optim.Adam(list(self.m.value.parameters()) + list(self.m.band_gate.parameters()),
+        self.opt_value = torch.optim.Adam(list(self.m.value.parameters()) + list(self.m.band_gate.parameters()) + list(self.m.vcrit.parameters()),
                                           lr=float(self.cfg["value_lr"]))
         for p_ in self.m.band_in.parameters():
             p_.requires_grad_(False)
@@ -278,9 +281,8 @@ class Life:
                 # value's free constant has no direction to walk in.
                 with torch.no_grad():
                     eta = 1.0 / float(self.cfg["diff_horizon"])
-                    for b in range(len(gam)):
-                        if self._differential[b]:
-                            m.band_mu[b] += eta * (self._bands_prev[b].detach() - m.band_mu[b])
+                    for b in range(len(gam)):                          # every band's mean (the ventral critic centers on all)
+                        m.band_mu[b] += eta * (self._bands_prev[b].detach() - m.band_mu[b])
                 # DISCOUNTED TD below the differential horizon, AVERAGE-REWARD (differential) TD at and
                 # above it: with the discount near 1 the bootstrapped value ran away (the slowest band
                 # read 7000 against a true return near 85, correlation -0.995: run 21, day 20). The
@@ -288,7 +290,11 @@ class Life:
                 td = torch.stack([(r + gam[b] * v_now[b].detach() - v_prev_live[b]) if not self._differential[b]
                                   else (r - float(self.rbar) + v_now[b].detach() - v_prev_live[b]) for b in range(len(gam))])
                 self.rbar += (1.0 / float(self.cfg["diff_horizon"])) * (r - self.rbar)   # the reward rate, tonic dopamine
-                loss_v = (td ** 2).mean()
+                # THE VENTRAL CRITIC: differential TD over the whole ladder's states (semi-gradient, the target detached)
+                with torch.no_grad():
+                    vl_now = m.value_long(self.bands)
+                td_long = r - float(self.rbar) + vl_now.detach() - m.value_long(self._bands_prev.detach())
+                loss_v = (td ** 2).mean() + td_long ** 2
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
                                      for b in range(len(gam))])
@@ -301,10 +307,11 @@ class Life:
                 # gamma 0.9375): an expected reward fires before it lands, a missed one dips
                 delta = float(td[int(self.cfg["dopamine_band"])].detach())
                 delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
+                delta_long = float(td_long.detach()); vlong = float(vl_now)
                 for b in range(len(gam)):
                     self.v_buf[b].append((self._bands_prev[b].detach().cpu(), r, self.bands[b].detach().cpu()))
             else:
-                delta = r; delta_slow = r
+                delta = r; delta_slow = r; delta_long = r; vlong = 0.0
             m.eval()
         self._dopa = delta
         # --- its face learns from yours (a readout) ---
@@ -363,7 +370,7 @@ class Life:
         if abs(delta) >= float(self.cfg["burst"]):
             self.n_bursts += 1
         # --- the gate's buffer and lesson ---
-        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow, int_t, self.fatigue])
+        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + float(self.cfg.get("vcrit_w", 0.0)) * delta_long, int_t, self.fatigue])
         if self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0 and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:
                 self._gate_lesson()
@@ -388,6 +395,7 @@ class Life:
                      "stress": round(self.stress, 2), "ent": round(ent, 2), "felt": felt,
                      "said": (self.tok.decode([int(nxt)]) if nxt != self.sil else ""),
                      "gate": round(p_act, 3), "dopamine": round(delta, 3), "doses": self.n_bursts, "level": round(level, 3),
+                     "vlong": round(vlong, 3), "dlong": round(delta_long, 3),
                      "store": self.store.n(), "store_conf": round(conf1, 3), "surprise": round(surp1, 3),
                      "own": [self.tok.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
                      "gate_lesson": self._gate_last, "wake": self._wake_last}

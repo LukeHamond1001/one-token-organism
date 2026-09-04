@@ -217,6 +217,12 @@ class Organs(nn.Module):
         self.register_buffer("diff", torch.zeros(nb, dtype=torch.bool))
         self.register_buffer("band_mu", torch.zeros(nb, d))
         self.register_buffer("v_scale", torch.ones(nb))           # each band's value's running mean square (the level input's normalizer)
+        # THE VENTRAL CRITIC: one relative (average-reward) value over the WHOLE ladder, fast bands and slow, so
+        # its error moves with the act itself (the fast bands change within a tick) while it predicts the long run
+        # (the reward rate's horizon). The ladder's own slow heads read states that move a thousandth per tick and
+        # cannot register an act (runs 37/38); the ventral striatum reads the cue it sees now and predicts far.
+        self.vcrit = nn.Linear(nb * d, 1, bias=False)
+        nn.init.zeros_(self.vcrit.weight)
         # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream, the feelings, and the
         # salience of the mouth's proposal (the forecast's certainty, as the striatum reads the
         # strength of a cortical request for action)
@@ -304,6 +310,10 @@ class Organs(nn.Module):
         if bool(self.diff[b]):
             return (s - self.band_mu[b]) @ self.value[b].weight[0]
         return self.value[b](s).squeeze(-1)
+
+    def value_long(self, states):
+        """the ventral critic's relative value over every band's state, each centered on its running mean"""
+        return ((states - self.band_mu).reshape(-1) @ self.vcrit.weight[0])
 
     def values(self, states):
         """V_b(s_b) for every band: [nb]"""
