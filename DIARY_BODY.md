@@ -3540,3 +3540,19 @@ reward less the long expectation, a baselined reward, which is what the synaptic
 on the gate needs to capture: runs 87 and 88, the settled recipe with the slow-band head
 at weight 1 and the tag at four millionths, the parent who wants a reply, born 17:32 for
 twenty days, read at days 6, 16 and 20 against runs 85 and 86.
+
+**Day 28 under the parent who wants a reply, 17:50.** The served body's first day with the
+new typist: 8 cues on the page, every one answered right ('why dog ' → 'up', 'give big '
+→ 'ball', 'you will go ' → 'down', 'first milk then ' → 'ball', 'dog will ' → 'go', 'big
+dog ' → 'bigger', 'why dog up? because ' → 'big') and every one run past; 67 smiles
+against 113, 102 and 87 on the three days before; 233 misses, of them 97 'distracted',
+77 'talked over' and 42 'past its answer'; the parent's attention ground down to 0.12
+and the parent turned away seven times, once near 17:27 and a cluster from 17:43 to
+17:48; 35 utterances in 5 rounds, no new word. The body of day 28 is the same body that
+answered everything; what changed is that a parent who wants a reply gives a body that
+never stops talking a third fewer smiles and turns its back. That is the rule as
+written and as measured on the fast seeds (where the days are shorter and the parent's
+typing takes fewer ticks); on the served body's page the typing is slow and the body
+talks through it. Day 29's boundary and its totals decide whether the served body stays
+under this parent or returns to the earlier one while the gate is given a way to read
+the consequence (runs 87 and 88).
