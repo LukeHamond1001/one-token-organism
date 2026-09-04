@@ -3319,3 +3319,28 @@ head gains a bias for its level, born at zero in older bodies; the night clears 
 trace); 16 of 16 tests. Measured first the cheap way: four chained instrument days on run
 67's day-20 body with the ventral critic born at zero and carried from day to day, TD(0)
 against the trace (scratchpad/vtrace_probe.py), then on fresh seeds if it reads right.
+
+**The critic's rate, 15:25.** The chained instrument on run 67's day-20 body, the ventral
+critic born at zero, the other organs fresh each day, the critic carried, judged frozen at
+each day's start against the return that followed at its own horizon: TD(0) after one day
++0.33 (learning through its first day +0.65), the trace after one day −0.75 (learning
+through its first −0.56); the weights' norm 22 after a day and 37 after two at the shared
+rate of a thousandth a tick. Both heads are tracking the last few hundred ticks, not the
+state, and in a world that reverts (the parent's habituation to the fiftieth 'dog', the
+answer smile once a cue) a recency tracker reads the return with the wrong sign; the
+trace, crediting a smile to the last five hundred ticks of states, is the faster tracker,
+so it reads worse, and twenty days of TD(0) at that rate came to −0.28 the same way. So
+the theorem was not the whole story: a head at horizon 1024 needs its own clock, the
+learning rate scaled by the horizon as each band's is by its own (the ladder's principle),
+value_lr × 16/1024. Behind vcrit_lr (0 = the shared rate); 16 of 16 tests. Two more
+instruments at that rate, TD(0) and the trace, born 15:20, read at days 2 to 5; and the
+control with no ventral credit in the gate at all, whose first day earned 240 rewards
+against 245 with the credit and a fresh critic, so the 91 of run 67's trained critic is
+the trained critic's own doing, to be confirmed on its later days. Runs 77 to 80 at day
+6: run 80's mouth 42 and 42 of 48, run-on 8.3 per cue, no different from runs 73 and 74
+without the tag; a tag capturing a wrong-signed error was not expected to help, and it
+did not. Day 25's teacher: 42 utterances offered in 6 rounds, 6 cues, 3 answered
+on-topic ('where ball? ' → 'under', 'you will go ' → 'down'), 87 smiles, 92 misses
+almost all 'distracted', the attention from 0.65 to 1.0 by mid-day, a dip to 0.37
+before the night, 0.74 at the end; no new word; the planner disclosed checking each
+appended line's JSON by reading back that one line, which decided nothing.

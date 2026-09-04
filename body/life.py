@@ -35,6 +35,11 @@ PHYSIOLOGY = dict(
     # by the error as it arrives (the synaptic tag on the critic's side). 0 = TD(0); candidate 1 - 1/1024 (the night
     # clears the trace)
     vcrit_lambda=0.0,
+    # THE CRITIC'S OWN RATE: a head at horizon 1024 learning at the fast heads' rate (a thousandth a tick, Adam) tracks
+    # the last few hundred ticks instead of the state's value, and in a world that reverts (the parent's habituation)
+    # a recency tracker reads the return with the wrong sign (run 67's body: TD(0) +0.65 on its first day, −0.28 after
+    # twenty; the trace −0.75 after one). Each head at its own clock: 0 = the shared value_lr; candidate value_lr x 16/1024
+    vcrit_lr=0.0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -126,8 +131,9 @@ class Life:
         # rate they ran away (1e-3: saturated by day 6, run 26; 1e-5: saturated by day 15, run 28) while
         # learning nothing this world offers to learn (the stream carries no reward at their horizons).
         # Linear heads on fixed features under on-policy TD converge (Tsitsiklis and Van Roy).
-        self.opt_value = torch.optim.Adam(list(self.m.value.parameters()) + list(self.m.band_gate.parameters()) + list(self.m.vcrit.parameters()),
-                                          lr=float(self.cfg["value_lr"]))
+        vlr = float(self.cfg["value_lr"]); vclr = float(self.cfg.get("vcrit_lr", 0.0)) or vlr
+        self.opt_value = torch.optim.Adam([{"params": list(self.m.value.parameters()) + list(self.m.band_gate.parameters()), "lr": vlr},
+                                           {"params": list(self.m.vcrit.parameters()), "lr": vclr}], lr=vlr)
         for p_ in self.m.band_in.parameters():
             p_.requires_grad_(False)
         self.opt_face = torch.optim.Adam(self.m.face_head.parameters(), lr=float(self.cfg["face_lr"]))
