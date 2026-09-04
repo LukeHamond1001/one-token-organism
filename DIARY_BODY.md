@@ -2109,3 +2109,15 @@ Run 25 at day 20, the gated write's record: the body unharmed (40 of 48 in full,
 of 82), the mid and slow bands' values wild to the end (one at 1671 with a spread of 830,
 another at −244), and the slowest band's gate learned to shut its state to nothing. The
 revert stands; run 27 is the settled ladder's run.
+
+## Run 27 at day 6, and one reward rate (2026-09-03, night)
+
+The settled ladder's first instrument: the body's best day yet, 48 of 48 cues started
+and all 48 completed in full, the cortex's trace 58 of 82, seven bands bounded. The
+eighth, the slowest, ran away again, 643 against a return of 131 with correlation −0.99,
+and the mathematics of differential TD says why: its baseline, the reward rate, was
+estimated at the band's own clock, one part in 16384 a tick, too slow to track the rate
+within a day, so the undiscounted value integrated raw reward. The baseline must
+converge faster than the value drifts, and there is one reward rate in any case: tonic
+dopamine. One running mean of the reward at the differential horizon, shared by the
+slow bands, replaces the per-band estimates. Ten checks pass; run 28 carries it.

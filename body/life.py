@@ -49,7 +49,11 @@ class Life:
         self.pred_prev = None                              # the forecast made at the last step (surprise)
         self.v_prev = None                                 # V_b of the previous tick's states
         self.v_buf = {b: collections.deque(maxlen=int(self.cfg["v_buf"])) for b in range(nb)}
-        self.rbar = torch.zeros(nb)                              # the reward rate at each clock (the differential bands' baseline)
+        # THE REWARD RATE, one estimate: a running mean of the reward at the differential horizon (tonic
+        # dopamine), the baseline of every differential band. Estimated per band at the band's own clock,
+        # the slowest band's baseline (one part in 16384 a tick) could not track the rate within a day and
+        # its undiscounted value integrated raw reward (run 27, day 6: 643 against a return of 131).
+        self.rbar = 0.0
         self._differential = [int(c) >= int(self.cfg["diff_horizon"]) for c in self.m.clocks]
         # feelings and clocks
         self.fatigue = 0.0; self.stress = 0.0; self.mood = 0.0
@@ -226,11 +230,8 @@ class Life:
                 # read 7000 against a true return near 85, correlation -0.995: run 21, day 20). The
                 # baseline is the reward rate estimated at the band's own clock, tonic dopamine.
                 td = torch.stack([(r + gam[b] * v_now[b].detach() - v_prev_live[b]) if not self._differential[b]
-                                  else (r - float(self.rbar[b]) + v_now[b].detach() - v_prev_live[b]) for b in range(len(gam))])
-                with torch.no_grad():
-                    for b in range(len(gam)):
-                        if self._differential[b]:
-                            self.rbar[b] += (1.0 / float(m.clocks[b])) * float(td[b].detach())
+                                  else (r - float(self.rbar) + v_now[b].detach() - v_prev_live[b]) for b in range(len(gam))])
+                self.rbar += (1.0 / float(self.cfg["diff_horizon"])) * (r - self.rbar)   # the reward rate, tonic dopamine
                 loss_v = (td ** 2).mean()
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
@@ -625,7 +626,7 @@ class Life:
             with torch.no_grad():
                 vn = m.value[b](hn).squeeze(-1)
             vp = m.value[b](hp).squeeze(-1)
-            terms.append((((R - float(self.rbar[b]) + vn - vp) if self._differential[b] else (R + gam[b] * vn - vp)) ** 2).mean())
+            terms.append((((R - float(self.rbar) + vn - vp) if self._differential[b] else (R + gam[b] * vn - vp)) ** 2).mean())
         if terms:
             self.opt_value.zero_grad(set_to_none=True)
             torch.stack(terms).mean().backward(); self.opt_value.step()
@@ -662,7 +663,7 @@ class Life:
                          "window": self.m.window, "clocks": list(self.m.clocks)},
                 "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure, "heard": self.heard.cpu(),
                          "fatigue": self.fatigue, "stress": self.stress, "mood": self.mood, "n_bursts": self.n_bursts,
-                         "sym_freq": self.sym_freq, "last_night": self.last_night, "rbar": self.rbar.clone()}}
+                         "sym_freq": self.sym_freq, "last_night": self.last_night, "rbar": float(self.rbar)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -683,7 +684,7 @@ class Life:
                 setattr(life, k, L[k])
         life.sym_freq = dict(L.get("sym_freq") or {})
         if L.get("rbar") is not None:
-            life.rbar = L["rbar"].clone()
+            rb = L["rbar"]; life.rbar = float(rb.mean()) if torch.is_tensor(rb) else float(rb)
         if L.get("heard") is not None:
             life.heard = L["heard"].to(device)
         return life
