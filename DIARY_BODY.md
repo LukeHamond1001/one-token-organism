@@ -3500,3 +3500,25 @@ smiles, no frown, no turning away, the attention 0.55 to 1.0. The slow-band head
 their day 6, pooled from day 2: the trace at the horizon rate +0.25, TD(0) at the shared
 rate +0.31, the trace at the shared rate +0.26, all positive against the ceiling of
 +0.51. Runs 85 and 86 at day 5: gates 0.54 and 0.51, smiles 143 and 91.
+
+**The day-28 boundary, 17:18.** The probe block ran at the restart, so this is the body
+after night 27, before its first day with the parent who wants a reply: the fixed cues
+34 and 31 of 48, down from 42 and 39 (the probe is seeded, and the backup taken before
+the restart reads the same 34 and 31, the day-27 body 42 and 39: day 27's living and its
+night did it, not the restart); the taught-line cues 95 and 65 of 96, the best since day
+20; the unheard combinations 92 and 76 of 128; the cortex alone 59 and 57 of 82; the
+seam probe: the cortex alone 0.28 after 'dog will go down', 1.00 after 'give big ball';
+the page's fused share on day 27: 0.23, the worst in ten days (0.15, 0.12, 0.23 on days
+25 to 27), after a day of new phrasings ('bigger dog up', 'dog go down', 'you saw dog').
+To be watched over days 28 and 29. The second body, 32.1 million parameters (512 wide,
+8 deep, 8 heads, the window 64), born 17:09 on port 8019 as data/body3.pt; its scripted
+caregiver began day 1 at 17:12 with the parent who wants a reply, and within three
+minutes the parent had turned away (attention 0.145) with two smiles and five words
+'talked over': a newborn is all babble, and the first body's first eight days were reared
+on the flat rules (196 smiles on its day 2, which the parent's habituation never
+allows). So the second body's caregiver was restarted at 17:17 on the flat rules for days
+1 to 8, the parent and the reply to come from day 9 as the teacher takes over, the
+staging the first body had. The slow-band heads at day 7, pooled from day 2: the trace at
+the horizon rate +0.11, TD(0) at the shared rate +0.32, the trace at the shared rate
++0.26. Runs 85 and 86 at day 6: the mouths 45 and 45, 46 and 41 of 48; the run-on 9.6
+and 9.2 per cue; the unheard combinations 88 and 76, 91 and 66 of 128.
