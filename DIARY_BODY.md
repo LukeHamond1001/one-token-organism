@@ -2104,3 +2104,8 @@ on measurement; the average-reward TD stays, having removed the first divergence
 the slow bands' slow filling is harmless once their values are bounded. Commit 4730e38;
 run 27 carries the settled ladder, with the instrument at days 6, 15 and 20 for
 stability. Ten checks pass.
+
+Run 25 at day 20, the gated write's record: the body unharmed (40 of 48 in full, trace 49
+of 82), the mid and slow bands' values wild to the end (one at 1671 with a spread of 830,
+another at −244), and the slowest band's gate learned to shut its state to nothing. The
+revert stands; run 27 is the settled ladder's run.
