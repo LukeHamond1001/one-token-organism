@@ -280,10 +280,20 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
 - **The slow error in the gate's credit.** The mouth's credit is the fast
   band's error; adding the 1024-tick band's error to it (runs 37 and 38, the
   parent world, weight 1) left the mouth where it was (44 and 42 of 48 at day
-  20) and emptied the slow critics: corr(V, G) at 256/1024/4096/16384 of
-  -0.36/0.00/-0.05/-0.68 and -0.27/0.84/-0.58/-0.78 against the recipe's
-  0.47/0.84/0.91 and 0.42/0.55/0.39 under the same parent (runs 35, 36). The
-  slow error routed into the gate is spent there; the weight stays zero.
+  20) and did not help the critics: under the corrected instrument (§7) the
+  1024-tick critic read -0.19 and +0.27 at day 20 against the recipe's +0.26
+  and +0.14 under the same parent (runs 35, 36; all within one day's spread).
+  The slow error routed into the gate buys nothing; the weight stays zero.
+- **The level.** The gate reading the 1024-tick critic's value of the moment
+  (divided by that value's running root mean square, a fifth feeling beside
+  fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the
+  state's long-run promise invigorating the act) with a weight its own
+  three-factor lesson sets: runs 39 and 40, the parent world. The mouth 40
+  and 46 of 48 at day 20 (the recipe 43 and 41), smiles and the parent's
+  attention seed noise, and the learned weight -0.72 and -0.27 at day 6, -0.03
+  and -0.07 at day 20: the striatum found nothing in the slow value to act on.
+  The 1024-tick critic read -0.15 and -0.04 at day 20 (corrected instrument).
+  Not adopted; the input stays at zero like the salience.
 - **The recall's confidence.** The store's read is the attended mean of unit
   values, and its norm is the agreement among the memories attended. The
   largest attention weight is not: once the key carried its own bag, duplicate
@@ -342,13 +352,19 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   caregiver's schedule. Under the parent (attention that rises at answers
   and known words, falls at babble, drifts down in silence, and sets the
   chance of a smile, the pace, and the still face; CURRICULUM.md, on the
-  user's word of 2026-09-03), the same critics read 0.47, 0.84 and 0.91 at
-  256, 1024 and 4096 ticks on run 35's twentieth day and 0.23, 0.72 and 0.54
-  on run 36's fifteenth, the slowest band near or below zero on both (so not
-  the time-of-day artifact), every band bounded, the mouth at 42 to 46 of 48.
-  The parent's attention is a quantity the body can only read through the
-  parent's behavior, and the middle of the ladder learned to carry it as a
-  value from nothing but the face and the page. In this world the reward is about three hundred smiles a day at
+  user's word of 2026-09-03), the critics gain content, and less of it than
+  first read: single instrument days of 7200 ticks gave 0.84 and 0.91 at 1024
+  and 4096 ticks on run 35's twentieth day, and those readings are withdrawn
+  (a day holds seven independent windows of the 1024-tick return; the
+  corrected instrument, §7, four days of 14376 ticks with the truncated tail
+  cut, reads the same bodies at 0.29 and 0.38 at 256 ticks, 0.26 and 0.14 at
+  1024, spreads of 0.1 to 0.3, runs 35 and 36 at day 20; the 4096-tick
+  horizon cannot be judged inside a day, whose return falls as the parent
+  habituates while the band's state climbs). The parent's attention is a
+  quantity the body can only read through the parent's behavior, and the
+  middle of the ladder carries a little of it as a value from nothing but the
+  face and the page; nothing in the body acts on it yet (the slow error in
+  the gate, the level: measured, not adopted). In the flat world the reward is about three hundred smiles a day at
   isolated known words, jittered within twelve ticks, against eight cue
   completions: no state predicts the next smile better than its rate. Reward at
   long timescales is a form the architecture has and a measurement the
@@ -403,6 +419,22 @@ answer a smiled word by repeating it and expanding it into a frame.
 - Per night: dreams (examples, lengths), NREM loss, REM cosine, gauge,
   discarded flag. Per day: known words, smiles felt, cue completions, gate
   rate, fatigue, stress, mood.
+- The value instrument (the ladder against its returns): on fresh scratch
+  copies of a saved body, four instrument days of twice the plan (44 lines,
+  16 cues, about 14,400 ticks) with a different caregiver seed and order each,
+  the parent's rules as served; per band, corr(V_b(t), G_b(t)) with G the
+  realized discounted return, counting only ticks with at least 86% of the
+  horizon ahead (t < T - 2h); the mean and spread across days. One day's
+  reading is not a measurement (seven windows at 1024 ticks; a single short
+  day once read 0.84 where four days read 0.26); horizons of 4096 ticks and
+  up are beyond a day's judgment (the return trends down through the day as
+  the parent habituates, the band's state trends up as it integrates it, and
+  the two anti-correlate whatever the head knows); a held-out linear "ceiling"
+  from the band's 256 dimensions overfits and is not reported.
+- Engagement per day (from the caregiver's log, the supervisor's read):
+  smiles, the parent's turns away, its attention at the day's end and at
+  smiles, the misses by kind, known words said, the parent's hit rate; and
+  from saved copies the gate's weights on its feelings.
 
 ## 8. Tests (each fails when its organ stops doing its job)
 
