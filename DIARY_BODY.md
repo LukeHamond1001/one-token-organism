@@ -3223,3 +3223,18 @@ forecast gives the end. The page's fused share on day 23: 0.12. Day 23's teacher
 utterances, five cues, four answered ('why dog up? ' because big dog, 'dog will go '
 down, 'where ball? ' ball under, 'little dog had ' milk then ba), 89 smiles, the parent's
 attention at 1.0 through the middle of the day and 0.40 at its close.
+
+**The effort in the reward at day 6, 14:40.** Runs 73 and 74 (the parent who wants a
+reply): the mouth 46 and 43, 46 and 44 of 48; the cortex alone 40 and 33, 45 and 47 of
+82; the unheard combinations 64 and 50; the run-on 9.2 and 8.1 symbols per cue, resting
+2.6 and 2.8 ticks first. Runs 75 and 76 (the earlier parent): 46 and 29, 47 and 45; 51
+and 51, 52 and 48; 84; the run-on 8.8 and 8.2. The gates 0.42 to 0.59 across the four,
+held by the felt effort alone, no intrinsic act credit anywhere. The run-on falls from
+ten to eight or nine, and falls the same under both parents: the effort does it, and the
+parent's contingency has not yet added its own share by day 6. The cortex alone reads
+lower than the recipe's on three of four seeds (a quieter body earns fewer smiles, the
+parent talks less, fewer lines a day). Runs 67 and 68 at day 20 (the recipe's gate, the
+ventral credit at 1, the new parent): the mouth 45 and 47, the run-on 9.7 and 9.8; stopped.
+The fast runs print a day line on odd days for some seeds and even for others; the
+waiters accept either now. Days 16 and 20 of runs 73 to 76 decide whether the form is
+the recipe and whether the run-on keeps falling; the served body waits for that reading.
