@@ -2888,3 +2888,33 @@ go<eot>', 'where bal', 'give mi'. Sixteen tests pass. Runs 57 and 58 carry both 
 runs 59 and 60 the first symbol with onsets alone, so the two are measured apart; all at
 the recipe otherwise, their day 6 due at about 08:00. Runs 53 to 56 continue as they were
 (their processes hold the old code) for their days 15, 20 and 40.
+
+**Night 17 of the raised body, the first with the marks, and the day-18 boundary, 08:15.**
+Night 17 (07:52, 135 s): forty-eight dreams of mean length 9.8, 470 symbols, drawn from
+the day's onsets ('og will', 'ig dog bi', 'hy dog', 'ive big ball go down'), the gauge
+0.73 to 0.86, the highest of its nights. The morning's yardsticks against the day-17
+boundary: the fixed cues 47 and 47 of 48 (46 and 42); the taught-line cues 95 and 78 of
+96 (94 and 64); the unheard combinations 100 and 97 of 128 (101 and 79); the cortex
+alone within lines 62 and 59 of 82 (70 and 63); the page's fused share on day 17 0.20
+(0.14, 0.21 before). And the seam probe, the cortex alone's probability of the turn's end
+after a heard line: 0.00 on all six lines at the day-16 and day-17 boundaries, three days
+into the offset; at the day-18 boundary 0.87 after 'scared dog', 0.17 after 'give big
+ball', 0.10 after 'dog will go down', 0.00 after the other three. One night of whole
+utterances ending at the offset taught the raised cortex what three days of waking
+offset lessons had not begun to. With the store's recall in the forecast the end reads
+0.00 everywhere: the store never holds the turn-end as a memory, so the turn's end is
+the cortex's vote alone against the store's next symbol, which is where the body's own
+turn-end will have to be found.
+
+A false alarm, kept for the record. The post-night cues of day 17 read 'dog will ' →
+'o down', 'scared ' → 'og then', 'I had ' → 'ilk gone', and I read them as the night's
+second-symbol dreams teaching the mouth to skip a first symbol, and armed the serve's
+restart on the new code for the day-17 boundary. The same clipped forms stand in the
+post-night rows of days 15 and 16, before the marks: the caregiver's 'its_after' record
+begins after the answer's first symbols, and the same block's smiles were on whole
+words ('go' for 'dog will ', 'ball' for 'where ball? ', 'dog' for 'big dog bigger ').
+No skip. The restart went ahead at 08:08 all the same (data/body2_before_prefix_day17.pt
+keeps the body as it was; nights 17, 265 slots): the served body now dreams from the
+first symbol and half from anywhere, which is the recipe as of cb7591f, and the raised
+body's cortex, down from 70 to 62 on the trace after one onset-only night, is the
+patient. Day 18's teacher started 08:14.
