@@ -4116,3 +4116,14 @@ the dose is a disclosed constant of the environment, not a rule. The served body
 boundary: mouth 29 and 23 of 48 after 32 and 27 and 40 and 36, the taught lines 83 and 53,
 the unheard combinations 97 and 77, the cortex alone 45 and 44; day 42's words said 78, of
 them 44 known and 6 fused.
+
+**A correction to runs 125 and 126, 07:01.** Their first day logged the head's reliability
+at 0.0 because I had left the reliability gain off for the out-of-credit pair, and the gain
+is what computes the running correlation; with the weight at zero the gain touches nothing,
+so both were reborn at 07:01 with the gain on and the weight at zero: the reliability logged
+by day, the credit untouched. Runs 127 and 128 (the head in the credit through its gain)
+read −0.12 and unfilled at day 1, a newborn's features. The served body's boundary script
+passes the same pair of flags, so its day-44 body logs the same reading. The second body's
+day 13: 17 smiles in a 34-minute day, its attention falling to 0.31 as the lines repeated,
+twenty-four minutes of "distracted" misses before its night; the engagement problem of the
+fused babble stands.
