@@ -4311,3 +4311,19 @@ time. The wait can only teach a body whose long critic carries the pause's conse
 the gate's credit, and the served body's critic is not in its credit. So from day 47 the
 diary's typist replies at once (the patience 12 seconds, the mask and the ear unchanged); the
 withheld reply returns with the critic. Days 47 to 51 under it.
+
+**The magnitudes kept, day 6, 10:36.** SGD 0.2 (runs 135 and 136): the listening weight
+−1.21 and −1.06, the bout +1.12 and +1.25, the net mid-bout inside a line −0.09 and +0.19,
+where Adam 1e-3 stood at −0.55/−0.72 against +0.96/+1.07 on day 8 and reached −1.15/−1.28
+against +1.47/+1.60 only by day 18. The probe: acted inside the parent's lines 0.30 and 0.29
+of the ticks, p(start) 0.25 and 0.25, p(continue) 0.40 and 0.40, which is what the Adam
+bodies showed at day 14 (0.30 and 0.18; 0.23 and 0.15; 0.49 and 0.31). The mouths 47 and 46,
+48 and 45 of 48; words said over the parent 60 to 88 on days 4 to 6 against 63 to 103. So the
+magnitude rule is twice as fast and holds the mouth, but the bout weight grew with the
+listening weight here too: the outside gap is not the 0.002 the single-day probe read, or the
+bout's credit is real (a word finished pays), and the difference of the two weights is again
+near zero rather than large. SGD 0.05 (133 and 134): −0.32 and −0.35 against +0.47 and
++0.58, slow, the mouths 47 and 37, 42 and 37. Day 16 says whether 0.2 goes on past the
+Adam bodies or stops where they did. Day 46 of the diary ended its post-night cues with six
+turnings-away, each at an attention of 0.12 to 0.14 after a 12-second wait: the reply comes
+at once from day 47.
