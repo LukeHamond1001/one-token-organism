@@ -3880,3 +3880,30 @@ while the reward flows. A week or two at that rate; day 16 near 03:30 says wheth
 count has begun to fall. The mask at 0.1 (runs 105 and 106) cannot, at a third of the
 difference. The world's words at 0.1 without the mask (101 and 102, retired at day 16)
 cut the words past the answer by a quarter and the talking over not at all.
+
+**The gate cannot learn what its inputs say, 03:20.** The mask at 0.3 at day 16 (runs 107 and
+108): the words said over the parent 102, 114, 104 and 95, 94, 85 a day, as the baselines'
+99 to 104 and 78 to 95; the gate's probability of acting inside the parent's typing 0.53
+against 0.51 outside on the mask body, 0.49 against 0.50 on the baseline. Sixteen days of a
+right-signed credit of 0.19 and the gate is blind to the state it applies in. So I asked
+whether the state is in the gate's inputs at all: a Fisher reader on the cortex state and
+the five feelings tells inside from outside at 0.999 on held-out ticks, and the gate's own
+weights read it at 0.65 (0.16 on the baseline, which speaks more inside). The inputs carry
+the state; the lesson cannot find the weight. The geometry says why: the inputs' mean has
+norm 2.33, the difference between the inside and outside means 0.45, and the cosine between
+the inside mean and the overall mean 0.98. The three-factor rule's systematic gradient
+points along the inside mean, which reads the state at 0.58; the centered difference reads
+it at 0.998. Uncentered, every contingency the credit carries becomes a push on the common
+bias, which the running baseline then cancels, and the selective direction is learned only
+from the two percent of the gradient that is not the common mean. THE ADAPTED INPUT
+(gate_center): the gate reads its inputs relative to their running mean, a time constant of
+1,024 ticks, as sensory neurons adapt to their mean input; the mean is saved with the body.
+The organ tests 16 of 16. Runs 111 and 112, born 03:19, carry it with the reply withheld,
+the world's words at 0.3 and the mask; runs 113 and 114 carry it on the baseline alone, to
+see what centering does to the mouth by itself. If the first pair's talking over falls where
+the mask pair's did not, the actor was the bottleneck all night. The forgetting head in the
+credit (103 and 104) read +0.21 and +0.13 at day 16, −0.15 and −0.26 at day 17; out of the
+credit (109 and 110, day 9) −0.12 and +0.01: neither reads the return yet. The served body's
+day 38 under the fixed typist: 148 smiles, no frown, no turning-away, "bed" learned in a day
+and nine new lines heard. The second body's day 10: 39 smiles, two turnings-away, all three
+cues answered; its fused babble wears the parent as the first body's never did.
