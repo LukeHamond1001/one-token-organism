@@ -3846,3 +3846,21 @@ answer, as the baselines' 10 to 16; the mouths 48 and 42, 41 and 36. At 0.1 a sy
 forfeit is below the act's own margin (the credit difference near 0.14 against a tonic drive
 less effort of 0.13 to 0.23), so runs 107 and 108, born 01:45, carry the world's words at 0.3
 with the mask, each on one thread to measure the compute as well.
+
+**Day 16 on the fixed parent, 02:13.** The words past the answer per answer over days 14 to 16:
+the baselines (the reply rule alone) 15.7, 15.5, 14.0 on seed 97 and 12.2, 10.1, 11.4 on seed
+98; the reply withheld with the world's words at 0.1, 9.2, 9.6, 10.0 on seed 101 and 9.2, 9.2,
+9.5 on seed 102. The words said over the parent a day: 85 to 102 and 77 to 89 against 89 to
+105 and 73 to 99. The symbols before the reply on the world pair 16 to 50, every answer but
+two yielded before the cap. The mouths 48 and 46, 47 and 46 against 46 and 44, 47 and 43. So
+the world's words at 0.1 cut the words past the answer by a quarter, two seeds against two
+with a spread of four between the baselines, and did nothing to the talking over; the mask at
+0.1 (runs 105 and 106, day 9) reads the same as without it. Not turn-taking. Runs 101 and 102
+retired at their day-16 copies; the record stands for the value instrument later. The served
+body's day-38 boundary: 29 and 26 of 48, the sixth fall, the sample 'I had ' answered "go
+downg ing i" on the memory, a stutter of "down" into "going" into "in" that the "going" frames
+of the last days feed; day 39 and 40's planners are told to leave "going", "go down" and
+"down" alone this week and to answer a "downg" with a clean short line. The second body's day
+9 under its first teacher: 61 smiles, all six cues answered, "down" placed four times, two
+turnings-away in the session and two in the post-night cues. One thread a run: 245 to 310
+seconds a day where the four-thread runs beside them take ten to fourteen minutes.
