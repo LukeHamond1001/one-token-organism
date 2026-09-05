@@ -3803,3 +3803,26 @@ probe again over every band and the gate's own probability by quiet count, to se
 faster band resolves the pause and could carry the credit. The reliability gain's pair closed:
 run 92 at day 20, the head from birth under the gain, −0.53; the gain kept that credit off and
 did nothing else. Run 91's turn-taking: 9.2 per cue at day 20, the same as every recipe.
+
+**No band foresees the reply, and the seam has no memory, 01:14.** The second pause probe, every
+band on run 100's day-6 body across 438 held ticks: the values +0.00, +0.05, +0.13 and
++0.85 at horizons 1, 4, 16 and 64 ticks, flat across the quiet count and the same after a
+rest as after an act; the gate's own probability of acting 0.55 to 0.57 whatever the state.
+The pause cannot come from the critics at ten replies a day. The end as a rest (end_rest,
+runs 61 and 62, neutral) failed for a reason I can now name: the recall after a whole line
+is not a memory of the line's end but a confident false match. The store keeps only what
+the world said next; between the parent's utterances the world's context fades by 0.8 a
+tick, so after the fast parent's pauses of 240 ticks nothing is written under the line's own
+context, and the query at the line's end lands on the nearest partial context with the
+mass on one symbol. I wrote the marks into the live recall (recall_end: the seam slot, an
+utterance's first symbol kept under the last line's faded context, recalls the turn's end
+instead of that symbol; the organ tests 16 of 16) and found on a newborn under the fast
+parent that no such slot exists to be marked. Under the served typist's pauses of twelve
+ticks (the context at 0.07) they do exist, so the flag can only be tested there, and the
+question underneath is older: the world's quiet is not a memory, and writing the turn's end
+into the store failed after cues (runs 45 and 46). The cue's quiet is the child's turn; the
+line's quiet is the end; the body must learn which from the page. Left for a clear head. The
+mask pair (105 and 106) and the forgetting head (103 and 104: reliability −0.41 and +0.30 at
+day 5) run on. The served body's day 36: 109 smiles, one turning-away at the stutter, its
+first "cat" heard; the day-36 boundary 31 and 28 of 48 after 36 and 33, days 34 and 35's
+teaching, the first fall of the full count in six boundaries.

@@ -46,14 +46,20 @@ class Store:
         self.W = torch.zeros(0, dtype=torch.long, device=device)
         self.B = torch.zeros(0, dtype=torch.bool, device=device)   # THE BOUNDARY: this slot's symbol ended the world's utterance
         self.Bs = torch.zeros(0, dtype=torch.bool, device=device)  # and this slot's symbol began one (the first after a pause)
+        self.Bq = torch.zeros(0, dtype=torch.bool, device=device)  # THE SEAM: this slot's symbol is an utterance's first, under the last line's faded context
 
     def n(self):
         return int(self.K.shape[0])
 
     @torch.no_grad()
-    def read(self, q, adapt=None):
+    def read(self, q, adapt=None, end_vec=None):
         """q [d] -> (the recalled next embedding [d], its norm the confidence in 0..1, winner index);
-        adapt [n] (optional) multiplies strengths: the recall adaptation a dream runs under"""
+        adapt [n] (optional) multiplies strengths: the recall adaptation a dream runs under;
+        end_vec [d] (optional): THE MARKS SPEAK IN THE RECALL. A seam slot (an utterance's first symbol written under
+        the last line's faded context, whose unit key is the line's own) recalls not that symbol but the turn's end
+        (the unit direction of <eot_human>): the memory that a new utterance began here is the memory that the turn
+        ended here. Without it the recall after a whole line is the next line's first letter, the seam the mouth
+        said ('downg', served body day 10; runs 61/62 neutral for this reason)"""
         if self.n() == 0:
             return torch.zeros(self.d, device=self.dev), 0.0, -1
         # A DOT PRODUCT, not a cosine: the keys are unit directions, the query is the context as it is,
@@ -71,7 +77,10 @@ class Store:
         # the recall is the attended mean of unit values: its norm is the agreement among the memories
         # attended, the calibrated confidence (the largest weight understated it once duplicate slots
         # that no longer merge split the mass eight ways at conf 0.11, all of them saying 'g': run 15)
-        pred = w @ self.V
+        V = self.V
+        if end_vec is not None and bool(self.Bq.any()):
+            V = torch.where(self.Bq.unsqueeze(1), end_vec.to(self.dev).float().unsqueeze(0).expand_as(self.V), self.V)
+        pred = w @ V
         self._last_w = w
         return pred, float(pred.norm()), int(w.argmax())
 
@@ -95,6 +104,7 @@ class Store:
         self.W = torch.cat([self.W, torch.tensor([int(who)], device=self.dev)])
         self.B = torch.cat([self.B, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.Bs = torch.cat([self.Bs, torch.zeros(1, dtype=torch.bool, device=self.dev)])
+        self.Bq = torch.cat([self.Bq, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         if self.n() > self.cap:                                         # the weakest gives way
             keep = torch.argsort(self.S, descending=True)[: self.cap]
             self._keep(keep)
@@ -133,7 +143,16 @@ class Store:
 
     def _keep(self, idx):
         self.K, self.V, self.S, self.W = self.K[idx], self.V[idx], self.S[idx], self.W[idx]
-        self.B, self.Bs = self.B[idx], self.Bs[idx]
+        self.B, self.Bs, self.Bq = self.B[idx], self.Bs[idx], self.Bq[idx]
+
+    @torch.no_grad()
+    def mark_seam(self, k, v, merge_cos=0.97):
+        """THE SEAM: the slot that holds an utterance's first symbol under the last line's faded context"""
+        j = self._find(k, v, merge_cos)
+        if j < 0:
+            return False
+        self.Bq[j] = True
+        return True
 
     @torch.no_grad()
     def fade(self, f=0.9, floor_rel=0.1):
@@ -174,13 +193,14 @@ class Store:
         return [int(pool[i]) for i in idx]
 
     def state_dict(self):
-        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "temp": self.temp}
+        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp}
 
     def load_state_dict(self, sd):
         self.K = sd["K"].to(self.dev); self.V = sd["V"].to(self.dev)
         self.S = sd["S"].to(self.dev); self.W = sd["W"].to(self.dev)
         self.B = sd["B"].to(self.dev) if "B" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.Bs = sd["Bs"].to(self.dev) if "Bs" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
+        self.Bq = sd["Bq"].to(self.dev) if "Bq" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.temp = float(sd.get("temp", self.temp))
 
 

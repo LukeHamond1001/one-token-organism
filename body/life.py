@@ -115,6 +115,13 @@ PHYSIOLOGY = dict(
     # have been heard: the model-free consequence for talking over, where the withheld reply's delay was invisible to a
     # critic that never learned to foresee the reply (the pause probe of 2026-09-05: V16 flat across the quiet count)
     world_mask=0,
+    # THE MARKS SPEAK IN THE RECALL (recall_end, 0 = off): the seam slot, an utterance's first symbol written under the
+    # last line's faded context (a unit key the line's own direction), recalls the turn's end (<eot_human>) instead of
+    # that symbol, so after a whole line the recall says "the turn ended" where it
+    # said the next line's first letter (the seam). With the end as a rest (end_rest) the mouth then rests where its own
+    # memory says the turn ends: the pause from memory, where the critics never learned to foresee the parent's reply
+    # (the pause probes of 2026-09-05). The dreams already end at the marks; the live recall now reads them too
+    recall_end=0,
     diff_horizon=1024,    # bands with clocks at or above this learn average-reward TD (no discount, the reward rate as baseline)
 )
 
@@ -222,11 +229,16 @@ class Life:
             # the hippocampus: write what came next under the context before it
             if self.cfg.get("store_off"):
                 learn_store = False                              # an instrument: the cortex alone, no hippocampus
+            seam = bool(getattr(self, "_seam_pending", False)) and who == 0 and x != self.sil
+            if seam:
+                self._seam_pending = False                       # the first symbol's turn, kept or not
             if learn_store and who == 0 and x != self.sil and self.key.norm() > 1e-6:
                 self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
                 self._last_write = (self.key.clone(), ex.clone())                    # for the boundary mark at the offset
                 if getattr(self, "_start_pending", False):
                     self.store.mark_start(self.key, ex); self._start_pending = False  # the utterance's first kept memory
+                if seam:
+                    self.store.mark_seam(self.key, ex)           # the first symbol under the last line's faded context
             # the context moves on: both bags fade with time (a pause ends a context, as working memory
             # does), the world's symbols entering the world's bag, its own symbols its own
             # (the bags are content alone: a speaker embedding summed into every key was a constant all
@@ -242,7 +254,8 @@ class Life:
                     self.bag_o = torch.zeros_like(self.bag_o); self.n_own = 0
                 else:
                     self.bag_o = m.shift(self.bag_o) + ex; self.n_own += 1
-            read, conf, _ = (self.store.read(self.bag) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
+            end_vec = F.normalize(m.E.weight[self.eot], dim=0) if int(self.cfg.get("recall_end", 0)) else None
+            read, conf, _ = (self.store.read(self.bag, end_vec=end_vec) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
             self._read = read                                  # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
             # THE TICK'S POSITION. The world's symbol opens it. The world's quiet opens nothing yet: the
@@ -358,7 +371,7 @@ class Life:
             # symbol's, whatever the pause did to the bag (a short pause left the first symbol a memory under a faded
             # context and a long one no memory at all, so the mark fell a symbol apart between the two, runs 53/54)
             if first_after_pause:
-                self._start_armed = True; self._start_pending = False
+                self._start_armed = True; self._start_pending = False; self._seam_pending = True
             elif getattr(self, "_start_armed", False):
                 self._start_pending = True; self._start_armed = False
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
