@@ -4064,3 +4064,23 @@ adapted input, the vigor term off, Adam on the gate at 1e-3; the world's words a
 mask; the uncentered ventral critic out of the credit with its reliability logged; and a
 typist that wants a reply and withholds it until four ticks of the child's quiet. The body
 before the boundary is kept as data/body2_before_recipe_day43.pt.
+
+**The gate's rate, day 6, 06:45.** Runs 121 and 122 (Adam 3e-3) and 123 and 124 (1e-2) on the
+ear actor with the reply withheld, the world's words at 0.3 and the mask, against 115 and
+116 at 1e-3. The weights at day 6: listening −1.25 and −1.16 at 3e-3 (where 1e-3 stood at
+day 18), −1.79 and −2.64 at 1e-2; the bout +1.53 and +1.47, and +3.95 and +3.85; the net
+mid-bout inside a line +0.28 and +0.31 at 3e-3, +0.33 and +0.32 at 1e-3 on day 18, +2.16 and
++1.21 at 1e-2. The two weights walk in lockstep at every rate: the bout weight is one weight
+for the 95 percent of bouts outside the parent's lines, where continuing pays, and the
+listening weight can only ever offset it by the inside credit, so the difference settles and
+the rate sets only how fast. The behavior at days 4 to 6: words said over the parent 71, 62,
+64 and 68, 77, 71 at 3e-3 (against 73, 82, 103 and 63, 72, 81 at 1e-3), 53, 59, 59 and 36,
+26, 31 at 1e-2: the fast gate's listening weight of −2.6 does stop the starts, and starts are
+most of the words said over the parent. But 1e-2 pays for it: run 123's mouth 42 and 38 of
+48 and its gate swinging from 0.79 to 0.31 in a day, run 124's unheard combinations 93
+started and 56 full of 128 with the memory road at 12 of 32 against 85 to 96 full and 20 to
+24 elsewhere, the other weights' norm 11 to 14 against 5 to 6, the words past the answer 13
+to 16 per answer. At 3e-3 the mouths 48 and 47, 48 and 48, the unheard combinations 106 and
+96, 92 and 85 of 128, the words past the answer 10 to 13. So 1e-2 is out; 3e-3 is a
+candidate against 1e-3 at day 16 near 07:05, before the boundary. The served body's day 42:
+167 smiles, no frown, no turning-away, "red" learned, 52 known words, 106 lines heard.
