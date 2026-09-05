@@ -292,6 +292,15 @@ class Organs(nn.Module):
         # which bands feed it (vcrit_bands): all by default; the ceiling instrument of 2026-09-04 read +0.51 for the
         # slow bands alone against +0.38 for all eight, the fast bands adding overfit
         self.register_buffer("vcrit_mask", torch.ones(nb))
+        # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the
+        # eligibility trace carried through a precision matrix (the Kalman form of TD; the online LSTD of Xu et al. 2002).
+        # A gradient head fit for one pass to correlated inputs reads their dominant common component, which on the slow
+        # bands runs against the return (the cross-page instrument, 2026-09-05: -0.49, -0.74, -0.60 on days the body never
+        # lived, where least squares read +0.66, +0.92, +0.71); the inverse covariance divides that component out, as a
+        # decorrelating inhibitory input layer does. A and b are the accumulated statistics (sized by the life to the
+        # head's active inputs plus the level), float64 for the solve.
+        self.register_buffer("vc_A", torch.zeros(0, 0, dtype=torch.float64))
+        self.register_buffer("vc_b", torch.zeros(0, dtype=torch.float64))
         # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream, the feelings, and the
         # salience of the mouth's proposal (the forecast's certainty, as the striatum reads the
         # strength of a cortical request for action)
@@ -403,6 +412,15 @@ class Organs(nn.Module):
     def value_long(self, states):
         """the ventral critic's value over the bands' states (see vcrit_input)"""
         return (self.vcrit_input(states) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
+
+    def vcrit_rls_solve(self, idx):
+        """the decorrelated head from its statistics: w = A^-1 b, written into the head over its active inputs and the level"""
+        with torch.no_grad():
+            try:
+                w = torch.linalg.solve(self.vc_A, self.vc_b)
+            except Exception:
+                w = torch.linalg.lstsq(self.vc_A, self.vc_b.unsqueeze(1)).solution.squeeze(1)
+            self.vcrit.weight.zero_(); self.vcrit.weight[0, idx] = w[:-1].to(self.vcrit.weight.dtype); self.vcrit.bias[0] = w[-1].to(self.vcrit.bias.dtype)
 
     def values(self, states):
         """V_b(s_b) for every band: [nb]"""

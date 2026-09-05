@@ -4470,3 +4470,91 @@ parent with the lesson off: acted inside the parent's lines 0.37 and 0.36 of the
 p(start) 0.26 and 0.31, p(continue) 0.56 and 0.45, against 0.44 and 0.43, 0.67 and 0.66
 outside: where the Adam bodies stood at day 14 (0.30 and 0.18; 0.23 and 0.15; 0.49 and 0.31).
 Twice as fast to the same place, and the same place; the optimizer is not the remainder.
+
+**The young body's value is readable, 13:52.** The night-transfer page lived by run 137's day-6 body
+(9000 ticks, 126 rewards) and replayed through its day-11 body: the slow bands drift 0.41 to 0.55
+per band across five nights (centered 0.25 to 0.51), the fastest drift I have measured, and a
+ridge head from the slow bands fit on the first 60 percent of the day-6 body's ticks reads the
+return at horizon 1024 on the held-out 40 percent at +0.85, and on the day-11 body at +0.89; fit on
+day 11 it reads +0.87 own and +0.86 on day 6. The served body's day 40 read +0.50. So the young
+body's features carry the value more plainly than the old body's, and carry it across five nights
+of the fastest drift. The same head with a tenth of the regularization flips to −0.85 held-out:
+one day is one ramp, and a 768-weight head fit hard to its first part predicts the wrong sign on
+its last part; the regularization ridge needs is the whole penalty, not a tenth of it. Meanwhile
+runs 137 to 140's live three-flag heads read their reliability at −0.18 to +0.19 through days 9 to
+12. The features are not the defect; the live rule on them is, and its offline replica on this
+very page (the trace at the horizon, Adam 1e-3, forgetting at 12000) and a grid of its variants
+(shorter forgetting, a smaller step, the standardized input, the normalized step) are computing.
+
+**The third defect is the input's scale, 13:58.** The day-6 value instrument on runs 137 to 140 (four
+fresh instrument days each, the head frozen): the live three-flag head reads the return at its horizon
+at +0.07, −0.08, +0.09 and −0.29, nothing, as the live reliability said. Its offline replica on run
+137's own day-6 page (the trace at the horizon, Adam 1e-3, forgetting at 12000, the raw slow bands)
+reads −0.86 held-out and −0.86 on the day-11 body, and so does every variant on the raw bands:
+forgetting at 3000 or 1000, the step at 1e-4, TD(0), no forgetting, the normalized step. The raw
+slow bands have a norm of 8 and a per-dimension standard deviation of 0.08: their variation is a
+hundredth of their level, so the semi-gradient is the mean direction times the error and the head
+learns the day's level as a ramp, which on the young body has the wrong sign for the rest of the
+day. Standardized (the fit part's mean and scale) the same rule reads +0.88 held-out and +0.85 to
++0.87 on the day-11 body after one pass, with Adam or the normalized step, as the ridge ceiling
+does. But the served body's day 40, where the raw head read +0.52 across ten nights, reads −0.38 to
+−0.56 under every running normalization I tried (mean alone at 12000, scale alone, both at 4096 to
+48000): what mends the young body breaks the old. The two pages are being fit side by side with
+least squares at five regularizations and the live rule at 1 to 64 passes on raw, statically
+standardized and running-standardized inputs, and the diary's own day-50 body is living the page
+against its day-43 body, to find the one form that reads both.
+
+**Runs 137 to 140 ended, 14:04.** Their reliability read −0.18 to +0.19 through day 14 and their day-6
+value instrument +0.07, −0.08, +0.09 and −0.29 on fresh days: the three-flag head does not read the
+return live on a young body, and the offline replica says why (the raw input's scale). Nothing more
+was to be learned from them; their four cores go to the instrument that decides the next form. The
+pages instrument (scratchpad/nt_pages.py): one body lives the fast parent's plan under several seeds,
+and a head fit on one page is read on the pages it never lived. Every reading of the critic so far,
+the +0.52 across ten nights and today's +0.85, was within one page (the fit on its first part, the
+read on its last, or the same page through another night's body), where a head that has learned
+where it is in the parent's plan reads the return without learning any value the body could act
+on; the value instrument's four fresh days, which read the live heads at zero all along, are the
+cross-page reading. Run 137's day-6 body and the diary's day-50 body are living pages under seeds 8,
+9 and 10 beside their seed-7 pages.
+
+**A reading of −0.96, 14:10.** The diary's day-50 body lived the seed-7 page (141 rewards) and its
+day-43 body replayed it: the slow bands 0.98 to 1.00 at the same tick, the fast bands 0.71 to 0.79
+(the ear recipe moved the fast bands, not the slow). A ridge head fit on the first 60 percent reads
+the return on the last 40 percent at −0.96, on either body, at either regularization, from the slow
+bands or all eight. A linear head cannot be that wrong about a value; it can be exactly that wrong
+about a trend. Two monotone ramps, the return's and the features', fit on the rising part and read
+on the falling, give −0.96, and every within-page reading of the critic this week, the +0.52 that
+held across ten nights and this morning's +0.85, is the same kind of number with a kinder sign. The
+cross-page reading is the only one that counts; it is computing on both bodies.
+
+**The cross-page reading, and the decorrelated critic, 14:34.** Run 137's day-6 body lived four days
+under four parent plans (seeds 7 to 10; 70 to 111 rewards each), and the diary's day-50 body four of
+its own. A ridge head from the slow bands fit on one day of the young body reads the return at
+horizon 1024 on the three days it never lived at +0.66, +0.92 and +0.71 (the regularization at 10),
+and fit on three days reads the fourth at +0.70: the young body's state carries a value that holds
+across the parent's plans. The live rule (the trace at the horizon, Adam 1e-3, forgetting at
+12000) fit on the same day reads the same three days at −0.49, −0.74 and −0.60, and every input
+form I tried (raw, centered, standardized, the running mean and scale at 1024 or 4096) leaves it
+negative; on three days of fitting, +0.05. The defect is not the input's scale after all; it is
+that a gradient head fit for one pass to correlated inputs reads their dominant common component,
+which on the slow bands runs against the return, and only the inverse covariance divides it out:
+the first-order direction of TD(λ=1) is XᵀG, the least-squares head is (XᵀX)⁻¹XᵀG, and on these
+inputs the two point opposite ways. Recursive least-squares TD(λ) with forgetting (the eligibility
+trace carried through a precision matrix; the online form of LSTD, the Kalman form of TD) fit on
+the same one day, one pass, reads the three unlived days at +0.63, +0.92 and +0.71 with the prior
+100 I, standardized or raw, with or without forgetting, with the trace at γ or at γ²: at the
+ceiling. On the diary's day-50 body no head fit on one day reads the other three consistently
+(the ridge itself −0.12, +0.03, −0.81); fit on three days, the least-squares head reads the fourth
+at +0.75 and the recursive head at +0.87, where the gradient head reads −0.70. A body whose
+inputs are decorrelated by its inhibitory interneurons learns as the recursive head does; that is
+biology's answer to correlated inputs, and it is the fixed point a decorrelating layer computes.
+Written as vcrit_rls (body/model.py, body/life.py): the statistics A and b of the trace against
+the state's discounted change and the reward, forgetting at vcrit_forget with a constant prior
+vcrit_rls_delta·I so no unexcited direction winds up, the head the solve every vcrit_rls_every
+ticks, float64, saved with the body and sized by the life to the head's active inputs plus the
+level. The organ tests 16 of 16; on a scratch copy 2000 ticks under the fast parent give a level
+of 22 against returns near 25, and the statistics round-trip through save and load. Runs 141 and
+142 (out of the credit, the reliability logged) and 143 and 144 (in the credit at weight 1 through
+the gain) on the ear actor launched at 14:32, otherwise as 137 to 140; their day-6 value
+instrument, four fresh days each, is the reading that arms the diary's boundary
+(scratchpad/recipe_boundary_rls.sh, unarmed: the critic out of the credit first).

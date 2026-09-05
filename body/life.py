@@ -86,6 +86,13 @@ PHYSIOLOGY = dict(
     # undo. Synapses decay; a critic that forgets at the horizon of days tracks a body that changes over days. The bias
     # (the level) is not decayed. Candidate 24000 (two days)
     vcrit_forget=0,
+    # THE DECORRELATED CRITIC (vcrit_rls 1): the ventral head learns by recursive least-squares TD(lambda) instead of the
+    # gradient: the trace (decaying at gamma x vcrit_lambda) times the state's discounted change accumulates in A, the trace
+    # times the reward in b, both forgetting at vcrit_forget ticks (0 = never) with a constant prior vcrit_rls_delta x I (so A
+    # never winds up in an unexcited direction), and the head is the solve every vcrit_rls_every ticks. The cross-page
+    # instrument (2026-09-05): one pass over one day, read on three days the body never lived, +0.63, +0.92, +0.71 against
+    # the ceiling +0.66, +0.92, +0.71 and the gradient head's -0.49, -0.74, -0.60.
+    vcrit_rls=0, vcrit_rls_delta=100.0, vcrit_rls_every=64,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -172,6 +179,14 @@ class Life:
                 for b_ in vb.split(","):
                     organs.vcrit_mask[int(b_)] = 1.0
         self.m.vcrit_center = bool(int(self.cfg.get("vcrit_center", 1)))
+        with torch.no_grad():
+            self._vc_idx = organs.vcrit_mask[:, None].expand(organs.vcrit_mask.numel(), organs.vcrit.weight.shape[1] // organs.vcrit_mask.numel()).reshape(-1).nonzero().squeeze(1)
+            if int(self.cfg.get("vcrit_rls", 0)):
+                k = int(self._vc_idx.numel()) + 1
+                if organs.vc_A.numel() != k * k:
+                    organs.vc_A = torch.eye(k, dtype=torch.float64, device=organs.vcrit.weight.device) * float(self.cfg.get("vcrit_rls_delta", 100.0))
+                    organs.vc_b = torch.zeros(k, dtype=torch.float64, device=organs.vcrit.weight.device)
+        self._vc_e = None
         self.m.read_sharp = float(self.cfg["read_sharp"])
         self.sil = tok.token_to_id("<pad>")
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
@@ -457,6 +472,23 @@ class Life:
                     td_long = r + gl * vl_now.detach() - m.value_long(self._bands_prev.detach())
                     gl_tr = gl
                 lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
+                rls = int(self.cfg.get("vcrit_rls", 0))
+                if rls:
+                    # THE DECORRELATED CRITIC: the statistics of the trace against the state's discounted change and the reward
+                    with torch.no_grad():
+                        one = torch.ones(1, dtype=torch.float64, device=self.dev)
+                        xa_prev = torch.cat([m.vcrit_input(self._bands_prev.detach())[self._vc_idx].double(), one])
+                        xa_now = torch.cat([m.vcrit_input(self.bands.detach())[self._vc_idx].double(), one])
+                        e = getattr(self, "_vc_e", None)
+                        self._vc_e = (gl_tr * lam * e if e is not None else torch.zeros_like(xa_prev)) + xa_prev
+                        vf_ = float(self.cfg.get("vcrit_forget", 0) or 0); beta = (1.0 - 1.0 / vf_) if vf_ > 0 else 1.0
+                        dlt = xa_prev - gl * xa_now
+                        m.vc_A.mul_(beta).add_(torch.outer(self._vc_e, dlt))
+                        if beta < 1.0:
+                            m.vc_A.diagonal().add_((1.0 - beta) * float(self.cfg.get("vcrit_rls_delta", 100.0)))
+                        m.vc_b.mul_(beta).add_(self._vc_e * float(r))
+                        if self.ticks % int(self.cfg.get("vcrit_rls_every", 64)) == 0:
+                            m.vcrit_rls_solve(self._vc_idx)
                 with torch.no_grad():
                     x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach()), torch.ones(1, device=self.dev)])
                     if lam > 0.0:
@@ -465,7 +497,9 @@ class Life:
                         tr = getattr(self, "_vtrace", None)
                         self._vtrace = (gl_tr * lam * tr if tr is not None else torch.zeros_like(x_prev)) + x_prev
                     e_in = self._vtrace if lam > 0.0 else x_prev
-                if tau > 0.0:
+                if rls:
+                    loss_vl = td_long.detach() * 0.0                   # the decorrelated head learns above, not by the gradient
+                elif tau > 0.0:
                     # THE NORMALIZED STEP at the critic's time constant: the input's energy tracked over a horizon
                     with torch.no_grad():
                         en = float((e_in * e_in).sum())
@@ -487,7 +521,7 @@ class Life:
                 (loss_v + 0.01 * loss_g).backward()
                 self.opt_value.step()
                 vf = float(self.cfg.get("vcrit_forget", 0) or 0)
-                if vf > 0:
+                if vf > 0 and not rls:
                     with torch.no_grad():
                         m.vcrit.weight.mul_(1.0 - 1.0 / vf)       # the forgetting head
                 # DOPAMINE: the TD error of the band whose discount matches dopamine's (clock 16,
@@ -913,7 +947,7 @@ class Life:
             rep["store_slots"] = self.store.n(); rep["vrel"] = round(self._vrel_corr, 3)
             self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
-            self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None
+            self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None
             self.fatigue = 0.0
             self.sleep_pressure = 0
             self.nights += 1; self.day_n += 1
@@ -1029,13 +1063,16 @@ class Life:
         if w is not None and w.shape[1] < organs.mouth_gate.weight.shape[1]:
             # an older body's gate had fewer inputs (no salience, no level): those weights are born at zero
             blob["organs"]["mouth_gate.weight"] = torch.cat([w, torch.zeros(w.shape[0], organs.mouth_gate.weight.shape[1] - w.shape[1])], 1)
+        vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
-        if missing.missing_keys:
-            print("load: organs without", missing.missing_keys, "(an older recipe; born fresh where missing)")
+        if [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")]:
+            print("load: organs without", [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")], "(an older recipe; born fresh where missing)")
         c = dict(blob.get("cfg") or {})
         c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
         c.update(cfg or {})
         life = cls(organs, tok, cfg=c, device=device, seed=seed, save_path=save_path or path)
+        if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved["vc_A"].shape == life.m.vc_A.shape:
+            life.m.vc_A.copy_(vc_saved["vc_A"].to(device)); life.m.vc_b.copy_(vc_saved["vc_b"].to(device))   # the decorrelated critic's memory
         life.store.load_state_dict(blob["store"])
         L = blob.get("life") or {}
         for k in ("ticks", "nights", "day_n", "sleep_pressure", "fatigue", "stress", "mood", "n_bursts", "last_night"):

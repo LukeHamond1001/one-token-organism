@@ -762,6 +762,7 @@ before the served body takes it at a day boundary.
 
 ## 7. Instruments (the supervisor's, never the caregiver's)
 
+- **The critic's third defect was the learning rule, not the input.** Every reading of the critic before 2026-09-05 14:00 was within one page (the fit on a day's first part, the read on its last, or the same page through another night's body); such a head reads the parent's plan, and can read it at −0.96. The cross-page instrument (one body lives several days under different plans; a head fit on one is read on the others) gives the honest reading: on a young body a least-squares head reads unlived days at +0.66/+0.92/+0.71, the gradient head (Adam, one pass, any input normalization) at −0.49/−0.74/−0.60. A one-pass gradient head on correlated inputs reads their dominant common component (its first-order direction is XᵀG); the least-squares head is (XᵀX)⁻¹XᵀG. THE DECORRELATED CRITIC (vcrit_rls): recursive least-squares TD(λ) with forgetting, the trace carried through a precision matrix (the online LSTD; the Kalman form of TD; what a decorrelating inhibitory input layer computes), reads the unlived days at +0.63/+0.92/+0.71 from one day, one pass. Statistics A, b (float64, saved with the body), the prior vcrit_rls_delta·I kept constant under forgetting, the solve every vcrit_rls_every ticks.
 - The gauge: the cortex alone (store off), teacher-forced on the night's
   dreams, before and after the lesson.
 - The free-running probe: a cue typed, then the mouth alone, memory off and
@@ -820,6 +821,7 @@ before the served body takes it at a day boundary.
   rest. The run-on (scratchpad/runon.py, from the caregiver's log): in the
   twenty-five ticks after a cue, the symbols the body adds after its first
   word, and the rest it takes right after that word.
+- **The pages instrument** (scratchpad/nt_pages.py + nt_heads7/9.py): one body lives the fast parent's plan under several seeds; heads fit on one page are read on the others. The only reading of a critic that counts; within-page readings (night_transfer + nt_heads) measure drift, not value.
 
 ## 8. Tests (each fails when its organ stops doing its job)
 
