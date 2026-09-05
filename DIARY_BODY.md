@@ -3675,3 +3675,22 @@ of a head shaping the reward it predicts. Runs 89 and 90, born 20:52 on the comm
 recipe (the slow-band head learning from birth, its weight in the credit 0), the parent
 who wants a reply, twenty days, read at day 20 by the value instrument: a head kept out
 of the loop, if it reads +0.6, leaves the history blameless and the loop guilty.
+
+**The reliability gain on fixed bodies, 21:53.** The ventral head's weight in the gate's
+credit as its own running correlation between what it foretold and the return that
+arrived (vcrit_auto), measured on run 85's day-20 and day-6 bodies held fixed for four
+chained days with the credit on: on the day-20 body the head's reliability read +0.65,
++0.10, +0.55 and +0.44 at the days' ends against +0.51, +0.59 and +0.72 for the frozen
+head the next day; on the day-6 body +0.50, −0.46, −0.55 and +0.44 against −0.46,
+−0.25 and +0.72 (the newborn's copy learned to foresee by its fourth day of standing
+still). The gain tracks the truth roughly and shuts the credit off when the head is
+wrong, which is its job. The smiles: with the gain 356, 303, 357, 298 on the day-20
+body and 380, 377, 337, 358 on the day-6 body; with no credit at all, on the same bodies
+and days, 369, 322, 372, 348 and 379, 338, 337, 358. The credit under the gain neither
+adds nor costs a smile (my note at 21:14 compared them to run 67's level by mistake). So
+the mechanism is safe and honest; whether it gives the act anything the fast credit did
+not is the live pair's question. Runs 91 and 92, born 21:13 with the gain from birth:
+their first days' reliabilities −0.45 and +0.12, the credit off in the newborns as it
+should be; read at days 6, 16 and 20. Runs 89 and 90 (the head out of the credit) at
+day 6: the mouths 45 and 43, 48 and 47; the run-on 10.5 and 9.8. Day 32's teacher: 87
+smiles, no frown, no turning away, every cue completed.
