@@ -3658,3 +3658,20 @@ with age, as the day-20 chains on run 67's mature body foretold, while the all-b
 head reads wrong at every age. So the long-timescale foresight is in the ladder as
 built, arriving with maturity; the open question is only how to hand it to the act.
 Runs 85 and 86 stopped at 20:33 with their forty days and instruments complete.
+
+**The age chains, 20:52.** The slow-band head learned from zero on run 85's saved bodies
+at ages 6, 16, 20, 30 and 40, each held at its age for five chained days with the head
+out of the credit, frozen at each day's start against the return at horizon 1024: age 6
++0.33, −0.32, +0.20, +0.68; age 16 +0.75, +0.75, +0.38, +0.78; age 20 +0.80, +0.65,
++0.61, +0.66; age 30 +0.77, +0.60, +0.82, +0.57; age 40 +0.75, +0.58, +0.71, +0.80
+(pooled over the days, which mixes their levels, +0.37, +0.40, +0.57, +0.60, +0.58). So
+a newborn's four minutes are unforeseeable and a two-week-old's are foreseeable at
++0.7 a day by a head that has learned for a single day, on any body from 16 to 40 days
+old. On run 67's day-20 body the same head read +0.46. The live heads of runs 87 and 88,
+learned from birth with their error in the gate's credit, read +0.21 and −0.18 at day 20
+against +0.68 for a fresh head on a body of that age: the deficit is the head's own
+history (two weeks fitting a newborn's noise into weights of norm ninety) or the loop
+of a head shaping the reward it predicts. Runs 89 and 90, born 20:52 on the committed
+recipe (the slow-band head learning from birth, its weight in the credit 0), the parent
+who wants a reply, twenty days, read at day 20 by the value instrument: a head kept out
+of the loop, if it reads +0.6, leaves the history blameless and the loop guilty.
