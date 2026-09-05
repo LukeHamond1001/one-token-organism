@@ -3646,7 +3646,7 @@ cortex alone 58 and 55 at the end, the smiles 63 to 100 a day; at day 20 its pin
 bands read +0.43 and +0.67 and the old all-band ventral head −0.57. The recipe stands
 accepted for forty days. The day-40 value instruments follow.
 
-**The day-40 value instruments, 20:35.** Run 85's day-40 body, four lived days: the
+**The day-40 value instruments, 20:24.** Run 85's day-40 body, four lived days: the
 pinned 1024-tick band +0.49, +0.28, +0.50, +0.41 (a mean of +0.42; at day 20 it read
 −0.13), the 4096-tick band +0.77, −0.23, +0.69, +0.79 (+0.51), the old all-band ventral
 head −0.46, +0.27, −0.22, −0.24 (−0.16). Run 86's: the 1024-tick band +0.26, +0.11, +0.00,
