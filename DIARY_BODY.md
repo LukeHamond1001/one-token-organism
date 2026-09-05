@@ -4327,3 +4327,16 @@ near zero rather than large. SGD 0.05 (133 and 134): −0.32 and −0.35 against
 Adam bodies or stops where they did. Day 46 of the diary ended its post-night cues with six
 turnings-away, each at an attention of 0.12 to 0.14 after a 12-second wait: the reply comes
 at once from day 47.
+
+**The young body's nights, 10:38.** The night-transfer instrument on run 125's own bodies at
+days 16, 20 and 6: the slow bands drift across four nights at this age (cosine at the same
+tick 0.75, 0.83, 0.83; centered 0.51, 0.69, 0.72) where the forty-day-old's did not (0.99,
+1.00, 1.00), and across the ten nights back to day 6 they are another body (0.58, 0.61,
+0.59). Yet the ridge head from the slow bands fit on day 16 reads the return at +0.76 on its
+own held-out ticks, higher than the forty-day-old's +0.50, and +0.70 on the body of four
+nights later; fit on day 20 it reads +0.71 and +0.63 on day 16. Only the day-6 body is
+foreign to it (−0.57). So a young body's value is there to read and a regularized head keeps
+it across the nights it lives through; the live heads' readings near zero at day 16 are the
+estimator's failure, the overfit of one day's ramp that the cache showed, and the forgetting
+head with the trace is the remedy runs 137 to 140 will measure from birth. A live head that
+forgets at a day also forgets the day-6 body by day 16, which is what the drift asks of it.
