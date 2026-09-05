@@ -4301,3 +4301,13 @@ at about a day. All three exist as flags. Runs 137 and 138 (the head out of the 
 reliability logged) and 139 and 140 (in the credit through its gain) on the ear actor with
 Adam 1e-3, the reply withheld, the world's words 0.3 and the mask, take the slots the dose
 and kept-function pairs free near 11:15.
+
+**The wait itself costs, 10:35.** Day 46 under the 12-second patience: four turnings-away by
+its post-night cues, each at an attention of 0.12 or less, the replies now delivered after
+12 seconds and 34 to 39 symbols instead of 45 seconds and 116. The cause is in the
+caregiver's own rule: its attention drifts down in silence, so a withheld reply costs
+attention through the wait whatever the cap, and a body that does not yet pause pays it every
+time. The wait can only teach a body whose long critic carries the pause's consequence into
+the gate's credit, and the served body's critic is not in its credit. So from day 47 the
+diary's typist replies at once (the patience 12 seconds, the mask and the ear unchanged); the
+withheld reply returns with the critic. Days 47 to 51 under it.
