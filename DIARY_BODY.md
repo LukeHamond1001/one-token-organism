@@ -4191,3 +4191,20 @@ pairs' slots. The rate pairs' day 20: at 3e-3, words said over the parent 31 to 
 42 and 41, 44 and 38; at 1e-2, 26 to 42, the mouths 28 and 27, 23 and 18, the gates at 0.97
 and 0.11 on the last day. The second body's day 14: 68 smiles, no turning-away, its cues all
 answered; its days 15 to 17 began 08:25.
+
+**The critic runs at day 6, and day 45's first ten minutes, 09:00.** The value instrument
+on the day-6 bodies (four fresh instrument days each): the uncentered ventral critic reads
+the return at its horizon at +0.17 (−0.18, +0.36, +0.12, +0.37) on run 126 with the head out
+of the credit, +0.14 (+0.04, +0.46, −0.22, +0.28) on 127 and −0.26 (−0.09, −0.14, −0.23,
+−0.57) on 128 with the head in the credit through its gain; the pinned bands read as they
+always have on a young body, band 5 near −0.2, band 6 at −0.7 to −0.8 (the day's trend,
+beyond a day's judgment). Weakly right-signed on two of three where the centered heads read
+−0.26 and −0.28 at day 20, and nowhere near the +0.52 the same rule read on the day-40 body:
+a six-day-old's slow bands do not yet carry what a forty-day-old's do, which is the age
+chains' finding again (a newborn's minutes unforeseeable, a two-week-old's foreseeable). Day
+16 near 09:40 is the reading that counts. The heads in the credit have not changed behavior
+yet: run 127's words said over the parent 64 to 74 and its words past the answer 16 to 17
+per answer at days 14 to 16, run 128's 49 to 57 and 11. The served body's day 45, ten
+minutes in: 45 smiles, no turning-away, the gate's mean on its lines 0.49 after 0.61 on day
+44 and 0.54 on day 43, the parent's attention at smiles 0.81. The gate has found its new
+coordinates by its own lesson in a day, as the fast bodies' gates did.
