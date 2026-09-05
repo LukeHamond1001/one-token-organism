@@ -60,6 +60,14 @@ PHYSIOLOGY = dict(
     # +0.51, its weights settling near 89; the same rule over all eight bands +0.19 with weights running to 78, the fast
     # bands' overfit. The trace forms on the slow bands: erratic (+0.33 pooled) or weak (+0.12). "" = all eight
     vcrit_bands="5,6,7",
+    # THE RELIABILITY GAIN (vcrit_auto): the ventral head's weight in the gate's credit is its own measured reliability,
+    # the running correlation between what it foretold and the return that then arrived (a Kalman gain for a noisy
+    # estimate; the brain scales a lesson by its certainty, Pearce and Hall 1980, and the prefrontal input to the ventral
+    # striatum matures late). The age chains of 2026-09-04: a newborn's four minutes are unforeseeable, a two-week-old's
+    # foreseeable at +0.7; a head wired in from birth (runs 87/88) read wrong. Computed from the head's own buffer: the
+    # return at its horizon over 3072 ticks (95 percent of the discounted mass), the correlation decayed over 8192
+    # samples, the gain max(0, corr). 0 = the fixed weight vcrit_w
+    vcrit_auto=0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -127,6 +135,9 @@ class Life:
         # the slowest band's baseline (one part in 16384 a tick) could not track the rate within a day and
         # its undiscounted value integrated raw reward (run 27, day 6: 643 against a return of 131).
         self.rbar = 0.0
+        # the reliability gain's buffers: the head's value and the reward per tick, the running moments of (value, return)
+        self._vbuf_v = collections.deque(maxlen=4096); self._vbuf_r = collections.deque(maxlen=4096)
+        self._vrel = [0.0] * 6; self._vrel_gain = 0.0; self._vrel_corr = 0.0
         self._differential = [int(c) >= int(self.cfg["diff_horizon"]) for c in self.m.clocks]
         with torch.no_grad():
             self.m.diff[:] = torch.tensor(self._differential, dtype=torch.bool, device=self.m.diff.device)
@@ -401,6 +412,8 @@ class Life:
                 delta = float(td[int(self.cfg["dopamine_band"])].detach())
                 delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
                 delta_long = float(td_long.detach()); vlong = float(vl_now)
+                if int(self.cfg.get("vcrit_auto", 0)):
+                    self._vrel_update(vlong, r)
                 for b in range(len(gam)):
                     self.v_buf[b].append((self._bands_prev[b].detach().cpu(), r, self.bands[b].detach().cpu()))
             else:
@@ -491,7 +504,8 @@ class Life:
         if abs(delta) >= float(self.cfg["burst"]):
             self.n_bursts += 1
         # --- the gate's buffer and lesson ---
-        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + float(self.cfg.get("vcrit_w", 0.0)) * delta_long, int_t, self.fatigue])
+        vw = float(self.cfg.get("vcrit_w", 0.0)) * (self._vrel_gain if int(self.cfg.get("vcrit_auto", 0)) else 1.0)
+        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long, int_t, self.fatigue])
         if self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0 and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:
                 self._gate_lesson()
@@ -511,7 +525,7 @@ class Life:
             del self.page[:20000]; self.page_base += 20000
         self.face_prev = self.face_now
         self.ticks += 1; self.sleep_pressure += 1
-        self.last = {"tick": self.ticks, "you": round(self.face_now, 2), "face": round(its_face, 2),
+        self.last = {"tick": self.ticks, "you": round(self.face_now, 2), "face": round(its_face, 2), "vrel": round(self._vrel_corr, 3),
                      "mood": round(self.mood, 2), "cort": round(self.fatigue, 2), "fatigue": round(self.fatigue, 2),
                      "stress": round(self.stress, 2), "ent": round(ent, 2), "felt": felt,
                      "said": (self.tok.decode([int(nxt)]) if nxt != self.sil else ""),
@@ -524,6 +538,26 @@ class Life:
             self._sleep_now()
 
     # ---------------- the gate's lesson (the striatum's opponent rule) ----------------
+    def _vrel_update(self, vlong, r):
+        """THE RELIABILITY GAIN: every 256 ticks, once the buffer holds 4096, the return at the head's horizon for the
+        oldest 256 ticks (3072 rewards each, 95 percent of the discounted mass) against the head's value then; the
+        moments decay over 8192 samples; the gain is max(0, corr)"""
+        self._vbuf_v.append(float(vlong)); self._vbuf_r.append(float(r))
+        if len(self._vbuf_r) < 4096 or self.ticks % 256 != 0:
+            return
+        gl = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+        rs = torch.tensor(list(self._vbuf_r)); vs = torch.tensor(list(self._vbuf_v))
+        disc = gl ** torch.arange(3072, dtype=torch.float32)
+        G = torch.stack([(rs[i:i + 3072] * disc).sum() for i in range(256)]); V = vs[:256]
+        d = 1.0 - 1.0 / 8192; m = self._vrel
+        for v_, g_ in zip(V.tolist(), G.tolist()):
+            m[0] = d * m[0] + 1.0; m[1] = d * m[1] + v_; m[2] = d * m[2] + g_
+            m[3] = d * m[3] + v_ * v_; m[4] = d * m[4] + g_ * g_; m[5] = d * m[5] + v_ * g_
+        n = m[0]; mv, mg = m[1] / n, m[2] / n
+        var_v, var_g = m[3] / n - mv * mv, m[4] / n - mg * mg; cov = m[5] / n - mv * mg
+        corr = cov / math.sqrt(max(var_v, 1e-9) * max(var_g, 1e-9))
+        self._vrel_corr = float(corr); self._vrel_gain = float(max(0.0, corr))
+
     def _gate_lesson(self):
         buf = list(self.gate_buf)
         K = int(self.cfg["elig_ticks"]); dec = float(self.cfg["elig_decay"])
@@ -766,7 +800,7 @@ class Life:
                                       "cos_before": before_cos, "cos_after_nrem": mid_cos, "cos_after": after_cos}})
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
-            rep["store_slots"] = self.store.n()
+            rep["store_slots"] = self.store.n(); rep["vrel"] = round(self._vrel_corr, 3)
             self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None
