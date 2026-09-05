@@ -126,6 +126,10 @@ PHYSIOLOGY = dict(
     # cosine 0.98 with the mean) moved it 0.004. With the vigor term on the same input moves the wrong way (+0.09): the
     # credit runs high where the parent's rewarded words are, and vigor acts more wherever the credit is high
     gate_ear=0,
+    # THE FUNCTION KEPT UNDER THE MOVING MEAN (gate_center_keep 1): with the adapted input, the gate's bias absorbs
+    # w . d_mu at every tick the running mean moves, so the centering is a change of the lesson's coordinates only.
+    # 0 = the form of 2026-09-04 (the function shifts with the mean). Runs 131/132 measure it against 115/116.
+    gate_center_keep=0,
     # THE GATE'S OPTIMIZER (gate_opt "sgd" | "adam", gate_adam_lr): Adam normalizes each weight's step by its gradient's
     # running scale, so a consistent small gradient on one input (the ear) accumulates at the rate whatever the noise
     gate_opt="sgd", gate_adam_lr=1e-3,
@@ -528,7 +532,14 @@ class Life:
                 # THE ADAPTED INPUT: the gate's inputs relative to their running mean
                 if getattr(self, "_feat_mu", None) is None or self._feat_mu.shape != feat.shape:
                     self._feat_mu = torch.zeros_like(feat)
-                self._feat_mu += (feat - self._feat_mu) / float(self.cfg.get("gate_center_tau", 1024))
+                d_mu = (feat - self._feat_mu) / float(self.cfg.get("gate_center_tau", 1024))
+                if int(self.cfg.get("gate_center_keep", 0)):
+                    # THE FUNCTION KEPT UNDER THE MOVING MEAN (2026-09-05): the bias takes w . d_mu as the running mean
+                    # moves, so centering changes the lesson's coordinates and never the gate's function. Without it a
+                    # body switched to the adapted input mid-life lost w . mu (−2.06 on the served body's day 44) and
+                    # opened its gate until its lesson refit; and every drift of the mean moves the operating point.
+                    m.mouth_gate.bias += (m.mouth_gate.weight[0, : d_mu.numel()] @ d_mu)
+                self._feat_mu += d_mu
                 feat = feat - self._feat_mu
             if int(self.cfg.get("gate_ear", 0)):
                 # THE EAR: the world's symbol this tick, its own act last tick (sensed, not inferred)
