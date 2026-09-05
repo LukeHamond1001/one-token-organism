@@ -109,6 +109,12 @@ PHYSIOLOGY = dict(
     # heard, at the fast critic's horizon; and the parent's engagement, which sets its pace, becomes a reward rate the
     # slow critics can foresee. 0 = off; candidate 0.1 (a line of fifteen symbols near a smile)
     world_r=0.0,
+    # COROLLARY DISCHARGE (world_mask, 0 = off): the world's word is not felt as reward on a tick after the mouth acted.
+    # Vocalizing suppresses the auditory cortex's response to sound (Eliades and Wang 2003, 2008; the infant's own babble
+    # masks the caregiver's voice), so a symbol said over the parent forfeits, at once and in the reward itself, what would
+    # have been heard: the model-free consequence for talking over, where the withheld reply's delay was invisible to a
+    # critic that never learned to foresee the reply (the pause probe of 2026-09-05: V16 flat across the quiet count)
+    world_mask=0,
     diff_horizon=1024,    # bands with clocks at or above this learn average-reward TD (no discount, the reward rate as baseline)
 )
 
@@ -336,7 +342,9 @@ class Life:
             self.level = lvl
         r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
         if u != self.sil:
-            r += float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
+            wr = float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
+            if wr and not (int(self.cfg.get("world_mask", 0)) and getattr(self, "_acted_last", False)):
+                r += wr                                     # not heard over its own voice (world_mask)
         if self.cfg.get("cost_in_reward") and getattr(self, "_acted_last", False):
             # THE EFFORT IN THE REWARD: the cost of the last act is felt as the next tick's reward, so both critics
             # predict it and the gate reads their error alone. Added to the act's credit outside the critics (the

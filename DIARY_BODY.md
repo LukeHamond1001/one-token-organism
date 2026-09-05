@@ -3778,3 +3778,28 @@ ticks, two days, decoupled from the lesson as in AdamW, the level undecayed, so 
 always the last two days' head. The organ tests 16 of 16. Runs 103 and 104, born when runs
 91 and 92 end, carry it from birth with the reliability gain at weight 1 on the fixed parent
 under the reply rule: their reliability by day and the value instrument at day 20 decide.
+
+**The pause, seen by the critic, 00:56.** The six seeds' day 6 on the fixed parent: the words past
+the answer 14, 16 and 12 per answer on baseline seed 97 and 10, 13 and 10 on seed 98 (days 4
+to 6); under the reply withheld 8, 9 and 10 (seed 99) and 14, 11 and 12 (100); with the world's
+words 10, 9 and 12 (101) and 10, 11 and 9 (102): 12.7 against 10.5, inside the seed noise. Every
+answer yielded before the cap, after 9 to 37 symbols with no trend down; the mouths 47 to 48
+started and 34 to 47 full. So I asked the critic itself. The pause probe: run 100's day-6 body,
+a lived day under the reply withheld, and at every tick while the parent held its reply the
+dopamine band's value, its error, whether the mouth acted, and the quiet count. 438 ticks
+held. The value +0.14, +0.11, +0.13, +0.17 at zero to three quiet ticks after a rest, +0.11,
++0.17, +0.09, +0.11 after an act, where a smile of two a tick away would put it near +1.9;
+the error −0.008 after a rest and −0.007 after an act. The critic does not foresee the reply,
+so the delay the withheld reply imposes never reaches the gate's credit, and the arithmetic
+of 22:23 assumed a foresight the body has not got: a band that averages the cortex over
+sixteen ticks barely moves across a four-tick pause, and ten replies a day are few lessons
+for a linear reading of "I have answered and I am quiet". Two roads from here, both grounded,
+both measured rather than argued. The mask: the world's word is not felt as reward on a tick
+after the mouth acted (vocalizing suppresses the auditory cortex, Eliades and Wang; the
+babble masks the voice), so a symbol said over the parent forfeits, in the reward itself and
+at once, what would have been heard; runs 105 and 106, born 00:54, carry it with the reply
+withheld and the world's words at 0.1, in place of runs 99 and 100, stopped at day 7. And the
+probe again over every band and the gate's own probability by quiet count, to see whether a
+faster band resolves the pause and could carry the credit. The reliability gain's pair closed:
+run 92 at day 20, the head from birth under the gain, −0.53; the gain kept that credit off and
+did nothing else. Run 91's turn-taking: 9.2 per cue at day 20, the same as every recipe.
