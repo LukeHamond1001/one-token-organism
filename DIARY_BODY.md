@@ -4238,3 +4238,12 @@ by its planner: 105 smiles, "cup" in four frames, "one" typed for the first time
 answered ("first milk then" → "ball" clean), the attention recovering to 0.85 to 1.0 in the
 back half after two turnings-away a third of the way in; five turnings-away in all with the
 post-night cues, each after a withheld reply met its 45-second cap.
+
+**Day 45 closed, 09:37.** 131 smiles, no frown, five turnings-away (seven the day before, each
+after a withheld reply met the 45-second cap), the parent's attention 0.77 at the end, "cup"
+learned, 55 known words, 123 lines heard; the gate's mean on the day's lines 0.52, back where
+it was before the switch. The ear recipe stays on the diary. From day 46 the typist's
+patience is 12 seconds (teach_days3b.sh, days 46 to 48; the planners for 47 and 48, "cold"
+and "soft", spawned). The second body's day 15: 19 smiles, no turning-away, "run" heard in
+three frames, and to "dog will" it answered "sit little dog", yesterday's word in an old
+frame, a retention across days.
