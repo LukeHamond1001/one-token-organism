@@ -3907,3 +3907,31 @@ credit (109 and 110, day 9) −0.12 and +0.01: neither reads the return yet. The
 day 38 under the fixed typist: 148 smiles, no frown, no turning-away, "bed" learned in a day
 and nine new lines heard. The second body's day 10: 39 smiles, two turnings-away, all three
 cues answered; its fused babble wears the parent as the first body's never did.
+
+**The lesson replayed, and the ear, 04:16.** The adapted input at day 6 (runs 111 and 112): the
+words said over the parent 85 to 98 and 84 to 95 a day, no fall, and the same on the baseline
+pair (113 and 114: 76 to 103, 88 to 94). So I replayed the gate's own lesson offline on a
+quarter day recorded from run 112's day-6 body: the features as the gate saw them, the acts,
+the dopamine, the belief credit and the fatigue, and whether the parent was typing; then the
+three-factor rule exactly as life.py runs it, from the body's own weights, under the recipe's
+optimizer and others. The recipe (SGD 0.05, the vigor term at 1): the logit moved −0.052
+inside the parent's typing and −0.056 outside, a selective difference of +0.004; at ten times
+the rate both moved ten times as far and the difference stayed under 0.04; Adam the same. The
+lesson learns the global rate and nothing selective, whatever the credit says. Then the
+remaining grounded remedy: a unit input for "the world's symbol arrived this tick", the ear,
+which the striatum has and the face already gives the cortex. With it, under the recipe's
+lesson, the logit moved +0.09 inside against outside in a quarter day, the wrong way: the
+credit runs high where the parent's rewarded words are, and the vigor term (the credit
+itself, whatever the act was) acts more wherever the credit is high. With the vigor term off
+and Adam at 1e-3 the same input moved −0.08 a quarter day, a third of a logit a day in the
+listening direction; SGD without vigor −0.02. THE EAR (gate_ear: the world's symbol this tick
+and its own act last tick, two gate inputs born at zero, an older body widened on load) and
+the gate's optimizer as a choice (gate_opt adam) are written; the organ tests 16 of 16.
+Runs 115 and 116, born 04:15: the ear, the vigor term off, Adam, the adapted input, with the
+reply withheld, the world's words at 0.3 and the mask, against 111 and 112; runs 117 and 118
+the same actor on the baseline environment, against 113 and 114 and the baselines. The
+forgetting head out of the credit (109 and 110) read −0.52, −0.12, +0.07 and −0.14, +0.01,
+−0.12 at days 14 to 16: the head that learned +0.7 in a day on a body held fixed does not
+learn on a body whose cortex changes every night; the value instruments at day 20 close the
+record and the design waits for a clear head. The served body's day 39: 161 smiles, "eat" in
+four frames, a 49th known word, seven new lines heard, no turning-away.
