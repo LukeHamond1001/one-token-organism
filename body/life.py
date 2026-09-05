@@ -108,6 +108,17 @@ PHYSIOLOGY = dict(
     # direction reads the state at 0.58, the centered difference at 0.998). Centered, the three-factor rule can learn
     # what the credit says. Candidate 1 with tau 1024
     gate_center=0, gate_center_tau=1024,
+    # THE EAR (gate_ear, 0 = off): two more inputs to the gate, sensed not inferred: the world's symbol arriving this tick
+    # and its own act on the last tick (the auditory input to the striatum, the corollary discharge of the mouth), as the
+    # face is a sense of the cortex. The lesson replayed offline on run 112's day-6 body (2026-09-05): "the parent is
+    # typing" as a unit input lets the three-factor rule move the logit inside the parent's typing by 0.08 a quarter day
+    # in the listening direction with the vigor term off and Adam, where the cortex state's own direction (norm 0.45,
+    # cosine 0.98 with the mean) moved it 0.004. With the vigor term on the same input moves the wrong way (+0.09): the
+    # credit runs high where the parent's rewarded words are, and vigor acts more wherever the credit is high
+    gate_ear=0,
+    # THE GATE'S OPTIMIZER (gate_opt "sgd" | "adam", gate_adam_lr): Adam normalizes each weight's step by its gradient's
+    # running scale, so a consistent small gradient on one input (the ear) accumulates at the rate whatever the noise
+    gate_opt="sgd", gate_adam_lr=1e-3,
     read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
     # THE WORLD'S WORDS AS REWARD (the user's word of 2026-09-04, "both are your call"): each symbol the world types is
@@ -200,7 +211,12 @@ class Life:
         self.credit = collections.deque(maxlen=64)
         # optimizers: the day's (the cortex and its forecasts), the striatum's (the gate), the critic's
         self.opt_day = torch.optim.Adam(self.m.parameters(), lr=float(self.cfg["live_lr"]))
-        self.opt_gate = torch.optim.SGD(self.m.mouth_gate.parameters(), lr=float(self.cfg["gate_lr"]))
+        if int(self.cfg.get("gate_ear", 0)) and self.m.mouth_gate.in_features == self.m.d + 5:
+            self.m.widen_gate(2)                                # THE EAR: two inputs, born at zero
+        if str(self.cfg.get("gate_opt", "sgd")) == "adam":
+            self.opt_gate = torch.optim.Adam(self.m.mouth_gate.parameters(), lr=float(self.cfg.get("gate_adam_lr", 1e-3)))
+        else:
+            self.opt_gate = torch.optim.SGD(self.m.mouth_gate.parameters(), lr=float(self.cfg["gate_lr"]))
         # the critic's optimizer: the value heads and the Go/NoGo gates. The bands' input maps are fixed
         # (born): trained by the critic's own bootstrapped error they are the deadly triad, and at any
         # rate they ran away (1e-3: saturated by day 6, run 26; 1e-5: saturated by day 15, run 28) while
@@ -503,6 +519,9 @@ class Life:
                     self._feat_mu = torch.zeros_like(feat)
                 self._feat_mu += (feat - self._feat_mu) / float(self.cfg.get("gate_center_tau", 1024))
                 feat = feat - self._feat_mu
+            if int(self.cfg.get("gate_ear", 0)):
+                # THE EAR: the world's symbol this tick, its own act last tick (sensed, not inferred)
+                feat = torch.cat([feat, torch.tensor([1.0 if u != self.sil else 0.0, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
@@ -972,6 +991,8 @@ class Life:
         a = blob["arch"]
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]))
         w = blob["organs"].get("mouth_gate.weight")
+        if w is not None and w.shape[1] > organs.mouth_gate.weight.shape[1]:
+            organs.widen_gate(w.shape[1] - organs.mouth_gate.weight.shape[1])   # a body with the ear
         if w is not None and w.shape[1] < organs.mouth_gate.weight.shape[1]:
             # an older body's gate had fewer inputs (no salience, no level): those weights are born at zero
             blob["organs"]["mouth_gate.weight"] = torch.cat([w, torch.zeros(w.shape[0], organs.mouth_gate.weight.shape[1] - w.shape[1])], 1)

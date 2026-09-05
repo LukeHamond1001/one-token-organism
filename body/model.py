@@ -298,6 +298,7 @@ class Organs(nn.Module):
         self.mouth_gate = nn.Linear(d + 5, 1)                      # + fatigue, mood, stress, salience, the level
         nn.init.zeros_(self.mouth_gate.weight)
         nn.init.constant_(self.mouth_gate.bias, math.log(birth_act / (1.0 - birth_act)))
+
         # ITS FACE: a forecast of the caregiver's face (a readout)
         self.face_head = nn.Linear(d, 1)
         nn.init.zeros_(self.face_head.weight); nn.init.zeros_(self.face_head.bias)
@@ -305,6 +306,15 @@ class Organs(nn.Module):
         self.register_buffer("_mask", torch.triu(torch.ones(self.window, self.window, dtype=torch.bool), 1))
 
     # ---- the cortex over a window ----
+
+    @torch.no_grad()
+    def widen_gate(self, n_extra):
+        """THE EAR: more inputs to the gate (the world's symbol this tick, its own act last tick), their weights born at zero"""
+        old = self.mouth_gate
+        new = nn.Linear(old.in_features + int(n_extra), 1)
+        new.weight.zero_(); new.weight[:, :old.in_features] = old.weight; new.bias.copy_(old.bias)
+        self.mouth_gate = new.to(old.weight.device)
+
     def inputs(self, xs, xos, faces, bundles, reads):
         """one position per tick: xs [T] the world's symbol (or its quiet), xos [T] its own symbol in
         the same tick (or its quiet), faces [T, 2], bundles [T, nb, d], reads [T, d] -> u [T, d].
