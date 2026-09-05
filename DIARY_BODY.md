@@ -4021,3 +4021,27 @@ when nothing was ever planned (from day 42, 05:59). The served body's day 41: 14
 turning-away, "run" learned, 51 known words, 101 lines heard. The second body's day 12: 40
 smiles, one turning-away, its day only thirty minutes long because its sleep pressure was
 already at 10186 of 12000 when the teacher's session began.
+
+**The ear listens, 06:15.** The ear's weights at night 14: "the world's symbol this tick"
+−0.94 and −1.07 on the mask bodies (115 and 116; from −0.55 and −0.72 at day 8), −0.11 and
++0.04 on the baseline (117 and 118); "my own act last tick" +1.25 and +1.39, grown too (from
++0.96 and +1.07), so mid-bout during the parent's line the two nearly cancel and a linear gate
+cannot form "the parent is speaking and I am mid-word". What it can form is the start: the
+start/continuation probe (scratchpad/pact2.py, 3000 ticks under the fast parent with the
+lesson off, on copies) reads, inside the parent's typing, p(start) 0.23 and 0.15 and
+p(continue) 0.49 and 0.31 on the mask bodies against p(start) 0.43 to 0.45 and p(continue)
+0.63 to 0.68 outside, and against 0.34, 0.44 and 0.60, 0.63 inside on the baseline actor,
+0.47 to 0.49 and 0.49 to 0.54 on the no-ear bodies of 111 and 112 at day 20. Acted inside
+the parent's lines: 0.30 and 0.18 of the ticks against 0.48 to 0.52 for every body without
+the ear's credit. The body with the ear starts a bout while the parent speaks a third as
+often as a body without it, and speaks over the parent half or a third as much, from a credit
+of a tenth of a smile per heard symbol that the mask makes it forfeit: turn-taking learned by
+the gate's own lesson from the world's contingency, no rule written. The gate's-rate pairs at
+day 2: the listening weight −0.57 and −0.50 at Adam 3e-3 (where 1e-3 stood at day 8), −1.49
+and −1.45 at 1e-2 (where 1e-3 would stand near day 20), the bout weight +1.54 and +1.60 and
+the other weights' norm 8.4 and 7.1 against 3.4 at the lower rates, the fast gate growing
+everything at once; their day 6 says whether the mouth holds under it. Day 16's yardsticks on
+115 to 118 decide the boundary: if the mouths hold, the served body takes the ear actor, the
+world's words at 0.3 with the mask, the reply withheld (the typist waits four ticks) and the
+uncentered critic out of the credit with its reliability logged, at the 43 to 44 boundary
+near 07:50.
