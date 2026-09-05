@@ -99,6 +99,15 @@ PHYSIOLOGY = dict(
     # fell to 39/48 at day 20 on one cue's stutter; a second seed (run 34) decides. Not the recipe until it does.
     gate_int_form="value",
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
+    # THE ADAPTED INPUT (gate_center, 0 = off): the gate reads its inputs relative to their running mean (time constant
+    # gate_center_tau ticks), as every sensory neuron adapts to its mean input. Measured 2026-09-05 on run 108's day-16
+    # body: "the parent is typing" is readable from the gate's inputs at AUC 0.999, the gate's learned weights read it at
+    # 0.65 after sixteen days of a right-signed credit (+0.10 for a rest, -0.09 for an act inside the parent's typing);
+    # the inputs' mean has norm 2.3 against a between-state difference of 0.45 (cosine 0.98), so the lesson's systematic
+    # gradient moved the common bias, which the baseline cancels, and not the selective direction (the mean-inside
+    # direction reads the state at 0.58, the centered difference at 0.998). Centered, the three-factor rule can learn
+    # what the credit says. Candidate 1 with tau 1024
+    gate_center=0, gate_center_tau=1024,
     read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
     # THE WORLD'S WORDS AS REWARD (the user's word of 2026-09-04, "both are your call"): each symbol the world types is
@@ -488,6 +497,12 @@ class Life:
             sal = float(self.cfg["gate_salience"]) * float(pred1.norm())      # the proposal's salience
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
                               torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0, sal, level], device=self.dev)])
+            if int(self.cfg.get("gate_center", 0)):
+                # THE ADAPTED INPUT: the gate's inputs relative to their running mean
+                if getattr(self, "_feat_mu", None) is None or self._feat_mu.shape != feat.shape:
+                    self._feat_mu = torch.zeros_like(feat)
+                self._feat_mu += (feat - self._feat_mu) / float(self.cfg.get("gate_center_tau", 1024))
+                feat = feat - self._feat_mu
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
@@ -946,7 +961,8 @@ class Life:
                          "window": self.m.window, "clocks": list(self.m.clocks)},
                 "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure, "heard": self.heard.cpu(),
                          "fatigue": self.fatigue, "stress": self.stress, "mood": self.mood, "n_bursts": self.n_bursts,
-                         "sym_freq": self.sym_freq, "perf": {int(k): float(v) for k, v in self.perf.items()}, "last_night": self.last_night, "rbar": float(self.rbar)}}
+                         "sym_freq": self.sym_freq, "perf": {int(k): float(v) for k, v in self.perf.items()}, "last_night": self.last_night, "rbar": float(self.rbar),
+                         "feat_mu": (self._feat_mu.cpu() if getattr(self, "_feat_mu", None) is not None else None)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -971,6 +987,8 @@ class Life:
         for k in ("ticks", "nights", "day_n", "sleep_pressure", "fatigue", "stress", "mood", "n_bursts", "last_night"):
             if k in L:
                 setattr(life, k, L[k])
+        if L.get("feat_mu") is not None:
+            life._feat_mu = L["feat_mu"].to(device)                  # the gate's adapted input, its running mean
         life.sym_freq = dict(L.get("sym_freq") or {})
         life.perf = {int(k): float(v) for k, v in (L.get("perf") or {}).items()}
         if L.get("rbar") is not None:
