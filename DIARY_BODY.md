@@ -3981,3 +3981,43 @@ fewer interruptions at best, which is what the noise hides. To yield the weight 
 question day 16 answers with the slope. Both chains armed: the served body's days 44 to 46
 after the day-43 teacher ends, the second body's days 15 to 17 after its day 14; the served
 body's day 41 at 62 smiles half-way, the second body's day 12 at 21.
+
+**The night-transfer instrument, and the critic's defect found, 06:00.** The question left
+open at 05:05 was why a ventral head learned live reads the return with the wrong sign when
+the same head learned on a body held fixed reads +0.7, and whether the nightly change of the
+cortex was the obstacle. The instrument (scratchpad/night_transfer.py): one page of 9000
+ticks lived by the served body's day-40 self under the fast parent (143 felt rewards), then
+replayed tick for tick, teacher-forced, through fresh copies of that body and of the bodies
+of days 41, 38 and 30, so every body sees the identical stream and the identical rewards and
+only the body differs; a ridge head from the bands to the return at horizon 1024, fit on the
+first 60 percent of day 40's ticks and read on the last 40 percent of every body's. The
+fast bands drift: cosine at the same tick 0.70 after one night, 0.40 after ten. The slow
+bands do not: 0.99, 1.00, 1.00 after one night, 0.98, 1.00, 1.00 after ten. The head from
+the slow bands reads +0.50 on day 40's held-out ticks and +0.51, +0.49, +0.51 on the bodies
+of days 41, 38 and 30: a value readout learned on one day is worth exactly as much ten
+nights later. The nightly change was never the obstacle. Then the learning rule, on the same
+cached features (scratchpad/nt_heads.py): the live rule, semi-gradient TD(0) with Adam at
+1e-3 over the slow bands, reads +0.52 after one pass over a third of a day and +0.53 on the
+next night's body, when it reads the raw bands; the same rule reads −0.56 and −0.55 when it
+reads what the live critic is given, the bands centered on a running mean at 1024 ticks; a
+ridge head on the centered bands +0.01 that day and −0.44 the next. That centering, written
+on 2026-09-03 so the differential heads' free constant had no direction to walk in, was
+applied to the ventral critic too; a running mean at 1024 ticks tracks a band whose clock is
+4096 or 16384 and leaves a thousand-tick recency residual, so the head learned recency and,
+in a world that reverts, the wrong sign. Every wrong reading since run 49, the runaway, the
+withdrawn weight, the trace, the normalized step, the reliability gain read at zero, the
+forgetting head, was this one line. Discounted with a bias the head needs no centering:
+vcrit_center (1 = the old form, 0 = the raw state) is written, the organ tests 16 of 16.
+Runs 125 to 128 are armed for the four slots the ear pairs free near 06:20, on the ear actor
+with the reply withheld, the world's words at 0.3 and the mask: 125 and 126 with the
+uncentered head out of the credit, its reliability logged by day; 127 and 128 with the head
+in the credit at 1.0 through its own measured reliability (the gain the code already has).
+The gate's-rate pairs 121 to 124 (Adam at 3e-3 and 1e-2 on the ear actor) began 05:43 in
+the slots of 111 to 114. The typist's filler was the day's other find: the two 'go down'
+lines that opened the served body's day 41 were the typist's own, a random heard line said
+while the planner's first row was still unwritten, and the most-heard lines are the oldest
+frames; the filler now repeats one of the last two dozen planned lines, a heard line only
+when nothing was ever planned (from day 42, 05:59). The served body's day 41: 146 smiles, no
+turning-away, "run" learned, 51 known words, 101 lines heard. The second body's day 12: 40
+smiles, one turning-away, its day only thirty minutes long because its sleep pressure was
+already at 10186 of 12000 when the teacher's session began.
