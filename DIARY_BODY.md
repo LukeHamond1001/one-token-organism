@@ -4094,3 +4094,25 @@ nothing, as its weight said. Halved by day 20, by a credit of a tenth of a smile
 the first word; the words past the answer 11 to 15 per answer, the bout's cost, unchanged.
 Runs 125 to 128 (the uncentered critic) were born 06:50 in the freed slots. The served body's
 day 43 began 06:58; the boundary follows its end.
+
+**The conjunction was never needed, 07:00.** I wrote at 06:40 that a linear gate cannot form
+"the parent is speaking and I am mid-word". That was wrong, and the probe says so
+(scratchpad/conj_probe.py, the ear body of run 116 at night 14 and run 112's day-20 body,
+3000 ticks, the lesson off): from the cortex state alone, a Fisher discriminant fit on the
+first half reads "the parent is typing" on the second half at AUC 0.997 among mid-bout ticks
+and 0.998 among rested ticks; the conjunction against everything else 0.967 and 0.985; only
+"I acted last tick" is weak in the cortex (0.63, 0.78), which is what the ear bit supplies.
+And the pattern the gate needs is not exclusive-or: rest when the parent speaks whether or
+not mid-word, continue outside, start seldom inside; a linear unit does that with the
+listening weight larger than the bout weight (−3 against +1.5), which is a point the linear
+gate can reach. It does not reach it because of the lesson's dynamics, not its form: the
+listening weight's gradient comes from the 170 ticks a day the parent types, the bout
+weight's from six thousand mid-bout ticks, and under Adam the two grow in lockstep at every
+rate. So the lever is the inside credit's size, which is the world's: runs 129 and 130 are
+armed for two of the rate pairs' slots (they end near 07:15), the ear actor with the world's
+words at 0.6 instead of 0.3, the mask forfeiting twice as much per symbol said over the
+parent; if the listening weight then outruns the bout weight, the dose was the limit, and
+the dose is a disclosed constant of the environment, not a rule. The served body's day-43
+boundary: mouth 29 and 23 of 48 after 32 and 27 and 40 and 36, the taught lines 83 and 53,
+the unheard combinations 97 and 77, the cortex alone 45 and 44; day 42's words said 78, of
+them 44 known and 6 fused.
