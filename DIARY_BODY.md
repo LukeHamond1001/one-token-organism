@@ -4084,3 +4084,13 @@ to 16 per answer. At 3e-3 the mouths 48 and 47, 48 and 48, the unheard combinati
 96, 92 and 85 of 128, the words past the answer 10 to 13. So 1e-2 is out; 3e-3 is a
 candidate against 1e-3 at day 16 near 07:05, before the boundary. The served body's day 42:
 167 smiles, no frown, no turning-away, "red" learned, 52 known words, 106 lines heard.
+
+**The ear pair's day 20, 06:56.** Words said over the parent on days 18 to 20: 53, 44, 50 and
+41, 56, 63 on the ear bodies with the mask (from 73 to 103 on days 4 to 6 and 60 to 78 on
+days 14 to 16: still falling), against 91, 88, 91 and 89, 72, 126 on the same environment
+without the ear, and 99, 106, 90 and 85, 66, 83 on the ear without the mask, which learned
+nothing, as its weight said. Halved by day 20, by a credit of a tenth of a smile. The mouths
+48 and 47, 48 and 47 of 48; the cortex alone 57 and 53; the run-on 9.6 and 10.9 symbols past
+the first word; the words past the answer 11 to 15 per answer, the bout's cost, unchanged.
+Runs 125 to 128 (the uncentered critic) were born 06:50 in the freed slots. The served body's
+day 43 began 06:58; the boundary follows its end.
