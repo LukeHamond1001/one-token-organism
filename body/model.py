@@ -390,9 +390,19 @@ class Organs(nn.Module):
             return (s - self.band_mu[b]) @ self.value[b].weight[0]
         return self.value[b](s).squeeze(-1)
 
+    def vcrit_input(self, states):
+        """what the ventral critic reads: the bands' states (vcrit_center 0; the bias holds the level) or the states
+        centered on their running means (vcrit_center 1, the form of 2026-09-03). THE CENTERING WAS THE DEFECT
+        (the night-transfer instrument, 2026-09-05): a running mean at 1024 ticks tracks a band whose clock is 4096 or
+        16384 and leaves it a thousand-tick recency residual; on the served body's day 40 the same TD(0) rule read the
+        return at horizon 1024 at +0.52 from the raw slow bands and -0.56 from the centered ones, and a ridge head from
+        the raw slow bands read +0.50 on that day and +0.51 one, two and ten nights away: the slow bands do not drift"""
+        x = states - self.band_mu if getattr(self, "vcrit_center", True) else states
+        return (x * self.vcrit_mask[:, None]).reshape(-1)
+
     def value_long(self, states):
-        """the ventral critic's relative value over every band's state, each centered on its running mean"""
-        return (((states - self.band_mu) * self.vcrit_mask[:, None]).reshape(-1) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
+        """the ventral critic's value over the bands' states (see vcrit_input)"""
+        return (self.vcrit_input(states) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
 
     def values(self, states):
         """V_b(s_b) for every band: [nb]"""

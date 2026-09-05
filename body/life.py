@@ -60,6 +60,16 @@ PHYSIOLOGY = dict(
     # +0.51, its weights settling near 89; the same rule over all eight bands +0.19 with weights running to 78, the fast
     # bands' overfit. The trace forms on the slow bands: erratic (+0.33 pooled) or weak (+0.12). "" = all eight
     vcrit_bands="5,6,7",
+    # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
+    # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
+    # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
+    # and the same head +0.51 on the bodies of days 41, 38 and 30 (the slow bands' cosine across a night 0.99, 1.00,
+    # 1.00; across ten nights 0.98, 1.00, 1.00), so the nightly cortex change was never the obstacle; the same ridge on
+    # the centered bands +0.01 that day and -0.44 the next; the live rule, TD(0) with Adam 1e-3, -0.56 on the centered
+    # bands and +0.52 on the raw ones in one pass over a third of a day, +0.53 on the next night's body. Every wrong
+    # reading of the ventral head since run 49 (recency, wrong sign, the runaway) was the running mean eating the slow
+    # state. Discounted with a bias, the head needs no centering. 1 keeps older bodies' readings as they were.
+    vcrit_center=1,
     # THE RELIABILITY GAIN (vcrit_auto): the ventral head's weight in the gate's credit is its own measured reliability,
     # the running correlation between what it foretold and the return that then arrived (a Kalman gain for a noisy
     # estimate; the brain scales a lesson by its certainty, Pearce and Hall 1980, and the prefrontal input to the ventral
@@ -157,6 +167,7 @@ class Life:
                 organs.vcrit_mask.zero_()
                 for b_ in vb.split(","):
                     organs.vcrit_mask[int(b_)] = 1.0
+        self.m.vcrit_center = bool(int(self.cfg.get("vcrit_center", 1)))
         self.m.read_sharp = float(self.cfg["read_sharp"])
         self.sil = tok.token_to_id("<pad>")
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
@@ -443,7 +454,7 @@ class Life:
                     gl_tr = gl
                 lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
                 with torch.no_grad():
-                    x_prev = torch.cat([((self._bands_prev.detach() - m.band_mu) * m.vcrit_mask[:, None]).reshape(-1), torch.ones(1, device=self.dev)])
+                    x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach()), torch.ones(1, device=self.dev)])
                     if lam > 0.0:
                         # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
                         # decays at gamma * lambda; the error captures it
