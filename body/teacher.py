@@ -98,9 +98,12 @@ class Teacher(Caregiver):
         return self.corpus.heard_lines()                      # what continues a cue: the lines it has heard
 
     def reply_line_for(self, cue, answer):
-        # the recast: the heard line (twice at least) that begins with the cue and goes on with its answer, the most heard
-        lines = [(n, l) for l, n in self.corpus.lines.items() if n >= HEARD_FOR_CUE and l.startswith(cue) and (l[len(cue):].split() or [""])[0] == answer]
-        return max(lines)[1] if lines else (cue + answer).strip()
+        # the recast: the heard line (twice at least) that begins with the cue and goes on with its answer. THE MINIMAL RECAST
+        # (2026-09-05): the shortest such line, the most heard among equals; the most heard alone was 'dog will go down' for
+        # every 'dog will' -> 'go', the typist feeding the stutter's frame that its teachers avoided. A parent recasts the
+        # child's words with the least added.
+        lines = [(len(l), -n, l) for l, n in self.corpus.lines.items() if n >= HEARD_FOR_CUE and l.startswith(cue) and (l[len(cue):].split() or [""])[0] == answer]
+        return min(lines)[2] if lines else (cue + answer).strip()
 
     def event(self, text, kind):
         if kind == "cue":
