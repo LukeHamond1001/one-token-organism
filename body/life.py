@@ -93,6 +93,20 @@ PHYSIOLOGY = dict(
     # instrument (2026-09-05): one pass over one day, read on three days the body never lived, +0.63, +0.92, +0.71 against
     # the ceiling +0.66, +0.92, +0.71 and the gradient head's -0.49, -0.74, -0.60.
     vcrit_rls=0, vcrit_rls_delta=100.0, vcrit_rls_every=64,
+    # THE CRITIC'S HOMEOSTATIC INPUT (vcrit_norm_tau, ticks; 0 = off): the head's inputs standardized by running per-dimension
+    # statistics at this time constant; THE PRIOR IN UNITS OF EVIDENCE (vcrit_rls_prior; 0 = the absolute vcrit_rls_delta):
+    # the decorrelated head's prior is this many forgetting horizons of unit-variance evidence in every direction. One day is
+    # about seven independent returns at horizon 1024 against 768 weights; a prior of one to ten days' evidence keeps the
+    # head on the directions that carry value (run 141 day 6, pages 8/10: +0.93/+0.89 against +0.77/+0.91 for ridge; the
+    # prior at 100 raw: -0.41/-0.13).
+    # The statistics must be slow: across settled pages with converged statistics carried on, tau 36000 reads +0.84/+0.70/+0.30
+    # (the static ceiling +0.88/+0.68/+0.30), 12000 reads +0.72/+0.59/+0.15, 4096 reads -0.6 to -0.9 (a fast normalization
+    # high-passes the state and removes the value). Synaptic scaling runs over days. Candidate 36000 (four days).
+    vcrit_norm_tau=0, vcrit_rls_prior=0.0,
+    # THE SLOW STATE KEPT ACROSS SLEEP (night_keep_bands 1): the bands are not zeroed at night. Zeroed, every morning is a birth
+    # for the slow bands (clocks to 16,384 ticks, longer than a day), and the day is one ramp from zero that every value head
+    # reads as time since waking; statistics carried across days misread the morning (pages instrument, 2026-09-05).
+    night_keep_bands=0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -183,9 +197,18 @@ class Life:
             self._vc_idx = organs.vcrit_mask[:, None].expand(organs.vcrit_mask.numel(), organs.vcrit.weight.shape[1] // organs.vcrit_mask.numel()).reshape(-1).nonzero().squeeze(1)
             if int(self.cfg.get("vcrit_rls", 0)):
                 k = int(self._vc_idx.numel()) + 1
+                pri = float(self.cfg.get("vcrit_rls_prior", 0.0) or 0.0); vf0 = float(self.cfg.get("vcrit_forget", 0) or 0) or 12000.0
+                self._vc_delta = pri * vf0 if pri > 0 else float(self.cfg.get("vcrit_rls_delta", 100.0))
+                norm_on = bool(int(self.cfg.get("vcrit_norm_tau", 0)))
                 if organs.vc_A.numel() != k * k:
-                    organs.vc_A = torch.eye(k, dtype=torch.float64, device=organs.vcrit.weight.device) * float(self.cfg.get("vcrit_rls_delta", 100.0))
+                    organs.vc_A = torch.eye(k, dtype=torch.float64, device=organs.vcrit.weight.device) * self._vc_delta
                     organs.vc_b = torch.zeros(k, dtype=torch.float64, device=organs.vcrit.weight.device)
+                if norm_on and organs.vc_mu.numel() != k - 1:
+                    # born with a prior on the input's scale (one unit, weighing tau/32 ticks), so the first hours' few samples
+                    # do not inflate the standardized input before the statistics have formed
+                    organs.vc_mu = torch.zeros(k - 1, dtype=torch.float64, device=organs.vcrit.weight.device)
+                    organs.vc_var = torch.ones(k - 1, dtype=torch.float64, device=organs.vcrit.weight.device)
+                    organs.vc_n = torch.full((), float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0), dtype=torch.float64, device=organs.vcrit.weight.device)
         self._vc_e = None
         self.m.read_sharp = float(self.cfg["read_sharp"])
         self.sil = tok.token_to_id("<pad>")
@@ -477,15 +500,22 @@ class Life:
                     # THE DECORRELATED CRITIC: the statistics of the trace against the state's discounted change and the reward
                     with torch.no_grad():
                         one = torch.ones(1, dtype=torch.float64, device=self.dev)
-                        xa_prev = torch.cat([m.vcrit_input(self._bands_prev.detach())[self._vc_idx].double(), one])
-                        xa_now = torch.cat([m.vcrit_input(self.bands.detach())[self._vc_idx].double(), one])
+                        x_p = m.vcrit_input(self._bands_prev.detach())[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach())[self._vc_idx].double()
+                        ntau = int(self.cfg.get("vcrit_norm_tau", 0))
+                        if ntau:
+                            # the homeostatic statistics take the state once (the previous state was taken last tick); both states
+                            # are read through the current statistics
+                            m.vcrit_norm_update(x_n, ntau)
+                            sd_ = m.vc_var.clamp_min(0).sqrt() + 1e-3
+                            x_p = (x_p - m.vc_mu) / sd_; x_n = (x_n - m.vc_mu) / sd_
+                        xa_prev = torch.cat([x_p, one]); xa_now = torch.cat([x_n, one])
                         e = getattr(self, "_vc_e", None)
                         self._vc_e = (gl_tr * lam * e if e is not None else torch.zeros_like(xa_prev)) + xa_prev
                         vf_ = float(self.cfg.get("vcrit_forget", 0) or 0); beta = (1.0 - 1.0 / vf_) if vf_ > 0 else 1.0
                         dlt = xa_prev - gl * xa_now
                         m.vc_A.mul_(beta).add_(torch.outer(self._vc_e, dlt))
                         if beta < 1.0:
-                            m.vc_A.diagonal().add_((1.0 - beta) * float(self.cfg.get("vcrit_rls_delta", 100.0)))
+                            m.vc_A.diagonal().add_((1.0 - beta) * self._vc_delta)
                         m.vc_b.mul_(beta).add_(self._vc_e * float(r))
                         if self.ticks % int(self.cfg.get("vcrit_rls_every", 64)) == 0:
                             m.vcrit_rls_solve(self._vc_idx)
@@ -945,7 +975,9 @@ class Life:
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n(); rep["vrel"] = round(self._vrel_corr, 3)
-            self.bands.zero_(); self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
+            if not int(self.cfg.get("night_keep_bands", 0)):
+                self.bands.zero_()                                    # the slow state kept across sleep when the flag is on
+            self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None
             self.fatigue = 0.0
@@ -1063,7 +1095,7 @@ class Life:
         if w is not None and w.shape[1] < organs.mouth_gate.weight.shape[1]:
             # an older body's gate had fewer inputs (no salience, no level): those weights are born at zero
             blob["organs"]["mouth_gate.weight"] = torch.cat([w, torch.zeros(w.shape[0], organs.mouth_gate.weight.shape[1] - w.shape[1])], 1)
-        vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b") if k_ in blob["organs"]}   # sized by the life below
+        vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         if [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")]:
             print("load: organs without", [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")], "(an older recipe; born fresh where missing)")
@@ -1071,8 +1103,12 @@ class Life:
         c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
         c.update(cfg or {})
         life = cls(organs, tok, cfg=c, device=device, seed=seed, save_path=save_path or path)
-        if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved["vc_A"].shape == life.m.vc_A.shape:
-            life.m.vc_A.copy_(vc_saved["vc_A"].to(device)); life.m.vc_b.copy_(vc_saved["vc_b"].to(device))   # the decorrelated critic's memory
+        saved_norm = vc_saved.get("vc_mu") is not None and vc_saved["vc_mu"].numel() > 0; norm_on = int(c.get("vcrit_norm_tau", 0)) > 0
+        if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved.get("vc_A") is not None and vc_saved["vc_A"].shape == life.m.vc_A.shape and saved_norm == norm_on:
+            # the decorrelated critic's memory, in the units it was accumulated in; in other units it begins again from the prior
+            life.m.vc_A.copy_(vc_saved["vc_A"].to(device)); life.m.vc_b.copy_(vc_saved["vc_b"].to(device))
+            if norm_on:
+                life.m.vc_mu.copy_(vc_saved["vc_mu"].to(device)); life.m.vc_var.copy_(vc_saved["vc_var"].to(device)); life.m.vc_n.copy_(vc_saved["vc_n"].to(device))
         life.store.load_state_dict(blob["store"])
         L = blob.get("life") or {}
         for k in ("ticks", "nights", "day_n", "sleep_pressure", "fatigue", "stress", "mood", "n_bursts", "last_night"):

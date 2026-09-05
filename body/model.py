@@ -301,6 +301,13 @@ class Organs(nn.Module):
         # head's active inputs plus the level), float64 for the solve.
         self.register_buffer("vc_A", torch.zeros(0, 0, dtype=torch.float64))
         self.register_buffer("vc_b", torch.zeros(0, dtype=torch.float64))
+        # THE CRITIC'S HOMEOSTATIC INPUT (vcrit_norm_tau): each input dimension standardized by its own running mean and scale
+        # (adaptation and synaptic scaling at a slow time constant; the rate 1/min(n, tau), so the first ticks are exact
+        # averages), because a prior that is scale-free in standardized units serves every dimension while on raw inputs,
+        # whose scales span two orders, no single prior does (the pages instrument, 2026-09-05).
+        self.register_buffer("vc_mu", torch.zeros(0, dtype=torch.float64))
+        self.register_buffer("vc_var", torch.zeros(0, dtype=torch.float64))
+        self.register_buffer("vc_n", torch.zeros((), dtype=torch.float64))
         # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream, the feelings, and the
         # salience of the mouth's proposal (the forecast's certainty, as the striatum reads the
         # strength of a cortical request for action)
@@ -414,13 +421,26 @@ class Organs(nn.Module):
         return (self.vcrit_input(states) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
 
     def vcrit_rls_solve(self, idx):
-        """the decorrelated head from its statistics: w = A^-1 b, written into the head over its active inputs and the level"""
+        """the decorrelated head from its statistics: w = A^-1 b over the (standardized) active inputs and the level; with the
+        homeostatic input the head is kept in the input's own units by folding the standardization into weight and bias, so
+        value_long reads raw states as always"""
         with torch.no_grad():
             try:
                 w = torch.linalg.solve(self.vc_A, self.vc_b)
             except Exception:
                 w = torch.linalg.lstsq(self.vc_A, self.vc_b.unsqueeze(1)).solution.squeeze(1)
-            self.vcrit.weight.zero_(); self.vcrit.weight[0, idx] = w[:-1].to(self.vcrit.weight.dtype); self.vcrit.bias[0] = w[-1].to(self.vcrit.bias.dtype)
+            ww, bb = w[:-1], w[-1]
+            if self.vc_mu.numel() == ww.numel():
+                sd = self.vc_var.clamp_min(0).sqrt() + 1e-3
+                bb = bb - (ww * self.vc_mu / sd).sum(); ww = ww / sd
+            self.vcrit.weight.zero_(); self.vcrit.weight[0, idx] = ww.to(self.vcrit.weight.dtype); self.vcrit.bias[0] = bb.to(self.vcrit.bias.dtype)
+
+    def vcrit_norm_update(self, x, tau):
+        """the homeostatic statistics take this tick's (active) input; returns the standardized input"""
+        with torch.no_grad():
+            self.vc_n += 1.0; eta = 1.0 / min(float(self.vc_n), float(tau))
+            self.vc_mu += eta * (x - self.vc_mu); self.vc_var += eta * ((x - self.vc_mu) ** 2 - self.vc_var)
+            return (x - self.vc_mu) / (self.vc_var.clamp_min(0).sqrt() + 1e-3)
 
     def values(self, states):
         """V_b(s_b) for every band: [nb]"""

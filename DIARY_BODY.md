@@ -4558,3 +4558,75 @@ of 22 against returns near 25, and the statistics round-trip through save and lo
 the gain) on the ear actor launched at 14:32, otherwise as 137 to 140; their day-6 value
 instrument, four fresh days each, is the reading that arms the diary's boundary
 (scratchpad/recipe_boundary_rls.sh, unarmed: the critic out of the credit first).
+
+**The magnitude rule oscillates, 14:54.** Runs 135 and 136 (plain SGD at 0.2 on the gate) at days 17 to
+20: gates 0.84, 0.86, 0.91, 0.19 and 0.80, 0.84, 0.21, 0.19; a gate that acts nine ticks in ten one
+day and two in ten the next, with smiles swinging 132 to 198 and the run-on past an answer 5 to 16
+words. Runs 133 and 134 (SGD at 0.05) hold 0.40 to 0.65 as the Adam bodies do, talk over the parent
+48 to 85 words a day at day 18 to 20 as the Adam bodies did at day 20, and run on 10 to 11 words: the
+same place by the same day. The step that reaches the listening weight in six days is the step
+that cannot hold a gate; the actor keeps Adam at 1e-3 and the diary's optimizer does not change.
+
+**The decorrelated critic's first days, 14:54.** Runs 141 to 144 at day 2: reliability +0.06, +0.40,
++0.25 and +0.25 on their own stream (the gradient heads of 137 to 140 read −0.09 to +0.15 through
+day 12). A day takes 770 seconds against 137's 480 under a lighter load; the critic itself costs 2
+to 3 milliseconds a tick on the scratch harness (25.7 against 29.0, 23.3 against 25.5), a tenth.
+
+**Day 4 is too young to read, 15:14.** Run 141's day-4 body lived two fresh pages (seeds 8 and 9). Its
+live decorrelated head, frozen, reads the return on them at −0.06 and −0.71 (its value sits at 26
+against returns of 23 to 25: the level is right, the shape is not). But no head reads this body
+across pages: ridge fit on one page reads the other at +0.30 and −0.09, the offline recursive head
++0.21 and −0.71, the body's own leaky form +0.11 and −0.68. The live rule is doing what its
+offline twin does; the day-4 state does not yet carry a value that holds from one parent plan to
+another, where run 137's day-6 state did at +0.7 to +0.9. The live reliabilities of 141 to 144
+through day 5 (−0.16 to +0.40) are readings of that youth. The day-6 value instrument and the
+cross-page ceiling on the same day-6 body, side by side, will say whether the head or the state is
+the bound at six days.
+
+**The day-6 reading, the prior's scale, and the morning ramp, 16:00.** Run 141's day-6 body lived
+four fresh pages. The ceiling holds at six days: ridge fit on one page reads two of the other
+three at +0.77 and +0.91 (the third is a flat page, its return's spread 2.7 against 8 to 10, which
+nothing reads). The live decorrelated head, frozen from the body, reads them at +0.08, +0.81,
+−0.21 and +0.38: real, and half the ceiling. Two returns were checked: the face's and the body's
+own (the world's words at 0.3, not heard over its own voice, add a third of the mass but a tenth
+of the variance), and the head reads both alike, so the target is not the gap. The gap is the
+prior. Recursive least squares fit on one page with the prior 100 I on raw inputs reads the other
+pages at −0.41, −0.26, −0.13; with the inputs standardized and the prior 10,000 or 100,000 it
+reads +0.93, +0.06, +0.89, above the ridge; on run 137's day-6 pages the same reads +0.67, +0.94,
++0.69 at every prior from 100 up. One day is about seven independent returns at this horizon
+against 768 weights, and only a prior about as heavy as a day's evidence in each direction (the
+prior in units of the forgetting horizon, one to ten) keeps the head on the few directions that
+carry the value. In standardized units that prior is scale-free; on raw inputs no single prior
+serves, because the dimensions' scales span two orders. Then the live form of the standardization:
+a running per-dimension mean and scale at 4096 to 36000 ticks, the statistics carried on from
+the fit page into the read pages as a live body's would be, reads −0.62 to −0.92 on run 141 and
+−0.17 to −0.60 on run 137; the same statistics restarted at each page's first tick read +0.50 to
++0.86 and +0.53 to +0.88. The cause is the night: body/life.py zeroes the bands at sleep, so every
+page, like every morning, begins with the slow bands at zero and climbing toward their level
+for most of the day (band 7's clock is 16,384 ticks, longer than a day), and statistics that have
+settled on evening levels misread the morning by many standard deviations. The ramp is the
+"one day is one ramp" I found this morning, and it is not the world's; it is the body's own
+reset. Brains do not zero their slow state at sleep. Four pages are being lived on the same
+day-6 body from a settled state (a warm plan first) to read the running form without the ramp;
+if it reads, the bands keep their state across the night (a flag, measured on fast seeds first).
+
+**Settled pages, and the statistics' time constant, 16:46.** Four pages lived by run 141's day-6 body
+from a settled state (a warm plan first; the slow bands' norm 9.8 at the page's start against 10.9
+at its end, no ramp). Ridge from one page reads the others at +0.84, +0.77, +0.47; the recursive
+head on statically standardized inputs with the prior at one to ten days of evidence reads +0.88 to
++0.90, +0.66 to +0.68, +0.27 to +0.30; raw inputs at any prior read −0.9 to +0.4. The running
+statistics, when they have converged before the fit page and then run on through fit and read pages
+(a body past its first days), read +0.84 to +0.87, +0.63 to +0.70, +0.24 to +0.30 at a time constant
+of 36000 ticks, the static ceiling; +0.72, +0.59, +0.15 at 12000; and −0.6 to −0.9 at 4096. A fast
+normalization high-passes the state and removes the value with the level; synaptic scaling runs over
+days, and here it must. The same statistics begun from nothing on the fit page read −0.65 to −0.91
+on the next pages: a head fit while its input's scale is still forming does not read the formed
+scale, which is the transient the scratch harness showed (the head's norm 300 at two thousand
+ticks, 15 at nine thousand), a birth phenomenon that the forgetting head outgrows once the
+statistics have formed. So the statistics are born with a prior on the scale (one unit, weighing
+tau/32 ticks) and their time constant is 36000. Written (vcrit_norm_tau, vcrit_rls_prior,
+night_keep_bands; the statistics dropped at a change of units on load), the organ tests 16 of 16.
+Runs 145 and 146 (out of the credit) and 147 and 148 (in it at weight 1 through the gain) launched at
+16:45 with the homeostatic input at 36000, the prior at 3 days, the slow state kept across sleep,
+otherwise as 141 to 144, which run on to day 20 as the raw baseline (their day-6 value instrument on
+fresh days: +0.11, −0.06, +0.15, −0.05; their pages at day 6: +0.08, +0.81, −0.21, +0.38).
