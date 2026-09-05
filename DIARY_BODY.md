@@ -4247,3 +4247,20 @@ patience is 12 seconds (teach_days3b.sh, days 46 to 48; the planners for 47 and 
 and "soft", spawned). The second body's day 15: 19 smiles, no turning-away, "run" heard in
 three frames, and to "dog will" it answered "sit little dog", yesterday's word in an old
 frame, a retention across days.
+
+**The magnitudes kept, day 2, 09:58.** Adam was the lockstep. A three-factor rule's step is
+eligibility times credit, and the inside gap (0.19 in favor of resting while the parent
+types) against the outside gap (0.002, the mouth at its credit-neutral rate) should move the
+listening weight a hundred times faster than the bout weight; Adam divides each weight's step
+by its own gradient's running size and moves both at the rate, so doubling the inside credit
+(runs 129 and 130) changed nothing and every rate gave the same lockstep. Runs 133 to 136 put
+plain SGD back on the gate (the vigor term off, the adapted input with the function kept, the
+ear): at day 2 the listening weight −0.52 and −0.43 against the bout +0.40 and +0.50 at SGD
+0.2, the first bodies whose listening weight leads the bout, and −0.09 and −0.13 against
++0.31 and +0.44 at 0.05, slow; the other weights' norm 0.9 and 0.2 against Adam's 3 to 6,
+the cortex weights left nearly at birth because their gradients are small, which is the
+magnitude rule doing its work on them too. If at day 6 the net logit mid-bout inside a line
+is negative and the mouth holds, the gate will rest mid-word while the parent speaks, which
+no Adam body did in twenty days, and SGD 0.2 with the function kept becomes the candidate
+recipe for the next boundary. Day 46 under the 12-second patience, eleven minutes in: 30
+smiles, no turning-away.
