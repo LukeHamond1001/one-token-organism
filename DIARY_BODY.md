@@ -3634,7 +3634,7 @@ yardstick recovered in a day. The two days under the parent who wants a reply he
 body flat and a third poorer in smiles; the day after gave them back. The rule stays on
 the fast seeds.
 
-**The acceptance pair at forty days, 20:25.** Runs 85 and 86, born 16:39 on the recipe as
+**The acceptance pair at forty days, 20:09.** Runs 85 and 86, born 16:39 on the recipe as
 committed (the tonic form, the marks and the onset dreams, the offset, the ventral credit
 0, the slow-band head unused) under the parent who wants a reply: forty days without a
 collapse on either seed. Run 85: the gates 0.44 to 0.57 across the forty days, the mouth
