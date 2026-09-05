@@ -3935,3 +3935,22 @@ forgetting head out of the credit (109 and 110) read −0.52, −0.12, +0.07 and
 learn on a body whose cortex changes every night; the value instruments at day 20 close the
 record and the design waits for a clear head. The served body's day 39: 161 smiles, "eat" in
 four frames, a 49th known word, seven new lines heard, no turning-away.
+
+**The ear's first week, 05:05.** Runs 115 to 118 at day 6 (the ear, the vigor term off, Adam
+at 1e-3, the adapted input; 115 and 116 with the reply withheld, the world's words at 0.3 and
+the mask, 117 and 118 on the baseline). The gate's weight on "the world's symbol this tick":
+−0.40 and −0.53 where the mask makes talking over cost something, +0.07 and +0.16 where it
+does not. The first actor of the night to learn a state its credit named, and with the right
+sign; a tenth quieter during the parent's lines so far, the weight still growing. The words
+said over the parent on days 4 to 6: 73, 82, 103 and 63, 72, 81 against 84, 90, 100 and 82,
+77, 84 on the baseline actor, so a fifth fewer on one seed and none yet on the other; the
+mouths 47 and 40, 48 and 47. The other ear weight, "my own act last tick", reads +0.86 to
++0.98 on all four bodies: the gate has learned that having just spoken it should speak
+again, the bout made explicit, the run-on's own spring, which the lesson rewards because the
+belief credit and the tonic drive pay every act inside a bout. Day 16 near 05:50 says whether
+the listening weight keeps growing and the count falls. The served body's day 40: 157 smiles,
+no turning-away, "sit" learned in a day, a fiftieth known word, 96 lines heard; and the
+day-41 boundary 40 and 36 of 48 after 31 and 28, the best since day 31, the taught lines 88
+and 61, the unheard combinations 95 and 81, the cortex alone 42 and 41. The second body's
+day 11: 52 smiles, no turning-away, its cues answered; its chain had ended with day 11 and
+it stood teacherless from 04:38 to 04:41, when days 12 to 14 were launched.
