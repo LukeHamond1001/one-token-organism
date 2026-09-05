@@ -3608,7 +3608,7 @@ behind a backlog and not yet heard. Runs 85 and 86 at days 33 and 34: gates 0.55
 of 128; their value instruments running. The second body at day 3 with 460 smiles since
 birth, its third night at 19:31.
 
-**Runs 87 and 88 at day 20, 20:00.** The slow-band ventral head at weight 1 in the gate's
+**Runs 87 and 88 at day 20, 19:48.** The slow-band ventral head at weight 1 in the gate's
 credit with the synaptic tag, two fresh seeds under the parent who wants a reply: the
 gates 0.46 and 0.50 at day 20 and 0.52 and 0.48 at days 22 and 23, the mouths 45 and 43,
 47 and 44 of 48, the run-on 8.8 and 8.3, the unheard combinations 108 and 85, 81 and 72;
@@ -3625,3 +3625,11 @@ Clause 2 stands as the ceiling instrument put it: a fixed body's slow bands hold
 foresight at four minutes and TD(0) on them reaches +0.46; on a growing body the target
 moves, and a critic that keeps up with it is the open problem, to be measured with the
 chained instrument on a body copied from a live run at several ages rather than one.
+
+**The day-31 boundary, 19:55.** After one day back on the earlier parent (day 30: 116
+smiles with the post-night cues, no turning-away): the fixed cues 41 and 33 of 48 (34 and
+28 the day before), the taught-line cues 95 and 66 of 96 (61), the unheard combinations
+110 and 94 of 128 (94 and 75), the cortex alone 54 and 53 of 82 (52 and 50). Every
+yardstick recovered in a day. The two days under the parent who wants a reply held the
+body flat and a third poorer in smiles; the day after gave them back. The rule stays on
+the fast seeds.
