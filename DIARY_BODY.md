@@ -4377,3 +4377,16 @@ reply (the mask and the ear stay, the patience 12 seconds), and the reply return
 long critic is in the credit and can learn from what the reply costs. The comparison of the
 switch itself is now clean: the actor changed at 43 and the typist at 43 and 45 and 46 and
 47; only the actor stays.
+
+**Day 20 of the dose and the first kept-function pairs, 11:21.** The dose pair (the world's
+words at 0.6): words said over the parent 68, 56, 46 and 64, 53, 75 on days 18 to 20, the
+mouths 48 and 47, 48 and 48, the listening weight −0.84 and −0.98 against the bout +1.50 and
++1.34 at day 16: the same as at 0.3, the dose is not the lever. The first kept-function pair
+on the drifting form: run 131 yielded to the withheld reply once in seven at day 20 after
+157 ticks of waiting, words said over the parent 77 to 84, a gate pointing against its mean
+feature; the corrected form runs on 133 to 140 from 10:50. Run 128's day 20 with the
+uncentered head in the credit and no decay: +0.15, +0.27, 0.00, −0.20, the overfit as the
+cache predicted. Day 47 of the diary by its planner: "cold" in five lines and four frames,
+67 smiles in the teaching window, six turnings-away between 10:50 and 11:07 and none after,
+the cues answered in family but none cleanly. Its close and the reply's end come with its
+post-night cues.
