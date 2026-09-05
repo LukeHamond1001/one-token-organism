@@ -3864,3 +3864,19 @@ of the last days feed; day 39 and 40's planners are told to leave "going", "go d
 9 under its first teacher: 61 smiles, all six cues answered, "down" placed four times, two
 turnings-away in the session and two in the post-night cues. One thread a run: 245 to 310
 seconds a day where the four-thread runs beside them take ten to fourteen minutes.
+
+**The mask's credit, 02:26.** The world's words at 0.3 with the mask, run 108's day-6 body,
+and the baseline's, run 98's, each living 3,000 ticks under the fast parent with the gate's
+own credit recomputed at every tick and sorted by whether the parent was typing. Inside the
+parent's typing, the mask body: an act −0.09, a rest +0.10, a difference of 0.19 in favor
+of listening; the baseline: −0.14 and −0.15, the act costing nothing. Outside, both bodies
+−0.01 either way. The first mechanism tonight whose consequence reaches the gate's credit
+with the right sign at the moment of the decision. Yet at day 6 the words said over the
+parent are 95 to 118 a day on the mask pair (107 and 108), as on every other seed, and the
+arithmetic says why: the parent types on one tick in twenty, the three-factor lesson's
+step on those ticks moves the logit near 0.07 a day in the listening direction, and the
+vigor term (the credit itself, whatever the act was, at weight 1) pushes the other way
+while the reward flows. A week or two at that rate; day 16 near 03:30 says whether the
+count has begun to fall. The mask at 0.1 (runs 105 and 106) cannot, at a third of the
+difference. The world's words at 0.1 without the mask (101 and 102, retired at day 16)
+cut the words past the answer by a quarter and the talking over not at all.
