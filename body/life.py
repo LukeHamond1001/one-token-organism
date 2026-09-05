@@ -107,6 +107,12 @@ PHYSIOLOGY = dict(
     # for the slow bands (clocks to 16,384 ticks, longer than a day), and the day is one ramp from zero that every value head
     # reads as time since waking; statistics carried across days misread the morning (pages instrument, 2026-09-05).
     night_keep_bands=0,
+    # THE STATISTICS RE-FORMED AT WAKE (vcrit_norm_wake 1): at night the homeostatic statistics' count returns to its birth
+    # value (tau/32), so the morning's mean and scale form again from the morning's own state at the birth rate, while the
+    # mean and scale themselves are kept as the starting point. The night moves the slow bands coherently (the cortex learns
+    # in its sleep); a head whose window spans the night learns that shift against the day's change of reward level, a
+    # confound that reads as noise on any single day (runs 145-148, 2026-09-05 18:20).
+    vcrit_norm_wake=0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -977,6 +983,8 @@ class Life:
             rep["store_slots"] = self.store.n(); rep["vrel"] = round(self._vrel_corr, 3)
             if not int(self.cfg.get("night_keep_bands", 0)):
                 self.bands.zero_()                                    # the slow state kept across sleep when the flag is on
+            if int(self.cfg.get("vcrit_norm_wake", 0)) and self.m.vc_mu.numel():
+                self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None

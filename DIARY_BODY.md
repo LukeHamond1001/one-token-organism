@@ -4630,3 +4630,63 @@ Runs 145 and 146 (out of the credit) and 147 and 148 (in it at weight 1 through 
 16:45 with the homeostatic input at 36000, the prior at 3 days, the slow state kept across sleep,
 otherwise as 141 to 144, which run on to day 20 as the raw baseline (their day-6 value instrument on
 fresh days: +0.11, −0.06, +0.15, −0.05; their pages at day 6: +0.08, +0.81, −0.21, +0.38).
+
+**Day 53 and the evening's plan, 17:15.** The diary's day 53: 138 smiles, no frown, no turning-away,
+attention 0.90 at the end, 63 known words; six clean days since the reply was withheld. Day 54
+began at 17:22 under the same typist; a continuation (scratchpad/continue55.sh) keeps days 55 to 57
+under the old recipe so the body is never without a teacher, and the boundary script, if armed after
+the refined critic's day-6 reading (runs 145 to 148, due near 18:40), takes over from day 56. Runs
+145 to 148 through day 3: reliabilities +0.60, +0.18, +0.60, +0.03 on day 1, then −0.15 to +0.48 on
+days 2 and 3, the statistics still forming (their time constant is four days); runs 141 to 144
+through day 18 at −0.16 to +0.44, their day-16 mouths 45 to 48 of 48 cues started, talked over 48 to
+85 words a day, run-on 11 to 13 words past an answer, as the ear actor read at this age before.
+
+**The refined seeds' first five days, 17:35.** Runs 145 to 148 read their reliability on their own
+stream at −0.23, −0.32, −0.08 and −0.12 on day 5, after −0.25, −0.24, +0.08, +0.18 on day 4: the
+homeostatic form is consistently below zero where the raw form (141 to 144) hovered about it and
+the offline steady-state replica read +0.85. A consistent sign is a defect, not noise. A scratch
+copy is living a page under the refined critic with its inputs and rewards recorded, and the same
+statistics are being recomputed offline on the recording, to compare the two heads at every solve:
+if they agree, the mathematics is at fault on these bodies; if they differ, the live loop is. The
+day-6 value instrument on fresh days, due near 18:40, is read alongside. Runs 141 to 144 ended at
+day 20 (reliabilities −0.15, −0.02, +0.31, +0.27 on the last day); their day-20 instruments run.
+
+**The live head against its replica, and against the pages, 17:50.** A scratch copy lived a page under
+the refined critic with its inputs and rewards recorded, and the same statistics were recomputed
+on the recording: the live head's direction and its replica's agree to three decimals at every solve
+(cosine 1.000), so the live loop is the mathematics. On four fresh pages of run 148's day-6 body the
+frozen live head reads −0.88, −0.81, −0.65 and −0.92, while recursive least squares fit on one of
+those pages with the body's own statistics (spanning its days) and the same prior reads the others
+at +0.81, +0.68, +0.92, the ridge ceiling; every prior from 100 to ten times the evidence reads the
+same. So neither the prior nor the statistics is the gap: the head learned the value of the days it
+lived and reads the pages wrong. The days it lived had the reply typist (the parent answers what the
+body says); the pages instrument runs without it (the parent follows its plan and ignores speech),
+and in those two worlds speech has opposite consequences. Four pages with the reply typist on are
+being lived by the same body: if the live head reads them, the critic reads its own world, and it
+was the yardstick that changed worlds.
+
+**The confound is the night, 18:22.** Four fresh pages with the reply typist on (the world runs 145 to
+148 live in) lived by run 148's day-6 body. Among the three typical pages the least-squares ceiling
+is +0.59 to +0.83 in every direction; the fourth page (55 rewards, the return's spread 4.4) reads
+−0.04 to −0.37 from any fit and fits nothing, an outlier. Recursive least squares fit on a typical
+page with the BODY'S OWN statistics (the running mean and scale spanning its days) and the same
+prior, the live configuration to the letter, reads the other typical pages at +0.65 and +0.74, at
+the ceiling; with the level free or pinned, with the prior absolute or relative to the evidence, the
+same. The live head, fit on the days the body lived, reads those pages at −0.80, −0.68 and −0.66.
+Same estimator, same statistics, same prior, opposite sign: the difference is the data. A fresh
+page has no night in it; the live head's window (forgetting at 12000 ticks, a day and a third)
+always has one. The night's lessons move the cortex, and with it the slow bands, coherently
+across all 768 inputs, while the next day's reward level is also different; a least-squares head
+fed both days learns the coherent shift against the change of level, a between-day confound of
+enormous leverage that reads as noise or worse within any single day. The bands zeroed at night
+(the old form) had no between-day offset, and the raw head of 141 to 144 read fresh days at about
++0.1 to +0.3; the bands kept across sleep removed the morning ramp and brought the offset. Three
+arms launched at 18:21, six seeds, all with the homeostatic input at 36000 and the head out of the
+credit, to remove the confound three ways: A (149, 150) the head's window inside the day
+(forgetting 4000, the prior three of them); B (151, 152) the statistics re-formed at wake
+(vcrit_norm_wake: the count returns to its birth value at night, so the morning's mean and scale
+form again at the birth rate); C (153, 154) the bands zeroed at night as before. Runs 145 to 148
+run on as arm D (their day-6 fresh-day instruments are computing). Tomorrow morning's day-16 and
+day-20 fresh-day instruments choose. The diary keeps its recipe tonight: day 54 ended with 143
+smiles, no frown, no turning-away, the seventh clean day; day 55 began at 18:16 under the same
+typist (scratchpad/continue55.sh, days 55 to 57).
