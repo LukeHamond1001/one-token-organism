@@ -533,13 +533,24 @@ class Life:
                 if getattr(self, "_feat_mu", None) is None or self._feat_mu.shape != feat.shape:
                     self._feat_mu = torch.zeros_like(feat)
                 d_mu = (feat - self._feat_mu) / float(self.cfg.get("gate_center_tau", 1024))
-                if int(self.cfg.get("gate_center_keep", 0)):
-                    # THE FUNCTION KEPT UNDER THE MOVING MEAN (2026-09-05): the bias takes w . d_mu as the running mean
-                    # moves, so centering changes the lesson's coordinates and never the gate's function. Without it a
-                    # body switched to the adapted input mid-life lost w . mu (−2.06 on the served body's day 44) and
-                    # opened its gate until its lesson refit; and every drift of the mean moves the operating point.
-                    m.mouth_gate.bias += (m.mouth_gate.weight[0, : d_mu.numel()] @ d_mu)
                 self._feat_mu += d_mu
+                if int(self.cfg.get("gate_center_keep", 0)):
+                    # THE FUNCTION KEPT UNDER THE MOVING MEAN (2026-09-05): the gate's function is w . x + c with c the
+                    # uncentered intercept the lesson owns; the bias the centered forward pass uses is c + w . mu,
+                    # recomputed from the current w and mu at every tick, so centering changes the lesson's coordinates
+                    # and never the function. (The first form added w . d_mu to the bias each tick, which keeps the
+                    # function only while w stands still; as the lesson moved w the increments stopped summing to
+                    # w . mu and runs 131/132 drifted into a gate pointing against its mean feature, w . mu −4.1.)
+                    # Without it a body switched to the adapted input mid-life lost w . mu (−2.06 on the served body's
+                    # day 44) and opened its gate until its lesson refit.
+                    wmu = float(m.mouth_gate.weight[0, : self._feat_mu.numel()] @ self._feat_mu)
+                    if getattr(self, "_gate_c", None) is None:
+                        # born: mu is near zero and c is the bias; loaded: the saved bias was c + w . mu of the saved mean
+                        self._gate_c = float(m.mouth_gate.bias[0]) - wmu
+                    else:
+                        # the lesson may have moved the bias since the last tick: what it moved is the intercept's
+                        self._gate_c += float(m.mouth_gate.bias[0]) - self._gate_wmu_last - self._gate_c
+                    m.mouth_gate.bias.fill_(self._gate_c + wmu); self._gate_wmu_last = wmu
                 feat = feat - self._feat_mu
             if int(self.cfg.get("gate_ear", 0)):
                 # THE EAR: the world's symbol this tick, its own act last tick (sensed, not inferred)
