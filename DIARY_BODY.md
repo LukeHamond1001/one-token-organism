@@ -4340,3 +4340,8 @@ it across the nights it lives through; the live heads' readings near zero at day
 estimator's failure, the overfit of one day's ramp that the cache showed, and the forgetting
 head with the trace is the remedy runs 137 to 140 will measure from birth. A live head that
 forgets at a day also forgets the day-6 body by day 16, which is what the drift asks of it.
+
+**Day 46 closed, 10:36.** 108 smiles, no frown, seven turnings-away under the 12-second
+patience (five under 45 seconds the day before): the cap was not the cost, the wait was.
+"hot" learned, 56 known words, 127 lines heard. From day 47 the typist replies at once and
+recasts with the least added (days 47 to 51 armed, the planners for 47 and 48 waiting).
