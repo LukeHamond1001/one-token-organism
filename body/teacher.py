@@ -83,8 +83,8 @@ class Corpus:
 
 
 class Teacher(Caregiver):
-    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0, answer_levels=1, parent=0, reply=0):
-        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels, parent=parent, reply=reply)
+    def __init__(self, base, day, log, corpus, planner, period=60.0, quiet=3.0, cap=45.0, seed=0, answer_levels=1, parent=0, reply=0, wait=0):
+        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels, parent=parent, reply=reply, wait=wait)
         self.corpus, self.planner = corpus, planner
         self.said_today = []                                  # (text, kind, its_after)
 
@@ -96,6 +96,11 @@ class Teacher(Caregiver):
 
     def lines(self):
         return self.corpus.heard_lines()                      # what continues a cue: the lines it has heard
+
+    def reply_line_for(self, cue, answer):
+        # the recast: the heard line (twice at least) that begins with the cue and goes on with its answer, the most heard
+        lines = [(n, l) for l, n in self.corpus.lines.items() if n >= HEARD_FOR_CUE and l.startswith(cue) and (l[len(cue):].split() or [""])[0] == answer]
+        return max(lines)[1] if lines else (cue + answer).strip()
 
     def event(self, text, kind):
         if kind == "cue":
@@ -157,10 +162,9 @@ class Teacher(Caregiver):
                     text = self.rng.choice(holds)                  # answering its word with a line that holds it
                 self.expand_next = None
             if prev is not None:
-                while time.time() < prev + self.pace():
-                    self.watch(min(3.0, prev + self.pace() - time.time()))
-                    if (self.state or {}).get("asleep"):
-                        break
+                prev = self.pace_wait(prev, self.pace())
+                if prev is None:
+                    slept = True; break
             while self.parent and time.time() < self.away_until and not (self.state or {}).get("asleep"):
                 self.watch(2.0)
             prev = time.time()
@@ -180,14 +184,14 @@ class Teacher(Caregiver):
                 break
             time.sleep(5)
         self.row({"action": "night", "slept_s": round(time.time() - t_sleep, 1), "last_night": (self.state or {}).get("last_night")})
+        self.reply_pending = None; self.reply_line = None    # a reply due at the night's edge is not given
         # the post-night cues: the eight raised cues (the fixed yardstick), a heard line between each pair
         lines2 = self.rng.sample(self.corpus.heard_lines(HEARD_FOR_CUE), min(4, len(self.corpus.heard_lines(HEARD_FOR_CUE))))
         prev = None; j = 0
         for i, c in enumerate(CUES0):
             for text, kind in ([(c, "cue")] + ([(lines2[j % len(lines2)], "line")] if i % 2 == 1 and lines2 else [])):
                 if prev is not None:
-                    while time.time() < prev + self.period:
-                        self.watch(min(3.0, prev + self.period - time.time()))
+                    prev = self.pace_wait(prev, self.period) or time.time()
                 prev = time.time(); self.event(text, kind)
                 if kind == "line":
                     j += 1
@@ -322,6 +326,7 @@ def main():
     ap.add_argument("--cap", type=float, default=45.0); ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--answer-levels", type=int, default=1); ap.add_argument("--parent", type=int, default=0)
     ap.add_argument("--reply", type=int, default=0)           # the parent wants a reply (the user's word of 2026-09-04)
+    ap.add_argument("--wait", type=int, default=0)            # the reply withheld: ticks of the child's quiet before the parent answers (4)
     a = ap.parse_args()
     for k in range(a.days):
         day = a.day + k
@@ -329,7 +334,7 @@ def main():
         planner = {"claude": lambda: ClaudePlanner(a.model, a.budget, rng), "queue": lambda: QueuePlanner(a.queue, rng),
                    "fixed": lambda: FixedPlanner(rng)}[a.planner]()
         corpus = Corpus(a.corpus)
-        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply)
+        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply, wait=a.wait)
         t.run_day()
 
 

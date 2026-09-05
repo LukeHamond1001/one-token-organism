@@ -47,6 +47,19 @@ PARENT = int(os.environ.get("PARENT", "0"))
 # cued line ('where ball? ' 'ball under'); and a word said over the parent's own typing does the same. Decided from
 # the page alone; the answer smile is always given. Measured first on fresh seeds (runs 63/64) before the served body.
 REPLY = int(os.environ.get("REPLY", "0"))
+# THE REPLY WITHHELD (on the user's word of 2026-09-04, "both are your call"): the parent who wants a reply answers
+# when the child has finished. Its smile for the answer and its reply (the cued line in full, the recast a parent
+# gives) come after the child's quiet of REPLY_QUIET ticks, and every symbol the child adds before that postpones
+# them: a parent does not praise over a child still talking, and a child who talks over its parent gets no reply
+# until it stops (the contingent response infants work for, Goldstein and West 2003). After the cap it replies
+# anyway; the answer smile is always given. Decided from the page alone. The environment's road to turn-taking:
+# the run-on's consequence, near a tenth of a smile under the reply rule alone, becomes the delay of the smile and
+# of the reply, at the fast critic's horizon. 0 = the reply rule as before (the smile at once).
+WAIT = int(os.environ.get("WAIT", "0"))
+# The parent's second: a served body of 33 days speaks on half of all ticks and one rest in a hundred reaches eight
+# ticks (a quiet of eight within 180 ticks after the parent's utterance 35 percent of the time, median 116 ticks; a
+# quiet of four every time, median 22), and infant-parent turn transitions are near a second (Gratier 2015).
+REPLY_QUIET = int(os.environ.get("REPLY_QUIET", "4"))
 E0, E_FLOOR, E_TAU, E_AWAY, AWAY_TICKS = 0.6, 0.3, 600.0, 0.15, 200   # start, resting level, decay ticks, still-face
 
 
@@ -64,6 +77,7 @@ class FastCaregiver:
         self.e = E0; self.said_today = {}; self.away_until = -1; self.aways = 0; self.expand_next = None
         self.reply_cue = None; self.reply_tokens = []; self.answered = False; self.past = False   # the reply to a cue
         self.typing_span = (-1, -1)                                                            # the parent's own turn, in ticks
+        self.reply_pending = None; self.reply_line = None; self.own_since = 0                    # the reply withheld (WAIT)
 
     def row(self, obj):
         obj = dict(obj); obj.setdefault("day", self.day); obj.setdefault("tick", self.L.ticks)
@@ -89,6 +103,8 @@ class FastCaregiver:
         t = L.ticks
         if sym != "":
             self.last_write_tick = t
+            if self.reply_pending is not None:
+                self.own_since += 1
         # tokens in its stream: maximal runs of symbols that are not rest and not space
         if sym in ("", " "):
             if self.tok_buf:
@@ -98,17 +114,29 @@ class FastCaregiver:
             if not self.tok_buf:
                 self.tok_start = t
             self.tok_buf.append(sym)
+        rp = self.reply_pending
+        if rp is not None:
+            yielded = t - self.last_write_tick >= REPLY_QUIET
+            if yielded or t - rp["end"] >= self.cap:
+                self.reply_pending = None
+                self.smile(rp["tok"], rp["why"], extra={"waited": t - rp["end"], "run_on": self.own_since, "yielded": yielded})
+                self.reply_line = rp["line"]
+
+    def hold_reply(self, tok, why, cue, answer, b):
+        lines = [l for l in LINES if l.startswith(cue) and (l[len(cue):].split() or [""])[0] == answer]
+        self.reply_pending = {"tok": tok, "why": why, "end": b, "line": self.rng.choice(lines) if lines else (cue + answer).strip()}
+        self.own_since = 0
 
     def set_face(self, v, ticks):
         self.face_val = float(v); self.L.set_face(v); self.face_until = self.L.ticks + ticks
 
-    def smile(self, on, why):
+    def smile(self, on, why, extra=None):
         levels = ANSWER_LEVELS if why.startswith("cue") else 1
         self.set_face(2.0, self.smile_ticks); self.smiles += 1; self.last_smile_tick = self.L.ticks; self.last_word = on
         if levels >= 2:
             self.face_plan = [(self.L.ticks + self.smile_ticks // 2, 4.0)]
         self.words.append((self.L.ticks, on, why))
-        self.row({"action": "smile", "on": on, "why": why, "levels": levels, "e": round(self.e, 3), "gate": self.L.last.get("gate"), "mood": round(self.L.mood, 3)})
+        self.row(dict({"action": "smile", "on": on, "why": why, "levels": levels, "e": round(self.e, 3), "gate": self.L.last.get("gate"), "mood": round(self.L.mood, 3)}, **(extra or {})))
 
     def on_token(self, tok, a, b):
         t = self.L.ticks
@@ -131,10 +159,17 @@ class FastCaregiver:
         if c and t <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
                 c["done"] = True; self.answered = True; self.reply_tokens.append(low)
-                self.e = min(1.0, self.e + 0.25); self.smile(tok, "cue completion: " + c["text"]); return
+                self.e = min(1.0, self.e + 0.25)
+                if WAIT:
+                    self.hold_reply(tok, "cue completion: " + c["text"], c["text"], low, b); return
+                self.smile(tok, "cue completion: " + c["text"]); return
             if low[:2] in [x[:2] for x in c["full"]]:
                 c["done"] = True; self.answered = True; self.reply_tokens.append(low)
-                self.e = min(1.0, self.e + 0.15); self.smile(tok, "cue prefix: " + c["text"]); return
+                self.e = min(1.0, self.e + 0.15)
+                if WAIT:
+                    full = [x for x in c["full"] if x[:2] == low[:2]][0]
+                    self.hold_reply(tok, "cue prefix: " + c["text"], c["text"], full, b); return
+                self.smile(tok, "cue prefix: " + c["text"]); return
         if PARENT and REPLY and self.answered:
             # past its answer: the parent asked and got a speech (the words may go on completing the cued line)
             said = (self.reply_cue + " ".join(self.reply_tokens + [tok])).strip()
@@ -191,6 +226,22 @@ class FastCaregiver:
             self.cue = None
         return True
 
+    def pace_wait(self, last_t, pace):
+        """ticks until last_t + pace; under WAIT a reply that comes due is spoken at once and the pace restarts
+        from it. Returns the new last_t, or None if the body fell asleep."""
+        L = self.L
+        while L.ticks < last_t + pace:
+            if L.sleep_pressure >= L.cfg["wake_ticks"]:
+                break
+            if WAIT and self.reply_line:
+                line = self.reply_line; self.reply_line = None
+                last_t = L.ticks
+                if not self.event(line, "line"):
+                    return None
+                continue
+            self.step()
+        return last_t
+
     def run_day(self):
         L = self.L
         self.row({"action": "day_start", "sleep_pressure": L.sleep_pressure, "nights": L.nights})
@@ -213,10 +264,9 @@ class FastCaregiver:
                     text = self.rng.choice(holds)                  # answering its word with a line that holds it
                 self.expand_next = None
             if last_t is not None:
-                while L.ticks < last_t + self.pace():
-                    if L.sleep_pressure >= L.cfg["wake_ticks"]:
-                        break
-                    self.step()
+                last_t = self.pace_wait(last_t, self.pace())
+                if last_t is None:
+                    slept = True; break
             if PARENT and L.ticks < self.away_until:
                 while L.ticks < self.away_until:
                     self.step()
@@ -229,6 +279,7 @@ class FastCaregiver:
         n0 = L.nights
         while L.nights == n0:
             self.step()
+        self.reply_line = None                                # a reply due at the night's edge is not given
         night = L.last_night
         self.row({"action": "night", "record": night})
         # the post-night cues, a line between each pair
@@ -236,8 +287,7 @@ class FastCaregiver:
         for i, c in enumerate(CUES):
             for text, kind in ([(c, "cue")] + ([(lines2[j % len(lines2)], "line")] if i % 2 == 1 else [])):
                 if last_t is not None:
-                    while L.ticks < last_t + self.period:
-                        self.step()
+                    last_t = self.pace_wait(last_t, self.period) or L.ticks
                 last_t = L.ticks; self.event(text, kind)
                 if kind == "line":
                     j += 1
@@ -248,12 +298,15 @@ class FastCaregiver:
 def summarize(log, night, day):
     cues = [r for r in log if r.get("action") == "cue" and r.get("day") == day]
     smiles = [r for r in log if r.get("action") == "smile" and r.get("day") == day]
+    held = [r for r in smiles if "run_on" in r]
+    reply = (f" | reply: run-on {sum(r['run_on'] for r in held) / len(held):.1f} waited {sum(r['waited'] for r in held) / len(held):.0f}"
+             f" yielded {sum(1 for r in held if r['yielded'])}/{len(held)}") if held else ""
     g = night.get("gauge", {}) if night else {}
     print(f"day {day}: smiles {len(smiles)} ({', '.join(sorted(set(r['on'] for r in smiles)))[:60]}) | cues {len(cues)}: "
           + " ".join(repr(r['its_after'].replace('_', '')[:6]) for r in cues[-8:])
           + f" | night: dreams {night.get('dreams')} len {night.get('mean_len')} nrem {(night.get('nrem_loss') or ['?'])[0]}->{(night.get('nrem_loss') or ['?'])[-1]} gauge {g.get('before')}->{g.get('after_nrem')}->{g.get('after')} "
           f"cos {g.get('cos_before')}->{g.get('cos_after')} rem {night.get('rem_cos_first')}->{night.get('rem_cos')} discarded {night.get('discarded')} "
-          f"| gate {cues[-1].get('gate') if cues else None} store {night.get('store_slots')} vrel {night.get('vrel')} | dreams e.g. {[e[:14] for e in (night.get('examples') or [])[:3]]}", flush=True)
+          f"| gate {cues[-1].get('gate') if cues else None} store {night.get('store_slots')} vrel {night.get('vrel')}{reply} | dreams e.g. {[e[:14] for e in (night.get('examples') or [])[:3]]}", flush=True)
 
 
 def main():

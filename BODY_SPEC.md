@@ -495,7 +495,33 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   parent who wants a reply is near a tenth of a smile, below any critic's
   reach. The reply needs a parent whose reply is withheld while the child
   runs on, or a body that feels the world's words as reward when they come
-  (the dopamine of information); both wait for the user's word.
+  (the dopamine of information). THE WORD (2026-09-04, "both are your
+  call"): both taken, behind flags. The environment's road, THE REPLY
+  WITHHELD (§6: WAIT=1 in fastlife, --wait 4 in the served typist): the
+  parent's smile for the answer and its recast of the cued line come after
+  the child's quiet of four ticks, every symbol before that postpones them,
+  the cap of 180 ticks replies anyway. The architecture's road, THE
+  WORLD'S WORDS AS REWARD (world_r, 0 = off, candidate 0.1): each symbol
+  the world types is felt as reward beside the face, the caregiver's voice
+  as a primary reward (DeCasper and Fifer 1980; Abrams 2016; Goldstein and
+  West 2003; Bromberg-Martin and Hikosaka 2009), so a turn given up pays in
+  what is heard, and the parent's pace (its engagement) becomes a reward
+  rate the slow critics can foresee. The arithmetic at the dopamine band
+  (gamma 15/16) with the reply four ticks off: the answer smile 2 then 4
+  and a recast of twenty symbols at 0.1 make a prospect near 6, a run-on
+  symbol at the pause's start costs its one-tick delay, 0.29, and a symbol
+  two ticks into the pause costs the reset, 0.64, against the act's own
+  margin (tonic 0.25 less the effort, plus the belief credit) of 0.13 to
+  0.48; so the pause, once begun, pays to keep. THE MEASUREMENT that set
+  the four ticks: the served body at 33 days speaks on half of all ticks,
+  one rest in a hundred reaches eight ticks, a quiet of eight comes within
+  180 ticks of the parent's utterance 35 percent of the time (median 116)
+  and a quiet of four every time (median 22); a newborn under an
+  eight-tick wait hit the cap on two answers of three (run-on 87 and 96
+  symbols). Runs 93/94 (the reply withheld) and 95/96 (and the world's
+  words at 0.1), born 22:22, twenty days, the run-on and the symbols
+  before the reply at days 6, 16 and 20, against runs 89/90 (the reply
+  rule alone, 9.8 to 10.5 per cue at day 6).
 - **The level.** The gate reading the 1024-tick critic's value of the moment
   (divided by that value's running root mean square, a fifth feeling beside
   fatigue, mood, stress and salience; Pavlovian-instrumental transfer, the
@@ -631,6 +657,24 @@ timescales (the run-on bullet in §5b); this is the environment's long
 contingency for turn-taking, the ventral critic's to read. Measured first on
 fresh seeds (runs 63/64, REPLY=1 in fastlife; --reply 1 in the served
 typist) before the served body takes it at a day boundary.
+
+THE REPLY WITHHELD (the user's word of 2026-09-04, "both are your call"):
+the parent who wants a reply answers when the child has finished. Its
+smile for the answer (2 then 4) and its reply, the cued line in full with
+the answer the child gave (the recast a parent gives: 'why dog up? ' →
+'because' → "why dog up? because big dog"), come after the child's quiet
+of four ticks, a second, and every symbol the child adds before that
+postpones them; after the cap (180 ticks, the typist's 45 seconds) the
+parent replies anyway. The reply is spoken at once, outside the pace,
+and the pace restarts from it. A parent does not praise over a child
+still talking, and a child who talks over its parent gets no reply until
+it stops (the contingent response infants work for, Goldstein and West
+2003). Decided from the page alone; the answer smile is always given;
+the smile row records the ticks waited, the symbols said before the
+reply and whether the child yielded before the cap (the turn-taking
+instrument, §7). WAIT=1 and REPLY_QUIET (4) in fastlife; --wait 4 in the
+served typist (0 = the smile at once). Measured on runs 93/94 and 95/96
+before the served body takes it at a day boundary.
 
 ## 7. Instruments (the supervisor's, never the caregiver's)
 

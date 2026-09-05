@@ -30,8 +30,14 @@ def iso(t=None):
 
 
 class Caregiver:
-    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1, parent=0, reply=0):
+    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1, parent=0, reply=0, wait=0.0):
         self.base, self.day, self.log = base, day, log
+        # THE REPLY WITHHELD (the user's word of 2026-09-04, "both are your call"): the parent answers when the child has
+        # finished. Its smile for the answer and its reply (the cued line in full, the recast) come after the child's
+        # quiet of `wait` ticks (4: a second), and every symbol the child adds before that postpones them: a parent does not praise
+        # over a child still talking, and a child who talks over its parent gets no reply until it stops. After the cap
+        # it replies anyway; the answer smile is always given. Decided from the page alone. 0 = the smile at once.
+        self.wait = int(wait); self.reply_pending = None; self.reply_line = None
         self.answer_levels = int(answer_levels)          # 2: the smile at a cue's completion grows, 2 then 4 (CURRICULUM.md)
         # THE PARENT (the user's word of 2026-09-03): attention that moves, decided from the page alone. e rises at an
         # answer or a known word (more at a word new today), falls at babble, drifts down in silence (150 s); a known
@@ -107,7 +113,7 @@ class Caregiver:
         except Exception:
             pass
 
-    def smile(self, on, ctx, why):
+    def smile(self, on, ctx, why, extra=None):
         db = (self.state.get("last") or {}).get("doses")
         levels = self.answer_levels if why.startswith("cue") else 1
         self.face(2); t0 = time.time()
@@ -121,8 +127,44 @@ class Caregiver:
             la = {}
         self.face(0)
         self.smiles += 1; self.last_smile = time.time(); self.last_word = on
-        self.row({"action": "smile", "on": on, "context": ctx, "why": why, "levels": levels, "e": round(self.e, 3), "ts": iso(t0),
-                  "doses_before": db, "doses_after": la.get("doses"), "mood": la.get("mood"), "gate": la.get("gate")})
+        self.row(dict({"action": "smile", "on": on, "context": ctx, "why": why, "levels": levels, "e": round(self.e, 3), "ts": iso(t0),
+                       "doses_before": db, "doses_after": la.get("doses"), "mood": la.get("mood"), "gate": la.get("gate")}, **(extra or {})))
+
+    # ---- the reply withheld ----
+    def reply_line_for(self, cue, answer):
+        lines = [l for l in self.lines() if l.startswith(cue) and (l[len(cue):].split() or [""])[0] == answer]
+        return self.rng.choice(lines) if lines else (cue + answer).strip()
+
+    def hold_reply(self, tok, ctx, why, cue, answer, b):
+        self.reply_pending = {"tok": tok, "ctx": ctx, "why": why, "end": b, "t0": time.time(), "line": self.reply_line_for(cue, answer)}
+
+    def deliver(self):
+        rp = self.reply_pending
+        if rp is None:
+            return
+        now = time.time()
+        last_write = max([t for t, s_ in self.its.items() if s_ != ""] or [-1])
+        yielded = self.maxtick - last_write >= self.wait       # the child's quiet, in the page's own ticks
+        if yielded or now - rp["t0"] >= self.cap:
+            run_on = sum(1 for t in range(rp["end"] + 2, self.maxtick + 1) if self.its.get(t))
+            self.reply_pending = None
+            self.smile(rp["tok"], rp["ctx"], rp["why"], extra={"waited_s": round(now - rp["t0"], 1), "run_on": run_on, "yielded": yielded})
+            self.reply_line = rp["line"]
+
+    def pace_wait(self, prev, pace):
+        """watch until prev + pace; a reply that comes due is spoken at once and the pace restarts from it.
+        Returns the new prev, or None if the body fell asleep under the reply."""
+        while time.time() < prev + pace:
+            if self.reply_line:
+                line = self.reply_line; self.reply_line = None
+                prev = time.time()
+                if not self.event(line, "line"):
+                    return None
+                continue
+            self.watch(min(3.0, prev + pace - time.time()))
+            if (self.state or {}).get("asleep"):
+                break
+        return prev
 
     def frown(self, on, ctx):
         self.face(-2); time.sleep(1.2); self.face(0)
@@ -144,10 +186,11 @@ class Caregiver:
             while t < end and self.its.get(t, "") not in ("", " "):
                 t += 1
             if t >= end:
-                return                                    # still growing
+                self.deliver(); return                    # still growing
             b = t - 1; self.finalized = b
             self.on_token("".join(self.its.get(k, "") for k in range(a, b + 1)), a, b)
         self.finalized = max(self.finalized, end - 1)
+        self.deliver()
 
     def lines(self):
         return [c + a for c, ans in ANSWERS.items() for a in ans]   # the lines this parent knows (the teacher reads the corpus)
@@ -173,10 +216,17 @@ class Caregiver:
         if c and wall <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
                 c["done"] = True; self.answered = True; self.reply_tokens.append(low)
-                self.e = min(1.0, self.e + 0.25); self.smile(tok, ctx, "cue completion: " + c["text"]); return
+                self.e = min(1.0, self.e + 0.25)
+                if self.wait > 0:
+                    self.hold_reply(tok, ctx, "cue completion: " + c["text"], c["text"], low, b); return
+                self.smile(tok, ctx, "cue completion: " + c["text"]); return
             if low[:2] in [x[:2] for x in c["full"]] and time.time() - wall < 3.5:
                 c["done"] = True; self.answered = True; self.reply_tokens.append(low)
-                self.e = min(1.0, self.e + 0.15); self.smile(tok, ctx, "cue prefix: " + c["text"]); return
+                self.e = min(1.0, self.e + 0.15)
+                if self.wait > 0:
+                    full = [x for x in c["full"] if x[:2] == low[:2]][0]
+                    self.hold_reply(tok, ctx, "cue prefix: " + c["text"], c["text"], full, b); return
+                self.smile(tok, ctx, "cue prefix: " + c["text"]); return
         if self.parent and self.reply and self.answered:
             # past its answer: the parent asked and got a speech (the words may go on completing the cued line)
             said = ((self.reply_cue or "") + " ".join(self.reply_tokens + [tok])).strip()
@@ -273,8 +323,9 @@ class Caregiver:
                     text = self.rng.choice(holds)                  # answering its word with a line that holds it
                 self.expand_next = None
             if prev is not None:
-                while time.time() < prev + self.pace():
-                    self.watch(min(3.0, prev + self.pace() - time.time()))
+                prev = self.pace_wait(prev, self.pace())
+                if prev is None:
+                    slept = True; break
             while self.parent and time.time() < self.away_until:
                 self.watch(2.0)
             prev = time.time()
@@ -297,14 +348,14 @@ class Caregiver:
                 break
             time.sleep(5)
         self.row({"action": "night", "slept_s": round(time.time() - t_sleep, 1), "last_night": (self.state or {}).get("last_night")})
+        self.reply_pending = None; self.reply_line = None    # a reply due at the night's edge is not given
         # the post-night cues, a known line between each pair
         post = list(cues); lines2 = self.rng.sample(lines, len(lines))
         prev = None; j = 0
         for i, c in enumerate(post):
             for text, kind in ([(c, "cue")] + ([(lines2[j % len(lines2)], "line")] if i % 2 == 1 else [])):
                 if prev is not None:
-                    while time.time() < prev + self.period:
-                        self.watch(min(3.0, prev + self.period - time.time()))
+                    prev = self.pace_wait(prev, self.period) or time.time()
                 prev = time.time(); self.event(text, kind)
                 if kind == "line":
                     j += 1
@@ -327,10 +378,11 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--answer-levels", type=int, default=1)
     ap.add_argument("--parent", type=int, default=0); ap.add_argument("--reply", type=int, default=0)
+    ap.add_argument("--wait", type=int, default=0)            # the reply withheld: ticks of the child's quiet before the parent answers (4)
     ap.add_argument("--lines", default="dog will go|I will go up|you will go in|scared dog|scared ball|what? scared dog|give milk|give ball|give book|ball under|ball on|where ball? ball under|I had milk|you had ball|dog had ball|first milk then ball|first up then in|big dog bigger dog|bigger dog up|I saw dog|you saw dog|why dog up? because big dog")
     ap.add_argument("--cues", default="dog will |scared |give |where ball? |I had |first milk then |big dog bigger |why dog up? ")
     a = ap.parse_args()
-    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply)
+    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply, wait=a.wait)
     cg.run_day([x for x in a.lines.split("|") if x], [x for x in a.cues.split("|") if x])
 
 

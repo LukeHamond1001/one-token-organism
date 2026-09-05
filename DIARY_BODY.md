@@ -3707,3 +3707,35 @@ taught-line cues 96 and 63 again, the unheard combinations 99 and 82, the cortex
 boundaries at 41 and 33: the body is holding its level on the earlier parent, neither
 climbing nor slipping, its smiles a hundred a day. The unheard combinations came off
 their day-31 high and stayed there. Day 33 began 21:37.
+
+**The word for the reply, 22:24.** The user: "you can do this. Turn-taking. The run-on is
+still about nine symbols past the answer on every recipe... it needs either a parent
+whose reply is withheld while the child runs on or a body that feels the world's words
+as reward. Both are grounded; both are your call." Both taken, each behind a flag. The
+environment's road: the parent who wants a reply now answers when the child has
+finished. Its smile for the answer and its recast of the cued line in full ('why dog
+up? ' → 'because' → "why dog up? because big dog") come after the child's quiet, every
+symbol the child adds before that postpones them, and after the cap it replies anyway;
+the reply is spoken at once, outside the pace. The architecture's road: each symbol the
+world types is felt as reward beside the face (world_r, 0.1 a symbol, a line of fifteen
+near a smile), the caregiver's voice as an infant's primary reward, so a turn given up
+pays in what is heard and the parent's pace becomes a reward rate the slow critics can
+foresee. The first smoke on a newborn with the parent's wait at eight ticks: two answers
+of three hit the cap of 180 ticks with 87 and 96 symbols said before it. So I measured
+the served body's own rests from its page: at 33 days it speaks on half of all ticks
+(5,390 symbols in 10,551), one rest in a hundred reaches eight ticks, and after the
+parent's utterances a quiet of eight comes within 180 ticks a third of the time (median
+116 ticks) where a quiet of four comes every time (median 22). The run-on was never nine
+symbols; the body never stops. The parent's wait is four ticks, a second, the transition
+infants and parents make. The arithmetic at the dopamine band with the reply a second
+off: the answer smile (2 then 4) and a recast of twenty symbols at 0.1 make a prospect
+near 6; a run-on symbol at the pause's start costs its one-tick delay, 0.29, and one two
+ticks into the pause costs the reset, 0.64, against the act's own margin of 0.13 to
+0.48. A pause, once begun, pays to keep; whether the gate finds it is the runs'
+question. Runs 93 and 94 (the reply withheld) and 95 and 96 (and the world's words),
+born 22:22 on the recipe, twenty days, read at days 6, 16 and 20 against runs 89 and 90.
+The organ tests 16 of 16. The user also asked whether Sonnet is a good enough teacher
+and gave me the teacher's method to tune without asking: it is adequate for the role as
+built (day 33: six of seven cues answered, no rule broken); the bottleneck is the
+environment's contingency, now under measurement, and the curriculum's pace, which I
+will tune from day 36.

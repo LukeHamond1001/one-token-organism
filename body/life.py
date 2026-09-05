@@ -93,6 +93,14 @@ PHYSIOLOGY = dict(
     gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
     read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
+    # THE WORLD'S WORDS AS REWARD (the user's word of 2026-09-04, "both are your call"): each symbol the world types is
+    # felt as reward of world_r beside the face. The caregiver's voice is a primary reward to an infant (the mother's
+    # voice preferred from birth, DeCasper and Fifer 1980; the ventral striatum answers it, Abrams 2016), and infants
+    # work for a contingent voice (Goldstein and West 2003); information itself is paid in dopamine (Bromberg-Martin
+    # and Hikosaka 2009). With the parent's reply withheld while the child runs on, a turn given up pays in what is
+    # heard, at the fast critic's horizon; and the parent's engagement, which sets its pace, becomes a reward rate the
+    # slow critics can foresee. 0 = off; candidate 0.1 (a line of fifteen symbols near a smile)
+    world_r=0.0,
     diff_horizon=1024,    # bands with clocks at or above this learn average-reward TD (no discount, the reward rate as baseline)
 )
 
@@ -319,6 +327,8 @@ class Life:
                 felt = lvl
             self.level = lvl
         r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
+        if u != self.sil:
+            r += float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
         if self.cfg.get("cost_in_reward") and getattr(self, "_acted_last", False):
             # THE EFFORT IN THE REWARD: the cost of the last act is felt as the next tick's reward, so both critics
             # predict it and the gate reads their error alone. Added to the act's credit outside the critics (the
