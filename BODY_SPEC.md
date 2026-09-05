@@ -695,6 +695,23 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   variables belongs at the switch. Runs 131/132 (with it, from birth) read
   as 115/116 in every yardstick, as a pure change of coordinates should.
 
+- **The critic's second defect: one day is one ramp (2026-09-05).** On the
+  cached features of the served body's day 40, the live rule (TD(0), Adam
+  1e-3, raw slow bands) reads the return at +0.52 after one pass and −0.49
+  after four, −0.52 after sixteen (weights 2.3 → 7.2, bias → +1.7); TD(λ)
+  with the trace at the horizon holds through four passes and flips at
+  sixteen the same way. A day's slow bands are one monotone ramp, and a
+  768-weight head fit to it long enough learns the day's trend and carries
+  it wrongly to the next day: overfitting an effective sample of one, which
+  the ridge head (+0.50 across ten nights) escaped by its regularizer. The
+  forgetting head on the raw bands escapes it too: weights decaying toward
+  zero at 24,000, 12,000 or 6,000 ticks hold +0.52 after sixteen passes and
+  +0.53 to +0.60 on the body ten nights before; at 96,000 they fail as
+  without. So the long critic is three flags at once, each necessary, none
+  sufficient alone: vcrit_center 0, vcrit_lambda = γ, vcrit_forget ≈ 12000.
+  Runs 137–140 measure it live from birth (137/138 out of the credit,
+  139/140 in it through the reliability gain).
+
 ## 6. The environment (raw)
 
 The caregiver decides from the page and its face row only: pace by its quiet
