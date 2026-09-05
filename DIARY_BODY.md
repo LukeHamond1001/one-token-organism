@@ -4464,3 +4464,9 @@ does not reply, continuing costs, and the same rule learned to rest. The turn-ta
 left is therefore the environment's to teach through a credit that reaches the gate, not the
 optimizer's; the fast parent as written pays for bouts and the diary's parent charges for
 them. The long critic's day-6 value instrument is computing.
+
+**The clean SGD pair's probe, 12:51.** Runs 135 and 136 at day 6, 3000 ticks under the fast
+parent with the lesson off: acted inside the parent's lines 0.37 and 0.36 of the ticks,
+p(start) 0.26 and 0.31, p(continue) 0.56 and 0.45, against 0.44 and 0.43, 0.67 and 0.66
+outside: where the Adam bodies stood at day 14 (0.30 and 0.18; 0.23 and 0.15; 0.49 and 0.31).
+Twice as fast to the same place, and the same place; the optimizer is not the remainder.
