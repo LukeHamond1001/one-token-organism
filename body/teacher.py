@@ -156,11 +156,14 @@ class Teacher(Caregiver):
             if item is None:
                 self.watch(3.0); continue
             text, kind = item
-            if self.parent and self.expand_next and kind == "line":
+            if self.parent and self.expand_next and kind == "line" and not getattr(self.planner, "planned", False):
+                # answering its word with a line that holds it: only in place of the typist's own filler. Replacing
+                # the planner's lines too (2026-09-04 and before), with a hundred smiled words a day, it ate nearly
+                # every planned phrasing and word: the corpus grew by one word in thirty days
                 holds = [l for l in self.corpus.heard_lines(HEARD_FOR_CUE) if self.expand_next in l.split()]
                 if holds:
-                    text = self.rng.choice(holds)                  # answering its word with a line that holds it
-                self.expand_next = None
+                    text = self.rng.choice(holds)
+            self.expand_next = None
             if prev is not None:
                 prev = self.pace_wait(prev, self.pace())
                 if prev is None:
@@ -249,9 +252,10 @@ class QueuePlanner:
                 except Exception:
                     pass
         if self.buf:
-            s = self.buf.pop(0)
+            s = self.buf.pop(0); self.planned = True
             return (s, "cue" if s.endswith(" ") else "line")
         heard = teacher.corpus.heard_lines(HEARD_FOR_CUE) or LINES0
+        self.planned = False                                  # the typist's own filler: a heard line
         return (self.rng.choice(heard), "line")
 
 
@@ -286,9 +290,10 @@ class ClaudePlanner:
         if not self.buf and self.calls < self.budget:
             self.buf = self.plan(teacher)
         if self.buf:
-            s = self.buf.pop(0)
+            s = self.buf.pop(0); self.planned = True
             return (s, "cue" if s.endswith(" ") else "line")
         heard = teacher.corpus.heard_lines(HEARD_FOR_CUE) or LINES0
+        self.planned = False                                  # the typist's own filler: a heard line
         return (self.rng.choice(heard), "line")
 
     def plan(self, teacher):
