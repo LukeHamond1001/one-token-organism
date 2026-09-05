@@ -3676,7 +3676,7 @@ recipe (the slow-band head learning from birth, its weight in the credit 0), the
 who wants a reply, twenty days, read at day 20 by the value instrument: a head kept out
 of the loop, if it reads +0.6, leaves the history blameless and the loop guilty.
 
-**The reliability gain on fixed bodies, 21:53.** The ventral head's weight in the gate's
+**The reliability gain on fixed bodies, 21:32.** The ventral head's weight in the gate's
 credit as its own running correlation between what it foretold and the return that
 arrived (vcrit_auto), measured on run 85's day-20 and day-6 bodies held fixed for four
 chained days with the credit on: on the day-20 body the head's reliability read +0.65,
