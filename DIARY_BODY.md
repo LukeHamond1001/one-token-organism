@@ -4208,3 +4208,17 @@ per answer at days 14 to 16, run 128's 49 to 57 and 11. The served body's day 45
 minutes in: 45 smiles, no turning-away, the gate's mean on its lines 0.49 after 0.61 on day
 44 and 0.54 on day 43, the parent's attention at smiles 0.81. The gate has found its new
 coordinates by its own lesson in a day, as the fast bodies' gates did.
+
+**The parent's patience, 09:12.** Day 45's two turnings-away came at 09:09 and 09:10, right
+after a withheld reply hit its cap: the typist waited 45 seconds for four ticks of the
+child's quiet, the child said 108 symbols meanwhile, and the parent's attention, decaying
+through the wait, fell to 0.14. Half the served body's replies have hit that cap (108 and
+116 symbols of run-on), and on day 44 the same fall preceded most of the seven turnings-away.
+The cap also paces the parent's lines (it speaks when the child has been quiet three seconds
+or after the cap), so a body that seldom rests hears one line a minute at best. The fast ear
+bodies yield within 20 to 40 ticks and never met the cap; the served body, switched at 43
+days, does not yet. A parent waits seconds, not most of a minute: from day 46 the typist's
+cap is 12 seconds (scratchpad/teach_days3b.sh, the same typist otherwise, days 46 to 48),
+the body untouched. The reply withheld stays: it is the parent's behavior the user chose,
+and the fall of attention through a long wait is the environment telling the truth. Day 45 so
+far: 79 smiles in twenty minutes, the gate at 0.52, two turnings-away.
