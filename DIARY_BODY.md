@@ -4280,3 +4280,24 @@ run 127's words past the answer 14 to 15 per answer and its words said over the 
 73 at days 18 to 20, run 128's 11 and 40 to 51, the run-on untouched. Day 46 under the
 12-second patience, thirty minutes in: 80 smiles, one turning-away, the first withheld reply
 delivered after 12 seconds and 34 symbols instead of 45 seconds and 116.
+
+**The critic's second defect, and the head that holds, 10:30.** On the cached features of the
+served body's day 40, the live rule read the return at +0.52 after one pass and −0.49 after
+four, −0.52 after sixteen, its weights growing from 2.3 to 7.2 and its bias to +1.7: sixteen
+days of updates on one day's kind of ticks, which is what every live head has had, turn the
+right head into the wrong one. TD(λ) with the trace at the horizon (the backward view of the
+return itself, written 2026-09-04 against the bootstrap's fixed point) holds +0.53 through
+four passes and flips at sixteen the same way, so the bootstrap was not the only cause: a
+day's slow bands are one ramp, and a 768-weight head fit to it for long enough learns the
+day's trend and carries it wrongly to the next day. The ridge head held +0.50 across ten
+nights because it was regularized. The forgetting head (the weights decaying toward zero,
+written 2026-09-04 and read wrong on centered inputs) on the raw slow bands: at a time
+constant of 24,000, 12,000 or 6,000 ticks the head reads +0.52 after sixteen passes, +0.52 on
+the next night's body and +0.53 to +0.60 on the body of ten nights before; at 96,000 it fails
+as without. Synapses decay, and a critic whose weights forget at the scale of a day cannot
+overfit a day. So the long critic is three things at once, each necessary and none
+sufficient: the raw slow bands (the centering off), the trace at its horizon, and forgetting
+at about a day. All three exist as flags. Runs 137 and 138 (the head out of the credit, its
+reliability logged) and 139 and 140 (in the credit through its gain) on the ear actor with
+Adam 1e-3, the reply withheld, the world's words 0.3 and the mask, take the slots the dose
+and kept-function pairs free near 11:15.
