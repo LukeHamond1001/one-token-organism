@@ -4447,3 +4447,20 @@ bout is credited below the baseline, and the switched gate has learned to rest m
 no fast body has. The bias +0.48 against w·μ −3.5. The turn-taking the fast seeds could not
 reach in twenty days may come on the diary from the parent's rules alone; the day-49 boundary
 probes and the day's misses will say.
+
+**Day 6 of the eight clean bodies, 12:49.** Without the kept function: SGD 0.2 (135 and 136)
+listening −1.27 and −1.10, bout +1.87 and +1.45, net mid-bout +0.60 and +0.36; SGD 0.05 (133
+and 134) −0.28 and −0.42 against +0.54 and +0.74; Adam 1e-3 (137 to 140) −0.39 to −0.45
+against +0.87 to +0.94, as 115 and 116 read at this age. So the magnitude rule reaches in six
+days the listening weight Adam took eighteen for, and the bout weight comes with it: the
+lockstep is not Adam's alone, it is REINFORCE's, which raises the weight of any action that
+pays wherever it is taken, and continuing a bout pays in the fast parent's world. Three
+forms of the centering's bias gave three bout weights at day 6 under the same SGD 0.2 (+1.1
+drifting, +3.05 held, +1.87 uncompensated), which says the operating point's slow drift
+enters the lesson's dynamics in a way I have not derived; the uncompensated form is the one
+every measured body has lived under and the one the diary lives under. The diary's own gate
+meanwhile has a bout weight of −0.40: under its parent, whose attention babble wears and who
+does not reply, continuing costs, and the same rule learned to rest. The turn-taking that is
+left is therefore the environment's to teach through a credit that reaches the gate, not the
+optimizer's; the fast parent as written pays for bouts and the diary's parent charges for
+them. The long critic's day-6 value instrument is computing.
