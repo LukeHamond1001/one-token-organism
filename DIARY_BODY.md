@@ -4437,3 +4437,13 @@ then" → ball, "big dog bigger" → dog, "little dog had" → milk, "you saw" �
 because" → big). The ear recipe on the diary, with the typist that does not reply, is a
 better day than any before it; what the mask teaches it (the ear's listening weight after
 four days) is measured at the day-49 boundary by the gate's weights on the saved body.
+
+**The diary's ear after five days, 12:25.** The gate's weight on "the world's symbol this
+tick" −0.52 on the saved body after night 48, from −0.13 after night 44: a tenth a day, faster
+than the fast bodies' twentieth, since the typist's lines fill more of this body's ticks. The
+bout weight −0.40, where every fast body's is +1.3 to +1.6: on the diary, with the parent's
+own rule that babble wears its attention and no reply typist counting words, continuing a
+bout is credited below the baseline, and the switched gate has learned to rest mid-bout as
+no fast body has. The bias +0.48 against w·μ −3.5. The turn-taking the fast seeds could not
+reach in twenty days may come on the diary from the parent's rules alone; the day-49 boundary
+probes and the day's misses will say.
