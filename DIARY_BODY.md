@@ -3762,3 +3762,19 @@ stopped at day 8 with their day-6 readings kept, and the comparison relaunched l
 like at 23:34 on the fixed parent: runs 97 and 98 the reply rule alone, 99 and 100 the
 reply withheld, 101 and 102 the reply withheld with the world's words, twenty days each,
 read at days 6, 16 and 20.
+
+**History, not the loop, 23:53.** Runs 89 and 90 at day 20, the slow-band ventral head learned
+from birth with its error never in the gate's credit, read by the value instrument over four
+lived days: −0.52, −0.35, −0.26, −0.52 (a mean of −0.41) and +0.03, +0.03, −0.47, −0.51
+(−0.23), while the same head learned fresh for one day on a body of that age reads +0.7. The
+loop is innocent; the head's history is the defect: twenty days of Adam steps on a newborn's
+noise, weights of norm near ninety, that a day's learning cannot undo. Runs 91 and 92, the
+gain from birth, agree: their reliability wandered from −0.41 to +0.29 through day 18 and
+never settled. The pinned slow bands on the same bodies read as before, band 5 +0.11 and
++0.15, band 6 +0.37 and −0.63. Biology's remedy is forgetting: synapses decay, and a critic
+that forgets at the horizon of days tracks a body that changes over days. THE FORGETTING
+HEAD (vcrit_forget): the head's weights decay toward zero at a time constant of 24,000
+ticks, two days, decoupled from the lesson as in AdamW, the level undecayed, so the head is
+always the last two days' head. The organ tests 16 of 16. Runs 103 and 104, born when runs
+91 and 92 end, carry it from birth with the reliability gain at weight 1 on the fixed parent
+under the reply rule: their reliability by day and the value instrument at day 20 decide.

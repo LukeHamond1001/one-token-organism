@@ -68,6 +68,14 @@ PHYSIOLOGY = dict(
     # return at its horizon over 3072 ticks (95 percent of the discounted mass), the correlation decayed over 8192
     # samples, the gain max(0, corr). 0 = the fixed weight vcrit_w
     vcrit_auto=0,
+    # THE FORGETTING HEAD (vcrit_forget, ticks; 0 = off): the ventral head's weights decay toward zero at this time
+    # constant (decoupled from the lesson, as in AdamW), so the head is always the last days' head. Runs 89/90
+    # (2026-09-04): the slow-band head learned from birth read the return at its horizon at -0.41 and -0.23 at day 20
+    # with its error never in the credit, while the same head learned fresh for a day on a body of that age read +0.7;
+    # the deficit is the head's history, twenty days of steps on a newborn's noise (norm near ninety) that a day cannot
+    # undo. Synapses decay; a critic that forgets at the horizon of days tracks a body that changes over days. The bias
+    # (the level) is not decayed. Candidate 24000 (two days)
+    vcrit_forget=0,
     # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
     # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
     # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
@@ -417,6 +425,10 @@ class Life:
                 self.opt_value.zero_grad(set_to_none=True)
                 (loss_v + 0.01 * loss_g).backward()
                 self.opt_value.step()
+                vf = float(self.cfg.get("vcrit_forget", 0) or 0)
+                if vf > 0:
+                    with torch.no_grad():
+                        m.vcrit.weight.mul_(1.0 - 1.0 / vf)       # the forgetting head
                 # DOPAMINE: the TD error of the band whose discount matches dopamine's (clock 16,
                 # gamma 0.9375): an expected reward fires before it lands, a missed one dips
                 delta = float(td[int(self.cfg["dopamine_band"])].detach())

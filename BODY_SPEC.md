@@ -488,7 +488,14 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   are unforeseeable, a two-week-old's foreseeable at +0.7 by a head learned
   for one day. The live head's deficit is its newborn history or the loop
   of a head shaping the reward it predicts; runs 89/90 (the head learning
-  from birth, out of the credit) separate the two.
+  from birth, out of the credit) separate the two: at day 20 they read
+  −0.41 and −0.23 with the error never in the credit, so the history is
+  the defect, twenty days of Adam steps on a newborn's noise that a day
+  cannot undo. THE FORGETTING HEAD (vcrit_forget, ticks, 0 = off; candidate
+  24000): the head's weights decay toward zero at a time constant of days,
+  decoupled from the lesson, so it is always the last days' head, the one
+  the chains showed reading +0.7 from day 16; runs 103/104 measure it from
+  birth with the reliability gain at weight 1.
   And the parent's attention, read from the bands at +0.89,
   correlates +0.03 with the return: a known word raises it as readily as a
   word past the answer lowers it, so the run-on's consequence under the
