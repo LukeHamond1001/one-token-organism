@@ -4127,3 +4127,20 @@ passes the same pair of flags, so its day-44 body logs the same reading. The sec
 day 13: 17 smiles in a 34-minute day, its attention falling to 0.31 as the lines repeated,
 twenty-four minutes of "distracted" misses before its night; the engagement problem of the
 fused babble stands.
+
+**The boundary passed, 07:43.** Day 43 ended at 07:42: 163 smiles, no frown, no
+turning-away, "wet" in four frames, 53 known words, 111 lines heard; and the diary took the
+ear recipe. The body was saved, kept as data/body2_before_recipe_day43.pt, and reloaded on
+the same page with the ear and the adapted input, the vigor term off, Adam on the gate at
+1e-3, the world's words at 0.3 with the mask, the uncentered ventral critic out of the credit
+with its reliability logged, and the offset as before; 519,266 ticks, 43 nights, 397 slots
+in the store. The typist for days 44 to 46 wants a reply and withholds it until four ticks
+of the child's quiet. The first-day yardsticks of a body switched mid-life are the fast ear
+bodies' at day 6 (the gate opening toward 0.6, the listening weight near −0.4 after six days
+of the parent's lines) and the scratch test of 06:15 (the mouth held over a third of a day);
+what the diary shows tomorrow morning is the real reading. The critic runs at day 6: the
+live reliability wanders by day (127: −0.07, +0.46, +0.25, +0.19, +0.12, −0.01; 128: −0.12,
+−0.31, +0.45, +0.11, −0.01, +0.21; 125: +0.15, −0.10, −0.11, +0.22, +0.09; 126: +0.32,
++0.06, +0.46, +0.26, −0.13), an estimator over some eight independent windows at a time, and
+the value instrument's four fresh days say what it is; run 127's mouth 47 and 34 of 48 at
+day 6, its words past the answer 13 to 17, no gift from the credit yet on a newborn's head.
