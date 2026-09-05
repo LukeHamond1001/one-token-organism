@@ -4264,3 +4264,19 @@ is negative and the mouth holds, the gate will rest mid-word while the parent sp
 no Adam body did in twenty days, and SGD 0.2 with the function kept becomes the candidate
 recipe for the next boundary. Day 46 under the 12-second patience, eleven minutes in: 30
 smiles, no turning-away.
+
+**The critic runs at day 16, 10:20.** The uncentered ventral head on the four fresh
+instrument days of each day-16 body: +0.03 (−0.08, +0.22, −0.17, +0.16) on 125 and −0.22
+(−0.33, −0.59, −0.01, +0.07) on 126 with the head out of the credit; +0.16 (−0.03, +0.17,
++0.15, +0.33) on 127 and +0.08 (−0.54, +0.33, +0.24, +0.30) on 128 with the head in the
+credit through its gain. Right-signed on three of four and near zero on the whole: not the
+centered heads' steady wrong sign, and not the +0.52 the same rule read in a third of a day
+on the served body at 40 days. The centering was a defect and its removal was necessary; it
+was not sufficient for a head learned live from birth. What differs between the two readings
+is the body's age and the head's history, and the night-transfer instrument is now running on
+run 125's own bodies at days 16, 20 and 6 to say whether a sixteen-day-old's slow bands drift
+across nights the way a forty-day-old's do not. The heads in the credit changed no behavior:
+run 127's words past the answer 14 to 15 per answer and its words said over the parent 59 to
+73 at days 18 to 20, run 128's 11 and 40 to 51, the run-on untouched. Day 46 under the
+12-second patience, thirty minutes in: 80 smiles, one turning-away, the first withheld reply
+delivered after 12 seconds and 34 symbols instead of 45 seconds and 116.
