@@ -668,6 +668,33 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   logged by day; 127/128 the head in the credit at 1.0 through its measured
   reliability.
 
+- **Adam was the lockstep (2026-09-05).** The ear's listening weight and the
+  bout weight grew in step at every Adam rate (net mid-bout inside a line
+  +0.3 at 1e-3 and 3e-3; the bout ran away at 1e-2), and doubling the
+  inside credit (the world's words at 0.6) changed nothing. The arithmetic:
+  a three-factor rule's step is eligibility × credit, and the credit gap
+  inside the parent's lines (0.19 for resting) is a hundred times the gap
+  outside (0.002, the mouth at its credit-neutral rate); Adam divides each
+  weight's step by its own gradient's running size and so moves the sparse,
+  large-gap listening weight and the dense, tiny-gap bout weight at the same
+  speed. The magnitudes carry the information a striatal synapse uses. Runs
+  133–136 (plain SGD on the gate at 0.05 and 0.2, the vigor term off, the
+  adapted input with the function kept, the ear): at day 2 the listening
+  weight −0.52 and −0.43 against the bout +0.40 and +0.50 at 0.2, the first
+  bodies whose listening weight leads. The cortex weights stay near birth
+  under SGD (norm 0.9 against Adam's 3 to 6), the same rule at work. Day 6
+  decides whether a body rests mid-word while the parent speaks.
+- **The function kept under the moving mean (2026-09-05).** The adapted
+  input subtracts a running mean μ from the gate's inputs; a gate fit to the
+  raw inputs loses w·μ from its logit when centering begins (−2.06 on the
+  served body switched at day 43: the gate opened, seven turnings-away), and
+  every drift of μ moves the operating point. gate_center_keep 1: the bias
+  takes w·Δμ at every tick the mean moves, so the centering changes the
+  lesson's coordinates and never the gate's function. Applied after the
+  fact it over-corrects (the lesson has already refit): the change of
+  variables belongs at the switch. Runs 131/132 (with it, from birth) read
+  as 115/116 in every yardstick, as a pure change of coordinates should.
+
 ## 6. The environment (raw)
 
 The caregiver decides from the page and its face row only: pace by its quiet
