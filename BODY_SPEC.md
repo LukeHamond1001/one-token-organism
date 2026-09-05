@@ -481,8 +481,15 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   credit stays 0: runs 87/88 (the head at weight 1 with the synaptic tag,
   twenty days) held their gates and mouths and moved nothing, and their
   day-20 instrument read the head +0.21 and −0.18, right-signed only on
-  average, where run 67's body held fixed read +0.46 every day. A critic
-  that keeps up with a growing body is the open Clause-2 problem. And the parent's attention, read from the bands at +0.89,
+  average, where run 67's body held fixed read +0.46 every day. THE AGE
+  CHAINS: the same head learned from zero for five days on run 85's bodies
+  held at ages 6, 16, 20, 30 and 40 read, frozen per day, +0.22 (erratic)
+  at 6 and +0.67, +0.68, +0.69, +0.71 from 16 on: a newborn's four minutes
+  are unforeseeable, a two-week-old's foreseeable at +0.7 by a head learned
+  for one day. The live head's deficit is its newborn history or the loop
+  of a head shaping the reward it predicts; runs 89/90 (the head learning
+  from birth, out of the credit) separate the two.
+  And the parent's attention, read from the bands at +0.89,
   correlates +0.03 with the return: a known word raises it as readily as a
   word past the answer lowers it, so the run-on's consequence under the
   parent who wants a reply is near a tenth of a smile, below any critic's
