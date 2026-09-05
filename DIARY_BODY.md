@@ -3826,3 +3826,23 @@ mask pair (105 and 106) and the forgetting head (103 and 104: reliability −0.4
 day 5) run on. The served body's day 36: 109 smiles, one turning-away at the stutter, its
 first "cat" heard; the day-36 boundary 31 and 28 of 48 after 36 and 33, days 34 and 35's
 teaching, the first fall of the full count in six boundaries.
+
+**The typist ate the curriculum, 01:52.** Day 37's planner (the word of the day "cup", fourteen lines
+of it, four cues all completed, 105 smiles, no frown, no turning-away) reported that none of
+its plain lines reached the page before the night, only its cues. The cause is in the typist,
+not the planner: under the parent with moving attention the rule "answer a smiled word with a
+line that holds it" replaced the planner's next plain line with a heard line holding the child's
+last smiled word, and with a hundred smiled words a day that was nearly every line. Since the
+parent came to the served body its teachers' new phrasings and words have rarely been typed;
+the corpus grew by one word in thirty days because the typist would not say the others. Fixed
+at 01:52 (commit ac2993b): the holding line stands in only for the typist's own filler, the
+random heard line it types when the planner has nothing; the planner's lines go to the page as
+planned. In force from day 38's typist and the second body's day 10. The day-36 planner had
+seen the same and read it as a backlog. The turning-away of day 36 came at the stutter
+("downg ing ing in", the hundredth "in" of the day). The mask pair at day 6 (runs 105 and 106,
+the world's words at 0.1 forfeited on a tick after the mouth acted): the words said over the
+parent 89 to 106 a day, as the baselines' 81 to 113; the words past the answer 9 to 11 per
+answer, as the baselines' 10 to 16; the mouths 48 and 42, 41 and 36. At 0.1 a symbol the
+forfeit is below the act's own margin (the credit difference near 0.14 against a tonic drive
+less effort of 0.13 to 0.23), so runs 107 and 108, born 01:45, carry the world's words at 0.3
+with the mask, each on one thread to measure the compute as well.
