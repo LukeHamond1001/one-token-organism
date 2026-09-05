@@ -3694,3 +3694,16 @@ their first days' reliabilities −0.45 and +0.12, the credit off in the newborn
 should be; read at days 6, 16 and 20. Runs 89 and 90 (the head out of the credit) at
 day 6: the mouths 45 and 43, 48 and 47; the run-on 10.5 and 9.8. Day 32's teacher: 87
 smiles, no frown, no turning away, every cue completed.
+
+**The day-32 and day-33 boundaries, 21:45.** Day 31, the first whole day back on the earlier
+parent: 126 smiles with the post-night cues, 11 withheld, no frown, no turning away. Day
+32: 100 smiles (87 by its teacher's count), 11 withheld, no frown, no
+turning away. After night 31: the fixed cues 41 and 33 of 48, the taught-line cues 96 and
+63 of 96, the unheard combinations 96 and 77 of 128 (110 and 94 the day before), the
+cortex alone 55 and 53 of 82; day 31's fused share 0.12; the seam 'all gone' with the
+store 0.98, 'give big ball' 0.92. After night 32: the fixed cues 41 and 33 again, the
+taught-line cues 96 and 63 again, the unheard combinations 99 and 82, the cortex alone
+52 and 52; day 32's fused share 0.07, level with day 24's, the lowest of the record. Three
+boundaries at 41 and 33: the body is holding its level on the earlier parent, neither
+climbing nor slipping, its smiles a hundred a day. The unheard combinations came off
+their day-31 high and stayed there. Day 33 began 21:37.
