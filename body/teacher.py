@@ -238,6 +238,23 @@ class QueuePlanner:
         self.path, self.rng = path, rng; self.buf = []; self.calls = 0
         # a new day's planner starts at the file's end: yesterday's rows were yesterday's speech
         self.pos = os.path.getsize(path) if os.path.exists(path) else 0
+        # THE FILLER IS RECENT SPEECH (2026-09-05): when the queue is empty the typist used to say a random heard line,
+        # and the most-heard lines are the oldest frames ('ball go down', 'dog go down' opened day 41 while the teachers
+        # avoided them for the stutter). A parent with nothing new to say repeats what was said lately: the filler is
+        # one of the last two dozen planned lines (yesterday's tail before today's rows arrive), a heard line only when
+        # nothing was ever planned.
+        self.recent = []
+        if os.path.exists(path):
+            try:
+                with open(path) as f:
+                    tail = f.readlines()[-12:]
+                for line in tail:
+                    for s in json.loads(line).get("say", []):
+                        c = clean(s).strip()
+                        if c:
+                            self.recent.append(c)
+            except Exception:
+                pass
 
     def next(self, teacher):
         if os.path.exists(self.path):
@@ -253,10 +270,14 @@ class QueuePlanner:
                     pass
         if self.buf:
             s = self.buf.pop(0); self.planned = True
+            if s.strip():
+                self.recent.append(s.strip()); self.recent = self.recent[-24:]
             return (s, "cue" if s.endswith(" ") else "line")
+        self.planned = False                                  # the typist's own filler
+        if self.recent:
+            return (self.rng.choice(self.recent), "line")     # a recent planned line, said as a line (a cue's prefix too)
         heard = teacher.corpus.heard_lines(HEARD_FOR_CUE) or LINES0
-        self.planned = False                                  # the typist's own filler: a heard line
-        return (self.rng.choice(heard), "line")
+        return (self.rng.choice(heard), "line")               # a heard line only when nothing was ever planned
 
 
 SYSTEM = """You are the teacher of a small language organism that lives on a shared page: it sees one
@@ -291,10 +312,14 @@ class ClaudePlanner:
             self.buf = self.plan(teacher)
         if self.buf:
             s = self.buf.pop(0); self.planned = True
+            if s.strip():
+                self.recent.append(s.strip()); self.recent = self.recent[-24:]
             return (s, "cue" if s.endswith(" ") else "line")
+        self.planned = False                                  # the typist's own filler
+        if self.recent:
+            return (self.rng.choice(self.recent), "line")     # a recent planned line, said as a line (a cue's prefix too)
         heard = teacher.corpus.heard_lines(HEARD_FOR_CUE) or LINES0
-        self.planned = False                                  # the typist's own filler: a heard line
-        return (self.rng.choice(heard), "line")
+        return (self.rng.choice(heard), "line")               # a heard line only when nothing was ever planned
 
     def plan(self, teacher):
         known = sorted(teacher.corpus.known())
