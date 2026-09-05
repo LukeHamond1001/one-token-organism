@@ -790,6 +790,17 @@ before the served body takes it at a day boundary.
   learns, RLS, on raw and on running-mean-centered inputs. The sanity row
   (the replay's bands against the lived bands, cosine 0.98) says the replay
   is the life.
+- The start/continuation probe (scratchpad/pact2.py): on saved copies living
+  3000 ticks under the fast parent with the lesson off, the gate's acts
+  inside the parent's typing against outside, split by the tick before (a
+  START is an act after a rest, a CONTINUATION an act after an act). It is the
+  yardstick the ear can move: a linear gate stops starting bouts inside the
+  parent's lines long before it stops continuing them. The conjunction probe
+  (scratchpad/conj_probe.py): Fisher discriminants from the cortex state
+  alone for "the parent is typing", "I acted last tick" and their
+  conjunction, held-out AUC, and "inside vs outside" among mid-bout ticks
+  alone; it read 0.997 for the last, so the pattern turn-taking needs is
+  linearly available and the limit is the lesson, not the form.
 - Engagement per day (from the caregiver's log, the supervisor's read):
   smiles, the parent's turns away, its attention at the day's end and at
   smiles, the misses by kind, known words said, the parent's hit rate; and
