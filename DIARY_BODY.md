@@ -4144,3 +4144,15 @@ live reliability wanders by day (127: −0.07, +0.46, +0.25, +0.19, +0.12, −0.
 +0.06, +0.46, +0.26, −0.13), an estimator over some eight independent windows at a time, and
 the value instrument's four fresh days say what it is; run 127's mouth 47 and 34 of 48 at
 day 6, its words past the answer 13 to 17, no gift from the credit yet on a newborn's head.
+
+**The gate's rate at day 16, 08:12.** Adam 3e-3 (runs 121 and 122): words said over the
+parent on days 14 to 16, 41, 37, 34 and 39, 49, 27, against 61, 60, 63 and 67, 64, 78 at
+1e-3; but the mouths 39 and 28, 43 and 35 of 48 against 48 and 47, 48 and 42, the unheard
+combinations 98 started and 63 full, 94 and 78, against 103 and 91, 92 and 84, the gates
+0.78 and 0.82. Adam 1e-2 (123 and 124): 28, 19, 21 and 33, 37, 32 said over the parent, the
+mouths 25 and 17, 30 and 28, the gates swinging by the day between 0.06 and 0.99 (124:
+0.85, 0.17, 0.11, 0.94, 0.83, 0.96, 0.06, 0.97 on days 8 to 17). The faster the gate learns,
+the less it talks over the parent and the less it answers a cue; the rate buys listening with
+the mouth, and the mouth is the diary's. 1e-3 stays, which is what the diary took at 07:43.
+The lever that does not spend the mouth is the inside credit itself, runs 129 and 130 (the
+world's words at 0.6), armed for the slots 121 to 124 free near 08:25.
