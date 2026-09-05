@@ -4390,3 +4390,13 @@ cache predicted. Day 47 of the diary by its planner: "cold" in five lines and fo
 67 smiles in the teaching window, six turnings-away between 10:50 and 11:07 and none after,
 the cues answered in family but none cleanly. Its close and the reply's end come with its
 post-night cues.
+
+**The critic runs at day 20, 11:35.** The uncentered head with no decay: out of the credit,
++0.31 (+0.39, +0.36, +0.06, +0.44) on 125 and +0.22 (+0.14, +0.04, +0.35, +0.35) on 126,
+up from +0.03 and −0.22 at day 16; in the credit through its gain, +0.03 on 127 and +0.05 on
+128. Pinned band 5 reads +0.15 and +0.39 on the out-of-credit bodies at this age. So the
+head learns with the body's age when nothing it does feeds back into what it predicts, and
+reads near zero when its error moves the gate that makes the return: a critic in the loop
+must track a value its own influence keeps moving, which is the usual actor-critic
+non-stationarity and one more reason the head must forget at the scale of a day. Runs 137 to
+140 carry the three flags from 11:23.
