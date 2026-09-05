@@ -4045,3 +4045,22 @@ everything at once; their day 6 says whether the mouth holds under it. Day 16's 
 world's words at 0.3 with the mask, the reply withheld (the typist waits four ticks) and the
 uncentered critic out of the credit with its reliability logged, at the 43 to 44 boundary
 near 07:50.
+
+**The boundary armed, 06:25.** Day 16 of the ear pair, all yardsticks: words said over the
+parent on days 14 to 16, 61, 60, 63 and 67, 64, 78 against 83, 90, 96 and 94, 104, 96 on the
+same environment without the ear; the mouths 48 and 47, 48 and 42 of 48; the unheard
+combinations 103 and 91 of 128; the cortex alone 60 and 51; the parent's turnings-away 12,
+12, 14 and 16, 9, 12 a day against 17 to 24 on every recipe before it; the smiles 95, 95, 85
+and 103, 87, 95 against 39 to 63. The reply comes after 10 to 13 of its symbols and 18 to 25
+ticks against 11 to 21 and 22 to 43. The one cost: the words past the answer, 12 to 14 per
+answer against 9 to 11, the bout weight's doing, which is the long critic's item, not the
+ear's. The switch itself was tested on a scratch copy of the served body's day 42 loaded with
+the boundary's flags and living a third of a day under the fast parent: the mouth 37 and 32
+of 48 after against 32 and 29 before, 59 smiles, no fault; the gate opened from 0.50 to 0.67
+as the fast ear bodies' gates did (0.65 to 0.72 at day 16), and on those bodies the open gate
+came with fewer turnings-away, not more. So the served body takes, at the 43 to 44 boundary
+near 07:50 (scratchpad/recipe_boundary43.sh, armed; the --reply 0 chain killed): the ear, the
+adapted input, the vigor term off, Adam on the gate at 1e-3; the world's words at 0.3 with the
+mask; the uncentered ventral critic out of the credit with its reliability logged; and a
+typist that wants a reply and withholds it until four ticks of the child's quiet. The body
+before the boundary is kept as data/body2_before_recipe_day43.pt.
