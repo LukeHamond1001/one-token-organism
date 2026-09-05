@@ -3954,3 +3954,30 @@ day-41 boundary 40 and 36 of 48 after 31 and 28, the best since day 31, the taug
 and 61, the unheard combinations 95 and 81, the cortex alone 42 and 41. The second body's
 day 11: 52 smiles, no turning-away, its cues answered; its chain had ended with day 11 and
 it stood teacherless from 04:38 to 04:41, when days 12 to 14 were launched.
+
+**The adapted input alone is nothing, and the ear at day 8, 05:30.** Runs 111 to 114 at
+day 16 (the adapted gate input on the recipe's actor; 111 and 112 with the reply withheld,
+the world's words at 0.3 and the mask, 113 and 114 on the baseline): words said over the
+parent on days 14 to 16, 83, 90, 96 and 94, 104, 96 against 81, 80, 89 and 79, 89, 93; the
+run-on 9.5 and 8.7 against 9.9 and 10.1 symbols past the answer; the mouths 47 and 47, 46
+and 48 of 48; the unheard combinations 89 and 97, 99 of 128. Centering the inputs of a gate
+whose lesson pushes the wrong way changes nothing, as the replay said it would: the vigor
+term, not the geometry, was the wall. Runs 105 and 106 at day 20 (the world's words at 0.1
+and the mask on the fixed parent): talked over 95, 90, 75 and 93, 97, 87 on days 18 to 20,
+the run-on 9.4 and 9.6; the record closes with a tenth of a smile per heard symbol doing
+nothing a critic could carry. The ear at day 8: the weight on "the world's symbol this tick"
+−0.55 and −0.72 where the mask bites (from −0.40 and −0.53 at day 6), +0.02 and +0.15 on the
+baseline (from +0.07 and +0.16): growing about 0.08 a day on the bodies whose credit names
+the state, still nothing where it does not. The bout weight +0.93 to +1.07 on all four. The
+words said over the parent on days 6 to 8: 103, 80, 62 and 81, 85, 80 (the ear, the mask)
+against 89, 96, 85 and 95, 73, 55 (no ear, the mask) and 100, 77, 88 and 84, 90, 74 (the
+ear, no mask): no separation the day-to-day noise of twenty does not swallow. The arithmetic
+of what is coming: Adam at 1e-3 can move a weight a thousandth a step, and the ear's input is
+on only during the parent's lines, about 150 to 190 ticks a day, so the ceiling is 0.15 to
+0.19 a day and the weight moves at half of it; a logit of −0.7 against a bout weight of +1.0
+takes a mid-bout p(act) from about 0.6 to about 0.45 during the parent's lines, a fifth
+fewer interruptions at best, which is what the noise hides. To yield the weight must reach
+−2 or so, twelve more days at this pace. Whether to wait or to raise the gate's rate is the
+question day 16 answers with the slope. Both chains armed: the served body's days 44 to 46
+after the day-43 teacher ends, the second body's days 15 to 17 after its day 14; the served
+body's day 41 at 62 smiles half-way, the second body's day 12 at 21.
