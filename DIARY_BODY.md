@@ -3594,3 +3594,16 @@ fresh bodies. Runs 85 and 86 at days 24 to 26: gates 0.46 to 0.56, smiles 76 to 
 87 and 88 at day 14: gates 0.51 and 0.49, smiles 66 and 67. The second body's day 2: 322
 smiles by its evening, 'why dog up? ' answered 'because big do', 'I had ' 'milk then
 bal', 'first milk then ' 'ball undere'.
+
+**Day 30 on the earlier parent, 19:36.** The served body's first day back with the earlier
+parent: 90 smiles (74 and 68 on the two days under the parent who wants a reply), all 7
+cues right ('why dog ' → 'up', 'give big ' → 'ball', 'where ball? ' → 'ball' twice,
+'first milk then ' → 'ball' twice, 'dog will ' → 'go', 'you will ' → 'go'), 109 misses
+all 'distracted' or 'late', 14 withheld for a word said twice, no turning away; the
+attention from 0.65 to 1.0 in the first ten minutes and down to 0.43 by night; the
+teacher's three new lines on 'book' ('book gone', 'I saw book', 'where book?') queued
+behind a backlog and not yet heard. Runs 85 and 86 at days 33 and 34: gates 0.55 and
+0.49, smiles 91 and 81, the cues clean. Runs 87 and 88 at day 20: the mouths 45 and 43,
+47 and 44 of 48; the run-on 8.8 and 8.3; the unheard combinations 108 and 85, 81 and 72
+of 128; their value instruments running. The second body at day 3 with 460 smiles since
+birth, its third night at 19:31.
