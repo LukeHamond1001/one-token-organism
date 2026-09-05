@@ -4400,3 +4400,8 @@ reads near zero when its error moves the gate that makes the return: a critic in
 must track a value its own influence keeps moving, which is the usual actor-critic
 non-stationarity and one more reason the head must forget at the scale of a day. Runs 137 to
 140 carry the three flags from 11:23.
+
+**Day 47 closed, 11:29.** 92 smiles, no frown, nine turnings-away with the reply at once (the
+accounting rules of the reply typist, not the wait), "cold" learned, 57 known words, 132
+lines heard. From day 48 the typist does not reply; the mask and the ear stay; the reply
+returns with the critic.
