@@ -4690,3 +4690,9 @@ run on as arm D (their day-6 fresh-day instruments are computing). Tomorrow morn
 day-20 fresh-day instruments choose. The diary keeps its recipe tonight: day 54 ended with 143
 smiles, no frown, no turning-away, the seventh clean day; day 55 began at 18:16 under the same
 typist (scratchpad/continue55.sh, days 55 to 57).
+
+**The night's teaching, 18:24.** Both bodies teach on through the night under their standing recipes:
+the diary days 58 to 62 (scratchpad/continue58.sh; the words hat, car, bee, fish, sun), the second
+body days 24 to 28 (scratchpad/after_b3_day23.sh; fast, slow, new, black, white), each day with its
+own planner. Ten fast seeds carry the critic's four arms to day 20 by the small hours; the fresh-day
+value instruments at days 16 and 20 are read in the morning, and the diary's boundary waits for them.
