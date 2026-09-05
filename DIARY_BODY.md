@@ -4345,3 +4345,21 @@ forgets at a day also forgets the day-6 body by day 16, which is what the drift 
 patience (five under 45 seconds the day before): the cap was not the cost, the wait was.
 "hot" learned, 56 known words, 127 lines heard. From day 47 the typist replies at once and
 recasts with the least added (days 47 to 51 armed, the planners for 47 and 48 waiting).
+
+**The kept function, corrected, 10:50.** Runs 131 and 132 at day 16 read what no other body
+has: the bout weight −1.68 and −0.23 (every other body +1.3 to +1.6), the bias +1.61 and
++0.30 (every other −0.5), the gate's weights pointing against their own mean feature (w·μ
+−4.1 and −3.3), the reply waited for 90 to 134 ticks and yielded 4 of 9 and 5 of 7, words
+said over the parent 84 to 94 and 64 to 74. The fault is mine and it is arithmetic: I wrote
+the kept function as the bias taking w·Δμ at every tick, which keeps w·x + b unchanged only
+while w stands still; as the lesson moves w, the accumulated increments stop summing to w·μ,
+the bias and the weights chase each other, and the gate drifts to a degenerate solution. The
+exact form holds the uncentered intercept c as the lesson's own quantity and recomputes the
+bias as c + w·μ from the current w and μ at every tick, attributing whatever the lesson moved
+the bias by to c; a check with a moving w and lesson steps keeps the logit to a millionth. A
+loaded body's saved bias is c + w·μ of its saved mean, so c is recovered at the first tick.
+The organ tests 16 of 16. Runs 133 to 136, which carried the first form, were reborn at 10:50
+on the corrected one (their day-2 and day-6 readings stand as read, the SGD gates having
+moved w little); runs 137 to 140 launch on it. The dose pair at day 16: words said over the
+parent 59 to 62 and 53 to 75, the mouths 48 and 47, 48 and 48, the listening weight −0.84 and
+−0.98 against the bout +1.50 and +1.34, the lockstep as at 0.3.
