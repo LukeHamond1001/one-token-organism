@@ -4175,3 +4175,19 @@ the cost of a switch made without the change of variables. The general fix, body
 exact: the adapted input should change the lesson's geometry and never the function, the
 bias taking w·Δμ at every tick the running mean moves. It is the next item for the fast
 seeds, beside the mask's dose.
+
+**Day 44 closed, 08:43.** The served body's first day on the ear recipe: 126 smiles in a
+26-minute day and its post-night cues, no frown, seven turnings-away against none on days 41
+to 43, the parent's attention 0.64 at the end, "cat" learned, 54 known words, 119 lines
+heard; the withheld reply twice past its cap (116 symbols of run-on) and otherwise yielded
+after 34 to 82 symbols. The day-45 boundary's mouth 37 and 29 of 48, up from 29 and 23 the
+day before. Day 45 is the full day that decides: if the turnings-away stay at this rate the
+switch is undone at the 45 to 46 boundary from data/body2_before_recipe_day43.pt, an honest
+failure of a mid-life switch made without the change of variables, and the ear recipe is
+kept for bodies born with it; if they fall back toward none, the gate has found its new
+coordinates and the recipe stays. Runs 129 and 130 (the world's words at 0.6) and 131 and
+132 (the function kept under the moving mean, gate_center_keep) were born 08:33 in the rate
+pairs' slots. The rate pairs' day 20: at 3e-3, words said over the parent 31 to 44, the mouths
+42 and 41, 44 and 38; at 1e-2, 26 to 42, the mouths 28 and 27, 23 and 18, the gates at 0.97
+and 0.11 on the last day. The second body's day 14: 68 smiles, no turning-away, its cues all
+answered; its days 15 to 17 began 08:25.
