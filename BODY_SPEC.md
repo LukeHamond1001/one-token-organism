@@ -642,6 +642,32 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   (cos ≈ 0.5) the logit gap is 10, so recall is decisive; equal keys share.
   Merge at cos > 0.97 on both key and value: the same memory, stronger.
 
+- **The critic's input was the defect (2026-09-05).** The night-transfer
+  instrument on the served body's day 40: the fast bands drift across a
+  night (cosine at the same tick 0.70; 0.40 across ten nights), the slow
+  bands do not (0.99, 1.00, 1.00; across ten nights 0.98, 1.00, 1.00). A
+  ridge head from the raw slow bands reads the return at horizon 1024 at
+  +0.50 on day 40's held-out ticks and +0.51, +0.49, +0.51 on the bodies of
+  days 41, 38 and 30: a readout learned on one day is worth as much ten
+  nights later, so the nightly cortex change was never the obstacle. The
+  same ridge on the slow bands centered on a running mean at 1024 ticks,
+  which is what the live critic was given (the differential heads' adaptation,
+  applied to it on 2026-09-03), reads +0.01 that day and −0.44 the next. The
+  live rule itself, semi-gradient TD(0) with Adam at 1e-3, reads +0.52 after
+  one pass over a third of a day on the raw slow bands (+0.53 on the next
+  night's body) and −0.56 on the centered ones (−0.55 the next night), the
+  sign every live head has read since run 49. The arithmetic: a running mean
+  at 1024 ticks tracks a band whose clock is 4096 or 16384 and leaves it a
+  thousand-tick recency residual; a head on that residual learns recency,
+  wrong-signed in a world that reverts. The runaway, the withdrawn weight,
+  the trace, the normalized step, the reliability gain at zero and the
+  forgetting head were all treatments of this one line. Discounted with a
+  bias, the head needs no centering: vcrit_center 0 reads the raw state (1
+  keeps older bodies' readings). Runs 125–128 measure it live from birth on
+  the ear actor: 125/126 the head out of the credit with its reliability
+  logged by day; 127/128 the head in the credit at 1.0 through its measured
+  reliability.
+
 ## 6. The environment (raw)
 
 The caregiver decides from the page and its face row only: pace by its quiet
@@ -706,6 +732,20 @@ before the served body takes it at a day boundary.
   the parent habituates, the band's state trends up as it integrates it, and
   the two anti-correlate whatever the head knows); a held-out linear "ceiling"
   from the band's 256 dimensions overfits and is not reported.
+- The night-transfer instrument (scratchpad/night_transfer.py, 2026-09-05):
+  one page lived by a saved body under the fast parent (9000 ticks, its
+  world symbols, own symbols and felt rewards recorded per tick), then
+  replayed teacher-forced through fresh copies of that body and of the same
+  body on other nights, so every body sees the identical stream and the
+  identical rewards; a ridge head from the bands to the return at horizon
+  1024, fit on the first 60% of one body's ticks and read on the last 40% of
+  every body's (same body = a linear head's ceiling; other bodies = what a
+  head carried across those nights would read); and the bands' own drift,
+  the cosine at the same tick. Its companion (scratchpad/nt_heads.py) runs
+  learning rules on the cached features: ridge, TD(0) with Adam as the body
+  learns, RLS, on raw and on running-mean-centered inputs. The sanity row
+  (the replay's bands against the lived bands, cosine 0.98) says the replay
+  is the life.
 - Engagement per day (from the caregiver's log, the supervisor's read):
   smiles, the parent's turns away, its attention at the day's end and at
   smiles, the misses by kind, known words said, the parent's hit rate; and
