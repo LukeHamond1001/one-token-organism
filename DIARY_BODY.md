@@ -4405,3 +4405,18 @@ non-stationarity and one more reason the head must forget at the scale of a day.
 accounting rules of the reply typist, not the wait), "cold" learned, 57 known words, 132
 lines heard. From day 48 the typist does not reply; the mask and the ear stay; the reply
 returns with the critic.
+
+**The kept function is not a rule to live by, 11:50.** The corrected form, which holds the
+gate's function exactly under the moving mean, changes what the lesson does with it: SGD 0.2
+with the function kept reaches a bout weight of +3.05 and +3.06 by day 6 (the drifting form
+gave +1.12 and +1.25; the Adam bodies without it +1.5 at day 18), the listening weight −1.11
+and −1.11, the gates 0.72 and 0.27, one mouth 32 and 20 of 48, and the probe p(continue)
+outside 0.75 and 0.72 against 0.63 to 0.68 before. So the slow drift of the mean under the
+uncompensated centering was doing something to the lesson that I took for nothing: with it
+the bout weight grows a tenth as fast. I do not have the mathematics of that yet, and a rule
+whose effect I cannot derive does not go in the recipe. What stands: the compensation belongs
+at a mid-life switch as a warm-up (the lesson held while the mean adapts and the bias takes
+w·Δμ, exact because w stands still), not as a standing rule. Runs 133 to 140 all carried the
+flag; all eight were reborn at 11:50 without it and with fresh logs (the day-4 to 6 instrument
+lines printed for 133 to 136 at 11:45 counted two lives in one log and are void). The SGD
+question and the long critic's question start over clean; day 6 near 12:20.
