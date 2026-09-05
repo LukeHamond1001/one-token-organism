@@ -3607,3 +3607,21 @@ behind a backlog and not yet heard. Runs 85 and 86 at days 33 and 34: gates 0.55
 47 and 44 of 48; the run-on 8.8 and 8.3; the unheard combinations 108 and 85, 81 and 72
 of 128; their value instruments running. The second body at day 3 with 460 smiles since
 birth, its third night at 19:31.
+
+**Runs 87 and 88 at day 20, 20:00.** The slow-band ventral head at weight 1 in the gate's
+credit with the synaptic tag, two fresh seeds under the parent who wants a reply: the
+gates 0.46 and 0.50 at day 20 and 0.52 and 0.48 at days 22 and 23, the mouths 45 and 43,
+47 and 44 of 48, the run-on 8.8 and 8.3, the unheard combinations 108 and 85, 81 and 72;
+no harm and no turn-taking. The value instrument on their day-20 bodies, four lived days:
+the ventral head +0.13, +0.37, −0.27, +0.59 (a mean of +0.21) on run 88 and −0.23,
++0.02, −0.09, −0.42 (a mean of −0.18) on run 87; the pinned 1024-tick band +0.19 and
+−0.00, the 4096-tick band +0.29 and +0.24. So the head that read +0.46 every day on run
+67's body held fixed, the critic alone learning, is not reliably right-signed on a body
+that grows while its gate is fed by the head's own error: the world the critic learns is
+then moving. The all-band head on the same instrument read −0.57 and −0.14 (runs 86 and
+85), so the slow bands remain the better definition, and the weight in the credit stays
+0 as committed: nothing measured yet profits from it. What the day established for
+Clause 2 stands as the ceiling instrument put it: a fixed body's slow bands hold +0.51 of
+foresight at four minutes and TD(0) on them reaches +0.46; on a growing body the target
+moves, and a critic that keeps up with it is the open problem, to be measured with the
+chained instrument on a body copied from a live run at several ages rather than one.
