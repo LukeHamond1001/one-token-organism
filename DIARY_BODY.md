@@ -3739,3 +3739,26 @@ and gave me the teacher's method to tune without asking: it is adequate for the 
 built (day 33: six of seven cues answered, no rule broken); the bottleneck is the
 environment's contingency, now under measurement, and the curriculum's pace, which I
 will tune from day 36.
+
+**The day-34 and day-35 boundaries, and the fast parent's double day, 23:35.** Day 33: 98
+words said, 47 known, the fused share 0.08; day 34: 102 smiles, no frown, one turning-away
+in the post-night cues (the first since day 29), 88 words said, 49 known, fused 0.09. After
+night 33: the fixed cues 37 and 33 of 48, the taught-line cues 96 and 64, the unheard
+combinations 90 and 72, the cortex alone 50 and 50. After night 34: 36 and 33, 96 and 62,
+94 and 75, 54 and 51. The full count holds at 33 for the fifth boundary; the started count
+has slipped 41, 41, 41, 37, 36. The first readings of the reply withheld at day 6, four
+seeds: the symbols said before the parent's reply 16, 25, 19 and 20 (from 3, 36, 18 and 8
+on day 1, rising with the newborns' speech to 22 to 26 by days 4 and 5), every answer
+yielded before the cap, the mouths 47 and 41, 47 and 45, 47 and 43 of 48, the words past
+the answer 9 to 12 per answer against 13 to 17 for runs 89 and 90. And a bug older than
+tonight: under the parent with moving attention the fast day loop never noticed the body's
+night, which runs inside a tick, and the parent talked on through it, so every logged day
+held two nights (run 89's days print 1, 2, 4, 6, 7, 9...), the plan and the post-night cues
+came once per two nights, and a "twenty-day" run lived near forty nights. Ages by nights
+were right, so the readings at days 6, 16, 20 and 40 stand as readings of bodies that
+age; but each night had half the cues, and the served typist, which polls the body's
+sleep, never had the fault. Fixed at 23:33 (the day ends at its night); runs 93 to 96
+stopped at day 8 with their day-6 readings kept, and the comparison relaunched like for
+like at 23:34 on the fixed parent: runs 97 and 98 the reply rule alone, 99 and 100 the
+reply withheld, 101 and 102 the reply withheld with the world's words, twenty days each,
+read at days 6, 16 and 20.

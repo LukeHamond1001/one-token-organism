@@ -244,6 +244,7 @@ class FastCaregiver:
 
     def run_day(self):
         L = self.L
+        n0 = L.nights                                         # the night comes inside a tick: the day ends when it has
         self.row({"action": "day_start", "sleep_pressure": L.sleep_pressure, "nights": L.nights})
         order = self.rng.sample(LINES, len(LINES)); plan = []; ci = 0
         for i, line in enumerate(order):
@@ -251,7 +252,9 @@ class FastCaregiver:
             if i % 2 == 1 and ci < len(CUES):
                 plan.append(("cue", CUES[ci])); ci += 1
         last_t = None; slept = False; pi = 0
-        while pi < len(plan) or (PARENT and L.sleep_pressure < L.cfg["wake_ticks"] - 600):
+        # (before 2026-09-04 23:50 the loop did not notice the night and the engaged parent talked through it: every
+        # logged day held two nights, the plan and the post-night cues once per two nights; ages by nights were right)
+        while (pi < len(plan) or (PARENT and L.sleep_pressure < L.cfg["wake_ticks"] - 600)) and L.nights == n0:
             if pi < len(plan):
                 kind, text = plan[pi]; pi += 1
             else:
@@ -265,18 +268,19 @@ class FastCaregiver:
                 self.expand_next = None
             if last_t is not None:
                 last_t = self.pace_wait(last_t, self.pace())
-                if last_t is None:
+                if last_t is None or L.nights != n0:
                     slept = True; break
             if PARENT and L.ticks < self.away_until:
-                while L.ticks < self.away_until:
+                while L.ticks < self.away_until and L.nights == n0:
                     self.step()
+                if L.nights != n0:
+                    slept = True; break
             last_t = L.ticks
-            if not self.event(text, kind):
+            if not self.event(text, kind) or L.nights != n0:
                 slept = True; break
-        if not slept:
+        if not slept and L.nights == n0:
             self.event("bye", "line")
         # the night comes when the pressure crosses; the body sleeps inside tick()
-        n0 = L.nights
         while L.nights == n0:
             self.step()
         self.reply_line = None                                # a reply due at the night's edge is not given
