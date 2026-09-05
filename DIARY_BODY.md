@@ -4420,3 +4420,11 @@ w·Δμ, exact because w stands still), not as a standing rule. Runs 133 to 140 
 flag; all eight were reborn at 11:50 without it and with fresh logs (the day-4 to 6 instrument
 lines printed for 133 to 136 at 11:45 counted two lives in one log and are void). The SGD
 question and the long critic's question start over clean; day 6 near 12:20.
+
+**Day 48 with the reply off, 12:13.** By its night: 135 smiles, no frown, no turning-away, no
+"talked over" and no "past its answer" miss, 30 lines and 9 cues typed. The accounting held:
+the turnings-away of days 44 to 47 were the reply typist's rules on a body that could not yet
+learn from them, and with the reply off the ear-recipe body takes the parent's smiles at the
+best rate of its life. The second body's day 17: 99 smiles, its best, "wet" heard in two
+lines, its cues answered ("I had" → "milk", "why dog up?" → "because big do"); its days 18 to
+20 began 12:13.
