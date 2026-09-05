@@ -3645,3 +3645,16 @@ the smiles 75 to 143 a day. Run 86: the gates 0.46 to 0.55, the mouth 46 and 41,
 cortex alone 58 and 55 at the end, the smiles 63 to 100 a day; at day 20 its pinned slow
 bands read +0.43 and +0.67 and the old all-band ventral head −0.57. The recipe stands
 accepted for forty days. The day-40 value instruments follow.
+
+**The day-40 value instruments, 20:35.** Run 85's day-40 body, four lived days: the
+pinned 1024-tick band +0.49, +0.28, +0.50, +0.41 (a mean of +0.42; at day 20 it read
+−0.13), the 4096-tick band +0.77, −0.23, +0.69, +0.79 (+0.51), the old all-band ventral
+head −0.46, +0.27, −0.22, −0.24 (−0.16). Run 86's: the 1024-tick band +0.26, +0.11, +0.00,
++0.09 (+0.12; +0.43 at day 20), the 4096-tick band +0.76, +0.82, +0.85, +0.26 (+0.67),
+the ventral head −0.60, −0.31, −0.18, −0.35 (−0.36). The ladder's own slow heads,
+differential TD at the shared rate on their own band's features, read the long return
+right on both forty-day bodies where one of them did not at twenty: they come right
+with age, as the day-20 chains on run 67's mature body foretold, while the all-band
+head reads wrong at every age. So the long-timescale foresight is in the ladder as
+built, arriving with maturity; the open question is only how to hand it to the act.
+Runs 85 and 86 stopped at 20:33 with their forty days and instruments complete.
