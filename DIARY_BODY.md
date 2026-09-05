@@ -4156,3 +4156,22 @@ the less it talks over the parent and the less it answers a cue; the rate buys l
 the mouth, and the mouth is the diary's. 1e-3 stays, which is what the diary took at 07:43.
 The lever that does not spend the mouth is the inside credit itself, runs 129 and 130 (the
 world's words at 0.6), armed for the slots 121 to 124 free near 08:25.
+
+**The switched gate, 08:30.** The served body's first day on the ear recipe (day 44, a
+26-minute day, its sleep pressure already half spent at the boundary): 110 smiles at a
+higher rate than day 43's 163 in fifty minutes, no frown, but four turnings-away after none
+on days 41 to 43, the parent's attention falling through the day from 0.80 to 0.53, and the
+reply withheld once past its cap (116 symbols of run-on before the parent answered "give
+cat"). The gate's mean on the day's lines 0.61 against 0.54 the day before. The cause is
+arithmetic: the adapted input subtracts the running mean μ from the gate's inputs, and a gate
+whose weights were fit over 43 days to the raw inputs loses the term w·μ from its logit, here
+−2.06 (|μ| 2.9, |w| 6.3), so the switch raised every logit by two and the gate opened until
+its lesson fit the new coordinates. The exact remedy, the bias absorbing w·μ so the function
+is unchanged while the coordinates change, was tested on a copy of the body after its night:
+too late, since the day's lesson had already refit the gate; corrected now, the gate falls to
+0.31 and the smiles to 21 in three thousand ticks. So the diary is left alone at the 44 to 45
+boundary; its gate re-equilibrates by its own lesson, and the day's four turnings-away are
+the cost of a switch made without the change of variables. The general fix, body-general and
+exact: the adapted input should change the lesson's geometry and never the function, the
+bias taking w·Δμ at every tick the running mean moves. It is the next item for the fast
+seeds, beside the mask's dose.
