@@ -4428,3 +4428,12 @@ learn from them, and with the reply off the ear-recipe body takes the parent's s
 best rate of its life. The second body's day 17: 99 smiles, its best, "wet" heard in two
 lines, its cues answered ("I had" → "milk", "why dog up?" → "because big do"); its days 18 to
 20 began 12:13.
+
+**Day 48 closed, 12:23.** 171 smiles, the most of any day of this body's life (167 on day 42
+before the switch), no frown, no turning-away, the parent's attention 0.96 at the end, "soft"
+learned, 58 known words, 137 lines heard; eight cues answered with accepted words in the
+teaching window ("dog will" → sit, "give big" → ball, "where ball?" → ball under, "first milk
+then" → ball, "big dog bigger" → dog, "little dog had" → milk, "you saw" → dog, "why dog up?
+because" → big). The ear recipe on the diary, with the typist that does not reply, is a
+better day than any before it; what the mask teaches it (the ear's listening weight after
+four days) is measured at the day-49 boundary by the gate's weights on the saved body.
