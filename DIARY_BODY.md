@@ -3633,3 +3633,15 @@ smiles with the post-night cues, no turning-away): the fixed cues 41 and 33 of 4
 yardstick recovered in a day. The two days under the parent who wants a reply held the
 body flat and a third poorer in smiles; the day after gave them back. The rule stays on
 the fast seeds.
+
+**The acceptance pair at forty days, 20:25.** Runs 85 and 86, born 16:39 on the recipe as
+committed (the tonic form, the marks and the onset dreams, the offset, the ventral credit
+0, the slow-band head unused) under the parent who wants a reply: forty days without a
+collapse on either seed. Run 85: the gates 0.44 to 0.57 across the forty days, the mouth
+45 and 45, 47 and 46, 48 and 47, 47 and 46, 45 and 42 of 48 at days 6, 16, 20, 30 and 40,
+the run-on 9.6, 9.8, 9.6, 10.6 and 9.1 per cue, the cortex alone 50 and 49 at the end,
+the smiles 75 to 143 a day. Run 86: the gates 0.46 to 0.55, the mouth 46 and 41, 48 and
+40, 48 and 42, 46 and 42, 48 and 46 of 48, the run-on 9.2, 9.4, 9.2, 9.5 and 9.2, the
+cortex alone 58 and 55 at the end, the smiles 63 to 100 a day; at day 20 its pinned slow
+bands read +0.43 and +0.67 and the old all-band ventral head −0.57. The recipe stands
+accepted for forty days. The day-40 value instruments follow.

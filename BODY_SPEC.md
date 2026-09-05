@@ -426,6 +426,10 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   the tonic drive against the convex fatigue was the homeostat, the mouth
   speaking in bouts at the fatigue where the two balance. The effort form is
   set aside; the tonic form stays the recipe.
+- **Accepted for forty days (2026-09-04).** Runs 85/86 on the recipe as
+  committed under the parent who wants a reply: gates 0.44 to 0.57 and 0.46
+  to 0.55 across forty days, the mouths 45 and 42 and 48 and 46 of 48 at day
+  40, the run-on 9.1 and 9.2, no collapse on either seed.
 - **The critic's eligibility trace.** Run 67's value instrument at day 20:
   the ventral critic, the whole-ladder head at horizon 1024 whose error the
   gate's credit carries, read the return that followed at −0.28 (four days,
