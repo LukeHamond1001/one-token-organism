@@ -4363,3 +4363,17 @@ on the corrected one (their day-2 and day-6 readings stand as read, the SGD gate
 moved w little); runs 137 to 140 launch on it. The dose pair at day 16: words said over the
 parent 59 to 62 and 53 to 75, the mouths 48 and 47, 48 and 48, the listening weight −0.84 and
 −0.98 against the bout +1.50 and +1.34, the lockstep as at 0.3.
+
+**The accounting of the turnings-away, 10:52.** By day: days 40 to 43, with the reply off, no
+"talked over" and no "past its answer" miss at all and no turning-away; days 44 to 46, with
+the reply on, 80, 87, 117 words counted as said over the parent and 75, 42, 93 as past the
+answer, each at 0.04 of the caregiver's attention by its own rule, and seven, five, seven
+turnings-away; day 47 with the reply at once, 15 and 17 in its first twelve minutes and one
+turning-away. The wait was not the cost and the cap was not the cost: the reply typist's
+rules are, and they fall on a body that cannot yet learn from them, since nothing carries
+the attention's fall into its credit. The fast bodies born into that world take 10 to 24
+turnings-away a day, the ear bodies the fewest. So from day 48 the diary's typist does not
+reply (the mask and the ear stay, the patience 12 seconds), and the reply returns when the
+long critic is in the credit and can learn from what the reply costs. The comparison of the
+switch itself is now clean: the actor changed at 43 and the typist at 43 and 45 and 46 and
+47; only the actor stays.
