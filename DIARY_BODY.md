@@ -4222,3 +4222,19 @@ cap is 12 seconds (scratchpad/teach_days3b.sh, the same typist otherwise, days 4
 the body untouched. The reply withheld stays: it is the parent's behavior the user chose,
 and the fall of attention through a long wait is the environment telling the truth. Day 45 so
 far: 79 smiles in twenty minutes, the gate at 0.52, two turnings-away.
+
+**The dose and the kept function at day 6, 09:30.** Runs 129 and 130 (the world's words at
+0.6, the mask forfeiting twice as much per symbol said over the parent): the listening
+weight −0.49 and −0.52 at day 6, the bout +0.96 and +0.92, against −0.40 and −0.53, +0.86
+and +0.98 at 0.3. Doubling the inside credit did not speed the listening weight: the lockstep
+is not the credit's size either, so the difference of the two weights is set by the lesson's
+own geometry, not by how much a talked-over symbol costs. Words said over the parent 73 to 92
+on days 4 to 6, as at 0.3. Runs 131 and 132 (the function kept under the moving mean): the
+listening weight −0.43 and −0.46, the bout +0.84 and +1.30, the bias carrying w·μ as it
+should (−0.31 and −0.59); the same body as 115 and 116 in every reading so far, which is what
+a change of coordinates that leaves the function alone ought to be; its worth is at a switch,
+where it keeps a 43-day-old gate's function while the mean adapts. The served body's day 45
+by its planner: 105 smiles, "cup" in four frames, "one" typed for the first time, the cues
+answered ("first milk then" → "ball" clean), the attention recovering to 0.85 to 1.0 in the
+back half after two turnings-away a third of the way in; five turnings-away in all with the
+post-night cues, each after a withheld reply met its 45-second cap.
