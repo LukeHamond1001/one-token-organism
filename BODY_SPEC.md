@@ -684,16 +684,23 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   bodies whose listening weight leads. The cortex weights stay near birth
   under SGD (norm 0.9 against Adam's 3 to 6), the same rule at work. Day 6
   decides whether a body rests mid-word while the parent speaks.
-- **The function kept under the moving mean (2026-09-05).** The adapted
-  input subtracts a running mean μ from the gate's inputs; a gate fit to the
-  raw inputs loses w·μ from its logit when centering begins (−2.06 on the
-  served body switched at day 43: the gate opened, seven turnings-away), and
-  every drift of μ moves the operating point. gate_center_keep 1: the bias
-  takes w·Δμ at every tick the mean moves, so the centering changes the
-  lesson's coordinates and never the gate's function. Applied after the
-  fact it over-corrects (the lesson has already refit): the change of
-  variables belongs at the switch. Runs 131/132 (with it, from birth) read
-  as 115/116 in every yardstick, as a pure change of coordinates should.
+- **The function kept under the moving mean (2026-09-05), withdrawn.** The
+  adapted input subtracts a running mean μ from the gate's inputs; a gate fit
+  to the raw inputs loses w·μ from its logit when centering begins (−2.06 on
+  the served body switched at day 43: the gate opened, seven turnings-away).
+  gate_center_keep 1 holds the function exactly: the lesson owns an
+  uncentered intercept c and the bias is recomputed as c + w·μ at every tick
+  (a first form that added w·Δμ to the bias each tick kept the function only
+  while w stood still and drifted runs 131/132 into a gate pointing against
+  its mean feature). Held exactly, it changes what the lesson does: SGD 0.2
+  reached a bout weight of +3.05 by day 6 (the drifting form +1.1; the Adam
+  bodies without it +1.5 at day 18), the gates split to 0.72 and 0.27, one
+  mouth fell to 32/20. The mean's slow drift under uncompensated centering
+  does something to the lesson's dynamics that is not derived yet, and a rule
+  whose effect cannot be derived is not in the recipe: keep 0 is the form
+  that lives. The compensation's right use is a one-time warm-up at a
+  mid-life switch, the lesson held while μ adapts and the bias takes w·Δμ,
+  exact because w stands still (not yet written).
 
 - **The critic's second defect: one day is one ramp (2026-09-05).** On the
   cached features of the served body's day 40, the live rule (TD(0), Adam
