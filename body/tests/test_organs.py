@@ -337,7 +337,7 @@ def test_ventral_critic():
     the mouth's credit; a body saved without it loads with it born at zero"""
     import math, os, tempfile
     life = tiny(vcrit_w=1.0, gate_every=10 ** 9, wake_every=10 ** 9); m = life.m
-    assert m.vcrit.weight.shape == (1, len(m.clocks) * m.d + len(m.clocks))      # the bands' states and, after them, the eight tonic traces
+    assert m.vcrit.weight.shape == (1, len(m.clocks) * m.d + len(m.clocks) + 1)  # the bands' states, the eight tonic traces, the clock
     vl, dl = [], []
     for t in range(240):
         if t % 24 == 0:

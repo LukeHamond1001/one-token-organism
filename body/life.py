@@ -65,6 +65,7 @@ PHYSIOLOGY = dict(
     # random sign (bands 3..7, all sets); the eight traces alone read it at +0.83/+0.59. The parent's attention cycles (rich -> the body
     # talked over -> away -> poor -> recovery), and its phase lives in the reward history, not in the cortex's slow state.
     vcrit_traces=0,
+    vcrit_clock=0,        # THE CLOCK as a critic input: sleep pressure over the wake threshold (see model.py); 2026-09-06
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -209,10 +210,11 @@ class Life:
                     if b_.strip() and b_.strip() != "-":
                         organs.vcrit_mask[int(b_)] = 1.0
         self.m.vcrit_center = bool(int(self.cfg.get("vcrit_center", 1)))
-        self.m.vcrit_traces = bool(int(self.cfg.get("vcrit_traces", 0)))
+        self.m.vcrit_traces = bool(int(self.cfg.get("vcrit_traces", 0))); self.m.vcrit_clock = bool(int(self.cfg.get("vcrit_clock", 0)))
         with torch.no_grad():
-            nb_ = organs.vcrit_mask.numel(); d_ = (organs.vcrit.weight.shape[1] - nb_) // nb_
-            full = torch.cat([organs.vcrit_mask[:, None].expand(nb_, d_).reshape(-1), torch.ones(nb_) if self.m.vcrit_traces else torch.zeros(nb_)])
+            nb_ = organs.vcrit_mask.numel(); d_ = (organs.vcrit.weight.shape[1] - nb_ - 1) // nb_
+            full = torch.cat([organs.vcrit_mask[:, None].expand(nb_, d_).reshape(-1), torch.ones(nb_) if self.m.vcrit_traces else torch.zeros(nb_),
+                              torch.ones(1) if self.m.vcrit_clock else torch.zeros(1)])
             self._vc_idx = full.nonzero().squeeze(1)
             if int(self.cfg.get("vcrit_rls", 0)):
                 k = int(self._vc_idx.numel()) + 1
@@ -227,7 +229,10 @@ class Life:
                     # do not inflate the standardized input before the statistics have formed
                     organs.vc_mu = torch.zeros(k - 1, dtype=torch.float64, device=organs.vcrit.weight.device)
                     organs.vc_var = torch.ones(k - 1, dtype=torch.float64, device=organs.vcrit.weight.device)
-                    organs.vc_n = torch.full((), float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0), dtype=torch.float64, device=organs.vcrit.weight.device)
+                    # THE FAST START (2026-09-06): the scale set by the first samples (n from 1), not born at one unit weighing tau/32. With the evidence in raw coordinates the statistics
+                    # shape only the prior, so a fast start risks nothing; the slow one left the traces' variance at the residue of
+                    # its birth value (0.0099 against a true 0.0001) after six days, a prior a hundred times too strong, the head crushed.
+                    organs.vc_n = torch.full((), 1.0, dtype=torch.float64, device=organs.vcrit.weight.device)   # the first sample sets the scale
         self._vc_e = None
         self.m.read_sharp = float(self.cfg["read_sharp"])
         self.sil = tok.token_to_id("<pad>")
@@ -482,6 +487,8 @@ class Life:
             m.v_scale[lb] += (1.0 / float(self.cfg["diff_horizon"])) * (vb * vb - float(m.v_scale[lb]))
             level = float(self.cfg["gate_level_w"]) * max(-5.0, min(5.0, vb / (1.0 + math.sqrt(max(0.0, float(m.v_scale[lb]))))))
         gam = m.gammas()
+        with torch.no_grad():                                    # THE CLOCK advances: the day's fraction, the night at 1
+            m.vc_clock_prev.copy_(m.vc_clock); m.vc_clock.fill_(min(1.0, float(self.sleep_pressure) / max(1.0, float(self.cfg["wake_ticks"]))))
         with torch.enable_grad():
             # the organs hold no dropout or batch statistics, so train()/eval() changed nothing but cost 12% of the tick in
             # Python (a recursive mode flip over every module twice a tick); the body stays in eval mode from construction
@@ -508,13 +515,13 @@ class Life:
                 # THE VENTRAL CRITIC: discounted TD at a definite long horizon over the whole ladder's states (semi-gradient,
                 # the target detached; linear on fixed features, convergent)
                 with torch.no_grad():
-                    vl_now = m.value_long(self.bands, m.r_tr)
+                    vl_now = m.value_long(self.bands, m.r_tr, m.vc_clock)
                 gl = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)); nfl = (gl ** N_) if an_ else 1.0   # THE NIGHT TAKES TIME
                 if int(self.cfg.get("vcrit_diff", 0)):
-                    td_long = (r - float(self.rbar)) + vl_now.detach() - m.value_long(self._bands_prev.detach(), m.r_tr_prev)
+                    td_long = (r - float(self.rbar)) + vl_now.detach() - m.value_long(self._bands_prev.detach(), m.r_tr_prev, m.vc_clock_prev)
                     gl_tr = 1.0                                       # the trace decays at lambda alone
                 else:
-                    td_long = r + gl * nfl * vl_now.detach() - m.value_long(self._bands_prev.detach(), m.r_tr_prev)
+                    td_long = r + gl * nfl * vl_now.detach() - m.value_long(self._bands_prev.detach(), m.r_tr_prev, m.vc_clock_prev)
                     gl_tr = gl
                 lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
                 rls = int(self.cfg.get("vcrit_rls", 0))
@@ -522,7 +529,7 @@ class Life:
                     # THE DECORRELATED CRITIC: the statistics of the trace against the state's discounted change and the reward
                     with torch.no_grad():
                         one = torch.ones(1, dtype=torch.float64, device=self.dev)
-                        x_p = m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev)[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach(), m.r_tr)[self._vc_idx].double()
+                        x_p = m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev, m.vc_clock_prev)[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach(), m.r_tr, m.vc_clock)[self._vc_idx].double()
                         ntau = int(self.cfg.get("vcrit_norm_tau", 0))
                         if ntau:
                             # THE PRIOR AS THE METRIC (2026-09-05 21:40): the homeostatic statistics take the state but do NOT transform
@@ -544,7 +551,7 @@ class Life:
                         if self.ticks % int(self.cfg.get("vcrit_rls_every", 64)) == 0:
                             m.vcrit_rls_solve(self._vc_idx, prior=(self._vc_delta if ntau else None))
                 with torch.no_grad():
-                    x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev), torch.ones(1, device=self.dev)])
+                    x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev, m.vc_clock_prev), torch.ones(1, device=self.dev)])
                     if lam > 0.0:
                         # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
                         # decays at gamma * lambda; the error captures it
