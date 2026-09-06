@@ -4696,3 +4696,50 @@ the diary days 58 to 62 (scratchpad/continue58.sh; the words hat, car, bee, fish
 body days 24 to 28 (scratchpad/after_b3_day23.sh; fast, slow, new, black, white), each day with its
 own planner. Ten fast seeds carry the critic's four arms to day 20 by the small hours; the fresh-day
 value instruments at days 16 and 20 are read in the morning, and the diary's boundary waits for them.
+
+**The diary's mouth at days 55 and 56, 19:06.** The boundary probe (eight fixed cues on a scratch copy,
+the parent off) fell from 43 of 48 started and 36 full at day 54 to 35 and 29 at day 55 and 34 and 26
+at day 56, after seven days at 41 to 43. The gate did not change (bias +0.33 to +0.38 through days
+54 to 56, the listening weight −0.84 to −0.95, the bout weight −0.35 to −0.31). What changed is
+which lines the store returns: "I had " answered 'milk gone' six of six on day 54 and 'ball under
+dog' or 'balld dog' on day 56, none started; "give " went from 'book fast' five of six to three. The
+last days' teaching was black, white and yellow beside ball and dog, and the old lines "I had
+milk" and "give book" were not repeated, so their memories faded under the store's daily forgetting
+while the recent lines won the completions. The parent's page is unchanged (143 smiles, no frown,
+no turning-away on day 55). Not an organ's defect but the curriculum's: tomorrow's briefs should
+repeat two of the old cue lines each day beside the word of the day.
+
+**The second body's day 23 was a quiet one, 19:10.** Its planner, woken by message when the session
+began at 18:29, appended nothing the typist reached: two backlog lines were typed in forty minutes,
+7 smiles, no frown, no turning-away, and the night came at 19:09. The planner has been told the day
+is over. Days 24 to 28 follow under the armed chain with fresh planners.
+
+**Two turnings-away at the start of day 56, 19:21.** The session began at 19:16 with the parent's
+attention at 0.59 (the typist keeps it from the day before, which ended at 0.60) and the body babbling
+fragments after the night ('b bbbbb b b', 'fas t b ook'), each fragment wearing attention by 0.04:
+0.49, 0.25, 0.14 and the parent turned away at 19:18, reset to 0.35, wore down again to 0.15 and
+turned away at 19:20. The first turnings-away since the reply was withheld on day 48. Sleep pressure at
+the session's start has climbed from 4847 (day 52) to 6640 (day 56) as the sessions lengthened and the
+boundary probes lengthened the waking gap between them, so the body wakes into each session more
+tired; the morning after a night also begins with the slow bands zeroed (this body keeps the old form).
+No change to the body or the parent tonight; the parent's rule is doing what it does, and the turnings-
+away are the body's to feel. Whether they recur through the day decides whether the morning is a
+pattern.
+
+**Runs 145 to 148 ended at day 13, 19:24.** Their form (the homeostatic input at 36000, forgetting at
+12000, the slow state kept) read fresh pages at −0.7 and is the arm the others correct; the machine
+is at a load of 30 with ten seeds, and the three decisive arms need the cores. Their day-6 fresh-day
+instruments run on to completion as arm D's one reading.
+
+**The body alone on an empty page, 19:27.** The turnings-away of day 56 (six by 19:30, the body
+saying 'bbbbbb' to "give ") have a cause outside the body. The chain that runs the diary's days
+took the boundary probes (the mouth, the taught lines, the unheard combinations, the cortex alone)
+on a copy BEFORE starting the teacher, and under today's load those probes took 28 minutes instead
+of 10. Through that gap the body is awake and alone: its sleep pressure at the session's start rose
+from 4847 on day 52 to 6640 on day 56, and it spent the gap speaking to a page no one writes on. It
+woke into day 56 tired, its mouth having drifted to the one letter its recent lines begin with, and
+the parent, who keeps yesterday's attention (0.60), turned away four times in eight minutes. The
+instruments distorted the life they measured. From the next chain (day 58 on, and the second body's
+after day 28) the probes run in the background on the boundary copy while the teacher begins at
+once (scratchpad/teach_days3b.sh, teach_days_b3.sh); the copy is the same copy, so the probes
+measure the same body. The second body's short day 23 had the same cause.
