@@ -4886,7 +4886,7 @@ The fast critic was given the dopamine band's own state to read, and the ventral
 
 This is the striatum's shape and the cerebellum's: a fixed sparse expansion of afferents, then fast linear learning under dopamine. It is also what a robot would need, since the expansion cares nothing for what the input is. The fast critic will read a short delay line of the stream through a born expansion, as an option tested on fresh seeds first, judged by the rise of its value before the smile.
 
-## The striatal input, live (2026-09-06, 07:30)
+## The striatal input, live (2026-09-06, 07:23)
 
 Arm U was born with arm S's recipe and the fast critic reading a line of the last eight events through the born expansion. On its third day, stalked with the parent road on, the fast value rises seven hundredths of a smile in the eight ticks before a smile and the error on the reward's tick is +1.82: the first expectation of a smile any live body of this lineage has shown, and a small one. The value is highest while the parent types, where the frowns land, because the heard symbols flood the line and smiles follow the parent's lines. Offline, on the same body's recorded days, the line's ceiling is low: under the parent road even the body's own eight symbols read an unseen day at 0.16, against 0.34 on the flat-rule days. The parent who wants a reply smiles only after the child's four quiet ticks, and quiet was not an event of the line, so the value could not rise through the pause. The pause is exactly where the gate's rests need their credit.
 
