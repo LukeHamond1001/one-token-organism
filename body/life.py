@@ -78,7 +78,10 @@ PHYSIOLOGY = dict(
     # defect: blind to the word ending), "striatum" = a delay line of the last stri_k events of the stream through a born
     # expansion of stri_m units; the fast head (fast_rls) reads it. The felt face is an event of the line, so an expected
     # smile is discounted the tick it lands.
-    fast_input="band", stri_k=16, stri_m=2048,
+    # stri_quiet 1: a tick of quiet is an event of the line too (the line carries time). Measured 2026-09-06 on fresh seeds: with
+    # quiet ticks (arms V and W) day 3 read 65-85 smiles against 97-99 without them (arm U), though the value before a smile
+    # rose a little more; off by default, the line of eight events as in arm U.
+    fast_input="band", stri_k=8, stri_m=1024, stri_quiet=0,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -768,7 +771,7 @@ class Life:
         if stri:
             if acted:
                 m.striatum_push(1, int(nxt))                      # its own symbol is an event of the stream
-            elif u == self.sil and not felt:
+            elif u == self.sil and not felt and int(self.cfg.get("stri_quiet", 0)):
                 m.striatum_push(3, 0)                             # a tick of quiet is an event too (the line carries time)
             self._z_prev = m.striatum_read()
         self._acted_last = bool(acted)
