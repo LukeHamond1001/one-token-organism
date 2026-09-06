@@ -5,7 +5,7 @@ and the planner's choice when it decided. Also the day's organ summary.
 """
 import sys, json, argparse, statistics as st
 ap = argparse.ArgumentParser(); ap.add_argument("prefix"); ap.add_argument("--events", type=int, default=12); ap.add_argument("--span", type=int, default=6)
-ap.add_argument("--kinds", default="smile,frown,away,cue"); a = ap.parse_args()
+ap.add_argument("--kinds", default="smile,frown,away,cue,sequence"); a = ap.parse_args()
 T = [json.loads(l) for l in open(a.prefix + "_ticks.jsonl")]; R = [json.loads(l) for l in open(a.prefix + "_rows.jsonl")]
 byt = {x["t"]: x for x in T}; kinds = set(a.kinds.split(","))
 # the parent's typing per tick is known; what it typed is in the rows ("line"/"cue" text) -> mark the span
