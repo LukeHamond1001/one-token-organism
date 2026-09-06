@@ -246,7 +246,7 @@ class Life:
         self.m.vcrit_traces = bool(int(self.cfg.get("vcrit_traces", 0))); self.m.vcrit_clock = bool(int(self.cfg.get("vcrit_clock", 0)))
         with torch.no_grad():
             nb_ = organs.vcrit_mask.numel(); d_ = (organs.vcrit.weight.shape[1] - nb_ - 1) // nb_
-            full = torch.cat([organs.vcrit_mask[:, None].expand(nb_, d_).reshape(-1), torch.ones(nb_) if self.m.vcrit_traces else torch.zeros(nb_),
+            full = torch.cat([organs.vcrit_mask.cpu()[:, None].expand(nb_, d_).reshape(-1), torch.ones(nb_) if self.m.vcrit_traces else torch.zeros(nb_),
                               torch.ones(1) if self.m.vcrit_clock else torch.zeros(1)])
             self._vc_idx = full.nonzero().squeeze(1)
             if int(self.cfg.get("vcrit_rls", 0)):
@@ -255,17 +255,17 @@ class Life:
                 self._vc_delta = pri * vf0 if pri > 0 else float(self.cfg.get("vcrit_rls_delta", 100.0))
                 norm_on = bool(int(self.cfg.get("vcrit_norm_tau", 0)))
                 if organs.vc_A.numel() != k * k:
-                    organs.vc_A = torch.eye(k, dtype=torch.float64, device=organs.vcrit.weight.device) * (0.0 if norm_on else self._vc_delta)
-                    organs.vc_b = torch.zeros(k, dtype=torch.float64, device=organs.vcrit.weight.device)
+                    organs.vc_A = torch.eye(k, dtype=torch.float64, device="cpu") * (0.0 if norm_on else self._vc_delta)
+                    organs.vc_b = torch.zeros(k, dtype=torch.float64, device="cpu")
                 if norm_on and organs.vc_mu.numel() != k - 1:
                     # born with a prior on the input's scale (one unit, weighing tau/32 ticks), so the first hours' few samples
                     # do not inflate the standardized input before the statistics have formed
-                    organs.vc_mu = torch.zeros(k - 1, dtype=torch.float64, device=organs.vcrit.weight.device)
-                    organs.vc_var = torch.ones(k - 1, dtype=torch.float64, device=organs.vcrit.weight.device)
+                    organs.vc_mu = torch.zeros(k - 1, dtype=torch.float64, device="cpu")
+                    organs.vc_var = torch.ones(k - 1, dtype=torch.float64, device="cpu")
                     # THE FAST START (2026-09-06): the scale set by the first samples (n from 1), not born at one unit weighing tau/32. With the evidence in raw coordinates the statistics
                     # shape only the prior, so a fast start risks nothing; the slow one left the traces' variance at the residue of
                     # its birth value (0.0099 against a true 0.0001) after six days, a prior a hundred times too strong, the head crushed.
-                    organs.vc_n = torch.full((), 1.0, dtype=torch.float64, device=organs.vcrit.weight.device)   # the first sample sets the scale
+                    organs.vc_n = torch.full((), 1.0, dtype=torch.float64, device="cpu")   # the first sample sets the scale
         self._vc_e = None
         if int(self.cfg.get("fast_rls", 0)):
             with torch.no_grad():
@@ -279,7 +279,7 @@ class Life:
                     kf = m_ * (1 + wm_) + 1
                 else:
                     kf = int(organs.value[fb].weight.shape[1]) + 1
-                dev_ = organs.vcrit.weight.device
+                dev_ = "cpu"
                 if organs.vf_A.shape != (kf, kf):
                     organs.vf_A = torch.zeros(kf, kf, dtype=torch.float64, device=dev_); organs.vf_b = torch.zeros(kf, dtype=torch.float64, device=dev_)
                     organs.vf_mu = torch.zeros(kf - 1, dtype=torch.float64, device=dev_); organs.vf_var = torch.ones(kf - 1, dtype=torch.float64, device=dev_)
@@ -632,8 +632,8 @@ class Life:
                 if rls:
                     # THE DECORRELATED CRITIC: the statistics of the trace against the state's discounted change and the reward
                     with torch.no_grad():
-                        one = torch.ones(1, dtype=torch.float64, device=self.dev)
-                        x_p = m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev, m.vc_clock_prev)[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach(), m.r_tr, m.vc_clock)[self._vc_idx].double()
+                        one = torch.ones(1, dtype=torch.float64, device="cpu")
+                        x_p = m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev, m.vc_clock_prev).detach().cpu()[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach(), m.r_tr, m.vc_clock).detach().cpu()[self._vc_idx].double()
                         ntau = int(self.cfg.get("vcrit_norm_tau", 0))
                         if ntau:
                             # THE PRIOR AS THE METRIC (2026-09-05 21:40): the homeostatic statistics take the state but do NOT transform
@@ -657,11 +657,11 @@ class Life:
                 if int(self.cfg.get("fast_rls", 0)) and (not stri or getattr(self, "_z_prev", None) is not None):
                     # THE FAST CRITIC DECORRELATED: the dopamine band's evidence on its own state (or the striatal input), at its own horizon
                     with torch.no_grad():
-                        fb = int(self.cfg["dopamine_band"]); gf = float(gam[fb]); one = torch.ones(1, dtype=torch.float64, device=self.dev)
+                        fb = int(self.cfg["dopamine_band"]); gf = float(gam[fb]); one = torch.ones(1, dtype=torch.float64, device="cpu")
                         if stri:
-                            xf_p = self._z_prev.double(); xf_n = self._z_now.double()
+                            xf_p = self._z_prev.detach().cpu().double(); xf_n = self._z_now.detach().cpu().double()
                         else:
-                            xf_p = self._bands_prev[fb].detach().double(); xf_n = self.bands[fb].detach().double()
+                            xf_p = self._bands_prev[fb].detach().cpu().double(); xf_n = self.bands[fb].detach().cpu().double()
                         m.fast_norm_update(xf_n, float(self.cfg.get("fast_rls_forget", 36000)))
                         xa_p = torch.cat([xf_p, one]); xa_n = torch.cat([xf_n, one])
                         ef = getattr(self, "_vf_e", None)
@@ -1340,15 +1340,15 @@ class Life:
         saved_form = float(vc_saved["vc_form"]) if vc_saved.get("vc_form") is not None else 1.0
         if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved.get("vc_A") is not None and vc_saved["vc_A"].shape == life.m.vc_A.shape and saved_norm == norm_on and (not norm_on or saved_form == float(life.m.vc_form)):
             # the decorrelated critic's memory, in the units it was accumulated in; in other units it begins again from the prior
-            life.m.vc_A.copy_(vc_saved["vc_A"].to(device)); life.m.vc_b.copy_(vc_saved["vc_b"].to(device))
+            life.m.vc_A.copy_(vc_saved["vc_A"].cpu()); life.m.vc_b.copy_(vc_saved["vc_b"].cpu())
             if norm_on:
-                life.m.vc_mu.copy_(vc_saved["vc_mu"].to(device)); life.m.vc_var.copy_(vc_saved["vc_var"].to(device)); life.m.vc_n.copy_(vc_saved["vc_n"].to(device))
+                life.m.vc_mu.copy_(vc_saved["vc_mu"].cpu()); life.m.vc_var.copy_(vc_saved["vc_var"].cpu()); life.m.vc_n.copy_(vc_saved["vc_n"].cpu())
         if vf_saved and int(c.get("fast_rls", 0)) and vf_saved.get("vf_A") is not None and vf_saved["vf_A"].shape == life.m.vf_A.shape:
             # the fast critic's memory (the ninth defect: until 2026-09-06 the loader sized fresh zeros here and dropped the
             # saved evidence, so every reloaded fast-critic body met its prior with no evidence and its head was crushed
             # at the first solve; the running body was never affected, only its copies, stalks and restarts)
             for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n"):
-                getattr(life.m, k_).copy_(vf_saved[k_].to(device))
+                getattr(life.m, k_).copy_(vf_saved[k_].cpu())
         if st_saved and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None and st_saved["stri_W"].shape == life.m.stri_W.shape:
             with torch.no_grad():                                  # the striatal input as born, its line, and its head
                 life.m.stri_W.copy_(st_saved["stri_W"].to(device)); life.m.stri_b.copy_(st_saved["stri_b"].to(device)); life.m.stri_line.copy_(st_saved["stri_line"].to(device))

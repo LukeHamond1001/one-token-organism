@@ -467,9 +467,18 @@ class Organs(nn.Module):
             try: w = torch.linalg.solve(A, self.vf_b)
             except Exception: w = torch.linalg.lstsq(A, self.vf_b.unsqueeze(1)).solution.squeeze(1)
             if self.stri_W.numel() > 0:                                       # the striatal head
-                self.vfast.weight[0].copy_(w[:-1].to(self.vfast.weight.dtype)); self.vfast.bias[0] = w[-1].to(self.vfast.bias.dtype)
+                self.vfast.weight[0].copy_(w[:-1].to(self.vfast.weight)); self.vfast.bias[0] = w[-1].to(self.vfast.bias)
             else:
-                self.value[b].weight[0].copy_(w[:-1].to(self.value[b].weight.dtype)); self.value[b].bias[0] = w[-1].to(self.value[b].bias.dtype)
+                self.value[b].weight[0].copy_(w[:-1].to(self.value[b].weight)); self.value[b].bias[0] = w[-1].to(self.value[b].bias)
+
+    def to(self, *args, **kwargs):
+        """the critics' double-precision evidence (A, b, the running statistics) stays on the CPU: Metal has no float64 and
+        no solve; the cortex, the bands, the store and the heads go where they are sent"""
+        dbl = {n: self._buffers.pop(n) for n in list(self._buffers) if self._buffers[n] is not None and self._buffers[n].dtype == torch.float64}
+        out = super().to(*args, **kwargs)
+        for n, b in dbl.items():
+            out.register_buffer(n, b.cpu())
+        return out
 
     def striatum_init(self, k, m, seed=0, wm=0):
         """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
@@ -539,7 +548,7 @@ class Organs(nn.Module):
         """running mean and variance of the fast head's inputs (Welford, the count from 1), for the prior's metric only"""
         with torch.no_grad():
             self.vf_n += 1.0; eta = 1.0 / min(float(self.vf_n), float(tau))
-            d = x.double() - self.vf_mu; self.vf_mu += eta * d; self.vf_var += eta * (d * (x.double() - self.vf_mu) - self.vf_var)
+            x = x.detach().cpu().double(); d = x - self.vf_mu; self.vf_mu += eta * d; self.vf_var += eta * (d * (x - self.vf_mu) - self.vf_var)
 
     def vcrit_rls_solve(self, idx, prior=None):
         """the decorrelated head from its evidence: w = (A + R)^-1 b over the active inputs (raw coordinates) and the level. With the
@@ -555,7 +564,7 @@ class Organs(nn.Module):
                 w = torch.linalg.solve(A, self.vc_b)
             except Exception:
                 w = torch.linalg.lstsq(A, self.vc_b.unsqueeze(1)).solution.squeeze(1)
-            self.vcrit.weight.zero_(); self.vcrit.weight[0, idx] = w[:-1].to(self.vcrit.weight.dtype); self.vcrit.bias[0] = w[-1].to(self.vcrit.bias.dtype)
+            self.vcrit.weight.zero_(); self.vcrit.weight[0, idx.to(self.vcrit.weight.device)] = w[:-1].to(self.vcrit.weight); self.vcrit.bias[0] = w[-1].to(self.vcrit.bias)
 
     def vcrit_norm_update(self, x, tau):
         """the homeostatic statistics take this tick's (active) input; returns the standardized input"""
