@@ -1189,6 +1189,12 @@ class Life:
             life.m.vc_A.copy_(vc_saved["vc_A"].to(device)); life.m.vc_b.copy_(vc_saved["vc_b"].to(device))
             if norm_on:
                 life.m.vc_mu.copy_(vc_saved["vc_mu"].to(device)); life.m.vc_var.copy_(vc_saved["vc_var"].to(device)); life.m.vc_n.copy_(vc_saved["vc_n"].to(device))
+        if vf_saved and int(c.get("fast_rls", 0)) and vf_saved.get("vf_A") is not None and vf_saved["vf_A"].shape == life.m.vf_A.shape:
+            # the fast critic's memory (the ninth defect: until 2026-09-06 the loader sized fresh zeros here and dropped the
+            # saved evidence, so every reloaded fast-critic body met its prior with no evidence and its head was crushed
+            # at the first solve; the running body was never affected, only its copies, stalks and restarts)
+            for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n"):
+                getattr(life.m, k_).copy_(vf_saved[k_].to(device))
         life.store.load_state_dict(blob["store"])
         L = blob.get("life") or {}
         for k in ("ticks", "nights", "day_n", "sleep_pressure", "fatigue", "stress", "mood", "n_bursts", "last_night"):
