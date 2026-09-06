@@ -303,6 +303,13 @@ class Organs(nn.Module):
         # one lived fast day, read the next at +0.5..+0.7 where the traces flipped sign between days.
         self.register_buffer("vc_clock", torch.zeros(1)); self.register_buffer("vc_clock_prev", torch.zeros(1))
         self.vcrit_clock = False
+        # THE FAST CRITIC DECORRELATED (fast_rls 1; 2026-09-06): the dopamine band's own value head solved from evidence like the
+        # ventral critic (raw coordinates, the prior as the metric), at its own horizon. On a stalked day the fast error at a smile was
+        # +1.97 on a reward of +2: the band predicted nothing of it, so nothing could be disappointed, so talking over the parent cost
+        # nothing the gate could feel. The infant's turn-taking needs the expected answer.
+        self.register_buffer("vf_A", torch.zeros(0, 0, dtype=torch.float64)); self.register_buffer("vf_b", torch.zeros(0, dtype=torch.float64))
+        self.register_buffer("vf_mu", torch.zeros(0, dtype=torch.float64)); self.register_buffer("vf_var", torch.zeros(0, dtype=torch.float64))
+        self.register_buffer("vf_n", torch.zeros((), dtype=torch.float64))
         # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the
         # eligibility trace carried through a precision matrix (the Kalman form of TD; the online LSTD of Xu et al. 2002).
         # A gradient head fit for one pass to correlated inputs reads their dominant common component, which on the slow
@@ -435,6 +442,23 @@ class Organs(nn.Module):
     def value_long(self, states, traces=None, clock=None):
         """the ventral critic's value over the bands' states and, when it reads them, the tonic traces and the clock (see vcrit_input)"""
         return (self.vcrit_input(states, traces, clock) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
+
+    def fast_rls_solve(self, b, prior=None):
+        """the dopamine band's head from its evidence: w = (A + R)^-1 b over the band's state (raw) and the level (see vcrit_rls_solve)"""
+        with torch.no_grad():
+            A = self.vf_A
+            if prior is not None and self.vf_var.numel() == A.shape[0] - 1:
+                R = torch.zeros(A.shape[0], dtype=A.dtype, device=A.device); R[:-1] = float(prior) * (self.vf_var.clamp_min(0) + 1e-9)
+                A = A + torch.diag(R)
+            try: w = torch.linalg.solve(A, self.vf_b)
+            except Exception: w = torch.linalg.lstsq(A, self.vf_b.unsqueeze(1)).solution.squeeze(1)
+            self.value[b].weight[0].copy_(w[:-1].to(self.value[b].weight.dtype)); self.value[b].bias[0] = w[-1].to(self.value[b].bias.dtype)
+
+    def fast_norm_update(self, x, tau):
+        """running mean and variance of the fast head's inputs (Welford, the count from 1), for the prior's metric only"""
+        with torch.no_grad():
+            self.vf_n += 1.0; eta = 1.0 / min(float(self.vf_n), float(tau))
+            d = x.double() - self.vf_mu; self.vf_mu += eta * d; self.vf_var += eta * (d * (x.double() - self.vf_mu) - self.vf_var)
 
     def vcrit_rls_solve(self, idx, prior=None):
         """the decorrelated head from its evidence: w = (A + R)^-1 b over the active inputs (raw coordinates) and the level. With the

@@ -71,6 +71,9 @@ PHYSIOLOGY = dict(
     # talked over -> away -> poor -> recovery), and its phase lives in the reward history, not in the cortex's slow state.
     vcrit_traces=0,
     vcrit_clock=0,        # THE CLOCK as a critic input: sleep pressure over the wake threshold (see model.py); 2026-09-06
+    # THE FAST CRITIC DECORRELATED (see model.py): the dopamine band's head from evidence (LSTD, trace at its gamma, forgetting
+    # fast_rls_forget, the prior fast_rls_prior forgetting-horizons of unit evidence as the metric), solved every fast_rls_every ticks.
+    fast_rls=0, fast_rls_forget=36000, fast_rls_prior=3.0, fast_rls_every=64,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -239,6 +242,16 @@ class Life:
                     # its birth value (0.0099 against a true 0.0001) after six days, a prior a hundred times too strong, the head crushed.
                     organs.vc_n = torch.full((), 1.0, dtype=torch.float64, device=organs.vcrit.weight.device)   # the first sample sets the scale
         self._vc_e = None
+        if int(self.cfg.get("fast_rls", 0)):
+            with torch.no_grad():
+                fb = int(self.cfg["dopamine_band"]); kf = int(organs.value[fb].weight.shape[1]) + 1
+                dev_ = organs.vcrit.weight.device
+                if organs.vf_A.shape != (kf, kf):
+                    organs.vf_A = torch.zeros(kf, kf, dtype=torch.float64, device=dev_); organs.vf_b = torch.zeros(kf, dtype=torch.float64, device=dev_)
+                    organs.vf_mu = torch.zeros(kf - 1, dtype=torch.float64, device=dev_); organs.vf_var = torch.ones(kf - 1, dtype=torch.float64, device=dev_)
+                    organs.vf_n = torch.full((), 1.0, dtype=torch.float64, device=dev_)
+            self._vf_delta = float(self.cfg["fast_rls_prior"]) * float(self.cfg["fast_rls_forget"])
+        self._vf_e = None
         self.m.read_sharp = float(self.cfg["read_sharp"])
         self.sil = tok.token_to_id("<pad>")
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
@@ -555,6 +568,19 @@ class Life:
                         m.vc_b.mul_(beta).add_(self._vc_e * float(r))
                         if self.ticks % int(self.cfg.get("vcrit_rls_every", 64)) == 0:
                             m.vcrit_rls_solve(self._vc_idx, prior=(self._vc_delta if ntau else None))
+                if int(self.cfg.get("fast_rls", 0)):
+                    # THE FAST CRITIC DECORRELATED: the dopamine band's evidence on its own state, at its own horizon
+                    with torch.no_grad():
+                        fb = int(self.cfg["dopamine_band"]); gf = float(gam[fb]); one = torch.ones(1, dtype=torch.float64, device=self.dev)
+                        xf_p = self._bands_prev[fb].detach().double(); xf_n = self.bands[fb].detach().double()
+                        m.fast_norm_update(xf_n, float(self.cfg.get("fast_rls_forget", 36000)))
+                        xa_p = torch.cat([xf_p, one]); xa_n = torch.cat([xf_n, one])
+                        ef = getattr(self, "_vf_e", None)
+                        self._vf_e = (gf * ef if ef is not None else torch.zeros_like(xa_p)) + xa_p           # the trace at gamma (lambda 1)
+                        bf = 1.0 - 1.0 / float(self.cfg.get("fast_rls_forget", 36000))
+                        m.vf_A.mul_(bf).add_(torch.outer(self._vf_e, xa_p - gf * xa_n)); m.vf_b.mul_(bf).add_(self._vf_e * float(r))
+                        if self.ticks % int(self.cfg.get("fast_rls_every", 64)) == 0:
+                            m.fast_rls_solve(fb, prior=self._vf_delta)
                 with torch.no_grad():
                     x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev, m.vc_clock_prev), torch.ones(1, device=self.dev)])
                     if lam > 0.0:
@@ -577,7 +603,10 @@ class Life:
                     loss_vl = -(td_long.detach() * (m.vcrit.weight[0] @ self._vtrace[:-1] + m.vcrit.bias[0] * self._vtrace[-1]))   # gradient -error x trace
                 else:
                     loss_vl = td_long ** 2
-                loss_v = (td ** 2).mean() + loss_vl
+                if int(self.cfg.get("fast_rls", 0)):
+                    mask_ = torch.ones_like(td); mask_[int(self.cfg["dopamine_band"])] = 0.0; loss_v = ((td * mask_) ** 2).mean() + loss_vl
+                else:
+                    loss_v = (td ** 2).mean() + loss_vl
                 # Go/NoGo on the bands' own updates: a positive error pulls the gate open, a negative one shut
                 gates = torch.stack([torch.sigmoid(m.band_gate[b](self._bands_prev[b].detach())).squeeze()
                                      for b in range(len(gam))])
@@ -1022,6 +1051,7 @@ class Life:
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None
             self._after_night = True
+            self._vf_e = None
             self.fatigue = 0.0
             self.sleep_pressure = 0
             self.nights += 1; self.day_n += 1
@@ -1080,7 +1110,7 @@ class Life:
         terms = []
         for b in range(len(gam)):
             pairs = list(self.v_buf[b])
-            if len(pairs) < 4:
+            if len(pairs) < 4 or (int(self.cfg.get("fast_rls", 0)) and b == int(self.cfg["dopamine_band"])):   # the fast head is solved, not replayed
                 continue
             hp = torch.stack([p[0] for p in pairs]).to(self.dev); R = torch.tensor([p[1] for p in pairs], device=self.dev)
             hn = torch.stack([p[2] for p in pairs]).to(self.dev)
@@ -1143,10 +1173,11 @@ class Life:
         vw = blob["organs"].get("vcrit.weight")
         if vw is not None and vw.shape[1] < organs.vcrit.weight.shape[1]:   # an older critic without the trace inputs: those weights born at zero
             blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
+        vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
-        if [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")]:
-            print("load: organs without", [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")], "(an older recipe; born fresh where missing)")
+        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_"))]:
+            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_"))], "(an older recipe; born fresh where missing)")
         c = dict(blob.get("cfg") or {})
         c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
         c.update(cfg or {})
