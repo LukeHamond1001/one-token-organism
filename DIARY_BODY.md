@@ -4893,3 +4893,9 @@ Arm U was born with arm S's recipe and the fast critic reading a line of the las
 The behavior moved more than the value: over the five days both arms lived, U was smiled at fifteen more times a day than S on every day, and twenty-nine more than the arm with the frown and the old critic. The ladder of the credit machinery on matched days: the frown alone thirteen smiles a day over the old critic, the decorrelated critic in the credit three more, the striatal input fifteen more, turnings-away easing a little at each step.
 
 A tick of quiet is now an event of the line, which carries sixteen events into two thousand and forty-eight units. Arm V is born with it.
+
+## Quiet ticks, and the diary's turn (2026-09-06, 08:23)
+
+With a tick of quiet as an event of the line, the value before a smile rose a little more (a tenth to a fifth of the smile on arm V's third day, against a fourteenth on arm U's), and the bodies were smiled at less: sixty-five and eighty-five times on the third day with quiet ticks in a line of eight, sixty-eight and seventy-one in a line of sixteen, against ninety-seven and ninety-nine without them. The behavior is the yardstick, so the quiet ticks are an option and off. Offline, every readout of the line read an unseen day at about a third and rose almost nothing before the smile, while the live head, which solves itself again every sixty-four ticks, rose a fifth: an online head follows a day that drifts and a parent who smiles at a fraction of completions, and a head fit yesterday does not. The live rise is the instrument.
+
+The diary takes the striatal fast critic tonight, at the boundary after its sixty-eighth day, in arm U's form, with the ventral critic still out of the credit; and its typist takes the frown, on the user's word and after the fast seeds measured it. The reading tomorrow: smiles, turnings-away and frowns of the sixty-ninth day against the days before it, and the rise before the smile on a stalked copy.
