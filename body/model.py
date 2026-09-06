@@ -322,6 +322,8 @@ class Organs(nn.Module):
         # symbol, added to the cortex's forecast (the cortex proposes, the striatum disposes); learned by the three-factor rule
         # over which-symbol, as the gate learns act-or-rest. Sized with the striatum; a placeholder until then.
         self.actor = nn.Linear(1, 1)
+        self.register_buffer("wm_slot", torch.zeros(0)); self.register_buffer("wm_on", torch.zeros(())); self.register_buffer("wm_age", torch.zeros(()))
+        self.stri_wm = 0
         # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the
         # eligibility trace carried through a precision matrix (the Kalman form of TD; the online LSTD of Xu et al. 2002).
         # A gradient head fit for one pass to correlated inputs reads their dominant common component, which on the slow
@@ -469,7 +471,7 @@ class Organs(nn.Module):
             else:
                 self.value[b].weight[0].copy_(w[:-1].to(self.value[b].weight.dtype)); self.value[b].bias[0] = w[-1].to(self.value[b].bias.dtype)
 
-    def striatum_init(self, k, m, seed=0):
+    def striatum_init(self, k, m, seed=0, wm=0):
         """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
         thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot)"""
         n_in = int(k) * (2 * self.vocab + 3)                                   # heard | own | warm face, cold face, a tick of quiet
@@ -477,8 +479,14 @@ class Organs(nn.Module):
         self.stri_W = (torch.randn(n_in, int(m), generator=g) / math.sqrt(float(k))).to(dev)
         self.stri_b = (-torch.rand(int(m), generator=g) * 1.5).to(dev)          # random thresholds: about a third of the units fire
         self.stri_line = torch.full((int(k),), -1, dtype=torch.long, device=dev)
-        self.vfast = nn.Linear(int(m), 1).to(dev)
-        self.actor = nn.Linear(int(m), self.vocab).to(dev)
+        # WORKING MEMORY (wm 1; 2026-09-06): a slot beside the line, latching the striatal input at a dopamine burst and
+        # holding it until the reward comes or it ages out, so what began a sequence is still readable at its end
+        # (prefrontal gating by dopamine: update at a burst, maintain otherwise). The heads read [line, slot].
+        self.stri_wm = int(wm)
+        self.wm_slot = torch.zeros(int(m), device=dev); self.wm_on = torch.zeros((), device=dev); self.wm_age = torch.zeros((), device=dev)   # buffers (assigned by name)
+        width = int(m) * (1 + self.stri_wm)
+        self.vfast = nn.Linear(width, 1).to(dev)
+        self.actor = nn.Linear(width, self.vocab).to(dev)
         with torch.no_grad():
             self.vfast.weight.zero_(); self.vfast.bias.zero_(); self.actor.weight.zero_(); self.actor.bias.zero_()
 
@@ -499,6 +507,25 @@ class Organs(nn.Module):
                 if e >= 0:
                     z += self.stri_W[p_ * width + e]
             return torch.relu(z)
+
+    def stri_in(self):
+        """what the striatal heads read: the line's expansion, and the working-memory slot beside it when the slot exists"""
+        z = self.striatum_read()
+        if getattr(self, "stri_wm", 0):
+            return torch.cat([z, self.wm_slot * self.wm_on])
+        return z
+
+    def wm_latch(self, z):
+        with torch.no_grad():
+            self.wm_slot.copy_(z[: self.wm_slot.numel()]); self.wm_on.fill_(1.0); self.wm_age.fill_(0.0)
+
+    def wm_clear(self):
+        with torch.no_grad():
+            self.wm_on.fill_(0.0); self.wm_age.fill_(0.0)
+
+    def wm_tick(self):
+        with torch.no_grad():
+            self.wm_age += 1.0
 
     def striatum_reset(self):
         with torch.no_grad():

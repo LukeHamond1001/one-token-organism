@@ -90,7 +90,15 @@ PHYSIOLOGY = dict(
     # logits of its best) and the striatum chooses among them (its bias added only there; the rest are never said), as the basal
     # ganglia select among cortical candidates rather than inventing actions.
     actor_form="add", actor_margin=4.0,
+    # actor_form "plan" (2026-09-06): at a word boundary the cortex proposes its shortlist, each candidate is imagined forward
+    # plan_h own symbols through the world model (greedy), the striatal critic values the imagined line, and the choice follows
+    # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
+    # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
+    plan_h=4, plan_beta=4.0,
     own_target_decay=0.0,
+    # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
+    # reward or after wm_max ticks; the striatal heads read [line, slot].
+    wm=0, wm_burst=0.5, wm_max=512,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -264,9 +272,11 @@ class Life:
                 fb = int(self.cfg["dopamine_band"])
                 if str(self.cfg.get("fast_input", "band")) == "striatum":
                     k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
-                    if organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != k_ * (2 * organs.vocab + 3):
-                        organs.striatum_init(k_, m_, seed=seed)               # born (or re-born at a new size)
-                    kf = m_ + 1
+                    wm_ = int(self.cfg.get("wm", 0))
+                    if (organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != k_ * (2 * organs.vocab + 3)
+                            or organs.vfast.weight.shape[1] != m_ * (1 + wm_)):
+                        organs.striatum_init(k_, m_, seed=seed, wm=wm_)        # born (or re-born at a new size)
+                    kf = m_ * (1 + wm_) + 1
                 else:
                     kf = int(organs.value[fb].weight.shape[1]) + 1
                 dev_ = organs.vcrit.weight.device
@@ -280,6 +290,7 @@ class Life:
         self.sil = tok.token_to_id("<pad>")
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
         self.nl = tok.token_to_id("\n")
+        self.space_id = tok.token_to_id(" ")                  # the word boundary the planning actor decides at
         self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
         self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
         self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None; self._start_pending = False
@@ -436,6 +447,9 @@ class Life:
         a dream ends where the cortex, so taught, expects the quiet. Nothing enters the stream, the bags and the
         mouth's context stand, and the store keeps only what the world said next: written there too, the quiet
         after a cue blended with the answer's memory and the mouth read junk (runs 45 and 46, day 1)."""
+        if int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
+            with torch.no_grad():                            # WORKING MEMORY latches at the world's utterance end (a salience event)
+                self.m.wm_latch(self.m.striatum_read())
         for w in reversed(self.win):
             if w["x"] != self.sil:
                 w["end"] = True; break
@@ -477,11 +491,45 @@ class Life:
         return self.m.stream(u)[-1]
 
     # ---------------- the tick ----------------
+    def _imagine_value(self, first, h):
+        """IMAGINATION FOR CHOICE: say `first`, then h-1 more symbols as the cortex would (greedy), on a copy of the window; the
+        striatal critic's value of the imagined line (with the working-memory slot as it stands). Nothing in the body changes."""
+        m = self.m
+        with torch.no_grad():
+            win = list(self.win); line = m.stri_line.clone(); sym = int(first); zero_read = torch.zeros(m.d, device=self.dev)
+            face = torch.tensor([self.face_now / 6.0, 0.0], device=self.dev)
+            said = []
+            for step in range(int(h)):
+                said.append(sym)
+                win.append({"x": self.sil, "xo": sym, "face": face, "bundle": self.bands, "read": zero_read, "r": 0.0})
+                if len(win) > m.window:
+                    win = win[-m.window:]
+                if step == int(h) - 1:
+                    break
+                xs, whos, faces, bundles, reads = self._window_tensors(win)
+                C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+                lg = m.readout(m.forecast(C, zero_read)); lg[self.sil] = float("-inf"); lg[self.bans] = float("-inf")
+                sym = int(lg.argmax())
+                if sym == self.space_id:
+                    said.append(sym); break                       # the word ends: value the line here
+            width = 2 * m.vocab + 3
+            for sy in said:
+                line = torch.roll(line, 1); line[0] = m.vocab + int(sy)      # its own symbols, kind 1
+            z = m.stri_b.clone()
+            for p_ in range(line.numel()):
+                e = int(line[p_])
+                if e >= 0:
+                    z += m.stri_W[p_ * width + e]
+            z = torch.relu(z)
+            if getattr(m, "stri_wm", 0):
+                z = torch.cat([z, m.wm_slot * m.wm_on])
+            return float(m.fast_value(z))
+
     def fast_value(self):
         """the fast critic's value now (the striatal head on the delay line, or the dopamine band's head on its state)"""
         with torch.no_grad():
             if str(self.cfg.get("fast_input", "band")) == "striatum" and self.m.stri_W.numel() > 0:
-                return float(self.m.fast_value(self.m.striatum_read()))
+                return float(self.m.fast_value(self.m.stri_in()))
             return float(self.m.values(self.bands)[int(self.cfg["dopamine_band"])])
 
     def tick(self):
@@ -532,7 +580,7 @@ class Life:
                 m.striatum_push(2, 0 if felt > 0 else 1)          # the felt face is an event of the stream
             if u != self.sil:
                 m.striatum_push(0, int(u))
-            self._z_now = m.striatum_read()
+            self._z_now = m.stri_in()
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
         with torch.no_grad():
@@ -671,6 +719,13 @@ class Life:
                 if int(self.cfg.get("actor", 0)) and getattr(self, "_e_actor", None) is not None:
                     with torch.no_grad():                        # THE ACTOR'S LESSON: dopamine times the eligibility, the weights forgetting
                         m.actor.weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)
+                if stri and int(self.cfg.get("wm", 0)) and getattr(m, "stri_wm", 0):
+                    with torch.no_grad():                        # WORKING MEMORY: latch at a burst, clear at the reward or with age
+                        m.wm_tick()
+                        if r > 0 or float(m.wm_age) > float(self.cfg.get("wm_max", 512)):
+                            m.wm_clear()
+                        elif delta > float(self.cfg.get("wm_burst", 0.5)):
+                            m.wm_latch(m.striatum_read()); self._z_now = m.stri_in()
                 delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
                 delta_long = float(td_long.detach()); vlong = float(vl_now)
                 if int(self.cfg.get("vcrit_auto", 0)):
@@ -743,9 +798,22 @@ class Life:
             if act_on:
                 with torch.no_grad():                                  # the striatum disposes: its bias on the cortex's proposal
                     a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
-                    if str(self.cfg.get("actor_form", "add")) == "select":
+                    form_ = str(self.cfg.get("actor_form", "add"))
+                    if form_ == "select":
                         short = logits >= (logits.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
                         logits = torch.where(short, logits + a_bias, torch.full_like(logits, float("-inf")))
+                    elif form_ == "plan":
+                        boundary = (not getattr(self, "_acted_last", False)) or getattr(self, "_own_last", None) in (None, self.space_id)
+                        if boundary:
+                            short = logits >= (logits.max() - float(self.cfg.get("actor_margin", 4.0)))
+                            cands = [int(i) for i in torch.nonzero(short).flatten().tolist() if int(i) not in (self.sil, self.eot)]
+                            if len(cands) > 1:
+                                vals = {c: self._imagine_value(c, int(self.cfg.get("plan_h", 4))) for c in cands}
+                                self._plan_last = {"cands": cands, "vals": vals, "cortex": {c: float(logits[c]) for c in cands}}
+                                planned = torch.full_like(logits, float("-inf"))
+                                for c in cands:
+                                    planned[c] = logits[c] + float(self.cfg.get("plan_beta", 4.0)) * vals[c]
+                                logits = planned
                     else:
                         logits = logits + a_bias
             if self.cfg.get("end_rest"):
@@ -795,12 +863,13 @@ class Life:
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
         self._bands_prev = self.bands.clone()
+        self._own_last = int(nxt) if acted else None
         if stri:
             if acted:
                 m.striatum_push(1, int(nxt))                      # its own symbol is an event of the stream
             elif u == self.sil and not felt and int(self.cfg.get("stri_quiet", 0)):
                 m.striatum_push(3, 0)                             # a tick of quiet is an event too (the line carries time)
-            self._z_prev = m.striatum_read()
+            self._z_prev = m.stri_in()
         self._acted_last = bool(acted)
         if float(self.cfg.get("gate_slow_lr", 0.0)) > 0.0:
             with torch.no_grad():
@@ -1129,6 +1198,8 @@ class Life:
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
+            if getattr(self.m, "stri_wm", 0):
+                self.m.wm_clear()
             if self.m.stri_W.numel() > 0:
                 self.m.striatum_reset()                            # the delay line empties for the night
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None
@@ -1256,11 +1327,11 @@ class Life:
         if vw is not None and vw.shape[1] < organs.vcrit.weight.shape[1]:   # an older critic without the trace inputs: those weights born at zero
             blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
-        st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias") if k_ in blob["organs"]}   # the striatal input, sized by the life below
+        st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias", "wm_slot", "wm_on", "wm_age") if k_ in blob["organs"]}   # the striatal input, sized by the life below
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
-        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor."))]:
-            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor."))], "(an older recipe; born fresh where missing)")
+        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("wm_"))]:
+            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
         c = dict(blob.get("cfg") or {})
         c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
         c.update(cfg or {})
@@ -1284,6 +1355,8 @@ class Life:
                 life.m.vfast.weight.copy_(st_saved["vfast.weight"].to(device)); life.m.vfast.bias.copy_(st_saved["vfast.bias"].to(device))
                 if st_saved.get("actor.weight") is not None and st_saved["actor.weight"].shape == life.m.actor.weight.shape:
                     life.m.actor.weight.copy_(st_saved["actor.weight"].to(device)); life.m.actor.bias.copy_(st_saved["actor.bias"].to(device))
+                if st_saved.get("wm_slot") is not None and st_saved["wm_slot"].shape == life.m.wm_slot.shape:
+                    life.m.wm_slot.copy_(st_saved["wm_slot"].to(device)); life.m.wm_on.copy_(st_saved["wm_on"].to(device)); life.m.wm_age.copy_(st_saved["wm_age"].to(device))
         life.store.load_state_dict(blob["store"])
         L = blob.get("life") or {}
         for k in ("ticks", "nights", "day_n", "sleep_pressure", "fatigue", "stress", "mood", "n_bursts", "last_night"):
