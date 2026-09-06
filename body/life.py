@@ -17,6 +17,11 @@ PHYSIOLOGY = dict(
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
+    # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
+    # felt-reward trace at the ladder's clock gate_tonic_clock (index into the clocks; 4 = 256 ticks, a minute) — tonic dopamine as the
+    # average reward rate setting vigor (Niv 2007), the infant babbling more when answered (Goldstein & Schwade 2008). With the constant
+    # drive alone the gate was a coin (a stalked day: p(act) 0.53 whatever the parent did); with no drive the body fell silent (arm N).
+    gate_tonic_rate=0.0, gate_tonic_clock=4,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
     # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
     # horizons of the discount gradient, driving vigor; the fast band's error selects the act). gate_slow_w 0 = off (runs 37/38)
@@ -711,7 +716,8 @@ class Life:
             self.n_bursts += 1
         # --- the gate's buffer and lesson ---
         vw = float(self.cfg.get("vcrit_w", 0.0)) * (self._vrel_gain if int(self.cfg.get("vcrit_auto", 0)) else 1.0)
-        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long, int_t, self.fatigue])
+        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long, int_t, self.fatigue,
+                              float(m.r_tr[int(self.cfg.get("gate_tonic_clock", 4))])])          # the felt-reward trace at the tick, for the drive
         if self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0 and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:
                 self._gate_lesson()
@@ -783,7 +789,8 @@ class Life:
                 # (linear, 0.59 at fatigue's ceiling never beat a confident recitation's drive of 0.7:
                 # run 19, gate 0.97 all day, fatigue pinned at 40; convex, the mouth speaks in bouts).
                 # With the effort in the reward (cost_in_reward) the cost is the critics' to predict, not the act's
-                g += tonic + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else cost * (1.0 + (float(buf[t][4]) / f0) ** 2))
+                drive_t = tonic + (float(self.cfg.get("gate_tonic_rate", 0.0)) * float(buf[t][5]) if len(buf[t]) > 5 else 0.0)   # THE DRIVE FOLLOWS THE REWARD RATE
+                g += drive_t + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else cost * (1.0 + (float(buf[t][4]) / f0) ** 2))
             G[t] = g
         # the credit is taken against a running baseline (dopamine is an error, not a value)
         base = getattr(self, "_g_base", None)
