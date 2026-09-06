@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
@@ -1025,7 +1025,10 @@ class Life:
                 # heard as the world's in the next time step
                 with torch.no_grad():
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
-                    xs.append(int(lg.argmax()))
+                    rt = float(self.cfg.get("rem_temp", 0.0))
+                    # THE DREAM SAMPLED, NOT TAKEN AT ITS MODE (rem_temp > 0; 2026-09-06): biology's REM is noisy; the greedy
+                    # continuation reproduces the store's most frequent lines and consolidates nothing new. 0 = greedy (as before).
+                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1)) if rt > 0 else int(lg.argmax()))
             with torch.no_grad():
                 bag = float(self.cfg["bag_decay"]) * (m.shift(bag) if xs[step] != self.sil else bag) + (m.E.weight[xs[step]] if xs[step] != self.sil else 0.0)
             reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
