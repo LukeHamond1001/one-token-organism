@@ -308,6 +308,7 @@ class Organs(nn.Module):
         self.register_buffer("vc_mu", torch.zeros(0, dtype=torch.float64))
         self.register_buffer("vc_var", torch.zeros(0, dtype=torch.float64))
         self.register_buffer("vc_n", torch.zeros((), dtype=torch.float64))
+        self.register_buffer("vc_form", torch.full((), 2.0, dtype=torch.float64))   # 2: evidence in raw coordinates, the prior as the metric
         # THE MOUTH'S GATE (basal ganglia): whether to act, from the stream, the feelings, and the
         # salience of the mouth's proposal (the forecast's certainty, as the striatum reads the
         # strength of a cortical request for action)
@@ -420,20 +421,21 @@ class Organs(nn.Module):
         """the ventral critic's value over the bands' states (see vcrit_input)"""
         return (self.vcrit_input(states) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
 
-    def vcrit_rls_solve(self, idx):
-        """the decorrelated head from its statistics: w = A^-1 b over the (standardized) active inputs and the level; with the
-        homeostatic input the head is kept in the input's own units by folding the standardization into weight and bias, so
-        value_long reads raw states as always"""
+    def vcrit_rls_solve(self, idx, prior=None):
+        """the decorrelated head from its evidence: w = (A + R)^-1 b over the active inputs (raw coordinates) and the level. With the
+        homeostatic statistics (prior given) R = prior x sd_i^2 on each weight and 0 on the level: the standardized prior in raw
+        coordinates, so the statistics shape only the prior and the evidence never changes coordinates. Without them the prior
+        already sits inside A."""
         with torch.no_grad():
+            A = self.vc_A
+            if prior is not None and self.vc_var.numel() == A.shape[0] - 1:
+                R = torch.zeros(A.shape[0], dtype=A.dtype, device=A.device); R[:-1] = float(prior) * (self.vc_var.clamp_min(0) + 1e-6)
+                A = A + torch.diag(R)
             try:
-                w = torch.linalg.solve(self.vc_A, self.vc_b)
+                w = torch.linalg.solve(A, self.vc_b)
             except Exception:
-                w = torch.linalg.lstsq(self.vc_A, self.vc_b.unsqueeze(1)).solution.squeeze(1)
-            ww, bb = w[:-1], w[-1]
-            if self.vc_mu.numel() == ww.numel():
-                sd = self.vc_var.clamp_min(0).sqrt() + 1e-3
-                bb = bb - (ww * self.vc_mu / sd).sum(); ww = ww / sd
-            self.vcrit.weight.zero_(); self.vcrit.weight[0, idx] = ww.to(self.vcrit.weight.dtype); self.vcrit.bias[0] = bb.to(self.vcrit.bias.dtype)
+                w = torch.linalg.lstsq(A, self.vc_b.unsqueeze(1)).solution.squeeze(1)
+            self.vcrit.weight.zero_(); self.vcrit.weight[0, idx] = w[:-1].to(self.vcrit.weight.dtype); self.vcrit.bias[0] = w[-1].to(self.vcrit.bias.dtype)
 
     def vcrit_norm_update(self, x, tau):
         """the homeostatic statistics take this tick's (active) input; returns the standardized input"""

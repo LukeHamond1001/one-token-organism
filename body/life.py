@@ -207,7 +207,7 @@ class Life:
                 self._vc_delta = pri * vf0 if pri > 0 else float(self.cfg.get("vcrit_rls_delta", 100.0))
                 norm_on = bool(int(self.cfg.get("vcrit_norm_tau", 0)))
                 if organs.vc_A.numel() != k * k:
-                    organs.vc_A = torch.eye(k, dtype=torch.float64, device=organs.vcrit.weight.device) * self._vc_delta
+                    organs.vc_A = torch.eye(k, dtype=torch.float64, device=organs.vcrit.weight.device) * (0.0 if norm_on else self._vc_delta)
                     organs.vc_b = torch.zeros(k, dtype=torch.float64, device=organs.vcrit.weight.device)
                 if norm_on and organs.vc_mu.numel() != k - 1:
                     # born with a prior on the input's scale (one unit, weighing tau/32 ticks), so the first hours' few samples
@@ -509,22 +509,24 @@ class Life:
                         x_p = m.vcrit_input(self._bands_prev.detach())[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach())[self._vc_idx].double()
                         ntau = int(self.cfg.get("vcrit_norm_tau", 0))
                         if ntau:
-                            # the homeostatic statistics take the state once (the previous state was taken last tick); both states
-                            # are read through the current statistics
+                            # THE PRIOR AS THE METRIC (2026-09-05 21:40): the homeostatic statistics take the state but do NOT transform
+                            # it. The evidence A, b is accumulated in the raw coordinates, which never drift; the statistics act only on
+                            # the prior at the solve (delta x sd_i^2 on each weight, the level free), which is the standardized prior
+                            # expressed in raw coordinates. Standardizing the inputs themselves while the statistics formed put every
+                            # tick's evidence in different coordinates: on a recorded lived day the body's own head read -0.59 where the
+                            # same evidence in fixed coordinates read +0.71 (nt_worlds3/4).
                             m.vcrit_norm_update(x_n, ntau)
-                            sd_ = m.vc_var.clamp_min(0).sqrt() + 1e-3
-                            x_p = (x_p - m.vc_mu) / sd_; x_n = (x_n - m.vc_mu) / sd_
                         xa_prev = torch.cat([x_p, one]); xa_now = torch.cat([x_n, one])
                         e = getattr(self, "_vc_e", None)
                         self._vc_e = (gl_tr * lam * e if e is not None else torch.zeros_like(xa_prev)) + xa_prev
                         vf_ = float(self.cfg.get("vcrit_forget", 0) or 0); beta = (1.0 - 1.0 / vf_) if vf_ > 0 else 1.0
                         dlt = xa_prev - gl * xa_now
                         m.vc_A.mul_(beta).add_(torch.outer(self._vc_e, dlt))
-                        if beta < 1.0:
-                            m.vc_A.diagonal().add_((1.0 - beta) * self._vc_delta)
+                        if beta < 1.0 and not ntau:
+                            m.vc_A.diagonal().add_((1.0 - beta) * self._vc_delta)   # the constant prior inside A (the form without statistics)
                         m.vc_b.mul_(beta).add_(self._vc_e * float(r))
                         if self.ticks % int(self.cfg.get("vcrit_rls_every", 64)) == 0:
-                            m.vcrit_rls_solve(self._vc_idx)
+                            m.vcrit_rls_solve(self._vc_idx, prior=(self._vc_delta if ntau else None))
                 with torch.no_grad():
                     x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach()), torch.ones(1, device=self.dev)])
                     if lam > 0.0:
@@ -1103,7 +1105,7 @@ class Life:
         if w is not None and w.shape[1] < organs.mouth_gate.weight.shape[1]:
             # an older body's gate had fewer inputs (no salience, no level): those weights are born at zero
             blob["organs"]["mouth_gate.weight"] = torch.cat([w, torch.zeros(w.shape[0], organs.mouth_gate.weight.shape[1] - w.shape[1])], 1)
-        vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n") if k_ in blob["organs"]}   # sized by the life below
+        vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         if [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")]:
             print("load: organs without", [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")], "(an older recipe; born fresh where missing)")
@@ -1112,7 +1114,8 @@ class Life:
         c.update(cfg or {})
         life = cls(organs, tok, cfg=c, device=device, seed=seed, save_path=save_path or path)
         saved_norm = vc_saved.get("vc_mu") is not None and vc_saved["vc_mu"].numel() > 0; norm_on = int(c.get("vcrit_norm_tau", 0)) > 0
-        if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved.get("vc_A") is not None and vc_saved["vc_A"].shape == life.m.vc_A.shape and saved_norm == norm_on:
+        saved_form = float(vc_saved["vc_form"]) if vc_saved.get("vc_form") is not None else 1.0
+        if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved.get("vc_A") is not None and vc_saved["vc_A"].shape == life.m.vc_A.shape and saved_norm == norm_on and (not norm_on or saved_form == float(life.m.vc_form)):
             # the decorrelated critic's memory, in the units it was accumulated in; in other units it begins again from the prior
             life.m.vc_A.copy_(vc_saved["vc_A"].to(device)); life.m.vc_b.copy_(vc_saved["vc_b"].to(device))
             if norm_on:
