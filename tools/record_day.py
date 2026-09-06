@@ -20,13 +20,14 @@ L = Life.load(tmp, tok, save_path=None, cfg=sets if sets else None); os.remove(t
 if sets: print("overrides:", sets)
 L.cfg["wake_ticks"] = L.sleep_pressure + N
 fb = int(L.cfg["dopamine_band"])
-B = []; C_ = []; R = []; VF = []; DF = []; SAID = []; T = []; rows = []; cg_ref = []
+B = []; C_ = []; Z = []; R = []; VF = []; DF = []; SAID = []; T = []; rows = []; cg_ref = []
 orig_tick = L.tick
 def tick():
     orig_tick()
     la = L.last
     with torch.no_grad():
         B.append(L.bands.detach().to(torch.float16).cpu().clone()); VF.append(L.fast_value())
+        if L.m.stri_W.numel() > 0: Z.append(L.m.striatum_read().to(torch.float16).cpu().clone())          # the striatal input now
         c = getattr(L, "_C_last", None); C_.append((c.detach().reshape(-1)[-L.m.d:] if c is not None else torch.zeros(L.m.d)).to(torch.float16).cpu().clone())   # the cortex now
     R.append(float(la.get("felt", 0) or 0)); DF.append(float(la.get("dopamine") or 0)); SAID.append(la.get("said", "")); T.append(L.ticks)
 L.tick = tick
@@ -36,6 +37,6 @@ def row(obj):
     obj = dict(obj); obj["t"] = L.ticks; rows.append(obj); return orig_row(obj)
 cg.row = row
 cg.run_day()
-torch.save({"bands": torch.stack(B), "C": torch.stack(C_), "r": torch.tensor(R), "vf": torch.tensor(VF), "dopa": torch.tensor(DF), "said": SAID, "t": torch.tensor(T),
+torch.save({"bands": torch.stack(B), "C": torch.stack(C_), "Z": (torch.stack(Z) if Z else None), "r": torch.tensor(R), "vf": torch.tensor(VF), "dopa": torch.tensor(DF), "said": SAID, "t": torch.tensor(T),
             "rows": rows, "smiles": cg.smiles, "aways": cg.aways, "frowns": cg.frowns, "src": src, "seed": seed, "clocks": [int(c) for c in L.m.clocks]}, out)
 print(f"recorded {len(T)} ticks of {name} (seed {seed}): smiles {cg.smiles} aways {cg.aways} frowns {cg.frowns} -> {out}")

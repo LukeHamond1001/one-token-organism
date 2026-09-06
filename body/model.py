@@ -468,7 +468,7 @@ class Organs(nn.Module):
     def striatum_init(self, k, m, seed=0):
         """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
         thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot)"""
-        n_in = int(k) * (2 * self.vocab + 2)
+        n_in = int(k) * (2 * self.vocab + 3)                                   # heard | own | warm face, cold face, a tick of quiet
         g = torch.Generator().manual_seed(int(seed) + 7919); dev = self.E.weight.device
         self.stri_W = (torch.randn(n_in, int(m), generator=g) / math.sqrt(float(k))).to(dev)
         self.stri_b = (-torch.rand(int(m), generator=g) * 1.5).to(dev)          # random thresholds: about a third of the units fire
@@ -478,15 +478,17 @@ class Organs(nn.Module):
             self.vfast.weight.zero_(); self.vfast.bias.zero_()
 
     def striatum_push(self, kind, idx):
-        """an event enters the delay line: kind 0 a heard symbol, 1 an own symbol, 2 a felt face (idx 0 warm, 1 cold)"""
+        """an event enters the delay line: kind 0 a heard symbol, 1 an own symbol, 2 a felt face (idx 0 warm, 1 cold), 3 a tick
+        of quiet (nothing heard, nothing said: the line carries time, as time cells do, so a smile that comes after the
+        child's quiet can be seen approaching through the quiet)"""
         with torch.no_grad():
             self.stri_line = torch.roll(self.stri_line, 1)
-            self.stri_line[0] = int(kind) * self.vocab + int(idx) if int(kind) < 2 else 2 * self.vocab + int(idx)
+            self.stri_line[0] = int(kind) * self.vocab + int(idx) if int(kind) < 2 else 2 * self.vocab + (int(idx) if int(kind) == 2 else 2)
 
     def striatum_read(self):
         """the expansion now: relu(the born rows of the line's events + thresholds), [m]"""
         with torch.no_grad():
-            width = 2 * self.vocab + 2; z = self.stri_b.clone()
+            width = 2 * self.vocab + 3; z = self.stri_b.clone()
             for p_ in range(self.stri_line.numel()):
                 e = int(self.stri_line[p_])
                 if e >= 0:

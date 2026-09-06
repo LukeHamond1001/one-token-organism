@@ -78,7 +78,7 @@ PHYSIOLOGY = dict(
     # defect: blind to the word ending), "striatum" = a delay line of the last stri_k events of the stream through a born
     # expansion of stri_m units; the fast head (fast_rls) reads it. The felt face is an event of the line, so an expected
     # smile is discounted the tick it lands.
-    fast_input="band", stri_k=8, stri_m=1024,
+    fast_input="band", stri_k=16, stri_m=2048,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -252,7 +252,7 @@ class Life:
                 fb = int(self.cfg["dopamine_band"])
                 if str(self.cfg.get("fast_input", "band")) == "striatum":
                     k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
-                    if organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_:
+                    if organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != k_ * (2 * organs.vocab + 3):
                         organs.striatum_init(k_, m_, seed=seed)               # born (or re-born at a new size)
                     kf = m_ + 1
                 else:
@@ -768,6 +768,8 @@ class Life:
         if stri:
             if acted:
                 m.striatum_push(1, int(nxt))                      # its own symbol is an event of the stream
+            elif u == self.sil and not felt:
+                m.striatum_push(3, 0)                             # a tick of quiet is an event too (the line carries time)
             self._z_prev = m.striatum_read()
         self._acted_last = bool(acted)
         if float(self.cfg.get("gate_slow_lr", 0.0)) > 0.0:
