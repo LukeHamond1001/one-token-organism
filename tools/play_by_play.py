@@ -21,6 +21,12 @@ for r in shown:
     for k in range(-a.span, a.span + 1):
         if t + k in byt: print(("  >" if k == 0 else "   ") + fmt(byt[t + k]))
 sm = [r["t"] for r in R if r.get("action") == "smile"]; vf = [x["vf"] for x in T if x.get("vf") is not None]; mv = st.mean(vf) if vf else 0
+# the actor's overrides: decisions where the symbol said was not the cortex's own favorite among the candidates
+dec = [(x, byt.get(x["t"] + 1)) for x in T if x.get("plan")]
+over = [(x, nx) for x, nx in dec if nx and nx.get("said") and nx["said"] in x["plan"]["cands"] and x["plan"]["cands"].index(nx["said"]) != x["plan"]["cortex"].index(max(x["plan"]["cortex"]))]
+def smiled_soon(t, k=16): return any(t < s_ <= t + k for s_ in sm)
+o_s = sum(1 for x, nx in over if smiled_soon(x["t"])); f_s = sum(1 for x, nx in dec if nx and smiled_soon(x["t"]))
+print(f"actor: {len(dec)} decisions, {len(over)} overrode the cortex's favorite; a smile within 16 ticks after {o_s}/{max(1,len(over))} overrides vs {f_s}/{max(1,len(dec))} of all decisions")
 print(f"\nday: {len(T)} ticks | smiles {len(sm)} completions {sum(1 for r in R if r.get('action')=='smile' and 'completion' in str(r.get('why')))} frowns {sum(1 for r in R if r.get('action')=='frown')} aways {sum(1 for r in R if r.get('action')=='away')} cues {sum(1 for r in R if r.get('action')=='cue')} | "
       f"spoke while the parent typed {st.mean(1.0 if x.get('said') else 0.0 for x in T if x.get('typing')) if any(x.get('typing') for x in T) else float('nan'):.2f} vs quiet {st.mean(1.0 if x.get('said') else 0.0 for x in T if not x.get('typing')):.2f} | "
       f"wm latches {sum(1 for x in T if x.get('wm_latch'))}, held {st.mean(x.get('wm') or 0 for x in T):.2f} of the day | planner decisions {sum(1 for x in T if x.get('plan'))}")
