@@ -86,6 +86,10 @@ PHYSIOLOGY = dict(
     # dopamine (the striatal critic's error) times an eligibility trace of (chosen - expected symbol) x the striatal input,
     # decaying at the dopamine band's discount; the weights forget over actor_forget ticks. Off by default; fresh seeds first.
     actor=0, actor_lr=0.02, actor_beta=1.0, actor_forget=36000,
+    # actor_form "add": the bias on every symbol's logit; "select": the cortex proposes a shortlist (the symbols within actor_margin
+    # logits of its best) and the striatum chooses among them (its bias added only there; the rest are never said), as the basal
+    # ganglia select among cortical candidates rather than inventing actions.
+    actor_form="add", actor_margin=4.0,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -737,7 +741,12 @@ class Life:
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
             if act_on:
                 with torch.no_grad():                                  # the striatum disposes: its bias on the cortex's proposal
-                    logits = logits + float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
+                    a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
+                    if str(self.cfg.get("actor_form", "add")) == "select":
+                        short = logits >= (logits.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
+                        logits = torch.where(short, logits + a_bias, torch.full_like(logits, float("-inf")))
+                    else:
+                        logits = logits + a_bias
             if self.cfg.get("end_rest"):
                 # THE END IS A REST: the forecast's vote for the turn's end (a symbol the mouth can never say) is its
                 # vote for silence; banned outright, a sure forecast of the end raised the proposal's salience and then
