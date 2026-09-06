@@ -42,6 +42,8 @@ ANSWER_LEVELS = int(os.environ.get("ANSWER_LEVELS", "1"))
 # A minute's smiles then depend on the body's own last minutes, which is what a critic at long horizons needs.
 # 0 = the flat rules. Nothing reads the body's insides; the answer smile is always given.
 PARENT = int(os.environ.get("PARENT", "0"))
+TALKOVER_FROWN = int(os.environ.get("TALKOVER_FROWN", "0"))   # the parent's face when talked over (2026-09-06; off until the user's word)
+AWAY_FACE = int(os.environ.get("AWAY_FACE", "0"))             # the turning-away shown on the face row (off until the user's word)
 # THE PARENT WANTS A REPLY (on the user's word of 2026-09-04): once its cue is answered, each further word the child
 # adds before the parent's next turn wears its attention and gets no smile, unless the words go on completing the
 # cued line ('where ball? ' 'ball under'); and a word said over the parent's own typing does the same. Decided from
@@ -94,6 +96,8 @@ class FastCaregiver:
             if self.e < E_AWAY and L.ticks >= self.away_until:
                 self.away_until = L.ticks + AWAY_TICKS; self.aways += 1
                 self.row({"action": "away", "e": round(self.e, 3)}); self.e = 0.35
+                if AWAY_FACE:                                     # THE TURNING-AWAY SEEN (AWAY_FACE=1; off by default, a smile rule)
+                    self.set_face(-1.0, self.smile_ticks)
         if self.face_plan and L.ticks >= self.face_plan[0][0]:
             _, v = self.face_plan.pop(0); self.face_val = float(v); L.set_face(v)
         if L.ticks >= self.face_until and self.face_val != 0.0:
@@ -154,7 +158,11 @@ class FastCaregiver:
         if PARENT and REPLY:
             ts, te = self.typing_span
             if a < te and b >= ts:                                # said over the parent's own turn
-                self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3)}); return
+                self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3)})
+                if TALKOVER_FROWN and t - self.last_frown_tick > 60:  # THE PARENT'S FACE WHEN INTERRUPTED (TALKOVER_FROWN=1; off by default,
+                    self.set_face(-1.0, self.smile_ticks // 2); self.frowns += 1; self.last_frown_tick = t   # a smile rule: the user's word)
+                    self.row({"action": "frown", "on": tok, "why": "talked over"})
+                return
         c = self.cue
         if c and t <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
