@@ -82,6 +82,10 @@ PHYSIOLOGY = dict(
     # quiet ticks (arms V and W) day 3 read 65-85 smiles against 97-99 without them (arm U), though the value before a smile
     # rose a little more; off by default, the line of eight events as in arm U.
     fast_input="band", stri_k=8, stri_m=1024, stri_quiet=0,
+    # THE ACTOR (needs fast_input striatum): actor_beta scales its bias (through tanh) on the cortex's logits; the lesson is
+    # dopamine (the striatal critic's error) times an eligibility trace of (chosen - expected symbol) x the striatal input,
+    # decaying at the dopamine band's discount; the weights forget over actor_forget ticks. Off by default; fresh seeds first.
+    actor=0, actor_lr=0.02, actor_beta=1.0, actor_forget=36000,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -659,6 +663,9 @@ class Life:
                         delta = float(r + float(gam[fb_]) * m.fast_value(self._z_now) - m.fast_value(self._z_prev))
                 else:
                     delta = float(td[int(self.cfg["dopamine_band"])].detach())
+                if int(self.cfg.get("actor", 0)) and getattr(self, "_e_actor", None) is not None:
+                    with torch.no_grad():                        # THE ACTOR'S LESSON: dopamine times the eligibility, the weights forgetting
+                        m.actor.weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)
                 delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
                 delta_long = float(td_long.detach()); vlong = float(vl_now)
                 if int(self.cfg.get("vcrit_auto", 0)):
@@ -727,6 +734,10 @@ class Life:
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
             logits = m.readout(pred1).clone()
+            act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
+            if act_on:
+                with torch.no_grad():                                  # the striatum disposes: its bias on the cortex's proposal
+                    logits = logits + float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
             if self.cfg.get("end_rest"):
                 # THE END IS A REST: the forecast's vote for the turn's end (a symbol the mouth can never say) is its
                 # vote for silence; banned outright, a sure forecast of the end raised the proposal's salience and then
@@ -745,6 +756,12 @@ class Life:
             else:
                 nxt, p_choice = self.sil, 0.0
         int_t = 0.0
+        if acted and act_on:
+            with torch.no_grad():                                      # the actor's eligibility: what it said against what it expected, on this input
+                oh = torch.zeros_like(probs); oh[nxt] = 1.0
+                e_new = torch.outer(oh - probs.detach(), self._z_now)
+                ea = getattr(self, "_e_actor", None)
+                self._e_actor = (float(gam[int(self.cfg["dopamine_band"])]) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
         if acted:
             hab = float(self.cfg["gate_habit"])
             if str(self.cfg.get("gate_int_form", "value")) == "error":
@@ -1092,7 +1109,7 @@ class Life:
                 self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
-            self._z_prev = None; self._z_now = None
+            self._z_prev = None; self._z_now = None; self._e_actor = None
             if self.m.stri_W.numel() > 0:
                 self.m.striatum_reset()                            # the delay line empties for the night
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None
@@ -1220,11 +1237,11 @@ class Life:
         if vw is not None and vw.shape[1] < organs.vcrit.weight.shape[1]:   # an older critic without the trace inputs: those weights born at zero
             blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
-        st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias") if k_ in blob["organs"]}   # the striatal input, sized by the life below
+        st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias") if k_ in blob["organs"]}   # the striatal input, sized by the life below
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
-        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast."))]:
-            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast."))], "(an older recipe; born fresh where missing)")
+        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor."))]:
+            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor."))], "(an older recipe; born fresh where missing)")
         c = dict(blob.get("cfg") or {})
         c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
         c.update(cfg or {})
@@ -1246,6 +1263,8 @@ class Life:
             with torch.no_grad():                                  # the striatal input as born, its line, and its head
                 life.m.stri_W.copy_(st_saved["stri_W"].to(device)); life.m.stri_b.copy_(st_saved["stri_b"].to(device)); life.m.stri_line.copy_(st_saved["stri_line"].to(device))
                 life.m.vfast.weight.copy_(st_saved["vfast.weight"].to(device)); life.m.vfast.bias.copy_(st_saved["vfast.bias"].to(device))
+                if st_saved.get("actor.weight") is not None and st_saved["actor.weight"].shape == life.m.actor.weight.shape:
+                    life.m.actor.weight.copy_(st_saved["actor.weight"].to(device)); life.m.actor.bias.copy_(st_saved["actor.bias"].to(device))
         life.store.load_state_dict(blob["store"])
         L = blob.get("life") or {}
         for k in ("ticks", "nights", "day_n", "sleep_pressure", "fatigue", "stress", "mood", "n_bursts", "last_night"):

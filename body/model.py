@@ -318,6 +318,10 @@ class Organs(nn.Module):
         self.register_buffer("stri_W", torch.zeros(0, 0)); self.register_buffer("stri_b", torch.zeros(0))
         self.register_buffer("stri_line", torch.full((0,), -1, dtype=torch.long))
         self.vfast = nn.Linear(1, 1)
+        # THE ACTOR (actor 1; 2026-09-06): the striatum's second head, from the same delay-line expansion to a bias over the next
+        # symbol, added to the cortex's forecast (the cortex proposes, the striatum disposes); learned by the three-factor rule
+        # over which-symbol, as the gate learns act-or-rest. Sized with the striatum; a placeholder until then.
+        self.actor = nn.Linear(1, 1)
         # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the
         # eligibility trace carried through a precision matrix (the Kalman form of TD; the online LSTD of Xu et al. 2002).
         # A gradient head fit for one pass to correlated inputs reads their dominant common component, which on the slow
@@ -474,8 +478,9 @@ class Organs(nn.Module):
         self.stri_b = (-torch.rand(int(m), generator=g) * 1.5).to(dev)          # random thresholds: about a third of the units fire
         self.stri_line = torch.full((int(k),), -1, dtype=torch.long, device=dev)
         self.vfast = nn.Linear(int(m), 1).to(dev)
+        self.actor = nn.Linear(int(m), self.vocab).to(dev)
         with torch.no_grad():
-            self.vfast.weight.zero_(); self.vfast.bias.zero_()
+            self.vfast.weight.zero_(); self.vfast.bias.zero_(); self.actor.weight.zero_(); self.actor.bias.zero_()
 
     def striatum_push(self, kind, idx):
         """an event enters the delay line: kind 0 a heard symbol, 1 an own symbol, 2 a felt face (idx 0 warm, 1 cold), 3 a tick

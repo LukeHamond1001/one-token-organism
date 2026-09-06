@@ -17,16 +17,17 @@ def days_of(runs):
             d = r.get("day")
             if not isinstance(d, int) or d < fr: continue
             per[d][r.get("action")] += 1
+            if r.get("action") == "smile" and "cue completion" in str(r.get("why", "")): per[d]["completion"] += 1
         for d, c in per.items():
-            out[d]["smiles"].append(c["smile"]); out[d]["aways"].append(c["away"]); out[d]["frowns"].append(c["frown"]); out[d]["talked_over"].append(c["missed"])
+            out[d]["smiles"].append(c["smile"]); out[d]["aways"].append(c["away"]); out[d]["frowns"].append(c["frown"]); out[d]["talked_over"].append(c["missed"]); out[d]["completions"].append(c["completion"])
     return out
 da, db = days_of(A), days_of(B); common = sorted(set(da) & set(db))
 def summ(name, dd, runs):
     ds = sorted(dd)
     if not ds: print(f"  {name} runs {runs}: no days"); return
-    print(f"  {name:18s} runs {runs}: days {ds[0]}..{ds[-1]} | smiles/day {st.mean([st.mean(dd[d]['smiles']) for d in ds]):5.1f} | aways/day {st.mean([st.mean(dd[d]['aways']) for d in ds]):4.1f} | frowns/day {st.mean([st.mean(dd[d]['frowns']) for d in ds]):5.1f} | misses/day {st.mean([st.mean(dd[d]['talked_over']) for d in ds]):5.1f}")
+    print(f"  {name:18s} runs {runs}: days {ds[0]}..{ds[-1]} | smiles/day {st.mean([st.mean(dd[d]['smiles']) for d in ds]):5.1f} | aways/day {st.mean([st.mean(dd[d]['aways']) for d in ds]):4.1f} | frowns/day {st.mean([st.mean(dd[d]['frowns']) for d in ds]):5.1f} | misses/day {st.mean([st.mean(dd[d]['talked_over']) for d in ds]):5.1f} | cue completions/day {st.mean([st.mean(dd[d]['completions']) for d in ds]):4.1f}")
     print("      smiles by day " + " ".join(f"{d}:{st.mean(dd[d]['smiles']):.0f}" for d in ds) + " | aways by day " + " ".join(f"{d}:{st.mean(dd[d]['aways']):.0f}" for d in ds))
 summ("A", da, A); summ("B", db, B)
 if common:
-    ds_ = [st.mean(da[d]["smiles"]) - st.mean(db[d]["smiles"]) for d in common]; dw = [st.mean(da[d]["aways"]) - st.mean(db[d]["aways"]) for d in common]
-    print(f"  A - B on the {len(common)} shared days: smiles {st.mean(ds_):+.1f}/day (sd {st.pstdev(ds_):.1f}; A above on {sum(1 for x in ds_ if x > 0)}/{len(common)}) | aways {st.mean(dw):+.1f}/day (A below on {sum(1 for x in dw if x < 0)}/{len(common)})")
+    ds_ = [st.mean(da[d]["smiles"]) - st.mean(db[d]["smiles"]) for d in common]; dw = [st.mean(da[d]["aways"]) - st.mean(db[d]["aways"]) for d in common]; dc = [st.mean(da[d]["completions"]) - st.mean(db[d]["completions"]) for d in common]
+    print(f"  A - B on the {len(common)} shared days: smiles {st.mean(ds_):+.1f}/day (sd {st.pstdev(ds_):.1f}; A above on {sum(1 for x in ds_ if x > 0)}/{len(common)}) | aways {st.mean(dw):+.1f}/day (A below on {sum(1 for x in dw if x < 0)}/{len(common)}) | cue completions {st.mean(dc):+.1f}/day (A above on {sum(1 for x in dc if x > 0)}/{len(common)})")
