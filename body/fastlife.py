@@ -62,6 +62,20 @@ WAIT = int(os.environ.get("WAIT", "0"))
 # ticks (a quiet of eight within 180 ticks after the parent's utterance 35 percent of the time, median 116 ticks; a
 # quiet of four every time, median 22), and infant-parent turn transitions are near a second (Gratier 2015).
 REPLY_QUIET = int(os.environ.get("REPLY_QUIET", "4"))
+# THE SMILE AT THE LINE'S END (WORD_SMILES=0; 2026-09-06, the ladder's fourth rung): the parent smiles only at an answer to its cue,
+# not at every known word, so the reward comes at the end of a line and the value must rise at its start. 1 = every known word.
+WORD_SMILES = int(os.environ.get("WORD_SMILES", "1"))
+# FIRST_LETTER_BIAS="w:0.7": seven lines in ten begin with w (a day of one word's lines), to test the own-babble target decay.
+_flb = os.environ.get("FIRST_LETTER_BIAS", "")
+FLB_LETTER, FLB_P = ((_flb.split(":")[0], float(_flb.split(":")[1])) if ":" in _flb else ("", 0.0))
+
+def pick_line(rng):
+    """a line to say: biased toward one first letter when FIRST_LETTER_BIAS is set"""
+    if FLB_LETTER and rng.random() < FLB_P:
+        c = [l for l in LINES if l.lower().startswith(FLB_LETTER)]
+        if c:
+            return rng.choice(c)
+    return rng.choice(LINES)
 E0, E_FLOOR, E_TAU, E_AWAY, AWAY_TICKS = 0.6, 0.3, 600.0, 0.15, 200   # start, resting level, decay ticks, still-face
 
 
@@ -196,7 +210,10 @@ class FastCaregiver:
                     if self.rng.random() > p:
                         self.row({"action": "missed", "on": tok, "why": "distracted", "e": round(self.e, 3)}); return
                     self.expand_next = low
-                self.smile(tok, "known word")
+                if WORD_SMILES:
+                    self.smile(tok, "known word")
+                else:
+                    self.row({"action": "heard", "on": tok, "why": "known word, no smile: the smile waits for the line's end"})
         elif PARENT and low and len(low) >= 3 and low not in KNOWN2 and not any(w.startswith(low) for w in KNOWN2):
             self.e = max(0.0, self.e - 0.04)                      # babble wears the parent's attention
 
@@ -254,7 +271,7 @@ class FastCaregiver:
         L = self.L
         n0 = L.nights                                         # the night comes inside a tick: the day ends when it has
         self.row({"action": "day_start", "sleep_pressure": L.sleep_pressure, "nights": L.nights})
-        order = self.rng.sample(LINES, len(LINES)); plan = []; ci = 0
+        order = ([pick_line(self.rng) for _ in LINES] if FLB_LETTER else self.rng.sample(LINES, len(LINES))); plan = []; ci = 0
         for i, line in enumerate(order):
             plan.append(("line", line))
             if i % 2 == 1 and ci < len(CUES):
@@ -266,7 +283,7 @@ class FastCaregiver:
             if pi < len(plan):
                 kind, text = plan[pi]; pi += 1
             else:
-                kind, text = "line", self.rng.choice(LINES)          # an engaged parent keeps talking till the night
+                kind, text = "line", pick_line(self.rng)             # an engaged parent keeps talking till the night
             while self.pending:
                 self.event(self.pending.pop(0), "line")
             if PARENT and self.expand_next and kind == "line":

@@ -90,6 +90,7 @@ PHYSIOLOGY = dict(
     # logits of its best) and the striatum chooses among them (its bias added only there; the rest are never said), as the basal
     # ganglia select among cortical candidates rather than inventing actions.
     actor_form="add", actor_margin=4.0,
+    own_target_decay=0.0,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -934,6 +935,15 @@ class Life:
                 last = t
         tgt_pos = [max(0, i) for i in nxt]
         w = torch.tensor([1.0 if i >= 0 else 0.0 for i in nxt], device=self.dev)
+        odc = float(self.cfg.get("own_target_decay", 0.0))
+        if odc > 0.0:
+            # THE OWN-BABBLE TARGET FADES WITH DISTANCE (own_target_decay; 2026-09-06): at its own positions the target is the
+            # world's next symbol, so a long babble targets the first letter of the parent's next line at every position and the
+            # forecast locks on it (the second body's mouth, 'w' for an hour on a day of w-lines). A prediction is owed only
+            # where one is possible: an own position's weight decays by the distance to the next world symbol.
+            for t_ in range(T):
+                if nxt[t_] >= 0 and int(whos[t_]) != 0:
+                    w[t_] = w[t_] * (odc ** max(0, nxt[t_] - t_ - 1))
         y = xs[torch.tensor(tgt_pos, device=self.dev)].clone()
         for t in range(T):
             if win[t].get("end"):                                  # THE OFFSET: after this symbol the world went quiet
