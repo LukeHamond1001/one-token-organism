@@ -69,6 +69,38 @@ WORD_SMILES = int(os.environ.get("WORD_SMILES", "1"))
 _flb = os.environ.get("FIRST_LETTER_BIAS", "")
 FLB_LETTER, FLB_P = ((_flb.split(":")[0], float(_flb.split(":")[1])) if ":" in _flb else ("", 0.0))
 
+# THE ROOM (ROOM=1; 2026-09-06, BODY_SPEC §9): a world with state. Objects stand at places; the parent narrates the state
+# ("ball on hill") and moves things; "where X? " is answered by X's place now; "want X? " is answered by "give", after which
+# the parent moves X to its hand and narrates it, the smile coming with that reply: the end of a sequence the child began.
+ROOM = int(os.environ.get("ROOM", "0"))
+ROOM_OBJECTS = ["ball", "milk", "dog", "egg"]
+ROOM_PLACES = {"hill": "on hill", "nest": "in nest", "hand": "in hand", "boat": "in boat", "up": "up", "down": "down"}
+if ROOM:
+    try:
+        KNOWN2.update({"hill", "nest", "hand", "boat", "up", "down", "give", "want", "where", "egg", "ball", "milk", "dog"})
+    except AttributeError:
+        pass
+
+class Room:
+    def __init__(self, rng):
+        self.rng = rng; self.place = {o: rng.choice(list(ROOM_PLACES)) for o in ROOM_OBJECTS}; self.wanted = None; self.sequences = 0
+    def narrate(self, o):
+        return f"{o} {ROOM_PLACES[self.place[o]]}"
+    def move(self, o=None, to=None):
+        o = o or self.rng.choice(ROOM_OBJECTS); self.place[o] = to or self.rng.choice([p for p in ROOM_PLACES if p != self.place[o]]); return self.narrate(o)
+    def line(self):
+        return self.move() if self.rng.random() < 0.5 else self.narrate(self.rng.choice(ROOM_OBJECTS))
+    def cue(self, i):
+        o = self.rng.choice(ROOM_OBJECTS)
+        return f"where {o}? " if i % 2 == 0 else f"want {o}? "
+    def answer(self, text):
+        """the cue's answers now: X's place for where, 'give' for want (and the want is remembered)"""
+        if text.startswith("where "):
+            return [self.place[text[6:].rstrip("? ")]]
+        if text.startswith("want "):
+            self.wanted = text[5:].rstrip("? "); return ["give"]
+        return []
+
 def pick_line(rng):
     """a line to say: biased toward one first letter when FIRST_LETTER_BIAS is set"""
     if FLB_LETTER and rng.random() < FLB_P:
@@ -91,6 +123,7 @@ class FastCaregiver:
         self.last_write_tick = -1
         self.face_plan = []                                   # (tick, level): the growing smile's next rise
         self.e = E0; self.said_today = {}; self.away_until = -1; self.aways = 0; self.expand_next = None
+        self.room = Room(self.rng) if ROOM else None
         self.reply_cue = None; self.reply_tokens = []; self.answered = False; self.past = False   # the reply to a cue
         self.typing_span = (-1, -1)                                                            # the parent's own turn, in ticks
         self.reply_pending = None; self.reply_line = None; self.own_since = 0                    # the reply withheld (WAIT)
@@ -142,7 +175,13 @@ class FastCaregiver:
 
     def hold_reply(self, tok, why, cue, answer, b):
         lines = [l for l in LINES if l.startswith(cue) and (l[len(cue):].split() or [""])[0] == answer]
-        self.reply_pending = {"tok": tok, "why": why, "end": b, "line": self.rng.choice(lines) if lines else (cue + answer).strip()}
+        line = self.rng.choice(lines) if lines else (cue + answer).strip()
+        if self.room and cue.startswith("want ") and answer == "give" and self.room.wanted:
+            line = self.room.move(self.room.wanted, "hand"); self.room.sequences += 1   # the sequence ends: the thing is given, and said
+            self.row({"action": "sequence", "on": self.room.wanted, "line": line}); self.room.wanted = None
+        elif self.room and cue.startswith("where "):
+            line = (cue + answer).strip()
+        self.reply_pending = {"tok": tok, "why": why, "end": b, "line": line}
         self.own_since = 0
 
     def set_face(self, v, ticks):
@@ -230,7 +269,7 @@ class FastCaregiver:
         if not self.wait_gate():
             return False
         if kind == "cue":
-            self.cue = {"text": text, "until": self.L.ticks + 96, "full": ANSWERS.get(text, []), "done": False}
+            self.cue = {"text": text, "until": self.L.ticks + 96, "full": (self.room.answer(text) if self.room else ANSWERS.get(text, [])), "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.L.type_text(text)
         t_start = self.L.ticks; its = []
@@ -273,9 +312,9 @@ class FastCaregiver:
         self.row({"action": "day_start", "sleep_pressure": L.sleep_pressure, "nights": L.nights})
         order = ([pick_line(self.rng) for _ in LINES] if FLB_LETTER else self.rng.sample(LINES, len(LINES))); plan = []; ci = 0
         for i, line in enumerate(order):
-            plan.append(("line", line))
+            plan.append(("line", self.room.line() if self.room else line))
             if i % 2 == 1 and ci < len(CUES):
-                plan.append(("cue", CUES[ci])); ci += 1
+                plan.append(("cue", self.room.cue(ci) if self.room else CUES[ci])); ci += 1
         last_t = None; slept = False; pi = 0
         # (before 2026-09-04 23:50 the loop did not notice the night and the engaged parent talked through it: every
         # logged day held two nights, the plan and the post-night cues once per two nights; ages by nights were right)
@@ -283,7 +322,7 @@ class FastCaregiver:
             if pi < len(plan):
                 kind, text = plan[pi]; pi += 1
             else:
-                kind, text = "line", pick_line(self.rng)             # an engaged parent keeps talking till the night
+                kind, text = "line", (self.room.line() if self.room else pick_line(self.rng))   # an engaged parent keeps talking till the night
             while self.pending:
                 self.event(self.pending.pop(0), "line")
             if PARENT and self.expand_next and kind == "line":
@@ -314,7 +353,7 @@ class FastCaregiver:
         # the post-night cues, a line between each pair
         lines2 = self.rng.sample(LINES, len(LINES)); j = 0; last_t = None
         for i, c in enumerate(CUES):
-            for text, kind in ([(c, "cue")] + ([(lines2[j % len(lines2)], "line")] if i % 2 == 1 else [])):
+            for text, kind in ([((self.room.cue(i) if self.room else c), "cue")] + ([((self.room.line() if self.room else lines2[j % len(lines2)]), "line")] if i % 2 == 1 else [])):
                 if last_t is not None:
                     last_t = self.pace_wait(last_t, self.period) or L.ticks
                 last_t = L.ticks; self.event(text, kind)
