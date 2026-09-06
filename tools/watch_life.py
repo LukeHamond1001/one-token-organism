@@ -66,8 +66,20 @@ for _ in range(a.days):
     agree = sum(1 for p in plans if p["cands"] and p["vals"].index(max(p["vals"])) == p["cortex"].index(max(p["cortex"]))) 
     aways = sum(1 for r in rows if r.get("action") == "away"); frowns = sum(1 for r in rows if r.get("action") == "frown"); seqs = sum(1 for r in rows if r.get("action") == "sequence")
     st_typ, n_typ = spoke(typ); st_q, _ = spoke(quiet)
+    # THE PREFRONTAL BANDS: the long critic's value against the return it later realized (1024 ticks, discounted), its measured
+    # reliability, and its effective weight in the gate's credit (the ceiling times the reliability): doing, and whether guiding
+    gl = 1.0 - 1.0 / 1024.0; rr = [float(x.get("felt") or 0) for x in ticks]; vl = [x.get("vlong") for x in ticks]
+    G = [0.0] * len(rr); acc = 0.0
+    for i in range(len(rr) - 1, -1, -1): acc = rr[i] + gl * acc; G[i] = acc
+    pairs = [(v, g) for v, g in zip(vl[: max(0, len(vl) - 1024)], G[: max(0, len(G) - 1024)]) if v is not None]
+    if len(pairs) > 100:
+        mv_, mg_ = st.mean(p[0] for p in pairs), st.mean(p[1] for p in pairs); sv_, sg_ = st.pstdev(p[0] for p in pairs), st.pstdev(p[1] for p in pairs)
+        corr_long = (sum((p[0] - mv_) * (p[1] - mg_) for p in pairs) / len(pairs)) / (sv_ * sg_) if sv_ > 1e-9 and sg_ > 1e-9 else float("nan")
+    else: corr_long = float("nan")
+    vrel = float(getattr(L, "_vrel_corr", 0.0)); vw_eff = float(L.cfg.get("vcrit_w", 0.0)) * (max(0.0, vrel) if int(L.cfg.get("vcrit_auto", 0)) else 1.0)
     digest = (f"day {day:3d} ({time.time()-t0:.0f}s, {len(ticks)} ticks): smiles {len(sm)} (completions {comp}, sequences {seqs}) aways {aways} frowns {frowns} | "
               f"ear: spoke {st_typ:.2f} while the parent typed (n {n_typ}) vs {st_q:.2f} quiet | fast value mean {mv:+.2f}, rise before a smile {rise:+.0f}% of a smile, "
-              f"error at the reward {st.mean(err) if err else float('nan'):+.2f} | wm latches {latches} | planner: {len(plans)} choices, agreed with the cortex {agree} | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
+              f"error at the reward {st.mean(err) if err else float('nan'):+.2f} | wm latches {latches} | planner: {len(plans)} choices, agreed with the cortex {agree} | "
+              f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability {vrel:+.2f}, weight in the credit {vw_eff:.3f} | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
     print(digest, flush=True)
     with open(f"{out}/digest.txt", "a") as f: f.write(digest + "\n")
