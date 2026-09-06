@@ -15,16 +15,19 @@ out = sys.argv[4] if len(sys.argv) > 4 else f"data/stalks/nt_day_{name}_{seed}.p
 os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
 tok = Tokenizer.from_file("data/tok_char.json")
 tmp = f"{os.path.dirname(out) or '.'}/tmp_rec_{name}_{seed}_{os.getpid()}.pt"; shutil.copy(src, tmp)
-L = Life.load(tmp, tok, save_path=None); os.remove(tmp)
+sets = {kv.split("=")[0]: float(kv.split("=")[1]) for kv in sys.argv[5:] if "=" in kv}      # physiology overrides for the recorded day, e.g. live_lr=0
+L = Life.load(tmp, tok, save_path=None, cfg=sets if sets else None); os.remove(tmp)
+if sets: print("overrides:", sets)
 L.cfg["wake_ticks"] = L.sleep_pressure + N
 fb = int(L.cfg["dopamine_band"])
-B = []; R = []; VF = []; DF = []; SAID = []; T = []; rows = []; cg_ref = []
+B = []; C_ = []; R = []; VF = []; DF = []; SAID = []; T = []; rows = []; cg_ref = []
 orig_tick = L.tick
 def tick():
     orig_tick()
     la = L.last
     with torch.no_grad():
         B.append(L.bands.detach().to(torch.float16).cpu().clone()); VF.append(float(L.m.values(L.bands)[fb]))
+        c = getattr(L, "_C_last", None); C_.append((c.detach().reshape(-1)[-L.m.d:] if c is not None else torch.zeros(L.m.d)).to(torch.float16).cpu().clone())   # the cortex now
     R.append(float(la.get("felt", 0) or 0)); DF.append(float(la.get("dopamine") or 0)); SAID.append(la.get("said", "")); T.append(L.ticks)
 L.tick = tick
 cg = FastCaregiver(L, L.day_n + 1, [], random.Random(seed)); cg_ref.append(cg)
@@ -33,6 +36,6 @@ def row(obj):
     obj = dict(obj); obj["t"] = L.ticks; rows.append(obj); return orig_row(obj)
 cg.row = row
 cg.run_day()
-torch.save({"bands": torch.stack(B), "r": torch.tensor(R), "vf": torch.tensor(VF), "dopa": torch.tensor(DF), "said": SAID, "t": torch.tensor(T),
+torch.save({"bands": torch.stack(B), "C": torch.stack(C_), "r": torch.tensor(R), "vf": torch.tensor(VF), "dopa": torch.tensor(DF), "said": SAID, "t": torch.tensor(T),
             "rows": rows, "smiles": cg.smiles, "aways": cg.aways, "frowns": cg.frowns, "src": src, "seed": seed, "clocks": [int(c) for c in L.m.clocks]}, out)
 print(f"recorded {len(T)} ticks of {name} (seed {seed}): smiles {cg.smiles} aways {cg.aways} frowns {cg.frowns} -> {out}")

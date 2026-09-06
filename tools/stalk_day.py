@@ -23,6 +23,7 @@ fb = int(L.cfg["dopamine_band"])
 ticks = []; rows = []; cg_ref = []
 orig_tick = L.tick
 def tick():
+    typing = len(L.queue) > 0                        # the parent's symbol enters this tick (the queue feeds one symbol a tick)
     orig_tick()
     la = L.last
     with torch.no_grad():
@@ -30,7 +31,7 @@ def tick():
     ticks.append({"t": L.ticks, "said": la.get("said", ""), "felt": la.get("felt", 0), "gate": la.get("gate"), "dopa": la.get("dopamine"),
                   "vlong": la.get("vlong"), "dlong": la.get("dlong"), "level": la.get("level"), "e": cg_ref[0].e if cg_ref else None,
                   "away": (cg_ref[0].away_until > L.ticks) if cg_ref else False, "clock": float(L.m.vc_clock), "fatigue": la.get("fatigue"),
-                  "vf": vf})
+                  "vf": vf, "typing": typing})
 L.tick = tick
 cg = FastCaregiver(L, L.day_n + 1, [], random.Random(seed)); cg_ref.append(cg)
 orig_row = cg.row

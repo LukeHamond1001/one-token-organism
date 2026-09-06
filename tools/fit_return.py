@@ -5,7 +5,7 @@ sample and the rise of the fitted value in the ticks before a smile, as a fracti
 """
 import sys, argparse, statistics as st, torch
 ap = argparse.ArgumentParser(); ap.add_argument("a"); ap.add_argument("b"); ap.add_argument("--h", type=int, default=16)
-ap.add_argument("--sets", default="2;0;1;0,1;0,1,2;0,1,2,3;all"); ap.add_argument("--lams", default="1,10,100,1000")
+ap.add_argument("--sets", default="2;0;1;0,1;0,1,2;0,1,2,3;all"); ap.add_argument("--lams", default="1,10,100,1000"); ap.add_argument("--src", default="bands", help="bands | C (the cortex's stream vector) | C+bands")
 a = ap.parse_args()
 def load(f):
     d = torch.load(f, map_location="cpu", weights_only=False); X = d["bands"].float(); r = d["r"]; nb = X.shape[1]
@@ -18,14 +18,17 @@ print(f"fit on {a.a.split('/')[-1]} ({len(GA)} ticks, {len(smA)} rewards) -> rea
 def corr(u, v):
     u = u - u.mean(); v = v - v.mean(); den = (u.norm() * v.norm()).item()
     return float((u @ v) / den) if den > 1e-9 else float("nan")
-def feats(X, bands):
-    return X.reshape(X.shape[0], -1) if bands == "all" else X[:, bands, :].reshape(X.shape[0], -1)
+def feats(X, bands, d=None):
+    F = X.reshape(X.shape[0], -1) if bands == "all" else X[:, bands, :].reshape(X.shape[0], -1)
+    if a.src == "C": return d["C"].float()
+    if a.src == "C+bands": return torch.cat([d["C"].float(), F], 1)
+    return F
 def rise(V, sm, span=8):
     pre = [float(V[i - 1]) for i in sm if i - 1 >= 0]; far = [float(V[i - span]) for i in sm if i - span >= 0]
     return (st.mean(pre) - st.mean(far)) if pre and far else float("nan")
-for s in a.sets.split(";"):
-    bands = "all" if s == "all" else [int(x) for x in s.split(",")]
-    FA = feats(XA, bands); FB = feats(XB, bands); mu = FA.mean(0); sd = FA.std(0) + 1e-6
+for s in (["C"] if a.src == "C" else a.sets.split(";")):
+    bands = "all" if s in ("all", "C") else [int(x) for x in s.split(",")]
+    FA = feats(XA, bands, dA); FB = feats(XB, bands, dB); mu = FA.mean(0); sd = FA.std(0) + 1e-6
     ZA = (FA - mu) / sd; ZB = (FB - mu) / sd; ZA1 = torch.cat([ZA, torch.ones(len(ZA), 1)], 1); ZB1 = torch.cat([ZB, torch.ones(len(ZB), 1)], 1)
     best = None
     for lam in [float(x) for x in a.lams.split(",")]:
