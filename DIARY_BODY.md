@@ -4900,6 +4900,6 @@ With a tick of quiet as an event of the line, the value before a smile rose a li
 
 The diary takes the striatal fast critic tonight, at the boundary after its sixty-eighth day, in arm U's form, with the ventral critic still out of the credit; and its typist takes the frown, on the user's word and after the fast seeds measured it. The reading tomorrow: smiles, turnings-away and frowns of the sixty-ninth day against the days before it, and the rise before the smile on a stalked copy.
 
-## The frown without the reply (2026-09-06, 10:43)
+## The frown without the reply (2026-09-06, 10:41)
 
 The diary took the frown on its sixty-ninth day, with the striatal critic and its old parent who smiles at every known word at once. It lost half its smiles, drew sixty-eight frowns and ten turnings-away, and its parent's attention fell through the day to a third. Fresh seeds under the same parent say the same on every paired day: with the frown, thirty to forty fewer smiles a day and three or four more turnings-away, whichever critic they carry, through their sixth day. Under the parent who withholds the reply until the child is quiet, the same frown had been worth thirteen smiles a day and made the gate's ear. Punishment alone teaches nothing here; a smile that waits for the child's quiet teaches yielding, and the frown sharpens what the waiting smile has begun. The frown comes off the diary's typist at tonight's boundary; the striatal critic stays.
