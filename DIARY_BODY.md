@@ -4743,3 +4743,71 @@ instruments distorted the life they measured. From the next chain (day 58 on, an
 after day 28) the probes run in the background on the boundary copy while the teacher begins at
 once (scratchpad/teach_days3b.sh, teach_days_b3.sh); the copy is the same copy, so the probes
 measure the same body. The second body's short day 23 had the same cause.
+
+**Housekeeping, 19:45.** Twelve monitors from before this session's compaction were still running, tailing
+the logs of runs 69 to 132 and of boundaries long past, with their Python drivers and a day-old planner
+watcher; all ended, with two stale waiters. In the sweep the second body's own monitor went too and was
+restarted. What runs now: the six arm seeds and their instrument loops, the two servers, the diary's
+day-56 typist, the chains (55–57, 58–62, 63–66; the second body's 24–28), the planners' foreground
+waits, and five monitors.
+
+**The REM ablation, queued, 19:56.** REM's benefit to behavior has never been isolated in its detached form
+(its early form, through the trunk, undid a third of NREM's gain and was detached for it; since then its
+own measure, the forecast cosine, rises across a life and the gauge is untouched). Runs 155 and 156
+(REM off: rem_rounds 0) against 157 and 158 (REM on), otherwise the ear recipe with the critic out of the
+credit, twenty days each with the instruments at 6, 16 and 20, start when the six arms finish tonight
+(scratchpad/after_arms.sh), to be read on the mouth probe, the run-on, the cue answers and the talking
+over the parent.
+
+**Day 56 and the day-57 probe, 20:02.** Day 56 ended with 79 smiles, no frown, five turnings-away (all in
+its first seven minutes) and attention 0.61 at the end; 66 known words. The day-57 boundary probe reads
+33 of 48 cue answers started and 23 full, the third day down (43/36, 35/29, 34/26, 33/23). The lonely
+morning is not only tiring: a body that speaks for half an hour to a page no one writes on trains its
+cortex on its own babble, and what it babbles now is the one letter its recent lines begin with. Day 57
+is the last day with that gap (the running chain keeps the old order); from day 58 the teacher begins at
+the boundary and the probes run beside it. If the probe keeps falling without the gap, the store's
+recency and the stutter are the next suspects, and the old cue lines must return to the curriculum.
+
+**The critic on the diary tonight, out of the credit, 20:24.** The arms' live reliabilities through day 8
+or 9 hover about zero like arm D's (A −0.04 to +0.28, B −0.37 to +0.47, C −0.19 to +0.16); their
+fresh-day instruments are computing. Two facts argue that the diary is a different case from the
+seeds: its slow bands do not drift across nights (0.98 to 1.00 at the same tick over seven nights,
+where a young body's read 0.41 to 0.55 over five), and its value needed three days of pages to read
+(+0.75 by ridge, +0.87 by the recursive head) where one day read nothing. So the diary takes the
+decorrelated critic at the 57-to-58 boundary with its weight in the credit at zero: the homeostatic
+input at 36000, the prior three days of evidence, forgetting at 36000 (four days, since nothing
+drifts), the bands zeroed at night as it has always lived. The head learns and is read; it moves
+nothing. Its reliability across days 58 to 66, and a fresh-day instrument on the morning's copy, are
+a live reading on the body that matters, beside the seeds'. The reply typist stays off.
+
+**The 57-to-58 boundary, 20:57.** Day 57 ended with 145 smiles, no frown, no turning-away, attention 0.72,
+67 known words (the body said "bird" unprompted, the day's word). At 20:57 the body was saved (a copy
+at data/body2_before_rls_day57.pt), the serve restarted with the decorrelated critic learning at zero
+weight (the homeostatic input at 36000, the prior three days, forgetting at four days, the bands zeroed
+at night as before), and day 58's teacher began at once: sleep pressure 3045 at the session's start
+against 5988 to 6640 on the mornings with the gap. The boundary probes now run beside the day on the
+boundary copy. The critic's reliability appears in the night rows from here on.
+
+**The arms at day 6 on fresh days, 21:10.** The frozen heads on four fixed-pace instrument days: arm A
+(the head's window inside the day) −0.01 and −0.02; arm B (the statistics re-formed at wake) −0.22
+and −0.20, each within 0.05 across its four days; arm C (the bands zeroed at night) −0.30 and +0.03.
+None reads, and arm B's is not noise: a head that reads four unlived days at the same −0.2 has learned
+something real about its lived world that holds with the opposite sign in the instrument's. The
+instruments (the four-day value instrument and the pages) pace the parent every 240 ticks; the lived
+day paces the parent by its attention (240 × (1.6 − e), from 144 ticks when it is rapt to 312 when it
+wanders), answers the body's word with a line that holds it, and talks on until the night. In the
+lived world a state that holds the parent's attention is followed by faster lines and more reward;
+in the instrument's world the lines come at the clock. Two real lived days of run 149's day-6 body
+are being recorded beside two fixed-pace pages; heads fit in each world are read in the other. If a
+head fit on a lived day reads another lived day and not the pages, the critic has been reading its
+own world and the yardstick changed worlds, as the pages did this morning.
+
+## The drifting coordinates (2026-09-05, 21:45)
+
+I recorded a real fast day with the body's own critic saved beside it, and read the head against the day's actual returns: −0.59. Then I fit the same head, from the same evidence, on the same day, in fixed coordinates: +0.71. Same inputs, same rewards, same rule; the only difference was that the body's homeostatic statistics were moving while the head accumulated. Over that day the running mean moved by two standard deviations and the scale by a factor of 2.4. The head solves A w = b, and A and b are sums over a window of days; when every term of the sum is written in different coordinates, the sum is the evidence for no head at all. Replicating the moving statistics offline reproduces the failure (+0.40 with cosine 0.44 to the batch head) — so this is the whole of it, not a symptom of something else.
+
+The fix is not to freeze the statistics. A body that meets a new input must learn its scale, and a robot's inputs will not arrive standardized. The fix is to move the statistics out of the evidence: A and b accumulate on the raw inputs, which never move, and the running statistics shape only the prior at the solve — the ridge becomes the metric δ·diag(sd²) on the weights, with the level free, which means "small in units of the input's own scale" without touching the data. Offline that reads +0.74, the same as fixed coordinates. Committed as fa86969, the evidence versioned (vc_form 2) so a body loading old standardized evidence starts fresh from the prior instead of mixing forms.
+
+The fifth defect, and the pattern is now plain: the gradient head read the anti-correlation (XᵀG), the weak prior let the noise in, the fast statistics destroyed the standardization, the night zeroed the state, and the moving coordinates corrupted the sum. Each was a place where the estimator's own machinery, not the world, wrote into the evidence. Biology's critic has no such machinery to drift: dopamine reports the error against a synapse whose input is the raw firing rate.
+
+Tonight: arms E (159/160, forgetting 12000) and F (161/162, forgetting 36000) run with the new form, the slow state kept across sleep, out of the credit, with the fresh-day instrument at days 6 and 16; the REM ablation (155/156 REM off, 157/158 on) began at 21:40 when arms A–C ended (none of the three read at day 6, so their question was moot once the coordinates were the cause). The diary takes the new form at the 58→59 boundary, still out of the credit, its reliability logged. Tomorrow reads: if the head reads fresh days at +0.5 or better by day 6 and holds at 16, the fourth clause has its estimator and the diary takes it into the credit at a boundary; if not, the remaining suspect is the horizon, not the estimator.
