@@ -66,6 +66,8 @@ for _ in range(a.days):
     agree = sum(1 for p in plans if p["cands"] and p["vals"].index(max(p["vals"])) == p["cortex"].index(max(p["cortex"]))) 
     aways = sum(1 for r in rows if r.get("action") == "away"); frowns = sum(1 for r in rows if r.get("action") == "frown"); seqs = sum(1 for r in rows if r.get("action") == "sequence")
     st_typ, n_typ = spoke(typ); st_q, _ = spoke(quiet)
+    held = [r for r in rows if r.get("action") == "smile" and r.get("run_on") is not None]
+    run_on = st.mean(r["run_on"] for r in held) if held else float("nan"); waited = st.mean(r.get("waited") or 0 for r in held) if held else float("nan")
     # THE PREFRONTAL BANDS: the long critic's value against the return it later realized (1024 ticks, discounted), its measured
     # reliability, and its effective weight in the gate's credit (the ceiling times the reliability): doing, and whether guiding
     gl = 1.0 - 1.0 / 1024.0; rr = [float(x.get("felt") or 0) for x in ticks]; vl = [x.get("vlong") for x in ticks]
@@ -80,6 +82,6 @@ for _ in range(a.days):
     digest = (f"day {day:3d} ({time.time()-t0:.0f}s, {len(ticks)} ticks): smiles {len(sm)} (completions {comp}, sequences {seqs}) aways {aways} frowns {frowns} | "
               f"ear: spoke {st_typ:.2f} while the parent typed (n {n_typ}) vs {st_q:.2f} quiet | fast value mean {mv:+.2f}, rise before a smile {rise:+.0f}% of a smile, "
               f"error at the reward {st.mean(err) if err else float('nan'):+.2f} | wm latches {latches} | planner: {len(plans)} choices, agreed with the cortex {agree} | "
-              f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability {vrel:+.2f}, weight in the credit {vw_eff:.3f} | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
+              f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability {vrel:+.2f}, weight in the credit {vw_eff:.3f} | run-on after the answer {run_on:.1f} symbols, the smile waited {waited:.1f} ticks (n {len(held)}) | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
     print(digest, flush=True)
     with open(f"{out}/digest.txt", "a") as f: f.write(digest + "\n")
