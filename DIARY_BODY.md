@@ -4880,7 +4880,7 @@ The reading that the fast critic expects nothing was taken through a hole. The d
 
 Fixed in the loader; the sixteen organ tests pass. The stalks now write the fast value down tick by tick, and the expectation of a smile will be read as a rise of value in the ticks before the reward, not as the error on the reward's tick. A band that barely moves in one tick cannot cancel an impulse of two, and no critic was ever supposed to; the shift biology describes is the rise before, and the fall of the response at the reward is only its consequence at the horizon of the band.
 
-## The tenth defect: the critic's input is blind (2026-09-06, 08:25)
+## The tenth defect: the critic's input is blind (2026-09-06, 06:49)
 
 The fast critic was given the dopamine band's own state to read, and the ventral critic the ladder's. On two recorded days of one body, with the cortex's daytime lesson on or off, no set of bands predicts the sixteen-tick return on the day it did not see: the best reads 0.13, the rise of its value before a smile a tenth of the smile. The cortex's own stream vector reads 0.11. The body's last eight symbols, one-hot, through a ridge, read 0.34 and rise a fifth of a smile; through a small nonlinear head, 0.47 and half a smile; through a born random sparse expansion of four thousand thresholded units and a ridge, 0.42 to 0.47 and half a smile. The smile is in the stream. The ladder blurs it away by construction (each band's gate sits at 0.88, so band 0 is a born tanh map of the cortex's vector, and the cortex's vector is a next-symbol forecast, not a record of the word being said), and a linear reader of any cortical state cannot recover which word is ending.
 
