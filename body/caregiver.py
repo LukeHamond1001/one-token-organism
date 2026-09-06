@@ -8,6 +8,7 @@ at the pace, gated by its quiet). Logs one JSON row per action.
 import argparse
 import json
 import os
+TALKOVER_FROWN = int(os.environ.get("TALKOVER_FROWN", "0"))   # the served typist's face when talked over: off until a day boundary after the fast seeds read (the user's word given 2026-09-06)
 import random
 import sys
 import time
@@ -208,10 +209,14 @@ class Caregiver:
                 self.frown(tok, ctx); return
         if self.parent and time.time() < self.away_until:
             return                                                # the parent is turned away
-        if self.parent and self.reply:
+        if self.parent and (self.reply or TALKOVER_FROWN):
             ts, te = self.typing_span
             if a < te and b >= ts:                                # said over the parent's own turn
-                self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx}); return
+                self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx})
+                if TALKOVER_FROWN and time.time() - self.last_frown > 15.0:   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
+                    self.face(-1); time.sleep(0.6); self.face(0)             # a light, brief frown, at most every 15 seconds
+                    self.frowns += 1; self.last_frown = time.time(); self.row({"action": "frown", "on": tok, "why": "talked over", "context": ctx})
+                return
         c = self.cue
         if c and wall <= c["until"] and not c["done"] and len(tok) >= 2 and low:
             if low in c["full"]:
