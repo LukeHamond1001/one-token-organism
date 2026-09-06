@@ -94,7 +94,7 @@ PHYSIOLOGY = dict(
     # plan_h own symbols through the world model (greedy), the striatal critic values the imagined line, and the choice follows
     # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
     # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
-    plan_h=4, plan_beta=4.0,
+    plan_h=2, plan_beta=4.0, plan_k=4,
     own_target_decay=0.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
@@ -804,9 +804,11 @@ class Life:
                         logits = torch.where(short, logits + a_bias, torch.full_like(logits, float("-inf")))
                     elif form_ == "plan":
                         boundary = (not getattr(self, "_acted_last", False)) or getattr(self, "_own_last", None) in (None, self.space_id)
-                        if boundary:
+                        if boundary and acted:                                 # imagination only when it is about to speak
                             short = logits >= (logits.max() - float(self.cfg.get("actor_margin", 4.0)))
                             cands = [int(i) for i in torch.nonzero(short).flatten().tolist() if int(i) not in (self.sil, self.eot)]
+                            if len(cands) > int(self.cfg.get("plan_k", 4)):        # the cortex's top few, as many as a choice can weigh
+                                cands = sorted(cands, key=lambda c: -float(logits[c]))[: int(self.cfg.get("plan_k", 4))]
                             if len(cands) > 1:
                                 vals = {c: self._imagine_value(c, int(self.cfg.get("plan_h", 4))) for c in cands}
                                 self._plan_last = {"cands": cands, "vals": vals, "cortex": {c: float(logits[c]) for c in cands}}
