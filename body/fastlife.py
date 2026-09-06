@@ -327,12 +327,24 @@ def main():
     ap.add_argument("--days", type=int, default=5); ap.add_argument("--birth", action="store_true")
     ap.add_argument("--seed", type=int, default=0); ap.add_argument("--log", default=None)
     ap.add_argument("--d", type=int, default=256); ap.add_argument("--layers", type=int, default=6)
+    ap.add_argument("--cfg-from", default=None, help="a saved body whose physiology (cfg) this one is born with")
+    ap.add_argument("--set", action="append", default=[], help="physiology overrides key=value (repeatable)")
     a = ap.parse_args()
     tok = Tokenizer.from_file(a.tok)
+    cfg = {}
+    if a.cfg_from:
+        import torch
+        cfg = dict(torch.load(a.cfg_from, map_location="cpu", weights_only=False).get("cfg") or {})
+    for kv in a.set:
+        k_, v_ = kv.split("=", 1)
+        try: cfg[k_] = int(v_) if v_.lstrip("-").isdigit() else float(v_)
+        except ValueError: cfg[k_] = v_
+    if cfg:
+        print("physiology:", {k_: cfg[k_] for k_ in sorted(cfg) if k_ in [x.split("=")[0] for x in a.set] or a.cfg_from})
     if a.birth:
-        life = Life.birth(tok, device="cpu", d=a.d, layers=a.layers, heads=4, window=64, seed=a.seed, save_path=a.body); life.save()
+        life = Life.birth(tok, device="cpu", d=a.d, layers=a.layers, heads=4, window=64, cfg=cfg or None, seed=a.seed, save_path=a.body); life.save()
     else:
-        life = Life.load(a.body, tok, device="cpu", save_path=a.body)
+        life = Life.load(a.body, tok, device="cpu", cfg=cfg or None, save_path=a.body)
     rng = random.Random(a.seed)
     log = []
     for k in range(a.days):

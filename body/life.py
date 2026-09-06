@@ -74,6 +74,11 @@ PHYSIOLOGY = dict(
     # THE FAST CRITIC DECORRELATED (see model.py): the dopamine band's head from evidence (LSTD, trace at its gamma, forgetting
     # fast_rls_forget, the prior fast_rls_prior forgetting-horizons of unit evidence as the metric), solved every fast_rls_every ticks.
     fast_rls=0, fast_rls_forget=36000, fast_rls_prior=3.0, fast_rls_every=64,
+    # THE STRIATAL INPUT (2026-09-06; see model.striatum_init): fast_input "band" = the dopamine band's own state (the tenth
+    # defect: blind to the word ending), "striatum" = a delay line of the last stri_k events of the stream through a born
+    # expansion of stri_m units; the fast head (fast_rls) reads it. The felt face is an event of the line, so an expected
+    # smile is discounted the tick it lands.
+    fast_input="band", stri_k=8, stri_m=1024,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -244,7 +249,14 @@ class Life:
         self._vc_e = None
         if int(self.cfg.get("fast_rls", 0)):
             with torch.no_grad():
-                fb = int(self.cfg["dopamine_band"]); kf = int(organs.value[fb].weight.shape[1]) + 1
+                fb = int(self.cfg["dopamine_band"])
+                if str(self.cfg.get("fast_input", "band")) == "striatum":
+                    k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
+                    if organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_:
+                        organs.striatum_init(k_, m_, seed=seed)               # born (or re-born at a new size)
+                    kf = m_ + 1
+                else:
+                    kf = int(organs.value[fb].weight.shape[1]) + 1
                 dev_ = organs.vcrit.weight.device
                 if organs.vf_A.shape != (kf, kf):
                     organs.vf_A = torch.zeros(kf, kf, dtype=torch.float64, device=dev_); organs.vf_b = torch.zeros(kf, dtype=torch.float64, device=dev_)
@@ -453,6 +465,13 @@ class Life:
         return self.m.stream(u)[-1]
 
     # ---------------- the tick ----------------
+    def fast_value(self):
+        """the fast critic's value now (the striatal head on the delay line, or the dopamine band's head on its state)"""
+        with torch.no_grad():
+            if str(self.cfg.get("fast_input", "band")) == "striatum" and self.m.stri_W.numel() > 0:
+                return float(self.m.fast_value(self.m.striatum_read()))
+            return float(self.m.values(self.bands)[int(self.cfg["dopamine_band"])])
+
     def tick(self):
         m = self.m
         self._decay_feelings()
@@ -495,6 +514,13 @@ class Life:
             elif getattr(self, "_start_armed", False):
                 self._start_pending = True; self._start_armed = False
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
+        stri = str(self.cfg.get("fast_input", "band")) == "striatum" and int(self.cfg.get("fast_rls", 0))
+        if stri:
+            if felt:
+                m.striatum_push(2, 0 if felt > 0 else 1)          # the felt face is an event of the stream
+            if u != self.sil:
+                m.striatum_push(0, int(u))
+            self._z_now = m.striatum_read()
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
         with torch.no_grad():
@@ -568,11 +594,14 @@ class Life:
                         m.vc_b.mul_(beta).add_(self._vc_e * float(r))
                         if self.ticks % int(self.cfg.get("vcrit_rls_every", 64)) == 0:
                             m.vcrit_rls_solve(self._vc_idx, prior=(self._vc_delta if ntau else None))
-                if int(self.cfg.get("fast_rls", 0)):
-                    # THE FAST CRITIC DECORRELATED: the dopamine band's evidence on its own state, at its own horizon
+                if int(self.cfg.get("fast_rls", 0)) and (not stri or getattr(self, "_z_prev", None) is not None):
+                    # THE FAST CRITIC DECORRELATED: the dopamine band's evidence on its own state (or the striatal input), at its own horizon
                     with torch.no_grad():
                         fb = int(self.cfg["dopamine_band"]); gf = float(gam[fb]); one = torch.ones(1, dtype=torch.float64, device=self.dev)
-                        xf_p = self._bands_prev[fb].detach().double(); xf_n = self.bands[fb].detach().double()
+                        if stri:
+                            xf_p = self._z_prev.double(); xf_n = self._z_now.double()
+                        else:
+                            xf_p = self._bands_prev[fb].detach().double(); xf_n = self.bands[fb].detach().double()
                         m.fast_norm_update(xf_n, float(self.cfg.get("fast_rls_forget", 36000)))
                         xa_p = torch.cat([xf_p, one]); xa_n = torch.cat([xf_n, one])
                         ef = getattr(self, "_vf_e", None)
@@ -621,7 +650,12 @@ class Life:
                         m.vcrit.weight.mul_(1.0 - 1.0 / vf)       # the forgetting head
                 # DOPAMINE: the TD error of the band whose discount matches dopamine's (clock 16,
                 # gamma 0.9375): an expected reward fires before it lands, a missed one dips
-                delta = float(td[int(self.cfg["dopamine_band"])].detach())
+                if stri and getattr(self, "_z_prev", None) is not None:
+                    with torch.no_grad():                        # the dopamine from the striatal head
+                        fb_ = int(self.cfg["dopamine_band"])
+                        delta = float(r + float(gam[fb_]) * m.fast_value(self._z_now) - m.fast_value(self._z_prev))
+                else:
+                    delta = float(td[int(self.cfg["dopamine_band"])].detach())
                 delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
                 delta_long = float(td_long.detach()); vlong = float(vl_now)
                 if int(self.cfg.get("vcrit_auto", 0)):
@@ -731,6 +765,10 @@ class Life:
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
         self._bands_prev = self.bands.clone()
+        if stri:
+            if acted:
+                m.striatum_push(1, int(nxt))                      # its own symbol is an event of the stream
+            self._z_prev = m.striatum_read()
         self._acted_last = bool(acted)
         if float(self.cfg.get("gate_slow_lr", 0.0)) > 0.0:
             with torch.no_grad():
@@ -1049,6 +1087,9 @@ class Life:
                 self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
+            self._z_prev = None; self._z_now = None
+            if self.m.stri_W.numel() > 0:
+                self.m.striatum_reset()                            # the delay line empties for the night
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None
             self._after_night = True
             self._vf_e = None
@@ -1174,10 +1215,11 @@ class Life:
         if vw is not None and vw.shape[1] < organs.vcrit.weight.shape[1]:   # an older critic without the trace inputs: those weights born at zero
             blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
+        st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias") if k_ in blob["organs"]}   # the striatal input, sized by the life below
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
-        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_"))]:
-            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_"))], "(an older recipe; born fresh where missing)")
+        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast."))]:
+            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast."))], "(an older recipe; born fresh where missing)")
         c = dict(blob.get("cfg") or {})
         c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
         c.update(cfg or {})
@@ -1195,6 +1237,10 @@ class Life:
             # at the first solve; the running body was never affected, only its copies, stalks and restarts)
             for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n"):
                 getattr(life.m, k_).copy_(vf_saved[k_].to(device))
+        if st_saved and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None and st_saved["stri_W"].shape == life.m.stri_W.shape:
+            with torch.no_grad():                                  # the striatal input as born, its line, and its head
+                life.m.stri_W.copy_(st_saved["stri_W"].to(device)); life.m.stri_b.copy_(st_saved["stri_b"].to(device)); life.m.stri_line.copy_(st_saved["stri_line"].to(device))
+                life.m.vfast.weight.copy_(st_saved["vfast.weight"].to(device)); life.m.vfast.bias.copy_(st_saved["vfast.bias"].to(device))
         life.store.load_state_dict(blob["store"])
         L = blob.get("life") or {}
         for k in ("ticks", "nights", "day_n", "sleep_pressure", "fatigue", "stress", "mood", "n_bursts", "last_night"):

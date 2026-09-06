@@ -310,6 +310,14 @@ class Organs(nn.Module):
         self.register_buffer("vf_A", torch.zeros(0, 0, dtype=torch.float64)); self.register_buffer("vf_b", torch.zeros(0, dtype=torch.float64))
         self.register_buffer("vf_mu", torch.zeros(0, dtype=torch.float64)); self.register_buffer("vf_var", torch.zeros(0, dtype=torch.float64))
         self.register_buffer("vf_n", torch.zeros((), dtype=torch.float64))
+        # THE STRIATAL INPUT (fast_input "striatum"; 2026-09-06, the tenth defect): a short delay line of the stream's events
+        # (heard symbols, own symbols, felt faces) through a born random sparse expansion, read linearly by the fast critic.
+        # Neither the ladder's bands nor the cortex's vector linearly carry which word is ending (0.13 on an unseen day); a
+        # fixed thresholded expansion of the last eight events does (0.47, the value rising half a smile before the smile),
+        # as the striatum's and the cerebellum's afferent layers do. Sized by the life (stri_k events, stri_m units); 0 = absent.
+        self.register_buffer("stri_W", torch.zeros(0, 0)); self.register_buffer("stri_b", torch.zeros(0))
+        self.register_buffer("stri_line", torch.full((0,), -1, dtype=torch.long))
+        self.vfast = nn.Linear(1, 1)
         # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the
         # eligibility trace carried through a precision matrix (the Kalman form of TD; the online LSTD of Xu et al. 2002).
         # A gradient head fit for one pass to correlated inputs reads their dominant common component, which on the slow
@@ -452,7 +460,46 @@ class Organs(nn.Module):
                 A = A + torch.diag(R)
             try: w = torch.linalg.solve(A, self.vf_b)
             except Exception: w = torch.linalg.lstsq(A, self.vf_b.unsqueeze(1)).solution.squeeze(1)
-            self.value[b].weight[0].copy_(w[:-1].to(self.value[b].weight.dtype)); self.value[b].bias[0] = w[-1].to(self.value[b].bias.dtype)
+            if self.stri_W.numel() > 0:                                       # the striatal head
+                self.vfast.weight[0].copy_(w[:-1].to(self.vfast.weight.dtype)); self.vfast.bias[0] = w[-1].to(self.vfast.bias.dtype)
+            else:
+                self.value[b].weight[0].copy_(w[:-1].to(self.value[b].weight.dtype)); self.value[b].bias[0] = w[-1].to(self.value[b].bias.dtype)
+
+    def striatum_init(self, k, m, seed=0):
+        """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
+        thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot)"""
+        n_in = int(k) * (2 * self.vocab + 2)
+        g = torch.Generator().manual_seed(int(seed) + 7919); dev = self.E.weight.device
+        self.stri_W = (torch.randn(n_in, int(m), generator=g) / math.sqrt(float(k))).to(dev)
+        self.stri_b = (-torch.rand(int(m), generator=g) * 1.5).to(dev)          # random thresholds: about a third of the units fire
+        self.stri_line = torch.full((int(k),), -1, dtype=torch.long, device=dev)
+        self.vfast = nn.Linear(int(m), 1).to(dev)
+        with torch.no_grad():
+            self.vfast.weight.zero_(); self.vfast.bias.zero_()
+
+    def striatum_push(self, kind, idx):
+        """an event enters the delay line: kind 0 a heard symbol, 1 an own symbol, 2 a felt face (idx 0 warm, 1 cold)"""
+        with torch.no_grad():
+            self.stri_line = torch.roll(self.stri_line, 1)
+            self.stri_line[0] = int(kind) * self.vocab + int(idx) if int(kind) < 2 else 2 * self.vocab + int(idx)
+
+    def striatum_read(self):
+        """the expansion now: relu(the born rows of the line's events + thresholds), [m]"""
+        with torch.no_grad():
+            width = 2 * self.vocab + 2; z = self.stri_b.clone()
+            for p_ in range(self.stri_line.numel()):
+                e = int(self.stri_line[p_])
+                if e >= 0:
+                    z += self.stri_W[p_ * width + e]
+            return torch.relu(z)
+
+    def striatum_reset(self):
+        with torch.no_grad():
+            self.stri_line.fill_(-1)
+
+    def fast_value(self, z):
+        """the fast critic's value of a striatal input"""
+        return self.vfast(z).squeeze(-1)
 
     def fast_norm_update(self, x, tau):
         """running mean and variance of the fast head's inputs (Welford, the count from 1), for the prior's metric only"""

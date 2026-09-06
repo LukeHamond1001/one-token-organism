@@ -26,7 +26,7 @@ def tick():
     orig_tick()
     la = L.last
     with torch.no_grad():
-        B.append(L.bands.detach().to(torch.float16).cpu().clone()); VF.append(float(L.m.values(L.bands)[fb]))
+        B.append(L.bands.detach().to(torch.float16).cpu().clone()); VF.append(L.fast_value())
         c = getattr(L, "_C_last", None); C_.append((c.detach().reshape(-1)[-L.m.d:] if c is not None else torch.zeros(L.m.d)).to(torch.float16).cpu().clone())   # the cortex now
     R.append(float(la.get("felt", 0) or 0)); DF.append(float(la.get("dopamine") or 0)); SAID.append(la.get("said", "")); T.append(L.ticks)
 L.tick = tick

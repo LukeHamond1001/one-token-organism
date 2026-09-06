@@ -27,7 +27,7 @@ def tick():
     orig_tick()
     la = L.last
     with torch.no_grad():
-        vf = float(L.m.values(L.bands)[fb]) if getattr(L, "bands", None) is not None else None
+        vf = L.fast_value()
     ticks.append({"t": L.ticks, "said": la.get("said", ""), "felt": la.get("felt", 0), "gate": la.get("gate"), "dopa": la.get("dopamine"),
                   "vlong": la.get("vlong"), "dlong": la.get("dlong"), "level": la.get("level"), "e": cg_ref[0].e if cg_ref else None,
                   "away": (cg_ref[0].away_until > L.ticks) if cg_ref else False, "clock": float(L.m.vc_clock), "fatigue": la.get("fatigue"),
