@@ -10,7 +10,7 @@ T = [json.loads(l) for l in open(a.prefix + "_ticks.jsonl")]; R = [json.loads(l)
 byt = {x["t"]: x for x in T}; kinds = set(a.kinds.split(","))
 # the parent's typing per tick is known; what it typed is in the rows ("line"/"cue" text) -> mark the span
 ev = [r for r in R if r.get("action") in kinds]
-step = max(1, len(ev) // a.events); shown = ev[::step][:a.events]
+step = max(1, len(ev) // max(1, a.events)); shown = ev[::step][:a.events]
 def fmt(x):
     said = x.get("said") or ("·" if not x.get("typing") else "…")
     pl = x.get("plan"); pls = ""
