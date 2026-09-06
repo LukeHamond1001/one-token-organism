@@ -107,6 +107,10 @@ PHYSIOLOGY = dict(
     # for the slow bands (clocks to 16,384 ticks, longer than a day), and the day is one ramp from zero that every value head
     # reads as time since waking; statistics carried across days misread the morning (pages instrument, 2026-09-05).
     night_keep_bands=0,
+    # THE NIGHT TAKES TIME (night_ticks > 0; 2026-09-06): the night passes no ticks, so the critic's last evening state was followed
+    # one tick later by the next morning; the first lesson after a night discounts its bootstrap by gamma^night_ticks as well,
+    # the night counted as elapsed time. 0 = the night as a doorstep (the old behaviour).
+    night_ticks=0,
     # THE STATISTICS RE-FORMED AT WAKE (vcrit_norm_wake 1): at night the homeostatic statistics' count returns to its birth
     # value (tau/32), so the morning's mean and scale form again from the morning's own state at the birth rate, while the
     # mean and scale themselves are kept as the starting point. The night moves the slow bands coherently (the cortex learns
@@ -487,19 +491,21 @@ class Life:
                 # above it: with the discount near 1 the bootstrapped value ran away (the slowest band
                 # read 7000 against a true return near 85, correlation -0.995: run 21, day 20). The
                 # baseline is the reward rate estimated at the band's own clock, tonic dopamine.
-                td = torch.stack([(r + gam[b] * v_now[b].detach() - v_prev_live[b]) if not self._differential[b]
+                N_ = int(self.cfg.get("night_ticks", 0)); an_ = bool(N_) and bool(getattr(self, "_after_night", False)); self._after_night = False
+                nf = [(gam[b] ** N_) if an_ else 1.0 for b in range(len(gam))]      # THE NIGHT TAKES TIME
+                td = torch.stack([(r + gam[b] * nf[b] * v_now[b].detach() - v_prev_live[b]) if not self._differential[b]
                                   else (r - float(self.rbar) + v_now[b].detach() - v_prev_live[b]) for b in range(len(gam))])
                 self.rbar += (1.0 / float(self.cfg["diff_horizon"])) * (r - self.rbar)   # the reward rate, tonic dopamine
                 # THE VENTRAL CRITIC: discounted TD at a definite long horizon over the whole ladder's states (semi-gradient,
                 # the target detached; linear on fixed features, convergent)
                 with torch.no_grad():
                     vl_now = m.value_long(self.bands)
-                gl = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+                gl = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)); nfl = (gl ** N_) if an_ else 1.0   # THE NIGHT TAKES TIME
                 if int(self.cfg.get("vcrit_diff", 0)):
                     td_long = (r - float(self.rbar)) + vl_now.detach() - m.value_long(self._bands_prev.detach())
                     gl_tr = 1.0                                       # the trace decays at lambda alone
                 else:
-                    td_long = r + gl * vl_now.detach() - m.value_long(self._bands_prev.detach())
+                    td_long = r + gl * nfl * vl_now.detach() - m.value_long(self._bands_prev.detach())
                     gl_tr = gl
                 lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
                 rls = int(self.cfg.get("vcrit_rls", 0))
@@ -521,7 +527,7 @@ class Life:
                         e = getattr(self, "_vc_e", None)
                         self._vc_e = (gl_tr * lam * e if e is not None else torch.zeros_like(xa_prev)) + xa_prev
                         vf_ = float(self.cfg.get("vcrit_forget", 0) or 0); beta = (1.0 - 1.0 / vf_) if vf_ > 0 else 1.0
-                        dlt = xa_prev - gl * xa_now
+                        dlt = xa_prev - gl * (nfl if not int(self.cfg.get("vcrit_diff", 0)) else 1.0) * xa_now
                         m.vc_A.mul_(beta).add_(torch.outer(self._vc_e, dlt))
                         if beta < 1.0 and not ntau:
                             m.vc_A.diagonal().add_((1.0 - beta) * self._vc_delta)   # the constant prior inside A (the form without statistics)
@@ -990,6 +996,7 @@ class Life:
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self.stream.clear(); self.gate_buf.clear(); self._g_base = None; self._gate_tag = None; self._vtrace = None; self._vc_e = None
+            self._after_night = True
             self.fatigue = 0.0
             self.sleep_pressure = 0
             self.nights += 1; self.day_n += 1
