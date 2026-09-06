@@ -470,7 +470,8 @@ class Life:
             level = float(self.cfg["gate_level_w"]) * max(-5.0, min(5.0, vb / (1.0 + math.sqrt(max(0.0, float(m.v_scale[lb]))))))
         gam = m.gammas()
         with torch.enable_grad():
-            m.train()
+            # the organs hold no dropout or batch statistics, so train()/eval() changed nothing but cost 12% of the tick in
+            # Python (a recursive mode flip over every module twice a tick); the body stays in eval mode from construction
             v_prev_live = m.values(self._bands_prev.detach()) if getattr(self, "_bands_prev", None) is not None else None
             if v_prev_live is not None:
                 # SEMI-GRADIENT TD, the convergent form: the target r + gamma V(s_now) is detached and
@@ -573,7 +574,6 @@ class Life:
                     self.v_buf[b].append((self._bands_prev[b].detach().cpu(), r, self.bands[b].detach().cpu()))
             else:
                 delta = r; delta_slow = r; delta_long = r; vlong = 0.0
-            m.eval()
         self._dopa = delta
         # THE SYNAPTIC TAG: every act (or rest) leaves a tag on the gate's weights, (act - p) x the gate's input, that
         # decays at the ventral critic's own horizon; the ventral error, as it arrives over the following minutes,
