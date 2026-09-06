@@ -155,7 +155,7 @@ class FastCaregiver:
         low = tok if (tok == "I" or tok.islower()) else ""
         if PARENT and t < self.away_until:
             return                                                # the parent is turned away
-        if PARENT and REPLY:
+        if PARENT and (REPLY or TALKOVER_FROWN):                  # talked-over is registered without the reply road when the frown is on (as the served typist does)
             ts, te = self.typing_span
             if a < te and b >= ts:                                # said over the parent's own turn
                 self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3)})
