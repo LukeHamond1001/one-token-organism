@@ -287,11 +287,16 @@ class Organs(nn.Module):
         # cannot register an act (runs 37/38); the ventral striatum reads the cue it sees now and predicts far.
         # Discounted, so it has a level (the reward rate over its horizon) that the bias holds; an older body's
         # bias is born at zero. Its lesson may carry an eligibility trace at its own horizon (vcrit_lambda).
-        self.vcrit = nn.Linear(nb * d, 1, bias=True)
+        self.vcrit = nn.Linear(nb * d + nb, 1, bias=True)      # over the bands' states and, after them, the eight tonic traces
         nn.init.zeros_(self.vcrit.weight); nn.init.zeros_(self.vcrit.bias)
         # which bands feed it (vcrit_bands): all by default; the ceiling instrument of 2026-09-04 read +0.51 for the
         # slow bands alone against +0.38 for all eight, the fast bands adding overfit
         self.register_buffer("vcrit_mask", torch.ones(nb))
+        # THE TONIC TRACES (2026-09-06): the felt reward averaged at each of the ladder's clocks, tonic dopamine at eight timescales;
+        # the ventral critic may read them (vcrit_traces 1). On two recorded fresh days a head on these eight numbers alone read the
+        # 1024-return at +0.83/+0.59 where every head on the bands' states, fit the same way, read the next day at random sign.
+        self.register_buffer("r_tr", torch.zeros(nb)); self.register_buffer("r_tr_prev", torch.zeros(nb))
+        self.vcrit_traces = False
         # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the
         # eligibility trace carried through a precision matrix (the Kalman form of TD; the online LSTD of Xu et al. 2002).
         # A gradient head fit for one pass to correlated inputs reads their dominant common component, which on the slow
@@ -407,7 +412,7 @@ class Organs(nn.Module):
             return (s - self.band_mu[b]) @ self.value[b].weight[0]
         return self.value[b](s).squeeze(-1)
 
-    def vcrit_input(self, states):
+    def vcrit_input(self, states, traces=None):
         """what the ventral critic reads: the bands' states (vcrit_center 0; the bias holds the level) or the states
         centered on their running means (vcrit_center 1, the form of 2026-09-03). THE CENTERING WAS THE DEFECT
         (the night-transfer instrument, 2026-09-05): a running mean at 1024 ticks tracks a band whose clock is 4096 or
@@ -415,11 +420,13 @@ class Organs(nn.Module):
         return at horizon 1024 at +0.52 from the raw slow bands and -0.56 from the centered ones, and a ridge head from
         the raw slow bands read +0.50 on that day and +0.51 one, two and ten nights away: the slow bands do not drift"""
         x = states - self.band_mu if getattr(self, "vcrit_center", True) else states
-        return (x * self.vcrit_mask[:, None]).reshape(-1)
+        x = (x * self.vcrit_mask[:, None]).reshape(-1)
+        tr = (self.r_tr if traces is None else traces).to(x.dtype)
+        return torch.cat([x, tr if getattr(self, "vcrit_traces", False) else tr * 0.0])   # the full width always; the traces zeroed unless read
 
-    def value_long(self, states):
-        """the ventral critic's value over the bands' states (see vcrit_input)"""
-        return (self.vcrit_input(states) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
+    def value_long(self, states, traces=None):
+        """the ventral critic's value over the bands' states and, when it reads them, the tonic traces (see vcrit_input)"""
+        return (self.vcrit_input(states, traces) @ self.vcrit.weight[0]) + self.vcrit.bias[0]
 
     def vcrit_rls_solve(self, idx, prior=None):
         """the decorrelated head from its evidence: w = (A + R)^-1 b over the active inputs (raw coordinates) and the level. With the

@@ -60,6 +60,11 @@ PHYSIOLOGY = dict(
     # +0.51, its weights settling near 89; the same rule over all eight bands +0.19 with weights running to 78, the fast
     # bands' overfit. The trace forms on the slow bands: erratic (+0.33 pooled) or weak (+0.12). "" = all eight
     vcrit_bands="5,6,7",
+    # THE CRITIC READS THE TONIC TRACES (vcrit_traces 1; 2026-09-06): the felt reward averaged at each of the ladder's clocks joins the
+    # critic's input; vcrit_bands "-" reads no band at all. Every head on the bands' states fit on one lived day read the next day at
+    # random sign (bands 3..7, all sets); the eight traces alone read it at +0.83/+0.59. The parent's attention cycles (rich -> the body
+    # talked over -> away -> poor -> recovery), and its phase lives in the reward history, not in the cortex's slow state.
+    vcrit_traces=0,
     # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
     # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
     # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
@@ -201,10 +206,14 @@ class Life:
             with torch.no_grad():
                 organs.vcrit_mask.zero_()
                 for b_ in vb.split(","):
-                    organs.vcrit_mask[int(b_)] = 1.0
+                    if b_.strip() and b_.strip() != "-":
+                        organs.vcrit_mask[int(b_)] = 1.0
         self.m.vcrit_center = bool(int(self.cfg.get("vcrit_center", 1)))
+        self.m.vcrit_traces = bool(int(self.cfg.get("vcrit_traces", 0)))
         with torch.no_grad():
-            self._vc_idx = organs.vcrit_mask[:, None].expand(organs.vcrit_mask.numel(), organs.vcrit.weight.shape[1] // organs.vcrit_mask.numel()).reshape(-1).nonzero().squeeze(1)
+            nb_ = organs.vcrit_mask.numel(); d_ = (organs.vcrit.weight.shape[1] - nb_) // nb_
+            full = torch.cat([organs.vcrit_mask[:, None].expand(nb_, d_).reshape(-1), torch.ones(nb_) if self.m.vcrit_traces else torch.zeros(nb_)])
+            self._vc_idx = full.nonzero().squeeze(1)
             if int(self.cfg.get("vcrit_rls", 0)):
                 k = int(self._vc_idx.numel()) + 1
                 pri = float(self.cfg.get("vcrit_rls_prior", 0.0) or 0.0); vf0 = float(self.cfg.get("vcrit_forget", 0) or 0) or 12000.0
@@ -499,13 +508,13 @@ class Life:
                 # THE VENTRAL CRITIC: discounted TD at a definite long horizon over the whole ladder's states (semi-gradient,
                 # the target detached; linear on fixed features, convergent)
                 with torch.no_grad():
-                    vl_now = m.value_long(self.bands)
+                    vl_now = m.value_long(self.bands, m.r_tr)
                 gl = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024)); nfl = (gl ** N_) if an_ else 1.0   # THE NIGHT TAKES TIME
                 if int(self.cfg.get("vcrit_diff", 0)):
-                    td_long = (r - float(self.rbar)) + vl_now.detach() - m.value_long(self._bands_prev.detach())
+                    td_long = (r - float(self.rbar)) + vl_now.detach() - m.value_long(self._bands_prev.detach(), m.r_tr_prev)
                     gl_tr = 1.0                                       # the trace decays at lambda alone
                 else:
-                    td_long = r + gl * nfl * vl_now.detach() - m.value_long(self._bands_prev.detach())
+                    td_long = r + gl * nfl * vl_now.detach() - m.value_long(self._bands_prev.detach(), m.r_tr_prev)
                     gl_tr = gl
                 lam = float(self.cfg.get("vcrit_lambda", 0.0)); tau = float(self.cfg.get("vcrit_tau", 0.0))
                 rls = int(self.cfg.get("vcrit_rls", 0))
@@ -513,7 +522,7 @@ class Life:
                     # THE DECORRELATED CRITIC: the statistics of the trace against the state's discounted change and the reward
                     with torch.no_grad():
                         one = torch.ones(1, dtype=torch.float64, device=self.dev)
-                        x_p = m.vcrit_input(self._bands_prev.detach())[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach())[self._vc_idx].double()
+                        x_p = m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev)[self._vc_idx].double(); x_n = m.vcrit_input(self.bands.detach(), m.r_tr)[self._vc_idx].double()
                         ntau = int(self.cfg.get("vcrit_norm_tau", 0))
                         if ntau:
                             # THE PRIOR AS THE METRIC (2026-09-05 21:40): the homeostatic statistics take the state but do NOT transform
@@ -535,7 +544,7 @@ class Life:
                         if self.ticks % int(self.cfg.get("vcrit_rls_every", 64)) == 0:
                             m.vcrit_rls_solve(self._vc_idx, prior=(self._vc_delta if ntau else None))
                 with torch.no_grad():
-                    x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach()), torch.ones(1, device=self.dev)])
+                    x_prev = torch.cat([m.vcrit_input(self._bands_prev.detach(), m.r_tr_prev), torch.ones(1, device=self.dev)])
                     if lam > 0.0:
                         # THE CRITIC'S ELIGIBILITY TRACE (TD(lambda), backward view): the trace of the critic's inputs
                         # decays at gamma * lambda; the error captures it
@@ -580,6 +589,8 @@ class Life:
                     self.v_buf[b].append((self._bands_prev[b].detach().cpu(), r, self.bands[b].detach().cpu()))
             else:
                 delta = r; delta_slow = r; delta_long = r; vlong = 0.0
+        with torch.no_grad():                                    # THE TONIC TRACES advance with this tick's felt reward
+            m.r_tr_prev.copy_(m.r_tr); m.r_tr += (float(r) - m.r_tr) / torch.tensor([float(c) for c in m.clocks], device=m.r_tr.device)
         self._dopa = delta
         # THE SYNAPTIC TAG: every act (or rest) leaves a tag on the gate's weights, (act - p) x the gate's input, that
         # decays at the ventral critic's own horizon; the ventral error, as it arrives over the following minutes,
@@ -1115,6 +1126,9 @@ class Life:
         if w is not None and w.shape[1] < organs.mouth_gate.weight.shape[1]:
             # an older body's gate had fewer inputs (no salience, no level): those weights are born at zero
             blob["organs"]["mouth_gate.weight"] = torch.cat([w, torch.zeros(w.shape[0], organs.mouth_gate.weight.shape[1] - w.shape[1])], 1)
+        vw = blob["organs"].get("vcrit.weight")
+        if vw is not None and vw.shape[1] < organs.vcrit.weight.shape[1]:   # an older critic without the trace inputs: those weights born at zero
+            blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         if [k_ for k_ in missing.missing_keys if not k_.startswith("vc_")]:
