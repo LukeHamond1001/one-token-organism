@@ -863,3 +863,25 @@ before the served body takes it at a day boundary.
 Small first: d 256, six cortex blocks, window 64, about five to ten million
 parameters; a tick in tens of milliseconds, a night in a minute, a day in
 ten. Scale only after milestone 3.
+
+
+## 9. The room (proposed 2026-09-06; environment, not body)
+
+The diary's world is a face and a stream of words: nothing the child does changes anything that persists, so no horizon
+beyond the day carries structure, the long bands learn the daily profile and nothing else (74 days measured), and a
+word has no consequence past the next smile. The room gives the parent's world a state.
+
+- **State.** A few objects (ball, milk, dog, egg, nest, hand, boat) at a few places (hill, nest, hand, boat, under, up,
+  down), each with one or two conditions (warm/cold, wet/dry, gone/here). The parent narrates it ("ball on hill", "milk
+  cold") and asks about it ("where ball? "), and the answer that earns the smile is the one true of the room now.
+- **Acts.** Some of the child's lines act through the parent: "give ball" moves the ball to the hand; "milk warm" warms
+  the milk if it is near; "dog up" moves the dog. The parent narrates the change. Nothing reads the body's insides:
+  the room changes only through words on the page, as a house changes only through what a child does in it.
+- **Sequences.** Some rewards come only at the end of a sequence (the milk warmed, then given, then the smile; the egg
+  found, then put in the nest). The value must rise at the sequence's start; the actor must choose the word whose
+  consequence pays later; the long bands have, at last, structure at their horizon.
+- **Yardsticks.** Sequences completed per day; the value at a sequence's start as a fraction of its end reward on a
+  stalked day; answers correct about the room's state; and the same on the 32M body and on a second input stream.
+
+The room is the maturation environment of the long bands, the first test of the actor's consequence, and the shape of a
+robot's world: a state the agent changes. It is built beside the ladder's remaining rungs, first as a fast-parent option.
