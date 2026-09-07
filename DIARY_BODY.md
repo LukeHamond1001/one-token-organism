@@ -5065,3 +5065,19 @@ typist's chain is armed so the parent continues past day 16 without a gap.
 
 What the thirteen days look like from the outside: it yields when spoken to about three fifths of the time, answers a
 question with the right word almost every time, and has not yet put two of its own words together unasked.
+
+## Sonnet's fourth and fifth days (2026-09-07, 09:00)
+
+Day 14: the relation words "more" and "no" entered (more milk, more ball, more book; no ball, no dog, no milk), and each
+came back unprompted in the body's own mouth within the hour, earning its smile. "want" took "you" as a subject. Asked
+"why dog up?", it answered "because" and then, unasked, "big dog": the first frame it finished on its own. Every cue
+answered right; 63 smiles to 35 frowns; the night 0.79 to 0.93, its dreams carrying "more" and "happy".
+
+Day 15: "my" and "here" entered (my ball, my milk, my book, my dog; ball here, here dog, book here) and drew smiles across
+all four nouns; "no book" completed the set; "more" appeared once on its own with no priming that day. "you want" was
+cued three times without a clean answer. The session's faces: 94 smiles to 51 frowns, 8 aways; the known-word count moved
+for the first time under this parent, 46 to 47. The night 0.86 to 0.90.
+
+Five days under Sonnet: seven words entered, all inside frames it already answered, all seven now answered back or said on
+their own; smiles have led frowns for three days; what it has not done is pair two of its own words unasked. The sixth
+day's parent is told to give it the most chances to.
