@@ -67,7 +67,9 @@ for _ in range(a.days):
     err = [byt[t + 1]["dopa"] for t in sm if t + 1 in byt and byt[t + 1].get("dopa") is not None]
     latches = sum(1 for x in ticks if x["wm_latch"]); plans = [x for x in ticks if x["plan"]]
     # the planner's flips: decisions where the symbol said was not the cortex's own favorite among the candidates (review: "agreed" was a coin)
-    agree = sum(1 for x in plans if x.get("said") and x["said"] in x["plan"]["cands"] and x["plan"]["cands"].index(x["said"]) != x["plan"]["cortex"].index(max(x["plan"]["cortex"])))
+    other = sum(1 for x in plans if x.get("said") and x["said"] in x["plan"]["cands"] and x["plan"]["cands"].index(x["said"]) != x["plan"]["cortex"].index(max(x["plan"]["cortex"])))
+    beta_ = float(L.cfg.get("plan_beta", 4.0))                                 # the value's own flips: where it moved the favorite itself
+    flips = sum(1 for x in plans if max(range(len(x["plan"]["cands"])), key=lambda i: x["plan"]["cortex"][i] + beta_ * x["plan"]["vals"][i]) != x["plan"]["cortex"].index(max(x["plan"]["cortex"])))
     aways = sum(1 for r in rows if r.get("action") == "away"); frowns = sum(1 for r in rows if r.get("action") == "frown"); seqs = sum(1 for r in rows if r.get("action") == "sequence")
     st_typ, n_typ = spoke(typ); st_q, _ = spoke(quiet)
     held = [r for r in rows if r.get("action") == "smile" and r.get("run_on") is not None]
@@ -85,7 +87,7 @@ for _ in range(a.days):
     vrel = float(getattr(L, "_vrel_corr", 0.0)); vw_eff = float(L.cfg.get("vcrit_w", 0.0)) * (max(0.0, vrel) if int(L.cfg.get("vcrit_auto", 0)) else 1.0)
     digest = (f"day {day:3d} ({time.time()-t0:.0f}s, {len(ticks)} ticks): smiles {len(sm)} (completions {comp}, sequences {seqs}) aways {aways} frowns {frowns} | "
               f"ear: spoke {st_typ:.2f} while the parent typed (n {n_typ}) vs {st_q:.2f} quiet | fast value mean {mv:+.2f}, rise before a smile {rise:+.0f}% of a smile, "
-              f"error at the reward {st.mean(err) if err else float('nan'):+.2f} | wm latches {latches} | planner: {len(plans)} choices, agreed with the cortex {agree} | "
+              f"error at the reward {st.mean(err) if err else float('nan'):+.2f} | wm latches {latches} | planner: {len(plans)} choices, the value flipped the cortex's favorite {flips}, the mouth said another {other} | "
               f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability {vrel:+.2f}, weight in the credit {vw_eff:.3f} | run-on after the answer {run_on:.1f} symbols, the smile waited {waited:.1f} ticks (n {len(held)}) | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
     print(digest, flush=True)
     with open(f"{out}/digest.txt", "a") as f: f.write(digest + "\n")
