@@ -190,7 +190,7 @@ catches up) minus a cost that grows with fatigue.
 
 ## 5. Physiology (the disclosed constants)
 
-- `night_warm` (0): the night's rate climbs linearly over its first `night_warm` optimizer steps, then holds (the twelfth defect, §5b). `night_lr` 1e-4, `night_rounds` 24 unchanged.
+- `night_warm` (0): the night's rate climbs linearly over its first `night_warm` optimizer steps, then holds (the twelfth defect, §5b). `night_lr` 1e-4 unchanged at every size measured (half kept less of the day, double overshot). `night_rounds` (24): the count of NREM steps a night; a size-dependent constant, 48 for the 179M body (measured on a copy of its day-1 save: 0.26 to 0.51 with 24 steps, 0.26 to 0.70 with 48, the reference's level), applied at its day-3 boundary on 2026-09-06.
 
 symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fatigue and stress half-life 240 ticks · mood half-life 1200 ticks
 · wake switch 12,000 ticks · eligibility 12 × 0.8 · store fade 0.9/night ·

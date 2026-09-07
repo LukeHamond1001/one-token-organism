@@ -4978,3 +4978,22 @@ The third life was stopped at day 5 and set aside (data/stalks/watch2_third_try.
 last, was born at 21:58 with the ramp from birth and everything else as it was: 179M, seed 1, the reply parent, the frown,
 the striatal critic, working memory, the planning actor, the ventral critic on the clock and the traces. The user's word for
 it: "one model complete live training that works. then we get cool demo at the end of teaching it."
+
+## The night's length (2026-09-06, 23:40)
+
+With the shove gone the fourth life's nights gain what the reference's gain (night 2: 0.23 to 0.47 against the reference's
+0.62 to 0.81, the same +0.2), but from a lower base, because the first night kept 0.29 of the day where the reference kept
+0.71. On a copy of the day-1 save, with a scratch save path, the same night at four rates and two lengths: half the rate kept
+0.45, the full rate 0.51, double 0.35 (its loss bouncing in the last steps and the dreams collapsing again), a fifth 0.38;
+and the full rate for 48 steps instead of 24 kept 0.70, with the NREM loss ending at 0.23, both the reference's numbers.
+The rate is right and the night is too short for a cortex of this width: at the same per-step size, twice the weights want
+twice the steps to hold a day. A brain does not sleep longer because it is bigger, but a night here is a count of steps,
+not hours, and the count is a disclosed constant (night_rounds). It goes from 24 to 48 at the day-3 boundary, the body
+reloaded from its own save with the parent's seed advanced so the parent's lines do not replay days 1 to 3. No restart;
+the life keeps its three days. The proof comes with day 4's night record: 48 NREM steps, and the memory after the night
+near 0.7.
+
+The REM question stays open: the big body's dreams are near copies of each other (REM cosine 0.56 to 0.72 on night 2, the
+reference's 0.07 to 0.21) because REM rolls out greedily at temperature zero. A warm-REM night on the same copy is running;
+if it keeps more of the day or spreads the dreams, rem_temp changes at a boundary; if not, REM stays as it is. REM's share of
+the memory gauge has been zero at both sizes on every night so far; its contribution is expected at the cortex's maturity.
