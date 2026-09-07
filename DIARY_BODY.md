@@ -5008,3 +5008,14 @@ opens is a question about exploration rather than sleep: a body whose mouth rare
 through what the world does to its state and through the planner's shortlist, which at this logit scale holds one to four
 candidates. The reference learned to answer cues this way, so it is not a defect proven; it is written down as the next
 thing to measure when the ear is bought. No change to the living body.
+
+## The night, proven on the living body (2026-09-07, 00:27)
+
+Night 4, the first with 48 steps: the day's memory 0.35 before, 0.91 after, the NREM loss 0.40 falling to 0.09. The
+reference's fourth night: 0.88 to 0.91. The big cortex now keeps a day the way the small one does, at the same rate, with
+the plasticity ramp and twice the steps. Two constants, both disclosed, both measured on copies before they touched the
+life, one applied from birth and one at a day boundary. The life keeps its four days.
+
+Also on day 4, earlier than the reference: the prefrontal value's reliability turned positive (+0.23) and it earned its
+first weight in the credit (0.068). The reference reached 0.049 on day 20. Whether that is the width or a fluctuation, day 5
+will say; the rule that gives it weight is the same rule at both sizes. The ear is still a coin at 0.51 against 0.54.
