@@ -4947,3 +4947,34 @@ pressure; any authoring of the body's words; any reward not grounded in the pare
 (179M, d 1024, 12 layers) was 42 minutes into its second life with the open chain; stopped, set aside
 (data/stalks/watch2_second_try.pt), and reborn at 19:13 on the fixed code with the fast head at 2048 units (the reviewer's
 measurement: the 8193-wide evidence cost 182 ms a tick and a 7.7 s stall every 64 ticks). One seed, watched, one go.
+
+## The night's shove, and the fourth birth (2026-09-06, 21:58)
+
+The one-go body's first days answered the question I had asked of them, and not the way I hoped. Its waking organs learned
+like the reference's: the fast critic rose before a smile from the first day, working memory latched, the planner ran, the
+prefrontal value sat at zero weight as it should. But its nights did nothing. The reference keeps six to eight tenths of a
+day's symbols after a night; the big body kept a quarter, and the night's own log said why: NREM's loss doubled or tripled
+at the first step of every night (0.52 to 1.06, 0.46 to 1.64, 0.48 to 1.23, 0.46 to 1.16) and the remaining steps were spent
+climbing back to where it had started. Its dreams grew more alike each night, 0.58 to 0.96. REM was innocent: the gauge was
+identical before and after it.
+
+The cause is arithmetic. Each night births a fresh optimizer, and a fresh optimizer's first step moves every weight by the
+whole rate at once, in the direction of its gradient's sign. On a 512-wide, 8-deep cortex that step is bearable; on a
+1024-wide, 12-deep one it is a shove that grows with the width and the depth. A brain does not begin sleep at full
+plasticity; spindles and slow waves build over the first minutes. So the night's rate now climbs over its first steps
+(night_warm, a disclosed constant, eight of the twenty-four steps; zero for every older body).
+
+Measured on a copy of the day-4 body, saving to a scratch file: the inherited night, loss 0.41 to 1.01 at step two, memory
+0.288 to 0.327; a fifth of the rate, no jolt, 0.288 to 0.325, the same small gain; the full rate with the ramp, no jolt, 0.288
+to 0.424, three and a half times the gain. Removing the shove alone is not enough; the big cortex needs the full rate's steps
+without the shove.
+
+One error of mine, recorded so it is not repeated: a loaded life saves back to the file it was loaded from, and the night
+saves. My first probes loaded the living body's own save and overwrote it with their jolted copies for forty minutes. The
+life itself was untouched, holding its state in memory and rewriting the file at each day's end, but a crash in that window
+would have resumed it from a wreck. Every probe now copies the file first and saves to the scratchpad.
+
+The third life was stopped at day 5 and set aside (data/stalks/watch2_third_try.pt). The fourth, and the one meant to be the
+last, was born at 21:58 with the ramp from birth and everything else as it was: 179M, seed 1, the reply parent, the frown,
+the striatal critic, working memory, the planning actor, the ventral critic on the clock and the traces. The user's word for
+it: "one model complete live training that works. then we get cool demo at the end of teaching it."
