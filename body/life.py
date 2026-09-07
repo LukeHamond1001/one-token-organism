@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -1158,6 +1158,12 @@ class Life:
                 before, nsym = self.gauge(dreams); before_cos = self._gauge_cos
                 opt = torch.optim.Adam(m.parameters(), lr=float(self.cfg["night_lr"]))   # sleep's own plasticity
                 sig = float(self.cfg["sigreg"])
+                # THE PLASTICITY RAMPS (night_warm, 0 = off; 2026-09-06): a fresh optimizer's first steps move every weight
+                # by the whole rate at once, and on a wide, deep cortex that first step is a shove (the 179M body's NREM loss
+                # doubled or tripled at step one every night and spent the night recovering; the 32M reference never did).
+                # Sleep's plasticity in a brain rises over the first minutes of NREM; here the rate climbs linearly over the
+                # first night_warm steps, then holds. A disclosed constant, not a rule about content.
+                warm_ = int(self.cfg.get("night_warm", 0)); base_lr_ = float(self.cfg["night_lr"]); nstep_ = 0
                 m.train()
                 nrem = 0; losses = []
                 for _ in range(int(self.cfg["night_rounds"])):
@@ -1174,6 +1180,10 @@ class Life:
                             continue
                         (ll / len(dreams)).backward(); tot += float(ll.detach()) / len(dreams); ok += 1
                     if ok:
+                        nstep_ += 1
+                        if warm_:
+                            for g_ in opt.param_groups:
+                                g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
                         self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
                 mid, _ = self.gauge(dreams); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
                 # REM: the cortex runs free from each dream's first symbols on its own readout,

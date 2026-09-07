@@ -513,11 +513,32 @@ def test_chain_closes():
     print(f"21 the chain closes: evidence asymmetry fast {af:.4f} ventral {av:.4f} | no negative diagonal")
 
 
+
+def test_night_warmup():
+    """the plasticity ramps: with night_warm W the night's first W steps run at 1/W, 2/W, ... of the rate, then the whole rate
+    (a fresh optimizer's first full-rate step shoves a wide cortex); with night_warm 0 every step runs at the rate"""
+    for warm in (4, 0):
+        life = tiny(night_warm=warm, night_rounds=6, night_starts=2, rem_dreams=2, rem_rounds=1, rem_steps=1); seen = []
+        orig = life._night_step
+        def spy(opt, _seen=seen, _orig=orig):
+            _seen.append(round(opt.param_groups[0]["lr"] / float(life.cfg["night_lr"]), 3)); return _orig(opt)
+        life._night_step = spy
+        say(life, "the dog sat on the hill ", 8); say(life, "the cat ran up the tree ", 8)
+        rep = life.night() or getattr(life, "last_night", {}) or {}
+        assert rep.get("dreams"), "the night dreamed nothing"
+        nrem_lrs = seen[:6]
+        if warm:
+            assert nrem_lrs[:4] == [0.25, 0.5, 0.75, 1.0] and all(x == 1.0 for x in nrem_lrs[4:]), f"the ramp is wrong: {nrem_lrs}"
+            ramp = nrem_lrs
+        else:
+            assert all(x == 1.0 for x in nrem_lrs), f"without the ramp the rate must be whole: {nrem_lrs}"
+    print("22 the night's plasticity ramps: rates", ramp, "with night_warm 4; whole without")
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup]
     failed = 0
     for t in tests:
         try:
