@@ -4919,3 +4919,31 @@ Reward could choose when the body speaks and what it keeps; it could not choose 
 ## One life, watched (2026-09-06, 14:44)
 
 The user's word: no more arms; build the two organs, put the complete architecture in one body at the larger size, one seed, and watch its every move. Working memory and the planning actor were built and passed the organ tests within the hour, and at 14:45 a body of the second body's size was born with everything: the cortex and its nights, the hippocampal store with its marks, the striatal input with the fast critic on it, the slot beside it, the planner over the cortex's proposals, the gate with its ears, the ventral critic on the ladder with the traces and the clock behind the reliability gate, the own-babble target fading with distance, and the parent who wants a reply, with the frown. Every tick is written down; a digest closes each day. At its third day it moves into the room, where the parent's world has a state to be right about. The reading is the play by play: when a cue lands, does the slot hold it, does the planner choose the answer for its value, does the critic's value rise at the want and fall at the giving, does the gate wait while the parent types. Nothing else runs beside it except the two served bodies and their teachers.
+
+## The review, and the eleventh defect (2026-09-06, 19:12)
+
+The user asked for a second pair of eyes on everything before the one-go life: "spawn sub agent to review show it our tests
+and archecture make sure everythings looking good", and "also make sure no cheats". An independent reviewer read the body,
+the environment, the instruments, the tests, and the watched bodies' saved evidence, and returned ranked findings. The first
+was a defect I had not seen in nine months of temporal-difference code: the chain did not close. The value's source was the
+state at the end of the previous tick, after the body's own symbol; the target was the state mid-tick, after the world's. The
+saved evidence carried the proof: the LSTD matrices, which a closed chain makes symmetric up to the trace, were 16 to 30
+percent asymmetric with negative eigenvalues. Every dopamine reading of the last two days had that gap in it, twice its own
+standard deviation. Fixed by making the next lesson's source this lesson's target; the asymmetry fell to 0.01 (fast) and 0.000
+(ventral) on a fresh stretch, and the check is now organ test 21.
+
+The rest, all fixed and committed (1ad8c27): the bands integrated twice a tick, so their true time constants were 0.57 of the
+disclosed ones; the gate's lesson learned a probability that lacked the stress divisor the act was drawn with; a third of the
+gate's samples were learned twice; the working-memory slot cleared on the world's word, not only the face; and one cheat, small
+but real, in the environment: the served parents read the body's sleep pressure to say goodbye. They now see only whether it
+sleeps, which the page shows. The world's word as reward (world_r 0.3, two fifths of all felt reward on the reference days) was
+in the physiology but not in the spec's reward section; it is there now, named beside the face. The planner's shortlist was
+measured against the silence symbol's logit, and at toy size the shortlist was therefore always empty; it is now measured among
+the speakable symbols. Five organ tests were missing (the striatum, the slot, the planner, the save's round trip of the new
+organs, the closed chain); they exist, 21 of 21 pass.
+
+What the review did not find: any reading from inside in the caregiver, the typist, or the fast parent beyond the sleep
+pressure; any authoring of the body's words; any reward not grounded in the parent's face or the parent's act. The big body
+(179M, d 1024, 12 layers) was 42 minutes into its second life with the open chain; stopped, set aside
+(data/stalks/watch2_second_try.pt), and reborn at 19:13 on the fixed code with the fast head at 2048 units (the reviewer's
+measurement: the 8193-wide evidence cost 182 ms a tick and a 7.7 s stall every 64 ticks). One seed, watched, one go.
