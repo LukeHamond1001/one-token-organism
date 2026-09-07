@@ -5109,3 +5109,18 @@ on day 15 ("dog because"), four a day on days 17 and 18 ("dog big", "dog because
 holds, "big dog" turned around, "because" carried out of "why dog up?". So it pairs its words forty times a day and invents
 a handful; novelty is where it stands at eighteen days. Day 18: all thirteen cues right, "down" solid, "hi" still uncredited
 after five exposures, 91 smiles to 49 frowns.
+
+## Days 18 to 20 (2026-09-07, 14:01)
+
+Day 18: all thirteen cues right; "down" solid; "hi" uncredited after five exposures; 91 smiles to 49 frowns. Day 19: the
+three frames that had never registered as cues answered on the first try, "here" with "dog", "you want" with "dog", "hi"
+with "dog", each with the typist's graded completion smile; "hi dog" came out on its own right after an unrelated line, the
+first time a word it had never been credited for arrived unasked; "big milk" was modeled four times but a "big" cue still
+answers "dog": the old completion holds the frame. 106 smiles to 49 frowns, the best faces yet. Its night dreamed "hi",
+"you want" twice, "my" three times, the day's targets. Day 20: 99 smiles to 45 frowns; the night began from a lower base
+(0.68) because more of the day was new, and ended at 0.89.
+
+The served days now read, from the log: fifty lines and a dozen cues a day (more than the curriculum's thirty, the old
+backlog draining beside the day's batches), forty to fifty of its own two-word runs a day, four or five of them pairs no one
+taught it, the known-word count at 48, every night keeping nine tenths. The talking-over holds at forty-five to fifty
+frowns a day against ninety to a hundred smiles.
