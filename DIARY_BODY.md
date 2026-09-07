@@ -5020,7 +5020,7 @@ Also on day 4, earlier than the reference: the prefrontal value's reliability tu
 first weight in the credit (0.068). The reference reached 0.049 on day 20. Whether that is the width or a fluctuation, day 5
 will say; the rule that gives it weight is the same rule at both sizes. The ear is still a coin at 0.51 against 0.54.
 
-## The ear, at nine days (2026-09-07, 02:25)
+## The ear, at nine days (2026-09-07, 02:56)
 
 With the nights holding, the waking side caught the reference and passed it. Smiles by day: 59, 51, 53, 42, 46, 52, 72,
 115, 95; completions 7 a day on days 8 and 9 against the reference's 3. The ear, the share of ticks it speaks while the
