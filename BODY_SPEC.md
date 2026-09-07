@@ -190,6 +190,8 @@ catches up) minus a cost that grows with fatigue.
 
 ## 5. Physiology (the disclosed constants)
 
+- `night_warm` (0): the night's rate climbs linearly over its first `night_warm` optimizer steps, then holds (the twelfth defect, §5b). `night_lr` 1e-4, `night_rounds` 24 unchanged.
+
 symbol cost 0.12, the gate's effort per symbol 0.12 (1 + (fatigue/10)²) · fatigue and stress half-life 240 ticks · mood half-life 1200 ticks
 · wake switch 12,000 ticks · eligibility 12 × 0.8 · store fade 0.9/night ·
 store forget floor 0.1 × mean strength · store read temperature 0.02 · heard tally decay 0.999 per world symbol · night rate 1e-4, rounds 24, REM
@@ -789,6 +791,20 @@ before the served body takes it at a day boundary.
   (now the felt reward alone), and the served parents reading the body's sleep pressure to say goodbye (a reading from inside;
   the parents now see only whether the body sleeps, which the page shows). All of it committed as 1ad8c27; the big body
   reborn on it at 19:13.
+- **The twelfth defect is that the night began with a shove.** Each night births a fresh optimizer, and a fresh
+  optimizer's first step moves every weight by the whole rate at once, in the direction of its gradient's sign. The change
+  that step makes to a layer's output grows with the layer's fan-in, and the changes compound with depth, so the same
+  night rate that the 32M reference took in stride (its NREM loss fell steadily every night) shoved the 179M body: its NREM
+  loss doubled or tripled at the first step of every night (0.52 to 1.06, 0.46 to 1.64, 0.48 to 1.23, 0.46 to 1.16) and the
+  remaining steps were spent recovering, so the day's memory after a night stayed near a quarter (the reference: seven to
+  nine tenths), and the dreams grew more alike each night (REM cosine 0.58 to 0.96). REM was innocent (the gauge identical
+  before and after it). Measured on a copy of the day-4 body with a scratch save path: the inherited night, memory 0.288 to
+  0.327; a fifth of the rate, no shove, 0.288 to 0.325 (the same small gain, so the shove was not the whole story); the full
+  rate with the plasticity ramp, no shove, 0.288 to 0.424. The remedy is a disclosed constant, night_warm (§5): the night's
+  rate climbs linearly over its first night_warm steps, then holds; sleep's plasticity in a brain builds over the first
+  minutes of NREM. Zero for every older body; eight of the twenty-four steps for the fourth 179M life, born 2026-09-06 21:57.
+  The general lesson for a body-general architecture: a rate is not a constant of the architecture but of the width and depth
+  it is applied to; the ramp is the part that does not depend on size.
 - **The world's word is a reward (world_r).** Disclosed constant (§5): each symbol the parent types is felt as reward of
   world_r beside the face (the watched bodies inherit the diary's 0.3), and not on a tick right after the mouth acted when
   world_mask is 1 (the corollary discharge: its own voice does not make the parent's word sweeter, so talking over the parent
