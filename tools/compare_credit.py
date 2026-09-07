@@ -1,4 +1,4 @@
-"""THE BEHAVIORAL YARDSTICK for fast arms: from their page logs (body/fastlife --log data/fast_rN.jsonl), smiles, turnings-away
+"""THE BEHAVIORAL YARDSTICK for fast arms: from their page logs (body/fastlife --log data/arms/fast_rN.jsonl), smiles, turnings-away
 and frowns per day for two groups of runs, and the paired daily differences on the days both groups lived.
     python3 tools/compare_credit.py 187,188 183,184 [--from DAY]
 """
@@ -8,7 +8,7 @@ fr = int(sys.argv[sys.argv.index("--from") + 1]) if "--from" in sys.argv else 0
 def days_of(runs):
     out = collections.defaultdict(lambda: collections.defaultdict(list))
     for R in runs:
-        f = f"data/fast_r{R}.jsonl"
+        f = f"data/arms/fast_r{R}.jsonl"
         if not os.path.exists(f): print(f"  (no log for run {R})"); continue
         per = collections.defaultdict(collections.Counter)
         for l in open(f):

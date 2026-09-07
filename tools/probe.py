@@ -1,6 +1,6 @@
 """the supervisor's instruments on a saved second body (BODY_SPEC.md §7). Read-only.
 
-  python3 -m body.probe data/body2.pt --cues "dog will |give |scared " --n 8 --ticks 24
+  python3 tools/probe.py data/body2.pt --cues "dog will |give |scared " --n 8 --ticks 24
 """
 import argparse
 import sys

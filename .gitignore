@@ -10,7 +10,11 @@ API Key.md
 docs-private/
 data/
 
-# per-run scratch target of scripts/life_gate.py (per-arm copies are committed as *_<arm>.json)
-results/evidence/v10_gates_epi.json
+# per-run scratch target of legacy/scripts/life_gate.py (per-arm copies are committed as *_<arm>.json)
+legacy/results/evidence/v10_gates_epi.json
 rescue_volume/
 *.log
+
+# caches and the editor's worktrees
+.pytest_cache/
+.claude/worktrees/

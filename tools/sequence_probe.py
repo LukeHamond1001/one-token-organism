@@ -1,7 +1,7 @@
 """the sequence probe (BODY_SPEC.md §7): after a cue, what the store and the cortex forecast, and
 again after the body's own first letter of the answer. Read-only, the mouth held quiet.
 
-  python3 -m body.sequence_probe data/body2_fast.pt
+  python3 tools/sequence_probe.py data/body2_fast.pt
 """
 import sys
 

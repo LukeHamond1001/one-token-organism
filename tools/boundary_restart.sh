@@ -14,7 +14,7 @@ until grep -q "\"action\": \"night\".*\"day\": $DAY," "$LOG" 2>/dev/null; do sle
 echo "$(date +%H:%M:%S) night $DAY seen"
 pkill -f "body.teacher --port $PORT" ; sleep 3
 pkill -f "body.serve.*--port $PORT" ; sleep 8
-cp "$BODY" "${BODY%.pt}_before_boundary_day$DAY.pt"
+mkdir -p "data/backups/$(basename "${BODY%.pt}")"; cp "$BODY" "data/backups/$(basename "${BODY%.pt}")/$(basename "${BODY%.pt}")_before_boundary_day$DAY.pt"
 nohup python3 -m body.serve --load "$BODY" --tok data/tok_char.json --port $PORT ${=SFLAGS} > "${GO}.serve.log" 2>&1 &
 sleep 40
 env ${=TENV} nohup python3 -m body.teacher --port $PORT --day $((DAY+1)) --log "$LOG" ${=TARGS} > "${GO}.teach.log" 2>&1 &

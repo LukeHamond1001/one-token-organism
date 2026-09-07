@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "iga"
 version = "1.0.0"
-description = "Vision — the one-token organism: a 297M language creature that lives in one continuous stream and learns while you talk to it."
+description = "iga — a language organism raised from nothing by live conversation: one stream, one grounded reward, learning while spoken to, on one Mac."
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
@@ -16,4 +16,4 @@ crafter = ["crafter"]
 render = ["pillow", "matplotlib"]
 
 [tool.setuptools]
-packages = ["iga"]
+packages = ["body"]
