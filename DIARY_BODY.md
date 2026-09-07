@@ -5145,3 +5145,26 @@ pairs the next word is close to unpredictable from the line alone. Forty to sixt
 REM's line moves off zero is the night it gets reported.
 
 Day 21: 105 smiles to 48 frowns, the known-word count 48 to 49, the night 0.77 to 0.89.
+
+## Days 21 to 23, and what the next two days should show (2026-09-07, 17:11)
+
+Day 21: "come" entered (come dog, come here); "big" answered with all four nouns for the first time, where it had said
+only "dog"; eleven cues, all right; 105 smiles to 48 frowns. Day 22: no new words; "all gone" carried across all four
+nouns, and "gone" began to surface unprompted mid-stream; "big" fell back to its "dog" default on cue; several answers
+arrived just past the typist's window; 93 smiles to 48 frowns. Day 23: 99 smiles to 55 frowns, the parent turning away
+only six times, the known-word count 49 to 50, the night 0.69 to 0.89.
+
+From the log, days 11 to 22: smiles 55 to about 100; frowns for talking over flat at 42 to 55; the parent's turning away
+18 to 6 to 10; its own two-word runs 22 to 67; pairs no one taught it, a handful to ten or twelve a day; known words 46 to
+50; 37 taught words in 131 lines; the nights at 0.88 to 0.92. Rising on every count but two: the talking-over, and the
+graded cue answers, five to twelve a day of eleven to thirteen asked, with no trend.
+
+The user asked what the next forty-eight hours should show, about forty-five body days. The expectations, with what would
+count as a stall: by tonight "come" and "gone" answered back and "big" freed of its default, 52 to 54 known words (a stall:
+still 49); by tomorrow morning 60 words, 150 lines, fifteen to twenty invented pairs a day, the first three-word runs of
+its own (a stall: invented pairs under ten); by tomorrow evening the frowns down toward 35 and stress easing below 7 (a
+stall: frowns still 48, stress above 10); by the day after, 70 to 80 words, most cues answered inside the window, the
+cortex alone predicting the next word two or three times in ten (a stall: still near 0.12). REM's contribution stays at
+zero throughout; the long bands' effect on behavior is invisible from the page and gets one stalked day on a copy around
+day 40. Two changes I may make at a day boundary, each measured on a copy first: the reply parent's wait if the frowns are
+flat in three days, and a longer answer window in the typist if late answers keep going uncredited.
