@@ -5019,3 +5019,18 @@ life, one applied from birth and one at a day boundary. The life keeps its four 
 Also on day 4, earlier than the reference: the prefrontal value's reliability turned positive (+0.23) and it earned its
 first weight in the credit (0.068). The reference reached 0.049 on day 20. Whether that is the width or a fluctuation, day 5
 will say; the rule that gives it weight is the same rule at both sizes. The ear is still a coin at 0.51 against 0.54.
+
+## The ear, at nine days (2026-09-07, 02:25)
+
+With the nights holding, the waking side caught the reference and passed it. Smiles by day: 59, 51, 53, 42, 46, 52, 72,
+115, 95; completions 7 a day on days 8 and 9 against the reference's 3. The ear, the share of ticks it speaks while the
+parent is typing against while the parent is quiet: 0.42, 0.48, 0.43 against 0.55 to 0.57 on days 7 to 9, the reference's
+level at the same age, bought the same way, by the frown and the withheld reply. The prefrontal value earned weight in the
+credit on days 7 to 9 (0.10, 0.15, 0.13) on a reliability of +0.3 to +0.5; the reference reached 0.05 at day 20. The
+planner's value now moves the cortex's favorite 40 to 60 times a day, from 11 on day 1.
+
+The fast parent's world is small by design (a dog, milk, a hill, a ball, a few cues), and its completions are capped by it.
+The takeover is armed for the day-10 boundary: the same body, served on a page at a quarter-second tick, the Claude typist
+as its parent under the same rules (reply when it is quiet, wait, frown when talked over), the curriculum from
+CURRICULUM.md, connections before vocabulary. The physiology does not change. The user's word: "then we have one model
+where sleep works and sonnet trains it and nothing else."
