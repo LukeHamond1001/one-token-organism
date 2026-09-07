@@ -177,7 +177,7 @@ class Teacher(Caregiver):
             if not self.event(text, kind):
                 slept = True; break
             n_events += 1
-            if (self.state or {}).get("sleep_pressure", 0) >= (self.state or {}).get("wake_ticks", 10 ** 9) - 300 and n_events > 4:
+            if False:   # (review 2026-09-06) the parent used the body's sleep pressure to say bye before the night; a parent sees sleep, not adenosine
                 self.event("bye", "line")
                 while not (self.poll() or {}).get("asleep"):
                     self.watch(5.0)

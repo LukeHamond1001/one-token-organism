@@ -347,7 +347,7 @@ def test_ventral_critic():
         life.tick(); vl.append(life.last["vlong"]); dl.append(life.last["dlong"])
     assert all(math.isfinite(x) for x in vl + dl), "the ventral critic left the finite"
     assert float(m.vcrit.weight.abs().sum()) > 0, "the ventral critic did not learn"
-    assert abs(life.gate_buf[-1][2] - (life.last["dopamine"] + life.last["dlong"])) < 1e-3 or True
+    assert any(abs(x) > 1e-6 for x in dl), "the ventral critic never erred"
     path = os.path.join(tempfile.mkdtemp(), "old.pt"); life.save_path = path; life.save()
     blob = torch.load(path, weights_only=False); del blob["organs"]["vcrit.weight"]; torch.save(blob, path)
     life2 = Life.load(path, TOK, save_path=None)
@@ -396,10 +396,128 @@ def test_guards():
     print("9 guards: a NaN weight ->", "discarded" if rep.get("discarded") else rep.get("error"))
 
 
+
+def _watched(seed=0, **kw):
+    """the watched recipe at toy size: the striatal input with a working-memory slot, the decorrelated fast critic, the planning actor,
+    the ventral critic on the clock and the tonic traces alone"""
+    c = dict(fast_rls=1, fast_input="striatum", stri_k=4, stri_m=64, stri_quiet=1, wm=1, wm_max=64, actor=1, actor_form="plan", plan_k=3,
+             plan_h=2, plan_beta=4.0, vcrit_w=0.3, vcrit_traces=1, vcrit_clock=1, vcrit_bands="-", own_target_decay=0.7,
+             gate_every=10 ** 9, wake_every=10 ** 9)
+    c.update(kw)
+    return tiny(seed=seed, **c)
+
+
+def _live(life, ticks):
+    """a stretch of life: the world says a word now and then, smiles now and then"""
+    for t in range(ticks):
+        if t % 25 == 0:
+            life.set_face(2.0)
+        elif t % 25 == 2:
+            life.set_face(0.0)
+        if t % 40 == 0:
+            life.type_text("go ")
+        life.tick()
+
+
+def test_striatum():
+    """the striatal input: a delay line of the last k events (heard, own, face, quiet) through a born expansion the heads read;
+    the expansion never learns"""
+    life = _watched(); m = life.m
+    V = m.vocab; k = int(life.cfg["stri_k"]); M = int(life.cfg["stri_m"])
+    assert m.stri_W.shape == (k * (2 * V + 3), M) and m.stri_line.numel() == k
+    m.striatum_reset(); z0 = m.striatum_read()
+    assert z0.shape == (M,) and float(z0.min()) >= 0
+    m.striatum_push(0, 5); z1 = m.striatum_read(); assert not torch.equal(z0, z1), "a heard symbol left no trace"
+    m.striatum_push(1, 5); z2 = m.striatum_read(); assert not torch.equal(z1, z2), "own symbol indistinguishable from heard"
+    assert int(m.stri_line[0]) == V + 5 and int(m.stri_line[1]) == 5, "the line does not keep the order of events"
+    m.striatum_push(2, 1); assert int(m.stri_line[0]) == 2 * V + 1, "the frown is not an event"
+    m.striatum_push(3, 0); assert int(m.stri_line[0]) == 2 * V + 2, "a quiet tick is not an event"
+    for _ in range(k + 2):
+        m.striatum_push(0, 1)
+    assert int(m.stri_line[-1]) == 1, "the line does not forget the oldest event"
+    assert m.stri_in().shape == (2 * M,), "the heads do not read the slot beside the line"
+    W0, b0 = m.stri_W.clone(), m.stri_b.clone(); _live(life, 80)
+    assert torch.equal(W0, m.stri_W) and torch.equal(b0, m.stri_b), "the born expansion moved (it must not learn)"
+    print("17 the striatum: line of", k, "events x", 2 * V + 3, "kinds ->", M, "units | ordered | forgets | born, unlearned")
+
+
+def test_working_memory():
+    """working memory: a slot latched at the world's utterance end, cleared by the felt reward or by age; read beside the line"""
+    life = _watched(wm_max=30, wm_burst=100.0); m = life.m
+    assert float(m.wm_on) == 0
+    say(life, "hi ", ticks_after=16)                       # the world speaks and falls quiet: the offset latches
+    assert float(m.wm_on) == 1, "the offset did not latch the slot"
+    assert float(m.stri_in()[int(life.cfg["stri_m"]):].abs().sum()) > 0, "the latched slot is empty"
+    life.set_face(2.0)
+    for _ in range(3):
+        life.tick()
+    assert float(m.wm_on) == 0, "the felt reward did not clear the slot"
+    life.set_face(0.0); m.wm_latch(m.striatum_read()); assert float(m.wm_on) == 1
+    for _ in range(34):
+        life.tick()
+    assert float(m.wm_on) == 0, "age did not clear the slot"
+    print("18 working memory: latched at the offset | cleared by the reward | cleared by age", int(life.cfg["wm_max"]))
+
+
+def test_planning_actor():
+    """the planning actor: at a word boundary when about to speak, the cortex's few candidates are imagined through the world
+    model and valued by the striatal critic; the imagination leaves the body as it was"""
+    life = _watched(actor_margin=1e9); m = life.m          # every speakable symbol within the margin: the cap alone shortens the list
+    line = m.stri_line.clone(); n = len(life.win); v = life._imagine_value(TOK.token_to_id("a"), 2)
+    assert math.isfinite(float(v)) and torch.equal(line, m.stri_line) and len(life.win) == n, "imagining moved the body"
+    pl = None
+    for t in range(600):
+        if t % 25 == 0:
+            life.set_face(2.0)
+        elif t % 25 == 2:
+            life.set_face(0.0)
+        if t % 40 == 0:
+            life.type_text("go ")
+        life.tick(); pl = getattr(life, "_plan_last", None)
+        if pl:
+            break
+    assert pl, "the planner never ran (the body never spoke at a boundary)"
+    assert len(pl["cands"]) == int(life.cfg["plan_k"]), "the shortlist is not the cortex's few"
+    assert all(math.isfinite(float(x)) for x in pl["vals"].values()), "an imagined value left the finite"
+    print("19 the planning actor: shortlist of", len(pl["cands"]), "| imagined values", {c: round(float(v), 3) for c, v in pl["vals"].items()})
+
+
+def test_new_organs_round_trip():
+    """save/load keeps the striatal expansion, its line, the fast evidence and head, the actor, the slot, and the parent's environment"""
+    import os, tempfile
+    life = _watched(); m = life.m; _live(life, 200); m.wm_latch(m.striatum_read())
+    assert float(m.vf_A.abs().sum()) > 0, "no fast evidence gathered"
+    path = os.path.join(tempfile.mkdtemp(), "w.pt"); life.save_path = path; life.save()
+    life2 = Life.load(path, TOK, save_path=None); m2 = life2.m
+    for k_ in ("stri_W", "stri_b", "stri_line", "vf_A", "vf_b", "vf_mu", "vf_var", "vf_n", "wm_slot", "wm_on", "wm_age"):
+        assert torch.equal(getattr(m, k_), getattr(m2, k_)), f"{k_} did not survive the save"
+    p1, p2 = dict(m.named_parameters()), dict(m2.named_parameters())
+    for k_ in ("vfast.weight", "vfast.bias", "actor.weight", "actor.bias"):
+        assert torch.equal(p1[k_], p2[k_]), f"{k_} did not survive the save"
+    assert isinstance(torch.load(path, weights_only=False).get("env"), dict), "the save does not record the parent's environment"
+    life2.tick()
+    print("20 the new organs survive the save: striatum, fast evidence", tuple(m.vf_A.shape), "heads, slot, env")
+
+
+def test_chain_closes():
+    """the eleventh defect: the value's source and target are the same instant one tick apart, so the temporal-difference
+    evidence is symmetric (the fast head's up to its trace); before the fix 0.16 and 0.30"""
+    life = _watched(); m = life.m; _live(life, 400)
+
+    def asym(A):
+        return float((A - A.T).norm() / max(float(A.norm()), 1e-12))
+    af, av = asym(m.vf_A[:-1, :-1]), asym(m.vc_A[:-1, :-1])
+    assert av < 0.02, f"the ventral chain does not close (asymmetry {av:.3f})"
+    assert af < 0.08, f"the fast chain does not close (asymmetry {af:.3f})"
+    assert int((m.vf_A.diagonal() < 0).sum()) == 0 and int((m.vc_A.diagonal() < 0).sum()) == 0, "negative evidence on the diagonal"
+    print(f"21 the chain closes: evidence asymmetry fast {af:.4f} ventral {av:.4f} | no negative diagonal")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes]
     failed = 0
     for t in tests:
         try:

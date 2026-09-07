@@ -232,6 +232,9 @@ PHYSIOLOGY = dict(
 
 class Life:
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None):
+        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY)
+        if unknown:
+            print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
         self.tok = tok; self.dev = device
         self.cfg = dict(PHYSIOLOGY); self.cfg.update(cfg or {})
@@ -435,7 +438,8 @@ class Life:
                 C = self._C_last                               # the last filled position's stream, and its forecast
             else:
                 C = self._stream_now()
-            self.bands = m.band_update(self.bands, C)
+            if who == 0:                                       # once a tick (review 2026-09-06: twice doubled every band's rate)
+                self.bands = m.band_update(self.bands, C)
             self._C_last = C
             pred = m.forecast(C, read)
             self.pred_prev = F.normalize(pred, dim=0)
@@ -648,7 +652,7 @@ class Life:
                         self._vc_e = (gl_tr * lam * e if e is not None else torch.zeros_like(xa_prev)) + xa_prev
                         vf_ = float(self.cfg.get("vcrit_forget", 0) or 0); beta = (1.0 - 1.0 / vf_) if vf_ > 0 else 1.0
                         dlt = xa_prev - gl * (nfl if not int(self.cfg.get("vcrit_diff", 0)) else 1.0) * xa_now
-                        m.vc_A.mul_(beta).add_(torch.outer(self._vc_e, dlt))
+                        m.vc_A.mul_(beta).addr_(self._vc_e, dlt)
                         if beta < 1.0 and not ntau:
                             m.vc_A.diagonal().add_((1.0 - beta) * self._vc_delta)   # the constant prior inside A (the form without statistics)
                         m.vc_b.mul_(beta).add_(self._vc_e * float(r))
@@ -667,7 +671,7 @@ class Life:
                         ef = getattr(self, "_vf_e", None)
                         self._vf_e = (gf * ef if ef is not None else torch.zeros_like(xa_p)) + xa_p           # the trace at gamma (lambda 1)
                         bf = 1.0 - 1.0 / float(self.cfg.get("fast_rls_forget", 36000))
-                        m.vf_A.mul_(bf).add_(torch.outer(self._vf_e, xa_p - gf * xa_n)); m.vf_b.mul_(bf).add_(self._vf_e * float(r))
+                        m.vf_A.mul_(bf).addr_(self._vf_e, xa_p - gf * xa_n); m.vf_b.mul_(bf).add_(self._vf_e * float(r))
                         if self.ticks % int(self.cfg.get("fast_rls_every", 64)) == 0:
                             m.fast_rls_solve(fb, prior=self._vf_delta)
                 with torch.no_grad():
@@ -722,7 +726,7 @@ class Life:
                 if stri and int(self.cfg.get("wm", 0)) and getattr(m, "stri_wm", 0):
                     with torch.no_grad():                        # WORKING MEMORY: latch at a burst, clear at the reward or with age
                         m.wm_tick()
-                        if r > 0 or float(m.wm_age) > float(self.cfg.get("wm_max", 512)):
+                        if felt > 0 or float(m.wm_age) > float(self.cfg.get("wm_max", 512)):
                             m.wm_clear()
                         elif delta > float(self.cfg.get("wm_burst", 0.5)):
                             m.wm_latch(m.striatum_read()); self._z_now = m.stri_in()
@@ -734,6 +738,13 @@ class Life:
                     self.v_buf[b].append((self._bands_prev[b].detach().cpu(), r, self.bands[b].detach().cpu()))
             else:
                 delta = r; delta_slow = r; delta_long = r; vlong = 0.0
+            # THE CHAIN CLOSES (the eleventh defect, found by review 2026-09-06): the state that was this update's target is the
+            # next update's source. Before, the source was the end of the previous tick (after its own symbol) and the target the
+            # middle of this one (after the world's), so the body's own step fell in a gap no transition covered and every
+            # critic's evidence matrix was asymmetric (16-30 percent) where a closed chain's is symmetric.
+            self._bands_prev = self.bands.clone()
+            if stri:
+                self._z_prev = self._z_now
         with torch.no_grad():                                    # THE TONIC TRACES advance with this tick's felt reward
             m.r_tr_prev.copy_(m.r_tr); m.r_tr += (float(r) - m.r_tr) / torch.tensor([float(c) for c in m.clocks], device=m.r_tr.device)
         self._dopa = delta
@@ -799,13 +810,14 @@ class Life:
                 with torch.no_grad():                                  # the striatum disposes: its bias on the cortex's proposal
                     a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
                     form_ = str(self.cfg.get("actor_form", "add"))
+                    spk = logits.clone(); spk[self.sil] = float("-inf"); spk[self.eot] = float("-inf")   # the speakable proposals
                     if form_ == "select":
-                        short = logits >= (logits.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
+                        short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
                         logits = torch.where(short, logits + a_bias, torch.full_like(logits, float("-inf")))
                     elif form_ == "plan":
                         boundary = (not getattr(self, "_acted_last", False)) or getattr(self, "_own_last", None) in (None, self.space_id)
                         if boundary and acted:                                 # imagination only when it is about to speak
-                            short = logits >= (logits.max() - float(self.cfg.get("actor_margin", 4.0)))
+                            short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # within the margin of the best speakable
                             cands = [int(i) for i in torch.nonzero(short).flatten().tolist() if int(i) not in (self.sil, self.eot)]
                             if len(cands) > int(self.cfg.get("plan_k", 4)):        # the cortex's top few, as many as a choice can weigh
                                 cands = sorted(cands, key=lambda c: -float(logits[c]))[: int(self.cfg.get("plan_k", 4))]
@@ -864,14 +876,12 @@ class Life:
             self._step(nxt, 1, r=0.0, dopamine=delta)          # its own symbol enters the stream
         else:
             self._step(self.sil, 1, r=0.0, learn_store=False)   # its rest enters as an empty tick
-        self._bands_prev = self.bands.clone()
         self._own_last = int(nxt) if acted else None
         if stri:
             if acted:
                 m.striatum_push(1, int(nxt))                      # its own symbol is an event of the stream
             elif u == self.sil and not felt and int(self.cfg.get("stri_quiet", 0)):
                 m.striatum_push(3, 0)                             # a tick of quiet is an event too (the line carries time)
-            self._z_prev = m.stri_in()
         self._acted_last = bool(acted)
         if float(self.cfg.get("gate_slow_lr", 0.0)) > 0.0:
             with torch.no_grad():
@@ -887,7 +897,7 @@ class Life:
         # --- the gate's buffer and lesson ---
         vw = float(self.cfg.get("vcrit_w", 0.0)) * (self._vrel_gain if int(self.cfg.get("vcrit_auto", 0)) else 1.0)
         self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long, int_t, self.fatigue,
-                              float(m.r_tr[int(self.cfg.get("gate_tonic_clock", 4))])])          # the felt-reward trace at the tick, for the drive
+                              float(m.r_tr[int(self.cfg.get("gate_tonic_clock", 4))]), p_act])   # the felt-reward trace at the tick, for the drive; the probability it acted with
         if self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0 and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:
                 self._gate_lesson()
@@ -911,7 +921,7 @@ class Life:
                      "mood": round(self.mood, 2), "cort": round(self.fatigue, 2), "fatigue": round(self.fatigue, 2),
                      "stress": round(self.stress, 2), "ent": round(ent, 2), "felt": felt,
                      "said": (self.tok.decode([int(nxt)]) if nxt != self.sil else ""),
-                     "gate": round(p_act, 3), "dopamine": round(delta, 3), "doses": self.n_bursts, "level": round(level, 3),
+                     "gate": round(p_act, 3), "dopamine": round(delta, 3), "doses": self.n_bursts, "level": round(level, 3), "r": round(float(r), 3),
                      "vlong": round(vlong, 3), "dlong": round(delta_long, 3),
                      "store": self.store.n(), "store_conf": round(conf1, 3), "surprise": round(surp1, 3),
                      "own": [self.tok.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
@@ -931,14 +941,14 @@ class Life:
         rs = torch.tensor(list(self._vbuf_r)); vs = torch.tensor(list(self._vbuf_v))
         disc = gl ** torch.arange(3072, dtype=torch.float32)
         G = torch.stack([(rs[i:i + 3072] * disc).sum() for i in range(256)]); V = vs[:256]
-        d = 1.0 - 1.0 / 8192; m = self._vrel
+        d = 1.0 - 1.0 / 65536; m = self._vrel                     # ~5 days of samples (review: 8192 held ~8 independent returns)
         for v_, g_ in zip(V.tolist(), G.tolist()):
             m[0] = d * m[0] + 1.0; m[1] = d * m[1] + v_; m[2] = d * m[2] + g_
             m[3] = d * m[3] + v_ * v_; m[4] = d * m[4] + g_ * g_; m[5] = d * m[5] + v_ * g_
         n = m[0]; mv, mg = m[1] / n, m[2] / n
         var_v, var_g = m[3] / n - mv * mv, m[4] / n - mg * mg; cov = m[5] / n - mv * mg
         corr = cov / math.sqrt(max(var_v, 1e-9) * max(var_g, 1e-9))
-        self._vrel_corr = float(corr); self._vrel_gain = float(max(0.0, corr))
+        self._vrel_corr = float(corr); self._vrel_gain = float(max(0.0, min(1.0, cov / max(var_v, 1e-9))))   # the slope (review: corr flickered at random)
 
     def _gate_lesson(self):
         buf = list(self.gate_buf)
@@ -973,7 +983,10 @@ class Life:
         self.m.mouth_gate.train()
         z = self.m.mouth_gate(feats).squeeze(-1)
         fl = float(self.cfg["gate_floor"])
-        p = (fl + (1.0 - fl) * torch.sigmoid(z)).detach()
+        # the probability the gate actually acted with (stress divisor and all), carried in the buffer (review 2026-09-06: recomputed
+        # here without the divisor, (act - p) was biased with stress); older samples without it fall back to the recomputation
+        p = torch.tensor([float(b[6]) if len(b) > 6 else float("nan") for b in buf[:n]], device=self.dev)
+        p = torch.where(torch.isnan(p), (fl + (1.0 - fl) * torch.sigmoid(z)).detach(), p)
         # THE THREE-FACTOR RULE: credit x (action - p) has expectation cov(credit, acting), what a policy
         # must learn (Go for acts that paid, NoGo for acts that cost); plus vigor: the average credit
         # itself, tonic dopamine setting the rate of acting whatever it did
@@ -984,7 +997,7 @@ class Life:
         self.opt_gate.step(); self.m.mouth_gate.eval()
         self._gate_last = {"n": n, "credit_mean": round(float(G.mean()), 4), "baseline": round(float(base), 4),
                            "acted": round(float(sum(1 for b in buf[:n] if b[1]) / n), 3), "tick": self.ticks}
-        for _ in range(min(len(self.gate_buf), int(self.cfg["gate_every"]))):
+        for _ in range(min(len(self.gate_buf), n)):                 # the samples the lesson consumed (review: popping gate_every left a third to be learned twice)
             self.gate_buf.popleft()
 
     # ---------------- the waking cortex ----------------
@@ -1304,7 +1317,7 @@ class Life:
     # ---------------- save / load ----------------
     def save(self, path=None):
         path = path or self.save_path
-        blob = {"organs": self.m.state_dict(), "store": self.store.state_dict(), "cfg": self.cfg,
+        blob = {"organs": self.m.state_dict(), "store": self.store.state_dict(), "cfg": self.cfg, "env": {k_: os.environ.get(k_, "") for k_ in ("PARENT", "REPLY", "WAIT", "TALKOVER_FROWN", "WORD_SMILES", "ROOM", "ANSWER_LEVELS", "REPLY_QUIET")},
                 "arch": {"vocab": self.m.vocab, "d": self.m.d, "layers": len(self.m.blocks), "heads": self.m.blocks[0].attn.num_heads,
                          "window": self.m.window, "clocks": list(self.m.clocks)},
                 "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure, "heard": self.heard.cpu(),

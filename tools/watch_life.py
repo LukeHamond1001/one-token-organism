@@ -29,6 +29,9 @@ else:
     L = Life.load(a.body, tok, device="cpu", cfg=cfg or None, save_path=a.body)
 name = os.path.basename(a.body).replace(".pt", ""); out = a.out or f"data/watch/{name}"; os.makedirs(out, exist_ok=True)
 m = L.m; rng = random.Random(a.seed)
+ENV = {k: os.environ.get(k, "") for k in ("PARENT", "REPLY", "WAIT", "TALKOVER_FROWN", "WORD_SMILES", "ROOM", "FIRST_LETTER_BIAS", "ANSWER_LEVELS", "REPLY_QUIET")}
+with open(f"{out}/digest.txt", "a") as f: f.write(f"# {time.strftime('%Y-%m-%d %H:%M')} start at day {L.day_n + 1}: env {ENV} | sets {a.set} | arch d {L.m.d} layers {len(L.m.blocks)}\n")
+print(f"env {ENV}")
 print(f"watching {name}: day {L.day_n + 1} onward, {a.days} days | cfg {{{', '.join(f'{k}={cfg[k]}' for k in sorted(cfg) if k in [x.split('=')[0] for x in a.set])}}}", flush=True)
 for _ in range(a.days):
     day = L.day_n + 1; ticks = []; rows = []; cg_ref = []
@@ -39,7 +42,7 @@ for _ in range(a.days):
         orig_tick()
         la = L.last; wm1 = float(getattr(m, "wm_on", torch.zeros(()))); pl = getattr(L, "_plan_last", None)
         ticks.append({"t": L.ticks, "typing": typing, "said": la.get("said", ""), "felt": la.get("felt", 0), "gate": la.get("gate"), "dopa": la.get("dopamine"),
-                      "vf": L.fast_value(), "vlong": la.get("vlong"), "e": cg_ref[0].e if cg_ref else None, "away": (cg_ref[0].away_until > L.ticks) if cg_ref else False,
+                      "vf": L.fast_value(), "r": la.get("r"), "vlong": la.get("vlong"), "e": cg_ref[0].e if cg_ref else None, "away": (cg_ref[0].away_until > L.ticks) if cg_ref else False,
                       "wm": wm1, "wm_latch": wm1 > wm0, "fatigue": la.get("fatigue"),
                       "plan": ({"cands": [tok.decode([c]) for c in pl["cands"]], "vals": [round(pl["vals"][c], 3) for c in pl["cands"]], "cortex": [round(pl["cortex"][c], 2) for c in pl["cands"]]} if pl else None)})
     L.tick = tick
@@ -62,8 +65,9 @@ for _ in range(a.days):
     pre = [byt[t - 1]["vf"] - mv for t in sm if t - 1 in byt]; far = [byt[t - 8]["vf"] - mv for t in sm if t - 8 in byt]
     rise = (st.mean(pre) - st.mean(far)) / 2 * 100 if pre and far else float("nan")
     err = [byt[t + 1]["dopa"] for t in sm if t + 1 in byt and byt[t + 1].get("dopa") is not None]
-    latches = sum(1 for x in ticks if x["wm_latch"]); plans = [x["plan"] for x in ticks if x["plan"]]
-    agree = sum(1 for p in plans if p["cands"] and p["vals"].index(max(p["vals"])) == p["cortex"].index(max(p["cortex"]))) 
+    latches = sum(1 for x in ticks if x["wm_latch"]); plans = [x for x in ticks if x["plan"]]
+    # the planner's flips: decisions where the symbol said was not the cortex's own favorite among the candidates (review: "agreed" was a coin)
+    agree = sum(1 for x in plans if x.get("said") and x["said"] in x["plan"]["cands"] and x["plan"]["cands"].index(x["said"]) != x["plan"]["cortex"].index(max(x["plan"]["cortex"])))
     aways = sum(1 for r in rows if r.get("action") == "away"); frowns = sum(1 for r in rows if r.get("action") == "frown"); seqs = sum(1 for r in rows if r.get("action") == "sequence")
     st_typ, n_typ = spoke(typ); st_q, _ = spoke(quiet)
     held = [r for r in rows if r.get("action") == "smile" and r.get("run_on") is not None]

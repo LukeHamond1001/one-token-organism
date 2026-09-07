@@ -259,7 +259,7 @@ class FastCaregiver:
     def wait_gate(self):
         t0 = self.L.ticks
         while True:
-            if self.L.asleep or self.L.sleep_pressure >= self.L.cfg["wake_ticks"]:
+            if self.L.asleep:                                   # the parent sees sleep, never the pressure behind it (review 2026-09-06)
                 return False
             if (self.L.ticks - self.last_write_tick >= self.quiet and self.L.ticks - t0 >= 2) or self.L.ticks - t0 >= self.cap:
                 return True
@@ -295,7 +295,7 @@ class FastCaregiver:
         from it. Returns the new last_t, or None if the body fell asleep."""
         L = self.L
         while L.ticks < last_t + pace:
-            if L.sleep_pressure >= L.cfg["wake_ticks"]:
+            if L.asleep:
                 break
             if WAIT and self.reply_line:
                 line = self.reply_line; self.reply_line = None
@@ -318,7 +318,7 @@ class FastCaregiver:
         last_t = None; slept = False; pi = 0
         # (before 2026-09-04 23:50 the loop did not notice the night and the engaged parent talked through it: every
         # logged day held two nights, the plan and the post-night cues once per two nights; ages by nights were right)
-        while (pi < len(plan) or (PARENT and L.sleep_pressure < L.cfg["wake_ticks"] - 600)) and L.nights == n0:
+        while (pi < len(plan) or (PARENT and not L.asleep)) and L.nights == n0:
             if pi < len(plan):
                 kind, text = plan[pi]; pi += 1
             else:

@@ -22,8 +22,8 @@ for r in shown:
         if t + k in byt: print(("  >" if k == 0 else "   ") + fmt(byt[t + k]))
 sm = [r["t"] for r in R if r.get("action") == "smile"]; vf = [x["vf"] for x in T if x.get("vf") is not None]; mv = st.mean(vf) if vf else 0
 # the actor's overrides: decisions where the symbol said was not the cortex's own favorite among the candidates
-dec = [(x, byt.get(x["t"] + 1)) for x in T if x.get("plan")]
-over = [(x, nx) for x, nx in dec if nx and nx.get("said") and nx["said"] in x["plan"]["cands"] and x["plan"]["cands"].index(nx["said"]) != x["plan"]["cortex"].index(max(x["plan"]["cortex"]))]
+dec = [(x, x) for x in T if x.get("plan")]                      # the symbol chosen is said on the plan's own tick (review: t+1 was wrong)
+over = [(x, nx) for x, nx in dec if nx.get("said") and nx["said"] in x["plan"]["cands"] and x["plan"]["cands"].index(nx["said"]) != x["plan"]["cortex"].index(max(x["plan"]["cortex"]))]
 def smiled_soon(t, k=16): return any(t < s_ <= t + k for s_ in sm)
 o_s = sum(1 for x, nx in over if smiled_soon(x["t"])); f_s = sum(1 for x, nx in dec if nx and smiled_soon(x["t"]))
 print(f"actor: {len(dec)} decisions, {len(over)} overrode the cortex's favorite; a smile within 16 ticks after {o_s}/{max(1,len(over))} overrides vs {f_s}/{max(1,len(dec))} of all decisions")

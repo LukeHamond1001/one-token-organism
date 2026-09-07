@@ -24,5 +24,9 @@ for f in sys.argv[1:]:
     read("all ticks", ts)
     if has_typing:
         read("parent typing", [t for t in ts if byt[t].get("typing")]); read("parent quiet", [t for t in ts if not byt[t].get("typing")])
+        ends = [t for i, t in enumerate(ts[1:], 1) if byt[ts[i - 1]].get("typing") and not byt[t].get("typing")]   # the parent's line just ended
+        win = set(); [win.update(range(t, t + W)) for t in ends]
+        read(f"first {W} ticks after the parent's line", [t for t in ts if t in win and not byt[t].get("typing")])
+        read("other quiet ticks", [t for t in ts if t not in win and not byt[t].get("typing")])
     read(f"{W} ticks after a talked-over miss", after_over); read(f"{W} ticks after a smile", after_smile); read(f"{W} ticks after a frown", after_frown)
     read("parent turned away", [t for t in ts if byt[t].get("away")])
