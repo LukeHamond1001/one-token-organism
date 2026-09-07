@@ -5050,3 +5050,18 @@ curriculum is now widening.
 The diary at 32M reached this level of answering, most cues right, in its eighth week. This body reached it on its first
 day of questions, at eleven days, on the same rules and the same rewards. What it does not do yet: put two of its own words
 together unasked, or answer "why". Tomorrow's parent reinforces "can" and "happy" and gives "why dog up?" one more pass.
+
+## Sonnet's second and third days (2026-09-07, 06:36)
+
+Day 12: "want" entered inside the frame "I ___ milk" (I want milk, I want ball, I want book). The body answered "you will
+go" with "in", the word taught that same day, while "I will go" still drew the old "up"; once it typed "wa_n_t book" with no
+cue. Faces 40 smiles to 44 frowns, every frown for talking over; the night kept the day (0.87 before, 0.92 after).
+
+Day 13: no new words; the day was rope. Every cue was answered right, and the three words that entered under this parent
+came back as answers: "dog can" and "I can" and "you can" with "go", "happy" with "ball", "book", "dog", "I want" with
+"milk" and "book", "why dog up?" with "because", after which the typist modeled the whole ("why dog up? because big dog").
+Faces 43 smiles to 37 frowns, the first day under Sonnet where the smiles led; 17 aways; the night 0.82 to 0.91. The
+typist's chain is armed so the parent continues past day 16 without a gap.
+
+What the thirteen days look like from the outside: it yields when spoken to about three fifths of the time, answers a
+question with the right word almost every time, and has not yet put two of its own words together unasked.
