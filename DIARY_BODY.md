@@ -5098,3 +5098,14 @@ book; "my" answered ball, milk, book, dog; "more" answered milk, ball, book; "gi
 Day 17: 92 smiles to 50 frowns, the known-word count 47 to 48; the night 0.75 to 0.89. Still no pair of its own words
 unasked; the day-18 parent is told to model pairs of words it already says on its own right after a sweep and leave a
 longer quiet for it to try.
+
+## Two of its own words (2026-09-07, 12:00)
+
+The planners report no spontaneous pair of the child's words, but they read the smile rows, which record one word each.
+The page's log keeps the child's own stream in every row's context, the parent's symbols masked, so the pairs can be
+counted. Two known words in a row in its own stream: 15 on day 11, 35 on day 14, 41 on days 17 and 18; distinct pairs 7
+rising to 19. Nearly all of it is recall of frames it was taught. Pairs no one taught it: one on day 14 ("book ball"), one
+on day 15 ("dog because"), four a day on days 17 and 18 ("dog big", "dog because", "book ball"): recombinations of pieces it
+holds, "big dog" turned around, "because" carried out of "why dog up?". So it pairs its words forty times a day and invents
+a handful; novelty is where it stands at eighteen days. Day 18: all thirteen cues right, "down" solid, "hi" still uncredited
+after five exposures, 91 smiles to 49 frowns.
