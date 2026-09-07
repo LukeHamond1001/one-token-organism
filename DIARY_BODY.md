@@ -4997,3 +4997,14 @@ The REM question stays open: the big body's dreams are near copies of each other
 reference's 0.07 to 0.21) because REM rolls out greedily at temperature zero. A warm-REM night on the same copy is running;
 if it keeps more of the day or spreads the dreams, rem_temp changes at a boundary; if not, REM stays as it is. REM's share of
 the memory gauge has been zero at both sizes on every night so far; its contribution is expected at the cortex's maturity.
+
+## REM at 0.7 is still greedy (2026-09-06, 23:55)
+
+The warm-REM night on the day-1 copy came out identical to the baseline in every number, to three decimals. The rollout
+does sample above zero temperature; the softmax it samples from is a one-hot regardless, because the readout's logits are
+that peaked: a newborn's next-symbol entropy measured 0.03 nats at every size (uniform over the lexicon would be 4.7), so a
+temperature of 0.7 changes nothing and the mouth itself is close to deterministic from birth. REM stays as it is. What this
+opens is a question about exploration rather than sleep: a body whose mouth rarely varies its favorite explores words only
+through what the world does to its state and through the planner's shortlist, which at this logit scale holds one to four
+candidates. The reference learned to answer cues this way, so it is not a defect proven; it is written down as the next
+thing to measure when the ear is bought. No change to the living body.
