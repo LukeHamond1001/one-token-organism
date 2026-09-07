@@ -5034,3 +5034,19 @@ The takeover is armed for the day-10 boundary: the same body, served on a page a
 as its parent under the same rules (reply when it is quiet, wait, frown when talked over), the curriculum from
 CURRICULUM.md, connections before vocabulary. The physiology does not change. The user's word: "then we have one model
 where sleep works and sonnet trains it and nothing else."
+
+## Sonnet's first day (2026-09-07, 04:27)
+
+Day 11, the first under the Claude typist and a Sonnet planner writing from the curriculum. From the planner's report and
+the page's log: the typist said 44 lines and asked 11 cues; the body answered "where ball?" with "ball" three times, "give"
+with "milk", "ball" and "book", "scared" with "dog" and "ball", "dog will" with "go", "first milk then" with "ball", "I had"
+with "milk", "big dog bigger" with "dog". The one cue never credited: "why dog up?", answered "because" and no further. Two
+words entered inside frames it knew: "can" through the will-frame ("I can go up", "dog can go") and "happy" through the
+slot big and scared had made ("happy dog", "happy ball"); neither came back in its own words yet. Faces: 55 smiles, 42
+frowns, every frown for talking over, 18 aways. The night fell mid-session (the served day carries the watched day's
+ticks) and kept the day: 0.81 before, 0.91 after; the dreams replayed the fast parent's few lines, which is what the
+curriculum is now widening.
+
+The diary at 32M reached this level of answering, most cues right, in its eighth week. This body reached it on its first
+day of questions, at eleven days, on the same rules and the same rewards. What it does not do yet: put two of its own words
+together unasked, or answer "why". Tomorrow's parent reinforces "can" and "happy" and gives "why dog up?" one more pass.
