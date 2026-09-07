@@ -5081,3 +5081,20 @@ for the first time under this parent, 46 to 47. The night 0.86 to 0.90.
 Five days under Sonnet: seven words entered, all inside frames it already answered, all seven now answered back or said on
 their own; smiles have led frowns for three days; what it has not done is pair two of its own words unasked. The sixth
 day's parent is told to give it the most chances to.
+
+## Its own dopamine, and days 16 and 17 (2026-09-07, 10:54)
+
+The user asked whether it makes dopamine on its own from the lower bands. From the tick logs of the watched days, on the
+ticks where nothing came in at all, no face and no word: 64 percent of day 1's positive dopamine was made there, 56 percent
+of day 10's, and 95 to 96 percent of the negative on every day. Bursts above half a smile with nothing coming in rose from
+6 on day 1 to 13 on day 10, eight of them on a word it had just said itself; the dips below minus half a smile fell from 29
+to 10. On a tick where nothing arrives, only the fast critic's changing expectation can move dopamine, so this is the
+short-timescale reward system running on its own: it rewards its own words when it expects a smile to follow, and it has
+learned when smiles do not come. The long bands' value carries a tenth to a seventh of the credit, still small beside it.
+
+Day 16 under Sonnet: no new words by design; the relation words swept the nouns on cue ("no" answered dog, ball, milk,
+book; "my" answered ball, milk, book, dog; "more" answered milk, ball, book; "give" answered milk, ball, book and once
+"more"). 63 smiles to 46 frowns. The typist's six-day run ended and the chain relaunched it for day 17 without a gap.
+Day 17: 92 smiles to 50 frowns, the known-word count 47 to 48; the night 0.75 to 0.89. Still no pair of its own words
+unasked; the day-18 parent is told to model pairs of words it already says on its own right after a sweep and leave a
+longer quiet for it to try.
