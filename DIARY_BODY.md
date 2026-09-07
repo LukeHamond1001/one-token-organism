@@ -5124,3 +5124,24 @@ The served days now read, from the log: fifty lines and a dozen cues a day (more
 backlog draining beside the day's batches), forty to fifty of its own two-word runs a day, four or five of them pairs no one
 taught it, the known-word count at 48, every night keeping nine tenths. The talking-over holds at forty-five to fifty
 frowns a day against ninety to a hundred smiles.
+
+## The cortex alone, and when REM will count (2026-09-07, 15:05)
+
+The user asked whether the cortex has learned to predict the next state. Measured on a copy with the hippocampus off,
+teacher-forced through lines one at a time, the targets split into spelling (the next letter inside a word) and the next
+word (its first letter): spelling 0.50 right on taught lines and 0.57 on combinations it never heard, against 0.02 on
+letter noise; the next word 0.12 right on taught lines and 0.00 on new combinations, in its top three 0.17 and 0.39. The
+32M reference at 22 days reads the same: 0.50 and 0.45 for spelling, 0.15 and 0.06 for the next word. So the cortex has
+learned to spell and has learned the frames' shapes, and does not yet predict on its own which word comes next; in
+conversation the hippocampus supplies the line and the context the frame, which is why the body answers better than its
+cortex alone predicts. The nine tenths the nights report is the memory of the lines just consolidated, easy targets
+included, not this.
+
+The same measurement says when REM will contribute. REM runs the cortex free from each dream's first symbols and learns
+from what it produces; that adds nothing while the rollouts are copies of each other (cosine 0.998) and the next word is a
+guess. Two conditions, both in the nightly record: the REM cosine below about 0.9, and the next word near a third right
+alone. Neither is a constant to set; both come from lines with structure between them, and with 33 words in 97 taught
+pairs the next word is close to unpredictable from the line alone. Forty to sixty more days is the estimate, and the night
+REM's line moves off zero is the night it gets reported.
+
+Day 21: 105 smiles to 48 frowns, the known-word count 48 to 49, the night 0.77 to 0.89.
