@@ -5209,3 +5209,19 @@ Three rulings from the user today. The typist's cadence stays as it is: I had fo
 once and the server feeds it one symbol a tick, so the body has never heard a human pace, and proposed a per-letter delay
 that varies; the user said to forget it and keep teaching. The planners run on Opus from day 28, the brief unchanged. And
 no tests of word relations on copies for now; the page's log is the record.
+
+## "dog out here" (2026-09-07, 22:26)
+
+Day 28, the first day with an Opus planner, and the day the thing the last week had been waiting for arrived. "out"
+entered inside frames it answers: "dog out", then ball out, book out, go out, out here, big dog out, my dog out. Ten
+minutes after the first "dog out" the body wrote "out milk", a pair no one had taught it; then "dog out here", and "go
+out here", joining "dog out" and "out here" by itself: three words of its own, from two frames it had heard for the first
+time that session. "look", a day old, came out as "look dog look" in its own voice. On cue, "go" answered "out" twice,
+"look" answered "here", "see" answered "dog"; the cues asked late in the day drew nothing, as the day before. The parent
+imitated "dog out here" back to it as its next line, which is what the curriculum says to do with what the child offers.
+99 smiles to 40 frowns, 13 aways; the known-word count 53 to 54; the night 0.76 to 0.87.
+
+What this is and is not. It is the first time the body has built a string longer than two words out of pieces it was
+given separately, inside the hour it was given them: the relation between "out" and its frame-mates was learned, not the
+lines. It is not grammar; "out milk" is a pair of the right words in an order no parent would use. The next days say
+whether it does this with every new word or only with ones like "out" that fit many frames at once.
