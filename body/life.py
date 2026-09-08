@@ -515,7 +515,7 @@ class Life:
                 C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
                 lg = m.readout(m.forecast(C, zero_read)); lg[self.sil] = float("-inf"); lg[self.bans] = float("-inf")
                 sym = int(lg.argmax())
-                if sym == self.space_id:
+                if int(self.cfg.get("plan_boundary", 1)) and sym == self.space_id:   # the word as the unit only under the old rule
                     said.append(sym); break                       # the word ends: value the line here
             width = 2 * m.vocab + 3
             for sy in said:
