@@ -3,7 +3,7 @@
   python3 -m body.serve --birth data/body2.pt --tok data/tok_char.json --port 8018 --period 0.5
   python3 -m body.serve --load  data/body2.pt --tok data/tok_char.json --port 8018
 
-POST /type {"text"}   POST /face {"expr"}   GET /state?since=N   POST /save {}
+POST /type {"text"}   POST /face {"expr"}   GET /state?since=N   POST /save {}   (no /sleep: the day ends by the body alone; the review of 2026-09-08)
 """
 import argparse
 import json
@@ -107,9 +107,6 @@ def main():
                 elif self.path == "/save":
                     with lock:
                         self._json(life.save())
-                elif self.path == "/sleep":
-                    with lock:
-                        self._json(life.night())               # the supervisor's plumbing for tests only
                 else:
                     self._json({"error": "unknown path"}, 404)
             except Exception as e:

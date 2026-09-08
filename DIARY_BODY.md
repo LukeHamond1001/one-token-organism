@@ -5654,3 +5654,53 @@ talked-over frown firing, one smile, no errors. Recorded in the thread; reversib
 Also tonight: --explore-choice 1.0 rides (pre-registered from the fast seeds: smiles 68 vs 59); the prefrontal ceiling stays fixed (the
 day-46 reading's copy was killed for memory after the server died at 17:57:55 beside it; the served body's /insides now reports the slope,
 the weight and the gate's floor, so tomorrow's reading costs nothing). RULE from the death: no copy body beside the served one.
+
+
+### The user's word: no small things (2026-09-08, 18:35)
+
+"why all these small. lets get architecture going fast with the quicker teacher, 1 cycle equals one token. then we need to reevaluate
+architecture and make sure its headed on path that will get all of its parts working." The four small seeds for the calibrated sharpness
+were stopped after two minutes and removed. The one experiment is the served body: one symbol a tick, its parent in ticks, the fast parent
+from day 48; changes at its boundaries, read on its own days. The re-evaluation of the whole architecture, organ by organ, follows now.
+
+
+### The fast parent's first eight minutes (2026-09-08, 18:49)
+
+Day 48 from 18:41 (the reload at 18:40 with --explore-choice 1.0; the night on time in ticks: day 46/47 ran 6,480 ticks at a second a
+tick and 5,640 at a quarter). In eight minutes: 31 lines (one every 15.8 s; the gate mostly at its cap of 32 ticks, the child talking
+through), 23 smiles (0.74 a line; day 46 under the old parent 0.68), 16 frowns, all for talking over (0.52 a line; day 46 0.55), 45 missed
+(26 talked over, 12 distracted). Per line the same parent; per minute three times the exchange. The child's speech in the gaps is
+words and recombinations: "my hat down", "you had", "dog had baby", "dog out", "more milk", "you had ball", "hot milk book he" (the
+day's new word, hot, said back within six minutes of its first line). Memory: the server at 3.5 GB, 3.4 GB free, no copy beside it.
+The prefrontal slope reads 0.0: its evidence began at the reload and is saved from now on.
+
+
+### The re-evaluation (2026-09-08, 18:55; a Fable review, read-only)
+
+The question: is every part on a path to working, and what law would put it there. The verdicts, checked against the code:
+- Working: the cortex (spelling 0.50, next word 0.12; the corpus is its ceiling), the gate's ear (grounded in the frown and the withheld
+  reply), the fast critic (8% of a smile is under a perfect critic's 20%, since one known word in five is smiled at, not absent), NREM
+  (0.807 to 0.855 at 48 rounds).
+- THE FOURTEENTH DEFECT: REM cannot work as built. Its lesson trains the eight forecast heads to foresee the next tick's band state, which is a
+  deterministic function of the stream and the bands the stream already holds (forecast cosine 1.000 awake, 0.999 before REM's first
+  step): no error to learn from. And nothing reads those heads (model.py:611 is their only use). Maturity will not change this. The fix is
+  a re-aim, a build for tomorrow: REM as imagination for the critics (sampled rollouts on a calibrated readout, the face organ scoring each
+  imagined tick, the striatal critic taking imagined transitions as it takes lived ones, gated by the face organ's measured slope).
+- The slow bands cannot work on this path: zeroed at every night (life.py:1288), the 16384 band is a clock of the day and the head learns the
+  day's profile; the long error never reaches the policy while the tag (gate_slow_lr) is off; and the page holds no contingency past the
+  parent's attention. The law: keep the state through sleep and count the night as elapsed ticks (night_keep_bands, night_ticks, both
+  built), open the tag at the gate's own rate; then a world with state.
+- The gate's rate is a hand-set tonic (0.25) minus fatigue, not the reward rate; since the intrinsic drive went to zero every act is a loss
+  and the gate slides to the fatigue equilibrium; stress halves its logit. The law: the tonic as the reward rate (gate_tonic_rate, built;
+  Niv 2007), so vigor is grounded.
+- Working memory is starved (5 to 14 certain smiles a day against a 36,000-tick forgetting window; most latches are the critic's own noise);
+  the planner's flips are near noise while the value anticipates 8%; the actor needs a body without a demonstrator.
+- Code against the spec: the sharpness clamps mood at zero (a bad day never widens babble, against the songbird law the comment cites); the
+  store's strength uses |dopamine|; the forecast heads unread; 'heard' saved and never read; the working state wakes fresh against clocks
+  longer than a day. No live violation of the law; the /sleep route (an outside hand ending the day) removed from the served port tonight.
+The ranked plan: (1) tonight, the rest vote (end_rest 1: the forecast's own vote for silence at its own logit) beside the choice drive;
+read day 49 against 48 in run-on, yielded, talked-over per line, smiles per line, cue completions; failed if smiles per line drop a fifth
+or completions halve. (2) The next night: the calibrated sharpness with REM's dreams sampled (rem_temp 1) and the mood unclamped with a
+floor; read sharp_cal settling under 25, rem_cos under 0.9, invented pairs up, frowns per line held. Then the build: REM as imagination,
+gated by the face organ's slope, measured first. (3) Then the kept bands, the night as ticks, the tag, under the fixed ceiling; read the
+slope from 0 toward +0.3 within five nights, the long voice's weight, talked-over and aways down.
