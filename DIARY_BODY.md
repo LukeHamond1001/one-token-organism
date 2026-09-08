@@ -5437,3 +5437,30 @@ Day 43 (Opus): "in" freed from "here" ("no ball" answered "in", clean of the att
 on one noun; "off" entered off "hat on"; eight cues right; unprompted "will go out", never taught, and after the nap
 "go in here dog out here" and "will go in", the day's "go in" back through the night on its own. 145 smiles to 50
 frowns; the known-word count 61 to 62.
+
+## The purge (2026-09-08, 14:55)
+
+The user asked for the whole architecture gone through against one sentence: put in a humanoid, switch the inputs and
+the reward, and it learns, with no special rule cheating in the current run. Two reviewers read the code, the second on
+Fable at the user's word, with the first's findings in hand. What they found, and what was done today:
+
+The mouth's bans and the typing filter counted this tokenizer's special tokens, "ids 0 to 10 plus newline"; in a robot
+that would silently ban the first eleven motor primitives and drop the first eleven sense tokens. Replaced by a reserved
+set declared from the tokenizer's own special tokens, identical for this body. The rest, the turn-end and the display
+symbol were found by their strings in the code; now declared in the physiology as anatomy. The planner's boundary was
+the space; the doubt rule is the code's default and the living body took it by a reload right after its forty-fourth
+night, the imagined rollout stopping for no symbol under it. The page's state carried mood, dopamine and the mouth's
+next guess to the parent's page, and the page's bar printed them beside the face keys, so a human parent at that page
+was not held to the typist's law; the page now carries the page, the insides have their own endpoint for instruments,
+committed and served at the next reload. And one term I had never named: the gate's lesson carries, at half weight, the
+mouth's confidence in a symbol times its novelty by a hand-built habituation table, a drive read from inside; the Fable
+reviewer's judgment, "a disclosed drive with a rule inside it," the confidence an organ's reading and the tables not.
+It is measured on two copy days, on against off, before any decision at a night.
+
+Both reviewers: nothing authors or edits the body's words; nothing in the body reads the environment beyond the typed
+symbols and the face; nothing outside reads the insides to decide a face. The exploration drive, built this afternoon as
+arousal that follows the body's surprise rather than a reward, is off in the living body and measured on two copy days
+against its absence. What a humanoid would still need beyond inputs, outputs and reward, in the reviewers' words: a
+rest and a turn-end symbol the body owns (done today), an event-boundary sense in place of eight ticks of quiet, the
+gate's inside-made drives removed or re-derived from organs (under measurement), the tick-rate constants re-sized, and
+the page's channel closed (done today).
