@@ -5329,3 +5329,19 @@ survived the night's replay; "dog and" answered "milk", the different partner; "
 eleven cues, none wrong; a fourth reach for a relation word, "little ball onder". 129 smiles to 53 frowns. Day 37: 137
 smiles to 50 frowns, five aways, the parent's mean face the warmest yet; the night 0.83 to 0.85. The day-38 parent is
 told where the value now lies: relation words used across many frames, and lines that put two relation words together.
+
+## Two relation words in a line (2026-09-08, 09:33)
+
+Day 37 (Opus): "eat" and "hat" roped into their relations ("hat down", "no hat", "dog had hat"); "me eat" answered
+"milk" and "hat" answered "down", a continuation taught twice that morning; unprompted, "no milk here", "dog had hat"
+from a frame taught once, then "had hat down here", its own "dog had hat" fused with its own "down here". 137 smiles to
+50 frowns. Day 38: "under" made live and answered "here" on cue, then written on its own page twice; "eat" spread to
+objects and agents and answered "milk"; "baby and" answered "hat"; the parent's lines began carrying two relation words
+("no more hat", "no big dog", "my big hat"); unprompted, five words, "here dog out here dog", and "here dog had ball".
+Seven cues right, five wrong, mostly late or on frames one exposure old. 152 smiles to 58 frowns, the most smiles of
+any day. Day 39: 139 smiles to 56 frowns; the known-word count 59 to 60; the night 0.77 to 0.86.
+
+Twenty-nine days on the page: twenty-two words entered; the strings of its own run to five words; the two-relation lines
+are the parents' new instrument for the thing the measurement said was missing. Day 40 is the last of the typist's fifth
+run; the chain relaunches it for day 41, and a stalked day on a copy of the day-40 save reads the insides for the first
+time since day 10.
