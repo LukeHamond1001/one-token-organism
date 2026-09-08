@@ -38,6 +38,7 @@ PHYSIOLOGY = dict(
     # horizon 1024 is fed by the fast bands' energy and learns recency, wrong-signed in a world that reverts; the trace
     # (vcrit_lambda) and the normalized step (vcrit_tau) did not cure it in a day. 0 until a right-signed head exists.
     vcrit_w=0.0, vcrit_gamma=1.0 - 1.0 / 1024,
+    vcrit_ceiling="fixed",   # THE PREFRONTAL VOICE'S CEILING (2026-09-08): "fixed" = vcrit_w x reliability (a hand-set ceiling); "earned" = the reliability itself, up to the fast critic's own weight, no constant
     # THE CRITIC'S ELIGIBILITY TRACE: TD(0) bootstrapped over a thousand steps sits at a fixed point whose error the
     # horizon amplifies (Tsitsiklis and Van Roy: by (1 - lambda gamma) / (1 - gamma), a thousandfold at lambda 0), and
     # run 67's ventral critic read the return that followed at -0.28 over four days while the pinned 4096-tick band
@@ -942,7 +943,11 @@ class Life:
         if abs(delta) >= float(self.cfg["burst"]):
             self.n_bursts += 1
         # --- the gate's buffer and lesson ---
-        vw = float(self.cfg.get("vcrit_w", 0.0)) * (self._vrel_gain if int(self.cfg.get("vcrit_auto", 0)) else 1.0)
+        if str(self.cfg.get("vcrit_ceiling", "fixed")) == "earned" and int(self.cfg.get("vcrit_auto", 0)):
+            vw = float(self._vrel_gain)                                   # the voice is exactly as loud as it has proved right
+        else:
+            vw = float(self.cfg.get("vcrit_w", 0.0)) * (self._vrel_gain if int(self.cfg.get("vcrit_auto", 0)) else 1.0)
+        self._vw_now = vw
         self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long, int_t, self.fatigue,
                               float(m.r_tr[int(self.cfg.get("gate_tonic_clock", 4))]), p_act])   # the felt-reward trace at the tick, for the drive; the probability it acted with
         if self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0 and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
