@@ -95,7 +95,8 @@ PHYSIOLOGY = dict(
     # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
     # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
     plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=0,   # the planner's boundary is the cortex's doubt (2026-09-08); 1 = the old space rule
-    explore_gain=0.0, explore_tau=64,   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
+    explore_gain=0.0, explore_tau=64,
+    rest_token="<pad>", end_token="<eot_human>", display_token="\n",   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
@@ -291,11 +292,13 @@ class Life:
             self._vf_delta = float(self.cfg["fast_rls_prior"]) * float(self.cfg["fast_rls_forget"])
         self._vf_e = None
         self.m.read_sharp = float(self.cfg["read_sharp"])
-        self.sil = tok.token_to_id("<pad>")
+        # THE BODY'S OWN SYMBOLS, DECLARED (anatomy, 2026-09-08): its rest, the world's turn-end, and a display symbol the world
+        # never types, named in the physiology by the body that is born, never found by a fixed string in the code.
+        self.sil = tok.token_to_id(str(self.cfg.get("rest_token", "<pad>")))
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
-        self.nl = tok.token_to_id("\n")
+        self.nl = tok.token_to_id(str(self.cfg.get("display_token", "\n")))
         self.space_id = tok.token_to_id(" ")                  # the word boundary the planning actor decides at
-        self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
+        self.eot = tok.token_to_id(str(self.cfg.get("end_token", "<eot_human>")))         # the world's turn ended: the offset (§2), never the mouth's
         # THE RESERVED SYMBOLS (anatomy, declared, 2026-09-08): the lexicon's control tokens, every `<...>` the tokenizer
         # defines (the world's turn-end, the old face tokens), except the rest; and this body's newline, a display symbol the
         # world never types. Neither the mouth nor the typing admits them. Declared from the tokenizer, never counted.
@@ -1339,11 +1342,17 @@ class Life:
         return {"you": self.face_now}
 
     def state(self, since=0):
+        """THE PAGE, and nothing else (2026-09-08, the review): what a parent may see. The words, the faces, whether it sleeps,
+        how many nights it has lived. No reading from inside reaches the one who decides the face."""
         i = max(0, int(since) - self.page_base)
-        return {"page": self.page[i:], "n": self.page_base + len(self.page), "last": self.last,
-                "queued": len(self.queue), "asleep": self.asleep, "sleep_pressure": self.sleep_pressure,
-                "wake_ticks": int(self.cfg["wake_ticks"]), "nights": self.nights, "last_night": self.last_night,
-                "store": self.store.n()}
+        return {"page": self.page[i:], "n": self.page_base + len(self.page), "queued": len(self.queue),
+                "asleep": self.asleep, "nights": self.nights}
+
+    def insides(self):
+        """the supervisor's instrument, never the caregiver's: the readings from inside"""
+        return {"last": self.last, "sleep_pressure": self.sleep_pressure, "wake_ticks": int(self.cfg["wake_ticks"]),
+                "nights": self.nights, "last_night": self.last_night, "store": self.store.n(),
+                "mood": round(float(self.mood), 3), "fatigue": round(float(self.fatigue), 3), "stress": round(float(self.stress), 3)}
 
     # ---------------- save / load ----------------
     def save(self, path=None):

@@ -21,8 +21,7 @@ PAGE = """<!doctype html><meta charset=utf-8><title>the diary, second body</titl
 <style>body{margin:0;background:#f5f1e6;color:#222;font:16px/1.6 Georgia,serif}
 #pg{white-space:pre-wrap;padding:32px 40px 120px;max-width:820px;margin:0 auto}.u{color:#1a1a1a}.n{color:#b08a5a}
 #bar{position:fixed;left:0;right:0;bottom:0;background:#eae4d3;border-top:1px solid #cbbfa3;padding:10px 40px;font:13px ui-monospace,monospace;display:flex;gap:18px;flex-wrap:wrap}</style>
-<div id=pg></div><div id=bar><span>you <b id=you>0</b></span><span>its face <b id=face>-</b></span><span>mood <b id=mood>-</b></span>
-<span>fatigue <b id=fat>-</b></span><span>stress <b id=str>-</b></span><span>gate <b id=gate>-</b></span><span>tick <b id=tick>0</b></span><span id=night></span></div>
+<div id=pg></div><div id=bar><span>you <b id=you>0</b></span><span>its face <b id=face>-</b></span><span id=night></span></div>
 <script>let face=0,seen=0;const pg=document.getElementById('pg');
 function post(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json())}
 document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;
@@ -31,8 +30,8 @@ document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return
  if(e.key.length===1){post('/type',{text:e.key});e.preventDefault()}});
 async function poll(){const d=await fetch('/state?since='+seen).then(r=>r.json());
  for(const [t,who] of d.page){const s=document.createElement('span');s.className=who?'n':'u';s.textContent=t;pg.appendChild(s)}
- seen=d.n;const l=d.last||{};for(const [k,id] of [['you','you'],['face','face'],['mood','mood'],['fatigue','fat'],['stress','str'],['gate','gate'],['tick','tick']]){document.getElementById(id).textContent=l[k]??'-'}
- document.getElementById('night').textContent=d.asleep?'asleep':('pressure '+d.sleep_pressure+'/'+d.wake_ticks+' nights '+d.nights);
+ seen=d.n;const last=d.page.length?d.page[d.page.length-1]:null;if(last){document.getElementById('you').textContent=last[2];document.getElementById('face').textContent=last[3]}
+ document.getElementById('night').textContent=d.asleep?'asleep':('nights '+d.nights);
  window.scrollTo(0,document.body.scrollHeight)}
 setInterval(poll,500);</script>"""
 
@@ -91,6 +90,8 @@ def main():
                     try: since = int(self.path.split("since=")[1].split("&")[0])
                     except Exception: since = 0
                 self._json(life.state(since))
+            elif self.path.startswith("/insides"):                # the supervisor's instrument, never the caregiver's
+                self._json(life.insides())
             else:
                 b = PAGE.encode(); self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
