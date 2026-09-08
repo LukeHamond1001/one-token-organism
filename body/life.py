@@ -1386,7 +1386,9 @@ class Life:
         """the supervisor's instrument, never the caregiver's: the readings from inside"""
         return {"last": self.last, "sleep_pressure": self.sleep_pressure, "wake_ticks": int(self.cfg["wake_ticks"]),
                 "nights": self.nights, "last_night": self.last_night, "store": self.store.n(),
-                "mood": round(float(self.mood), 3), "fatigue": round(float(self.fatigue), 3), "stress": round(float(self.stress), 3)}
+                "mood": round(float(self.mood), 3), "fatigue": round(float(self.fatigue), 3), "stress": round(float(self.stress), 3),
+                "ticks": self.ticks, "vrel_slope": round(float(self._vrel_gain), 3), "vrel_corr": round(float(self._vrel_corr), 3),
+                "vw_now": round(float(getattr(self, "_vw_now", 0.0)), 4), "floor_now": round(float(getattr(self, "_floor_now", 0.0)), 4)}
 
     # ---------------- save / load ----------------
     def save(self, path=None):

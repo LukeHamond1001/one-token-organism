@@ -5626,3 +5626,31 @@ Last, the pace. The user saw that the tick's length does not touch the learning 
 training without changing the architecture: the quarter-second tick, the pace of days 11 to 45, four times the days an
 hour, with the parent's timers back at their old tick values. It rides on tonight's reload too. The user's word on the
 architecture's finish stands as given: finished today at 16:08; proven by the second body.
+
+
+### The parent's clock is the body's (2026-09-08, 18:20)
+
+The user's word: "can we supercharge opus to be lightning speed ... with response and mood and have it live in speed time." The body
+runs four ticks a second; its parent ran on the wall clock: a line every forty seconds (160 ticks), a smile 1.2 seconds long, a look at the
+page every 1.5 seconds (six ticks late at the worst), the planner every five minutes (1,200 ticks: twenty of the body's minutes between
+one thought of its parent and the next). From the body's side its parent was slow, and every change of tick length silently changed the
+environment (the afternoon at one tick a second made the same parent four times denser in the body's time).
+
+The change (body/caregiver.py, body/teacher.py): every timer of the served parent is now a count of the body's ticks, converted to seconds by
+the served tick length (--tick 0.25): its period, its quiet, its cap, the child's turn after each line (--listen), the cue's window (360),
+the smile's length (5 ticks), the frown's (5; the talked-over frown 2.5, at most every 60), the attention drift (600), the turn away (200),
+the "late" limit (13), the smile spacing (8), the "same word twice" window (48). The child's quiet at the gate is read in the page's own
+ticks now, not from the typist's observation times. And the parent looks at the page once a tick. A pure conversion at 0.25 s a tick, so
+the environment the body was raised in is the one written down: period 160, quiet 12, cap 48, listen 50.
+
+Then the pace, from day 48 (the night's boundary, 18:50): period 40 ticks (pace 24 to 64 with attention), quiet 8, cap 32, listen 24: a line
+every ten to sixteen seconds of wall time, about 250 a day instead of 76, the reply within four ticks of the child's quiet, the smile within a
+tick of the word. The Opus parent's checks every ninety seconds instead of five minutes, batches of six to eight. What to watch on day 48
+against 47: smiles and frowns per line (the talked-over frowns will rise first: the child has three times the chances to interrupt), the
+child's answer length, the run-on after the reply, whether its own strings survive a denser parent. The test at tick 0.1 on a fresh
+0.8M-parameter body (port 8031, two minutes): lines 4 to 8 s apart at a 4 s period, gate waits 0.6 to 3.3 s (the cap 3.2 s), the
+talked-over frown firing, one smile, no errors. Recorded in the thread; reversible at any boundary by the chain's arguments alone.
+
+Also tonight: --explore-choice 1.0 rides (pre-registered from the fast seeds: smiles 68 vs 59); the prefrontal ceiling stays fixed (the
+day-46 reading's copy was killed for memory after the server died at 17:57:55 beside it; the served body's /insides now reports the slope,
+the weight and the gate's floor, so tomorrow's reading costs nothing). RULE from the death: no copy body beside the served one.

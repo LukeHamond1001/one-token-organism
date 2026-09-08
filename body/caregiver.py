@@ -31,8 +31,12 @@ def iso(t=None):
 
 
 class Caregiver:
-    def __init__(self, base, day, log, period=120.0, quiet=6.0, cap=90.0, seed=0, answer_levels=1, parent=0, reply=0, wait=0.0):
+    def __init__(self, base, day, log, period=480, quiet=24, cap=360, seed=0, answer_levels=1, parent=0, reply=0, wait=0.0, tick=0.25, listen=50):
         self.base, self.day, self.log = base, day, log
+        # THE PARENT'S CLOCK IS THE BODY'S (the user's word of 2026-09-08, "have it live in speed time"): every timer of this
+        # parent is a count of the body's ticks, converted to seconds by the served tick length, so its cadence, its face and
+        # its patience are the same in the body's time whatever the wall clock does. It looks at the page once a tick.
+        self.tick = float(tick); self.listen = self.s(listen)   # listen: the child's turn after each line, in ticks
         # THE REPLY WITHHELD (the user's word of 2026-09-04, "both are your call"): the parent answers when the child has
         # finished. Its smile for the answer and its reply (the cued line in full, the recast) come after the child's
         # quiet of `wait` ticks (4: a second), and every symbol the child adds before that postpones them: a parent does not praise
@@ -51,7 +55,7 @@ class Caregiver:
         self.reply = int(reply); self.reply_cue = None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (-1, -1)                       # the parent's own turn, in ticks
         self.expand_next = None; self._e_t = time.time()
-        self.period, self.quiet_needed, self.cap = period, quiet, cap
+        self.period, self.quiet_ticks, self.cap = self.s(period), int(quiet), self.s(cap)
         self.rng = random.Random(seed)
         self.cursor = 0; self.its = {}; self.tobs = {}; self.maxtick = -1; self.finalized = -1
         self.last_smile = 0.0; self.last_frown = 0.0; self.last_word = None
@@ -73,14 +77,17 @@ class Caregiver:
             f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
     # ---- the page ----
+    def s(self, ticks):
+        return float(ticks) * self.tick                  # seconds for a count of the body's ticks
+
     def pace(self):
         return self.period * (1.6 - self.e) if self.parent else self.period
 
     def _attend(self):
         now = time.time(); dt = now - self._e_t; self._e_t = now
-        self.e += (0.3 - self.e) * min(1.0, dt / 150.0)   # attention drifts down in silence
+        self.e += (0.3 - self.e) * min(1.0, dt / self.s(600))   # attention drifts down in silence (600 ticks)
         if self.e < 0.15 and now >= self.away_until:
-            self.away_until = now + 50.0; self.aways += 1
+            self.away_until = now + self.s(200); self.aways += 1
             self.row({"action": "away", "e": round(self.e, 3)}); self.e = 0.35
 
     def poll(self):
@@ -102,10 +109,11 @@ class Caregiver:
         return d
 
     def quiet_since(self):
+        """the child's quiet, in the page's own ticks"""
         last_write = max([t for t, s in self.its.items() if s != ""] or [-1])
         if last_write < 0 or self.maxtick < 0:
-            return 999.0
-        return self.tobs.get(self.maxtick, time.time()) - self.tobs.get(last_write, time.time())
+            return 10 ** 6
+        return self.maxtick - last_write
 
     # ---- the face ----
     def face(self, v):
@@ -119,9 +127,9 @@ class Caregiver:
         levels = self.answer_levels if why.startswith("cue") else 1
         self.face(2); t0 = time.time()
         if levels >= 2:
-            time.sleep(0.6); self.face(4); time.sleep(0.6)
+            time.sleep(self.s(2.5)); self.face(4); time.sleep(self.s(2.5))
         else:
-            time.sleep(1.2)
+            time.sleep(self.s(5))
         try:
             la = self.req("/state?since=%d" % max(self.cursor - 2, 0)).get("last", {})
         except Exception:
@@ -162,13 +170,13 @@ class Caregiver:
                 if not self.event(line, "line"):
                     return None
                 continue
-            self.watch(min(3.0, prev + pace - time.time()))
+            self.watch(min(self.s(12), prev + pace - time.time()))
             if (self.state or {}).get("asleep"):
                 break
         return prev
 
     def frown(self, on, ctx):
-        self.face(-2); time.sleep(1.2); self.face(0)
+        self.face(-2); time.sleep(self.s(5)); self.face(0)
         self.frowns += 1; self.last_frown = time.time()
         self.row({"action": "frown", "on": on, "context": ctx})
 
@@ -205,7 +213,7 @@ class Caregiver:
                 self.letter_runs[L] = self.letter_runs.get(L, 0) + 1
                 if self.letter_runs[L] >= 3 and L not in self.expanded and L in EXPAND:
                     self.expanded.add(L); self.pending_expand = EXPAND[L]
-            elif tok[0] != " " and time.time() - self.last_frown > 60:
+            elif tok[0] != " " and time.time() - self.last_frown > self.s(240):
                 self.frown(tok, ctx); return
         if self.parent and time.time() < self.away_until:
             return                                                # the parent is turned away
@@ -213,8 +221,8 @@ class Caregiver:
             ts, te = self.typing_span
             if a < te and b >= ts:                                # said over the parent's own turn
                 self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx})
-                if TALKOVER_FROWN and time.time() - self.last_frown > 15.0:   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
-                    self.face(-1); time.sleep(0.6); self.face(0)             # a light, brief frown, at most every 15 seconds
+                if TALKOVER_FROWN and time.time() - self.last_frown > self.s(60):   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
+                    self.face(-1); time.sleep(self.s(2.5)); self.face(0)             # a light, brief frown, at most every 60 ticks
                     self.frowns += 1; self.last_frown = time.time(); self.row({"action": "frown", "on": tok, "why": "talked over", "context": ctx})
                 return
         c = self.cue
@@ -225,7 +233,7 @@ class Caregiver:
                 if self.wait > 0:
                     self.hold_reply(tok, ctx, "cue completion: " + c["text"], c["text"], low, b); return
                 self.smile(tok, ctx, "cue completion: " + c["text"]); return
-            if low[:2] in [x[:2] for x in c["full"]] and time.time() - wall < 3.5:
+            if low[:2] in [x[:2] for x in c["full"]] and time.time() - wall < self.s(14):
                 c["done"] = True; self.answered = True; self.reply_tokens.append(low)
                 self.e = min(1.0, self.e + 0.15)
                 if self.wait > 0:
@@ -241,9 +249,9 @@ class Caregiver:
             self.reply_tokens.append(tok)
         if low in KNOWN2:
             age = time.time() - wall
-            if self.last_word == low and time.time() - self.last_smile < 12:
+            if self.last_word == low and time.time() - self.last_smile < self.s(48):
                 self.row({"action": "withheld", "on": tok, "why": "same word twice", "context": ctx})
-            elif age <= 3.2 and time.time() - self.last_smile >= 2.0:
+            elif age <= self.s(13) and time.time() - self.last_smile >= self.s(8):
                 if self.parent:
                     n = self.word_count.get(low, 0); self.word_count[low] = n + 1
                     p = self.e * (0.95 ** max(0, n - 5))         # attention, and the fiftieth "dog"
@@ -263,7 +271,7 @@ class Caregiver:
             d = self.poll()
             if d is not None:
                 self.scan()
-            time.sleep(1.5)
+            time.sleep(max(0.05, self.s(1)))
 
     # ---- the typist ----
     def gate(self):
@@ -275,9 +283,9 @@ class Caregiver:
             self.scan()
             if d.get("asleep"):
                 return -1.0
-            if self.quiet_since() >= self.quiet_needed or time.time() - t0 >= self.cap:
+            if self.quiet_since() >= self.quiet_ticks or time.time() - t0 >= self.cap:
                 return time.time() - t0
-            time.sleep(1.0)
+            time.sleep(max(0.05, self.s(1)))
 
     def event(self, text, kind):
         gw = self.gate()
@@ -285,7 +293,7 @@ class Caregiver:
             return False
         last_before = self.state.get("last") or {}
         if kind == "cue":
-            self.cue = {"text": text, "until": time.time() + 90, "full": ANSWERS.get(text, []), "done": False}
+            self.cue = {"text": text, "until": time.time() + self.s(360), "full": ANSWERS.get(text, []), "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (self.maxtick + 1, 10 ** 9)     # the parent's turn: from its first symbol to its last
         self.req("/type", {"text": text}); t_start = time.time()
@@ -293,10 +301,10 @@ class Caregiver:
             d = self.poll(); self.scan()
             if d is not None and d.get("queued", 0) == 0:
                 break
-            time.sleep(0.4)
+            time.sleep(max(0.05, self.s(1)))
         tick_end = self.maxtick                            # the page's own tick count (survives a serve restart)
         self.typing_span = (self.typing_span[0], tick_end)
-        self.watch(12.4)
+        self.watch(self.listen)
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
         self.row({"action": kind, "text": text, "gate_wait_s": round(gw, 1), "its_after": its, "ts": iso(t_start),
@@ -304,7 +312,7 @@ class Caregiver:
                   "own": la.get("own"), "doses": la.get("doses"), "smiles_so_far": self.smiles,
                   "sleep_pressure": self.state.get("sleep_pressure"), "store": self.state.get("store")})
         if kind == "cue":
-            time.sleep(3); self.cue = None
+            time.sleep(self.s(12)); self.cue = None
         return True
 
     def run_day(self, lines, cues):
@@ -377,8 +385,9 @@ def main():
     ap.add_argument("--port", type=int, default=8018)
     ap.add_argument("--day", type=int, default=1)
     ap.add_argument("--log", default="data/body2_caregiver.jsonl")
-    ap.add_argument("--period", type=float, default=120.0)
-    ap.add_argument("--quiet", type=float, default=6.0)
+    ap.add_argument("--period", type=float, default=480)    # ticks between the parent's lines
+    ap.add_argument("--quiet", type=float, default=24)      # ticks of the child's quiet before the parent speaks
+    ap.add_argument("--tick", type=float, default=0.25); ap.add_argument("--listen", type=float, default=50)
     ap.add_argument("--cap", type=float, default=90.0)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--answer-levels", type=int, default=1)
@@ -387,7 +396,7 @@ def main():
     ap.add_argument("--lines", default="dog will go|I will go up|you will go in|scared dog|scared ball|what? scared dog|give milk|give ball|give book|ball under|ball on|where ball? ball under|I had milk|you had ball|dog had ball|first milk then ball|first up then in|big dog bigger dog|bigger dog up|I saw dog|you saw dog|why dog up? because big dog")
     ap.add_argument("--cues", default="dog will |scared |give |where ball? |I had |first milk then |big dog bigger |why dog up? ")
     a = ap.parse_args()
-    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply, wait=a.wait)
+    cg = Caregiver("http://localhost:%d" % a.port, a.day, a.log, period=a.period, quiet=a.quiet, cap=a.cap, seed=a.seed, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply, wait=a.wait, tick=a.tick, listen=a.listen)
     cg.run_day([x for x in a.lines.split("|") if x], [x for x in a.cues.split("|") if x])
 
 
