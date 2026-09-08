@@ -12,9 +12,11 @@ import sys
 log = sys.argv[1]; corpus_path = sys.argv[2]; first = int(sys.argv[3]) if len(sys.argv) > 3 else 0
 rows = [json.loads(l) for l in open(log)]
 corpus = json.load(open(corpus_path)).get("lines", {})
-taught = set(); words = set()
+words = set()
 for line in corpus:
-    ws = re.findall(r"[a-z]+", line.lower()); words.update(ws); taught.update(zip(ws, ws[1:]))
+    words.update(re.findall(r"[a-z]+", line.lower()))
+taught = set()      # THE PARENT'S PAIRS AS THEY WERE SAID (2026-09-07): built in order from the parent's own rows, so a pair the
+                    # child made before the parent ever said it stays novel even after the parent imitates it back
 days = collections.defaultdict(lambda: collections.defaultdict(int))
 pairs = collections.defaultdict(collections.Counter); novel = collections.defaultdict(collections.Counter)
 gauge = {}; known = {}
@@ -23,6 +25,9 @@ for r in rows:
     if d is None or d < first:
         continue
     days[d][a] += 1
+    if a in ("line", "cue"):
+        txt = (r.get("text") or r.get("line") or r.get("said") or "").lower()
+        ws_ = re.findall(r"[a-z]+", txt); taught.update(zip(ws_, ws_[1:]))
     if a == "smile" and "cue" in str(r.get("why")):
         days[d]["cue_answered"] += 1
     if a == "missed" and r.get("why") == "talked over":
