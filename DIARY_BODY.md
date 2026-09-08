@@ -5381,3 +5381,20 @@ for any known word at any moment, a thousand of them, loosely timed by the typis
 critic to anticipate precisely; the fast parent rewards a few things at exact moments. The environment stays as the user
 chose; the number is the one to watch when cues become the main reward. The copy's few smiles and many aways are the fast
 parent not knowing the page's words. The stalk's records are kept in data/stalks/watch2_day40_stalk.
+
+## Prepositions of its own (2026-09-08, 12:38)
+
+Day 41 (Opus): "in" made live inside frames it owns ("in here", "dog in", "hat in") and used unprompted within six
+minutes ("hi dog in here dog", "had hat in here"); "with" spread to noun-with-noun and came back out on cue, "dog
+with" answered "hat"; all seven fresh cues right and the four misses were silences on old leftovers; it recombines
+prepositions unprompted now ("little hat on here", "dog had hat on here"). 119 smiles to 50 frowns. Day 42: 148 smiles
+to 57 frowns; the night began low (0.63) because much of the day was new and ended at 0.86.
+
+The user asked whether it learns and generalizes faster than a transformer, and whether that is big. The body's cortex is
+a transformer; what differs is how it is taught and what stands around it. Per exposure it learns far faster than
+gradient descent: a line held after one hearing, a cue answered after two, the word in its own mouth in minutes, from
+about 420 lines of experience in all; that comes from the hippocampus and the night, one-shot like in-context learning
+and permanent like training. It generalizes a word to its frames within a day; it rarely invents a relation no one
+showed it, and its cortex alone still predicts the next word poorly. What is big is the kind, not the speed: continuous
+learning from lived experience, one grounded reward, memory that survives sleep. It holds at toddler scale; whether it
+holds at the scale where transformers shine is the unproven half, and the same question as the top of the ladder.
