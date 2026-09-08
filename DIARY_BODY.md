@@ -5245,3 +5245,22 @@ grasp, is learned by reward in both, and this body has not learned it yet either
 untouched, because it lives in the parent: a smile at a taught movement instead of a taught word.
 
 Day 29: 127 smiles to 49 frowns; the night 0.81 to 0.86; the known-word count held at 54.
+
+## Four words, and a question (2026-09-08, 00:27)
+
+Day 29 (Opus): "sad" entered ("sad dog", "sad ball", "see sad dog") and pulled "happy" and "scared" out of it
+unprompted; after the night it wrote "sad" twice on its own. The three-word strings of its own became daily: "because
+big dog", "dog out here", "away dog up", "look milk here", "will go up", "down here dog". Cues landed better after the
+nap (five of eight) than before it (three of six); the parent's count of what it said right but outside the credit
+window, 85 against 8 credited, says the window understates it. 127 smiles to 49 frowns; the known-word count held at 54.
+
+Day 30 (Opus): "and" entered inside noun frames ("dog and ball", "milk and dog") and within twenty minutes answered
+correctly in two frames it was cued in, "dog and" with "ball" and "ball and" with "dog": the relation, not the line.
+Thirteen cues, ten answered, none wrong; the three lost were the last eight minutes' again. Unprompted, four of its own
+words: "bigger dog up here", "dog down here" four times, "ball down here", joining "X down" with "down here" and "bigger
+dog" with "dog up here" by itself; and once "where book?", a question of its own. 83 smiles to 49 frowns, every frown for
+talking over; the night 0.83 to 0.88; the known-word count 54 to 55.
+
+Twenty days on the page: seventeen words entered, all answered back; the strings of its own went from pairs to four
+words; the talking-over is the whole of the frowning. The parents' finding to carry: a word that fits many frames, "out",
+"and", is learned as a relation inside the hour; a word bound to one line, "dog go away", stays bound.
