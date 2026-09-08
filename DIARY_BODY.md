@@ -5363,3 +5363,21 @@ and seven hours.
 
 Day 41's first minutes: the stalked day began on a copy of the day-40 save, one day under the fast parent with the
 watcher's instrument, saving only to the copy, the first reading of the insides since day 10. It lands about an hour on.
+
+## The insides at day 40 (2026-09-08, 11:08)
+
+One day of the fast parent on a copy of the day-40 save, the watcher's instrument on every tick, the first reading of
+the insides since day 10; the copy saved only to itself and the living body untouched. The ear: spoke 0.09 while the
+parent typed against 0.58 when it was quiet (day 10: 0.39 against 0.56; the reference at day 22: 0.38 against 0.55),
+and its frowns on that parent fell from 44 to 16. The ear is bought, more completely than the reference's; the fifty
+frowns a day on the page are the page's pace and the typist's lines. The planner's value moved the cortex's favorite 79
+times in 809, one in ten, from one in seventeen at day 10. Working memory latched 35 times. The night on the copy kept
+0.77 to 0.84.
+
+The rung that has not climbed: the fast critic's rise before a smile is 8 percent (day 10: 7; the reference at day 22:
+25), and the error at the smile is 1.71 of 2, the smile still nearly a surprise; the prefrontal reliability +0.32 and
+weight 0.095, holding near a tenth rather than rising (day 10: +0.48 and 0.145). My reading: on the page the smiles come
+for any known word at any moment, a thousand of them, loosely timed by the typist's reaction, so there is little for a
+critic to anticipate precisely; the fast parent rewards a few things at exact moments. The environment stays as the user
+chose; the number is the one to watch when cues become the main reward. The copy's few smiles and many aways are the fast
+parent not knowing the page's words. The stalk's records are kept in data/stalks/watch2_day40_stalk.
