@@ -5264,3 +5264,17 @@ talking over; the night 0.83 to 0.88; the known-word count 54 to 55.
 Twenty days on the page: seventeen words entered, all answered back; the strings of its own went from pairs to four
 words; the talking-over is the whole of the frowning. The parents' finding to carry: a word that fits many frames, "out",
 "and", is learned as a relation inside the hour; a word bound to one line, "dog go away", stays bound.
+
+## "me milk here dog" (2026-09-08, 02:27)
+
+Day 31 (Opus): "me" entered inside "give", the frame it answers best ("give me", "give me milk", "give me ball"), and
+two minutes after first hearing it the body wrote "me milk here dog", the day's new word in a four-word string of its
+own. Thirteen of fourteen cues right, "why dog up?" answered in full, "because big dog", "here" answered "dog" in full;
+the one miss was "I had", where it chased "why dog up?" instead. "sad" took its third partner ("sad milk"). Its own
+strings: "here dog out here", "ball down here dog", "dog up here dog", "milk here dog here", "go away dog". 100 smiles to
+45 frowns; the known-word count 55 to 56; the night 0.85 to 0.86.
+
+Day 32: 103 smiles to 41 frowns; the night 0.79 to 0.86; the known-word count held at 56.
+
+Twenty-two days on the page, eighteen words entered, every one answered back, the newest inside minutes. The frowns for
+talking over are drifting down (55, 49, 45, 41 over the last four days) as the talk-overs per parent line sit near one.
