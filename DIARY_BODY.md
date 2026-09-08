@@ -5464,3 +5464,28 @@ against its absence. What a humanoid would still need beyond inputs, outputs and
 rest and a turn-end symbol the body owns (done today), an event-boundary sense in place of eight ticks of quiet, the
 gate's inside-made drives removed or re-derived from organs (under measurement), the tick-rate constants re-sized, and
 the page's channel closed (done today).
+
+## The drive refused, and the event's end by the law (2026-09-08, 15:08)
+
+The exploration drive, built this afternoon at the user's asking, was measured the way everything is measured: one day
+of the fast parent on a copy of the current save, with the drive at 0.3 against without it. With it the body invented a
+few more pairs (16 against 12) and earned a quarter fewer smiles (49 against 64), speaking more exactly when the parent
+said something new; its ear read 0.17 against 0.12 while the parent typed. By the rule set before the run it does not go
+in. It stays built and off, for a body where speaking is not the only act.
+
+The user then asked why the architecture should not find an event's end itself, by a universal law, rather than by
+eight ticks of quiet. The law is the prediction error: brains segment experience where it jumps and treat as one event
+what it stays settled through. The body scores its surprise every tick now, the rest included, and a second form of
+the offset fires when that surprise, having jumped at the world's stopping, settles under its running level: no count.
+A newborn's surprise is flat, so it would never end an event by the law alone; the count stays beneath it as the
+senses' own adaptation, the floor a newborn needs, and the law takes over as the cortex learns. Organ test 25 shows the
+law firing within twenty quiet ticks of the world's stopping and never inside an utterance. It is measured on copy days
+behind the gate's, and goes in at a night if the ear and the answers hold. The user's other point stands corrected in
+the diary: a body's first actions come from its own spontaneous action shaped by reward, which this body showed in its
+first ten days, and a parent's hand is the faster childhood, not the mechanism.
+
+Day 44 (Opus): "box" entered and answered "ball in" with "box" the same day, and "box went" with "in", the new word as
+a subject; "hat went" answered "off" only after five teachings, so the past frame is still per-subject; "? because big
+dog", a question mark of its own with its reason. 156 smiles to 56 frowns; the known-word count 62 to 63. The reload's
+one cost: the typist's page cursor outran the new server's count and its last nine minutes went to a dark page; day 45's
+new session reset it, and the next reload restarts the typist through the chain right after the server.
