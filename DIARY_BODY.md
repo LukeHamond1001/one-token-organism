@@ -5190,3 +5190,22 @@ talked over. The raw occasions are in the log as the chances it missed by talkin
 1.76 on day 11 to 1.01 on day 21, 0.97 on day 24, 1.21 on day 25: a third fewer in two weeks, the reference's slow arc at
 the fast parent's pace. The ear is improving under the frown as it should; the reply parent's wait stays as it is, and
 the served day's digest now carries the rate. The stall, restated: the rate not below 1.0 by day 30.
+
+## Days 26 and 27, and the page read aloud (2026-09-07, 21:18)
+
+Day 26: a consolidation day; "see" carried to a full pronoun grid ("I see dog", "you see ball", "dog see ball") beside
+the older "I saw" frames and answered cleanly with dog, ball and book; "dog go away" chained on its own all session; 107
+smiles to 40 frowns, the fewest of any served day. Day 27: "look" entered ("look ball", "look dog") and appeared in its
+own stream the same session; the known-word count 52 to 53; 105 smiles to 48 frowns; the night 0.85 to 0.88.
+
+The user asked to see what the parent and the child were actually saying. From the page's last ten minutes of day 27:
+"no more" drew "one, dog, scared, down, here"; "big ball" drew "dog, ball, all, gone, ball"; "dog go" drew "away"; "see
+dog here" drew "book, dog, saw, here, go, away"; "my ball" drew "down, dog, ball, under, all, away, milk"; "give milk"
+drew "milk, all, down, here, ball, go". Nearly every word is a real word and most are related to the line it just heard:
+it echoes the parent's noun and brings the frame-mates it learned with it. No grammar around them, no patience, and most
+of its words fall outside the typist's answer window, so the credited answers understate what it knows.
+
+Three rulings from the user today. The typist's cadence stays as it is: I had found that the typist sends a whole line at
+once and the server feeds it one symbol a tick, so the body has never heard a human pace, and proposed a per-letter delay
+that varies; the user said to forget it and keep teaching. The planners run on Opus from day 28, the brief unchanged. And
+no tests of word relations on copies for now; the page's log is the record.
