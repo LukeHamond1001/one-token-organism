@@ -94,7 +94,7 @@ PHYSIOLOGY = dict(
     # plan_h own symbols through the world model (greedy), the striatal critic values the imagined line, and the choice follows
     # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
     # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
-    plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=1,
+    plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=0,   # the planner's boundary is the cortex's doubt (2026-09-08); 1 = the old space rule
     explore_gain=0.0, explore_tau=64,   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
@@ -296,7 +296,12 @@ class Life:
         self.nl = tok.token_to_id("\n")
         self.space_id = tok.token_to_id(" ")                  # the word boundary the planning actor decides at
         self.eot = tok.token_to_id("<eot_human>")         # the world's turn ended: the offset (§2), never the mouth's
-        self.bans = [i for i in range(11) if i != self.sil] + ([self.nl] if self.nl is not None else [])
+        # THE RESERVED SYMBOLS (anatomy, declared, 2026-09-08): the lexicon's control tokens, every `<...>` the tokenizer
+        # defines (the world's turn-end, the old face tokens), except the rest; and this body's newline, a display symbol the
+        # world never types. Neither the mouth nor the typing admits them. Declared from the tokenizer, never counted.
+        _vocab = tok.get_vocab(); _specials = sorted(i for s_, i in _vocab.items() if s_.startswith("<") and s_.endswith(">"))
+        self.reserved = [i for i in _specials if i != self.sil] + ([self.nl] if self.nl is not None else [])
+        self.bans = list(self.reserved)
         self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None; self._start_pending = False
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -1325,7 +1330,7 @@ class Life:
         n = 0
         for ch in s:
             i = self.tok.token_to_id(ch)
-            if i is not None and i >= 11 and i != self.nl and len(self.queue) < 600:
+            if i is not None and i != self.sil and i not in self.reserved and len(self.queue) < 600:   # the reserved symbols are not typed
                 self.queue.append(i); n += 1
         return {"queued": n}
 
