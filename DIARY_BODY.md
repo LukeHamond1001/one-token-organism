@@ -5604,3 +5604,25 @@ noisy the returns are. The digest had computed the weight from the correlation, 
 a digest, 0.145 at day 10, 0.095 at day 40, was the correlation times the ceiling and not the body's number; the true
 past weights were never recorded. The digest now prints the correlation, the slope and the body's own weight, and the
 maturity signal from here is the slope near one with the long value's share of the credit visibly moving behavior.
+
+## The evening's rulings (2026-09-08, 17:53)
+
+The user stopped every test in the afternoon, the body needing time rather than fiddling, and I found five waiters
+still sleeping from probes I had superseded and four tails from monitors dead two days, and killed them all; only the
+life, its typist, the chain, the planner and the log's monitor run. The drive in the choice, which passed its copy day,
+was parked rather than applied.
+
+Then three questions, answered by the reasons rather than by caution. Three systems look capped by a constant rather
+than lagging: the fast critic anticipates through a window of eight events; the readout is so peaked that REM's rollouts
+are all one rollout; the prefrontal voice sits under a fixed ceiling. Each can be swapped live, and each has a cost that
+makes a blind swap a guess: widening the window rebuilds the striatum and loses the anticipation it has; lowering the
+sharpness changes how the mouth speaks; lifting the ceiling could make the long value leap to the fast critic's weight
+in one night if its slope is high, and the slope has never been read. So the prerequisite for all three is one reading,
+which costs the body nothing: a stalked day on a copy of the day-46 save, launched at 17:44 with the corrected digest.
+The rules were fixed before the numbers: the earned ceiling goes in tonight if the slope is a real signal and not a
+leap; the sharpness and the window wait for their own copy days; the choice drive rides on the reload.
+
+Last, the pace. The user saw that the tick's length does not touch the learning per tick and asked to speed the
+training without changing the architecture: the quarter-second tick, the pace of days 11 to 45, four times the days an
+hour, with the parent's timers back at their old tick values. It rides on tonight's reload too. The user's word on the
+architecture's finish stands as given: finished today at 16:08; proven by the second body.
