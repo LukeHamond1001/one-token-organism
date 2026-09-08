@@ -96,6 +96,7 @@ PHYSIOLOGY = dict(
     # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
     plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=0,   # the planner's boundary is the cortex's doubt (2026-09-08); 1 = the old space rule
     explore_gain=0.0, explore_tau=64,
+    explore_choice=0.0,   # THE DRIVE IN THE CHOICE (2026-09-08): novelty widens the planner's choice among its candidates, not whether it speaks
     rest_token="<pad>", end_token="<eot_human>", display_token="\n",
     end_symbol="eot",   # THE WORLD'S STOP (2026-09-08): "eot" = the chat token as the end's mark; "rest" = the end is the first rest after a symbol, the cortex learns to predict rest where the parent stops, and the chat token goes unused   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
@@ -602,7 +603,7 @@ class Life:
             if u == self.sil and not self._offset_done and self.ticks - self._last_world >= 1 and \
                     (settled_ or self.ticks - self._last_world >= off):         # the law, or the senses' own adaptation as the floor
                 self._offset(); self._offset_done = True                     # a newborn's flat surprise still ends events by the count
-        if u != self.sil and float(self.cfg.get("explore_gain", 0.0)) > 0:   # arousal follows novelty: a running surprise at the world's symbols
+        if u != self.sil and (float(self.cfg.get("explore_gain", 0.0)) > 0 or float(self.cfg.get("explore_choice", 0.0)) > 0):   # arousal follows novelty: a running surprise at the world's symbols
             a_ = 1.0 / max(1.0, float(self.cfg.get("explore_tau", 64)))
             self._surp_run = (1.0 - a_) * getattr(self, "_surp_run", 0.0) + a_ * float(surp1)
         stri = str(self.cfg.get("fast_input", "band")) == "striatum" and int(self.cfg.get("fast_rls", 0))
@@ -866,6 +867,12 @@ class Life:
                                 planned = torch.full_like(logits, float("-inf"))
                                 for c in cands:
                                     planned[c] = logits[c] + float(self.cfg.get("plan_beta", 4.0)) * vals[c]
+                                ec_ = float(self.cfg.get("explore_choice", 0.0)); temp_ = 1.0
+                                if ec_ > 0:                                     # THE DRIVE IN THE CHOICE: where the world is new the choice
+                                    temp_ = 1.0 + ec_ * float(getattr(self, "_surp_run", 0.0))   # among the candidates widens; familiar, it narrows
+                                    for c in cands:
+                                        planned[c] = planned[c] / temp_
+                                self._plan_last["temp"] = round(temp_, 3)
                                 logits = planned
                     else:
                         logits = logits + a_bias

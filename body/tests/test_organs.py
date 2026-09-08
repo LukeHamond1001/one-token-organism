@@ -637,11 +637,35 @@ def test_end_as_rest():
     assert not any(e == life.eot for e in outs["rest"][1]), "the chat token appeared in a rest-form dream"
     print("26 the world's stop as rest: the end's target", outs["rest"][0], "(the rest) | rest-form dreams end with", sorted(set(outs["rest"][1]))[:4], "| token form with", sorted(set(outs["eot"][1]))[:4])
 
+
+def test_explore_in_the_choice():
+    """the drive in the choice: with explore_choice the planner's temperature over its candidates rises after the world
+    surprises it and is one when the drive is off; the gate's floor is untouched by it"""
+    temps = {}
+    for ec in (0.0, 2.0):
+        life = _watched(actor_margin=1e9, explore_choice=ec, explore_tau=8); seen = []
+        for t in range(300):
+            if t % 25 == 0:
+                life.set_face(2.0)
+            elif t % 25 == 2:
+                life.set_face(0.0)
+            if t % 40 == 0:
+                life.type_text("zq xj vk ")                                       # a strange line: surprise
+            life._plan_last = None; life.tick()
+            pl = getattr(life, "_plan_last", None)
+            if pl and "temp" in pl:
+                seen.append(pl["temp"])
+        temps[ec] = seen
+        assert getattr(life, "_floor_now", life.cfg["gate_floor"]) == float(life.cfg["gate_floor"]), "the choice drive moved the gate's floor"
+    assert temps[0.0] and all(t == 1.0 for t in temps[0.0]), f"with the drive off the temperature must be one: {temps[0.0][:5]}"
+    assert temps[2.0] and max(temps[2.0]) > 1.05, f"with the drive on the temperature never rose: {temps[2.0][:8]}"
+    print("27 the drive in the choice: temperature", round(max(temps[2.0]), 2), "at most after strange lines, 1.0 with the drive off; the floor untouched")
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice]
     failed = 0
     for t in tests:
         try:
