@@ -84,10 +84,11 @@ for _ in range(a.days):
         mv_, mg_ = st.mean(p[0] for p in pairs), st.mean(p[1] for p in pairs); sv_, sg_ = st.pstdev(p[0] for p in pairs), st.pstdev(p[1] for p in pairs)
         corr_long = (sum((p[0] - mv_) * (p[1] - mg_) for p in pairs) / len(pairs)) / (sv_ * sg_) if sv_ > 1e-9 and sg_ > 1e-9 else float("nan")
     else: corr_long = float("nan")
-    vrel = float(getattr(L, "_vrel_corr", 0.0)); vw_eff = float(L.cfg.get("vcrit_w", 0.0)) * (max(0.0, vrel) if int(L.cfg.get("vcrit_auto", 0)) else 1.0)
+    vrel = float(getattr(L, "_vrel_corr", 0.0)); vslope = float(getattr(L, "_vrel_gain", 0.0))
+    vw_eff = float(getattr(L, "_vw_now", float(L.cfg.get("vcrit_w", 0.0)) * (vslope if int(L.cfg.get("vcrit_auto", 0)) else 1.0)))   # the body's own weight (the slope, not the correlation: the review of 2026-09-08)
     digest = (f"day {day:3d} ({time.time()-t0:.0f}s, {len(ticks)} ticks): smiles {len(sm)} (completions {comp}, sequences {seqs}) aways {aways} frowns {frowns} | "
               f"ear: spoke {st_typ:.2f} while the parent typed (n {n_typ}) vs {st_q:.2f} quiet | fast value mean {mv:+.2f}, rise before a smile {rise:+.0f}% of a smile, "
               f"error at the reward {st.mean(err) if err else float('nan'):+.2f} | wm latches {latches} | planner: {len(plans)} choices, the value flipped the cortex's favorite {flips}, the mouth said another {other} | "
-              f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability {vrel:+.2f}, weight in the credit {vw_eff:.3f} | run-on after the answer {run_on:.1f} symbols, the smile waited {waited:.1f} ticks (n {len(held)}) | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
+              f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability (correlation) {vrel:+.2f}, slope {vslope:.2f}, weight in the credit {vw_eff:.3f} | run-on after the answer {run_on:.1f} symbols, the smile waited {waited:.1f} ticks (n {len(held)}) | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
     print(digest, flush=True)
     with open(f"{out}/digest.txt", "a") as f: f.write(digest + "\n")

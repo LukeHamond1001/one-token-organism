@@ -5,7 +5,7 @@ for line in open(sys.argv[1]):
     m = re.search(r"day\s+(\d+).*?smiles (\d+) \(completions (\d+).*?aways (\d+) frowns (\d+).*?spoke ([\d.]+) while.*?vs ([\d.]+) quiet.*?rise before a smile ([+-]?\d+)%.*?error at the reward ([+-][\d.]+).*?wm latches (\d+).*?planner: (\d+) choices, (?:agreed with the cortex|flipped the cortex's favorite|the value flipped the cortex's favorite) (\d+)", line)
     if not m: continue
     d, sm, comp, aw, fr, ear_t, ear_q, rise, err, wm, pl, ag = m.groups()
-    pf = re.search(r"prefrontal: long value vs its realized return ([+-][\d.]+|nan), reliability ([+-][\d.]+), weight in the credit ([\d.]+)", line)
+    pf = re.search(r"prefrontal: long value vs its realized return ([+-][\d.]+|nan), reliability(?: \(correlation\))? ([+-][\d.]+),(?: slope [\d.]+,)? weight in the credit ([\d.]+)", line)
     g = re.search(r"'after': ([\d.]+)", line); ro = re.search(r"run-on after the answer ([\d.]+|nan) symbols, the smile waited ([\d.]+|nan)", line)
     rows = os.path.join(os.path.dirname(sys.argv[1]), f"day{int(d):03d}_rows.jsonl"); cons = ""
     if os.path.exists(rows):
