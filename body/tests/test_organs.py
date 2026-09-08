@@ -274,7 +274,7 @@ def test_offset():
     marked ended and the lesson's target there is the turn-end; the store's slot for that symbol carries the boundary
     mark and the first memory kept after a pause the start mark; a dream runs from a start to an end; nothing enters
     the stream; the bags stand"""
-    life = tiny(offset_ticks=8, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m
+    life = tiny(offset_ticks=8, offset_form="count", end_symbol="eot", gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0); m = life.m   # the old forms, deliberately
     with torch.no_grad():
         m.mouth_gate.bias.fill_(-30.0)
     life.type_text("dog will go")

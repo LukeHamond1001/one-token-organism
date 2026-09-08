@@ -5562,3 +5562,26 @@ pain for a later good. Built today as a second form: the ceiling follows reliabi
 right over days can weigh as much as the fast one and a wrong one weighs nothing, with no constant in it. Organ test 28
 shows both forms at a reliability of 0.8: 0.24 under the fixed ceiling, 0.8 under the earned. Its copy day runs behind
 the choice drive's tonight, and it goes in at a night only if the ear and the answers hold while the weight rises.
+
+## The final audit's verdict: a gated imitator (2026-09-08, 16:43)
+
+At the user's word a last review ran on Fable with the exact question: no cheats, and could a humanoid take it with
+only inputs, outputs and reward swapped. The reviewer found no live cheat: reward enters only by the face and the typed
+symbols, nothing authors the body's words, nothing outside reads the insides for a face, and twenty-eight tests pass.
+To the question it signed "No", with a reason I had missed: the body's mouth is an imitation organ. Its cortex proposes
+the world's next symbol, trained on the world's symbols only; reward decides whether to act and, at torn moments,
+which of the cortex's top four to take. Enough for language, because the parent demonstrates every word; a humanoid
+whose motor primitives never appear in the world's stream would get no proposal, so reward would have nothing to
+choose among. The equation for that body, a chooser of what to do learned from reward over the whole lexicon, exists
+as the actor's earlier forms, set aside when one setting collapsed the mouth and another was mediocre, never measured
+properly. So the honest sentence stands as it was given with the guided hand: a parent who moves the limbs makes the
+transfer work as it works here; a body left to babble needs the actor, and the actor is unproven, as is credit carried
+past the fast horizon to a sequence's end.
+
+Its other findings, done or queued the same evening: the physiology defaults now describe the served body rather than
+the old one; the planner's shortlist excludes the whole reserved set rather than two names; the event structure is keyed
+on the world's quiet, so a robot's senses must emit "nothing new" or the settle law must drop that condition; the
+mouth cannot choose rest when it acts under the rest form, a coherence gap whose fix, the rest vote, is on a copy day
+behind the actor's; the old space rule and the `<...>` convention remain dormant behind flags; a bug in the unused
+Claude-planner mode fixed. The copy days queued behind one another tonight: the drive in the choice, the earned
+ceiling, the actor's add form at a modest weight, the rest vote. Each decides at a night.

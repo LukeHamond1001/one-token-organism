@@ -305,6 +305,7 @@ class ClaudePlanner:
     name = "claude"
 
     def __init__(self, model, budget, rng, batch=6):
+        self.recent = []                                     # the filler's memory (the review: it was never set here)
         import anthropic
         self.client = anthropic.Anthropic()
         self.model, self.budget, self.rng, self.batch = model, budget, rng, batch

@@ -16,7 +16,7 @@ PHYSIOLOGY = dict(
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
-    gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.5, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
+    gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
     # felt-reward trace at the ladder's clock gate_tonic_clock (index into the clocks; 4 = 256 ticks, a minute) — tonic dopamine as the
     # average reward rate setting vigor (Niv 2007), the infant babbling more when answered (Goldstein & Schwade 2008). With the constant
@@ -99,7 +99,7 @@ PHYSIOLOGY = dict(
     explore_gain=0.0, explore_tau=64,
     explore_choice=0.0,   # THE DRIVE IN THE CHOICE (2026-09-08): novelty widens the planner's choice among its candidates, not whether it speaks
     rest_token="<pad>", end_token="<eot_human>", display_token="\n",
-    end_symbol="eot",   # THE WORLD'S STOP (2026-09-08): "eot" = the chat token as the end's mark; "rest" = the end is the first rest after a symbol, the cortex learns to predict rest where the parent stops, and the chat token goes unused   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
+    end_symbol="rest",   # THE WORLD'S STOP (2026-09-08): "eot" = the chat token as the end's mark; "rest" = the end is the first rest after a symbol, the cortex learns to predict rest where the parent stops, and the chat token goes unused   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
@@ -177,7 +177,7 @@ PHYSIOLOGY = dict(
     # 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next line's
     # first letter at probability 1, the mouth's "downg"; served body, day 10)
     offset_ticks=8,
-    offset_form="count", offset_settle=0.5, offset_fast=4, offset_slow=64,   # THE EVENT'S END BY THE LAW (2026-09-08): "settle" fires the offset when the surprise, having jumped at the world's stopping, settles under its running level; no count       # THE RECIPE (runs 47/48): two seconds at four ticks a second; within a line the world types a symbol a
+    offset_form="settle", offset_settle=0.5, offset_fast=4, offset_slow=64,   # THE EVENT'S END BY THE LAW (2026-09-08): "settle" fires the offset when the surprise, having jumped at the world's stopping, settles under its running level; no count       # THE RECIPE (runs 47/48): two seconds at four ticks a second; within a line the world types a symbol a
     # tick, and 8 + the lesson's cadence of 24 keeps the ended position inside the lesson's 32. 0 = off
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
     # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
@@ -843,7 +843,7 @@ class Life:
                 with torch.no_grad():                                  # the striatum disposes: its bias on the cortex's proposal
                     a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
                     form_ = str(self.cfg.get("actor_form", "add"))
-                    spk = logits.clone(); spk[self.sil] = float("-inf"); spk[self.eot] = float("-inf")   # the speakable proposals
+                    spk = logits.clone(); spk[self.sil] = float("-inf"); spk[self.bans] = float("-inf")   # the speakable proposals: not the rest, not the reserved
                     if form_ == "select":
                         short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
                         logits = torch.where(short, logits + a_bias, torch.full_like(logits, float("-inf")))
@@ -859,7 +859,7 @@ class Life:
                             boundary = True
                         if boundary and acted:                                 # imagination only when it is about to speak
                             short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # within the margin of the best speakable
-                            cands = [int(i) for i in torch.nonzero(short).flatten().tolist() if int(i) not in (self.sil, self.eot)]
+                            cands = [int(i) for i in torch.nonzero(short).flatten().tolist() if int(i) != self.sil and int(i) not in self.bans]
                             if len(cands) > int(self.cfg.get("plan_k", 4)):        # the cortex's top few, as many as a choice can weigh
                                 cands = sorted(cands, key=lambda c: -float(logits[c]))[: int(self.cfg.get("plan_k", 4))]
                             if len(cands) > 1:
