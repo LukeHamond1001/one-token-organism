@@ -723,6 +723,19 @@ band clocks 1..16384 · dose burst 0.5 (PLUMBING, a compute budget).
   Runs 137–140 measure it live from birth (137/138 out of the credit,
   139/140 in it through the reliability gain).
 
+
+**5c. The fourteenth defect and the re-aim of REM (2026-09-08).** REM's lesson trained the eight forecast heads (`pfc_pred`) to foresee the
+next tick's band state, which is a deterministic function of the stream and of the bands the stream already carries (forecast cosine 1.000
+awake, 0.999 before REM's first step): no error, nothing learned, and nothing reads those heads. The re-aim, REM AS IMAGINATION FOR THE
+CRITICS: (1) the face organ foresees rather than reads: `face_head(C_t)` predicts the felt reward of the next tick, and its reliability
+(the slope of the realized felt reward on its prediction, the same moments as the prefrontal voice's) is measured from inside; (2) in REM
+the cortex runs free from each dream's first symbols on its calibrated readout, sampled (rem_temp 1), and along the imagined stream the
+striatal delay line advances with the imagined events, the face organ scores each imagined tick, and the fast critic's evidence takes the
+imagined transition (z_t, r_hat, z_t+1) exactly as it takes a lived one (the same accumulators), weighted by the face organ's slope
+clipped at zero: imagination counts for as much as the imaginer has proved right (Dyna; hippocampal-striatal replay, Lansink 2009).
+(3) The forecast heads' loss leaves the wake lesson and REM. Nothing here reads the environment or authors a word; a humanoid keeps it
+unchanged: its face organ becomes its model of whatever grounded reward it has.
+
 ## 6. The environment (raw)
 
 The parents (the served typist and the fast parent) see only the page: the words, the face row, and whether the body
