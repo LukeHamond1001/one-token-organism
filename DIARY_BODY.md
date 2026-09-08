@@ -5312,3 +5312,20 @@ new and ended at 0.86, "hat and mi…" among its dreams.
 
 Twenty-six days on the page: twenty-one words entered, a word a day now, the newest back in its own mouth within minutes
 and in frames no one queued. Its own two-word runs have climbed from 22 a day to 130 to 180.
+
+## Connections, measured (2026-09-08, 07:32)
+
+The user asked whether it is mastering the relations between words rather than adding words. From the page's log, the
+child's own stream only: it has paired "out" with ten different frame-mates by itself, 422 times; "little" with six;
+"hat" and "baby" with five each within a day of hearing them; "me" with three. A new noun enters a network within a day.
+The pairings it makes that no parent ever said are one or two per word: it recombines the frames it was given and
+rarely builds a relation from nothing. And the relation words come slower than the nouns: it writes "ond" for "and" and
+"onder" for "under", its own reaching, and has not yet paired "come", "sad" or "eat" on its own. The nouns slot into
+frames; the frames are still the parent's. The measure is a floor: it reads the stream through the log's context
+windows. It lives in tools/word_mates.py now, beside the served digest.
+
+Day 36 (Opus): "eat" entered and was in its own mouth ninety seconds later; "dog eat" three minutes after the nap, so it
+survived the night's replay; "dog and" answered "milk", the different partner; "little" answered with all six nouns;
+eleven cues, none wrong; a fourth reach for a relation word, "little ball onder". 129 smiles to 53 frowns. Day 37: 137
+smiles to 50 frowns, five aways, the parent's mean face the warmest yet; the night 0.83 to 0.85. The day-38 parent is
+told where the value now lies: relation words used across many frames, and lines that put two relation words together.
