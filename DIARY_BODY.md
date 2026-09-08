@@ -5585,3 +5585,22 @@ mouth cannot choose rest when it acts under the rest form, a coherence gap whose
 behind the actor's; the old space rule and the `<...>` convention remain dormant behind flags; a bug in the unused
 Claude-planner mode fixed. The copy days queued behind one another tonight: the drive in the choice, the earned
 ceiling, the actor's add form at a modest weight, the rest vote. Each decides at a night.
+
+## The drive in the choice passes, and a number withdrawn (2026-09-08, 17:20)
+
+The drive in the choice, novelty widening the planner's choice among its candidates rather than raising the gate,
+had its copy day: one day of the fast parent on the same copy, on against off. On: 68 smiles, 20 frowns, the ear
+0.10 while the parent typed against 0.51 quiet, nine pairs no one taught it, the run-on after an answer 11.9
+symbols, the night keeping 0.83. Off: 59, 24, 0.09 against 0.51, seven, 4.1, 0.85. More smiles, fewer frowns, the
+ear unchanged, a few more invented pairs, longer run-ons after answers. By the rule it goes in, at one night with
+whatever else passes tonight. The same pair showed the doubt-rule planner's run-on on the fast parent at four
+symbols against eighteen at day 40, so the run-ons day 45's parent saw belong to the page.
+
+A number withdrawn. The user asked whether a long band's reward should ever line up with the actual reward; it should
+not, and it is not checked against the moment's reward but against the return that accumulated over its own horizon,
+which is noisy, so the correlation I had been quoting as "reliability" is bounded by that noise and can never reach the
+bar I gave. The body's weight for the prefrontal voice uses the slope, which a calibrated predictor gets to one however
+noisy the returns are. The digest had computed the weight from the correlation, so every prefrontal weight quoted from
+a digest, 0.145 at day 10, 0.095 at day 40, was the correlation times the ceiling and not the body's number; the true
+past weights were never recorded. The digest now prints the correlation, the slope and the body's own weight, and the
+maturity signal from here is the slope near one with the long value's share of the credit visibly moving behavior.
