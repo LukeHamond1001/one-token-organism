@@ -611,11 +611,37 @@ def test_offset_by_settling():
     assert len(fired2) == 1, f"the count floor did not end the event for a flat newborn: {fired2}"
     print("25 the event's end by the law: fired", [f - 0 for f in fired][:4], "ticks in, within 20 quiet ticks, no count; the newborn's floor at 8")
 
+
+def test_end_as_rest():
+    """the world's stop as rest (end_symbol rest): the offset marks the line's end, the lesson's target there is the rest
+    itself, a dream ends with the rest, and the chat token appears nowhere; the old form still targets the token"""
+    outs = {}
+    for form in ("eot", "rest"):
+        life = tiny(end_symbol=form, offset_ticks=8, gate_every=10 ** 9, wake_every=10 ** 9, gate_floor=0.0)
+        with torch.no_grad():
+            life.m.mouth_gate.bias.fill_(-30.0)                              # the mouth held silent: the world's line alone
+        life.type_text("dog will go")
+        while life.queue:
+            life.tick()
+        for _ in range(8):
+            life.tick()                                                      # the offset after eight quiet ticks
+        ended = [i for i, w in enumerate(life.win) if w.get("end")]
+        assert len(ended) == 1, f"one position should be ended: {ended}"
+        xs = torch.tensor([w["x"] for w in life.win]); y = xs.clone(); y[ended[-1]] = life.end_id
+        d = life.dreams(12)
+        outs[form] = (int(y[ended[-1]]), [ids[-1] for ids in d if ids])
+        assert all(w["x"] != life.eot and w["xo"] != life.eot for w in life.win), "the turn-end entered the stream"
+    assert outs["eot"][0] == life.eot and outs["rest"][0] == life.sil, f"the end's target: {outs}"
+    assert any(e == life.eot for e in outs["eot"][1]), f"under the token form no dream ended at the boundary: {outs['eot'][1]}"
+    assert any(e == life.sil for e in outs["rest"][1]), f"under the rest form no dream ended with the rest: {outs['rest'][1]}"
+    assert not any(e == life.eot for e in outs["rest"][1]), "the chat token appeared in a rest-form dream"
+    print("26 the world's stop as rest: the end's target", outs["rest"][0], "(the rest) | rest-form dreams end with", sorted(set(outs["rest"][1]))[:4], "| token form with", sorted(set(outs["eot"][1]))[:4])
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest]
     failed = 0
     for t in tests:
         try:

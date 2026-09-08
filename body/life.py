@@ -96,7 +96,8 @@ PHYSIOLOGY = dict(
     # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
     plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=0,   # the planner's boundary is the cortex's doubt (2026-09-08); 1 = the old space rule
     explore_gain=0.0, explore_tau=64,
-    rest_token="<pad>", end_token="<eot_human>", display_token="\n",   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
+    rest_token="<pad>", end_token="<eot_human>", display_token="\n",
+    end_symbol="eot",   # THE WORLD'S STOP (2026-09-08): "eot" = the chat token as the end's mark; "rest" = the end is the first rest after a symbol, the cortex learns to predict rest where the parent stops, and the chat token goes unused   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
@@ -299,7 +300,8 @@ class Life:
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
         self.nl = tok.token_to_id(str(self.cfg.get("display_token", "\n")))
         self.space_id = tok.token_to_id(" ")                  # the word boundary the planning actor decides at
-        self.eot = tok.token_to_id(str(self.cfg.get("end_token", "<eot_human>")))         # the world's turn ended: the offset (§2), never the mouth's
+        self.eot = tok.token_to_id(str(self.cfg.get("end_token", "<eot_human>")))
+        self.end_id = self.sil if str(self.cfg.get("end_symbol", "eot")) == "rest" else self.eot   # what the offset teaches the cortex to expect         # the world's turn ended: the offset (§2), never the mouth's
         # THE RESERVED SYMBOLS (anatomy, declared, 2026-09-08): the lexicon's control tokens, every `<...>` the tokenizer
         # defines (the world's turn-end, the old face tokens), except the rest; and this body's newline, a display symbol the
         # world never types. Neither the mouth nor the typing admits them. Declared from the tokenizer, never counted.
@@ -425,7 +427,7 @@ class Life:
                     self.bag_o = torch.zeros_like(self.bag_o); self.n_own = 0
                 else:
                     self.bag_o = m.shift(self.bag_o) + ex; self.n_own += 1
-            end_vec = F.normalize(m.E.weight[self.eot], dim=0) if int(self.cfg.get("recall_end", 0)) else None
+            end_vec = F.normalize(m.E.weight[self.end_id], dim=0) if int(self.cfg.get("recall_end", 0)) else None
             read, conf, _ = (self.store.read(self.bag, end_vec=end_vec) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
             self._read = read                                  # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
@@ -871,7 +873,8 @@ class Life:
                 # THE END IS A REST: the forecast's vote for the turn's end (a symbol the mouth can never say) is its
                 # vote for silence; banned outright, a sure forecast of the end raised the proposal's salience and then
                 # the next-best symbol was said in its place
-                logits[self.sil] = logits[self.eot]
+                if self.end_id != self.sil:
+                    logits[self.sil] = logits[self.eot]                   # under the rest form the vote for the end is the rest's own logit
             else:
                 logits[self.sil] = float("-inf")
             logits[self.bans] = float("-inf")
@@ -1068,7 +1071,7 @@ class Life:
         y = xs[torch.tensor(tgt_pos, device=self.dev)].clone()
         for t in range(T):
             if win[t].get("end"):                                  # THE OFFSET: after this symbol the world went quiet
-                y[t] = self.eot; w[t] = 1.0
+                y[t] = self.end_id; w[t] = 1.0
         if float(w.sum()) < 1:
             return None
         m = self.m; m.train()
@@ -1121,11 +1124,15 @@ class Life:
                                                       or float(adapt[win]) < float(self.cfg["dream_exhaust"]))):
                         break                                             # unsure, or the memory is exhausted (a slot fires at most twice)
                     lg = self.m.readout(pred).clone()
-                    lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
+                    lg[self.bans] = float("-inf")
+                    if self.end_id != self.sil:
+                        lg[self.sil] = float("-inf")
                     nid = int(lg.argmax())
+                    if nid == self.sil:                                   # the rest form: the recall itself expects the quiet
+                        ids.append(self.sil); break
                     ids.append(nid)
                     if int(self.cfg.get("offset_ticks", 0)) > 0 and win >= 0 and bool(self.store.B[win]):
-                        ids.append(self.eot); break                       # the memory ends where the world went quiet
+                        ids.append(self.end_id); break                    # the memory ends where the world went quiet
                     adapt = 1.0 - a_rec * (1.0 - adapt)                   # recovery toward 1
                     # the recalled memory tires fully each time it fires, and every slot tires in
                     # proportion to how much it fired (neural adaptation), so a cycle exhausts itself
@@ -1168,7 +1175,9 @@ class Life:
                 xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
                 C = self.m.stream(self.m.inputs(xs, whos, faces, bundles, reads))
                 pred = self.m.latent_pred(C)
-                lg = self.m.readout(pred); lg[:, [b for b in self.bans if b != self.eot]] = float("-inf"); lg[:, self.sil] = float("-inf")
+                lg = self.m.readout(pred); lg[:, [b for b in self.bans if b != self.eot]] = float("-inf")
+                if self.end_id != self.sil:
+                    lg[:, self.sil] = float("-inf")                       # under the rest form the rest is a target the cortex may hit
                 hits += int((lg.argmax(-1) == y).sum()); n += int(y.numel())   # a dream's end (the turn's) counts as a target
                 cos_sum += float(F.cosine_similarity(pred, self.m.E.weight[y], dim=-1).sum())
         self._gauge_cos = (round(cos_sum / n, 3) if n else None)
