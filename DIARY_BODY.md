@@ -5489,3 +5489,17 @@ a subject; "hat went" answered "off" only after five teachings, so the past fram
 dog", a question mark of its own with its reason. 156 smiles to 56 frowns; the known-word count 62 to 63. The reload's
 one cost: the typist's page cursor outran the new server's count and its last nine minutes went to a dark page; day 45's
 new session reset it, and the next reload restarts the typist through the chain right after the server.
+
+## The world's stop as rest (2026-09-08, 15:52)
+
+The user's word: get rid of the turn-end token and teach the model to predict when the parent is done typing. Built as a
+form of the body's stop (end_symbol rest, beside the old token form): the offset's target at a line's end is the rest
+itself, so the cortex learns to predict rest where the parent stops; a dream ends where the recall expects the rest or
+where the memory's boundary lies; the mouth's vote for silence is the rest's own logit; the chat token goes unused. One
+symbol fewer, and the body-general form: a robot has no chat tokens, but it has stillness. Organ test 26 shows the
+end's target as the rest and rest-form dreams ending with it, the token form unchanged. Twenty-six tests pass.
+
+What is queued behind one another on copies of the living body, one day of the fast parent each, in this order: the
+gate's intrinsic term on against off; the offset by count against by settling; the stop as the token against as the
+rest. Each pair decides at a night. The user's rule for the afternoon, stated back: yes to every change that passes its
+copy day, tonight, at one night boundary; no to any change on the afternoon it was written without a day on a copy.
