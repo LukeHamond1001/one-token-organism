@@ -5522,3 +5522,24 @@ digest at the new pace, day 46's, says what that does to the ear. Answered along
 character; silence between its letters is already free; a lexicon of characters and one rest is what the body now lives
 in, with the leftover tokens declared reserved, and the clean tokenizer is the next body's birth; two voices blending
 when both speak is a real piece of anatomy, auditory masking, for the next body.
+
+## The purge served, and the drive moved to the choice (2026-09-08, 16:14)
+
+At 16:08, right after its forty-fifth night's own save, the served body was restarted with everything at once: one
+tick a second, the planner at points of its own doubt, the gate's intrinsic term off, the offset by settling with the
+count as its floor, the world's stop as rest, the page carrying only the page, the symbols declared. The typist was
+restarted through the chain with a fresh cursor and was smiling at the page within three minutes; the known-word count
+stood at 64. The body it loaded is the body a humanoid would take: swap the senses, the primitives, the two special
+symbols and the reward, re-measure its constants, give it reflexes beneath its tick, and let it babble or be guided.
+The insides are on their own endpoint now; the parent's page shows the words, the faces, and whether it sleeps.
+
+The user asked why the exploration drive failed and whether Opus's teaching could make it work. It worked as built
+and pointed at the wrong thing: novelty raised the body's readiness to speak, and in a language body the world is
+newest when the parent is typing, so it spoke where it should have listened. The parent's rules reward answers and
+known words in the quiet, not novelty, and a parent who rewarded novelty would be the intrinsic reward moved outside.
+The fault was where the drive pointed. Novelty should widen what the body tries, not whether it speaks: the planner
+already holds candidates with imagined values, and the drive now belongs there, as a wider choice among them when the
+world is new and a narrow one when it is familiar, the same readiness spent on which way rather than on whether. Built
+as explore_choice beside the first form, off by default; organ test 27 shows the choice's temperature rising to 2.3
+after strange lines and the gate's floor untouched; two copy days of the fast parent run on it now, off against on,
+and it goes in at a night if it earns pairs without costing smiles.
