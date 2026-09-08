@@ -22,12 +22,12 @@ pairs = collections.defaultdict(collections.Counter); novel = collections.defaul
 gauge = {}; known = {}
 for r in rows:
     d = r.get("day"); a = r.get("action")
+    if a in ("line", "cue"):                                # the parent's pairs accumulate from the first row, whatever day is printed
+        txt = (r.get("text") or r.get("line") or r.get("said") or "").lower()
+        ws_ = re.findall(r"[a-z]+", txt); taught.update(zip(ws_, ws_[1:]))
     if d is None or d < first:
         continue
     days[d][a] += 1
-    if a in ("line", "cue"):
-        txt = (r.get("text") or r.get("line") or r.get("said") or "").lower()
-        ws_ = re.findall(r"[a-z]+", txt); taught.update(zip(ws_, ws_[1:]))
     if a == "smile" and "cue" in str(r.get("why")):
         days[d]["cue_answered"] += 1
     if a == "missed" and r.get("why") == "talked over":
