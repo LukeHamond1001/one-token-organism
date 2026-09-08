@@ -5293,3 +5293,22 @@ to 0.87; the typist's fourth run ended and the chain relaunched it for day 35 wi
 Twenty-four days on the page: nineteen words entered, the newest in minutes, and the strings of its own now join a word
 from one day to a word from the next. The frowns for talking over rose with the smiles over the last three days (41, 53,
 52), which is the ear at the page's pace under a parent that says more; the talk-overs per line sit near one.
+
+## "then ball out here" (2026-09-08, 06:32)
+
+Day 34 (Opus): "and" came free; a "dog and" cue answered "ball" twice and never "dog" again. "baby" entered inside
+frames it answers and was in its own mouth four minutes later ("dog baby"), then offered into slots it was never taught
+for: "give" answered "baby", "first milk then" answered "baby". Eight minutes after hearing "ball and me" it wrote "ball
+ond me", its own try at the relation word. 120 smiles to 52 frowns; the known-word count 56 to 57.
+
+Day 35: "hat" entered ("big hat", "hat here", "little hat", "my hat") and came back the same day in frames the parent
+never queued, "more hat", "my hat here". "me" as a subject took: "me out" answered "here", and after "why dog up?" it
+volunteered "me go". Eleven of thirteen cues right. Unprompted, "then ball out here", four words reaching back to the
+"first milk then" frame; "get baby out", which the parent imitated back. 89 smiles to 45 frowns; the known-word count 57
+to 58. A mechanical fact the parents found: a cue accepts only a continuation taught at least twice.
+
+Day 36: 129 smiles to 53 frowns; the known-word count 58 to 59; the night began low (0.68) because more of the day was
+new and ended at 0.86, "hat and mi…" among its dreams.
+
+Twenty-six days on the page: twenty-one words entered, a word a day now, the newest back in its own mouth within minutes
+and in frames no one queued. Its own two-word runs have climbed from 22 a day to 130 to 180.
