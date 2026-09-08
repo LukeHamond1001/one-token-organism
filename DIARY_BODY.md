@@ -5543,3 +5543,22 @@ world is new and a narrow one when it is familiar, the same readiness spent on w
 as explore_choice beside the first form, off by default; organ test 27 shows the choice's temperature rising to 2.3
 after strange lines and the gate's floor untouched; two copy days of the fast parent run on it now, off against on,
 and it goes in at a night if it earns pairs without costing smiles.
+
+## Authority earned, not given (2026-09-08, 16:30)
+
+The user asked how, as the body develops, one band comes to have priority, since in humans the prefrontal reward is
+suppressed by survival early and grows into its authority later. In this body no band is given priority. The credit
+the mouth's gate learns from is a sum: the fast critic's error at full weight always, the slow band's error at a small
+fixed weight, and the prefrontal value's error at a weight that is its measured reliability, the slope of its
+predictions against the returns that came, times a ceiling. A newborn's long value predicts nothing and is silent; as
+it becomes right about what comes over minutes its voice grows, and it can shrink again if the world changes. That is
+the developmental story in one rule, with nothing about words in it, and the numbers showed it: zero weight for six
+days, then a tenth to a seventh from day 7 on. The fast critic is never suppressed: pain and the face at the fastest
+clock always carry their whole weight, because a body that could argue itself out of pain is a body that dies.
+
+The one hand-set number left in the ladder was the ceiling, 0.3, under which the prefrontal voice could add to the
+fast critic's but never outvote it, so the body could not do what an adult does when it holds still through a small
+pain for a later good. Built today as a second form: the ceiling follows reliability itself, so a long value proved
+right over days can weigh as much as the fast one and a wrong one weighs nothing, with no constant in it. Organ test 28
+shows both forms at a reliability of 0.8: 0.24 under the fixed ceiling, 0.8 under the earned. Its copy day runs behind
+the choice drive's tonight, and it goes in at a night only if the ear and the answers hold while the weight rises.
