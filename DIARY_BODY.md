@@ -5168,3 +5168,16 @@ cortex alone predicting the next word two or three times in ten (a stall: still 
 zero throughout; the long bands' effect on behavior is invisible from the page and gets one stalked day on a copy around
 day 40. Two changes I may make at a day boundary, each measured on a copy first: the reply parent's wait if the frowns are
 flat in three days, and a longer answer window in the typist if late answers keep going uncredited.
+
+## Days 24 and 25 (2026-09-07, 19:15)
+
+Day 24 was the best day of the life: 141 smiles to 44 frowns. "get" entered through the "give ball" frame and answered a
+bare cue within the hour; "away", "gone" and "get" all crossed to credited known words in the one day, the fastest entry
+yet; "dog all" answered "gone" cleanly, and "gone" now runs freely inside its own recall ("milk all gone", "ball all
+gone"), not only after a cue. The night 0.77 to 0.86. Day 25: 131 smiles to 53 frowns, the known-word count 51 to 52,
+the first of tonight's expected marks reached; the night 0.77 to 0.87.
+
+Fifteen days under Sonnet: thirteen words entered inside frames it already answered, every one answered back; smiles from
+55 to 130 or 140 a day; the parent turning away from 18 to 10; its own two-word runs from 22 to 60 or 70 a day, the pairs
+no one taught it from a handful to ten or more. Flat: the frowns for talking over, 44 to 55 a day. That is the ear at the
+page's pace, and the reply parent's wait is the thing measured next if it stays flat through day 27.
