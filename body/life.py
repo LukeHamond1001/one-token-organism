@@ -95,6 +95,7 @@ PHYSIOLOGY = dict(
     # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
     # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
     plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=1,
+    explore_gain=0.0, explore_tau=64,   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
@@ -578,6 +579,9 @@ class Life:
             elif getattr(self, "_start_armed", False):
                 self._start_pending = True; self._start_armed = False
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
+        if u != self.sil and float(self.cfg.get("explore_gain", 0.0)) > 0:   # arousal follows novelty: a running surprise at the world's symbols
+            a_ = 1.0 / max(1.0, float(self.cfg.get("explore_tau", 64)))
+            self._surp_run = (1.0 - a_) * getattr(self, "_surp_run", 0.0) + a_ * float(surp1)
         stri = str(self.cfg.get("fast_input", "band")) == "striatum" and int(self.cfg.get("fast_rls", 0))
         if stri:
             if felt:
@@ -802,6 +806,10 @@ class Life:
                 feat = torch.cat([feat, torch.tensor([1.0 if u != self.sil else 0.0, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
+            eg_ = float(self.cfg.get("explore_gain", 0.0))
+            if eg_ > 0:                                                             # THE EXPLORATION DRIVE: readiness to act, not a
+                fl = min(0.5, fl + eg_ * getattr(self, "_surp_run", 0.0))            # reward; the floor climbs where the world surprises
+            self._floor_now = fl
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
             logits = m.readout(pred1).clone()

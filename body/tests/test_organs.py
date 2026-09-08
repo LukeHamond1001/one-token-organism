@@ -560,11 +560,26 @@ def test_plan_boundary():
     assert counts[0][0] >= counts[1][0] and counts[0][1] > 0, f"without the space rule the planner did not reach inside words: {counts}"
     print("23 the planner's boundary: plans", counts[1][0], "with the space rule (none mid-word);", counts[0][0], "without it,", counts[0][1], "mid-word")
 
+
+def test_exploration_drive():
+    """the exploration drive: with explore_gain the gate's floor rises after the world surprises it and settles as the
+    world repeats; with the gain at zero the floor is the constant, whatever the world does"""
+    floors = {}
+    for gain in (0.0, 1.0):
+        life = tiny(explore_gain=gain, explore_tau=8, gate_every=10 ** 9, wake_every=10 ** 9); fl = []
+        for _ in range(3):
+            say(life, "zq xj vk pw ", 2); fl.append(getattr(life, "_floor_now", None))
+        floors[gain] = fl
+    assert all(f == float(life.cfg["gate_floor"]) for f in floors[0.0]), f"without the drive the floor moved: {floors[0.0]}"
+    assert floors[1.0][0] > float(life.cfg["gate_floor"]), f"the drive did not raise the floor after surprise: {floors[1.0]}"
+    assert max(floors[1.0]) <= 0.5, "the floor passed its cap"
+    print("24 the exploration drive: floor", round(float(life.cfg["gate_floor"]), 3), "->", [round(f, 3) for f in floors[1.0]], "after a strange line, three times")
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive]
     failed = 0
     for t in tests:
         try:
