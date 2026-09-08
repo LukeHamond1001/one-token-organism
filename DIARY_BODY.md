@@ -5225,3 +5225,23 @@ What this is and is not. It is the first time the body has built a string longer
 given separately, inside the hour it was given them: the relation between "out" and its frame-mates was learned, not the
 lines. It is not grammar; "out milk" is a pair of the right words in an order no parent would use. The next days say
 whether it does this with every new word or only with ones like "out" that fit many frames at once.
+
+## Anatomy, physiology, and cheating (2026-09-07, 23:25)
+
+The user asked whether the planner's boundary is a cheat, then whether we have the biological architecture at all or are
+cheating. The line, drawn once: three kinds of things are in the body. Cheating is reward or knowledge from anywhere but
+the outside: none is present, and the one instance ever found was removed. Physiology is the constants of the body's
+constitution, rates and half-lives and the night's length, disclosed and measured, as every animal has by evolution.
+Anatomy is the facts about the body's world built into the body: what its senses deliver, what its output atoms are,
+where one unit ends. The lexicon of 107 symbols and the space as the end of a word are this body's anatomy, given as a
+child's is given. The law asks that anatomy be the only given and everything above it be learned from reward and
+prediction, and that is the case: every word, frame, value and habit of waiting came from a face and a voice on a page.
+
+Measured, the planner's space clause does real work: on day 10, 58 percent of its 550 plans fired by the space alone,
+mid-speech, 33 percent by both clauses, 9 percent by the pause alone. It stays in this life and is named in the spec as
+what it is. The map to a humanoid, anatomy for anatomy: letters become quantized sensor readings and motor primitives; the
+word ended by a space becomes the action ended by its primitive's completion; the chunk above the unit, a reach then a
+grasp, is learned by reward in both, and this body has not learned it yet either. The parent's known-word smile transfers
+untouched, because it lives in the parent: a smile at a taught movement instead of a taught word.
+
+Day 29: 127 smiles to 49 frowns; the night 0.81 to 0.86; the known-word count held at 54.
