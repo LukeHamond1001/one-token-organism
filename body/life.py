@@ -209,7 +209,7 @@ PHYSIOLOGY = dict(
     # THE GATE'S OPTIMIZER (gate_opt "sgd" | "adam", gate_adam_lr): Adam normalizes each weight's step by its gradient's
     # running scale, so a consistent small gradient on one input (the ear) accumulates at the rate whatever the noise
     gate_opt="sgd", gate_adam_lr=1e-3,
-    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
+    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, sharp_form="fixed", sharp_rate=0.05, sharp_min=2.0, sharp_max=100.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
     # THE WORLD'S WORDS AS REWARD (the user's word of 2026-09-04, "both are your call"): each symbol the world types is
     # felt as reward of world_r beside the face. The caregiver's voice is a primary reward to an infant (the mother's
@@ -334,6 +334,10 @@ class Life:
         # the reliability gain's buffers: the head's value and the reward per tick, the running moments of (value, return)
         self._vbuf_v = collections.deque(maxlen=4096); self._vbuf_r = collections.deque(maxlen=4096)
         self._vrel = [0.0] * 6; self._vrel_gain = 0.0; self._vrel_corr = 0.0
+        self.sharp_cal = float(self.cfg["sharp_base"])       # THE CALIBRATED SHARPNESS (sharp_form "calibrated"): the readout's base, set by its own hits
+        self._fc_prev = None                                  # the forecast made at the last step, unnormalized (its norm is its certainty)
+        _wk = int(self.cfg["wake_ticks"]) + 16                # the day's ring: the fast value before each tick and the felt reward at it (the anticipation reading)
+        self._ring_vf = collections.deque(maxlen=_wk); self._ring_r = collections.deque(maxlen=_wk)
         self._differential = [int(c) >= int(self.cfg["diff_horizon"]) for c in self.m.clocks]
         with torch.no_grad():
             self.m.diff[:] = torch.tensor(self._differential, dtype=torch.bool, device=self.m.diff.device)
@@ -391,6 +395,8 @@ class Life:
         if who == 0 and getattr(self, "pred_prev", None) is not None:      # the tick's surprise, the rest included: the event's end by the law
             with torch.no_grad():
                 self._surp_tick = float(1.0 - F.cosine_similarity(self.pred_prev, m.E.weight[int(x)], dim=0))
+            if str(self.cfg.get("sharp_form", "fixed")) == "calibrated":
+                self._sharp_calibrate(int(x))
         with torch.no_grad():
             ex = m.E.weight[x]
             # surprise of what arrived, against the forecast made a step ago (embedding space)
@@ -459,6 +465,7 @@ class Life:
                 self.bands = m.band_update(self.bands, C)
             self._C_last = C
             pred = m.forecast(C, read)
+            self._fc_prev = pred.detach()
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
 
@@ -555,6 +562,7 @@ class Life:
 
     def tick(self):
         m = self.m
+        self._ring_vf.append(self.fast_value())            # the fast critic's value before this tick (the anticipation reading; the supervisor's, never the body's)
         self._decay_feelings()
         u = self.queue.popleft() if self.queue else self.sil
         # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
@@ -574,6 +582,7 @@ class Life:
                 felt = lvl
             self.level = lvl
         r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
+        self._ring_r.append(r)
         if u != self.sil:
             wr = float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
             if wr and not (int(self.cfg.get("world_mask", 0)) and getattr(self, "_acted_last", False)):
@@ -797,7 +806,8 @@ class Life:
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
         # DECISIVENESS from tonic dopamine (songbirds: variability is high when unrewarded and falls as
         # reward comes; mood is the body's tonic dopamine): the readout's sharpness = base + gain x mood/6
-        m.read_sharp = float(self.cfg["sharp_base"]) + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
+        base = float(self.sharp_cal) if str(self.cfg.get("sharp_form", "fixed")) == "calibrated" else float(self.cfg["sharp_base"])
+        m.read_sharp = base + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
         with torch.no_grad():
             sal = float(self.cfg["gate_salience"]) * float(pred1.norm())      # the proposal's salience
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
@@ -1382,13 +1392,46 @@ class Life:
         return {"page": self.page[i:], "n": self.page_base + len(self.page), "queued": len(self.queue),
                 "asleep": self.asleep, "nights": self.nights}
 
+    def _sharp_calibrate(self, x):
+        """THE CALIBRATED READOUT (2026-09-08): the sharpness is the one number in the readout that theory does not give, and a
+        readout is well set when its confidence matches how often it is right. Each world symbol is a sample of the truth the
+        forecast was read against: the gradient of the log-likelihood of what arrived, with respect to the sharpness, is the
+        forecast's score of what arrived minus its expected score under its own reading (temperature scaling, Guo et al. 2017,
+        as a running law). Over-confident readings are pushed flatter, under-confident ones sharper, by the body's own hits and
+        misses; dopamine's sharpening (sharp_gain x mood) rides on the calibrated base. The reserved symbols are outside the
+        readout's support, so a reserved arrival teaches nothing."""
+        fc = getattr(self, "_fc_prev", None)
+        if fc is None or x in self.bans:
+            return
+        m = self.m
+        with torch.no_grad():
+            s = max(1e-3, float(m.read_sharp))
+            lg = m.readout(fc); q = lg / s
+            lg = lg.clone(); lg[self.bans] = float("-inf")
+            p = torch.softmax(lg, dim=0)
+            grad = float(q[x] - (p * q).sum())
+            lo, hi = float(self.cfg.get("sharp_min", 2.0)), float(self.cfg.get("sharp_max", 100.0))
+            self.sharp_cal = float(min(hi, max(lo, self.sharp_cal + float(self.cfg.get("sharp_rate", 0.05)) * grad)))
+
+    def anticipation(self):
+        """the digest's number read from inside: the fast critic's rise over the seven ticks before a felt smile, as a percent of a smile"""
+        vf = list(self._ring_vf); rr = list(self._ring_r); n = min(len(vf), len(rr)); vf, rr = vf[-n:], rr[-n:]
+        idx = [i for i in range(8, n) if rr[i] > 0]
+        if n < 100 or not idx:
+            return None
+        mv = sum(vf) / n
+        pre = sum(vf[i] - mv for i in idx) / len(idx); far = sum(vf[i - 7] - mv for i in idx) / len(idx)
+        return {"rise_pct": round((pre - far) / 2 * 100, 1), "n": len(idx), "mean_vf": round(mv, 3), "ticks": n}
+
     def insides(self):
         """the supervisor's instrument, never the caregiver's: the readings from inside"""
         return {"last": self.last, "sleep_pressure": self.sleep_pressure, "wake_ticks": int(self.cfg["wake_ticks"]),
                 "nights": self.nights, "last_night": self.last_night, "store": self.store.n(),
                 "mood": round(float(self.mood), 3), "fatigue": round(float(self.fatigue), 3), "stress": round(float(self.stress), 3),
                 "ticks": self.ticks, "vrel_slope": round(float(self._vrel_gain), 3), "vrel_corr": round(float(self._vrel_corr), 3),
-                "vw_now": round(float(getattr(self, "_vw_now", 0.0)), 4), "floor_now": round(float(getattr(self, "_floor_now", 0.0)), 4)}
+                "vw_now": round(float(getattr(self, "_vw_now", 0.0)), 4), "floor_now": round(float(getattr(self, "_floor_now", 0.0)), 4),
+                "sharp_now": round(float(self.m.read_sharp), 2), "sharp_cal": round(float(self.sharp_cal), 2), "sharp_form": str(self.cfg.get("sharp_form", "fixed")),
+                "anticipation": self.anticipation()}
 
     # ---------------- save / load ----------------
     def save(self, path=None):
@@ -1399,7 +1442,9 @@ class Life:
                 "life": {"ticks": self.ticks, "nights": self.nights, "day_n": self.day_n, "sleep_pressure": self.sleep_pressure, "heard": self.heard.cpu(),
                          "fatigue": self.fatigue, "stress": self.stress, "mood": self.mood, "n_bursts": self.n_bursts,
                          "sym_freq": self.sym_freq, "perf": {int(k): float(v) for k, v in self.perf.items()}, "last_night": self.last_night, "rbar": float(self.rbar),
-                         "feat_mu": (self._feat_mu.cpu() if getattr(self, "_feat_mu", None) is not None else None)}}
+                         "feat_mu": (self._feat_mu.cpu() if getattr(self, "_feat_mu", None) is not None else None),
+                         "vrel": list(self._vrel), "vrel_gain": float(self._vrel_gain), "vrel_corr": float(self._vrel_corr),
+                         "vbuf_v": list(self._vbuf_v), "vbuf_r": list(self._vbuf_r), "sharp_cal": float(self.sharp_cal)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -1455,6 +1500,11 @@ class Life:
                 setattr(life, k, L[k])
         if L.get("feat_mu") is not None:
             life._feat_mu = L["feat_mu"].to(device)                  # the gate's adapted input, its running mean
+        if L.get("vrel") is not None:                                # THE THIRTEENTH DEFECT (2026-09-08): the prefrontal voice's evidence was dropped at every load
+            life._vrel = [float(v) for v in L["vrel"]]; life._vrel_gain = float(L.get("vrel_gain", 0.0)); life._vrel_corr = float(L.get("vrel_corr", 0.0))
+            life._vbuf_v.extend(float(v) for v in (L.get("vbuf_v") or [])); life._vbuf_r.extend(float(v) for v in (L.get("vbuf_r") or []))
+        if L.get("sharp_cal") is not None:
+            life.sharp_cal = float(L["sharp_cal"])
         life.sym_freq = dict(L.get("sym_freq") or {})
         life.perf = {int(k): float(v) for k, v in (L.get("perf") or {}).items()}
         if L.get("rbar") is not None:

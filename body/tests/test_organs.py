@@ -678,11 +678,44 @@ def test_prefrontal_ceiling():
     assert abs(weights["earned"] - 0.8) < 1e-6, f"earned: {weights}"
     print("28 the prefrontal voice's ceiling: fixed", weights["fixed"], "| earned", weights["earned"], "at reliability 0.8")
 
+def test_calibrated_sharpness():
+    """the readout's sharpness as a law: fed a world whose symbols come from a flatter reading of its own forecast, the base
+    falls; from a sharper one, it rises; no number is set by hand"""
+    ends = {}
+    for star in (6.0, 60.0):
+        life = tiny(sharp_form="calibrated", sharp_rate=0.5, gate_every=10 ** 9, wake_every=10 ** 9)
+        torch.manual_seed(0)
+        fc = torch.randn(life.m.d) * 0.3                                    # a forecast held still
+        life._fc_prev = fc
+        for _ in range(1000):
+            life.m.read_sharp = life.sharp_cal                               # the reading the world is scored against (no mood)
+            lg = life.m.readout(fc).clone(); lg[life.bans] = float("-inf"); lg[life.sil] = float("-inf")
+            p = torch.softmax(lg / life.m.read_sharp * star, dim=0)         # the world drawn from the star reading
+            life._sharp_calibrate(int(torch.multinomial(p, 1)))
+        ends[star] = life.sharp_cal
+    assert ends[6.0] < 25.0 - 3 and ends[60.0] > 25.0 + 3, ends
+    print("29 the calibrated sharpness: from 25, under a world read at 6 ->", round(ends[6.0], 1), "| at 60 ->", round(ends[60.0], 1))
+
+
+def test_evidence_survives_the_load():
+    """the thirteenth defect: the prefrontal voice's evidence (the reliability's moments and buffers) and the calibrated
+    sharpness are the body's, saved and loaded with it"""
+    import os, tempfile
+    life = tiny(vcrit_auto=1)
+    life._vrel = [10.0, 1.0, 2.0, 3.0, 4.0, 5.0]; life._vrel_gain = 0.6; life._vrel_corr = 0.7; life.sharp_cal = 17.5
+    life._vbuf_v.extend([0.1, 0.2, 0.3]); life._vbuf_r.extend([1.0, 0.0, 2.0])
+    path = os.path.join(tempfile.mkdtemp(), "ev.pt"); life.save_path = path; life.save()
+    life2 = Life.load(path, TOK, device="cpu", save_path=path)
+    assert life2._vrel == life._vrel and abs(life2._vrel_gain - 0.6) < 1e-9 and abs(life2._vrel_corr - 0.7) < 1e-9, (life2._vrel, life2._vrel_gain)
+    assert list(life2._vbuf_v) == [0.1, 0.2, 0.3] and list(life2._vbuf_r) == [1.0, 0.0, 2.0] and abs(life2.sharp_cal - 17.5) < 1e-9
+    print("30 the evidence survives the load: the reliability's moments and buffers, the slope", life2._vrel_gain, "| the calibrated sharpness", life2.sharp_cal)
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load]
     failed = 0
     for t in tests:
         try:
