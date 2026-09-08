@@ -94,7 +94,7 @@ PHYSIOLOGY = dict(
     # plan_h own symbols through the world model (greedy), the striatal critic values the imagined line, and the choice follows
     # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
     # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
-    plan_h=2, plan_beta=4.0, plan_k=4,
+    plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=1,
     own_target_decay=0.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
@@ -815,7 +815,15 @@ class Life:
                         short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
                         logits = torch.where(short, logits + a_bias, torch.full_like(logits, float("-inf")))
                     elif form_ == "plan":
-                        boundary = (not getattr(self, "_acted_last", False)) or getattr(self, "_own_last", None) in (None, self.space_id)
+                        # THE BOUNDARY (plan_boundary 1): the tick after a pause in its own speech, or its last symbol the space (a
+                        # fact about text written in). plan_boundary 0 (2026-09-08): no symbol, no pause test; the planner runs
+                        # whenever it is about to act and the cortex is torn (more than one candidate within the margin), which is
+                        # what the shortlist test below already asks. Inside a word the cortex is rarely torn; at a word's start it is.
+                        # Deliberation where there is doubt: body-general, and it carries to a body without a space.
+                        if int(self.cfg.get("plan_boundary", 1)):
+                            boundary = (not getattr(self, "_acted_last", False)) or getattr(self, "_own_last", None) in (None, self.space_id)
+                        else:
+                            boundary = True
                         if boundary and acted:                                 # imagination only when it is about to speak
                             short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # within the margin of the best speakable
                             cands = [int(i) for i in torch.nonzero(short).flatten().tolist() if int(i) not in (self.sil, self.eot)]

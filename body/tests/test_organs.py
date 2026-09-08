@@ -534,11 +534,37 @@ def test_night_warmup():
             assert all(x == 1.0 for x in nrem_lrs), f"without the ramp the rate must be whole: {nrem_lrs}"
     print("22 the night's plasticity ramps: rates", ramp, "with night_warm 4; whole without")
 
+
+def test_plan_boundary():
+    """the planner's boundary: with plan_boundary 1 it plans only after a pause or a space; with plan_boundary 0 it plans
+    whenever it acts and the cortex is torn, whatever the last symbol was (no fact about text needed)"""
+    counts = {}
+    for pb in (1, 0):
+        life = _watched(actor_margin=1e9, plan_boundary=pb); n = 0; mid = 0
+        prev_acted, prev_own = False, None
+        for t in range(400):
+            if t % 25 == 0:
+                life.set_face(2.0)
+            elif t % 25 == 2:
+                life.set_face(0.0)
+            if t % 40 == 0:
+                life.type_text("go ")
+            life._plan_last = None; life.tick()
+            if getattr(life, "_plan_last", None):
+                n += 1
+                if prev_acted and prev_own not in (None, life.space_id):
+                    mid += 1                                                   # a plan inside its own word
+            prev_acted = bool(getattr(life, "_acted_last", False)); prev_own = getattr(life, "_own_last", None)
+        counts[pb] = (n, mid)
+    assert counts[1][1] == 0, f"with the space rule a plan fired inside a word: {counts[1]}"
+    assert counts[0][0] >= counts[1][0] and counts[0][1] > 0, f"without the space rule the planner did not reach inside words: {counts}"
+    print("23 the planner's boundary: plans", counts[1][0], "with the space rule (none mid-word);", counts[0][0], "without it,", counts[0][1], "mid-word")
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary]
     failed = 0
     for t in tests:
         try:
