@@ -5398,3 +5398,22 @@ and permanent like training. It generalizes a word to its frames within a day; i
 showed it, and its cortex alone still predicts the next word poorly. What is big is the kind, not the speed: continuous
 learning from lived experience, one grounded reward, memory that survives sleep. It holds at toddler scale; whether it
 holds at the scale where transformers shine is the unproven half, and the same question as the top of the ladder.
+
+## The equations (2026-09-08, 13:41)
+
+The user asked whether we have the most important equation for real intelligence. The answer given: the one biology has
+found most often is at the center, the reward prediction error, the reward the face gave plus the value of where the
+body now is minus the value it expected; dopamine's computation, and everything in the body hangs on it: the critics
+learn from it, the mouth's credit is weighted by it, mood integrates it, working memory latches on a burst of it, the
+planner's imagined values are the value in it, the ladder is the same equation at eight clocks, and the prefrontal
+value earns weight only as its error proves reliable. Beside it the two others a brain is known to have: prediction
+error in the cortex, and replay in sleep from the hippocampus's one-shot store. Reward error, prediction error, replay,
+coupled, with nothing else written in but anatomy. Two equations we do not have: chunking, what makes a word from
+letters and a plan from actions, so that the planner's boundary is learned rather than typed; and a drive to explore,
+which here is a constant floor of spontaneous action rather than a drive that grows where the world is unknown. Both
+are on the list for the body that is not made of words.
+
+Day 42 (Opus): "went" entered inside the past frame and the same day "me went" answered "out", the new word on a new
+agent; "angry" moved from swamped to answering "dog" twice; the parent's own caution that the "baby" cue accepts "here",
+the first word of its attractor, so that completion proves little. 148 smiles to 57 frowns. Day 43: 145 smiles to 50
+frowns; the known-word count 61 to 62; the night 0.68 to 0.85, "angry" among its dreams.
