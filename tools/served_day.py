@@ -25,6 +25,8 @@ for r in rows:
     days[d][a] += 1
     if a == "smile" and "cue" in str(r.get("why")):
         days[d]["cue_answered"] += 1
+    if a == "missed" and r.get("why") == "talked over":
+        days[d]["talked_over"] += 1                       # the raw occasions: the frown itself fires at most once per 15 s
     if a == "session_end":
         known[d] = r.get("known")
     if a == "night":
@@ -43,4 +45,5 @@ for r in rows:
 for d in sorted(days):
     c = days[d]; g = gauge.get(d)
     nv = novel[d]
-    print(f"day {d:3d} | smiles {c['smile']:3d} frowns {c['frown']:3d} aways {c['away']:2d} | lines {c['line']:3d} cues {c['cue']:2d} answered {c['cue_answered']:2d} | own pairs {sum(pairs[d].values()):3d} distinct {len(pairs[d]):2d} novel {sum(nv.values()):2d} {[' '.join(k) for k, _ in nv.most_common(3)]} | known {known.get(d, '-')} | night {g[0] if g else '-'} -> {g[1] if g else '-'}")
+    n_ = max(1, c['line'] + c['cue'])
+    print(f"day {d:3d} | smiles {c['smile']:3d} frowns {c['frown']:3d} aways {c['away']:2d} | lines {c['line']:3d} cues {c['cue']:2d} answered {c['cue_answered']:2d} | talked over per line {c['talked_over'] / n_:.2f} | own pairs {sum(pairs[d].values()):3d} distinct {len(pairs[d]):2d} novel {sum(nv.values()):2d} {[' '.join(k) for k, _ in nv.most_common(3)]} | known {known.get(d, '-')} | night {g[0] if g else '-'} -> {g[1] if g else '-'}")

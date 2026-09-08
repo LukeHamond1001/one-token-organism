@@ -5181,3 +5181,12 @@ Fifteen days under Sonnet: thirteen words entered inside frames it already answe
 55 to 130 or 140 a day; the parent turning away from 18 to 10; its own two-word runs from 22 to 60 or 70 a day, the pairs
 no one taught it from a handful to ten or more. Flat: the frowns for talking over, 44 to 55 a day. That is the ear at the
 page's pace, and the reply parent's wait is the thing measured next if it stays flat through day 27.
+
+## The ear at the page's pace, measured right (2026-09-07, 19:16)
+
+The frowns for talking over have read 44 to 55 a day since day 11, and I called that flat. The count is capped: the
+typist frowns at most once in fifteen seconds, so an hour's day cannot show more than about fifty however often it is
+talked over. The raw occasions are in the log as the chances it missed by talking over, and per parent line they fell from
+1.76 on day 11 to 1.01 on day 21, 0.97 on day 24, 1.21 on day 25: a third fewer in two weeks, the reference's slow arc at
+the fast parent's pace. The ear is improving under the frown as it should; the reply parent's wait stays as it is, and
+the served day's digest now carries the rate. The stall, restated: the rate not below 1.0 by day 30.
