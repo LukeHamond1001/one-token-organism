@@ -5345,3 +5345,21 @@ Twenty-nine days on the page: twenty-two words entered; the strings of its own r
 are the parents' new instrument for the thing the measurement said was missing. Day 40 is the last of the typist's fifth
 run; the chain relaunches it for day 41, and a stalked day on a copy of the day-40 save reads the insides for the first
 time since day 10.
+
+## "no big hat on here" (2026-09-08, 10:37)
+
+Day 39 (Opus): "with" entered inside the "X and Y" frame and answered a cue ten minutes later, "dog with" with "me";
+all five of the day's fresh cues right, the four misses old leftover cues after the nap; unprompted, "you had book here"
+and a seven-word run, "get me milk here dog down here". 139 smiles to 56 frowns; the known-word count 59 to 60.
+
+Day 40: "on" made live beside "under" and answered "here" on cue; "angry" entered inside the feeling frame ("angry
+dog", "angry ball", "angry baby"); the two frames that failed on day 38 answered ("no more" with "hat", "on" with
+"here"); "baby" alone still draws its attractor, "here dog out". Ten minutes after "on here" was first taught it wrote
+"no big hat on here": five words, two relation words, of its own. One caution from the parent: after "no more hat" was
+said twice around its cue the body ran "no no no no" for ninety seconds; the parent dropped "no X" lines and it cleared.
+166 smiles to 58 frowns, the most smiles of any day; the known-word count 60 to 61; the night 0.77 to 0.84. The
+typist's fifth run ended and the chain relaunched it for day 41 without a gap; the server has run untouched for a day
+and seven hours.
+
+Day 41's first minutes: the stalked day began on a copy of the day-40 save, one day under the fast parent with the
+watcher's instrument, saving only to the copy, the first reading of the insides since day 10. It lands about an hour on.
