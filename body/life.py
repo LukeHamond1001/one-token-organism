@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -336,6 +336,9 @@ class Life:
         self._vrel = [0.0] * 6; self._vrel_gain = 0.0; self._vrel_corr = 0.0
         self.sharp_cal = float(self.cfg["sharp_base"])       # THE CALIBRATED SHARPNESS (sharp_form "calibrated"): the readout's base, set by its own hits
         self._fc_prev = None                                  # the forecast made at the last step, unnormalized (its norm is its certainty)
+        self._frel = [0.0] * 6; self._frel_gain = 0.0; self._frel_corr = 0.0   # THE FACE ORGAN'S RELIABILITY (face_form "foresee", §5c): the slope of the felt reward on its foresight
+        self._C1_prev = None; self._fpred_now = 0.0
+        self._fh_A = torch.zeros(self.m.d + 1, self.m.d + 1, dtype=torch.float64); self._fh_b = torch.zeros(self.m.d + 1, dtype=torch.float64)   # the foreseeing face organ's evidence (least squares, as the fast critic's)
         _wk = int(self.cfg["wake_ticks"]) + 16                # the day's ring: the fast value before each tick and the felt reward at it (the anticipation reading)
         self._ring_vf = collections.deque(maxlen=_wk); self._ring_r = collections.deque(maxlen=_wk)
         self._differential = [int(c) >= int(self.cfg["diff_horizon"]) for c in self.m.clocks]
@@ -798,11 +801,28 @@ class Life:
                 m.mouth_gate.weight += slr * delta_long * self._gate_tag[:-1].unsqueeze(0)
                 m.mouth_gate.bias += slr * delta_long * self._gate_tag[-1:]
         # --- its face learns from yours (a readout) ---
-        with torch.enable_grad():
-            f_pred = m.face_head(C1.detach()).squeeze() * 6.0
-            lf = (f_pred - torch.tensor(float(self.face_now), device=self.dev)) ** 2
-            self.opt_face.zero_grad(set_to_none=True); lf.backward(); self.opt_face.step()
-        its_face = float(f_pred.detach())
+        if str(self.cfg.get("face_form", "read")) == "foresee":
+            # THE FACE ORGAN FORESEES (2026-09-08, §5c): from the stream a tick ago it predicts the felt reward of this tick; its
+            # reliability, the slope of the felt reward on that foresight, is measured, so imagination can be weighed by it
+            # a least-squares readout (as the fast critic's): decorrelated, in reward units, its evidence forgetting over face_tau
+            # ticks and solved every face_every; tick-by-tick gradient steps on a target that is zero on most ticks swung it wildly
+            with torch.no_grad():
+                if getattr(self, "_C1_prev", None) is not None:
+                    x = torch.cat([self._C1_prev.detach().cpu().double(), torch.ones(1, dtype=torch.float64)])
+                    f_prev = float(m.face_head(self._C1_prev).squeeze())           # the foresight made a tick ago, before this evidence
+                    bf = 1.0 - 1.0 / float(self.cfg.get("face_tau", 36000))
+                    self._fh_A.mul_(bf).addr_(x, x); self._fh_b.mul_(bf).add_(x * float(r))
+                    self._frel_update(f_prev, float(r))
+                    if self.ticks % int(self.cfg.get("face_every", 64)) == 0:
+                        self._face_solve()
+                f_pred = m.face_head(C1.detach()).squeeze()                     # the felt reward it foresees for the next tick
+            self._C1_prev = C1.detach()
+        else:
+            with torch.enable_grad():
+                f_pred = m.face_head(C1.detach()).squeeze() * 6.0
+                lf = (f_pred - torch.tensor(float(self.face_now), device=self.dev)) ** 2
+                self.opt_face.zero_grad(set_to_none=True); lf.backward(); self.opt_face.step()
+        its_face = float(f_pred.detach()); self._fpred_now = its_face
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
         # DECISIVENESS from tonic dopamine (songbirds: variability is high when unrewarded and falls as
         # reward comes; mood is the body's tonic dopamine): the readout's sharpness = base + gain x mood/6
@@ -1107,7 +1127,10 @@ class Life:
             # the store missed and undid the night: run 13, day 4)
             pred = m.latent_pred(C)
             ll, lc = m.latent_loss(pred, y, w=w)
-            fl, fc = m.forecast_loss(C[:-1].detach(), bundles[1:], sig=0.0)   # the PFC's heads learn from the stream, not through it
+            if str(self.cfg.get("rem_form", "forecast")) == "imagine":
+                fl, fc = torch.zeros((), device=self.dev), 1.0            # the forecast heads retired (§5c: their target was the stream's own dynamics)
+            else:
+                fl, fc = m.forecast_loss(C[:-1].detach(), bundles[1:], sig=0.0)   # the PFC's heads learn from the stream, not through it
             loss = (ll + fl) * (1.0 + self.stress / 10.0)      # stress raises plasticity
             if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
@@ -1256,8 +1279,11 @@ class Life:
                 mid, _ = self.gauge(dreams); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
                 # REM: the cortex runs free from each dream's first symbols on its own readout,
                 # a quarter of the night in rounds (biology's share), each round one batched step
-                rem_cos = []; rem_steps = 0
-                for _ in range(int(self.cfg["rem_rounds"])):
+                rem_cos = []; rem_steps = 0; rem_imag = None
+                if str(self.cfg.get("rem_form", "forecast")) == "imagine":
+                    rem_imag = self._rem_imagine_rounds(dreams); rem_steps = rem_imag["rounds"]
+                else:
+                  for _ in range(int(self.cfg["rem_rounds"])):
                     opt.zero_grad(set_to_none=True); rc = []
                     for ids in dreams[:int(self.cfg["rem_dreams"])]:
                         fl, fc = self._rem_rollout(ids, sig)
@@ -1278,7 +1304,7 @@ class Life:
                 after, _ = self.gauge(dreams); after_cos = self._gauge_cos
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
                             "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
-                            "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None),
+                            "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None), "rem_imagined": rem_imag,
                             "gauge": {"before": before, "after_nrem": mid, "after": after, "symbols": nsym,
                                       "cos_before": before_cos, "cos_after_nrem": mid_cos, "cos_after": after_cos}})
             # the rest: the store fades, the working state wakes fresh, the body is saved
@@ -1311,6 +1337,89 @@ class Life:
         finally:
             self.asleep = False
         return rep
+
+    def _face_solve(self):
+        """the foreseeing face organ from its evidence: w = (A + ridge)^-1 b, the ridge scaled to the evidence's own size"""
+        m = self.m
+        with torch.no_grad():
+            A = self._fh_A; lam = float(self.cfg.get("face_ridge", 1.0)) * float(A.diagonal()[:-1].mean().clamp_min(1e-9))
+            R = torch.full((A.shape[0],), lam, dtype=A.dtype); R[-1] = 0.0
+            try:
+                w = torch.linalg.solve(A + torch.diag(R), self._fh_b)
+            except Exception:
+                w = torch.linalg.lstsq(A + torch.diag(R), self._fh_b.unsqueeze(1)).solution.squeeze(1)
+            m.face_head.weight[0].copy_(w[:-1].to(m.face_head.weight)); m.face_head.bias[0] = w[-1].to(m.face_head.bias)
+
+    def _frel_update(self, f, r):
+        """the face organ's reliability: the running moments of (foresight, felt reward) over face_tau ticks; the slope, clipped to [0, 1]"""
+        d = 1.0 - 1.0 / float(self.cfg.get("face_tau", 36000)); m = self._frel
+        m[0] = d * m[0] + 1.0; m[1] = d * m[1] + f; m[2] = d * m[2] + r; m[3] = d * m[3] + f * f; m[4] = d * m[4] + r * r; m[5] = d * m[5] + f * r
+        n = m[0]; mf, mr = m[1] / n, m[2] / n
+        var_f, var_r = m[3] / n - mf * mf, m[4] / n - mr * mr; cov = m[5] / n - mf * mr
+        self._frel_corr = float(cov / math.sqrt(max(var_f, 1e-9) * max(var_r, 1e-9))) if n > 64 else 0.0
+        self._frel_gain = float(max(0.0, min(1.0, cov / max(var_f, 1e-9)))) if n > 64 else 0.0
+
+    def _rem_imagine_rounds(self, dreams):
+        """REM AS IMAGINATION (§5c), the night's share: each round, each dream imagined once; the fast critic re-solved from the evidence"""
+        m = self.m; rounds = 0; n_tr = 0; rsum = 0.0
+        w = float(self.cfg.get("rem_weight", 1.0)) * max(0.0, float(self._frel_gain))
+        for _ in range(int(self.cfg["rem_rounds"])):
+            n_round = 0
+            for ids in dreams[:int(self.cfg["rem_dreams"])]:
+                n_, r_ = self._rem_imagine(ids); n_round += n_; rsum += r_
+            if n_round:
+                rounds += 1; n_tr += n_round
+                m.fast_rls_solve(int(self.cfg["dopamine_band"]), prior=getattr(self, "_vf_delta", None))
+        return {"rounds": rounds, "transitions": n_tr, "mean_abs_rhat": (round(rsum / n_tr, 3) if n_tr else None), "weight": round(w, 3),
+                "face_slope": round(float(self._frel_gain), 3)}
+
+    def _rem_imagine(self, ids, k=3):
+        """REM AS IMAGINATION (2026-09-08, §5c): the cortex runs free from a dream's first symbols on its sampled readout; the imagined
+        events advance the striatal delay line as heard ones do; the face organ scores each imagined tick with the felt reward it
+        foresees; and the fast critic's evidence takes each imagined transition exactly as it takes a lived one (the same accumulators,
+        no forgetting), weighted by the face organ's proven slope: imagination counts for as much as the imaginer has proved right.
+        The lived delay line and working memory are restored after. Returns (transitions taken, the sum of |foreseen reward|)."""
+        m = self.m
+        if (m.stri_W.numel() == 0 or not int(self.cfg.get("fast_rls", 0)) or len(ids) < k + 1
+                or str(self.cfg.get("face_form", "read")) != "foresee"):
+            return 0, 0.0
+        w = float(self.cfg.get("rem_weight", 1.0)) * max(0.0, float(self._frel_gain))
+        if w <= 0.0:
+            return 0, 0.0
+        L = int(self.cfg["rem_steps"]); gf = float(m.gammas()[int(self.cfg["dopamine_band"])])
+        line_saved = m.stri_line.clone()
+        wm_saved = (m.wm_slot.clone(), m.wm_on.clone(), m.wm_age.clone()) if getattr(m, "stri_wm", 0) else None
+        m.striatum_reset()
+        if wm_saved is not None:
+            m.wm_clear()
+        bands = torch.zeros_like(self.bands); xs = [self.sil] + list(ids[:k])
+        reads, bundles, Cs = [], [], []; z_prev = None; f_prev = 0.0; e = None; n_up = 0; rsum = 0.0
+        one = torch.ones(1, dtype=torch.float64)
+        with torch.no_grad():
+            for step in range(len(xs) + L):
+                if step >= len(xs):
+                    lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf")   # the rest may be imagined: the world's stop
+                    rt = float(self.cfg.get("rem_temp", 0.0))
+                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1)) if rt > 0 else int(lg.argmax()))
+                x = xs[step]
+                m.striatum_push(0 if x != self.sil else 3, x if x != self.sil else 0)
+                reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
+                n = step + 1
+                u = m.inputs(torch.tensor(xs[:n], device=self.dev), torch.full((n,), self.sil, dtype=torch.long, device=self.dev),
+                             torch.zeros(n, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
+                C = m.stream(u)[-1]; Cs.append(C)
+                bands = m.band_update(bands, C)
+                z_now = m.stri_in()
+                if step > k and z_prev is not None:                       # the free-running part: imagined transitions
+                    xa_p = torch.cat([z_prev.detach().cpu().double(), one]); xa_n = torch.cat([z_now.detach().cpu().double(), one])
+                    e = (gf * e if e is not None else torch.zeros_like(xa_p)) + xa_p
+                    m.vf_A.addr_(e, xa_p - gf * xa_n, alpha=w); m.vf_b.add_(e * (w * f_prev))
+                    n_up += 1; rsum += abs(f_prev)
+                z_prev = z_now; f_prev = float(m.face_head(C).squeeze())    # the felt reward foreseen for the next imagined tick
+        m.stri_line.copy_(line_saved)
+        if wm_saved is not None:
+            m.wm_slot.copy_(wm_saved[0]); m.wm_on.copy_(wm_saved[1]); m.wm_age.copy_(wm_saved[2])
+        return n_up, rsum
 
     def _rem_rollout(self, ids, sig, k=3):
         m = self.m
@@ -1431,7 +1540,8 @@ class Life:
                 "ticks": self.ticks, "vrel_slope": round(float(self._vrel_gain), 3), "vrel_corr": round(float(self._vrel_corr), 3),
                 "vw_now": round(float(getattr(self, "_vw_now", 0.0)), 4), "floor_now": round(float(getattr(self, "_floor_now", 0.0)), 4),
                 "sharp_now": round(float(self.m.read_sharp), 2), "sharp_cal": round(float(self.sharp_cal), 2), "sharp_form": str(self.cfg.get("sharp_form", "fixed")),
-                "anticipation": self.anticipation()}
+                "anticipation": self.anticipation(), "face_form": str(self.cfg.get("face_form", "read")), "face_slope": round(float(self._frel_gain), 3),
+                "face_corr": round(float(self._frel_corr), 3), "face_pred": round(float(self._fpred_now), 3), "rem_form": str(self.cfg.get("rem_form", "forecast"))}
 
     # ---------------- save / load ----------------
     def save(self, path=None):
@@ -1444,7 +1554,9 @@ class Life:
                          "sym_freq": self.sym_freq, "perf": {int(k): float(v) for k, v in self.perf.items()}, "last_night": self.last_night, "rbar": float(self.rbar),
                          "feat_mu": (self._feat_mu.cpu() if getattr(self, "_feat_mu", None) is not None else None),
                          "vrel": list(self._vrel), "vrel_gain": float(self._vrel_gain), "vrel_corr": float(self._vrel_corr),
-                         "vbuf_v": list(self._vbuf_v), "vbuf_r": list(self._vbuf_r), "sharp_cal": float(self.sharp_cal)}}
+                         "vbuf_v": list(self._vbuf_v), "vbuf_r": list(self._vbuf_r), "sharp_cal": float(self.sharp_cal),
+                         "frel": list(self._frel), "frel_gain": float(self._frel_gain), "frel_corr": float(self._frel_corr),
+                         "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone()}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -1505,6 +1617,10 @@ class Life:
             life._vbuf_v.extend(float(v) for v in (L.get("vbuf_v") or [])); life._vbuf_r.extend(float(v) for v in (L.get("vbuf_r") or []))
         if L.get("sharp_cal") is not None:
             life.sharp_cal = float(L["sharp_cal"])
+        if L.get("frel") is not None:
+            life._frel = [float(v) for v in L["frel"]]; life._frel_gain = float(L.get("frel_gain", 0.0)); life._frel_corr = float(L.get("frel_corr", 0.0))
+        if L.get("fh_A") is not None and tuple(L["fh_A"].shape) == tuple(life._fh_A.shape):
+            life._fh_A.copy_(L["fh_A"]); life._fh_b.copy_(L["fh_b"])
         life.sym_freq = dict(L.get("sym_freq") or {})
         life.perf = {int(k): float(v) for k, v in (L.get("perf") or {}).items()}
         if L.get("rbar") is not None:

@@ -711,11 +711,48 @@ def test_evidence_survives_the_load():
     print("30 the evidence survives the load: the reliability's moments and buffers, the slope", life2._vrel_gain, "| the calibrated sharpness", life2.sharp_cal)
 
 
+def test_face_foresees():
+    """the face organ foresees (§5c): a smile that always follows one line is foreseen before it is felt, and the organ's slope,
+    the felt reward on its foresight, comes out positive"""
+    life = tiny(face_form="foresee", face_tau=2000, face_every=16, gate_every=10 ** 9, wake_every=10 ** 9)
+    fores = []
+    for rep in range(40):
+        say(life, "dog will go", 1)
+        fores.append(float(life._fpred_now))                                # what it foresees for the next tick
+        life.set_face(2.0); life.tick(); life.set_face(0.0)                   # the smile, felt on this tick
+        for _ in range(6):
+            life.tick()
+    first, late = fores[0], sum(fores[-5:]) / 5                            # before any smile, and after forty
+    assert abs(first) < 0.3 and late > 0.5, (first, late)
+    assert life._frel_gain > 0.3, life._frel_gain
+    print("31 the face organ foresees: before the smile", round(first, 2), "->", round(late, 2), "| its slope", round(life._frel_gain, 2))
+
+
+def test_rem_imagines():
+    """REM as imagination (§5c): imagined transitions enter the fast critic's evidence weighted by the face organ's slope; at slope
+    zero nothing enters; the lived delay line is restored after"""
+    life = _watched(); m = life.m
+    assert m.vf_A.numel() > 0, "the fast critic's evidence is not kept in this configuration"
+    life.cfg["rem_form"] = "imagine"; life.cfg["face_form"] = "foresee"; life.cfg["rem_temp"] = 1.0; life.cfg["rem_steps"] = 6
+    for _ in range(3):
+        say(life, "dog will go", 2); life.set_face(2.0); life.tick(); life.set_face(0.0); say(life, "give milk", 2)
+    ids = [TOK.token_to_id(c) for c in "dog will go"]
+    line0 = m.stri_line.clone(); A0 = m.vf_A.clone(); b0 = m.vf_b.clone()
+    life._frel_gain = 0.0; n0, _ = life._rem_imagine(ids)
+    assert n0 == 0 and torch.equal(m.vf_b, b0), "imagination counted with a face organ that has proved nothing"
+    life._frel_gain = 0.5; n1, _ = life._rem_imagine(ids)
+    assert n1 == 6 and not torch.equal(m.vf_A, A0), (n1,)
+    assert torch.equal(m.stri_line, line0), "the lived delay line was not restored"
+    rep = life.night()
+    assert rep.get("rem_imagined") and rep["rem_imagined"]["rounds"] >= 1, rep.get("rem_imagined")
+    print("32 REM imagines: transitions at slope 0 ->", n0, "| at slope 0.5 ->", n1, "| the night:", rep["rem_imagined"])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines]
     failed = 0
     for t in tests:
         try:
