@@ -5503,3 +5503,22 @@ What is queued behind one another on copies of the living body, one day of the f
 gate's intrinsic term on against off; the offset by count against by settling; the stop as the token against as the
 rest. Each pair decides at a night. The user's rule for the afternoon, stated back: yes to every change that passes its
 copy day, tonight, at one night boundary; no to any change on the afternoon it was written without a day on a copy.
+
+## The owner's call: everything at once, and a second per tick (2026-09-08, 16:01)
+
+The user overrode the measured rule for the afternoon: stop the body at its furthest checkpoint and put every change in
+at once, then let Opus go on teaching. The copy days were stopped and their copies removed. The body was in its
+forty-fifth night, and the night's own save is the checkpoint, with nothing lost; a reload is armed on that night's row
+with all of it: the planner at points of doubt, the gate's intrinsic term off, the offset by settling with the count as
+its floor, the world's stop as rest, the page carrying only the page, the symbols declared; and, at the user's word, one
+tick equals one second, one character a second. The backup of the body before the change is kept.
+
+Two risks named to the user: the cortex has predicted the old token at line ends for forty-five days and now learns to
+predict rest there, so the night's memory gauge may dip for days while the answers, which come from the store in
+context, should hold; and the gate has learned with the intrinsic term, so its willingness to speak may drift. The
+second-per-tick costs wall time: a body day becomes three hours and twenty minutes, the rest of the sixty days about
+fifty hours, and the parent's timers in seconds land four times sooner in the body's ticks, a denser parent. The first
+digest at the new pace, day 46's, says what that does to the ear. Answered along the way: one tick already is one
+character; silence between its letters is already free; a lexicon of characters and one rest is what the body now lives
+in, with the leftover tokens declared reserved, and the clean tokenizer is the next body's birth; two voices blending
+when both speak is a real piece of anatomy, auditory masking, for the next body.
