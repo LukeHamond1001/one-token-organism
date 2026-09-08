@@ -5417,3 +5417,23 @@ Day 42 (Opus): "went" entered inside the past frame and the same day "me went" a
 agent; "angry" moved from swamped to answering "dog" twice; the parent's own caution that the "baby" cue accepts "here",
 the first word of its attractor, so that completion proves little. 148 smiles to 57 frowns. Day 43: 145 smiles to 50
 frowns; the known-word count 61 to 62; the night 0.68 to 0.85, "angry" among its dreams.
+
+## The boundary as doubt (2026-09-08, 13:54)
+
+The user asked whether the planner's chunking could be made learned now, at no cost, and whether it should chunk at every
+letter. Not every letter: eight forward passes per plan at every acting tick would put the served body behind its tick,
+and inside a word the cortex has one candidate, so the plans would be wasted. The body-general boundary is the cortex's
+own doubt: the planner already builds a shortlist of the candidates within a margin of the best and plans only when
+there is more than one; drop the space test and it plans wherever it is about to act and is torn. Deliberation where
+there is doubt, which carries to a body without a space. Measured on a copy of the day-43 body over 2,500 ticks of the
+fast parent: torn at boundaries 82 times, mid-word 50 of 771 acting ticks, six percent; about sixty percent more plans,
+a few minutes of compute an hour. The constant plan_boundary is built (1 the old rule, 0 the doubt rule), organ test 23
+covers both, twenty-three tests pass, and the served body is reloaded with the doubt rule right after its day-44 night's
+save: a physiology change at a boundary, measured first. With it, no rule about text is left in how the body learns or
+decides; what a new body would swap is anatomy, the encoder and decoder and the two special outputs, and its constants
+would be re-measured for its size. The exploration drive is a different matter, a new signal, and waits.
+
+Day 43 (Opus): "in" freed from "here" ("no ball" answered "in", clean of the attractor); the under/on/in contrast taught
+on one noun; "off" entered off "hat on"; eight cues right; unprompted "will go out", never taught, and after the nap
+"go in here dog out here" and "will go in", the day's "go in" back through the night on its own. 145 smiles to 50
+frowns; the known-word count 61 to 62.
