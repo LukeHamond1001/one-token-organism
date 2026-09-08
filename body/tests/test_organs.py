@@ -575,11 +575,47 @@ def test_exploration_drive():
     assert max(floors[1.0]) <= 0.5, "the floor passed its cap"
     print("24 the exploration drive: floor", round(float(life.cfg["gate_floor"]), 3), "->", [round(f, 3) for f in floors[1.0]], "after a strange line, three times")
 
+
+def test_offset_by_settling():
+    """the event's end by the law: with offset_form settle the offset fires when the surprise, high while the world speaks,
+    settles after it stops, long before the count would; the count stays as the floor for a body whose surprise is flat"""
+    life = tiny(offset_form="settle", offset_ticks=400, offset_settle=0.5, offset_fast=3, offset_slow=48, gate_every=10 ** 9, wake_every=10 ** 9)
+    fired = []; orig = life._offset
+    def spy():
+        fired.append(life.ticks); return orig()
+    life._offset = spy
+    orig_step = life._step
+    def step(x, who, **kw):                                   # a synthetic surprise: high while the world's symbols arrive, low at rest
+        out = orig_step(x, who, **kw)
+        if who == 0:
+            life._surp_tick = 1.0 if x != life.sil else 0.05
+        return out
+    life._step = step
+    for rep in range(4):
+        t0 = life.ticks; life.type_text("the dog sat on the hill ")
+        while life.queue:
+            life.tick()
+        t_end = life.ticks
+        for _ in range(40):
+            life.tick()
+        assert any(t_end < f <= t_end + 20 for f in fired), f"the offset did not fire within 20 quiet ticks after the world stopped: {fired}"
+        assert not any(t0 < f <= t_end for f in fired), "the offset fired inside an utterance"
+    assert len(fired) == 4, f"once per pause: {fired}"
+    flat = tiny(offset_form="settle", offset_ticks=8, gate_every=10 ** 9, wake_every=10 ** 9); fired2 = []; o2 = flat._offset
+    flat._offset = lambda: (fired2.append(flat.ticks), o2())[1]
+    flat.type_text("go "); 
+    while flat.queue:
+        flat.tick()
+    for _ in range(30):
+        flat.tick()
+    assert len(fired2) == 1, f"the count floor did not end the event for a flat newborn: {fired2}"
+    print("25 the event's end by the law: fired", [f - 0 for f in fired][:4], "ticks in, within 20 quiet ticks, no count; the newborn's floor at 8")
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling]
     failed = 0
     for t in tests:
         try:

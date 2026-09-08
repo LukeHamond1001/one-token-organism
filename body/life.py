@@ -173,7 +173,8 @@ PHYSIOLOGY = dict(
     # hold it (written there, the quiet after a cue blended with the answer and the mouth read junk: runs 45/46).
     # 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next line's
     # first letter at probability 1, the mouth's "downg"; served body, day 10)
-    offset_ticks=8,       # THE RECIPE (runs 47/48): two seconds at four ticks a second; within a line the world types a symbol a
+    offset_ticks=8,
+    offset_form="count", offset_settle=0.5, offset_fast=4, offset_slow=64,   # THE EVENT'S END BY THE LAW (2026-09-08): "settle" fires the offset when the surprise, having jumped at the world's stopping, settles under its running level; no count       # THE RECIPE (runs 47/48): two seconds at four ticks a second; within a line the world types a symbol a
     # tick, and 8 + the lesson's cadence of 24 keeps the ended position inside the lesson's 32. 0 = off
     # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
     # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
@@ -383,6 +384,9 @@ class Life:
     def _step(self, x, who, r=0.0, learn_store=True, dopamine=0.0):
         """one symbol enters (x: id, who: 0 world / 1 body). Returns the stream C [d] and the forecast."""
         m = self.m
+        if who == 0 and getattr(self, "pred_prev", None) is not None:      # the tick's surprise, the rest included: the event's end by the law
+            with torch.no_grad():
+                self._surp_tick = float(1.0 - F.cosine_similarity(self.pred_prev, m.E.weight[int(x)], dim=0))
         with torch.no_grad():
             ex = m.E.weight[x]
             # surprise of what arrived, against the forecast made a step ago (embedding space)
@@ -552,8 +556,8 @@ class Life:
         # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
         # saying meanwhile (with the body's silence required too, a babbling body never let it fire: run 41 held
         # two turn-end memories after six days)
-        off = int(self.cfg.get("offset_ticks", 0))
-        if u == self.sil and off > 0 and not self._offset_done and self.ticks - self._last_world >= off:
+        off = int(self.cfg.get("offset_ticks", 0)); settle_form = str(self.cfg.get("offset_form", "count")) == "settle"
+        if u == self.sil and off > 0 and not self._offset_done and not settle_form and self.ticks - self._last_world >= off:
             self._offset(); self._offset_done = True
         first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
         if u != self.sil:
@@ -587,6 +591,15 @@ class Life:
             elif getattr(self, "_start_armed", False):
                 self._start_pending = True; self._start_armed = False
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
+        if settle_form and off > 0:                                          # THE EVENT'S END BY THE LAW: two running averages of the
+            st_ = float(getattr(self, "_surp_tick", 0.0))                     # tick's surprise; the world stops, the surprise jumps and
+            af_ = 1.0 / max(1.0, float(self.cfg.get("offset_fast", 4))); as_ = 1.0 / max(1.0, float(self.cfg.get("offset_slow", 64)))
+            self._surp_fast = (1 - af_) * getattr(self, "_surp_fast", st_) + af_ * st_
+            self._surp_slow = (1 - as_) * getattr(self, "_surp_slow", st_) + as_ * st_
+            settled_ = self._surp_fast <= float(self.cfg.get("offset_settle", 0.5)) * max(1e-6, self._surp_slow)
+            if u == self.sil and not self._offset_done and self.ticks - self._last_world >= 1 and \
+                    (settled_ or self.ticks - self._last_world >= off):         # the law, or the senses' own adaptation as the floor
+                self._offset(); self._offset_done = True                     # a newborn's flat surprise still ends events by the count
         if u != self.sil and float(self.cfg.get("explore_gain", 0.0)) > 0:   # arousal follows novelty: a running surprise at the world's symbols
             a_ = 1.0 / max(1.0, float(self.cfg.get("explore_tau", 64)))
             self._surp_run = (1.0 - a_) * getattr(self, "_surp_run", 0.0) + a_ * float(surp1)
