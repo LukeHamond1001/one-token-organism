@@ -5845,3 +5845,15 @@ child speaks less each day and earns fewer smiles a line. The likely mechanism i
 while the ventral value lags a fallen reward rate (the mood says the critic over-predicts), which pushes every act down: a bias, not a
 contingency. The pre-registered rule holds (five nights; failed under a duty of 0.2), with a guard armed for the next night: if day 57's
 duty falls under 0.2 or its smiles per line stay under 0.6, the tag closes at that night; otherwise the reading runs on.
+
+
+### Night 55: the guard held (2026-09-09, 03:52)
+
+Day 57: lines 80, smiles 82 (0.80 a line, back from 0.56), frowns 40, turned away 3, cues 19 answered 7, own pairs 11 with one new
+("hat book"), talked over per line 0.59; the gate's duty after the parent's lines 0.285 (0.27 the day before: the fall stopped); the
+mood +1.0 at the night, the first positive night in a week; the known words 73 (open, shut; the parent's report: its own questions
+"where ball" and "where dog out", "box in here" straight out of the night). The guard read duty 0.285 and smiles per line 0.80 and held:
+the long tag stays open, the reading runs to its fifth night. Night 55: 240 imagined transitions at weight 0.14, the gauge 0.682 ->
+0.850. The prefrontal slope 0.49 with correlation 0.31 (0.56/0.34 the night before): steady on kept state. After the fifth night, if
+the guard still holds, the earned ceiling goes in under the same guard: the long voice's weight in the credit becomes its slope (about
+0.5) instead of 0.3 times it, one change for one night's reading.
