@@ -5885,3 +5885,17 @@ night's ticks kept, the earned ceiling not added. The six nights of the tag: the
 0.28, smiles per line 0.56 to 1.04 with no trend: the tag neither raised the long voice's evidence nor clearly harmed the day; it is
 closed by a rule that a single day's swing tripped. The earned ceiling goes in at the next night under the same guard (the slope 0.38
 is inside the pre-registered band; the correlation 0.20 says the long value explains a twentieth of its return: a small voice either way).
+
+
+### Night 58: the guard again; the parent's period (2026-09-09, 06:55)
+
+Day 60: lines 113 and cues 23 (answered 10, the most yet), smiles 57 (0.42 a line: 0.82, 0.78, 0.59, 0.42 over four days), frowns
+41, turned away 3, talked over per line 0.40, the gate's duty after the parent's lines 0.23 (0.28, 0.26, 0.275, 0.23); the mood -0.07;
+the known words 76. Night 58: 144 imagined transitions at weight 0.18 (the face organ's correlation rising slowly, 0.14 -> 0.18), the
+gauge 0.751 -> 0.848; the prefrontal slope 0.38, correlation 0.19. The guard tripped on smiles per line 0.42; the restart at 06:52
+(pid 2862) kept the safe flags (the tag closed, no ceiling). Read across the four days, this is not the tag (closed two nights ago) and
+not the ceiling (never in): the child speaks less in its turns and the parent, who waits for quiet, fills each silence forty ticks
+after it begins, so the quieter the child the denser the lines (113 on day 60), which teaches more silence: a loop on the parent's side.
+The seeds' parent that raised the ear had a period of 240 ticks. At this boundary (day 61, 06:53) the parent's period goes from 40 to
+120 ticks, the cap 180 and the child's turn of 32 kept: it still answers the child's quiet, but does not fill it at once. The earned
+ceiling is set aside until the day reads well again; nothing is armed for the next night.
