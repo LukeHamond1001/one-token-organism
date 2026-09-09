@@ -5704,3 +5704,15 @@ or completions halve. (2) The next night: the calibrated sharpness with REM's dr
 floor; read sharp_cal settling under 25, rem_cos under 0.9, invented pairs up, frowns per line held. Then the build: REM as imagination,
 gated by the face organ's slope, measured first. (3) Then the kept bands, the night as ticks, the tag, under the fixed ceiling; read the
 slope from 0 toward +0.3 within five nights, the long voice's weight, talked-over and aways down.
+
+
+### REM re-aimed, built (2026-09-08, 19:05)
+
+Built on a branch while day 48 ran, merged with both forms off. The face organ foresees (face_form foresee): from the stream a tick
+ago it predicts the felt reward of this tick, as a least-squares readout solved every 64 ticks (tick-by-tick gradient steps on a
+target that is zero on most ticks swung it between minus one and four; the least-squares form reads 0 before any smile and 0.71 of a
+2 after forty, with a slope of 1.0: calibrated). Its reliability is the slope of the felt reward on its foresight, saved with the body.
+REM as imagination (rem_form imagine): the cortex runs free on its sampled readout; the imagined events advance the striatal delay
+line; the face organ scores each imagined tick; the fast critic's evidence takes the imagined transitions as it takes lived ones,
+weighted by the face organ's slope, nothing at slope zero; the lived line and working memory restored after; 144 imagined transitions a
+night in the test body. The forecast heads leave the lessons under the form. Tests 31 and 32; 32 of 32 pass.
