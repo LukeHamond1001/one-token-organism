@@ -6019,3 +6019,16 @@ again), turned away 1, cues 10 answered 3, own pairs 60 (30 distinct, two new), 
 the parent's lines 0.32; the mood +4.8 at the night, the highest of the life; the known words 85. Night 68: 384 imagined transitions at
 weight 0.11, the gauge 0.766 -> 0.870. The prefrontal slope 0.98, correlation 0.42: four nights rising on kept state with the tag closed
 (0.23, 0.29, 0.31, 0.42). If it holds above 0.3 at the next night, the earned ceiling goes in the night after, under the guard.
+
+
+### Night 69: the ceiling armed (2026-09-09, 18:10)
+
+Day 71: lines and cues 75, smiles 121 (1.61 a line), frowns 34, turned away 3, cues 9 answered 4, own pairs 44 (22 distinct, four new,
+among them "all in" and "here box"), the child's duty after the parent's lines 0.33; the mood +1.8 at the night; the known words 86
+(lift, tip; the parent's report on days 69-70: "tip" answered in all three of its noun frames on the word's first day and taken into
+its own mouth within eight minutes, the one-verb-one-particle rule proven to land in a day). Night 69: 336 imagined transitions at
+weight 0.11, the gauge 0.777 -> 0.872, the store 1,677 slots with 84 dropped; the nights are lengthening as the store grows (571, 496,
+596, 536, 656, 791 s over the last six), thirteen minutes now. The prefrontal slope 0.92, correlation 0.47: five nights at or above 0.3
+on kept state with the tag closed (0.29, 0.31, 0.42, 0.47). The rule is met: the earned ceiling is armed for the next night under the
+guard (duty under 0.2 or smiles per line under 0.6 keeps the safe flags instead): the long voice's weight in the credit becomes its
+slope, about 0.9, instead of 0.3 times it; read by day in smiles per line, the duty, talked-over per line, and by night in the slope.
