@@ -5857,3 +5857,16 @@ the long tag stays open, the reading runs to its fifth night. Night 55: 240 imag
 0.850. The prefrontal slope 0.49 with correlation 0.31 (0.56/0.34 the night before): steady on kept state. After the fifth night, if
 the guard still holds, the earned ceiling goes in under the same guard: the long voice's weight in the credit becomes its slope (about
 0.5) instead of 0.3 times it, one change for one night's reading.
+
+
+### Night 56, the fifth on kept bands: the reading (2026-09-09, 04:55)
+
+Day 58: lines 75, smiles 76 (1.01 a line), frowns 34, turned away 5, cues 27 answered 7, own pairs 8 with one new ("get box"),
+talked over per line 0.38 (the lowest of the life), the gate's duty after the parent's lines 0.26; the mood -2.8 at the night; the
+known words 74. Night 56: 336 imagined transitions at weight 0.14, the gauge 0.446 -> 0.863. The five nights on kept state, the
+prefrontal slope: 0.52, 0.48, 0.56, 0.49, 0.41 (correlation 0.32, 0.28, 0.34, 0.31, 0.23); the gate's duty: 0.31, 0.31, 0.27, 0.285,
+0.26; smiles per line 0.89, 1.04, 0.56, 0.80, 1.01. The verdict: the kept state did not raise the slope (the review's mark was a rise
+toward 0.3 from near zero; ours drifted down from 0.7), the gate drifted but not under 0.2, the ear kept improving. The guard held.
+The duty now sits at 0.26, the fatigue equilibrium the review predicted for a gate whose tonic is a hand-set number minus fatigue once
+the intrinsic drive was removed: the slide may be that, not the tag. The candidate for tonight is therefore the gate's grounded tonic
+(the reward rate as vigor, Niv 2007; gate_tonic_rate, built and off), read in the code first; the earned ceiling the night after.
