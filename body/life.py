@@ -213,7 +213,7 @@ PHYSIOLOGY = dict(
     # THE GATE'S OPTIMIZER (gate_opt "sgd" | "adam", gate_adam_lr): Adam normalizes each weight's step by its gradient's
     # running scale, so a consistent small gradient on one input (the ear) accumulates at the rate whatever the noise
     gate_opt="sgd", gate_adam_lr=1e-3,
-    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, sharp_form="fixed", sharp_rate=0.05, sharp_min=8.0, sharp_max=100.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
+    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, sharp_form="fixed", sharp_rate=0.05, sharp_min=8.0, sharp_max=100.0, rem_world_temp=0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
     # THE WORLD'S WORDS AS REWARD (the user's word of 2026-09-04, "both are your call"): each symbol the world types is
     # felt as reward of world_r beside the face. The caregiver's voice is a primary reward to an infant (the mother's
@@ -404,8 +404,9 @@ class Life:
         if who == 0 and getattr(self, "pred_prev", None) is not None:      # the tick's surprise, the rest included: the event's end by the law
             with torch.no_grad():
                 self._surp_tick = float(1.0 - F.cosine_similarity(self.pred_prev, m.E.weight[int(x)], dim=0))
-            if str(self.cfg.get("sharp_form", "fixed")) in ("calibrated", "world"):
-                self._sharp_calibrate(int(x))
+            if str(self.cfg.get("sharp_form", "fixed")) in ("calibrated", "world") and int(x) != self.sil:
+                self._sharp_calibrate(int(x))       # on the world's spoken symbols only: on its quiet ticks the forecast is of the mouth's own next
+                                                    # letter, and scored against the rest the gradient was negative whatever the reading (20:50)
         with torch.no_grad():
             ex = m.E.weight[x]
             # surprise of what arrived, against the forecast made a step ago (embedding space)
@@ -1391,8 +1392,8 @@ class Life:
         """REM's sampling temperature: rem_temp, and under the world form scaled by the readout's base over its world-calibrated base,
         so the dreams are drawn at the sharpness the world proved (a base of 25 calibrated to 8 samples at temperature 3)"""
         rt = float(self.cfg.get("rem_temp", 0.0))
-        if rt > 0 and str(self.cfg.get("sharp_form", "fixed")) == "world" and float(self.sharp_cal) > 0:
-            rt = rt * float(self.cfg["sharp_base"]) / float(self.sharp_cal)
+        if rt > 0 and str(self.cfg.get("sharp_form", "fixed")) == "world" and int(self.cfg.get("rem_world_temp", 0)) and float(self.sharp_cal) > 0:
+            rt = rt * float(self.cfg["sharp_base"]) / float(self.sharp_cal)   # rem_world_temp 1: the dreams at the world's proved sharpness (off until the reading is trusted)
         return rt
 
     def _frel_update(self, f, r):
