@@ -5899,3 +5899,13 @@ after it begins, so the quieter the child the denser the lines (113 on day 60), 
 The seeds' parent that raised the ear had a period of 240 ticks. At this boundary (day 61, 06:53) the parent's period goes from 40 to
 120 ticks, the cap 180 and the child's turn of 32 kept: it still answers the child's quiet, but does not fill it at once. The earned
 ceiling is set aside until the day reads well again; nothing is armed for the next night.
+
+
+### Night 59: the parent's period read (2026-09-09, 07:55)
+
+Day 61, the first under the parent that leaves room (period 120, cap 180): lines and cues 94 (one every 33 s; 136 at 27 s the day
+before), smiles 73 (0.78 a line, from 0.42), frowns 27 (from 41), turned away 1 (from 3), talked over per line 0.35 (the lowest of the
+life), the child's duty after the parent's lines 0.244 (from 0.231), one new pair of its own ("box put"); cues 15 with 1 answered (10
+of 23 the day before: one day, to be read again); the mood +1.3 at the night. Night 59: 384 imagined transitions at weight 0.17, the
+gauge 0.794 -> 0.846; the prefrontal slope 0.34, correlation 0.15; the actor's favorite matched the mouth 10 percent of the time (3
+the day before), its slope still 0.03. The verdict on the period: more smiles from fewer lines, fewer frowns, the mood up; it stays.
