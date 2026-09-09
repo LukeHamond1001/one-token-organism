@@ -6000,3 +6000,13 @@ new), the child's duty after the parent's lines 0.29; the mood +0.3 at the night
 transitions at weight 0.12, the gauge 0.785 -> 0.864. The prefrontal slope 0.83, correlation 0.29 (0.23, 0.43, 0.22 the nights
 before: it holds between 0.2 and 0.4 on kept state now, against 0.13 last week). The actor's slope 0.04. Six days on the parent that
 leaves room: smiles per line 0.78, 0.90, 1.02, 1.06, 1.31, 1.42, 1.55, 1.59.
+
+
+### Night 67 (2026-09-09, 16:02)
+
+Day 69: lines and cues 75, smiles 126 (1.68 a line, the highest), frowns 23, turned away 3, cues 9 answered 4, own pairs 40 (23
+distinct, two new), the child's duty after the parent's lines 0.31; the mood +4.0 at the night, the highest of the life; the known
+words 84 (roll, hide; the parent's report on days 67-68: each cue-answerable the same day, "roll it out" back whole within half an
+hour, "give ball in here" out of the night; its particle answers collapsing onto "in" and "here", which day 69's parent was told to
+work against). Night 67: 240 imagined transitions at weight 0.11, the gauge 0.749 -> 0.853. The prefrontal slope 0.82, correlation
+0.31, holding. The actor's slope 0.03.
