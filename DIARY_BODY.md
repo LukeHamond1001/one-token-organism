@@ -5811,3 +5811,13 @@ The reload at 23:47 (pid 92768): the slow bands kept across sleep, the night as 
 code the imagination now weighed by the face organ's correlation (0.15). Every organ of the ranked list is on. What is read from here:
 by night, the prefrontal slope and correlation on kept state, the long voice's weight, the gate's duty; by day, smiles per line,
 talked-over per line, the pairs; the actor's slope (0.03) and the face organ's correlation (0.15) for whether either voice earns more.
+
+
+### Night 52: the first night on kept bands (2026-09-09, 00:50)
+
+Day 54, the first day with the slow state kept across sleep, the long tag open (0.0006) and imagination at the face organ's correlation:
+lines 83, smiles 74 (0.89 a line, from 2.0 on day 53 and 1.09 on 52), frowns 39, turned away 6, cues 15 answered 6 (the best rate in a
+week), own pairs 5, talked over per line 0.54; the gate's duty after the parent's lines 0.31 (0.36 the day before); the anticipation rise
+0.8 percent; the known words 70. Night 52: 288 imagined transitions at weight 0.153 (the correlation), foreseen reward 0.034; the gauge
+0.669 -> 0.874. The prefrontal slope 0.52 with correlation 0.32, easing still (0.99, 0.70, 0.61, 0.52). One day is not a verdict: the
+rule for the third step is five nights, failed if the slope reaches zero or the gate's duty falls under 0.2; neither is near.
