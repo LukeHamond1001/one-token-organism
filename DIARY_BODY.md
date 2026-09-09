@@ -5798,3 +5798,16 @@ unit of eligibility (gate_slow_lr 0.0006 = gate_lr 0.05 x 12/1024: the fast less
 horizon), the ceiling fixed. Read by night: the prefrontal slope and correlation (kept state should raise both within five nights), the
 long voice's weight, talked-over per line and aways; failed if the slope stays at or below zero after five nights or the gate's duty
 drifts under 0.2.
+
+
+### Night 51: the third step in (2026-09-08, 23:50)
+
+Day 53 (the patient parent; imagination at full weight for one more night, the old process): lines 57, smiles 114 (2.0 a line, the
+highest yet; 1.09 on day 52), frowns 24, no turning away, cues 10 answered 2, own pairs 10; the anticipation rise 2.5 percent over 123
+felt smiles (1.6 the day before); the known words 69 (wet, dry; the parent's report: "what ?" written alone, "hi dog on box you had").
+Night 51: 336 imagined transitions, foreseen reward 0.033, the gauge 0.756 -> 0.818. The prefrontal slope 0.61 with correlation 0.37,
+easing day by day (0.99/0.58, 0.70/0.44, 0.61/0.37) as its moments fill: the first readings were on few returns.
+The reload at 23:47 (pid 92768): the slow bands kept across sleep, the night as 2,200 elapsed ticks, the long tag at 0.0006, and by
+code the imagination now weighed by the face organ's correlation (0.15). Every organ of the ranked list is on. What is read from here:
+by night, the prefrontal slope and correlation on kept state, the long voice's weight, the gate's duty; by day, smiles per line,
+talked-over per line, the pairs; the actor's slope (0.03) and the face organ's correlation (0.15) for whether either voice earns more.
