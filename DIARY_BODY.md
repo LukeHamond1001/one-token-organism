@@ -5742,3 +5742,15 @@ of the reward of the next 16 ticks on its vote for the act taken, from inside, s
 times that slope, added to the cortex's proposal before the planner's shortlist), plus the reading of its favorite's agreement with what
 was said. Test 33; 33 of 33 pass. It rides tonight's reload: silent at slope zero, audible as its votes prove to predict reward. Read
 actor_slope and actor_agree by night; the voice is audible in the day's speech only if its slope leaves zero.
+
+
+### Day 49 read; the third night's switches (2026-09-08, 20:47)
+
+Day 49 under the patient parent (period 40, quiet 12, cap 180, listen 32; the rest vote and the foreseeing face organ from the night):
+lines 68 (the parent waited its 45 s on most lines: the child talks through), smiles 112 (1.65 a line; 2.2 a minute against 1.6 on day
+48), frowns 42 (against 83), turned away 4 (against 10), cues 6 answered 4, own pairs 10 with one new; the known words 67 (cold). Better
+on every count but the pairs, which stay a quarter of day 46's. Night 48 (the old process): gauge 0.553 -> 0.887; REM cosine 1.000.
+The prefrontal slope at the day's end read 1.0 (correlation 0.59), the first full day of kept evidence.
+The reload at 20:44 (pid 88163): the calibrated sharpness, the dreams sampled, the actor's earned voice. In its first five minutes the
+calibrated base fell 25 -> 15 (the readout was overconfident about the world), the face organ's slope read 1.0 on thin evidence, the
+actor's favorite matched the mouth 5 percent of the time (chance is 1). The mood's additive gain was made proportional to the base.

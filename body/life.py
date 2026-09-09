@@ -841,7 +841,10 @@ class Life:
         if str(self.cfg.get("sharp_form", "fixed")) == "calibrated":
             # the calibrated base, and mood on both sides of zero as the spec and the songbird law say (the fixed form clamped a bad
             # day at zero, so it never widened the babble: the review of 2026-09-08), floored at sharp_min
-            m.read_sharp = max(float(self.cfg.get("sharp_min", 2.0)), float(self.sharp_cal) + float(self.cfg["sharp_gain"]) * max(-6.0, min(6.0, self.mood)) / 6.0)
+            # the gain rides on the calibrated base (25 + 25 x mood/6 is 25 x (1 + mood/6); with a base the body sets, the additive
+            # constant was a hand-set number again: at base 15 and mood -2 it read 8, and mood -4 would have pinned the floor)
+            ratio = float(self.cfg["sharp_gain"]) / max(1e-6, float(self.cfg["sharp_base"]))
+            m.read_sharp = max(float(self.cfg.get("sharp_min", 2.0)), float(self.sharp_cal) * (1.0 + ratio * max(-6.0, min(6.0, self.mood)) / 6.0))
         else:
             m.read_sharp = float(self.cfg["sharp_base"]) + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
         with torch.no_grad():
