@@ -5939,3 +5939,15 @@ duty after the parent's lines 0.25, own pairs 16 (10 distinct, one new: "here lo
 -0.6 at the night; the known words 79. Night 62: 384 imagined transitions at weight 0.15, the gauge 0.815 -> 0.865. The prefrontal
 slope 0.41, correlation 0.14; the actor's slope 0.03. Four days on the parent that leaves room: smiles per line 0.78, 0.90, 1.02, 1.06;
 frowns 27, 22, 30, 24; the pairs of its own returning.
+
+
+### Why cues land (2026-09-09, 11:10; the parent's finding on days 63-64)
+
+Three mechanical causes, none of them the delay: a cue accepts only continuations taught at least twice for that exact frame, so the
+child's "on" to "put it " was scored a miss on day 61 and a completion on days 62 and 63 once "on" crossed the threshold; every
+completion was two or three characters (out, here, on, in, it) while four-letter nouns came out as prefixes and were cut off by the
+parent's next line four to nine seconds later; particles beat object nouns. Days 63 and 64: smiles per line 1.27 and 1.48 (0.78 and
+0.90 two days before), frowns flat. "there" said after thirteen hearings (27 in the corpus now), "your" in its mouth 25 minutes after
+its first line, "over" the next morning, "you had milk" out of the night, "because big then in here", and "books", a plural never
+taught. The child's turn after a line goes from 32 to 48 ticks at the chain's next relaunch so a noun can finish; every parent from
+now is briefed to cue two-word frames with two or three taught continuations whose answers are particles.
