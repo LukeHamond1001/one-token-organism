@@ -5833,3 +5833,15 @@ with correlation 0.28: five readings easing (0.99, 0.70, 0.61, 0.52, 0.48) as th
 settles. The actor's slope 0.03, its favorite matching the mouth 3 percent of the time: no predictive vote yet. The digest's "own pairs"
 count comes from the face rows' contexts and shrinks as the child stops talking over the parent; the parents' reports read the chains
 from the page itself and are the better instrument for its own speech.
+
+
+### Night 54, the third on kept bands: a warning on the gate (2026-09-09, 02:52)
+
+Day 56: lines 82, smiles 46 (0.56 a line: 2.0, 0.89, 1.04, 0.56 over the four days since the third step), frowns 34, turned away 3, cues
+16 answered 6, talked over per line 0.44; the gate's duty after the parent's lines 0.27 (0.36, 0.31, 0.31, 0.27); the mood -2.0; the
+anticipation rise 0.0; the known words 72. Night 54: 384 imagined transitions at weight 0.14, the gauge 0.685 -> 0.828. The prefrontal
+slope 0.56 with correlation 0.34, up from 0.48 and 0.28: the easing stopped on kept state. The warning: since the long tag opened the
+child speaks less each day and earns fewer smiles a line. The likely mechanism is the tag capturing a long error that runs negative
+while the ventral value lags a fallen reward rate (the mood says the critic over-predicts), which pushes every act down: a bias, not a
+contingency. The pre-registered rule holds (five nights; failed under a duty of 0.2), with a guard armed for the next night: if day 57's
+duty falls under 0.2 or its smiles per line stay under 0.6, the tag closes at that night; otherwise the reading runs on.
