@@ -5982,3 +5982,12 @@ Days 65-66 (the parent's report): "drop" and "kick" through the it-frame, "kick 
 appeared, its question "where dog" answered within the minute; smiles 130 and 155 (the two highest days), frowns 32 and 36; the rule
 for parents: a new verb gets one particle and its noun frame is cued the same day; an old many-particle frame is cued with the
 it-frame line immediately before it.
+
+
+### Night 65: the longer turn and the one-particle rule (2026-09-09, 14:00)
+
+Day 67 (the child's turn 48 ticks; the parent briefed on how cues land; ten minutes without a parent at its start): lines and cues
+58, smiles 90 (1.55 a line), frowns 19 (the fewest of the life), turned away 3, cues 9 answered 8, own pairs 41 (19 distinct, four
+new, among them "eat back"): the most of its own pairs ever, the child's duty after the parent's lines 0.33; the mood +0.6 at the
+night; the known words 82. Night 65: 240 imagined transitions at weight 0.12, the gauge 0.792 -> 0.859. The prefrontal correlation 0.23
+(0.43 the night before: the rise did not hold, but it stays above last week's 0.13); slope 0.63. The actor's slope 0.04.
