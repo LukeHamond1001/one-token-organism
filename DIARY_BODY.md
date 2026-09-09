@@ -5919,3 +5919,14 @@ transitions at weight 0.17, the gauge 0.830 -> 0.849 (little new to consolidate)
 on; the actor's favorite matched the mouth 8 percent. Two days on the longer period: smiles per line 0.78 and 0.90 against 0.42, frowns
 27 and 22 against 41; the cues answered stay low (1 of 15, 2 of 13) and are the next thing to read with the parents' reports. The
 automatic backups older than the last two were removed for disk (6.4 GB free before).
+
+
+### Night 61 (2026-09-09, 09:57)
+
+Day 63: lines and cues 84, smiles 86 (1.02 a line), frowns 30, turned away 4, cues 19 answered 7 (back from 2 and 3), talked over per
+line 0.43, the child's duty after the parent's lines 0.25, one new pair ("it no"); the mood -2.8 at the night; the known words 78 (it,
+again; the parent's report on days 61-62: "take hat off" whole with the right particle, "why dog up? " answered with its own "go back
+in", "where a" and "whi dog" asked on day 62, speaking first on waking both days). Night 61: 288 imagined transitions at weight 0.16,
+the gauge 0.825 -> 0.862. The prefrontal value's correlation with its return has eased to 0.13 over twelve days of kept evidence (0.58
+on the first day of few returns): on this page the long value predicts little, as the review said it would, and the kept state did not
+change that. The actor's slope 0.03, its favorite matching the mouth 6 percent.
