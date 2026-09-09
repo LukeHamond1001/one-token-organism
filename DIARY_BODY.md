@@ -5960,3 +5960,13 @@ child's duty after the parent's lines 0.26, own pairs 26 (16 distinct, one new: 
 parent that leaves room; the mood +0.9 at the night; the known words 80 (over, your). Night 63: 384 imagined transitions at weight
 0.14, the gauge 0.664 -> 0.868 (a full day's new material). The prefrontal slope 0.70, correlation 0.22, up from 0.41 and 0.14 the
 night before; the actor's slope 0.03.
+
+
+### Night 64 (2026-09-09, 13:00)
+
+Day 66: lines and cues 88, smiles 125 (1.42 a line), frowns 33, turned away 1, cues 19 answered 5, talked over per line 0.45, the child's
+duty after the parent's lines 0.31 (0.26 the day before: it speaks more again), own pairs 19 with three new ("it no", "it kick"); the mood
+-1.4 at the night; the known words 81. Night 64: 384 imagined transitions at weight 0.13, the gauge 0.822 -> 0.858. The prefrontal value:
+slope 1.0 (clipped), correlation 0.43, rising four nights in a row (0.13, 0.14, 0.22, 0.43) on kept state, the tag closed: the long value
+is finding something to predict; to be read on, not acted on. The actor's slope 0.04. The typist's sixth day ends here; the chain relaunches
+it with the child's turn at 48 ticks.
