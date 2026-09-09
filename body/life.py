@@ -1405,10 +1405,16 @@ class Life:
         self._frel_corr = float(cov / math.sqrt(max(var_f, 1e-9) * max(var_r, 1e-9))) if n > 64 else 0.0
         self._frel_gain = float(max(0.0, min(1.0, cov / max(var_f, 1e-9)))) if n > 64 else 0.0
 
+    def _face_weight(self):
+        """how much an imagined tick counts: the face organ's correlation with the felt reward, clipped at zero. Not its slope: a
+        predictor of small variance clips its slope at one while discriminating nothing (night 50: slope 1.0, correlation 0.15, a
+        mean foreseen reward of 0.03 over 336 imagined transitions at full weight). The correlation is the share it has proved."""
+        return max(0.0, float(self._frel_corr))
+
     def _rem_imagine_rounds(self, dreams):
         """REM AS IMAGINATION (§5c), the night's share: each round, each dream imagined once; the fast critic re-solved from the evidence"""
         m = self.m; rounds = 0; n_tr = 0; rsum = 0.0
-        w = float(self.cfg.get("rem_weight", 1.0)) * max(0.0, float(self._frel_gain))
+        w = float(self.cfg.get("rem_weight", 1.0)) * self._face_weight()
         for _ in range(int(self.cfg["rem_rounds"])):
             n_round = 0
             for ids in dreams[:int(self.cfg["rem_dreams"])]:
@@ -1417,7 +1423,7 @@ class Life:
                 rounds += 1; n_tr += n_round
                 m.fast_rls_solve(int(self.cfg["dopamine_band"]), prior=getattr(self, "_vf_delta", None))
         return {"rounds": rounds, "transitions": n_tr, "mean_abs_rhat": (round(rsum / n_tr, 3) if n_tr else None), "weight": round(w, 3),
-                "face_slope": round(float(self._frel_gain), 3)}
+                "face_slope": round(float(self._frel_gain), 3), "face_corr": round(float(self._frel_corr), 3)}
 
     def _rem_imagine(self, ids, k=3):
         """REM AS IMAGINATION (2026-09-08, §5c): the cortex runs free from a dream's first symbols on its sampled readout; the imagined
@@ -1429,7 +1435,7 @@ class Life:
         if (m.stri_W.numel() == 0 or not int(self.cfg.get("fast_rls", 0)) or len(ids) < k + 1
                 or str(self.cfg.get("face_form", "read")) != "foresee"):
             return 0, 0.0
-        w = float(self.cfg.get("rem_weight", 1.0)) * max(0.0, float(self._frel_gain))
+        w = float(self.cfg.get("rem_weight", 1.0)) * self._face_weight()
         if w <= 0.0:
             return 0, 0.0
         L = int(self.cfg["rem_steps"]); gf = float(m.gammas()[int(self.cfg["dopamine_band"])])

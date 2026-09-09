@@ -738,14 +738,14 @@ def test_rem_imagines():
         say(life, "dog will go", 2); life.set_face(2.0); life.tick(); life.set_face(0.0); say(life, "give milk", 2)
     ids = [TOK.token_to_id(c) for c in "dog will go"]
     line0 = m.stri_line.clone(); A0 = m.vf_A.clone(); b0 = m.vf_b.clone()
-    life._frel_gain = 0.0; n0, _ = life._rem_imagine(ids)
+    life._frel_corr = 0.0; n0, _ = life._rem_imagine(ids)
     assert n0 == 0 and torch.equal(m.vf_b, b0), "imagination counted with a face organ that has proved nothing"
-    life._frel_gain = 0.5; n1, _ = life._rem_imagine(ids)
+    life._frel_corr = 0.5; n1, _ = life._rem_imagine(ids)
     assert n1 == 6 and not torch.equal(m.vf_A, A0), (n1,)
     assert torch.equal(m.stri_line, line0), "the lived delay line was not restored"
     rep = life.night()
     assert rep.get("rem_imagined") and rep["rem_imagined"]["rounds"] >= 1, rep.get("rem_imagined")
-    print("32 REM imagines: transitions at slope 0 ->", n0, "| at slope 0.5 ->", n1, "| the night:", rep["rem_imagined"])
+    print("32 REM imagines: transitions at correlation 0 ->", n0, "| at 0.5 ->", n1, "| the night:", rep["rem_imagined"])
 
 
 def test_actor_earned_voice():
