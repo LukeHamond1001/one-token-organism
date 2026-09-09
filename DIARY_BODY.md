@@ -5909,3 +5909,13 @@ life), the child's duty after the parent's lines 0.244 (from 0.231), one new pai
 of 23 the day before: one day, to be read again); the mood +1.3 at the night. Night 59: 384 imagined transitions at weight 0.17, the
 gauge 0.794 -> 0.846; the prefrontal slope 0.34, correlation 0.15; the actor's favorite matched the mouth 10 percent of the time (3
 the day before), its slope still 0.03. The verdict on the period: more smiles from fewer lines, fewer frowns, the mood up; it stays.
+
+
+### Night 60 (2026-09-09, 08:55)
+
+Day 62 (period 120): lines and cues 84, smiles 76 (0.90 a line), frowns 22, no turning away, talked over per line 0.33, the child's duty
+after the parent's lines 0.22, own pairs 8, cues 13 answered 2; the mood -1.2 at the night; the known words 77. Night 60: 336 imagined
+transitions at weight 0.17, the gauge 0.830 -> 0.849 (little new to consolidate). The prefrontal slope 0.33, correlation 0.14, easing
+on; the actor's favorite matched the mouth 8 percent. Two days on the longer period: smiles per line 0.78 and 0.90 against 0.42, frowns
+27 and 22 against 41; the cues answered stay low (1 of 15, 2 of 13) and are the next thing to read with the parents' reports. The
+automatic backups older than the last two were removed for disk (6.4 GB free before).
