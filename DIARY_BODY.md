@@ -5821,3 +5821,15 @@ week), own pairs 5, talked over per line 0.54; the gate's duty after the parent'
 0.8 percent; the known words 70. Night 52: 288 imagined transitions at weight 0.153 (the correlation), foreseen reward 0.034; the gauge
 0.669 -> 0.874. The prefrontal slope 0.52 with correlation 0.32, easing still (0.99, 0.70, 0.61, 0.52). One day is not a verdict: the
 rule for the third step is five nights, failed if the slope reaches zero or the gate's duty falls under 0.2; neither is near.
+
+
+### Night 53, the second on kept bands (2026-09-09, 01:50)
+
+Day 55: lines 68, smiles 71 (1.04 a line), frowns 26, turned away 5, cues 11 answered 5, talked over per line 0.44 (the lowest yet;
+0.82 on day 48), the gate's duty after the parent's lines 0.31; the mood -1.9 at the night; the known words 71 (put, take; the parent's
+report: "put hat back on" unprompted, four words never taught whole, "take box out" thirty seconds after waking). Night 53: 192 imagined
+transitions at weight 0.12 (the face organ's correlation, easing 0.15 -> 0.12), the gauge 0.611 -> 0.872. The prefrontal slope 0.48
+with correlation 0.28: five readings easing (0.99, 0.70, 0.61, 0.52, 0.48) as the moments fill; the earned ceiling waits on where it
+settles. The actor's slope 0.03, its favorite matching the mouth 3 percent of the time: no predictive vote yet. The digest's "own pairs"
+count comes from the face rows' contexts and shrinks as the child stops talking over the parent; the parents' reports read the chains
+from the page itself and are the better instrument for its own speech.
