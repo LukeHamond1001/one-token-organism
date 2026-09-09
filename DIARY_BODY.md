@@ -5991,3 +5991,12 @@ Day 67 (the child's turn 48 ticks; the parent briefed on how cues land; ten minu
 new, among them "eat back"): the most of its own pairs ever, the child's duty after the parent's lines 0.33; the mood +0.6 at the
 night; the known words 82. Night 65: 240 imagined transitions at weight 0.12, the gauge 0.792 -> 0.859. The prefrontal correlation 0.23
 (0.43 the night before: the rise did not hold, but it stays above last week's 0.13); slope 0.63. The actor's slope 0.04.
+
+
+### Night 66 (2026-09-09, 15:02)
+
+Day 68: lines and cues 81, smiles 129 (1.59 a line), frowns 26, turned away 2, cues 16 answered 5, own pairs 30 (22 distinct, three
+new), the child's duty after the parent's lines 0.29; the mood +0.3 at the night; the known words 83. Night 66: 336 imagined
+transitions at weight 0.12, the gauge 0.785 -> 0.864. The prefrontal slope 0.83, correlation 0.29 (0.23, 0.43, 0.22 the nights
+before: it holds between 0.2 and 0.4 on kept state now, against 0.13 last week). The actor's slope 0.04. Six days on the parent that
+leaves room: smiles per line 0.78, 0.90, 1.02, 1.06, 1.31, 1.42, 1.55, 1.59.
