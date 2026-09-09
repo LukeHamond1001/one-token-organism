@@ -736,6 +736,8 @@ clipped at zero: imagination counts for as much as the imaginer has proved right
 (3) The forecast heads' loss leaves the wake lesson and REM. Nothing here reads the environment or authors a word; a humanoid keeps it
 unchanged: its face organ becomes its model of whatever grounded reward it has.
 
+
+**The readout's sharpness (corrected 2026-09-08).** The served recipe reads at base 25 plus gain 25 times mood over 6 (earlier text said 5 and 5). Under the fixed form the code clamped mood at zero, so a bad day never widened the babble, against the songbird law the spec cites; under the calibrated form (sharp_form calibrated) the base follows the likelihood of what arrives (§5b, the calibrated readout) and mood counts on both sides of zero, floored at sharp_min.
 ## 6. The environment (raw)
 
 The parents (the served typist and the fast parent) see only the page: the words, the face row, and whether the body

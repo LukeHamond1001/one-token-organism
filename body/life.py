@@ -826,8 +826,12 @@ class Life:
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
         # DECISIVENESS from tonic dopamine (songbirds: variability is high when unrewarded and falls as
         # reward comes; mood is the body's tonic dopamine): the readout's sharpness = base + gain x mood/6
-        base = float(self.sharp_cal) if str(self.cfg.get("sharp_form", "fixed")) == "calibrated" else float(self.cfg["sharp_base"])
-        m.read_sharp = base + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
+        if str(self.cfg.get("sharp_form", "fixed")) == "calibrated":
+            # the calibrated base, and mood on both sides of zero as the spec and the songbird law say (the fixed form clamped a bad
+            # day at zero, so it never widened the babble: the review of 2026-09-08), floored at sharp_min
+            m.read_sharp = max(float(self.cfg.get("sharp_min", 2.0)), float(self.sharp_cal) + float(self.cfg["sharp_gain"]) * max(-6.0, min(6.0, self.mood)) / 6.0)
+        else:
+            m.read_sharp = float(self.cfg["sharp_base"]) + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
         with torch.no_grad():
             sal = float(self.cfg["gate_salience"]) * float(pred1.norm())      # the proposal's salience
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
