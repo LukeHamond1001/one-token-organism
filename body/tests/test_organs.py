@@ -748,11 +748,29 @@ def test_rem_imagines():
     print("32 REM imagines: transitions at slope 0 ->", n0, "| at slope 0.5 ->", n1, "| the night:", rep["rem_imagined"])
 
 
+def test_actor_earned_voice():
+    """the actor's earned voice: its reliability is the slope of the reward that follows an act on its vote for it; the voice is silent
+    at slope zero and applied at its slope; the reading is from inside"""
+    life = _watched(); m = life.m
+    life.cfg["actor_voice"] = "earned"; life.cfg["actor_horizon"] = 4; life.cfg["actor_tau"] = 1000
+    for _ in range(3):
+        say(life, "dog will go", 2); life.set_face(2.0); life.tick(); life.set_face(0.0); say(life, "give milk", 2)
+    n_acts = len(life._act_agree)
+    assert n_acts > 0 and life._act_pending is not None, "no acts were recorded"
+    for i in range(300):                                                  # votes followed by reward in proportion: a reliable actor
+        v = (i % 5) / 4.0; life._arel_update(v, 2.0 * v + 0.1 * ((i * 7) % 3 - 1))
+    assert life._arel_gain > 0.5, life._arel_gain
+    z = m.stri_in(); a_bias = torch.tanh(m.actor(z))
+    assert float(a_bias.abs().max()) <= 1.0
+    d = life.insides(); assert d["actor_voice"] == "earned" and d["actor_slope"] > 0.5 and d["acts"] == n_acts, d
+    print("33 the actor's earned voice: acts read", n_acts, "| agreement", d["actor_agree"], "| slope after reliable votes", d["actor_slope"])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice]
     failed = 0
     for t in tests:
         try:

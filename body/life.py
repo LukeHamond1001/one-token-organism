@@ -91,6 +91,10 @@ PHYSIOLOGY = dict(
     # logits of its best) and the striatum chooses among them (its bias added only there; the rest are never said), as the basal
     # ganglia select among cortical candidates rather than inventing actions.
     actor_form="add", actor_margin=4.0,
+    # THE ACTOR'S EARNED VOICE (actor_voice "earned", 2026-09-08): the striatum's own vote for a symbol, bounded, applied to the
+    # cortex's proposal as loudly as it has proved right: its weight is the slope of the reward of the next actor_horizon ticks on
+    # its vote for the act taken, clipped to [0, 1] (the law of the prefrontal voice and the face organ). "off": the vote unused.
+    actor_voice="off", actor_horizon=16, actor_tau=36000,
     # actor_form "plan" (2026-09-06): at a word boundary the cortex proposes its shortlist, each candidate is imagined forward
     # plan_h own symbols through the world model (greedy), the striatal critic values the imagined line, and the choice follows
     # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
@@ -338,6 +342,8 @@ class Life:
         self._fc_prev = None                                  # the forecast made at the last step, unnormalized (its norm is its certainty)
         self._frel = [0.0] * 6; self._frel_gain = 0.0; self._frel_corr = 0.0   # THE FACE ORGAN'S RELIABILITY (face_form "foresee", §5c): the slope of the felt reward on its foresight
         self._C1_prev = None; self._fpred_now = 0.0
+        self._arel = [0.0] * 6; self._arel_gain = 0.0; self._arel_corr = 0.0; self._act_pending = collections.deque()   # the actor's reliability
+        self._a_bias_now = None; self._act_agree = collections.deque(maxlen=int(self.cfg["wake_ticks"]) + 16)
         self._fh_A = torch.zeros(self.m.d + 1, self.m.d + 1, dtype=torch.float64); self._fh_b = torch.zeros(self.m.d + 1, dtype=torch.float64)   # the foreseeing face organ's evidence (least squares, as the fast critic's)
         _wk = int(self.cfg["wake_ticks"]) + 16                # the day's ring: the fast value before each tick and the felt reward at it (the anticipation reading)
         self._ring_vf = collections.deque(maxlen=_wk); self._ring_r = collections.deque(maxlen=_wk)
@@ -586,6 +592,12 @@ class Life:
             self.level = lvl
         r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
         self._ring_r.append(r)
+        if self._act_pending:                               # the actor's reliability: the reward of the ticks after each act, on its vote for that act
+            H = int(self.cfg.get("actor_horizon", 16))
+            for p_ in self._act_pending:
+                p_[2] += r
+            while self._act_pending and self.ticks - self._act_pending[0][0] >= H:
+                t0_, v_, g_ = self._act_pending.popleft(); self._arel_update(v_, g_)
         if u != self.sil:
             wr = float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
             if wr and not (int(self.cfg.get("world_mask", 0)) and getattr(self, "_acted_last", False)):
@@ -876,7 +888,10 @@ class Life:
             if act_on:
                 with torch.no_grad():                                  # the striatum disposes: its bias on the cortex's proposal
                     a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
+                    self._a_bias_now = a_bias
                     form_ = str(self.cfg.get("actor_form", "add"))
+                    if str(self.cfg.get("actor_voice", "off")) == "earned" and form_ not in ("add", "select") and self._arel_gain > 0.0:
+                        logits = logits + float(self._arel_gain) * a_bias                 # the earned voice: as loud as it has proved right
                     spk = logits.clone(); spk[self.sil] = float("-inf"); spk[self.bans] = float("-inf")   # the speakable proposals: not the rest, not the reserved
                     if form_ == "select":
                         short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
@@ -931,6 +946,11 @@ class Life:
                 nxt, p_choice = self.sil, 0.0
         int_t = 0.0
         if acted and act_on:
+            if getattr(self, "_a_bias_now", None) is not None:
+                ab_ = self._a_bias_now
+                self._act_pending.append([self.ticks, float(ab_[nxt]), 0.0])   # its vote for the act taken; the reward that follows is gathered
+                spk_ = ab_.clone(); spk_[self.sil] = float("-inf"); spk_[self.bans] = float("-inf")
+                self._act_agree.append(1.0 if int(spk_.argmax()) == nxt else 0.0)
             with torch.no_grad():                                      # the actor's eligibility: what it said against what it expected, on this input
                 oh = torch.zeros_like(probs); oh[nxt] = 1.0
                 e_new = torch.outer(oh - probs.detach(), self._z_now)
@@ -1354,6 +1374,15 @@ class Life:
                 w = torch.linalg.lstsq(A + torch.diag(R), self._fh_b.unsqueeze(1)).solution.squeeze(1)
             m.face_head.weight[0].copy_(w[:-1].to(m.face_head.weight)); m.face_head.bias[0] = w[-1].to(m.face_head.bias)
 
+    def _arel_update(self, v, g):
+        """the actor's reliability: the running moments of (its vote for the act taken, the reward of the ticks after) over actor_tau acts"""
+        d = 1.0 - 1.0 / float(self.cfg.get("actor_tau", 36000)); m = self._arel
+        m[0] = d * m[0] + 1.0; m[1] = d * m[1] + v; m[2] = d * m[2] + g; m[3] = d * m[3] + v * v; m[4] = d * m[4] + g * g; m[5] = d * m[5] + v * g
+        n = m[0]; mv, mg = m[1] / n, m[2] / n
+        var_v, var_g = m[3] / n - mv * mv, m[4] / n - mg * mg; cov = m[5] / n - mv * mg
+        self._arel_corr = float(cov / math.sqrt(max(var_v, 1e-9) * max(var_g, 1e-9))) if n > 64 else 0.0
+        self._arel_gain = float(max(0.0, min(1.0, cov / max(var_v, 1e-9)))) if n > 64 else 0.0
+
     def _frel_update(self, f, r):
         """the face organ's reliability: the running moments of (foresight, felt reward) over face_tau ticks; the slope, clipped to [0, 1]"""
         d = 1.0 - 1.0 / float(self.cfg.get("face_tau", 36000)); m = self._frel
@@ -1545,7 +1574,9 @@ class Life:
                 "vw_now": round(float(getattr(self, "_vw_now", 0.0)), 4), "floor_now": round(float(getattr(self, "_floor_now", 0.0)), 4),
                 "sharp_now": round(float(self.m.read_sharp), 2), "sharp_cal": round(float(self.sharp_cal), 2), "sharp_form": str(self.cfg.get("sharp_form", "fixed")),
                 "anticipation": self.anticipation(), "face_form": str(self.cfg.get("face_form", "read")), "face_slope": round(float(self._frel_gain), 3),
-                "face_corr": round(float(self._frel_corr), 3), "face_pred": round(float(self._fpred_now), 3), "rem_form": str(self.cfg.get("rem_form", "forecast"))}
+                "face_corr": round(float(self._frel_corr), 3), "face_pred": round(float(self._fpred_now), 3), "rem_form": str(self.cfg.get("rem_form", "forecast")),
+                "actor_voice": str(self.cfg.get("actor_voice", "off")), "actor_slope": round(float(self._arel_gain), 3), "actor_corr": round(float(self._arel_corr), 3),
+                "actor_agree": (round(sum(self._act_agree) / len(self._act_agree), 3) if self._act_agree else None), "acts": len(self._act_agree)}
 
     # ---------------- save / load ----------------
     def save(self, path=None):
@@ -1560,7 +1591,8 @@ class Life:
                          "vrel": list(self._vrel), "vrel_gain": float(self._vrel_gain), "vrel_corr": float(self._vrel_corr),
                          "vbuf_v": list(self._vbuf_v), "vbuf_r": list(self._vbuf_r), "sharp_cal": float(self.sharp_cal),
                          "frel": list(self._frel), "frel_gain": float(self._frel_gain), "frel_corr": float(self._frel_corr),
-                         "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone()}}
+                         "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone(),
+                         "arel": list(self._arel), "arel_gain": float(self._arel_gain), "arel_corr": float(self._arel_corr)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -1625,6 +1657,8 @@ class Life:
             life._frel = [float(v) for v in L["frel"]]; life._frel_gain = float(L.get("frel_gain", 0.0)); life._frel_corr = float(L.get("frel_corr", 0.0))
         if L.get("fh_A") is not None and tuple(L["fh_A"].shape) == tuple(life._fh_A.shape):
             life._fh_A.copy_(L["fh_A"]); life._fh_b.copy_(L["fh_b"])
+        if L.get("arel") is not None:
+            life._arel = [float(v) for v in L["arel"]]; life._arel_gain = float(L.get("arel_gain", 0.0)); life._arel_corr = float(L.get("arel_corr", 0.0))
         life.sym_freq = dict(L.get("sym_freq") or {})
         life.perf = {int(k): float(v) for k, v in (L.get("perf") or {}).items()}
         if L.get("rbar") is not None:

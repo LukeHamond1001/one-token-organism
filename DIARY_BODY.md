@@ -5731,3 +5731,14 @@ quiet), quiet 12, cap 180, listen 32, in ticks; the chain re-armed with it. Day 
 organ from the night's reload (19:43, pid 86321; the night: gauge 0.784 -> 0.870, REM's forecast cosine 1.000 as diagnosed). Read day 49
 against 48: smiles per line, the parent's cut-ins per line, own pairs, aways; then the rest vote's own share is inferred from the
 talked-over misses.
+
+
+### The actor's voice, earned (2026-09-08, 20:00)
+
+The user: "why not turn it on." The record: under the planner form the actor has learned from dopamine at every act since birth; only its
+vote went unused, since the unbounded bias once collapsed the mouth and the bounded one changed nothing measurable, never read. The
+honest switch is the body's own law for every voice: applied as loudly as it has proved right. Built: the actor's reliability (the slope
+of the reward of the next 16 ticks on its vote for the act taken, from inside, saved with the body) and the earned voice (the bounded vote
+times that slope, added to the cortex's proposal before the planner's shortlist), plus the reading of its favorite's agreement with what
+was said. Test 33; 33 of 33 pass. It rides tonight's reload: silent at slope zero, audible as its votes prove to predict reward. Read
+actor_slope and actor_agree by night; the voice is audible in the day's speech only if its slope leaves zero.

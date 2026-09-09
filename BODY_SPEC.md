@@ -738,6 +738,8 @@ unchanged: its face organ becomes its model of whatever grounded reward it has.
 
 
 **The readout's sharpness (corrected 2026-09-08).** The served recipe reads at base 25 plus gain 25 times mood over 6 (earlier text said 5 and 5). Under the fixed form the code clamped mood at zero, so a bad day never widened the babble, against the songbird law the spec cites; under the calibrated form (sharp_form calibrated) the base follows the likelihood of what arrives (§5b, the calibrated readout) and mood counts on both sides of zero, floored at sharp_min.
+
+**The actor's earned voice (2026-09-08).** Under the planner form the actor's weights learn from dopamine at every act (its eligibility is what it said against what it expected, on the striatal input), but its vote was unused after the unbounded bias collapsed the mouth. `actor_voice earned`: the bounded vote (actor_beta x tanh) is added to the cortex's proposal weighted by the actor's reliability, the slope of the reward of the next actor_horizon ticks on its vote for the act taken, clipped to [0, 1] and measured from inside (the law of the prefrontal voice and the face organ): silent until proven, as loud as it has proved right. The readings: actor_slope, actor_corr, and the agreement of its favorite with what was said.
 ## 6. The environment (raw)
 
 The parents (the served typist and the fast parent) see only the page: the words, the face row, and whether the body
