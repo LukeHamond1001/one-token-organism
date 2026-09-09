@@ -5951,3 +5951,12 @@ parent's next line four to nine seconds later; particles beat object nouns. Days
 its first line, "over" the next morning, "you had milk" out of the night, "because big then in here", and "books", a plural never
 taught. The child's turn after a line goes from 32 to 48 ticks at the chain's next relaunch so a noun can finish; every parent from
 now is briefed to cue two-word frames with two or three taught continuations whose answers are particles.
+
+
+### Night 63 (2026-09-09, 11:58)
+
+Day 65: lines and cues 86, smiles 113 (1.31 a line), frowns 31, no turning away, cues 15 answered 6, talked over per line 0.42, the
+child's duty after the parent's lines 0.26, own pairs 26 (16 distinct, one new: "eat box"): 5, 8, 16, 18, 26 over five days on the
+parent that leaves room; the mood +0.9 at the night; the known words 80 (over, your). Night 63: 384 imagined transitions at weight
+0.14, the gauge 0.664 -> 0.868 (a full day's new material). The prefrontal slope 0.70, correlation 0.22, up from 0.41 and 0.14 the
+night before; the actor's slope 0.03.
