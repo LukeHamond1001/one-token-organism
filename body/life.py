@@ -213,7 +213,7 @@ PHYSIOLOGY = dict(
     # THE GATE'S OPTIMIZER (gate_opt "sgd" | "adam", gate_adam_lr): Adam normalizes each weight's step by its gradient's
     # running scale, so a consistent small gradient on one input (the ear) accumulates at the rate whatever the noise
     gate_opt="sgd", gate_adam_lr=1e-3,
-    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, sharp_form="fixed", sharp_rate=0.05, sharp_min=2.0, sharp_max=100.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
+    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, sharp_form="fixed", sharp_rate=0.05, sharp_min=8.0, sharp_max=100.0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
     dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
     # THE WORLD'S WORDS AS REWARD (the user's word of 2026-09-04, "both are your call"): each symbol the world types is
     # felt as reward of world_r beside the face. The caregiver's voice is a primary reward to an infant (the mother's
@@ -404,7 +404,7 @@ class Life:
         if who == 0 and getattr(self, "pred_prev", None) is not None:      # the tick's surprise, the rest included: the event's end by the law
             with torch.no_grad():
                 self._surp_tick = float(1.0 - F.cosine_similarity(self.pred_prev, m.E.weight[int(x)], dim=0))
-            if str(self.cfg.get("sharp_form", "fixed")) == "calibrated":
+            if str(self.cfg.get("sharp_form", "fixed")) in ("calibrated", "world"):
                 self._sharp_calibrate(int(x))
         with torch.no_grad():
             ex = m.E.weight[x]
@@ -838,15 +838,16 @@ class Life:
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
         # DECISIVENESS from tonic dopamine (songbirds: variability is high when unrewarded and falls as
         # reward comes; mood is the body's tonic dopamine): the readout's sharpness = base + gain x mood/6
-        if str(self.cfg.get("sharp_form", "fixed")) == "calibrated":
-            # the calibrated base, and mood on both sides of zero as the spec and the songbird law say (the fixed form clamped a bad
-            # day at zero, so it never widened the babble: the review of 2026-09-08), floored at sharp_min
-            # the gain rides on the calibrated base (25 + 25 x mood/6 is 25 x (1 + mood/6); with a base the body sets, the additive
-            # constant was a hand-set number again: at base 15 and mood -2 it read 8, and mood -4 would have pinned the floor)
-            ratio = float(self.cfg["sharp_gain"]) / max(1e-6, float(self.cfg["sharp_base"]))
-            m.read_sharp = max(float(self.cfg.get("sharp_min", 2.0)), float(self.sharp_cal) * (1.0 + ratio * max(-6.0, min(6.0, self.mood)) / 6.0))
-        else:
-            m.read_sharp = float(self.cfg["sharp_base"]) + float(self.cfg["sharp_gain"]) * max(0.0, min(6.0, self.mood)) / 6.0
+        # THE MOUTH'S DECISIVENESS (the spec's law, both sides of zero: 25 x (1 + mood/6); the code had clamped a bad day at zero, so it
+        # never widened the babble: the review of 2026-09-08), floored where the lexicon's own noise wins (sharp_min 8: below about ten
+        # a symbol at probability 0.5 no longer outweighs fifty strangers at their noise). The base is the readout's anatomy under the
+        # fixed and world forms; under "calibrated" it is the world-calibrated base, which on the served body fell 25 -> 8 in three
+        # minutes (2026-09-08, 20:47): the world's next symbol is far less predictable than the mouth's own, so the world's calibration
+        # cannot set the mouth's decisiveness (perception and production are two readouts in biology too). Under "world" the
+        # calibration runs as a reading and sets REM's sampling temperature: the dreams as varied as the world proved to be.
+        base = float(self.sharp_cal) if str(self.cfg.get("sharp_form", "fixed")) == "calibrated" else float(self.cfg["sharp_base"])
+        ratio = float(self.cfg["sharp_gain"]) / max(1e-6, float(self.cfg["sharp_base"]))
+        m.read_sharp = max(float(self.cfg.get("sharp_min", 8.0)), base * (1.0 + ratio * max(-6.0, min(6.0, self.mood)) / 6.0))
         with torch.no_grad():
             sal = float(self.cfg["gate_salience"]) * float(pred1.norm())      # the proposal's salience
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
@@ -1386,6 +1387,14 @@ class Life:
         self._arel_corr = float(cov / math.sqrt(max(var_v, 1e-9) * max(var_g, 1e-9))) if n > 64 else 0.0
         self._arel_gain = float(max(0.0, min(1.0, cov / max(var_v, 1e-9)))) if n > 64 else 0.0
 
+    def _rem_temperature(self):
+        """REM's sampling temperature: rem_temp, and under the world form scaled by the readout's base over its world-calibrated base,
+        so the dreams are drawn at the sharpness the world proved (a base of 25 calibrated to 8 samples at temperature 3)"""
+        rt = float(self.cfg.get("rem_temp", 0.0))
+        if rt > 0 and str(self.cfg.get("sharp_form", "fixed")) == "world" and float(self.sharp_cal) > 0:
+            rt = rt * float(self.cfg["sharp_base"]) / float(self.sharp_cal)
+        return rt
+
     def _frel_update(self, f, r):
         """the face organ's reliability: the running moments of (foresight, felt reward) over face_tau ticks; the slope, clipped to [0, 1]"""
         d = 1.0 - 1.0 / float(self.cfg.get("face_tau", 36000)); m = self._frel
@@ -1435,7 +1444,7 @@ class Life:
             for step in range(len(xs) + L):
                 if step >= len(xs):
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf")   # the rest may be imagined: the world's stop
-                    rt = float(self.cfg.get("rem_temp", 0.0))
+                    rt = self._rem_temperature()
                     xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1)) if rt > 0 else int(lg.argmax()))
                 x = xs[step]
                 m.striatum_push(0 if x != self.sil else 3, x if x != self.sil else 0)
@@ -1471,7 +1480,7 @@ class Life:
                 # heard as the world's in the next time step
                 with torch.no_grad():
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf"); lg[self.sil] = float("-inf")
-                    rt = float(self.cfg.get("rem_temp", 0.0))
+                    rt = self._rem_temperature()
                     # THE DREAM SAMPLED, NOT TAKEN AT ITS MODE (rem_temp > 0; 2026-09-06): biology's REM is noisy; the greedy
                     # continuation reproduces the store's most frequent lines and consolidates nothing new. 0 = greedy (as before).
                     xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1)) if rt > 0 else int(lg.argmax()))
