@@ -5754,3 +5754,14 @@ The prefrontal slope at the day's end read 1.0 (correlation 0.59), the first ful
 The reload at 20:44 (pid 88163): the calibrated sharpness, the dreams sampled, the actor's earned voice. In its first five minutes the
 calibrated base fell 25 -> 15 (the readout was overconfident about the world), the face organ's slope read 1.0 on thin evidence, the
 actor's favorite matched the mouth 5 percent of the time (chance is 1). The mood's additive gain was made proportional to the base.
+
+
+### The calibrated readout failed on the mouth; the world form (2026-09-08, 20:50)
+
+Three minutes after the reload the calibrated base had fallen 25 -> 8 and the mouth read at 3.7 with the mood's term: the world's next
+symbol (the parent's typing) is far less predictable than the mouth's own, so a readout calibrated to the world is far too flat for
+production. Perception and production are two readouts in biology as well. Reverted at 20:48 by a restart from a save (backup
+watch2_before_world_form_day50.pt) to the WORLD form: the calibration runs as a reading of how predictable the world is to this cortex
+and sets REM's sampling temperature (the dreams as varied as the world proved: rem_temp x base / calibrated base), while the mouth's
+decisiveness follows the spec's law on every form, 25 x (1 + mood/6), both sides of zero, floored at 8 where the lexicon's own noise
+wins. The actor's earned voice and the foreseeing face organ stayed on. The chain relabels the typist's day at each relaunch.
