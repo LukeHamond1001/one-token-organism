@@ -5870,3 +5870,18 @@ toward 0.3 from near zero; ours drifted down from 0.7), the gate drifted but not
 The duty now sits at 0.26, the fatigue equilibrium the review predicted for a gate whose tonic is a hand-set number minus fatigue once
 the intrinsic drive was removed: the slide may be that, not the tag. The candidate for tonight is therefore the gate's grounded tonic
 (the reward rate as vigor, Niv 2007; gate_tonic_rate, built and off), read in the code first; the earned ceiling the night after.
+
+
+### Night 57: the guard closed the long tag (2026-09-09, 05:55)
+
+Day 59: lines 84 and cues 20, smiles 61 (0.59 a line: 0.82 and 0.78 the two days before), frowns 29, turned away 5, cues answered 7,
+own pairs 11 with three new ("book box", "here look", "book book"), talked over per line 0.41, the gate's duty after the parent's lines
+0.275; the known words 76 (push, pull; the parent's report: "push box " and "pull box " answered "in" the first time asked, the
+particle slot generalised; "because big" free-standing; "out here you" on waking). Night 57: 336 imagined transitions at weight 0.16,
+the gauge 0.684 -> 0.848; the prefrontal slope 0.38 with correlation 0.20.
+The script read day 59 at the night: duty 0.275 (held), smiles per line 0.592 (under the 0.6 I had set, by eight thousandths). The
+guard tripped, as written: the body restarted at 05:50 (pid 1054) with the long tag closed (gate_slow_lr 0), the kept bands and the
+night's ticks kept, the earned ceiling not added. The six nights of the tag: the prefrontal slope 0.52 -> 0.38, the gate's duty 0.31 ->
+0.28, smiles per line 0.56 to 1.04 with no trend: the tag neither raised the long voice's evidence nor clearly harmed the day; it is
+closed by a rule that a single day's swing tripped. The earned ceiling goes in at the next night under the same guard (the slope 0.38
+is inside the pre-registered band; the correlation 0.20 says the long value explains a twentieth of its return: a small voice either way).
