@@ -5780,3 +5780,21 @@ The conditional reload read the face slope 1.0 and switched imagination on (pid 
 critic imagined transitions scored by the face organ at that weight. Read tomorrow: the night's rem_imagined (transitions, mean foreseen
 reward), the anticipation rise, smiles per line. If the anticipation falls, the weight moves from the slope to the correlation, which
 is the honest measure for a predictor of small variance.
+
+
+### Night 50: the first imagination, read; the third step armed (2026-09-08, 22:52)
+
+Day 52 (the patient parent, imagination on): lines 89, smiles 97 (1.09 a line), frowns 37, cues 9 answered 4, own pairs 11 with one new
+("hot here"), talked over per line 0.48 (0.82 on day 48, 0.53 on day 51); the mood at the night -0.05; the known words 68. Night 50, the
+first with imagination: 336 imagined transitions at weight 1.0 with a mean foreseen reward of 0.03: the face organ's slope clipped at
+1.0 while its correlation read 0.15, so the imagination ran at full weight on a scorer that foresees almost nothing. The weight is now
+the correlation, clipped at zero (the share it has proved), by code from tonight's reload. The anticipation rise over the day: 1.6
+percent of a smile (5.7 on day 48, 4.4 on 49, 2.5 on 51): falling day by day since the patient parent, before imagination began; to be
+read against the smile kinds. The prefrontal slope 0.70, correlation 0.44 (0.99 and 0.58 the day before). The actor's slope 0.04, its
+favorite matching the mouth 8 percent of the time (4 the day before).
+Tonight's reload (~23:45), the review's third step: the slow bands kept across sleep (night_keep_bands 1), the night counted as 2,200
+elapsed ticks for the critic's bootstrap (nine minutes at a quarter second a tick), and the long tag opened at the gate's own rate per
+unit of eligibility (gate_slow_lr 0.0006 = gate_lr 0.05 x 12/1024: the fast lesson's rate over the fast window, spread over the ventral
+horizon), the ceiling fixed. Read by night: the prefrontal slope and correlation (kept state should raise both within five nights), the
+long voice's weight, talked-over per line and aways; failed if the slope stays at or below zero after five nights or the gate's duty
+drifts under 0.2.
