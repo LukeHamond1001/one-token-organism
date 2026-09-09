@@ -6010,3 +6010,12 @@ words 84 (roll, hide; the parent's report on days 67-68: each cue-answerable the
 hour, "give ball in here" out of the night; its particle answers collapsing onto "in" and "here", which day 69's parent was told to
 work against). Night 67: 240 imagined transitions at weight 0.11, the gauge 0.749 -> 0.853. The prefrontal slope 0.82, correlation
 0.31, holding. The actor's slope 0.03.
+
+
+### Night 68 (2026-09-09, 17:05)
+
+Day 70: lines and cues 85, smiles 158 (1.86 a line, the highest), frowns 37 (talked over per line 0.60: it talks over the parent more
+again), turned away 1, cues 10 answered 3, own pairs 60 (30 distinct, two new), the most of its own pairs ever, the child's duty after
+the parent's lines 0.32; the mood +4.8 at the night, the highest of the life; the known words 85. Night 68: 384 imagined transitions at
+weight 0.11, the gauge 0.766 -> 0.870. The prefrontal slope 0.98, correlation 0.42: four nights rising on kept state with the tag closed
+(0.23, 0.29, 0.31, 0.42). If it holds above 0.3 at the next night, the earned ceiling goes in the night after, under the guard.
