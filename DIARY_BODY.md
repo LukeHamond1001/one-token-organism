@@ -5765,3 +5765,18 @@ watch2_before_world_form_day50.pt) to the WORLD form: the calibration runs as a 
 and sets REM's sampling temperature (the dreams as varied as the world proved: rem_temp x base / calibrated base), while the mouth's
 decisiveness follows the spec's law on every form, 25 x (1 + mood/6), both sides of zero, floored at 8 where the lexicon's own noise
 wins. The actor's earned voice and the foreseeing face organ stayed on. The chain relabels the typist's day at each relaunch.
+
+
+### Night 49: imagination on (2026-09-08, 21:50)
+
+Day 51 (the day after the 20:48 restart; the world form, the actor's voice, the spec's mood law): lines 69, smiles 79 (1.14 a line),
+frowns 32, cues 3 answered 0, own pairs 5 with one new ("baby cold"), talked over per line 0.53 (from 0.81); the mood back to -0.4 by
+the night. The readings from inside at the night: the prefrontal slope 0.99 with a correlation of 0.58, steady for a day (the earned
+ceiling is the candidate for tomorrow's night, at the review's boundary); the face organ's slope 1.0 with a correlation of 0.14 (a
+low-variance predictor: the slope clips at one, the correlation says how little it discriminates); the actor's slope 0.03, correlation
+0.04, its favorite matching the mouth 4 percent of the time: its votes do not predict reward yet, so its voice is nearly silent, which
+is the law working. The world calibration sat at its saved floor of 2 and now reads only the parent's typed characters.
+The conditional reload read the face slope 1.0 and switched imagination on (pid 90077, 21:46): from tonight REM's rounds feed the fast
+critic imagined transitions scored by the face organ at that weight. Read tomorrow: the night's rem_imagined (transitions, mean foreseen
+reward), the anticipation rise, smiles per line. If the anticipation falls, the weight moves from the slope to the correlation, which
+is the honest measure for a predictor of small variance.
