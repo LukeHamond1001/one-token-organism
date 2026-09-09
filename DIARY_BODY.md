@@ -5970,3 +5970,15 @@ duty after the parent's lines 0.31 (0.26 the day before: it speaks more again), 
 slope 1.0 (clipped), correlation 0.43, rising four nights in a row (0.13, 0.14, 0.22, 0.43) on kept state, the tag closed: the long value
 is finding something to predict; to be read on, not acted on. The actor's slope 0.04. The typist's sixth day ends here; the chain relaunches
 it with the child's turn at 48 ticks.
+
+
+### Ten minutes without a parent (2026-09-09, 13:18)
+
+The typist's sixth day ended at 13:05 and the chain should have relaunched it within the minute with the child's turn at 48 ticks. It
+did not until I launched it by hand at 13:15: my own two waits for that relaunch carried, in their command lines, the very text the
+chain greps for to know whether a typist is alive, so the chain saw one and held. The body spent ten minutes of day 67 alone on the
+page. The chain's test is narrowed to the typist's own arguments; the supervisor's checks name the typist another way from now.
+Days 65-66 (the parent's report): "drop" and "kick" through the it-frame, "kick it " answered "out" three minutes after the word first
+appeared, its question "where dog" answered within the minute; smiles 130 and 155 (the two highest days), frowns 32 and 36; the rule
+for parents: a new verb gets one particle and its noun frame is cued the same day; an old many-particle frame is cued with the
+it-frame line immediately before it.
