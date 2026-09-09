@@ -5716,3 +5716,18 @@ REM as imagination (rem_form imagine): the cortex runs free on its sampled reado
 line; the face organ scores each imagined tick; the fast critic's evidence takes the imagined transitions as it takes lived ones,
 weighted by the face organ's slope, nothing at slope zero; the lived line and working memory restored after; 144 imagined transitions a
 night in the test body. The forecast heads leave the lessons under the form. Tests 31 and 32; 32 of 32 pass.
+
+
+### Day 48 read, the parent corrected (2026-09-08, 19:47)
+
+Day 48, the first full day of the fast parent (period 40, quiet 8, cap 32, listen 24), against day 46, the last full day of the old one:
+lines 158 vs 123, smiles 82 vs 93 (0.52 a line vs 0.76), frowns 83 vs 75, turned away 10 vs 2, cues 8 answered 3 vs 13 answered 1, the
+child's own pairs 14 vs 42 with none new vs 10; the known words 66 (hot). The mood ended at -1.9. The rows say why: the gate waited its
+cap on nearly every line and the parent cut in, on 82 percent of lines, and the child was then frowned at for being interrupted; the
+fresh seeds where the ear was learned had a parent that waited up to 180 ticks for the child's quiet (the contingent response infants work
+for). The choice drive, which rode the same reload, triples the child's run-on on the seeds, and under a parent who cuts in that is more
+interruption. Three minutes into day 49 (the boundary) the parent is corrected: period 40 (it still answers within 40 ticks of the child's
+quiet), quiet 12, cap 180, listen 32, in ticks; the chain re-armed with it. Day 49 also carries the rest vote and the foreseeing face
+organ from the night's reload (19:43, pid 86321; the night: gauge 0.784 -> 0.870, REM's forecast cosine 1.000 as diagnosed). Read day 49
+against 48: smiles per line, the parent's cut-ins per line, own pairs, aways; then the rest vote's own share is inferred from the
+talked-over misses.
