@@ -5930,3 +5930,12 @@ in", "where a" and "whi dog" asked on day 62, speaking first on waking both days
 the gauge 0.825 -> 0.862. The prefrontal value's correlation with its return has eased to 0.13 over twelve days of kept evidence (0.58
 on the first day of few returns): on this page the long value predicts little, as the review said it would, and the kept state did not
 change that. The actor's slope 0.03, its favorite matching the mouth 6 percent.
+
+
+### Night 62 (2026-09-09, 10:58)
+
+Day 64: lines and cues 82, smiles 87 (1.06 a line), frowns 24, turned away 1, cues 15 answered 6, talked over per line 0.34, the child's
+duty after the parent's lines 0.25, own pairs 16 (10 distinct, one new: "here look"), the most of its own pairs since day 46; the mood
+-0.6 at the night; the known words 79. Night 62: 384 imagined transitions at weight 0.15, the gauge 0.815 -> 0.865. The prefrontal
+slope 0.41, correlation 0.14; the actor's slope 0.03. Four days on the parent that leaves room: smiles per line 0.78, 0.90, 1.02, 1.06;
+frowns 27, 22, 30, 24; the pairs of its own returning.
