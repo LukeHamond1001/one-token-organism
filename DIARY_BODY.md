@@ -6210,3 +6210,13 @@ imagination began, to be read on). The prefrontal correlation 0.34.
 The B arm: the reload at 11:56 carried the earned form from the saved physiology and left the voice at 0.95, so the body was restarted
 again at 11:59 with the ceiling fixed and the weight 0: the long voice is out of the credit for four days (nights 86-89), everything
 else unchanged; then on again for four. Read by arm: smiles per line, the duty, the frowns, the cues.
+
+
+### Night 87 (2026-09-10, 13:05)
+
+The prefrontal test was withdrawn at the user's word at 12:10, three minutes into its first B day: the earned ceiling is restored and the
+guard keeps it as the standing state. Day 91 (the log's label after the two restarts; the body's 87th): lines and cues 67, smiles 178
+(2.65 a line), frowns 20 (the fewest of the life), turned away 1, cues 11 answered 3, own pairs 76 (46 distinct, three new); the taught
+words 93. Night 87: 384 imagined transitions at weight 0.37, the gauge 0.700 -> 0.883. The face organ on the striatal input, five days:
+correlation 0.12 -> 0.37, slope 0.87; the anticipation rise 3.8 percent for the second day. The prefrontal correlation 0.38, its weight
+1.0. The mood at the night -2.2 with the mouth floored at 8. The automatic backups pruned again for disk.
