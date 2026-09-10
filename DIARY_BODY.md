@@ -6170,3 +6170,14 @@ percent of acting ticks, the readout's normalized entropy 0.05: the mouth is dec
 of its acts. The face organ on the striatal input, one day: correlation 0.12 -> 0.19, its slope 0.61 (no longer clipped at one: a
 real predictor), the mean foreseen reward in imagination 0.03 -> 0.11, imagination's weight 0.19. Night 83: 384 imagined
 transitions, the gauge 0.781 -> 0.868. The prefrontal correlation 0.39, weight 0.80.
+
+
+### Night 84 (2026-09-10, 09:52)
+
+Day 86: lines and cues 95, smiles 172 (1.81 a line), frowns 30, turned away 6, cues 11 answered 6, own pairs 89 (44 distinct, eight
+new, among them "can ball", "here down"); the mood -5.6 in the day's last minutes (the daily dip) with the mouth at the floor of 8, no
+longer near random; the taught words 89. Night 84: 384 imagined transitions at weight 0.25, the mean foreseen reward 0.105, the gauge
+0.730 -> 0.872. The face organ on the striatal input, two days: correlation 0.12 -> 0.19 -> 0.25, slope 0.63: the wiring the review
+named is paying by the day. The planner torn on 40 percent of acting ticks, entropy 0.07. The prefrontal correlation 0.34 (0.45, 0.39,
+0.34 over three nights), weight 0.71. The anticipation rise 2.7 percent over 172 felt smiles. The review's first test, the prefrontal
+voice off (vcrit_w 0) for four days with the parent unchanged, then on again, starts at night 86 after the face organ's third day.
