@@ -6220,3 +6220,12 @@ guard keeps it as the standing state. Day 91 (the log's label after the two rest
 words 93. Night 87: 384 imagined transitions at weight 0.37, the gauge 0.700 -> 0.883. The face organ on the striatal input, five days:
 correlation 0.12 -> 0.37, slope 0.87; the anticipation rise 3.8 percent for the second day. The prefrontal correlation 0.38, its weight
 1.0. The mood at the night -2.2 with the mouth floored at 8. The automatic backups pruned again for disk.
+
+
+### Night 88 (2026-09-10, 14:10)
+
+Day 92: lines and cues 80, smiles 201 (2.51 a line), frowns 34, turned away 3, cues 12 answered 7, own pairs 87 (55 distinct, four
+new, among them "had fill"); the taught words 93. The guard held (duty 0.344, smiles per line 2.48). Night 88: 384 imagined
+transitions at weight 0.38, the gauge 0.805 -> 0.881. The face organ on the striatal input, six days: 0.12, 0.19, 0.25, 0.28, 0.33,
+0.37, 0.38, levelling near 0.4; its slope 0.87. The anticipation rise 1.4 percent (3.8 the two days before: noisy at this size).
+The prefrontal correlation 0.33, weight 0.83; the actor's slope 0.05, its favorite matching the mouth 1 percent.
