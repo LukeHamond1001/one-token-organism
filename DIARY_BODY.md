@@ -6076,3 +6076,12 @@ days 73-74: "hold" answered in all three noun frames on its first day and return
 sentence of its own; "give me back in here", five of its own words, its longest string; "why" and "where" asked and answered within the
 minute; the it-frame line before a noun-frame cue rescues a new verb's frames but not an old many-particle frame). The guard's verdict
 and the night's readings are in the memory note of this hour; the guard is re-armed.
+
+
+### Night 74 (2026-09-09, 23:26)
+
+Day 76, the fourth under the earned ceiling: lines and cues 73, smiles 146 (2.00 a line), frowns 30, turned away 3, cues 10 answered 4,
+own pairs 83 (33 distinct, three new), the child's duty after the parent's lines 0.36; the mood -3.8 at the night (a swing down after
+the record day; the tonic dopamine reads the critic's over-prediction); the known words 91. The guard held (duty 0.353, smiles per
+line 2.01). Night 74: 336 imagined transitions at weight 0.12, the gauge 0.836 -> 0.864. The prefrontal slope 0.89, correlation 0.51,
+its weight in the credit 0.89. Four days at the earned ceiling: smiles per line 1.93, 1.91, 2.56, 2.00; its own pairs 62, 67, 101, 83.
