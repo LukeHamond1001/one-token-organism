@@ -6032,3 +6032,14 @@ weight 0.11, the gauge 0.777 -> 0.872, the store 1,677 slots with 84 dropped; th
 on kept state with the tag closed (0.29, 0.31, 0.42, 0.47). The rule is met: the earned ceiling is armed for the next night under the
 guard (duty under 0.2 or smiles per line under 0.6 keeps the safe flags instead): the long voice's weight in the credit becomes its
 slope, about 0.9, instead of 0.3 times it; read by day in smiles per line, the duty, talked-over per line, and by night in the slope.
+
+
+### Night 70: the earned ceiling (2026-09-09, 19:12)
+
+Day 72: lines and cues 83, smiles 133 (1.60 a line), frowns 33, turned away 3, cues 12 answered 6, own pairs 62 (34 distinct, six new,
+among them "eat box" and "give get"), the child's duty after the parent's lines 0.32; the mood +1.3 at the night; the known words 88.
+Night 70: 384 imagined transitions at weight 0.11, the gauge 0.786 -> 0.858. The script read day 72 (duty 0.317, smiles per line
+1.598), held, and restarted the body at 19:10 (pid 17187) with the earned ceiling: the prefrontal voice's weight in the gate's credit is
+its slope, 0.86, where the fixed ceiling gave 0.3 times it. The correlation at the switch 0.44. The reading from here, by day: smiles per
+line, the child's duty, talked-over per line, the cues; by night: the slope and correlation themselves, which the voice's own weight
+now feeds back into. The guard stays armed each night with the safe flags ready.
