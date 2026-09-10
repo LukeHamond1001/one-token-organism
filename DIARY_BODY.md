@@ -6055,3 +6055,12 @@ consolidation yet); the prefrontal slope 1.0 (clipped), correlation 0.56, the hi
 The night lasted 866 s, fourteen minutes: the nights lengthen with the store (1,663 slots) and the dreams; a fifth of the cycle, the
 share biology gives sleep, so nothing to change. From here the guard restarts the body only if a day trips it; otherwise nothing is
 touched at night.
+
+
+### Night 72 (2026-09-09, 21:22)
+
+Day 74, the second under the earned ceiling: lines and cues 91, smiles 174 (1.91 a line), frowns 32, turned away 2, cues 9 answered 4,
+own pairs 67 (36 distinct, eight new, among them "me back", "look on", "come down"), the child's duty after the parent's lines 0.32;
+the mood -0.4 at the night; the known words 89. The guard held (duty 0.317, smiles per line 1.90); the body was not restarted. Night
+72: 384 imagined transitions at weight 0.12, the gauge 0.801 -> 0.890. The prefrontal slope 0.90, correlation 0.48, its weight in
+the credit 0.90. Two days at its own slope: smiles per line 1.93 and 1.91 (1.60 the day before it), its own new pairs 11 and 8.
