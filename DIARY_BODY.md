@@ -6105,3 +6105,22 @@ away 4, cues 10 answered 7, own pairs 80 (36 distinct, eleven new, among them "b
 the child's duty after the parent's lines 0.36; the mood -0.5 at the night; the known words 93. The guard held (duty 0.363, smiles
 per line 2.14). Night 76: 384 imagined transitions at weight 0.12, the gauge 0.828 -> 0.873. The prefrontal slope 0.78, correlation
 0.43, its weight 0.78. Six days at the earned ceiling: smiles per line 1.93, 1.91, 2.56, 2.00, 2.03, 2.18; nothing tripped.
+
+
+### Nights 77 to 80, in one entry (2026-09-10, 05:40)
+
+The notifications of four nights arrived together at 05:37, and the record shows a lapse of mine: the parent for days 79 and 80 ended
+at day 81's row and none was spawned for days 81 and 82, so the typist taught those two days from its own filler, recent lines
+repeated, with no cues of its own and no new word. The days themselves, under the earned ceiling (the sixth to the tenth):
+day 79: lines and cues 91, smiles 209 (2.30 a line), frowns 35, cues 17 answered 9, own pairs 119 (56 distinct, fifteen new);
+day 80: 85, smiles 202 (2.38), frowns 24, cues 17 answered 9, own pairs 154 (55 distinct, twenty-three new), the most ever;
+day 81 (unparented): 99, smiles 234 (2.36), frowns 37, cues 8 answered 2, own pairs 107 (thirteen new);
+day 82 (unparented): 78, smiles 186 (2.38), frowns 26, no cues, own pairs 95 (nineteen new).
+The known words 93 -> 96 (lay, rub, turn, toss); the parents' reports: all three "turn" frames answered on the day the verb entered,
+"turn it over" whole within two minutes of its first line; "why dog in" and "why ... because bi" written unaided, both halves of the
+why frame; "dog go back in here", five of its own words; "put hat down" carrying a new particle to an old verb before it was taught.
+The unparented days say something too: with the parent's lines familiar, the child's own speech carried the day (2.4 smiles a line,
+a hundred pairs of its own), and the only things missing were the cues and the new word. The guard held at night 77 (duty 0.342,
+smiles per line 2.16) and was not re-armed for three nights; nothing tripped in the readings. Night 80: the gauge 0.821 -> 0.862; the
+prefrontal slope 0.92, correlation 0.48, its weight 0.92; the store 1,735 slots. From now the parents are briefed for three days at
+a time, so a missed wakeup cannot leave the body alone.
