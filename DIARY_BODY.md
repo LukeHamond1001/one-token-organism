@@ -6229,3 +6229,16 @@ new, among them "had fill"); the taught words 93. The guard held (duty 0.344, sm
 transitions at weight 0.38, the gauge 0.805 -> 0.881. The face organ on the striatal input, six days: 0.12, 0.19, 0.25, 0.28, 0.33,
 0.37, 0.38, levelling near 0.4; its slope 0.87. The anticipation rise 1.4 percent (3.8 the two days before: noisy at this size).
 The prefrontal correlation 0.33, weight 0.83; the actor's slope 0.05, its favorite matching the mouth 1 percent.
+
+
+### Night 89 (2026-09-10, 15:12)
+
+The parent's report on days 90-92 (the log's labels): the noun finding replicated twice: "bag" (day 90) answered 5 of 9 old verb frames
+on its first full day, "pot" (day 92) 5 of 6 on the day it entered, and both came back unprompted in whole three-word frames never
+cued ("tip bag over" four times, "take bag out", "tip pot over"); "kick ball in box again" and "dog will go up I had milk" its longest
+own runs; day 92: 245 smiles, 37 frowns. Two mechanics for the briefs: queued lines are dropped at every boundary, and a repeat one or
+two lines apart is dropped, which starves a cue.
+Day 93: lines and cues 80, smiles 225 (2.85 a line, the highest), frowns 27, turned away 2, cues 11 answered 7, own pairs 95
+(51 distinct, eight new, among them "here lift", "open in"); the taught words 94. The guard held (duty 0.376, smiles per line 2.85).
+Night 89: 384 imagined transitions at weight 0.40, the gauge 0.838 -> 0.877. The face organ on the striatal input, seven days: 0.12
+-> 0.40, slope 0.92. The prefrontal correlation 0.36, weight 0.91. The anticipation rise 1.5 percent over 272 felt smiles.
