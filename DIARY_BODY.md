@@ -6043,3 +6043,15 @@ Night 70: 384 imagined transitions at weight 0.11, the gauge 0.786 -> 0.858. The
 its slope, 0.86, where the fixed ceiling gave 0.3 times it. The correlation at the switch 0.44. The reading from here, by day: smiles per
 line, the child's duty, talked-over per line, the cues; by night: the slope and correlation themselves, which the voice's own weight
 now feeds back into. The guard stays armed each night with the safe flags ready.
+
+
+### Night 71: the ceiling's first day (2026-09-09, 20:20)
+
+Day 73, the first full day with the prefrontal voice at its own slope: lines and cues 100, smiles 193 (1.93 a line, the highest of
+the life), frowns 42, turned away 1, cues 12 answered 4, own pairs 62 (38 distinct, eleven new, among them "see milk", "here not",
+"here angry"), the child's duty after the parent's lines 0.275; the mood -0.9 at the night; the known words 89. The guard read duty
+0.275 and smiles per line 1.93 and held. Night 71: 336 imagined transitions at weight 0.12, the gauge 0.778 -> 0.889 (the best night's
+consolidation yet); the prefrontal slope 1.0 (clipped), correlation 0.56, the highest read, with its own weight now 1.0 in the credit.
+The night lasted 866 s, fourteen minutes: the nights lengthen with the store (1,663 slots) and the dreams; a fifth of the cycle, the
+share biology gives sleep, so nothing to change. From here the guard restarts the body only if a day trips it; otherwise nothing is
+touched at night.
