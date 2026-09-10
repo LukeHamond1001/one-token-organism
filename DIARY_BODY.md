@@ -6252,3 +6252,13 @@ fifteen new, among them "here lid", "baby on"); the taught words 95 (lid, a noun
 sequences lengthen, so the night will level near twenty minutes); 384 imagined transitions at weight 0.40, the gauge 0.763 -> 0.889.
 The face organ's correlation 0.40, level for two nights; the prefrontal correlation 0.35, weight 0.89; the mood -4.7 in the day's last
 minutes, the mouth floored at 8.
+
+
+### Night 91 (2026-09-10, 17:30)
+
+Day 95: lines and cues 79, smiles 231 (2.92 a line, the highest), frowns 35, turned away 2, cues 11 answered 7, own pairs 121 (55
+distinct, nineteen new), the child's duty after the parent's lines 0.42 (the highest); the taught words 96. The guard held (duty
+0.422, smiles per line 2.91). Night 91: 384 imagined transitions at weight 0.40, the gauge 0.842 -> 0.882, the store 1,987 slots.
+The face organ's correlation 0.40 for a third night; the prefrontal correlation 0.34, weight 0.87; the anticipation rise 2.4 percent
+over 258 felt smiles. From the next parent: two nouns a day inside the old frames, since a noun enters every frame within a day at no
+cost to the smiles (bag, pot, lid), verbs still one at a time with one particle; the two queue mechanics in the brief.
