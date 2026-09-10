@@ -6193,3 +6193,20 @@ foreseen reward 0.105, the gauge 0.821 -> 0.873. The face organ on the striatal 
 share the credit's reading of the same reward), weight 0.66. The anticipation rise 2.6 percent over 203 felt smiles. The review's
 first test is armed for the next night: the long voice off (vcrit_w 0) for four days, the parent unchanged, then on again; read smiles
 per line, the duty, the cues and the talk-overs by arm.
+
+
+### Night 86: the A arm read, the B arm begun (2026-09-10, 12:05)
+
+The A arm, four days with the prefrontal voice at its own slope and the parent unchanged (period 120, cap 180, the child's turn 48,
+the one-particle cueing): day 85 smiles per line 2.31, duty 0.30, frowns 33, cues 5 of 8; day 86: 1.78, 0.36, 35, 9 of 18; day 87:
+2.60, 0.43, 31, 11 of 14; day 88: 2.79, 0.33, 22, 4 of 8. Means: 2.37 smiles a line, duty 0.35, frowns 30, cues 0.60 answered.
+The parent's report on days 86-88: "carry", "cup" and "stick" entered; the noun "cup" slotted into every old verb frame within a day
+without being taught those cues ("fill cup ", "hold cup ", "pour cup ", "lift cup " all answered), the strongest body-general evidence
+of the week; "there book?", a question with its own mark, answered within the minute; invented particles "toss it up" and "stick it
+out"; "carry hat " the one frame that fails while its it- and box-frames land. Taught words 92.
+Night 86: 384 imagined transitions at weight 0.33, the gauge 0.813 -> 0.882; the face organ's correlation 0.33 (its fourth day on
+the striatal input: 0.12 -> 0.33), the anticipation rise 3.8 percent over 268 felt smiles (2.6 the day before: the first move up since
+imagination began, to be read on). The prefrontal correlation 0.34.
+The B arm: the reload at 11:56 carried the earned form from the saved physiology and left the voice at 0.95, so the body was restarted
+again at 11:59 with the ceiling fixed and the weight 0: the long voice is out of the credit for four days (nights 86-89), everything
+else unchanged; then on again for four. Read by arm: smiles per line, the duty, the frowns, the cues.
