@@ -6181,3 +6181,15 @@ longer near random; the taught words 89. Night 84: 384 imagined transitions at w
 named is paying by the day. The planner torn on 40 percent of acting ticks, entropy 0.07. The prefrontal correlation 0.34 (0.45, 0.39,
 0.34 over three nights), weight 0.71. The anticipation rise 2.7 percent over 172 felt smiles. The review's first test, the prefrontal
 voice off (vcrit_w 0) for four days with the parent unchanged, then on again, starts at night 86 after the face organ's third day.
+
+
+### Night 85: the face organ's third day; the B arm armed (2026-09-10, 10:55)
+
+Day 87: lines and cues 68, smiles 187 (2.75 a line, the highest), frowns 26, turned away 5, cues 6 answered 6, own pairs 87 (56
+distinct, the most distinct yet, seven new, among them "no cup"), the child's duty after the parent's lines 0.41 (the highest); the
+taught words 90. The guard held (duty 0.412, smiles per line 2.66). Night 85: 384 imagined transitions at weight 0.28, the mean
+foreseen reward 0.105, the gauge 0.821 -> 0.873. The face organ on the striatal input, three days: correlation 0.12 -> 0.19 -> 0.25
+-> 0.28, slope 0.68. The prefrontal correlation 0.28 (0.45, 0.39, 0.34, 0.28: easing since the striatal face organ went in; the two
+share the credit's reading of the same reward), weight 0.66. The anticipation rise 2.6 percent over 203 felt smiles. The review's
+first test is armed for the next night: the long voice off (vcrit_w 0) for four days, the parent unchanged, then on again; read smiles
+per line, the duty, the cues and the talk-overs by arm.
