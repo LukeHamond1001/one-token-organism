@@ -6085,3 +6085,14 @@ own pairs 83 (33 distinct, three new), the child's duty after the parent's lines
 the record day; the tonic dopamine reads the critic's over-prediction); the known words 91. The guard held (duty 0.353, smiles per
 line 2.01). Night 74: 336 imagined transitions at weight 0.12, the gauge 0.836 -> 0.864. The prefrontal slope 0.89, correlation 0.51,
 its weight in the credit 0.89. Four days at the earned ceiling: smiles per line 1.93, 1.91, 2.56, 2.00; its own pairs 62, 67, 101, 83.
+
+
+### Night 75 (2026-09-10, 00:28)
+
+Day 77, the fifth under the earned ceiling: lines and cues 74, smiles 150 (2.03 a line), frowns 30, turned away 4, cues 13 answered 7,
+own pairs 80 (38 distinct, nine new, among them "out hat", "no had"), the child's duty after the parent's lines 0.38 (the highest of
+the life); the mood -0.3 at the night; the known words 92 (wipe, pick; the parent's report on days 75-76: both whole in its own mouth
+within fifteen minutes, "pick it up" the first thing on the page on waking, "I had " answered "my cold milk", "why dog up? " answered
+"because" for the first time, its questions "where book" and "open box where" answered). The guard held (duty 0.374, smiles per line
+2.06). Night 75: 384 imagined transitions at weight 0.11, the gauge 0.697 -> 0.872. The prefrontal slope 0.75, correlation 0.42,
+its weight 0.75. Five days at the earned ceiling: smiles per line 1.93, 1.91, 2.56, 2.00, 2.03; its own pairs 62, 67, 101, 83, 80.
