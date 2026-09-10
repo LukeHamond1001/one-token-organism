@@ -6064,3 +6064,15 @@ own pairs 67 (36 distinct, eight new, among them "me back", "look on", "come dow
 the mood -0.4 at the night; the known words 89. The guard held (duty 0.317, smiles per line 1.90); the body was not restarted. Night
 72: 384 imagined transitions at weight 0.12, the gauge 0.801 -> 0.890. The prefrontal slope 0.90, correlation 0.48, its weight in
 the credit 0.90. Two days at its own slope: smiles per line 1.93 and 1.91 (1.60 the day before it), its own new pairs 11 and 8.
+
+
+### Night 73 (2026-09-09, 22:24)
+
+Day 75, the third under the earned ceiling: lines and cues 78, smiles 200 (2.56 a line, far the highest), frowns 29, turned away 1,
+cues 8 answered 5, own pairs 101 (52 distinct, five new, among them "ball no", "hot with"), the child's duty after the parent's
+lines 0.35; the mood +3.2 at the night; the guard read duty 0.341 and smiles per line 2.58 and held; night 73: 288 imagined
+transitions at weight 0.13, the gauge 0.778 -> 0.868, the prefrontal correlation 0.52 at full weight; the known words 90 (shake, hold; the parent's report on
+days 73-74: "hold" answered in all three noun frames on its first day and returned unprompted as "dog hold hat", an agent-action-object
+sentence of its own; "give me back in here", five of its own words, its longest string; "why" and "where" asked and answered within the
+minute; the it-frame line before a noun-frame cue rescues a new verb's frames but not an old many-particle frame). The guard's verdict
+and the night's readings are in the memory note of this hour; the guard is re-armed.
