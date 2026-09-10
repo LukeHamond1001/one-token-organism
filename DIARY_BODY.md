@@ -6124,3 +6124,25 @@ a hundred pairs of its own), and the only things missing were the cues and the n
 smiles per line 2.16) and was not re-armed for three nights; nothing tripped in the readings. Night 80: the gauge 0.821 -> 0.862; the
 prefrontal slope 0.92, correlation 0.48, its weight 0.92; the store 1,735 slots. From now the parents are briefed for three days at
 a time, so a missed wakeup cannot leave the body alone.
+
+
+### The second review (2026-09-10, 06:55; a Fable reviewer, read-only, the owner's four questions)
+
+Its corrections stand and are recorded: (1) the teacher's known set unioned the first lineage's hard-coded list of 44 words, so ten
+words no parent ever taught (the, one, two, three, please, bye, going, balls, books, dogs) were "known" and drew 62 smiles; the honest
+count of taught words is 87, not 96, and "books" was one smile from that list, not a plural learned. (2) The gate's drive is a written
+constant and the parent's words are felt as reward at a written weight. (3) Eight physiology restarts and four parent changes chosen on
+outcomes: the trajectory was selected as well as developed. (4) The face organ read the cortex stream, which carries the coming reward
+at 0.11 where the striatal line carries it at 0.47: a wiring fault, and why imagination was inert. (5) The actor and the choice drive
+are starved by the readout itself: at sharpness 25 on a unit forecast the readout is one-hot (entropy 0.0, own probability 1.0), the
+planner's shortlist rarely holds two candidates, so there is nothing to choose. (6) The fast critic's ceiling is ~45 percent of a smile
+(the share of its known words smiled at now), not 20, so it sits at a twentieth of it, starved by the timing the typist's blind sleeps
+impose. (7) The prefrontal voice's effect on the days is confounded with the parent's changes in the same window. (8) "where book" is a
+parent line; the five- and six-word strings rest on the planners' page reads. Its verdict on the fourth question: several of biology's
+mechanisms wired with care, on a cortex, critics and a readout that are not biology's; a promising hybrid, not a demonstrated method;
+testable only as pre-registered lesion-matched ablations, milestone order under fixed physiology, and transfer.
+Done on its list the same hour: the teacher's known set is the taught set only; the face organ may read the striatal input
+(face_input striatum; test 34: foresight 0.62 of a smile, slope 1.0); the torn-tick fraction and the readout's entropy are read from
+inside (test body: 0.5 percent torn, entropy 0.001, the one-hot finding confirmed); the typist's face on timers instead of blind sleeps
+(caregiver.py); all take effect at tonight's reload and the day-86 relaunch. Next: the sharpness against the torn reading, then the
+prefrontal voice on and off four days each with the parent unchanged, then the room.
