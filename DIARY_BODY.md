@@ -6242,3 +6242,13 @@ Day 93: lines and cues 80, smiles 225 (2.85 a line, the highest), frowns 27, tur
 (51 distinct, eight new, among them "here lift", "open in"); the taught words 94. The guard held (duty 0.376, smiles per line 2.85).
 Night 89: 384 imagined transitions at weight 0.40, the gauge 0.838 -> 0.877. The face organ on the striatal input, seven days: 0.12
 -> 0.40, slope 0.92. The prefrontal correlation 0.36, weight 0.91. The anticipation rise 1.5 percent over 272 felt smiles.
+
+
+### Night 90 (2026-09-10, 16:22)
+
+Day 94: lines and cues 83, smiles 203 (2.45 a line), frowns 33, turned away 2, cues 13 answered 7, own pairs 103 (52 distinct,
+fifteen new, among them "here lid", "baby on"); the taught words 95 (lid, a noun). The guard held (duty 0.383, smiles per line
+2.45). Night 90: 1,021 s, the longest yet (the store 1,938 slots, 96 dropped at the fade; the dreams run to their cap as the store's
+sequences lengthen, so the night will level near twenty minutes); 384 imagined transitions at weight 0.40, the gauge 0.763 -> 0.889.
+The face organ's correlation 0.40, level for two nights; the prefrontal correlation 0.35, weight 0.89; the mood -4.7 in the day's last
+minutes, the mouth floored at 8.
