@@ -6262,3 +6262,14 @@ distinct, nineteen new), the child's duty after the parent's lines 0.42 (the hig
 The face organ's correlation 0.40 for a third night; the prefrontal correlation 0.34, weight 0.87; the anticipation rise 2.4 percent
 over 258 felt smiles. From the next parent: two nouns a day inside the old frames, since a noun enters every frame within a day at no
 cost to the smiles (bag, pot, lid), verbs still one at a time with one particle; the two queue mechanics in the brief.
+
+
+### Night 92: the first day at two nouns (2026-09-10, 18:33)
+
+Day 96, the first at two nouns a day: lines and cues 75, smiles 264 (3.52 a line, far the highest), frowns 21, turned away 3, cues 8
+answered 7, own pairs 120 (61 distinct, eleven new, among them "give mug"), talked over per line 0.32 (the lowest of the life), the
+child's duty after the parent's lines 0.35; the taught words 97 at the day's start (the parent's report on days 93-95: pan, lid, rug
+each in the old verb frames on the day taught; "rub it off" invented; "ball? ball under" asked and answered in one breath). The guard
+held (duty 0.347, smiles per line 3.54). Night 92: 336 imagined transitions at weight 0.42, the mean foreseen reward 0.13, the gauge
+0.821 -> 0.883, the store 2,092 slots. The face organ's correlation 0.41; the prefrontal correlation 0.40, its weight 1.0; the
+anticipation rise 4.6 percent over 304 felt smiles, the highest read since imagination began. Two nouns a day stays.
