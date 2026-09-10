@@ -6146,3 +6146,16 @@ Done on its list the same hour: the teacher's known set is the taught set only; 
 inside (test body: 0.5 percent torn, entropy 0.001, the one-hot finding confirmed); the typist's face on timers instead of blind sleeps
 (caregiver.py); all take effect at tonight's reload and the day-86 relaunch. Next: the sharpness against the torn reading, then the
 prefrontal voice on and off four days each with the parent unchanged, then the room.
+
+
+### Night 82: the striatal face organ in; the mood's swings read (2026-09-10, 07:50)
+
+Day 84: lines and cues 73, smiles 179 (2.49 a line), frowns 28, turned away 1, cues 9 answered 1, own pairs 63 (41 distinct); the
+known words on the page's own row now 88, the taught count (the teacher's set is the taught set from this relaunch). The guard held
+(duty 0.343, smiles per line 2.49) and the step went in at 07:42: the face organ reads the striatal input, the ceiling kept. Its first
+readings (300 ticks in): face correlation 0.12 (the old evidence; the new input's evidence starts now), torn ticks 100 percent and
+entropy 0.23 at a sharpness of 2.6: the mood stood at -5.4. The minute sampler shows why: the mood swings between about -5 and +6 on
+its five-minute half-life, the deepest dips in the last minutes of each day (-4.5 at 23:24, -5.3 at 07:34), and the mouth's sharpness
+rides it, 2 to 49, because the running body carries the old floor of 2 in its saved physiology. The floor of 8 (where the lexicon's
+own noise wins) goes in explicitly at the next reload. The torn and entropy readings are meaningful only as a day's mean at the
+mouth's usual sharpness; read tomorrow.
