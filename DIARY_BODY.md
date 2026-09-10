@@ -6159,3 +6159,14 @@ its five-minute half-life, the deepest dips in the last minutes of each day (-4.
 rides it, 2 to 49, because the running body carries the old floor of 2 in its saved physiology. The floor of 8 (where the lexicon's
 own noise wins) goes in explicitly at the next reload. The torn and entropy readings are meaningful only as a day's mean at the
 mouth's usual sharpness; read tomorrow.
+
+
+### Night 83: the striatal face organ's first day; the torn reading (2026-09-10, 08:50)
+
+Day 85: lines and cues 97, smiles 224 (2.33 a line), frowns 33, turned away 2, cues 8 answered 5, own pairs 116 (54 distinct, five
+new); the mood's day mean +1.9, the mouth's sharpness mean 33; the taught words 88. The guard held (duty 0.297, smiles per line
+2.33) and the reload at 08:45 added the readout's floor of 8. The readings the review asked for, as day means: the planner torn on 36
+percent of acting ticks, the readout's normalized entropy 0.05: the mouth is decisive, not one-hot; the actor has a choice on a third
+of its acts. The face organ on the striatal input, one day: correlation 0.12 -> 0.19, its slope 0.61 (no longer clipped at one: a
+real predictor), the mean foreseen reward in imagination 0.03 -> 0.11, imagination's weight 0.19. Night 83: 384 imagined
+transitions, the gauge 0.781 -> 0.868. The prefrontal correlation 0.39, weight 0.80.
