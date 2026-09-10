@@ -62,6 +62,7 @@ class Caregiver:
         self.letter_runs = {}; self.expanded = set(); self.pending_expand = None
         self.cue = None                                  # (text, until, prefixes, full, done)
         self.smiles = 0; self.frowns = 0; self.state = {}
+        self._face_timer = None; self._cue_clear_at = None      # THE FACE ON TIMERS (the review of 2026-09-10): a held face no longer blinds the typist
         self.events = []
 
     def req(self, path, data=None, timeout=30):
@@ -90,7 +91,22 @@ class Caregiver:
             self.away_until = now + self.s(200); self.aways += 1
             self.row({"action": "away", "e": round(self.e, 3)}); self.e = 0.35
 
+    def _timers(self):
+        now = time.time()
+        if self._face_timer is not None and now >= self._face_timer[0]:
+            expr, rest = self._face_timer[1], self._face_timer[2]
+            self.face(expr); self._face_timer = rest
+        if self._cue_clear_at is not None and now >= self._cue_clear_at:
+            self.cue = None; self._cue_clear_at = None
+
+    def _hold(self, expr, ticks, then=0.0, then_ticks=None, then_expr=None):
+        """set a face now and let it go back after `ticks` (or step to `then_expr` and then back): the loop keeps polling meanwhile"""
+        self.face(expr)
+        rest = None if then_expr is None else (time.time() + self.s(ticks) + self.s(then_ticks or ticks), then, None)
+        self._face_timer = (time.time() + self.s(ticks), then if then_expr is None else then_expr, rest)
+
     def poll(self):
+        self._timers()
         if self.parent:
             self._attend()
         try:
@@ -125,16 +141,11 @@ class Caregiver:
     def smile(self, on, ctx, why, extra=None):
         db = (self.state.get("last") or {}).get("doses")
         levels = self.answer_levels if why.startswith("cue") else 1
-        self.face(2); t0 = time.time()
+        t0 = time.time(); la = {}
         if levels >= 2:
-            time.sleep(self.s(2.5)); self.face(4); time.sleep(self.s(2.5))
+            self._hold(2, 2.5, then=0.0, then_ticks=2.5, then_expr=4)
         else:
-            time.sleep(self.s(5))
-        try:
-            la = self.req("/state?since=%d" % max(self.cursor - 2, 0)).get("last", {})
-        except Exception:
-            la = {}
-        self.face(0)
+            self._hold(2, 5)
         self.smiles += 1; self.last_smile = time.time(); self.last_word = on
         self.row(dict({"action": "smile", "on": on, "context": ctx, "why": why, "levels": levels, "e": round(self.e, 3), "ts": iso(t0),
                        "doses_before": db, "doses_after": la.get("doses"), "mood": la.get("mood"), "gate": la.get("gate")}, **(extra or {})))
@@ -176,7 +187,7 @@ class Caregiver:
         return prev
 
     def frown(self, on, ctx):
-        self.face(-2); time.sleep(self.s(5)); self.face(0)
+        self._hold(-2, 5)
         self.frowns += 1; self.last_frown = time.time()
         self.row({"action": "frown", "on": on, "context": ctx})
 
@@ -222,7 +233,7 @@ class Caregiver:
             if a < te and b >= ts:                                # said over the parent's own turn
                 self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx})
                 if TALKOVER_FROWN and time.time() - self.last_frown > self.s(60):   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
-                    self.face(-1); time.sleep(self.s(2.5)); self.face(0)             # a light, brief frown, at most every 60 ticks
+                    self._hold(-1, 2.5)                                             # a light, brief frown, at most every 60 ticks
                     self.frowns += 1; self.last_frown = time.time(); self.row({"action": "frown", "on": tok, "why": "talked over", "context": ctx})
                 return
         c = self.cue
@@ -312,7 +323,7 @@ class Caregiver:
                   "own": la.get("own"), "doses": la.get("doses"), "smiles_so_far": self.smiles,
                   "sleep_pressure": self.state.get("sleep_pressure"), "store": self.state.get("store")})
         if kind == "cue":
-            time.sleep(self.s(12)); self.cue = None
+            self._cue_clear_at = time.time() + self.s(12)
         return True
 
     def run_day(self, lines, cues):

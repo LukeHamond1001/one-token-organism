@@ -66,7 +66,8 @@ class Corpus:
             json.dump({"lines": self.lines, "words": self.words}, open(tmp, "w")); os.replace(tmp, self.path)
 
     def known(self):
-        return {w for w, n in self.words.items() if n >= KNOWN_AFTER and len(w) >= 2 and (w == "I" or w.islower())} | {w for w in KNOWN if len(w) >= 2}
+        # only what a parent taught (the review of 2026-09-10: the first lineage's hard-coded list had 10 untaught words smiled at 62 times)
+        return {w for w, n in self.words.items() if n >= KNOWN_AFTER and len(w) >= 2 and (w == "I" or w.islower())}
 
     def answers(self, prefix):
         """the next words of every heard line that begins with the prefix (the prefix ends in a space)"""
@@ -136,7 +137,7 @@ class Teacher(Caregiver):
                   "sleep_pressure": self.state.get("sleep_pressure"), "store": self.state.get("store")})
         self.said_today.append((text, kind, its.replace("_", "")))
         if kind == "cue":
-            time.sleep(self.s(12)); self.cue = None
+            self._cue_clear_at = time.time() + self.s(12)   # the cue closes 12 ticks after the listening, without a blind sleep
         return True
 
     def recent(self, n=8):
