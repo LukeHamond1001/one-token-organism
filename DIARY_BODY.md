@@ -6351,3 +6351,17 @@ lines 0.47; the taught words 115 at the day's start. The guard held (duty 0.474,
 0.869, 336 imagined transitions at weight 0.41, the store 2,372 slots; the face organ's correlation 0.41, its highest; the prefrontal
 correlation 0.52. Three days of the sentence stage: smiles per line 2.86, 2.79, 2.75; new pairs of its own 28, 44, 42; cues 9 of
 10, 9 of 9, 3 of 8. The chain alive; the next parent spawned at day 103's row with the same brief.
+
+
+### Night 99 (2026-09-11, 02:17)
+
+The parent's report on days 100-102, the first three of the sentence stage: cues answered 16 of 17, 16 of 16, 15 of 15, on sentence
+prefixes ("the dog put the ball " -> in, "the man had the " -> ball, "where is the " -> pen, car, man, sun); the grammar words is, this,
+that taught as words; on its own "sun is here", "key is here", and to "where is the sun" the answer "is up here"; smiles per
+utterance easing 3.04 -> 2.96 -> 2.80, so day 102 was cut to two nouns and no verb by the guard, which is the rule working.
+Day 103: lines and cues 76, smiles 186 (2.45 a line), frowns 39 (talked over per line 0.62: the longer lines give more to talk
+over, the second number to watch), turned away 1, cues 9 answered 9, own pairs 209 (65 distinct, thirty-four new), the child's duty
+after the parent's lines 0.51 (the highest of the life); the mood +4.2 at the night; the taught words 118 at the day's start. The
+guard held (duty 0.507, smiles per line 2.41). Night 99: the gauge 0.837 -> 0.876, 384 imagined transitions at weight 0.40, the
+store 2,426 slots; the face organ's correlation 0.40; the prefrontal correlation 0.50. Four days of the stage: smiles per line 2.86,
+2.79, 2.75, 2.45, easing; frowns 25, 38, 29, 39. The chain alive; the guard re-armed.
