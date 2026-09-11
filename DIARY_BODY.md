@@ -6467,3 +6467,15 @@ asked wants the answer, then the yield. The typist relaunched on the new rules a
 110 in smiles per line and the post-night battery's hits. NREM and REM are read each night from the body's own report: the loss over
 the rounds, the gauge before and after, the imagined transitions and their weight; last night's divergence is now caught by the
 night undone.
+
+
+### Night 107: the cortex recovered (2026-09-11, 10:40)
+
+Night 107, the first under the night undone: the NREM loss fell over the rounds as it should, 0.172 to 0.080, and the gauge rose
+0.722 -> 0.865: the blur of the diverged night (the "before" at 0.72 where the nights before it read 0.82-0.86) was repaired by one
+night's replay of the same material; nothing discarded. The pre-night copy of the evening's checkpoint is kept by the guard from this
+night on. Day 112, the short first day on the parent's new rules (the typist relaunched at 10:06 into a day already half run since the
+09:36 restart): lines and cues 29, smiles 123 (4.24 a line), frowns 7, cues 5 answered 4, "distracted" misses 46 against 139-196 on
+the full days before; the parent's report on days 109-111: the longer turn paid (smiles per line 3.93, 4.57, 3.78 against 2.17
+before it), the non-"here" cues worked ("the man had the " -> nut, rat; "that is your " -> jug; "the dog went " -> out), "where is the
+cat went in" recalled whole across a night, "is that?" written with its own question mark; the taught words 143.
