@@ -6491,3 +6491,13 @@ after their fifth, which is the rule working as meant; the reward goes to variet
 the ones without a taught answer are logged as lines, so the log undercounts it; the parent's report will read it. Night 108: the loss
 0.139 to 0.082, the gauge 0.802 -> 0.858, not discarded; 384 imagined transitions at weight 0.41; the face organ's correlation 0.41;
 the prefrontal correlation 0.41. The guard held (duty 0.489, smiles per line 2.94).
+
+
+### Night 109 (2026-09-11, 12:43)
+
+Day 114: lines and cues 58, smiles 190 (3.28 a line), frowns 22, turned away 4, cues 11 answered 6, own pairs 214 (80 distinct and
+fifty-four new, both the most of any day), the child's duty after the parent's lines 0.52 (the highest of the life); the taught
+words 147 at the day's start. The guard held (duty 0.518, smiles per line 3.25). Night 109: the loss 0.099 to 0.081, the gauge
+0.855 -> 0.865, not discarded; 336 imagined transitions at weight 0.40; the face organ's correlation 0.40; the prefrontal
+correlation 0.36; the actor's slope 0.084, creeping up over the week from 0.05. The chain alive; the guard re-armed; the next parent
+spawned at day 115's row with the same brief.
