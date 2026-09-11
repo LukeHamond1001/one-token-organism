@@ -6415,3 +6415,13 @@ night 100 I act by hand, with the mildest lever: at the chain's next relaunch (d
 48 to 64 ticks and the parent's period from 120 to 160, so a reply to a longer line can finish before the next line begins. The
 language gains of the stage stand: the cues on sentence prefixes, five- and six-word sentences of its own, 133 words. The chain
 re-armed with the new arguments; the guard re-armed.
+
+
+### Night 104 (2026-09-11, 07:30)
+
+Day 108, the last on the shorter turn: lines and cues 82, smiles 146 (1.78 a line), frowns 32, turned away 4, cues 13 answered 8,
+own pairs 130 (63 distinct, thirty-six new), talked over per line 0.51, the child's duty after the parent's lines 0.33; the taught
+words 136 at the day's start. The guard held (duty 0.325, smiles per line 1.78). Night 104: the gauge 0.810 -> 0.870, 336 imagined
+transitions at weight 0.39, the store 2,430 slots; the face organ's correlation 0.39; the prefrontal correlation 0.46. The typist's six-day run
+ends here; the chain relaunches it for day 109 with the child's turn at 64 ticks and the parent's period at 160. The next parent
+spawned for days 109-111: one noun and one grammar word a day, short sentences, cues whose answer is not "here".
