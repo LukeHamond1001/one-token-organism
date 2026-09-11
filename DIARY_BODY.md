@@ -6565,3 +6565,24 @@ Night 113 (13 minutes): the loss 0.163 to 0.129, a shallower fall than the night
 0.804, a smaller rise; not discarded; 336 imagined transitions at weight 0.42; the face organ's correlation 0.42 (its highest);
 the prefrontal correlation 0.33; the actor's slope 0.095. The store 1932 slots after 191 dropped: 2213, 2130, 2012, 1932 over
 four nights, the drops growing (129, 172, 173, 191); to watch. The chain alive.
+
+
+### Night 114 (2026-09-11, 18:25): the talkative parent's first day
+
+The user's word at 17:20: "have Opus talking a bunch, dopamine conversations, like pretraining with dopamine; if the model
+talks while Opus tries to talk, Opus frowns; until it starts to get basic patterns. We can't force the model to do anything,
+we can only indoctrinate." (An hour earlier I had proposed reading aloud with a special typist mode, timed to the store, and
+the user called it cheating; withdrawn: a mode is a hand rule and timing the environment to consolidation is inside
+knowledge.) At 17:24 the typist was relaunched at period 60, quiet 8, cap 120, listen 32 (from 160/12/180/64), the same
+rules and face, the talk-over frown as before; the chain re-chained with those arguments; a new parent briefed for six-line
+batches every 45 seconds, two nouns and a grammar word a day, statement cues only, none on "the Xs are ".
+
+Day 119 (from 17:24): lines and cues 143 (62 to 75 before), smiles 189 (1.32 a line; 219 to 239 in all on the days before),
+frowns 66 (24 to 34 before; talked over 107 times), cues 11 answered 5 ("take tub " -> out twice, "take bin " -> out, "that
+is my " -> bin, the day's noun), duty after the parent's lines 0.43; frowns by quarter of the day 16, 22, 25, 3 (the last
+quarter is the quiet before the night). On the page over the day the parent's share of the speech was 0.42 (about 0.1 the day
+before), the "ttle tin" loop 26 marks per thousand of the child's symbols, the child silent 0.67 of the ticks. The guard held
+(duty 0.432, smiles per line 1.41; the fall is arithmetic, twice the lines). Night 114: the loss 0.271 to 0.091, the gauge 0.601
+-> 0.882, not discarded; 336 imagined transitions; the store 2287 after 321 dropped (1932 the night before: the day's volume
+filled it); the face organ's correlation 0.42; the prefrontal correlation 0.56, up from 0.33 in one day, the denser reward
+easier to foresee at its horizon; the actor's slope 0.093. The chain alive; the guard re-armed.
