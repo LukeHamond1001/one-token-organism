@@ -192,10 +192,14 @@ class Teacher(Caregiver):
             time.sleep(5)
         self.row({"action": "night", "slept_s": round(time.time() - t_sleep, 1), "last_night": (self.state or {}).get("last_night")})
         self.reply_pending = None; self.reply_line = None    # a reply due at the night's edge is not given
-        # the post-night cues: the eight raised cues (the fixed yardstick), a heard line between each pair
+        # the post-night cues: the day's own cues, the eight most recent distinct (2026-09-11: the eight raised cues of the first lineage
+        # were answered one time in five after a hundred days; the window after a night is where cues land best), a heard line between
+        # each pair; the raised cues only when the day asked fewer than four
         lines2 = self.rng.sample(self.corpus.heard_lines(HEARD_FOR_CUE), min(4, len(self.corpus.heard_lines(HEARD_FOR_CUE))))
+        day_cues = list(dict.fromkeys(t for t, k, _ in reversed(self.said_today) if k == "cue"))[:8][::-1]
+        battery = day_cues if len(day_cues) >= 4 else CUES0
         prev = None; j = 0
-        for i, c in enumerate(CUES0):
+        for i, c in enumerate(battery):
             for text, kind in ([(c, "cue")] + ([(lines2[j % len(lines2)], "line")] if i % 2 == 1 and lines2 else [])):
                 if prev is not None:
                     prev = self.pace_wait(prev, self.period) or time.time()
@@ -238,10 +242,11 @@ class QueuePlanner:
     utterance ending in a space is a cue. Empty queue: a heard line (the day goes on)."""
     name = "queue"
 
-    def __init__(self, path, rng):
-        self.path, self.rng = path, rng; self.buf = []; self.calls = 0
-        # a new day's planner starts at the file's end: yesterday's rows were yesterday's speech
-        self.pos = os.path.getsize(path) if os.path.exists(path) else 0
+    def __init__(self, path, rng, pos=None, buf=None):
+        self.path, self.rng = path, rng; self.buf = list(buf or []); self.calls = 0
+        # a new day's planner starts where the last one stopped (2026-09-11): the parent's unread lines used to be dropped at every
+        # boundary; with no last one, at the file's end (yesterday's rows were yesterday's speech)
+        self.pos = int(pos) if pos is not None else (os.path.getsize(path) if os.path.exists(path) else 0)
         # THE FILLER IS RECENT SPEECH (2026-09-05): when the queue is empty the typist used to say a random heard line,
         # and the most-heard lines are the oldest frames ('ball go down', 'dog go down' opened day 41 while the teachers
         # avoided them for the stutter). A parent with nothing new to say repeats what was said lately: the filler is
@@ -365,11 +370,15 @@ def main():
     ap.add_argument("--reply", type=int, default=0)           # the parent wants a reply (the user's word of 2026-09-04)
     ap.add_argument("--wait", type=int, default=0)            # the reply withheld: ticks of the child's quiet before the parent answers (4)
     a = ap.parse_args()
+    prev_q = None
     for k in range(a.days):
         day = a.day + k
         rng = random.Random(a.seed + day)
-        planner = {"claude": lambda: ClaudePlanner(a.model, a.budget, rng), "queue": lambda: QueuePlanner(a.queue, rng),
+        planner = {"claude": lambda: ClaudePlanner(a.model, a.budget, rng),
+                   "queue": lambda: QueuePlanner(a.queue, rng, pos=(prev_q.pos if prev_q else None), buf=(prev_q.buf if prev_q else None)),
                    "fixed": lambda: FixedPlanner(rng)}[a.planner]()
+        if a.planner == "queue":
+            prev_q = planner
         corpus = Corpus(a.corpus)
         t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply, wait=a.wait, tick=a.tick, listen=a.listen)
         t.run_day()

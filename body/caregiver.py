@@ -86,7 +86,7 @@ class Caregiver:
 
     def _attend(self):
         now = time.time(); dt = now - self._e_t; self._e_t = now
-        self.e += (0.3 - self.e) * min(1.0, dt / self.s(600))   # attention drifts down in silence (600 ticks)
+        self.e += (0.5 - self.e) * min(1.0, dt / self.s(600))   # attention drifts toward its resting level in silence (600 ticks); 0.3 -> 0.5 on 2026-09-11: at 0.3 the parent withheld 150-200 known-word smiles a day as "distracted"
         if self.e < 0.15 and now >= self.away_until:
             self.away_until = now + self.s(200); self.aways += 1
             self.row({"action": "away", "e": round(self.e, 3)}); self.e = 0.35
@@ -262,7 +262,7 @@ class Caregiver:
             age = time.time() - wall
             if self.last_word == low and time.time() - self.last_smile < self.s(48):
                 self.row({"action": "withheld", "on": tok, "why": "same word twice", "context": ctx})
-            elif age <= self.s(13) and time.time() - self.last_smile >= self.s(8):
+            elif age <= self.s(13) and time.time() - self.last_smile >= self.s(5):   # a smile may follow as soon as the face has returned (the hold is 5 ticks; 8 withheld 50-90 a day)
                 if self.parent:
                     n = self.word_count.get(low, 0); self.word_count[low] = n + 1
                     p = self.e * (0.95 ** max(0, n - 5))         # attention, and the fiftieth "dog"
