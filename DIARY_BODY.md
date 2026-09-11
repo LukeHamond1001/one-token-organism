@@ -6425,3 +6425,15 @@ words 136 at the day's start. The guard held (duty 0.325, smiles per line 1.78).
 transitions at weight 0.39, the store 2,430 slots; the face organ's correlation 0.39; the prefrontal correlation 0.46. The typist's six-day run
 ends here; the chain relaunches it for day 109 with the child's turn at 64 ticks and the parent's period at 160. The next parent
 spawned for days 109-111: one noun and one grammar word a day, short sentences, cues whose answer is not "here".
+
+
+### Night 105: the longer turn read (2026-09-11, 08:33)
+
+Day 109, the first with the child's turn at 64 ticks and the parent's gap at 160: lines and cues 62 (one every 51 s), smiles 173
+(2.79 a line, from 1.78), frowns 20 (the fewest since day 98), turned away 2, cues 13 answered 3 (the harder cues, whose answer is
+not "here": one full completion), own pairs 169 (61 distinct, twenty-nine new), talked over per line 0.42, the child's duty after
+the parent's lines 0.46; the taught words 139 at the day's start. The guard held (duty 0.459, smiles per line 2.74). Night 105: the
+gauge 0.838 -> 0.869, 384 imagined transitions at weight 0.39, the store 2,412 slots; the face organ's correlation 0.39; the
+prefrontal correlation 0.46. The parent's report on days 106-108: nine words; every new noun answered "put X " with "in" the day it
+came; "do not " and "the X was " answered the day they were taught; "that is a hat" said untaught; "where is the toy" typed before
+any line on two days. The turn stays; the cues on the harder frames are read on.
