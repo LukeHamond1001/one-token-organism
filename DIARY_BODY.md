@@ -6284,3 +6284,11 @@ The typist is back at 19:19 and the chain restarted with a thousand rounds. Day 
 303 smiles, 24 frowns, "mug" and "cat" in the old verb frames the day they were taught ("put cat " -> "in box" forty minutes after the
 word's first line: the finding holds for an animate noun), "where ball?" asked unprompted, "dog hold it up" out of the night; the
 taught words 99.
+
+
+### Night 93 (2026-09-10, 19:40)
+
+Day 97 was the day alone: forty minutes without a parent, then six lines from the typist relaunched at 19:19 (26 smiles, 4 frowns).
+Night 93: 384 imagined transitions at weight 0.38, the gauge 0.839 -> 0.884, the store 2,075 slots. The prefrontal correlation read
+0.62, its highest, which is the quiet hour's doing: the long value predicted little reward through the silence and little came, a
+correlation earned on an empty day; it will settle. The face organ's correlation 0.38. The chain alive, the guard re-armed.
