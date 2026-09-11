@@ -6516,3 +6516,16 @@ are in" never taught, and a question cue ("what is ") answered as a question ("i
 next brief says cue statements only. The visitor's page was built today (commits 40cc7eb, e7f1e99, 0f4e6f6: each key straight
 into the page, smile and frown buttons, the typist yielding a minute after a visitor's key) and, on the user's word at 13:30,
 left undeployed: the body stays in the Opus speed-training mode until it is good enough to talk to.
+
+
+### Night 111 (2026-09-11, 15:02)
+
+Day 116: lines and cues 62, smiles 223 (3.60 a line), frowns 18, turned away 1, cues 9 answered 4, own pairs 262 (64 distinct and
+fifty-one new), the child's duty after the parent's lines 0.46; the taught words 150 at the day's start. The day's noun "bat":
+"put bat " -> in, three times; "the bat was " -> out; "that is a " -> hat (a noun, the wrong one); "the man had the " missed.
+Night 111 (19 minutes, the longest lately): the loss 0.333 to 0.077, the gauge 0.50 -> 0.874, not discarded; 384 imagined
+transitions at weight 0.40; the face organ's correlation 0.40; the prefrontal correlation 0.37; the actor's slope 0.092. The
+evening's gauge 0.50 is the lowest recorded before a normal night (0.753 the night before): the day blurred the dream recall
+more than usual and the night restored it. The guard was not re-armed after night 110 (my omission): its reading for day 116
+(duty 0.46, smiles per line 3.60) would have held; the checkpoint copy taken by hand at 15:00 and the guard re-armed for
+night 112. The chain alive.
