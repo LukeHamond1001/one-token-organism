@@ -6479,3 +6479,15 @@ night on. Day 112, the short first day on the parent's new rules (the typist rel
 the full days before; the parent's report on days 109-111: the longer turn paid (smiles per line 3.93, 4.57, 3.78 against 2.17
 before it), the non-"here" cues worked ("the man had the " -> nut, rat; "that is your " -> jug; "the dog went " -> out), "where is the
 cat went in" recalled whole across a night, "is that?" written with its own question mark; the taught words 143.
+
+
+### Night 108: the first full day on the parent's new rules (2026-09-11, 11:45)
+
+Day 113: lines and cues 75, smiles 231 (3.08 a line), frowns 27, turned away 4, cues 17 answered 10, own pairs 232 (62 distinct,
+thirty-one new), talked over per line 0.52, the child's duty after the parent's lines 0.49; the taught words 144 at the day's
+start. The "distracted" misses stayed at 147: the reading says why: the rule that habituates to a word said many times a day (the
+fiftieth "dog") dominates the attention term, and the words the child says a hundred times a day, "here", "in", "the", earn nothing
+after their fifth, which is the rule working as meant; the reward goes to variety. The post-night battery re-asked the day's own cues;
+the ones without a taught answer are logged as lines, so the log undercounts it; the parent's report will read it. Night 108: the loss
+0.139 to 0.082, the gauge 0.802 -> 0.858, not discarded; 384 imagined transitions at weight 0.41; the face organ's correlation 0.41;
+the prefrontal correlation 0.41. The guard held (duty 0.489, smiles per line 2.94).
