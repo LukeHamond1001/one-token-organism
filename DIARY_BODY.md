@@ -6529,3 +6529,16 @@ evening's gauge 0.50 is the lowest recorded before a normal night (0.753 the nig
 more than usual and the night restored it. The guard was not re-armed after night 110 (my omission): its reading for day 116
 (duty 0.46, smiles per line 3.60) would have held; the checkpoint copy taken by hand at 15:00 and the guard re-armed for
 night 112. The chain alive.
+
+
+### Night 112 (2026-09-11, 16:12)
+
+Day 117: lines and cues 73 (the most of any day), smiles 175 (2.40 a line, the fewest of the three days), frowns 24, turned away 3,
+cues 13 answered 9, own pairs 219 (72 distinct and thirty-four new), the child's duty after the parent's lines 0.45; the taught
+words 151 at the day's start. The day's noun "mat": "put mat " -> in twice, "take mat " -> out twice, "the mat was " -> out;
+"the mats are " -> "the toy" and "he bed is here", answers of a kind but not the frame's; "that is my " missed three times. The
+child ran on past its answers 113 times, the most yet. The guard held (duty 0.450, smiles per line 2.33) and was re-armed at
+once this time. Night 112: the loss 0.142 to 0.079, the gauge 0.804 -> 0.868, not discarded; 384 imagined transitions at
+weight 0.40; the face organ's correlation 0.40; the prefrontal correlation 0.34; the actor's slope 0.094. The store 2012 slots
+after 173 dropped. The chain alive. The parent for days 118 to 120 spawned at the night with the tighter loop: 45-second
+checks, batches of three, two to four ahead, the child's own sentences answered first, statement cues only.
