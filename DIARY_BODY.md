@@ -6341,3 +6341,13 @@ away 3, cues 9 answered 9, own pairs 139 (70 distinct, forty-four new, the most 
 the parent's lines 0.47; the mood +2.3 at the night; the taught words 110 at the day's start. The guard held (duty 0.467, smiles per
 line 2.75). Night 97: the gauge 0.704 -> 0.885, 336 imagined transitions at weight 0.40, the store 2,392 slots; the face organ's
 correlation 0.40; the prefrontal correlation 0.52.
+
+
+### Night 98 (2026-09-11, 01:14)
+
+Day 102, the third day of the sentence stage: lines and cues 72, smiles 201 (2.75 a line), frowns 29, turned away 2, cues 8
+answered 3, own pairs 183 (68 distinct, forty-two new, among them "tin the", "tin there"), the child's duty after the parent's
+lines 0.47; the taught words 115 at the day's start. The guard held (duty 0.474, smiles per line 2.75). Night 98: the gauge 0.771 ->
+0.869, 336 imagined transitions at weight 0.41, the store 2,372 slots; the face organ's correlation 0.41, its highest; the prefrontal
+correlation 0.52. Three days of the sentence stage: smiles per line 2.86, 2.79, 2.75; new pairs of its own 28, 44, 42; cues 9 of
+10, 9 of 9, 3 of 8. The chain alive; the next parent spawned at day 103's row with the same brief.
