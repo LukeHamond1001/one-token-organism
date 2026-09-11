@@ -6319,3 +6319,15 @@ window is one sentence and its store recalls sequences rather than pointing into
 does; the test before any index: "like" taught as a frame over many pairs once the sentences hold, and working memory read on it.
 From day 100 the parents teach stage three: sentences to 40 characters, the grammar words as words, three nouns, a verb and a
 grammar word a day, conversation as the shape.
+
+
+### Night 96: the first day of the sentence stage (2026-09-10, 23:03)
+
+Day 100, the first at stage three: lines and cues 69, the parent's lines now sentences ("the dog is big", "the pen is here", mean
+length 12 characters, the longest 21), smiles 197 (2.86 a line), frowns 25, turned away 3, cues 10 answered 9, own pairs 109 (57
+distinct, twenty-eight new, the most new pairs in a day, among them "eat me", "eat and"), the child's duty after the parent's lines
+0.48 (the highest of the life); "the pen is " cued and answered "here". The guard held (duty 0.479, smiles per line 2.81). Night 96:
+the gauge 0.624 -> 0.863, the largest night's climb, on the most new material; 384 imagined transitions at weight 0.40, the store
+2,322 slots; the face organ's correlation 0.39; the prefrontal correlation 0.53. The parent's report on days 97-99: jar, tin, pack,
+cap, rag; the take-off frame solved by "on here" then "off here" in the two lines before the cue; "fill mug up" out of a night before
+it was ever cued; "where ball?" written by itself again.
