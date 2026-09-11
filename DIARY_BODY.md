@@ -6542,3 +6542,12 @@ once this time. Night 112: the loss 0.142 to 0.079, the gauge 0.804 -> 0.868, no
 weight 0.40; the face organ's correlation 0.40; the prefrontal correlation 0.34; the actor's slope 0.094. The store 2012 slots
 after 173 dropped. The chain alive. The parent for days 118 to 120 spawned at the night with the tighter loop: 45-second
 checks, batches of three, two to four ahead, the child's own sentences answered first, statement cues only.
+
+The parent of days 115 to 117 reported at day 118's row: ant, bat and mat with your, was and the plurals; 60, 54 and 56 lines
+queued; cues 13, 7 and 10 landed; the re-asking after each night landed what the evening missed ("that is your " -> ant, "the
+ant went " -> out). Unprompted: its own questions with their marks, "is the tin?", "the tin is in the tin?", "bed hat here
+ball?"; sentences of its own, "a hen is big", "hide pan in box", "the hen was up", and on day 117 "little bat was out" and
+"the mat was out" twice each, the day's noun inside the day before's grammar word; once "was out that is my ", a whole parent
+frame from memory. Its advice: the -at family (hat, rat, bat, mat) is where it is strongest, bring the next noun through it and
+"the X was "; stop cueing "the Xs are ", lost four of five to "here". (The parent of days 118 to 120 was briefed before this
+arrived and was told to build on "the Xs are "; the cost is a few missed cues; the brief for 121 to 123 takes the advice.)
