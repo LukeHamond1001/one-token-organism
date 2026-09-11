@@ -84,8 +84,8 @@ class Corpus:
 
 
 class Teacher(Caregiver):
-    def __init__(self, base, day, log, corpus, planner, period=160, quiet=12, cap=48, seed=0, answer_levels=1, parent=0, reply=0, wait=0, tick=0.25, listen=50):
-        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels, parent=parent, reply=reply, wait=wait, tick=tick, listen=listen)
+    def __init__(self, base, day, log, corpus, planner, period=160, quiet=12, cap=48, seed=0, answer_levels=1, parent=0, reply=0, wait=0, tick=0.25, listen=50, yield_ticks=240):
+        super().__init__(base, day, log, period=period, quiet=quiet, cap=cap, seed=seed, answer_levels=answer_levels, parent=parent, reply=reply, wait=wait, tick=tick, listen=listen, yield_ticks=yield_ticks)
         self.corpus, self.planner = corpus, planner
         self.said_today = []                                  # (text, kind, its_after)
 
@@ -118,7 +118,7 @@ class Teacher(Caregiver):
             self.cue = {"text": text, "until": time.time() + self.s(360), "full": ans, "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (self.maxtick + 1, 10 ** 9)         # the parent's turn: from its first symbol to its last
-        self.req("/type", {"text": text}); t_start = time.time()
+        self.req("/type", {"text": text, "who": "parent"}); t_start = time.time()
         self.corpus.typed(text if kind == "line" else text.strip())
         while True:
             d = self.poll(); self.scan()
@@ -369,6 +369,7 @@ def main():
     ap.add_argument("--answer-levels", type=int, default=1); ap.add_argument("--parent", type=int, default=0)
     ap.add_argument("--reply", type=int, default=0)           # the parent wants a reply (the user's word of 2026-09-04)
     ap.add_argument("--wait", type=int, default=0)            # the reply withheld: ticks of the child's quiet before the parent answers (4)
+    ap.add_argument("--yield", dest="yield_ticks", type=int, default=240)   # the parent steps back for this many ticks after a visitor types (2026-09-11)
     a = ap.parse_args()
     prev_q = None
     for k in range(a.days):
@@ -380,7 +381,7 @@ def main():
         if a.planner == "queue":
             prev_q = planner
         corpus = Corpus(a.corpus)
-        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply, wait=a.wait, tick=a.tick, listen=a.listen)
+        t = Teacher("http://localhost:%d" % a.port, day, a.log, corpus, planner, period=a.period, quiet=a.quiet, cap=a.cap, seed=day, answer_levels=a.answer_levels, parent=a.parent, reply=a.reply, wait=a.wait, tick=a.tick, listen=a.listen, yield_ticks=a.yield_ticks)
         t.run_day()
 
 

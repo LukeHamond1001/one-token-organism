@@ -204,6 +204,9 @@ readings allow, and the owner's word is the aim: teach it to be a small language
   corpus the mouth learns, and it is the whole language the body will have.
 - Everything in the principles above still holds: no scolding, never the same line three times running, follow its attention,
   the smile and frown come from the typist's rules and not from the parent's choice.
+- **A visitor may talk to it** (the page at /talk, 2026-09-11). The typist steps back for a minute after a visitor types and the
+  visitor's smile and frown are its face then; the sessions go on as before when nobody is there, and nothing a visitor types is
+  counted as taught by the parent.
 
 ## What each session reports
 

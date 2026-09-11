@@ -31,8 +31,12 @@ def iso(t=None):
 
 
 class Caregiver:
-    def __init__(self, base, day, log, period=480, quiet=24, cap=360, seed=0, answer_levels=1, parent=0, reply=0, wait=0.0, tick=0.25, listen=50):
+    def __init__(self, base, day, log, period=480, quiet=24, cap=360, seed=0, answer_levels=1, parent=0, reply=0, wait=0.0, tick=0.25, listen=50, yield_ticks=240):
         self.base, self.day, self.log = base, day, log
+        # THE PARENT YIELDS TO A VISITOR (2026-09-11, the user's plan: a page to talk to it while its life goes on): the page
+        # marks who typed each symbol; for yield_ticks after a symbol typed by anyone but this parent, the parent types nothing,
+        # scores nothing and makes no face; the visitor is the parent then. Decided from the page alone.
+        self.yield_ticks = int(yield_ticks); self.visitor_tick = -10 ** 9; self.yielding_now = False
         # THE PARENT'S CLOCK IS THE BODY'S (the user's word of 2026-09-08, "have it live in speed time"): every timer of this
         # parent is a count of the body's ticks, converted to seconds by the served tick length, so its cadence, its face and
         # its patience are the same in the body's time whatever the wall clock does. It looks at the page once a tick.
@@ -121,8 +125,20 @@ class Caregiver:
             idx = self.cursor + i; tick = idx // 2
             if idx % 2 == 1:
                 self.its[tick] = e[0]; self.tobs[tick] = t; self.maxtick = max(self.maxtick, tick)
+            elif e[0] and len(e) >= 5 and e[4] and e[4] != "parent":
+                self.visitor_tick = max(self.visitor_tick, tick)     # a visitor's symbol on the page
         self.cursor = n; self.state = d
+        y = self.yielding()
+        if y != self.yielding_now:
+            self.yielding_now = y
+            if y:
+                self.cue = None; self.reply_pending = None; self.reply_line = None; self.expand_next = None; self.pending_expand = None
+            self.row({"action": "yield" if y else "resume", "visitor_tick": self.visitor_tick, "tick": self.maxtick})
         return d
+
+    def yielding(self):
+        """a visitor typed within yield_ticks: the parent steps back"""
+        return self.yield_ticks > 0 and self.maxtick - self.visitor_tick < self.yield_ticks
 
     def quiet_since(self):
         """the child's quiet, in the page's own ticks"""
@@ -197,6 +213,8 @@ class Caregiver:
     # ---- the watcher ----
     def scan(self):
         start, end = self.finalized + 1, self.maxtick
+        if self.yielding():                                   # the visitor is the parent now: nothing scored, no face
+            self.finalized = max(self.finalized, end - 1); return
         t = start
         while t < end:
             sym = self.its.get(t, "")
@@ -294,7 +312,9 @@ class Caregiver:
             self.scan()
             if d.get("asleep"):
                 return -1.0
-            if self.quiet_since() >= self.quiet_ticks or time.time() - t0 >= self.cap:
+            if self.yielding():
+                t0 = time.time()                              # the cap does not run against a visitor
+            elif self.quiet_since() >= self.quiet_ticks or time.time() - t0 >= self.cap:
                 return time.time() - t0
             time.sleep(max(0.05, self.s(1)))
 
@@ -307,7 +327,7 @@ class Caregiver:
             self.cue = {"text": text, "until": time.time() + self.s(360), "full": ANSWERS.get(text, []), "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (self.maxtick + 1, 10 ** 9)     # the parent's turn: from its first symbol to its last
-        self.req("/type", {"text": text}); t_start = time.time()
+        self.req("/type", {"text": text, "who": "parent"}); t_start = time.time()
         while True:
             d = self.poll(); self.scan()
             if d is not None and d.get("queued", 0) == 0:

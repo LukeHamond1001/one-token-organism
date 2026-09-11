@@ -786,11 +786,74 @@ def test_face_on_striatum():
     print("34 the face organ on the striatal input: before the smile", round(fores[0], 2), "->", round(late, 2), "| slope", round(life._frel_gain, 2), "| torn", d["torn_frac"], "entropy", d["ent_mean"])
 
 
+def test_page_tags_who():
+    """the page marks who typed each symbol (the visitor page of 2026-09-11): the parent's and a visitor's symbols are told apart on
+    the page, the silence carries no tag, and nothing inside reads the tag"""
+    life = tiny()
+    life.type_text("hi", who="you"); life.tick(); life.tick()
+    life.type_text("go", who="parent"); life.tick(); life.tick(); life.tick()
+    ev = [e for e in life.page if e[1] == 0]
+    assert [e[4] for e in ev[:5]] == ["you", "you", "parent", "parent", ""], [e[4] for e in ev[:5]]
+    assert [e[0] for e in ev[:5]] == ["h", "i", "g", "o", ""], [e[0] for e in ev[:5]]
+    assert len(life.state(0)["page"][0]) == 5 and not life.queue_who
+    print("35 the page tags who typed:", [e[4] or "-" for e in ev[:5]])
+
+
+def test_typist_yields():
+    """the parent yields to a visitor (2026-09-11): a symbol typed by anyone but the parent holds the typist's lines and faces for
+    yield_ticks, its rows say yield and resume, and it scores again after"""
+    import json
+    import os
+    import random
+    from body.teacher import Teacher, Corpus, FixedPlanner
+    life = tiny()
+    log = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/yield_test.jsonl"
+    if os.path.exists(log):
+        os.remove(log)
+
+    class Stub(Teacher):                                   # the page in-process: two ticks a poll, as a served loop would
+        def req(self, path, data=None, timeout=30):
+            if path.startswith("/state"):
+                life.tick(); life.tick()
+                return life.state(int(path.split("since=")[1]))
+            if path == "/type":
+                return life.type_text(data["text"], who=data.get("who", "you"))
+            if path == "/face":
+                return life.set_face(data["expr"])
+            return {}
+    t = Stub("", 1, log, Corpus(None), FixedPlanner(random.Random(0)), period=4, quiet=2, cap=8, tick=0.001, listen=2, yield_ticks=20)
+    t.poll(); t.finalized = t.maxtick - 1
+
+    def child_says(word):                                  # the child's word on the page, finished, seen now
+        m = t.maxtick
+        for k in range(m - 8, m):
+            t.its[k] = ""; t.tobs[k] = time.time()
+        for j, ch in enumerate(word):
+            t.its[m - 6 + j] = ch
+        t.finalized = m - 9; t.scan()
+
+    life.type_text("hi", who="you"); t.poll()
+    assert t.yielding(), "the visitor's symbol did not make the parent yield"
+    child_says("dog")
+    vt = t.visitor_tick
+    t.event("dog will go", "line")                         # the parent's line waits through the yield
+    assert not t.yielding()
+    parent_ticks = [i // 2 for i, e in enumerate(life.page) if e[1] == 0 and e[0] and e[4] == "parent"]
+    assert parent_ticks and min(parent_ticks) >= vt + 20, (vt, parent_ticks[:3])
+    child_says("dog")
+    rows = [json.loads(l) for l in open(log)]
+    kinds = [r["action"] for r in rows]
+    assert "yield" in kinds and "resume" in kinds and kinds.index("yield") < kinds.index("resume"), kinds
+    smiles = [i for i, k in enumerate(kinds) if k == "smile"]
+    assert len(smiles) == 1 and smiles[0] > kinds.index("resume"), kinds
+    print("36 the typist yields to a visitor: the line waited", min(parent_ticks) - vt, "ticks; rows", [k for k in kinds if k in ("yield", "resume", "smile", "line")])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields]
     failed = 0
     for t in tests:
         try:

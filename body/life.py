@@ -372,6 +372,7 @@ class Life:
         self.n_bursts = 0
         # the page and the two hands
         self.queue = collections.deque()
+        self.queue_who = collections.deque()             # who typed each queued symbol ("parent", "you"): the page shows it, nothing inside reads it
         self.page = []; self.page_base = 0
         self.stream = collections.deque(maxlen=96)       # (id, who)
         self.last = {}
@@ -582,6 +583,7 @@ class Life:
         self._ring_vf.append(self.fast_value())            # the fast critic's value before this tick (the anticipation reading; the supervisor's, never the body's)
         self._decay_feelings()
         u = self.queue.popleft() if self.queue else self.sil
+        who = (self.queue_who.popleft() if self.queue_who else "") if u != self.sil else ""
         # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
         # saying meanwhile (with the body's silence required too, a babbling body never let it fire: run 41 held
         # two turn-end memories after six days)
@@ -1032,7 +1034,7 @@ class Life:
                 self._wake_last = {"error": str(e)[:120]}
         # --- bookkeeping ---
         self.stream.append((int(u), 0)); self.stream.append((int(nxt), 1))
-        self.page.append(((self.tok.decode([int(u)]) if u != self.sil else ""), 0, round(self.face_now, 2), round(its_face, 2)))
+        self.page.append(((self.tok.decode([int(u)]) if u != self.sil else ""), 0, round(self.face_now, 2), round(its_face, 2), who))
         self.page.append(((self.tok.decode([int(nxt)]) if nxt != self.sil else ""), 1, round(self.face_now, 2), round(its_face, 2), False))
         if len(self.page) > 40000:
             del self.page[:20000]; self.page_base += 20000
@@ -1561,16 +1563,18 @@ class Life:
             torch.stack(terms).mean().backward(); self.opt_value.step()
 
     def _sleep_now(self):
-        self.queue.clear()
+        self.queue.clear(); self.queue_who.clear()
         self.night()
 
     # ---------------- the hands ----------------
-    def type_text(self, s):
-        n = 0
+    def type_text(self, s, who=""):
+        """the world's hand: each symbol enters the page in its turn, tagged with who typed it (the visitor page of 2026-09-11:
+        the parent yields to a visitor it can see on the page; the tag is on the page, never inside)"""
+        n = 0; who = str(who)[:8]
         for ch in s:
             i = self.tok.token_to_id(ch)
             if i is not None and i != self.sil and i not in self.reserved and len(self.queue) < 600:   # the reserved symbols are not typed
-                self.queue.append(i); n += 1
+                self.queue.append(i); self.queue_who.append(who); n += 1
         return {"queued": n}
 
     def set_face(self, expr):

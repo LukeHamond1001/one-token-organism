@@ -788,6 +788,8 @@ served typist (0 = the smile at once). Measured on runs 93/94 and 95/96
 before the served body takes it at a day boundary.
 
 
+**The visitor's page (2026-09-11; the user's plan: "the ui to talk to it with time continuing on when you don't talk to it").** `GET /talk` serves a page with a line box and two buttons, smile and frown (the face at +2 or -2 for five ticks, then 0: the two graded buttons of the Phase-2 design, one grade each for now). Every symbol typed enters the page tagged with who typed it (`/type {"text", "who"}`: "parent" from the typist, "you" from any page), and the tag is on the page only; nothing inside reads it. The typist yields to a visitor: for `--yield` ticks (240, a minute) after a symbol typed by anyone but itself it types nothing, scores nothing and makes no face, its cap does not run, and its rows say `yield` and `resume`; the visitor is the parent then, and the body's life goes on unchanged when nobody comes. Decided from the page alone, like everything the parent does.
+
 **The parent's clock (2026-09-08).** Every timer of the served parent is a count of the body's ticks, converted by the served tick length (`--tick`): period, quiet, cap, listen (the child's turn after a line), the cue window, the smile and frown lengths and spacings, the attention drift and the turn away. The child's quiet at the gate is read in the page's own ticks. The parent looks at the page once a tick. The diary body's environment: period 160, quiet 12, cap 48, listen 50 through day 47; from day 48 period 40, quiet 8, cap 32, listen 24 (the fast parent).
 ## 7. Instruments (the supervisor's, never the caregiver's)
 
