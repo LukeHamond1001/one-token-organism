@@ -6304,3 +6304,18 @@ by the empty hour of day 97); the mood -4.5 in the day's last minutes, floored a
 then the page to talk to it with a visitor taking the parent's seat and the typist yielding, a one-minute teaser of the live-teaching
 act, a ten-minute explainer with the honest scope, then X and the companies; the repo cleaned and a fresh-seed replication started
 before anything is public. Nothing changes in the body meanwhile.
+
+
+### Night 95: the last day of stage two (2026-09-10, 21:55)
+
+Day 99, the last at two nouns before the sentence stage: lines and cues 80, smiles 238 (2.98 a line), frowns 31, turned away 1, cues
+10 answered 6, own pairs 99 (55 distinct, twenty-two new), the child's duty after the parent's lines 0.43; the taught words 102 at
+the day's start. The guard held. Night 95: 384 imagined transitions at weight 0.40, the gauge 0.747 -> 0.878, the store 2,219
+slots; the face organ's correlation 0.40; the prefrontal correlation 0.54, its weight 1.0. The user's questions of the evening,
+answered in the transcript and worth the record: the body has stamina (effort rising with fatigue, decaying in a minute; sleep pressure
+over the day) and has mostly learned not to talk over the parent (0.82 to 0.32 a line; the residue is a letter begun as the parent's
+line begins); it learns a new noun in an hour by exposure but cannot learn from an explanation ("a mug is like a cup"), because its
+window is one sentence and its store recalls sequences rather than pointing into the cortex's meaning as the human hippocampal index
+does; the test before any index: "like" taught as a frame over many pairs once the sentences hold, and working memory read on it.
+From day 100 the parents teach stage three: sentences to 40 characters, the grammar words as words, three nouns, a verb and a
+grammar word a day, conversation as the shape.
