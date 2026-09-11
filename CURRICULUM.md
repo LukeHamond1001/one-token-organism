@@ -184,6 +184,27 @@ about. Rules ("we don't hit"). Conversation with two turns: it asks
 and letter sounds. Jokes built on known frames. "If" and "so". Answering
 why with a reason of its own. Only when stages 3 and 4 hold across nights.
 
+## The stage now: three, entered on day 100 (2026-09-10)
+
+The body knows a hundred taught words and the relations of stage 2 hold: a new noun enters every verb frame it knows within a day,
+particles cross between verbs, why brings because. From day 100 the sessions teach stage 3 and the front of stage 4, at the pace the
+readings allow, and the owner's word is the aim: teach it to be a small language model.
+
+- **Whole short sentences.** Lines may be up to 40 characters, and most should be sentences: "the dog put the ball in the box",
+  "where is the cup", "I want the hat", "you can go out". The twelve-character cap of the earlier stage is lifted.
+- **The grammar words are taught as words**, each inside sentences it already answers: the, a, is, are, you, I, me, my, your, it,
+  not, and, will, went, what, where, why, this, that, here, there; plurals (dogs, balls); the progressive (running) when its verbs
+  are ready. None of these is known until a parent has typed it three times.
+- **Pace:** three new nouns and one new verb a day, each inside old frames, nouns early, midday and late; a grammar word a day
+  beside them. If the smiles per line or the cues answered fall clearly on a day, the next day goes back to two nouns and no verb.
+- **Conversation is the shape.** Question and answer in both directions: the parent asks about what the child just said ("where
+  is the cup" after it wrote "cup here"), answers every question the child writes within the minute, and expands every utterance
+  the child offers first by one step. A cue may be a sentence prefix ("the dog put the ball "); it is scored on the next word.
+- **Variety over the corpus.** Every word in many sentences, every sentence with a change of one part from the last: that is the
+  corpus the mouth learns, and it is the whole language the body will have.
+- Everything in the principles above still holds: no scolding, never the same line three times running, follow its attention,
+  the smile and frown come from the typist's rules and not from the parent's choice.
+
 ## What each session reports
 
 The lines written and how often; what it wrote back at each stage and
