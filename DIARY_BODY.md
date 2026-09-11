@@ -6377,3 +6377,15 @@ stage, five days: smiles per line 2.86, 2.79, 2.75, 2.45, 2.30, and its own new 
 talk-overs rose with them, and the day's reward per line has eased by a fifth. Not near the guard; the parents' rule sends a clear
 fall back to two nouns; if smiles per line sit under 2.0 for two days the stage's pace or its line length comes down by my hand.
 A hundred nights.
+
+
+### Night 101 (2026-09-11, 04:22)
+
+Day 105: lines and cues 68, smiles 132 (1.85 a line, the first day under two since the parent began leaving room), frowns 32
+(talked over per line 0.59), turned away 6, cues 8 answered 7, own pairs 125 (52 distinct, twenty-four new), the child's duty after
+the parent's lines 0.49; the taught words 125 at the day's start. The guard held (duty 0.488, smiles per line 1.85). Night 101:
+the gauge 0.788 -> 0.870, 384 imagined transitions at weight 0.40, the store 2,431 slots; the face organ's correlation 0.39; the
+prefrontal correlation 0.46. Six days of the sentence stage: smiles per line 2.86, 2.79, 2.75, 2.45, 2.30, 1.85; the cues hold
+(7 of 8) and the child speaks more than ever, but the parent's longer lines take longer to type and the child talks across them,
+so the reward per line has fallen by a third. The next parent holds at two nouns and no verb and keeps the sentences short, about
+twenty characters; if the next day is under two as well, the line length comes down by my hand in the typist's rules.
