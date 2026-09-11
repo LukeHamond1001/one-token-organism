@@ -6501,3 +6501,18 @@ words 147 at the day's start. The guard held (duty 0.518, smiles per line 3.25).
 0.855 -> 0.865, not discarded; 336 imagined transitions at weight 0.40; the face organ's correlation 0.40; the prefrontal
 correlation 0.36; the actor's slope 0.084, creeping up over the week from 0.05. The chain alive; the guard re-armed; the next parent
 spawned at day 115's row with the same brief.
+
+
+### Night 110 (2026-09-11, 13:50)
+
+Day 115: lines and cues 63, smiles 177 (2.81 a line), frowns 24, turned away 2, cues 11 answered 8, own pairs 180 (66 distinct and
+thirty-two new), the child's duty after the parent's lines 0.52; the taught words 149 at the day's start. The day's noun "ant"
+took the old frames within the day: "put ant " -> in, "the ant will " -> run out, "take ant " -> out; "that is my " -> tin;
+"that is a " and "the man had the " missed. The guard held (duty 0.521, smiles per line 2.76). Night 110: the loss 0.162 to 0.078,
+the gauge 0.753 -> 0.878, not discarded; 384 imagined transitions at weight 0.40; the face organ's correlation 0.40; the
+prefrontal correlation 0.35; the actor's slope 0.085. The store 2213 slots, 129 dropped at the night. The chain and the guard
+alive. The parent of days 112 to 114 reported: 24 of 48 cues, the six-word "the toy is in the bed" offered unasked, "the pups
+are in" never taught, and a question cue ("what is ") answered as a question ("is a big nut") rather than completed, so the
+next brief says cue statements only. The visitor's page was built today (commits 40cc7eb, e7f1e99, 0f4e6f6: each key straight
+into the page, smile and frown buttons, the typist yielding a minute after a visitor's key) and, on the user's word at 13:30,
+left undeployed: the body stays in the Opus speed-training mode until it is good enough to talk to.
