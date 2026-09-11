@@ -6551,3 +6551,17 @@ ball?"; sentences of its own, "a hen is big", "hide pan in box", "the hen was up
 frame from memory. Its advice: the -at family (hat, rat, bat, mat) is where it is strongest, bring the next noun through it and
 "the X was "; stop cueing "the Xs are ", lost four of five to "here". (The parent of days 118 to 120 was briefed before this
 arrived and was told to build on "the Xs are "; the cost is a few missed cues; the brief for 121 to 123 takes the advice.)
+
+
+### Night 113 (2026-09-11, 17:18)
+
+Day 118, the first under the tighter loop (45-second checks, batches of three, its own sentences answered first): lines and cues
+75 (the most of any day), smiles 219 (2.92 a line), frowns 30, turned away 1, cues 14 answered 5, own pairs 289 (69 distinct and
+fifty-nine new, the most new of any day), the child's duty after the parent's lines 0.46; the taught words 153 at the day's
+start. The day's noun "pin": "take pin " -> out twice, "put pin " -> in once of three; "the pins are " cued three times and lost
+each time (the previous parent's advice, which this one was briefed before); "the owl is in the " drew nothing. The parent
+answered its sentences in place ("yes. the hen was up"). The guard held (duty 0.463, smiles per line 2.91) and was re-armed.
+Night 113 (13 minutes): the loss 0.163 to 0.129, a shallower fall than the nights before (0.078 lately); the gauge 0.773 ->
+0.804, a smaller rise; not discarded; 336 imagined transitions at weight 0.42; the face organ's correlation 0.42 (its highest);
+the prefrontal correlation 0.33; the actor's slope 0.095. The store 1932 slots after 191 dropped: 2213, 2130, 2012, 1932 over
+four nights, the drops growing (129, 172, 173, 191); to watch. The chain alive.
