@@ -6452,3 +6452,18 @@ toy is here"), so the harm is partial. Built and live from 09:36: the night undo
 more than 0.15 is discarded as a non-finite one is, the organs returning to the evening's save, the store and the evidence standing;
 and the guard keeps a copy of the evening's checkpoint at each night row, three deep. Test suite 34 of 34. The next night tells whether
 the cortex recovers on its own material.
+
+
+### Three tweaks on the parent's side (2026-09-11, 10:10)
+
+Read from the rows of days 108-110: the parent's rules withheld 139-196 known-word smiles a day as "distracted" (the attention model
+resting at 0.3 in silence), 49-93 as too soon after the last smile (a spacing of 8 ticks against a face held for 5), and 54-106 as
+past the answer under the reply road; the post-night battery, the eight raised cues of the first lineage, was answered 16 times in 84
+over eleven days, in the window where cues land best; and every boundary dropped the parent's unread lines. None of these is the
+child's doing. Changed, in the parent's method: the resting attention 0.5, a smile allowed as soon as the face has returned (5 ticks),
+the post-night battery drawn from the day's own eight most recent cues (the raised ones only when the day asked fewer than four), and
+the queue carried over the boundary (the next day's planner starts where the last stopped). The reply road's rule stays: a parent who
+asked wants the answer, then the yield. The typist relaunched on the new rules at the boundary the kill makes; read day 112 against
+110 in smiles per line and the post-night battery's hits. NREM and REM are read each night from the body's own report: the loss over
+the rounds, the gauge before and after, the imagined transitions and their weight; last night's divergence is now caught by the
+night undone.
