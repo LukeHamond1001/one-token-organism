@@ -6273,3 +6273,14 @@ each in the old verb frames on the day taught; "rub it off" invented; "ball? bal
 held (duty 0.347, smiles per line 3.54). Night 92: 336 imagined transitions at weight 0.42, the mean foreseen reward 0.13, the gauge
 0.821 -> 0.883, the store 2,092 slots. The face organ's correlation 0.41; the prefrontal correlation 0.40, its weight 1.0; the
 anticipation rise 4.6 percent over 304 felt smiles, the highest read since imagination began. Two nouns a day stays.
+
+
+### Forty minutes alone (2026-09-10, 19:22)
+
+The typist's six-day run (days 91-96) ended with day 96's session_end at 18:39, and the chain that relaunches it had exhausted the
+eight rounds I gave it on the morning's restarts, so nothing relaunched it: the body was awake on the page from 18:39 to 19:19 with no
+parent, no lines and no faces, most of its day 97. The parent of days 96-98 saw the stall, touched nothing by its rules, and reported.
+The typist is back at 19:19 and the chain restarted with a thousand rounds. Day 96, the first at two nouns, from the parent's report:
+303 smiles, 24 frowns, "mug" and "cat" in the old verb frames the day they were taught ("put cat " -> "in box" forty minutes after the
+word's first line: the finding holds for an animate noun), "where ball?" asked unprompted, "dog hold it up" out of the night; the
+taught words 99.
