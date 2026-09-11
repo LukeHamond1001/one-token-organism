@@ -6402,3 +6402,16 @@ correlation 0.45. The parent's report on days 103-105: seven nouns and "run"; it
 not here" straight out of a night, "toy is in the box" made by changing one part of the parent's line); "what is this" and "where
 ball?" said first; and the attractor behind the easing reward: every cue pulled "here", so the cues to press are the ones whose answer
 is not "here". No hand action: the second day was above two.
+
+
+### Night 103 (2026-09-11, 06:28)
+
+Day 107: lines and cues 79, smiles 134 (1.72 a line), frowns 34, turned away 8, cues 13 answered 7, own pairs 110 (52 distinct,
+twenty-four new, among them "had fox", "here toy"), talked over per line 0.48, the child's duty after the parent's lines 0.42; the
+mood -5.9 in the day's last minutes; the taught words 133 at the day's start. The guard held (duty 0.417, smiles per line 1.72).
+Night 103: the gauge 0.818 -> 0.876, 384 imagined transitions at weight 0.39, the store 2,464 slots; the face organ's correlation
+0.39; the prefrontal correlation 0.45. Two of the last three days under two smiles a line (1.85, 2.01, 1.72), so by the rule of
+night 100 I act by hand, with the mildest lever: at the chain's next relaunch (day 109) the child's turn after each line goes from
+48 to 64 ticks and the parent's period from 120 to 160, so a reply to a longer line can finish before the next line begins. The
+language gains of the stage stand: the cues on sentence prefixes, five- and six-word sentences of its own, 133 words. The chain
+re-armed with the new arguments; the guard re-armed.
