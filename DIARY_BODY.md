@@ -6365,3 +6365,15 @@ after the parent's lines 0.51 (the highest of the life); the mood +4.2 at the ni
 guard held (duty 0.507, smiles per line 2.41). Night 99: the gauge 0.837 -> 0.876, 384 imagined transitions at weight 0.40, the
 store 2,426 slots; the face organ's correlation 0.40; the prefrontal correlation 0.50. Four days of the stage: smiles per line 2.86,
 2.79, 2.75, 2.45, easing; frowns 25, 38, 29, 39. The chain alive; the guard re-armed.
+
+
+### Night 100 (2026-09-11, 03:20)
+
+Day 104: lines and cues 73, smiles 168 (2.30 a line), frowns 33, turned away 4, cues 9 answered 8, own pairs 118 (52 distinct,
+twenty-three new), the child's duty after the parent's lines 0.46; the mood -5.5 in the day's last minutes; the taught words 120 at
+the day's start. The guard held (duty 0.459, smiles per line 2.32). Night 100: the gauge 0.734 -> 0.857, 336 imagined transitions at
+weight 0.41, the store 2,449 slots; the face organ's correlation 0.41; the prefrontal correlation 0.47. The trend of the sentence
+stage, five days: smiles per line 2.86, 2.79, 2.75, 2.45, 2.30, and its own new pairs 28, 44, 42, 34, 23: the lines got longer, the
+talk-overs rose with them, and the day's reward per line has eased by a fifth. Not near the guard; the parents' rule sends a clear
+fall back to two nouns; if smiles per line sit under 2.0 for two days the stage's pace or its line length comes down by my hand.
+A hundred nights.
