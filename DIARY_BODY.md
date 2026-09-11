@@ -6437,3 +6437,18 @@ gauge 0.838 -> 0.869, 384 imagined transitions at weight 0.39, the store 2,412 s
 prefrontal correlation 0.46. The parent's report on days 106-108: nine words; every new noun answered "put X " with "in" the day it
 came; "do not " and "the X was " answered the day they were taught; "that is a hat" said untaught; "where is the toy" typed before
 any line on two days. The turn stays; the cues on the harder frames are read on.
+
+
+### Night 106: a night that diverged, and the night undone (2026-09-11, 09:40)
+
+Day 110, the second on the longer turn: lines and cues 67, smiles 231 (3.45 a line, the highest since day 96), frowns 30, turned away
+3, cues 14 answered 9 (five whole words, four prefixes: the cues whose answer is not "here" landing now), own pairs 255 (70 distinct,
+forty-three new, the most new pairs of any day), the child's duty after the parent's lines 0.40; the mood +3.5 at the night; the taught
+words 140. Then night 106: the NREM loss fell for the first rounds, 0.103 to 0.086, and rose to 0.29 by the forty-eighth, and the gauge
+read 0.584 after the night against 0.861 before, the first night in a hundred and six that left the day's memory worse than it found
+it. The dreams were ordinary ("hold ", "put ", "that is ", "big", a mean length of 7); the divergence was the optimizer's. The body
+saved that state over its only checkpoint; the page's speech since waking is still language ("the bun is big", "get bun in box", "the
+toy is here"), so the harm is partial. Built and live from 09:36: the night undone (night_undo_drop 0.15): a night whose gauge falls by
+more than 0.15 is discarded as a non-finite one is, the organs returning to the evening's save, the store and the evidence standing;
+and the guard keeps a copy of the evening's checkpoint at each night row, three deep. Test suite 34 of 34. The next night tells whether
+the cortex recovers on its own material.
