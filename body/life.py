@@ -15,7 +15,7 @@ PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
     bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
-    dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
+    dream_max=24, dream_floor_rel=0.5, night_undo_drop=0.15, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
     # felt-reward trace at the ladder's clock gate_tonic_clock (index into the clocks; 4 = 256 ticks, a minute) — tonic dopamine as the
@@ -1336,11 +1336,17 @@ class Life:
                 m.eval()
                 del opt
                 finite = all(bool(torch.isfinite(p).all()) for p in m.parameters())
-                rep["discarded"] = not finite
-                if not finite and self.save_path and os.path.exists(self.save_path):
+                after, _ = self.gauge(dreams); after_cos = self._gauge_cos
+                # THE NIGHT UNDONE (2026-09-11, night 106): a night whose lesson diverged (the NREM loss tripling over the rounds, the gauge
+                # 0.861 -> 0.584) had saved itself over the only checkpoint. A night that leaves the day's memory worse by more than
+                # night_undo_drop is discarded like a non-finite one: the organs return to the evening's save. Sleep that fails to consolidate
+                # is not kept; the day's store and evidence stand, and the next night tries again.
+                fell = float(before) - float(after) > float(self.cfg.get("night_undo_drop", 0.15)) if isinstance(before, (int, float)) and isinstance(after, (int, float)) else False
+                rep["discarded"] = (not finite) or fell; rep["undone_for"] = "non-finite" if not finite else ("the gauge fell" if fell else None)
+                if rep["discarded"] and self.save_path and os.path.exists(self.save_path):
                     sd = torch.load(self.save_path, map_location="cpu", weights_only=False)
                     m.load_state_dict(sd["organs"]); m.to(self.dev)
-                after, _ = self.gauge(dreams); after_cos = self._gauge_cos
+                    after, _ = self.gauge(dreams); after_cos = self._gauge_cos
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
                             "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
                             "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None), "rem_imagined": rem_imag,
