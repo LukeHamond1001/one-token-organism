@@ -6389,3 +6389,16 @@ prefrontal correlation 0.46. Six days of the sentence stage: smiles per line 2.8
 (7 of 8) and the child speaks more than ever, but the parent's longer lines take longer to type and the child talks across them,
 so the reward per line has fallen by a third. The next parent holds at two nouns and no verb and keeps the sentences short, about
 twenty characters; if the next day is under two as well, the line length comes down by my hand in the typist's rules.
+
+
+### Night 102: the shorter lines read (2026-09-11, 05:25)
+
+Day 106, the first with the sentences held to about twenty characters (mean 13, the longest 23) and two nouns, no verb: lines and
+cues 75, smiles 151 (2.01 a line, back from 1.85), frowns 27 (talked over per line 0.40, from 0.59: the shorter lines gave the
+child less to talk across), turned away 4, cues 12 answered 7, own pairs 151 (48 distinct, thirty-one new), the child's duty after the
+parent's lines 0.44; the taught words 130 at the day's start. The guard held (duty 0.436, smiles per line 2.03). Night 102: the gauge
+0.865 -> 0.871, 384 imagined transitions at weight 0.39, the store 2,453 slots; the face organ's correlation 0.39; the prefrontal
+correlation 0.45. The parent's report on days 103-105: seven nouns and "run"; its own sentences of five and six words ("little bus is
+not here" straight out of a night, "toy is in the box" made by changing one part of the parent's line); "what is this" and "where
+ball?" said first; and the attractor behind the easing reward: every cue pulled "here", so the cues to press are the ones whose answer
+is not "here". No hand action: the second day was above two.
