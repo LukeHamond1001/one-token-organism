@@ -6331,3 +6331,13 @@ the gauge 0.624 -> 0.863, the largest night's climb, on the most new material; 3
 2,322 slots; the face organ's correlation 0.39; the prefrontal correlation 0.53. The parent's report on days 97-99: jar, tin, pack,
 cap, rag; the take-off frame solved by "on here" then "off here" in the two lines before the cue; "fill mug up" out of a night before
 it was ever cued; "where ball?" written by itself again.
+
+
+### Night 97 (2026-09-11, 00:12)
+
+Day 101, the second day of the sentence stage: lines and cues 73 (the parent's lines a mean of 13 characters, the longest 23: "the bed
+is here", "sit down"), smiles 204 (2.79 a line), frowns 38 (talked over per line 0.62: longer lines give more to talk over), turned
+away 3, cues 9 answered 9, own pairs 139 (70 distinct, forty-four new, the most new pairs in a day by far), the child's duty after
+the parent's lines 0.47; the mood +2.3 at the night; the taught words 110 at the day's start. The guard held (duty 0.467, smiles per
+line 2.75). Night 97: the gauge 0.704 -> 0.885, 336 imagined transitions at weight 0.40, the store 2,392 slots; the face organ's
+correlation 0.40; the prefrontal correlation 0.52.
