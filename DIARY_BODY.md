@@ -6753,3 +6753,14 @@ the loop 17.8 per thousand, the parent's share 0.49, the child silent 0.71. The 
 and was re-armed. Night 123: 298 new slots -> 48 dreams, the loss 0.159 to 0.110 (shallower than the four nights before,
 which ended at 0.074; falling throughout, not rising), the gauge 0.787 -> 0.815; the store 4388 after 72 dropped; the face
 organ's correlation 0.46; the prefrontal 0.74; the actor's slope 0.099. The chain alive.
+
+The ear, measured on the page at 04:50 (2026-09-12): the child speaks on 0.08 of the ticks while the parent types and on 0.38
+of the ticks when the parent is quiet, an ear ratio of 0.20: it yields five to one. The frowns' plateau near seventy is not a
+failure to yield: the frown fires at most once per sixty ticks and the talked-over words per line rose from 0.4-0.5 at the
+slow pace to 0.6-0.7 at the fast one, that is, the child's late replies to one line collide with the next line, typed fifteen
+seconds after the last began with an eight-second turn between. The frown did its work; what it punishes now is replies. (My
+latency reading was an artifact: a line's row is written after its listening, so the frowns during a line's typing precede
+its row in the file; the frown is prompt.) The decision, on the parent's method: from the boundary after night 124 the typist
+runs at a line every twenty seconds (period 80) with a ten-second turn (listen 40), the same rules otherwise; the chain
+re-chained with those arguments and the typist's relaunch after that night's save armed. Expect ~150 lines a day, fewer
+collisions, the frowns per line to fall; the ear ratio to be read every night from now on.
