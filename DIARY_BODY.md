@@ -6924,3 +6924,25 @@ chunk_max instead of breaking by a random draw. To read at the night: the frowns
 now runs over it: the frown will land on the word's one credit, the clean signal the gate and the actor need), the ear, the
 loop share, cue landing, the actor's slope. chunk_max 12 -> 8 at the next restart that is needed anyway (the corpus's longest
 word is six letters and a space).
+
+
+### Night 132 (2026-09-12, 14:12): the first day of chunks
+
+Day 141 (the body's 132nd; the label skipped 140), the first under the action chunk: lines and cues 112 (the typist waited on
+the child's talking for its lines: 96 lines, 137 the day before; the parent's share of the page 0.25), smiles 244 (2.18 a
+line), frowns 46 (7 the day before; the talked-over tokens now words, 25 of two letters, 23 of three, 12 longer, none a
+single letter: a word begun before the parent's typing runs over it), cues 16 answered 12 (75%: "the tin was " -> in, "the
+nest was " -> in twice, "put doll " -> in three times, "put ice " -> in twice, "the doll was " -> in), duty after the parent's
+lines 0.54 (the highest), the child silent 0.46 of the ticks (0.63 to 0.70 before: a word begun runs to its end), the ear
+ratio 0.25 (0.18), the loop 47 per thousand (12 to 21 before: the cycle the cortex forecasts from its own babble now runs as
+a program to the chunk's bound; 42 unsegmented runs of more than eight symbols), 1524 words begun in 4565 program ticks (3.0
+symbols a word), the planner torn at 0.68 of its decisions (0.39: the decisions are at word starts, where the cortex doubts),
+the entropy at the choice 0.16 (0.07). The guard held (duty 0.535, smiles per line 2.14) and was re-armed. Night 132: 288 new
+slots -> 48 dreams of mean length 10.8, whole lines among them ("the lad was in the hut", "two ties are in your bag", "put doll
+in"), the loss 0.207 to 0.088, the gauge 0.653 -> 0.879; the store 6051; the face organ's correlation 0.45; the prefrontal
+0.495 (the drift reached the threshold; the earned voice keeps its weight while the slope holds at 1.0; to look at); the
+actor's slope 0.087 after one day of word-level credit (days are needed). The reading: the chunk bought clean phrases, the
+best duty and cue rate, and a doubled loop, a worse ear and forty-six frowns, all three the same thing, a program that runs
+what the cortex forecasts from its own noise. The credit per word is the cure the biology gives, over days; chunk_max 8 at
+the next boundary; if the loop share has not fallen by the third chunk day, the corollary discharge on its own sound
+(own_gain 0.5, measured in cortex at a third to a half) is the physiological lever. The chain alive.
