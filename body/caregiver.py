@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 TALKOVER_FROWN = int(os.environ.get("TALKOVER_FROWN", "0"))   # the served typist's face when talked over: off until a day boundary after the fast seeds read (the user's word given 2026-09-06)
+FROWN_GAP = int(os.environ.get("FROWN_GAP", "60"))            # the least ticks between two talk-over frowns (2026-09-12: 60 gave seventy frowns a day under the chunk and a body at stress 20 all day, its gate flattened threefold; a parent frowns, then gives it a minute: 240)
 import random
 import sys
 import time
@@ -254,8 +255,8 @@ class Caregiver:
             ts, te = self.typing_span
             if a < te and b >= ts:                                # said over the parent's own turn
                 self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx})
-                if TALKOVER_FROWN and time.time() - self.last_frown > self.s(60):   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
-                    self._hold(-1, 2.5)                                             # a light, brief frown, at most every 60 ticks
+                if TALKOVER_FROWN and time.time() - self.last_frown > self.s(FROWN_GAP):   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
+                    self._hold(-1, 2.5)                                             # a light, brief frown, at most every FROWN_GAP ticks
                     self.frowns += 1; self.last_frown = time.time(); self.row({"action": "frown", "on": tok, "why": "talked over", "context": ctx})
                 return
         c = self.cue
