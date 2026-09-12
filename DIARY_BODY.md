@@ -6816,3 +6816,15 @@ yielding holds without the letter frowns). It ran on past its answers 90 times, 
 more running on. The guard held (duty 0.475, smiles per line 2.14) and was re-armed. Night 126: 217 new slots -> 48 dreams,
 the loss 0.124 to 0.086, the gauge 0.86 -> 0.872 (the highest evening gauge of the life: the day's material well held before
 the night); the store 4956; the face organ's correlation 0.47; the prefrontal 0.71; the actor's slope 0.097. The chain alive.
+
+
+### Night 127 (2026-09-12, 09:02)
+
+Day 134 (the body's 127th): lines and cues 146, smiles 256 (1.75 a line), frowns 3, cues 21 answered 17 (81%: "the toe was ",
+"the lip was ", "the kid was ", "the mud was " -> in, the day's nouns lip and mud among them; "put lip " -> in, "put mud " ->
+in; "the man had the " -> toe, ham, den; "that is my " -> tub), duty after the parent's lines 0.43, the loop 11.6 per
+thousand, the parent's share 0.42, the child silent 0.67, the ear ratio 0.17; it ran on past its answers 96 times. The guard
+held (duty 0.430, smiles per line 1.75) and was re-armed. Night 127: 232 new slots -> 48 dreams, the loss 0.114 to 0.085, the
+gauge 0.85 -> 0.876; the store 5133; the face organ's correlation 0.47; the prefrontal 0.70 (0.76 seven nights ago, drifting
+down a hundredth a night since the letter frowns and the slower pace changed the reward's rhythm); the actor's slope 0.092.
+The parent for days 135 to 137 spawned with the cue findings (particle slots; "the X was in"). The chain alive.
