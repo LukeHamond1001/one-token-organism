@@ -6586,3 +6586,18 @@ before), the "ttle tin" loop 26 marks per thousand of the child's symbols, the c
 -> 0.882, not discarded; 336 imagined transitions; the store 2287 after 321 dropped (1932 the night before: the day's volume
 filled it); the face organ's correlation 0.42; the prefrontal correlation 0.56, up from 0.33 in one day, the denser reward
 easier to foresee at its horizon; the actor's slope 0.093. The chain alive; the guard re-armed.
+
+
+### Night 115 (2026-09-11, 19:32): the talkative parent's second day
+
+Day 120: lines and cues 171, smiles 199 (1.16 a line), frowns 81 (66 the day before; talked over 124 times), cues 13 answered
+6 ("take fan " -> out, "put fan " -> in, "the fan went " -> in, "take vat " -> out; "the man had the " -> tin twice, a noun
+but not the frame's), duty after the parent's lines 0.39 (0.43); frowns by quarter of the day 20, 23, 22, 16: flat, no fall
+yet. On the page the parent's share of the speech 0.46, the loop 19 marks per thousand (26), the child silent 0.70 of the ticks
+(0.67): it is going quieter under the frown, the loop thinning. The guard held (duty 0.385, smiles per line 1.17). Night 115:
+the loss 0.271 to 0.175 (0.091 the night before), the gauge 0.558 -> 0.708 (0.601 -> 0.882): the night consolidated less far
+with twice the day's material and the same 48 rounds; not discarded; the store 2542 after 347 dropped; the face organ's
+correlation 0.44; the prefrontal correlation 0.67 (0.33, 0.56, 0.67 over three nights); the actor's slope 0.087. To watch: if
+the next night ends higher in loss again and the gauge after it falls again, the night's work is not scaling with the day's
+load, and a night whose rounds grow with the day's new memories (sleep need with the day's plasticity, Tononi's homeostasis) is
+the principled change. The chain alive; the guard re-armed.
