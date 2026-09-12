@@ -6865,3 +6865,9 @@ the body restarts with the store's sequence links (store_chain 1: dreams run the
 branch) and the clock at five ticks a second (period 0.2; the typist re-chained at tick 0.2). To read tomorrow: the night's
 mean dream length (expect fifteen or more), the achieved ticks a second (expect about five), the night's length, and cue
 landing. The chain alive.
+
+The boundary at 11:08 (2026-09-12): the body restarted with the store's sequence links and the clock at period 0.2 (pid
+17227: --period 0.2 --store-sat 1 --store-chain 1), loaded in seconds (ticks 1548961, store 5551); the typist relaunched as
+day 138 at tick 0.2 (the label skipped 137, which holds one row). The achieved rate 4.67 ticks a second against 3.8 before
+(the loop now near one core's full time, 104%): a fifth more life an hour, the days about 43 minutes of wall time. Night 130
+is the first whose dreams run the episodes as lived; its mean dream length is the reading.
