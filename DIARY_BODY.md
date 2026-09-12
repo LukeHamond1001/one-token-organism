@@ -6634,3 +6634,20 @@ big tin"; the taught grammar words not, was, went, are used unprompted. Faces 21
 0.46, 0.45, 0.44; smiles per line 1.34, 1.15, 1.48. Its advice: make "the man had the " the carrier for new nouns and keep
 cues to three-word prefixes ending in the noun. Its note: a relaunch at a boundary sometimes drops the unsaid queue (the
 planner's position restarts at the file's end on a fresh typist); the typist now remembers its position across relaunches.
+
+
+### Night 117 (2026-09-11, 21:50): the night that did not scale, and diverged
+
+Day 123 (the log's label; the body's 117th day): lines and cues 166, smiles 227 (1.37 a line), frowns 64 (66, 81, 68, 64 over
+the talkative days: falling), cues 24 answered 10, duty after the parent's lines 0.43, the loop 16.5 per thousand (26, 19,
+19, 16.5: thinning), the parent's share of the page 0.41, the child silent 0.66. The guard held (duty 0.426, smiles per line
+1.37). Night 117 did NOT scale: the restarted body had no count of the store at its last night (the field is new; the save
+had none), so the day's new slots read 0 and it dreamed 48; the count is set now (2742 at the night's end) and the load takes
+the last night's store size when the field is absent (commit 1884d96), so the next night scales. And the night diverged: the
+loss 0.261, 0.243, 0.214 ... 0.362, 0.392, 0.372, falling for the first rounds and rising after; the gauge 0.574 -> 0.583,
+flat; the cosine 0.593 -> 0.554. Kept, by the user's word (the rollback is gone; it would not have fired anyway, the gauge did
+not fall). The dreams' examples were the parent's cue prefixes ("do not ", "what is ", "that is my" three times, "put ",
+"fill the "): the store's strongest memories are what the typist repeats most, and the talkative parent cued 24 times today
+and re-asks eight after each night. To watch at the scaled night: whether the loss falls through the rounds again with the
+broader dream set, and what share of the dreams are prefixes. The face organ's correlation 0.44; the prefrontal 0.75; the
+actor's slope 0.076; the store 2742 after 264 dropped. The chain alive; the guard re-armed.
