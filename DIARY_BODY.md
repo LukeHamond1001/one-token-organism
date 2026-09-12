@@ -6973,3 +6973,19 @@ about forty-five of the child's utterances; unprompted: "the mat was in here", "
 "hold the big box", "ice is not in my mug", "the ice is cold", "it is not a nut", "hi. I see you"; questions of its own "up?
 ball in my bed", "it was that?"; the day's new nouns re-used unprompted the same day, and "not" and "your" in its own frames.
 Faces 296/8, 251/47, 274/43; smiles per line 2.24, 2.46, 3.38.
+
+
+### Night 134 (2026-09-12, 16:12): the third day of chunks, the parent talking through
+
+Day 144 (the body's 134th; the first with the typist's cap at 40 ticks): lines and cues 135 (92 the day before: the parent's
+lines back), smiles 231 (1.71 a line), frowns 72 (the parent now talks through the child's babble and the child's words run
+over it: 93 talked-over words), cues 11 answered 6 (55%; the day's nouns frog, boat, corn at prefixes: "put frog " -> "in
+boxp", "put corn " -> "int"), duty after the parent's lines 0.53, the child silent 0.50, the parent's share 0.31 (0.20), the
+ear ratio 0.30 (0.18 before the chunk: it yields less, the programs run over the parent), the loop 37 per thousand (47, 39,
+37: falling slowly), 55 runs longer than eight symbols. The guard held (duty 0.524, smiles per line 1.72) and was re-armed.
+Night 134: 303 new slots -> 48 dreams of mean length 11.1 ("yes. it was in the den", "no. it is in the tin and ", "that is
+your cod wi"), the loss 0.198 to 0.083, the gauge 0.689 -> 0.885; the store 6316; the face organ's correlation 0.43 (0.49
+four nights ago: falling as the reward's rhythm changed again); the prefrontal 0.59; the actor's slope 0.096 (0.087, 0.092,
+0.096 over the three chunk days: a hair a day, the direction right). The parent of days 144 to 146 stopped at this night by
+my hand and the two-voice parent briefed for the next three days; the typist relaunches after this night's save with the
+second voice's code (a "b:" line typed under the tag "other" right after the parent's, no pace, no cue, no reward).
