@@ -6601,3 +6601,18 @@ correlation 0.44; the prefrontal correlation 0.67 (0.33, 0.56, 0.67 over three n
 the next night ends higher in loss again and the gauge after it falls again, the night's work is not scaling with the day's
 load, and a night whose rounds grow with the day's new memories (sleep need with the day's plasticity, Tononi's homeostasis) is
 the principled change. The chain alive; the guard re-armed.
+
+
+### Night 116 (2026-09-11, 20:38): the talkative parent's third day; the night to scale
+
+Day 121: lines and cues 155, smiles 238 (1.54 a line, up from 1.16), frowns 68 (81 the day before; talked over 97 times, from
+124), cues 11 answered 5 ("take jam " -> out twice, "take wig " -> out, "the wig went " -> in), duty after the parent's lines
+0.45 (0.39); frowns by quarter of the day 20, 16, 20, 12. The frowns fell on the third day as the fast seeds foretold on day
+72: the child is yielding. On the page the parent's share 0.41, the loop 19 per thousand (flat), the child silent 0.65 of the
+ticks. The guard held (duty 0.453, smiles per line 1.53). Night 116: the loss 0.366 to 0.200, the gauge 0.397 -> 0.581 (0.601
+-> 0.882 two nights ago): the third night in a row consolidating less far on the doubled day, the after-gauge the lowest of any
+kept night; not discarded; the store 2659 after 345 dropped; the face organ's correlation 0.44; the prefrontal correlation
+0.755 (0.33 four nights ago; the denser reward foreseen); the actor's slope 0.075. The rule set at night 115 fires: the night
+scales with the day from the restart after this night's save (night_load 0.125, at most 192 dreams: a 700-slot day dreams
+about 88), together with the rollback's removal (the user's word). The reload re-armed at 20:36 with those flags; the guard
+re-armed for night 117; the chain alive.
