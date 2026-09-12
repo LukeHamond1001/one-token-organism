@@ -6731,3 +6731,14 @@ Fifty-five of the parent's seventy-two batches opened with an answer to what the
 the answers by re-using their material. Frowns 73, 73, 73 (identical; flat), smiles 203, 296, 248. Its advice: cue one in
 eight, and put the evening's cues on frames taught twice that day, because the night turns evening misses into morning
 answers.
+
+
+### Night 122 (2026-09-12, 03:42)
+
+Day 129 (the body's 122nd): lines and cues 178 (the most of any day), smiles 243 (1.37 a line), frowns 74 (by quarter 19,
+16, 22, 17; flat near seventy for six days), cues 11 answered 5 ("take pea " -> out, "that is my " -> nut, "the hog was " ->
+in), duty after the parent's lines 0.39, the loop 17.2 per thousand, the parent's share of the page 0.48 (the highest), the
+child silent 0.71 of the ticks (0.62 three days ago: it talks less, but still over the parent). The guard held (duty 0.389,
+smiles per line 1.37) and was re-armed. Night 122: 407 new slots -> 51 dreams, the loss 0.189 to 0.074, the gauge 0.742 ->
+0.852; the store 4162 after 106 dropped; the face organ's correlation 0.46; the prefrontal 0.76; the actor's slope 0.095
+(0.074 four nights ago: creeping up again). The chain alive.
