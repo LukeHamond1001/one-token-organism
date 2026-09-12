@@ -6742,3 +6742,14 @@ child silent 0.71 of the ticks (0.62 three days ago: it talks less, but still ov
 smiles per line 1.37) and was re-armed. Night 122: 407 new slots -> 51 dreams, the loss 0.189 to 0.074, the gauge 0.742 ->
 0.852; the store 4162 after 106 dropped; the face organ's correlation 0.46; the prefrontal 0.76; the actor's slope 0.095
 (0.074 four nights ago: creeping up again). The chain alive.
+
+
+### Night 123 (2026-09-12, 04:48)
+
+Day 130 (the body's 123rd): lines and cues 181 (the most of any day), smiles 238 (1.31 a line), frowns 79 (74 the day
+before; the talkative days 66, 81, 68, 64, 68, 60, 66, 71, 69, 74, 79: no fall in seven days), cues 12 answered 6 ("the rod
+was " -> in three times, "the pod was " -> in, "put pod " -> in, "that is my " -> tub), duty after the parent's lines 0.38,
+the loop 17.8 per thousand, the parent's share 0.49, the child silent 0.71. The guard held (duty 0.379, smiles per line 1.32)
+and was re-armed. Night 123: 298 new slots -> 48 dreams, the loss 0.159 to 0.110 (shallower than the four nights before,
+which ended at 0.074; falling throughout, not rising), the gauge 0.787 -> 0.815; the store 4388 after 72 dropped; the face
+organ's correlation 0.46; the prefrontal 0.74; the actor's slope 0.099. The chain alive.
