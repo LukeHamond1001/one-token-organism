@@ -6999,3 +6999,15 @@ phrases second. The physiological lever is taken at the next boundary: the corol
 from 0.5 to 0.3 (the low end of what cortex measures), so the forecast the mouth runs leans on the parent's last line rather
 than on its own babble in the window; made a physiology constant (commit 3a4023e), armed with the restart after night 135's
 save. The reading the next day: the loop share and the ear.
+
+Watched live at 16:45 (2026-09-12), the conversation parent twelve minutes in: A "what do you have?" / B "I have a hat" / A "yes.
+you have a hat"; A "do you want milk?" / B "I want milk" / A "yes. here is milk". The child between them: "I want a hot yam is
+in my mug", "my yam is not a nut", "yes. pan in box first milk then ham is here", "two ties are here", "milk is gem is in the
+hut", "yes! th": fluent chains of its frames, "milk" picked up from the question, "yes." already at the front of its replies
+twelve minutes after B began to model it; not yet an answer to the question. The hump, in numbers: stress 19.5 of 30 in
+every sample of the last hundred minutes (the frowns 43 to 77 an hour under the chunk against 1 to 7 before), and the gate's
+logit is divided by (1 + stress/10): a body at stress 20 decides to speak with a third of its resolution, so it cannot hold
+its tongue, talks over, is frowned at, and stays stressed; its readout at the floor sharpness one sample in five. The parent's
+method answers: a talk-over frown at most every 240 ticks instead of 60 (a parent frowns, then gives it a minute), from the
+typist's relaunch in the restart after night 135's save (FROWN_GAP, an environment setting; the chain re-chained). The
+corollary discharge goes to 0.3 in the same restart.
