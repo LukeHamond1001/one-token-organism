@@ -6989,3 +6989,13 @@ four nights ago: falling as the reward's rhythm changed again); the prefrontal 0
 0.096 over the three chunk days: a hair a day, the direction right). The parent of days 144 to 146 stopped at this night by
 my hand and the two-voice parent briefed for the next three days; the typist relaunches after this night's save with the
 second voice's code (a "b:" line typed under the tag "other" right after the parent's, no pace, no cue, no reward).
+
+The two voices at 16:08 (2026-09-12): the typist relaunched with the second voice's code; ten minutes in, 30 A lines and 6 B
+lines ("where is the cat?", "is the cake in the tin?", "where is the bird?"; A: "yes. the cake is in the tin", "the bird is
+in the nest"). The child in the same minutes: "it is in the tin", "wash the tin", "here in the ice is in", "the ice is cold",
+and, dominating the page, the loop as programs: "tttlet tttlettletttle tin is in the". The loop's share fell only from 47 to
+37 per thousand over the three chunk days and the ear worsened to 0.30; the transcript reads as the loop first and the
+phrases second. The physiological lever is taken at the next boundary: the corollary discharge on its own sound, own_gain,
+from 0.5 to 0.3 (the low end of what cortex measures), so the forecast the mouth runs leans on the parent's last line rather
+than on its own babble in the window; made a physiology constant (commit 3a4023e), armed with the restart after night 135's
+save. The reading the next day: the loop share and the ear.
