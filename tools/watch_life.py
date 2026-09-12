@@ -89,6 +89,6 @@ for _ in range(a.days):
     digest = (f"day {day:3d} ({time.time()-t0:.0f}s, {len(ticks)} ticks): smiles {len(sm)} (completions {comp}, sequences {seqs}) aways {aways} frowns {frowns} | "
               f"ear: spoke {st_typ:.2f} while the parent typed (n {n_typ}) vs {st_q:.2f} quiet | fast value mean {mv:+.2f}, rise before a smile {rise:+.0f}% of a smile, "
               f"error at the reward {st.mean(err) if err else float('nan'):+.2f} | wm latches {latches} | planner: {len(plans)} choices, the value flipped the cortex's favorite {flips}, the mouth said another {other} | "
-              f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability (correlation) {vrel:+.2f}, slope {vslope:.2f}, weight in the credit {vw_eff:.3f} | run-on after the answer {run_on:.1f} symbols, the smile waited {waited:.1f} ticks (n {len(held)}) | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
+              f"prefrontal: long value vs its realized return {corr_long:+.2f}, reliability (correlation) {vrel:+.2f}, slope {vslope:.2f}, weight in the credit {vw_eff:.3f} | sharpness {float(getattr(L, "sharp_cal", L.cfg.get("sharp_base", 0))):.1f} ({L.cfg.get("sharp_form", "fixed")}) | run-on after the answer {run_on:.1f} symbols, the smile waited {waited:.1f} ticks (n {len(held)}) | gauge {night.get('gauge') if isinstance(night, dict) else ''}")
     print(digest, flush=True)
     with open(f"{out}/digest.txt", "a") as f: f.write(digest + "\n")
