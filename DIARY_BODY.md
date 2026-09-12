@@ -7011,3 +7011,14 @@ its tongue, talks over, is frowned at, and stays stressed; its readout at the fl
 method answers: a talk-over frown at most every 240 ticks instead of 60 (a parent frowns, then gives it a minute), from the
 typist's relaunch in the restart after night 135's save (FROWN_GAP, an environment setting; the chain re-chained). The
 corollary discharge goes to 0.3 in the same restart.
+
+The conversation parent's report at 17:05 (2026-09-12), its twenty-three minutes of day 145 (it stopped itself at the day's end
+mistaking the night's silence for a fault: no night row appears until the night ends, and it had been told twenty-five
+minutes; the next brief says so): 90 utterances queued (49 A, 37 B, 4 cues), 82 said; the exchanges of greeting, wants, having,
+mine and yours, offers, feelings, doing; new words happy and come from inside them; never "tin", "box" or "bin". The child
+wrote "I am here" unprompted a minute after B modeled it, then "I want a hot yam", "my yam is not a nut", "the milk went in
+here", "milk is not cold", "is not wet", "eat the nut", "this is my hip", and echoed the parent's lines with one change ("here
+is your yam" -> "here is the yam"); "I see" eleven times, "I want" five, "yes" twenty-two, "heppy" reaching for happy; its own
+question "is the yak?" answered within four lines. The cue "I want " -> "the" (a smile). "tin" fell from 3.4 a minute under
+the previous parent to 1.2 a minute under this one, within the same day. Faces in its minutes: 208 smiles, 36 frowns. Its
+advice: keep modeling answers with "I" and yes/no; B's answers come back out of the child's mouth within a minute.
