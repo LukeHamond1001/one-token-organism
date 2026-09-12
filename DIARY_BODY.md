@@ -6704,3 +6704,18 @@ guard held (duty 0.479, smiles per line 1.91) and was re-armed. Night 120: 505 n
 0.093 falling through the rounds, the gauge 0.787 -> 0.847; the store 3538 after 135 dropped (2825, 3168, 3538 over three
 nights: growing under the converted strengths, the cap 8192 the limit; to watch); the face organ's correlation 0.45; the
 prefrontal 0.71; the actor's slope 0.084. The chain alive.
+
+
+### Night 121 (2026-09-12, 02:32)
+
+Day 128 (the body's 121st): lines and cues 166, smiles 234 (1.41 a line), frowns 69 (by quarter 16, 21, 17, 15; the
+talkative days 66, 81, 68, 64, 68, 60, 66, 71, 69: flat near seventy for five days), cues 11 answered 4 ("the dog went " ->
+out twice, "the man had the " -> nut), duty after the parent's lines 0.41, the loop 18.5 per thousand (15.8 the day before),
+the parent's share 0.44, the child silent 0.68. The guard held (duty 0.408, smiles per line 1.40) and was re-armed. Night 121:
+454 new slots -> 57 dreams, the loss 0.098 to 0.074 (the lowest start and end of any night: the day's material well predicted
+before the night began), the gauge 0.854 -> 0.894 (the highest); the store 3861 after 131 dropped (growing ~330 a night); the
+face organ's correlation 0.46; the prefrontal 0.74; the actor's slope 0.087. Imitation measured over days 100 to 127: the share
+of the child's scored words that were in the parent's last two lines 0.17 under the slow parent, 0.32 under the talkative one;
+its two-word pairs 85% taught pairs throughout; verbatim echo of the line just typed rare (one to eight a day). The parent for
+days 129 to 131 spawned with the hand-over rule (three minutes after the start row; stop at the last night row) and a duty to
+answer the child's sayings-back within the minute. The chain alive.
