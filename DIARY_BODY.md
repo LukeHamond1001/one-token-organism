@@ -6616,3 +6616,9 @@ kept night; not discarded; the store 2659 after 345 dropped; the face organ's co
 scales with the day from the restart after this night's save (night_load 0.125, at most 192 dreams: a 700-slot day dreams
 about 88), together with the rollback's removal (the user's word). The reload re-armed at 20:36 with those flags; the guard
 re-armed for night 117; the chain alive.
+
+The boundary at 20:35: after night 116's post-night save the body was restarted with the A flags and night_load 0.125
+(night_starts_max 192), the rollback gone from the code; loaded in eight seconds (ticks 1392850, store 2681); the typist of
+day 120's launch had stamped day 122's start row before it was stopped, so the chain's relaunch at 20:37 carries the label 123:
+day 122 is one row in the log and the body's count is unchanged at 116 nights. The parent for the next three days waits on
+the log; the guard armed with the new flags.
