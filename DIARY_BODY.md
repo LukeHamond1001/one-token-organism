@@ -6838,3 +6838,16 @@ evening misses recovered the same day too. It re-uses an answered frame across l
 in the tin". Questions of its own: "that is that? a big...", "is this?". Frowns 5, 3, 3; smiles 285, 289, 254. Its advice:
 keep "the X was ", "put X ", "that is my/your ", "the man had the "; drop "take X " and "the X went " until its output
 segments.
+
+
+### Night 128 (2026-09-12, 10:05)
+
+Day 135 (the body's 128th): lines and cues 146, smiles 271 (1.86 a line), frowns 1, cues 21 answered 14 (67%: "the cab was "
+-> in three times, "put cab " -> in three times, "take cab " -> out twice, "take ox " -> out, "the kid was " -> in; "the ox
+was " missed three times, the two-letter noun drawing "not" and "the"), duty after the parent's lines 0.42, the loop 19.3
+per thousand (it swings between 10 and 19 day to day), the parent's share 0.40, the child silent 0.67, the ear ratio 0.17;
+it ran on past its answers 78 times. The guard held (duty 0.422, smiles per line 1.85) and was re-armed. Night 128: 261 new
+slots -> 48 dreams, the loss 0.152 to 0.123 (a shallow night; the end losses of the last eight nights 0.074, 0.074, 0.110,
+0.118, 0.097, 0.086, 0.085, 0.123), the gauge 0.812 -> 0.83; the store 5326; the face organ's correlation 0.47; the prefrontal
+0.68 (0.76 eight nights ago: the drift continues, a hundredth a night, since the frowns left the reward's rhythm: the long
+horizon's returns are harder to foresee without the predictable negative); the actor's slope 0.092. The chain alive.
