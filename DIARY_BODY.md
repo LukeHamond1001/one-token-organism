@@ -7049,3 +7049,10 @@ fixes, not yet taken: (a) a target for its own positions that is its own next sy
 recall's continuation), so the cortex learns to continue an utterance it has begun; (b) the mouth's plan drawn from the
 recall's chain (the episode as lived, as the dreams now are) rather than the one-step forecast. To be decided on the probe
 after tonight's save, with the exchanges in the store.
+
+The eighteenth defect (2026-09-12, 17:40): the probe on tonight's save read the same repeats ("t t t", "my my my"), so the
+root is the target: at its own positions the waking lesson made the cortex predict the world's next symbol, the parent's next
+line's first letter, the same at every step. From the restart after night 136's save the target at an own position is the
+recall's continuation of what it has said (own_target_form recall; commit 75125ae; test 42): the forward model of its own
+speech, the stored adult line as the template, the songbird's way. Also at that restart: nothing else. The disk was nearly
+full (2.5 GB): ten gigabytes of my restart copies removed, the script keeps two now.
