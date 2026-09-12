@@ -933,11 +933,39 @@ def test_dreams_follow_the_episode():
     print("39 dreams follow the episode:", texts[:4], "| mean length", round(sum(lens) / len(lens), 1), "| whole lines", whole, "of", len(texts), "| the branch replays", sorted(ends & {"web", "nut", "hut"}))
 
 
+def test_actor_chunks():
+    """the action chunk (actor_form chunk, 2026-09-12): inside a word the mouth says the cortex's own continuation with no gate
+    decision and no sampling, the word ends at a space or the rest, and the actor's credit is taken once per word, not per letter"""
+    life = _watched(actor_form="chunk", chunk_max=6, gate_floor=0.9)
+    for _ in range(3):
+        for line in ["dog will go", "give milk", "big dog"]:
+            say(life, line, 6)
+    words0 = getattr(life, "_chunk_words", 0); pend0 = len(life._act_pending); n0 = len(life.gate_buf)
+    for _ in range(120):
+        life.tick()
+    words = getattr(life, "_chunk_words", 0) - words0; ticks_in = getattr(life, "_chunk_ticks", 0)
+    assert words >= 3 and ticks_in >= words, (words, ticks_in)
+    own = [e for e in life.page[-240:] if e[1] == 1 and e[0]]
+    assert own, "it said nothing"
+    # inside a word the gate had nothing to credit (p_act 1.0 on the program's ticks); a word's start was a decision (p_act < 1)
+    rows = list(life.gate_buf)[-120:]
+    conts = sum(1 for row in rows if row[1] and abs(float(row[6]) - 1.0) < 1e-9)
+    starts = sum(1 for row in rows if row[1] and float(row[6]) < 1.0 - 1e-9)
+    assert conts >= starts >= 1 and conts + starts == sum(1 for row in rows if row[1]), (conts, starts)
+    # one credit per word: the actor's pending acts grew by the words begun, not by the letters said
+    said = sum(1 for e in life.page[-240:] if e[1] == 1 and e[0])
+    grew = len(life._act_pending) - pend0
+    assert grew <= words + 2 and said > words, (grew, words, said)
+    d = life.insides(); assert d["actor_form"] == "chunk" and d["chunk_words"] >= 3
+    text = "".join(e[0] if e[0] else "_" for e in life.page[-120:] if e[1] == 1)
+    print("40 the actor chunks:", words, "words in", ticks_in, "program ticks,", said, "symbols said; its speech:", repr(text[-60:]))
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks]
     failed = 0
     for t in tests:
         try:

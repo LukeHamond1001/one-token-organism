@@ -91,6 +91,11 @@ PHYSIOLOGY = dict(
     # logits of its best) and the striatum chooses among them (its bias added only there; the rest are never said), as the basal
     # ganglia select among cortical candidates rather than inventing actions.
     actor_form="add", actor_margin=4.0,
+    # actor_form "chunk" (2026-09-12, the user's word: "child probably spends most of its time chunking stuff into sounds"): the
+    # basal ganglia's action chunk. At a word's start the cortex proposes, imagination values the candidates and the choice is made
+    # (as under "plan"); then the word RUNS as a motor program: the cortex's own continuation, symbol by symbol, no gate and no
+    # sampling until the space or the rest (or chunk_max symbols). One act, one credit, per word; the letters inside are not choices.
+    chunk_max=12,
     # THE ACTOR'S EARNED VOICE (actor_voice "earned", 2026-09-08): the striatum's own vote for a symbol, bounded, applied to the
     # cortex's proposal as loudly as it has proved right: its weight is the slope of the reward of the next actor_horizon ticks on
     # its vote for the act taken, clipped to [0, 1] (the law of the prefrontal voice and the face organ). "off": the vote unused.
@@ -919,13 +924,13 @@ class Life:
                     if form_ == "select":
                         short = spk >= (spk.max() - float(self.cfg.get("actor_margin", 4.0)))   # the cortex's shortlist
                         logits = torch.where(short, logits + a_bias, torch.full_like(logits, float("-inf")))
-                    elif form_ == "plan":
+                    elif form_ in ("plan", "chunk"):
                         # THE BOUNDARY (plan_boundary 1): the tick after a pause in its own speech, or its last symbol the space (a
                         # fact about text written in). plan_boundary 0 (2026-09-08): no symbol, no pause test; the planner runs
                         # whenever it is about to act and the cortex is torn (more than one candidate within the margin), which is
                         # what the shortlist test below already asks. Inside a word the cortex is rarely torn; at a word's start it is.
                         # Deliberation where there is doubt: body-general, and it carries to a body without a space.
-                        if int(self.cfg.get("plan_boundary", 1)):
+                        if int(self.cfg.get("plan_boundary", 1)) or form_ == "chunk":   # the chunk form deliberates at the word's start only
                             boundary = (not getattr(self, "_acted_last", False)) or getattr(self, "_own_last", None) in (None, self.space_id)
                         else:
                             boundary = True
@@ -961,15 +966,31 @@ class Life:
             logits[self.bans] = float("-inf")
             probs = torch.softmax(logits, -1)
             ent = float(-(probs * (probs + 1e-9).log()).sum() / math.log(probs.numel())); self._ent_now = ent
-            if acted:
+            chunk_form = act_on and str(self.cfg.get("actor_form", "add")) == "chunk"
+            self._chunk_cont = False
+            if chunk_form and getattr(self, "_acted_last", False) and getattr(self, "_own_last", None) not in (None, self.space_id) \
+                    and getattr(self, "_chunk_len", 0) < int(self.cfg.get("chunk_max", 12)):
+                # THE CHUNK RUNS: inside a word (its last own symbol not the space, its turn unbroken) the cortex's own continuation is
+                # said, the most likely symbol, with no gate decision (p_act 1: nothing to credit) and no sampling; the word ends at
+                # the space or at the rest (the turn's end); chunk_max symbols force a new decision
+                acted = True; p_act = 1.0; self._chunk_cont = True
+                nxt = int(torch.argmax(logits)); p_choice = float(probs[nxt]); self._chunk_len = getattr(self, "_chunk_len", 0) + 1
+                self._chunk_ticks = getattr(self, "_chunk_ticks", 0) + 1
+                if nxt == self.sil:
+                    acted, p_choice = False, 0.0
+            elif acted:
                 nxt = int(torch.multinomial(probs.cpu(), 1, generator=self.gen))
                 p_choice = float(probs[nxt])
                 if nxt == self.sil:
                     acted, p_choice = False, 0.0                  # it chose the rest: the turn is the other's
+                elif chunk_form:
+                    self._chunk_len = 1                           # a word begins: the act; its letters follow as a program
+                    if nxt != self.space_id:
+                        self._chunk_words = getattr(self, "_chunk_words", 0) + 1
             else:
                 nxt, p_choice = self.sil, 0.0
         int_t = 0.0
-        if acted and act_on:
+        if acted and act_on and not self._chunk_cont:            # the actor's act and credit: once per word under the chunk form
             self._ring_torn.append(1.0 if self._torn_now else 0.0); self._ring_ent.append(float(self._ent_now)); self._torn_now = False
             if getattr(self, "_a_bias_now", None) is not None:
                 ab_ = self._a_bias_now
@@ -1665,6 +1686,7 @@ class Life:
                 "anticipation": self.anticipation(), "face_form": str(self.cfg.get("face_form", "read")), "face_slope": round(float(self._frel_gain), 3),
                 "face_corr": round(float(self._frel_corr), 3), "face_pred": round(float(self._fpred_now), 3), "rem_form": str(self.cfg.get("rem_form", "forecast")),
                 "actor_voice": str(self.cfg.get("actor_voice", "off")), "actor_slope": round(float(self._arel_gain), 3), "actor_corr": round(float(self._arel_corr), 3),
+                "actor_form": str(self.cfg.get("actor_form", "add")), "chunk_words": int(getattr(self, "_chunk_words", 0)), "chunk_ticks": int(getattr(self, "_chunk_ticks", 0)),
                 "actor_agree": (round(sum(self._act_agree) / len(self._act_agree), 3) if self._act_agree else None), "acts": len(self._act_agree),
                 "face_input": str(self.cfg.get("face_input", "cortex")), "torn_frac": (round(sum(self._ring_torn) / len(self._ring_torn), 3) if self._ring_torn else None),
                 "ent_mean": (round(sum(self._ring_ent) / len(self._ring_ent), 3) if self._ring_ent else None)}
