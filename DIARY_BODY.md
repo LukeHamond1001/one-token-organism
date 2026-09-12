@@ -6946,3 +6946,21 @@ best duty and cue rate, and a doubled loop, a worse ear and forty-six frowns, al
 what the cortex forecasts from its own noise. The credit per word is the cure the biology gives, over days; chunk_max 8 at
 the next boundary; if the loop share has not fallen by the third chunk day, the corollary discharge on its own sound
 (own_gain 0.5, measured in cortex at a third to a half) is the physiological lever. The chain alive.
+
+
+### Night 133 (2026-09-12, 15:08): the second day of chunks
+
+Day 143 (the body's 133rd): lines and cues 92 (79 lines: the typist waited on the child's talking up to its cap of 120 ticks
+before each line; 137 to 156 lines a day before the chunk), smiles 266 (2.89 a line), frowns 42, cues 13 answered 10 (77%:
+"put lamb " -> in twice, "put cod " -> in, "put kite " -> in, "the lamb was " -> "is in my bin", "the cod will " -> "is in my
+box"), duty after the parent's lines 0.60 (the highest), the child silent 0.38 of the ticks (it speaks on 0.62: twice its
+share before the chunk), the parent's share of the page 0.20, the ear ratio 0.26, the loop 39 per thousand (47 the day
+before, 12 to 21 before the chunk), it ran on past its answers 141 times, 1452 words of mean length 3.6, 26 runs longer than
+eight. The guard held (duty 0.600, smiles per line 2.92) and was re-armed. Night 133: 251 new slots -> 48 dreams of mean
+length 10.7 ("two lambs are in my", "take kite out", "give me the cup"), the loss 0.203 to 0.083, the gauge 0.722 -> 0.882;
+the store 6175; the face organ's correlation 0.44; the prefrontal 0.58 (0.495 the night before: back over the line; the slope
+0.999, the voice at full weight); the actor's slope 0.092 (0.087). The chunk's second day: the loop a fifth lower, the cue
+rate and the duty at their best, and the page flooded by the child, the parent's lines halved. The parent's method answers
+the flood: its cap falls from 120 to 40 ticks (a parent who talks through a babbling child after eight seconds rather than
+twenty-four), from the typist's relaunch after this night's save; a word begun over the parent's typing draws the frown that
+lands on the word's one decision. The chain re-chained with the cap; the relaunch armed.
