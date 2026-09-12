@@ -6719,3 +6719,15 @@ of the child's scored words that were in the parent's last two lines 0.17 under 
 its two-word pairs 85% taught pairs throughout; verbatim echo of the line just typed rare (one to eight a day). The parent for
 days 129 to 131 spawned with the hand-over rule (three minutes after the start row; stop at the last night row) and a duty to
 answer the child's sayings-back within the minute. The chain alive.
+
+The parent of days 126 to 128 reported at 02:35: 432 utterances queued (27 cues, one in sixteen, under the brief's one in
+eight), 158, 163 and 178 said; arm and web (day 127), ear and yam (day 128), each entering through "the man had the X" and
+carried through the frames; plurals and "went". The old frames came back after day 124's collapse ("that is my " -> tin, bin,
+tin on the three days; "the man had the " -> tin, webt, nutpi); every full post-night hit was a frame that had missed the same
+evening, three nights of three. Unprompted sentences of its own: "I had my hat is hot" (six words), "hat is not my hat", "my
+tin is not in", "milk under the bin", "two pets are here" and, after the parent answered it, "two hens are here"; "you had
+hat", "had two hats", "pig is big". Questions of its own with their marks: "this is my toy?", "that is that?", "the toy?".
+Fifty-five of the parent's seventy-two batches opened with an answer to what the child had just written, and the child took
+the answers by re-using their material. Frowns 73, 73, 73 (identical; flat), smiles 203, 296, 248. Its advice: cue one in
+eight, and put the evening's cues on frames taught twice that day, because the night turns evening misses into morning
+answers.
