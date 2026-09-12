@@ -7056,3 +7056,9 @@ line's first letter, the same at every step. From the restart after night 136's 
 recall's continuation of what it has said (own_target_form recall; commit 75125ae; test 42): the forward model of its own
 speech, the stored adult line as the template, the songbird's way. Also at that restart: nothing else. The disk was nearly
 full (2.5 GB): ten gigabytes of my restart copies removed, the script keeps two now.
+
+Watched live, day 147 (the label; 2026-09-12, 17:36 to 18:01), under the corollary discharge at 0.3 and the frown gap of a
+minute: the loop 14, 18, 12, 15, 7, 5 per thousand (37 to 47 on the chunk days), "tin" a handful per five minutes, the ear
+ratio 0.39 -> 0.27, the child's share of the ticks 0.55 -> 0.39, the mouth's sharpness 32 to 48 with the mood high, stress
+20.5 -> 19.1 (slow to fall); the actor's slope 0.103. Its phrases: "I had my", "is my hip is wet", "had my duck two webs are
+in my hut", "hide little milk"; no answer yet to a question. The own-speech target lands at the next boundary.
