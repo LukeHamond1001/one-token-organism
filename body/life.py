@@ -1405,6 +1405,7 @@ class Life:
                     m.load_state_dict(sd["organs"]); m.to(self.dev)
                     after, _ = self.gauge(dreams); after_cos = self._gauge_cos
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
+                            "nrem_curve": [round(float(x), 4) for x in losses],   # the whole curve (2026-09-12): to read where the rounds stop paying
                             "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
                             "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None), "rem_imagined": rem_imag,
                             "gauge": {"before": before, "after_nrem": mid, "after": after, "symbols": nsym,
