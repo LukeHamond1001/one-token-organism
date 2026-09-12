@@ -6871,3 +6871,19 @@ The boundary at 11:08 (2026-09-12): the body restarted with the store's sequence
 day 138 at tick 0.2 (the label skipped 137, which holds one row). The achieved rate 4.67 ticks a second against 3.8 before
 (the loop now near one core's full time, 104%): a fifth more life an hour, the days about 43 minutes of wall time. Night 130
 is the first whose dreams run the episodes as lived; its mean dream length is the reading.
+
+
+### Night 130 (2026-09-12, 12:10): the first night of episodes, half formed
+
+Day 138 (the body's 130th; the first at five ticks a second, 4.67 achieved): lines and cues 156, smiles 241 (1.54 a line),
+frowns 5, cues 14 answered 7 ("put gem " -> in, "the hip was " -> in, "put cab " -> in, "the pad was " -> in), duty after the
+parent's lines 0.38, the loop 12.6 per thousand, the parent's share 0.46, the child silent 0.70, the ear ratio 0.19. The
+guard held (duty 0.381, smiles per line 1.55) and was re-armed. Night 130 (16 minutes), the first under the sequence links:
+385 new slots -> 48 dreams of mean length 8.4 (6.9 the night before), among them whole lines for the first time, "the man
+had the nut", "my nut is in your bag", "put gem in", "yes. hide the ball in", beside the old fragments ("the ", "pu") from
+onsets whose slots were written before the links existed and have no chain yet; the links form as lines are heard again, so
+the length should climb over the coming nights. The loss 0.241 to 0.111; the gauge 0.562 -> 0.818 (a lower before-reading:
+whole lines are a harder recall than openers); the store 5737 after 185 dropped; the face organ's correlation 0.49 (rising
+slowly for a week); the prefrontal 0.62 (0.76 ten nights ago: the drift continues and steepened tonight; the earned law is
+taking the voice from a critic whose long returns changed their rhythm when the frowns left and the pace moved; to watch,
+not to touch); the actor's slope 0.079. The chain alive.
