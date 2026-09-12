@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, night_load=0.0, night_starts_max=192, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, night_undo_drop=0.15, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -343,6 +343,7 @@ class Life:
         self._frel = [0.0] * 6; self._frel_gain = 0.0; self._frel_corr = 0.0   # THE FACE ORGAN'S RELIABILITY (face_form "foresee", §5c): the slope of the felt reward on its foresight
         self._C1_prev = None; self._fpred_now = 0.0
         self._arel = [0.0] * 6; self._arel_gain = 0.0; self._arel_corr = 0.0; self._act_pending = collections.deque()   # the actor's reliability
+        self._store_after_night = None                    # the store's size when the last night ended: the day's new memories are counted from it
         self._a_bias_now = None; self._act_agree = collections.deque(maxlen=int(self.cfg["wake_ticks"]) + 16)
         # THE FACE ORGAN'S INPUT (face_input, the review of 2026-09-10): "cortex" reads the stream, which carries the coming reward at 0.11;
         # "striatum" reads what the fast critic reads, the delay line's expansion (and the working-memory slot beside it), which carries it at 0.47
@@ -1280,8 +1281,19 @@ class Life:
         m = self.m
         rep = {"night": self.nights + 1, "tick": self.ticks}
         try:
-            dreams = self.dreams()
-            rep["dreams"] = len(dreams)
+            # SLEEP NEED SCALES WITH THE DAY'S PLASTICITY (night_load, 0 = off; 2026-09-11, nights 114-115): with the parent talking
+            # twice as much, the day wrote twice the memories and the night, dreaming its fixed 48 starts, consolidated less far (the
+            # gauge after it 0.88 -> 0.71, the loss ending 0.09 -> 0.18). Slow-wave activity in a brain grows with the plasticity of
+            # the wake before it (the synaptic homeostasis of Tononi and Cirelli); here the number of dreams a night starts grows
+            # with the memories the day added to the store, night_load dreams per new slot, never fewer than night_starts and never
+            # more than night_starts_max. A disclosed constant, not a rule about content; the store's own count, nothing read from
+            # the parent.
+            n_new = (self.store.n() - int(self._store_after_night)) if self._store_after_night is not None else 0
+            load = float(self.cfg.get("night_load", 0.0)); n_starts = None
+            if load > 0.0:
+                n_starts = int(min(int(self.cfg.get("night_starts_max", 192)), max(int(self.cfg["night_starts"]), round(load * max(0, n_new)))))
+            dreams = self.dreams(n_starts)
+            rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new)
             rep["examples"] = [self.tok.decode(d)[:32] for d in dreams[:8]]
             rep["mean_len"] = round(sum(len(d) for d in dreams) / len(dreams), 1) if dreams else 0
             if not dreams:
@@ -1357,6 +1369,7 @@ class Life:
             # the rest: the store fades, the working state wakes fresh, the body is saved
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]))
             rep["store_slots"] = self.store.n(); rep["vrel"] = round(self._vrel_corr, 3)
+            self._store_after_night = self.store.n()
             if not int(self.cfg.get("night_keep_bands", 0)):
                 self.bands.zero_()                                    # the slow state kept across sleep when the flag is on
             if int(self.cfg.get("vcrit_norm_wake", 0)) and self.m.vc_mu.numel():
@@ -1648,7 +1661,8 @@ class Life:
                          "vbuf_v": list(self._vbuf_v), "vbuf_r": list(self._vbuf_r), "sharp_cal": float(self.sharp_cal),
                          "frel": list(self._frel), "frel_gain": float(self._frel_gain), "frel_corr": float(self._frel_corr),
                          "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone(), "fh_w": self._fh_w.clone(),
-                         "arel": list(self._arel), "arel_gain": float(self._arel_gain), "arel_corr": float(self._arel_corr)}}
+                         "arel": list(self._arel), "arel_gain": float(self._arel_gain), "arel_corr": float(self._arel_corr),
+                         "store_after_night": self._store_after_night}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -1717,6 +1731,8 @@ class Life:
                 life._fh_w.copy_(L["fh_w"])
         if L.get("arel") is not None:
             life._arel = [float(v) for v in L["arel"]]; life._arel_gain = float(L.get("arel_gain", 0.0)); life._arel_corr = float(L.get("arel_corr", 0.0))
+        if L.get("store_after_night") is not None:
+            life._store_after_night = int(L["store_after_night"])
         life.sym_freq = dict(L.get("sym_freq") or {})
         life.perf = {int(k): float(v) for k, v in (L.get("perf") or {}).items()}
         if L.get("rbar") is not None:

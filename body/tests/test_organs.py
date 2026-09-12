@@ -849,11 +849,32 @@ def test_typist_yields():
     print("36 the typist yields to a visitor: the line waited", min(parent_ticks) - vt, "ticks; rows", [k for k in kinds if k in ("yield", "resume", "smile", "line")])
 
 
+def test_night_scales_with_the_day():
+    """sleep need scales with the day's plasticity (night_load, 2026-09-11): a day that wrote many memories starts more dreams than
+    night_starts, a quiet day starts night_starts, and the count is remembered across a save"""
+    life = tiny(night_starts=4, night_load=0.5, night_starts_max=40, night_rounds=2)
+    for line in ["dog will go", "give milk", "ball under", "big dog", "I saw dog", "you had ball", "first milk then ball", "scared ball"]:
+        say(life, line, 2)
+    n_before = life.store.n()
+    life._store_after_night = 0                            # everything in the store is the day's
+    rep = life.night()
+    assert rep["new_slots"] == n_before and rep["dreams"] >= 5, (rep.get("new_slots"), rep.get("dreams"), n_before)
+    assert rep["dreams"] <= 40 and life._store_after_night == life.store.n()
+    say(life, "dog", 1)                                    # a quiet day
+    rep2 = life.night()
+    assert rep2["dreams"] == 4, rep2["dreams"]
+    import os
+    path = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/night_load_test.pt"
+    life.save(path); life2 = Life.load(path, TOK, device="cpu"); os.remove(path)
+    assert life2._store_after_night == life._store_after_night
+    print("37 the night scales with the day: a full day ->", rep["dreams"], "dreams of", rep["new_slots"], "new slots; a quiet day ->", rep2["dreams"])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day]
     failed = 0
     for t in tests:
         try:
