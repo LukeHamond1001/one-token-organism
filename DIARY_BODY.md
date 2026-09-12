@@ -7022,3 +7022,30 @@ is your yam" -> "here is the yam"); "I see" eleven times, "I want" five, "yes" t
 question "is the yak?" answered within four lines. The cue "I want " -> "the" (a smile). "tin" fell from 3.4 a minute under
 the previous parent to 1.2 a minute under this one, within the same day. Faces in its minutes: 208 smiles, 36 frowns. Its
 advice: keep modeling answers with "I" and yes/no; B's answers come back out of the child's mouth within a minute.
+
+
+### Night 135 (2026-09-12, 17:35): the conversation day's night, forty-three minutes
+
+Day 145 (the body's 135th): the first twenty-three minutes of conversations (the previous parent's drills before them);
+smiles 353, frowns 65 in all. Night 135 took 2558 seconds, longer than the day: 565 new slots (the exchanges are new
+memories, as they should be) -> 71 dreams of mean length 14.7 ("that is my big wet hat", "what do you want milk?", "take
+bud out", "put cod in"), the loss 0.357 to 0.094, the gauge 0.536 -> 0.878; the store 6680 after 207 dropped; the face
+organ's correlation 0.43; the prefrontal 0.54; the actor's slope 0.102 (0.087 at the chunk's start: a hair a day). The
+night's cost grows with the dreams' length and count: 71 x 48 rounds x 15 symbols; the last rounds of every curve are flat,
+so night_rounds falls from 48 to 32 at the restart after this night's save (the full curve, kept from tonight, will say
+where the rounds stop paying), beside own_gain 0.3. The guard re-armed.
+
+THE LANGUAGE MODEL INSIDE, probed (tools/probe_lm.py, on a copy of the 16:07 save): a prompt as the world's symbols, the
+world's pause, then the greedy continuation with its own symbols fed back. "do you want milk?" -> " s s s s t t t t"; "what
+do you have?" -> "s.s.s.s."; "are you here?" -> "t t t t"; "where is the dog?" -> "me me me me"; "hi" -> "me t bre bre bre".
+The mouth reads a forecast of the WORLD's next symbol, and at the child's own positions that target is the parent's next
+line's first letter, the same at every step (own_target_decay 0.7 fades but keeps it), so the greedy continuation repeats
+one letter or one syllable: the loop in its purest form, "t t t", "ttle", "me me". Its sentences come from elsewhere: the
+hippocampal recall of taught lines chained by context (the recall pathway the mouth reads beside the forecast), and the
+sampling that breaks the repeat. A language model generates by predicting its own next symbol; this body predicts the
+world's, which is right for hearing and wrong for saying beyond one symbol. What biology does: the forward model of one's
+own speech; the intended utterance planned as a sequence and executed; imitation of stored adult forms. The candidate
+fixes, not yet taken: (a) a target for its own positions that is its own next symbol when what it says is a stored line (the
+recall's continuation), so the cortex learns to continue an utterance it has begun; (b) the mouth's plan drawn from the
+recall's chain (the episode as lived, as the dreams now are) rather than the one-step forecast. To be decided on the probe
+after tonight's save, with the exchanges in the store.
