@@ -6964,3 +6964,12 @@ rate and the duty at their best, and the page flooded by the child, the parent's
 the flood: its cap falls from 120 to 40 ticks (a parent who talks through a babbling child after eight seconds rather than
 twenty-four), from the typist's relaunch after this night's save; a word begun over the parent's typing draws the frown that
 lands on the word's one decision. The chain re-chained with the cap; the relaunch armed.
+
+The parent of days 139 to 143 reported at 15:12: three nouns a day (duck, sock, bud; nest, doll, ice; lamb, kite, cod) with
+where, not, your; 315 utterances queued, 308 said; cue completions 12, 10, 8 of 21, 23, 16, never under half: three nouns a
+day landed as well as two, every new noun's "the X was " and "put X " landing the day it entered, only doll and kite stuck at
+a prefix ("int": "in" and then it runs on). The re-asking after the night converted the evening's misses again. It answered
+about forty-five of the child's utterances; unprompted: "the mat was in here", "the lad was in my hat", "it was in your ear",
+"hold the big box", "ice is not in my mug", "the ice is cold", "it is not a nut", "hi. I see you"; questions of its own "up?
+ball in my bed", "it was that?"; the day's new nouns re-used unprompted the same day, and "not" and "your" in its own frames.
+Faces 296/8, 251/47, 274/43; smiles per line 2.24, 2.46, 3.38.
