@@ -6651,3 +6651,21 @@ not fall). The dreams' examples were the parent's cue prefixes ("do not ", "what
 and re-asks eight after each night. To watch at the scaled night: whether the loss falls through the rounds again with the
 broader dream set, and what share of the dreams are prefixes. The face organ's correlation 0.44; the prefrontal 0.75; the
 actor's slope 0.076; the store 2742 after 264 dropped. The chain alive; the guard re-armed.
+
+
+### Night 118 (2026-09-11, 22:58): a good night, and the day after the divergence
+
+Day 124 (the body's 118th): lines and cues 148, smiles 219 (1.48 a line), frowns 60 (66, 81, 68, 64, 68, 60: falling), duty
+after the parent's lines 0.47, the loop 16.7 per thousand, the parent's share 0.36, the child silent 0.62. But the cues: 1 of
+24 ("take pet " -> "outtle"), against 10 of 32 the day before and five to ten of a dozen on every day for weeks. This was the
+day after night 117 diverged: it wrote sentences of a kind all day ("no milk.", "it was in th", "eat the nut", "the tin is in
+the") and did not complete the frames it had completed every day. The divergence cost it the cue frames, for a day at least.
+Night 118 (with the count set, 317 new slots -> 40 < 48, so 48 dreams; the night did not need to scale): the loss 0.245 to
+0.084, the gauge 0.619 -> 0.879: a normal, good night, the dreams' examples whole-line onsets again ("the ", "put ", "yes.
+the ", "cap ont went"). The face organ's correlation 0.44; the prefrontal 0.74; the actor's slope 0.074. The guard held (duty
+0.468, smiles per line 1.46) and was re-armed with the new flags. At the boundary after this night's save the body restarts
+with repetition suppression (store_sat 1; the store converted once at the load) and the night's scaling, so the cause of the
+collapse of the dreams is removed before it recurs; a night that diverges is kept, by the user's word, so the cause is the
+only protection. The parent for the next three days spawned with fewer cues (one in eight) and whole sentences, "the man had
+the X" as the carrier. To read tomorrow: whether the cue frames come back (day 125/126), and whether the nights hold their
+shape with the spread dreams.
