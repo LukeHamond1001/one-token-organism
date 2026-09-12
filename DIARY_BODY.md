@@ -6792,3 +6792,15 @@ own sentences: "the egg is in the hen", "it is not my web", "tins are in my bag"
 method): a letter is not talking; from the next typist relaunch (armed after day 132's post-night save) the talk-over rule
 applies to tokens of two letters or more, like the smile's bound. Expect the frowns to fall from ~75 to under ten a day; the
 ear ratio read nightly, the rule restored if it rises above 0.35 for two days.
+
+
+### Night 125 (2026-09-12, 06:55): a letter is not talking
+
+Day 132 (the body's 125th), the first under the rule that the talk-over frown applies to words of two letters or more, at a
+line every twenty seconds: lines and cues 147, smiles 286 (1.95 a line, the most per line of the talkative days), frowns 5
+(74 the day before), cues 18 answered 7 ("the ram was " -> in, "the pie was " -> in, "take ram " -> out, "put pod " -> in),
+duty after the parent's lines 0.48, the loop 9.7 per thousand (the first day under ten; 26 on the first talkative day), the
+parent's share 0.37, the child silent 0.64, the ear ratio 0.18, unchanged with the letter frowns gone: the yielding it had
+learned stands without them. The guard held (duty 0.481, smiles per line 1.96) and was re-armed. Night 125: 274 new slots ->
+48 dreams, the loss 0.198 to 0.097, the gauge 0.728 -> 0.87 (better than the two nights before); the store 4793; the face
+organ's correlation 0.46; the prefrontal 0.72; the actor's slope 0.100. The chain alive.
