@@ -903,11 +903,34 @@ def test_repetition_suppression():
     print("38 repetition suppression: max/mean strength", round(skew(S), 2), "| the most drawn start", round(top, 2), "of the dreams | a linear store converted once at the load:", round(skew(S2), 2), "->", round(skew(S3), 2))
 
 
+def test_dreams_follow_the_episode():
+    """the store's sequence links (store_chain, 2026-09-12): a dream from an onset runs the utterance as it was lived, to its end,
+    instead of a pattern completion that stops at the first ambiguity; the links survive a save and a pruning"""
+    import os
+    life = tiny(store_chain=1)
+    lines = ["dog will go up", "give milk now", "scared ball under", "big dog bigger dog"]
+    for line in lines:
+        say(life, line, 10)
+    assert int((life.store.N >= 0).sum()) > 20, int((life.store.N >= 0).sum())
+    life.gen.manual_seed(0); dreams = life.dreams(8)
+    texts = [TOK.decode([i for i in d if i != life.end_id]) for d in dreams]
+    lens = [len(t) for t in texts]
+    whole = sum(1 for t in texts if any(t.strip() == l for l in lines))
+    assert sum(lens) / len(lens) > 8 and whole >= len(texts) // 2, (texts,)
+    path = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/chain_test.pt"
+    life.save(path); life2 = Life.load(path, TOK, device="cpu"); os.remove(path)
+    assert torch.equal(life2.store.N, life.store.N)
+    keep = torch.arange(life2.store.n() - 3)                 # a pruning: the links follow the slots that stay
+    life2.store._keep(keep)
+    N = life2.store.N; assert int(N.max()) < life2.store.n() and int((N >= life2.store.n()).sum()) == 0
+    print("39 dreams follow the episode:", texts[:4], "| mean length", round(sum(lens) / len(lens), 1), "| whole lines", whole, "of", len(texts))
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode]
     failed = 0
     for t in tests:
         try:

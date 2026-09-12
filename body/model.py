@@ -49,6 +49,8 @@ class Store:
         self.B = torch.zeros(0, dtype=torch.bool, device=device)   # THE BOUNDARY: this slot's symbol ended the world's utterance
         self.Bs = torch.zeros(0, dtype=torch.bool, device=device)  # and this slot's symbol began one (the first after a pause)
         self.Bq = torch.zeros(0, dtype=torch.bool, device=device)  # THE SEAM: this slot's symbol is an utterance's first, under the last line's faded context
+        self.N = torch.zeros(0, dtype=torch.long, device=device)   # THE SEQUENCE (2026-09-12): the slot written next in the same utterance (-1: none); a dream follows it
+        self.last_idx = -1                                         # the slot the last write went to (new or merged)
 
     def n(self):
         return int(self.K.shape[0])
@@ -99,6 +101,7 @@ class Store:
             same = (sims > merge_cos) & ((self.V @ v) > merge_cos)
             if bool(same.any()):
                 j = int(torch.where(same, sims, torch.full_like(sims, -2.0)).argmax())
+                self.last_idx = j
                 if self.saturate:
                     # THE SIXTEENTH DEFECT (2026-09-11, night 117): strength summed linearly over repeats, so the typist's most repeated
                     # prefixes ("that is my ", said thirty times a day) reached four hundred against a store mean of two, the dreams
@@ -117,10 +120,22 @@ class Store:
         self.B = torch.cat([self.B, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.Bs = torch.cat([self.Bs, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.Bq = torch.cat([self.Bq, torch.zeros(1, dtype=torch.bool, device=self.dev)])
+        self.N = torch.cat([self.N, torch.full((1,), -1, dtype=torch.long, device=self.dev)])
+        self.last_idx = self.n() - 1
         if self.n() > self.cap:                                         # the weakest gives way
             keep = torch.argsort(self.S, descending=True)[: self.cap]
             self._keep(keep)
         return True
+
+    @torch.no_grad()
+    def link(self, a, b):
+        """THE SEVENTEENTH DEFECT (2026-09-12, night 128 read on a copy): the night's dreams were pattern completions from the
+        utterance onsets, and every line that began with the same word shared one onset, so ninety-six dreams were seventeen
+        fragments ("the ", "put ", "yes. ") of five symbols: the night replayed first words and the day's line endings, the nouns,
+        never. A hippocampus keeps the order of an episode (CA3's recurrent chain; replay runs it as lived): each slot remembers
+        the slot written next in the same utterance, and a dream follows that chain, pattern completion only where it breaks."""
+        if 0 <= a < self.n() and 0 <= b < self.n() and a != b:
+            self.N[a] = int(b)
 
     @torch.no_grad()
     def compress(self):
@@ -164,8 +179,12 @@ class Store:
         return True
 
     def _keep(self, idx):
+        idx = idx.to(self.dev).long()
+        remap = torch.full((self.n(),), -1, dtype=torch.long, device=self.dev); remap[idx] = torch.arange(int(idx.numel()), device=self.dev)
+        self.last_idx = int(remap[self.last_idx]) if 0 <= self.last_idx < self.n() else -1
         self.K, self.V, self.S, self.W = self.K[idx], self.V[idx], self.S[idx], self.W[idx]
         self.B, self.Bs, self.Bq = self.B[idx], self.Bs[idx], self.Bq[idx]
+        N = self.N[idx]; self.N = torch.where(N >= 0, remap[N.clamp_min(0)], N)   # the links follow the slots that stay; a dropped successor is none
 
     @torch.no_grad()
     def mark_seam(self, k, v, merge_cos=0.97):
@@ -215,7 +234,7 @@ class Store:
         return [int(pool[i]) for i in idx]
 
     def state_dict(self):
-        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp, "sat": bool(self.sat_done)}
+        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp, "sat": bool(self.sat_done), "N": self.N.cpu()}
 
     def load_state_dict(self, sd):
         self.K = sd["K"].to(self.dev); self.V = sd["V"].to(self.dev)
@@ -224,6 +243,8 @@ class Store:
         self.Bs = sd["Bs"].to(self.dev) if "Bs" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.Bq = sd["Bq"].to(self.dev) if "Bq" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.temp = float(sd.get("temp", self.temp)); self.sat_done = bool(sd.get("sat", False))
+        self.N = sd["N"].to(self.dev) if "N" in sd else torch.full((self.n(),), -1, dtype=torch.long, device=self.dev)
+        self.last_idx = -1
 
 
 class Block(nn.Module):

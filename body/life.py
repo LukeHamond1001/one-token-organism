@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -315,6 +315,7 @@ class Life:
         self.reserved = [i for i in _specials if i != self.sil] + ([self.nl] if self.nl is not None else [])
         self.bans = list(self.reserved)
         self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None; self._start_pending = False
+        self._prev_slot = -1                                   # the slot of the world's last symbol in this utterance (the sequence's link)
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
         self.store.saturate = bool(int(self.cfg.get("store_sat", 0)))   # repetition suppression (store_sat)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -435,6 +436,10 @@ class Life:
                 self._seam_pending = False                       # the first symbol's turn, kept or not
             if learn_store and who == 0 and x != self.sil and self.key.norm() > 1e-6:
                 self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
+                if int(self.cfg.get("store_chain", 0)) and self.store.last_idx >= 0:
+                    if self._prev_slot >= 0:
+                        self.store.link(self._prev_slot, self.store.last_idx)       # the episode's order: this symbol followed that one
+                    self._prev_slot = self.store.last_idx
                 self._last_write = (self.key.clone(), ex.clone())                    # for the boundary mark at the offset
                 if getattr(self, "_start_pending", False):
                     self.store.mark_start(self.key, ex); self._start_pending = False  # the utterance's first kept memory
@@ -503,6 +508,7 @@ class Life:
                 w["end"] = True; break
         if self._last_write is not None and not self.cfg.get("store_off"):
             self.store.mark_boundary(*self._last_write)                # the memory of the last symbol carries the boundary
+        self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain
 
     @property
     def bag(self):
@@ -1196,8 +1202,23 @@ class Life:
         floor = float(self.cfg["dream_floor_rel"]) * ref
         out = []
         a_hit, a_rec = float(self.cfg["dream_adapt"]), float(self.cfg["dream_recover"])
+        chain = int(self.cfg.get("store_chain", 0)) and self.store.N.numel() == self.store.n()
         with torch.no_grad():
             for j in starts:
+                if chain and int(self.store.N[j]) >= 0:
+                    # THE EPISODE AS LIVED: the onset's first symbol, then the slots in the order they were written, to the utterance's end
+                    ids = [self.m.nearest(self.store.K[j])]; k = int(j); seen = {k}
+                    for _ in range(int(self.cfg["dream_max"])):
+                        ids.append(self.m.nearest(self.store.V[k]))
+                        nk = int(self.store.N[k])
+                        if nk < 0 or nk in seen:
+                            if bool(self.store.B[k]) and int(self.cfg.get("offset_ticks", 0)) > 0:
+                                ids.append(self.end_id)                 # the memory ends where the world went quiet
+                            break
+                        k = nk; seen.add(k)
+                    if len(ids) >= 2:
+                        out.append(ids)
+                    continue
                 bag = self.store.K[j].clone()                           # a dream's context: per symbol, as the keys are
                 # the dream begins with the context's own last symbol, read from the key (a key is the bag before the
                 # memory's symbol, its newest term whole): at an onset that is the utterance's first symbol, which the
