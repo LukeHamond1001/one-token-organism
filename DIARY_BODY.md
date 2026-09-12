@@ -6764,3 +6764,20 @@ its row in the file; the frown is prompt.) The decision, on the parent's method:
 runs at a line every twenty seconds (period 80) with a ten-second turn (listen 40), the same rules otherwise; the chain
 re-chained with those arguments and the typist's relaunch after that night's save armed. Expect ~150 lines a day, fewer
 collisions, the frowns per line to fall; the ear ratio to be read every night from now on.
+
+
+### Night 124 (2026-09-12, 05:52): the pace change came a day early; a perfect day on cues
+
+The typist's relaunch after the post-night save, armed at 04:43, fired on day 130's save seconds later (the count it read was
+already the old one), so day 131 ran at the new pace: a line every twenty seconds with a ten-second turn (period 80, listen
+40). Day 131 (the body's 124th): lines and cues 155, smiles 247 (1.59 a line, up), frowns 74 (0.48 a line: no fall at the
+slower pace; talked-over words per line 0.71), cues 11 answered 11 ("the yak was " -> in three times, the day's noun; "the
+bib was " -> in twice, "put bib " -> in, "put yak " -> in twice, "take yak " -> out, "the rod was " -> in, "put pod " -> in):
+the first day every cue landed. Duty after the parent's lines 0.41; the loop 11.3 per thousand (the lowest yet); the parent's
+share 0.42; the child silent 0.67; the ear ratio 0.18 (it speaks on 0.08 of the ticks while the parent types, 0.42 when the
+parent is quiet). The guard held (duty 0.408, smiles per line 1.57) and was re-armed. Night 124: 285 new slots -> 48 dreams,
+the loss 0.187 to 0.118 (the fourth night's end in a row above the 0.074 of nights 121-122: shallower), the gauge 0.716 ->
+0.84; the store 4588; the face organ's correlation 0.46; the prefrontal 0.73; the actor's slope 0.098. What the frowns are
+for, read from the rows: the talked-over tokens are single letters almost entirely ('e', 'n', 'h', 'x' as the parent types
+"the ear is in the box"), the mouth shadowing the parent's own letters as they arrive; not one in a hundred is a word of the
+line. The parent for days 132 to 134 spawned for the twenty-second pace. The chain alive.
