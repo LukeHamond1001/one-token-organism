@@ -961,11 +961,52 @@ def test_actor_chunks():
     print("40 the actor chunks:", words, "words in", ticks_in, "program ticks,", said, "symbols said; its speech:", repr(text[-60:]))
 
 
+def test_second_voice():
+    """the second voice (2026-09-12): a queue line marked "b:" is typed under the page tag "other" right after the parent's line,
+    with no pace before it; the typist does not step aside for it; the corpus counts it as heard; the row says which voice"""
+    import json
+    import os
+    import random
+    from body.teacher import Teacher, Corpus, QueuePlanner
+    life = tiny()
+    log = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/voice_test.jsonl"
+    q = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/voice_queue.jsonl"
+    for f in (log, q, q + ".pos"):
+        if os.path.exists(f):
+            os.remove(f)
+    open(q, "a").write(json.dumps({"say": ["where is the dog?", "b: the dog is in the box", "put dog in"]}) + "\n")
+
+    class Stub(Teacher):
+        def req(self, path, data=None, timeout=30):
+            if path.startswith("/state"):
+                life.tick(); life.tick()
+                return life.state(int(path.split("since=")[1]))
+            if path == "/type":
+                return life.type_text(data["text"], who=data.get("who", "you"))
+            if path == "/face":
+                return life.set_face(data["expr"])
+            return {}
+    planner = QueuePlanner(q, random.Random(0), pos=0)
+    t = Stub("", 1, log, Corpus(None), planner, period=4, quiet=2, cap=8, tick=0.001, listen=2, yield_ticks=20)
+    t.poll(); t.finalized = t.maxtick - 1
+    items = [planner.next(t) for _ in range(3)]
+    assert items[1] == ("the dog is in the box", "line", "other") and len(items[0]) == 2, items
+    for it in items:
+        t.event(it[0], it[1], it[2] if len(it) > 2 else "parent")
+    tags = [e[4] for e in life.page if e[1] == 0 and e[0]]
+    assert "other" in tags and "parent" in tags and not t.yielding(), (set(tags), t.yielding())
+    rows = [json.loads(l) for l in open(log)]
+    voices = [r.get("voice") for r in rows if r["action"] in ("line", "cue")]
+    assert voices == ["a", "b", "a"], voices
+    assert t.corpus.lines.get("the dog is in the box", 0) == 1 and "box" in t.corpus.words
+    print("41 the second voice: tags", sorted(set(tags)), "| voices", voices, "| the typist did not yield")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice]
     failed = 0
     for t in tests:
         try:

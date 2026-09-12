@@ -125,7 +125,7 @@ class Caregiver:
             idx = self.cursor + i; tick = idx // 2
             if idx % 2 == 1:
                 self.its[tick] = e[0]; self.tobs[tick] = t; self.maxtick = max(self.maxtick, tick)
-            elif e[0] and len(e) >= 5 and e[4] and e[4] != "parent":
+            elif e[0] and len(e) >= 5 and e[4] and e[4] not in ("parent", "other"):   # a visitor's symbol; the other voice is the typist's own
                 self.visitor_tick = max(self.visitor_tick, tick)     # a visitor's symbol on the page
         self.cursor = n; self.state = d
         y = self.yielding()

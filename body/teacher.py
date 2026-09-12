@@ -106,7 +106,13 @@ class Teacher(Caregiver):
         lines = [(len(l), -n, l) for l, n in self.corpus.lines.items() if n >= HEARD_FOR_CUE and l.startswith(cue) and (l[len(cue):].split() or [""])[0] == answer]
         return min(lines)[2] if lines else (cue + answer).strip()
 
-    def event(self, text, kind):
+    def event(self, text, kind, who="parent"):
+        # THE SECOND VOICE (2026-09-12, the user's word: "have Opus do the complete flow of conversation, two voices back and forth,
+        # then the model learns to imitate"): a line marked for the other voice is typed under the page tag "other", a reply that
+        # follows the parent's line at once; the child overhears the exchange. The parent's face and rules are unchanged; the other
+        # voice earns nothing, asks no cue, and the typist does not step aside for it as it does for a visitor.
+        if who != "parent":
+            kind = "line"
         if kind == "cue":
             ans = self.corpus.answers(text)
             if not ans:
@@ -118,7 +124,7 @@ class Teacher(Caregiver):
             self.cue = {"text": text, "until": time.time() + self.s(360), "full": ans, "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (self.maxtick + 1, 10 ** 9)         # the parent's turn: from its first symbol to its last
-        self.req("/type", {"text": text, "who": "parent"}); t_start = time.time()
+        self.req("/type", {"text": text, "who": who}); t_start = time.time()
         self.corpus.typed(text if kind == "line" else text.strip())
         while True:
             d = self.poll(); self.scan()
@@ -130,7 +136,7 @@ class Teacher(Caregiver):
         self.watch(self.listen)
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
-        self.row({"action": kind, "text": text, "answers": (self.cue or {}).get("full") if kind == "cue" else None,
+        self.row({"action": kind, "text": text, "answers": (self.cue or {}).get("full") if kind == "cue" else None, "voice": ("b" if who != "parent" else "a"),
                   "gate_wait_s": round(gw, 1), "its_after": its, "ts": iso(t_start), "teacher": self.planner.name,
                   "fatigue": la.get("fatigue"), "stress": la.get("stress"), "mood": la.get("mood"), "gate": la.get("gate"),
                   "own": la.get("own"), "doses": la.get("doses"), "smiles_so_far": self.smiles,
@@ -159,7 +165,7 @@ class Teacher(Caregiver):
             item = self.planner.next(self)
             if item is None:
                 self.watch(self.s(12)); continue
-            text, kind = item
+            text, kind = item[0], item[1]; who = item[2] if len(item) > 2 else "parent"
             if self.parent and self.expand_next and kind == "line" and not getattr(self.planner, "planned", False):
                 # answering its word with a line that holds it: only in place of the typist's own filler. Replacing
                 # the planner's lines too (2026-09-04 and before), with a hundred smiled words a day, it ate nearly
@@ -168,14 +174,14 @@ class Teacher(Caregiver):
                 if holds:
                     text = self.rng.choice(holds)
             self.expand_next = None
-            if prev is not None:
+            if prev is not None and who == "parent":              # the other voice replies at once: no pace before it
                 prev = self.pace_wait(prev, self.pace())
                 if prev is None:
                     slept = True; break
             while self.parent and time.time() < self.away_until and not (self.state or {}).get("asleep"):
                 self.watch(self.s(8))
             prev = time.time()
-            if not self.event(text, kind):
+            if not self.event(text, kind, who):
                 slept = True; break
             n_events += 1
             if False:   # (review 2026-09-06) the parent used the body's sleep pressure to say bye before the night; a parent sees sleep, not adenosine
@@ -295,14 +301,17 @@ class QueuePlanner:
             for line in new.splitlines():
                 try:
                     for s in json.loads(line).get("say", []):
-                        c = clean(s)
+                        s = str(s); other = s[:2].lower() == "b:"          # "b: ..." marks the other voice's line
+                        c = clean(s[2:] if other else s)
                         if c:
-                            self.buf.append(c); self.calls += 1
+                            self.buf.append(("b:" + c.strip()) if other else c); self.calls += 1
                 except Exception:
                     pass
         if self.buf:
             s = self.buf.pop(0); self.planned = True
             self._remember()
+            if s[:2] == "b:":
+                return (s[2:], "line", "other")
             if s.strip():
                 self.recent.append(s.strip()); self.recent = self.recent[-24:]
             return (s, "cue" if s.endswith(" ") else "line")

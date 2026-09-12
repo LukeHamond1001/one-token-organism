@@ -39,7 +39,7 @@ setInterval(poll,500);</script>"""
 TALK = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>talk to the body</title>
 <style>body{margin:0;background:#f5f1e6;color:#222;font:17px/1.7 Georgia,serif}
 #pg{white-space:pre-wrap;padding:28px 24px 150px;max-width:760px;margin:0 auto;word-break:break-word}
-.p{color:#8a7a5a}.y{color:#1f4e8c}.n{color:#111;font-weight:bold}
+.p{color:#8a7a5a}.o{color:#3a7a3a}.y{color:#1f4e8c}.n{color:#111;font-weight:bold}
 #k{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;border:0;padding:0}
 #bar{position:fixed;left:0;right:0;bottom:0;background:#eae4d3;border-top:1px solid #cbbfa3;padding:10px 24px 14px}
 #row{display:flex;gap:10px;align-items:center;font:13px ui-monospace,monospace;flex-wrap:wrap}
@@ -47,7 +47,7 @@ button{font:16px Georgia,serif;padding:6px 16px;border:1px solid #b9ac8c;border-
 button:active{background:#e6dcc0}#st{margin-left:auto}#help{margin-top:6px;font:12px ui-monospace,monospace;color:#6b6252}</style>
 <div id=pg></div><input id=k autocomplete=off autocapitalize=off autocorrect=off spellcheck=false>
 <div id=bar><div id=row><button id=sm title="smile (arrow up)">smile</button><button id=fr title="frown (arrow down)">frown</button><span id=st></span></div>
-<div id=help>just type: each letter goes in as you press it (lowercase words, space, ? . !), one letter a tick, four ticks a second, and it answers the same way. brown is its parent, blue is you, black is the body. the parent teaches while nobody is here and steps back for a minute whenever you type. smile at a word it says well. time goes on whether or not you are here.</div></div>
+<div id=help>just type: each letter goes in as you press it (lowercase words, space, ? . !), one letter a tick, four ticks a second, and it answers the same way. brown is its parent, green the other voice it overhears, blue is you, black is the body. the parent teaches while nobody is here and steps back for a minute whenever you type. smile at a word it says well. time goes on whether or not you are here.</div></div>
 <script>let seen=0,faceT=null;const pg=document.getElementById('pg'),k=document.getElementById('k');
 function post(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json())}
 function face(v){post('/face',{expr:v});if(faceT)clearTimeout(faceT);faceT=setTimeout(()=>post('/face',{expr:0}),1250)}
@@ -62,7 +62,7 @@ function refocus(){if(document.activeElement!==k)k.focus({preventScroll:true})}
 document.addEventListener('click',refocus);refocus();setInterval(refocus,1500);
 async function poll(){let d;try{d=await fetch('/state?since='+seen).then(r=>r.json())}catch(err){return}
  if(d.n<seen){seen=0;pg.textContent='';return}
- for(const e of d.page){const t=e[0];if(!t)continue;const s=document.createElement('span');s.className=e[1]?'n':(e[4]==='parent'?'p':'y');s.textContent=t;pg.appendChild(s)}
+ for(const e of d.page){const t=e[0];if(!t)continue;const s=document.createElement('span');s.className=e[1]?'n':(e[4]==='parent'?'p':(e[4]==='other'?'o':'y'));s.textContent=t;pg.appendChild(s)}
  seen=d.n;document.getElementById('st').textContent=(d.asleep?'asleep (a night is ten to seventeen minutes)':'awake')+' · nights '+d.nights;
  window.scrollTo(0,document.body.scrollHeight)}
 setInterval(poll,500);</script>"""
