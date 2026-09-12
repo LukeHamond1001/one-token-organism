@@ -6851,3 +6851,17 @@ slots -> 48 dreams, the loss 0.152 to 0.123 (a shallow night; the end losses of 
 0.118, 0.097, 0.086, 0.085, 0.123), the gauge 0.812 -> 0.83; the store 5326; the face organ's correlation 0.47; the prefrontal
 0.68 (0.76 eight nights ago: the drift continues, a hundredth a night, since the frowns left the reward's rhythm: the long
 horizon's returns are harder to foresee without the predictable negative); the actor's slope 0.092. The chain alive.
+
+
+### Night 129 (2026-09-12, 11:12): the last night of the old dreams
+
+Day 136 (the body's 129th): lines and cues 151, smiles 258 (1.71 a line), frowns 6, cues 15 answered 8 ("the hip was " -> in
+twice, "the pad was " -> in twice, "put pad " -> in, "take pad " -> out, "the tin was " -> in), duty after the parent's
+lines 0.42, the loop 14.8 per thousand, the parent's share 0.45, the child silent 0.68, the ear ratio 0.16. The guard held
+(duty 0.420, smiles per line 1.70) and was re-armed with the new flags. Night 129, the last under pattern-completion dreams:
+344 new slots -> 48 dreams of mean length 6.9, the loss 0.171 to 0.098, the gauge 0.764 -> 0.858; the store 5537; the face
+organ's correlation 0.48; the prefrontal 0.67 (drifting); the actor's slope 0.081. At the boundary after this night's save
+the body restarts with the store's sequence links (store_chain 1: dreams run the utterance as lived, a draw by strength at a
+branch) and the clock at five ticks a second (period 0.2; the typist re-chained at tick 0.2). To read tomorrow: the night's
+mean dream length (expect fifteen or more), the achieved ticks a second (expect about five), the night's length, and cue
+landing. The chain alive.
