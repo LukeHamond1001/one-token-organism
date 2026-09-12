@@ -6804,3 +6804,15 @@ parent's share 0.37, the child silent 0.64, the ear ratio 0.18, unchanged with t
 learned stands without them. The guard held (duty 0.481, smiles per line 1.96) and was re-armed. Night 125: 274 new slots ->
 48 dreams, the loss 0.198 to 0.097, the gauge 0.728 -> 0.87 (better than the two nights before); the store 4793; the face
 organ's correlation 0.46; the prefrontal 0.72; the actor's slope 0.100. The chain alive.
+
+
+### Night 126 (2026-09-12, 07:58)
+
+Day 133 (the body's 126th): lines and cues 136, smiles 291 (2.14 a line, a new high), frowns 3, cues 18 answered 11 ("the toe
+was " -> in twice, "the kid was " -> in twice, the day's nouns; "the ram went " -> in, "the ram will " -> go, "that is my " ->
+nut, "that is your " -> hog twice, "put kid " -> in, "the man had the " -> tin), duty after the parent's lines 0.48, the loop
+18.6 per thousand (9.7 the day before; it swings), the parent's share 0.37, the child silent 0.63, the ear ratio 0.16 (the
+yielding holds without the letter frowns). It ran on past its answers 90 times, the most since the fast days: more answers,
+more running on. The guard held (duty 0.475, smiles per line 2.14) and was re-armed. Night 126: 217 new slots -> 48 dreams,
+the loss 0.124 to 0.086, the gauge 0.86 -> 0.872 (the highest evening gauge of the life: the day's material well held before
+the night); the store 4956; the face organ's correlation 0.47; the prefrontal 0.71; the actor's slope 0.097. The chain alive.
