@@ -6622,3 +6622,15 @@ The boundary at 20:35: after night 116's post-night save the body was restarted 
 day 120's launch had stamped day 122's start row before it was stopped, so the chain's relaunch at 20:37 carries the label 123:
 day 122 is one row in the log and the body's count is unchanged at 116 nights. The parent for the next three days waits on
 the log; the guard armed with the new flags.
+
+The parent of days 119 to 121 reported at 20:45: 450 utterances queued in batches of six, 159, 186 and 166 said; tub, bin,
+fan, vat, jam and wig with not, went and your, each noun in an old verb frame the same day; cues 6, 10 and 5 of about 18;
+"the man had the " now completes with nouns it was never cued on (ant, tin: the frame generalized); "fill the " and "do not "
+lose to its talking and were retired; the re-asking after the night brought back four of eight evening misses. It answered
+about forty of the child's utterances and the child echoed them ("yes." appeared in its own writing). Unprompted sentences of
+its own: "the mop is in the box", "this is my hat", "fox had a nut", "I had milk", "me want tin", "egg is not in the tin",
+"I see you", "the pig went out", "dog had hat", "the owl will go"; and its own question with its own answer, "what is this? a
+big tin"; the taught grammar words not, was, went, are used unprompted. Faces 213/73, 213/84, 245/73; the frown rate per line
+0.46, 0.45, 0.44; smiles per line 1.34, 1.15, 1.48. Its advice: make "the man had the " the carrier for new nouns and keep
+cues to three-word prefixes ending in the noun. Its note: a relaunch at a boundary sometimes drops the unsaid queue (the
+planner's position restarts at the file's end on a fresh typist); the typist now remembers its position across relaunches.
