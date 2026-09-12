@@ -246,18 +246,19 @@ class QueuePlanner:
         self.path, self.rng = path, rng; self.buf = list(buf or []); self.calls = 0
         # a new day's planner starts where the last one stopped (2026-09-11): the parent's unread lines used to be dropped at every
         # boundary; with no last one, at the file's end (yesterday's rows were yesterday's speech)
-        # THE POSITION SURVIVES A RELAUNCH (2026-09-11, the parent of days 119-121: a fresh typist began at the file's end and the
-        # unsaid lines of the boundary were lost): the position is written beside the queue after each read and taken from there
-        # by a new typist; the file's end only when no position was ever written.
+        # THE POSITION AND THE UNSAID LINES SURVIVE A RELAUNCH (2026-09-11, the parent of days 119-121: a fresh typist began at the
+        # file's end and the unsaid lines of the boundary were lost): after each utterance the position read to and the lines read
+        # but not yet said are written beside the queue, and a new typist takes them from there; the file's end only when nothing
+        # was ever written.
         self.pos_path = path + ".pos"
         if pos is not None:
             self.pos = int(pos)
         else:
-            self.pos = None
             try:
-                self.pos = int(open(self.pos_path).read().strip())
+                st = json.load(open(self.pos_path))
+                self.pos = int(st["pos"]); self.buf = [str(x) for x in st.get("buf", [])]
                 if os.path.exists(path) and self.pos > os.path.getsize(path):
-                    self.pos = os.path.getsize(path)               # the queue was replaced by a shorter file
+                    self.pos = os.path.getsize(path); self.buf = []   # the queue was replaced by a shorter file
             except Exception:
                 self.pos = os.path.getsize(path) if os.path.exists(path) else 0
         # THE FILLER IS RECENT SPEECH (2026-09-05): when the queue is empty the typist used to say a random heard line,
@@ -278,16 +279,19 @@ class QueuePlanner:
             except Exception:
                 pass
 
+    def _remember(self):
+        try:
+            tmp = self.pos_path + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump({"pos": self.pos, "buf": self.buf}, f)
+            os.replace(tmp, self.pos_path)
+        except Exception:
+            pass
+
     def next(self, teacher):
         if os.path.exists(self.path):
             with open(self.path) as f:
                 f.seek(self.pos); new = f.read(); self.pos = f.tell()
-            if new:
-                try:
-                    with open(self.pos_path, "w") as f:
-                        f.write(str(self.pos))
-                except Exception:
-                    pass
             for line in new.splitlines():
                 try:
                     for s in json.loads(line).get("say", []):
@@ -298,9 +302,11 @@ class QueuePlanner:
                     pass
         if self.buf:
             s = self.buf.pop(0); self.planned = True
+            self._remember()
             if s.strip():
                 self.recent.append(s.strip()); self.recent = self.recent[-24:]
             return (s, "cue" if s.endswith(" ") else "line")
+        self._remember()
         self.planned = False                                  # the typist's own filler
         if self.recent:
             return (self.rng.choice(self.recent), "line")     # a recent planned line, said as a line (a cue's prefix too)
