@@ -1202,15 +1202,16 @@ class Life:
         floor = float(self.cfg["dream_floor_rel"]) * ref
         out = []
         a_hit, a_rec = float(self.cfg["dream_adapt"]), float(self.cfg["dream_recover"])
-        chain = int(self.cfg.get("store_chain", 0)) and self.store.N.numel() == self.store.n()
+        chain = int(self.cfg.get("store_chain", 0)) and self.store.N.shape[0] == self.store.n()
         with torch.no_grad():
             for j in starts:
-                if chain and int(self.store.N[j]) >= 0:
-                    # THE EPISODE AS LIVED: the onset's first symbol, then the slots in the order they were written, to the utterance's end
+                if chain and int((self.store.N[j] >= 0).sum()) > 0:
+                    # THE EPISODE AS LIVED: the onset's first symbol, then the slots in the order they were written, to the utterance's
+                    # end; at a branch (a frame heard with several continuations) a draw by strength, the recent and the rewarded more
                     ids = [self.m.nearest(self.store.K[j])]; k = int(j); seen = {k}
                     for _ in range(int(self.cfg["dream_max"])):
                         ids.append(self.m.nearest(self.store.V[k]))
-                        nk = int(self.store.N[k])
+                        nk = self.store.successor(k, gen=self.gen)
                         if nk < 0 or nk in seen:
                             if bool(self.store.B[k]) and int(self.cfg.get("offset_ticks", 0)) > 0:
                                 ids.append(self.end_id)                 # the memory ends where the world went quiet

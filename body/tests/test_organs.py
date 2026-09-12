@@ -911,7 +911,7 @@ def test_dreams_follow_the_episode():
     lines = ["dog will go up", "give milk now", "scared ball under", "big dog bigger dog"]
     for line in lines:
         say(life, line, 10)
-    assert int((life.store.N >= 0).sum()) > 20, int((life.store.N >= 0).sum())
+    assert int((life.store.N[:, 0] >= 0).sum()) > 20, int((life.store.N[:, 0] >= 0).sum())
     life.gen.manual_seed(0); dreams = life.dreams(8)
     texts = [TOK.decode([i for i in d if i != life.end_id]) for d in dreams]
     lens = [len(t) for t in texts]
@@ -923,7 +923,14 @@ def test_dreams_follow_the_episode():
     keep = torch.arange(life2.store.n() - 3)                 # a pruning: the links follow the slots that stay
     life2.store._keep(keep)
     N = life2.store.N; assert int(N.max()) < life2.store.n() and int((N >= life2.store.n()).sum()) == 0
-    print("39 dreams follow the episode:", texts[:4], "| mean length", round(sum(lens) / len(lens), 1), "| whole lines", whole, "of", len(texts))
+    # the branch: one frame heard with three continuations is replayed with more than one of them
+    life3 = tiny(store_chain=1)
+    for _ in range(2):
+        for line in ["the man had the web", "the man had the nut", "the man had the hut"]:
+            say(life3, line, 10)
+    life3.gen.manual_seed(1); ends = {TOK.decode([i for i in d if i != life3.end_id]).split()[-1] for d in life3.dreams(24) if len(d) > 8}
+    assert len(ends & {"web", "nut", "hut"}) >= 2, ends
+    print("39 dreams follow the episode:", texts[:4], "| mean length", round(sum(lens) / len(lens), 1), "| whole lines", whole, "of", len(texts), "| the branch replays", sorted(ends & {"web", "nut", "hut"}))
 
 
 if __name__ == "__main__":

@@ -49,7 +49,8 @@ class Store:
         self.B = torch.zeros(0, dtype=torch.bool, device=device)   # THE BOUNDARY: this slot's symbol ended the world's utterance
         self.Bs = torch.zeros(0, dtype=torch.bool, device=device)  # and this slot's symbol began one (the first after a pause)
         self.Bq = torch.zeros(0, dtype=torch.bool, device=device)  # THE SEAM: this slot's symbol is an utterance's first, under the last line's faded context
-        self.N = torch.zeros(0, dtype=torch.long, device=device)   # THE SEQUENCE (2026-09-12): the slot written next in the same utterance (-1: none); a dream follows it
+        self.NK = 4                                                # THE SEQUENCE (2026-09-12): each slot keeps the last NK slots written next in the same utterance
+        self.N = torch.zeros(0, self.NK, dtype=torch.long, device=device)   # (-1: none); a dream draws one by strength: the recent and the rewarded replayed more
         self.last_idx = -1                                         # the slot the last write went to (new or merged)
 
     def n(self):
@@ -120,7 +121,7 @@ class Store:
         self.B = torch.cat([self.B, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.Bs = torch.cat([self.Bs, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.Bq = torch.cat([self.Bq, torch.zeros(1, dtype=torch.bool, device=self.dev)])
-        self.N = torch.cat([self.N, torch.full((1,), -1, dtype=torch.long, device=self.dev)])
+        self.N = torch.cat([self.N, torch.full((1, self.NK), -1, dtype=torch.long, device=self.dev)])
         self.last_idx = self.n() - 1
         if self.n() > self.cap:                                         # the weakest gives way
             keep = torch.argsort(self.S, descending=True)[: self.cap]
@@ -135,7 +136,23 @@ class Store:
         never. A hippocampus keeps the order of an episode (CA3's recurrent chain; replay runs it as lived): each slot remembers
         the slot written next in the same utterance, and a dream follows that chain, pattern completion only where it breaks."""
         if 0 <= a < self.n() and 0 <= b < self.n() and a != b:
-            self.N[a] = int(b)
+            row = self.N[a]
+            if int((row == int(b)).sum()) > 0:
+                return                                              # the same continuation again: already kept
+            self.N[a] = torch.cat([torch.tensor([int(b)], device=self.dev), row[:-1]])   # the newest first, the oldest forgotten
+
+    @torch.no_grad()
+    def successor(self, a, gen=None):
+        """the next slot of an episode from slot a: a draw among the last NK continuations by their strength (the surprise and the
+        reward at the moment of writing), the way replay favors the recent and the rewarded; -1 when there is none"""
+        if not (0 <= a < self.n()):
+            return -1
+        row = self.N[a]; ok = row >= 0
+        if not bool(ok.any()):
+            return -1
+        cand = row[ok]; w = self.S[cand].clamp_min(1e-6)
+        i = int(torch.multinomial((w / w.sum()).cpu(), 1, generator=gen))
+        return int(cand[i])
 
     @torch.no_grad()
     def compress(self):
@@ -243,7 +260,13 @@ class Store:
         self.Bs = sd["Bs"].to(self.dev) if "Bs" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.Bq = sd["Bq"].to(self.dev) if "Bq" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.temp = float(sd.get("temp", self.temp)); self.sat_done = bool(sd.get("sat", False))
-        self.N = sd["N"].to(self.dev) if "N" in sd else torch.full((self.n(),), -1, dtype=torch.long, device=self.dev)
+        N = sd.get("N")
+        if N is None or N.dim() != 2 or N.shape[1] != self.NK:
+            self.N = torch.full((self.n(), self.NK), -1, dtype=torch.long, device=self.dev)
+            if N is not None and N.dim() == 1 and N.numel() == self.n():
+                self.N[:, 0] = N.to(self.dev)                           # a save with one link a slot
+        else:
+            self.N = N.to(self.dev)
         self.last_idx = -1
 
 
