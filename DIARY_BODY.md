@@ -6693,3 +6693,14 @@ guard held (duty 0.457, smiles per line 1.27) and was re-armed. Night 119, the f
 dreams (scaled), the loss 0.222 to 0.089 falling through every round, the gauge 0.692 -> 0.863; the store 3168 after 110
 dropped, converted (max 11.8 times the mean, from 233); the face organ's correlation 0.44; the prefrontal 0.72; the actor's
 slope 0.080. The chain alive.
+
+
+### Night 120 (2026-09-12, 01:25)
+
+Day 127 (the body's 120th): lines and cues 150, smiles 289 (1.93 a line, the most per line of the talkative days), frowns 71
+(by quarter 18, 19, 18, 16), cues 8 answered 4 ("the man had the " -> nut, -> web, the day's new noun, and -> hut; "take arm "
+-> out), duty after the parent's lines 0.48, the loop 15.8 per thousand, the parent's share 0.39, the child silent 0.64. The
+guard held (duty 0.479, smiles per line 1.91) and was re-armed. Night 120: 505 new slots -> 63 dreams, the loss 0.133 to
+0.093 falling through the rounds, the gauge 0.787 -> 0.847; the store 3538 after 135 dropped (2825, 3168, 3538 over three
+nights: growing under the converted strengths, the cap 8192 the limit; to watch); the face organ's correlation 0.45; the
+prefrontal 0.71; the actor's slope 0.084. The chain alive.
