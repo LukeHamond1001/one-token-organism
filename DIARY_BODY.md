@@ -6828,3 +6828,13 @@ held (duty 0.430, smiles per line 1.75) and was re-armed. Night 127: 232 new slo
 gauge 0.85 -> 0.876; the store 5133; the face organ's correlation 0.47; the prefrontal 0.70 (0.76 seven nights ago, drifting
 down a hundredth a night since the letter frowns and the slower pace changed the reward's rhythm); the actor's slope 0.092.
 The parent for days 135 to 137 spawned with the cue findings (particle slots; "the X was in"). The chain alive.
+
+The parent of days 132 to 134 reported at 09:05: 390 utterances queued (56 cues, one in seven), 146, 135 and 146 said; ram,
+pie, toe, kid, lip, mud through the carrier; cue completions 4, 6, 11 (plus prefixes 3, 4, 6) of 17, 17, 21: rising; the wrong
+answers mostly the right word unsegmented ("tint", "hamthis", "tubtin"); the re-asking after the night landed again, and
+evening misses recovered the same day too. It re-uses an answered frame across lines: told "the mat was in my tub" it wrote
+"it was in my tub", "the bat was in my tub", "the tin was in my tub". Unprompted: "the hen had two tins", "egg is not wet",
+"this is a big web", "bee is on my hat", "the pig is big and wet", and thirty minutes after first hearing the word, "pour mud
+in the tin". Questions of its own: "that is that? a big...", "is this?". Frowns 5, 3, 3; smiles 285, 289, 254. Its advice:
+keep "the X was ", "put X ", "that is my/your ", "the man had the "; drop "take X " and "the X went " until its output
+segments.
