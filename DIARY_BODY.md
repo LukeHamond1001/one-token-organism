@@ -7062,3 +7062,16 @@ minute: the loop 14, 18, 12, 15, 7, 5 per thousand (37 to 47 on the chunk days),
 ratio 0.39 -> 0.27, the child's share of the ticks 0.55 -> 0.39, the mouth's sharpness 32 to 48 with the mood high, stress
 20.5 -> 19.1 (slow to fall); the actor's slope 0.103. Its phrases: "I had my", "is my hip is wet", "had my duck two webs are
 in my hut", "hide little milk"; no answer yet to a question. The own-speech target lands at the next boundary.
+
+
+### Night 136 (2026-09-12, 18:40): thirty-two rounds, the conversations' first full day
+
+Day 147 (the body's 136th; the first full day of conversations, under the corollary discharge at 0.3 and the frown gap of a
+minute): 91 lines and cues from the parent, 56 replies from the other voice, smiles 346 (2.35 a line), frowns 31 (65 to 72
+the days before), cues 4 answered 3 ("I see " -> you, "dog will " -> go out, "I am " -> am; "I want " -> "here is your"),
+duty after the parent's lines 0.46, the loop 3 to 5 per thousand by the day's end. The guard held (duty 0.453, smiles per
+line 2.36) and was re-armed. Night 136 (21 minutes at 32 rounds): 469 new slots -> 59 dreams of mean length 14.5 ("my doll
+will go out", "where is milk", "yes. eat the ice"), the loss 0.307 to 0.118 with the curve still falling at the last round
+(0.307, 0.248, 0.209, 0.182, 0.185, 0.163, 0.143, 0.128 every fourth round: the rounds converge between 32 and 48; at 48 the
+end was 0.094 and the gauge 0.878), the gauge 0.596 -> 0.845; the store 6930; the face organ's correlation 0.44; the
+prefrontal 0.52; the actor's slope 0.101. The restart after this night's save carries the own-speech target.
