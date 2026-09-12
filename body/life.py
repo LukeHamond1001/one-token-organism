@@ -1732,6 +1732,8 @@ class Life:
             life._arel = [float(v) for v in L["arel"]]; life._arel_gain = float(L.get("arel_gain", 0.0)); life._arel_corr = float(L.get("arel_corr", 0.0))
         if L.get("store_after_night") is not None:
             life._store_after_night = int(L["store_after_night"])
+        elif isinstance(L.get("last_night"), dict) and L["last_night"].get("store_slots") is not None:
+            life._store_after_night = int(L["last_night"]["store_slots"])   # a save from before the count: the last night's report holds it
         life.sym_freq = dict(L.get("sym_freq") or {})
         life.perf = {int(k): float(v) for k, v in (L.get("perf") or {}).items()}
         if L.get("rbar") is not None:
