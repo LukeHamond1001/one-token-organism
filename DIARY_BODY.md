@@ -6669,3 +6669,14 @@ collapse of the dreams is removed before it recurs; a night that diverges is kep
 only protection. The parent for the next three days spawned with fewer cues (one in eight) and whole sentences, "the man had
 the X" as the carrier. To read tomorrow: whether the cue frames come back (day 125/126), and whether the nights hold their
 shape with the spread dreams.
+
+The boundary at 22:53 (2026-09-11, 23:12): the body restarted with store_sat 1 and night_load; the typist relaunched as day 126
+(the label skipped 125 again). Two parents overlapped on the queue for ten minutes: the parent of days 122 to 124 saw its end
+row at 22:53 but was mid-cycle and appended three more batches ("jet", a third noun for the day) before it noticed the
+successor's rows at 23:05 and stopped; the successor, finding batches not its own, halted itself and reported correctly rather
+than share the day's curriculum. Both stopped; a fresh parent briefed at 23:10 for the rest of day 126 (no new noun; map, gum
+and jet worked through the frames) and days 127 and 128, with the old frames cued once each early on both days to read whether
+the cue answers come back after night 117's divergence. The batch appended in the sixty seconds between the two session_start
+rows was lost at the relaunch (the new typist began at the file's end because no position had been written yet; from now on
+the position is written and carries). The operational rule from here: a parent stops appending at the night row of its last
+day, and its successor appends only after the next session_start; one hand on the queue at any moment.
