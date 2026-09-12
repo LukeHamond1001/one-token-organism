@@ -6781,3 +6781,14 @@ the loss 0.187 to 0.118 (the fourth night's end in a row above the 0.074 of nigh
 for, read from the rows: the talked-over tokens are single letters almost entirely ('e', 'n', 'h', 'x' as the parent types
 "the ear is in the box"), the mouth shadowing the parent's own letters as they arrive; not one in a hundred is a word of the
 line. The parent for days 132 to 134 spawned for the twenty-second pace. The chain alive.
+
+The parent of days 129 to 131 reported at 05:55: 486 utterances queued (34 cues, one in fourteen), 188, 192 and 159 said; hog,
+pea, pod, rod, yak, bib through "the man had the X"; cue completions 2, 3, 5, 8 across days 128 to 131, the particle slots
+("put X " -> in, "the X was " -> in, "take X " -> out) landing and the noun slots not ("that is my " -> a noun of its own
+choosing); "the X was " lands taught with "in", not "here"; the rival-particle rule works as written; every evening miss
+landed after the night. It says the parent's answers back with one change ("it was in my bag" -> "it was in my hat"). Its
+own sentences: "the egg is in the hen", "it is not my web", "tins are in my bag", "that is your hut", "first milk then nut",
+"a dog had baby", "two dogs are here", "hi see you". Faces 249/77, 242/81, 252/74. The decision on the frown (the parent's
+method): a letter is not talking; from the next typist relaunch (armed after day 132's post-night save) the talk-over rule
+applies to tokens of two letters or more, like the smile's bound. Expect the frowns to fall from ~75 to under ten a day; the
+ear ratio read nightly, the rule restored if it rises above 0.35 for two days.
