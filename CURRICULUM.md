@@ -208,6 +208,27 @@ readings allow, and the owner's word is the aim: teach it to be a small language
   visitor's smile and frown are its face then; the sessions go on as before when nobody is there, and nothing a visitor types is
   counted as taught by the parent.
 
+## The stage now: four, entered on day 145 (2026-09-12): conversations, not drills
+
+The owner's word: "we need actual conversations, not this tin game." The frames of stage three did their work (a noun enters its
+frames the day it is taught; cues land two times in three) and left a child whose most-said word is "tin", because "tin" was what
+it heard a hundred times a day; a curriculum of container frames makes a child who talks about containers. From day 145 the
+sessions are conversations of the kind a parent and a small child actually have, in two voices (the parent, and a child-like
+partner who models the answers), with the drills as a minor share:
+
+- **About the two of them and the page**, which is the only world they share: greetings ("hi", "hi. I see you", "are you here?"
+  / "I am here"), wants ("what do you want?" / "I want milk", "more milk?" / "yes", "no more"), offers and requests ("give me the
+  ball" / "here is the ball", "come here" / "I come"), feelings ("are you sad?" / "no. I am happy", "is it hot?" / "it is cold"),
+  looking and having ("look. a big dog" / "I see the dog", "what do you have?" / "I have a hat"), doing ("go up" / "I go up",
+  "sit down" / "I sit"), yes and no, mine and yours, here and there, now and then.
+- **Exchanges of two to four turns**, short lines, the partner answering the way the child should: with "I", with "yes"/"no",
+  with the thing named. The child overhears the whole turn and the parent answers the child's own words first, as always.
+- **New words come from the conversations** (a want, a feeling, a doing), one or two a day, never a noun for its own sake; the
+  container frames and "the X was in the Y" retire to one line in ten, and "tin", "box" and "bin" rest for a while.
+- **Cues** stay honest but rare (one in twelve), on lines the child has heard twice that day, and on the conversational
+  frames now ("I want ", "I see ", "give me ", "I am ").
+- The rules of the typist and the parent's face are unchanged; nothing in the body changes for this stage.
+
 ## What each session reports
 
 The lines written and how often; what it wrote back at each stage and
