@@ -6680,3 +6680,16 @@ the cue answers come back after night 117's divergence. The batch appended in th
 rows was lost at the relaunch (the new typist began at the file's end because no position had been written yet; from now on
 the position is written and carries). The operational rule from here: a parent stops appending at the night row of its last
 day, and its successor appends only after the next session_start; one hand on the queue at any moment.
+
+
+### Night 119 (2026-09-12, 00:10): the spread dreams hold, the frames return
+
+Day 126 (the body's 119th; the log's label): lines and cues 147, smiles 188 (1.28 a line), frowns 66 (60 the day before; by
+quarter 20, 18, 18, 10), cues 11 answered 6 ("take map " -> out, "that is your " -> map, three minutes after map was taught,
+"take jet " -> out twice, "put bat " -> in): the cue frames came back the day after the fixed night, from 1 of 24. Duty after
+the parent's lines 0.46; the loop 15.1 per thousand (26 on the first talkative day); the parent's share 0.37; the child silent
+0.63. Two parents overlapped for ten minutes at the boundary (recorded above); the day's nouns were map, gum and jet. The
+guard held (duty 0.457, smiles per line 1.27) and was re-armed. Night 119, the first under both laws: 453 new slots -> 57
+dreams (scaled), the loss 0.222 to 0.089 falling through every round, the gauge 0.692 -> 0.863; the store 3168 after 110
+dropped, converted (max 11.8 times the mean, from 233); the face organ's correlation 0.44; the prefrontal 0.72; the actor's
+slope 0.080. The chain alive.
