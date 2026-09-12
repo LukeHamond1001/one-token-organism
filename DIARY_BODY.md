@@ -6913,3 +6913,14 @@ ball? ball in t", "that is my ox", "two ducks are in the bag", "put box"; the lo
 (whole lines are the harder recall; the night carries them to 0.83); the store 5906 after 177 dropped; the face organ's
 correlation 0.48; the prefrontal 0.57 (0.76 twelve nights ago; the drift continues; the threshold to think again is 0.5);
 the actor's slope 0.084. At the boundary after this night's save the body restarts with the action chunk. The chain alive.
+
+The boundary at 13:11 (2026-09-12): the body restarted with the action chunk (pid 21445: --actor-form chunk beside the
+sequence links and the clock at 0.2); the typist relaunched as day 141 (the label skipped 140). Five minutes in: 204 words
+begun, 551 program ticks (2.7 symbols a word), the child speaking on half the ticks (a third before: a word begun now runs to
+its end where the gate used to abort it a letter in). Its speech under the chunk, from the page: "is on the log is in my bin
+is in the tin", "was in my hat on", "the nest was " -> "in the tin"; and the loop as a program, "ttle tin is in the is in
+the", "ththththth" to the chunk's bound: the cycle the cortex forecasts from its own babble now runs deterministically to
+chunk_max instead of breaking by a random draw. To read at the night: the frowns (a word begun before the parent's typing
+now runs over it: the frown will land on the word's one credit, the clean signal the gate and the actor need), the ear, the
+loop share, cue landing, the actor's slope. chunk_max 12 -> 8 at the next restart that is needed anyway (the corpus's longest
+word is six letters and a space).
