@@ -6899,3 +6899,17 @@ noun is too fresh for the corpus to hold a continuation (so new nouns are cued o
 at the faster clock the typist consumed four utterances a minute and the queue ran dry twice (batches of six from here).
 Its advice: "two Xs are in the Y", which it now volunteers, as the carrier for new nouns; the evening's cues on the day's new
 noun so the night finishes them.
+
+
+### Night 131 (2026-09-12, 13:12): the episodes lengthen; three nouns land
+
+Day 139 (the body's 131st; the first at three nouns a day: duck, sock, bud): lines and cues 137, smiles 274 (2.00 a line),
+frowns 7, cues 14 answered 10 (71%: "put duck " -> in twice, "put sock " -> in twice, "the duck was " -> in, "put bud " -> in,
+"the bud was " -> in, "the hip was " -> in): three nouns a day landed as two did. Duty after the parent's lines 0.50, the loop
+21.6 per thousand (it swings), the parent's share 0.37, the child silent 0.63, the ear ratio 0.18. The guard held (duty 0.493,
+smiles per line 2.01) and was re-armed with the chunk in its flags. Night 131 (20 minutes), the second under the sequence
+links: 343 new slots -> 48 dreams of mean length 11.2 (6.9, 8.4, 11.2 over three nights: the links forming), among them "where
+ball? ball in t", "that is my ox", "two ducks are in the bag", "put box"; the loss 0.302 to 0.122; the gauge 0.473 -> 0.831
+(whole lines are the harder recall; the night carries them to 0.83); the store 5906 after 177 dropped; the face organ's
+correlation 0.48; the prefrontal 0.57 (0.76 twelve nights ago; the drift continues; the threshold to think again is 0.5);
+the actor's slope 0.084. At the boundary after this night's save the body restarts with the action chunk. The chain alive.
