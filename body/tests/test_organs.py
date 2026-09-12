@@ -1002,11 +1002,44 @@ def test_second_voice():
     print("41 the second voice: tags", sorted(set(tags)), "| voices", voices, "| the typist did not yield")
 
 
+def test_own_speech_target():
+    """the own-speech target (own_target_form recall, 2026-09-12): at its own positions the waking lesson targets the recall's
+    continuation of what it said, weighted by the recall's confidence; under the world form its target there is the world's next
+    symbol, the same at every own position (the "t t t" of the probe)"""
+    life = tiny(own_target_form="recall", wake_every=10 ** 9)
+    for _ in range(4):
+        say(life, "give milk", 8)
+    # a window: the world's line, a pause, then its own "give " with the recall after each symbol
+    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0
+    zero = torch.zeros(life.m.d)
+    for ch in "give milk":
+        life.win.append({"x": TOK.token_to_id(ch), "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+        life.bag_w = life.cfg["bag_decay"] * life.m.shift(life.bag_w) + life.m.E.weight[TOK.token_to_id(ch)]
+    for _ in range(8):
+        life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+    life.bag_w.zero_()
+    for ch in "give ":
+        i = TOK.token_to_id(ch)
+        life.bag_w = life.cfg["bag_decay"] * life.m.shift(life.bag_w) + life.m.E.weight[i]
+        rd, conf, _ = life.store.read(life.bag_w)
+        life.win.append({"x": life.sil, "xo": i, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
+    # the lesson's own targets: the recall after "give " says "m"
+    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win))
+    T = xs.shape[0]; own = [t for t in range(T) if int(whos[t]) != life.sil]
+    e_pos = own[-2]                                            # its own 'e' of "give ": the target there is the recall after "give "
+    conf_last = float(reads[e_pos + 1].norm()); tgt = TOK.decode([int(life.m.nearest(reads[e_pos + 1]))])
+    life._wake_recall_targets = 0
+    life.cfg["wake_window"] = T; out = life._wake_lesson()
+    assert life._wake_recall_targets >= 2, life._wake_recall_targets
+    assert tgt == "m" or conf_last < 0.3, (tgt, conf_last)
+    print("40b the own-speech target: the recall after its own 'give ' says", repr(tgt), "at confidence", round(conf_last, 2), "| recall targets in the lesson:", life._wake_recall_targets)
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target]
     failed = 0
     for t in tests:
         try:

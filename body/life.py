@@ -110,6 +110,14 @@ PHYSIOLOGY = dict(
     rest_token="<pad>", end_token="<eot_human>", display_token="\n",
     end_symbol="rest",   # THE WORLD'S STOP (2026-09-08): "eot" = the chat token as the end's mark; "rest" = the end is the first rest after a symbol, the cortex learns to predict rest where the parent stops, and the chat token goes unused   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
+    # THE OWN-SPEECH TARGET (own_target_form "recall", 2026-09-12; the probe of night 135): the mouth reads a forecast of the world's
+    # next symbol, and at its own positions that target is the parent's next line's first letter, the same at every step, so its
+    # greedy continuation is "t t t": the loop's root. A speaker's forward model predicts the continuation of what it is saying;
+    # the songbird learns its song against a stored tutor template. Under "recall" the target at an own position is the
+    # hippocampus's continuation of what it has said so far (the recall made after that symbol, the stored adult line it is
+    # following), weighted by the recall's confidence, and no target where the recall is unsure; the world's next symbol stays the
+    # target at the world's positions. "world": the target of 2026-09-06.
+    own_target_form="world", own_target_conf=0.3,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
     wm=0, wm_burst=0.5, wm_max=512,
@@ -1187,6 +1195,16 @@ class Life:
         for t in range(T):
             if win[t].get("end"):                                  # THE OFFSET: after this symbol the world went quiet
                 y[t] = self.end_id; w[t] = 1.0
+        if str(self.cfg.get("own_target_form", "world")) == "recall":
+            cf = float(self.cfg.get("own_target_conf", 0.3)); n_rec = 0
+            for t in range(T - 1):
+                if int(whos[t]) != self.sil:                       # its own position: the target is the recall's continuation of what it said
+                    rv = reads[t + 1]; c = float(rv.norm())
+                    if c > cf:
+                        y[t] = int(self.m.nearest(rv)); w[t] = min(1.0, c); n_rec += 1
+                    else:
+                        w[t] = 0.0                                 # unsure: nothing owed
+            self._wake_recall_targets = getattr(self, "_wake_recall_targets", 0) + n_rec
         if float(w.sum()) < 1:
             return None
         m = self.m; m.train()
