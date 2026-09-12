@@ -6887,3 +6887,15 @@ whole lines are a harder recall than openers); the store 5737 after 185 dropped;
 slowly for a week); the prefrontal 0.62 (0.76 ten nights ago: the drift continues and steepened tonight; the earned law is
 taking the voice from a critic whose long returns changed their rhythm when the frowns left and the pace moved; to watch,
 not to touch); the actor's slope 0.079. The chain alive.
+
+The parent of days 135 to 138 reported at 12:20: 420 utterances queued (one in five a cue), 129, 140 and 144 said of the
+typist's 159, 162, 171; cab, ox, hip, pad, lad, gem with are, your, where; cue completions 10, 8, 10 of 28, 21, 21; the new
+nouns took the frames the same day ("the cab was " -> in four times, "put gem " and "put lad " -> in), and day 135's cab still
+answered two nights later; the re-asking after the night 1, 2, 4 of 8, the four on day 138 all frames that had missed the
+evening before. Unprompted: "the dogs are here in the hat", "the pig is in my bin", "give me milk", "hi. I see you", "pull it
+out", "put bat in here", "two lads are in" (the day's noun in its own plural clause), "that is my ox"; its own questions "give
+me ball?" and "hide ball? ball in". Faces 289/1, 265/6, 256/5. Two mechanics: the typist demotes a cue to a line when the
+noun is too fresh for the corpus to hold a continuation (so new nouns are cued on "the X was ", "put X ", "take X " only), and
+at the faster clock the typist consumed four utterances a minute and the queue ran dry twice (batches of six from here).
+Its advice: "two Xs are in the Y", which it now volunteers, as the carrier for new nouns; the evening's cues on the day's new
+noun so the night finishes them.
