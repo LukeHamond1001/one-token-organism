@@ -40,6 +40,8 @@ class Store:
     def __init__(self, d, cap=8192, temp=0.05, device="cpu", read_strength=0.0):
         self.d, self.cap, self.temp, self.dev = d, int(cap), float(temp), device
         self.read_strength = float(read_strength)      # weight of log-strength in the read: 0 = recall by content alone
+        self.saturate = False                          # REPETITION SUPPRESSION (2026-09-11): a repeat strengthens its slot less the stronger it already is
+        self.sat_done = False                          # the strengths were converted to the saturating law once (a save from before it)
         self.K = torch.zeros(0, d, device=device)
         self.V = torch.zeros(0, d, device=device)
         self.S = torch.zeros(0, device=device)
@@ -97,7 +99,17 @@ class Store:
             same = (sims > merge_cos) & ((self.V @ v) > merge_cos)
             if bool(same.any()):
                 j = int(torch.where(same, sims, torch.full_like(sims, -2.0)).argmax())
-                self.S[j] += float(strength)
+                if self.saturate:
+                    # THE SIXTEENTH DEFECT (2026-09-11, night 117): strength summed linearly over repeats, so the typist's most repeated
+                    # prefixes ("that is my ", said thirty times a day) reached four hundred against a store mean of two, the dreams
+                    # (drawn by strength) collapsed onto nine distinct sequences of ninety-six, and the night diverged on them. A
+                    # hippocampus encodes the familiar weakly (repetition suppression, novelty-gated encoding): a repeat's increment is
+                    # scaled by m / (m + S), m the store's own mean strength, so a slot grows like the log of its repetitions, relative
+                    # to the store and not to a constant. A new memory is written in full.
+                    m_ = float(self.S.mean()) if self.n() > 0 else 1.0
+                    self.S[j] += float(strength) * m_ / (m_ + float(self.S[j]))
+                else:
+                    self.S[j] += float(strength)
                 return True
         self.K = torch.cat([self.K, k.unsqueeze(0)]); self.V = torch.cat([self.V, v.unsqueeze(0)])
         self.S = torch.cat([self.S, torch.tensor([float(strength)], device=self.dev)])
@@ -109,6 +121,16 @@ class Store:
             keep = torch.argsort(self.S, descending=True)[: self.cap]
             self._keep(keep)
         return True
+
+    @torch.no_grad()
+    def compress(self):
+        """the strengths of a store kept under the linear law converted once to what the saturating law would have summed:
+        S -> m ln(1 + S/m), m the store's mean; the order is kept, the skew is not"""
+        if self.n() > 0 and not self.sat_done:
+            m_ = float(self.S.mean())
+            if m_ > 0:
+                self.S = m_ * torch.log1p(self.S / m_)
+        self.sat_done = True
 
     @torch.no_grad()
     def _find(self, k, v, merge_cos=0.97):
@@ -193,7 +215,7 @@ class Store:
         return [int(pool[i]) for i in idx]
 
     def state_dict(self):
-        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp}
+        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp, "sat": bool(self.sat_done)}
 
     def load_state_dict(self, sd):
         self.K = sd["K"].to(self.dev); self.V = sd["V"].to(self.dev)
@@ -201,7 +223,7 @@ class Store:
         self.B = sd["B"].to(self.dev) if "B" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.Bs = sd["Bs"].to(self.dev) if "Bs" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.Bq = sd["Bq"].to(self.dev) if "Bq" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
-        self.temp = float(sd.get("temp", self.temp))
+        self.temp = float(sd.get("temp", self.temp)); self.sat_done = bool(sd.get("sat", False))
 
 
 class Block(nn.Module):

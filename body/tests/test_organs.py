@@ -870,11 +870,44 @@ def test_night_scales_with_the_day():
     print("37 the night scales with the day: a full day ->", rep["dreams"], "dreams of", rep["new_slots"], "new slots; a quiet day ->", rep2["dreams"])
 
 
+def test_repetition_suppression():
+    """the store's repetition suppression (store_sat, 2026-09-11): a memory repeated two hundred times grows like the log of its
+    repetitions, the dreams no longer collapse onto it, and a store from before the law is converted once at the load"""
+    import os
+    life = tiny(store_sat=1)
+    assert life.store.saturate
+    for _ in range(12):
+        say(life, "give milk", 8)                        # one line, repeated after a pause each time: its onset strengthens sub-linearly
+    for line in ["dog will go", "ball under", "big dog", "I saw dog", "you had ball", "scared ball", "first milk then ball", "dog had ball"]:
+        say(life, line, 8)
+    assert int(life.store.Bs.sum()) >= 6, int(life.store.Bs.sum())
+    S = life.store.S[:life.store.n()]
+    assert float(S.max()) < 6.0 * float(S.mean()), (float(S.max()), float(S.mean()))
+    life.gen.manual_seed(0); starts = life.store.sample_starts(64, gen=life.gen)
+    top = max(starts.count(j) for j in set(starts)) / 64.0
+    assert top < 0.5, top
+    # the linear law's skew, converted once at the load
+    life2 = tiny(store_sat=0)
+    for _ in range(40):
+        say(life2, "give milk", 8)
+    say(life2, "dog will go", 8)
+    S2 = life2.store.S[:life2.store.n()].clone(); m2 = float(S2.mean())
+    path = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/sat_test.pt"
+    life2.save(path); life3 = Life.load(path, TOK, device="cpu", cfg=dict(store_sat=1)); os.remove(path)
+    S3 = life3.store.S[:life3.store.n()]
+    assert life3.store.sat_done and torch.allclose(S3, m2 * torch.log1p(S2 / m2), atol=1e-5), "the conversion is not m ln(1 + S/m)"
+    assert torch.equal(torch.argsort(S2), torch.argsort(S3)), "the order of the strengths changed"
+    life3.save(path); life4 = Life.load(path, TOK, device="cpu", cfg=dict(store_sat=1)); os.remove(path)
+    assert torch.allclose(life4.store.S[:life4.store.n()], S3), "converted twice"
+    skew = lambda t: float(t.max()) / float(t.mean())
+    print("38 repetition suppression: max/mean strength", round(skew(S), 2), "| the most drawn start", round(top, 2), "of the dreams | a linear store converted once at the load:", round(skew(S2), 2), "->", round(skew(S3), 2))
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression]
     failed = 0
     for t in tests:
         try:
