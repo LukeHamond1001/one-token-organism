@@ -246,7 +246,20 @@ class QueuePlanner:
         self.path, self.rng = path, rng; self.buf = list(buf or []); self.calls = 0
         # a new day's planner starts where the last one stopped (2026-09-11): the parent's unread lines used to be dropped at every
         # boundary; with no last one, at the file's end (yesterday's rows were yesterday's speech)
-        self.pos = int(pos) if pos is not None else (os.path.getsize(path) if os.path.exists(path) else 0)
+        # THE POSITION SURVIVES A RELAUNCH (2026-09-11, the parent of days 119-121: a fresh typist began at the file's end and the
+        # unsaid lines of the boundary were lost): the position is written beside the queue after each read and taken from there
+        # by a new typist; the file's end only when no position was ever written.
+        self.pos_path = path + ".pos"
+        if pos is not None:
+            self.pos = int(pos)
+        else:
+            self.pos = None
+            try:
+                self.pos = int(open(self.pos_path).read().strip())
+                if os.path.exists(path) and self.pos > os.path.getsize(path):
+                    self.pos = os.path.getsize(path)               # the queue was replaced by a shorter file
+            except Exception:
+                self.pos = os.path.getsize(path) if os.path.exists(path) else 0
         # THE FILLER IS RECENT SPEECH (2026-09-05): when the queue is empty the typist used to say a random heard line,
         # and the most-heard lines are the oldest frames ('ball go down', 'dog go down' opened day 41 while the teachers
         # avoided them for the stutter). A parent with nothing new to say repeats what was said lately: the filler is
@@ -269,6 +282,12 @@ class QueuePlanner:
         if os.path.exists(self.path):
             with open(self.path) as f:
                 f.seek(self.pos); new = f.read(); self.pos = f.tell()
+            if new:
+                try:
+                    with open(self.pos_path, "w") as f:
+                        f.write(str(self.pos))
+                except Exception:
+                    pass
             for line in new.splitlines():
                 try:
                     for s in json.loads(line).get("say", []):
