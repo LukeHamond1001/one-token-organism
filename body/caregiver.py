@@ -246,7 +246,11 @@ class Caregiver:
                 self.frown(tok, ctx); return
         if self.parent and time.time() < self.away_until:
             return                                                # the parent is turned away
-        if self.parent and (self.reply or TALKOVER_FROWN):
+        if self.parent and (self.reply or TALKOVER_FROWN) and len(tok) >= 2:
+            # A LETTER IS NOT TALKING (2026-09-12, days 118-131 read): of the tokens said over the parent's typing, 103 of 111 a day were
+            # single letters, the mouth shadowing the parent's own letters as they arrived ('n' as "tin" was typed), and the frown fell
+            # on them 72 times a day while the child already yielded five to one (the ear ratio 0.18). A parent frowns at a word said
+            # over it, not at a murmured letter; the same two-letter bound the smile has.
             ts, te = self.typing_span
             if a < te and b >= ts:                                # said over the parent's own turn
                 self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx})
