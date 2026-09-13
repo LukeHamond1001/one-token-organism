@@ -7317,3 +7317,6 @@ after 32 steps, 0.509 after 128); batch 64 descended from the first step. A whol
 steps) through the night code on a copy: the dream set 0.585 -> 0.725, the parent's last sixty lines 0.523 -> 0.606, the old lines
 of days 110-125 (faded from the store) 0.438 -> 0.454; ten minutes on a busy machine. Deployed for the boundary after night 143:
 batch 64, six rounds, warm 4, 1024 dreams (96 steps a night).
+02:59: the challenger on the copy over a whole night (1024 dreams, 6 rounds, 384 steps of batch 16 at 3e-5, warm 8): the dream set
+0.574 -> 0.743, the parent's last sixty lines 0.500 -> 0.588, the old lines (days 110-125, faded from the store) 0.438 -> 0.498
+against the batch-64 night's 0.454. Re-armed before night 143's save: the served body takes the challenger's form from day 161.

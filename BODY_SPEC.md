@@ -1016,3 +1016,10 @@ turned on for the served body: every night of the old form began by wrecking its
 compute the smaller batch at the lower rate fits the dream set fastest; the lines' change is within noise at this budget and
 needs a night's volume to read (see the whole-night reading above). Batch 16 at 3e-5 runs as the challenger on a copy over a whole
 night while batch 64 at 1e-4 serves.
+
+**The challenger over a whole night (the same copy; 1024 dreams, six rounds, 384 steps of batch 16 at 3e-5, warm 8; twenty minutes
+on a busy machine):** the NREM loss 0.265 -> 0.183, the dream set 0.574 -> 0.743, the parent's last sixty lines 0.500 -> 0.588,
+**the old lines of days 110-125 0.438 -> 0.498** (the batch-64 night: 0.438 -> 0.454 from 512 dreams). The old lines are the
+language-model reading proper: nothing in them was replayed. Served from the boundary after night 143 as `--night-batch 16
+--night-warm 8 --night-lr 3e-5 --night-rounds 6 --night-starts 1024` in place of the batch-64 form (re-armed before that save
+fired). Whether the breadth (1024 dreams) or the rate did the old lines' gain is read on the served nights: the probe after each.
