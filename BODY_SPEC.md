@@ -1116,3 +1116,10 @@ held-out 0.559 -> 0.569, where the same night without the skip moved it 0.559 ->
 repairs what the first fitting lowered, at the very positions the skip withholds). The onset mark's fault stands as described; the
 skip is not its remedy, and `dream_skip` stays off. The twelve-round night from the dusk save before night 151 is the reading that
 follows.
+
+**The rounds (2026-09-13, 13:06), measured and rejected:** from the dusk save before night 151, twelve rounds moved the held-out
+0.584 -> 0.555 where the served six moved it to 0.559, and the old lines 0.403 -> 0.382. A second night over an already-fitted
+store gained 0.040 on a copy, but a first night over new memories loses the same at six or twelve rounds: the loss is not a
+settling that more passes repair. Across seven copy and served nights the night's effect on the held-out reads about -0.01 with a
+spread of 0.03, and the day's about +0.01; the ruler cannot resolve single-night changes finer than that. The reading that
+remains is content: a night of the parent's own last thousand lines, whole and clean, against the store's fragments.
