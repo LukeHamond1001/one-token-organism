@@ -7463,3 +7463,14 @@ The mouth, on this save, with the recall carrying the episode (read_follow 20): 
 '. I am happy with you' to "hi", 'I am tired' to "what do you want?", 'that is your' to "are you here?": whole phrases where the
 recall lands in the world's memories; still 'nt in the hte was in hot' where it lands in its own song, which won 10 to 20 of 24
 reads and now fades (own_store off from this save).
+
+The fourth question-first parent's report (labels 169, 170, 172; 12:05): answered before the partner voice 2, 6, 10 a day ("are you
+hungry?" -> "I want with you now here", "do you want it here?" -> "yes please", "do you want the kite?" -> "es! we are all happy");
+its own question marks 7, 8, 14, on the last day whole questions ("what do we do first?", "what do you see?", "you a hug?"); it did
+not take the answers because the queue's depth put each reply four to ten lines late (the next parent keeps the queue six to
+eight ahead and answers in the very next line); cues only off its own words: 3, one answered ("I am " -> "here!it"); unprompted
+"I want hot milk for you", "we are all happy", "we eat it here", "sit down here now", "have a run dog!", "a bird is in it", "nest on
+your hat"; "I see milk" dead (1, 1, 0) but the stub "i see m is i see m is" survives (30, 8, 20 "i see" a day); smiles/frowns
+426/35, 241/81 (the overlap day), 355/37. It reported the 08:54 overlap as a genuine fault (it was: my chain's relaunch). Its own
+wait loop stalled three times for half an hour, which emptied the queue. The fifth parent (labels 174-177) took over at 12:04
+after a dry half hour.
