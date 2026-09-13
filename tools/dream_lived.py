@@ -8,11 +8,12 @@ from tokenizers import Tokenizer
 from body.life import Life, PHYSIOLOGY
 
 def arg(name, default):
-    for a in sys.argv[1:]:
-        if a.startswith(f"--{name}="):
+    names = {f"--{name}", f"--{name.replace('_', '-')}"}                   # --night_lr and --night-lr alike
+    for i, a in enumerate(sys.argv[1:], 1):
+        if "=" in a and a.split("=", 1)[0] in names:
             return type(default)(a.split("=", 1)[1])
-        if a == f"--{name}":
-            return type(default)(sys.argv[sys.argv.index(a) + 1])
+        if a in names and i + 1 < len(sys.argv):
+            return type(default)(sys.argv[i + 1])
     return default
 
 def parse_flags(s):
