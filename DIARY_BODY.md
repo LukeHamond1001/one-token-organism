@@ -7522,3 +7522,14 @@ of the store's fragments had lost a hundredth each. The held-out's course: 0.598
 "y sock is on my leg", "yes! we talk again"); its own questions productive ("where am I?", "you help me here?"), the answers
 taken; answered before the partner voice four times a day with the parent's questions fallen to 38, 31, 23; "i see" 25, 34, 20
 from its own memory. The sixth parent (labels 178-181): half of A's lines questions, the queue six to eight ahead.
+
+### Night 155 (2026-09-13, 15:41): the climb confirmed
+
+Day 178 (14:49-15:41; the sixth parent's first day): 89 parent lines, 69 of them questions, 74 partner lines; smiles 326, frowns
+33; duty 0.43; its own question marks 12; "i see" 26. The dusk probe: held-out 0.605 (0.608 after night 154: the day held), the
+old lines 0.429. Night 155: 327 utterances heard, 1024 dreams of mean length 21.3 ('do you want more egg?', 'are you here with
+me?', 'what do we do now?', 'thank you! you help me'), 384 steps, the loss 0.160 -> 0.099, the gauge on the dreams 0.731 -> 0.868.
+The guard held (duty 0.432, smiles per line 1.98). The probe on the save: **held-out 0.636 (from 0.605)**, the old lines 0.424, the
+recent lines 0.830. Two nights of whole utterances: 0.547 -> 0.608 -> 0.636, the day between them flat. The night adds. The mouth:
+'I want milk too?', 'yes. you', 'I ate the hat'; the stub 'i see 1 is' still on the first prompt from the old own slots. The next
+lever: the pace, a line every 60 ticks and the child's turn 32 (from 80 and 40), at the typist's next relaunch.

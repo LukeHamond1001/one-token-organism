@@ -1145,3 +1145,5 @@ and fills within a day, so night 154 is the first that dreams whole utterances. 
 **Served (2026-09-13, 14:50):** night 154, the first on the utterances heard (161 of them after fifty minutes of the day; 1024 dreams
 of mean length 21.1, the loss 0.219 -> 0.090), moved the held-out from 0.517 at dusk to **0.608**, the old lines 0.415 -> 0.434, the
 recent lines 0.551 -> 0.866. The served body repeated the copy: the night adds.
+Night 155 (327 utterances heard): held-out 0.605 at dusk -> **0.636**; two nights of whole utterances, 0.547 -> 0.608 -> 0.636,
+the day between them flat.
