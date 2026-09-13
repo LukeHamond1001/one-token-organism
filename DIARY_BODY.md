@@ -7219,3 +7219,10 @@ with its report). The guard held (duty 0.592, smiles per line 3.81) and was re-a
 went in the" still with the stray prefix of the older writes), the loss 0.352 to 0.116, the gauge 0.544 -> 0.858; the store
 7989 after 214 dropped; the face organ's correlation 0.45; the prefrontal 0.59; the actor's slope 0.073. At this boundary:
 the waking recall's tiring, the typist's relaunch with the day's-cues-only battery, the probe.
+
+The mouth probed on the save after night 140 (2026-09-12, 23:29): "do you want milk?" -> "I have the little tin"; "what do
+you want?" -> "I have the hen out of t"; "what do you have?" -> "I tub tle hat is not in m"; "can you play?" -> "I s it dry?
+I want sock"; "hi" -> "meast the ice please"; "are you here?" -> "me see milk went in the"; "who is here?" and "I see " ->
+"ttle hat ttle hat", the little-hat chain. Four of ten prompts open with "I" and two carry a want or a having; the recall's
+loops ("ttle hat", "nt in the tub") take the rest; the cortex alone still repeats. The waking recall's tiring is live from
+this restart (pid 51361, read_tire 0.2), which the probe does not apply; the page is the reading now.
