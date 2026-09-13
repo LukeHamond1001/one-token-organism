@@ -7447,3 +7447,19 @@ strong nights: 0.598, 0.601, 0.577, 0.575, 0.583.
 11:15: the twenty-third defect, at the mouth: the read is a five-gram walk (as the dreams were) and 60% of its reads land in its own
 stored song. Built read_follow (the recall carries the episode; test 49; 49/49). Decided: own_store off and read_follow 20 at the
 save after night 151; the mouth probe reads the lived prefix and the own-winner share from tomorrow.
+
+### Night 151 (2026-09-13, 11:53): the rate was not the cause; the mouth speaks whole phrases
+
+Day 172 (10:46-11:53): 120 parent lines, 57 questions, 58 partner lines; smiles 354, frowns 37; duty 0.40; its own question marks
+15; "i see" 20. The dusk probe: held-out 0.584 (0.583 after night 150: the day flat), the old lines 0.403, the recent 0.611. Night
+151, the first at a third of the rate (1e-5): 1024 dreams (mean length 10.1), own share 0.16, 384 steps, the loss 0.224 -> 0.145
+and the world gauge 0.573 -> 0.783, the same fit as at 3e-5: the rate never limited the night's fit of its dreams. The guard held
+(duty 0.399, smiles per line 2.00). The probe on the save: held-out 0.559 (from 0.584 at dusk, the largest drop yet), the old
+lines 0.411, the recent 0.606. So the night's damage is not its rate but the direction of its fit: 1024 dreams drawn by strength,
+the most repeated lines most, six passes over the same set. The draw comparison on copies (uniform against by strength, two
+seeds) is the reading for the next boundary; with it, one pass over six times the dreams instead of six passes over the same.
+
+The mouth, on this save, with the recall carrying the episode (read_follow 20): 'you and your dog. good' to "do you want milk?",
+'. I am happy with you' to "hi", 'I am tired' to "what do you want?", 'that is your' to "are you here?": whole phrases where the
+recall lands in the world's memories; still 'nt in the hte was in hot' where it lands in its own song, which won 10 to 20 of 24
+reads and now fades (own_store off from this save).
