@@ -7253,3 +7253,11 @@ line as the night does). By the night's own gauge the cortex alone predicts 0.82
 replayed, 0.52 on the parent's last sixty lines it did not, 0.53 on lines from twenty days ago: a half-learned language,
 memorized where replayed, generalized to half elsewhere. The nineteenth defect stands as breadth against depth; the broad
 night is armed; the reading is the gauge on unreplayed lines, 0.52 tonight.
+
+The blind typist (2026-09-12, 23:28 to 23:56): at the boundary the typist's relaunch fired on the save row a few seconds
+before the server's restart, so the new typist had read the old page before the page began again; its cursor reset with the
+page but its tick count and scan cursor did not, and for twenty-eight minutes it typed the parent's lines and scored
+nothing: no smiles, no frowns, no rows of the child's words. The child's mood fell to the floor and the mouth to its
+flattest, and the twenty-minute watch under the recall's tiring read a body no one was smiling at. Fixed in the typist
+(the page's tick count and the scan restart with the page; commit above) and the blind one stopped for the chain's relaunch.
+The tiring's reading is therefore not yet taken; the watch runs again on the relaunched day.
