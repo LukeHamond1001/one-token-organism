@@ -1023,3 +1023,32 @@ on a busy machine):** the NREM loss 0.265 -> 0.183, the dream set 0.574 -> 0.743
 language-model reading proper: nothing in them was replayed. Served from the boundary after night 143 as `--night-batch 16
 --night-warm 8 --night-lr 3e-5 --night-rounds 6 --night-starts 1024` in place of the batch-64 form (re-armed before that save
 fired). Whether the breadth (1024 dreams) or the rate did the old lines' gain is read on the served nights: the probe after each.
+
+### The twenty-first defect: the night dreamt its own song as the world's speech (2026-09-13)
+
+Once the night was strong (the twentieth defect), the served night 144 gained a third of what the same night gave on a copy
+(the parent's last sixty lines 0.543 against 0.588; the old lines 0.455 against 0.498). The dream set was the reason. The own
+song (2026-09-12) writes the body's last utterance into the store at every smile, marked as an onset so the night would dream it;
+on the body after night 144 the store's 8192 slots held 2127 of its own (26%), but **258 of the 348 onset slots were its own (74%)
+and 591 of the 1024 dreams a night drew began on its own garbled utterances** ('e. te was in the egg is a', 'k iilo we'), and the
+world's own chains crossed into them through merged slots. Every dream entered the lesson as the world's speech: the child's
+babble, replayed 384 steps a night, was being consolidated as the language. In a brain the corollary discharge marks what the
+animal itself did, and the hippocampus keeps it: replay of one's own act is not replay of the world.
+
+**The form now (dream_who, 0 = the old form; needs the lockstep path):** dreams start where the WORLD spoke (the world's onset
+slots); a dream carries who said each symbol (the store's W); in the lesson its own symbols enter as its own sound (xos, the
+corollary discharge, as awake) and no forecast is owed of them (one predicts the environment); the gauge counts the world's
+symbols only; the night's examples show its own symbols in capitals. A disclosed constant, not a rule about content. Test 47.
+
+**Measured from the same copy (the body after night 144), a whole night each (1024 dreams, six rounds, 384 steps of batch 16 at
+3e-5, warm 8), the two side by side:**
+
+| | dream set | the parent's last 60 lines | the old lines (days 110-125) |
+|---|---|---|---|
+| the served form (own dreams as the world's) | 0.648 -> 0.740 (16.5k targets) | 0.546 -> 0.572 | **0.455 -> 0.425** |
+| dream_who | 0.484 -> 0.680 (10.0k world targets; own share 32%) | 0.546 -> **0.601** | 0.455 -> **0.517** |
+
+The served form now erodes the old lines: the language it had is being overwritten by its babble. Served from the boundary after
+night 145 with `--dream-who 1`. Two readings follow: the dusk probe (a save as the sleep pressure nears the threshold, then the
+probe) to tell the day's lesson's effect from the night's, and the store's breadth: only 90 world onsets in a store of 8192 slots
+(three days of speech at the cap), so a night's 1024 dreams start from ninety lines.

@@ -7342,3 +7342,7 @@ the target at its own positions), and the dream set, whose examples read like it
 'k iilo we'): the own song, written to the store at every smile, is dreamt as if the world had said it. Instruments armed: a dusk
 probe (a save as the sleep pressure nears the threshold, then the probe) to tell the day's effect from the night's; the dream
 set's composition measured now.
+04:36: the twenty-first defect, measured. The dream set on the post-144 body: 74% of the onset slots and 58% of the drawn dreams
+were its own garbled song, entered as the world's speech. Built and tested dream_who (dreams from the world's onsets; its own
+symbols as its own sound, no forecast owed; test 47, 47/47). Two whole nights from the same copy: the served form, lines 0.546 ->
+0.572 and the old lines 0.455 -> 0.425 (eroding); dream_who, lines -> 0.601 and the old lines -> 0.517. Armed for night 145's save.
