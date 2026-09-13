@@ -52,12 +52,13 @@ class Store:
         self.NK = 4                                                # THE SEQUENCE (2026-09-12): each slot keeps the last NK slots written next in the same utterance
         self.N = torch.zeros(0, self.NK, dtype=torch.long, device=device)   # (-1: none); a dream draws one by strength: the recent and the rewarded replayed more
         self.last_idx = -1                                         # the slot the last write went to (new or merged)
+        self.A = torch.zeros(0, device=device)                     # THE WAKING RECALL TIRES (2026-09-12): a slot's short-term availability, 1 rested
 
     def n(self):
         return int(self.K.shape[0])
 
     @torch.no_grad()
-    def read(self, q, adapt=None, end_vec=None):
+    def read(self, q, adapt=None, end_vec=None, tire=None):
         """q [d] -> (the recalled next embedding [d], its norm the confidence in 0..1, winner index);
         adapt [n] (optional) multiplies strengths: the recall adaptation a dream runs under;
         end_vec [d] (optional): THE MARKS SPEAK IN THE RECALL. A seam slot (an utterance's first symbol written under
@@ -78,6 +79,8 @@ class Store:
         logits = sims / self.temp
         if self.read_strength > 0 or adapt is not None:
             logits = logits + (self.read_strength if adapt is None else 1.0) * torch.log(S + 1e-6) * (1.0 if adapt is not None else 1.0)
+        if tire is not None and tire.numel() == logits.numel():
+            logits = logits + torch.log(tire + 1e-6)             # a memory recalled lately is harder to recall again (synaptic depression)
         w = torch.softmax(logits, 0)
         # the recall is the attended mean of unit values: its norm is the agreement among the memories
         # attended, the calibrated confidence (the largest weight understated it once duplicate slots
@@ -122,6 +125,7 @@ class Store:
         self.Bs = torch.cat([self.Bs, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.Bq = torch.cat([self.Bq, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.N = torch.cat([self.N, torch.full((1, self.NK), -1, dtype=torch.long, device=self.dev)])
+        self.A = torch.cat([self.A, torch.ones(1, device=self.dev)])
         self.last_idx = self.n() - 1
         if self.n() > self.cap:                                         # the weakest gives way
             keep = torch.argsort(self.S, descending=True)[: self.cap]
@@ -202,6 +206,7 @@ class Store:
         self.K, self.V, self.S, self.W = self.K[idx], self.V[idx], self.S[idx], self.W[idx]
         self.B, self.Bs, self.Bq = self.B[idx], self.Bs[idx], self.Bq[idx]
         N = self.N[idx]; self.N = torch.where(N >= 0, remap[N.clamp_min(0)], N)   # the links follow the slots that stay; a dropped successor is none
+        self.A = self.A[idx] if self.A.numel() == remap.numel() else torch.ones(int(idx.numel()), device=self.dev)
 
     @torch.no_grad()
     def mark_seam(self, k, v, merge_cos=0.97):
@@ -268,6 +273,7 @@ class Store:
         else:
             self.N = N.to(self.dev)
         self.last_idx = -1
+        self.A = torch.ones(self.n(), device=self.dev)            # rested after a load
 
 
 class Block(nn.Module):

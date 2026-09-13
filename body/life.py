@@ -128,6 +128,12 @@ PHYSIOLOGY = dict(
     # at own_store_gain times the reward (the world's lines keep the stronger claim on the night), at most one write per
     # own_store_gap ticks
     own_store_len=12, own_store_gain=0.3, own_store_gap=40,
+    # THE WAKING RECALL TIRES (read_tire, 0 = off; 2026-09-12, 22:50, read live: with its own rewarded phrase in the store the mouth
+    # said "i see milk went in the" thirty-five times in half an hour, half its three-word windows repeats). The dreams already run
+    # under this law (a recalled memory tires, dream_adapt); awake the same slot could be recalled without end. A slot that wins the
+    # read loses read_tire of its availability and recovers toward rest by read_recover a tick: synaptic depression, the law that
+    # keeps any circuit from saying one thing forever.
+    read_tire=0.0, read_recover=0.97,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
     wm=0, wm_burst=0.5, wm_max=512,
@@ -487,7 +493,13 @@ class Life:
                 else:
                     self.bag_o = m.shift(self.bag_o) + ex; self.n_own += 1
             end_vec = F.normalize(m.E.weight[self.end_id], dim=0) if int(self.cfg.get("recall_end", 0)) else None
-            read, conf, _ = (self.store.read(self.bag, end_vec=end_vec) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
+            rt_ = float(self.cfg.get("read_tire", 0.0))
+            tire_ = self.store.A if (rt_ > 0.0 and self.store.A.numel() == self.store.n()) else None
+            read, conf, win_ = (self.store.read(self.bag, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
+            if rt_ > 0.0 and self.store.A.numel() == self.store.n():
+                if win_ >= 0:
+                    self.store.A[win_] *= (1.0 - rt_)                        # the winner tires
+                self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
             self._read = read                                  # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
             # THE TICK'S POSITION. The world's symbol opens it. The world's quiet opens nothing yet: the
