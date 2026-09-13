@@ -7272,3 +7272,15 @@ three-word windows that repeat 0.18, 0.30, 0.35, 0.45 (0.52 before the tiring: t
 minutes and returns); "i see milk" 7, 8, 7, 3 per five minutes. Its turns: "with you see here? no wet dog", "I s it dry? I
 want now? no wet dog here". The actor's slope 0.068, drifting down through the day. Night 141 began at 00:10; the broad
 night lands at the restart on its save.
+
+
+### Night 141 (2026-09-13, 00:30): the last deep night
+
+Day 157 (the label; the scored thirty-three minutes after the blind typist was stopped): the parent asked 17 questions in 37
+lines; smiles 201, frowns 11, duty after the parent's lines 0.65; five replies of the modeled shape within six seconds. The
+guard held (duty 0.638, smiles per line 3.81) and was re-armed. Night 141 (17 minutes; the last under the deep settings):
+214 new slots -> 48 dreams of mean length 16.9 ("I ha big tu", "y i see milk is her", "you have?", "lI am dry.", "a bunt in
+the den"), the loss 0.338 to 0.093, the gauge 0.554 -> 0.886; the store at its cap of 8192 (the weakest give way at each
+write from here; the fade and the cap keep it there); the face organ's correlation 0.42; the prefrontal 0.52; the actor's
+slope 0.068. At this boundary: the broad night (512 dreams and up to 1024, three rounds) from the restart on this save; the
+probe on the save; the first broad night is night 142.
