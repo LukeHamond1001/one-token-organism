@@ -7498,3 +7498,13 @@ held-out 0.556 -> 0.687, the old lines 0.401 -> 0.484, the replayed 0.816. Seven
 The night's content was the whole fault. Built the utterances heard (dream_source utterances: the world's utterances kept whole
 between pauses, fading by night, dreamt whole; test 51; 51/51); armed for the save after night 153. Night 154 is the first that
 dreams them.
+
+### Night 153 (2026-09-13, 13:54): the last night of the store's fragments
+
+Day 175 (13:02-13:54): 100 parent lines, 32 questions, 70 partner lines; smiles 340, frowns 34; duty 0.43; its own question marks
+16; "i see" 34 (the stub 'i see m is i see' loops from the own slots still strong in the store). The dusk probe: held-out 0.564
+(0.564 after night 152: the day flat), the old lines 0.432. Night 153: 1024 dreams of mean length 8.7, own share 0.14, 384 steps,
+the loss 0.232 -> 0.174, the world gauge 0.596 -> 0.733; examples 'come in', 'sit do', 'l E EGG Is alml!h'. The guard held (duty
+0.431, smiles per line 2.00). The probe on the save: held-out 0.547 (from 0.564), the old lines 0.424, the recent 0.592: the
+fragments' last subtraction. The reload at this save: the utterances heard. Restarted 13:56 (verified); day 176 fills the memory;
+night 154 dreams whole utterances. The held-out's course: 0.598, 0.601, 0.577, 0.575, 0.583, 0.559, 0.564, 0.547.
