@@ -22,6 +22,16 @@ KNOWN = set("""hi bye no more up dog ball milk book go big my please the you two
 want where not give little under one three went what then can happy will sad why because
 first bigger had scared saw balls dogs books all gone""".split())
 KNOWN2 = {w for w in KNOWN if len(w) >= 2}
+# THE SMILE FOR THE ANSWER (ANSWER_SMILE, 2026-09-13): a parent rewards relevance, not vocabulary. With a smile at any known word (two a
+# line, three hundred a day) the reward did not depend on which word the child said, and the striatal actor, which learns from the
+# dopamine error over which symbol, sat still for days (slope 0.04) while the gate, whose reward depends on when, learned turn-taking.
+# With it on, the child's word during its turn after the parent's line earns the full smile when it is what the other voice is about to
+# answer (a content word of the coming B line, or yes/no when B begins so), and any other known word a faint one.
+ANSWER_SMILE = int(os.environ.get("ANSWER_SMILE", "0"))
+STOP = {"the", "a", "an", "is", "it", "in", "on", "at", "to", "of", "with", "my", "your", "you", "me", "i", "and", "here", "there", "now",
+        "we", "are", "am", "do", "can", "too", "for", "up", "out", "so", "this", "that", "not", "no", "yes", "please"}
+def content_words(line):
+    return [w for w in line.replace("?", "").replace(".", "").replace("!", "").lower().split() if w not in STOP and len(w) >= 2]
 ANSWERS = {"dog will ": ["go"], "scared ": ["dog", "ball"], "give ": ["milk", "ball", "book"], "where ball? ": ["ball"],
            "I had ": ["milk"], "first milk then ": ["ball"], "big dog bigger ": ["dog"], "why dog up? ": ["because"],
            "what? ": ["dog", "ball", "milk", "sad", "scared"], "I can ": ["go"], "sad ": ["dog", "ball"], "happy ": ["dog", "ball"]}
@@ -64,6 +74,7 @@ class Caregiver:
         self.reply = int(reply); self.reply_cue = None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (-1, -1)                       # the parent's own turn, in ticks
         self.expand_next = None; self._e_t = time.time()
+        self.expect = None                                   # the answer the other voice is about to give (ANSWER_SMILE)
         self.period, self.quiet_ticks, self.cap = self.s(period), int(quiet), self.s(cap)
         self.rng = random.Random(seed)
         self.cursor = 0; self.its = {}; self.tobs = {}; self.maxtick = -1; self.finalized = -1
@@ -161,11 +172,13 @@ class Caregiver:
         except Exception:
             pass
 
-    def smile(self, on, ctx, why, extra=None):
+    def smile(self, on, ctx, why, extra=None, faint=False):
         db = (self.state.get("last") or {}).get("doses")
-        levels = self.answer_levels if why.startswith("cue") else 1
+        levels = self.answer_levels if why.startswith("cue") else (0 if faint else 1)
         t0 = time.time(); la = {}
-        if levels >= 2:
+        if faint:
+            self._hold(0.5, 5)                                   # a faint smile: a known word that did not answer (ANSWER_SMILE)
+        elif levels >= 2:
             self._hold(2, 2.5, then=0.0, then_ticks=2.5, then_expr=4)
         else:
             self._hold(2, 5)
@@ -287,6 +300,11 @@ class Caregiver:
                 self.past = True; self.e = max(0.0, self.e - 0.04)
                 self.row({"action": "missed", "on": tok, "why": "past its answer", "e": round(self.e, 3), "context": ctx}); return
             self.reply_tokens.append(tok)
+        ex = self.expect
+        if ANSWER_SMILE and self.parent and ex and not ex.get("done") and low and len(low) >= 2 and wall <= ex["until"]:
+            if low in ex["words"] or (ex["yesno"] and low in ("yes", "no")):
+                ex["done"] = True; self.e = min(1.0, self.e + 0.2); self.word_smiled_tick[low] = b
+                self.smile(tok, ctx, "answer: " + ex["line"]); return
         if low in KNOWN2:
             age = time.time() - wall
             if self.last_word == low and time.time() - self.last_smile < self.s(48):
@@ -305,7 +323,7 @@ class Caregiver:
                     if self.rng.random() > p:
                         self.row({"action": "missed", "on": tok, "why": "distracted", "e": round(self.e, 3), "context": ctx}); return
                     self.expand_next = low; self.word_smiled_tick[low] = b
-                self.smile(tok, ctx, "known word")
+                self.smile(tok, ctx, "known word", faint=bool(ANSWER_SMILE and self.parent))
             else:
                 self.row({"action": "missed", "on": tok, "why": "late %.1fs" % age, "context": ctx})
         elif self.parent and low and len(low) >= 3 and low not in KNOWN2 and not any(w.startswith(low) for w in KNOWN2):

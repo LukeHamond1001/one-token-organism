@@ -133,6 +133,17 @@ class Teacher(Caregiver):
             time.sleep(max(0.05, self.s(1)))
         tick_end = self.maxtick
         self.typing_span = (self.typing_span[0], tick_end)
+        # THE ANSWER EXPECTED (ANSWER_SMILE): after the parent's line, if the other voice's answer is next in the queue, the child's turn
+        # may earn the full smile by saying what that answer names; the other voice's own line clears it
+        self.expect = None
+        if who == "parent" and kind == "line":
+            buf = getattr(self.planner, "buf", None) or []
+            nxt = str(buf[0]).strip() if buf else ""
+            if nxt[:2].lower() == "b:":
+                from .caregiver import content_words
+                bl = nxt[2:].strip()
+                self.expect = {"line": bl, "words": set(content_words(bl)), "yesno": bl.lower().startswith(("yes", "no")),
+                               "until": time.time() + self.s(self.listen) + self.s(4), "done": False}
         self.watch(self.listen)
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}

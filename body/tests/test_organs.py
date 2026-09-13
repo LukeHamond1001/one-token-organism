@@ -1245,11 +1245,64 @@ def test_dreams_the_utterances_heard():
     print("51 the utterances heard:", len(life.utts), "kept whole; the dreams", texts[:3], "| strengths after a night", [round(v, 2) for v in life.utt_S])
 
 
+
+def test_smile_for_the_answer():
+    """52 (2026-09-13): with ANSWER_SMILE on, the child's word during its turn earns the full smile when it names what the other voice is
+    about to answer, and a known word that does not answer earns a faint one; the expectation comes from the queue's next B line"""
+    import json, os, random
+    import body.caregiver as cg
+    from body.teacher import Teacher, Corpus, FixedPlanner
+    life = tiny()
+    log = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/answer_test.jsonl"
+    if os.path.exists(log):
+        os.remove(log)
+
+    class Stub(Teacher):
+        def req(self, path, data=None, timeout=30):
+            if path.startswith("/state"):
+                life.tick(); life.tick()
+                return life.state(int(path.split("since=")[1]))
+            if path == "/type":
+                return life.type_text(data["text"], who=data.get("who", "you"))
+            if path == "/face":
+                return life.set_face(data["expr"])
+            return {}
+    old = cg.ANSWER_SMILE; cg.ANSWER_SMILE = 1
+    try:
+        t = Stub("", 1, log, Corpus(None), FixedPlanner(random.Random(0)), period=4, quiet=2, cap=8, tick=0.001, listen=2, parent=1)
+        t.poll(); t.finalized = t.maxtick - 1
+        t.e = 1.0
+        def child_says(word):
+            m = t.maxtick
+            for k in range(m - 8, m):
+                t.its[k] = ""; t.tobs[k] = time.time()
+            for j, ch in enumerate(word):
+                t.its[m - 6 + j] = ch
+            t.finalized = m - 9; t.scan()
+        t.expect = {"line": "I want the egg", "words": set(cg.content_words("I want the egg")), "yesno": False, "until": time.time() + 60, "done": False}
+        child_says("dog")                                      # a known word that does not answer: faint
+        child_says("egg")                                      # the answer: the full smile
+        rows = [json.loads(l) for l in open(log)]
+        smiles = [r for r in rows if r["action"] == "smile"]
+        assert any(r["on"] == "egg" and r["why"].startswith("answer:") and r["levels"] == 1 for r in smiles), smiles
+        faint = [r for r in smiles if r["on"] == "dog"]
+        assert faint and faint[0]["levels"] == 0, smiles
+        assert t.expect["done"]
+        t.planner.buf = ["b: I have my hat"]                    # the expectation set from the queue's next B line after a parent's line
+        t.event("what do you have?", "line")
+        assert t.expect and "hat" in t.expect["words"] and not t.expect["yesno"], t.expect
+        t.event("I have my hat", "line", "other")               # the other voice's line clears it
+        assert t.expect is None
+    finally:
+        cg.ANSWER_SMILE = old
+    print("52 the smile for the answer: full for 'egg' (the answer), faint for 'dog'; the expectation follows the queue")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer]
     failed = 0
     for t in tests:
         try:
