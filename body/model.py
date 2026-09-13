@@ -37,7 +37,7 @@ class Store:
     completion); write = a new slot or a merge into a near-identical one; fade = strengths
     shrink each night and slots far below the store's own mean are forgotten."""
 
-    def __init__(self, d, cap=8192, temp=0.05, device="cpu", read_strength=0.0):
+    def __init__(self, d, cap=8192, temp=0.05, device="cpu", read_strength=0.0, links=4):
         self.d, self.cap, self.temp, self.dev = d, int(cap), float(temp), device
         self.read_strength = float(read_strength)      # weight of log-strength in the read: 0 = recall by content alone
         self.saturate = False                          # REPETITION SUPPRESSION (2026-09-11): a repeat strengthens its slot less the stronger it already is
@@ -49,8 +49,12 @@ class Store:
         self.B = torch.zeros(0, dtype=torch.bool, device=device)   # THE BOUNDARY: this slot's symbol ended the world's utterance
         self.Bs = torch.zeros(0, dtype=torch.bool, device=device)  # and this slot's symbol began one (the first after a pause)
         self.Bq = torch.zeros(0, dtype=torch.bool, device=device)  # THE SEAM: this slot's symbol is an utterance's first, under the last line's faded context
-        self.NK = 4                                                # THE SEQUENCE (2026-09-12): each slot keeps the last NK slots written next in the same utterance
+        self.NK = int(links)                                       # THE SEQUENCE (2026-09-12): each slot keeps the last NK slots written next in the same utterance
         self.N = torch.zeros(0, self.NK, dtype=torch.long, device=device)   # (-1: none); a dream draws one by strength: the recent and the rewarded replayed more
+        # THE EPISODE TAG (2026-09-13, the twenty-second defect): each link remembers which utterance wrote it (a count of utterances,
+        # the hippocampal time context), so a dream can follow ONE utterance as lived through slots that many utterances share
+        self.NE = torch.zeros(0, self.NK, dtype=torch.long, device=device)  # (-1: untagged, a link from before the tags)
+        self.episode = 0
         self.last_idx = -1                                         # the slot the last write went to (new or merged)
         self.A = torch.zeros(0, device=device)                     # THE WAKING RECALL TIRES (2026-09-12): a slot's short-term availability, 1 rested
 
@@ -125,6 +129,7 @@ class Store:
         self.Bs = torch.cat([self.Bs, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.Bq = torch.cat([self.Bq, torch.zeros(1, dtype=torch.bool, device=self.dev)])
         self.N = torch.cat([self.N, torch.full((1, self.NK), -1, dtype=torch.long, device=self.dev)])
+        self.NE = torch.cat([self.NE, torch.full((1, self.NK), -1, dtype=torch.long, device=self.dev)])
         self.A = torch.cat([self.A, torch.ones(1, device=self.dev)])
         self.last_idx = self.n() - 1
         if self.n() > self.cap:                                         # the weakest gives way
@@ -133,30 +138,48 @@ class Store:
         return True
 
     @torch.no_grad()
-    def link(self, a, b):
+    def link(self, a, b, tag=-1):
         """THE SEVENTEENTH DEFECT (2026-09-12, night 128 read on a copy): the night's dreams were pattern completions from the
         utterance onsets, and every line that began with the same word shared one onset, so ninety-six dreams were seventeen
         fragments ("the ", "put ", "yes. ") of five symbols: the night replayed first words and the day's line endings, the nouns,
         never. A hippocampus keeps the order of an episode (CA3's recurrent chain; replay runs it as lived): each slot remembers
         the slot written next in the same utterance, and a dream follows that chain, pattern completion only where it breaks."""
         if 0 <= a < self.n() and 0 <= b < self.n() and a != b:
-            row = self.N[a]
-            if int((row == int(b)).sum()) > 0:
-                return                                              # the same continuation again: already kept
-            self.N[a] = torch.cat([torch.tensor([int(b)], device=self.dev), row[:-1]])   # the newest first, the oldest forgotten
+            row = self.N[a]; tags = self.NE[a]
+            keep = row != int(b)                                     # the same continuation again: moved to the front, under this utterance's tag
+            row = row[keep]; tags = tags[keep]
+            self.N[a] = torch.cat([torch.tensor([int(b)], device=self.dev), row])[:self.NK]      # the newest first, the oldest forgotten
+            self.NE[a] = torch.cat([torch.tensor([int(tag)], device=self.dev), tags])[:self.NK]
 
     @torch.no_grad()
-    def successor(self, a, gen=None):
+    def successor(self, a, gen=None, tag=None):
         """the next slot of an episode from slot a: a draw among the last NK continuations by their strength (the surprise and the
-        reward at the moment of writing), the way replay favors the recent and the rewarded; -1 when there is none"""
+        reward at the moment of writing), the way replay favors the recent and the rewarded; -1 when there is none. With a tag,
+        the newest continuation written by that utterance, or -1 where the utterance's trace is gone (the episode ends there)"""
         if not (0 <= a < self.n()):
             return -1
         row = self.N[a]; ok = row >= 0
+        if tag is not None:
+            hit = ok & (self.NE[a] == int(tag))
+            return int(row[hit][0]) if bool(hit.any()) else -1
         if not bool(ok.any()):
             return -1
         cand = row[ok]; w = self.S[cand].clamp_min(1e-6)
         i = int(torch.multinomial((w / w.sum()).cpu(), 1, generator=gen))
         return int(cand[i])
+
+    @torch.no_grad()
+    def draw_link(self, a, gen=None):
+        """a dream's first step from an onset: a continuation drawn by strength as successor() draws, and the utterance that wrote it
+        (its tag; -1 for a link from before the tags): the dream then follows that utterance"""
+        if not (0 <= a < self.n()):
+            return -1, -1
+        row = self.N[a]; ok = row >= 0
+        if not bool(ok.any()):
+            return -1, -1
+        idx = torch.nonzero(ok).flatten(); w = self.S[row[idx]].clamp_min(1e-6)
+        i = int(idx[int(torch.multinomial((w / w.sum()).cpu(), 1, generator=gen))])
+        return int(row[i]), int(self.NE[a][i])
 
     @torch.no_grad()
     def compress(self):
@@ -206,6 +229,8 @@ class Store:
         self.K, self.V, self.S, self.W = self.K[idx], self.V[idx], self.S[idx], self.W[idx]
         self.B, self.Bs, self.Bq = self.B[idx], self.Bs[idx], self.Bq[idx]
         N = self.N[idx]; self.N = torch.where(N >= 0, remap[N.clamp_min(0)], N)   # the links follow the slots that stay; a dropped successor is none
+        NE = self.NE[idx] if self.NE.shape[0] == remap.numel() else torch.full_like(self.N, -1)
+        self.NE = torch.where(self.N >= 0, NE, torch.full_like(NE, -1))
         self.A = self.A[idx] if self.A.numel() == remap.numel() else torch.ones(int(idx.numel()), device=self.dev)
 
     @torch.no_grad()
@@ -256,7 +281,7 @@ class Store:
         return [int(pool[i]) for i in idx]
 
     def state_dict(self):
-        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp, "sat": bool(self.sat_done), "N": self.N.cpu()}
+        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp, "sat": bool(self.sat_done), "N": self.N.cpu(), "NE": self.NE.cpu(), "episode": int(self.episode)}
 
     def load_state_dict(self, sd):
         self.K = sd["K"].to(self.dev); self.V = sd["V"].to(self.dev)
@@ -265,13 +290,21 @@ class Store:
         self.Bs = sd["Bs"].to(self.dev) if "Bs" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.Bq = sd["Bq"].to(self.dev) if "Bq" in sd else torch.zeros(self.n(), dtype=torch.bool, device=self.dev)
         self.temp = float(sd.get("temp", self.temp)); self.sat_done = bool(sd.get("sat", False))
+        def fit(M):                                                     # a saved link table brought to this store's width (padded or trimmed, newest first)
+            M = M.to(self.dev)
+            if M.shape[1] < self.NK:
+                return torch.cat([M, torch.full((M.shape[0], self.NK - M.shape[1]), -1, dtype=torch.long, device=self.dev)], dim=1)
+            return M[:, :self.NK]
         N = sd.get("N")
-        if N is None or N.dim() != 2 or N.shape[1] != self.NK:
+        if N is None or N.dim() != 2:
             self.N = torch.full((self.n(), self.NK), -1, dtype=torch.long, device=self.dev)
             if N is not None and N.dim() == 1 and N.numel() == self.n():
                 self.N[:, 0] = N.to(self.dev)                           # a save with one link a slot
         else:
-            self.N = N.to(self.dev)
+            self.N = fit(N)
+        NE = sd.get("NE")
+        self.NE = fit(NE) if (NE is not None and NE.dim() == 2 and NE.shape[0] == self.n()) else torch.full_like(self.N, -1)
+        self.episode = int(sd.get("episode", 0))
         self.last_idx = -1
         self.A = torch.ones(self.n(), device=self.dev)            # rested after a load
 

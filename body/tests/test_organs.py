@@ -1157,11 +1157,39 @@ def test_dreams_know_who_spoke():
     print("47 the dream knows who spoke: own share", rep["own_share"], "| examples", rep["examples"][:3])
 
 
+
+def test_dreams_follow_one_utterance():
+    """48 (2026-09-13): with dream_tag on, a dream through slots that many lines share follows the one utterance whose link it drew,
+    so its world text is a line as lived; the links remember their utterance across a save; a wider link table keeps more"""
+    lines = ["the dog is here", "the dog is big", "the dog is wet", "the dog is not here"]
+    life = tiny(store_chain=1, night_batch=4, dream_who=1, dream_tag=1, store_links=8)
+    for t in lines:
+        say(life, t, 8)
+    assert life.store.NK == 8 and life.store.episode >= len(lines) and int((life.store.NE >= 0).sum()) > 0
+    life.gen.manual_seed(0); dreams, owns = life.dreams(24, with_who=True)
+    texts = [TOK.decode([i for i in d if i != life.end_id]).strip() for d in dreams]
+    long_ = [t for t in texts if len(t) >= 8]
+    assert long_, texts
+    whole = [t for t in long_ if any(t in l for l in lines)]
+    assert len(whole) == len(long_), [t for t in long_ if t not in whole]
+    sd = life.store.state_dict(); life.store.load_state_dict(sd)
+    assert int((life.store.NE >= 0).sum()) > 0 and life.store.episode >= len(lines)
+    life2 = tiny(store_chain=1, night_batch=4, dream_who=1, dream_tag=0)
+    for t in lines:
+        say(life2, t, 8)
+    life2.gen.manual_seed(0); texts2 = [TOK.decode([i for i in d if i != life2.end_id]).strip() for d in life2.dreams(24)]
+    long2 = [t for t in texts2 if len(t) >= 8]; whole2 = [t for t in long2 if any(t in l for l in lines)]
+    assert len(whole2) <= len(long2)
+    rep = life.night()
+    assert "error" not in rep and rep["nrem_steps"] > 0, rep
+    print("48 dreams follow one utterance:", len(whole), "of", len(long_), "whole | untagged", len(whole2), "of", len(long2), "|", texts[:4])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance]
     failed = 0
     for t in tests:
         try:

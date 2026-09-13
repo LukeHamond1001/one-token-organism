@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, store_links=4, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -348,7 +348,7 @@ class Life:
         self.bans = list(self.reserved)
         self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None; self._start_pending = False
         self._prev_slot = -1                                   # the slot of the world's last symbol in this utterance (the sequence's link)
-        self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device)
+        self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device, links=int(self.cfg.get("store_links", 4)))
         self.store.saturate = bool(int(self.cfg.get("store_sat", 0)))   # repetition suppression (store_sat)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.save_path = save_path
@@ -470,7 +470,7 @@ class Life:
                 self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
                 if int(self.cfg.get("store_chain", 0)) and self.store.last_idx >= 0:
                     if self._prev_slot >= 0:
-                        self.store.link(self._prev_slot, self.store.last_idx)       # the episode's order: this symbol followed that one
+                        self.store.link(self._prev_slot, self.store.last_idx, tag=self.store.episode)   # the episode's order: this symbol followed that one
                     self._prev_slot = self.store.last_idx
                 self._last_write = (self.key.clone(), ex.clone())                    # for the boundary mark at the offset
                 if getattr(self, "_start_pending", False):
@@ -680,6 +680,7 @@ class Life:
                 self._start_armed = True; self._start_pending = False; self._seam_pending = True
             elif getattr(self, "_start_armed", False):
                 self._start_pending = True; self._start_armed = False
+                self.store.episode += 1                                    # a new utterance of the world's: the links it writes carry its tag
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
         if settle_form and off > 0:                                          # THE EVENT'S END BY THE LAW: two running averages of the
             st_ = float(getattr(self, "_surp_tick", 0.0))                     # tick's surprise; the world stops, the surprise jumps and
@@ -1288,9 +1289,16 @@ class Life:
                     # end; at a branch (a frame heard with several continuations) a draw by strength, the recent and the rewarded more
                     ids = [self.m.nearest(self.store.K[j])]; k = int(j); seen = {k}
                     who = [bool(self.store.W[j] == 1)]                    # who said each symbol: the onset's first by its own slot
+                    tag = None
+                    if int(self.cfg.get("dream_tag", 0)) > 0:
+                        # THE DREAM FOLLOWS ONE UTTERANCE (dream_tag; the twenty-second defect): at the onset a continuation is drawn by
+                        # strength as before, and the dream then follows the utterance that wrote it, slot by slot, ending where its
+                        # trace ends; without the tag a chain drew a successor from another utterance at every shared slot, and half
+                        # a night's dream text was stitched across lines after four symbols. A link from before the tags follows as before.
+                        _, t_ = self.store.draw_link(j, gen=self.gen); tag = int(t_) if t_ >= 0 else None
                     for _ in range(int(self.cfg["dream_max"])):
                         ids.append(self.m.nearest(self.store.V[k])); who.append(bool(self.store.W[k] == 1))
-                        nk = self.store.successor(k, gen=self.gen)
+                        nk = self.store.successor(k, gen=self.gen, tag=tag)
                         if nk < 0 or nk in seen:
                             if bool(self.store.B[k]) and int(self.cfg.get("offset_ticks", 0)) > 0:
                                 ids.append(self.end_id); who.append(bool(self.store.W[k] == 1))   # the memory ends where the world went quiet
@@ -1780,6 +1788,7 @@ class Life:
         m = self.m; d_ = float(self.cfg["bag_decay"]); chain = int(self.cfg.get("store_chain", 0))
         with torch.no_grad():
             bag = self.bag_w.clone(); prev = -1; n = 0
+            self.store.episode += 1                                        # its own utterance: an episode of its own
             for i in run:
                 if i in self.bans or i == self.sil:
                     continue
@@ -1789,7 +1798,7 @@ class Life:
                     if n == 2:
                         self.store.mark_start(bag, ex)         # the start mark on the second symbol's slot, as the world's onsets are marked
                     if chain and prev >= 0:
-                        self.store.link(prev, j)
+                        self.store.link(prev, j, tag=self.store.episode)
                     prev = j
                 bag = d_ * m.shift(bag) + ex
         self._own_stored_n = getattr(self, "_own_stored_n", 0) + n
