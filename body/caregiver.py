@@ -123,8 +123,10 @@ class Caregiver:
         except Exception as e:
             self.row({"action": "error", "err": repr(e)[:120]}); time.sleep(2); return None
         n = d.get("n", 0)
-        if n < self.cursor:                               # the serve restarted
+        if n < self.cursor:                               # the serve restarted: the page begins again, and so must the reading of it
             self.cursor = 0; d = self.req("/state?since=0"); n = d.get("n", 0)
+            self.its = {}; self.tobs = {}; self.maxtick = -1; self.finalized = -1   # (2026-09-12: a typist that outlived a restart kept its
+            self.typing_span = (-1, -1); self.visitor_tick = -10 ** 9              # old tick count and scanned nothing for half an hour)
         t = time.time()
         for i, e in enumerate(d.get("page", [])):
             idx = self.cursor + i; tick = idx // 2
