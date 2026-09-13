@@ -7385,3 +7385,13 @@ The held-out reading on the same save: **0.598 (cos 0.629) on 73 never-typed lin
 replayed recent lines.** The cortex generalises within the stage as well as it remembers; what the old lines measured was the
 language moving on from its container nouns. The held-out gauge is the ruler from here; the old lines stay in the probe as a
 record of the drift. (Of 124 lines I wrote in the parents' style, 43 turned out to have been typed already: the style is theirs.)
+
+### Night 147 (2026-09-13, 06:44): the night that lowered what it did not train on
+
+Day 166 (05:53-06:44): 102 parent lines, 51 questions, 49 partner lines; smiles 449, frowns 32; duty 0.46; its own question marks
+2; "i see" 23 (36 the day before). The dusk probe: held-out 0.615 (0.598 after night 146), the recent lines 0.608, the old 0.475:
+the day raised all three. Night 147: 1024 dreams, own share 0.32, 384 steps, the world gauge 0.522 -> 0.668. The guard held (duty
+0.460, smiles per line 2.99). The probe on the save: held-out 0.601, the recent lines 0.567, the old 0.453: the night lowered all
+three while fitting its dreams. The dreams' world parts are patchworks: at a merged slot (a context shared by many lines) the chain
+draws a successor from another line, so a dream is a five-gram walk through the corpus rather than an utterance as lived, and 384
+steps of fitting that teach the cortex that a line's far structure is random.
