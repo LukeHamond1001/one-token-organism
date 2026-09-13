@@ -54,7 +54,12 @@ if "--lmloss" in sys.argv:
     # utterances; the corpus near four thousand): material no night can have replayed, the language-model reading proper
     old = [ids_of(t) for t in dict.fromkeys(r["text"].strip() for r in R if r["action"] in ("line", "cue") and r.get("voice") != "b" and 110 <= int(r.get("day", -1)) <= 125)][:150]
     old = [x for x in old if len(x) >= 2]
+    # THE HELD-OUT SET (2026-09-13): lines in the current stage's style and vocabulary, written by the supervisor and never typed
+    # (any that a parent later happens to type are dropped at probe time): the generalisation reading proper
+    typed = set(r["text"].strip() for r in R if r["action"] in ("line", "cue"))
+    held = [ids_of(t.strip()) for t in open("/Users/lukehamond/Projects/project/tools/heldout_stage4.txt") if t.strip() and t.strip() not in typed]
     life.cfg["night_batch"] = max(1, int(life.cfg.get("night_batch", 0)))    # the gauge on the lockstep path (exact; fast)
     with torch.no_grad():
-        g2 = life.gauge(recent); c2 = life._gauge_cos; g3 = life.gauge(old); c3 = life._gauge_cos; g1 = life.gauge(dreams) if dreams else (float("nan"), 0)
-    print(f"LM accuracy (the night's gauge): the parent's last 60 lines {g2[0]:.3f} (cos {c2}) over {g2[1]} symbols | {len(old)} old lines (days 110-125) {g3[0]:.3f} (cos {c3}) over {g3[1]} | the last night's dreams {g1[0]:.2f} over {g1[1]}")
+        g2 = life.gauge(recent); c2 = life._gauge_cos; g3 = life.gauge(old); c3 = life._gauge_cos
+        g4 = life.gauge(held); c4 = life._gauge_cos; g1 = life.gauge(dreams) if dreams else (float("nan"), 0)
+    print(f"LM accuracy (the night's gauge): the parent's last 60 lines {g2[0]:.3f} (cos {c2}) over {g2[1]} symbols | {len(old)} old lines (days 110-125) {g3[0]:.3f} (cos {c3}) over {g3[1]} | HELD-OUT {len(held)} lines {g4[0]:.3f} (cos {c4}) over {g4[1]} | the last night's dreams {g1[0]:.2f} over {g1[1]}")

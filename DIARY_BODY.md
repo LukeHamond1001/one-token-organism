@@ -7368,3 +7368,20 @@ dog is here", "the egg is not here"); "please", "yes please.", "again", "give me
 parent's lapse: the queue ran dry for ten minutes on day 160 and the typist replayed one frame five times. The next parent (labels
 165-168) builds on its questions (each answered as the opening of an exchange) and starves "I see" (cues on "I am", "I have", "I
 want" only).
+
+### Night 146 (2026-09-13, 05:51): the first who-aware night, and a flawed reading
+
+Day 165 (05:01-05:51; the third parent's first day): 103 parent lines, 54 questions, 48 partner lines; smiles 431, frowns 33; duty
+0.51; its own question marks 6; "i see" 36 times in its writing. The dusk probe: the old lines 0.459 (0.467 after night 145): the
+day flat again. Night 146: 1024 dreams from the world's onsets, a third of their symbols its own and entered as its own sound, 384
+steps, nine minutes, the loss 0.324 -> 0.235, the gauge on the world's symbols 0.454 -> 0.661; the examples with its own in
+capitals ('al gOne IS IN my bag', 'k WITH YOU I SEE MILk Was'). The guard held (duty 0.508, smiles per line 2.85). The probe on
+the save: the recent lines 0.601 (0.557 at dusk), the old lines 0.447 (0.459 at dusk). Four strong nights: the old lines 0.438,
+0.455, 0.467, 0.447. The recent lines rise because the store holds them and the night replays them; the old lines do not, and the
+copy's 0.517 was one draw's luck (two nights from one copy spread 0.09). The old set is also the wrong ruler: days 110-125 were the
+container stage, whose nouns the parent no longer says, so it measures the drift of the vocabulary as much as the language. A
+held-out set replaces it: lines in the present stage's style and vocabulary, written by me and never typed.
+The held-out reading on the same save: **0.598 (cos 0.629) on 73 never-typed lines of the present stage, against 0.595 on the
+replayed recent lines.** The cortex generalises within the stage as well as it remembers; what the old lines measured was the
+language moving on from its container nouns. The held-out gauge is the ruler from here; the old lines stay in the probe as a
+record of the drift. (Of 124 lines I wrote in the parents' style, 43 turned out to have been typed already: the style is theirs.)
