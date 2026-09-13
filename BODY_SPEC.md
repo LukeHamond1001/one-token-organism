@@ -1052,3 +1052,27 @@ The served form now erodes the old lines: the language it had is being overwritt
 night 145 with `--dream-who 1`. Two readings follow: the dusk probe (a save as the sleep pressure nears the threshold, then the
 probe) to tell the day's lesson's effect from the night's, and the store's breadth: only 90 world onsets in a store of 8192 slots
 (three days of speech at the cap), so a night's 1024 dreams start from ninety lines.
+
+### The twenty-second defect: a dream was a five-gram walk across lines (2026-09-13)
+
+With the night strong and its dreams the world's (the twentieth and twenty-first defects), night 147 raised its own dream gauge
+from 0.522 to 0.668 and lowered everything it had not trained on: the held-out lines 0.615 -> 0.601, the recent lines 0.608 ->
+0.567, the old lines 0.475 -> 0.453, where the waking day before it had raised all three. The dreams were the reason. Measured
+on the body's save: 300 dreams held 256 runs of the world's symbols of four or more, of mean length 7.8, and **only 48% of them
+were a substring of any line ever typed**; the stitched ones ('look!r youe', 'that cut d', 'I am  egg?') were lived for 3.7
+symbols of 8.5. The store merges the same memory across lines (a context and the symbol that followed it), so a slot in a shared
+frame ('the dog is ') holds continuations written by many utterances, and the chain, drawing one by strength at every slot, walked
+the corpus like a five-gram model: plausible for a few symbols, then another line. Three hundred and eighty-four steps of fitting
+that taught the cortex that a line's far structure is random.
+
+**The form now (dream_tag, 0 = the old draw; store_links, the width of each slot's link table):** every link remembers which
+utterance wrote it (the store counts utterances, the world's at each onset and its own at each song: the hippocampal time context,
+the tag CA3's sequence carries). A dream draws its first continuation by strength as before and then follows the utterance that
+wrote it, slot by slot, ending where that utterance's trace ends; a repeated continuation moves to the front of its slot's table
+under the new utterance's tag; a link from before the tags follows as it did. The table widened from four to sixteen so a busy
+frame keeps sixteen utterances' traces rather than four. Disclosed constants, not rules about content. Test 48 (a dream through
+slots four lines share is one of the lines whole; the tags survive a save; a saved table is padded to the new width).
+
+Served from the boundary after night 148 with `--dream-tag 1 --store-links 16`: the tags accrue as the day writes, so the first
+whole-line night is 149. The readings to follow: the lived share of a night's dream text, and the held-out gauge at dusk and after
+each night (the day's gain against the night's).
