@@ -7182,3 +7182,17 @@ second slot). The loss 0.391 to 0.130, the curve still falling at round 32 (0.39
 0.140 every fourth round); the gauge 0.386 -> 0.82 (its own utterances the harder recall); the store 7644 after 547 dropped;
 the face organ's correlation 0.45; the prefrontal 0.57; the actor's slope 0.073. The night's dream count capped at 96 from
 the restart after this save. The guard held (duty 0.602, smiles per line 3.64) and was re-armed.
+
+THE MOUTH PROBED (2026-09-12, 22:22; tools/probe_lm.py rebuilt to read the mouth, the cortex's forecast plus the hippocampal
+recall with the efference copy, as the tick reads it; greedy, on the save after night 139):
+  "do you want milk?"  ->  "I have my hat tle hat is"
+  "what do you have?"  ->  "I want the toy gum"
+  "hi"                 ->  ". I see you. hi. I see y"
+  "are you sad?"       ->  "nest is on the me my soc"
+  "what do you want?"  ->  "nt in the tint in the ti"
+  "are you here?"      ->  "mmmm"
+Three of eight prompts draw a reply of the modeled shape from the mouth itself with no sampling and no parent present: "I
+have my hat", "I want the toy", "I see you. hi." The cortex alone is still the two-letter repeat ("nmenme", "ntnt"): the
+hearing model is not the speaker; the speaker is the recall's chain read through the cortex, and the exchanges of the last
+day and the night's replay of its own rewarded phrases are what put the answers there. The loop ("nt in the tint") remains
+in the recall for two prompts. This is the reading the day was for.
