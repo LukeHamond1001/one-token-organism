@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -1345,10 +1345,53 @@ class Life:
         return (torch.tensor(xs, device=self.dev), xos,
                 torch.zeros(T, 2, device=self.dev), torch.stack(bundles), torch.stack(reads), torch.tensor(ids, device=self.dev))
 
+    def _dream_batch(self, dream_list):
+        """THE DREAMS IN LOCKSTEP (2026-09-13): a list of dreams as one right-padded batch, the bands run along each as _dream_inputs
+        runs them one at a time (a causal cortex: a dream's positions never see the padding after them). Returns xs, xos [B, T],
+        faces [B, T, 2], bundles [B, T, nb, d], reads [B, T, d] (zeros: the store is off in the lesson), y [B, T] the targets and
+        w [B, T] their weights (1 on a dream's own positions, 0 on the padding)"""
+        m = self.m; B = len(dream_list); T = max(len(ids) for ids in dream_list); nb = len(m.clocks)
+        xs = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)
+        y = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)
+        w = torch.zeros(B, T, device=self.dev)
+        for i, ids in enumerate(dream_list):
+            L = len(ids)
+            if L > 1:
+                xs[i, 1:L] = torch.tensor(ids[:-1], dtype=torch.long, device=self.dev)
+            y[i, :L] = torch.tensor(ids, dtype=torch.long, device=self.dev); w[i, :L] = 1.0
+        xos = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)      # a dream: no own sound
+        faces = torch.zeros(B, T, 2, device=self.dev); reads = torch.zeros(B, T, m.d, device=self.dev)
+        bundles = torch.zeros(B, T, nb, m.d, device=self.dev); bands = torch.zeros(B, nb, m.d, device=self.dev)
+        with torch.no_grad():
+            for t in range(T):
+                bundles[:, t] = bands
+                if t + 1 < T:
+                    C = m.stream(m.inputs(xs[:, :t + 1], xos[:, :t + 1], faces[:, :t + 1], bundles[:, :t + 1], reads[:, :t + 1]))[:, -1]
+                    bands = m.band_update_b(bands, C)
+        return xs, xos, faces, bundles, reads, y, w
+
+    def _gauge_batched(self, dreams, bs=32):
+        """gauge() over lockstep batches: the same count, many dreams at once"""
+        hits = 0.0; n = 0.0; cos_sum = 0.0
+        bans = [b for b in self.bans if b != self.eot]
+        with torch.no_grad():
+            for i in range(0, len(dreams), bs):
+                xs, xos, faces, bundles, reads, y, w = self._dream_batch(dreams[i:i + bs])
+                pred = self.m.latent_pred(self.m.stream(self.m.inputs(xs, xos, faces, bundles, reads)))
+                lg = self.m.readout(pred); lg[..., bans] = float("-inf")
+                if self.end_id != self.sil:
+                    lg[..., self.sil] = float("-inf")
+                hits += float(((lg.argmax(-1) == y).float() * w).sum()); n += float(w.sum())
+                cos_sum += float((F.cosine_similarity(pred, self.m.E.weight[y], dim=-1) * w).sum())
+        self._gauge_cos = (round(cos_sum / n, 3) if n else None)
+        return (round(hits / n, 3) if n else None), int(n)
+
     def gauge(self, dreams):
         """the cortex alone (store off), teacher-forced on the dreams: the share of next symbols it
         forecasts itself (argmax), and the mean cosine of its forecast to the embedding received
         (the finer instrument: it moves before the argmax does)"""
+        if int(self.cfg.get("night_batch", 0)) > 0 and dreams:
+            return self._gauge_batched(dreams)
         hits = n = 0; cos_sum = 0.0
         with torch.no_grad():
             for ids in dreams:
@@ -1403,7 +1446,29 @@ class Life:
                 warm_ = int(self.cfg.get("night_warm", 0)); base_lr_ = float(self.cfg["night_lr"]); nstep_ = 0
                 m.train()
                 nrem = 0; losses = []
-                for _ in range(int(self.cfg["night_rounds"])):
+                # A SYNAPTIC CHANGE PER RIPPLE, NOT PER NIGHT (night_batch, 0 = off; 2026-09-13, the twentieth defect): with one step
+                # per round, a night of 512 dreams and three rounds was three weight updates, and the cortex's accuracy on the parent's
+                # unreplayed lines stood at 0.52 for a hundred nights while its recall of the few replayed ones read 0.86. A sharp-wave
+                # ripple induces its plasticity as it happens, thousands a night, the replays interleaved (the complementary learning
+                # systems of McClelland, McNaughton and O'Reilly); here the optimizer steps after every night_batch dreams, the dreams
+                # shuffled each round and run in lockstep. A disclosed constant, not a rule about content.
+                nbatch_ = int(self.cfg.get("night_batch", 0))
+                for _ in range(int(self.cfg["night_rounds"]) if nbatch_ > 0 else 0):
+                    order = torch.randperm(len(dreams), generator=self.gen).tolist(); tot = 0.0; ok = 0
+                    for i0 in range(0, len(order), nbatch_):
+                        opt.zero_grad(set_to_none=True)
+                        xs, xos, faces, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]])
+                        C = m.stream(m.inputs(xs, xos, faces, bundles, reads))
+                        ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
+                        if not bool(torch.isfinite(ll.detach())):
+                            continue
+                        ll.backward(); tot += float(ll.detach()); ok += 1; nstep_ += 1
+                        if warm_:
+                            for g_ in opt.param_groups:
+                                g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
+                        self._night_step(opt); nrem += 1
+                    losses.append(round(tot / max(1, ok), 3))
+                for _ in range(int(self.cfg["night_rounds"]) if nbatch_ <= 0 else 0):
                     opt.zero_grad(set_to_none=True); tot = 0.0; ok = 0
                     for ids in dreams:
                         # the hippocampus replays the sequence; the cortex must carry it itself (the read

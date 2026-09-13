@@ -443,7 +443,7 @@ class Organs(nn.Module):
         (own_gain; measured in cortex at a third to a half). With two positions per tick (the world's,
         then its own, mostly a rest) the stream read "d . o . g ." awake and "d o g" in the dreams
         the night trains on, and the cortex forecast "d" after everything awake (run 17, day 6)."""
-        u = self.E(xs) + self.face_in(faces) + self.bundle_in(bundles.reshape(bundles.shape[0], -1))
+        u = self.E(xs) + self.face_in(faces) + self.bundle_in(bundles.reshape(*bundles.shape[:-2], -1))   # [T, nb, d] or [B, T, nb, d]
         if xos is not None and self.sil_id is not None:
             # its own sound attenuated (corollary discharge, own_gain 0.5) and superposed on the tick's
             # position. Heard at full weight with the lessons hearing the world only (run 22), the cortex
@@ -466,13 +466,16 @@ class Organs(nn.Module):
         return self.latent_pred(C) + self.store_in(reads)     # both calibrated: each norm its certainty
 
     def stream(self, u):
-        """u [T, d] -> C [T, d], the cortex stream (causal over the window)"""
-        T = u.shape[0]
-        x = u.unsqueeze(0)
+        """u [T, d] -> C [T, d], the cortex stream (causal over the window); a batch u [B, T, d] -> C [B, T, d] (the
+        night's dreams in lockstep, 2026-09-13: the same arithmetic, many at once)"""
+        batched = u.dim() == 3
+        T = u.shape[-2]
+        x = u if batched else u.unsqueeze(0)
         mask = self._mask[:T, :T]
         for blk in self.blocks:
             x = blk(x, mask)
-        return self.lnf(x[0])
+        x = self.lnf(x)
+        return x if batched else x[0]
 
     def readout(self, pred, prior=None):
         """the lexicon read: logits [.., vocab] = sharpness x (pred . E). The forecast is the conditional
@@ -503,6 +506,16 @@ class Organs(nn.Module):
             # hundreds with TD errors in the thousands); reverted on measurement.
             out.append(s + (g / float(tau)) * (target - s))
         return torch.stack(out)
+
+    def band_update_b(self, states, c):
+        """band_update for a batch (the night's dreams in lockstep, 2026-09-13): states [B, nb, d], c [B, d] -> [B, nb, d]"""
+        out = []
+        for b, tau in enumerate(self.clocks):
+            s = states[:, b]
+            g = torch.sigmoid(self.band_gate[b](s.detach()))
+            target = torch.tanh(self.band_in[b](c))
+            out.append(s + (g / float(tau)) * (target - s))
+        return torch.stack(out, dim=1)
 
     def value_of(self, b, s):
         """V_b(s): a linear head; a differential band's head has no bias and reads the state centered

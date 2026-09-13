@@ -1,0 +1,79 @@
+"""A NIGHT ON A COPY (a supervisor's instrument, 2026-09-13): load a saved body on a copy (never saved back), run its night as the
+served body would with the given constants, and read the night's own report, the language-model accuracy on the parent's last
+sixty lines (unreplayed material) before and after, the time it took, and the mouth.
+usage: python3 tools/night_copy.py COPY.pt --flags FLAGS.txt --batch 8 --rounds 6 --starts 512 [--lr 1e-4]"""
+import sys, json, time
+sys.path.insert(0, "/Users/lukehamond/Projects/project")
+import torch
+from tokenizers import Tokenizer
+from body.life import Life, PHYSIOLOGY
+
+def arg(name, default):
+    for a in sys.argv[1:]:
+        if a.startswith(f"--{name}="):
+            return type(default)(a.split("=", 1)[1])
+        if a == f"--{name}":
+            return type(default)(sys.argv[sys.argv.index(a) + 1])
+    return default
+
+def parse_flags(s):
+    toks = s.split(); cfg = {}; i = 0
+    while i < len(toks):
+        t = toks[i]
+        if t.startswith("--"):
+            k = t[2:].replace("-", "_")
+            if k in PHYSIOLOGY:
+                cfg[k] = type(PHYSIOLOGY[k])(toks[i + 1])
+            i += 2
+        else:
+            i += 1
+    return cfg
+
+path = sys.argv[1]
+cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
+cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4)))
+TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
+life = Life.load(path, TOK, device="cpu", cfg=cfg, seed=arg("seed", 0)); m = life.m; m.eval()
+assert life.save_path is None
+R = [json.loads(l) for l in open("/Users/lukehamond/Projects/project/data/watch2_caregiver.jsonl") if l.strip()]
+def ids_of(t): return [TOK.token_to_id(ch) for ch in t if TOK.token_to_id(ch) is not None]
+recent = [ids_of(r["text"].strip()) for r in R if r["action"] in ("line", "cue") and r.get("voice") != "b"][-60:]
+recent = [x for x in recent if len(x) >= 2]
+
+def mouth(prompt, n=24):
+    zero = torch.zeros(m.d)
+    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0
+    out, cortex = [], []
+    with torch.no_grad():
+        for ch in prompt:
+            i = TOK.token_to_id(ch)
+            life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+            life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
+        for _ in range(int(life.cfg.get("offset_ticks", 8))):
+            life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+            life.bag_w = life.cfg["bag_decay"] * life.bag_w
+        for _ in range(n):
+            xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+            C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+            rd, conf, _ = life.store.read(life.bag)
+            lc = m.readout(m.forecast(C, zero)); lc[life.bans] = float("-inf"); lc[life.sil] = float("-inf")
+            lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
+            sym = int(lm.argmax()); cortex.append(TOK.decode([int(lc.argmax())])); out.append(TOK.decode([sym]))
+            life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
+            life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
+    return "".join(out), "".join(cortex)
+
+PROMPTS = ["do you want milk?", "what do you have?", "are you here?", "can you play?", "I want ", "I see "]
+print(f"body: nights {life.nights} store {life.store.n()} | night_batch {cfg['night_batch']} rounds {cfg['night_rounds']} starts {cfg['night_starts']} lr {cfg['night_lr']}", flush=True)
+with torch.no_grad():
+    g0 = life.gauge(recent); c0 = life._gauge_cos
+print(f"before: the parent's last {len(recent)} lines {g0[0]} (cos {c0}) over {g0[1]} symbols", flush=True)
+t0 = time.time(); rep = life.night(); dt = time.time() - t0
+keep = {k: rep.get(k) for k in ("dreams", "mean_len", "nrem_steps", "nrem_curve", "gauge", "rem_steps", "rem_imagined", "error", "discarded")}
+print(f"the night took {dt:.0f}s: {json.dumps(keep)}", flush=True)
+with torch.no_grad():
+    g1 = life.gauge(recent); c1 = life._gauge_cos
+print(f"after: the parent's last {len(recent)} lines {g1[0]} (cos {c1}) | dreams {rep.get('gauge', {}).get('before')} -> {rep.get('gauge', {}).get('after')}", flush=True)
+for p in PROMPTS:
+    mo, co = mouth(p); print(f"   {p!r:20} mouth {mo!r:26} cortex {co!r}", flush=True)
+print("nothing saved", flush=True)

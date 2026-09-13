@@ -1084,11 +1084,46 @@ def test_waking_recall_tires():
     print("44 the waking recall tires: winners under tiring", wins, "| rested after recovery; without tiring one winner", w2[0])
 
 
+
+def test_dreams_in_lockstep_equal_one_at_a_time():
+    """45 (2026-09-13): the batched dream inputs and the gauge equal the one-at-a-time forms exactly"""
+    life = tiny(night_batch=4)
+    for t in ("the dog is here", "I see the dog", "where is the ball?", "I want milk"):
+        say(life, t)
+    dreams = life.dreams(6)
+    assert len(dreams) >= 2
+    xs, xos, faces, bundles, reads, y, w = life._dream_batch(dreams)
+    with torch.no_grad():
+        Cb = life.m.stream(life.m.inputs(xs, xos, faces, bundles, reads))
+        for i, ids in enumerate(dreams):
+            xs1, xos1, faces1, bundles1, reads1, y1 = life._dream_inputs(ids, mem_on=False)
+            L = len(ids)
+            assert torch.equal(xs[i, :L], xs1) and torch.equal(y[i, :L], y1) and float(w[i].sum()) == L
+            assert torch.allclose(bundles[i, :L], bundles1, atol=1e-5)
+            C1 = life.m.stream(life.m.inputs(xs1, xos1, faces1, bundles1, reads1))
+            assert torch.allclose(Cb[i, :L], C1, atol=1e-4)
+        g_b = life._gauge_batched(dreams); cos_b = life._gauge_cos
+        life.cfg["night_batch"] = 0
+        g_1 = life.gauge(dreams); cos_1 = life._gauge_cos
+    assert g_b == g_1 and abs(cos_b - cos_1) < 2e-3
+
+
+def test_night_steps_per_batch():
+    """46 (2026-09-13): with night_batch on, a night takes a synaptic step per batch of dreams each round, and moves the cortex"""
+    life = tiny(night_batch=3, night_rounds=2, night_starts=9, rem_rounds=1)
+    for t in ("the dog is here", "I see the dog", "where is the ball?", "I want milk", "the ball is big"):
+        say(life, t)
+    rep = life.night()
+    assert "error" not in rep, rep
+    assert rep["dreams"] == 9 and rep["nrem_steps"] == 2 * 3, rep
+    assert len(rep["nrem_curve"]) == 2 and rep["gauge"]["after_nrem"] is not None
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch]
     failed = 0
     for t in tests:
         try:
