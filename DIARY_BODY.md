@@ -7444,3 +7444,6 @@ The guard held (duty 0.380, smiles per line 0.94). The probe on the save: held-o
 0.701, the old lines 0.427 (0.412). No dusk reading: the dusk probe fired as the night began and read the night's save. From this
 save the night's rate is 1e-5 (verified on the restart); night 151 is the first at that rate. The held-out's course through six
 strong nights: 0.598, 0.601, 0.577, 0.575, 0.583.
+11:15: the twenty-third defect, at the mouth: the read is a five-gram walk (as the dreams were) and 60% of its reads land in its own
+stored song. Built read_follow (the recall carries the episode; test 49; 49/49). Decided: own_store off and read_follow 20 at the
+save after night 151; the mouth probe reads the lived prefix and the own-winner share from tomorrow.

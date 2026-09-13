@@ -1076,3 +1076,20 @@ slots four lines share is one of the lines whole; the tags survive a save; a sav
 Served from the boundary after night 148 with `--dream-tag 1 --store-links 16`: the tags accrue as the day writes, so the first
 whole-line night is 149. The readings to follow: the lived share of a night's dream text, and the held-out gauge at dusk and after
 each night (the day's gain against the night's).
+
+### The twenty-third defect: the mouth was a five-gram walk, and mostly through its own song (2026-09-13)
+
+The dreams' defect at the mouth. The waking read returns, at every tick, the continuation of whichever memory best matches the
+context bag (about five symbols), from whatever utterance that memory came, so its speech was a five-gram walk across everything
+it had heard ('it is my egg', 'the egg is in the egg', 'I ha big tubtle hat is'). And on the body after night 149, 11 to 19 of the
+mouth's 24 reads on each probe landed in its OWN stored song (2,967 of the store's 8,192 slots, written at every smile by the own
+song of 2026-09-12): while it speaks, the query is its own recent symbols, which match its own past babble better than any line
+of the world's. Its babble reproduced its babble, smiled at for a known word inside it.
+
+**The form now:** `read_follow` (a gain, 0 = off): the slots the recalled utterance wrote next (its links under its tag) are easier
+to recall at the next read, as a retrieved sequence continues along its chain (CA3's recurrent chain; the mechanism the dreams
+follow since the twenty-second defect); the read keeps the episode while its winner continues it and names a new one from the
+winner's newest link when it lands elsewhere; let go at an utterance's end and at night (test 49: the mouth's continuation of a
+frame four lines share is the one line, whole). And `own_store 0`: its own utterances are no longer written to the store; the
+recall draws on what the world said, and the own slots already there fade by the store's own law. Served from the boundary after
+night 151 with `--own-store 0 --read-follow 20`; read by the mouth probe's lived prefix and own-winner share, daily.

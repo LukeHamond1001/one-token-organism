@@ -40,17 +40,19 @@ for prompt in prompts:
         for _ in range(int(life.cfg.get("offset_ticks", 8))):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
             life.bag_w = life.cfg["bag_decay"] * life.bag_w
-        mouth, cortex = [], []
+        mouth, cortex = [], []; own_win = 0; n_win = 0
         for step in range(n):
             xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
             C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
-            rd, conf, _ = life._recall(life.bag)
+            rd, conf, win_ = life._recall(life.bag)
+            if win_ >= 0:
+                n_win += 1; own_win += int(life.store.W[win_] == 1)     # the recall's winner: its own song, or the world's
             lc = m.readout(m.forecast(C, zero)); lc[life.bans] = float("-inf"); lc[life.sil] = float("-inf")
             lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
             sym = int(lm.argmax()); cortex.append(TOK.decode([int(lc.argmax())])); mouth.append(TOK.decode([sym]))
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
             life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
-    print(f"{prompt!r:22} mouth: {''.join(mouth)!r:28} cortex alone: {''.join(cortex)!r}   lived prefix {lived_share(''.join(mouth)):.2f}")
+    print(f"{prompt!r:22} mouth: {''.join(mouth)!r:28} cortex alone: {''.join(cortex)!r}   lived prefix {lived_share(''.join(mouth)):.2f}   own winners {own_win}/{n_win}")
 
 # THE LANGUAGE MODEL'S ACCURACY (2026-09-12, 23:55): the night's own gauge (teacher-forced argmax share, the cortex alone, the
 # ladder run along each line from rest) on the parent's last sixty lines as heard: the number a language model is judged by,
