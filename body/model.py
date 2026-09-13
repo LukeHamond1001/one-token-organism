@@ -477,6 +477,27 @@ class Organs(nn.Module):
         x = self.lnf(x)
         return x if batched else x[0]
 
+    def stream_step(self, u_t, cache):
+        """THE STREAM ONE POSITION AT A TIME (2026-09-13): u_t [B, d] the newest position's input; cache a list, one entry per
+        block, of the keys and values of the positions before it ([B, heads, t, hd] each, or None at the first position) ->
+        C_t [B, d], the cache grown by this position. The same arithmetic as stream() at the last position (the attention is
+        causal, so the earlier positions' keys and values never change), without recomputing the positions before: the night's
+        lockstep loop over a dream's prefixes falls from quadratic to linear in its length."""
+        x = u_t.unsqueeze(1)                                                       # [B, 1, d]
+        for i, blk in enumerate(self.blocks):
+            h = blk.ln1(x)
+            q, k, v = F.linear(h, blk.attn.in_proj_weight, blk.attn.in_proj_bias).chunk(3, dim=-1)
+            B_, _, d = q.shape; H = blk.attn.num_heads; hd = d // H
+            q = q.view(B_, 1, H, hd).transpose(1, 2); k = k.view(B_, 1, H, hd).transpose(1, 2); v = v.view(B_, 1, H, hd).transpose(1, 2)
+            if cache[i] is not None:
+                k = torch.cat([cache[i][0], k], dim=2); v = torch.cat([cache[i][1], v], dim=2)
+            assert k.shape[2] <= self.window, "the stream's cache outgrew the window"
+            cache[i] = (k, v)
+            att = torch.softmax((q @ k.transpose(-1, -2)) / math.sqrt(hd), dim=-1)  # [B, H, 1, t]
+            x = x + blk.attn.out_proj((att @ v).transpose(1, 2).reshape(B_, 1, d))
+            x = x + blk.mlp(blk.ln2(x))
+        return self.lnf(x[:, 0])
+
     def readout(self, pred, prior=None):
         """the lexicon read: logits [.., vocab] = sharpness x (pred . E). The forecast is the conditional
         mean of the next unit embedding (trained by squared error), so pred . E_k is its probability of

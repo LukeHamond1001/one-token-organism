@@ -1363,10 +1363,11 @@ class Life:
         faces = torch.zeros(B, T, 2, device=self.dev); reads = torch.zeros(B, T, m.d, device=self.dev)
         bundles = torch.zeros(B, T, nb, m.d, device=self.dev); bands = torch.zeros(B, nb, m.d, device=self.dev)
         with torch.no_grad():
+            cache = [None] * len(m.blocks)                                        # the stream's keys and values so far, per block
             for t in range(T):
                 bundles[:, t] = bands
                 if t + 1 < T:
-                    C = m.stream(m.inputs(xs[:, :t + 1], xos[:, :t + 1], faces[:, :t + 1], bundles[:, :t + 1], reads[:, :t + 1]))[:, -1]
+                    C = m.stream_step(m.inputs(xs[:, t], xos[:, t], faces[:, t], bundles[:, t], reads[:, t]), cache)
                     bands = m.band_update_b(bands, C)
         return xs, xos, faces, bundles, reads, y, w
 

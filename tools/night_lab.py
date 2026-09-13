@@ -2,7 +2,7 @@
 night does, and consolidate the dreams with a synaptic update every `batch` replays instead of one per round, at the night's rate.
 Reads after each round: the NREM loss, the cortex-alone gauge on the dream set and on the parent's last sixty lines (material the
 night may not have replayed: the language-model number), then the mouth on a few prompts.
-usage: python3 tools/night_lab.py data/watch2.pt --flags FLAGS.txt --starts 256 --rounds 4 --batch 8 [--lr 1e-4] [--seed 0]"""
+usage: python3 tools/night_lab.py data/watch2.pt --flags FLAGS.txt --starts 256 --rounds 4 --batch 8 [--lr 1e-4] [--warm 0] [--seed 0]   (the lockstep path)"""
 import sys, json, time, random
 sys.path.insert(0, "/Users/lukehamond/Projects/project")
 import torch
@@ -76,30 +76,31 @@ print(f"before: gauge dreams {g_d[0]} (cos {life._gauge_cos}) | parent's last {l
 for p in PROMPTS[:3]:
     mo, co = mouth(p); print(f"   {p!r:20} mouth {mo!r:26} cortex {co!r}", flush=True)
 opt = torch.optim.Adam(m.parameters(), lr=lr)
+warm = arg("warm", 0); life.cfg["night_batch"] = batch                      # the gauge and the lesson on the lockstep path
 rng = random.Random(seed)
 steps = 0
 for r in range(rounds):
     t1 = time.time(); m.train(); order = list(range(len(dreams))); rng.shuffle(order)
-    opt.zero_grad(set_to_none=True); tot = 0.0; nb = 0; first = []
-    for i, j in enumerate(order):
-        ids = dreams[j]
-        xs, whos, faces, bundles, reads, y = life._dream_inputs(ids, mem_on=False)
-        C = m.stream(m.inputs(xs, whos, faces, bundles, reads))
-        ll, _ = m.latent_loss(m.latent_pred(C), y)
+    tot = 0.0; nb = 0
+    for i0 in range(0, len(order), batch):
+        opt.zero_grad(set_to_none=True)
+        xs, xos, faces, bundles, reads, y, w = life._dream_batch([dreams[j] for j in order[i0:i0 + batch]])
+        C = m.stream(m.inputs(xs, xos, faces, bundles, reads))
+        ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
         if not bool(torch.isfinite(ll.detach())):
             continue
-        (ll / batch).backward(); tot += float(ll.detach()); nb += 1
-        if (i + 1) % batch == 0 or i == len(order) - 1:
-            gn = torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
-            if bool(torch.isfinite(gn)):
-                opt.step()
-            opt.zero_grad(set_to_none=True); steps += 1
-            if len(first) < 12:
-                first.append(round(tot / max(1, nb), 3)); tot = 0.0; nb = 0
+        ll.backward(); tot += float(ll.detach()); nb += 1; steps += 1
+        if warm:
+            for g_ in opt.param_groups:
+                g_["lr"] = lr * min(1.0, steps / warm)
+        gn = torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+        if bool(torch.isfinite(gn)):
+            opt.step()
+        opt.zero_grad(set_to_none=True)
     m.eval()
     with torch.no_grad():
         g_d = life.gauge(dreams[:128]); cd = life._gauge_cos; g_r = life.gauge(recent); cr = life._gauge_cos
-    print(f"round {r+1}: steps {steps} | loss first batches {first} | gauge dreams {g_d[0]} (cos {cd}) | parent's lines {g_r[0]} (cos {cr}) | {time.time()-t1:.0f}s", flush=True)
+    print(f"round {r+1}: steps {steps} | train loss {tot/max(1,nb):.4f} | gauge dreams {g_d[0]} (cos {cd}) | parent's lines {g_r[0]} (cos {cr}) | {time.time()-t1:.0f}s", flush=True)
     for p in PROMPTS:
         mo, co = mouth(p); print(f"   {p!r:20} mouth {mo!r:26} cortex {co!r}", flush=True)
 print(f"done in {time.time()-t0:.0f}s; nothing saved", flush=True)
