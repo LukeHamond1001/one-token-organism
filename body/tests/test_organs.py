@@ -1225,20 +1225,6 @@ def test_recall_carries_the_episode():
 
 
 
-def test_dream_skip_owes_nothing_at_the_start():
-    """50 (2026-09-13): with dream_skip on, the night's lesson puts no weight on a dream's first positions; the gauge still reads them"""
-    life = tiny(store_chain=1, night_batch=4, dream_who=1, dream_tag=1, dream_skip=2, night_rounds=1, night_starts=6, rem_rounds=1)
-    for t in ("the dog is here", "the dog is big", "I want milk"):
-        say(life, t, 8)
-    dreams, owns = life.dreams(6, with_who=True)
-    xs, xos, faces, bundles, reads, y, w = life._dream_batch(dreams, owns)
-    assert float(w[:, :2].sum()) > 0                                        # the batch itself carries the weights: the gauge reads every position
-    rep = life.night()
-    assert "error" not in rep and rep["nrem_steps"] > 0, rep
-    print("50 the night owes nothing at a dream's start: steps", rep["nrem_steps"], "| curve", rep["nrem_curve"])
-
-
-
 def test_dreams_the_utterances_heard():
     """51 (2026-09-13): the world's utterances are kept whole as heard; with dream_source utterances the night dreams them whole (with
     the turn's end), they survive a save, and they fade by night"""
@@ -1263,7 +1249,7 @@ if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dream_skip_owes_nothing_at_the_start, test_dreams_the_utterances_heard]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard]
     failed = 0
     for t in tests:
         try:

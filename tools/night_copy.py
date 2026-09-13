@@ -32,7 +32,7 @@ def parse_flags(s):
 
 path = sys.argv[1]
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
-cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4), night_warm=arg("warm", 0), dream_who=arg("who", 0), dream_tag=arg("tag", 0), dream_draw=arg("draw", "strength"), dream_skip=arg("skip", 0)))
+cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4), night_warm=arg("warm", 0), dream_who=arg("who", 0), dream_tag=arg("tag", 0)))
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 life = Life.load(path, TOK, device="cpu", cfg=cfg, seed=arg("seed", 0)); m = life.m; m.eval()
 life.save_path = None                                                   # a copy: the night must not save it
