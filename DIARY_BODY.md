@@ -7474,3 +7474,10 @@ your hat"; "I see milk" dead (1, 1, 0) but the stub "i see m is i see m is" surv
 426/35, 241/81 (the overlap day), 355/37. It reported the 08:54 overlap as a genuine fault (it was: my chain's relaunch). Its own
 wait loop stalled three times for half an hour, which emptied the queue. The fifth parent (labels 174-177) took over at 12:04
 after a dry half hour.
+12:20: the accident that read best. The clean-lines diagnostic's option went unparsed, so what ran was a plain second night at the
+served constants from the save after night 151: the held-out 0.559 -> 0.599, the old lines 0.411 -> 0.427, the recent lines
+0.618 -> 0.634, the dreams' gauge 0.724 -> 0.782 and the loss 0.175 -> 0.146. A second consolidation of the same content raised
+what the first lowered. Three copy nights now run in turn from the dusk save before night 151 (the served night's own start,
+whose six rounds gave 0.559): no forecast owed on a dream's first three positions; twelve rounds instead of six; and the parent's
+last thousand lines as dreams, whole. The night's damage may be the shock of first fitting new memories, which a longer settling
+repairs; the twelve-round night is the test.
