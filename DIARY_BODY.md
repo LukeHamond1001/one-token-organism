@@ -7261,3 +7261,7 @@ nothing: no smiles, no frowns, no rows of the child's words. The child's mood fe
 flattest, and the twenty-minute watch under the recall's tiring read a body no one was smiling at. Fixed in the typist
 (the page's tick count and the scan restart with the page; commit above) and the blind one stopped for the chain's relaunch.
 The tiring's reading is therefore not yet taken; the watch runs again on the relaunched day.
+
+The seeing typist (2026-09-12, 23:56; the label day 157): in its first two minutes 28 smiles, 30 misses, 3 frowns; the
+child's words after the parent's lines "I want a jug put", "now? no wet dog had"; mood climbing from the floor (-2.4),
+sharpness 15, stress 4.1. The recall's tiring is now read on a scored day.
