@@ -3,24 +3,35 @@ symbols and the world's pause, then read what the MOUTH would say, greedily, wit
 plus the hippocampal recall (the efference copy in the recall's query), as the tick reads them. Two columns: the mouth, and the
 cortex alone (the hearing model, which is not the speaker).
 usage: python3 tools/probe_lm.py data/watch2.pt "do you want milk?" ...   [--n=24]"""
-import sys
+import sys, json
 sys.path.insert(0, "/Users/lukehamond/Projects/project")
 import torch
 from tokenizers import Tokenizer
 from body.life import Life
 
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
-n = 24
+n = 24; follow = 0.0
 for a in sys.argv[1:]:
     if a.startswith("--n="):
         n = int(a[4:])
+    if a.startswith("--follow="):
+        follow = float(a[9:])                                   # the waking recall carries the episode (read_follow) at this gain
 path, prompts = args[0], args[1:] or ["do you want milk?", "what do you have?", "are you here?", "are you sad?", "what do you want?", "hi", "I want ", "I see "]
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
-life = Life.load(path, TOK, device="cpu"); m = life.m; m.eval()
+life = Life.load(path, TOK, device="cpu", cfg=({"read_follow": follow} if follow > 1.0 else None)); m = life.m; m.eval()
+_R = [json.loads(l) for l in open("/Users/lukehamond/Projects/project/data/watch2_caregiver.jsonl") if l.strip()] if True else []
+_typed = " | ".join(r["text"].strip() for r in _R if r["action"] in ("line", "cue"))
+def lived_share(text):
+    """the longest prefix of the mouth's text that is a substring of a line ever typed, as a share of its length"""
+    t = text.strip()
+    for L in range(len(t), 2, -1):
+        if t[:L] in _typed:
+            return L / max(1, len(t))
+    return 0.0
 print(f"body: nights {life.nights}, own_gain {m.own_gain}, store {life.store.n()} (own {int((life.store.W == 1).sum())})")
 zero = torch.zeros(m.d)
 for prompt in prompts:
-    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0
+    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
     with torch.no_grad():
         for ch in prompt:
             i = TOK.token_to_id(ch)
@@ -33,13 +44,13 @@ for prompt in prompts:
         for step in range(n):
             xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
             C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
-            rd, conf, _ = life.store.read(life.bag)
+            rd, conf, _ = life._recall(life.bag)
             lc = m.readout(m.forecast(C, zero)); lc[life.bans] = float("-inf"); lc[life.sil] = float("-inf")
             lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
             sym = int(lm.argmax()); cortex.append(TOK.decode([int(lc.argmax())])); mouth.append(TOK.decode([sym]))
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
             life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
-    print(f"{prompt!r:22} mouth: {''.join(mouth)!r:28} cortex alone: {''.join(cortex)!r}")
+    print(f"{prompt!r:22} mouth: {''.join(mouth)!r:28} cortex alone: {''.join(cortex)!r}   lived prefix {lived_share(''.join(mouth)):.2f}")
 
 # THE LANGUAGE MODEL'S ACCURACY (2026-09-12, 23:55): the night's own gauge (teacher-forced argmax share, the cortex alone, the
 # ladder run along each line from rest) on the parent's last sixty lines as heard: the number a language model is judged by,

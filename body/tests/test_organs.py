@@ -1185,11 +1185,50 @@ def test_dreams_follow_one_utterance():
     print("48 dreams follow one utterance:", len(whole), "of", len(long_), "whole | untagged", len(whole2), "of", len(long2), "|", texts[:4])
 
 
+
+def test_recall_carries_the_episode():
+    """49 (2026-09-13): with read_follow on, the waking recall continues the utterance it is in through slots that other lines share,
+    so the mouth's greedy continuation of a shared frame is one line whole; off, the read lands by content alone"""
+    lines = ["the dog is here now", "the dog is big and wet", "the dog is not here", "the dog is my dog"]
+    def body(follow):
+        life = tiny(store_chain=1, store_links=8, read_follow=follow)
+        for t in lines:
+            say(life, t, 8)
+        return life
+    def continue_(life, prompt, n=14):
+        life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+        out = []
+        with torch.no_grad():
+            for ch in prompt:
+                life.bag_w = life.cfg["bag_decay"] * life.m.shift(life.bag_w) + life.m.E.weight[TOK.token_to_id(ch)]
+                life._recall(life.bag)                                     # the read runs along the prompt as it would awake
+            for _ in range(n):
+                rd, conf, _ = life._recall(life.bag)
+                if conf < 0.05:
+                    break
+                sym = life.m.nearest(rd); out.append(TOK.decode([sym]))
+                life.bag_o = life.cfg["bag_decay"] * life.m.shift(life.bag_o) + life.m.E.weight[sym]; life.n_own += 1
+        return "".join(out)
+    on = body(20.0); off = body(0.0)
+    prompts = ("the dog is h", "the dog is b", "the dog is n", "the dog is m")
+    def whole(life):
+        n_ = 0; got = []
+        for prompt, line in zip(prompts, lines):
+            t = prompt + continue_(life, prompt, n=len(line) - len(prompt))   # the continuation to the line's own end
+            got.append(t); n_ += int(t == line)
+        return n_, got
+    whole_on, got_on = whole(on); whole_off, got_off = whole(off)
+    assert whole_on == 4, (got_on, got_off)
+    assert whole_on >= whole_off, (got_on, got_off)
+    assert on._follow is None or isinstance(on._follow, tuple)
+    print("49 the recall carries the episode:", whole_on, "of 4 whole with it |", whole_off, "of 4 without |", got_on)
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode]
     failed = 0
     for t in tests:
         try:

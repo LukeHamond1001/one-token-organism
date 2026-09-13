@@ -62,7 +62,7 @@ class Store:
         return int(self.K.shape[0])
 
     @torch.no_grad()
-    def read(self, q, adapt=None, end_vec=None, tire=None):
+    def read(self, q, adapt=None, end_vec=None, tire=None, follow=None, follow_gain=1.0):
         """q [d] -> (the recalled next embedding [d], its norm the confidence in 0..1, winner index);
         adapt [n] (optional) multiplies strengths: the recall adaptation a dream runs under;
         end_vec [d] (optional): THE MARKS SPEAK IN THE RECALL. A seam slot (an utterance's first symbol written under
@@ -85,6 +85,16 @@ class Store:
             logits = logits + (self.read_strength if adapt is None else 1.0) * torch.log(S + 1e-6) * (1.0 if adapt is not None else 1.0)
         if tire is not None and tire.numel() == logits.numel():
             logits = logits + torch.log(tire + 1e-6)             # a memory recalled lately is harder to recall again (synaptic depression)
+        if follow is not None and follow_gain > 1.0:
+            # THE RECALL CARRIES THE EPISODE (read_follow; 2026-09-13, the twenty-third defect): the slots that the utterance being
+            # recalled wrote next (its links under its tag) are easier to recall now, as a retrieved sequence continues along its chain
+            # (CA3's recurrent chain, the mechanism the dreams follow). Without it the waking read returned, at every tick, the
+            # continuation of whichever memory matched the last five symbols, and its speech was a five-gram walk across lines.
+            slot, tag = follow
+            if 0 <= slot < self.n():
+                row = self.N[slot]; hit = (row >= 0) & (self.NE[slot] == int(tag))
+                if bool(hit.any()):
+                    logits = logits.clone(); logits[row[hit]] += math.log(float(follow_gain))
         w = torch.softmax(logits, 0)
         # the recall is the attended mean of unit values: its norm is the agreement among the memories
         # attended, the calibrated confidence (the largest weight understated it once duplicate slots

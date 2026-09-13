@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_draw="strength", store_links=4, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_draw="strength", store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -348,6 +348,7 @@ class Life:
         self.bans = list(self.reserved)
         self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None; self._start_pending = False
         self._prev_slot = -1                                   # the slot of the world's last symbol in this utterance (the sequence's link)
+        self._follow = None                                    # the episode the waking recall is in: (slot, tag), or none (read_follow)
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device, links=int(self.cfg.get("store_links", 4)))
         self.store.saturate = bool(int(self.cfg.get("store_sat", 0)))   # repetition suppression (store_sat)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -495,7 +496,7 @@ class Life:
             end_vec = F.normalize(m.E.weight[self.end_id], dim=0) if int(self.cfg.get("recall_end", 0)) else None
             rt_ = float(self.cfg.get("read_tire", 0.0))
             tire_ = self.store.A if (rt_ > 0.0 and self.store.A.numel() == self.store.n()) else None
-            read, conf, win_ = (self.store.read(self.bag, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
+            read, conf, win_ = (self._recall(self.bag, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
             if rt_ > 0.0 and self.store.A.numel() == self.store.n():
                 if win_ >= 0:
                     self.store.A[win_] *= (1.0 - rt_)                        # the winner tires
@@ -532,6 +533,28 @@ class Life:
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
 
+    def _recall(self, bag, end_vec=None, tire=None):
+        """the waking read, carrying the episode it is in when read_follow is on (the gain, > 1): after a read whose winner continues
+        the episode followed, the same tag is kept; after a read that landed elsewhere, the winner's newest link names the episode"""
+        fw = float(self.cfg.get("read_follow", 0.0))
+        follow = self._follow if fw > 1.0 else None
+        read, conf, win_ = self.store.read(bag, end_vec=end_vec, tire=tire, follow=follow, follow_gain=fw)
+        if fw > 1.0:
+            st = self.store
+            if win_ >= 0 and st.N.shape[0] == st.n():
+                tag = -1
+                if follow is not None:
+                    slot, t_ = follow
+                    row = st.N[slot]
+                    if bool(((row >= 0) & (st.NE[slot] == int(t_)) & (row == int(win_))).any()):
+                        tag = int(t_)                                       # the read continued the episode: keep following it
+                if tag < 0 and int(st.N[win_][0]) >= 0:
+                    tag = int(st.NE[win_][0])                               # elsewhere: the winner's newest continuation names the episode
+                self._follow = (int(win_), tag) if tag >= 0 else None
+            else:
+                self._follow = None
+        return read, conf, win_
+
     def _offset(self):
         """THE OFFSET (§2): the world's quiet after its utterance, once per pause. The last world position is
         marked ended, so the waking lesson's target there is the turn-end and not the next line's first letter;
@@ -547,6 +570,7 @@ class Life:
         if self._last_write is not None and not self.cfg.get("store_off"):
             self.store.mark_boundary(*self._last_write)                # the memory of the last symbol carries the boundary
         self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain
+        self._follow = None                                            # and the recall's episode is let go
 
     @property
     def bag(self):
@@ -1569,7 +1593,7 @@ class Life:
                 self.bands.zero_()                                    # the slow state kept across sleep when the flag is on
             if int(self.cfg.get("vcrit_norm_wake", 0)) and self.m.vc_mu.numel():
                 self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
-            self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None
+            self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None; self._follow = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
             if getattr(self.m, "stri_wm", 0):
