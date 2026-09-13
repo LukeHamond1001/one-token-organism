@@ -7292,3 +7292,16 @@ or carry an answer, and "I come. I am not sad" is the cleanest reply the mouth h
 shape to a question it was asked today. The recall's chains ("te was in", "ttle hat") take the rest; the cortex alone
 still repeats. The restart with the broad night is done (pid 56598: 512 to 1024 dreams, three rounds); night 142 is the
 first broad night, and the probe after its save reads the accuracy.
+
+
+### Night 142 (2026-09-13, 01:40): the first broad night
+
+Day 159 (the label; the body's 142nd): the parent asked 48 questions in 101 lines; smiles 475 (3.21 a line), frowns 34,
+duty after the parent's lines 0.50; replies of the modeled shape within six seconds 2 by the narrow count. The guard held
+(duty 0.495, smiles per line 3.21) and was re-armed. Night 142 (23 minutes), the first broad one: 512 dreams of mean length
+17.1 (the store at its cap, so the day's "new slots" read 10 and the count fell to the minimum), three rounds, the loss
+0.344, 0.322, 0.306 (a shallow descent by design), the gauge on the dream set 0.532 -> 0.592 over 8,748 symbols (the deep
+nights read 0.86 on their few dreams: memorization; this reads the broad set after three passes); the store 8192, nothing
+dropped by the fade (the cap prunes at each write now); the face organ's correlation 0.44; the prefrontal 0.54; the actor's
+slope 0.065. The reading that matters is the probe on this save: the accuracy on the parent's last sixty unreplayed lines,
+0.52 before this night.
