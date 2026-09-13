@@ -1677,15 +1677,15 @@ class Life:
             return 0
         m = self.m; d_ = float(self.cfg["bag_decay"]); chain = int(self.cfg.get("store_chain", 0))
         with torch.no_grad():
-            bag = self.bag_w.clone(); prev = -1; first = True; n = 0
+            bag = self.bag_w.clone(); prev = -1; n = 0
             for i in run:
                 if i in self.bans or i == self.sil:
                     continue
                 ex = m.E.weight[i]
                 if bag.norm() > 1e-6 and self.store.write(bag, ex, float(strength), 1):
                     j = self.store.last_idx; n += 1
-                    if first:
-                        self.store.mark_start(bag, ex); first = False
+                    if n == 2:
+                        self.store.mark_start(bag, ex)         # the start mark on the second symbol's slot, as the world's onsets are marked
                     if chain and prev >= 0:
                         self.store.link(prev, j)
                     prev = j
