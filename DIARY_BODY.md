@@ -7566,3 +7566,13 @@ nest is on me" (never taught), "it is here at my leg"; "i see" flat at 24-26 fro
 323/35; one new word, "love", inside "I ___ you". Its one cue on a new line was typed plain (the typist cues only lines already
 heard that day). The seventh parent (labels 181-184): questions above 70%, its questions answered as openings, and what/who/where
 questions to push "yes please" toward a named thing.
+
+### Night 158 (2026-09-13, 18:23): the climb resumes
+
+Day 181 (17:30-18:23; the seventh parent's first day): 131 parent lines, 87 questions, 53 partner lines; smiles 283, frowns 37;
+duty 0.35; its own question marks 12. The dusk probe: held-out 0.637 (0.628 after night 157: the day +0.009), the old lines
+0.454. Night 158: 856 utterances heard, 1024 dreams of mean length 21.8 ('yes! we go out. run!', 'where is your dog?'), the loss
+0.138 -> 0.103, the gauge on the dreams 0.763 -> 0.856. The guard held (duty 0.354, smiles per line 1.55). The probe on the save:
+**held-out 0.660** (from 0.637), the old lines 0.474 (from 0.454), the recent 0.769: both a new high. The course: 0.547, 0.608,
+0.636, 0.630, 0.628, 0.660. The actor's slope 0.035: the reward does not depend on which word it says (a smile at any known word),
+so the actor has nothing to learn from; the smile for the answer is built tonight (the teacher's method).
