@@ -7284,3 +7284,11 @@ the den"), the loss 0.338 to 0.093, the gauge 0.554 -> 0.886; the store at its c
 write from here; the fade and the cap keep it there); the face organ's correlation 0.42; the prefrontal 0.52; the actor's
 slope 0.068. At this boundary: the broad night (512 dreams and up to 1024, three rounds) from the restart on this save; the
 probe on the save; the first broad night is night 142.
+
+The mouth probed on the save after night 141 (2026-09-13, 00:28): "can you play?" -> "I come. I am not sad"; "hi" -> ". I see
+you y hip is not"; "who is here?" -> "mea I want my yam hat milk"; "do you want milk?" -> "I ? all gone? your ice is";
+"what do you have?" -> "te was in the tub y yes."; "are you here?" -> "m outtle hat is not my t". Four of ten open with "I"
+or carry an answer, and "I come. I am not sad" is the cleanest reply the mouth has produced: two sentences of the modeled
+shape to a question it was asked today. The recall's chains ("te was in", "ttle hat") take the rest; the cortex alone
+still repeats. The restart with the broad night is done (pid 56598: 512 to 1024 dreams, three rounds); night 142 is the
+first broad night, and the probe after its save reads the accuracy.
