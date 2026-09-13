@@ -7406,3 +7406,11 @@ recent lines 0.554, the old 0.450. Night 148: 1024 dreams, own share 0.32, 384 s
 -> 0.577) and the old lines (0.475 -> 0.453, 0.450 -> 0.401) while raising the replayed recent lines. The reload at this save:
 the episode tags. Night 149 is the reading: whole-line dreams against the same 384 steps. If the held-out still falls, the
 night's rate is next (3e-5 -> 1e-5 at the following boundary).
+
+The third question-first parent's report (labels 165-167, 07:45): 54/51/51 questions a day; answered before the partner voice
+7/2/5 (the earlier 30s were "i see milk"); its own question marks 7/3/9 ("milk?", "e egg?", "and cold?", "it please?", "see
+here?", "see it there?"), the answers taken ("you hee me here", "here with you"); fourteen cold cues returned nothing (the frames
+land inside conversation); "i see" 36 -> 23 -> 13; "all gone" steady at 9-11; new sentences "ham is hot in my bed", "it is my
+egg", "my sock is here", "the dog is here again", "help me here", "wet dog is out", "sit down here"; new words hug, too, wait,
+hungry, talk, nice; smiles/frowns 442/33, 460/33, 398/36; the queue never ran dry. The next parent (labels 169-172): its
+questions answered as openings, cues only off its own words, "I see" starved.
