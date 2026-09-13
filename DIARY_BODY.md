@@ -7086,3 +7086,9 @@ The parent's method answers with a habituation the child can see: a word smiled 
 and smiles again after (HABIT_TICKS, an environment setting; the chain re-chained; the typist's relaunch armed after the
 next save). The striatal line holds the last events, so the body can learn that a word said twice in half a minute earns
 one smile. Expected: the stress falls toward 10, the gate's resolution triples, the talking over and the loop fall further.
+
+Watched live under the own-speech target (2026-09-12, 18:46 to 19:11; the label day 149): the loop 13, 5, 4, 7, 9, 5 per
+thousand, no triple letters, the ear 0.19 to 0.32, the child on 0.64 to 0.67 of the ticks (it talks more: the target makes
+the cortex continue what it began), the parent's share 0.24, stress 20 to 22 (the habituation fix lands at the next relaunch),
+mood falling 6.0 -> 0.7 over the half hour on the withheld smiles, sharpness 50 -> 28 with it; the actor's slope 0.100.
+Its phrases: "i am here with you", "I eat the ice", "the ham is in my bag", "yes! two hats are here".
