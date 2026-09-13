@@ -7132,3 +7132,8 @@ first answer-shaped reply to a question ("no ... here with you"). The stress ari
 at a parent's ordinary rate, and stress rises by half of each with a fifty-second half-life: equilibrium near 20. The constant
 is the lever: stress_gain 0.5 -> 0.1 at the next boundary (equilibrium near 4, the gate near its own resolution), with the
 own song remembered in the same restart.
+
+The half hour under the learnable habituation (2026-09-12, 19:50 to 20:15): stress 21.8, 21.9, 20.9, 19.8, 20.1, 20.5 (flat:
+the constant changes at the next restart); mood 3.4 to 5.8, sharpness 39 to 49; the loop 5 to 11; the ear 0.24 to 0.32; the
+child on two thirds of the ticks; smiles 155 to 164 per four hundred rows, "said lately" rising to 78 as it repeats "the",
+"is", "in"; the withholdings for the day's count 14. After "do you want more?": "I had the h t is in the hut".
