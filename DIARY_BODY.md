@@ -7169,3 +7169,16 @@ twice, then once; good, who, play, thank you learned inside exchanges; faces 479
 typist fell back to the retired drills ("put lid in"); fixed: the filler now holds the child's word with a recent planned
 line, not the whole corpus. Night 139 is long: the own episodes count as the day's new memories and the night scaled toward
 its maximum of 192 dreams.
+
+
+### Night 139 (2026-09-12, 22:20): fifty-five minutes; the first replay of its own speech
+
+Day 153 (the label; twenty-two minutes of a day after the mid-day restart): the parent asked 14 questions in 38 lines, three
+answered in the modeled shape; smiles 183, frowns 12, duty 0.62. Night 139 (55 minutes): 880 new slots (the own episodes
+among them) -> 110 dreams of mean length 17.9, the own utterances replayed for the first time ("i see milk went in the h",
+"I want", "I saw dog", "who is happy?"), each beginning with a stray letter, the world's faded context's last symbol, because
+the own episode's start mark sat on its first slot where the world's onsets are marked on the second; fixed (the mark on the
+second slot). The loss 0.391 to 0.130, the curve still falling at round 32 (0.391, 0.314, 0.263, 0.227, 0.197, 0.173, 0.154,
+0.140 every fourth round); the gauge 0.386 -> 0.82 (its own utterances the harder recall); the store 7644 after 547 dropped;
+the face organ's correlation 0.45; the prefrontal 0.57; the actor's slope 0.073. The night's dream count capped at 96 from
+the restart after this save. The guard held (duty 0.602, smiles per line 3.64) and was re-armed.
