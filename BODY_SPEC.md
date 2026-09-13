@@ -1123,3 +1123,21 @@ store gained 0.040 on a copy, but a first night over new memories loses the same
 settling that more passes repair. Across seven copy and served nights the night's effect on the held-out reads about -0.01 with a
 spread of 0.03, and the day's about +0.01; the ruler cannot resolve single-night changes finer than that. The reading that
 remains is content: a night of the parent's own last thousand lines, whole and clean, against the store's fragments.
+
+### The twenty-fifth defect: the night's content (2026-09-13)
+
+The last of the day's readings was the decisive one. From the dusk save of day 174 (held-out 0.556), a night at the served
+constants whose dreams were the parent's own last thousand lines, whole and clean (mean length 19.7), read afterwards **held-out
+0.687, the old lines 0.484 (from 0.401), the replayed recent lines 0.816**; the same night on the store's dreams, across seven
+copy and served nights, read -0.01 with a spread of 0.03. The night's lesson was never the problem; its content was: the slot
+store's chains gave it ten-symbol fragments that began mid-word, a third of them stitched, and the cortex was fitted to those
+six times a night. Neither the rate, the draw, the rounds nor skipping a dream's first targets could repair content.
+
+**The form now (dream_source "utterances", utt_cap):** the body keeps the world's utterances as it heard them, whole, between
+pauses (the pause the offset already detects), each with a strength of one that fades by night with the store's fade, the
+weakest giving way at the cap (4096 utterances: weeks of speech, where the slot store held three days). The night draws its
+dreams from them by strength (the recent, still strong, more), with replacement when fewer than asked, each with the turn's end.
+A hippocampus keeps an episode as the sequence it was (CA3's chain, the time cells); this memory keeps it plainly, and it is
+what the slot store's chains, tags and marks were approximating. The slot store stays for the recall at the mouth. Disclosed
+constants, no rule about content. Test 51. Served from the boundary after night 153; the memory starts empty on the served body
+and fills within a day, so night 154 is the first that dreams whole utterances. The reading is the held-out after each night.

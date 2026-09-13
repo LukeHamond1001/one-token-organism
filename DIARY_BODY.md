@@ -7493,3 +7493,8 @@ gauge 0.622 -> 0.775; the examples clean at last ('are you hot', 'what do you pl
 recent lines 0.633; the mouth 'you have the egg now!', 'that is your egg', 'I am happy now?', 'I am happy too'; the recall's own
 winners 3 to 11 of 24 on most prompts (15 to 20 where the stub lives). The held-out's course: 0.598, 0.601, 0.577, 0.575, 0.583,
 0.559, 0.564.
+13:25: the decisive reading. A night of the parent's last thousand lines, whole and clean, from the dusk save of day 174: the
+held-out 0.556 -> 0.687, the old lines 0.401 -> 0.484, the replayed 0.816. Seven nights of the store's fragments had read -0.01.
+The night's content was the whole fault. Built the utterances heard (dream_source utterances: the world's utterances kept whole
+between pauses, fading by night, dreamt whole; test 51; 51/51); armed for the save after night 153. Night 154 is the first that
+dreams them.
