@@ -972,3 +972,37 @@ word has no consequence past the next smile. The room gives the parent's world a
 
 The room is the maturation environment of the long bands, the first test of the actor's consequence, and the shape of a
 robot's world: a state the agent changes. It is built beside the ladder's remaining rungs, first as a fast-parent option.
+
+### The twentieth defect: a night was three weight updates (2026-09-13)
+
+The night's lesson summed the gradient over every dream and stepped the weights once per round: the first broad night (512
+dreams, three rounds) was three updates; a deep night (48 dreams, 24 rounds) twenty-four; the day's lesson one step of a single
+window every 24 ticks at a hundredth of the night's rate. The cortex's accuracy on the parent's unreplayed lines (the night's own
+gauge on the last sixty lines) stood at 0.52-0.53 for a hundred nights while its recall of the few replayed dreams read 0.86:
+memorisation of the replayed, nothing learned of the language. A sharp-wave ripple induces its plasticity as it happens, thousands
+a night, the replays interleaved (the complementary learning systems of McClelland, McNaughton and O'Reilly); nothing in a brain
+averages a night's replays into one change.
+
+**The form now (night_batch, 0 = the old form):** the optimizer steps after every night_batch dreams, the dreams shuffled each round
+(the body's own generator) and run in lockstep: a batch is right-padded, and a causal cortex never sees the padding after a dream's
+positions (test 45: the batched inputs, bundles, stream and gauge equal the one-at-a-time forms). The bands along a dream are run
+on a cache of the stream's keys and values (`stream_step`), one position at a time, so the loop over a dream's prefixes is linear
+in its length rather than quadratic: a dream-round fell from 1.4 s to about 0.12 s on the 179M body. A disclosed constant, not a
+rule about content.
+
+**Measured on copies of the body saved after night 142** (the same 256 dreams; the gauge on the parent's last sixty lines, most of
+them typed after the save, so unheard; four rounds):
+
+| form | steps | dreams (train) | the parent's lines |
+|---|---|---|---|
+| batch 8 at 1e-4, no warm-up | 32 / 128 | 0.539 / 0.617 (from 0.574) | 0.492 / 0.509 (from 0.534) |
+| batch 64 at 1e-4, warm 4 | 4 / 8 / 12 | 0.581 / 0.621 / 0.638 (from 0.574) | 0.529 / 0.548 / 0.538 (from 0.539) |
+
+Small batches at the night's rate are noise before they are signal (Adam moves every weight by the whole rate on a small batch's
+gradient: 32 such steps lowered both readings, and 128 had not recovered the lines). Batch 64 descends from the first step. A whole
+night of that form through the night code itself (512 dreams, six rounds, 48 steps, warm 4; ten minutes on a busy machine against
+23 for the old broad night): the NREM loss 0.282 -> 0.195 by rounds, the dream set 0.585 -> 0.725, **the parent's last sixty lines
+0.523 -> 0.606**, and 150 of the parent's lines from days 110-125, long faded from the store and unreplayable, 0.438 -> 0.454. Served
+from the boundary after night 143 as `--night-batch 64 --night-rounds 6 --night-warm 4 --night-starts 1024` (96 steps a night, about
+fifteen minutes). The mouth's greedy probe is unchanged by it (the recall leads the mouth); the number to watch is the lines' gauge
+night by night, and the old lines' behind it.

@@ -7305,3 +7305,15 @@ nights read 0.86 on their few dreams: memorization; this reads the broad set aft
 dropped by the fade (the cap prunes at each write now); the face organ's correlation 0.44; the prefrontal 0.54; the actor's
 slope 0.065. The reading that matters is the probe on this save: the accuracy on the parent's last sixty unreplayed lines,
 0.52 before this night.
+
+### The twentieth defect, found by the probe after night 142 (2026-09-13, 01:40-02:25)
+
+The probe after the first broad night read the parent's last sixty lines at 0.53, unchanged, and the arithmetic said why: a night's
+round summed every dream's gradient into one step, so the broad night was three weight updates and a deep night twenty-four; the
+day's lesson a step every 24 ticks at a hundredth of the rate. Built and tested in the hour: a synaptic step per batch of replays
+(night_batch), the dreams shuffled and run in lockstep, the bands along a dream on a cache of the stream's keys and values (a
+dream-round 1.4 s -> 0.12 s); tests 45 and 46; 46/46. On copies: batch 8 at the night's rate was noise (the lines 0.534 -> 0.492
+after 32 steps, 0.509 after 128); batch 64 descended from the first step. A whole night of batch 64, six rounds over 512 dreams (48
+steps) through the night code on a copy: the dream set 0.585 -> 0.725, the parent's last sixty lines 0.523 -> 0.606, the old lines
+of days 110-125 (faded from the store) 0.438 -> 0.454; ten minutes on a busy machine. Deployed for the boundary after night 143:
+batch 64, six rounds, warm 4, 1024 dreams (96 steps a night).
