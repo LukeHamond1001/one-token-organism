@@ -7265,3 +7265,10 @@ The tiring's reading is therefore not yet taken; the watch runs again on the rel
 The seeing typist (2026-09-12, 23:56; the label day 157): in its first two minutes 28 smiles, 30 misses, 3 frowns; the
 child's words after the parent's lines "I want a jug put", "now? no wet dog had"; mood climbing from the floor (-2.4),
 sharpness 15, stress 4.1. The recall's tiring is now read on a scored day.
+
+The scored day under the recall's tiring (2026-09-13, 23:56 to 00:08, the label day 157): mood -1.5 -> 5.2 in eight minutes
+once smiled at again, sharpness 19 -> 47, smiles 74 -> 116 per three hundred rows, frowns 5 or 6; the share of its
+three-word windows that repeat 0.18, 0.30, 0.35, 0.45 (0.52 before the tiring: the strongest own phrase recovers within
+minutes and returns); "i see milk" 7, 8, 7, 3 per five minutes. Its turns: "with you see here? no wet dog", "I s it dry? I
+want now? no wet dog here". The actor's slope 0.068, drifting down through the day. Night 141 began at 00:10; the broad
+night lands at the restart on its save.
