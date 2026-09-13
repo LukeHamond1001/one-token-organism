@@ -1093,3 +1093,20 @@ winner's newest link when it lands elsewhere; let go at an utterance's end and a
 frame four lines share is the one line, whole). And `own_store 0`: its own utterances are no longer written to the store; the
 recall draws on what the world said, and the own slots already there fade by the store's own law. Served from the boundary after
 night 151 with `--own-store 0 --read-follow 20`; read by the mouth probe's lived prefix and own-winner share, daily.
+
+### The twenty-fourth defect: the night taught line starts that begin mid-word (2026-09-13)
+
+With the rate cut to a third, night 151 still lowered the held-out (0.584 -> 0.559), and a uniform draw of the onsets was worse
+still (-0.048 on a copy: weak onsets are junk; strength was a quality filter). The gauge by position told where the night's loss
+lands: across night 151 the held-out lines lost 0.045 at positions 1-2, 0.035 at 3-5, 0.034 at 6-9 and 0.008 at 10-29. The
+dreams' starts. The onset mark falls on the first memory the store kept after an utterance's first symbol, and the store keeps a
+symbol by its surprise, so the mark often falls a symbol or two in: of 105 world onsets on the served body, 60% began a typed line
+by their first two symbols and 36% by three ('ere it is', 'our dog', 's h', 'e a'); the night, six passes a night, taught the
+cortex that a line begins there. Dreams from the seam slot (the utterance's true first symbol, under the last line's faded
+context) measured worse (42% and 36% lived): a seam is shared by every line that begins with the same symbol, and its chains
+scatter.
+
+**The form now (dream_skip, 0 = off):** the night owes no forecast on a dream's first dream_skip positions; the lesson's targets
+begin after them, with the dream's start as context only. The waking lesson teaches line starts from the stream as lived, with
+their pauses. A disclosed constant. Test 50. Measured on the copy after night 151 (a whole night at the served constants, skip 3)
+by the held-out and the gauge by position: the reading follows.
