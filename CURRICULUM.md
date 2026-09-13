@@ -235,3 +235,10 @@ The lines written and how often; what it wrote back at each stage and
 whether from memory; every recall test with the exact text and the "own"
 reading; trust, quiet fraction and stress at start, middle and end; any
 expansion it produced that was not taught (the first sign of the trunk).
+
+**A self-sustaining frame is starved (2026-09-13).** "I see milk" became what "tin" had been: five or six repeats a day, unmoved by
+resting "I see" from the parent's lines for a day. The parent's method: for three days A's lines do not model the frame and no cue
+falls on it; the cues go to the frames it reaches for and misses by timing ("I am ", "I have ", "I want "). And the child's own
+questions ("here?", "hot?", "you sad?") are answered in A's very next line as the OPENING of an exchange (an answer, then a
+question back), never as a closing: its question marks are the behaviour that grows (10, 13, 17 a day), and they feed on being
+answered.
