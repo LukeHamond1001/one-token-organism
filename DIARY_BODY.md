@@ -7226,3 +7226,14 @@ I want sock"; "hi" -> "meast the ice please"; "are you here?" -> "me see milk we
 "ttle hat ttle hat", the little-hat chain. Four of ten prompts open with "I" and two carry a want or a having; the recall's
 loops ("ttle hat", "nt in the tub") take the rest; the cortex alone still repeats. The waking recall's tiring is live from
 this restart (pid 51361, read_tire 0.2), which the probe does not apply; the page is the reading now.
+
+THE TREND, days 141 to 155 (2026-09-12, 23:35), from the rows: of the child's scored words, the conversational core (I, yes,
+no, you, me, my, want, see, have, here, please, am) was 6 to 7 percent on the drill days (141 to 145), 13 to 15 percent on
+the first conversation days (147 to 150), 19 to 25 percent on the question days (152 to 155); the container nouns (tin,
+box, bin, tub) 7 to 11 percent, then 1 to 4, then 0 to 1. Its replies to the parent's questions beginning with I, yes, no
+or here within six seconds: none before questions were asked, 15 of 39 on day 150, 7 of 20, 3 of 16, 2 of 46 on day 155,
+the day the own-song phrase loop took its turns (the parent's own count over the whole turn: 16 of 37 and 13 of 34 on days
+150 and 152). Under the recall's tiring, the first five minutes: the share of its three-word windows that are repeats 0.09
+(0.52 the afternoon before); "i see milk" three times, "ttle hat" twice; "y i sit down here wit" to "good! I see you here".
+The speech is not random: what it says has moved with what it hears, from containers to the conversational core, four times
+over in ten days, and the answer shape appeared the day questions began.
