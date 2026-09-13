@@ -7357,3 +7357,14 @@ examples still its own babble ('t h te was in my ha', 'gonee dog outy sosit'). T
 The probe on its save: the recent lines 0.618, the old lines 0.467. The course of the old lines, the language-model reading
 proper: 0.438 after night 142, 0.455 after 144, 0.456 at dusk, 0.467 after 145. The reload at this save: from day 164 the dream
 knows who spoke.
+
+The second question-first parent's report (labels 160-163, 05:05): 53/50/54 questions a day; answered before the partner voice
+31/31/24 (58, 62, 44%), mostly "i see milk", the unmistakable ones "what do you have now?" -> "had a big hat", "can I hide from
+you?" -> "yes please.", "do you see me here?" -> "you hee me here"; its own questions 10/13/17 ("here?", "egg?", "dog?", "hot?",
+"you sad?", "milk is good milk?"), the answers taken; cue answers "I have " -> "a big hat", "I want " -> "hot milk"; unprompted
+strings of three or more words 93/87/100 a day ("my sock is not in my", "yes. here is a cup", "your milk is here with me", "no wet
+dog is here", "the egg is not here"); "please", "yes please.", "again", "give me the" on its own; "i see milk" self-sustaining
+(5-6 repeats a day, unmoved by resting "I see" from the parent's lines: the new "tin"); smiles/frowns 417/38, 430/36, 460/43. The
+parent's lapse: the queue ran dry for ten minutes on day 160 and the typist replayed one frame five times. The next parent (labels
+165-168) builds on its questions (each answered as the opening of an exchange) and starves "I see" (cues on "I am", "I have", "I
+want" only).
