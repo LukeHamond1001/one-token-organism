@@ -7543,3 +7543,16 @@ it?'), the loss 0.149 -> 0.098, the gauge on the dreams 0.752 -> 0.869. The guar
 probe on the save: held-out 0.630 (from 0.609), the old lines 0.448, the recent lines 0.826; the mouth 'I sit with my dog', 'I am
 here with you'. Three nights of whole utterances: +0.091, +0.031, +0.021; the days between: -0.003, -0.027. The course: 0.547,
 0.608, 0.636, 0.630. At this save the typist relaunched at the faster pace (a line every 60 ticks, the child's turn 32).
+
+### Night 157 (2026-09-13, 17:28): the fourth whole-utterance night; the held-out levels
+
+Day 180 (16:35-17:28; the first at the faster pace): 101 parent lines, 71 questions, 81 partner lines (182 in the day against
+~160); smiles 320, frowns 35; duty 0.42; its own question marks 12; "i see" 24. The dusk probe: held-out 0.626 (0.630 after
+night 156: the day flat), the old lines 0.443. Night 157: 674 utterances heard, 1024 dreams of mean length 21.7 ('the mat is
+under the dog', 'I play and I run', 'I hug you and my dog'), the loss 0.137 -> 0.098, the gauge on the dreams 0.753 -> 0.866. The
+guard held (duty 0.421, smiles per line 1.73). The probe on the save: held-out 0.628 (from 0.626; the cosine 0.656 -> 0.676), the
+old lines 0.460 (from 0.401 four nights ago, a new high), the recent 0.823; the mouth 'I am happy with you', 'I am here with me
+now?', 'gone to talk to my dog'; the recall's own winners 2 to 18 of 24, falling. Four whole-utterance nights: +0.091, +0.031,
++0.021, +0.002; the days -0.003, -0.027, -0.004. The held-out levels near 0.63 while the replayed lines sit at 0.82: the gap is
+what unseen lines of this style withhold (which noun, which frame), and the same eight families of exchange, dreamt again, do not
+close it. The old lines still rising says the language transfers; the next gain is in the variety of what it hears.
