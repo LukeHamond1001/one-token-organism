@@ -123,6 +123,11 @@ PHYSIOLOGY = dict(
     # episode of its own (keys as the world's would be, the chain linked, its first symbol a start), so the night replays it and
     # the cortex learns to say again what was rewarded. Only the rewarded utterances: the corollary discharge keeps the babble out.
     own_store=0, own_store_r=1.0,
+    # its bounds (2026-09-12, 21:05, read live: 1595 own symbols stored in twenty minutes, the store past its cap and pruning the
+    # world's weakest): the last own_store_len symbols of the utterance (about two words: the word rewarded and what led to it),
+    # at own_store_gain times the reward (the world's lines keep the stronger claim on the night), at most one write per
+    # own_store_gap ticks
+    own_store_len=12, own_store_gain=0.3, own_store_gap=40,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
     wm=0, wm_burst=0.5, wm_max=512,
@@ -649,8 +654,8 @@ class Life:
             r -= float(self.cfg["symbol_cost"]) * (1.0 + (self.fatigue / float(self.cfg["gate_fatigue"])) ** 2)
         if int(self.cfg.get("own_store", 0)):
             thr = float(self.cfg.get("own_store_r", 1.0))
-            if float(r) >= thr and not getattr(self, "_own_stored", False):
-                self._own_stored = True; self._consolidate_own(float(r))
+            if float(r) >= thr and not getattr(self, "_own_stored", False) and self.ticks - getattr(self, "_own_store_tick", -10 ** 9) >= int(self.cfg.get("own_store_gap", 40)):
+                self._own_stored = True; self._own_store_tick = self.ticks; self._consolidate_own(float(r) * float(self.cfg.get("own_store_gain", 0.3)))
             elif float(r) < 0.5 * thr:
                 self._own_stored = False
         # --- the ear's half: the world's symbol (or its quiet) enters ---
@@ -1667,7 +1672,8 @@ class Life:
         if cur:
             runs.append(cur)
         run = runs[-1] if runs else []
-        if len(run) < 3 or len(run) > 24:
+        run = run[-int(self.cfg.get("own_store_len", 12)):]           # the last symbols: the word rewarded and what led to it
+        if len(run) < 3:
             return 0
         m = self.m; d_ = float(self.cfg["bag_decay"]); chain = int(self.cfg.get("store_chain", 0))
         with torch.no_grad():
