@@ -205,7 +205,8 @@ class Teacher(Caregiver):
         # each pair; the raised cues only when the day asked fewer than four
         lines2 = self.rng.sample(self.corpus.heard_lines(HEARD_FOR_CUE), min(4, len(self.corpus.heard_lines(HEARD_FOR_CUE))))
         day_cues = list(dict.fromkeys(t for t, k, _ in reversed(self.said_today) if k == "cue"))[:8][::-1]
-        battery = day_cues if len(day_cues) >= 4 else CUES0
+        battery = day_cues                                   # the day's own cues only (2026-09-12: the raised cues of stage one, "dog will ",
+                                                             # "scared ", came back every morning a day asked fewer than four, in stage four)
         prev = None; j = 0
         for i, c in enumerate(battery):
             for text, kind in ([(c, "cue")] + ([(lines2[j % len(lines2)], "line")] if i % 2 == 1 and lines2 else [])):
