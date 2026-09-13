@@ -7111,3 +7111,14 @@ is milk. I eat", an exchange strung by itself. The rewards: smiles 458, frowns 2
 habituation; replaced at this boundary), "late" 180 (the smile's own spacing of five ticks against four words a second in
 chunks: a rate limit the body can learn). The parent replaced at this boundary with one whose every exchange begins with a
 question: at least half of A's lines questions, counted.
+
+
+### Night 137 (2026-09-12, 19:45): the first day under the own-speech target
+
+Day 149 (the label; the body's 137th): 125 lines (67 the parent's, 58 the other voice's), smiles 459 (3.67 a line, the most
+of the life), frowns 30, duty after the parent's lines 0.70 (the highest of the life; 0.38 to 0.60 on the chunk days),
+withheld under the day-count habituation 344, talked over 78 tokens. The guard held (duty 0.704, smiles per line 3.67) and
+was re-armed. Night 137 (21 minutes): 457 new slots -> 57 dreams of mean length 13.6 ("yes. I am here. I", "yes. I eat the
+ice in t", "more egg. it is gone", "where is the"), the loss 0.341 to 0.122, the gauge 0.486 -> 0.843; the store 7193; the
+face organ's correlation 0.45; the prefrontal 0.53; the actor's slope 0.098. At this boundary: the typist relaunches with the
+habituation the child can see (HABIT_TICKS 120); the probe reads the save; the question-first parent takes the queue.
