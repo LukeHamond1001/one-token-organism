@@ -7196,3 +7196,14 @@ have my hat", "I want the toy", "I see you. hi." The cortex alone is still the t
 hearing model is not the speaker; the speaker is the recall's chain read through the cortex, and the exchanges of the last
 day and the night's replay of its own rewarded phrases are what put the answers there. The loop ("nt in the tint") remains
 in the recall for two prompts. This is the reading the day was for.
+
+The own song heard back (2026-09-12, 22:50, the label day 155): thirty minutes of the page: "i see milk" 35 times, "te was
+in" 65, "I am here with you" 15, "here" 93; half its three-word windows repeats within the half hour; its most-said words in,
+the, see, was, is, I, milk. The night's replay of its own rewarded phrase made that phrase the recall's strongest chain, and
+the waking read could recall the same slot without end: the songbird's crystallized song, one phrase. The dreams already
+run under adaptation (a recalled memory tires); the waking read did not. The law brought to the waking read: a slot that
+wins the read loses a fifth of its availability and recovers toward rest by 0.97 a tick, synaptic depression (read_tire,
+test 44, commit 615c5fd; the first attempt committed the test alone and the code an hour later). Armed for the restart
+after night 140's save, beside the typist's relaunch with the battery fix. Stress 3.8, mood 2 to 3, sharpness 35 to 39,
+the loop 2 per thousand, the ear 0.21 to 0.24 through the day; questions asked 33 by 22:45, replies in the modeled shape in
+the first six seconds 2 (the planner's own count, which reads the whole turn, comes with its report).
