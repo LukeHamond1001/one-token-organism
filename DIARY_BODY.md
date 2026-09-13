@@ -7414,3 +7414,16 @@ land inside conversation); "i see" 36 -> 23 -> 13; "all gone" steady at 9-11; ne
 egg", "my sock is here", "the dog is here again", "help me here", "wet dog is out", "sit down here"; new words hug, too, wait,
 hungry, talk, nice; smiles/frowns 442/33, 460/33, 398/36; the queue never ran dry. The next parent (labels 169-172): its
 questions answered as openings, cues only off its own words, "I see" starved.
+
+### Night 149 (2026-09-13, 08:29): the first whole-line night, and the night's rate
+
+Day 169 (07:39-08:29; the fourth parent's first day): 106 parent lines, 52 questions, 50 partner lines; smiles 423, frowns 35;
+duty 0.48; its own question marks 7; "i see" 28 (13 the day before: self-sustaining after all). The dusk probe: held-out 0.583
+(0.577 after night 148), the old lines 0.432 (0.401): the day restored some. Night 149, the first with the episode tags: 1024
+dreams of mean length 11.0, own share 0.23, 384 steps, the NREM loss 0.218 -> 0.157 (0.298 -> 0.228 the night before: consistent
+utterances now), the world gauge 0.588 -> 0.778. The guard held (duty 0.480, smiles per line 2.72). The probe on the save:
+held-out 0.575 (cos 0.593), the old lines 0.412, the recent lines 0.602. Three nights running: the held-out down 0.014, 0.019,
+0.008 at night and up 0.017, down 0.005, up 0.006 by day; the old lines down every night. The stitching was not the cause, or not
+the only one: 384 steps at 3e-5 fit whatever the night dreams (the store's three days, drawn by strength, the most repeated lines
+most) at the cost of the language at large. The night's plasticity is a constant; from the boundary after night 150 it is 1e-5,
+a third, the schedule unchanged. Measured on copies meanwhile: dreams drawn uniformly over the world's onsets against by strength.
