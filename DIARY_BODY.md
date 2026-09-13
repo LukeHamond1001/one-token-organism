@@ -7237,3 +7237,13 @@ the day the own-song phrase loop took its turns (the parent's own count over the
 (0.52 the afternoon before); "i see milk" three times, "ttle hat" twice; "y i sit down here wit" to "good! I see you here".
 The speech is not random: what it says has moved with what it hears, from containers to the conversational core, four times
 over in ten days, and the answer shape appeared the day questions began.
+
+THE NINETEENTH DEFECT (2026-09-12, 23:50). The question "are we missing something in the architecture" answered with a
+measurement: the cortex, teacher-forced on the parent's last sixty lines, predicts the next symbol right 32 times in a
+hundred, after 140 nights, on a corpus where most symbols follow from the word; and fed its own continuation back as heard
+speech it cycles ("the he he he", "henox henox"): the hearing model has not learned the language. The night replayed 48 to 96
+dreams for 32 to 48 rounds, a few dozen lines drawn by strength, memorized (their loss 0.08); the day's lesson is a trickle
+at 1e-5. Complementary learning systems: the cortex learns from many interleaved episodes, each replayed a few times. The
+night becomes broad from the restart after night 141: 512 dreams (up to 1024, one per new memory) for three rounds, the same
+compute spread over ten times the lines, each run down a branch of the chain. The reading: the accuracy on the last sixty
+lines, 0.32 tonight; the mouth's probe beside it.
