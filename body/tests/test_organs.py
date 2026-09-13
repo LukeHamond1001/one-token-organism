@@ -1035,11 +1035,33 @@ def test_own_speech_target():
     print("40b the own-speech target: the recall after its own 'give ' says", repr(tgt), "at confidence", round(conf_last, 2), "| recall targets in the lesson:", life._wake_recall_targets)
 
 
+def test_own_song_remembered():
+    """the own song remembered (own_store, 2026-09-12): a smile writes the body's last utterance into the store as an episode of
+    its own, linked and started, and the night dreams it; off, no own symbol is ever stored (the corollary discharge)"""
+    life = tiny(own_store=1, store_chain=1)
+    say(life, "the dog is here", 8)
+    n0 = life.store.n()
+    life.stream.clear()
+    for ch in "give milk":                                 # as if the body had said it, one symbol a tick
+        life.stream.append((life.sil, 0)); life.stream.append((TOK.token_to_id(ch), 1))
+    n = life._consolidate_own(2.0)
+    assert n >= 8 and life.store.n() >= n0 + 8, (n, life.store.n(), n0)
+    assert int((life.store.W == 1).sum()) >= 8 and int(life.store.Bs[n0:].sum()) >= 1
+    life.gen.manual_seed(0); texts = [TOK.decode([i for i in d if i != life.end_id]) for d in life.dreams(12)]
+    assert any("give milk" in t or "ive milk" in t for t in texts), texts
+    life2 = tiny(own_store=0)
+    say(life2, "the dog is here", 8); life2.stream.clear()
+    for ch in "give milk":
+        life2.stream.append((life2.sil, 0)); life2.stream.append((TOK.token_to_id(ch), 1))
+    assert int((life2.store.W == 1).sum()) == 0
+    print("43 the own song remembered:", n, "own symbols stored at a smile; the dreams:", [t for t in texts if "milk" in t][:2])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered]
     failed = 0
     for t in tests:
         try:

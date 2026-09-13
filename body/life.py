@@ -118,6 +118,11 @@ PHYSIOLOGY = dict(
     # following), weighted by the recall's confidence, and no target where the recall is unsure; the world's next symbol stays the
     # target at the world's positions. "world": the target of 2026-09-06.
     own_target_form="world", own_target_conf=0.3,
+    # THE OWN SONG REMEMBERED (own_store, 2026-09-12): the songbird replays its own song in sleep, and the hippocampus keeps what we
+    # said as episodes; a smile (the felt reward at or above own_store_r) writes the body's last utterance into the store as an
+    # episode of its own (keys as the world's would be, the chain linked, its first symbol a start), so the night replays it and
+    # the cortex learns to say again what was rewarded. Only the rewarded utterances: the corollary discharge keeps the babble out.
+    own_store=0, own_store_r=1.0,
     # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
     # reward or after wm_max ticks; the striatal heads read [line, slot].
     wm=0, wm_burst=0.5, wm_max=512,
@@ -642,6 +647,12 @@ class Life:
             # earlier form, with a tonic drive of 0.25 cancelling it) it was never predicted away and, with the drive
             # gone, held every act at a loss; with both gone the gate saturated at 0.98 (runs 69-72).
             r -= float(self.cfg["symbol_cost"]) * (1.0 + (self.fatigue / float(self.cfg["gate_fatigue"])) ** 2)
+        if int(self.cfg.get("own_store", 0)):
+            thr = float(self.cfg.get("own_store_r", 1.0))
+            if float(r) >= thr and not getattr(self, "_own_stored", False):
+                self._own_stored = True; self._consolidate_own(float(r))
+            elif float(r) < 0.5 * thr:
+                self._own_stored = False
         # --- the ear's half: the world's symbol (or its quiet) enters ---
         v_before = m.values(self.bands.detach()) if self.v_prev is None else self.v_prev
         if off > 0 and u != self.sil:
@@ -1640,6 +1651,42 @@ class Life:
             self.opt_value.zero_grad(set_to_none=True)
             torch.stack(terms).mean().backward(); self.opt_value.step()
 
+    def _consolidate_own(self, strength):
+        """the body's last utterance (its own symbols in the stream, the last run between pauses of three or more ticks) written
+        into the store as an episode: keys as the world's would have been (the faded world context, then the utterance itself),
+        the chain linked, the first symbol a start; nothing when the run is shorter than three symbols"""
+        own = [i for (i, w) in self.stream if w == 1]
+        runs = []; cur = []; gap = 0
+        for i in own:
+            if i == self.sil:
+                gap += 1
+                if gap >= 3 and cur:
+                    runs.append(cur); cur = []
+            else:
+                gap = 0; cur.append(int(i))
+        if cur:
+            runs.append(cur)
+        run = runs[-1] if runs else []
+        if len(run) < 3 or len(run) > 24:
+            return 0
+        m = self.m; d_ = float(self.cfg["bag_decay"]); chain = int(self.cfg.get("store_chain", 0))
+        with torch.no_grad():
+            bag = self.bag_w.clone(); prev = -1; first = True; n = 0
+            for i in run:
+                if i in self.bans or i == self.sil:
+                    continue
+                ex = m.E.weight[i]
+                if bag.norm() > 1e-6 and self.store.write(bag, ex, float(strength), 1):
+                    j = self.store.last_idx; n += 1
+                    if first:
+                        self.store.mark_start(bag, ex); first = False
+                    if chain and prev >= 0:
+                        self.store.link(prev, j)
+                    prev = j
+                bag = d_ * m.shift(bag) + ex
+        self._own_stored_n = getattr(self, "_own_stored_n", 0) + n
+        return n
+
     def _sleep_now(self):
         self.queue.clear(); self.queue_who.clear()
         self.night()
@@ -1709,6 +1756,7 @@ class Life:
                 "face_corr": round(float(self._frel_corr), 3), "face_pred": round(float(self._fpred_now), 3), "rem_form": str(self.cfg.get("rem_form", "forecast")),
                 "actor_voice": str(self.cfg.get("actor_voice", "off")), "actor_slope": round(float(self._arel_gain), 3), "actor_corr": round(float(self._arel_corr), 3),
                 "actor_form": str(self.cfg.get("actor_form", "add")), "chunk_words": int(getattr(self, "_chunk_words", 0)), "chunk_ticks": int(getattr(self, "_chunk_ticks", 0)),
+                "own_stored": int(getattr(self, "_own_stored_n", 0)),
                 "actor_agree": (round(sum(self._act_agree) / len(self._act_agree), 3) if self._act_agree else None), "acts": len(self._act_agree),
                 "face_input": str(self.cfg.get("face_input", "cortex")), "torn_frac": (round(sum(self._ring_torn) / len(self._ring_torn), 3) if self._ring_torn else None),
                 "ent_mean": (round(sum(self._ring_ent) / len(self._ring_ent), 3) if self._ring_ent else None)}
