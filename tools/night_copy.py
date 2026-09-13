@@ -93,4 +93,8 @@ with torch.no_grad():
 print(f"after: the parent's last {len(recent)} lines {g1[0]} (cos {c1}) | old lines {o1[0]} (cos {oc1}) | HELD-OUT {h1[0]} (cos {hc1}) | dreams {rep.get('gauge', {}).get('before')} -> {rep.get('gauge', {}).get('after')}", flush=True)
 for p in PROMPTS:
     mo, co = mouth(p); print(f"   {p!r:20} mouth {mo!r:26} cortex {co!r}", flush=True)
-print("nothing saved", flush=True)
+save_as = arg("save_as", "")
+if save_as:
+    life.save_path = save_as; life.save(); life.save_path = None; print(f"the copy after its night saved as {save_as}", flush=True)
+else:
+    print("nothing saved", flush=True)
