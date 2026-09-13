@@ -7247,3 +7247,9 @@ at 1e-5. Complementary learning systems: the cortex learns from many interleaved
 night becomes broad from the restart after night 141: 512 dreams (up to 1024, one per new memory) for three rounds, the same
 compute spread over ten times the lines, each run down a branch of the chain. The reading: the accuracy on the last sixty
 lines, 0.32 tonight; the mouth's probe beside it.
+
+Corrected at 23:58: the 0.32 was the probe's artifact (it fed the live slow state instead of running the ladder along the
+line as the night does). By the night's own gauge the cortex alone predicts 0.82 of the next symbols on the lines the night
+replayed, 0.52 on the parent's last sixty lines it did not, 0.53 on lines from twenty days ago: a half-learned language,
+memorized where replayed, generalized to half elsewhere. The nineteenth defect stands as breadth against depth; the broad
+night is armed; the reading is the gauge on unreplayed lines, 0.52 tonight.
