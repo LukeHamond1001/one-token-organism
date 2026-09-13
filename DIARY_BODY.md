@@ -7320,3 +7320,12 @@ batch 64, six rounds, warm 4, 1024 dreams (96 steps a night).
 02:59: the challenger on the copy over a whole night (1024 dreams, 6 rounds, 384 steps of batch 16 at 3e-5, warm 8): the dream set
 0.574 -> 0.743, the parent's last sixty lines 0.500 -> 0.588, the old lines (days 110-125, faded from the store) 0.438 -> 0.498
 against the batch-64 night's 0.454. Re-armed before night 143's save: the served body takes the challenger's form from day 161.
+
+### Night 143 (2026-09-13, 03:05): the last night of the old form
+
+Day 160 (01:36-03:05; the question-first parent's first day): 118 parent lines, 57 of them questions, 41 partner lines, 3 cues;
+smiles 411, frowns 38, withheld 17; duty 0.48; replies of the modeled shape within the parent's question 3 by the narrow count;
+its own question marks 10; its words: see 47, egg 29, milk 20, was 19, dog, eat, you, all, with. Night 143 (41 minutes under the
+copy runs' load): 512 dreams of mean length 16.5, three steps, the loss 0.333 -> 0.311, the gauge on the dream set 0.532 -> 0.579,
+the store at its cap, nothing dropped. The guard held (duty 0.478, smiles per line 2.59) and was re-armed. The reload waits at this
+night's save: from day 161 the night steps after every 16 dreams at 3e-5 with a ramp of eight, six rounds over 1024 dreams.
