@@ -1110,3 +1110,9 @@ scatter.
 begin after them, with the dream's start as context only. The waking lesson teaches line starts from the stream as lived, with
 their pauses. A disclosed constant. Test 50. Measured on the copy after night 151 (a whole night at the served constants, skip 3)
 by the held-out and the gauge by position: the reading follows.
+
+**Measured (2026-09-13, 12:33), and rejected:** from the save after night 151, a night at the served constants with skip 3 moved the
+held-out 0.559 -> 0.569, where the same night without the skip moved it 0.559 -> 0.599 (a second consolidation of the same content
+repairs what the first fitting lowered, at the very positions the skip withholds). The onset mark's fault stands as described; the
+skip is not its remedy, and `dream_skip` stays off. The twelve-round night from the dusk save before night 151 is the reading that
+follows.
