@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_draw="strength", store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_draw="strength", dream_skip=0, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -1519,6 +1519,15 @@ class Life:
                         opt.zero_grad(set_to_none=True)
                         xs, xos, faces, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]],
                                                                                  [owns[j] for j in order[i0:i0 + nbatch_]] if owns is not None else None)
+                        skip_ = int(self.cfg.get("dream_skip", 0))
+                        if skip_ > 0:
+                            # A DREAM'S FIRST TRANSITIONS ARE NOT OWED (dream_skip; 2026-09-13, the twenty-fourth defect): the onset mark falls on
+                            # the first memory the store kept after an utterance's first symbol, often a symbol or two in ('ere it is', 'our
+                            # dog': 40% of the served body's onsets), so a dream's first transitions teach line starts that begin mid-word;
+                            # night 151 lost the held-out lines' accuracy at positions 1-9 (0.035-0.045) and nowhere else. The night owes
+                            # no forecast on a dream's first dream_skip positions; the waking lesson teaches line starts from the stream,
+                            # with their pauses. A disclosed constant.
+                            w = w.clone(); w[:, :skip_] = 0.0
                         C = m.stream(m.inputs(xs, xos, faces, bundles, reads))
                         ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
                         if not bool(torch.isfinite(ll.detach())):

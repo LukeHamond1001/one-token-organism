@@ -31,7 +31,7 @@ def parse_flags(s):
 
 path = sys.argv[1]
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
-cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4), night_warm=arg("warm", 0), dream_who=arg("who", 0), dream_tag=arg("tag", 0), dream_draw=arg("draw", "strength")))
+cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4), night_warm=arg("warm", 0), dream_who=arg("who", 0), dream_tag=arg("tag", 0), dream_draw=arg("draw", "strength"), dream_skip=arg("skip", 0)))
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 life = Life.load(path, TOK, device="cpu", cfg=cfg, seed=arg("seed", 0)); m = life.m; m.eval()
 life.save_path = None                                                   # a copy: the night must not save it
@@ -76,6 +76,15 @@ life.cfg["night_batch"] = max(1, int(life.cfg.get("night_batch", 0)))
 with torch.no_grad():
     g0 = life.gauge(recent); c0 = life._gauge_cos; o0 = life.gauge(old); oc0 = life._gauge_cos; h0 = life.gauge(held); hc0 = life._gauge_cos
 print(f"before: the parent's last {len(recent)} lines {g0[0]} (cos {c0}) over {g0[1]} symbols | {len(old)} old lines (days {d0}-{d1}) {o0[0]} (cos {oc0}) over {o0[1]} | HELD-OUT {len(held)} lines {h0[0]} (cos {hc0}) over {h0[1]}", flush=True)
+# A DIAGNOSTIC (2026-09-13): --lines-as-dreams N replaces the night's dreams with the parent's last N lines from the log, whole and
+# clean, to tell whether the night's lesson form hurts the held-out or only what it dreams
+n_lines = arg("lines_as_dreams", 0)
+if n_lines > 0:
+    lines_ = [ids_of(r["text"].strip()) for r in R if r["action"] in ("line", "cue")][-n_lines:]
+    lines_ = [x for x in lines_ if len(x) >= 4]
+    _orig_dreams = life.dreams
+    life.dreams = lambda n=None, with_who=False: (lines_, [[False] * len(d) for d in lines_]) if with_who else lines_
+    print(f"diagnostic: the night dreams the parent's last {len(lines_)} lines, whole", flush=True)
 t0 = time.time(); rep = life.night(); dt = time.time() - t0
 keep = {k: rep.get(k) for k in ("dreams", "mean_len", "own_share", "examples", "nrem_steps", "nrem_curve", "gauge", "rem_steps", "error", "discarded")}
 print(f"the night took {dt:.0f}s: {json.dumps(keep)}", flush=True)
