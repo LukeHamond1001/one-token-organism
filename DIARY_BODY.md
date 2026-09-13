@@ -7137,3 +7137,15 @@ The half hour under the learnable habituation (2026-09-12, 19:50 to 20:15): stre
 the constant changes at the next restart); mood 3.4 to 5.8, sharpness 39 to 49; the loop 5 to 11; the ear 0.24 to 0.32; the
 child on two thirds of the ticks; smiles 155 to 164 per four hundred rows, "said lately" rising to 78 as it repeats "the",
 "is", "in"; the withholdings for the day's count 14. After "do you want more?": "I had the h t is in the hut".
+
+
+### Night 138 (2026-09-12, 20:40): the question-first parent's first day
+
+Day 150 (the body's 138th): the parent asked 37 questions in 91 lines, the other voice answered 39 times; smiles 500 (3.85
+a line, the most of the life), frowns 33, duty after the parent's lines 0.71 (the highest); the child's replies to the
+parent's questions began with I, yes, no or here 15 times of 37 ("who is here?" -> "I have i am here", "do you want the
+dog?" -> "here I am here with", "what do you want?" -> "I"); withheld "said lately" 185, for the day's count 58. The guard
+held (duty 0.706, smiles per line 3.85) and was re-armed. Night 138 (11 minutes): 291 new slots -> 48 dreams of mean length
+11.6 ("I am happy. y", "what do you eat?", "yes. it was in the box?", "it was in my nest": the exchanges are its episodes),
+the loss 0.318 to 0.105, the gauge 0.553 -> 0.859; the store 7310; the face organ's correlation 0.45; the prefrontal 0.57;
+the actor's slope 0.089. At this boundary: the own song remembered and the stress constant at a tenth.
