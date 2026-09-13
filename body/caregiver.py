@@ -9,7 +9,10 @@ import argparse
 import json
 import os
 TALKOVER_FROWN = int(os.environ.get("TALKOVER_FROWN", "0"))   # the served typist's face when talked over: off until a day boundary after the fast seeds read (the user's word given 2026-09-06)
-FROWN_GAP = int(os.environ.get("FROWN_GAP", "60"))            # the least ticks between two talk-over frowns (2026-09-12: 60 gave seventy frowns a day under the chunk and a body at stress 20 all day, its gate flattened threefold; a parent frowns, then gives it a minute: 240)
+FROWN_GAP = int(os.environ.get("FROWN_GAP", "60"))
+HABIT_TICKS = int(os.environ.get("HABIT_TICKS", "0"))       # THE HABITUATION THE CHILD CAN SEE (2026-09-12): 0 = the day-count rule (0.95^(n-5): the fiftieth "dog" gets
+                                                            # one smile in ten, a count the body cannot see, so its critic never learns it and its stress stayed at 20 of 30
+                                                            # all day on withheld smiles); N > 0 = a word smiled at within the last N ticks earns nothing, and smiles again after            # the least ticks between two talk-over frowns (2026-09-12: 60 gave seventy frowns a day under the chunk and a body at stress 20 all day, its gate flattened threefold; a parent frowns, then gives it a minute: 240)
 import random
 import sys
 import time
@@ -54,6 +57,7 @@ class Caregiver:
         # word is smiled at with probability e, less for the fiftieth "dog"; the parent talks faster when engaged,
         # answers a smiled word with a line that holds it, and below a floor turns away for 50 s (the still face).
         self.parent = int(parent); self.e = 0.6; self.word_count = {}; self.away_until = 0.0; self.aways = 0
+        self.word_smiled_tick = {}                        # the page tick of the last smile at each word (HABIT_TICKS)
         # THE PARENT WANTS A REPLY (the user's word of 2026-09-04): once its cue is answered, each further word the
         # child adds before the parent's next turn wears its attention and gets no smile, unless the words go on
         # completing the cued line; a word said over the parent's own typing does the same. The answer smile stands.
@@ -288,11 +292,17 @@ class Caregiver:
             elif age <= self.s(13) and time.time() - self.last_smile >= self.s(5):   # a smile may follow as soon as the face has returned (the hold is 5 ticks; 8 withheld 50-90 a day)
                 if self.parent:
                     n = self.word_count.get(low, 0); self.word_count[low] = n + 1
-                    p = self.e * (0.95 ** max(0, n - 5))         # attention, and the fiftieth "dog"
+                    if HABIT_TICKS > 0:
+                        last_t = self.word_smiled_tick.get(low, -10 ** 9)
+                        if b - last_t < HABIT_TICKS:               # said and smiled at lately: nothing this time, a smile again later
+                            self.row({"action": "missed", "on": tok, "why": "said lately", "e": round(self.e, 3), "context": ctx}); return
+                        p = self.e
+                    else:
+                        p = self.e * (0.95 ** max(0, n - 5))     # attention, and the fiftieth "dog"
                     self.e = min(1.0, self.e + (0.1 if n == 0 else 0.05))
                     if self.rng.random() > p:
                         self.row({"action": "missed", "on": tok, "why": "distracted", "e": round(self.e, 3), "context": ctx}); return
-                    self.expand_next = low
+                    self.expand_next = low; self.word_smiled_tick[low] = b
                 self.smile(tok, ctx, "known word")
             else:
                 self.row({"action": "missed", "on": tok, "why": "late %.1fs" % age, "context": ctx})
