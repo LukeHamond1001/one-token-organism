@@ -7092,3 +7092,22 @@ thousand, no triple letters, the ear 0.19 to 0.32, the child on 0.64 to 0.67 of 
 the cortex continue what it began), the parent's share 0.24, stress 20 to 22 (the habituation fix lands at the next relaunch),
 mood falling 6.0 -> 0.7 over the half hour on the withheld smiles, sharpness 50 -> 28 with it; the actor's slope 0.100.
 Its phrases: "i am here with you", "I eat the ice", "the ham is in my bag", "yes! two hats are here".
+
+The math and the transcript in detail (2026-09-12, 19:30, on the copy of the 18:38 save and the day's rows). THE MOUTH
+DECOMPOSED: the mouth reads readout(forecast(C, recall)); along its own greedy speech after a prompt and the world's pause,
+the three columns:
+  "do you want milk?"  cortex " t n t t n t"   recall "I hhe hithe hi"   mouth "I the t the b"   (recall conf 0.74)
+  "I want "            cortex "t e t ttttm t"   recall "mhe hoygumput"    mouth "the toygumput"   (0.83)
+  "the dog is "        cortex "nenent .tl"      recall "hereow milkI h"   mouth "hereot milkI"    (0.80)
+The recall carries the language (the stored lines' continuations: "I h..." after the question, "m" for milk after "I want ",
+"here" after "the dog is "); the cortex's forecast is the degenerate "t"; the mouth is their sum, and the cortex's "t" pulls
+"I want " -> "the" instead of "milk". The own-speech target, live since 18:39, trains the cortex at its own positions toward
+exactly the recall column, so the two columns should converge and the mouth follow the recall cleanly; the probe after
+tonight's save is the first reading. THE TRANSCRIPT (the label day 149, 40 minutes): 125 lines, 67 the parent's, of which ONE
+a question (the planner wrote statements and B "answered" them); 58 the other voice's. After B's answers the child began with
+I/yes/no 16 percent of the time (from none); its scored words in the last two lines heard 0.27; B's answers said back with two
+of their words within three lines 7 of 58; "i am here with you", "I eat the ice", and, the parent's last note, "please. here
+is milk. I eat", an exchange strung by itself. The rewards: smiles 458, frowns 29, withheld "distracted" 338 (the day-count
+habituation; replaced at this boundary), "late" 180 (the smile's own spacing of five ticks against four words a second in
+chunks: a rate limit the body can learn). The parent replaced at this boundary with one whose every exchange begins with a
+question: at least half of A's lines questions, counted.
