@@ -170,7 +170,9 @@ class Teacher(Caregiver):
                 # answering its word with a line that holds it: only in place of the typist's own filler. Replacing
                 # the planner's lines too (2026-09-04 and before), with a hundred smiled words a day, it ate nearly
                 # every planned phrasing and word: the corpus grew by one word in thirty days
-                holds = [l for l in self.corpus.heard_lines(HEARD_FOR_CUE) if self.expand_next in l.split()]
+                # the line that holds its word comes from the parent's recent speech, not the whole corpus (2026-09-12: with the
+                # queue empty the typist answered "in" with "put lid in", the drills of a stage the parent had retired)
+                holds = [l for l in getattr(self.planner, "recent", []) if self.expand_next in l.split()]
                 if holds:
                     text = self.rng.choice(holds)
             self.expand_next = None
