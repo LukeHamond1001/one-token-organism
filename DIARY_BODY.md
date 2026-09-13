@@ -7395,3 +7395,14 @@ the day raised all three. Night 147: 1024 dreams, own share 0.32, 384 steps, the
 three while fitting its dreams. The dreams' world parts are patchworks: at a merged slot (a context shared by many lines) the chain
 draws a successor from another line, so a dream is a five-gram walk through the corpus rather than an utterance as lived, and 384
 steps of fitting that teach the cortex that a line's far structure is random.
+
+### Night 148 (2026-09-13, 07:36): the last night of stitched dreams
+
+Day 167 (06:46-07:36): 104 parent lines, 51 questions, 51 partner lines; smiles 386, frowns 36; duty 0.40; its own question marks
+9; "i see" 13 (36, 23, 13 over three days: the starving works). The dusk probe: held-out 0.596 (0.601 after night 147), the
+recent lines 0.554, the old 0.450. Night 148: 1024 dreams, own share 0.32, 384 steps, the world gauge 0.523 -> 0.672; examples
+'neat idono', 'noW?EE DOG Is ou', 'here iw'. The guard held (duty 0.399, smiles per line 2.48). The probe on the save: held-out
+0.577, the recent lines 0.575, the old 0.401. Two nights running the stitched dreams lowered the held-out (0.615 -> 0.601, 0.596
+-> 0.577) and the old lines (0.475 -> 0.453, 0.450 -> 0.401) while raising the replayed recent lines. The reload at this save:
+the episode tags. Night 149 is the reading: whole-line dreams against the same 384 steps. If the held-out still falls, the
+night's rate is next (3e-5 -> 1e-5 at the following boundary).
