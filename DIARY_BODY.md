@@ -7481,3 +7481,15 @@ what the first lowered. Three copy nights now run in turn from the dusk save bef
 whose six rounds gave 0.559): no forecast owed on a dream's first three positions; twelve rounds instead of six; and the parent's
 last thousand lines as dreams, whole. The night's damage may be the shock of first fitting new memories, which a longer settling
 repairs; the twelve-round night is the test.
+
+### Night 152 (2026-09-13, 13:01): the first served night that did not subtract
+
+Day 174 (11:55-13:01; the fifth parent's first day, the own song no longer written, the recall carrying the episode): 114 parent
+lines, 45 questions, 68 partner lines; smiles 378, frowns 37; duty 0.45; its own question marks 15; "i see" 27 (the stub 'yam is
+i see m is i' loops on from the own slots still in the store). The dusk probe: held-out 0.556 (0.559 after night 151), the old
+lines 0.401. Night 152: 1024 dreams of mean length 9.0, own share 0.14, 384 steps at 1e-5, the loss 0.218 -> 0.149, the world
+gauge 0.622 -> 0.775; the examples clean at last ('are you hot', 'what do you pl', 'I want my', 's the dog wit'). The guard held
+(duty 0.451, smiles per line 2.08). The probe on the save: held-out 0.564 (from 0.556), the old lines 0.415 (from 0.401), the
+recent lines 0.633; the mouth 'you have the egg now!', 'that is your egg', 'I am happy now?', 'I am happy too'; the recall's own
+winners 3 to 11 of 24 on most prompts (15 to 20 where the stub lives). The held-out's course: 0.598, 0.601, 0.577, 0.575, 0.583,
+0.559, 0.564.
