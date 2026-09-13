@@ -7427,3 +7427,10 @@ held-out 0.575 (cos 0.593), the old lines 0.412, the recent lines 0.602. Three n
 the only one: 384 steps at 3e-5 fit whatever the night dreams (the store's three days, drawn by strength, the most repeated lines
 most) at the cost of the language at large. The night's plasticity is a constant; from the boundary after night 150 it is 1e-5,
 a third, the schedule unchanged. Measured on copies meanwhile: dreams drawn uniformly over the world's onsets against by strength.
+
+Two incidents in the morning of 2026-09-13, both mine. At 08:54 macOS's process list failed for a moment, the typist's chain read
+that as the typist gone and launched a second beside the living one; the new one died within seconds on the corpus file both were
+writing (the chain now ends its wait only on a true "no such process"). From 08:34 to 10:07 four copy nights ran in parallel at
+full priority beside the served body, which runs niced: its day slowed to a tick a second and the parent's lines came five times
+denser in its ticks than they should; the copies were killed and the day recovered its pace within seconds (the rule now: one copy
+run at a time, at the lowest priority, never beside a served night; the restart scripts no longer nice the server).
