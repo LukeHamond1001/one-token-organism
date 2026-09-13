@@ -7556,3 +7556,13 @@ now?', 'gone to talk to my dog'; the recall's own winners 2 to 18 of 24, falling
 +0.021, +0.002; the days -0.003, -0.027, -0.004. The held-out levels near 0.63 while the replayed lines sit at 0.82: the gap is
 what unseen lines of this style withhold (which noun, which frame), and the same eight families of exchange, dreamt again, do not
 close it. The old lines still rising says the language transfers; the next gain is in the variety of what it hears.
+
+The sixth question-first parent's report (labels 178-180, 17:40): A's questions 69/89, 63/87, 71/101 (70-78% of its lines);
+answered before the partner voice 16, 13, 18 a day (from four), almost all "yes", "yes please", "no", four with a whole sentence
+("I ate it!", "I eat the yam", "I eat it all"); its own question marks 12, 10, 12 ("sock on?", "milk is yours?", "do you wait?",
+"what do you eat?"), each answered as an opening, and it stayed in the topic two or three turns; "all gone now?" answered
+differently each time fell 5, 3, 3; unprompted whole sentences "the ham is hot", "the egg is all gone", "yes! then we run out", "a
+nest is on me" (never taught), "it is here at my leg"; "i see" flat at 24-26 from its own memory; smiles/frowns 333/33, 354/32,
+323/35; one new word, "love", inside "I ___ you". Its one cue on a new line was typed plain (the typist cues only lines already
+heard that day). The seventh parent (labels 181-184): questions above 70%, its questions answered as openings, and what/who/where
+questions to push "yes please" toward a named thing.
