@@ -1141,3 +1141,7 @@ A hippocampus keeps an episode as the sequence it was (CA3's chain, the time cel
 what the slot store's chains, tags and marks were approximating. The slot store stays for the recall at the mouth. Disclosed
 constants, no rule about content. Test 51. Served from the boundary after night 153; the memory starts empty on the served body
 and fills within a day, so night 154 is the first that dreams whole utterances. The reading is the held-out after each night.
+
+**Served (2026-09-13, 14:50):** night 154, the first on the utterances heard (161 of them after fifty minutes of the day; 1024 dreams
+of mean length 21.1, the loss 0.219 -> 0.090), moved the held-out from 0.517 at dusk to **0.608**, the old lines 0.415 -> 0.434, the
+recent lines 0.551 -> 0.866. The served body repeated the copy: the night adds.

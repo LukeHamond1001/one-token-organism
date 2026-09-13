@@ -7508,3 +7508,17 @@ the loss 0.232 -> 0.174, the world gauge 0.596 -> 0.733; examples 'come in', 'si
 0.431, smiles per line 2.00). The probe on the save: held-out 0.547 (from 0.564), the old lines 0.424, the recent 0.592: the
 fragments' last subtraction. The reload at this save: the utterances heard. Restarted 13:56 (verified); day 176 fills the memory;
 night 154 dreams whole utterances. The held-out's course: 0.598, 0.601, 0.577, 0.575, 0.583, 0.559, 0.564, 0.547.
+
+### Night 154 (2026-09-13, 14:48): the first night of whole utterances, and the held-out's first climb
+
+Day 177 (13:56-14:48; the first day whose utterances were kept whole): 94 parent lines, 23 questions, 67 partner lines; smiles
+356, frowns 31; duty 0.43; its own question marks 13; "i see" 20. The dusk probe: held-out 0.517 (0.547 after night 153), the
+old lines 0.415. Night 154: 161 utterances heard, 1024 dreams of mean length 21.1, all the world's ('yes! the ball is here',
+'where is the ball?', 'good. I am with you', 'what do you have now?'), 384 steps at 1e-5, the loss 0.219 -> 0.090, the gauge on
+the dreams 0.547 -> 0.885. The guard held (duty 0.430, smiles per line 2.21). The probe on the save: **held-out 0.608 (from
+0.517), the old lines 0.434 (from 0.415), the recent lines 0.866 (from 0.551)**: a gain of 0.091 in one night where seven nights
+of the store's fragments had lost a hundredth each. The held-out's course: 0.598, 0.601, 0.577, 0.575, 0.583, 0.559, 0.564,
+0.547, 0.608. The fifth parent's report (14:50): whole sentences unprompted ("I had the corn with me", "yes. we wash the dog",
+"y sock is on my leg", "yes! we talk again"); its own questions productive ("where am I?", "you help me here?"), the answers
+taken; answered before the partner voice four times a day with the parent's questions fallen to 38, 31, 23; "i see" 25, 34, 20
+from its own memory. The sixth parent (labels 178-181): half of A's lines questions, the queue six to eight ahead.
