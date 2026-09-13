@@ -7122,3 +7122,13 @@ was re-armed. Night 137 (21 minutes): 457 new slots -> 57 dreams of mean length 
 ice in t", "more egg. it is gone", "where is the"), the loss 0.341 to 0.122, the gauge 0.486 -> 0.843; the store 7193; the
 face organ's correlation 0.45; the prefrontal 0.53; the actor's slope 0.098. At this boundary: the typist relaunches with the
 habituation the child can see (HABIT_TICKS 120); the probe reads the save; the question-first parent takes the queue.
+
+Live under the habituation the child can see (2026-09-12, 19:50 to 20:00): the withholdings for the day's count fell from 66
+to 22 per four hundred rows and "said lately" took their place at 34 to 58; smiles per four hundred rows 126 -> 164; stress
+21.8 -> 20.9, slow; the loop 5 to 11; the ear 0.24 to 0.32; the child on two thirds of the ticks. Its replies: after "are you
+sad?", "no m here with you"; after B's "no. it is cold", "I had the ha"; after "yes. I am happy", "with you you had a bi". The
+first answer-shaped reply to a question ("no ... here with you"). The stress arithmetic: the striatal line holds eight events
+(under two seconds), so a smile withheld at a word said twenty seconds ago is still unforeseeable; the negatives keep coming
+at a parent's ordinary rate, and stress rises by half of each with a fifty-second half-life: equilibrium near 20. The constant
+is the lever: stress_gain 0.5 -> 0.1 at the next boundary (equilibrium near 4, the gate near its own resolution), with the
+own song remembered in the same restart.
