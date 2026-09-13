@@ -7533,3 +7533,13 @@ The guard held (duty 0.432, smiles per line 1.98). The probe on the save: **held
 recent lines 0.830. Two nights of whole utterances: 0.547 -> 0.608 -> 0.636, the day between them flat. The night adds. The mouth:
 'I want milk too?', 'yes. you', 'I ate the hat'; the stub 'i see 1 is' still on the first prompt from the old own slots. The next
 lever: the pace, a line every 60 ticks and the child's turn 32 (from 80 and 40), at the typist's next relaunch.
+
+### Night 156 (2026-09-13, 16:35): the third whole-utterance night
+
+Day 179 (15:42-16:35): 87 parent lines, 63 questions, 78 partner lines; smiles 354, frowns 32; duty 0.44; its own question marks
+11; "i see" 26. The dusk probe: held-out 0.609 (0.636 after night 155: the day gave 0.027 back), the old lines 0.442. Night 156:
+492 utterances heard, 1024 dreams of mean length 21.6 ('the dog is with me', 'is the bird all gone now?', 'can you get up to
+it?'), the loss 0.149 -> 0.098, the gauge on the dreams 0.752 -> 0.869. The guard held (duty 0.440, smiles per line 2.15). The
+probe on the save: held-out 0.630 (from 0.609), the old lines 0.448, the recent lines 0.826; the mouth 'I sit with my dog', 'I am
+here with you'. Three nights of whole utterances: +0.091, +0.031, +0.021; the days between: -0.003, -0.027. The course: 0.547,
+0.608, 0.636, 0.630. At this save the typist relaunched at the faster pace (a line every 60 ticks, the child's turn 32).
