@@ -7346,3 +7346,14 @@ set's composition measured now.
 were its own garbled song, entered as the world's speech. Built and tested dream_who (dreams from the world's onsets; its own
 symbols as its own sound, no forecast owed; test 47, 47/47). Two whole nights from the same copy: the served form, lines 0.546 ->
 0.572 and the old lines 0.455 -> 0.425 (eroding); dream_who, lines -> 0.601 and the old lines -> 0.517. Armed for night 145's save.
+
+### Night 145 (2026-09-13, 04:58): the last night that dreamt its own song as the world's
+
+Day 163 (04:01-04:58): 109 parent lines, 54 questions, 53 partner lines; smiles 450, frowns 42; duty 0.52; its own question marks
+18 (10 and 12 the two days before); modeled replies 1. The dusk probe (a save as the sleep pressure neared the threshold): the
+parent's last sixty lines 0.569, the old lines 0.456, against 0.543 and 0.455 after night 144: the waking day does not erode the
+language. Night 145: 1022 dreams, 384 steps, nine and a half minutes, the loss 0.261 -> 0.203, the dream set 0.593 -> 0.717; the
+examples still its own babble ('t h te was in my ha', 'gonee dog outy sosit'). The guard held (duty 0.518, smiles per line 2.77).
+The probe on its save: the recent lines 0.618, the old lines 0.467. The course of the old lines, the language-model reading
+proper: 0.438 after night 142, 0.455 after 144, 0.456 at dusk, 0.467 after 145. The reload at this save: from day 164 the dream
+knows who spoke.
