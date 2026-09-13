@@ -7149,3 +7149,10 @@ held (duty 0.706, smiles per line 3.85) and was re-armed. Night 138 (11 minutes)
 11.6 ("I am happy. y", "what do you eat?", "yes. it was in the box?", "it was in my nest": the exchanges are its episodes),
 the loss 0.318 to 0.105, the gauge 0.553 -> 0.859; the store 7310; the face organ's correlation 0.45; the prefrontal 0.57;
 the actor's slope 0.089. At this boundary: the own song remembered and the stress constant at a tenth.
+
+The own song bounded (2026-09-12, 21:10): read live, the smiles wrote 1,658 own symbols into the store in twenty-five minutes
+(every smile the last twenty-four symbols at the reward's full strength), the store at 7,879 of its cap of 8,192 and about
+to prune the world's weakest. Bounded: the last twelve symbols (the word rewarded and what led to it), at a third of the
+reward (the world's lines keep the stronger claim on the night), at most one write per forty ticks; the body saved and
+restarted at once with the bounds (the stress by then 4.1, mood climbing, the loop 1 to 2 per thousand, the ear 0.18 to
+0.45); the typist relaunched by the chain.
