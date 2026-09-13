@@ -7207,3 +7207,15 @@ test 44, commit 615c5fd; the first attempt committed the test alone and the code
 after night 140's save, beside the typist's relaunch with the battery fix. Stress 3.8, mood 2 to 3, sharpness 35 to 39,
 the loop 2 per thousand, the ear 0.21 to 0.24 through the day; questions asked 33 by 22:45, replies in the modeled shape in
 the first six seconds 2 (the planner's own count, which reads the whole turn, comes with its report).
+
+
+### Night 140 (2026-09-12, 23:30)
+
+Day 155 (the label; the body's 140th): the parent asked 45 questions in 90 lines, half, as briefed; the other voice 38 replies;
+smiles 487 (3.81 a line), frowns 31, duty after the parent's lines 0.60; "said lately" withheld 211 (its repeats of one
+phrase); replies in the modeled shape within six seconds 2 by my narrow count (the parent's count over the whole turn comes
+with its report). The guard held (duty 0.592, smiles per line 3.81) and was re-armed. Night 140 (28 minutes): 549 new slots
+-> 69 dreams of mean length 15.9 ("do you want more milk?", "yes. two pigs ar", "went in the eg", and its own "i see milk
+went in the" still with the stray prefix of the older writes), the loss 0.352 to 0.116, the gauge 0.544 -> 0.858; the store
+7989 after 214 dropped; the face organ's correlation 0.45; the prefrontal 0.59; the actor's slope 0.073. At this boundary:
+the waking recall's tiring, the typist's relaunch with the day's-cues-only battery, the probe.
