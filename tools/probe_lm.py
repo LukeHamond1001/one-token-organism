@@ -41,23 +41,15 @@ for prompt in prompts:
             life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
     print(f"{prompt!r:22} mouth: {''.join(mouth)!r:28} cortex alone: {''.join(cortex)!r}")
 
-# THE LANGUAGE MODEL'S LOSS (2026-09-12, 23:45): the cortex's mean next-symbol loss, teacher-forced, on the parent's last lines
-# as heard (the world's symbols with a pause after each): the number a language model is judged by, on material the night may
-# not have replayed. Run with --lmloss; the lines come from the page log.
+# THE LANGUAGE MODEL'S ACCURACY (2026-09-12, 23:55): the night's own gauge (teacher-forced argmax share, the cortex alone, the
+# ladder run along each line from rest) on the parent's last sixty lines as heard: the number a language model is judged by,
+# on material the night may not have replayed. Run with --lmloss.
 if "--lmloss" in sys.argv:
-    import json, math
+    import json
     R = [json.loads(l) for l in open("/Users/lukehamond/Projects/project/data/watch2_caregiver.jsonl") if l.strip()]
-    lines = [r["text"].strip() for r in R if r["action"] in ("line", "cue") and r.get("voice") != "b"][-60:]
-    tot, cnt, hits = 0.0, 0, 0
+    def ids_of(t): return [TOK.token_to_id(ch) for ch in t if TOK.token_to_id(ch) is not None]
+    recent = [ids_of(r["text"].strip()) for r in R if r["action"] in ("line", "cue") and r.get("voice") != "b"][-60:]
+    dreams = [ids_of(t) for t in ((life.last_night or {}).get("examples") or []) if len(t) >= 6]
     with torch.no_grad():
-        for line in lines:
-            life.win.clear()
-            ids = [TOK.token_to_id(ch) for ch in line]
-            for k, i in enumerate(ids):
-                if k >= 2:
-                    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-                    C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
-                    lg = m.readout(m.forecast(C, zero)); p = torch.log_softmax(lg, -1)
-                    tot += -float(p[i]); cnt += 1; hits = hits + (1 if int(lg.argmax()) == i else 0)
-                life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-    print(f"LM on the parent's last {len(lines)} lines, teacher-forced, cortex alone: next-symbol argmax accuracy {hits/max(1,cnt):.2f}; loss at the mouth's sharpness {tot/max(1,cnt):.2f} nats")
+        g2 = life.gauge(recent); g1 = life.gauge(dreams) if dreams else (float("nan"), 0)
+    print(f"LM accuracy (the night's gauge): the parent's last 60 lines {g2[0]:.2f} over {g2[1]} symbols | the last night's dreams {g1[0]:.2f} over {g1[1]}")
