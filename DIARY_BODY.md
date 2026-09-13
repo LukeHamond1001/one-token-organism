@@ -7329,3 +7329,16 @@ its own question marks 10; its words: see 47, egg 29, milk 20, was 19, dog, eat,
 copy runs' load): 512 dreams of mean length 16.5, three steps, the loss 0.333 -> 0.311, the gauge on the dream set 0.532 -> 0.579,
 the store at its cap, nothing dropped. The guard held (duty 0.478, smiles per line 2.59) and was re-armed. The reload waits at this
 night's save: from day 161 the night steps after every 16 dreams at 3e-5 with a ramp of eight, six rounds over 1024 dreams.
+
+### Night 144 (2026-09-13, 03:59): the first served night of the new form
+
+Day 161/162 (03:07-03:58, the labels split by the relaunch): 100 parent lines, 50 questions, 51 partner lines; smiles 416, frowns
+35; duty 0.48; its own question marks 12; modeled replies 1. Night 144: 1024 dreams (mean length 15.7), 384 steps of batch 16 at
+3e-5 with the ramp, nine minutes; the loss 0.299 -> 0.216; the gauge on the dream set 0.505 -> 0.696 (cos 0.541 -> 0.726). The
+guard held (duty 0.474, smiles per line 2.77). The probe on the save: the parent's last sixty lines 0.543 (0.53 after night 142),
+the old lines 0.455 (0.438 after night 142). Real, and a third of what the same night gave on the copy (0.588 and 0.498). Two
+suspects: the day's waking lesson between the nights (500 steps of a single lived window at 1e-5, with its own recalled babble as
+the target at its own positions), and the dream set, whose examples read like its own garbled speech ('e. te was in the egg is a',
+'k iilo we'): the own song, written to the store at every smile, is dreamt as if the world had said it. Instruments armed: a dusk
+probe (a save as the sleep pressure nears the threshold, then the probe) to tell the day's effect from the night's; the dream
+set's composition measured now.
