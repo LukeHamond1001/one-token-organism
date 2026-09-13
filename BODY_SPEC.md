@@ -1006,3 +1006,13 @@ night of that form through the night code itself (512 dreams, six rounds, 48 ste
 from the boundary after night 143 as `--night-batch 64 --night-rounds 6 --night-warm 4 --night-starts 1024` (96 steps a night, about
 fifteen minutes). The mouth's greedy probe is unchanged by it (the recall leads the mouth); the number to watch is the lines' gauge
 night by night, and the old lines' behind it.
+
+**The sweep (the same 256 dreams, four rounds, 1024 dream-passes each; the parent's-lines set shifts as the log grows, so read its
+change within a form):** batch 64 at 1e-4, warm 4: dreams 0.574 -> 0.661, lines -0.001; batch 64 at 3e-5: 0.657, lines +0.016;
+batch 16 at 3e-5, warm 8 (64 steps): 0.688, lines +0.011; batch 16 at 1e-5: 0.656, lines +0.011; **the served form itself (one step
+of the whole batch at 1e-4, no ramp): the first step threw the gauge from 0.574 to 0.278, the second and third recovered it to
+0.551**, the lines from 0.500 to 0.488. The plasticity ramp (night_warm, built 2026-09-06 for exactly this shove) had never been
+turned on for the served body: every night of the old form began by wrecking its own cortex and ended by recovering it. At equal
+compute the smaller batch at the lower rate fits the dream set fastest; the lines' change is within noise at this budget and
+needs a night's volume to read (see the whole-night reading above). Batch 16 at 3e-5 runs as the challenger on a copy over a whole
+night while batch 64 at 1e-4 serves.
