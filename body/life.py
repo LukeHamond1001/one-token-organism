@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -1263,11 +1263,19 @@ class Life:
         return out
 
     # ---------------- the night ----------------
-    def dreams(self, n=None):
+    def dreams(self, n=None, with_who=False):
         """dreams start where the store is strongest and run by pattern completion until the recall
-        is half as sure as a memory of its own (relative to the store, not a constant)"""
+        is half as sure as a memory of its own (relative to the store, not a constant).
+        THE DREAM KNOWS WHO SPOKE (dream_who, 0 = off; 2026-09-13, the twenty-first defect): the store keeps who said each memory
+        (its own song written at a smile, W = 1), and on the served body 74% of the onsets and 58% of a night's dreams were its own
+        garbled utterances, replayed as if the world had said them: the night, once strong, taught the cortex the child's babble
+        as the language. With dream_who on, dreams start where the WORLD spoke (the world's onsets), run through its own replies as
+        lived, and with_who returns, beside each dream, who said each symbol; the lesson then enters its own symbols as its own
+        sound (the corollary discharge, as awake) and owes no forecast of them (one predicts the environment). A disclosed constant."""
         n = int(self.cfg["night_starts"] if n is None else n)
-        starts = self.store.sample_starts(n, gen=self.gen)
+        who_on = int(self.cfg.get("dream_who", 0)) > 0 and self.store.n() > 0
+        starts = self.store.sample_starts(n, gen=self.gen, mask=(self.store.W != 1) if who_on else None)
+        outw = []
         d_ = float(self.cfg["bag_decay"]); ref = self.store.self_confidence(qnorm=(1.0 / (1.0 - d_ * d_)) ** 0.5)   # a full context's norm
         floor = float(self.cfg["dream_floor_rel"]) * ref
         out = []
@@ -1279,16 +1287,17 @@ class Life:
                     # THE EPISODE AS LIVED: the onset's first symbol, then the slots in the order they were written, to the utterance's
                     # end; at a branch (a frame heard with several continuations) a draw by strength, the recent and the rewarded more
                     ids = [self.m.nearest(self.store.K[j])]; k = int(j); seen = {k}
+                    who = [bool(self.store.W[j] == 1)]                    # who said each symbol: the onset's first by its own slot
                     for _ in range(int(self.cfg["dream_max"])):
-                        ids.append(self.m.nearest(self.store.V[k]))
+                        ids.append(self.m.nearest(self.store.V[k])); who.append(bool(self.store.W[k] == 1))
                         nk = self.store.successor(k, gen=self.gen)
                         if nk < 0 or nk in seen:
                             if bool(self.store.B[k]) and int(self.cfg.get("offset_ticks", 0)) > 0:
-                                ids.append(self.end_id)                 # the memory ends where the world went quiet
+                                ids.append(self.end_id); who.append(bool(self.store.W[k] == 1))   # the memory ends where the world went quiet
                             break
                         k = nk; seen.add(k)
                     if len(ids) >= 2:
-                        out.append(ids)
+                        out.append(ids); outw.append(who)
                     continue
                 bag = self.store.K[j].clone()                           # a dream's context: per symbol, as the keys are
                 # the dream begins with the context's own last symbol, read from the key (a key is the bag before the
@@ -1322,8 +1331,8 @@ class Life:
                         adapt[win] *= a_hit
                     bag = float(self.cfg["bag_decay"]) * self.m.shift(bag) + self.m.E.weight[nid]
                 if len(ids) >= 3:
-                    out.append(ids)
-        return out
+                    out.append(ids); outw.append([False] * len(ids))     # a completed dream: the world's, as before
+        return (out, outw) if with_who else out
 
     def _dream_inputs(self, ids, mem_on):
         """a dream as a window: fresh bands (a night's working state), the store leading if mem_on"""
@@ -1345,7 +1354,7 @@ class Life:
         return (torch.tensor(xs, device=self.dev), xos,
                 torch.zeros(T, 2, device=self.dev), torch.stack(bundles), torch.stack(reads), torch.tensor(ids, device=self.dev))
 
-    def _dream_batch(self, dream_list):
+    def _dream_batch(self, dream_list, own_list=None):
         """THE DREAMS IN LOCKSTEP (2026-09-13): a list of dreams as one right-padded batch, the bands run along each as _dream_inputs
         runs them one at a time (a causal cortex: a dream's positions never see the padding after them). Returns xs, xos [B, T],
         faces [B, T, 2], bundles [B, T, nb, d], reads [B, T, d] (zeros: the store is off in the lesson), y [B, T] the targets and
@@ -1354,12 +1363,18 @@ class Life:
         xs = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)
         y = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)
         w = torch.zeros(B, T, device=self.dev)
+        xos = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)      # a dream: no own sound, unless the dream knows who spoke
         for i, ids in enumerate(dream_list):
-            L = len(ids)
-            if L > 1:
-                xs[i, 1:L] = torch.tensor(ids[:-1], dtype=torch.long, device=self.dev)
-            y[i, :L] = torch.tensor(ids, dtype=torch.long, device=self.dev); w[i, :L] = 1.0
-        xos = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)      # a dream: no own sound
+            L = len(ids); own = own_list[i] if own_list is not None else None
+            y[i, :L] = torch.tensor(ids, dtype=torch.long, device=self.dev)
+            if own is None:
+                if L > 1:
+                    xs[i, 1:L] = torch.tensor(ids[:-1], dtype=torch.long, device=self.dev)
+                w[i, :L] = 1.0
+            else:
+                for t in range(1, L):                                  # its own symbols enter as its own sound (dream_who)
+                    (xos if own[t - 1] else xs)[i, t] = ids[t - 1]
+                w[i, :L] = torch.tensor([0.0 if o else 1.0 for o in own], device=self.dev)   # no forecast owed of its own act
         faces = torch.zeros(B, T, 2, device=self.dev); reads = torch.zeros(B, T, m.d, device=self.dev)
         bundles = torch.zeros(B, T, nb, m.d, device=self.dev); bands = torch.zeros(B, nb, m.d, device=self.dev)
         with torch.no_grad():
@@ -1371,13 +1386,13 @@ class Life:
                     bands = m.band_update_b(bands, C)
         return xs, xos, faces, bundles, reads, y, w
 
-    def _gauge_batched(self, dreams, bs=32):
-        """gauge() over lockstep batches: the same count, many dreams at once"""
+    def _gauge_batched(self, dreams, owns=None, bs=32):
+        """gauge() over lockstep batches: the same count, many dreams at once; owns (dream_who): its own symbols are not counted"""
         hits = 0.0; n = 0.0; cos_sum = 0.0
         bans = [b for b in self.bans if b != self.eot]
         with torch.no_grad():
             for i in range(0, len(dreams), bs):
-                xs, xos, faces, bundles, reads, y, w = self._dream_batch(dreams[i:i + bs])
+                xs, xos, faces, bundles, reads, y, w = self._dream_batch(dreams[i:i + bs], owns[i:i + bs] if owns is not None else None)
                 pred = self.m.latent_pred(self.m.stream(self.m.inputs(xs, xos, faces, bundles, reads)))
                 lg = self.m.readout(pred); lg[..., bans] = float("-inf")
                 if self.end_id != self.sil:
@@ -1387,12 +1402,12 @@ class Life:
         self._gauge_cos = (round(cos_sum / n, 3) if n else None)
         return (round(hits / n, 3) if n else None), int(n)
 
-    def gauge(self, dreams):
+    def gauge(self, dreams, owns=None):
         """the cortex alone (store off), teacher-forced on the dreams: the share of next symbols it
         forecasts itself (argmax), and the mean cosine of its forecast to the embedding received
-        (the finer instrument: it moves before the argmax does)"""
+        (the finer instrument: it moves before the argmax does); owns (who said each symbol) needs the lockstep path"""
         if int(self.cfg.get("night_batch", 0)) > 0 and dreams:
-            return self._gauge_batched(dreams)
+            return self._gauge_batched(dreams, owns)
         hits = n = 0; cos_sum = 0.0
         with torch.no_grad():
             for ids in dreams:
@@ -1429,14 +1444,22 @@ class Life:
             load = float(self.cfg.get("night_load", 0.0)); n_starts = None
             if load > 0.0:
                 n_starts = int(min(int(self.cfg.get("night_starts_max", 192)), max(int(self.cfg["night_starts"]), round(load * max(0, n_new)))))
-            dreams = self.dreams(n_starts)
+            who_on = int(self.cfg.get("dream_who", 0)) > 0 and int(self.cfg.get("night_batch", 0)) > 0
+            if who_on:
+                dreams, owns = self.dreams(n_starts, with_who=True)
+            else:
+                dreams = self.dreams(n_starts); owns = None
             rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new)
-            rep["examples"] = [self.tok.decode(d)[:32] for d in dreams[:8]]
+            if owns is not None:                                        # its own symbols in capitals, to be read
+                rep["examples"] = ["".join(self.tok.decode([i]).upper() if o else self.tok.decode([i]) for i, o in zip(d, w_))[:32] for d, w_ in zip(dreams[:8], owns[:8])]
+                rep["own_share"] = round(sum(sum(w_) for w_ in owns) / max(1, sum(len(w_) for w_ in owns)), 3)
+            else:
+                rep["examples"] = [self.tok.decode(d)[:32] for d in dreams[:8]]
             rep["mean_len"] = round(sum(len(d) for d in dreams) / len(dreams), 1) if dreams else 0
             if not dreams:
                 rep["note"] = "the store holds nothing to dream"
             else:
-                before, nsym = self.gauge(dreams); before_cos = self._gauge_cos
+                before, nsym = self.gauge(dreams, owns); before_cos = self._gauge_cos
                 opt = torch.optim.Adam(m.parameters(), lr=float(self.cfg["night_lr"]))   # sleep's own plasticity
                 sig = float(self.cfg["sigreg"])
                 # THE PLASTICITY RAMPS (night_warm, 0 = off; 2026-09-06): a fresh optimizer's first steps move every weight
@@ -1458,7 +1481,8 @@ class Life:
                     order = torch.randperm(len(dreams), generator=self.gen).tolist(); tot = 0.0; ok = 0
                     for i0 in range(0, len(order), nbatch_):
                         opt.zero_grad(set_to_none=True)
-                        xs, xos, faces, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]])
+                        xs, xos, faces, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]],
+                                                                                 [owns[j] for j in order[i0:i0 + nbatch_]] if owns is not None else None)
                         C = m.stream(m.inputs(xs, xos, faces, bundles, reads))
                         ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
                         if not bool(torch.isfinite(ll.detach())):
@@ -1488,7 +1512,7 @@ class Life:
                             for g_ in opt.param_groups:
                                 g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
                         self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
-                mid, _ = self.gauge(dreams); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
+                mid, _ = self.gauge(dreams, owns); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
                 # REM: the cortex runs free from each dream's first symbols on its own readout,
                 # a quarter of the night in rounds (biology's share), each round one batched step
                 rem_cos = []; rem_steps = 0; rem_imag = None
@@ -1509,7 +1533,7 @@ class Life:
                 m.eval()
                 del opt
                 finite = all(bool(torch.isfinite(p).all()) for p in m.parameters())
-                after, _ = self.gauge(dreams); after_cos = self._gauge_cos
+                after, _ = self.gauge(dreams, owns); after_cos = self._gauge_cos
                 # THE NIGHT STANDS (the user's word, 2026-09-11 20:00: 'remove night rollback'): from night 106 to 115 a night whose dream recall
                 # fell by more than 0.15 was discarded and the organs returned to the evening's save; nothing in biology does that, and it
                 # never fired after the night it was built for. A night is kept whatever it does. Only a non-finite lesson (the arithmetic
@@ -1518,7 +1542,7 @@ class Life:
                 if rep["discarded"] and self.save_path and os.path.exists(self.save_path):
                     sd = torch.load(self.save_path, map_location="cpu", weights_only=False)
                     m.load_state_dict(sd["organs"]); m.to(self.dev)
-                    after, _ = self.gauge(dreams); after_cos = self._gauge_cos
+                    after, _ = self.gauge(dreams, owns); after_cos = self._gauge_cos
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
                             "nrem_curve": [round(float(x), 4) for x in losses],   # the whole curve (2026-09-12): to read where the rounds stop paying
                             "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),

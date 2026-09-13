@@ -240,7 +240,7 @@ class Store:
         return float((w @ self.V).norm(dim=1).mean())
 
     @torch.no_grad()
-    def sample_starts(self, n, gen=None):
+    def sample_starts(self, n, gen=None, mask=None):
         """dream starts: the utterance onsets the store knows, drawn by strength (an episode replayed from its
         beginning; with fewer onsets than dreams the draw is with replacement: ten onsets gave ten short dreams a
         night and the cortex's trace fell from 60 to 36 of 82, run 54); any memory by strength, without
@@ -249,7 +249,7 @@ class Store:
         if self.n() == 0:
             return []
         n = int(n)
-        starts = torch.nonzero(self.Bs).flatten()
+        starts = torch.nonzero(self.Bs if mask is None else (self.Bs & mask.to(self.Bs.device))).flatten()   # mask: which onsets may start a dream
         pool = starts if starts.numel() >= 1 else torch.arange(self.n(), device=self.dev)
         p = self.S[pool] / self.S[pool].sum()
         idx = torch.multinomial(p.cpu(), n, replacement=bool(pool.numel() < n), generator=gen)

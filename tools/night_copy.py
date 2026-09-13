@@ -31,14 +31,19 @@ def parse_flags(s):
 
 path = sys.argv[1]
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
-cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4)))
+cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4), night_warm=arg("warm", 0), dream_who=arg("who", 0)))
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 life = Life.load(path, TOK, device="cpu", cfg=cfg, seed=arg("seed", 0)); m = life.m; m.eval()
-assert life.save_path is None
+life.save_path = None                                                   # a copy: the night must not save it
 R = [json.loads(l) for l in open("/Users/lukehamond/Projects/project/data/watch2_caregiver.jsonl") if l.strip()]
 def ids_of(t): return [TOK.token_to_id(ch) for ch in t if TOK.token_to_id(ch) is not None]
 recent = [ids_of(r["text"].strip()) for r in R if r["action"] in ("line", "cue") and r.get("voice") != "b"][-60:]
 recent = [x for x in recent if len(x) >= 2]
+# THE OLD LINES: the parent's distinct lines from days long faded from the store (the store holds about five hundred utterances;
+# the corpus near four thousand): material the night cannot have replayed, the language-model reading proper
+d0, d1 = [int(x) for x in arg("old_days", "110-125").split("-")]
+old_lines = list(dict.fromkeys(r["text"].strip() for r in R if r["action"] in ("line", "cue") and r.get("voice") != "b" and d0 <= int(r.get("day", -1)) <= d1))
+old = [ids_of(t) for t in old_lines][:150]; old = [x for x in old if len(x) >= 2]
 
 def mouth(prompt, n=24):
     zero = torch.zeros(m.d)
@@ -64,16 +69,16 @@ def mouth(prompt, n=24):
     return "".join(out), "".join(cortex)
 
 PROMPTS = ["do you want milk?", "what do you have?", "are you here?", "can you play?", "I want ", "I see "]
-print(f"body: nights {life.nights} store {life.store.n()} | night_batch {cfg['night_batch']} rounds {cfg['night_rounds']} starts {cfg['night_starts']} lr {cfg['night_lr']}", flush=True)
+print(f"body: nights {life.nights} store {life.store.n()} | night_batch {cfg['night_batch']} rounds {cfg['night_rounds']} starts {cfg['night_starts']} lr {cfg['night_lr']} warm {cfg['night_warm']} dream_who {cfg['dream_who']}", flush=True)
 with torch.no_grad():
-    g0 = life.gauge(recent); c0 = life._gauge_cos
-print(f"before: the parent's last {len(recent)} lines {g0[0]} (cos {c0}) over {g0[1]} symbols", flush=True)
+    g0 = life.gauge(recent); c0 = life._gauge_cos; o0 = life.gauge(old); oc0 = life._gauge_cos
+print(f"before: the parent's last {len(recent)} lines {g0[0]} (cos {c0}) over {g0[1]} symbols | {len(old)} old lines (days {d0}-{d1}) {o0[0]} (cos {oc0}) over {o0[1]}", flush=True)
 t0 = time.time(); rep = life.night(); dt = time.time() - t0
-keep = {k: rep.get(k) for k in ("dreams", "mean_len", "nrem_steps", "nrem_curve", "gauge", "rem_steps", "rem_imagined", "error", "discarded")}
+keep = {k: rep.get(k) for k in ("dreams", "mean_len", "own_share", "examples", "nrem_steps", "nrem_curve", "gauge", "rem_steps", "error", "discarded")}
 print(f"the night took {dt:.0f}s: {json.dumps(keep)}", flush=True)
 with torch.no_grad():
-    g1 = life.gauge(recent); c1 = life._gauge_cos
-print(f"after: the parent's last {len(recent)} lines {g1[0]} (cos {c1}) | dreams {rep.get('gauge', {}).get('before')} -> {rep.get('gauge', {}).get('after')}", flush=True)
+    g1 = life.gauge(recent); c1 = life._gauge_cos; o1 = life.gauge(old); oc1 = life._gauge_cos
+print(f"after: the parent's last {len(recent)} lines {g1[0]} (cos {c1}) | old lines {o1[0]} (cos {oc1}) | dreams {rep.get('gauge', {}).get('before')} -> {rep.get('gauge', {}).get('after')}", flush=True)
 for p in PROMPTS:
     mo, co = mouth(p); print(f"   {p!r:20} mouth {mo!r:26} cortex {co!r}", flush=True)
 print("nothing saved", flush=True)

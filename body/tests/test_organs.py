@@ -1119,11 +1119,49 @@ def test_night_steps_per_batch():
     assert len(rep["nrem_curve"]) == 2 and rep["gauge"]["after_nrem"] is not None
 
 
+
+def test_dreams_know_who_spoke():
+    """47 (2026-09-13): with dream_who on, dreams start where the world spoke, carry who said each symbol, and the lesson enters its
+    own symbols as its own sound with no forecast owed of them; off, the own song is dreamt as the world's"""
+    life = tiny(own_store=1, store_chain=1, night_batch=4, dream_who=1)
+    say(life, "the dog is here", 8)
+    life.stream.clear()
+    for ch in "give milk":                                 # as if the body had said it, one symbol a tick
+        life.stream.append((life.sil, 0)); life.stream.append((TOK.token_to_id(ch), 1))
+    n0 = life.store.n(); life._consolidate_own(2.0)
+    assert int((life.store.W == 1).sum()) >= 8
+    life.store.link(n0 - 1, n0)                            # the reply as lived: the world's last symbol, then its own (served bodies cross through merged slots)
+    life.gen.manual_seed(0); dreams, owns = life.dreams(12, with_who=True)
+    assert len(dreams) == len(owns) and all(len(d) == len(o) for d, o in zip(dreams, owns))
+    assert all(not o[0] for o in owns), "a dream starts where the world spoke"
+    assert any(any(o) for o in owns), "a world chain runs into its own reply"
+    xs, xos, faces, bundles, reads, y, w = life._dream_batch(dreams, owns)
+    for i, (d, o) in enumerate(zip(dreams, owns)):
+        for t in range(1, len(d)):
+            if o[t - 1]:
+                assert int(xos[i, t]) == d[t - 1] and int(xs[i, t]) == life.sil
+            else:
+                assert int(xs[i, t]) == d[t - 1] and int(xos[i, t]) == life.sil
+        assert all(float(w[i, t]) == (0.0 if o[t] else 1.0) for t in range(len(d)))
+    g, n = life.gauge(dreams, owns)
+    assert n == sum(1 for o in owns for x in o if not x)
+    rep = life.night()
+    assert "error" not in rep and rep.get("own_share", 0) > 0 and rep["nrem_steps"] > 0, rep
+    life2 = tiny(own_store=1, store_chain=1, night_batch=4, dream_who=0)
+    say(life2, "the dog is here", 8); life2.stream.clear()
+    for ch in "give milk":
+        life2.stream.append((life2.sil, 0)); life2.stream.append((TOK.token_to_id(ch), 1))
+    life2._consolidate_own(2.0); life2.gen.manual_seed(0)
+    texts = [TOK.decode([i for i in d if i != life2.end_id]) for d in life2.dreams(12)]
+    assert any("ive milk" in t for t in texts), texts                 # off: its own song starts dreams as the world's
+    print("47 the dream knows who spoke: own share", rep["own_share"], "| examples", rep["examples"][:3])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke]
     failed = 0
     for t in tests:
         try:
