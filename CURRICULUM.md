@@ -242,3 +242,11 @@ falls on it; the cues go to the frames it reaches for and misses by timing ("I a
 questions ("here?", "hot?", "you sad?") are answered in A's very next line as the OPENING of an exchange (an answer, then a
 question back), never as a closing: its question marks are the behaviour that grows (10, 13, 17 a day), and they feed on being
 answered.
+
+**The smile for the answer (2026-09-13, from day 183).** A parent rewards relevance, not vocabulary. Until now the typist smiled at
+any known word (two a line, three hundred a day), so the reward did not depend on which word the child said, and the striatal
+actor, which learns from the dopamine error over which symbol, sat still for days while the gate, whose reward depends on when,
+learned turn-taking. From day 183 the child's word in its turn after the parent's line earns the full smile when it names what the
+other voice is about to answer (a content word of the coming B line, or yes/no when B begins so), and any other known word a faint
+one. The parent's method, not the body's; read by the answers before the other voice, the actor's slope, the smiles a day, and
+that the mood and the gate's duty hold as the smiles thin.
