@@ -40,3 +40,24 @@ for prompt in prompts:
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
             life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
     print(f"{prompt!r:22} mouth: {''.join(mouth)!r:28} cortex alone: {''.join(cortex)!r}")
+
+# THE LANGUAGE MODEL'S LOSS (2026-09-12, 23:45): the cortex's mean next-symbol loss, teacher-forced, on the parent's last lines
+# as heard (the world's symbols with a pause after each): the number a language model is judged by, on material the night may
+# not have replayed. Run with --lmloss; the lines come from the page log.
+if "--lmloss" in sys.argv:
+    import json, math
+    R = [json.loads(l) for l in open("/Users/lukehamond/Projects/project/data/watch2_caregiver.jsonl") if l.strip()]
+    lines = [r["text"].strip() for r in R if r["action"] in ("line", "cue") and r.get("voice") != "b"][-60:]
+    tot, cnt, hits = 0.0, 0, 0
+    with torch.no_grad():
+        for line in lines:
+            life.win.clear()
+            ids = [TOK.token_to_id(ch) for ch in line]
+            for k, i in enumerate(ids):
+                if k >= 2:
+                    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+                    C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+                    lg = m.readout(m.forecast(C, zero)); p = torch.log_softmax(lg, -1)
+                    tot += -float(p[i]); cnt += 1; hits = hits + (1 if int(lg.argmax()) == i else 0)
+                life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+    print(f"LM on the parent's last {len(lines)} lines, teacher-forced, cortex alone: next-symbol argmax accuracy {hits/max(1,cnt):.2f}; loss at the mouth's sharpness {tot/max(1,cnt):.2f} nats")
