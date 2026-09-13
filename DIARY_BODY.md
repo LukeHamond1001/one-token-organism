@@ -7075,3 +7075,14 @@ will go out", "where is milk", "yes. eat the ice"), the loss 0.307 to 0.118 with
 (0.307, 0.248, 0.209, 0.182, 0.185, 0.163, 0.143, 0.128 every fourth round: the rounds converge between 32 and 48; at 48 the
 end was 0.094 and the gauge 0.878), the gauge 0.596 -> 0.845; the store 6930; the face organ's correlation 0.44; the
 prefrontal 0.52; the actor's slope 0.101. The restart after this night's save carries the own-speech target.
+
+The stress, read at 19:05 (2026-09-12): the frowns fell to thirty a day and the stress stayed at 20 to 21 of 30, so the frowns
+were not its source. The stress half-life is 240 ticks (fifty seconds): to sit at 20 the body takes in a negative prediction
+error every few ticks all day, and the source is the withheld smiles, 150 to 400 an hour: the parent's habituation, 0.95 to
+the power of the day's count of the word beyond five, withholds the smile at a rate that depends on a count the body cannot
+see, so its critic can never learn it, expects the smile, and takes the negative every time. Unpredictable, uncontrollable
+negatives are what make stress chronic in an animal too, and this body's gate decides at a third of its resolution under it.
+The parent's method answers with a habituation the child can see: a word smiled at within the last 120 ticks earns nothing
+and smiles again after (HABIT_TICKS, an environment setting; the chain re-chained; the typist's relaunch armed after the
+next save). The striatal line holds the last events, so the body can learn that a word said twice in half a minute earns
+one smile. Expected: the stress falls toward 10, the gate's resolution triples, the talking over and the loop fall further.
