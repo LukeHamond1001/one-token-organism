@@ -7156,3 +7156,16 @@ to prune the world's weakest. Bounded: the last twelve symbols (the word rewarde
 reward (the world's lines keep the stronger claim on the night), at most one write per forty ticks; the body saved and
 restarted at once with the bounds (the stress by then 4.1, mood climbing, the loop 1 to 2 per thousand, the ear 0.18 to
 0.45); the typist relaunched by the chain.
+
+The question-first parent's report (2026-09-12, 22:05; it stopped itself at night 139, which ran past its forty-minute rule):
+day 150: 37 questions of 71 parent lines; the child answered 16 of them with "I", "yes" or "no" BEFORE the other voice did
+("what do you have?" -> "I have a hat", "do you want more milk?" -> "yes.", "are you sad?" -> "no m here with you"), five
+more in part; the cue "I am " -> "here"; six questions of its own ("the egg dry?", "it hot here?", "you have?"), each answered
+in the parent's next line; unprompted "please. I want it", "give me your hat please", "I eat the egg and milk"; faces 542/37.
+Day 151-153 (the labels of the restarts): 34 questions, 13 answered with I/yes/no before the other voice ("who is here?" ->
+"I have my hat again", "do you want more?" -> "yes."); its own questions nine ("you eat the egg?", "see me here?", "the egg
+hot?"), and it took two of the answers back; "I see" 23 times in its own writing (from none), "I want" 6, "I eat" 4; "tin"
+twice, then once; good, who, play, thank you learned inside exchanges; faces 479/31. Its warning: with the queue empty the
+typist fell back to the retired drills ("put lid in"); fixed: the filler now holds the child's word with a recent planned
+line, not the whole corpus. Night 139 is long: the own episodes count as the day's new memories and the night scaled toward
+its maximum of 192 dreams.
