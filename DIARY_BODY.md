@@ -7434,3 +7434,13 @@ writing (the chain now ends its wait only on a true "no such process"). From 08:
 full priority beside the served body, which runs niced: its day slowed to a tick a second and the parent's lines came five times
 denser in its ticks than they should; the copies were killed and the day recovered its pace within seconds (the rule now: one copy
 run at a time, at the lowest priority, never beside a served night; the restart scripts no longer nice the server).
+
+### Night 150 (2026-09-13, 10:44): the second tagged night; the rate lowered at its save
+
+Day 170 (08:31-10:44, slowed to a tick a second for ninety minutes by my copy runs): 214 parent lines, 111 questions, 34 partner
+lines; smiles 238, frowns 82; duty 0.38; its own question marks 8; "i see" 8. Night 150: 1024 dreams (mean length 10.8), own share
+0.16, 384 steps at 3e-5, the loss 0.216 -> 0.149, the world gauge 0.573 -> 0.784; examples 'we play her', 'where is', 'ar yo '.
+The guard held (duty 0.380, smiles per line 0.94). The probe on the save: held-out 0.583 (0.575 after night 149), the recent lines
+0.701, the old lines 0.427 (0.412). No dusk reading: the dusk probe fired as the night began and read the night's save. From this
+save the night's rate is 1e-5 (verified on the restart); night 151 is the first at that rate. The held-out's course through six
+strong nights: 0.598, 0.601, 0.577, 0.575, 0.583.
