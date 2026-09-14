@@ -7622,3 +7622,9 @@ on the dreams 0.764 -> 0.845. The guard held (duty 0.351, smiles per line 1.29).
 'yes. I want more milk' with the recall's winners the world's on 23 of 24 reads, the own song all but gone from it; "hi" -> '! are
 you happy with me?'. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684. From this save the faint smile is
 half the full one (day 185).
+21:20: one-shot recall, measured on a copy of the save after night 161. Three lines it had never heard ('the yam is under the cup',
+'my hat can jump up', 'the milk sits on the bird'), each heard once as the parent's, awake, no night; then the mouth from each
+line's first three words: 'the yam is ' -> 'under the cup' (whole, exact); 'my hat can ' -> 'jump u...' (the first word, then a
+drift); 'the milk sits ' -> 'on the egg' (two words, then the most frequent object won over 'bird'). All three kept whole in the
+utterance memory for the night. One hearing is enough for the recall to begin a line; it holds the whole line where no stronger
+memory shares the frame, and the night makes it the cortex's.
