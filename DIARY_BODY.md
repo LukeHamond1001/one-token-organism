@@ -7936,3 +7936,12 @@ facts 0.791, the mouth 20 of 26 prefixes (24, 23, 21, 22, 20 over the last five 
 in three days; the cortex alone on the fact sentences does not). The seventeenth parent spawned at the night row (days 202-204).
 The probe after night 178: HELD-OUT 0.705 (dusk 0.686: +0.019; the highest post-night reading), the cortex on the fact sentences
 0.832 (dusk 0.791: +0.041), the mouth 20 of 26, old lines 0.464, the last 60 lines 0.766.
+
+The sixteenth parent's report (days 199-201; 13:15): all thirty facts once each on the right day, verbatim; **answered before B 37%,
+46%, 55%**; fact words before B said them 2, 1, 1 a day (ice, water; apple; fins); unprompted sentences of three words or more 21,
+22, 29 ("we walk out with you", "your sock is white", "we eat a yam"); own question marks 22, 49, 44 ("are we good here?", answered
+as B's next line); answer smiles 4, 5, 5, shifting from content guesses to bare yes/no landing just before B's polarity; smiles
+268/274/269, frowns 38/39/36, all talk-overs; zero alternation breaks in 588 transitions under the no-echo rule; the typist's gate
+wait capped at 8.2 s on 110 of 202 lines (the child talks through the parent's turn; duty 0.33). The nights ran 17.6, 21.6 and
+14.4 minutes of wall time beside the copy runs (10 minutes alone). The depth script matched a duplicated line once; it now matches
+the last three typed lines in order.
