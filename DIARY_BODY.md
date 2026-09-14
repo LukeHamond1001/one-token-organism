@@ -7586,3 +7586,13 @@ dreams 0.771 -> 0.844. The guard held (duty 0.398, smiles per line 1.72). The pr
 the cosine 0.698), the old lines 0.474, the recent 0.787; the mouth '! are you happy with me?' to "hi". The course: 0.547, 0.608,
 0.636, 0.630, 0.628, 0.660, 0.663; the old lines 0.40 -> 0.47. At this save the typist relaunched with the smile for the answer
 (day 183 the first under it).
+
+### Night 160 (2026-09-13, 20:12): the first day of faint smiles
+
+Day 183 (19:18-20:12; the first under the smile for the answer, whose answer branch never fired for a timing fault, so every
+smile was faint): 132 parent lines, 99 questions, 60 partner lines; smiles 277, all faint; frowns 39; duty 0.40; its own
+question marks 18 (a high). The mood fell to -6 and the stress rose to 5 as the felt reward thinned: the risk I named. The dusk
+probe: held-out 0.643 (0.663 after night 159: the day gave 0.020 back), the old lines 0.487, a new high. Night 160: 1229
+utterances heard, the loss 0.136 -> 0.112, the gauge on the dreams 0.782 -> 0.846. The guard held (duty 0.402, smiles per line
+1.44). At this save the typist relaunched with the expectation standing until the parent's next line; day 184 is the first
+where an answer can earn the full smile. If the mood does not recover with the answer smiles, the faint smile's value rises.
