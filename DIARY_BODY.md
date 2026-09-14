@@ -7957,3 +7957,8 @@ rests. The failures are of three kinds: the sibling's continuation ("what is hot
 The answered: cold, wet, rain, green, wings, four legs, drink, sweet, fins, and the sun family by its subject. Half the facts, on a
 clean question at the natural pause, from the store alone; in conversation the child's own babble sits in the query and it answers
 a fact question with the fact's word once or twice a day.
+
+Night 179 (after day 202, 14:07): duty 0.346, smiles/line 1.61 (300 smiles over 183 lines, the richest day of the stage), the
+guard holds. Day 202 (the seventeenth parent, facts 1-10): 183 lines (A 91, all questions), frowns 37; answered before B 15 of 91
+by the five-second window ("a star?" in its turn to "what do you see?"). Dusk 202: held-out 0.697, the mouth 21 of 26, the cortex
+on the facts 0.814.
