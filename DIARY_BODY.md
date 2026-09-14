@@ -7905,3 +7905,5 @@ parent's first rows; then ordinary talk from three hands): 195 lines (A 98, all 
 B 19 of 98 by the five-second window ("yes please. the milk" to "are you tired now?"). Dusk 199: held-out 0.682, the mouth 21 of
 26, the cortex on the facts 0.785. The day lived again on a copy at the served query decay (0.8, the control for the horizon test)
 reads 8, 9, 10, 4 of 30 by the pause, as the served body does: the instrument reproduces the body.
+The probe after night 176: HELD-OUT 0.680 (dusk 0.682: flat), the cortex on the fact sentences 0.828 (0.703, 0.767, 0.791, 0.808,
+0.828 after nights 172-176), the mouth 21 of 26 (23-24 before the day of one fact pass), old lines 0.476, the last 60 lines 0.787.
