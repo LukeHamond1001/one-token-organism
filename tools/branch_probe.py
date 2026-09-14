@@ -15,9 +15,19 @@ for a in sys.argv[2:]:
 TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
 life = Life.load(sys.argv[1], TOK, device="cpu", cfg={"read_follow": follow}); m = life.m; m.eval()
 zero = torch.zeros(m.d)
-FAMILIES = [("the sun ", [("what is hot?", "i"), ("what makes us warm?", "m"), ("what is up in the day?", "i"), ("what is the sun?", "i")]),
+SETS = {
+    "sun": [("the sun ", [("what is hot?", "i"), ("what makes us warm?", "m"), ("what is up in the day?", "i"), ("what is the sun?", "i")]),
             ("birds ", [("what do birds do?", "f"), ("where do birds live?", "l")]),
-            ("the sun is ", [("what is hot?", "h"), ("what is up in the day?", "u"), ("what is the sun?", "a")])]
+            ("the sun is ", [("what is hot?", "h"), ("what is up in the day?", "u"), ("what is the sun?", "a")])],
+    # the facts of a second day (11-20): "we " begins eat, drink and sleep; "a " begins wings, legs and big; "an " red and little
+    "day2": [("we ", [("what do we eat?", "e"), ("what do we drink?", "d"), ("where do we sleep?", "s")]),
+             ("a ", [("what has wings?", "b"), ("what has four legs?", "d"), ("what is big?", "t")]),
+             ("an ", [("what is red?", "a"), ("what is little?", "a")]),
+             ("we eat ", [("what do we eat?", "b")]), ("we drink ", [("what do we drink?", "w")]), ("a bird ", [("what has wings?", "h")]), ("a dog ", [("what has four legs?", "h")])]}
+which = "sun"
+for a in sys.argv[2:]:
+    if a.startswith("--set="): which = a[6:]
+FAMILIES = SETS[which]
 def dist(prefix):
     """PREFIX: the question, '|' rests, then the shared start said by the mouth itself (after the rests, the symbols are its own)"""
     life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None

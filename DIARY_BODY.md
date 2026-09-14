@@ -8017,3 +8017,7 @@ against the usual 0.03): the old memories, written without a context, are reache
 day's lesson, whose own targets are the recall's continuations, drifted the cortex more. The transition cost, expected; watched
 against the post-night probe and the branch: if the branch flips on the served body and the prefixes recover as the store re-keys,
 the switch stands; if the prefixes stay down and the cortex keeps falling, it reverts at a boundary.
+The branch on the served body after night 183, the sun family: the mouth 0 of 9 (1-2 before the switch). Premature by design: the
+sun facts (1, 9, 25, 26) were last taught before the switch, so their memories carry no context and the query now carries one; they
+are re-taught on days 208 and 210. The branch on the facts taught on day 206 under the new key (11-20: "we " begins eat, drink and
+sleep; "a " begins wings, legs and big) is the reading that tests the mechanism on the served body now.
