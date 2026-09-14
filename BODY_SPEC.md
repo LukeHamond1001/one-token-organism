@@ -1186,3 +1186,29 @@ still holds it, joined by `dream_gap` rests (the pause compressed, as replay com
 extended from one utterance to the utterances in order; it knows nothing of facts or questions, and a robot's episodes replay the
 same way. Measured first on a copy of the dusk before night 173 (512 pairs against the served night's 1024 single utterances on the
 same body), by the held-out lines, the old lines, the prefixes and the questions. Test 53.
+
+### The twenty-eighth defect: one key for every "the sun ", and the episode's thread cut at common words (2026-09-14)
+
+The store's key was the fast bag: the world's last symbols as a decayed, shifted sum, in effect the last five characters. Four facts
+begin "the sun " and their symbols wrote into the same slots; a common slot's sixteen links hold only the newest utterances' tags,
+so the chain from a question to its own answer broke within two symbols (traced on the served body: after "what is hot?" the
+episode was followed for one symbol, then the recall landed in the most recent "the sun"; the follow gain at 20, 60, 200 or 1000
+changed nothing). The mouth answered "what is hot?" with "the sun makes us warm": the sibling with the strongest memory.
+
+**The slow context in the key** (`key_ctx`, default 0; `ctx_decay`, default 0.95): beside the fast bag, each utterance keeps an
+order-free bag of its own symbols, recency-weighted by `ctx_decay` a symbol (not a tick: it holds through the pause), begun afresh
+at the utterance's first symbol after the offset. A world symbol is written under the fast bag plus `key_ctx` times the PREVIOUS
+utterance's bag (brought to the fast bag's norm); the read query carries the fast context plus `key_ctx` times the LATEST utterance's
+bag. "The sun is hot" is then keyed by "what is hot?" and "the sun makes us warm" by "what makes us warm?": separate memories,
+separate chains, each found by the question that stands in the context. Own symbols enter the query's fast part as the world's
+would (the efference copy) and never the key (corollary discharge); the slow context is the world's alone. Howard and Kahana's
+temporal context; the dentate's separation by context; the event boundary's reset. Test 55. On a copy of day 202 against the fast
+bag alone: at 0.5 the branch after a shared start 6 of 9 against 3 ("what is hot?" + "the sun " -> "is", "the sun is " -> "hot") with
+the answers by the pause held (11, 13, 9 against 13, 13, 8); at 1.0 the mouth looped (6, 5, 4); at 0.3 the branch 5 of 9. The
+served body takes 0.5 at the post-night save of night 182; the store re-keys itself as every utterance is written with its context.
+
+Two forms tried first and kept as instruments, off: `key_form cortex` (the stream's state as the key, with the running mean taken
+out, `key_scale`): 0 of 30 on a copy day, the state being the whole window and the bands, not the utterance; and `dream_pair` (the
+exchange replayed): three nights on a copy gave the cortex no preference at the branch. The rulers gained the answer by the pause
+(`tools/qa_by_gap.py`, every fact listed, the store read along the question as awake) and the branch after a shared start
+(`tools/branch_probe.py`); the question ruler reads twenty symbols.
