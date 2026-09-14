@@ -7949,3 +7949,11 @@ One exchange night on a copy of the body after night 177 (pair1_178; the dreams 
 cortex alone 0 of 9 (as before), the mouth 2 of 9 (1 before); the answer by the pause 10 and 12 of 30 at two and four rests (the
 served body 8 and 8), of the day's ten facts 4 and 6. A night of exchange dreams gives the cortex no preference at the branch; the
 mouth's gain is at the edge of a night's noise. The exchange replay is a slow lever at best; it stays off the served body.
+THE QUESTION RULER READ TWENTY SYMBOLS (13:40): at twelve it cut 'bees make ho', 'cows give mi', 'fish have fi' before their word.
+The served body after night 178, every fact listed (tools/qa_by_gap.py --all): the mouth 10, 14, 10 of 30 at two, four, eight
+rests. The failures are of three kinds: the sibling's continuation ("what is hot?" -> "the sun makes us warm", four facts begin
+"the sun"; "where do birds live?" -> "birds live in wa[ter]"); the echo ("what do dogs do?" -> "dogs do?ducks", "what do ducks do?"
+-> "ducks do?ducks"); and the day's talk intruding at a common start ("what is red?" -> "an egg", "what do we eat?" -> "we run out").
+The answered: cold, wet, rain, green, wings, four legs, drink, sweet, fins, and the sun family by its subject. Half the facts, on a
+clean question at the natural pause, from the store alone; in conversation the child's own babble sits in the query and it answers
+a fact question with the fact's word once or twice a day.

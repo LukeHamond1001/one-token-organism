@@ -35,7 +35,7 @@ def run(q, k, use_recall):
         for _ in range(k):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
             life.bag_w = life.cfg["bag_decay"] * life.bag_w
-        for _ in range(12):
+        for _ in range(20):                                       # twenty symbols: 'bees make honey' is fifteen
             xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
             C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
             cortex_key = str(life.cfg.get("key_form", "bag")) == "cortex"
@@ -45,7 +45,7 @@ def run(q, k, use_recall):
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": (rd_prev if cortex_key else rd), "r": 0.0}); rd_prev = rd
             life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
     return "".join(got)
-print(f"body {os.path.basename(sys.argv[1])}: nights {life.nights} | key_form {life.cfg.get('key_form')} bag_decay {life.cfg['bag_decay']} read_follow {life.cfg.get('read_follow')}")
+print(f"body {os.path.basename(sys.argv[1])}: twenty symbols read | nights {life.nights} | key_form {life.cfg.get('key_form')} bag_decay {life.cfg['bag_decay']} read_follow {life.cfg.get('read_follow')}")
 for k in gaps:
     row = []
     for use_recall in (False, True):

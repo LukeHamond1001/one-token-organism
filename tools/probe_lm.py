@@ -135,7 +135,7 @@ if "--qa" in sys.argv:
                     for _ in range(pause):
                         life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
                         life.bag_w = life.cfg["bag_decay"] * life.bag_w
-                    for _ in range(12):
+                    for _ in range(20):                                   # twenty symbols (13:40: twelve cut 'bees make ho' before its word)
                         xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
                         C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
                         rd, conf, _w = life._recall(life.bag)
