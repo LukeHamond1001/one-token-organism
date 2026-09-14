@@ -7962,3 +7962,7 @@ Night 179 (after day 202, 14:07): duty 0.346, smiles/line 1.61 (300 smiles over 
 guard holds. Day 202 (the seventeenth parent, facts 1-10): 183 lines (A 91, all questions), frowns 37; answered before B 15 of 91
 by the five-second window ("a star?" in its turn to "what do you see?"). Dusk 202: held-out 0.697, the mouth 21 of 26, the cortex
 on the facts 0.814.
+The probe after night 179 (the first with the question ruler after a night): HELD-OUT 0.706 (the highest post-night reading; dusk
+0.697), the cortex on the fact sentences 0.855 (0.703 -> 0.855 over nights 172-179), the mouth 21 of 26, the last 60 lines 0.817;
+the questions 9 of 30 at two rests and 8 at eight ("fish live in w[ater]" now, "birds fly up" at eight). WATCH: the old lines
+(days 110-125) 0.498, 0.476, 0.471, 0.464, 0.450 over nights 175-179, the vocabulary of the earlier stages fading under the facts.
