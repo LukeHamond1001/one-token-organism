@@ -305,7 +305,8 @@ class Caregiver:
             self.reply_tokens.append(tok)
         ex = self.expect
         if ANSWER_SMILE and self.parent and ex and not ex.get("done") and low and len(low) >= 2 and wall <= ex["until"]:
-            if low in ex["words"] or (ex["yesno"] and low in ("yes", "no")):
+            w_ = low.strip(".!?")                                # "yes." and "yes!" are yes (days 184-185: 13 such answers, 2 rewarded)
+            if w_ in ex["words"] or (ex["yesno"] and w_ in ("yes", "no")):
                 ex["done"] = True; self.e = min(1.0, self.e + 0.2); self.word_smiled_tick[low] = b
                 self.smile(tok, ctx, "answer: " + ex["line"]); return
         if low in KNOWN2:

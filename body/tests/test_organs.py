@@ -1281,10 +1281,10 @@ def test_smile_for_the_answer():
             t.finalized = m - 9; t.scan()
         t.expect = {"line": "I want the egg", "words": set(cg.content_words("I want the egg")), "yesno": False, "until": time.time() + 60, "done": False}
         child_says("dog")                                      # a known word that does not answer: faint
-        child_says("egg")                                      # the answer: the full smile
+        child_says("egg.")                                     # the answer, with the mark attached as the child writes it: the full smile
         rows = [json.loads(l) for l in open(log)]
         smiles = [r for r in rows if r["action"] == "smile"]
-        assert any(r["on"] == "egg" and r["why"].startswith("answer:") and r["levels"] == 1 for r in smiles), smiles
+        assert any(r["on"] == "egg." and r["why"].startswith("answer:") and r["levels"] == 1 for r in smiles), smiles
         faint = [r for r in smiles if r["on"] == "dog"]
         assert faint and faint[0]["levels"] == 0, smiles
         assert t.expect["done"]
