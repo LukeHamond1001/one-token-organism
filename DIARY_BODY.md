@@ -7753,3 +7753,14 @@ dreams 0.806 -> 0.851. The guard held (duty 0.279, smiles per line 1.11).
 The probe after night 168: the mouth completes 8 of 26 held-out prefixes (as at dusk; of ten facts taught, eight, and 'ice is ' ->
 'too cold'); **the cortex alone on the fact sentences 0.464** (0.409 at dusk, 0.356 before the facts): the night puts the facts into
 the cortex. The held-out lines 0.686 (from 0.678 at dusk), the recent 0.813, the old lines 0.504.
+
+### Night 169 (2026-09-14, 04:14): the third day of facts; the duty back
+
+Day 192 (03:23-04:14): 99 parent lines, 88 questions, 82 partner lines; facts 11-15 three times each and five of the earlier
+ones once; 267 ordinary smiles (1.5 a line), three for answers, one cue; frowns 36; 100 words over the parent's typing; duty 0.33
+(0.26 two days ago: recovered on its own, so the coaxing stays in the drawer); its own question marks 12; the mood 0.1 at the
+day's end. The dusk probe: **the mouth completes 12 of 26 held-out prefixes** (8 after night 168: four of the five new facts on the
+day they were taught), the cortex alone on the fact sentences 0.438 (0.464 after night 168; the new sentences not yet its), the
+held-out lines 0.682, the old lines 0.503. Night 169: 2963 utterances heard, the loss 0.129 -> 0.104, the gauge on the dreams
+0.797 -> 0.853. The guard held (duty 0.327, smiles per line 1.50). The eleventh parent (labels 193-195): facts 16-30, five a day,
+and five of the first fifteen each day.
