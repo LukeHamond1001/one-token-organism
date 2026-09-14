@@ -7993,3 +7993,8 @@ deep; the next brief lets the facts go in the day's first rows, written as the n
 The probe after night 181: HELD-OUT 0.720 (dusk 0.687: +0.033; the highest reading of the stage), the cortex on the fact sentences
 0.863 (0.703 -> 0.863 over nights 172-181), the mouth 22 of 26, old lines 0.471, the last 60 lines 0.784; the questions 10 of 30
 at two rests and 6 at eight.
+The slow context's weight on copies of day 202 (17:10): at 0.5 the answers by the pause 11, 13, 9 of 30 (the fast bag alone 13, 13,
+8; of the day's ten facts 7, 7, 5 against 7, 7, 5) and THE BRANCH 6 of 9 against 3 ("what is hot?" -> "the sun is h[ot]", where the
+fast bag alone ran to "the sun is u[p]"); at 0.3 the answers 10, 9, 4 and the branch 5 of 9; at 1.0 the mouth looped. At 0.5 the
+branch flips and the answer count holds: THE SERVED BODY TAKES key_ctx 0.5 (ctx_decay 0.95) at the next post-night save; the store
+re-keys itself over the coming days as every utterance is written with its context; the guard re-armed with the new flags.
