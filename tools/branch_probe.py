@@ -8,9 +8,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.ins
 import torch
 from tokenizers import Tokenizer
 from body.life import Life
-follow = 20.0
+follow = 20.0; reads_along = False
 for a in sys.argv[2:]:
     if a.startswith("--follow="): follow = float(a[9:])
+    if a == "--reads-along": reads_along = True
 TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
 life = Life.load(sys.argv[1], TOK, device="cpu", cfg={"read_follow": follow}); m = life.m; m.eval()
 zero = torch.zeros(m.d)
@@ -18,12 +19,21 @@ FAMILIES = [("the sun ", [("what is hot?", "i"), ("what makes us warm?", "m"), (
             ("birds ", [("what do birds do?", "f"), ("where do birds live?", "l")]),
             ("the sun is ", [("what is hot?", "h"), ("what is up in the day?", "u"), ("what is the sun?", "a")])]
 def dist(prefix):
-    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+    """PREFIX: the question, '|' rests, then the shared start said by the mouth itself (after the rests, the symbols are its own)"""
+    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None
     with torch.no_grad():
+        own = False
         for ch in prefix:
             i = TOK.token_to_id(ch) if ch != "|" else life.sil
-            life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.bag_w = life.cfg["bag_decay"] * (m.shift(life.bag_w) + m.E.weight[i] if ch != "|" else life.bag_w)
+            if ch == "|": own = True
+            if own and ch != "|":
+                life.win.append({"x": life.sil, "xo": i, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+                life.rest_tick(); life.take_own(i)
+            else:
+                life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+                life.rest_tick()
+                if ch != "|": life.take_world(i)
+            if reads_along: life._recall(life.bag)                  # the store read at every symbol, as awake: the episode followed builds
         xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
         C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
         rd, conf, _ = life._recall(life.bag)

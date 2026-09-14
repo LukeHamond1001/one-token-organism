@@ -26,15 +26,17 @@ zero = torch.zeros(m.d)
 STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
 pairs = [tuple(s.strip() for s in l.split("|")[:2]) for l in open(os.path.join(ROOT, "tools/facts_stage5.txt")) if "|" in l]
 def run(q, k, use_recall):
-    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None
     got = []; rd_prev = zero
     with torch.no_grad():
         for ch in q:
             i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
+            life.rest_tick(); life.take_world(i)                       # as the tick: the fade, then the world's symbol
+            if use_recall: life._recall(life.bag)                     # the store read along the question, as awake (the episode builds)
         for _ in range(k):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.bag_w = life.cfg["bag_decay"] * life.bag_w
+            life.rest_tick()
+            if use_recall: life._recall(life.bag)
         for _ in range(20):                                       # twenty symbols: 'bees make honey' is fifteen
             xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
             C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
@@ -43,7 +45,7 @@ def run(q, k, use_recall):
             lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
             sym = int(lm.argmax()); got.append(TOK.decode([sym]))
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": (rd_prev if cortex_key else rd), "r": 0.0}); rd_prev = rd
-            life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
+            life.rest_tick(); life.take_own(sym)                       # as the tick: the world half's fade, then its own symbol
     return "".join(got)
 print(f"body {os.path.basename(sys.argv[1])}: twenty symbols read | nights {life.nights} | key_form {life.cfg.get('key_form')} bag_decay {life.cfg['bag_decay']} read_follow {life.cfg.get('read_follow')}")
 for k in gaps:

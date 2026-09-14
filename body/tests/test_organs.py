@@ -1341,11 +1341,32 @@ def test_store_keys_on_the_cortex():
     print("54 the store keys on the cortex: 'give ' ->", repr(top), "| by content", got)
 
 
+def test_two_facts_one_topic():
+    """55 (2026-09-14): with the slow context in the key (key_ctx), two answers that share their first words but follow different
+    questions are separate memories, each found by its question: after "what is hot?" the mouth's own "the sun " continues with 'i'
+    (is hot), after "what makes us warm?" with 'm' (makes); with the fast bag alone the two collide in one slot"""
+    def run(lam):
+        life = tiny(key_ctx=lam, ctx_decay=0.95, read_follow=20.0, store_links=16)
+        for _ in range(3):
+            for q, a in [("what is hot?", "the sun is hot"), ("what makes us warm?", "the sun makes us warm")]:
+                say(life, q, 12); say(life, a, 12)                 # pauses past the offset: each utterance closes and keys the next
+        got = {}
+        for q, want in [("what is hot?", "i"), ("what makes us warm?", "m")]:
+            say(life, q, 2)
+            for ch in "the sun ":
+                life.rest_tick(); life.take_own(TOK.token_to_id(ch)); life._recall(life.bag)
+            rd, conf, _ = life._recall(life.bag); got[q] = TOK.decode([life.m.nearest(rd)])
+        return got
+    with_ctx = run(1.0); without = run(0.0)
+    assert with_ctx == {"what is hot?": "i", "what makes us warm?": "m"}, with_ctx
+    print("55 two facts, one topic: with the slow context", with_ctx, "| the fast bag alone", without)
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic]
     failed = 0
     for t in tests:
         try:
