@@ -7790,3 +7790,6 @@ the held-out lines 0.677, the old lines 0.490. Night 170: 3140 utterances heard,
 The probe after night 170: **the mouth completes 16 of 26 held-out prefixes** (of twenty facts taught, sixteen, and 'ice is ' ->
 'too cold'); **the cortex alone on the fact sentences 0.581** (0.532 at dusk; 0.356 before the facts); the held-out lines 0.688,
 the recent 0.817, the old lines 0.492. The facts' course at the mouth: 1, 3, 4, 8, 8, 12, 12, 15, 16.
+05:35: day 194, twenty-five minutes in, the fused yes matched: three answer smiles, and for the first time two of them on named
+things, 'birds' before the partner's "birds live in a nest" and 'fish' before "fish live in water": the facts answered by naming
+in its turn. The mood +2.7, the duty 0.28.
