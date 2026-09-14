@@ -7645,3 +7645,12 @@ with the mark stripped from the answer match. The course: 0.547, 0.608, 0.636, 0
 mechanism whole; but the duty 0.29 and the mood -3: the thinned ordinary smile halved the day's reward and the gate acts less by
 the day (0.42, 0.35, 0.38, 0.29). The form from the relaunch after night 163: the ordinary smile at its old strength, the answer
 smile the growing one the cues earn (2, then 4). Reward depends on the word by contrast, not by starvation.
+
+### Night 163 (2026-09-13, 22:54): the last day of the thinned smile
+
+Day 186 (22:01-22:54; the faint smile at half, the mark stripped): 111 parent lines, 90 questions, 88 partner lines; 185 ordinary
+smiles, five for answers ('yes!' before "yes. I wait for you", "yes please. I want ice"), two cue prefixes; frowns 36; duty 0.29
+(0.42 four days ago); mood -4.5; its own question marks 14. The dusk probe: held-out 0.666 (0.673 after night 162), the old lines
+0.444. Night 163: 1817 utterances heard, the loss 0.127 -> 0.107, the gauge on the dreams 0.795 -> 0.85. The guard held (duty
+0.289, smiles per line 0.96). At this save the typist relaunched with the ordinary smile at its old strength and the answer's the
+bigger one: day 187 is the first under that form; the duty is the number to watch.
