@@ -7929,3 +7929,8 @@ shared start (tools/branch_probe.py), served body after night 177: four facts be
 the cortex alone puts 'y' first and the mouth 'm' ("makes us warm", the store's strongest sibling); no preference by the question in
 the cortex, and the mouth follows the store. One exchange night on a copy now, the branch read after it: whether the exchange
 dreams give the cortex the preference the mouth would need.
+
+Night 178 (after day 201, 13:12): duty 0.331, smiles/line 1.29, the guard holds. Day 201 (the sixteenth parent, facts 21-30):
+202 lines (A 101, all questions), smiles 260, frowns 36; answered before B 24 of 101. Dusk 201: held-out 0.686, the cortex on the
+facts 0.791, the mouth 20 of 26 prefixes (24, 23, 21, 22, 20 over the last five dusks: the prefixes slip as each fact comes once
+in three days; the cortex alone on the fact sentences does not). The seventeenth parent spawned at the night row (days 202-204).
