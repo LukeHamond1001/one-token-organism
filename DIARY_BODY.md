@@ -7681,3 +7681,11 @@ the answer smiles rose 5 -> 9 a day.
 The probe after night 164: held-out 0.686 (from 0.661 at dusk), the recent 0.800, the old lines 0.496. The mouth: "what do you
 have?" -> 'I have a bird too!', whole and the world's on every read; "do you want milk?" -> 'yes please. I want it'. The course:
 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673, 0.691, 0.686.
+
+### Night 165 (2026-09-14, 00:42)
+
+Day 188 (23:51-00:42; the contrast smile's second day): 109 parent lines, 89 questions, 89 partner lines; 185 ordinary smiles,
+eight for answers; frowns 39; duty 0.35 (0.29 -> 0.31 -> 0.35, recovering); its own question marks 12; mood +0.7 at the day's
+end. The dusk probe: held-out 0.675 (0.686 after night 164), the old lines 0.489, the facts 1 of 26 (nothing taught yet). Night
+165: 2213 utterances heard, the loss 0.126 -> 0.106, the gauge on the dreams 0.798 -> 0.852. The guard held (duty 0.350, smiles
+per line 0.96). The actor's slope 0.016, flat under the contrast smile's first two days.
