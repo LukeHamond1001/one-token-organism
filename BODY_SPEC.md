@@ -1147,3 +1147,13 @@ of mean length 21.1, the loss 0.219 -> 0.090), moved the held-out from 0.517 at 
 recent lines 0.551 -> 0.866. The served body repeated the copy: the night adds.
 Night 155 (327 utterances heard): held-out 0.605 at dusk -> **0.636**; two nights of whole utterances, 0.547 -> 0.608 -> 0.636,
 the day between them flat.
+
+### Stage five, the first reading: facts taught as exchanges are retrievable the next morning (2026-09-14)
+
+Day 190, the first of stage five: five facts ('what is hot?' / 'the sun is hot', 'ice is cold', 'water is wet', 'fish live in
+water', 'birds fly up'), each asked and answered by the two voices three times through the day inside the ordinary conversation.
+The probe's prefixes are phrasings the parents never type ('the sun is '). At dusk, before any night on them, the mouth completed
+3 of 26 (from 1); after night 167, 4 of 26, and the fifth ('ice is ' -> 'too cold') right by sense and not by the rule. The
+cortex alone on the thirty fact sentences 0.356 -> 0.391. The held-out lines held at 0.702. So: a fact heard three times in a day
+is retrievable at the mouth the same day (the recall) and the next morning (the recall and the cortex, the night having replayed
+it whole). The stage's reading from here is that count, night by night, as five facts a day are added.

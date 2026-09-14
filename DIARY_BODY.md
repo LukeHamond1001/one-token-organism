@@ -7735,3 +7735,8 @@ the facts: the mouth completes 3 of 26 held-out prefixes ('the sun is ' -> 'hot'
 'up'), from 1; the cortex alone on the fact sentences 0.393, from 0.356.** One hearing, three times over a day, and the recall has
 three of the five. The held-out lines 0.672 (0.702 after night 166), the old lines 0.501. Night 167: 2601 utterances heard, the
 loss 0.128 -> 0.106, the gauge on the dreams 0.783 -> 0.851. The guard held (duty 0.268, smiles per line 1.04).
+**The probe after night 167, the first night on the facts: the mouth completes 4 of 26 held-out prefixes ('the sun is ' -> 'hot',
+'water is ' -> 'wet', 'fish live in ' -> 'water', 'birds fly ' -> 'up'; 'ice is ' -> 'too cold', right and not counted), from 1
+before the day and 3 at dusk: four of the five facts taught, each heard three times, retrievable the next morning.** The held-out
+lines 0.702 (from 0.672 at dusk; the high held), the recent 0.780, the old lines 0.496; the cortex alone on the fact sentences
+0.391. The course: ..., 0.692, 0.702, 0.702.
