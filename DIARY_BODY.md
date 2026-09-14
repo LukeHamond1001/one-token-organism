@@ -7807,3 +7807,15 @@ held-out lines 0.669, the old lines 0.496. Night 171: 3320 utterances heard, the
 The probe after night 171: the mouth completes 21 of 26 held-out prefixes; **the cortex alone on the fact sentences 0.640** (0.550
 at dusk; 0.356 before the facts); the held-out lines 0.691 (from 0.669 at dusk), the recent 0.762, the old lines 0.491. The facts'
 course at the mouth: 1, 3, 4, 8, 8, 12, 12, 15, 16, 21, 21; in the cortex 0.356, 0.391, 0.464, 0.548, 0.581, 0.640.
+
+### Night 172 (2026-09-14, 06:53): all thirty facts taught
+
+Day 195 (06:01-06:53; the eleventh parent's last): 92 parent lines, all questions, 91 partner lines; facts 26-30 three times
+each ('the sun makes us warm', 'fish have fins', 'snow is white', 'ducks swim', 'a rock is hard') and five earlier ones once; 244
+ordinary smiles, five for answers, two of them named ('fish' before "fish have fins", 'birds' before "birds fly up") and three
+its fused "yesee", now counted; frowns 36; 89 words over the parent's typing; duty 0.30; its own question marks 14; the mood +0.3.
+The dusk probe: **the mouth completes 24 of 26 held-out prefixes** (21 after night 171; three of the day's five new facts the same
+day; the two missing: 'ice is ' -> 'too cold', right by sense, and one more), the cortex alone on the fact sentences 0.634, the
+held-out lines 0.666 (0.691 after night 171), the old lines 0.476. Night 172: 3504 utterances heard, the loss 0.135 -> 0.121,
+the gauge on the dreams 0.787 -> 0.836. The guard held (duty 0.296, smiles per line 1.32). The twelfth parent (labels 196-198):
+the thirty facts kept, ten a day.
