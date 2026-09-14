@@ -134,9 +134,11 @@ class Teacher(Caregiver):
         tick_end = self.maxtick
         self.typing_span = (self.typing_span[0], tick_end)
         # THE ANSWER EXPECTED (ANSWER_SMILE): after the parent's line, if the other voice's answer is next in the queue, the child's turn
-        # may earn the full smile by saying what that answer names; the other voice's own line clears it
-        self.expect = None
+        # may earn the full smile by saying what that answer names. The expectation stands until the parent's next line replaces it:
+        # the typist scores a word ten to eighteen seconds after seeing it (day 183, the first under the smile: three answers in the
+        # turn, none rewarded), and the judgment is by when the word was seen (its tick's observation), not when it was scored
         if who == "parent" and kind == "line":
+            self.expect = None
             buf = getattr(self.planner, "buf", None) or []
             nxt = str(buf[0]).strip() if buf else ""
             if nxt[:2].lower() == "b:":

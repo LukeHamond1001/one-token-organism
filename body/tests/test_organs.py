@@ -1291,7 +1291,10 @@ def test_smile_for_the_answer():
         t.planner.buf = ["b: I have my hat"]                    # the expectation set from the queue's next B line after a parent's line
         t.event("what do you have?", "line")
         assert t.expect and "hat" in t.expect["words"] and not t.expect["yesno"], t.expect
-        t.event("I have my hat", "line", "other")               # the other voice's line clears it
+        t.event("I have my hat", "line", "other")               # the other voice's line leaves it (a word seen in the turn is scored later)
+        assert t.expect and t.expect["line"] == "I have my hat"
+        t.planner.buf = ["are you here?"]
+        t.event("do you want it?", "line")                      # the parent's next line replaces it (none: no B line follows)
         assert t.expect is None
     finally:
         cg.ANSWER_SMILE = old
