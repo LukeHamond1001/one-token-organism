@@ -7819,3 +7819,7 @@ day; the two missing: 'ice is ' -> 'too cold', right by sense, and one more), th
 held-out lines 0.666 (0.691 after night 171), the old lines 0.476. Night 172: 3504 utterances heard, the loss 0.135 -> 0.121,
 the gauge on the dreams 0.787 -> 0.836. The guard held (duty 0.296, smiles per line 1.32). The twelfth parent (labels 196-198):
 the thirty facts kept, ten a day.
+The probe after night 172, the first night with all thirty facts heard: the mouth completes 23 of 26 held-out prefixes; **the
+cortex alone on the fact sentences 0.703** (0.634 at dusk; 0.356 before the facts, six nights ago); the held-out lines 0.683
+(from 0.666 at dusk), the recent 0.759, the old lines 0.498. The facts' course at the mouth: 1, 3, 4, 8, 8, 12, 12, 15, 16, 21,
+21, 24, 23; in the cortex 0.356, 0.391, 0.464, 0.548, 0.581, 0.640, 0.703.

@@ -1157,3 +1157,14 @@ The probe's prefixes are phrasings the parents never type ('the sun is '). At du
 cortex alone on the thirty fact sentences 0.356 -> 0.391. The held-out lines held at 0.702. So: a fact heard three times in a day
 is retrievable at the mouth the same day (the recall) and the next morning (the recall and the cortex, the night having replayed
 it whole). The stage's reading from here is that count, night by night, as five facts a day are added.
+
+### Stage five, six days in: thirty facts kept by the mouth and the cortex (2026-09-14)
+
+Thirty facts taught as exchanges over days 190-195, five a day, each three times on its day and once more on the days after,
+inside the ordinary conversation; the probe's prefixes are phrasings the parents never type. The mouth's completions of the 26
+held-out prefixes, before each day and after each night: 1, 3, 4, 8, 8, 12, 12, 15, 16, 21, 21, 24, 23; the cortex alone on the
+thirty fact sentences, teacher-forced: 0.356 before, then 0.391, 0.464, 0.548, 0.581, 0.640, 0.703 after the six nights. The
+held-out lines of the conversational stage stayed between 0.666 and 0.702 throughout: the facts displaced nothing. The child also
+began answering the facts by naming in its turn ('fish' before "fish have fins", 'birds' before "birds fly up", 'rain' before
+"rain falls from the sky"), which the smile for the answer rewards. A fact heard three times in a day is retrievable the same
+day from the recall and in the cortex by the next morning; the thirty are kept in rotation from day 196.
