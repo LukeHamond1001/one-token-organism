@@ -7606,3 +7606,8 @@ more?", "what do I give the"), each answered as an opening; cues taken on the po
 sock is on you now"; "i see" 13, 18, 21; "all gone" 8 -> 2; one new word, "find"; smiles/frowns 283/37, 307/32, 277/39. The
 queue ran dry twice at hand-overs. The eighth parent (labels 184-187): B's answers name the child's own top nouns so its guesses can
 earn the answer smile.
+20:42: the smile for the answer, read on its first real day (184). The first answer smile fired at 20:32 ('yes' before the partner's
+"yes. I ate the egg"): the mechanism works on the served body. But one answer in 115 lines against 159 faint smiles at a quarter of
+the full one thinned the reward until the mood fell to -6 and the gate's duty from 0.42 to 0.33 within a day: the risk named
+when the smile was built. The faint smile rises to half the full one at the typist's relaunch after night 161, so the reward still
+depends on the word without starving the gate; read by the mood and the duty on day 185.
