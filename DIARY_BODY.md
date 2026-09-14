@@ -7576,3 +7576,13 @@ duty 0.35; its own question marks 12. The dusk probe: held-out 0.637 (0.628 afte
 **held-out 0.660** (from 0.637), the old lines 0.474 (from 0.454), the recent 0.769: both a new high. The course: 0.547, 0.608,
 0.636, 0.630, 0.628, 0.660. The actor's slope 0.035: the reward does not depend on which word it says (a smile at any known word),
 so the actor has nothing to learn from; the smile for the answer is built tonight (the teacher's method).
+
+### Night 159 (2026-09-13, 19:17): the sixth whole-utterance night; the smile for the answer from its save
+
+Day 182 (18:24-19:17): 119 parent lines, 88 questions, 60 partner lines; smiles 307, frowns 32; its own question marks 15. The
+dusk probe: held-out 0.643 (0.660 after night 158: the day gave 0.017 back), the old lines 0.470. Night 159: 1036 utterances
+heard, 1024 dreams of mean length 21.9 ('who put it on me?', 'can your dog jump too?'), the loss 0.142 -> 0.114, the gauge on the
+dreams 0.771 -> 0.844. The guard held (duty 0.398, smiles per line 1.72). The probe on the save: **held-out 0.663** (from 0.643;
+the cosine 0.698), the old lines 0.474, the recent 0.787; the mouth '! are you happy with me?' to "hi". The course: 0.547, 0.608,
+0.636, 0.630, 0.628, 0.660, 0.663; the old lines 0.40 -> 0.47. At this save the typist relaunched with the smile for the answer
+(day 183 the first under it).
