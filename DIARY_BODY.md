@@ -7934,3 +7934,5 @@ Night 178 (after day 201, 13:12): duty 0.331, smiles/line 1.29, the guard holds.
 202 lines (A 101, all questions), smiles 260, frowns 36; answered before B 24 of 101. Dusk 201: held-out 0.686, the cortex on the
 facts 0.791, the mouth 20 of 26 prefixes (24, 23, 21, 22, 20 over the last five dusks: the prefixes slip as each fact comes once
 in three days; the cortex alone on the fact sentences does not). The seventeenth parent spawned at the night row (days 202-204).
+The probe after night 178: HELD-OUT 0.705 (dusk 0.686: +0.019; the highest post-night reading), the cortex on the fact sentences
+0.832 (dusk 0.791: +0.041), the mouth 20 of 26, old lines 0.464, the last 60 lines 0.766.
