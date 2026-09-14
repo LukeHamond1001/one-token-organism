@@ -7990,3 +7990,6 @@ asked on its own, "birds live?", for two days before the fact came due); own que
 words 21, 14, 21 ("run out to the grass", "we drink it now"); smiles 303/234/250, frowns 37/35/38; no deferrals in 559 lines under
 a pre-append echo check. Structural: the facts land 15-37 minutes into a 42-46-minute day because the queue runs 11-16 minutes
 deep; the next brief lets the facts go in the day's first rows, written as the night ends, with the depth held at 30-90 lines.
+The probe after night 181: HELD-OUT 0.720 (dusk 0.687: +0.033; the highest reading of the stage), the cortex on the fact sentences
+0.863 (0.703 -> 0.863 over nights 172-181), the mouth 22 of 26, old lines 0.471, the last 60 lines 0.784; the questions 10 of 30
+at two rests and 6 at eight.
