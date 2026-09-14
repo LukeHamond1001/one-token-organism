@@ -119,6 +119,10 @@ if "--qa" in sys.argv:
     STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
     if os.path.exists(fp):
         pairs = [tuple(s.strip() for s in l.split("|")[:2]) for l in open(fp) if "|" in l]
+      # THE PAUSE (2026-09-14, qa_by_gap read): the served body after night 174 answered 8, 11, 11, 6 of 30 at pauses of 1, 2, 4, 8 rests,
+      # all of it the recall's (the cortex alone 0 at every pause); the ruler reads at two rests (the child's early answer) and at the
+      # offset (eight), the second the harder
+      for pause in (2, int(life.cfg.get("offset_ticks", 8))):
         n_ans = 0; shown = []
         for q, fact in pairs:
             keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
@@ -128,7 +132,7 @@ if "--qa" in sys.argv:
                 for ch in q:
                     i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
                     life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
-                for _ in range(int(life.cfg.get("offset_ticks", 8))):
+                for _ in range(pause):
                     life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
                     life.bag_w = life.cfg["bag_decay"] * life.bag_w
                 for _ in range(12):
@@ -142,4 +146,4 @@ if "--qa" in sys.argv:
             text = "".join(got); ok = any(k in text.lower() for k in keys)
             n_ans += int(ok)
             if len(shown) < 8: shown.append(f"{q!r}->{text[:14]!r}{'*' if ok else ''}")
-        print(f"QA: the mouth answers {n_ans} of {len(pairs)} fact questions | {' '.join(shown)}")
+        print(f"QA (pause {pause}): the mouth answers {n_ans} of {len(pairs)} fact questions | {' '.join(shown)}")

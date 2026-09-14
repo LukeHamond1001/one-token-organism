@@ -7865,3 +7865,10 @@ Day 197 (facts 11-20 re-taught): 193 lines (A 98, all questions), smiles 273, fr
 (retrieved, off the question). Dusk 197: held-out 0.689 (the highest dusk yet), the mouth 24 of 26, the cortex on the facts 0.693.
 The probe after night 174: HELD-OUT 0.682 (dusk 0.689: the night's change within a night's noise), the cortex on the fact sentences
 0.791 (dusk 0.693: +0.098; 0.767 after 173, the highest yet), the mouth 23 of 26, the last 60 lines 0.803, old lines 0.493.
+THE ANSWER BY THE PAUSE (tools/qa_by_gap.py, the served body after night 174): each fact's question, then k rests, then twelve symbols
+read two ways. The cortex alone answers 0 of 30 at every pause; the mouth (the recall in the forecast) answers 8, 11, 11, 6 of 30 at
+1, 2, 4, 8 rests ("what is cold?" -> "ice is cold." at two rests; "what is wet?" -> "water is wet" at four). Every answer the body
+gives is the store's; the cortex has no question-to-answer mapping at all, as the twenty-sixth defect says; and the question ruler's
+eight-rest pause was its hardest reading. The ruler now reads at two rests and at eight. Two exchange nights on the copy (pair3_2):
+the questions 5 and 5 of 30 at eight rests, the pair dreams 0.54 -> 0.81 -> 0.85; the copy's two-rest and cortex-alone readings
+come from the third night's save (pair3_2 was pruned before the pause instrument existed).
