@@ -7693,3 +7693,13 @@ The probe after night 165: **held-out 0.692** (from 0.675 at dusk; the cosine 0.
 0.501. The mouth: "do you want milk?" -> 'yes. I hug you too?', "hi" -> '! are you happy now?', "are you sad?" -> 'y sock is on the
 bed?', the world's memories on every read. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673,
 0.691, 0.686, 0.692.
+
+### Day 189 (2026-09-14, 00:43-): a spiral, and the parent's part in it
+
+Twenty-five minutes in: mood -5.5, the duty 0.29, 62 smiles in 125 lines against a smile a line the day before, 58 words said
+over the parent's typing and 62 known words discarded as "distracted". The child fell silent in its turns and spoke over the
+partner's lines instead; the mood fell, the gate acted less, the smiles thinned, the mood fell. Two of the parent's own settings
+feed it: the six-second turn under the faster pace (a line every twelve seconds, the child's turn 32 ticks), which lands its late
+answers on the partner's typing, and the typist's attention, whose random distraction at a resting level of 0.5 discards nearly
+half of its known words. From the typist's relaunch after night 166: the child's turn back to 40 ticks (a line every 64), and the
+attention's rest at 0.7. The parent's method, read tomorrow by the duty, the frowns and the smiles a line.
