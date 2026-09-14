@@ -7665,3 +7665,7 @@ topic held two or three turns; "yes please" taken from the partner's form (1 -> 
 27 a day ("milk is not all gone", "I see you have more egg", "kick it to me", "I run walk"); "i see" 17, 19, 14; new words walk,
 warm, soft (known 264); smiles/frowns 252/36, 259/34, 193/37. The answering threshold set for the next stage (half the parent's
 questions answered in the modelled shape) is met on two of three days.
+23:20: stage five prepared. Thirty facts as exchanges in tools/facts_stage5.txt, each with a prefix the parents never type in
+tools/heldout_facts.txt; the probe reads both from tonight. The baseline before any teaching: the mouth completes 1 of 26
+prefixes ('ice is ' -> 'cold', from the line it already knows), the cortex alone on the thirty fact sentences 0.362. The tenth
+parent, after the ninth reports, teaches five facts a day inside the conversation.
