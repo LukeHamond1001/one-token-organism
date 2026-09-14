@@ -8005,3 +8005,6 @@ mouth 20 of 26, the cortex on the facts 0.830. THE SWITCH: at night 182's save t
 in the memory's key (key_ctx 0.5, ctx_decay 0.95); day 206 began at 17:16 under it; the guard re-armed with the same flags. (A
 correction to the records: the page's night row is written when the night ENDS, with its duration; the times given for nights
 above are their ends.) The memories written from day 206 carry their context; the store re-keys itself over the coming days.
+The probe after night 182 (the last night under the fast bag alone, the baseline for the switch): HELD-OUT 0.708, the cortex on the
+fact sentences 0.867 (the highest), the mouth 19 of 26 (slipping: 24 -> 19 over eight dusks and nights), old lines 0.474, the last
+60 lines 0.737; the questions 11 of 30 at two rests and 6 at eight.
