@@ -7998,3 +7998,10 @@ The slow context's weight on copies of day 202 (17:10): at 0.5 the answers by th
 fast bag alone ran to "the sun is u[p]"); at 0.3 the answers 10, 9, 4 and the branch 5 of 9; at 1.0 the mouth looped. At 0.5 the
 branch flips and the answer count holds: THE SERVED BODY TAKES key_ctx 0.5 (ctx_decay 0.95) at the next post-night save; the store
 re-keys itself over the coming days as every utterance is written with its context; the guard re-armed with the new flags.
+
+Night 182 (ended 17:14 after day 205; 1011 s): duty 0.322, smiles/line 1.40, the guard holds. Day 205 (the eighteenth parent,
+facts 1-10): 194 lines (A 97, all questions), smiles 274, frowns 39; answered before B 23 of 97. Dusk 205: held-out 0.702, the
+mouth 20 of 26, the cortex on the facts 0.830. THE SWITCH: at night 182's save the served body was restarted with the slow context
+in the memory's key (key_ctx 0.5, ctx_decay 0.95); day 206 began at 17:16 under it; the guard re-armed with the same flags. (A
+correction to the records: the page's night row is written when the night ENDS, with its duration; the times given for nights
+above are their ends.) The memories written from day 206 carry their context; the store re-keys itself over the coming days.
