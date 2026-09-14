@@ -7641,3 +7641,7 @@ answers; frowns 34; duty 0.38; its own question marks 14. The dusk probe: held-o
 mouth: 'yes. I red hat is on me', 'two little bird in your'; on two prompts the greedy probe ran 'balllll' (the recall's follow at
 a repeated letter, greedy without the live sampling; the live writing is checked for runs). At this save the typist relaunched
 with the mark stripped from the answer match. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673.
+22:32: day 186, twenty-five minutes in, with the mark stripped: four answer smiles ('yes!' before "yes. I wait for you"), the
+mechanism whole; but the duty 0.29 and the mood -3: the thinned ordinary smile halved the day's reward and the gate acts less by
+the day (0.42, 0.35, 0.38, 0.29). The form from the relaunch after night 163: the ordinary smile at its old strength, the answer
+smile the growing one the cues earn (2, then 4). Reward depends on the word by contrast, not by starvation.
