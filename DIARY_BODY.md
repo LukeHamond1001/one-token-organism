@@ -7978,3 +7978,7 @@ On a copy of day 202 at key_ctx 1.0 against the fast bag alone: THE BRANCH after
 4 of 30 against 13, 13, 8, the mouth looping ('the suthe suthe ', 'ck millck millck'): at equal weight the context out-pulls the
 fast bag once the mouth's own symbols drift from the keys, and the day's 183 lines are the only memories with a context at all.
 The weight 0.5 and 0.3 on copies next.
+
+Night 181 (after day 204, 16:06): duty 0.308, smiles/line 1.28, the guard holds. Day 204 (the seventeenth parent, facts 21-30):
+191 lines (A 95, all questions), smiles 249, frowns 38; answered before B 14 of 95. Dusk 204: held-out 0.687, the mouth 22 of 26,
+the cortex on the facts 0.818. The eighteenth parent spawned at the night row (days 205-207).
