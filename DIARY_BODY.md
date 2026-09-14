@@ -7891,3 +7891,11 @@ the queue ran dry once (day 196, two minutes). The thirteenth parent, spawned at
 ordinary talk) and then ended its turn to "wait for the next wake" on a monitor of its own that would only fire at the third night:
 a parent that leaves its turn is asleep; its monitor was stopped and a fourteenth parent takes days 199-201 with the order to stay
 in its turn (append, sleep, read, repeat) until the third night row.
+Three exchange nights in a row on the copy (pair3_3, 1152 steps, no day between): HELD-OUT 0.680, 0.669, 0.674; the last 60 lines
+0.76, 0.74, 0.73; the facts' cortex 0.738, 0.748, 0.773; the pair dreams 0.81, 0.85, 0.87; the questions at eight rests 5, 5, 5. The
+answer by the pause after the third: the cortex alone 0 of 30 at every pause; the mouth 8, 8, 10, 5 at 1, 2, 4, 8 rests, against the
+served body's 7, 8, 8, 4 after night 175. THE EXCHANGE REPLAY DOES NOT TEACH THE CORTEX TO ANSWER IN THREE NIGHTS; it stays off the
+served body. The answers are the store's: the question recalled by its ending (the query's horizon is the bag's decay, 0.8 a tick,
+about five symbols) and the reply found by following the episode's links. The query's decay at read time alone (the keys as written
+at 0.8): 0.9 read 4 and 11 of 30 at two and eight rests (0.8: 8 and 4), 0.95 read 4 and 6: a longer horizon holds the question
+across the pause but no longer matches the keys; only a horizon written and read alike can be judged, on a copy given a day.

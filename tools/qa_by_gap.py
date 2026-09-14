@@ -9,12 +9,16 @@ import torch
 from tokenizers import Tokenizer
 from body.life import Life
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-follow = 0.0; gaps = [1, 2, 4, 8]
+follow = 0.0; gaps = [1, 2, 4, 8]; bag = None
 for a in sys.argv[2:]:
     if a.startswith("--follow="): follow = float(a[9:])
     if a.startswith("--gaps="): gaps = [int(x) for x in a[7:].split(",")]
+    if a.startswith("--bag="): bag = float(a[6:])          # the recall query's decay at read time (the keys stay as written)
 TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
-life = Life.load(sys.argv[1], TOK, device="cpu", cfg=({"read_follow": follow} if follow > 1.0 else None)); m = life.m; m.eval()
+cfg_ = {}
+if follow > 1.0: cfg_["read_follow"] = follow
+if bag is not None: cfg_["bag_decay"] = bag
+life = Life.load(sys.argv[1], TOK, device="cpu", cfg=(cfg_ or None)); m = life.m; m.eval()
 zero = torch.zeros(m.d)
 STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
 pairs = [tuple(s.strip() for s in l.split("|")[:2]) for l in open(os.path.join(ROOT, "tools/facts_stage5.txt")) if "|" in l]
@@ -37,7 +41,7 @@ def run(q, k, use_recall):
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
             life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
     return "".join(got)
-print(f"body {os.path.basename(sys.argv[1])}: nights {life.nights}")
+print(f"body {os.path.basename(sys.argv[1])}: nights {life.nights} | bag_decay {life.cfg['bag_decay']} read_follow {life.cfg.get('read_follow')}")
 for k in gaps:
     row = []
     for use_recall in (False, True):
