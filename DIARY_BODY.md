@@ -7804,3 +7804,6 @@ question marks 20; the mood 0.1 at the day's end. The dusk probe: **the mouth co
 night 170: all five of the day's new facts on the day they were taught), the cortex alone on the fact sentences 0.550, the
 held-out lines 0.669, the old lines 0.496. Night 171: 3320 utterances heard, the loss 0.132 -> 0.108, the gauge on the dreams
 0.800 -> 0.848. The guard held (duty 0.285, smiles per line 1.44).
+The probe after night 171: the mouth completes 21 of 26 held-out prefixes; **the cortex alone on the fact sentences 0.640** (0.550
+at dusk; 0.356 before the facts); the held-out lines 0.691 (from 0.669 at dusk), the recent 0.762, the old lines 0.491. The facts'
+course at the mouth: 1, 3, 4, 8, 8, 12, 12, 15, 16, 21, 21; in the cortex 0.356, 0.391, 0.464, 0.548, 0.581, 0.640.
