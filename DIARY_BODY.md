@@ -7787,3 +7787,6 @@ prefixes** (12 after night 169: three of the five new on the day they were taugh
 the held-out lines 0.677, the old lines 0.490. Night 170: 3140 utterances heard, the loss 0.126 -> 0.106, the gauge on the dreams
 0.811 -> 0.853. The guard held (duty 0.301, smiles per line 1.43). At this save the typist relaunched with the fused yes matched
 ('yesee' is yes).
+The probe after night 170: **the mouth completes 16 of 26 held-out prefixes** (of twenty facts taught, sixteen, and 'ice is ' ->
+'too cold'); **the cortex alone on the fact sentences 0.581** (0.532 at dusk; 0.356 before the facts); the held-out lines 0.688,
+the recent 0.817, the old lines 0.492. The facts' course at the mouth: 1, 3, 4, 8, 8, 12, 12, 15, 16.
