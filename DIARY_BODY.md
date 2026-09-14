@@ -7858,3 +7858,8 @@ old 0.459 -> 0.483 (0.493), the cortex on the facts 0.671 -> 0.738 (0.767), the 
 is the answer after its question, which those rulers do not read), and the questions do not move in one night. Three exchange
 nights in a row on the copy (and three single nights as the control) now run, the questions read after each: whether the answer
 after its question is learnable from the replay alone.
+
+Night 174 (after day 197, 08:51; the day ran 63 min beside a copy night at nice 19): duty 0.331, smiles/line 1.37, the guard holds.
+Day 197 (facts 11-20 re-taught): 193 lines (A 98, all questions), smiles 273, frowns 39; answered with I/yes/no/please before B
+28 of 98 (14 the day before): "I am with you and I talk", "I eat a yam", and to "where is the dog?" the fact "bees make honey"
+(retrieved, off the question). Dusk 197: held-out 0.689 (the highest dusk yet), the mouth 24 of 26, the cortex on the facts 0.693.
