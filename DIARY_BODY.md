@@ -7847,3 +7847,8 @@ this dusk (512 pairs) against the served night's own result on the same body.
 The probe after night 173: HELD-OUT 0.697 (dusk 0.658: +0.039), the parent's last 60 lines 0.812, old lines 0.493, the mouth 23 of
 26 prefixes, the cortex on the fact sentences 0.767 (dusk 0.671: +0.096, the highest yet; 0.703 after night 172). The served nights
 take a minute of wall time at batch 16.
+The exchange night on the copy, first reading (dusk 196's body, 512 pairs = 192 steps, against the served night 173's 1024 single
+utterances = 384 steps): HELD-OUT 0.658 -> 0.673 (served 0.697), old 0.459 -> 0.475 (0.493), last-60 0.775 -> 0.787 (0.812), the
+cortex on the facts 0.671 -> 0.703 (0.767), the mouth 23 of 26 both, the questions 6 of 30 against 7. Every ruler lifted less, by
+about the ratio of the steps; the pair dreams themselves went 0.54 -> 0.77 (the answer after its question, new ground). One night
+cannot show the answering; the prefixes took a week. Next: the same dusk given 1024 pairs (the served step count), for the cost.
