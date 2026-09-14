@@ -7654,3 +7654,6 @@ smiles, five for answers ('yes!' before "yes. I wait for you", "yes please. I wa
 0.444. Night 163: 1817 utterances heard, the loss 0.127 -> 0.107, the gauge on the dreams 0.795 -> 0.85. The guard held (duty
 0.289, smiles per line 0.96). At this save the typist relaunched with the ordinary smile at its old strength and the answer's the
 bigger one: day 187 is the first under that form; the duty is the number to watch.
+The probe after night 163: **held-out 0.691** (from 0.666 at dusk; the cosine 0.71), the recent 0.815, the old lines 0.497 (from
+0.444). The mouth: "do you want milk?" -> 'yes please. I want the y(am)', a whole recalled answer (lived prefix 1.00) on three
+prompts; "hi" -> 'are you happy with your'. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673, 0.691.
