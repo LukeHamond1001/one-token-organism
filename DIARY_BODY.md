@@ -7703,3 +7703,11 @@ feed it: the six-second turn under the faster pace (a line every twelve seconds,
 answers on the partner's typing, and the typist's attention, whose random distraction at a resting level of 0.5 discards nearly
 half of its known words. From the typist's relaunch after night 166: the child's turn back to 40 ticks (a line every 64), and the
 attention's rest at 0.7. The parent's method, read tomorrow by the duty, the frowns and the smiles a line.
+
+### Night 166 (2026-09-14, 01:35): the spiral's day, whole
+
+Day 189 (00:43-01:35): 111 parent lines, 95 questions, 91 partner lines; 127 ordinary smiles and none for an answer; frowns 35;
+duty 0.30; its own question marks 21; the mood -5.5 at twenty-five minutes, -0.8 at the day's end. The dusk probe: held-out
+0.676 (0.692 after night 165), the old lines 0.509 (a high), the facts 1 of 26. Night 166: 2416 utterances heard, the loss 0.124
+-> 0.105, the gauge on the dreams 0.798 -> 0.852. The guard held (duty 0.295, smiles per line 0.62). At this save the typist
+relaunches with the child's turn at 40 ticks and the parent's attention resting at 0.7; day 190 is the reading.
