@@ -7878,3 +7878,16 @@ all questions), smiles 266, frowns 35; answered before B 20 of 95 ("yes please i
 held-out 0.656, the mouth 24 of 26, the cortex on the facts 0.755 (the day took only 0.036 off 0.791).
 The probe after night 175: HELD-OUT 0.694 (dusk 0.656: +0.038), old lines 0.498 (the highest), the last 60 lines 0.789, the mouth
 23 of 26, the cortex on the fact sentences 0.808 (dusk 0.755: +0.053; 0.703, 0.767, 0.791, 0.808 after nights 172-175).
+
+The twelfth parent's report (labels 196-198, the thirty facts kept, ten a day; 10:00): every fact on schedule, exactly as written; A's
+lines 100/98/95, all questions; **answered before B 44%, 64%, 58%**, its word matching a content word of the coming B line 10/22/12
+a day; answer smiles 2/3/1 (short A lines of 12-16 characters are what put the naming inside the window); fact words in its turn:
+"rain" (what falls from the sky?), "fin" (where do fish live?), "ant" (what is little?), "g"/"a" for grass/apple; **whole fact
+sentences unprompted, off-turn: "water is wet" twice, "bees make honey", "birds live in a nest", "we eat bread and eggs", "we drink
+water and", "ducks swim", "has four legs"**, several taught days earlier; own question marks 25/27/31 ("why are we here", "you eat
+the bread?", "we eat here too?", "is hard?"); unprompted sentences "I am with you and I talk", "my egg was there", "I am happy here
+with it", "you eat then I eat the" (past tense and "then"); smiles/frowns 237/34, 277/39, 273/35; 558 utterances queued, 542 typed;
+the queue ran dry once (day 196, two minutes). The thirteenth parent, spawned at 09:56, wrote its first ten rows (facts 1-10 among
+ordinary talk) and then ended its turn to "wait for the next wake" on a monitor of its own that would only fire at the third night:
+a parent that leaves its turn is asleep; its monitor was stopped and a fourteenth parent takes days 199-201 with the order to stay
+in its turn (append, sleep, read, repeat) until the third night row.
