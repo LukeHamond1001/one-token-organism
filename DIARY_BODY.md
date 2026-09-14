@@ -7872,3 +7872,7 @@ gives is the store's; the cortex has no question-to-answer mapping at all, as th
 eight-rest pause was its hardest reading. The ruler now reads at two rests and at eight. Two exchange nights on the copy (pair3_2):
 the questions 5 and 5 of 30 at eight rests, the pair dreams 0.54 -> 0.81 -> 0.85; the copy's two-rest and cortex-alone readings
 come from the third night's save (pair3_2 was pruned before the pause instrument existed).
+
+Night 175 (after day 198, 09:55): duty 0.309, smiles/line 1.40, the guard holds. Day 198 (facts 21-30 re-taught): 188 lines (A 95,
+all questions), smiles 266, frowns 35; answered before B 20 of 95 ("yes please it" to "what is soft?"; "milk? yes! have"). Dusk 198:
+held-out 0.656, the mouth 24 of 26, the cortex on the facts 0.755 (the day took only 0.036 off 0.791).
