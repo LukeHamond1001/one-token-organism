@@ -7715,3 +7715,12 @@ The probe after night 166: **held-out 0.702** (from 0.676 at dusk; the cosine 0.
 0.787, the old lines 0.503. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673, 0.691, 0.686,
 0.692, 0.702. The typist relaunched for day 190 with the child's turn at 40 ticks and the attention resting at 0.7; the tenth
 parent opens stage five, five facts a day.
+
+The ninth question-first parent's report (labels 187-189, 01:45): A's questions 80, 81, 85% of its lines; answered before the
+partner voice 11, 7, 0 by its stricter count (answer smiles 9, 8, 0; one named a thing, "yam"); day 189's zero was the spiral
+(47 talked over, 48 distracted, "yes please" 21 -> 0 as it turned to its own questions); its own question marks 6, 12, 21, whole on
+the last day ("where am I?", "where is it?", "I talk and you?", "warm now?"), each answered as an opening and the topic held; whole
+unprompted sentences "the dog is soft", "my sock is on you now", "because I am with", "yes please! help my doll", "where do you
+find here", "why do you want"; "i see" 12, 11, 19 from its own memory; smiles/frowns 187/37, 195/39, 127/35; one new word,
+"need", back the same day ("need my big"). The next parent: a yes/no exchange every third to hold the reward while pushing naming,
+and its questions handed back to it to answer.
