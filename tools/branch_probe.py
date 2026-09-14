@@ -1,0 +1,41 @@
+"""THE BRANCH AFTER A SHARED START (a supervisor's instrument, 2026-09-14): four facts begin "the sun ", two begin "birds ". After
+the question, a rest, and the shared start, which symbol does the cortex alone put first, and which the mouth (the recall in the
+forecast)? The asked fact's continuation should win; on the served body after night 177 the cortex alone had no preference by the
+question and the mouth followed the store's strongest sibling ("what is hot?" -> "the sun makes...").
+usage: python3 tools/branch_probe.py BODY.pt [--follow=20]"""
+import sys, os
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.insert(0, ROOT)
+import torch
+from tokenizers import Tokenizer
+from body.life import Life
+follow = 20.0
+for a in sys.argv[2:]:
+    if a.startswith("--follow="): follow = float(a[9:])
+TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
+life = Life.load(sys.argv[1], TOK, device="cpu", cfg={"read_follow": follow}); m = life.m; m.eval()
+zero = torch.zeros(m.d)
+FAMILIES = [("the sun ", [("what is hot?", "i"), ("what makes us warm?", "m"), ("what is up in the day?", "i"), ("what is the sun?", "i")]),
+            ("birds ", [("what do birds do?", "f"), ("where do birds live?", "l")]),
+            ("the sun is ", [("what is hot?", "h"), ("what is up in the day?", "u"), ("what is the sun?", "a")])]
+def dist(prefix):
+    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+    with torch.no_grad():
+        for ch in prefix:
+            i = TOK.token_to_id(ch) if ch != "|" else life.sil
+            life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+            life.bag_w = life.cfg["bag_decay"] * (m.shift(life.bag_w) + m.E.weight[i] if ch != "|" else life.bag_w)
+        xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+        C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+        rd, conf, _ = life._recall(life.bag)
+        lc = m.readout(m.forecast(C, zero)); lm = m.readout(m.forecast(C, rd))
+        for l in (lc, lm): l[life.bans] = float("-inf"); l[life.sil] = float("-inf")
+        return torch.softmax(lc, 0), torch.softmax(lm, 0)
+print(f"body {os.path.basename(sys.argv[1])}: nights {life.nights}")
+tot_c = tot_m = n = 0
+for start, qs in FAMILIES:
+    for q, want in qs:
+        pc, pm = dist(q + "||" + start); w = TOK.token_to_id(want)
+        topc = TOK.decode([int(pc.argmax())]); topm = TOK.decode([int(pm.argmax())])
+        okc = topc == want; okm = topm == want; tot_c += okc; tot_m += okm; n += 1
+        print(f"  {q!r:24} + {start!r:12} wants {want!r}: cortex alone {topc!r} (p {float(pc[w]):.2f}){'*' if okc else ' '} | the mouth {topm!r} (p {float(pm[w]):.2f}){'*' if okm else ' '}")
+print(f"BRANCH: the asked fact's continuation first: cortex alone {tot_c}/{n}, the mouth {tot_m}/{n}")
