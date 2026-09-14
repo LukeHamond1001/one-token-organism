@@ -7907,3 +7907,14 @@ B 19 of 98 by the five-second window ("yes please. the milk" to "are you tired n
 reads 8, 9, 10, 4 of 30 by the pause, as the served body does: the instrument reproduces the body.
 The probe after night 176: HELD-OUT 0.680 (dusk 0.682: flat), the cortex on the fact sentences 0.828 (0.703, 0.767, 0.791, 0.808,
 0.828 after nights 172-176), the mouth 21 of 26 (23-24 before the day of one fact pass), old lines 0.476, the last 60 lines 0.787.
+
+Night 177 (after day 200, 12:09; the day 68 min beside copy days at nice 19): duty 0.324, smiles/line 1.40, the guard holds. Day
+200 (the sixteenth parent, facts 11-20): 194 lines (A 97, all questions), smiles 272, frowns 39; answered before B 19 of 97 ("yesee"
+the fused yes). Dusk 200: held-out 0.680, the mouth 22 of 26, the cortex on the facts 0.796.
+THE TWENTY-SEVENTH DEFECT, named: the store's key is the world's last five characters (the bag), so "what is hot?" and "is your yam
+hot?" write under one key; of the thirty fact questions, ten share their last five symbols with ten or more ordinary lines of the
+week. THE KEY ON THE CORTEX (key_form cortex): the memory keyed on the stream's state before the symbol, the query the state after
+the latest one, the recall entering the cortex a tick late. The first copy day under it answered 1 of 30: the stream's states all
+point one way (mean pairwise cosine 0.986; 0.002 with the running mean taken out), so every key matched every other. PATTERN
+SEPARATION added: the running mean of the state subtracted before the key is made (the dentate's decorrelation). Measured next on
+a copy of day 199 against the bag key's control.
