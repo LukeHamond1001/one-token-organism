@@ -1,0 +1,1 @@
+zsh tools/typist_chain.sh 8020 data/watch2_caregiver.jsonl --days 6 --corpus data/watch2_corpus.json --planner queue --queue data/teach_queue_w2.jsonl --tick 0.2 --period 64 --quiet 8 --cap 40 --listen 40 --answer-levels 1 --parent 1 --reply 1 --wait 4 TALKOVER_FROWN=1 FROWN_GAP=240 HABIT_TICKS=120 ANSWER_SMILE=1 1000
