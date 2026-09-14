@@ -7918,3 +7918,5 @@ the latest one, the recall entering the cortex a tick late. The first copy day u
 point one way (mean pairwise cosine 0.986; 0.002 with the running mean taken out), so every key matched every other. PATTERN
 SEPARATION added: the running mean of the state subtracted before the key is made (the dentate's decorrelation). Measured next on
 a copy of day 199 against the bag key's control.
+The probe after night 177: HELD-OUT 0.700 (dusk 0.680: +0.020), the cortex on the fact sentences 0.840 (0.703, 0.767, 0.791, 0.808,
+0.828, 0.840 after nights 172-177), the mouth 22 of 26, old lines 0.471, the last 60 lines 0.766.
