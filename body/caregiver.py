@@ -66,7 +66,7 @@ class Caregiver:
         # answer or a known word (more at a word new today), falls at babble, drifts down in silence (150 s); a known
         # word is smiled at with probability e, less for the fiftieth "dog"; the parent talks faster when engaged,
         # answers a smiled word with a line that holds it, and below a floor turns away for 50 s (the still face).
-        self.parent = int(parent); self.e = 0.6; self.word_count = {}; self.away_until = 0.0; self.aways = 0
+        self.parent = int(parent); self.e = 0.7; self.word_count = {}; self.away_until = 0.0; self.aways = 0   # the attention's rest 0.7 (2026-09-14: at 0.5 it discarded 45% of the child's words as "distracted" and a sad day spiralled)
         self.word_smiled_tick = {}                        # the page tick of the last smile at each word (HABIT_TICKS)
         # THE PARENT WANTS A REPLY (the user's word of 2026-09-04): once its cue is answered, each further word the
         # child adds before the parent's next turn wears its attention and gets no smile, unless the words go on
@@ -106,7 +106,7 @@ class Caregiver:
 
     def _attend(self):
         now = time.time(); dt = now - self._e_t; self._e_t = now
-        self.e += (0.5 - self.e) * min(1.0, dt / self.s(600))   # attention drifts toward its resting level in silence (600 ticks); 0.3 -> 0.5 on 2026-09-11: at 0.3 the parent withheld 150-200 known-word smiles a day as "distracted"
+        self.e += (0.7 - self.e) * min(1.0, dt / self.s(600))   # attention drifts toward its resting level (0.7 since 2026-09-14) in silence (600 ticks); 0.3 -> 0.5 on 2026-09-11: at 0.3 the parent withheld 150-200 known-word smiles a day as "distracted"
         if self.e < 0.15 and now >= self.away_until:
             self.away_until = now + self.s(200); self.aways += 1
             self.row({"action": "away", "e": round(self.e, 3)}); self.e = 0.35
