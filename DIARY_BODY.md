@@ -7876,3 +7876,5 @@ come from the third night's save (pair3_2 was pruned before the pause instrument
 Night 175 (after day 198, 09:55): duty 0.309, smiles/line 1.40, the guard holds. Day 198 (facts 21-30 re-taught): 188 lines (A 95,
 all questions), smiles 266, frowns 35; answered before B 20 of 95 ("yes please it" to "what is soft?"; "milk? yes! have"). Dusk 198:
 held-out 0.656, the mouth 24 of 26, the cortex on the facts 0.755 (the day took only 0.036 off 0.791).
+The probe after night 175: HELD-OUT 0.694 (dusk 0.656: +0.038), old lines 0.498 (the highest), the last 60 lines 0.789, the mouth
+23 of 26, the cortex on the fact sentences 0.808 (dusk 0.755: +0.053; 0.703, 0.767, 0.791, 0.808 after nights 172-175).
