@@ -1168,3 +1168,21 @@ held-out lines of the conversational stage stayed between 0.666 and 0.702 throug
 began answering the facts by naming in its turn ('fish' before "fish have fins", 'birds' before "birds fly up", 'rain' before
 "rain falls from the sky"), which the smile for the answer rewards. A fact heard three times in a day is retrievable the same
 day from the recall and in the cortex by the next morning; the thirty are kept in rotation from day 196.
+
+### The twenty-sixth defect: the night never showed the cortex an answer after its question (2026-09-14)
+
+The facts of stage five were in the body by their sentences: the mouth completed 23-24 of 26 held-out prefixes, the cortex read 0.70-0.77
+on the fact sentences after a night. Asked in conversation, the child answered a fact's question with the fact's own word once a day
+(1 of ~22, days 190-196); asked on a clean ruler (the question as the world's line, the pause, the mouth's twelve symbols: `probe_lm.py
+--qa`), 6 of 30. The cause was in what the night is shown. The cortex learns in two places: at night from the dreams, which since the
+twenty-fifth defect are single utterances run from rest, so no dream contains a question followed by its answer; and awake from the
+lived window of 32 ticks every 24 ticks at 1e-5, while the child's turn between the parent's question and the other voice's answer
+runs 48-80 ticks, so the answer arrives after the question has left the window and only the bands carry a trace. The one-shot store
+follows the episode (read_follow) and gives the few answers there are.
+
+**The exchange replayed** (`dream_pair`, default 0; `dream_gap`, default 1): each utterance heard carries its serial number (`utt_N`,
+saved); with `dream_pair` 1 a dream is the utterance drawn by strength and the utterance that followed it in time when the memory
+still holds it, joined by `dream_gap` rests (the pause compressed, as replay compresses it), ended as before. Sleep's sequence replay,
+extended from one utterance to the utterances in order; it knows nothing of facts or questions, and a robot's episodes replay the
+same way. Measured first on a copy of the dusk before night 173 (512 pairs against the served night's 1024 single utterances on the
+same body), by the held-out lines, the old lines, the prefixes and the questions. Test 53.
