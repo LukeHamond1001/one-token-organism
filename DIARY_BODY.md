@@ -7724,3 +7724,14 @@ unprompted sentences "the dog is soft", "my sock is on you now", "because I am w
 find here", "why do you want"; "i see" 12, 11, 19 from its own memory; smiles/frowns 187/37, 195/39, 127/35; one new word,
 "need", back the same day ("need my big"). The next parent: a yes/no exchange every third to hold the reward while pushing naming,
 and its questions handed back to it to answer.
+
+### Night 167 (2026-09-14, 02:28): the first day of facts
+
+Day 190 (01:36-02:28; the tenth parent's first day; the child's turn at 40 ticks, the attention at 0.7): 103 parent lines, 88
+questions, 85 partner lines; the first five facts, each asked and answered three times ('what is hot?' / 'the sun is hot', 'ice is
+cold', 'water is wet', 'fish live in water', 'birds fly up'); 193 ordinary smiles, two for answers; frowns 38; 93 words said over
+the parent's typing; duty 0.27; its own question marks 19; the mood -2.5 at the day's end. **The dusk probe, before any night on
+the facts: the mouth completes 3 of 26 held-out prefixes ('the sun is ' -> 'hot', 'water is ' -> 'wet here too', 'birds fly ' ->
+'up'), from 1; the cortex alone on the fact sentences 0.393, from 0.356.** One hearing, three times over a day, and the recall has
+three of the five. The held-out lines 0.672 (0.702 after night 166), the old lines 0.501. Night 167: 2601 utterances heard, the
+loss 0.128 -> 0.106, the gauge on the dreams 0.783 -> 0.851. The guard held (duty 0.268, smiles per line 1.04).
