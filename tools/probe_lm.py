@@ -76,3 +76,35 @@ if "--lmloss" in sys.argv:
         g2 = life.gauge(recent); c2 = life._gauge_cos; g3 = life.gauge(old); c3 = life._gauge_cos
         g4 = life.gauge(held); c4 = life._gauge_cos; g1 = life.gauge(dreams) if dreams else (float("nan"), 0)
     print(f"LM accuracy (the night's gauge): the parent's last 60 lines {g2[0]:.3f} (cos {c2}) over {g2[1]} symbols | {len(old)} old lines (days 110-125) {g3[0]:.3f} (cos {c3}) over {g3[1]} | HELD-OUT {len(held)} lines {g4[0]:.3f} (cos {c4}) over {g4[1]} | the last night's dreams {g1[0]:.2f} over {g1[1]}")
+    # THE FACTS (stage five, 2026-09-14): each fact of tools/facts_stage5.txt as a prefix the parents never type (tools/heldout_facts.txt);
+    # a fact counts as learned when the mouth completes the prefix with the fact's own remainder; and the cortex alone on the fact
+    # sentences, teacher-forced, as the finer number
+    import os
+    fp, hp = "/Users/lukehamond/Projects/project/tools/facts_stage5.txt", "/Users/lukehamond/Projects/project/tools/heldout_facts.txt"
+    if os.path.exists(fp) and os.path.exists(hp):
+        facts = [l.split("|")[1].strip() for l in open(fp) if "|" in l]
+        prefixes = [l.rstrip("\n") for l in open(hp) if l.strip()]
+        learned = 0; shown = []
+        for pre in prefixes:
+            rems = [f[len(pre):].strip() for f in facts if f.startswith(pre.strip() + " ") or f.startswith(pre)]
+            rems = [r for r in rems if r]
+            life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+            got = []
+            with torch.no_grad():
+                for ch in pre:
+                    i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+                    life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
+                for _ in range(12):
+                    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+                    C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+                    rd, conf, _w = life._recall(life.bag)
+                    lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
+                    sym = int(lm.argmax()); got.append(TOK.decode([sym]))
+                    life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
+                    life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
+            text = "".join(got); ok = any(text.startswith(r[:max(3, len(r.split()[0]))]) for r in rems)
+            learned += int(ok)
+            if len(shown) < 6: shown.append(f"{pre!r}->{text[:14]!r}{'*' if ok else ''}")
+        with torch.no_grad():
+            gf = life.gauge([ids_of(f) for f in facts]); cf = life._gauge_cos
+        print(f"FACTS: the mouth completes {learned} of {len(prefixes)} held-out prefixes | the cortex alone on the {len(facts)} fact sentences {gf[0]:.3f} (cos {cf}) | {' '.join(shown)}")
