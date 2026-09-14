@@ -7711,3 +7711,7 @@ duty 0.30; its own question marks 21; the mood -5.5 at twenty-five minutes, -0.8
 0.676 (0.692 after night 165), the old lines 0.509 (a high), the facts 1 of 26. Night 166: 2416 utterances heard, the loss 0.124
 -> 0.105, the gauge on the dreams 0.798 -> 0.852. The guard held (duty 0.295, smiles per line 0.62). At this save the typist
 relaunches with the child's turn at 40 ticks and the parent's attention resting at 0.7; day 190 is the reading.
+The probe after night 166: **held-out 0.702** (from 0.676 at dusk; the cosine 0.72), the first reading above 0.70; the recent
+0.787, the old lines 0.503. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673, 0.691, 0.686,
+0.692, 0.702. The typist relaunched for day 190 with the child's turn at 40 ticks and the attention resting at 0.7; the tenth
+parent opens stage five, five facts a day.
