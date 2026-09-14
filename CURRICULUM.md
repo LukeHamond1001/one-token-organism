@@ -246,7 +246,8 @@ answered.
 **The smile for the answer (2026-09-13, from day 183).** A parent rewards relevance, not vocabulary. Until now the typist smiled at
 any known word (two a line, three hundred a day), so the reward did not depend on which word the child said, and the striatal
 actor, which learns from the dopamine error over which symbol, sat still for days while the gate, whose reward depends on when,
-learned turn-taking. From day 183 the child's word in its turn after the parent's line earns the full smile when it names what the
-other voice is about to answer (a content word of the coming B line, or yes/no when B begins so), and any other known word a faint
-one. The parent's method, not the body's; read by the answers before the other voice, the actor's slope, the smiles a day, and
+learned turn-taking. From day 183 the child's word in its turn after the parent's line earns the BIGGER smile, the growing one the cues
+earn, when it names what the other voice is about to answer (a content word of the coming B line, or yes/no when B begins so, the
+mark it attaches stripped), and any other known word the ordinary smile at its old strength. (Thinning the ordinary smile instead,
+days 183-186, halved the day's reward and the gate acted less by the day: contrast, not starvation.) The parent's method, not the body's; read by the answers before the other voice, the actor's slope, the smiles a day, and
 that the mood and the gate's duty hold as the smiles thin.
