@@ -7899,3 +7899,9 @@ served body. The answers are the store's: the question recalled by its ending (t
 about five symbols) and the reply found by following the episode's links. The query's decay at read time alone (the keys as written
 at 0.8): 0.9 read 4 and 11 of 30 at two and eight rests (0.8: 8 and 4), 0.95 read 4 and 6: a longer horizon holds the question
 across the pause but no longer matches the keys; only a horizon written and read alike can be judged, on a copy given a day.
+
+Night 176 (after day 199, 10:59): duty 0.276, smiles/line 1.32, the guard holds. Day 199 (facts 1-10 asked once by the thirteenth
+parent's first rows; then ordinary talk from three hands): 195 lines (A 98, all questions), smiles 261, frowns 38; answered before
+B 19 of 98 by the five-second window ("yes please. the milk" to "are you tired now?"). Dusk 199: held-out 0.682, the mouth 21 of
+26, the cortex on the facts 0.785. The day lived again on a copy at the served query decay (0.8, the control for the horizon test)
+reads 8, 9, 10, 4 of 30 by the pause, as the served body does: the instrument reproduces the body.
