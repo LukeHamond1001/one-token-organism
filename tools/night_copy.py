@@ -72,7 +72,7 @@ def mouth(prompt, n=24):
     return "".join(out), "".join(cortex)
 
 PROMPTS = ["do you want milk?", "what do you have?", "are you here?", "can you play?", "I want ", "I see "]
-print(f"body: nights {life.nights} store {life.store.n()} | night_batch {cfg['night_batch']} rounds {cfg['night_rounds']} starts {cfg['night_starts']} lr {cfg['night_lr']} warm {cfg['night_warm']} dream_who {cfg['dream_who']} tag {cfg['dream_tag']} draw {cfg['dream_draw']} seed {arg('seed', 0)}", flush=True)
+print(f"body: nights {life.nights} store {life.store.n()} | night_batch {cfg['night_batch']} rounds {cfg['night_rounds']} starts {cfg['night_starts']} lr {cfg['night_lr']} warm {cfg['night_warm']} dream_who {cfg['dream_who']} tag {cfg['dream_tag']} draw {cfg.get('dream_draw', '-')} seed {arg('seed', 0)}", flush=True)
 life.cfg["night_batch"] = max(1, int(life.cfg.get("night_batch", 0)))
 with torch.no_grad():
     g0 = life.gauge(recent); c0 = life._gauge_cos; o0 = life.gauge(old); oc0 = life._gauge_cos; h0 = life.gauge(held); hc0 = life._gauge_cos
