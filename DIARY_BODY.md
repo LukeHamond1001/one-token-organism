@@ -7920,3 +7920,12 @@ SEPARATION added: the running mean of the state subtracted before the key is mad
 a copy of day 199 against the bag key's control.
 The probe after night 177: HELD-OUT 0.700 (dusk 0.680: +0.020), the cortex on the fact sentences 0.840 (0.703, 0.767, 0.791, 0.808,
 0.828, 0.840 after nights 172-177), the mouth 22 of 26, old lines 0.471, the last 60 lines 0.766.
+THE CORTEX KEY, pattern-separated, on a copy of day 199: 0 of 30 at every pause (the raw-key control 8 of 30; of the day's ten
+facts, 0 against 3-5). The stream's state is the whole window and the bands, not the utterance: the key written as "what is cold?"
+was typed inside the day's talk does not match the query made from the same question in a clean context; a global state cannot
+be the key of a memory that must be found again in another context. The bag key is local (five symbols) and matches across contexts,
+which is why it works at all, and why it confuses siblings. The form stays in the code as an instrument, off. The branch after a
+shared start (tools/branch_probe.py), served body after night 177: four facts begin "the sun "; after "what is hot?" and the start,
+the cortex alone puts 'y' first and the mouth 'm' ("makes us warm", the store's strongest sibling); no preference by the question in
+the cortex, and the mouth follows the store. One exchange night on a copy now, the branch read after it: whether the exchange
+dreams give the cortex the preference the mouth would need.
