@@ -7628,3 +7628,6 @@ line's first three words: 'the yam is ' -> 'under the cup' (whole, exact); 'my h
 drift); 'the milk sits ' -> 'on the egg' (two words, then the most frequent object won over 'bird'). All three kept whole in the
 utterance memory for the night. One hearing is enough for the recall to begin a line; it holds the whole line where no stronger
 memory shares the frame, and the night makes it the cortex's.
+21:35: day 185 under the faint smile at half, twenty-five minutes in: mood +0.3 (from -6), the gate's duty 0.41 (from 0.33), 175 faint
+smiles and one for an answer, frowns 19. The gate is fed again; the answer smile stays rare because the child's turn seldom holds
+the exact word the other voice is about to say.
