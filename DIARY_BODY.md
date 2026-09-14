@@ -7844,3 +7844,6 @@ THE TWENTY-SIXTH DEFECT, named: the night dreams single utterances from rest, so
 answer, and the waking lesson's 32-tick window is shorter than the child's turn between them. THE EXCHANGE REPLAYED (dream_pair 1,
 dream_gap 1): a dream is the utterance and the one that followed it, the pause compressed to a rest; measured first on a copy of
 this dusk (512 pairs) against the served night's own result on the same body.
+The probe after night 173: HELD-OUT 0.697 (dusk 0.658: +0.039), the parent's last 60 lines 0.812, old lines 0.493, the mouth 23 of
+26 prefixes, the cortex on the fact sentences 0.767 (dusk 0.671: +0.096, the highest yet; 0.703 after night 172). The served nights
+take a minute of wall time at batch 16.
