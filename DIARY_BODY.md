@@ -7863,3 +7863,5 @@ Night 174 (after day 197, 08:51; the day ran 63 min beside a copy night at nice 
 Day 197 (facts 11-20 re-taught): 193 lines (A 98, all questions), smiles 273, frowns 39; answered with I/yes/no/please before B
 28 of 98 (14 the day before): "I am with you and I talk", "I eat a yam", and to "where is the dog?" the fact "bees make honey"
 (retrieved, off the question). Dusk 197: held-out 0.689 (the highest dusk yet), the mouth 24 of 26, the cortex on the facts 0.693.
+The probe after night 174: HELD-OUT 0.682 (dusk 0.689: the night's change within a night's noise), the cortex on the fact sentences
+0.791 (dusk 0.693: +0.098; 0.767 after 173, the highest yet), the mouth 23 of 26, the last 60 lines 0.803, old lines 0.493.
