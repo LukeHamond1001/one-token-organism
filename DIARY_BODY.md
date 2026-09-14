@@ -7966,3 +7966,15 @@ The probe after night 179 (the first with the question ruler after a night): HEL
 0.697), the cortex on the fact sentences 0.855 (0.703 -> 0.855 over nights 172-179), the mouth 21 of 26, the last 60 lines 0.817;
 the questions 9 of 30 at two rests and 8 at eight ("fish live in w[ater]" now, "birds fly up" at eight). WATCH: the old lines
 (days 110-125) 0.498, 0.476, 0.471, 0.464, 0.450 over nights 175-179, the vocabulary of the earlier stages fading under the facts.
+
+THE TWENTY-EIGHTH DEFECT, named (15:00): the memory's key is the last five symbols, so every "the sun " of four facts wrote into one
+slot, and a common slot's sixteen links hold only the newest utterances' tags: the chain from a question to its own answer breaks
+within two symbols (traced on the served body: after "what is hot?" the episode is followed for one symbol, then the recall lands
+in the most recent "the sun"; the follow gain at 20, 60, 200 or 1000 changes nothing, the thread is gone). THE SLOW CONTEXT IN THE
+KEY (key_ctx): each utterance keyed by an order-free bag of the utterance before it, the query carrying the latest utterance (the
+question), the switch at the utterance's end; test 55 separates "the sun is hot" from "the sun makes us warm" by their questions.
+On a copy of day 202 at key_ctx 1.0 against the fast bag alone: THE BRANCH after a shared start flips, the mouth 6 of 9 against 3
+("what is hot?" -> 'i' at p 1.00, "the sun is " -> 'h'; "what is up in the day?" -> 'u'); but the answers by the pause fall to 6, 5,
+4 of 30 against 13, 13, 8, the mouth looping ('the suthe suthe ', 'ck millck millck'): at equal weight the context out-pulls the
+fast bag once the mouth's own symbols drift from the keys, and the day's 183 lines are the only memories with a context at all.
+The weight 0.5 and 0.3 on copies next.
