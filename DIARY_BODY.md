@@ -8025,3 +8025,9 @@ THE BRANCH ON THE FACTS TAUGHT UNDER THE NEW KEY (day 206's facts 11-20), the se
 full confidence ("what do we eat?" + "we " -> "e[at]", "what do we drink?" -> "d[rink]", "where do we sleep?" -> "s[leep]"; "what
 has wings?" + "a " -> "b[ird]", "what has four legs?" -> "d[og]", "what is big?" -> "t[ree]"; "we eat " -> "b[read]", "a bird " ->
 "h[as]"), the misses "an " for red and little. Facts sharing a start are told apart by their questions on the served body itself.
+The probe after night 183 (the first night under the slow context): HELD-OUT 0.691 (0.708 the night before), the cortex on the fact
+sentences 0.861 (the night restored the day's fall from 0.867 to 0.785), the mouth's held-out prefixes 10 of 26 (19), the
+questions 6 and 6 of 30 (11 and 6), old lines 0.459. The cost of the transition as foreseen: the facts last taught before the
+switch (1-10 on day 205, 21-30 earlier) are written without a context and reached less by a query that carries one; only day
+206's facts 11-20 are re-keyed, and on those the branch reads ten of twelve. Facts 21-30 are re-taught on day 207 and 1-10 on day
+208, so the honest verdict on the served body is the probe after night 185 and the branch after 187 (the sun family whole).
