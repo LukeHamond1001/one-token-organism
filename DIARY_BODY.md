@@ -7678,3 +7678,6 @@ day's end (from -4.5). The dusk probe: held-out 0.661 (0.691 after night 163: th
 facts 1 of 26 (the baseline, no fact taught yet). Night 164: 2015 utterances heard, the loss 0.129 -> 0.107, the gauge on the
 dreams 0.787 -> 0.851. The guard held (duty 0.309, smiles per line 0.95). The duty has not yet climbed back from the thinned days;
 the answer smiles rose 5 -> 9 a day.
+The probe after night 164: held-out 0.686 (from 0.661 at dusk), the recent 0.800, the old lines 0.496. The mouth: "what do you
+have?" -> 'I have a bird too!', whole and the world's on every read; "do you want milk?" -> 'yes please. I want it'. The course:
+0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673, 0.691, 0.686.
