@@ -8021,3 +8021,7 @@ The branch on the served body after night 183, the sun family: the mouth 0 of 9 
 sun facts (1, 9, 25, 26) were last taught before the switch, so their memories carry no context and the query now carries one; they
 are re-taught on days 208 and 210. The branch on the facts taught on day 206 under the new key (11-20: "we " begins eat, drink and
 sleep; "a " begins wings, legs and big) is the reading that tests the mechanism on the served body now.
+THE BRANCH ON THE FACTS TAUGHT UNDER THE NEW KEY (day 206's facts 11-20), the served body after night 183: the mouth 10 of 12 at
+full confidence ("what do we eat?" + "we " -> "e[at]", "what do we drink?" -> "d[rink]", "where do we sleep?" -> "s[leep]"; "what
+has wings?" + "a " -> "b[ird]", "what has four legs?" -> "d[og]", "what is big?" -> "t[ree]"; "we eat " -> "b[read]", "a bird " ->
+"h[as]"), the misses "an " for red and little. Facts sharing a start are told apart by their questions on the served body itself.
