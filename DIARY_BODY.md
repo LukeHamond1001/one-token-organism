@@ -7776,3 +7776,14 @@ day**; answer smiles 2, 1, 3 (its "yes" fuses into "yesee" and loses the reward 
 each answered as an opening, and "why are we happy?", modelled once on day 190, came back from it whole on day 192; unprompted
 "I talk and you?", "the egg is in it", "I hold my egg", "and I talk here"; "i see" 5, 10, 7 (fading at last); smiles/frowns
 193/37, 196/31, 266/36; the queue ran dry twice at hand-overs. The eleventh parent (labels 193-195): facts 16-30.
+
+### Night 170 (2026-09-14, 05:07): facts 16-20
+
+Day 193 (04:16-05:07; the eleventh parent's first day): 92 parent lines, all of them questions, 83 partner lines; facts 16-20
+three times each ('we drink water and milk', 'a bird has wings', 'a dog has four legs', 'bees make honey', 'we sleep in a bed')
+and five of the earlier ones once; 245 ordinary smiles, five for answers; frowns 32; 79 words over the parent's typing; duty 0.30;
+its own question marks 24, a high; the mood +1.3 at the day's end. The dusk probe: **the mouth completes 15 of 26 held-out
+prefixes** (12 after night 169: three of the five new on the day they were taught), the cortex alone on the fact sentences 0.532,
+the held-out lines 0.677, the old lines 0.490. Night 170: 3140 utterances heard, the loss 0.126 -> 0.106, the gauge on the dreams
+0.811 -> 0.853. The guard held (duty 0.301, smiles per line 1.43). At this save the typist relaunched with the fused yes matched
+('yesee' is yes).
