@@ -1309,7 +1309,7 @@ if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange]
     failed = 0
     for t in tests:
         try:
@@ -1320,3 +1320,17 @@ if __name__ == "__main__":
             failed += 1; print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
     print(f"{len(tests) - failed}/{len(tests)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+
+def test_dreams_the_exchange():
+    """53 (2026-09-14): with dream_pair on, a dream is the utterance heard and the one that followed it, joined by the pause (dream_gap
+    rests) and ended as before; an utterance whose follower has left the memory dreams alone; with dream_pair off, nothing changes"""
+    life = tiny(); life.cfg["dream_source"] = "utterances"; life.cfg["dream_pair"] = 1; life.cfg["dream_gap"] = 2; life.cfg["offset_ticks"] = 8
+    life.utts = [[5, 6, 7], [8, 9], [10, 11, 12], [13, 14]]; life.utt_S = [1.0] * 4; life.utt_N = [1, 2, 4, 5]; life._utt_serial = 5
+    ds = life.dreams(60); s_ = life.sil; e_ = [life.end_id]
+    allowed = ([5, 6, 7, s_, s_, 8, 9] + e_, [8, 9] + e_, [10, 11, 12, s_, s_, 13, 14] + e_, [13, 14] + e_)
+    assert all(d in allowed for d in ds), ds[:4]
+    assert len(set(tuple(d) for d in ds)) == 4, "every utterance drawn over sixty dreams"
+    ds2, who = life.dreams(6, with_who=True); assert all(len(w) == len(d) and not any(w) for d, w in zip(ds2, who))
+    life.cfg["dream_pair"] = 0; assert all(len(d) <= 4 for d in life.dreams(20))
+    print("53 the exchange replayed:", [d for d in ds[:6]])

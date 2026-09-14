@@ -7833,3 +7833,14 @@ answered "why do we play?" it produced "why do we eat?"; it asked a fact's own q
 whole sentences "a red van is out", "I eat a yam and an egg", "my egg is warm", "I talk with you too"; no phrase dominated; "i
 see" 5-8; smiles/frowns 250/32, 270/33, 242/36. Two mechanical findings: its instant answers run into the typist's line without a
 space and a right naming is logged as a frown (79-89 talked over a day); a B line repeating two words of A's line is deferred.
+
+Night 173 (after day 196, 07:46, slept 596 s): duty 0.297, smiles/line 1.22, the guard holds. Day 196 (the twelfth parent's first,
+facts 1-10 re-taught inside talk): 186 lines (A 100, all questions; B 86), smiles 231, frowns 34; answered with I/yes/no/please
+before B 14 of 100 by the five-second window ("where do fish live?" -> "finsee", "what do you want to do?" -> "I eat the hot yam");
+own question marks 22. Dusk 196 (before this night): held-out 0.658, facts 23/26 at the mouth, cortex on facts 0.671 (the day took
+0.03 off the night's 0.703, as every day does). THE DEMO RULER (this morning): a fact's own question as the world's line, the mouth's
+reply read: 6 of 30 answered on the body after night 172; in conversation, 1 of ~22 fact questions a day carries the fact's word.
+THE TWENTY-SIXTH DEFECT, named: the night dreams single utterances from rest, so no night shows the cortex a question followed by its
+answer, and the waking lesson's 32-tick window is shorter than the child's turn between them. THE EXCHANGE REPLAYED (dream_pair 1,
+dream_gap 1): a dream is the utterance and the one that followed it, the pause compressed to a rest; measured first on a copy of
+this dusk (512 pairs) against the served night's own result on the same body.

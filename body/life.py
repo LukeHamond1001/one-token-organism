@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -355,6 +355,11 @@ class Life:
         # parent's last thousand lines, whole, read +0.13. A hippocampus keeps an episode as the sequence it was (CA3's chain, the
         # time cells); this memory keeps it plainly. The recall at the mouth still reads the slot store.
         self.utts = []; self.utt_S = []; self._utt_cur = []
+        # THE EXCHANGE REPLAYED (dream_pair; 2026-09-14, the twenty-sixth defect): each utterance carries its serial number, so the night
+        # can dream it together with the one that followed it (the question, the pause, the answer): the sequence replay of sleep,
+        # compressed. Utterances dreamt one by one from rest taught the cortex no line from the line before it: the thirty facts were
+        # completed from their prefixes (24 of 26) and answered from their questions in conversation once a day (5%).
+        self.utt_N = []; self._utt_serial = 0
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device, links=int(self.cfg.get("store_links", 4)))
         self.store.saturate = bool(int(self.cfg.get("store_sat", 0)))   # repetition suppression (store_sat)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -580,10 +585,11 @@ class Life:
         self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain
         self._follow = None                                            # and the recall's episode is let go
         if len(self._utt_cur) >= 2:
-            self.utts.append(list(self._utt_cur)); self.utt_S.append(1.0)   # the utterance kept whole, at full strength
+            self._utt_serial += 1
+            self.utts.append(list(self._utt_cur)); self.utt_S.append(1.0); self.utt_N.append(self._utt_serial)   # the utterance kept whole, at full strength, in its turn
             cap = int(self.cfg.get("utt_cap", 4096))
             if len(self.utts) > cap:                                   # the weakest (the oldest, faded) gives way
-                i = min(range(len(self.utt_S)), key=lambda k: self.utt_S[k]); del self.utts[i]; del self.utt_S[i]
+                i = min(range(len(self.utt_S)), key=lambda k: self.utt_S[k]); del self.utts[i]; del self.utt_S[i]; del self.utt_N[i]
         self._utt_cur = []
 
     @property
@@ -1317,7 +1323,18 @@ class Life:
             S_ = torch.tensor(self.utt_S, dtype=torch.float); p_ = S_.clamp_min(1e-6) / S_.clamp_min(1e-6).sum()
             idx = torch.multinomial(p_, n, replacement=bool(len(self.utts) < n), generator=self.gen).tolist()
             end_ = [self.end_id] if int(self.cfg.get("offset_ticks", 0)) > 0 else []
-            out = [list(self.utts[i]) + end_ for i in idx]
+            # THE EXCHANGE REPLAYED (dream_pair, the utterances that followed; dream_gap rests between, the pause compressed as replay
+            # compresses it): a dream is the utterance and its successor in time when the memory still holds it
+            pair = int(self.cfg.get("dream_pair", 0)); gap = [self.sil] * max(0, int(self.cfg.get("dream_gap", 1)))
+            out = []
+            for i in idx:
+                d = list(self.utts[i]); j = i
+                for _ in range(pair):
+                    if j + 1 < len(self.utts) and self.utt_N[j + 1] == self.utt_N[j] + 1:
+                        d = d + gap + list(self.utts[j + 1]); j += 1
+                    else:
+                        break
+                out.append(d + end_)
             return (out, [[False] * len(d) for d in out]) if with_who else out
         who_on = int(self.cfg.get("dream_who", 0)) > 0 and self.store.n() > 0
         starts = self.store.sample_starts(n, gen=self.gen, mask=(self.store.W != 1) if who_on else None)
@@ -1940,7 +1957,8 @@ class Life:
                          "frel": list(self._frel), "frel_gain": float(self._frel_gain), "frel_corr": float(self._frel_corr),
                          "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone(), "fh_w": self._fh_w.clone(),
                          "arel": list(self._arel), "arel_gain": float(self._arel_gain), "arel_corr": float(self._arel_corr),
-                         "store_after_night": self._store_after_night, "utts": self.utts, "utt_S": self.utt_S}}
+                         "store_after_night": self._store_after_night, "utts": self.utts, "utt_S": self.utt_S,
+                         "utt_N": self.utt_N, "utt_serial": int(self._utt_serial)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -2006,6 +2024,8 @@ class Life:
             life.sharp_cal = float(L["sharp_cal"])
         if L.get("utts"):
             life.utts = [list(u) for u in L["utts"]]; life.utt_S = [float(v) for v in L.get("utt_S", [1.0] * len(L["utts"]))]
+            life.utt_N = [int(v) for v in (L.get("utt_N") or range(1, len(life.utts) + 1))]   # a save from before the serials: taken as consecutive
+            life._utt_serial = int(L.get("utt_serial", max(life.utt_N) if life.utt_N else 0))
         if L.get("frel") is not None:
             life._frel = [float(v) for v in L["frel"]]; life._frel_gain = float(L.get("frel_gain", 0.0)); life._frel_corr = float(L.get("frel_corr", 0.0))
         if L.get("fh_A") is not None and tuple(L["fh_A"].shape) == tuple(life._fh_A.shape):

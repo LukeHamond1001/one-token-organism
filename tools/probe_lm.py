@@ -108,3 +108,38 @@ if "--lmloss" in sys.argv:
         with torch.no_grad():
             gf = life.gauge([ids_of(f) for f in facts]); cf = life._gauge_cos
         print(f"FACTS: the mouth completes {learned} of {len(prefixes)} held-out prefixes | the cortex alone on the {len(facts)} fact sentences {gf[0]:.3f} (cos {cf}) | {' '.join(shown)}")
+
+# THE QUESTION ANSWERED (stage five's demo ruler, 2026-09-14): each fact's own question (tools/facts_stage5.txt, left of the bar) as the
+# world's line, then the pause; the mouth's twelve symbols read with the recall; the question counts as answered when the mouth says a
+# content word of the fact that the question itself does not contain ("what is cold?" -> "ice"). The conversation's form of the fact,
+# against the prefix completion above (the prefix says the fact's first words; the question does not). Run with --qa.
+if "--qa" in sys.argv:
+    import os, re
+    fp = "/Users/lukehamond/Projects/project/tools/facts_stage5.txt"
+    STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
+    if os.path.exists(fp):
+        pairs = [tuple(s.strip() for s in l.split("|")[:2]) for l in open(fp) if "|" in l]
+        n_ans = 0; shown = []
+        for q, fact in pairs:
+            keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
+            life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+            got = []
+            with torch.no_grad():
+                for ch in q:
+                    i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+                    life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
+                for _ in range(int(life.cfg.get("offset_ticks", 8))):
+                    life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+                    life.bag_w = life.cfg["bag_decay"] * life.bag_w
+                for _ in range(12):
+                    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+                    C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+                    rd, conf, _w = life._recall(life.bag)
+                    lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
+                    sym = int(lm.argmax()); got.append(TOK.decode([sym]))
+                    life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
+                    life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
+            text = "".join(got); ok = any(k in text.lower() for k in keys)
+            n_ans += int(ok)
+            if len(shown) < 8: shown.append(f"{q!r}->{text[:14]!r}{'*' if ok else ''}")
+        print(f"QA: the mouth answers {n_ans} of {len(pairs)} fact questions | {' '.join(shown)}")
