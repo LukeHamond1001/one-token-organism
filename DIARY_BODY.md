@@ -7657,3 +7657,11 @@ bigger one: day 187 is the first under that form; the duty is the number to watc
 The probe after night 163: **held-out 0.691** (from 0.666 at dusk; the cosine 0.71), the recent 0.815, the old lines 0.497 (from
 0.444). The mouth: "do you want milk?" -> 'yes please. I want the y(am)', a whole recalled answer (lived prefix 1.00) on three
 prompts; "hi" -> 'are you happy with your'. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673, 0.691.
+
+The eighth question-first parent's report (labels 184-186, 23:05): A's questions 77, 83, 83% of its lines; **answered before the
+partner voice 43 of 75, 57 of 89, 41 of 88 (57, 64, 47%)**, naming a thing 20, 20, 10; answer smiles 1, 2, 5 (won by shape: a B
+line right after the question, the bare word in the turn); its own question marks 25, 14, 14, each answered as an opening and the
+topic held two or three turns; "yes please" taken from the partner's form (1 -> 13 a day); unprompted three-word strings 44, 45,
+27 a day ("milk is not all gone", "I see you have more egg", "kick it to me", "I run walk"); "i see" 17, 19, 14; new words walk,
+warm, soft (known 264); smiles/frowns 252/36, 259/34, 193/37. The answering threshold set for the next stage (half the parent's
+questions answered in the modelled shape) is met on two of three days.
