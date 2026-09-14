@@ -7631,3 +7631,13 @@ memory shares the frame, and the night makes it the cortex's.
 21:35: day 185 under the faint smile at half, twenty-five minutes in: mood +0.3 (from -6), the gate's duty 0.41 (from 0.33), 175 faint
 smiles and one for an answer, frowns 19. The gate is fed again; the answer smile stays rare because the child's turn seldom holds
 the exact word the other voice is about to say.
+
+### Night 162 (2026-09-13, 22:01)
+
+Day 185 (21:09-22:01; the faint smile at half): 107 parent lines, 89 questions, 89 partner lines; 257 faint smiles, two for
+answers; frowns 34; duty 0.38; its own question marks 14. The dusk probe: held-out 0.664 (0.684 after night 161), the old lines
+0.474. Night 162: 1619 utterances heard, the loss 0.129 -> 0.109, the gauge on the dreams 0.78 -> 0.847. The guard held (duty
+0.385, smiles per line 1.32). The probe on the save: held-out 0.673 (from 0.664), the recent 0.801, the old lines 0.464. The
+mouth: 'yes. I red hat is on me', 'two little bird in your'; on two prompts the greedy probe ran 'balllll' (the recall's follow at
+a repeated letter, greedy without the live sampling; the live writing is checked for runs). At this save the typist relaunched
+with the mark stripped from the answer match. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684, 0.673.
