@@ -7982,3 +7982,11 @@ The weight 0.5 and 0.3 on copies next.
 Night 181 (after day 204, 16:06): duty 0.308, smiles/line 1.28, the guard holds. Day 204 (the seventeenth parent, facts 21-30):
 191 lines (A 95, all questions), smiles 249, frowns 38; answered before B 14 of 95. Dusk 204: held-out 0.687, the mouth 22 of 26,
 the cortex on the facts 0.818. The eighteenth parent spawned at the night row (days 205-207).
+
+The seventeenth parent's report (days 202-204; 16:10): all thirty facts once each on the right day, verbatim; **answered before B
+45%, 45%, 47%**; fact words before B said them 1, 1, 2 a day (fish; grass; honey, birds); two of the fifteen answer smiles were
+whole fact sentences said before B: "fish live in water" (day 202) and "birds live in a nest" (day 204, a question the child had
+asked on its own, "birds live?", for two days before the fact came due); own question marks 43, 54, 46; sentences of three known
+words 21, 14, 21 ("run out to the grass", "we drink it now"); smiles 303/234/250, frowns 37/35/38; no deferrals in 559 lines under
+a pre-append echo check. Structural: the facts land 15-37 minutes into a 42-46-minute day because the queue runs 11-16 minutes
+deep; the next brief lets the facts go in the day's first rows, written as the night ends, with the depth held at 30-90 lines.
