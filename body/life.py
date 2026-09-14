@@ -361,6 +361,12 @@ class Life:
         # completed from their prefixes (24 of 26) and answered from their questions in conversation once a day (5%).
         self.utt_N = []; self._utt_serial = 0
         self._q_prev = None; self._read_prev = None            # the cortex key: the query of the tick before, the read of the tick before
+        # PATTERN SEPARATION (2026-09-14): the stream's states all point one way (mean pairwise cosine 0.986 on the served body; 0.002
+        # once the running mean is taken out), so a key that is the raw state matches every other key and the recall is a blur (the
+        # first cortex-keyed copy answered 1 of 30). The dentate gyrus decorrelates the cortical pattern before CA3 stores it; here
+        # the running mean of the state is subtracted before the key is made. A plain average for the first two thousand ticks, then
+        # a slow exponential one (0.9995 a tick, about an hour), saved with the body.
+        self._c_mu = torch.zeros(self.m.d, device=device); self._c_n = 0
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device, links=int(self.cfg.get("store_links", 4)))
         self.store.saturate = bool(int(self.cfg.get("store_sat", 0)))   # repetition suppression (store_sat)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -552,7 +558,7 @@ class Life:
                 self.bands = m.band_update(self.bands, C)
             self._C_last = C
             if cortex_key:
-                q = self.query_from(C)
+                q = self.query_from(C, learn=True)
                 read, conf, win_ = (self._recall(q, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
                 self._tire(win_, rt_)
                 self._read = read; self._read_prev = read; self._q_prev = q
@@ -561,10 +567,15 @@ class Life:
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
 
-    def query_from(self, C):
-        """the recall's query under the cortex key: the stream's state as a unit direction at the norm a full context's bag would have
-        (the query's norm is the recall's inverse temperature; key_scale, a disclosed constant near the bag's own norm)"""
-        return F.normalize(C.detach().float(), dim=0) * float(self.cfg.get("key_scale", 2.5))
+    def query_from(self, C, learn=False):
+        """the recall's query under the cortex key: the stream's state, its running mean taken out (pattern separation), as a unit
+        direction at the norm a full context's bag would have (the query's norm is the recall's inverse temperature; key_scale, a
+        disclosed constant near the bag's own norm). With learn, the running mean takes this state in first."""
+        c = C.detach().float()
+        if learn:
+            self._c_n += 1; a = max(1.0 / self._c_n, 1.0 - 0.9995)
+            self._c_mu = self._c_mu + a * (c - self._c_mu)
+        return F.normalize(c - self._c_mu, dim=0) * float(self.cfg.get("key_scale", 2.5))
 
     def _tire(self, win_, rt_):
         if rt_ > 0.0 and self.store.A.numel() == self.store.n():
@@ -1984,7 +1995,7 @@ class Life:
                          "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone(), "fh_w": self._fh_w.clone(),
                          "arel": list(self._arel), "arel_gain": float(self._arel_gain), "arel_corr": float(self._arel_corr),
                          "store_after_night": self._store_after_night, "utts": self.utts, "utt_S": self.utt_S,
-                         "utt_N": self.utt_N, "utt_serial": int(self._utt_serial)}}
+                         "utt_N": self.utt_N, "utt_serial": int(self._utt_serial), "c_mu": self._c_mu.clone(), "c_n": int(self._c_n)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -2052,6 +2063,8 @@ class Life:
             life.utts = [list(u) for u in L["utts"]]; life.utt_S = [float(v) for v in L.get("utt_S", [1.0] * len(L["utts"]))]
             life.utt_N = [int(v) for v in (L.get("utt_N") or range(1, len(life.utts) + 1))]   # a save from before the serials: taken as consecutive
             life._utt_serial = int(L.get("utt_serial", max(life.utt_N) if life.utt_N else 0))
+        if L.get("c_mu") is not None and tuple(L["c_mu"].shape) == tuple(life._c_mu.shape):
+            life._c_mu.copy_(L["c_mu"]); life._c_n = int(L.get("c_n", 0))
         if L.get("frel") is not None:
             life._frel = [float(v) for v in L["frel"]]; life._frel_gain = float(L.get("frel_gain", 0.0)); life._frel_corr = float(L.get("frel_corr", 0.0))
         if L.get("fh_A") is not None and tuple(L["fh_A"].shape) == tuple(life._fh_A.shape):
