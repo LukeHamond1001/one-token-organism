@@ -7945,3 +7945,7 @@ as B's next line); answer smiles 4, 5, 5, shifting from content guesses to bare 
 wait capped at 8.2 s on 110 of 202 lines (the child talks through the parent's turn; duty 0.33). The nights ran 17.6, 21.6 and
 14.4 minutes of wall time beside the copy runs (10 minutes alone). The depth script matched a duplicated line once; it now matches
 the last three typed lines in order.
+One exchange night on a copy of the body after night 177 (pair1_178; the dreams 0.53 -> 0.80): the branch after a shared start,
+cortex alone 0 of 9 (as before), the mouth 2 of 9 (1 before); the answer by the pause 10 and 12 of 30 at two and four rests (the
+served body 8 and 8), of the day's ten facts 4 and 6. A night of exchange dreams gives the cortex no preference at the branch; the
+mouth's gain is at the edge of a night's noise. The exchange replay is a slow lever at best; it stays off the served body.

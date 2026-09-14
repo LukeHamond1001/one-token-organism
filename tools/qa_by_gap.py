@@ -9,12 +9,13 @@ import torch
 from tokenizers import Tokenizer
 from body.life import Life
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-follow = 0.0; gaps = [1, 2, 4, 8]; bag = None; key_form = None
+follow = 0.0; gaps = [1, 2, 4, 8]; bag = None; key_form = None; show_all = False
 for a in sys.argv[2:]:
     if a.startswith("--follow="): follow = float(a[9:])
     if a.startswith("--gaps="): gaps = [int(x) for x in a[7:].split(",")]
     if a.startswith("--bag="): bag = float(a[6:])          # the recall query's decay at read time (the keys stay as written)
     if a.startswith("--key-form="): key_form = a[11:]
+    if a == "--all": show_all = True
 TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
 cfg_ = {}
 if follow > 1.0: cfg_["read_follow"] = follow
@@ -53,5 +54,6 @@ for k in gaps:
             keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
             t = run(q, k, use_recall); ok = any(w in t.lower() for w in keys); n += int(ok); first10 += int(ok and qi < 10)
             if ok and len(ex) < 3: ex.append(f"{q!r}->{t[:12]!r}")
+            if show_all and use_recall: print(f"      {'*' if ok else ' '} {q:26} -> {t[:16]!r}   (wants one of {keys})")
         row.append((n, ex, first10))
     print(f"  pause {k:2d} rests: cortex alone answers {row[0][0]:2d}/30 {' '.join(row[0][1])} | the mouth {row[1][0]:2d}/30 {' '.join(row[1][1])} | facts 1-10 {row[1][2]}")
