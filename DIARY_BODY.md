@@ -7793,3 +7793,14 @@ the recent 0.817, the old lines 0.492. The facts' course at the mouth: 1, 3, 4, 
 05:35: day 194, twenty-five minutes in, the fused yes matched: three answer smiles, and for the first time two of them on named
 things, 'birds' before the partner's "birds live in a nest" and 'fish' before "fish live in water": the facts answered by naming
 in its turn. The mood +2.7, the duty 0.28.
+
+### Night 171 (2026-09-14, 06:00): facts 21-25, and named answers
+
+Day 194 (05:08-06:00; the fused yes matched from this day): 91 parent lines, all questions, 90 partner lines; facts 21-25 three
+times each ('a cat is soft', 'honey is sweet', 'cows give milk', 'birds live in a nest', 'the sun is a star') and five earlier
+ones once; 261 ordinary smiles, four for answers, three of them named things ('birds' before "birds live in a nest", 'fish' before
+"fish live in water", 'rain' before "rain falls from the sky"); frowns 33; 85 words over the parent's typing; duty 0.29; its own
+question marks 20; the mood 0.1 at the day's end. The dusk probe: **the mouth completes 21 of 26 held-out prefixes** (16 after
+night 170: all five of the day's new facts on the day they were taught), the cortex alone on the fact sentences 0.550, the
+held-out lines 0.669, the old lines 0.496. Night 171: 3320 utterances heard, the loss 0.132 -> 0.108, the gauge on the dreams
+0.800 -> 0.848. The guard held (duty 0.285, smiles per line 1.44).
