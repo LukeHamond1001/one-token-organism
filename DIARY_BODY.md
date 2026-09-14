@@ -7611,3 +7611,14 @@ earn the answer smile.
 the full one thinned the reward until the mood fell to -6 and the gate's duty from 0.42 to 0.33 within a day: the risk named
 when the smile was built. The faint smile rises to half the full one at the typist's relaunch after night 161, so the reward still
 depends on the word without starving the gate; read by the mood and the duty on day 185.
+
+### Night 161 (2026-09-13, 21:08): a new high, and a lived answer at the mouth
+
+Day 184 (20:13-21:08; the quarter-value faint smile): 117 parent lines, 90 questions, 77 partner lines; 251 faint smiles and one
+for an answer ('yes' before "yes. I ate the egg", 20:32, the first); frowns 36; duty 0.35; mood -6; its own question marks 25, a
+high. The dusk probe: held-out 0.666, the old lines 0.507. Night 161: 1422 utterances heard, the loss 0.134 -> 0.111, the gauge
+on the dreams 0.764 -> 0.845. The guard held (duty 0.351, smiles per line 1.29). The probe on the save: **held-out 0.684** (from
+0.666; the cosine 0.71), the recent 0.787, the old lines 0.476 (from 0.507: the ruler's spread). The mouth: "do you want milk?" ->
+'yes. I want more milk' with the recall's winners the world's on 23 of 24 reads, the own song all but gone from it; "hi" -> '! are
+you happy with me?'. The course: 0.547, 0.608, 0.636, 0.630, 0.628, 0.660, 0.663, 0.662, 0.684. From this save the faint smile is
+half the full one (day 185).
