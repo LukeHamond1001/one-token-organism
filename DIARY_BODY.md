@@ -7596,3 +7596,13 @@ probe: held-out 0.643 (0.663 after night 159: the day gave 0.020 back), the old 
 utterances heard, the loss 0.136 -> 0.112, the gauge on the dreams 0.782 -> 0.846. The guard held (duty 0.402, smiles per line
 1.44). At this save the typist relaunched with the expectation standing until the parent's next line; day 184 is the first
 where an answer can earn the full smile. If the mood does not recover with the answer smiles, the faint smile's value rises.
+
+The probe after night 160: held-out 0.662 (from 0.643 at dusk), the old lines 0.507 (from 0.40 a week of nights ago), the recent
+0.789. The seventh question-first parent's report (labels 181-183, 20:15): A's questions 66, 73, 75% of its lines; **answered
+before the partner voice 31, 36, 44 a day** (16-18 the days before), naming a thing 11-13 by the strict count, 6-8 genuine ("dog",
+"a bird", "the egg"); its own question marks 11, 15, 18, with real forms ("you eat the ham?", "what can I help with?", "do we get
+more?", "what do I give the"), each answered as an opening; cues taken on the post-night re-run ("I have " -> "the egg too", "I am "
+-> "here"); "that dog is out again now" (six words, whole, an answer before B), "that is my big dog", "milk is not all gone", "my
+sock is on you now"; "i see" 13, 18, 21; "all gone" 8 -> 2; one new word, "find"; smiles/frowns 283/37, 307/32, 277/39. The
+queue ran dry twice at hand-overs. The eighth parent (labels 184-187): B's answers name the child's own top nouns so its guesses can
+earn the answer smile.
