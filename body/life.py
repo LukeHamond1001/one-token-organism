@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -360,6 +360,7 @@ class Life:
         # compressed. Utterances dreamt one by one from rest taught the cortex no line from the line before it: the thirty facts were
         # completed from their prefixes (24 of 26) and answered from their questions in conversation once a day (5%).
         self.utt_N = []; self._utt_serial = 0
+        self._q_prev = None; self._read_prev = None            # the cortex key: the query of the tick before, the read of the tick before
         self.store = Store(self.m.d, temp=float(self.cfg["store_temp"]), device=device, links=int(self.cfg.get("store_links", 4)))
         self.store.saturate = bool(int(self.cfg.get("store_sat", 0)))   # repetition suppression (store_sat)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
@@ -480,17 +481,24 @@ class Life:
                 self._seam_pending = False                       # the first symbol's turn, kept or not
             if who == 0 and x != self.sil:
                 self._utt_cur.append(int(x))                     # the utterance as heard, symbol by symbol (dream_source utterances)
-            if learn_store and who == 0 and x != self.sil and self.key.norm() > 1e-6:
-                self.store.write(self.key, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
+            # THE KEY OF A MEMORY (key_form; 2026-09-14, the twenty-seventh defect): "bag", the world's last symbols as a decayed, shifted sum
+            # (the last five characters, in effect: "what is hot?" and "is your yam hot?" wrote under one key, and the store answered
+            # nine of thirty fact questions however the pause or the horizon was set); "cortex", the stream's state at the position
+            # before this symbol, the query of the tick before (the hippocampus indexes the cortex's pattern, not the sense data)
+            key_ = self._q_prev if str(self.cfg.get("key_form", "bag")) == "cortex" else self.key
+            if key_ is None:
+                key_ = torch.zeros(m.d, device=self.dev)
+            if learn_store and who == 0 and x != self.sil and key_.norm() > 1e-6:
+                self.store.write(key_, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
                 if int(self.cfg.get("store_chain", 0)) and self.store.last_idx >= 0:
                     if self._prev_slot >= 0:
                         self.store.link(self._prev_slot, self.store.last_idx, tag=self.store.episode)   # the episode's order: this symbol followed that one
                     self._prev_slot = self.store.last_idx
-                self._last_write = (self.key.clone(), ex.clone())                    # for the boundary mark at the offset
+                self._last_write = (key_.clone(), ex.clone())                       # for the boundary mark at the offset
                 if getattr(self, "_start_pending", False):
-                    self.store.mark_start(self.key, ex); self._start_pending = False  # the utterance's first kept memory
+                    self.store.mark_start(key_, ex); self._start_pending = False     # the utterance's first kept memory
                 if seam:
-                    self.store.mark_seam(self.key, ex)           # the first symbol under the last line's faded context
+                    self.store.mark_seam(key_, ex)               # the first symbol under the last line's faded context
             # the context moves on: both bags fade with time (a pause ends a context, as working memory
             # does), the world's symbols entering the world's bag, its own symbols its own
             # (the bags are content alone: a speaker embedding summed into every key was a constant all
@@ -509,12 +517,14 @@ class Life:
             end_vec = F.normalize(m.E.weight[self.end_id], dim=0) if int(self.cfg.get("recall_end", 0)) else None
             rt_ = float(self.cfg.get("read_tire", 0.0))
             tire_ = self.store.A if (rt_ > 0.0 and self.store.A.numel() == self.store.n()) else None
-            read, conf, win_ = (self._recall(self.bag, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
-            if rt_ > 0.0 and self.store.A.numel() == self.store.n():
-                if win_ >= 0:
-                    self.store.A[win_] *= (1.0 - rt_)                        # the winner tires
-                self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
-            self._read = read                                  # the latest recall (an instrument's hook)
+            cortex_key = str(self.cfg.get("key_form", "bag")) == "cortex"
+            if cortex_key:
+                read = self._read_prev if getattr(self, "_read_prev", None) is not None else torch.zeros(m.d, device=self.dev)
+                conf, win_ = 0.0, -1                           # the recall of the tick before enters the cortex (the return path's delay)
+            else:
+                read, conf, win_ = (self._recall(self.bag, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
+                self._tire(win_, rt_)
+                self._read = read                              # the latest recall (an instrument's hook)
             face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
             # THE TICK'S POSITION. The world's symbol opens it. The world's quiet opens nothing yet: the
             # forecast the mouth reads is then the one made at the last filled position, the one
@@ -541,10 +551,26 @@ class Life:
             if who == 0:                                       # once a tick (review 2026-09-06: twice doubled every band's rate)
                 self.bands = m.band_update(self.bands, C)
             self._C_last = C
+            if cortex_key:
+                q = self.query_from(C)
+                read, conf, win_ = (self._recall(q, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
+                self._tire(win_, rt_)
+                self._read = read; self._read_prev = read; self._q_prev = q
             pred = m.forecast(C, read)
             self._fc_prev = pred.detach()
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
+
+    def query_from(self, C):
+        """the recall's query under the cortex key: the stream's state as a unit direction at the norm a full context's bag would have
+        (the query's norm is the recall's inverse temperature; key_scale, a disclosed constant near the bag's own norm)"""
+        return F.normalize(C.detach().float(), dim=0) * float(self.cfg.get("key_scale", 2.5))
+
+    def _tire(self, win_, rt_):
+        if rt_ > 0.0 and self.store.A.numel() == self.store.n():
+            if win_ >= 0:
+                self.store.A[win_] *= (1.0 - rt_)                            # the winner tires
+            self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
 
     def _recall(self, bag, end_vec=None, tire=None):
         """the waking read, carrying the episode it is in when read_follow is on (the gain, > 1): after a read whose winner continues
