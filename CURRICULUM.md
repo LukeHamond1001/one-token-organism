@@ -251,3 +251,17 @@ earn, when it names what the other voice is about to answer (a content word of t
 mark it attaches stripped), and any other known word the ordinary smile at its old strength. (Thinning the ordinary smile instead,
 days 183-186, halved the day's reward and the gate acted less by the day: contrast, not starvation.) The parent's method, not the body's; read by the answers before the other voice, the actor's slope, the smiles a day, and
 that the mood and the gate's duty hold as the smiles thin.
+
+## Stage five: tiny general knowledge, as exchanges (from 2026-09-14, when the answering threshold was met: 57%, 64%, 47% of the
+parent's questions answered before the other voice on days 184-186)
+
+The owner's plan: after the answering threshold, facts about the world as exchanges, taught the way the conversations were. The
+facts are in `tools/facts_stage5.txt`: thirty questions and their answers ("what is hot?" / "the sun is hot"), each a short sentence
+in the child's grammar, most with one new noun (sun, ice, water, fish, moon, rain, grass, apple, tree, ant, bread, honey, cow, nest,
+star, fins, snow, duck, rock). The method stays the method: a fact is an EXCHANGE, A asks and B answers in the full sentence; five
+facts a day, each asked and answered three times through the day at least three lines apart, inside the ordinary conversation
+(two thirds of the day stays the two of them); a new noun enters only inside its fact; "i see" stays starved; the answer smile works
+as before (B's answer names the thing, so the child earns the bigger smile by naming it in its turn). No fact is asked as a cue
+and no fact is taught in a second phrasing: `tools/heldout_facts.txt` holds each fact as a prefix the parents never type ("the sun
+is "), and the probe reads the mouth's continuation of it after each night: a fact counts as learned when the mouth completes the
+prefix with the fact's word. The reading that judges the stage is that count, night by night, beside the held-out lines.
