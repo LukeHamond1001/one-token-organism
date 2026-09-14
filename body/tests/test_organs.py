@@ -1305,6 +1305,20 @@ def test_smile_for_the_answer():
     print("52 the smile for the answer: full for 'egg' (the answer), faint for 'dog'; the expectation follows the queue")
 
 
+def test_dreams_the_exchange():
+    """53 (2026-09-14): with dream_pair on, a dream is the utterance heard and the one that followed it, joined by the pause (dream_gap
+    rests) and ended as before; an utterance whose follower has left the memory dreams alone; with dream_pair off, nothing changes"""
+    life = tiny(); life.cfg["dream_source"] = "utterances"; life.cfg["dream_pair"] = 1; life.cfg["dream_gap"] = 2; life.cfg["offset_ticks"] = 8
+    life.utts = [[5, 6, 7], [8, 9], [10, 11, 12], [13, 14]]; life.utt_S = [1.0] * 4; life.utt_N = [1, 2, 4, 5]; life._utt_serial = 5
+    ds = life.dreams(60); s_ = life.sil; e_ = [life.end_id]
+    allowed = ([5, 6, 7, s_, s_, 8, 9] + e_, [8, 9] + e_, [10, 11, 12, s_, s_, 13, 14] + e_, [13, 14] + e_)
+    assert all(d in allowed for d in ds), ds[:4]
+    assert len(set(tuple(d) for d in ds)) == 4, "every utterance drawn over sixty dreams"
+    ds2, who = life.dreams(6, with_who=True); assert all(len(w) == len(d) and not any(w) for d, w in zip(ds2, who))
+    life.cfg["dream_pair"] = 0; assert all(len(d) <= 4 for d in life.dreams(20))
+    print("53 the exchange replayed:", [d for d in ds[:6]])
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
@@ -1320,17 +1334,3 @@ if __name__ == "__main__":
             failed += 1; print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
     print(f"{len(tests) - failed}/{len(tests)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
-
-
-def test_dreams_the_exchange():
-    """53 (2026-09-14): with dream_pair on, a dream is the utterance heard and the one that followed it, joined by the pause (dream_gap
-    rests) and ended as before; an utterance whose follower has left the memory dreams alone; with dream_pair off, nothing changes"""
-    life = tiny(); life.cfg["dream_source"] = "utterances"; life.cfg["dream_pair"] = 1; life.cfg["dream_gap"] = 2; life.cfg["offset_ticks"] = 8
-    life.utts = [[5, 6, 7], [8, 9], [10, 11, 12], [13, 14]]; life.utt_S = [1.0] * 4; life.utt_N = [1, 2, 4, 5]; life._utt_serial = 5
-    ds = life.dreams(60); s_ = life.sil; e_ = [life.end_id]
-    allowed = ([5, 6, 7, s_, s_, 8, 9] + e_, [8, 9] + e_, [10, 11, 12, s_, s_, 13, 14] + e_, [13, 14] + e_)
-    assert all(d in allowed for d in ds), ds[:4]
-    assert len(set(tuple(d) for d in ds)) == 4, "every utterance drawn over sixty dreams"
-    ds2, who = life.dreams(6, with_who=True); assert all(len(w) == len(d) and not any(w) for d, w in zip(ds2, who))
-    life.cfg["dream_pair"] = 0; assert all(len(d) <= 4 for d in life.dreams(20))
-    print("53 the exchange replayed:", [d for d in ds[:6]])
