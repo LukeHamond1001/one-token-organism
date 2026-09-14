@@ -8008,3 +8008,12 @@ above are their ends.) The memories written from day 206 carry their context; th
 The probe after night 182 (the last night under the fast bag alone, the baseline for the switch): HELD-OUT 0.708, the cortex on the
 fact sentences 0.867 (the highest), the mouth 19 of 26 (slipping: 24 -> 19 over eight dusks and nights), old lines 0.474, the last
 60 lines 0.737; the questions 11 of 30 at two rests and 6 at eight.
+
+Night 183 (ended 18:08 after day 206, the first day under the slow-context key): duty 0.349, smiles/line 1.39, the guard holds.
+Day 206 (facts 11-20): 181 lines (A 91, all questions), smiles 253, frowns 36; **answered before B 35 of 91 by the five-second
+window, the most of the stage** (23, 14, 23 on the three days before). Dusk 206: held-out 0.705; but the mouth's held-out prefixes
+fell to 11 of 26 (19-22 before) and the cortex alone on the fact sentences to 0.785 (0.867 after night 182, a day's fall of 0.08
+against the usual 0.03): the old memories, written without a context, are reached less well by a query that carries one, and the
+day's lesson, whose own targets are the recall's continuations, drifted the cortex more. The transition cost, expected; watched
+against the post-night probe and the branch: if the branch flips on the served body and the prefixes recover as the store re-keys,
+the switch stands; if the prefixes stay down and the cortex keeps falling, it reverts at a boundary.
