@@ -7852,3 +7852,9 @@ utterances = 384 steps): HELD-OUT 0.658 -> 0.673 (served 0.697), old 0.459 -> 0.
 cortex on the facts 0.671 -> 0.703 (0.767), the mouth 23 of 26 both, the questions 6 of 30 against 7. Every ruler lifted less, by
 about the ratio of the steps; the pair dreams themselves went 0.54 -> 0.77 (the answer after its question, new ground). One night
 cannot show the answering; the prefixes took a week. Next: the same dusk given 1024 pairs (the served step count), for the cost.
+The exchange night on the copy, equal steps (1024 pairs, 384 steps, the same dusk): HELD-OUT 0.658 -> 0.683 (the served night 0.697),
+old 0.459 -> 0.483 (0.493), the cortex on the facts 0.671 -> 0.738 (0.767), the mouth 23 of 26 both, the questions 5 of 30 against
+5-7. At equal steps the exchange night gives the old rulers about two thirds of the single-utterance night's lift (half of each dream
+is the answer after its question, which those rulers do not read), and the questions do not move in one night. Three exchange
+nights in a row on the copy (and three single nights as the control) now run, the questions read after each: whether the answer
+after its question is learnable from the replay alone.
