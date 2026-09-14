@@ -7764,3 +7764,15 @@ day they were taught), the cortex alone on the fact sentences 0.438 (0.464 after
 held-out lines 0.682, the old lines 0.503. Night 169: 2963 utterances heard, the loss 0.129 -> 0.104, the gauge on the dreams
 0.797 -> 0.853. The guard held (duty 0.327, smiles per line 1.50). The eleventh parent (labels 193-195): facts 16-30, five a day,
 and five of the first fifteen each day.
+The probe after night 169: the mouth completes 12 of 26 held-out prefixes; **the cortex alone on the fact sentences 0.548** (0.438
+at dusk; 0.356 before the facts): the night puts facts 11-15 into the cortex. The held-out lines 0.699 (from 0.682 at dusk), the
+recent 0.825, the old lines 0.490.
+
+The tenth parent's report (labels 190-192, the first of stage five; 04:20): facts 1-15 taught as exchanges exactly as written,
+three times each on their day and once more on the days after; the child said fact answers in its own turn before the partner
+voice ("fish live in water" whole, "water is wet" twice in one turn, "we eat bread" a minute after its first teaching, "rain
+falls"); A's questions 89-91% of its lines; **answered before the partner voice 48%, 51%, 60%, naming a thing 16, 21, 30 times a
+day**; answer smiles 2, 1, 3 (its "yes" fuses into "yesee" and loses the reward it earned); its own question marks 19, 15, 12,
+each answered as an opening, and "why are we happy?", modelled once on day 190, came back from it whole on day 192; unprompted
+"I talk and you?", "the egg is in it", "I hold my egg", "and I talk here"; "i see" 5, 10, 7 (fading at last); smiles/frowns
+193/37, 196/31, 266/36; the queue ran dry twice at hand-overs. The eleventh parent (labels 193-195): facts 16-30.
