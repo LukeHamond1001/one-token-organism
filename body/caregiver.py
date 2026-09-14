@@ -174,14 +174,13 @@ class Caregiver:
 
     def smile(self, on, ctx, why, extra=None, faint=False):
         db = (self.state.get("last") or {}).get("doses")
-        levels = self.answer_levels if why.startswith("cue") else (0 if faint else 1)
+        # THE ANSWER'S SMILE IS THE BIGGER ONE (ANSWER_SMILE, 2026-09-13): the ordinary smile at a known word keeps its old strength and
+        # the answer earns the growing smile the cues earn (2, then 4). Thinning the ordinary smile instead (a quarter, then a half)
+        # halved the day's reward and the gate acted less each day (duty 0.42 -> 0.35 -> 0.29): reward must depend on the word by
+        # contrast, not by starvation
+        levels = self.answer_levels if why.startswith("cue") else (2 if why.startswith("answer") else 1)
         t0 = time.time(); la = {}
-        if faint:
-            # a faint smile, half the full one: a known word that did not answer (ANSWER_SMILE). At a quarter (0.5) the day's reward
-            # thinned to the point the mood fell to -6 and the gate's duty from 0.42 to 0.33 within a day (days 183-184); the reward
-            # must still depend on the word without starving the gate
-            self._hold(1.0, 5)
-        elif levels >= 2:
+        if levels >= 2:
             self._hold(2, 2.5, then=0.0, then_ticks=2.5, then_expr=4)
         else:
             self._hold(2, 5)

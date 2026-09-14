@@ -1247,8 +1247,8 @@ def test_dreams_the_utterances_heard():
 
 
 def test_smile_for_the_answer():
-    """52 (2026-09-13): with ANSWER_SMILE on, the child's word during its turn earns the full smile when it names what the other voice is
-    about to answer, and a known word that does not answer earns a faint one; the expectation comes from the queue's next B line"""
+    """52 (2026-09-13): with ANSWER_SMILE on, the child's word during its turn earns the bigger, growing smile when it names what the
+    other voice is about to answer; a known word that does not answer earns the ordinary one; the expectation comes from the queue's next B line"""
     import json, os, random
     import body.caregiver as cg
     from body.teacher import Teacher, Corpus, FixedPlanner
@@ -1284,9 +1284,9 @@ def test_smile_for_the_answer():
         child_says("egg.")                                     # the answer, with the mark attached as the child writes it: the full smile
         rows = [json.loads(l) for l in open(log)]
         smiles = [r for r in rows if r["action"] == "smile"]
-        assert any(r["on"] == "egg." and r["why"].startswith("answer:") and r["levels"] == 1 for r in smiles), smiles
-        faint = [r for r in smiles if r["on"] == "dog"]
-        assert faint and faint[0]["levels"] == 0, smiles
+        assert any(r["on"] == "egg." and r["why"].startswith("answer:") and r["levels"] == 2 for r in smiles), smiles
+        plain = [r for r in smiles if r["on"] == "dog"]
+        assert plain and plain[0]["levels"] == 1, smiles
         assert t.expect["done"]
         t.planner.buf = ["b: I have my hat"]                    # the expectation set from the queue's next B line after a parent's line
         t.event("what do you have?", "line")
