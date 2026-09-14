@@ -7750,3 +7750,6 @@ marks 15; the mood 0.0 at the day's end (from -5.5 two days ago). The dusk probe
 (4 after night 167; 'dogs run and ' -> 'bark' among the new), the cortex alone on the fact sentences 0.409; the held-out lines
 0.678 (0.702 after night 167), the old lines 0.493. Night 168: 2783 utterances heard, the loss 0.128 -> 0.106, the gauge on the
 dreams 0.806 -> 0.851. The guard held (duty 0.279, smiles per line 1.11).
+The probe after night 168: the mouth completes 8 of 26 held-out prefixes (as at dusk; of ten facts taught, eight, and 'ice is ' ->
+'too cold'); **the cortex alone on the fact sentences 0.464** (0.409 at dusk, 0.356 before the facts): the night puts the facts into
+the cortex. The held-out lines 0.686 (from 0.678 at dusk), the recent 0.813, the old lines 0.504.
