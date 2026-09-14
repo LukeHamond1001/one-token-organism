@@ -7823,3 +7823,13 @@ The probe after night 172, the first night with all thirty facts heard: the mout
 cortex alone on the fact sentences 0.703** (0.634 at dusk; 0.356 before the facts, six nights ago); the held-out lines 0.683
 (from 0.666 at dusk), the recent 0.759, the old lines 0.498. The facts' course at the mouth: 1, 3, 4, 8, 8, 12, 12, 15, 16, 21,
 21, 24, 23; in the cortex 0.356, 0.391, 0.464, 0.548, 0.581, 0.640, 0.703.
+
+The eleventh parent's report (labels 193-195, facts 16-30; 07:02): every fact its three times; A's questions 100% of its lines;
+**answered before the partner voice 72%, 76%, 76%, with a content word rather than yes/no 35, 55, 53 times a day**; fact answers
+in its own turn before the partner ('birds', 'fish', 'rain', each the bigger smile; 'ice!', 'fins', 'hrock' right but fused into
+the typist's text); "ducks swim" written twice on the day it first heard it, "we eat bread and" the morning after; its own
+question marks 24, 20, 14, whole ("why do we play?", "can I hold your doll?", "are we good?"), and forty seconds after being
+answered "why do we play?" it produced "why do we eat?"; it asked a fact's own question back ("?what has four "); unprompted
+whole sentences "a red van is out", "I eat a yam and an egg", "my egg is warm", "I talk with you too"; no phrase dominated; "i
+see" 5-8; smiles/frowns 250/32, 270/33, 242/36. Two mechanical findings: its instant answers run into the typist's line without a
+space and a right naming is logged as a frown (79-89 talked over a day); a B line repeating two words of A's line is deferred.
