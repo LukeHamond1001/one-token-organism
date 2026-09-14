@@ -7669,3 +7669,12 @@ questions answered in the modelled shape) is met on two of three days.
 tools/heldout_facts.txt; the probe reads both from tonight. The baseline before any teaching: the mouth completes 1 of 26
 prefixes ('ice is ' -> 'cold', from the line it already knows), the cortex alone on the thirty fact sentences 0.362. The tenth
 parent, after the ninth reports, teaches five facts a day inside the conversation.
+
+### Night 164 (2026-09-13, 23:49): the first day of the contrast smile
+
+Day 187 (22:56-23:49; the ordinary smile at full strength, the answer's the growing one): 110 parent lines, 88 questions, 87
+partner lines; 177 ordinary smiles, nine for answers, one cue; frowns 37; duty 0.31; its own question marks 6; mood +1.4 at the
+day's end (from -4.5). The dusk probe: held-out 0.661 (0.691 after night 163: the day gave 0.030 back), the old lines 0.497, the
+facts 1 of 26 (the baseline, no fact taught yet). Night 164: 2015 utterances heard, the loss 0.129 -> 0.107, the gauge on the
+dreams 0.787 -> 0.851. The guard held (duty 0.309, smiles per line 0.95). The duty has not yet climbed back from the thinned days;
+the answer smiles rose 5 -> 9 a day.
