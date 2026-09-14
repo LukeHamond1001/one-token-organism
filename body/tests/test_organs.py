@@ -1288,6 +1288,10 @@ def test_smile_for_the_answer():
         plain = [r for r in smiles if r["on"] == "dog"]
         assert plain and plain[0]["levels"] == 1, smiles
         assert t.expect["done"]
+        t.expect = {"line": "yes. I am here", "words": set(cg.content_words("yes. I am here")), "yesno": True, "until": time.time() + 60, "done": False}
+        child_says("yesee")                                    # its yes fused into the next sound: still the answer
+        rows = [json.loads(l) for l in open(log)]
+        assert any(r["action"] == "smile" and r["on"] == "yesee" and r["why"].startswith("answer:") for r in rows), [r for r in rows if r["action"] == "smile"][-3:]
         t.planner.buf = ["b: I have my hat"]                    # the expectation set from the queue's next B line after a parent's line
         t.event("what do you have?", "line")
         assert t.expect and "hat" in t.expect["words"] and not t.expect["yesno"], t.expect

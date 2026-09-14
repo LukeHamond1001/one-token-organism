@@ -305,7 +305,8 @@ class Caregiver:
         ex = self.expect
         if ANSWER_SMILE and self.parent and ex and not ex.get("done") and low and len(low) >= 2 and wall <= ex["until"]:
             w_ = low.strip(".!?")                                # "yes." and "yes!" are yes (days 184-185: 13 such answers, 2 rewarded)
-            if w_ in ex["words"] or (ex["yesno"] and w_ in ("yes", "no")):
+            said_yes = w_.startswith("yes")                      # and "yesee", "yesplease": its yes fuses into the next sound (days 190-192)
+            if w_ in ex["words"] or (ex["yesno"] and (said_yes or w_ == "no")):
                 ex["done"] = True; self.e = min(1.0, self.e + 0.2); self.word_smiled_tick[low] = b
                 self.smile(tok, ctx, "answer: " + ex["line"]); return
         if low in KNOWN2:
