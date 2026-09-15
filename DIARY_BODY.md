@@ -8240,3 +8240,6 @@ Night 197 (ended 09:44 after the day labelled 223): duty 0.346, smiles/line 1.23
 223-225, facts 1-10): the tally below.
   day 223: lines=183 (A=92 B=91) A-questions=92 cues=0 smiles=232 frowns=39 withheld=8
   A-questions the child answered with I/yes/no/please before B: 22
+The probe after night 197: HELD-OUT 0.672, the cortex on the fact sentences 0.890, the mouth's prefixes 18 of 26, the questions 16
+of 30 at two rests (16, 16, 17, 18, 16 over five nights) and 11 at eight, the branch 7 of 9 and 12 of 12. A plateau near sixteen to
+eighteen on the clean ask, from the store alone.
