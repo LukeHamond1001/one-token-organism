@@ -8294,3 +8294,8 @@ half, rephrasings about a quarter.
 Night 200 (ended 13:01 after the day labelled 228, the first full day back on the pre-chooser flags): duty 0.325, smiles/line
 1.28 (253 smiles over 189 lines), the guard holds with its flags quoted; frowns 40; answered before B 25 of 94. The day recovered
 whole from the chooser's day.
+THE PREFIXES HALVED IN A DAY (13:10): the mouth completed 20 of 26 held-out prefixes on the save of 11:48 (after night 199), 10 at
+the dusk of the day labelled 228 (12:36) and 9 after night 200; the questions 16 -> 7 of 30; the flags verified the same as
+before the chooser, the store full (8192 slots, every strength above 0.54, the mean 0.82 -> 0.91 through the day). A day writes
+about 3500 world symbols into 8192 slots: two fifths of the store turns over daily, and the facts come once in three days. The
+store's capacity (the second iteration) is derived and built next; the tick's cost is measured before it goes on the served body.

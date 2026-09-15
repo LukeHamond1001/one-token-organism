@@ -19,6 +19,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 ## To test in the language world (a copy run of 20-30 minutes each)
 1. The episode chain kept per utterance, not in a slot's sixteen links. Ruler: the branch.
 2. Store capacity and the tag tables. Ruler: fact prefixes across days.
+   DERIVED (2026-09-15, 13:15): the store holds 8192 slots and a day writes about 3500 world symbols, so two fifths of it turns over
+   every day; a fact's chain survives only until stronger writes displace it, and the facts come once in three days. Bracketed on
+   the served body: the prefixes 20 of 26 at 11:48 and 10 of 26 at 12:36 the same day, the store full at every strength above
+   0.54. The hippocampus holds weeks, not two days. Mechanism: the slot count as a constant (store_cap), raised to 32768, four
+   times the writes of a fact's cycle. Predicted: the prefixes hold their morning count through the day; the tick's read costs
+   four times as much (the matmul over the keys), to be measured before the switch.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by
