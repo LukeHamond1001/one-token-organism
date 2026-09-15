@@ -8312,3 +8312,12 @@ by the cortex 0.888; the mouth completes 11 of 26 prefixes and answers 13 of 30 
 8): day 229, the last at the old cap, retaught some facts (7 -> 13) and evicted others (the prefixes 9 -> 11 only). The reload at
 the save (14:11:35) put the capacity on the served body: the store read 8282 slots within two minutes, past the old limit, and
 the typist relaunched. Day 230 is the falsifier: the dusk probe against this morning's 11 of 26.
+THE FIRST DAY AT THE CAPACITY (the log's day 231, 14:12-15:01; night 202 ended 15:22, slept 1303 s): the prefixes 11 of 26 in the
+morning, 22 at dusk; the held-out 0.659 in the morning, 0.667 at dusk, the first dusk above its morning since the stage began; the
+store 8192 -> 10318 slots, nothing evicted; the guard held (duty 0.320, smiles a line 1.47). The eviction was the cause, and the
+capacity the cure. (The label 230 was an aborted session of no lines; the typist's relaunch skips a label.)
+THE PARENT OF 228, 229 AND 231 REPORTED (15:24): 189/188/186 lines; A's questions answered before B 56/49/53 of 94; answer smiles
+11/7/6; fact words in its own turn before B: fish, rain / bees make it / cows, birds; unprompted runs of three words 18/15/12; its own
+question marks 31/29/28; smiles 253/274/284, frowns 40/39/41 (all talk-overs); known words 419 -> 436. It answered the child's own
+fact-shaped questions ("what is green", "is the star?", "is soft?") with the fact as B's next line. The queue is saturating: most
+first-draft lines collide with the 3700 rows; the next parent (232-234) is briefed to vary and check.
