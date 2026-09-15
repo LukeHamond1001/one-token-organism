@@ -8155,3 +8155,6 @@ parent for 216-218, facts 1-10): the tally below.
   day 216: lines=191 (A=95 B=96) A-questions=95 cues=0 smiles=235 frowns=43 withheld=2
   A-questions the child answered with I/yes/no/please before B: 15
      Q: what do you see out here? | its: 'yes          .'
+The probe after night 191 (the last save under the slow context): HELD-OUT 0.668, the cortex on the fact sentences 0.885, the
+mouth's prefixes 16 of 26, the questions 8 and 8 of 30 ("the sun is hot" whole, "fish live in w[ater]", "birds fly up", "dogs
+run"), the branch 7 of 9 and 9 of 12. From here the readings are the fast bag's with the floor.
