@@ -8148,3 +8148,10 @@ context and the floor: HELD-OUT after the night 0.657, the prefixes 15 of 26, th
 and 10 of 12. The context costs the held-out 0.024 and four answers, and the branch no longer needs it: with the answer's onset
 written (the floor), the episode's links carry the question into its own answer. THE SLOW CONTEXT REVERTS at the next post-night
 save; the floor stays. The memories written under the context remain and match on their fast part.
+
+Night 191 (ended ~03:27 after the day labelled 216): THE SLOW CONTEXT REVERTED at this night's save (the reload at 03:27:45; the
+fast bag with the write floor at 1e-30); the typist relaunched (the label skipped again: the current day is 218). Day 216 (the
+parent for 216-218, facts 1-10): the tally below.
+  day 216: lines=191 (A=95 B=96) A-questions=95 cues=0 smiles=235 frowns=43 withheld=2
+  A-questions the child answered with I/yes/no/please before B: 15
+     Q: what do you see out here? | its: 'yes          .'
