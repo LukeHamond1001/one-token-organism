@@ -8086,3 +8086,12 @@ fired there and exited while the waiter saw it still alive; a guard is armed aga
 
 Night 187 (ended ~23:21 after day 211): day 211: 183 lines (A 91, all questions), smiles 253, frowns 39; answered before B 19 of
 91. The parent for days 212-214 spawned at the night row (facts 1-10 first).
+The parent's report for days 209-211 (23:23; its day 208 was cut by the restart): answered before B 43 of 76, 62 of 95, 63 of 91
+(57-69%); the asked fact's word before B 0 on every day (fact-answer pairs in its turns 6, 9, 9: "did the ducks swim", "eat bread
+an", "bees makes"); its own fact-shaped questions "what is little?", "what has wi[ngs]" answered as B's next line; own question
+marks 19, 24, 33; smiles 241/261/252, frowns 32/40/39. A typist defect found: a line with a comma is never typed (twelve exchanges
+broke; the brief now forbids commas). The three arms on the copy of day 209: A (the served form) and B (the floor lowered) read
+identically, 10, 10, 7 of 30 and the branch 9 of 9, 8 of 12: at listen 64 the faded key's norm is 1.3e-6, just above the floor;
+the crossing is near 68 ticks, and the served body's turns run to 80 (the gate's 8.2-second cap on half the lines), so the copy
+cannot show what the served log implies. The floor's repair is arithmetic and goes on the served body at night 188's save; arm C
+(the shifted context) decides the context's form.
