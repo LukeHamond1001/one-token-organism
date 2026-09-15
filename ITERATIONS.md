@@ -39,7 +39,7 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    with rewards, then fact answers in conversation.
    ON THE SERVED BODY from night 198's save (2026-09-15, 10:45) and OFF from 11:50: its first live day collapsed (48 smiles, 99 junk characters, duty 0.158; the guard tripped). Read on a copy: the head learns the day's action prior through the state's mean direction and votes it back into the mouth, which loops and thins. FAILED for this world's reward density; kept as code, off; it belongs to a body with denser, more specific reward.
 4. The actor's earned voice measured again with the chooser in place. Ruler: the actor's slope.
-5. The handoff: the rulers read with the store off. Ruler: answers with the store off.
+5. The handoff: the rulers read with the store off. Ruler: answers with the store off. READ ALREADY by qa_by_gap's 'cortex alone' column: 0 of 30 every night; the cortex answers no question on its own yet.
 6. Old memories in the night's draw. Ruler: old lines, held-out.
    DERIVED (2026-09-15, 10:50): the night draws its 1024 utterances by strength, which is recency (0.97 a night), from a memory of
    about 4096 utterances, twenty days of speech; the held-out lines are in the fourth stage's style and the days are now fact-heavy
@@ -66,7 +66,7 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 14. Awake replay during the pauses. Ruler: the fact sentences, held-out.
 15. Synaptic homeostasis in the night (renormalizing, not only strengthening). Ruler: held-out, old lines.
 16. Noise: a copy day of dropped and swapped letters. Ruler: all four on the corrupted copy.
-17. The rephrased-question ruler (before any recording).
+17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
 
 ## Body only (a simulated body first; each with the same rulers carried over)

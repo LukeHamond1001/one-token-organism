@@ -8284,3 +8284,9 @@ without a bias, and votes it back into a mouth that already carries that prior f
 stranger symbols. With ten relevant smiles a day the state-dependent residual it was built for cannot outweigh that prior. The
 chooser is off and stays off in this world; it is written down as failed for the reward's density, not the mechanism's kind: a
 body with denser, more specific reward is where a striatal chooser earns its place.
+THE REPHRASED-QUESTION RULER (12:10; tools/heldout_rephrased.txt, thirty facts asked in words the parents never type): the served
+body after night 199 answers 8 of 30 at two rests and 7 at four ("what is so green?" -> "grass is green", "what comes down from
+the sky?" -> "rain falls", "what can ducks do?" -> "ducks swim", "where do the birds live?" -> "birds live in a", "what do the fish
+have?" -> "fish have fins"), against 16 to 18 on the taught wording: the recall carries to a rephrasing when the question's last
+words are the taught ones, which is what a key of the last five symbols predicts. The honest demo claim: taught questions about
+half, rephrasings about a quarter.
