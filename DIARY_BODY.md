@@ -8180,3 +8180,8 @@ answers ahead of B ("on my foot" to "where is my sock?", "out" to "where is the 
 fragments bound to the wrong question ("where do birds live?" -> "cows give"); its own fact-shaped question "what is soft?" answered
 in the next rows; own question marks 21, 35, 39; smiles 235/233/278 (answer smiles 4, 5, 6), frowns 43/37/39; one A line lost at a
 night boundary in 516; no B line deferred. The day label is not a day counter (the reload's relaunch skips one).
+The probe after night 193 (the second night after the revert, the fast bag with the floor): HELD-OUT 0.680, the cortex on the fact
+sentences 0.890 (the highest), old lines 0.501 (the highest in ten days), the mouth's prefixes 20 of 26, THE QUESTIONS 16 OF 30 AT
+TWO RESTS AND 15 AT EIGHT, the highest readings of the stage (8-11 before the switch, 4-10 under the slow context): "ice", "fish
+live in w[ater]", "birds fly up"; the branch 7 of 9 and 12 of 12. The floor's repair shows on the live body: the answer's onset
+written, the question finds its own answer half the time on a clean ask.
