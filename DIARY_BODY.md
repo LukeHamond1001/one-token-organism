@@ -8335,3 +8335,11 @@ at two rests and 9 at eight, each the sentence verbatim; after a night on the co
 taught questions on the same copy 17 of 30. The demo's central scene stands on a copy. The never-typed facts answer better than
 the taught ones because their question's key is uncrowded: the taught questions were asked in ordinary talk with other answers,
 and the recall splits among the continuations under one key.
+THE DUSK OF DAY 232 (16:12; the second day at the capacity, the new parent's first): the mouth completes 25 of 26 prefixes (22 in
+the morning); but the held-out 0.665 -> 0.595 and the facts by the cortex 0.888 -> 0.796, a fall ten times an ordinary day's, the
+old lines steady (0.481 -> 0.474). The day itself was ordinary (183 lines, 861 words, junk 2, smiles 281, duty 0.333, stress 4.5).
+The cortex's weights moved less over night 202 and day 232 together (relative 0.0074) than over day 231 alone (0.0104), so it is
+not runaway plasticity but a movement in a bad direction for the recent material; the cortex's stream never sees the recall (the
+read enters the mouth's forecast only), so it is not the cortex leaning on the store. The night's probe decides whether the day's
+fall is a transient. (An instrument's lesson: the dusk probe's save overwrites the served file by day, so a "morning" copy taken
+later is the dusk; the post-save probe now keeps the morning save.)
