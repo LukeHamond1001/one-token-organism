@@ -8198,3 +8198,12 @@ read): on the served body the actor votes 'b' at +1.00 or 'd' at +1.00 whatever 
 Its earned voice being small (slope 0.036), it does no harm to the mouth; as a chooser it is absent. The chooser must be rebuilt:
 bounded (a softmax over the candidates, not a tanh per symbol), fed by a state that carries the question, credited by the answer
 smile on the candidate chosen, and read by this instrument on copies with the day's rewards replayed.
+THE THIRTIETH DEFECT, named (06:40): the served actor has been off (no --actor on the served flags), and the head that remains is
+saturated; the striatal delay line it read held only the last eight events, so no question could ever have reached it. THE CHOOSER
+(actor_form softmax, actor_input cortex; 06:43): a striatal head over the CANDIDATES at a torn moment (the mouth's top few and the
+cortex's own top two, the best two within the margin), read from the cortex's state with its running mean taken out (the
+corticostriatal path), a softmax among the candidates whose zero-mean log enters the readout at the earned gain; credited by
+dopamine on the candidate said (the log-softmax's gradient, decaying by dopamine's discount); every row of its weights bounded so
+no candidate can saturate the vote. Born at zero. Test 57 (a rewarded choice raises its candidate on that state, a punished one
+lowers it, forty pushes cannot pass the bound); suite 56 of 56. Measured next on a copy of day 216 with its rewards replayed, the
+chooser's raw vote at the branch read after, at rates 0.2 and 1.0.
