@@ -8213,3 +8213,5 @@ as the arithmetic said of a head that never sees the question. The chooser's cop
 
 Night 195 (ended 07:40 after the day labelled 221): duty 0.370 (a high), smiles/line 1.50 (279 smiles over 182 lines), the guard
 holds; frowns 34; answered before B 25 of 91 ("yes. water" to "can that duck swim?").
+The probe after night 195: HELD-OUT 0.670, the cortex on the fact sentences 0.892 (the highest), the mouth's prefixes 21 of 26, THE
+QUESTIONS 17 OF 30 at two rests (16, 16, 17 over the last three nights) and 12 at eight, the branch 8 of 9 and 12 of 12.
