@@ -8235,3 +8235,8 @@ had a bias, and a bias absorbs exactly the state-free part of the credit, the sy
 state-dependent preference. The bias removed: the chooser votes by the state alone, and the branch probe now reads its vote among
 the family's candidates only, as it votes in the body. One more copy day at 0.2; then, its gain being earned and born at zero, the
 chooser goes on the served body to learn over days from real rewards, where a copy day's ten answer smiles cannot teach it.
+
+Night 197 (ended 09:44 after the day labelled 223): duty 0.346, smiles/line 1.23, the guard holds. Day 223 (the parent for
+223-225, facts 1-10): the tally below.
+  day 223: lines=183 (A=92 B=91) A-questions=92 cues=0 smiles=232 frowns=39 withheld=8
+  A-questions the child answered with I/yes/no/please before B: 22
