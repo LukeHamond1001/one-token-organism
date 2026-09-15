@@ -24,7 +24,13 @@ if key_form: cfg_["key_form"] = key_form
 life = Life.load(sys.argv[1], TOK, device="cpu", cfg=(cfg_ or None)); m = life.m; m.eval()
 zero = torch.zeros(m.d)
 STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
-pairs = [tuple(s.strip() for s in l.split("|")[:2]) for l in open(os.path.join(ROOT, "tools/facts_stage5.txt")) if "|" in l]
+qset = "facts"
+for a in sys.argv[2:]:
+    if a.startswith("--set="): qset = a[6:]
+# THE REPHRASED QUESTIONS (2026-09-15; --set=rephrased): each fact asked in words the parents never type (tools/heldout_rephrased.txt),
+# the answer the same: recall of the taught exchange against understanding of the question
+qfile = "tools/heldout_rephrased.txt" if qset == "rephrased" else "tools/facts_stage5.txt"
+pairs = [tuple(s.strip() for s in l.split("|")[:2]) for l in open(os.path.join(ROOT, qfile)) if "|" in l]
 def run(q, k, use_recall):
     life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None
     got = []; rd_prev = zero
@@ -47,7 +53,7 @@ def run(q, k, use_recall):
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": (rd_prev if cortex_key else rd), "r": 0.0}); rd_prev = rd
             life.rest_tick(); life.take_own(sym)                       # as the tick: the world half's fade, then its own symbol
     return "".join(got)
-print(f"body {os.path.basename(sys.argv[1])}: twenty symbols read | nights {life.nights} | key_form {life.cfg.get('key_form')} bag_decay {life.cfg['bag_decay']} read_follow {life.cfg.get('read_follow')}")
+print(f"body {os.path.basename(sys.argv[1])}: {qset} questions, twenty symbols read | nights {life.nights} | key_form {life.cfg.get('key_form')} bag_decay {life.cfg['bag_decay']} read_follow {life.cfg.get('read_follow')}")
 for k in gaps:
     row = []
     for use_recall in (False, True):
