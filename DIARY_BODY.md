@@ -8243,3 +8243,9 @@ Night 197 (ended 09:44 after the day labelled 223): duty 0.346, smiles/line 1.23
 The probe after night 197: HELD-OUT 0.672, the cortex on the fact sentences 0.890, the mouth's prefixes 18 of 26, the questions 16
 of 30 at two rests (16, 16, 17, 18, 16 over five nights) and 11 at eight, the branch 7 of 9 and 12 of 12. A plateau near sixteen to
 eighteen on the clean ask, from the store alone.
+The chooser without a bias, one copy day with the rewards (10:43, actor_lr 0.2): its vote among the family's candidates 4 of 9 on
+the sun family and 8 of 12 on the day-206 families (the one-candidate starts counted), unsaturated (votes within one): a favourite
+per family ('m' after "the sun ", 'd' after "we " and "a ", 'a' after "an ") rather than a choice by the question, which is what
+ten relevant smiles a day can teach a linear head in a day. The mouth's rulers 16 and 12 of 30, the branch 7 of 9 and 10 of 12,
+its earned voice small (0.063). Born at zero and gated by what it earns, the chooser goes on the served body at night 198's save
+to learn over days from the real rewards; its reading from here is its vote at the branch after each night.
