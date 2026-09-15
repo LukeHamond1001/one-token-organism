@@ -8249,3 +8249,8 @@ per family ('m' after "the sun ", 'd' after "we " and "a ", 'a' after "an ") rat
 ten relevant smiles a day can teach a linear head in a day. The mouth's rulers 16 and 12 of 30, the branch 7 of 9 and 10 of 12,
 its earned voice small (0.063). Born at zero and gated by what it earns, the chooser goes on the served body at night 198's save
 to learn over days from the real rewards; its reading from here is its vote at the branch after each night.
+
+Night 198 (ended ~10:45 after the day labelled 224): day 224: 183 lines (A 91, all questions), smiles 268, frowns 36; answered
+before B 21 of 91. THE CHOOSER ON THE SERVED BODY: the reload at 10:45:49 after this night's save (actor 1, actor_form softmax,
+actor_input cortex, actor_voice earned, actor_lr 0.2, born at zero); from day 225 the striatal head votes among the candidates
+the mouth is torn between, as loud as it earns.
