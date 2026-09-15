@@ -8083,3 +8083,6 @@ context) report near 23:00; the held-out's slide is the number that decides a re
 Day 210 (the eighteenth-after-reboot parent's facts 11-20 or 21-30 by its shifted schedule): 180 lines (A 95, all questions),
 smiles 261, frowns 40; answered before B 19 of 95. (The guard's row for night 186 was not written: the guard armed before night 185
 fired there and exited while the waiter saw it still alive; a guard is armed again for night 187.)
+
+Night 187 (ended ~23:21 after day 211): day 211: 183 lines (A 91, all questions), smiles 253, frowns 39; answered before B 19 of
+91. The parent for days 212-214 spawned at the night row (facts 1-10 first).
