@@ -28,6 +28,14 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the cortex alone, the candidates from the cortex and the recall together. PREREQUISITE: copy days carry no reward, so none of this is
    measurable on a copy until the day's smiles are replayed with the lines (the caregiver log holds each smile's time and word): the
    reward-replay instrument (day_on_copy --rewards) comes first, and it makes 5, 7, 11 and 13 measurable on copies too.
+   MEASURED (2026-09-15, 06:40): the reward replay works (277 faces land); the actor's earned voice does not move in a day at 0.02, 0.2
+   or 1.0 (the voice is gated by a correlation over two hours of ticks); and the actor's raw vote at the branch is saturated, 'b' or
+   'd' at +1.00 whatever the question, 0 of 9. DESIGN for the rebuild: a striatal head that scores only the CANDIDATES at a torn
+   moment (the cortex's and the recall's top few) with a softmax over them, its input the delay line's expansion (which carries the
+   question) and the candidates' embeddings; trained by the reward prediction error (the critic's baseline) with the eligibility on
+   the candidate chosen, decaying over the answer's ticks; its weights bounded by decay so it cannot saturate; its vote entering the
+   readout at a gain earned by its correlation with reward as now. Rulers: the actor's raw vote at the branch (branch_probe) on copies
+   with rewards, then fact answers in conversation.
 4. The actor's earned voice measured again with the chooser in place. Ruler: the actor's slope.
 5. The handoff: the rulers read with the store off. Ruler: answers with the store off.
 6. Old memories in the night's draw. Ruler: old lines, held-out.

@@ -8192,3 +8192,9 @@ rewards: at actor_lr 0.2 the actor's slope 0.038 (corr 0.025), the same as at 0.
 rulers 16 and 13 of 30, the branch 7 of 9 and 11 of 12. Ten times the rate moves the earned voice not at all in a day: the voice is
 gated by a correlation estimated over two hours of ticks (actor_tau), and a day cannot move it. The chooser's reading must be the
 actor's raw preference at the branch, before the gate; the 1.0 arm runs to close the sweep.
+THE ACTOR AT THE BRANCH (06:39, tools/branch_probe.py with the striatal delay line fed along the prefix and the actor's raw vote
+read): on the served body the actor votes 'b' at +1.00 or 'd' at +1.00 whatever the question and the start ("the sun " -> 'b',
+"the sun is " -> 'd'), 0 of 9 right: the head is saturated (tanh at its rails on a few symbols) and reads nothing of the question.
+Its earned voice being small (slope 0.036), it does no harm to the mouth; as a chooser it is absent. The chooser must be rebuilt:
+bounded (a softmax over the candidates, not a tanh per symbol), fed by a state that carries the question, credited by the answer
+smile on the candidate chosen, and read by this instrument on copies with the day's rewards replayed.
