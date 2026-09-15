@@ -8260,3 +8260,9 @@ cortex on the fact sentences 0.885, the mouth's prefixes 21 of 26, the questions
 7 of 9 and 12 of 12.
 The served body verified after the reload (10:48): the chooser's flags on, the typist relaunched, the guard re-armed, 92 ticks in
 twenty seconds, the earned gain 0.049 (the saved estimate; the new head's weights are zero, so its first votes are even).
+The old in the draw, two copy nights from the save after night 198 (11:20): with a quarter of the dreams drawn uniformly over the
+memory, HELD-OUT 0.654 -> 0.641 and the old lines 0.476 -> 0.471; without, 0.654 -> 0.654 and 0.473. Rejected: the utterance
+memory holds about twenty days, all of stage five, so its "old" is the same style as its new; the fourth stage's speech the
+held-out lines are written in is no longer in it. The held-out's drift is the day's erosion of what earlier nights consolidated
+(each dusk two to three hundredths down, each night one to two up), which the eighth iteration, the day's plasticity gated by
+reward and surprise, addresses next.

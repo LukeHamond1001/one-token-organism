@@ -47,8 +47,16 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    too. A share of the draw taken uniformly over the whole memory (dream_old_share, a constant) is the mechanism; predicted: the
    old lines and the held-out up by one to two hundredths a night, the fact sentences' climb slower by less than that. Measured
    by two copy nights from the same save, with and without the share.
+   MEASURED (11:20): rejected. With the share the held-out fell 0.013 and the old lines 0.005; without, flat. The memory's twenty days are all of stage five, so its old is the new's style; the held-out's drift is the day's erosion, not the draw's.
 7. Reward-weighted replay. Ruler: the fact sentences per night.
 8. Waking plasticity gated by the smile and by surprise. Ruler: dusk-to-night deltas.
+   DERIVED (2026-09-15, 11:25): the day's lesson runs every 24 ticks at 1e-5 on the last 32 ticks, all day, scaled only by stress;
+   each dusk the held-out sits two to three hundredths under the morning and the night restores one to two, a net drift down. In
+   the brain the waking write into cortex is gated by dopamine and acetylcholine: the rewarded and the surprising moments are
+   written, the rest weakly. Mechanism: the lesson's rate multiplied by (wake_base + wake_dopa x |dopamine| + wake_novel x the
+   running surprise), constants disclosed; with wake_base 0.3 the ordinary tick learns at a third, a smile's tick at full or more.
+   Predicted: the dusk's fall on the held-out halves, the fact sentences (rewarded exchanges) keep their climb. Measured by two copy
+   days with the rewards replayed, gated and ungated, the held-out read before and after the day.
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
 10. The learned working-memory cue replacing the hand-shaped context. Ruler: the branch, held-out.
 11. Tonic dopamine from the running reward rate setting vigor and the gate's rate. Ruler: duty, smiles per line.

@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, dream_old_share=0.0, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, dream_old_share=0.0, wake_base=1.0, wake_dopa=0.0, wake_novel=0.0, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -1455,7 +1455,11 @@ class Life:
                 fl, fc = torch.zeros((), device=self.dev), 1.0            # the forecast heads retired (§5c: their target was the stream's own dynamics)
             else:
                 fl, fc = m.forecast_loss(C[:-1].detach(), bundles[1:], sig=0.0)   # the PFC's heads learn from the stream, not through it
-            loss = (ll + fl) * (1.0 + self.stress / 10.0)      # stress raises plasticity
+            # THE DAY'S PLASTICITY GATED (wake_base, wake_dopa, wake_novel; 2026-09-15): the waking write into cortex at the ordinary
+            # tick's share, raised by the dopamine of the moment and by the running surprise (the rewarded and the novel are written,
+            # the rest weakly); at the defaults (1, 0, 0) the lesson is as before
+            gate_ = float(self.cfg.get("wake_base", 1.0)) + float(self.cfg.get("wake_dopa", 0.0)) * abs(float(getattr(self, "_dopa", 0.0))) + float(self.cfg.get("wake_novel", 0.0)) * float(getattr(self, "_surp_run", 0.0))
+            loss = (ll + fl) * (1.0 + self.stress / 10.0) * gate_      # stress raises plasticity
             if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
             loss.backward()
