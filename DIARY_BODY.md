@@ -8343,3 +8343,7 @@ not runaway plasticity but a movement in a bad direction for the recent material
 read enters the mouth's forecast only), so it is not the cortex leaning on the store. The night's probe decides whether the day's
 fall is a transient. (An instrument's lesson: the dusk probe's save overwrites the served file by day, so a "morning" copy taken
 later is the dusk; the post-save probe now keeps the morning save.)
+NIGHT 203 (ended 16:29, the 193rd row): the held-out 0.655 (0.595 at dusk, 0.665 the morning before: the day's fall was a
+transient the night undid, the cycle's net a hundredth down as before), the facts by the cortex 0.881, the old lines 0.470; the
+mouth completes 25 of 26 prefixes and answers 20 of 30 questions at two rests (the stage's highest; 14 at eight); the rephrased
+12 of 30; the branch 9 of 9 and 11 of 12; the store 12449 after the fade; the guard held (duty 0.333, smiles a line 1.55).
