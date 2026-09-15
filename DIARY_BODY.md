@@ -8165,3 +8165,9 @@ The probe after night 192 (the first night after the revert, the fast bag with t
 the cortex on the fact sentences 0.881, the mouth's prefixes 17 of 26, the questions 10 of 30 at two rests and 5 at eight, THE
 BRANCH 8 of 9 on the sun family and 12 of 12 on the day-206 families: the siblings told apart on the fast bag alone once the
 answer's onset is written.
+THE REWARD REPLAYED, first use (05:30): day 216 on a copy with its 277 smiles and frowns set on the face at their delays, and once
+without. The actor's slope 0.036 (corr 0.024) with the reward against 0.039 (0.026) without: a day of reward moves the actor not at
+all at actor_lr 0.02, as the arithmetic said (one to five answer smiles a day against thirty maps). The rulers 11 and 8 of 30
+against 14 and 6, the branch 8 of 9 and 9 of 12 against 7 of 9 and 12 of 12: the reward's presence changes the day's course within
+a day's noise. The instrument works (the faces land, the mood differs); the actor's rate at rewarded moments is now measurable on
+copies: 0.2 and 1.0 next, against 0.02.
