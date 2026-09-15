@@ -494,9 +494,9 @@ class Organs(nn.Module):
         # THE CHOOSER (2026-09-15, the thirtieth defect): a striatal head over the CANDIDATES at a torn moment, read from the cortex's
         # state (corticostriatal), a softmax among the few the mouth is torn between, its rows bounded so it cannot saturate as the
         # old actor did (tanh at its rails on 'b' whatever the question). Born at zero: no vote until reward has taught it one.
-        self.chooser = nn.Linear(d, vocab)
-        with torch.no_grad():
-            self.chooser.weight.zero_(); self.chooser.bias.zero_()
+        self.chooser = nn.Linear(d, vocab, bias=False)          # no bias: a symbol's standing worth is the cortex's and the store's to say;
+        with torch.no_grad():                                   # the chooser votes only by the state (the first copy day taught a biased
+            self.chooser.weight.zero_()                         # head to say '?' everywhere, the symbol most often followed by a smile)
         self.register_buffer("wm_slot", torch.zeros(0)); self.register_buffer("wm_on", torch.zeros(())); self.register_buffer("wm_age", torch.zeros(()))
         self.stri_wm = 0
         # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the

@@ -66,6 +66,8 @@ tot_c = tot_m = tot_a = n = 0
 for start, qs in FAMILIES:
     for q, want in qs:
         pc, pm, pa = dist(q + "||" + start); w = TOK.token_to_id(want)
+        cset = [TOK.token_to_id(x) for _, x in qs]                              # the chooser votes only among the family's candidates
+        pa_c = torch.full_like(pa, float("-inf")); pa_c[cset] = pa[cset]; pa = pa_c
         topc = TOK.decode([int(pc.argmax())]); topm = TOK.decode([int(pm.argmax())]); topa = TOK.decode([int(pa.argmax())])
         okc = topc == want; okm = topm == want; oka = topa == want; tot_c += okc; tot_m += okm; tot_a += oka; n += 1
         print(f"  {q!r:24} + {start!r:12} wants {want!r}: cortex alone {topc!r} (p {float(pc[w]):.2f}){'*' if okc else ' '} | the mouth {topm!r} (p {float(pm[w]):.2f}){'*' if okm else ' '} | the actor {topa!r} (vote {float(pa[w]):+.2f}){'*' if oka else ' '}")
