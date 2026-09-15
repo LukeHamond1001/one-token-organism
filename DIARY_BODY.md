@@ -8174,3 +8174,9 @@ copies: 0.2 and 1.0 next, against 0.02.
 
 Night 193 (ended 05:33 after the day labelled 219): duty 0.316, smiles/line 1.44 (280 smiles over 190 lines), the guard holds;
 frowns 39; answered before B 15 of 95. The parent for days 220-222 spawned at the night row (facts 1-10 first).
+The parent's report for days 216, 218 and 219 (05:36): all thirty facts once each, front-loaded; answered before B 42 of 95, 57 of
+99, 44 of 95 (44-58%); the fact's word in its own turn before B 2, 2, 1 a day (birds, rain; apple, ants; fins); clean content
+answers ahead of B ("on my foot" to "where is my sock?", "out" to "where is the dog?", "my sock" to "what is in the tub?"); fact
+fragments bound to the wrong question ("where do birds live?" -> "cows give"); its own fact-shaped question "what is soft?" answered
+in the next rows; own question marks 21, 35, 39; smiles 235/233/278 (answer smiles 4, 5, 6), frowns 43/37/39; one A line lost at a
+night boundary in 516; no B line deferred. The day label is not a day counter (the reload's relaunch skips one).
