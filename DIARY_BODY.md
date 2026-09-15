@@ -8121,3 +8121,10 @@ body on the arithmetic; the served probes after nights 189 and 190 are its readi
 Night 189 (ended ~01:20 after the day labelled 214; the reload's relaunch skipped the label 213): day 214, the first under the
 repaired write floor: 181 lines (A 91, all questions), smiles 282 (a high), frowns 37; answered before B 15 of 91 ("i did." to "who
 woke the cat up?"). Dusk: held-out 0.658, the mouth 16 of 26, the cortex on the facts 0.838.
+The probe after night 189 (the first day under the repaired floor): HELD-OUT 0.659 (0.685 the night before; under the key the
+readings run 0.66-0.69 against about 0.70 in the five nights before the switch), the cortex on the fact sentences 0.883 (the
+highest), old lines 0.496 (the highest in a week), the mouth's prefixes 16 of 26, the questions 4 and 6 of 30, and for the first
+time "what is hot?" answered whole, "the sun is hot"; the branch 7 of 9 and 10 of 12. The count of answers stays low and noisy
+(4-9 a night under the key; 8-11 before) while the branch stands high (7-9 of 9; 1-2 before). Whether the key costs the held-out
+is tested on copies overnight: day 214 lived twice from the same body, with the key and without, each followed by its night and
+the rulers.
