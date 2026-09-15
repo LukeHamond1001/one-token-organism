@@ -8043,3 +8043,13 @@ under the new key), the cortex on the fact sentences 0.873 (the highest), the pr
 branch on the sun family 6 of 9 (0 the night before, 1-2 before the switch). The verdict stays open: facts 1-10 were last taught on
 day 205, before the switch, and come again on day 208; the readings after nights 185 and 187 decide, and the held-out's slide is
 the number that would revert it. THE BODY STOPPED AT 19:08 FOR A REBOOT, saved; ops/RESTART.md relaunches it.
+
+After the reboot (20:05): the body served again with the slow-context key, the typist chain relaunched (the label skipped to 209),
+the guard, the dusk probe and the probes after nights 185 and 186 armed, a parent for days 208-210 with facts 1-10 first.
+THE TWENTY-NINTH DEFECT, named: a slot's link table holds only its sixteen newest continuations, and a slot shared by every "the "
+sees hundreds of utterances, so the thread from a question to its own answer was cut within two symbols (traced 15:02). THE EPISODE
+KEPT PER UTTERANCE (episode_chain, off by default): each utterance keeps the ordered list of the slots it wrote, the newest thousand
+utterances; the recall follows an episode by position and joins the newest episode of any winner it lands on elsewhere. Test 56:
+ten lines sharing " and I are " with the link table narrowed to two; "the dog and I are " continues with "here" along its own chain,
+where the slot links alone run to the newest line's "out". Suite 55 of 55. Measured now on a copy of day 207 against the slot
+links alone, the branch and every fact by the pause after each.
