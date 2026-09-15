@@ -8031,3 +8031,15 @@ questions 6 and 6 of 30 (11 and 6), old lines 0.459. The cost of the transition 
 switch (1-10 on day 205, 21-30 earlier) are written without a context and reached less by a query that carries one; only day
 206's facts 11-20 are re-keyed, and on those the branch reads ten of twelve. Facts 21-30 are re-taught on day 207 and 1-10 on day
 208, so the honest verdict on the served body is the probe after night 185 and the branch after 187 (the sun family whole).
+
+Night 184 (ended 19:01 after day 207): the eighteenth parent's report (days 205-207): all thirty facts once each on the right day;
+**answered before B 45 of 97, 46 of 91, 45 of 87**; fact words in its own turn 1, 1, 0 by the answer-smile measure ("birds" before
+"birds fly up", "grass" before "grass is green"); **answer-level smiles 8, 21, 21: trebled on the two days under the slow context**;
+own question marks 39, 28, 27; runs of three words 32, 33, 27 ("it keeps me warm", "your sock is"); smiles 274/257/246, frowns
+39/36/33, all talk-overs; no deferred lines in 550. The probe after night 184, WITH THE PROBE'S LOOPS FIXED (they had fed the bags
+by hand and never the slow context, so under the new key the query lacked its context and the old memories won: the prefix and
+question readings after the switch were partly the probe's blindness): HELD-OUT 0.679 (0.708 -> 0.691 -> 0.679 over the two nights
+under the new key), the cortex on the fact sentences 0.873 (the highest), the prefixes 15 of 26, the questions 6 and 4 of 30; the
+branch on the sun family 6 of 9 (0 the night before, 1-2 before the switch). The verdict stays open: facts 1-10 were last taught on
+day 205, before the switch, and come again on day 208; the readings after nights 185 and 187 decide, and the held-out's slide is
+the number that would revert it. THE BODY STOPPED AT 19:08 FOR A REBOOT, saved; ops/RESTART.md relaunches it.

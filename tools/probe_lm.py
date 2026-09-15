@@ -31,15 +31,15 @@ def lived_share(text):
 print(f"body: nights {life.nights}, own_gain {m.own_gain}, store {life.store.n()} (own {int((life.store.W == 1).sum())})")
 zero = torch.zeros(m.d)
 for prompt in prompts:
-    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+    life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None
     with torch.no_grad():
         for ch in prompt:
             i = TOK.token_to_id(ch)
             life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
+            life.rest_tick(); life.take_world(i)
         for _ in range(int(life.cfg.get("offset_ticks", 8))):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.bag_w = life.cfg["bag_decay"] * life.bag_w
+            life.rest_tick()
         mouth, cortex = [], []; own_win = 0; n_win = 0
         for step in range(n):
             xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
@@ -51,7 +51,7 @@ for prompt in prompts:
             lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
             sym = int(lm.argmax()); cortex.append(TOK.decode([int(lc.argmax())])); mouth.append(TOK.decode([sym]))
             life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
-            life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
+            life.rest_tick(); life.take_own(sym)
     print(f"{prompt!r:22} mouth: {''.join(mouth)!r:28} cortex alone: {''.join(cortex)!r}   lived prefix {lived_share(''.join(mouth)):.2f}   own winners {own_win}/{n_win}")
 
 # THE LANGUAGE MODEL'S ACCURACY (2026-09-12, 23:55): the night's own gauge (teacher-forced argmax share, the cortex alone, the
@@ -88,12 +88,12 @@ if "--lmloss" in sys.argv:
         for pre in prefixes:
             rems = [f[len(pre):].strip() for f in facts if f.startswith(pre.strip() + " ") or f.startswith(pre)]
             rems = [r for r in rems if r]
-            life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+            life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None
             got = []
             with torch.no_grad():
                 for ch in pre:
                     i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-                    life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
+                    life.rest_tick(); life.take_world(i)
                 for _ in range(12):
                     xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
                     C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
@@ -101,7 +101,7 @@ if "--lmloss" in sys.argv:
                     lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
                     sym = int(lm.argmax()); got.append(TOK.decode([sym]))
                     life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
-                    life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
+                    life.rest_tick(); life.take_own(sym)
             text = "".join(got); ok = any(text.startswith(r[:max(3, len(r.split()[0]))]) for r in rems)
             learned += int(ok)
             if len(shown) < 6: shown.append(f"{pre!r}->{text[:14]!r}{'*' if ok else ''}")
@@ -126,15 +126,15 @@ if "--qa" in sys.argv:
             n_ans = 0; shown = []
             for q, fact in pairs:
                 keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
-                life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.n_own = 0; life._follow = None
+                life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None
                 got = []
                 with torch.no_grad():
                     for ch in q:
                         i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-                        life.bag_w = life.cfg["bag_decay"] * m.shift(life.bag_w) + m.E.weight[i]
+                        life.rest_tick(); life.take_world(i)
                     for _ in range(pause):
                         life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-                        life.bag_w = life.cfg["bag_decay"] * life.bag_w
+                        life.rest_tick()
                     for _ in range(20):                                   # twenty symbols (13:40: twelve cut 'bees make ho' before its word)
                         xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
                         C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
@@ -142,7 +142,7 @@ if "--qa" in sys.argv:
                         lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
                         sym = int(lm.argmax()); got.append(TOK.decode([sym]))
                         life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
-                        life.bag_o = life.cfg["bag_decay"] * m.shift(life.bag_o) + m.E.weight[sym]; life.n_own += 1
+                        life.rest_tick(); life.take_own(sym)
                 text = "".join(got); ok = any(k in text.lower() for k in keys)
                 n_ans += int(ok)
                 if len(shown) < 8: shown.append(f"{q!r}->{text[:14]!r}{'*' if ok else ''}")
