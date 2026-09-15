@@ -8266,3 +8266,14 @@ memory holds about twenty days, all of stage five, so its "old" is the same styl
 held-out lines are written in is no longer in it. The held-out's drift is the day's erosion of what earlier nights consolidated
 (each dusk two to three hundredths down, each night one to two up), which the eighth iteration, the day's plasticity gated by
 reward and surprise, addresses next.
+
+THE CHOOSER'S DAY, AND THE GUARD (11:48): the first day under the chooser (labelled 226; 10:47-11:35) collapsed: 196 lines, 48
+smiles (0.24 a line; 1.3-1.5 the days before), 3 frowns, duty 0.158, answered before B 16 of 98, and the child's turns filled
+with stray symbols ('k62W\Yo', 'Fa 9', 'Mth': 99 characters that are not letters, against 0-1 on the days before): the chooser's
+vote let symbols the mouth never says into its speech, or the tick under it broke; the copy days had not shown it because the
+probes read the mouth's answers, never the day's own symbols. The guard read the day and tripped, as it should, and its restart
+FAILED: the flags it holds had lost their quoting when I regenerated its arguments, so "--period" arrived without its value; the
+served body was down from 11:48 to 11:50. Restored by hand at 11:50 on the pre-chooser flags (the fast bag, the floor; no tag
+closure: the trip was the chooser's, not the tag's); the guard re-armed with its flags quoted; the typist chain relaunched (the
+label skipped to 228); the parent for days 228-230 spawned. THE CHOOSER IS OFF; before it returns, a copy day must be read for
+the child's own symbols, not only the rulers.
