@@ -8103,3 +8103,9 @@ The third arm (23:29): the shifted context reads the answers 10, 10, 9 of 30 (th
 context stays order-free. The write floor alone goes on the served body at night 188's save. A second pair of copy days at listen
 80, where the served body's longest turns sit and the faded key crosses the old floor, runs overnight to put the floor's effect on
 the record.
+
+Night 188 (ended 00:24 after day 212): duty 0.354, smiles/line 1.28, the guard holds. Day 212 (the parent for 212-214, facts 1-10):
+185 lines (A 93, all questions), smiles 240, frowns 40; answered before B 5 of 93 by the five-second window. Dusk 212: held-out
+0.677, the mouth 14 of 26, the cortex on the facts 0.865. THE WRITE FLOOR REPAIRED on the served body at this night's save (the
+reload at 00:24:42, write_floor 1e-30 with the slow context kept): from day 213 the first symbol of every world line is written
+however long the child's turn before it ran.
