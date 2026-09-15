@@ -8138,3 +8138,7 @@ The parent's report for days 212, 214 and 215 (02:30): all thirty facts once eac
 four"), answered in ordinary wording; runs of three known words 39, 36, 46; smiles 240/282/290, frowns 40/37/38, all talk-overs;
 no exchange broke in 528 lines. The reload at night 188 wrote a phantom session (day 213: one line heard), so the log's day label
 runs one ahead of the nights.
+The probe after night 190: HELD-OUT 0.668 (0.659 the night before), the cortex on the fact sentences 0.888 (the highest), the mouth's
+prefixes 20 of 26 (14, 16, 20 over the three nights under the floor), the questions 8 and 10 of 30 (the highest under the key;
+"the sun did", "birds fly", "dogs run and b[ark]", "milk" for the cats), the branch 8 of 9 and 9 of 12. The recovery under the key
+and the floor runs; the matched copy test of the key's cost reports near 03:30.
