@@ -18,6 +18,8 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 
 ## To test in the language world (a copy run of 20-30 minutes each)
 1. The episode chain kept per utterance, not in a slot's sixteen links. Ruler: the branch.
+   MEASURED (2026-09-14, 21:04, day 207 on a copy): the branch equal (6 of 9, 8 of 12 both ways), the answers 11/11/5 against 8/8/7
+   across the pauses: within a day's noise. NEUTRAL; off. The floor and the capacity, not the chain's form, were the answer's gates.
 2. Store capacity and the tag tables. Ruler: fact prefixes across days.
    DERIVED (2026-09-15, 13:15): the store holds 8192 slots and a day writes about 3500 world symbols, so two fifths of it turns over
    every day; a fact's chain survives only until stronger writes displace it, and the facts come once in three days. Bracketed on
@@ -51,6 +53,7 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    with rewards, then fact answers in conversation.
    ON THE SERVED BODY from night 198's save (2026-09-15, 10:45) and OFF from 11:50: its first live day collapsed (48 smiles, 99 junk characters, duty 0.158; the guard tripped). Read on a copy: the head learns the day's action prior through the state's mean direction and votes it back into the mouth, which loops and thins. FAILED for this world's reward density; kept as code, off; it belongs to a body with denser, more specific reward.
 4. The actor's earned voice measured again with the chooser in place. Ruler: the actor's slope.
+   MOOT (2026-09-15): the chooser failed live (iteration 3); the earned voice stays measured as it was (0.036-0.063, unmoved by a day).
 5. The handoff: the rulers read with the store off. Ruler: answers with the store off. READ ALREADY by qa_by_gap's 'cortex alone' column: 0 of 30 every night; the cortex answers no question on its own yet.
 6. Old memories in the night's draw. Ruler: old lines, held-out.
    DERIVED (2026-09-15, 10:50): the night draws its 1024 utterances by strength, which is recency (0.97 a night), from a memory of
@@ -83,15 +86,49 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    (it was the same within a hundredth, both arms two hundredths under the morning); the prefixes' four are within a day's noise
    and were mostly the eviction below (iteration 2), not the lesson. Not adopted; the constants stay at their off values.
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
+   DERIVED (2026-09-15, 13:30): a boundary ends an episode tag; the tag scopes the follow links the recall runs along. Today the
+   boundary is the offset (silence). A surprise boundary would split a line at its surprising symbol, "yes. take some with honey"
+   into two episodes. The branch reads the chain within a sentence, unchanged either way; the held-out is the cortex, which the
+   night trains on the utterances whole from the utterance memory, not on the store's episodes. Predicted: neither ruler moves by
+   more than its noise (the branch 1 of 9, the held-out 0.005). NOT RUN: no ruler on this world can see it.
 10. The learned working-memory cue replacing the hand-shaped context. Ruler: the branch, held-out.
+   DERIVED (13:30): the fast bag is a fixed code (shift and decay); a learned cue needs a signal that says which keys should be
+   near and which far. The cortex's state as the key (iteration 27 of the spec) was the learned cue without such a signal, and its
+   state was global: the branch fell to 1 of 9. The signal the dentate gyrus has is pattern separation learned unsupervised from
+   the input's statistics, not from reward; on a lexicon of a hundred symbols and lines of forty, the fixed shift-and-decay already
+   separates by position and content. Predicted: no lift on the branch (8-9 of 9 at the floor). NOT RUN until a ruler fails on it.
 11. Tonic dopamine from the running reward rate setting vigor and the gate's rate. Ruler: duty, smiles per line.
+   DERIVED (13:30): the running reward (rbar) exists; vigor would scale the gate's readiness by it. The rulers it moves are duty
+   (0.33) and smiles a line (1.28), neither a demo ruler; the answers by the pause and the prefixes are the store's, not the
+   gate's. Predicted: duty follows the smile rate within a day, the demo rulers unmoved. DEFERRED to the body-general list.
 12. An acetylcholine-like signal tipping the store between writing and recalling by surprise. Ruler: held-out, answers by the pause.
+   DERIVED (13:30): the write is already scaled by surprise; the recall's share of the forecast is constant. The tip would suppress
+   the recall while a novel line is heard (encoding) and free it in the familiar (retrieval). The question is familiar when asked,
+   so the answers by the pause are read under the same recall either way; the held-out is teacher-forced on the cortex. Predicted:
+   both rulers within noise. What it would change is the mouth's interference during a new line, which no ruler reads. DEFERRED.
 13. The exploration gain driven by uncertainty in place of a constant. Ruler: duty, answer smiles.
+   DERIVED (13:30): the choice's exploration is a constant (explore_choice 1.0). By uncertainty it would speak less where the
+   forecast is sure and more where it is not; the answer is spoken where the recall is sure, so the answer smiles stay; the
+   junk (own symbols where nothing is sure) would fall. Predicted: the demo rulers unmoved, the own-symbol junk down by a third.
+   DEFERRED behind the capacity's falsifier; one copy day with the rewards replayed when the served body is steady.
 14. Awake replay during the pauses. Ruler: the fact sentences, held-out.
+   DERIVED (13:30): the night replays the utterances whole a thousand times a night and the cortex alone still answers 0 of 30:
+   the cortex's failure at the question is structural (the answer sits across a pause the window carries but the lesson does not
+   bridge), not a shortage of replay. Replay in the day's pauses adds the same lesson earlier. Predicted: the fact sentences'
+   cortex loss unchanged within 0.01 (0.88 already), the answers by the cortex alone still 0. NOT RUN.
 15. Synaptic homeostasis in the night (renormalizing, not only strengthening). Ruler: held-out, old lines.
+   DERIVED (13:30): the held-out drifts down (0.689 to 0.654 over six nights) as each night's lesson leans to the newest style; a
+   renormalisation (weight decay in the night's steps) shrinks all weights alike and does not choose between the old style and the
+   new. Predicted: the held-out within 0.005 of the plain night on a copy night. NOT RUN; the drift's cure is the draw (iteration 6
+   failed on it) or a steadier world, not the weights' norm.
 16. Noise: a copy day of dropped and swapped letters. Ruler: all four on the corrupted copy.
+   DERIVED (13:30): a measurement, not a mechanism: a day whose lines lose one letter in twenty. The store's keys are the last
+   five symbols, so a dropped letter breaks the chain at that point and the follow links recover it two symbols on. Predicted:
+   the prefixes and the answers within 2 of the clean day's; the held-out (read on clean text) within 0.005. TO RUN once the
+   served body is steady under the capacity (a day's copy at the usual cost).
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
+   MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
 
 ## Body only (a simulated body first; each with the same rulers carried over)
 19. A learned sensory front end.
