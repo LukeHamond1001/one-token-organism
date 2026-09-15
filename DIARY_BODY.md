@@ -8356,3 +8356,11 @@ typed over the child's speech, which the typist never does. The memory is not th
 instrument waits for the child's quiet; decisiveness by certainty (sharp_conf, off by default; test 61): the choice's sharpness
 times (1 + sharp_conf x the forecast's norm), the selection's noise falling as its evidence rises, the same certainty the gate's
 salience reads. Measured next: the bound (sharp_base 60 and 100 on the live ruler), then sharp_conf 3 and 8.
+NIGHT 204 (ended 17:46, the 194th row): the held-out 0.657 (the dusk 0.641, an ordinary day's fall), the facts by the cortex
+0.883, the old lines 0.469; the mouth completes 26 of 26 prefixes and answers 21 of 30 questions at two rests (13 at eight); the
+rephrased 12; the branch 9 of 9 and 12 of 12; the store 14847; the guard held (duty 0.345, smiles a line 1.34). Day 233: 198
+lines, smiles 271, frowns 41.
+THE BOUND ON THE LIVE MOUTH (17:53): with the instrument waiting for the child's quiet, sharp_base 25 answers 4 and 6 of 30,
+sharp_base 60 answers 2 and 1: sharper is worse, the sampling is not the cause. The instrument gave no smiles and the copy's
+mood sank to the readout's floor through the run; it now smiles at an answer as the caregiver does. The hold of working memory
+(bag_rest_decay 0.97) is measured next, greedy by the pause and live with smiles, against the control with smiles.

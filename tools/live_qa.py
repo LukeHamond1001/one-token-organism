@@ -33,7 +33,7 @@ NOVEL = [("what is sour?", "a lemon is sour"), ("what is loud?", "a drum is loud
          ("what gives light?", "a lamp gives light"), ("what has wool?", "a sheep has wool"), ("what has a horn?", "a goat has a horn"),
          ("what is steep?", "a hill is steep")]
 path = sys.argv[1]; qset = arg("set", "facts"); reps = arg("reps", 3); window = arg("window", 60); gap = arg("gap", 30)
-quiet = arg("quiet", 8); max_wait = arg("max_wait", 200); trace = arg("trace", 0)                    # --trace N: the first N questions tick by tick                       # the parent waits for the child's quiet before the next question, as the typist does
+quiet = arg("quiet", 8); max_wait = arg("max_wait", 200); trace = arg("trace", 0); smile = arg("smile", 0)   # --smile 1: the parent smiles at an answer (the caregiver's answer smile: +2 for twelve ticks)                    # --trace N: the first N questions tick by tick                       # the parent waits for the child's quiet before the next question, as the typist does
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
 for a in sys.argv[1:]:                                                          # any physiology constant may be overridden on the line
     if a.startswith("--") and "=" not in a:
@@ -63,14 +63,19 @@ for rep in range(reps):
         while life.queue:
             life.tick()
             if tr: note("q ")
-        got = []
-        for _ in range(window):
+        got = []; smiled = -1
+        for t_ in range(window):
             life.tick(); w = life.win[-1]
             if int(w["xo"]) != life.sil: got.append(TOK.decode([int(w["xo"])]))
             if tr: note("  ")
+            if smile and smiled < 0 and any(k in "".join(got).lower() for k in keys):
+                life.set_face(2.0); smiled = t_                                    # the answer's smile, as the caregiver gives it
+            if smiled >= 0 and t_ >= smiled + 12:
+                life.set_face(0.0); smiled = 10 ** 6
         if tr:
             print(f"TRACE {q!r} (world symbol, own symbol; act = the gate's probability, ! = it acted; say = the sampled symbol at its probability; top = the readout's argmax):", flush=True)
             for r in rows: print("   " + r, flush=True)
+        life.set_face(0.0)
         for _ in range(gap):
             life.tick()
         text = "".join(got); own_total += len(text); junk += sum(1 for ch in text if not (ch.islower() or ch in " .?!'"))
@@ -78,4 +83,4 @@ for rep in range(reps):
         if rep == 0: first[q] = (ok, text[:24])
     print(f"LIVE pass {rep + 1}: {n}/{len(pairs)} answered in the child's turn ({time.time() - t0:.0f}s)", flush=True)
 ever = sum(1 for q in hits if hits[q] > 0)
-print(f"LIVE {qset} (sharp_base {life.cfg['sharp_base']}, read_sharp {float(life.m.read_sharp):.1f}): answered in {sum(hits.values()) / max(1, reps):.1f} of {len(pairs)} per pass, {ever} ever | own symbols {own_total}, junk {junk}, questions typed over its speech {talked_over} | " + " ".join(f"{'*' if ok else ' '}{q!r}->{t!r}" for q, (ok, t) in first.items()), flush=True)
+print(f"LIVE {qset} (sharp_base {life.cfg['sharp_base']}, read_sharp {float(life.m.read_sharp):.1f}, mood {life.mood:.1f}, smiles {'on' if smile else 'off'}, rest {life.cfg.get('bag_rest_decay')}, sharp_conf {life.cfg.get('sharp_conf')}): answered in {sum(hits.values()) / max(1, reps):.1f} of {len(pairs)} per pass, {ever} ever | own symbols {own_total}, junk {junk}, questions typed over its speech {talked_over} | " + " ".join(f"{'*' if ok else ' '}{q!r}->{t!r}" for q, (ok, t) in first.items()), flush=True)

@@ -190,6 +190,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    it at sixteen; the live mouth answers 12 or more of 30 taught and 6 of 10 never-typed; a line's context is a tenth after 75
    quiet ticks, the typist's gap, so the mouth does not chain across lines. Falsified if the live count stays under 8 (then the
    gate's latency or the sampling is the gate, not the fade) or the branch or held-out fall.
+   THE BOUND (17:53): with the instrument waiting for the child's quiet, sharp_base 25 answers 4 and 6 of 30 (8 ever), sharp_base
+   60 answers 2 and 1: sharper is worse. The sampling is not the cause; the trace's reading stands (the gate's latency against the
+   cue's fade, iteration 37). A confound found in the instrument: it gave no smiles, so the copy's mood sank through the run and
+   its readout's sharpness fell to the floor (8); the instrument now smiles at an answer as the caregiver does (--smile 1).
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
