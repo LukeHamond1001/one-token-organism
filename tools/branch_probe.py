@@ -13,7 +13,14 @@ for a in sys.argv[2:]:
     if a.startswith("--follow="): follow = float(a[9:])
     if a == "--reads-along": reads_along = True
 TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
-life = Life.load(sys.argv[1], TOK, device="cpu", cfg={"read_follow": follow}); m = life.m; m.eval()
+from body.life import PHYSIOLOGY
+cfg_ = {"read_follow": follow}
+for a in sys.argv[2:]:                                                          # any physiology constant may be overridden on the line
+    if a.startswith("--") and "=" not in a:
+        k = a[2:].replace("-", "_")
+        if k in PHYSIOLOGY:
+            cfg_[k] = type(PHYSIOLOGY[k])(sys.argv[sys.argv.index(a) + 1])
+life = Life.load(sys.argv[1], TOK, device="cpu", cfg=cfg_); m = life.m; m.eval()
 zero = torch.zeros(m.d)
 SETS = {
     "sun": [("the sun ", [("what is hot?", "i"), ("what makes us warm?", "m"), ("what is up in the day?", "i"), ("what is the sun?", "i")]),
@@ -41,7 +48,7 @@ def dist(prefix):
                 life.rest_tick(); life.take_own(i); m.striatum_push(1, i)          # the delay line hears its own symbol
             else:
                 life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-                life.rest_tick()
+                life.rest_tick(world=(ch != "|"))
                 if ch != "|": life.take_world(i); m.striatum_push(0, i)          # the delay line hears the world's symbol
                 else: m.striatum_push(3, 0)                                      # a tick of quiet
             if reads_along: life._recall(life.bag)                  # the store read at every symbol, as awake: the episode followed builds
