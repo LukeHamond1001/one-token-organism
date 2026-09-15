@@ -1362,11 +1362,30 @@ def test_two_facts_one_topic():
     print("55 two facts, one topic: with the slow context", with_ctx, "| the fast bag alone", without)
 
 
+def test_episode_kept_per_utterance():
+    """56 (2026-09-14): with episode_chain on, the thread from one utterance runs through slots shared by many others: ten lines share
+    the middle " and I are " (longer than the fast bag, so they write into one chain of slots), the link table is narrowed to two,
+    and the first line's tags are cut out of the shared slots; yet the mouth's own "the dog and I are " still continues with 'h'
+    (here) along the first line's own chain, where the slot links alone run to a later line's ending"""
+    def run(chain):
+        life = tiny(episode_chain=chain, store_chain=1, read_follow=20.0, store_links=2, key_ctx=0.0)   # the slot links on in both
+        say(life, "the dog and I are here", 12)
+        for w, e in [("cat", "big"), ("ant", "wet"), ("egg", "out"), ("cow", "big"), ("bee", "wet"), ("hat", "out"), ("tub", "big"), ("yam", "wet"), ("sun", "out")]:
+            say(life, f"the {w} and I are {e}", 12)
+        life.rest_tick(); life._follow = None; rd = None
+        for ch in "the dog and I are ":
+            life.rest_tick(); life.take_own(TOK.token_to_id(ch)); rd, conf, _ = life._recall(life.bag)   # the read at the last symbol (a second read would tire it)
+        return TOK.decode([life.m.nearest(rd)])
+    with_chain = run(1); without = run(0)
+    assert with_chain == "h" and without != "h", (with_chain, without)
+    print("56 the episode kept per utterance: 'the dog and I are ' ->", repr(with_chain), "| the slot links alone ->", repr(without))
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance]
     failed = 0
     for t in tests:
         try:

@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, episode_chain=0, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -508,6 +508,8 @@ class Life:
                     if self._prev_slot >= 0:
                         self.store.link(self._prev_slot, self.store.last_idx, tag=self.store.episode)   # the episode's order: this symbol followed that one
                     self._prev_slot = self.store.last_idx
+                if int(self.cfg.get("episode_chain", 0)) and self.store.last_idx >= 0:
+                    self.store.note(self.store.episode, self.store.last_idx)           # the utterance's own ordered chain
                 self._last_write = (key_.clone(), ex.clone())                       # for the boundary mark at the offset
                 if getattr(self, "_start_pending", False):
                     self.store.mark_start(key_, ex); self._start_pending = False     # the utterance's first kept memory
@@ -594,7 +596,22 @@ class Life:
         """the waking read, carrying the episode it is in when read_follow is on (the gain, > 1): after a read whose winner continues
         the episode followed, the same tag is kept; after a read that landed elsewhere, the winner's newest link names the episode"""
         fw = float(self.cfg.get("read_follow", 0.0))
-        follow = self._follow if fw > 1.0 else None
+        if int(self.cfg.get("episode_chain", 0)) and fw > 1.0:
+            # THE EPISODE KEPT PER UTTERANCE: the follow is (slot, tag, position); the next element of that episode is easier to recall;
+            # a read that lands on it continues the episode, a read elsewhere joins the newest episode the winner belongs to
+            st = self.store; fo = self._follow if (self._follow is not None and len(self._follow) == 3) else None
+            nxt = st.next_in(fo[1], fo[2]) if fo is not None else -1
+            read, conf, win_ = st.read(bag, end_vec=end_vec, tire=tire, follow=None, follow_gain=fw, boost=(nxt if nxt >= 0 else None))
+            if win_ >= 0:
+                if fo is not None and int(win_) == nxt:
+                    self._follow = (int(win_), fo[1], fo[2] + 1)
+                else:
+                    eps = st.episodes_of(int(win_))
+                    self._follow = (int(win_), eps[-1][0], eps[-1][1]) if eps else None
+            else:
+                self._follow = None
+            return read, conf, win_
+        follow = self._follow if (fw > 1.0 and self._follow is not None and len(self._follow) == 2) else None
         read, conf, win_ = self.store.read(bag, end_vec=end_vec, tire=tire, follow=follow, follow_gain=fw)
         if fw > 1.0:
             st = self.store

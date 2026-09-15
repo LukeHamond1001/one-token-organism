@@ -56,13 +56,18 @@ class Store:
         self.NE = torch.zeros(0, self.NK, dtype=torch.long, device=device)  # (-1: untagged, a link from before the tags)
         self.episode = 0
         self.last_idx = -1                                         # the slot the last write went to (new or merged)
+        # THE EPISODE KEPT PER UTTERANCE (episode_chain; 2026-09-14, the twenty-ninth defect): a slot's link table holds only its
+        # sixteen newest continuations, and a slot shared by every "the " sees hundreds of utterances, so the thread from a question
+        # to its own answer was cut within two symbols. Here each utterance keeps the ordered list of the slots it wrote (CA3's
+        # sequence, held per episode, not per element), the newest ep_cap utterances; a slot knows the episodes it belongs to.
+        self.EP = {}; self.EPI = {}; self.ep_cap = 1000
         self.A = torch.zeros(0, device=device)                     # THE WAKING RECALL TIRES (2026-09-12): a slot's short-term availability, 1 rested
 
     def n(self):
         return int(self.K.shape[0])
 
     @torch.no_grad()
-    def read(self, q, adapt=None, end_vec=None, tire=None, follow=None, follow_gain=1.0):
+    def read(self, q, adapt=None, end_vec=None, tire=None, follow=None, follow_gain=1.0, boost=None):
         """q [d] -> (the recalled next embedding [d], its norm the confidence in 0..1, winner index);
         adapt [n] (optional) multiplies strengths: the recall adaptation a dream runs under;
         end_vec [d] (optional): THE MARKS SPEAK IN THE RECALL. A seam slot (an utterance's first symbol written under
@@ -95,6 +100,8 @@ class Store:
                 row = self.N[slot]; hit = (row >= 0) & (self.NE[slot] == int(tag))
                 if bool(hit.any()):
                     logits = logits.clone(); logits[row[hit]] += math.log(float(follow_gain))
+        if boost is not None and 0 <= int(boost) < self.n() and follow_gain > 1.0:
+            logits = logits.clone(); logits[int(boost)] += math.log(float(follow_gain))   # the episode's next element (episode_chain)
         w = torch.softmax(logits, 0)
         # the recall is the attended mean of unit values: its norm is the agreement among the memories
         # attended, the calibrated confidence (the largest weight understated it once duplicate slots
@@ -160,6 +167,41 @@ class Store:
             row = row[keep]; tags = tags[keep]
             self.N[a] = torch.cat([torch.tensor([int(b)], device=self.dev), row])[:self.NK]      # the newest first, the oldest forgotten
             self.NE[a] = torch.cat([torch.tensor([int(tag)], device=self.dev), tags])[:self.NK]
+
+    def note(self, tag, slot):
+        """the slot just written (new or merged) is the next element of this utterance's episode"""
+        tag = int(tag); slot = int(slot)
+        if slot < 0:
+            return
+        if tag not in self.EP:
+            self.EP[tag] = []
+            while len(self.EP) > self.ep_cap:                       # the oldest utterance's episode forgotten
+                old = next(iter(self.EP)); ids = self.EP.pop(old)
+                for sl in ids:
+                    if sl >= 0 and sl in self.EPI:
+                        self.EPI[sl] = [(t, q) for (t, q) in self.EPI[sl] if t != old]
+        self.EP[tag].append(slot); self.EPI.setdefault(slot, []).append((tag, len(self.EP[tag]) - 1))
+
+    def next_in(self, tag, pos):
+        """the slot that followed position pos in utterance tag's episode; -1 at its end or where the slot was dropped"""
+        ids = self.EP.get(int(tag))
+        if ids is None or pos + 1 >= len(ids):
+            return -1
+        return int(ids[pos + 1])
+
+    def episodes_of(self, slot):
+        """the (tag, position) pairs of the episodes a slot belongs to, oldest first"""
+        return list(self.EPI.get(int(slot), []))
+
+    def _remap_episodes(self, remap):
+        rm = remap.tolist(); EP = {}
+        for tag, ids in self.EP.items():
+            EP[tag] = [(rm[i] if 0 <= i < len(rm) else -1) if i >= 0 else -1 for i in ids]
+        self.EP = EP; self.EPI = {}
+        for tag, ids in self.EP.items():
+            for q, sl in enumerate(ids):
+                if sl >= 0:
+                    self.EPI.setdefault(sl, []).append((tag, q))
 
     @torch.no_grad()
     def successor(self, a, gen=None, tag=None):
@@ -242,6 +284,8 @@ class Store:
         NE = self.NE[idx] if self.NE.shape[0] == remap.numel() else torch.full_like(self.N, -1)
         self.NE = torch.where(self.N >= 0, NE, torch.full_like(NE, -1))
         self.A = self.A[idx] if self.A.numel() == remap.numel() else torch.ones(int(idx.numel()), device=self.dev)
+        if self.EP:
+            self._remap_episodes(remap)
 
     @torch.no_grad()
     def mark_seam(self, k, v, merge_cos=0.97):
@@ -291,7 +335,7 @@ class Store:
         return [int(pool[i]) for i in idx]
 
     def state_dict(self):
-        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp, "sat": bool(self.sat_done), "N": self.N.cpu(), "NE": self.NE.cpu(), "episode": int(self.episode)}
+        return {"K": self.K.cpu(), "V": self.V.cpu(), "S": self.S.cpu(), "W": self.W.cpu(), "B": self.B.cpu(), "Bs": self.Bs.cpu(), "Bq": self.Bq.cpu(), "temp": self.temp, "sat": bool(self.sat_done), "N": self.N.cpu(), "NE": self.NE.cpu(), "episode": int(self.episode), "EP": {int(t): list(v) for t, v in self.EP.items()}}
 
     def load_state_dict(self, sd):
         self.K = sd["K"].to(self.dev); self.V = sd["V"].to(self.dev)
@@ -317,6 +361,16 @@ class Store:
         self.episode = int(sd.get("episode", 0))
         self.last_idx = -1
         self.A = torch.ones(self.n(), device=self.dev)            # rested after a load
+        EP = sd.get("EP")
+        self.EP = {}; self.EPI = {}
+        if isinstance(EP, dict):
+            n = self.n()
+            for t, ids in EP.items():
+                self.EP[int(t)] = [int(i) if (0 <= int(i) < n) else -1 for i in ids]
+            for t, ids in self.EP.items():
+                for q, sl in enumerate(ids):
+                    if sl >= 0:
+                        self.EPI.setdefault(sl, []).append((t, q))
 
 
 class Block(nn.Module):
