@@ -8321,3 +8321,6 @@ THE PARENT OF 228, 229 AND 231 REPORTED (15:24): 189/188/186 lines; A's question
 question marks 31/29/28; smiles 253/274/284, frowns 40/39/41 (all talk-overs); known words 419 -> 436. It answered the child's own
 fact-shaped questions ("what is green", "is the star?", "is soft?") with the fact as B's next line. The queue is saturating: most
 first-draft lines collide with the 3700 rows; the next parent (232-234) is briefed to vary and check.
+NIGHT 202 (the first at the capacity; ended 15:22): held-out 0.665, the old lines 0.481, the facts by the cortex 0.888; the mouth
+completes 22 of 26 prefixes (held through the night) and answers 18 of 30 questions at two rests and 18 at eight (the stage's best
+at the long pause, 8-14 before); the dreams 0.83.
