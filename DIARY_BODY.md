@@ -8207,3 +8207,6 @@ dopamine on the candidate said (the log-softmax's gradient, decaying by dopamine
 no candidate can saturate the vote. Born at zero. Test 57 (a rewarded choice raises its candidate on that state, a punished one
 lowers it, forty pushes cannot pass the bound); suite 56 of 56. Measured next on a copy of day 216 with its rewards replayed, the
 chooser's raw vote at the branch read after, at rates 0.2 and 1.0.
+The old actor's rate, the sweep closed (07:40): at actor_lr 1.0 with the day's rewards the slope 0.042 (corr 0.028), the raw vote at
+the branch 0 of 9 and 0 of 12, the rulers 15 and 10 of 30, the branch 7 of 9 and 10 of 12: fifty times the rate moves nothing,
+as the arithmetic said of a head that never sees the question. The chooser's copy days begin now.
