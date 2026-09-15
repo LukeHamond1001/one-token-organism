@@ -8215,3 +8215,8 @@ Night 195 (ended 07:40 after the day labelled 221): duty 0.370 (a high), smiles/
 holds; frowns 34; answered before B 25 of 91 ("yes. water" to "can that duck swim?").
 The probe after night 195: HELD-OUT 0.670, the cortex on the fact sentences 0.892 (the highest), the mouth's prefixes 21 of 26, THE
 QUESTIONS 17 OF 30 at two rests (16, 16, 17 over the last three nights) and 12 at eight, the branch 8 of 9 and 12 of 12.
+
+Night 196 (ended 08:43 after the day labelled 222): duty 0.299, smiles/line 1.08 (the lowest rate of the week), the guard holds.
+The parent for days 223-225 spawned at the night row (facts 1-10 first).
+  day 222: lines=187 (A=93 B=94) A-questions=93 cues=0 smiles=209 frowns=40 withheld=4
+  A-questions the child answered with I/yes/no/please before B: 23
