@@ -33,6 +33,11 @@ def parse_flags(s):
 path = sys.argv[1]
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
 cfg.update(dict(night_batch=arg("batch", 8), night_rounds=arg("rounds", 6), night_starts=arg("starts", 512), night_load=0.0, night_lr=arg("lr", 1e-4), night_warm=arg("warm", 0), dream_who=arg("who", 0), dream_tag=arg("tag", 0)))
+for a in sys.argv[1:]:                                                    # any physiology constant may be overridden on the line (2026-09-15)
+    if a.startswith("--") and "=" not in a:
+        k = a[2:].replace("-", "_")
+        if k in PHYSIOLOGY and k not in ("night_batch", "night_rounds", "night_starts", "night_lr", "night_warm", "dream_who", "dream_tag"):
+            cfg[k] = type(PHYSIOLOGY[k])(sys.argv[sys.argv.index(a) + 1])
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 life = Life.load(path, TOK, device="cpu", cfg=cfg, seed=arg("seed", 0)); m = life.m; m.eval()
 life.save_path = None                                                   # a copy: the night must not save it
@@ -72,7 +77,7 @@ def mouth(prompt, n=24):
     return "".join(out), "".join(cortex)
 
 PROMPTS = ["do you want milk?", "what do you have?", "are you here?", "can you play?", "I want ", "I see "]
-print(f"body: nights {life.nights} store {life.store.n()} | night_batch {cfg['night_batch']} rounds {cfg['night_rounds']} starts {cfg['night_starts']} lr {cfg['night_lr']} warm {cfg['night_warm']} dream_who {cfg['dream_who']} tag {cfg['dream_tag']} draw {cfg.get('dream_draw', '-')} seed {arg('seed', 0)}", flush=True)
+print(f"body: nights {life.nights} store {life.store.n()} | night_batch {cfg['night_batch']} rounds {cfg['night_rounds']} starts {cfg['night_starts']} lr {cfg['night_lr']} warm {cfg['night_warm']} dream_who {cfg['dream_who']} tag {cfg['dream_tag']} draw {cfg.get('dream_draw', '-')} old_share {cfg.get('dream_old_share', 0)} seed {arg('seed', 0)}", flush=True)
 life.cfg["night_batch"] = max(1, int(life.cfg.get("night_batch", 0)))
 with torch.no_grad():
     g0 = life.gauge(recent); c0 = life._gauge_cos; o0 = life.gauge(old); oc0 = life._gauge_cos; h0 = life.gauge(held); hc0 = life._gauge_cos
