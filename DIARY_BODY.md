@@ -8307,3 +8307,8 @@ THE EVICTION PROVEN (13:20): day 228 wrote 1240 new slots into the full store an
 memories heard once. Fourteen of the twenty prefixes the morning answered read a slot the dusk no longer held; the dusk body with
 the union of both stores answers 19 of 26 against its own 10, and 14 of 30 questions against its own 9. The capacity is a constant of the organ now (store_cap); 32768 goes
 on the served body at night 201's save, and the next dusk is the falsifier: the prefixes hold their morning count through day 230.
+NIGHT 201 (ended 14:11, slept 1242 s; the 191st row; the log's day 229): held-out 0.659 (from 0.654), the old lines 0.466, the facts
+by the cortex 0.888; the mouth completes 11 of 26 prefixes and answers 13 of 30 questions at two rests (8 at eight; the rephrased
+8): day 229, the last at the old cap, retaught some facts (7 -> 13) and evicted others (the prefixes 9 -> 11 only). The reload at
+the save (14:11:35) put the capacity on the served body: the store read 8282 slots within two minutes, past the old limit, and
+the typist relaunched. Day 230 is the falsifier: the dusk probe against this morning's 11 of 26.
