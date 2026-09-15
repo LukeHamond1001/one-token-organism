@@ -8074,3 +8074,9 @@ floor is now a constant (write_floor). THE COARSE CONTEXT: an order-free bag of 
 at night?" share most of their weight, so the context term drew the siblings closer than the fast bag alone; the shifted form
 (ctx_form) keeps the utterance's order. Three arms on a copy of day 209 with long turns (listen 64): the served form, the floor
 lowered, the floor lowered with the shifted context.
+
+Night 186 (ended ~22:10 after day 210): the probe after it: HELD-OUT 0.661 (0.708, 0.691, 0.679, 0.674, 0.661 over the five nights
+under the slow context: the slide continues), the cortex on the fact sentences 0.877 (the highest), the mouth's prefixes 18 of 26
+(recovering from 10), the questions 8 of 30 at two rests (5 the night before; 11 before the switch), the branch 8 of 9 and 9 of 12.
+The starts are still the failures ("what is hot?" -> "two ducks and"). The three arms on the copy (the write floor, the shifted
+context) report near 23:00; the held-out's slide is the number that decides a revert if neither arm mends the starts.
