@@ -8323,4 +8323,4 @@ fact-shaped questions ("what is green", "is the star?", "is soft?") with the fac
 first-draft lines collide with the 3700 rows; the next parent (232-234) is briefed to vary and check.
 NIGHT 202 (the first at the capacity; ended 15:22): held-out 0.665, the old lines 0.481, the facts by the cortex 0.888; the mouth
 completes 22 of 26 prefixes (held through the night) and answers 18 of 30 questions at two rests and 18 at eight (the stage's best
-at the long pause, 8-14 before); the dreams 0.83.
+at the long pause, 8-14 before); the rephrased 11 of 30 (8 before); the branch 9 of 9 and 11 of 12; the dreams 0.83.
