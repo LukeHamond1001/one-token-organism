@@ -8109,3 +8109,6 @@ Night 188 (ended 00:24 after day 212): duty 0.354, smiles/line 1.28, the guard h
 0.677, the mouth 14 of 26, the cortex on the facts 0.865. THE WRITE FLOOR REPAIRED on the served body at this night's save (the
 reload at 00:24:42, write_floor 1e-30 with the slow context kept): from day 213 the first symbol of every world line is written
 however long the child's turn before it ran.
+The probe after night 188: HELD-OUT 0.685 (0.661, 0.676, 0.685: recovering), the cortex on the fact sentences 0.869, the mouth's
+prefixes 14 of 26, the questions 8 and 8 of 30, the branch 7 of 9 and 7 of 12. The served body verified after the reload: the write
+floor at 1e-30 with the slow context, the typist relaunched, the guard re-armed on the same flags.
