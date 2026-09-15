@@ -8095,3 +8095,6 @@ identically, 10, 10, 7 of 30 and the branch 9 of 9, 8 of 12: at listen 64 the fa
 the crossing is near 68 ticks, and the served body's turns run to 80 (the gate's 8.2-second cap on half the lines), so the copy
 cannot show what the served log implies. The floor's repair is arithmetic and goes on the served body at night 188's save; arm C
 (the shifted context) decides the context's form.
+The probe after night 187: HELD-OUT 0.676 (0.661 the night before: the slide turned), the cortex on the fact sentences 0.869, the
+mouth's prefixes 18 of 26, the questions 9 of 30 at both pauses (5, 8, 9 over the last three nights; 11 before the switch), the
+branch 7 of 9 and 9 of 12. The recovery under the new key runs as the facts are re-taught with their contexts.
