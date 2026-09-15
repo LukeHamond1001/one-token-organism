@@ -8299,3 +8299,7 @@ the dusk of the day labelled 228 (12:36) and 9 after night 200; the questions 16
 before the chooser, the store full (8192 slots, every strength above 0.54, the mean 0.82 -> 0.91 through the day). A day writes
 about 3500 world symbols into 8192 slots: two fifths of the store turns over daily, and the facts come once in three days. The
 store's capacity (the second iteration) is derived and built next; the tick's cost is measured before it goes on the served body.
+THE PLASTICITY GATE READ (13:16): day 224 lived twice on the save after night 198, the lesson gated by the smile and the surprise
+against ungated. The held-out fell two hundredths in both (0.654 to 0.638 gated, 0.644 ungated); the questions 17 of 30 in both;
+the prefixes 22 gated against 18. The prediction (the dusk's fall halved) failed; the gate stays off. What the day costs the
+held-out is not the ordinary tick's lesson.

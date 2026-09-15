@@ -314,9 +314,12 @@ class Store:
         a dream is judged against: it stops when recall is half as sure as a memory of its own)"""
         if self.n() == 0:
             return 0.0
-        logits = (float(qnorm) * self.K @ self.K.t()) / self.temp     # each slot read by its own key at a full context's norm
-        w = torch.softmax(logits, 1)
-        return float((w @ self.V).norm(dim=1).mean())
+        tot = 0.0; step = 2048                                          # in blocks of rows: the n x n table is four gigabytes at 32768 slots
+        for i in range(0, self.n(), step):
+            logits = (float(qnorm) * self.K[i:i + step] @ self.K.t()) / self.temp     # each slot read by its own key at a full context's norm
+            w = torch.softmax(logits, 1)
+            tot += float((w @ self.V).norm(dim=1).sum())
+        return tot / self.n()
 
     @torch.no_grad()
     def sample_starts(self, n, gen=None, mask=None):

@@ -71,6 +71,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    running surprise), constants disclosed; with wake_base 0.3 the ordinary tick learns at a third, a smile's tick at full or more.
    Predicted: the dusk's fall on the held-out halves, the fact sentences (rewarded exchanges) keep their climb. Measured by two copy
    days with the rewards replayed, gated and ungated, the held-out read before and after the day.
+   MEASURED (13:16): day 224 lived twice on the save after night 198 (the held-out 0.654, the prefixes 21 of 26 before the day).
+   Gated (0.3 + 1.0 x |dopamine| + 0.5 x surprise): held-out 0.638, prefixes 22, questions 17 (pause 2) and 14 (pause 8).
+   Ungated: held-out 0.644, prefixes 18, questions 17 and 13. The prediction FAILED: the dusk's fall on the held-out did not halve
+   (it was the same within a hundredth, both arms two hundredths under the morning); the prefixes' four are within a day's noise
+   and were mostly the eviction below (iteration 2), not the lesson. Not adopted; the constants stay at their off values.
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
 10. The learned working-memory cue replacing the hand-shaped context. Ruler: the branch, held-out.
 11. Tonic dopamine from the running reward rate setting vigor and the gate's rate. Ruler: duty, smiles per line.

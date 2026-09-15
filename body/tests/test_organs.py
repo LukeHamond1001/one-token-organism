@@ -1424,11 +1424,26 @@ def test_reward_tags_the_utterance():
     print("59 the reward tags the utterance: strengths", [round(v, 2) for v in life.utt_S], "| without the gain", life2.utt_S)
 
 
+def test_store_capacity_is_a_constant():
+    """60 (2026-09-15): the store's slot count comes from the physiology (store_cap); over it the weakest give way; the self-confidence
+    computed in row blocks equals the whole table's"""
+    life = tiny(store_cap=4); st = life.store
+    for k in range(6):
+        v = torch.zeros(life.m.d); v[k] = 1.0; kk = torch.zeros(life.m.d); kk[k + 10] = 1.0
+        st.write(kk, v, 0.5 + 0.1 * k, 0)
+    assert st.n() == 4 and float(st.S.min()) > 0.65, (st.n(), st.S)
+    assert tiny().store.cap == 8192
+    q = (1.0 / (1.0 - 0.64)) ** 0.5
+    whole = float((torch.softmax((q * st.K @ st.K.t()) / st.temp, 1) @ st.V).norm(dim=1).mean())
+    assert abs(st.self_confidence(qnorm=q) - whole) < 1e-5
+    print("60 the store's capacity is a constant: cap 4 holds", st.n(), "of six writes, strengths", [round(float(x), 2) for x in st.S], "| default", tiny().store.cap)
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant]
     failed = 0
     for t in tests:
         try:
