@@ -154,6 +154,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    The never-typed facts answer better than the taught ones because their question's key is uncrowded: the taught questions have
    been asked in ordinary talk with other answers ("what is hot?" -> "the tub is hot"), so the store holds several continuations
    under one key and the recall splits among them. The taught questions' 60% is the crowding of the key, not the memory's strength.
+36. The questions asked of the live mouth (the demo's form: the gate and the sampled choice, not the greedy probe). Ruler:
+   tools/live_qa.py, the question typed as the parent, twelve seconds of the child's turn read from the page.
+   DERIVED (2026-09-15, 16:20, before the run): the greedy probe reads the argmax at every symbol with the recall in the forecast;
+   the live mouth speaks when its gate opens and samples its choice (explore_choice 1.0), and the parent's silence after the
+   question is the only cue. The taught questions answer 18-20 of 30 greedily on the dusk copy; the live form loses some to the
+   gate's timing and the sampling. Predicted: 12-15 of 30 taught per pass (three passes), the never-typed facts 6-8 of 10 on the
+   told-once copy. Falsified if the taught count is under 9: then the demo's gate is the choice and the gate, not the memory.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
