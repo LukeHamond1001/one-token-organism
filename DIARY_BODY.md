@@ -8057,3 +8057,8 @@ The episode kept per utterance, on a copy of day 207 against the slot links alon
 both, the day-206 families 8 of 12 both: the slow context already tells the siblings apart); the answers by the pause 11, 11, 5 of
 30 against 8, 8, 7: three more at the natural pauses, two fewer at eight, within a day's noise. A structural mending with no clear
 lift yet; it stays off the served body until the key's verdict is in, then a second copy day decides it.
+
+Night 185 (ended 21:05 after day 209, the relabelled remainder of day 208 plus the new parent's facts 1-10): duty 0.331,
+smiles/line 1.56 (240 smiles over 150 lines), the guard holds; answered before B 27 of 76; frowns 32. Dusk: held-out 0.667 (57
+lines: another held-out line has been typed), the mouth 15 of 26, the cortex on the facts 0.810. All thirty facts now carry a
+context; the probe after this night is the key's first full reading.
