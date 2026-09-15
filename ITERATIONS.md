@@ -6,7 +6,8 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 (branch_probe.py), the day's tally (answers before B, fact words in its turn, own questions, smiles, frowns), the actor's slope, duty.
 
 ## Landed
-- The slow context in the memory's key (key_ctx 0.5): the branch 6/9 on a copy, 10/12 on the served body; on the body since day 206.
+- The write floor (write_floor 1e-30): the answer's onset written after long turns; the branch 9 of 9 on the fast bag alone once it is (the matched test, 2026-09-15). On the served body since night 188.
+- The slow context in the memory's key (key_ctx 0.5): separated siblings at the branch but cost the held-out 0.024 and four answers in the matched test; reverted at night 191; kept as an instrument.
 - The question rulers read twenty symbols and read the store along the question as awake; the depth measure for parents.
 
 ## Failed, kept as instruments, off

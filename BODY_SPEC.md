@@ -1212,3 +1212,15 @@ out, `key_scale`): 0 of 30 on a copy day, the state being the whole window and t
 exchange replayed): three nights on a copy gave the cortex no preference at the branch. The rulers gained the answer by the pause
 (`tools/qa_by_gap.py`, every fact listed, the store read along the question as awake) and the branch after a shared start
 (`tools/branch_probe.py`); the question ruler reads twenty symbols.
+
+**The twenty-eighth defect, resolved otherwise (2026-09-15, 03:25).** The slow context ran on the served body from day 206 to night
+191. It separated the siblings at the branch (9 of 9 on the sun family) but the held-out slid from 0.708 to 0.66-0.69 and the
+questions from 11 to 5-9 of 30. The matched test (day 214 lived on two copies of the same body, each followed by its night) read the
+context's cost plainly: HELD-OUT 0.657 against 0.681, the prefixes 15 against 19 of 26, the questions 7 against 11 of 30, and the
+branch 5 of 9 against 9 of 9 WITHOUT the context. What had cut the thread was not the key's ambiguity but the write floor: the
+memory of the answer's first symbol was never written after a long turn (the key's norm under 1e-6), so the episode's links jumped
+from the question into the answer's second symbol. With the floor a constant (`write_floor` 1e-30) the answer's onset is written
+under the question's faded direction, the links carry the question into its own answer, and the branch stands at 9 of 9 on the
+fast bag alone. The slow context (`key_ctx`, `ctx_form`) stays in the code as an instrument, off; the served flags are the fast bag
+with the floor. The lesson for the method: a defect of arithmetic (a threshold against a fading quantity) wore the mask of a
+representational one, and the representational cure cost a day of the held-out before the matched test told them apart.
