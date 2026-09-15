@@ -8112,3 +8112,8 @@ however long the child's turn before it ran.
 The probe after night 188: HELD-OUT 0.685 (0.661, 0.676, 0.685: recovering), the cortex on the fact sentences 0.869, the mouth's
 prefixes 14 of 26, the questions 8 and 8 of 30, the branch 7 of 9 and 7 of 12. The served body verified after the reload: the write
 floor at 1e-30 with the slow context, the typist relaunched, the guard re-armed on the same flags.
+The write floor at listen 80 on copies of day 209 (01:22): the old floor 15, 13, 11 of 30 (branch 7 of 9, 9 of 12); the floor at
+1e-30 11, 12, 10 (7 of 9, 7 of 12). Not the lift the arithmetic promised, and not the same day twice: once the floor changes what
+is written, the mouth's own speech changes and the whole day diverges, so a single pair of runs reads the chaos as much as the
+floor (at listen 64, where nothing crosses the floor, the two arms were identical to the symbol). The floor stays on the served
+body on the arithmetic; the served probes after nights 189 and 190 are its reading, and two falling nights would revert it.
