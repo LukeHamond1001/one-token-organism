@@ -8324,3 +8324,8 @@ first-draft lines collide with the 3700 rows; the next parent (232-234) is brief
 NIGHT 202 (the first at the capacity; ended 15:22): held-out 0.665, the old lines 0.481, the facts by the cortex 0.888; the mouth
 completes 22 of 26 prefixes (held through the night) and answers 18 of 30 questions at two rests and 18 at eight (the stage's best
 at the long pause, 8-14 before); the rephrased 11 of 30 (8 before); the branch 9 of 9 and 11 of 12; the dreams 0.83.
+THE REWARD TAG READ (15:40): day 224 lived twice on the save after night 198 with the rewards replayed, then a night on each copy.
+Tagged: the held-out 0.661 at dusk, 0.669 after the night, the facts by the cortex 0.888. Untagged: 0.646, 0.646, 0.881. The
+direction predicted, but the dusks differ by 0.015 before the night touches anything, the two copy days having diverged on the
+store's reads: a copy day's noise on the held-out is about 0.015, larger than most effects measured this stage. Inconclusive; a
+matched pair of nights from the tagged day's save (the control with its tags zeroed) is queued behind the told-once test.

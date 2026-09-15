@@ -78,6 +78,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    RUNNING (14:15): arm T (reward_gain 2.0) lived day 224 at the old cap; the flags file took the capacity at 13:22, so arm C's day
    runs at 32768. The night's inputs (the utterance memory and its strengths) do not depend on the store's cap, so the fact
    sentences and the held-out compare cleanly; the questions and the prefixes, the store's, do not, and are not read for this pair.
+   MEASURED (15:40): with the tag, the night took the held-out 0.661 -> 0.669 and the fact sentences to 0.888; without, 0.646 ->
+   0.646 and 0.881. The direction is the predicted one on both rulers, but the two dusks differ by 0.015 from the day alone (the
+   tag does nothing to the cortex by day; two copy days from one save diverge on the store's reads), so one pair cannot resolve a
+   hundredth. INCONCLUSIVE; not adopted. Next: a matched night pair from the tagged day's save, the control with the tags zeroed
+   (the strengths above one clipped to one), the same seed: the only difference the draw's weights.
 8. Waking plasticity gated by the smile and by surprise. Ruler: dusk-to-night deltas.
    DERIVED (2026-09-15, 11:25): the day's lesson runs every 24 ticks at 1e-5 on the last 32 ticks, all day, scaled only by stress;
    each dusk the held-out sits two to three hundredths under the morning and the night restores one to two, a net drift down. In
