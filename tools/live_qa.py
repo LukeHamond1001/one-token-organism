@@ -33,7 +33,7 @@ NOVEL = [("what is sour?", "a lemon is sour"), ("what is loud?", "a drum is loud
          ("what gives light?", "a lamp gives light"), ("what has wool?", "a sheep has wool"), ("what has a horn?", "a goat has a horn"),
          ("what is steep?", "a hill is steep")]
 path = sys.argv[1]; qset = arg("set", "facts"); reps = arg("reps", 3); window = arg("window", 60); gap = arg("gap", 30)
-quiet = arg("quiet", 8); max_wait = arg("max_wait", 200)                       # the parent waits for the child's quiet before the next question, as the typist does
+quiet = arg("quiet", 8); max_wait = arg("max_wait", 200); trace = arg("trace", 0)                    # --trace N: the first N questions tick by tick                       # the parent waits for the child's quiet before the next question, as the typist does
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
 for a in sys.argv[1:]:                                                          # any physiology constant may be overridden on the line
     if a.startswith("--") and "=" not in a:
@@ -48,7 +48,7 @@ print(f"body {os.path.basename(path)}: nights {life.nights} store {life.store.n(
 hits = {q: 0 for q, _ in pairs}; first = {}; t0 = time.time(); junk = 0; own_total = 0; talked_over = 0
 for rep in range(reps):
     n = 0
-    for q, fact in pairs:
+    for qi, (q, fact) in enumerate(pairs):
         keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
         silent = 0; waited = 0
         while silent < quiet and waited < max_wait:                             # the typist's rule: no line over the child's speech
@@ -56,12 +56,21 @@ for rep in range(reps):
             silent = silent + 1 if int(life.win[-1]["xo"]) == life.sil else 0
         talked_over += int(silent < quiet)
         life.type_text(q, who="you")
+        tr = rep == 0 and qi < trace; rows = []
+        def note(tag):
+            c = getattr(life, "_last_choice", None); w = life.win[-1]
+            if c: rows.append(f"{tag}{TOK.decode([int(w['x'])]) if int(w['x']) != life.sil else '_'}{TOK.decode([int(w['xo'])]) if int(w['xo']) != life.sil else '_'} act {c['p_act']:.2f}{'!' if c['acted'] else ' '} say {TOK.decode([c['nxt']]) if c['nxt'] != life.sil else '_'} p {c['p_choice']:.2f} top {TOK.decode([c['top']]) if c['top'] != life.sil else '_'} |pred| {c['norm']:.2f} sharp {c['sharp']:.0f}")
         while life.queue:
             life.tick()
+            if tr: note("q ")
         got = []
         for _ in range(window):
             life.tick(); w = life.win[-1]
             if int(w["xo"]) != life.sil: got.append(TOK.decode([int(w["xo"])]))
+            if tr: note("  ")
+        if tr:
+            print(f"TRACE {q!r} (world symbol, own symbol; act = the gate's probability, ! = it acted; say = the sampled symbol at its probability; top = the readout's argmax):", flush=True)
+            for r in rows: print("   " + r, flush=True)
         for _ in range(gap):
             life.tick()
         text = "".join(got); own_total += len(text); junk += sum(1 for ch in text if not (ch.islower() or ch in " .?!'"))

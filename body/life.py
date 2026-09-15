@@ -1250,6 +1250,8 @@ class Life:
                         self._chunk_words = getattr(self, "_chunk_words", 0) + 1
             else:
                 nxt, p_choice = self.sil, 0.0
+            self._last_choice = {"p_act": float(p_act), "acted": bool(acted), "nxt": int(nxt), "p_choice": float(p_choice), "norm": float(pred1.norm()),
+                                 "top": int(torch.argmax(logits)), "sharp": float(getattr(self, "_sharp_eff", m.read_sharp))}   # the tick's choice, for the instruments
         int_t = 0.0
         if acted and act_on and not self._chunk_cont:            # the actor's act and credit: once per word under the chunk form
             self._ring_torn.append(1.0 if self._torn_now else 0.0); self._ring_ent.append(float(self._ent_now)); self._torn_now = False
