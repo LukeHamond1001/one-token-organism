@@ -33,17 +33,28 @@ NOVEL = [("what is sour?", "a lemon is sour"), ("what is loud?", "a drum is loud
          ("what gives light?", "a lamp gives light"), ("what has wool?", "a sheep has wool"), ("what has a horn?", "a goat has a horn"),
          ("what is steep?", "a hill is steep")]
 path = sys.argv[1]; qset = arg("set", "facts"); reps = arg("reps", 3); window = arg("window", 60); gap = arg("gap", 30)
+quiet = arg("quiet", 8); max_wait = arg("max_wait", 200)                       # the parent waits for the child's quiet before the next question, as the typist does
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
+for a in sys.argv[1:]:                                                          # any physiology constant may be overridden on the line
+    if a.startswith("--") and "=" not in a:
+        k = a[2:].replace("-", "_")
+        if k in PHYSIOLOGY:
+            cfg[k] = type(PHYSIOLOGY[k])(sys.argv[sys.argv.index(a) + 1])
 TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
 life = Life.load(path, TOK, device="cpu", cfg=cfg); life.save_path = None; life.sleep_pressure = 0
 pairs = NOVEL if qset == "novel" else [tuple(s.strip() for s in l.split("|")[:2]) for l in open(os.path.join(ROOT, "tools/facts_stage5.txt")) if "|" in l]
 STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
 print(f"body {os.path.basename(path)}: nights {life.nights} store {life.store.n()} | {qset} questions, {reps} passes, the child's turn {window} ticks then {gap} of quiet", flush=True)
-hits = {q: 0 for q, _ in pairs}; first = {}; t0 = time.time(); junk = 0; own_total = 0
+hits = {q: 0 for q, _ in pairs}; first = {}; t0 = time.time(); junk = 0; own_total = 0; talked_over = 0
 for rep in range(reps):
     n = 0
     for q, fact in pairs:
         keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
+        silent = 0; waited = 0
+        while silent < quiet and waited < max_wait:                             # the typist's rule: no line over the child's speech
+            life.tick(); waited += 1
+            silent = silent + 1 if int(life.win[-1]["xo"]) == life.sil else 0
+        talked_over += int(silent < quiet)
         life.type_text(q, who="you")
         while life.queue:
             life.tick()
@@ -58,4 +69,4 @@ for rep in range(reps):
         if rep == 0: first[q] = (ok, text[:24])
     print(f"LIVE pass {rep + 1}: {n}/{len(pairs)} answered in the child's turn ({time.time() - t0:.0f}s)", flush=True)
 ever = sum(1 for q in hits if hits[q] > 0)
-print(f"LIVE {qset}: answered in {sum(hits.values()) / max(1, reps):.1f} of {len(pairs)} per pass, {ever} ever | own symbols {own_total}, junk {junk} | " + " ".join(f"{'*' if ok else ' '}{q!r}->{t!r}" for q, (ok, t) in first.items()), flush=True)
+print(f"LIVE {qset} (sharp_base {life.cfg['sharp_base']}, read_sharp {float(life.m.read_sharp):.1f}): answered in {sum(hits.values()) / max(1, reps):.1f} of {len(pairs)} per pass, {ever} ever | own symbols {own_total}, junk {junk}, questions typed over its speech {talked_over} | " + " ".join(f"{'*' if ok else ' '}{q!r}->{t!r}" for q, (ok, t) in first.items()), flush=True)
