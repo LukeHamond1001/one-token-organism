@@ -1401,11 +1401,21 @@ def test_chooser_learns_the_torn_choice():
     print("57 the chooser learns the torn choice: scores", [round(score(c), 2) for c in cands], "| max row norm", round(float(m.chooser.weight.norm(dim=1).max()), 2))
 
 
+def test_the_old_in_the_draw():
+    """58 (2026-09-15): with dream_old_share the night's dreams reach the faded utterances; without it the strong recent ones alone"""
+    life = tiny(); life.cfg["dream_source"] = "utterances"; life.cfg["offset_ticks"] = 8
+    life.utts = [[5, 6, 7]] * 50 + [[8, 9]] * 50; life.utt_S = [0.001] * 50 + [1.0] * 50; life.utt_N = list(range(1, 101)); life._utt_serial = 100
+    life.cfg["dream_old_share"] = 0.0; ds = life.dreams(200); faded = sum(1 for d in ds if d[0] == 5)
+    life.cfg["dream_old_share"] = 0.5; ds2 = life.dreams(200); faded2 = sum(1 for d in ds2 if d[0] == 5)
+    assert faded < 20 and faded2 > 40, (faded, faded2)
+    print("58 the old in the draw: faded utterances among two hundred dreams", faded, "-> with the share", faded2)
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw]
     failed = 0
     for t in tests:
         try:

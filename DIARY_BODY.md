@@ -8258,3 +8258,5 @@ The probe after night 198 (the last save before the chooser): HELD-OUT 0.654 (0.
 nights since the revert: a drift down to watch; the held-out set is 55 lines now, two more of its lines having been typed), the
 cortex on the fact sentences 0.885, the mouth's prefixes 21 of 26, the questions 16 of 30 at two rests and 9 at eight, the branch
 7 of 9 and 12 of 12.
+The served body verified after the reload (10:48): the chooser's flags on, the typist relaunched, the guard re-armed, 92 ticks in
+twenty seconds, the earned gain 0.049 (the saved estimate; the new head's weights are zero, so its first votes are even).

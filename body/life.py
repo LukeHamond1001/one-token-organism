@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, dream_old_share=0.0, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -1481,7 +1481,13 @@ class Life:
         if str(self.cfg.get("dream_source", "store")) == "utterances" and self.utts:
             # the utterances heard, whole, drawn by strength (the recent, still strong, more), with replacement when fewer than asked
             S_ = torch.tensor(self.utt_S, dtype=torch.float); p_ = S_.clamp_min(1e-6) / S_.clamp_min(1e-6).sum()
-            idx = torch.multinomial(p_, n, replacement=bool(len(self.utts) < n), generator=self.gen).tolist()
+            # THE OLD IN THE DRAW (dream_old_share; 2026-09-15): a share of the night's dreams drawn uniformly over the whole memory,
+            # the faded utterances of earlier days as likely as the fresh ones (replay reaches remote memories too); the rest by
+            # strength as before. Without it every night leaned to the newest days' style and the held-out lines drifted.
+            n_old = int(round(n * float(self.cfg.get("dream_old_share", 0.0)))); n_new = n - n_old
+            idx = torch.multinomial(p_, n_new, replacement=bool(len(self.utts) < n_new), generator=self.gen).tolist() if n_new > 0 else []
+            if n_old > 0:
+                idx += torch.randint(0, len(self.utts), (n_old,), generator=self.gen).tolist()
             end_ = [self.end_id] if int(self.cfg.get("offset_ticks", 0)) > 0 else []
             # THE EXCHANGE REPLAYED (dream_pair, the utterances that followed; dream_gap rests between, the pause compressed as replay
             # compresses it): a dream is the utterance and its successor in time when the memory still holds it

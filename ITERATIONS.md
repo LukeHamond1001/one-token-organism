@@ -40,6 +40,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 4. The actor's earned voice measured again with the chooser in place. Ruler: the actor's slope.
 5. The handoff: the rulers read with the store off. Ruler: answers with the store off.
 6. Old memories in the night's draw. Ruler: old lines, held-out.
+   DERIVED (2026-09-15, 10:50): the night draws its 1024 utterances by strength, which is recency (0.97 a night), from a memory of
+   about 4096 utterances, twenty days of speech; the held-out lines are in the fourth stage's style and the days are now fact-heavy
+   short questions, so each night's lesson leans to the newest style and the held-out drifts (0.689 to 0.654 over the six nights
+   since the revert; the old lines near 0.48 for a week) while the fact sentences climb. Biology's replay reaches remote memories
+   too. A share of the draw taken uniformly over the whole memory (dream_old_share, a constant) is the mechanism; predicted: the
+   old lines and the held-out up by one to two hundredths a night, the fact sentences' climb slower by less than that. Measured
+   by two copy nights from the same save, with and without the share.
 7. Reward-weighted replay. Ruler: the fact sentences per night.
 8. Waking plasticity gated by the smile and by surprise. Ruler: dusk-to-night deltas.
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
