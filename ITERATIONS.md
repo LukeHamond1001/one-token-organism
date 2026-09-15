@@ -194,6 +194,9 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    60 answers 2 and 1: sharper is worse. The sampling is not the cause; the trace's reading stands (the gate's latency against the
    cue's fade, iteration 37). A confound found in the instrument: it gave no smiles, so the copy's mood sank through the run and
    its readout's sharpness fell to the floor (8); the instrument now smiles at an answer as the caregiver does (--smile 1).
+   The third point (18:10): sharp_base 100 answers 4 and 4 of 30 taught (as at 25) and 3 and 4 of 10 never-typed (against 2 and
+   1 at 25), the mood at -6 throughout for lack of smiles. Sharpness alone moves the uncrowded questions a little and the
+   taught ones not at all: the lever is the cue's hold through the gate's latency (iteration 37), measured next with smiles.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
