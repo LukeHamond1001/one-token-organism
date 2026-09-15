@@ -8171,3 +8171,6 @@ all at actor_lr 0.02, as the arithmetic said (one to five answer smiles a day ag
 against 14 and 6, the branch 8 of 9 and 9 of 12 against 7 of 9 and 12 of 12: the reward's presence changes the day's course within
 a day's noise. The instrument works (the faces land, the mood differs); the actor's rate at rewarded moments is now measurable on
 copies: 0.2 and 1.0 next, against 0.02.
+
+Night 193 (ended 05:33 after the day labelled 219): duty 0.316, smiles/line 1.44 (280 smiles over 190 lines), the guard holds;
+frowns 39; answered before B 15 of 95. The parent for days 220-222 spawned at the night row (facts 1-10 first).
