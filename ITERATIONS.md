@@ -11,6 +11,7 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 - The question rulers read twenty symbols and read the store along the question as awake; the depth measure for parents.
 
 ## Failed, kept as instruments, off
+- The chooser (actor_form softmax): learned the action prior from ten relevant smiles a day and thinned the mouth; one served day lost (2026-09-15).
 - The exchange replay (dream_pair): no preference at the branch after three copy nights.
 - The cortex-state key (key_form cortex, pattern-separated): 0/30; the state is the whole window.
 - The context at weight 1.0 (loops); the query horizon 0.9 (no peak gain); the follow gain 20-1000 (the thread is cut earlier).
@@ -36,7 +37,7 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the candidate chosen, decaying over the answer's ticks; its weights bounded by decay so it cannot saturate; its vote entering the
    readout at a gain earned by its correlation with reward as now. Rulers: the actor's raw vote at the branch (branch_probe) on copies
    with rewards, then fact answers in conversation.
-   ON THE SERVED BODY from night 198's save (2026-09-15, 10:45): actor 1, actor_form softmax, actor_input cortex, actor_voice earned, actor_lr 0.2; born at zero; its vote at the branch read after each night.
+   ON THE SERVED BODY from night 198's save (2026-09-15, 10:45) and OFF from 11:50: its first live day collapsed (48 smiles, 99 junk characters, duty 0.158; the guard tripped). Read on a copy: the head learns the day's action prior through the state's mean direction and votes it back into the mouth, which loops and thins. FAILED for this world's reward density; kept as code, off; it belongs to a body with denser, more specific reward.
 4. The actor's earned voice measured again with the chooser in place. Ruler: the actor's slope.
 5. The handoff: the rulers read with the store off. Ruler: answers with the store off.
 6. Old memories in the night's draw. Ruler: old lines, held-out.

@@ -8277,3 +8277,10 @@ served body was down from 11:48 to 11:50. Restored by hand at 11:50 on the pre-c
 closure: the trip was the chooser's, not the tag's); the guard re-armed with its flags quoted; the typist chain relaunched (the
 label skipped to 228); the parent for days 228-230 spawned. THE CHOOSER IS OFF; before it returns, a copy day must be read for
 the child's own symbols, not only the rulers.
+THE CHOOSER'S FAULT, read on a copy (12:06): thirty lines of day 224 with the rewards replayed, the chooser on against off: the
+child's own symbols 301 against 474, junk characters 4 against 1, and its speech looped on the rewarded fragment ("did. ... did.
+... did yo"). The head learns the day's action prior, the symbols rewarded on average, through the state's mean direction even
+without a bias, and votes it back into a mouth that already carries that prior from the cortex and the store: fewer, looping,
+stranger symbols. With ten relevant smiles a day the state-dependent residual it was built for cannot outweigh that prior. The
+chooser is off and stays off in this world; it is written down as failed for the reward's density, not the mechanism's kind: a
+body with denser, more specific reward is where a striatal chooser earns its place.

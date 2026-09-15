@@ -74,7 +74,8 @@ print(f"body {os.path.basename(path)}: nights {life.nights} store {life.store.n(
 t0 = time.time(); ticks = 0
 with torch.no_grad():
     pass
-faces_set = 0
+faces_set = 0; own_syms = []                                          # the child's own symbols, for the junk count (--dump-own 1)
+dump_own = arg("dump_own", 0)
 for i, (text, who) in enumerate(lines):
     life.type_text(text, who=who)
     span = len(text) + listen                                   # the line's ticks on the copy: its symbols, then the child's turn
@@ -94,13 +95,19 @@ for i, (text, who) in enumerate(lines):
             else:
                 life.set_face(0.0); face_until = -1
         t_after += 1
+    n0 = len(life.win)
     while life.queue:
         life.tick(); ticks += 1; face_tick()
     for _ in range(listen):
         life.tick(); ticks += 1; face_tick()
     if rewards: life.set_face(0.0)
+    if dump_own:
+        own_syms += [int(w["xo"]) for w in list(life.win)[-min(len(life.win), 96):] if int(w["xo"]) != life.sil]
     if (i + 1) % 40 == 0:
         print(f"  {i + 1} lines, {ticks} ticks, {time.time() - t0:.0f}s, store {life.store.n()}", flush=True)
+if dump_own:
+    txt = "".join(TOK.decode([x]) for x in own_syms); junk = sum(1 for ch in txt if not (ch.islower() or ch in " .?!'"))
+    print(f"own symbols {len(txt)}: junk (not lowercase, space or .?!) {junk} | sample {txt[:160]!r}", flush=True)
 print(f"done: {len(lines)} lines in {ticks} ticks, {time.time() - t0:.0f}s | faces set {faces_set} | the actor's slope {float(getattr(life, '_arel_gain', 0.0)):.3f} corr {float(getattr(life, '_arel_corr', 0.0)):.3f} | mood {life.mood:.2f}", flush=True)
 if save_as:
     life.save_path = save_as; life.save(); life.save_path = None; print(f"saved as {save_as}", flush=True)
