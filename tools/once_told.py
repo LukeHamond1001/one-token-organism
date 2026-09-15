@@ -65,7 +65,7 @@ def run(q, k, use_recall):
     with torch.no_grad():
         for ch in q:
             i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.rest_tick(); life.take_world(i)
+            life.rest_tick(world=True); life.take_world(i)
             if use_recall: life._recall(life.bag)
         for _ in range(k):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})

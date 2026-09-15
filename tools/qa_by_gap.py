@@ -21,6 +21,12 @@ cfg_ = {}
 if follow > 1.0: cfg_["read_follow"] = follow
 if bag is not None: cfg_["bag_decay"] = bag
 if key_form: cfg_["key_form"] = key_form
+from body.life import PHYSIOLOGY
+for a in sys.argv[2:]:                                                          # any physiology constant may be overridden on the line
+    if a.startswith("--") and "=" not in a:
+        k = a[2:].replace("-", "_")
+        if k in PHYSIOLOGY:
+            cfg_[k] = type(PHYSIOLOGY[k])(sys.argv[sys.argv.index(a) + 1])
 life = Life.load(sys.argv[1], TOK, device="cpu", cfg=(cfg_ or None)); m = life.m; m.eval()
 zero = torch.zeros(m.d)
 STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
@@ -37,7 +43,7 @@ def run(q, k, use_recall):
     with torch.no_grad():
         for ch in q:
             i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.rest_tick(); life.take_world(i)                       # as the tick: the fade, then the world's symbol
+            life.rest_tick(world=True); life.take_world(i)                       # as the tick: the fade, then the world's symbol
             if use_recall: life._recall(life.bag)                     # the store read along the question, as awake (the episode builds)
         for _ in range(k):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})

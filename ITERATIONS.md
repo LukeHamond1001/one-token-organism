@@ -177,6 +177,19 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    starts where the forecast's margin is thin; and the instrument typed the next question over the child's speech (the typist
    waits for its quiet). The memory is not the demo's gate; the choice is. Next: the instrument waits for quiet; the bound with
    the readout near-greedy (sharp_base 60, 100); then the certainty-scaled decisiveness (iteration 13's form, revised).
+37. The hold of working memory in the quiet (bag_rest_decay). Ruler: the live mouth; the answers by the pause at 8 and 16.
+   DERIVED (2026-09-15, 17:20, from the live ruler's trace, before the run): after "what is hot?" the readout's argmax is 't' at a
+   sure forecast for five ticks, but the gate, taught caution by the talk-over frowns, stays at its floor for twelve to forty ticks;
+   the world's context fades 0.8 a tick in the quiet, so by then its norm is a tenth, the recall (a dot product, the norm its
+   temperature) has flattened to the generic mean, and the child says "yes.". The answer lives eight ticks and the gate opens
+   later. In a brain the cue of a question is held through the pause by prefrontal delay activity; a context fades as symbols
+   displace it, not by the clock. Mechanism: the fast bags fade by bag_decay per symbol of their own kind and by bag_rest_decay
+   per quiet tick (a constant; 0 = the old rule). The keys are unchanged in direction (the onset's key is the question's still,
+   merged into the same slot), so the store's structure does not move; only the cue's norm through the pause. Predicted at 0.97
+   (a norm of 0.54 after twenty quiet ticks): the greedy answers at eight rests rise to the count at two (20 of 30) and hold near
+   it at sixteen; the live mouth answers 12 or more of 30 taught and 6 of 10 never-typed; a line's context is a tenth after 75
+   quiet ticks, the typist's gap, so the mouth does not chain across lines. Falsified if the live count stays under 8 (then the
+   gate's latency or the sampling is the gate, not the fade) or the branch or held-out fall.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).

@@ -36,7 +36,7 @@ for prompt in prompts:
         for ch in prompt:
             i = TOK.token_to_id(ch)
             life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-            life.rest_tick(); life.take_world(i)
+            life.rest_tick(world=True); life.take_world(i)
         for _ in range(int(life.cfg.get("offset_ticks", 8))):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
             life.rest_tick()
@@ -93,7 +93,7 @@ if "--lmloss" in sys.argv:
             with torch.no_grad():
                 for ch in pre:
                     i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-                    life.rest_tick(); life.take_world(i)
+                    life.rest_tick(world=True); life.take_world(i)
                 for _ in range(12):
                     xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
                     C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
@@ -131,7 +131,7 @@ if "--qa" in sys.argv:
                 with torch.no_grad():
                     for ch in q:
                         i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-                        life.rest_tick(); life.take_world(i)
+                        life.rest_tick(world=True); life.take_world(i)
                     for _ in range(pause):
                         life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
                         life.rest_tick()
