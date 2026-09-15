@@ -132,6 +132,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    five symbols, so a dropped letter breaks the chain at that point and the follow links recover it two symbols on. Predicted:
    the prefixes and the answers within 2 of the clean day's; the held-out (read on clean text) within 0.005. TO RUN once the
    served body is steady under the capacity (a day's copy at the usual cost).
+35. The fact told once (the demo's central scene, before any recording). Ruler: tools/once_told.py, ten never-typed facts.
+   DERIVED (2026-09-15, 15:40, before the run): a fact told once is written at the surprise's strength (about 0.55) as a chain from
+   the question's last symbols through the pause into the answer; the read is by content, and a never-typed question ("what is
+   sour?") has no near key among the taught ones (the taught questions share "what is " and differ by one word, the branch's
+   problem), so its recall is less crowded than a taught fact's. The night fades the strength by a tenth and evicts nothing at the
+   capacity; the cortex's lesson on the day's utterances moves the forecast, which the recall's confidence outweighs on a unique
+   chain. Predicted: at least 6 of 10 answered at two rests the same day, and the same count within one after the night; the
+   cortex alone 0. Falsified if the same-day count is under 4 (the single write too weak against the forecast) or the night's count
+   falls by three or more (the night's lesson overrides the store's chain).
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
