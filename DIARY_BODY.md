@@ -8158,3 +8158,6 @@ parent for 216-218, facts 1-10): the tally below.
 The probe after night 191 (the last save under the slow context): HELD-OUT 0.668, the cortex on the fact sentences 0.885, the
 mouth's prefixes 16 of 26, the questions 8 and 8 of 30 ("the sun is hot" whole, "fish live in w[ater]", "birds fly up", "dogs
 run"), the branch 7 of 9 and 9 of 12. From here the readings are the fast bag's with the floor.
+
+Night 192 (ended 04:30 after the day labelled 218, the first full day after the revert): duty 0.304, smiles/line 1.14 (233 smiles
+over 198 lines, the lowest rate of the week), the guard holds; frowns 37; answered before B 17 of 99.
