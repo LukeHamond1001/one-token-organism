@@ -38,24 +38,30 @@ def dist(prefix):
             if ch == "|": own = True
             if own and ch != "|":
                 life.win.append({"x": life.sil, "xo": i, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
-                life.rest_tick(); life.take_own(i)
+                life.rest_tick(); life.take_own(i); m.striatum_push(1, i)          # the delay line hears its own symbol
             else:
                 life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
                 life.rest_tick()
-                if ch != "|": life.take_world(i)
+                if ch != "|": life.take_world(i); m.striatum_push(0, i)          # the delay line hears the world's symbol
+                else: m.striatum_push(3, 0)                                      # a tick of quiet
             if reads_along: life._recall(life.bag)                  # the store read at every symbol, as awake: the episode followed builds
         xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
         C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
         rd, conf, _ = life._recall(life.bag)
         lc = m.readout(m.forecast(C, zero)); lm = m.readout(m.forecast(C, rd))
         for l in (lc, lm): l[life.bans] = float("-inf"); l[life.sil] = float("-inf")
-        return torch.softmax(lc, 0), torch.softmax(lm, 0)
+        # THE ACTOR'S RAW PREFERENCE (2026-09-15): the striatal head's vote at the branch, before the earned-voice gate scales it
+        try:
+            a = torch.tanh(m.actor(m.stri_in())); a[life.bans] = float("-inf"); a[life.sil] = float("-inf")
+        except Exception:
+            a = torch.zeros_like(lc)
+        return torch.softmax(lc, 0), torch.softmax(lm, 0), a
 print(f"body {os.path.basename(sys.argv[1])}: nights {life.nights}")
-tot_c = tot_m = n = 0
+tot_c = tot_m = tot_a = n = 0
 for start, qs in FAMILIES:
     for q, want in qs:
-        pc, pm = dist(q + "||" + start); w = TOK.token_to_id(want)
-        topc = TOK.decode([int(pc.argmax())]); topm = TOK.decode([int(pm.argmax())])
-        okc = topc == want; okm = topm == want; tot_c += okc; tot_m += okm; n += 1
-        print(f"  {q!r:24} + {start!r:12} wants {want!r}: cortex alone {topc!r} (p {float(pc[w]):.2f}){'*' if okc else ' '} | the mouth {topm!r} (p {float(pm[w]):.2f}){'*' if okm else ' '}")
-print(f"BRANCH: the asked fact's continuation first: cortex alone {tot_c}/{n}, the mouth {tot_m}/{n}")
+        pc, pm, pa = dist(q + "||" + start); w = TOK.token_to_id(want)
+        topc = TOK.decode([int(pc.argmax())]); topm = TOK.decode([int(pm.argmax())]); topa = TOK.decode([int(pa.argmax())])
+        okc = topc == want; okm = topm == want; oka = topa == want; tot_c += okc; tot_m += okm; tot_a += oka; n += 1
+        print(f"  {q!r:24} + {start!r:12} wants {want!r}: cortex alone {topc!r} (p {float(pc[w]):.2f}){'*' if okc else ' '} | the mouth {topm!r} (p {float(pm[w]):.2f}){'*' if okm else ' '} | the actor {topa!r} (vote {float(pa[w]):+.2f}){'*' if oka else ' '}")
+print(f"BRANCH: the asked fact's continuation first: cortex alone {tot_c}/{n}, the mouth {tot_m}/{n}, the actor's raw vote {tot_a}/{n}")
