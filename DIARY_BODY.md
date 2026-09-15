@@ -8053,3 +8053,7 @@ utterances; the recall follows an episode by position and joins the newest episo
 ten lines sharing " and I are " with the link table narrowed to two; "the dog and I are " continues with "here" along its own chain,
 where the slot links alone run to the newest line's "out". Suite 55 of 55. Measured now on a copy of day 207 against the slot
 links alone, the branch and every fact by the pause after each.
+The episode kept per utterance, on a copy of day 207 against the slot links alone (21:04): the branch equal (the sun family 6 of 9
+both, the day-206 families 8 of 12 both: the slow context already tells the siblings apart); the answers by the pause 11, 11, 5 of
+30 against 8, 8, 7: three more at the natural pauses, two fewer at eight, within a day's noise. A structural mending with no clear
+lift yet; it stays off the served body until the key's verdict is in, then a second copy day decides it.
