@@ -8117,3 +8117,7 @@ The write floor at listen 80 on copies of day 209 (01:22): the old floor 15, 13,
 is written, the mouth's own speech changes and the whole day diverges, so a single pair of runs reads the chaos as much as the
 floor (at listen 64, where nothing crosses the floor, the two arms were identical to the symbol). The floor stays on the served
 body on the arithmetic; the served probes after nights 189 and 190 are its reading, and two falling nights would revert it.
+
+Night 189 (ended ~01:20 after the day labelled 214; the reload's relaunch skipped the label 213): day 214, the first under the
+repaired write floor: 181 lines (A 91, all questions), smiles 282 (a high), frowns 37; answered before B 15 of 91 ("i did." to "who
+woke the cat up?"). Dusk: held-out 0.658, the mouth 16 of 26, the cortex on the facts 0.838.
