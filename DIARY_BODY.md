@@ -8161,3 +8161,7 @@ run"), the branch 7 of 9 and 9 of 12. From here the readings are the fast bag's 
 
 Night 192 (ended 04:30 after the day labelled 218, the first full day after the revert): duty 0.304, smiles/line 1.14 (233 smiles
 over 198 lines, the lowest rate of the week), the guard holds; frowns 37; answered before B 17 of 99.
+The probe after night 192 (the first night after the revert, the fast bag with the floor): HELD-OUT 0.689 (0.668 the night before),
+the cortex on the fact sentences 0.881, the mouth's prefixes 17 of 26, the questions 10 of 30 at two rests and 5 at eight, THE
+BRANCH 8 of 9 on the sun family and 12 of 12 on the day-206 families: the siblings told apart on the fast bag alone once the
+answer's onset is written.
