@@ -8080,3 +8080,6 @@ under the slow context: the slide continues), the cortex on the fact sentences 0
 (recovering from 10), the questions 8 of 30 at two rests (5 the night before; 11 before the switch), the branch 8 of 9 and 9 of 12.
 The starts are still the failures ("what is hot?" -> "two ducks and"). The three arms on the copy (the write floor, the shifted
 context) report near 23:00; the held-out's slide is the number that decides a revert if neither arm mends the starts.
+Day 210 (the eighteenth-after-reboot parent's facts 11-20 or 21-30 by its shifted schedule): 180 lines (A 95, all questions),
+smiles 261, frowns 40; answered before B 19 of 95. (The guard's row for night 186 was not written: the guard armed before night 185
+fired there and exited while the waiter saw it still alive; a guard is armed again for night 187.)
