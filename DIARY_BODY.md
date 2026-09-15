@@ -8329,3 +8329,9 @@ Tagged: the held-out 0.661 at dusk, 0.669 after the night, the facts by the cort
 direction predicted, but the dusks differ by 0.015 before the night touches anything, the two copy days having diverged on the
 store's reads: a copy day's noise on the held-out is about 0.015, larger than most effects measured this stage. Inconclusive; a
 matched pair of nights from the tagged day's save (the control with its tags zeroed) is queued behind the told-once test.
+THE FACT TOLD ONCE (16:12; tools/once_told.py on a copy of the save after night 202): ten facts the parents never typed, told once
+each among forty lines of day 231's talk as the typist types them; asked with the pause the same day, the mouth answered 10 of 10
+at two rests and 9 at eight, each the sentence verbatim; after a night on the copy, 10 and 8; the cortex alone 0 throughout; the
+taught questions on the same copy 17 of 30. The demo's central scene stands on a copy. The never-typed facts answer better than
+the taught ones because their question's key is uncrowded: the taught questions were asked in ordinary talk with other answers,
+and the recall splits among the continuations under one key.

@@ -148,6 +148,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    chain. Predicted: at least 6 of 10 answered at two rests the same day, and the same count within one after the night; the
    cortex alone 0. Falsified if the same-day count is under 4 (the single write too weak against the forecast) or the night's count
    falls by three or more (the night's lesson overrides the store's chain).
+   MEASURED (16:12, on a copy of the save after night 202): the same day 10 of 10 at two rests and 9 at eight; after a night on the
+   copy 10 of 10 and 8 of 10, every answer the fact's sentence verbatim ("a lemon is sour", "the sea is salty", "a sheep has wool");
+   the cortex alone 0 throughout; the taught questions on the same copy 17 of 30 (the served 18). LANDED, above the prediction.
+   The never-typed facts answer better than the taught ones because their question's key is uncrowded: the taught questions have
+   been asked in ordinary talk with other answers ("what is hot?" -> "the tub is hot"), so the store holds several continuations
+   under one key and the recall splits among them. The taught questions' 60% is the crowding of the key, not the memory's strength.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
