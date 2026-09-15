@@ -82,7 +82,9 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    0.646 and 0.881. The direction is the predicted one on both rulers, but the two dusks differ by 0.015 from the day alone (the
    tag does nothing to the cortex by day; two copy days from one save diverge on the store's reads), so one pair cannot resolve a
    hundredth. INCONCLUSIVE; not adopted. Next: a matched night pair from the tagged day's save, the control with the tags zeroed
-   (the strengths above one clipped to one), the same seed: the only difference the draw's weights.
+   (the strengths above one clipped to one), the same seed: the only difference the draw's weights. The chain had removed its
+   day saves, so the matched pair needs the tagged day lived again (an hour and a half of copy time): QUEUED behind the demo's
+   gates (the told-once test, the recording), not before.
 8. Waking plasticity gated by the smile and by surprise. Ruler: dusk-to-night deltas.
    DERIVED (2026-09-15, 11:25): the day's lesson runs every 24 ticks at 1e-5 on the last 32 ticks, all day, scaled only by stress;
    each dusk the held-out sits two to three hundredths under the morning and the night restores one to two, a net drift down. In
