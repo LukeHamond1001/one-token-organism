@@ -50,6 +50,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    by two copy nights from the same save, with and without the share.
    MEASURED (11:20): rejected. With the share the held-out fell 0.013 and the old lines 0.005; without, flat. The memory's twenty days are all of stage five, so its old is the new's style; the held-out's drift is the day's erosion, not the draw's.
 7. Reward-weighted replay. Ruler: the fact sentences per night.
+   DERIVED (2026-09-15, 12:15): an utterance enters the memory at strength 1 and fades 0.97 a night; the night draws by strength, so by
+   recency alone. Dopamine tags what precedes it, and replay favours the tagged: the reward the child earns in the turn after a world
+   line belongs to that line. Mechanism: when the next world utterance is pushed, the previous one's strength is raised by
+   reward_gain times the smiles' dopamine integrated since it (a constant, disclosed). Predicted: the fact exchanges, which draw the
+   answer smiles, are replayed about twice as often; the fact sentences climb faster by a hundredth or two a night; the held-out
+   unchanged or a hundredth down. Measured: a copy day with the rewards replayed, then a copy night, against the same without the
+   weighting; the fact sentences and the held-out after the night.
 8. Waking plasticity gated by the smile and by surprise. Ruler: dusk-to-night deltas.
    DERIVED (2026-09-15, 11:25): the day's lesson runs every 24 ticks at 1e-5 on the last 32 ticks, all day, scaled only by stress;
    each dusk the held-out sits two to three hundredths under the morning and the night restores one to two, a net drift down. In
