@@ -8305,5 +8305,5 @@ the prefixes 22 gated against 18. The prediction (the dusk's fall halved) failed
 held-out is not the ordinary tick's lesson.
 THE EVICTION PROVEN (13:20): day 228 wrote 1240 new slots into the full store and evicted 1238, all at strength 0.54-0.59, the
 memories heard once. Fourteen of the twenty prefixes the morning answered read a slot the dusk no longer held; the dusk body with
-the union of both stores answers 19 of 26 against its own 10. The capacity is a constant of the organ now (store_cap); 32768 goes
+the union of both stores answers 19 of 26 against its own 10, and 14 of 30 questions against its own 9. The capacity is a constant of the organ now (store_cap); 32768 goes
 on the served body at night 201's save, and the next dusk is the falsifier: the prefixes hold their morning count through day 230.
