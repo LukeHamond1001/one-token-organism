@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, episode_chain=0, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, utt_cap=4096, store_links=4, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -502,7 +502,11 @@ class Life:
             key_ = self._q_prev if str(self.cfg.get("key_form", "bag")) == "cortex" else self.key
             if key_ is None:
                 key_ = torch.zeros(m.d, device=self.dev)
-            if learn_store and who == 0 and x != self.sil and key_.norm() > 1e-6:
+            # THE WRITE FLOOR (2026-09-14, 21:15): the key's norm had to exceed 1e-6 for a memory to be written, a guard against the empty
+            # bag at birth; but the world's bag fades 0.8 a tick through the child's turn, and after 62 ticks of the child talking the
+            # first symbol of the other voice's answer fell under the floor and was never written: the answer's onset, the very memory
+            # the question must find. The direction of a faded bag is the question's still; the floor is a constant (write_floor).
+            if learn_store and who == 0 and x != self.sil and key_.norm() > float(self.cfg.get("write_floor", 1e-6)):
                 self.store.write(key_, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
                 if int(self.cfg.get("store_chain", 0)) and self.store.last_idx >= 0:
                     if self._prev_slot >= 0:
@@ -695,7 +699,11 @@ class Life:
         self.bag_w = self.m.shift(self.bag_w) + ex
         if not self._utt_open:                                       # the utterance's first symbol: the last one becomes the key's context
             self.ctx_prev = self.ctx_cur.clone(); self.ctx_cur = torch.zeros_like(self.ctx_cur); self._utt_open = True
-        self.ctx_cur = float(self.cfg.get("ctx_decay", 0.95)) * self.ctx_cur + ex
+        rho = float(self.cfg.get("ctx_decay", 0.95))
+        if str(self.cfg.get("ctx_form", "bag")) == "shifted":      # the utterance with its order (the shift a symbol): "what is hot?" and
+            self.ctx_cur = rho * self.m.shift(self.ctx_cur) + ex     # "what do we see at night?" no longer share most of their letters' weight
+        else:
+            self.ctx_cur = rho * self.ctx_cur + ex
         self.bag_o = torch.zeros_like(self.bag_o); self.n_own = 0
 
     def take_own(self, i):
