@@ -8228,3 +8228,10 @@ queue's novelty is the binding constraint for the parents: 10,262 distinct lines
 colliding.
 The probe after night 196: HELD-OUT 0.681, the cortex on the fact sentences 0.885, the mouth's prefixes 21 of 26, THE QUESTIONS 18
 OF 30 at two rests (16, 16, 17, 18 over four nights on the fast bag with the floor) and 12 at eight, the branch 8 of 9 and 12 of 12.
+The chooser's first copy days (09:40; day 216 with its rewards, actor_lr 0.2 and 1.0): the mouth 15/13 and 17/9 of 30, the branch
+8 of 9 and 12 of 12 (the chooser's voice being small), and the chooser's raw vote 0 of 9 and 0 of 12: at 0.2 its favourite is '?'
+everywhere, the symbol most often followed by a smile (the child's own questions earn them), at 1.0 'I' and 's'. Derived: the head
+had a bias, and a bias absorbs exactly the state-free part of the credit, the symbols rewarded on average; it then out-votes any
+state-dependent preference. The bias removed: the chooser votes by the state alone, and the branch probe now reads its vote among
+the family's candidates only, as it votes in the body. One more copy day at 0.2; then, its gain being earned and born at zero, the
+chooser goes on the served body to learn over days from real rewards, where a copy day's ten answer smiles cannot teach it.
