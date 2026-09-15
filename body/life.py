@@ -107,6 +107,7 @@ PHYSIOLOGY = dict(
     plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=0,   # the planner's boundary is the cortex's doubt (2026-09-08); 1 = the old space rule
     explore_gain=0.0, explore_tau=64,
     explore_choice=0.0,   # THE DRIVE IN THE CHOICE (2026-09-08): novelty widens the planner's choice among its candidates, not whether it speaks
+    sharp_conf=0.0,       # DECISIVENESS BY CERTAINTY (2026-09-15): the choice's sharpness x (1 + sharp_conf x the forecast's norm); 0 = as before
     rest_token="<pad>", end_token="<eot_human>", display_token="\n",
     end_symbol="rest",   # THE WORLD'S STOP (2026-09-08): "eot" = the chat token as the end's mark; "rest" = the end is the first rest after a symbol, the cortex learns to predict rest where the parent stops, and the chat token goes unused   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
     own_target_decay=0.0,
@@ -1140,7 +1141,14 @@ class Life:
             self._floor_now = fl
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
-            logits = m.readout(pred1).clone()
+            # DECISIVENESS BY CERTAINTY (sharp_conf; 2026-09-15, the live ruler): each word's first symbol is sampled from this readout, and
+            # at a fixed sharpness a three-word answer needed three lucky starts where the forecast's margin was thin (the live mouth
+            # answered 3 of 30 questions the greedy readout answered 20 of). A selection's noise falls as its evidence rises (the
+            # basal ganglia's threshold; a decision's variance at the bound); the forecast's norm is its certainty, the same the
+            # gate's salience reads. The sharpness here is the readout's times (1 + sharp_conf x that norm): a sure forecast is read
+            # decisively, an unsure one as before. The readouts of the probes, the gauge and the dreams are untouched.
+            sc_ = float(self.cfg.get("sharp_conf", 0.0)); self._sharp_eff = float(m.read_sharp) * (1.0 + sc_ * float(pred1.norm()))
+            logits = m.readout(pred1).clone() * (1.0 + sc_ * float(pred1.norm()))
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
             self._cands_now = None
             if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":
@@ -2114,7 +2122,7 @@ class Life:
                 "mood": round(float(self.mood), 3), "fatigue": round(float(self.fatigue), 3), "stress": round(float(self.stress), 3),
                 "ticks": self.ticks, "vrel_slope": round(float(self._vrel_gain), 3), "vrel_corr": round(float(self._vrel_corr), 3),
                 "vw_now": round(float(getattr(self, "_vw_now", 0.0)), 4), "floor_now": round(float(getattr(self, "_floor_now", 0.0)), 4),
-                "sharp_now": round(float(self.m.read_sharp), 2), "sharp_cal": round(float(self.sharp_cal), 2), "sharp_form": str(self.cfg.get("sharp_form", "fixed")),
+                "sharp_now": round(float(self.m.read_sharp), 2), "sharp_eff": round(float(getattr(self, "_sharp_eff", self.m.read_sharp)), 2), "sharp_cal": round(float(self.sharp_cal), 2), "sharp_form": str(self.cfg.get("sharp_form", "fixed")),
                 "anticipation": self.anticipation(), "face_form": str(self.cfg.get("face_form", "read")), "face_slope": round(float(self._frel_gain), 3),
                 "face_corr": round(float(self._frel_corr), 3), "face_pred": round(float(self._fpred_now), 3), "rem_form": str(self.cfg.get("rem_form", "forecast")),
                 "actor_voice": str(self.cfg.get("actor_voice", "off")), "actor_slope": round(float(self._arel_gain), 3), "actor_corr": round(float(self._arel_corr), 3),
