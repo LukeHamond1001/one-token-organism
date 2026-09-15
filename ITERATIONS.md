@@ -18,6 +18,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 1. The episode chain kept per utterance, not in a slot's sixteen links. Ruler: the branch.
 2. Store capacity and the tag tables. Ruler: fact prefixes across days.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
+   DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
+   its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by
+   imagination. It fails at a fact's start for two reasons the arithmetic settles: (a) the reward is starved, one to five answer smiles a
+   day against thirty question-to-answer maps, at actor_lr 0.02 with deltas of 0.1-0.5, so a map gains 0.002-0.01 a smile and needs
+   hundreds; (b) the "torn" test reads the logits with the store's vote in them, so where the store is sure and wrong nothing
+   deliberates. What to change: the actor's rate at rewarded moments (a dopamine burst is large; a constant to sweep), the torn test on
+   the cortex alone, the candidates from the cortex and the recall together. PREREQUISITE: copy days carry no reward, so none of this is
+   measurable on a copy until the day's smiles are replayed with the lines (the caregiver log holds each smile's time and word): the
+   reward-replay instrument (day_on_copy --rewards) comes first, and it makes 5, 7, 11 and 13 measurable on copies too.
 4. The actor's earned voice measured again with the chooser in place. Ruler: the actor's slope.
 5. The handoff: the rulers read with the store off. Ruler: answers with the store off.
 6. Old memories in the night's draw. Ruler: old lines, held-out.
