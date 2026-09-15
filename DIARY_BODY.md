@@ -8347,3 +8347,12 @@ NIGHT 203 (ended 16:29, the 193rd row): the held-out 0.655 (0.595 at dusk, 0.665
 transient the night undid, the cycle's net a hundredth down as before), the facts by the cortex 0.881, the old lines 0.470; the
 mouth completes 25 of 26 prefixes and answers 20 of 30 questions at two rests (the stage's highest; 14 at eight); the rephrased
 12 of 30; the branch 9 of 9 and 11 of 12; the store 12449 after the fade; the guard held (duty 0.333, smiles a line 1.55).
+THE LIVE MOUTH READ (16:56; tools/live_qa.py, the question typed as the parent, the child's turn of twelve seconds read from the
+page): the taught questions answered 5, 1 and 3 of 30 over three passes on the dusk copy of 232, the never-typed ones 4, 0 and 1
+of 10 on the told-once copy, against 20 of 30 and 10 of 10 by the greedy readout. The answers come but late and broken ("one
+little fishice is co", "lemon is sourlwet"): each word's first symbol is sampled from the readout at the fixed sharpness of 25
+and the word then runs greedily, so a three-word answer needs three lucky starts where the margin is thin; and the instrument
+typed over the child's speech, which the typist never does. The memory is not the demo's gate; the choice is. Built: the
+instrument waits for the child's quiet; decisiveness by certainty (sharp_conf, off by default; test 61): the choice's sharpness
+times (1 + sharp_conf x the forecast's norm), the selection's noise falling as its evidence rises, the same certainty the gate's
+salience reads. Measured next: the bound (sharp_base 60 and 100 on the live ruler), then sharp_conf 3 and 8.
