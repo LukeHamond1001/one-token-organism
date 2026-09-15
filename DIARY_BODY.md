@@ -8098,3 +8098,8 @@ cannot show what the served log implies. The floor's repair is arithmetic and go
 The probe after night 187: HELD-OUT 0.676 (0.661 the night before: the slide turned), the cortex on the fact sentences 0.869, the
 mouth's prefixes 18 of 26, the questions 9 of 30 at both pauses (5, 8, 9 over the last three nights; 11 before the switch), the
 branch 7 of 9 and 9 of 12. The recovery under the new key runs as the facts are re-taught with their contexts.
+The third arm (23:29): the shifted context reads the answers 10, 10, 9 of 30 (the order-free 10, 10, 7) but the branch falls to
+6 of 9 and 5 of 12 (9 of 9 and 8 of 12): the order-coded context tells the siblings apart less well, not better. Rejected; the
+context stays order-free. The write floor alone goes on the served body at night 188's save. A second pair of copy days at listen
+80, where the served body's longest turns sit and the faded key crosses the old floor, runs overnight to put the floor's effect on
+the record.
