@@ -8290,3 +8290,7 @@ the sky?" -> "rain falls", "what can ducks do?" -> "ducks swim", "where do the b
 have?" -> "fish have fins"), against 16 to 18 on the taught wording: the recall carries to a rephrasing when the question's last
 words are the taught ones, which is what a key of the last five symbols predicts. The honest demo claim: taught questions about
 half, rephrasings about a quarter.
+
+Night 200 (ended 13:01 after the day labelled 228, the first full day back on the pre-chooser flags): duty 0.325, smiles/line
+1.28 (253 smiles over 189 lines), the guard holds with its flags quoted; frowns 40; answered before B 25 of 94. The day recovered
+whole from the chooser's day.
