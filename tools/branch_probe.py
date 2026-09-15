@@ -52,7 +52,12 @@ def dist(prefix):
         for l in (lc, lm): l[life.bans] = float("-inf"); l[life.sil] = float("-inf")
         # THE ACTOR'S RAW PREFERENCE (2026-09-15): the striatal head's vote at the branch, before the earned-voice gate scales it
         try:
-            a = torch.tanh(m.actor(m.stri_in())); a[life.bans] = float("-inf"); a[life.sil] = float("-inf")
+            if str(life.cfg.get("actor_form", "add")) == "softmax":                 # the chooser: its raw scores on the cortex's state
+                za = torch.nn.functional.normalize(C.detach().float() - life._c_mu, dim=0) * float(life.cfg.get("key_scale", 2.5))
+                a = m.chooser(za).clone()
+            else:
+                a = torch.tanh(m.actor(m.stri_in()))
+            a[life.bans] = float("-inf"); a[life.sil] = float("-inf")
         except Exception:
             a = torch.zeros_like(lc)
         return torch.softmax(lc, 0), torch.softmax(lm, 0), a

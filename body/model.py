@@ -491,6 +491,12 @@ class Organs(nn.Module):
         # symbol, added to the cortex's forecast (the cortex proposes, the striatum disposes); learned by the three-factor rule
         # over which-symbol, as the gate learns act-or-rest. Sized with the striatum; a placeholder until then.
         self.actor = nn.Linear(1, 1)
+        # THE CHOOSER (2026-09-15, the thirtieth defect): a striatal head over the CANDIDATES at a torn moment, read from the cortex's
+        # state (corticostriatal), a softmax among the few the mouth is torn between, its rows bounded so it cannot saturate as the
+        # old actor did (tanh at its rails on 'b' whatever the question). Born at zero: no vote until reward has taught it one.
+        self.chooser = nn.Linear(d, vocab)
+        with torch.no_grad():
+            self.chooser.weight.zero_(); self.chooser.bias.zero_()
         self.register_buffer("wm_slot", torch.zeros(0)); self.register_buffer("wm_on", torch.zeros(())); self.register_buffer("wm_age", torch.zeros(()))
         self.stri_wm = 0
         # THE DECORRELATED CRITIC (vcrit_rls): the head's lesson is recursive least-squares TD(lambda) with forgetting, the

@@ -99,7 +99,7 @@ PHYSIOLOGY = dict(
     # THE ACTOR'S EARNED VOICE (actor_voice "earned", 2026-09-08): the striatum's own vote for a symbol, bounded, applied to the
     # cortex's proposal as loudly as it has proved right: its weight is the slope of the reward of the next actor_horizon ticks on
     # its vote for the act taken, clipped to [0, 1] (the law of the prefrontal voice and the face organ). "off": the vote unused.
-    actor_voice="off", actor_horizon=16, actor_tau=36000,
+    actor_voice="off", actor_horizon=16, actor_tau=36000, actor_input="striatum", actor_wmax=3.0, actor_temp=1.0, chooser_k=4,
     # actor_form "plan" (2026-09-06): at a word boundary the cortex proposes its shortlist, each candidate is imagined forward
     # plan_h own symbols through the world model (greedy), the striatal critic values the imagined line, and the choice follows
     # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
@@ -596,6 +596,30 @@ class Life:
                 self.store.A[win_] *= (1.0 - rt_)                            # the winner tires
             self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
 
+    def _chooser_credit(self, nxt, gamma):
+        """the chooser's eligibility: the log-softmax's gradient over the candidates for the one said, on the cortex's state; decays by
+        dopamine's discount; nothing new when the moment was not torn"""
+        m = self.m
+        e = getattr(self, "_e_chooser", None)
+        e = (gamma * e) if e is not None else torch.zeros(m.vocab, m.d, device=self.dev)
+        cands = getattr(self, "_cands_now", None)
+        if cands is not None and int(nxt) in cands:
+            pa = self._pa_now; za = self._za_now
+            for j, c in enumerate(cands):
+                e[c] += ((1.0 if c == int(nxt) else 0.0) - float(pa[j])) * za
+        self._e_chooser = e
+
+    def _chooser_learn(self, delta):
+        """dopamine times the eligibility on the chooser's head; every row bounded (actor_wmax) so no candidate can saturate the vote"""
+        e = getattr(self, "_e_chooser", None)
+        if e is None or abs(float(delta)) < 1e-9:
+            return
+        with torch.no_grad():
+            W = self.m.chooser.weight
+            W.add_(float(self.cfg.get("actor_lr", 0.02)) * float(delta) * e)
+            n = W.norm(dim=1, keepdim=True); wmax = float(self.cfg.get("actor_wmax", 3.0))
+            W.mul_(torch.clamp(wmax / (n + 1e-9), max=1.0))
+
     def _recall(self, bag, end_vec=None, tire=None):
         """the waking read, carrying the episode it is in when read_follow is on (the gain, > 1): after a read whose winner continues
         the episode followed, the same tag is kept; after a read that landed elsewhere, the winner's newest link names the episode"""
@@ -987,7 +1011,9 @@ class Life:
                         delta = float(r + float(gam[fb_]) * m.fast_value(self._z_now) - m.fast_value(self._z_prev))
                 else:
                     delta = float(td[int(self.cfg["dopamine_band"])].detach())
-                if int(self.cfg.get("actor", 0)) and getattr(self, "_e_actor", None) is not None:
+                if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":
+                    self._chooser_learn(delta)
+                elif int(self.cfg.get("actor", 0)) and getattr(self, "_e_actor", None) is not None:
                     with torch.no_grad():                        # THE ACTOR'S LESSON: dopamine times the eligibility, the weights forgetting
                         m.actor.weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)
                 if stri and int(self.cfg.get("wm", 0)) and getattr(m, "stri_wm", 0):
@@ -1104,7 +1130,31 @@ class Life:
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
             logits = m.readout(pred1).clone()
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
-            if act_on:
+            self._cands_now = None
+            if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":
+                # THE CHOOSER AT A TORN MOMENT: the candidates are the mouth's top few (the cortex's forecast with the recall in it) and
+                # the cortex's own top two; where the best two lie within the margin the chooser votes among them, a softmax of its
+                # scores on the cortex's state (the running mean taken out, as a key's would be), at the earned gain
+                with torch.no_grad():
+                    act_on = True
+                    c_ = C1.detach().float(); self._c_n += 1; a_ = max(1.0 / self._c_n, 1.0 - 0.9995); self._c_mu = self._c_mu + a_ * (c_ - self._c_mu)
+                    za = F.normalize(c_ - self._c_mu, dim=0) * float(self.cfg.get("key_scale", 2.5)); self._za_now = za
+                    spk0 = logits.clone(); spk0[self.sil] = float("-inf"); spk0[self.bans] = float("-inf")
+                    kk = int(self.cfg.get("chooser_k", 4)); top = spk0.topk(kk).indices.tolist()
+                    lc0 = m.readout(m.forecast(C1, torch.zeros_like(pred1))); lc0[self.sil] = float("-inf"); lc0[self.bans] = float("-inf")
+                    top2 = lc0.topk(2).indices.tolist()
+                    cands = sorted(set(int(i) for i in top + top2 if spk0[int(i)] > float("-inf")))
+                    vals = spk0[cands]; torn = len(cands) > 1 and bool((vals.max() - vals.topk(2).values[-1]) <= float(self.cfg.get("actor_margin", 4.0)))
+                    if torn:
+                        sc = m.chooser(za)[cands] / float(self.cfg.get("actor_temp", 1.0)); pa = torch.softmax(sc, 0)
+                        vote = torch.log(pa + 1e-9) - math.log(1.0 / len(cands))          # zero-mean over the candidates
+                        ab = torch.zeros_like(logits); ab[cands] = vote; self._a_bias_now = ab
+                        self._cands_now = cands; self._pa_now = pa
+                        if str(self.cfg.get("actor_voice", "off")) == "earned" and self._arel_gain > 0.0:
+                            logits[cands] = logits[cands] + float(self._arel_gain) * float(self.cfg.get("actor_beta", 1.0)) * vote
+                    else:
+                        self._a_bias_now = None
+            elif act_on:
                 with torch.no_grad():                                  # the striatum disposes: its bias on the cortex's proposal
                     a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.actor(self._z_now))
                     self._a_bias_now = a_bias
@@ -1189,10 +1239,13 @@ class Life:
                 spk_ = ab_.clone(); spk_[self.sil] = float("-inf"); spk_[self.bans] = float("-inf")
                 self._act_agree.append(1.0 if int(spk_.argmax()) == nxt else 0.0)
             with torch.no_grad():                                      # the actor's eligibility: what it said against what it expected, on this input
-                oh = torch.zeros_like(probs); oh[nxt] = 1.0
-                e_new = torch.outer(oh - probs.detach(), self._z_now)
-                ea = getattr(self, "_e_actor", None)
-                self._e_actor = (float(gam[int(self.cfg["dopamine_band"])]) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
+                if str(self.cfg.get("actor_form", "add")) == "softmax":
+                    self._chooser_credit(nxt, float(gam[int(self.cfg["dopamine_band"])]))
+                else:
+                    oh = torch.zeros_like(probs); oh[nxt] = 1.0
+                    e_new = torch.outer(oh - probs.detach(), self._z_now)
+                    ea = getattr(self, "_e_actor", None)
+                    self._e_actor = (float(gam[int(self.cfg["dopamine_band"])]) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
         if acted:
             hab = float(self.cfg["gate_habit"])
             if str(self.cfg.get("gate_int_form", "value")) == "error":

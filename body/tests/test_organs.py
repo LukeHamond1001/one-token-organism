@@ -1381,11 +1381,31 @@ def test_episode_kept_per_utterance():
     print("56 the episode kept per utterance: 'the dog and I are ' ->", repr(with_chain), "| the slot links alone ->", repr(without))
 
 
+def test_chooser_learns_the_torn_choice():
+    """57 (2026-09-15): the chooser scores the candidates at a torn moment on the cortex's state; a rewarded choice raises that
+    candidate's score on that state and lowers the others', a punished one the reverse, and no row can grow past actor_wmax"""
+    life = tiny(actor=1, actor_form="softmax", actor_input="cortex", actor_lr=0.5, actor_wmax=3.0); m = life.m
+    za = torch.randn(m.d); za = za / za.norm() * 2.5
+    def score(c): return float(m.chooser(za)[c])
+    cands = [5, 9, 12]
+    life._za_now = za; life._cands_now = cands; life._pa_now = torch.full((3,), 1 / 3); life._e_chooser = None
+    life._chooser_credit(9, 0.9); life._chooser_learn(+1.0)
+    assert score(9) > score(5) and score(9) > score(12), (score(5), score(9), score(12))
+    life._cands_now = cands; life._pa_now = torch.softmax(m.chooser(za)[cands], 0); life._e_chooser = None
+    life._chooser_credit(5, 0.9); life._chooser_learn(-1.0)                     # a punished choice of 5 lowers 5 further
+    assert score(5) < score(12), (score(5), score(12))
+    for _ in range(40):                                                          # the bound: forty rewarded pushes cannot pass wmax
+        life._cands_now = cands; life._pa_now = torch.softmax(m.chooser(za)[cands], 0); life._e_chooser = None
+        life._chooser_credit(9, 0.9); life._chooser_learn(+1.0)
+    assert float(m.chooser.weight.norm(dim=1).max()) <= 3.0 + 1e-4
+    print("57 the chooser learns the torn choice: scores", [round(score(c), 2) for c in cands], "| max row norm", round(float(m.chooser.weight.norm(dim=1).max()), 2))
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice]
     failed = 0
     for t in tests:
         try:
