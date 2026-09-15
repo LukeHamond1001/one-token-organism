@@ -8142,3 +8142,9 @@ The probe after night 190: HELD-OUT 0.668 (0.659 the night before), the cortex o
 prefixes 20 of 26 (14, 16, 20 over the three nights under the floor), the questions 8 and 10 of 30 (the highest under the key;
 "the sun did", "birds fly", "dogs run and b[ark]", "milk" for the cats), the branch 8 of 9 and 9 of 12. The recovery under the key
 and the floor runs; the matched copy test of the key's cost reports near 03:30.
+THE KEY'S COST, MATCHED (03:24): day 214 lived on two copies of the body after night 189, each followed by its night. With the slow
+context and the floor: HELD-OUT after the night 0.657, the prefixes 15 of 26, the questions 7 and 8 of 30, the branch 5 of 9 and
+10 of 12. With the fast bag alone and the floor: HELD-OUT 0.681, the prefixes 19 of 26, the questions 11 and 11, the branch 9 of 9
+and 10 of 12. The context costs the held-out 0.024 and four answers, and the branch no longer needs it: with the answer's onset
+written (the floor), the episode's links carry the question into its own answer. THE SLOW CONTEXT REVERTS at the next post-night
+save; the floor stays. The memories written under the context remain and match on their fast part.
