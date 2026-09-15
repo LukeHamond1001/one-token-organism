@@ -8220,3 +8220,9 @@ Night 196 (ended 08:43 after the day labelled 222): duty 0.299, smiles/line 1.08
 The parent for days 223-225 spawned at the night row (facts 1-10 first).
   day 222: lines=187 (A=93 B=94) A-questions=93 cues=0 smiles=209 frowns=40 withheld=4
   A-questions the child answered with I/yes/no/please before B: 23
+The parent's report for days 220-222 (08:46): all thirty facts once each, front-loaded; answered before B 36 of 93, 46 of 91, 37
+of 93 (39-51%); the fact's word before B 2, 1, 0 a day (fish, birds; grass); **answer smiles 11, 11, 10 a day** (4-7 the days before:
+the child names what B is about to say twice as often); own question marks 28, 30, 23; runs of three known words 17, 20, 12;
+smiles 257/279/209, frowns 37/34/40, all talk-overs; one line lost at a night boundary in 557; known words 381 -> 399. The
+queue's novelty is the binding constraint for the parents: 10,262 distinct lines already, a fifth to a third of fresh lines
+colliding.
