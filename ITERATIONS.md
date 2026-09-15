@@ -25,6 +25,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    0.54. The hippocampus holds weeks, not two days. Mechanism: the slot count as a constant (store_cap), raised to 32768, four
    times the writes of a fact's cycle. Predicted: the prefixes hold their morning count through the day; the tick's read costs
    four times as much (the matmul over the keys), to be measured before the switch.
+   MEASURED (13:20): day 228 wrote 1240 new slots into the full store and evicted 1238, every one at strength 0.54-0.59 (the
+   memories heard once; the kept mean 0.86); of the 20 prefixes the morning save answered, 14 read a slot at weight near 1.0 that
+   the dusk no longer held. The dusk's body with the union of both stores (9430 slots, what a larger cap would have held) answers
+   19 of 26 against the dusk's own 10 and the morning's 20. The read at 32768 slots costs 5.1 ms against 1.5 (measured), the
+   self-confidence now in row blocks. CONFIRMED; store_cap 32768 goes on the served body at night 201's save (the boundary),
+   the falsifier the next dusk: the prefixes hold their morning count through day 230 or the cause was not the eviction.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by

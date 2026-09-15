@@ -8303,3 +8303,7 @@ THE PLASTICITY GATE READ (13:16): day 224 lived twice on the save after night 19
 against ungated. The held-out fell two hundredths in both (0.654 to 0.638 gated, 0.644 ungated); the questions 17 of 30 in both;
 the prefixes 22 gated against 18. The prediction (the dusk's fall halved) failed; the gate stays off. What the day costs the
 held-out is not the ordinary tick's lesson.
+THE EVICTION PROVEN (13:20): day 228 wrote 1240 new slots into the full store and evicted 1238, all at strength 0.54-0.59, the
+memories heard once. Fourteen of the twenty prefixes the morning answered read a slot the dusk no longer held; the dusk body with
+the union of both stores answers 19 of 26 against its own 10. The capacity is a constant of the organ now (store_cap); 32768 goes
+on the served body at night 201's save, and the next dusk is the falsifier: the prefixes hold their morning count through day 230.

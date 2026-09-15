@@ -1224,3 +1224,16 @@ under the question's faded direction, the links carry the question into its own 
 fast bag alone. The slow context (`key_ctx`, `ctx_form`) stays in the code as an instrument, off; the served flags are the fast bag
 with the floor. The lesson for the method: a defect of arithmetic (a threshold against a fading quantity) wore the mask of a
 representational one, and the representational cure cost a day of the held-out before the matched test told them apart.
+
+**The twenty-ninth defect (2026-09-15, day 228): the store's capacity below a fortnight's writes.** The hippocampal store held
+8192 slots; a day of the parents' talk writes about twelve hundred new memories (the rest merge into the repeated phrases), so
+the store, full since the stage-five days, evicted its twelve hundred weakest each day. The weakest are the memories heard once:
+a fact told in one exchange is written at the surprise's strength, 0.55, while the typist's repeated phrases grow by merging to a
+mean of 0.85. So the facts of one day were gone by the next dusk: the prefixes fell from 20 of 26 at the morning save to 10 at
+dusk within day 228, and of the twenty answered in the morning, fourteen had read a slot at weight near one that the dusk no
+longer held. The dusk body given the union of the two stores answered 19 again. A hippocampus keeps weeks of episodes; in this
+body the nightly fade (0.9 a night, the floor a tenth of the mean) forgets a once-heard memory in about nineteen nights, and the
+capacity should stand above nineteen days of writes so that the fade, not the cap, does the forgetting. The capacity is now a
+constant of the organ (`store_cap`, 32768 on the served body from night 201's save; the read costs 5 ms a tick against 1.5).
+The lesson: an organ's capacity is a physiological constant to be set from the world's rate of writing, and the eviction of the
+weakest is the eviction of the newest one-shot memories, exactly the ones the store exists to keep.
