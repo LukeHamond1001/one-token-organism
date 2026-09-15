@@ -8062,3 +8062,15 @@ Night 185 (ended 21:05 after day 209, the relabelled remainder of day 208 plus t
 smiles/line 1.56 (240 smiles over 150 lines), the guard holds; answered before B 27 of 76; frowns 32. Dusk: held-out 0.667 (57
 lines: another held-out line has been typed), the mouth 15 of 26, the cortex on the facts 0.810. All thirty facts now carry a
 context; the probe after this night is the key's first full reading.
+The probe after night 185 (all thirty facts re-keyed): HELD-OUT 0.674 (0.708, 0.691, 0.679, 0.674 over the four nights under the
+new key), the cortex on the fact sentences 0.867, the mouth's prefixes 15 of 26, the questions 5 of 30 at every pause (11 before the
+switch); THE BRANCH on the sun family 9 of 9 and on the day-206 families 8 of 12. The continuation given the right start is now
+right; the START of the answer is wrong more often than before ("what is hot?" -> "the moon is", "what do dogs do?" -> "ducks swim").
+Two causes found. THE WRITE FLOOR: a memory was written only when the key's norm exceeded 1e-6, a guard against the empty bag at
+birth; the world's bag fades 0.8 a tick through the child's turn, so after 62 ticks of the child talking the first symbol of the
+other voice's answer fell under the floor and was never written, on about half the served body's lines (the gate waits to its
+8.2-second cap on half of them), never on a copy day (listen 24). The answer's onset is the memory the question must find; the
+floor is now a constant (write_floor). THE COARSE CONTEXT: an order-free bag of characters makes "what is hot?" and "what do we see
+at night?" share most of their weight, so the context term drew the siblings closer than the fast bag alone; the shifted form
+(ctx_form) keeps the utterance's order. Three arms on a copy of day 209 with long turns (listen 64): the served form, the floor
+lowered, the floor lowered with the shifted context.
