@@ -8185,3 +8185,10 @@ sentences 0.890 (the highest), old lines 0.501 (the highest in ten days), the mo
 TWO RESTS AND 15 AT EIGHT, the highest readings of the stage (8-11 before the switch, 4-10 under the slow context): "ice", "fish
 live in w[ater]", "birds fly up"; the branch 7 of 9 and 12 of 12. The floor's repair shows on the live body: the answer's onset
 written, the question finds its own answer half the time on a clean ask.
+
+Night 194 (ended 06:36 after the day labelled 220): duty 0.349, smiles/line 1.33 (257 smiles over 187 lines), the guard holds;
+frowns 37; answered before B 23 of 93 ("i did. she" to "what did we hear?"). THE ACTOR'S RATE on a copy of day 216 with its
+rewards: at actor_lr 0.2 the actor's slope 0.038 (corr 0.025), the same as at 0.02 (0.036) and as without reward (0.039); the
+rulers 16 and 13 of 30, the branch 7 of 9 and 11 of 12. Ten times the rate moves the earned voice not at all in a day: the voice is
+gated by a correlation estimated over two hours of ticks (actor_tau), and a day cannot move it. The chooser's reading must be the
+actor's raw preference at the branch, before the gate; the 1.0 arm runs to close the sweep.
