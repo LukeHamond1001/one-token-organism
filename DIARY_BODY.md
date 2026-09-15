@@ -8132,3 +8132,9 @@ the rulers.
 Night 190 (ended 02:27 after day 215): duty 0.364, smiles/line 1.56 (290 smiles over 182 lines, the highest count of the stage),
 the guard holds; frowns 38; answered before B 14 of 91. The parent for days 216-218 spawned at the night row (facts 1-10 first, no
 commas).
+The parent's report for days 212, 214 and 215 (02:30): all thirty facts once each, verbatim, on schedule; answered before B 30 of
+93, 37 of 91, 39 of 91 (32-43%); the fact's word in its own turn 3, 0, 1 of 10 a day (water, fly, rain; sun); answer smiles 4, 7,
+5 (two on facts: "rain", "fish"); own question marks 33, 36, 33, among them fact-shaped ones of its own ("what do cows", "has
+four"), answered in ordinary wording; runs of three known words 39, 36, 46; smiles 240/282/290, frowns 40/37/38, all talk-overs;
+no exchange broke in 528 lines. The reload at night 188 wrote a phantom session (day 213: one line heard), so the log's day label
+runs one ahead of the nights.
