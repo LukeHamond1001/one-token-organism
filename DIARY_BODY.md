@@ -8254,3 +8254,7 @@ Night 198 (ended ~10:45 after the day labelled 224): day 224: 183 lines (A 91, a
 before B 21 of 91. THE CHOOSER ON THE SERVED BODY: the reload at 10:45:49 after this night's save (actor 1, actor_form softmax,
 actor_input cortex, actor_voice earned, actor_lr 0.2, born at zero); from day 225 the striatal head votes among the candidates
 the mouth is torn between, as loud as it earns.
+The probe after night 198 (the last save before the chooser): HELD-OUT 0.654 (0.689, 0.680, 0.670, 0.681, 0.672, 0.654 over the six
+nights since the revert: a drift down to watch; the held-out set is 55 lines now, two more of its lines having been typed), the
+cortex on the fact sentences 0.885, the mouth's prefixes 21 of 26, the questions 16 of 30 at two rests and 9 at eight, the branch
+7 of 9 and 12 of 12.
