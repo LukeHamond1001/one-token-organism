@@ -8226,3 +8226,5 @@ the child names what B is about to say twice as often); own question marks 28, 3
 smiles 257/279/209, frowns 37/34/40, all talk-overs; one line lost at a night boundary in 557; known words 381 -> 399. The
 queue's novelty is the binding constraint for the parents: 10,262 distinct lines already, a fifth to a third of fresh lines
 colliding.
+The probe after night 196: HELD-OUT 0.681, the cortex on the fact sentences 0.885, the mouth's prefixes 21 of 26, THE QUESTIONS 18
+OF 30 at two rests (16, 16, 17, 18 over four nights on the fast bag with the floor) and 12 at eight, the branch 8 of 9 and 12 of 12.
