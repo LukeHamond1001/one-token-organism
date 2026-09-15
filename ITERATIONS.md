@@ -124,6 +124,16 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    forecast is sure and more where it is not; the answer is spoken where the recall is sure, so the answer smiles stay; the
    junk (own symbols where nothing is sure) would fall. Predicted: the demo rulers unmoved, the own-symbol junk down by a third.
    DEFERRED behind the capacity's falsifier; one copy day with the rewards replayed when the served body is steady.
+   REVISED (16:58, after the live ruler): the derivation above was wrong about the demo rulers: the live mouth answers 3 of 30
+   where the greedy readout answers 20, because the choice samples each word's first symbol at a fixed sharpness. Biology's
+   selection is a winner-take-all whose noise falls as the evidence rises (the basal ganglia's threshold under dopamine; the
+   drift-diffusion of a decision: more evidence, less variance at the bound). Mechanism: the readout's sharpness at the choice
+   scaled by the forecast's certainty, sharp x (1 + sharp_conf x |pred|), the norm the same certainty the gate's salience reads
+   (a constant, disclosed; 0 = as now). A sure recall (norm near 1) is read at double or more the sharpness; a babble (norm 0.2)
+   nearly as now. Predicted: with sharp_conf 3, the taught questions answered live at 12 or more of 30 per pass, the never-typed
+   6 or more of 10, the day's own-symbol junk not up (a sure forecast was decisive already; the unsure is untouched). The bound
+   first: sharp_base 60 and 100 on the live ruler; if 100 does not lift the live count past 10, the choice's sharpness is not
+   the cause and the trace of a single question tick by tick comes next.
 14. Awake replay during the pauses. Ruler: the fact sentences, held-out.
    DERIVED (13:30): the night replays the utterances whole a thousand times a night and the cortex alone still answers 0 of 30:
    the cortex's failure at the question is structural (the answer sits across a pause the window carries but the lesson does not
@@ -161,6 +171,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    question is the only cue. The taught questions answer 18-20 of 30 greedily on the dusk copy; the live form loses some to the
    gate's timing and the sampling. Predicted: 12-15 of 30 taught per pass (three passes), the never-typed facts 6-8 of 10 on the
    told-once copy. Falsified if the taught count is under 9: then the demo's gate is the choice and the gate, not the memory.
+   MEASURED (16:56): FALSIFIED. Taught: 5, 1, 3 of 30 over three passes (7 ever); never-typed: 4, 0, 1 of 10. The answers are
+   there but late and garbled ("one little fishice is co", "lemon is sourlwet", "he sea is salty"): each word's first symbol is
+   sampled from the readout at a fixed sharpness (25) and the word then runs greedily, so a three-word answer needs three lucky
+   starts where the forecast's margin is thin; and the instrument typed the next question over the child's speech (the typist
+   waits for its quiet). The memory is not the demo's gate; the choice is. Next: the instrument waits for quiet; the bound with
+   the readout near-greedy (sharp_base 60, 100); then the certainty-scaled decisiveness (iteration 13's form, revised).
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
