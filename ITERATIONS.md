@@ -72,6 +72,9 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    answer smiles, are replayed about twice as often; the fact sentences climb faster by a hundredth or two a night; the held-out
    unchanged or a hundredth down. Measured: a copy day with the rewards replayed, then a copy night, against the same without the
    weighting; the fact sentences and the held-out after the night.
+   RUNNING (14:15): arm T (reward_gain 2.0) lived day 224 at the old cap; the flags file took the capacity at 13:22, so arm C's day
+   runs at 32768. The night's inputs (the utterance memory and its strengths) do not depend on the store's cap, so the fact
+   sentences and the held-out compare cleanly; the questions and the prefixes, the store's, do not, and are not read for this pair.
 8. Waking plasticity gated by the smile and by surprise. Ruler: dusk-to-night deltas.
    DERIVED (2026-09-15, 11:25): the day's lesson runs every 24 ticks at 1e-5 on the last 32 ticks, all day, scaled only by stress;
    each dusk the held-out sits two to three hundredths under the morning and the night restores one to two, a net drift down. In
