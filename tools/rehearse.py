@@ -8,8 +8,9 @@ usage: python3 tools/rehearse.py [--port 8020] [--facts 1-15] [--tell "what is s
 import sys, os, re, json, time, subprocess, signal, urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def arg(name, default):
+    names = {"--" + name, "--" + name.replace("_", "-")}
     for i, a in enumerate(sys.argv[1:], 1):
-        if a == "--" + name and i + 1 < len(sys.argv): return type(default)(sys.argv[i + 1])
+        if a in names and i + 1 < len(sys.argv): return type(default)(sys.argv[i + 1])
     return default
 port = arg("port", 8020); facts_range = arg("facts", "1-30"); tell = arg("tell", ""); ask_tell = arg("ask_tell", 1); day = arg("day", 246); ask = arg("ask", "")   # --ask "q|a;...": asked, never told (a fact told in an earlier session)
 window = arg("window", 60); smile = arg("smile", 1); freeze = arg("freeze", 1); quiet_ticks = arg("quiet", 8); max_wait = arg("max_wait", 200)

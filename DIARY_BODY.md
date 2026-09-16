@@ -8529,3 +8529,11 @@ parent (252-254, facts 21-30 first) spawned at the 207th row.
 NIGHT 217 (ended 06:43, the 207th row; the log's day 251, facts 11-20): the held-out 0.641 (the dusk 0.616), the facts by the
 cortex 0.888, the old lines 0.463; the mouth completes 24 of 26 prefixes and answers 20 of 30 questions at two rests and 22 at
 eight; the rephrased 11; the branch 9 of 9 and 10 of 12; the store 41078; the day: answer smiles 9, junk 9, question marks 24.
+THE FIFTH REHEARSAL (07:08-07:22, mid-day of the log's day 252): three new facts told twice each ("a pear is a fruit", "a snail
+is slow", "owls hoot") and asked the same day, twice each: 3 of 6 ("a snail is", "owls hoot" twice; "what is a pear?" -> "a pear
+is shall", the chain right to the word boundary and lost there to the cortex's habit), the mood rising -1.4 to +0.7 under the
+parent's 47 smiles; then the old six once-told facts after their nights: 2 of 6 ("a sheep has wool", "drum is loud"), the mood
+falling -2.1 to -3.5 as the failures went unsmiled. Across the sessions the live recall of a told fact runs 7 of 18 after a
+night and 7 of 12 the same day; the greedy readout holds nearly all of them; the losses sit at word boundaries where the sample
+goes to the cortex's habit ("shall", "i do.", "yes."). The decisiveness constant is raised from 3 to 8 at night 218's save, the
+sixth rehearsal mid-day under it; falsified if the nine told facts answer under 5 of 9, then back to 3 at the next save.

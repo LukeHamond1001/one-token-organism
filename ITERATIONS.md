@@ -166,6 +166,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the served body: the once-told facts answered live after a night at 2 of 3 or better (from 1 of 3), the same day 3 of 3; the
    taught live count not down; the parent's answer smiles and answered-before-B not down; junk not up. Falsified if the
    after-night count stays at 1 of 3 over two sets of three, or the parent's counts fall by a fifth.
+   MEASURED LIVE (07:22): under sharp_conf 3 the told facts answer 7 of 18 after a night and 7 of 12 the same day across five
+   sessions (the taught questions 16 of 30); the greedy readout holds them. The losses sit at word boundaries ("a pear is
+   shall", "a lemon i" then "do."): the cortex's habit wins the sample where the recall's margin is thin. Predicted with
+   sharp_conf 8 (a sure forecast read at nine times the sharpness, an unsure one at five): the nine told facts answered mid-day
+   at 6 of 9 or better; the day's junk and the parent's counts unchanged. Falsified under 5 of 9 (then back to 3), or if the
+   parent's known-word growth stalls over two days (the exploration lost).
 14. Awake replay during the pauses. Ruler: the fact sentences, held-out.
    DERIVED (13:30): the night replays the utterances whole a thousand times a night and the cortex alone still answers 0 of 30:
    the cortex's failure at the question is structural (the answer sits across a pause the window carries but the lesson does not
