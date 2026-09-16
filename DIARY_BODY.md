@@ -8526,3 +8526,6 @@ its own question marks 15, 26, 24; smiles 188/223/204 (answer smiles 7, 6, 9), f
 cold" unprompted after "why is the stone so cold?", a question in the parent's own words. A mechanical finding: a queue row
 that straddles a night loses its remaining lines at the relaunch (the brief now puts facts in a row's first pair). The next
 parent (252-254, facts 21-30 first) spawned at the 207th row.
+NIGHT 217 (ended 06:43, the 207th row; the log's day 251, facts 11-20): the held-out 0.641 (the dusk 0.616), the facts by the
+cortex 0.888, the old lines 0.463; the mouth completes 24 of 26 prefixes and answers 20 of 30 questions at two rests and 22 at
+eight; the rephrased 11; the branch 9 of 9 and 10 of 12; the store 41078; the day: answer smiles 9, junk 9, question marks 24.
