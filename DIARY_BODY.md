@@ -8612,3 +8612,8 @@ NIGHT 225 (ended 14:05, the 215th row; the log's day 263, facts 11-20, a quiet d
 0.621 (the dusk 0.609, the day's fall -0.004, the night +0.012), the facts by the cortex 0.885, the old lines 0.466; the mouth
 completes 24 of 26 prefixes and answers 21 of 30 questions at two rests and 23 at eight; the rephrased 13; the branch 9 of 9
 and 10 of 12; the store 57086; the day: answer smiles 6, junk 4.
+THE PARENT OF 261, 263 AND 264 REPORTED (15:17): 169/165/169 lines; A's questions answered before B 46 of 84, 41 of 82, 38 of
+85; fact answers in its own turn before B 5, 6, 3, the highest yet ("water is wet", "the sun makes us warm", "grass is green"
+whole); runs of three own words 41, 23, 31; its own question marks 20, 26, 27; smiles 282/249/279, frowns 38/35/35, all
+talk-overs; all thirty facts complete in the first half of each day; one queue line lost at a night boundary; a two-word echo
+went through undeferred. The next parent (265-267, facts 21-30 first) spawned at the 216th row.
