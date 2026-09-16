@@ -338,6 +338,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    Predicted: on the healthy dusk copy the night's loss curve and gauge unchanged within 0.01; on the served body no round's
    loss rising a fifth above the night's first over the following twenty nights (against one in the last twenty-six).
    Falsified if the healthy copy's night worsens by more than 0.01, or a divergence recurs under it.
+   THE LEAN FORM (16:45): keeping the moments across nights would add 1.4 GB to every save (two moments over 179M weights), too
+   heavy for the copies; the same protection without state is the second moment's horizon alone: night_beta2 0.99 (formed in
+   a hundred steps, before the rounds where the outliers arrive) beside the existing warm-up. Built as a constant, 0.999 as
+   before; tested first on the healthy dusk copy, then on the served body at a night's save.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
