@@ -8496,3 +8496,8 @@ habit ("i do.", "yes.") against a sure recall for the first symbol, the sample o
 certainty (sharp_conf 3), measured before only on copies at a floor mood, goes on the served body at night 215's save, with a
 rehearsal after it (the three old facts asked again; three new facts told once) and another after night 216 (the new three
 asked after their night). Predicted: after-night recall 2 of 3 or better; the parent's counts not down.
+NIGHT 215 (ended 04:53, the 205th row; the log's day 248, 117 lines, cut by the second rehearsal; facts 21-30): the held-out
+0.643 (the dusk 0.650, above the morning), the facts by the cortex 0.883, the old lines 0.451; the mouth completes 24 of 26
+prefixes and answers 17 of 30 questions at two rests and 21 at eight; the rephrased 9; the branch 9 of 9 and 10 of 12; the
+store 37165. DECISIVENESS BY CERTAINTY WENT ON THE SERVED BODY at this save (the reload at 04:53:22, served again 04:54:17:
+sharp_conf 3 beside the capacity, the hold and its form; the guard re-armed with the same flags). The third rehearsal begins.
