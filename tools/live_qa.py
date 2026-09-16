@@ -33,7 +33,7 @@ NOVEL = [("what is sour?", "a lemon is sour"), ("what is loud?", "a drum is loud
          ("what gives light?", "a lamp gives light"), ("what has wool?", "a sheep has wool"), ("what has a horn?", "a goat has a horn"),
          ("what is steep?", "a hill is steep")]
 path = sys.argv[1]; qset = arg("set", "facts"); reps = arg("reps", 3); window = arg("window", 60); gap = arg("gap", 30)
-quiet = arg("quiet", 8); max_wait = arg("max_wait", 200); trace = arg("trace", 0); smile = arg("smile", 0)
+quiet = arg("quiet", 8); max_wait = arg("max_wait", 200); trace = arg("trace", 0); smile = arg("smile", 0); interleave = arg("interleave", 0); day_ = arg("day", 235)   # --interleave 1: an ordinary exchange of the logged day (A then B) before each question, as the real day goes
 # --smile 1: the parent smiles as the caregiver does: at a known word said in the child's turn (+2 for twelve ticks; the same word not
 # within 120 ticks, the face returned five ticks before the next), and the answer's growing smile (+2 then +4) when the fact's word
 # comes; without it the copy's mood sinks to the readout's floor through a run, which no parent's child lives under
@@ -50,10 +50,29 @@ pairs = NOVEL if qset == "novel" else [tuple(s.strip() for s in l.split("|")[:2]
 STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
 print(f"body {os.path.basename(path)}: nights {life.nights} store {life.store.n()} | {qset} questions, {reps} passes, the child's turn {window} ticks then {gap} of quiet", flush=True)
 hits = {q: 0 for q, _ in pairs}; first = {}; t0 = time.time(); junk = 0; own_total = 0; talked_over = 0; word_tick = {}; smiles_given = [0]; last_face_end = -10 ** 9
+ordinary = []
+if interleave:
+    import json
+    R_ = [json.loads(l) for l in open(os.path.join(ROOT, "data/watch2_caregiver.jsonl")) if l.strip()]
+    L_ = [(r["text"], "other" if r.get("voice") == "b" else "you") for r in R_ if r.get("day") == day_ and r["action"] == "line"]
+    ordinary = [(L_[i], L_[i + 1]) for i in range(0, len(L_) - 1, 2) if L_[i][1] == "you" and L_[i + 1][1] == "other" and not any(f in L_[i][0] for f, _ in pairs)]
+    print(f"interleaving {len(ordinary)} ordinary exchanges of day {day_} between the questions", flush=True)
+def wait_quiet():
+    silent = 0; waited = 0
+    while silent < quiet and waited < max_wait:
+        life.tick(); waited += 1
+        silent = silent + 1 if int(life.win[-1]["xo"]) == life.sil else 0
+    return silent < quiet
+def say_line(text, who):
+    wait_quiet(); life.type_text(text, who=who)
+    while life.queue: life.tick()
+    for _ in range(20): life.tick()                                             # the typist's four seconds before the other voice
 for rep in range(reps):
     n = 0
     for qi, (q, fact) in enumerate(pairs):
         keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
+        if ordinary:
+            (a_, aw), (b_, bw) = ordinary[(rep * len(pairs) + qi) % len(ordinary)]; say_line(a_, aw); say_line(b_, bw)
         silent = 0; waited = 0
         while silent < quiet and waited < max_wait:                             # the typist's rule: no line over the child's speech
             life.tick(); waited += 1
@@ -64,10 +83,14 @@ for rep in range(reps):
         def note(tag):
             c = getattr(life, "_last_choice", None); w = life.win[-1]
             if c: rows.append(f"{tag}{TOK.decode([int(w['x'])]) if int(w['x']) != life.sil else '_'}{TOK.decode([int(w['xo'])]) if int(w['xo']) != life.sil else '_'} act {c['p_act']:.2f}{'!' if c['acted'] else ' '} say {TOK.decode([c['nxt']]) if c['nxt'] != life.sil else '_'} p {c['p_choice']:.2f} top {TOK.decode([c['top']]) if c['top'] != life.sil else '_'} |pred| {c['norm']:.2f} sharp {c['sharp']:.0f}")
+        got = []
         while life.queue:
             life.tick()
             if tr: note("q ")
-        got = []; answered_at = -1; face_until = -1; face_then = None; seen_words = 0
+            if not life.queue:                                                  # the question's last tick: a symbol said in it belongs to the answer
+                w = life.win[-1]
+                if int(w["xo"]) != life.sil: got.append(TOK.decode([int(w["xo"])]))
+        answered_at = -1; face_until = -1; face_then = None; seen_words = 0
         for t_ in range(window):
             life.tick(); w = life.win[-1]; tick_now = life.ticks
             if int(w["xo"]) != life.sil: got.append(TOK.decode([int(w["xo"])]))

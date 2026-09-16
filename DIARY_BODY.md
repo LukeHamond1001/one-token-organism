@@ -8386,3 +8386,11 @@ rests (14 at eight, read without the hold: the save's own constants); the rephra
 18966; the guard held. Day 235: 184 lines, smiles 296, frowns 38. THE HOLD WENT ON THE SERVED BODY at this save (the reload at
 20:00:15, served again 20:01:10; bag_rest_decay 0.97 beside the capacity; the guard re-armed with the same flags; the typist
 relaunched, the log's day 237 (236 an aborted session)).
+THE FIRST HOURS AT THE HOLD (20:31, day 237 half done): 111 lines, smiles 1.25 a line (1.61 the day before), answer smiles 3
+(9 in the whole of day 235), no fact word before B yet; frowns 0.23 a line (0.21); duty 0.283 (0.337); junk 6. After the fact
+questions its turn is mostly empty for the five seconds the page shows, or a fragment ("what is little?" -> "as an ... ant"):
+the gate's latency runs past the page's window on the served body more often than on the copies. Too early to read; the day's
+tally at night 207 and the next days' parent counts are the ruler. The live instrument on the served body's morning save with
+the hold reads 10 and 9 of 30, and undercounts: "what is cold?" -> "ce is coldd", the 'i' said in the question's last tick
+before the window; fixed. The instrument's mood sinks to the floor under back-to-back questions (the value's expectation of the
+answer smile unmet two times in three); it now interleaves the day's ordinary exchanges between questions (--interleave 1).
