@@ -8508,3 +8508,9 @@ and asked minutes later 1 of 3 ("a hill is"; "what is loud?" -> "is yes. whthe s
 verdict on the choice; the mood at the day's start is the confound (right after a night and a reload the readout sat at its
 floor). The fourth rehearsal moves to mid-day, when the parent's smiles have lifted the mood; the body's mood is logged
 through a day to place the recording.
+NIGHT 216 (ended 05:49, the 206th row; the log's day 250, 138 lines, cut by the third rehearsal): the held-out 0.650 (the dusk
+0.627), the facts by the cortex 0.883, the old lines 0.461; the mouth completes 24 of 26 prefixes and answers 20 of 30
+questions at two rests and 22 at eight; the rephrased 12; the branch 9 of 9 and 10 of 12; the store 39071. THE MOOD THROUGH A
+DAY (logged each minute from 05:05): the third rehearsal left it at -5.5; the parent's ordinary talk lifted it to +2 within
+eight minutes and +5 within fifteen; it held between +1 and +5 through the day. The readout's floor at -4 and below is a
+morning state after a night and a restart, not the day's; rehearsals and the recording belong ten minutes or more into a day.
