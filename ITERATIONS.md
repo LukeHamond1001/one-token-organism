@@ -126,6 +126,9 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    falls halve, at or above -0.015 on both days, and the morning values stop declining; the facts by the cortex at dusk fall
    less (0.836-0.849 lately against 0.883 in the morning). Falsified if either day falls -0.025 or more, or the parent's counts
    (answered before B, answer smiles) drop by a fifth: then back to 1.0 at the next save (BASE_FLAGS_wake1.txt).
+   DAY ONE LIVE (11:23): the dusk's fall +0.002 (0.623 -> 0.625) against -0.018 to -0.029 on the four days before; the old
+   lines 0.481 after the night (0.455-0.471 for a week); the questions, prefixes and branch unmoved; the parent's counts within
+   their noise (answered before B 69%, answer smiles 7). The second day decides.
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
    DERIVED (2026-09-15, 13:30): a boundary ends an episode tag; the tag scopes the follow links the recall runs along. Today the
    boundary is the offset (silence). A surprise boundary would split a line at its surprising symbol, "yes. take some with honey"

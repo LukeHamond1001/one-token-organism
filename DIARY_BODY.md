@@ -8573,3 +8573,9 @@ questions at two rests and 23 at eight; the rephrased 14; the branch 9 of 9 and 
 smiles 9, junk 9, duty 0.293. THE DAY'S LESSON AT A THIRD WENT ON THE SERVED BODY at this save (the reload at 10:23:56, served
 again 10:24:51, wake_base 0.3 beside the capacity, the hold and its form; the guard re-armed the same): two days, the dusk's
 fall the ruler, -0.015 or better predicted, -0.025 or worse on either day the falsifier.
+NIGHT 222 (ended 11:19, the 212th row; the log's day 259, the first full day with the day's lesson at a third): THE DUSK'S FALL
++0.002 (the dusk 0.625 against the morning 0.623; the four days before -0.029, -0.018, -0.019, -0.025): the prediction met on
+the first day. The morning after 0.624, the facts by the cortex 0.890, the old lines 0.481 (its highest for a week); the mouth
+completes 24 of 26 prefixes and answers 21 of 30 questions at two rests and 24 at eight; the rephrased 15; the branch 9 of 9
+and 10 of 12; the store 50760; the day: answer smiles 7, junk 8, duty 0.311, A's questions answered before B 58 of 84. The
+second day decides.
