@@ -229,6 +229,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    save's value standing, so "the pre-hold flags" on the save after night 207 ran at 0.97 and printed the hold's own numbers as
    the control (11 of 30 live, interleaved, both arms identical). A control must pass the zero explicitly (--bag-rest-decay 0).
    Rerun queued. The interleaved live with the hold on that save: 11 of 30, the copy's mood at the floor throughout.
+   MEASURED (21:48, the save after night 207, greedy by the pause): the hold as served 16, 17, 18 of 30 at 2, 8, 16 rests; with
+   own symbols at the symbol rate 19, 20, 18; without the hold 19 and 14; the branch 9 of 9 in both forms. The form's fix restores
+   the two-rest count to the save's own ceiling (the no-hold 19) and keeps the pause's gain (20 against 14 at eight). Within one
+   of the prediction; the falsifier not met. ON THE SERVED BODY from night 208's save (~22:10): --bag-own-fade 1 beside the hold
+   (BASE_FLAGS, guard_args, serve_command; the previous set kept as BASE_FLAGS_pre_ownfade.txt).
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).

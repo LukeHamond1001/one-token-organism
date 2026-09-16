@@ -8404,3 +8404,7 @@ completes 24 of 26 prefixes; the questions 16 of 30 at two rests (21 the night b
 form: the world's context faded at the quiet rate while the child answered, though the query shifts it a lag per own symbol and
 the keys were written at the symbol rate; the fade must follow the symbols whoever says them (bag_own_fade, a disclosed switch).
 Measured next on this night's save, greedy by the pause, both forms.
+THE HOLD'S FORM MEASURED (21:48; the save after night 207, greedy by the pause): as served (own symbols at the quiet rate) 16, 17,
+18 of 30 at 2, 8, 16 rests; with own symbols at the symbol rate 19, 20, 18; without the hold 19 and 14; the branch 9 of 9 in
+both. The fix restores the two-rest count to the save's ceiling and keeps the pause's gain; it goes on the served body at night
+208's save (bag_own_fade 1 beside bag_rest_decay 0.97), the reload armed, the guard to be re-armed with the same flags.
