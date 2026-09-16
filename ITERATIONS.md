@@ -43,6 +43,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    switched at a night's save if two more nights confirm the rate; the falsifier as before (the prefixes hold through a day).
    ARMED (2026-09-15, 23:58): the rate held (2200, 1983, 1957 a day; the store 27250 after night 210): --store-cap 65536 goes on
    the served body at night 211's save (the 32768 set kept as BASE_FLAGS_cap32k.txt). The falsifier as before.
+   DERIVED A THIRD TIME (2026-09-16, 17:14): the store reads 64565 against the capacity of 65536 (nights 226-228 wrote 3200 a
+   day, the fade dropped 1100-1150 a night): at the cap the daily eviction of the newest one-shots returns. A larger capacity
+   cannot be paid on this disk (each save two and a half gigabytes, ten copies rotating). The fade's floor is the other
+   constant: with the mean strength at 0.28 now (most slots one-shots), the floor at 0.1 x mean lets a once-heard memory live
+   twenty-eight nights, so the store's steady state is ninety thousand; at 0.25 x mean it lives nineteen or twenty nights,
+   the horizon the capacity was derived for, and the steady state about sixty thousand. store_floor_rel 0.25 from the next
+   save. Predicted: the nightly drops rise toward the day's writes and the store levels under the capacity within a week
+   with no eviction at the cap; the prefixes and the questions hold. Falsified if the store shrinks under forty thousand, or
+   the prefixes fall by three: then back to 0.1. (The fade itself, 0.9, is left alone: the utterance memory fades with it.)
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by
