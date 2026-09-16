@@ -8623,3 +8623,9 @@ NIGHT 226 (ended 15:0x, the 216th row): A NIGHT THAT DAMAGED THE CORTEX. Its les
 0.602, the parent's lines 0.611. The material was ordinary (the dreams plain lines, the utterance memory as before); the store's
 rulers stand (24 of 26 prefixes, 21 and 23 of 30 questions, the branch 9 of 9). The night stands, by the word; the night is
 re-run on the dusk copy to see whether it diverges the same way, and night 227 shows whether the cortex recovers.
+NIGHT 226 RE-RUN ON THE DUSK COPY (15:09-15:35): it did not diverge; its loss fell 0.195 to 0.154, its gauge on its dreams rose
+0.698 to 0.787, the held-out 0.605 to 0.611, the parent's lines 0.667 to 0.725. Its dreams were other lines than the served
+night's (the dusk copy is sixteen minutes of talk older than the night's start, and the draw depends on the memory then), so
+the served night's divergence was a chance event of the optimization on that night's draws, not a property of the state or
+the material. The night stands; night 227 tells whether the cortex recovers on its own. If it does not within three nights,
+the night's lesson needs a derived robustness (the ledger's item 38).

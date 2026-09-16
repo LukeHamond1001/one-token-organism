@@ -321,6 +321,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    unreliably, and the mood is the strongest modulator. The parent's natural repetition is the next mechanism to measure: the
    fact told twice in a session (a merge, the slot's strength doubled), asked mid-day after its night. Predicted: 2 of 3 or
    better live; falsified at 1 of 3 or worse over two sets.
+38. The night's robustness. Ruler: the night's own loss curve and its gauge before and after; the morning rulers.
+   OBSERVED (2026-09-16, 15:36): night 226's lesson diverged (the loss 0.20 -> 0.34 at the third round, the gauge on its dreams
+   0.694 -> 0.605, the facts by the cortex 0.885 -> 0.646 by morning) on ordinary material; re-run on the dusk copy with other
+   draws it ran normally. One night in two hundred and twenty-six. Not yet derived: the candidates are a gradient outlier
+   meeting a fresh optimizer's early moments (night_warm 8), or a batch of near-identical dreams. The falsifier for any fix is
+   the same night re-run with the served draws, which needs the draws logged: the night now records its draws' serials (to
+   build). Nothing changes on the served body until the cortex's recovery is read over the next three nights.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
