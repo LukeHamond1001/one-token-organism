@@ -8579,3 +8579,8 @@ the first day. The morning after 0.624, the facts by the cortex 0.890, the old l
 completes 24 of 26 prefixes and answers 21 of 30 questions at two rests and 24 at eight; the rephrased 15; the branch 9 of 9
 and 10 of 12; the store 50760; the day: answer smiles 7, junk 8, duty 0.311, A's questions answered before B 58 of 84. The
 second day decides.
+THE PARENT OF 257, 259 AND 260 REPORTED (12:13): 173/168/166 lines; A's questions answered before B 59%, 49%, 63%; fact answers
+in its own turn 2, 5, 3 ("the sun is up in the day" whole; "grass is green", "an ant is little", "we drink water an"); it asked
+"what is hard?" on day 259, was answered under a reworded line, and said "a rock is hard" unprompted the next day; runs of four
+known words 4, 9, 5; its own question marks 28, 30, 25; smiles 215/249/262, frowns 37/34/36; known words 657 -> 690. One line
+destroyed at a night boundary in three. The next parent (262-264, facts 21-30 first) spawned at the 213th row.
