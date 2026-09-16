@@ -8660,3 +8660,10 @@ answers in its own turn before B 6, 7, 4; whole fact sentences unprompted: "cats
 "we sleep in a bed" (two days before that fact was taught), "we drink water"; runs of four own words 21, 42, 31; its own
 question marks 22, 32, 36; smiles 270/331/285, frowns 39/44/41; two lines lost at boundaries; the nights lengthening (866,
 1432, 812 s) under the copies' load on the machine. The next parent (271-273, facts 21-30 first) spawned at the 219th row.
+NIGHT 229 (ended 18:22, the 219th row; the first night under the fade's floor at a quarter of the mean and the moment's horizon
+at 0.99): the store purged its backlog at once, 64000 -> 47158 (the slots faded under the new floor over the twelve days since
+the capacity was raised), and the rulers stood or rose: the mouth completes 23 of 26 prefixes and answers 23 of 30 questions
+at two rests and 24 at eight; the held-out 0.611 (the dusk 0.584), the facts by the cortex 0.879, the old lines 0.494, the
+rephrased 15; the branch 9 of 9 and 10 of 12. THE MOMENT'S HORIZON WENT ON THE SERVED BODY at this save (the reload at
+18:2x, served again 18:23:17 with all five constants; the guard re-armed). The store's level over the next nights is the
+floor's test (above forty thousand, under the capacity).
