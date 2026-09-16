@@ -8480,3 +8480,8 @@ THE PARENT OF 245, 246 AND 247 REPORTED (03:56): 184/184/107 lines (the third da
 water is warm", "one egg and"); its own question marks 23, 30, 14; smiles 282/271/183, frowns 36/37/22, all talk-overs. A
 mechanical finding: the typist silently drops a line over 38 characters (the exchange breaks); the brief now carries the cap.
 The next parent (248-250, facts 21-30 first) spawned at the 204th row.
+NIGHT 214 (ended 03:57, the 204th row; the log's day 247, cut short by the rehearsal): the held-out 0.654 (the dusk 0.608 after
+the rehearsal's questions; the night restored it fully: 0.635, 0.633, 0.649, 0.654), the facts by the cortex 0.883, the old
+lines 0.466; the mouth completes 24 of 26 prefixes and answers 19 of 30 questions at two rests and 23 at eight; the rephrased
+10; the branch 9 of 9 and 10 of 12; the store 35431. The second rehearsal began on the served body at the day's start: the
+three never-typed facts told before the night, asked after it, then the taught questions 16-30.
