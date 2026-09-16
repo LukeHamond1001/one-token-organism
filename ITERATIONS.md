@@ -172,6 +172,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    sharp_conf 8 (a sure forecast read at nine times the sharpness, an unsure one at five): the nine told facts answered mid-day
    at 6 of 9 or better; the day's junk and the parent's counts unchanged. Falsified under 5 of 9 (then back to 3), or if the
    parent's known-word growth stalls over two days (the exploration lost).
+   MEASURED (08:10, the sixth rehearsal, begun at mood +4.6): under sharp_conf 8 the nine told facts answered 4 of 9 after their
+   nights, the three told twice 1 of 3: FALSIFIED (under 5 of 9). Across the six rehearsals no value separates: after a night
+   1 of 3 at 0; 3 of 3, 1 of 6, 2 of 6 at 3; 4 of 9 at 8. The choice's sharpness is not the lever of the live variance. What
+   the rehearsals show instead: the answer usually begins right and derails at a common-word branch ("a pear is a " never
+   reaches "fruit"; "owls hoot", "the sea is salty", "a hill is steep" survive), and the same-day recall (7 of 12) beats the
+   overnight (11 of 27). OFF from night 219's save (no measured lift; the law). The demo's told fact must have a distinctive
+   continuation and a question unlike the session's others.
 14. Awake replay during the pauses. Ruler: the fact sentences, held-out.
    DERIVED (13:30): the night replays the utterances whole a thousand times a night and the cortex alone still answers 0 of 30:
    the cortex's failure at the question is structural (the answer sits across a pause the window carries but the lesson does not

@@ -8546,3 +8546,10 @@ THE MOOD THROUGH THREE HOURS (logged each minute, 05:05-08:04): within each day 
 to ten minutes after a night and a restart it sits at -4 to -6 and climbs under the parent's talk (+2 within eight minutes, +5
 within fifteen); each rehearsal pulled it down while it ran (the failures unsmiled) and the parent lifted it again after. At
 08:00 it stood at +4.8, and the sixth rehearsal began there.
+THE SIXTH REHEARSAL (08:04-08:10, mid-day of the log's day 253, decisiveness 8, the mood +4.6 at the start and -1.1 at the
+end): the nine told facts answered 4 of 9 after their nights ("owls hoot", "a lemon is", "the sea is salty", "a hill is
+steep"), the three told twice 1 of 3. Falsified; across six rehearsals no value of the constant separates (after a night 1 of
+3 at 0; 3 of 3, 1 of 6, 2 of 6 at 3; 4 of 9 at 8). Decisiveness by certainty goes off at night 219's save. The rehearsals
+teach the demo instead: the answer begins right and derails at a common-word branch ("a pear is a " never "fruit"), so the
+told fact must have a distinctive continuation, and the same-day recall (7 of 12) is the safer scene than the overnight one
+(11 of 27), which is shown honestly as sometimes.
