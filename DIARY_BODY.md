@@ -8364,3 +8364,9 @@ THE BOUND ON THE LIVE MOUTH (17:53): with the instrument waiting for the child's
 sharp_base 60 answers 2 and 1: sharper is worse, the sampling is not the cause. The instrument gave no smiles and the copy's
 mood sank to the readout's floor through the run; it now smiles at an answer as the caregiver does. The hold of working memory
 (bag_rest_decay 0.97) is measured next, greedy by the pause and live with smiles, against the control with smiles.
+THE PARENT OF 232, 233 AND 234 REPORTED (18:58): 183/198/188 lines; A's questions answered before B 51 of 91, 57 of 99, 40 of 94;
+anticipation smiles 11/7/9, of which whole fact answers on day 233: "grass is green", "a dog has four legs", "bees make honey";
+fact words in its own turn before B 2/3/0; its own question marks 29/39/26; smiles 288/271/274, frowns 38/41/40 (a third of the
+talk-overs); known words 436 -> 457. It answered the child's own fact-shaped questions ("hat has wings?" -> a bird has wings) as
+B's next line. The typist typed all 569 lines in order, none deferred; nights 1071, 1348 and 1377 s. The next parent (235-237)
+was spawned at the 195th row.
