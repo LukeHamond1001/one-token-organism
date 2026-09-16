@@ -197,6 +197,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    The third point (18:10): sharp_base 100 answers 4 and 4 of 30 taught (as at 25) and 3 and 4 of 10 never-typed (against 2 and
    1 at 25), the mood at -6 throughout for lack of smiles. Sharpness alone moves the uncrowded questions a little and the
    taught ones not at all: the lever is the cue's hold through the gate's latency (iteration 37), measured next with smiles.
+   MEASURED (19:00, the dusk copy of 232): greedy by the pause at 0.97: 19, 20, 23, 20 of 30 at 2, 8, 16 and 32 rests (against
+   20 and 14 at 2 and 8 without the hold): the answer survives the pause, the first half of the prediction met. Live, with the
+   instrument smiling at answers only: the control 4 and 3 of 30; with the hold 14 and 4 of 30 (15 ever) — the first pass past
+   the predicted 12, the second sunk with the copy's mood at -6: the instrument's smiles were a tenth of the world's (the
+   caregiver smiles at every known word) and the readout's sharpness fell to its floor. The never-typed 3 and 2 of 10. The
+   instrument now smiles as the caregiver does; the mood-fair pair (control against 0.97, and the never-typed) runs next.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
