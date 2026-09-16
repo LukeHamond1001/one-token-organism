@@ -8463,3 +8463,7 @@ the held-out rose 0.635 -> 0.645, gated 0.650; neither fell, while the served bo
 does not reproduce the served day: its mood sinks to -5 under replayed rewards not contingent on what its child says, its
 readout flattens to the floor, and it never speaks the fluent turns suspected of pulling the cortex. Inconclusive; the gate
 stays off; the drift is watched (flat at night 212). A faithful copy day needs a caregiver in the loop.
+NIGHT 213 (ended 03:02, the 203rd row; the log's day 246, facts 11-20 under form 2): the held-out 0.649 (the dusk 0.626; up from
+0.633: the drift reversed), the facts by the cortex 0.881, the old lines 0.465; the mouth completes 24 of 26 prefixes and answers
+21 of 30 questions at two rests and 24 at eight (the best at eight, equal to the stage's best at two); the rephrased 11; the
+branch 9 of 9 and 10 of 12; the store 33765, past the old capacity; the day: answer smiles 11, junk 5, its own question marks 32.
