@@ -225,6 +225,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    only when no one speaks (bag_own_fade 1, a disclosed switch; 0 = the form served from night 206). Predicted on the save after
    night 207: the questions at two rests back to 20 or more, at eight and sixteen unchanged or up; the live count unchanged or
    up. Falsified if the two-rest count stays at 16: then the drop was the day's writes, not the geometry.
+   AN INSTRUMENT'S LESSON (21:40): a save carries its own constants (the blob's cfg), and a flags file that lacks a key leaves the
+   save's value standing, so "the pre-hold flags" on the save after night 207 ran at 0.97 and printed the hold's own numbers as
+   the control (11 of 30 live, interleaved, both arms identical). A control must pass the zero explicitly (--bag-rest-decay 0).
+   Rerun queued. The interleaved live with the hold on that save: 11 of 30, the copy's mood at the floor throughout.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
