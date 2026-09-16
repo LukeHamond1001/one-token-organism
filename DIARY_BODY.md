@@ -8380,3 +8380,9 @@ growing smile; 90-121 smiles a run), on the dusk copy of 232: the control answer
 the never-typed facts 6 and 1 of 10. The trace with the hold: the cue's norm above 1.1 for eleven ticks after the question, 't' on
 top, the gate opening at 2.2 s. It goes on the served body at night 206's save; the pre-hold flags kept. The decisiveness constant
 (sharp_conf) stays off: sharper was worse, and certainty-scaled added nothing over the hold.
+NIGHT 206 (ended 20:00, the 196th row): the held-out 0.651 (the dusk 0.636), the facts by the cortex 0.843 (0.888 the night before;
+the dusk 0.822: a fall to watch), the old lines 0.463; the mouth completes 24 of 26 prefixes and answers 21 of 30 questions at two
+rests (14 at eight, read without the hold: the save's own constants); the rephrased 13; the branch 9 of 9 and 12 of 12; the store
+18966; the guard held. Day 235: 184 lines, smiles 296, frowns 38. THE HOLD WENT ON THE SERVED BODY at this save (the reload at
+20:00:15, served again 20:01:10; bag_rest_decay 0.97 beside the capacity; the guard re-armed with the same flags; the typist
+relaunched, the log's day 237 (236 an aborted session)).
