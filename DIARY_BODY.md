@@ -8617,3 +8617,9 @@ THE PARENT OF 261, 263 AND 264 REPORTED (15:17): 169/165/169 lines; A's question
 whole); runs of three own words 41, 23, 31; its own question marks 20, 26, 27; smiles 282/249/279, frowns 38/35/35, all
 talk-overs; all thirty facts complete in the first half of each day; one queue line lost at a night boundary; a two-word echo
 went through undeferred. The next parent (265-267, facts 21-30 first) spawned at the 216th row.
+NIGHT 226 (ended 15:0x, the 216th row): A NIGHT THAT DAMAGED THE CORTEX. Its lesson's loss rose across the rounds (0.200,
+0.228, 0.342, 0.293, 0.279, 0.272) where night 225's fell (0.224 to 0.170); its gauge on its own dreams went 0.694 -> 0.605
+(225: 0.671 -> 0.772); after it the facts by the cortex read 0.646 (0.885 the night before, 0.865 at the dusk), the held-out
+0.602, the parent's lines 0.611. The material was ordinary (the dreams plain lines, the utterance memory as before); the store's
+rulers stand (24 of 26 prefixes, 21 and 23 of 30 questions, the branch 9 of 9). The night stands, by the word; the night is
+re-run on the dusk copy to see whether it diverges the same way, and night 227 shows whether the cortex recovers.
