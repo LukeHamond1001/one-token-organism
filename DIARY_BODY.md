@@ -8408,3 +8408,16 @@ THE HOLD'S FORM MEASURED (21:48; the save after night 207, greedy by the pause):
 18 of 30 at 2, 8, 16 rests; with own symbols at the symbol rate 19, 20, 18; without the hold 19 and 14; the branch 9 of 9 in
 both. The fix restores the two-rest count to the save's ceiling and keeps the pause's gain; it goes on the served body at night
 208's save (bag_own_fade 1 beside bag_rest_decay 0.97), the reload armed, the guard to be re-armed with the same flags.
+NIGHT 208 (ended 21:58, the 198th row): the held-out 0.649 (the dusk 0.647: a day at the hold with no fall), the facts by the
+cortex 0.885, the old lines 0.469; the mouth completes 25 of 26 prefixes; the questions 15 of 30 at two rests and 16 at eight,
+read with the save's own form (own symbols at the quiet rate); the rephrased 8; the branch 9 of 9 and 10 of 12; the store 23310
+(+2200 a day under the hold: the answer chains now carry the question in their keys and merge less). THE FORM FIX WENT ON THE
+SERVED BODY at this save (the reload at 21:58:40, served again 21:59:35: bag_own_fade 1 beside the hold and the capacity; the
+guard re-armed with the same flags; the typist relaunched). The slide of the two-rest count since night 205 (24, 21, 16, 15) is
+read as the transition: the keys written under the hold carry the question, the old chains match the new query less, and the
+facts retaught over the next days rebuild under the new form; the day's own answering (the parent's counts) rose at once.
+THE PARENT OF 235, 237 AND 238 REPORTED (22:00): 184/182/183 lines; A's questions answered before B 47%, 55%, 53% (the last two
+the days at the hold); answer smiles 9, 10, 14; the fact's word in its own turn before B 1, 2, 1; its own question marks 26, 30,
+44; whole phrases of three words or more 15, 8, 8 (shorter turns, more often a single answer or a question); smiles 297/248/279,
+frowns 38/40/37, all talk-overs. No deferral in 549 lines; 306 waited for the child's quiet (mean 4.1 s, 64 at the 8.2 s ceiling).
+It said "es make honey" before fact 19 was asked that day. The next parent (239-241) spawned at the 198th row.
