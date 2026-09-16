@@ -1545,6 +1545,9 @@ class Life:
             idx = torch.multinomial(p_, n_new, replacement=bool(len(self.utts) < n_new), generator=self.gen).tolist() if n_new > 0 else []
             if n_old > 0:
                 idx += torch.randint(0, len(self.utts), (n_old,), generator=self.gen).tolist()
+            # THE DRAW'S SERIALS (2026-09-16, night 226): which utterances the night dreamt, by their serials, kept in the night's report
+            # so a night can be re-run exactly on a copy (night 226 diverged on its draws and the copy's draws were others)
+            self._last_draw = [int(self.utt_N[i]) if i < len(self.utt_N) else -1 for i in idx]
             end_ = [self.end_id] if int(self.cfg.get("offset_ticks", 0)) > 0 else []
             # THE EXCHANGE REPLAYED (dream_pair, the utterances that followed; dream_gap rests between, the pause compressed as replay
             # compresses it): a dream is the utterance and its successor in time when the memory still holds it
@@ -1742,7 +1745,7 @@ class Life:
                 dreams, owns = self.dreams(n_starts, with_who=True)
             else:
                 dreams = self.dreams(n_starts); owns = None
-            rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new)
+            rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new); rep["draw_serials"] = list(getattr(self, "_last_draw", []))
             if owns is not None:                                        # its own symbols in capitals, to be read
                 rep["examples"] = ["".join(self.tok.decode([i]).upper() if o else self.tok.decode([i]) for i, o in zip(d, w_))[:32] for d, w_ in zip(dreams[:8], owns[:8])]
                 rep["own_share"] = round(sum(sum(w_) for w_ in owns) / max(1, sum(len(w_) for w_ in owns)), 3)
