@@ -265,6 +265,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    On the save after night 209 form 2 reads 17 and 17 of 30 at two and eight rests, form 1's numbers exactly (the same query).
    ON THE SERVED BODY from night 210's save (~00:05). Predicted: the facts retaught from now on keep 7 of 10 or better within a
    night of their retelling; facts 1-10 recover when retold (about three days); the parent's answer smiles hold or rise.
+   REHEARSED ON THE SERVED BODY (2026-09-16, 03:24; tools/rehearse.py: the typist frozen, the questions typed over the page, the
+   smiles contingent): the taught questions 1-15 answered 8 of 15 in the child's turn, the answers arriving 0.6 to 7.4 s after
+   the question ("the sun", "water is wet", "cats drink milk", "rain falls from the sky", "an apple is red", "an ant is little",
+   "we eat bread and"); three never-typed facts told once at the session's start answered 3 of 3 ("a lemon i", "a sheep has
+   wool", "the sea") at 2 to 5 s. The mood fell -2.5 -> -6.0 over sixteen minutes: the rehearsal's parent smiled only inside
+   short windows where the typist smiles at every known word whenever said; the later answers came under a floor-flat readout.
+   The rehearsal's parent is made attentive through its waits before the after-night run.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).

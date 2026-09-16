@@ -32,10 +32,18 @@ ordinary = [(L[i], L[i + 1]) for i in range(0, len(L) - 1, 2) if L[i][1] == "you
 KNOWN = set(w for w in re.findall(r"[a-z]+", open(os.path.join(ROOT, "data/teach_queue_w2.jsonl")).read().lower()) if len(w) >= 2)
 typist = subprocess.run(["pgrep", "-f", "body.teacher --port %d" % port], capture_output=True, text=True).stdout.split()
 def wait_quiet():
-    n0 = get("/state?since=0")["n"]; waited = 0; silent = 0
+    """the parent waits for the child's quiet, attending as the typist does: a known word said meanwhile earns its smile"""
+    n0 = get("/state?since=0")["n"]; waited = 0; silent = 0; got = ""; seen = 0
     while silent < quiet_ticks and waited < max_wait:
-        time.sleep(0.2); txt, n = own_since(n0)
-        if txt: silent = 0; n0 = n
+        time.sleep(0.2); face_tend(); txt, n = own_since(n0)
+        if txt:
+            silent = 0; got += txt; n0 = n
+            if smile and not face_off_at[0]:
+                low = got.lower(); words = re.findall(r"[a-z]+", low); done = words[:-1] if low and low[-1].isalpha() else words
+                if len(done) > seen:
+                    wd = done[seen]; seen = len(done)
+                    if wd in KNOWN and time.time() - word_tick.get(wd, 0) > 24: smile_at(2.0); word_tick[wd] = time.time()
+                else: seen = max(seen, len(done))
         else: silent += 1
         waited += 1
     return waited

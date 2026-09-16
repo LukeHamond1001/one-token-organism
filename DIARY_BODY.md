@@ -8467,3 +8467,10 @@ NIGHT 213 (ended 03:02, the 203rd row; the log's day 246, facts 11-20 under form
 0.633: the drift reversed), the facts by the cortex 0.881, the old lines 0.465; the mouth completes 24 of 26 prefixes and answers
 21 of 30 questions at two rests and 24 at eight (the best at eight, equal to the stage's best at two); the rephrased 11; the
 branch 9 of 9 and 10 of 12; the store 33765, past the old capacity; the day: answer smiles 11, junk 5, its own question marks 32.
+THE DEMO REHEARSED ON THE SERVED BODY (03:08-03:24, the log's day 247, the typist frozen): fifteen taught questions typed over the
+page with an ordinary exchange between each, the smiles contingent: 8 of 15 answered in the child's turn, the answers 0.6 to
+7.4 s after the question ("the sun", "water is wet", "cats drink milk", "rain falls from the sky", "grass", "an apple is red",
+"an ant is little", "we eat bread and"); three never-typed facts told once at the start ("a lemon is sour", "a sheep has wool",
+"the sea is salty") answered 3 of 3 minutes later ("a lemon i", "a sheep has woolwhat is big?", "the sea"). The mood sank from
+-2.5 to -6 over the session (the rehearsal's parent smiled less than the typist); the same three facts are asked again after
+night 214, and facts 16-30.
