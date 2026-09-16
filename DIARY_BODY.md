@@ -8655,3 +8655,8 @@ THE MOMENT'S HORIZON MEASURED (17:12-17:38, the donor copy, the same draws as it
 0.999 within a hundredth on its loss and its gauge (0.203 -> 0.159 and 0.781 against 0.205 -> 0.165 and 0.773), the
 held-out the same; the parent's lines and the old lines a hundredth or two lower, a night's noise. It goes on the served
 body at night 229's save; twenty nights without a diverging round is its test there.
+THE PARENT OF 265, 267 AND 269 REPORTED (18:24): 171/167/172 lines; A's questions answered before B 54%, 46%, 48%; fact
+answers in its own turn before B 6, 7, 4; whole fact sentences unprompted: "cats drink milk", "the sun is up in the day",
+"we sleep in a bed" (two days before that fact was taught), "we drink water"; runs of four own words 21, 42, 31; its own
+question marks 22, 32, 36; smiles 270/331/285, frowns 39/44/41; two lines lost at boundaries; the nights lengthening (866,
+1432, 812 s) under the copies' load on the machine. The next parent (271-273, facts 21-30 first) spawned at the 219th row.
