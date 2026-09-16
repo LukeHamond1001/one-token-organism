@@ -8449,3 +8449,7 @@ THE PARENT OF 240, 241 AND 243 REPORTED (00:50): 177/180/178 lines; A's question
 more 29, 28, 33; its own question marks 14, 24, 27; talk-overs 107, 105, 87; smiles 267/283/281, frowns 36/38/35. Whole
 utterances of its own: "I like my bed", "shall we go to bed", "what is hard?", "bread and honey", "snow gone now?". One line
 lost at the aborted 242 relaunch; no deferral. The next parent (244-246) spawned at the 201st row.
+NIGHT 211's PROBE (00:52): the held-out 0.635 (the fifth night down: 0.657, 0.649, 0.640, 0.644, 0.635), the facts by the cortex
+0.877, the old lines 0.472; the mouth completes 24 of 26 prefixes and answers 18 of 30 questions at two rests and 20 at eight
+(the best at eight); the rephrased 7. The drift is real; the day's lesson at a third is re-tested on this night's save (day
+243 lived twice with the rewards replayed), the dusk's held-out the ruler.

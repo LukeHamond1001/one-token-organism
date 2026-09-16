@@ -105,6 +105,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    Ungated: held-out 0.644, prefixes 18, questions 17 and 13. The prediction FAILED: the dusk's fall on the held-out did not halve
    (it was the same within a hundredth, both arms two hundredths under the morning); the prefixes' four are within a day's noise
    and were mostly the eviction below (iteration 2), not the lesson. Not adopted; the constants stay at their off values.
+   RE-DERIVED (2026-09-16, 00:55): since the hold went on (night 206) the child answers before the other voice on three
+   questions in four and speaks whole utterances of its own, and the held-out has drifted down five nights running (0.657,
+   0.649, 0.640, 0.644, 0.635 after the nights; 0.647, 0.638, 0.629, 0.619 at the dusks). The day's lesson learns from windows
+   full of its own fluent speech (heard at 0.3, the targets the world's quiet), a conflict the babbling child never posed. If
+   that is the drift's source, the day's lesson at a third (wake_base 0.3) cuts the dusk's fall from about 0.025 to about 0.01
+   on day 243 lived on the save after night 211 with the rewards replayed, the facts by the cortex likewise; falsified if the
+   two dusks lie within 0.005 of each other (then the source is the day's content, not the lesson's rate).
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
    DERIVED (2026-09-15, 13:30): a boundary ends an episode tag; the tag scopes the follow links the recall runs along. Today the
    boundary is the offset (silence). A surprise boundary would split a line at its surprising symbol, "yes. take some with honey"
