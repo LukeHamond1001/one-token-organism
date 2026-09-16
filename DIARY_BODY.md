@@ -8553,3 +8553,8 @@ steep"), the three told twice 1 of 3. Falsified; across six rehearsals no value 
 teach the demo instead: the answer begins right and derails at a common-word branch ("a pear is a " never "fruit"), so the
 told fact must have a distinctive continuation, and the same-day recall (7 of 12) is the safer scene than the overnight one
 (11 of 27), which is shown honestly as sometimes.
+NIGHT 219 (ended 08:34, the 209th row; the log's day 254): the held-out 0.626 (the dusk 0.607; the dusks 0.625, 0.616, 0.607
+over three days: watched), the facts by the cortex 0.888, the old lines 0.471; the mouth completes 24 of 26 prefixes and
+answers 21 of 30 questions at two rests and 24 at eight; the rephrased 14 of 30 (the highest yet); the branch 9 of 9 and 10 of
+12; the store 44399; the day: answer smiles 11, junk 4, question marks 20. DECISIVENESS BY CERTAINTY WENT OFF at this save
+(the reload at 08:34:02, served again 08:34:57 with the capacity, the hold and its form; the guard re-armed the same).
