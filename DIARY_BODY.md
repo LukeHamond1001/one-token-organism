@@ -8514,3 +8514,9 @@ questions at two rests and 22 at eight; the rephrased 12; the branch 9 of 9 and 
 DAY (logged each minute from 05:05): the third rehearsal left it at -5.5; the parent's ordinary talk lifted it to +2 within
 eight minutes and +5 within fifteen; it held between +1 and +5 through the day. The readout's floor at -4 and below is a
 morning state after a night and a restart, not the day's; rehearsals and the recording belong ten minutes or more into a day.
+THE FOURTH REHEARSAL (06:14-06:18, mid-day of the log's day 251, the mood -1.9 at the start and -3.7 at the end, the readout
+17 -> 10): the six facts told once answered 1 of 6 after their nights ("a lemon is sour" at 4.4 s; "what is loud?" -> "a small
+green leaf", "what has wool?" -> "iav i wht"). Across the sessions the after-night live recall of a once-told fact has read 1
+of 3, 3 of 3 and 1 of 6: the memory holds greedily, the live choice does not hold it reliably, and the mood falls as the
+failures go unsmiled. Next: three new facts told twice each, as a parent repeats, mid-day after night 217, asked mid-day after
+night 218 with the old six; the rehearsal's parent reports its smiles and the mood at each question.

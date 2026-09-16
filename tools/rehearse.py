@@ -48,9 +48,9 @@ def wait_quiet():
         else: silent += 1
         waited += 1
     return waited
-face_off_at = [0.0]; word_tick = {}
+face_off_at = [0.0]; word_tick = {}; smiles_given = [0]
 def smile_at(level, dur=2.4):
-    post("/face", {"expr": level}); face_off_at[0] = time.time() + dur
+    post("/face", {"expr": level}); face_off_at[0] = time.time() + dur; smiles_given[0] += 1
 def face_tend():
     if face_off_at[0] and time.time() >= face_off_at[0]: post("/face", {"expr": 0}); face_off_at[0] = 0.0
 def say(text, who, keys=None, read=True):
@@ -83,7 +83,7 @@ def run_set(qs, label):
             (a_, aw), (b_, bw) = ordinary[qi % len(ordinary)]; say(a_, aw, read=False); time.sleep(4.0); say(b_, bw, read=False)
         keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
         got, ok, at = say(q, "you", keys=keys); n += int(ok)
-        rows.append(f"{'*' if ok else ' '} {q!r:26} -> {got[:28]!r}{' at %.1fs' % at if at else ''}")
+        md = get("/insides"); rows.append(f"{'*' if ok else ' '} {q!r:26} -> {got[:28]!r}{' at %.1fs' % at if at else ''}  (mood {md['mood']:.1f} sharp {md['sharp_now']:.0f} smiles so far {smiles_given[0]})")
         print("  " + rows[-1], flush=True)
     print(f"REHEARSAL {label}: {n}/{len(qs)} answered in the child's turn on the served body", flush=True)
     return n

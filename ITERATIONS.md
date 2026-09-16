@@ -282,6 +282,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    wool", "the sea") at 2 to 5 s. The mood fell -2.5 -> -6.0 over sixteen minutes: the rehearsal's parent smiled only inside
    short windows where the typist smiles at every known word whenever said; the later answers came under a floor-flat readout.
    The rehearsal's parent is made attentive through its waits before the after-night run.
+   LIVE, AFTER A NIGHT (2026-09-16, 06:19; the rehearsals on the served body): a fact told once answered after its night 1 of 3,
+   3 of 3 (two nights, decisiveness on), 1 of 6 (mid-day, the mood -2 to -4); the same day 3 of 3 and 1 of 3. Greedily on each
+   morning's save the told facts answer and the untold do not. The store keeps the once-told fact; the live choice recalls it
+   unreliably, and the mood is the strongest modulator. The parent's natural repetition is the next mechanism to measure: the
+   fact told twice in a session (a merge, the slot's strength doubled), asked mid-day after its night. Predicted: 2 of 3 or
+   better live; falsified at 1 of 3 or worse over two sets.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
