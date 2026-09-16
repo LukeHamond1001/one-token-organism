@@ -8589,3 +8589,10 @@ morning's 0.624, a fall of -0.035, the week's largest, after the first day's +0.
 falsified on its second day and the lesson's rate returns to one at night 224's save. The day's fall is episodic: day 259 did
 not fall and day 260 fell hard under the same rate, so the source is in the day's content, to be found by comparing those two
 days' lines and the child's turns, not in the lesson's gain.
+NIGHT 223 (ended 12:14, the 213th row): the night restored the hard day fully, the held-out 0.589 at dusk -> 0.640 in the
+morning (the week's best morning), the facts by the cortex 0.888, the old lines 0.475; the mouth completes 24 of 26 prefixes
+and answers 21 of 30 questions at two rests and 23 at eight; the rephrased 15; the branch 9 of 9 and 10 of 12; the store
+52880. The hard day (260) against the soft one (259): more of the child's own speech (own characters 1417 against 1303, duty
+0.344 against 0.311, turns of three words or more 50 against 43) and more rare words in the parent's lines (190 against 169);
+both suspects lean the same way, the differences modest. The dusk's fall is tabulated against those features over the last
+ten days next.
