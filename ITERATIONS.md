@@ -36,6 +36,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    LIVE (15:25): the capacity went on at night 201's save (14:11). The first day at it (the log's 231; facts 21-30 taught): the
    prefixes 11 of 26 in the morning -> 22 at dusk, the held-out 0.659 -> 0.667 (the first dusk above its morning in the stage),
    the store 8192 -> 10318 slots, nothing evicted. The prediction held and more: LANDED.
+   DERIVED AGAIN (2026-09-15, 22:05): under the hold the answer chains carry the question in their keys and merge less, and the
+   store grows 2200 slots a day (18966, 21209, 23310 over nights 206-208) against 1500 before; at that rate it fills in four
+   days, and the eviction of the weakest (the newest one-shots) returns. The fade's horizon is nineteen nights, so the capacity
+   should stand above 19 x 2200 = 42000: the next constant is 65536 (the read 13 ms a tick, measured; the save 1.6 GB). To be
+   switched at a night's save if two more nights confirm the rate; the falsifier as before (the prefixes hold through a day).
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by
