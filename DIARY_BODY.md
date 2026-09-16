@@ -8421,3 +8421,8 @@ the days at the hold); answer smiles 9, 10, 14; the fact's word in its own turn 
 44; whole phrases of three words or more 15, 8, 8 (shorter turns, more often a single answer or a question); smiles 297/248/279,
 frowns 38/40/37, all talk-overs. No deferral in 549 lines; 306 waited for the child's quiet (mean 4.1 s, 64 at the 8.2 s ceiling).
 It said "es make honey" before fact 19 was asked that day. The next parent (239-241) spawned at the 198th row.
+NIGHT 209 (ended 22:58, the 199th row; the first day at the corrected form, the log's day 240): answer smiles 18 (9, 10, 14 the
+days before), duty 0.322, junk 2, its own question marks 14 (44 the day before), frowns 36; the held-out 0.640 (the dusk 0.638:
+the night restored little; 0.657, 0.649, 0.640 over three nights, to watch), the facts by the cortex 0.883, the old lines 0.458;
+the mouth completes 24 of 26 prefixes and answers 17 of 30 questions at two rests and 17 at eight (15 and 16 the night before,
+under the served form); the rephrased 7; the branch 9 of 9 and 11 of 12; the store 25293 (+1983).
