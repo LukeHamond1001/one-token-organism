@@ -8635,3 +8635,7 @@ direction, not by a shove. Beside the cortex the value critic has been running a
 2630 at that dusk already, 7807 after night 226, 50304 after 227, its head's weights at 1162; the store's strengths (max 2.4),
 the mood and the reward average are untouched by it, since what the head feeds is clamped. The night re-run from the healthy
 dusk copy was normal; the night is now re-run from the damaged state to see whether it is stuck by itself.
+THE NIGHT FROM THE DAMAGED STATE (16:15-16:40, the dusk copy of day 265): stuck by itself, its loss flat at 0.26 across the
+rounds (0.287, 0.262, 0.260, 0.263, 0.254, 0.265; the healthy night 0.195 to 0.154), its gauge 0.546 -> 0.602, the held-out
+0.58 -> 0.59. The cortex sits in a basin the night's lesson at its rate barely climbs; recovery by nights alone would take
+many. The cortex transplant is measured on a copy next; whether it is ever applied to the served body is the user's call.

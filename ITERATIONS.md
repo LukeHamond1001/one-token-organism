@@ -328,6 +328,16 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    meeting a fresh optimizer's early moments (night_warm 8), or a batch of near-identical dreams. The falsifier for any fix is
    the same night re-run with the served draws, which needs the draws logged: the night now records its draws' serials (to
    build). Nothing changes on the served body until the cortex's recovery is read over the next three nights.
+   DERIVED (16:42): the night's lesson is a fresh Adam every night (moments 0.9 and 0.999, a warm-up of eight steps on the
+   rate). At the third round a fresh second moment has seen about 150 gradients, and an outlier on parameters whose moment is
+   still small is normalised into a step many times the rate, which the global clip does not bound: night 226's loss rose
+   0.23 -> 0.34 in one round and the cortex was left in a basin the rate cannot climb (the night re-run from the damaged
+   state: flat at 0.26). In a brain the machinery of sleep's plasticity is not remade each night; its state persists. The
+   mechanism (night_opt_keep, a disclosed switch; 0 = as now): the night optimizer's moments kept across nights in the save,
+   with the second moment's horizon at a hundred steps (0.99) so an outlier is measured against a moment that has formed.
+   Predicted: on the healthy dusk copy the night's loss curve and gauge unchanged within 0.01; on the served body no round's
+   loss rising a fifth above the night's first over the following twenty nights (against one in the last twenty-six).
+   Falsified if the healthy copy's night worsens by more than 0.01, or a divergence recurs under it.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
