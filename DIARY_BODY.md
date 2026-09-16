@@ -8600,3 +8600,11 @@ THE DUSK'S FALL OVER TWENTY-TWO DAYS (12:21): from +0.008 to -0.070, a mean near
 the day's features (the child's own speech, the parent's rare words, the talk-overs, the line count, all under 0.15); the
 nights restore a little less than the days take, a net -0.0016 a morning. The lesson-rate test of two days could not resolve a
 third of the fall against that scatter; a fair test needs eight days an arm and waits behind the demo.
+NIGHT 224 (ended 13:10, the 214th row; the log's day 261, facts 1-10; the day with the most of the child's own speech yet, duty
+0.403, own characters 1692): the held-out 0.613, the lowest morning so far (0.640 the morning before; the night did not
+restore this day's fall), the facts by the cortex 0.883, the old lines 0.452; the mouth completes 24 of 26 prefixes and
+answers 20 of 30 questions at two rests and 24 at eight; the rephrased 16 of 30 (a new high); the branch 9 of 9 and 10 of 12;
+the store 55006; the day: answer smiles 9, junk 10, A's questions answered before B 72 of 84. THE LESSON'S RATE RETURNED TO
+ONE at this save (the reload at 13:10:11, served again 13:11:06 with the capacity, the hold and its form; the guard re-armed
+the same). The morning's held-out and the child's own speech now move in opposite directions across the week: the drift's
+derivation waits behind the recording, with the eight-day test.
