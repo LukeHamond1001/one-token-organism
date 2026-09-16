@@ -8432,3 +8432,11 @@ of 10 each. The log shows why: on nine of those ten questions the child spoke be
 context faded to nothing, the retellings of one fact in two key forms. The keys must be the world's alone; the symbol-rate
 fade for own symbols belongs in the query beside the efference copy's shift (form 2; test 64). Form 2 reads exactly as form 1
 on that save (17 and 17); it goes on the served body at night 210's save, the flags and the guard updated.
+NIGHT 210 (ended 23:53, the 200th row; the log's day 241, facts 11-20 under form 1): the held-out 0.644 (the dusk 0.629; the dusks
+0.647, 0.638, 0.629 over three days, the nights restoring to 0.649, 0.640, 0.644: to watch), the facts by the cortex 0.888, the
+old lines 0.468; the mouth completes 23 of 26 prefixes and answers 18 of 30 questions at two rests and 19 at eight (15/16 and
+17/17 the two nights before: the retold facts rebuild under consistent keys); the rephrased 9; the branch 9 of 9 and 11 of 12;
+the store 27250 (+1957); answer smiles 9 (18 the day before), junk 8, its own question marks 24. FORM 2 WENT ON THE SERVED BODY
+at this save (the reload at 23:53:55, served again 23:54:50; the guard re-armed with the same flags). The store reaches the
+capacity in under three days at this rate; 65536 (the fade's horizon of nineteen nights at two thousand a day) goes on at
+night 211's save.

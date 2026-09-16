@@ -41,6 +41,8 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    days, and the eviction of the weakest (the newest one-shots) returns. The fade's horizon is nineteen nights, so the capacity
    should stand above 19 x 2200 = 42000: the next constant is 65536 (the read 13 ms a tick, measured; the save 1.6 GB). To be
    switched at a night's save if two more nights confirm the rate; the falsifier as before (the prefixes hold through a day).
+   ARMED (2026-09-15, 23:58): the rate held (2200, 1983, 1957 a day; the store 27250 after night 210): --store-cap 65536 goes on
+   the served body at night 211's save (the 32768 set kept as BASE_FLAGS_cap32k.txt). The falsifier as before.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by
