@@ -342,6 +342,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    heavy for the copies; the same protection without state is the second moment's horizon alone: night_beta2 0.99 (formed in
    a hundred steps, before the rounds where the outliers arrive) beside the existing warm-up. Built as a constant, 0.999 as
    before; tested first on the healthy dusk copy, then on the served body at a night's save.
+   THE REPAIR MEASURED (17:11, copies): a night from the damaged state is stuck (flat at 0.26, the gauge 0.546 -> 0.602); the
+   cortex of day 264's dusk transplanted into the current body (the store, the utterance memory and the life kept) reads the
+   facts 0.875, the held-out 0.605, the questions 21 and 25, and its night runs normally (0.205 -> 0.165, the gauge 0.688 ->
+   0.773). tools/transplant.py builds it on a copy in a minute; applying it to the served body is the user's decision.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).

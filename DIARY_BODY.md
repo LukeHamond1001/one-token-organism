@@ -8639,3 +8639,9 @@ THE NIGHT FROM THE DAMAGED STATE (16:15-16:40, the dusk copy of day 265): stuck 
 rounds (0.287, 0.262, 0.260, 0.263, 0.254, 0.265; the healthy night 0.195 to 0.154), its gauge 0.546 -> 0.602, the held-out
 0.58 -> 0.59. The cortex sits in a basin the night's lesson at its rate barely climbs; recovery by nights alone would take
 many. The cortex transplant is measured on a copy next; whether it is ever applied to the served body is the user's call.
+THE TRANSPLANT MEASURED (16:16-17:11, on a copy): the healthy cortex of day 264's dusk placed into the body of the morning after
+night 227, the store (61339 slots), the utterance memory and the life kept: the facts by the cortex 0.875 (0.667 in the
+damaged body), the held-out 0.605, the parent's lines 0.690, the prefixes 24 of 26, the questions 21 and 25 of 30; a night on
+it ran normally (the loss 0.205 -> 0.165, its gauge 0.688 -> 0.773, the held-out to 0.616), where the night from the damaged
+state stayed flat at 0.26. The repair is one organ restored to sixteen minutes before the divergence with nothing since lost;
+whether it is applied to the served body is the user's call, by their word that the night stands.
