@@ -156,6 +156,16 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    6 or more of 10, the day's own-symbol junk not up (a sure forecast was decisive already; the unsure is untouched). The bound
    first: sharp_base 60 and 100 on the live ruler; if 100 does not lift the live count past 10, the choice's sharpness is not
    the cause and the trace of a single question tick by tick comes next.
+   RE-DERIVED (2026-09-16, 04:20, from the rehearsals on the served body): three facts told once before a night answered 3 of 3
+   minutes later and 1 of 3 after the night, live; read greedily on the morning save they answer 3 of 3 verbatim and seven facts
+   never told 0 of 7. The memory is intact; the live loss is the choice: after "what has wool?" the cortex's habit ("i do.",
+   "yes.") and the sure recall ("a sheep has wool") compete for the first symbol, the sum's argmax is the recall's, the margin
+   is thin, and the sample lands on the habit half the time. The copy measurements of sharp_conf were made at a floor mood (the
+   readout at 8, where a fourfold sharpening only restores the healthy 25) on crowded taught questions; this is the uncrowded
+   case at a healthy mood (the readout 23-24), where the certainty is high exactly at the answer. Predicted with sharp_conf 3 on
+   the served body: the once-told facts answered live after a night at 2 of 3 or better (from 1 of 3), the same day 3 of 3; the
+   taught live count not down; the parent's answer smiles and answered-before-B not down; junk not up. Falsified if the
+   after-night count stays at 1 of 3 over two sets of three, or the parent's counts fall by a fifth.
 14. Awake replay during the pauses. Ruler: the fact sentences, held-out.
    DERIVED (13:30): the night replays the utterances whole a thousand times a night and the cortex alone still answers 0 of 30:
    the cortex's failure at the question is structural (the answer sits across a pause the window carries but the lesson does not

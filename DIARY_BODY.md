@@ -8490,3 +8490,9 @@ its waits: the mood held, -0.46 to -0.19, the readout at 23-24): the three never
 1 of 3 after it ("a lemon" at 1.5 s; "what has wool?" -> "i do. he is wet", "what is salty?" -> "the shall I"); the taught
 questions 16-30 answered 8 of 15 in the child's turn ("we drink water and milk", "a bird has wings", "bees make honey", "we
 sleep in a bed", "honey is sweet", "fins", "snow is white", "ducks swim"), the taught set 16 of 30 live over the two sessions.
+THE ONCE-TOLD MEMORY IS INTACT (04:17): read greedily on the morning save after night 214, the three facts told once before the
+night answer 3 of 3 verbatim and seven facts never told 0 of 7; live they answered 1 of 3. The loss is the choice: the cortex's
+habit ("i do.", "yes.") against a sure recall for the first symbol, the sample on the habit half the time. Decisiveness by
+certainty (sharp_conf 3), measured before only on copies at a floor mood, goes on the served body at night 215's save, with a
+rehearsal after it (the three old facts asked again; three new facts told once) and another after night 216 (the new three
+asked after their night). Predicted: after-night recall 2 of 3 or better; the parent's counts not down.
