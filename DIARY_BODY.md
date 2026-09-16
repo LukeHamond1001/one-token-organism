@@ -8440,3 +8440,12 @@ the store 27250 (+1957); answer smiles 9 (18 the day before), junk 8, its own qu
 at this save (the reload at 23:53:55, served again 23:54:50; the guard re-armed with the same flags). The store reaches the
 capacity in under three days at this rate; 65536 (the fade's horizon of nineteen nights at two thousand a day) goes on at
 night 211's save.
+NIGHT 211 (ended 00:48, the 201st row; the log's day 243, facts 21-30 under form 2): the dusk's held-out 0.619 (0.647, 0.638,
+0.629, 0.619 over four dusks: a drift to derive if the night does not restore it), the facts by the cortex at dusk 0.845; the day:
+answer smiles 14, junk 6, its own question marks 27, frowns 35, duty 0.346. THE CAPACITY WENT TO 65536 at this save (the reload
+at 00:48:54, served again 00:49:49 with the hold and form 2; the guard re-armed with the same flags; the store 29346 at the load).
+THE PARENT OF 240, 241 AND 243 REPORTED (00:50): 177/180/178 lines; A's questions with a word of the child's before B 67%, 70%,
+75%; fact answers in its own turn 4 (facts 2, 4, 5, 10 on day 240), 1, 1; answer smiles 18, 9, 14; turns of three known words or
+more 29, 28, 33; its own question marks 14, 24, 27; talk-overs 107, 105, 87; smiles 267/283/281, frowns 36/38/35. Whole
+utterances of its own: "I like my bed", "shall we go to bed", "what is hard?", "bread and honey", "snow gone now?". One line
+lost at the aborted 242 relaunch; no deferral. The next parent (244-246) spawned at the 201st row.
