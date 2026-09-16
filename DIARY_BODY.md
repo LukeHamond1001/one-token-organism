@@ -8567,3 +8567,9 @@ before B 58%, 59%, 69%; fact answers in its own turn 1, 3, 4 ("fish live in wate
 or more 15, 31, 29 ("the sea is salty", from the rehearsals' telling); its own question marks 27, 20, 23; smiles 180/228/251,
 frowns 23/31/35; talk-overs rising with its own speech (61, 96, 101). The night boundary destroys one or two queue lines
 whatever their place in a row. The next parent (257-259) spawned at the 210th row.
+NIGHT 221 (ended 10:23, the 211th row; the log's day 257, facts 21-30): the held-out 0.623 (the dusk 0.600, the day's fall
+-0.025), the facts by the cortex 0.890, the old lines 0.465; the mouth completes 24 of 26 prefixes and answers 22 of 30
+questions at two rests and 23 at eight; the rephrased 14; the branch 9 of 9 and 10 of 12; the store 48637; the day: answer
+smiles 9, junk 9, duty 0.293. THE DAY'S LESSON AT A THIRD WENT ON THE SERVED BODY at this save (the reload at 10:23:56, served
+again 10:24:51, wake_base 0.3 beside the capacity, the hold and its form; the guard re-armed the same): two days, the dusk's
+fall the ruler, -0.015 or better predicted, -0.025 or worse on either day the falsifier.
