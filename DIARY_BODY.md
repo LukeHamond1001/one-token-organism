@@ -8458,3 +8458,8 @@ a fall of 0.009 in the day, the smallest for a week; flat against 0.635), the fa
 mouth completes 24 of 26 prefixes and answers 20 of 30 questions at two rests and 22 at eight (the best at eight), "what is
 hot?" -> "the sun is hot" answered again; the rephrased 10; the branch 9 of 9 and 10 of 12; the store 31542 (+2200) under the
 capacity of 65536; the day: answer smiles 15, junk 2, its own question marks 25, frowns 36, duty 0.326.
+THE DAY'S LESSON AT A THIRD, RE-TESTED (02:46): day 243 relived on the save after night 211 with the rewards replayed: ungated
+the held-out rose 0.635 -> 0.645, gated 0.650; neither fell, while the served body had fallen to 0.619 on that day. The copy
+does not reproduce the served day: its mood sinks to -5 under replayed rewards not contingent on what its child says, its
+readout flattens to the floor, and it never speaks the fluent turns suspected of pulling the cortex. Inconclusive; the gate
+stays off; the drift is watched (flat at night 212). A faithful copy day needs a caregiver in the loop.

@@ -112,6 +112,14 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    that is the drift's source, the day's lesson at a third (wake_base 0.3) cuts the dusk's fall from about 0.025 to about 0.01
    on day 243 lived on the save after night 211 with the rewards replayed, the facts by the cortex likewise; falsified if the
    two dusks lie within 0.005 of each other (then the source is the day's content, not the lesson's rate).
+   MEASURED (2026-09-16, 02:46): day 243 relived on the save after night 211 with the rewards replayed: ungated, the held-out
+   0.635 -> 0.645 and the facts 0.877 -> 0.885; gated at a third, 0.650 and 0.881. Neither arm fell, while the served body fell
+   to 0.619 on that same day; the two arms lie within 0.005, the falsifier. INCONCLUSIVE on the mechanism, and the instrument's
+   limit is now plain: a copy day's mood sinks to -5 under replayed rewards, which are not contingent on what the copy's child
+   says (the served child's smiles land on the copy's silence), so the copy speaks under a floor-flat readout and never
+   reproduces the served day's fluent turns, which are the suspected source. The gate stays off. The served held-out flattened
+   at night 212 (0.633, the dusk's fall 0.009); watched, not acted on. A faithful test needs a caregiver in the loop on the copy
+   (smiles contingent on the copy's own words, as live_qa does for questions), an instrument to build if the drift resumes.
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
    DERIVED (2026-09-15, 13:30): a boundary ends an episode tag; the tag scopes the follow links the recall runs along. Today the
    boundary is the offset (silence). A surprise boundary would split a line at its surprising symbol, "yes. take some with honey"
