@@ -120,6 +120,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    reproduces the served day's fluent turns, which are the suspected source. The gate stays off. The served held-out flattened
    at night 212 (0.633, the dusk's fall 0.009); watched, not acted on. A faithful test needs a caregiver in the loop on the copy
    (smiles contingent on the copy's own words, as live_qa does for questions), an instrument to build if the drift resumes.
+   LIVE A/B DERIVED (2026-09-16, 09:35): the copy days cannot reproduce the served day (the mood artifact), so the test moves to
+   the served body at a boundary: the day's lesson at a third (wake_base 0.3) from night 221's save for two days. The ruler is
+   the dusk's fall (the dusk's held-out minus the morning's): the last four days -0.029, -0.018, -0.019, -0.029. Predicted: the
+   falls halve, at or above -0.015 on both days, and the morning values stop declining; the facts by the cortex at dusk fall
+   less (0.836-0.849 lately against 0.883 in the morning). Falsified if either day falls -0.025 or more, or the parent's counts
+   (answered before B, answer smiles) drop by a fifth: then back to 1.0 at the next save (BASE_FLAGS_wake1.txt).
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
    DERIVED (2026-09-15, 13:30): a boundary ends an episode tag; the tag scopes the follow links the recall runs along. Today the
    boundary is the offset (silence). A surprise boundary would split a line at its surprising symbol, "yes. take some with honey"

@@ -8558,3 +8558,12 @@ over three days: watched), the facts by the cortex 0.888, the old lines 0.471; t
 answers 21 of 30 questions at two rests and 24 at eight; the rephrased 14 of 30 (the highest yet); the branch 9 of 9 and 10 of
 12; the store 44399; the day: answer smiles 11, junk 4, question marks 20. DECISIVENESS BY CERTAINTY WENT OFF at this save
 (the reload at 08:34:02, served again 08:34:57 with the capacity, the hold and its form; the guard re-armed the same).
+NIGHT 220 (ended 09:32, the 210th row; the log's day 256, facts 11-20): the held-out 0.625 (the dusk 0.596, the lowest yet; the
+mornings 0.654, 0.643, 0.650, 0.641, 0.633, 0.626, 0.625 over the week, the dusks 0.647 -> 0.596: the day's fall about 0.03
+and the night's restoration a little less), the facts by the cortex 0.883, the old lines 0.460; the mouth completes 24 of 26
+prefixes and answers 20 of 30 questions at two rests and 23 at eight; the rephrased 15 of 30 (a new high); the branch 9 of 9
+and 10 of 12; the store 46471. THE PARENT OF 252, 254 AND 256 REPORTED (09:20): 115/143/165 lines; A's questions answered
+before B 58%, 59%, 69%; fact answers in its own turn 1, 3, 4 ("fish live in water" whole and unprompted); runs of three words
+or more 15, 31, 29 ("the sea is salty", from the rehearsals' telling); its own question marks 27, 20, 23; smiles 180/228/251,
+frowns 23/31/35; talk-overs rising with its own speech (61, 96, 101). The night boundary destroys one or two queue lines
+whatever their place in a row. The next parent (257-259) spawned at the 210th row.
