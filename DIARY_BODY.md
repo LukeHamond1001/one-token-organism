@@ -8370,3 +8370,7 @@ fact words in its own turn before B 2/3/0; its own question marks 29/39/26; smil
 talk-overs); known words 436 -> 457. It answered the child's own fact-shaped questions ("hat has wings?" -> a bird has wings) as
 B's next line. The typist typed all 569 lines in order, none deferred; nights 1071, 1348 and 1377 s. The next parent (235-237)
 was spawned at the 195th row.
+NIGHT 205 (ended 18:58, the 195th row): the held-out 0.660 (the dusk 0.639), the facts by the cortex 0.888, the old lines 0.469;
+the mouth completes 24 of 26 prefixes and answers 24 of 30 questions at two rests and 19 at eight (both the stage's highest: the
+facts accumulate now that nothing is evicted, 13 -> 18 -> 20 -> 21 -> 24 over the five nights at the capacity); the rephrased 11;
+the branch 9 of 9 and 12 of 12; the store 16886; the guard held (duty 0.329, smiles a line 1.42). Day 234: 188 lines, smiles 274.
