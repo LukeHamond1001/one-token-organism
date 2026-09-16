@@ -355,6 +355,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    cortex of day 264's dusk transplanted into the current body (the store, the utterance memory and the life kept) reads the
    facts 0.875, the held-out 0.605, the questions 21 and 25, and its night runs normally (0.205 -> 0.165, the gauge 0.688 ->
    0.773). tools/transplant.py builds it on a copy in a minute; applying it to the served body is the user's decision.
+   MEASURED (17:38, the donor copy, the same draws as its control): at 0.99 the night's loss 0.203 -> 0.159 against 0.205 ->
+   0.165 at 0.999, its gauge 0.781 against 0.773, the held-out 0.616 in both; the parent's lines 0.683 against 0.705 and the
+   old lines 0.469 against 0.482, within a night's noise on those two. Not falsified on the stated rulers. ON THE SERVED BODY
+   from night 229's save; the falsifier there: no round's loss rising a fifth above the night's first over twenty nights, the
+   morning rulers not down.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).

@@ -8651,3 +8651,7 @@ night's gauge on its dreams 0.69, the old lines 0.488; the mouth completes 24 of
 two rests and 23 at eight; the rephrased 16 of 30 (a new high); the branch 9 of 9 and 10 of 12; the store 63401. The day (267):
 smiles 329, answer smiles 2, junk 5, duty 0.382. The transplant is not needed while this holds; the donor stays in the
 backups. THE FADE'S FLOOR WENT TO 0.25 OF THE MEAN at this save (the reload at 17:2x, served again 17:22:25; the guard re-armed).
+THE MOMENT'S HORIZON MEASURED (17:12-17:38, the donor copy, the same draws as its control): at 0.99 the night ran as at
+0.999 within a hundredth on its loss and its gauge (0.203 -> 0.159 and 0.781 against 0.205 -> 0.165 and 0.773), the
+held-out the same; the parent's lines and the old lines a hundredth or two lower, a night's noise. It goes on the served
+body at night 229's save; twenty nights without a diverging round is its test there.
