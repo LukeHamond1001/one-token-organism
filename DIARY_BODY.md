@@ -8453,3 +8453,8 @@ NIGHT 211's PROBE (00:52): the held-out 0.635 (the fifth night down: 0.657, 0.64
 0.877, the old lines 0.472; the mouth completes 24 of 26 prefixes and answers 18 of 30 questions at two rests and 20 at eight
 (the best at eight); the rephrased 7. The drift is real; the day's lesson at a third is re-tested on this night's save (day
 243 lived twice with the rewards replayed), the dusk's held-out the ruler.
+NIGHT 212 (ended 02:01, the 202nd row; the log's day 245, facts 1-10 retold under form 2): the held-out 0.633 (the dusk 0.626:
+a fall of 0.009 in the day, the smallest for a week; flat against 0.635), the facts by the cortex 0.879, the old lines 0.482; the
+mouth completes 24 of 26 prefixes and answers 20 of 30 questions at two rests and 22 at eight (the best at eight), "what is
+hot?" -> "the sun is hot" answered again; the rephrased 10; the branch 9 of 9 and 10 of 12; the store 31542 (+2200) under the
+capacity of 65536; the day: answer smiles 15, junk 2, its own question marks 25, frowns 36, duty 0.326.
