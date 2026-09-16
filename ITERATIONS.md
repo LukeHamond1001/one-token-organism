@@ -134,6 +134,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    and a third of the lesson's rate does not set it. OFF at night 224's save (back to 1.0). The drift's source stays open: the
    day's content (which lines, which of the child's own turns) rather than the lesson's rate; the next derivation must find
    what a hard day has that a soft day lacks (the caregiver log holds both: days 259 and 260 side by side).
+   THE FALL TABULATED (12:21): twenty-two days aligned by time, each dusk against its morning: the falls scatter from +0.008 to
+   -0.070 around a mean near -0.02 (a scatter of 0.018), and no day-level feature tracks them: the child's own characters
+   (+0.09), its duty (+0.06), its turns of three words (+0.04), the parent's rare words (+0.09), near-new words (+0.03),
+   talk-overs (+0.10), lines (+0.08). The nights restore a little less than the days take, a net -0.0016 a morning. The two-day
+   test at a third could not resolve a third of the fall against that scatter (its falsifier was set too tight); a fair test
+   needs about eight days per arm, deferred behind the demo. The revert stands, by the law.
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
    DERIVED (2026-09-15, 13:30): a boundary ends an episode tag; the tag scopes the follow links the recall runs along. Today the
    boundary is the offset (silence). A surprise boundary would split a line at its surprising symbol, "yes. take some with honey"

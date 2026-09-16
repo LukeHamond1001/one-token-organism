@@ -8596,3 +8596,7 @@ and answers 21 of 30 questions at two rests and 23 at eight; the rephrased 15; t
 0.344 against 0.311, turns of three words or more 50 against 43) and more rare words in the parent's lines (190 against 169);
 both suspects lean the same way, the differences modest. The dusk's fall is tabulated against those features over the last
 ten days next.
+THE DUSK'S FALL OVER TWENTY-TWO DAYS (12:21): from +0.008 to -0.070, a mean near -0.02 and a scatter of 0.018, tracking none of
+the day's features (the child's own speech, the parent's rare words, the talk-overs, the line count, all under 0.15); the
+nights restore a little less than the days take, a net -0.0016 a morning. The lesson-rate test of two days could not resolve a
+third of the fall against that scatter; a fair test needs eight days an arm and waits behind the demo.
