@@ -213,6 +213,9 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    serve_command carry --bag-rest-decay 0.97; the pre-hold set kept). The falsifier live: the parents' fact words in the child's
    turn before B (2-3 of 10 a day) and the whole-fact anticipation smiles rise over the next days; the held-out and the branch
    hold; the child does not chain across lines through the pauses (junk and talk-over frowns not up).
+   ON THE SERVED SAVE (20:34; the save after night 206, the caregiver's smiles): with the hold 10 and 9 of 30 live (12 ever),
+   without it 1 of 30. The instrument undercounted the hold's answers ('ce is coldd', the 'i' said in the question's last tick);
+   fixed after this reading. The first day under the hold on the served body is read at night 207 (the parent's counts).
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).

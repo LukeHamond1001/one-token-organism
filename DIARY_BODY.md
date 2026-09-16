@@ -8394,3 +8394,5 @@ tally at night 207 and the next days' parent counts are the ruler. The live inst
 the hold reads 10 and 9 of 30, and undercounts: "what is cold?" -> "ce is coldd", the 'i' said in the question's last tick
 before the window; fixed. The instrument's mood sinks to the floor under back-to-back questions (the value's expectation of the
 answer smile unmet two times in three); it now interleaves the day's ordinary exchanges between questions (--interleave 1).
+THE LIVE MOUTH ON THE SERVED SAVE (20:34; the save after night 206): with the hold 10 and 9 of 30, without it 1 of 30, the
+instrument still undercounting a symbol said in the question's last tick.
