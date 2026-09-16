@@ -8501,3 +8501,10 @@ NIGHT 215 (ended 04:53, the 205th row; the log's day 248, 117 lines, cut by the 
 prefixes and answers 17 of 30 questions at two rests and 21 at eight; the rephrased 9; the branch 9 of 9 and 10 of 12; the
 store 37165. DECISIVENESS BY CERTAINTY WENT ON THE SERVED BODY at this save (the reload at 04:53:22, served again 04:54:17:
 sharp_conf 3 beside the capacity, the hold and its form; the guard re-armed with the same flags). The third rehearsal begins.
+THE THIRD REHEARSAL (04:58-05:04, the start of the log's day 249, decisiveness by certainty live; the body's mood -4.5 at the
+start, its readout on the floor, and -5.8 at the end): the three facts told once two nights before answered 3 of 3 ("a lemon
+is", "a sheep has wool", "the sea is salty"; 1 of 3 the morning before without the decisiveness); three new facts told once
+and asked minutes later 1 of 3 ("a hill is"; "what is loud?" -> "is yes. whthe su"). Four of six both mornings: not yet a
+verdict on the choice; the mood at the day's start is the confound (right after a night and a reload the readout sat at its
+floor). The fourth rehearsal moves to mid-day, when the parent's smiles have lifted the mood; the body's mood is logged
+through a day to place the recording.
