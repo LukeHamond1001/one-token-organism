@@ -8584,3 +8584,8 @@ in its own turn 2, 5, 3 ("the sun is up in the day" whole; "grass is green", "an
 "what is hard?" on day 259, was answered under a reworded line, and said "a rock is hard" unprompted the next day; runs of four
 known words 4, 9, 5; its own question marks 28, 30, 25; smiles 215/249/262, frowns 37/34/36; known words 657 -> 690. One line
 destroyed at a night boundary in three. The next parent (262-264, facts 21-30 first) spawned at the 213th row.
+NIGHT 223's DUSK (12:15; the second day with the day's lesson at a third, the log's day 260): the held-out 0.589 against the
+morning's 0.624, a fall of -0.035, the week's largest, after the first day's +0.002; the old lines 0.425. The test is
+falsified on its second day and the lesson's rate returns to one at night 224's save. The day's fall is episodic: day 259 did
+not fall and day 260 fell hard under the same rate, so the source is in the day's content, to be found by comparing those two
+days' lines and the child's turns, not in the lesson's gain.

@@ -129,6 +129,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    DAY ONE LIVE (11:23): the dusk's fall +0.002 (0.623 -> 0.625) against -0.018 to -0.029 on the four days before; the old
    lines 0.481 after the night (0.455-0.471 for a week); the questions, prefixes and branch unmoved; the parent's counts within
    their noise (answered before B 69%, answer smiles 7). The second day decides.
+   DAY TWO LIVE (12:19): the dusk's fall -0.035 (0.624 -> 0.589), the week's largest, after day one's +0.002; the old lines
+   0.425 at that dusk. FALSIFIED by the second day: the day's fall is episodic, some days pulling hard and some not at all,
+   and a third of the lesson's rate does not set it. OFF at night 224's save (back to 1.0). The drift's source stays open: the
+   day's content (which lines, which of the child's own turns) rather than the lesson's rate; the next derivation must find
+   what a hard day has that a soft day lacks (the caregiver log holds both: days 259 and 260 side by side).
 9. Event boundaries from surprise as well as silence. Ruler: the branch, held-out.
    DERIVED (2026-09-15, 13:30): a boundary ends an episode tag; the tag scopes the follow links the recall runs along. Today the
    boundary is the offset (silence). A surprise boundary would split a line at its surprising symbol, "yes. take some with honey"
