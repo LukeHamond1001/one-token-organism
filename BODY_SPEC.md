@@ -1253,3 +1253,11 @@ pause of thirty-two rests (19, 20, 23, 20 of 30 at 2, 8, 16, 32 against 20 and 1
 12 of 30 against the control's 3 and 2, the never-typed facts 6 of 10, the gate opening about two seconds after the question.
 The lesson: an organ's timescale is a physiological constant to be set from the body's own latencies, and a ruler that reads
 the organ directly (the greedy readout) can pass while the body, read as it acts, fails.
+*Addendum to the thirtieth defect (night 209).* The first form of the hold kept the world's context at the quiet rate while
+the body spoke, and the query's geometry during its own answer no longer matched the keys (the questions at two rests 21 to
+16). The second form faded the state by the body's own symbols, and then the keys depended on what the body had said: when
+it answered before the other voice, that voice's answer was written under a context faded to nothing, and one fact's
+retellings landed in two key forms (3 of 10 for the facts retold that day). The form that stands (`bag_own_fade` 2): the
+state is the world's alone, faded by the symbol rate per world symbol and the quiet rate per quiet tick; the query fades its
+world part by the symbol rate per own symbol, beside the efference copy's shift. The keys never depend on what the body said;
+the query reads as if the world had said it.

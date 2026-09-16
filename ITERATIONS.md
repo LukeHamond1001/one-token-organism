@@ -239,6 +239,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the two-rest count to the save's own ceiling (the no-hold 19) and keeps the pause's gain (20 against 14 at eight). Within one
    of the prediction; the falsifier not met. ON THE SERVED BODY from night 208's save (~22:10): --bag-own-fade 1 beside the hold
    (BASE_FLAGS, guard_args, serve_command; the previous set kept as BASE_FLAGS_pre_ownfade.txt).
+   THE FORM'S SECOND FLAW (23:09, night 209, the first day at form 1): the ten facts retaught that day answered 3 of 10 at two
+   rests while the twenty taught under the served form answered 7 of 10 each. On the log, the child spoke before the other
+   voice on nine of those ten questions ("ice", "fish live", "birds", "rain falls": the live answering itself), and form 1 faded
+   the world's context by those own symbols, so the other voice's answer was written under a context faded to nothing: one
+   fact's retellings landed in two key forms. The keys must be the world's alone; the symbol-rate fade for own symbols belongs
+   in the query, beside the efference copy's shift (form 2, bag_own_fade 2; test 64: the state as form 0, the query as form 1).
+   On the save after night 209 form 2 reads 17 and 17 of 30 at two and eight rests, form 1's numbers exactly (the same query).
+   ON THE SERVED BODY from night 210's save (~00:05). Predicted: the facts retaught from now on keep 7 of 10 or better within a
+   night of their retelling; facts 1-10 recover when retold (about three days); the parent's answer smiles hold or rise.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).

@@ -8426,3 +8426,9 @@ days before), duty 0.322, junk 2, its own question marks 14 (44 the day before),
 the night restored little; 0.657, 0.649, 0.640 over three nights, to watch), the facts by the cortex 0.883, the old lines 0.458;
 the mouth completes 24 of 26 prefixes and answers 17 of 30 questions at two rests and 17 at eight (15 and 16 the night before,
 under the served form); the rephrased 7; the branch 9 of 9 and 11 of 12; the store 25293 (+1983).
+THE FORM'S SECOND FLAW (23:09): on the save after night 209 the ten facts retaught that day answer 3 of 10, the other twenty 7
+of 10 each. The log shows why: on nine of those ten questions the child spoke before the other voice ("ice", "fish live",
+"birds", "rain falls"), and form 1 faded the world's context by its own symbols, so the answer's onset was written under a
+context faded to nothing, the retellings of one fact in two key forms. The keys must be the world's alone; the symbol-rate
+fade for own symbols belongs in the query beside the efference copy's shift (form 2; test 64). Form 2 reads exactly as form 1
+on that save (17 and 17); it goes on the served body at night 210's save, the flags and the guard updated.

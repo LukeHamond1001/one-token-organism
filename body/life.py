@@ -711,6 +711,11 @@ class Life:
         w = self.bag_w
         for _ in range(min(int(self.n_own), 64)):
             w = self.m.shift(w)
+        if int(self.cfg.get("bag_own_fade", 0)) == 2 and self.n_own > 0:
+            # form 2: the world's context in the query fades by the symbol rate for each symbol the body said since the world's
+            # last (as the shift advances its lag), the state itself untouched (the keys are the world's alone)
+            rest_ = float(self.cfg.get("bag_rest_decay", 0.0)) or float(self.cfg["bag_decay"])
+            w = w * (float(self.cfg["bag_decay"]) / rest_) ** min(int(self.n_own), 64)
         q = w + float(self.cfg["bag_own_weight"]) * self.bag_o
         lam = float(self.cfg.get("key_ctx", 0.0))
         if lam > 0.0:                                          # the slow context: the world's latest utterance, whole (the question)
@@ -756,12 +761,17 @@ class Life:
         ex = self.m.E.weight[int(i)]
         rest_ = float(self.cfg.get("bag_rest_decay", 0.0)) or float(self.cfg["bag_decay"])
         self.bag_o = (float(self.cfg["bag_decay"]) / rest_) * self.bag_o
-        if int(self.cfg.get("bag_own_fade", 0)):
-            # THE WORLD'S CONTEXT FADES BY ITS OWN SYMBOLS TOO (bag_own_fade; 2026-09-15, night 207): the query shifts the world's
+        if int(self.cfg.get("bag_own_fade", 0)) == 1:
+            # THE WORLD'S CONTEXT FADES BY ITS OWN SYMBOLS TOO (bag_own_fade 1; 2026-09-15, night 207): the query shifts the world's
             # context a lag for every symbol it says (the efference copy), so its fade must advance by the symbol rate for every own
             # symbol as well, as it would have for the other voice's; under the hold alone the world's context faded at the quiet
             # rate while the child answered, and the query's geometry during its answer no longer matched the keys written while the
             # other voice answered (the questions at two rests 21 -> 16). 0 = the form served from night 206; 1 = the symbol rate.
+            # THE FLAW OF FORM 1 (night 209): fading the state itself let the child's speech shape the KEYS: when it answered before
+            # the other voice, the onset of that voice's answer was written under a context faded to nothing, and one fact's
+            # retellings landed in two key forms (the ten retaught that day answered 3 of 10). Form 2 leaves the state to the
+            # world's own timing and puts the symbol-rate fade in the query alone (the bag property), where the efference copy's
+            # shift already lives: the keys never depend on what the body said; the query reads as if the world had said it.
             self.bag_w = (float(self.cfg["bag_decay"]) / rest_) * self.bag_w
         self.bag_o = self.m.shift(self.bag_o) + ex; self.n_own += 1
 
