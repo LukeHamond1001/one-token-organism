@@ -11,7 +11,7 @@ def arg(name, default):
     for i, a in enumerate(sys.argv[1:], 1):
         if a == "--" + name and i + 1 < len(sys.argv): return type(default)(sys.argv[i + 1])
     return default
-port = arg("port", 8020); facts_range = arg("facts", "1-30"); tell = arg("tell", ""); ask_tell = arg("ask_tell", 1); day = arg("day", 246)
+port = arg("port", 8020); facts_range = arg("facts", "1-30"); tell = arg("tell", ""); ask_tell = arg("ask_tell", 1); day = arg("day", 246); ask = arg("ask", "")   # --ask "q|a;...": asked, never told (a fact told in an earlier session)
 window = arg("window", 60); smile = arg("smile", 1); freeze = arg("freeze", 1); quiet_ticks = arg("quiet", 8); max_wait = arg("max_wait", 200)
 BASE = f"http://localhost:{port}"
 def get(path):
@@ -24,8 +24,9 @@ def own_since(n):
 def tick_now(): return get("/state?since=0")["n"] // 2
 STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
 pairs = [tuple(s.strip() for s in l.split("|")[:2]) for l in open(os.path.join(ROOT, "tools/facts_stage5.txt")) if "|" in l]
-lo, hi = (int(x) for x in facts_range.split("-")); pairs = pairs[lo - 1:hi]
+lo, hi = (int(x) for x in facts_range.split("-")); pairs = pairs[lo - 1:hi] if hi >= lo else []
 told = [tuple(s.strip() for s in t.split("|")) for t in tell.split(";") if "|" in t]
+asked = [tuple(s.strip() for s in t.split("|")) for t in ask.split(";") if "|" in t]
 R = [json.loads(l) for l in open(os.path.join(ROOT, "data/watch2_caregiver.jsonl")) if l.strip()]
 L = [(r["text"], "other" if r.get("voice") == "b" else "you") for r in R if r.get("day") == day and r["action"] == "line"]
 ordinary = [(L[i], L[i + 1]) for i in range(0, len(L) - 1, 2) if L[i][1] == "you" and L[i + 1][1] == "other" and not any(f in L[i][0] for f, _ in pairs)]
@@ -95,6 +96,7 @@ try:
         for q, a in told:
             say(q, "you", read=False); time.sleep(4.0); say(a, "other", read=False)
         print(f"told once: {len(told)} never-typed facts", flush=True)
+    if asked: run_set(asked, "never-typed, told in an earlier session (after the night)")
     if pairs: run_set(pairs, f"taught {facts_range}")
     if told and ask_tell: run_set(told, "never-typed, the same day")
     st = get("/insides"); print(f"after: mood {st['mood']:.2f} sharp {st['sharp_now']} pressure {st['sleep_pressure']}", flush=True)
