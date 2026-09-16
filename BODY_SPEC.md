@@ -1237,3 +1237,19 @@ capacity should stand above nineteen days of writes so that the fade, not the ca
 constant of the organ (`store_cap`, 32768 on the served body from night 201's save; the read costs 5 ms a tick against 1.5).
 The lesson: an organ's capacity is a physiological constant to be set from the world's rate of writing, and the eviction of the
 weakest is the eviction of the newest one-shot memories, exactly the ones the store exists to keep.
+
+**The thirtieth defect (2026-09-15, the live ruler): the cue faded before the gate opened.** Read greedily two rests after a
+question, the mouth answered twenty of thirty; asked live, with the gate and the sampled choice, three. The tick-by-tick trace
+showed the readout's top symbol right ('t', the sun) at a sure forecast for five ticks after the question, the gate at its floor
+of five in a hundred for twelve to forty ticks (a caution learned from the talk-over frowns), and the world's context fading 0.8
+a tick by the clock in the quiet, so that when the gate opened the cue's norm was a tenth, the recall (a dot product, the norm
+its temperature) had flattened to the generic mean, and the child said "yes.". Sharpening the choice made it worse; scaling
+the decisiveness by certainty added nothing. A context fades as new symbols displace it; in the quiet, working memory holds
+it (prefrontal delay activity holds a cue for seconds). The fast bags now fade by `bag_decay` per symbol of their own kind and
+by `bag_rest_decay` per quiet tick (0.97 on the served body from night 206's save; 0 = the old one rate). The keys are unchanged
+in direction (an answer's onset is the question's still, merged into the same slot), so the store's structure does not move;
+only the cue's norm through the pause. Measured on a copy with the caregiver's smiles mirrored: the greedy answers survive a
+pause of thirty-two rests (19, 20, 23, 20 of 30 at 2, 8, 16, 32 against 20 and 14 at 2 and 8); the live mouth answers 12 and
+12 of 30 against the control's 3 and 2, the never-typed facts 6 of 10, the gate opening about two seconds after the question.
+The lesson: an organ's timescale is a physiological constant to be set from the body's own latencies, and a ruler that reads
+the organ directly (the greedy readout) can pass while the body, read as it acts, fails.

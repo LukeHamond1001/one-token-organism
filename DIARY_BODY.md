@@ -8374,3 +8374,9 @@ NIGHT 205 (ended 18:58, the 195th row): the held-out 0.660 (the dusk 0.639), the
 the mouth completes 24 of 26 prefixes and answers 24 of 30 questions at two rests and 19 at eight (both the stage's highest: the
 facts accumulate now that nothing is evicted, 13 -> 18 -> 20 -> 21 -> 24 over the five nights at the capacity); the rephrased 11;
 the branch 9 of 9 and 12 of 12; the store 16886; the guard held (duty 0.329, smiles a line 1.42). Day 234: 188 lines, smiles 274.
+THE HOLD OF WORKING MEMORY, MEASURED MOOD-FAIR (19:49): the instrument smiling as the caregiver does (a known word said, the answer's
+growing smile; 90-121 smiles a run), on the dusk copy of 232: the control answers 3 and 2 of 30 live, the hold (bag_rest_decay
+0.97) 12 and 12 of 30, 18 ever, the predicted count on both passes, at the copy's floor mood (-6) where the readout is flattest;
+the never-typed facts 6 and 1 of 10. The trace with the hold: the cue's norm above 1.1 for eleven ticks after the question, 't' on
+top, the gate opening at 2.2 s. It goes on the served body at night 206's save; the pre-hold flags kept. The decisiveness constant
+(sharp_conf) stays off: sharper was worse, and certainty-scaled added nothing over the hold.

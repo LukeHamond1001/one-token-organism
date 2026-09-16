@@ -207,6 +207,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    (against a fall to 0.5 and 'y' without the hold); the gate opens at the eleventh tick (2.2 s) and the child says "th m for..."
    (this question is crowded on the copy: the greedy readout says "the duck does." to it too). With sharp_conf 3 on top of the
    hold, 10 and 8 of 30 at mood -6 (the answers-only smiles): no lift over the hold alone; the decisiveness is not the lever.
+   MEASURED, MOOD-FAIR (19:49; the instrument smiling as the caregiver does, 90-121 smiles a run): the control answers 3 and 2 of
+   30 live; the hold 12 and 12 of 30 (18 ever), the predicted count met on both passes at the copy's floor mood; the never-typed
+   6 and 1 of 10 (7 ever). LANDED on copies. ON THE SERVED BODY from night 206's save (~20:10; BASE_FLAGS, guard_args and
+   serve_command carry --bag-rest-decay 0.97; the pre-hold set kept). The falsifier live: the parents' fact words in the child's
+   turn before B (2-3 of 10 a day) and the whole-fact anticipation smiles rise over the next days; the held-out and the branch
+   hold; the child does not chain across lines through the pauses (junk and talk-over frowns not up).
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
