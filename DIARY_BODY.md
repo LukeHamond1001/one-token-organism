@@ -8520,3 +8520,9 @@ green leaf", "what has wool?" -> "iav i wht"). Across the sessions the after-nig
 of 3, 3 of 3 and 1 of 6: the memory holds greedily, the live choice does not hold it reliably, and the mood falls as the
 failures go unsmiled. Next: three new facts told twice each, as a parent repeats, mid-day after night 217, asked mid-day after
 night 218 with the old six; the rehearsal's parent reports its smiles and the mood at each question.
+THE PARENT OF 248, 250 AND 251 REPORTED (06:24): 117/138/153 lines (the first two days cut by rehearsals); A's questions
+answered before B 41 of 58, 46 of 69, 50 of 77; fact answers in its own turn 2, 3, 1; unprompted whole sentences 9, 17, 16;
+its own question marks 15, 26, 24; smiles 188/223/204 (answer smiles 7, 6, 9), frowns 24/31/33. On day 251 it said "ice is
+cold" unprompted after "why is the stone so cold?", a question in the parent's own words. A mechanical finding: a queue row
+that straddles a night loses its remaining lines at the relaunch (the brief now puts facts in a row's first pair). The next
+parent (252-254, facts 21-30 first) spawned at the 207th row.
