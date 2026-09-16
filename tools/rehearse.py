@@ -45,10 +45,11 @@ def smile_at(level, dur=2.4):
 def face_tend():
     if face_off_at[0] and time.time() >= face_off_at[0]: post("/face", {"expr": 0}); face_off_at[0] = 0.0
 def say(text, who, keys=None, read=True):
+    win = window if read else 20                                             # an ordinary line: the typist's four seconds
     wait_quiet(); n0 = get("/state?since=0")["n"]; post("/type", {"text": text, "who": who})
     while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
-    got = ""; seen = 0; answered = False; t0 = time.time(); answered_at = None
-    while time.time() - t0 < window * 0.2:
+    got = ""; seen = 0; answered = False; t0 = time.time(); answered_at = None; post_then = None
+    while time.time() - t0 < win * 0.2:
         time.sleep(0.2); face_tend(); txt, n = own_since(n0)
         if txt != got:
             got = txt
@@ -61,7 +62,7 @@ def say(text, who, keys=None, read=True):
                     wd = done[seen]; seen = len(done)
                     if wd in KNOWN and time.time() - word_tick.get(wd, 0) > 24: smile_at(2.0); word_tick[wd] = time.time()
                 else: seen = max(seen, len(done))
-        if answered and 'post_then' in dir() and post_then and time.time() >= post_then[1]:
+        if post_then and time.time() >= post_then[1]:
             smile_at(post_then[0]); post_then = None
     if keys and not answered: answered = any(k in got.lower() for k in keys)
     face_tend(); post("/face", {"expr": 0}); face_off_at[0] = 0.0
