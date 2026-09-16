@@ -8542,3 +8542,7 @@ NIGHT 218 (ended 07:38, the 208th row; the log's day 252, 115 lines, cut by the 
 at two rests and 22 at eight; the rephrased 12; the branch 9 of 9 and 10 of 12; the store 42735; the day: answer smiles 10,
 junk 1, question marks 27. THE DECISIVENESS CONSTANT WENT FROM 3 TO 8 at this save (the reload at 07:38:52, served again
 07:39:47; the guard re-armed with the same flags). The sixth rehearsal, mid-day, decides it.
+THE MOOD THROUGH THREE HOURS (logged each minute, 05:05-08:04): within each day it swings between -5 and +5; for the first five
+to ten minutes after a night and a restart it sits at -4 to -6 and climbs under the parent's talk (+2 within eight minutes, +5
+within fifteen); each rehearsal pulled it down while it ran (the failures unsmiled) and the parent lifted it again after. At
+08:00 it stood at +4.8, and the sixth rehearsal began there.
