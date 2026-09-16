@@ -8629,3 +8629,9 @@ night's (the dusk copy is sixteen minutes of talk older than the night's start, 
 the served night's divergence was a chance event of the optimization on that night's draws, not a property of the state or
 the material. The night stands; night 227 tells whether the cortex recovers on its own. If it does not within three nights,
 the night's lesson needs a derived robustness (the ledger's item 38).
+THE DAMAGE LOCATED (16:15): between the dusk of day 264 and the morning after night 226 no weight of the transformer moved by
+more than 0.0014, and the whole cortex moved by its ordinary night's amount; the night's lesson moved it in a harmful
+direction, not by a shove. Beside the cortex the value critic has been running away for longer: band 5's value scale stood at
+2630 at that dusk already, 7807 after night 226, 50304 after 227, its head's weights at 1162; the store's strengths (max 2.4),
+the mood and the reward average are untouched by it, since what the head feeds is clamped. The night re-run from the healthy
+dusk copy was normal; the night is now re-run from the damaged state to see whether it is stuck by itself.
