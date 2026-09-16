@@ -8608,3 +8608,7 @@ the store 55006; the day: answer smiles 9, junk 10, A's questions answered befor
 ONE at this save (the reload at 13:10:11, served again 13:11:06 with the capacity, the hold and its form; the guard re-armed
 the same). The morning's held-out and the child's own speech now move in opposite directions across the week: the drift's
 derivation waits behind the recording, with the eight-day test.
+NIGHT 225 (ended 14:05, the 215th row; the log's day 263, facts 11-20, a quiet day of the child's, duty 0.271): the held-out
+0.621 (the dusk 0.609, the day's fall -0.004, the night +0.012), the facts by the cortex 0.885, the old lines 0.466; the mouth
+completes 24 of 26 prefixes and answers 21 of 30 questions at two rests and 23 at eight; the rephrased 13; the branch 9 of 9
+and 10 of 12; the store 57086; the day: answer smiles 6, junk 4.
