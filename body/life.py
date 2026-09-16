@@ -14,7 +14,7 @@ from .model import Organs, Store, CLOCKS
 PHYSIOLOGY = dict(
     symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
     wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_rest_decay=0.0, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, dream_old_share=0.0, wake_base=1.0, wake_dopa=0.0, wake_novel=0.0, reward_gain=0.0, utt_cap=4096, store_links=4, store_cap=8192, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
+    bag_decay=0.8, bag_rest_decay=0.0, bag_own_fade=0, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, dream_old_share=0.0, wake_base=1.0, wake_dopa=0.0, wake_novel=0.0, reward_gain=0.0, utt_cap=4096, store_links=4, store_cap=8192, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
     dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
     gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
     # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
@@ -756,6 +756,13 @@ class Life:
         ex = self.m.E.weight[int(i)]
         rest_ = float(self.cfg.get("bag_rest_decay", 0.0)) or float(self.cfg["bag_decay"])
         self.bag_o = (float(self.cfg["bag_decay"]) / rest_) * self.bag_o
+        if int(self.cfg.get("bag_own_fade", 0)):
+            # THE WORLD'S CONTEXT FADES BY ITS OWN SYMBOLS TOO (bag_own_fade; 2026-09-15, night 207): the query shifts the world's
+            # context a lag for every symbol it says (the efference copy), so its fade must advance by the symbol rate for every own
+            # symbol as well, as it would have for the other voice's; under the hold alone the world's context faded at the quiet
+            # rate while the child answered, and the query's geometry during its answer no longer matched the keys written while the
+            # other voice answered (the questions at two rests 21 -> 16). 0 = the form served from night 206; 1 = the symbol rate.
+            self.bag_w = (float(self.cfg["bag_decay"]) / rest_) * self.bag_w
         self.bag_o = self.m.shift(self.bag_o) + ex; self.n_own += 1
 
     def note_offset(self):

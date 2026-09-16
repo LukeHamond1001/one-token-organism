@@ -1468,11 +1468,24 @@ def test_working_memory_holds_in_the_quiet():
     print("62 working memory holds in the quiet: the world's context after ten quiet ticks", round(0.97 ** 10, 3), "of itself at 0.97,", round(0.8 ** 10, 3), "at the old rate")
 
 
+def test_own_symbols_fade_the_world_context():
+    """63 (2026-09-15): with bag_own_fade the world's context fades by the symbol rate for each symbol the body says (as the query
+    shifts it a lag for each), whatever the quiet rate; without it, by the quiet rate"""
+    a = tiny(bag_rest_decay=0.97, bag_own_fade=1); i = a.tok.token_to_id("a")
+    a.rest_tick(world=True); a.take_world(i); n0 = float(a.bag_w.norm())
+    a.rest_tick(); a.take_own(i)
+    assert abs(float(a.bag_w.norm()) / n0 - 0.8) < 1e-3, float(a.bag_w.norm()) / n0
+    b = tiny(bag_rest_decay=0.97, bag_own_fade=0); b.rest_tick(world=True); b.take_world(i); m0 = float(b.bag_w.norm())
+    b.rest_tick(); b.take_own(i)
+    assert abs(float(b.bag_w.norm()) / m0 - 0.97) < 1e-3
+    print("63 own symbols fade the world's context: 0.8 per own symbol with the switch, 0.97 without")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context]
     failed = 0
     for t in tests:
         try:

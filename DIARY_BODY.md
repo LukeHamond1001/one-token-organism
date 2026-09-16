@@ -8396,3 +8396,11 @@ before the window; fixed. The instrument's mood sinks to the floor under back-to
 answer smile unmet two times in three); it now interleaves the day's ordinary exchanges between questions (--interleave 1).
 THE LIVE MOUTH ON THE SERVED SAVE (20:34; the save after night 206): with the hold 10 and 9 of 30, without it 1 of 30, the
 instrument still undercounting a symbol said in the question's last tick.
+NIGHT 207 (ended 21:00, the 197th row; the first night after a day at the hold): the day 237's dusk fell hard on the cortex (the
+held-out 0.610, the facts 0.732) and the night restored it (0.657, 0.881), as on day 232; the old lines 0.482; the mouth
+completes 24 of 26 prefixes; the questions 16 of 30 at two rests (21 the night before) and 17 at eight (14); the rephrased 8
+(13); the branch 9 of 9 and 10 of 12; the store 21209. The parent's counts for the day at the hold: questions answered before B
+36 of 91 (25), answer smiles 10 (9), duty 0.294 (0.337), frowns 40 (38). The two-rest fall is derived to be a flaw in the hold's
+form: the world's context faded at the quiet rate while the child answered, though the query shifts it a lag per own symbol and
+the keys were written at the symbol rate; the fade must follow the symbols whoever says them (bag_own_fade, a disclosed switch).
+Measured next on this night's save, greedy by the pause, both forms.

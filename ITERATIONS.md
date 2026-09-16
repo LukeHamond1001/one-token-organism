@@ -216,6 +216,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    ON THE SERVED SAVE (20:34; the save after night 206, the caregiver's smiles): with the hold 10 and 9 of 30 live (12 ever),
    without it 1 of 30. The instrument undercounted the hold's answers ('ce is coldd', the 'i' said in the question's last tick);
    fixed after this reading. The first day under the hold on the served body is read at night 207 (the parent's counts).
+   NIGHT 207, THE FIRST DAY LIVE (21:05): the parent's questions answered before B 36 of 91 (25 the day before), the answer
+   smiles 10 (9), duty 0.294 (0.337), frowns 40 (38); but the greedy questions at two rests 21 -> 16 and the rephrased 13 -> 8
+   while the count at eight rests rose 14 -> 17. DERIVED (21:10): a flaw in the form. The query shifts the world's context a lag
+   for every symbol the body says, but under the hold that context faded at the quiet rate while the body answered, whereas the
+   keys were written with it fading 0.8 per symbol of the other voice's answer: the query's geometry during its own answer no
+   longer matched the keys. The context must fade by the symbol rate for every symbol, whoever says it, and by the quiet rate
+   only when no one speaks (bag_own_fade 1, a disclosed switch; 0 = the form served from night 206). Predicted on the save after
+   night 207: the questions at two rests back to 20 or more, at eight and sixteen unchanged or up; the live count unchanged or
+   up. Falsified if the two-rest count stays at 16: then the drop was the day's writes, not the geometry.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
