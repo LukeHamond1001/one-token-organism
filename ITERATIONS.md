@@ -203,6 +203,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the predicted 12, the second sunk with the copy's mood at -6: the instrument's smiles were a tenth of the world's (the
    caregiver smiles at every known word) and the readout's sharpness fell to its floor. The never-typed 3 and 2 of 10. The
    instrument now smiles as the caregiver does; the mood-fair pair (control against 0.97, and the never-typed) runs next.
+   THE TRACE WITH THE HOLD (19:13): after "what is hot?" the forecast's norm stays at 1.1-1.4 for eleven ticks with 't' on top
+   (against a fall to 0.5 and 'y' without the hold); the gate opens at the eleventh tick (2.2 s) and the child says "th m for..."
+   (this question is crowded on the copy: the greedy readout says "the duck does." to it too). With sharp_conf 3 on top of the
+   hold, 10 and 8 of 30 at mood -6 (the answers-only smiles): no lift over the hold alone; the decisiveness is not the lever.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
