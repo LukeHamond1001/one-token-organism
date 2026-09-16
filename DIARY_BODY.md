@@ -8474,3 +8474,9 @@ page with an ordinary exchange between each, the smiles contingent: 8 of 15 answ
 "the sea is salty") answered 3 of 3 minutes later ("a lemon i", "a sheep has woolwhat is big?", "the sea"). The mood sank from
 -2.5 to -6 over the session (the rehearsal's parent smiled less than the typist); the same three facts are asked again after
 night 214, and facts 16-30.
+THE PARENT OF 245, 246 AND 247 REPORTED (03:56): 184/184/107 lines (the third day cut by the rehearsal's freeze of the typist,
+03:08-03:25; facts 27-30 did not land); A's questions answered before B 55%, 66%, 65%; fact answers in its own turn 1, 5, 3
+("apple red" whole and ahead of B, "grass", "bees make", "honey sweet", "the sun", "sun makes"); whole phrases 7, 6, 6 ("the
+water is warm", "one egg and"); its own question marks 23, 30, 14; smiles 282/271/183, frowns 36/37/22, all talk-overs. A
+mechanical finding: the typist silently drops a line over 38 characters (the exchange breaks); the brief now carries the cap.
+The next parent (248-250, facts 21-30 first) spawned at the 204th row.
