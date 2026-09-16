@@ -8537,3 +8537,8 @@ falling -2.1 to -3.5 as the failures went unsmiled. Across the sessions the live
 night and 7 of 12 the same day; the greedy readout holds nearly all of them; the losses sit at word boundaries where the sample
 goes to the cortex's habit ("shall", "i do.", "yes."). The decisiveness constant is raised from 3 to 8 at night 218's save, the
 sixth rehearsal mid-day under it; falsified if the nine told facts answer under 5 of 9, then back to 3 at the next save.
+NIGHT 218 (ended 07:38, the 208th row; the log's day 252, 115 lines, cut by the fifth rehearsal): the held-out 0.633 (the dusk
+0.625), the facts by the cortex 0.888, the old lines 0.460; the mouth completes 25 of 26 prefixes and answers 19 of 30 questions
+at two rests and 22 at eight; the rephrased 12; the branch 9 of 9 and 10 of 12; the store 42735; the day: answer smiles 10,
+junk 1, question marks 27. THE DECISIVENESS CONSTANT WENT FROM 3 TO 8 at this save (the reload at 07:38:52, served again
+07:39:47; the guard re-armed with the same flags). The sixth rehearsal, mid-day, decides it.
