@@ -8485,3 +8485,8 @@ the rehearsal's questions; the night restored it fully: 0.635, 0.633, 0.649, 0.6
 lines 0.466; the mouth completes 24 of 26 prefixes and answers 19 of 30 questions at two rests and 23 at eight; the rephrased
 10; the branch 9 of 9 and 10 of 12; the store 35431. The second rehearsal began on the served body at the day's start: the
 three never-typed facts told before the night, asked after it, then the taught questions 16-30.
+THE SECOND REHEARSAL (04:02-04:15, the start of the log's day 248, the typist frozen, the rehearsal's parent attending through
+its waits: the mood held, -0.46 to -0.19, the readout at 23-24): the three never-typed facts told once before the night answered
+1 of 3 after it ("a lemon" at 1.5 s; "what has wool?" -> "i do. he is wet", "what is salty?" -> "the shall I"); the taught
+questions 16-30 answered 8 of 15 in the child's turn ("we drink water and milk", "a bird has wings", "bees make honey", "we
+sleep in a bed", "honey is sweet", "fins", "snow is white", "ducks swim"), the taught set 16 of 30 live over the two sessions.
