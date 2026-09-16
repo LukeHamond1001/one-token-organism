@@ -8645,3 +8645,9 @@ damaged body), the held-out 0.605, the parent's lines 0.690, the prefixes 24 of 
 it ran normally (the loss 0.205 -> 0.165, its gauge 0.688 -> 0.773, the held-out to 0.616), where the night from the damaged
 state stayed flat at 0.26. The repair is one organ restored to sixteen minutes before the divergence with nothing since lost;
 whether it is applied to the served body is the user's call, by their word that the night stands.
+NIGHT 228 (ended 17:22, the 218th row; the log's day 267): THE CORTEX RECOVERED ON ITS OWN. The facts by the cortex 0.577 at
+dusk and 0.857 in the morning (0.885 before the accident), the parent's lines 0.677, the held-out 0.599 (the dusk 0.588), the
+night's gauge on its dreams 0.69, the old lines 0.488; the mouth completes 24 of 26 prefixes and answers 21 of 30 questions at
+two rests and 23 at eight; the rephrased 16 of 30 (a new high); the branch 9 of 9 and 10 of 12; the store 63401. The day (267):
+smiles 329, answer smiles 2, junk 5, duty 0.382. The transplant is not needed while this holds; the donor stays in the
+backups. THE FADE'S FLOOR WENT TO 0.25 OF THE MEAN at this save (the reload at 17:2x, served again 17:22:25; the guard re-armed).
