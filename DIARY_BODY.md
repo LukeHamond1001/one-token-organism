@@ -8685,3 +8685,11 @@ marks 26, 26, 20; smiles 268/255/236, frowns 37/35/41; the child starting earlie
 talk-overs up). The soft days follow the divergent night and the two-night purge; the cycle retells the dropped chains. A
 mechanical finding: lines queued at a night are typed first the next day and delay that day's facts; the brief now asks for
 the depth to fall toward 45 as a day ends. The next parent (275-277, facts 21-30 first) spawned at the 222nd row.
+THE REVIEW'S FINDING (21:35): an independent review read the served saves' own constants and found three reverts that never took
+effect: decisiveness 8 (recorded off at night 219), the day's lesson at a third (recorded off at 224) and the fade's floor at
+a quarter (recorded back to a tenth at 231) all live, and the slow context in the key at 0.5 since day 206 (recorded reverted
+at night 191). The cause: a save carries its constants, a reload passes only the flags file's keys, and a key left out keeps
+the save's value; I had written that lesson for the copies' controls on the 15th and did not apply it to the served body. The
+store is still purging (41251). From night 233's save every revert is explicit in the flags and the slow context is explicit
+and disclosed as on; ops/served_cfg.py prints the effective constants after every reload. The verdicts of nights 219-232 are
+re-read in the ledger's item 39.

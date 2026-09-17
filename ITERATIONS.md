@@ -365,6 +365,22 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    old lines 0.469 against 0.482, within a night's noise on those two. Not falsified on the stated rulers. ON THE SERVED BODY
    from night 229's save; the falsifier there: no round's loss rising a fifth above the night's first over twenty nights, the
    morning rulers not down.
+39. The reload's inheritance (an operations defect, found by the independent review of 2026-09-16, 21:30). A save carries its
+   own constants; a reload passes only the flags file's keys; a key left out of the file keeps the save's value. Three reverts
+   recorded in this ledger as done never took effect: decisiveness (item 13, "off from night 219's save") ran at 8 through
+   night 232; the day's lesson at a third (item 8, "off at night 224's save") ran at 0.3 through night 232; the fade's floor at a
+   quarter (item 2, "back to 0.1 at night 231's save") ran on through night 232 and kept purging the store (42724, 41511,
+   41251). And the slow context in the key (item 27 of the spec, "reverted at night 191") has been live at 0.5 since day 206:
+   every measurement since, the hold's derivation and its forms included, was taken with it on. The verdicts drawn on those
+   nights are re-read accordingly: item 8's "episodic, not the rate" rests on an A/B whose control arm never existed, and
+   the eight days at 0.3 that followed by accident show the same falls as the days before (a mean near -0.02): the rate does
+   not set the fall, which stands, now on eight days rather than two; item 13's "no value separates" compared 0, 3 and 8 where
+   the last two sessions were both at 8: the claim narrows to "3 and 8 do not separate from each other"; item 2's purge
+   continued two nights longer than recorded. From night 233's save every revert is explicit in the flags (--sharp-conf 0
+   --wake-base 1.0 --store-floor-rel 0.1), the slow context is explicit and disclosed as on (--key-ctx 0.5; not changed before
+   the recording, since the store's keys were written under it), and ops/served_cfg.py prints a save's effective constants
+   against the flags after every reload. The lesson, in one line: the served constants are what the save says, and the flags
+   are only a delta on it.
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
