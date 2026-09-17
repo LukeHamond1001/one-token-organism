@@ -89,6 +89,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    armed at 01:20 with --store-floor-abs 0.07 explicit in BASE_FLAGS, guard_args and serve_command (the pre set kept as
    BASE_FLAGS_pre_floorabs.txt), the guard relaunched after it. Falsifier on the served body: the prefixes or the questions
    three under their range (20-23, 18-23) on the first three mornings under it; then --store-floor-abs 0 EXPLICITLY.
+   LANDED (2026-09-17, 02:02, night 237's save; pid 87146; served_cfg verified). THE FIRST NIGHT UNDER IT (238): 8028 slots
+   forgotten, the store 47967 by morning, the weakest at 0.070, the next band 2104; the curve 0.206 -> 0.154, the dreams
+   1024 at 23.7 symbols; the morning read the prefixes 22 of 26 ("ice is " lost, as on the cut copy), the questions 19 and
+   21, the rephrased 13, the branch 9/9 and 10/12, the held-out 0.607: nothing three under the reference. Mornings 239 and
+   240 close the falsifier's window.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by

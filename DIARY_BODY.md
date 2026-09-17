@@ -8763,3 +8763,6 @@ the dreams 0.85; the mouth completes 22 of 26 prefixes ("ice is " to "coming tom
 19 of 30 at two rests and 21 at eight; the rephrased 13; the branch 9 of 9 and 10 of 12. Against the reference (prefixes
 22-23, questions 18-21) nothing is three under: the falsifier is not met on the first morning. The day 282: 172 lines, 66 of
 86 A-lines with letters in its turn, 7 answered with I/yes/no/please before B, answer smiles 2, junk 5, duty 0.325, frowns 36.
+The night's own report: 8028 slots forgotten (the band below 0.078 and the day's low writes), 1024 dreams at 23.7 symbols, the
+curve 0.206 to 0.154 over six rounds (no round rose), the gauge 0.655 to 0.795; the store's weakest slot stands at 0.070 now
+and 2104 slots sit in the band the next night takes, so the store grows by about eight hundred a night toward its steady state.
