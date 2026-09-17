@@ -8693,3 +8693,10 @@ the save's value; I had written that lesson for the copies' controls on the 15th
 store is still purging (41251). From night 233's save every revert is explicit in the flags and the slow context is explicit
 and disclosed as on; ops/served_cfg.py prints the effective constants after every reload. The verdicts of nights 219-232 are
 re-read in the ledger's item 39.
+AFTER THE REVIEW (21:43): the answer scoring of every ruler is anchored at a word boundary before the answer's word (a match
+inside another word no longer counts; the child's run-ons, "honeyhave", still do, being answers given); on the save after night
+232 the questions read 20 of 30 at both pauses under it, 19 by the old rule. The fact prefixes are named for what they are
+(tools/fact_prefixes.txt, cued recall of answers heard about twenty-five times); the false deferral rule is struck from the
+parent brief; the rehearsal is relabelled a second parent on the live body; the spec carries the chunk form's space boundary
+as a text-specific prior and points the constants at ops/served_cfg.py; the demo's claim is rephrased to survive a skeptic,
+with the caregiver's answer smile disclosed. From night 233's save every revert is explicit in the flags.
