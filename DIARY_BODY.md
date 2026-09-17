@@ -8819,3 +8819,10 @@ facts by the cortex 0.875, the old lines 0.473, the parent's last lines 0.757, t
 prefixes and answers 20 of 30 at two rests and 23 at eight, the most at eight yet; the rephrased 12; the branch 9 of 9 and 10
 of 12. The day 287: 60 of 74 A-lines with letters in its turn, 4 answered with I/yes/no/please before B, answer smiles 1,
 junk 3, duty 0.306, frowns 30.
+NIGHT 244 (ended 08:35, the 234th row, the seventh under the absolute floor; the log's day 288, facts 11-20): the dusk read the
+held-out 0.604 and the prefixes 19; the night: 3248 slots forgotten, the store 49960, the curve 0.218 to 0.152, the gauge 0.68
+to 0.793; the morning: the held-out 0.632, the highest yet, the facts by the cortex 0.875, the old lines 0.475, the parent's
+last lines 0.761, the dreams 0.80; the mouth completes 19 of 26 prefixes and answers 19 of 30 at two rests and 20 at eight; the
+rephrased 12; the branch 9 of 9 and 10 of 12. The day 288: 167 lines, 62 of 84 A-lines with letters in its turn, 1 answered
+with I/yes/no/please before B, answer smiles 0, junk 3, duty 0.308, frowns 37. The next parent (289-291, facts 21-30 first,
+stop at the 237th row) spawned at 08:40 with the queue at 43 lines.
