@@ -42,8 +42,8 @@ def run(n):
         if t in FACES: life.set_face(FACES[t])
         life.tick()
 run(ticks)
-with torch.no_grad():
-    rep = life.night()
+rep = life.night()                                   # as the tick's sleep switch calls it: with grad, the night's own optimizer
+assert not rep.get("error"), rep.get("error")
 run(100)
 h = hashlib.sha256()
 def add(name, x):
