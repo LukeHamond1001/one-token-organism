@@ -8738,3 +8738,7 @@ to a competing memory), the questions 17 and 19 against 18 and 20 (two lost, "wh
 "what do cows give?"), the rephrased, the branch, the held-out and the old lines the same. Under the falsifier's three: the absolute floor goes on at night 237's save (the reload armed 01:20, the flag
 explicit in every flags file, the guard relaunched after the landing). The first night under it will forget about the same
 band; the falsifier on the served body is three under the mornings' range on the first three mornings.
+THE FLOOR LANDED (02:02:34, after night 237's save, the 227th row): the served body restarted (pid 87146) with
+--store-floor-abs 0.07 beside the explicit set, the typist relaunched by the chain, the guard relaunched with the new
+arguments; ops/served_cfg.py reads the floor from the flags and no reverted constant from the save alone. Night 238 is
+the first night under it; it will forget the low band at once (about a tenth of the store), then the day's writes a night.

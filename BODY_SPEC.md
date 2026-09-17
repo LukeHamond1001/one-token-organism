@@ -1292,5 +1292,6 @@ surprise at the moment of writing, is 0.72). Under the fade 0.9 a median memory 
 at full surprise twenty-seven, and a memory reinforced by a retelling lives on; the store's size becomes a consequence,
 about fifty-three thousand at the present write rate, under the capacity. The dream floor (a dream stops at a slot below
 the forgetting floor) follows the same constant. Test 65. The derivation is the ledger's item 2, its fourth; measured on a
-copy (the cut at 0.078, what the first night's fade takes below 0.07, against the same save untouched) before adoption at
-a save; until then the served floor is the relative tenth.
+copy (the cut at 0.078, what the first night's fade takes below 0.07, against the same save untouched: one prefix and one
+question under it, three reads shifted) and on the served body from night 237's save (02:02 on the 17th), the flag explicit
+in every flags file.
