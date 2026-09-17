@@ -8802,3 +8802,13 @@ branch 9 of 9 and 10 of 12; the store 49549 (+236). The day 286: 171 lines, 61 o
 answered with I/yes/no/please before B, answer smiles 3, its own question marks 31, junk 5, duty 0.291, frowns 35. The
 prefixes' fall is the day's writes at a shared key, not the floor: the floor forgets the weak, and "the water is warm" was
 written that day at full surprise.
+THE EIGHTH REHEARSAL (07:10-07:15, 26 minutes into the log's day 287, the typist frozen, the caregiver's smiles on; mood +2.2
+and the readout 34 at the start): a never-typed fact told once as an exchange ("what is slow?" / "a snail is slow"), then five
+taught questions, then the told fact asked back. The child: "what is cold?" -> "i snail is slowswee" (the fresh memory intruding:
+the told question shares the frame "what is" with the asked one); "what do cats drink?" -> "cats drink" (milk not reached in
+the window); "what do bees make?" -> "bees make honeyis" at 10.7 s; "what is white?" -> "rsnow is whitewho is scratch" (the
+answer, failed by the ruler's word boundary for the stray r); "what do ducks do?" -> "hat ducks swims" at 2.5 s; five minutes
+after the telling, "what is slow?" -> "a snail is it" at 5.3 s. By the ruler 2 of 5 taught and 1 of 1 told once; by a viewer
+3 or 4 of 5. The mood fell +2.2 to -4.2 and the readout 34 to 8 across the six questions, the seventh rehearsal's drain again.
+Two rules confirmed for the take: three or four questions at most; the told fact's question shaped unlike the taught ones
+(my "what is slow?" beside "what is cold?" and "what is white?" broke the script's own rule and intruded on the first answer).
