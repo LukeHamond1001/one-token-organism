@@ -804,9 +804,22 @@ class Life:
             return float(self.m.values(self.bands)[int(self.cfg["dopamine_band"])])
 
     def tick(self):
+        """one moment of the body's clock, in eight phases (each a method below, in this order)"""
         m = self.m
         self._ring_vf.append(self.fast_value())            # the fast critic's value before this tick (the anticipation reading; the supervisor's, never the body's)
         self._decay_feelings()
+        u, who, felt, r, off, settle_form, first_after_pause = self._sense()
+        C1, pred1, surp1, conf1, stri = self._hear(u, r, felt, off, settle_form, first_after_pause)
+        delta, delta_slow, delta_long, vlong, level, gam = self._learn_values(r, felt, stri)
+        its_face = self._own_face(C1, r)
+        acted, nxt, p_act, p_choice, probs, feat, ent, act_on = self._choose(C1, pred1, u, level, stri)
+        int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on)
+        self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act)
+        self._bookkeep(u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs)
+
+    def _sense(self):
+        """the world's symbol (or its quiet) off the queue, the offset by the count, the face felt as reward, the reward's other terms"""
+        m = self.m
         u = self.queue.popleft() if self.queue else self.sil
         who = (self.queue_who.popleft() if self.queue_who else "") if u != self.sil else ""
         # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
@@ -849,6 +862,11 @@ class Life:
                 self._own_stored = True; self._own_store_tick = self.ticks; self._consolidate_own(float(r) * float(self.cfg.get("own_store_gain", 0.3)))
             elif float(r) < 0.5 * thr:
                 self._own_stored = False
+        return u, who, felt, r, off, settle_form, first_after_pause
+
+    def _hear(self, u, r, felt, off, settle_form, first_after_pause):
+        """the ear's half: the start mark, the world's symbol enters the stream and the store writes what surprised it, the offset by the settle law, the striatal events"""
+        m = self.m
         # --- the ear's half: the world's symbol (or its quiet) enters ---
         if off > 0 and u != self.sil:
             # THE START MARK falls on the memory whose context holds the utterance's first symbol: the second
@@ -880,6 +898,11 @@ class Life:
                 m.striatum_push(0, int(u))
             self._z_now = m.stri_in()
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
+        return C1, pred1, surp1, conf1, stri
+
+    def _learn_values(self, r, felt, stri):
+        """dopamine: every critic learns from the felt reward; the fast band's error is dopamine; the chain closes; the synaptic tag is captured"""
+        m = self.m
         # --- dopamine: the fast band's error of the world's reward; the critic learns at every band ---
         with torch.no_grad():
             v_now = m.values(self.bands)
@@ -1056,6 +1079,11 @@ class Life:
             with torch.no_grad():
                 m.mouth_gate.weight += slr * delta_long * self._gate_tag[:-1].unsqueeze(0)
                 m.mouth_gate.bias += slr * delta_long * self._gate_tag[-1:]
+        return delta, delta_slow, delta_long, vlong, level, gam
+
+    def _own_face(self, C1, r):
+        """its own face, learned from yours: a foresight of the felt reward (face_form "foresee") or a readout of it"""
+        m = self.m
         # --- its face learns from yours (a readout) ---
         if str(self.cfg.get("face_form", "read")) == "foresee":
             # THE FACE ORGAN FORESEES (2026-09-08, §5c): from the stream a tick ago it predicts the felt reward of this tick; its
@@ -1080,6 +1108,11 @@ class Life:
                 lf = (f_pred - torch.tensor(float(self.face_now), device=self.dev)) ** 2
                 self.opt_face.zero_grad(set_to_none=True); lf.backward(); self.opt_face.step()
         its_face = float(f_pred.detach()) if torch.is_tensor(f_pred) else float(f_pred); self._fpred_now = its_face
+        return its_face
+
+    def _choose(self, C1, pred1, u, level, stri):
+        """the mouth's half: whether to speak (the gate), then what (the readout at the mood's sharpness; the actor's chunk, plan or vote)"""
+        m = self.m
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
         # DECISIVENESS from tonic dopamine (songbirds: variability is high when unrewarded and falls as
         # reward comes; mood is the body's tonic dopamine): the readout's sharpness = base + gain x mood/6
@@ -1243,6 +1276,11 @@ class Life:
                 nxt, p_choice = self.sil, 0.0
             self._last_choice = {"p_act": float(p_act), "acted": bool(acted), "nxt": int(nxt), "p_choice": float(p_choice), "norm": float(pred1.norm()),
                                  "top": int(torch.argmax(logits)), "sharp": float(getattr(self, "_sharp_eff", m.read_sharp))}   # the tick's choice, for the instruments
+        return acted, nxt, p_act, p_choice, probs, feat, ent, act_on
+
+    def _act(self, u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on):
+        """the act: the actor's credit, the intrinsic credit, its own symbol (or its rest) enters the stream, the gate's tag"""
+        m = self.m
         int_t = 0.0
         if acted and act_on and not self._chunk_cont:            # the actor's act and credit: once per word under the chunk form
             self._ring_torn.append(1.0 if self._torn_now else 0.0); self._ring_ent.append(float(self._ent_now)); self._torn_now = False
@@ -1294,6 +1332,11 @@ class Life:
                 tag_in = torch.cat([feat.detach(), torch.ones(1, device=self.dev)])
                 prev = getattr(self, "_gate_tag", None)
                 self._gate_tag = ((g_ * prev) if prev is not None else torch.zeros_like(tag_in)) + (float(acted) - p_act) * tag_in
+        return int_t
+
+    def _feel_and_learn(self, delta, delta_slow, delta_long, feat, acted, int_t, p_act):
+        """the feelings from dopamine; the gate's buffer and its lesson; the waking cortex lesson"""
+        m = self.m
         # --- feelings from dopamine ---
         self.mood = max(-6.0, min(6.0, self.mood + float(self.cfg["mood_gain"]) * delta))
         self.stress = min(30.0, self.stress + float(self.cfg["stress_gain"]) * max(0.0, -delta))
@@ -1318,6 +1361,10 @@ class Life:
                 self._wake_lesson()
             except Exception as e:
                 self._wake_last = {"error": str(e)[:120]}
+
+    def _bookkeep(self, u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs):
+        """the stream, the page, the tick's record for the instruments, the sleep switch"""
+        m = self.m
         # --- bookkeeping ---
         self.stream.append((int(u), 0)); self.stream.append((int(nxt), 1))
         self.page.append(((self.tok.decode([int(u)]) if u != self.sil else ""), 0, round(self.face_now, 2), round(its_face, 2), who))
