@@ -8672,3 +8672,9 @@ itself: the mean rises as the weak go), and the mouth completes 20 of 26 prefixe
 falsifier. The questions 21 and 21 of 30; the held-out 0.599 (the dusk 0.626), the facts by the cortex 0.879, the rephrased
 13; the branch 9 of 9 and 10 of 12; the night's own curve healthy under the moment's horizon (0.212 to 0.171, its gauge 0.654
 to 0.767). The floor returns to a tenth at night 231's save; an absolute floor is the form to derive later.
+NIGHT 231 (ended 20:18, the 221st row; the last night at the floor of a quarter): the store 41511 after a drop of 4521; the
+mouth completes 20 of 26 prefixes and answers 19 of 30 questions at both pauses (the purge took the chains of the less
+retold facts, which the parents' cycle retells within three days); the held-out 0.613 (the dusk 0.575), the facts by the
+cortex 0.888, the old lines 0.493, the rephrased 10; the branch 9 of 9 and 10 of 12; the night's own curve healthy (0.206 to
+0.167, its gauge 0.681 to 0.768). THE FLOOR RETURNED TO A TENTH at this save (the reload at 20:18, served again 20:19:05 with
+the capacity, the hold and its form, the moment's horizon; the guard re-armed the same).
