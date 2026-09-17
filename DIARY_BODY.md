@@ -8742,3 +8742,9 @@ THE FLOOR LANDED (02:02:34, after night 237's save, the 227th row): the served b
 --store-floor-abs 0.07 beside the explicit set, the typist relaunched by the chain, the guard relaunched with the new
 arguments; ops/served_cfg.py reads the floor from the flags and no reverted constant from the save alone. Night 238 is
 the first night under it; it will forget the low band at once (about a tenth of the store), then the day's writes a night.
+NIGHT 237 (ended 02:01, the 227th row, the last under the relative floor; the log's day 280, facts 1-10): the dusk read the
+held-out 0.598, the night 0.614; the facts by the cortex 0.867 to 0.890, the old lines 0.483, the parent's last lines 0.726;
+the mouth completes 23 of 26 prefixes, answers 20 of 30 at two rests and 21 at eight; the rephrased 13; the branch 9 of 9
+and 10 of 12; the store 52474; the day 280: 171 lines, 60 of 85 A-lines with letters in its turn, 14 answered with I/yes/no/
+please before B, answer smiles 4, the child's own question marks 31, junk 5, duty 0.331, frowns 36. These are the floor's
+reference mornings: prefixes 22-23, questions 18-21 over the four nights before it.
