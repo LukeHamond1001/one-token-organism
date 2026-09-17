@@ -8812,3 +8812,10 @@ after the telling, "what is slow?" -> "a snail is it" at 5.3 s. By the ruler 2 o
 3 or 4 of 5. The mood fell +2.2 to -4.2 and the readout 34 to 8 across the six questions, the seventh rehearsal's drain again.
 Two rules confirmed for the take: three or four questions at most; the told fact's question shaped unlike the taught ones
 (my "what is slow?" beside "what is cold?" and "what is white?" broke the script's own rule and intruded on the first answer).
+NIGHT 243 (ended 07:39, the 233rd row, the sixth under the absolute floor; the log's day 287, facts 1-10, the day shortened to
+149 lines by the rehearsal's freeze): the dusk read the held-out 0.616 and the prefixes 20; the night: 3085 slots forgotten,
+the store 49696, the curve 0.184 to 0.140, the gauge 0.708 to 0.811; the morning: the held-out 0.625, the highest yet, the
+facts by the cortex 0.875, the old lines 0.473, the parent's last lines 0.757, the dreams 0.82; the mouth completes 19 of 26
+prefixes and answers 20 of 30 at two rests and 23 at eight, the most at eight yet; the rephrased 12; the branch 9 of 9 and 10
+of 12. The day 287: 60 of 74 A-lines with letters in its turn, 4 answered with I/yes/no/please before B, answer smiles 1,
+junk 3, duty 0.306, frowns 30.
