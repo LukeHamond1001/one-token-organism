@@ -4,7 +4,7 @@
   python3 -m body.serve --load  data/body2.pt --tok data/tok_char.json --port 8018
 
 POST /type {"text", "who"}   POST /face {"expr"}   GET /state?since=N   POST /save {}   (no /sleep: the day ends by the body alone; the review of 2026-09-08)
-GET /talk   the visitor's page (2026-09-11): each key goes in as pressed, no box; a smile and a frown button; the typist yields for a minute after a visitor types
+GET /talk   the visitor's page (2026-09-11; redrawn 2026-09-17 as a conversation: each line a bubble, the body's speech its own, a box that types a line at the tick rate); a smile and a frown button; the typist yields for a minute after a visitor types
 """
 import argparse
 import json
@@ -37,35 +37,41 @@ async function poll(){const d=await fetch('/state?since='+seen).then(r=>r.json()
 setInterval(poll,500);</script>"""
 
 TALK = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>talk to the body</title>
-<style>body{margin:0;background:#f5f1e6;color:#222;font:17px/1.7 Georgia,serif}
-#pg{white-space:pre-wrap;padding:28px 24px 150px;max-width:760px;margin:0 auto;word-break:break-word}
-.p{color:#8a7a5a}.o{color:#3a7a3a}.y{color:#1f4e8c}.n{color:#111;font-weight:bold}
-#k{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;border:0;padding:0}
-#bar{position:fixed;left:0;right:0;bottom:0;background:#eae4d3;border-top:1px solid #cbbfa3;padding:10px 24px 14px}
-#row{display:flex;gap:10px;align-items:center;font:13px ui-monospace,monospace;flex-wrap:wrap}
-button{font:16px Georgia,serif;padding:6px 16px;border:1px solid #b9ac8c;border-radius:6px;background:#fff9ea;cursor:pointer}
-button:active{background:#e6dcc0}#st{margin-left:auto}#help{margin-top:6px;font:12px ui-monospace,monospace;color:#6b6252}</style>
-<div id=pg></div><input id=k autocomplete=off autocapitalize=off autocorrect=off spellcheck=false>
-<div id=bar><div id=row><button id=sm title="smile (arrow up)">smile</button><button id=fr title="frown (arrow down)">frown</button><span id=st></span></div>
-<div id=help>just type: each letter goes in as you press it (lowercase words, space, ? . !), one letter a tick, four ticks a second, and it answers the same way. brown is its parent, green the other voice it overhears, blue is you, black is the body. the parent teaches while nobody is here and steps back for a minute whenever you type. smile at a word it says well. time goes on whether or not you are here.</div></div>
-<script>let seen=0,faceT=null;const pg=document.getElementById('pg'),k=document.getElementById('k');
+<style>body{margin:0;background:#f5f1e6;color:#222;font:17px/1.55 Georgia,serif}
+#pg{padding:22px 18px 170px;max-width:820px;margin:0 auto}
+.b{margin:7px 0;max-width:78%;clear:both}.b .lab{display:block;font:11px ui-monospace,monospace;color:#8b8474;margin-bottom:1px}
+.b .t{display:inline-block;padding:7px 12px;border-radius:12px;white-space:pre-wrap;word-break:break-word}
+.w{float:left}.w.parent .t{background:#efe7d4;color:#5e4f33}.w.other .t{background:#e2eedb;color:#2f5f2f}.w.you .t{background:#dde6f3;color:#1f4e8c}
+.o{float:right;text-align:right}.o .t{background:#111;color:#fff9ea;font-weight:bold;letter-spacing:.02em}
+#bar{position:fixed;left:0;right:0;bottom:0;background:#eae4d3;border-top:1px solid #cbbfa3;padding:10px 18px 12px}
+#row{display:flex;gap:10px;align-items:center;max-width:820px;margin:0 auto}
+#box{flex:1;font:18px Georgia,serif;padding:9px 12px;border:1px solid #b9ac8c;border-radius:8px;background:#fff}
+button{font:16px Georgia,serif;padding:8px 16px;border:1px solid #b9ac8c;border-radius:8px;background:#fff9ea;cursor:pointer}
+button:active{background:#e6dcc0}#st{max-width:820px;margin:6px auto 0;font:12px ui-monospace,monospace;color:#6b6252;display:flex;gap:14px;flex-wrap:wrap}
+#help{max-width:820px;margin:4px auto 0;font:12px ui-monospace,monospace;color:#8b8474}</style>
+<div id=pg></div>
+<div id=bar><div id=row><input id=box autocomplete=off autocapitalize=off autocorrect=off spellcheck=false placeholder="type a line and press Enter"><button id=sm title="smile (arrow up)">smile</button><button id=fr title="frown (arrow down)">frown</button></div>
+<div id=st><span id=s1></span><span id=s2></span></div>
+<div id=help>your line goes in one letter a tick (five a second), like its parents' lines; it answers the same way, in black. smile when it says something sensible (arrow up); frown when it talks over you (arrow down). brown is its parent, green the other voice it overhears, blue is you. the parent steps back for a minute after you type.</div></div>
+<script>const pg=document.getElementById('pg'),box=document.getElementById('box');let seen=0,first=true,faceT=null;
+const GAP=8;let wOpen=null,wWho=null,wGap=0,oOpen=null,oGap=0,oSil=0;
 function post(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json())}
-function face(v){post('/face',{expr:v});if(faceT)clearTimeout(faceT);faceT=setTimeout(()=>post('/face',{expr:0}),1250)}
-function send(t){t=[...t].filter(c=>/[a-zA-Z ?.!]/.test(c)).map(c=>c==='I'?c:c.toLowerCase()).join('');if(t)post('/type',{text:t,who:'you'})}
-document.getElementById('sm').onclick=e=>{face(2);e.stopPropagation()};document.getElementById('fr').onclick=e=>{face(-2);e.stopPropagation()};
-k.addEventListener('input',()=>{const v=k.value;k.value='';send(v)});                 /* the hidden catcher: desktop keys and the phone's keyboard alike */
-document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;
- if(e.key==='ArrowUp'){face(2);e.preventDefault();return}if(e.key==='ArrowDown'){face(-2);e.preventDefault();return}
- if(e.key==='Enter'){send(' ');e.preventDefault();return}
- if(document.activeElement!==k&&e.key.length===1){send(e.key);e.preventDefault()}});
-function refocus(){if(document.activeElement!==k)k.focus({preventScroll:true})}
-document.addEventListener('click',refocus);refocus();setInterval(refocus,1500);
-async function poll(){let d;try{d=await fetch('/state?since='+seen).then(r=>r.json())}catch(err){return}
- if(d.n<seen){seen=0;pg.textContent='';return}
- for(const e of d.page){const t=e[0];if(!t)continue;const s=document.createElement('span');s.className=e[1]?'n':(e[4]==='parent'?'p':(e[4]==='other'?'o':'y'));s.textContent=t;pg.appendChild(s)}
- seen=d.n;document.getElementById('st').textContent=(d.asleep?'asleep (a night is ten to seventeen minutes)':'awake')+' · nights '+d.nights;
- window.scrollTo(0,document.body.scrollHeight)}
-setInterval(poll,500);</script>"""
+function face(v){post('/face',{expr:v});if(faceT)clearTimeout(faceT);faceT=setTimeout(()=>post('/face',{expr:0}),1250);flash(v>0?'smile':'frown')}
+function flash(w){const b=document.getElementById(w==='smile'?'sm':'fr');b.style.background='#e6dcc0';setTimeout(()=>b.style.background='',250)}
+function send(t){t=[...t].filter(c=>/[a-zA-Z ?.!]/.test(c)).map(c=>c==='I'?c:c.toLowerCase()).join('').trim();if(t)post('/type',{text:t,who:'you'})}
+function block(kind,who){const b=document.createElement('div');b.className='b '+(kind==='w'?'w '+who:'o');const l=document.createElement('span');l.className='lab';l.textContent=kind==='w'?(who==='parent'?'its parent':who==='other'?'the other voice':'you'):'the body';const t=document.createElement('span');t.className='t';b.appendChild(l);b.appendChild(t);pg.appendChild(b);while(pg.children.length>90)pg.removeChild(pg.firstChild);return t}
+function feed(es){for(const e of es){const sym=e[0];if(e[1]===0){if(sym){const who=e[4]||'you';if(!wOpen||who!==wWho){wOpen=block('w',who);wWho=who}wOpen.textContent+=sym;wGap=0}else{wGap++;if(wOpen&&wGap>=GAP)wOpen=null}}
+ else{if(sym){if(!oOpen){oOpen=block('o');oSil=0}else if(oSil>=3&&!oOpen.textContent.endsWith(' '))oOpen.textContent+=' ';oOpen.textContent+=sym;oGap=0;oSil=0}else{oGap++;oSil++;if(oOpen&&oGap>=GAP)oOpen=null}}}}
+document.getElementById('sm').onclick=()=>face(2);document.getElementById('fr').onclick=()=>face(-2);
+box.addEventListener('keydown',e=>{if(e.key==='Enter'){send(box.value);box.value='';e.preventDefault()}});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowUp'){face(2);e.preventDefault()}else if(e.key==='ArrowDown'){face(-2);e.preventDefault()}});
+document.addEventListener('click',e=>{if(e.target.tagName!=='BUTTON')box.focus({preventScroll:true})});box.focus();
+async function poll(){let d;try{d=await fetch('/state?since='+seen).then(r=>r.json())}catch(err){document.getElementById('s1').textContent='no answer from the body (is it being restarted?)';return}
+ if(d.n<seen){seen=0;pg.textContent='';wOpen=oOpen=null;first=true}
+ const es=first?d.page.slice(-4000):d.page;first=false;const atBottom=window.innerHeight+window.scrollY>=document.body.scrollHeight-80;feed(es);seen=d.n;
+ document.getElementById('s1').textContent=(d.asleep?'asleep (a night is ten to seventeen minutes)':'awake')+' · nights '+d.nights;
+ document.getElementById('s2').textContent=d.queued?('typing in ('+d.queued+' letters to go)'):'';if(atBottom)window.scrollTo(0,document.body.scrollHeight)}
+setInterval(poll,400);poll();</script>"""
 
 
 def main():

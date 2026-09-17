@@ -33,6 +33,8 @@ A watched life from birth, with the fast parent (one seed, every tick logged, a 
 PARENT=1 REPLY=1 WAIT=4 TALKOVER_FROWN=1 python3 -u tools/watch_life.py data/NAME.pt --birth --seed 1 --d 1024 --layers 12 --heads 16 --window 64 --cfg-from data/body2.pt --set wm=1 --set actor=1 --set actor_form=plan --days 60 --threads 6
 ```
 
+Talking to the served body yourself: open http://localhost:8020/talk (or, when the page in the code is newer than the running server, `python3 ops/talk_proxy.py` and http://localhost:8021). A line goes in one symbol a tick like the parents' lines; smile and frown are the two buttons or the arrow keys; the parent's typist steps back for a minute after a visitor types. Nothing on that page reads from inside.
+
 The organ tests:
 
 ```bash

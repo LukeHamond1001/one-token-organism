@@ -18,3 +18,8 @@ AFTER ANY RELOAD OR RESTART (2026-09-16, the reviewer's finding): a save carries
 it; a key left out of the flags keeps the save's value. Every changed constant must be passed explicitly, reverts included, and
 after the restart run  python3 ops/served_cfg.py data/watch2.pt ops/BASE_FLAGS.txt  and read the lines marked "the save alone":
 none of them may be a constant the ledger records as reverted.
+
+THE TALK PAGE (2026-09-17): the body serves the visitor's page at http://localhost:8020/talk (a conversation: each line a bubble,
+the body's speech its own, a box that types a line at the tick rate, smile and frown). ops/talk_proxy.py serves the same page on
+port 8021 and forwards its calls to the body, for use when the page in body/serve.py is newer than the running server:
+   nohup python3 ops/talk_proxy.py --port 8021 --body 8020 > <SCRATCH>/logs/talk_proxy.log 2>&1 &
