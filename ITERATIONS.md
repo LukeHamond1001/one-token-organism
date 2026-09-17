@@ -52,6 +52,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    save. Predicted: the nightly drops rise toward the day's writes and the store levels under the capacity within a week
    with no eviction at the cap; the prefixes and the questions hold. Falsified if the store shrinks under forty thousand, or
    the prefixes fall by three: then back to 0.1. (The fade itself, 0.9, is left alone: the utterance memory fades with it.)
+   FALSIFIED (2026-09-16, 19:28): night 229 purged 18378 slots (64000 -> 47158) and night 230 another 7673 (-> 42724), and the
+   prefixes fell 23 -> 20 of 26, the falsifier's clause. The derivation missed that a floor RELATIVE TO THE MEAN feeds itself:
+   removing the weak raises the mean, the floor climbs, and the next night removes more. Back to 0.1 at night 231's save. The
+   right form is an absolute floor set by the write strength and the fade (a once-heard memory, 0.55, reaches 0.07 after
+   twenty nights at 0.9), which does not move as the store thins: store_floor_abs, to derive and build after the recording.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by

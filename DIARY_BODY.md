@@ -8667,3 +8667,8 @@ at two rests and 24 at eight; the held-out 0.611 (the dusk 0.584), the facts by 
 rephrased 15; the branch 9 of 9 and 10 of 12. THE MOMENT'S HORIZON WENT ON THE SERVED BODY at this save (the reload at
 18:2x, served again 18:23:17 with all five constants; the guard re-armed). The store's level over the next nights is the
 floor's test (above forty thousand, under the capacity).
+NIGHT 230 (ended 19:2x, the 220th row): the store 42724 after another purge of 7673 (the floor at a quarter of the mean feeds
+itself: the mean rises as the weak go), and the mouth completes 20 of 26 prefixes (23 the night before): the floor's
+falsifier. The questions 21 and 21 of 30; the held-out 0.599 (the dusk 0.626), the facts by the cortex 0.879, the rephrased
+13; the branch 9 of 9 and 10 of 12; the night's own curve healthy under the moment's horizon (0.212 to 0.171, its gauge 0.654
+to 0.767). The floor returns to a tenth at night 231's save; an absolute floor is the form to derive later.
