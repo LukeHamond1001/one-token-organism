@@ -3,7 +3,7 @@ at a horizon is (a) from the body's own last K symbols (one-hot, ridge): is the 
 bands through a small nonlinear head (an MLP, early-stopped on the fit day's tail): can a striatal readout find it where a
 linear one cannot.   python3 tools/ceiling_smile.py DAY_A.pt DAY_B.pt [--h 16] [--k 8] [--bands 0,1,2]
 """
-import sys, argparse, statistics as st, torch
+import argparse, statistics as st, torch
 ap = argparse.ArgumentParser(); ap.add_argument("a"); ap.add_argument("b"); ap.add_argument("--h", type=int, default=16)
 ap.add_argument("--k", type=int, default=8); ap.add_argument("--bands", default="0,1,2"); ap.add_argument("--epochs", type=int, default=60)
 a = ap.parse_args(); torch.manual_seed(0); torch.set_num_threads(2)

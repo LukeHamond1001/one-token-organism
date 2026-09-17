@@ -3,7 +3,7 @@ of the discounted return the delay line holds under different readouts: the live
 line (ridge), a small trained nonlinear head on the one-hot line, and born sparse conjunctions (granule-cell form: each unit
 the AND of a few random position-event pairs) with ridge.   python3 tools/ceiling_line.py DAY_A.pt DAY_B.pt [--h 16]
 """
-import sys, argparse, statistics as st, torch
+import argparse, statistics as st, torch
 ap = argparse.ArgumentParser(); ap.add_argument("a"); ap.add_argument("b"); ap.add_argument("--h", type=int, default=16); ap.add_argument("--epochs", type=int, default=40)
 a = ap.parse_args(); torch.manual_seed(0); torch.set_num_threads(3)
 def load(f):

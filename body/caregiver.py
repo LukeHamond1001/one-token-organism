@@ -14,7 +14,6 @@ HABIT_TICKS = int(os.environ.get("HABIT_TICKS", "0"))       # THE HABITUATION TH
                                                             # one smile in ten, a count the body cannot see, so its critic never learns it and its stress stayed at 20 of 30
                                                             # all day on withheld smiles); N > 0 = a word smiled at within the last N ticks earns nothing, and smiles again after            # the least ticks between two talk-over frowns (2026-09-12: 60 gave seventy frowns a day under the chunk and a body at stress 20 all day, its gate flattened threefold; a parent frowns, then gives it a minute: 240)
 import random
-import sys
 import time
 import urllib.request
 
@@ -361,7 +360,6 @@ class Caregiver:
         gw = self.gate()
         if gw < 0:
             return False
-        last_before = self.state.get("last") or {}
         if kind == "cue":
             self.cue = {"text": text, "until": time.time() + self.s(360), "full": ANSWERS.get(text, []), "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False

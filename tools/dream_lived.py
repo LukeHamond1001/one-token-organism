@@ -3,7 +3,6 @@ and read how much of their world text is speech as lived (a substring of a line 
 usage: python3 tools/dream_lived.py COPY.pt --flags FLAGS.txt [--n 300]"""
 import sys, json
 sys.path.insert(0, "/Users/lukehamond/Projects/project")
-import torch
 from tokenizers import Tokenizer
 from body.life import Life, PHYSIOLOGY
 
