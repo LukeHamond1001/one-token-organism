@@ -8748,3 +8748,11 @@ the mouth completes 23 of 26 prefixes, answers 20 of 30 at two rests and 21 at e
 and 10 of 12; the store 52474; the day 280: 171 lines, 60 of 85 A-lines with letters in its turn, 14 answered with I/yes/no/
 please before B, answer smiles 4, the child's own question marks 31, junk 5, duty 0.331, frowns 36. These are the floor's
 reference mornings: prefixes 22-23, questions 18-21 over the four nights before it.
+THE PARENT 279-282 (real days 279, 280, 282; the label 281 an aborted session at the reload's relaunch, one line consumed and
+never typed): by the parent's count the child spoke a content word or yes/no before B on 54 of 88, 44 of 85 and 52 of 86
+A-questions; the fact's word in its own turn 4, 4 and 4 of 10; whole fact sentences before B: none on 279, "birds fly up" and
+"the sun is up in" on 280, "an ant is little" and "we drink water" on 282; its own fact-shaped questions twice ("what is wet?"
+right after "ice is cold"; "where do fi"), answered under other wording; unprompted runs of four words or more 12, 12, 19;
+talk-overs 97, 118, 110 a day (a frown for every third); the typist about fifteen seconds a line, slowing to twenty-eight
+before each night; one draft line in eighteen rejected as a duplicate of the queue's 4778 rows. The next parent (283-285,
+facts 21-30 first, stop at the 231st row) spawned at 03:00 with the queue at about 63 lines.
