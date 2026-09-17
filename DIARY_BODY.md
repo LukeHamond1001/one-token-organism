@@ -8968,3 +8968,9 @@ the weak tail, as the review foresaw; 5056 slots now sit under 0.078 where the o
 cortex 0.873, the old lines 0.496, the parent's last lines 0.794, the dreams 0.86; the mouth completes 19 of 26 prefixes and
 answers 18 of 30 at two rests and 21 at eight; the rephrased 11; the branch 9 of 9 and 8 of 12. The day 296: 164 lines, 63 of
 82 A-lines with letters in its turn, answer smiles 3, its own question marks 21, junk 4, duty 0.352, frowns 38.
+NIGHT 251 (ended 15:14, the 241st row, the second back under the relative floor; the log's day 297, facts 21-30): the morning:
+the held-out 0.628, the facts by the cortex 0.879, the old lines 0.516, the parent's last lines 0.803; the mouth completes 18 of
+26 prefixes (the failed: ice is, grass is, an ant is, a bird has, a cat is, honey is, snow is, a rock is) and answers 20 of 30
+at two rests and 21 at eight (16, 18, 20 across the three mornings since the revert); the rephrased 12; the branch 9 of 9 and
+8 of 12; the store 53621, rebuilding toward the capacity. The day 297: 165 lines, 55 of 83 A-lines with letters in its turn,
+answer smiles 4, junk 6, duty 0.338, frowns 38.
