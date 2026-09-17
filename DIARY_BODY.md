@@ -8961,3 +8961,10 @@ grass is soft"); its own question marks 29, 18, 21 ("let us go in to sleep?" who
 queue lines lost at night boundaries, neither a fact; the duplicate collision one in fourteen, clustered on "do you want" and
 "where is"; the carry-over 46-55 lines puts the facts at minutes 11-20, the structural floor. The next parent (297-299, facts
 21-30 first, stop at the 243rd row) spawned at 14:20 with the queue at 48 lines.
+NIGHT 250 (ended 14:16, the 240th row, THE FIRST NIGHT BACK UNDER THE RELATIVE FLOOR; the log's day 296, facts 11-20): the night's
+own report: 619 slots forgotten (the relative threshold 0.0295, a tenth of a mean raised by the absolute floor's removal of
+the weak tail, as the review foresaw; 5056 slots now sit under 0.078 where the old floor took them), the store 51330, the curve
+0.167 to 0.125, the dreams 1024 at 24.7 symbols, the gauge 0.728 to 0.838; the morning: the held-out 0.627, the facts by the
+cortex 0.873, the old lines 0.496, the parent's last lines 0.794, the dreams 0.86; the mouth completes 19 of 26 prefixes and
+answers 18 of 30 at two rests and 21 at eight; the rephrased 11; the branch 9 of 9 and 8 of 12. The day 296: 164 lines, 63 of
+82 A-lines with letters in its turn, answer smiles 3, its own question marks 21, junk 4, duty 0.352, frowns 38.
