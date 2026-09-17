@@ -8788,3 +8788,8 @@ answered under other wording. Mechanical: no line dropped in 516; the log's rows
 a day's end; the night's row is written at the END of the night, so a night is detected by the queue freezing; a carry-over of
 69 lines at night 239 pushed day 284's facts to minutes 17-26 and that day gave the fewest fact answers (2), the next two
 nights held at 45 and day 285 gave 6. The next parent (286-288, facts 21-30 first, stop at the 234th row) spawned at 06:00.
+NIGHT 241 (ended 05:47, the 231st row, the fourth under the absolute floor; the log's day 285, facts 11-20): the dusk read the
+held-out 0.597, the night 0.623, the highest morning yet; the facts by the cortex 0.832 to 0.873, the old lines 0.473, the
+parent's last lines 0.745, the dreams 0.78; the mouth completes 22 of 26 prefixes and answers 21 of 30 at two rests and 22 at
+eight; the rephrased 14; the branch 9 of 9 and 10 of 12; the store 49313 (+547). The day 285: 171 lines, 56 of 85 A-lines
+with letters in its turn, 3 answered with I/yes/no/please before B, answer smiles 4, junk 2, duty 0.272, frowns 33.
