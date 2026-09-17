@@ -8929,3 +8929,8 @@ A research note from the review, to watch: the relative floor's threshold is a t
 eleven nights removed the weak tail and raised the mean (0.33 to 0.35), so the first nights back under it drop more than the
 pre-floor regime did until the tail rebuilds; the store's dropped count on nights 249-252 is read before the floor's reference
 is taken from night 237.
+THE FLOOR REVERTED (13:20:18, after night 249's save, the 239th row): the served body restarted (pid 82759) with
+--store-floor-abs 0 explicit; ops/served_cfg.py reads "FLAGS OVERRIDE the save's 0.07" for it and the rest from the flags; the
+guard relaunched with the new arguments; the redrawn talk page with the review's fixes on the body's own port. The relative
+floor at a tenth and the capacity's eviction are the forgetting again; the store rebuilds toward the capacity over about a
+week, and the questions are expected back at 18-21 within two retelling cycles.
