@@ -8826,3 +8826,10 @@ last lines 0.761, the dreams 0.80; the mouth completes 19 of 26 prefixes and ans
 rephrased 12; the branch 9 of 9 and 10 of 12. The day 288: 167 lines, 62 of 84 A-lines with letters in its turn, 1 answered
 with I/yes/no/please before B, answer smiles 0, junk 3, duty 0.308, frowns 37. The next parent (289-291, facts 21-30 first,
 stop at the 237th row) spawned at 08:40 with the queue at 43 lines.
+THE PARENT 286-288 (real days 286, 287, 288): by the parent's count the child spoke before B on 61 of 86, 60 of 74 and 62 of
+84 A-questions (71, 81 and 74 percent, the 81 the highest of any day); the fact's word in its own turn 4, 1 and 1 of 10 (day
+286: honey, snow, sun, "swims"; day 287: "rain fa" and "the m" cut at the window; day 288: green), against day 285's 6; day 287
+carried the eighth rehearsal's freeze and the mood it drained (+2.2 to -4.2 at minute 26), which the count reflects; the
+carry-over at each night held to 35, 30 and 31 lines, the facts at minutes 7-21, and the earlier placement did not by itself
+raise the fact answers. Unprompted whole sentences 4, 2, 7; its own question marks 30, 17, 18; no line dropped in 487, one
+exchange straddling a night without loss; the duplicate collision one in seventeen on the commonest frames.
