@@ -1,3 +1,6 @@
+"""THE STORE'S STRENGTHS (a supervisor's instrument, 2026-09-17): a save's slot count, the strengths' mean, median, quantiles and
+histogram, the counts under candidate floors, and the save's store constants.
+usage: python3 tools/store_dist.py SAVE.pt"""
 import torch, sys
 p=sys.argv[1]
 d=torch.load(p, map_location='cpu', weights_only=False)

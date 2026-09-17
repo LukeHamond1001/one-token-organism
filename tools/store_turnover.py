@@ -1,3 +1,7 @@
+"""THE STORE'S TURNOVER (a supervisor's instrument, 2026-09-17): two morning saves a day apart; which slots survived, how many were
+written and dropped, the new slots' write strength, and the steady-state size under absolute forgetting floors (the fade 0.9 a
+night; a slot written at s lives ln(F/s)/ln(0.9) nights above a floor F). The derivation of store_floor_abs (the ledger's item 2).
+usage: python3 tools/store_turnover.py BEFORE.pt AFTER.pt"""
 import torch, sys, math
 def load_store(p):
     d=torch.load(p, map_location='cpu', weights_only=False)
