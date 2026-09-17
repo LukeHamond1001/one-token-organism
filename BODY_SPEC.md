@@ -1278,3 +1278,19 @@ other voice's coming line and gives the growing smile when the child names a con
 carries the answer's identity, as a real parent's does. (6) The answer scoring of every ruler is anchored at a word boundary BEFORE the answer's word from this date ("ice" inside "nice"
 no longer counts); the boundary after it is not required, since the child often runs its answer into the next chain without a
 space ("honeyhave"), which is an answer given. Counts before this date may include matches inside another word.
+
+
+**The thirty-first defect (2026-09-17, the morning saves after nights 234 and 235): the forgetting floor moved with the store.**
+The hippocampal store forgot a slot each night when its strength had fallen below a tenth of the store's own mean. A floor
+relative to the mean feeds on itself under a purge (each removal raises the mean and the threshold with it: at a quarter,
+nights 229-231 removed twenty-six thousand slots and cost the prefixes three of twenty-six), and at a tenth it forgot almost
+nothing (26 of 44006 in a night) while the day wrote 2745, so the store climbed toward its capacity (46725 after night 235,
+the cap of 65536 seven days off), where the eviction of the weakest at the moment of writing would have become the
+forgetting, a threshold floating with the day's write rate. A trace is lost when it has faded below a fixed retrieval
+threshold in the write's own units: `store_floor_abs` 0.07, a tenth of a typical write (the median write's strength, the
+surprise at the moment of writing, is 0.72). Under the fade 0.9 a median memory heard once lives twenty-three nights, one
+at full surprise twenty-seven, and a memory reinforced by a retelling lives on; the store's size becomes a consequence,
+about fifty-three thousand at the present write rate, under the capacity. The dream floor (a dream stops at a slot below
+the forgetting floor) follows the same constant. Test 65. The derivation is the ledger's item 2, its fourth; measured on a
+copy (the cut at 0.078, what the first night's fade takes below 0.07, against the same save untouched) before adoption at
+a save; until then the served floor is the relative tenth.

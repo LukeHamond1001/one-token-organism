@@ -1493,11 +1493,32 @@ def test_own_fade_in_the_query_alone():
     print("64 the own-symbol fade in the query alone: the state as form 0, the query as form 1")
 
 
+def test_forgetting_by_an_absolute_floor():
+    """65 (2026-09-17): with store_floor_abs the night forgets by a slot's own strength alone: the same weak memory is kept or lost
+    whatever the rest of the store holds, where the relative floor (a tenth of the mean) loses it once the store is strong"""
+    def store_with(strong):
+        life = tiny(store_floor_abs=0.07); st = life.store
+        for k, s in enumerate([0.08] + [strong] * 8):
+            v = torch.zeros(life.m.d); v[k] = 1.0; kk = torch.zeros(life.m.d); kk[k + 10] = 1.0
+            st.write(kk, v, s, 0)
+        return st
+    a, b = store_with(0.5), store_with(5.0)
+    da = a.fade(0.9, 0.1, 0.07); db = b.fade(0.9, 0.1, 0.07)        # the weak slot 0.08 -> 0.072: above 0.07 in both stores
+    assert da == 0 and db == 0 and a.n() == 9 and b.n() == 9, (da, db)
+    da = a.fade(0.9, 0.1, 0.07); db = b.fade(0.9, 0.1, 0.07)        # 0.0648: below in both
+    assert da == 1 and db == 1 and a.n() == 8, (da, db)
+    c, d = store_with(0.5), store_with(5.0)
+    dc = c.fade(0.9, 0.1, 0.0); dd = d.fade(0.9, 0.1, 0.0)          # the relative floor: kept beside 0.5 (threshold 0.041), lost beside 5.0 (0.40)
+    assert dc == 0 and dd == 1, (dc, dd)
+    assert tiny().cfg.get("store_floor_abs", 0.0) == 0.0
+    print("65 forgetting by an absolute floor: the weak slot kept then lost at 0.065 < 0.07 beside weak and strong neighbours alike; under the relative floor lost beside the strong")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor]
     failed = 0
     for t in tests:
         try:

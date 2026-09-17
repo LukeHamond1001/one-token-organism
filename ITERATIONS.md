@@ -57,6 +57,24 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    removing the weak raises the mean, the floor climbs, and the next night removes more. Back to 0.1 at night 231's save. The
    right form is an absolute floor set by the write strength and the fade (a once-heard memory, 0.55, reaches 0.07 after
    twenty nights at 0.9), which does not move as the store thins: store_floor_abs, to derive and build after the recording.
+   DERIVED A FOURTH TIME, THE ABSOLUTE FLOOR (2026-09-17, 00:40; the cap seven days off, before the recording after all):
+   measured on the morning saves after nights 234 and 235 (tools/floor_cut.py's companion, the turnover script): day 278 wrote
+   2745 new slots (beside 496 merges that strengthened a slot, x2.2 each), and the relative floor at a tenth of the mean (0.034)
+   dropped 26; the store 44006 -> 46725. The new slots' write strength (the surprise x (1 + |dopamine|)): median 0.72, a quarter
+   under 0.16, a tenth under 0.065. Under the fade 0.9 a slot written at s lives ln(F/s)/ln(0.9) nights above an absolute floor
+   F; the steady state is the day's writes times the mean lifetime plus the merges' extension (about 3700): F 0.05 -> 61000,
+   0.06 -> 56600, 0.07 -> 53000, 0.08 -> 50000; the relative floor as it stands (0.034) gives 70000, above the cap, so the
+   cap's eviction by strength at the moment of writing would be the forgetting. At 3200 writes a day (nights 226-228) 0.06
+   reaches the cap and 0.07 levels at 61000. THE CONSTANT: store_floor_abs 0.07, a tenth of a typical write (a memory is lost
+   when its trace has faded to a tenth of what one hearing writes): a median memory heard once lives 23 nights, one at full
+   surprise 27; a fact retold every three days merges and lives on. The floor does not move with the store's mean (test 65),
+   and the dream floor (a dream stops at a slot below the forgetting floor) follows the same constant. The first night under
+   it forgets the slots at 0.065-0.078 (2257 of 46725 on the save after night 235: the last two days' low-surprise writes,
+   memories of what the cortex already predicted) against 26 under the relative floor, then about the day's writes a night.
+   Falsifier: the prefixes or the questions fall by three on the cut copy against the same save untouched, or on the served
+   body's first mornings under it; then back to the relative floor at a tenth, explicitly. ARMED: the cut at 0.078 (what the
+   first night's fade takes below 0.07) measured on the save after night 236 against its morning probe; adoption at a later
+   save by the reload, --store-floor-abs 0.07 explicit in every flags file.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by

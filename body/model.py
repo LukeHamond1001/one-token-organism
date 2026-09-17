@@ -297,12 +297,17 @@ class Store:
         return True
 
     @torch.no_grad()
-    def fade(self, f=0.9, floor_rel=0.1):
-        """each night: strengths x f; slots below floor_rel x the store's own mean are forgotten"""
+    def fade(self, f=0.9, floor_rel=0.1, floor_abs=0.0):
+        """each night: strengths x f; slots below the floor are forgotten. THE FLOOR IS ABSOLUTE when floor_abs is set (2026-09-17,
+        the thirty-first defect): a trace is lost when it has faded below a fixed retrieval threshold in the write's own units
+        (the surprise at the moment of writing), whatever the rest of the store holds. The relative floor (floor_rel x the store's
+        mean) fed on itself, each purge raising the mean and the threshold with it (nights 229-231), and it rose with every
+        reinforced memory; left at a tenth it forgot almost nothing (26 of 44006 a night) and the capacity's eviction, by strength
+        at the moment of writing, would have been the forgetting"""
         if self.n() == 0:
             return 0
         self.S *= float(f)
-        thr = float(floor_rel) * float(self.S.mean())
+        thr = float(floor_abs) if float(floor_abs) > 0 else float(floor_rel) * float(self.S.mean())
         keep = torch.nonzero(self.S >= thr).flatten()
         dropped = self.n() - int(keep.numel())
         self._keep(keep)

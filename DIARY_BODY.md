@@ -8711,3 +8711,19 @@ taught questions 1-15 answered 6 of 15 in the child's turn: 3 of the first 5 whi
 is wet", "birds fly up"), 3 of the next 10 as the mood sank from +2.2 to -5.3 and the readout flattened to its floor (34 to 8).
 The drain feeds itself: a failed answer earns no smile, the mood falls, the readout flattens, the next answer fails. The take
 starts above +2, keeps its questions few, and the parent smiles at every sensible word.
+NIGHT 234 (ended 23:09, the 224th row; the log's day 277, facts 1-10; the label 276 an aborted day of one line): the held-out
+0.600, the facts by the cortex 0.879, the old lines 0.488, the parent's last lines 0.744; the mouth completes 23 of 26 fact
+prefixes and answers 18 of 30 questions at two rests and 19 at eight; the rephrased 13; the store 44006; the day 277: 155
+lines, 56 of 77 A-lines with letters in its turn, answer smiles 3, junk 6, duty 0.332, frowns 31.
+NIGHT 235 (ended 00:06 on the 17th, the 225th row; the log's day 278, facts 11-20): the dusk before it read the held-out 0.583
+and the night raised it to 0.620, the facts by the cortex 0.847 to 0.881, the old lines 0.498; the mouth completes 23 of 26
+prefixes, answers 18 of 30 at two rests and 21 at eight; the rephrased 12; the branch 9 of 9 and 10 of 12; the store 46746,
+growing 2700 a day since the purge ended, the cap of 65536 seven days off at this rate (the eviction at the cap was the
+regression's cause, the ledger's item 2: the absolute floor is due before then); the day 278: 172 lines, 58 of 86 A-lines
+with letters in its turn, 18 answered with I/yes/no/please before B, answer smiles 0, junk 3, duty 0.255, frowns 35.
+THE PARENT 275-278 (real days 275, 277, 278; all thirty facts asked in each day's first half; 38-character lines, no commas):
+by the parent's own count the child spoke a content word or yes/no before B on 53 of 89, 50 of 77 and 45 of 86 A-questions;
+the fact's word in its own turn before B said it 1, 4 and 4 of 10 ("bees make honey" produced whole); one fact exchange lost
+to the night boundary after day 275 and asked again the next day. The next parent (279-281, facts 21-30 first, stop at the
+228th row) spawned at 00:08 with the queue at 61 lines. The night waiters are a script now (night_waiter.sh N, the label
+N+10), armed for the 226th to the 229th rows; the probe waiters stand through the 247th label.
