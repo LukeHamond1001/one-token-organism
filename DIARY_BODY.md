@@ -8980,3 +8980,11 @@ prefixes and answers 17 of 30 at two rests and 21 at eight; the rephrased 13; th
 (+2225, toward the capacity). The day 298: 159 lines, 58 of 80 A-lines with letters in its turn, answer smiles 3, junk 8, duty
 0.259 (a quiet day), frowns 36. The gate's ear is being measured on a copy of this morning's save (day 297 lived again, the
 rewards replayed, the talk-overs per quarter), the salience input after it.
+THE PARENT 297-299 (real days 297, 298, 299; the relative floor's first days back): by the parent's count the child spoke a
+content word or yes/no before B on 30 of 83, 22 of 80 and 23 of 85 A-questions (36, 28 and 27 percent by this parent's stricter
+count); the fact's word in its own turn 5, 5 and 3 of 10 ("cows give milk", "snow is white", "ducks swim", "water is wet", "an
+ant is little" whole; "a bird has wings on" unprompted after an unrelated line; "that sock is not my", its first negation of
+possession); its own question marks 15, 13, 15, two of them facts' ("what has wings?", "what is hard"), answered under other
+wording; talk-overs 110, 102 and 123 a day, 46 percent of all its missed symbols, frowns 38, 36, 42: the baseline the listening
+reflex is measured against. One line lost at the 297-298 boundary, a B line. The next parent (300-302, facts 21-30 first, stop
+at the 246th row) spawned at 17:26 with the queue at 42 lines.
