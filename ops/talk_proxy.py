@@ -22,7 +22,9 @@ class H(BaseHTTPRequestHandler):
         if self.path.startswith("/state"):
             try:
                 with urllib.request.urlopen(BASE + self.path, timeout=10) as r: self._send(200, "application/json", r.read())
-            except Exception as e: self._send(502, "application/json", json.dumps({"error": str(e)[:200]}).encode())
+            except Exception as e:
+                print(f"[talk] {self.path[:40]} -> {type(e).__name__}: {str(e)[:120]}", flush=True)
+                self._send(502, "application/json", json.dumps({"error": str(e)[:200]}).encode())
         else:
             self._send(200, "text/html; charset=utf-8", TALK.encode())
     def do_POST(self):
@@ -31,7 +33,9 @@ class H(BaseHTTPRequestHandler):
             try:
                 req = urllib.request.Request(BASE + self.path, data=body, headers={"Content-Type": "application/json"})
                 with urllib.request.urlopen(req, timeout=10) as r: self._send(200, "application/json", r.read())
-            except Exception as e: self._send(502, "application/json", json.dumps({"error": str(e)[:200]}).encode())
+            except Exception as e:
+                print(f"[talk] {self.path[:40]} -> {type(e).__name__}: {str(e)[:120]}", flush=True)
+                self._send(502, "application/json", json.dumps({"error": str(e)[:200]}).encode())
         else:
             self._send(404, "application/json", b'{"error": "unknown path"}')
 
