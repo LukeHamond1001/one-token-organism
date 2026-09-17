@@ -1294,4 +1294,7 @@ about fifty-three thousand at the present write rate, under the capacity. The dr
 the forgetting floor) follows the same constant. Test 65. The derivation is the ledger's item 2, its fourth; measured on a
 copy (the cut at 0.078, what the first night's fade takes below 0.07, against the same save untouched: one prefix and one
 question under it, three reads shifted) and on the served body from night 237's save (02:02 on the 17th), the flag explicit
-in every flags file.
+in every flags file. FALSIFIED over eleven mornings (the ledger's item 2): the floor at 0.07 stands above the write strength of
+a predicted symbol, so it forgot the middles of the known utterances and cut the episode chains that carry an answer past
+its onset; the store's rulers fell in step (the questions 21 to 16) while the onset reads and the cortex held. Reverted at
+night 249's save to the relative tenth with the capacity's eviction as the forgetting; the constant stays in the code, off.

@@ -101,6 +101,18 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    with tools/read_trace.py on the last save under the relative floor and this morning's: the fact's slot at "ice is " is
    present with its strength on both, and a fresh slot from the parent's "ice is in your cup" (a closer key by 0.014) took
    the read; the reads are by content alone. Not the floor's doing: the key's collision with natural talk (the dentate item).
+   FALSIFIED ON THE SERVED BODY (2026-09-17, 12:50; eleven mornings): the store's rulers fell in step under the floor, the
+   questions at two rests 21 -> 16, the prefixes 23 -> 17, the rephrased 15 -> 10, the branch's second set 10 -> 8 of 12,
+   while the held-out rose 0.607 -> 0.633 and the onset reads held (read_trace --qa: the answer's first symbol wins 25 of 30
+   at the question, 24 on the pre-floor save; its mean share 0.78 against 0.73). The mechanism: the middles of well-known
+   utterances are written at a predicted symbol's surprise (0.05-0.15), under the floor, so the episode chains that carry
+   an answer past its onset are cut at the first night; the relative floor kept those writes four nights and the retelling
+   refreshed them. The derivation weighed the store's size and missed that the floor's height stands above the write
+   strength of everything the cortex already knows. REVERTED at night 249's save (--store-floor-abs 0 explicit; the 0.07
+   set kept as BASE_FLAGS_floorabs07.txt): the relative tenth and the capacity's eviction, the best-measured regime.
+   The next form, if one is needed: the write strength of an utterance's chain set by the utterance (its onset's or its
+   mean surprise), the episode encoded as a unit, so a fixed floor keeps or loses a chain whole; measured over the store's
+   turnover on the served body, never on three mornings.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by

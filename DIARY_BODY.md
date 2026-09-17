@@ -8884,3 +8884,30 @@ five-symbol key's collision with the days' natural talk, the twenty-eighth defec
 (the dentate-style separation, after the take), not a parent steered away from the facts' frames. The questions that fail
 this morning read the same way: "what is cold?" -> "warm is beside", "what has four legs?" -> "a bird has wings", "what is
 the sun?" -> "the sun is hot".
+NIGHT 248 (ended 12:22, the 238th row, the eleventh under the absolute floor; the log's day 293 after the aborted 292, facts
+21-30): the morning: the held-out 0.633, the facts by the cortex 0.885, the old lines 0.491, the parent's last lines 0.799,
+the dreams 0.86; the mouth completes 17 of 26 prefixes and answers 16 of 30 at two rests and 17 at eight; the rephrased 10;
+the branch 9 of 9 and 8 of 12; the store 49215. The day 293: 168 lines, 64 of 84 A-lines with letters in its turn, answer
+smiles 1, its own question marks 29, junk 9, duty 0.341, frowns 36. ACROSS THE FLOOR'S ELEVEN MORNINGS the store's rulers
+have fallen in step: the questions at two rests 19, 19, 21, 21, 21, 20, 19, 18, 18, 17, 16; the prefixes 22, 22, 23, 22, 19,
+19, 19, 20, 19, 17, 17; the rephrased 13, 12, 14, 14, 15, 10, 12, 12, 10, 9, 10; the branch's second set 10 of 12 until this
+morning's 8; while the held-out rose 0.607 to 0.633 and the cortex's facts held 0.88. The falsifier I set (three under the
+range on the first three mornings) was shorter than the fade's timescale: the weak traces go over ten nights, not one. The
+best-measured period of the store's rulers was at the capacity (nights 226-228: the questions 21 and 25, the prefixes 24,
+the rephrased 16), with the relative floor forgetting almost nothing and the capacity's eviction the forgetting. Measured
+fact by fact next (the answer's share of the read at each question on the pre-floor save and on this morning's).
+THE FLOOR FALSIFIED ON THE SERVED BODY (12:35-12:50; tools/read_trace.py --qa on the pre-floor save and this morning's): at every
+question, fed as the ruler feeds it, the store still finds the answer's first symbol: it wins 25 of 30 now against 24 before,
+its mean share of the read 0.78 against 0.73, the onset slots present with their strengths. The damage is after the onset:
+the answer's continuation is carried by the episode's chain, slot to slot through the utterance, and the middle of a
+well-known utterance is written weakly (the surprise of a predicted symbol, 0.05 to 0.15; a tenth of the day's writes lie
+under 0.07), so the absolute floor at 0.07 forgets those slots within a night or a few, the links that carried an answer
+past its first letter point to nothing, and the read falls back to the fast key, where the day's talk collides ("ice is in
+your cup"). Under the relative floor a 0.05 write lived four nights and the three-day retelling refreshed it; at the
+capacity the eviction took the faded tail first. Hence the slow fall of every store ruler across eleven mornings while the
+onset reads and the cortex held. THE REVERT: --store-floor-abs 0 explicit in every flags file (the 0.07 set kept as
+BASE_FLAGS_floorabs07.txt), the reload armed for night 249's save, the guard relaunched after it; the relative floor at a
+tenth stays and the capacity of 65536 is the forgetting (the weakest gives way at each write over it), the regime of the
+best-measured mornings (nights 226-228). Expected: the chains rebuild through the three-day cycle, the questions back to
+18-21 within two cycles. THE LESSON, for the method: a change of forgetting shows on the store's turnover (twenty nights),
+not on three mornings; its falsifier must be read over that span on the served body, since no copy can live it.
