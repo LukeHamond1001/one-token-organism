@@ -104,7 +104,7 @@ if "--lmloss" in sys.argv:
                     life.rest_tick(); life.take_own(sym)
             text = "".join(got); ok = any(text.startswith(r[:max(3, len(r.split()[0]))]) for r in rems)
             learned += int(ok)
-            if len(shown) < 6: shown.append(f"{pre!r}->{text[:14]!r}{'*' if ok else ''}")
+            if len(shown) < 6 or "--qa-all" in sys.argv: shown.append(f"{pre!r}->{text[:14]!r}{'*' if ok else ''}")   # --qa-all: every prefix too (2026-09-17)
         with torch.no_grad():
             gf = life.gauge([ids_of(f) for f in facts]); cf = life._gauge_cos
         print(f"FACTS: the mouth completes {learned} of {len(prefixes)} fact prefixes (cued recall) | the cortex alone on the {len(facts)} fact sentences {gf[0]:.3f} (cos {cf}) | {' '.join(shown)}")
