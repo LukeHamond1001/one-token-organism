@@ -8840,3 +8840,11 @@ parent's last lines 0.796, the dreams 0.81; the mouth completes 20 of 26 prefixe
 not grow (the day's writes and the night's forgetting now even: the steady state near fifty thousand, as derived). The day
 289: 164 lines, 61 of 82 A-lines with letters in its turn, 3 answered with I/yes/no/please before B, answer smiles 3, smiles
 348 (2.07 a line, the most yet), junk 3, duty 0.343, frowns 37.
+NIGHT 246 (ended 10:28, the 236th row, the ninth under the absolute floor; the log's day 290, facts 1-10): the dusk read the
+held-out 0.602 and the prefixes 19; the night: 3375 slots forgotten, the store 49637, the curve 0.175 to 0.133, the gauge 0.707
+to 0.825; the morning: the held-out 0.635, the highest yet (0.604 to 0.635 across the floor's nine mornings), the facts by the
+cortex 0.888, the old lines 0.493, the parent's last lines 0.764, the dreams 0.82; the mouth completes 19 of 26 prefixes and
+answers 18 of 30 at two rests and 20 at eight; the rephrased 10; the branch 9 of 9 and 10 of 12; the served constants read
+again from the flags (the floor 0.07, decisiveness 0, the lesson's rate 1.0, the slow context 0.5). The day 290: 171 lines,
+60 of 85 A-lines with letters in its turn, 11 answered with I/yes/no/please before B, answer smiles 1, junk 4, duty 0.300,
+frowns 37.
