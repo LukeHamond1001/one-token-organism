@@ -58,7 +58,7 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    right form is an absolute floor set by the write strength and the fade (a once-heard memory, 0.55, reaches 0.07 after
    twenty nights at 0.9), which does not move as the store thins: store_floor_abs, to derive and build after the recording.
    DERIVED A FOURTH TIME, THE ABSOLUTE FLOOR (2026-09-17, 00:40; the cap seven days off, before the recording after all):
-   measured on the morning saves after nights 234 and 235 (tools/floor_cut.py's companion, the turnover script): day 278 wrote
+   measured on the morning saves after nights 234 and 235 (tools/store_turnover.py, with tools/store_dist.py): day 278 wrote
    2745 new slots (beside 496 merges that strengthened a slot, x2.2 each), and the relative floor at a tenth of the mean (0.034)
    dropped 26; the store 44006 -> 46725. The new slots' write strength (the surprise x (1 + |dopamine|)): median 0.72, a quarter
    under 0.16, a tenth under 0.065. Under the fade 0.9 a slot written at s lives ln(F/s)/ln(0.9) nights above an absolute floor
