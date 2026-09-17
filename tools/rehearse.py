@@ -65,7 +65,7 @@ def say(text, who, keys=None, read=True):
             got = txt
             if smile:
                 low = got.lower(); words = re.findall(r"[a-z]+", low); done = words[:-1] if low and low[-1].isalpha() else words
-                if keys and not answered and any(re.search(r'\b' + re.escape(k) + r'\b', low) for k in keys):
+                if keys and not answered and any(re.search(r'\b' + re.escape(k), low) for k in keys):
                     answered = True; answered_at = time.time() - t0; smile_at(2.0); face_off_at[0] = time.time() + 2.4
                     post_then = (4.0, time.time() + 2.4)
                 elif not face_off_at[0] and len(done) > seen:
@@ -74,7 +74,7 @@ def say(text, who, keys=None, read=True):
                 else: seen = max(seen, len(done))
         if post_then and time.time() >= post_then[1]:
             smile_at(post_then[0]); post_then = None
-    if keys and not answered: answered = any(re.search(r'\b' + re.escape(k) + r'\b', got.lower()) for k in keys)
+    if keys and not answered: answered = any(re.search(r'\b' + re.escape(k), got.lower()) for k in keys)
     face_tend(); post("/face", {"expr": 0}); face_off_at[0] = 0.0
     return got, answered, answered_at
 def run_set(qs, label):

@@ -1275,5 +1275,6 @@ the held-out sets proper are `tools/heldout_stage4.txt` (the language ruler; lin
 surviving count printed) and `tools/heldout_rephrased.txt`. (4) `tools/rehearse.py` is a second parent acting on the live body,
 not an instrument; its numbers are rehearsals. (5) The reward channel: under the caregiver's answer smile the parent looks at the
 other voice's coming line and gives the growing smile when the child names a content word of it first; the smile's timing
-carries the answer's identity, as a real parent's does. (6) The answer scoring of every ruler is anchored at word boundaries from
-this date; counts before it may include substring matches.
+carries the answer's identity, as a real parent's does. (6) The answer scoring of every ruler is anchored at a word boundary BEFORE the answer's word from this date ("ice" inside "nice"
+no longer counts); the boundary after it is not required, since the child often runs its answer into the next chain without a
+space ("honeyhave"), which is an answer given. Counts before this date may include matches inside another word.

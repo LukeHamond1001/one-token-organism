@@ -119,7 +119,7 @@ for rep in range(reps):
         for _ in range(gap):
             life.tick()
         text = "".join(got); own_total += len(text); junk += sum(1 for ch in text if not (ch.islower() or ch in " .?!'"))
-        ok = any(re.search(r'\b' + re.escape(k) + r'\b', text.lower()) for k in keys); n += int(ok); hits[q] += int(ok)
+        ok = any(re.search(r'\b' + re.escape(k), text.lower()) for k in keys); n += int(ok); hits[q] += int(ok)
         if rep == 0: first[q] = (ok, text[:24])
     print(f"LIVE pass {rep + 1}: {n}/{len(pairs)} answered in the child's turn ({time.time() - t0:.0f}s)", flush=True)
 ever = sum(1 for q in hits if hits[q] > 0)

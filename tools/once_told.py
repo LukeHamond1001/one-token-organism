@@ -85,6 +85,6 @@ for k in (2, 8):
         n = 0; rows = []
         for q, fact in NOVEL:
             keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
-            t = run(q, k, use_recall); ok = any(re.search(r'\b' + re.escape(w) + r'\b', t.lower()) for w in keys); n += int(ok)
+            t = run(q, k, use_recall); ok = any(re.search(r'\b' + re.escape(w), t.lower()) for w in keys); n += int(ok)
             rows.append(f"{'*' if ok else ' '} {q!r:20}->{t[:16]!r}")
         print(f"ONCE pause {k} {'the mouth' if use_recall else 'cortex alone'}: {n}/{len(NOVEL)} | " + " ".join(rows), flush=True)

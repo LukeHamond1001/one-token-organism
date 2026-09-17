@@ -66,7 +66,7 @@ for k in gaps:
         n = 0; ex = []; first10 = 0
         for qi, (q, fact) in enumerate(pairs):
             keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
-            t = run(q, k, use_recall); ok = any(re.search(r'\b' + re.escape(w) + r'\b', t.lower()) for w in keys); n += int(ok); first10 += int(ok and qi < 10)
+            t = run(q, k, use_recall); ok = any(re.search(r'\b' + re.escape(w), t.lower()) for w in keys); n += int(ok); first10 += int(ok and qi < 10)
             if ok and len(ex) < 3: ex.append(f"{q!r}->{t[:12]!r}")
             if show_all and use_recall: print(f"      {'*' if ok else ' '} {q:26} -> {t[:16]!r}   (wants one of {keys})")
         row.append((n, ex, first10))
