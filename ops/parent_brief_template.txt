@@ -15,3 +15,9 @@ READING THE CHILD. The page log is data/watch2_caregiver.jsonl (append-only; rea
 THE DAYS. A day ends at a row {"action": "night", ...}; the label then increments (the next rows carry the next "day"). You must keep the queue full across the nights (the typist resumes after the night). Count nights ONLY with grep -c '"action": "night"' on the log (it reads <N> now); STOP ONLY when it reaches <N+3> (the third night you see), keeping the queue full across each night, then write your report: for each day, the lines typed (A/B), A's questions answered by the child before B spoke (count them from its_after: a content word or yes/no in the child's turn), the fact answers it gave in its own turn (the fact's word before B said it), unprompted whole sentences, its own question marks, smiles and frowns, and any mechanical finding about the typist (deferred lines, talk-overs). Facts and figures, no praise.
 
 DO NOT read anything under tools/ (held-out material lives there); do not touch the body, the server, the tests, or any file other than the queue file (append) and the log (read).
+
+MECHANICAL FINDINGS TO KEEP IN THE BRIEF (the parent of days 283-285, 2026-09-17): the night's row is written at the END of the
+night, about twelve minutes after the last line, so a night is detected by the queue freezing (the depth not moving for two
+readings), not by the log; the log's rows lag the typist by two or three minutes near a day's end (the depth script is the
+live signal); during a night's freeze append only the next day's facts and enough talk to reach 45 lines: a carry-over of 69
+lines pushed the next day's facts to minutes 17-26 and that day gave the fewest fact answers.

@@ -8780,3 +8780,11 @@ and 22 at eight; the rephrased 14, the most yet; the branch 9 of 9 and 10 of 12;
 lines, 55 of 86 A-lines with letters in its turn, 13 answered with I/yes/no/please before B, answer smiles 2, junk 7, duty
 0.287, frowns 38. THE FLOOR STANDS: three mornings under it read the prefixes 22, 22, 23 and the questions 19/21, 19/22, 21/22
 against the reference 22-23 and 18-21; the store 47967, 48458, 48766, settling under the capacity as derived.
+THE PARENT 283-285 (real days 283, 284, 285; the three nights under the absolute floor): by the parent's count the child spoke
+before B on 63 of 87, 54 of 86 and 52 of 85 A-questions (72, 63 and 61 percent); the fact's word in its own turn 4, 2 and 6 of
+10, day 285 the most of any day yet ("grass is green", "we drink water and milk", "bees make honey" whole, "we eat bread and eg"
+before B); turns of three words or more 46, 46, 38; its own question marks 21, 23, 18, one of them a fact's ("what is little?"),
+answered under other wording. Mechanical: no line dropped in 516; the log's rows lag the typist by two or three minutes near
+a day's end; the night's row is written at the END of the night, so a night is detected by the queue freezing; a carry-over of
+69 lines at night 239 pushed day 284's facts to minutes 17-26 and that day gave the fewest fact answers (2), the next two
+nights held at 45 and day 285 gave 6. The next parent (286-288, facts 21-30 first, stop at the 234th row) spawned at 06:00.
