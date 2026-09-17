@@ -8953,3 +8953,11 @@ and banners; dead imports and names removed in the body and the tools; tools/REA
 superseded scripts, ops/README; the README rewritten for the body as it runs. The cleaned tree and the commit before the cleanup
 give the same digests (023f6e9b under the served set, 6b619a79 under the defaults; the guard's own first form had run its night
 without gradients and was fixed). The served body takes the cleaned code at its next reload; it behaves the same.
+THE PARENT 292-294 (real days 293, 294, 296; the label 295 aborted by the revert's relaunch; the last three days under the
+absolute floor and the first under the relative one): by the parent's count the child spoke before B on 45 of 84, 49 of 81 and
+43 of 82 A-questions (54, 60 and 52 percent, down from 70-80 under the earlier parents, the floor's days); the fact's word in its
+own turn 1, 1 and 3 of 10 ("bees make honey" whole on day 296); runs of four words 6, 11, 8 ("we sit here and drink it", "the
+grass is soft"); its own question marks 29, 18, 21 ("let us go in to sleep?" whole); talk-overs flat at 106-114 a day; two
+queue lines lost at night boundaries, neither a fact; the duplicate collision one in fourteen, clustered on "do you want" and
+"where is"; the carry-over 46-55 lines puts the facts at minutes 11-20, the structural floor. The next parent (297-299, facts
+21-30 first, stop at the 243rd row) spawned at 14:20 with the queue at 48 lines.
