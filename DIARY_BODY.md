@@ -8766,3 +8766,10 @@ the dreams 0.85; the mouth completes 22 of 26 prefixes ("ice is " to "coming tom
 The night's own report: 8028 slots forgotten (the band below 0.078 and the day's low writes), 1024 dreams at 23.7 symbols, the
 curve 0.206 to 0.154 over six rounds (no round rose), the gauge 0.655 to 0.795; the store's weakest slot stands at 0.070 now
 and 2104 slots sit in the band the next night takes, so the store grows by about eight hundred a night toward its steady state.
+NIGHT 239 (ended 03:54, the 229th row, the second under the absolute floor; the log's day 283, facts 21-30): the dusk read the
+held-out 0.599, the night 0.604; the facts by the cortex 0.873 to 0.888, the old lines 0.481, the parent's last lines 0.757,
+the dreams 0.77; the mouth completes 22 of 26 prefixes and answers 19 of 30 at two rests and 22 at eight ("ice is cold" back at
+eight); the rephrased 12; the branch 9 of 9 and 10 of 12; the store 48458 (+491: the growth is the day's writes less the
+band the floor takes, about five hundred a night now). The day 283: 173 lines, 66 of 87 A-lines with letters in its turn, 8
+answered with I/yes/no/please before B, answer smiles 4, junk 1, duty 0.309, frowns 38. The falsifier is not met on the
+second morning either.
