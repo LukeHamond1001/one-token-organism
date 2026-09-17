@@ -1734,6 +1734,10 @@ class Life:
         opt.zero_grad(set_to_none=True)
 
     def night(self):
+        """the night, in order: the dreams drawn from the store or the utterance memory (dreams()); NREM, the cortex learning on
+        them with the recall off as its input; REM, the cortex running free and the forecast heads learning; the value ladder's
+        replay; the gauge before and after; then the store fades, the working state wakes fresh and the body is saved. A night is
+        kept whatever it does; only a non-finite lesson reloads the evening's organs."""
         self.asleep = True
         m = self.m
         rep = {"night": self.nights + 1, "tick": self.ticks}
@@ -1745,6 +1749,7 @@ class Life:
             # with the memories the day added to the store, night_load dreams per new slot, never fewer than night_starts and never
             # more than night_starts_max. A disclosed constant, not a rule about content; the store's own count, nothing read from
             # the parent.
+            # --- the dreams drawn: as many as the day's new memories ask for, between night_starts and night_starts_max ---
             n_new = (self.store.n() - int(self._store_after_night)) if self._store_after_night is not None else 0
             load = float(self.cfg.get("night_load", 0.0)); n_starts = None
             if load > 0.0:
@@ -1764,6 +1769,7 @@ class Life:
             if not dreams:
                 rep["note"] = "the store holds nothing to dream"
             else:
+                # --- NREM: sleep's own optimizer; the dreams in batches (night_batch > 0) or one step per round ---
                 before, nsym = self.gauge(dreams, owns); before_cos = self._gauge_cos
                 # THE MOMENT'S HORIZON (night_beta2; 2026-09-16, night 226): a fresh optimizer's second moment forms over about a thousand
                 # steps at 0.999, so at the third round an outlier gradient on a parameter whose moment is still small is normalised
@@ -1823,7 +1829,7 @@ class Life:
                                 g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
                         self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
                 mid, _ = self.gauge(dreams, owns); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
-                # REM: the cortex runs free from each dream's first symbols on its own readout,
+                # --- REM: the cortex runs free from each dream's first symbols on its own readout,
                 # a quarter of the night in rounds (biology's share), each round one batched step
                 rem_cos = []; rem_steps = 0; rem_imag = None
                 if str(self.cfg.get("rem_form", "forecast")) == "imagine":
@@ -1838,7 +1844,7 @@ class Life:
                         (fl / max(1, min(len(dreams), int(self.cfg["rem_dreams"])))).backward(); rc.append(fc)
                     if rc:
                         self._night_step(opt); rem_steps += 1; rem_cos.append(sum(rc) / len(rc))
-                # the value ladder replays its lived pairs once
+                # --- the value ladder replays its lived pairs once; the gauge after; a non-finite night reloads the evening's organs ---
                 self._value_replay()
                 m.eval()
                 del opt
@@ -1859,7 +1865,7 @@ class Life:
                             "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None), "rem_imagined": rem_imag,
                             "gauge": {"before": before, "after_nrem": mid, "after": after, "symbols": nsym,
                                       "cos_before": before_cos, "cos_after_nrem": mid_cos, "cos_after": after_cos}})
-            # the rest: the store fades, the working state wakes fresh, the body is saved
+            # --- the rest: the store fades, the working state wakes fresh, the body is saved ---
             rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]), float(self.cfg.get("store_floor_abs", 0.0)))
             self.utt_S = [v * float(self.cfg["store_fade"]) for v in self.utt_S]   # the utterances heard fade as the store does
             rep["utterances"] = len(self.utts)
