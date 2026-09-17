@@ -8942,3 +8942,14 @@ two rests and 19 at eight (the failed: cold, dogs, up in the day, big, we eat, w
 the sun, hard); the rephrased 11; the branch 9 of 9 and 8 of 12; the store 48890. The day 294: 163 lines, 56 of 81 A-lines
 with letters in its turn, 7 answered with I/yes/no/please before B ("what is cold?" -> "i o you"), answer smiles 3, junk 3,
 duty 0.335, frowns 36. The morning probes list every prefix and question from this save on.
+THE CODE MADE READABLE (13:05-13:45, on a copy of the tree, nothing on the served body changed): a behaviour guard first
+(tools/determinism_check.py: a tiny body at a fixed seed under the served constants lives a fixed script and a night; every
+weight, the store, the utterance memory, the page and the feelings hashed), then the edits, each measured by it under the served
+constants and under the defaults and by the organ suite. The physiology's 188 constants grouped by organ with one-line meanings,
+their values checked equal, the 197 lines of history that sat among them moved word for word to the spec's appendix; a code map at
+the top of life.py and model.py; the tick, 535 lines, split into eight phase methods with explicit parameters and returns, each
+body byte-identical (_sense, _hear, _learn_values, _own_face, _choose, _act, _feel_and_learn, _bookkeep); the night's docstring
+and banners; dead imports and names removed in the body and the tools; tools/README; ops/archive for the kept flag sets and the
+superseded scripts, ops/README; the README rewritten for the body as it runs. The cleaned tree and the commit before the cleanup
+give the same digests (023f6e9b under the served set, 6b619a79 under the defaults; the guard's own first form had run its night
+without gradients and was fixed). The served body takes the cleaned code at its next reload; it behaves the same.
