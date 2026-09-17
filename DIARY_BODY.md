@@ -8988,3 +8988,7 @@ possession); its own question marks 15, 13, 15, two of them facts' ("what has wi
 wording; talk-overs 110, 102 and 123 a day, 46 percent of all its missed symbols, frowns 38, 36, 42: the baseline the listening
 reflex is measured against. One line lost at the 297-298 boundary, a B line. The next parent (300-302, facts 21-30 first, stop
 at the 246th row) spawned at 17:26 with the queue at 42 lines.
+NIGHT 253 (ended 17:23, the 243rd row, the fourth back under the relative floor; the log's day 299, facts 11-20): the morning:
+the held-out 0.620, the facts by the cortex 0.879, the old lines 0.497, the parent's last lines 0.790; the mouth completes 18 of
+26 prefixes and answers 18 of 30 at two rests and 20 at eight; the rephrased 13; the branch 9 of 9 and 8 of 12; the store 58280
+(+2434). The day 299: 171 lines, 58 of 85 A-lines with letters in its turn, answer smiles 2, junk 7, duty 0.311, frowns 42.
