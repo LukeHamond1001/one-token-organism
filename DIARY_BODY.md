@@ -8773,3 +8773,10 @@ eight); the rephrased 12; the branch 9 of 9 and 10 of 12; the store 48458 (+491:
 band the floor takes, about five hundred a night now). The day 283: 173 lines, 66 of 87 A-lines with letters in its turn, 8
 answered with I/yes/no/please before B, answer smiles 4, junk 1, duty 0.309, frowns 38. The falsifier is not met on the
 second morning either.
+NIGHT 240 (ended 04:50, the 230th row, the third under the absolute floor; the log's day 284, facts 1-10): the dusk read the
+held-out 0.600 and the prefixes 24 of 26; the night's morning: the held-out 0.607, the facts by the cortex 0.881, the old lines
+0.488, the parent's last lines 0.741, the dreams 0.83; the mouth completes 23 of 26 prefixes and answers 21 of 30 at two rests
+and 22 at eight; the rephrased 14, the most yet; the branch 9 of 9 and 10 of 12; the store 48766 (+308). The day 284: 172
+lines, 55 of 86 A-lines with letters in its turn, 13 answered with I/yes/no/please before B, answer smiles 2, junk 7, duty
+0.287, frowns 38. THE FLOOR STANDS: three mornings under it read the prefixes 22, 22, 23 and the questions 19/21, 19/22, 21/22
+against the reference 22-23 and 18-21; the store 47967, 48458, 48766, settling under the capacity as derived.
