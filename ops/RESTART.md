@@ -19,7 +19,7 @@ it; a key left out of the flags keeps the save's value. Every changed constant m
 after the restart run  python3 ops/served_cfg.py data/watch2.pt ops/BASE_FLAGS.txt  and read the lines marked "the save alone":
 none of them may be a constant the ledger records as reverted.
 
-THE TALK PAGE (2026-09-17): the body serves the visitor's page at http://localhost:8020/talk (a conversation: each line a bubble,
-the body's speech its own, a box that types a line at the tick rate, smile and frown). ops/talk_proxy.py serves the same page on
-port 8021 and forwards its calls to the body, for use when the page in body/serve.py is newer than the running server:
+THE TALK PAGE (2026-09-17): ops/talk_proxy.py serves the visitor's page on port 8021 and forwards its calls to the body; while a
+browser polls it the typist is stopped (SIGSTOP) and six seconds after the last poll resumed (SIGCONT), resumed too on any exit of
+the server. The body serves the same page at http://localhost:8020/talk without the pause. Start it after the body:
    nohup python3 ops/talk_proxy.py --port 8021 --body 8020 > <SCRATCH>/logs/talk_proxy.log 2>&1 &

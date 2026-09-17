@@ -4,7 +4,7 @@
   python3 -m body.serve --load  data/body2.pt --tok data/tok_char.json --port 8018
 
 POST /type {"text", "who"}   POST /face {"expr"}   GET /state?since=N   POST /save {}   (no /sleep: the day ends by the body alone; the review of 2026-09-08)
-GET /talk   the visitor's page (2026-09-11; redrawn 2026-09-17 as a conversation: each line a bubble, the body's speech its own, a box that types a line at the tick rate); a smile and a frown button; the typist yields for a minute after a visitor types
+GET /talk   the visitor's page (2026-09-11; redrawn 2026-09-17): a conversation, each line a bubble, the body's speech its own; the letters flow in as typed, no box; the number keys are the face (5 neutral, held until the next); the typist yields for a minute after a visitor types
 """
 import argparse
 import json
@@ -35,48 +35,49 @@ async function poll(){const d=await fetch('/state?since='+seen).then(r=>r.json()
 setInterval(poll,500);</script>"""
 
 TALK = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>talk to the body</title>
-<style>body{margin:0;background:#f5f1e6;color:#222;font:17px/1.55 Georgia,serif}
-#pg{padding:96px 18px 190px;max-width:820px;margin:0 auto}
-#top{position:fixed;left:0;right:0;top:0;background:#eae4d3;border-bottom:1px solid #cbbfa3;padding:6px 18px 4px}
-#cv{display:block;width:100%;max-width:820px;height:64px;margin:0 auto;background:#f5f1e6;border:1px solid #d9d0b8;border-radius:6px}
-#cl{display:block;max-width:820px;margin:3px auto 0;font:11px ui-monospace,monospace;color:#6b6252}
-.b{margin:7px 0;max-width:78%;clear:both}.b .lab{display:block;font:11px ui-monospace,monospace;color:#8b8474;margin-bottom:1px}
-.b .t{display:inline-block;padding:7px 12px;border-radius:12px;white-space:pre-wrap;word-break:break-word}
-.w{float:left}.w.parent .t{background:#efe7d4;color:#5e4f33}.w.other .t{background:#e2eedb;color:#2f5f2f}.w.you .t{background:#dde6f3;color:#1f4e8c}
-.o{float:right;text-align:right}.o .t{background:#111;color:#fff9ea;font-weight:bold;letter-spacing:.02em}.gap{display:inline-block;width:.45em}
-#bar{position:fixed;left:0;right:0;bottom:0;background:#eae4d3;border-top:1px solid #cbbfa3;padding:10px 18px 12px}
-#row{display:flex;gap:10px;align-items:center;max-width:820px;margin:0 auto}
-#box{flex:1;font:18px Georgia,serif;padding:9px 12px;border:1px solid #b9ac8c;border-radius:8px;background:#fff}
-button{font:16px Georgia,serif;padding:8px 16px;border:1px solid #b9ac8c;border-radius:8px;background:#fff9ea;cursor:pointer}
-button:active{background:#e6dcc0}#st{max-width:820px;margin:6px auto 0;font:12px ui-monospace,monospace;color:#6b6252;display:flex;gap:14px;flex-wrap:wrap}
-#help{max-width:820px;margin:4px auto 0;font:12px ui-monospace,monospace;color:#8b8474}</style>
-<div id=top><canvas id=cv width=820 height=64></canvas><span id=cl>the faces over the last three minutes, tick by tick: blue the room's face (its parents' smiles and frowns, and yours), black its own face. -6 to +6; the middle line is neutral.</span></div>
-<div id=pg></div>
-<div id=bar><div id=row><input id=box autocomplete=off autocapitalize=off autocorrect=off spellcheck=false placeholder="type a line and press Enter"><button id=sm title="smile +2 (arrow up)">smile</button><button id=bg title="big smile +4 (shift + arrow up)">big smile</button><button id=fr title="frown -2 (arrow down)">frown</button></div>
-<div id=st><span id=s1></span><span id=s2></span></div>
-<div id=help>your line goes in one letter a tick (five a second), like its parents' lines; it answers the same way, in black. smile when it says something sensible (arrow up, +2); big smile when it answers you (shift + arrow up, +4); frown when it talks over you (arrow down, -2); the arrow keys work while the box is empty. the body learns from the surprise in your face, not its size: a smile it did not expect counts most. brown is its parent, green the other voice it overhears, blue is you. the parent steps back for a minute after you type.</div></div>
-<script>const pg=document.getElementById('pg'),box=document.getElementById('box');let seen=0,faceT=null;
+<style>:root{--bg:#fafafa;--ink:#1c1c1e;--mute:#8e8e93;--line:#e5e5ea;--parent:#f0f0f2;--parent-ink:#3a3a3c;--other:#e9eef6;--other-ink:#2c3e5a;--you:#e7f1eb;--you-ink:#1f4a34;--body:#1c1c1e;--body-ink:#fafafa;--blue:#3b6ea5}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif}
+#top{position:fixed;left:0;right:0;top:0;background:rgba(250,250,250,.97);border-bottom:1px solid var(--line)}
+#topin{max-width:760px;margin:0 auto;padding:10px 16px 8px;display:flex;align-items:center;gap:14px}
+#st{width:8px;height:8px;border-radius:50%;background:#34c759;flex:none}#st.off{background:#c7c7cc}
+#cv{flex:1;height:48px;display:block;background:#fff;border:1px solid var(--line);border-radius:8px;min-width:0}
+#mood{display:flex;gap:4px;flex:none}
+#mood span{width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);cursor:pointer;user-select:none;background:#fff}
+#mood span.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#pg{max-width:760px;margin:0 auto;padding:84px 16px 48px}
+.b{margin:6px 0;max-width:80%;clear:both}.b .lab{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);margin:0 0 2px 4px}
+.b .t{display:inline-block;padding:8px 12px;border-radius:12px;white-space:pre-wrap;word-break:break-word}
+.w{float:left}.w.parent .t{background:var(--parent);color:var(--parent-ink)}.w.other .t{background:var(--other);color:var(--other-ink)}.w.you .t{background:var(--you);color:var(--you-ink)}
+.o{float:right;text-align:right}.o .lab{margin:0 4px 2px 0}.o .t{background:var(--body);color:var(--body-ink);font-weight:500}.gap{display:inline-block;width:.4em}
+#k{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;border:0;padding:0}</style>
+<div id=top><div id=topin><span id=st title="awake"></span><canvas id=cv width=760 height=48></canvas><div id=mood></div></div></div>
+<div id=pg></div><input id=k autocomplete=off autocapitalize=off autocorrect=off spellcheck=false>
+<script>const pg=document.getElementById('pg'),k=document.getElementById('k'),st=document.getElementById('st'),moodEl=document.getElementById('mood');let seen=0,held=5,busy=false;
 const GAP=8;let wOpen=null,wWho=null,wGap=0,oOpen=null,oGap=0,oSil=0;
-function post(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json())}
-function face(v){post('/face',{expr:v});if(faceT)clearTimeout(faceT);faceT=setTimeout(()=>post('/face',{expr:0}),1250);flash(v>0?'smile':'frown')}
+function post(p,b){return fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>null)}
+/* THE FACE IS A NUMBER KEY, held until the next: 5 neutral, 6 to 9 warmer, 4 to 1 colder (the levels -4 to +4 of the face) */
+for(let d=1;d<=9;d++){const s=document.createElement('span');s.textContent=d;s.dataset.d=d;s.onclick=()=>setMood(d);moodEl.appendChild(s)}
+function setMood(d){held=d;post('/face',{expr:d-5});for(const s of moodEl.children)s.classList.toggle('on',+s.dataset.d===d)}
+setMood(5);setInterval(()=>{if(held!==5)post('/face',{expr:held-5})},3000);
+/* THE LETTERS FLOW IN AS TYPED: no box, no editing; lowercase words, space, ? . !; Enter is a space; nothing else goes in */
+function send(t){t=[...t].filter(c=>/[a-zA-Z ?.!]/.test(c)).map(c=>c==='I'?c:c.toLowerCase()).join('');if(t)post('/type',{text:t,who:'you'})}
+function takeChar(c){if(/^[1-9]$/.test(c))setMood(+c);else send(c)}
+k.addEventListener('input',()=>{const v=k.value;k.value='';for(const c of v)takeChar(c)});
+document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;if(document.activeElement===k&&e.key.length===1&&!/^[1-9]$/.test(e.key))return;
+ if(e.key==='Enter'){send(' ');e.preventDefault();return}if(e.key===' '){send(' ');e.preventDefault();return}
+ if(e.key.length===1){takeChar(e.key);e.preventDefault()}});
+function refocus(){if(document.activeElement!==k)k.focus({preventScroll:true})}
+document.addEventListener('click',e=>{if(e.target.parentElement!==moodEl&&!(window.getSelection&&window.getSelection().toString()))refocus()});refocus();
 const F=[];const cv=document.getElementById('cv'),cx=cv.getContext('2d');
-function draw(){const W=cv.width,H=cv.height,N=900;cx.clearRect(0,0,W,H);cx.strokeStyle='#cbbfa3';cx.beginPath();cx.moveTo(0,H/2);cx.lineTo(W,H/2);cx.stroke();const y=v=>H/2-Math.max(-6,Math.min(6,v))*(H/2-4)/6;for(const[k,col]of[[1,'#111'],[0,'#1f4e8c']]){cx.strokeStyle=col;cx.lineWidth=k?1.6:1.2;cx.beginPath();F.forEach((f,i)=>{const x=(i+N-F.length)*W/N;if(i===0)cx.moveTo(x,y(f[k]));else cx.lineTo(x,y(f[k]))});cx.stroke()}}
-function flash(w){const b=document.getElementById(w==='smile'?'sm':'fr');b.style.background='#e6dcc0';setTimeout(()=>b.style.background='',250)}
-function send(t){t=[...t].filter(c=>/[a-zA-Z ?.!]/.test(c)).map(c=>c==='I'?c:c.toLowerCase()).join('').trim();if(t)post('/type',{text:t,who:'you'})}
-function block(kind,who){const b=document.createElement('div');b.className='b '+(kind==='w'?'w '+who:'o');const l=document.createElement('span');l.className='lab';l.textContent=kind==='w'?(who==='parent'?'its parent':who==='other'?'the other voice':'you'):'the body';const t=document.createElement('span');t.className='t';b.appendChild(l);b.appendChild(t);pg.appendChild(b);while(pg.children.length>90){const f=pg.firstChild;if(wOpen&&f.contains(wOpen))wOpen=null;if(oOpen&&f.contains(oOpen))oOpen=null;pg.removeChild(f)}return t}
+function draw(){const W=cv.width,H=cv.height,N=900;cx.clearRect(0,0,W,H);cx.strokeStyle='#e5e5ea';cx.beginPath();cx.moveTo(0,H/2);cx.lineTo(W,H/2);cx.stroke();const y=v=>H/2-Math.max(-6,Math.min(6,v))*(H/2-3)/6;for(const[i,col,lw]of[[0,'#3b6ea5',1.2],[1,'#1c1c1e',1.6]]){cx.strokeStyle=col;cx.lineWidth=lw;cx.beginPath();F.forEach((f,j)=>{const x=(j+N-F.length)*W/N;if(j===0)cx.moveTo(x,y(f[i]));else cx.lineTo(x,y(f[i]))});cx.stroke()}}
+function block(kind,who){const b=document.createElement('div');b.className='b '+(kind==='w'?'w '+who:'o');const l=document.createElement('span');l.className='lab';l.textContent=kind==='w'?(who==='parent'?'parent':who==='other'?'other voice':'you'):'body';const t=document.createElement('span');t.className='t';b.appendChild(l);b.appendChild(t);pg.appendChild(b);while(pg.children.length>90){const f=pg.firstChild;if(wOpen&&f.contains(wOpen))wOpen=null;if(oOpen&&f.contains(oOpen))oOpen=null;pg.removeChild(f)}return t}
 function feed(es){for(const e of es){const sym=e[0];if(e[1]===0){F.push([e[2]||0,e[3]||0]);if(F.length>900)F.shift();if(sym){const who=e[4]||'you';if(!wOpen||who!==wWho){wOpen=block('w',who);wWho=who}wOpen.appendChild(document.createTextNode(sym));wGap=0}else{wGap++;if(wOpen&&wGap>=GAP)wOpen=null}}
  else{if(sym){if(!oOpen&&sym===' '){oGap=0;continue}if(!oOpen){oOpen=block('o');oSil=0}else if(oSil>=3){const g=document.createElement('span');g.className='gap';oOpen.appendChild(g)}oOpen.appendChild(document.createTextNode(sym));oGap=0;oSil=0}else{oGap++;oSil++;if(oOpen&&oGap>=GAP)oOpen=null}}}}
-document.getElementById('sm').onclick=()=>face(2);document.getElementById('bg').onclick=()=>face(4);document.getElementById('fr').onclick=()=>face(-2);
-box.addEventListener('keydown',e=>{if(e.key==='Enter'){send(box.value);box.value='';e.preventDefault()}});
-document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;if(box.value!=='')return;if(e.key==='ArrowUp'){face(e.shiftKey?4:2);e.preventDefault()}else if(e.key==='ArrowDown'){face(-2);e.preventDefault()}});
-document.addEventListener('click',e=>{if(e.target.tagName!=='BUTTON'&&!(window.getSelection&&window.getSelection().toString()))box.focus({preventScroll:true})});box.focus();
-let busy=false;
 async function poll(){if(busy)return;busy=true;let d;try{d=await fetch('/state?since='+seen).then(r=>r.json())}catch(err){d=null}finally{busy=false}
- if(!d||!d.page){document.getElementById('s1').textContent='no answer from the body (is it being restarted?)';return}
+ if(!d||!d.page){st.className='off';st.title='no answer from the body';return}
  if(d.n<seen||(d.base!==undefined&&d.base>seen&&seen>0)){seen=0;pg.textContent='';wOpen=oOpen=null}
  const es=(seen===0)?d.page.slice(-4000):d.page;const atBottom=window.innerHeight+window.scrollY>=document.body.scrollHeight-80;feed(es);draw();seen=d.n;
- document.getElementById('s1').textContent=(d.asleep?'asleep (a night is ten to seventeen minutes)':'awake')+' · nights '+d.nights;
- document.getElementById('s2').textContent=d.queued?('typing in ('+d.queued+' letters to go)'):'';if(atBottom)window.scrollTo(0,document.body.scrollHeight)}
+ st.className=d.asleep?'off':'';st.title=d.asleep?'asleep':'awake';if(atBottom)window.scrollTo(0,document.body.scrollHeight)}
 setInterval(poll,400);poll();</script>"""
 
 

@@ -33,7 +33,7 @@ nohup python3 -m body.serve --load data/watch2.pt --tok data/tok_char.json --por
 
 The typist that talks to it, day after day, from the queue a parent agent appends to (`data/teach_queue_w2.jsonl`): the exact quoted command is `ops/typist_chain_command.txt`. The nightly cycle (the guard, the dusk and morning probes, the night waiter, the parent's brief) is `ops/RESTART.md`.
 
-Talking to it yourself: open http://localhost:8020/talk. Each line is a bubble, its parent in brown, the other voice in green, you in blue, the body in black; a line you type goes in one symbol a tick like its parents' lines; smile and frown are the buttons or the arrow keys; both faces run tick by tick at the top; the parent's typist steps back for a minute after you type. When the page in the code is newer than the running server, `python3 ops/talk_proxy.py` serves the same page on http://localhost:8021 beside the body. Nothing on that page reads from inside.
+Talking to it yourself: `python3 ops/talk_proxy.py` and open http://localhost:8021 (the same page the body serves at http://localhost:8020/talk, but this one pauses the parent). Each line is a bubble, its parent, the other voice, you and the body told apart by shade; what you type flows in letter by letter at the tick rate, no box and no editing; the number keys are your face, 5 neutral, 6 to 9 warmer, 4 to 1 colder, held until the next; both faces run tick by tick at the top. While the page is open the parent's typist is paused, and it resumes six seconds after the page is closed. Nothing on that page reads from inside.
 
 The organ tests:
 

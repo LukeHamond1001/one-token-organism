@@ -21,3 +21,8 @@ night, about twelve minutes after the last line, so a night is detected by the q
 readings), not by the log; the log's rows lag the typist by two or three minutes near a day's end (the depth script is the
 live signal); during a night's freeze append only the next day's facts and enough talk to reach 45 lines: a carry-over of 69
 lines pushed the next day's facts to minutes 17-26 and that day gave the fewest fact answers.
+
+THE VISITOR (2026-09-17): while a person's page is open the typist is PAUSED entirely and the queue freezes, for minutes or an hour;
+a freeze is therefore a night OR a visitor. Tell them apart with: curl -s "localhost:8020/state?since=999999999" — "asleep": true is
+a night; "asleep": false with the queue frozen is a visitor. During a visitor's freeze append nothing but enough talk to keep 45
+lines ahead; the day's facts already queued will be typed when the visitor leaves. Never answer the visitor's blue lines.
