@@ -8992,3 +8992,15 @@ NIGHT 253 (ended 17:23, the 243rd row, the fourth back under the relative floor;
 the held-out 0.620, the facts by the cortex 0.879, the old lines 0.497, the parent's last lines 0.790; the mouth completes 18 of
 26 prefixes and answers 18 of 30 at two rests and 20 at eight; the rephrased 13; the branch 9 of 9 and 8 of 12; the store 58280
 (+2434). The day 299: 171 lines, 58 of 85 A-lines with letters in its turn, answer smiles 2, junk 7, duty 0.311, frowns 42.
+NIGHT 254 (ended 18:2x, the 244th row, the fifth back under the relative floor; the log's day 300, facts 21-30): the morning: the
+held-out 0.616, the facts by the cortex 0.877, the old lines 0.519, the parent's last lines 0.777; the mouth completes 19 of 26
+prefixes and answers 18 of 30 at two rests and 22 at eight; the rephrased 12; the branch 9 of 9 and 7 of 12; the store 60817
+(+2537, the capacity two days off). The day 300: 171 lines, 60 of 86 A-lines with letters in its turn, answer smiles 2, smiles
+351, junk 4, duty 0.359, frowns 46.
+THE DISK (18:30): 3.9 GB free, a save 1.4 GB: the day's measurement copies (the ear's two arms, the reflex's, the floor's cut)
+had taken ten gigabytes of the scratch space; removed, 9.4 GB free; the chains now remove each copy after its probe. What
+remains large is the first lineage's data (23 GB) and the backups' rotations (9 GB, bounded).
+THE CHAIN'S FLAW (18:35): the ear's and the reflex's measurement arms came out identical to their controls to the symbol because
+the chain passed the override as one word ("--gate-listen 1.0" unsplit: zsh does not split an unquoted variable), so the
+instrument ignored it; on the copy itself, loaded with the reflex on, the floor reads 0 and the gate stays shut through a
+typed line and releases eight ticks after it. The chain fixed (${=X}); the two reflex arms re-run.
