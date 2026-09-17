@@ -8793,3 +8793,12 @@ held-out 0.597, the night 0.623, the highest morning yet; the facts by the corte
 parent's last lines 0.745, the dreams 0.78; the mouth completes 22 of 26 prefixes and answers 21 of 30 at two rests and 22 at
 eight; the rephrased 14; the branch 9 of 9 and 10 of 12; the store 49313 (+547). The day 285: 171 lines, 56 of 85 A-lines
 with letters in its turn, 3 answered with I/yes/no/please before B, answer smiles 4, junk 2, duty 0.272, frowns 33.
+NIGHT 242 (ended 06:43, the 232nd row, the fifth under the absolute floor; the log's day 286, facts 21-30): the dusk read the
+held-out 0.599 and the prefixes 19 of 26; the morning: the held-out 0.619, the facts by the cortex 0.881, the old lines 0.492,
+the parent's last lines 0.772, the dreams 0.82; the mouth completes 19 of 26 prefixes (the dusk's count: "water is " lost to
+"warm and who", B having typed "no. the water is warm" that day, the five-symbol key's collision with the day's talk, beside
+"ice is " lost since the floor's cut) and answers 21 of 30 at two rests and 22 at eight; the rephrased 15, the most yet; the
+branch 9 of 9 and 10 of 12; the store 49549 (+236). The day 286: 171 lines, 61 of 86 A-lines with letters in its turn, 9
+answered with I/yes/no/please before B, answer smiles 3, its own question marks 31, junk 5, duty 0.291, frowns 35. The
+prefixes' fall is the day's writes at a shared key, not the floor: the floor forgets the weak, and "the water is warm" was
+written that day at full surprise.
