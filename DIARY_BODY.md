@@ -8856,3 +8856,20 @@ differential ones, whose states shrink with the clock), unchanged between the tw
 form I had queued for after the take is not needed while this holds; the falsifier of the diagnosis is the scale or the
 head rising again over a week (read on the morning saves with the store instruments' companion, the value scale by night).
 The next structural lever for its learning is the store's five-symbol key (the dentate-style separation), after the take.
+NIGHT 247 (ended 11:26, the 237th row, the tenth under the absolute floor; the log's day 291, facts 11-20): the dusk read the
+held-out 0.613 and the prefixes 17; the night: 3306 slots forgotten, the store 49325, the curve 0.178 to 0.133, the gauge 0.726
+to 0.825; the morning: the held-out 0.634, the facts by the cortex 0.883, the old lines 0.499, the parent's last lines 0.781;
+the mouth completes 17 of 26 prefixes ("ice is " to "in your cup", "water is " to "warm for me", the day's talk at those keys)
+and answers 17 of 30 at two rests and 19 at eight; the rephrased 9; the branch 9 of 9 and 10 of 12. The prefixes have fallen
+from 23 (nights 233-237) to 19-20 and now 17 across the floor's ten mornings while the held-out rose 0.604 to 0.634 and the
+questions held 17-21: to be traced on the morning save (which slots win the reads at "ice is " and "water is ") before any
+verdict on the floor. The day 291: 169 lines, 67 of 85 A-lines with letters in its turn, 10 answered with I/yes/no/please
+before B, answer smiles 3, junk 9, duty 0.339, frowns 38. THE RELOAD at this save (11:26:39, served again 11:27:35, pid
+69838) carries the redrawn talk page on the body's own port; the constants verified from the flags.
+THE PARENT 289-291 (real days 289, 290, 291): by the parent's count the child spoke before B on 60 of 82, 59 of 85 and 66 of
+85 A-questions (73, 69 and 78 percent); the fact's key word in its own turn 3, 1 and 2 of 10 (any word of the answer 4, 3,
+4); whole fact sentences before B: "fish have fins" (289), "an ant is little" (291); its own fact-shaped questions answered
+under other wording; turns of three words or more 63, 47, 60; no line dropped in 438, both nights splitting a row cleanly.
+A handoff overlap: the previous parent's last four rows landed after this one's first depth reading and pushed day 289's
+facts to minute 26; the brief now says to trust the depth, not the row count. The next parent (292-294, facts 21-30 first,
+stop at the 240th row) spawned at 11:27 with the queue at 27 lines.
