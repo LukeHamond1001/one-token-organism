@@ -405,6 +405,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    old lines 0.469 against 0.482, within a night's noise on those two. Not falsified on the stated rulers. ON THE SERVED BODY
    from night 229's save; the falsifier there: no round's loss rising a fifth above the night's first over twenty nights, the
    morning rulers not down.
+   THE CRITIC AFTER THE DIVERGENCE (2026-09-17, 11:12): the value scale of band 5, 50304 after night 227, reads 2972 after 237
+   and 2165 after 246; the ventral head 1162, 247, 92. Its evidence forgets at 36000 ticks and the divergence's evidence is
+   gone; the slow bands' heads (46, 234, 1254) hold their scale between the saves. No bounded form is needed while the scale
+   and the head keep falling or hold; falsified if either rises across a week of mornings.
 39. The reload's inheritance (an operations defect, found by the independent review of 2026-09-16, 21:30). A save carries its
    own constants; a reload passes only the flags file's keys; a key left out of the file keeps the save's value. Three reverts
    recorded in this ledger as done never took effect: decisiveness (item 13, "off from night 219's save") ran at 8 through

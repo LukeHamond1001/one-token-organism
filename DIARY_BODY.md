@@ -8848,3 +8848,11 @@ answers 18 of 30 at two rests and 20 at eight; the rephrased 10; the branch 9 of
 again from the flags (the floor 0.07, decisiveness 0, the lesson's rate 1.0, the slow context 0.5). The day 290: 171 lines,
 60 of 85 A-lines with letters in its turn, 11 answered with I/yes/no/please before B, answer smiles 1, junk 4, duty 0.300,
 frowns 37.
+THE CRITIC'S RUNAWAY RECEDED (11:12, read on the morning saves): band 5's value scale, 50304 after night 227's divergence, reads
+2972 after night 237 and 2165 after night 246, its typical value about 46; the ventral critic's head, 1162 at its worst, 247
+and then 92 (its norm 95). The head's evidence forgets at 36000 ticks (about three days of its clock), and the divergence's
+evidence has been forgotten; nothing was done to it. The slow bands' heads read 46, 234 and 1254 (bands 5, 6, 7, the
+differential ones, whose states shrink with the clock), unchanged between the two saves: a scale, not a walk. The bounded
+form I had queued for after the take is not needed while this holds; the falsifier of the diagnosis is the scale or the
+head rising again over a week (read on the morning saves with the store instruments' companion, the value scale by night).
+The next structural lever for its learning is the store's five-symbol key (the dentate-style separation), after the take.
