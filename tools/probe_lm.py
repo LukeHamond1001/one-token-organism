@@ -143,7 +143,7 @@ if "--qa" in sys.argv:
                         sym = int(lm.argmax()); got.append(TOK.decode([sym]))
                         life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
                         life.rest_tick(); life.take_own(sym)
-                text = "".join(got); ok = any(re.search(r'\\b' + re.escape(k) + r'\\b', text.lower()) for k in keys)
+                text = "".join(got); ok = any(re.search(r'\b' + re.escape(k) + r'\b', text.lower()) for k in keys)
                 n_ans += int(ok)
                 if len(shown) < 8: shown.append(f"{q!r}->{text[:14]!r}{'*' if ok else ''}")
             print(f"QA (pause {pause}): the mouth answers {n_ans} of {len(pairs)} fact questions | {' '.join(shown)}")
