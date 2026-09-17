@@ -40,7 +40,7 @@ def wait_quiet():
         time.sleep(0.2); face_tend(); txt, n = own_since(n0)
         if txt:
             silent = 0; got += txt; n0 = n
-            if smile and not face_off_at[0]:
+            if smile:
                 low = got.lower(); words = re.findall(r"[a-z]+", low); done = words[:-1] if low and low[-1].isalpha() else words
                 if len(done) > seen:
                     wd = done[seen]; seen = len(done)
@@ -68,7 +68,7 @@ def say(text, who, keys=None, read=True):
                 if keys and not answered and any(re.search(r'\b' + re.escape(k), low) for k in keys):
                     answered = True; answered_at = time.time() - t0; smile_at(2.0); face_off_at[0] = time.time() + 2.4
                     post_then = (4.0, time.time() + 2.4)
-                elif not face_off_at[0] and len(done) > seen:
+                elif len(done) > seen:                                              # the typist smiles at every known word said, one smile on top of another
                     wd = done[seen]; seen = len(done)
                     if wd in KNOWN and time.time() - word_tick.get(wd, 0) > 24: smile_at(2.0); word_tick[wd] = time.time()
                 else: seen = max(seen, len(done))

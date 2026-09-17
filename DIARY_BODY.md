@@ -8706,3 +8706,8 @@ rephrased 12; the branch 9 of 9 and 10 of 12; the store 41361, the last night of
 duty 0.309. THE EXPLICIT REVERTS LANDED at this save (the reload at 22:11, served again 22:12:40): the served constants read
 from the flags now, decisiveness 0, the lesson's rate 1.0, the floor a tenth, the slow context 0.5 disclosed, beside the
 capacity, the hold, its form and the moment's horizon; verified with ops/served_cfg.py against the save.
+THE SEVENTH REHEARSAL (22:36-22:41, mid-day of the log's day 276, the constants as recorded at last, the scoring anchored): the
+taught questions 1-15 answered 6 of 15 in the child's turn: 3 of the first 5 while the mood stood above zero ("ice is", "water
+is wet", "birds fly up"), 3 of the next 10 as the mood sank from +2.2 to -5.3 and the readout flattened to its floor (34 to 8).
+The drain feeds itself: a failed answer earns no smile, the mood falls, the readout flattens, the next answer fails. The take
+starts above +2, keeps its questions few, and the parent smiles at every sensible word.
