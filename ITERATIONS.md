@@ -489,6 +489,16 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the pause at two rests (an answer could only begin at the offset, four to eight ticks after the question).
    Adoption of any form at a night's save, with the flag explicit; falsified if the questions by the pause or the held-out
    fall three under the control copy's on the same day, or the parents' talk-over counts do not fall within three days live.
+   THE EAR READ (2026-09-17, 17:30): the copy day with --gate-ear 1 came out identical to the control to the symbol, and the
+   saves explained it: the served body has had the ear since an earlier day (gate_ear 1 in its save, the gate 1031 wide), and
+   its weights have learned, -48 on the world's symbol arriving this tick and +13 on its own act last tick: a gate slammed
+   shut during the parent's lines. The talk-overs (630 own symbols on 4206 typing ticks, 15 percent, on 132 of 165 lines) come
+   from what no learned weight reaches: the spontaneous floor (gate_floor 0.05) starting a word on a twentieth of the ticks,
+   and the chunk form then running that word's letters with no gate decision. So form (c) is the one: THE LISTENING REFLEX
+   (gate_listen; test 66) scales the floor by (1 - gate_listen) while the world's utterance is open (from its symbol until the
+   offset fires) and cuts a running word then; the learned gate is untouched, and it is released at the event's end the body
+   computes. Measured on the same save (day 297, the rewards replayed): the control against 1.0 and 0.5; the rulers below.
+   The salience input stays unmeasured: its weight reads exactly 0 in the save (born at zero), so a day would show nothing.
 
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
