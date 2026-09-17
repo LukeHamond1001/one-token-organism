@@ -8974,3 +8974,9 @@ the held-out 0.628, the facts by the cortex 0.879, the old lines 0.516, the pare
 at two rests and 21 at eight (16, 18, 20 across the three mornings since the revert); the rephrased 12; the branch 9 of 9 and
 8 of 12; the store 53621, rebuilding toward the capacity. The day 297: 165 lines, 55 of 83 A-lines with letters in its turn,
 answer smiles 4, junk 6, duty 0.338, frowns 38.
+NIGHT 252 (ended 16:11, the 242nd row, the third back under the relative floor; the log's day 298, facts 1-10): the morning: the
+held-out 0.613, the facts by the cortex 0.879, the old lines 0.498, the parent's last lines 0.786; the mouth completes 18 of 26
+prefixes and answers 17 of 30 at two rests and 21 at eight; the rephrased 13; the branch 9 of 9 and 8 of 12; the store 55846
+(+2225, toward the capacity). The day 298: 159 lines, 58 of 80 A-lines with letters in its turn, answer smiles 3, junk 8, duty
+0.259 (a quiet day), frowns 36. The gate's ear is being measured on a copy of this morning's save (day 297 lived again, the
+rewards replayed, the talk-overs per quarter), the salience input after it.
