@@ -8725,5 +8725,16 @@ THE PARENT 275-278 (real days 275, 277, 278; all thirty facts asked in each day'
 by the parent's own count the child spoke a content word or yes/no before B on 53 of 89, 50 of 77 and 45 of 86 A-questions;
 the fact's word in its own turn before B said it 1, 4 and 4 of 10 ("bees make honey" produced whole); one fact exchange lost
 to the night boundary after day 275 and asked again the next day. The next parent (279-281, facts 21-30 first, stop at the
-228th row) spawned at 00:08 with the queue at 61 lines. The night waiters are a script now (night_waiter.sh N, the label
-N+10), armed for the 226th to the 229th rows; the probe waiters stand through the 247th label.
+228th row) spawned at 00:08 with the queue at 61 lines. The night waiters armed before the review stand through the 247th
+label (the probe waiters too); a script (night_waiter.sh N, the label N+10) arms the nights beyond.
+NIGHT 236 (ended 01:04, the 226th row; the log's day 279, facts 21-30): the dusk read the held-out 0.606, the night 0.614; the
+facts by the cortex 0.853 to 0.881, the old lines 0.502, the parent's last lines 0.735; the mouth completes 23 of 26 prefixes,
+answers 18 of 30 at two rests and 20 at eight; the rephrased 12; the branch 9 of 9 and 10 of 12; the store 49601 (+2855); the
+day 279: 175 lines, 63 of 88 A-lines with letters in its turn, 13 answered with I/yes/no/please before B, answer smiles 0,
+junk 5, duty 0.297, frowns 37. The floor's cut on this morning's save is being measured on a copy.
+THE FLOOR'S CUT MEASURED (01:14-01:18, on a copy of the save after night 236): 4649 of 49601 slots below 0.078 forgotten at
+once (the band the relative floor never removed); against the same save untouched the prefixes 22 against 23 ("ice is " lost
+to a competing memory), the questions 17 and 19 against 18 and 20 (two lost, "what is big?" and "what has wings?", one gained,
+"what do cows give?"), the rephrased, the branch, the held-out and the old lines the same. Under the falsifier's three: the absolute floor goes on at night 237's save (the reload armed 01:20, the flag
+explicit in every flags file, the guard relaunched after the landing). The first night under it will forget about the same
+band; the falsifier on the served body is three under the mornings' range on the first three mornings.

@@ -145,5 +145,5 @@ if "--qa" in sys.argv:
                         life.rest_tick(); life.take_own(sym)
                 text = "".join(got); ok = any(re.search(r'\b' + re.escape(k), text.lower()) for k in keys)
                 n_ans += int(ok)
-                if len(shown) < 8: shown.append(f"{q!r}->{text[:14]!r}{'*' if ok else ''}")
+                if len(shown) < 8 or "--qa-all" in sys.argv: shown.append(f"{q!r}->{text[:14]!r}{'*' if ok else ''}")   # --qa-all: every question (2026-09-17)
             print(f"QA (pause {pause}): the mouth answers {n_ans} of {len(pairs)} fact questions | {' '.join(shown)}")

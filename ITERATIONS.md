@@ -75,6 +75,20 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    body's first mornings under it; then back to the relative floor at a tenth, explicitly. ARMED: the cut at 0.078 (what the
    first night's fade takes below 0.07) measured on the save after night 236 against its morning probe; adoption at a later
    save by the reload, --store-floor-abs 0.07 explicit in every flags file.
+   MEASURED ON THE CUT COPY (2026-09-17, 01:18; the save after night 236, 49601 slots): the cut at 0.078 forgot 4649 (9.4%: the
+   low band the relative floor never removed, two days of low-surprise writes and the faded tail), the store's mean 0.327 ->
+   0.355. Against the same save untouched: the prefixes 22 of 26 against 23 ("ice is " -> "coming tomor" against "cold": the
+   weak trace of a well-predicted answer gone, a competing memory unmasked), the questions 17 and 19 against 18 and 20, the
+   rephrased 12 = 12, the branch 9/9 and 10/12 = the same, the held-out and the old lines identical (the cortex untouched).
+   Question by question (probe_lm --qa-all): three reads shifted, two lost ("what is big?", "what has wings?") and one gained
+   ("what do cows give?" -> "cows give milk"); the rest word for word or the same verdict.
+   One prefix and one question, under the falsifier's three. The catch disclosed: surprise-gated encoding writes a well-
+   predicted fact weakly, and the weak traces are what an absolute floor forgets first; a retelling merges into a weak slot at
+   nearly the full write strength (the increment m/(m+S) of it, 0.82 at S 0.07), so the three-day cycle keeps the thirty, and
+   a fact told once at full surprise (the demo's scene) lives twenty-seven nights. ADOPTED at night 237's save: the reload
+   armed at 01:20 with --store-floor-abs 0.07 explicit in BASE_FLAGS, guard_args and serve_command (the pre set kept as
+   BASE_FLAGS_pre_floorabs.txt), the guard relaunched after it. Falsifier on the served body: the prefixes or the questions
+   three under their range (20-23, 18-23) on the first three mornings under it; then --store-floor-abs 0 EXPLICITLY.
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by
