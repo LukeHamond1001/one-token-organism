@@ -467,6 +467,29 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    NOT RUN until after the recording; the served body keeps its key. Falsifier for any form: the held-out or the rephrased
    set three under the control copy's on the same day, or the branch under 8 of 9.
 
+41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
+   a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
+   child's own symbols while a line is being typed against those in its turn), the junk rate of its own symbols, the questions
+   by the pause and the held-out (which must not fall), the parents' live counts after adoption (talk-overs and frowns a day,
+   flat at 100-114 and 36-38 for weeks).
+   THE READING: the same save answers 20 of 30 questions read greedily; live it opens the gate during the parent's lines (the
+   talk-over echoes) and samples a first letter when the forecast is flat (the junk words). Two mechanisms in the code, off:
+   (a) THE EAR (gate_ear): the world's symbol this tick and its own act last tick as sensed inputs of the gate, born at zero, so
+   the frowns can teach silence while the parent types (measured once on fresh seeds of the first lineage, +0.08 of logit a
+   quarter day with the vigor term off; this body runs vigor 0). Measured now: day 297 lived again on the morning save after
+   night 252 with the rewards replayed, the served set against the served set with the ear.
+   (b) THE SALIENCE (gate_salience): the forecast's certainty (its norm) as a gate input, so the gate opens where the mouth is
+   sure and stays shut where the readout would be noise; the input has been zero since birth, its weight unlearned. Measured
+   after (a) on the save after night 253: alone and with the ear, with the junk rate read.
+   (c) If the learned forms are too slow: THE LISTENING REFLEX, an innate inhibition on the gate's logit while the world's
+   utterance is open, released at the event's end the body already computes (the offset, by the settle law or the count),
+   as a disclosed constant (gate_listen) like the activity floor: the vocal suppression while hearing speech that an infant
+   has before it learns turn-taking; the learned weights can override it with evidence. Body-general (any body with an ear
+   and an event boundary), nothing about content, nothing read from the parent. Its cost to measure first: the answers by
+   the pause at two rests (an answer could only begin at the offset, four to eight ticks after the question).
+   Adoption of any form at a night's save, with the flag explicit; falsified if the questions by the pause or the held-out
+   fall three under the control copy's on the same day, or the parents' talk-over counts do not fall within three days live.
+
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
