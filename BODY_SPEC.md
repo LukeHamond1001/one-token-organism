@@ -1261,3 +1261,19 @@ retellings landed in two key forms (3 of 10 for the facts retold that day). The 
 state is the world's alone, faded by the symbol rate per world symbol and the quiet rate per quiet tick; the query fades its
 world part by the symbol rate per own symbol, beside the efference copy's shift. The keys never depend on what the body said;
 the query reads as if the world had said it.
+
+
+*Amendments after the independent review (2026-09-16).* (1) The space as a boundary: section 5 records the space test as replaced by
+`plan_boundary` 0; the chunk form of the action (`actor_form chunk`, on the served body since night 131) re-introduced it: a word's
+first symbol is decided and sampled, its remaining symbols run as the cortex's own continuation to the space or the rest. That is
+a fact about text written into the body, disclosed here as such; a body without a space symbol needs a boundary from the pause in
+its own speech, which is the form to build for the next body. (2) The constants: section 5's prose list is not maintained; the
+served body's constants are what its save says, with the flags a delta on it, and `ops/served_cfg.py` prints the effective set
+against the flags. Three reverts recorded on 2026-09-16 never took effect until made explicit (the ledger's item 39). (3) The
+fact prefixes (`tools/fact_prefixes.txt`, formerly named held-out) are cued recall of answers heard about twenty-five times each;
+the held-out sets proper are `tools/heldout_stage4.txt` (the language ruler; lines a parent has since typed are dropped and the
+surviving count printed) and `tools/heldout_rephrased.txt`. (4) `tools/rehearse.py` is a second parent acting on the live body,
+not an instrument; its numbers are rehearsals. (5) The reward channel: under the caregiver's answer smile the parent looks at the
+other voice's coming line and gives the growing smile when the child names a content word of it first; the smile's timing
+carries the answer's identity, as a real parent's does. (6) The answer scoring of every ruler is anchored at word boundaries from
+this date; counts before it may include substring matches.

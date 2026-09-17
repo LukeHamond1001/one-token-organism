@@ -3,7 +3,7 @@ symbols and the world's pause, then read what the MOUTH would say, greedily, wit
 plus the hippocampal recall (the efference copy in the recall's query), as the tick reads them. Two columns: the mouth, and the
 cortex alone (the hearing model, which is not the speaker).
 usage: python3 tools/probe_lm.py data/watch2.pt "do you want milk?" ...   [--n=24]"""
-import sys, json
+import sys, re, json
 sys.path.insert(0, "/Users/lukehamond/Projects/project")
 import torch
 from tokenizers import Tokenizer
@@ -76,11 +76,11 @@ if "--lmloss" in sys.argv:
         g2 = life.gauge(recent); c2 = life._gauge_cos; g3 = life.gauge(old); c3 = life._gauge_cos
         g4 = life.gauge(held); c4 = life._gauge_cos; g1 = life.gauge(dreams) if dreams else (float("nan"), 0)
     print(f"LM accuracy (the night's gauge): the parent's last 60 lines {g2[0]:.3f} (cos {c2}) over {g2[1]} symbols | {len(old)} old lines (days 110-125) {g3[0]:.3f} (cos {c3}) over {g3[1]} | HELD-OUT {len(held)} lines {g4[0]:.3f} (cos {c4}) over {g4[1]} | the last night's dreams {g1[0]:.2f} over {g1[1]}")
-    # THE FACTS (stage five, 2026-09-14): each fact of tools/facts_stage5.txt as a prefix the parents never type (tools/heldout_facts.txt);
+    # THE FACTS (stage five, 2026-09-14): each fact of tools/facts_stage5.txt as a prefix (tools/fact_prefixes.txt; the answers themselves are heard about twenty-five times each: cued recall, not a held-out set);
     # a fact counts as learned when the mouth completes the prefix with the fact's own remainder; and the cortex alone on the fact
     # sentences, teacher-forced, as the finer number
     import os
-    fp, hp = "/Users/lukehamond/Projects/project/tools/facts_stage5.txt", "/Users/lukehamond/Projects/project/tools/heldout_facts.txt"
+    fp, hp = "/Users/lukehamond/Projects/project/tools/facts_stage5.txt", "/Users/lukehamond/Projects/project/tools/fact_prefixes.txt"
     if os.path.exists(fp) and os.path.exists(hp):
         facts = [l.split("|")[1].strip() for l in open(fp) if "|" in l]
         prefixes = [l.rstrip("\n") for l in open(hp) if l.strip()]
@@ -107,7 +107,7 @@ if "--lmloss" in sys.argv:
             if len(shown) < 6: shown.append(f"{pre!r}->{text[:14]!r}{'*' if ok else ''}")
         with torch.no_grad():
             gf = life.gauge([ids_of(f) for f in facts]); cf = life._gauge_cos
-        print(f"FACTS: the mouth completes {learned} of {len(prefixes)} held-out prefixes | the cortex alone on the {len(facts)} fact sentences {gf[0]:.3f} (cos {cf}) | {' '.join(shown)}")
+        print(f"FACTS: the mouth completes {learned} of {len(prefixes)} fact prefixes (cued recall) | the cortex alone on the {len(facts)} fact sentences {gf[0]:.3f} (cos {cf}) | {' '.join(shown)}")
 
 # THE QUESTION ANSWERED (stage five's demo ruler, 2026-09-14): each fact's own question (tools/facts_stage5.txt, left of the bar) as the
 # world's line, then the pause; the mouth's twelve symbols read with the recall; the question counts as answered when the mouth says a
@@ -143,7 +143,7 @@ if "--qa" in sys.argv:
                         sym = int(lm.argmax()); got.append(TOK.decode([sym]))
                         life.win.append({"x": life.sil, "xo": sym, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
                         life.rest_tick(); life.take_own(sym)
-                text = "".join(got); ok = any(k in text.lower() for k in keys)
+                text = "".join(got); ok = any(re.search(r'\\b' + re.escape(k) + r'\\b', text.lower()) for k in keys)
                 n_ans += int(ok)
                 if len(shown) < 8: shown.append(f"{q!r}->{text[:14]!r}{'*' if ok else ''}")
             print(f"QA (pause {pause}): the mouth answers {n_ans} of {len(pairs)} fact questions | {' '.join(shown)}")

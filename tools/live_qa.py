@@ -4,7 +4,7 @@ ticks and the child's own symbols on the page are read; the question counts as a
 question lacks appears in that turn (qa_by_gap's rule). Several passes, since the choice samples. The copy's sleep pressure is
 zeroed so the copy does not fall asleep under the questions.
 usage: python3 tools/live_qa.py BODY.pt --flags FLAGS.txt [--set facts|novel] [--reps 3] [--window 60] [--gap 30]"""
-import sys, os, re, time
+import sys, re, os, re, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
 from tokenizers import Tokenizer
@@ -119,7 +119,7 @@ for rep in range(reps):
         for _ in range(gap):
             life.tick()
         text = "".join(got); own_total += len(text); junk += sum(1 for ch in text if not (ch.islower() or ch in " .?!'"))
-        ok = any(k in text.lower() for k in keys); n += int(ok); hits[q] += int(ok)
+        ok = any(re.search(r'\\b' + re.escape(k) + r'\\b', text.lower()) for k in keys); n += int(ok); hits[q] += int(ok)
         if rep == 0: first[q] = (ok, text[:24])
     print(f"LIVE pass {rep + 1}: {n}/{len(pairs)} answered in the child's turn ({time.time() - t0:.0f}s)", flush=True)
 ever = sum(1 for q in hits if hits[q] > 0)

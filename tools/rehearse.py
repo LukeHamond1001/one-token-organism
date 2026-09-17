@@ -5,7 +5,7 @@ ticks; the answer's growing smile 2 then 4), and speaks an ordinary exchange of 
 shape. Facts never typed can be told once (--tell "q|a;q|a") and are asked after the set. The copies' mood artifact does not apply:
 this is the body itself, its rewards contingent on what it says.
 usage: python3 tools/rehearse.py [--port 8020] [--facts 1-15] [--tell "what is sour?|a lemon is sour;..."] [--ask-tell 1] [--day 246] [--window 60] [--smile 1] [--freeze 1]"""
-import sys, os, re, json, time, subprocess, signal, urllib.request
+import sys, re, os, re, json, time, subprocess, signal, urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def arg(name, default):
     names = {"--" + name, "--" + name.replace("_", "-")}
@@ -65,7 +65,7 @@ def say(text, who, keys=None, read=True):
             got = txt
             if smile:
                 low = got.lower(); words = re.findall(r"[a-z]+", low); done = words[:-1] if low and low[-1].isalpha() else words
-                if keys and not answered and any(k in low for k in keys):
+                if keys and not answered and any(re.search(r'\\b' + re.escape(k) + r'\\b', low) for k in keys):
                     answered = True; answered_at = time.time() - t0; smile_at(2.0); face_off_at[0] = time.time() + 2.4
                     post_then = (4.0, time.time() + 2.4)
                 elif not face_off_at[0] and len(done) > seen:
@@ -74,7 +74,7 @@ def say(text, who, keys=None, read=True):
                 else: seen = max(seen, len(done))
         if post_then and time.time() >= post_then[1]:
             smile_at(post_then[0]); post_then = None
-    if keys and not answered: answered = any(k in got.lower() for k in keys)
+    if keys and not answered: answered = any(re.search(r'\\b' + re.escape(k) + r'\\b', got.lower()) for k in keys)
     face_tend(); post("/face", {"expr": 0}); face_off_at[0] = 0.0
     return got, answered, answered_at
 def run_set(qs, label):

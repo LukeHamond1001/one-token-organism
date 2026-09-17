@@ -3,7 +3,7 @@ symbols read greedily two ways: the cortex alone (its own argmax fed back as its
 forecast). A question is answered when a content word of the fact that the question lacks appears. The exchange dreams put the
 answer one rest after the question (dream_gap); the probe's pause is offset_ticks: where the answer lives, if anywhere.
 usage: python3 tools/qa_by_gap.py BODY.pt [--follow=20] [--gaps=1,2,4,8]"""
-import sys, re, os
+import sys, re, re, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
 from tokenizers import Tokenizer
@@ -66,7 +66,7 @@ for k in gaps:
         n = 0; ex = []; first10 = 0
         for qi, (q, fact) in enumerate(pairs):
             keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
-            t = run(q, k, use_recall); ok = any(w in t.lower() for w in keys); n += int(ok); first10 += int(ok and qi < 10)
+            t = run(q, k, use_recall); ok = any(re.search(r'\\b' + re.escape(w) + r'\\b', t.lower()) for w in keys); n += int(ok); first10 += int(ok and qi < 10)
             if ok and len(ex) < 3: ex.append(f"{q!r}->{t[:12]!r}")
             if show_all and use_recall: print(f"      {'*' if ok else ' '} {q:26} -> {t[:16]!r}   (wants one of {keys})")
         row.append((n, ex, first10))

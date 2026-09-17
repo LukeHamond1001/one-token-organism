@@ -4,7 +4,7 @@ each inside forty ordinary lines of a logged day, as the typist types (the line'
 each question is asked with the pause and twenty symbols read with the recall (qa_by_gap's rule: answered when a content word of the
 fact the question lacks appears). Run again with --ask-only 1 on the copy after a night on it (tools/night_copy.py).
 usage: python3 tools/once_told.py BODY.pt --flags FLAGS.txt [--day 231] [--listen 48] [--every 4] [--save-as OUT.pt] [--ask-only 0]"""
-import sys, os, re, json, time
+import sys, re, os, re, json, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
 from tokenizers import Tokenizer
@@ -85,6 +85,6 @@ for k in (2, 8):
         n = 0; rows = []
         for q, fact in NOVEL:
             keys = [w for w in re.findall(r"[a-z]+", fact.lower()) if w not in STOP and w not in q.lower()]
-            t = run(q, k, use_recall); ok = any(w in t.lower() for w in keys); n += int(ok)
+            t = run(q, k, use_recall); ok = any(re.search(r'\\b' + re.escape(w) + r'\\b', t.lower()) for w in keys); n += int(ok)
             rows.append(f"{'*' if ok else ' '} {q!r:20}->{t[:16]!r}")
         print(f"ONCE pause {k} {'the mouth' if use_recall else 'cortex alone'}: {n}/{len(NOVEL)} | " + " ".join(rows), flush=True)
