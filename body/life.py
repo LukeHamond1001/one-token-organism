@@ -148,6 +148,7 @@ PHYSIOLOGY = dict(
     gate_every=24,
     gate_baseline=0.9,
     gate_floor=0.05,   # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z)
+    gate_listen=0.0,   # THE LISTENING REFLEX (item 41): while the world's utterance is open (before the offset) the floor is scaled by (1 - gate_listen) and a running word is cut; 0 = off
     gate_salience=0.0,   # the forecast's certainty as an input of the gate; 0 = off
     gate_slow_band=5,
     gate_slow_w=0.0,
@@ -1160,6 +1161,14 @@ class Life:
                 feat = torch.cat([feat, torch.tensor([1.0 if u != self.sil else 0.0, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
+            # THE LISTENING REFLEX (gate_listen; 2026-09-17, item 41): the learned gate had shut itself during the parent's lines (the ear's
+            # weight -48) and the talk-overs came from what no learned weight reaches, the spontaneous floor starting a word on a
+            # twentieth of the ticks and the chunk then running it with no gate decision. While the world's utterance is open (from its
+            # symbol until the offset, the event's end the body computes) the floor is scaled by (1 - gate_listen) and a running word
+            # is cut: the vocal suppression while hearing speech, innate before turn-taking is learned; the learned weights still decide.
+            listening = float(self.cfg.get("gate_listen", 0.0)) > 0.0 and not self._offset_done and self.ticks - self._last_world < 10 ** 6
+            if listening:
+                fl = fl * (1.0 - float(self.cfg.get("gate_listen", 0.0)))
             eg_ = float(self.cfg.get("explore_gain", 0.0))
             if eg_ > 0:                                                             # THE EXPLORATION DRIVE: readiness to act, not a
                 fl = min(0.5, fl + eg_ * getattr(self, "_surp_run", 0.0))            # reward; the floor climbs where the world surprises
@@ -1255,7 +1264,7 @@ class Life:
             chunk_form = act_on and str(self.cfg.get("actor_form", "add")) == "chunk"
             self._chunk_cont = False
             if chunk_form and getattr(self, "_acted_last", False) and getattr(self, "_own_last", None) not in (None, self.space_id) \
-                    and getattr(self, "_chunk_len", 0) < int(self.cfg.get("chunk_max", 12)):
+                    and getattr(self, "_chunk_len", 0) < int(self.cfg.get("chunk_max", 12)) and not listening:   # a running word is cut while the world speaks
                 # THE CHUNK RUNS: inside a word (its last own symbol not the space, its turn unbroken) the cortex's own continuation is
                 # said, the most likely symbol, with no gate decision (p_act 1: nothing to credit) and no sampling; the word ends at
                 # the space or at the rest (the turn's end); chunk_max symbols force a new decision
