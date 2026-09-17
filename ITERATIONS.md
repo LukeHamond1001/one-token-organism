@@ -97,6 +97,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    STANDS (2026-09-17, 04:55): the three mornings under it read the prefixes 22, 22, 23 and the questions 19/21, 19/22, 21/22,
    the rephrased 13, 12, 14, the branch 9/9 and 10/12 each morning, the held-out 0.607, 0.604, 0.607; the store 47967, 48458,
    48766 (the growth 491 then 308 a night, settling under the capacity). The absolute floor is the served body's forgetting.
+   THE PREFIXES UNDER IT (2026-09-17, 11:48; ten mornings): 22, 22, 23, 22, 19, 19, 19, 20, 19, 17 against 23 before. Traced
+   with tools/read_trace.py on the last save under the relative floor and this morning's: the fact's slot at "ice is " is
+   present with its strength on both, and a fresh slot from the parent's "ice is in your cup" (a closer key by 0.014) took
+   the read; the reads are by content alone. Not the floor's doing: the key's collision with natural talk (the dentate item).
 3. The chooser: the striatum selecting among candidate continuations at a branch, with the no-go path (response inhibition), trained by the answer smile. Ruler: the branch, fact answers in conversation.
    DERIVED (2026-09-14, 23:35, before any run): the machinery exists. The actor is a linear head on the striatal delay line's expansion,
    its vote scaled by its earned voice; the planner deliberates among the cortex's candidates when they are torn, valuing each by

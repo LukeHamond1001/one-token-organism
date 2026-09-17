@@ -8873,3 +8873,14 @@ under other wording; turns of three words or more 63, 47, 60; no line dropped in
 A handoff overlap: the previous parent's last four rows landed after this one's first depth reading and pushed day 289's
 facts to minute 26; the brief now says to trust the depth, not the row count. The next parent (292-294, facts 21-30 first,
 stop at the 240th row) spawned at 11:27 with the queue at 27 lines.
+THE PREFIXES' FALL TRACED (11:40-11:48, tools/read_trace.py on the save at night 237's reload, the last under the relative
+floor, and on this morning's): at "ice is " the fact's slot won before (57 percent of the read's weight, strength 0.58, the
+next symbol "c") and this morning a slot written from the parent's "ice is in your cup" (strength 0.77, its key a hair
+closer, 2.006 against 1.992) takes 51 percent, the fact's slot second at 26 with its strength 0.51; eighteen keys sit near
+the query on both saves with the same run of strengths. At "water is " the answer's first symbol still wins (61 against 76
+percent before) beside two fresh slots of "the water is very..."; at "the sun is " nothing moved (80 percent). The reads are
+by content alone (the read's strength weight is 0), so the forgotten weak slots never carried these votes: the fall is the
+five-symbol key's collision with the days' natural talk, the twenty-eighth defect's family, and the fix is the body's
+(the dentate-style separation, after the take), not a parent steered away from the facts' frames. The questions that fail
+this morning read the same way: "what is cold?" -> "warm is beside", "what has four legs?" -> "a bird has wings", "what is
+the sun?" -> "the sun is hot".
