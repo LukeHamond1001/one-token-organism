@@ -1,6 +1,17 @@
 """the second body alive (BODY_SPEC.md §1, §3, §4): ticks, feelings, the one reward system,
 the waking lesson, sleep by fatigue, the night. The caregiver reaches it only through THE DIARY
-protocol in serve.py; nothing here reads the caregiver's mind or edits the body's words."""
+protocol in serve.py; nothing here reads the caregiver's mind or edits the body's words.
+
+HOW TO READ THIS FILE. `PHYSIOLOGY` holds every constant, grouped by organ; the served body's effective set is its save plus
+ops/BASE_FLAGS.txt (ops/served_cfg.py prints it), and the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md,
+not here. `Life.__init__` wires the organs (body/model.py: `Organs` the learned parts, `Store` the hippocampus) and the state a tick
+touches. `tick()` is one moment of the body's clock, in this order: the offset (the event's end after the world's quiet); the
+ear's half (the world's symbol or its quiet enters the stream; the store writes what surprised it); dopamine (the fast band's error
+of the felt face; every critic learns); the gate's synaptic tag; its own face; the mouth's half (whether to speak, then what: the
+readout, the actor's chunk, the recall along the episode); the feelings; the gate's lesson; the waking cortex lesson; bookkeeping.
+`night()` runs NREM (the dreams from `dreams()`, batched, the cortex learning with the recall off as its input), REM
+(`_rem_imagine`, `_rem_rollout`), the value replay, the store's fade, the save. `type_text`, `set_face`, `state` and `insides`
+are the page's endpoints; `save`, `load` and `birth` are the body on disk."""
 import collections
 import math
 import os
@@ -9,264 +20,214 @@ import time
 import torch
 import torch.nn.functional as F
 
-from .model import Organs, Store, CLOCKS
+from .model import Organs, Store
 
 PHYSIOLOGY = dict(
-    symbol_cost=0.12, fatigue_half_life=240, stress_half_life=240, mood_half_life=1200,   # in ticks: the body lives on its clock
-    wake_ticks=12000, elig_ticks=12, elig_decay=0.8, store_fade=0.9, store_floor_rel=0.1, store_floor_abs=0.0, store_temp=0.02, heard_decay=0.999,
-    bag_decay=0.8, bag_rest_decay=0.0, bag_own_fade=0, bag_own_weight=1.0, night_lr=1e-4, night_warm=0, night_beta2=0.999, night_rounds=24, night_batch=0, dream_who=0, dream_tag=0, dream_source="store", dream_pair=0, dream_gap=1, key_form="bag", key_scale=2.5, key_ctx=0.0, ctx_decay=0.95, ctx_form="bag", write_floor=1e-6, episode_chain=0, dream_old_share=0.0, wake_base=1.0, wake_dopa=0.0, wake_novel=0.0, reward_gain=0.0, utt_cap=4096, store_links=4, store_cap=8192, read_follow=0.0, night_starts=48, night_load=0.0, night_starts_max=192, store_sat=0, store_chain=0, own_gain=0.5, rem_steps=8, rem_dreams=8, rem_rounds=6, rem_temp=0.0, rem_form="forecast", rem_weight=1.0, face_form="read", face_tau=36000, face_ridge=0.1, face_every=64, face_input="cortex", sigreg=0.0,
-    dream_max=24, dream_floor_rel=0.5, end_rest=0, cost_in_reward=0, gate_slow_lr=0.0, dream_adapt=0.2, dream_recover=0.97, dream_exhaust=0.1, gate_baseline=0.9, wake_every=24, wake_window=32, live_lr=1e-5, value_lr=1e-3, band_lr=1e-5, face_lr=1e-3,
-    gate_lr=0.05, birth_act=0.25, gate_habit=0.9, gate_fatigue=10.0, gate_int=0.0, gate_tonic=0.25, gate_vigor=1.0, gate_every=24,
-    # THE DRIVE FOLLOWS THE REWARD RATE (gate_tonic_rate > 0; 2026-09-06): the tonic drive per act is gate_tonic + gate_tonic_rate x the
-    # felt-reward trace at the ladder's clock gate_tonic_clock (index into the clocks; 4 = 256 ticks, a minute) — tonic dopamine as the
-    # average reward rate setting vigor (Niv 2007), the infant babbling more when answered (Goldstein & Schwade 2008). With the constant
-    # drive alone the gate was a coin (a stalked day: p(act) 0.53 whatever the parent did); with no drive the body fell silent (arm N).
-    gate_tonic_rate=0.0, gate_tonic_clock=4,
-    gate_salience=0.0,    # the forecast's certainty as an input of the gate (the proposal's salience); 0 until measured (run 30)
-    # THE MOTIVATIONAL DOPAMINE: the gate's credit may carry the error of a slow band too (ventral striatal dopamine, the long
-    # horizons of the discount gradient, driving vigor; the fast band's error selects the act). gate_slow_w 0 = off (runs 37/38)
-    gate_slow_band=5, gate_slow_w=0.0,
-    # THE VENTRAL CRITIC in the mouth's credit: its error (the act's effect on the long-run prospect) added to the fast
-    # band's error with weight vcrit_w. Its horizon is definite, discounted at vcrit_gamma (1024 ticks): as a differential
-    # (average-reward) head over fast features it computed the day-scale relative value, swinging by a hundred within a
-    # day (runs 49/50: the integral of reward above its wandering average), and that drift entered the mouth's twelve-tick
-    # credit ten times the size of the fast error and shut one seed's gate. 0 = off until measured (runs 51/52; candidate 1.0)
-    # Adopted at 1.0 on runs 55/56's forty days (the gate held, the mouth held) and WITHDRAWN 2026-09-04 on the value
-    # instrument: run 67's trained head read the return at its own horizon at -0.28 over four days, its weights running
-    # away under Adam at the shared rate (a fresh head +0.33, +0.26, -0.10 on days 2 to 4 as its norm grew 37, 47, 54),
-    # and the day's smiles under the trained head 91 against 240 with the credit absent. A head over all eight bands at
-    # horizon 1024 is fed by the fast bands' energy and learns recency, wrong-signed in a world that reverts; the trace
-    # (vcrit_lambda) and the normalized step (vcrit_tau) did not cure it in a day. 0 until a right-signed head exists.
-    vcrit_w=0.0, vcrit_gamma=1.0 - 1.0 / 1024,
-    vcrit_ceiling="fixed",   # THE PREFRONTAL VOICE'S CEILING (2026-09-08): "fixed" = vcrit_w x reliability (a hand-set ceiling); "earned" = the reliability itself, up to the fast critic's own weight, no constant
-    # THE CRITIC'S ELIGIBILITY TRACE: TD(0) bootstrapped over a thousand steps sits at a fixed point whose error the
-    # horizon amplifies (Tsitsiklis and Van Roy: by (1 - lambda gamma) / (1 - gamma), a thousandfold at lambda 0), and
-    # run 67's ventral critic read the return that followed at -0.28 over four days while the pinned 4096-tick band
-    # read +0.86. TD(lambda) with the trace decaying at the critic's own horizon (lambda = gamma, the factor near 2)
-    # is the backward view of the discounted return itself: a trace of the critic's inputs on its weights, captured
-    # by the error as it arrives (the synaptic tag on the critic's side). 0 = TD(0); candidate 1 - 1/1024 (the night
-    # clears the trace)
-    vcrit_lambda=0.0,
-    # THE CRITIC'S OWN RATE: a head at horizon 1024 learning at the fast heads' rate (a thousandth a tick, Adam) tracks
-    # the last few hundred ticks instead of the state's value, and in a world that reverts (the parent's habituation)
-    # a recency tracker reads the return with the wrong sign (run 67's body: TD(0) +0.65 on its first day, −0.28 after
-    # twenty; the trace −0.75 after one). Each head at its own clock: 0 = the shared value_lr; candidate value_lr x 16/1024
-    vcrit_lr=0.0,
-    # THE CRITIC'S TIME CONSTANT: the normalized rule (each step corrects a fixed fraction of the error along its input,
-    # the input's energy tracked over a horizon) with the fraction set by a time constant in horizons, (1 - gamma) / tau:
-    # the critic averages the return over tau horizons, whatever the features' scale. With the trace on, the trace is
-    # the input. 0 = the optimizer's lesson above (Adam at the shared rate: run 67's runaway); candidate 4
-    vcrit_tau=0.0,
-    # THE AVERAGE-REWARD FORM: the head's level is the body's own reward rate over its horizon, rbar / (1 - gamma), not a
-    # weight to learn (at the horizon rate a learned level took forty days); its error is r - rbar + V' - V and its trace
-    # decays at lambda alone. 0 = discounted with a bias; 1 = differential
-    vcrit_diff=0,
-    # THE VENTRAL HEAD READS THE SLOW BANDS (adopted 2026-09-04): on run 67's body over nine frozen days, TD(0) at the
-    # shared rate on bands 5-7 read the return at horizon 1024 at +0.46 (+0.38 to +0.51 every day) against a ceiling of
-    # +0.51, its weights settling near 89; the same rule over all eight bands +0.19 with weights running to 78, the fast
-    # bands' overfit. The trace forms on the slow bands: erratic (+0.33 pooled) or weak (+0.12). "" = all eight
-    vcrit_bands="5,6,7",
-    # THE CRITIC READS THE TONIC TRACES (vcrit_traces 1; 2026-09-06): the felt reward averaged at each of the ladder's clocks joins the
-    # critic's input; vcrit_bands "-" reads no band at all. Every head on the bands' states fit on one lived day read the next day at
-    # random sign (bands 3..7, all sets); the eight traces alone read it at +0.83/+0.59. The parent's attention cycles (rich -> the body
-    # talked over -> away -> poor -> recovery), and its phase lives in the reward history, not in the cortex's slow state.
-    vcrit_traces=0,
-    vcrit_clock=0,        # THE CLOCK as a critic input: sleep pressure over the wake threshold (see model.py); 2026-09-06
-    # THE FAST CRITIC DECORRELATED (see model.py): the dopamine band's head from evidence (LSTD, trace at its gamma, forgetting
-    # fast_rls_forget, the prior fast_rls_prior forgetting-horizons of unit evidence as the metric), solved every fast_rls_every ticks.
-    fast_rls=0, fast_rls_forget=36000, fast_rls_prior=3.0, fast_rls_every=64,
-    # THE STRIATAL INPUT (2026-09-06; see model.striatum_init): fast_input "band" = the dopamine band's own state (the tenth
-    # defect: blind to the word ending), "striatum" = a delay line of the last stri_k events of the stream through a born
-    # expansion of stri_m units; the fast head (fast_rls) reads it. The felt face is an event of the line, so an expected
-    # smile is discounted the tick it lands.
-    # stri_quiet 1: a tick of quiet is an event of the line too (the line carries time). Measured 2026-09-06 on fresh seeds: with
-    # quiet ticks (arms V and W) day 3 read 65-85 smiles against 97-99 without them (arm U), though the value before a smile
-    # rose a little more; off by default, the line of eight events as in arm U.
-    fast_input="band", stri_k=8, stri_m=1024, stri_quiet=0,
-    # THE ACTOR (needs fast_input striatum): actor_beta scales its bias (through tanh) on the cortex's logits; the lesson is
-    # dopamine (the striatal critic's error) times an eligibility trace of (chosen - expected symbol) x the striatal input,
-    # decaying at the dopamine band's discount; the weights forget over actor_forget ticks. Off by default; fresh seeds first.
-    actor=0, actor_lr=0.02, actor_beta=1.0, actor_forget=36000,
-    # actor_form "add": the bias on every symbol's logit; "select": the cortex proposes a shortlist (the symbols within actor_margin
-    # logits of its best) and the striatum chooses among them (its bias added only there; the rest are never said), as the basal
-    # ganglia select among cortical candidates rather than inventing actions.
-    actor_form="add", actor_margin=4.0,
-    # actor_form "chunk" (2026-09-12, the user's word: "child probably spends most of its time chunking stuff into sounds"): the
-    # basal ganglia's action chunk. At a word's start the cortex proposes, imagination values the candidates and the choice is made
-    # (as under "plan"); then the word RUNS as a motor program: the cortex's own continuation, symbol by symbol, no gate and no
-    # sampling until the space or the rest (or chunk_max symbols). One act, one credit, per word; the letters inside are not choices.
-    chunk_max=12,
-    # THE ACTOR'S EARNED VOICE (actor_voice "earned", 2026-09-08): the striatum's own vote for a symbol, bounded, applied to the
-    # cortex's proposal as loudly as it has proved right: its weight is the slope of the reward of the next actor_horizon ticks on
-    # its vote for the act taken, clipped to [0, 1] (the law of the prefrontal voice and the face organ). "off": the vote unused.
-    actor_voice="off", actor_horizon=16, actor_tau=36000, actor_input="striatum", actor_wmax=3.0, actor_temp=1.0, chooser_k=4,
-    # actor_form "plan" (2026-09-06): at a word boundary the cortex proposes its shortlist, each candidate is imagined forward
-    # plan_h own symbols through the world model (greedy), the striatal critic values the imagined line, and the choice follows
-    # the cortex's logit plus plan_beta times that value: selection by consequence (the basal ganglia over hippocampal-prefrontal
-    # rollouts), no lesson of its own. Mid-word the cortex's continuation stands.
-    plan_h=2, plan_beta=4.0, plan_k=4, plan_boundary=0,   # the planner's boundary is the cortex's doubt (2026-09-08); 1 = the old space rule
-    explore_gain=0.0, explore_tau=64,
-    explore_choice=0.0,   # THE DRIVE IN THE CHOICE (2026-09-08): novelty widens the planner's choice among its candidates, not whether it speaks
-    sharp_conf=0.0,       # DECISIVENESS BY CERTAINTY (2026-09-15): the choice's sharpness x (1 + sharp_conf x the forecast's norm); 0 = as before
-    rest_token="<pad>", end_token="<eot_human>", display_token="\n",
-    end_symbol="rest",   # THE WORLD'S STOP (2026-09-08): "eot" = the chat token as the end's mark; "rest" = the end is the first rest after a symbol, the cortex learns to predict rest where the parent stops, and the chat token goes unused   # ANATOMY: the body's own symbols, declared, not found by name in the code   # THE EXPLORATION DRIVE (2026-09-08): the gate's floor rises with the body's recent surprise at the world
-    own_target_decay=0.0,
-    # THE OWN-SPEECH TARGET (own_target_form "recall", 2026-09-12; the probe of night 135): the mouth reads a forecast of the world's
-    # next symbol, and at its own positions that target is the parent's next line's first letter, the same at every step, so its
-    # greedy continuation is "t t t": the loop's root. A speaker's forward model predicts the continuation of what it is saying;
-    # the songbird learns its song against a stored tutor template. Under "recall" the target at an own position is the
-    # hippocampus's continuation of what it has said so far (the recall made after that symbol, the stored adult line it is
-    # following), weighted by the recall's confidence, and no target where the recall is unsure; the world's next symbol stays the
-    # target at the world's positions. "world": the target of 2026-09-06.
-    own_target_form="world", own_target_conf=0.3,
-    # THE OWN SONG REMEMBERED (own_store, 2026-09-12): the songbird replays its own song in sleep, and the hippocampus keeps what we
-    # said as episodes; a smile (the felt reward at or above own_store_r) writes the body's last utterance into the store as an
-    # episode of its own (keys as the world's would be, the chain linked, its first symbol a start), so the night replays it and
-    # the cortex learns to say again what was rewarded. Only the rewarded utterances: the corollary discharge keeps the babble out.
-    own_store=0, own_store_r=1.0,
-    # its bounds (2026-09-12, 21:05, read live: 1595 own symbols stored in twenty minutes, the store past its cap and pruning the
-    # world's weakest): the last own_store_len symbols of the utterance (about two words: the word rewarded and what led to it),
-    # at own_store_gain times the reward (the world's lines keep the stronger claim on the night), at most one write per
-    # own_store_gap ticks
-    own_store_len=12, own_store_gain=0.3, own_store_gap=40,
-    # THE WAKING RECALL TIRES (read_tire, 0 = off; 2026-09-12, 22:50, read live: with its own rewarded phrase in the store the mouth
-    # said "i see milk went in the" thirty-five times in half an hour, half its three-word windows repeats). The dreams already run
-    # under this law (a recalled memory tires, dream_adapt); awake the same slot could be recalled without end. A slot that wins the
-    # read loses read_tire of its availability and recovers toward rest by read_recover a tick: synaptic depression, the law that
-    # keeps any circuit from saying one thing forever.
-    read_tire=0.0, read_recover=0.97,
-    # WORKING MEMORY (needs the striatum): wm 1 latches the line's expansion at a dopamine burst above wm_burst, clears at a
-    # reward or after wm_max ticks; the striatal heads read [line, slot].
-    wm=0, wm_burst=0.5, wm_max=512,
-    # THE CRITIC'S INPUT UNCENTERED (vcrit_center 0; 1 = centered on the running mean at diff_horizon, the form of
-    # 2026-09-03). The night-transfer instrument of 2026-09-05 on the served body's day 40 (one page, teacher-forced
-    # through the body on four nights): a ridge head from the raw slow bands reads the return at horizon 1024 at +0.50
-    # and the same head +0.51 on the bodies of days 41, 38 and 30 (the slow bands' cosine across a night 0.99, 1.00,
-    # 1.00; across ten nights 0.98, 1.00, 1.00), so the nightly cortex change was never the obstacle; the same ridge on
-    # the centered bands +0.01 that day and -0.44 the next; the live rule, TD(0) with Adam 1e-3, -0.56 on the centered
-    # bands and +0.52 on the raw ones in one pass over a third of a day, +0.53 on the next night's body. Every wrong
-    # reading of the ventral head since run 49 (recency, wrong sign, the runaway) was the running mean eating the slow
-    # state. Discounted with a bias, the head needs no centering. 1 keeps older bodies' readings as they were.
-    vcrit_center=1,
-    # THE RELIABILITY GAIN (vcrit_auto): the ventral head's weight in the gate's credit is its own measured reliability,
-    # the running correlation between what it foretold and the return that then arrived (a Kalman gain for a noisy
-    # estimate; the brain scales a lesson by its certainty, Pearce and Hall 1980, and the prefrontal input to the ventral
-    # striatum matures late). The age chains of 2026-09-04: a newborn's four minutes are unforeseeable, a two-week-old's
-    # foreseeable at +0.7; a head wired in from birth (runs 87/88) read wrong. Computed from the head's own buffer: the
-    # return at its horizon over 3072 ticks (95 percent of the discounted mass), the correlation decayed over 8192
-    # samples, the gain max(0, corr). 0 = the fixed weight vcrit_w
-    vcrit_auto=0,
-    # THE FORGETTING HEAD (vcrit_forget, ticks; 0 = off): the ventral head's weights decay toward zero at this time
-    # constant (decoupled from the lesson, as in AdamW), so the head is always the last days' head. Runs 89/90
-    # (2026-09-04): the slow-band head learned from birth read the return at its horizon at -0.41 and -0.23 at day 20
-    # with its error never in the credit, while the same head learned fresh for a day on a body of that age read +0.7;
-    # the deficit is the head's history, twenty days of steps on a newborn's noise (norm near ninety) that a day cannot
-    # undo. Synapses decay; a critic that forgets at the horizon of days tracks a body that changes over days. The bias
-    # (the level) is not decayed. Candidate 24000 (two days)
-    vcrit_forget=0,
-    # THE DECORRELATED CRITIC (vcrit_rls 1): the ventral head learns by recursive least-squares TD(lambda) instead of the
-    # gradient: the trace (decaying at gamma x vcrit_lambda) times the state's discounted change accumulates in A, the trace
-    # times the reward in b, both forgetting at vcrit_forget ticks (0 = never) with a constant prior vcrit_rls_delta x I (so A
-    # never winds up in an unexcited direction), and the head is the solve every vcrit_rls_every ticks. The cross-page
-    # instrument (2026-09-05): one pass over one day, read on three days the body never lived, +0.63, +0.92, +0.71 against
-    # the ceiling +0.66, +0.92, +0.71 and the gradient head's -0.49, -0.74, -0.60.
-    vcrit_rls=0, vcrit_rls_delta=100.0, vcrit_rls_every=64,
-    # THE CRITIC'S HOMEOSTATIC INPUT (vcrit_norm_tau, ticks; 0 = off): the head's inputs standardized by running per-dimension
-    # statistics at this time constant; THE PRIOR IN UNITS OF EVIDENCE (vcrit_rls_prior; 0 = the absolute vcrit_rls_delta):
-    # the decorrelated head's prior is this many forgetting horizons of unit-variance evidence in every direction. One day is
-    # about seven independent returns at horizon 1024 against 768 weights; a prior of one to ten days' evidence keeps the
-    # head on the directions that carry value (run 141 day 6, pages 8/10: +0.93/+0.89 against +0.77/+0.91 for ridge; the
-    # prior at 100 raw: -0.41/-0.13).
-    # The statistics must be slow: across settled pages with converged statistics carried on, tau 36000 reads +0.84/+0.70/+0.30
-    # (the static ceiling +0.88/+0.68/+0.30), 12000 reads +0.72/+0.59/+0.15, 4096 reads -0.6 to -0.9 (a fast normalization
-    # high-passes the state and removes the value). Synaptic scaling runs over days. Candidate 36000 (four days).
-    vcrit_norm_tau=0, vcrit_rls_prior=0.0,
-    # THE SLOW STATE KEPT ACROSS SLEEP (night_keep_bands 1): the bands are not zeroed at night. Zeroed, every morning is a birth
-    # for the slow bands (clocks to 16,384 ticks, longer than a day), and the day is one ramp from zero that every value head
-    # reads as time since waking; statistics carried across days misread the morning (pages instrument, 2026-09-05).
-    night_keep_bands=0,
-    # THE NIGHT TAKES TIME (night_ticks > 0; 2026-09-06): the night passes no ticks, so the critic's last evening state was followed
-    # one tick later by the next morning; the first lesson after a night discounts its bootstrap by gamma^night_ticks as well,
-    # the night counted as elapsed time. 0 = the night as a doorstep (the old behaviour).
-    night_ticks=0,
-    # THE STATISTICS RE-FORMED AT WAKE (vcrit_norm_wake 1): at night the homeostatic statistics' count returns to its birth
-    # value (tau/32), so the morning's mean and scale form again from the morning's own state at the birth rate, while the
-    # mean and scale themselves are kept as the starting point. The night moves the slow bands coherently (the cortex learns
-    # in its sleep); a head whose window spans the night learns that shift against the day's change of reward level, a
-    # confound that reads as noise on any single day (runs 145-148, 2026-09-05 18:20).
-    vcrit_norm_wake=0,
-    # THE LEVEL (Pavlovian-instrumental transfer): the gate reads the slow band's value, the state's long-run promise, through
-    # a divisive normalization by that value's own running scale (semi-saturation 1), and its own three-factor lesson sets
-    # the weight. A cue that promises reward invigorates the act (general PIT: the amygdala's Pavlovian value onto the
-    # striatum's vigor). gate_level_w 0 = off until measured (runs 39/40)
-    gate_level_band=5, gate_level_w=0.0,
-    # THE OFFSET: the world's quiet after its utterance is an event. After offset_ticks of the world's quiet, once per
-    # pause, the line's end (the turn-end, <eot_human>, the tokenizer's end of the human's turn) becomes the waking
-    # lesson's target for the line's last symbol (the cortex learns "then quiet" instead of the next line's first
-    # letter); the store's slot for that symbol carries a boundary mark and the first memory kept after a pause a start
-    # mark: dreams run from a start and end at a marked memory (the cortex's own expectation of the quiet ended a young
-    # body's dreams at two symbols and is not used); the mouth may never say it. Nothing enters the stream (as a
-    # stream symbol it wiped the body's own context mid-answer: runs 43/44, day 1, "go n Z") and the store does not
-    # hold it (written there, the quiet after a cue blended with the answer and the mouth read junk: runs 45/46).
-    # 0 = off (before it, the cortex learned the seam between utterances: after "dog will go down" the next line's
-    # first letter at probability 1, the mouth's "downg"; served body, day 10)
-    offset_ticks=8,
-    offset_form="settle", offset_settle=0.5, offset_fast=4, offset_slow=64,   # THE EVENT'S END BY THE LAW (2026-09-08): "settle" fires the offset when the surprise, having jumped at the world's stopping, settles under its running level; no count       # THE RECIPE (runs 47/48): two seconds at four ticks a second; within a line the world types a symbol a
-    # tick, and 8 + the lesson's cadence of 24 keeps the ended position inside the lesson's 32. 0 = off
-    # THE INTRINSIC CREDIT: "value" = the forecast's belief in what it said x novelty habituating by repetition (the recipe; with
-    # gate_tonic 0.25). "error" = belief minus that syllable's usual belief (the songbird's performance error, Gadagkar 2016) with
-    # gate_tonic 0.70 (the mean the value form gives a grown body): run 31 matched the value form's seeds at days 6 and 15 and
-    # fell to 39/48 at day 20 on one cue's stutter; a second seed (run 34) decides. Not the recipe until it does.
-    gate_int_form="value",
-    gate_floor=0.05,      # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z); no absorbing silence
-    # THE ADAPTED INPUT (gate_center, 0 = off): the gate reads its inputs relative to their running mean (time constant
-    # gate_center_tau ticks), as every sensory neuron adapts to its mean input. Measured 2026-09-05 on run 108's day-16
-    # body: "the parent is typing" is readable from the gate's inputs at AUC 0.999, the gate's learned weights read it at
-    # 0.65 after sixteen days of a right-signed credit (+0.10 for a rest, -0.09 for an act inside the parent's typing);
-    # the inputs' mean has norm 2.3 against a between-state difference of 0.45 (cosine 0.98), so the lesson's systematic
-    # gradient moved the common bias, which the baseline cancels, and not the selective direction (the mean-inside
-    # direction reads the state at 0.58, the centered difference at 0.998). Centered, the three-factor rule can learn
-    # what the credit says. Candidate 1 with tau 1024
-    gate_center=0, gate_center_tau=1024,
-    # THE EAR (gate_ear, 0 = off): two more inputs to the gate, sensed not inferred: the world's symbol arriving this tick
-    # and its own act on the last tick (the auditory input to the striatum, the corollary discharge of the mouth), as the
-    # face is a sense of the cortex. The lesson replayed offline on run 112's day-6 body (2026-09-05): "the parent is
-    # typing" as a unit input lets the three-factor rule move the logit inside the parent's typing by 0.08 a quarter day
-    # in the listening direction with the vigor term off and Adam, where the cortex state's own direction (norm 0.45,
-    # cosine 0.98 with the mean) moved it 0.004. With the vigor term on the same input moves the wrong way (+0.09): the
-    # credit runs high where the parent's rewarded words are, and vigor acts more wherever the credit is high
-    gate_ear=0,
-    # THE FUNCTION KEPT UNDER THE MOVING MEAN (gate_center_keep 1): with the adapted input, the gate's bias absorbs
-    # w . d_mu at every tick the running mean moves, so the centering is a change of the lesson's coordinates only.
-    # 0 = the form of 2026-09-04 (the function shifts with the mean). Runs 131/132 measure it against 115/116.
-    gate_center_keep=0,
-    # THE GATE'S OPTIMIZER (gate_opt "sgd" | "adam", gate_adam_lr): Adam normalizes each weight's step by its gradient's
-    # running scale, so a consistent small gradient on one input (the ear) accumulates at the rate whatever the noise
-    gate_opt="sgd", gate_adam_lr=1e-3,
-    read_sharp=25.0, sharp_base=25.0, sharp_gain=25.0, sharp_form="fixed", sharp_rate=0.05, sharp_min=8.0, sharp_max=100.0, rem_world_temp=0, burst=0.5, mood_gain=0.25, stress_gain=0.5, v_buf=32,
-    dopamine_band=2,      # the band whose TD error is dopamine: clock 16, discount 0.9375 per tick (a four-second horizon)
-    # THE WORLD'S WORDS AS REWARD (the user's word of 2026-09-04, "both are your call"): each symbol the world types is
-    # felt as reward of world_r beside the face. The caregiver's voice is a primary reward to an infant (the mother's
-    # voice preferred from birth, DeCasper and Fifer 1980; the ventral striatum answers it, Abrams 2016), and infants
-    # work for a contingent voice (Goldstein and West 2003); information itself is paid in dopamine (Bromberg-Martin
-    # and Hikosaka 2009). With the parent's reply withheld while the child runs on, a turn given up pays in what is
-    # heard, at the fast critic's horizon; and the parent's engagement, which sets its pace, becomes a reward rate the
-    # slow critics can foresee. 0 = off; candidate 0.1 (a line of fifteen symbols near a smile)
-    world_r=0.0,
-    # COROLLARY DISCHARGE (world_mask, 0 = off): the world's word is not felt as reward on a tick after the mouth acted.
-    # Vocalizing suppresses the auditory cortex's response to sound (Eliades and Wang 2003, 2008; the infant's own babble
-    # masks the caregiver's voice), so a symbol said over the parent forfeits, at once and in the reward itself, what would
-    # have been heard: the model-free consequence for talking over, where the withheld reply's delay was invisible to a
-    # critic that never learned to foresee the reply (the pause probe of 2026-09-05: V16 flat across the quiet count)
-    world_mask=0,
-    # THE MARKS SPEAK IN THE RECALL (recall_end, 0 = off): the seam slot, an utterance's first symbol written under the
-    # last line's faded context (a unit key the line's own direction), recalls the turn's end (<eot_human>) instead of
-    # that symbol, so after a whole line the recall says "the turn ended" where it
-    # said the next line's first letter (the seam). With the end as a rest (end_rest) the mouth then rests where its own
-    # memory says the turn ends: the pause from memory, where the critics never learned to foresee the parent's reply
-    # (the pause probes of 2026-09-05). The dreams already end at the marks; the live recall now reads them too
+    # The disclosed constants, grouped by organ. The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
+    # prints it); the ledger (ITERATIONS.md) records every change and the spec (BODY_SPEC.md, the appendix on the constants' history)
+    # keeps the derivations that used to sit here. A constant at 0 or "off" is an instrument kept in the code, measured and not adopted.
+    # --- the body's clock and its feelings (in ticks; the body lives on its own clock, not the serve's) ---
+    symbol_cost=0.12,   # fatigue per symbol said
+    fatigue_half_life=240,
+    stress_half_life=240,
+    mood_half_life=1200,
+    wake_ticks=12000,   # sleep pressure crosses the switch here: the body sleeps by itself
+    burst=0.5,
+    mood_gain=0.25,
+    stress_gain=0.5,
+    # --- reward and dopamine: the face becomes the fast band's error; the ladder learns at every band ---
+    dopamine_band=2,   # the band whose TD error is dopamine: clock 16, discount 0.9375 a tick, a four-second horizon
+    elig_ticks=12,
+    elig_decay=0.8,
+    world_r=0.0,   # each symbol the world types felt as reward beside the face
+    world_mask=0,   # corollary discharge: the world's word is not felt as reward on a tick after the mouth acted
+    cost_in_reward=0,
+    reward_gain=0.0,
+    diff_horizon=1024,   # bands with clocks at or above this learn average-reward TD (no discount, the reward rate as baseline)
+    value_lr=1e-3,
+    band_lr=1e-5,
+    v_buf=32,
+    # --- the hippocampal store: what is written, how it is read, how it is forgotten ---
+    store_cap=8192,   # the slot count; over it the weakest gives way
+    store_fade=0.9,
+    store_floor_rel=0.1,   # a slot below this fraction of the store's mean strength is forgotten at night
+    store_floor_abs=0.0,   # an absolute forgetting floor; 0 = the relative floor (falsified on the served body, item 2)
+    store_temp=0.02,
+    store_links=4,
+    store_sat=0,
+    store_chain=0,
+    write_floor=1e-6,   # the key's norm must exceed this for a memory to be written (a constant, not a threshold on a fading quantity)
+    read_follow=0.0,   # the recall carries the episode: the next slot of the followed utterance is easier to recall (a gain)
+    read_tire=0.0,   # a slot that wins the read loses this much availability (synaptic depression), recovering by read_recover a tick
+    read_recover=0.97,
     recall_end=0,
-    diff_horizon=1024,    # bands with clocks at or above this learn average-reward TD (no discount, the reward rate as baseline)
+    episode_chain=0,
+    heard_decay=0.999,
+    # --- the key of a memory and the working context (the fast bag of the last symbols; the slow context of the last utterance) ---
+    key_form="bag",
+    key_scale=2.5,
+    key_ctx=0.0,   # the previous utterance's order-free bag in the key and the query, at this weight
+    ctx_decay=0.95,
+    ctx_form="bag",
+    bag_decay=0.8,
+    bag_rest_decay=0.0,   # the world's context fades at this rate per quiet tick (0 = at bag_decay)
+    bag_own_fade=0,   # 0/1/2: whether the body's own symbols fade the world's context (2 = in the query alone)
+    bag_own_weight=1.0,
+    # --- the own song: the body's own speech as a target and in memory ---
+    own_gain=0.5,
+    own_target_decay=0.0,
+    own_target_form="world",   # "recall" = the own-speech target is the hippocampus's continuation of what it said; "world" = the world's next symbol
+    own_target_conf=0.3,
+    own_store=0,   # a rewarded own utterance written into the store as an episode (off: the corollary discharge keeps babble out)
+    own_store_r=1.0,
+    own_store_len=12,
+    own_store_gain=0.3,
+    own_store_gap=40,
+    # --- the waking lesson of the cortex ---
+    wake_every=24,
+    wake_window=32,
+    live_lr=1e-5,
+    wake_base=1.0,
+    wake_dopa=0.0,
+    wake_novel=0.0,
+    sigreg=0.0,
+    # --- the night: NREM on the dreams, then REM; the utterance memory it replays ---
+    night_lr=1e-4,
+    night_warm=0,
+    night_beta2=0.999,   # the night's Adam second-moment horizon
+    night_rounds=24,
+    night_batch=0,
+    night_starts=48,
+    night_starts_max=192,
+    night_load=0.0,
+    night_keep_bands=0,   # the slow bands are not zeroed at night
+    night_ticks=0,
+    utt_cap=4096,   # the utterance memory replayed at night, whole utterances
+    dream_source="store",   # "utterances" = the night dreams the utterances heard whole; "store" = pattern completion from the store
+    dream_who=0,
+    dream_tag=0,
+    dream_pair=0,
+    dream_gap=1,
+    dream_old_share=0.0,
+    dream_max=24,
+    dream_floor_rel=0.5,
+    dream_adapt=0.2,
+    dream_recover=0.97,
+    dream_exhaust=0.1,
+    rem_steps=8,
+    rem_dreams=8,
+    rem_rounds=6,
+    rem_temp=0.0,
+    rem_form="forecast",
+    rem_weight=1.0,
+    rem_world_temp=0,
+    # --- the event's end (the offset after the world's quiet) and the marks ---
+    offset_ticks=8,
+    offset_form="settle",   # "settle" = the offset fires when the surprise settles (offset_fast/offset_slow, offset_settle); "count" = after offset_ticks
+    offset_settle=0.5,
+    offset_fast=4,
+    offset_slow=64,
+    end_rest=0,
+    end_symbol="rest",   # "rest" = the turn ends at the first rest after a symbol; "eot" = the chat token marks it
+    rest_token="<pad>",
+    end_token="<eot_human>",
+    display_token="\n",
+    # --- the gate: whether to speak, learned from the same reward ---
+    gate_lr=0.05,
+    birth_act=0.25,
+    gate_habit=0.9,
+    gate_fatigue=10.0,
+    gate_int=0.0,
+    gate_int_form="value",
+    gate_tonic=0.25,
+    gate_tonic_rate=0.0,   # the tonic drive follows the felt-reward trace at clock gate_tonic_clock
+    gate_tonic_clock=4,
+    gate_vigor=1.0,
+    gate_every=24,
+    gate_baseline=0.9,
+    gate_floor=0.05,   # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z)
+    gate_salience=0.0,   # the forecast's certainty as an input of the gate; 0 = off
+    gate_slow_band=5,
+    gate_slow_w=0.0,
+    gate_slow_lr=0.0,
+    gate_level_band=5,
+    gate_level_w=0.0,
+    gate_center=0,   # the gate reads its inputs relative to their running mean
+    gate_center_tau=1024,
+    gate_center_keep=0,
+    gate_ear=0,   # two more inputs to the gate: the world's symbol this tick and its own act last tick
+    gate_opt="sgd",
+    gate_adam_lr=1e-3,
+    # --- the mouth's decisiveness: the readout's sharpness, and exploration ---
+    read_sharp=25.0,
+    sharp_base=25.0,
+    sharp_gain=25.0,
+    sharp_form="fixed",
+    sharp_rate=0.05,
+    sharp_min=8.0,
+    sharp_max=100.0,
+    sharp_conf=0.0,   # the choice's sharpness x (1 + sharp_conf x the forecast's norm); 0 = off (item 13: falsified)
+    explore_gain=0.0,
+    explore_tau=64,
+    explore_choice=0.0,   # novelty widens the planner's choice among its candidates
+    # --- the striatum, working memory and the fast critic ---
+    fast_input="band",   # the fast critic's input: "striatum" = a delay line of the stream's last events through a born expansion; "band" = the dopamine band's state
+    stri_k=8,
+    stri_m=1024,
+    stri_quiet=0,
+    fast_rls=0,
+    fast_rls_forget=36000,
+    fast_rls_prior=3.0,
+    fast_rls_every=64,
+    wm=0,   # working memory: latches the line's expansion at a dopamine burst, clears at a reward or after wm_max ticks
+    wm_burst=0.5,
+    wm_max=512,
+    # --- the ventral critic (the slow prospect) ---
+    vcrit_w=0.0,
+    vcrit_gamma=1.0 - 1.0 / 1024,
+    vcrit_ceiling="fixed",   # "fixed" = vcrit_w x reliability; "earned" = the reliability itself
+    vcrit_lambda=0.0,
+    vcrit_lr=0.0,
+    vcrit_tau=0.0,
+    vcrit_diff=0,
+    vcrit_bands="5,6,7",   # the ventral critic reads these bands ("-" = none)
+    vcrit_traces=0,
+    vcrit_clock=0,   # sleep pressure over the wake threshold as a critic input
+    vcrit_center=1,
+    vcrit_auto=0,
+    vcrit_forget=0,
+    vcrit_rls=0,   # the ventral head learns by recursive least-squares TD(lambda) from accumulated evidence
+    vcrit_rls_delta=100.0,
+    vcrit_rls_every=64,
+    vcrit_norm_tau=0,
+    vcrit_rls_prior=0.0,
+    vcrit_norm_wake=0,
+    # --- the actor and the planner: what to say at a word's start ---
+    actor=0,
+    actor_lr=0.02,
+    actor_beta=1.0,
+    actor_forget=36000,
+    actor_form="add",   # "chunk" = one act per word, the letters inside not choices; "plan", "select", "add" the earlier forms
+    actor_margin=4.0,
+    chunk_max=12,   # a word runs as a motor program for at most this many symbols
+    actor_voice="off",
+    actor_horizon=16,
+    actor_tau=36000,
+    actor_input="striatum",
+    actor_wmax=3.0,
+    actor_temp=1.0,
+    chooser_k=4,
+    plan_h=2,
+    plan_beta=4.0,
+    plan_k=4,
+    plan_boundary=0,   # 0 = the planner acts at the cortex's doubt; 1 = at the space (the old rule)
+    # --- the face organ: its own face, learned from yours ---
+    face_form="read",   # the face organ: "foresee" = it foresees the face to come; "read" = a readout of the felt face
+    face_tau=36000,
+    face_ridge=0.1,
+    face_every=64,
+    face_input="cortex",
+    face_lr=1e-3,
 )
 
 
@@ -889,7 +850,6 @@ class Life:
             elif float(r) < 0.5 * thr:
                 self._own_stored = False
         # --- the ear's half: the world's symbol (or its quiet) enters ---
-        v_before = m.values(self.bands.detach()) if self.v_prev is None else self.v_prev
         if off > 0 and u != self.sil:
             # THE START MARK falls on the memory whose context holds the utterance's first symbol: the second
             # symbol's, whatever the pause did to the bag (a short pause left the first symbol a memory under a faded

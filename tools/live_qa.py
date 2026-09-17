@@ -6,7 +6,6 @@ zeroed so the copy does not fall asleep under the questions.
 usage: python3 tools/live_qa.py BODY.pt --flags FLAGS.txt [--set facts|novel] [--reps 3] [--window 60] [--gap 30]"""
 import sys, re, os, re, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import torch
 from tokenizers import Tokenizer
 from body.life import Life, PHYSIOLOGY
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

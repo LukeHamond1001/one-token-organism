@@ -1,6 +1,6 @@
 """THE WATCHED LIFE'S TREND: one row per day from the digest, the numbers that say whether each part is learning.
     python3 tools/watch_trend.py data/watch/watch1/digest.txt"""
-import sys, re, os, json, collections
+import sys, re, os, json
 for line in open(sys.argv[1]):
     m = re.search(r"day\s+(\d+).*?smiles (\d+) \(completions (\d+).*?aways (\d+) frowns (\d+).*?spoke ([\d.]+) while.*?vs ([\d.]+) quiet.*?rise before a smile ([+-]?\d+)%.*?error at the reward ([+-][\d.]+).*?wm latches (\d+).*?planner: (\d+) choices, (?:agreed with the cortex|flipped the cortex's favorite|the value flipped the cortex's favorite) (\d+)", line)
     if not m: continue

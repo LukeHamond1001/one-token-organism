@@ -24,7 +24,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from body.caregiver import Caregiver, KNOWN, EXPAND, iso  # noqa: E402
+from body.caregiver import Caregiver, iso  # noqa: E402
 
 LINES0 = ["dog will go", "I will go up", "you will go in", "scared dog", "scared ball", "what? scared dog", "give milk", "give ball",
           "give book", "ball under", "ball on", "where ball? ball under", "I had milk", "you had ball", "dog had ball",
@@ -166,15 +166,15 @@ class Teacher(Caregiver):
         self.poll(); self.finalized = self.maxtick - 1; self.face(0)
         self.row({"action": "session_start", "teacher": self.planner.name, "sleep_pressure": self.state.get("sleep_pressure"),
                   "nights": self.state.get("nights"), "known": len(self.corpus.known()), "lines_heard": len(self.corpus.heard_lines())})
-        slept = False; prev = None; n_events = 0
+        prev = None
         while True:
             d = self.poll()
             if d is not None and d.get("asleep"):
-                slept = True; break
+                break
             if self.pending_expand:
                 text2 = self.pending_expand; self.pending_expand = None
                 if not self.event(text2, "line"):
-                    slept = True; break
+                    break
             item = self.planner.next(self)
             if item is None:
                 self.watch(self.s(12)); continue
@@ -192,18 +192,17 @@ class Teacher(Caregiver):
             if prev is not None and who == "parent":              # the other voice replies at once: no pace before it
                 prev = self.pace_wait(prev, self.pace())
                 if prev is None:
-                    slept = True; break
+                    break
             while self.parent and time.time() < self.away_until and not (self.state or {}).get("asleep"):
                 self.watch(self.s(8))
             prev = time.time()
             if not self.event(text, kind, who):
-                slept = True; break
-            n_events += 1
+                break
             if False:   # (review 2026-09-06) the parent used the body's sleep pressure to say bye before the night; a parent sees sleep, not adenosine
                 self.event("bye", "line")
                 while not (self.poll() or {}).get("asleep"):
                     self.watch(5.0)
-                slept = True; break
+                break
         # the night
         t_sleep = time.time()
         while True:

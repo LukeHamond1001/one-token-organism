@@ -3,7 +3,7 @@ day and read on another day of the same body (tools/record_day.py). Reports the 
 sample and the rise of the fitted value in the ticks before a smile, as a fraction of the smile.
     python3 tools/fit_return.py DAY_A.pt DAY_B.pt [--h 16] [--sets 2;0;1;0,1;0,1,2;0,1,2,3;all]
 """
-import sys, argparse, statistics as st, torch
+import argparse, statistics as st, torch
 ap = argparse.ArgumentParser(); ap.add_argument("a"); ap.add_argument("b"); ap.add_argument("--h", type=int, default=16)
 ap.add_argument("--sets", default="2;0;1;0,1;0,1,2;0,1,2,3;all"); ap.add_argument("--lams", default="1,10,100,1000"); ap.add_argument("--src", default="bands", help="bands | C (the cortex's stream vector) | C+bands | Z (the striatal input)")
 a = ap.parse_args()

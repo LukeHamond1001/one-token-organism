@@ -3,7 +3,7 @@ position in the line (the first symbols after rest against the rest of the line)
 usage: python3 tools/gauge_by_position.py BEFORE.pt AFTER.pt"""
 import sys, json
 sys.path.insert(0, "/Users/lukehamond/Projects/project")
-import torch, torch.nn.functional as F
+import torch
 from tokenizers import Tokenizer
 from body.life import Life
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")

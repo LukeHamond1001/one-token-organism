@@ -1,5 +1,12 @@
 """the organs of the second body (BODY_SPEC.md §2).
 
+HOW TO READ THIS FILE. `Store` is the hippocampus: `write` (a new slot, or a merge into a near-identical one, at the surprise's
+strength), `read` (recall by content: a softmax over the keys at a fixed temperature, the episode followed through `link`s),
+`fade` (the night's forgetting), `sample_starts` (where dreams begin). `Organs` holds everything learned: the cortex stream
+(`stream`, `forecast`, `readout`), the band ladder and its value heads (`band_update`, `values`), the critics (`vcrit_*`,
+`fast_*`), the striatum and working memory (`striatum_*`, `wm_*`), the gate's inputs (`widen_gate`), the losses of the night
+(`latent_loss`, `forecast_loss`).
+
 Everything learned lives in `Organs` (an nn.Module, saved with the body). The hippocampus
 is `Store`, a table of slots whose tensors are saved beside the weights. Nothing here decides
 behaviour by hand: constants are physiology (disclosed in the spec) or plumbing.

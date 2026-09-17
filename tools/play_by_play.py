@@ -3,7 +3,7 @@ around it: what the parent typed, what the body said, the reward felt, the dopam
 and the planner's choice when it decided. Also the day's organ summary.
     python3 tools/play_by_play.py data/watch/watch1/day001 [--events 12] [--span 6] [--kinds smile,frown,away,cue]
 """
-import sys, json, argparse, statistics as st
+import json, argparse, statistics as st
 ap = argparse.ArgumentParser(); ap.add_argument("prefix"); ap.add_argument("--events", type=int, default=12); ap.add_argument("--span", type=int, default=6)
 ap.add_argument("--kinds", default="smile,frown,away,cue,sequence"); a = ap.parse_args()
 T = [json.loads(l) for l in open(a.prefix + "_ticks.jsonl")]; R = [json.loads(l) for l in open(a.prefix + "_rows.jsonl")]

@@ -8,12 +8,10 @@ GET /talk   the visitor's page (2026-09-11; redrawn 2026-09-17 as a conversation
 """
 import argparse
 import json
-import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-import torch
 from tokenizers import Tokenizer
 
 from .life import Life, PHYSIOLOGY
