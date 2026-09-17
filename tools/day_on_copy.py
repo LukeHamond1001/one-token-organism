@@ -2,7 +2,9 @@
 then feed it a day's typed lines from the page log in order, as the typist did (the line's symbols, then the child's turn of
 `listen` ticks in which the mouth speaks and the store writes as awake), and save the copy: the day lived again under a changed
 constant, for the rulers to read. Never saves back.
-usage: python3 tools/day_on_copy.py BODY.pt --flags FLAGS.txt --day 199 --save-as OUT.pt [--listen 24] [--bag-decay 0.9] [--max-lines 0]"""
+usage: python3 tools/day_on_copy.py BODY.pt --flags FLAGS.txt --day 199 --save-as OUT.pt [--listen 24] [--bag-decay 0.9] [--max-lines 0] [--talkover 1]
+(--talkover 1, 2026-09-17: the child's own symbols said while the line was still being typed, the talk-overs, against those said in
+its turn after it, per quarter of the day and in all: the ruler for the gate's ear)"""
 import sys, os, json, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.insert(0, ROOT)
 import torch
@@ -75,7 +77,7 @@ t0 = time.time(); ticks = 0
 with torch.no_grad():
     pass
 faces_set = 0; own_syms = []                                          # the child's own symbols, for the junk count (--dump-own 1)
-dump_own = arg("dump_own", 0)
+dump_own = arg("dump_own", 0); talkover = arg("talkover", 0); to_rows = []   # per line: own symbols while typing, own symbols in its turn
 for i, (text, who) in enumerate(lines):
     life.type_text(text, who=who)
     span = len(text) + listen                                   # the line's ticks on the copy: its symbols, then the child's turn
@@ -96,15 +98,23 @@ for i, (text, who) in enumerate(lines):
                 life.set_face(0.0); face_until = -1
         t_after += 1
     n0 = len(life.win)
+    own_typing = 0; own_turn = 0
     while life.queue:
-        life.tick(); ticks += 1; face_tick()
+        life.tick(); ticks += 1; face_tick(); own_typing += int(list(life.win)[-1]["xo"] != life.sil) if talkover else 0
     for _ in range(listen):
-        life.tick(); ticks += 1; face_tick()
+        life.tick(); ticks += 1; face_tick(); own_turn += int(list(life.win)[-1]["xo"] != life.sil) if talkover else 0
+    if talkover: to_rows.append((len(text), own_typing, own_turn))
     if rewards: life.set_face(0.0)
     if dump_own:
         own_syms += [int(w["xo"]) for w in list(life.win)[-min(len(life.win), 96):] if int(w["xo"]) != life.sil]
     if (i + 1) % 40 == 0:
         print(f"  {i + 1} lines, {ticks} ticks, {time.time() - t0:.0f}s, store {life.store.n()}", flush=True)
+if talkover and to_rows:
+    q = max(1, len(to_rows) // 4)
+    parts = [to_rows[i:i + q] for i in range(0, len(to_rows), q)][:4]
+    print("TALK-OVERS: own symbols while the line was being typed / typed symbols, then own symbols in its turn, per quarter of the day: " +
+          " | ".join(f"{sum(r[1] for r in pt)}/{sum(r[0] for r in pt)} typing, {sum(r[2] for r in pt)} in turn" for pt in parts) +
+          f" || all: {sum(r[1] for r in to_rows)}/{sum(r[0] for r in to_rows)} typing ({100.0 * sum(r[1] for r in to_rows) / max(1, sum(r[0] for r in to_rows)):.1f}%), {sum(r[2] for r in to_rows)} in turn, lines with a talk-over {sum(1 for r in to_rows if r[1] > 0)} of {len(to_rows)}", flush=True)
 if dump_own:
     txt = "".join(TOK.decode([x]) for x in own_syms); junk = sum(1 for ch in txt if not (ch.islower() or ch in " .?!'"))
     print(f"own symbols {len(txt)}: junk (not lowercase, space or .?!) {junk} | sample {txt[:160]!r}", flush=True)
