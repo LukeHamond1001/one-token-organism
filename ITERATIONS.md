@@ -103,8 +103,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the read; the reads are by content alone. Not the floor's doing: the key's collision with natural talk (the dentate item).
    FALSIFIED ON THE SERVED BODY (2026-09-17, 12:50; eleven mornings): the store's rulers fell in step under the floor, the
    questions at two rests 21 -> 16, the prefixes 23 -> 17, the rephrased 15 -> 10, the branch's second set 10 -> 8 of 12,
-   while the held-out rose 0.607 -> 0.633 and the onset reads held (read_trace --qa: the answer's first symbol wins 25 of 30
-   at the question, 24 on the pre-floor save; its mean share 0.78 against 0.73). The mechanism: the middles of well-known
+   while the held-out rose 0.607 -> 0.633. Read with tools/read_trace.py --qa on the real read (corrected after the review of
+   2026-09-17, whose first form had scored the sentence's opener alone): the onset, the sentence's first symbol at the
+   question, 25 of 30 now against 24 before (a weak reading, an article or the question's own word for most facts); the
+   middle, the answer word's first letter with the sentence taken as the body's own up to it, 24 of 30 now against 26
+   before, its mean share 0.77 against 0.81 ("a tree" 0.06 against 0.39, "water" lost to "ice"); the free-running ruler
+   compounds such losses (21 to 16). The mechanism, supported, not proven: the middles of well-known
    utterances are written at a predicted symbol's surprise (0.05-0.15), under the floor, so the episode chains that carry
    an answer past its onset are cut at the first night; the relative floor kept those writes four nights and the retelling
    refreshed them. The derivation weighed the store's size and missed that the floor's height stands above the write

@@ -43,24 +43,41 @@ for pre in prefixes:
             print(f"   slot {j:6d} w {float(w[j]):.3f} sim {float(sims[j]):.3f} S {float(st.S[j]):.2f} value -> {sym_of(st.V[j])!r} key's last symbol {TOK.decode([int(m.nearest(st.K[j]))])!r}")
 
 if qa:
+    # THE QUESTIONS, READ AS THE RULER READS THEM (the real read, life._recall, its weights from the store): two readings per fact.
+    # The onset: after the question and the rests, the share of the answer SENTENCE's first symbol (an article or a word of the
+    # question for most facts: a weak reading, said so). The middle: the sentence teacher-forced as the body's own symbols up to
+    # its answer word (probe_lm's keys: the fact's content words not in the question), then the read: the share of the answer
+    # word's first letter, the reading that the episode's chain must carry (the reviewer of 2026-09-17: fact[0] alone said little).
+    import re
+    STOP = set("is are the a an in on and to do we i you it of my your they can what where who how does".split())
     pairs = [tuple(x.strip() for x in l.split("|")[:2]) for l in open("/Users/lukehamond/Projects/project/tools/facts_stage5.txt") if "|" in l]
-    tot = 0.0; wins = 0
-    print(f"\nTHE QUESTIONS (fed as the ruler feeds them, {pause} rests, then the read): the answer's first symbol's share of the read's weight")
+    def split_of():
+        w = st._last_w; out = {}; cum = 0.0
+        for j in torch.argsort(w, descending=True).tolist():
+            s_ = sym_of(st.V[j]); out[s_] = out.get(s_, 0.0) + float(w[j]); cum += float(w[j])
+            if cum > 0.99: break
+        return out
+    def top(d): return max(d.items(), key=lambda x: x[1]) if d else ("?", 0.0)
+    zero = torch.zeros(m.d)
+    n_on = n_mid = 0; t_on = t_mid = 0.0
+    print(f"\nTHE QUESTIONS ({pause} rests): the onset = the sentence's first symbol's share of the real read | the middle = the answer word's first letter's share after the sentence is taken as its own up to that word")
     for q, fact in pairs:
+        keys = [w_ for w_ in re.findall(r"[a-z]+", fact.lower()) if w_ not in STOP and w_ not in q.lower()]
+        aw = keys[0] if keys else fact.split()[-1]; pos = fact.lower().find(aw); pre = fact[:pos]
         life.win.clear(); life.bag_w.zero_(); life.bag_o.zero_(); life.ctx_cur.zero_(); life.ctx_prev.zero_(); life._utt_open = False; life.n_own = 0; life._follow = None
         with torch.no_grad():
             for ch in q:
-                i = TOK.token_to_id(ch); life.rest_tick(world=True); life.take_world(i)
+                i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
+                life.rest_tick(world=True); life.take_world(i)
             for _ in range(pause):
-                life.rest_tick()
-            qv = life.bag.float(); sims = st.K @ qv; w = torch.softmax(sims / st.temp, 0)
-            split = {}; cum = 0.0
-            for j in torch.argsort(w, descending=True).tolist():
-                s_ = sym_of(st.V[j]); split[s_] = split.get(s_, 0.0) + float(w[j]); cum += float(w[j])
-                if cum > 0.99: break
-            a0 = fact[0]; share = split.get(a0, 0.0); top_s, top_w = max(split.items(), key=lambda x: x[1])
-            tot += share; wins += int(top_s == a0)
-            best = [j for j in torch.argsort(w, descending=True).tolist()[:40] if sym_of(st.V[j]) == a0][:1]
-            bs = f"S {float(st.S[best[0]]):.2f} sim {float(sims[best[0]]):.3f}" if best else "no slot for it in the top 40"
-            print(f"   {q!r:26} -> {a0!r} {share:.2f} {'WINS' if top_s == a0 else 'loses to ' + repr(top_s) + f' {top_w:.2f}'}; the answer's best slot: {bs}")
-    print(f"   the answer's symbol wins {wins} of {len(pairs)}; its mean share {tot / len(pairs):.3f}")
+                life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0}); life.rest_tick()
+            rd, conf, _w = life._recall(life.bag); on = split_of(); a0 = fact[0]; on_share = on.get(a0, 0.0); on_top = top(on)
+            for ch in pre:                                            # the sentence as its own, up to the answer word
+                i = TOK.token_to_id(ch)
+                life.win.append({"x": life.sil, "xo": i, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
+                life.rest_tick(); life.take_own(i); rd, conf, _w = life._recall(life.bag)
+            mid = split_of(); m0 = aw[0]; mid_share = mid.get(m0, 0.0); mid_top = top(mid)
+        n_on += int(on_top[0] == a0); t_on += on_share; n_mid += int(mid_top[0] == m0); t_mid += mid_share
+        flag = " (opener in the question)" if fact.split()[0].lower() in q.lower() else ""
+        print(f"   {q!r:26} onset {a0!r} {on_share:.2f} {'wins' if on_top[0] == a0 else 'loses to ' + repr(on_top[0]) + f' {on_top[1]:.2f}'}{flag} | middle {pre!r}->{m0!r} ({aw}) {mid_share:.2f} {'wins' if mid_top[0] == m0 else 'loses to ' + repr(mid_top[0]) + f' {mid_top[1]:.2f}'}")
+    n = max(1, len(pairs)); print(f"   the onset wins {n_on} of {len(pairs)} (mean share {t_on / n:.3f}); THE MIDDLE, the answer word, wins {n_mid} of {len(pairs)} (mean share {t_mid / n:.3f})")

@@ -2123,7 +2123,7 @@ class Life:
         """THE PAGE, and nothing else (2026-09-08, the review): what a parent may see. The words, the faces, whether it sleeps,
         how many nights it has lived. No reading from inside reaches the one who decides the face."""
         i = max(0, int(since) - self.page_base)
-        return {"page": self.page[i:], "n": self.page_base + len(self.page), "queued": len(self.queue),
+        return {"page": self.page[i:], "n": self.page_base + len(self.page), "base": self.page_base, "queued": len(self.queue),
                 "asleep": self.asleep, "nights": self.nights}
 
     def _sharp_calibrate(self, x):

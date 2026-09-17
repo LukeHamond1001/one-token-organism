@@ -36,4 +36,4 @@ class H(BaseHTTPRequestHandler):
             self._send(404, "application/json", b'{"error": "unknown path"}')
 
 print(f"[talk] the page is open on http://localhost:{PORT} (the body on {BODY})", flush=True)
-ThreadingHTTPServer(("0.0.0.0", PORT), H).serve_forever()
+ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()

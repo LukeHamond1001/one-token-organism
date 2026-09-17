@@ -8896,9 +8896,13 @@ range on the first three mornings) was shorter than the fade's timescale: the we
 best-measured period of the store's rulers was at the capacity (nights 226-228: the questions 21 and 25, the prefixes 24,
 the rephrased 16), with the relative floor forgetting almost nothing and the capacity's eviction the forgetting. Measured
 fact by fact next (the answer's share of the read at each question on the pre-floor save and on this morning's).
-THE FLOOR FALSIFIED ON THE SERVED BODY (12:35-12:50; tools/read_trace.py --qa on the pre-floor save and this morning's): at every
-question, fed as the ruler feeds it, the store still finds the answer's first symbol: it wins 25 of 30 now against 24 before,
-its mean share of the read 0.78 against 0.73, the onset slots present with their strengths. The damage is after the onset:
+THE FLOOR FALSIFIED ON THE SERVED BODY (12:35-13:00; tools/read_trace.py --qa on the pre-floor save and this morning's, on the
+real read, the instrument corrected after the review: its first form scored the sentence's opener alone, an article or the
+question's own word for most facts): the onset, the sentence's first symbol at the question, wins 25 of 30 now against 24
+before; the middle, the answer word's first letter with the sentence taken as the body's own up to it, 24 of 30 now against
+26 before, its mean share 0.77 against 0.81 ("a tree" 0.06 against 0.39; "water" after "we drink " lost to "ice"); the
+free-running ruler compounds such losses (21 to 16). The damage is after the onset, and the mechanism is supported, not
+proven:
 the answer's continuation is carried by the episode's chain, slot to slot through the utterance, and the middle of a
 well-known utterance is written weakly (the surprise of a predicted symbol, 0.05 to 0.15; a tenth of the day's writes lie
 under 0.07), so the absolute floor at 0.07 forgets those slots within a night or a few, the links that carried an answer
@@ -8911,3 +8915,17 @@ tenth stays and the capacity of 65536 is the forgetting (the weakest gives way a
 best-measured mornings (nights 226-228). Expected: the chains rebuild through the three-day cycle, the questions back to
 18-21 within two cycles. THE LESSON, for the method: a change of forgetting shows on the store's turnover (twenty nights),
 not on three mornings; its falsifier must be read over that span on the served body, since no copy can live it.
+THE REVIEW OF THE DAY'S CHANGES (12:35-13:05, an independent reviewer over the diff since last night; nothing changed by it): the
+organ suite 64 of 64; the floor at zero bit-identical to the old behaviour, every caller updated, the explicit zero winning over
+the save's 0.07 at the load, the three flags files identical, the armed reload carrying the revert. Found and fixed: the
+question trace's first form scored the sentence's opener, not the answer (above); the talk page's first load could draw the
+whole transcript twice under a slow first answer (one poll in flight now, the first load sliced by its since), the arrow
+keys gave a face while a line was being edited and with modifiers held (the arrows work only while the box is empty, the
+modifiers ignored), the page inserted a space the body did not say (a thin gap now), a trimmed page could not recover (the
+state carries its base), a bad answer from the page's server was not shown, the trim could orphan an open bubble, a click
+stole the selection; the page's server binds the loopback only; the night waiter's dusk-log glob failed past the 299th row;
+the six armed morning probes lacked the per-item listing (re-armed with it, saves 225-230); the restart procedure's numbering.
+A research note from the review, to watch: the relative floor's threshold is a tenth of the mean, and the absolute floor's
+eleven nights removed the weak tail and raised the mean (0.33 to 0.35), so the first nights back under it drop more than the
+pre-floor regime did until the tail rebuilds; the store's dropped count on nights 249-252 is read before the floor's reference
+is taken from night 237.
