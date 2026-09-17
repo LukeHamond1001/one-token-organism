@@ -8678,3 +8678,10 @@ retold facts, which the parents' cycle retells within three days); the held-out 
 cortex 0.888, the old lines 0.493, the rephrased 10; the branch 9 of 9 and 10 of 12; the night's own curve healthy (0.206 to
 0.167, its gauge 0.681 to 0.768). THE FLOOR RETURNED TO A TENTH at this save (the reload at 20:18, served again 20:19:05 with
 the capacity, the hold and its form, the moment's horizon; the guard re-armed the same).
+THE PARENT OF 271, 272 AND 274 REPORTED (21:16): 166/173/179 lines; A's questions answered before B 39%, 29%, 34% (55 to 75%
+earlier in the week); fact answers in its own turn 1, 2, 3 ("the sun is hot", "grass is green", "we eat bread"), and "we eat
+bread and eggs" unprompted under an unrelated line; answer smiles 2, 2, 2; turns of four words 32, 32, 15; its own question
+marks 26, 26, 20; smiles 268/255/236, frowns 37/35/41; the child starting earlier into A's line (the late misses down, the
+talk-overs up). The soft days follow the divergent night and the two-night purge; the cycle retells the dropped chains. A
+mechanical finding: lines queued at a night are typed first the next day and delay that day's facts; the brief now asks for
+the depth to fall toward 45 as a day ends. The next parent (275-277, facts 21-30 first) spawned at the 222nd row.
