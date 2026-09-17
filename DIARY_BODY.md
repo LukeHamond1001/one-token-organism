@@ -8934,3 +8934,11 @@ THE FLOOR REVERTED (13:20:18, after night 249's save, the 239th row): the served
 guard relaunched with the new arguments; the redrawn talk page with the review's fixes on the body's own port. The relative
 floor at a tenth and the capacity's eviction are the forgetting again; the store rebuilds toward the capacity over about a
 week, and the questions are expected back at 18-21 within two retelling cycles.
+NIGHT 249 (ended 13:19, the 239th row, the twelfth and last night under the absolute floor, its save the one the revert reloaded;
+the log's day 294, facts 1-10): the dusk read the held-out 0.622 and the prefixes 18; the morning: the held-out 0.627, the
+facts by the cortex 0.881, the old lines 0.498, the parent's last lines 0.806, the dreams 0.84; the mouth completes 18 of 26
+prefixes (the failed: ice is, grass is, an ant is, a bird has, a cat is, honey is, snow is, a rock is) and answers 18 of 30 at
+two rests and 19 at eight (the failed: cold, dogs, up in the day, big, we eat, we drink, four legs, we sleep, soft, birds live,
+the sun, hard); the rephrased 11; the branch 9 of 9 and 8 of 12; the store 48890. The day 294: 163 lines, 56 of 81 A-lines
+with letters in its turn, 7 answered with I/yes/no/please before B ("what is cold?" -> "i o you"), answer smiles 3, junk 3,
+duty 0.335, frowns 36. The morning probes list every prefix and question from this save on.
