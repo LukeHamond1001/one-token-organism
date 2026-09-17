@@ -429,6 +429,28 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    the recording, since the store's keys were written under it), and ops/served_cfg.py prints a save's effective constants
    against the flags after every reload. The lesson, in one line: the served constants are what the save says, and the flags
    are only a delta on it.
+40. The key's separation (the dentate item; opened 2026-09-17, 11:55, from the prefixes' trace). Ruler: the fact prefixes and
+   the questions under natural talk (the fall 23 -> 17 as the parents said "ice is in your cup" and "the water is warm"), with
+   the rephrased set and the held-out as the generalization that must not fall.
+   THE EVIDENCE: tools/read_trace.py shows the collision in the read itself: at "ice is " a fresh slot from the day's talk with a
+   key 0.014 closer outvotes the fact's slot (51 against 26 percent); the reads are by content alone (read_strength 0), the
+   temperature 0.02, eighteen keys within a tenth of the query. The key is the fast bag (the last five symbols, shifted and
+   decayed) plus 0.5 of the previous utterance's order-free bag (key_ctx, live since day 206 by the reload's inheritance,
+   explicit since night 233). The order-free bag of "what is cold?" and of "is your milk cold?" share most of their mass, so
+   the context term does not separate a fact's question from a question about the same word; and the matched test of day
+   214 read the context as a cost (the held-out 0.657 against 0.681, the questions 7 against 11) while its store had been
+   written under the context on both copies, a confound never resolved (item 39).
+   THE FORMS TO DERIVE, each measured on copies against the same days: (a) the context with its order (ctx_form "shifted",
+   in the code as an instrument), so "what is cold?" and "is your milk cold?" separate by their order; (b) a dentate-style
+   expansion of the key (a fixed sparse random projection with winner-take-all over a few thousand units, born like the
+   lexicon): similar contexts decorrelate, at the cost of the rephrased set unless the expansion keeps a dense part; (c) the
+   cortex's code of the current utterance as the context term (the stream's state with the running mean out, key_form
+   "cortex" gave 0 of 30 as the whole key; as the context term beside the fast bag it is untried). A re-keyed store is a
+   store rebuilt: the utterance memory holds the days' lines whole, so a night-like pass can write them again under the new
+   key (reconsolidation) instead of three days of retelling.
+   NOT RUN until after the recording; the served body keeps its key. Falsifier for any form: the held-out or the rephrased
+   set three under the control copy's on the same day, or the branch under 8 of 9.
+
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
