@@ -8833,3 +8833,10 @@ carried the eighth rehearsal's freeze and the mood it drained (+2.2 to -4.2 at m
 carry-over at each night held to 35, 30 and 31 lines, the facts at minutes 7-21, and the earlier placement did not by itself
 raise the fact answers. Unprompted whole sentences 4, 2, 7; its own question marks 30, 17, 18; no line dropped in 487, one
 exchange straddling a night without loss; the duplicate collision one in seventeen on the commonest frames.
+NIGHT 245 (ended 09:31, the 235th row, the eighth under the absolute floor; the log's day 289, facts 21-30): the dusk read the
+held-out 0.591 and the prefixes 19; the morning: the held-out 0.621, the facts by the cortex 0.881, the old lines 0.500, the
+parent's last lines 0.796, the dreams 0.81; the mouth completes 20 of 26 prefixes ("ice is " to "cold" again) and answers 18 of
+30 at two rests and 20 at eight; the rephrased 10; the branch 9 of 9 and 10 of 12; the store 49802, the first morning it did
+not grow (the day's writes and the night's forgetting now even: the steady state near fifty thousand, as derived). The day
+289: 164 lines, 61 of 82 A-lines with letters in its turn, 3 answered with I/yes/no/please before B, answer smiles 3, smiles
+348 (2.07 a line, the most yet), junk 3, duty 0.343, frowns 37.
