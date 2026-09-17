@@ -12,3 +12,8 @@ Everything the served body needs is in this directory; the scratchpad under /pri
 5. The probe after each night's save:  nohup nice -n 5 zsh ops/probe_after_save2.sh <SCRATCH> <save-count> probe_after_nightNNN.log &  (the save count is the number of "save" rows in the log; night N's save is row N-24).
 6. A parent: the Agent brief in ops/parent_brief_template.txt, with the night count (grep -c '"action": "night"' data/watch2_caregiver.jsonl), the day label, the facts schedule (ten a day, rotating), and the depth script ops/queue_depth.py (never the .pos file).
 The scripts expect the scratch directory's logs/ subfolder; create it (mkdir -p <SCRATCH>/logs) and point them at any directory.
+
+AFTER ANY RELOAD OR RESTART (2026-09-16, the reviewer's finding): a save carries its own constants and the flags are only a delta on
+it; a key left out of the flags keeps the save's value. Every changed constant must be passed explicitly, reverts included, and
+after the restart run  python3 ops/served_cfg.py data/watch2.pt ops/BASE_FLAGS.txt  and read the lines marked "the save alone":
+none of them may be a constant the ledger records as reverted.

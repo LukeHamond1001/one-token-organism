@@ -8700,3 +8700,9 @@ inside another word no longer counts; the child's run-ons, "honeyhave", still do
 parent brief; the rehearsal is relabelled a second parent on the live body; the spec carries the chunk form's space boundary
 as a text-specific prior and points the constants at ops/served_cfg.py; the demo's claim is rephrased to survive a skeptic,
 with the caregiver's answer smile disclosed. From night 233's save every revert is explicit in the flags.
+NIGHT 233 (ended 22:11, the 223rd row; the log's day 275, facts 21-30): the held-out 0.604, the facts by the cortex 0.879, the
+old lines 0.466; the mouth completes 23 of 26 fact prefixes and answers 20 of 30 questions at two rests and 21 at eight; the
+rephrased 12; the branch 9 of 9 and 10 of 12; the store 41361, the last night of the purge; the day: answer smiles 0, junk 3,
+duty 0.309. THE EXPLICIT REVERTS LANDED at this save (the reload at 22:11, served again 22:12:40): the served constants read
+from the flags now, decisiveness 0, the lesson's rate 1.0, the floor a tenth, the slow context 0.5 disclosed, beside the
+capacity, the hold, its form and the moment's horizon; verified with ops/served_cfg.py against the save.
