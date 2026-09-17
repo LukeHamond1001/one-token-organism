@@ -8756,3 +8756,10 @@ right after "ice is cold"; "where do fi"), answered under other wording; unpromp
 talk-overs 97, 118, 110 a day (a frown for every third); the typist about fifteen seconds a line, slowing to twenty-eight
 before each night; one draft line in eighteen rejected as a duplicate of the queue's 4778 rows. The next parent (283-285,
 facts 21-30 first, stop at the 231st row) spawned at 03:00 with the queue at about 63 lines.
+NIGHT 238 (ended 02:58, the 228th row; THE FIRST NIGHT UNDER THE ABSOLUTE FLOOR; the log's day 282, facts 11-20): the store
+about 55000 at dusk to 47967 by morning (the low band forgotten at once, as the cut had shown); the dusk read the held-out
+0.621, the morning 0.607; the facts by the cortex 0.804 at dusk to 0.883; the old lines 0.477, the parent's last lines 0.740,
+the dreams 0.85; the mouth completes 22 of 26 prefixes ("ice is " to "coming tomor", the loss the cut copy showed) and answers
+19 of 30 at two rests and 21 at eight; the rephrased 13; the branch 9 of 9 and 10 of 12. Against the reference (prefixes
+22-23, questions 18-21) nothing is three under: the falsifier is not met on the first morning. The day 282: 172 lines, 66 of
+86 A-lines with letters in its turn, 7 answered with I/yes/no/please before B, answer smiles 2, junk 5, duty 0.325, frowns 36.
