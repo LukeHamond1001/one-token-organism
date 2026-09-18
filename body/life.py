@@ -1605,6 +1605,13 @@ class Life:
                         d = d + gap + list(self.utts[j + 1]); j += 1
                     else:
                         break
+                # THE THIRTY-THIRD DEFECT (2026-09-18, night 276 failed: "the stream's cache outgrew the window"): an utterance longer
+                # than the cortex's window (two lines with no offset between them, 72 symbols) cannot be dreamt whole; the lockstep
+                # batch is as long as its longest dream and the stream's cache holds a window at most. A dream is clipped to the
+                # window; the first night to draw that utterance, the first with 2048 dreams, failed whole and reset the day.
+                W_ = int(self.m.window) - len(end_)
+                if len(d) > W_:
+                    d = d[:W_]
                 out.append(d + end_)
             return (out, [[False] * len(d) for d in out]) if with_who else out
         who_on = int(self.cfg.get("dream_who", 0)) > 0 and self.store.n() > 0

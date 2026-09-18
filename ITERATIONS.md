@@ -624,6 +624,14 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    it was, the rate a quarter higher; the machine's compute per tick, 150 to 175 ms, is the ceiling, and the day at 24000 ticks
    is about 65 minutes of wall clock with the parent's lines at the old wall pace. The exposure gain is therefore modest, a
    quarter more lines an hour, not the doubling promised: said so to the user.
+   THE THIRTY-THIRD DEFECT (18:36, the first scaled night): night 276, the first to draw 2048 dreams, failed whole with "the
+   stream's cache outgrew the window" and reset the day's pressure to half (the body stayed awake, the day ran on). The cause:
+   the utterance memory holds one utterance of 72 symbols (two lines with no offset between them) against a window of 64; the
+   night's lockstep batch is as long as its longest dream and the stream's cache holds a window at most; 1024 draws had never
+   hit it, 2048 did. Fixed in Life.dreams: a dream clipped to the window less the end symbol. Test 70 (a tiny body with a
+   71-symbol line in its memory, the night runs, the dreams at most the window); the guard's digest unchanged. Served by a
+   mid-day reload before the next attempt, since a failing night would reset the pressure every half day and the child would
+   never sleep.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
