@@ -78,6 +78,7 @@ with torch.no_grad():
     pass
 faces_set = 0; own_syms = []                                          # the child's own symbols, for the junk count (--dump-own 1)
 dump_own = arg("dump_own", 0); talkover = arg("talkover", 0); to_rows = []   # per line: own symbols while typing, own symbols in its turn
+own_file = arg("own_file", "")                                       # --own-file PATH: the child's own text of the whole day written there (for tools/word_rate.py --text)
 for i, (text, who) in enumerate(lines):
     life.type_text(text, who=who)
     span = len(text) + listen                                   # the line's ticks on the copy: its symbols, then the child's turn
@@ -107,6 +108,8 @@ for i, (text, who) in enumerate(lines):
     if rewards: life.set_face(0.0)
     if dump_own:
         own_syms += [int(w["xo"]) for w in list(life.win)[-min(len(life.win), 96):] if int(w["xo"]) != life.sil]
+    if own_file:
+        own_all = getattr(life, "_own_all", []); own_all += [(int(w["xo"]), (w["x"] != life.sil)) for w in list(life.win)[-(span):] if int(w["xo"]) != life.sil]; life._own_all = own_all
     if (i + 1) % 40 == 0:
         print(f"  {i + 1} lines, {ticks} ticks, {time.time() - t0:.0f}s, store {life.store.n()}", flush=True)
 if talkover and to_rows:
@@ -115,6 +118,9 @@ if talkover and to_rows:
     print("TALK-OVERS: own symbols while the line was being typed / typed symbols, then own symbols in its turn, per quarter of the day: " +
           " | ".join(f"{sum(r[1] for r in pt)}/{sum(r[0] for r in pt)} typing, {sum(r[2] for r in pt)} in turn" for pt in parts) +
           f" || all: {sum(r[1] for r in to_rows)}/{sum(r[0] for r in to_rows)} typing ({100.0 * sum(r[1] for r in to_rows) / max(1, sum(r[0] for r in to_rows)):.1f}%), {sum(r[2] for r in to_rows)} in turn, lines with a talk-over {sum(1 for r in to_rows if r[1] > 0)} of {len(to_rows)}", flush=True)
+if own_file:
+    oa = getattr(life, "_own_all", []); turn = "".join(TOK.decode([x]) for x, over in oa if not over); over_ = "".join(TOK.decode([x]) for x, over in oa if over)
+    open(own_file, "w").write(json.dumps({"in_turn": turn, "over_the_line": over_})); print(f"own text written to {own_file}: {len(turn)} symbols in its turn, {len(over_)} over the line", flush=True)
 if dump_own:
     txt = "".join(TOK.decode([x]) for x in own_syms); junk = sum(1 for ch in txt if not (ch.islower() or ch in " .?!'"))
     print(f"own symbols {len(txt)}: junk (not lowercase, space or .?!) {junk} | sample {txt[:160]!r}", flush=True)

@@ -149,6 +149,7 @@ PHYSIOLOGY = dict(
     gate_baseline=0.9,
     gate_floor=0.05,   # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z)
     gate_listen=0.0,   # THE LISTENING REFLEX (item 41): while the world's utterance is open (before the offset) the floor is scaled by (1 - gate_listen) and a running word is cut; 0 = off
+    gate_quiet_tau=0,  # THE BABBLE DRIVE (item 41): the spontaneous floor rebuilds from 0 toward gate_floor over this many ticks of the world's silence; 0 = off
     gate_salience=0.0,   # the forecast's certainty as an input of the gate; 0 = off
     gate_slow_band=5,
     gate_slow_w=0.0,
@@ -1169,6 +1170,13 @@ class Life:
             listening = float(self.cfg.get("gate_listen", 0.0)) > 0.0 and not self._offset_done and self.ticks - self._last_world < 10 ** 6
             if listening:
                 fl = fl * (1.0 - float(self.cfg.get("gate_listen", 0.0)))
+            qt_ = int(self.cfg.get("gate_quiet_tau", 0))
+            if qt_ > 0:
+                # THE BABBLE DRIVE (gate_quiet_tau; 2026-09-17, item 41, the user's word: "talk less until the teacher leaves it alone long
+                # enough"): the urge to vocalize on its own returns with silence; the spontaneous floor is zero as the world speaks and
+                # rebuilds toward gate_floor over gate_quiet_tau ticks of the world's silence. The learned gate is untouched: a sure proposal
+                # (an answer) opens it whatever the floor, as the trace of 2026-09-17 showed (p_act 0.99 a tick after the line, the floor 0).
+                fl = fl * min(1.0, max(0.0, float(self.ticks - self._last_world)) / float(qt_))
             eg_ = float(self.cfg.get("explore_gain", 0.0))
             if eg_ > 0:                                                             # THE EXPLORATION DRIVE: readiness to act, not a
                 fl = min(0.5, fl + eg_ * getattr(self, "_surp_run", 0.0))            # reward; the floor climbs where the world surprises
