@@ -613,6 +613,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    parent's rhythm with a person's pause, one gap in five two to four periods long (caregiver.pace), so the critic learns a
    slow partner and the mood stops falling under a person at the keyboard. Together about 1.7 to 2 times the lines per hour
    of wall clock (the night's cost per line unchanged bounds it). The prior set: ops/archive/flags/BASE_FLAGS_pre_fast.txt.
+   THE CLOCK MEASURED (16:57, after the reload at night 275's save): at --period 0.1 the body ran 6.7 ticks a second at 134
+   percent of a core (the page's rows, two a tick, 13.3 a second), not ten: the tick's compute is about 150 ms with the waking
+   lesson every 24 ticks and the store at its capacity. A typist told --tick 0.1 then paces in a body-time compressed by 0.72,
+   its smiles and gaps landing early in ticks. Set to what the machine sustains: --period 0.15 with the typist's --tick 0.15, a
+   mid-day reload five minutes into day 327 (ops/reload_now.sh) so the two clocks agree; 1.33 times the old rate, with the
+   doubled day and the scaled night as decided.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the

@@ -9313,3 +9313,10 @@ at 0.2), the day at 24000 ticks with the night scaled to 2048 dreams, and the pa
 in five two to four periods long) so its critic learns a slow partner; the typist's chain restarted with the matching clock.
 About twice the lines an hour; the night's cost per line bounds it. The judgment of progress is the supervisor's sitting each
 morning from here, the conversation reported in words; the rulers a footnote.
+NIGHT 275 (ended 16:50 on the 18th, the 265th row; the log's day 326): the day 326: 100 lines, 43 of 50 A-lines with letters
+in its turn, frowns 3 (nine the day before: the gate learned), answer smiles 2, junk 0. AT THE SAVE (16:52): the reload took
+the tick at 0.1 s, the day at 24000 ticks and the night at up to 2048 dreams; the new chain relaunched the typist on the same
+clock at 16:56. MEASURED AT ONCE: the body ran 6.7 ticks a second, not ten (the compute about 150 ms a tick at 134 percent of a
+core), so the typist's clock and the body's disagreed; corrected five minutes into day 327 with a reload to --period 0.15 and
+the typist at --tick 0.15, what the machine sustains. The days from here: about 40 minutes of wall clock, 24000 ticks, the
+parent's lines at 1.33 times the old rate with a person's pause one gap in five; the nights up to 2048 dreams.
