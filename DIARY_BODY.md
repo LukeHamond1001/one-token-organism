@@ -9181,3 +9181,17 @@ store repopulating from 39.5k. The fade after a rebuild is a one-time settling, 
 the ones the live nights would have dropped at their first night.
 THE REHEARSAL ON THE LIVE BODY (04:40-04:46, the demo's own test through the queue): "what is sour? / b: a lemon is sour" told
 once at 04:40 among the morning's talk; asked again at 04:46: 'a lemon is sourwa lemon' (the first asking, before it was told: '').
+NIGHT 264 (ended 05:30 on the 18th, the 254th row; the log's day 315, the second day on the rebuilt store): the morning: the
+held-out 0.650; the mouth answers 18 of 30 at two rests and 18 at eight; the rephrased 13; the prefixes 13 of 26; the facts by
+the cortex 0.871; the store 39225 (the dusk before, 42712: the fade now takes what the day wrote, the settling done). The day
+315: 146 lines, 45 of 73 A-lines with letters in its turn, frowns 2, junk 0, answer smiles 3; in its turn "what is hard?" ->
+"a rock is hard", "what has wings?" -> "a bird has wi", "what is big?" -> "a tree", "what is little?" -> "an ant", "what is
+red?" -> "an apple is", "what is up at night?" -> "the moon is up at ni".
+THE DEMO'S SECOND HALF, LIVE (05:33): "what is sour?", told once at 04:40 the day before and answered at 04:46, asked again
+as the first question after the night: "a lemon ... is". A fact told once in conversation, answered minutes later and the
+next morning, on the served body through the queue at the typist's rhythm.
+THE RULERS AFTER THE SETTLING, HONESTLY: two nights after the rebuild the morning reads the questions 18, the rephrased 13, the
+prefixes 13, against the old store's 19-22, 15-17, 16-17; the branch 11-12 of 12 against 7. The rebuilt store holds the last
+4096 utterances (some ten days) where the old one held the strong survivors of twenty-five; the facts' long accumulation is
+what the rephrased and the prefixes read, and it is gone with the rebuild. Whether the ordered context itself costs
+rephrasings after a fade is not yet separated from that loss: the two arms rebuilt and faded once, side by side, follow.
