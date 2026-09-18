@@ -9096,3 +9096,16 @@ the typist's rhythm and the supervisor's lines: "what is red?" -> "an apple"; "w
 go by?" -> "no."; "what has four legs?" -> "a big cow i"; "what do bees make?" -> "bees m"; "where do we sleep?" -> "we l"; "we
 drink water and milk" -> "shall we put it on" (the honey, before it was offered); "?you hold i", "?my", "which"; nothing over any
 line; the mood +3 to +5.6 the whole hour. Teaching by hand at the body's rhythm works; teaching by the chair at my own did not.
+NIGHT 259 (ended 23:56, the 249th row; the log's day 308: the supervisor's hour through the queue and the human teacher's lines
+before it, facts 11-20): the morning: the mouth answers 22 of 30 at two rests and 23 at eight, the second morning at that
+level; the rephrased 15; the prefixes 17 of 26; the facts by the cortex 0.888; the branch 9 of 9 and 7 of 12; the store at the
+capacity. The day 308: 118 lines, 40 of 58 A-lines with letters in its turn, frowns 1, junk 2, duty 0.266.
+THE ARCHITECTURE DOUBLE-CHECKED (00:25 on the 18th, the user's word): over nights 250-259 the held-out 0.613 to 0.623-0.636, the
+questions at two rests 17-18 to 22 on the last two mornings, the rephrased 11 to 15, the cortex on the facts 0.873 to 0.888;
+the prefixes 19 to 17 and the branch's second set 10 to 7 of 12 since night 254, and the probe on the morning save shows one
+cause for both: at the shared starts "we " and "a " the store reads "we sit", "we see", "we look" and "a s..." ahead of "we
+eat", "we drink", "we sleep", "a bird", the evening's talk about ducks and rocks; one word further ("we eat ", "a bird ") it is
+12 of 12. Item 40, the key, is the last body change worth making. Known and kept: a slow parent drains the mood (the critic
+learned the typist's rhythm); the run-ons are the cortex's seam. Two warts read: the guard's restart at night 257 ("the tag
+closed") was the replay day reading as a silent child (duty under 0.2); the morning's first-lineage lines ("pack it up") were
+the typist's post-night drill, woken by one line of the supervisor's that ended in a space and so counted as a cue.
