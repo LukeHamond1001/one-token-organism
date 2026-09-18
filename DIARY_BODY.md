@@ -9259,3 +9259,14 @@ rephrased 20; the prefixes 14 of 26; the facts by the cortex 0.857; the branch 9
 ("the ducks go to the nest now" -> "all three. good night du"; "the little one takes the bread first" -> "it is fast. the big
 one"). THE FACT TOLD ONCE, A NINTH TIME (12:19): "what is sour?" -> "a lemon is sour", eight nights after the telling. The days
 from here are written fuller and more varied, in the held-out's own manner, the catechism fewer.
+NIGHT 272 (ended 13:16 on the 18th, the 262nd row; the log's day 323, the third varied day, written fuller): the morning: the
+held-out 0.619 (the slip paused: 0.617 the morning before); the mouth answers 23 of 30 at two rests and 23 at eight; the
+rephrased 21, the most since the rebuild; the prefixes 14 of 26; the facts by the cortex 0.867 (0.857); the branch 9 of 9 and
+11 of 12; the store 46641. The day 323: 125 lines, 51 of 62 A-lines with letters in its turn, frowns 3, answer smiles 5 (the
+fuller days ask fewer catechism questions), junk 0; it anticipates the other voice ("the grass is wet. mind your feet" ->
+"wet and cold. I wal"; "the milk is cold from the box" -> "cold and good the br"). THE FACT TOLD ONCE, A TENTH TIME (13:18):
+"what is sour?" -> "a lemon is sour", nine nights after the telling.
+THE USER'S QUESTION (13:21, "how long till the speech looks good"): answered without a date. The answers in its turn are there;
+about half its turns are fragments of the day and alone it loops; those thin as the cortex's general model rises, and the
+held-out must turn up first. The levers named: the teacher's material (varied now) and the exposure, 130 lines in a
+46-minute day; a longer day offered as the user's environment call, to be measured on a copy first, not run unbidden.
