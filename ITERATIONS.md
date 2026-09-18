@@ -619,6 +619,11 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    its smiles and gaps landing early in ticks. Set to what the machine sustains: --period 0.15 with the typist's --tick 0.15, a
    mid-day reload five minutes into day 327 (ops/reload_now.sh) so the two clocks agree; 1.33 times the old rate, with the
    doubled day and the scaled night as decided.
+   MEASURED AGAIN AT 0.15 (17:00, the page's two rows a tick the counter): 5.7 ticks a second in the minutes after the restart,
+   about a tenth under the typist's clock; the old regime at 0.2 ran 4.6 against 5, the same tenth. Kept: the mismatch is what
+   it was, the rate a quarter higher; the machine's compute per tick, 150 to 175 ms, is the ceiling, and the day at 24000 ticks
+   is about 65 minutes of wall clock with the parent's lines at the old wall pace. The exposure gain is therefore modest, a
+   quarter more lines an hour, not the doubling promised: said so to the user.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
