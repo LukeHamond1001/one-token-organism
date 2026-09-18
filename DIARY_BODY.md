@@ -9010,3 +9010,10 @@ the page every minute or two, answers what the child just said, expands its frag
 so the words stay contingent, and weaves the day's ten facts where they belong (ops/parent_brief_human.txt: the situation told
 plainly, the page its only sense, the words its only act). The reflex and the babble drive stay measured on copies and off the
 served body while the teacher has its days: one change at a time. The current parent is stopped and the human teacher spawned.
+THE PARENT 300-302, STOPPED AT THE HANDOVER (19:05; real day 300 and sixty lines of 301): by the parent's count the child spoke a
+content word or yes/no before B on 28 of 86 A-questions on day 300 and 7 of 30 on the part of 301; the fact's word in its own turn
+4 clean of 10 on day 300 ("cows give milk", "fish have fins", "snow is white", "ducks swim", and "birds liv" cut) and "wat" for
+"water is wet" on 301, where "what is cold?" drew "it is hot", the previous fact's content one exchange late; turns with runs of
+four words 28 and 13; its own question marks 24 and 6; every frown a talk-over (46, 17). Mechanical: no line dropped in 232;
+the typing 15.5-21 s a line and day 300 a full 54 minutes of talk, night 300 25 minutes (1518 s): the copies' load on the
+machine lengthens both, as it did on the 16th. Facts 4-10 of day 301 were already queued at the handover.
