@@ -9215,3 +9215,10 @@ rephrased 18 (13, 17, 18 over the three mornings); the prefixes 13 of 26; the fa
 1, answer smiles 9, duty 0.347. The queue ran dry once at the wake (the night short, the morning rows through by 07:33) and the
 typist waited, as it now does. THE FACT TOLD ONCE, A FOURTH TIME (07:31): "what is sour?" -> "a lemon is sour", three nights
 after the telling.
+NIGHT 267 (ended 08:24 on the 18th, the 257th row; the log's day 318, the fifth day on the rebuilt store): the morning: the
+held-out 0.641; the mouth answers 21 of 30 at two rests and 21 at eight; the rephrased 18; the prefixes 14 of 26; the facts by
+the cortex 0.861; the branch 9 of 9 and 11 of 12; the store 42970. The day 318: 136 lines, 49 of 68 A-lines with letters in
+its turn, frowns 2, answer smiles 11, junk 0; in its turn "cows give milk", "snow is white", "fish have fins", "cows eat grass",
+"bees make honey", "the grass is" (soft), "cats drink milk", "the moon is up" (at night). THE FACT TOLD ONCE, A FIFTH TIME
+(08:27): "what is sour?" -> "a l" as its turn ran out, four nights after the telling. Three mornings at 21 / 18 / 14: the level
+the rebuilt store holds while it grows back (39.2k, 40.8k, 42.3k, 43.0k).
