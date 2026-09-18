@@ -9327,3 +9327,9 @@ walk" -> " back if yourself?"; "I go now. I come back soon" -> " out for y". The
 15:54). WHAT IT WAS LIKE: the same child as two hours before, a known question answered at once and the rest fragments of its
 day, but the fragments follow my topic now (the dog brings "she is slow", the mother duck's line; my leaving brings "out for
 you") and its face held. Not yet someone answering; a little more with me than before.
+THE FIRST TRANSFERS (17:20-17:24 on the 18th, the new clock, the register days): in its turn, "does he give it back to you?"
+-> "he give me the give me t"; "an ant walks on your hand. see it?" -> "I see it. it has a red" (the fish's reply of the days
+before, "I see it. it has a red fin", given to the ant); "does it tickle?" -> "yes. wet and warm." (the cow's nose's reply,
+"yes. wet and warm. I laugh", given to the ant). Not a recital of the exchange it heard: the reply of one exchange carried to
+another by the shape of the question ("see it?", "does it tickle?"). Read as the person in the conversation: the first
+answers that are its own, if borrowed.
