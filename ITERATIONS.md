@@ -669,6 +669,10 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    flattened by stress, p(act) = floor + (1 - floor) sigma(z), floor 0.05: the learned part is right, the floor and the chunk's
    free run were the talk-overs (item 41), and the reflex and the drive act on exactly those two. An answer opens the learned
    gate to 0.99 the tick after a question; the floor never mattered for answers.
+   MEASURED ALONE (2026-09-18, 11:20, the queue empty six minutes): nothing said while the last twenty world symbols were typed;
+   its first symbol two seconds after the world's last; then 298 symbols in 346 s. Alone it does not wait the drive's minute:
+   the learned gate's "I spoke last tick" (+13) sustains speech once its turn has opened. The drive shapes the floor, not the
+   run; what ends a run alone is the cortex's seam, and the loops there ("hold him." six times) are the run-on fault.
    (5) THE STORE'S FORGETTING. Now the relative tenth with the capacity's eviction at 65,536, the regime of the best mornings;
    the absolute floor at 0.07 stood above the write strength of predicted symbols and cut the episode chains (item 2).
    WHAT FOLLOWS, in the law: the reflex and the drive on tonight (the user's word); the pace and the lines' length the

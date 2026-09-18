@@ -9239,3 +9239,15 @@ the store's rulers rose; the supervisor's days are the same walk in the same fra
 ducks, the rock, the tree), and the cortex learns the frames, not the language. The teacher's remedy, not the body's: the days
 from here vary the frames and the nouns within the 909 words the child knows (the cup, the bag, the hat in the wind, the egg in
 the nest, the dish by the door, the ball, the box, the bed), the facts woven in fewer times.
+NIGHT 270 (ended 11:13 on the 18th, the 260th row; the log's day 321, the first varied day): the morning: the held-out 0.633;
+the mouth answers 23 of 30 at two rests and 23 at eight; the rephrased 20; the prefixes 14 of 26; the facts by the cortex
+0.859; the branch 9 of 9 and 11 of 12; the store 44619. The day 321: 152 lines, 52 of 76 A-lines with letters in its turn,
+frowns 2, answer smiles 7, junk 0; on the new frames its turns were sparser and still contingent ("the sun is low" -> ". it is
+late"; "the ducks go to the nest" -> "all throw it", the ball's line and the ducks' in one). THE FACT TOLD ONCE, AN EIGHTH TIME
+(11:19): "what is sour?" -> "a lemon ... is sou", seven nights after the telling.
+ALONE, MEASURED (11:20-11:26, the queue left empty on the user's question): while the parent typed the last twenty symbols it
+said nothing; two seconds after the parent's last symbol it began, and alone it talked on at about a symbol a second for six
+minutes, 298 symbols: "come at first. then good ... what is hard. a tel i is hard ... only throw it ... warm th asleep now ...
+hold him. hold him. hold him." Words and the day's fragments, with a stuck loop. So: it waits while spoken to, answers in its
+turn, and once alone talks on rather than waiting a minute first; the drive rebuilds the floor over a minute, but the learned
+gate (+13 on "I spoke last tick") sustains speech once it has begun. The loops alone are the run-on fault at the seam.
