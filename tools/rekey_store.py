@@ -96,6 +96,9 @@ with torch.no_grad():
                 n_before = st.n()
                 if st.write(key_, ex, surps[i][j], 0):
                     written += 1; merged += int(st.n() == n_before)
+                    rm_ = getattr(st, "last_remap", None)
+                    if rm_ is not None:                                      # the eviction moved slots: the link's index follows (the thirty-second defect)
+                        life._prev_slot = int(rm_[life._prev_slot]) if 0 <= life._prev_slot < rm_.numel() else -1
                     if int(life.cfg.get("store_chain", 0)) and st.last_idx >= 0:
                         if life._prev_slot >= 0:
                             st.link(life._prev_slot, st.last_idx, tag=st.episode)

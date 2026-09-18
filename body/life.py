@@ -480,6 +480,16 @@ class Life:
             # the question must find. The direction of a faded bag is the question's still; the floor is a constant (write_floor).
             if learn_store and who == 0 and x != self.sil and key_.norm() > float(self.cfg.get("write_floor", 1e-6)):
                 self.store.write(key_, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
+                rm_ = getattr(self.store, "last_remap", None)
+                if rm_ is not None:
+                    # THE THIRTY-SECOND DEFECT (2026-09-18, read at the rekey; confirmed on a tiny body: at the capacity 25 of 52 links joined
+                    # the wrong slots, under it 138 of 138): a write beyond the capacity evicts the weakest slot and re-sorts the store by
+                    # strength, so the index of the symbol before (the chain's link) and of the episode being followed went stale, and
+                    # since the store reached the capacity (night 256) about half the chain links were made from a neighbouring slot. The
+                    # store now reports its remap and the indices held across the write follow it.
+                    self._prev_slot = int(rm_[self._prev_slot]) if 0 <= self._prev_slot < rm_.numel() else -1
+                    if self._follow is not None and 0 <= self._follow[0] < rm_.numel():
+                        s_ = int(rm_[self._follow[0]]); self._follow = ((s_,) + tuple(self._follow[1:])) if s_ >= 0 else None
                 if int(self.cfg.get("store_chain", 0)) and self.store.last_idx >= 0:
                     if self._prev_slot >= 0:
                         self.store.link(self._prev_slot, self.store.last_idx, tag=self.store.episode)   # the episode's order: this symbol followed that one

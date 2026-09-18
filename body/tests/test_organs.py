@@ -5,6 +5,7 @@ import sys
 import time
 
 import torch
+import torch.nn.functional as F
 from tokenizers import Tokenizer
 
 sys.path.insert(0, "/Users/lukehamond/Projects/project")
@@ -1569,11 +1570,44 @@ def test_sure_proposal_needs_no_quiet():
     print("68 a sure proposal needs no quiet: the floor whole a tick after the line when the forecast is sure, on the ramp when it is not")
 
 
+def test_links_survive_the_eviction():
+    """THE THIRTY-SECOND DEFECT (2026-09-18): a write beyond the store's capacity evicts the weakest slot and re-sorts the store by strength,
+    and the index of the symbol before (the chain's link) went stale: at the capacity about half the links joined a neighbouring slot.
+    Every link made at the capacity must join the slot of the symbol before to the slot of the symbol just written."""
+    L = tiny(store_chain=1, store_cap=150, store_links=16, write_floor=1e-30, gate_floor=0.0, key_ctx=0.5)
+    st = L.store; En = F.normalize(L.m.E.weight.detach(), dim=1)
+    def sym_of(v): return int((En @ F.normalize(v, dim=0)).argmax())
+    orig = st.link; orig_w = st.write; rec = []; written = []
+    def spy_w(k, v, strength, who, merge_cos=0.97):
+        ok = orig_w(k, v, strength, who, merge_cos)
+        if ok and st.last_idx >= 0:
+            written.append(sym_of(v))                            # the chain joins kept memories: a symbol too predictable to be written, or written so
+                                                                 # weakly that the eviction drops it at once, is skipped
+        return ok
+    def spy(a, b, tag=-1):
+        if a != b:                                               # a skipped write leaves last_idx on the slot before: the store makes no link of a slot to itself
+            rec.append((st.n() >= 150, sym_of(st.V[a]) == written[-2] and sym_of(st.V[b]) == written[-1]))
+        return orig(a, b, tag)
+    st.link = spy; st.write = spy_w
+    for text in ["the cat is here", "what is cold?", "ice is cold", "we go out now", "the sun is hot", "birds fly up", "fish live in water",
+                 "the dog runs fast", "we eat bread", "cows give milk", "what is wet?", "water is wet", "the moon is up", "snow is white"]:
+        L.type_text(text, who="parent")
+        while L.queue:
+            L.tick()
+        for _ in range(20):
+            L.tick()
+    under = [ok for cap, ok in rec if not cap]; over = [ok for cap, ok in rec if cap]
+    assert len(over) >= 20 and st.n() == 150, (len(over), st.n())
+    assert all(under), sum(under)
+    assert all(over), f"{sum(over)} of {len(over)} links at the capacity join the right slots"
+    print(f"69 the chain's links survive the eviction: {len(under)} under the capacity and {len(over)} at it all join the right slots")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction]
     failed = 0
     for t in tests:
         try:

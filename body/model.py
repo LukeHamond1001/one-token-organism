@@ -63,6 +63,7 @@ class Store:
         self.NE = torch.zeros(0, self.NK, dtype=torch.long, device=device)  # (-1: untagged, a link from before the tags)
         self.episode = 0
         self.last_idx = -1                                         # the slot the last write went to (new or merged)
+        self.last_remap = None                                     # the last write's eviction remap (old index -> new, -1 dropped), or none
         # THE EPISODE KEPT PER UTTERANCE (episode_chain; 2026-09-14, the twenty-ninth defect): a slot's link table holds only its
         # sixteen newest continuations, and a slot shared by every "the " sees hundreds of utterances, so the thread from a question
         # to its own answer was cut within two symbols. Here each utterance keeps the ordered list of the slots it wrote (CA3's
@@ -122,6 +123,7 @@ class Store:
 
     @torch.no_grad()
     def write(self, k, v, strength, who, merge_cos=0.97):
+        self.last_remap = None                                   # set by an eviction in this write: old slot index -> new (-1 dropped)
         if strength <= 1e-4:
             return False
         k = F.normalize(k.to(self.dev).float(), dim=0); v = F.normalize(v.to(self.dev).float(), dim=0)
@@ -285,6 +287,8 @@ class Store:
         idx = idx.to(self.dev).long()
         remap = torch.full((self.n(),), -1, dtype=torch.long, device=self.dev); remap[idx] = torch.arange(int(idx.numel()), device=self.dev)
         self.last_idx = int(remap[self.last_idx]) if 0 <= self.last_idx < self.n() else -1
+        self.last_remap = remap                                  # THE THIRTY-SECOND DEFECT (2026-09-18): whoever holds a slot's index across
+                                                                 # this write must follow it (the body's _prev_slot and _follow did not)
         self.K, self.V, self.S, self.W = self.K[idx], self.V[idx], self.S[idx], self.W[idx]
         self.B, self.Bs, self.Bq = self.B[idx], self.Bs[idx], self.Bq[idx]
         N = self.N[idx]; self.N = torch.where(N >= 0, remap[N.clamp_min(0)], N)   # the links follow the slots that stay; a dropped successor is none

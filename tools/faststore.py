@@ -34,6 +34,7 @@ class FastStore(Store):
     def write(self, k, v, strength, who, merge_cos=0.97):
         if strength <= 1e-4:
             return False
+        self.last_remap = None
         k = F.normalize(k.to(self.dev).float(), dim=0); v = F.normalize(v.to(self.dev).float(), dim=0)
         n = self.n()
         if n > 0:
@@ -53,9 +54,28 @@ class FastStore(Store):
         self._Bb[n] = False; self._Bsb[n] = False; self._Bqb[n] = False; self._Nb[n] = -1; self._NEb[n] = -1; self._Ab[n] = 1.0
         self._views(n + 1); self.last_idx = n
         if self.n() > self.cap:
-            keep = torch.argsort(self.S, descending=True)[: self.cap]
-            self._keep(keep)
+            self._evict_one()                                    # the weakest gives way (the body's rule, without the copy of every slot)
         return True
+    def _evict_one(self):
+        """THE EVICTION WITHOUT THE COPY: the body's write beyond the capacity keeps the strongest cap slots in their order, a copy of
+        every tensor at every write. Here the single weakest slot is dropped and the last slot moved into its place: the same set of
+        slots, their order changed, which nothing in the store depends on (the reads, the links, the marks and the episodes address
+        slots by index, and the links and episodes are remapped as the body remaps them)."""
+        n = self.n(); j = int(self.S.argmin()); last = n - 1
+        remap = torch.arange(n, device=self.dev); remap[j] = -1
+        if j != last:
+            remap[last] = j
+            self._Kb[j] = self._Kb[last]; self._Vb[j] = self._Vb[last]; self._Sb[j] = self._Sb[last]; self._Wb[j] = self._Wb[last]
+            self._Bb[j] = self._Bb[last]; self._Bsb[j] = self._Bsb[last]; self._Bqb[j] = self._Bqb[last]
+            self._Nb[j] = self._Nb[last]; self._NEb[j] = self._NEb[last]; self._Ab[j] = self._Ab[last]
+        self._views(last)
+        N = self.N; keep = N >= 0
+        N2 = torch.where(keep, remap[N.clamp_min(0)], N); self.N.copy_(N2)          # a link to the moved slot follows it; a link to the dropped one is none
+        self.NE.copy_(torch.where(self.N >= 0, self.NE, torch.full_like(self.NE, -1)))
+        self.last_idx = int(remap[self.last_idx]) if 0 <= self.last_idx < n else -1
+        self.last_remap = remap
+        if self.EP:
+            self._remap_episodes(remap)
     def _keep(self, idx):
         super()._keep(idx)                                       # the body's compaction (new tensors); then back into the buffers
         n = self.n(); K, V, S, W, B, Bs, Bq, N, NE, A = self.K, self.V, self.S, self.W, self.B, self.Bs, self.Bq, self.N, self.NE, self.A

@@ -493,6 +493,39 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    (the stream's state after its last symbol with the day's running mean out) as the context, which can only be swapped at the
    offset: if the code of a question and of its rephrasing agree (the cortex forecasts the same continuation for both), form (c)
    keeps the rephrased set that the ordered bag loses while separating the taught ones.
+   THE SIXTEEN-DAY RUN (01:25; 1727 lines of days 295-310, 46.5k symbols, the store 37-44k slots; the same facts and readings):
+     ctx form, key_ctx, swap    taught onset  chain  margin (med)  own slot wins  right-symbol share   rephrased onset  own wins
+     bag 0.5 first (served)        28/30      0.99     +1.8           22/30            0.83               15/30          3/30
+     shifted 0.5 first             30/30      1.00     +3.8           24/30            0.90               16/30          6/30
+     shifted 0.5 offset            24/30      0.99    +11.9           25/30            0.86               14/30         12/30
+     bag 0.5 offset                24/30      0.98     +4.7           25/30            0.81               13/30         12/30
+   READ: (1) the ordered context under the served swap is ahead of the served form on every column at both sizes (taught 30
+   against 28, the margin twice, the right symbol's share 0.90 against 0.83, the rephrased 16 against 15), and the served
+   form's margin shrinks with the store (+4.5 at six days, +1.8 at sixteen: the collisions the trace showed). (2) The swap at the
+   offset loses taught onsets (24) at both sizes although the fact's own slot wins more often: with the question in the onset's
+   key, the answer's variants in the days' talk ("a bird has wings" and "birds have wings" after the same question) tie at the
+   onset and the read's mean decodes to neither; under the served swap the onset's context is the utterance before the question
+   and the tail decides. The cortex's code as the context (form c) is out: the centred stream states of different utterances
+   agree at 0.87 (a question and its rephrasing at 0.999), no separation to be had. (3) What the ruler cannot show, the chain
+   positions being read under the follow: the served body's branch fall (7 of 12 at "we ", "a ") is a mid-chain read where the
+   question's context is the only thing that separates "we eat" from the evening's "we sit", and the ordered context's
+   separation there is the same geometry as its onset margin.
+   DECISION (01:30): ctx_form "shifted" at key_ctx 0.5 under the served swap is the candidate; the swap stays. The real-store
+   test follows: the served save's store rebuilt from its utterance memory (tools/rekey_store.py) under the served form (R0)
+   and under the ordered context (R1), the rulers on both against the save as it is; then a day on each; adoption at a save
+   with the rekey, if the falsifier holds off.
+   THE THIRTY-SECOND DEFECT, found on the way (01:50; body/model.py Store._keep, body/life.py _step): a write beyond the store's
+   capacity evicts the weakest slot and keeps the rest SORTED BY STRENGTH, so every slot's index moves at every such write; the
+   store remapped its own last_idx but not the indices the body held across the write: _prev_slot (the chain's link from the
+   symbol before) and _follow (the episode the waking recall is in). Measured on a tiny body at a capacity of 150 with a spy on
+   the links: under the capacity 138 of 138 links joined the right kept memories; at the capacity 38 of 67 (the rest joined a
+   neighbouring slot). The served store has been at its capacity since night 256: since then about four chain links in ten
+   have been wrong, and the branch's second set fell from 10 to 7 of 12 at night 254-256, as the store reached the cap. The
+   chain is what the dreams follow and what the waking recall's follow (read_follow 20) boosts mid-utterance. FIX: the store
+   reports the eviction's remap (last_remap) and the body's held indices follow it; at the capacity 67 of 67. Test 69; the guard
+   b26f0c48 unchanged under the pre-sure flags (a tiny body never reaches the cap). The wrong links of the last five nights stay
+   in the served store until the rekey rebuilds them; the rekey pass (tools/rekey_store.py, on a store with room kept ahead and
+   a copy-free eviction, tools/faststore.py) makes them right.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
