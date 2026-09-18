@@ -595,6 +595,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    distribution, the utterance memory filling with one teacher's register as the earlier parents' lines age out of its 4096.
    The remedy is the teacher's register (the earlier parents' lines in the page log, never the held-out file, are the model), and
    the exposure per night; the day-length chain runs next.
+   THE DAY AND THE NIGHT SEPARATED (16:05, the dusk probes against the mornings): dusk after day 322 0.620, morning 0.619 (the
+   night -0.001); dusk after day 323 0.606, morning 0.632 (the night +0.026); dusk after day 324 0.600, morning 0.598 (-0.002).
+   So the DAYS drain the held-out (day 323 -0.013, day 324 -0.032) and a night on fuller material recovers it. The waking lesson
+   trains on the window as lived, its own sound superposed at own_gain, and day 324 was the day it talked over the other voice's
+   lines most (nine frowns, the anticipation): the cortex learning to predict the world from a stream mixed with its own babble
+   predicts clean lines worse. The night's lesson hears the world alone and recovers. Readings, not yet tested: the talk-overs
+   will fall as the frowns teach the gate and the day's drain with them; the fuller material's nights recover more than the
+   catechism's. Not changed: own_gain in the day's lesson (0.3; "the lessons hearing the world only" was worse at day 6 of the
+   first body). The day-length chain's B arm reads whether a doubled day doubles the drain or the recovery.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the

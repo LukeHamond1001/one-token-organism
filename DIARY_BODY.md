@@ -9298,3 +9298,11 @@ partner (the critic learned the typist's twelve-second rhythm; a human at the pa
 minutes). The second is the larger obstacle to the demo with a person at the keyboard and is the environment's shape as much
 as the body's: days at a human pace, with the day lengthened to keep the lines; the user's call on the pace, measured on
 copies first.
+NIGHT 274 (ended 15:49 on the 18th, the 264th row, twenty-seven minutes under the supervisor's copy chain; the log's day 325,
+the register day): the morning: the held-out 0.598, down from 0.632; the mouth answers 23 of 30 at two rests and 23 at eight;
+the rephrased 21; the prefixes 13 of 26; the facts by the cortex 0.849; the branch 9 of 9 and 11 of 12; the store 48212. The
+day 325: 120 lines, 48 of 60 A-lines with letters in its turn, frowns 9, answer smiles 3, junk 0. THE FACT TOLD ONCE, A
+TWELFTH TIME (15:50): it asked "what is sour?" itself before the parent did, then answered "a lemon is so" and recalled "we
+have one lemon" from the day it was told. THE FALL PLACED: the dusk probes show the days draining the held-out (0.632 to 0.600
+across day 324, the day it talked over the other voice most) and a night on fuller lines recovering it (+0.026 after day 323):
+the waking lesson hears its own babble in the window; the night hears the world alone. Watched, not changed.
