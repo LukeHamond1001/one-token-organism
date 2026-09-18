@@ -10,7 +10,9 @@ last = typed[-1] if typed else ""
 flat = []
 for l in open("data/teach_queue_w2.jsonl"):
     if l.strip():
-        for s in json.loads(l).get("say", []):
+        try: row = json.loads(l)
+        except Exception: continue                        # a line that is not a row is skipped, as the typist skips it
+        for s in row.get("say", []):
             s = s.strip()
             flat.append(s[2:].strip() if s[:2].lower() == "b:" else s)
 # the newest place where the last THREE typed lines occur in order (a line duplicated later in the queue fooled the single match:
