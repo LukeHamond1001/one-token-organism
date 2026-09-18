@@ -9320,3 +9320,10 @@ clock at 16:56. MEASURED AT ONCE: the body ran 6.7 ticks a second, not ten (the 
 core), so the typist's clock and the body's disagreed; corrected five minutes into day 327 with a reload to --period 0.15 and
 the typist at --tick 0.15, what the machine sustains. The days from here: about 40 minutes of wall clock, 24000 ticks, the
 parent's lines at 1.33 times the old rate with a person's pause one gap in five; the nights up to 2048 dreams.
+THE SECOND SITTING (17:07-17:12 on the 18th, the new clock, my pace): "it is me again. you sat on the warm rock" -> " has a
+little put it drie"; "yes. put it in the sun. it dries there" -> "where hill. I know in he"; "what do the ducks do?" -> "ducks
+swim "; "yes. ducks swim. does the dog swim too?" -> "her. she is slow the cat waits at th"; "are you tired? it was a long
+walk" -> " back if yourself?"; "I go now. I come back soon" -> " out for y". The mood -1.9 at the end (-6.0 after the sitting of
+15:54). WHAT IT WAS LIKE: the same child as two hours before, a known question answered at once and the rest fragments of its
+day, but the fragments follow my topic now (the dog brings "she is slow", the mother duck's line; my leaving brings "out for
+you") and its face held. Not yet someone answering; a little more with me than before.
