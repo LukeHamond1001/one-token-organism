@@ -9081,3 +9081,18 @@ you want to the water": words, a fact's question asked of nobody, run-ons; what 
 (22:03-22:06): "I am back. do you see the water?" -> "every drop will"; "every drop. yes. the water is wet" -> "want"; "what do
 ducks do?" -> "ducks swim in" at 7.2 s (the sure term: the answer needed no quiet); "yes. ducks swim on the water" -> "teeth
 come up". The mood -2.4 to -5.4 in six minutes at my pace.
+NIGHT 258 (ended 22:57, the 248th row; the log's day 307, the human teacher's second day, facts 1-10, and the supervisor's
+sittings): the morning: the mouth answers 22 of 30 at two rests and 23 at eight, the most at two rests in twenty nights; the
+rephrased 15; the prefixes 17 of 26; the facts by the cortex 0.881; the branch 9 of 9 and 7 of 12; the store at the capacity.
+The day 307: 136 lines, 39 of 68 A-lines with letters in its turn, frowns 1, answer smiles 1, junk 4, duty 0.222.
+THE SUPERVISOR TEACHING (22:58-23:12, the chair with the typist's rhythm, four to eight lines a call): "what is wet?" -> "water"
+at 1.4 s; "what do cats drink?" -> "cats drink"; "I want milk and", "I want", "for me", "the ducks are asleep"; the mood +4.3 at
+the day's start to -5.5 in the chair, and back to 0.0 within four minutes of the typist's rhythm resuming: the drain is the
+rhythm, not the words; a gap of thirty seconds between a supervisor's calls is a fall in the value the fast critic learned
+under a line every fifteen seconds. From 23:09 the supervisor teaches through the queue at the typist's rhythm, a row or two
+a minute answering what the child said, the day's ten facts woven in.
+THE SUPERVISOR THROUGH THE QUEUE (23:09-23:40, the log's day 308, facts 11-20 woven in): the child's replies in its turn under
+the typist's rhythm and the supervisor's lines: "what is red?" -> "an apple"; "what is big?" -> "a"; "do you see the little ant
+go by?" -> "no."; "what has four legs?" -> "a big cow i"; "what do bees make?" -> "bees m"; "where do we sleep?" -> "we l"; "we
+drink water and milk" -> "shall we put it on" (the honey, before it was offered); "?you hold i", "?my", "which"; nothing over any
+line; the mood +3 to +5.6 the whole hour. Teaching by hand at the body's rhythm works; teaching by the chair at my own did not.

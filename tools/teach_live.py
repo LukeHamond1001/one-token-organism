@@ -70,12 +70,36 @@ if cmd == "start":
     md = get("/insides"); print(f"in the chair; the typist held ({pids}); mood {md['mood']:.1f} sharp {md['sharp_now']:.0f} nights {md['nights']} asleep {get('/state?since=0').get('asleep')}")
     print("the page:", page_tail())
 elif cmd == "say":
-    text = sys.argv[2]; who = arg("who", "parent"); w = arg("watch", 12); keys = [k.strip() for k in arg("answer", "").split(",") if k.strip()]
+    # --then "the other voice's line": typed after the child's turn, in the same call (an exchange in one call keeps the pace near the typist's)
+    text = sys.argv[2]; who = arg("who", "parent"); w = arg("watch", 8); keys = [k.strip() for k in arg("answer", "").split(",") if k.strip()]; then = arg("then", "")
     before = wait_quiet()
     n0 = get("/state?since=0")["n"]; post("/type", {"text": text, "who": who})
     while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
     got, at = watch(w, keys, n0)
     print(f"[{who}] {text}\n[child] {got!r}" + (f"  (answered at {at}s)" if at else "") + (f"  (before the line it said {before!r})" if before.strip() else ""))
+    if then:
+        wait_quiet(quiet_ticks=4, max_wait=60); n1 = get("/state?since=0")["n"]; post("/type", {"text": then, "who": "other"})
+        while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
+        got2, _ = watch(arg("watch2", 5), None, n1)
+        print(f"[other] {then}\n[child] {got2!r}")
+elif cmd == "talk":
+    # talk "line|b: reply|line|b: reply": several lines typed at the typist's rhythm (its quiet awaited, the other voice four seconds
+    # after the parent, about fifteen seconds a line), the child's turn watched and smiled at after each; all its turns returned.
+    # The supervisor's hand on every line, the rhythm the child's critic expects.
+    lines = [x.strip() for x in sys.argv[2].split("|") if x.strip()]; gap = float(arg("gap", 6.0)); w = arg("watch", 8)
+    out = []
+    for ln in lines:
+        who = "other" if ln[:2].lower() == "b:" else "parent"; text = ln[2:].strip() if who == "other" else ln
+        keys = []
+        if "=>" in text: text, ans = text.split("=>", 1); text = text.strip(); keys = [k.strip() for k in ans.split(",") if k.strip()]
+        before = wait_quiet(quiet_ticks=4 if who == "other" else 8, max_wait=100)
+        n0 = get("/state?since=0")["n"]; post("/type", {"text": text, "who": who})
+        while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
+        got, at = watch(w if who == "parent" else max(3, w // 2), keys, n0)
+        out.append(f"[{'A' if who == 'parent' else 'b'}] {text}  ->  {got!r}" + (f" (answered at {at}s)" if at else "") + (f"  [before: {before.strip()!r}]" if before.strip() else ""))
+        print(out[-1], flush=True)
+        if who == "other": time.sleep(gap)
+    md = get("/insides"); print(f"(mood {md['mood']:.1f} sharp {md['sharp_now']:.0f} pressure {md['sleep_pressure']})")
 elif cmd == "listen":
     got, _ = watch(int(sys.argv[2]) if len(sys.argv) > 2 else 20); print(f"[child, alone with us listening] {got!r}")
 elif cmd == "leave":
