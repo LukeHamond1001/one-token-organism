@@ -9004,3 +9004,9 @@ THE CHAIN'S FLAW (18:35): the ear's and the reflex's measurement arms came out i
 the chain passed the override as one word ("--gate-listen 1.0" unsplit: zsh does not split an unquoted variable), so the
 instrument ignored it; on the copy itself, loaded with the reflex on, the floor reads 0 and the gate stays shut through a
 typed line and releases eight ticks after it. The chain fixed (${=X}); the two reflex arms re-run.
+THE HUMAN TEACHER (19:00, the user's word on seeing the page: "we want a human stuck in an LLM, not all these rules; we need a
+human teacher; get Opus to become that"): the parent's method changes from a script read every ten minutes to a parent who reads
+the page every minute or two, answers what the child just said, expands its fragments, keeps the queue at two to five minutes
+so the words stay contingent, and weaves the day's ten facts where they belong (ops/parent_brief_human.txt: the situation told
+plainly, the page its only sense, the words its only act). The reflex and the babble drive stay measured on copies and off the
+served body while the teacher has its days: one change at a time. The current parent is stopped and the human teacher spawned.
