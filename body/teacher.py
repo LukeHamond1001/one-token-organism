@@ -337,8 +337,6 @@ class QueuePlanner:
         # come down for it" ten times, 105 of the parent's lines against 22 of the other voice's) and the child went silent, echoing.
         # The typist now waits for the next row (the run loop watches twelve ticks and asks again); the child, left alone, talks to itself.
         return None
-        heard = teacher.corpus.heard_lines(HEARD_FOR_CUE) or LINES0
-        return (self.rng.choice(heard), "line")               # a heard line only when nothing was ever planned
 
 
 SYSTEM = """You are the teacher of a small language organism that lives on a shared page: it sees one
