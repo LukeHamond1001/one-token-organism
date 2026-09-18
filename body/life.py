@@ -150,6 +150,7 @@ PHYSIOLOGY = dict(
     gate_floor=0.05,   # spontaneous activity never stops: p(act) = floor + (1 - floor) sigmoid(z)
     gate_listen=0.0,   # THE LISTENING REFLEX (item 41): while the world's utterance is open (before the offset) the floor is scaled by (1 - gate_listen) and a running word is cut; 0 = off
     gate_quiet_tau=0,  # THE BABBLE DRIVE (item 41): the spontaneous floor rebuilds from 0 toward gate_floor over this many ticks of the world's silence; 0 = off
+    gate_quiet_sure=0.0,   # THE SURE PROPOSAL (item 41): under the drive the floor is whole at once when the forecast's norm reaches this (an answer waits for no quiet); 0 = off
     gate_salience=0.0,   # the forecast's certainty as an input of the gate; 0 = off
     gate_slow_band=5,
     gate_slow_w=0.0,
@@ -1176,7 +1177,16 @@ class Life:
                 # enough"): the urge to vocalize on its own returns with silence; the spontaneous floor is zero as the world speaks and
                 # rebuilds toward gate_floor over gate_quiet_tau ticks of the world's silence. The learned gate is untouched: a sure proposal
                 # (an answer) opens it whatever the floor, as the trace of 2026-09-17 showed (p_act 0.99 a tick after the line, the floor 0).
-                fl = fl * min(1.0, max(0.0, float(self.ticks - self._last_world)) / float(qt_))
+                ramp = min(1.0, max(0.0, float(self.ticks - self._last_world)) / float(qt_))
+                sure_ = float(self.cfg.get("gate_quiet_sure", 0.0))
+                if sure_ > 0.0:
+                    # THE SURE PROPOSAL (gate_quiet_sure; 2026-09-17, 21:20, read in the chair): the drive held the floor at zero for the first
+                    # minute after a question and the answers went unsaid; the learned gate opened (p 0.99 the tick after the line) but the
+                    # mouth then sampled the rest, and it was the floor's forty tries a turn that had let an answer out. The readiness to act
+                    # rises with the strength of the proposal (the striatum driven harder by a stronger cortical input): a forecast whose
+                    # norm reaches gate_quiet_sure has the floor whole at once, a flat one waits for the silence to rebuild it.
+                    ramp = max(ramp, min(1.0, float(pred1.norm()) / sure_))
+                fl = fl * ramp
             eg_ = float(self.cfg.get("explore_gain", 0.0))
             if eg_ > 0:                                                             # THE EXPLORATION DRIVE: readiness to act, not a
                 fl = min(0.5, fl + eg_ * getattr(self, "_surp_run", 0.0))            # reward; the floor climbs where the world surprises

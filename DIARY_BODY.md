@@ -9035,3 +9035,21 @@ become a human trapped in an LLM; no cheats and biology inspired." The listening
 300 explicit in every flags file (the set before kept as ops/archive/flags/BASE_FLAGS_pre_listen.txt); the human teacher
 continues; no more copy arms. The nightly probes stay as they are. Read live from tomorrow's parents' reports: the talk-overs
 (110 a day) and the letters over the lines on the page, the speech in its turn, the answers.
+NIGHT 256 (ended 20:5x, the 246th row; the log's day 302, the human teacher's first full day, facts 11-20): the morning: the
+held-out 0.636, the highest yet, the facts by the cortex 0.881, the old lines 0.493, the parent's last lines 0.733; the mouth
+completes 18 of 26 prefixes and answers 18 of 30 at two rests and 20 at eight; the rephrased 13; the branch 9 of 9 and 7 of 12;
+the store 65536, at the capacity. The day 302: 161 lines (52 of the 80 A-lines questions), 59 of 80 A-lines with letters in its
+turn, answer smiles 3, junk 6, duty 0.329, frowns 37. THE REFLEX AND THE DRIVE LANDED at this save (20:55; gate_listen 1.0 and
+gate_quiet_tau 300 from the flags, verified; the guard relaunched).
+IN THE CHAIR (20:58-21:12, tools/teach_live.py, the typist held, the mood +1.7 and the readout 32 at the start): "hello. are you
+awake now?" -> "th a twig in her beak where" (the birds of the teacher's last line); "a twig in her beak? for the nest?" -> silence;
+the other voice's answer -> "?ten up to the tr"; "what do bees make?" -> "bees make honeyis" at 11.1 s; "what does a frog do?" ->
+"birds fly up is th every bravest of th" (the frame's collision); told once, "a frog hops in the wet grass"; two lines about the
+ball, silence; the frog asked back two minutes later -> silence. Nothing over my lines the whole session (the reflex), and
+almost nothing in its turn (the drive): the drive held the floor at zero for the first minute after every line, and on the copy
+trace the learned gate opens at 0.99 the tick after a question but the mouth samples the rest; it was the floor's forty tries a
+turn that let an answer out. The mood fell from +1.7 to -6.0 and the readout from 32 to 8 in fourteen minutes: a quiet child
+earns few known-word smiles, the ladder expects the typist's 1.7 a line, and the difference is a dip every tick. Two constants
+of the mouth follow at the next save: the floor whole at once when the forecast is sure (gate_quiet_sure; the copy showed
+|pred| about 0.6 for a recalled answer, 0.3 for a flat forecast: 0.45), and the readout's floor raised from 8 to 20 so a bad
+mood widens the babble without turning words into letters.
