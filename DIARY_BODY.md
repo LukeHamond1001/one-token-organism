@@ -9066,3 +9066,18 @@ readout held at 20 where the old floor of 8 would have flattened it), nothing ov
 my pace is a line every 25-40 s (the tool's watch and my turn) against the typist's 15, and the fast critic, taught the typist's
 rate, expects a smile sooner than a slow parent gives one; a human at the page types at the typist's pace and would not drain
 it so. The empty-room test (the drive's self-talk) is for the next day's window.
+THE HUMAN TEACHER'S FIRST REPORT (days 301, 302 and 304-305, to the 247th row): the child's words answered every minute or two
+("is a bee out there", "her eggs warm", "shall we say goodnight", "want an apple now. please", "I am sleepy?", "how many eggs");
+before B spoke "an apple is red" whole, "she has wings", "we drink", "a cat is", "snow is", "honey"; "honey is sweet" said
+unasked; its own questions taken up. Talk-overs 26, 37, then 1 and 0 under the reflex. A FAULT SEEN BY THE TEACHER on day 304:
+twenty-five minutes of single lines replayed from the back of the queue, mostly the parent's (105 A lines against 22 B; "now
+they come down for it" ten times), the child gone near silent, echoing. Read in the code: the queue planner's filler when the
+queue is empty is one of the last two dozen planned lines, and the queue ran empty after the supervisor's sittings (the typist
+held, the teacher appending only a few lines for a visitor, the queue drained on the resume). The typist will wait instead of
+repeating: the filler removed at the next relaunch.
+THE ROOM EMPTY (22:00, the day's start, 180 s with the typist held and no face): alone it said "somethin water i rockis the
+water the tell him in tell the water the water i shall where do fish live? fis the tell him in tell whth th th a red head can
+you want to the water": words, a fact's question asked of nobody, run-ons; what it wants to say when left alone. THEN BARE TURNS
+(22:03-22:06): "I am back. do you see the water?" -> "every drop will"; "every drop. yes. the water is wet" -> "want"; "what do
+ducks do?" -> "ducks swim in" at 7.2 s (the sure term: the answer needed no quiet); "yes. ducks swim on the water" -> "teeth
+come up". The mood -2.4 to -5.4 in six minutes at my pace.
