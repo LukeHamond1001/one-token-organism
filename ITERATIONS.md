@@ -466,6 +466,33 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    key (reconsolidation) instead of three days of retelling.
    NOT RUN until after the recording; the served body keeps its key. Falsifier for any form: the held-out or the rephrased
    set three under the control copy's on the same day, or the branch under 8 of 9.
+   THE ONSET'S CONTEXT (2026-09-18, 00:46, read in the code and confirmed on a tiny body with the store's write spied): the slow
+   context becomes the key's "previous utterance" inside take_world at the next utterance's FIRST symbol, after that symbol's own
+   write, so an answer's first symbol is keyed by the utterance before the question, and only its second symbol on by the question
+   ("the cat is here" / "what is cold?" / "ice is cold": the 'i' of "ice" keyed by the cat line, cos 1.000 to its bag, the 'c' by
+   the question). The query at the onset carries the question. The onset, the read that chooses the answer's branch, has had a
+   context term of noise since key_ctx went live (night 206).
+   THE GEOMETRIC RULER (tools/key_separation.py, the same hour): an empty store written at strength one from the last six days'
+   typed lines (546 lines, 15.5k symbols; the thirty facts heard once after the first third), then each fact asked in the taught
+   and in the rephrased wording, the read at the answer's onset and along it. Six forms of the key:
+     ctx form, key_ctx, swap    taught onset  chain  onset margin (med)  own slot wins   rephrased onset  chain
+     bag 0.5 first (served)        26/30      0.99      +4.5 nats            24/30            14/30        0.94
+     bag 0.5 offset                25/30      0.99      +6.5                 26/30            11/30        0.93
+     bag 0.0 (no context)          25/30      0.96      +4.3                 26/30             6/30        0.90
+     shifted 0.5 first             28/30      1.00      +5.4                 25/30            13/30        0.94
+     shifted 0.5 offset            24/30      0.99     +14.1                 26/30             9/30        0.93
+     shifted 1.0 offset            24/30      0.99     +21.5                 25/30             8/30        0.89
+   READ: (1) the context term is what finds a fact under a rephrased question (6 of 30 without it, 13-14 with the order-free or
+   the end-aligned ordered bag under the served swap), since the query's fast bag holds only the question's tail; (2) the swap at
+   the offset gives the onset a real context and a decisive margin (the ordered bag: +14 to +21 nats, a hundred to one), but the
+   rephrased set falls (14 to 9-11), because under the served swap the onset's context is noise for every slot alike and the tail
+   decides, which a rephrasing shares; (3) the taught onsets sit at 24-28 in every form: the five that fail (grass, honey, cows,
+   birds have, a) fail under every key, so their cause is not the key; (4) six days' talk does not reproduce the served body's
+   falls (the prefixes 17 of 26, the branch 7 of 12): the served store holds sixty-five thousand slots of some twenty-five days.
+   NEXT: the same ruler over sixteen days (the served regime), and form (c), the cortex's code of the utterance just ended
+   (the stream's state after its last symbol with the day's running mean out) as the context, which can only be swapped at the
+   offset: if the code of a question and of its rephrasing agree (the cortex forecasts the same continuation for both), form (c)
+   keeps the rephrased set that the ordered bag loses while separating the taught ones.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the

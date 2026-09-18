@@ -6,7 +6,10 @@ Everything the served body needs is in this directory; the scratchpad under /pri
    nohup python3 -m body.serve --load data/watch2.pt --tok data/tok_char.json --port 8020 $(tr '\n' ' ' < ops/BASE_FLAGS.txt) > logs/serve_watch2.log 2>&1 &
    (the exact command last used is in ops/serve_command.txt)
 2. The typist chain: the exact quoted command is in ops/typist_chain_command.txt (PORT LOG "TYPIST ARGS" "ENV" ROUNDS; the args and env must stay quoted).
-   The typist relaunches at each night with the day label from the log.
+   The typist runs its --days in one process and the chain relaunches it only when that process exits or is killed, with the day
+   label from the log. A change to body/teacher.py or body/caregiver.py therefore reaches the served typist only at a relaunch:
+   kill the typist at a boundary (right after a night row) and the chain starts the next one within a minute on the new code
+   (2026-09-18: the filler's removal of 22:07 ran only from night 260, the typist of 21:56 having kept the old planner until then).
 3. The guard on the long tag, re-armed after every night row:  nohup nice -n 5 zsh ops/guard_tag_at_night.sh <SCRATCH> <flags> &  (ops/guard_args.txt holds the exact line; replace the scratch path).
 4. The dusk probe:  nohup nice -n 5 zsh ops/probe_at_dusk.sh <SCRATCH> probe_dusk_labelNNN.log &   (never arm near the sleep threshold).
 5. The probe after each night's save:  nohup nice -n 5 zsh ops/probe_after_save5.sh <SCRATCH> <save-count> probe_after_nightNNN.log &  (the save count is the number of "save" rows in the log; night N's save is row N-24; the script keeps the morning save as post_night_<save-count>.pt two deep and runs the language probe, the questions and the rephrased set).

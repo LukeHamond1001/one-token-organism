@@ -9109,3 +9109,24 @@ eat", "we drink", "we sleep", "a bird", the evening's talk about ducks and rocks
 learned the typist's rhythm); the run-ons are the cortex's seam. Two warts read: the guard's restart at night 257 ("the tag
 closed") was the replay day reading as a silent child (duty under 0.2); the morning's first-lineage lines ("pack it up") were
 the typist's post-night drill, woken by one line of the supervisor's that ended in a space and so counted as a cue.
+
+NIGHT 260 (ended 01:03 on the 18th, the 250th row; the log's day 309, the supervisor's day through the queue with facts 21-30 and
+the day's facts woven in): the morning: the mouth answers 22 of 30 at two rests and 22 at eight; the rephrased 16, the most yet;
+the prefixes 16 of 26; the facts by the cortex 0.875; the branch 9 of 9 and 7 of 12; the held-out 0.627; the store at the
+capacity. The day 309: 157 lines, 53 of 91 A-lines with letters in its turn, frowns 0, junk 2, duty 0.210. The night ran
+twenty-three minutes against sixteen, the supervisor's copy runs beside it.
+THE REPLAY'S CAUSE (00:30-00:35): the lines re-typed from the back of the queue on days 304 and 309 were the old planner's filler
+still running: the typist of 21:56 (the guard's restart) began before the 22:07 fix and kept its code, since the typist runs its
+six days in one process and the chain relaunches it only when it exits. At 01:03:55, twenty seconds after the night row, the
+supervisor stopped it; the chain relaunched the typist at 01:04:19 for day 310 on the new planner, which waits when the queue is
+empty. Written into ops/RESTART.md: a change to the typist's code reaches the served typist only at a relaunch.
+THE ONSET'S CONTEXT (00:46; item 40 of ITERATIONS.md): read in the code and confirmed on a tiny body, an answer's first symbol is
+keyed by the utterance before the question, its second symbol on by the question: the slow context swaps inside take_world at
+the next utterance's first symbol, after that symbol's own write. The query at the onset carries the question, so the onset's
+context term has been noise since night 206. The geometric ruler (tools/key_separation.py; six days' lines written at strength
+one, the thirty facts once, each asked in the taught and the rephrased wording): the taught onsets sit at 24-28 of 30 under
+every form of the key; the rephrased set needs the context (6 without it, 14 with the served form); the swap at the offset gives
+the onset a decisive margin (the ordered bag: a hundred to one) but the rephrased set falls to 9-11, since under the served swap
+the onset is decided by the question's tail, which a rephrasing shares. The cortex's code as the context (form c) is out: the
+centered stream states of different utterances agree at 0.87 (a question and its rephrasing at 0.999). Six days' talk did not
+reproduce the served falls; the sixteen-day run follows.
