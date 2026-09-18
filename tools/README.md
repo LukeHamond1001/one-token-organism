@@ -16,6 +16,7 @@ Copies that live or sleep (the measurement of a change before it goes on the ser
 - `baseline_train.py` exists and has not been run on this body's claim, by the house rule against ordinary-training comparisons.
 
 The store laid open: `read_trace.py` (which memories carry a read, a prefix or every question, on the real read), `store_dist.py` (the strengths), `store_turnover.py` (two mornings: what was written, dropped and strengthened; the steady state under a floor).
+The key's geometry and the store rebuilt (item 40): `key_separation.py` — an empty store written from the last days' typed lines under a chosen form of the key (`--forms ctx:lam:swap`), the facts heard once, each asked in the taught and the rephrased wording: onset hits, chain accuracy, margins in nats. `rekey_store.py` — a copy's store rebuilt from its utterance memory under the code's key (the reconsolidation a change of key needs; the one instrument that writes a copy, `--save-as`; ops/rekey_after_save.sh runs it on the served save at a post-night save). `faststore.py` — the body's Store with room kept ahead and a copy-free eviction, proved identical, for the two above; never the body's.
 
 The behaviour guard: `determinism_check.py` — a tiny body at a fixed seed on a fixed script; its digest must not change under an edit of body/.
 

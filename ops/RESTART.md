@@ -10,6 +10,11 @@ Everything the served body needs is in this directory; the scratchpad under /pri
    label from the log. A change to body/teacher.py or body/caregiver.py therefore reaches the served typist only at a relaunch:
    kill the typist at a boundary (right after a night row) and the chain starts the next one within a minute on the new code
    (2026-09-18: the filler's removal of 22:07 ran only from night 260, the typist of 21:56 having kept the old planner until then).
+   A change to body/ reaches the served body only at a restart: ops/reload_after_save.sh SCRATCH "FLAGS" (at the next post-night
+   save; the code on disk) or ops/reload_now.sh mid-day. A change of the KEY'S FORM (key_ctx, ctx_form, key_form) needs the store
+   rebuilt as well, since memories written under one form are not found by a query under another: ops/rekey_after_save.sh SCRATCH
+   FLAGS_FILE (at the next post-night save: the typist held, the save backed up, tools/rekey_store.py over the utterance memory,
+   served again, the typist relaunched; about fifteen minutes of the morning). Night 262 (2026-09-18) took --ctx-form shifted this way.
 3. The guard on the long tag, re-armed after every night row:  nohup nice -n 5 zsh ops/guard_tag_at_night.sh <SCRATCH> <flags> &  (ops/guard_args.txt holds the exact line; replace the scratch path).
 4. The dusk probe:  nohup nice -n 5 zsh ops/probe_at_dusk.sh <SCRATCH> probe_dusk_labelNNN.log &   (never arm near the sleep threshold).
 5. The probe after each night's save:  nohup nice -n 5 zsh ops/probe_after_save5.sh <SCRATCH> <save-count> probe_after_nightNNN.log &  (the save count is the number of "save" rows in the log; night N's save is row N-24; the script keeps the morning save as post_night_<save-count>.pt two deep and runs the language probe, the questions and the rephrased set).
