@@ -521,6 +521,18 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    19:00 (the human teacher first, one change at a time): to go on at the save after the teacher's three days, with the
    teacher continuing, and the parents' talk-over counts (110 a day now) and the in-turn speech read over the days after.
    The 0.5 arm and the drive's arms are deferred to a quiet machine.
+   ON THE SERVED BODY (2026-09-17, 20:55, the user's word: "stop the data points"): the reflex and the drive (gate_listen 1.0,
+   gate_quiet_tau 300) at night 256's save, verified. IN THE CHAIR right after (tools/teach_live.py, the supervisor typing live
+   with the face timed as the caregiver's): nothing over the lines the whole session, "bees make honey" at 11 s; but the
+   told-once fact asked back went unsaid, and most turns were silence. Read against the copy trace: after a line the learned
+   gate opens at 0.99 and the mouth samples the rest; under the old floor forty spontaneous tries a turn let the answer out on
+   one of them, and the drive had removed them for the first minute. The mood fell +1.7 -> -6.0 in fourteen minutes (a quiet
+   child earns few known-word smiles against an expectation of 1.7 a line) and the readout to its floor of 8.
+   THE SURE PROPOSAL (gate_quiet_sure; test 68): under the drive the floor is whole at once when the forecast's norm reaches the
+   constant (0.45: a recalled answer reads about 0.6, a flat forecast about 0.3 on the copies), and waits for the silence
+   otherwise: the readiness to act rises with the strength of the proposal. THE READOUT'S FLOOR (sharp_min 8 -> 20): a bad mood
+   widens the babble and no longer turns words into letters (item 42: the temperature 1/(sharpness x |pred|)). Both at night
+   257's save; the guard's reference under the current flags b26f0c48 (023f6e9b under the set before the reflex).
 
 42. The mathematics of the mouth, read whole (2026-09-17, 20:30, the user's word: "look at the math going on in the model and
    get this thing figured out"). Five numbers set what you hear, and three of them are not the body's.
