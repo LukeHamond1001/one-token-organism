@@ -9156,3 +9156,15 @@ of 30 at two and at eight rests, the rephrased 26 of 30, the prefixes 22 of 26, 
 unchanged. Adopted at night 262's save: the served flags carry --ctx-form shifted, and ops/rekey_after_save.sh rebuilds the
 served store from its utterance memory at the post-night save (fourteen minutes of the morning; the typist held and relaunched
 after). The last body change of item 40 is the key's form; the rebuild is its reconsolidation.
+NIGHT 262 (ended 03:20 on the 18th, the 252nd row; the log's day 312, the supervisor's day through the queue): the morning on
+the store as it was (the probe copied before the rebuild): the held-out 0.650, the most yet; the mouth answers 19 of 30 at two
+rests and 21 at eight; the rephrased 17; the prefixes 17 of 26; the facts by the cortex 0.881. The day 312: 146 lines, 54 of 73
+A-lines with letters in its turn, frowns 5 (talk-overs at a line's closing "?", three days rising 0, 3, 5), junk 0, duty 0.277.
+THE STORE REBUILT AND THE ORDERED CONTEXT SERVED (03:21-03:37): at the post-night save the typist was held, the body stopped, the
+save backed up (data/backups/watch2/watch2_before_rekey_night262.pt), and the store rebuilt from the utterance memory under the
+ordered context in 674 s (65536 slots from 104k writes, 38.7k merged, links 45132); served again at 03:37 with --ctx-form
+shifted, the typist relaunched at 03:38 (the log's day 314). The rulers on the served save as rebuilt, the same cortex: the mouth
+answers 28 of 30 at two rests and 29 at eight; the rephrased 24; the prefixes 21 of 26; the branch 9 of 9 and 12 of 12; the
+held-out 0.650. Against the same morning's old store: 19/21, 17, 17, 7 of 12. Its first turns on the rebuilt store: "good
+morning. I slept well" -> "is warm. good m"; "what do we eat in the morning?" -> "we eattle". The last body change of item 40 is
+made; what follows is the teacher's.
