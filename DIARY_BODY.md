@@ -9053,3 +9053,16 @@ earns few known-word smiles, the ladder expects the typist's 1.7 a line, and the
 of the mouth follow at the next save: the floor whole at once when the forecast is sure (gate_quiet_sure; the copy showed
 |pred| about 0.6 for a recalled answer, 0.3 for a flat forecast: 0.45), and the readout's floor raised from 8 to 20 so a bad
 mood widens the babble without turning words into letters.
+THE RELOAD NOW (21:32:35-21:33:30, the user's word "you train live": the sure term and the readout's floor could not wait for the
+night): the body saved by request, restarted (pid 28122) with --gate-quiet-sure 0.45 and --sharp-min 20 beside the reflex and the
+drive, verified; the typist and the guard relaunched; ops/reload_now.sh keeps the form. IN THE CHAIR AGAIN (21:35-21:50, the
+mood +0.9 and the readout 29 at the start, the day's last quarter): "hello. I am here with you now" -> "?eggs"; "eggs? do you want
+an egg now?" -> "I eat my egg did"; the other voice "you eat your egg. it is warm" -> "i"; "what is white?" -> "snwha little";
+"snow is white. white and cold" -> "enough fasts out"; told once, "what does a mole do?" / "a mole digs down in the dark" ("down"
+said as the question ended); "is the cat on your bed now?" -> "my"; "the cat is on your bed. she is soft" -> "and warm i"; the
+mole asked back two minutes later, ninety seconds before its night -> "all we goodnigh". Words throughout, no letters (the
+readout held at 20 where the old floor of 8 would have flattened it), nothing over my lines, contingent replies ("I eat my egg",
+"and warm"); the taught question half-begun; the told fact not recalled at the day's very end. The mood fell +0.9 -> -6.0 again:
+my pace is a line every 25-40 s (the tool's watch and my turn) against the typist's 15, and the fast critic, taught the typist's
+rate, expects a smile sooner than a slow parent gives one; a human at the page types at the typist's pace and would not drain
+it so. The empty-room test (the drive's self-talk) is for the next day's window.
