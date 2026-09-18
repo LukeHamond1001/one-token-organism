@@ -698,6 +698,12 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    its first symbol two seconds after the world's last; then 298 symbols in 346 s. Alone it does not wait the drive's minute:
    the learned gate's "I spoke last tick" (+13) sustains speech once its turn has opened. The drive shapes the floor, not the
    run; what ends a run alone is the cortex's seam, and the loops there ("hold him." six times) are the run-on fault.
+   THE TALK-OVERS ROSE WITH THE REGISTER (day 325, 2026-09-18: nine frowns against two to four): read in the frowns' contexts,
+   seven of nine came in the middle of the OTHER voice's line ("he ran all day. he sle|eps" said as "he sleeps now" was typed):
+   the child anticipates the reply it has learned and says it along with the voice, the sure term opening the gate on a
+   forecast that is right. Not a fault of the rule and not changed: the parent's frown when interrupted is the signal that
+   teaches the learned gate to hold its tongue while another speaks; the count is to be watched over the next days, and the
+   two at a line's closing "?" (the answer given as the question ends) are the eager case the earlier days already showed.
    (5) THE STORE'S FORGETTING. Now the relative tenth with the capacity's eviction at 65,536, the regime of the best mornings;
    the absolute floor at 0.07 stood above the write strength of predicted symbols and cut the episode chains (item 2).
    WHAT FOLLOWS, in the law: the reflex and the drive on tonight (the user's word); the pace and the lines' length the
