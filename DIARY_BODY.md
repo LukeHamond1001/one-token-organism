@@ -9195,3 +9195,16 @@ prefixes 13, against the old store's 19-22, 15-17, 16-17; the branch 11-12 of 12
 4096 utterances (some ten days) where the old one held the strong survivors of twenty-five; the facts' long accumulation is
 what the rephrased and the prefixes read, and it is gone with the rebuild. Whether the ordered context itself costs
 rephrasings after a fade is not yet separated from that loss: the two arms rebuilt and faded once, side by side, follow.
+NIGHT 265 (ended 06:31 on the 18th, the 255th row; the log's day 316, the third day on the rebuilt store): the morning: the
+held-out 0.645; the mouth answers 21 of 30 at two rests and 21 at eight (18 the morning before); the rephrased 17 (13); the
+prefixes 14 of 26 (13); the facts by the cortex 0.863; the branch 9 of 9 and 11 of 12; the store 40833, growing back. The day
+316: 158 lines, 53 of 79 A-lines with letters in its turn, frowns 1, answer smiles 12 (the most in a day), duty 0.307; in its
+turn "what do cats drink?" -> "cats drink milk", "who gives milk?" -> "cows give", "what is little?" -> "an ant is little",
+"what falls from the sky?" -> "rain falls from th", "what do bees make?" -> "bees make honey", "what do fish have?" -> "fish
+have fins".
+THE FACT TOLD ONCE, A THIRD TIME (06:34): "what is sour?" as the first question after night 265, two nights after the telling:
+"a lemon is sour". Told once at 04:40 on day 315; answered at 04:46, at 05:33 after one night, at 06:34 after two.
+THE STORE REPOPULATING: the rulers turned up on the third morning (the questions 18 to 21, the rephrased 13 to 17) as the days'
+writes refill what the settling took; the branch holds at 11 of 12. The like-for-like of the two key forms after one fade
+(both rebuilt from the night-262 backup, no day between) read equal within a fact (10 / 8 / 6 against 9 / 7 / 6): the ordered
+context costs nothing after a fade and stays; a rebuilt store must live a day before its first night.
