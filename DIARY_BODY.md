@@ -9029,3 +9029,9 @@ eight; the rephrased 13 ("what is so cold?" -> "ice is colds"); the branch 9 of 
 day off, where the eviction of the weakest at each write becomes the forgetting, the regime of the best-measured mornings. The
 day 301: 170 lines (79 of the 85 A-lines questions: the teacher's remarks are new), 63 of 85 A-lines with letters in its turn,
 answer smiles 0, junk 2, duty 0.360, frowns 41.
+THE USER'S WORD (20:05): "we need it to look good and work; stop trying to get all these data points for the model; get it to
+become a human trapped in an LLM; no cheats and biology inspired." The listening reflex (passed on its copy) and the babble drive
+(built on the same principle, its copy arms not run) go on the served body at the next save, --gate-listen 1.0 --gate-quiet-tau
+300 explicit in every flags file (the set before kept as ops/archive/flags/BASE_FLAGS_pre_listen.txt); the human teacher
+continues; no more copy arms. The nightly probes stay as they are. Read live from tomorrow's parents' reports: the talk-overs
+(110 a day) and the letters over the lines on the page, the speech in its turn, the answers.
