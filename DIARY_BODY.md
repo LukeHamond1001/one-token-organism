@@ -9208,3 +9208,10 @@ THE STORE REPOPULATING: the rulers turned up on the third morning (the questions
 writes refill what the settling took; the branch holds at 11 of 12. The like-for-like of the two key forms after one fade
 (both rebuilt from the night-262 backup, no day between) read equal within a fact (10 / 8 / 6 against 9 / 7 / 6): the ordered
 context costs nothing after a fade and stays; a rebuilt store must live a day before its first night.
+NIGHT 266 (ended 07:31 on the 18th, the 256th row; the log's day 317, the fourth day on the rebuilt store; the nights run
+ten to thirteen minutes now): the morning: the held-out 0.634; the mouth answers 21 of 30 at two rests and 21 at eight; the
+rephrased 18 (13, 17, 18 over the three mornings); the prefixes 13 of 26; the facts by the cortex 0.875; the branch 9 of 9 and
+11 of 12; the store 42263, growing back from 39.2k. The day 317: 150 lines, 54 of 75 A-lines with letters in its turn, frowns
+1, answer smiles 9, duty 0.347. The queue ran dry once at the wake (the night short, the morning rows through by 07:33) and the
+typist waited, as it now does. THE FACT TOLD ONCE, A FOURTH TIME (07:31): "what is sour?" -> "a lemon is sour", three nights
+after the telling.
