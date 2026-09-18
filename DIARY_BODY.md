@@ -9228,3 +9228,14 @@ mornings since the rebuild); the prefixes 14 of 26; the facts by the cortex 0.86
 43308. The day 319: 131 lines, 49 of 66 A-lines with letters in its turn, frowns 3, answer smiles 10, junk 0; in its turn "an
 apple is red", "cows give milk", "snow is white", "honey is sweet", "dogs run", "cats", "the sun is" (hot), "fish have fins".
 THE FACT TOLD ONCE, A SIXTH TIME (09:24): "what is sour?" -> "a lemon is", five nights after the telling.
+NIGHT 269 (ended 10:19 on the 18th, the 259th row; the log's day 320, the seventh day on the rebuilt store): the morning:
+the held-out 0.630; the mouth answers 22 of 30 at two rests and 22 at eight; the rephrased 19; the prefixes 14 of 26; the facts
+by the cortex 0.859; the branch 9 of 9 and 11 of 12; the store 43375. The day 320: 129 lines, 50 of 64 A-lines with letters in
+its turn, frowns 3, answer smiles 10, junk 0. THE FACT TOLD ONCE, A SEVENTH TIME (10:21): "what is sour?" -> "a lemon is sour",
+six nights after the telling. THE NIGHTS RUN TEN MINUTES since the supervisor's copy runs stopped (sixteen to twenty-three under
+their load).
+A WATCH ITEM: the held-out has slipped a little each morning since the rebuild (0.650, 0.646, 0.634, 0.641, 0.635, 0.630) while
+the store's rulers rose; the supervisor's days are the same walk in the same frames ("what is X? / Y is X" ten times a day, the
+ducks, the rock, the tree), and the cortex learns the frames, not the language. The teacher's remedy, not the body's: the days
+from here vary the frames and the nouns within the 909 words the child knows (the cup, the bag, the hat in the wind, the egg in
+the nest, the dish by the door, the ball, the box, the bed), the facts woven in fewer times.
