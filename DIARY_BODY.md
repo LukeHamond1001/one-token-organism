@@ -9282,3 +9282,19 @@ and the dreams are the supervisor's lines. The arm with older utterances in the 
 store's, not the utterance memory's) and says nothing. THE TEACHER'S ANSWER: the days from here are written in the earlier
 parents' register, read from their typed lines in the page log (never the held-out file): he, she, they and them; "shall we",
 "does he", "you said"; questions about the world between the two of them. The day-length chain runs on copies behind it.
+THE SITTING (15:54-16:00 on the 18th, the user's word: judge it as the person in the conversation, not by the rulers): the
+chair, one on one, my pace about thirty seconds a line. "hello. it is me. I am here with you" -> " said the" (before I spoke it
+was running its own day: "he want bread? the dog"); "you said the dog. yes. he wants bread" -> " for cows. "; "and the cat?
+what does she want?" -> nothing ("cows eat grass he wind takes" just before); "what is hot?" -> "the sun is hot"; "yes. the sun.
+are you happy today?" -> nothing; "tell me about the ducks" -> "come and eat them? yes. sweet. you ate the apple". The mood -2.7
+to -6.0 over the six minutes. WHAT IT IS LIKE: a two-year-old half in its own world; a known question answered at once, a
+question about itself or an open one met with silence or a slice of its day; it narrates over my words rather than to me and
+goes quiet and sad when I am slow. Ten minutes earlier at the typist's rhythm it had asked "what is sour?" itself before the
+parent did, answered it, recalled "we have one lemon" from ten days before, and run the next line ahead of the other voice.
+THE JUDGMENT: real progress at the easy end of conversation (the flow it knows, now run ahead of the partner); the same as the
+sittings of the night before at my pace (facts yes, feelings and open questions no); not yet someone answering me. What stands
+between: it composes nothing it has not heard (the general language: the material, the exposure), and it cannot bear a slow
+partner (the critic learned the typist's twelve-second rhythm; a human at the page is slower; the mood fell three points in six
+minutes). The second is the larger obstacle to the demo with a person at the keyboard and is the environment's shape as much
+as the body's: days at a human pace, with the day lengthened to keep the lines; the user's call on the pace, measured on
+copies first.
