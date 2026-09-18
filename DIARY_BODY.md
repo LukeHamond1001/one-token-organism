@@ -9022,3 +9022,10 @@ day on the same save without it): the talk-overs 0 of 4206 typing ticks against 
 speech in its turn 1207 symbols against 1405, coherent ("is she wet on her back", "shall we let her come and sit"), junk 2 against
 5; the questions 21 and 25 against 21 and 24; the prefixes 16 = 16; the cortex's facts 0.843 against 0.865. It passes; it waits
 for the teacher's days (the user's word: one change at a time) and goes on at the save after them.
+NIGHT 255 (ended 19:5x, the 245th row; the log's day 301, the handover day: sixty lines of the scripted parent, then the human
+teacher's, the queue held at thirteen lines by the end): the morning: the held-out 0.620, the facts by the cortex 0.883, the old
+lines 0.523, the parent's last lines 0.772; the mouth completes 19 of 26 prefixes and answers 18 of 30 at two rests and 22 at
+eight; the rephrased 13 ("what is so cold?" -> "ice is colds"); the branch 9 of 9 and 8 of 12; the store 63235, the capacity a
+day off, where the eviction of the weakest at each write becomes the forgetting, the regime of the best-measured mornings. The
+day 301: 170 lines (79 of the 85 A-lines questions: the teacher's remarks are new), 63 of 85 A-lines with letters in its turn,
+answer smiles 0, junk 2, duty 0.360, frowns 41.
