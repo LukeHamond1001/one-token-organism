@@ -9337,4 +9337,5 @@ THE NIGHT THAT FAILED (18:36 on the 18th): night 276, the first scaled to 2048 d
 lines with no offset between them) and the cortex's window is 64; the lockstep batch overflowed the stream's cache, the night
 failed whole and the body's pressure fell to half, so it stayed awake into its second hour ("you are up again. the sun is not
 down"). The thirty-third defect: a dream longer than the window. Fixed (the dream clipped to the window; test 70) and served
-by a reload before the next attempt. The day 327 runs long this once.
+by a reload before the next attempt. The day 327 runs long this once. Served from 18:45 by a reload (the typist relaunched by the chain on the same clock); the next attempt at the night comes
+at 24000 ticks of pressure, about 19:13.
