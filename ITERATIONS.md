@@ -579,6 +579,14 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    and the cortex's own forecast weakens where the store supplies the symbol; the night's lesson runs with the store off, and
    pulls the other way. The ruler for (b) is a copy living a day with the recall zeroed in the stream against a copy as served,
    the held-out read the morning after. Not run: the days are the teacher's until the slip either stops or reaches 0.60.
+   READ IN THE CODE (13:45, the user's word to investigate): reading (b) is out. The recall never enters the stream (model.inputs
+   takes the reads and does not use them; the forecast adds store_in(reads) outside the stream), and the waking lesson trains
+   the cortex on latent_pred(C) alone ("recall is a parallel contribution the mouth reads, never a term in the cortex's error").
+   What remains is the material: by day the waking lesson on the supervisor's lines, by night the dreams drawn from the
+   utterance memory by strength (the recent and the rewarded more), both the same few frames. Two nights on copies of the
+   served save run now (tools/night_copy.py): as served, and with dream_old_share 0.3 (older utterances in the draw, an existing
+   constant at 0); the held-out before and after each says whether the night lowers it and whether older material holds it.
+   The slip paused at 0.619 on the first day written fuller (night 272).
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
