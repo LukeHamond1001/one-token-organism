@@ -587,6 +587,14 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    served save run now (tools/night_copy.py): as served, and with dream_old_share 0.3 (older utterances in the draw, an existing
    constant at 0); the held-out before and after each says whether the night lowers it and whether older material holds it.
    The slip paused at 0.619 on the first day written fuller (night 272).
+   THE NIGHT PAIR READ (14:33): as served, one night on a copy of the day-323 save took the held-out 0.619 to 0.615 (its cosine
+   0.651 to 0.655) while the parent's last sixty lines rose 0.781 to 0.795 and the old lines held 0.553: a night costs the
+   held-out about four thousandths, the eight-night slip's rate, and what it learns is the supervisor's lines. The arm with
+   dream_old_share 0.3 drew the same dreams (the examples identical) and read 0.613: the constant did nothing under
+   dream_source "utterances" (the old share is the store's draw), so that arm says nothing. READING: interference from a narrow
+   distribution, the utterance memory filling with one teacher's register as the earlier parents' lines age out of its 4096.
+   The remedy is the teacher's register (the earlier parents' lines in the page log, never the held-out file, are the model), and
+   the exposure per night; the day-length chain runs next.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the

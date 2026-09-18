@@ -9270,3 +9270,15 @@ THE USER'S QUESTION (13:21, "how long till the speech looks good"): answered wit
 about half its turns are fragments of the day and alone it loops; those thin as the cortex's general model rises, and the
 held-out must turn up first. The levers named: the teacher's material (varied now) and the exposure, 130 lines in a
 46-minute day; a longer day offered as the user's environment call, to be measured on a copy first, not run unbidden.
+NIGHT 273 (ended 14:27 on the 18th, the 263rd row, twenty-four minutes under the supervisor's copy runs; the log's day 324,
+the fourth varied day): the morning: the held-out 0.632, up from 0.619, the first rise in nine mornings and after the two days
+written fuller; the mouth answers 23 of 30 at two rests and 24 at eight; the rephrased 21; the prefixes 12 of 26; the facts by
+the cortex 0.863; the branch 9 of 9 and 11 of 12; the store 47307. The day 324: 124 lines, 46 of 62 A-lines with letters in
+its turn, frowns 4, answer smiles 7, junk 0, duty 0.379 (the most it has talked in a day). THE FACT TOLD ONCE, AN ELEVENTH
+TIME (14:29): "what is sour?" -> "a lemon is sour", ten nights after the telling.
+THE NIGHT'S SHARE OF THE SLIP, READ ON COPIES (13:46-14:27): a night as served on a copy of the day-323 save took the held-out
+0.619 to 0.615 while it learned the parent's last sixty lines 0.781 to 0.795: about four thousandths a night, the slip's rate,
+and the dreams are the supervisor's lines. The arm with older utterances in the draw drew the same dreams (the constant is the
+store's, not the utterance memory's) and says nothing. THE TEACHER'S ANSWER: the days from here are written in the earlier
+parents' register, read from their typed lines in the page log (never the held-out file): he, she, they and them; "shall we",
+"does he", "you said"; questions about the world between the two of them. The day-length chain runs on copies behind it.
