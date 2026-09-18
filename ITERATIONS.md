@@ -499,6 +499,19 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    offset fires) and cuts a running word then; the learned gate is untouched, and it is released at the event's end the body
    computes. Measured on the same save (day 297, the rewards replayed): the control against 1.0 and 0.5; the rulers below.
    The salience input stays unmeasured: its weight reads exactly 0 in the save (born at zero), so a day would show nothing.
+   THE WORD RATE (2026-09-17, 19:05; tools/word_rate.py): of the child's own runs of letters in its turn on days 297-300, 73, 80, 75
+   and 82 percent are words its parents have typed (862 of 1112); what is not is mostly two words run together ("nowdid",
+   "hotis", the chunk form's missing space) and short fragments. So "random letters" on the page are the fragments over the
+   parent's lines, the floor's spontaneous starts cut short, not its speech in its turn; the ruler for the user's "words, not
+   letters" is this rate, read on a copy day's own text (day_on_copy --own-file), in its turn and over the line separately.
+   THE BABBLE DRIVE (gate_quiet_tau; test 67; the user's word: "talk less until the teacher leaves it alone long enough"):
+   the spontaneous floor is zero as the world speaks and rebuilds linearly toward gate_floor over gate_quiet_tau ticks of the
+   world's silence (the urge to vocalize returns in silence); the learned gate is untouched, and an answer opens it whatever
+   the floor (the trace: p_act 0.99 a tick after the line with the floor at 0). Measured after the reflex's arms on the same
+   save: the control, the reflex with the drive at 300 ticks (a minute), the drive alone. The salience gain stays unbuilt
+   while the in-turn word rate is already three quarters; the missing spaces are the cortex's seam, not the gate's.
+   THE CHAIN'S FLAW (18:35): the first arms were void: zsh passed "--gate-listen 1.0" unsplit and the instrument ignored it
+   (${=X} splits); on the copy loaded with the reflex on, the floor reads 0 through a typed line and releases at the offset.
 
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
