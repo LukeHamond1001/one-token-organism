@@ -526,6 +526,18 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    b26f0c48 unchanged under the pre-sure flags (a tiny body never reaches the cap). The wrong links of the last five nights stay
    in the served store until the rekey rebuilds them; the rekey pass (tools/rekey_store.py, on a store with room kept ahead and
    a copy-free eviction, tools/faststore.py) makes them right.
+   THE REBUILD ON THE REAL STORE (02:13-02:26): the dusk-309 save (data/watch2.pt as copied at 00:41) rebuilt from its utterance
+   memory under the served key (R0) and the morning rulers on both:
+                                untouched     R0 (rebuilt, served key)
+     questions at 2 / 8 rests    22 / 21          28 / 28
+     rephrased at 2 rests          15                21
+     fact prefixes               16 of 26          18 of 26
+     branch sun / day2            9/9, 7/12        9/9, 12/12
+     held-out (cortex alone)       0.633            0.633
+   The rebuild alone, the key form unchanged, is the largest gain of the last twenty nights: correct chain links (the
+   thirty-second defect undone), strengths fresh from the cortex's surprise, and the stale slots of weeks (the nineteen keys
+   within a tenth of a query) gone with them. It is a reconsolidation, not a new mechanism; the utterance memory is the
+   material and the code's own key the form.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the

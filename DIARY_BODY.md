@@ -9130,3 +9130,24 @@ the onset a decisive margin (the ordered bag: a hundred to one) but the rephrase
 the onset is decided by the question's tail, which a rephrasing shares. The cortex's code as the context (form c) is out: the
 centered stream states of different utterances agree at 0.87 (a question and its rephrasing at 0.999). Six days' talk did not
 reproduce the served falls; the sixteen-day run follows.
+
+NIGHT 261 (ended 02:19 on the 18th, the 251st row; the log's day 310, the supervisor's day through the queue): the morning: the
+held-out 0.646, the most yet; the mouth answers 21 of 30 at two rests and 23 at eight; the rephrased 15; the prefixes 16 of 26;
+the facts by the cortex 0.879; the branch 9 of 9 and 7 of 12. The day 310: 163 lines, 60 of 82 A-lines with letters in its
+turn, frowns 3 (talk-overs at a line's closing "?"), junk 8, duty 0.258; the answers in its turn: "what is red?" -> "an apple
+is", "what is little?" -> "an ant", "what falls from the sky?" -> "rain falls fr", "what has wings?" -> "a bird has win", "what
+is white?" -> "snow is white", "what do ducks do?" -> "ducks swim"; and "what has four legs?" -> "a big sun with my fath", the
+branch at "a " going the evening's way.
+THE THIRTY-SECOND DEFECT (01:50; item 40's entry in ITERATIONS.md): at the store's capacity every write evicts the weakest slot
+and keeps the rest sorted by strength, so every slot's index moves, and the body's index of the symbol before (the chain's link)
+and of the episode being followed went stale: on a tiny body at a capacity of 150, 38 of 67 links made at the capacity joined
+the wrong slots (138 of 138 under it). The served store has been at its capacity since night 256, and the branch's second set
+fell 10 to 7 of 12 in those nights. Fixed (the store reports its remap; the held indices follow it; 67 of 67; test 69; the guard
+unchanged); served from 02:20 by the reload at the post-night save.
+THE STORE REBUILT (02:13-02:26; tools/rekey_store.py): the dusk-309 save's store rebuilt from its utterance memory (4096
+utterances, 103k symbols, 65536 slots from 103k writes) under the served key with the links right and the strengths the
+cortex's surprise, and the morning rulers on it against the same save untouched: the questions 28 of 30 at two and at eight
+rests against 22 and 21; the rephrased 21 against 15; the prefixes 18 of 26 against 16; the branch 9 of 9 and 12 of 12 against
+9 of 9 and 7 of 12; the held-out 0.633 both (the cortex untouched). The largest single gain in the body's recent history, and
+it is a repair: the wrong links of five nights and the stale slots of weeks gone. The ordered-context arm (R1) follows; the
+rebuild is to be adopted at a save (the reconsolidation of item 40's plan) once R1 has spoken.
