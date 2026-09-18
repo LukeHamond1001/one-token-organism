@@ -552,6 +552,14 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    ops/rekey_after_save.sh (the save backed up first). The cost stated: the rebuilt store holds the last 4096 utterances only,
    the older memories gone (the eviction at the capacity had them going anyway), the smiles' dopamine not in the strengths,
    every pause taken as 48 ticks; a fact told from now on is keyed under the ordered context of the line before it.
+   AFTER THE FIRST NIGHT ON THE REBUILT STORE (night 263, 04:33): the fade dropped 26k of 65536 slots (the relative floor over
+   raw-surprise strengths: the predictable middles the old store had lost over weeks), and the morning read the questions 19 /
+   18, the rephrased 17, the prefixes 15 of 26, the branch 9/9 and 11/12 (at dusk, before the fade, the prefixes 20). Against
+   the old store after night 262 (19 / 21, 17, 17, the branch 7/12 the night before): the rebuild's 28-30 were the unfaded
+   store; what lasts after a night is the branch and the links. The fade after a rebuild is a one-time settling. NOTED, NOT
+   BUILT: a chain whose middle slot the fade drops breaks there (the dropped slot's links go to none); a chain that closes around
+   a dropped element (the predecessor inheriting the dropped slot's successors under the same tag) would keep an episode
+   retrievable through its surprising elements alone. Its ruler would be the questions and the branch on a copy after a night.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the

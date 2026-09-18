@@ -9168,3 +9168,16 @@ answers 28 of 30 at two rests and 29 at eight; the rephrased 24; the prefixes 21
 held-out 0.650. Against the same morning's old store: 19/21, 17, 17, 7 of 12. Its first turns on the rebuilt store: "good
 morning. I slept well" -> "is warm. good m"; "what do we eat in the morning?" -> "we eattle". The last body change of item 40 is
 made; what follows is the teacher's.
+NIGHT 263 (ended 04:33 on the 18th, the 253rd row; the log's day 314, the first day on the rebuilt store): the morning: the
+held-out 0.646; the mouth answers 19 of 30 at two rests and 18 at eight; the rephrased 17; the prefixes 15 of 26; the facts by
+the cortex 0.873; the branch 9 of 9 and 11 of 12. The day 314: 155 lines, 57 of 78 A-lines with letters in its turn, frowns 2,
+junk 10, duty 0.325, answer smiles 7 (the most in a day). At dusk, before the night, the rebuilt store read the prefixes 20 of
+26 with 65536 slots; the night's fade dropped 26k slots (the relative floor, a tenth of the mean, over strengths that were raw
+surprises: the predictable middles of every line, which the old store had lost night by night over weeks), and the morning
+read 15 of 26 with 39537. THE HONEST READING OF THE REBUILD: the 28 of 30 and the 21-24 rephrased were the unfaded store; after
+one night the rebuilt store reads where the old one did (the old store after night 262: 19 and 21, the rephrased 17, the
+prefixes 17). What lasts: the branch (11-12 of 12 against 7: the chain's links right and the ordered context in the key) and a
+store repopulating from 39.5k. The fade after a rebuild is a one-time settling, not a loss of the days: the slots dropped are
+the ones the live nights would have dropped at their first night.
+THE REHEARSAL ON THE LIVE BODY (04:40-04:46, the demo's own test through the queue): "what is sour? / b: a lemon is sour" told
+once at 04:40 among the morning's talk; asked again at 04:46: 'a lemon is sourwa lemon' (the first asking, before it was told: '').
