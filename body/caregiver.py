@@ -101,7 +101,13 @@ class Caregiver:
         return float(ticks) * self.tick                  # seconds for a count of the body's ticks
 
     def pace(self):
-        return self.period * (1.6 - self.e) if self.parent else self.period
+        """the parent's rhythm: the period stretched by inattention (1.6 - e); and now and then a person's pause (2026-09-18, the
+        supervisor's sitting: the child's mood fell three points in six minutes under a partner at a keyboard's pace, its critic
+        having learned the typist's even beat). One gap in five is two to four periods long, so the critic learns a slow partner too."""
+        base = self.period * (1.6 - self.e) if self.parent else self.period
+        if self.parent and self.rng.random() < 0.2:
+            return base * self.rng.uniform(2.0, 4.0)
+        return base
 
     def _attend(self):
         now = time.time(); dt = now - self._e_t; self._e_t = now

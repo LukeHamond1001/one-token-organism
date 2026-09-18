@@ -604,6 +604,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    will fall as the frowns teach the gate and the day's drain with them; the fuller material's nights recover more than the
    catechism's. Not changed: own_gain in the day's lesson (0.3; "the lessons hearing the world only" was worse at day 6 of the
    first body). The day-length chain's B arm reads whether a doubled day doubles the drain or the recovery.
+   THE EXPOSURE DECIDED (16:15, the user's word: "we are going in circles; why always these tests"): the copy runs stopped (the
+   served body under their load ran at 3.6 ticks a second against 5, its nights twice as long); no new ones unless something
+   breaks. The bottleneck named: the body hears 1,300 words a day, 140k in its life. Three changes at night 275's save, all of
+   the environment's shape (the user's call, given) or the parent's method (the supervisor's): (1) the tick 0.1 s (the body's
+   time is ticks; unloaded it used 36 percent of a core at 0.2 s), the typist's --tick 0.1 with it; (2) the day 24000 ticks
+   (wake_ticks) with the night scaled (night_starts_max 2048; night_load 1.0 draws the day's new slots up to it); (3) the
+   parent's rhythm with a person's pause, one gap in five two to four periods long (caregiver.pace), so the critic learns a
+   slow partner and the mood stops falling under a person at the keyboard. Together about 1.7 to 2 times the lines per hour
+   of wall clock (the night's cost per line unchanged bounds it). The prior set: ops/archive/flags/BASE_FLAGS_pre_fast.txt.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the

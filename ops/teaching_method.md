@@ -30,3 +30,8 @@ What the rulers said about the method so far: the questions answered rose 18 to 
 ten mornings of these days (the store repopulating under the ordered context); the held-out slipped 0.650 to 0.617 and paused,
 which opened the material's sameness as the first suspect and the recall in the stream as the second (ITERATIONS.md, item 40's
 watch item).
+
+9. **The parent's rhythm has a person's pause** (2026-09-18, caregiver.pace): one gap in five is two to four periods long, so the
+   critic learns a slow partner and the mood holds under someone at the keyboard. **The register** is the earlier parents' (he,
+   she, they and them; "shall we", "does he", "you said"; questions about the world between the two of them), read from their
+   typed lines in the page log, never from the held-out file.

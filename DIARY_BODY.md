@@ -9306,3 +9306,10 @@ TWELFTH TIME (15:50): it asked "what is sour?" itself before the parent did, the
 have one lemon" from the day it was told. THE FALL PLACED: the dusk probes show the days draining the held-out (0.632 to 0.600
 across day 324, the day it talked over the other voice most) and a night on fuller lines recovering it (+0.026 after day 323):
 the waking lesson hears its own babble in the window; the night hears the world alone. Watched, not changed.
+THE EXPOSURE DECIDED (16:15 on the 18th, the user's word: "we are going in circles; why always these tests"): the copy runs
+stopped for good (under their load the served body ran at 3.6 ticks a second against 5 and its nights ran twice as long); no
+new ones unless something breaks. At night 275's save the body takes the tick at 0.1 s (unloaded it used 36 percent of a core
+at 0.2), the day at 24000 ticks with the night scaled to 2048 dreams, and the parent's rhythm gains a person's pause (one gap
+in five two to four periods long) so its critic learns a slow partner; the typist's chain restarted with the matching clock.
+About twice the lines an hour; the night's cost per line bounds it. The judgment of progress is the supervisor's sitting each
+morning from here, the conversation reported in words; the rulers a footnote.
