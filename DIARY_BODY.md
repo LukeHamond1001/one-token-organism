@@ -9251,3 +9251,11 @@ minutes, 298 symbols: "come at first. then good ... what is hard. a tel i is har
 hold him. hold him. hold him." Words and the day's fragments, with a stuck loop. So: it waits while spoken to, answers in its
 turn, and once alone talks on rather than waiting a minute first; the drive rebuilds the floor over a minute, but the learned
 gate (+13 on "I spoke last tick") sustains speech once it has begun. The loops alone are the run-on fault at the seam.
+NIGHT 271 (ended 12:18 on the 18th, the 261st row; the log's day 322, the second varied day): the morning: the held-out 0.617
+(the slip since the rebuild: 0.650 to 0.617 over eight mornings, opened as a watch item in the ledger with two readings, the
+teacher's material and the cortex leaning on a repaired recall); the mouth answers 23 of 30 at two rests and 23 at eight; the
+rephrased 20; the prefixes 14 of 26; the facts by the cortex 0.857; the branch 9 of 9 and 11 of 12; the store 45346. The day
+322: 115 lines, 45 of 58 A-lines with letters in its turn, frowns 4, answer smiles 10, junk 0; it anticipates the other voice
+("the ducks go to the nest now" -> "all three. good night du"; "the little one takes the bread first" -> "it is fast. the big
+one"). THE FACT TOLD ONCE, A NINTH TIME (12:19): "what is sour?" -> "a lemon is sour", eight nights after the telling. The days
+from here are written fuller and more varied, in the held-out's own manner, the catechism fewer.
