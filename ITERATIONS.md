@@ -570,6 +570,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    heard. RULE FOR A REBUILD: a rebuilt store lives a day before its first night (as it did), never a night first.
    THE ORDERED CONTEXT STAYS. The morning rulers from here read a store of ten days' span repopulating under correct links;
    the branch holds at 11-12 of 12; the questions and the rephrased are the teacher's to raise by the days.
+   A WATCH ITEM OPENED (2026-09-18, 12:25): the held-out (the cortex alone on lines no parent typed) has slipped every morning
+   since the rebuild: 0.650, 0.646, 0.634, 0.641, 0.635, 0.630, 0.633, 0.617 (nights 262-271), and the cortex alone on the fact
+   sentences 0.888 to 0.857, while the store's rulers rose (the questions 18 to 23, the rephrased 13 to 20, the branch 11-12).
+   Two readings, neither yet tested: (a) the teacher's material, the supervisor's days being one walk in a few frames, which the
+   cortex learns instead of the language (the days vary from day 321; one varied day did not stop the slip); (b) the
+   complementary-learning trade: with a repaired hippocampus the waking lesson can lean on the recall that enters the stream,
+   and the cortex's own forecast weakens where the store supplies the symbol; the night's lesson runs with the store off, and
+   pulls the other way. The ruler for (b) is a copy living a day with the recall zeroed in the stream against a copy as served,
+   the held-out read the morning after. Not run: the days are the teacher's until the slip either stops or reaches 0.60.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
