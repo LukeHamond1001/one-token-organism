@@ -9017,3 +9017,8 @@ content word or yes/no before B on 28 of 86 A-questions on day 300 and 7 of 30 o
 four words 28 and 13; its own question marks 24 and 6; every frown a talk-over (46, 17). Mechanical: no line dropped in 232;
 the typing 15.5-21 s a line and day 300 a full 54 minutes of talk, night 300 25 minutes (1518 s): the copies' load on the
 machine lengthens both, as it did on the 16th. Facts 4-10 of day 301 were already queued at the handover.
+THE REFLEX ON A COPY (19:25; day 297 lived again on the save after night 252 with the smiles and frowns replayed, against the same
+day on the same save without it): the talk-overs 0 of 4206 typing ticks against 630, on no line against 132 of 165; its own
+speech in its turn 1207 symbols against 1405, coherent ("is she wet on her back", "shall we let her come and sit"), junk 2 against
+5; the questions 21 and 25 against 21 and 24; the prefixes 16 = 16; the cortex's facts 0.843 against 0.865. It passes; it waits
+for the teacher's days (the user's word: one change at a time) and goes on at the save after them.

@@ -512,6 +512,15 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    while the in-turn word rate is already three quarters; the missing spaces are the cortex's seam, not the gate's.
    THE CHAIN'S FLAW (18:35): the first arms were void: zsh passed "--gate-listen 1.0" unsplit and the instrument ignored it
    (${=X} splits); on the copy loaded with the reflex on, the floor reads 0 through a typed line and releases at the offset.
+   THE REFLEX MEASURED (2026-09-17, 19:25; day 297 lived again on the save after night 252, the rewards replayed, the same day
+   as the control): talk-overs 0 of 4206 typing ticks against the control's 630 (15 percent), on no line against 132 of 165;
+   its own symbols in its turn 1207 against 1405 (391, 281, 282, 241 by quarter against 340, 362, 345, 345); junk 2 of 2135
+   against 5 of 2977; the questions on the copy 21 and 25 of 30 against 21 and 24, the prefixes 16 = 16, the cortex on the
+   fact sentences 0.843 against 0.865 (the held-out line was cut by the chain's own display and is lost for this arm; the
+   copy is gone). PASSES its rulers: the talk-overs gone, the answers held. Held off the served body by the user's word of
+   19:00 (the human teacher first, one change at a time): to go on at the save after the teacher's three days, with the
+   teacher continuing, and the parents' talk-over counts (110 a day now) and the in-turn speech read over the days after.
+   The 0.5 arm and the drive's arms are deferred to a quiet machine.
 
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
