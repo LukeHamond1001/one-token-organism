@@ -61,7 +61,8 @@ make honey; 20 where do we sleep? | we sleep in a bed; 21 what is soft? | a cat 
 29 what do ducks do? | ducks swim; 30 what is hard? | a rock is hard. Each is asked by A and answered by B exactly as written,
 once a day: today's ten are FACTS_TODAY, tomorrow's the next ten, the day after the next ten. If the child asks one of them
 itself ("what has wings?"), answer with the full sentence under a differently worded question of yours, so no exchange is spent
-twice.
+twice. Hold the day's last two exchanges back until you have seen whether the child asks one of them itself. Check "asleep"
+every cycle, so a night does not catch you with a full queue.
 
 NEVER END YOUR TURN before the job is done: work as a loop of read the page, write one or two rows that answer it, python3 -c
 "import time; time.sleep(60)", again, for the whole job (about three hours), until the night count reaches STOP_COUNT; then

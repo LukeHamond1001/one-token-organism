@@ -331,9 +331,12 @@ class QueuePlanner:
                 self.recent.append(s.strip()); self.recent = self.recent[-24:]
             return (s, "cue" if s.endswith(" ") else "line")
         self._remember()
-        self.planned = False                                  # the typist's own filler
-        if self.recent:
-            return (self.rng.choice(self.recent), "line")     # a recent planned line, said as a line (a cue's prefix too)
+        self.planned = False
+        # A PARENT WITH NOTHING NEW TO SAY WAITS (2026-09-17, read by the human teacher on day 304): the filler here was one of the last
+        # two dozen planned lines, and with the queue run dry after a visitor's sitting the typist said them over and over ("now they
+        # come down for it" ten times, 105 of the parent's lines against 22 of the other voice's) and the child went silent, echoing.
+        # The typist now waits for the next row (the run loop watches twelve ticks and asks again); the child, left alone, talks to itself.
+        return None
         heard = teacher.corpus.heard_lines(HEARD_FOR_CUE) or LINES0
         return (self.rng.choice(heard), "line")               # a heard line only when nothing was ever planned
 
