@@ -9151,3 +9151,8 @@ rests against 22 and 21; the rephrased 21 against 15; the prefixes 18 of 26 agai
 9 of 9 and 7 of 12; the held-out 0.633 both (the cortex untouched). The largest single gain in the body's recent history, and
 it is a repair: the wrong links of five nights and the stale slots of weeks gone. The ordered-context arm (R1) follows; the
 rebuild is to be adopted at a save (the reconsolidation of item 40's plan) once R1 has spoken.
+THE ORDERED CONTEXT ON THE REBUILT STORE (02:52; R1): the same save rebuilt under the ordered context reads the questions 30
+of 30 at two and at eight rests, the rephrased 26 of 30, the prefixes 22 of 26, the branch 9 of 9 and 12 of 12, the held-out
+unchanged. Adopted at night 262's save: the served flags carry --ctx-form shifted, and ops/rekey_after_save.sh rebuilds the
+served store from its utterance memory at the post-night save (fourteen minutes of the morning; the typist held and relaunched
+after). The last body change of item 40 is the key's form; the rebuild is its reconsolidation.

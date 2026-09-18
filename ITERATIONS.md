@@ -538,6 +538,20 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    thirty-second defect undone), strengths fresh from the cortex's surprise, and the stale slots of weeks (the nineteen keys
    within a tenth of a query) gone with them. It is a reconsolidation, not a new mechanism; the utterance memory is the
    material and the code's own key the form.
+   R1, THE ORDERED CONTEXT ON THE REAL STORE (02:31-02:52; the same save rebuilt under ctx_form "shifted", key_ctx 0.5, the
+   served swap; the rulers with the same flag):
+                                untouched     R0 (rebuilt, served key)    R1 (rebuilt, ordered context)
+     questions at 2 / 8 rests    22 / 21          28 / 28                     30 / 30
+     rephrased at 2 rests          15                21                          26
+     fact prefixes               16 of 26          18 of 26                    22 of 26
+     branch sun / day2            9/9, 7/12        9/9, 12/12                  9/9, 12/12
+     held-out (cortex alone)       0.633            0.633                       0.633
+   The falsifier (the held-out or the rephrased three under the control's; the branch under 8 of 9) is nowhere near: every
+   ruler that reads the store rises, the cortex's untouched. ADOPTED (02:52): --ctx-form shifted in the served flags (the set
+   before it in ops/archive/flags/BASE_FLAGS_pre_shifted.txt) with the store rebuilt at night 262's post-night save by
+   ops/rekey_after_save.sh (the save backed up first). The cost stated: the rebuilt store holds the last 4096 utterances only,
+   the older memories gone (the eviction at the capacity had them going anyway), the smiles' dopamine not in the strengths,
+   every pause taken as 48 ticks; a fact told from now on is keyed under the ordered context of the line before it.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
