@@ -522,6 +522,43 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    teacher continuing, and the parents' talk-over counts (110 a day now) and the in-turn speech read over the days after.
    The 0.5 arm and the drive's arms are deferred to a quiet machine.
 
+42. The mathematics of the mouth, read whole (2026-09-17, 20:30, the user's word: "look at the math going on in the model and
+   get this thing figured out"). Five numbers set what you hear, and three of them are not the body's.
+   (1) THE EXPOSURE. The parents type about 1,000 words a day to it (985, 966, 984, 999, 985, 1024, 986, 1074, 1096, 1100 on
+   days 290-301; 4,100 symbols), one line every 15 s (the typist's period 64 ticks = 12.8 s plus a wait for its quiet; the
+   median interval 15.0 s, the gate's wait 0.7 s). Since birth 31,168 lines, 138,239 words, 564,273 symbols over 245 nights:
+   a child hears about 30,000 words a day, thirty times this; the whole of its life's language is a short children's book.
+   The night replays that day's and the recent days' utterances (1024 dreams of about 24 symbols, six rounds, 384 steps at
+   1e-5): the cortex sees the same thousand words thirty times a night, so its growth is bound by the new language a day
+   brings, not by the nights, and the held-out's rise of a few hundredths a night is what a thousand new words buy. The
+   lever is the pace, which is the parent's: the typist's period (64 ticks) against the child's turn (listen 40 ticks = 8
+   s; an answer lands at 2.5-10 s); the lines' length (six words in 24 symbols against the 38 allowed). Fuller lines at the
+   same pace (+30 percent) cost nothing; a period of 48 (+33 percent) shortens the turn to five seconds; together +70.
+   (2) THE READOUT. logits = sharpness x (pred . E_k): the forecast pred is the conditional mean of the next unit embedding
+   (its norm the certainty, its direction the symbol), and the sharpness is 25 x (1 + mood/6), floored at 8. The temperature
+   of a word's first letter is therefore 1 / (sharpness x |pred|): a sure forecast (|pred| 0.6) in a good mood (+3, sharpness
+   37) is read at an effective 22 and comes out a word; the same forecast at mood -4 (sharpness 8) at 5, and a flat forecast
+   (|pred| 0.3) at 2.4, a letter drawn almost at random, then run as a word by the chunk. The junk is the product of certainty
+   and mood, and the mood is the integral of dopamine: forty frowns a day for talk-overs (-2 each), the eighth rehearsal's
+   drain (+2.2 to -4.2 over six questions, the sharpness 34 to 8). So the listening reflex, which removes the talk-overs,
+   removes most of the frowns, holds the mood, and sharpens every word: the "random letters" and the "talking over" were one
+   mechanism seen twice. (The decisiveness-by-certainty constant, item 13, multiplied the sharpness by |pred| a second time;
+   it was falsified on the live answers and is not the fix; the mood is.)
+   (3) THE RECALL. The store reads by content alone: softmax over unit keys of (K . q)/0.02 with the query's norm as the
+   inverse temperature (a full context about 2.1, so the read is sharp), the key the last five symbols plus half the
+   previous utterance's bag; the episode's chain carries a recalled utterance forward (read_follow 20). What it gets wrong
+   is a collision: a fresh strong write with a key a hundredth closer takes the read from a fact's slot (item 40's trace),
+   and nothing in the read weighs strength (read_strength 0). That is the last body change worth making for this world.
+   (4) THE GATE. z = the learned gate's logit (its ear at -48 on "the world's symbol arrives", +13 on "I spoke last tick"),
+   flattened by stress, p(act) = floor + (1 - floor) sigma(z), floor 0.05: the learned part is right, the floor and the chunk's
+   free run were the talk-overs (item 41), and the reflex and the drive act on exactly those two. An answer opens the learned
+   gate to 0.99 the tick after a question; the floor never mattered for answers.
+   (5) THE STORE'S FORGETTING. Now the relative tenth with the capacity's eviction at 65,536, the regime of the best mornings;
+   the absolute floor at 0.07 stood above the write strength of predicted symbols and cut the episode chains (item 2).
+   WHAT FOLLOWS, in the law: the reflex and the drive on tonight (the user's word); the pace and the lines' length the
+   parent's to raise (mine), with the held-out's nightly rise as the ruler; the key (item 40) the last body change; then the
+   recipe frozen and the days are the teacher's. Nothing in these five is a rule about content, and nothing reads the parent.
+
 17. The rephrased-question ruler (before any recording). DONE 2026-09-15: tools/heldout_rephrased.txt, qa_by_gap --set=rephrased; first reading 8 and 7 of 30 at two and four rests against 16-18 on the taught wording.
 18. The exchange replay revisited once the chooser exists. Ruler: the branch.
    MOOT (2026-09-15): the chooser failed live; the exchange replay stays as measured (failed).
