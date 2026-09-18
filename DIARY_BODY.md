@@ -9222,3 +9222,9 @@ its turn, frowns 2, answer smiles 11, junk 0; in its turn "cows give milk", "sno
 "bees make honey", "the grass is" (soft), "cats drink milk", "the moon is up" (at night). THE FACT TOLD ONCE, A FIFTH TIME
 (08:27): "what is sour?" -> "a l" as its turn ran out, four nights after the telling. Three mornings at 21 / 18 / 14: the level
 the rebuilt store holds while it grows back (39.2k, 40.8k, 42.3k, 43.0k).
+NIGHT 268 (ended 09:23 on the 18th, the 258th row; the log's day 319, the sixth day on the rebuilt store): the morning: the
+held-out 0.635; the mouth answers 21 of 30 at two rests and 21 at eight; the rephrased 19 (13, 17, 18, 18, 19 over the
+mornings since the rebuild); the prefixes 14 of 26; the facts by the cortex 0.861; the branch 9 of 9 and 11 of 12; the store
+43308. The day 319: 131 lines, 49 of 66 A-lines with letters in its turn, frowns 3, answer smiles 10, junk 0; in its turn "an
+apple is red", "cows give milk", "snow is white", "honey is sweet", "dogs run", "cats", "the sun is" (hot), "fish have fins".
+THE FACT TOLD ONCE, A SIXTH TIME (09:24): "what is sour?" -> "a lemon is", five nights after the telling.
