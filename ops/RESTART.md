@@ -10,6 +10,9 @@ Everything the served body needs is in this directory; the scratchpad under /pri
    label from the log. A change to body/teacher.py or body/caregiver.py therefore reaches the served typist only at a relaunch:
    kill the typist at a boundary (right after a night row) and the chain starts the next one within a minute on the new code
    (2026-09-18: the filler's removal of 22:07 ran only from night 260, the typist of 21:56 having kept the old planner until then).
+   NEVER check for the typist with its own pattern ("-m body.teacher --port 8020 --day") in a pgrep of your own: the chain waits
+   while any process shows that pattern, and a supervisor's repeated check held the relaunch four minutes on 2026-09-18 18:45.
+   Use `ps -eo args | grep body.teacher | grep -v grep` instead.
    A change to body/ reaches the served body only at a restart: ops/reload_after_save.sh SCRATCH "FLAGS" (at the next post-night
    save; the code on disk) or ops/reload_now.sh mid-day. A change of the KEY'S FORM (key_ctx, ctx_form, key_form) needs the store
    rebuilt as well, since memories written under one form are not found by a query under another: ops/rekey_after_save.sh SCRATCH
