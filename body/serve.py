@@ -39,7 +39,7 @@ TALK = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI","Helvetica Neue",Arial,sans-serif}
 #top{position:fixed;left:0;right:0;top:0;background:rgba(250,250,250,.97);border-bottom:1px solid var(--line)}
 #topin{max-width:760px;margin:0 auto;padding:10px 16px 8px;display:flex;align-items:center;gap:14px}
-#st{width:8px;height:8px;border-radius:50%;background:#34c759;flex:none}#st.off{background:#c7c7cc}
+#st{width:8px;height:8px;border-radius:50%;background:#34c759;flex:none}#st.off{background:#c7c7cc}#st.away{background:#f0a030}
 #cv{flex:1;height:48px;display:block;background:#fff;border:1px solid var(--line);border-radius:8px;min-width:0}
 #mood{display:flex;gap:4px;flex:none}
 #mood span{width:26px;height:26px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);cursor:pointer;user-select:none;background:#fff}
@@ -61,10 +61,11 @@ function setMood(d){held=d;post('/face',{expr:d-5});for(const s of moodEl.childr
 setMood(5);setInterval(()=>{if(held!==5)post('/face',{expr:held-5})},3000);
 /* THE LETTERS FLOW IN AS TYPED: no box, no editing; lowercase words, space, ? . !; Enter is a space; nothing else goes in */
 function send(t){t=[...t].filter(c=>/[a-zA-Z ?.!]/.test(c)).map(c=>c==='I'?c:c.toLowerCase()).join('');if(t)post('/type',{text:t,who:'you'})}
-function takeChar(c){if(/^[1-9]$/.test(c))setMood(+c);else send(c)}
+let away=false;function leaveRoom(){away=!away;held=5;post('/face',{expr:0});for(const s of moodEl.children)s.classList.toggle('on',!away&&+s.dataset.d===5);st.classList.toggle('away',away);st.title=away?'you have left the room (0 to return)':'awake'}
+function takeChar(c){if(c==='0')leaveRoom();else if(away)return;else if(/^[1-9]$/.test(c))setMood(+c);else send(c)}
 k.addEventListener('input',()=>{const v=k.value;k.value='';for(const c of v)takeChar(c)});
 document.addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey||e.altKey)return;if(document.activeElement===k&&e.key.length===1&&!/^[1-9]$/.test(e.key))return;
- if(e.key==='Enter'){send(' ');e.preventDefault();return}if(e.key===' '){send(' ');e.preventDefault();return}
+ if(e.key==='Enter'){if(!away)send(' ');e.preventDefault();return}if(e.key===' '){if(!away)send(' ');e.preventDefault();return}
  if(e.key.length===1){takeChar(e.key);e.preventDefault()}});
 function refocus(){if(document.activeElement!==k)k.focus({preventScroll:true})}
 document.addEventListener('click',e=>{if(e.target.parentElement!==moodEl&&!(window.getSelection&&window.getSelection().toString()))refocus()});refocus();
