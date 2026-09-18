@@ -560,6 +560,16 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    BUILT: a chain whose middle slot the fade drops breaks there (the dropped slot's links go to none); a chain that closes around
    a dropped element (the predecessor inheriting the dropped slot's successors under the same tag) would keep an episode
    retrievable through its surprising elements alone. Its ruler would be the questions and the branch on a copy after a night.
+   THE TWO FORMS AFTER ONE FADE, LIKE FOR LIKE (05:37-06:16): both rebuilt from the night-262 backup and faded once as the night
+   fades (no day between), the rulers on each: the order-free bag 65536 -> 33536 slots, the questions 10 / 10, the rephrased 8,
+   the prefixes 6 of 26, the branch 9/9 and 12/12; the ordered context 65536 -> 37844, the questions 9 / 10, the rephrased 7, the
+   prefixes 6, the branch 9/9 and 11/12. Equal within a fact: the ordered context costs nothing after a fade (the falsifier's
+   three not met), and it keeps its onset separation (the branch). Both arms collapse alike when a rebuilt store meets its first
+   fade before a day of writes: every fact's middle is a single surprise then. The served store, rebuilt at night 262's save and
+   given day 314 before night 263's fade, read 19 / 18, 17, 15 the next morning: the day's writes re-strengthened what it
+   heard. RULE FOR A REBUILD: a rebuilt store lives a day before its first night (as it did), never a night first.
+   THE ORDERED CONTEXT STAYS. The morning rulers from here read a store of ten days' span repopulating under correct links;
+   the branch holds at 11-12 of 12; the questions and the rephrased are the teacher's to raise by the days.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
