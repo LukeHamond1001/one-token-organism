@@ -1649,11 +1649,63 @@ def test_night_reads_a_corpus():
     print(f"71 the night reads a corpus: {len(pool)} sentences in the pool, three of them among {len(dreams)} dreams, the night ran")
 
 
+def test_the_ears_trace():
+    """THE EAR'S TRACE (gate_ear_decay, 2026-09-19): the ear's world input to the learned gate persists between the world's symbols,
+    decaying by the constant each quiet tick, so a slow typist's pauses leave the ear ringing; at 0 it is the symbol's tick alone."""
+    L = tiny(gate_ear=1, gate_ear_decay=0.9, offset_ticks=4, offset_form="count")
+    L.type_text("a", who="parent"); L.tick()
+    assert abs(float(L._ear_trace) - 1.0) < 1e-6, L._ear_trace
+    L.tick(); L.tick()
+    assert abs(float(L._ear_trace) - 0.81) < 1e-6, L._ear_trace
+    L.type_text("b", who="parent"); L.tick()
+    assert abs(float(L._ear_trace) - 1.0) < 1e-6, L._ear_trace
+    L0 = tiny(gate_ear=1, gate_ear_decay=0.0, offset_ticks=4, offset_form="count")
+    L0.type_text("a", who="parent"); L0.tick(); L0.tick()
+    assert not hasattr(L0, "_ear_trace") or float(L0._ear_trace) == 0.0
+    print("72 the ear's trace: 1.0 at the symbol's tick, 0.81 two quiet ticks later, 1.0 again at the next symbol; none at 0")
+
+
+def test_night_ends_every_utterance():
+    """THE NIGHT ENDS EVERY UTTERANCE (the review of 2026-09-19): a line the night falls inside is closed at the night's start (its
+    memory kept), and the morning begins with no open utterance, no chain index and an empty current utterance."""
+    L = tiny(dream_source="utterances", night_batch=2, night_rounds=1, night_starts=2, night_load=0.0, offset_ticks=8, offset_form="count", write_floor=1e-30)
+    L.type_text("go up", who="parent")
+    while L.queue:
+        L.tick()                                                    # the line typed, the offset not yet fired (eight quiet ticks away)
+    assert not L._offset_done and len(L._utt_cur) == 5, (L._offset_done, L._utt_cur)
+    n_utts = len(L.utts)
+    rep = L.night()
+    assert not rep.get("error"), rep.get("error")
+    assert L._offset_done and L._utt_cur == [] and L._prev_slot == -1 and L._follow is None
+    assert len(L.utts) == n_utts + 1, (n_utts, len(L.utts))          # the dusk's line is a memory, not glued to the morning
+    print("73 the night ends every utterance: the open line stored at the night's start, the morning with nothing open")
+
+
+def test_fresh_store_unfaded():
+    """A REBUILT STORE'S FIRST NIGHT (2026-09-19): marked fresh (tools/rekey_store.py), the store is not faded on its first night,
+    and the mark is spent."""
+    L = tiny(dream_source="utterances", night_batch=2, night_rounds=1, night_starts=2, night_load=0.0, offset_ticks=2, offset_form="count", write_floor=1e-30, store_fade=0.5, store_floor_rel=0.9)
+    for text in ("go up", "we go", "up we go"):
+        L.type_text(text, who="parent")
+        while L.queue:
+            L.tick()
+        for _ in range(6):
+            L.tick()
+    S0 = L.store.S.clone(); L._store_fresh = True
+    rep = L.night()
+    assert not rep.get("error"), rep.get("error")
+    assert rep["store_dropped"] == 0 and not L._store_fresh and torch.allclose(L.store.S, S0), (rep["store_dropped"], L._store_fresh)
+    rep2 = L.night()
+    assert rep2["store_dropped"] > 0 or float(L.store.S.max()) < float(S0.max()), "the second night fades as before"
+    print(f"74 a rebuilt store's first night: unfaded and the mark spent; the second night faded ({rep2['store_dropped']} dropped)")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
     tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance, test_night_reads_a_corpus]
+    tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded]
     failed = 0
     for t in tests:
         try:
