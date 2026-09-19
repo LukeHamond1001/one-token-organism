@@ -9455,3 +9455,8 @@ before the reading), the questions 17 of 30 (20; 21 before), the parent's last s
 0.013 a night against 0.005 before, the questions down four: the rule set on the 19th at 06:30 says the share halves, and it does,
 512 story sentences a night from the reload after night 283's save. The days were also two-fifths story lines; from today a quarter.
 THE RELOAD AFTER NIGHT 282's SAVE (08:40): the utterance's end by the count at thirty ticks. Day 340 is the first day of it.
+THE MORNING AFTER NIGHT 282 (08:42, the typist, the first lines under the count at thirty): "did you sleep well?" -> "yes. I sle";
+then, over the other voice's reply, "now what is sour? a lemon." before the question was typed; "what is sour?" -> nothing more, the
+nineteenth morning said early; "is the egg hard or soft?" -> "the egg is hard", RIGHT FOR THE FIRST TIME after two days of "soft";
+"who gives us eggs?" -> "the hen gives us eggs"; "what does the hen say?" typed one-handed -> silence, nothing over the line; "what
+is sweet?" -> "honey is sweet and hon"; "what is round?" typed one-handed -> four words over it, then "yes. roun".
