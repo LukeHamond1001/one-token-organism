@@ -9515,3 +9515,6 @@ lines 0.92), from 3.36 the day before; the fast lines 0.05; 35 frowns, from 65. 
 (78 percent the day before), the answer a median 4.25 s after the line's end (1.0), the child's first symbol at 13 ticks (6), a
 third of the lines with nothing said in their window (an eighth); 391 known words into the silence past its turn. The ear rang on
 after a finished line. Night 286 began at 16:25; its save loads the release by the settle law.
+NIGHT 286 (16:25 on the 19th, the sixth and last night with story sentences among its dreams). THE PROBE AFTER ITS SAVE: the
+held-out 0.610, the cortex alone on the facts 0.777 (0.785; 0.832 before the reading), the questions 12 of 30, the parent's last
+sixty lines 0.778. The reading stops at this save's reload; the facts are watched for their recovery over the next nights.
