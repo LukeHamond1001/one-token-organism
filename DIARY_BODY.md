@@ -9432,3 +9432,11 @@ began at 05:27, the first that reads: a thousand story sentences among its two t
 NIGHT 281 (05:27-06:21 on the 19th, THE FIRST NIGHT THAT READS: 3072 dreams, its own 2048 and 1024 story sentences, 1152 NREM
 steps over 90296 symbols, no error, fifty-four minutes; the gauge 0.594 to 0.759, the low start being the stories the cortex had
 never heard among the dreams). The mood at the wake -6.0. The store 60500.
+THE MORNING AFTER THE FIRST READING NIGHT (06:22 on the 19th, the typist): "did you sleep well?" -> "yes. I slept and"; "what is
+sour?" -> "a lemon is sour", the eighteenth morning; "who gives us eggs?" -> nothing in its turn, then over the other voice's answer
+"the hen say? cluck cluck", the next question and its answer anticipated; "is the egg hard or soft?" -> "soft" again; "what is
+sweet?" one-handed -> "honey is sw"; "what is round?" one-handed -> chatter over the question (eight words); "what do the ducks
+eat?" one-handed -> "we eats. it i" (seven over); "what does the hen say?" one-handed -> "cluck cluck", taught once the day before.
+THE PROBE AFTER THE SAVE: the held-out 0.620 (0.606 the night before, the largest single night's move in weeks), the cortex alone
+on the facts 0.818 (0.832), the questions 20 of 30 (21), the parent's last sixty lines 0.702 (0.663). One night; the next nights say
+whether the held-out's rise is the reading.
