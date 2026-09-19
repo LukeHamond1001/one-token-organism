@@ -9359,4 +9359,6 @@ the typist's rhythm, 31 of 33 A-lines with letters in its turn, nearly every rep
 DAY 328 (19:43-20:51 on the 18th, the first full day at 24000 ticks, sixty-eight minutes): 224 lines, 103 of 112 A-lines
 with letters in its turn, answer smiles 12, frowns 14, junk 0; the mood +5 through the afternoon and the evening at the typist's
 rhythm with the parent's pause. Nearly every reply anticipated, the transfers holding ("does it tickle?" -> "yes. wet and"
-for the cow and the ant alike). Night 277 began at 20:51.
+for the cow and the ant alike). Night 277 began at 20:51. The fourteen frowns read in their contexts: the child finishing the parent's own line as it is typed ("what do dogs" said
+"dogs"; "in the shade" said "shade"; "the ducks are" said "ar"), the sure forecast opening the gate mid-line. A child
+completing a sentence; the light frown kept, since it is what teaches the turn, and the count watched.
