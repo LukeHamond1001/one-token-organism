@@ -9339,3 +9339,9 @@ failed whole and the body's pressure fell to half, so it stayed awake into its s
 down"). The thirty-third defect: a dream longer than the window. Fixed (the dream clipped to the window; test 70) and served
 by a reload before the next attempt. The day 327 runs long this once. Served from 18:45 by a reload (the typist relaunched by the chain on the same clock); the next attempt at the night comes
 at 24000 ticks of pressure, about 19:13.
+NIGHT 276 (19:15-19:43 on the 18th, the 266th row; the first scaled night, 2048 dreams, on the code that clips a dream to
+the window): it ran whole, 768 lesson steps, the night's gauge 0.762 to 0.883 over 57650 symbols, 4279 slots faded. The long
+day before it (16:53-19:15, two restarts and the failed night): 432 lines, 190 of 215 A-lines with letters in its turn (the
+most yet), answer smiles 18, frowns 23 (ten an hour, the anticipation over the other voice's lines; watched), junk 0; the
+mood +0.9 to +4.7 through the evening with the parent's pause in the rhythm. ON WAKING (19:43), to "good morning. the sun is
+up": "what is sour? a l", the question and its answer begun before the parent asked, the thirteenth morning since the telling.
