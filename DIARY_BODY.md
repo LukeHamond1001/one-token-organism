@@ -9494,3 +9494,9 @@ THE MORNING AFTER NIGHT 284 (13:21, the typist on its fixed code, the answer's s
 over any of them; "what is sour?" -> "a lemon is sour", the twenty-first morning; "who gives us eggs?" -> "the hen"; "is the egg
 hard or soft?" -> "the egg is hard", the second morning right; "what is sweet?" -> "honey is sweet", the pear still behind; "what
 does the hen say?" -> "cluck c"; "who gives us milk?" typed one-handed -> "the cow gives us milk", nothing over the slow question.
+DAY 342 (13:19-14:27 on the 19th, sixty-eight minutes; the count back at eight, the typist on its fixed code, no ear trace yet):
+116 parent lines, 33 slow. Words said over the typing: 3.36 per slow line (21 percent clean; the conversation lines 3.32), the
+worst day yet; the fast lines 0.18; 65 frowns; 42 answer smiles, against about eight a day under the broken window. THE READING:
+the gate grows more eager as the answer's smile lands, and the frown at one is weak against a smile at four; the ear's trace from
+tonight's reload gives the gate the feature that separates a keystroke's pause from a line's end, and the frown then has something
+to bind to. The count of days 337 to 342: 1.96, 2.07, 2.78, 1.35, 1.95, 3.36. Night 285 began at 14:27.
