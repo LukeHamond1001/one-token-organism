@@ -668,6 +668,9 @@ class Life:
         self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain
         self.note_offset()                                             # and the slow context's utterance closes with it
         self._follow = None                                            # and the recall's episode is let go
+        self._ear_trace = 0.0                                          # THE EAR STOPS RINGING AT THE UTTERANCE'S END (2026-09-19 15:50): the trace held the gate shut
+                                                                       # after a finished line too (the answers at 2.5 s and half as many, day 343); the listener is
+                                                                       # released when the utterance is perceived to have ended, and held through the pauses inside it
         if len(self._utt_cur) >= 2:
             # THE REWARD'S TAG ON THE LINE BEFORE (reward_gain; 2026-09-15): the smiles' dopamine felt since the last utterance was kept
             # raises that utterance's strength, so the night replays the rewarded exchanges more (dopamine tags what preceded it)

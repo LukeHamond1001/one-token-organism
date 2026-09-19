@@ -1659,10 +1659,12 @@ def test_the_ears_trace():
     assert abs(float(L._ear_trace) - 0.81) < 1e-6, L._ear_trace
     L.type_text("b", who="parent"); L.tick()
     assert abs(float(L._ear_trace) - 1.0) < 1e-6, L._ear_trace
+    for _ in range(6): L.tick()                                      # the count's offset fires: the ear stops ringing
+    assert float(L._ear_trace) == 0.0, L._ear_trace
     L0 = tiny(gate_ear=1, gate_ear_decay=0.0, offset_ticks=4, offset_form="count")
     L0.type_text("a", who="parent"); L0.tick(); L0.tick()
     assert not hasattr(L0, "_ear_trace") or float(L0._ear_trace) == 0.0
-    print("72 the ear's trace: 1.0 at the symbol's tick, 0.81 two quiet ticks later, 1.0 again at the next symbol; none at 0")
+    print("72 the ear's trace: 1.0 at the symbol's tick, 0.81 two quiet ticks later, 1.0 again at the next symbol, 0 at the utterance's end; none at 0")
 
 
 def test_night_ends_every_utterance():

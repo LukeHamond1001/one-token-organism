@@ -52,7 +52,7 @@ def own_since(p0):
     txt = "".join(e[0] for e in life.page[p0:] if e[1] == 1 and e[0])
     return len(re.findall(r"[A-Za-z]{2,}", txt)), txt
 print(f"body {path.split('/')[-1]} nights {life.nights} | offset_ticks {life.cfg.get('offset_ticks')} form {life.cfg.get('offset_form')} offset_fast {life.cfg.get('offset_fast')} | {len(lines)} lines at a person's pace, seed {seed}", flush=True)
-total = 0; clean = 0
+total = 0; clean = 0; lat = []
 diag = arg("diag", 0)
 # THE DIAGNOSTIC (--diag 1): where the words over a slow line come from. The offset's firings inside the line are counted by
 # wrapping life._offset; each own symbol during the line is tagged with the floor at that tick (life._floor_now: 0 under the
@@ -79,10 +79,17 @@ with torch.no_grad():
                 tags.append(f"{'F' if float(getattr(life, '_floor_now', 0.0)) > 0.0 else 'g'}{'+' if n_off[0] else '-'}")
         n, txt = own_since(p0); total += n; clean += (n == 0)
         extra = f" | offsets inside the line {n_off[0]}; own symbols by (F=floor open, g=floor shut; +=after an offset): {''.join(tags)}" if diag else ""
-        print(f"  {line!r:40} over {n:2d} {txt!r}{extra}", flush=True)
-        for _ in range(40): life.tick()                                       # the child's turn (not counted)
+        p_end = len(life.page); first_at = None
+        for k_ in range(40):                                                  # the child's turn (not counted as over): the ticks to its first symbol
+            p1 = len(life.page); life.tick()
+            if first_at is None and any(e[1] == 1 and e[0] for e in life.page[p1:]):
+                first_at = k_ + 1
+        lat.append(first_at)
+        print(f"  {line!r:40} over {n:2d} {txt!r}{extra} | first own symbol after the line: {first_at}", flush=True)
         q = 0
         while q < 60:                                                         # then its quiet, as the typist waits
             p1 = len(life.page); life.tick(); q += 1
             if any(e[1] == 1 and e[0] for e in life.page[p1:]): q = 0 if q < 30 else q
-print(f"RESULT offset_ticks {life.cfg.get('offset_ticks')}: {len(lines)} slow lines, {total/len(lines):.2f} words over per line, {100*clean/len(lines):.0f}% clean", flush=True)
+import statistics
+got = [x for x in lat if x is not None]
+print(f"RESULT offset_ticks {life.cfg.get('offset_ticks')} ear {life.cfg.get('gate_ear_decay')}: {len(lines)} slow lines, {total/len(lines):.2f} words over per line, {100*clean/len(lines):.0f}% clean | its turn: first symbol at a median {statistics.median(got) if got else None} ticks, none within 40 ticks on {len(lat)-len(got)} of {len(lat)} lines", flush=True)
