@@ -33,7 +33,7 @@ def page_tail(n_entries=400):
     return " | ".join(f"{t}:{x}" for t, x in out[-14:])
 KNOWN = set(w for w in re.findall(r"[a-z]+", open(os.path.join(ROOT, "data/teach_queue_w2.jsonl")).read().lower()) if len(w) >= 2)
 face_off_at = [0.0]; word_tick = {}; smiles = [0]
-def smile_at(level, dur=2.4): post("/face", {"expr": level}); face_off_at[0] = time.time() + dur; smiles[0] += 1
+def smile_at(level, dur=0.75): post("/face", {"expr": level}); face_off_at[0] = time.time() + dur; smiles[0] += 1   # the typist's hold (5 ticks), the review of 2026-09-19
 def face_tend():
     if face_off_at[0] and time.time() >= face_off_at[0]: post("/face", {"expr": 0}); face_off_at[0] = 0.0
 def watch(seconds, keys=None, n0=None):
@@ -45,7 +45,7 @@ def watch(seconds, keys=None, n0=None):
         if txt != got:
             got = txt; low = got.lower(); words = re.findall(r"[a-z]+", low); done = words[:-1] if low and low[-1].isalpha() else words
             if keys and answered is None and any(re.search(r"\b" + re.escape(k), low) for k in keys):
-                answered = round(time.time() - t0, 1); smile_at(2.0); post_then = (4.0, time.time() + 2.4)
+                answered = round(time.time() - t0, 1); smile_at(2.0); post_then = (4.0, time.time() + 0.75)
             elif len(done) > seen:
                 wd = done[seen]; seen = len(done)
                 if wd in KNOWN and time.time() - word_tick.get(wd, 0) > 24: smile_at(2.0); word_tick[wd] = time.time()
@@ -79,7 +79,7 @@ def type_slow(text, who, cps, pause=0.1, frown=True):
                 if txt != over:
                     over = txt
                     if frown and re.search(r"[A-Za-z]{2,}", over) and time.time() - last_frown > 9.0:
-                        post("/face", {"expr": -1}); face_off_at[0] = time.time() + 2.5; last_frown = time.time()
+                        post("/face", {"expr": -1}); face_off_at[0] = time.time() + 0.4; last_frown = time.time()   # the typist's frown hold (2.5 ticks)
         post("/type", {"text": ch, "who": who})
     while get("/state?since=0")["queued"] > 0: time.sleep(0.1)
     over, _ = own_since(n0)

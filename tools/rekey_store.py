@@ -120,6 +120,7 @@ with torch.no_grad():
     life._prev_slot = -1; life.note_offset()
 print(f"REKEYED in {time.time() - t0:.0f}s: {st.n()} slots from {written} writes ({merged} merged into a slot that said the same), mean strength {float(st.S.mean()):.3f}, seams {int(st.Bq.sum())} starts {int(st.Bs.sum())} boundaries {int(st.B.sum())}, links {int((st.N >= 0).sum())}", flush=True)
 if save_as:
-    life.save_path = save_as; life.save(); life.save_path = None; print(f"the rekeyed copy saved as {save_as}", flush=True)
+    life._store_fresh = True                                          # a rebuilt store lives a day before its first fade (the body's guard, 2026-09-19)
+    life.save_path = save_as; life.save(); life.save_path = None; print(f"the rekeyed copy saved as {save_as} (marked fresh: no fade on its first night)", flush=True)
 else:
     print("nothing saved")

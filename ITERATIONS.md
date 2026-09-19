@@ -845,3 +845,42 @@ fires in the pause because the story's letters surprise the cortex more than its
 the next save's reload, one disclosed constant, effective only while the cortex still expects more; the finished line still ends by
 the settle law. Not changed: offset_settle 0.5 (a deeper settle would hold the story lines too; one constant at a time). The count
 on the day's slow lines is the measure; the story lines grow familiar with the reading.
+
+46. THE REVIEW OF 2026-09-19 (the user's word: "look over the whole architecture and training, make sure everything is in good
+order"). The tests 70 of 70; the served flags equal ops/BASE_FLAGS.txt; no duplicate flag; the serve log clean; the guard on the
+long tag found unarmed since night 278 (its line pointed at a scratch copy that was gone) and re-armed from the repository's copy.
+Three readings (the waking path, the night with the store, the typist), the confirmed findings and what was done:
+ THE TYPIST. (1) The answer's smile window was 1.5 s, not 6.6: self.listen is seconds since the 8th and the expectation added
+ self.s() to it again; 25 of 119 answers in the child's turn got the answer smile since day 343, the rest the faint smile or a
+ miss. Fixed. (2) A line in flight at the sleep switch typed its tail into the sleeping body and spun on the drain all night; no
+ night row, the reload's waiter never fired. Fixed: the slow loop and the drain see the night and the day ends. (3) The reload
+ killed the typist five to sixty seconds into the next day: phantom days (337, 342, 345, 347), two day numbers a night, a popped
+ line lost. Fixed in the script: the typist is stopped at the save row and the chain held while the server restarts. (4) The
+ smile in its turn only let the babble decay drain the parent's attention with no bump to repay it: aways in the evening's silence,
+ the next lines scored distracted. Fixed: chatter past the turn neither pays nor drains. (5) The chair's faces held three to six
+ times longer than the typist's; the talk-over frowns on the other voice's lines uncounted; a request without a guard; a row read
+ while being appended lost whole; the stage-one expansion lines ("milk") typed into a conversation day. All fixed.
+ THE NIGHT. (6) The night's dream count read the store's growth, which the capacity stops (65536; the store at 63000): the nights
+ would have halved within two days. Fixed: the day's kept writes are counted. (7) The night fell inside a line and left it open
+ until the morning, glued to the day's first line under the dusk's tag and a stale chain index (the fade re-indexes the store and
+ only a write follows the remap). Fixed: the night ends every utterance, the wake resets the utterance state and the chain's
+ index. (8) A rebuilt store's first fade (the ledger's rule) is now the body's guard (store_fresh, set by tools/rekey_store.py).
+ (9) A clipped dream was given the turn's end symbol at the cut; fixed. (10) REM sampled from the global generator; the corpus
+ draws unrecorded; the gauge mixed the corpus dreams. Fixed: the body's generator, the corpus count in the report, the gauge over
+ its own dreams. (11) The slow bands were not saved: zeroed at every reload while band_mu was kept, the ventral critic reading a
+ birth each morning. Fixed: saved and restored.
+ THE WAKING PATH. (12) THE COUNT AT THIRTY WAS WRONG: the served tick is 0.26 s, not 0.15 (the body is compute-bound), the
+ other voice's answer arrives a median 33 ticks after the question's last symbol, a third under thirty; the child's own answer holds
+ the question's utterance open under the settle law (its own letters make the rest surprising), so the question and the answer
+ merged into one utterance keyed under the context before the question, and the question could not cue it. Reverted to eight at
+ night 284's save. (13) THE DIAGNOSTIC (tools/slow_line_probe.py --diag 1): at thirty ticks no offset fires inside a one-handed
+ line and every word said over it comes through the LEARNED GATE with the floor shut: the ear reads the tick (the world's symbol
+ this tick, weight -49; its own act last tick, +14), so the gate is shut on a keystroke's tick and free on the quiet ticks between
+ a slow typist's keystrokes. Day 340's fall to 1.35 was not the count; day 341 returned to 1.95. THE EAR'S TRACE (gate_ear_decay):
+ the ear's world input persists between symbols, decaying each tick, the auditory trace; the learned weight then keeps the gate
+ shut while a person is still typing at any pace. Measured on a copy before anything enters the body.
+ DEFERRED, RECORDED: the store's write at the capacity copies the whole store twice and re-sorts it (about a gigabyte a world
+ symbol on the CPU; tools/faststore.py holds the copy-free form; the served store reaches the capacity in about two days);
+ the non-finite night's reload restores the previous morning, not the evening (a dusk snapshot is the fix); the count-ended line's
+ end mark falls outside the wake lesson's window eleven times in twelve; the queue's who-labels and the sleep clear are not atomic
+ under the HTTP handlers; a NaN strength would empty the store at the next fade; the corpus lowercases "I".

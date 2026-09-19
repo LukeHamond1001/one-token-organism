@@ -316,10 +316,11 @@ class Caregiver:
             if w_ in ex["words"] or (ex["yesno"] and (said_yes or w_ == "no")):
                 ex["done"] = True; self.e = min(1.0, self.e + 0.2); self.word_smiled_tick[low] = b
                 self.smile(tok, ctx, "answer: " + ex["line"]); return
+        ts_, te_ = self.typing_span
+        in_silence = bool(TURN_ONLY_SMILE and self.parent and te_ < 10 ** 8 and b > te_ + 2 * int(round(self.listen / max(1e-6, self.tick))))
         if low in KNOWN2:
             age = time.time() - wall
-            ts_, te_ = self.typing_span
-            if TURN_ONLY_SMILE and self.parent and te_ < 10 ** 8 and b > te_ + 2 * int(round(self.listen / max(1e-6, self.tick))):
+            if in_silence:
                 # THE SMILE IN ITS TURN ONLY (TURN_ONLY_SMILE, 2026-09-19, the user's word on the babble: alone at the wake it recited its
                 # evening in a loop until spoken to, and the faint smile at any known word had been paying that chatter): a known word
                 # said into the silence past the child's turn after a line (twice the listen window) earns no smile and no expansion,
@@ -344,8 +345,8 @@ class Caregiver:
                 self.smile(tok, ctx, "known word", faint=bool(ANSWER_SMILE and self.parent))
             else:
                 self.row({"action": "missed", "on": tok, "why": "late %.1fs" % age, "context": ctx})
-        elif self.parent and low and len(low) >= 3 and low not in KNOWN2 and not any(w.startswith(low) for w in KNOWN2):
-            self.e = max(0.0, self.e - 0.04)                      # babble wears the parent's attention
+        elif self.parent and low and len(low) >= 3 and low not in KNOWN2 and not any(w.startswith(low) for w in KNOWN2) and not in_silence:
+            self.e = max(0.0, self.e - 0.04)                      # babble wears the parent's attention (not the chatter past its turn: the parent is not listening to it, so it neither pays nor drains; the review of 2026-09-19 found the drain alone spiralling into aways)
 
     def watch(self, seconds):
         t0 = time.time()

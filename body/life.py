@@ -163,6 +163,7 @@ PHYSIOLOGY = dict(
     gate_center_tau=1024,
     gate_center_keep=0,
     gate_ear=0,   # two more inputs to the gate: the world's symbol this tick and its own act last tick
+    gate_ear_decay=0.0,   # THE EAR'S TRACE (2026-09-19): the ear's world input persists between the world's symbols, decaying by this each tick (0 = the symbol this tick only); a slow typist's pauses leave the ear ringing
     gate_opt="sgd",
     gate_adam_lr=1e-3,
     # --- the mouth's decisiveness: the readout's sharpness, and exploration ---
@@ -481,7 +482,8 @@ class Life:
             # first symbol of the other voice's answer fell under the floor and was never written: the answer's onset, the very memory
             # the question must find. The direction of a faded bag is the question's still; the floor is a constant (write_floor).
             if learn_store and who == 0 and x != self.sil and key_.norm() > float(self.cfg.get("write_floor", 1e-6)):
-                self.store.write(key_, ex, surp * (1.0 + abs(dopamine)), who)   # the world's quiet is not a memory
+                if self.store.write(key_, ex, surp * (1.0 + abs(dopamine)), who):   # the world's quiet is not a memory
+                    self._writes_today = int(getattr(self, "_writes_today", 0)) + 1   # the day's kept writes (the night's count; the store's growth stops at the capacity)
                 rm_ = getattr(self.store, "last_remap", None)
                 if rm_ is not None:
                     # THE THIRTY-SECOND DEFECT (2026-09-18, read at the rekey; confirmed on a tiny body: at the capacity 25 of 52 links joined
@@ -1172,7 +1174,18 @@ class Life:
                 feat = feat - self._feat_mu
             if int(self.cfg.get("gate_ear", 0)):
                 # THE EAR: the world's symbol this tick, its own act last tick (sensed, not inferred)
-                feat = torch.cat([feat, torch.tensor([1.0 if u != self.sil else 0.0, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
+                ear_w = 1.0 if u != self.sil else 0.0
+                ed_ = float(self.cfg.get("gate_ear_decay", 0.0))
+                if ed_ > 0.0:
+                    # THE EAR'S TRACE (gate_ear_decay; 2026-09-19, the review and the diagnostic probe of item 45): with the ear reading
+                    # the tick alone, the learned gate (its ear weight -49 on a symbol's tick, +14 on its own act) was shut on the ticks a
+                    # symbol arrived and free on the quiet ticks between a slow typist's keystrokes, and every word said over a
+                    # one-handed line came through it with the floor shut. A sense persists past its stimulus (the auditory trace,
+                    # the simplest sensory memory): the ear's world input decays by gate_ear_decay a tick from each symbol instead of
+                    # falling to zero, so the gate's learned weight keeps it shut while a person is still typing at any pace and
+                    # frees it as the ringing fades. A disclosed constant; nothing about content; the typist's fast lines unchanged.
+                    self._ear_trace = max(ed_ * float(getattr(self, "_ear_trace", 0.0)), ear_w); ear_w = self._ear_trace
+                feat = torch.cat([feat, torch.tensor([ear_w, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
             # THE LISTENING REFLEX (gate_listen; 2026-09-17, item 41): the learned gate had shut itself during the parent's lines (the ear's
@@ -1636,8 +1649,9 @@ class Life:
                 # window; the first night to draw that utterance, the first with 2048 dreams, failed whole and reset the day.
                 W_ = int(self.m.window) - len(end_)
                 if len(d) > W_:
-                    d = d[:W_]
-                out.append(d + end_)
+                    out.append(d[:W_])                                 # cut, not ended: the turn did not end there (the review of 2026-09-19)
+                else:
+                    out.append(d + end_)
             # THE NIGHT READS (dream_corpus_n; 2026-09-18, item 44, the user's word: pretrain it, all local and live): a number of
             # sentences of a corpus drawn uniformly into the night's dreams, through the same lesson, as words overheard; the
             # corpus is read once, as the parent reads it to the child by day (lower case, no commas or quotes, sentences of the
@@ -1648,6 +1662,7 @@ class Life:
                 if pool:
                     idx_c = torch.randint(0, len(pool), (n_corp,), generator=self.gen).tolist()
                     out += [list(pool[k]) + end_ for k in idx_c]
+                    self._n_corpus_dreams = len(idx_c)
             return (out, [[False] * len(d) for d in out]) if with_who else out
         who_on = int(self.cfg.get("dream_who", 0)) > 0 and self.store.n() > 0
         starts = self.store.sample_starts(n, gen=self.gen, mask=(self.store.W != 1) if who_on else None)
@@ -1820,6 +1835,10 @@ class Life:
         self.asleep = True
         m = self.m
         rep = {"night": self.nights + 1, "tick": self.ticks}
+        if not self._offset_done:
+            # THE NIGHT ENDS EVERY UTTERANCE (the review of 2026-09-19): the switch fires on the tick count, blind to a line in progress;
+            # a line the night fell inside was kept open until the morning, glued to the first line of the day under the dusk's tag
+            self._offset(); self._offset_done = True
         try:
             # SLEEP NEED SCALES WITH THE DAY'S PLASTICITY (night_load, 0 = off; 2026-09-11, nights 114-115): with the parent talking
             # twice as much, the day wrote twice the memories and the night, dreaming its fixed 48 starts, consolidated less far (the
@@ -1830,14 +1849,20 @@ class Life:
             # the parent.
             # --- the dreams drawn: as many as the day's new memories ask for, between night_starts and night_starts_max ---
             n_new = (self.store.n() - int(self._store_after_night)) if self._store_after_night is not None else 0
+            n_new = max(n_new, int(getattr(self, "_writes_today", 0)))   # at the capacity the store's count stops growing (the review of 2026-09-19); the day's writes are the measure
             load = float(self.cfg.get("night_load", 0.0)); n_starts = None
             if load > 0.0:
                 n_starts = int(min(int(self.cfg.get("night_starts_max", 192)), max(int(self.cfg["night_starts"]), round(load * max(0, n_new)))))
             who_on = int(self.cfg.get("dream_who", 0)) > 0 and int(self.cfg.get("night_batch", 0)) > 0
+            self._n_corpus_dreams = 0
             if who_on:
                 dreams, owns = self.dreams(n_starts, with_who=True)
             else:
                 dreams = self.dreams(n_starts); owns = None
+            n_own_ = len(dreams) - int(getattr(self, "_n_corpus_dreams", 0))       # the gauge reads the body's own dreams only (the review of 2026-09-19): comparable across nights with and without reading
+            g_dreams = dreams[:n_own_] if n_own_ > 0 else dreams
+            g_owns = (owns[:len(g_dreams)] if owns is not None else None)
+            rep["corpus_dreams"] = int(getattr(self, "_n_corpus_dreams", 0))
             rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new); rep["draw_serials"] = list(getattr(self, "_last_draw", []))
             if owns is not None:                                        # its own symbols in capitals, to be read
                 rep["examples"] = ["".join(self.tok.decode([i]).upper() if o else self.tok.decode([i]) for i, o in zip(d, w_))[:32] for d, w_ in zip(dreams[:8], owns[:8])]
@@ -1849,7 +1874,7 @@ class Life:
                 rep["note"] = "the store holds nothing to dream"
             else:
                 # --- NREM: sleep's own optimizer; the dreams in batches (night_batch > 0) or one step per round ---
-                before, nsym = self.gauge(dreams, owns); before_cos = self._gauge_cos
+                before, nsym = self.gauge(g_dreams, g_owns); before_cos = self._gauge_cos
                 # THE MOMENT'S HORIZON (night_beta2; 2026-09-16, night 226): a fresh optimizer's second moment forms over about a thousand
                 # steps at 0.999, so at the third round an outlier gradient on a parameter whose moment is still small is normalised
                 # into a step many times the rate, which the global clip does not bound (night 226's loss rose 0.23 -> 0.34 in one
@@ -1907,7 +1932,7 @@ class Life:
                             for g_ in opt.param_groups:
                                 g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
                         self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
-                mid, _ = self.gauge(dreams, owns); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
+                mid, _ = self.gauge(g_dreams, g_owns); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
                 # --- REM: the cortex runs free from each dream's first symbols on its own readout,
                 # a quarter of the night in rounds (biology's share), each round one batched step
                 rem_cos = []; rem_steps = 0; rem_imag = None
@@ -1928,7 +1953,7 @@ class Life:
                 m.eval()
                 del opt
                 finite = all(bool(torch.isfinite(p).all()) for p in m.parameters())
-                after, _ = self.gauge(dreams, owns); after_cos = self._gauge_cos
+                after, _ = self.gauge(g_dreams, g_owns); after_cos = self._gauge_cos
                 # THE NIGHT STANDS (the user's word, 2026-09-11 20:00: 'remove night rollback'): from night 106 to 115 a night whose dream recall
                 # fell by more than 0.15 was discarded and the organs returned to the evening's save; nothing in biology does that, and it
                 # never fired after the night it was built for. A night is kept whatever it does. Only a non-finite lesson (the arithmetic
@@ -1937,7 +1962,7 @@ class Life:
                 if rep["discarded"] and self.save_path and os.path.exists(self.save_path):
                     sd = torch.load(self.save_path, map_location="cpu", weights_only=False)
                     m.load_state_dict(sd["organs"]); m.to(self.dev)
-                    after, _ = self.gauge(dreams, owns); after_cos = self._gauge_cos
+                    after, _ = self.gauge(g_dreams, g_owns); after_cos = self._gauge_cos
                 rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
                             "nrem_curve": [round(float(x), 4) for x in losses],   # the whole curve (2026-09-12): to read where the rounds stop paying
                             "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
@@ -1945,7 +1970,12 @@ class Life:
                             "gauge": {"before": before, "after_nrem": mid, "after": after, "symbols": nsym,
                                       "cos_before": before_cos, "cos_after_nrem": mid_cos, "cos_after": after_cos}})
             # --- the rest: the store fades, the working state wakes fresh, the body is saved ---
-            rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]), float(self.cfg.get("store_floor_abs", 0.0)))
+            if getattr(self, "_store_fresh", False):
+                # A REBUILT STORE LIVES A DAY BEFORE ITS FIRST FADE (the ledger's rule, now the body's; the review of 2026-09-19): raw
+                # single surprises under the relative floor lose the middles of the facts (nights 252 and 262, a third of the store)
+                rep["store_dropped"] = 0; self._store_fresh = False
+            else:
+                rep["store_dropped"] = self.store.fade(float(self.cfg["store_fade"]), float(self.cfg["store_floor_rel"]), float(self.cfg.get("store_floor_abs", 0.0)))
             self.utt_S = [v * float(self.cfg["store_fade"]) for v in self.utt_S]   # the utterances heard fade as the store does
             rep["utterances"] = len(self.utts)
             rep["store_slots"] = self.store.n(); rep["vrel"] = round(self._vrel_corr, 3)
@@ -1955,6 +1985,8 @@ class Life:
             if int(self.cfg.get("vcrit_norm_wake", 0)) and self.m.vc_mu.numel():
                 self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None; self._follow = None
+            self._prev_slot = -1; self._last_write = None; self._start_armed = False; self._start_pending = False; self._seam_pending = False
+            self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._ear_trace = 0.0; self._writes_today = 0
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
             if getattr(self.m, "stri_wm", 0):
@@ -2078,7 +2110,7 @@ class Life:
                 if step >= len(xs):
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf")   # the rest may be imagined: the world's stop
                     rt = self._rem_temperature()
-                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1)) if rt > 0 else int(lg.argmax()))
+                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))
                 x = xs[step]
                 m.striatum_push(0 if x != self.sil else 3, x if x != self.sil else 0)
                 reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
@@ -2116,7 +2148,7 @@ class Life:
                     rt = self._rem_temperature()
                     # THE DREAM SAMPLED, NOT TAKEN AT ITS MODE (rem_temp > 0; 2026-09-06): biology's REM is noisy; the greedy
                     # continuation reproduces the store's most frequent lines and consolidates nothing new. 0 = greedy (as before).
-                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1)) if rt > 0 else int(lg.argmax()))
+                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))
             with torch.no_grad():
                 bag = float(self.cfg["bag_decay"]) * (m.shift(bag) if xs[step] != self.sil else bag) + (m.E.weight[xs[step]] if xs[step] != self.sil else 0.0)
             reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
@@ -2283,7 +2315,8 @@ class Life:
                          "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone(), "fh_w": self._fh_w.clone(),
                          "arel": list(self._arel), "arel_gain": float(self._arel_gain), "arel_corr": float(self._arel_corr),
                          "store_after_night": self._store_after_night, "utts": self.utts, "utt_S": self.utt_S,
-                         "utt_N": self.utt_N, "utt_serial": int(self._utt_serial), "c_mu": self._c_mu.clone(), "c_n": int(self._c_n), "ctx_cur": self.ctx_cur.clone(), "ctx_prev": self.ctx_prev.clone(), "utt_open": bool(self._utt_open)}}
+                         "utt_N": self.utt_N, "utt_serial": int(self._utt_serial), "c_mu": self._c_mu.clone(), "c_n": int(self._c_n), "ctx_cur": self.ctx_cur.clone(), "ctx_prev": self.ctx_prev.clone(),
+                         "bands": self.bands.detach().cpu().clone(), "writes_today": int(getattr(self, "_writes_today", 0)), "store_fresh": bool(getattr(self, "_store_fresh", False)), "utt_open": bool(self._utt_open)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -2363,6 +2396,9 @@ class Life:
                 life._fh_w.copy_(L["fh_w"])
         if L.get("arel") is not None:
             life._arel = [float(v) for v in L["arel"]]; life._arel_gain = float(L.get("arel_gain", 0.0)); life._arel_corr = float(L.get("arel_corr", 0.0))
+        if L.get("bands") is not None and tuple(L["bands"].shape) == tuple(life.bands.shape):
+            life.bands.copy_(L["bands"].to(device))                  # the slow bands survive a reload as they survive the night (the review of 2026-09-19: zeroed at every reload, every morning a birth)
+        life._writes_today = int(L.get("writes_today", 0)); life._store_fresh = bool(L.get("store_fresh", False))
         if L.get("store_after_night") is not None:
             life._store_after_night = int(L["store_after_night"])
         elif isinstance(L.get("last_night"), dict) and L["last_night"].get("store_slots") is not None:

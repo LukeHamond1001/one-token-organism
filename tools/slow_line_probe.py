@@ -53,17 +53,33 @@ def own_since(p0):
     return len(re.findall(r"[A-Za-z]{2,}", txt)), txt
 print(f"body {path.split('/')[-1]} nights {life.nights} | offset_ticks {life.cfg.get('offset_ticks')} form {life.cfg.get('offset_form')} offset_fast {life.cfg.get('offset_fast')} | {len(lines)} lines at a person's pace, seed {seed}", flush=True)
 total = 0; clean = 0
+diag = arg("diag", 0)
+# THE DIAGNOSTIC (--diag 1): where the words over a slow line come from. The offset's firings inside the line are counted by
+# wrapping life._offset; each own symbol during the line is tagged with the floor at that tick (life._floor_now: 0 under the
+# listening reflex, so a word begun at floor 0 came through the learned gate) and whether an offset had fired inside the line.
+n_off = [0]
+if diag:
+    _orig_offset = life._offset
+    def _counted_offset():
+        n_off[0] += 1; return _orig_offset()
+    life._offset = _counted_offset
 with torch.no_grad():
     for _ in range(40): life.tick()                                           # a moment of quiet first
     for line in lines:
-        p0 = len(life.page)
+        p0 = len(life.page); n_off[0] = 0; tags = []
         for k, ch in enumerate(line):
             if k > 0:
                 gap = rng.choice([2, 3]) if rng.random() > 0.1 else rng.randint(6, 24)   # two symbols a second; a thinking pause of 1-4 s
-                for _ in range(gap): life.tick()
-            life.type_text(ch, "parent"); life.tick()
+                for _ in range(gap):
+                    p1 = len(life.page); life.tick()
+                    if diag and any(e[1] == 1 and e[0] for e in life.page[p1:]):
+                        tags.append(f"{'F' if float(getattr(life, '_floor_now', 0.0)) > 0.0 else 'g'}{'+' if n_off[0] else '-'}")
+            life.type_text(ch, "parent"); p1 = len(life.page); life.tick()
+            if diag and any(e[1] == 1 and e[0] for e in life.page[p1:]):
+                tags.append(f"{'F' if float(getattr(life, '_floor_now', 0.0)) > 0.0 else 'g'}{'+' if n_off[0] else '-'}")
         n, txt = own_since(p0); total += n; clean += (n == 0)
-        print(f"  {line!r:40} over {n:2d} {txt!r}", flush=True)
+        extra = f" | offsets inside the line {n_off[0]}; own symbols by (F=floor open, g=floor shut; +=after an offset): {''.join(tags)}" if diag else ""
+        print(f"  {line!r:40} over {n:2d} {txt!r}{extra}", flush=True)
         for _ in range(40): life.tick()                                       # the child's turn (not counted)
         q = 0
         while q < 60:                                                         # then its quiet, as the typist waits

@@ -136,24 +136,37 @@ class Teacher(Caregiver):
         # the pauses, so a word said into one is said over the parent and meets the face. Nothing in the body knows the pace.
         slow = who == "parent" and SLOW_SHARE > 0 and self.rng.random() < SLOW_SHARE
         t_start = time.time()
-        if slow:
-            for k, ch in enumerate(text):
-                if k > 0:
-                    dt = self.rng.uniform(0.6, 1.4) / SLOW_CPS
-                    if self.rng.random() < SLOW_PAUSE:
-                        dt += self.rng.uniform(1.0, 4.0)
-                    t_next = time.time() + dt
-                    while time.time() < t_next:
-                        self.poll(); self.scan(); time.sleep(max(0.05, self.s(1)))
-                self.req("/type", {"text": ch, "who": who})
-        else:
-            self.req("/type", {"text": text, "who": who})
+        asleep_ = False
+        try:
+            if slow:
+                for k, ch in enumerate(text):
+                    if k > 0:
+                        dt = self.rng.uniform(0.6, 1.4) / SLOW_CPS
+                        if self.rng.random() < SLOW_PAUSE:
+                            dt += self.rng.uniform(1.0, 4.0)
+                        t_next = time.time() + dt
+                        while time.time() < t_next:
+                            d = self.poll(); self.scan(); time.sleep(max(0.05, self.s(1)))
+                            if d is not None and d.get("asleep"):          # the night fell inside the line (the review of 2026-09-19):
+                                asleep_ = True; break                       # the rest of the line is not typed into a sleeping body
+                    if asleep_:
+                        break
+                    self.req("/type", {"text": ch, "who": who})
+            else:
+                self.req("/type", {"text": text, "who": who})
+        except Exception as e:                                                # a serve restart mid-line: the day ends, the chain relaunches
+            self.row({"action": "error", "where": "type", "what": str(e)[:120]}); return False
         self.corpus.typed(text if kind == "line" else text.strip())
-        while True:
+        while not asleep_:
             d = self.poll(); self.scan()
+            if d is not None and d.get("asleep"):
+                asleep_ = True; break
             if d is not None and d.get("queued", 0) == 0:
                 break
             time.sleep(max(0.05, self.s(1)))
+        if asleep_:
+            self.typing_span = (self.typing_span[0], self.maxtick)
+            return False                                                      # run_day sees the night
         tick_end = self.maxtick
         self.typing_span = (self.typing_span[0], tick_end)
         # THE ANSWER EXPECTED (ANSWER_SMILE): after the parent's line, if the other voice's answer is next in the queue, the child's turn
@@ -168,12 +181,12 @@ class Teacher(Caregiver):
                 from .caregiver import content_words
                 bl = nxt[2:].strip()
                 self.expect = {"line": bl, "words": set(content_words(bl)), "yesno": bl.lower().startswith(("yes", "no")),
-                               "until": time.time() + self.s(self.listen) + self.s(4), "done": False}
+                               "until": time.time() + self.listen + self.s(4), "done": False}   # self.listen is seconds already (the review of 2026-09-19: self.s() on it gave 1.5 s, not 6.6)
         self.watch(self.listen)
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
         self.row({"action": kind, "text": text, "answers": (self.cue or {}).get("full") if kind == "cue" else None, "voice": ("b" if who != "parent" else "a"),
-                  "slow": True if slow else None, "over": self.over_count if who == "parent" else None,
+                  "slow": True if slow else None, "over": self.over_count,
                   "gate_wait_s": round(gw, 1), "its_after": its, "ts": iso(t_start), "teacher": self.planner.name,
                   "fatigue": la.get("fatigue"), "stress": la.get("stress"), "mood": la.get("mood"), "gate": la.get("gate"),
                   "own": la.get("own"), "doses": la.get("doses"), "smiles_so_far": self.smiles,
@@ -197,7 +210,7 @@ class Teacher(Caregiver):
                 break
             if self.pending_expand:
                 text2 = self.pending_expand; self.pending_expand = None
-                if not self.event(text2, "line"):
+                if getattr(self.planner, "name", "") != "queue" and not self.event(text2, "line"):   # the stage-one expansion lines ("milk") stay out of a conversation day (the review of 2026-09-19)
                     break
             item = self.planner.next(self)
             if item is None:
@@ -337,6 +350,9 @@ class QueuePlanner:
         if os.path.exists(self.path):
             with open(self.path) as f:
                 f.seek(self.pos); new = f.read(); self.pos = f.tell()
+            if new and not new.endswith("\n"):                                  # a row still being appended: left for the next read (the review of 2026-09-19)
+                cut = new.rfind("\n") + 1
+                self.pos -= len(new[cut:].encode("utf-8")); new = new[:cut]
             for line in new.splitlines():
                 try:
                     for s in json.loads(line).get("say", []):
