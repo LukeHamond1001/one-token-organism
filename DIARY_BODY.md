@@ -9490,3 +9490,7 @@ hundredth a night whether the share is a thousand or five hundred; the backgroun
 at 512 with the full two thousand of its own dreams restored; under 0.79 the night's reading stops and the parent's reading by
 day stands alone. THE RELOAD AT THIS WAKE (13:19): the count at eight again, the review's fixes live, the typist on its fixed
 code (the answer's smile window whole for the first time since the 13th).
+THE MORNING AFTER NIGHT 284 (13:21, the typist on its fixed code, the answer's smile whole): sixteen lines and not one word said
+over any of them; "what is sour?" -> "a lemon is sour", the twenty-first morning; "who gives us eggs?" -> "the hen"; "is the egg
+hard or soft?" -> "the egg is hard", the second morning right; "what is sweet?" -> "honey is sweet", the pear still behind; "what
+does the hen say?" -> "cluck c"; "who gives us milk?" typed one-handed -> "the cow gives us milk", nothing over the slow question.
