@@ -9440,3 +9440,12 @@ eat?" one-handed -> "we eats. it i" (seven over); "what does the hen say?" one-h
 THE PROBE AFTER THE SAVE: the held-out 0.620 (0.606 the night before, the largest single night's move in weeks), the cortex alone
 on the facts 0.818 (0.832), the questions 20 of 30 (21), the parent's last sixty lines 0.702 (0.663). One night; the next nights say
 whether the held-out's rise is the reading.
+DAY 339 (06:21-07:31 on the 19th, seventy minutes; the fourth day of the frown at every interruption): 147 parent lines, 59 slow.
+Words said over the typing: 2.78 per slow line (27 percent clean; questions 3.12, statements 2.64; no slope within the day), 0.07
+per fast line (93 percent clean); 79 frowns; 88 known words into silence. THE COUNT ON SLOW LINES RISES: 1.96, 2.07, 2.78 over
+three days under the frown. Read in the code at night 282's start: a person's thinking pause ends the utterance by the count
+(offset_ticks 8, a second and a third), since the cortex still expects letters and the surprise does not settle; the listening
+reflex then releases the floor, and the sure forecast of the next letter has the floor whole, so the child finishes the line. The
+floor is not learned; no frown reaches it. The typist's fast lines have no pause inside them, and they are clean. Measured now on a
+copy (tools/slow_line_probe.py: twenty of the parent's lines typed one-handed into the copy, the words over each counted, at the
+served count and at thirty ticks; then the rulers at thirty), the change at a boundary if the copy says so.
