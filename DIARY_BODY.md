@@ -9407,3 +9407,7 @@ sixteenth morning; "what do the ducks eat?" -> "bugs and b" at 6.6 s, taught the
 comes now. I go" -> " out soon". WHAT IT WAS LIKE: a child that answers what it was taught as question and answer, the day after,
 and gives the older answer when the fresh fact came as a statement; that murmurs fragments while a slow line is typed; and that,
 alone at the wake, recites its evening in a loop until spoken to.
+THE DECISION (03:10 on the 19th): the night reads from night 280's save. One mixed night on a copy kept the facts (the cortex
+alone 0.840 against 0.843), the questions (21 of 30), the branch and the held-out (0.606), where the pure corpus pass had taken the
+facts out of the cortex; a thousand story sentences go among each night's dreams from tonight's reload. The typist's smile comes
+only in the child's turn from the same night.

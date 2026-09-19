@@ -814,3 +814,18 @@ rulers is the comparison (the held-out 0.605 to 0.601 across night 278, the ques
 the smoke test's after-copy is read first: whether the answers survive when the cortex's facts do not. The day door (the parent
 reads) is open regardless. If the mixed night also costs the facts, the night's reading share goes down (256-512) or the reading
 stays with the day, where the sentences become its own utterances and are replayed among the day's at the natural ratio.
+
+44 (the decision, 2026-09-19 03:10). THE MIXED NIGHT ON A COPY of the body after night 278, one night in the served form with the
+corpus among its own dreams (2048 own + 1024 story sentences, 3072 dreams, 1152 NREM steps): the held-out 0.601 to 0.606, the
+parent's last sixty lines 0.463 to 0.549, the old lines 0.573 to 0.581; the rulers after: the cortex alone on the thirty fact
+sentences 0.840 (the served body after night 278: 0.843; the pure pass: 0.571), the mouth 21 of 30 questions (the same), the
+prefixes 13 of 26 (12), the branch 9 of 9 and 11 of 12 (the same). The interleaving does what biology's replay does: nothing lost.
+The mouth with the store on the pure pass's copy also answered 21 of 30, the store carrying what the cortex had let go. THE
+CHANGE: --dream-corpus-n 1024 --dream-corpus-file data/stories_valid.txt in the served flags (ops/BASE_FLAGS.txt, guard_args.txt,
+serve_command.txt; the archive ops/archive/flags/BASE_FLAGS_pre_reading.txt), the reload armed for the save after night 280. The
+cost: half again as many dreams, a night of about forty-five minutes on the CPU. The benefit is unproven and is watched in the
+sittings (a statement given back to a question, the pear's kind) and on the held-out; about 36k story symbols a night, 470k a day.
+THE CLOCK, measured on a copy with the machine free (scratchpad/clock_check.py): the waking tick 199 ms on the CPU and 190 ms on the
+GPU (MPS), no gain, the tick's cost outside the matmuls; the night's step of sixteen dreams 5.98 s on the CPU and 2.92 s on the GPU,
+twice as fast. The GPU would halve the nights, not the days; a served body on it is measured on a copy first (a night on each
+device, the same dreams' gauge), not tonight.
