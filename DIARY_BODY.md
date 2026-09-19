@@ -9449,3 +9449,9 @@ reflex then releases the floor, and the sure forecast of the next letter has the
 floor is not learned; no frown reaches it. The typist's fast lines have no pause inside them, and they are clean. Measured now on a
 copy (tools/slow_line_probe.py: twenty of the parent's lines typed one-handed into the copy, the words over each counted, at the
 served count and at thirty ticks; then the rulers at thirty), the change at a boundary if the copy says so.
+NIGHT 282 (07:31-08:39 on the 19th, the second reading night, 3072 dreams, no error, the gauge 0.633 to 0.767, sixty-eight minutes
+beside the copy probes). THE PROBE AFTER ITS SAVE: the held-out 0.614 (0.620), the cortex alone on the facts 0.806 (0.818; 0.832
+before the reading), the questions 17 of 30 (20; 21 before), the parent's last sixty lines 0.679. Two reading nights, the facts down
+0.013 a night against 0.005 before, the questions down four: the rule set on the 19th at 06:30 says the share halves, and it does,
+512 story sentences a night from the reload after night 283's save. The days were also two-fifths story lines; from today a quarter.
+THE RELOAD AFTER NIGHT 282's SAVE (08:40): the utterance's end by the count at thirty ticks. Day 340 is the first day of it.
