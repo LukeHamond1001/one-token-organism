@@ -802,3 +802,15 @@ measure: the talked-over count on slow lines against fast lines per day, and the
 still posts whole lines; a --slow mode for the chair is next). From day 336 (the chain relaunched 23:17, during night 278). Not done:
 the offset's constant. A slowly typed line is split into utterances at each pause of 1.3 s or a settled surprise, and the store keys
 the pieces; watched first, changed only if the recall of slowly typed facts fails.
+
+44 (continued, 2026-09-19 00:45). THE SMOKE TEST'S ANSWER: a million story symbols through the night's own lesson on a copy of the
+body after night 277 (batch 16, lr 1e-5, one round, 1674 steps, 3.2 hours beside the served body): the corpus loss 0.380 to 0.253,
+the stories learned; the held-out 0.605 to 0.564; THE FACTS BY THE CORTEX 0.853 TO 0.571. A pure pass over another distribution, with
+none of its own material among the batches, takes the facts out of the cortex: the forgetting biology's interleaved replay exists to
+prevent, and the smoke test had no interleaving by design. So nothing of it enters the served body. Measured next, on a copy of the
+body after night 278: one night in the served form with the corpus among its own dreams (2048 own + 1024 story sentences), then the
+rulers (the held-out, the thirty questions with the store, the rephrased, the branch); the served night's own change on the same
+rulers is the comparison (the held-out 0.605 to 0.601 across night 278, the questions 23 to 21 of 30). The mouth with the store on
+the smoke test's after-copy is read first: whether the answers survive when the cortex's facts do not. The day door (the parent
+reads) is open regardless. If the mixed night also costs the facts, the night's reading share goes down (256-512) or the reading
+stays with the day, where the sentences become its own utterances and are replayed among the day's at the natural ratio.
