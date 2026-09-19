@@ -582,7 +582,7 @@ def test_offset_by_settling():
     settles after it stops, long before the count would; the count stays as the floor for a body whose surprise is flat"""
     life = tiny(offset_form="settle", offset_ticks=400, offset_settle=0.5, offset_fast=3, offset_slow=48, gate_every=10 ** 9, wake_every=10 ** 9)
     fired = []; orig = life._offset
-    def spy():
+    def spy(settled=True):
         fired.append(life.ticks); return orig()
     life._offset = spy
     orig_step = life._step
@@ -603,7 +603,7 @@ def test_offset_by_settling():
         assert not any(t0 < f <= t_end for f in fired), "the offset fired inside an utterance"
     assert len(fired) == 4, f"once per pause: {fired}"
     flat = tiny(offset_form="settle", offset_ticks=8, gate_every=10 ** 9, wake_every=10 ** 9); fired2 = []; o2 = flat._offset
-    flat._offset = lambda: (fired2.append(flat.ticks), o2())[1]
+    flat._offset = lambda settled=True: (fired2.append(flat.ticks), o2())[1]
     flat.type_text("go "); 
     while flat.queue:
         flat.tick()

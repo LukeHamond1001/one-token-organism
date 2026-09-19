@@ -22,7 +22,7 @@ import time
 import torch
 import torch.nn.functional as F
 
-from .model import Organs, Store
+from .model import Organs, Store, FastStore
 
 PHYSIOLOGY = dict(
     # The disclosed constants, grouped by organ. The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
@@ -342,7 +342,7 @@ class Life:
         # the facts told on one day were gone by the next dusk (the prefixes 20 -> 10 of 26 within day 228). A hippocampus holds weeks
         # of episodes; the nightly fade, not the cap, is meant to do the forgetting (a once-heard memory falls under the fade's floor
         # in about nineteen nights, twenty-four thousand writes at this day's rate). The capacity is a constant of the organ.
-        self.store = Store(self.m.d, cap=int(self.cfg.get("store_cap", 8192)), temp=float(self.cfg["store_temp"]), device=device, links=int(self.cfg.get("store_links", 4)))
+        self.store = FastStore(self.m.d, cap=int(self.cfg.get("store_cap", 8192)), temp=float(self.cfg["store_temp"]), device=device, links=int(self.cfg.get("store_links", 4)))   # the copy-free store (2026-09-19)
         self.store.saturate = bool(int(self.cfg.get("store_sat", 0)))   # repetition suppression (store_sat)
         self.gen = torch.Generator(device="cpu").manual_seed(int(seed))
         self.save_path = save_path
