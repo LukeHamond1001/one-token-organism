@@ -1623,11 +1623,37 @@ def test_night_survives_a_long_utterance():
     print(f"70 the night survives an utterance longer than the window: {len(long)} symbols in the memory, the dreams at most {max(len(d) for d in dreams)}, the night ran")
 
 
+def test_night_reads_a_corpus():
+    """THE NIGHT READS (item 44, 2026-09-18): with dream_corpus_n set and a corpus file named, that many of the corpus's sentences,
+    read as the parent reads them (lower case, no commas, the window's length), join the night's dreams; the night runs on them."""
+    import tempfile
+    f = tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False)
+    f.write('Once upon a time, a cat sat on a mat. "The cat is soft," said Sam. It was a good day.<|endoftext|>The dog ran to the water and it swam.\n')
+    f.close()
+    L = tiny(dream_source="utterances", night_batch=4, night_rounds=1, night_starts=2, night_load=0.0, offset_ticks=2, offset_form="count",
+             write_floor=1e-30, dream_corpus_n=3, dream_corpus_file=f.name)
+    for text in ("go up", "we go"):
+        L.type_text(text, who="parent")
+        while L.queue:
+            L.tick()
+        for _ in range(8):
+            L.tick()
+    pool = L._corpus_pool()
+    texts = ["".join(L.tok.decode([i]) for i in ids) for ids in pool]
+    assert "the cat is soft said sam." in texts and "it was a good day." in texts, texts      # commas and quotes dropped
+    assert all(len(ids) <= L.m.window - 1 for ids in pool) and len(pool) == 2, texts          # the two long sentences exceed the tiny window
+    dreams = L.dreams(2)
+    assert len(dreams) == 2 + 3, len(dreams)
+    rep = L.night()
+    assert not rep.get("error"), rep.get("error")
+    print(f"71 the night reads a corpus: {len(pool)} sentences in the pool, three of them among {len(dreams)} dreams, the night ran")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
-    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance]
+    tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance, test_night_reads_a_corpus]
     failed = 0
     for t in tests:
         try:

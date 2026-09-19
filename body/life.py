@@ -111,6 +111,8 @@ PHYSIOLOGY = dict(
     dream_pair=0,
     dream_gap=1,
     dream_old_share=0.0,
+    dream_corpus_n=0,       # THE NIGHT READS (2026-09-18, item 44): this many sentences of a corpus among each night's dreams (0 = off)
+    dream_corpus_file="",   # the corpus, a text file; read as the parent reads it (lower case, no commas, sentences of the window's length)
     dream_max=24,
     dream_floor_rel=0.5,
     dream_adapt=0.2,
@@ -1570,6 +1572,29 @@ class Life:
         return out
 
     # ---------------- the night ----------------
+    def _corpus_pool(self):
+        """the corpus as the body hears it (item 44): the file named by dream_corpus_file, lower case, commas, quotes, colons and
+        semicolons dropped, split at . ? and !, sentences of 8 symbols to the window less the end symbol, of the tokenizer's letters
+        only; read once and kept as lists of ids"""
+        if getattr(self, "_corpus_cache", None) is not None:
+            return self._corpus_cache
+        path = str(self.cfg.get("dream_corpus_file", "") or "")
+        pool = []
+        if path and os.path.exists(path):
+            import re
+            W_ = int(self.m.window) - (1 if int(self.cfg.get("offset_ticks", 0)) > 0 else 0)
+            ok = set("abcdefghijklmnopqrstuvwxyz .?!'")
+            raw = open(path, encoding="utf-8", errors="ignore").read().lower()
+            raw = raw.replace("<|endoftext|>", " ").replace('"', "").replace(",", "").replace(";", "").replace(":", "").replace("\n", " ")
+            for s_ in re.split(r"(?<=[.?!])\s+", raw):
+                s_ = re.sub(r"\s+", " ", s_).strip()
+                if 8 <= len(s_) <= W_ and all(ch in ok for ch in s_):
+                    ids = [self.tok.token_to_id(ch) for ch in s_]
+                    if all(i is not None for i in ids):
+                        pool.append(ids)
+        self._corpus_cache = pool
+        return pool
+
     def dreams(self, n=None, with_who=False):
         """dreams start where the store is strongest and run by pattern completion until the recall
         is half as sure as a memory of its own (relative to the store, not a constant).
@@ -1613,6 +1638,16 @@ class Life:
                 if len(d) > W_:
                     d = d[:W_]
                 out.append(d + end_)
+            # THE NIGHT READS (dream_corpus_n; 2026-09-18, item 44, the user's word: pretrain it, all local and live): a number of
+            # sentences of a corpus drawn uniformly into the night's dreams, through the same lesson, as words overheard; the
+            # corpus is read once, as the parent reads it to the child by day (lower case, no commas or quotes, sentences of the
+            # window's length), and kept as symbol ids. A disclosed constant; the held-out ruler reads its effect each morning.
+            n_corp = int(self.cfg.get("dream_corpus_n", 0))
+            if n_corp > 0:
+                pool = self._corpus_pool()
+                if pool:
+                    idx_c = torch.randint(0, len(pool), (n_corp,), generator=self.gen).tolist()
+                    out += [list(pool[k]) + end_ for k in idx_c]
             return (out, [[False] * len(d) for d in out]) if with_who else out
         who_on = int(self.cfg.get("dream_who", 0)) > 0 and self.store.n() > 0
         starts = self.store.sample_starts(n, gen=self.gen, mask=(self.store.W != 1) if who_on else None)
