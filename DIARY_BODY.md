@@ -9429,3 +9429,6 @@ turn only): 143 parent lines, 43 slow. Words said over the typing: 2.07 per slow
 1.73 in the second), 0.05 per fast line (95 percent clean, from 0.14); 56 frowns (from 70). Known words said into the silence past
 its turn, unrewarded from this day: 153, most of them in the wake's first minutes and in the gaps when the queue ran dry. Night 281
 began at 05:27, the first that reads: a thousand story sentences among its two thousand dreams.
+NIGHT 281 (05:27-06:21 on the 19th, THE FIRST NIGHT THAT READS: 3072 dreams, its own 2048 and 1024 story sentences, 1152 NREM
+steps over 90296 symbols, no error, fifty-four minutes; the gauge 0.594 to 0.759, the low start being the stories the cortex had
+never heard among the dreams). The mood at the wake -6.0. The store 60500.
