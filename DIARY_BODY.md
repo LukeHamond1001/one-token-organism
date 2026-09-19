@@ -9500,3 +9500,12 @@ worst day yet; the fast lines 0.18; 65 frowns; 42 answer smiles, against about e
 the gate grows more eager as the answer's smile lands, and the frown at one is weak against a smile at four; the ear's trace from
 tonight's reload gives the gate the feature that separates a keystroke's pause from a line's end, and the frown then has something
 to bind to. The count of days 337 to 342: 1.96, 2.07, 2.78, 1.35, 1.95, 3.36. Night 285 began at 14:27.
+NIGHT 285 (14:27-15:12 on the 19th, 2560 dreams, 2048 its own again by the day's count of writes and 512 story sentences, no error,
+the gauge 0.764 to 0.851, forty-five minutes). THE RELOAD AT ITS SAVE (15:12, the rewritten script: the typist stopped at the save
+row, the server back in seven seconds, the chain released): THE EAR'S TRACE IS LIVE, gate_ear_decay 0.9. Day 343 is the first
+day of it. THE PROBE AFTER THE SAVE: the held-out 0.616 (0.601, the reading's gain), the cortex alone on the facts 0.785 (0.796;
+0.832 before the reading), the questions 13 of 30, the parent's last sixty lines 0.777. THE RULE SET AT 13:30 FIRES: the facts
+under 0.79, the night's reading stops at night 286's save (dream_corpus_n 0); the parent's reading by day stands. The trade read
+plainly: five reading nights lifted the held-out a hundredth and cost the cortex's own hold on the old facts five hundredths,
+while the store still answers them (thirteen to sixteen of thirty); the facts the demo needs are the morning's, taught daily, and
+they hold. Two nights without reading tell whether the facts recover; then 256 is the question.
