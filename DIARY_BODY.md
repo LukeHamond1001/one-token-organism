@@ -9374,3 +9374,6 @@ rebuilt after, the judgment by sitting and the held-out; a smoke test on this ma
 THE USER'S WORD ON MANNERS (21:48): taught by the face, biology. The parent's frown at an interruption comes at every
 interruption from the next relaunch (FROWN_GAP 240 to 60 ticks), a parent disapproving each time; the count of interruptions
 over the days is the measure. Nothing written about content.
+THE USER'S WORD (22:18): no pods, all local and live. From 22:20 the parent reads to it: story sentences in its register
+between the conversation's rows ("roxy loved to climb. she climbed trees rocks and hills."), the first four rows queued; the
+night will read too once the smoke test on the copy says what a million symbols do.

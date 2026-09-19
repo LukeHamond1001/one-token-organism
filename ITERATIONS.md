@@ -644,6 +644,13 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    after, the fact sentences by the cortex, the questions on the served rulers after the rebuild, and the sitting. FALSIFIER:
    the held-out not up by three hundredths after ten million symbols, or the facts by the cortex down by five, or the sitting
    worse in words.
+   THE USER'S WORD (22:18): no pods; all local, all live, in the served body. The pod scripts stay unused. Two live paths inside
+   the body as built: (a) the parent reads to it by day, story sentences in its register queued as the parent's lines
+   between the conversation (ops/read_stories.py; the waking lesson learns them, the night replays them); (b) the night reads
+   too, a number of story sentences drawn from the corpus into each night's dreams through the night's own lesson
+   (dream_corpus_n, dream_corpus_file: disclosed constants, in the served process). The arithmetic: reading by day some
+   thousands of symbols a day; a night of 2048 dreams some thirty thousand; a million symbols (the smoke test on a copy,
+   running) tells the effect per million, and the night's length is the lever if the effect is worth it.
 
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
