@@ -9518,3 +9518,11 @@ after a finished line. Night 286 began at 16:25; its save loads the release by t
 NIGHT 286 (16:25 on the 19th, the sixth and last night with story sentences among its dreams). THE PROBE AFTER ITS SAVE: the
 held-out 0.610, the cortex alone on the facts 0.777 (0.785; 0.832 before the reading), the questions 12 of 30, the parent's last
 sixty lines 0.778. The reading stops at this save's reload; the facts are watched for their recovery over the next nights.
+DAY 344 (17:12-18:16 on the 19th, sixty-four minutes; THE FIRST DAY WITH THE EAR RELEASED BY THE SETTLE LAW): 117 parent lines,
+34 slow. Words said over the typing: 0.91 per slow line (47 percent clean; the conversation lines 0.87, 52 percent clean; the
+story lines 1.00), the fast lines 0.10 (90 percent clean); 36 frowns. THE ANSWERS BACK: the smile on 36 of 44 questions (82
+percent, the best share yet; 50 the day before under the unreleased ring, 78 before the trace), the answer a median half a second
+after the line's end, the child's first symbol at 11 ticks, a fifth of the lines with nothing in their window (a third the day
+before). The trade is settled: a quarter of the interruptions of two days ago, the answering whole. 248 known words into the
+silence past its turn. The count of days 337 to 344: 1.96, 2.07, 2.78, 1.35, 1.95, 3.36, 0.69, 0.91. Night 287 began at 18:16,
+the first without reading among its dreams.
