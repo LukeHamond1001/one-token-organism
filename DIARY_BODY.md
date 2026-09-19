@@ -9424,3 +9424,8 @@ FULL, told once the day before in one row, the answer begun before the question 
 frown by the law, an eager child); "and who gives us milk?" -> "the cow gives us milk"; "what do the ducks eat?" -> "bugs and br";
 "is the egg hard or soft?" -> "soft", the wrong one of a pair told once beside the hen. The probe after the save: the cortex alone
 on the facts 0.832, the questions 21 of 30, the parent's last sixty lines 0.663.
+DAY 338 (04:17-05:27 on the 19th, seventy minutes; the third day of the frown at every interruption, the first of the smile in its
+turn only): 143 parent lines, 43 slow. Words said over the typing: 2.07 per slow line (33 percent clean; 2.43 in the first half,
+1.73 in the second), 0.05 per fast line (95 percent clean, from 0.14); 56 frowns (from 70). Known words said into the silence past
+its turn, unrewarded from this day: 153, most of them in the wake's first minutes and in the gaps when the queue ran dry. Night 281
+began at 05:27, the first that reads: a thousand story sentences among its two thousand dreams.
