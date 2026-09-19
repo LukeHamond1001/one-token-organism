@@ -6,7 +6,7 @@ the copy saved as asked. The rest of the body (the store, the gate, the face, th
 embeddings' and must be rebuilt after (tools/rekey_store.py) before the copy serves.
 THE CORPUS AS THE BODY HEARS IT: lower case; commas, quotes, colons and semicolons dropped; split at . ? and !; sentences of
 8 to 63 symbols made only of the tokenizer's characters; shuffled at a fixed seed; taken until --chars symbols.
-usage: nice -n 19 python3 tools/pretrain_cortex.py COPY.pt --flags ops/BASE_FLAGS.txt --corpus FILE --chars 1000000 [--batch 16] [--lr 1e-5] [--rounds 1] --save-as OUT.pt"""
+usage: nice -n 19 python3 tools/pretrain_cortex.py COPY.pt --flags ops/BASE_FLAGS.txt --corpus FILE --chars 1000000 [--batch 16] [--lr 1e-5] [--rounds 1] [--device cuda] --save-as OUT.pt"""
 import sys, os, re, time, random
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.insert(0, ROOT)
 import torch
@@ -39,8 +39,9 @@ path = sys.argv[1]
 cfg = parse_flags(open(arg("flags", "")).read()) if arg("flags", "") else {}
 corpus = arg("corpus", ""); n_chars = arg("chars", 1000000); batch = arg("batch", 16); lr = arg("lr", 1e-5); rounds = arg("rounds", 1)
 save_as = arg("save_as", ""); seed = arg("seed", 0); report_every = arg("report_every", 200)
+device = arg("device", "cpu")                                # cuda on a pod; the body's arithmetic is the same
 TOK = Tokenizer.from_file(os.path.join(ROOT, "data/tok_char.json"))
-life = Life.load(path, TOK, device="cpu", cfg=cfg); life.save_path = None; m = life.m
+life = Life.load(path, TOK, device=device, cfg=cfg); life.save_path = None; m = life.m
 life.cfg["night_batch"] = max(1, batch)                     # the gauge runs batched
 end_ = [life.end_id] if int(life.cfg.get("offset_ticks", 0)) > 0 else []
 W = int(m.window) - len(end_)
