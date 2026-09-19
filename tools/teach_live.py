@@ -4,7 +4,8 @@ held (SIGSTOP) from `start` to `end`, exactly as tools/rehearse.py holds it; the
 (a known word +2 for 2.4 s, an answer 2 then 4) so the words are the teacher's and the smiles land when the word does. `leave`
 is a way out of the room: no words, no face, for a while, the typist still held, so the child is alone.
 usage: python3 tools/teach_live.py start
-       python3 tools/teach_live.py say "what is cold?" [--who parent|other] [--watch 12] [--answer "ice,cold"]
+       python3 tools/teach_live.py say "what is cold?" [--who parent|other] [--watch 12] [--answer "ice,cold"] [--slow 2.0]
+       (--slow CPS types the line one-handed: symbol by symbol at CPS a second with thinking pauses; the talk-over is reported and frowned at)
        python3 tools/teach_live.py listen 20          (watch its own talk for 20 s, smiling at its words)
        python3 tools/teach_live.py leave 120          (leave the room for 120 s; prints what it said alone)
        python3 tools/teach_live.py end
@@ -61,6 +62,28 @@ def wait_quiet(quiet_ticks=8, max_wait=150):
         else: silent += 1
         waited += 1
     return got
+def type_slow(text, who, cps, pause=0.1, frown=True):
+    """A PERSON'S HAND (2026-09-19, the user's word: the demo's typist types one-handed, the other hand on the face): the line goes in
+    symbol by symbol at `cps` a second (each gap 0.6-1.4 of the mean) with a thinking pause of one to four seconds now and then
+    (`pause` per symbol). What the child says during the typing is said over us: returned, and met with the typist's light frown
+    (-1 for 2.5 s, at most every nine seconds) when it is a word, as the typist's law has it. The face is the only lesson."""
+    import random
+    n0 = get("/state?since=0")["n"]; over = ""; last_frown = 0.0
+    for k, ch in enumerate(text):
+        if k > 0:
+            dt = random.uniform(0.6, 1.4) / cps
+            if random.random() < pause: dt += random.uniform(1.0, 4.0)
+            t_next = time.time() + dt
+            while time.time() < t_next:
+                time.sleep(0.1); face_tend(); txt, n = own_since(n0)
+                if txt != over:
+                    over = txt
+                    if frown and re.search(r"[A-Za-z]{2,}", over) and time.time() - last_frown > 9.0:
+                        post("/face", {"expr": -1}); face_off_at[0] = time.time() + 2.5; last_frown = time.time()
+        post("/type", {"text": ch, "who": who})
+    while get("/state?since=0")["queued"] > 0: time.sleep(0.1)
+    over, _ = own_since(n0)
+    return over
 cmd = sys.argv[1] if len(sys.argv) > 1 else "help"
 if cmd == "start":
     assert not os.path.exists(STATE), "a session is open already (end it first)"
@@ -72,11 +95,14 @@ if cmd == "start":
 elif cmd == "say":
     # --then "the other voice's line": typed after the child's turn, in the same call (an exchange in one call keeps the pace near the typist's)
     text = sys.argv[2]; who = arg("who", "parent"); w = arg("watch", 8); keys = [k.strip() for k in arg("answer", "").split(",") if k.strip()]; then = arg("then", "")
-    before = wait_quiet()
-    n0 = get("/state?since=0")["n"]; post("/type", {"text": text, "who": who})
-    while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
+    before = wait_quiet(); slow = arg("slow", 0.0); over = ""
+    if slow > 0:
+        over = type_slow(text, who, slow); n0 = get("/state?since=0")["n"]
+    else:
+        n0 = get("/state?since=0")["n"]; post("/type", {"text": text, "who": who})
+        while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
     got, at = watch(w, keys, n0)
-    print(f"[{who}] {text}\n[child] {got!r}" + (f"  (answered at {at}s)" if at else "") + (f"  (before the line it said {before!r})" if before.strip() else ""))
+    print(f"[{who}{' slow' if slow > 0 else ''}] {text}\n[child] {got!r}" + (f"  (answered at {at}s)" if at else "") + (f"  (before the line it said {before!r})" if before.strip() else "") + (f"\n[over us while we typed] {over!r}" if over.strip() else ""))
     if then:
         wait_quiet(quiet_ticks=4, max_wait=60); n1 = get("/state?since=0")["n"]; post("/type", {"text": then, "who": "other"})
         while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
@@ -92,11 +118,14 @@ elif cmd == "talk":
         who = "other" if ln[:2].lower() == "b:" else "parent"; text = ln[2:].strip() if who == "other" else ln
         keys = []
         if "=>" in text: text, ans = text.split("=>", 1); text = text.strip(); keys = [k.strip() for k in ans.split(",") if k.strip()]
-        before = wait_quiet(quiet_ticks=4 if who == "other" else 8, max_wait=100)
-        n0 = get("/state?since=0")["n"]; post("/type", {"text": text, "who": who})
-        while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
+        before = wait_quiet(quiet_ticks=4 if who == "other" else 8, max_wait=100); slow = arg("slow", 0.0); over = ""
+        if slow > 0 and who == "parent":
+            over = type_slow(text, who, slow); n0 = get("/state?since=0")["n"]
+        else:
+            n0 = get("/state?since=0")["n"]; post("/type", {"text": text, "who": who})
+            while get("/state?since=0")["queued"] > 0: time.sleep(0.2)
         got, at = watch(w if who == "parent" else max(3, w // 2), keys, n0)
-        out.append(f"[{'A' if who == 'parent' else 'b'}] {text}  ->  {got!r}" + (f" (answered at {at}s)" if at else "") + (f"  [before: {before.strip()!r}]" if before.strip() else ""))
+        out.append(f"[{'A' if who == 'parent' else 'b'}{' slow' if slow > 0 and who == 'parent' else ''}] {text}  ->  {got!r}" + (f" (answered at {at}s)" if at else "") + (f"  [before: {before.strip()!r}]" if before.strip() else "") + (f"  [OVER US: {over.strip()!r}]" if over.strip() else ""))
         print(out[-1], flush=True)
         if who == "other": time.sleep(gap)
     md = get("/insides"); print(f"(mood {md['mood']:.1f} sharp {md['sharp_now']:.0f} pressure {md['sleep_pressure']})")
