@@ -9475,3 +9475,10 @@ THE MORNING AFTER NIGHT 283 (10:46, the typist; all eight questions at the tick 
 sleep well?" -> "yes. I slept. I a"; "what is sour?" -> "a lemon is sour", the twentieth morning; "who gives us eggs?" -> "the hen";
 "who gives us milk?" -> "the cow giv"; "what do the ducks eat?" -> "bugs"; "what is sweet?" -> "honey is", the pear still behind;
 "is the egg hard or soft?" and "what is round?" -> nothing in their turns.
+DAY 341 (10:45-11:52 on the 19th, sixty-seven minutes; the second day with the utterance's end at thirty ticks): 132 parent lines,
+38 slow. Words said over the typing: 1.95 per slow line (26 percent clean), from 1.35 the day before and 2.78 before the change;
+the slow conversation lines 1.47 (32 percent clean), the story lines 2.42; the fast lines 0.14; 60 frowns; 190 known words into
+silence. THE REBOUND, READ: the count at thirty holds a pause the cortex still finds surprising; but the settle law ends the
+utterance when the surprise has settled, and two days of slow lines have taught the cortex that a pause inside a line is ordinary,
+so the pause now settles and the floor returns by the law itself. The senses adapt to the pauses. Measured on a copy from night
+284's start (the same probe, twenty lines, seed 1): the served ratio 0.5 against a deeper settle at 0.25, then the rulers at 0.25.
