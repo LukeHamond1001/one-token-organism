@@ -9471,3 +9471,7 @@ fifty-five minutes). THE PROBE AFTER ITS SAVE: the held-out 0.611, the cortex al
 bread is soft" are counted as misses because the ruler's list holds the older answers; they are this week's teaching, not
 forgetting. The questions' fall from 21 is partly the parent's own new pairs on the ruler's questions. The share stays at 512 from
 this reload (10:45) as a conservative choice; the measure of the facts is the morning's own recall and the held-out.
+THE MORNING AFTER NIGHT 283 (10:46, the typist; all eight questions at the tick this time, none with a word over them): "did you
+sleep well?" -> "yes. I slept. I a"; "what is sour?" -> "a lemon is sour", the twentieth morning; "who gives us eggs?" -> "the hen";
+"who gives us milk?" -> "the cow giv"; "what do the ducks eat?" -> "bugs"; "what is sweet?" -> "honey is", the pear still behind;
+"is the egg hard or soft?" and "what is round?" -> nothing in their turns.
