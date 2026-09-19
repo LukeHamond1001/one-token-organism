@@ -5,7 +5,8 @@ S=/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-
 N=$1; L=$((N+10))
 until [ "$(grep -c '"action": "night"' data/watch2_caregiver.jsonl)" -ge "$N" ]; do python3 -c "import time; time.sleep(30)"; done
 python3 -c "import time; time.sleep(45)"; date '+%H:%M:%S'; echo "night $L ended (the ${N}th row)"; tail -1 $S/logs/watch2.log | cut -c1-140
-G=$(pgrep -f "^zsh /.*guard_tag_at_night.sh" | wc -l | tr -d ' '); [ "$G" = "0" ] && eval "nohup nice -n 5 $(cat ops/guard_args.txt) > /dev/null 2>&1 &"
+# THE GUARD IS RETIRED (2026-09-19 17:15): the long tag has been closed for days (gate_slow_lr 0) and the guard's trip (the gate's duty under 0.2) fired on the ear's trace, restarting the served body with stale flags a minute after the reload. Not re-armed.
+# G=$(pgrep -f "^zsh /.*guard_tag_at_night.sh" | wc -l | tr -d ' '); [ "$G" = "0" ] && eval "nohup nice -n 5 $(cat ops/guard_args.txt) > /dev/null 2>&1 &"
 D=$(pgrep -f "^zsh /.*probe_at_dusk.sh" | wc -l | tr -d ' '); [ "$D" = "0" ] && { nohup nice -n 5 zsh $S/probe_at_dusk.sh $S probe_dusk_after$N.log > /dev/null 2>&1 & }
 python3 -c "import time; time.sleep(2)"; echo "armed: guard $(pgrep -f '^zsh /.*guard_tag_at_night.sh' | wc -l | tr -d ' ') dusk $(pgrep -f '^zsh /.*probe_at_dusk.sh' | wc -l | tr -d ' ')"
 DL=$(grep '"action": "night"' data/watch2_caregiver.jsonl | tail -1 | grep -o '"day": [0-9]*' | grep -o '[0-9]*'); echo "=== the day that ended ($DL)"; python3 ops/day.py $DL 2>&1 | head -4; python3 - <<PY

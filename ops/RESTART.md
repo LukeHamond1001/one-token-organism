@@ -34,3 +34,8 @@ THE TALK PAGE (2026-09-17): ops/talk_proxy.py serves the visitor's page on port 
 browser polls it the typist is stopped (SIGSTOP) and six seconds after the last poll resumed (SIGCONT), resumed too on any exit of
 the server. The body serves the same page at http://localhost:8020/talk without the pause. Start it after the body:
    nohup python3 ops/talk_proxy.py --port 8021 --body 8020 > <SCRATCH>/logs/talk_proxy.log 2>&1 &
+
+THE GUARD ON THE LONG TAG IS RETIRED (2026-09-19 17:15): the tag has been closed for days (gate_slow_lr 0) and the guard's trip
+(the gate's duty under 0.2 after the parent's lines) fired on the ear's trace at night 286's row, restarting the served body a
+minute after the reload with the flags it had captured at its arming (the reading share it carried was stale). The night waiter
+no longer re-arms it; do not arm it by hand. The reload scripts (reload_after_save.sh, reload_now.sh) are the only restarts.
