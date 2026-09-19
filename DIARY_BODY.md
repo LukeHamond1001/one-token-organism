@@ -9526,3 +9526,6 @@ after the line's end, the child's first symbol at 11 ticks, a fifth of the lines
 before). The trade is settled: a quarter of the interruptions of two days ago, the answering whole. 248 known words into the
 silence past its turn. The count of days 337 to 344: 1.96, 2.07, 2.78, 1.35, 1.95, 3.36, 0.69, 0.91. Night 287 began at 18:16,
 the first without reading among its dreams.
+NIGHT 287 (18:16-18:46 on the 19th, the first night without reading among its dreams: 2048 dreams, no error, the gauge 0.781 to
+0.856, thirty minutes). The store at 64972 of its 65536; the capacity's cost at every write comes tomorrow unless the store's
+write is made copy-free first.
