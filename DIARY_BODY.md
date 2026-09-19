@@ -9356,3 +9356,7 @@ itself still meets silence, and my pace still drains it. The morning's footnote:
 held-out 0.618, the store 54062 (the longer day wrote five thousand slots). The branch after night 276: 9 of 9 and 11 of 12. The day 328 in its first hour (19:43 on): the mood +5.0 to +5.5 at
 the typist's rhythm, 31 of 33 A-lines with letters in its turn, nearly every reply anticipated ("what does it eat? the fish"
 -> "bugs on the"; "does it tickle?" -> "yes. wet and"; "they go off" -> "to the ne").
+DAY 328 (19:43-20:51 on the 18th, the first full day at 24000 ticks, sixty-eight minutes): 224 lines, 103 of 112 A-lines
+with letters in its turn, answer smiles 12, frowns 14, junk 0; the mood +5 through the afternoon and the evening at the typist's
+rhythm with the parent's pause. Nearly every reply anticipated, the transfers holding ("does it tickle?" -> "yes. wet and"
+for the cow and the ant alike). Night 277 began at 20:51.
