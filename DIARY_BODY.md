@@ -9416,3 +9416,11 @@ the first with the exact count in each line's row): 158 parent lines, 48 slow. W
 percent of slow lines clean), 0.14 per fast line (86 percent clean); no slope within the day (1.91 in the first half, 2.00 in the
 second); 70 frowns. Yesterday's approximate 1.11 per slow line undercounted. Night 280 began at 03:51; the chain relaunched with the
 smile in its turn only; the reload after this night's save brings the reading into night 281.
+NIGHT 280 (03:51-04:17 on the 19th, 2048 dreams, no error, twenty-six minutes alone, the gauge 0.803 to 0.872; the reload after
+its save: the night reads from 281). THE MORNING (04:20, the typist; the smile in its turn only from this day): "what is sour?" ->
+"a lemon is so", the seventeenth morning, nothing said over the question; "what is sweet?" typed one-handed -> "ho", the older
+honey still ahead of the pear taught as a pair the day before; "who gives us eggs?" typed one-handed -> "the hen gives us eggs" IN
+FULL, told once the day before in one row, the answer begun before the question was finished (three words over the slow line, the
+frown by the law, an eager child); "and who gives us milk?" -> "the cow gives us milk"; "what do the ducks eat?" -> "bugs and br";
+"is the egg hard or soft?" -> "soft", the wrong one of a pair told once beside the hen. The probe after the save: the cortex alone
+on the facts 0.832, the questions 21 of 30, the parent's last sixty lines 0.663.
