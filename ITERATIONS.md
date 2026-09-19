@@ -889,3 +889,20 @@ Three readings (the waking path, the night with the store, the typist), the conf
  0.611, the facts 0.804, the questions 16 and 18 of 30). A keystroke gap at two symbols a second is two or three ticks: at 0.8 the
  ring is half gone between keystrokes, at 0.9 it holds. Adopted at 0.9 for the reload at night 285's save; the day's count of
  words over slow lines is the measure, the morning's answer latency the cost to watch.
+ THE TRACE'S COST AND ITS RELEASE (day 343, 15:12 on): the first hour with the trace gave 0.92 words over a slow line (3.36 the day
+ before) and, on the other side, the answer's smile on 41 percent of the questions (78) at a delay of 2.5 s (1.0), the child's
+ first symbol after a line at a median 11 ticks (6), 38 percent of lines with no symbol in the window (12): the ear kept ringing
+ after a finished line and the gate stayed shut into the child's own turn. THE RELEASE: the ear stops ringing when the utterance
+ is perceived to have ended. Released at every offset (the count's too), the copy after night 285 gave 3.00 words over a line (5.20
+ without the trace on that save, the gate grown eager as the answers pay) with the first symbol at 9.5 ticks (4.5): the count's
+ offset fires inside a person's thinking pause and freed the gate there. Released only when the SETTLE LAW ends the utterance
+ (the cortex expected the quiet: a finished line) and held when the count alone ends it (a long pause the cortex did not expect:
+ a person thinking): measured on the copy at 16:10, the number that decides what enters the body at night 286's save.
+ THE SETTLE-ONLY RELEASE MEASURED (16:20, the same ten lines on the copy after night 285): 1.20 words over a line (50 percent
+ clean; 5.20 with no trace, 3.00 released at every offset) and the turn's first symbol at a median 21 ticks (4.5 with no trace, 9.5
+ released at every offset), every line answered within forty. Read: after a finished question the cortex expects the other voice's
+ answer, so the quiet does not settle and the count ends the utterance without releasing the ear; the ring then decays on its own
+ and the answer comes at five seconds. For the demo that is the better side: a person waits five seconds for a child that thinks
+ before it answers, and does not want to be talked over. Adopted for night 286's save at 0.9; day 344's count, the answer's delay
+ and the answer's share are the three numbers; the gate's own learning (the smile at four for the late answers, the frown for the
+ words in long pauses) moves them from there, and 0.85 is the constant to try if the delay stays past fifteen ticks.
