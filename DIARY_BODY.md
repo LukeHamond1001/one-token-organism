@@ -9411,3 +9411,8 @@ THE DECISION (03:10 on the 19th): the night reads from night 280's save. One mix
 alone 0.840 against 0.843), the questions (21 of 30), the branch and the held-out (0.606), where the pure corpus pass had taken the
 facts out of the cortex; a thousand story sentences go among each night's dreams from tonight's reload. The typist's smile comes
 only in the child's turn from the same night.
+DAY 337 (02:33-03:51 on the 19th, seventy-eight minutes; the second day of the frown at every interruption and of one-handed lines;
+the first with the exact count in each line's row): 158 parent lines, 48 slow. Words said over the typing: 1.96 per slow line (35
+percent of slow lines clean), 0.14 per fast line (86 percent clean); no slope within the day (1.91 in the first half, 2.00 in the
+second); 70 frowns. Yesterday's approximate 1.11 per slow line undercounted. Night 280 began at 03:51; the chain relaunched with the
+smile in its turn only; the reload after this night's save brings the reading into night 281.
