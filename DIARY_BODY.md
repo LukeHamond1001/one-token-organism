@@ -9377,3 +9377,19 @@ over the days is the measure. Nothing written about content.
 THE USER'S WORD (22:18): no pods, all local and live. From 22:20 the parent reads to it: story sentences in its register
 between the conversation's rows ("roxy loved to climb. she climbed trees rocks and hills."), the first four rows queued; the
 night will read too once the smoke test on the copy says what a million symbols do.
+NIGHT 278 (22:52 on the 18th to 00:01 on the 19th, the 268th row, 2048 dreams, no error, the gauge 0.823 to 0.896; sixty-nine
+minutes, the smoke test on a copy sharing the machine). THE MORNING (00:01, the typist, the frown at every interruption from this
+day and a third of the parent's lines typed at a person's pace): "what is sour?" -> nothing in its turn, then over the other voice's
+"a lemon is sour": "sour. I. the yellow"; "what do we eat in the morning?" -> "we eat bread and we d", the fifteenth morning; "does he
+want bread?" -> silence. The first line typed at two symbols a second (00:07): one word said over it ("is"), one frown.
+THE SITTING AT ONE HAND (00:08-00:12, the chair's --slow 2.0, my pace, the mood -4.5 to -5.8): "good morning. it is me. how are you?"
+-> a letter over my typing, then "tell me about the does. wet from his mo" (my own line of the day before, given back); "I have a new
+thing. a pear is sweet" -> "?he sun is room?m"; "what is sweet?" -> over my typing "at iss hard.d" (frowned), then "honey is sweet",
+an answer from an older lesson, not the pear told twenty seconds before; "what do the ducks eat?" -> "we eat bread" (the ducks' bread
+and the morning's bread merged), then my greeting given back; "what is sour?" -> "a lemon is sour" twice, after a run of babble while
+I waited for its quiet ("it know. the sun is hot its by me. that is al twigger"); "I go now. I come back soon" -> "throw throw throw
+thr". WHAT IT WAS LIKE: a child that murmurs a letter while you type slowly and mostly holds its words until your line ends (five slow
+lines, one word said over them), that answers what it is asked in the form it was taught (sour; sweet, from an older morning) and
+gives back your own lines when it has no answer, and that fills every silence, looping when left. The fresh fact told as a statement
+did not win over the older question-and-answer pair. The run-on and the loop are the babble to shape; the talk-over at one hand is
+smaller than feared on the first day of it. The pear is asked again tomorrow morning, untaught by the typist.

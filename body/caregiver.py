@@ -280,6 +280,7 @@ class Caregiver:
             # over it, not at a murmured letter; the same two-letter bound the smile has.
             ts, te = self.typing_span
             if a < te and b >= ts:                                # said over the parent's own turn
+                self.over_count = getattr(self, "over_count", 0) + 1   # the words said over this line (reported in the line's row, 2026-09-19)
                 self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx})
                 if TALKOVER_FROWN and time.time() - self.last_frown > self.s(FROWN_GAP):   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
                     self._hold(-1, 2.5)                                             # a light, brief frown, at most every FROWN_GAP ticks

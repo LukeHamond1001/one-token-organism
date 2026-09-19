@@ -128,6 +128,7 @@ class Teacher(Caregiver):
             self.cue = {"text": text, "until": time.time() + self.s(360), "full": ans, "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (self.maxtick + 1, 10 ** 9)         # the parent's turn: from its first symbol to its last
+        self.over_count = 0                                    # the words said over this line, for its row (the measure of item 45)
         # A PERSON'S HAND (2026-09-18, the user's word: the demo's typist types with one hand, the other on the face, and the child
         # must not interrupt a slow typer): a share of the parent's lines (SLOW_SHARE) go in symbol by symbol at a one-handed pace
         # (SLOW_CPS symbols a second, each gap 0.6-1.4 of the mean) with a thinking pause of one to four seconds now and then
@@ -172,7 +173,7 @@ class Teacher(Caregiver):
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
         self.row({"action": kind, "text": text, "answers": (self.cue or {}).get("full") if kind == "cue" else None, "voice": ("b" if who != "parent" else "a"),
-                  "slow": True if slow else None,
+                  "slow": True if slow else None, "over": self.over_count if who == "parent" else None,
                   "gate_wait_s": round(gw, 1), "its_after": its, "ts": iso(t_start), "teacher": self.planner.name,
                   "fatigue": la.get("fatigue"), "stress": la.get("stress"), "mood": la.get("mood"), "gate": la.get("gate"),
                   "own": la.get("own"), "doses": la.get("doses"), "smiles_so_far": self.smiles,
