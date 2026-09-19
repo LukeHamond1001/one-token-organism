@@ -9460,3 +9460,8 @@ then, over the other voice's reply, "now what is sour? a lemon." before the ques
 nineteenth morning said early; "is the egg hard or soft?" -> "the egg is hard", RIGHT FOR THE FIRST TIME after two days of "soft";
 "who gives us eggs?" -> "the hen gives us eggs"; "what does the hen say?" typed one-handed -> silence, nothing over the line; "what
 is sweet?" -> "honey is sweet and hon"; "what is round?" typed one-handed -> four words over it, then "yes. roun".
+DAY 340 (08:40-09:48 on the 19th, sixty-eight minutes; THE FIRST DAY WITH THE UTTERANCE'S END AT THIRTY TICKS): 132 parent lines,
+48 slow. Words said over the typing: 1.35 per slow line (52 percent clean), from 2.78 the day before; the slow conversation lines
+1.00 (66 percent clean), the slow story lines 1.89 (32 percent); the first half 1.77, the second 0.86; the fast lines 0.08 (92 percent
+clean); 42 frowns, from 79. The copy had said 1.3 to 1.7. The count is halved by the constant on its first day, with the story lines
+holding most of what remains. Night 283 began at 09:48; the reload after its save takes the reading to 512.
