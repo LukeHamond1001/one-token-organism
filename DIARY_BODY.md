@@ -9398,3 +9398,12 @@ the machine; the first day of the frown at every interruption and of a third of 
 lines, 38 of them slow. Words said over the parent's typing: 1.11 per slow line, 0.15 per fast line, seven to one; 48 frowns
 (24 over slow lines, 13 over fast, 11 elsewhere). This is the first number of item 45, the day before any shaping could show.
 Night 279 began at 01:31; the typist relaunched at its row with each line's row now carrying the count of words said over it.
+NIGHT 279 (01:31-02:33 on the 19th, 2048 dreams, no error, sixty-two minutes beside the mixed night on the copy). THE MORNING
+SITTING FIRST, AT ONE HAND (02:34-02:37, the chair's --slow 2.0, the typist held, the mood -5.0 to -5.5): alone at the wake it was
+looping "by the wall my feet are open yes. I am by the wall" (its own evening lines, chained); "good morning. it is me" -> fragments
+over my typing ("ood nigo nihow cl"), then nothing; "what is sweet?" -> "honey is sweet", the older pair again: THE PEAR TOLD ONCE AS
+A STATEMENT the morning before is not given back to the question; "what is sour?" -> "a lemon is sour" at 2.1 s, twice, the
+sixteenth morning; "what do the ducks eat?" -> "bugs and b" at 6.6 s, taught the day before in the typist's rows; "the other one
+comes now. I go" -> " out soon". WHAT IT WAS LIKE: a child that answers what it was taught as question and answer, the day after,
+and gives the older answer when the fresh fact came as a statement; that murmurs fragments while a slow line is typed; and that,
+alone at the wake, recites its evening in a loop until spoken to.
