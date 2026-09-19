@@ -829,3 +829,19 @@ THE CLOCK, measured on a copy with the machine free (scratchpad/clock_check.py):
 GPU (MPS), no gain, the tick's cost outside the matmuls; the night's step of sixteen dreams 5.98 s on the CPU and 2.92 s on the GPU,
 twice as fast. The GPU would halve the nights, not the days; a served body on it is measured on a copy first (a night on each
 device, the same dreams' gauge), not tonight.
+
+45 (continued, 2026-09-19 08:05). THE COUNT RISES UNDER THE FROWN: words said over a slow line 1.96, 2.07, 2.78 on days 337-339
+(fast lines 0.14, 0.05, 0.07). The frown cannot reach the cause. Read in the code: a person's thinking pause ends the world's
+utterance by the count (offset_ticks 8, 1.3 s) when the surprise has not settled (the cortex still expects letters, so the silence
+surprises it and the settle law does not fire); the listening reflex then releases the floor and the sure forecast of the next letter
+has it whole; the floor is not learned. MEASURED ON A COPY (tools/slow_line_probe.py: twenty of the parent's recent lines typed
+one-handed into the copy after night 281, the words over each counted, seed 0): offset_ticks 8: 2.70 per line, 25 percent clean (the
+served day: 2.78, 27 percent; the probe is faithful); offset_ticks 30: 1.70 per line, 30 percent clean. Excluding the first line,
+typed into the copy's own chatter with no wait for its quiet (10-11 words in both, the probe's artifact): 2.26 to 1.26, a 44 percent
+fall. By kind: the conversation lines (the register the demo's typist will use) are clean or near it at thirty ("what is sour?" 2 to
+0, "one more. what is hard?" 5 to 0, "you are still up. the night is near" 8 to 1, "it is late. the moon is up" 3 to 1); what remains
+is on the story lines ("mom said some mushrooms are bad." 5 and 5, "lily wanted to touch it anyway." 3 and 4), where the settle law
+fires in the pause because the story's letters surprise the cortex more than its silence does. THE CHANGE: offset_ticks 8 to 30 at
+the next save's reload, one disclosed constant, effective only while the cortex still expects more; the finished line still ends by
+the settle law. Not changed: offset_settle 0.5 (a deeper settle would hold the story lines too; one constant at a time). The count
+on the day's slow lines is the measure; the story lines grow familiar with the reading.
