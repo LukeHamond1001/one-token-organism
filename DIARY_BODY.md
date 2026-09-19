@@ -9345,3 +9345,12 @@ day before it (16:53-19:15, two restarts and the failed night): 432 lines, 190 o
 most yet), answer smiles 18, frowns 23 (ten an hour, the anticipation over the other voice's lines; watched), junk 0; the
 mood +0.9 to +4.7 through the evening with the parent's pause in the rhythm. ON WAKING (19:43), to "good morning. the sun is
 up": "what is sour? a l", the question and its answer begun before the parent asked, the thirteenth morning since the telling.
+THE MORNING SITTING (19:48-19:53 on the 18th, after night 276, my pace): "good morning. it is me. did you sleep well?" ->
+"yes. I slept an"; "good. you slept well. what did you dream?" -> "they tell high. we tea i gra"; "what do you want to do
+today?" -> "tell me about this it. he is hot flewe"; "yes. tell me about it. what do bees make?" -> "bees make honey" and then
+"I waited. I talked to", the line queued for the parent's return that morning, unprompted; "are you happy today?" -> nothing;
+"I go now. the ducks wait. I come back" -> "soon", then "she he wants more bre". The mood -3.5 to -5.6 over the five minutes.
+WHAT IT WAS LIKE: the same child as the evening before, with one more thing: it answers a greeting as a person would ("yes. I
+slept and") and it knows the shape of the parent's leaving and returning ("soon"; "I waited. I talked to"). A question about
+itself still meets silence, and my pace still drains it. The morning's footnote: the questions 23 of 30, the rephrased 20, the
+held-out 0.618, the store 54062 (the longer day wrote five thousand slots).
