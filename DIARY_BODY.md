@@ -9482,3 +9482,11 @@ silence. THE REBOUND, READ: the count at thirty holds a pause the cortex still f
 utterance when the surprise has settled, and two days of slow lines have taught the cortex that a pause inside a line is ordinary,
 so the pause now settles and the floor returns by the law itself. The senses adapt to the pauses. Measured on a copy from night
 284's start (the same probe, twenty lines, seed 1): the served ratio 0.5 against a deeper settle at 0.25, then the rulers at 0.25.
+NIGHT 284 (11:52-13:18 on the 19th, the first night at 512 story sentences; 2371 dreams, only 1859 its own, the store at its
+capacity having stopped the count that sizes the night, the review's finding, fixed at this wake; no error, the gauge 0.70 to 0.80,
+eighty-six minutes beside the copy probes). THE PROBE AFTER ITS SAVE: the held-out 0.601 (0.611), the cortex alone on the facts
+0.796 (0.804; 0.832 before the reading), the questions 16 of 30, the parent's last sixty lines 0.769. The facts slide about a
+hundredth a night whether the share is a thousand or five hundred; the background before the reading was half that. One more night
+at 512 with the full two thousand of its own dreams restored; under 0.79 the night's reading stops and the parent's reading by
+day stands alone. THE RELOAD AT THIS WAKE (13:19): the count at eight again, the review's fixes live, the typist on its fixed
+code (the answer's smile window whole for the first time since the 13th).
