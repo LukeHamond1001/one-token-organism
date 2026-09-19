@@ -35,3 +35,11 @@ watch item).
    critic learns a slow partner and the mood holds under someone at the keyboard. **The register** is the earlier parents' (he,
    she, they and them; "shall we", "does he", "you said"; questions about the world between the two of them), read from their
    typed lines in the page log, never from the held-out file.
+
+10. **The day is 24000 ticks now (2026-09-18, about 65 minutes of wall clock at 0.15 s a tick):** the evening rows go in at the
+    hour, not at forty minutes; the typist consumes five to six lines a minute, so the queue takes eight rows every five minutes.
+
+11. **Manners are taught by the face, never written** (2026-09-18, the user's word): when the child talks over a line, the parent
+    frowns, a light and brief one, and the gate learns from that reward like everything else. The frown comes at every
+    interruption now (FROWN_GAP 60 ticks, from 240): a parent disapproves each time, and the count of interruptions over the days
+    is the measure of the manners learned.

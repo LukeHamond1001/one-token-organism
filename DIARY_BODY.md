@@ -9371,3 +9371,6 @@ given back); "I go now. I come back soon" -> "shall an apple is slow th". The sa
 slices of the day and of my own lines. THE USER'S WORD (21:27): pretrain it, since its only sense is text and language is the
 reality it lives in; the plan given and begun: the night's own lesson over a corpus of children's stories on a copy, the store
 rebuilt after, the judgment by sitting and the held-out; a smoke test on this machine first, the full run on a pod.
+THE USER'S WORD ON MANNERS (21:48): taught by the face, biology. The parent's frown at an interruption comes at every
+interruption from the next relaunch (FROWN_GAP 240 to 60 ticks), a parent disapproving each time; the count of interruptions
+over the days is the measure. Nothing written about content.
