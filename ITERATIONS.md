@@ -884,3 +884,8 @@ Three readings (the waking path, the night with the store, the typist), the conf
  the non-finite night's reload restores the previous morning, not the evening (a dusk snapshot is the fix); the count-ended line's
  end mark falls outside the wake lesson's window eleven times in twelve; the queue's who-labels and the sleep clear are not atomic
  under the HTTP handlers; a NaN strength would empty the store at the next fade; the corpus lowercases "I".
+ THE EAR'S TRACE MEASURED (13:05): the same ten lines, seed 1, the count at eight: no trace 3.10 words over per line (40 percent
+ clean); the ring at 0.8, 2.30 (40 percent); the ring at 0.9, 0.90 (60 percent), with the rulers at 0.9 unchanged (the held-out
+ 0.611, the facts 0.804, the questions 16 and 18 of 30). A keystroke gap at two symbols a second is two or three ticks: at 0.8 the
+ ring is half gone between keystrokes, at 0.9 it holds. Adopted at 0.9 for the reload at night 285's save; the day's count of
+ words over slow lines is the measure, the morning's answer latency the cost to watch.
