@@ -787,3 +787,18 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
 32. Joint attention and social reward (oxytocin).
 33. Real sensor noise.
 34. Development: plasticity that opens and closes on a schedule; neurogenesis as the store's growth.
+
+45. A PERSON'S HAND (2026-09-18 23:16, the user's word: the demo's typist will type with one hand, the other on the face, and the
+child must not interrupt a slow typer and must generalize to one). Read in the code before changing anything: the typist has always
+posted whole lines and the page typed them at one symbol a tick (0.15 s); my own sittings post whole lines too. No line in the body's
+life was ever typed slowly. The learned gate's ear feature (a world symbol this tick) and the offset (eight ticks of quiet, or the
+surprise settling) both read a slow typer's pause inside a line as the utterance's end, and the sure proposal then has the floor whole:
+a one-handed person would be interrupted at every pause, and nothing learned so far transfers, since the gate's other feature, the
+cortex's state, has never held a pause inside a line. The change is in the environment and the parent's method, no constant of the
+body touched: a share of the parent's lines (SLOW_SHARE 0.33) go in symbol by symbol at SLOW_CPS 2.0 a second (each gap 0.6-1.4 of
+the mean) with a thinking pause of one to four seconds at SLOW_PAUSE 0.1 per symbol; the turn stays open across the pauses, so a word
+said into one is said over the parent and meets the frown (FROWN_GAP 60 from the same relaunch). The rows carry "slow": true. The
+measure: the talked-over count on slow lines against fast lines per day, and the sitting at a one-handed pace (tools/teach_live.py
+still posts whole lines; a --slow mode for the chair is next). From day 336 (the chain relaunched 23:17, during night 278). Not done:
+the offset's constant. A slowly typed line is split into utterances at each pause of 1.3 s or a settled surprise, and the store keys
+the pieces; watched first, changed only if the recall of slowly typed facts fails.

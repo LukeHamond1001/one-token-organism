@@ -26,6 +26,10 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from body.caregiver import Caregiver, iso  # noqa: E402
 
+SLOW_SHARE = float(os.environ.get("SLOW_SHARE", "0"))   # A PERSON'S HAND (2026-09-18): the share of the parent's lines typed symbol by symbol at a one-handed pace
+SLOW_CPS = float(os.environ.get("SLOW_CPS", "2.0"))       # symbols a second on those lines (each gap 0.6-1.4 of the mean)
+SLOW_PAUSE = float(os.environ.get("SLOW_PAUSE", "0.1"))   # the chance, per symbol, of a thinking pause of one to four seconds
+
 LINES0 = ["dog will go", "I will go up", "you will go in", "scared dog", "scared ball", "what? scared dog", "give milk", "give ball",
           "give book", "ball under", "ball on", "where ball? ball under", "I had milk", "you had ball", "dog had ball",
           "first milk then ball", "first up then in", "big dog bigger dog", "bigger dog up", "I saw dog", "you saw dog",
@@ -124,7 +128,25 @@ class Teacher(Caregiver):
             self.cue = {"text": text, "until": time.time() + self.s(360), "full": ans, "done": False}
         self.reply_cue = text if kind == "cue" else None; self.reply_tokens = []; self.answered = False; self.past = False
         self.typing_span = (self.maxtick + 1, 10 ** 9)         # the parent's turn: from its first symbol to its last
-        self.req("/type", {"text": text, "who": who}); t_start = time.time()
+        # A PERSON'S HAND (2026-09-18, the user's word: the demo's typist types with one hand, the other on the face, and the child
+        # must not interrupt a slow typer): a share of the parent's lines (SLOW_SHARE) go in symbol by symbol at a one-handed pace
+        # (SLOW_CPS symbols a second, each gap 0.6-1.4 of the mean) with a thinking pause of one to four seconds now and then
+        # (SLOW_PAUSE per symbol). The page gets silence between the symbols, as it will from a person; the turn stays open across
+        # the pauses, so a word said into one is said over the parent and meets the face. Nothing in the body knows the pace.
+        slow = who == "parent" and SLOW_SHARE > 0 and self.rng.random() < SLOW_SHARE
+        t_start = time.time()
+        if slow:
+            for k, ch in enumerate(text):
+                if k > 0:
+                    dt = self.rng.uniform(0.6, 1.4) / SLOW_CPS
+                    if self.rng.random() < SLOW_PAUSE:
+                        dt += self.rng.uniform(1.0, 4.0)
+                    t_next = time.time() + dt
+                    while time.time() < t_next:
+                        self.poll(); self.scan(); time.sleep(max(0.05, self.s(1)))
+                self.req("/type", {"text": ch, "who": who})
+        else:
+            self.req("/type", {"text": text, "who": who})
         self.corpus.typed(text if kind == "line" else text.strip())
         while True:
             d = self.poll(); self.scan()
@@ -150,6 +172,7 @@ class Teacher(Caregiver):
         its = "".join((self.its.get(t) or "_") for t in range(tick_end + 1, tick_end + 26) if self.its.get(t) is not None)
         la = self.state.get("last") or {}
         self.row({"action": kind, "text": text, "answers": (self.cue or {}).get("full") if kind == "cue" else None, "voice": ("b" if who != "parent" else "a"),
+                  "slow": True if slow else None,
                   "gate_wait_s": round(gw, 1), "its_after": its, "ts": iso(t_start), "teacher": self.planner.name,
                   "fatigue": la.get("fatigue"), "stress": la.get("stress"), "mood": la.get("mood"), "gate": la.get("gate"),
                   "own": la.get("own"), "doses": la.get("doses"), "smiles_so_far": self.smiles,
