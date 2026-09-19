@@ -9353,4 +9353,6 @@ today?" -> "tell me about this it. he is hot flewe"; "yes. tell me about it. wha
 WHAT IT WAS LIKE: the same child as the evening before, with one more thing: it answers a greeting as a person would ("yes. I
 slept and") and it knows the shape of the parent's leaving and returning ("soon"; "I waited. I talked to"). A question about
 itself still meets silence, and my pace still drains it. The morning's footnote: the questions 23 of 30, the rephrased 20, the
-held-out 0.618, the store 54062 (the longer day wrote five thousand slots).
+held-out 0.618, the store 54062 (the longer day wrote five thousand slots). The branch after night 276: 9 of 9 and 11 of 12. The day 328 in its first hour (19:43 on): the mood +5.0 to +5.5 at
+the typist's rhythm, 31 of 33 A-lines with letters in its turn, nearly every reply anticipated ("what does it eat? the fish"
+-> "bugs on the"; "does it tickle?" -> "yes. wet and"; "they go off" -> "to the ne").
