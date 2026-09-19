@@ -9393,3 +9393,8 @@ lines, one word said over them), that answers what it is asked in the form it wa
 gives back your own lines when it has no answer, and that fills every silence, looping when left. The fresh fact told as a statement
 did not win over the older question-and-answer pair. The run-on and the loop are the babble to shape; the talk-over at one hand is
 smaller than feared on the first day of it. The pear is asked again tomorrow morning, untaught by the typist.
+DAY 336 (00:01-01:31 on the 19th, ninety minutes of wall for its twenty-four thousand ticks, the mixed night on a copy sharing
+the machine; the first day of the frown at every interruption and of a third of the parent's lines typed one-handed): 125 parent
+lines, 38 of them slow. Words said over the parent's typing: 1.11 per slow line, 0.15 per fast line, seven to one; 48 frowns
+(24 over slow lines, 13 over fast, 11 elsewhere). This is the first number of item 45, the day before any shaping could show.
+Night 279 began at 01:31; the typist relaunched at its row with each line's row now carrying the count of words said over it.
