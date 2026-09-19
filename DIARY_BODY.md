@@ -9362,3 +9362,12 @@ rhythm with the parent's pause. Nearly every reply anticipated, the transfers ho
 for the cow and the ant alike). Night 277 began at 20:51. The fourteen frowns read in their contexts: the child finishing the parent's own line as it is typed ("what do dogs" said
 "dogs"; "in the shade" said "shade"; "the ducks are" said "ar"), the sure forecast opening the gate mid-line. A child
 completing a sentence; the light frown kept, since it is what teaches the turn, and the count watched.
+NIGHT 277 (20:51-21:22 on the 18th, the 267th row, 2048 dreams, no error, the gauge 0.808 to 0.888, 2296 slots faded). THE
+MORNING (21:23): "what is sour?" -> "a lemon is sour", the fourteenth morning; "what do we eat in the morning?" -> "we eat bread
+and we dr"; "and he? does he want bread?" -> "he does". THE SITTING (21:33, my pace, the mood 4.0 to -1.4): "good morning. it
+is me. how are you?" -> " wet. I laughed s can he has twigger. cold"; "tell me about the ducks" -> " come afternoon we give it
+ars for me? I wait f"; "what do you want to do today?" -> "yes. tell me about it. what do" (my own line of the morning before,
+given back); "I go now. I come back soon" -> "shall an apple is slow th". The same child; the open questions still met with
+slices of the day and of my own lines. THE USER'S WORD (21:27): pretrain it, since its only sense is text and language is the
+reality it lives in; the plan given and begun: the night's own lesson over a corpus of children's stories on a copy, the store
+rebuilt after, the judgment by sitting and the held-out; a smoke test on this machine first, the full run on a pod.
