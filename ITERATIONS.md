@@ -633,6 +633,18 @@ fact sentences (probe_lm.py --lmloss), the questions by the pause (qa_by_gap.py,
    mid-day reload before the next attempt, since a failing night would reset the pressure every half day and the child would
    never sleep.
 
+44. THE CORTEX OVERHEARS A CORPUS (opened 2026-09-18, 21:30, the user's word: "we have to pretrain this thing; language comes
+   from reality and it lives in a language world"). The body hears 1,300 words a day from its parents; a child overhears
+   millions aimed at no one. Its only sense is text, so a corpus is the world it can overhear. The mechanism is the night's
+   own: the cortex forecasting the next symbol over sequences run in lockstep, the store off, Adam at the night's rate; the
+   material a corpus of children's stories in the body's register (lower case, no commas or quotes, sentences of 8 to 63
+   symbols), never the held-out lines. Nothing else of the body changes; the store's keys are the embeddings' and are rebuilt
+   after (tools/rekey_store.py); the gate and the actor relearn over days. tools/pretrain_cortex.py; the smoke test a million
+   symbols on this machine, the full run on a pod. RULER: the held-out (the cortex alone on lines no parent typed) before and
+   after, the fact sentences by the cortex, the questions on the served rulers after the rebuild, and the sitting. FALSIFIER:
+   the held-out not up by three hundredths after ten million symbols, or the facts by the cortex down by five, or the sitting
+   worse in words.
+
 41. The gate listens (opened 2026-09-17, 16:05, the user's word: "less chattery; wait until nobody talks to it for a while; not
    a random letter generator"). Rulers: the talk-overs per quarter of a copy day (tools/day_on_copy.py --talkover 1: the
    child's own symbols while a line is being typed against those in its turn), the junk rate of its own symbols, the questions
