@@ -906,3 +906,9 @@ Three readings (the waking path, the night with the store, the typist), the conf
  before it answers, and does not want to be talked over. Adopted for night 286's save at 0.9; day 344's count, the answer's delay
  and the answer's share are the three numbers; the gate's own learning (the smile at four for the late answers, the frown for the
  words in long pauses) moves them from there, and 0.85 is the constant to try if the delay stays past fifteen ticks.
+ THE STORE'S WRITE MADE COPY-FREE (19:00, the review's fourth finding, done the same day): the tools' FastStore is the body's own
+ (body/model.py), its rows in buffers allocated in blocks and exposed as views, the eviction a single weakest slot with the last
+ moved into its place and the links following through last_remap; the buffers rebuilt after a load or a compaction. Measured on
+ a copy with the capacity set under the store's count so every write evicts: 285 ms a world-symbol tick against 327 with the copy
+ of every slot, the served body sharing the machine. The tests 73 of 73. Into the body at night 288's save, with the store at
+ 65024 of its 65536.
