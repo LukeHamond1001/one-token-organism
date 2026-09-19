@@ -9509,3 +9509,9 @@ under 0.79, the night's reading stops at night 286's save (dream_corpus_n 0); th
 plainly: five reading nights lifted the held-out a hundredth and cost the cortex's own hold on the old facts five hundredths,
 while the store still answers them (thirteen to sixteen of thirty); the facts the demo needs are the morning's, taught daily, and
 they hold. Two nights without reading tell whether the facts recover; then 256 is the question.
+DAY 343 (15:12-16:25 on the 19th, seventy-three minutes; THE FIRST DAY WITH THE EAR'S TRACE, 0.9, no release): 110 parent lines,
+36 slow. Words said over the typing: 0.69 per slow line (50 percent clean; the conversation lines 0.57, 57 percent clean; the story
+lines 0.92), from 3.36 the day before; the fast lines 0.05; 35 frowns, from 65. THE COST: the answer's smile on 22 of 44 questions
+(78 percent the day before), the answer a median 4.25 s after the line's end (1.0), the child's first symbol at 13 ticks (6), a
+third of the lines with nothing said in their window (an eighth); 391 known words into the silence past its turn. The ear rang on
+after a finished line. Night 286 began at 16:25; its save loads the release by the settle law.
