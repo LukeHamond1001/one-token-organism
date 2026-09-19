@@ -651,7 +651,7 @@ class Life:
                 self._follow = None
         return read, conf, win_
 
-    def _offset(self):
+    def _offset(self, settled=True):
         """THE OFFSET (§2): the world's quiet after its utterance, once per pause. The last world position is
         marked ended, so the waking lesson's target there is the turn-end and not the next line's first letter;
         a dream ends where the cortex, so taught, expects the quiet. Nothing enters the stream, the bags and the
@@ -668,9 +668,12 @@ class Life:
         self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain
         self.note_offset()                                             # and the slow context's utterance closes with it
         self._follow = None                                            # and the recall's episode is let go
-        self._ear_trace = 0.0                                          # THE EAR STOPS RINGING AT THE UTTERANCE'S END (2026-09-19 15:50): the trace held the gate shut
+        if settled:
+            self._ear_trace = 0.0                                      # THE EAR STOPS RINGING AT THE UTTERANCE'S END (2026-09-19 15:50): the trace held the gate shut
                                                                        # after a finished line too (the answers at 2.5 s and half as many, day 343); the listener is
-                                                                       # released when the utterance is perceived to have ended, and held through the pauses inside it
+                                                                       # released when the utterance is perceived to have ended BY THE SETTLE LAW (the cortex expected
+                                                                       # the quiet), and held when the count alone ended it (a long pause the cortex did not expect:
+                                                                       # a person thinking; the copy at 16:10: released on the count too, three words over a line)
         if len(self._utt_cur) >= 2:
             # THE REWARD'S TAG ON THE LINE BEFORE (reward_gain; 2026-09-15): the smiles' dopamine felt since the last utterance was kept
             # raises that utterance's strength, so the night replays the rewarded exchanges more (dopamine tags what preceded it)
@@ -848,7 +851,7 @@ class Life:
         # two turn-end memories after six days)
         off = int(self.cfg.get("offset_ticks", 0)); settle_form = str(self.cfg.get("offset_form", "count")) == "settle"
         if u == self.sil and off > 0 and not self._offset_done and not settle_form and self.ticks - self._last_world >= off:
-            self._offset(); self._offset_done = True
+            self._offset(settled=False); self._offset_done = True
         first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
         if u != self.sil:
             self._last_world = self.ticks; self._offset_done = False
@@ -907,7 +910,7 @@ class Life:
             settled_ = self._surp_fast <= float(self.cfg.get("offset_settle", 0.5)) * max(1e-6, self._surp_slow)
             if u == self.sil and not self._offset_done and self.ticks - self._last_world >= 1 and \
                     (settled_ or self.ticks - self._last_world >= off):         # the law, or the senses' own adaptation as the floor
-                self._offset(); self._offset_done = True                     # a newborn's flat surprise still ends events by the count
+                self._offset(settled=bool(settled_)); self._offset_done = True   # a newborn's flat surprise still ends events by the count
         if u != self.sil and (float(self.cfg.get("explore_gain", 0.0)) > 0 or float(self.cfg.get("explore_choice", 0.0)) > 0):   # arousal follows novelty: a running surprise at the world's symbols
             a_ = 1.0 / max(1.0, float(self.cfg.get("explore_tau", 64)))
             self._surp_run = (1.0 - a_) * getattr(self, "_surp_run", 0.0) + a_ * float(surp1)
