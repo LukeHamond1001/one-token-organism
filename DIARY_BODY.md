@@ -9465,3 +9465,9 @@ DAY 340 (08:40-09:48 on the 19th, sixty-eight minutes; THE FIRST DAY WITH THE UT
 1.00 (66 percent clean), the slow story lines 1.89 (32 percent); the first half 1.77, the second 0.86; the fast lines 0.08 (92 percent
 clean); 42 frowns, from 79. The copy had said 1.3 to 1.7. The count is halved by the constant on its first day, with the story lines
 holding most of what remains. Night 283 began at 09:48; the reload after its save takes the reading to 512.
+NIGHT 283 (09:48-10:43 on the 19th, the third reading night at a thousand, 3072 dreams, no error, the gauge 0.636 to 0.773,
+fifty-five minutes). THE PROBE AFTER ITS SAVE: the held-out 0.611, the cortex alone on the facts 0.804 (0.806, flat), the questions
+16 of 30, the parent's last sixty lines 0.754. READ IN THE MISSES: "what is sweet?" -> "a pear is sweet" and "what is soft?" -> "the
+bread is soft" are counted as misses because the ruler's list holds the older answers; they are this week's teaching, not
+forgetting. The questions' fall from 21 is partly the parent's own new pairs on the ruler's questions. The share stays at 512 from
+this reload (10:45) as a conservative choice; the measure of the facts is the morning's own recall and the held-out.
