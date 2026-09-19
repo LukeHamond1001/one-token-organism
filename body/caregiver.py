@@ -10,6 +10,7 @@ import json
 import os
 TALKOVER_FROWN = int(os.environ.get("TALKOVER_FROWN", "0"))   # the served typist's face when talked over: off until a day boundary after the fast seeds read (the user's word given 2026-09-06)
 FROWN_GAP = int(os.environ.get("FROWN_GAP", "60"))
+TURN_ONLY_SMILE = int(os.environ.get("TURN_ONLY_SMILE", "0"))   # THE SMILE IN ITS TURN ONLY (2026-09-19): a known word said into the silence past the child's turn earns nothing
 HABIT_TICKS = int(os.environ.get("HABIT_TICKS", "0"))       # THE HABITUATION THE CHILD CAN SEE (2026-09-12): 0 = the day-count rule (0.95^(n-5): the fiftieth "dog" gets
                                                             # one smile in ten, a count the body cannot see, so its critic never learns it and its stress stayed at 20 of 30
                                                             # all day on withheld smiles); N > 0 = a word smiled at within the last N ticks earns nothing, and smiles again after            # the least ticks between two talk-over frowns (2026-09-12: 60 gave seventy frowns a day under the chunk and a body at stress 20 all day, its gate flattened threefold; a parent frowns, then gives it a minute: 240)
@@ -317,6 +318,13 @@ class Caregiver:
                 self.smile(tok, ctx, "answer: " + ex["line"]); return
         if low in KNOWN2:
             age = time.time() - wall
+            ts_, te_ = self.typing_span
+            if TURN_ONLY_SMILE and self.parent and te_ < 10 ** 8 and b > te_ + 2 * int(round(self.listen / max(1e-6, self.tick))):
+                # THE SMILE IN ITS TURN ONLY (TURN_ONLY_SMILE, 2026-09-19, the user's word on the babble: alone at the wake it recited its
+                # evening in a loop until spoken to, and the faint smile at any known word had been paying that chatter): a known word
+                # said into the silence past the child's turn after a line (twice the listen window) earns no smile and no expansion,
+                # a parent not answering chatter. The turn after a line is rewarded as before. Nothing in the body changes.
+                self.row({"action": "missed", "on": tok, "why": "in silence", "context": ctx}); return
             if self.last_word == low and time.time() - self.last_smile < self.s(48):
                 self.row({"action": "withheld", "on": tok, "why": "same word twice", "context": ctx})
             elif age <= self.s(13) and time.time() - self.last_smile >= self.s(5):   # a smile may follow as soon as the face has returned (the hold is 5 ticks; 8 withheld 50-90 a day)
