@@ -9681,3 +9681,9 @@ greeting.
 THE SECOND CANDIDATE INTO THE BODY (13:58, for night 298's save; item 48): the quiet foreseen at 0.5, the turn's readiness, the
 ear ringing on, the sure proposal off, the drive at 1200, the yield 20. On the copy: 0.10 words over a one-handed line and 95
 percent of lines clean, 2.3 words in a forty-second silence, the known facts answered whole in the demo's own sequence.
+DAY 355 (13:01-14:19 on the 20th, seventy-eight minutes, thirty-eight of them silent, the queue run dry under my hand while the
+copy ran; the yield's first day): 91 parent lines, 23 slow. Words said over the typing: 0.43 per slow line (70 percent clean; the
+conversation lines 0.56, 62 percent clean; the story lines 0.14), the fast lines 0.01; 13 frowns, from 63. The answers: the smile
+on 33 of 44 questions, 75 percent, a median 2.3 s after the line's end, the copy runs beside the body all day and the tick slowed
+under them. The babble into the silence 19.0 known words a silent minute, the long silences the drive's own. Night 298 began at
+14:19; the second candidate goes in at its save.
