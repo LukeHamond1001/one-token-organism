@@ -972,3 +972,12 @@ for the answers' place in the slot.
  statement 1.01. An answer's forecast stands above a silence's by half and above a pause's by a quarter: a threshold near 1.0 to
  1.1 has the floor whole through most of an answer's slot, on about a tenth of a silence's ticks and a third of a pause's. Measured
  next on the same body and the same twenty lines: sure 1.0 and 1.1 with tau 1200 under the yield.
+ THE THRESHOLD IS NOT CLEAN (12:35, the same body and lines): sure 1.0 with tau 1200 under the yield, the silence 6.5 words, the
+ one-handed lines 0.45 over and 80 percent clean, no turn inside the slot on 5 of 20; sure 1.1, the silence 5.5. The pauses' norms
+ overlap the slot's, and the answer's own loop keeps its forecast sure past the slot. THE TURN'S READINESS (gate_turn, 12:33;
+ test 76): the readiness to respond follows the other's utterance being perceived as complete, which the body already computes
+ (the settle law: the surprise's fast average under half its slow one, the cortex having expected the quiet); under the babble
+ drive the floor is whole for the slot's length (gate_yield_after) after such an end, a pause the count alone ended (a person
+ thinking mid-line) opens no turn, and past the slot the drive's ramp rules. The sure proposal off (0). Reads no content; the
+ same constant as the yield's slot. The risk: a line whose end the count perceives gets no turn's floor and the learned gate alone;
+ the share of settled ends is the measure running alongside (the diag now reads each line's end).
