@@ -933,3 +933,11 @@ store of about fifty thousand, reverted after night 249 to let the store refill 
 would be the forgetting) does not move with the mean. It returns at night 294's save; the capacity's eviction remains the ceiling.
 The measure: the store's count and the fade per night from night 295; the morning's recall of the taught facts, which are the
 strongest slots and were never the ones the floor took.
+ THE EAR'S GAIN (2026-09-20 06:20). The gate's weights read across five saves: the weight on the ear -48.78 to -48.73, on its own
+ act +13.86, while the weights on the cortex's state grew (their mean size 8.84 to 8.96) from the answers' smiles; the frown at two
+ moved nothing. The ear's trace holds the gate only through that fixed weight, so the input's scale, gate_ear_gain, is the constant
+ to set. Measured on the copy after night 293 (the same ten lines, seed 1, the settle-only release): gain 1, 1.20 words over a line
+ and 50 percent clean, the turn's first symbol at 21 ticks; gain 1.5, 0.80 and 60 percent, 20.5 ticks; gain 2, 0.70 and 40
+ percent, 19.5 ticks. Adopted at 1.5 with the absolute floor at night 294's save. The words that remain come in the long pauses,
+ where the ring has decayed below what the cortex's state pushes; the gate's own learning would have to carry those, and it does
+ not move.
