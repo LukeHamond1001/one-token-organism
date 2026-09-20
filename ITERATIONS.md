@@ -1010,3 +1010,10 @@ for the answers' place in the slot.
  answer said over again until the slot ends ("a lemon is sour a lemon is sour a lemo"): the gate's own-act momentum, which the
  yield holds only past the slot. The slot at 24 ticks (four seconds) measured next, the answers arriving at one to five ticks
  after a foreseen end and taking fifteen.
+ THE DEMO REHEARSED, SERVED CONSTANTS WITH THE YIELD (13:40, tools/demo_rehearsal.py, the copy after 296, one-handed, sixty ticks
+ of thinking between lines): "what does the fox say?" untaught -> "cluck cluck ... woof wo"; the other voice teaches "the fox says
+ yip"; asked -> "meow the fox says yip woo" (answered); "what is sour?" -> "a lemon is sour"; "who gives us milk?" -> "the" in
+ the slot, "cow one day she" in the silence; "what is sweet?" -> "a pear is s|weet" across the slot's edge; the fox again after
+ three questions -> "woof woof tommy!" (the dog's, the fact heard once against the dog's hundreds). Three of six answered, two
+ words over the lines, twenty stray words in seven silences. The new fact's second recall is the demo's weak point in this body:
+ the once-heard pair loses to its older neighbours of the same form ("what does the X say?"); the candidate's rehearsal follows.
