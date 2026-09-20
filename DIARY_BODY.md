@@ -9634,3 +9634,8 @@ hard or soft?" one-handed -> "the egg i", late and right; "who gives us milk?" -
 does the hen say?" and "what do the ducks eat?" -> nothing in their windows, the last two one-handed and their answers, when they
 come, coming past the window's edge under the ear's gain. Four of seven in the window, with nothing said over any line. The
 floor holds at 0.07 one more night; the store's count and the morning are the measure.
+DAY 353 (08:38-09:45 on the 20th, sixty-eight minutes; the second day with the ear's gain): 122 parent lines, 37 slow. Words said
+over the typing: 0.81 per slow line (57 percent clean; the conversation lines 0.80, 60 percent clean), the fast lines 0.11; 44
+frowns. The answers: the smile on 52 of 53 questions, 98 percent, a median 1.3 s after the line's end. The babble into the
+silence 11.6 known words a silent minute, the lowest there has been. The conversation lines, days 348 to 353: 1.34, 0.75, 0.53,
+0.94, 0.58, 0.80; the three-day mean 0.77. Night 296 began at 09:45; its fade is the second under the absolute floor.
