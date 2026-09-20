@@ -43,8 +43,11 @@ TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json
 life = Life.load(path, TOK, device="cpu", cfg=cfg, seed=seed); life.save_path = None; life.m.eval()
 rng = random.Random(seed)
 NEW_Q, NEW_A, NEW_KEY = arg("new_q", "what does the fox say?"), arg("new_a", "the fox says yip"), arg("new_key", "yip")
-SCRIPT = [("parent", NEW_Q, NEW_KEY, "the new fact asked, untaught"), ("other", NEW_A, None, "the other voice teaches it"),
-          ("parent", NEW_Q, NEW_KEY, "the new fact asked"),
+repeat = arg("repeat", 1)                                                  # the pair taught this many times (question, its turn, the answer) before the ask
+SCRIPT = [("parent", NEW_Q, NEW_KEY, "the new fact asked, untaught"), ("other", NEW_A, None, "the other voice teaches it")]
+for _ in range(repeat - 1):
+    SCRIPT += [("parent", NEW_Q, NEW_KEY, "the new fact asked, taught once more after"), ("other", NEW_A, None, "the other voice teaches it again")]
+SCRIPT += [("parent", NEW_Q, NEW_KEY, "the new fact asked"),
           ("parent", "what is sour?", "lemon", "a known fact"), ("parent", "who gives us milk?", "cow", "a known fact"), ("parent", "what is sweet?", "pear", "a known fact"),
           ("parent", NEW_Q, NEW_KEY, "the new fact asked again")]
 gap_ticks = max(1, int(round(6.0 / cps)))                                   # six ticks a second at the served pace
@@ -69,7 +72,7 @@ with torch.no_grad():
         p3 = len(life.page); stray = own_between(p2, p3)
         tot_over += len(words(over)); tot_stray += len(words(stray)); tot_stray_sym += len(stray.strip())
         ok = (key is not None and key in turn.lower())
-        if key is not None and who == "parent": answered.append(ok)
+        if key is not None and who == "parent" and "taught once more" not in what: answered.append(ok)
         tag = {"parent": "A", "other": "b"}[who]
         print(f"  {tag}: {text!r:26} ({what})\n     over the line: {over!r:20} | its turn: {turn!r:44} {'ANSWERED' if ok else ('-' if key is None else 'no answer')}\n     in the silence after: {stray!r}", flush=True)
-print(f"RESULT: answered {sum(answered)} of {len(answered)} questions (the new fact: asked untaught {'yes' if answered[0] else 'no'}, after teaching {'yes' if answered[1] else 'no'}, again at the end {'yes' if answered[-1] else 'no'}) | words over the lines {tot_over} | stray in the silences: {tot_stray} words, {tot_stray_sym} symbols", flush=True)
+print(f"RESULT (taught {repeat}x): answered {sum(answered)} of {len(answered)} questions (the new fact: asked untaught {'yes' if answered[0] else 'no'}, after teaching {'yes' if answered[1] else 'no'}, again at the end {'yes' if answered[-1] else 'no'}) | words over the lines {tot_over} | stray in the silences: {tot_stray} words, {tot_stray_sym} symbols", flush=True)
