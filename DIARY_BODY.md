@@ -9538,3 +9538,6 @@ lines 0.73), the fast lines 0.11; 38 frowns. THE ANSWERS: the smile on 47 of 51 
 a median 1.2 s after the line's end. The babble into the silence past its turn 15.8 known words a silent minute, unchanged. The
 count of days 337 to 345: 1.96, 2.07, 2.78, 1.35, 1.95, 3.36, 0.69, 0.91, 0.70. Night 288 began at 19:55; its save loads the
 copy-free store, the store at 65024 of its 65536.
+NIGHT 288 (19:55-20:22 on the 19th, 2048 dreams, no error, the gauge 0.788 to 0.856, twenty-seven minutes). THE RELOAD AT ITS
+SAVE (20:22, seven seconds from the save row to the server back): the copy-free store is the body's own from here, the store at
+64964 of its 65536.
