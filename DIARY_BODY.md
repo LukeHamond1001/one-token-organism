@@ -9529,3 +9529,6 @@ the first without reading among its dreams.
 NIGHT 287 (18:16-18:46 on the 19th, the first night without reading among its dreams: 2048 dreams, no error, the gauge 0.781 to
 0.856, thirty minutes). The store at 64972 of its 65536; the capacity's cost at every write comes tomorrow unless the store's
 write is made copy-free first.
+THE PROBE AFTER NIGHT 287 (the first without reading): the held-out 0.598 (0.610), the cortex alone on the facts 0.777 (0.777,
+flat for the first night since the reading began), the questions 15 of 30 (12). One night; the held-out's slip is within a
+night's noise, the facts' halt is the thing watched.
