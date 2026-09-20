@@ -9687,3 +9687,6 @@ conversation lines 0.56, 62 percent clean; the story lines 0.14), the fast lines
 on 33 of 44 questions, 75 percent, a median 2.3 s after the line's end, the copy runs beside the body all day and the tick slowed
 under them. The babble into the silence 19.0 known words a silent minute, the long silences the drive's own. Night 298 began at
 14:19; the second candidate goes in at its save.
+NIGHT 298 (14:19-15:03 on the 20th, forty-four minutes, the copy quiet beside it). THE SECOND CANDIDATE INTO THE BODY at its save:
+the reload at 15:03:40 with the quiet foreseen, the turn's readiness, the ear ringing on, the sure proposal off, the drive at
+1200 and the yield 20. Day 356 is its first day.
