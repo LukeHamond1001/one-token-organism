@@ -167,6 +167,7 @@ PHYSIOLOGY = dict(
     gate_ear_gain=1.0,    # THE EAR'S GAIN (2026-09-20): the ear's world input to the learned gate, scaled; the gate's weight on it is built over weeks and moves little in days
     gate_yield=0.0,       # THE YIELD (2026-09-20): past its slot after the world's line (gate_yield_after ticks), the learned gate is held by this much, the hold fading over gate_quiet_tau as the babble drive returns; 0 = off
     gate_yield_after=40,  # the slot for its turn after the world's last symbol, in ticks
+    gate_turn=0,          # THE TURN'S READINESS (2026-09-20): under the babble drive the floor is whole for the slot (gate_yield_after ticks) after a world utterance perceived to have ended by the settle law; a pause the count ended opens no turn; 0 = off
     gate_opt="sgd",
     gate_adam_lr=1e-3,
     # --- the mouth's decisiveness: the readout's sharpness, and exploration ---
@@ -671,6 +672,7 @@ class Life:
         self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain
         self.note_offset()                                             # and the slow context's utterance closes with it
         self._follow = None                                            # and the recall's episode is let go
+        self._turn_open = bool(settled)                                # THE TURN'S READINESS (gate_turn): a settled end opens the slot, a count's end does not
         if settled:
             self._ear_trace = 0.0                                      # THE EAR STOPS RINGING AT THE UTTERANCE'S END (2026-09-19 15:50): the trace held the gate shut
                                                                        # after a finished line too (the answers at 2.5 s and half as many, day 343); the listener is
@@ -857,7 +859,7 @@ class Life:
             self._offset(settled=False); self._offset_done = True
         first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
         if u != self.sil:
-            self._last_world = self.ticks; self._offset_done = False
+            self._last_world = self.ticks; self._offset_done = False; self._turn_open = False
         # the face: a change is felt; a held face is silence; easing off is not an event
         lvl = max(-6, min(6, int(self.face_now)))
         felt = 0
@@ -1225,6 +1227,14 @@ class Life:
                 # rebuilds toward gate_floor over gate_quiet_tau ticks of the world's silence. The learned gate is untouched: a sure proposal
                 # (an answer) opens it whatever the floor, as the trace of 2026-09-17 showed (p_act 0.99 a tick after the line, the floor 0).
                 ramp = min(1.0, max(0.0, float(self.ticks - self._last_world)) / float(qt_))
+                if int(self.cfg.get("gate_turn", 0)) and getattr(self, "_turn_open", False) and self._offset_done and \
+                        self.ticks - self._last_world <= int(self.cfg.get("gate_yield_after", 40)):
+                    # THE TURN'S READINESS (gate_turn; 2026-09-20, item 48): the sure proposal opened the floor on nearly every forecast (the
+                    # norm passes 0.45 and 0.9 alike), and its tries were the words in a one-handed line's pauses and the babble in a thinking
+                    # silence, as well as what started a turn. The readiness to respond follows the other's utterance being perceived as
+                    # complete (the settle law: the cortex expected the quiet), for the slot's length; a pause the count ended (a person
+                    # thinking mid-line) opens no turn, and past the slot the drive's ramp rules the silence. Reads no content.
+                    ramp = 1.0
                 sure_ = float(self.cfg.get("gate_quiet_sure", 0.0))
                 if sure_ > 0.0:
                     # THE SURE PROPOSAL (gate_quiet_sure; 2026-09-17, 21:20, read in the chair): the drive held the floor at zero for the first
@@ -2008,7 +2018,7 @@ class Life:
                 self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None; self._follow = None
             self._prev_slot = -1; self._last_write = None; self._start_armed = False; self._start_pending = False; self._seam_pending = False
-            self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._ear_trace = 0.0; self._writes_today = 0
+            self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._ear_trace = 0.0; self._writes_today = 0; self._turn_open = False
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
             if getattr(self.m, "stri_wm", 0):
