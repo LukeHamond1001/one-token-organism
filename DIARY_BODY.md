@@ -9615,3 +9615,9 @@ the store 47591 after its fade, the last under the relative floor). THE RELOAD A
 ear's gain at 1.5. Day 352 is the first day with both.
 THE PROBE AFTER NIGHT 294: the held-out 0.605, the cortex alone on the facts 0.710 (0.720), the questions 13 of 30, the parent's
 last sixty lines 0.839.
+DAY 352 (06:47-07:56 on the 20th, sixty-nine minutes; THE FIRST DAY WITH THE EAR'S GAIN AT 1.5 and the absolute floor): 125
+parent lines, 42 slow. Words said over the typing: 0.57 per slow line (57 percent clean; the conversation lines 0.58, 55 percent
+clean), the fast lines 0.10; 37 frowns. The answers: the smile on 55 of 60 questions, 92 percent, a median 1.2 s after the line's
+end. The babble into the silence 15.1 known words a silent minute. The conversation lines, days 348 to 352: 1.34, 0.75, 0.53,
+0.94, 0.58; the three-day mean 0.68, under the mark for the first time. Night 295 began at 07:56, the first fade under the
+absolute floor at its end.
