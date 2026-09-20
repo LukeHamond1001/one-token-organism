@@ -9532,3 +9532,9 @@ write is made copy-free first.
 THE PROBE AFTER NIGHT 287 (the first without reading): the held-out 0.598 (0.610), the cortex alone on the facts 0.777 (0.777,
 flat for the first night since the reading began), the questions 15 of 30 (12). One night; the held-out's slip is within a
 night's noise, the facts' halt is the thing watched.
+DAY 345 (18:46-19:55 on the 19th, sixty-nine minutes; the second day with the ear released by the settle law): 122 parent lines,
+40 slow. Words said over the typing: 0.70 per slow line (52 percent clean; the conversation lines 0.69, 55 percent clean; the story
+lines 0.73), the fast lines 0.11; 38 frowns. THE ANSWERS: the smile on 47 of 51 questions, 92 percent, the best day there has been,
+a median 1.2 s after the line's end. The babble into the silence past its turn 15.8 known words a silent minute, unchanged. The
+count of days 337 to 345: 1.96, 2.07, 2.78, 1.35, 1.95, 3.36, 0.69, 0.91, 0.70. Night 288 began at 19:55; its save loads the
+copy-free store, the store at 65024 of its 65536.
