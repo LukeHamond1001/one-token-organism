@@ -1666,6 +1666,9 @@ def test_the_ears_trace():
     L0 = tiny(gate_ear=1, gate_ear_decay=0.0, offset_ticks=4, offset_form="count")
     L0.type_text("a", who="parent"); L0.tick(); L0.tick()
     assert not hasattr(L0, "_ear_trace") or float(L0._ear_trace) == 0.0
+    L1 = tiny(gate_ear=1, gate_ear_decay=0.9, gate_ear_release=0, offset_ticks=4, offset_form="count")   # the ear rings on at a settled end (2026-09-20)
+    L1.type_text("a", who="parent"); L1.tick(); L1._offset(settled=True)
+    assert abs(float(L1._ear_trace) - 1.0) < 1e-6, L1._ear_trace
     print("72 the ear's trace: 1.0 at the symbol's tick, 0.81 two quiet ticks later, 1.0 again at the next symbol, ringing on through the count's offset, 0 at the settled end; none at 0")
 
 

@@ -166,6 +166,7 @@ PHYSIOLOGY = dict(
     gate_ear=0,   # two more inputs to the gate: the world's symbol this tick and its own act last tick
     gate_ear_decay=0.0,   # THE EAR'S TRACE (2026-09-19): the ear's world input persists between the world's symbols, decaying by this each tick (0 = the symbol this tick only); a slow typist's pauses leave the ear ringing
     gate_ear_gain=1.0,    # THE EAR'S GAIN (2026-09-20): the ear's world input to the learned gate, scaled; the gate's weight on it is built over weeks and moves little in days
+    gate_ear_release=1,   # THE EAR'S RELEASE (2026-09-20): 1 = the ear stops ringing at an utterance perceived complete (the 19th's form); 0 = it rings on and fades by gate_ear_decay whatever ended the utterance (the ring is the listener's readying: the gate waits while the forecast moves from the rest to the reply)
     gate_yield=0.0,       # THE YIELD (2026-09-20): past its slot after the world's line (gate_yield_after ticks), the learned gate is held by this much, the hold fading over gate_quiet_tau as the babble drive returns; 0 = off
     gate_yield_after=40,  # the slot for its turn after the world's last symbol, in ticks
     gate_turn=0,          # THE TURN'S READINESS (2026-09-20): under the babble drive the floor is whole for the slot (gate_yield_after ticks) after a world utterance perceived to have ended by the settle law; a pause the count ended opens no turn; 0 = off
@@ -674,7 +675,7 @@ class Life:
         self.note_offset()                                             # and the slow context's utterance closes with it
         self._follow = None                                            # and the recall's episode is let go
         self._turn_open = bool(settled)                                # THE TURN'S READINESS (gate_turn): a settled end opens the slot, a count's end does not
-        if settled:
+        if settled and int(self.cfg.get("gate_ear_release", 1)):
             self._ear_trace = 0.0                                      # THE EAR STOPS RINGING AT THE UTTERANCE'S END (2026-09-19 15:50): the trace held the gate shut
                                                                        # after a finished line too (the answers at 2.5 s and half as many, day 343); the listener is
                                                                        # released when the utterance is perceived to have ended BY THE SETTLE LAW (the cortex expected
