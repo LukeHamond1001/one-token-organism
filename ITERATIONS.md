@@ -1075,3 +1075,7 @@ for the answers' place in the slot.
  THE RELEASE AT SIX TICKS, THE SILENCE (15:39, the copy after 298): 2.0 words a silence; four of six answers whole ("a lemon is
  sour", "the hen gives us eggs", "the egg is hard", "bugs and bread"), the milk's blurred, the pear's lost; against two whole at
  one tick and four at no release. The gate freed a second and a half after the end speaks when the recall has come in.
+ THE RELEASE AT SIX TICKS, THE SEQUENCE (15:44): the fact taught three times answered on the ask after the third teaching ("the
+ fox says yip") and at the end ("yip"), "a lemon is sour", "a egg is sweetie? a pear is sweetie?" corrected in its own mouth, the
+ milk missed; five stray words in twelve silences, five words over the teaching's one-handed lines. Four of six, the new fact
+ twice: the best sequence yet. The twenty lines under it are the last measure before the flags.
