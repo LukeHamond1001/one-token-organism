@@ -912,3 +912,9 @@ Three readings (the waking path, the night with the store, the typist), the conf
  a copy with the capacity set under the store's count so every write evicts: 285 ms a world-symbol tick against 327 with the copy
  of every slot, the served body sharing the machine. The tests 73 of 73. Into the body at night 288's save, with the store at
  65024 of its 65536.
+ THE BABBLE MEASURED (19:45, ops/day_report.py): known words said into the silence past its turn, per silent minute: 15.8 on day
+ 342, 17.0 on day 344; the smile in its turn only (from day 340) has not moved it in two days. The candidate, in the constants
+ already there: the tonic drive that pays every act (gate_tonic 0.25, babble its own reward) following the felt reward rate
+ (gate_tonic_rate, 0 = off), so the urge to act falls in the silence where nothing pays and rises under the parent's smiles; it
+ works through the gate's lesson, over days, and the answer's smile at four dwarfs it. Before the change, the babble alone is
+ measured in the chair (two minutes out of the room), the demo's own case.
