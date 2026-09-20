@@ -9546,3 +9546,9 @@ THE PROBE AFTER NIGHT 288 (the second night without reading): the held-out 0.605
 ruler's thirty facts are old ones the days no longer teach, faded from the store and so from the dreams, and the cortex lets them
 go at about that rate whatever the night reads. The reading was charged with more than its share. Two more nights of the bare
 slope before the reading's share is set again.
+DAY 346 (20:22-21:30 on the 19th, sixty-eight minutes; the first day on the copy-free store): 120 parent lines, 47 slow. Words
+said over the typing: 1.15 per slow line (38 percent clean; the conversation lines 1.14, 41 percent clean; the story lines 1.20),
+the fast lines 0.10; 53 frowns. The answers: the smile on 45 of 55 questions (82 percent), a median 1.3 s after the line's end.
+The babble into the silence past its turn 12.8 known words a silent minute (15.8 the day before). The count of days 343 to 346
+under the ear's trace: 0.69, 0.91, 0.70, 1.15; a quarter of the days before it, not yet falling under the frown. Night 289 began
+at 21:30.
