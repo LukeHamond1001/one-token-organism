@@ -9565,3 +9565,5 @@ count under the ear's trace, days 343 to 347: 0.69, 0.91, 0.70, 1.15, 1.13: a qu
 THE FROWN'S WEIGHT, the parent's method, from night 290's boundary: the frown at a word said over the parent's turn goes from one
 to two (the known word's smile is two), and the gap between frowns from sixty ticks to twenty, so nearly every interruption meets
 it. The gate has the ear's trace to bind the frown to now; the frown was set light in the days when it could not.
+NIGHT 290 (23:05-23:33 on the 19th, 2048 dreams, no error, the gauge 0.79 to 0.855, twenty-eight minutes; the store 63520 after
+its fade). Day 348 begins with the frown at two.
