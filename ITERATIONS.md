@@ -981,3 +981,13 @@ for the answers' place in the slot.
  thinking mid-line) opens no turn, and past the slot the drive's ramp rules. The sure proposal off (0). Reads no content; the
  same constant as the yield's slot. The risk: a line whose end the count perceives gets no turn's floor and the learned gate alone;
  the share of settled ends is the measure running alongside (the diag now reads each line's end).
+ THE SETTLE LAW NEVER FIRES (12:50, the diag on the twenty one-handed lines, the served constants): every utterance's end was the
+ count's, at eight ticks, none by the settle law, at no line's end and in none of the fifty pauses inside them. So the ear's
+ release at a settled end (item 45) never came: the ear rings after every line until it fades (a tenth of the way at twenty-two
+ ticks), the learned gate is held through most of the slot, and the turns the served body takes are the floor's tries under the
+ sure proposal (the first own symbol at a median seventeen ticks, where the floor's twentieth-of-the-ticks lands). The turn's
+ readiness keyed to a settled end therefore opens nothing as it stands. THE QUIET FORESEEN (offset_foresee, 13:05; test 77): the
+ cortex is taught at every offset to expect the rest after a complete utterance, so its readout's probability of the rest at a
+ quiet tick is the perception of completeness read directly (a listener projects the other's turn-end from what has been said);
+ under the settle form the utterance is settled when that probability reaches the constant. Measured next: the probability by
+ phase (the ticks after a line's last symbol against a one-handed line's pauses), the constant set between them if they separate.
