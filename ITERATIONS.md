@@ -1098,3 +1098,6 @@ for the answers' place in the slot.
  re-teaching lost to a run-on ("tweet a big hill"); "a lemon is sour" and "a pear is sweet" whole, the milk missed; no word over
  any line, three stray words. ADOPTED for night 300's save: gate_ear_release 9 (archive BASE_FLAGS_pre_release9.txt). The
  next-day recall of a fact taught in a day's rows is the demo's second act, shown.
+ THE NINE-TICK RELEASE ON THE LINES (17:50, the copy after 299): no word over any of the twenty one-handed lines, eight ends
+ foreseen, the turns on the questions at a median seven ticks, no turn on ten statements. Adopted as it stood for night 300's
+ save.
