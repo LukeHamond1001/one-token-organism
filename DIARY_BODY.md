@@ -9625,3 +9625,6 @@ NIGHT 295 (07:56-08:37 on the 20th, 2560 dreams, no error, the gauge 0.798 to 0.
 ABSOLUTE FLOOR TOOK THE STORE FROM 47601 TO 30630: the slots under 0.07 in the write's own units, the weak traces of what the
 cortex already predicted, the rows retold daily among them. The floor does not move with the mean, so this is the cut and not a
 spiral; the store settles where the day's writes and their fade balance. The morning's recall is the measure.
+THE PROBE AFTER NIGHT 295: the held-out 0.609, the cortex alone on the facts 0.718 (untouched), THE QUESTIONS 4 OF 30 (13): the
+old facts' slots, faded for weeks, were the weak traces the absolute floor's first cut took; the mouth with the store no longer
+finds them. The morning's own facts, retold daily and strong, are read next.
