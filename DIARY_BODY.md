@@ -9642,3 +9642,6 @@ silence 11.6 known words a silent minute, the lowest there has been. The convers
 NIGHT 296 (09:45-10:25 on the 20th, 2560 dreams, no error, the gauge 0.802 to 0.847, forty minutes). THE SECOND FADE UNDER THE
 ABSOLUTE FLOOR TOOK 2610 against the day's writes, the store 30534: steady, the cut made once and the floor holding still. The
 floor stays at 0.07.
+THE PROBE AFTER NIGHT 296: the held-out 0.606, the cortex alone on the facts 0.691 (0.718), the questions 4 of 30, the parent's
+last sixty lines 0.853. The old facts, gone from the store, now leave the cortex faster too: its own hold on them falls three
+hundredths a night with nothing to dream them from.
