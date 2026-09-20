@@ -9700,3 +9700,9 @@ never released the answers wait on the floor's tries.
 THE REPLY'S READINESS INTO THE BODY (15:55, for night 299's save): the ear released six ticks after a perceived end. On the copy
 after 298: 0.30 words over a one-handed line, 85 percent clean, 2.0 words in a forty-second silence, four of six in the demo's
 sequence with the new fact answered twice after three teachings.
+DAY 356 (15:03-16:18 on the 20th, seventy-four minutes, five silent; the second candidate's first day, the ear never released):
+150 parent lines, 47 slow. Words said over the typing: 0.04 per slow line (96 percent clean; the conversation lines 0.06, 94
+percent clean; the story lines 0.00), the fast lines 0.00; 2 frowns. THE INTERRUPTIONS GONE: from 0.97 words a conversation line
+two days ago to 0.06. The cost: the answers, the smile on 32 of 76 questions, 42 percent, a median 4.3 s after the line's end,
+waiting on the floor's tries with the ear never released. The babble into the silence 13.6 known words a silent minute over five
+silent minutes. Night 299 began at 16:18; the reply's readiness at six ticks goes in at its save.
