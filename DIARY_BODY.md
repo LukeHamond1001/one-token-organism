@@ -9613,3 +9613,5 @@ does not cover. Night 294 began at 05:59; its save brings the absolute floor.
 NIGHT 294 (05:59-06:47 on the 20th, 2560 dreams, no error, the gauge 0.778 to 0.839, forty-eight minutes beside the copy probes;
 the store 47591 after its fade, the last under the relative floor). THE RELOAD AT ITS SAVE: the absolute floor at 0.07 and the
 ear's gain at 1.5. Day 352 is the first day with both.
+THE PROBE AFTER NIGHT 294: the held-out 0.605, the cortex alone on the facts 0.710 (0.720), the questions 13 of 30, the parent's
+last sixty lines 0.839.
