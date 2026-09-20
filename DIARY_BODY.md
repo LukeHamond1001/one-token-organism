@@ -9671,3 +9671,5 @@ proposal's threshold is the afternoon's measure on the copy.
 NIGHT 297 (11:37-13:01 on the 20th, 2560 dreams, no error, the gauge 0.779 to 0.849, eighty-four minutes: twice its length, the
 copy runs beside it pressing the memory; the fade 2728 against the day's writes, the store 31019, steady). The yield at 20 into
 the body at its save; the reload at 13:01.
+THE PROBE AFTER NIGHT 297: the held-out 0.617, the cortex alone on the facts 0.714, the questions 5 of 30, the parent's last sixty
+lines 0.791.
