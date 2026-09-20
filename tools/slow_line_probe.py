@@ -59,16 +59,17 @@ diag = arg("diag", 0)
 # THE DIAGNOSTIC (--diag 1): where the words over a slow line come from. The offset's firings inside the line are counted by
 # wrapping life._offset; each own symbol during the line is tagged with the floor at that tick (life._floor_now: 0 under the
 # listening reflex, so a word begun at floor 0 came through the learned gate) and whether an offset had fired inside the line.
-n_off = [0]
+n_off = [0]; n_set = [0]; end_off = [None]                 # offsets inside the line, those by the settle law, and the line's end (settled, tick)
 if diag:
     _orig_offset = life._offset
     def _counted_offset(settled=True):                      # the offset carries whether the settle law ended the utterance (2026-09-19)
-        n_off[0] += 1; return _orig_offset(settled=settled)
+        n_off[0] += 1; n_set[0] += int(bool(settled)); end_off[0] = (bool(settled), life.ticks); return _orig_offset(settled=settled)
     life._offset = _counted_offset
+ends = []
 with torch.no_grad():
     for _ in range(40): life.tick()                                           # a moment of quiet first
     for line in lines:
-        p0 = len(life.page); n_off[0] = 0; tags = []
+        p0 = len(life.page); n_off[0] = 0; n_set[0] = 0; tags = []
         for k, ch in enumerate(line):
             if k > 0:
                 gap = rng.choice([2, 3]) if rng.random() > 0.1 else rng.randint(6, 24)   # two symbols a second; a thinking pause of 1-4 s
@@ -80,18 +81,22 @@ with torch.no_grad():
             if diag and any(e[1] == 1 and e[0] for e in life.page[p1:]):
                 tags.append(f"{'F' if float(getattr(life, '_floor_now', 0.0)) > 0.0 else 'g'}{'+' if n_off[0] else '-'}")
         n, txt = own_since(p0); total += n; clean += (n == 0)
-        extra = f" | offsets inside the line {n_off[0]}; own symbols by (F=floor open, g=floor shut; +=after an offset): {''.join(tags)}" if diag else ""
-        p_end = len(life.page); first_at = None
+        extra = f" | offsets inside the line {n_off[0]} ({n_set[0]} settled); own symbols by (F=floor open, g=floor shut; +=after an offset): {''.join(tags)}" if diag else ""
+        p_end = len(life.page); first_at = None; t_end = life.ticks; end_off[0] = None
         for k_ in range(40):                                                  # the child's turn (not counted as over): the ticks to its first symbol
             p1 = len(life.page); life.tick()
             if first_at is None and any(e[1] == 1 and e[0] for e in life.page[p1:]):
                 first_at = k_ + 1
         lat.append(first_at)
-        print(f"  {line!r:40} over {n:2d} {txt!r}{extra} | first own symbol after the line: {first_at}", flush=True)
+        end_ = f"; the line's end: {'settled' if end_off[0][0] else 'by the count'} at tick {end_off[0][1] - t_end}" if diag and end_off[0] else (" | the line's end: no offset in 40 ticks" if diag else "")
+        if diag: ends.append(end_off[0][0] if end_off[0] else None)
+        print(f"  {line!r:40} over {n:2d} {txt!r}{extra} | first own symbol after the line: {first_at}{end_}", flush=True)
         q = 0
         while q < 60:                                                         # then its quiet, as the typist waits
             p1 = len(life.page); life.tick(); q += 1
             if any(e[1] == 1 and e[0] for e in life.page[p1:]): q = 0 if q < 30 else q
 import statistics
 got = [x for x in lat if x is not None]
+if diag:
+    print(f"  the lines' ends: {sum(1 for e in ends if e is True)} settled, {sum(1 for e in ends if e is False)} by the count, {sum(1 for e in ends if e is None)} none in the turn", flush=True)
 print(f"RESULT offset_ticks {life.cfg.get('offset_ticks')} ear {life.cfg.get('gate_ear_decay')}: {len(lines)} slow lines, {total/len(lines):.2f} words over per line, {100*clean/len(lines):.0f}% clean | its turn: first symbol at a median {statistics.median(got) if got else None} ticks, none within 40 ticks on {len(lat)-len(got)} of {len(lat)} lines", flush=True)
