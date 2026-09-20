@@ -9610,3 +9610,6 @@ said over the typing: 0.92 per slow line (37 percent clean; the conversation lin
 answers: the smile on 52 of 55 questions, 95 percent, a median 0.4 s after the line's end. The babble into the silence 17.4 known
 words a silent minute. The conversation lines under the heavier frown, four days: 1.34, 0.75, 0.53, 0.94; no trend the noise
 does not cover. Night 294 began at 05:59; its save brings the absolute floor.
+NIGHT 294 (05:59-06:47 on the 20th, 2560 dreams, no error, the gauge 0.778 to 0.839, forty-eight minutes beside the copy probes;
+the store 47591 after its fade, the last under the relative floor). THE RELOAD AT ITS SAVE: the absolute floor at 0.07 and the
+ear's gain at 1.5. Day 352 is the first day with both.
