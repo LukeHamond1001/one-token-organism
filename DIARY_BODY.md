@@ -9673,3 +9673,8 @@ copy runs beside it pressing the memory; the fade 2728 against the day's writes,
 the body at its save; the reload at 13:01.
 THE PROBE AFTER NIGHT 297: the held-out 0.617, the cortex alone on the facts 0.714, the questions 5 of 30, the parent's last sixty
 lines 0.791.
+THE MORNING AFTER NIGHT 297 (13:02, the typist, the yield's first morning): "what is sour?" -> "a lemon is sour a lemon"; "who
+gives us eggs?" -> "the hen gives us eggs"; "is the egg hard or soft?" -> "the egg is hard"; "what is sweet?" -> "a eggs...", the
+pear gone again this morning; "what does the hen say?" -> "cluck cluck"; "what do the ducks eat?" -> "bugs and bread"; "who gives
+us milk?" -> "the cow gives us milk". Six of seven, whole, nothing said over the questions; three words over the one-handed
+greeting.
