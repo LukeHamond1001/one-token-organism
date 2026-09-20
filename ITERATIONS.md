@@ -918,3 +918,8 @@ Three readings (the waking path, the night with the store, the typist), the conf
  (gate_tonic_rate, 0 = off), so the urge to act falls in the silence where nothing pays and rises under the parent's smiles; it
  works through the gate's lesson, over days, and the answer's smile at four dwarfs it. Before the change, the babble alone is
  measured in the chair (two minutes out of the room), the demo's own case.
+ THE FROWN'S WEIGHT (23:10, the parent's method): under the ear's trace the words over a one-handed conversation line held at a
+ quarter of before and did not fall (days 343-347: 0.57, 0.87, 0.69, 1.14, 1.12) while the answers rose to 96 percent of the
+ questions. The talk-over frown was set light (-1, at most every sixty ticks) on the 6th, when the gate had no feature to bind it
+ to; it has one now. From night 290's boundary: -2, the known word's smile's weight, at most every twenty ticks. Day 348 is the
+ first day of it; the count on conversation lines is the measure, the answers' share the cost to watch.
