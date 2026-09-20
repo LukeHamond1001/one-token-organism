@@ -60,8 +60,8 @@ diag = arg("diag", 0)
 n_off = [0]
 if diag:
     _orig_offset = life._offset
-    def _counted_offset():
-        n_off[0] += 1; return _orig_offset()
+    def _counted_offset(settled=True):                      # the offset carries whether the settle law ended the utterance (2026-09-19)
+        n_off[0] += 1; return _orig_offset(settled=settled)
     life._offset = _counted_offset
 with torch.no_grad():
     for _ in range(40): life.tick()                                           # a moment of quiet first
