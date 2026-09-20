@@ -17,8 +17,14 @@ for l in open("data/teach_queue_w2.jsonl"):
             flat.append(s[2:].strip() if s[:2].lower() == "b:" else s)
 # the newest place where the last THREE typed lines occur in order (a line duplicated later in the queue fooled the single match:
 # the sixteenth parent's finding, 12:33)
-seq = typed[-3:]
-hits = [k for k in range(len(flat)) if flat[max(0, k - len(seq) + 1):k + 1] == seq] or [k for k, s in enumerate(flat) if s == last]
+# six lines, then three, then one (2026-09-19: the days' closing rows end in the same three lines, and the newest such row, still
+# unread, matched as the typist's place)
+hits = []
+for n_ in (6, 3, 1):
+    seq = typed[-n_:]
+    hits = [k for k in range(len(flat)) if flat[max(0, k - len(seq) + 1):k + 1] == seq]
+    if hits:
+        break
 idx = hits[-1] if hits else len(flat) - 1
 ahead = len(flat) - 1 - idx
 print(f"lines ahead {ahead} (about {ahead * 13 / 60:.0f} min of talk); last typed {last!r}; queue rows {sum(1 for l in open('data/teach_queue_w2.jsonl') if l.strip())}")
