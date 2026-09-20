@@ -47,6 +47,8 @@ for r in reversed(R):
         seen.add(r["text"]); lines.append(r["text"])
     if len(lines) >= n_lines: break
 lines = list(reversed(lines))
+if arg("lines_file", ""):                                                 # the same lines across runs (2026-09-20): one a line, in order
+    lines = [l.rstrip("\n") for l in open(arg("lines_file", "")) if l.strip()][:n_lines]
 rng = random.Random(seed)
 def own_since(p0):
     txt = "".join(e[0] for e in life.page[p0:] if e[1] == 1 and e[0])
