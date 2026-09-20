@@ -9621,3 +9621,7 @@ clean), the fast lines 0.10; 37 frowns. The answers: the smile on 55 of 60 quest
 end. The babble into the silence 15.1 known words a silent minute. The conversation lines, days 348 to 352: 1.34, 0.75, 0.53,
 0.94, 0.58; the three-day mean 0.68, under the mark for the first time. Night 295 began at 07:56, the first fade under the
 absolute floor at its end.
+NIGHT 295 (07:56-08:37 on the 20th, 2560 dreams, no error, the gauge 0.798 to 0.842, forty-one minutes). THE FIRST FADE UNDER THE
+ABSOLUTE FLOOR TOOK THE STORE FROM 47601 TO 30630: the slots under 0.07 in the write's own units, the weak traces of what the
+cortex already predicted, the rows retold daily among them. The floor does not move with the mean, so this is the cut and not a
+spiral; the store settles where the day's writes and their fade balance. The morning's recall is the measure.
