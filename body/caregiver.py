@@ -284,7 +284,7 @@ class Caregiver:
                 self.over_count = getattr(self, "over_count", 0) + 1   # the words said over this line (reported in the line's row, 2026-09-19)
                 self.e = max(0.0, self.e - 0.04); self.row({"action": "missed", "on": tok, "why": "talked over", "e": round(self.e, 3), "context": ctx})
                 if TALKOVER_FROWN and time.time() - self.last_frown > self.s(FROWN_GAP):   # THE PARENT'S FACE WHEN INTERRUPTED (the user's word, 2026-09-06):
-                    self._hold(-1, 2.5)                                             # a light, brief frown, at most every FROWN_GAP ticks
+                    self._hold(-2, 2.5)                                             # a frown the weight of a known word's smile (2026-09-19 23:10: light at -1 while the gate had nothing to bind it to; the ear's trace gives it that), at most every FROWN_GAP ticks
                     self.frowns += 1; self.last_frown = time.time(); self.row({"action": "frown", "on": tok, "why": "talked over", "context": ctx})
                 return
         c = self.cue

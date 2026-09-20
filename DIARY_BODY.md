@@ -9558,3 +9558,10 @@ THE PROBE AFTER NIGHT 289 (the third night without reading): the held-out 0.604,
 the questions 16 of 30, the parent's last sixty lines 0.828. The bare slope of the facts: a hundredth, then six thousandths, a
 night; the reading at a thousand cost half a hundredth over it, at five hundred nothing the ruler can see. The held-out's gain of
 the reading nights, a hundredth, has been given back over three bare nights. The fourth bare night decides the share.
+DAY 347 (21:58-23:05 on the 19th, sixty-eight minutes): 117 parent lines, 38 slow. Words said over the typing: 1.13 per slow line
+(42 percent clean; the conversation lines 1.12, 41 percent clean), the fast lines 0.10; 49 frowns. The answers: the smile on 47 of
+49 questions, 96 percent, a median 1.3 s after the line's end. The babble into the silence 14.9 known words a silent minute. The
+count under the ear's trace, days 343 to 347: 0.69, 0.91, 0.70, 1.15, 1.13: a quarter of before, and two days at or above one.
+THE FROWN'S WEIGHT, the parent's method, from night 290's boundary: the frown at a word said over the parent's turn goes from one
+to two (the known word's smile is two), and the gap between frowns from sixty ticks to twenty, so nearly every interruption meets
+it. The gate has the ear's trace to bind the frown to now; the frown was set light in the days when it could not.
