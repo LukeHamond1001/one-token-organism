@@ -1005,3 +1005,8 @@ for the answers' place in the slot.
  A question opens its slot at once; a statement leaves the child quiet unless its gate opens by itself, which under the ringing ear
  it seldom does inside the slot. For the demo that is the shape wanted; for the day's lesson it means fewer acts after statements
  and so fewer known-word smiles, the answers' smiles untouched: the day report's three numbers are the watch.
+ THE CANDIDATE'S SILENCE (13:30): 1.8 words a silence of 240 ticks (2.8 a silent minute; served 41), the six answers whole inside
+ their slots, the first stray symbol a median 35 ticks into the silence, the floor's ramp. What remains inside the slot is the
+ answer said over again until the slot ends ("a lemon is sour a lemon is sour a lemo"): the gate's own-act momentum, which the
+ yield holds only past the slot. The slot at 24 ticks (four seconds) measured next, the answers arriving at one to five ticks
+ after a foreseen end and taking fifteen.
