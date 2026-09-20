@@ -9651,3 +9651,16 @@ or soft?" -> "the egg is hard"; "what is sweet?" -> "A PEAR IS SWEET", the pear 
 slots gone with the floor's cut; "what does the hen say?" -> "cluck cluck"; "what do the ducks eat?" -> "bugs and bread"; "who
 gives us milk?" one-handed -> nothing in the window. Six of seven, whole, one word said over in the whole morning. The cut took
 the old competitors and left the taught pairs to win.
+DAY 354 (10:26-11:37 on the 20th, seventy-one minutes; the third day with the ear's gain): 133 parent lines, 46 slow. Words said
+over the typing: 0.96 per slow line (43 percent clean; the conversation lines 0.97, 41 percent clean; the story lines 0.93), the
+fast lines 0.18; 63 frowns. The answers: the smile on 44 of 51 questions, 86 percent, a median 0.7 s after the line's end. The
+babble into the silence 11.0 known words a silent minute. The conversation lines, days 348 to 354: 1.34, 0.75, 0.53, 0.94, 0.58,
+0.80, 0.97; the three-day mean 0.78. Night 297 began at 11:37.
+THE BABBLE'S DOOR (11:00-11:40, on the copy after night 296, tools/silence_probe.py): a question typed at the tick, forty ticks
+for its turn, then a thinking silence of 240 ticks. Under the served constants 27.5 words a silence, the answer looping through
+it; the sure proposal at 0.9, 26.2; with the babble drive at 1200 as well, 26.7, the same words on the same seed. The floor's
+draws never acted: the learned gate runs on its own answer (its own act's weight +13.9). THE YIELD (gate_yield, gate_yield_after
+40; item 48): past its slot the learned gate is held, the hold fading over the drive's tau. Yield 20: 11.2 words a silence;
+yield 40: 9.3; yield 20 with the sure proposal at 0.9 and tau 1200: 9.5, the residue the floor's, whole under the sure
+proposal on nearly every forecast. The one-handed lines under that last set: 0.65 words over a line, 65 percent clean, the
+turn's first symbol at a median 16 ticks, none within the slot on 3 of 20 lines. Next on the copy: the sure proposal off.

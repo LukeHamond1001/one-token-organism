@@ -941,3 +941,19 @@ strongest slots and were never the ones the floor took.
  percent, 19.5 ticks. Adopted at 1.5 with the absolute floor at night 294's save. The words that remain come in the long pauses,
  where the ring has decayed below what the cortex's state pushes; the gate's own learning would have to carry those, and it does
  not move.
+
+48. THE BABBLE'S DOOR IS THE GATE, NOT THE FLOOR (2026-09-20 11:30; the user's word: "I need it not to just spit random blabber
+while I'm having a convo"). The measure, tools/silence_probe.py on the copy after night 296: six questions typed at the tick, the
+child's turn given forty ticks, then a person's thinking silence of 240 ticks (forty seconds at the served pace) with no input; every
+own word in the silence counted. Under the served constants 27.5 words a silence (41 a silent minute), the answer looping through the
+whole of it ("a lemon is sour a lemon is sour a lemon is s..."; "the cow gives us milk the cow gives us milk"). The floor's constants
+changed nothing: the sure proposal at 0.9, 26.2; with the babble drive at 1200 ticks as well, 26.7, and the word sequences identical
+to the served run's on the same seed, so the floor's draws were never the ones that acted. The door is the learned gate, whose weight
+on its own act (+13.9) keeps it open once it has begun: it answers and does not stop. THE YIELD (gate_yield, gate_yield_after 40):
+after the world's last symbol the child has its slot; past the slot, with the world still quiet, the learned gate's logit is held by
+gate_yield, the hold fading over gate_quiet_tau as the babble drive returns, so a child left alone for minutes babbles as before. An
+innate turn-taking bias (answer, then wait for the other), two disclosed constants, no content read, nothing inside the slot touched,
+the day's lines (the typist's gaps under ten seconds) untouched. Test 75. On the copy: yield 20, 11.2 words a silence, the remainder
+the floor's own share (a twentieth of the ticks with the sure proposal keeping it whole), which is the sure proposal's and the
+babble drive's to set: measured next with the sure proposal at 0.9 and tau 1200 under the yield, the one-handed line probe alongside
+for the answers' place in the slot.
