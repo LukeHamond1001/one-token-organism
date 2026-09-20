@@ -9706,3 +9706,6 @@ percent clean; the story lines 0.00), the fast lines 0.00; 2 frowns. THE INTERRU
 two days ago to 0.06. The cost: the answers, the smile on 32 of 76 questions, 42 percent, a median 4.3 s after the line's end,
 waiting on the floor's tries with the ear never released. The babble into the silence 13.6 known words a silent minute over five
 silent minutes. Night 299 began at 16:18; the reply's readiness at six ticks goes in at its save.
+NIGHT 299 (16:18-17:07 on the 20th, forty-nine minutes, 2560 dreams, no error, the gauge 0.790 to 0.846, the fade 2950, the
+store 31556). THE REPLY'S READINESS INTO THE BODY at its save: the ear released six ticks after a perceived end. Day 357 is its
+first day; the answers' share is the measure.
