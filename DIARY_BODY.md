@@ -9541,3 +9541,8 @@ copy-free store, the store at 65024 of its 65536.
 NIGHT 288 (19:55-20:22 on the 19th, 2048 dreams, no error, the gauge 0.788 to 0.856, twenty-seven minutes). THE RELOAD AT ITS
 SAVE (20:22, seven seconds from the save row to the server back): the copy-free store is the body's own from here, the store at
 64964 of its 65536.
+THE PROBE AFTER NIGHT 288 (the second night without reading): the held-out 0.605 (0.598), the cortex alone on the facts 0.767
+(0.777), the questions 16 of 30, the parent's last sixty lines 0.820. THE FACTS FELL A HUNDREDTH WITH NO READING AT ALL: the
+ruler's thirty facts are old ones the days no longer teach, faded from the store and so from the dreams, and the cortex lets them
+go at about that rate whatever the night reads. The reading was charged with more than its share. Two more nights of the bare
+slope before the reading's share is set again.
