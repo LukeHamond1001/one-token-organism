@@ -9628,3 +9628,9 @@ spiral; the store settles where the day's writes and their fade balance. The mor
 THE PROBE AFTER NIGHT 295: the held-out 0.609, the cortex alone on the facts 0.718 (untouched), THE QUESTIONS 4 OF 30 (13): the
 old facts' slots, faded for weeks, were the weak traces the absolute floor's first cut took; the mouth with the store no longer
 finds them. The morning's own facts, retold daily and strong, are read next.
+THE MORNING AFTER NIGHT 295 (08:38, the typist, the store at thirty thousand): "did you sleep well?" -> "yes. I slept. I am up";
+"what is sour?" -> "a lemnn is sour", the twenty-fifth morning, a letter slipped; "who gives us eggs?" -> "the hen"; "is the egg
+hard or soft?" one-handed -> "the egg i", late and right; "who gives us milk?" -> "the cow gives us milk"; "what is sweet?", "what
+does the hen say?" and "what do the ducks eat?" -> nothing in their windows, the last two one-handed and their answers, when they
+come, coming past the window's edge under the ear's gain. Four of seven in the window, with nothing said over any line. The
+floor holds at 0.07 one more night; the store's count and the morning are the measure.
