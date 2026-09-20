@@ -1068,3 +1068,7 @@ for the answers' place in the slot.
  gate speaks before the recall has come in; the floor's tries under the old constants had started the answers ten to twenty ticks
  in, when it had. A release a few ticks after the end (gate_ear_release 6, a second and a half at the served pace) is measured
  next, the same three probes.
+ THE ONE-TICK RELEASE ON THE LINES AND THE SEQUENCE (15:35, the copy after 298): the twenty lines 0.30 words over, 85 percent
+ clean, seven ends foreseen, four lines without a turn; the sequence with the fact taught three times: four of six ("a lemon is
+ sour", "the cow gi|ves", "a pear in see her", the fox's "yip" at the end), eleven stray words in twelve silences, the freed gate
+ running its answer on past the slot's edge. The release at six ticks is running.
