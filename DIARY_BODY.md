@@ -9690,3 +9690,5 @@ under them. The babble into the silence 19.0 known words a silent minute, the lo
 NIGHT 298 (14:19-15:03 on the 20th, forty-four minutes, the copy quiet beside it). THE SECOND CANDIDATE INTO THE BODY at its save:
 the reload at 15:03:40 with the quiet foreseen, the turn's readiness, the ear ringing on, the sure proposal off, the drive at
 1200 and the yield 20. Day 356 is its first day.
+THE PROBE AFTER NIGHT 298: the held-out 0.616, the cortex alone on the facts 0.677, the questions 5 of 30, the parent's last sixty
+lines 0.788.
