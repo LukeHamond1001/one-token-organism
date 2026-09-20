@@ -1083,3 +1083,8 @@ for the answers' place in the slot.
  percent clean, the turn on sixteen of twenty at a median eighteen ticks; the silence 2.0 words; the sequence four of six with the
  new fact twice after three teachings. The ear rings through the end and a second and a half beyond it, then the gate is free:
  the reply's readiness as the interval the recall needs. Archive: ops/archive/flags/BASE_FLAGS_pre_release6.txt.
+ DAY 356, THE SECOND CANDIDATE'S FIRST DAY (16:20): 0.06 words over a one-handed conversation line, 94 percent clean, the story
+ lines 0.00, two frowns in seventy-four minutes: the interruptions the user asked about on the 19th are gone from the served body.
+ The cost as the copy foretold: the answers 42 percent of the questions at a median 4.3 s, the ear never released. The release at
+ six ticks goes in at night 299's save; on the copy the questions' turns came at 5, 9, 15 and 34 ticks against 9, 17, 19 and none.
+ Day 357's answers' share is the measure; the interruptions' count must hold.
