@@ -957,3 +957,12 @@ the day's lines (the typist's gaps under ten seconds) untouched. Test 75. On the
 the floor's own share (a twentieth of the ticks with the sure proposal keeping it whole), which is the sure proposal's and the
 babble drive's to set: measured next with the sure proposal at 0.9 and tau 1200 under the yield, the one-handed line probe alongside
 for the answers' place in the slot.
+ ADOPTED (12:11): gate_yield 20 alone at night 297's save, the floor's constants as they were: the silence 27.5 to 11.2 words, the
+ answers and the one-handed lines untouched. THE SURE PROPOSAL IS THE OTHER DOOR (11:40-12:11, the same twenty one-handed lines, seed
+ 0): the served constants 0.50 words over a line, 65 percent clean, every line answered inside the slot (a median 18.5 ticks); the
+ sure proposal off with tau 1200 under the yield, 0.10 and 95 percent, but the turn missing inside the slot on ten of twenty lines,
+ three questions among them, and the silence 1.0 words. The floor's tries under the proposal are most of the words in a one-handed
+ line's pauses and most of the babble in a silence, and they are also what starts a turn the learned gate does not start by itself
+ (with no act there is no own-act input, and the gate's momentum never begins). The forecast's norm passes 0.45 and 0.9 on nearly
+ every tick; whether an answer's forecast stands above a pause's is the measure running (tools/norm_probe.py), the proposal's
+ threshold set from it on the copy for night 298's save if the two separate.

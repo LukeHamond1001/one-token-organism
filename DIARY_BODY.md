@@ -9664,3 +9664,7 @@ draws never acted: the learned gate runs on its own answer (its own act's weight
 yield 40: 9.3; yield 20 with the sure proposal at 0.9 and tau 1200: 9.5, the residue the floor's, whole under the sure
 proposal on nearly every forecast. The one-handed lines under that last set: 0.65 words over a line, 65 percent clean, the
 turn's first symbol at a median 16 ticks, none within the slot on 3 of 20 lines. Next on the copy: the sure proposal off.
+THE YIELD INTO THE BODY (12:11): gate_yield 20 at night 297's save, the reload armed; the sure proposal and the drive as they were.
+On the same twenty one-handed lines: served, 0.50 words over a line, 65 percent clean, every turn inside the slot; the proposal
+off with tau 1200 under the yield, 0.10 and 95 percent, the silence 1.0 words, but no turn inside the slot on ten of twenty. The
+proposal's threshold is the afternoon's measure on the copy.
