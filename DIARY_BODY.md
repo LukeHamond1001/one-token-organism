@@ -9554,3 +9554,7 @@ under the ear's trace: 0.69, 0.91, 0.70, 1.15; a quarter of the days before it, 
 at 21:30.
 NIGHT 289 (21:30-21:58 on the 19th, 2048 dreams, no error, the gauge 0.771 to 0.854, twenty-eight minutes; the store 64753 after
 its fade, the copy-free store's first night).
+THE PROBE AFTER NIGHT 289 (the third night without reading): the held-out 0.604, the cortex alone on the facts 0.761 (0.767),
+the questions 16 of 30, the parent's last sixty lines 0.828. The bare slope of the facts: a hundredth, then six thousandths, a
+night; the reading at a thousand cost half a hundredth over it, at five hundred nothing the ruler can see. The held-out's gain of
+the reading nights, a hundredth, has been given back over three bare nights. The fourth bare night decides the share.
