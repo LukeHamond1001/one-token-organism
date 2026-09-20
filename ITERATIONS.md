@@ -1026,3 +1026,9 @@ for the answers' place in the slot.
  THE EAR'S RELEASE (gate_ear_release 0, 13:40): the ear rings on and fades by its decay whatever ended the utterance; the foreseen
  end now opens only the turn's floor. The second candidate: offset_foresee 0.5, gate_turn 1, gate_ear_release 0, the sure proposal
  off, tau 1200, the yield 20: the rehearsal, the silence, the twenty lines, running.
+ THE SECOND CANDIDATE'S REHEARSAL (13:42): the three known facts answered whole ("a lemon is sour", "the cow gives", "a pear is
+ sweet"), two stray words in seven silences (served: twenty), two words over the lines. The new fact, "what does the fox say?" ->
+ "the fox says yip", answered neither after the teaching ("woof woof an egg and") nor at the end ("cluck cluck is the hen"); under
+ the served constants it had come once, right after the teaching. A pair heard once against the hen's and the dog's hundreds of
+ the same form loses the recall; the demo's new fact should not share its question's form with the taught ones, and a fact of a
+ distinct form ("what color is the fox?" -> "the fox is red") is rehearsed next.
