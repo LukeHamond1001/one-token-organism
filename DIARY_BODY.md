@@ -9605,3 +9605,8 @@ SLOTS, the store 56873 to 48829 after a day that wrote 4617; the relative floor 
 thirty-first defect, and the story lines' strong writes lifting the mean. The absolute floor at 0.07 returns at night 294's save.
 THE PROBE AFTER NIGHT 293: the held-out 0.615, the cortex alone on the facts 0.720 (0.718, flat), the questions 16 of 30 (11, the
 revisited rows' first day), the parent's last sixty lines 0.843.
+DAY 351 (04:51-05:59 on the 20th, sixty-eight minutes; the fourth day with the frown at two): 118 parent lines, 38 slow. Words
+said over the typing: 0.92 per slow line (37 percent clean; the conversation lines 0.94), the fast lines 0.14; 55 frowns. The
+answers: the smile on 52 of 55 questions, 95 percent, a median 0.4 s after the line's end. The babble into the silence 17.4 known
+words a silent minute. The conversation lines under the heavier frown, four days: 1.34, 0.75, 0.53, 0.94; no trend the noise
+does not cover. Night 294 began at 05:59; its save brings the absolute floor.
