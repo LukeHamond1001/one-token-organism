@@ -9572,3 +9572,9 @@ on the facts 0.746 (0.761), the questions 17 of 30, the parent's last sixty line
 a hundredth, six thousandths, a hundredth and a half, with no reading at all; the reading was charged for the ruler's own decay.
 The reading returns at five hundred sentences a night from night 291's save, and stays unless the facts fall faster than the bare
 slope by a hundredth a night.
+DAY 348 (23:33 on the 19th to 00:41 on the 20th, sixty-eight minutes; THE FIRST DAY WITH THE FROWN AT TWO, at most every twenty
+ticks): 119 parent lines, 42 slow. Words said over the typing: 1.07 per slow line (43 percent clean; the conversation lines 1.34,
+31 percent clean; the story lines 0.20), the fast lines 0.14; 51 frowns, nearly one for every word said over. The answers: the
+smile on 51 of 54 questions, 94 percent, a median 1.7 s after the line's end. The babble into the silence 18.3 known words a
+silent minute. The heavier frown's first day did not lower the count; one day, thirty-two lines. Night 291 began at 00:41; its
+save brings the reading back at five hundred.
