@@ -1054,3 +1054,7 @@ for the answers' place in the slot.
  tries. THE REPLY'S READINESS (gate_ear_release 2, 15:15; test 78): at a perceived end the ear is released the tick AFTER, when the
  cortex's forecast has moved from the rest (its whole mass at the end's tick) to the reply; the junk of the first candidate came
  from the release at the end's own tick. Measured now on the copy after 298: the silence, the twenty lines, the demo's sequence.
+ THE NEW FACT TAUGHT THREE TIMES (15:15, the copy after 298, the second candidate): "what does the fox say?" -> "the fox says yip"
+ answered at the end, after three other questions, and not on the ask right after the third teaching; five words over the
+ lines, eleven stray words in twelve silences. Three teachings put the pair within reach of the recall where one did not; five
+ is measured next, and the same under the reply's readiness.
