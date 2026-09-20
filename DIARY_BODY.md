@@ -9645,3 +9645,9 @@ floor stays at 0.07.
 THE PROBE AFTER NIGHT 296: the held-out 0.606, the cortex alone on the facts 0.691 (0.718), the questions 4 of 30, the parent's
 last sixty lines 0.853. The old facts, gone from the store, now leave the cortex faster too: its own hold on them falls three
 hundredths a night with nothing to dream them from.
+THE MORNING AFTER NIGHT 296 (10:27, the typist, the store steady at thirty thousand): THE BEST MORNING THERE HAS BEEN. "what is
+sour?" -> "a lemon is sour", the twenty-sixth morning; "who gives us eggs?" -> "the hen gives us eggs", whole; "is the egg hard
+or soft?" -> "the egg is hard"; "what is sweet?" -> "A PEAR IS SWEET", the pear at last after a week behind honey, the honey's old
+slots gone with the floor's cut; "what does the hen say?" -> "cluck cluck"; "what do the ducks eat?" -> "bugs and bread"; "who
+gives us milk?" one-handed -> nothing in the window. Six of seven, whole, one word said over in the whole morning. The cut took
+the old competitors and left the taught pairs to win.
