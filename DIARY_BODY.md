@@ -9595,3 +9595,8 @@ NIGHT 292 (02:18-03:00 on the 20th, the reading back: 2560 dreams, 2048 its own 
 THE PROBE AFTER NIGHT 292 (the reading back at five hundred): the held-out 0.611, the cortex alone on the facts 0.718 (0.720,
 flat), the questions 11 of 30, the parent's last sixty lines 0.844. The facts held the night the reading returned; the revisiting
 of old rows begins today.
+DAY 350 (03:01-04:09 on the 20th, sixty-eight minutes; the third day with the frown at two): 123 parent lines, 44 slow. Words
+said over the typing: 0.48 per slow line (68 percent clean; the conversation lines 0.53, 67 percent clean, the best day there has
+been; the story lines 0.25), the fast lines 0.13; 38 frowns. The answers: the smile on 41 of 50 questions, 82 percent, a median
+1.3 s after the line's end. The babble into the silence 14.7 known words a silent minute. The conversation lines under the heavier
+frown, three days: 1.34, 0.75, 0.53, falling. Night 293 began at 04:09.
