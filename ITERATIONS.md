@@ -1072,3 +1072,6 @@ for the answers' place in the slot.
  clean, seven ends foreseen, four lines without a turn; the sequence with the fact taught three times: four of six ("a lemon is
  sour", "the cow gi|ves", "a pear in see her", the fox's "yip" at the end), eleven stray words in twelve silences, the freed gate
  running its answer on past the slot's edge. The release at six ticks is running.
+ THE RELEASE AT SIX TICKS, THE SILENCE (15:39, the copy after 298): 2.0 words a silence; four of six answers whole ("a lemon is
+ sour", "the hen gives us eggs", "the egg is hard", "bugs and bread"), the milk's blurred, the pear's lost; against two whole at
+ one tick and four at no release. The gate freed a second and a half after the end speaks when the recall has come in.
