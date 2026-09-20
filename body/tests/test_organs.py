@@ -1704,12 +1704,41 @@ def test_fresh_store_unfaded():
     print(f"74 a rebuilt store's first night: unfaded and the mark spent; the second night faded ({rep2['store_dropped']} dropped)")
 
 
+def test_the_yield():
+    """75 (2026-09-20): with gate_yield, past gate_yield_after ticks after the world's last symbol the learned gate's logit is held by the
+    constant, the hold fading to nothing over gate_quiet_tau; inside the slot, past the fade, and at 0 the gate is itself"""
+    import math as _m
+    L = tiny(gate_yield=4.0, gate_yield_after=3, gate_quiet_tau=10, gate_floor=0.0, offset_form="count", offset_ticks=2)
+    held = {}
+    orig = L._choose
+    def spy(C1, pred1, u, level, stri):
+        held["args"] = (C1, pred1, u, level, stri); return orig(C1, pred1, u, level, stri)
+    L._choose = spy
+    L.type_text("go", who="parent")
+    while L.queue:
+        L.tick()
+    L.tick()
+    def p_at(d):                                                     # the gate read at the same state, d ticks after the world's last symbol
+        L._last_world = L.ticks - d
+        return float(orig(*held["args"])[2])
+    logit = lambda p: _m.log(p / (1.0 - p))
+    base = logit(p_at(3))                                             # inside the slot: the gate itself
+    assert abs(logit(p_at(0)) - base) < 1e-4 and abs(logit(p_at(1)) - base) < 1e-4
+    assert abs(logit(p_at(4)) - (base - 4.0 * 0.9)) < 1e-3, (logit(p_at(4)), base)     # a tick past the slot: held by nearly all of it
+    assert abs(logit(p_at(8)) - (base - 4.0 * 0.5)) < 1e-3, (logit(p_at(8)), base)     # half way through the fade: half the hold
+    assert abs(logit(p_at(13)) - base) < 1e-4 and abs(logit(p_at(40)) - base) < 1e-4  # the fade over: itself again
+    L.cfg["gate_yield"] = 0.0
+    assert abs(logit(p_at(4)) - base) < 1e-4                                            # at 0 the gate is itself past the slot too
+    assert tiny().cfg.get("gate_yield", 0.0) == 0.0 and int(tiny().cfg.get("gate_yield_after", 40)) == 40
+    print("75 the yield: the learned gate itself inside its slot, held by 0.9 of the constant a tick past it, by half at half the fade, itself again after; none at 0")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
     tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance, test_night_reads_a_corpus]
-    tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded]
+    tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield]
     failed = 0
     for t in tests:
         try:
