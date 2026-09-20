@@ -9711,3 +9711,8 @@ store 31556). THE REPLY'S READINESS INTO THE BODY at its save: the ear released 
 first day; the answers' share is the measure.
 THE PROBE AFTER NIGHT 299: the held-out 0.603, the cortex alone on the facts 0.687, the questions 6 of 30, the parent's last sixty
 lines 0.836.
+THE MORNING AFTER NIGHT 299 (17:08, the typist, the six-tick release's first morning): nothing said over any question, the answers
+early, six to ten symbols into the window, and blurred: "what is sour?" -> "a ... leone"; "who gives us eggs?" -> "tel cow gives
+us eggs"; "is the egg hard or soft?" -> "the egg is hard"; "what is sweet?" -> "ougs and had b"; "what does the hen say?" ->
+"cluck is tearsy"; "what do the ducks eat?" -> "bugs and coldwat"; "who gives us milk?" -> "th mlant". One whole, three half.
+The release's tick is a trade between early and whole; a sweep of it runs on the copy.
