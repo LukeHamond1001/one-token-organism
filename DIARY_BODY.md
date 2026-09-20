@@ -9668,3 +9668,6 @@ THE YIELD INTO THE BODY (12:11): gate_yield 20 at night 297's save, the reload a
 On the same twenty one-handed lines: served, 0.50 words over a line, 65 percent clean, every turn inside the slot; the proposal
 off with tau 1200 under the yield, 0.10 and 95 percent, the silence 1.0 words, but no turn inside the slot on ten of twenty. The
 proposal's threshold is the afternoon's measure on the copy.
+NIGHT 297 (11:37-13:01 on the 20th, 2560 dreams, no error, the gauge 0.779 to 0.849, eighty-four minutes: twice its length, the
+copy runs beside it pressing the memory; the fade 2728 against the day's writes, the store 31019, steady). The yield at 20 into
+the body at its save; the reload at 13:01.
