@@ -1063,3 +1063,8 @@ for the answers' place in the slot.
  three times: at the end only; five times: both. The recall of a pair is earned by its tellings against the older pairs' hundreds,
  as a child's is; the demo teaches its new fact five times with the face and then asks. Three stray words a silence in this run,
  the ear unreleased.
+ THE REPLY'S READINESS AT ONE TICK (15:21, the copy after 298): the silence 1.7 words; the answers at once but half of them
+ blurred ("the cow gie hen gives us milk", "a egg is swet", the eggs' "tell me what i four?"): released the tick after the end the
+ gate speaks before the recall has come in; the floor's tries under the old constants had started the answers ten to twenty ticks
+ in, when it had. A release a few ticks after the end (gate_ear_release 6, a second and a half at the served pace) is measured
+ next, the same three probes.
