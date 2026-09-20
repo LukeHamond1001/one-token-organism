@@ -1,18 +1,19 @@
 """REVISITING (2026-09-20): a few of the parent's own earlier rows, drawn at random from the queue's past, appended again, so the
 facts taught weeks ago are heard now and then as a parent revisits old lessons. The parent's own material only; nothing from tools/.
-usage: python3 ops/revisit_rows.py --rows 3 [--before 3000] [--seed N]"""
+usage: python3 ops/revisit_rows.py --rows 3 [--after 2600] [--before 6400] [--seed N]   (the stage-four days; the newest rows excluded so it is a revisit)"""
 import sys, json, random, os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def arg(name, default):
     for i, a in enumerate(sys.argv[1:], 1):
         if a == "--" + name and i + 1 < len(sys.argv): return type(default)(sys.argv[i + 1])
     return default
-n = arg("rows", 3); before = arg("before", 3000); seed = arg("seed", int.from_bytes(os.urandom(4), "little"))
+n = arg("rows", 3); after = arg("after", 2600); before = arg("before", 6400); seed = arg("seed", int.from_bytes(os.urandom(4), "little"))
 path = os.path.join(ROOT, "data/teach_queue_w2.jsonl")
 rows = []
 with open(path) as f:
     for i, l in enumerate(f):
         if i >= before: break
+        if i < after: continue
         try:
             r = json.loads(l)
         except Exception:
