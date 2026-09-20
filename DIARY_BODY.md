@@ -9716,3 +9716,6 @@ early, six to ten symbols into the window, and blurred: "what is sour?" -> "a ..
 us eggs"; "is the egg hard or soft?" -> "the egg is hard"; "what is sweet?" -> "ougs and had b"; "what does the hen say?" ->
 "cluck is tearsy"; "what do the ducks eat?" -> "bugs and coldwat"; "who gives us milk?" -> "th mlant". One whole, three half.
 The release's tick is a trade between early and whole; a sweep of it runs on the copy.
+THE FOX THE NEXT DAY (17:32, on the copy after 299): "what does the fox say?", never asked of this copy, answered "the fox says
+yip" at once: the pair typed six times into day 356's rows and kept through night 299. The release at nine ticks goes in at
+night 300's save.

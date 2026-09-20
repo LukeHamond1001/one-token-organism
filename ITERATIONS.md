@@ -1093,3 +1093,8 @@ for the answers' place in the slot.
  under every setting ("tel ... cow gives us milk"), the eggs' lost under all but two. The morning live under six: one whole and
  three half of seven, early. The recall settles over about eight ticks after the end; freed before that the gate speaks the
  generic continuation ("tel", from "tell me"). Nine ticks, two and a half seconds, measured on the sequence and the lines next.
+ THE NINE-TICK RELEASE ON THE SEQUENCE (17:32, the copy after 299): "what does the fox say?" answered UNTAUGHT at the first ask,
+ "the fox says yip": the pair typed into day 356's rows the afternoon before and kept by the night; the two asks after the
+ re-teaching lost to a run-on ("tweet a big hill"); "a lemon is sour" and "a pear is sweet" whole, the milk missed; no word over
+ any line, three stray words. ADOPTED for night 300's save: gate_ear_release 9 (archive BASE_FLAGS_pre_release9.txt). The
+ next-day recall of a fact taught in a day's rows is the demo's second act, shown.
