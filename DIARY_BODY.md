@@ -9578,3 +9578,5 @@ ticks): 119 parent lines, 42 slow. Words said over the typing: 1.07 per slow lin
 smile on 51 of 54 questions, 94 percent, a median 1.7 s after the line's end. The babble into the silence 18.3 known words a
 silent minute. The heavier frown's first day did not lower the count; one day, thirty-two lines. Night 291 began at 00:41; its
 save brings the reading back at five hundred.
+NIGHT 291 (00:41-01:08 on the 20th, 2048 dreams, no error, the gauge 0.779 to 0.851, twenty-seven minutes; the store 61605 after
+its fade). The reload at its save brings the reading back at five hundred a night.
