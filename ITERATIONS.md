@@ -966,3 +966,9 @@ for the answers' place in the slot.
  (with no act there is no own-act input, and the gate's momentum never begins). The forecast's norm passes 0.45 and 0.9 on nearly
  every tick; whether an answer's forecast stands above a pause's is the measure running (tools/norm_probe.py), the proposal's
  threshold set from it on the copy for night 298's save if the two separate.
+ THE FORECAST'S NORM BY PHASE (12:14, tools/norm_probe.py on the copy after 296, the proposal off): the slot after a taught question,
+ a median of 1.13 (p10 0.90, p90 1.37; the first eight ticks 1.12, p10 1.00); the thinking silence after the answer 0.59 (p10 0.48,
+ p90 1.09); the quiet ticks inside a one-handed line 1.02, its perceived pauses 0.86 (p10 0.63, p90 1.35); the forty ticks after a
+ statement 1.01. An answer's forecast stands above a silence's by half and above a pause's by a quarter: a threshold near 1.0 to
+ 1.1 has the floor whole through most of an answer's slot, on about a tenth of a silence's ticks and a third of a pause's. Measured
+ next on the same body and the same twenty lines: sure 1.0 and 1.1 with tau 1200 under the yield.
