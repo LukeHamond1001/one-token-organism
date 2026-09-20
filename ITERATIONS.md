@@ -991,3 +991,11 @@ for the answers' place in the slot.
  quiet tick is the perception of completeness read directly (a listener projects the other's turn-end from what has been said);
  under the settle form the utterance is settled when that probability reaches the constant. Measured next: the probability by
  phase (the ticks after a line's last symbol against a one-handed line's pauses), the constant set between them if they separate.
+ THE QUIET FORESEEN, READ (13:12, tools/norm_probe.py): the readout's probability of the rest on the first quiet tick after a
+ complete question 0.85, 0.85, 0.88 and 1.00; on every other quiet tick, in the slot, the silence, the forty ticks after a
+ statement and all two hundred and sixty quiet ticks inside twenty one-handed lines, their perceived pauses included, 0.00 at the
+ ninetieth percentile. The cortex expects the rest exactly once, at a complete line's end, and never mid-line: the perception of
+ completeness the settle law was meant to read, clean. offset_foresee 0.5 measured now with the turn's readiness, the sure
+ proposal off, tau 1200 and the yield: the twenty lines, the silence, and the user's demo sequence rehearsed one-handed
+ (tools/demo_rehearsal.py: a new fact taught as two voices, asked, three known facts asked, the new one asked again, every own
+ symbol placed as over a line, in its turn, or stray in a thinking silence).
