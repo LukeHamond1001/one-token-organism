@@ -44,7 +44,9 @@ rec = []; phase = ["idle"]
 _orig = life._choose
 def spy(C1, pred1, u, level, stri):
     out = _orig(C1, pred1, u, level, stri)
-    rec.append((phase[0], life.ticks - life._last_world, float(pred1.norm()), bool(out[0]), u != life.sil, bool(life._offset_done)))
+    with torch.no_grad():
+        p_rest = float(torch.softmax(life.m.readout(pred1), 0)[life.sil])       # the readout's probability of the rest: the quiet foreseen
+    rec.append((phase[0], life.ticks - life._last_world, float(pred1.norm()), bool(out[0]), u != life.sil, bool(life._offset_done), p_rest))
     return out
 life._choose = spy
 questions = ["what is sour?", "who gives us eggs?", "what do the ducks eat?", "what is sweet?"][:arg("lines", 4)]
@@ -78,5 +80,11 @@ for ph in ("slot", "silence", "line", "after"):
         print(f"  {ph:8} perceived pause: {q([r[2] for r in quiet if r[5]])}   (the offset fired inside the line)")
     acted = [r[2] for r in quiet if r[3]]
     print(f"  {ph:8} ticks it acted:  {q(acted)}")
+    print(f"  {ph:8} P(rest) all quiet ticks: {q([r[6] for r in quiet])}")
+    if ph == "slot":
+        for d_ in (1, 2, 4, 8):
+            print(f"  {ph:8} P(rest) at tick {d_} after the last symbol: {q([r[6] for r in quiet if r[1] == d_])}")
+    if ph == "line":
+        print(f"  {ph:8} P(rest) in the perceived pauses: {q([r[6] for r in quiet if r[5]])} | in the gaps before an offset: {q([r[6] for r in quiet if not r[5]])}")
 own = "".join(e[0] for e in life.page if e[1] == 1 and e[0])
 print(f"  said in all: {own!r}")
