@@ -1088,3 +1088,8 @@ for the answers' place in the slot.
  The cost as the copy foretold: the answers 42 percent of the questions at a median 4.3 s, the ear never released. The release at
  six ticks goes in at night 299's save; on the copy the questions' turns came at 5, 9, 15 and 34 ticks against 9, 17, 19 and none.
  Day 357's answers' share is the measure; the interruptions' count must hold.
+ THE RELEASE TICK SWEPT (17:35, the copy after 299, six taught questions at the tick, whole answers of six): two ticks 1, four 1,
+ six 3, nine 4, twelve 3; the same first symbols under two and four (the first act lands past both), the milk's answer blurred
+ under every setting ("tel ... cow gives us milk"), the eggs' lost under all but two. The morning live under six: one whole and
+ three half of seven, early. The recall settles over about eight ticks after the end; freed before that the gate speaks the
+ generic continuation ("tel", from "tell me"). Nine ticks, two and a half seconds, measured on the sequence and the lines next.
