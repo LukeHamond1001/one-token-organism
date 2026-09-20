@@ -9580,3 +9580,7 @@ silent minute. The heavier frown's first day did not lower the count; one day, t
 save brings the reading back at five hundred.
 NIGHT 291 (00:41-01:08 on the 20th, 2048 dreams, no error, the gauge 0.779 to 0.851, twenty-seven minutes; the store 61605 after
 its fade). The reload at its save brings the reading back at five hundred a night.
+THE PROBE AFTER NIGHT 291 (the fifth night without reading): the held-out 0.609, the cortex alone on the facts 0.720 (0.746),
+the questions 13 of 30. The old facts leave faster each night now that the store no longer holds them: two and a half hundredths
+this night with no reading at all. From today the parent revisits: three of its own rows from weeks ago, drawn at random, heard
+again each day, as a parent returns to old lessons.
