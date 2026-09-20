@@ -165,6 +165,8 @@ PHYSIOLOGY = dict(
     gate_ear=0,   # two more inputs to the gate: the world's symbol this tick and its own act last tick
     gate_ear_decay=0.0,   # THE EAR'S TRACE (2026-09-19): the ear's world input persists between the world's symbols, decaying by this each tick (0 = the symbol this tick only); a slow typist's pauses leave the ear ringing
     gate_ear_gain=1.0,    # THE EAR'S GAIN (2026-09-20): the ear's world input to the learned gate, scaled; the gate's weight on it is built over weeks and moves little in days
+    gate_yield=0.0,       # THE YIELD (2026-09-20): past its slot after the world's line (gate_yield_after ticks), the learned gate is held by this much, the hold fading over gate_quiet_tau as the babble drive returns; 0 = off
+    gate_yield_after=40,  # the slot for its turn after the world's last symbol, in ticks
     gate_opt="sgd",
     gate_adam_lr=1e-3,
     # --- the mouth's decisiveness: the readout's sharpness, and exploration ---
@@ -1195,6 +1197,18 @@ class Life:
                 ear_w = ear_w * float(self.cfg.get("gate_ear_gain", 1.0))     # THE EAR'S GAIN (2026-09-20): the learned weight on the ear (-49, built over weeks) moved by 0.05 in five days of frowns; the input's scale is the constant that sets how hard the ringing ear holds the gate
                 feat = torch.cat([feat, torch.tensor([ear_w, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
+            gy_ = float(self.cfg.get("gate_yield", 0.0))
+            if gy_ > 0.0:
+                # THE YIELD (gate_yield; 2026-09-20, the user's word: no blabber between the lines of a conversation): after the
+                # world's line the child has its slot (gate_yield_after ticks); past it, with the world still quiet, the learned gate
+                # is held by gate_yield, the hold fading over gate_quiet_tau as the babble drive returns, so a child alone for minutes
+                # babbles again. Turn-taking: I answer, then I wait for you. The silence probe of 11:20 on the copy: 27 words in a
+                # 240-tick silence after an answer, none of them through the floor, the learned gate running on its own answer.
+                since_ = self.ticks - self._last_world
+                after_ = int(self.cfg.get("gate_yield_after", 40))
+                if since_ > after_:
+                    tau_y = float(self.cfg.get("gate_quiet_tau", 0) or 300)
+                    z = z - gy_ * (1.0 - min(1.0, float(since_ - after_) / tau_y))
             fl = float(self.cfg["gate_floor"])
             # THE LISTENING REFLEX (gate_listen; 2026-09-17, item 41): the learned gate had shut itself during the parent's lines (the ear's
             # weight -48) and the talk-overs came from what no learned weight reaches, the spontaneous floor starting a word on a
