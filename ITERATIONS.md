@@ -1017,3 +1017,12 @@ for the answers' place in the slot.
  three questions -> "woof woof tommy!" (the dog's, the fact heard once against the dog's hundreds). Three of six answered, two
  words over the lines, twenty stray words in seven silences. The new fact's second recall is the demo's weak point in this body:
  the once-heard pair loses to its older neighbours of the same form ("what does the X say?"); the candidate's rehearsal follows.
+ THE CANDIDATE'S REHEARSAL (13:37): one of six answered. The lines clean (one word over) and the silences clean (three stray
+ words), but the turns wrong: "what is sour?" -> "we se breadwth went tooardand softth ha". With the foreseen end releasing the ear
+ on the first quiet tick, the learned gate is free at the very tick the cortex's forecast IS the rest (P 0.85-1.0); the mouth bans
+ the rest and samples the remainder, junk, and the gate's own-act momentum runs the junk through the slot. The served body never
+ has this: its ear rings on after every line (the settle law dead), the gate is held ten to twenty ticks, and by the time the
+ floor's tries start a word the forecast has moved from the rest to the reply. The ring is the listener's readying, not a fault.
+ THE EAR'S RELEASE (gate_ear_release 0, 13:40): the ear rings on and fades by its decay whatever ended the utterance; the foreseen
+ end now opens only the turn's floor. The second candidate: offset_foresee 0.5, gate_turn 1, gate_ear_release 0, the sure proposal
+ off, tau 1200, the yield 20: the rehearsal, the silence, the twenty lines, running.
