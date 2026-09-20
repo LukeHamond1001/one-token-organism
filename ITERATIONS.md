@@ -1047,3 +1047,10 @@ for the answers' place in the slot.
  once is not recalled in this body in the same sitting, whatever its form; the pairs it answers were typed to it over days. The
  demo's "teach it something new" is therefore a teaching of the pair several times with the face, not one line, and how many is
  the next measure (tools/demo_rehearsal.py --repeat N), on the copy after night 298, no copy runs while the night runs.
+ THE SECOND CANDIDATE'S FIRST MORNING (15:04): nothing said over the questions, but the answers late and two of seven missing in
+ the window, against six of seven at about a second the mornings before. The served body's fast answers had come through the
+ settle law after all: on the typist's FAST lines (two thirds of them) the surprise's averages do settle and the ear was released,
+ the gate free at once; only the one-handed lines never settled. With the release off everywhere the answers wait on the floor's
+ tries. THE REPLY'S READINESS (gate_ear_release 2, 15:15; test 78): at a perceived end the ear is released the tick AFTER, when the
+ cortex's forecast has moved from the rest (its whole mass at the end's tick) to the reply; the junk of the first candidate came
+ from the release at the end's own tick. Measured now on the copy after 298: the silence, the twenty lines, the demo's sequence.

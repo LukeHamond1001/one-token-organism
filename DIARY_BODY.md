@@ -9692,3 +9692,8 @@ the reload at 15:03:40 with the quiet foreseen, the turn's readiness, the ear ri
 1200 and the yield 20. Day 356 is its first day.
 THE PROBE AFTER NIGHT 298: the held-out 0.616, the cortex alone on the facts 0.677, the questions 5 of 30, the parent's last sixty
 lines 0.788.
+THE MORNING AFTER NIGHT 298 (15:04, the typist, the second candidate's first morning): nothing said over any question, one word
+over the greeting; "what is sour?" -> "a ... lemno", broken; "who gives us eggs?" -> nothing in the window; "is the egg hard or
+soft?" -> "the egg is hard", late; "what is sweet?" -> "a pear is sweet"; "what does the hen say?" -> "cluck cluck", late; "what
+do the ducks eat?" -> "bugs and bread", late; "who gives us milk?" -> nothing in the window. Four whole, all late: with the ear
+never released the answers wait on the floor's tries.
