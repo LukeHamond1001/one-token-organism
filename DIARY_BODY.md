@@ -9552,3 +9552,5 @@ the fast lines 0.10; 53 frowns. The answers: the smile on 45 of 55 questions (82
 The babble into the silence past its turn 12.8 known words a silent minute (15.8 the day before). The count of days 343 to 346
 under the ear's trace: 0.69, 0.91, 0.70, 1.15; a quarter of the days before it, not yet falling under the frown. Night 289 began
 at 21:30.
+NIGHT 289 (21:30-21:58 on the 19th, 2048 dreams, no error, the gauge 0.771 to 0.854, twenty-eight minutes; the store 64753 after
+its fade, the copy-free store's first night).
