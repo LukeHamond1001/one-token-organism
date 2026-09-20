@@ -9584,3 +9584,9 @@ THE PROBE AFTER NIGHT 291 (the fifth night without reading): the held-out 0.609,
 the questions 13 of 30. The old facts leave faster each night now that the store no longer holds them: two and a half hundredths
 this night with no reading at all. From today the parent revisits: three of its own rows from weeks ago, drawn at random, heard
 again each day, as a parent returns to old lessons.
+DAY 349 (01:09-02:18 on the 20th, sixty-eight minutes; the second day with the frown at two): 134 parent lines, 40 slow. Words said
+over the typing: 0.72 per slow line (45 percent clean; the conversation lines 0.75, 47 percent clean; the story lines 0.62), the
+fast lines 0.14; 52 frowns. The answers: the smile on 49 of 57 questions, 86 percent, a median 0.8 s after the line's end. The
+babble into the silence 15.8 known words a silent minute. The conversation lines under the ear's trace, days 343 to 349: 0.57,
+0.87, 0.69, 1.14, 1.12, 1.34, 0.75; two days of the heavier frown at 1.34 and 0.75, the swing of a day wider than any trend yet.
+Night 292 began at 02:18, the first with the reading back at five hundred.
