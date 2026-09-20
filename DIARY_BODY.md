@@ -9603,3 +9603,5 @@ frown, three days: 1.34, 0.75, 0.53, falling. Night 293 began at 04:09.
 NIGHT 293 (04:09-04:50 on the 20th, 2560 dreams, no error, the gauge 0.797 to 0.84, forty-one minutes): THE FADE TOOK 10360
 SLOTS, the store 56873 to 48829 after a day that wrote 4617; the relative floor feeding on itself as the ledger warned at the
 thirty-first defect, and the story lines' strong writes lifting the mean. The absolute floor at 0.07 returns at night 294's save.
+THE PROBE AFTER NIGHT 293: the held-out 0.615, the cortex alone on the facts 0.720 (0.718, flat), the questions 16 of 30 (11, the
+revisited rows' first day), the parent's last sixty lines 0.843.
