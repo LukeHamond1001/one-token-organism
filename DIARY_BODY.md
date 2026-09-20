@@ -9719,3 +9719,8 @@ The release's tick is a trade between early and whole; a sweep of it runs on the
 THE FOX THE NEXT DAY (17:32, on the copy after 299): "what does the fox say?", never asked of this copy, answered "the fox says
 yip" at once: the pair typed six times into day 356's rows and kept through night 299. The release at nine ticks goes in at
 night 300's save.
+DAY 357 (17:07-18:20 on the 20th, seventy-two minutes, five silent; the six-tick release's day): 154 parent lines, 40 slow. Words
+said over the typing: 0.00 per slow line, every one of the forty clean, the conversation lines 0.00, the story lines 0.00, the
+fast lines 0.00; no frown all day. The answers: the smile on 58 of 78 questions, 74 percent, a median 2.2 s after the line's end,
+back from 42 percent and 4.3 s. The babble into the silence 9.4 known words a silent minute. The conversation lines, days 351 to
+357: 0.94, 0.58, 0.80, 0.97, 0.56, 0.06, 0.00. Night 300 began at 18:20; the nine-tick release goes in at its save.

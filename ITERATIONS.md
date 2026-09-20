@@ -1101,3 +1101,6 @@ for the answers' place in the slot.
  THE NINE-TICK RELEASE ON THE LINES (17:50, the copy after 299): no word over any of the twenty one-handed lines, eight ends
  foreseen, the turns on the questions at a median seven ticks, no turn on ten statements. Adopted as it stood for night 300's
  save.
+ DAY 357 (18:20): not one word over any of forty one-handed lines, no frown in seventy-two minutes, the answers 74 percent at 2.2 s
+ (from 42 and 4.3 the day before), the babble 9.4 a silent minute. The three-day mean of words over a conversation line 0.21,
+ under the bar of 0.7 set on the 19th; the answers' share is what the nine-tick release must lift at night 300's save.
