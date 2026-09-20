@@ -999,3 +999,9 @@ for the answers' place in the slot.
  proposal off, tau 1200 and the yield: the twenty lines, the silence, and the user's demo sequence rehearsed one-handed
  (tools/demo_rehearsal.py: a new fact taught as two voices, asked, three known facts asked, the new one asked again, every own
  symbol placed as over a line, in its turn, or stray in a thinking silence).
+ THE CANDIDATE ON THE TWENTY LINES (13:25): the four questions among them foreseen complete on the first quiet tick, every
+ statement ended by the count; 0.15 words over a line, 90 percent clean (served: 0.50 and 65); the turn after the questions at
+ 2, 35, 1 and 5 ticks, after the statements late or not at all (six of twenty lines without a turn in the slot, all statements).
+ A question opens its slot at once; a statement leaves the child quiet unless its gate opens by itself, which under the ringing ear
+ it seldom does inside the slot. For the demo that is the shape wanted; for the day's lesson it means fewer acts after statements
+ and so fewer known-word smiles, the answers' smiles untouched: the day report's three numbers are the watch.
