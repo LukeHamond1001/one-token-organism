@@ -9592,3 +9592,6 @@ babble into the silence 15.8 known words a silent minute. The conversation lines
 Night 292 began at 02:18, the first with the reading back at five hundred.
 NIGHT 292 (02:18-03:00 on the 20th, the reading back: 2560 dreams, 2048 its own and 512 story sentences, no error, the gauge
 0.789 to 0.843 over its own dreams, forty-two minutes; the store 56873 after its fade, the old material leaving).
+THE PROBE AFTER NIGHT 292 (the reading back at five hundred): the held-out 0.611, the cortex alone on the facts 0.718 (0.720,
+flat), the questions 11 of 30, the parent's last sixty lines 0.844. The facts held the night the reading returned; the revisiting
+of old rows begins today.
