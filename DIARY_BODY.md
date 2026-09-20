@@ -9709,3 +9709,5 @@ silent minutes. Night 299 began at 16:18; the reply's readiness at six ticks goe
 NIGHT 299 (16:18-17:07 on the 20th, forty-nine minutes, 2560 dreams, no error, the gauge 0.790 to 0.846, the fade 2950, the
 store 31556). THE REPLY'S READINESS INTO THE BODY at its save: the ear released six ticks after a perceived end. Day 357 is its
 first day; the answers' share is the measure.
+THE PROBE AFTER NIGHT 299: the held-out 0.603, the cortex alone on the facts 0.687, the questions 6 of 30, the parent's last sixty
+lines 0.836.
