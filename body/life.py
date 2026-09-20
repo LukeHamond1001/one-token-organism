@@ -166,7 +166,7 @@ PHYSIOLOGY = dict(
     gate_ear=0,   # two more inputs to the gate: the world's symbol this tick and its own act last tick
     gate_ear_decay=0.0,   # THE EAR'S TRACE (2026-09-19): the ear's world input persists between the world's symbols, decaying by this each tick (0 = the symbol this tick only); a slow typist's pauses leave the ear ringing
     gate_ear_gain=1.0,    # THE EAR'S GAIN (2026-09-20): the ear's world input to the learned gate, scaled; the gate's weight on it is built over weeks and moves little in days
-    gate_ear_release=1,   # THE EAR'S RELEASE (2026-09-20): 1 = the ear stops ringing at an utterance perceived complete (the 19th's form); 0 = it rings on and fades by gate_ear_decay whatever ended the utterance (the ring is the listener's readying: the gate waits while the forecast moves from the rest to the reply)
+    gate_ear_release=1,   # THE EAR'S RELEASE (2026-09-20): at an utterance perceived complete the ear stops ringing this many ticks on: 1 = at the end's own tick (the 19th's form), 2 = the tick after (the forecast is the rest at the end's tick and the reply the tick after: the reply's readiness), 0 = never, the ring fading by gate_ear_decay
     gate_yield=0.0,       # THE YIELD (2026-09-20): past its slot after the world's line (gate_yield_after ticks), the learned gate is held by this much, the hold fading over gate_quiet_tau as the babble drive returns; 0 = off
     gate_yield_after=40,  # the slot for its turn after the world's last symbol, in ticks
     gate_turn=0,          # THE TURN'S READINESS (2026-09-20): under the babble drive the floor is whole for the slot (gate_yield_after ticks) after a world utterance perceived to have ended by the settle law; a pause the count ended opens no turn; 0 = off
@@ -675,7 +675,10 @@ class Life:
         self.note_offset()                                             # and the slow context's utterance closes with it
         self._follow = None                                            # and the recall's episode is let go
         self._turn_open = bool(settled)                                # THE TURN'S READINESS (gate_turn): a settled end opens the slot, a count's end does not
-        if settled and int(self.cfg.get("gate_ear_release", 1)):
+        rel_ = int(self.cfg.get("gate_ear_release", 1))
+        if settled and rel_ > 1:
+            self._ear_release_at = self.ticks + rel_ - 1               # THE REPLY'S READINESS (2026-09-20, item 48): released the tick after, when the forecast has moved from the rest to the reply
+        if settled and rel_ == 1:
             self._ear_trace = 0.0                                      # THE EAR STOPS RINGING AT THE UTTERANCE'S END (2026-09-19 15:50): the trace held the gate shut
                                                                        # after a finished line too (the answers at 2.5 s and half as many, day 343); the listener is
                                                                        # released when the utterance is perceived to have ended BY THE SETTLE LAW (the cortex expected
@@ -861,7 +864,7 @@ class Life:
             self._offset(settled=False); self._offset_done = True
         first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
         if u != self.sil:
-            self._last_world = self.ticks; self._offset_done = False; self._turn_open = False
+            self._last_world = self.ticks; self._offset_done = False; self._turn_open = False; self._ear_release_at = None
         # the face: a change is felt; a held face is silence; easing off is not an event
         lvl = max(-6, min(6, int(self.face_now)))
         felt = 0
@@ -1199,6 +1202,9 @@ class Life:
                 # THE EAR: the world's symbol this tick, its own act last tick (sensed, not inferred)
                 ear_w = 1.0 if u != self.sil else 0.0
                 ed_ = float(self.cfg.get("gate_ear_decay", 0.0))
+                ra_ = getattr(self, "_ear_release_at", None)
+                if ra_ is not None and self.ticks >= ra_:
+                    self._ear_trace = 0.0; self._ear_release_at = None   # the ear released the tick after the perceived end (gate_ear_release 2)
                 if ed_ > 0.0:
                     # THE EAR'S TRACE (gate_ear_decay; 2026-09-19, the review and the diagnostic probe of item 45): with the ear reading
                     # the tick alone, the learned gate (its ear weight -49 on a symbol's tick, +14 on its own act) was shut on the ticks a
@@ -2030,7 +2036,7 @@ class Life:
                 self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None; self._follow = None
             self._prev_slot = -1; self._last_write = None; self._start_armed = False; self._start_pending = False; self._seam_pending = False
-            self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._ear_trace = 0.0; self._writes_today = 0; self._turn_open = False
+            self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._ear_trace = 0.0; self._writes_today = 0; self._turn_open = False; self._ear_release_at = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
             if getattr(self.m, "stri_wm", 0):
