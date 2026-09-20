@@ -9567,3 +9567,8 @@ to two (the known word's smile is two), and the gap between frowns from sixty ti
 it. The gate has the ear's trace to bind the frown to now; the frown was set light in the days when it could not.
 NIGHT 290 (23:05-23:33 on the 19th, 2048 dreams, no error, the gauge 0.79 to 0.855, twenty-eight minutes; the store 63520 after
 its fade). Day 348 begins with the frown at two.
+THE PROBE AFTER NIGHT 290 (the fourth night without reading): the held-out 0.620, the highest there has been; the cortex alone
+on the facts 0.746 (0.761), the questions 17 of 30, the parent's last sixty lines 0.849. FOUR BARE NIGHTS: the facts' ruler fell
+a hundredth, six thousandths, a hundredth and a half, with no reading at all; the reading was charged for the ruler's own decay.
+The reading returns at five hundred sentences a night from night 291's save, and stays unless the facts fall faster than the bare
+slope by a hundredth a night.
