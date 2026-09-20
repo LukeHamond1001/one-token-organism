@@ -1058,3 +1058,8 @@ for the answers' place in the slot.
  answered at the end, after three other questions, and not on the ask right after the third teaching; five words over the
  lines, eleven stray words in twelve silences. Three teachings put the pair within reach of the recall where one did not; five
  is measured next, and the same under the reply's readiness.
+ THE NEW FACT TAUGHT FIVE TIMES (15:30): "what color is the fox?" -> "the fox is red": on the ask after the fifth teaching "the egg
+ is red" (the colour right, the subject the egg's), at the end after three other questions "the fox is red", whole. Once: never;
+ three times: at the end only; five times: both. The recall of a pair is earned by its tellings against the older pairs' hundreds,
+ as a child's is; the demo teaches its new fact five times with the face and then asks. Three stray words a silence in this run,
+ the ear unreleased.
