@@ -164,6 +164,7 @@ PHYSIOLOGY = dict(
     gate_center_keep=0,
     gate_ear=0,   # two more inputs to the gate: the world's symbol this tick and its own act last tick
     gate_ear_decay=0.0,   # THE EAR'S TRACE (2026-09-19): the ear's world input persists between the world's symbols, decaying by this each tick (0 = the symbol this tick only); a slow typist's pauses leave the ear ringing
+    gate_ear_gain=1.0,    # THE EAR'S GAIN (2026-09-20): the ear's world input to the learned gate, scaled; the gate's weight on it is built over weeks and moves little in days
     gate_opt="sgd",
     gate_adam_lr=1e-3,
     # --- the mouth's decisiveness: the readout's sharpness, and exploration ---
@@ -1191,6 +1192,7 @@ class Life:
                     # falling to zero, so the gate's learned weight keeps it shut while a person is still typing at any pace and
                     # frees it as the ringing fades. A disclosed constant; nothing about content; the typist's fast lines unchanged.
                     self._ear_trace = max(ed_ * float(getattr(self, "_ear_trace", 0.0)), ear_w); ear_w = self._ear_trace
+                ear_w = ear_w * float(self.cfg.get("gate_ear_gain", 1.0))     # THE EAR'S GAIN (2026-09-20): the learned weight on the ear (-49, built over weeks) moved by 0.05 in five days of frowns; the input's scale is the constant that sets how hard the ringing ear holds the gate
                 feat = torch.cat([feat, torch.tensor([ear_w, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             fl = float(self.cfg["gate_floor"])
