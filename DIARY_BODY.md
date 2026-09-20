@@ -9590,3 +9590,5 @@ fast lines 0.14; 52 frowns. The answers: the smile on 49 of 57 questions, 86 per
 babble into the silence 15.8 known words a silent minute. The conversation lines under the ear's trace, days 343 to 349: 0.57,
 0.87, 0.69, 1.14, 1.12, 1.34, 0.75; two days of the heavier frown at 1.34 and 0.75, the swing of a day wider than any trend yet.
 Night 292 began at 02:18, the first with the reading back at five hundred.
+NIGHT 292 (02:18-03:00 on the 20th, the reading back: 2560 dreams, 2048 its own and 512 story sentences, no error, the gauge
+0.789 to 0.843 over its own dreams, forty-two minutes; the store 56873 after its fade, the old material leaving).
