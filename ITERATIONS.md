@@ -1042,3 +1042,8 @@ for the answers' place in the slot.
  the demo's sequence: the three known facts whole, two stray words in seven silences. The archive of the flags before it:
  ops/archive/flags/BASE_FLAGS_pre_foresee.txt. The watch from day 356: the answers' share and delay, the words over conversation
  lines, the babble a silent minute, the frowns, and the morning; the cost to expect is fewer known-word smiles after statements.
+ A NEW FACT OF A DISTINCT FORM (14:01): "what color is the fox?" -> "the fox is red", taught once, answered neither after the
+ teaching ("tels his i love my") nor at the end ("the hen maybe"); the three known facts whole again, two stray words. A pair heard
+ once is not recalled in this body in the same sitting, whatever its form; the pairs it answers were typed to it over days. The
+ demo's "teach it something new" is therefore a teaching of the pair several times with the face, not one line, and how many is
+ the next measure (tools/demo_rehearsal.py --repeat N), on the copy after night 298, no copy runs while the night runs.
