@@ -1035,3 +1035,10 @@ for the answers' place in the slot.
  THE SECOND CANDIDATE'S SILENCE (13:46): 2.3 words a silence (3.5 a silent minute; served 41): "a lemon is sour", "the egg is
  hard", "the cow gives us milk", "a pear is |sweet" across the slot's edge, the ducks' "bugs" half, the eggs missed; the answers
  arrive later than under the released ear, the ring holding the gate ten to twenty ticks and the floor's tries starting them.
+ ADOPTED (13:58, for night 298's save): offset_foresee 0.5, gate_turn 1, gate_ear_release 0, the sure proposal 0, gate_quiet_tau
+ 1200, gate_yield 20 (gate_yield_after 40). The second candidate on the twenty one-handed lines: 0.10 words over a line, 95
+ percent clean (served 0.50 and 65); the questions among them foreseen complete on their first quiet tick and answered at 9, 17 and
+ 19 ticks (one not in the slot), the statements left without a turn (eight of twenty); the silence 2.3 words (served 41 a minute);
+ the demo's sequence: the three known facts whole, two stray words in seven silences. The archive of the flags before it:
+ ops/archive/flags/BASE_FLAGS_pre_foresee.txt. The watch from day 356: the answers' share and delay, the words over conversation
+ lines, the babble a silent minute, the frowns, and the morning; the cost to expect is fewer known-word smiles after statements.

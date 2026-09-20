@@ -9678,3 +9678,6 @@ gives us eggs?" -> "the hen gives us eggs"; "is the egg hard or soft?" -> "the e
 pear gone again this morning; "what does the hen say?" -> "cluck cluck"; "what do the ducks eat?" -> "bugs and bread"; "who gives
 us milk?" -> "the cow gives us milk". Six of seven, whole, nothing said over the questions; three words over the one-handed
 greeting.
+THE SECOND CANDIDATE INTO THE BODY (13:58, for night 298's save; item 48): the quiet foreseen at 0.5, the turn's readiness, the
+ear ringing on, the sure proposal off, the drive at 1200, the yield 20. On the copy: 0.10 words over a one-handed line and 95
+percent of lines clean, 2.3 words in a forty-second silence, the known facts answered whole in the demo's own sequence.
