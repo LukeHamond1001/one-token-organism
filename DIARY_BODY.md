@@ -9600,3 +9600,6 @@ said over the typing: 0.48 per slow line (68 percent clean; the conversation lin
 been; the story lines 0.25), the fast lines 0.13; 38 frowns. The answers: the smile on 41 of 50 questions, 82 percent, a median
 1.3 s after the line's end. The babble into the silence 14.7 known words a silent minute. The conversation lines under the heavier
 frown, three days: 1.34, 0.75, 0.53, falling. Night 293 began at 04:09.
+NIGHT 293 (04:09-04:50 on the 20th, 2560 dreams, no error, the gauge 0.797 to 0.84, forty-one minutes): THE FADE TOOK 10360
+SLOTS, the store 56873 to 48829 after a day that wrote 4617; the relative floor feeding on itself as the ledger warned at the
+thirty-first defect, and the story lines' strong writes lifting the mean. The absolute floor at 0.07 returns at night 294's save.

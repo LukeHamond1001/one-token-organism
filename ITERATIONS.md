@@ -923,3 +923,13 @@ Three readings (the waking path, the night with the store, the typist), the conf
  questions. The talk-over frown was set light (-1, at most every sixty ticks) on the 6th, when the gate had no feature to bind it
  to; it has one now. From night 290's boundary: -2, the known word's smile's weight, at most every twenty ticks. Day 348 is the
  first day of it; the count on conversation lines is the measure, the answers' share the cost to watch.
+
+47. THE RELATIVE FLOOR FEEDS ON ITSELF AGAIN (2026-09-20 04:55). The store: 65028 slots at night 288's save, then 64964, 64753,
+63520, 61605, 56873, 48829 at night 293's, the night's fade taking 275, 1233, 1915, 4732, 8044 and 10360 while the days wrote
+about 4600. The mechanism is the thirty-first defect's, in the ledger's own words: a floor relative to the mean climbs as the weak
+are removed and as the strong grow, and the next night removes more; and since the 18th the day's story lines, unfamiliar and so
+written strongly, lift the mean further. The absolute floor (store_floor_abs 0.07, derived on the 17th, lived twelve nights at a
+store of about fifty thousand, reverted after night 249 to let the store refill to the capacity where the eviction by strength
+would be the forgetting) does not move with the mean. It returns at night 294's save; the capacity's eviction remains the ceiling.
+The measure: the store's count and the fade per night from night 295; the morning's recall of the taught facts, which are the
+strongest slots and were never the ones the floor took.
