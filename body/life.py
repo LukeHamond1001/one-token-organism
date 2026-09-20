@@ -128,6 +128,7 @@ PHYSIOLOGY = dict(
     # --- the event's end (the offset after the world's quiet) and the marks ---
     offset_ticks=8,
     offset_form="settle",   # "settle" = the offset fires when the surprise settles (offset_fast/offset_slow, offset_settle); "count" = after offset_ticks
+    offset_foresee=0.0,     # THE QUIET FORESEEN (2026-09-20): under "settle" the utterance is also perceived complete when the readout's probability of the rest reaches this (the cortex expecting the quiet); 0 = off
     offset_settle=0.5,
     offset_fast=4,
     offset_slow=64,
@@ -913,6 +914,16 @@ class Life:
             self._surp_fast = (1 - af_) * getattr(self, "_surp_fast", st_) + af_ * st_
             self._surp_slow = (1 - as_) * getattr(self, "_surp_slow", st_) + as_ * st_
             settled_ = self._surp_fast <= float(self.cfg.get("offset_settle", 0.5)) * max(1e-6, self._surp_slow)
+            fp_ = float(self.cfg.get("offset_foresee", 0.0))
+            if fp_ > 0.0 and u == self.sil and not settled_:
+                # THE QUIET FORESEEN (offset_foresee; 2026-09-20, item 48): on the copy the surprise's averages never settled, at no line's end
+                # and in no pause of twenty one-handed lines (the count ended every utterance at eight ticks), so the ear's release and the
+                # turn's readiness, both keyed to a settled end, never came. The cortex is taught at every offset to expect the rest after a
+                # complete utterance; its readout's probability of the rest at a quiet tick is that expectation read directly. A listener
+                # projects the other's turn-end from what has been said; a pause mid-line, the quiet not foreseen, ends nothing.
+                with torch.no_grad():
+                    self._p_rest = float(torch.softmax(m.readout(pred1), 0)[self.sil])
+                settled_ = self._p_rest >= fp_
             if u == self.sil and not self._offset_done and self.ticks - self._last_world >= 1 and \
                     (settled_ or self.ticks - self._last_world >= off):         # the law, or the senses' own adaptation as the floor
                 self._offset(settled=bool(settled_)); self._offset_done = True   # a newborn's flat surprise still ends events by the count
