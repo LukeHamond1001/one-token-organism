@@ -1079,3 +1079,7 @@ for the answers' place in the slot.
  fox says yip") and at the end ("yip"), "a lemon is sour", "a egg is sweetie? a pear is sweetie?" corrected in its own mouth, the
  milk missed; five stray words in twelve silences, five words over the teaching's one-handed lines. Four of six, the new fact
  twice: the best sequence yet. The twenty lines under it are the last measure before the flags.
+ ADOPTED (15:55, for night 299's save): gate_ear_release 6. On the copy after 298 the twenty one-handed lines 0.30 words over, 85
+ percent clean, the turn on sixteen of twenty at a median eighteen ticks; the silence 2.0 words; the sequence four of six with the
+ new fact twice after three teachings. The ear rings through the end and a second and a half beyond it, then the gate is free:
+ the reply's readiness as the interval the recall needs. Archive: ops/archive/flags/BASE_FLAGS_pre_release6.txt.

@@ -9697,3 +9697,6 @@ over the greeting; "what is sour?" -> "a ... lemno", broken; "who gives us eggs?
 soft?" -> "the egg is hard", late; "what is sweet?" -> "a pear is sweet"; "what does the hen say?" -> "cluck cluck", late; "what
 do the ducks eat?" -> "bugs and bread", late; "who gives us milk?" -> nothing in the window. Four whole, all late: with the ear
 never released the answers wait on the floor's tries.
+THE REPLY'S READINESS INTO THE BODY (15:55, for night 299's save): the ear released six ticks after a perceived end. On the copy
+after 298: 0.30 words over a one-handed line, 85 percent clean, 2.0 words in a forty-second silence, four of six in the demo's
+sequence with the new fact answered twice after three teachings.
