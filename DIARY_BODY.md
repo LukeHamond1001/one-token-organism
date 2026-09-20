@@ -9639,3 +9639,6 @@ over the typing: 0.81 per slow line (57 percent clean; the conversation lines 0.
 frowns. The answers: the smile on 52 of 53 questions, 98 percent, a median 1.3 s after the line's end. The babble into the
 silence 11.6 known words a silent minute, the lowest there has been. The conversation lines, days 348 to 353: 1.34, 0.75, 0.53,
 0.94, 0.58, 0.80; the three-day mean 0.77. Night 296 began at 09:45; its fade is the second under the absolute floor.
+NIGHT 296 (09:45-10:25 on the 20th, 2560 dreams, no error, the gauge 0.802 to 0.847, forty minutes). THE SECOND FADE UNDER THE
+ABSOLUTE FLOOR TOOK 2610 against the day's writes, the store 30534: steady, the cut made once and the floor holding still. The
+floor stays at 0.07.
