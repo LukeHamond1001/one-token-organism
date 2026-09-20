@@ -1032,3 +1032,6 @@ for the answers' place in the slot.
  the served constants it had come once, right after the teaching. A pair heard once against the hen's and the dog's hundreds of
  the same form loses the recall; the demo's new fact should not share its question's form with the taught ones, and a fact of a
  distinct form ("what color is the fox?" -> "the fox is red") is rehearsed next.
+ THE SECOND CANDIDATE'S SILENCE (13:46): 2.3 words a silence (3.5 a silent minute; served 41): "a lemon is sour", "the egg is
+ hard", "the cow gives us milk", "a pear is |sweet" across the slot's edge, the ducks' "bugs" half, the eggs missed; the answers
+ arrive later than under the released ear, the ring holding the gate ten to twenty ticks and the floor's tries starting them.
