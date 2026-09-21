@@ -9804,3 +9804,9 @@ DAY 366 (09:59-11:01 on the 21st, the first day under the quiet foreseen at 0.2)
 typing: 0.02 per slow line (98 percent clean; the conversation lines 0.03); one frown. The answers: the smile on 64 of 78
 questions, 82 percent, a median 1.3 s after the line's end: 75, 80, 77, 83, 78, 72, 82. Night 309 (11:01-11:44, forty-three
 minutes) slept and saved on its own.
+THE MORNING AFTER NIGHT 309 (11:47 on the 21st): "and the lemon?" one-handed -> "a lemon is sour"; "and what does the fox say?" ->
+"the fox says yip", the fox's second fact whole; "did you sleep well?" one-handed -> "yes. I slept. I am up"; "what is sour?" ->
+"a lemon is sour"; "who gives us eggs?" -> "the hen ames"; "is the egg hard or soft?" -> "the egg is hard"; "what is sweet?" ->
+"a pear", late; "what does the hen say?" one-handed -> "cluck cluck"; "what do the ducks eat?" one-handed -> "bugs and bread";
+"who gives us milk?" -> "the cow gives us milk", at last; "what is up in the sky?" -> "twater. cold". Nine of eleven whole or
+near, the one-handed ones among them; nothing said over any line. The best morning there has been under the new constants.
