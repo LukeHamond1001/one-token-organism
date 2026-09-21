@@ -9775,3 +9775,7 @@ DAY 363 (04:31-05:35 on the 21st, the second day under the world form): 143 pare
 per slow line (96 percent clean; the conversation lines 0.06, the story lines 0.00); two frowns. The answers: the smile on 72 of
 87 questions, 83 percent, a median 1.3 s after the line's end: 74, 69, 65, 75, 80, 77, 83. Night 306 (05:35-06:18, forty-three
 minutes) slept and saved on its own.
+THE MORNING AFTER NIGHT 306 (06:22 on the 21st): "who gives us eggs?" -> "the hen gives us eggs"; "is the egg hard or soft?" ->
+"the egg is hard"; "what is sweet?" one-handed -> "a peri cluck"; "what does the hen say?" -> "cluck cluck"; "what do the ducks
+eat?" one-handed -> "bugs a(nd bread)", late; "who gives us milk?" one-handed -> nothing in the window; "what is up in the sky?"
+-> "the sun"; "see her?" -> "I see her". Nothing said over any question.
