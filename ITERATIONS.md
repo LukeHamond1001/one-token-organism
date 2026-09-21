@@ -1104,3 +1104,8 @@ for the answers' place in the slot.
  DAY 357 (18:20): not one word over any of forty one-handed lines, no frown in seventy-two minutes, the answers 74 percent at 2.2 s
  (from 42 and 4.3 the day before), the babble 9.4 a silent minute. The three-day mean of words over a conversation line 0.21,
  under the bar of 0.7 set on the 19th; the answers' share is what the nine-tick release must lift at night 300's save.
+ DAY 358 (20:55): no word over any of fifty-four one-handed lines, one frown, the answers 69 percent at 1.7 s. The interruptions
+ are settled; the answers' share is the demo's remaining number, and its door is the gate opening in the slot: after the foreseen
+ end the turn's floor is the resting floor (0.05, a try every twenty ticks) and the gate alone, freed at nine ticks, opens too
+ seldom. THE TURN'S FLOOR (gate_turn_floor; test 79): the readiness to reply inside the slot above the resting floor, a disclosed
+ constant; measured on the copy after 301 at 0.15 and 0.25 (the answers whole, the words in the silence, the twenty lines).

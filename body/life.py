@@ -170,6 +170,7 @@ PHYSIOLOGY = dict(
     gate_yield=0.0,       # THE YIELD (2026-09-20): past its slot after the world's line (gate_yield_after ticks), the learned gate is held by this much, the hold fading over gate_quiet_tau as the babble drive returns; 0 = off
     gate_yield_after=40,  # the slot for its turn after the world's last symbol, in ticks
     gate_turn=0,          # THE TURN'S READINESS (2026-09-20): under the babble drive the floor is whole for the slot (gate_yield_after ticks) after a world utterance perceived to have ended by the settle law; a pause the count ended opens no turn; 0 = off
+    gate_turn_floor=0.0,  # the spontaneous floor inside the slot after a foreseen end (2026-09-20 evening): the readiness to reply stronger than the resting floor; 0 = gate_floor
     gate_opt="sgd",
     gate_adam_lr=1e-3,
     # --- the mouth's decisiveness: the readout's sharpness, and exploration ---
@@ -1253,6 +1254,7 @@ class Life:
                     # complete (the settle law: the cortex expected the quiet), for the slot's length; a pause the count ended (a person
                     # thinking mid-line) opens no turn, and past the slot the drive's ramp rules the silence. Reads no content.
                     ramp = 1.0
+                    fl = max(fl, float(self.cfg.get("gate_turn_floor", 0.0)))   # THE TURN'S FLOOR: the reply's readiness above the resting floor (day 358: the answers 69 percent, the gate alone too seldom opening in the slot)
                 sure_ = float(self.cfg.get("gate_quiet_sure", 0.0))
                 if sure_ > 0.0:
                     # THE SURE PROPOSAL (gate_quiet_sure; 2026-09-17, 21:20, read in the chair): the drive held the floor at zero for the first

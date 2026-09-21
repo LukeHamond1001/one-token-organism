@@ -9733,3 +9733,7 @@ sour?" -> "a lemon is sour"; "who gives us eggs?" -> "the hen amiss"; "is the eg
 sweet?" one-handed -> "a pear is sweet"; "what does the hen say?" -> "cluc w tert"; "what do the ducks eat?" -> "bugs and bread";
 "who gives us milk?" one-handed -> "the", the rest past the window. Four whole at two to three seconds, two half, one late: the
 best morning under the new constants.
+DAY 358 (19:03-20:11 on the 20th, sixty-eight minutes, none silent; the nine-tick release's first day): 153 parent lines, 54 slow.
+Words said over the typing: 0.00 per slow line, all fifty-four clean, the conversation and story lines 0.00, the fast lines 0.01;
+one frown. The answers: the smile on 59 of 85 questions, 69 percent, a median 1.7 s after the line's end. Night 301 (20:11-20:54,
+forty-three minutes) slept and saved on its own, no reload armed, the flags unchanged.

@@ -31,7 +31,8 @@ while true; do
   n2=$(grep -c '"action": "night"' $L)
   if [ "$n2" -gt "$nnight" ]; then
     nnight=$n2; now=$(date +%Y-%m-%dT%H:%M)
-    echo "$(date +%H:%M:%S) night $nnight has begun; $(python3 ops/day_report.py $wake_ts $now --label "day" 2>&1 | tail -4 | tr '\n' ' ' | cut -c1-400)"
+    bn=$(curl -s -m 3 localhost:8020/state | python3 -c "import sys,json; print(json.load(sys.stdin).get('nights'))" 2>/dev/null)
+    echo "$(date +%H:%M:%S) night $bn has ended (the typist's night row); the day before it: $(python3 ops/day_report.py $wake_ts $now --label "day" 2>&1 | tail -4 | tr '\n' ' ' | cut -c1-400)"
   fi
   s2=$(grep -c '"action": "save"' $L)
   if [ "$s2" -gt "$nsave" ]; then
@@ -40,7 +41,7 @@ while true; do
     sleep 150                                                              # the reload, if one is armed, and the typist's morning
     cat $S/morning_300.jsonl >> $Q; cat $S/day_358.jsonl >> $Q
     python3 ops/read_stories.py --corpus data/stories_valid.txt --rows 4 --lines 4 > /dev/null 2>&1; python3 ops/revisit_rows.py --rows 3 > /dev/null 2>&1
-    echo "$(date +%H:%M:%S) the wake from night $nnight: the morning rows, the day's script, four stories and three revisits queued; the probe running"
+    echo "$(date +%H:%M:%S) the wake from night $bn: the morning rows, the day's script, four stories and three revisits queued; the probe running (probe_after_night$nnight.log)"
   fi
   if ! curl -s -m 3 localhost:8020/state | grep -q '"asleep": true'; then
     ahead=$(python3 ops/queue_depth.py 2>/dev/null | tail -1 | sed -E 's/lines ahead ([0-9]+).*/\1/')
