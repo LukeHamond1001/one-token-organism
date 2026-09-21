@@ -9790,3 +9790,6 @@ sweet?" -> nothing in the window; "what does the hen say?" -> "cluck cluck cluck
 Four of seven whole and the greeting; the one-handed questions the ones that miss.
 THE THRESHOLD LOWERED (08:35 on the 21st, for night 308's save): the quiet foreseen at 0.2, so the one-handed "who" questions
 end where the cortex expects the rest and their turns come at three ticks instead of thirty; the lines still clean.
+DAY 365 (08:08-09:14 on the 21st): 151 parent lines, 45 slow. Words said over the typing: 0.02 per slow line (98 percent clean; the
+conversation lines 0.00); one frown. The answers: the smile on 67 of 93 questions, 72 percent, a median 1.3 s after the line's
+end: 75, 80, 77, 83, 78, 72. Night 308 (09:14-09:57, forty-three minutes) slept and saved; the quiet foreseen at 0.2 at its save.
