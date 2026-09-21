@@ -1125,3 +1125,10 @@ for the answers' place in the slot.
  floor is not what made the old mornings whole. The remaining question is the body against the constants: the copy after 296
  gave five whole of six under the yield alone, the copy after 302 gives fifteen of twenty-four; the body saved before day 351
  (the old regime's) runs the same sample under the old flags and under the current ones.
+ THE BODY DRIFTED, NOT THE CONSTANTS (23:45): the body saved before day 351, under the old flags 21 of 24 answers carrying the key
+ word and 6.7 words in a sixty-tick silence; under the current flags 20 of 24 and 0.3 words. The current constants keep the
+ answers whole on a body that could say them, and the babble gone. The body after 302 gives 15 of 24 under the same constants:
+ the whole-ness went out of the body over the days between, and the drift's curve (the bodies after 299 and 300) is being read.
+ The suspect is the loop in which the child's own derailed first words are learned back: the cortex hears its own speech at
+ own_gain 0.3 and the wake lesson targets the recall's continuation of what it said (own_target_form recall, own_target_conf 0.3);
+ with the answers half-said for three days, the lesson has been rehearsing half-said answers.
