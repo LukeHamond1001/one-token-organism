@@ -1138,3 +1138,14 @@ for the answers' place in the slot.
  three on 299 and 300, three of three on 302), so the sample is coarse, but the level fell from twenty to the mid-teens and has
  not come back. The loop to test: a day on a copy (tools/day_on_copy.py, the eight pairs typed four rounds as the typist types
  them, the copy learning), the own-speech lesson targeting the recall against targeting the world, the answers before and after.
+
+49. THE OWN-SPEECH LESSON'S RECALL FORM EATS THE ANSWERS (2026-09-21 01:45; tools/day_on_copy.py on the copy after night 303, the
+same seed). Under own_target_form recall the eight taught questions carried their key word five times before the day and five
+after four rounds of the pairs; under own_target_form world, seven and seven. The two runs differ before any pair is typed: the
+wake lesson runs every twenty-four ticks through the asking itself, and under the recall form every position the child spoke is
+taught the recall's nearest symbol, a blend of the store's neighbours ("a l" taught "m"), so the cortex is pulled toward garbage
+each time it speaks, within minutes; under the world form its own positions owe the world's next symbol, discounted, and the
+answers stand. This is the drift of days 356-360 (item 48: twenty of twenty-four whole before day 351, ten to fifteen after):
+the recall form of 2026-09-12 was benign while the floor's tries started whole answers and turned on the body once the freed
+gate's first words derailed. ADOPTED for night 304's save: own_target_form world (archive BASE_FLAGS_pre_owntarget_world.txt).
+The measure: the answers' share and whole-ness on days 362 and after, the mornings, the same sample on the copy after 305.

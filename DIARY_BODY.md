@@ -9748,3 +9748,7 @@ DAY 360 (22:52 on the 20th to 00:03 on the 21st, the cycle's day): 153 parent li
 slow line, all clean, the conversation and story lines 0.00; no frown. The answers: the smile on 72 of 96 questions, 75 percent, a
 median 2.3 s after the line's end: 74, 69, 65, 75 over the four days under the new constants. The babble into the silence 4.6
 known words a silent minute. Night 303 (00:03-00:46, forty-three minutes) slept and saved on its own.
+THE LOOP CAUGHT (01:45 on the 21st, on the copy after night 303): under the own-speech lesson's recall form the eight taught
+answers came whole five times of eight, under the world form seven, the same body and seed, before a single pair was typed: the
+lesson through the asking itself pulls the cortex toward the recall's blend at every position it speaks. The world form goes in
+at night 304's save; item 49.
