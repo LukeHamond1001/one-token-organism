@@ -9788,3 +9788,5 @@ sour", at once; "who gives us eggs?" one-handed -> "the hen ames", late; "is the
 sweet?" -> nothing in the window; "what does the hen say?" -> "cluck cluck cluck"; "what do the ducks eat?" -> "bugs and bread";
 "who gives us milk?" one-handed -> nothing in the window, the third morning running; "what is up in the sky?" -> "tw agazing".
 Four of seven whole and the greeting; the one-handed questions the ones that miss.
+THE THRESHOLD LOWERED (08:35 on the 21st, for night 308's save): the quiet foreseen at 0.2, so the one-handed "who" questions
+end where the cortex expects the rest and their turns come at three ticks instead of thirty; the lines still clean.

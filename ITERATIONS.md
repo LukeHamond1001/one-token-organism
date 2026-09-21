@@ -1163,3 +1163,6 @@ The measure: the answers' share and whole-ness on days 362 and after, the mornin
  first quiet tick after each symbol, 0.00 at the most. The threshold at 0.5 missed the two "who" questions by a hair; at 0.2 it
  takes all eight with the pauses still at nothing. Measured on the eight questions and the twenty lines, then into the flags at
  night 308's save.
+ ADOPTED (08:35, for night 308's save): offset_foresee 0.2. On the copy after 307 the eight taught questions typed one-handed are
+ all foreseen and answered at 3 to 12 ticks (the milk and the eggs at 3, from 24 to 33); the twenty lines, sixteen ends foreseen,
+ no word over any line, the turns at a median nine ticks, three lines without one. Archive BASE_FLAGS_pre_foresee02.txt.
