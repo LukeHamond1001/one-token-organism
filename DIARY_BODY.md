@@ -9779,3 +9779,7 @@ THE MORNING AFTER NIGHT 306 (06:22 on the 21st): "who gives us eggs?" -> "the he
 "the egg is hard"; "what is sweet?" one-handed -> "a peri cluck"; "what does the hen say?" -> "cluck cluck"; "what do the ducks
 eat?" one-handed -> "bugs a(nd bread)", late; "who gives us milk?" one-handed -> nothing in the window; "what is up in the sky?"
 -> "the sun"; "see her?" -> "I see her". Nothing said over any question.
+DAY 364 (06:21-07:23 on the 21st, the third day under the world form): 151 parent lines, 47 slow. Words said over the typing: 0.02
+per slow line (98 percent clean; the conversation lines 0.03, the story lines 0.00); one frown. The answers: the smile on 69 of
+89 questions, 78 percent, a median 1.3 s after the line's end: 75, 80, 77, 83, 78. Night 307 (07:23-08:06, forty-three minutes)
+slept and saved on its own.
