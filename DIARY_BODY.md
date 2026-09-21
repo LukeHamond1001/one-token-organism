@@ -9737,3 +9737,7 @@ DAY 358 (19:03-20:11 on the 20th, sixty-eight minutes, none silent; the nine-tic
 Words said over the typing: 0.00 per slow line, all fifty-four clean, the conversation and story lines 0.00, the fast lines 0.01;
 one frown. The answers: the smile on 59 of 85 questions, 69 percent, a median 1.7 s after the line's end. Night 301 (20:11-20:54,
 forty-three minutes) slept and saved on its own, no reload armed, the flags unchanged.
+DAY 359 (20:54-22:06 on the 20th, the first day fed by the cycle): 159 parent lines, 43 slow. Words said over the typing: 0.00
+per slow line, all clean, the conversation and story lines 0.00, the fast lines 0.00; no frown. The answers: the smile on 60 of 92
+questions, 65 percent, a median 1.7 s after the line's end: 74, 69, 65 over the three days under the new constants, the
+whole-ness of the answer the number that slides. Night 302 (22:06-22:49, forty-three minutes) slept and saved on its own.
