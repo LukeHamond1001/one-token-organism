@@ -9728,3 +9728,8 @@ NIGHT 300 (18:20-19:03 on the 20th, forty-three minutes, 2560 dreams, no error, 
 store 31654). The release at nine ticks into the body at its save. Day 358 is its first day.
 THE PROBE AFTER NIGHT 300: the held-out 0.604, the cortex alone on the facts 0.695, the questions 10 of 30, the best there has
 been, the parent's last sixty lines 0.832.
+THE MORNING AFTER NIGHT 300 (19:04, the typist, the nine-tick release's first morning): nothing said over any question; "what is
+sour?" -> "a lemon is sour"; "who gives us eggs?" -> "the hen amiss"; "is the egg hard or soft?" -> "the egg is hard"; "what is
+sweet?" one-handed -> "a pear is sweet"; "what does the hen say?" -> "cluc w tert"; "what do the ducks eat?" -> "bugs and bread";
+"who gives us milk?" one-handed -> "the", the rest past the window. Four whole at two to three seconds, two half, one late: the
+best morning under the new constants.
