@@ -40,6 +40,8 @@ seed = arg("seed", 0); n_lines = arg("lines", 6); quiet = arg("quiet", 240)
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 life = Life.load(path, TOK, device="cpu", cfg=cfg, seed=seed); life.save_path = None; life.m.eval()
 questions = ["what is sour?", "who gives us eggs?", "is the egg hard or soft?", "what do the ducks eat?", "who gives us milk?", "what is sweet?", "what does the hen say?", "what is round?"][:n_lines]
+if arg("questions_file", ""):                                              # any questions, one a line (the reworded set of 2026-09-21)
+    questions = [l.rstrip("\n") for l in open(arg("questions_file", "")) if l.strip()][:n_lines]
 def own_since(p0):
     txt = "".join(e[0] for e in life.page[p0:] if e[1] == 1 and e[0])
     return len(re.findall(r"[A-Za-z]{2,}", txt)), txt
