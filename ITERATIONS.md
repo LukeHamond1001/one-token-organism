@@ -1109,3 +1109,8 @@ for the answers' place in the slot.
  end the turn's floor is the resting floor (0.05, a try every twenty ticks) and the gate alone, freed at nine ticks, opens too
  seldom. THE TURN'S FLOOR (gate_turn_floor; test 79): the readiness to reply inside the slot above the resting floor, a disclosed
  constant; measured on the copy after 301 at 0.15 and 0.25 (the answers whole, the words in the silence, the twenty lines).
+ THE TURN'S FLOOR MEASURED (21:20, the copy after 301): at 0.15 three and a half whole of six in the silence probe, the twenty
+ lines clean, the questions' turns at 2 to 11 ticks; at 0.25 two whole, the earlier tries starting words before the recall is in
+ ("ter i walk. he egg is hard"); the release at nine alone, on the copy after 299, four whole. No measured gain: the constant
+ stays at 0. The answers' share lives in the whole-ness of what the mouth says when the gate opens, not in how often it opens;
+ a larger sample of the release tick (eight questions, three seeds, nine against twelve) runs after night 302's wake.
