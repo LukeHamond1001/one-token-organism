@@ -1149,3 +1149,7 @@ answers stand. This is the drift of days 356-360 (item 48: twenty of twenty-four
 the recall form of 2026-09-12 was benign while the floor's tries started whole answers and turned on the body once the freed
 gate's first words derailed. ADOPTED for night 304's save: own_target_form world (archive BASE_FLAGS_pre_owntarget_world.txt).
 The measure: the answers' share and whole-ness on days 362 and after, the mornings, the same sample on the copy after 305.
+ THE RECOVERY BEGUN (04:50 on the 21st, the copy after night 305, one day and one night under the world form, the same eight
+ questions and three seeds): 18 of 24 answers carry their key word, from 15 after night 302; the lemon back three of three, the
+ milk three, the hen's eggs lost for now. Before day 351 it was 20. The loop closed, the pairs and the nights are repairing the
+ answers at about a question a day.

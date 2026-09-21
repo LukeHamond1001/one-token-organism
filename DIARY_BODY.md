@@ -9764,3 +9764,5 @@ the nights; the copy sample after night 305 is the reading.
 DAY 362 (02:42-03:46 on the 21st, the first day under the world form): 147 parent lines, 52 slow. Words said over the typing: 0.00
 per slow line, all clean; no frown. The answers: the smile on 69 of 90 questions, 77 percent, a median 1.3 s after the line's end:
 74, 69, 65, 75, 80, 77. Night 305 (03:46-04:29, forty-three minutes) slept and saved on its own.
+THE RECOVERY BEGUN (04:50 on the 21st, the copy after night 305): 18 of 24 whole on the eight questions, from 15 after night 302;
+"a lemon is sour" back three of three, "the hen gives us eggs" gone for now.
