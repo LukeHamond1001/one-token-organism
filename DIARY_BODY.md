@@ -9726,3 +9726,5 @@ back from 42 percent and 4.3 s. The babble into the silence 9.4 known words a si
 357: 0.94, 0.58, 0.80, 0.97, 0.56, 0.06, 0.00. Night 300 began at 18:20; the nine-tick release goes in at its save.
 NIGHT 300 (18:20-19:03 on the 20th, forty-three minutes, 2560 dreams, no error, the gauge 0.800 to 0.848, the fade 3015, the
 store 31654). The release at nine ticks into the body at its save. Day 358 is its first day.
+THE PROBE AFTER NIGHT 300: the held-out 0.604, the cortex alone on the facts 0.695, the questions 10 of 30, the best there has
+been, the parent's last sixty lines 0.832.
