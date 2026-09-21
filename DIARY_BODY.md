@@ -9822,3 +9822,7 @@ the hen say?" one-handed -> "cluck"; "what do the ducks eat?" one-handed -> "bug
 gives us milk". Eleven of twelve whole or near, five of them one-handed; nothing said over any line.
 GENERALIZATION (14:05 on the 21st, the copy after 310): the taught questions reworded, eleven of sixteen answered; "where is the
 fox?" taught five times lost to "the fox is red" both asks.
+DAY 368 (13:34-14:41 on the 21st): 142 parent lines, 51 slow. Words said over the typing: 0.06 per slow line (96 percent clean;
+the conversation lines 0.03, the story lines 0.11); two frowns. THE ANSWERS: the smile on 76 of 79 questions, 96 PERCENT, a
+median 1.5 s after the line's end: 75, 80, 77, 83, 78, 72, 82, 92, 96. Night 311 (14:41-15:24, forty-three minutes) slept and
+saved on its own.
