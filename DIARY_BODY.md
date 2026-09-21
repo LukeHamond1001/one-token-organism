@@ -9766,3 +9766,8 @@ per slow line, all clean; no frown. The answers: the smile on 69 of 90 questions
 74, 69, 65, 75, 80, 77. Night 305 (03:46-04:29, forty-three minutes) slept and saved on its own.
 THE RECOVERY BEGUN (04:50 on the 21st, the copy after night 305): 18 of 24 whole on the eight questions, from 15 after night 302;
 "a lemon is sour" back three of three, "the hen gives us eggs" gone for now.
+THE MORNING AFTER NIGHT 305 (04:36 on the 21st, the second under the world form): "what is sour?" one-handed -> "A LEMON IS SOUR",
+the lemon back on the served body; "who gives us eggs?" -> "the hen gives us eggs"; "is the egg hard or soft?" -> "the egg is
+hard"; "what is sweet?" -> "a", the rest past the window; "what does the hen say?" -> "cluck cluck cluck"; "what do the ducks
+eat?" -> "bugs and bread"; "who gives us milk?" one-handed -> "the sun. it? meow". Five of seven whole at about two seconds,
+nothing said over any question.
