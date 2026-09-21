@@ -1169,3 +1169,11 @@ The measure: the answers' share and whole-ness on days 362 and after, the mornin
  DAY 367 (13:32 on the 21st, the second day under the quiet foreseen at 0.2 and the sixth under the world form): not one word over
  any of fifty one-handed lines, no frown, the answers 92 percent of the questions at 1.3 s, the babble 0.6 a silent minute. The
  four measures the demo asked for are on the served body together for the first time; the sit-down of the 22nd is the check.
+ GENERALIZATION READ (14:05 on the 21st, the copy after 310): the eight taught questions reworded ("tell me. what is sour?",
+ "which one gives us eggs?", "the egg. is it hard?", "what do ducks like to eat?", "who gives milk to us?", "tell me what is
+ sweet", "what sound does the hen make?", "what color is the fox?"): 11 of 16 over two seeds carry the key word, "yes. the egg
+ is hard" to the yes-or-no form, "the hen gives us eggs" to "which one", "bees hum" for the hen's sound (a story line about a
+ sound), the milk lost to both. The wording generalizes about two thirds of the time. A new fact of a new form about a known
+ subject, "where is the fox?" -> "the fox is in the wood", taught five times: never, "the fox is red" both asks, the subject's
+ known fact winning the recall. The demo's honest edge: new wordings mostly, new facts of known forms with tellings, a second
+ fact about the same subject in a new form not yet.

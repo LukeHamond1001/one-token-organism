@@ -9820,3 +9820,5 @@ I slept. I am up"; "what is sour?" one-handed -> "a lemon is sour"; "who gives u
 cow for the hen; "is the egg hard or soft?" one-handed -> "the egg is hard"; "what is sweet?" -> "a pear is sweet"; "what does
 the hen say?" one-handed -> "cluck"; "what do the ducks eat?" one-handed -> "bugs and bread"; "who gives us milk?" -> "the cow
 gives us milk". Eleven of twelve whole or near, five of them one-handed; nothing said over any line.
+GENERALIZATION (14:05 on the 21st, the copy after 310): the taught questions reworded, eleven of sixteen answered; "where is the
+fox?" taught five times lost to "the fox is red" both asks.
