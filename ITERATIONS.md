@@ -1120,3 +1120,8 @@ for the answers' place in the slot.
  constants the mornings gave six of seven whole. Whether the old floor (the sure proposal, whole always) is what made them whole
  is measured next on the same body and seeds: the sure proposal at 0.45 with the release at nine, and with the ear never
  released (the old regime's shut gate, the floor's tries alone).
+ THE OLD FLOOR'S HYPOTHESIS REJECTED (23:25, the same body and seeds): the sure proposal at 0.45 with the release at nine, 13 of
+ 24; with the ear never released (the old regime's shut gate, the floor's tries alone), 9 of 24; without either, 15. The old
+ floor is not what made the old mornings whole. The remaining question is the body against the constants: the copy after 296
+ gave five whole of six under the yield alone, the copy after 302 gives fifteen of twenty-four; the body saved before day 351
+ (the old regime's) runs the same sample under the old flags and under the current ones.
