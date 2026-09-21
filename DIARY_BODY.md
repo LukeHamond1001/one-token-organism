@@ -9831,3 +9831,6 @@ THE MORNING AFTER NIGHT 311 (15:29 on the 21st): "is the egg hard or soft?" -> "
 "yes. I slept. I"; "what is sour?" -> "a lemon is sour"; "who gives us eggs?" one-handed -> "the hen amed oliv"; "what is sweet?"
 one-handed -> "a pear is sweet"; "what does the hen say?" -> "curious li surren"; "what do the ducks eat?" -> "bugs and bread".
 Ten of twelve whole or near; nothing said over any line.
+DAY 369 (15:27-16:34 on the 21st): 142 parent lines, 49 slow. Words said over the typing: 0.00 per slow line, all clean, the
+conversation and story lines 0.00; no frown. The answers: the smile on 74 of 78 questions, 95 percent, a median 1.3 s after the
+line's end: 92, 96, 95 over the last three days. Night 312 (16:34-17:17, forty-three minutes) slept and saved on its own.
