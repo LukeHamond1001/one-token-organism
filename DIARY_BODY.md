@@ -9756,3 +9756,8 @@ DAY 361 (00:49-01:57 on the 21st, the cycle's day, the last under the recall for
 typing: 0.02 per slow line (98 percent clean; the conversation lines 0.00, the story lines 0.09); one frown. The answers: the
 smile on 70 of 88 questions, 80 percent, a median 2.3 s after the line's end: 74, 69, 65, 75, 80. Night 304 (01:57-02:39,
 forty-two minutes) slept and saved; the world form of the own-speech target at its save.
+THE MORNING AFTER NIGHT 304 (02:46 on the 21st, the first under the world form): "what is sour?" one-handed -> "a lmaybutterfly!",
+the same derailing the copies show ("a l" then "m"), the cortex's own model of the lemon damaged by the days under the recall
+form, which the new form stops but does not undo; "who gives us eggs?" -> "the he(n)", late; "is the egg hard or soft?" -> "the egg
+is h(ard)", late; "what does the hen say?" -> "cluck cluck"; nothing said over any question. The repair is the daily pairs and
+the nights; the copy sample after night 305 is the reading.
