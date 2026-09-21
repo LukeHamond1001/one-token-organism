@@ -9810,3 +9810,7 @@ THE MORNING AFTER NIGHT 309 (11:47 on the 21st): "and the lemon?" one-handed -> 
 "a pear", late; "what does the hen say?" one-handed -> "cluck cluck"; "what do the ducks eat?" one-handed -> "bugs and bread";
 "who gives us milk?" -> "the cow gives us milk", at last; "what is up in the sky?" -> "twater. cold". Nine of eleven whole or
 near, the one-handed ones among them; nothing said over any line. The best morning there has been under the new constants.
+DAY 367 (11:47-12:49 on the 21st): 149 parent lines, 50 slow. Words said over the typing: 0.00 per slow line, every one of the
+fifty clean, the conversation and story lines 0.00; no frown. THE ANSWERS: the smile on 76 of 83 questions, 92 PERCENT, a median
+1.3 s after the line's end: 75, 80, 77, 83, 78, 72, 82, 92. The babble into the silence 0.6 known words a silent minute. Night
+310 (12:49-13:32, forty-three minutes) slept and saved on its own.

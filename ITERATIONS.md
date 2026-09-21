@@ -1166,3 +1166,6 @@ The measure: the answers' share and whole-ness on days 362 and after, the mornin
  ADOPTED (08:35, for night 308's save): offset_foresee 0.2. On the copy after 307 the eight taught questions typed one-handed are
  all foreseen and answered at 3 to 12 ticks (the milk and the eggs at 3, from 24 to 33); the twenty lines, sixteen ends foreseen,
  no word over any line, the turns at a median nine ticks, three lines without one. Archive BASE_FLAGS_pre_foresee02.txt.
+ DAY 367 (13:32 on the 21st, the second day under the quiet foreseen at 0.2 and the sixth under the world form): not one word over
+ any of fifty one-handed lines, no frown, the answers 92 percent of the questions at 1.3 s, the babble 0.6 a silent minute. The
+ four measures the demo asked for are on the served body together for the first time; the sit-down of the 22nd is the check.
