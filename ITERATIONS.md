@@ -1114,3 +1114,9 @@ for the answers' place in the slot.
  ("ter i walk. he egg is hard"); the release at nine alone, on the copy after 299, four whole. No measured gain: the constant
  stays at 0. The answers' share lives in the whole-ness of what the mouth says when the gate opens, not in how often it opens;
  a larger sample of the release tick (eight questions, three seeds, nine against twelve) runs after night 302's wake.
+ THE RELEASE TICK, THE LARGER SAMPLE (23:13, the copy after 302, eight taught questions at the tick, three seeds): the answers
+ carrying their key word, nine ticks 15 of 24, twelve 15, sixteen 14. Past nine the tick is not the lever. The failures are the
+ mouth's first word derailing ("a lma", "a park", "cur?") with the right answer often following in the same slot; under the old
+ constants the mornings gave six of seven whole. Whether the old floor (the sure proposal, whole always) is what made them whole
+ is measured next on the same body and seeds: the sure proposal at 0.45 with the release at nine, and with the ear never
+ released (the old regime's shut gate, the floor's tries alone).
