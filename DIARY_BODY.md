@@ -9783,3 +9783,8 @@ DAY 364 (06:21-07:23 on the 21st, the third day under the world form): 151 paren
 per slow line (98 percent clean; the conversation lines 0.03, the story lines 0.00); one frown. The answers: the smile on 69 of
 89 questions, 78 percent, a median 1.3 s after the line's end: 75, 80, 77, 83, 78. Night 307 (07:23-08:06, forty-three minutes)
 slept and saved on its own.
+THE MORNING AFTER NIGHT 307 (08:09 on the 21st): "did you sleep well?" -> "yes. I slept. I am up"; "what is sour?" -> "a lemon is
+sour", at once; "who gives us eggs?" one-handed -> "the hen ames", late; "is the egg hard or soft?" -> "the egg is hard"; "what is
+sweet?" -> nothing in the window; "what does the hen say?" -> "cluck cluck cluck"; "what do the ducks eat?" -> "bugs and bread";
+"who gives us milk?" one-handed -> nothing in the window, the third morning running; "what is up in the sky?" -> "tw agazing".
+Four of seven whole and the greeting; the one-handed questions the ones that miss.
