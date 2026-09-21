@@ -9793,3 +9793,10 @@ end where the cortex expects the rest and their turns come at three ticks instea
 DAY 365 (08:08-09:14 on the 21st): 151 parent lines, 45 slow. Words said over the typing: 0.02 per slow line (98 percent clean; the
 conversation lines 0.00); one frown. The answers: the smile on 67 of 93 questions, 72 percent, a median 1.3 s after the line's
 end: 75, 80, 77, 83, 78, 72. Night 308 (09:14-09:57, forty-three minutes) slept and saved; the quiet foreseen at 0.2 at its save.
+THE MORNING AFTER NIGHT 308 (10:00 on the 21st, the first under the quiet foreseen at 0.2): "what color is the fox?" -> "THE FOX
+IS RED", at once, the pair taught in the days' rows and kept; "and what does the dog say?" one-handed -> "woof woof"; "do you want
+water?" -> "yes. I"; "what does the fox say?" one-handed -> "tw and the duck"; "and what does the hen say?" -> "cluck cluck cluck";
+"is the milk sweet?" -> "yes. the milk is sweet"; "did you sleep well?" -> "yes. I slept. I am"; "what is sour?" -> "a lemon is
+sour"; "who gives us eggs?" -> "the hen ames"; "is the egg hard or soft?" -> "the egg is hard"; "what is sweet?" -> "a pear is
+sweet"; "what does the hen say?" one-handed -> "curain fal curious". Nine of twelve whole or near, nothing said over any line:
+the best morning under the new constants.
