@@ -9752,3 +9752,7 @@ THE LOOP CAUGHT (01:45 on the 21st, on the copy after night 303): under the own-
 answers came whole five times of eight, under the world form seven, the same body and seed, before a single pair was typed: the
 lesson through the asking itself pulls the cortex toward the recall's blend at every position it speaks. The world form goes in
 at night 304's save; item 49.
+DAY 361 (00:49-01:57 on the 21st, the cycle's day, the last under the recall form): 150 parent lines, 51 slow. Words said over the
+typing: 0.02 per slow line (98 percent clean; the conversation lines 0.00, the story lines 0.09); one frown. The answers: the
+smile on 70 of 88 questions, 80 percent, a median 2.3 s after the line's end: 74, 69, 65, 75, 80. Night 304 (01:57-02:39,
+forty-two minutes) slept and saved; the world form of the own-speech target at its save.
