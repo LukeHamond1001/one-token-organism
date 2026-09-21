@@ -1132,3 +1132,9 @@ for the answers' place in the slot.
  The suspect is the loop in which the child's own derailed first words are learned back: the cortex hears its own speech at
  own_gain 0.3 and the wake lesson targets the recall's continuation of what it said (own_target_form recall, own_target_conf 0.3);
  with the answers half-said for three days, the lesson has been rehearsing half-said answers.
+ THE DRIFT'S CURVE (23:58, the same eight questions, three seeds, the current flags): the body before day 351, 20 of 24; after
+ night 299, 18; after night 300, 10; after night 302, 15. The fall came across day 357 and night 300, the first day the ear was
+ released at six ticks; a partial return after. Per question the whole-ness flips from body to body ("the egg is hard" none of
+ three on 299 and 300, three of three on 302), so the sample is coarse, but the level fell from twenty to the mid-teens and has
+ not come back. The loop to test: a day on a copy (tools/day_on_copy.py, the eight pairs typed four rounds as the typist types
+ them, the copy learning), the own-speech lesson targeting the recall against targeting the world, the answers before and after.
