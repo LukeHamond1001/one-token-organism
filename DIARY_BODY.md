@@ -9814,3 +9814,9 @@ DAY 367 (11:47-12:49 on the 21st): 149 parent lines, 50 slow. Words said over th
 fifty clean, the conversation and story lines 0.00; no frown. THE ANSWERS: the smile on 76 of 83 questions, 92 PERCENT, a median
 1.3 s after the line's end: 75, 80, 77, 83, 78, 72, 82, 92. The babble into the silence 0.6 known words a silent minute. Night
 310 (12:49-13:32, forty-three minutes) slept and saved on its own.
+THE MORNING AFTER NIGHT 310 (13:36 on the 21st): "is the milk sweet?" -> "yes. the milk is sweet"; "what is sweet?" -> "a pear is
+sweet"; "and the lemon?" -> "a lemon is sour"; "and what does the fox say?" -> "the fox says yip"; "did you sleep well?" -> "yes.
+I slept. I am up"; "what is sour?" one-handed -> "a lemon is sour"; "who gives us eggs?" one-handed -> "the is cow gives", the
+cow for the hen; "is the egg hard or soft?" one-handed -> "the egg is hard"; "what is sweet?" -> "a pear is sweet"; "what does
+the hen say?" one-handed -> "cluck"; "what do the ducks eat?" one-handed -> "bugs and bread"; "who gives us milk?" -> "the cow
+gives us milk". Eleven of twelve whole or near, five of them one-handed; nothing said over any line.
