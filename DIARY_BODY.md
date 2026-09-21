@@ -9741,3 +9741,5 @@ DAY 359 (20:54-22:06 on the 20th, the first day fed by the cycle): 159 parent li
 per slow line, all clean, the conversation and story lines 0.00, the fast lines 0.00; no frown. The answers: the smile on 60 of 92
 questions, 65 percent, a median 1.7 s after the line's end: 74, 69, 65 over the three days under the new constants, the
 whole-ness of the answer the number that slides. Night 302 (22:06-22:49, forty-three minutes) slept and saved on its own.
+THE PROBE AFTER NIGHT 301: the held-out 0.608, the questions 9 of 30, the parent's last sixty lines 0.821. The memory holds; the
+answers' slide is in the mouth's whole-ness at the tick the gate opens.
