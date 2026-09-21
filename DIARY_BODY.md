@@ -9743,3 +9743,4 @@ questions, 65 percent, a median 1.7 s after the line's end: 74, 69, 65 over the 
 whole-ness of the answer the number that slides. Night 302 (22:06-22:49, forty-three minutes) slept and saved on its own.
 THE PROBE AFTER NIGHT 301: the held-out 0.608, the questions 9 of 30, the parent's last sixty lines 0.821. The memory holds; the
 answers' slide is in the mouth's whole-ness at the tick the gate opens.
+THE PROBE AFTER NIGHT 302: HELD-OUT 54 lines 0.604, the mouth answers 8 of 30.
