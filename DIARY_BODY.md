@@ -9771,3 +9771,7 @@ the lemon back on the served body; "who gives us eggs?" -> "the hen gives us egg
 hard"; "what is sweet?" -> "a", the rest past the window; "what does the hen say?" -> "cluck cluck cluck"; "what do the ducks
 eat?" -> "bugs and bread"; "who gives us milk?" one-handed -> "the sun. it? meow". Five of seven whole at about two seconds,
 nothing said over any question.
+DAY 363 (04:31-05:35 on the 21st, the second day under the world form): 143 parent lines, 51 slow. Words said over the typing: 0.04
+per slow line (96 percent clean; the conversation lines 0.06, the story lines 0.00); two frowns. The answers: the smile on 72 of
+87 questions, 83 percent, a median 1.3 s after the line's end: 74, 69, 65, 75, 80, 77, 83. Night 306 (05:35-06:18, forty-three
+minutes) slept and saved on its own.
