@@ -1158,3 +1158,8 @@ The measure: the answers' share and whole-ness on days 362 and after, the mornin
  window, which is the milk missed three mornings running; the "what" questions are foreseen and answered at 6 to 14 ticks. The
  readout's probability of the rest at those ends is read next, and the foreseen threshold set under it if the pauses inside
  lines stay well below.
+ THE QUIET FORESEEN AT THE ONE-HANDED ENDS (08:25): the readout's probability of the rest on the first quiet tick after the line:
+ "who gives us milk?" 0.28, "who gives us eggs?" 0.42, the six "what" and "is" questions 0.56 to 1.00; inside every line, at the
+ first quiet tick after each symbol, 0.00 at the most. The threshold at 0.5 missed the two "who" questions by a hair; at 0.2 it
+ takes all eight with the pauses still at nothing. Measured on the eight questions and the twenty lines, then into the flags at
+ night 308's save.
