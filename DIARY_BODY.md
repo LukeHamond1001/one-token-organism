@@ -9826,3 +9826,8 @@ DAY 368 (13:34-14:41 on the 21st): 142 parent lines, 51 slow. Words said over th
 the conversation lines 0.03, the story lines 0.11); two frowns. THE ANSWERS: the smile on 76 of 79 questions, 96 PERCENT, a
 median 1.5 s after the line's end: 75, 80, 77, 83, 78, 72, 82, 92, 96. Night 311 (14:41-15:24, forty-three minutes) slept and
 saved on its own.
+THE MORNING AFTER NIGHT 311 (15:29 on the 21st): "is the egg hard or soft?" -> "the egg is hard", twice; "what color is the fox?"
+-> "the fox is red"; "and what does the dog say?" -> "woof woof"; "do you want water?" -> "yes. I"; "did you sleep well?" ->
+"yes. I slept. I"; "what is sour?" -> "a lemon is sour"; "who gives us eggs?" one-handed -> "the hen amed oliv"; "what is sweet?"
+one-handed -> "a pear is sweet"; "what does the hen say?" -> "curious li surren"; "what do the ducks eat?" -> "bugs and bread".
+Ten of twelve whole or near; nothing said over any line.
