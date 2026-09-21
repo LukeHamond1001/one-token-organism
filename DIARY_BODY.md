@@ -9744,3 +9744,7 @@ whole-ness of the answer the number that slides. Night 302 (22:06-22:49, forty-t
 THE PROBE AFTER NIGHT 301: the held-out 0.608, the questions 9 of 30, the parent's last sixty lines 0.821. The memory holds; the
 answers' slide is in the mouth's whole-ness at the tick the gate opens.
 THE PROBE AFTER NIGHT 302: HELD-OUT 54 lines 0.604, the mouth answers 8 of 30.
+DAY 360 (22:52 on the 20th to 00:03 on the 21st, the cycle's day): 153 parent lines, 44 slow. Words said over the typing: 0.00 per
+slow line, all clean, the conversation and story lines 0.00; no frown. The answers: the smile on 72 of 96 questions, 75 percent, a
+median 2.3 s after the line's end: 74, 69, 65, 75 over the four days under the new constants. The babble into the silence 4.6
+known words a silent minute. Night 303 (00:03-00:46, forty-three minutes) slept and saved on its own.
