@@ -9834,3 +9834,8 @@ Ten of twelve whole or near; nothing said over any line.
 DAY 369 (15:27-16:34 on the 21st): 142 parent lines, 49 slow. Words said over the typing: 0.00 per slow line, all clean, the
 conversation and story lines 0.00; no frown. The answers: the smile on 74 of 78 questions, 95 percent, a median 1.3 s after the
 line's end: 92, 96, 95 over the last three days. Night 312 (16:34-17:17, forty-three minutes) slept and saved on its own.
+THE MORNING AFTER NIGHT 312 (17:22 on the 21st): "what is sweet?" -> "a pear is sweet", twice, once one-handed; "and the lemon?"
+one-handed -> "a lemon is sour"; "and what does the fox say?" -> "the fox says yip"; "and what does she say?" -> "cluck cluck",
+twice; "what is sour?" -> "a lemon is sour", and once "a lemnow"; "did you sleep well?" one-handed -> "yes. I slept. I", three
+words said over the greeting; "who gives us eggs?" one-handed -> "the hen ames"; "is the egg hard or soft?" -> "the egg is hard".
+Ten of twelve whole or near.
