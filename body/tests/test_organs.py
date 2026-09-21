@@ -1839,6 +1839,7 @@ def test_the_turns_floor():
     L.type_text("go", who="parent")
     while L.queue:
         L.tick()
+    for _ in range(6): L.tick()                                         # the count ends the pause first (the offset done)
     L._offset(settled=True); L.tick()
     assert abs(float(L._floor_now) - 0.2) < 1e-9, L._floor_now
     for _ in range(10): L.tick()
@@ -1847,6 +1848,7 @@ def test_the_turns_floor():
     L0.type_text("go", who="parent")
     while L0.queue:
         L0.tick()
+    for _ in range(6): L0.tick()
     L0._offset(settled=True); L0.tick()
     assert abs(float(L0._floor_now) - float(L0.cfg["gate_floor"])) < 1e-9, L0._floor_now
     assert tiny().cfg.get("gate_turn_floor", 0.0) == 0.0
