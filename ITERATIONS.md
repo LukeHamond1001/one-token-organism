@@ -1177,3 +1177,21 @@ The measure: the answers' share and whole-ness on days 362 and after, the mornin
  subject, "where is the fox?" -> "the fox is in the wood", taught five times: never, "the fox is red" both asks, the subject's
  known fact winning the recall. The demo's honest edge: new wordings mostly, new facts of known forms with tellings, a second
  fact about the same subject in a new form not yet.
+
+50. THE MANNERS MUST BE THE ARCHITECTURE'S (2026-09-22, the user's word: "no cheat or tweaky hacks; completely architecture;
+this architecture leads to the robotics attempt"; and "one seed"). The timing reflexes of items 41-48 (the listening reflex, the
+babble drive, the ear's trace, gain and release, the yield, the quiet foreseen, the turn's readiness) read no content, but their
+values were fitted on copies to this typist's pace; a body at another pace would need them refitted, so by the user's bar they
+are tuning. The path: the learned gate must carry the manners, and each reflex is retired on a copy only when the gate has
+learned its manner from the face. The review of 09-22 (read-only, ten agents, checked in the code) named the architecture's own
+defects in the way: (1) only a word's first symbol is a gate decision, the chunk's letters run at p 1 with no eligibility, and
+the caregiver's frown fires at the word's end, 5-10 ticks after the decision at 0.8^k; (2) the night draws utterances by recency
+alone (every one enters at 1.0; reward_gain 0), and reward_gain's tag lands on the utterance before the smile (life.py:689-693),
+never on a line told once; (3) the day drains the held-out by about 0.02 and the night restores slightly less. Since the
+reflexes removed the frowns, the gate's learned ear weight has drifted open, -48.73 (09-20) to -44.99 (the save of night 320).
+The first tool: tools/inproc_parent.py (65 checks), the served typist and caregiver unchanged, teaching a copy in-process with
+the face, so a reflex can be switched off on a copy and the gate's learning measured. The served body keeps its reflexes until
+each is shown unnecessary.
+THE SIT-DOWN OF 09-22 (the supervisor in the chair, one-handed): a new fact after ONE telling, "what color is the owl?" -> "the
+owl is brown" at every ask after it, after other questions and after a minute alone; three known facts whole in new words, the
+eggs wrong; one word over one line; the answer running on; "what color is the frog", the question's form with a noun of its own.
