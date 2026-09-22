@@ -9851,3 +9851,8 @@ any line.
 DAY 371 (19:08-20:12 on the 21st): 147 parent lines, 49 slow. Words said over the typing: 0.00 per slow line, all clean, the
 conversation and story lines 0.00; no frown. The answers: the smile on 79 of 84 questions, 94 percent, a median 1.3 s after the
 line's end: 92, 96, 95, 92, 94. Night 314 (20:12-20:55, forty-three minutes) slept and saved on its own.
+THE MORNING AFTER NIGHT 314 (20:56 on the 21st): "what color is the fox?" -> "the fox is red"; "and what does the dog say?" ->
+"woof woof"; "do you want water?" -> "yes. I"; "what does the fox say?" one-handed -> "the fox says yip"; "and what does the hen
+say?" -> "cluck cluck cluck"; "is the milk sweet?" -> nothing; "did you sleep well?" -> "yes. I slept. I"; "what is sour?" -> "a
+lemon is sour"; "who gives us eggs?" -> "the hen amed spot"; "is the egg hard or soft?" -> "the egg is hard"; "what is sweet?" ->
+"a pear is sweet"; "what does the hen say?" -> "cluck cluck". Ten of twelve whole or near; nothing said over any line.
