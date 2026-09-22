@@ -9842,3 +9842,9 @@ Ten of twelve whole or near.
 DAY 370 (17:20-18:23 on the 21st): 147 parent lines, 49 slow. Words said over the typing: 0.06 per slow line (98 percent clean; the
 conversation lines 0.08, the story lines 0.00); one frown. The answers: the smile on 82 of 89 questions, 92 percent, a median
 1.3 s after the line's end: 92, 96, 95, 92. Night 313 (18:23-19:06, forty-three minutes) slept and saved on its own.
+THE MORNING AFTER NIGHT 313 (19:09 on the 21st): "did you sleep well?" -> "yes. I slept. I am up"; "what is sour?" one-handed ->
+"a lemon is sour"; "who gives us eggs?" one-handed -> "the hen amed spo"; "is the egg hard or soft?" -> "the egg is hard"; "what
+is sweet?" -> "a pear i", late; "what does the hen say?" -> "cluck cluck"; "what do the ducks eat?" -> "ggggg gg is hard", a
+stutter; "who gives us milk?" one-handed -> "the sun. it is hard"; "what is up in the sky?" one-handed -> "the sun. it is hot";
+"is the milk sweet?" one-handed -> nothing. Six of eleven whole or near, the weakest of the last four mornings; nothing said over
+any line.
