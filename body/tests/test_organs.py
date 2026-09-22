@@ -1897,12 +1897,277 @@ def test_the_tag_at_entry():
     print("81 the tag at entry: the repeated line's last entries", [round(v, 2) for v in S[4:8]], "the new line", round(S[-1], 2), "; flat, all 1.0")
 
 
+def _pace_q(xs, p):
+    """the sample quantile the trackers are read against (the nearest rank)"""
+    s = sorted(xs)
+    return float(s[min(len(s) - 1, max(0, int(math.ceil(p * len(s))) - 1))])
+
+
+def test_pace_trackers_learn_the_partner():
+    """82 (2026-09-23, the sensed pace): the running quantiles in log units learn the partner's pace one heard event at a time: silences
+    of 2-4 ticks with a tenth at 8-28 give P near their 99th percentile, returns of 36-50 with a fifth at 80-190 give R_lo and R_hi near
+    their 5th and 95th; the same stream stretched twice as long gives twice the values"""
+    import random
+    def run(k):
+        L = tiny(pace_sense=1); rng = random.Random(7); sil, ret = [], []
+        for _ in range(600):
+            for _ in range(23):
+                g = rng.randint(2, 4) if rng.random() < 0.9 else rng.randint(8, 28)
+                L._gap_foreseen = False; L._pace_update(g * k); sil.append(g * k)
+            g = rng.randint(36, 50) if rng.random() < 0.8 else rng.randint(80, 190)
+            L._gap_foreseen = True; L._pace_update(g * k); ret.append(g * k)
+        return L._pace(), (_pace_q(sil, 0.99), _pace_q(ret, 0.05), _pace_q(ret, 0.95)), L
+    (P1, lo1, hi1), (qP1, qlo1, qhi1), L1 = run(1)
+    (P2, lo2, hi2), (qP2, qlo2, qhi2), _ = run(2)
+    for got, want in ((P1, qP1), (lo1, qlo1), (hi1, qhi1), (P2, qP2), (lo2, qlo2), (hi2, qhi2)):
+        assert abs(got / want - 1.0) <= 0.15, ((P1, lo1, hi1), (qP1, qlo1, qhi1), (P2, lo2, hi2), (qP2, qlo2, qhi2))
+    for a, b in ((P1, P2), (lo1, lo2), (hi1, hi2)):
+        assert abs(b / (2.0 * a) - 1.0) <= 0.15, ((P1, lo1, hi1), (P2, lo2, hi2))
+    assert L1._pq["n_ret"] == 600 and L1._pq["n_pause"] >= 0.99 * 600 * 23, L1._pq
+    assert tiny().cfg.get("pace_sense", 0) == 0
+    print(f"82 the pace trackers: P {P1:.1f} (sample {qP1:.0f}), R_lo {lo1:.1f} ({qlo1:.0f}), R_hi {hi1:.1f} ({qhi1:.0f}); stretched x2: {P2:.1f}, {lo2:.1f}, {hi2:.1f}")
+
+
+def test_pace_what_is_not_a_pause():
+    """83: the pause tracker hears silences of two ticks or more under R_lo; a one-tick gap (the line's own rhythm), a silence of R_lo or
+    longer, a silence after a foreseen end (a return, heard by R_lo and R_hi instead) and the day's first symbol are not pauses"""
+    L = tiny(pace_sense=1)
+    a_id = TOK.token_to_id("a"); fore = {"on": False}
+    L._pace_top = lambda pred: L.sil if fore["on"] else a_id
+    L._pq.update(lo=math.log(10.0), hi=math.log(20.0))
+    def n():
+        return (L._pq["n_pause"], L._pq["n_ret"])
+    L.type_text("a", who="parent"); L.tick()
+    assert n() == (0, 0), n()                                          # the day's first symbol: its gap is the night's sentinel
+    L.type_text("b", who="parent"); L.tick()
+    assert n() == (0, 0), n()                                          # a one-tick gap is no silence
+    for _ in range(5): L.tick()
+    q0 = L._pq["pause"]; L.type_text("c", who="parent"); L.tick()
+    assert n() == (1, 0) and L._pq["pause"] != q0, (n(), q0)           # a pause of six ticks: heard
+    for _ in range(12): L.tick()
+    L.type_text("d", who="parent"); L.tick()
+    assert n() == (1, 0), n()                                          # thirteen ticks, past R_lo: not a pause
+    fore["on"] = True; L.tick(); fore["on"] = False                    # the end foreseen at the first quiet tick (the shadow's M1)
+    for _ in range(4): L.tick()
+    lo0 = L._pq["lo"]; L.type_text("e", who="parent"); L.tick()
+    assert n() == (1, 1) and L._pq["lo"] != lo0, n()                    # six ticks after a foreseen end: a return, not a pause
+    pq0 = dict(L._pq)
+    rep = L.night()
+    assert not rep.get("error") and rep.get("pace", {}).get("returns") == 1, rep.get("pace")
+    assert L._pq == pq0 and not L._gap_foreseen and L._sh_done       # the trackers kept, the labels cleared
+    L.type_text("f", who="parent"); L.tick()
+    assert n() == (1, 1), n()                                          # the morning's first symbol: not heard as a gap
+    print("83 what is not a pause: the day's first symbol, a one-tick gap, a silence past R_lo and a return after a foreseen end; the trackers kept through the night")
+
+
+def test_pace_pause_outlasted():
+    """84 (M2, M3): with P at 26, a 20-tick pause inside a line holds the ear at 1 and the floor at 0 and ends nothing; a 30-tick pause
+    is ended unforeseen at the 26th tick, the ear let go at once and the child's slot open"""
+    L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0)
+    a_id = TOK.token_to_id("a"); L._pace_top = lambda pred: a_id       # nothing foreseen
+    L._pq.update(pause=math.log(26.0), lo=math.log(37.0), hi=math.log(190.0))
+    fired = []; _o = L._offset
+    L._offset = lambda settled=True: (fired.append((L.ticks - L._last_world, bool(settled))), _o(settled=settled))[1]
+    L.type_text("go", who="parent")
+    while L.queue:
+        L.tick()
+    rows = []
+    for _ in range(20):
+        L.tick(); rows.append((float(L._ear_now), float(L._floor_now)))
+    assert fired == [] and not L._offset_done and all(e == 1.0 and f == 0.0 for e, f in rows), (fired, rows)
+    L.type_text("o", who="parent"); L.tick()
+    rows = []
+    for _ in range(30):
+        s = L.ticks - L._last_world; L.tick(); rows.append((s, float(L._ear_now), float(L._floor_now), L._offset_done))
+    assert fired == [(26, False)], fired
+    at = [r for r in rows if r[0] == 26][0]
+    assert at[1] == 0.0 and abs(at[2] - float(L.cfg["gate_floor"])) < 1e-12 and at[3] and L._turn_open, at
+    assert all(r[1] == 1.0 and r[2] == 0.0 for r in rows if r[0] < 26), rows
+    assert L._pace_day["pause"] == 1 and L._pace_day["fore"] == 0
+    print("84 the pause outlasted: a 20-tick pause holds the ear at 1 and the floor at 0, nothing ended; a 30-tick pause ended unforeseen at 26, the ear 0, the slot open")
+
+
+def _pace_fake(seed=3, th=0.3):
+    """a forecast that moves for three ticks after the end and then stands still (since 1 the end; 2, 3, 4 moving; from 5 still)"""
+    g = torch.Generator().manual_seed(seed)
+    b0 = F.normalize(torch.randn(64, generator=g), dim=0); b1 = torch.randn(64, generator=g); b1 = F.normalize(b1 - (b1 @ b0) * b0, dim=0)
+    def fake(s):
+        a = min(max(s - 1, 0), 3) * th
+        return math.cos(a) * b0 + math.sin(a) * b1
+    return fake
+
+
+def test_pace_reply_ready():
+    """85 (M4): after a foreseen end the held ear lets go on the first tick the forecast has settled (its change at most half its largest
+    since the end) with the rest not its most likely symbol: not while it moves, not while it still expects the rest; a world symbol
+    before then cancels it; with ready_law 0 the release comes at gate_ear_release (9) ticks"""
+    a_id = TOK.token_to_id("a"); fake = _pace_fake()
+    def body(**kw):
+        L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0, **kw)
+        L._pq.update(pause=math.log(1000.0), lo=math.log(37.0), hi=math.log(190.0))
+        orig = L._pace_hear
+        L._pace_hear = lambda u, pred, live: orig(u, fake(L.ticks - L._last_world), live)
+        L._pace_top = lambda pred: L.sil if (L.ticks - L._last_world) in (1, 2, 4, 5) else a_id   # moving at 3 with the rest not first
+        L.type_text("go", who="parent")
+        while L.queue:
+            L.tick()
+        return L
+    L = body(); rows = []
+    for _ in range(8):
+        s = L.ticks - L._last_world; L.tick(); rows.append((s, L._ear_held, float(L._ear_now), L._offset_done))
+    assert rows[0][0] == 1 and rows[0][3] and L._pace_day["fore"] == 1, rows              # the end foreseen at the first quiet tick
+    assert [r[1] for r in rows] == [True] * 5 + [False] * 3, rows                        # held through 5, let go at 6
+    assert [r[2] for r in rows] == [1.0] * 5 + [0.0] * 3, rows                           # the ear 1 while held, 0 in the slot after
+    assert L._pace_day["rel"] == [6], L._pace_day
+    L2 = body()
+    L2.tick(); L2.tick()                                                                  # the end at 1, the reply not yet ready at 2
+    assert L2._ready_E is not None and L2._ear_held
+    L2.type_text("x", who="parent"); L2.tick()
+    assert L2._ready_E is None and L2._ear_held and float(L2._ear_now) == 1.0 and L2._pace_day["cancel"] == 1 and L2._pace_day["rel"] == []
+    L0 = body(ready_law=0, gate_ear_release=9); held = []
+    for _ in range(12):
+        s = L0.ticks - L0._last_world; L0.tick(); held.append((s, L0._ear_held))
+    assert [h for s, h in held] == [True] * 8 + [False] * 4 and L0._pace_day["rel"] == [9], held
+    print("85 the reply ready: held while the forecast moves or expects the rest, let go on the first still tick with a symbol first (6); a symbol before cancels it; ready_law 0 at 9")
+
+
+def test_pace_turn_wait_alone():
+    """86 (M5): with R_lo 37 and R_hi 190, after an end the ear reads 0 in the slot, 1 at 38, 0.5 at 285 and 0 at 380; the floor is
+    gate_floor at 30, 0 at 150, 0.025 at 285 and whole at 380; before the first return, no wait and the whole floor"""
+    a_id = TOK.token_to_id("a")
+    def ended(lo, hi):
+        L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0)
+        L._pace_top = lambda pred: a_id
+        L._pq.update(pause=math.log(2.0), lo=lo, hi=hi)
+        L.type_text("go", who="parent")
+        while L.queue:
+            L.tick()
+        L.tick(); L.tick()                                                 # the pause outlasted at 2: the ear let go, the slot open
+        assert L._offset_done and not L._ear_held and L._turn_open
+        return L
+    L = ended(math.log(37.0), math.log(190.0)); got = {}
+    for s in (30, 38, 150, 285, 380):
+        L._last_world = L.ticks - s; L.tick(); got[s] = (float(L._ear_now), float(L._floor_now))
+    f = float(L.cfg["gate_floor"])
+    want = {30: (0.0, f), 38: (1.0, 0.0), 150: (1.0, 0.0), 285: (0.5, f * 0.5), 380: (0.0, f)}
+    assert all(abs(got[s][0] - want[s][0]) < 1e-9 and abs(got[s][1] - want[s][1]) < 1e-9 for s in want), (got, want)
+    L2 = ended(None, None)
+    L2._last_world = L2.ticks - 150; L2.tick()
+    assert float(L2._ear_now) == 0.0 and abs(float(L2._floor_now) - f) < 1e-12, (L2._ear_now, L2._floor_now)
+    print("86 turn, wait, alone: the ear", {s: round(v[0], 3) for s, v in got.items()}, "the floor", {s: round(v[1], 4) for s, v in got.items()}, "; no wait before the first return")
+
+
+def test_pace_scales_with_the_partner():
+    """87: one script at its silences x1 and x2, the trackers at x1 and x2: the ends fall at the same symbol, the releases (the body's
+    own latency, in cortex steps) at the same tick, the slot's close and the drive's return at twice the ticks, within one"""
+    a_id = TOK.token_to_id("a"); fake = _pace_fake()
+    SCRIPT = [("hello", 2), (" there.", 12), ("what is", 3), (" that?", 8), ("a dog", 7), (" runs.", 30)]
+    def live(k):
+        L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0)
+        L._pq.update(pause=math.log(6.4 * k), lo=math.log(10.4 * k), hi=math.log(20.4 * k))   # off the integers, so a tick's rounding cannot alias
+        heard = {"n": 0, "last": ""}
+        orig_heard = L._pace_heard
+        def on_heard(lv):
+            heard["n"] += 1; return orig_heard(lv)
+        L._pace_heard = on_heard
+        orig = L._pace_hear
+        L._pace_hear = lambda u, pred, lv: orig(u, fake(L.ticks - L._last_world), lv)
+        def top(pred):
+            if L._ready_E is not None:
+                return L.sil if L.ticks - L._ready_E < 3 else a_id               # the reply's plan: the rest for three ticks, then a symbol
+            return L.sil if heard["last"] in ".?" else a_id                      # a line's end foreseen at its full stop or its question mark
+        L._pace_top = top
+        ends, rels, gaps = [], [], []
+        _o = L._offset
+        L._offset = lambda settled=True: (ends.append((heard["n"], bool(settled))), _o(settled=settled))[1]
+        _r = L._pace_release
+        L._pace_release = lambda lv, since=None: (rels.append(since), _r(lv, since))[1]
+        for text, quiet in SCRIPT:
+            for ch in text:
+                L.type_text(ch, who="parent"); L.tick(); heard["last"] = ch
+            rows = []
+            for _ in range(quiet * k):
+                s = L.ticks - L._last_world; L.tick(); rows.append((s, float(L._floor_now)))
+            gaps.append(rows)
+        return ends, rels, gaps, L
+    e1, r1, g1, L1 = live(1)
+    e2, r2, g2, L2 = live(2)
+    f = float(L1.cfg["gate_floor"])
+    assert e1 == e2 and e1 == [(12, True), (25, True), (30, False), (36, True)], (e1, e2)   # the same symbols; the pause outlasted in "a dog"
+    assert r1 == r2 and r1 == [5, 5, 5], (r1, r2)                     # moving at 2-4, still at 5 with a symbol first: the same tick at both
+    def first(rows, cond):
+        return next(s for s, fl in rows if cond(fl))
+    for i in (1, 5):                                                     # after " there." and " runs.": the slot closes past R_lo
+        c1, c2 = first(g1[i], lambda fl: fl < f - 1e-12), first(g2[i], lambda fl: fl < f - 1e-12)
+        assert abs(c2 - 2 * c1) <= 1 and 10 <= c1 <= 11, (i, c1, c2)
+    c1, c2 = first(g1[5], lambda fl: fl < f - 1e-12), first(g2[5], lambda fl: fl < f - 1e-12)
+    d1 = next(s for s, fl in g1[5] if s > c1 and fl > 0.0); d2 = next(s for s, fl in g2[5] if s > c2 and fl > 0.0)
+    assert abs(d2 - 2 * d1) <= 1 and 19 <= d1 <= 21, (d1, d2)            # the drive returns past R_hi
+    assert L1._pace_day["false"] == 1 and L2._pace_day["false"] == 1
+    print("87 the pace scales with the partner: ends at the same symbols", [e[0] for e in e1], "releases at", [r for r in r1 if r is not None],
+          "both; the slot closed at", first(g1[5], lambda fl: fl < f - 1e-12), "and", first(g2[5], lambda fl: fl < f - 1e-12), "; the drive back at", d1, "and", d2)
+
+
+def test_pace_shadow_changes_nothing():
+    """88: pace_sense 1 (the shadow) lives the same life as 0 under the served reflexes (the settle law and the quiet foreseen, the ear's
+    trace, gain and release at 9, the listening reflex, the yield, the babble drive and the turn): every weight, the store, the utterances,
+    the page and the feelings equal, with the shadow's ends, releases and trackers running; save and load keep the trackers, and a save
+    from before them loads with the newborn's values"""
+    import os, tempfile
+    served = dict(gate_ear=1, gate_listen=1.0, offset_form="settle", offset_ticks=8, offset_foresee=0.2, gate_ear_decay=0.9, gate_ear_gain=1.5,
+                  gate_ear_release=9, gate_quiet_tau=1200, gate_yield=20.0, gate_turn=1, end_symbol="rest", end_rest=1, night_rounds=2, night_starts=8)
+    SCRIPT = [("what do you want?", 0), ("I want milk", 1), ("do you see the ball?", 2), ("yes. the ball is red", 1), ("what is cold?", 3), ("ice is cold", 0)]
+    out = {}
+    for ps in (0, 1):
+        L = tiny(pace_sense=ps, **served)
+        faces = {40: 2.0, 41: 0.0, 150: -2.0, 151: 0.0}
+        typed = {}; line_end = set()
+        for j, (text, pause) in enumerate(SCRIPT):                          # a line every 50 ticks; a slow hand pauses after its spaces
+            t_ = 50 * j
+            for ch in text:
+                typed[t_] = ch; t_ += 1 + (pause if ch == " " else 0)
+            line_end.add(t_ - (pause if text[-1] == " " else 0))
+        orig_top = L._pace_top                                              # the shadow's M1 at each line's end and its M4 on the real forecast
+        L._pace_top = lambda pred, _L=L, _o=orig_top, _e=line_end: _L.sil if (_L.ticks in _e or _L.ticks - 1 in _e) else _o(pred)
+        for t in range(320):
+            if t in typed:
+                L.type_text(typed[t], who="parent")
+            if t in faces:
+                L.set_face(faces[t])
+            L.tick()
+        rep = L.night()
+        assert not rep.get("error"), rep.get("error")
+        for _ in range(40):
+            L.tick()
+        out[ps] = (L, rep)
+    (A, ra), (B, rb) = out[0], out[1]
+    sa, sb = A.m.state_dict(), B.m.state_dict()
+    assert all(torch.equal(sa[k_], sb[k_]) for k_ in sa), [k_ for k_ in sa if not torch.equal(sa[k_], sb[k_])][:5]
+    for k_ in ("K", "V", "S", "W"):
+        assert torch.equal(getattr(A.store, k_), getattr(B.store, k_)), k_
+    assert A.page == B.page and A.utts == B.utts and A.utt_S == B.utt_S and (A.mood, A.fatigue, A.stress) == (B.mood, B.fatigue, B.stress)
+    assert "pace" not in ra and "pace" in rb and rb["pace"]["ends_foreseen"] >= 4 and rb["pace"]["ends_by_pause"] >= 1 and rb["pace"]["releases"] >= 1, rb.get("pace")
+    assert B._pq["n_pause"] + B._pq["n_ret"] > 0 and A._pq["n_pause"] + A._pq["n_ret"] == 0
+    path = os.path.join(tempfile.mkdtemp(), "p.pt"); B.save_path = path; B.save()
+    C = Life.load(path, TOK, save_path=None)
+    assert C._pq == B._pq and C._pace_day == B._pace_day and C.cfg["pace_sense"] == 1, (C._pq, B._pq)
+    C.tick()
+    blob = torch.load(path, weights_only=False); del blob["life"]["pace"]; del blob["life"]["pace_day"]; torch.save(blob, path)
+    D = Life.load(path, TOK, save_path=None)
+    assert D._pq == {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0} and D._pace_day == Life._pace_day_new(), D._pq
+    D.tick()
+    print("88 the shadow changes nothing: weights, store, utterances, page and feelings equal at 0 and 1; the shadow's day", {k_: rb["pace"][k_] for k_ in ("P", "ends_foreseen", "ends_by_pause", "releases")},
+          "; the trackers saved and loaded; an older save loads at the newborn's values")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
     tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance, test_night_reads_a_corpus]
     tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield, test_the_turns_readiness, test_the_quiet_foreseen, test_the_replys_readiness, test_the_turns_floor, test_the_continuation_gated, test_the_tag_at_entry]
+    tests += [test_pace_trackers_learn_the_partner, test_pace_what_is_not_a_pause, test_pace_pause_outlasted, test_pace_reply_ready, test_pace_turn_wait_alone,
+              test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing]
     failed = 0
     for t in tests:
         try:
