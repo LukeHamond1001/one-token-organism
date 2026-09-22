@@ -10,15 +10,15 @@ S=$1; FIRST=$2; L=data/watch2_caregiver.jsonl; Q=data/teach_queue_w2.jsonl
 until [ "$(grep -c '"action": "save"' $L)" -ge "$FIRST" ]; do sleep 30; done
 sleep 240
 POOL=(
-'{"say": ["the fox is by the wood. what color is the fox?", "b: the fox is red", "and what does the fox say?", "b: the fox says yip"]}'
-'{"say": ["the hen pecks by the wall. who gives us eggs?", "b: the hen gives us eggs", "and what does she say?", "b: cluck cluck"]}'
+'{"say": ["by the wood. what color is the fox?", "b: the fox is red", "and what does the fox say?", "b: the fox says yip"]}'
+'{"say": ["by the wall. who gives us eggs?", "b: the hen gives us eggs", "and what does she say?", "b: cluck cluck"]}'
 '{"say": ["I cut a lemon. what is sour?", "b: a lemon is sour", "and what is sweet?", "b: a pear is sweet"]}'
-'{"say": ["the ducks come to the bread. what do they eat?", "b: bugs and bread", "and who gives us milk?", "b: the cow gives us milk"]}'
+'{"say": ["the ducks come. what do they eat?", "b: bugs and bread", "and who gives us milk?", "b: the cow gives us milk"]}'
 '{"say": ["is the egg hard or soft?", "b: the egg is hard", "good. and the bread?", "b: the bread is soft"]}'
 '{"say": ["what color is the fox?", "b: the fox is red", "and what does the dog say?", "b: woof woof"]}'
 '{"say": ["it is hot. we sit in the shade", "b: the shade is cool", "do you want water?", "b: yes. water is cold"]}'
 '{"say": ["what does the fox say?", "b: the fox says yip", "and what does the hen say?", "b: cluck cluck"]}'
-'{"say": ["the cow is by the gate. who gives us milk?", "b: the cow gives us milk", "is the milk sweet?", "b: yes. the milk is sweet"]}'
+'{"say": ["by the gate. who gives us milk?", "b: the cow gives us milk", "is the milk sweet?", "b: yes. the milk is sweet"]}'
 '{"say": ["I hold the pear. what is sweet?", "b: a pear is sweet", "and the lemon?", "b: a lemon is sour"]}'
 )
 CLOSE=(
