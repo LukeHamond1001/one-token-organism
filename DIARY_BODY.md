@@ -9839,3 +9839,6 @@ one-handed -> "a lemon is sour"; "and what does the fox say?" -> "the fox says y
 twice; "what is sour?" -> "a lemon is sour", and once "a lemnow"; "did you sleep well?" one-handed -> "yes. I slept. I", three
 words said over the greeting; "who gives us eggs?" one-handed -> "the hen ames"; "is the egg hard or soft?" -> "the egg is hard".
 Ten of twelve whole or near.
+DAY 370 (17:20-18:23 on the 21st): 147 parent lines, 49 slow. Words said over the typing: 0.06 per slow line (98 percent clean; the
+conversation lines 0.08, the story lines 0.00); one frown. The answers: the smile on 82 of 89 questions, 92 percent, a median
+1.3 s after the line's end: 92, 96, 95, 92. Night 313 (18:23-19:06, forty-three minutes) slept and saved on its own.
