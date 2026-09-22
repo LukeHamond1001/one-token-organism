@@ -9868,3 +9868,16 @@ DAY 373 (22:48 on the 21st to 23:51, the cycle's day): 148 parent lines, 48 slow
 all clean, the conversation and story lines 0.00; no frown. The answers: the smile on 69 of 84 questions, 82 percent, a median
 1.2 s after the line's end: 92, 96, 95, 92, 94, 87, 82. Night 316 (23:51-00:34 on the 22nd, forty-three minutes) slept and saved
 on its own.
+THE REBOOT AND THE RETURN (the 22nd): the Mac shut down at 09:20 and restarted at 09:30, stopping the served body, the typist and
+the loop at 08:55; the scratchpad went with it. The save of night 320 (07:48) intact; the hour of day 378 before the stop lost.
+Days 374-377 before it: 0.02, 0.04, 0.07, 0.02 words over a one-handed line; the answers 86, 95, 90, 93 percent. Served again
+at 13:54 from the save, the flags unchanged; the typist on day 390; the loop relaunched; the two staged row files rewritten.
+THE SIT-DOWN (13:59-14:25 on the 22nd, the supervisor in the chair, every line one-handed at two symbols a second):
+"good morning. did you sleep well?" -> "yes. I slept. I am up". THE OWL, NEVER TOLD BEFORE: "what color is the owl?" -> a scrap;
+the other voice: "the owl is brown"; asked again -> "THE OWL IS BROWN" at 2.7 s, after ONE telling, and at every ask after it
+(2.3, 6.8, 2.1 s). The known facts in new words: "tell me. what is sour?" -> "a lemon is sour"; "what does the hen say?" ->
+"cluck cluck"; "who gives us milk?" -> "the cow gives us milk"; "which one gives us eggs?" -> "the bread is sweet", wrong. The
+owl again after them -> "the owl is brown". A minute alone -> "he the owl is", rehearsing it softly. Back with one line -> "the
+owl is brown". One word over one line in the whole sitting. The flaws a viewer sees: the answer runs on ("a lemon is sour a
+lemon is sour", "the owl is brown we go in"); after each of the other voice's lines it asked "what color is the frog", the
+question's form with a noun of its own; the mood fell from 1.2 to -5.3 across the chair.
