@@ -9859,3 +9859,8 @@ lemon is sour"; "who gives us eggs?" -> "the hen amed spot"; "is the egg hard or
 DAY 372 (20:58-22:02 on the 21st): 147 parent lines, 45 slow. Words said over the typing: 0.00 per slow line, all clean, the
 conversation and story lines 0.00; no frown. The answers: the smile on 74 of 85 questions, 87 percent, a median 1.3 s after the
 line's end: 92, 96, 95, 92, 94, 87. Night 315 (22:02-22:45, forty-three minutes) slept and saved on its own.
+THE MORNING AFTER NIGHT 315 (22:48 on the 21st): "is the egg hard or soft?" -> "the egg is hard", twice; "good. and the bread?"
+one-handed -> "the bread is soft"; "did you sleep well?" -> "yes. I slept. I"; "what is sour?" -> "a lemon is sour"; "who gives
+us eggs?" one-handed -> "the hen a gives us"; "what is sweet?" -> "a pear is sweet"; "what does the hen say?" -> "cluck cluck";
+"what do the ducks eat?" -> "bugs and bread"; "who gives us milk?" -> nothing; "what is up in the sky?" one-handed -> "the sun.
+it is hot". Ten of eleven whole or near; nothing said over any line.
