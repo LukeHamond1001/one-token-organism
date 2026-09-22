@@ -105,6 +105,8 @@ PHYSIOLOGY = dict(
     night_keep_bands=0,   # the slow bands are not zeroed at night
     night_ticks=0,
     utt_cap=4096,   # the utterance memory replayed at night, whole utterances
+    utt_entry="flat",   # THE TAG AT ENTRY (2026-09-22, item 50): "flat" = every utterance enters the night's draw at 1.0; "felt" = at the mean of its symbols' write strengths (surprise x (1 + |dopamine|), the store's own law) over their running mean, so the novel and the rewarded are replayed more (tagging at encoding)
+    utt_entry_tau=64,   # the running mean's horizon for the felt entry, in utterances
     dream_source="store",   # "utterances" = the night dreams the utterances heard whole; "store" = pattern completion from the store
     dream_who=0,
     dream_tag=0,
@@ -225,6 +227,7 @@ PHYSIOLOGY = dict(
     actor_form="add",   # "chunk" = one act per word, the letters inside not choices; "plan", "select", "add" the earlier forms
     actor_margin=4.0,
     chunk_max=12,   # a word runs as a motor program for at most this many symbols
+    chunk_gate=0,   # THE CONTINUATION GATED (2026-09-22, item 50): 1 = inside a word the learned gate decides at every symbol whether the program goes on (the basal ganglia's stop pathway can halt an action under way), so the face's credit reaches the choices it followed; 0 = a word runs unchosen once begun (p 1, no credit)
     actor_voice="off",
     actor_horizon=16,
     actor_tau=36000,
@@ -477,6 +480,7 @@ class Life:
                 self._seam_pending = False                       # the first symbol's turn, kept or not
             if who == 0 and x != self.sil:
                 self._utt_cur.append(int(x))                     # the utterance as heard, symbol by symbol (dream_source utterances)
+                self._utt_felt = float(getattr(self, "_utt_felt", 0.0)) + surp * (1.0 + abs(dopamine))   # its felt strength, the store's law (utt_entry felt)
             # THE KEY OF A MEMORY (key_form; 2026-09-14, the twenty-seventh defect): "bag", the world's last symbols as a decayed, shifted sum
             # (the last five characters, in effect: "what is hot?" and "is your yam hot?" wrote under one key, and the store answered
             # nine of thirty fact questions however the pause or the horizon was set); "cortex", the stream's state at the position
@@ -693,11 +697,23 @@ class Life:
                 self.utt_S[-1] = float(self.utt_S[-1]) + rg * max(0.0, float(getattr(self, "_dopa_since_utt", 0.0)))
             self._dopa_since_utt = 0.0
             self._utt_serial += 1
-            self.utts.append(list(self._utt_cur)); self.utt_S.append(1.0); self.utt_N.append(self._utt_serial)   # the utterance kept whole, at full strength, in its turn
+            entry_ = 1.0
+            if str(self.cfg.get("utt_entry", "flat")) == "felt":
+                # THE TAG AT ENTRY (utt_entry felt; 2026-09-22, item 50): every utterance had entered the night's draw at 1.0, so the night
+                # replayed by recency alone and a line heard once, however new, had the same few dreams as the tenth hearing of a drill.
+                # The hippocampus tags an experience at encoding by its novelty and the reward around it and replays the tagged more;
+                # the store already writes each symbol at surprise x (1 + |dopamine|). The utterance enters at the mean of that over its
+                # symbols, relative to the running mean over utterances (utt_entry_tau), so the average entry stays near 1.0.
+                f_ = float(getattr(self, "_utt_felt", 0.0)) / max(1, len(self._utt_cur))
+                mu_ = getattr(self, "_utt_felt_mu", None)
+                mu_ = f_ if mu_ is None else float(mu_)
+                entry_ = f_ / max(1e-6, mu_) if mu_ > 1e-6 else 1.0
+                self._utt_felt_mu = mu_ + (f_ - mu_) / max(1.0, float(self.cfg.get("utt_entry_tau", 64)))
+            self.utts.append(list(self._utt_cur)); self.utt_S.append(entry_); self.utt_N.append(self._utt_serial)   # the utterance kept whole, at its entry strength, in its turn
             cap = int(self.cfg.get("utt_cap", 4096))
             if len(self.utts) > cap:                                   # the weakest (the oldest, faded) gives way
                 i = min(range(len(self.utt_S)), key=lambda k: self.utt_S[k]); del self.utts[i]; del self.utt_S[i]; del self.utt_N[i]
-        self._utt_cur = []
+        self._utt_cur = []; self._utt_felt = 0.0
 
     @property
     def bag(self):
@@ -1363,11 +1379,27 @@ class Life:
                 # THE CHUNK RUNS: inside a word (its last own symbol not the space, its turn unbroken) the cortex's own continuation is
                 # said, the most likely symbol, with no gate decision (p_act 1: nothing to credit) and no sampling; the word ends at
                 # the space or at the rest (the turn's end); chunk_max symbols force a new decision
-                acted = True; p_act = 1.0; self._chunk_cont = True
-                nxt = int(torch.argmax(logits)); p_choice = float(probs[nxt]); self._chunk_len = getattr(self, "_chunk_len", 0) + 1
-                self._chunk_ticks = getattr(self, "_chunk_ticks", 0) + 1
-                if nxt == self.sil:
-                    acted, p_choice = False, 0.0
+                if int(self.cfg.get("chunk_gate", 0)):
+                    # THE CONTINUATION GATED (chunk_gate; 2026-09-22, item 50): the review found the face's credit could not reach a word
+                    # under way: its letters ran with no decision (p 1, so the lesson's (act - p) was 0 for all of them) and the talked-over
+                    # frown, felt at the word's end, reached only its first symbol five to ten ticks back. An action under way is itself
+                    # gated (the stop pathway: cortex to subthalamus halts a program in progress): here the learned gate's own draw of this
+                    # tick decides whether the program goes on, the letter still the cortex's continuation; a no stops the word.
+                    if acted:
+                        self._chunk_cont = True
+                        nxt = int(torch.argmax(logits)); p_choice = float(probs[nxt]); self._chunk_len = getattr(self, "_chunk_len", 0) + 1
+                        self._chunk_ticks = getattr(self, "_chunk_ticks", 0) + 1
+                        if nxt == self.sil:
+                            acted, p_choice = False, 0.0
+                    else:
+                        nxt, p_choice = self.sil, 0.0
+                        self._chunk_stops = getattr(self, "_chunk_stops", 0) + 1
+                else:
+                    acted = True; p_act = 1.0; self._chunk_cont = True
+                    nxt = int(torch.argmax(logits)); p_choice = float(probs[nxt]); self._chunk_len = getattr(self, "_chunk_len", 0) + 1
+                    self._chunk_ticks = getattr(self, "_chunk_ticks", 0) + 1
+                    if nxt == self.sil:
+                        acted, p_choice = False, 0.0
             elif acted:
                 nxt = int(torch.multinomial(probs.cpu(), 1, generator=self.gen))
                 p_choice = float(probs[nxt])
@@ -2038,7 +2070,7 @@ class Life:
                 self.m.vc_n.fill_(float(int(self.cfg.get("vcrit_norm_tau", 0)) / 32.0))   # the statistics re-form at wake
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None; self._follow = None
             self._prev_slot = -1; self._last_write = None; self._start_armed = False; self._start_pending = False; self._seam_pending = False
-            self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._ear_trace = 0.0; self._writes_today = 0; self._turn_open = False; self._ear_release_at = None
+            self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._utt_felt = 0.0; self._ear_trace = 0.0; self._writes_today = 0; self._turn_open = False; self._ear_release_at = None
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
             if getattr(self.m, "stri_wm", 0):
