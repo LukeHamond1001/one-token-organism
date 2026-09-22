@@ -1195,3 +1195,16 @@ each is shown unnecessary.
 THE SIT-DOWN OF 09-22 (the supervisor in the chair, one-handed): a new fact after ONE telling, "what color is the owl?" -> "the
 owl is brown" at every ask after it, after other questions and after a minute alone; three known facts whole in new words, the
 eggs wrong; one word over one line; the answer running on; "what color is the frog", the question's form with a noun of its own.
+ THE REFLEX-FREE COPY, MEASURED (2026-09-22 16:05-17:55, tools/inproc_parent.py on the save of 15:58, the served typist and
+ caregiver in-process, every timing reflex off, chunk_gate 1 and utt_entry felt): the day, 33 one-handed lines with 7.9 words said
+ over each (6.5, 10.2 and 7.5 by thirds: no learning within the day), 71 fast lines with 7 words over in all, 146 frowns, the
+ answers to fast questions whole ("a lemon is sour", "the cow gives us milk"). The gate cannot learn to wait through a slow line in
+ a day: its own-act weight (+13.9) holds a word on, the tonic drive (0.25) less the symbol cost (0.12) now pays every gated letter
+ against a frown of -2 at most every twenty ticks, and the lesson moves a weight about a unit a day. THE NEXT MORNING (after its
+ night, the ten facts told once each the day before, asked unanswered among five never told): "the sheep says baa", "the bee says
+ buzz", "the horse says neigh", "the mouse says squeak" whole (4 of 10), "the crow is blach", "the plum is purplum", "the crab is
+ orab" near (3); the never-told: "cluck", "yes. the", "woof woof" twice, and "the rose is pink" for the bear (a taught fact on the
+ wrong question). The best next-day recall of once-told facts the body has shown (item 35: 1 of 3 live); no matched flat-entry
+ night was run, so the felt entry's share is not yet separated. THE DECISION (the user's bar): the timing reflexes become measured
+ by the body itself (pace_sense, designed today, built on the branch pace-sense); the purely learned manners continue later on
+ copies with the drive paid per word.

@@ -9881,3 +9881,8 @@ owl again after them -> "the owl is brown". A minute alone -> "he the owl is", r
 owl is brown". One word over one line in the whole sitting. The flaws a viewer sees: the answer runs on ("a lemon is sour a
 lemon is sour", "the owl is brown we go in"); after each of the other voice's lines it asked "what color is the frog", the
 question's form with a noun of its own; the mood fell from 1.2 to -5.3 across the chair.
+THE COPY WITHOUT ITS REFLEXES (the 22nd, 16:05-17:55, a copy of the save of 15:58 taught in-process by the real parent): with every
+timing reflex off and the two new fixes on, it talked over every one-handed line all day, about eight words a line, and did not
+learn to stop; the fast lines and the answers were fine. Its next morning, ten facts heard once the day before: "the sheep says
+baa", "the bee says buzz", "the horse says neigh", "the mouse says squeak" whole; "the crow is blach", "the plum is purplum", "the
+crab is orab" near; nothing right-sounding for the five never told.
