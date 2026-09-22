@@ -107,6 +107,7 @@ PHYSIOLOGY = dict(
     utt_cap=4096,   # the utterance memory replayed at night, whole utterances
     utt_entry="flat",   # THE TAG AT ENTRY (2026-09-22, item 50): "flat" = every utterance enters the night's draw at 1.0; "felt" = at the mean of its symbols' write strengths (surprise x (1 + |dopamine|), the store's own law) over their running mean, so the novel and the rewarded are replayed more (tagging at encoding)
     utt_entry_tau=64,   # the running mean's horizon for the felt entry, in utterances
+    night_dev="",   # THE NIGHT'S DEVICE (2026-09-22): "" = the body's own; e.g. "mps" = the cortex moves to the GPU for the night's lessons (NREM and REM) after the dreams are drawn and comes home before the value replay, the fade and the save; the day stays where it is
     dream_source="store",   # "utterances" = the night dreams the utterances heard whole; "store" = pattern completion from the store
     dream_who=0,
     dream_tag=0,
@@ -1958,6 +1959,7 @@ class Life:
                 rep["note"] = "the store holds nothing to dream"
             else:
                 # --- NREM: sleep's own optimizer; the dreams in batches (night_batch > 0) or one step per round ---
+                self._night_away()                                  # the night's lessons on night_dev (the dreams already drawn at home)
                 before, nsym = self.gauge(g_dreams, g_owns); before_cos = self._gauge_cos
                 # THE MOMENT'S HORIZON (night_beta2; 2026-09-16, night 226): a fresh optimizer's second moment forms over about a thousand
                 # steps at 0.999, so at the third round an outlier gradient on a parameter whose moment is still small is normalised
@@ -2033,6 +2035,7 @@ class Life:
                     if rc:
                         self._night_step(opt); rem_steps += 1; rem_cos.append(sum(rc) / len(rc))
                 # --- the value ladder replays its lived pairs once; the gauge after; a non-finite night reloads the evening's organs ---
+                self._night_home()                                  # home before the value replay, the gauge after, the fade and the save
                 self._value_replay()
                 m.eval()
                 del opt
@@ -2088,11 +2091,31 @@ class Life:
                 self.save()
         except Exception as e:
             rep["error"] = str(e)[:200]
+            print(f"[body] night {rep.get('night')} error: {e!r}", flush=True)
             self.sleep_pressure = int(self.cfg["wake_ticks"]) // 2
             self.last_night = rep
         finally:
+            self._night_home()                                         # a failed night never leaves the day on the night's device
             self.asleep = False
         return rep
+
+    def _night_away(self):
+        """THE NIGHT ON ANOTHER DEVICE (night_dev; 2026-09-22): the cortex and the day's small state move for the night's lessons; the
+        store, the critics' float64 evidence (kept on the host by Organs.to) and every random draw stay home"""
+        nd = str(self.cfg.get("night_dev", "")).strip()
+        if not nd or torch.device(nd) == torch.device(self.dev):
+            return
+        self._home_dev = self.dev; self.m.to(nd); self.dev = nd
+        self.bands, self.bag_w, self.bag_o = self.bands.to(nd), self.bag_w.to(nd), self.bag_o.to(nd)
+
+    def _night_home(self):
+        home = getattr(self, "_home_dev", None)
+        if home is None:
+            return
+        self.m.to(home); self.dev = home; self._home_dev = None
+        self.bands, self.bag_w, self.bag_o = self.bands.to(home), self.bag_w.to(home), self.bag_o.to(home)
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
 
     def _face_solve(self):
         """the foreseeing face organ from its evidence: w = (A + ridge)^-1 b, the ridge scaled to the evidence's own size"""
@@ -2194,7 +2217,7 @@ class Life:
                 if step >= len(xs):
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[self.bans] = float("-inf")   # the rest may be imagined: the world's stop
                     rt = self._rem_temperature()
-                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))
+                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0).cpu(), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))   # drawn on the host: the CPU generator, the same stream on any device
                 x = xs[step]
                 m.striatum_push(0 if x != self.sil else 3, x if x != self.sil else 0)
                 reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
@@ -2232,7 +2255,7 @@ class Life:
                     rt = self._rem_temperature()
                     # THE DREAM SAMPLED, NOT TAKEN AT ITS MODE (rem_temp > 0; 2026-09-06): biology's REM is noisy; the greedy
                     # continuation reproduces the store's most frequent lines and consolidates nothing new. 0 = greedy (as before).
-                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))
+                    xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0).cpu(), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))   # drawn on the host: the CPU generator, the same stream on any device
             with torch.no_grad():
                 bag = float(self.cfg["bag_decay"]) * (m.shift(bag) if xs[step] != self.sil else bag) + (m.E.weight[xs[step]] if xs[step] != self.sil else 0.0)
             reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())

@@ -1897,12 +1897,29 @@ def test_the_tag_at_entry():
     print("81 the tag at entry: the repeated line's last entries", [round(v, 2) for v in S[4:8]], "the new line", round(S[-1], 2), "; flat, all 1.0")
 
 
+def test_the_night_on_the_gpu():
+    """90 (2026-09-22): with night_dev the night's lessons run on that device and the body comes home for the fade and the save: the
+    night completes without an error, every parameter is back on the day's device, and the day goes on; off, nothing moves"""
+    if not torch.backends.mps.is_available():
+        print("90 the night on the GPU: no GPU here, skipped"); return
+    L = tiny(night_batch=4, dream_source="utterances", night_rounds=1, night_starts=8, rem_rounds=1, night_dev="mps")
+    for t in ["the dog is here", "I want milk", "where is the ball?"]:
+        say(L, t, 8)
+    rep = L.night()
+    assert not rep.get("error") and L.nights == 1, rep
+    assert L.dev == "cpu" and all(p.device.type == "cpu" for p in L.m.parameters()), L.dev
+    assert L.bands.device.type == "cpu" and L.bag_w.device.type == "cpu"
+    say(L, "the dog is here", 8)                                        # the day goes on at home
+    assert tiny().cfg.get("night_dev", "") == ""
+    print("90 the night on the GPU: the night done on mps (nrem steps", rep.get("nrem_steps"), ") and the body home on the cpu for the day")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
              test_rem_learns, test_gate, test_feelings_follow_dopamine, test_sleep_by_fatigue, test_guards, test_ladder_pinned, test_older_gate_loads, test_answer_smile_felt_twice, test_level_input, test_offset, test_ventral_critic]
     tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance, test_night_reads_a_corpus]
-    tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield, test_the_turns_readiness, test_the_quiet_foreseen, test_the_replys_readiness, test_the_turns_floor, test_the_continuation_gated, test_the_tag_at_entry]
+    tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield, test_the_turns_readiness, test_the_quiet_foreseen, test_the_replys_readiness, test_the_turns_floor, test_the_continuation_gated, test_the_tag_at_entry, test_the_night_on_the_gpu]
     failed = 0
     for t in tests:
         try:

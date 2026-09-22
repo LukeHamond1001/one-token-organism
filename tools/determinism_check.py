@@ -26,7 +26,8 @@ def parse_flags(path):
 
 flags = arg("flags", os.path.join(HERE, "ops", "BASE_FLAGS.txt")); ticks = arg("ticks", 400)
 cfg = parse_flags(flags) if os.path.exists(flags) else {}
-cfg.update(dict(night_starts=64, night_starts_max=64, night_rounds=2, night_batch=8, rem_dreams=4, rem_steps=4))   # a night a tiny body can afford
+cfg.update(dict(night_starts=64, night_starts_max=64, night_rounds=2, night_batch=8, rem_dreams=4, rem_steps=4))
+cfg["night_dev"] = str(arg("night_dev", ""))   # the guard stays a CPU guard whatever the flags carry; --night_dev mps makes it a device smoke test   # a night a tiny body can afford
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 torch.manual_seed(0)
 life = Life.birth(TOK, device="cpu", d=64, layers=2, heads=2, window=32, cfg=cfg, seed=0)
