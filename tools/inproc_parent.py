@@ -1096,7 +1096,7 @@ def main(argv=None):
             "real_ticks_s": round(body.real_ticks_s, 1), "real_nights_s": round(body.real_nights_s, 1),
             "clock": ("measured, floor %.3f s" % floor) if a.tick_measured else ("fixed %.3f s per tick" % a.body_tick),
             "night_s": a.night_s if a.night_s is not None else (("measured, at least %g s" % night_min) if a.night_measured else SERVED_NIGHT_S),
-            "threads": torch.get_num_threads(), "nice": os.nice(0),
+            "threads": torch.get_num_threads(), "nice": os.getpriority(os.PRIO_PROCESS, 0),
             "typist": {"day0": day0, "days": a.days, "planner": a.planner, "period": a.period, "quiet": a.quiet, "cap": a.cap,
                        "tick": a.tick, "listen": a.listen, "answer_levels": a.answer_levels, "parent": a.parent, "reply": a.reply,
                        "wait": a.wait, "yield": a.yield_ticks, "seed": a.seed, "queue_pos": a.queue_pos if not a.resume else "resumed",
@@ -1138,7 +1138,7 @@ def main(argv=None):
           % (body.ticks, body.tick_errors, body.own, body.world, dict(body.calls)))
         W("  virtual time %s (%s; night %s) from %s to %s" % (hms(virtual), summary["clock"], summary["night_s"], iso(body.t0), iso(body.now)))
         W("  real time %.1f s (load and first save %.1f s; loop %.1f s: ticks %.1f s, nights %.1f s); virtual/real x%.0f; nice %d, %d threads"
-          % (summary["real_s"], load_real, real_loop, body.real_ticks_s, body.real_nights_s, virtual / max(1e-9, real_loop), os.nice(0), torch.get_num_threads()))
+          % (summary["real_s"], load_real, real_loop, body.real_ticks_s, body.real_nights_s, virtual / max(1e-9, real_loop), os.getpriority(os.PRIO_PROCESS, 0), torch.get_num_threads()))
         W("  files: log %s (this run's rows from byte %d), corpus %s, queue %s (+.pos), save %s (%d saves; %.1f GiB free, %.1f kept)"
           % (log_path, log_offset, corpus_path, queue_path, save_path, disk.saves, disk.free() / GiB, disk.reserve / GiB))
         W("  guard: %d refused%s; %d paths written, %s%s" % (len(guard.refused), (" " + repr(guard.refused)) if guard.refused else "", len(guard.written),
