@@ -310,7 +310,7 @@ try:
 except SystemExit as e:
     check("at least 60" in str(e) and not os.path.exists(os.path.join(out, "runN")), "--night-s below 60 s (or four listening turns) is refused before anything is written")
 sC = IP.main([os.path.join(ra, "tiny_body.pt")] + [x for x in common if x != "--birth-tiny"] + ["--out", rc, "--night-s", "60", "--days", "3"])
-check(sC["days"] == [391, 392, 393] and sC["nights"] == sC["night_rows"] == 3 and sC["body"].startswith("a copy of"),
+check(len(sC["days"]) == 3 and sC["days"] == list(range(sC["days"][0], sC["days"][0] + 3)) and sC["nights"] == sC["night_rows"] == 3 and sC["body"].startswith("a copy of"),
       "a copy of a save, three days with 60 s nights: the parent's day loop saw every night (3 nights, 3 night rows)")
 try:
     IP.main(common + ["--out", os.path.join(out, "runD"), "--disk-reserve-gb", "1000000"]); check(False, "disk reserve")

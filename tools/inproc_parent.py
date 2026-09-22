@@ -809,9 +809,11 @@ def main(argv=None):
                          "its turns), and not with --night-measured" % night_min)
     if a.body_tick <= 0 or (a.tick_floor is not None and a.tick_floor < 0):
         raise SystemExit("--body-tick must be > 0 and --tick-floor >= 0")
-    nice0 = os.nice(0)
-    if nice0 < 19:
-        os.nice(19 - nice0)                                             # the served body first, whatever the caller forgot
+    try:                                                                # the served body first, whatever the caller forgot
+        if os.getpriority(os.PRIO_PROCESS, 0) < 19:                     # (os.nice(0) raised EPERM under a script's nice 19 on macOS, 2026-09-22)
+            os.setpriority(os.PRIO_PROCESS, 0, 19)
+    except OSError:
+        pass
 
     # -- paths, checked before anything is written --
     out = check_out(rpath(a.out), a.resume)
