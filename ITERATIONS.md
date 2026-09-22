@@ -1208,3 +1208,8 @@ eggs wrong; one word over one line; the answer running on; "what color is the fr
  night was run, so the felt entry's share is not yet separated. THE DECISION (the user's bar): the timing reflexes become measured
  by the body itself (pace_sense, designed today, built on the branch pace-sense); the purely learned manners continue later on
  copies with the drive paid per word.
+ THE COMPARISON (A1, 17:55-18:41, the same save, the same rows, every timing reflex off and neither fix): 9.1 words over each of 35
+ one-handed lines (7.6, 9.9, 10.1 by thirds), 70 words over 66 fast lines, 281 frowns; against B1 with both fixes 7.9, 7 over 71
+ fast lines, 146 frowns. The continuation gated (chunk_gate) cut the words over fast lines tenfold and halved the frowns: the ear's
+ learned weight now stops a word as the parent's symbols arrive, where before a word once begun ran through them. The slow line's
+ pauses remain the gap the learned gate cannot yet close; pace_sense is built for it.
