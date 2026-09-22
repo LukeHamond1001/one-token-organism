@@ -9848,3 +9848,6 @@ is sweet?" -> "a pear i", late; "what does the hen say?" -> "cluck cluck"; "what
 stutter; "who gives us milk?" one-handed -> "the sun. it is hard"; "what is up in the sky?" one-handed -> "the sun. it is hot";
 "is the milk sweet?" one-handed -> nothing. Six of eleven whole or near, the weakest of the last four mornings; nothing said over
 any line.
+DAY 371 (19:08-20:12 on the 21st): 147 parent lines, 49 slow. Words said over the typing: 0.00 per slow line, all clean, the
+conversation and story lines 0.00; no frown. The answers: the smile on 79 of 84 questions, 94 percent, a median 1.3 s after the
+line's end: 92, 96, 95, 92, 94. Night 314 (20:12-20:55, forty-three minutes) slept and saved on its own.
