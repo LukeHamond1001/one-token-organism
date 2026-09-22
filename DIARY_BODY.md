@@ -9864,3 +9864,7 @@ one-handed -> "the bread is soft"; "did you sleep well?" -> "yes. I slept. I"; "
 us eggs?" one-handed -> "the hen a gives us"; "what is sweet?" -> "a pear is sweet"; "what does the hen say?" -> "cluck cluck";
 "what do the ducks eat?" -> "bugs and bread"; "who gives us milk?" -> nothing; "what is up in the sky?" one-handed -> "the sun.
 it is hot". Ten of eleven whole or near; nothing said over any line.
+DAY 373 (22:48 on the 21st to 23:51, the cycle's day): 148 parent lines, 48 slow. Words said over the typing: 0.00 per slow line,
+all clean, the conversation and story lines 0.00; no frown. The answers: the smile on 69 of 84 questions, 82 percent, a median
+1.2 s after the line's end: 92, 96, 95, 92, 94, 87, 82. Night 316 (23:51-00:34 on the 22nd, forty-three minutes) slept and saved
+on its own.
