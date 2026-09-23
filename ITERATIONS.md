@@ -1249,3 +1249,12 @@ symbols across words; the gated continuation (chunk_gate) is the first half of t
  within 0.001, the gauge 0.846 to 0.866 on both, the parent's lines 0.876 and 0.875, the held-out 0.569 and 0.580, the questions
  9 and 9 of 30; but 1250 s against 1502 s (0.83, not the 0.65 the pass line asked). Not adopted: the nights stay on the CPU. The
  reading's removal alone took the night from about 41 minutes to 25.
+ THE FIRST LIVE DAY (2026-09-23 00:29-01:38, pace_sense 2, its trackers warmed by the shadow day): 0.09 words over a one-handed line,
+ 94 percent clean; fast lines 0.00; the answers 84 percent at a median 2.4 s; babble 0.3 a silent minute; 4 frowns. The night's report:
+ P 27.5, R_lo 51.6, R_hi 91.7 ticks; 135 ends foreseen, 102 by the pause outlasted (these waited P, the slow answers), 134 releases at a
+ median 3 ticks. M1 BY ITS OWN MEASURE (pace_fore_q, test 93) MEASURED AND NOT ADOPTED (03:32-05:01, copies of the save of night 325,
+ day-only): half speed as served 0.05 words over a line (95 percent clean), the answers all given at a median 3.8 s; half speed with
+ pace_fore_q 0.99, 4.41 (13 percent clean), the answers at 0.3 s; the typist's speed with it, 1.45 (55 percent clean). The running
+ 99th percentile of the mid-line end probability started from one sample and moves 0.05 up a step, so it sat low all day and the end
+ was foreseen in the middle of lines. A warm start from the sample quantile (as the returns settle) is the next form, measured before
+ any use. The served turn-taking stands as it is: whole answers, a few seconds late at half speed.
