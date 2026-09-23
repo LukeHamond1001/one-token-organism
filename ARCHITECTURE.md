@@ -930,6 +930,9 @@ save are never exercised, so the check never runs:
 
 Its hash leaves out the bands, the face organ and `rbar`, and the tests share the gap. Until a served profile, a hash of the full
 state and a save/load round trip are added, no refactor can be shown to change nothing on the served body.
+The check now has them (2026-09-23): `--profile served` and `--profile switches`, `--full` and `--roundtrip`
+(tools/determinism_check.py's first lines). The round trip found one field a reload does not give back: a store born under
+store_sat 1 is never marked as converted, so its first reload compresses strengths that were already saturating.
 
 **Constants with no effect on the served body.** The review counts 67 of 204. The ones checked in the code for this document:
 - `vcrit_w` 0.3 is overruled by `vcrit_ceiling earned` with `vcrit_auto 1`.
