@@ -186,6 +186,7 @@ PHYSIOLOGY = dict(
     pace_ret_hi=0.95,     # R_hi: this quantile of the partner's returns (its usual longest silence: beyond it the child is alone)
     ready_law=1,          # M4 the reply ready: 1 = the held ear released when the forecast has settled off the rest (cortex steps); 0 = gate_ear_release ticks after the foreseen end
     ready_ratio=0.5,      # M4: settled when the forecast's change is at most this fraction of its largest change since the end (the settle law's own ratio)
+    pace_fore_q=0.0,      # M1 BY ITS OWN MEASURE (2026-09-23): >0 = the end is also foreseen when the readout's probability of the end symbol is above this quantile of its highest in each of the partner's mid-line pauses (a running quantile, like P); 0 = the argmax alone
     gate_opt="sgd",
     gate_adam_lr=1e-3,
     # --- the mouth's decisiveness: the readout's sharpness, and exploration ---
@@ -343,7 +344,7 @@ class Life:
         # THE SENSED TURN-TAKING (pace_sense): the partner's pace in log ticks (saved as life["pace"]): its pauses (P) and its returns (R_lo,
         # R_hi, from the first return heard); the gap's labels (a foreseen end in it, an end by the pause), the ear held by a line, the reply's
         # readiness (the end's tick, the forecast a step ago, the largest change since), the shadow's own end; the day's instruments
-        self._pq = {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": []}   # warm: the returns heard while they settle (None once settled)
+        self._pq = {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": [], "fore_q": None, "n_mid": 0}   # warm: the returns heard while they settle (None once settled)
         self._gap_foreseen = False; self._gap_paused = False; self._sh_done = True
         self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
         self._pace_day = self._pace_day_new()
@@ -1094,6 +1095,18 @@ class Life:
             self._pace_update(self.ticks - self._last_world)
         if self._ready_E is not None:
             self._pace_day["cancel"] += 1
+        fq_ = float(self.cfg.get("pace_fore_q", 0.0))
+        gm_ = getattr(self, "_gap_pend_max", None)
+        if fq_ > 0.0 and gm_ is not None and not self._gap_foreseen and not self._gap_paused:
+            # M1 BY ITS OWN MEASURE: a gap the world closed with no end in it was a mid-line pause; the highest log-probability of the end
+            # the readout gave in it is one sample of what this body predicts mid-line for this partner (the running quantile, as P)
+            pq = self._pq; eta = float(self.cfg.get("pace_eta", 0.05))
+            if pq.get("fore_q") is None:
+                pq["fore_q"] = float(gm_)
+            else:
+                pq["fore_q"] = float(pq["fore_q"]) + eta * (fq_ - (1.0 if gm_ <= float(pq["fore_q"]) else 0.0))
+            pq["n_mid"] = int(pq.get("n_mid", 0)) + 1
+        self._gap_pend_max = None
         self._gap_foreseen = False; self._gap_paused = False; self._sh_done = False
         self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
         if live:
@@ -1120,6 +1133,15 @@ class Life:
         open_ = (not self._offset_done) if live else (not self._sh_done)
         if u == self.sil and open_ and since >= 1:
             top = self._pace_top(pred1); fore = top == self.end_id
+            fq_ = float(self.cfg.get("pace_fore_q", 0.0))
+            if fq_ > 0.0:
+                with torch.no_grad():
+                    lg_ = self.m.readout(pred1).clone(); lg_[[b for b in self.bans if b != self.end_id]] = float("-inf")
+                    lp_ = float(torch.log_softmax(lg_, 0)[self.end_id])
+                self._gap_pend_max = lp_ if getattr(self, "_gap_pend_max", None) is None else max(float(self._gap_pend_max), lp_)
+                q_ = self._pq.get("fore_q")
+                if not fore and q_ is not None and int(self._pq.get("n_mid", 0)) >= max(1, int(round(1.0 / max(float(self.cfg.get("pace_eta", 0.05)), 1e-9)))) and lp_ > float(q_):
+                    fore = True                                                   # above what it predicts in 99 of the partner's 100 mid-line pauses
             if fore or since + 1 > self._pace()[0]:                             # M2: the gap this silence will close is already longer than P
                 if fore:
                     self._gap_foreseen = True; d["fore"] += 1
@@ -2757,6 +2779,10 @@ class Life:
             life.bands.copy_(L["bands"].to(device))                  # the slow bands survive a reload as they survive the night (the review of 2026-09-19: zeroed at every reload, every morning a birth)
         life._writes_today = int(L.get("writes_today", 0)); life._store_fresh = bool(L.get("store_fresh", False))
         if isinstance(L.get("pace"), dict):                          # the sensed pace's trackers (a save from before them: the newborn's start values)
+            for k_ in ("fore_q",):
+                if L["pace"].get(k_) is not None:
+                    life._pq[k_] = float(L["pace"][k_])
+            life._pq["n_mid"] = int(L["pace"].get("n_mid", 0))
             for k_ in ("pause", "lo", "hi"):
                 if k_ in L["pace"]:
                     life._pq[k_] = (float(L["pace"][k_]) if L["pace"][k_] is not None else None)

@@ -2173,7 +2173,7 @@ def test_pace_shadow_changes_nothing():
     C.tick()
     blob = torch.load(path, weights_only=False); del blob["life"]["pace"]; del blob["life"]["pace_day"]; torch.save(blob, path)
     D = Life.load(path, TOK, save_path=None)
-    assert D._pq == {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": []} and D._pace_day == Life._pace_day_new(), D._pq
+    assert D._pq == {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": [], "fore_q": None, "n_mid": 0} and D._pace_day == Life._pace_day_new(), D._pq
     D.tick()
     print("88 the shadow changes nothing: weights, store, utterances, page and feelings equal at 0 and 1; the shadow's day", {k_: rb["pace"][k_] for k_ in ("P", "ends_foreseen", "ends_by_pause", "releases")},
           "; the trackers saved and loaded; an older save loads at the newborn's values")
@@ -2304,6 +2304,28 @@ def test_pace_edges():
     print("92 the edges: offset_ticks 0 leaves the pace off; a reply never ready lets the ear go at 26 before any return; the line's floor 0 at",
           "gate_listen 0; M1 reads the turn-end token under eot; a failed night reports the day's pace")
 
+def test_pace_end_by_its_own_measure():
+    """93 (2026-09-23): with pace_fore_q the highest log-probability of the end in each mid-line pause the world closed feeds a running
+    quantile; a gap in which an end was foreseen or outlasted is not a mid-line pause and feeds nothing; off (0), nothing is kept"""
+    L = tiny(pace_sense=2, offset_ticks=8, pace_fore_q=0.99, gate_ear=1)
+    def gap(x, fore=False, paused=False):
+        L._gap_pend_max = x; L._gap_foreseen = fore; L._gap_paused = paused
+        L._last_world = L.ticks - 3; L._pace_heard(True)
+    gap(-6.0)
+    assert abs(float(L._pq["fore_q"]) + 6.0) < 1e-9 and L._pq["n_mid"] == 1, L._pq
+    gap(-3.0); q1 = float(L._pq["fore_q"])
+    assert abs(q1 - (-6.0 + 0.05 * 0.99)) < 1e-9, q1                      # above the quantile: up by eta x p
+    gap(-9.0); q2 = float(L._pq["fore_q"])
+    assert abs(q2 - (q1 - 0.05 * 0.01)) < 1e-9, q2                       # below it: down by eta x (1 - p)
+    gap(-1.0, fore=True); gap(-1.0, paused=True)
+    assert L._pq["n_mid"] == 3 and abs(float(L._pq["fore_q"]) - q2) < 1e-12   # a line's end is no mid-line pause
+    L0 = tiny(pace_sense=2, offset_ticks=8, gate_ear=1)
+    L0._gap_pend_max = -2.0; L0._gap_foreseen = False; L0._gap_paused = False; L0._last_world = L0.ticks - 3; L0._pace_heard(True)
+    assert L0._pq.get("fore_q") is None and L0._pq.get("n_mid", 0) == 0
+    assert tiny().cfg.get("pace_fore_q", 0.0) == 0.0
+    print("93 the end by its own measure: the mid-line pauses' highest end probability a running 99th percentile (up 0.0495, down 0.0005), the ends kept out; off, nothing kept")
+
+
 if __name__ == "__main__":
     t0 = time.time()
     tests = [test_corollary_discharge, test_store_recalls, test_recall_is_by_content, test_dreams_are_its_lines, test_night_moves_the_cortex,
@@ -2311,7 +2333,7 @@ if __name__ == "__main__":
     tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance, test_night_reads_a_corpus]
     tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield, test_the_turns_readiness, test_the_quiet_foreseen, test_the_replys_readiness, test_the_turns_floor, test_the_continuation_gated, test_the_tag_at_entry, test_the_night_on_the_gpu]
     tests += [test_pace_trackers_learn_the_partner, test_pace_what_is_not_a_pause, test_pace_pause_outlasted, test_pace_reply_ready, test_pace_turn_wait_alone,
-              test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing, test_pace_false_ends_and_settling, test_pace_edges]
+              test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing, test_pace_false_ends_and_settling, test_pace_edges, test_pace_end_by_its_own_measure]
     failed = 0
     for t in tests:
         try:
