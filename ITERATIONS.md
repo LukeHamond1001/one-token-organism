@@ -1227,3 +1227,12 @@ warm-started on the first twenty returns, saved with the body. The constants lef
 default; shadow at 1 (the trackers learn, the body unchanged: the determinism digest 76f1d51c at 0 and 1, test 88), live at 2. 90
 tests. Served in shadow from the restart after night 322 (--pace-sense 1); the copies at the typist's pace, half and double decide
 the live switch.
+
+52. THE NIGHT'S READING OFF (2026-09-22, the user's bar: "no cheats; completely architecture"). The night had dreamt 512 story
+sentences it never heard (dream_corpus_n, item 44), a training channel no brain has and no robot will; the day's story lines,
+typed by the parent and heard, stay. The evidence that it costs little is already in the ledger: the bare nights 287-290 read the
+held-out 0.598, 0.605, 0.604, 0.620 against 0.601-0.617 with the reading, and "the reading's gain, a hundredth, has been given
+back over three bare nights". From the served restart after night 322 (--dream-corpus-n 0; archive BASE_FLAGS_pre_corpus_off.txt).
+The word boundary at the space (the chunk's end, the actor's unit) stays until a learned stop replaces it: it reads no content,
+but it is knowledge of text a robot will not have, and taken out without a replacement every motor program would run eight
+symbols across words; the gated continuation (chunk_gate) is the first half of that replacement.
