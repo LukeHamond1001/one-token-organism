@@ -1213,3 +1213,17 @@ eggs wrong; one word over one line; the answer running on; "what color is the fr
  fast lines, 146 frowns. The continuation gated (chunk_gate) cut the words over fast lines tenfold and halved the frowns: the ear's
  learned weight now stops a word as the parent's symbols arrive, where before a word once begun ran through them. The slow line's
  pauses remain the gap the learned gate cannot yet close; pace_sense is built for it.
+
+51. THE SENSED TURN-TAKING (pace_sense; 2026-09-22, the user's bar of item 50). Each timing reflex that counted ticks fitted to this
+typist becomes a quantity the body measures from its partner (the design: a read-only workflow of a mapper, three designs and two
+judges; built on the branch pace-sense, reviewed by two skeptics, merged as 5909408). M1, the end foreseen: on a quiet tick of an
+open line the readout's most likely symbol is the turn's end (no constant). M2, the pause outlasted: a silence longer than the
+partner's 99th-percentile within-line pause ends the line. M3, the ear held: the ear input stays 1 through an open line, so the
+learned weight (-45) keeps the gate shut however slow the hand. M4, the reply ready: after a foreseen end the ear is released when
+the forecast has settled (its tick-to-tick change at or under half its largest since the end), counted in cortex steps; ready_law 0
+keeps the 9 ticks, stated as the body's own recall time. M5, the turn, the wait and the babble alone: the slot, the wait and the
+drive's return set by the partner's 5th and 95th percentile returns. The trackers are running quantiles in log units (eta 0.05),
+warm-started on the first twenty returns, saved with the body. The constants left are ratios (0.99, 0.05, 0.95, one half). Off by
+default; shadow at 1 (the trackers learn, the body unchanged: the determinism digest 76f1d51c at 0 and 1, test 88), live at 2. 90
+tests. Served in shadow from the restart after night 322 (--pace-sense 1); the copies at the typist's pace, half and double decide
+the live switch.
