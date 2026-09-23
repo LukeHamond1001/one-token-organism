@@ -19,9 +19,12 @@ WHERE THE METHODS LIVE (the split of 2026-09-23, review 2026-09-22 section 4, st
 `tick()`; every other method was moved verbatim into a mixin in body/core/ (its __init__.py has the map): senses, memory, cortex,
 mouth, critics, actor, night, persistence and instruments, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here."""
 import collections
+import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
+import os  # noqa: F401
 import time
 
 import torch
+import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
 from .core.physiology import PHYSIOLOGY
@@ -34,6 +37,9 @@ from .core.actor import ActorMixin
 from .core.night import NightMixin
 from .core.persistence import PersistenceMixin
 from .core.instruments import InstrumentsMixin
+
+# `from body.life import *` gives exactly the names it gave before the split (the mixins stay reachable as attributes)
+__all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
 
 
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin):

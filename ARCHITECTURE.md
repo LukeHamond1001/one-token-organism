@@ -893,7 +893,7 @@ means a switch that is off by default, measured on a copy before use.
 | 4 | A rest is logged as the gate saying no. Inside a running word a sampled rest is stored as (acted 0, p 1); with gate_vigor 0 that is an eligibility of −1 on a tick the gate never decided. | body/core/mouth.py `_choose`, chunk branch (lines 507-512) | low now (2 words in 15 days); at every rest inside a word under chunk_gate 1 | record the gate's own draw and use it for eligibility, before chunk_gate |
 | 5 | The actor's trace decays per word, not per tick, while dopamine multiplies it every tick. | core/mouth.py `_act` (lines 543-546) and core/critics.py `_learn_values` (lines 160-162) | low: credit smears over about 16 words; nothing measured about the actor can be trusted until fixed | constant `actor_trace_tick` |
 | 6 | Smiles never reach the felt entry: it sees only the dopamine of the tick before each heard symbol. | core/cortex.py `_step` (line 39) | low: B1 tested tagging by surprise, not reward | constant `utt_entry_trace` (a tag lasting 32-64 ticks) |
-| 7 | The felt entry's running mean starts cold and is not saved. | core/senses.py `_offset` (lines 71-75); absent from `save()` | low: the first facts of B1 entered 1.1-1.5 times too strong | save and restore the mean; warm-up behind `utt_entry_warm` |
+| 7 | The felt entry's running mean starts cold and is not saved. | core/senses.py `_offset` (lines 72-76); absent from `save()` | low: the first facts of B1 entered 1.1-1.5 times too strong | save and restore the mean; warm-up behind `utt_entry_warm` |
 | 8 | The gate's credit counts the dopamine from before the act. | core/mouth.py `_gate_lesson` | low: unbiased, about 21% more noise | constant `elig_from` |
 | 9 | `night_ticks` discounts the wrong step, the first to second morning tick. No transition across the night has been learned. | core/critics.py `_learn_values` (lines 53-55) | low: one bad sample a day | drop `--night-ticks` at a boundary, or constant `night_bridge` |
 | 10 | A working-memory latch breaks the fast critic's evidence chain. | core/critics.py `_learn_values` (line 169) | low: about 1% of transitions | constant `wm_chain` |
@@ -906,7 +906,7 @@ means a switch that is off by default, measured on a copy before use.
 | 17 | The line popped at nightfall is lost. | body/teacher.py (review: line 215) | 5 of the last 10 nights | env constant UNSAID_BACK |
 | 18 | "hot." gets no smile, and it drains attention. | body/caregiver.py (review: line 321) | about 2% of smiles; a bias against the end mark | KNOWN_MARK (strip only a trailing mark) |
 | 19 | The answer smile pays for echoing the question. | body/caregiver.py (review: line 316) | about a third of answer smiles | ANSWER_ASKED (the answer's words minus the question's, both "or" choices kept, fused words accepted) |
-| 20 | Negligible. | life.py | none | `night_ends_word`, `load_ends_line`; the optimizers are not saved, and need not be |
+| 20 | Negligible. | core/night.py `night` (line 380); core/persistence.py `load` (line 101); body/life.py `__init__` (line 228) | none | `night_ends_word`, `load_ends_line`; the optimizers are not saved, and need not be |
 
 **Not reached by the served body** (review):
 - A NaN in the bands freezes the tick loop before any night.

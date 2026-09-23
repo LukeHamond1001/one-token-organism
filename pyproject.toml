@@ -16,4 +16,4 @@ crafter = ["crafter"]
 render = ["pillow", "matplotlib"]
 
 [tool.setuptools]
-packages = ["body"]
+packages = ["body", "body.core"]

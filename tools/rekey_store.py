@@ -3,7 +3,7 @@ utterance memory (the world's last utterances, whole and in order, up to utt_cap
 and the code now make: the reconsolidation a change of key needs, since a memory written under one form of the key is not found by
 a query under another. Each utterance is replayed as the day heard it: the cortex, teacher-forced over the utterance alone (the
 night's lockstep batch), gives each symbol's surprise, the write strength (no dopamine: the smiles of those days are not kept); the
-fast bag and the slow context run as body/life.py runs them (key, rest_tick, take_world, note_offset); the utterance's marks (the
+fast bag and the slow context run as body/core/memory.py runs them (key, rest_tick, take_world, note_offset); the utterance's marks (the
 seam on its first symbol, the start on its second, the boundary on its last) and its chain links are set as the day sets them.
 The pause between utterances is not in the utterance memory: --gap ticks of the world's quiet stand for every pause (48, the
 parent's line after the child's turn; the offset's own eight ticks come first). Memories older than the utterance memory's reach

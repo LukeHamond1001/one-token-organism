@@ -4,7 +4,8 @@ terms) and `_hear` (the start mark, the world's symbol enters the stream, the of
 striatal events); the offset itself (`_offset`: the last world position marked ended, the utterance memory's entry, the working
 memory's latch); and the world's two hands on the page (`type_text`, `set_face`).
 
-Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2); every attribute they touch is born in `Life.__init__`."""
+Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Not every attribute they touch is born in `Life.__init__`:
+twenty are first set later, by a phase of the tick or by the night, and thirteen of those are read here with a `getattr` default."""
 import torch
 
 
