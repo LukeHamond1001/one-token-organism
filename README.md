@@ -4,7 +4,7 @@ iga is a small brain-inspired architecture that lives one symbol per tick, learn
 
 ## What it does today
 
-The numbers below come from the served body (`data/watch2.pt`, day 397 by the typist's count on 2026-09-23) and from copies of it. Each is taken from `ITERATIONS.md` items 48 to 52 and the latest entries of `DIARY_BODY.md`, where the full runs are written up.
+The numbers below come from the served body (`data/watch2.pt`, on day 400 by the page log's count after the night that ended at 12:27 on 2026-09-23) and from copies of it. Each is taken from `ITERATIONS.md` items 48 to 52 and the latest entries of `DIARY_BODY.md`, where the full runs are written up.
 
 **It takes turns.** Since 2026-09-23 its turn-taking is sensed (`pace_sense`, item 51). The body measures how long its partner pauses inside a line and how long they take to reply, as running quantiles saved with the body, and waits by those measures. No timing is fitted by hand.
 - The first live day (2026-09-23, 00:29-01:38): 0.09 words said over a one-handed line, with 94 percent of lines clean; 0.00 words over fast lines; 0.3 words of babble per silent minute; 4 frowns.
@@ -21,7 +21,7 @@ The numbers below come from the served body (`data/watch2.pt`, day 397 by the ty
 - The fox (item 48): a pair typed into one day's rows ("what does the fox say?" / "the fox says yip") was answered at the first ask the next day, on a copy that had not been asked it before.
 - In demo rehearsals on copies, a new fact took three to five tellings. `DEMO_SCRIPT.md` plans for two to five.
 
-**It sleeps.** After 24,000 ticks awake (about 67 minutes at the served pace of 0.15 s a tick, about 0.17 s measured) it sleeps for about 25 minutes. The night replays the utterances it heard (NREM), imagines (REM) and saves. Since night 322 the night no longer reads stories it never heard (item 52), which cut the night from about 41 minutes to about 25.
+**It sleeps.** After 24,000 ticks awake (about 67 minutes: the served period is 0.15 s a tick, but a tick takes about 0.17 s in practice) it sleeps for about 25 minutes (24 to 36 minutes for the nights of 2026-09-23). The night replays the utterances it heard (NREM), imagines (REM) and saves. Since night 322 the night no longer reads stories it never heard (item 52), which cut the night from about 41 minutes to about 25.
 
 **The rulers.** On lines no parent typed (`tools/heldout_stage4.txt`), the cortex's next-symbol accuracy is about 0.60 (0.604 after nights 300 and 302). The language probe's thirty fact questions, read greedily from the mouth, get 8 to 10 of 30.
 
@@ -33,7 +33,7 @@ The numbers below come from the served body (`data/watch2.pt`, day 397 by the ty
 - Stop an answer or keep to its own questions. It runs on ("a lemon is sour a lemon is sour", "the owl is brown we go in") and asks questions built from the forms it hears ("what color is the frog").
 - Hold its mood through a long sitting. The mood fell from 1.2 to -5.3 across the owl sit-down. Its speech gets junkier when the mood is low, just after a restart and just after a night.
 - Carry its manners in learned weights alone. With every timing reflex off (a copy, item 50) it talked over each one-handed line all day, about eight words a line, and did not improve within the day. Its turn-taking today comes from `pace_sense`, which measures the partner but is still a built-in mechanism. Getting the learned gate to carry the manners is the open work.
-- Answer quickly when the person types slowly. At half the typist's speed its answers come at a median 3.8 s. A faster form (`pace_fore_q`) talked over slow lines and was not adopted (item 51).
+- Answer quickly when the person types slowly. At half the typist's speed its answers come at a median 3.8 s. A faster form (`pace_fore_q`) talked over slow lines and was not adopted (recorded under item 52).
 - Live in a robot. The review of 2026-09-22 (`ops/review_2026-09-22.md` §3) lists the gaps:
   - one symbol per tick, on one channel, with one mouth and one readout;
   - the world going quiet is both the event clock and the turn signal;
@@ -74,7 +74,7 @@ The exact quoted command, from `ops/typist_chain_command.txt`:
 nohup zsh tools/typist_chain.sh 8020 data/watch2_caregiver.jsonl "--days 6 --corpus data/watch2_corpus.json --planner queue --queue data/teach_queue_w2.jsonl --tick 0.15 --period 64 --quiet 8 --cap 40 --listen 40 --answer-levels 1 --parent 1 --reply 1 --wait 4" "TALKOVER_FROWN=1 FROWN_GAP=20 HABIT_TICKS=120 ANSWER_SMILE=1 SLOW_SHARE=0.33 SLOW_CPS=2.0 SLOW_PAUSE=0.1 TURN_ONLY_SMILE=1" 1000 > <SCRATCH>/logs/typist_chain_8020.log 2>&1 &
 ```
 
-The arguments are `PORT LOG "TYPIST ARGS" "ENV" ROUNDS`, and the typist arguments and the environment must stay quoted. The typist (`body/teacher.py`) types the rows queued in `data/teach_queue_w2.jsonl` in two voices, a third of its lines one-handed. The face comes from the caregiver (`body/caregiver.py`), which reads only the page: a small smile for a known word in the child's turn, a larger one for the answer, and a frown when talked over.
+The arguments are `PORT LOG "TYPIST ARGS" "ENV" ROUNDS`, and the typist arguments and the environment must stay quoted. The typist (`body/teacher.py`) types the rows queued in `data/teach_queue_w2.jsonl` in two voices, a third of the first voice's lines one-handed (the `b:` voice's lines never). The face comes from the caregiver (`body/caregiver.py`), which reads only the page: a small smile for a known word in the child's turn, a larger one for the answer, and a frown when talked over.
 
 When a typist's `--days` run out, the chain starts the next one with the day label taken from the log. A change to `body/teacher.py` or `body/caregiver.py` therefore reaches the typist only at a relaunch. Never check for the typist with its own pattern in a `pgrep`, because the chain waits while any process shows it. Use this instead:
 
@@ -88,7 +88,7 @@ ps -eo args | grep body.teacher | grep -v grep
 zsh ops/night_cycle.sh <SCRATCH> <FIRST_SAVE>
 ```
 
-The usage line is from the script's header; `ops/RESTART.md` does not describe this loop yet. The loop begins once the page log holds `FIRST_SAVE` save rows, and it prints one line per event.
+The usage line is from the script's header, and `ops/RESTART.md` step 3 describes the loop in full. The loop begins once the page log holds `FIRST_SAVE` save rows, and it prints one line per event.
 - It keeps the queue fed while the body is awake.
 - At each night it prints the day's three numbers (`ops/day_report.py`).
 - After each save it runs the morning probe (`ops/probe_after_save5.sh`: the language probe, the questions and the rephrased set, with the morning save kept two deep).
@@ -167,7 +167,7 @@ Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a
   - The store laid open: `read_trace.py`, `store_dist.py`, `store_turnover.py` and `key_separation.py`. `rekey_store.py` is the key rebuild.
   - The page log read back: `word_rate.py`, `served_day.py` and `word_mates.py`.
   - The only tools that act on the live body: `teach_live.py` and `rehearse.py`. Both hold the typist while they sit.
-  - Also `determinism_check.py` and `typist_chain.sh`.
+  - Also `determinism_check.py`, `typist_chain.sh`, `gauge_by_position.py` (the cortex alone, by position) and `faststore.py` (a shim that `rekey_store.py` and `key_separation.py` import).
   - The rest are retired and now live in `tools/archive/` (moved 2026-09-23). They include the earlier lineage's recorders and watchers, the body2-era probes, the pod pretraining, and `baseline_train.py`, which was never run, under the no-baseline law. They are kept as the ledger's record and are not run.
 - `ops/`: what runs the served body day and night.
   - The constants and exact commands: `BASE_FLAGS.txt`, `serve_command.txt` and `typist_chain_command.txt`.

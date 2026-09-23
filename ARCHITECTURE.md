@@ -44,7 +44,7 @@ source column says **flags**, **save** or **default**.
 | the life | watch2, born the evening of 2026-09-06, seed 1. Its first days were lived under tools/archive/watch_life.py's scripted parent, then under the served typist. For a time its nights also dreamt story sentences (item 44), a channel removed in item 52 | data/watch/watch2/digest.txt; DIARY_BODY.md |
 | size | 179M parameters; d 1024, 12 transformer blocks, window 64 ticks (the head count is in the save's `arch`) | the birth digest; README.md |
 | symbols | 107 characters (data/tok_char.json): ids 0-10 are bookkeeping marks the mouth never says (`<pad>` is the rest, `<eot_human>` the turn's end), then digits, letters and punctuation | the tokenizer |
-| clock | `--period 0.15` s a tick, about 0.17 s in practice (compute-bound); a day of 24000 ticks is about 67 minutes, a night about 25 minutes on the CPU | flags; DEMO_SCRIPT.md; item 52 |
+| clock | `--period 0.15` s a tick, about 0.17 s in practice (compute-bound); a day of 24000 ticks is about 67 minutes, a night about 25 minutes on the CPU (the nights of 2026-09-23 took 24 to 36 minutes) | flags; DEMO_SCRIPT.md; item 52; the page log's night rows |
 | process | `python3 -m body.serve --load data/watch2.pt` on port 8020 with ops/BASE_FLAGS.txt; the typist chain (`body.teacher`) and ops/night_cycle.sh beside it | ops/serve_command.txt, ops/typist_chain_command.txt |
 | store | FastStore, capacity 65536 slots | flags |
 | tests | 91 test functions in body/tests/test_organs.py | counted |
@@ -107,7 +107,8 @@ enters the stream". The cortex never learns from reward.
 **The waking lesson** (`_wake_lesson`) runs every 24 ticks on the last 32 positions (Adam at 1e-5, gradient clip 1):
 - The target at every position is the world's next symbol. The body's own symbols and rests are inputs only.
 - At a position after which the utterance was perceived to end, the target is the end symbol, which is the rest (`end_symbol rest`).
-- The body's own positions are weighted 0.7 to the power of their distance to the next world symbol (`own_target_decay`).
+- The body's own positions are weighted 0.7 to the power of the number of positions between them and the next world symbol
+  (`own_target_decay`), so an own position just before a world symbol keeps weight 1.
 - The loss is scaled by (1 + stress/10).
 
 The recall form of the own-speech target, which taught the recall's continuation at the body's own positions, was retired in
@@ -812,9 +813,9 @@ ops/parent_brief_human.txt. The parent decides its face from the page alone. Wit
 - no smile for the same word again within 120 ticks (HABIT_TICKS);
 - when its attention runs low, the parent turns away for 200 ticks: the still face.
 
-A word counts as known once the teacher has typed it three times. A third of its lines are typed one-handed, at 2 symbols a
-second with thinking pauses (SLOW_SHARE 0.33). `/insides` is the supervisor's instrument and never reaches the one who decides
-the face.
+A word counts as known once the teacher has typed it three times. A third of the parent voice's lines (never the `b:` voice's)
+are typed one-handed, at 2 symbols a second with thinking pauses (SLOW_SHARE 0.33). `/insides` is the supervisor's instrument
+and never reaches the one who decides the face.
 
 **Biology.** Social reward from a caregiver's face, felt as prediction error. The face organ is the body's model of whatever
 grounded reward it has; BODY_SPEC §5c says "a humanoid keeps it unchanged".
@@ -940,7 +941,7 @@ state and a save/load round trip are added, no refactor can be shown to change n
 - `dream_corpus_file` does nothing with `dream_corpus_n` 0.
 - `gate_lr` is unused under Adam.
 - `actor_input` and `band_lr` are read by no code.
-- `key_scale` acts only under the cortex key.
+- `key_scale` acts only under the cortex key and in the retired chooser (`actor_form softmax`).
 - `heard_decay` feeds a tally that is saved but never read.
 
 ## Where the code lives
