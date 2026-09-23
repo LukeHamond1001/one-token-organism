@@ -3,9 +3,10 @@ over the parent's one-handed lines (per line, and the share clean; conversation 
 smile on the questions, its delay after the line's end), and the babble into silence per minute of silence (known words said past
 the child's turn, over the minutes with no line in progress and no turn after one).
 With --pace, the body's sensed turn-taking (pace_sense 1 or 2) as well: its trackers (P, R_lo, R_hi in ticks), the day's ends foreseen and
-by the pause, the false pause ends (the world back before R_lo), the median release after the last symbol, the ear's learned weight; read
-from the insides (a URL such as http://127.0.0.1:8020/insides, or a JSON dump of it), a night report as JSON, or a save (.pt, loaded whole:
-its last night's report). The body's day runs from its morning to its night, not the window's times.
+by the pause, the false ends (a pause ended and the world back before R_lo; an end foreseen and the world back within P), whether the
+returns have settled, the median release after the last symbol, the ear's learned weight; read from the insides (a URL such as
+http://127.0.0.1:8020/insides, or a JSON dump of it: the lightest), a night report as JSON, or a save (.pt: its last night's report, the
+file memory-mapped so its tensors are not read in). The body's day runs from its morning to its night, not the window's times.
 usage: python3 ops/day_report.py 2026-09-19T17:12 2026-09-19T18:17 [--label "day 344"] [--pace SRC]"""
 import sys, json, statistics, datetime as dt, os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,7 +47,11 @@ def read_pace(src):
         d = json.loads(urllib.request.urlopen(src, timeout=10).read())
     elif src.endswith(".pt"):
         import torch
-        d = torch.load(src, map_location="cpu", weights_only=False).get("life") or {}
+        try:
+            blob = torch.load(src, map_location="cpu", weights_only=False, mmap=True)   # the tensors mapped, not read: only the report is wanted
+        except (RuntimeError, TypeError):
+            blob = torch.load(src, map_location="cpu", weights_only=False)             # a save in the legacy format cannot be mapped
+        d = blob.get("life") or {}
     else:
         d = json.load(open(src))
     if isinstance(d.get("pace"), dict) and "P" in d["pace"]:
@@ -59,7 +64,9 @@ if pace_src:
         print(f"  pace: no report in {pace_src} (pace_sense 0, or no night yet)")
     else:
         n_l = max(1, len(all_lines))
-        print(f"  pace ({'shadow' if p.get('mode') == 1 else 'live'}, the body's day): P {p['P']} R_lo {p['R_lo']} R_hi {p['R_hi']} ticks"
+        print(f"  pace ({ {0: 'off', 1: 'shadow', 2: 'live'}.get(p.get('mode'), p.get('mode')) }, the body's day): P {p['P']} R_lo {p['R_lo']} R_hi {p['R_hi']} ticks"
               f" | ends foreseen {p['ends_foreseen']}, by the pause {p['ends_by_pause']}, false {p['false_pause_ends']} ({p['false_pause_ends'] / n_l:.2f} a line of {len(all_lines)})"
+              f", foreseen and false {p.get('false_foreseen_ends', 'n/a')}"
               f" | release median {p['release_median']} ticks after the last symbol ({p['releases']} released, {p['release_lapsed']} lapsed, {p['release_cancelled']} cancelled)"
-              f" | ear weight {p['ear_w']} | heard {p['pauses_heard']} pauses, {p['returns_heard']} returns")
+              f" | ear weight {p['ear_w']} | heard {p['pauses_heard']} pauses, {p['returns_heard']} returns"
+              f"{'' if p.get('returns_settled', True) else ' (the returns not yet settled: not ready for live)'}")

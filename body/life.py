@@ -177,7 +177,9 @@ PHYSIOLOGY = dict(
     # learned one heard event at a time (running quantiles in log units); the body's own latency stays counted in cortex steps ---
     pace_sense=0,         # 0 = off; 1 = shadow (the partner's pace tracked, the rules computed and logged, behaviour unchanged); 2 = live (M1-M5 replace
                           # offset_foresee and the surprise law, offset_ticks' count, gate_ear_decay/gain, gate_yield, the babble drive, the turn and the sure proposal)
-    pace_eta=0.05,        # the trackers' step in log units per heard event: a new partner followed within about twenty events
+    pace_eta=0.05,        # the trackers' step in log units per heard event: a new partner followed within about 1/eta (twenty) events in each tracker's
+                          # fast direction (P up, R_lo down, R_hi up), at eta x min(p, 1 - p) a step in its slow one; R_lo and R_hi first settle as the
+                          # sample quantiles of the first 1/eta returns heard
     pace_pause_p=0.99,    # P, the pause outlasted: this quantile of the partner's silences under R_lo (one pause in a hundred taken for an end)
     pace_ret_lo=0.05,     # R_lo: this quantile of the partner's returns (its quickest usual return: the child's slot, and what counts as a pause)
     pace_ret_hi=0.95,     # R_hi: this quantile of the partner's returns (its usual longest silence: beyond it the child is alone)
@@ -340,7 +342,7 @@ class Life:
         # THE SENSED TURN-TAKING (pace_sense): the partner's pace in log ticks (saved as life["pace"]): its pauses (P) and its returns (R_lo,
         # R_hi, from the first return heard); the gap's labels (a foreseen end in it, an end by the pause), the ear held by a line, the reply's
         # readiness (the end's tick, the forecast a step ago, the largest change since), the shadow's own end; the day's instruments
-        self._pq = {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0}
+        self._pq = {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": []}   # warm: the returns heard while they settle (None once settled)
         self._gap_foreseen = False; self._gap_paused = False; self._sh_done = True
         self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
         self._pace_day = self._pace_day_new()
@@ -696,7 +698,7 @@ class Life:
         self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain
         self.note_offset()                                             # and the slow context's utterance closes with it
         self._follow = None                                            # and the recall's episode is let go
-        live_ = int(self.cfg.get("pace_sense", 0)) >= 2
+        live_ = self._pace_mode() >= 2
         self._turn_open = bool(settled) or live_                       # THE TURN'S READINESS (gate_turn): a settled end opens the slot, a count's end does not
                                                                        # (under the sensed pace, M5: either kind of end opens the child's slot)
         rel_ = int(self.cfg.get("gate_ear_release", 1))
@@ -903,7 +905,7 @@ class Life:
         # saying meanwhile (with the body's silence required too, a babbling body never let it fire: run 41 held
         # two turn-end memories after six days)
         off = int(self.cfg.get("offset_ticks", 0)); settle_form = str(self.cfg.get("offset_form", "count")) == "settle"
-        ps_ = int(self.cfg.get("pace_sense", 0))                   # under the sensed pace (2) the pause outlasted (M2, _pace_hear) replaces the count
+        ps_ = self._pace_mode()                                    # under the sensed pace (2) the pause outlasted (M2, _pace_hear) replaces the count
         if u == self.sil and off > 0 and not self._offset_done and not settle_form and ps_ < 2 and self.ticks - self._last_world >= off:
             self._offset(settled=False); self._offset_done = True
         first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
@@ -958,7 +960,7 @@ class Life:
                 self._start_pending = True; self._start_armed = False
                 self.store.episode += 1                                    # a new utterance of the world's: the links it writes carry its tag
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
-        ps_ = int(self.cfg.get("pace_sense", 0))
+        ps_ = self._pace_mode()
         if settle_form and off > 0 and ps_ < 2:                              # THE EVENT'S END BY THE LAW: two running averages of the
             st_ = float(getattr(self, "_surp_tick", 0.0))                     # tick's surprise; the world stops, the surprise jumps and
             af_ = 1.0 / max(1.0, float(self.cfg.get("offset_fast", 4))); as_ = 1.0 / max(1.0, float(self.cfg.get("offset_slow", 64)))
@@ -978,7 +980,7 @@ class Life:
             if u == self.sil and not self._offset_done and self.ticks - self._last_world >= 1 and \
                     (settled_ or self.ticks - self._last_world >= off):         # the law, or the senses' own adaptation as the floor
                 self._offset(settled=bool(settled_)); self._offset_done = True   # a newborn's flat surprise still ends events by the count
-        if ps_ and off > 0:
+        if ps_:
             self._pace_hear(u, pred1, ps_ >= 2)                              # THE SENSED PACE: the end foreseen or outlasted, the reply's readiness
         if u != self.sil and (float(self.cfg.get("explore_gain", 0.0)) > 0 or float(self.cfg.get("explore_choice", 0.0)) > 0):   # arousal follows novelty: a running surprise at the world's symbols
             a_ = 1.0 / max(1.0, float(self.cfg.get("explore_tau", 64)))
@@ -999,25 +1001,48 @@ class Life:
     # percentile of this partner's own silences, learned one heard event at a time: a running quantile in log units, q <- q + eta (p - [ln x
     # <= q]), so a fast hand with 1-4 s pauses and a robot on 30 Hz frames are met the same way. Typing speed is never read. The body's own
     # latency (the reply's readiness, M4) stays counted in cortex steps. Mechanisms (since = ticks since the world's last symbol):
-    #   M1 THE END FORESEEN: a quiet tick of an open utterance at which the readout's most likely symbol (the reserved masked) is the rest
-    #      (listeners project a turn's end from what has been said); no constant: sharpness and mood cannot move an argmax.
-    #   M2 THE PAUSE OUTLASTED: since >= P (the partner's 99th-percentile pause) ends it unforeseen and lets the ear go at once.
+    #   M1 THE END FORESEEN: a quiet tick of an open utterance at which the readout's most likely symbol (the reserved masked) is the end
+    #      symbol the offset teaches (end_id: the rest, or the turn-end token under end_symbol eot) (listeners project a turn's end from what
+    #      has been said); no constant: sharpness and mood cannot move an argmax.
+    #   M2 THE PAUSE OUTLASTED: once the silence is longer than P (the partner's 99th-percentile pause: since + 1 > P, the gap it will close
+    #      already past P) it ends the utterance unforeseen and lets the ear go at once.
     #   M3 THE EAR HELD: any world symbol holds the ear at 1 (gain 1) until an end lets it go, however long the pause (vocal suppression
     #      while a partner's call is under way); the learned weight on the ear shuts the gate through the whole line.
-    #   M4 THE REPLY READY: after a foreseen end at E, the ear lets go at the first t > E where the rest is not the argmax and the forecast's
-    #      change d_t = 1 - cos(pred_t, pred_t-1) is at most ready_ratio of its largest since E (a reply is launched when its plan settles).
+    #   M4 THE REPLY READY: after a foreseen end at E, the ear lets go at the first t > E where the end symbol is not the argmax and the
+    #      forecast's change d_t = 1 - cos(pred_t, pred_t-1) is at most ready_ratio of its largest since E (a reply is launched when its plan
+    #      settles); a reply never ready lapses when the slot closes (since > R_lo), or before the returns are known when the pause is outlasted.
     #   M5 TURN, WAIT, ALONE: after either end the slot (since <= R_lo) has the whole floor; past it the ear reads 1 until R_hi, then fades
     #      to 0 at 2 R_hi, and the floor returns as gate_floor x clip(since / R_hi - 1, 0, 1) (an infant's reply window follows the
-    #      caregiver's usual latency; vocalizing returns when it is left alone).
+    #      caregiver's usual latency; vocalizing returns when it is left alone). The same drive rules the floor while a line is under way
+    #      (nothing below R_hi; nothing before the returns are known), as the babble drive it replaces did, whatever gate_listen is.
+    # THE EVENTS (the review of 2026-09-23): a gap in which an end was foreseen is a return, unless the world came back within P (a false
+    # end, heard as the pause it was: one false 3-tick "return" had undone nineteen true ones, R_lo then fell and P behind it, the body
+    # talking over lines and never answering). R_lo and R_hi settle from the first 1/eta returns (the step's own horizon) as their sample
+    # quantiles, a return shorter than P struck as P grows (early on P is small, and a word's gap foreseen falsely would otherwise stand as
+    # the partner's quickest return); until they settle the pause tracker hears every silence not foreseen, as before the first return, so
+    # a misheard early return can neither set R_lo nor fence P beneath it. After that each is a running quantile: it follows a partner
+    # in its fast direction within about 1/eta events, and in its slow one at eta x min(p, 1 - p) a step (R_lo up, R_hi down, P down).
     # At 1 (shadow) the trackers run and the rules are computed on a shadow end and logged, the served reflexes deciding; at 2 they decide.
+    # The pace rides on the utterance's ends: with offset_ticks 0 (no ends) it is off whatever pace_sense says (_pace_mode).
     @staticmethod
     def _pace_day_new():
         """the day's instruments of the sensed pace (the night report's "pace", then begun afresh)"""
-        return {"fore": 0, "pause": 0, "false": 0, "ret": 0, "sil": 0, "rel": [], "lapsed": 0, "cancel": 0}
+        return {"fore": 0, "pause": 0, "false": 0, "false_fore": 0, "ret": 0, "sil": 0, "rel": [], "lapsed": 0, "cancel": 0}
+
+    @staticmethod
+    def _pace_q(xs, p):
+        """the sample p-quantile of xs, interpolated between the order statistics (the returns' settling)"""
+        s = sorted(xs); h = (len(s) - 1) * float(p); i = int(math.floor(h))
+        return s[i] if i + 1 >= len(s) else s[i] + (h - i) * (s[i + 1] - s[i])
+
+    def _pace_mode(self):
+        """the sensed pace in force: pace_sense (0 off, 1 shadow, 2 live), or 0 when offset_ticks is 0: the pace senses and decides the
+        utterance's ends, and with the ends switched off nothing would ever let the held ear go"""
+        return int(self.cfg.get("pace_sense", 0)) if int(self.cfg.get("offset_ticks", 0)) > 0 else 0
 
     def _pace(self):
         """(P, R_lo, R_hi) in ticks: the partner's usual longest pause, its quickest and its longest usual return (R_lo and R_hi None
-        until the first return is heard: no slot limit, no wait, the whole floor)"""
+        until a return is heard: no slot limit, no wait, the whole floor)"""
         pq = self._pq
         P = math.exp(float(pq["pause"]))
         if pq.get("lo") is None or pq.get("hi") is None:
@@ -1027,24 +1052,39 @@ class Life:
 
     def _pace_update(self, g):
         """one heard event, the gap g (ticks) the world's symbol ended: a gap of one tick is the line's own rhythm, not a silence; a gap in
-        which a foreseen end fired is a return (R_lo, R_hi, begun at the first); any other gap under R_lo is a pause (P), those the
-        pause outlasted included, so the tracker never sees only the gaps under its own threshold"""
+        which a foreseen end fired and the world stayed away at least P is a return (R_lo, R_hi); one it closed within P was a false end
+        and is a pause; any other gap under R_lo is a pause (P), those the pause outlasted included, so the tracker never sees only the
+        gaps under its own threshold. Until the returns have settled (1/eta of them past P, "warm" in the trackers) R_lo and R_hi are the
+        sample quantiles of those heard, any shorter than P struck as P grows, and the pause tracker hears every silence not foreseen"""
         if g < 2:
             return
         pq = self._pq; d = self._pace_day; lx = math.log(float(g)); eta = float(self.cfg.get("pace_eta", 0.05))
+        p_lo = float(self.cfg.get("pace_ret_lo", 0.05)); p_hi = float(self.cfg.get("pace_ret_hi", 0.95))
         P, lo, hi = self._pace()
-        if self._gap_foreseen:
+        warm = pq.get("warm")
+        fore = bool(self._gap_foreseen)
+        if fore and g < P:
+            fore = False; d["false_fore"] += 1                   # the end foreseen, and the world back within its usual longest pause: a pause
+        if fore:
             pq["n_ret"] = int(pq.get("n_ret", 0)) + 1; d["ret"] += 1
-            if pq.get("lo") is None or pq.get("hi") is None:
-                pq["lo"] = lx; pq["hi"] = lx
+            if warm is not None:
+                warm.append(lx)
             else:
-                pq["lo"] = float(pq["lo"]) + eta * (float(self.cfg.get("pace_ret_lo", 0.05)) - (1.0 if lx <= float(pq["lo"]) else 0.0))
-                pq["hi"] = float(pq["hi"]) + eta * (float(self.cfg.get("pace_ret_hi", 0.95)) - (1.0 if lx <= float(pq["hi"]) else 0.0))
-        elif lo is None or g < lo:
+                pq["lo"] = float(pq["lo"]) + eta * (p_lo - (1.0 if lx <= float(pq["lo"]) else 0.0))
+                pq["hi"] = float(pq["hi"]) + eta * (p_hi - (1.0 if lx <= float(pq["hi"]) else 0.0))
+        elif warm is not None or lo is None or g < lo:
             pq["pause"] = float(pq["pause"]) + eta * (float(self.cfg.get("pace_pause_p", 0.99)) - (1.0 if lx <= float(pq["pause"]) else 0.0))
             pq["n_pause"] = int(pq.get("n_pause", 0)) + 1; d["sil"] += 1
-            if self._gap_paused and lo is not None:
+            if self._gap_paused and lo is not None and g < lo:
                 d["false"] += 1                                  # the pause outlasted, and the world back before its quickest return: a false end
+        if warm is not None:
+            warm[:] = [x for x in warm if x >= float(pq["pause"])]    # a return shorter than the partner's usual longest pause, as P has grown: struck
+            if warm:
+                pq["lo"] = self._pace_q(warm, p_lo); pq["hi"] = self._pace_q(warm, p_hi)
+            else:
+                pq["lo"] = None; pq["hi"] = None
+            if len(warm) >= max(1, int(round(1.0 / max(eta, 1e-9)))):
+                pq["warm"] = None                                # settled: from here the running quantiles
 
     def _pace_heard(self, live):
         """a world symbol: the gap it ends is a heard event (the day's first, from the night's sentinel, is not); the gap's labels begin
@@ -1059,10 +1099,10 @@ class Life:
             self._ear_held = True
 
     def _pace_top(self, pred):
-        """the readout's most likely symbol, the reserved masked (M1's and M4's reading; no sampling, no RNG)"""
+        """the readout's most likely symbol, the reserved masked but the end symbol (M1's and M4's reading; no sampling, no RNG)"""
         with torch.no_grad():
             lg = self.m.readout(pred).clone()
-            lg[self.bans] = float("-inf")
+            lg[[b for b in self.bans if b != self.end_id]] = float("-inf")
             return int(lg.argmax())
 
     def _pace_release(self, live, since=None):
@@ -1078,8 +1118,8 @@ class Life:
         d = self._pace_day; since = self.ticks - self._last_world; top = None
         open_ = (not self._offset_done) if live else (not self._sh_done)
         if u == self.sil and open_ and since >= 1:
-            top = self._pace_top(pred1); fore = top == self.sil
-            if fore or since >= self._pace()[0] - 1e-9:
+            top = self._pace_top(pred1); fore = top == self.end_id
+            if fore or since + 1 > self._pace()[0]:                             # M2: the gap this silence will close is already longer than P
                 if fore:
                     self._gap_foreseen = True; d["fore"] += 1
                 else:
@@ -1092,8 +1132,9 @@ class Life:
         if self._ready_E is None:
             return
         P, lo, hi = self._pace()
-        if lo is not None and since > lo:
-            d["lapsed"] += 1; self._pace_release(live)                          # the slot passed with the reply never ready: the wait rules the ear
+        if (since > lo) if lo is not None else (since + 1 > P):
+            d["lapsed"] += 1; self._pace_release(live)                          # the slot passed with the reply never ready (before the returns are known,
+                                                                                # the pause outlasted): the wait rules the ear
         elif int(self.cfg.get("ready_law", 1)):
             if self.ticks > self._ready_E and self._pred_ready is not None:
                 with torch.no_grad():
@@ -1101,7 +1142,7 @@ class Life:
                 self._d_max = max(self._d_max, dt_)
                 if top is None:
                     top = self._pace_top(pred1)
-                if top != self.sil and dt_ <= float(self.cfg.get("ready_ratio", 0.5)) * self._d_max:
+                if top != self.end_id and dt_ <= float(self.cfg.get("ready_ratio", 0.5)) * self._d_max:
                     self._pace_release(live, since)
                     return
             self._pred_ready = pred1.detach()
@@ -1128,9 +1169,13 @@ class Life:
         return self._pace_wait(self.ticks - self._last_world, lo, hi)
 
     def _pace_floor(self, fl, since):
-        """M5 after the end: the whole floor in the child's slot (since <= R_lo, or before the first return), then the drive, gate_floor x
-        clip(since / R_hi - 1, 0, 1): nothing while the partner is merely slow, whole again by 2 R_hi"""
+        """M5: after the end, the whole floor in the child's slot (since <= R_lo, or before the first return), then the drive, gate_floor x
+        clip(since / R_hi - 1, 0, 1): nothing while the partner is merely slow, whole again by 2 R_hi. While the world's line is under way
+        the drive alone (nothing below R_hi, nothing before a return is known): the babble drive it replaces held the floor at zero as the
+        world spoke, so the line's floor does not rest on gate_listen (the review of 2026-09-23: 0.05 on a slow line at gate_listen 0)"""
         P, lo, hi = self._pace()
+        if not self._offset_done:
+            return 0.0 if hi is None else fl * min(1.0, max(0.0, float(since) / hi - 1.0))
         if lo is None or (getattr(self, "_turn_open", False) and since <= lo):
             return fl
         return fl * min(1.0, max(0.0, float(since) / hi - 1.0))
@@ -1139,9 +1184,11 @@ class Life:
         """the sensed pace's instruments: the trackers now, the day's ends, false ends, returns, the reply's releases, the ear's weight"""
         P, lo, hi = self._pace(); d = self._pace_day; rel = sorted(d["rel"]); n = len(rel)
         g = self.m.mouth_gate.weight; ew = round(float(g[0, self.m.d + 5].detach()), 3) if g.shape[1] >= self.m.d + 7 else None
-        return {"mode": int(self.cfg.get("pace_sense", 0)), "P": round(P, 2), "R_lo": (round(lo, 2) if lo is not None else None),
+        return {"mode": self._pace_mode(), "P": round(P, 2), "R_lo": (round(lo, 2) if lo is not None else None),
                 "R_hi": (round(hi, 2) if hi is not None else None), "pauses_heard": int(self._pq.get("n_pause", 0)), "returns_heard": int(self._pq.get("n_ret", 0)),
-                "ends_foreseen": d["fore"], "ends_by_pause": d["pause"], "false_pause_ends": d["false"], "returns": d["ret"], "silences": d["sil"],
+                "returns_settled": self._pq.get("warm") is None,
+                "ends_foreseen": d["fore"], "ends_by_pause": d["pause"], "false_pause_ends": d["false"], "false_foreseen_ends": d.get("false_fore", 0),
+                "returns": d["ret"], "silences": d["sil"],
                 "releases": n, "release_median": ((rel[(n - 1) // 2] + rel[n // 2]) / 2.0 if n else None), "release_lapsed": d["lapsed"],
                 "release_cancelled": d["cancel"], "ear_w": ew}
 
@@ -1399,7 +1446,7 @@ class Life:
                         self._gate_c += float(m.mouth_gate.bias[0]) - self._gate_wmu_last - self._gate_c
                     m.mouth_gate.bias.fill_(self._gate_c + wmu); self._gate_wmu_last = wmu
                 feat = feat - self._feat_mu
-            live_ = int(self.cfg.get("pace_sense", 0)) >= 2
+            live_ = self._pace_mode() >= 2
             if int(self.cfg.get("gate_ear", 0)) and live_:
                 # THE EAR UNDER THE SENSED PACE (M3, M5): held at 1 from the world's symbol until an end lets it go (M2 at once, M4 when the
                 # reply is ready), then the wait; no trace, no gain
@@ -1447,8 +1494,7 @@ class Life:
                 fl = fl * (1.0 - float(self.cfg.get("gate_listen", 0.0)))
             qt_ = int(self.cfg.get("gate_quiet_tau", 0))
             if live_:
-                if self._offset_done:
-                    fl = self._pace_floor(fl, self.ticks - self._last_world)    # M5: the slot's whole floor, then the drive (the babble drive, the turn and the sure proposal retired)
+                fl = self._pace_floor(fl, self.ticks - self._last_world)        # M5: the slot's whole floor, then the drive, the line's floor too (the babble drive, the turn and the sure proposal retired)
             elif qt_ > 0:
                 # THE BABBLE DRIVE (gate_quiet_tau; 2026-09-17, item 41, the user's word: "talk less until the teacher leaves it alone long
                 # enough"): the urge to vocalize on its own returns with silence; the spontaneous floor is zero as the world speaks and
@@ -2264,7 +2310,7 @@ class Life:
             self.bag_w.zero_(); self.bag_o.zero_(); self.n_own = 0; self.win.clear(); self.pred_prev = None; self._follow = None
             self._prev_slot = -1; self._last_write = None; self._start_armed = False; self._start_pending = False; self._seam_pending = False
             self._last_world = -10 ** 9; self._offset_done = True; self._utt_cur = []; self._utt_felt = 0.0; self._ear_trace = 0.0; self._writes_today = 0; self._turn_open = False; self._ear_release_at = None
-            if int(self.cfg.get("pace_sense", 0)):
+            if int(self.cfg.get("pace_sense", 0)) and "pace" not in rep:
                 rep["pace"] = self._pace_report(); self._pace_day = self._pace_day_new()   # the day's instruments of the sensed pace, then a new day's
             self._gap_foreseen = False; self._gap_paused = False; self._sh_done = True     # the gap's labels cleared, the trackers kept (the partner is the same)
             self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
@@ -2286,6 +2332,9 @@ class Life:
         except Exception as e:
             rep["error"] = str(e)[:200]
             self.sleep_pressure = int(self.cfg["wake_ticks"]) // 2
+            if int(self.cfg.get("pace_sense", 0)) and "pace" not in rep:
+                rep["pace"] = self._pace_report(); self._pace_day = self._pace_day_new()   # a night that failed ends the day's instruments too (the day goes on
+                                                                                         # awake: the next report holds the ticks from here, none counted twice)
             self.last_night = rep
         finally:
             self.asleep = False
@@ -2601,7 +2650,7 @@ class Life:
                          "store_after_night": self._store_after_night, "utts": self.utts, "utt_S": self.utt_S,
                          "utt_N": self.utt_N, "utt_serial": int(self._utt_serial), "c_mu": self._c_mu.clone(), "c_n": int(self._c_n), "ctx_cur": self.ctx_cur.clone(), "ctx_prev": self.ctx_prev.clone(),
                          "bands": self.bands.detach().cpu().clone(), "writes_today": int(getattr(self, "_writes_today", 0)), "store_fresh": bool(getattr(self, "_store_fresh", False)), "utt_open": bool(self._utt_open),
-                         "pace": dict(self._pq), "pace_day": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pace_day.items()}}}
+                         "pace": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pq.items()}, "pace_day": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pace_day.items()}}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -2690,10 +2739,23 @@ class Life:
                     life._pq[k_] = (float(L["pace"][k_]) if L["pace"][k_] is not None else None)
             for k_ in ("n_pause", "n_ret"):
                 life._pq[k_] = int(L["pace"].get(k_, 0))
+            w_ = L["pace"].get("warm", None if life._pq["lo"] is not None else [])   # a save from before the settling: its running quantiles go on
+            life._pq["warm"] = [float(x) for x in w_] if isinstance(w_, (list, tuple)) else None
+            if life._pq["lo"] is None or life._pq["hi"] is None:
+                life._pq["lo"] = None; life._pq["hi"] = None
+                if life._pq["warm"] is None:
+                    life._pq["warm"] = []                            # no returns known: they settle afresh
         if isinstance(L.get("pace_day"), dict):
             for k_, v_ in L["pace_day"].items():
                 if k_ in life._pace_day:
                     life._pace_day[k_] = list(v_) if isinstance(v_, list) else v_
+        if life._pace_mode() >= 2 and life._pq.get("warm") is not None:
+            # THE SHADOW COMES FIRST (the review of 2026-09-23): live on returns not yet settled, R_lo and R_hi are few or none (no slot limit, no
+            # wait, the whole floor) and P may still be the newborn's one tick; the design's shadow day (pace_sense 1) warms them. Said, not refused.
+            P_, lo_, hi_ = life._pace()
+            print(f"load: pace_sense 2 (live) with the partner's returns not settled ({len(life._pq['warm'])} of {max(1, int(round(1.0 / max(float(life.cfg.get('pace_eta', 0.05)), 1e-9))))}"
+                  f" heard past its pauses; {int(life._pq.get('n_ret', 0))} returns, {int(life._pq.get('n_pause', 0))} pauses in all; P {P_:.1f} ticks):"
+                  f" the shadow day (pace_sense 1) comes first", flush=True)
         if L.get("store_after_night") is not None:
             life._store_after_night = int(L["store_after_night"])
         elif isinstance(L.get("last_night"), dict) and L["last_night"].get("store_slots") is not None:

@@ -1934,7 +1934,7 @@ def test_pace_what_is_not_a_pause():
     L = tiny(pace_sense=1)
     a_id = TOK.token_to_id("a"); fore = {"on": False}
     L._pace_top = lambda pred: L.sil if fore["on"] else a_id
-    L._pq.update(lo=math.log(10.0), hi=math.log(20.0))
+    L._pq.update(lo=math.log(10.0), hi=math.log(20.0), warm=None)          # the returns settled
     def n():
         return (L._pq["n_pause"], L._pq["n_ret"])
     L.type_text("a", who="parent"); L.tick()
@@ -1961,11 +1961,13 @@ def test_pace_what_is_not_a_pause():
 
 
 def test_pace_pause_outlasted():
-    """84 (M2, M3): with P at 26, a 20-tick pause inside a line holds the ear at 1 and the floor at 0 and ends nothing; a 30-tick pause
-    is ended unforeseen at the 26th tick, the ear let go at once and the child's slot open"""
+    """84 (M2, M3): with P at 26.5, a 20-tick pause inside a line holds the ear at 1 and the floor at 0 and ends nothing; a 30-tick pause
+    is ended unforeseen at the 26th quiet tick, the first at which the gap it will close (27 or more) is longer than P (the tracker's own
+    measure: the gap, a silence's quiet ticks and one; since >= P had ended only gaps of ceil(P) + 1), the ear let go at once and the
+    child's slot open"""
     L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0)
     a_id = TOK.token_to_id("a"); L._pace_top = lambda pred: a_id       # nothing foreseen
-    L._pq.update(pause=math.log(26.0), lo=math.log(37.0), hi=math.log(190.0))
+    L._pq.update(pause=math.log(26.5), lo=math.log(37.0), hi=math.log(190.0), warm=None)   # off the integers (the 21-tick pause heard moves it by 0.05%)
     fired = []; _o = L._offset
     L._offset = lambda settled=True: (fired.append((L.ticks - L._last_world, bool(settled))), _o(settled=settled))[1]
     L.type_text("go", who="parent")
@@ -1984,7 +1986,7 @@ def test_pace_pause_outlasted():
     assert at[1] == 0.0 and abs(at[2] - float(L.cfg["gate_floor"])) < 1e-12 and at[3] and L._turn_open, at
     assert all(r[1] == 1.0 and r[2] == 0.0 for r in rows if r[0] < 26), rows
     assert L._pace_day["pause"] == 1 and L._pace_day["fore"] == 0
-    print("84 the pause outlasted: a 20-tick pause holds the ear at 1 and the floor at 0, nothing ended; a 30-tick pause ended unforeseen at 26, the ear 0, the slot open")
+    print("84 the pause outlasted: a 20-tick pause holds the ear at 1 and the floor at 0, nothing ended; with P", round(L._pace()[0], 2), "a 30-tick pause ended unforeseen at 26, the ear 0, the slot open")
 
 
 def _pace_fake(seed=3, th=0.3):
@@ -2004,7 +2006,7 @@ def test_pace_reply_ready():
     a_id = TOK.token_to_id("a"); fake = _pace_fake()
     def body(**kw):
         L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0, **kw)
-        L._pq.update(pause=math.log(1000.0), lo=math.log(37.0), hi=math.log(190.0))
+        L._pq.update(pause=math.log(1000.0), lo=math.log(37.0), hi=math.log(190.0), warm=None)
         orig = L._pace_hear
         L._pace_hear = lambda u, pred, live: orig(u, fake(L.ticks - L._last_world), live)
         L._pace_top = lambda pred: L.sil if (L.ticks - L._last_world) in (1, 2, 4, 5) else a_id   # moving at 3 with the rest not first
@@ -2038,7 +2040,7 @@ def test_pace_turn_wait_alone():
     def ended(lo, hi):
         L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0)
         L._pace_top = lambda pred: a_id
-        L._pq.update(pause=math.log(2.0), lo=lo, hi=hi)
+        L._pq.update(pause=math.log(2.0), lo=lo, hi=hi, warm=(None if lo is not None else []))
         L.type_text("go", who="parent")
         while L.queue:
             L.tick()
@@ -2064,7 +2066,7 @@ def test_pace_scales_with_the_partner():
     SCRIPT = [("hello", 2), (" there.", 12), ("what is", 3), (" that?", 8), ("a dog", 7), (" runs.", 30)]
     def live(k):
         L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0)
-        L._pq.update(pause=math.log(6.4 * k), lo=math.log(10.4 * k), hi=math.log(20.4 * k))   # off the integers, so a tick's rounding cannot alias
+        L._pq.update(pause=math.log(6.4 * k), lo=math.log(10.4 * k), hi=math.log(20.4 * k), warm=None)   # off the integers, so a tick's rounding cannot alias
         heard = {"n": 0, "last": ""}
         orig_heard = L._pace_heard
         def on_heard(lv):
@@ -2154,11 +2156,136 @@ def test_pace_shadow_changes_nothing():
     C.tick()
     blob = torch.load(path, weights_only=False); del blob["life"]["pace"]; del blob["life"]["pace_day"]; torch.save(blob, path)
     D = Life.load(path, TOK, save_path=None)
-    assert D._pq == {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0} and D._pace_day == Life._pace_day_new(), D._pq
+    assert D._pq == {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": []} and D._pace_day == Life._pace_day_new(), D._pq
     D.tick()
     print("88 the shadow changes nothing: weights, store, utterances, page and feelings equal at 0 and 1; the shadow's day", {k_: rb["pace"][k_] for k_ in ("P", "ends_foreseen", "ends_by_pause", "releases")},
           "; the trackers saved and loaded; an older save loads at the newborn's values")
 
+
+
+def _pace_stream(L, rng, lines, false_p=0.0, early=0, first=None, sil=None, ret=None):
+    """test 82's partner (23 silences a line of 2-4 ticks, a tenth 8-28; then a return of 36-50, a fifth 80-190, its end foreseen), heard
+    by _pace_update: false_p, each silence heard with an end foreseen (falsely); early, that many first lines open with a 3-tick silence
+    foreseen falsely; first, a first return of that many ticks. The true silences and returns are kept for the sample quantiles"""
+    sil = [] if sil is None else sil; ret = [] if ret is None else ret; nf = 0
+    if first is not None:
+        L._gap_foreseen = True; L._pace_update(first)
+    for i in range(lines):
+        if i < early:
+            L._gap_foreseen = True; L._pace_update(3); sil.append(3); nf += 1
+        for _ in range(23):
+            g = rng.randint(2, 4) if rng.random() < 0.9 else rng.randint(8, 28)
+            L._gap_foreseen = rng.random() < false_p; nf += int(L._gap_foreseen); L._pace_update(g); sil.append(g)
+        g = rng.randint(36, 50) if rng.random() < 0.8 else rng.randint(80, 190)
+        L._gap_foreseen = True; L._pace_update(g); ret.append(g)
+    return sil, ret, nf
+
+
+def test_pace_false_ends_and_settling():
+    """91 (the review of 2026-09-23): a gap the world closed within P after a foreseen end was a pause (a false end), not a return: with
+    half a false end a line the trackers stay at the partner's quantiles (as built they fell to P 2.6, R_lo 2.0: talking over lines, never
+    answering). R_lo and R_hi settle from the first 1/eta returns as their sample quantiles, any shorter than P struck as P grows, the pause
+    tracker hearing every silence not foreseen until then: three false 3-tick returns on the newborn's first lines and a first return of
+    1000 ticks leave them at the partner's quantiles within a hundred lines (as built: pinned for hundreds). The settling saved and loaded;
+    a save from before it goes on with its running quantiles"""
+    import random, os, tempfile
+    def near(L, sil, ret):
+        P, lo, hi = L._pace(); want = (_pace_q(sil, 0.99), _pace_q(ret, 0.05), _pace_q(ret, 0.95))
+        return [abs(g / w - 1.0) <= 0.15 for g, w in zip((P, lo, hi), want)], (round(P, 1), round(lo, 1), round(hi, 1)), want
+    L = tiny(pace_sense=1)
+    sil, ret, nf = _pace_stream(L, random.Random(7), 600, false_p=0.02)
+    ok, got, want = near(L, sil, ret)
+    assert all(ok) and L._pace_day["false_fore"] >= 0.8 * nf and L._pq["warm"] is None, (got, want, L._pace_day["false_fore"], nf)
+    got_false = got
+    L = tiny(pace_sense=1); rng = random.Random(7); sil, ret = [], []
+    _pace_stream(L, rng, 100, early=3, first=1000, sil=sil, ret=ret)
+    ok100, got100, want100 = near(L, sil, ret)
+    assert ok100[0] and ok100[1] and L._pq["warm"] is None, (got100, want100)
+    _pace_stream(L, rng, 500, sil=sil, ret=ret)
+    ok, got, want = near(L, sil, ret)
+    assert all(ok), (got, want)
+    # the settling itself, step by step
+    L = tiny(pace_sense=1); L._pq["pause"] = math.log(10.0); d = L._pace_day
+    for g in (3, 40, 1000, 50):
+        L._gap_foreseen = True; L._pace_update(g)
+    w = sorted(math.log(x) for x in (40, 50, 1000))
+    assert d["false_fore"] == 1 and d["ret"] == 3 and L._pq["warm"] == [math.log(40), math.log(1000), math.log(50)], (d, L._pq)
+    assert abs(L._pq["lo"] - (w[0] + 0.1 * (w[1] - w[0]))) < 1e-12 and abs(L._pq["hi"] - (w[1] + 0.9 * (w[2] - w[1]))) < 1e-12, L._pq
+    L._pq["pause"] = math.log(45.0); L._gap_foreseen = False; L._pace_update(100)       # P past 40 (a silence of 100 heard: settling, every one is)
+    assert L._pq["warm"] == [math.log(1000), math.log(50)] and abs(L._pq["lo"] - (w[1] + 0.05 * (w[2] - w[1]))) < 1e-12, L._pq
+    assert not L._pace_report()["returns_settled"]
+    path = os.path.join(tempfile.mkdtemp(), "p.pt"); L.save_path = path; L.save()
+    C = Life.load(path, TOK, save_path=None)
+    assert C._pq == L._pq and C._pq["warm"] is not L._pq["warm"], (C._pq, L._pq)
+    for _ in range(18):
+        L._gap_foreseen = True; L._pace_update(60)
+    assert L._pq["warm"] is None and L._pace_report()["returns_settled"] and L._pq["n_ret"] == 21, L._pq
+    lo0 = L._pq["lo"]; L._gap_foreseen = True; L._pace_update(200)
+    assert abs(L._pq["lo"] - (lo0 + 0.05 * 0.05)) < 1e-12                               # settled: the running quantile's step
+    blob = torch.load(path, weights_only=False); del blob["life"]["pace"]["warm"]; torch.save(blob, path)
+    D = Life.load(path, TOK, save_path=None)
+    assert D._pq["warm"] is None and D._pq["lo"] == C._pq["lo"], D._pq                 # a save from before the settling: its quantiles run on
+    blob["life"]["pace"]["lo"] = None; torch.save(blob, path)
+    E = Life.load(path, TOK, save_path=None)
+    assert E._pq["warm"] == [] and E._pq["lo"] is None and E._pq["hi"] is None, E._pq
+    print("91 false ends and the settling: half a false end a line", got_false, "at the partner's", tuple(round(x, 1) for x in want),
+          "; three false returns and a first of 1000:", got100, "at 100 lines; the settling struck, saved and loaded")
+
+
+def test_pace_edges():
+    """92 (the review of 2026-09-23): offset_ticks 0 leaves the pace off (live, the ear had been held from the first symbol forever); before
+    any return a reply never ready lapses when the pause is outlasted (it had held the ear until the world spoke again); live, the line's
+    floor is the drive's, zero, at gate_listen 0 too; M1 reads the end symbol the offset teaches (the turn-end token under end_symbol eot,
+    masked before); a night that fails still reports the day's pace and begins a new day's"""
+    a_id = TOK.token_to_id("a")
+    L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0, offset_ticks=0)
+    L.type_text("go", who="parent")
+    for _ in range(40):
+        L.tick()
+    assert L._pace_mode() == 0 and not L._ear_held and L._pq["n_pause"] + L._pq["n_ret"] == 0 and L.insides()["pace"]["mode"] == 0, (L._ear_held, L._pq)
+    L = tiny(pace_sense=2, gate_ear=1, gate_listen=1.0)
+    L._pq["pause"] = math.log(26.5); L._pace_top = lambda pred: L.sil      # the rest the forecast's top throughout: the reply never ready
+    L.type_text("go", who="parent")
+    while L.queue:
+        L.tick()
+    held = []
+    for _ in range(30):
+        s = L.ticks - L._last_world; L.tick(); held.append((s, L._ear_held, float(L._ear_now)))
+    assert L._pace()[1] is None and L._pace_day["fore"] == 1 and L._pace_day["lapsed"] == 1, (L._pace(), L._pace_day)
+    assert all(h and e == 1.0 for s, h, e in held if s < 26) and all(not h and e == 0.0 for s, h, e in held if s >= 26), held
+    f = float(tiny().cfg["gate_floor"])
+    for lo in (None, math.log(37.0)):
+        L = tiny(pace_sense=2, gate_ear=1, gate_listen=0.0)
+        L._pq.update(pause=math.log(26.5), lo=lo, hi=(None if lo is None else math.log(190.0)), warm=(None if lo is not None else []))
+        L._pace_top = lambda pred: a_id
+        fl = []
+        for ch in "what is":
+            L.type_text(ch, who="parent"); L.tick(); fl.append(float(L._floor_now))
+            for _ in range(3):
+                L.tick(); fl.append(float(L._floor_now))
+        assert fl == [0.0] * len(fl) and not L._offset_done, fl
+        for _ in range(30):
+            L.tick()
+        assert L._offset_done and abs(float(L._floor_now) - f) < 1e-12, (L._offset_done, L._floor_now)
+    for form, want_eot in (("eot", True), ("rest", False)):
+        L = tiny(pace_sense=1, end_symbol=form)
+        lg = torch.zeros(TOK.get_vocab_size()); lg[L.eot] = 5.0; lg[a_id] = 4.0
+        L.m.readout = lambda pred, _lg=lg: _lg
+        top = L._pace_top(torch.zeros(64)); del L.m.readout
+        assert (top == L.eot == L.end_id) if want_eot else (top == a_id and L.end_id == L.sil), (form, top, L.end_id, L.eot)
+    L = tiny(pace_sense=1)
+    for ch in "ab":
+        L.type_text(ch, who="parent"); L.tick()
+        for _ in range(4):
+            L.tick()
+    L.type_text("c", who="parent"); L.tick()
+    def boom(*a, **k):
+        raise RuntimeError("a night that fails")
+    L.dreams = boom
+    n0 = L._pace_day["sil"]; rep = L.night()
+    assert rep.get("error") and rep.get("pace", {}).get("silences") == n0 >= 1 and L._pace_day == Life._pace_day_new(), (rep, L._pace_day)
+    print("92 the edges: offset_ticks 0 leaves the pace off; a reply never ready lets the ear go at 26 before any return; the line's floor 0 at",
+          "gate_listen 0; M1 reads the turn-end token under eot; a failed night reports the day's pace")
 
 if __name__ == "__main__":
     t0 = time.time()
@@ -2167,7 +2294,7 @@ if __name__ == "__main__":
     tests += [test_striatum, test_working_memory, test_planning_actor, test_new_organs_round_trip, test_chain_closes, test_night_warmup, test_plan_boundary, test_exploration_drive, test_offset_by_settling, test_end_as_rest, test_explore_in_the_choice, test_prefrontal_ceiling, test_calibrated_sharpness, test_evidence_survives_the_load, test_face_foresees, test_rem_imagines, test_actor_earned_voice, test_face_on_striatum, test_page_tags_who, test_typist_yields, test_night_scales_with_the_day, test_repetition_suppression, test_dreams_follow_the_episode, test_actor_chunks, test_second_voice, test_own_speech_target, test_own_song_remembered, test_waking_recall_tires, test_dreams_in_lockstep_equal_one_at_a_time, test_night_steps_per_batch, test_dreams_know_who_spoke, test_dreams_follow_one_utterance, test_recall_carries_the_episode, test_dreams_the_utterances_heard, test_smile_for_the_answer, test_dreams_the_exchange, test_store_keys_on_the_cortex, test_two_facts_one_topic, test_episode_kept_per_utterance, test_chooser_learns_the_torn_choice, test_the_old_in_the_draw, test_reward_tags_the_utterance, test_store_capacity_is_a_constant, test_decisiveness_by_certainty, test_working_memory_holds_in_the_quiet, test_own_symbols_fade_the_world_context, test_own_fade_in_the_query_alone, test_forgetting_by_an_absolute_floor, test_listening_reflex, test_babble_drive, test_sure_proposal_needs_no_quiet, test_links_survive_the_eviction, test_night_survives_a_long_utterance, test_night_reads_a_corpus]
     tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield, test_the_turns_readiness, test_the_quiet_foreseen, test_the_replys_readiness, test_the_turns_floor, test_the_continuation_gated, test_the_tag_at_entry]
     tests += [test_pace_trackers_learn_the_partner, test_pace_what_is_not_a_pause, test_pace_pause_outlasted, test_pace_reply_ready, test_pace_turn_wait_alone,
-              test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing]
+              test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing, test_pace_false_ends_and_settling, test_pace_edges]
     failed = 0
     for t in tests:
         try:
