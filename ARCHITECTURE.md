@@ -10,7 +10,7 @@ describe items 41-52. Where this document and the code disagree, the code is rig
 
 **Where the served constants come from.** The served body's constants are the constants stored in its save, then overridden by
 the flags it was launched with. A flag left out of the file keeps the save's value (item 39: "the served constants are what the
-save says, and the flags are only a delta on it"). The defaults in `PHYSIOLOGY` (body/life.py) apply only where neither the save
+save says, and the flags are only a delta on it"). The defaults in `PHYSIOLOGY` (body/core/physiology.py, re-exported by body/life.py) apply only where neither the save
 nor the flags set a value. `ops/served_cfg.py` prints the effective set, but it loads the save, and this document was written
 without loading the served save. Twenty-six constants are set only by the save (the review's count, §4). Their values below come
 from a print of the effective constants made on 2026-09-22 at 17:38. No flag has touched those keys since. Where they are named,
@@ -882,31 +882,31 @@ pace_sense came after the review. Its law is general and its input is not (§10)
 ## Known defects
 
 **From the review of 2026-09-22.** The review ranked these by harm to the body's learning, and each was checked by a skeptic. All
-are open unless noted. Locations are in the current code; the review's line numbers predate the pace_sense merge. "Constant"
+are open unless noted. Locations are in the current code (body/, after the split of life.py into body/core/); the review's line numbers predate the pace_sense merge and the split. "Constant"
 means a switch that is off by default, measured on a copy before use.
 
 | # | defect | where | harm, as the review measured | proposed fix |
 |---|---|---|---|---|
-| 1 | Tired memories never recover. `_tire` rebinds `store.A` to a new tensor; each new slot's write points it back at FastStore's buffer, which holds only the tiring from write ticks. | body/life.py `_tire` (lines 619-623) | medium, served: the most-used memories are pushed down all day; the best match's availability averaged 0.62 against 0.71 fixed | `store.A.copy_(1 − rc (1 − store.A))` behind a constant, plus a test that writes a new slot after tiring |
+| 1 | Tired memories never recover. `_tire` rebinds `store.A` to a new tensor; each new slot's write points it back at FastStore's buffer, which holds only the tiring from write ticks. | body/core/memory.py `_tire` (lines 23-27) | medium, served: the most-used memories are pushed down all day; the best match's availability averaged 0.62 against 0.71 fixed | `store.A.copy_(1 − rc (1 − store.A))` behind a constant, plus a test that writes a new slot after tiring |
 | 2 | Some smiles are never felt. Two posts land milliseconds apart with no tick between. | body/caregiver.py (review: line 331) | medium, served: about 12% of known-word smiles and the first step of about a quarter of answer smiles; the "late" misses are refractory drops | relabel the log rows; env constant FACE_REST_SEEN (one tick at face 0 before the next smile) |
 | 3 | Long lines are silently dropped. `clean()` drops lines over 40 symbols or with an apostrophe. | body/teacher.py (review: line 279) | medium, served: 553 of 10000 lines in the last 2500 queue rows | **partly fixed**: the four long POOL questions shortened in ops/night_cycle.sh (commit b10dd84). Still open: ops/read_stories.py allows the apostrophe, and ops/queue_depth.py does not count through `clean()` |
-| 4 | A rest is logged as the gate saying no. Inside a running word a sampled rest is stored as (acted 0, p 1); with gate_vigor 0 that is an eligibility of −1 on a tick the gate never decided. | body/life.py `_choose`, chunk branch (lines 1668-1673) | low now (2 words in 15 days); at every rest inside a word under chunk_gate 1 | record the gate's own draw and use it for eligibility, before chunk_gate |
-| 5 | The actor's trace decays per word, not per tick, while dopamine multiplies it every tick. | life.py `_act` (lines 1704-1707) and `_learn_values` (lines 1366-1368) | low: credit smears over about 16 words; nothing measured about the actor can be trusted until fixed | constant `actor_trace_tick` |
-| 6 | Smiles never reach the felt entry: it sees only the dopamine of the tick before each heard symbol. | life.py `_step` (line 504) | low: B1 tested tagging by surprise, not reward | constant `utt_entry_trace` (a tag lasting 32-64 ticks) |
-| 7 | The felt entry's running mean starts cold and is not saved. | life.py `_offset` (lines 737-741); absent from `save()` | low: the first facts of B1 entered 1.1-1.5 times too strong | save and restore the mean; warm-up behind `utt_entry_warm` |
-| 8 | The gate's credit counts the dopamine from before the act. | life.py `_gate_lesson` | low: unbiased, about 21% more noise | constant `elig_from` |
-| 9 | `night_ticks` discounts the wrong step, the first to second morning tick. No transition across the night has been learned. | life.py `_learn_values` (lines 1259-1261) | low: one bad sample a day | drop `--night-ticks` at a boundary, or constant `night_bridge` |
-| 10 | A working-memory latch breaks the fast critic's evidence chain. | life.py `_learn_values` (line 1375) | low: about 1% of transitions | constant `wm_chain` |
+| 4 | A rest is logged as the gate saying no. Inside a running word a sampled rest is stored as (acted 0, p 1); with gate_vigor 0 that is an eligibility of −1 on a tick the gate never decided. | body/core/mouth.py `_choose`, chunk branch (lines 507-512) | low now (2 words in 15 days); at every rest inside a word under chunk_gate 1 | record the gate's own draw and use it for eligibility, before chunk_gate |
+| 5 | The actor's trace decays per word, not per tick, while dopamine multiplies it every tick. | core/mouth.py `_act` (lines 543-546) and core/critics.py `_learn_values` (lines 160-162) | low: credit smears over about 16 words; nothing measured about the actor can be trusted until fixed | constant `actor_trace_tick` |
+| 6 | Smiles never reach the felt entry: it sees only the dopamine of the tick before each heard symbol. | core/cortex.py `_step` (line 39) | low: B1 tested tagging by surprise, not reward | constant `utt_entry_trace` (a tag lasting 32-64 ticks) |
+| 7 | The felt entry's running mean starts cold and is not saved. | core/senses.py `_offset` (lines 72-76); absent from `save()` | low: the first facts of B1 entered 1.1-1.5 times too strong | save and restore the mean; warm-up behind `utt_entry_warm` |
+| 8 | The gate's credit counts the dopamine from before the act. | core/mouth.py `_gate_lesson` | low: unbiased, about 21% more noise | constant `elig_from` |
+| 9 | `night_ticks` discounts the wrong step, the first to second morning tick. No transition across the night has been learned. | core/critics.py `_learn_values` (lines 53-55) | low: one bad sample a day | drop `--night-ticks` at a boundary, or constant `night_bridge` |
+| 10 | A working-memory latch breaks the fast critic's evidence chain. | core/critics.py `_learn_values` (line 169) | low: about 1% of transitions | constant `wm_chain` |
 | 11 | The quiet foreseen trains on its own guess: the foreseen end becomes the end target the cortex learns. | review: offset_foresee (inert now) | low | constant `foresee_retract`. My reading of the code, not measured: M1 ends a line through the same `_offset`, which marks the window's last world position as ended, so the same loop applies to M1 |
 | 12 | The end depends on mood: p(rest) is read at the mood-set sharpness. | offset_foresee | low | constant `foresee_sharp`. Does not apply to M1, whose argmax sharpness cannot move |
 | 13 | The store reads and tires twice a tick, in the world's half and the own half. | `_step` via `_hear` and `_act` | documentation | correct the docs; `read_tire_once` only if the documented rate is wanted |
-| 14 | Every night draws the maximum dreams, because the write counter includes merges. | life.py `_step` (lines 517-518); `FastStore.write` returns True on a merge | low: 2048 dreams every night | constant `night_count='slots'` |
+| 14 | Every night draws the maximum dreams, because the write counter includes merges. | core/cortex.py `_step` (lines 52-53); `FastStore.write` returns True on a merge | low: 2048 dreams every night | constant `night_count='slots'` |
 | 15 | Faded keys are stored malformed: keys fainter than 1e-12 normalize to short vectors that can never be recalled. | body/model.py `FastStore.write` (line 884) | low: rare since 09-19 | constant `store_key_rescale` |
-| 16 | A failed save causes an extra night 12000 ticks later, and both memories fade twice that day. | life.py `night` (lines 2364-2369) | never fired; the disk is 94% full | give `save()` its own try block |
+| 16 | A failed save causes an extra night 12000 ticks later, and both memories fade twice that day. | core/night.py `night` (lines 398-403) | never fired; the disk is 94% full | give `save()` its own try block |
 | 17 | The line popped at nightfall is lost. | body/teacher.py (review: line 215) | 5 of the last 10 nights | env constant UNSAID_BACK |
 | 18 | "hot." gets no smile, and it drains attention. | body/caregiver.py (review: line 321) | about 2% of smiles; a bias against the end mark | KNOWN_MARK (strip only a trailing mark) |
 | 19 | The answer smile pays for echoing the question. | body/caregiver.py (review: line 316) | about a third of answer smiles | ANSWER_ASKED (the answer's words minus the question's, both "or" choices kept, fused words accepted) |
-| 20 | Negligible. | life.py | none | `night_ends_word`, `load_ends_line`; the optimizers are not saved, and need not be |
+| 20 | Negligible. | core/night.py `night` (line 380); core/persistence.py `load` (line 101); body/life.py `__init__` (line 228) | none | `night_ends_word`, `load_ends_line`; the optimizers are not saved, and need not be |
 
 **Not reached by the served body** (review):
 - A NaN in the bands freezes the tick loop before any night.
@@ -930,6 +930,9 @@ save are never exercised, so the check never runs:
 
 Its hash leaves out the bands, the face organ and `rbar`, and the tests share the gap. Until a served profile, a hash of the full
 state and a save/load round trip are added, no refactor can be shown to change nothing on the served body.
+The check now has them (2026-09-23): `--profile served` and `--profile switches`, `--full` and `--roundtrip`
+(tools/determinism_check.py's first lines). The round trip found one field a reload does not give back: a store born under
+store_sat 1 is never marked as converted, so its first reload compresses strengths that were already saturating.
 
 **Constants with no effect on the served body.** The review counts 67 of 204. The ones checked in the code for this document:
 - `vcrit_w` 0.3 is overruled by `vcrit_ceiling earned` with `vcrit_auto 1`.
@@ -948,7 +951,7 @@ state and a save/load round trip are added, no refactor can be shown to change n
 
 The mechanisms map onto these functions:
 
-| mechanism | body/model.py | body/life.py |
+| mechanism | body/model.py | `Life` (body/life.py and its mixins in body/core/) |
 |---|---|---|
 | cortex | `Organs.inputs`, `stream`, `stream_step`, `forecast`, `latent_loss` | `_wake_lesson`, `_stream_now` |
 | lexicon and readout | `Organs.E`, `readout`, `perm` | `_choose` (sharpness), `_sharp_calibrate` |
@@ -966,3 +969,17 @@ The mechanisms map onto these functions:
 
 The review's refactor plan (§4) splits life.py into mixins in this same order: physiology, senses, memory, cortex, mouth (with a
 Reflexes object for §11), critics, actor, night, persistence and instruments. It advises no full refactor before the demo.
+Step 2, the mechanical split, is done (2026-09-23, branch refactor-life). body/life.py keeps `Life.__init__` and `tick()`. Every
+other method moved verbatim into a mixin in body/core/, which `Life` inherits in that order. The map is in body/core/__init__.py:
+- senses.py: `_decay_feelings`, `_offset`, `_sense`, `_hear`, `type_text`, `set_face`
+- memory.py: `query_from`, `_tire`, `_recall`, `bag`, `key`, `_ctx_scaled`, `take_world`, `take_own`, `note_offset`, `rest_tick`, `_consolidate_own`
+- cortex.py: `_step`, `_window_tensors`, `_stream_now`, `_wake_lesson`, `_sharp_calibrate`
+- mouth.py: `_imagine_value`, the `_pace_*` methods, `_choose`, `_act`, `_feel_and_learn`, `_gate_lesson`
+- critics.py: `fast_value`, `_learn_values`, `_own_face`, `_vrel_update`, the face organ
+- actor.py: `_chooser_credit`, `_chooser_learn`, `_arel_update`
+- night.py: dreams, `night`, REM, `_value_replay`, `_sleep_now`
+- persistence.py: `save`, `load`, `birth`
+- instruments.py: `_bookkeep`, `gauge`, `state`, `anticipation`, `insides`
+
+`PHYSIOLOGY` is in physiology.py, and `from body.life import Life, PHYSIOLOGY` still works. Every digest of the determinism check
+reproduced unchanged. The Reflexes object was not made, because it would change method bodies.

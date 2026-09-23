@@ -147,15 +147,18 @@ This runs 91 organ tests. Each one fails when its organ stops doing its job.
 
 ```bash
 python3 tools/determinism_check.py [--flags ops/BASE_FLAGS.txt] [--ticks 400]
+python3 tools/determinism_check.py --profile served [--full] [--roundtrip]     # also: --profile switches
 ```
 
-Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a fixed script, sleeps one night and is hashed. An equal digest means the edit changed nothing the body does on that script. The check does not yet cover the constants that live only in the served save (review §4).
+Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a fixed script, sleeps one night and is hashed. An equal digest means the edit changed nothing the body does on that script. Run it from the main tree. `--profile served` first takes the served save's own constants (read from its pickle, no tensors), so the 26 constants that live only in the save are exercised, and the tiny day ends at the tick's own sleep switch. `--profile switches` adds chunk_gate 1, utt_entry felt and pace_fore_q 0.99. `--full` also hashes every optimizer, the random streams, the saved blob and every working attribute, with a digest per section. `--roundtrip` saves and reloads halfway and names any field a reload does not give back (review §4).
 
 ## Map of the repo
 
 - `body/`: the organism, and the only code the served body runs.
   - `model.py` holds the organs.
-  - `life.py` is a life: the tick, the waking lesson, the night, save and load, and the physiology table of constants.
+  - `life.py` is a life: `Life`, its `__init__` and its tick. Its other methods are mixins in `core/`, one module per role: senses, memory,
+    cortex, mouth, critics, actor, night, persistence and instruments. The physiology table of constants is `core/physiology.py`,
+    re-exported by `life.py`.
   - `serve.py` is the server and the `/talk` page.
   - `teacher.py` and `caregiver.py` are the typist and its face.
   - `fastlife.py` is the fast parent for fresh seeds. One test still uses it.

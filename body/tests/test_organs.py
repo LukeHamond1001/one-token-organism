@@ -1,14 +1,16 @@
 """one test per organ (BODY_SPEC.md §8). Run: python3 -m body.tests.test_organs
 Each test fails when its organ stops doing its job. Tiny body, CPU, seconds."""
 import math
+import os
 import sys
+import tempfile
 import time
 
 import torch
 import torch.nn.functional as F
 from tokenizers import Tokenizer
 
-sys.path.insert(0, "/Users/lukehamond/Projects/project")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))   # this tree's body, not a fixed one
 from body.life import Life  # noqa: E402
 
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
@@ -808,7 +810,7 @@ def test_typist_yields():
     import random
     from body.teacher import Teacher, Corpus, FixedPlanner
     life = tiny()
-    log = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/yield_test.jsonl"
+    log = os.path.join(tempfile.mkdtemp(), "yield_test.jsonl")
     if os.path.exists(log):
         os.remove(log)
 
@@ -865,7 +867,7 @@ def test_night_scales_with_the_day():
     rep2 = life.night()
     assert rep2["dreams"] == 4, rep2["dreams"]
     import os
-    path = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/night_load_test.pt"
+    path = os.path.join(tempfile.mkdtemp(), "night_load_test.pt")
     life.save(path); life2 = Life.load(path, TOK, device="cpu"); os.remove(path)
     assert life2._store_after_night == life._store_after_night
     print("37 the night scales with the day: a full day ->", rep["dreams"], "dreams of", rep["new_slots"], "new slots; a quiet day ->", rep2["dreams"])
@@ -893,7 +895,7 @@ def test_repetition_suppression():
         say(life2, "give milk", 8)
     say(life2, "dog will go", 8)
     S2 = life2.store.S[:life2.store.n()].clone(); m2 = float(S2.mean())
-    path = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/sat_test.pt"
+    path = os.path.join(tempfile.mkdtemp(), "sat_test.pt")
     life2.save(path); life3 = Life.load(path, TOK, device="cpu", cfg=dict(store_sat=1)); os.remove(path)
     S3 = life3.store.S[:life3.store.n()]
     assert life3.store.sat_done and torch.allclose(S3, m2 * torch.log1p(S2 / m2), atol=1e-5), "the conversion is not m ln(1 + S/m)"
@@ -918,7 +920,7 @@ def test_dreams_follow_the_episode():
     lens = [len(t) for t in texts]
     whole = sum(1 for t in texts if any(t.strip() == l for l in lines))
     assert sum(lens) / len(lens) > 8 and whole >= len(texts) // 2, (texts,)
-    path = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/chain_test.pt"
+    path = os.path.join(tempfile.mkdtemp(), "chain_test.pt")
     life.save(path); life2 = Life.load(path, TOK, device="cpu"); os.remove(path)
     assert torch.equal(life2.store.N, life.store.N)
     keep = torch.arange(life2.store.n() - 3)                 # a pruning: the links follow the slots that stay
@@ -970,8 +972,8 @@ def test_second_voice():
     import random
     from body.teacher import Teacher, Corpus, QueuePlanner
     life = tiny()
-    log = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/voice_test.jsonl"
-    q = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/voice_queue.jsonl"
+    log = os.path.join(tempfile.mkdtemp(), "voice_test.jsonl")
+    q = os.path.join(tempfile.mkdtemp(), "voice_queue.jsonl")
     for f in (log, q, q + ".pos"):
         if os.path.exists(f):
             os.remove(f)
@@ -1240,7 +1242,7 @@ def test_dreams_the_utterances_heard():
     rep = life.night()
     assert "error" not in rep and rep["nrem_steps"] > 0 and rep["utterances"] == 3, rep
     assert all(v < 1.0 for v in life.utt_S)
-    path = "/tmp/test_utts.pt"; life.save_path = path; life.save()
+    path = os.path.join(tempfile.mkdtemp(), "test_utts.pt"); life.save_path = path; life.save()
     life2 = Life.load(path, TOK, device="cpu")
     assert [TOK.decode(u) for u in life2.utts] == lines and len(life2.utt_S) == 3
     print("51 the utterances heard:", len(life.utts), "kept whole; the dreams", texts[:3], "| strengths after a night", [round(v, 2) for v in life.utt_S])
@@ -1254,7 +1256,7 @@ def test_smile_for_the_answer():
     import body.caregiver as cg
     from body.teacher import Teacher, Corpus, FixedPlanner
     life = tiny()
-    log = "/private/tmp/claude-501/-Users-lukehamond-Projects-project/a22528f8-bc83-4acb-9044-d5917dc9456c/scratchpad/answer_test.jsonl"
+    log = os.path.join(tempfile.mkdtemp(), "answer_test.jsonl")
     if os.path.exists(log):
         os.remove(log)
 

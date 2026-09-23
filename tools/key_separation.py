@@ -78,7 +78,7 @@ material = lines[:third] + [x for q, a in facts for x in ((q, "parent"), (a, "ot
 print(f"body {os.path.basename(path)} nights {life.nights} | {len(lines)} lines of days {last_day - days + 1}-{last_day}, {sum(len(ids_of(t)) for t, _ in lines)} symbols; {len(facts)} facts heard once after line {third} | temp {TEMP} links {LINKS} follow {FOLLOW} chain {CHAIN} bag {DEC}/{REST} ctx_decay {RHO} own_fade {OWN_FADE} offset {OFFSET} gaps {gap_parent}/{gap_other} | expand {expand} k {kwta}", flush=True)
 
 class Ctx:
-    """the two fast bags and the slow context, as body/life.py keeps them (take_world, take_own, rest_tick, key, bag), with the
+    """the two fast bags and the slow context, as body/core/memory.py keeps them (take_world, take_own, rest_tick, key, bag), with the
     swap of the slow context placed by --swap"""
     def __init__(self, form, lam, swap):
         self.form, self.lam, self.swap = form, lam, swap
