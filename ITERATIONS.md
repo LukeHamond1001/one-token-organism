@@ -1236,3 +1236,16 @@ back over three bare nights". From the served restart after night 322 (--dream-c
 The word boundary at the space (the chunk's end, the actor's unit) stays until a learned stop replaces it: it reads no content,
 but it is knowledge of text a robot will not have, and taken out without a replacement every motor program would run eight
 symbols across words; the gated continuation (chunk_gate) is the first half of that replacement.
+ THE COPIES (2026-09-22 21:21-22:57, the save of night 322, the served flags with pace_sense 2, the trackers cold, day-only, the
+ in-process parent; the typist's one-handed speed 2.0, 1.0 and 4.0 symbols a second): words over a one-handed line by thirds of
+ the day at 2.0: 1.29, 0.65, 0.08 (the last third 92 percent clean), the answers 97 percent at 0.2-0.5 s; at 4.0: 1.23, 0.12, 0.10
+ (90 percent clean), the answers all at 0.3 s; at 1.0: 1.93, 0.25, 0.00 (all clean) but the answers falling to 9 of 29 at a median
+ 4.2 s in the last third: too patient at half speed, the reply late past the parent's window. Fast lines 0.00 at every speed;
+ frowns 16-23 against 146 with the reflexes simply off. The whole-day figures carry the cold start (the design's pass lines were for
+ settled trackers). ADOPTED at the save after the shadow day (night 323's, about 00:30): --pace-sense 2 (archive
+ BASE_FLAGS_pre_pace_live.txt); the served typist's speed is 2.0, where it passes. The half-speed reply is the next measure on copies
+ (ready_law 0, the fallback of the body's own nine ticks, among the candidates).
+ THE NIGHT ON THE GPU (the same save, the served night with dream_corpus_n 0): the same 2048 dreams and 768 steps, the NREM curve
+ within 0.001, the gauge 0.846 to 0.866 on both, the parent's lines 0.876 and 0.875, the held-out 0.569 and 0.580, the questions
+ 9 and 9 of 30; but 1250 s against 1502 s (0.83, not the 0.65 the pass line asked). Not adopted: the nights stay on the CPU. The
+ reading's removal alone took the night from about 41 minutes to 25.
