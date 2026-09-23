@@ -18,3 +18,4 @@ rescue_volume/
 # caches and the editor's worktrees
 .pytest_cache/
 .claude/worktrees/
+video/
