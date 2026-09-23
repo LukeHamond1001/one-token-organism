@@ -156,7 +156,9 @@ Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a
 
 - `body/`: the organism, and the only code the served body runs.
   - `model.py` holds the organs.
-  - `life.py` is a life: the tick, the waking lesson, the night, save and load, and the physiology table of constants.
+  - `life.py` is a life: `Life`, its `__init__` and its tick. Its other methods are mixins in `core/`, one module per role: senses, memory,
+    cortex, mouth, critics, actor, night, persistence and instruments. The physiology table of constants is `core/physiology.py`,
+    re-exported by `life.py`.
   - `serve.py` is the server and the `/talk` page.
   - `teacher.py` and `caregiver.py` are the typist and its face.
   - `fastlife.py` is the fast parent for fresh seeds. One test still uses it.
