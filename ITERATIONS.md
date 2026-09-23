@@ -1258,3 +1258,10 @@ symbols across words; the gated continuation (chunk_gate) is the first half of t
  99th percentile of the mid-line end probability started from one sample and moves 0.05 up a step, so it sat low all day and the end
  was foreseen in the middle of lines. A warm start from the sample quantile (as the returns settle) is the next form, measured before
  any use. The served turn-taking stands as it is: whole answers, a few seconds late at half speed.
+ THE WARM START MEASURED (2026-09-23 06:33-07:31, copies of the save of night 326, day-only): pace_fore_q 0.99 with the first hundred
+ mid-line pauses' sample quantile: at half speed 0.83 words over a one-handed line (60 percent clean), the answers at a median 0.4 s;
+ at the typist's speed 0.35 (88 percent clean), the answers at once. Against the served turn-taking (0.05 and 95 percent at half speed
+ with answers at 3.8 s; 0.09 and 94 percent at the typist's speed with answers at 2.4 s) it buys the answers' speed with words said
+ over the lines: an end still foreseen too often in a slow line's longer pauses. NOT ADOPTED: the user's first demand is that it not
+ interrupt. The served turn-taking stands for the demo, its answers whole at two to four seconds. THE MOOD: this morning's -4.5 to
+ -5.6 came with the two sittings in the chair; the save of 06:33, after a day with the typist, read +0.55.
