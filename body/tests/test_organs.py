@@ -2173,7 +2173,7 @@ def test_pace_shadow_changes_nothing():
     C.tick()
     blob = torch.load(path, weights_only=False); del blob["life"]["pace"]; del blob["life"]["pace_day"]; torch.save(blob, path)
     D = Life.load(path, TOK, save_path=None)
-    assert D._pq == {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": [], "fore_q": None, "n_mid": 0} and D._pace_day == Life._pace_day_new(), D._pq
+    assert D._pq == {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": [], "fore_q": None, "n_mid": 0, "fore_warm": []} and D._pace_day == Life._pace_day_new(), D._pq
     D.tick()
     print("88 the shadow changes nothing: weights, store, utterances, page and feelings equal at 0 and 1; the shadow's day", {k_: rb["pace"][k_] for k_ in ("P", "ends_foreseen", "ends_by_pause", "releases")},
           "; the trackers saved and loaded; an older save loads at the newborn's values")
@@ -2311,14 +2311,17 @@ def test_pace_end_by_its_own_measure():
     def gap(x, fore=False, paused=False):
         L._gap_pend_max = x; L._gap_foreseen = fore; L._gap_paused = paused
         L._last_world = L.ticks - 3; L._pace_heard(True)
-    gap(-6.0)
-    assert abs(float(L._pq["fore_q"]) + 6.0) < 1e-9 and L._pq["n_mid"] == 1, L._pq
-    gap(-3.0); q1 = float(L._pq["fore_q"])
-    assert abs(q1 - (-6.0 + 0.05 * 0.99)) < 1e-9, q1                      # above the quantile: up by eta x p
+    for k in range(99):
+        gap(-10.0 + 0.05 * k)                                           # the warm start: 100 pauses kept before any quantile runs
+        assert L._pq["fore_q"] is None
+    gap(-2.0)
+    q0 = float(L._pq["fore_q"]); assert L._pq["fore_warm"] is None and L._pq["n_mid"] == 100 and -5.2 < q0 < -2.0, q0   # the sample 99th percentile
+    gap(-1.0); q1 = float(L._pq["fore_q"])
+    assert abs(q1 - (q0 + 0.05 * 0.99)) < 1e-9, q1                      # above the quantile: up by eta x p
     gap(-9.0); q2 = float(L._pq["fore_q"])
     assert abs(q2 - (q1 - 0.05 * 0.01)) < 1e-9, q2                       # below it: down by eta x (1 - p)
     gap(-1.0, fore=True); gap(-1.0, paused=True)
-    assert L._pq["n_mid"] == 3 and abs(float(L._pq["fore_q"]) - q2) < 1e-12   # a line's end is no mid-line pause
+    assert L._pq["n_mid"] == 102 and abs(float(L._pq["fore_q"]) - q2) < 1e-12   # a line's end is no mid-line pause
     L0 = tiny(pace_sense=2, offset_ticks=8, gate_ear=1)
     L0._gap_pend_max = -2.0; L0._gap_foreseen = False; L0._gap_paused = False; L0._last_world = L0.ticks - 3; L0._pace_heard(True)
     assert L0._pq.get("fore_q") is None and L0._pq.get("n_mid", 0) == 0

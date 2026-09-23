@@ -344,7 +344,7 @@ class Life:
         # THE SENSED TURN-TAKING (pace_sense): the partner's pace in log ticks (saved as life["pace"]): its pauses (P) and its returns (R_lo,
         # R_hi, from the first return heard); the gap's labels (a foreseen end in it, an end by the pause), the ear held by a line, the reply's
         # readiness (the end's tick, the forecast a step ago, the largest change since), the shadow's own end; the day's instruments
-        self._pq = {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": [], "fore_q": None, "n_mid": 0}   # warm: the returns heard while they settle (None once settled)
+        self._pq = {"pause": 0.0, "lo": None, "hi": None, "n_pause": 0, "n_ret": 0, "warm": [], "fore_q": None, "n_mid": 0, "fore_warm": []}   # warm: the returns heard while they settle (None once settled)
         self._gap_foreseen = False; self._gap_paused = False; self._sh_done = True
         self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
         self._pace_day = self._pace_day_new()
@@ -1101,8 +1101,17 @@ class Life:
             # M1 BY ITS OWN MEASURE: a gap the world closed with no end in it was a mid-line pause; the highest log-probability of the end
             # the readout gave in it is one sample of what this body predicts mid-line for this partner (the running quantile, as P)
             pq = self._pq; eta = float(self.cfg.get("pace_eta", 0.05))
+            n_warm = max(1, int(round(1.0 / max(1e-9, 1.0 - fq_))))      # the sample quantile needs 1/(1-q) pauses to see its tail: 100 at 0.99
             if pq.get("fore_q") is None:
-                pq["fore_q"] = float(gm_)
+                # THE WARM START (2026-09-23 05:15; the copies of 03:32): started from one sample and stepping 0.05 up, the running 99th
+                # percentile sat low all day and ends were foreseen mid-line (4.4 words over a line). As the returns settle, the first
+                # pauses are kept and the quantile is their sample quantile; the running quantile goes on from there.
+                fw = pq.get("fore_warm")
+                if not isinstance(fw, list):
+                    fw = []; pq["fore_warm"] = fw
+                fw.append(float(gm_))
+                if len(fw) >= n_warm:
+                    pq["fore_q"] = float(self._pace_q(fw, fq_)); pq["fore_warm"] = None
             else:
                 pq["fore_q"] = float(pq["fore_q"]) + eta * (fq_ - (1.0 if gm_ <= float(pq["fore_q"]) else 0.0))
             pq["n_mid"] = int(pq.get("n_mid", 0)) + 1
@@ -1140,7 +1149,7 @@ class Life:
                     lp_ = float(torch.log_softmax(lg_, 0)[self.end_id])
                 self._gap_pend_max = lp_ if getattr(self, "_gap_pend_max", None) is None else max(float(self._gap_pend_max), lp_)
                 q_ = self._pq.get("fore_q")
-                if not fore and q_ is not None and int(self._pq.get("n_mid", 0)) >= max(1, int(round(1.0 / max(float(self.cfg.get("pace_eta", 0.05)), 1e-9)))) and lp_ > float(q_):
+                if not fore and q_ is not None and lp_ > float(q_):
                     fore = True                                                   # above what it predicts in 99 of the partner's 100 mid-line pauses
             if fore or since + 1 > self._pace()[0]:                             # M2: the gap this silence will close is already longer than P
                 if fore:
@@ -2782,6 +2791,8 @@ class Life:
             for k_ in ("fore_q",):
                 if L["pace"].get(k_) is not None:
                     life._pq[k_] = float(L["pace"][k_])
+            fw_ = L["pace"].get("fore_warm")
+            life._pq["fore_warm"] = [float(x) for x in fw_] if isinstance(fw_, (list, tuple)) else None
             life._pq["n_mid"] = int(L["pace"].get("n_mid", 0))
             for k_ in ("pause", "lo", "hi"):
                 if k_ in L["pace"]:
