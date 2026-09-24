@@ -16,24 +16,29 @@ THE RECORD. One JSON line per event, keys sorted, in the life's folder (ledger.j
   ask, base   an ask she made (a gaze, an act, a name, a call), the tick it is judged from (its word heard: 4.8's "after
               'where is the X?'") and its window; a base-rate trial (the same test at a random moment with no ask: scheduled by
               the day plan, P4)
-  outcome     an ask's or a trial's result: met, missed, or void (a gaze or call trial whose target is already in the child's
-              fovea, a gaze trial whose X is out of its view, or a call while the child cannot see her (she is away, or where
-              its eyes cannot reach her), when it is judged from: 4.8's "X visible but not in the fovea"; an act trial whose act
-              was done before its word was heard; an ask cut before its word; a base trial in whose window she said its word)
+  outcome     an ask's or a trial's result: met, missed, or void (a gaze trial whose X she already reads the child attending,
+              its head's line on it, in its hand or reached toward; a call while she reads it looking at her face; a gaze trial
+              whose X is out of its view, or a call while the child cannot see her (she is away, or where its eyes cannot reach
+              her), when it is judged from: 4.8's "X visible but not where she reads it looking", A40; an act trial whose act
+              was done before its word was heard; an ask cut before its word; a name ask answered only by an echo of her own
+              word, or by a word begun before its question was heard; a base trial in whose window she said its word)
 
 EACH WORD'S STANDING (4.8), from those events alone:
   heard       said by her with its referent in the child's view (an object word: an object of that name the child sees; a body
               word: the child in her view; any other word: said)
-  understood  after "where is the X?" or "look at the X" (X in the child's view, no X in its fovea when the word has been
-              heard), X lands in its fovea within 20 ticks and stays 2 (an act word: its act within 40): met on at least 5 of
-              the last 10 asks, and above the
-              child's own base rate (the same test at random moments) by a one-sided binomial p < 0.05, once the base rate has
-              at least BASE_MIN = 10 trials (ours: the design names no minimum)
-  says        (per channel) the child says X with X in its fovea or hand ("mama": her face in its fovea, or she is away), or
-              right after its act (an act word: the act within the last 40 ticks), or, for a word with no referent or act
-              ("hi", "more"), in context: among the words she expected then (A27's set: the tract's words always are, a
-              token's letters read as a word she did not expect are not); never within ECHO_WINDOW ticks of her saying it (an
-              echo); 3 times over at least 2 life days
+  understood  after "where is the X?" or "look at the X" (X in the child's view, and none she reads it attending, when the word
+              has been heard), its trunk turns to an X or its hand reaches toward one (or takes it) within 20 ticks and that
+              holds 2 ticks, as she reads them (A40: its head's line and its hands, never its fovea's window); an act word: its
+              act within 40: met on at least 5 of the last 10 asks, and above the child's own base rate (the same test at random
+              moments) by a one-sided binomial p < 0.05, once the base rate has at least BASE_MIN = 10 trials (ours: the design
+              names no minimum). Only looks, reaches and acts meet these asks: a word never does, so an echo never counts toward
+              "understood"
+  says        (per channel) the child says X with X where she reads it looking, in its hand or reached toward ("mama": she reads
+              it looking at her face, or she is away), or right after its act (an act word: the act within the last 40 ticks), or,
+              for a word with no referent or act ("hi", "more"), in context: among the words she expected then (A27's set: the
+              tract's words always are, a token's letters read as a word she did not expect are not); never within ECHO_WINDOW
+              ticks of her saying it (an echo: it counts toward nothing, "says", "understood" or a met ask, though she may smile
+              at it, the conduct's method); 3 times over at least 2 life days
   exact       (per channel) how often the word was said exactly: an approximation earns a recast and a smile until this
               reaches 3 (4.6, A27)
 
@@ -194,15 +199,13 @@ class Ledger:
 
     def _referent(self, w, t, p, expected=()):
         if w in TP.OBJECT_NOUNS:
-            tg = p.target_obj()
-            held = [p.obj(h) for h in p.child_holds]
-            if (tg is not None and tg.name == w) or any(o is not None and o.name == w for o in held):
-                return True, "in its fovea or hand"
-            return False, "its referent not in its fovea or hand"
+            if any(o.name == w for o in p.attended()):
+                return True, "where she reads it looking, in its hand or reached toward"
+            return False, "its referent not where she reads it looking, nor in or toward its hand"
         if w == PARENT_NAME:
             if p.child_target == "mama" or not p.present or not p.seen_by_child:
-                return True, "her face in its fovea, or she is away"
-            return False, "her face not in its fovea"
+                return True, "she reads it looking at her face, or she is away"
+            return False, "she does not read it looking at her face"
         if w in ACT_WORDS and ACT_WORDS[w]:
             if any(k in ACT_WORDS[w] for tk, k, _o in self.recent_events if tk > t - K.JUDGE_ACT):
                 return True, "right after its act"
@@ -239,7 +242,7 @@ class Ledger:
         asks resolved this tick (base trials resolve silently)."""
         self.recent_events = [e for e in self.recent_events if e[0] > t - K.JUDGE_ACT] + [(t, k, o) for k, o in p.events]
         out, keep = [], []
-        tg = p.target_obj()
+        att = {o.name for o in p.attended()}                         # its head's line, its hands: as she reads them (A40)
         for tr in self.trials:
             ok = None
             if t < tr["open"]:
@@ -253,19 +256,20 @@ class Ledger:
             if not tr["opened"]:
                 tr["opened"] = True
                 if tr["kind"] == "gaze":
-                    if tg is not None and tg.name == tr["word"]:
-                        tr["void"] = f"a {tr['word']} already in its fovea when the word was heard"
+                    if tr["word"] in att:
+                        tr["void"] = f"a {tr['word']} already where she reads it looking, in its hand or reached toward " \
+                                     f"when the word was heard"
                     elif not any(s.name == tr["word"] and s.child_sees for s in p.seen):
                         tr["void"] = f"no {tr['word']} in its view when the word was heard"
                 elif tr["kind"] == "call" and p.child_target == "mama":
-                    tr["void"] = "already looking at her face when its name was heard"
+                    tr["void"] = "she read it already looking at her face when its name was heard"
                 elif tr["kind"] == "call" and not (p.present and p.seen_by_child):
                     tr["void"] = "the child cannot see her when its name was heard: no look can answer it"
                 if tr["void"] is not None:
                     ok = False                                       # resolved now, as void
             if ok is None and tr["void"] is None:
                 if tr["kind"] == "gaze":
-                    tr["run"] = tr["run"] + 1 if (tg is not None and tg.name == tr["word"]) else 0
+                    tr["run"] = tr["run"] + 1 if tr["word"] in att else 0
                     ok = tr["run"] >= K.HOLD or None
                 elif tr["kind"] == "call":
                     tr["run"] = tr["run"] + 1 if p.child_target == "mama" else 0
@@ -294,8 +298,9 @@ class Ledger:
         return False
 
     def named(self, t, word, start):
-        """a name ask ("what is this?", "more?") met by the child's word, read at t and begun at start (the tick the child made
-        it): met only when begun once the question had been heard (4.8; a word made before it and read at its end is none)."""
+        """a name ask ("what is this?") met by the child's word, read at t and begun at start (the tick the child made it): met
+        only when begun once the question had been heard (4.8; a word made before it and read at its end is none). The conduct
+        never calls it for an echo of her own word (an echo counts toward nothing here: it voids the ask instead)."""
         for tr in list(self.trials):
             if tr["kind"] == "name" and tr["word"] == word and not tr["base"] and start >= tr["open"]:
                 self.trials.remove(tr)

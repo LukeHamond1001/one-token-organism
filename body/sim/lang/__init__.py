@@ -2,8 +2,10 @@
 schedule (P1); and P3's fast layer:
   consts.py       her constants (the teacher's method: timings, the line check's limits, the ledger's tests, her ear's margins,
                   what she expects by situation), each with its source
-  percept.py      what she perceives each tick (what the world must hand her: only what a person in her place could see or hear)
-  templates.py    her frames by intent, the growth queue and what each word needs to be shown, and the line check
+  percept.py      what she perceives each tick (what the world must hand her: only what a person in her place could see or hear),
+                  and her Reader of the child's head line and hands (A40: never its fovea's window)
+  templates.py    her frames by intent, the growth queue and what each word needs to be shown, and the line check (with the
+                  new word's pitch-peak table, peak_lines.json: A34)
   conduct.py      her intents and the acts they accompany (the interface W2's motion implements; a stub until then), her voice's
                   manners (FastLayer) and the speech side of L2 (Conduct)
   transcriber.py  how she hears the child: its tract through her ear (body/sim/parent_ear.py) at each turn's end, its silent token

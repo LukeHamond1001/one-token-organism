@@ -16,11 +16,19 @@ RMS behind SYNTH_RMS, is a level, written into body/sim/voice/synth.py by hand a
              child's own voice (level over the same sound from 1.5 m, its lateral read); the cost a tick with three sources;
              the parent's speech moved by eighths of a sample (the top bands' level and level difference must hold still)
 
-Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N] [--growth]
+  peak       (--peak) the new word on the line's pitch peak, by frame (A34): every line she can say with a growth word as the
+             new word (templates.new_word_lines(): its introduction frames and her intents' frames the word can fill), in the
+             new-word register with the word emphasized, each word's peak F0 by f0_word; on its peak when no other word of the
+             line peaks higher. Writes the table the line check reads (body/sim/lang/peak_lines.json), and reports the lines off
+             their peak and, per growth word, how many of its introduction lines are on it (a word needs 3 for its set)
+
+Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N] [--growth] [--peak [--write]]
   --lines  one line a line (default: 16 lines written here; the commits used the all-out study's 331 birth template lines,
            $S/allout/lang/all_lines.txt: 275 end in ".", 37 in "?", 19 in "!"; 314 distinct)
   --cache  the voice cache to use (default: a temporary folder, removed after)
-  --growth only the growth words' introductions (P3's INTRO frames), each set's words a second in the new-word register (C25)
+  --growth only the growth words' introductions (P3's INTRO frames on their pitch peak, A34), each word's lines' words a second
+           in the new-word register, pooled (C25)
+  --peak   only the new word's pitch peak by frame (A34); --write writes the table into body/sim/lang/peak_lines.json
 """
 import argparse
 import json
@@ -364,24 +372,116 @@ def ears(clips):
     print(f"the ears with three sources: {1e3 * np.median(tt):.2f} ms a tick median, {1e3 * np.percentile(tt, 95):.2f} ms 95th pct")
 
 
-def growth_sets(cache):
-    """C25 over every growth word's introduction (P3: body/sim/lang/templates.py INTRO, INTRO_WORD): its 3 lines in the new-word
-    register, the word emphasized, the words a second pooled over the set; a frame's object slot filled with "block"."""
-    from body.sim.lang import templates as TP                             # noqa: PLC0415
+def intro_lines(TP, w):
+    """a growth word's introduction lines as she can say them (A34: on the pitch peak, as measured), a frame's object slot filled
+    with each object word: [(frame, line)]."""
     from body.sim.lang.percept import Seen                                  # noqa: PLC0415
+    out = []
+    for fr in TP.intro_frames(w):
+        for n in (sorted(TP.OBJECT_NOUNS) if "{o}" in fr[0] else [None]):
+            got = TP.fill(fr, o=None if n is None else Seen(n, n, "", "mat"), w=w)
+            if got is not None:
+                out.append((fr[0], got[0]))
+    return out
+
+
+def growth_sets(cache):
+    """C25 over every growth word's introduction (P3: body/sim/lang/templates.py INTRO, INTRO_WORD): its lines on the pitch peak
+    (A34, the table --peak writes), in the new-word register, the word emphasized; for a word whose frames have an object slot,
+    once for each object word it may be shown on. The words a second pooled over them, and the most over any 3 of them (a set
+    she may draw)."""
+    import itertools                                                         # noqa: PLC0415
+    from body.sim.lang import templates as TP                               # noqa: PLC0415
     rows = []
     for w in TP.GROWTH_WORDS:
-        frames = TP.intro_frames(w)
-        if not frames:
+        got = [(fr, ln) for fr, ln in intro_lines(TP, w) if TP.on_peak(ln)[0]]
+        if not got:
             continue
-        lines = [TP.fill(fr, o=Seen("block", "block", "red", "mat"), w=w)[0] for fr in frames]
-        cs = [cache.clip(ln, "new_word", emphasis=w) for ln in lines]
-        rows.append((w, sum(len(c.words) for c in cs) / sum((c.words[-1][2] - c.words[0][1]) / V.SR for c in cs), lines))
+        objs = sorted({ln.split()[1] for fr, ln in got if "{o}" in fr}) or [None]
+        for o in objs:
+            lines = [ln for fr, ln in got if "{o}" not in fr or ln.split()[1] == o]
+            cs = [cache.clip(ln, "new_word", emphasis=w) for ln in lines]
+            per = [(len(c.words), (c.words[-1][2] - c.words[0][1]) / V.SR) for c in cs]
+            worst = max(((sum(per[i][0] for i in k) / sum(per[i][1] for i in k)), tuple(lines[i] for i in k))
+                        for k in itertools.combinations(range(len(per)), 3)) if len(per) >= 3 else (float("nan"), ())
+            rows.append((w if o is None else f"{w} ({o})", sum(a for a, _ in per) / sum(b for _, b in per), worst, lines))
     r = np.array([x[1] for x in rows])
-    over = [(w, round(v, 2)) for w, v, _ in rows if v > 3]
-    print(f"the growth words' introductions (C25), {len(rows)} sets of 3 lines in the new-word register: {r.mean():.2f} words a "
-          f"second on average, {r.min():.2f}-{r.max():.2f}; {len(over)} over 3: {over}")
+    wr = np.array([x[2][0] for x in rows if np.isfinite(x[2][0])])
+    over = [(w, round(v, 2)) for w, v, _, _ in rows if v > 3]
+    over3 = [(w, round(v[0], 2), v[1]) for w, _, v, _ in rows if np.isfinite(v[0]) and v[0] > 3]
+    n_lines = len({ln for x in rows for ln in x[3]})
+    print(f"the growth words' introductions (C25), {len(rows)} words (or word and object), their lines on the pitch peak (A34; "
+          f"{n_lines} lines) in the new-word register: {r.mean():.2f} words a second pooled on average, {r.min():.2f}-"
+          f"{r.max():.2f}, {len(over)} over 3: {over}; the fastest 3 of a word's lines {wr.mean():.2f} on average, at most "
+          f"{wr.max():.2f}, {len(over3)} over 3: {over3}")
     return rows
+
+
+def peak_table(cache, write=False):
+    """A34: every line she can say with a growth word as the new word, its word emphasized in the new-word register; each word's
+    peak F0 (f0_word); the new word on the line's pitch peak when no other word peaks higher. Reports the lines off their peak,
+    the introduction lines among them, and each growth word's count of introduction lines on it; writes the table."""
+    from body.sim.lang import consts as K                                   # noqa: PLC0415
+    from body.sim.lang import templates as TP                               # noqa: PLC0415
+    lines = TP.new_word_lines()
+    table = {}
+    t0 = time.perf_counter()
+    for text, w in lines:
+        c = cache.clip(text, "new_word", emphasis=w, heard=False)
+        pk = []
+        for word, on, end in c.words:
+            _, p = f0_word(c.pcm[on:end])
+            pk.append((word, None if not np.isfinite(p) else round(float(p), 1)))
+        assert pk[-1][0] == w, (text, pk)
+        others = [(p, word) for word, p in pk[:-1] if p is not None]
+        top = max(others) if others else (None, None)
+        table[text] = [w, pk[-1][1], top[0], top[1], len(c.words), round((c.words[-1][2] - c.words[0][1]) / V.SR, 4)]
+    wall = time.perf_counter() - t0
+    off = {t: r for t, r in table.items() if r[1] is None or (r[2] is not None and r[2] > r[1])}
+    n_off_measured = len(off)
+    intro = {}
+    for w in TP.GROWTH_WORDS:
+        for fr, ln in intro_lines(TP, w):
+            intro.setdefault(w, []).append((fr, ln))
+    n_intro = sum(len(v) for v in intro.values())
+    unmeasured = {ln for v in intro.values() for _, ln in v if ln not in table}    # a line the check would refuse anyway
+    off.update({ln: [None, None, None, "not measured"] for ln in unmeasured})
+    off_intro = [ln for v in intro.values() for _, ln in v if ln in off]
+    print(f"the new word's pitch peak (A34): {len(table)} lines measured in {wall:.0f} s, {n_off_measured} off their peak; "
+          f"{n_intro} introduction lines (every frame, an object slot filled with each object word), {len(off_intro)} off")
+    by_frame = {}
+    for w, v in intro.items():
+        for fr, ln in v:
+            by_frame.setdefault((TP.GROWTH_CLASS[w] if w not in TP.INTRO_WORD else w, fr), []).append(ln not in off)
+    for (cls, fr), oks in sorted(by_frame.items()):
+        if not all(oks):
+            print(f"  {cls:8s} {fr!r}: {sum(oks)} of {len(oks)} on the peak")
+    short = {}
+    for w, v in intro.items():
+        frames_on = {fr for fr, ln in v if ln not in off}
+        if len(frames_on) < 3:
+            short[w] = sorted(frames_on)
+    print(f"  growth words with fewer than 3 introduction frames on the peak (they wait, A34): {len(short)}: "
+          + ", ".join(f"{w} ({len(f)})" for w, f in sorted(short.items())))
+    print(f"  introduction lines no line check passes (never said, not measured): {sorted(unmeasured)}")
+    print("  the lines off the peak: " + "; ".join(f"{t!r} ({r[3]} {r[2]} over {r[0]} {r[1]})" for t, r in sorted(off.items())
+                                                  if t in table))
+    if write:
+        info = cache._server().info()
+        meta = dict(tool="tools/sim_voice_check.py --peak", measure="f0_word's peak: the largest of the word's voiced 40 ms "
+                    "frames (hop 10 ms, autocorrelation over 0.5), octave errors dropped (1.6 x its median), median-filtered "
+                    "over 3", register="new_word", emphasis=list(V.EMPHASIS), rule="on the peak: no other word's peak above "
+                    "the new word's", engine=f"{info['name']} ({info['identifier']}), {info['os']}", lines=len(table),
+                    fields="the new word; its peak F0, Hz; the highest other word's peak F0, Hz; that word; the line's words; "
+                    "its spoken span, s (the first word's onset to the last word's end: C25's words a second)",
+                    off=n_off_measured, date=time.strftime("%Y-%m-%d"))
+        path = os.path.join(ROOT, "body", "sim", "lang", K.PEAK_FILE)
+        with open(path, "w") as fh:                                     # one line a measured line, sorted, for review
+            fh.write('{"meta": ' + json.dumps(meta, sort_keys=True) + ',\n "lines": {\n')
+            fh.write(",\n".join(f"  {json.dumps(t)}: {json.dumps(r)}" for t, r in sorted(table.items())))
+            fh.write("\n}}\n")
+        print(f"  written: {path} ({os.path.getsize(path) / 1024:.0f} KB)")
+    return table, off
 
 
 def main():
@@ -390,12 +490,17 @@ def main():
     ap.add_argument("--cache", default="")
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--growth", action="store_true", help="only the growth words' introductions (C25)")
+    ap.add_argument("--peak", action="store_true", help="only the new word's pitch peak by frame (A34)")
+    ap.add_argument("--write", action="store_true", help="with --peak: write body/sim/lang/peak_lines.json")
     a = ap.parse_args()
     lines = [ln.strip() for ln in open(a.lines) if ln.strip()] if a.lines else FALLBACK
     tmp = None
     root = a.cache or (tmp := tempfile.mkdtemp(prefix="voicecheck_"))
     cache = V.VoiceCache(root)
     try:
+        if a.peak:
+            peak_table(cache, a.write)
+            return
         if a.growth:
             growth_sets(cache)
             return

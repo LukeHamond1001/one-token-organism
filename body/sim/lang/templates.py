@@ -14,9 +14,10 @@ it is the line's last word (checked over every frame at import).
 
 THE LINE CHECK (check()) holds every line, the templates' and Claude's alike, to the form and to what she perceives:
   form        lowercase words, single spaces, only ". ? !" and only after a word, ending in one; at most 6 words (4.5)
-  words       only her vocabulary, plus the day's new word, and the new word, if said, last (4.5, A15)
+  words       only her vocabulary, plus the day's new word, and the new word, if said, last (4.5, A15), in a line measured to
+              put it on the line's pitch peak (A34: PEAK, the table tools/sim_voice_check.py --peak writes)
   held out    never a never-taught pair before its test: both its words in one line, or its colour said of an object of its
-              name (A28: "it is red." said of the red ball is the pair, whatever the words)
+              name (A28, A55: "it is blue." said of the blue ball is the pair, whatever the words)
   perceived   every object word names an object she sees (and each filled slot's object is one she sees); a colour word, an object
               of that colour she sees (of the named kind, when the line names one); a fixture word, a fixture she sees; the
               child's body, the child in her view; a past form ("fell", "rolled", "sat", "got", "did"), an event she saw in the
@@ -53,6 +54,8 @@ the child's pain, 4.3: she cannot show either at will); the social words with no
 "not", "do") have no introduction frames and cannot enter by 4.8's rule (sentence-final); they wait for a later stage's method
 (reported, never forced).
 """
+import json
+import os
 import re
 from dataclasses import dataclass
 
@@ -175,25 +178,40 @@ FRAMES = {
     "comfort": [F("oh. oh {n}.", "{n}"), F("uh oh. mama is here."), F("mama is here.")],
     "hit": [F("oh!")],
     "no": [F("no.")],
+    "no_talkover": [F("no.")],
     "night": [F("night night {n}.", "{n}"), F("night night.", "night")],
 }
 
-# a new word's introduction: 3 frames per class (4.8: a variation set, the word last, frames differing by at least one word)
+# a new word's introduction (4.8: a variation set of 3 lines, the word last, frames differing by at least one word): each class's
+# frames, of which she says only those measured to put the word on the line's pitch peak (A34: the line check's peak rule), 3
+# drawn among them; a word with fewer than 3 such lines waits. The P3 verifier's third round measured 17 of the first 210 lines
+# (3 a word) off the peak; each class's list was then widened by frames of the same kind, and every one measured
+# (tools/sim_voice_check.py --peak; "look at the X" dropped from the face's frames: it is the gaze ask's form, A51). Every set of
+# 3 of a word's lines on its peak runs at most 3 words a second (C25; the table's spans, body/tests/test_sim_lang.py test 32).
 INTRO = {
-    "toy": [F("a {w}.", "{w}"), F("the {w}!", "{w}"), F("you see the {w}?", "{w}")],            # the design's set (4.5)
-    "fixture": [F("the {w}.", "{w}"), F("look. the {w}!", "{w}"), F("see the {w}?", "{w}")],
-    "body": [F("your {w}.", "{w}"), F("here is your {w}!", "{w}"), F("see your {w}?", "{w}")],
-    "face": [F("look. {w}.", "{w}"), F("see? {w}!", "{w}"), F("look at the {w}.", "{w}")],
-    "colour": [F("it is {w}.", "{w}"), F("the {o} is {w}!", "{w}"), F("see? {w}.", "{w}")],
-    "adj": [F("it is {w}.", "{w}"), F("{w}!", "{w}"), F("see? {w}.", "{w}")],
-    "verb": [F("{w}!", "{w}"), F("look. {w}.", "{w}"), F("you {w}?", "{w}")],
-    "past": [F("you {w}!", "{w}"), F("oh! you {w}.", "{w}"), F("{n} {w}.", "{w}")],
-    "social": [F("{w}!", "{w}"), F("oh. {w}.", "{w}"), F("{w}. {w}!", "{w}")],
+    "toy": [F("a {w}.", "{w}"), F("the {w}!", "{w}"), F("you see the {w}?", "{w}"),     # the design's set (4.5)
+            F("look. a {w}.", "{w}"), F("see? a {w}.", "{w}"), F("a {w}!", "{w}")],
+    "fixture": [F("the {w}.", "{w}"), F("look. the {w}!", "{w}"), F("see the {w}?", "{w}"), F("you see the {w}?", "{w}"),
+                F("the {w}!", "{w}")],
+    "body": [F("your {w}.", "{w}"), F("here is your {w}!", "{w}"), F("see your {w}?", "{w}"), F("your {w}!", "{w}"),
+             F("you see your {w}?", "{w}")],
+    "face": [F("look. {w}.", "{w}"), F("see? {w}!", "{w}"), F("the {w}.", "{w}"), F("the {w}!", "{w}"),
+             F("see the {w}?", "{w}"), F("you see the {w}?", "{w}")],
+    "colour": [F("it is {w}.", "{w}"), F("the {o} is {w}!", "{w}"), F("see? {w}.", "{w}"), F("{w}!", "{w}"),
+               F("it is {w}!", "{w}"), F("see? {w}!", "{w}"), F("the {o} is {w}.", "{w}")],
+    "adj": [F("it is {w}.", "{w}"), F("{w}!", "{w}"), F("see? {w}.", "{w}"), F("it is {w}!", "{w}"), F("look. {w}.", "{w}"),
+            F("see? {w}!", "{w}")],
+    "verb": [F("{w}!", "{w}"), F("look. {w}.", "{w}"), F("you {w}?", "{w}"), F("see? {w}.", "{w}"), F("{w}. {w}!", "{w}"),
+             F("look. {w}!", "{w}")],
+    "past": [F("you {w}!", "{w}"), F("oh! you {w}.", "{w}"), F("{n} {w}.", "{w}"), F("you {w}.", "{w}"),
+             F("oh. you {w}!", "{w}")],
+    "social": [F("{w}!", "{w}"), F("oh. {w}.", "{w}"), F("{w}. {w}!", "{w}"), F("{w}.", "{w}"), F("oh! {w}.", "{w}")],
     "frame": [],
 }
 INTRO_WORD = {                                                             # words whose class frames do not fit them
-    "fell": [F("uh oh. it {w}.", "{w}"), F("the {o} {w}.", "{w}"), F("oh! it {w}!", "{w}")],
-    "done": [F("all {w}.", "{w}"), F("{w}!", "{w}"), F("oh. {w}.", "{w}")],
+    "fell": [F("uh oh. it {w}.", "{w}"), F("the {o} {w}.", "{w}"), F("oh! it {w}!", "{w}"), F("it {w}!", "{w}"),
+             F("oh. it {w}.", "{w}")],
+    "done": [F("all {w}.", "{w}"), F("{w}!", "{w}"), F("oh. {w}.", "{w}"), F("all {w}!", "{w}"), F("{w}.", "{w}")],
     "that": [F("look at {w}.", "{w}"), F("what is {w}?", "{w}"), F("see {w}?", "{w}")],
     "can": [F("you {w}!", "{w}"), F("{n} {w}.", "{w}"), F("you {w}?", "{w}")],
     "too": [F("you {w}.", "{w}"), F("mama {w}!", "{w}"), F("{n} {w}?", "{w}")],
@@ -205,7 +223,9 @@ INTRO_WORD = {                                                             # wor
     "thanks": [F("{w}!", "{w}"), F("oh. {w}.", "{w}"), F("yes. {w}.", "{w}")],
     "please": [F("{w}.", "{w}"), F("more? {w}.", "{w}"), F("give me. {w}.", "{w}")],
     "all": [F("it is {w}.", "{w}"), F("look. {w}.", "{w}"), F("{w}!", "{w}")],
-    "eyes": [F("look. {w}.", "{w}"), F("see? {w}!", "{w}"), F("look at the {w}.", "{w}")],
+    # "mouth", short: its face frames but "the mouth." and "the mouth!", with which 3 of its lines ran at up to 3.19 words a
+    # second, over C25's 3 (measured, tools/sim_voice_check.py --growth); every set of 3 of these is under it
+    "mouth": [F("look. {w}.", "{w}"), F("see? {w}!", "{w}"), F("see the {w}?", "{w}"), F("you see the {w}?", "{w}")],
 }
 
 _SLOT = re.compile(r"\{([a-z])\}")
@@ -235,6 +255,85 @@ class Line:
     frame: str = ""                 # the frame it was filled from
 
 
+# ---------------------------------------------------------------------------------------- the new word's pitch peak (A34)
+# PEAK: every line she can say with a growth word as the new word, measured by tools/sim_voice_check.py --peak (the line in the
+# new-word register, its last word emphasized, 4.4): text -> [the new word, its peak F0 (Hz), the highest other word's peak F0,
+# that word, the line's words, its spoken span in seconds] (a peak None where no frame of the word is voiced). On its peak: the
+# new word's peak at least every other word's. The spans give C25's words a second for a set (set_rate).
+PEAK, PEAK_META = {}, {}
+_PEAK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), K.PEAK_FILE)
+if os.path.exists(_PEAK_PATH):
+    with open(_PEAK_PATH) as _fh:
+        _d = json.load(_fh)
+    PEAK.update(_d["lines"])
+    PEAK_META.update(_d["meta"])
+
+
+def on_peak(text):
+    """a new word's line (its last word the new word) -> (on its pitch peak as measured, why not)."""
+    r = PEAK.get(text)
+    if r is None:
+        return False, "not measured on the line's pitch peak (A34; tools/sim_voice_check.py --peak)"
+    w, pk, other, ow = r[:4]
+    if pk is None:
+        return False, f"measured with no voiced frame in {w!r} (A34)"
+    if other is not None and other > pk:
+        return False, f"measured off the line's pitch peak: {ow!r} peaks at {other:.0f} Hz over {w!r} at {pk:.0f} Hz (A34)"
+    return True, ""
+
+
+def set_rate(lines):
+    """C25: the words a second of lines said together (a variation set), pooled over their spoken spans as measured (PEAK)."""
+    return sum(PEAK[x][4] for x in lines) / sum(PEAK[x][5] for x in lines)
+
+
+def intro_on_peak(word, o=None):
+    """a growth word's introduction lines measured to put it on the line's pitch peak (A34), its frames filled with o (a Seen, for
+    a frame with an object slot) -> [text]: its set is 3 of them, so a word with fewer waits."""
+    out = []
+    for fr in intro_frames(word):
+        got = fill(fr, o=o, w=word)
+        if got is not None and on_peak(got[0])[0]:
+            out.append(got[0])
+    return out
+
+
+def new_word_lines():
+    """every line the fast layer can say with a growth word as the day's new word (said last, emphasized, in the new-word
+    register) -> sorted [(text, the new word)]: each word's introduction frames (INTRO, INTRO_WORD; {o} filled with every object
+    word), and every frame of her intents whose focus a growth word fills ({o} a growth toy, {c} a colour, {p} a growth
+    fixture, {b} a growth body word, {w} any growth word her ear can hear: her recasts and echoes; a literal focus that is a
+    growth word: "all done."), each passing the line check's other rules with every other word hers. What
+    tools/sim_voice_check.py --peak measures; Claude's lines ending on the new word pass only if among them."""
+    from .percept import Seen                                          # noqa: PLC0415
+    growth = [g for g in GROWTH_WORDS if GROWTH_CLASS[g] != "frame"]
+    objs = sorted(OBJECT_NOUNS)
+    frames = [(fr, None) for fs in FRAMES.values() for fr in fs] + [(fr, w) for w in growth for fr in intro_frames(w)]
+    out = set()
+    for fr, word in frames:
+        slots = set(_SLOT.findall(fr[0]))
+        o_opts = [None]
+        if slots & set("ocp"):
+            cols = sorted(COLOURS) if "c" in slots else [""]
+            ons = sorted(FIXTURE_NOUNS) if "p" in slots else [""]
+            o_opts = [Seen(n, n, c, on) for n in objs for c in cols for on in ons]
+        b_opts = sorted(CHILD_BODY) if "b" in slots else [None]
+        w_opts = ([word] if word else growth) if "w" in slots else [None]
+        for o in o_opts:
+            for b in b_opts:
+                for w in w_opts:
+                    got = fill(fr, o=o, b=b, w=w, fixtures=FIXTURE_NOUNS)
+                    if got is None:
+                        continue
+                    text, focus, _ = got
+                    if focus not in growth or (word is not None and focus != word):
+                        continue
+                    vocab = BIRTH_WORDS + tuple(g for g in GROWTH_WORDS if g != focus)
+                    if check(text, vocab, focus, held=(), peak=False)[0]:
+                        out.add((text, focus))
+    return sorted(out)
+
+
 # ------------------------------------------------------------------------------------------------------ the line check
 def _new_words(new_word):
     if new_word is None:
@@ -246,26 +345,38 @@ _DEIXIS = ("it", "this", "that")
 _DETS = ("a", "the", "your")
 
 # ------------------------------------------------------------------------------------------- Claude's lines (A14, 4.5)
-CLAUDE_INTERJ = frozenset({"oh", "uh", "look", "see"})      # a sentence of these alone claims nothing ("oh!", "look.", "see?")
+CLAUDE_INTERJ = (("oh",), ("uh", "oh"), ("look",), ("see",))   # a sentence of one of these alone claims nothing ("oh!",
+                                                                 # "uh oh.", "look.", "see?"); never two run together
 NAMEABLE = OBJECT_NOUNS | FIXTURE_NOUNS | CHILD_BODY | HER_FACE | {PARENT_NAME}
 CLAUDE_DID = {"roll": "rolled", "rolled": "rolled", "sit": "sat", "sat": "sat"}   # "you roll." / "you sat.": its event, seen
-CLAUDE_FORMS = ("a name ('the duck.', 'your foot.', 'a red block.'); 'oh', 'uh', 'look' or 'see' alone; 'see the X' or 'you "
-                "see the X'; 'it / this / that / here / there is a X' or '... is C'; 'the X is on the Y', 'is down' or 'is C'; "
-                "'the X fell'; 'mama is here'; 'you roll' or 'you sit'")
+CLAUDE_FORMS = ("a name, said with '.' or '!': a toy with 'a', 'the' or 'your' and a colour or none ('the duck.', 'a red "
+                "block!', 'your cup.' of a toy it holds), a fixture or her face's part with 'the' ('the mat.'), its body with "
+                "'your' ('your foot.'), 'mama' alone; 'oh', 'uh oh', 'look' or 'see' alone, one to a sentence; 'see the X' or "
+                "'you see the X', any ending; with '.' or '!': 'it / this / that / here / there is a X', 'it / this / that is "
+                "C', 'the X is on the Y' (a fixture), 'the X is down', 'the X is C', 'the X fell', 'mama is here', 'you roll', "
+                "'you sit'")
 
 
 def _noun_phrase(ws):
-    """[the | a | your] [colour] noun -> (det, colour, noun), or None."""
+    """a name as Claude may say it -> (det, colour, noun), or None: a toy with a / the / your and at most one colour; a fixture or
+    her face's part with "the"; the child's body with "your"; "mama" alone (never "a mama" or "the mama")."""
     i, det, col = 0, None, None
     if i < len(ws) and ws[i] in _DETS:
         det, i = ws[i], i + 1
     if i < len(ws) and ws[i] in COLOURS:
         col, i = ws[i], i + 1
-    return (det, col, ws[i]) if i == len(ws) - 1 and ws[i] in NAMEABLE else None
+    if i != len(ws) - 1:
+        return None
+    n = ws[i]
+    ok = (n in OBJECT_NOUNS and det is not None) or \
+        (col is None and ((n in FIXTURE_NOUNS | HER_FACE and det == "the") or (n in CHILD_BODY and det == "your") or
+                          (n == PARENT_NAME and det is None)))
+    return (det, col, n) if ok else None
 
 
-def _sentences(text):
-    return [ws for ws in (words(x) for x in re.split(r"[.?!]", text)) if ws]
+def _sentences_marked(text):
+    """[(words, its mark)] of a line that passed the form."""
+    return [(words(x), m) for x, m in re.findall(r"([a-z ]+)([.?!])", text) if words(x)]
 
 
 def claude_claims(text):
@@ -282,15 +393,11 @@ def claude_claims(text):
             return None, ("an ask is the fast layer's: the child's name is the call (judged, at most once per 240 ticks, never "
                           "while it looks at her: A13, 4.6); Claude requests the call, the greeting or the goodnight")
     claims = []
-    for ws in _sentences(text):
-        bad = (f"not a claim she can hold true: {' '.join(ws)!r} (Claude's lines take these forms only: {CLAUDE_FORMS})")
+    for ws, mark in _sentences_marked(text):
+        bad = (f"not a claim she can hold true: {' '.join(ws) + mark!r} (Claude's lines take these forms only: {CLAUDE_FORMS})")
         if "look" in ws[:-1]:
             return None, "an ask is the fast layer's: 'look' with a word after it ('look at ...', 'look here') asks a look"
-        if all(w in CLAUDE_INTERJ for w in ws):
-            continue
-        np_ = _noun_phrase(ws)
-        if np_ is not None:
-            claims.append(("name",) + np_)
+        if tuple(ws) in CLAUDE_INTERJ:
             continue
         k = 2 if ws[:2] == ["you", "see"] else (1 if ws[0] == "see" else 0)
         if k:
@@ -299,9 +406,15 @@ def claude_claims(text):
                 return None, bad
             claims.append(("sees",) + np_)
             continue
+        if mark == "?":                               # a question asks (the fast layer's); only "see the X?" shows
+            return None, bad
+        np_ = _noun_phrase(ws)
+        if np_ is not None:
+            claims.append(("name",) + np_)
+            continue
         if len(ws) >= 3 and ws[1] == "is" and ws[0] in _DEIXIS + ("here", "there"):
             rest = ws[2:]
-            if len(rest) == 1 and rest[0] in COLOURS:
+            if len(rest) == 1 and rest[0] in COLOURS and ws[0] in _DEIXIS:
                 claims.append(("its_colour", rest[0]))
                 continue
             np_ = _noun_phrase(rest)
@@ -309,8 +422,8 @@ def claude_claims(text):
                 return None, bad
             claims.append(("is",) + np_)
             continue
-        i = 1 if ws[0] in _DETS else 0
-        if len(ws) > i + 1 and ws[i] in OBJECT_NOUNS:
+        if len(ws) > 2 and ws[0] == "the" and ws[1] in OBJECT_NOUNS:
+            i = 1
             n, pred = ws[i], ws[i + 1:]
             if pred == ["fell"]:
                 claims.append(("down", n))
@@ -319,7 +432,7 @@ def claude_claims(text):
                 p2 = pred[1:]
                 if p2[0] == "in":
                     return None, f"not seen: a thing in the {p2[-1]} (containment she cannot see)"
-                if len(p2) == 3 and p2[:2] == ["on", "the"]:
+                if len(p2) == 3 and p2[:2] == ["on", "the"] and p2[2] in FIXTURE_NOUNS:
                     claims.append(("on", n, p2[2]))
                     continue
                 if p2 == ["down"]:
@@ -339,9 +452,19 @@ def claude_claims(text):
     return claims, ""
 
 
+def claude_toys(claims):
+    """the toys a Claude line's claims name (4.10's redirect rule: a line naming a toy the child does not attend redirects)."""
+    out = []
+    for c in claims:
+        n = c[3] if c[0] in ("name", "sees", "is") else (c[1] if c[0] in ("on", "down", "colour") else None)
+        if n in OBJECT_NOUNS and n not in out:
+            out.append(n)
+    return out
+
+
 def _claude_true(claims, percept, seen, recent_events):
     """each of a Claude line's claims held against what she perceives now and saw in the last RECENT ticks."""
-    att = [o for o in [percept.target_obj()] + [percept.obj(h) for h in percept.child_holds] if o is not None]
+    att = percept.attended()                               # as she reads the child: its head's line and its hands (A40)
     held = [o for o in (percept.obj(h) for h in percept.child_holds) if o is not None]
     fell = {ob for _, k, ob in recent_events if k == "fell"}
     kinds = {k for _, k, _o in recent_events}
@@ -357,9 +480,10 @@ def _claude_true(claims, percept, seen, recent_events):
             if kind == "sees" and not any(like(o, n, col) and o.child_sees for o in seen.values()):
                 return False, f"not true: the child does not see a {n}"
             if kind == "is" and not any(like(o, n, col) for o in att):
-                return False, f"not true: it is not a {n} (it names what the child looks at or holds)"
+                return False, f"not true: it is not a {n} (it names what she reads the child looking at, holding or " \
+                              f"reaching toward)"
         elif kind == "its_colour" and not any(o.colour == c[1] for o in att):
-            return False, f"not true: what the child looks at or holds is not {c[1]}"
+            return False, f"not true: what she reads the child attending is not {c[1]}"
         elif kind == "on" and not any(o.name == c[1] and o.on == c[2] for o in seen.values()):
             return False, f"not true: no {c[1]} on the {c[2]} as she sees it"
         elif kind == "down" and not any(o.name == c[1] and o.id in fell for o in seen.values()):
@@ -374,13 +498,13 @@ def _claude_true(claims, percept, seen, recent_events):
 
 
 def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, source="fast", register=None,
-          recent_events=()):
+          recent_events=(), peak=True):
     """-> (ok, reason). vocab: the words she has (the birth words and the growth words entered); new_word: the day's new words
     (a word or a tuple of up to NEW_PER_DAY: each allowed, one a line, and only last); percept: what she perceives now
     (body/sim/lang/percept.Percept; None skips the perceived and true rules: for listing lines ahead, never for a line she
     says); refs: the object ids the line is about (its filled slots, or the object an intent was given); held: the never-taught
     pairs still held out; source: "fast" or "claude"; recent_events: the (tick, kind, object) she saw in the last RECENT
-    ticks."""
+    ticks; peak: the new word's line must be measured on its pitch peak (A34; False only for listing the lines to measure)."""
     if not isinstance(text, str) or not _FORM.fullmatch(text):
         return False, "form: lowercase words, single spaces, '. ? !' only after a word, ending in one"
     ws = words(text)
@@ -395,6 +519,10 @@ def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, 
         return False, f"two new words in one line: {sorted(set(said_new))}"
     if said_new and ws[-1] != said_new[0]:
         return False, f"the new word {said_new[0]!r} not last"
+    if said_new and peak:
+        ok, why = on_peak(text)
+        if not ok:
+            return False, f"the new word {said_new[0]!r}: {why}"
     wset = set(ws)
     for a, b in held:
         if a in wset and b in wset:
@@ -440,11 +568,11 @@ def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, 
 
 
 def _attended(percept, seen, refs):
-    """what "it" / "this" / "that" can point at: the line's own objects, else what the child looks at or holds."""
+    """what "it" / "this" / "that" can point at: the line's own objects, else what she reads the child attending (its head's
+    line, what it holds or reaches toward: A40)."""
     if refs:
         return [seen[r] for r in refs if r in seen]
-    out = [percept.target_obj()] + [percept.obj(h) for h in percept.child_holds]
-    return [o for o in out if o is not None]
+    return percept.attended()
 
 
 def _true(text, percept, seen, refs, recent_events):
@@ -460,8 +588,8 @@ def _true(text, percept, seen, refs, recent_events):
             if subj in _DEIXIS:
                 x = rest[1] if rest[0] in _DETS and len(rest) > 1 else rest[0]
                 if x in OBJECT_NOUNS and not any(o.name == x for o in att):
-                    return False, f"not true: {subj!r} is not a {x} (it names what the line is about, or what the child " \
-                                  f"looks at or holds)"
+                    return False, f"not true: {subj!r} is not a {x} (it names what the line is about, or what she reads " \
+                                  f"the child attending)"
                 if x in COLOURS and not any(o.colour == x for o in att):
                     return False, f"not true: {subj!r} is not {x}"
                 subj_objs = att

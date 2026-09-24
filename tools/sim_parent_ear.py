@@ -12,7 +12,9 @@ never part of a body. Nothing it measures reaches the child; the margins it meas
             words when she does not expect them (accepted as another word, the rule's own false acceptance); with and without
             delta
   cost      her ear per utterance (the expected words and the bank; her other words only when a word is accepted), and the
-            transcriber per tick over the babble stream (listening on every tick, hearing at each turn's end)
+            transcriber per tick over the babble stream (listening on every tick, hearing at each turn's end); with her
+            vocabulary at birth (50 words) and at its most (all 128 the ear is built with: the per-turn exact test, "the
+            nearest of all her words", grows with it; the P3 verifier's third finding)
   reach     the tract's own words on this ear (4.9's reach table): the voice study's instrument productions for 9 words, its
             hand scores and its searched acts (written by us, never given to the body: REACH_HAND, REACH_SEARCHED below),
             through the committed tract (body/sim/tract.py, seed 1) and her ear at 1 m, in 50 random expected sets of each size
@@ -474,7 +476,11 @@ def main():
     if "cost" not in skip:
         c = measure_cost(ear, words, rng)
         res["cost"] = c
-        print(f"cost: {c}")
+        print(f"cost, her {len(words)} birth words: {c}")
+        if len(all_words) > len(words):
+            c = measure_cost(ear, all_words, np.random.default_rng(9))
+            res["cost_all"] = c
+            print(f"cost, all {len(all_words)} words hers (the exact test over each): {c}")
     if a.out:
         with open(a.out, "w") as f:
             json.dump(res, f, indent=1, default=float)

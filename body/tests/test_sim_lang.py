@@ -18,8 +18,14 @@ Tests 25-30 are the P3 verifier's second findings (d053dff), each failing there 
 past the check (25, with the claims it could not hold), a name ask met by a word made before its question was heard (26), calls
 the child could not answer by a look counted as missed and the call's window (27), words introduced that the world cannot
 show (28, with the pace of 1 a minute), a give before its word counted as missed (29), deliberate writes to her ear uncaught
-(30)."""
+(30).
+Tests 31-37 are the P3 verifier's third findings (7447f73), after the merge of main's design (A30-A57), each failing there at its
+own first assertion: the gaze leak in her replies during an ask (31, A51, the verifier's probe both ways), the new word off its
+pitch peak (32, A34), her reading of the child's fovea rather than its trunk, head line and hands (33, A40, with "reaching
+toward"), the old held pairs (34, A55), echoes and "more?" (35), Claude's shows past the redirect rule and its loose forms (36),
+and her imperfection and stage 2's "no." to a talk-over (37, A52)."""
 import json
+import math
 import os
 import shutil
 import sys
@@ -105,7 +111,7 @@ def test_line_check_refuses():
     must = [("look at the duck.", {}), ("where is the ball?", {}), ("hi pip. mama is here.", {}),
             ("the ball is on the mat.", {}),
             ("a rattle.", dict(new_word="rattle", percept=P(0, seen=TOYS + (Seen("rattle", "rattle"),)))),
-            ("the block is red!", dict(vocab=VOCAB + ("red",), refs=("block_red",)))]
+            ("the ball is red!", dict(vocab=VOCAB + ("red",), refs=("ball",)))]
     for text, kw in must:
         kw = dict(kw)
         vocab = kw.pop("vocab", VOCAB)
@@ -115,8 +121,8 @@ def test_line_check_refuses():
         ("look at the duck and the ball.", {}, "too long"), ("look, the duck.", {}, "form"), ("Look at the duck.", {}, "form"),
         ("look at  the duck.", {}, "form"), ("look at the duck", {}, "form"), ("? the duck.", {}, "form"),
         ("the rattle.", {}, "not her word"), ("a rattle is here.", dict(new_word="rattle"), "not last"),
-        ("the red ball.", dict(vocab=VOCAB + ("red",)), "held-out pair"),
-        ("it is red.", dict(vocab=VOCAB + ("red",), refs=("ball",)), "held-out pair (red, ball) by its referent"),
+        ("the red block.", dict(vocab=VOCAB + ("red",)), "held-out pair"),
+        ("it is red.", dict(vocab=VOCAB + ("red",), refs=("block_red",)), "held-out pair (red, block) by its referent"),
         ("it is yellow.", dict(vocab=VOCAB + ("yellow",), refs=("ball",)), "unseen: a yellow"),
         ("look at the drum.", {}, "unseen: 'drum'"), ("look at the window.", dict(percept=P(0, fixtures=frozenset())), "unseen"),
         ("your foot.", dict(percept=P(0, child_in_view=False)), "unseen: the child's"),
@@ -132,7 +138,7 @@ def test_line_check_refuses():
         got, reason = TP.check(text, vocab, **kw)
         assert not got and why.split(":")[0] in reason, (text, reason, why)
     assert ok("the ball fell.", VOCAB + ("fell",), percept=p, recent_events=[(0, "fell", "ball")])
-    assert ok("yes. the duck!", VOCAB, percept=p) and ok("the red ball.", VOCAB + ("red",), percept=p, held=())
+    assert ok("yes. the duck!", VOCAB, percept=p) and ok("the red block.", VOCAB + ("red",), percept=p, held=())
     print(f"2 the line check passes {len(must)} lines and refuses {len(must_not)}: too long, form (a comma, a capital, two "
           f"spaces, no ending, a mark before a word), a word not hers, the new word not last, a held-out pair by its words and by "
           f"its referent, a colour or object or fixture or body she cannot see, a past event she did not see, Claude's praise and "
@@ -212,7 +218,7 @@ def test_variation_sets_and_repeats():
 def test_replies_and_judgments():
     """the token output (the scaffold) drives the child's words here: exact and approximate words, stage 1 and 2, the echo."""
     def one(stage, sym_seq, target="duck", said_duck_at=None):
-        con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=stage)
+        con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=stage, imperfect=False)    # her latency: test 37
         if said_duck_at is not None:
             con.fast.said_word["duck"] = said_duck_at
         toks = {40 + i: s for i, s in enumerate(sym_seq)}
@@ -257,7 +263,7 @@ def test_talk_over_and_turns():
     act = np.array([4, 4, 2, 4, 2, 2, 2, 4, 2, 0])                  # lungs and voicing up, the jaw open: a sound
     for t in range(0, 200):
         snd[t] = tract.tick(act if 6 <= t < 10 or 70 <= t < 73 else None)
-    con = C.Conduct(seed=2, transcriber=Transcriber(None))
+    con = C.Conduct(seed=2, transcriber=Transcriber(None), imperfect=False)       # her latency and misses: test 37
     con.request("call")
     cut_at, lines, heard = None, [], []
     for t in range(120):
@@ -409,7 +415,7 @@ def test_asks_answered():
     # asked of the red ball while the blue one is in its fovea: not asked (it would be met unasked)
     con, said, judg = ask_run(lambda t, c: "ball_blue")
     assert not [ln for _, ln in said if ln.intent == "ask_where"] and judg == [], (said, judg)
-    assert any("already in the child's fovea" in r[2] for r in con.fast.refused), con.fast.refused[-3:]
+    assert any("already where she reads the child looking" in r[2] for r in con.fast.refused), con.fast.refused[-3:]
     # its gaze lands on a ball while she says the line, before "ball" is heard: void, no smile, not counted either way
     con, said, judg = ask_run(lambda t, c: "ball_blue" if 1 <= t else None)
     ask = [ln for _, ln in said if ln.intent == "ask_where"]
@@ -639,6 +645,7 @@ def test_small_items():
     why = [r[2] for r in con.fast.refused[-2:]]
     assert "unseen: 'drum'" in why[0] and "redirect only after" in why[1], why
     s = None
+    con.fast.follow_in = K.FOLLOW_PER_REDIRECT                   # two follow-in namings today (4.10's 2 to 1: test 36)
     for t in range(40, 60):
         con.request("redirect", o="ball") if t == 45 else None
         s = con.tick(t, P(t))
@@ -660,11 +667,11 @@ def test_small_items():
     f = C.FastLayer(1)
     f.new_words = ("rattle",)
     assert f.add_steer("you see the rattle.", "any", 0)[0]
-    ln = f.steer_line(10, P(10, seen=toys))
+    ln, _kind = f.steer_line(10, P(10, seen=toys, child_target="rattle"))    # a follow-in naming (else a redirect: test 36)
     assert ln.register == "new_word" and ln.emphasis == "rattle" and ln.focus == "rattle", ln
     ln2 = C.FastLayer(1)
     ln2.add_steer("you see your cup.", "any", 0)
-    got = ln2.steer_line(10, P(10, child_holds=("cup",)))
+    got, _kind = ln2.steer_line(10, P(10, child_holds=("cup",)))
     assert got.register == "plain" and got.emphasis == "cup", got
     assert "'cancelled'" in C.StubMotion.__doc__
     assert not hasattr(TP, "_last_is_focus")
@@ -1071,7 +1078,9 @@ def scenario(n, seed, stage):
             tg = [None, "duck", "ball", "mama", "cup", None, "block_red"][int(rng.integers(7))]
         holds = ("cup",) if (t // 120) % 3 == 1 else ()
         ev = (("fell", "ball"),) if t % 173 == 60 else ()
-        percepts.append(P(t, child_target=tg, child_holds=holds, events=ev, seen=toys))
+        ev += (("wave", "left"),) if t % 89 == 20 else ()                    # its hand waves: she may copy it (A52)
+        reach = ("duck",) if t % 97 in (10, 11, 12, 13) else ()               # a hand closing on the duck, as she reads it
+        percepts.append(P(t, child_target=tg, child_holds=holds, events=ev, seen=toys, child_reaches=reach))
     tokens = {}
     for t in range(40, n, 83):
         tokens[t] = int(rng.choice([LX.WORD_ID["duck"], LX.WORD_ID["ball"], LX.WORD_ID["mama"]]))
@@ -1093,7 +1102,7 @@ def run_scenario(con, sc, t_from, t_to):
         s = con.tick(t, sc["percepts"][t], tract=sc["tract"][t], token=sc["tokens"].get(t))
         log.append(json.dumps([t, None if s.line is None else s.line.text, s.judgments, s.cut,
                                [(cw.channel, cw.word, cw.exact, cw.echo) for cw in s.heard],
-                               [(a.kind, a.target) for a in s.acts]]))
+                               [(a.kind, a.target) for a in s.acts], [(a.kind, a.target) for a in s.copy], s.frown]))
     return log
 
 
@@ -1348,7 +1357,9 @@ def test_introduce_only_what_she_can_show():
         else:
             refused[w] = [r[2] for r in con.fast.refused if r[1] == "new_word"][-1:]
     p0 = P(0, seen=room, fixtures=fix, events=events)
-    want = {w for w in words if TP.showable(w, con.world)[0] and TP.show_now(w, p0, [(0, k, o) for k, o in events])[0]}
+    ev0 = [(0, k, o) for k, o in events]
+    want = {w for w in words if TP.showable(w, con.world)[0] and TP.show_now(w, p0, ev0)[0] and
+            any(len(TP.intro_on_peak(w, o)) >= 3 for o in TP.show_now(w, p0, ev0)[0])}          # 3 lines on its peak (A34)
     assert introduced == want, (sorted(introduced - want), sorted(want - introduced))
     assert all(r and "waits" in r[0] for w, r in refused.items() if w in waiting), {w: refused[w] for w in waiting}
 
@@ -1377,7 +1388,7 @@ def test_introduce_only_what_she_can_show():
         s = con.tick(t, P(t, seen=twins))
         if s.line is not None and s.line.intent == "new_word":
             got.append(s.line)
-    assert len(got) == 3 and all(ln.refs and ln.refs[0].startswith("block") for ln in got), got
+    assert len(got) == 3 and all(ln.refs == ("ball",) for ln in got), got          # A55: "red" on the red ball, never a block
     # the pace (A14): a second new word within a minute is refused and logged; after the minute it is said
     con, got = intro("rattle")
     con.request("new_word", word="ring")
@@ -1389,7 +1400,7 @@ def test_introduce_only_what_she_can_show():
           f"acts) and she can show it now (show_now): of the {len(words)} with frames, {len(introduced)} introduced here "
           f"(exactly those), {len(refused)} wait, each logged ({', '.join(waiting)} among them: no 'here is your toes!'); a "
           f"motion that can clap introduces 'clap' with the act; a toy unseen, a fixture out of view, a fall not seen: not "
-          f"now; 'red' only once the world has two red toys, and on a red block, never the red ball; at most 1 new word a "
+          f"now; 'red' only once the world has two red toys, and on the red ball, never a red block (A55); at most 1 new word a "
           f"minute")
 
 
@@ -1496,6 +1507,538 @@ def test_ear_deliberate_writes():
           f"verify(pin) and the night refuse it; a world saved with one ear is not restored with another")
 
 
+# ------------------------------------------------------------- the P3 verifier's third findings (7447f73), each tested both ways
+def _perfect(**kw):
+    """a conduct with her imperfection off (A52; test 37 holds it), so a test isolates another rule. (Before A52 was built, as on
+    7447f73, she was always so: the new tests then fail at their own assertions, not at this call.)"""
+    try:
+        return C.Conduct(imperfect=False, **kw)
+    except TypeError:
+        return C.Conduct(**kw)
+
+
+def _no_sets(con, ids=("duck", "ball", "cup", "block", "block_red", "ball_blue")):
+    """named at tick 0: no follow-in set on these in the way for 120 ticks."""
+    for x in ids:
+        con.fast.last_set[x] = con.fast.last_named[x] = 0
+
+
+def test_gaze_leak_closed():
+    """finding 1 (A51): during an ask her replies still looked at the answer. The verifier's probe: "where is the ball?" (or "the
+    ball? where is the ball?"), the child's "ball" token made during it while its head is on the duck; her echo "ball! the
+    ball!" came with look -> ball while the ask was pending, and a child that follows her gaze met the ask (worth 2, counted).
+    The same with "give mama the cup.", whose open hand also targeted the toy."""
+    twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True), ("bottle", "bottle", "", "mat", True))
+
+    def probe(intent, o, word, tok_at=(6,), n=90, extra=None):
+        """a child that follows her eyes and hands: from the tick after she looks, points or shows at a thing, it looks there."""
+        con = _perfect(seed=4, transcriber=Transcriber(None))
+        _no_sets(con)
+        follow, rows, judg = None, [], []
+        for t in range(n):
+            if t == 5:
+                con.request(intent, o=o)
+            ev = extra(t, con) if extra else ()
+            s = con.tick(t, P(t, child_target=follow or "duck", seen=twins, events=ev),
+                         token=LX.WORD_ID[word] if t in tok_at else None)
+            if s.line is not None:
+                pend = con.pending is not None and con.pending["kind"] in ("gaze", "act", "call")
+                rows.append((t, s.line, s.acts, pend or s.line.intent.startswith("ask")))
+            for a in s.acts:
+                if a.kind in ("look", "point", "show") and a.target not in ("child_eyes", "child", None):
+                    follow = a.target
+            judg += s.judgments
+        return con, rows, judg
+    con, rows, judg = probe("ask_where", "ball", "ball")
+    during = [(t, ln.text, acts) for t, ln, acts, pend in rows if pend]
+    looked = [(t, x, a) for t, x, acts in during for a in acts
+              if a.kind in ("look", "point", "show") and a.target != "child_eyes"]
+    assert not looked, f"while the ask was pending her acts cued its answer: {looked}"
+    echo = [(t, ln.text) for t, ln, _a, pend in rows if pend and ln.intent in ("echo", "echo_word")]
+    assert echo and all(C.Act("look", "child_eyes") in acts for t, x, acts in during), (echo, during)
+    assert not [j for j in judg if j[1] == "met_ask"] and con.ledger.standing("ball")["asks"] == [0], \
+        f"a child that follows her gaze met the ask: {judg}, {con.ledger.standing('ball')}"
+    # both ways: the same echo once the ask is judged looks at the ball on its naming word (the joint-attention cue, 4.3)
+    con, rows, judg = probe("ask_where", "ball", "ball", tok_at=(6, 60))
+    after = [(t, ln.text, acts) for t, ln, acts, pend in rows if not pend and t > 60 and ln.intent in ("echo", "echo_word")]
+    assert after and C.Act("look", "ball", "focus") in after[0][2], after
+    # the give: her open hand held out to the child, never toward the cup, and her echo of "cup" on the child's eyes
+    con, rows, judg = probe("ask_give", "cup", "cup")
+    ask = [(ln.text, acts) for t, ln, acts, pend in rows if ln.intent == "ask_give"]
+    assert ask and C.Act("open_hand", "child") in ask[0][1] and not [a for a in ask[0][1] if a.target == "cup"], ask
+    during = [(t, ln.text, acts) for t, ln, acts, pend in rows if pend]
+    assert [x for _t, x, _a in during if "cup" in x and not x.startswith("give")] and \
+        not [a for _t, _x, acts in during for a in acts if a.target == "cup"], during
+    assert not [j for j in judg if j[1] == "met_ask"], judg
+    # the meal's first line waits while the ask is judged (its bottle in her hand would cue), and is said once it is judged
+    con, rows, judg = probe("ask_where", "ball", "ball", tok_at=(),
+                            extra=lambda t, c: (("charge_low", None),) if t >= 12 else ())
+    feeds = [(t, pend) for t, ln, acts, pend in rows if ln.intent == "feed"]
+    assert feeds and not [f for f in feeds if f[1]], feeds
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    con.request("ask_where", o="ball")
+    con.tick(0, P(0, child_target="duck", seen=twins))
+    assert con.eyes_on_child and con.pending["kind"] == "gaze"                 # L1 (W2) keeps her eyes on the child
+    # blind(): looks to the child's eyes; no point, show or hand-over; the open hand to the child; acts on the child kept
+    got = C.blind((C.Act("look", "ball", "focus"), C.Act("point", "ball"), C.Act("show", "cup"), C.Act("open_hand", "cup"),
+                   C.Act("hand_over", "duck"), C.Act("lean_in", "child_periphery"), C.Act("look", "child_eyes")))
+    assert got == (C.Act("look", "child_eyes"), C.Act("open_hand", "child"), C.Act("lean_in", "child_periphery")), got
+    print(f"31 the gaze leak closed (A51), the verifier's probe: during 'where is the ball?' the child's 'ball' is echoed "
+          f"({echo[0][1]!r} at tick {echo[0][0]}) with her eyes on the child's eyes, so a child that follows her gaze never "
+          f"meets it (the ask missed, no smile); the same echo after the ask is judged looks at the ball on its naming word; "
+          f"'give ... the cup.' holds her open hand out to the child, never toward the cup, and her echo of 'cup' stays on "
+          f"its eyes; the meal's line waits for the judgment; blind() keeps only looks at its eyes, the open hand to it and "
+          f"acts on it")
+
+
+def test_new_word_on_its_peak():
+    """finding 2 (A34): she introduced new words in frames that put an earlier word on the line's pitch peak (17 of the 210
+    introduction lines measured by the verifier with the tool's own f0_word). The line check now refuses a new word's line
+    unless it was measured on its peak (body/sim/lang/peak_lines.json, tools/sim_voice_check.py --peak)."""
+    found = [("look. eyes.", "eyes"), ("see? eyes!", "eyes"), ("look. open.", "open"), ("it is red.", "red"),
+             ("the block is red!", "red"), ("it is yellow.", "yellow"), ("the block is yellow!", "yellow"),
+             ("it is little.", "little"), ("it is all.", "all"), ("it is out.", "out"), ("it is off.", "off"),
+             ("it is under.", "under"), ("out. out.", "out"), ("off. off.", "off"), ("look at the eyes.", "eyes")]
+    for text, w in found:
+        vocab = VOCAB + tuple(g for g in TP.GROWTH_WORDS if g != w)
+        ok, why = TP.check(text, vocab, w, held=())
+        assert not ok and "pitch peak" in why, f"{text!r} (new word {w!r}) passed the check: {why!r}"
+    for text, w in (("a rattle.", "rattle"), ("the rattle!", "rattle"), ("you see the rattle?", "rattle"), ("see? red.", "red"),
+                    ("red!", "red")):
+        assert TP.check(text, VOCAB, w, held=())[0], (text, TP.check(text, VOCAB, w, held=()))
+    assert not TP.check("look. the rattle!", VOCAB, "rattle", held=())[0], "an unmeasured new-word line passed"
+    assert TP.check("look. eyes.", VOCAB + ("eyes",), None, held=())[0], "the peak rule held a word no longer new"
+    lines = TP.new_word_lines()
+    assert set(TP.PEAK) == {t for t, _w in lines}, "the table and the lines she can say with a new word differ"
+    assert all(TP.PEAK[t][0] == w == TP.words(t)[-1] for t, w in lines)
+    off = [t for t in TP.PEAK if not TP.on_peak(t)[0]]
+    assert TP.PEAK_META["lines"] == len(lines) and TP.PEAK_META["off"] == len(off), TP.PEAK_META
+    # every introduction said is on its peak: each growth word the room can show, introduced as in test 28
+    room = TOYS + seen(("rattle", "rattle", "purple", "mat", True), ("ring", "ring", "pink", "mat", True),
+                       ("stacker", "stacker", "white", "mat", True), ("bear", "bear", "brown", "mat", True),
+                       ("drum", "drum", "cyan", "mat", True), ("car", "car", "orange", "mat", True),
+                       ("ball_blue", "ball", "blue", "mat", True))
+    fix = frozenset({"mat", "sofa", "window", "table", "shelf", "door", "light", "floor"})
+    events = (("fell", "ball"), ("rolled", None), ("sat", None), ("got", "cup"), ("gave", "duck"))
+    world = dict(TP.ROOM_AT_BIRTH, objects=dict(TP.ROOM_AT_BIRTH["objects"], ball=["red", "blue"]))
+    said, n_words = [], 0
+    for w in [w for w, c in TP.GROWTH if c != "frame"]:
+        con = C.Conduct(seed=5, world=world)
+        con.request("new_word", word=w)
+        got = []
+        for t in range(60):
+            s = con.tick(t, P(t, seen=room, fixtures=fix, events=events if t % 10 == 0 else ()))
+            if s.line is not None and s.line.intent == "new_word":
+                got.append(s.line.text)
+        n_words += bool(got)
+        said += got
+    assert said and all(TP.on_peak(x)[0] for x in said), [x for x in said if not TP.on_peak(x)[0]]
+    assert not {x for x, _w in found} & set(said)
+    # C25 over what she may say as a set: every 3 of a word's introduction lines on its peak (for each object a colour or "fell"
+    # is shown on) at most 3 words a second, pooled over their measured spans
+    import itertools                                                         # noqa: PLC0415
+    worst = (0.0, ())
+    for w in [w for w, c in TP.GROWTH if c != "frame"]:
+        for n in sorted(TP.OBJECT_NOUNS):
+            ok_lines = TP.intro_on_peak(w, Seen(n, n, "", "mat"))
+            for k in itertools.combinations(ok_lines, 3):
+                worst = max(worst, (TP.set_rate(k), k))
+    assert worst[0] <= 3.0, worst
+    engine = ""
+    if _have_engine():                                                       # the measure made again: bit for bit
+        import importlib.util                                                # noqa: PLC0415
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        spec = importlib.util.spec_from_file_location("svc", os.path.join(root, "tools", "sim_voice_check.py"))
+        svc = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(svc)
+        tmp = tempfile.mkdtemp()
+        try:
+            cache = V.VoiceCache(tmp)
+            rng = np.random.default_rng(0)
+            sample = [x for x, _w in found if x in TP.PEAK] + [str(x) for x in rng.choice(sorted(TP.PEAK), 12, replace=False)]
+            for text in sample:
+                w = TP.PEAK[text][0]
+                c = cache.clip(text, "new_word", emphasis=w, heard=False)
+                pk = [(word, None if not np.isfinite(svc.f0_word(c.pcm[a:e])[1]) else round(svc.f0_word(c.pcm[a:e])[1], 1))
+                      for word, a, e in c.words]
+                others = [(p_, word) for word, p_ in pk[:-1] if p_ is not None]
+                top = max(others) if others else (None, None)
+                span = round((c.words[-1][2] - c.words[0][1]) / V.SR, 4)
+                assert [w, pk[-1][1], top[0], top[1], len(c.words), span] == TP.PEAK[text], (text, pk, TP.PEAK[text])
+            cache.close()
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        engine = f"; {len(sample)} of the table's lines synthesized and measured again, each entry the same"
+    print(f"32 a new word only on its pitch peak (A34): the verifier's lines ({', '.join(repr(x) for x, _w in found[:3])}, ...) "
+          f"refused by the check as measured off the peak (or never measured); {len(lines)} lines she can say with a growth "
+          f"word as the new word, all measured ({len(off)} off the peak, never said); every introduction the conduct makes "
+          f"({len(said)} lines over {n_words} words) on its peak; any 3 of a word's lines on its peak at most "
+          f"{worst[0]:.2f} words a second (C25: {', '.join(worst[1])}){engine}")
+
+
+def test_reads_trunk_and_hands():
+    """finding 3 (A40): her judgments read the child's software fovea's window, which a real G1 does not show. Now every read is
+    of its head's line and its hands, as a person sees a robot with no eyes: the Percept's child_target (Reader.look, her
+    error from her own stream), child_holds and child_reaches (Reader.reaches, the new field)."""
+    import dataclasses                                                       # noqa: PLC0415
+    import inspect                                                           # noqa: PLC0415
+    from body.sim.lang import percept as PC                                  # noqa: PLC0415
+    fields = {f.name for f in dataclasses.fields(Percept)}
+    assert "child_reaches" in fields and not [f for f in fields if "fovea" in f], fields
+    assert list(inspect.signature(PC.Reader.look).parameters) == ["self", "head_pos", "head_axes", "things"]
+    # her reading of its head's line: the duck straight ahead, the ball 8 degrees off it, the drum at 60 (beyond the reach)
+    axes = np.eye(3)
+    things = [("duck", (1.0, 0.0, 0.0)), ("ball", (1.0, math.tan(math.radians(8)), 0.0)),
+              ("drum", (1.0, math.tan(math.radians(60)), 0.0)), ("mama", (-1.0, 0.0, 0.3))]
+    r1, r2, r3 = PC.Reader(1), PC.Reader(1), PC.Reader(2)
+    a = [r1.look((0, 0, 0), axes, things) for _ in range(400)]
+    assert a == [r2.look((0, 0, 0), axes, things) for _ in range(400)], "her reading is not exact from her seed"
+    assert a != [r3.look((0, 0, 0), axes, things) for _ in range(400)]
+    tg = [x[0] for x in a]
+    share_ball = tg.count("ball") / len(tg)
+    assert set(tg) <= {"duck", "ball"} and 0.05 < share_ball < 0.4, (set(tg), share_ball)   # her error, not the fovea's
+    assert all("drum" not in x[1] and "mama" not in x[1] and "duck" in x[1] for x in a)      # before its camera
+    assert abs(K.READ_ERR_DEG * math.sqrt(math.pi / 2) - 5.0) < 0.02                           # Poppe et al. 2007's 5 degrees
+    # a hand reaching toward the cup: its path closing on it over 3 ticks; still, or moving away: no reach
+    rd = PC.Reader(1)
+    cup = [("cup", (0.5, 0.0, 0.0)), ("duck", (0.0, 0.5, 0.0))]
+    got = [rd.reaches({"left": (0.1 * k, 0.0, 0.0)}, cup) for k in range(4)]
+    assert got[:3] == [(), (), ()] and got[3] == ("cup",), got
+    rd2 = PC.Reader(1)
+    assert [rd2.reaches({"left": (0.0, 0.0, 0.0)}, cup) for _ in range(5)][-1] == ()
+    assert rd.reaches({"left": (0.4, 0.0, 0.0)}, cup, holds=("cup",)) == ()
+    st = json.loads(json.dumps(rd.state()))
+    rd3 = PC.Reader(9)
+    rd3.load_state(st)
+    assert rd3.look((0, 0, 0), axes, things) == rd.look((0, 0, 0), axes, things)
+    # a gaze ask met by a reach: "where is the ball?", its head on nothing she can name, a hand closing on the ball
+    twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True))
+
+    def ask(reach_at, n=60):
+        con = C.Conduct(seed=4, transcriber=Transcriber(None), imperfect=False)
+        _no_sets(con)
+        con.request("ask_where", o="ball")
+        judg = []
+        for t in range(n):
+            s = con.tick(t, P(t, child_target=None, seen=twins, child_reaches=("ball_blue",) if reach_at(t, con) else ()))
+            judg += s.judgments
+        return con, judg
+    con, judg = ask(lambda t, c: c.pending is not None and t >= c.pending["open"] + 2)
+    assert [j[1] for j in judg] == ["met_ask"] and con.ledger.standing("ball")["asks"] == [1], judg
+    con, judg = ask(lambda t, c: False)
+    assert judg == [] and con.ledger.standing("ball")["asks"] == [0]
+    con, judg = ask(lambda t, c: True)                                      # already reaching toward a ball: not asked
+    assert judg == [] and any("already where she reads" in r[2] for r in con.fast.refused), con.fast.refused[-2:]
+    # a right name by what its hand reaches toward; its word counts toward "says"; her ear expects it; Claude's situations
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), imperfect=False)
+    _no_sets(con)
+    judg = []
+    for t in range(60):
+        s = con.tick(t, P(t, child_target=None, child_reaches=("duck",) if t >= 30 else ()),
+                     token=LX.WORD_ID["duck"] if t == 40 else None)
+        judg += s.judgments
+    assert (2, "right_name", "duck") in judg and con.ledger.words["duck"]["says"]["token"] == [40], judg
+    p = P(0, child_target=None, child_reaches=("ball",))
+    assert "ball" in expected_words(p, None, None, None, VOCAB)
+    assert C.FastLayer.situation("target:ball", p) and C.FastLayer.situation("reaches:ball", p)
+    assert not C.FastLayer.situation("target:ball", P(0, child_target=None, extra={"fovea": "ball"}))
+    # its follow-in naming: a reach is a target (4.10); what an instrument puts in extra (its fovea's window) is never read
+    con = C.Conduct(seed=1, imperfect=False)
+    said, _ = run(con, [P(t, child_target=None, child_reaches=("cup",) if t >= 5 else ()) for t in range(40)])
+    assert said and said[0][1].focus == "cup", said[:1]
+    con = C.Conduct(seed=1, imperfect=False)
+    said, _ = run(con, [P(t, child_target=None, extra={"fovea_target": "cup"}) for t in range(40)])
+    assert not said, said
+    print(f"33 she reads its head's line and its hands, never its fovea (A40): the Percept has child_reaches and no fovea "
+          f"field; Reader.look, exact from her seed, reads the duck straight ahead and, by her 4-degree error per axis "
+          f"(Poppe et al. 2007's 5 degrees mean), the ball 8 degrees off it {100 * share_ball:.0f}% of the time, never the "
+          f"drum beyond the reach; Reader.reaches finds a hand closing on the cup over 3 ticks, not a still hand or a held "
+          f"toy; 'where is the ball?' met by a reach toward the blue ball (a smile of 2, counted), missed without, not asked "
+          f"while it already reaches; 'duck' while reaching toward the duck is a right name and counts toward 'says'; her "
+          f"ear expects the reached toy; Claude's 'target:' and 'reaches:' read it; a reach starts her follow-in naming; an "
+          f"instrument's fovea in extra is never read")
+
+
+def test_held_pairs_a55():
+    """finding 4 (A55): consts.HELD_PAIRS was the old list ((red, ball), (blue, block), ...), so the check let "the blue ball"
+    through and refused "red" on the red ball, which A55 requires her to say."""
+    ball_blue = seen(("ball_blue", "ball", "blue", "mat", True))
+    toys = TOYS + ball_blue + seen(("cup_yellow", "cup", "yellow", "mat", True), ("car_green", "car", "green", "mat", True),
+                                   ("car", "car", "orange", "mat", True))
+    p = P(0, seen=toys)
+    vocab = VOCAB + ("red", "blue", "yellow", "green")
+    for text, refs in (("the blue ball.", ()), ("it is blue.", ("ball_blue",)), ("the red block.", ()),
+                       ("it is red.", ("block_red",)), ("the yellow cup.", ()), ("it is yellow.", ("cup_yellow",)),
+                       ("the green car.", ()), ("it is green.", ("car_green",))):
+        ok, why = TP.check(text, vocab, None, p, refs)
+        assert not ok and "held-out pair" in why, f"{text!r} said of {refs} passed ({why!r})"
+    for text, refs in (("the red ball.", ()), ("it is red.", ("ball",)), ("the ball is red.", ("ball",)),
+                       ("the blue block.", ()), ("it is blue.", ("block",)), ("the yellow duck.", ()),
+                       ("the green cup.", ()), ("it is green.", ("cup",))):
+        ok, why = TP.check(text, vocab, None, p, refs)
+        assert ok, (text, why)
+    assert K.HELD_PAIRS == (("blue", "ball"), ("red", "block"), ("yellow", "cup"), ("green", "car"))
+    # "blue" introduced once the twins are in the world: on the blue block, never the blue ball, the held-out twin
+    world = dict(TP.ROOM_AT_BIRTH, objects=dict(TP.ROOM_AT_BIRTH["objects"], ball=["blue", "red"]))
+    blocks = TOYS[:3] + seen(("block", "block", "blue", "mat", True)) + ball_blue
+    con = C.Conduct(seed=5, world=world)
+    con.request("new_word", word="blue")
+    got = []
+    for t in range(60):
+        s = con.tick(t, P(t, seen=blocks))
+        if s.line is not None and s.line.intent == "new_word":
+            got.append(s.line)
+    assert len(got) == 3 and all(ln.refs == ("block",) for ln in got), got
+    f = C.FastLayer(1)
+    f.open_pair(("blue", "ball"))
+    assert TP.check("the blue ball.", vocab, None, p, (), f.held)[0], "its test opened, the pair was still held"
+    print("34 A55's held pairs: 'the blue ball.', 'the red block.', 'the yellow cup.', 'the green car.' and each colour said "
+          "of its twin refused; 'the red ball.', 'it is red.' of the red ball, 'the blue block.', 'the yellow duck.', 'the "
+          "green cup.' said; 'blue' introduced on the blue block, never the blue ball; a pair's test opens it")
+
+
+def test_echoes():
+    """finding 5: an echo of her word earned a smile, and "more?" at the feed was a name ask, so echoing "bottle" one tick after
+    "more bottle?" was a met ask worth 2. Now "more?" is the feed's line, never an ask; an echo may earn her smile (a parent
+    answers imitation, Goldstein and Schwade 2008: her method, disclosed), but counts toward nothing in the ledger."""
+    assert C.INTENTS["feed_more"].ask is None and C.INTENTS["feed_more"].expect, "'more?' is an ask"
+    bottle_seen = TOYS + seen(("bottle", "bottle", "", "mat", True))
+    frames = set()
+    for seed in range(12):                                                    # every frame of "more?" ("more?", "more bottle?")
+        c2 = C.Conduct(seed=seed, imperfect=False)
+        c2.routine = "feed"
+        c2.request("feed_more")
+        s = c2.tick(0, P(0, seen=bottle_seen))
+        frames.add(s.line.text)
+        assert c2.pending is None and not c2.ledger.trials, (s.line.text, c2.pending)
+    assert frames == {"more?", "more bottle?"}, frames
+
+    def feed(holds):
+        """the verifier's probe: "more bottle?" (ending at tick 5), the child's "bottle" 2 ticks after it."""
+        con = C.Conduct(seed=3, transcriber=Transcriber(None), imperfect=False)
+        _no_sets(con, ("duck", "ball", "cup", "block", "block_red", "bottle"))
+        con.routine = "feed"
+        things = TOYS + seen(("bottle", "bottle", "", "hand" if holds else "mat", True))
+        pp = lambda t: P(t, seen=things, child_holds=("bottle",) if holds else ())      # noqa: E731
+        con._say(TP.Line("more bottle?", "feed_more", "comfort", "bottle", "bottle", ()), 0, pp(0), C.Say())
+        judg = []
+        for t in range(1, 40):
+            s = con.tick(t, pp(t), token=LX.WORD_ID["bottle"] if t == 7 else None)
+            judg += s.judgments
+        return con, judg
+    con, judg = feed(False)
+    assert judg == [] and not con.ledger.trials and con.ledger.standing("bottle")["asks"] == [], judg
+    con, judg = feed(True)                                                    # in its hand: an echo of a right name
+    assert judg == [(2, "echo", "bottle")] and con.ledger.words["bottle"]["says"]["token"] == [], judg
+    # the verifier's probe: "a duck." ending at tick 5, the child's "duck" at tick 9 while its head is on the duck: an echo
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), imperfect=False)
+    _no_sets(con)
+    con._say(TP.Line("a duck.", "label", "plain", "duck", "duck", ("duck",)), 0, P(0, child_target="duck"), C.Say())
+    judg, heard = [], []
+    for t in range(1, 30):
+        s = con.tick(t, P(t, child_target="duck"), token=LX.WORD_ID["duck"] if t == 9 else None)
+        judg += s.judgments
+        heard += s.heard
+    st = con.ledger.words["duck"]
+    assert heard and heard[0].echo and judg == [(2, "echo", "duck")], (heard, judg)
+    assert st["says"]["token"] == [] and st["echoes"]["token"] == 1 and st["asks"] == [], st
+    # a name ask answered by an echo: smiled at, but void in the ledger, never met
+    con = C.Conduct(seed=6, transcriber=Transcriber(None), imperfect=False)
+    _no_sets(con)
+    con._say(TP.Line("a cup.", "label", "plain", "cup", "cup", ("cup",)), 0, P(0), C.Say())
+    for t in range(1, 7):
+        con.tick(t, P(t))
+    con._say(TP.Line("what is it?", "ask_what", "question", None, None, ("cup",)), 7, P(7), C.Say())
+    opened = con.pending["open"]
+    judg = []
+    for t in range(8, 40):
+        s = con.tick(t, P(t), token=LX.WORD_ID["cup"] if t == opened else None)     # begun as it was heard, 10 after her "cup"
+        judg += s.judgments
+    assert judg == [(2, "echo", "cup")] and con.pending is None and con.ledger.trials == [], (judg, con.pending)
+    # never "understood" by echoes: ten echoes of "duck" with the duck in view and attended
+    led = Ledger()
+    for i in range(10):
+        led.accepted(ChildWord(100 + 30 * i, "token", "duck", True, 99 + 30 * i, 100 + 30 * i, ("duck",), True),
+                     P(100 + 30 * i, child_target="duck"))
+    assert not led.understood("duck") and led.standing("duck")["asks"] == [] and not led.says("duck", "token")
+    print("35 echoes: 'more?' at the feed is the feed's line, never an ask (no trial; its echo of 'bottle' no met ask); 'a "
+          "duck.' then the child's 'duck' 4 ticks after it: an echo, smiled at as imitation (2, 'echo'), never toward 'says' "
+          "or 'understood'; 'what is it?' answered by an echo of her own 'cup': smiled at, the ask void, never met; ten "
+          "echoes understand nothing")
+
+
+def test_claude_shows_and_forms():
+    """finding 6 (low): Claude's "look! the X." and "see the X!" passed as shows, past the 40-tick redirect rule and the 2 to 1
+    ratio of follow-in naming to redirects; and CLAUDE_FORMS let "a mama?", "the mama.", "see see see!" and "uh see look."
+    through."""
+    drum = TOYS + seen(("drum", "drum", "cyan", "mat", True))
+
+    def steer(texts, stream, follow_in=0):
+        con = _perfect(seed=1)
+        _no_sets(con)
+        con.fast.follow_in = follow_in
+        for x in texts:
+            con.fast.add_steer(x, "any", 0)
+        said, _ = run(con, stream)
+        return con, [(t, ln.text) for t, ln in said if ln.source == "claude"]
+    duck = [P(t, child_target="duck", seen=drum) for t in range(60)]
+    con, said = steer(["look! the drum.", "see the drum!"], duck)
+    assert not said, f"Claude's shows of the drum, the child on the duck, were said: {said}"
+    assert any("does not attend" in r[2] and "40 ticks" in r[2] for r in con.fast.refused), con.fast.refused[-2:]
+    nothing = [P(t, child_target=None, seen=drum) for t in range(120)]
+    con, said = steer(["look! the drum."], nothing)
+    assert not said and any("2 to 1" in r[2] for r in con.fast.refused), (said, con.fast.refused[-1:])
+    con, said = steer(["look! the drum.", "see the drum!"], nothing, follow_in=2)
+    assert [x for _t, x in said] == ["look! the drum."] and said[0][0] >= K.REDIRECT_AFTER and con.fast.redirects == 1, said
+    con, said = steer(["look! the drum.", "see the drum!"], nothing, follow_in=4)
+    assert len(said) == 2 and con.fast.redirects == 2, said
+    con, said = steer(["look! the duck.", "a duck."], duck)                  # the duck it attends: follow-in naming
+    assert len(said) == 2 and con.fast.follow_in == 2 and con.fast.redirects == 0, said
+    # the fast layer's own redirect keeps the ratio too
+    con = _perfect(seed=1)
+    for t in range(60):
+        if t == 45:
+            con.request("redirect", o="drum")
+        con.tick(t, P(t, child_target=None, seen=drum))
+    assert any("2 to 1" in r[2] for r in con.fast.refused if r[1] == "redirect"), con.fast.refused[-2:]
+    # CLAUDE_FORMS as stated
+    p = P(0, child_target="duck", child_holds=("cup",), seen=drum)
+    for text in ("a mama?", "the mama.", "see see see!", "uh see look.", "the duck?", "a duck?", "here is red.",
+                 "the duck is on the mama.", "the duck is on the hand.", "a foot.", "the foot.", "your mat.", "oh oh.",
+                 "a mat.", "uh."):
+        ok, why = TP.check(text, VOCAB + ("red",), None, p, (), source="claude")
+        assert not ok and "her word" not in why, f"Claude's {text!r} passed ({why!r})"
+    for text in ("mama.", "uh oh.", "oh!", "see?", "see? the duck.", "the duck!", "your foot.", "the mat.", "your cup.",
+                 "you see the drum?", "it is a duck.", "the cup is on the mat."):
+        ok, why = TP.check(text, VOCAB, None, P(0, child_target="duck", child_holds=("cup",), seen=drum[:2] + seen(
+            ("cup", "cup", "green", "mat", True), ("drum", "drum", "cyan", "mat", True))), (), source="claude")
+        assert ok, (text, why)
+    print("36 Claude's shows: 'look! the drum.' and 'see the drum!' with the child on the duck are redirects: refused before 40 "
+          "ticks with no target, and after them until the day's follow-in namings are 2 to 1 (2 allow one, 4 two); naming "
+          "the duck it attends is follow-in naming, counted; the fast layer's own redirect keeps the ratio; CLAUDE_FORMS as "
+          "stated: 'a mama?', 'the mama.', 'see see see!', 'uh see look.', a question, 'here is red.', 'on the mama' refused, "
+          "'mama.', 'uh oh.', 'see? the duck.' said")
+
+
+def test_imperfect_parent_and_talk_over():
+    """finding 6 (low): A52 was not built (REPLY_AFTER a fixed 3), and stage 2 had no "no." for talking over her (4.4's register
+    table). Now her latency is drawn from human switching pauses, she misses a share of the turns she makes no judgment of,
+    she copies its arm and hand movements, and stage 2 answers a talk-over with the frown and "no."."""
+    act = np.array([4, 4, 2, 4, 2, 2, 2, 4, 2, 0])
+
+    def talk(stage, nonstop=False):
+        tract = T.Tract(1)
+        on = (lambda t: t % 10 < 8) if nonstop else (lambda t: 6 <= t < 9)
+        snd = {t: tract.tick(act if on(t) else None) for t in range(80)}
+        con = _perfect(seed=2, transcriber=Transcriber(None), stage=stage)
+        if nonstop:
+            con.nonstop_since, con.sound_hist = 0, [True] * K.NONSTOP[1]
+        con.request("call")
+        out = []
+        for t in range(80):
+            s = con.tick(t, P(t, child_target=None), tract=snd[t])
+            out.append(s)
+        return con, out
+    con, out = talk(2)
+    cut = [t for t, s in enumerate(out) if s.cut]
+    assert cut and getattr(out[cut[0]], "frown", None) == "talk_over", "stage 2's talk-over: no frown"
+    after = [(t, s.line) for t, s in enumerate(out) if s.line is not None and t > cut[0]]
+    assert after and after[0][1].text == "no." and after[0][1].register == "no" and \
+        not [j for s in out for j in s.judgments], after[:1]
+    con, out = talk(1)
+    assert [s.frown for s in out if s.cut] == [None] and not [s for s in out if s.line is not None and s.line.text == "no."]
+    con, out = talk(2, nonstop=True)
+    assert [s for s in out if s.cut] and not [s.frown for s in out if s.frown], "a frown for babble that never stops"
+    for stage, want in ((1, (None, "oh!")), (2, ("hit", "no."))):              # being hit by its own act (4.10)
+        con = _perfect(seed=2, stage=stage)
+        s = con.tick(0, P(0, events=(("hit_her", None),)))
+        assert (s.frown, s.line.text) == want, (stage, s.frown, s.line)
+    # her latency: Gratier et al. 2015's switching pauses less the turn's 2 quiet ticks, at least 1; fixed only when made perfect
+    con = C.Conduct(seed=7)
+    lat = np.array([con._latency() for _ in range(4000)])
+    assert lat.min() == 1 and 2.9 < lat.mean() < 3.4 and np.median(lat) == 2, (lat.min(), lat.mean(), np.median(lat))
+    assert C.Conduct(seed=7, imperfect=False)._latency() == K.REPLY_AFTER
+    lat2 = np.array([C.Conduct(seed=7)._latency() for _ in range(3)])
+    assert lat2.tolist() == [lat[0]] * 3
+    # misses: of 200 unjudged turns (a word it says of nothing it attends) about 30% get no reply; a judged turn always one
+    con = C.Conduct(seed=11, transcriber=Transcriber(None))
+    _no_sets(con)
+    replies, n = 0, 200
+    for i in range(n):
+        t0 = 100 * i
+        con.tick(t0, P(t0, child_target=None), token=LX.WORD_ID["ball"])
+        due = con.reply_due
+        replies += due is not None
+        if due is not None:
+            assert 1 <= due["tick"] - t0 <= 20, due
+        for t in range(t0 + 1, t0 + 30):
+            con.tick(t, P(t, child_target=None))
+    assert con.turns == [replies, n - replies] and abs((n - replies) / n - K.MISS_TURN) < 0.1, (con.turns, replies)
+    con = C.Conduct(seed=11, transcriber=Transcriber(None))
+    _no_sets(con)
+    for i in range(60):
+        t0 = 100 * i
+        s = con.tick(t0, P(t0, child_target="mama"), token=LX.WORD_ID["mama"])        # a right name each time
+        assert s.judgments and con.reply_due is not None, (i, s.judgments)
+        for t in range(t0 + 1, t0 + 30):
+            con.tick(t, P(t, child_target="mama"))
+    assert con.turns == [0, 0]
+    # a miss never touches a judgment: the reply owed to a met ask this tick stands when the child's turn is missed
+    for seed in range(40):
+        con = C.Conduct(seed=seed)
+        st = con.imp.bit_generator.state
+        con._latency()
+        missed = con.imp.random() < K.MISS_TURN
+        con.imp.bit_generator.state = st
+        if missed:
+            break
+    due = dict(tick=5, kind="confirm", word="ball", obj="ball")
+    con.reply_due = dict(due)
+    con._owe_reply(5, ChildWord(5, "tract", None, False, 1, 5), P(5), C.Say())
+    assert missed and con.reply_due == due and con.turns == [0, 1], (con.reply_due, con.turns)
+    # copying: its left arm raised, her right arm raised within 1-2 s; another movement within her gap not copied; none while
+    # an ask is pending
+    con = C.Conduct(seed=3)
+    copies, gap, before150 = [], None, None
+    for t in range(200):
+        ev = (("arm_raise", "left"),) if t in (10, 14) else ((("wave", "right"),) if t == 150 else ())
+        s = con.tick(t, P(t, child_target=None, events=ev))
+        copies += [(t, a) for a in s.copy]
+        if t == 10:
+            gap = con.copy_next
+        if t == 149:
+            before150 = con.copy_next
+    assert copies and copies[0][1] == C.Act("copy", "arm_raise:right") and 7 <= copies[0][0] - 10 <= 13, copies
+    assert len([c for c in copies if c[1].target.startswith("arm_raise")]) == 1 + (14 >= gap), (copies, gap)
+    assert len([c for c in copies if c[1] == C.Act("copy", "wave:left")]) == (150 >= before150), (copies, before150)
+    con = C.Conduct(seed=3, transcriber=Transcriber(None))
+    _no_sets(con)
+    con.request("ask_where", o="ball")
+    copies = []
+    for t in range(40):
+        s = con.tick(t, P(t, child_target=None, events=(("wave", "left"),) if t == 3 else ()))
+        copies += s.copy
+    assert not copies, copies
+    gaps = []
+    con = C.Conduct(seed=5)
+    last = None
+    for t in range(20000):
+        s = con.tick(t, P(t, child_target=None, events=(("wave", "left"),) if t % 5 == 0 else ()))
+        for _a in s.copy:
+            if last is not None:
+                gaps.append(t - last)
+            last = t
+    rate = len(gaps) / (20000 * 0.15 / 60)
+    assert 4.0 < rate < 7.0, rate
+    print(f"37 stage 2's talk-over: stopped, the frown and 'no.' (the 'no.' register), the turn not judged; none in stage 1 "
+          f"or for babble that never stops; her latency {lat.mean():.2f} ticks after the turn's end on average (median "
+          f"{np.median(lat):.0f}, 1 to {lat.max()}; Gratier et al. 2015), exact from her seed; {n - replies} of {n} unjudged "
+          f"turns missed ({K.MISS_TURN:.0%} declared; Gros-Louis et al. 2006), no judged turn missed; its raised left arm "
+          f"copied with her right within 1-2 s, another only once her gap had passed, none during an ask; {rate:.1f} copies a "
+          f"minute "
+          f"when it waves every 5 ticks (Pawlby 1977's about 6)")
+
+
 def _have_engine():
     return sys.platform == "darwin" and shutil.which("swiftc") is not None
 
@@ -1544,7 +2087,9 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_ear_exact_across_threads, test_approximation_in_context, test_asks_answered, test_cut_words_not_said,
          test_new_words_in_a_day, test_acts_carry_the_object, test_line_check_truth, test_small_items,
          test_replay_across_processes, test_claude_never_asks, test_name_ask_answered_after_its_question,
-         test_calls_out_of_sight, test_introduce_only_what_she_can_show, test_give_before_its_word, test_ear_deliberate_writes]
+         test_calls_out_of_sight, test_introduce_only_what_she_can_show, test_give_before_its_word, test_ear_deliberate_writes,
+         test_gaze_leak_closed, test_new_word_on_its_peak, test_reads_trunk_and_hands, test_held_pairs_a55, test_echoes,
+         test_claude_shows_and_forms, test_imperfect_parent_and_talk_over]
 
 if __name__ == "__main__":
     t0 = time.time()

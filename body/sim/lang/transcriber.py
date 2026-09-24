@@ -21,9 +21,10 @@ has two outputs, and she reads both here, on the world's side:
 A ChildWord's echo mark: said within ECHO_WINDOW = 10 ticks of her saying that word (4.8: it counts only as an echo, never toward
 "says"). The ledger keeps the two channels apart from birth (A26).
 
-expected_words() is A27's list, fixed before birth: the names of what is in the child's fovea or hand ("mama" when its fovea is on
-her face), the word of a pending ask, the focus word of her last line, the words of the routine under way (consts.EXPECT_ROUTINES),
-and "mama" while she is away or out of its view; kept to her words, in their order.
+expected_words() is A27's list, fixed before birth: the names of what she reads the child attending, where its head's line is,
+in its hand or reached toward ("mama" when she reads it looking at her face; A40: never its fovea's window), the word of a pending
+ask, the focus word of her last line, the words of the routine under way (consts.EXPECT_ROUTINES), and "mama" while she is away
+or out of its view; kept to her words, in their order.
 
 Nothing here draws a random number. state() and load_state() carry an utterance under way, the letters read so far and the tokens
 held during her line, so a replay continues exactly.
@@ -58,16 +59,7 @@ class ChildWord:
 
 def expected_words(p, pending, last_focus, routine, vocab):
     """A27's expected set for this moment, kept to her words, in their order."""
-    exp = set()
-    tg = p.target_obj()
-    if tg is not None:
-        exp.add(tg.name)
-    if p.child_target == "mama":
-        exp.add(LX.PARENT_NAME)
-    for h in p.child_holds:
-        o = p.obj(h)
-        if o is not None:
-            exp.add(o.name)
+    exp = set(p.attended_names())                    # its head's line, its hands, as she reads them (A40); "mama" at her face
     if pending is not None and pending.get("word"):
         exp.add(pending["word"])
     if last_focus:
@@ -220,8 +212,9 @@ class Transcriber:
         near = set()
         if p is not None:
             for o in p.seen:
-                if o.child_sees or o.id in p.child_holds or o.id == p.child_target:
+                if o.child_sees:
                     near.add(o.name)
+            near |= {o.name for o in p.attended()}
         w, exact, how = read_letters(s, vocab, near)
         return [ChildWord(t, "token", w, exact, start, t, tuple(expected), self._echo(w, start, said_word), True,
                           dict(letters=s, read=how))]
