@@ -1,0 +1,135 @@
+"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's step R1). Run: python3 -m body.tests.test_anatomy (the
+organ tests run these too). `LanguageAnatomy(tok, cfg)` must rebuild exactly the symbols a life derives from its tokenizer today, under
+every constant that moves them and on a tokenizer laid out otherwise, and building it must leave the body untouched."""
+import os
+import pickle
+import sys
+import time
+
+import torch
+from tokenizers import Tokenizer, models
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, ROOT)   # this tree's body, not a fixed one
+from body.life import Life, PHYSIOLOGY  # noqa: E402
+from body.core.anatomy import Anatomy, Channel, Effector, LanguageAnatomy, RewardSource  # noqa: E402
+
+TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
+FIELDS = ("sil", "nl", "space_id", "eot", "end_id", "reserved", "bans")
+
+
+def _born(tok, cfg):
+    return Life.birth(tok, device="cpu", d=64, layers=2, heads=2, window=32, cfg=cfg, seed=0)
+
+
+def _served_cfg():
+    """the served save's constants as the determinism check's pins froze them (tools/pins/served_cfg.pkl), the physiology's keys"""
+    p = os.path.join(ROOT, "tools", "pins", "served_cfg.pkl")
+    if not os.path.exists(p):
+        return None
+    with open(p, "rb") as f:
+        return {k: v for k, v in pickle.load(f).items() if k in PHYSIOLOGY}
+
+
+def _toy_tok():
+    """a tokenizer laid out otherwise: the rest not at 0, a special after the letters, no display symbol"""
+    return Tokenizer(models.WordLevel(vocab={"a": 0, "<rest>": 1, " ": 2, "<z>": 3, "b": 4, "<end>": 5, "c": 6}, unk_token="<z>"))
+
+
+def _same(a, life, label):
+    for f in FIELDS:
+        got, want = getattr(a, f), getattr(life, f)
+        assert type(got) is type(want) and got == want, f"{label}: {f} is {got!r}, the life derives {want!r}"
+    assert a.vocab == life.m.vocab == a.tok.get_vocab_size(), f"{label}: vocab {a.vocab}, the organs' {life.m.vocab}"
+    ear, face, voice = a.channel("ear"), a.channel("face"), a.effectors[0]
+    assert (ear.kind, ear.size, ear.rest_id, ear.end_id, ear.reserved, ear.partner) == ("symbol", life.m.vocab, life.sil, life.end_id, life.reserved, True), label
+    assert a.partner is ear and a.channels == [ear, face] and (face.kind, face.size, face.partner) == ("vector", 2, False), label
+    assert (voice.name, voice.factors, voice.rest_id, voice.end_id, voice.reserved) == ("voice", [life.m.vocab], life.sil, life.space_id, life.bans), label
+    assert [s.name for s in a.rewards] == ["face", "world_r", "cost"], label
+    a.check()
+
+
+def test_language_anatomy_equals_the_tokenizers_fields():
+    """anatomy 1: under the physiology's defaults, the served constants and every constant that names a symbol, on the served tokenizer
+    and on one laid out otherwise, LanguageAnatomy's symbols are the life's own (built from the cfg given, and from the life's cfg)"""
+    cases = [("the physiology", TOK, {}), ("end_symbol eot", TOK, dict(end_symbol="eot")),
+             ("another rest, no display symbol", TOK, dict(rest_token="<eot_model>", display_token="\t", end_symbol="eot")),
+             ("a rest the tokenizer lacks", TOK, dict(rest_token="<none>")),
+             ("the toy tokenizer", _toy_tok(), dict(rest_token="<rest>", end_token="<end>", end_symbol="eot")),
+             ("the toy tokenizer, rest as the end", _toy_tok(), dict(rest_token="<rest>", end_token="<end>", display_token="c"))]
+    sc = _served_cfg()
+    if sc is not None:
+        cases.append(("the served constants (tools/pins/served_cfg.pkl)", TOK, sc))
+    for label, tok, cfg in cases:
+        life = _born(tok, cfg)
+        _same(LanguageAnatomy(tok, cfg), life, label)
+        _same(LanguageAnatomy(tok, life.cfg), life, label + " (the life's cfg)")
+    # the served tokenizer today, written out: 107 symbols, the rest <pad> at 0, <eot_human> at 1, the space 105, the newline 106,
+    # the reserved the ten other <...> tokens and the newline; the end the rest under the physiology (end_symbol "rest")
+    a = LanguageAnatomy(TOK, {})
+    assert (a.vocab, a.sil, a.eot, a.space_id, a.nl, a.end_id) == (107, 0, 1, 105, 106, 0), (a.vocab, a.sil, a.eot, a.space_id, a.nl, a.end_id)
+    assert a.reserved == a.bans == list(range(1, 11)) + [106] and a.reserved is not a.bans, (a.reserved, a.bans)
+    print("anatomy 1: LanguageAnatomy's symbols equal the life's under", len(cases), "constant sets and two tokenizers;",
+          "today: vocab 107, rest 0, eot 1, space 105, newline 106, reserved 1-10 and 106" + ("" if sc is not None else " (no served pins here)"))
+
+
+def test_language_anatomy_is_inert():
+    """anatomy 2 (SIM_DESIGN.md 8.3 item 4): building the language anatomy draws no random number, builds no module and moves no
+    part of a life born beside it"""
+    life = _born(TOK, {})
+    g0, l0 = torch.get_rng_state().clone(), life.gen.get_state().clone()
+    sd0 = {k: v.clone() for k, v in life.m.state_dict().items()}; v0 = sorted(vars(life))
+    a = LanguageAnatomy(TOK, life.cfg)
+    assert torch.equal(g0, torch.get_rng_state()) and torch.equal(l0, life.gen.get_state()), "building the anatomy drew a random number"
+    assert sorted(vars(life)) == v0 and all(torch.equal(sd0[k], v) for k, v in life.m.state_dict().items()), "building the anatomy moved the life"
+    parts = [a, *a.channels, *a.effectors, *a.rewards]
+    mods = [(type(p).__name__, k) for p in parts for k, v in vars(p).items() if isinstance(v, (torch.nn.Module, torch.Tensor))]
+    assert not mods, f"the anatomy holds modules or tensors before a life binds them: {mods}"
+    print("anatomy 2: building it draws no random number, builds no module, moves nothing of the life")
+
+
+def test_anatomy_check():
+    """anatomy 3: the declaration's own check refuses two partners, a rest that is reserved, a symbol outside the alphabet, an
+    unknown kind, a name twice, no effector, and a reward source reading an unknown constant"""
+    def ok():
+        return Anatomy([Channel("ear", "symbol", 5, rest_id=0, end_id=1, reserved=[4], partner=True), Channel("face", "vector", 2)],
+                       [Effector("voice", [5], rest_id=0, end_id=2, reserved=[4])], [RewardSource("face"), RewardSource("cost", ("symbol_cost",))])
+    ok().check()
+    bad = []
+    a = ok(); a.channels[1].partner = True; bad.append(("two partners", a))
+    a = ok(); a.channels[0].reserved = [0]; bad.append(("the rest reserved", a))
+    a = ok(); a.channels[0].end_id = 5; bad.append(("a symbol outside", a))
+    a = ok(); a.effectors[0].reserved = [7]; bad.append(("an act outside", a))
+    a = ok(); a.channels[1].kind = "image"; bad.append(("an unknown kind", a))
+    a = ok(); a.channels[1].name = "ear"; bad.append(("a name twice", a))
+    a = ok(); a.effectors = []; bad.append(("no effector", a))
+    a = ok(); a.rewards[1].keys = ("symbol_cots",); bad.append(("an unknown constant", a))
+    for label, a in bad:
+        try:
+            a.check()
+        except ValueError:
+            continue
+        raise AssertionError(f"the check let pass {label}")
+    for call in (lambda: Channel("x", "symbol", 3).encode(1), lambda: Effector("v", [3]).gate_inputs(None, None),
+                 lambda: Effector("v", [3]).cost(0, None), lambda: RewardSource("r").felt(None, None)):
+        try:
+            call()
+        except NotImplementedError:
+            continue
+        raise AssertionError("a method not yet wired answered")
+    print("anatomy 3: the check refuses", len(bad), "faulty declarations; the methods of later steps are not yet wired")
+
+
+ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check]
+
+if __name__ == "__main__":
+    t0 = time.time(); failed = 0
+    for t in ANATOMY_TESTS:
+        try:
+            t()
+        except AssertionError as e:
+            failed += 1; print("FAIL", t.__name__, ":", e)
+        except Exception as e:
+            failed += 1; print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
+    print(f"{len(ANATOMY_TESTS) - failed}/{len(ANATOMY_TESTS)} passed in {time.time() - t0:.0f}s")
+    sys.exit(1 if failed else 0)

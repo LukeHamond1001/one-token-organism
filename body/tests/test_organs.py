@@ -2339,6 +2339,8 @@ if __name__ == "__main__":
     tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield, test_the_turns_readiness, test_the_quiet_foreseen, test_the_replys_readiness, test_the_turns_floor, test_the_continuation_gated, test_the_tag_at_entry, test_the_night_on_the_gpu]
     tests += [test_pace_trackers_learn_the_partner, test_pace_what_is_not_a_pause, test_pace_pause_outlasted, test_pace_reply_ready, test_pace_turn_wait_alone,
               test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing, test_pace_false_ends_and_settling, test_pace_edges, test_pace_end_by_its_own_measure]
+    from body.tests.test_anatomy import ANATOMY_TESTS    # the anatomy declared (docs/SIM_DESIGN.md 8.2; the core refactor, step R1)
+    tests += ANATOMY_TESTS
     failed = 0
     for t in tests:
         try:

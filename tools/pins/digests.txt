@@ -1,0 +1,37 @@
+# THE LANGUAGE BODY'S PINNED DIGESTS (docs/SIM_DESIGN.md 8.3; taken in the core refactor's step R1, 2026-09-23 20:35-21:00 CDT)
+# Recorded on main's unchanged body/ (commit c39836d); every refactor commit must reproduce every line exactly. Never re-pinned, except
+# when a language core fix is rebased in from main (8.3 item 5), with the pins re-taken at that commit.
+#
+# How each is run: from the MAIN tree's directory (the flags name data/stories_valid.txt relatively), the check of the tree under test
+# (it imports that tree's body; with no --flags it reads that tree's own ops/BASE_FLAGS.txt, and a relative --cfg is read from that
+# tree too), at nice -n 19. Pass no --flags: main's flags may change during the refactor, the branch's copy stays as at c39836d (a flags
+# change brought in by a rebase from main moves these pins as a core fix does, and they are re-taken at that commit):
+#   cd /Users/lukehamond/Projects/project && nice -n 19 python3 <tree>/tools/determinism_check.py <args>                                  (threaded)
+#   cd /Users/lukehamond/Projects/project && OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 nice -n 19 python3 <tree>/tools/determinism_check.py <args>  (pinned)
+# threaded = torch's default (4 threads on this Mac, as the served body runs); the digest depends on the thread count.
+# Lines of the check that begin 'load: ' are the loader's notes and are not part of the result.
+#
+# served_cfg.pkl: the cfg dict of the served save data/watch2.pt (written 2026-09-23 18:39), read as the check reads a save (no tensor
+# read), 217 keys, pickle protocol 4,
+# sha256 637a19959cca9d59d266adfc8b4093a1b81394be32acb0d237a27bf281c05fcb.
+# With the tree's ops/BASE_FLAGS.txt it gives the constants 458595067029 (served) and 81de6471d00b (switches), as the live save did;
+# the default profile reads the flags alone (constants 92e828037353).
+# Taken with python 3.14.3, torch 2.12.0, tokenizers 0.22.2 (macOS, arm64).
+#
+# digest  <profile> <threads> <digest> consts <consts> | <args>
+digest  default               threaded 7c54199e3c72cf77d45a8e94 consts 92e828037353 | (none)
+digest  served                threaded fc81c03dec606afb62c3fc35 consts 458595067029 | --profile served --cfg tools/pins/served_cfg.pkl
+digest  switches              threaded ab1ab46751b11b314dfc78c2 consts 81de6471d00b | --profile switches --cfg tools/pins/served_cfg.pkl
+digest  served_full_roundtrip threaded c4730b232091fe229ee286dc consts 458595067029 | --profile served --full --roundtrip --cfg tools/pins/served_cfg.pkl
+digest  default               pinned   fbe9e6b330f44e7424f113f3 consts 92e828037353 | (none)
+digest  served                pinned   f507fb9c6c55649ddd39f917 consts 458595067029 | --profile served --cfg tools/pins/served_cfg.pkl
+digest  switches              pinned   14de2b131ce4b2874ca0ad95 consts 81de6471d00b | --profile switches --cfg tools/pins/served_cfg.pkl
+digest  served_full_roundtrip pinned   823431e80a08f197ee086884 consts 458595067029 | --profile served --full --roundtrip --cfg tools/pins/served_cfg.pkl
+#
+# the --full section digests of served --full --roundtrip (a moved digest is placed by the section that moved)
+full    served_full_roundtrip threaded organs 8414b8e3ed5c store 7289e42bf9eb saved d944f2d765ca optim e2950bfff042 rng fe1a46550557 work 04b573d4d5a1
+full    served_full_roundtrip pinned   organs 95ec3c662b36 store 4170ab1c13bc saved 10ca0e063529 optim ded9b1951a94 rng fe1a46550557 work f94f538e4a21
+#
+# the round trip's fixed point (known: a newborn store under store_sat 1 is never marked converted, so its first reload compresses it once)
+lost    served_full_roundtrip threaded store.S, store.sat
+lost    served_full_roundtrip pinned   store.S, store.sat

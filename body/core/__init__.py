@@ -10,6 +10,8 @@ actor.py        the chooser's eligibility and lesson, the actor's reliability
 night.py        dreams, night (NREM, REM, the value replay, the fade), the night's device, the sleep switch's call
 persistence.py  save, load, birth
 instruments.py  _bookkeep (the page, the record, the sleep switch), gauge, state, anticipation, insides
+anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
+                8.2), step R1 of the core refactor, not yet used by `Life`
 
 Every method was moved verbatim; `Life` keeps `__init__` (the organs and the state, in their order) and `tick`. The mixins hold no
 state and no class attributes, and no method name is defined twice, so the order of the bases decides nothing.
