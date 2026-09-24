@@ -20,7 +20,9 @@ WHERE THE METHODS LIVE (the split of 2026-09-23, review 2026-09-22 section 4, st
 `tick()` and the read-only `tok` (the anatomy's tokenizer; the core refactor's step R2, docs/SIM_DESIGN.md 8.4); every other method
 was moved verbatim into a mixin in body/core/ (its __init__.py has the map): senses, memory, cortex, mouth, critics, actor, night,
 persistence and instruments, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here; the anatomy, the body's senses,
-effectors and reward sources declared, is body/core/anatomy.py, and the frame, the world at one tick, body/core/world.py."""
+effectors and reward sources declared, is body/core/anatomy.py, and the frame, the world at one tick, body/core/world.py. Since step
+R4 the window holds each of the anatomy's channels under its field and the cortex's input is their codes summed in the anatomy's
+order (`Organs.inputs(anatomy, obs, own, bundles)`)."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401
@@ -58,6 +60,17 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         # (body/core/anatomy.py). `tok` is what the callers always passed: a tokenizer builds the diary's LanguageAnatomy under this
         # life's constants; an anatomy may stand in its place. The tokenizer stays inside the language anatomy, for text only.
         self.anatomy = anatomy_for(tok, self.cfg)
+        # ITS CHANNELS IN THE ORGANS (step R4): each channel's code is made by the organ it names, and each later channel that declares
+        # a forecast has its head (Organs(..., channels=anatomy.channels) builds them); read here, nothing kept
+        for i_, c_ in enumerate(self.anatomy.channels):
+            if not isinstance(getattr(organs, c_.organ, None), torch.nn.Module):
+                raise ValueError(f"Life: the channel {c_.name!r} is encoded by the organ {c_.organ!r}, which these organs do not have")
+            if i_ and c_.forecast and c_.name not in getattr(organs, "chan_pred", {}):
+                raise ValueError(f"Life: the channel {c_.name!r} declares a forecast, and these organs have no head for it "
+                                 f"(built by Organs(..., channels=anatomy.channels))")
+        _undeclared = sorted(set(getattr(organs, "chan_pred", {}).keys()) - {c_.name for c_ in self.anatomy.channels[1:] if c_.forecast})
+        if _undeclared:
+            raise ValueError(f"Life: the organs hold forecast heads for channels the anatomy does not declare: {_undeclared}")
         vb = str(self.cfg.get("vcrit_bands", "") or "").strip()
         if vb:
             with torch.no_grad():

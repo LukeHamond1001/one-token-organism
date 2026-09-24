@@ -1,7 +1,8 @@
 """the body on disk (a mixin of `Life`, body/life.py): `save`, `load` (a reload: the save's own constants, then the caller's) and
 `birth`. `load` and `birth` are classmethods: `cls` is `Life`. Their `tok` is what it always was, a tokenizer, or an anatomy in its
 place (the core refactor's step R2): the life builds its anatomy from it (body/core/anatomy.py `anatomy_for`), and a birth sizes the
-organs' alphabet from that anatomy.
+organs' alphabet from that anatomy. Both build the anatomy before the organs (a load under the save's constants, then the caller's), so
+the organs build the forecast heads its later channels declare (step R4; the diary declares none).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import os
@@ -40,7 +41,13 @@ class PersistenceMixin:
     def load(cls, path, tok, device="cpu", cfg=None, seed=0, save_path=None):
         blob = torch.load(path, map_location="cpu", weights_only=False)
         a = blob["arch"]
-        organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]))
+        c = dict(blob.get("cfg") or {})
+        c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
+        c.update(cfg or {})
+        anatomy = anatomy_for(tok, c)                     # the body's anatomy under the save's constants, then the caller's (no draw), before
+                                                          # the organs: a later channel's forecast head is built with them (step R4)
+        organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]),
+                        channels=anatomy.channels)
         w = blob["organs"].get("mouth_gate.weight")
         if w is not None and w.shape[1] > organs.mouth_gate.weight.shape[1]:
             organs.widen_gate(w.shape[1] - organs.mouth_gate.weight.shape[1])   # a body with the ear
@@ -56,10 +63,7 @@ class PersistenceMixin:
         missing = organs.load_state_dict(blob["organs"], strict=False)
         if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("wm_"))]:
             print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
-        c = dict(blob.get("cfg") or {})
-        c.setdefault("gate_int_form", "value")            # an older body keeps the value form and its own drive unless told
-        c.update(cfg or {})
-        life = cls(organs, tok, cfg=c, device=device, seed=seed, save_path=save_path or path)
+        life = cls(organs, anatomy, cfg=c, device=device, seed=seed, save_path=save_path or path)
         saved_norm = vc_saved.get("vc_mu") is not None and vc_saved["vc_mu"].numel() > 0; norm_on = int(c.get("vcrit_norm_tau", 0)) > 0
         saved_form = float(vc_saved["vc_form"]) if vc_saved.get("vc_form") is not None else 1.0
         if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved.get("vc_A") is not None and vc_saved["vc_A"].shape == life.m.vc_A.shape and saved_norm == norm_on and (not norm_on or saved_form == float(life.m.vc_form)):
@@ -160,5 +164,6 @@ class PersistenceMixin:
     def birth(cls, tok, device="cpu", d=256, layers=6, heads=4, window=64, cfg=None, seed=0, save_path=None):
         torch.manual_seed(int(seed))
         anatomy = anatomy_for(tok, cfg)                 # the body's anatomy (a tokenizer's: the diary's); built with no draw, before the organs
-        organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])))
+        organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])),
+                        channels=anatomy.channels)       # a later channel's forecast head built last (step R4); the diary declares none
         return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path)

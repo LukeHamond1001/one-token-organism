@@ -2,7 +2,9 @@
 under the key, the contexts move, the waking read, the stream and the forecast), the window as tensors and the stream now, the
 waking lesson (`_wake_lesson`), and the readout's calibrated sharpness (`_sharp_calibrate`).
 
-Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
+Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Since the core refactor's step R4 (docs/SIM_DESIGN.md 8.4) a
+window position holds each of the anatomy's channels under its field, the window's tensors are per channel, the stream's input is
+their codes summed in the anatomy's order (`Organs.inputs`), and the waking lesson teaches a later channel's own forecast head."""
 import torch
 import torch.nn.functional as F
 
@@ -105,24 +107,27 @@ class CortexMixin:
                 read, conf, win_ = (self._recall(self.bag, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
                 self._tire(win_, rt_)
                 self._read = read                              # the latest recall (an instrument's hook)
-            face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
+            # THE POSITION'S CHANNELS (the core refactor's step R4, docs/SIM_DESIGN.md 8.4): each of the anatomy's channels observed at the
+            # position this step opens, under the channel's window field (the diary's: the ear "x", the world's symbol, its rest at a position
+            # its own sound opens; the face "face", [face/6, its change/6])
+            obs_ = {c_.field: c_.observe(self, x, who) for c_ in self.anatomy.channels}
             # THE TICK'S POSITION. The world's symbol opens it. The world's quiet opens nothing yet: the
             # forecast the mouth reads is then the one made at the last filled position, the one
             # holding its own last symbol, which is trained to foresee what follows that symbol. (Read
             # at a freshly appended rest, the forecast was of what follows a pause, and alone the mouth
             # looped on the cue's last word: runs 20 to 22.) Its own half then fills the open position
             # or, the world quiet, opens one of its own; a tick with nothing sounded leaves a rest.
-            entry = {"face": face, "bundle": self.bands.clone(), "read": read.clone(), "r": float(r)}
+            entry = {"bundle": self.bands.clone(), "read": read.clone(), "r": float(r)}
             if who == 0:
                 if x != self.sil or not self.win:
-                    self.win.append({"x": int(x), "xo": self.sil, **entry}); self._pos_open = True
+                    self.win.append({**obs_, "xo": self.sil, **entry}); self._pos_open = True
                 else:
                     self._pos_open = False
             else:
                 if getattr(self, "_pos_open", False):
                     self.win[-1]["xo"] = int(x)                # its own sound joins the world's time step
                 else:
-                    self.win.append({"x": self.sil, "xo": int(x), **entry})
+                    self.win.append({**obs_, "xo": int(x), **entry})
                 self._pos_open = False
             if who == 0 and not self._pos_open and getattr(self, "_C_last", None) is not None:
                 C = self._C_last                               # the last filled position's stream, and its forecast
@@ -142,17 +147,20 @@ class CortexMixin:
         return C, pred, surp, conf
 
     def _window_tensors(self, win=None):
+        """THE WINDOW AS TENSORS, PER CHANNEL (step R4): obs, each of the anatomy's channels by name, its field at every position ([T]
+        symbols of a symbol channel, [T, size] of a vector channel: the diary's ear [T] and face [T, 2]); whos [T] its own symbol at each
+        position; bundles [T, nb, d]; reads [T, d]"""
         win = list(self.win if win is None else win)
-        xs = torch.tensor([w["x"] for w in win], device=self.dev)
+        obs = {c_.name: (torch.tensor([w[c_.field] for w in win], device=self.dev) if c_.kind == "symbol" else torch.stack([w[c_.field] for w in win]))
+               for c_ in self.anatomy.channels}
         whos = torch.tensor([w["xo"] for w in win], device=self.dev)   # its own symbols, one per tick
-        faces = torch.stack([w["face"] for w in win])
         bundles = torch.stack([w["bundle"] for w in win])
         reads = torch.stack([w["read"] for w in win])
-        return xs, whos, faces, bundles, reads
+        return obs, whos, bundles, reads
 
     def _stream_now(self):
-        xs, whos, faces, bundles, reads = self._window_tensors()
-        u = self.m.inputs(xs, whos, faces, bundles, reads)
+        obs, whos, bundles, reads = self._window_tensors()
+        u = self.m.inputs(self.anatomy, obs, whos, bundles)
         return self.m.stream(u)[-1]
 
     # ---------------- the waking cortex ----------------
@@ -160,7 +168,8 @@ class CortexMixin:
         win = list(self.win)[-int(self.cfg["wake_window"]):]
         if len(win) < 8:
             return None
-        xs, whos, faces, bundles, reads = self._window_tensors(win)
+        obs, whos, bundles, reads = self._window_tensors(win)
+        xs = obs[self.anatomy.words.name]                          # the words (channel 0): the world's symbols, the lesson's targets
         T = xs.shape[0]
         # THE TARGET IS THE WORLD'S NEXT SYMBOL at every position: its own symbols and rests are inputs
         # only (one predicts the environment; one's own actions are not the environment). With the
@@ -202,7 +211,7 @@ class CortexMixin:
         m = self.m; m.train()
         try:
             self.opt_day.zero_grad(set_to_none=True)
-            u = m.inputs(xs, whos, faces, bundles, reads)     # the window as lived: its own sound in it, attenuated
+            u = m.inputs(self.anatomy, obs, whos, bundles)     # the window as lived: its own sound in it, attenuated
             C = m.stream(u)
             # the cortex is trained on ITS OWN forecast, day and night alike (predictive coding: each
             # area learns from its own error); recall is a parallel contribution the mouth reads, never
@@ -210,6 +219,14 @@ class CortexMixin:
             # the store missed and undid the night: run 13, day 4)
             pred = m.latent_pred(C)
             ll, lc = m.latent_loss(pred, y, w=w)
+            # THE LATER CHANNELS' FORECASTS (step R4): each later channel that declares a forecast is foreseen by its own head, the
+            # channel's code at the next position as the target (held still: the head learns to foresee the code, not the code to
+            # meet the head), by the squared error latent_loss uses; the diary's face declares none, so its lesson is as before
+            for i_, c_ in enumerate(self.anatomy.channels):
+                if i_ and c_.forecast:
+                    with torch.no_grad():
+                        tgt_ = c_.encode(m, obs[c_.name][1:])
+                    ll = ll + 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
             if str(self.cfg.get("rem_form", "forecast")) == "imagine":
                 fl, fc = torch.zeros((), device=self.dev), 1.0            # the forecast heads retired (§5c: their target was the stream's own dynamics)
             else:

@@ -1027,8 +1027,8 @@ def test_own_speech_target():
         rd, conf, _ = life.store.read(life.bag_w)
         life.win.append({"x": life.sil, "xo": i, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
     # the lesson's own targets: the recall after "give " says "m"
-    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win))
-    T = xs.shape[0]; own = [t for t in range(T) if int(whos[t]) != life.sil]
+    obs, whos, bundles, reads = life._window_tensors(list(life.win))
+    T = obs["ear"].shape[0]; own = [t for t in range(T) if int(whos[t]) != life.sil]
     e_pos = own[-2]                                            # its own 'e' of "give ": the target there is the recall after "give "
     conf_last = float(reads[e_pos + 1].norm()); tgt = TOK.decode([int(life.m.nearest(reads[e_pos + 1]))])
     life._wake_recall_targets = 0
@@ -1095,15 +1095,16 @@ def test_dreams_in_lockstep_equal_one_at_a_time():
         say(life, t)
     dreams = life.dreams(6)
     assert len(dreams) >= 2
-    xs, xos, faces, bundles, reads, y, w = life._dream_batch(dreams)
+    obs, xos, bundles, reads, y, w = life._dream_batch(dreams)
+    xs = obs["ear"]
     with torch.no_grad():
-        Cb = life.m.stream(life.m.inputs(xs, xos, faces, bundles, reads))
+        Cb = life.m.stream(life.m.inputs(life.anatomy, obs, xos, bundles))
         for i, ids in enumerate(dreams):
-            xs1, xos1, faces1, bundles1, reads1, y1 = life._dream_inputs(ids, mem_on=False)
+            obs1, xos1, bundles1, reads1, y1 = life._dream_inputs(ids, mem_on=False)
             L = len(ids)
-            assert torch.equal(xs[i, :L], xs1) and torch.equal(y[i, :L], y1) and float(w[i].sum()) == L
+            assert torch.equal(xs[i, :L], obs1["ear"]) and torch.equal(y[i, :L], y1) and float(w[i].sum()) == L
             assert torch.allclose(bundles[i, :L], bundles1, atol=1e-5)
-            C1 = life.m.stream(life.m.inputs(xs1, xos1, faces1, bundles1, reads1))
+            C1 = life.m.stream(life.m.inputs(life.anatomy, obs1, xos1, bundles1))
             assert torch.allclose(Cb[i, :L], C1, atol=1e-4)
         g_b = life._gauge_batched(dreams); cos_b = life._gauge_cos
         life.cfg["night_batch"] = 0
@@ -1138,7 +1139,8 @@ def test_dreams_know_who_spoke():
     assert len(dreams) == len(owns) and all(len(d) == len(o) for d, o in zip(dreams, owns))
     assert all(not o[0] for o in owns), "a dream starts where the world spoke"
     assert any(any(o) for o in owns), "a world chain runs into its own reply"
-    xs, xos, faces, bundles, reads, y, w = life._dream_batch(dreams, owns)
+    obs, xos, bundles, reads, y, w = life._dream_batch(dreams, owns)
+    xs = obs["ear"]
     for i, (d, o) in enumerate(zip(dreams, owns)):
         for t in range(1, len(d)):
             if o[t - 1]:

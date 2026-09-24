@@ -30,8 +30,9 @@ class SensesMixin:
         if int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
             with torch.no_grad():                            # WORKING MEMORY latches at the world's utterance end (a salience event)
                 self.m.wm_latch(self.m.striatum_read())
+        f_ = self.anatomy.words.field                                  # the words' window field (the diary's "x"; step R4)
         for w in reversed(self.win):
-            if w["x"] != self.sil:
+            if w[f_] != self.sil:
                 w["end"] = True; break
         if self._last_write is not None and not self.cfg.get("store_off"):
             self.store.mark_boundary(*self._last_write)                # the memory of the last symbol carries the boundary

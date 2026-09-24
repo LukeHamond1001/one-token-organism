@@ -63,8 +63,8 @@ t0 = time.time(); surps = []
 with torch.no_grad():
     for i in range(0, len(utts), 32):
         chunk = utts[i:i + 32]
-        xs, xos, faces, bundles, reads, y, w = life._dream_batch(chunk)
-        pred = m.latent_pred(m.stream(m.inputs(xs, xos, faces, bundles, reads)))
+        obs, xos, bundles, reads, y, w = life._dream_batch(chunk)
+        pred = m.latent_pred(m.stream(m.inputs(life.anatomy, obs, xos, bundles)))
         cos = F.cosine_similarity(pred, E[y], dim=-1)
         for j, ids in enumerate(chunk):
             surps.append([float(1.0 - cos[j, t]) for t in range(len(ids))])

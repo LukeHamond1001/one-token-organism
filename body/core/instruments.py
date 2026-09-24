@@ -37,8 +37,8 @@ class InstrumentsMixin:
         bans = [b for b in self.bans if b != self.eot]
         with torch.no_grad():
             for i in range(0, len(dreams), bs):
-                xs, xos, faces, bundles, reads, y, w = self._dream_batch(dreams[i:i + bs], owns[i:i + bs] if owns is not None else None)
-                pred = self.m.latent_pred(self.m.stream(self.m.inputs(xs, xos, faces, bundles, reads)))
+                obs, xos, bundles, reads, y, w = self._dream_batch(dreams[i:i + bs], owns[i:i + bs] if owns is not None else None)
+                pred = self.m.latent_pred(self.m.stream(self.m.inputs(self.anatomy, obs, xos, bundles)))
                 lg = self.m.readout(pred); lg[..., bans] = float("-inf")
                 if self.end_id != self.sil:
                     lg[..., self.sil] = float("-inf")
@@ -56,8 +56,8 @@ class InstrumentsMixin:
         hits = n = 0; cos_sum = 0.0
         with torch.no_grad():
             for ids in dreams:
-                xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
-                C = self.m.stream(self.m.inputs(xs, whos, faces, bundles, reads))
+                obs, whos, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
+                C = self.m.stream(self.m.inputs(self.anatomy, obs, whos, bundles))
                 pred = self.m.latent_pred(C)
                 lg = self.m.readout(pred); lg[:, [b for b in self.bans if b != self.eot]] = float("-inf")
                 if self.end_id != self.sil:

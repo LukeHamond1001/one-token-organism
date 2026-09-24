@@ -52,8 +52,8 @@ def dist(prefix):
                 if ch != "|": life.take_world(i); m.striatum_push(0, i)          # the delay line hears the world's symbol
                 else: m.striatum_push(3, 0)                                      # a tick of quiet
             if reads_along: life._recall(life.bag)                  # the store read at every symbol, as awake: the episode followed builds
-        xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-        C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+        obs, whos, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+        C = m.stream(m.inputs(life.anatomy, obs, whos, bundles))[-1]
         rd, conf, _ = life._recall(life.bag)
         lc = m.readout(m.forecast(C, zero)); lm = m.readout(m.forecast(C, rd))
         for l in (lc, lm): l[life.bans] = float("-inf"); l[life.sil] = float("-inf")

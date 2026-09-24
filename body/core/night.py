@@ -158,8 +158,15 @@ class NightMixin:
                     out.append(ids); outw.append([False] * len(ids))     # a completed dream: the world's, as before
         return (out, outw) if with_who else out
 
+    def _dream_obs(self, xs):
+        """A DREAM'S OBSERVATIONS BY CHANNEL (the core refactor's step R4): the dream's symbols `xs` ([T], or [B, T] for a batch) on the
+        words (channel 0), every other channel quiet over the same positions (its rest; a vector channel's zeros, the face a dream has
+        always had). The night over frames, each channel's own stored codes, is step R8."""
+        return {c_.name: (xs if i_ == 0 else c_.quiet(tuple(xs.shape), self.dev)) for i_, c_ in enumerate(self.anatomy.channels)}
+
     def _dream_inputs(self, ids, mem_on):
-        """a dream as a window: fresh bands (a night's working state), the store leading if mem_on"""
+        """a dream as a window: fresh bands (a night's working state), the store leading if mem_on. Returns obs (by channel: the words
+        the dream's symbols, the others quiet), xos (no own sound), bundles, reads and y the targets"""
         m = self.m
         bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag_w)
         xs = [self.sil] + list(ids[:-1]); reads, bundles = [], []
@@ -170,19 +177,18 @@ class NightMixin:
                 rd = self.store.read(bag)[0] if mem_on else torch.zeros(m.d, device=self.dev)
                 reads.append(rd); bundles.append(bands.clone())
                 n = len(reads)
-                u = m.inputs(torch.tensor(xs[:n], device=self.dev), xos[:n],
-                             torch.zeros(n, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
+                u = m.inputs(self.anatomy, self._dream_obs(torch.tensor(xs[:n], device=self.dev)), xos[:n], torch.stack(bundles))
                 C = m.stream(u)[-1]
                 bands = m.band_update(bands, C)
-        T = len(xs)
-        return (torch.tensor(xs, device=self.dev), xos,
-                torch.zeros(T, 2, device=self.dev), torch.stack(bundles), torch.stack(reads), torch.tensor(ids, device=self.dev))
+        return (self._dream_obs(torch.tensor(xs, device=self.dev)), xos, torch.stack(bundles), torch.stack(reads),
+                torch.tensor(ids, device=self.dev))
 
     def _dream_batch(self, dream_list, own_list=None):
         """THE DREAMS IN LOCKSTEP (2026-09-13): a list of dreams as one right-padded batch, the bands run along each as _dream_inputs
-        runs them one at a time (a causal cortex: a dream's positions never see the padding after them). Returns xs, xos [B, T],
-        faces [B, T, 2], bundles [B, T, nb, d], reads [B, T, d] (zeros: the store is off in the lesson), y [B, T] the targets and
-        w [B, T] their weights (1 on a dream's own positions, 0 on the padding)"""
+        runs them one at a time (a causal cortex: a dream's positions never see the padding after them). Returns obs (by channel: the
+        words xs [B, T], every other channel quiet: the diary's face [B, T, 2] of zeros), xos [B, T], bundles [B, T, nb, d], reads
+        [B, T, d] (zeros: the store is off in the lesson), y [B, T] the targets and w [B, T] their weights (1 on a dream's own
+        positions, 0 on the padding)"""
         m = self.m; B = len(dream_list); T = max(len(ids) for ids in dream_list); nb = len(m.clocks)
         xs = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)
         y = torch.full((B, T), self.sil, dtype=torch.long, device=self.dev)
@@ -199,16 +205,16 @@ class NightMixin:
                 for t in range(1, L):                                  # its own symbols enter as its own sound (dream_who)
                     (xos if own[t - 1] else xs)[i, t] = ids[t - 1]
                 w[i, :L] = torch.tensor([0.0 if o else 1.0 for o in own], device=self.dev)   # no forecast owed of its own act
-        faces = torch.zeros(B, T, 2, device=self.dev); reads = torch.zeros(B, T, m.d, device=self.dev)
+        obs = self._dream_obs(xs); reads = torch.zeros(B, T, m.d, device=self.dev)
         bundles = torch.zeros(B, T, nb, m.d, device=self.dev); bands = torch.zeros(B, nb, m.d, device=self.dev)
         with torch.no_grad():
             cache = [None] * len(m.blocks)                                        # the stream's keys and values so far, per block
             for t in range(T):
                 bundles[:, t] = bands
                 if t + 1 < T:
-                    C = m.stream_step(m.inputs(xs[:, t], xos[:, t], faces[:, t], bundles[:, t], reads[:, t]), cache)
+                    C = m.stream_step(m.inputs(self.anatomy, {k_: v_[:, t] for k_, v_ in obs.items()}, xos[:, t], bundles[:, t]), cache)
                     bands = m.band_update_b(bands, C)
-        return xs, xos, faces, bundles, reads, y, w
+        return obs, xos, bundles, reads, y, w
 
     def _night_step(self, opt):
         gn = torch.nn.utils.clip_grad_norm_(self.m.parameters(), 1.0)
@@ -291,9 +297,9 @@ class NightMixin:
                     order = torch.randperm(len(dreams), generator=self.gen).tolist(); tot = 0.0; ok = 0
                     for i0 in range(0, len(order), nbatch_):
                         opt.zero_grad(set_to_none=True)
-                        xs, xos, faces, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]],
-                                                                                 [owns[j] for j in order[i0:i0 + nbatch_]] if owns is not None else None)
-                        C = m.stream(m.inputs(xs, xos, faces, bundles, reads))
+                        obs, xos, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]],
+                                                                           [owns[j] for j in order[i0:i0 + nbatch_]] if owns is not None else None)
+                        C = m.stream(m.inputs(self.anatomy, obs, xos, bundles))
                         ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
                         if not bool(torch.isfinite(ll.detach())):
                             continue
@@ -309,8 +315,8 @@ class NightMixin:
                         # the hippocampus replays the sequence; the cortex must carry it itself (the read
                         # is not an input to the lesson, or the cortex learns to copy the recall and the
                         # gauge, taken alone, stays flat: run 6, day 4)
-                        xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
-                        C = m.stream(m.inputs(xs, whos, faces, bundles, reads))
+                        obs, whos, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
+                        C = m.stream(m.inputs(self.anatomy, obs, whos, bundles))
                         ll, _ = m.latent_loss(m.latent_pred(C), y)          # no SIGReg: with a fixed lexicon and the PFC's
                                                                              # objective off the trunk, nothing can collapse
                         if not bool(torch.isfinite(ll.detach())):
@@ -470,7 +476,7 @@ class NightMixin:
         if wm_saved is not None:
             m.wm_clear()
         bands = torch.zeros_like(self.bands); xs = [self.sil] + list(ids[:k])
-        reads, bundles, Cs = [], [], []; z_prev = None; f_prev = 0.0; e = None; n_up = 0; rsum = 0.0
+        bundles, Cs = [], []; z_prev = None; f_prev = 0.0; e = None; n_up = 0; rsum = 0.0
         one = torch.ones(1, dtype=torch.float64)
         with torch.no_grad():
             for step in range(len(xs) + L):
@@ -480,10 +486,10 @@ class NightMixin:
                     xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0).cpu(), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))   # drawn on the host: the CPU generator, the same stream on any device
                 x = xs[step]
                 m.striatum_push(0 if x != self.sil else 3, x if x != self.sil else 0)
-                reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
+                bundles.append(bands.clone())
                 n = step + 1
-                u = m.inputs(torch.tensor(xs[:n], device=self.dev), torch.full((n,), self.sil, dtype=torch.long, device=self.dev),
-                             torch.zeros(n, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
+                u = m.inputs(self.anatomy, self._dream_obs(torch.tensor(xs[:n], device=self.dev)),
+                             torch.full((n,), self.sil, dtype=torch.long, device=self.dev), torch.stack(bundles))
                 C = m.stream(u)[-1]; Cs.append(C)
                 bands = m.band_update(bands, C)
                 z_now = m.stri_in()
@@ -505,7 +511,7 @@ class NightMixin:
             return None, None
         bands = torch.zeros_like(self.bands); bag = torch.zeros_like(self.bag_w)
         xs = [self.sil] + list(ids[:k])
-        reads, bundles, Cs, bnext = [], [], [], []
+        bundles, Cs, bnext = [], [], []
         for step in range(len(xs) + L):
             if step >= len(xs):
                 # its imagined next symbol, read off its forecast (no gradient through the choice),
@@ -518,10 +524,10 @@ class NightMixin:
                     xs.append(int(torch.multinomial(torch.softmax(lg / rt, 0).cpu(), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))   # drawn on the host: the CPU generator, the same stream on any device
             with torch.no_grad():
                 bag = float(self.cfg["bag_decay"]) * (m.shift(bag) if xs[step] != self.sil else bag) + (m.E.weight[xs[step]] if xs[step] != self.sil else 0.0)
-            reads.append(torch.zeros(m.d, device=self.dev)); bundles.append(bands.clone())
+            bundles.append(bands.clone())
             n = step + 1
-            u = m.inputs(torch.tensor(xs[:n], device=self.dev), torch.full((n,), self.sil, dtype=torch.long, device=self.dev),
-                         torch.zeros(n, 2, device=self.dev), torch.stack(bundles), torch.stack(reads))
+            u = m.inputs(self.anatomy, self._dream_obs(torch.tensor(xs[:n], device=self.dev)),
+                         torch.full((n,), self.sil, dtype=torch.long, device=self.dev), torch.stack(bundles))
             C = m.stream(u)[-1]
             Cs.append(C)
             with torch.no_grad():

@@ -50,8 +50,8 @@ def run(q, k, use_recall):
             life.rest_tick()
             if use_recall: life._recall(life.bag)
         for _ in range(20):                                       # twenty symbols: 'bees make honey' is fifteen
-            xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-            C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+            obs, whos, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+            C = m.stream(m.inputs(life.anatomy, obs, whos, bundles))[-1]
             cortex_key = str(life.cfg.get("key_form", "bag")) == "cortex"
             rd = (life._recall(life.query_from(C))[0] if cortex_key else life._recall(life.bag)[0]) if use_recall else zero
             lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")

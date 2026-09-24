@@ -409,7 +409,7 @@ class Block(nn.Module):
 class Organs(nn.Module):
     """all the learned organs, one module, saved with the body"""
 
-    def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25):
+    def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None):
         super().__init__()
         self.vocab, self.d, self.window = int(vocab), int(d), int(window)
         self.clocks = tuple(int(c) for c in clocks)
@@ -547,6 +547,18 @@ class Organs(nn.Module):
         nn.init.zeros_(self.face_head.weight); nn.init.zeros_(self.face_head.bias)
         self.read_sharp = 10.0                            # PHYSIOLOGY (to become an organ): logit = sharpness x cosine
         self.register_buffer("_mask", torch.triu(torch.ones(self.window, self.window, dtype=torch.bool), 1))
+        # THE CHANNELS' OWN FORECASTS (the core refactor's step R4, docs/SIM_DESIGN.md 8.4): `channels` is the anatomy's channel list
+        # (body/core/anatomy.py). Channel 0 is the words, and its forecast head is latent_pred above; each later channel that declares a
+        # forecast gets a head of its own here, foreseeing the channel's code at the next position, born unsure as latent_pred is. Built
+        # after every other organ and only when declared (SIM_DESIGN.md 8.3: new modules only at the end, so the organs above draw from
+        # the random stream exactly as before); the diary declares none, so its organs are built as they always were.
+        later = [c for c in list(channels or [])[1:] if c.forecast]
+        if later:
+            self.chan_pred = nn.ModuleDict()
+            for c in later:
+                h = nn.Linear(d, d)
+                nn.init.normal_(h.weight, std=4e-4); nn.init.zeros_(h.bias)
+                self.chan_pred[c.name] = h
 
     # ---- the cortex over a window ----
 
@@ -558,14 +570,25 @@ class Organs(nn.Module):
         new.weight.zero_(); new.weight[:, :old.in_features] = old.weight; new.bias.copy_(old.bias)
         self.mouth_gate = new.to(old.weight.device)
 
-    def inputs(self, xs, xos, faces, bundles, reads):
-        """one position per tick: xs [T] the world's symbol (or its quiet), xos [T] its own symbol in
-        the same tick (or its quiet), faces [T, 2], bundles [T, nb, d], reads [T, d] -> u [T, d].
+    def inputs(self, anatomy, obs, xos, bundles):
+        """one position per tick -> u [T, d] (a batch of windows: [B, T, d]). THE ANATOMY'S CHANNEL CODES SUMMED IN ITS DECLARED ORDER
+        (the core refactor's step R4, docs/SIM_DESIGN.md 8.4), then the input's LayerNorm: `obs` maps each channel's name to its
+        observations ([T] symbols of a symbol channel, [T, size] of a vector channel), each encoded by the organ the channel names (the
+        diary's ear by the lexicon E, its face, [T, 2], by the learned face_in); bundles [T, nb, d] the ladder's states handed over; xos
+        [T] its own symbol in the same tick (or its quiet). The terms are added one at a time in this order, the sum's float order: the
+        first `anatomy.inner_at` channels, the ladder's bundle, its own sound, then the later channels (the diary's: ear + face + bundle
+        + own, the order they were always summed in). The store's recall is not an input (see forecast).
         All the sounds of a tick superpose in one time step, its own attenuated by corollary discharge
         (own_gain; measured in cortex at a third to a half). With two positions per tick (the world's,
         then its own, mostly a rest) the stream read "d . o . g ." awake and "d o g" in the dreams
         the night trains on, and the cortex forecast "d" after everything awake (run 17, day 6)."""
-        u = self.E(xs) + self.face_in(faces) + self.bundle_in(bundles.reshape(*bundles.shape[:-2], -1))   # [T, nb, d] or [B, T, nb, d]
+        k = int(anatomy.inner_at)
+        u = None
+        for c in anatomy.channels[:k]:
+            code = c.encode(self, obs[c.name])
+            u = code if u is None else u + code
+        b = self.bundle_in(bundles.reshape(*bundles.shape[:-2], -1))   # [T, nb, d] or [B, T, nb, d]
+        u = b if u is None else u + b
         if xos is not None and self.sil_id is not None:
             # its own sound attenuated (corollary discharge, own_gain 0.5) and superposed on the tick's
             # position. Heard at full weight with the lessons hearing the world only (run 22), the cortex
@@ -573,7 +596,14 @@ class Organs(nn.Module):
             # instrument's fault (a store holding only the cue), not the cortex's.
             own = (xos != self.sil_id).to(u.dtype).unsqueeze(-1)
             u = u + float(self.own_gain) * own * self.E(xos)
+        for c in anatomy.channels[k:]:
+            u = u + c.encode(self, obs[c.name])
         return self.in_ln(u)
+
+    def head(self, anatomy, i):
+        """channel i's forecast head (step R4): channel 0's, the words', is latent_pred (the forecast the mouth reads); a later
+        channel's is its own, chan_pred[name] (built when the anatomy declared it)"""
+        return self.latent_pred if int(i) == 0 else self.chan_pred[anatomy.channels[int(i)].name]
 
     def shift(self, v):
         """the context one lag older: v permuted (the last dimension)"""

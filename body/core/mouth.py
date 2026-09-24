@@ -18,17 +18,17 @@ class MouthMixin:
         m = self.m
         with torch.no_grad():
             win = list(self.win); line = m.stri_line.clone(); sym = int(first); zero_read = torch.zeros(m.d, device=self.dev)
-            face = torch.tensor([self.face_now / 6.0, 0.0], device=self.dev)
+            held = {c_.field: c_.observe(self, self.sil, 1, still=True) for c_ in self.anatomy.channels}   # an imagined position: the world quiet, the face held (step R4)
             said = []
             for step in range(int(h)):
                 said.append(sym)
-                win.append({"x": self.sil, "xo": sym, "face": face, "bundle": self.bands, "read": zero_read, "r": 0.0})
+                win.append({**held, "xo": sym, "bundle": self.bands, "read": zero_read, "r": 0.0})
                 if len(win) > m.window:
                     win = win[-m.window:]
                 if step == int(h) - 1:
                     break
-                xs, whos, faces, bundles, reads = self._window_tensors(win)
-                C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+                obs, whos, bundles, reads = self._window_tensors(win)
+                C = m.stream(m.inputs(self.anatomy, obs, whos, bundles))[-1]
                 lg = m.readout(m.forecast(C, zero_read)); lg[self.sil] = float("-inf"); lg[self.bans] = float("-inf")
                 sym = int(lg.argmax())
                 if int(self.cfg.get("plan_boundary", 1)) and sym == self.space_id:   # the word as the unit only under the old rule

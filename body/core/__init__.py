@@ -13,7 +13,9 @@ instruments.py  _bookkeep (the page, the record, the sleep switch), gauge, state
 anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
                 8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
                 `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward
-                sources (FaceReward, WorldWordsReward, EffortReward), felt in their order and summed in it (`_sense`)
+                sources (FaceReward, WorldWordsReward, EffortReward), felt in their order and summed in it (`_sense`); since step R4
+                its channels (EarChannel, FaceChannel) are the window's fields, the cortex's input (their codes summed in their order,
+                `Organs.inputs`) and, for a later channel that declares one, a forecast head of its own (`Organs.head`)
 world.py        not a mixin: `Frame`, the world at one tick as the body meets it (docs/SIM_DESIGN.md 8.2; step R3: the reward sources
                 read it; the language body builds it inside the tick from the queue); the World and DiaryWorld come with step R9
 
