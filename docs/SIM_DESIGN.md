@@ -198,7 +198,7 @@ MuJoCo 3.9, one file `body/sim/highchair.xml`, 2 ms physics steps, 75 per tick.
 - **The child's head:** 0.36 m up; pan ±60°, tilt −75° to +20°.
 - **Objects:** ball, cube, duck, cup; 60 g each, 1.3× C's size, saturated colours.
 - **Charge pad:** a flat magenta disc of radius 4.5 cm (no object shares its colour). It charges while the mitten is over the disc.
-- **The teacher:** mocap across the table, with no physics of its own. A torso, a head with a two-capsule mouth that shows smile and frown, and one hand. The hand carries objects and can hold the child's forearm through a soft weld to guide it.
+- **The parent (the owner's decision, 2026-09-23: "the teacher a robot like the model itself, teaching it like a parent would"):** a second robot of the same body across the table: the same planar arm and sticky mitten, the same pan/tilt head, and a face (a two-capsule mouth that shows smile and frown). It is driven by the scripted SimTeacher below (motion by inverse kinematics inside the same per-joint alphabet), with Opus steering what to teach between minutes. It shows by doing: it pushes, takes and names with its own arm, in the child's view, so imitation is of a body like its own; it can still guide the child's forearm (the soft weld below). Its arm has physics like the child's, so its touches and pushes are real events in the world. (A raised body could one day be the parent of the next: out of scope for the first life.) The original mocap teacher's parts follow:
   - The charge drain counts only the arm's own actuator torque, capped by its declared limit, so being guided costs at most that cap.
   - The weld's constraint force is not a contact, so it is never pain.
   - S1 measures the tracking and the servo's torque under a scripted guide.
@@ -211,7 +211,7 @@ Each channel's code is born (fixed, random, from the body's seed), unit-scaled a
 | channel | kind | raw | born code |
 |---|---|---|---|
 | `words` (the partner) | symbol | the teacher's word token, arriving on the tick its sound ends; rest otherwise | a fixed random lexicon: about 20 words, the child's name, rest and end; letter rows reserved for the fallback |
-| `ear` | vector | 15×40 log-mel: the teacher's cached clips scaled by distance, the child's own voice, contact clicks | fixed random projection |
+| `ear` | vector | 15×40 log-mel: the parent's cached voice clips scaled by distance, the child's own voice, and the world's sounds (the owner's decision, 2026-09-23): contact clicks, and each object's own sound when it is touched or moves (the duck squeaks, the ball taps, the cup clinks, the cube knocks; cached clips, scaled by distance and speed) | fixed random projection |
 | `eye_p` (periphery) | vector | 64×64 RGB + inverse depth (capped) | 8×8 cells × 6 random colour-depth mixes = 384, then a fixed projection |
 | `eye_f` (fovea) | vector | 32×32 RGB | 8×8 cells of 4 px × 6 mixes = 384, then a fixed projection |
 | `body` | vector | sin/cos of the 4 joint angles (arm and head), velocities, grip state, servo effort | fixed linear map, scaled by the ranges in the model file |
@@ -715,7 +715,7 @@ Wall hours assume 40–55 minutes a life day (6.2). At the ops guard's 1× real 
 - Hearing from audio alone: the word tokens run beside the audio at birth.
 - A synthesised voice (the numpy vocal tract): the child speaks cached word clips.
 - More than one teacher voice; two ears.
-- Imitating a twin or avatar (the correspondence problem beyond kinesthetic guidance).
+- Learning to imitate the parent robot by watching alone, with no guidance, is not assumed at birth: the parent's own arm makes it possible (the same body), and it is measured as a milestone, not built in.
 - Wheels, legs, balance; a 3D arm, fingers, lifting (the next body).
 - Deadline mode as the default.
 - A camera that reads the teacher's face: the face is a number beside the visible mouth.
@@ -726,6 +726,8 @@ Wall hours assume 40–55 minutes a life day (6.2). At the ops guard's 1× real 
 - The full dead-code clean-up beyond the seams.
 
 ## 12. The owner's decisions (the world's shape, then two others)
+
+Decided by the owner on 2026-09-23: the teacher is a parent robot with the same body (section 5.1); the world has sound (section 5.2: the objects' own sounds besides the voices and contacts). S1 grows by about 1 day (the parent's arm with physics and its inverse kinematics), S2 by about half a day (the object sounds).
 
 1. **The body and the world.**
    - Option 1 (recommended): the high chair's 2-joint planar arm with a sticky mitten and a pan/tilt head. The fastest to learning.
