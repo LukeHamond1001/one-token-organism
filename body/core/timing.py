@@ -16,7 +16,10 @@ WHEN EACH PART RUNS, for a later effector at tick t (after the voice's choice, i
   moved it: the parent's hand, a collision, a reflex, or nothing, which reads as the hold) act_inv's label for (s[t], s[t+1]),
   weighted by act_inv's reliability (a demonstration counts only as far as the inverse model has earned: the weights are absolute, the
   weighted errors averaged over the window's positions), or, for an effector with no inverse model, its rest; and fwd(C[t]) is taught
-  s[t+1]. Through the cortex, at the waking lesson's rate, as a channel's forecast.
+  s[t+1]. Through the cortex, at the waking lesson's rate, as a channel's forecast. ACT_PRED'S PLASTICITY IS GATED BY ITS LABELS'
+  RELIABILITY (`GatedAdam`, `_timing_step`): act_pred and its correction step with an optimizer of their own, a group per effector,
+  each lesson a sample of weight the lesson's mean label weight in the group's moments and in its step size; every other parameter
+  steps with the waking lesson's Adam as before.
 THE LEARNED STOPS (chunk_gate, every later effector; `_choose_effector`): a chunk of acts continues, the act act_pred's best guess
 (each joint's most likely setting, no draw), until that guess is the effector's rest (the learned end), its gate's own draw closes,
 its reflex fires, its declared end act closed the chunk before, or chunk_max acts have run (a ceiling: the next act is a fresh
@@ -32,10 +35,72 @@ import torch.nn.functional as F
 from .physiology import MOTOR
 
 
+class GatedAdam(torch.optim.Optimizer):
+    """ACT_PRED'S PLASTICITY, GATED BY THE RELIABILITY OF ITS LABELS (the R6 verifier's third finding, 2026-09-24; SIM_DESIGN.md 5.4):
+    Adam in which each step is one sample of weight `gain` (each group's, set before the step: the lesson's mean label weight over
+    the window's positions, 1 at an own act, its efference copy, and act_inv's reliability at a rest act_inv labelled). The gradient is
+    taken per unit of that weight, u = the gradient / gain (the lesson's weighted error averages the weights over the positions; u is
+    the gradient of the error averaged over the labels' weights), and the gain enters twice, as a neuromodulator gates plasticity:
+    - THE MOMENTS ARE MOVED IN PROPORTION: m <- m + (1 - beta1) gain (u - m), v <- v + (1 - beta2) gain (u^2 - v), the share of each
+      still its birth's zero q <- q (1 - (1 - beta) gain), their estimates m / (1 - q1) and v / (1 - q2). A lesson whose labels are
+      barely earned moves the running averages barely, so its direction is not carried into later lessons by the momentum.
+    - THE STEP IS SCALED: lr gain m^ / (sqrt(v^) + eps). Adam divides each parameter's step by its recent gradient size, so a
+      gradient made small (the lesson's loss scaled by the reliability, as R6 fix 1 made it) is re-inflated to a whole step: in the
+      day's Adam, over 300 lessons on a window of rests alone or of the parent's guidance alone at the served rate, act_pred learned
+      at reliability 0.01 0.95 and 0.87 of what it learned at 1 from a fresh optimizer (the moments built by the small gradients
+      themselves: after one lesson m^ is its gradient and v^ its square, whatever its size), 0.48 and 0.44 after 100 lessons of its
+      own acts had built them (their size forgotten over the lessons). The gain on the step size is what scales the learning: a
+      lesson at reliability r moves act_pred r of a whole lesson's step, and over N lessons it learns about what N r whole lessons
+      teach (anatomy 31: 0.011 to 0.024 of it at 0.01).
+    At gain 1 on every step this is the waking lesson's Adam exactly (the same betas and eps, its moments, bias corrections and step:
+    an effector with no inverse model, and a window of own acts, learn as they did); at gain 0 nothing moves, the moments included
+    (nothing learned, nothing forgotten). No constant is added: the rate is the waking lesson's (live_lr), the betas and eps Adam's
+    defaults, as the waking lesson's optimizer has them."""
+
+    def __init__(self, groups, lr, betas=(0.9, 0.999), eps=1e-8):
+        super().__init__(groups, dict(lr=float(lr), betas=tuple(betas), eps=float(eps), gain=0.0))
+
+    @torch.no_grad()
+    def step(self):
+        for g_ in self.param_groups:
+            w = float(g_["gain"])
+            if not w > 0.0:
+                continue                                           # no earned label: no plasticity, the moments kept
+            b1, b2 = g_["betas"]; a1, a2 = (1.0 - b1) * w, (1.0 - b2) * w
+            for p in g_["params"]:
+                if p.grad is None:
+                    continue
+                st = self.state[p]
+                if not st:
+                    st["m"] = torch.zeros_like(p, memory_format=torch.preserve_format); st["v"] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                    st["q1"] = 1.0; st["q2"] = 1.0
+                gh = p.grad / w                                    # u: the gradient per unit of the labels' weight
+                st["m"].lerp_(gh, a1)
+                st["v"].mul_(1.0 - a2).addcmul_(gh, gh, value=a2)
+                st["q1"] *= 1.0 - a1; st["q2"] *= 1.0 - a2
+                den = (st["v"].sqrt() / (1.0 - st["q2"]) ** 0.5).add_(g_["eps"])
+                p.addcdiv_(st["m"], den, value=-float(g_["lr"]) * w / (1.0 - st["q1"]))
+
+
 class TimingMixin:
     def _motor_const(self, k):
         """a motor timing constant: the body's cfg when it was given, else MOTOR's"""
         return self.cfg.get(k, MOTOR[k])
+
+    def _gated_params(self, e):
+        """later effector e's parameters whose waking plasticity its labels' reliability gates (`GatedAdam`): act_pred and the
+        correction, the proposal's two terms (the forward half's lesson is its body sense's, a label felt, never read by act_inv)"""
+        tm = self.m.timing[e.name]
+        return list(tm.pred.parameters()) + (list(tm.cor.parameters()) if tm.sense_n else [])
+
+    def _timing_step(self, rep):
+        """ACT_PRED'S AND THE CORRECTION'S STEP IN THE WAKING LESSON (after the waking lesson's own step; the gradients clipped with
+        every other parameter's): each later effector's group at the gain of its lesson, the mean weight of the window's labels
+        (`_timing_loss`'s report "w"; 0 where it had no lesson)"""
+        for g_ in self.opt_pred.param_groups:
+            r_ = rep.get(g_["name"])
+            g_["gain"] = float(r_["w"]) if r_ is not None else 0.0
+        self.opt_pred.step()
 
     def _body_sense(self, e):
         """effector e's body sense this tick [sense_n] (float32, detached): its sense channel's observation at the tick's position (the
@@ -168,7 +233,9 @@ class TimingMixin:
         positions (T - 1), never over the weights' sum. Divided by the weights' sum, the reliability only reweighted the rests against
         the own acts and never scaled them: a window of rests alone, or of the parent's hand alone, taught at full strength at any
         reliability above 0 (the verifier's probe: the same loss and gradient at 0.01 as at 1). Over the positions, a label act_inv
-        has not earned teaches only in proportion to what it has earned, and an own act teaches as it did in a window of own acts."""
+        has not earned teaches only in proportion to what it has earned, and an own act teaches as it did in a window of own acts.
+        The report's "w" is the lesson's mean label weight over the same positions, the gain at which act_pred and the correction step
+        (`GatedAdam`: the loss's weights reach the gradient, and Adam alone would undo their scale)."""
         e = self.anatomy.effectors[i]; st = self.motor[i - 1]
         tm = self.m.timing[e.name]; tab = self.m.get_submodule(e.organ)
         acts = obs[e.name]
@@ -201,7 +268,8 @@ class TimingMixin:
         w1 = wt[1:]
         lp = (0.5 * ((P.float() - rows.float()) ** 2).sum(-1) * w1).sum() / float(T - 1)   # over the positions: the weights absolute
         loss = lp if lf is None else lp + lf
-        rep = {"pred": round(float(lp.detach()), 4), "own": int(own[1:].sum()), "demo_w": round(gain, 3)}
+        rep = {"pred": round(float(lp.detach()), 4), "own": int(own[1:].sum()), "demo_w": round(gain, 3),
+               "w": float(w1.sum()) / float(T - 1)}                       # the lesson's mean label weight: act_pred's plasticity (GatedAdam)
         if lf is not None:
             rep["fwd"] = round(float(lf.detach()), 4)
         return loss, rep

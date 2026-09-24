@@ -29,7 +29,8 @@ effectors: the voice first (effector 0, today's code and names; `_choose` return
 at its senses' phase (or the frame the loop hands in) and returns its acts for the world; the sleep switch pauses the world for the
 night; body/serve.py runs it all through a WorldLoop. Since step R6 each later effector has its motor timing part (body/core/timing.py,
 the organs' m.timing[name]: act_pred its proposal, the forward half its correction, act_inv learning online with its own optimizer
-`opt_inv`) and, under chunk_gate, its chunks and learned stops; the diary has none of it."""
+`opt_inv`; act_pred and the correction learning in the waking lesson with `opt_pred`, their plasticity gated by their labels'
+reliability) and, under chunk_gate, its chunks and learned stops; the diary has none of it."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401
@@ -51,7 +52,7 @@ from .core.actor import ActorMixin
 from .core.night import NightMixin
 from .core.persistence import PersistenceMixin
 from .core.instruments import InstrumentsMixin
-from .core.timing import TimingMixin
+from .core.timing import TimingMixin, GatedAdam
 
 # `from body.life import *` gives exactly the names it gave before the split (the mixins stay reachable as attributes)
 __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
@@ -289,8 +290,10 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         self.stream = collections.deque(maxlen=96)       # (id, who)
         self.last = {}
         self.credit = collections.deque(maxlen=64)
-        # optimizers: the day's (the cortex and its forecasts), the striatum's (the gate), the critic's
-        self.opt_day = torch.optim.Adam(self.m.parameters(), lr=float(self.cfg["live_lr"]))
+        # optimizers: the day's (the cortex and its forecasts), the striatum's (the gate), the critic's. A body with later effectors:
+        # the day's holds every parameter but act_pred's and the corrections', which step with opt_pred (below; the diary has none)
+        gated_ = {id(p_) for e_ in self.anatomy.effectors[1:] for p_ in self._gated_params(e_)}
+        self.opt_day = torch.optim.Adam([p_ for p_ in self.m.parameters() if id(p_) not in gated_] if gated_ else self.m.parameters(), lr=float(self.cfg["live_lr"]))
         if int(self.cfg.get("gate_ear", 0)) and self.m.mouth_gate.in_features == self.m.d + 5:
             self.m.widen_gate(2)                                # THE EAR: two inputs, born at zero
         if str(self.cfg.get("gate_opt", "sgd")) == "adam":
@@ -312,6 +315,11 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
             ip_ = [p_ for e_ in self.anatomy.effectors[1:] if e_.inverse for p_ in self.m.timing[e_.name].inv.parameters()]
             if ip_:
                 self.opt_inv = torch.optim.Adam(ip_, lr=float(self.cfg.get("act_inv_lr", MOTOR["act_inv_lr"])))
+            # ACT_PRED'S PLASTICITY GATED BY ITS LABELS' RELIABILITY (the R6 verifier's third finding): act_pred and the correction learn in
+            # the waking lesson at the waking lesson's rate, a group per later effector, each lesson a sample of weight the mean weight of
+            # its labels (body/core/timing.py GatedAdam; at weight 1 the day's Adam exactly)
+            self.opt_pred = GatedAdam([{"params": self._gated_params(e_), "name": e_.name} for e_ in self.anatomy.effectors[1:]],
+                                      lr=float(self.cfg["live_lr"]))
         # the critic's optimizer: the value heads and the Go/NoGo gates. The bands' input maps are fixed
         # (born): trained by the critic's own bootstrapped error they are the deadly triad, and at any
         # rate they ran away (1e-3: saturated by day 6, run 26; 1e-5: saturated by day 15, run 28) while

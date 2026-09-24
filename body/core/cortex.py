@@ -6,7 +6,8 @@ Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Since th
 window position holds each of the anatomy's channels under its field, the window's tensors are per channel, the stream's input is
 their codes summed in the anatomy's order (`Organs.inputs`), and the waking lesson teaches a later channel's own forecast head. Since step
 R6 it also teaches each later effector's motor timing part (act_pred and the forward half, body/core/timing.py `_timing_loss`), and a body
-with later effectors has its lesson whether or not the world spoke in the window (their acts are targets on every position)."""
+with later effectors has its lesson whether or not the world spoke in the window (their acts are targets on every position); act_pred and
+the correction step with an optimizer of their own, their plasticity gated by the reliability of the lesson's labels (`GatedAdam`)."""
 import torch
 import torch.nn.functional as F
 
@@ -225,6 +226,8 @@ class CortexMixin:
         m = self.m; m.train()
         try:
             self.opt_day.zero_grad(set_to_none=True)
+            if motor_:
+                self.opt_pred.zero_grad(set_to_none=True)          # act_pred's and the corrections' (step R6)
             u = m.inputs(self.anatomy, obs, whos, bundles)     # the window as lived: its own sound in it, attenuated
             C = m.stream(u)
             # the cortex is trained on ITS OWN forecast, day and night alike (predictive coding: each
@@ -242,7 +245,8 @@ class CortexMixin:
                         tgt_ = c_.encode(m, obs[c_.name][1:])
                     ll = ll + 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
             # THE LATER EFFECTORS' TIMING PARTS (step R6): act_pred taught the act at each position from the stream before it (its own
-            # act, or where it rested what act_inv reads moved it, weighted by act_inv's reliability), the forward half its next body sense
+            # act, or where it rested what act_inv reads moved it, weighted by act_inv's reliability), the forward half its next body sense;
+            # act_pred and the correction step with opt_pred at their labels' mean weight (body/core/timing.py GatedAdam), the rest here
             mrep = {}
             for i_ in range(1, len(self.anatomy.effectors)):
                 lt_, rt_ = self._timing_loss(i_, C, obs)
@@ -262,11 +266,16 @@ class CortexMixin:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
             self.opt_day.step()
+            if motor_:
+                self._timing_step(mrep)                                # act_pred and the corrections: each effector's step at its labels' weight
             out = {"latent_cos": round(lc, 3), "forecast_cos": round(fc, 3), "n_world": int(w.sum()), "tick": self.ticks}
             if motor_:
-                out["motor"] = mrep                                    # the timing parts' lesson (step R6)
+                out["motor"] = {k_: dict(v_, w=round(v_["w"], 4)) for k_, v_ in mrep.items()}   # the timing parts' lesson (step R6)
         finally:
-            self.opt_day.zero_grad(set_to_none=True); m.eval()
+            self.opt_day.zero_grad(set_to_none=True)
+            if motor_:
+                self.opt_pred.zero_grad(set_to_none=True)
+            m.eval()
         self._wake_last = out
         return out
 
