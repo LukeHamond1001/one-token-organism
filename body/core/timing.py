@@ -2,8 +2,8 @@
 effector (the voice has none, so the language body runs none of this), act_pred (the forecast of its own next act, its proposal),
 the forward half (the forecast of its body sense at the next position, and the correction its error makes to the proposal) and
 act_inv (from its body sense at t and t+1 to the act that explains the motion, learning online from its own acts, its running
-reliability the critics' estimator). The organs are m.timing[name] (body/model.py `MotorTiming`); the working state is the
-effector's in life.motor; the constants are physiology.py's MOTOR, absent from a body's cfg unless given.
+reliability Cohen's kappa over its running confusion, joint by joint). The organs are m.timing[name] (body/model.py `MotorTiming`); the
+working state is the effector's in life.motor; the constants are physiology.py's MOTOR, absent from a body's cfg unless given.
 
 WHEN EACH PART RUNS, for a later effector at tick t (after the voice's choice, in `_choose_effector`, body/core/mouth.py):
 - `_timing_sense`: its body sense now, s_t (its channel's observation this tick, its own numbers); act_inv's lesson on the tick before
@@ -26,8 +26,6 @@ The one-tick timing the forward half serves: on a tick the world is quiet the ch
 tick before, so the sense felt now enters the proposal only through the forward half's error (SIM_DESIGN.md 5.2's one forward a tick
 for the sim, its own acts entering at the next frame, is a later step). On a tick a world symbol opens a position the choice reads it
 there, while the lesson teaches act_pred from the position before, as the words' lesson does."""
-import math
-
 import torch
 import torch.nn.functional as F
 
@@ -92,21 +90,42 @@ class TimingMixin:
         st["inv_n"] = int(st["inv_n"]) + 1
         st["inv_last"] = {"tick": self.ticks, "loss": round(float(loss.detach()), 4), "hit": [int(a == b) for a, b in zip(label, true)]}
 
+    @staticmethod
+    def _inv_conf_new(e):
+        """act_inv's running confusion at birth: per joint a K x K table of zeros (the row the setting act_inv's label chose, the
+        column the setting the efference copy made)"""
+        return [[[0.0] * int(K) for _ in range(int(K))] for K in e.factors]
+
     def _inv_rel_update(self, e, st, label, true):
-        """ACT_INV'S RELIABILITY: the critics' estimator (the running moments of a prediction and its outcome, the slope clipped to
-        [0, 1] and the correlation; zero until 64 samples: `_arel_update`, `_frel_update`), each sample one setting of one joint of an
-        own act, the prediction 1 where act_inv's label chose that setting and the outcome 1 where the efference copy did. The slope is
-        then the label's accuracy with chance taken out, (a K - 1) / (K - 1) for K settings at accuracy a: the weight a demonstration's
-        label earns in act_pred's lesson"""
-        d = 1.0 - 1.0 / float(self._motor_const("act_inv_tau")); m = st["inv_m"]
-        for j, K in enumerate(e.factors):
-            for k in range(int(K)):
-                v = 1.0 if label[j] == k else 0.0; g = 1.0 if true[j] == k else 0.0
-                m[0] = d * m[0] + 1.0; m[1] = d * m[1] + v; m[2] = d * m[2] + g; m[3] = d * m[3] + v * v; m[4] = d * m[4] + g * g; m[5] = d * m[5] + v * g
-        n = m[0]; mv, mg = m[1] / n, m[2] / n
-        var_v, var_g = m[3] / n - mv * mv, m[4] / n - mg * mg; cov = m[5] / n - mv * mg
-        st["inv_corr"] = float(cov / math.sqrt(max(var_v, 1e-9) * max(var_g, 1e-9))) if n > 64 else 0.0
-        st["inv_gain"] = float(max(0.0, min(1.0, cov / max(var_v, 1e-9)))) if n > 64 else 0.0
+        """ACT_INV'S RELIABILITY: COHEN'S KAPPA OVER ITS RUNNING CONFUSION, JOINT BY JOINT (the R6 verifier's second finding,
+        2026-09-24). Each own act adds one count to each joint's confusion (st["inv_conf"][j]: the row the setting act_inv's label
+        chose, the column the setting the efference copy made), every count decaying over act_inv_tau acts. A joint's kappa is its
+        labels' agreement with the acts with the agreement chance would reach AT THE ACTS' AND THE LABELS' OWN RATES taken out:
+        (p_o - p_e) / (1 - p_e), p_o the diagonal's share, p_e the sum over settings of the label's rate times the act's rate; a joint
+        whose labels and acts have never varied (p_e 1) has shown nothing, its kappa 0. The reliability, the weight a demonstration's
+        label earns in act_pred's lesson, is the joints' mean kappa, each clipped to [0, 1] (the act's row is the sum of its joints'
+        rows, so each joint's label is its own part of the target); zero until 64 acts, as the critics' estimators are zero until 64
+        samples. st["inv_kappa"] holds each joint's kappa.
+        Until 2026-09-24 this was the critics' estimator (the running moments of prediction and outcome, the slope clipped to [0, 1]),
+        its samples every setting of every joint pooled: chance was 1/K for every setting, so the body's own base rates read as skill
+        (the verifier's probe: a label that always said 'hold' earned 0.51 when 60% of the acts held the joint, and 0.75 at 80%; a
+        label drawn at the acts' own rates, blind to the act, 0.26 at 60%). Kappa reads all of them 0"""
+        d = 1.0 - 1.0 / float(self._motor_const("act_inv_tau"))
+        if st.get("inv_conf") is None:
+            st["inv_conf"] = self._inv_conf_new(e)
+        kap = []; n = 0.0
+        for j, Cj in enumerate(st["inv_conf"]):
+            for row in Cj:
+                for k in range(len(row)):
+                    row[k] *= d
+            Cj[int(label[j])][int(true[j])] += 1.0
+            K = len(Cj); n = sum(sum(r) for r in Cj)
+            po = sum(Cj[k][k] for k in range(K)) / n
+            pe = sum(sum(Cj[k]) * sum(Cj[r][k] for r in range(K)) for k in range(K)) / (n * n)
+            kap.append((po - pe) / (1.0 - pe) if 1.0 - pe > 1e-9 else 0.0)
+        on = n > 64
+        st["inv_kappa"] = [float(k) if on else 0.0 for k in kap]
+        st["inv_gain"] = float(sum(max(0.0, min(1.0, k)) for k in kap) / len(kap)) if on else 0.0
 
     def _timing_propose(self, e, C):
         """ACT_PRED'S PROPOSAL (the base Effector's `propose`; step R6): the forecast of its own next act from the stream C, plus the
@@ -192,6 +211,6 @@ class TimingMixin:
         e = self.anatomy.effectors[i]; st = self.motor[i - 1]
         out = {"chunks": int(st["chunks"]), "stops": dict(st["stops"]), "chunk": int(st["chunk"])}
         if e.inverse:
-            out.update({"inv_gain": round(float(st["inv_gain"]), 3), "inv_corr": round(float(st["inv_corr"]), 3), "inv_n": int(st["inv_n"]),
-                        "inv_last": st["inv_last"]})
+            out.update({"inv_gain": round(float(st["inv_gain"]), 3), "inv_kappa": [round(float(k_), 3) for k_ in st["inv_kappa"]],
+                        "inv_n": int(st["inv_n"]), "inv_last": st["inv_last"]})
         return out

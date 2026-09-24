@@ -4,8 +4,8 @@ place (the core refactor's step R2): the life builds its anatomy from it (body/c
 organs' alphabet from that anatomy. Both build the anatomy before the organs (a load under the save's constants, then the caller's), so
 the organs build the forecast heads its later channels declare (step R4; the diary declares none). Both take the world the life lives
 in (`world`, step R9; the diary's DiaryWorld when none is given): the world is not saved with the body. A body with later effectors
-keeps their act_inv's reliability (step R6: the critics' running moments, as the actor's and the face organ's are kept) under the save's
-life["motor"], a key only such a body's save has; their timing organs are in the organs' state (timing.<name>).
+keeps their act_inv's reliability (step R6; its running confusion per joint since 2026-09-24, the kappas and the reliability) under the
+save's life["motor"], a key only such a body's save has; their timing organs are in the organs' state (timing.<name>).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import os
@@ -38,7 +38,8 @@ class PersistenceMixin:
                          "bands": self.bands.detach().cpu().clone(), "writes_today": int(getattr(self, "_writes_today", 0)), "store_fresh": bool(getattr(self, "_store_fresh", False)), "utt_open": bool(self._utt_open),
                          "pace": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pq.items()}, "pace_day": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pace_day.items()}}}
         if len(self.anatomy.effectors) > 1:                         # the later effectors' act_inv reliability (step R6); the diary's save has no such key
-            blob["life"]["motor"] = {e_.name: {"inv_m": [float(x_) for x_ in st_["inv_m"]], "inv_gain": float(st_["inv_gain"]), "inv_corr": float(st_["inv_corr"]),
+            blob["life"]["motor"] = {e_.name: {"inv_conf": (None if st_["inv_conf"] is None else [[[float(x_) for x_ in r_] for r_ in c_] for c_ in st_["inv_conf"]]),
+                                               "inv_kappa": [float(x_) for x_ in st_["inv_kappa"]], "inv_gain": float(st_["inv_gain"]),
                                                "inv_n": int(st_["inv_n"])} for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
@@ -170,9 +171,20 @@ class PersistenceMixin:
         if isinstance(L.get("motor"), dict):                          # the later effectors' act_inv reliability (step R6), for those this anatomy declares
             for e_, st_ in zip(life.anatomy.effectors[1:], getattr(life, "motor", ())):
                 mv_ = L["motor"].get(e_.name)
-                if isinstance(mv_, dict) and len(mv_.get("inv_m") or []) == 6:
-                    st_["inv_m"] = [float(x_) for x_ in mv_["inv_m"]]; st_["inv_gain"] = float(mv_.get("inv_gain", 0.0))
-                    st_["inv_corr"] = float(mv_.get("inv_corr", 0.0)); st_["inv_n"] = int(mv_.get("inv_n", 0))
+                if not isinstance(mv_, dict):
+                    continue
+                st_["inv_n"] = int(mv_.get("inv_n", 0))
+                cf_ = mv_.get("inv_conf")
+                if e_.inverse and isinstance(cf_, list) and [len(c_) for c_ in cf_] == [int(k_) for k_ in e_.factors] and \
+                        all(len(r_) == len(c_) for c_ in cf_ for r_ in c_) and len(mv_.get("inv_kappa") or []) == len(e_.factors):
+                    st_["inv_conf"] = [[[float(x_) for x_ in r_] for r_ in c_] for c_ in cf_]
+                    st_["inv_kappa"] = [float(x_) for x_ in mv_["inv_kappa"]]; st_["inv_gain"] = float(mv_.get("inv_gain", 0.0))
+                elif e_.inverse and "inv_m" in mv_:              # a save from before 2026-09-24: the critics' estimator, which read base rates as skill
+                    print(f"load: {e_.name}'s act_inv reliability was saved as the critics' estimator (before kappa, 2026-09-24): it is earned "
+                          f"again from its next act (it read {float(mv_.get('inv_gain', 0.0)):.3f})", flush=True)
+                elif e_.inverse and cf_ is not None:             # counts of other joints than this anatomy declares
+                    print(f"load: {e_.name}'s act_inv confusion was saved for other joints than its declaration {list(e_.factors)}: it is "
+                          f"earned again from its next act", flush=True)
         if L.get("store_after_night") is not None:
             life._store_after_night = int(L["store_after_night"])
         elif isinstance(L.get("last_night"), dict) and L["last_night"].get("store_slots") is not None:

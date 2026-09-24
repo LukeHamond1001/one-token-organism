@@ -20,12 +20,14 @@ frames (its words, its face, a sense of its frames, two effectors acting on it; 
 pauses it and a morning; the deadline switch is off, and on lets the world run on its own clock; the pace log records the ticks and the
 nights and changes nothing. The motor timing part (R6), on a tiny arm in a stub world (two joints, its body sense their velocities, a
 touch of pain and the parent's hand, a wall, demonstrations): built last from the body's seed and absent from the language body;
-act_inv learning online on its own acts alone, its reliability the critics' estimator; act_pred's targets position by position
+act_inv learning online on its own acts alone, its reliability Cohen's kappa per joint (labels blind to the act read 0 however skewed
+the acts' own rates); act_pred's targets position by position
 (its own acts, act_inv's reading of what moved it where it rested at act_inv's reliability, the rest for an effector with no inverse
 model), its gradient and its learning; the forward half foreseeing each tick's body sense, its error correcting the proposal and
 steering a chunk; the learned stops (act_pred's rest, the gate's own no, the reflex, the declared end, chunk_max) and the reflex's
 tick (its act to the world, no draw, no credit, no eligibility)."""
 import collections
+import copy
 import math
 import os
 import pickle
@@ -2139,9 +2141,10 @@ def test_act_inv_learns_online():
     """anatomy 24 (step R6; SIM_DESIGN.md 5.4): act_inv learns online from birth on the body's own acts, the efference copy the label:
     one lesson on the tick after each own act, on the pair of body senses the act moved between (the frames the world showed) and the
     act the world applied; never after a rest, a demonstration (the parent's hand) or a night; the grip, with no inverse model, none.
-    Its reliability is the critics' estimator on the label it gave before each lesson against the efference copy (recomputed here,
-    equal to the bit), zero until 64 samples. With every other learning rate at 0 only act_inv moves. It learns: its labels right on
-    nearly every joint of the last own acts, its reliability high. The reliability survives the night and a save and a load"""
+    Its reliability is Cohen's kappa per joint over its running confusion, the label it gave before each lesson against the efference
+    copy, the joints' mean clipped (recomputed here, equal to the bit), zero until 64 acts. With every other learning rate at 0 only
+    act_inv moves. It learns: its labels right on nearly every joint of the last own acts, its reliability high. The reliability (the
+    confusion, the kappas) survives the night and a save and a load"""
     from body.core.world import WorldLoop
     cfg = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.85, fast_rls=0, act_inv_lr=1e-2, act_inv_tau=2000)
     w = _arm_world(); torch.manual_seed(5); L = _born_in(_Timed(TOK, cfg), cfg, w)
@@ -2171,29 +2174,35 @@ def test_act_inv_learns_online():
         assert i == 1 and act == rec[t]["act"] == w.moved[t][0] and w.moved[t][1] == "own", (tk, act, rec[t], w.moved[t])
         assert torch.equal(s0, torch.tensor(w.shown[t].obs["body"], dtype=torch.float32)) and torch.equal(s1, torch.tensor(w.shown[t + 1].obs["body"], dtype=torch.float32))
     assert not any(t + 1 in set(want) for t in guided), "a demonstration was taken for an own act"
-    # the reliability: the critics' estimator on the labels given before each lesson, recomputed
+    # the reliability: Cohen's kappa per joint over the running confusion of the labels given before each lesson, recomputed
     assert [p_[1] for p_ in pairs] == [l_[5] for l_ in lessons] and all(p_[0] == "arm" for p_ in pairs)
     assert all(p_[2] == [l_[4] // 5, l_[4] % 5] for p_, l_ in zip(pairs, lessons))
-    m_ = [0.0] * 6; d_ = 1.0 - 1.0 / 2000.0; gains = []
+    conf = [[[0.0] * 5 for _ in range(5)] for _ in range(2)]; d_ = 1.0 - 1.0 / 2000.0; gains = []
     for _, label, true in pairs:
+        kap = []
         for j in range(2):
-            for k in range(5):
-                v = 1.0 if label[j] == k else 0.0; g = 1.0 if true[j] == k else 0.0
-                m_[0] = d_ * m_[0] + 1.0; m_[1] = d_ * m_[1] + v; m_[2] = d_ * m_[2] + g; m_[3] = d_ * m_[3] + v * v; m_[4] = d_ * m_[4] + g * g; m_[5] = d_ * m_[5] + v * g
-        n = m_[0]; mv, mg = m_[1] / n, m_[2] / n; var_v, var_g = m_[3] / n - mv * mv, m_[4] / n - mg * mg; cov = m_[5] / n - mv * mg
-        gains.append((float(max(0.0, min(1.0, cov / max(var_v, 1e-9)))) if n > 64 else 0.0,
-                      float(cov / math.sqrt(max(var_v, 1e-9) * max(var_g, 1e-9))) if n > 64 else 0.0))
+            Cj = conf[j]
+            for r_ in Cj:
+                for k in range(5):
+                    r_[k] *= d_
+            Cj[label[j]][true[j]] += 1.0
+            n = sum(sum(r_) for r_ in Cj); po = sum(Cj[k][k] for k in range(5)) / n
+            pe = sum(sum(Cj[k]) * sum(Cj[r][k] for r in range(5)) for k in range(5)) / (n * n)
+            kap.append((po - pe) / (1.0 - pe) if 1.0 - pe > 1e-9 else 0.0)
+        gains.append((sum(max(0.0, min(1.0, k)) for k in kap) / 2.0 if n > 64 else 0.0, [k if n > 64 else 0.0 for k in kap]))
     st = L.motor[0]
-    assert st["inv_m"] == m_ and (st["inv_gain"], st["inv_corr"]) == gains[-1] and [l_[6] for l_ in lessons] == [g_[0] for g_ in gains]
-    assert all(g_ == (0.0, 0.0) for g_ in gains[:6]) and gains[6] != (0.0, 0.0), gains[:8]
-    assert st["inv_n"] == len(lessons) and L.motor[1]["inv_n"] == 0 and L.motor[1]["inv_m"] == [0.0] * 6 and not hasattr(L.m.timing["grip"], "inv")
+    assert st["inv_conf"] == conf and (st["inv_gain"], st["inv_kappa"]) == gains[-1] and [l_[6] for l_ in lessons] == [g_[0] for g_ in gains]
+    warm = next(k for k, g_ in enumerate(gains) if g_[1] != [0.0, 0.0])
+    assert all(g_ == (0.0, [0.0, 0.0]) for g_ in gains[:warm]) and warm == 65, (warm, gains[60:68])   # n > 64 at the 66th act (tau 2000)
+    assert st["inv_n"] == len(lessons) and L.motor[1]["inv_n"] == 0 and L.motor[1]["inv_conf"] is None and L.motor[1]["inv_kappa"] == [0.0]
+    assert not hasattr(L.m.timing["grip"], "inv")
     # only act_inv moved
     moved = sorted(k for k, v in L.m.named_parameters() if not torch.equal(v, p0[k]))
     assert moved == ["timing.arm.inv.0.bias", "timing.arm.inv.0.weight", "timing.arm.inv.2.bias", "timing.arm.inv.2.weight"], moved
     # it learned
     hits = [sum(1 for l_ in lessons[-100:] if l_[5][j] == [l_[4] // 5, l_[4] % 5][j]) / 100.0 for j in (0, 1)]
     first = [sum(1 for l_ in lessons[:50] if l_[5][j] == [l_[4] // 5, l_[4] % 5][j]) / 50.0 for j in (0, 1)]
-    assert min(hits) >= 0.95 and st["inv_gain"] >= 0.9 and max(first) < 0.8, (first, hits, st["inv_gain"])
+    assert min(hits) >= 0.95 and st["inv_gain"] >= 0.8 and max(first) < 0.8, (first, hits, st["inv_gain"])   # kappa over tau 2000 acts: the early labels still weigh
     rep = L.insides()["effectors"]["arm"]["timing"]
     assert rep["inv_gain"] == round(st["inv_gain"], 3) and rep["inv_n"] == len(lessons)
     # the night keeps the reliability and leaves no pair across it (the sleep switch's night, then a night by hand); a save and a load
@@ -2202,8 +2211,8 @@ def test_act_inv_learns_online():
     f_night = L.night
 
     def night_spy():
-        kept.append((list(st["inv_m"]), st["inv_gain"], st["inv_corr"], st["inv_n"])); out = f_night()
-        kept.append((list(st["inv_m"]), st["inv_gain"], st["inv_corr"], st["inv_n"])); return out
+        kept.append((copy.deepcopy(st["inv_conf"]), st["inv_gain"], list(st["inv_kappa"]), st["inv_n"])); out = f_night()
+        kept.append((copy.deepcopy(st["inv_conf"]), st["inv_gain"], list(st["inv_kappa"]), st["inv_n"])); return out
     L.night = night_spy
     while L.nights == 0:
         run.step(); rec.append(dict(L.last["acts"]["arm"]))
@@ -2219,17 +2228,33 @@ def test_act_inv_learns_online():
         C = Life.load(path, _Timed(TOK, L.cfg), save_path=None, world=w2)
     finally:
         os.remove(path)
-    assert sorted(blob["life"]["motor"]) == ["arm", "grip", "tap"] and blob["life"]["motor"]["arm"]["inv_m"] == st["inv_m"]
-    assert C.motor[0]["inv_m"] == st["inv_m"] and (C.motor[0]["inv_gain"], C.motor[0]["inv_corr"], C.motor[0]["inv_n"]) == (st["inv_gain"], st["inv_corr"], st["inv_n"])
+    assert sorted(blob["life"]["motor"]) == ["arm", "grip", "tap"] and blob["life"]["motor"]["arm"]["inv_conf"] == st["inv_conf"]
+    assert blob["life"]["motor"]["grip"]["inv_conf"] is None and C.motor[1]["inv_conf"] is None
+    assert C.motor[0]["inv_conf"] == st["inv_conf"] and (C.motor[0]["inv_gain"], C.motor[0]["inv_kappa"], C.motor[0]["inv_n"]) == (st["inv_gain"], st["inv_kappa"], st["inv_n"])
     sL, sC = L.m.state_dict(), C.m.state_dict()
     assert all(torch.equal(sL[k], sC[k]) for k in sL if k.startswith("timing.")) and C.opt_inv is not None
+    # a save of R6's first form (the critics' running moments under "inv_m"): loaded, said once, the reliability earned again
+    import contextlib
+    import io
+    old_ = copy.deepcopy(blob)
+    old_["life"]["motor"] = {k_: {"inv_m": [1.0] * 6, "inv_gain": 0.5, "inv_corr": 0.5, "inv_n": v_["inv_n"]} for k_, v_ in blob["life"]["motor"].items()}
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd); said = io.StringIO()
+    try:
+        torch.save(old_, path)
+        with contextlib.redirect_stdout(said):
+            O = Life.load(path, _Timed(TOK, L.cfg), save_path=None, world=_arm_world())
+    finally:
+        os.remove(path)
+    assert O.motor[0]["inv_conf"] == [[[0.0] * 5 for _ in range(5)] for _ in range(2)] and O.motor[0]["inv_gain"] == 0.0 and O.motor[0]["inv_n"] == st["inv_n"]
+    assert said.getvalue().count("act_inv reliability") == 1 and "earned again" in said.getvalue(), said.getvalue()
     run2 = WorldLoop(C)
     for _ in range(5):
         run2.step()
     print(f"anatomy 24: act_inv learned online on {len(lessons)} own acts, one lesson the tick after each (never after a rest or one of",
-          f"{len(guided)} demonstrations), its pair the frames' senses; its reliability the critics' estimator, equal to the bit, zero",
-          f"for the first 6 acts; only act_inv moved; its labels right on {first} of the first 50 joints and {hits} of the last 100,",
-          f"its reliability {st['inv_gain']:.3f}; kept through the night (no pair across it) and a save and a load")
+          f"{len(guided)} demonstrations), its pair the frames' senses; its reliability Cohen's kappa per joint over its running confusion,",
+          f"equal to the bit, zero for the first {warm} acts; only act_inv moved; its labels right on {first} of the first 50 joints and",
+          f"{hits} of the last 100, its kappas {[round(k_, 3) for k_ in st['inv_kappa']]}, its reliability {st['inv_gain']:.3f}; kept through",
+          f"the night (no pair across it) and a save and a load")
 
 
 def _timing_ref(L, i, C, obs, gain):
@@ -2430,6 +2455,98 @@ def test_demonstrations_count_as_earned():
           f"act_pred's gradient at 1 and at 0.01 (lesson, |grad| at 1, |grad| at 0.01): rests alone {out['rests']}, pure demonstration",
           f"{out['demonstration']}, own acts beside rests {out['mixed']} (linear in the reliability, the own acts' part fixed); the forward",
           f"half's lesson the same at every reliability")
+
+
+def test_act_inv_reliability_is_kappa():
+    """anatomy 29 (the R6 verifier's second finding; SIM_DESIGN.md 5.4): act_inv's reliability is Cohen's kappa per joint over its
+    running confusion, so the acts' own rates are never read as skill. On acts whose joints hold 60%, 80% and 95% of the time (the
+    other settings evenly), labels that carry nothing of the act read about 0: one that always says 'hold' (exactly 0), one drawn at
+    the acts' own rates, one drawn evenly; the critics' estimator R6 used, recomputed here for the record, read the first 0.51 at 60%
+    and 0.75 at 80%. A label right 90% of the time reads each joint's batch kappa of its counts (the decay made negligible); a label
+    right on one joint and blind on the other reads half that joint's; a joint whose labels and acts never varied reads 0. Zero until
+    64 acts, on from the 65th. A learner blind at first ('hold' always) and then right 90% reads about 0 while blind and rises after"""
+    from body.core.mouth import MouthMixin
+    from body.core.timing import TimingMixin
+
+    class _Rel(TimingMixin):
+        def __init__(self, tau):
+            self.cfg = {"act_inv_tau": tau}
+
+    arm = Effector("arm", [5, 5], rest_id=12, sense="body", inverse=True)
+    HOLD = 2
+
+    def act_(rng, p):
+        return HOLD if rng.random() < p else rng.choice([0, 1, 3, 4])
+
+    def run(tau, n, p, labeler, joint1=None, seed=1):
+        rng = random.Random(seed); life = _Rel(tau); st = MouthMixin._motor_state_new(arm); pairs = []; hist = []
+        for _ in range(n):
+            true = [act_(rng, p), act_(rng, p) if joint1 is None else joint1]
+            label = labeler(rng, true, p)
+            life._inv_rel_update(arm, st, label, true); pairs.append((label, true)); hist.append(st["inv_gain"])
+        return st, pairs, hist
+
+    def batch_kappa(pairs, j):
+        cnt = [[0] * 5 for _ in range(5)]
+        for lab, tru in pairs:
+            cnt[lab[j]][tru[j]] += 1
+        n = float(len(pairs)); po = sum(cnt[k][k] for k in range(5)) / n
+        pe = sum(sum(cnt[k]) * sum(cnt[r][k] for r in range(5)) for k in range(5)) / (n * n)
+        return (po - pe) / (1.0 - pe) if 1.0 - pe > 1e-12 else 0.0
+
+    def critics_(pairs, tau=8192.0):
+        """the estimator R6 used: the critics' running moments over every setting of every joint pooled, the slope clipped"""
+        d = 1.0 - 1.0 / tau; m = [0.0] * 6
+        for label, true in pairs:
+            for j in range(2):
+                for k in range(5):
+                    v = 1.0 if label[j] == k else 0.0; g = 1.0 if true[j] == k else 0.0
+                    m[0] = d * m[0] + 1.0; m[1] = d * m[1] + v; m[2] = d * m[2] + g; m[3] = d * m[3] + v * v; m[4] = d * m[4] + g * g; m[5] = d * m[5] + v * g
+        n = m[0]; mv, mg = m[1] / n, m[2] / n; var_v = m[3] / n - mv * mv; cov = m[5] / n - mv * mg
+        return max(0.0, min(1.0, cov / max(var_v, 1e-9)))
+
+    blind = {"always hold": lambda rng, t, p: [HOLD, HOLD], "at the acts' rates": lambda rng, t, p: [act_(rng, p), act_(rng, p)],
+             "evenly": lambda rng, t, p: [rng.randrange(5), rng.randrange(5)]}
+    right90 = lambda rng, t, p: [t[j] if rng.random() < 0.9 else rng.randrange(5) for j in range(2)]   # noqa: E731
+    table = {}
+    for p in (0.6, 0.8, 0.95):
+        for name, lab in blind.items():
+            st, pairs, _ = run(8192, 4000, p, lab)
+            assert st["inv_gain"] <= 0.06 and all(abs(k_) <= 0.06 for k_ in st["inv_kappa"]), (p, name, st["inv_gain"], st["inv_kappa"])
+            if name == "always hold":
+                assert all(abs(k_) <= 1e-9 for k_ in st["inv_kappa"]), (p, st["inv_kappa"])
+            table[(p, name)] = (round(st["inv_gain"], 3), round(critics_(pairs), 3))
+        st, pairs, hist = run(1e12, 4000, p, right90)
+        bk = [batch_kappa(pairs, j) for j in range(2)]
+        assert all(abs(a_ - b_) <= 1e-6 for a_, b_ in zip(st["inv_kappa"], bk)) and abs(st["inv_gain"] - sum(bk) / 2.0) <= 1e-6, (p, st["inv_kappa"], bk)
+        assert all(h_ == 0.0 for h_ in hist[:64]) and hist[64] > 0.0, (p, hist[62:66])
+        table[(p, "right 90%")] = (round(st["inv_gain"], 3), round(critics_(pairs), 3))
+    assert table[(0.6, "always hold")][1] >= 0.45 and table[(0.8, "always hold")][1] >= 0.7, table   # what R6's estimator read
+    assert table[(0.6, "right 90%")][0] >= 0.8, table
+    # one joint right, the other blind: half the first joint's
+    st, pairs, _ = run(1e12, 3000, 0.6, lambda rng, t, p: [t[0] if rng.random() < 0.9 else rng.randrange(5), HOLD])
+    k0 = batch_kappa(pairs, 0)
+    assert abs(st["inv_kappa"][0] - k0) <= 1e-6 and abs(st["inv_kappa"][1]) <= 1e-9 and abs(st["inv_gain"] - k0 / 2.0) <= 1e-6, (st["inv_kappa"], k0)
+    half = (round(k0, 3), round(st["inv_gain"], 3))
+    # a joint that never varied (the acts and the labels always 'hold') has shown nothing: 0
+    st, _, _ = run(8192, 500, 0.6, lambda rng, t, p: [t[0], HOLD], joint1=HOLD)
+    assert st["inv_kappa"][0] == 1.0 and st["inv_kappa"][1] == 0.0 and st["inv_gain"] == 0.5, st["inv_kappa"]
+    # an inverse model that learns (as act_inv does at birth): 3000 acts of labels that always say 'hold', then labels right 90% of the
+    # time, the acts holding 80% throughout, the counts decaying over 2000 acts: about 0 while blind (R6's estimator read 0.75 there),
+    # then rising as the informative labels replace the blind ones in the counts
+    seen = [0]
+
+    def learner(rng, t, p):
+        seen[0] += 1
+        return [HOLD, HOLD] if seen[0] <= 3000 else right90(rng, t, p)
+    st, pairs, hist = run(2000, 9000, 0.8, learner)
+    blind_ = max(hist[64:3000]); rise = [round(hist[k_], 3) for k_ in (2999, 3499, 3999, 5999, 8999)]
+    assert blind_ <= 0.06 and critics_(pairs[:3000], 2000.0) >= 0.7, (blind_, critics_(pairs[:3000], 2000.0))
+    assert all(a_ < b_ for a_, b_ in zip(rise, rise[1:])) and rise[-1] >= 0.7, rise
+    print("anatomy 29: act_inv's reliability is Cohen's kappa per joint (kappa, and R6's critics' estimator beside it):",
+          "; ".join(f"hold {p:.0%} {nm} {v_[0]} ({v_[1]})" for (p, nm), v_ in table.items()),
+          f"; one joint right (its kappa {half[0]}) and one blind: {half[1]}; a joint that never varied 0; zero until 64 acts; a learner",
+          f"blind for 3000 acts (at most {blind_:.3f}) then right 90%: {rise} at acts 3000, 3500, 4000, 6000, 9000")
 
 
 def test_the_forward_half():
@@ -2709,7 +2826,7 @@ ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_langua
                  test_the_gate_lesson_as_before, test_the_switches, test_a_later_effector, test_every_call_site_passes_the_effectors,
                  test_the_diary_world, test_a_world_of_frames, test_the_loop_deadline_and_pace,
                  test_the_timing_part_is_built_last, test_act_inv_learns_online, test_act_pred_targets, test_the_forward_half,
-                 test_the_learned_stops, test_demonstrations_count_as_earned]
+                 test_the_learned_stops, test_demonstrations_count_as_earned, test_act_inv_reliability_is_kappa]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

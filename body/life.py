@@ -301,7 +301,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         # its actor's trace, the tick's choice) in life.motor, in the anatomy's order after the voice; their gates' optimizer, of the
         # voice's kind, one for all (each lesson steps its own gate alone). The diary declares none: its life gains nothing.
         if len(self.anatomy.effectors) > 1:
-            self.motor = [self._motor_state_new() for _ in self.anatomy.effectors[1:]]
+            self.motor = [self._motor_state_new(e_) for e_ in self.anatomy.effectors[1:]]
             gp_ = [p_ for e_ in self.anatomy.effectors[1:] for p_ in self.m.get_submodule(e_.gate).parameters()]
             if str(self.cfg.get("gate_opt", "sgd")) == "adam":
                 self.opt_motor = torch.optim.Adam(gp_, lr=float(self.cfg.get("gate_adam_lr", 1e-3)))

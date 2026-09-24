@@ -267,7 +267,8 @@ SWITCHES = dict(
 MOTOR = dict(
     # act_inv's online rate (Adam, one step a tick of its own act): the inverse model learns from the body's own acts from birth
     act_inv_lr=1e-3,
-    # act_inv's running reliability: the critics' estimator (the running moments of prediction and outcome, decaying over this many
-    # samples; zero until 64 samples), each sample one setting of one joint of an own act (its label against its efference copy)
+    # act_inv's running reliability: Cohen's kappa per joint over its running confusion (its label against its efference copy), the
+    # counts decaying over this many own acts (since 2026-09-24; before, the critics' estimator's samples, one per setting of each
+    # joint of an act, so the memory in acts was this over the joints' settings); zero until 64 acts
     act_inv_tau=8192,
 )

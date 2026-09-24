@@ -560,15 +560,17 @@ class MouthMixin:
         return acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew
 
     @staticmethod
-    def _motor_state_new():
-        """a later effector's working state (step R5; one per effector after the voice, life.motor): its gate's buffer (the voice's
-        gate_buf's twin), its lesson's baseline and report, its act last tick, its actor's eligibility trace, and the tick's choice.
-        Step R6, its timing part's: the chunk's length (0: none under way), its body sense last tick, the sense its forward half
-        foresaw for this tick and the error now; act_inv's reliability (the critics' six running moments, the slope and the
-        correlation; kept through the night and saved with the body), its lessons and the last; the chunks begun and their stops"""
+    def _motor_state_new(e):
+        """a later effector's working state (step R5; one per effector after the voice, life.motor; e its declaration): its gate's
+        buffer (the voice's gate_buf's twin), its lesson's baseline and report, its act last tick, its actor's eligibility trace, and
+        the tick's choice. Step R6, its timing part's: the chunk's length (0: none under way), its body sense last tick, the sense its
+        forward half foresaw for this tick and the error now; act_inv's reliability (its running confusion per joint, None for an
+        effector with no inverse model, each joint's kappa and their mean clipped, the reliability; kept through the night and saved
+        with the body), its lessons and the last; the chunks begun and their stops"""
         return {"buf": collections.deque(maxlen=96), "g_base": None, "last": None, "acted_last": False, "e_actor": None, "now": None,
                 "chunk": 0, "sense": None, "fwd": None, "err": None,
-                "inv_m": [0.0] * 6, "inv_gain": 0.0, "inv_corr": 0.0, "inv_n": 0, "inv_last": None,
+                "inv_conf": ([[[0.0] * int(K) for _ in range(int(K))] for K in e.factors] if e.inverse else None),
+                "inv_kappa": [0.0] * len(e.factors), "inv_gain": 0.0, "inv_n": 0, "inv_last": None,
                 "chunks": 0, "stops": {"rest": 0, "gate": 0, "reflex": 0, "end": 0, "max": 0}}
 
     def _choose_effector(self, i, frame, C1, level, stri):
