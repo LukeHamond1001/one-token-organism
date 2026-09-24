@@ -721,19 +721,21 @@ def scene_xml(folder=HERE):
        of 2026-09-24, made for him; tools/sim_friction.py, measured 2026-09-24 at 1 and 10, never by pain rates or grasp counts):
        real rubber, plastic, foam and housings hold without a slide below mu N; MuJoCo's soft contacts creep there "by design"
        (MuJoCo 3.9 docs, Overview, "Softness and slip"), and the docs name the remedy: "using the Newton solver with elliptic
-       friction cones and large value of impratio is the recommended way of reducing slip" (ibid.; Modeling, "Preventing
-       slip": "Increase the impratio parameter. This will reduce (but not entirely prevent) slow slippage. Note that high
-       impratio values work well only with elliptic cones"); MuJoCo Menagerie's hand and gripper models (the Shadow hand, the
+       friction cones and large value of impratio is the recommended way of reducing slip" (ibid.; Modeling, "Solver
+       settings": "When contact slip is a problem, the best way to suppress it is to use elliptic cones, large impratio, and the
+       Newton algorithm with very small tolerance"; both on the stable docs, read 2026-09-24); MuJoCo Menagerie's hand and gripper models (the Shadow hand, the
        Allegro hand, the Robotiq 2F-85, ALOHA) ship cone="elliptic" impratio="10". Measured: a 10 kg box on the mat's contact
        pushed at 0.3-0.97 mu M g slid 3.6-21 mm in 2 s at 1 and 0.4-1.8 mm at 10 (real: none); the resting G1 pushed at 100 /
        150 / 200 N at the pelvis slid 1.9 / 3.1 / 4.4 cm at 1 and 0.4 / 0.7 / 1.9 cm at 10; above mu M g both slide as Coulomb's
        law says (0.99-1.00 of its distance). THE COST, disclosed (C5, C22): the convex contact model couples a slip to the normal
-       direction ("the only way to initiate slip is to generate some motion in the normal direction", Computation), so a
+       direction ("the only way to initiate slip is to generate some motion in the normal direction", Computation, "Physical realism
+       and soft contacts"), so a
        pressed box that starts to slide is pressed 22-24% harder than its load for about 10 ms at either setting, steady 0.5-5%
        after; and in the G1's hip housings pressed together and slid apart by the newborn's flexion, friction raises the normal
        force at 10 (1,795 N against 1,553 N with the pair frictionless) where at 1 it lowers it (1,333 against 1,646): a
-       pressed housing that slides reads harder at 10. The noslip solver would stop the slip entirely, but MuJoCo says it no
-       longer solves a well-defined problem and can be unstable, and it nearly doubled the tick. -->
+       pressed housing that slides reads harder at 10. The noslip solver (the docs' next step, "If that is not sufficient, enable
+       the Noslip solver") would stop the slip, but its cascade "is no longer solving a well-defined optimization problem (or any
+       other problem); instead it is just an adhoc mechanism" (Modeling, "Solver settings"), and it nearly doubled the tick. -->
   <!-- auto-reset off (A18): MuJoCo would otherwise put a state with a bad position, velocity or acceleration back to the
        start pose by itself and go on; off, the bad state stays as it is, and the world (body/sim/world.py) finds it on the
        tick it happens, before that tick's frame reaches the body -->
