@@ -3,7 +3,8 @@ for the limbs, computed from the frame as the body's own afferents give it (the 
 returning the act it forces on its effector this tick or None. They are the body's, below the gate: the sim's anatomy declares
 them on its effectors (the core's `Effector.reflex(frame, life, state)`, step R6), whose tick then gives the gate no eligibility
 and the actor no credit, and whose act reaches the world as any act. None of the refused reflexes (stepping, righting, the tonic
-neck and labyrinthine reflexes, Moro, rooting, Galant, Babinski, placing) is here. Orienting and the VOR act on the eyes (W3).
+neck and labyrinthine reflexes, Moro, rooting, Galant, Babinski, placing) is here. The VOR is the world's (body/sim/world.py,
+on the software fovea); orienting is a bias on the gaze's and the waist's proposals, the core's (R6h).
 
 THE FLEXOR WITHDRAWAL (Sherrington; spinal and lifelong). When a zone of a limb feels pain (the frame's `pain`: the zone's
 largest 10 ms mean force over F_pain), that limb takes one big flexion step of its flexion joints a tick for WITHDRAW_TICKS

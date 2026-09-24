@@ -17,10 +17,18 @@ x (WEAK_FLOOR + (1 - WEAK_FLOOR) h), weakness when the charge h is empty. No gra
 the servo acts on the G1. The gains replace the stock file's kp 500 at load (Menagerie's placeholder, its README says "needs
 tuning"); the file stays byte for byte as committed.
 
+THE GAZE (3.4, 3.5, 3.7; W3). The G1's eyes do not turn: a software fovea, a 32 px window in each camera's image (body/sim/eyes.py),
+sits where the gaze state puts it (yaw and pitch, tangent angles in the image; vergence, the two windows' yaw apart). The gaze
+effector (first of the effectors) steps it by +-0.07 / +-0.2 rad (vergence +-0.03 / +-0.1) at the tick's start, held in reach
+(each window inside its image, vergence up to the 25 cm near point, A23); a rest holds it (nothing pulls it back to the centre). THE VOR counter-turns it through the tick by
+the torso gyro's samples (the same noisy afferent the vestibular channel reads), gain 1, so a thing fixated stays fixated while
+the trunk turns; the gaze's own acts add on top.
+
 WHAT THE BODY SENSES (3.4; the channels of the frame, each the raw observation the anatomy's born code will read):
   body         43 joints x [sin, cos of the angle scaled over its range to -pi/2..pi/2, velocity (rad/s), servo effort (the
-               joint's actuator torque over its present limit)], in the effectors' order: joint sense (the real motors report
-               angle, velocity and torque)
+               joint's actuator torque over the limit it was clamped at)], in the effectors' order (joint sense: the real motors
+               report angle, velocity and torque); then the gaze's state and its velocity (6): BODY_SIZE 178 (the tract's 21
+               numbers are the voice lane's to append)
   touch        per touch zone (ZONES: 45, one per G1 link's collision shape, the head and the palm apart from the torso and the
                wrist they are fixed to) [log(1 + F / 1 N), onset], F the zone's summed normal contact force (self-contact
                included) averaged over the tick's 75 steps, onset the rise of the log force since the last tick (the slowly and
@@ -32,9 +40,11 @@ WHAT THE BODY SENSES (3.4; the channels of the frame, each the raw observation t
 and, for the reward's pain source and the spinal reflexes (a disclosed exception, 3.4: pain is the contact force on a zone),
   pain         per zone 1 when the tick's largest 10 ms mean (PAIN_WINDOW_STEPS physics steps) of its force exceeds F_PAIN, the
                threshold from the body's declared mass: PAIN_WEIGHTS x its weight from the model file (3 x 337.4 N = 1012 N)
+  eye_p, eye_f the eyes' retina codes (2 x 168, 2 x 384) and face_seen (A1's face test, either eye), when eyes are attached
+               (body/sim/eyes.py, W3)
 The frame's `face` is the parent's face level (0 until the parent lane's feelings drive it) and its `truth` (object poses, the
-forces in newtons, the charge's parts) is for the parent and the instruments only, never the body. The eyes are body/sim/eyes.py
-(W3) and the ears the parent lane's (P2); their channels join the frame there.
+forces in newtons, the charge's parts, the eyes' images) is for the parent and the instruments only, never the body. The ears are
+the parent lane's (P2); their channel joins the frame there.
 
 THE CHARGE (6.3, 5.3): h drains DRAIN_BASE a tick plus DRAIN_EFFORT x the tick's mean of sum(tau^2) / sum(tau_max^2) over the 43
 joints (the body's own actuator torque, tau_max the declared limits); a charger (a geom named bottle*, none in the room until the
@@ -48,7 +58,7 @@ can stop it outright (mujoco.FatalError). Every tick checks the counters and tha
 puts back the state it had when the tick began and raises WorldFault, so the fault never reaches the body.
 
 DETERMINISM. One seed; the world's own stream (the IMU noise) is a numpy PCG64 from SeedSequence(seed, spawn_key=(1,)), saved
-with the world. A saved world restored anywhere continues bit for bit (body/tests/test_sim_world.py, the exact replay test)."""
+with the world, as are the gaze and its velocity. A saved world restored anywhere continues bit for bit (body/tests/test_sim_world.py, the exact replay test)."""
 import math
 import pickle
 import sys
@@ -86,6 +96,20 @@ H_BIRTH = 1.0                   # born full (ours)
 WORLD_STREAM = 1                # the world's random stream: SeedSequence(seed, spawn_key=(1,)) (ours)
 CHARGER_PREFIX = "bottle"       # a geom named bottle* feeds through a palm (5.3; the bottle itself is W3's)
 
+# THE GAZE: the software fovea's effector (3.4, 3.5; W3). The G1 has no eyes that turn: a 32 x 32 px window inside each camera's
+# native image is its fovea, placed by a gaze state (yaw, pitch: tangent angles in the image, right and up positive; vergence: the
+# two windows' yaw apart, positive converging), moved by the gaze's acts (Hering's law: 3 commands move both windows) and counter-
+# turned by the VOR. The window stays inside its image: yaw within +-38.1 deg and pitch +-20.3 deg of the axis.
+GAZE_NAME, GAZE_JOINTS = "gaze", ("yaw", "pitch", "vergence")
+GAZE_SMALL, GAZE_BIG = 0.07, 0.20                  # rad a tick, yaw and pitch: +-4 / +-11.5 deg (3.5; anatomy, ours)
+VERG_SMALL, VERG_BIG = 0.03, 0.10                  # rad a tick, vergence: +-1.7 / +-5.7 deg (3.5; anatomy, ours)
+GAZE_SETTINGS = ((-GAZE_BIG, -GAZE_SMALL, 0.0, GAZE_SMALL, GAZE_BIG),) * 2 + ((-VERG_BIG, -VERG_SMALL, 0.0, VERG_SMALL, VERG_BIG),)
+NEAR_POINT_M = 0.25             # the nearest thing both windows can fixate: vergence 0 to 2 atan(0.025 / 0.25) = 11.4 deg, the
+                                # nearest her face comes (A3); anything nearer is seen double, as inside an infant's near point
+                                # (A23; anatomy, ours)
+VOR_GAIN = 1.0                  # the window counter-turns by the torso gyro's rotation, gain 1 (3.7; innate, ours)
+FOVEA_PX = 32                   # the fovea window, px of the native image (about 21 deg; 3.4; anatomy, ours)
+
 # THE G1'S TORQUE LIMITS (N m), per joint: Unitree's own robot description of this model's revision, the <limit effort> of
 # unitree_ros robots/g1_description/g1_29dof_with_hand_rev_1_0.urdf (read 2026-09-24). The Menagerie file (derived from Unitree's
 # MJCF) declares the same for 37 of the 43 joints; for the ankles' pitch and roll and the waist's roll and pitch it declares 50,
@@ -109,7 +133,7 @@ def torque_limit(joint):
 
 
 # ---------------------------------------------------------------- the effectors
-EFFECTOR_NAMES = tuple(n for n, _ in G.EFFECTORS)
+EFFECTOR_NAMES = (GAZE_NAME,) + tuple(n for n, _ in G.EFFECTORS)   # the gaze first, then the joint effectors (3.5's order)
 JOINTS = tuple(j for _, js in G.EFFECTORS for j in js)          # the 43 joints in the effectors' order (the body channel's)
 
 
@@ -139,8 +163,9 @@ def act_flat(digits):
     return a
 
 
-EFFECTOR_FACTORS = {n: [SETTINGS_PER_JOINT] * len(js) for n, js in G.EFFECTORS}
-EFFECTOR_REST = {n: rest_id(len(js)) for n, js in G.EFFECTORS}
+EFFECTOR_FACTORS = {GAZE_NAME: [SETTINGS_PER_JOINT] * len(GAZE_JOINTS), **{n: [SETTINGS_PER_JOINT] * len(js) for n, js in G.EFFECTORS}}
+EFFECTOR_REST = {n: rest_id(len(f)) for n, f in EFFECTOR_FACTORS.items()}
+BODY_SIZE = 4 * len(JOINTS) + 6  # the body channel: 43 joints x 4, then the gaze's state and its velocity
 
 
 # ---------------------------------------------------------------- the touch zones
@@ -195,6 +220,39 @@ def zone_groups(zones):
         else:
             raise ValueError(f"touch zone {z!r} belongs to no group")
     return out
+
+
+def gaze_reach(w=G.EYE_W, h=G.EYE_H, fovy_deg=G.EYE_FOVY, px=FOVEA_PX):
+    """the window centre's reach, (yaw, pitch) in rad, and the eye's focal length in px"""
+    f = (h / 2) / math.tan(math.radians(fovy_deg) / 2)
+    return math.atan((w / 2 - px / 2) / f), math.atan((h / 2 - px / 2) / f), f
+
+
+GAZE_REACH_YAW, GAZE_REACH_PITCH, EYE_F_PX = gaze_reach()
+VERG_MAX = 2 * math.atan(G.STEREO_BASELINE / 2 / NEAR_POINT_M)
+
+
+def clamp_gaze(g):
+    """the gaze held in reach: vergence in [0, VERG_MAX], pitch within the reach, yaw such that both windows stay in their images"""
+    v = min(VERG_MAX, max(0.0, float(g[2])))
+    ry = GAZE_REACH_YAW - v / 2
+    return np.array([min(ry, max(-ry, float(g[0]))), min(GAZE_REACH_PITCH, max(-GAZE_REACH_PITCH, float(g[1]))), v])
+
+
+def vor(yaw, pitch, omega_cam, dt, gain=VOR_GAIN):
+    """THE VOR on the software fovea: the conjugate gaze (tangent angles in the image) counter-turned by the head's rotation. The
+    ray it names in the camera's frame (x right, y up, z back) is rotated by -gain x omega dt for each gyro sample (omega already
+    in the camera's frame), so a thing fixated stays fixated while the head turns (roll about the axis cannot be undone by a
+    window and is left). Returns the new (yaw, pitch)."""
+    r = np.array([math.tan(yaw), math.tan(pitch), -1.0]); r /= np.linalg.norm(r)
+    for w in np.asarray(omega_cam, float):
+        th = -gain * w * dt
+        a = float(np.linalg.norm(th))
+        if a > 0:
+            k = th / a
+            r = r * math.cos(a) + np.cross(k, r) * math.sin(a) + k * float(k @ r) * (1 - math.cos(a))
+    zf = max(-r[2], 1e-6)
+    return math.atan2(r[0], zf), math.atan2(r[1], zf)
 
 
 MUJOCO_MESSAGES = []            # MuJoCo's warning texts this process, the latest last (kept here, never printed or logged to a file)
@@ -273,6 +331,12 @@ class G1World(SimWorld):
         self.imu_noise = np.repeat([float(m.sensor_noise[i]) for i in self.imu_order], 3)
         self.imu_cut = np.repeat([float(m.sensor_cutoff[i]) if m.sensor_cutoff[i] > 0 else np.inf for i in self.imu_order], 3)
         self.alpha = 1.0 - math.exp(-m.opt.timestep / (TONE_TAU_TICKS * TICK_S))
+        # the gaze: the torso gyro's samples turned into the eyes' camera frame (both eyes share it; the site rides the torso)
+        R_site = np.zeros(9); mujoco.mju_quat2Mat(R_site, m.site_quat[m.site("imu_in_torso").id])
+        R_cam = G.eye_frames()["L"][1]
+        self.gyro_to_cam = R_cam.T @ R_site.reshape(3, 3)
+        self.gaze = np.zeros(3); self.gaze_v = np.zeros(3)
+        self.eyes = None
         # birth
         self.tick = 0
         self.h = H_BIRTH; self.dh = 0.0
@@ -316,15 +380,20 @@ class G1World(SimWorld):
         mid, half = (self.hi + self.lo) / 2, (self.hi - self.lo) / 2
         ang = (q - mid) / half * (math.pi / 2)
         effort = d.qfrc_actuator[self.dof] / self.m.jnt_actfrcrange[self.jid, 1]     # over the limit the torque was clamped at
-        body = np.stack([np.sin(ang), np.cos(ang), d.qvel[self.dof], effort], axis=1).reshape(-1)
+        body = np.concatenate([np.stack([np.sin(ang), np.cos(ang), d.qvel[self.dof], effort], axis=1).reshape(-1), self.gaze, self.gaze_v])
         touch = np.stack([s["touch_log"], s["touch_onset"]], axis=1).reshape(-1)
         obs = {"body": body, "touch": touch, "vestibular": s["vestibular"].copy(), "charge": np.array([self.h, self.dh]),
                "pain": (s["pain_force"] > self.f_pain).astype(np.float64)}
-        return Frame(self.tick, obs, 0.0, self._truth())
+        truth = self._truth()
+        if self.eyes is not None:                                       # the eyes' retina codes (W3; body/sim/eyes.py)
+            seen = self.eyes.see()
+            obs["eye_p"], obs["eye_f"], obs["face_seen"] = seen["eye_p"], seen["eye_f"], seen["face_seen"]
+            truth["eyes"] = seen["truth"]
+        return Frame(self.tick, obs, 0.0, truth)
 
     def apply(self, acts):
-        """one tick (150 ms, 75 steps of 2 ms) with the body's acts {effector name: flat act}; names the world does not move (the
-        voice, the gaze until the eyes are built) are the other lanes'"""
+        """one tick (150 ms, 75 steps of 2 ms) with the body's acts {effector name: flat act}: the gaze's and the joint effectors';
+        names the world does not move (the voice, the word output) are the other lanes'"""
         if self.paused:
             raise RuntimeError("G1World: the world moved while paused (the night)")
         m, d = self.m, self.d
@@ -334,6 +403,8 @@ class G1World(SimWorld):
             a = acts.get(name) if acts else None
             if a is not None and int(a) != EFFECTOR_REST[name]:
                 steps[name] = np.array([SETTINGS[k] for k in act_digits(a, len(js))])
+        a = acts.get(GAZE_NAME) if acts else None
+        gaze_step = np.zeros(3) if a is None else np.array([GAZE_SETTINGS[j][k] for j, k in enumerate(act_digits(a, len(GAZE_JOINTS)))])
         start = self._capture()
         warn0 = [int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))]
         self._apply_weakness()
@@ -346,6 +417,8 @@ class G1World(SimWorld):
                 continue
             d.ctrl[self.aid[sl]] = np.clip(q[sl] + steps[name], self.lo[sl], self.hi[sl])
         self._last_acts = {k: int(v) for k, v in (acts or {}).items() if k in EFFECTOR_REST}
+        gaze0 = self.gaze.copy()
+        self.gaze = clamp_gaze(self.gaze + gaze_step)                  # the gaze's act: the windows jump at the tick's start
         rest_a = self.aid[rest_idx] if rest_idx else None
         rest_q = self.qadr[rest_idx] if rest_idx else None
         n, nz = STEPS_PER_TICK, self.nz
@@ -374,7 +447,11 @@ class G1World(SimWorld):
             said = f" ({MUJOCO_MESSAGES[-1]})" if MUJOCO_MESSAGES else ""
             raise WorldFault(self.tick, f"MuJoCo's warnings {warned}{said}" if warned else "a state not finite")
         # the tick's senses
+        imu = self._imu_noisy(imu)
         self._sense_tick(F, imu)
+        yaw, pitch = vor(self.gaze[0], self.gaze[1], imu[:, 3:6] @ self.gyro_to_cam.T, m.opt.timestep)   # the VOR through the tick
+        self.gaze = clamp_gaze([yaw, pitch, self.gaze[2]])
+        self.gaze_v = (self.gaze - gaze0) / TICK_S
         drain = DRAIN_BASE + DRAIN_EFFORT * float(eff.mean()) / self.tau_max_sq
         h0 = self.h
         self.h = float(min(1.0, max(0.0, self.h - drain + (FEED_RATE if fed else 0.0))))
@@ -444,7 +521,7 @@ class G1World(SimWorld):
         return False
 
     def _sense_tick(self, F, imu):
-        """the tick's aggregates: touch (the mean force's log, its onset), pain's filtered force, the IMUs with their noise"""
+        """the tick's aggregates: touch (the mean force's log, its onset), pain's filtered force, the IMUs (their noisy samples)"""
         s = self._sensed
         lf = np.log1p(F.mean(axis=0) / TOUCH_UNIT_N)
         onset = np.maximum(0.0, lf - s["touch_log"])
@@ -457,9 +534,11 @@ class G1World(SimWorld):
         self._sensed = {"touch_log": lf, "touch_onset": onset, "touch_force": F.mean(axis=0), "pain_force": pain_force,
                         "carry": F[-(w - 1):].copy(), "vestibular": vest, "peak_force": F.max(axis=0)}
 
-    def _vestibular(self, imu):
-        x = imu + self.rng.standard_normal(imu.shape) * self.imu_noise
-        x = np.clip(x, -self.imu_cut, self.imu_cut)
+    def _imu_noisy(self, imu):
+        """the IMUs' samples as the sensors give them: the model's declared noise from the world's stream, clipped at their ranges"""
+        return np.clip(imu + self.rng.standard_normal(imu.shape) * self.imu_noise, -self.imu_cut, self.imu_cut)
+
+    def _vestibular(self, x):
         mean = x.mean(axis=0)
         peak = x[np.abs(x).argmax(axis=0), np.arange(x.shape[1])]
         out = []
@@ -476,7 +555,7 @@ class G1World(SimWorld):
         imu = self.d.sensordata[self.imu_adr][None, :]
         lf = np.log1p(F[0] / TOUCH_UNIT_N)
         self._sensed = {"touch_log": lf, "touch_onset": np.zeros(self.nz), "touch_force": F[0].copy(), "pain_force": F[0].copy(),
-                        "carry": np.repeat(F, PAIN_WINDOW_STEPS - 1, axis=0), "vestibular": self._vestibular(imu),
+                        "carry": np.repeat(F, PAIN_WINDOW_STEPS - 1, axis=0), "vestibular": self._vestibular(self._imu_noisy(imu)),
                         "peak_force": F[0].copy()}
         self._drain = 0.0; self._fed = False
 
@@ -487,7 +566,8 @@ class G1World(SimWorld):
         s = self._sensed
         return {"time": float(d.time), "pelvis": d.qpos[0:7].copy(), "torso": d.xpos[m.body("torso_link").id].copy(),
                 "toys": toys, "touch_N": s["touch_force"].copy(), "pain_N": s["pain_force"].copy(), "peak_N": s["peak_force"].copy(),
-                "f_pain": self.f_pain, "drain": self._drain, "fed": self._fed, "ncon": int(d.ncon), "acts": dict(self._last_acts)}
+                "f_pain": self.f_pain, "drain": self._drain, "fed": self._fed, "ncon": int(d.ncon), "acts": dict(self._last_acts),
+                "gaze": self.gaze.copy()}
 
     # ---------------------------------------------------------------- the state
     def _capture(self):
@@ -498,7 +578,7 @@ class G1World(SimWorld):
                 "model": {f: getattr(m, f).copy() for f in MUTABLE_MODEL_FIELDS},
                 "tick": self.tick, "h": self.h, "dh": self.dh, "paused": self.paused, "seed": self.seed,
                 "sensed": {k: v.copy() for k, v in self._sensed.items()}, "drain": self._drain, "fed": self._fed,
-                "last_acts": dict(self._last_acts), "rng": self.rng.bit_generator.state,
+                "last_acts": dict(self._last_acts), "rng": self.rng.bit_generator.state, "gaze": self.gaze.copy(), "gaze_v": self.gaze_v.copy(),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
 
     def _restore(self, st):
@@ -514,4 +594,6 @@ class G1World(SimWorld):
         self._drain, self._fed = st["drain"], st["fed"]
         self._last_acts = dict(st["last_acts"])
         self.rng.bit_generator.state = st["rng"]
+        self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
+        self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()
         mujoco.mj_forward(m, d)

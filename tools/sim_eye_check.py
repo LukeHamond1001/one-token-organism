@@ -1,0 +1,230 @@
+"""THE EYE CHECK (docs/SIM_DESIGN.md 3.4, 13 risk 9, C2 and C3; the build plan's W3): does the software fovea tell the ten toys and
+the parent's face apart at 1.5 px a degree in the furnished room, under morning, midday and dusk light, with and without the sun's
+shadow; and does the face test's ray agree with a segmentation render? An instrument, never the body: no weight of any body learns
+here, and the readouts are the instrument's own.
+
+The G1 lies as born. Each view puts one thing (a toy, or the parent's head facing the eyes within 45 deg) at a random point 0.3-1.2
+m in front of the eyes, within the fovea's reach, turned at random; the gaze is aimed at it with a 1.5 deg error (gaze_at, the
+instrument's aim), and the two eyes render. The label is what fills the left fovea window in a segmentation render at the same eye
+(the most pixels of one thing, at least 20 of 1024; else none): so an occluded or clipped thing is labelled as what is seen. The
+same views are rendered under each light and shadow setting (paired). The code read is the retina's fovea code of both eyes (2 x
+384, body/sim/eyes.py), standardized on the training views; readouts: the nearest class mean and a ridge one-hot, trained on 2/3
+of the views and tested on the rest, balanced over the classes present; and a small nonlinear readout (one hidden layer of 256), as
+test 11 read born codes, since the body's reader is a cortex, not a linear map. The design's bar is 0.75 (C3). The lights are stand-ins
+until the day's light is built (W5): the sun as built (midday), low from the window's side and warm (morning), low and orange
+(dusk). C2: for the face views (a third of them with a toy put on the line between the eye and the mouth, at a random place
+along it), the face test's verdict in the left eye against a segmentation render's: the same test with the ray replaced by the
+render (8 x the eye's resolution, so the mouth resolves: the pixel at the mouth point is the parent's head) and the face's pixels
+counted in the window; their agreement, and the ray's verdict against the render's visibility alone.
+With --codes, the same views' fovea is also read (under the first light, no shadow) as its raw pixels (both eyes, 2 x 3,072) and
+as a finer retina (2 px cells: 16 x 16 x 6 per eye), to place what the retina's 4 px cells keep of the pixels' identity.
+Run: nice -n 19 python3 tools/sim_eye_check.py [--views 60] [--seed 1] [--lights midday,morning,dusk] [--codes]  (JSON on stdout;
+nothing written)"""
+import argparse
+import json
+import math
+import os
+import sys
+import time
+
+import mujoco
+import numpy as np
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+from body.sim import eyes as E  # noqa: E402
+from body.sim import world as W  # noqa: E402
+
+G = W.G
+kin = G.kin
+TOYS = ["ball", "block", "duck", "cup", "rattle", "car", "bear", "stacker", "drum", "ring"]
+CLASSES = TOYS + ["face"]
+LIGHTS = {"midday": None,
+          "morning": dict(dir=(0.85, 0.35, -0.40), diffuse=(0.32, 0.28, 0.22)),
+          "dusk": dict(dir=(0.85, -0.35, -0.40), diffuse=(0.30, 0.18, 0.10))}
+AIM_ERR_DEG = 1.5
+
+
+def rot(axis, a):
+    axis = np.asarray(axis, float) / np.linalg.norm(axis)
+    K = np.array([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]], [-axis[1], axis[0], 0]])
+    return np.eye(3) + math.sin(a) * K + (1 - math.cos(a)) * K @ K
+
+
+def ridge_acc(Xtr, ytr, Xte, yte, k, lam=1.0):
+    Y = np.eye(k)[ytr]
+    A = np.c_[Xtr, np.ones(len(Xtr))]
+    Wt = np.linalg.solve(A.T @ A + lam * np.eye(A.shape[1]), A.T @ Y)
+    return (np.c_[Xte, np.ones(len(Xte))] @ Wt).argmax(1)
+
+
+def mlp_acc(Xtr, ytr, Xte, k, seed=0, hidden=256, epochs=300):
+    """a small nonlinear readout (one hidden layer, the instrument's own; full-batch Adam, weight decay), as t11 read born codes"""
+    import torch
+    torch.manual_seed(seed)
+    net = torch.nn.Sequential(torch.nn.Linear(Xtr.shape[1], hidden), torch.nn.ReLU(), torch.nn.Linear(hidden, k))
+    opt = torch.optim.Adam(net.parameters(), lr=1e-3, weight_decay=1e-3)
+    X, y = torch.tensor(Xtr, dtype=torch.float32), torch.tensor(ytr)
+    for _ in range(epochs):
+        opt.zero_grad(); torch.nn.functional.cross_entropy(net(X), y).backward(); opt.step()
+    with torch.no_grad():
+        return net(torch.tensor(Xte, dtype=torch.float32)).argmax(1).numpy()
+
+
+def balanced(pred, y):
+    cs = sorted(set(y.tolist()))
+    return float(np.mean([np.mean(pred[y == c] == c) for c in cs]))
+
+
+def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
+    rng = np.random.default_rng(seed)
+    w = W.G1World(seed=seed)
+    m, d = w.m, w.d
+    ey = E.Eyes(w, shadows="sun")
+    seg = mujoco.Renderer(m, G.EYE_H, G.EYE_W)
+    seg.enable_segmentation_rendering()
+    UP = 8
+    seg8 = mujoco.Renderer(m, G.EYE_H * UP, G.EYE_W * UP)
+    seg8.enable_segmentation_rendering()
+    opt = G.eye_option()
+    sun = [i for i in range(m.nlight) if m.light(i).name == "sun"][0]
+    sun0 = (m.light_dir[sun].copy(), m.light_diffuse[sun].copy())
+    toy_body = {t: m.body(f"toy_{t}").id for t in TOYS}
+    head = m.body("parent_head").id
+    mouth_geoms = {g for g in range(m.ngeom) if (m.geom(g).name or "").startswith("parent_mouth")}
+    cls_of_body = {b: i for i, b in enumerate(toy_body.values())}
+    cls_of_body[head] = len(TOYS)
+    base = w.save_state()
+    hid = m.body_mocapid[head]
+    # the views
+    plan = []
+    camL = m.camera("eye_L").id
+    for v in range(views * len(CLASSES)):
+        c = v % len(CLASSES)
+        dist = rng.uniform(0.3, 1.2)
+        yaw, pitch = math.radians(rng.uniform(-30, 30)), math.radians(rng.uniform(-15, 15))
+        turn = (rng.uniform(-45, 45), rng.uniform(-20, 20)) if CLASSES[c] == "face" else None
+        block = (TOYS[int(rng.integers(len(TOYS)))], rng.uniform(0.3, 0.9)) if CLASSES[c] == "face" and rng.random() < 1 / 3 else None
+        plan.append((c, dist, yaw, pitch, turn, rng.normal(0, 1, 4), rng.normal(0, math.radians(AIM_ERR_DEG), 3), block))
+
+    def place(c, dist, yaw, pitch, turn, q, block):
+        w.load_state(base)
+        R = d.cam_xmat[camL].reshape(3, 3)
+        dirc = np.array([math.tan(yaw), math.tan(pitch), -1.0]); dirc /= np.linalg.norm(dirc)
+        p = d.cam_xpos[camL] + R @ dirc * dist
+        if CLASSES[c] == "face":
+            x = d.cam_xpos[camL] - p; x /= np.linalg.norm(x)          # facing the eye, her crown toward the child's head (leaning
+            z = np.array([-1.0, 0, 0]) - x * -x[0]; z /= np.linalg.norm(z)   # over it from its feet's side: upright in its eyes)
+            x = rot(z, math.radians(turn[0])) @ x                       # turned about her up axis
+            x = rot(np.cross(z, x), math.radians(turn[1])) @ x          # and nodded
+            z = z - x * float(x @ z); z /= np.linalg.norm(z)
+            Rh = np.column_stack([x, np.cross(z, x), z])
+            centre = np.array([kin.head_surface_x(0, 0.15), 0.0, 0.15])
+            d.mocap_pos[hid] = p - Rh @ centre
+            d.mocap_quat[hid] = kin.mjquat(Rh)
+            if block is not None:                                       # a toy on the line between the eye and the mouth
+                mujoco.mj_forward(m, d)
+                mouth = E.mouth_point(m, d)[0]
+                a = m.jnt_qposadr[m.body_jntadr[toy_body[block[0]]]]
+                d.qpos[a:a + 3] = d.cam_xpos[camL] + (mouth - d.cam_xpos[camL]) * block[1]
+        else:
+            j = m.body_jntadr[toy_body[CLASSES[c]]]
+            a = m.jnt_qposadr[j]
+            d.qpos[a:a + 3] = p; d.qpos[a + 3:a + 7] = q / np.linalg.norm(q)
+        mujoco.mj_forward(m, d)
+        return p
+
+    lights = {L: LIGHTS[L] for L in lights}
+    labels, feats, facecmp = [], {k: [] for k in [(L, s) for L in lights for s in ("sun", "none")]}, []
+    alt = {"raw pixels": [], "retina 2 px cells": []}
+    t0 = time.perf_counter()
+    for c, dist, yaw, pitch, turn, q, aim, block in plan:
+        p = place(c, dist, yaw, pitch, turn, q, block)
+        w.gaze = W.clamp_gaze(E.gaze_at(m, d, p) + aim)
+        seg.update_scene(d, camera="eye_L", scene_option=opt)
+        s = seg.render()
+        x0, y0 = E.window_corner("L", w.gaze)
+        win = s[y0:y0 + W.FOVEA_PX, x0:x0 + W.FOVEA_PX]
+        counts = np.zeros(len(CLASSES), int); mouth_px = 0
+        for gid, typ in win.reshape(-1, 2):
+            if typ == int(mujoco.mjtObj.mjOBJ_GEOM) and gid >= 0:
+                b = int(m.geom_bodyid[gid])
+                if b in cls_of_body:
+                    counts[cls_of_body[b]] += 1
+                mouth_px += int(gid in mouth_geoms)
+        lab = int(counts.argmax()) if counts.max() >= 20 else -1
+        labels.append(lab)
+        if CLASSES[c] == "face":
+            ft = E.face_test(m, d, w.gaze)["L"]
+            mouth = E.mouth_point(m, d)[0]
+            pr = E.project(m, d, "L", mouth)
+            seg8.update_scene(d, camera="eye_L", scene_option=opt)
+            s8 = seg8.render()
+            r8, c8 = int(pr[1] * UP), int(pr[0] * UP)
+            gid8, typ8 = s8[min(max(r8, 0), s8.shape[0] - 1), min(max(c8, 0), s8.shape[1] - 1)]
+            visible = bool(typ8 == int(mujoco.mjtObj.mjOBJ_GEOM) and gid8 >= 0 and m.geom_bodyid[gid8] == head)
+            in_win = x0 <= pr[0] < x0 + W.FOVEA_PX and y0 <= pr[1] < y0 + W.FOVEA_PX
+            geo_ok = ft[1] not in ("not in the fovea", "turned away", "too small", "behind the eye")
+            seg_verdict = bool(in_win and visible and counts[len(TOYS)] >= 20 and ft[1] not in ("turned away",))
+            facecmp.append((bool(ft[0]), seg_verdict, ft[1] != "blocked", visible, block is not None, geo_ok))
+        for L, spec in lights.items():
+            if spec is None:
+                m.light_dir[sun], m.light_diffuse[sun] = sun0
+            else:
+                m.light_dir[sun] = np.asarray(spec["dir"]) / np.linalg.norm(spec["dir"]); m.light_diffuse[sun] = spec["diffuse"]
+            for sh in ("sun", "none"):
+                ey.set_shadows(sh)
+                seen = ey.see()
+                feats[(L, sh)].append(seen["eye_f"])
+                if codes and sh == "none" and L == next(iter(lights)):
+                    fv = seen["truth"]["fovea"]
+                    alt["raw pixels"].append(np.concatenate([fv[x].reshape(-1) / 255.0 for x in "LR"]))
+                    alt["retina 2 px cells"].append(np.concatenate([E.retina(fv[x], 2).reshape(-1) for x in "LR"]))
+        m.light_dir[sun], m.light_diffuse[sun] = sun0
+    secs = time.perf_counter() - t0
+    y = np.array(labels)
+    keep = y >= 0
+    n = int(keep.sum())
+    idx = np.where(keep)[0]
+    perm = rng.permutation(idx)
+    tr, te = perm[: int(len(perm) * 2 / 3)], perm[int(len(perm) * 2 / 3):]
+    out = {"views": len(plan), "labelled": n, "label_counts": {CLASSES[k]: int((y == k).sum()) for k in range(len(CLASSES))},
+           "none": int((y < 0).sum()), "seconds": round(secs, 1), "results": {}}
+    todo = [(f"{k[0]}, shadows {k[1]}", F) for k, F in feats.items()]
+    if codes:
+        todo += [(f"{next(iter(lights))}, shadows none, {nm}", F) for nm, F in alt.items()]
+    for key, F in todo:
+        X = np.array(F)
+        mu, sd = X[tr].mean(0), X[tr].std(0) + 1e-6
+        Xn = (X - mu) / sd
+        cs = sorted(set(y[tr].tolist()))
+        C = np.stack([Xn[tr][y[tr] == c].mean(0) for c in cs])
+        nm = np.array(cs)[((Xn[te][:, None, :] - C[None]) ** 2).sum(-1).argmin(1)]
+        rd = ridge_acc(Xn[tr], y[tr], Xn[te], y[te], len(CLASSES), lam=float(len(tr)) * 0.1)
+        mp = mlp_acc(Xn[tr], y[tr], Xn[te], len(CLASSES))
+        out["results"][key] = {"nearest_mean": round(balanced(nm, y[te]), 3), "ridge": round(balanced(rd, y[te]), 3),
+                               "mlp": round(balanced(mp, y[te]), 3),
+                               "face_mlp": round(float(np.mean(mp[y[te] == len(TOYS)] == len(TOYS))), 3) if (y[te] == len(TOYS)).any() else None,
+                                                        "face_ridge": round(float(np.mean(rd[y[te] == len(TOYS)] == len(TOYS))), 3) if (y[te] == len(TOYS)).any() else None}
+    if facecmp:
+        a = np.array(facecmp)
+        g = a[:, 5]                                                     # the views whose geometry passes (in the window, facing, big enough)
+        out["face_test_vs_segmentation"] = {"views": len(a), "with_a_toy_on_the_line": int(a[:, 4].sum()),
+                                            "test_agrees": round(float(np.mean(a[:, 0] == a[:, 1])), 3),
+                                            "test_yes_render_no": int(np.sum(a[:, 0] & ~a[:, 1])), "test_no_render_yes": int(np.sum(~a[:, 0] & a[:, 1])),
+                                            "geometry_passing": int(g.sum()),
+                                            "ray_agrees_with_render_visibility": round(float(np.mean(a[g, 2] == a[g, 3])), 3) if g.any() else None,
+                                            "blocked_by_ray": int(np.sum(g & ~a[:, 2])), "hidden_in_render": int(np.sum(g & ~a[:, 3]))}
+    out["render_ms"] = round(1e3 * ey.timing["render_s"] / max(1, ey.timing["renders"]), 1)
+    seg.close(); seg8.close(); ey.close()
+    return out
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--views", type=int, default=60)
+    ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--lights", default=",".join(LIGHTS))
+    ap.add_argument("--codes", action="store_true")
+    a = ap.parse_args()
+    print(json.dumps(main(a.views, a.seed, tuple(a.lights.split(",")), a.codes), indent=1))

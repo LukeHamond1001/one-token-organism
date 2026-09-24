@@ -14,8 +14,9 @@ and closing sign measured on the G1's own geometry; the withdrawal on a limb's p
 a save, M more; restored (in the same world and in a new one), the M again: every frame and the final state bit for bit. THE
 NIGHT: frozen, nothing seen or moved, the morning the same as never pausing. FAULTS: a tick MuJoCo cannot live raises WorldFault
 and leaves the world where the tick began, no MuJoCo log file written. THE BABBLER: deterministic, its units and rests as declared.
-THE WORLD IN THE CORE: a tiny body of the world's channels and its seven joint effectors (their reflexes declared) lives through the
-core's world loop, every learning rate at 0."""
+THE WORLD IN THE CORE: a tiny body of the world's channels (the body's 178: the 43 joints and the gaze), the gaze and the seven joint
+effectors (their reflexes declared) lives through the core's world loop, every learning rate at 0. The eyes are body/tests/
+test_sim_eyes.py's."""
 import hashlib
 import math
 import os
@@ -214,7 +215,8 @@ def test_joint_sense_and_vestibule():
     for _ in range(10):
         w.apply({})
     f = w.frame()
-    b = f.obs["body"].reshape(43, 4)
+    assert f.obs["body"].shape == (W.BODY_SIZE,)
+    b = f.obs["body"][:172].reshape(43, 4)
     assert np.allclose(b[:, 0] ** 2 + b[:, 1] ** 2, 1.0) and (b[:, 1] >= -1e-3).all()   # within its range (a soft limit gives a little)
     q = w.d.qpos[w.qadr]
     ang = (q - (w.hi + w.lo) / 2) / ((w.hi - w.lo) / 2) * math.pi / 2
@@ -477,7 +479,7 @@ def test_the_babbler():
 
 # ---------------------------------------------------------------- the world in the core
 def test_the_world_in_the_core():
-    """world 13: a tiny body of the world's channels (body, touch, vestibular, charge) and its seven joint effectors, each sensing its
+    """world 13: a tiny body of the world's channels (body, touch, vestibular, charge), the gaze and its seven joint effectors, each sensing its
     own joints, the limbs' reflexes declared, a pain source beside the diary's, lives 30 ticks through the core's world loop at every
     learning rate 0: each tick one frame and one apply, every effector's act reaching the world"""
     from tokenizers import Tokenizer
@@ -506,8 +508,10 @@ def test_the_world_in_the_core():
     class SimBody(LanguageAnatomy):
         def __init__(self, tok, cfg=None):
             super().__init__(tok, cfg)
-            self.channels += [Channel("body", "vector", 172, organ="body_in"), Channel("touch", "vector", 2 * w.nz, organ="touch_in"),
+            self.channels += [Channel("body", "vector", W.BODY_SIZE, organ="body_in"), Channel("touch", "vector", 2 * w.nz, organ="touch_in"),
                               Channel("vestibular", "vector", 24, organ="vest_in"), Channel("charge", "vector", 2, organ="charge_in")]
+            self.effectors.append(Limb("gaze", W.EFFECTOR_FACTORS["gaze"], rest_id=W.EFFECTOR_REST["gaze"], effort=0.01, sense="body",
+                                       sense_idx=list(range(172, 178))))
             for name, js in G.EFFECTORS:
                 sl = w.eff_slices[name]
                 idx = [4 * j + c for j in range(sl.start, sl.stop) for c in range(4)]
@@ -519,7 +523,7 @@ def test_the_world_in_the_core():
     torch.manual_seed(0)
     a = SimBody(tok, cfg).check()
     o = Organs(a.vocab, d=32, layers=1, heads=2, window=16, channels=a.channels, effectors=a.effectors, born_seed=0)
-    for nm, n in (("body_in", 172), ("touch_in", 2 * w.nz), ("vest_in", 24), ("charge_in", 2)):
+    for nm, n in (("body_in", W.BODY_SIZE), ("touch_in", 2 * w.nz), ("vest_in", 24), ("charge_in", 2)):
         setattr(o, nm, torch.nn.Linear(n, 32))                         # the channels' own maps (the sim's born encoders are a core step)
     t0 = time.time()
     L = Life(o, a, cfg=cfg, device="cpu", seed=0, world=w)
@@ -535,8 +539,8 @@ def test_the_world_in_the_core():
     assert all(names <= set(x) for x in applied) and all(0 <= x[n] < 5 ** len(W.EFFECTOR_FACTORS[n]) for x in applied for n in names)
     moved = sum(int(x[n] != W.EFFECTOR_REST[n]) for x in applied for n in names)
     assert w.now is not None and w.now.tick == 29                       # the frame the last tick was lived on
-    assert L.win and L.win[-1]["body"].shape[-1] == 172 and torch.allclose(L.win[-1]["body"].double(), torch.as_tensor(w.now.obs["body"]), atol=1e-6)
-    print(f"world 13: a tiny body of the world's four channels and seven joint effectors (43 joints, the limbs' reflexes declared, a",
+    assert L.win and L.win[-1]["body"].shape[-1] == W.BODY_SIZE and torch.allclose(L.win[-1]["body"].double(), torch.as_tensor(w.now.obs["body"]), atol=1e-6)
+    print(f"world 13: a tiny body of the world's four channels, the gaze and seven joint effectors (43 joints, the limbs' reflexes declared, a",
           f"pain source) lived 30 ticks through the core's world loop in {time.time() - t0:.1f} s: one frame and one apply a tick, every",
           f"effector's act in range at the world ({moved} acts, the rest rests), the joint sense in the window as the frame gave it")
 
