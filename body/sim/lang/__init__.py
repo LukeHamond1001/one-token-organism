@@ -1,3 +1,14 @@
-"""THE PARENT'S LANGUAGE (docs/SIM_DESIGN.md 4.5-4.9). Built so far: lexicon.py, the born table of 79 rows and the words
-channel's schedule (P1). To come (P3): the fast layer's templates and intents, the line check, the transcriber of the child's
-voice and the ledger; consts.py with the parent's timings."""
+"""THE PARENT'S LANGUAGE (docs/SIM_DESIGN.md 4.4-4.10). Built: lexicon.py, the born table of 79 rows and the words channel's
+schedule (P1); and P3's fast layer:
+  consts.py       her constants (the teacher's method: timings, the line check's limits, the ledger's tests, her ear's margins,
+                  what she expects by situation), each with its source
+  percept.py      what she perceives each tick (what the world must hand her: only what a person in her place could see or hear)
+  templates.py    her frames by intent, the growth queue and what each word needs to be shown, and the line check
+  conduct.py      her intents and the acts they accompany (the interface W2's motion implements; a stub until then), her voice's
+                  manners (FastLayer) and the speech side of L2 (Conduct)
+  transcriber.py  how she hears the child: its tract through her ear (body/sim/parent_ear.py) at each turn's end, its silent token
+                  output as a transcript
+  ledger.py       every line she says and every word she accepts, each word's standing (heard, understood, says), saved with the
+                  world and checked on a replay
+To come: day.py (P4: the day plan, routines, stages, leaving and returning, the never-taught pairs' probes), the digest and the
+steering check (P5)."""

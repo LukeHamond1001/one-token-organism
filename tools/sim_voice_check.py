@@ -16,10 +16,11 @@ RMS behind SYNTH_RMS, is a level, written into body/sim/voice/synth.py by hand a
              child's own voice (level over the same sound from 1.5 m, its lateral read); the cost a tick with three sources;
              the parent's speech moved by eighths of a sample (the top bands' level and level difference must hold still)
 
-Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N]
+Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N] [--growth]
   --lines  one line a line (default: 16 lines written here; the commits used the all-out study's 331 birth template lines,
            $S/allout/lang/all_lines.txt: 275 end in ".", 37 in "?", 19 in "!"; 314 distinct)
   --cache  the voice cache to use (default: a temporary folder, removed after)
+  --growth only the growth words' introductions (P3's INTRO frames), each set's words a second in the new-word register (C25)
 """
 import argparse
 import json
@@ -363,17 +364,41 @@ def ears(clips):
     print(f"the ears with three sources: {1e3 * np.median(tt):.2f} ms a tick median, {1e3 * np.percentile(tt, 95):.2f} ms 95th pct")
 
 
+def growth_sets(cache):
+    """C25 over every growth word's introduction (P3: body/sim/lang/templates.py INTRO, INTRO_WORD): its 3 lines in the new-word
+    register, the word emphasized, the words a second pooled over the set; a frame's object slot filled with "block"."""
+    from body.sim.lang import templates as TP                             # noqa: PLC0415
+    from body.sim.lang.percept import Seen                                  # noqa: PLC0415
+    rows = []
+    for w in TP.GROWTH_WORDS:
+        frames = TP.intro_frames(w)
+        if not frames:
+            continue
+        lines = [TP.fill(fr, o=Seen("block", "block", "red", "mat"), w=w)[0] for fr in frames]
+        cs = [cache.clip(ln, "new_word", emphasis=w) for ln in lines]
+        rows.append((w, sum(len(c.words) for c in cs) / sum((c.words[-1][2] - c.words[0][1]) / V.SR for c in cs), lines))
+    r = np.array([x[1] for x in rows])
+    over = [(w, round(v, 2)) for w, v, _ in rows if v > 3]
+    print(f"the growth words' introductions (C25), {len(rows)} sets of 3 lines in the new-word register: {r.mean():.2f} words a "
+          f"second on average, {r.min():.2f}-{r.max():.2f}; {len(over)} over 3: {over}")
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--lines", default="")
     ap.add_argument("--cache", default="")
     ap.add_argument("--n", type=int, default=20)
+    ap.add_argument("--growth", action="store_true", help="only the growth words' introductions (C25)")
     a = ap.parse_args()
     lines = [ln.strip() for ln in open(a.lines) if ln.strip()] if a.lines else FALLBACK
     tmp = None
     root = a.cache or (tmp := tempfile.mkdtemp(prefix="voicecheck_"))
     cache = V.VoiceCache(root)
     try:
+        if a.growth:
+            growth_sets(cache)
+            return
         clips, rms = voice(lines, cache, a.n)
         tract(rms)
         ears(clips)

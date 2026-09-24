@@ -379,13 +379,15 @@ def line_ssml(text, pitch, rate, emphasis=None):
            f'rate="{_pct(rate / ENGINE_RATE * 100)}">{esc}</prosody></speak>'
 
 
-def request(text, register="plain", emphasis=None, voice=PARENT_VOICE):
+def request(text, register="plain", emphasis=None, voice=PARENT_VOICE, prosody=None):
     """-> (the key, the request, the register's level in dB). A new word's line must name its new word as emphasis: the parent
     introduces a new word on its pitch peak and lengthened, on every line she uses for it (". ? !" alike; the design's 4.4 and
-    C25, measured by ending in tools/sim_voice_check.py)."""
+    C25, measured by ending in tools/sim_voice_check.py). prosody: (pitch, rate) in place of a register's, at the plain level,
+    for the parent's ear's templates only (body/sim/parent_ear.py: other voices, the old child pitch; lang/consts.EAR_VOICES);
+    never a line she says, whose register is always one of REGISTERS."""
     if register == "new_word" and not emphasis:
         raise ValueError(f"a new word's line must emphasize its new word: {text!r}")
-    p, r, g = REGISTERS[register]
+    p, r, g = REGISTERS[register] if prosody is None else (float(prosody[0]), float(prosody[1]), 0.0)
     req = {"format": FORMAT, "sr": SR, "voice": voice, "ssml": line_ssml(text, p, r, emphasis)}
     key = _sha(json.dumps(req, sort_keys=True, separators=(",", ":")).encode())
     return key, req, g
@@ -485,10 +487,12 @@ class VoiceCache:
         if store is self.clips:
             self.size += pp.stat().st_size + pj.stat().st_size
 
-    def clip(self, text, register="plain", emphasis=None, voice=PARENT_VOICE, heard=True):
+    def clip(self, text, register="plain", emphasis=None, voice=PARENT_VOICE, heard=True, prosody=None):
         """the line in a register (and, if emphasis names one of its words, with that word emphasized) -> Clip. heard: the
-        life hears it (the parent says it): the clip is kept for good; heard=False: made ahead (warm()), trimmed by the limit."""
-        key, req, gain = request(text, register, emphasis, voice)
+        life hears it (the parent says it): the clip is kept for good; heard=False: made ahead (warm()), trimmed by the limit.
+        (The parent's ear's templates are made with heard=True: kept for good, as part of the life's fixed ear.) prosody: see
+        request()."""
+        key, req, gain = request(text, register, emphasis, voice, prosody)
         got, expect = self._read(key, req, self.kept, text, register)
         if got is None:
             got, ahead = self._read(key, req, self.clips, text, register)
@@ -541,11 +545,11 @@ class VoiceCache:
                     pass
 
     def warm(self, lines):
-        """make (text, register) pairs ahead, as at a night boundary (not heard: trimmed by the limit); returns the misses'
-        count."""
+        """make (text, register) pairs, or (text, register, emphasis) triples (body/sim/lang/templates.birth_lines), ahead, as at
+        a night boundary (not heard: trimmed by the limit); returns the misses' count."""
         m0 = self.misses
-        for text, register in lines:
-            self.clip(text, register, heard=False)
+        for ln in lines:
+            self.clip(ln[0], ln[1], emphasis=ln[2] if len(ln) > 2 else None, heard=False)
         return self.misses - m0
 
     def close(self):

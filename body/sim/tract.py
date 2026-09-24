@@ -55,7 +55,7 @@ from scipy.signal import lfilter
 
 try:
     from .voice.synth import PA_PER_UNIT  # noqa: F401  (the engine units -> pascals at 1 m, shared with the parent's voice)
-except ImportError:                       # imported as a top-level module from body/sim/ (the study's scripts, parent_ear.py)
+except ImportError:                       # imported as a top-level module from body/sim/ (the study's scripts)
     from voice.synth import PA_PER_UNIT  # noqa: F401
 
 STREAM = 2                   # the tract's own random stream of the body's seed: SeedSequence(seed, spawn_key=(2,)) (the world: 1)

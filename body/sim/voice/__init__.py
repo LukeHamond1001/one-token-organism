@@ -22,18 +22,16 @@ THE CHILD'S VOICE AND THE WORD SCAFFOLD: what we chose, and why.
     from 16,000 ticks of the child's own babble read the parent's words into echoes the parent accepted for 2 of 12 words, so
     without the output no word would reach the parent for a long time and stage 2's judgments (right names, met asks) would have
     nothing to judge. The tract still earns stage 1's vocal-turn smile, and the parent hears it.
-  - The parent's ear for the tract (body/sim/parent_ear.py, the study's prototype; P3v builds it) listens only for the words it
-    expects in the situation,
-    and accepts one only when the sound is nearer that word than a bank of the child's own babble, recorded before birth and
-    fixed, by a margin set so held-out babble passes 2% of the time: in the study real other speakers' words then passed 100%,
-    where a fixed distance cutoff passing 1% of babble passed 0% of them. It is to hear through the same cochlea as the child
-    (ears.cochlea); until P3v the prototype hears through the study's (body/sim/parent_ear_cochlea.py, kept at the merge of
-    main's G1 prototypes so it runs as it was measured). The bank stays fixed (adding rejected near-words in life would lock those pronunciations out), and the
-    margin is re-set for the real context sets (P3, P6). The babbler's accepted approximations are written down as chance, and
-    the tract's first accepted word is milestone M6t.
-  - Every figure of the parent's ear in the design (4.9: the margin m = -0.35, 94-100% and 72-96% recognized, 2 of 12 echoes
-    accepted, the tract's reach table) was measured in the voice study through the prototype cochlea (allout/lang/ear2.py),
-    whose filters were 1.6 ERB wide; the committed cochlea's are 1.00 ERB. They are the study's numbers, not this cochlea's:
-    P3v measures them again on ears.cochlea before any is used.
+  - The parent's ear for the tract (body/sim/parent_ear.py, built in P3 on the child's own cochlea, ears.cochlea) listens only
+    for the words she expects in the moment, and accepts one only when the sound is nearer that word than a bank of the child's
+    own babble, recorded before birth and fixed, by a margin m set so held-out babble passes 2% of the time, and near enough the
+    nearest of all her words (P3's delta, set so the held-out voices' other words pass 2% of the time); a word is
+    exact only when it is also the nearest of all her words. Her templates are made through this voice's cache (VoiceCache.clip
+    with prosody=: other voices, the old child pitch) and kept in its ledger. Nothing she hears is added to her ear. The babbler's
+    accepted approximations are written down as chance; the tract's first accepted word is milestone M6t
+    (tools/sim_parent_ear.py measures the margins, the held-out voices and the cost).
+  - The design's figures for the tract in the parent's ear (4.9: 2 of 12 echoes accepted, the tract's reach table) are still the
+    voice study's, measured through its own cochlea (allout/lang/ear2.py, filters 1.6 ERB wide): P3v measures them again on this
+    ear. Her ear's own figures (the margins, the other voices' recognition, its cost) were measured again on ears.cochlea in P3.
   - The risk: tokens are the easier road to reward. The removal test watches it.
 """
