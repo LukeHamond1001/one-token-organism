@@ -1,13 +1,14 @@
 # The first simulated body: the stock Unitree G1 on a play mat (design and plan, 2026-09-24)
 
-Status: a design with its world built and measured. The stock G1, the parent and the living room exist as a MuJoCo scene in `body/sim/` (section 17). Nothing is committed. The core refactor continues on the branch `sim-core`. The language body is paused.
+Status: a design whose first parts are built, verified and measured on branches, not yet merged into main (section 0's build status). The stock G1, the parent and the living room are a MuJoCo scene in `body/sim/` (section 17). The world (W1, W3) is built on `sim-world`, the parent's voice and the child's ears (P1, P2) on `sim-parent`, and the core refactor continues on `sim-core`. The language body is paused.
 
 This amends the all-out design written this morning with the owner's nine decisions (the G1 amendment; section 14 lists each and where it lands). The custom child that design built is kept for reference as `body/sim/*_customchild.*` (section 15). The one-arm high chair of 2026-09-23 is kept as `body/sim/highchair_onearm.xml` and its maker; its document is in git history (commit e144afa).
 
 Sources:
 - the all-out studies (the world, the core at this scale, learning to move, the parent's language);
 - four studies run today for the amendment, on this Mac: the G1 in the room, the parent's feelings and its limits with the G1, the vocal tract, the amygdala;
-- the branch's commits.
+- the branch's commits;
+- the first build's reports and its verifiers' verdicts (W1 and W3, P1 and P2, R6 fix 3), folded in on the afternoon of 2026-09-24.
 
 Section 17 lists the files.
 
@@ -27,39 +28,54 @@ Section 17 lists the files.
   - the ears' brainstem lateral read;
   - the amygdala's born event lines (what it learns from them is learned);
   - four disclosed reflexes (withdrawal, grasp, orienting, the VOR with its quick phase) and the born expression reading (section 3.7).
-- **The parent** moves by scripted inverse kinematics. It has a small scripted state of feeling shown on a graded face, and answers the child within a second. It follows the child's attention, speaks infant-directed sentences, scaffolds, and keeps routines. Claude steers what it teaches between wall minutes.
+- **The parent** moves by scripted inverse kinematics. It has a small scripted state of feeling shown on a graded face of human proportions, and answers the child within a second. It follows the child's attention, speaks infant-directed sentences, scaffolds, and keeps routines. Claude steers what it teaches between wall minutes.
 - **Reward** comes only from the parent's face, and only while the child looks at it, plus pain and a charge need.
 
 **What already exists** (built and measured today; section 17 lists the files):
 - **The G1 room.** `body/sim/make_g1room.py` includes the G1's file unchanged: it is byte-identical to the commit. The senses are added at load as cameras and sites only.
   - Under babble the physics runs at 10.9–12.2× real time.
   - The two eyes cost about 16 ms a tick without shadows and 38 ms with the sun's shadow, from render to fovea.
+  - In the built world (W1 and W3, on `sim-world`): 15–18 ms a tick under babble (8.4–10× real time), and 48–53 ms with both eyes and the sun's shadow (2.8–3.1×), before the parent's face of human proportions made the eyes' render about 25–30% slower (section 9).
 - **The parent's acts.** All 22 passed inverse kinematics inside human joint ranges around the custom child. Aimed at the G1, the parent kneels beside it, rests a hand on its trunk, shows a toy 40 cm before its eyes, and guides a forearm.
 - **The parent's feelings and graded face** (`parent_feel.py`). Its self-test shows that nothing but a judged act can ever be felt.
 - **The vocal tract** (`tract.py`). It babbles and hears itself. Eight of the nine target words can be said in a way the parent's ear accepts in context.
 - **The amygdala** is specified and measured on a synthetic stream: 0.19 ms a tick.
-- **Stills** are in `video/sim_look_g1/`.
+- **Stills** are in `video/sim_look_g1/` (the parent's old face; redrawn after the merge).
+
+**Build status** (2026-09-24; each part on its own branch, not yet merged into main; each checked by a separate verifier who re-ran its tests, the eight language digests and probes of their own):
+
+| part | branch | commits | tests | verifier |
+|---|---|---|---|---|
+| W1, the world (`world.py`, `reflexes.py`, the room), and W3, the eyes (`eyes.py`), with the parent's face of human proportions (`parent_face.py`) | `sim-world` | 1ac403d, bd87dcc, 3c3b639; the merge of main b85abd3; fixes d1e35b7, 6003014, f29bb36 and 7f40cc2, b9b61bd and df05f4c | `test_sim_world` 18/18, `test_sim_eyes` 16/16, threaded and pinned | READY at df05f4c, after four rounds that each found blockers |
+| P1, the parent's voice (`voice/`, `lang/lexicon.py`), and P2, the ears (`ears.py`), with the child's tract (`tract.py`) | `sim-parent` | 2e5e68a; fix 0f257d1; the merge of main 7b93e36; fixes 87a4194, 06b85b2 | `test_sim_voice` 13/13, `test_sim_ears` 18/18, threaded and single-threaded | READY at 06b85b2, after three rounds that each found blockers |
+| R6 fix 3 (`act_pred`'s plasticity gated by its labels' reliability, `GatedAdam`) and the verifiers' three non-blocking findings | `sim-core` | e48b284, 6d6d246 | organ and anatomy tests 123/123, threaded and pinned | NOT READY: the gate holds only for a newborn body (section 3.6); R6 fix 4 answers it |
+
+- Every language digest equals its pin on every commit above, and no language-body file changed.
+- In verification, and not folded here: R6 fix 4 on `sim-core` (440bad3) and P3, the parent's fast layer, her ear and the ledger, on `sim-parent` (5ea4c4e). Each verifier's first look found blockers.
+- What each build changed in this design is folded into the sections below; the questions its fix rounds decided are A30–A35.
 
 **What the measurements changed:**
 - **A person cannot move a 34 kg body the way a parent moves a baby.** A person's hands give about 160 N with both hands, or 200 N for up to 2 s.
   - Within that: holding the G1 once it is propped near upright; guiding a limb that yields; a brief turn onto its side.
   - Beyond it: sitting it up from lying (217–237 N), sliding it on the mat, lifting it (its weight is 337 N).
   - So the parent comes to the child, and the child's own acts must carry every rise (section 4.2).
-- **Four of the ten toys cannot be held** by a Dex3 hand at any scale tried: the ball, duck, bear and drum. The cup is scaled to 0.8.
+- **Two of the ten toys cannot be held** by a Dex3 hand: the bear (2 of 9 tries) and the drum (0 of 9). The first measurements' four (the ball, duck, bear and drum) were MuJoCo's soft contacts creeping at impratio 1. At impratio 10, chosen by the contacts' physics (A32), the ball holds 9 of 9, the duck 7 of 9 and the cup at full size 9 of 9. The cup, shrunk to 0.8 for the creep, stays at 0.8 until the owner answers B1.
 - **Sitting and crawling.** Sitting upright with the legs out tips backward; the G1 sits only leaning forward with its hands on its knees. On hands and knees, flat palms need 4× the wrists' 5 N·m; on fists it nearly holds.
-- **The solver.** The prototype's settings crash MuJoCo 3.9 when a Dex3 hand grasps. The elliptic friction cone with multi-point collision detection off ran 360 grasp trials and all the babble clean.
-- **Pain.** Under babble, single-step contact peaks (944–1,799 N) reach the G1's pain threshold (1,012 N). The 10 ms filter decides whether that is felt (C5).
+- **The solver.** The prototype's settings crash MuJoCo 3.9 when a Dex3 hand grasps. The elliptic friction cone with multi-point collision detection off ran 360 grasp trials and all the babble clean. With impratio 10 the soft contacts' creep nearly stops (a box pushed below its sliding force slid 3.6–21 mm in 2 s at impratio 1, 0.4–1.8 mm at 10); the cost is that a pressed housing that slides reads harder (section 5.1).
+- **Pain.** With the 10 ms filter and the newborn's withdrawal, babble is in pain on 6–12% of ticks (11.6% over 8 seeds × 400 ticks; 6.1% on a verifier's 4 seeds), mostly the G1's own housings pressed together: the thighs into the pelvis, the shoulders into the torso. At rest, none. No self-contact presses at rest, so every one is felt (A12).
+- **The born face template barely sees a real face.** The parent's face was rebuilt to a real woman's proportions and a real face's photometry, and the template was left as it was (A30). It detected her face in 1 of 48 fovea readings at 0.3–2 m, and never in the periphery; its other matches were chance, as strong on the image upside down. As built, the event line "a face in the fovea" and orienting's face cue would run on chance. The template's constants are settled from its own sources before birth (C39).
+- **The withdrawal is a newborn's, and crude.** The generalized flexion raises the pain it answers on 26% of onsets, against 19% for resting and 48% for the babble's own acts. That is written down as the newborn's (C22); a learned tuning is an open item (C40).
 - **Imitation starts near chance.** An inverse model learned from the child's own babble turns the parent's words into echoes the parent accepts for only 2 of 12 words. The parent's ear works only by listening for the words it expects, against a bank of the child's own babble.
-- **The tick grows.** The G1's physics, its two eyes, the tract and the parent's ear add about 15–30 ms. The tick is now about 100–155 ms mean with the sun's shadow in the eyes.
+- **The tick grows.** The G1's physics, its two eyes, the tract and the parent's ear add about 15–30 ms, and the parent's face of human proportions about 8–11 ms more in the eyes. The tick is now about 105–160 ms mean with the sun's shadow in the eyes.
 
 **The core.** The refactored core on `sim-core` serves this body at the planned size: d 512, 6 blocks, about 35M parameters.
-- R1–R6, R9 and R5b are committed, with R6 fixes 1, 2 and 3 (e48b284: `act_pred`'s plasticity gated by its labels' reliability) and the verifiers' three non-blocking findings (6d6d246). Every language digest held.
+- R1–R6, R9 and R5b are committed, with R6 fixes 1, 2 and 3 (e48b284: `act_pred`'s plasticity gated by its labels' reliability) and the verifiers' three non-blocking findings (6d6d246). Every language digest held. R6 fix 3's verifier found that the gate holds only for a newborn body; R6 fix 4 (440bad3) is in verification (section 3.6).
 - About 9.5 working days of core work are left. The amygdala is part of R7 and R8 (section 8).
 
 **When it is born:**
 - About working day 13 (range 11–18) with three build sessions in parallel: the core; the world and the G1; the parent, its voice and ears, and the child's tract.
 - About day 18 with two sessions, about day 28 with one.
-- The disk has 20 GB free. One verification run filled it this morning, so copies must stay small (risk 11). Birth needs at least 8 GB free (section 9).
+- The disk has 18 GB free (the afternoon of 2026-09-24). One verification run filled it in the morning, so copies must stay small (risk 11). Birth needs at least 8 GB free (section 9).
 
 **What a viewer can watch first:**
 - Life days 1–3 (about the first 1–5 wall hours): its fovea, then its trunk, turn to the parent's voice and face, and it keeps the smiling face in view.
@@ -80,13 +96,13 @@ Section 17 lists the files.
 5. **Thrashing, learned helplessness, and leaving the mat,** with no one able to carry it back.
 6. **The critics' float64 least squares** take about half the tick.
 7. **Solver stability** with the Dex3 hands.
-8. **Phantom pain** from contact spikes near F_pain.
-9. **Vision.** The fovea gives 1.5 px a degree. On its back the G1 sees mostly the ceiling and its own body; face down, only the mat; sitting or standing, only what is low and ahead of it (A22).
+8. **Pain from its own housings:** 6–12% of babble ticks with the 10 ms filter, and the newborn's withdrawal can add to it.
+9. **Vision.** The fovea gives 1.5 px a degree. On its back the G1 sees mostly the ceiling and its own body; face down, only the mat; sitting or standing, only what is low and ahead of it (A22). The born face template, as built, rarely detects a real face (C39).
 10. **Vocal imitation starts near chance,** and the word tokens are the easier road to reward.
 11. **Disk and heat.**
 12. **The tick budget** is over the old 125 ms target.
 
-**The owner's decisions.** The nine decisions of the G1 amendment are folded in; section 14 lists where each one lands. The decision log's part B asks what the design still defaults, the four toys a Dex3 hand cannot hold first. Three are needed before birth: B18 (touch on every link, a skin the real G1 lacks), B3 (the eyes' render shortcuts, the sun's shadow among them) and B1 (the cup already shrunk to fit the hand).
+**The owner's decisions.** The nine decisions of the G1 amendment are folded in; section 14 lists where each one lands. The decision log's part B asks what the design still defaults, the toys a Dex3 hand cannot hold first (two now, not four: B1). Three are needed before birth: B18 (touch on every link, a skin the real G1 lacks, which now carries most of babble's pain), B3 (the eyes' render shortcuts, the sun's shadow among them) and B1 (the cup, shrunk for a creep that is gone). The build's fix rounds decided six questions under the laws, recorded as ours: the parent's face made real and the detector left alone, the newborn's withdrawal, impratio by physics, what decides the eye check, a new word on its pitch peak, and the grasp summed at the spinal cord (A30–A35).
 
 ### Words used here
 
@@ -139,13 +155,13 @@ Section 17 lists the files.
 |---|---|---|
 | the child | a custom child: 0.75 m, 9.45 kg, a three-joint neck, eyes that turn, a mitten hand, a screen face | the stock G1: 1.32 m, 34.4 kg, no neck, Dex3 hands, no face (3.1) |
 | looking | turning eyes and a neck, with a VOR | a software fovea inside each camera image, then the waist and the whole body; the VOR acts on the window (3.4, 3.7) |
-| the parent | five scripted faces; lifts, props, turns and slides the child; brings it back | a scripted state of feeling on a graded face; a behaviour system (contingency, joint attention, infant-directed speech, scaffolding, routines); a person's force caps; it comes to the child (4) |
+| the parent | five scripted faces; lifts, props, turns and slides the child; brings it back | a scripted state of feeling on a graded face of human proportions; a behaviour system (contingency, joint attention, infant-directed speech, scaffolding, routines); a person's force caps; it comes to the child (4) |
 | the voice | a synthesized child voice playing word tokens | an articulatory vocal tract it must learn to use; the token output becomes a silent scaffold (4.9) |
 | the tagger | the "valence learner", a decision-log entry | the amygdala, a named organ of the core, in R7 and R8 (7.4) |
 | understanding | the ledger's "understood" | a never-taught test at every milestone (12) |
 | light | fixed daylight | day and night light across the life day (5.4) |
 | the face reward | a rise felt as the new level | the increment rule, for a graded face (6) |
-| the world | a 1.6 m mat; toys sized for a mitten | a 2.8 × 2.0 m mat; toys placed around the G1; the cup at 0.8; the elliptic friction cone (5) |
+| the world | a 1.6 m mat; toys sized for a mitten | a 2.8 × 2.0 m mat; toys placed around the G1; the cup at 0.8 (B1); the elliptic friction cone with impratio 10 (5) |
 
 **From the one-arm design of 2026-09-23:**
 - **The body:** a whole humanoid lying on a mat, instead of a planar two-joint arm at a table.
@@ -219,7 +235,11 @@ Ranges are in degrees and torque limits in N·m, for the left side. The right si
 | Dex3 thumb joints 0 / 1 / 2 | ±60 / −41.5..60 / 0..100 | 2.45 / 1.4 / 1.4 |
 | Dex3 index and middle (2 joints each) | −90..0, −100..0 | 1.4 |
 
-- **These are the real motors' limits** as Unitree publishes them, through Menagerie, with no scaling. The old risk "torque limits from memory" is gone.
+- **These are the model's own limits:** Menagerie's file, read at load and never changed there, with no scaling but weakness (A21). The old risk "torque limits from memory" is gone. They are not "the real motors' limits as Unitree publishes them", as this section first said: Unitree's own sources agree neither with the file nor with each other (read again 2026-09-24):
+  - its URDF of this revision (`unitree_ros` `g1_29dof_with_hand_rev_1_0.urdf`) gives 35 N·m for the ankles' pitch and roll and the waist's roll and pitch, where the file gives 50;
+  - its MJCF (`unitree_mujoco` `g1_29dof.xml`) gives those four 50, but the hip roll 88, where the file and the URDF give 139;
+  - its G1 page gives the knee 90 N·m (the G1) or 120 (the EDU), where all three files give 139.
+  - W1 first set 35 from the URDF. A verifier found that against this section and A21, and the file's limits were put back (so kp 200 at the ankles). The design keeps the model's (the owner's "keep it stock"); the real robot's are checked before the robot (C37).
 - The legs and waist are strong. The wrists' pitch and yaw (5 N·m) and the fingers (1.4 N·m) are weak.
 - Each joint has friction loss 0.3 N·m and armature 0.01, as shipped.
 
@@ -234,7 +254,7 @@ Ranges are in degrees and torque limits in N·m, for the left side. The right si
 - **An act re-anchors the target:** target = the measured angle + the step, so a move starts where the limb is.
 - **At rest the target relaxes toward the measured angle,** with a time constant of 3 ticks (ours, anatomy: muscle tone).
   - A posture held by acting holds; a posture left to rest sinks.
-  - The postures in section 3.8 were measured with the stock servos locked on fixed targets. Under the resting law every one of them sinks: holding a posture is learned, by acting every tick, as an infant learns to hold its head. W1 measures the sink rates.
+  - The postures in section 3.8 were measured with the stock servos locked on fixed targets. Under the resting law they sink: holding a posture is learned, by acting every tick, as an infant learns to hold its head. Measured in W1 (`tools/sim_sink.py`, 3 s at rest under this law): lying at birth, a shoulder sags 12°; with the arms raised 45°, 29°; prone on its elbows, the elbows 12°; the leaning sit holds (6° at an elbow); standing tips past 20° after 2.85 s. These were measured at the first W1 build, with the ankles then at 35 N·m; a re-run after the file's limits were restored found no posture tipping 20° within 3 s.
 - **No gravity compensation and no balance law.**
 - **Weakness when empty:** the torque limits × (0.3 + 0.7h), where h is the charge.
 - **Measured again before birth (W4)** under this law: rolls under babble, the leaning sit's fall time, guided tracking, and pressing into obstacles.
@@ -244,14 +264,14 @@ Ranges are in degrees and torque limits in N·m, for the left side. The right si
 Each channel's code is born fixed from the body's seed, unit-scaled and projected to d = 512. Each channel has its own forecast head.
 
 World truth (object poses, labels, which source made a sound, the torso's orientation in the room) goes only to the parent and the instruments, never into the body. There are four disclosed exceptions. The first three are the reward's carriers or the body's own state:
-- **The face channel.** Its level is the born expression reading of the parent's graded face (A1). It passes only while the face test holds; the test is a geometric ray test driven by where the child's own software fovea points. The amygdala's and the critics' event line "a face in the fovea" is **not** this test: it is the born three-blob face template (the one orienting uses) run on the fovea's own pixels, so the body's value and salience never read world truth beyond the reward's carrier. W3 measures the template's hits and false alarms in the fovea (C3).
-- **Pain.** It is the contact force on a link.
+- **The face channel.** Its level is the born expression reading of the parent's graded face (A1). It passes only while the face test holds; the test is a geometric ray test driven by where the child's own software fovea points. The amygdala's and the critics' event line "a face in the fovea" is **not** this test: it is the born three-blob face template (the one orienting uses) run on the fovea's own pixels (built in W3: the frame's `face_fovea`, either eye), so the body's value and salience never read world truth beyond the reward's carrier. On the parent's face of human proportions the template, unchanged, detected her face in 1 of 48 fovea readings at 0.3–2 m, and its other matches were chance. As built, this event line would run on chance, so its constants are settled from its own sources before birth (C39).
+- **Pain.** It is the contact force on a touch zone.
 - **Charge.** It is h.
 
 The fourth is a label, and it is temporary:
 - **The word scaffold (channel 0).** It is the parent's own label for the word it said, given as a token or as letters beside the sound, and only while the parent is audible. The ears still hear the same word. The scaffold is removed on a copy once the child's own hearing of words passes the tests in section 4.9.
 
-Everything else the body gets comes from its sensors. Orienting's triggers are among these: the face template works on the periphery's pixels, and a sound's onset and side come from the cochlea and the born lateral read. They are never taken from the world's list of events.
+Everything else the body gets comes from its sensors. Orienting's triggers are among these: the face template works on the periphery's pixels (the frame's `face_periph`: whether it matched, and where the best match lies from the window; it never matched her face there, C39), and a sound's onset and side come from the cochlea and the born lateral read. They are never taken from the world's list of events.
 
 **Where the G1's senses are.** They are added at load as cameras and sites: no shape, mass, joint or actuator.
 
@@ -261,7 +281,7 @@ Everything else the body gets comes from its sensors. Orienting's triggers are a
 | ears | a four-microphone array (its positions are not in the model) | two sites on the head's sides, 15.8 cm apart (assumed, B5) |
 | balance | inertial units in the torso and the pelvis | the model's own `imu_in_torso` (it moves with the head) and `imu_in_pelvis`, each with a gyro and an accelerometer. The file declares their noise (gyro 5e-4, accelerometer 1e-2), but MuJoCo 3.9 does not apply it (checked: a still G1 reads exactly 0), so the world adds it from its own seeded stream |
 | joint sense | each motor reports its angle, velocity and torque | the 43 joints' angles, velocities and efforts |
-| touch | tactile arrays on the Dex3-1 hand; no skin elsewhere | the contact force summed per link (42 links), from the contacts. On the 14 Dex3 links this is the real hand's sense; on the other 28 links it is a sim skin the robot lacks (B18) |
+| touch | tactile arrays on the Dex3-1 hand; no skin elsewhere | the contact force summed per zone, from the contacts: 45 zones, one per link with collision, with the head apart from the torso and each palm apart from its wrist (the grasp reads the palm alone). On the Dex3 hands' zones this is the real hand's sense; on the others it is a sim skin the robot lacks (B18) |
 | its voice | a loudspeaker (its place to check, B5) | the tract's sound from the head's front (4.9) |
 
 - **Colour stereo is a sim choice** (B4). The real D435's two imagers are monochrome infrared, with a separate colour camera beside them.
@@ -281,15 +301,16 @@ Everything else the body gets comes from its sensors. Orienting's triggers are a
 |---|---|---|---|
 | 0 | words (the scaffold) | one symbol from 79 | The parent's word token, arriving on the tick its sound ends; letters for words after the first 50 (section 4.9). Its forecast is today's `latent_pred`. |
 | 1 | face | 2 | The born expression reading of the parent's graded face: 2 × (smile − frown), its level and change. It updates only while the face passes the face test (A1). Out of view it holds its last value for 30 ticks, then reads neutral (A2). |
-| 2 | ears | 1,557 | Two cochleas (15 frames × 40 bands each, per tick) plus the brainstem's delay lines (21 low bands × 17 lags). The spatializer's head radius is the G1's, 0.078 m. |
-| 3 | eye_p (periphery) | 2 × 168 | Per eye: 56 × 32 px, coded retinotopically as 7 × 4 cells of 8 px (about 12.5° × 14.5°, near the custom child's 12.5°) × 6 fixed colour mixes. |
-| 4 | eye_f (fovea) | 2 × 384 | Per eye: the 32 × 32 window, coded as 8 × 8 cells × 6 fixed colour mixes. |
-| 5 | body (joint sense) | 199 | Per joint (43): sin and cos of the scaled angle, velocity, and servo effort (torque ÷ limit). The gaze state and its velocity (6). The tract's 10 positions and velocities, and breath left (21). |
-| 6 | touch | 42 × 2 = 84 | Per link: log force and onset. |
+| 2 | ears | 1,725 | Two cochleas (15 frames × 40 bands each, per tick) plus the brainstem's delay lines (21 low bands × 25 lags: ±12 samples, the head's own largest delay in those bands, 0.71 ms; ±8 would saturate the lateral read near 46° in the lowest bands). The spatializer is the exact rigid sphere through the two ear sites (radius 0.079 m, half their 15.8 cm), behind the ears' converter (flat to 7.6 kHz, gone by 8 kHz). Amended by P2 from 1,557 (`body/sim/ears.py`). |
+| 3 | eye_p (periphery) | 2 × 168 | Per eye: 56 × 32 px, coded retinotopically as 7 × 4 cells of 8 px (about 12.5° × 14.5°, near the custom child's 12.5°) × 6 fixed opponent channels (luminance, red–green and blue–yellow, each ON and OFF). |
+| 4 | eye_f (fovea) | 2 × 384 | Per eye: the 32 × 32 window, coded as 8 × 8 cells × the same 6 opponent channels. |
+| 5 | body (joint sense) | 199 | Per joint (43): sin and cos of the scaled angle, velocity, and servo effort (torque ÷ limit). The gaze state and its velocity (6). The world gives these 178. The tract's 10 positions and velocities, and breath left (21), join from the voice lane. |
+| 6 | touch | 45 × 2 = 90 | Per zone: log(1 + F / 1 N) of the tick's mean summed normal force, and its onset (the rise since the last tick). |
 | 7 | vestibular | 24 | Both inertial units: the accelerometer (which way is down) and the gyro (how the trunk turns), each as the tick's mean and peak. |
 | 8 | charge | 2 | h and Δh (the body's own need). |
 
-- About 2,970 numbers a tick, plus one symbol.
+- About 3,150 numbers a tick, plus one symbol (the ears' 1,725 in place of 1,557, and touch's 90 in place of 84: the core's born encoders, R6h day 3, take these sizes).
+- **The born face template's two readings** come with the eyes in the frame: `face_fovea` (1: the event line "a face in the fovea", either eye) and `face_periph` (3: orienting's cue, whether it matched and where the best match lies from the window). R7's event lines and R6h's orienting hook read them; the template's constants are in section 10.
 - **Keeping raw codes costs nothing measurable.** Storing each channel's raw code in the window and re-encoding every tick measured 58.8 against 58.0 ms (paired), so the window keeps the raw codes, which are smaller.
 
 ### 3.5 Effectors
@@ -325,7 +346,7 @@ Each joint's act is one of five settings {−big, −small, 0, +small, +big} per
 - **Chunks and learned stops** (built in R6). While a chunk is under way, the gate's own draw decides whether it goes on, and the act is `act_pred`'s best guess. The chunk ends when:
   - the guess is the effector's rest;
   - the gate says no;
-  - a reflex fires;
+  - a reflex takes the tick (the withdrawal; the grasp sums with the hand's own act and ends nothing, 3.7);
   - or `chunk_max` 8 is reached (a ceiling, never the usual stop).
 - **Movement units** (new, R6h). A motor chunk holds its first act unless the proposal prefers another by more than a born persistence margin (log 4 in logits, disclosed). The evidence, from the custom child's babbler (on its back, 3 × 4,000 ticks):
   - acts drawn fresh every tick: 0 rolls at any strength;
@@ -341,7 +362,8 @@ Each joint's act is one of five settings {−big, −small, 0, +small, +big} per
   - the correction: the forward error → a term added to the proposal.
   - `act_inv`: (the sense at t, the sense at t+1) → the per-joint act, with a running reliability (Cohen's kappa per joint, R6 fix 2).
   - `act_pred`'s target is the efference copy when the effector acted. When it rested and something moved it (the parent's hand, a bump), the target is `act_inv`'s label, weighted by that reliability. So a demonstration counts only as far as the inverse model has earned.
-  - `act_pred`'s plasticity is gated by its labels' reliability (R6 fix 3, e48b284).
+  - `act_pred`'s plasticity is gated by its labels' reliability (R6 fix 3, e48b284). Its own optimizer, `GatedAdam`, takes each lesson as one sample weighted by its labels' mean weight (1 for an own act, `act_inv`'s reliability for a labelled rest, 0 for an unlabelled one), so own acts beside unlabelled rests learn at the share of the window they fill. At weight 1 it is Adam bit for bit.
+  - Its verifier found the gate holds only for a newborn body: once `act_pred` has learned, unearned labels still reached the proposal through the cortex, whose Adam normalises each element. R6 fix 4 (440bad3: `act_inv`'s labels teach `act_pred` and the correction, never the stream; each optimizer bounds its own gradient) is in verification, and is folded here once a verifier passes it.
 - **New for the humanoid (R6h):**
   - each limb's forward error feeds its gate. It tells a movement the child made from one done to it, and it sets how much a guided movement counts.
   - `act_inv`'s lessons are batched every 8 ticks; unbatched they cost 4–6 ms a tick.
@@ -349,13 +371,13 @@ Each joint's act is one of five settings {−big, −small, 0, +small, +big} per
 
 ### 3.7 Reflexes: kept and refused
 
-Each kept reflex has a biological basis and is disclosed. Withdrawal and grasp act below the gate. Their ticks are logged as reflex and carry no gate eligibility; the cortex sees them through touch and joint sense. Orienting is only a bias that learning can outweigh, so it fades by learning, not by calendar.
+Each kept reflex has a biological basis and is disclosed. The withdrawal acts below the gate: its ticks are logged as reflex and carry no gate eligibility. The grasp is summed at the spinal cord with the hand's own act (A35): the hand's gate draws every tick and its acts keep their eligibility, so letting go can be learned. The cortex sees both through touch, joint sense and its forward model's error. Orienting is only a bias that learning can outweigh, so it fades by learning, not by calendar.
 
 | reflex | status | how it works, and why |
 |---|---|---|
-| withdrawal | kept | Spinal and lifelong: the flexor withdrawal (Sherrington). When a limb's link feels more than F_pain, that limb flexes away: one big flexion step of its joints a tick, for 2 ticks, whatever its last move was. The waist and torso have none. W1 fixes each G1 limb's flexion direction per joint from the model's axes. |
-| palmar grasp | kept | Spinal, present at birth. A touch on the hand's base link (the palm) above 0.3 N closes all seven Dex3 joints one step a tick, unless the hand's own act that tick opens it (the cortex can override). It makes the parent's hand-over a real hold from day one. It fades only as the cortex learns to override it. Lying face down, it closes a palm pressed on the mat, which may hinder crawling; W4 counts how often. |
-| orienting to faces and voices | kept | Newborns prefer faces (Goren 1975; Johnson and Morton 1991) and turn toward sounds (Muir and Field 1979). It is a born bias on the gaze's and the waist yaw's proposals toward a face-like blob in the periphery (a fixed three-blob template) and toward the side the ears' born lateral read gives. There is also a born gate input, "a face or a sound onset appeared", computed from the pixels and the cochlea. It is a bias, never a forced move; its gain is set by the amygdala (section 7.4) and is exactly 1 at birth. Without it, a newborn that never looks is never rewarded. |
+| withdrawal | kept | Spinal and lifelong: the flexor withdrawal (Sherrington), generalized over the limb as a newborn's is (A31). When any zone of a limb is in pain, that limb takes one big flexion step (0.27 rad) of its flexion joints a tick, for 2 ticks, wherever on the limb it hurts and whatever its last move was: a leg flexes the hip (pitch), the knee and the ankle (dorsiflexion); an arm flexes the shoulder (pitch) and the elbow, and a hand's pain withdraws its arm. No wrist joint takes part: the Dex3's fingers close across the wrist's pitch axis. Each sign was measured on the G1 (W1). The waist and torso have none. It can press a limb into a worse contact: 26% of onsets under babble (C22); a learned tuning is open (C40). |
+| palmar grasp | kept | Spinal, present at birth. A touch on the palm above 0.3 N (its tick-mean force) closes six of the Dex3's seven joints one small step a tick (the thumb's rotation has no closing sense and keeps the hand's own setting), unless the hand's own act that tick opens it. It is summed at the spinal cord with the hand's own act, never taking its tick (A35). It makes the parent's hand-over a real hold from day one. It fades only as the cortex learns to override it. It fires on anything pressing the palm, its own fingers included: a fist closed on nothing stays closed until the hand opens it (under babble it fired on 14% of hand-ticks, 40% of those on its own fingers alone: C41). Lying face down, it closes a palm pressed on the mat, which may hinder crawling; W4 counts how often. |
+| orienting to faces and voices | kept | Newborns prefer faces (Goren 1975; Johnson and Morton 1991) and turn toward sounds (Muir and Field 1979). It is a born bias on the gaze's and the waist yaw's proposals toward a face-like blob in the periphery (a fixed three-blob template) and toward the side the ears' born lateral read gives. There is also a born gate input, "a face or a sound onset appeared", computed from the pixels and the cochlea. It is a bias, never a forced move; its gain is set by the amygdala (section 7.4) and is exactly 1 at birth. Without it, a newborn that never looks is never rewarded. Measured on the parent's face of human proportions, the template never matched her face in the periphery: as built, the face cue would be chance, and the sound's side is the cue that works (C39). |
 | VOR | kept | Brainstem, present at birth. The software fovea's window counter-shifts by the torso gyro's rotation about each camera's own image axes (gain 1; the cameras are pitched 47.6° from the torso, so the gyro is rotated into each camera's frame first), so it stays on its target while the trunk turns. At the window's reach its quick phase jumps it back by half the reach, in the direction of the turn (A23). The gaze's own acts add on top. |
 | born expression reading | kept | A fixed read of the parent's mouth corners while the face is in the fovea (A1). |
 | screen face | removed | The G1 has no face (the owner's decision 7). |
@@ -402,30 +424,56 @@ Each kept reflex has a biological basis and is disclosed. Withdrawal and grasp a
 | babbling (two seeds) | 5,430–6,120 | 10.9–12.2× (12.3–13.8 ms a tick) |
 | babbling with the parent kneeling down beside it | 5,670 | 11.3× for the physics; 8.5× with the parent's Python (4.3 ms a tick) |
 | self-collision off (a test only) | 7,450 | 14.9× |
+| babbling in the built world (W1: the servo law, touch and pain, the IMUs, the reflexes; load about 2) | — | 8.4–10× (14.9–17.9 ms a tick: physics 12.3–15.0, the world's Python 2.3–2.6) |
+| the same with both eyes and the sun's shadow (W3), before the parent's face of human proportions | — | 2.8–3.1× (47.7–53.2 ms; the render 31.2–31.7) |
 
 - There were no MuJoCo warnings in any of these runs.
 - Under babble Σ τ² ÷ Σ τ²_max averages 0.063 (the custom child's was 0.043).
-- The largest contact at the tick ends was 944 N and 1,799 N under babble. F_pain is about 1,012 N, so babble alone reaches pain (C5).
+- The largest contact at the tick ends was 944 N and 1,799 N under babble. F_pain is about 1,012 N, so babble alone reaches pain (C5). With the 10 ms filter and the withdrawal, the built world is in pain on 11.6% of babble ticks (section 6).
 - With the kinematic parent kneeling, a contact reached 7,205 N: the G1's limbs hitting an immovable parent. The parent's yield rule (A4) is essential.
 - **Not yet measured on the G1** (W4): rolls under babble, travel, time off the mat, and the leaning sit's fall time. The custom child's numbers are kept in section 15 for reference.
 
-**Grasp** (360 trials under the final solver: a hand-over into the palm, 6 tries, and a top grasp from a surface, 3 tries, per toy per scale, at scales 1.0, 0.8, 0.7 and 0.6; none unstable):
-- **Held at full size:** the block 9 of 9; the ring 6 of 6 hand-overs; the rattle 4 of 6 hand-overs; the car and the stacker 2 of 6 hand-overs and 3 of 3 top grasps.
-- **The cup:** 0 of 9 at full size and 3 of 3 top grasps at 0.8, so it is scaled to 0.8 (6.7 cm across).
-- **The ball, duck, bear and drum:** at most 1 in 9 at any scale from 0.6 to 1.0. They stay at full size and are flagged (B1).
-- The Dex3's two fingers are 5.7 cm apart. Small objects slip between them, and round or large ones cannot be wrapped.
+**Grasp** (`tools/sim_grasp.py` on the built room: a Dex3 hand at its stock gains closing to the range's end; a hand-over into the palm, 6 tries, and a top grasp from a surface, 3 tries, per toy; none unstable). The prototype's 360 trials (scales 0.6–1.0) ran at impratio 1, where MuJoCo's soft contacts creep; the world runs at impratio 10, chosen by the contacts' physics (5.1, A32):
+
+| toy | held at impratio 1 | at impratio 10 (the world) |
+|---|---|---|
+| ball | 0 of 9 | 9 of 9 |
+| block | 9 of 9 | 9 of 9 |
+| duck | 0 of 9 | 7 of 9 |
+| cup at 0.8 | 5 of 9 | 9 of 9 |
+| cup at full size | 0 of 9 | 9 of 9 |
+| rattle | 5 of 6 hand-overs | 6 of 6 hand-overs (0 of 3 top grasps) |
+| car | 5 of 9 | 8 of 9 |
+| bear | 0 of 9 | 2 of 9 |
+| stacker | 3 of 9 | 9 of 9 |
+| drum | 0 of 9 | 0 of 9 |
+| ring | 6 of 6 hand-overs | 6 of 6 hand-overs |
+
+- **Only the bear and the drum cannot be held.** The cup was shrunk to 0.8 (6.7 cm across) for the creep; it holds at full size now, and stays at 0.8 until the owner answers B1.
+- The grasp reflex's small steps under the body's servo law press less than the stock gains closing to the range's end; W4 measures the holds under the reflex and the resting law (C28).
+- The Dex3's two fingers are 5.7 cm apart: small objects slip between them, and round or large ones are held by friction, never wrapped.
 
 ## 4. The parent
 
 ### 4.1 Its body and how it moves
 
 - **A complete human figure at human proportions:** 16 segments (pelvis, spine, chest, neck, head; upper arms, forearms, hands; thighs, shins, feet).
-- **An expressive face,** graded from its feelings (section 4.3): brows; lids; eyes with irises and pupils that look; cheeks; an upper and a lower lip; a mouth that smiles, frowns, rounds and opens with its voice.
+- **A face of human proportions,** graded from its feelings (section 4.3): brows; lids; eyes with irises and pupils that look; cheeks; an upper and a lower lip; a mouth that smiles, frowns, rounds and opens with its voice. Built in W3's fix rounds (`parent_face.py`) to a real woman's norms and a real face's photometry, with the born template left as it was (A30):
+  - **One smooth head sheet:** a thin-plate spline through the landmarks and her cranium, jaw and neck, the nose part of it, shaded by its own normals. MuJoCo draws the room's indirect light without shadowing, so her skin's shade of it is computed from her own geometry and baked into her texture (share 0.4). The eye openings are cut at the norms' outline.
+  - **Measured on the drawn face** (`tools/sim_face_measure.py`, by rays on the geometry; the norm in brackets, mm): the eye opening 30.7 (30.7); the inner canthi 31.8 apart (31.8), the outer 87.8 (87.8); the fissure 10.5 tall (10.9); the pupils 61.7 apart (61.7); the iris 11.7 (11.7); the mouth 50.5 wide (50.2); the brow's lower edge 11.4 over the lid at the pupil (10.9), 18.0 over the inner canthus (17.5) and 18.9 over the outer (18.5), its top 24.5 over the pupil (25); nasion to subnasale 51.7 (50.6), nasion to chin 110.3 (111.8); the head 147.2 wide (146.6), the cheekbones 131.8 apart (130.0), the jaw's angles 93.0 (91.1). A verifier's own method (a segmentation render from the front) agreed within 1 mm.
+  - **Sources:** Farkas et al.'s North American white women aged 18–25 (n 200), as tabulated by Husein et al. 2010 (J Plast Reconstr Aesthet Surg 63:1825–1831) and Virdi et al. 2019; Dodgson 2004 (the pupils); Rüfer, Schröder and Erb 2005 (the iris); Gao et al. 2025 and McKinney et al. 1991 (the brows); Yaremchuk's atlas (the brow 10 mm and the cheek 2 mm in front of the cornea); Park et al.'s head model (the head); EyeWiki's margin-to-reflex distances (the lid at rest). Recalled and flagged: the globe (24 mm) and a room-light pupil (4 mm). Ours: the anchors in her head's frame and the relief between the landmarks.
+  - **The lids** turn about a hinge through the globe's centre, 12° back and −9° tilted: of a grid, the least turn that closes a blink. A blink closes the whole fissure, the lashes stop on the lower lid, and each lid stays 0.2 mm behind the skin through its sweep. Rigid lids show up to 1.5 mm² of eye at the fissure's ends in a blink seen from 35° (disclosed); from the front, none.
+  - **The brows** are strips lying on the skin (0.1–1.1 mm over it in every expression); each lip is a tube of constant radius; nothing is white but the teeth, and nothing glows.
+  - **Photometry** (Russell, Kramer and Jones 2017: young women without makeup, each feature's lightness contrast against the skin around it): measured under a studio lamp at her face's depth, eyes 0.152, brows 0.126, lips 0.092, the source's own.
+  - Every graded expression still works, and the born reading still reads the mouth corners only. Cosmetic and open: at a full smile the lips are thin crescents round a flat dark oval, with no teeth.
+  - The custom child's reference room keeps the old face (`parent_face_customchild.py`).
+- **Her collision is her drawn face:** 102 convex pieces of her own sheet, 6 of her hair's cap, the head's solid, and a sphere over each eye out to the lashes. Over 83,068 rays the worst point was 2.8 mm behind the drawn face, and 0.16% of rays more than 0.5 mm behind; a 3 mm free sphere swept onto her face never got behind it. `mj_step` did not slow (0.33 ms). The hair hanging at her sides has no collision (a sphere passed 28–40 mm into it).
 - **Hands with shapes:** open, point, grip, curl.
 - **Kinematic.** It is posed every physics step by scripted forward kinematics, two-bone inverse kinematics for the arms and legs, and look-at for the head and eyes, all inside human joint ranges. The poses are written into 16 MuJoCo mocap bodies.
   - It touches the child and the toys as an immovable body, so its contacts need the yield rule (A4).
   - It holds toys through welds that start switched off. Its hand's collision proxy is off while a weld holds (both collision bits; the prototype's first switch cleared only one).
   - **It holds the G1 only through capped springs** (section 4.2): a force at the held point, computed each physics step from her hand's pose and clipped at the act's cap, applied as an outside force on that link. The prototype's welds on the torso, the pelvis and the elbows (`make_g1room.py`) are soft but have no cap, so W2 replaces them; a weld on the G1 would break the caps.
+  - The room still excludes her hands' contacts with the G1's torso and pelvis (made for the prototype's welds), so a hand laid on its chest passes into it and is felt only through a weld. W2 removes the exclusion with the welds.
 - **Its motions,** all passing the check with no failing frame:
   - a 4 m walk;
   - kneeling down (two step variants) and standing up;
@@ -444,7 +492,7 @@ Each kept reflex has a biological basis and is disclosed. Withdrawal and grasp a
 | kneel beside the G1 and attend, one hand resting on its trunk | passes; at 0.78 m from its centre line, 0.10 m toward its feet, clear of its arm and the toys (no parent contact) |
 | show a toy 40 cm before its eyes | passes; the toy held a little toward her side so her face is unblocked in both eyes (a ray test) |
 | point, either hand | passes, including a drum 1.4 m away |
-| hand a toy to the near or far hand | passes on the custom child (the grasp reflex held the rattle 3 s after release); on the G1, 6 of 10 toys can be held (section 3.8) |
+| hand a toy to the near or far hand | passes on the custom child (the grasp reflex held the rattle 3 s after release); on the G1, 8 of 10 toys can be held at impratio 10 (section 3.8) |
 | guide a forearm | passes, within the guide's cap only while the arm yields (below) |
 | turn it from its front onto its back | a brief act within the caps (below); for distress face down only. There is no tummy time: face down, its eyes see only the mat (A7, A22) |
 | pull to sit | only with the child's own flexion (A9); a limp sit-up needs more than a person gives |
@@ -480,9 +528,9 @@ Each kept reflex has a biological basis and is disclosed. Withdrawal and grasp a
 - **She comes to the child; she does not bring it back.** The all-out design's G1 line ("slides it … capped at 337 N") was beyond a person, and is replaced by these caps.
 - **Every hold is a capped spring,** with each cap in the parent's constants file. A contact over the act's cap for 2 physics steps stops that segment and backs it off (A4).
 - **Being held is felt.** Each hold's spring force is added to the touch of the link it holds, since it stands for the hand's grip. It counts toward pain under the same law as any force. Every cap (at most 200 N) is far under F_pain (1,012 N), so a hold is felt as touch, never as pain, and no exception to the pain law is needed.
-- **The friction model.** MuJoCo's soft contacts let the G1 creep 5 cm at 146–199 N, below the true sliding force. W1 sets real frictions and a friction model that does not creep (C26).
+- **The friction model.** MuJoCo's soft contacts let the G1 creep 5 cm at 146–199 N, below the true sliding force. At impratio 10, chosen by the contacts' physics (5.1, A32), the G1 pushed at the pelvis with 100 / 150 / 200 N slides 0.4 / 0.7 / 1.9 cm in 2 s, against 1.9 / 3.1 / 4.4 cm at impratio 1. The surfaces' own frictions are still open (C26).
   - Now the world's surfaces are 1.0, and the G1's own foot spheres are 0.6 at contact priority 1 (as shipped), so its feet already set their own friction on the mat.
-  - **Real frictions are set on the world's side only:** the floor, the mat, the furniture and the toys take contact priority 2, so their friction and softness decide every contact with the G1 without touching its file. The G1's self-contacts keep its own values. The creep is fought with world options (the elliptic cone's `impratio`, or `noslip` iterations), never with the G1's geoms.
+  - **Real frictions are set on the world's side only:** the floor, the mat, the furniture and the toys take contact priority 2 (built), so their friction and softness decide every contact with the G1 without touching its file. The G1's self-contacts keep its own values. The creep is fought with a world option, impratio 10; the noslip solver was refused (5.1). The G1's geoms are never touched.
 - **Clearing toys** before kneeling. The kneeling spot for the G1 is outside its leg sweep (W4 measures the sweep).
 - **Its feet do not physically meet the floor or the furniture.** Each placement is checked against them instead (the shoe within 5 mm of the floor).
 
@@ -531,16 +579,17 @@ In either case the smile waits for 2 neutral ticks, and is dropped and logged if
 - **With judgments:** felt ≤ judged in every case. An always-looking child felt 179.0 of 179.0; glancing every 2–10 ticks, also 179.0; every 30 ticks, 128; every 45 ticks, 110.
 - **Frowns:** each felt at most once, and only when seen.
 
-**What the child's own pixels see.** Fovea pixels (32 px, 20.9°) that differ from her neutral face by more than 8 grey levels:
+**What the child's own pixels see.** Fovea pixels (32 px, 20.9°, the left eye) that differ from her neutral face by more than 8 grey levels, measured on her face of human proportions (W3's fourth fix; a scratch instrument, `$S/build/world/fix4/pixtable.py`, to be made a tool with W5's lights). Each cell is frown / +1 / +2 / surprise: the frown is frown 1 with the brows lowered 0.9 and the lids tightened 0.8; +1 a smile of 0.5; +2 a smile of 1; surprise the brows raised 0.95, the lids up 1, the jaw 0.5 and the "oh" 0.8.
 
-| distance | frown | +1 | +2 | surprise |
-|---|---|---|---|---|
-| 0.3 m | 88 | 107 | 155 | 147 |
-| 0.6 m | 58 | 42 | 67 | 74 |
-| 1.2 m | 15 | 15 | 18 | 21 |
-| 2.0 m | 7 | 3 | 12 | 15 |
+| distance | midday | morning | dusk |
+|---|---|---|---|
+| 0.3 m | 28 / 19 / 37 / 101 | 78 / 33 / 80 / 167 | 61 / 26 / 70 / 149 |
+| 0.6 m | 1 / 1 / 13 / 20 | 11 / 15 / 27 / 47 | 9 / 16 / 28 / 43 |
+| 1.2 m | 2 / 1 / 3 / 2 | — | — |
+| 2.0 m | 0 / 0 / 0 / 1 | — | — |
 
-The grades are visible at the lean-in distance. Beyond about 1 m, only the born reading's world value carries them (A1, as disclosed).
+- The table depends on the light as much as on the face. In that placement her face reads about 36 of 255 at midday and about 60–77 under the morning and dusk lights, where the grades take about 2–16 times as many pixels at 0.6 m. It is given per light, never as a property of the face.
+- The table it replaces was measured on the cartoon face (88 / 107 / 155 / 147 at 0.3 m; 58 / 42 / 67 / 74 at 0.6 m). On a real face the grades are plain in the child's own pixels only at the lean-in distance; beyond about 1 m only the born reading's world value carries them (A1, as disclosed).
 
 **What earns a smile.** The worth is the reading's peak. The table is fixed before birth, only tightens, and is never loosened.
 
@@ -565,7 +614,7 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 ### 4.4 Its voice
 
 - **The engine:** macOS speech through a small Swift server (`AVSpeechSynthesizer.write`, with word markers).
-  - It returns exact word onsets and is byte-identical on every run.
+  - It returns exact word onsets and is byte-identical on every run. (Not after an SSML `<break>`, which moves the next word's mark 90–210 ms before its sound; so no line has a break.)
   - A sentence takes about 45 ms once warm (median 42–50 ms, 95th percentile 53–68 ms).
   - It runs at nice 10, off the tick loop. A cache miss makes the lockstep world wait about 50 ms of wall time and costs no sim time.
 - **The voice:** compact Samantha, at rate 0.25 and pitch 1.15. None of the installed voices is at enhanced or premium quality.
@@ -579,22 +628,40 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 | calling | 1.25 | 0.25, +6 dB | rising | the child's name |
 | question | plain | 0.25 | rising (the synthesizer raises the pitch on "?" itself) | asks |
 | "no." (stage 2 only) | 1.0 | 0.3 | short, low | a hit or talk-over |
+| new word | 1.15 | 0.15 | the new word on its pitch peak and lengthened, on any ending | the day's new word (4.8) |
 
 - **Infant-directed speech** (the owner's decision 6):
-  - lines of at most 6 words, the focus word last (Fernald and Mazzie 1991);
-  - the focus word on a pitch peak through SSML (`<prosody pitch="+30%" rate="70%">`). SSML was probed but its effect is not measured (P1). The fallback is a one-word echo at the approval pitch ("duck!");
-  - the new word's lines at rate 0.2; P1 measures words a second, with a target of at most 3.
-- **Its lines:** 4.0 words and 1.11 s (7.4 ticks) on average, 3.6 words a second.
+  - lines of at most 6 words, the focus word last (Fernald and Mazzie 1991: mothers put a focused new word in final position on the utterance's pitch peak in speech to infants, and not consistently in speech to adults);
+  - the focus word on a pitch peak and lengthened through SSML: a prosody around the word and the punctuation after it, pitch +30% on the line's, rate 0.7 × the line's (lengthening: Albin and Echols 1996, word- and sentence-final lengthening in infant-directed speech). Every line goes to the engine as SSML, its register's pitch and rate as one prosody around it (a plain line so made is the same clip, bit for bit, as the utterance).
+    - What the engine does, measured: a nested prosody's rate is read against the engine's default, not the line's; its pitch against the line's; a "." left outside the word's prosody is spoken aloud as "period" (bit for bit), so the voice refuses any word mark without a letter.
+    - The first build (87a4194 and before) left the punctuation outside and wrote the rate as 70% of the default. Its "+37% F0, +91% length" was measured only on "." lines, where the parent said "period" after the word; on "?" and "!" lines the word came out 15% shorter.
+    - Measured on every one of the 331 birth lines, the line's last word emphasized in the plain register: 1.17 times as long and F0 1.29–1.30 times the unemphasized line's, on ".", "?" and "!" lines alike;
+  - the new word's lines in the new-word register (rate 0.15, the new word always emphasized; the voice refuses a new-word line without it). Measured over the 331 birth lines as new-word lines, the line's last word as the new word:
+
+| line ends in | lines (distinct) | the new word's length, × the same line unemphasized (least) | × the plain line (least) | its F0, × unemphasized (least) | × the plain line (least) | words a second, pooled | lines over 3 |
+|---|---|---|---|---|---|---|---|
+| "." | 275 (258) | 1.14 (1.12) | 1.32 (1.28) | 1.30 (1.23) | 1.30 (1.22) | 2.93 | 116 |
+| "?" | 37 (37) | 1.15 (1.12) | 1.33 (1.29) | 1.29 (1.24) | 1.29 (1.26) | 2.90 | 13 |
+| "!" | 19 (19) | 1.14 (1.12) | 1.32 (1.29) | 1.30 (1.28) | 1.30 (1.27) | 2.51 | 2 |
+
+- **The new word, measured further** (`tools/sim_voice_check.py`):
+  - it lasts about 630 ms, against 552–554 ms unemphasized and 473–481 ms in the plain line; its F0 is about 195 Hz on "." and "!" lines and 232 Hz on questions, against 150 and 178;
+  - C25 is pooled: 2.91 words a second over all 331 new-word lines, and 2.40–2.83 (2.61 on average) over the variation set for a new word ("a X." / "the X!" / "you see the X?", each of the 8 toys). Line by line, 131 of the 331 run over 3 (up to 3.88), four of them lines of 3 words ("what is it?" 3.70, "up. up. up!" 3.57, "up! sit up." 3.53, "good. the bear!" 3.16); no line of 1–2 words does. Rate alone cannot bring every line under 3: the engine gets no slower below 0.15 (C25);
+  - at rate 0.2 (the parent spec's D3) the emphasized lines ran at 3.12 and 3.10 words a second on "." and "?" lines, over C25, so the register is 0.15. Questions keep the new word: the engine does it on every ending.
+  - **On the line's pitch peak, measured** (06b85b2's verifier, the tool's own pitch tracker): the emphasized new word is the line's highest word peak on 233 of 273 "." lines, 34 of 36 "?" lines and 17 of 18 "!" lines of more than one word. It is on every line of the variation set and on "look. a X.". It is not on "this is a X." for 7 of the 8 toys ("this" peaks at 281 Hz, the noun at 258–271), on "this is your foot / hand / head." or on "the X is up.". So she introduces a new word only in frames measured to put it on the peak (A34), and `tools/sim_voice_check.py` is to measure the peak by frame (P3).
+- **Its lines:** 4.0 words and 1.12 s (7.5 ticks) on average, 3.56 words a second (measured over the 331 birth lines; plain F0 203 Hz, approval 239, comfort 184 at 3.08 words a second, calling 219 at +6 dB).
   - At one symbol a tick, 95% of word tokens arrive on the tick their word ends and 5% one tick late.
-- **The cache:** `body/sim/voice/cache/`, keyed by (line, register), with a 300 MB limit that drops the least recently used lines.
-  - At each night boundary it pre-synthesizes every template line for the current vocabulary: 331 lines in 15 s, 14 MB.
-  - It is saved beside the body, so a replay is exact.
+- **The cache** is the life's voice folder, saved beside the body (never the source tree), keyed by the request: the voice, the line as SSML in its register, the clip format.
+  - Every line the life hears is kept for good (`kept/`), so a replay reads the very samples heard, and a ledger keeps every clip's digest. A clip made again must equal its digest, or the voice refuses it and the life pauses (an OS update may change the voice). A ledger line cut short (a full disk, a kill) is dropped on load, and a line the ledger lost is restored from the heard clip's own record; a damaged clip so recorded is made again and held to that record. With the ledger lost, a heard clip can be checked only against its own stored record.
+  - At each night boundary it pre-synthesizes every template line for the current vocabulary: 331 lines (314 distinct) in 8–15 s, 13.3 MB (40 KB a line). Lines made ahead and not yet heard (`clips/`) have a 300 MB limit that drops the least recently used.
+  - `kept/` grows by 40 KB for each line heard for the first time: at most about 25 MB a life day at 4.6's density even if every line were new, and the day's fresh lines in practice (section 9).
+  - The server answers within 60 s or the life pauses at that tick (the decision log's rule, in `SynthServer`).
 - **Its mouth** opens each tick with the clip's loudness in that tick (the jaw parameter).
 
 ### 4.5 Its sentences
 
 - **Two layers.**
-  - **The fast layer** is scripted, deterministic and seeded. It picks short sentences from templates, filled from what the parent can see: what the child looks at, holds, or just said. It carries every judgment that must land within ticks. There are 331 distinct lines at birth.
+  - **The fast layer** is scripted, deterministic and seeded. It picks short sentences from templates, filled from what the parent can see: what the child looks at, holds, or just said. It carries every judgment that must land within ticks. There are 331 template lines at birth, 314 of them distinct (17 "." lines repeat).
   - **Claude, between wall minutes,** reads a plain-text digest of the last minute and writes one steering row: the focus toys, the next activity, fresh lines tied to situations, and the one new word to introduce.
   - Claude never controls a feeling, the face, the gaze or a judgment, and never sees anything inside the child. A14 lists what it may and may not do.
 - **Intents, with examples:**
@@ -615,11 +682,11 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 | leave, return | "bye bye pip." / "hi pip! mama is here." |
 | peekaboo, comfort, night | "peekaboo!" / "night night pip." |
 
-- **Variation sets** (Küntay and Slobin; Onnis et al. 2008): 2–3 lines sharing the focus word, with frames differing by at least one word ("a duck." / "the duck!" / "you see the duck?"), 6 ticks apart. A set counts as one naming. At most one set per object per 120 ticks.
+- **Variation sets** (Küntay and Slobin; Onnis et al. 2008): 2–3 lines sharing the focus word, with frames differing by at least one word ("a duck." / "the duck!" / "you see the duck?"), 6 ticks apart. A set counts as one naming. At most one set per object per 120 ticks. A new word's set is in the new-word register, the word on its pitch peak and lengthened in each line whatever its ending: 2.40–2.83 words a second (C25).
 - **The line check** applies to every line, templates and Claude's alike:
   - at most 6 words;
-  - only `. ? !` as punctuation;
-  - only vocabulary words, plus that day's new word, placed last in the sentence;
+  - only `. ? !` as punctuation (the voice itself refuses a mark it would speak, a comma after the focus word among them, so a line past the check would stop the voice: the check is the guard);
+  - only vocabulary words, plus that day's new word, placed last in the sentence, in a frame measured to put it on the line's pitch peak (A34);
   - never a held-out never-taught pair before its test (section 12).
 - **The digest and steering.**
   - Every wall minute, `tools/sim_digest.py` writes about 40 lines of outward events only: posture; where the child's fovea rested, with the share on the parent's face; what it touched or held; what it said and when; the asks and their outcomes; the face events seen and unseen; pain; the ledger; the parent's last lines.
@@ -635,7 +702,7 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 - **The child's turn:**
   - it ends when the tract has rested 2 ticks (silent) after sounding;
   - the parent replies 3 ticks later, answering what the child said: an expansion, a recast, an echo of its babble, or an answer (Goldstein et al. 2003; Goldstein and Schwade 2008, from memory).
-- **Talk-over.** If the child starts sounding during the parent's clip, the parent finishes the current word (at most 3 ticks), stops, and looks at the child with a listening face.
+- **Talk-over.** If the child starts sounding during the parent's clip, the parent finishes the current word (at most 3 ticks), stops, and looks at the child with a listening face. A word that would need longer (2.8–2.9% of cuts over the birth lines: a long word said slowly, or a line's last word; 11.1% of cuts over the same lines as new-word lines, whose lengthened new word takes about 630 ms, 4–6 ticks to finish) is broken off at 3 ticks and not labelled as said: its token is withdrawn from channel 0, and a spelled word's letters already given are closed by its space.
 - **Repeats:**
   - the call at most once per 240 ticks;
   - the same line not within 60 ticks;
@@ -701,7 +768,7 @@ Anything urgent comes before the plan, in the behaviour system's order (section 
 - **Growth pace.** About 12 content words are active at a time.
   - The next word enters when at least half of the active set is understood.
   - At least one new word every 2 life days, at most 3 a life day.
-  - A new word is said sentence-final, in 3 lines within a minute (one variation set).
+  - A new word is said sentence-final, in 3 lines within a minute (one variation set), on the line's pitch peak and lengthened in every line of the set, whether it ends in ".", "?" or "!", and only in frames measured to put it on the peak (A34; 4.4: measured on all 331 birth lines by ending, the word 1.14 times as long and its F0 1.30 times the same line's unemphasized, 1.32 and 1.30 times the plain line's; the set at 2.40–2.83 words a second).
 
 ### 4.9 The child's voice: the vocal tract, and the word scaffold
 
@@ -720,7 +787,7 @@ The owner's decision 5: the voice is an articulatory vocal tract, so the child b
 - **Calibration** (all ours, disclosed):
   - the four corners of the tongue's range were fitted to children's vowel means (Peterson and Barney), with each constriction held at its anatomical place. The results: /i/ 344 / 2,719 Hz, /a/ 938 / 1,625 Hz, a rounded /u/ about 375 / 1,250 Hz;
   - an honest gap: the vowel space is about the size of an adult woman's. Front vowels fall short in F2 (2,700 against 3,200 Hz) and low vowels in F1 (about 900 against 1,030 Hz);
-  - levels: /a/ matches the parent's speech level; a hiss sits at −14 dB and /h/ at −13 dB relative to /a/.
+  - levels: /a/ at the parent's speech level, ANSI S3.5-1997's normal vocal effort, 62 dB SPL at 1 m (A26); a hiss sits at −14 dB and /h/ at −13 dB relative to /a/.
 - **Cost** (measured on this Mac while other sessions shared it):
 
 | case | ms per 150 ms tick |
@@ -728,7 +795,7 @@ The owner's decision 5: the voice is an articulatory vocal tract, so the child b
 | sounding (vowel, glide, fricative), a quieter moment | 1.8–3.0 |
 | sounding, under heavy load | 7–10 |
 | at rest | 0.12 |
-| its own voice to both ears | +0.17 |
+| its own voice to both ears | +0.37 a sounding tick (0.75–0.95 under heavy load), +0.05 at rest |
 | the babble average (6% of ticks sound), under load | about 1.6 |
 
 **The alphabet and the gate.**
@@ -747,7 +814,7 @@ The owner's decision 5: the voice is an articulatory vocal tract, so the child b
 **How the child hears itself.**
 - The tract is a software organ driving the G1's own loudspeaker, as the software fovea keeps the body stock. That the real G1 has a speaker, and where it sits, is from memory and still to check (B5).
 - In the sim the sound comes from the head's front and is spatialized to the two microphones.
-- It goes through the same cochleas and brainstem (channel 2). Its own voice arrives about 14 dB above the parent's at 1.5 m. There is no bone conduction.
+- It goes through the same cochleas and brainstem (channel 2). Its own voice arrives about 19–20 dB above the same sound from 1.5 m in front (the exact sphere's level for a source on its surface: +19.8 dB at 500 Hz, +19.1 dB for a held /a/, 78.7 dB SPL; the earlier "about 14 dB" was the prototype's 0.3 m level floor), and reads at the midline. There is no bone conduction.
 - An act at tick t is heard at t+1, as with the limbs.
 - The tract's 10 positions and velocities, plus breath left, join the body channel (21 numbers).
 
@@ -768,7 +835,7 @@ The owner's decision 5: the voice is an articulatory vocal tract, so the child b
   - So early imitation rests on the cortex learning to hear across voices. `act_inv`'s reliability is measured on its own voice, so it overstates on the parent's.
   - A method for the parent: echo the child's babble back (Goldstein and Schwade 2008).
 
-**How the parent hears the child's words** (`body/sim/parent_ear.py`; its cochlea `body/sim/ears.py`).
+**How the parent hears the child's words** (`body/sim/parent_ear.py`, the study's prototype). Every figure below was measured through the study's cochlea (filters about 1.6 ERB wide), which the prototype still uses (`body/sim/parent_ear_cochlea.py`). P3v moves the parent's ear onto the child's cochlea (`ears.cochlea`, 1.00 ERB, calibrated) and measures them again before any is used.
 - **Features:** the same cochlea → log bands → a shift of 0–4 bands (the parent adapting to a shorter tract) → cepstra c1–c12, mean-normalized → slope-constrained DTW (Itakura).
 - **How well it recognizes, as measured:**
   - across voices of the same synthesizer: 94–100% right among the 50 birth words;
@@ -894,32 +961,38 @@ The owner's decision 6 calls the parent the environment's most important part. I
   - A ceiling spot light blacked out the ceiling in MuJoCo 3.9's renderer on this Mac, so it was removed; the ceiling is most of what a child on its back sees.
   - The sun's shadow stays in the child's eyes. Dropping it would save about 21 ms a tick but take a piece of the owner's complete reality (decision 3), so it is the owner's call (B3), never decided by the eye check or by the tick.
   - The G1 file's own directional light (a Menagerie scene light, not part of the robot) is switched off at load.
+  - **No headlight.** MuJoCo's headlight is a lamp at the viewing camera: for the child's eyes, a lamp shining from its own head, which the G1 does not have. It is off, and the eyes refuse to render with one (a verifier found it on; C3's first figures were measured with it). MuJoCo computes no bounced light, so each light carries the room's indirect light as its ambient term, a third of its own diffuse (ROOM_INDIRECT, ours: about the prototype's headlight ambient carried onto the lights).
 - **The play space is the whole floor** (B7). The mat has no walls. The parent cannot carry the G1 back, so she comes to it.
 - **The G1 in the file.** The room includes `assets/unitree_g1/g1_with_hands.xml` first, so its `stand` keyframe still addresses its own joints.
   - MuJoCo applies the last `compiler` element to the whole model, so the room is written in radians (every `euler` converted in one place), and the G1's mesh folder is given from `body/sim/`.
   - The room's contact defaults sit in their own class, so the G1's defaults are untouched.
 - **Collision classes:** world 1 (floor, walls, mat, furniture); the G1 keeps its own contype 1 and conaffinity 1 (self-collision on, as shipped); toys 4; the parent 8, with conaffinity 1 so it touches the G1.
-- **Physics:** MuJoCo 3.9, 2 ms steps with `implicitfast`, 75 steps a tick, **the elliptic friction cone, multi-point collision detection off.**
+- **Physics:** MuJoCo 3.9, 2 ms steps with `implicitfast`, 75 steps a tick, **the elliptic friction cone, multi-point collision detection off, and impratio 10.**
   - With the pyramidal cone, a block squeezed in a Dex3 hand stopped MuJoCo ("FactorizeHessian: rank-deficient sparse Hessian"); with the conjugate-gradient solver or a dense Jacobian it gave NaN accelerations and a reset.
   - With the elliptic cone and multi-point detection on (MuJoCo's default), 8 of 360 grasp trials blew up to NaN about 0.1 s into closing the fingers, and MuJoCo silently reset them. With it off: 0 of 360, and the babble ran clean.
-  - The world catches `mujoco.FatalError`: two hands posed 3 cm into each other raised it inside `mj_forward` (A18). It also disables MuJoCo's auto-reset (`<flag autoreset="disable"/>`), so a bad state is never silently replaced.
-  - The world's geoms (floor, mat, furniture, toys) take contact priority 2, so real frictions are set on the world's side (C26).
+  - **impratio 10, chosen by the physics of these contacts** (A32), never by pain rates or by which toys can be held. Rubber fingertips on plastic toys, toys and the body on a foam mat, and motor housings on housings all hold without a slide below their sliding force. MuJoCo's soft contacts creep there by design (Overview, "Softness and slip"), and its documentation names the remedy: "using the Newton solver with elliptic friction cones and large value of impratio is the recommended way of reducing slip" (ibid.); "When contact slip is a problem, the best way to suppress it is to use elliptic cones, large impratio, and the Newton algorithm with very small tolerance" (Modeling, "Solver settings"; both the stable documentation, read 2026-09-24). Menagerie's hand and gripper models (the Shadow hand, the Allegro hand, the Robotiq 2F-85, ALOHA) ship elliptic cones with impratio 10.
+    - Measured (`tools/sim_friction.py`): a box on the mat pushed at 0.3–0.97 of its sliding force slid 3.6–21 mm in 2 s at impratio 1 and 0.4–1.8 mm at 10 (a real one would not slide); the resting G1 pushed at the pelvis with 100 / 150 / 200 N slid 1.9 / 3.1 / 4.4 cm at 1 and 0.4 / 0.7 / 1.9 cm at 10; above the sliding force both follow Coulomb's law within 1%.
+    - **Its cost, disclosed** (C5, C22). The convex contact model couples a slip to the normal direction ("the only way to initiate slip is to generate some motion in the normal direction", Computation, "Physical realism and soft contacts"). A pressed box that starts to slide is pressed 22–24% harder than its load for about 10 ms, at either setting. In the G1's hip housings, pressed together and slid apart by the withdrawal, friction raises the normal force at 10 (1,795 N against 1,553 N with the pair frictionless) where at 1 it lowers it (1,333 against 1,646): a pressed housing that slides reads harder at 10.
+    - The noslip solver, the documentation's next step, was refused: its cascade "is no longer solving a well-defined optimization problem (or any other problem); instead it is just an adhoc mechanism" (Modeling, "Solver settings"), and it nearly doubled the tick.
+  - The world catches `mujoco.FatalError`: two hands posed 3 cm into each other raised it inside `mj_forward` (A18). It also disables MuJoCo's auto-reset (`<flag autoreset="disable"/>`), so a bad state is never silently replaced. Built (W1): every tick checks MuJoCo's warning counters and the end state against MuJoCo's own bound (`mjMAXVAL`, 1e10) on positions, velocities and accelerations, with the tick's closing forward pass inside the catch; on any fault the world puts back the state the tick began with and raises `WorldFault`, so the fault never reaches the body.
+  - The world's geoms (floor, mat, furniture, toys) take contact priority 2, so real frictions are set on the world's side (built; the surfaces' own values are still 1.0, C26).
+  - **The mat's collision box reaches 10 cm below its top,** sunk into the floor. In a thin mat a 5 mm foot sphere was trapped at 1,900 N and gave pain on 151 of 400 babble ticks; with the deep box, 2 of 400, both real blows.
 
 ### 5.2 Toys and their sounds
 
 Every sound comes from an event in the physics: a toy's own clip on its event, scaled by the impulse or speed; contact clicks; the parent's voice and footsteps (from its gait); the child's tract. Each source is placed in space for the two ears.
 
-| toy | colour | size | held by a Dex3 hand? | its sound |
+| toy | colour | size | held by a Dex3 hand? (3.8, impratio 10) | its sound |
 |---|---|---|---|---|
-| ball | red | 12 cm | no (B1): pushed, rolled, named | a soft rubber bounce when it lands or is struck |
+| ball | red | 12 cm | yes, 9 of 9; also pushed, rolled and named | a soft rubber bounce when it lands or is struck |
 | block | blue | 7 cm cube | yes, 9 of 9 | a hollow wooden knock on contact |
-| duck | yellow | 11 cm | no (B1) | a squeak when squeezed |
-| cup | green | 0.8 scale, 6.7 cm across | yes, top grasp 3 of 3 | a plastic clink when it strikes something |
-| rattle | purple | a handle and a head | yes, 4 of 6 hand-overs | beads shaking, louder with speed |
-| car | orange | 14 cm long | yes | a wheel rattle while it moves |
-| bear | brown | 12 cm | no (B1) | a soft bell inside when it moves |
-| stacker | white, with coloured rings | 11 cm base | yes | the rings' plastic clack |
-| drum | cyan | 15 cm | no (B1): hit | a boom when hit on top |
+| duck | yellow | 11 cm | yes, 7 of 9 | a squeak when squeezed |
+| cup | green | 0.8 scale, 6.7 cm across (B1) | yes, 9 of 9 (and 9 of 9 at full size) | a plastic clink when it strikes something |
+| rattle | purple | a handle and a head | yes, 6 of 6 hand-overs | beads shaking, louder with speed |
+| car | orange | 14 cm long | yes, 8 of 9 | a wheel rattle while it moves |
+| bear | brown | 12 cm | no, 2 of 9 (B1) | a soft bell inside when it moves |
+| stacker | white, with coloured rings | 11 cm base | yes, 9 of 9 | the rings' plastic clack |
+| drum | cyan | 15 cm | no, 0 of 9 (B1): hit | a boom when hit on top |
 | ring (teether) | pink | 10 cm | yes, 6 of 6 hand-overs | a crinkle when handled |
 
 - **Where they lie at birth:** around the G1 on the mat. The block, cup and rattle are within its lying reach. The rattle was moved 7 cm nearer the right hand, and the block and duck were moved out from under its arm and leg.
@@ -928,8 +1001,8 @@ Every sound comes from an event in the physics: a toy's own clip on its event, s
 ### 5.3 The charger
 
 - **The bottle.** A toy-sized bottle charges the child while it touches either palm: 0.01 a tick, so from empty to full in 100 ticks.
-  - It is sized for the Dex3 in W3 (the cup held only at 6.7 cm across).
-  - Its dock is the prototype's white disc. The maker still has it at the mat's corner, far from the child; W3 moves it beside one hand (A17).
+  - It is sized for the Dex3 in W3 (not yet built; the hand now holds the cup at full size, 3.8).
+  - Its dock is the prototype's white disc. The maker still has it at the mat's corner, far from the child; W3 moves it beside one hand (A17; not yet built).
   - The dock moves out of reach only once moving across the mat toward things beats chance.
 - **Why a bottle** (the owner's decision 6 calls charging the child's meal):
   - the palm and the grasp reflex make feeding possible from day one;
@@ -941,8 +1014,9 @@ Every sound comes from an event in the physics: a toy's own clip on its event, s
 
 The owner's decision 3: sounds only from real events, day and night light, the parent's whole day as a parent, and no shortcuts in the body.
 - **Light across the life day.** The sun moves across the window from morning to dusk over the 24,000 ticks, with its colour warming at the ends of the day. The lamp comes on at winding down and dims over goodnight's last 30 ticks. The night is dark. The morning's light returns over the first 30 ticks of the wake.
-  - The eye check (C3) runs under morning, midday and dusk light. It reports what the fovea can tell apart in each light; it never changes the light. Making the world easier to see because the child's eyes find it hard would fit the world to the learner.
+  - The eye check (C3) runs under morning, midday and dusk light. It reports what the fovea can tell apart in each light; it never changes the light. Making the world easier to see because the child's eyes find it hard would fit the world to the learner. Its lights are stand-ins until W5 builds the day's; it runs again then.
 - **Night.** At the end of goodnight, `world.pause()` freezes the world exactly as it is. Nothing is moved, and the morning resumes from the same state. The parent sleeps on the sofa.
+  - Measured for W5: with every light switched off, MuJoCo renders the scene unlit and brighter (a mean grey of 95 against 39 lit), so the night dims the lights rather than switching them off; the ceiling, the window, the lamp's shade and the dock are emissive and still glow. The save carries the lights' places and directions, and the eyes re-render when any light changes.
 - **Sounds only from real events** (section 5.2). The room's echo is B9's default. The G1's own motors, which hum on the real robot as they work, are B20's.
 - **No shortcuts in the body.** Every channel comes from a sensor where the real G1 has one, with the four disclosed exceptions of section 3.4.
 
@@ -957,7 +1031,7 @@ Summed in this order.
    - It is grounded in the parent's visible judgment of world events.
 2. **Pain.** −1 on a tick when any link's force exceeds F_pain = 3 × the child's weight from the model file: 3 × 337.4 N ≈ 1,012 N.
    - A link's force for pain is the tick's largest 10 ms mean (5 physics steps) of its summed normal force (A12).
-   - At rest the largest contact at the tick ends is 272 N. Under babble, single-step peaks at the tick ends reached 944 and 1,799 N; W4 measures the pain rate with the filter (C5).
+   - At rest the largest contact at the tick ends is 272 N. Under babble, single-step peaks at the tick ends reached 944 and 1,799 N. Measured in the built world with the filter and the newborn's withdrawal (`tools/sim_pain.py`, 8 seeds × 400 ticks): pain on 11.6% of babble ticks at impratio 10 (11.7% at 1; 6.1% on a verifier's 4 seeds), mostly the thighs' housings driven into the pelvis and the shoulders into the torso; 0 of 400 ticks at rest (C5).
    - Pain at a joint's limit is a candidate, not measured, and not at birth.
 3. **Charge.** 4 × [D(h_t) − D(h_t+1)], with D(h) = (1 − h)². This is drive reduction (Keramati and Gutkin 2014), so a full charge earns nothing.
    - The drain is 4e-5 a tick plus 2e-3 × (Σ τ² ÷ Σ τ²_max), over the G1's own limits.
@@ -1021,7 +1095,7 @@ Status: specified, and measured on a synthetic stream; nothing is built. It repl
 | road | what | numbers (sim) |
 |---|---|---|
 | high (cortical) | the cortex's stream C, read when the tick's choice reads it, and detached: everything the cortex has made of the eyes, the ears, the joints, touch, balance and the charge. A voice's tone, the parent's face turning or changing, and the charge falling are carried here. | 512 |
-| low (thalamic) | R7's event lines, one declaration read by both the critics and the amygdala: touch onset in 8 zone groups (head and trunk together as the G1's torso, pelvis, each arm, each hand, each leg); pain on any link; a face in the fovea (the born three-blob template on the fovea's pixels, never the world's face test: section 3.4); a sound onset on the left and on the right (the cochlea's onset and the born lateral read) | 12 |
+| low (thalamic) | R7's event lines, one declaration read by both the critics and the amygdala: touch onset in 8 zone groups (the head, the trunk with the pelvis, each arm, each hand, each leg: the world's `zone_groups`); pain on any zone; a face in the fovea (the born three-blob template on the fovea's pixels, never the world's face test: section 3.4; its constants open, C39); a sound onset on the left and on the right (the cochlea's onset and the born lateral read; a sound with nothing below about 760 Hz gets no side, C42) | 12 |
 | level | 1 | 1 |
 
 The language body declares no event lines.
@@ -1140,6 +1214,8 @@ The critics learn from what happened what it is worth; they own dopamine, the on
 | R6 fix 3 | e48b284 | `act_pred`'s plasticity gated by its labels' reliability (`GatedAdam`) |
 | verifiers' findings | 6d6d246 | a striatum saved before R5b keeps all but its effectors' rows; `act_inv`'s kappa under shifting act rates measured, its correction left for R6h |
 
+- **R6 fix 3's verifier said NOT READY.** `GatedAdam` is right, and Adam bit for bit at weight 1, but the gate held only for a newborn body: once `act_pred` had learned, 1,000 lessons at reliability 0.01 taught the proposal about ten times what the same label mass taught given whole, through `act_pred`'s gradient into the cortex. R6 fix 4 (440bad3) closes that route and gives each optimizer its own gradient bound; its verifier found one route still open (windows mixing own acts and labelled rests, once the own acts are fitted, through Adam's moments), with a remedy probed (separate moments for `act_inv`'s labels). Both are in progress on `sim-core` and are folded here when a verifier passes them.
+
 **Left:**
 
 | step | work | days | risk to the digests |
@@ -1180,25 +1256,28 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 
 | part | ms | source |
 |---|---|---|
-| physics: 75 steps of the G1 under babble, about 28 contacts | 12.3–13.8 | measured |
+| physics: 75 steps of the G1 under babble, about 28 contacts | 12.3–15.0 | measured (the prototype, and the built world) |
+| the world's Python: the servo law, touch and pain per zone with the 10 ms filter, the IMUs, the reflexes | 2.3–2.6 | measured (W1) |
 | the parent's mocap and its Python, every step | 4.3 | measured |
 | the parent's plan (solved per act and once a second, warm-started, interpolated) | 1–3 after W2 | estimate |
-| two eyes, 168 × 96 each, the sun's shadow: render, read-back, the split into periphery and fovea | 37.6 (16.5 without shadows) | measured |
-| ears: three sources, both cochleas, the brainstem | 2.3 | measured |
-| the child's tract: the babble average, plus its sound to both ears | 1.6 + 0.2 | measured |
+| two eyes, 168 × 96 each, the sun's shadow: render and read-back | 31.2–31.7 with the parent's old face; her face of human proportions makes it about 25–30% slower (35 → 43–46 side by side), so about 40–45 (16.5 without shadows, the prototype) | measured (W3) |
+| the eyes' split into periphery and fovea, the retina's code, the born face template (3.0) and the face test's rays | 0.7–3.5 | measured (W3) |
+| ears: three sources, both cochleas, the brainstem | 1.4 (0.23 + about 0.37 a source; 2.8 under heavy load) | measured |
+| the child's tract: the babble average, plus its sound to both ears | 1.6 + 0.1 (its sound: 0.37 a sounding tick, 0.05 at rest) | measured |
 | the parent's ear: 287 ms per child utterance, at the born babble's 6.4–7.8 utterances a minute | about 5 on average (4.6–5.6; 287 ms at an utterance's end) | measured per utterance; the rate from the born babble |
 | the parent's voice | 0 on a cache hit | measured |
 | the core at the humanoid's size, at the critics' current solve rate | mean 56–84, median 39–53 | measured (paired against the language core: 84.4 against 74.3 mean) |
 | the critics' solves every 256 ticks instead of 64 | −7 to −20 | measured parts |
 | the amygdala | 0.19 | measured (synthetic) |
-| not yet measured: per-step contact forces for touch and the pain filter; the face test's rays; the fovea's face template; the parent's conduct layers L1–L2 and feelings each tick; the room camera while watched | about 2–10 | estimate |
-| **total** | **about 100–155 mean with the sun's shadow; about 80–135 without** | from real time to 1.5× faster |
+| not yet measured: the parent's conduct layers L1–L2 and feelings each tick; the room camera while watched | about 1–5 | estimate |
+| **total** | **about 105–160 mean with the sun's shadow; about 80–135 without** | from about 0.9× to 1.4× real time |
 
 - **Against this morning's design** (80–125 ms): the G1's physics adds 4–5 ms, its eyes 8–13 ms with the sun's shadow (render and read-back: 32.5 ms against the custom child's 24.2 ms in the same run), the tract about 2 ms, and the parent's ear about 2–5 ms.
+- **Her face costs the eyes 8–11 ms.** The parent's face of human proportions (a smooth sheet and its pieces: 859,000 mesh faces in the model against 680,000) made the two eyes' render about 25–30% slower in a side-by-side measure (35 → 43–46 ms); `mj_step` did not change (0.33 ms). Her face is the world's, not a render shortcut, so it is not one of B3's levers.
 - **Half the eyes' cost is the G1's own visual meshes** (629,000 triangles). Hiding them (a test only) gave 8.3 ms without shadows and 16.7 ms with the sun's. A lighter visual copy of the meshes, used only by the eyes, would save about 8–18 ms, but it changes how the G1 looks to itself (B3).
 - **A twice-sharp fovea** (336 × 192 per eye) costs 16.9 ms without shadows and 38.3 ms with the sun's: resolution barely matters; the fixed overhead does.
 - **Levers if the tick is too slow,** in order: the parent's ear scoring only the expected words and the bank (an estimate of −1 to −3 ms; the world's side, ours); then the owner's two render choices of B3, the lighter mesh copy (−8 to −18 ms) and the eyes without the sun's shadow (−21 ms). The shadow and the mesh are the owner's (decision 3), never ours to drop for speed; a slower life is the alternative, since lockstep makes the tick cost wall time only.
-- **A life day:** 24,000 ticks take about 40–62 wall minutes awake. The night is estimated at 12–25 minutes (R8 is not built). So a life day with its night takes about 55–90 wall minutes.
+- **A life day:** 24,000 ticks take about 42–64 wall minutes awake. The night is estimated at 12–25 minutes (R8 is not built). So a life day with its night takes about 55–90 wall minutes.
 - **Where the core's time goes.** The critics take about half the core's tick; the cortex's full window is recomputed every tick. The core's additions for a humanoid were profiled at about 10–12 ms a tick:
 
 | part | ms a tick |
@@ -1227,15 +1306,16 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 
 | item | size | kept |
 |---|---|---|
-| the save, written as `.tmp` then renamed | about 1.3–1.7 GB (up to 3.4 GB at peak with its `.tmp`); the amygdala adds 2.3 MB. The earlier 0.95 GB had no source and is below the language body's own save (1.28 GB on disk today), while the sim's core has more parameters (35.2M against 28.8M), a larger store (98,304 slots against 65,536: +134 MB) and the day's tape (141 MB). S5b measures it | one |
-| the day's tape (about 3,000 numbers a tick, fp16: 6 KB) | about 141 MB a life day, inside the episodes (cap 24,000 ticks) | in the save |
+| the save, written as `.tmp` then renamed | about 1.3–1.7 GB (up to 3.4 GB at peak with its `.tmp`); the amygdala adds 2.3 MB. The earlier 0.95 GB had no source and is below the language body's own save (1.28 GB on disk today), while the sim's core has more parameters (35.2M against 28.8M), a larger store (98,304 slots against 65,536: +134 MB) and the day's tape (151 MB). S5b measures it | one |
+| the day's tape (about 3,150 numbers a tick, fp16: 6.3 KB) | about 151 MB a life day, inside the episodes (cap 24,000 ticks) | in the save |
 | each tick's record for the amygdala (16 B) | 384 KB a life day | in the tape |
 | world states for exact replay and redrawn films | about 7.6 KB a tick, 180 MB a life day | the last 3 days, 0.55 GB |
-| the voice cache | at most 300 MB | always |
+| the voice cache (the life's folder) | lines made ahead: at most 300 MB. Lines heard: kept for good, 40 KB each (13.3 MB for the 331 birth lines), growing by at most about 25 MB a life day | always |
 | the parent's JSONL log | rotated at 100 MB | the last file |
 | **peak** | **about 4.4 GB** | |
 
 - The tract's sound is not saved: the tract is deterministic from its seed and the acts, so a replay regenerates it.
+- The voice's kept lines grow with the life: at most about 25 MB a life day (0.75 GB over 30 days if every line were new), the day's fresh lines in practice. The disk rule counts them.
 - **The rule.** The sim writes nothing that would leave less free space than the larger of the two bodies' saves (the sim's, about 1.7 GB until S5b measures it) plus 1 GB: about 2.7 GB. It skips the write, logs why, and pauses at its next boundary.
 - **Birth needs at least 8 GB free:** the peak of 4.4 GB plus the rule's floor of 2.7 GB, and a margin.
 - **The owner's folders** `data/backups` and `data/first_lineage` are never touched.
@@ -1244,36 +1324,44 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 
 | constant | value | kind | set by |
 |---|---|---|---|
-| tick; physics step | 150 ms; 2 ms (75 a tick), `implicitfast`, the elliptic friction cone, multi-point collision detection off, auto-reset disabled | clock, world | ours |
+| tick; physics step | 150 ms; 2 ms (75 a tick), `implicitfast`, the elliptic friction cone, multi-point collision detection off, impratio 10 (MuJoCo 3.9's documented remedy for slip, as Menagerie's hand models ship it: 5.1, A32), auto-reset disabled, the end state checked against `mjMAXVAL` each tick | clock, world | ours |
 | life day | 24,000 ticks | physiology | ours (today's) |
 | the child | the stock Unitree G1 with Dex3 hands (Menagerie `g1_with_hands.xml`, unchanged): 1.32 m, 34.39 kg | world | owner (decision 7) |
-| torque limits and joint ranges | the model's own (section 3.2) | anatomy | the robot's |
+| torque limits and joint ranges | the model's own (Menagerie's file, section 3.2); Unitree's differing URDF (35 N·m for the ankles and the waist's roll and pitch), MJCF (the hip roll 88) and page (the knee 90 / 120) recorded beside them | anatomy | the robot's model |
 | servo gains | set at load, never in the file: the limit reached at 0.25 rad of error (the Dex3's joints at 0.1 rad); damping 0.04 s × kp | anatomy | ours |
 | servo law | an act: target = measured angle + step; at rest the target relaxes to the measured angle, time constant 3 ticks; no gravity compensation | innate | ours |
 | step sizes | waist, arms, hands, legs ±0.09 / ±0.27 rad a tick; gaze ±4° / ±11.5°, vergence ±1.7° / ±5.7°; tract −0.6, −0.2, 0, +0.2, +0.6 of each articulator's range | anatomy | ours |
 | persistence margin (movement units) | log 4 in logits | physiology | ours |
 | `chunk_max` | 8, a ceiling only | physiology | ours (the served value) |
-| F_pain | 3 × the child's weight from the model file (about 1,012 N), per link | innate | ours |
-| pain force | per link, the tick's largest 10 ms mean (5 physics steps) of the summed normal force (A12) | innate | ours |
-| withdrawal | the hurt limb takes one big flexion step a tick for 2 ticks; the waist and torso have none; each joint's flexion direction fixed in W1 | innate | ours |
-| grasp reflex | a palm touch above 0.3 N closes the Dex3's 7 joints one step a tick, unless the hand's own act opens it | innate | ours |
-| orienting | a born bias on the gaze's and the waist yaw's proposals toward a three-blob face template and the ears' lateral read; a born gate input; its gain from the amygdala | innate | ours |
+| F_pain | 3 × the child's weight from the model file (about 1,012 N), per touch zone | innate | ours |
+| pain force | per zone, the tick's largest 10 ms mean (5 physics steps) of the summed normal force (A12) | innate | ours |
+| withdrawal | a limb with any zone in pain takes one big flexion step (0.27 rad) of its flexion joints a tick for 2 ticks (WITHDRAW_TICKS), generalized over the limb: a leg its hip pitch, knee and ankle pitch; an arm its shoulder pitch and elbow (its hand's pain included; no wrist joint); the signs measured on the G1; the waist and torso have none | innate | ours (Andrews and Fitzgerald 1994; Cornelissen et al. 2013; Holmberg and Schouenborg 1996: A31) |
+| grasp reflex | a palm touch above 0.3 N (GRASP_N, the palm's tick-mean force; the prototype's value) closes six of the Dex3's seven joints one small step a tick (the thumb's rotation has none), summed at the spinal cord with the hand's own act, unless that act opens the hand (A35) | innate | ours |
+| orienting | a born bias on the gaze's and the waist yaw's proposals toward a three-blob face template and the ears' lateral read; a born gate input; its gain from the amygdala (the template's constants: C39) | innate | ours |
 | VOR | the fovea window counter-shifts by the torso gyro's rotation in each camera's frame, gain 1; its quick phase at the window's reach, a jump back of half the reach in the direction of the turn (A23) | innate | ours |
 | weakness when empty | torque limits × (0.3 + 0.7h) | anatomy | ours |
-| eyes | a colour stereo pair at the D435's imagers (50 mm apart), 88.3° × 58° (horizontal × vertical), 168 × 96 px each, pitched 47.6° down as on the real G1; periphery 3 × 3 averaged (56 × 32 px); fovea a 32 px window (about 21°) whose centre reaches ±38° × ±20°; vergence 0–12°; born centred and parallel; the window holds where it is left; RGB only; the sun's shadow kept | anatomy | ours (colour stereo: B4; the shadow and a lighter mesh copy: B3) |
+| eyes | a colour stereo pair at the D435's imagers (50 mm apart), 88.3° × 58° (horizontal × vertical), 168 × 96 px each, pitched 47.6° down as on the real G1; periphery 3 × 3 averaged (56 × 32 px); fovea a 32 px window (about 21°) whose centre reaches ±38.1° × ±20.3°; vergence 0–11.4° (to the 25 cm near point); born centred and parallel; the window holds where it is left; RGB only; the sun's shadow kept | anatomy | ours (colour stereo: B4; the shadow and a lighter mesh copy: B3) |
+| touch | 45 zones (one per link with collision; the head apart from the torso, each palm from its wrist), each log(1 + F / 1 N) of the tick's mean summed normal force and its onset | anatomy | ours |
 | the IMUs' noise | the model file's own declared noise (gyro 5e-4, accelerometer 1e-2), added by the world from its own seeded stream, since MuJoCo 3.9 does not apply it | world | the robot's (its file) |
 | the event line "a face in the fovea" | the born three-blob face template on each fovea's pixels (either eye), never the world's face test | innate | ours |
+| the born face template | CONSPEC's three dark blobs in a face-shaped ellipse (A1's face front, 0.17 × 0.21 m): eye discs 0.20 W across at (±0.22 W, +0.12 H), a mouth ellipse 0.36 W × 0.10 H at (0, −0.25 H); read on luminance at widths 8, 11, 16 and 23 px; a match at r ≥ 0.5 over the ellipse with the blobs darker than the face by at least 0.10 (Weber); its readings `face_fovea` (1) and `face_periph` (3) | innate | ours (Johnson and Morton 1991; Goren 1975; Farroni et al. 2005 for the polarity; the layout recalled from a person's proportions, never set on the parent); to be settled from its sources (C39) |
 | contacts with the world | the world's geoms at contact priority 2, so their friction and softness decide contacts with the G1; the G1's file untouched (A21, C26) | world | ours |
-| born codes | retinotopic: periphery 7 × 4 cells × 6 colour mixes per eye, fovea 8 × 8 × 6; ears 40-band gammatone, ERB-spaced 80–7,600 Hz, cube-root, delay lines ±8 samples in 21 bands, head radius 0.078 m; random projections from the seed | anatomy | ours |
+| the mat's collision box | 10 cm deep, sunk into the floor (a thin one trapped a foot sphere at 1,900 N) | world | ours |
+| born codes | retinotopic: periphery 7 × 4 cells × 6 fixed opponent channels (luminance, red–green, blue–yellow, each ON and OFF) per eye, fovea 8 × 8 × 6; ears 40-band gammatone (the power response, 1.00 ERB, calibrated in Pa²), ERB-spaced 80–7,600 Hz, cube-root re 60 dB SPL, delay lines ±12 samples in 21 bands (a correlation times the band's loudness), the exact rigid sphere of radius 0.079 m, the ears' converter (flat to 7.6 kHz, 60 dB down from 8 kHz); random projections from the seed | anatomy | ours |
 | ears' places | two sites on the head's sides, 15.8 cm apart | anatomy | owner (default, B5) |
 | the tract | 12 cm, 24 sections plus a nasal branch; pitch 180–546 Hz, resting about 265 Hz; breath 400 cm³, refilled in 0.8 s; rest relax 1 tick; its calibration (section 4.9) | anatomy | ours (identity: B6) |
 | face reward | the increment rule: rises of the positive part felt positive, rises of the negative part felt negative, falls never felt, clipped ±2; felt only via the born reading while the face test passes on 2 consecutive ticks | reward | ours |
 | born reading | 2 × (smile − frown), the mouth corners only; its last value for 30 ticks out of view, then neutral (A2) | innate | ours |
-| face test | the mouth point in an eye's software fovea and reached by an unblocked ray; the face turned within 75°; its front (0.17 × 0.21 m) at least 20 fovea px × the cosine of the turn; either eye (A1) | innate | ours |
+| face test | the mouth point in an eye's software fovea and reached by an unblocked ray (a first hit within 2 cm of the mouth point, or on her own lips, counts as the face: RAY_SLACK_M); the face turned within 75°; its front (0.17 × 0.21 m) at least 20 fovea px × the cosine of the turn; either eye (A1) | innate | ours |
 | the parent's feelings (FEEL) | joy pulses of worth ÷ 2 (rise 2, held until seen at most 20, then 10, ease 5); displeasure 0.5 / 0.25, held 10; surprise τ 3, × 0.5 per repeat within 200; concern 1.0 / 0.6, τ 40, blocks smiles above 0.5; attention τ 5, the flash after 200 ticks unseen; mood τ 4,000 | teacher method | ours |
 | the face's start rule | a smile waits for 2 neutral ticks if another is on her face or a positive face was seen under 31 ticks ago; dropped after 40 | teacher method | ours |
 | the worth table | section 4.3; mastery 1 + e^(−n/10), floor 1 | teacher method | ours |
 | the parent's face placement | never closer than 25 cm, arriving at least 15° off the fovea's line (A3) | teacher method | ours |
+| the parent's face | the norms and sources of 4.1; ours: her corneal plane and pupils' height in her head's frame, the medial canthus 3 mm behind the corneal apex, the nasion 9 mm over the pupils and 10 mm in front of the cornea, the relief between the landmarks | world (the parent's body) | the sources / ours |
+| her lids and eyes | the hinge 12° back (HINGE_BACK_DEG) and −9° tilted (HINGE_TILT_DEG), of a grid the least turn that closes a blink; LID_CLEAR 0.2 mm; BLINK_OVERLAP 0.5 mm; BLINK_INNER (0.02, 0.98); LID_SPAN_DEG (110, 60); R_COV 13.3, R_COV_LO 13.45, R_COV_IN 12.45 and R_M 13.6 mm; LATERAL_TUCK 0.20; RIM_BAND 1 mm; the lashes LASH_R 0.55 mm over LASH_SPAN (0.06, 0.80); the pupil's disc seated 0.15 mm on the iris (PUPIL_SEAT); TEMPLE_PINCH 6 mm | world | ours |
+| her collision | convex pieces of her own sheet (COLLIDE_GAP 4 mm, COLLIDE_DEPTH 12 mm, COLLIDE_MIN 5° and 6 mm), her hair's cap, a sphere over each eye to the lash front | world | ours |
+| her photometry | Russell, Kramer and Jones 2017's contrasts, measured under a studio lamp (STUDIO 0.35, 0.65; STUDIO_SKIN_L 65) at her face's depth (FACE_DEPTH_M 0.52 m), with the 1 mm band round the lashes (LASH_BAND_MM) and a 5 mm skin ring (ANNULUS_MM); the colours so calibrated: the iris RGB (0.3137, 0.1881, 0.1045), the brows 37% hair over skin, the lips 32%, the sclera and the lashes; her skin's shade of the indirect light baked at share 0.4 | world | the source / ours (the calibration) |
+| the face instruments | `sim_face_measure`'s LEAK_DEPTH 0.15 mm; `sim_face_template`'s detection: a match centred within a third of her face's width of her face's centre, its width within √2 of hers | instrument | ours |
 | the parent's force caps | one hand 100 N sustained, 150 N for up to 2 s; both hands 160 N, 200 N for up to 2 s; every hold a capped spring | teacher method | ours (checked against sources in W2) |
 | the guide's cap | min(1.5 × the limb's own push at that pose, 100 N); at most 8 ticks at up to 0.3 m/s; stops after 2 ticks at the cap (A10) | teacher method | ours |
 | the parent's soft contact and yield | solref 0.05 on its collision shapes; a contact over the act's cap for 2 steps stops that segment and backs it off 2 cm a tick (A4) | teacher method | ours |
@@ -1304,8 +1392,9 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 | store | capacity set before birth to hold 19 life days of the measured writes | physiology | ours |
 | episode cap | 24,000 ticks | physiology | ours |
 | switches at birth | fixes #1, #4, #5, #8 on; `amyg` on; `chunk_gate` 1 per effector | physiology | ours (off for language) |
-| voices | parent: compact Samantha, rate 0.25, pitch 1.15, and the registers; the child: its tract | world, anatomy | owner (default) / ours |
+| voices | parent: compact Samantha, rate 0.25, pitch 1.15, and the registers (the new word's at rate 0.15); the focus word's prosody: pitch +30% on the line's, rate 0.7 × the line's, holding its punctuation (Fernald and Mazzie 1991; Albin and Echols 1996); the child: its tract | world, anatomy | owner (default) / ours |
 | light | the sun across the window from morning to dusk; the lamp at winding down; dark at night | world | owner (decision 3) |
+| the room's indirect light | each light's ambient a third of its diffuse (ROOM_INDIRECT); no headlight at the child's eyes | world | ours |
 | the room, toys, charger, names | sections 5 and 4.8 | world | owner (defaults) |
 
 Every language-body constant keeps its value and place.
@@ -1333,7 +1422,16 @@ Three sessions in parallel. Each writes tests at `nice -n 19`, small and short, 
 | 12 | — | S5b: two nights at every learning rate 0 on the whole core: the mean tick, the night's length and the store's write rate written down; the store's cap set; the birth checklist | |
 | 13 | — | **S6: birth (seed 1)**: day 1, its first night, day 2, the save round trip; the first hour watched at 1× | |
 
-- **Against this morning's plan** (birth about day 11 for the custom child, with the G1 and the tract each adding days unmeasured): the G1's room, senses, eyes and the parent's acts on it, the tract and the parent's ear now exist as prototypes. What remains is the servo law on the G1, the caps and the new acts, and the core's additions (the gaze and the declared consequence sense, the born units' lengths, the amygdala's extra half day in R8). R6 fix 3 is done (e48b284).
+**Where the build stands** (section 0's build status):
+- **Built and verified:** W1 (day 1's world; day 2's sink rates and friction model, impratio 10), W3 (the eyes, the gaze, the VOR with its quick phase, the retina's code, the face test and the born template), P1 and P2.
+- **Left in their rows:** the surfaces' own frictions (C26); the dock beside a hand, the bottle for the Dex3, and B1 and B2 applied (W3); the born template's constants from its sources (C39, before birth).
+- **Added to later rows by the build:**
+  - W2 removes the room's exclusion of her hands' contacts with the G1's torso and pelvis, with the welds, and builds the face channel's 2-tick gate and 30-tick hold (with S5a);
+  - W4 counts fists closed on its own fingers (C41) and the withdrawal's pressing on the born loop (C22);
+  - W5 dims the night's lights rather than switching them off (5.4), weighs the room's echo against the ears' cost per source (B9), and writes down a sound with no low bands (C42); the eye check runs again under its lights, at the core's d (A33).
+- **Merging:** each branch's trial merge into main was clean at its verified commit. P1–P2's `ears.py` and `tract.py` replace main's prototypes, and main's prototype ear moved to `parent_ear_cochlea.py`; W3's `eyes.py` replaces `g1eyes.py`, which stays for `tools/sim_look_g1.py`.
+
+- **Against this morning's plan** (birth about day 11 for the custom child, with the G1 and the tract each adding days unmeasured): the G1's room, senses, eyes and the parent's acts on it, the tract and the parent's ear now exist as prototypes. What remains is the servo law on the G1, the caps and the new acts, and the core's additions (the gaze and the declared consequence sense, the born units' lengths, the amygdala's extra half day in R8). R6 fix 3 is committed (e48b284); its verifier's finding is answered by R6 fix 4 (440bad3), in verification.
 - **Range 11–18.** The widest unknowns are the tick (the eye check and the parent's ear), R8, and whether the pull-to-sit and the catch work under the caps.
 - **Two sessions:** the world then the parent in session 2 (about 15 days), with the joint days after. Birth about day 18.
 - **One session:** about day 28.
@@ -1350,6 +1448,8 @@ Three sessions in parallel. Each writes tests at `nice -n 19`, small and short, 
 - `act_inv` starts untrained, and no weight of the body has learned from the babbler.
 - Seed 1 is born from its freshly built state, never from a plumbing or timing run's state: at every learning rate 0 the store's writes, the critics' and the amygdala's least-squares evidence and the running means still accumulate.
 - The born movement units' lengths are written down (C38), and the owner has answered B18 (the skin), B3 (the renders) and B1 (the cup's scale).
+- The born face template's constants are set from its sources and measured on her face, upright and turned, under each light (C39).
+- The eye check passes by A33's readout at the core's d, under W5's lights (C3).
 - The parent's force caps are in its constants file and checked against their sources; no act drives the G1 over them.
 - The babble bank for the parent's ear is recorded and fixed; the never-taught pairs are listed and held out.
 
@@ -1364,7 +1464,7 @@ Each milestone is judged by sitting with the child on `/sim` and by its own rule
 | **M0: it lives** | a day, a night and a day; the fovea windows, gates and the parent's face moving | its forecasts of its own next body sense and periphery beat "nothing changes" | birth day | the first |
 | **M1: it orients** | its fovea, then its trunk, turn to the parent's voice and name, and it holds the smiling face in view | turns within 20 ticks above the born rate; the share of ticks with the parent's face in the fovea | 1–3 | about 1–5 |
 | **M2: it reaches** | its hand touches a toy held over its chest | touches above the babble rate | first 5–25; reliable 20–60 | 5–38; 18–90 |
-| **M3: it grasps** | it reaches, then holds one of the six holdable toys (the reflex holds from hour 0 when a toy meets the palm) | reach then hold for at least 3 ticks, above chance | 15–60 | 14–90 |
+| **M3: it grasps** | it reaches, then holds one of the eight holdable toys (the reflex holds from hour 0 when a toy meets the palm) | reach then hold for at least 3 ticks, above chance | 15–60 | 14–90 |
 | **M4: it rolls on purpose** | it rolls toward the parent or a toy | rolls by direction against the babbler's share under the same parent placement (A19); the trunk turning first | 15–60 | 14–90 |
 | **M5: it sits with help** | it helps the pull-to-sit with its own flexion, then, held near upright, keeps its trunk up and looks at the face (her face low and ahead, where its eyes reach; in the leaning sit only by raising its trunk: A22) | its share of the rise; the trunk-up share and face looks while held; less hold needed over the days | 20–80 (open) | 18–120 |
 | **M6: it names** | it names what is in its fovea or hand (by the scaffold's output first) | the ledger's "says"; right names above 1 in 4 | first right names 15–40; 1 in 4 at 30–80 (open) | 14–60; 28–120 |
@@ -1401,15 +1501,15 @@ The numbers follow section 0.
 | 5 | Thrashing, learned helplessness, leaving the mat with no one to carry it back | per effector: gate open rate, Σ τ² / max, step reversals a second, thumps a minute; open rates after painful days; long still bouts; low charge with falling torque use; time off the mat and where it ends up |
 | 6 | The critics' cost | the mean tick and its spikes; the solve every 256 ticks |
 | 7 | Solver stability with the Dex3 hands | MuJoCo's warning counters every tick; `FatalError` caught; the life pauses on any reset or NaN (A18) |
-| 8 | Phantom pain: babble's single-step peaks (944–1,799 N) near F_pain (1,012 N) | pain on still ticks and under babble, with and without the 10 ms filter (C5) |
-| 9 | Vision: 1.5 px a degree in the fovea; on its back it sees mostly the ceiling and its own body, and the parent only when she leans over its chest or stands toward its feet; face down only the mat; sitting or standing only what is low and ahead (A22); the light changes through the day | the eye check at W3 (fovea identity at least 0.75 on the ten toys and the face, under each light); the fovea's forecast error on shown toys |
+| 8 | Pain from its own housings: with the 10 ms filter, 6–12% of babble ticks, mostly the thighs' housings into the pelvis and the shoulders into the torso; a pressed housing that slides reads harder at impratio 10 (5.1); the newborn's withdrawal raises the pain it answers on 26% of onsets (C22) | pain on still ticks and under babble (C5); the withdrawal's rate against rest and babble (C22); B18 |
+| 9 | Vision: 1.5 px a degree in the fovea; on its back it sees mostly the ceiling and its own body, and the parent only when she leans over its chest or stands toward its feet; face down only the mat; sitting or standing only what is low and ahead (A22); the light changes through the day; the born face template, as built, rarely detects a real face, so the face event line and orienting's face cue may run on chance (C39) | the eye check at W3 (fovea identity at least 0.75 on the ten toys and the face, under each light, by A33's readout); the fovea's forecast error on shown toys; the template's detections of her face (C39) |
 | 10 | Vocal imitation near chance at birth (2 of 12 echoes accepted); tokens are the easier road to reward | the first accepted echo; the tract's share of "says"; the copy tests before removing either scaffold (section 4.9) |
 | 11 | Disk and heat | the disk rule; one copy at a time; the mean tick over long runs |
 | 12 | The tick over the old 125 ms target | the tick heat-soaked (C12); the levers in section 9 |
 | 13 | Smiles drifting into shaping; the parent talking too much | the neutral resting face; the one law; the born reading's hold; `tools/sim_parent_rates.py` (at least 40% of play ticks free of her voice) |
 | 14 | The charge need is weak (drive reduction nets zero over a cycle), and feeds are frequent under babble (about 5–6 a day) | feeds the child starts itself; the bottle's stages |
 | 15 | The amygdala's "away" gain could teach it not to look at a parent whose face predicts frowns | the share of ticks on her face after days with frowns (7.4) |
-| 16 | Four toys cannot be held | the grasp rate on the six holdable toys; B1 |
+| 16 | Two toys cannot be held (the bear and the drum) | the grasp rate on the eight holdable toys; B1 |
 | 17 | Sleep is a pause by tick count, not a robot's sleep | accepted for the first body |
 | 18 | Sim choices that differ from the real robot: colour stereo, the microphones' places, the speaker's place, the servo gains, touch on every link (a skin the robot lacks) and pain read from it | listed in B4, B5 and B18 and section 3; checked before the robot. On the real G1 the skin's place would be taken by an added skin or by contact estimated from the joints' torques, each a change of body |
 
@@ -1430,7 +1530,7 @@ The numbers follow section 0.
 | 9 | The G1's facts: no neck; senses where the real G1's are; a movable fovea in software | 3.1, 3.4, 3.5 |
 
 **Still defaulted, each with a recommendation** (the decision log's part B asks each as a plain question):
-- the four toys a Dex3 hand cannot hold, and the cup already scaled to 0.8 so it can be held (B1);
+- the two toys a Dex3 hand cannot hold (the bear and the drum), and the cup, scaled to 0.8 for a creep that impratio 10 removed (B1);
 - the colour twins for the never-taught word test (B2);
 - the eyes' two render shortcuts: a lighter visual copy of the G1's meshes, and the sun's shadow (B3);
 - colour stereo, the microphones' and the speaker's places (B4, B5);
@@ -1454,7 +1554,7 @@ The numbers follow section 0.
 - the persistence margin;
 - F_pain's multiple;
 - the kept and refused reflexes, the VOR on the software fovea among them, with its quick phase from birth, decided on biology rather than by a measured rate (A23, C33);
-- the event line "a face in the fovea" from the born template on the fovea's pixels (section 3.4);
+- the event line "a face in the fovea" from the born template on the fovea's pixels (section 3.4; its constants settled from its sources, C39);
 - the IMUs' declared noise added by the world; the world's contact priority; MuJoCo's auto-reset disabled (A18, A21);
 - a born cry refused;
 - the amygdala's law and constants (A16);
@@ -1463,6 +1563,8 @@ The numbers follow section 0.
 - the parent's method: its feelings, timings, force caps, ear and conduct (A25, A27);
 - the tract's anatomy, calibration and alphabet (A26);
 - the tests of understanding and the scaffold's removal (A28, A29).
+- the parent's face made real and the detector left alone (A30); the newborn's generalized withdrawal (A31); impratio 10 by the contacts' physics (A32); what decides the eye check (A33); a new word on its pitch peak, on every ending (A34); the grasp summed at the spinal cord (A35);
+- the stock model's torque limits, with Unitree's differing values recorded (3.2).
 
 ## 15. The stock G1: what it changed from the custom child
 
@@ -1476,13 +1578,13 @@ This morning's design built a custom child to a brief of about 02:00. The owner'
 | looking | eyes that turn (conjugate and vergence), a 3-joint neck, the VOR on the eyes | a software fovea (±38° × ±20°), then the waist and the body; the VOR on the window |
 | its face | a screen face showing its face organ's readout; the parent read distress from it | none: the parent reads distress from pain, long spells face down, thumps and the charge light |
 | size and weight | 0.75 m, 9.45 kg: the parent lifts, props and turns it as a baby | 1.32 m, 34.4 kg: a person turns it briefly, holds it near upright, and cannot sit it up, slide it or lift it |
-| strength | adult reference × 0.08, from memory | the real motors' limits (section 3.2) |
+| strength | adult reference × 0.08, from memory | the model's own limits (section 3.2) |
 | pain | 3 × 93 N ≈ 278 N | 3 × 337 N ≈ 1,012 N |
-| hands | a tendon finger and a thumb (2 servos) | Dex3: three fingers, 7 joints; 6 of 10 toys holdable |
+| hands | a tendon finger and a thumb (2 servos) | Dex3: three fingers, 7 joints; 8 of 10 toys holdable at impratio 10 |
 | the alphabet | 40 joint settings in 9 motor effectors, and a 79-row voice | 43 joints, 3 gaze and 10 tract articulators in 9 effectors, and the 79-row silent output |
 | reach lying down | 0.53 m; 3 of 10 toys | 0.83 m; 3 of 10 toys |
 | sitting | propped upright by the parent in 2.4 s | leaning forward only; the parent cannot sit it up alone |
-| touch | every link, as on an infant's skin | every link: the Dex3's 14 links as on the real hand, the other 28 a sim skin (B18) |
+| touch | every link, as on an infant's skin | 45 zones: the Dex3 hands' as on the real hand, the rest a sim skin (B18) |
 | physics | 11–18× real time | 10.9–12.2× under babble |
 | two eyes with the sun's shadow (render and read-back) | 24.2 ms | 32.5 ms |
 
@@ -1508,37 +1610,41 @@ The render cost is mostly fixed overhead (the pixel count barely matters), and p
 
 ## 17. Files and sources
 
-**In `body/sim/` (the starting point; not committed):**
+**In `body/sim/` (on main since 1eb268b as the starting point; built further on the branches of section 0, not yet merged):**
 
 | file | what |
 |---|---|
 | `make_g1room.py` → `g1room.xml`, `textures/room_*.png` | the maker and the generated scene: the stock G1 (included unchanged, by relative paths), the parent with its graded face, the living room (edit the maker, never the XML) |
-| `g1scene.py` | loading the room and adding the G1's senses at load (the stereo pair at the D435, the ear sites); the parent's mocap and graded face; the welds (for toys; those on the G1's torso, pelvis and elbows are replaced by capped springs in W2, section 4.1) and the hand proxy; touch per link; the birth pose (cached to `g1_birth_state.npy`); SimWorld grows from it |
-| `g1eyes.py` | the two eyes: one render each, one read-back; the periphery; the movable software fovea (yaw, pitch, vergence) |
+| `g1scene.py` | loading the room and adding the G1's senses at load (the stereo pair at the D435, the ear sites); the parent's mocap and graded face; the welds (for toys; those on the G1's torso, pelvis and elbows are replaced by capped springs in W2, section 4.1) and the hand proxy; touch per zone; the birth pose (cached to `g1_birth_state.npy`); SimWorld grows from it. On `sim-world`: the parent drawn at birth (`born_parent`), and `Scene.pose` saved with the world |
+| `g1eyes.py` | the prototype's two eyes (one render each, one read-back; the periphery; the movable software fovea); on `sim-world` `eyes.py` replaces it, and it stays so `tools/sim_look_g1.py` loads |
 | `g1acts.py` | the parent's acts aimed at the G1's parts (attend, show, guide, two hands on the body) |
-| `parent_kin.py` | the parent's skeleton, forward and two-bone inverse kinematics, hand shapes, the face (the scalar path, and the graded FACS face with `face_reading`) |
+| `parent_kin.py` | the parent's skeleton, forward and two-bone inverse kinematics, hand shapes, the face (the scalar path, and the graded FACS face with `face_reading`); on `sim-world` its face is `parent_face.py`'s, re-exported |
 | `parent_poses.py`, `parent_acts.py` | its scripted motions and acts, each with a report of joint ranges; an act never chooses the face |
 | `parent_feel.py` | the parent's feelings, their display on the graded face, the born reading with the increment rule, and the no-farming self-test |
 | `tract.py` | the child's articulatory vocal tract |
-| `ears.py` | the two ears (the born cochlea, the brainstem's delay lines, the spatializer) |
-| `parent_ear.py` | the parent's ear for the child's words, with the context and babble-bank decision rule |
+| `ears.py` | the two ears (built, P2): the spatializer (the exact rigid sphere behind the ears' converter), two calibrated cochleas, the brainstem's delay lines, the born lateral read, the onsets |
+| `parent_ear.py`, `parent_ear_cochlea.py` | the parent's ear for the child's words, with the context and babble-bank decision rule, and the study's cochlea it was measured through (until P3v moves it onto `ears.cochlea`) |
+| `voice/`, `lang/lexicon.py` | built (P1): the parent's voice (the Swift server, SSML registers, the life's cache and ledger, playback with the talk-over stop) and the born table of 79 rows with the words channel |
+| `world.py`, `reflexes.py` | built (W1, `sim-world`): `G1World`, the core's `SimWorld` over MuJoCo in lockstep: the servo law set at load, weakness, touch and pain per zone with the 10 ms filter, the IMUs' declared noise, the gaze and the VOR, faults caught, save and restore with every random stream; the newborn's withdrawal and the grasp summed at the spinal cord |
+| `eyes.py` | built (W3, `sim-world`): both eyes rendered into one buffer, the periphery and the fovea, the retina's code, the face test (truth only), the born face template |
+| `parent_face.py`, `parent_face_customchild.py`, `assets/parent/`, `textures/parent_face_ao.png` | built (`sim-world`): the parent's face of human proportions, its lids, photometry, baked shade and collision pieces; the old face kept for the custom child's room |
 | `make_livingroom_customchild.py` → `livingroom_customchild.xml`; `scene_customchild.py` | the custom child's room and loader, kept for reference (section 15) |
 | `highchair_onearm.xml`, `make_highchair_onearm.py` | the one-arm high chair, kept for reference (`tools/sim_look.py` renders it) |
 | `assets/unitree_g1/` | the stock G1 (commit dd8640e) |
 
-**In `tools/`:** `sim_look_g1.py` renders the G1 room's stills into `video/sim_look_g1/` (`--out=` for elsewhere).
+**In `tools/`:** `sim_look_g1.py` renders the G1 room's stills into `video/sim_look_g1/` (`--out=` for elsewhere). On `sim-world`: `sim_babble.py` (the babbler and the speed tool), `sim_sink.py`, `sim_friction.py`, `sim_pain.py`, `sim_grasp.py`, `sim_eye_check.py` (C2, C3), `sim_face_measure.py`, `sim_face_photometry.py`, `sim_face_template.py`. On `sim-parent`: `sim_voice_check.py`. Tests: `body/tests/test_sim_world.py` and `test_sim_eyes.py` (`sim-world`), `test_sim_voice.py` and `test_sim_ears.py` (`sim-parent`).
 
 **To create** (section 11):
-- `body/sim/world.py` (SimWorld), `body/sim/senses.py`, `body/sim/anatomy.py` (SimAnatomy);
-- `body/sim/voice/`, `body/sim/lang/{lexicon,templates,conduct,ledger,day,transcriber,consts}.py`, `body/sim/serve.py` (`/sim` on port 8030);
+- `body/sim/senses.py`, `body/sim/anatomy.py` (SimAnatomy);
+- `body/sim/lang/{templates,conduct,ledger,day,transcriber,consts}.py` (P3, in verification on `sim-parent`), `body/sim/serve.py` (`/sim` on port 8030);
 - `body/core/amygdala.py`, `body/tests/test_amygdala.py`;
-- `tools/sim_babble.py`, `tools/sim_parent_rates.py`, `tools/sim_eye_check.py`, `tools/sim_digest.py`;
+- `tools/sim_parent_rates.py`, `tools/sim_digest.py`;
 - `ops/sim_parent_brief.txt`;
-- `body/tests/test_sim_world.py`, `body/tests/test_sim_lang.py`;
+- `body/tests/test_sim_lang.py`;
 - `tools/pins/sim_script.npz`.
 
 **Stills and sounds:**
-- `video/sim_look_g1/`: `room.png` (the parent kneeling by the G1, a hand on its chest), `kneel.png`, `show_toy.png` (the duck 40 cm before its eyes), `g1_eyes.png` (both eyes, peripheries and fovea windows, with the room at the same moment); `parent_faces_graded.png`, `parent_feelings_timeline.png`, `parent_face_fovea.png`.
+- `video/sim_look_g1/`: `room.png` (the parent kneeling by the G1, a hand on its chest), `kneel.png`, `show_toy.png` (the duck 40 cm before its eyes), `g1_eyes.png` (both eyes, peripheries and fovea windows, with the room at the same moment); `parent_faces_graded.png`, `parent_feelings_timeline.png`, `parent_face_fovea.png`. They show the parent's old face, and are redrawn after the merge.
 - `video/sim_look_g1/voice/`: `voice_sheet.png` (15 s of babble; "ball" and "mama" as the parent, hand score, searched and echo; the vowel space) and the matching `.wav` files.
 - `video/sim_look_allout/`: the custom child's stills.
 
@@ -1549,12 +1655,15 @@ The render cost is mostly fixed overhead (the pixel count barely matters), and p
 - `$S/g1/amyg/`: the amygdala on a synthetic stream (`m_amyg.py` to `m_amyg4.py` and their `.json`).
 - `$S/allout/`: the all-out world and the custom child; the core at this scale (`t20_humanoid_tick.py`, `t21_parts.py`, `t22_paired.py`, `t23_rss.py`, `prof20.py`); `move/` (learning to move); `lang/` (the parent's language: `synth.swift`, `voices.swift`, `ear2.py`, `parent_lang.py`, the tests); `owner_amendment_0924.md`.
 - `$S/sim_wf/`: the old design's measurements that still hold.
+- `$S/build/world/` (`fix` to `fix4`): the world track's measurements (friction, pain, grasps, the template, C2 and C3, the face's pixels); `$S/build/parent/`: the voice and ears track's logs.
 
-**Sources for the G1's senses:** Unitree's `unitree_ros` `robots/g1_description/g1_29dof_with_hand_rev_1_0.urdf` (the `d435_joint`); Unitree's G1 product page; the Menagerie `unitree_g1` README.
+**Sources for the G1's senses and limits:** Unitree's `unitree_ros` `robots/g1_description/g1_29dof_with_hand_rev_1_0.urdf` (the `d435_joint`; its torque limits); Unitree's `unitree_mujoco` `unitree_robots/g1/g1_29dof.xml`; Unitree's G1 product page; the Menagerie `unitree_g1` README.
+
+**Sources for the world, the parent's face and her voice:** MuJoCo 3.9's documentation (Overview, "Softness and slip"; Modeling, "Solver settings"; Computation, "Physical realism and soft contacts"); the face's norms and photometry (section 4.1: Farkas via Husein et al. 2010 and Virdi et al. 2019, Dodgson 2004, Rüfer et al. 2005, Gao et al. 2025, McKinney et al. 1991, Yaremchuk, Park et al., EyeWiki, Russell, Kramer and Jones 2017); the withdrawal's (section 3.7, A31); the voice's (Fernald and Mazzie 1991; Albin and Echols 1996, through Soderstrom and Bortfeld's review).
 
 **Documents:** ARCHITECTURE.md, BODY_SPEC.md and ops/review_2026-09-22.md (the defect numbers).
 
-## The decision log (2026-09-24, amended for the G1)
+## The decision log (2026-09-24, amended for the G1 and for the first build)
 
 This log settles the design's open decisions and edge cases, in three parts:
 - **(A) Decided here (ours):** each decision with its reason under the laws.
@@ -1587,6 +1696,13 @@ Where a decision changes an earlier section, that section points here. W, P, R a
   - the G1's holds were welds with no cap (4.1); its frictions and self-contacts were to be set on its own geoms (A21); MuJoCo 3.9 does not apply the IMU noise its file declares, and has a switch for its silent reset (A18);
   - the save's size (0.95 GB) had no source and was below the language save's 1.28 GB (section 9);
   - R6 fix 3 was already committed (e48b284).
+- The first build's verification rounds (later on 2026-09-24; W1 and W3 on `sim-world`, P1 and P2 on `sim-parent`):
+  - the grasp as a core hook took the hand's tick, so a touched hand could never let go (A35);
+  - world truth (the face test) had entered the body's observations, the parent was never drawn at birth, and a lamp shone from the child's eyes (A1, 5.1);
+  - her cartoon face was far from a real face's proportions and photometry, and the born template, measured on a real one, still barely fired (A30, C39);
+  - a withdrawal tuned by a born copy of the body was an adult's reflex (A31); impratio needed a physical reason (A32); the eye check's verdict turned on the readout and on the views (A33);
+  - the parent's new-word emphasis was measured only on "." lines, where the engine spoke the "." as "period" (A34);
+  - the torque limits "as Unitree publishes them" were Menagerie's, and Unitree's own sources disagree (3.2).
 
 ### (A) Decided here (ours)
 
@@ -1601,9 +1717,13 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 - **No mutual gaze is required.** Where the parent looks is its own cue, not part of the child's gate.
 - **Why a ray test, not a segmentation render.** Nine rays cost microseconds, where a second render per eye costs milliseconds. C2 checks the rays against a segmentation render; if they disagree too often, the render is used.
 - **The born reading reads the parent's expression from the world:** 2 × (smile − frown) of her graded face, not from pixels.
-  - The grades are visible in the fovea's pixels at the lean-in distance (section 4.3), but from about 1 m the mouth is too few pixels for any born pixel reader.
+  - The grades are visible in the fovea's pixels only at the lean-in distance, and on her face of human proportions in fewer pixels than on the cartoon's, differing by light (section 4.3); from about 1 m the mouth is too few pixels for any born pixel reader.
   - This is disclosed as how the born reading works. The test above is where the child's own eyes decide.
 - **The test gates the reward's carrier and nothing else.** The critics' and the amygdala's event line "a face in the fovea" comes from the born face template on the fovea's own pixels (section 3.4). Given this test instead, the body's value would read a perfect world-truth face detector: the one feature that best predicts a smile.
+- **Built (W3), and measured:**
+  - A first hit within 2 cm of the mouth point, or on her own lips, counts as the face (RAY_SLACK_M). A ray grazing her lip corner on a face turned past about 84° now reads "turned away", not "blocked".
+  - C2: over 2,000 babbled frames with her head kept inside the room, the ray agrees with an 8× segmentation render on 99.8% of the 975 frames whose geometry passes (98.7–100% in every distance bin from 0.3 to 3.5 m). The rays stay.
+  - The born template on her face of human proportions, over the same frames: 12 hits in the 453 where the test passes (6 of 82 at 0.3–0.6 m, none beyond 1.5 m), and false alarms on 4 of 736 frames with her face not seen and 3 of 401 with no face. Placed facing the child at 0.3–2 m, it detected her face (centred on it, at its size) in 1 of 48 fovea readings; its other matches were chance, as strong on the window upside down; in the periphery, never (C39).
 
 **A2. Glances and smile-farming** (sections 3.4 and 4.3)
 - **The born reading holds its last value for 30 ticks out of view, then reads neutral.** 30 ticks is longer than any smile lasts once seen, so the same smile can never be felt twice, and an old smile never blocks the next.
@@ -1687,19 +1807,20 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 - **Showing by doing** (shaking the rattle, rolling the ball, tapping the drum) reaches the child only as sights and sounds. The parent's spoken words reach the voice only through its ears and its own inverse model. There is no mirror module and no imitation shortcut.
 
 **A11. The hands' grasp**
-- **Holding is friction only:** no weld, no attach and no sticky rule for the child. The Dex3's collision shapes keep their friction as shipped until W1 sets real frictions (C26).
-- **The grasp reflex** (section 3.7) closes all seven Dex3 joints one step a tick while the palm touch is at least 0.3 N, unless the hand's own act opens it that tick. The palm is the hand's base link; its touch is read from contacts (the real Dex3-1 has tactile arrays).
+- **Holding is friction only:** no weld, no attach and no sticky rule for the child. The Dex3's collision shapes keep their friction as shipped; the world's geoms set the other side of each contact at priority 2 (C26).
+- **The grasp reflex** (section 3.7) closes six of the Dex3's seven joints (the thumb's rotation has no closing sense) one small step a tick while the palm's touch is at least 0.3 N, unless the hand's own act opens it that tick. The palm is its own touch zone; its touch is read from contacts (the real Dex3-1 has tactile arrays). It is summed at the spinal cord with the hand's own act (A35), so the hand's gate draws every tick and its opening acts keep their eligibility.
   - It never opens by itself. Letting go is the child's own act and is learned; the ask "give me the cup" needs it.
-  - It fires on anything in the palm: a toy, the bottle, the parent's hand, or the mat. W4 counts closed fists on the mat.
-- **Six toys can be held** (section 3.8). The other four are for looking, pushing, rolling, hitting and naming unless B1 changes them.
+  - It fires on anything in the palm: a toy, the bottle, the parent's hand, the mat, or its own fingers. W4 counts closed fists on the mat, and fists closed on its own fingers (C41).
+- **Eight toys can be held** at impratio 10 (section 3.8). The bear and the drum are for looking, pushing, hitting and naming unless B1 changes them.
 
 **A12. Pain for a body on the floor**
 - F_pain stays at 3 × the body's weight per link: about 1,012 N for the G1.
 - **A link's force for pain** is the tick's largest 10 ms mean (5 physics steps) of its summed normal force.
   - A single-step solver spike is not a blow. Real impacts in this contact model last 10–30 ms.
-  - Babble's single-step peaks at the tick ends (944–1,799 N) make phantom pain a real risk. W4 counts pain with and without the filter (C5).
+  - Babble's single-step peaks at the tick ends (944–1,799 N) made phantom pain a real risk. Measured with the filter in the built world: 11.6% of babble ticks, 0 at rest (section 6, C5).
 - **Self-contact counts:** a kick to its own leg hurts. MuJoCo already ignores contact between neighbouring links. Any other pair that presses into itself at rest is listed in the world (never by editing the G1's file), and disclosed.
   - The list removes that pair from touch and pain only, as a sensor's blind spot. It never excludes the pair from collision: the G1's self-collision stays as shipped, so the body's physics is the stock robot's.
+  - **Built (`rest_blind`): the list is empty.** For the G1 as born no pair presses at rest, so every self-contact is felt. A wider rule, blind to a joint's inner links pressing each other, was built and removed (6003014): it claimed those contacts were "the range, not a blow", but 35% of them above F_pain came more than 0.2 rad from every range end. They are convex hulls meeting, as motor housings would on the real robot, and they carry most of babble's pain. How much of the body has skin is the owner's (B18).
 - **Not at birth:** pain at a joint's range (C).
 - **The parent:** a hold's spring force is touch on the held link under the same law as any other force. Her caps (at most 200 N) keep it far under F_pain, so no exception to the law is needed.
 - **Being pinned** costs −1 a tick for as long as it lasts. The only source we know of is the parent, and the yield rule ends it.
@@ -1707,11 +1828,12 @@ Where a decision changes an earlier section, that section points here. W, P, R a
   - the loads it carries are far below it: the largest resting contact lying is 272 N, and the pelvis carries about 250 N in the leaning sit;
   - the thump line the parent reads as distress is half of it, 506 N (A13);
   - the custom child's falls from the prop struck its head at 260–890 N at 9.45 kg; the G1's falls under the final servo law are not yet measured (C31). A fall that passes 1,012 N hurts, as it should.
-- **One threshold for all 42 links,** not one per link:
+- **One threshold for all 45 touch zones,** not one per zone:
   - a threshold from each link's own mass would put a finger link's at a few newtons, so its own weight on its hand, or any grasp, would hurt;
   - the skin's pressure threshold would need contact areas, which MuJoCo's contacts do not give reliably;
   - the real G1's damage limits per link are not known here (C37).
 - **The robot after.** If any real G1 link is damaged below 1,012 N (C37), the pain law takes that link's limit for the next body, which is a new body with its own seed (A20), never a change to seed 1.
+- **The friction cone's share** (5.1): at impratio 10 a pressed housing that slides reads harder. It is disclosed as impratio's cost, never a reason to change the pain law (C5).
 
 **A13. What the parent does when the child does not look, is distressed, or babbles**
 - **When it does not look:**
@@ -1790,13 +1912,13 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 
 **A18. Crashes, disk and heat**
 - **After a crash, the lost part of the day replays exactly.** Every random stream, Claude's rows and the synthesized clips are logged, and the tract is deterministic, so the life resumes from the last save (the last night) and replays the lost part of the day exactly. A crash costs wall time only, so there are no saves in the middle of a day.
-- **MuJoCo's silent reset and its fatal errors.** MuJoCo resets the state by itself on a bad acceleration, and counts it in its warning counters; it can also raise `mujoco.FatalError` inside `mj_forward`. MuJoCo 3.9 has a switch for the reset (`<flag autoreset="disable"/>`), so the world turns it off: a bad state then stays visible as NaN instead of being silently replaced by the start pose. The world also checks the counters every tick and catches the error. On any reset, NaN or fatal error:
+- **MuJoCo's silent reset and its fatal errors.** MuJoCo resets the state by itself on a bad acceleration, and counts it in its warning counters; it can also raise `mujoco.FatalError` inside `mj_forward`. MuJoCo 3.9 has a switch for the reset (`<flag autoreset="disable"/>`), so the world turns it off: a bad state then stays visible as NaN instead of being silently replaced by the start pose. The world also checks the counters every tick and catches the error. On any reset, NaN or fatal error: Built in W1: the flag checked at load; each tick's end state checked against `mjMAXVAL`; the closing forward pass inside the catch; on a fault the world puts back the tick's starting state and raises `WorldFault` (tested with a velocity of 1e11 injected on a tick's 75th step).
   - the life pauses before that tick reaches the body;
   - the last good state is saved;
   - the fix is measured on a copy;
   - the life resumes from the last save with the fix, logged as a change of world at a boundary.
-- **The solver** is the elliptic friction cone with multi-point collision detection off (section 5.1), the only setting that ran the Dex3 grasps clean.
-- **The voice server.** A cache miss makes the world wait. If the server is down for 60 s, the life pauses at that tick. It never skips or swaps a line. If Claude is down, the fast layer runs alone (A14).
+- **The solver** is the elliptic friction cone with multi-point collision detection off (section 5.1), the only setting that ran the Dex3 grasps clean, with impratio 10 (A32).
+- **The voice server.** A cache miss makes the world wait. If the server is down for 60 s, the life pauses at that tick. It never skips or swaps a line. If Claude is down, the fast layer runs alone (A14). Built: `SynthServer` gives up at 60 s and raises `VoiceDown`.
 - **The Mac** runs `caffeinate -i` while the child lives. A closed lid or sleep only pauses the life.
 - **Disk.**
   - The rule of section 9 stands (skip the write, log why, pause at the next boundary). It is checked every 1,000 ticks and before each save.
@@ -1838,13 +1960,14 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 - Its file is included unchanged and checked byte for byte at the birth checklist.
 - Its senses are added at load, as cameras and sites (no shape, mass, joint or actuator).
 - Its servo gains are set at load, as the real robot takes kp and kd with every command (section 3.3).
+- Its torque limits are its file's, never another source's (section 3.2: Unitree's own differ from the file and from each other).
 - The Menagerie scene light is switched off at load.
 - Anything the world needs about the G1 is set in the world, never in its file, and never on its geoms at load either:
-  - frictions and contact softness through the world's own geoms at contact priority 2 (C26);
-  - a self-contact pair that presses at rest is blind to touch and pain, never excluded from collision (A12);
+  - frictions and contact softness through the world's own geoms at contact priority 2 (C26), and the world's options (impratio 10, A32) and the mat's deep collision box;
+  - a self-contact pair that presses at rest is blind to touch and pain, never excluded from collision (A12; none presses at rest for the G1 as born);
   - the IMUs' noise its file declares is added by the world, since MuJoCo does not apply it.
 - **What does change at load, and why each is still the stock robot:** cameras and sites added (sensors only); the servos' kp and kd, which the real G1 takes with every command; the torque limit scaled by weakness (0.3 + 0.7h), a clip the real robot's command could apply. The last is a sim physiology with no counterpart in the robot's hardware, disclosed as such.
-- **One sense goes beyond the robot:** touch on the 28 links outside the Dex3 hands (B18).
+- **One sense goes beyond the robot:** touch on the zones outside the Dex3 hands (B18).
 
 **A22. Looking without a neck** (the owner's decision 9; sections 3.1 and 3.4)
 - **How it looks.** The gaze moves a software fovea inside each camera image (A23). Beyond the fovea's reach, the waist turns the trunk (yaw ±150°, roll and pitch ±30°), and then the whole body. Lying on its back, a waist yaw turns the upper trunk against the mat, the start of a roll.
@@ -1863,19 +1986,19 @@ Where a decision changes an earlier section, that section points here. W, P, R a
   2. **Face down she never expects to be seen.** There is no tummy time (A7). She speaks from beside it and puts a toy on the mat where its eyes look (the ladder in section 4.10).
   3. **Every ask, call and judgment that needs a look** is made only while her face, or the object, is within this reach. She moves first. The never-taught probes follow the same rule (A28). An ask no body could meet from where it lies is never made.
   4. **M5's "looks at the face"** counts only while her face is within reach. In the leaning sit that needs the child to raise its trunk, which is the sitting skill itself.
-  5. **Orienting's face template** can fire only where a face can appear: on its back, above its chest and toward its feet.
+  5. **Orienting's face template** can fire only where a face can appear: on its back, above its chest and toward its feet. As built it rarely fires even there, and her face in the kneeling attend pose lies sideways in its fovea (C39).
   6. **M4's chance.** The born orienting may turn the trunk toward her voice and tip a roll toward her. The babbler that sets M4's chance runs with the born motor timing (C38), the born orienting bias and the VOR on, since they are part of the born body, so born turns count as chance.
 - **The parent reads where it looks** from the fovea's window (B14).
 
 **A23. The software fovea's control** (sections 3.4, 3.5 and 3.7)
 - **Its state:** yaw and pitch (both windows together) and vergence, in degrees in each camera's image. Born at 0, 0, 0: both windows centred, the eyes parallel.
 - **Its steps:** ±4° or ±11.5° a tick for yaw and pitch; ±1.7° or ±5.7° for vergence. A 30° shift takes 3 ticks. A newborn's gaze shifts to far targets are also slow and come in steps, a series of small saccades (Aslin and Salapatek 1975), so no faster saccade is added.
-- **Its reach:** each window's centre is kept inside its image, which puts it within ±38° × ±20° of the camera's axis. (`g1eyes.py`'s docstring says about ±33° × ±18°, a linear estimate; the code clips in pixels.)
-- **Vergence:** 0–12°, from parallel to a point 0.25 m away, the nearest her face comes (A3). Anything nearer is seen double, as inside an infant's near point.
+- **Its reach:** each window's centre is kept inside its image: ±38.1° × ±20.3° of the camera's axis (built; `g1eyes.py`'s docstring said about ±33° × ±18°, a linear estimate).
+- **Vergence:** 0–11.4° (2 atan(0.025 / 0.25), the 50 mm baseline), from parallel to a point 0.25 m away, the nearest her face comes (A3). Anything nearer is seen double, as inside an infant's near point.
 - **At rest the window stays where it was left.** Nothing in the image pulls it back to the centre.
 - **The VOR** (section 3.7): each tick the window counter-shifts by the torso gyro's rotation over the tick about each camera's own image axes (the gyro rotated into the camera's frame, pitched 47.6° from the torso), at gain 1, and is clipped at its reach.
   - Roll about the line of sight is not compensated. The window is square and cannot turn; the human torsional VOR is weak too.
-  - **Its quick phase is kept from birth** (changed in the review of the amendment). The first draft had none and would have added one before birth if the window sat pinned at its edge on more than 10% of ticks: a born reflex chosen by a measured rate, which the laws refuse. It is decided on biology instead: the VOR is a brainstem reflex of slow and quick phases together, and rotating a term newborn elicits nystagmus with both (from memory; W3 checks a source). So when the counter-shift would carry a window past its reach, the window jumps back, in the direction of the trunk's turn, by half its reach, within that tick. It is logged as reflex, with no gate eligibility. C33 counts the quick phases and only reports them.
+  - **Its quick phase is kept from birth** (changed in the review of the amendment). The first draft had none and would have added one before birth if the window sat pinned at its edge on more than 10% of ticks: a born reflex chosen by a measured rate, which the laws refuse. It is decided on biology instead: the VOR is a brainstem reflex of slow and quick phases together, and rotating a term newborn elicits nystagmus with both (from memory; W3 checks a source). So when the counter-shift would carry a window past its reach, the window jumps back, in the direction of the trunk's turn, by half its reach, within that tick. It is logged as reflex, with no gate eligibility. C33 counts the quick phases and only reports them. Built (d1e35b7): with the trunk turned 50° and the window at its edge, it gave 2 quick phases and no tick pinned.
 - **Refused:** smooth pursuit, optokinetic following, a saliency map, or any rule that moves the fovea to the brightest or newest thing. Pursuit is learned, as infants' smooth pursuit develops over the first months, through `act_pred` and the gaze's forward model. The orienting bias is the only born pull.
 - **One effector for both eyes.** Only conjugate and vergence commands move the windows (Hering's law), so one eye never looks away alone.
 - **Its consequence sense** is the window's state (6 numbers in the body channel) and what the fovea then sees.
@@ -1926,16 +2049,16 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 - **A rest is silence.** At rest the targets relax, with a time constant of 1 tick, to a silent resting posture: nose breathing, the lips nearly closed, the velum down. The gate's "no" means quiet, as a limb's rest means still.
 - **One target per articulator per tick** gives at most 3.3 syllables a second, about canonical babbling's rate. A word takes 4–6 ticks. Nothing sequences sounds inside a tick.
 - **Physics, not rules.** The articulators move with damped muscle dynamics (57–120 ms), so sounds glide into each other; breath (400 cm³, about 2.6 s, refilled in 0.8 s) makes breath groups. No phoneme table exists anywhere.
-- **Fitted to children's vowels, never to the teacher.** The tongue's corners were fitted to children's vowel means (Peterson and Barney). Nothing was fitted to the parent's words or voice.
+- **Fitted to children's vowels, never to the teacher.** The tongue's corners were fitted to children's vowel means (Peterson and Barney). Nothing was fitted to the parent's words or voice. Its level (GAIN) puts a steady /a/ at 62 dB SPL at 1 m, ANSI S3.5-1997's "normal" vocal effort. It is computed from the parent's engine level (`t_calib2.py`), which is defined as that same 62 dB, so in pascals it is the standard's level, not a fit to her voice; giving a held vowel the level of running speech is our choice.
 - **Not tuned to reach a word.** "bye" was reached by no act tried, and "hi", "pip", "up" and "see" only by hand. The tract stays as it is, and the first 50 words stay as they are. A word it cannot yet say is still one it can understand, and name by tokens while the scaffold lasts.
-- **It hears itself at t+1,** through its own ears, about 14 dB above the parent at 1.5 m, with no bone conduction.
+- **It hears itself at t+1,** through its own ears, about 19–20 dB above the same sound from 1.5 m (the exact sphere's level for its speaker on the head's front), with no bone conduction.
 - **The silent token output** (effector 1) is a second, separate effector with its own gate.
   - It never talks over her: a token made during her line is read when her line ends, and it never earns a frown.
   - The ledger keeps what is said by the tract and by tokens apart from birth.
 - **Deterministic** from its seed and the acts; its sound is not saved.
 
 **A27. The parent's ear: how she recognises the child's words** (section 4.9; `body/sim/parent_ear.py`)
-- **It is in the world, never in the body.** It uses the same born cochlea as the child, a shift of 0–4 bands, cepstra c1–c12 and Itakura DTW.
+- **It is in the world, never in the body.** It uses the same born cochlea as the child (from P3v; the prototype still hears through the study's), a shift of 0–4 bands, cepstra c1–c12 and Itakura DTW.
 - **Its templates:** the parent's own voice at plain and approval pitch; the same synthesizer at the old child pitch; and 8 other macOS voices (Flo, Sandy, Shelley, Eddy, Reed, Junior, Kathy, Fred). These are other synthesizers, not recordings of people.
 - **Fixed before birth: the templates, the babble bank and the expected sets.**
   - The child's accepted productions are never added as templates (`add_template` stays unused in life). Each one added would widen what passes, so the child's own chance acceptances (2% of babble) would loosen the criterion over time.
@@ -1983,21 +2106,62 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 - **After the output is unread,** its gate earns nothing and fades by its own credit. Nothing forces it off.
 - **Never brought back** to raise a rate. A fault in the change itself is fixed as a defect, on a copy, at a boundary.
 
+A30–A35 were decided in the first build's fix rounds, for the owner, under his standing word to decide toward the laws rather than ask. Each is ours to answer for.
+
+**A30. The parent's face: the world made real, the detector left alone** (decided in the W1 verifier's third and fourth rounds; sections 4.1 and 4.3, C39)
+- The born template never fired on her cartoon face: irises 19.6 mm against a real 11.7, eye whites 27 mm tall against about 10, eyes 72 mm apart against about 62, and no dark eye region. Changing her face or the template until it fired would fit one to the other.
+- **Decided: fix the world, not the detector.** Her face is built to a real woman's cited proportions and a real face's photometry at low spatial frequency (4.1), with her expressions kept and her look warm. The template, its sizes and its threshold are untouched, and nothing on her face was tuned to cross them.
+- **The result is a finding:** the template detects her face in 1 of 48 fovea readings at 0.3–2 m, and never in the periphery; its other matches are chance. Real faces are not what the template, as written, finds, so its own sources decide it (C39).
+- Her collision became her drawn face, and her pixels at each distance and light were measured again (4.3).
+
+**A31. The withdrawal is a newborn's** (decided in the W1 verifier's third round; section 3.7, C22, C40)
+- W1's second fix made the withdrawal precise: a "local sign" computed on an exact kinematic copy of the body, moving the joints that carry the hurt spot away, from a new afferent (`pain_site`, where on the link it pressed and the contact's normal). That is an adult's tuned reflex, born; and its normal was the contact's, not the skin's (26% of pressing contacts more than 30° from the link's own surface).
+- **Decided: the design's generalized flexion, as a newborn has it.**
+  - Human newborns' withdrawal is evoked from the whole limb at low thresholds, and its spatial tuning grows with age (Andrews and Fitzgerald 1994, Pain 56:95–101).
+  - Young infants' nociceptive flexion reflexes are bilateral and non-specific (Cornelissen et al. 2013, PLoS ONE 8:e76470).
+  - Newborn rats' withdrawals are functionally unadapted and often move the limb toward the stimulus; the adult, site-specific organisation emerges over the first three postnatal weeks (Holmberg and Schouenborg 1996, J Physiol 493:239–252).
+  - That tuning is learned from the tactile feedback of the body's own movements, spontaneous twitches in sleep among them (Petersson et al. 2003, Nature 424:72–75; Waldenström et al. 2003, J Neurosci 23:7719–7725).
+- `pain_site`, the local sign and its constant `RF_HALF` are gone; the frame carries pain alone.
+- **C22 is written down as the newborn's,** not held to a bar only a tuned reflex meets. A learned tuning would be its biology's next stage; it is an open design item (C40), not built.
+
+**A32. impratio 10, by the contacts' physics** (decided in the W1 verifier's third round; section 5.1)
+- W1 set impratio 10 to stop MuJoCo's creep, and a verifier asked for its physical reason: the choice had been read against pain rates and grasps.
+- **Decided on physics and MuJoCo's guidance, never on pain rates or on which toys are held:** the contacts here (rubber fingertips on plastic, toys and the body on foam, housings on housings) hold without a slide below their sliding force; MuJoCo's soft contacts creep by design, and its documentation names elliptic cones with a large impratio and the Newton solver as the remedy; Menagerie's hand models ship impratio 10 (5.1).
+- Measured at 1 and 10: the creep, the slide's onset, pain with the filter, and the ten toys' holds (5.1, 3.8, section 6). **B1's premise follows from the physics:** only the bear and the drum cannot be held.
+- **Its cost, disclosed:** a pressed housing that slides reads harder at 10 (5.1, C5).
+
+**A33. What decides the eye check (C3)** (decided here, after the W1 verifier's fourth round)
+- The identity score turned on the readout and on the views. Linear readouts reach only 0.52–0.64. A small nonlinear readout on the full code reached 0.840–0.860 at 67 training views a class. On the code through the core's projection it reached 0.794–0.836 there, but 0.74–0.78 at 44 training views, 0.65–0.72 at 22, and 0.711 in one setting (dusk, no shadow) at 40.
+- **Decided:** C3 is judged by a small nonlinear readout (one hidden layer) on the code as the core receives it: the channel's born projection into the cortex's d and the input's LayerNorm. The cortex reads the eye channel through that projection into its learned nonlinear blocks, so a linear readout is only a lower bound, and the full code is more than the core receives.
+- **At the tool's full training set,** 67 views a class (of 100), under each light with and without the shadow. C3 asks whether the fovea's code carries a toy's identity at 1.5 px a degree. The child sees each toy for thousands of ticks, so a readout starved of views measures the readout, not the eye.
+- This was decided after the curve by views was measured. The curve is reported beside every verdict, so the choice can be judged; the bar (0.75) and the light are never changed for it.
+- The tool projected into 256, and the sim's d is 512 (7.1), so the check runs again at 512 and under W5's lights (C3).
+
+**A34. A new word on its pitch peak, on every ending** (the parent's method, ours; sections 4.4 and 4.8, C25)
+- P1's first build claimed its new-word emphasis lengthened the word (+91%) and slowed the line. That held only on "." lines, where the engine spoke the "." aloud as "period"; on "?" and "!" lines the word came out 15% shorter.
+- **Decided:** she introduces a new word as infant-directed speech does: in final position, on the line's pitch peak and lengthened (Fernald and Mazzie 1991; Albin and Echols 1996), on ".", "?" and "!" lines alike. She uses only the engine's own SSML: a prosody around the word and its punctuation, pitch +30% on the line's, rate 0.7 × the line's, in the new-word register at rate 0.15. Had the engine failed on an ending, she would not have used that ending for a new word; it manages all three.
+- **Only in frames that put the new word on the peak.** Measured, the emphasized word is the line's highest peak on every line of the variation set and on "look. a X.", but not on "this is a X." (7 of the 8 toys), "this is your X." or "the X is up.", where an earlier word peaks higher. She does not introduce a new word in those frames, and the tool measures the peak by frame (P3).
+
+**A35. The grasp summed at the spinal cord** (decided in the W1 verifier's first round; sections 3.6, 3.7 and A11)
+- Built first as a core reflex hook, the grasp took the hand's tick. The hook is decided before the gate draws and sends the effector's rest, and the reflex read last tick's act, which was its own closing. With a ball in the palm it took 40 of 40 ticks, and the hand's gate drew 0 times: the child could never let go.
+- **Decided: the spinal summation,** as in the cord, where a reflex and the descending command meet at the same motor neurons. The hand's gate draws every tick, and the reflex adds a small closing step to the hand's own act unless that act opens the hand. The hand's acts keep their eligibility, so letting go is learned (A11). The withdrawal keeps the hook, with no eligibility on its ticks.
+- Measured with the ball in the palm: the gate drew on 24 of 40 ticks and passed 23 opening acts (test world 15).
+
 ### (B) The owner's calls, with recommended defaults
 
 The nine decisions of the G1 amendment are settled (section 14). These are the environment's remaining shapes, each with the default the design uses until the owner says otherwise.
 
 | # | question | recommended default | what it changes |
 |---|---|---|---|
-| B1 | The G1's hand cannot hold four toys: the ball, the duck, the bear and the drum. Leave them as they are? And we already made the cup smaller (0.8 of its size, 6.7 cm across) so the hand can hold it: keep that? | Yes to both: the four are for looking at, pushing, rolling, hitting and naming, and the grasp milestone uses the other six. The cup's size was changed to fit the robot's hand, which is the world fitted to the body, so it is your call. | A new shape (a handle, ears) would be measured again in W3. A full-size cup would leave five holdable toys. |
+| B1 | At first the G1's hand could not hold four toys (the ball, the duck, the bear, the drum), so we made the cup smaller (0.8 of its size, 6.7 cm across) to let the hand hold it. That was the simulator's contacts creeping. With the contact setting chosen by physics (impratio 10, A32), the hand holds the ball, the duck and the full-size cup; only the bear (2 of 9 tries) and the drum (0 of 9) cannot be held. May we put the cup back to its own size, and leave the bear and the drum as they are? | Yes to both. The cup's shrink fitted the world to the body, and now has no reason; the bear and the drum are for looking at, pushing, hitting and naming. Until you say, the cup stays at 0.8. | Eight toys are holdable either way; the full-size cup held 9 of 9. |
 | B2 | May we add four colour twins (a blue ball, a red block, a yellow cup, a green car), so we can test "the red ball" when it has never heard those words together? | Yes. | Four more toys; colour words come in once two toys share a colour (A28). |
-| B3 | If the tick is too slow, may its eyes (a) see a simpler copy of its own body, or (b) see the room without the sun's shadow? You would not see (a); (b) takes a piece of the complete reality you asked for. | Neither unless the heat-soaked tick is over 150 ms; then (a) first. If still too slow, we would rather ask again than drop the shadow: a slower life only costs wall time. | (a) saves about 8–18 ms a tick; (b) about 21 ms. |
+| B3 | If the tick is too slow, may its eyes (a) see a simpler copy of its own body, or (b) see the room without the sun's shadow? You would not see (a); (b) takes a piece of the complete reality you asked for. | Neither unless the heat-soaked tick is over 150 ms; then (a) first. If still too slow, we would rather ask again than drop the shadow: a slower life only costs wall time. | (a) saves about 8–18 ms a tick; (b) about 21 ms. Measured since in the built world: the render is 31 ms with the sun's shadow, and the parent's face of human proportions adds about 8–11 ms (section 9); her face is the world's, not a shortcut. |
 | B4 | The real G1's two eye cameras see in grey; ours see in colour. Keep colour? | Yes. | On the real robot it would need its colour camera, or to learn in grey. |
 | B5 | The model does not say where the G1's microphones and speaker are. Put its ears on the sides of its head and its voice at the front? | Yes, until Unitree's documents say where they are. | The ears' timing and loudness. |
 | B6 | Keep the child's voice as built: a child-sized throat, pitch about 265 Hz? | Yes. | What you hear it say. |
 | B7 | Nobody can carry the 34 kg child back, so the parent goes to it wherever it is. Keep the whole floor and the open hall as its play space, with no baby gate? | Yes. | Where it can end up. |
 | B8 | Close the gap under the sofa, take away the low table's pretend shelf (the lying G1's chest is 1 cm under it), and put lost toys back in their basket each morning? | Yes to all three. | Two lines in the maker; one morning rule in the world. |
-| B9 | Should the room echo? | Yes, if it costs under 1 ms a tick; otherwise no, and we report it. | The ears hear the room. |
+| B9 | Should the room echo? | Yes, if it costs under 1 ms a tick; otherwise no, and we report it. | The ears hear the room. Measured since (P2): each sound source costs about 0.37–0.4 ms a tick through the ears' spatializer, so six first-order echoes (the walls, the floor and the ceiling as image sources) would cost about 2.2–2.4 ms. Unless W5 finds a cheaper echo, the default gives none, reported. |
 | B10 | Keep charging as a bottle it holds in its hand, about 5–6 times a day while it moves a lot? | Yes. | Charging by mouth would need a mouth the G1 does not have. |
 | B11 | Keep the mat at 2.8 × 2.0 m? | Yes. | — |
 | B12 | Your decision 1 lists "looking at it" among what raises her happiness, and also says smiles come only for completed, visible acts. Should the child just looking at her ever make her smile? | No. Looking raises her attention (her eyes and a greeting flash, which the child cannot feel as reward); only its acts earn a smile. A look she asked for (a call answered, "look at the drum") is an act and does earn one. | Otherwise looking would pay. |
@@ -2006,7 +2170,7 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | B15 | Keep the living room at 5.2 × 4.6 m? For the 1.32 m G1 that is like a 2.9 × 2.6 m room for a baby. | Yes. More room comes with the house (section 16). | How often it meets a wall or furniture (A24). |
 | B16 | Keep the parent as strong as a real person, so she can never lift it, slide it or sit it up? | Yes. It must rise by itself, even if sitting comes late. | Stronger, she could carry it through postures it has not reached (A25). |
 | B17 | If the child's own hearing and voice never pass the tests for dropping the word tokens, keep the tokens? | Yes. They stay and are tested again every 5 life days (A29). | With a fixed date instead, it may lose words it knows. |
-| B18 | The real G1 feels touch only in its hands. Should our G1 feel touch (and pain) on its whole body, like a baby's skin, though the robot has no skin there? | Yes, disclosed as a sim sense: pain is one of its three rewards and needs it, and an infant has skin. On the real robot it would need an added skin, or contact estimated from its joints' torques. | Without it, touch and pain exist only in the hands, and a blow to the head is felt only through balance and joint effort. |
+| B18 | The real G1 feels touch only in its hands. Should our G1 feel touch (and pain) on its whole body, like a baby's skin, though the robot has no skin there? | Yes, disclosed as a sim sense: pain is one of its three rewards and needs it, and an infant has skin. On the real robot it would need an added skin, or contact estimated from its joints' torques. | Without it, touch and pain exist only in the hands, and a blow to the head is felt only through balance and joint effort. Measured since: no self-contact presses at rest, so every one is felt (A12), and most of babble's pain (6–12% of ticks) is its own housings pressed together, the thighs into the pelvis and the shoulders into the torso: on the real robot, motor housings striking each other. |
 | B19 | A life day is one simulated hour, so the sun crosses the window in an hour, not a day. Keep that? | Yes. A real-length day would make each life day 24 times longer in wall time. | How fast the light changes. |
 | B20 | The real G1's motors hum as they work, and its microphones hear it. Add that sound, growing with each motor's effort? | Yes, if it costs under 1 ms a tick; otherwise no, and we report it. | It hears its own effort; nothing rewards it. |
 ### (C) Open until measured
@@ -2014,10 +2178,10 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | # | open question | measured in | what decides it |
 |---|---|---|---|
 | C1 | Which child | — | settled: the stock G1 (the owner's decision 7) |
-| C2 | Whether the face test's rays agree with a segmentation render inside the software fovea | W3: 2,000 babbled frames, the parent at 0.3–3.5 m | at least 95% agreement; below that, the render is used |
-| C3 | Whether the fovea tells the toys and the face apart at 1.5 px a degree, under morning, midday and dusk light; the born face template's hits and false alarms in the fovea (section 3.4) | W3's eye check | identity at least 0.75; below that, the eye's own born constants (the fovea's size and code) are reconsidered before birth. The light and the shadow are never changed for it (5.4, B3) |
+| C2 | Whether the face test's rays agree with a segmentation render inside the software fovea | W3: 2,000 babbled frames, the parent at 0.3–3.5 m | at least 95% agreement; below that, the render is used. Measured: 99.8% of the 975 frames whose geometry passes, her head kept inside the room (98.7–100% in each distance bin); the rays stay |
+| C3 | Whether the fovea tells the toys and the face apart at 1.5 px a degree, under morning, midday and dusk light | W3's eye check (`tools/sim_eye_check.py`), again under W5's lights | identity at least 0.75 by A33's readout (a small nonlinear readout on the code through the channel's born projection into the core's d, at 67 training views a class, each light with and without the sun's shadow), the curve by views reported beside it; below that, the eye's own born constants (the fovea's size and code) are reconsidered before birth. The light and the shadow are never changed for it (5.4, B3). Measured on stand-in lights through the tool's projection into 256: 0.794–0.836, passing in all six settings (0.74–0.78 at 44 training views, 0.65–0.72 at 22); on the full code 0.840–0.860; linear readouts 0.52–0.64. To run at the sim's d 512. The born template's hits and false alarms are C39's |
 | C4 | Rolls under the final servo law on the G1, from the born body's own motor timing (C38), not the per-joint babbler | W4 | written down as chance; never tuned |
-| C5 | Phantom pain from contact spikes, with and without the 10 ms filter | W4 | pain on still ticks under 0.01% |
+| C5 | Phantom pain from contact spikes, with and without the 10 ms filter | W4 | pain on still ticks under 0.01%. Measured in W1: 0 of 400 ticks at rest; 0 on the 8–9 still ticks babble gave, too few to test the bar (babble almost never rests every effector), so W4 counts still ticks from the born loop at rest; under babble 11.6% of ticks at impratio 10, 11.7% at 1. The slide's spike at impratio 10 is disclosed (5.1) |
 | C6 | How many fall starts the catch stops on the G1, including falls driven by the child's own big steps (the earlier "about 2.4 J at 200 N" has no source; the upper body releases about 7 J from 35° to 50°, A9) | W2 and W4 | at least 95% caught; below that, the hover distance or the trigger angle changes before birth, for the stated reason that an uncaught fall hurts. The 300 ms reaction is a person's and never changes |
 | C7 | The pull-to-sit with the child's help under the caps; the guide's cap for each limb; the guide's pace on the limp arm (a 20 cm path in 1.2 s peaked at 139 N); the brief turn from its front, completed within 2 s at 200 N (A25) | W2 | no hold at its cap for more than 2 ticks, no act over the caps, and a limp arm guided at no more than 65 N |
 | C8 | Peak forces when the babbling G1 meets the soft, yielding parent; her kneeling spot outside its leg sweep | W2 and W4 | under her own 150 N threshold on most ticks, and under F_pain always |
@@ -2029,18 +2193,18 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | C14 | How long a night takes (R8) | S5b | reported |
 | C15 | Recognising words across voices, for removing the scaffolds; the tract's words in the parent's ear | P1–P3v, then after M6 begins | the tests of section 4.9 |
 | C16 | Credit across the delay (risk 1) | the first life days | `act_pred` against `act_inv` on held-out guides; the value rising at the touch |
-| C17 | Balance at a 150 ms tick: the leaning sit under the resting law | W1 and W4 | M5's range |
-| C18 | The G1 on the mat: the sink rates under the resting law, the pain rate at 1,012 N, travel and time off the mat | W1–W4 | written down before birth |
+| C17 | Balance at a 150 ms tick: the leaning sit under the resting law | W1 and W4 | M5's range. W1: the leaning sit holds 3 s at rest (6° at an elbow); standing tipped past 20° after 2.85 s with the ankles at 35 N·m, and not within 3 s at the file's 50 (3.3) |
+| C18 | The G1 on the mat: the sink rates under the resting law, the pain rate at 1,012 N, travel and time off the mat | W1–W4 | written down before birth. W1: the sink rates (3.3) and the pain rate (section 6); travel and time off the mat are W4's |
 | C19 | Toys lost each day, if the sofa's gap stays | the first life days | reported |
 | C20 | Free disk for birth, and before every verification copy; the save's real size | before S5b; before each copy; S5b | at least 8 GB left after the copy (A18); the disk rule's floor and birth's need re-set from the measured save |
 | C21 | Whether being held is felt: the hold's force in the held link's touch | W1–W2 | the touch channel shows every hold; every hold far under F_pain |
-| C22 | The flexor withdrawal on each G1 limb, and whether it ever drives a limb into a worse contact | W1, then W4 | written down; no withdrawal that raises the pain it answers |
-| C23 | The tick's parts not yet measured: per-step contact forces for touch and the pain filter, the face test's rays, the parent's ear at the babble rate | S5a | inside the 150 ms mean |
+| C22 | The flexor withdrawal on each G1 limb: how often the newborn's generalized flexion presses a limb into a worse contact | W1 (measured), then W4 on the born loop | written down as the newborn's (A31), with the limb resting and the babble's own acts as the chance comparisons; never tuned. W1 (8 seeds × 400 babble ticks at impratio 10, 121 onsets, either of its 2 ticks counted): it raised the pain it answered in 31 (26%: 28 on its first tick, 13 on its second), resting in 23 (19%), the babble's acts in 58 (48%); it pressed harder than resting in 60. A verifier's 4 seeds: 8 of 32, resting 8, babble 15. The first bar, "no withdrawal that raises the pain it answers", asked a newborn's reflex for a tuned one's (A31); the rate falls only if a learned tuning is built (C40) |
+| C23 | The tick's parts not yet measured: the parent's ear at the babble rate, and the parent's conduct layers each tick | S5a | inside the 150 ms mean. Measured since (W1, W3): touch and the pain filter within the world's 2.3–2.6 ms, the face test's rays and the template within the eyes' 0.7–3.5 ms (section 9) |
 | C24 | The parent's contingency: the child's acts answered within 7 ticks | P6 | at least 90% |
-| C25 | SSML's effect on per-word prosody, and the parent's word rate | P1 | at most 3 words a second on new words |
-| C26 | Real frictions (the world's surfaces 1.0 now; the G1's feet 0.6 at priority 1, as shipped) and a friction model that does not creep (the G1 crept 5 cm at 146–199 N) | W1 | the measured sliding force matches μ × weight, set through the world's geoms at contact priority 2 and world options only; the G1's file and geoms untouched (A21) |
+| C25 | SSML's effect on per-word prosody, and the parent's word rate | P1 | at most 3 words a second on new words, pooled over the lines (a set, or an ending's lines). Measured on all 331 birth lines as new-word lines (rate 0.15, the new word emphasized), by ending: the new word 1.14–1.15 times as long as unemphasized and 1.32–1.33 times the plain line's, its F0 1.29–1.30 times both, on ".", "?" and "!" lines alike; 2.93, 2.90 and 2.51 words a second pooled (2.91 over all), the variation set 2.40–2.83; line by line, 131 lines over 3, up to 3.88 (lines of 3–6 words). The first build's "+37% F0, +91% length, 2.84 words a second" was "." lines only, with "period" spoken. Open: the limit of 3 is ours, from the parent spec, with no cited source, and it was written as pooled after the measure; a source for it, and whether it binds per line, are decided before birth (rate alone cannot bring every line under 3). The new word on the line's pitch peak is measured by frame (A34) |
+| C26 | Real frictions (the world's surfaces 1.0 now; the G1's feet 0.6 at priority 1, as shipped) and a friction model that does not creep (the G1 crept 5 cm at 146–199 N) | W1 | the measured sliding force matches μ × weight, set through the world's geoms at contact priority 2 and world options only; the G1's file and geoms untouched (A21). The model is done: impratio 10 (A32), sliding within 1% of Coulomb above μMg, a creep of 0.4–1.8 mm in 2 s below it. The surfaces' own values are still 1.0: the sources found give wood on metal 0.2–0.6, polystyrene on polystyrene 0.5, rubber on concrete 0.6–0.85, and only a weak 0.63 for EVA foam (Engineering ToolBox); setting them means measuring the grasps again (C28) |
 | C27 | The parent's ear in life: its cost at the babble rate, its false accepts, m at the real context sizes; how often an accepted word is also exact (A27); whether the fixed babble bank still rejects babble once the child's babble has changed | P3v and P6, then the first life days | chance written down before birth; the rule never loosened after it |
-| C28 | The grasp on the six holdable toys under the resting servo law, and B1's choice | W3–W4 | written down |
+| C28 | The grasp on the eight holdable toys under the grasp reflex and the resting servo law (3.8's impratio-10 holds were at stock gains), and B1's choice | W3–W4 | written down |
 | C29 | Early imitation: the first accepted echo | the first life days | reported (M6t's precursor) |
 | C30 | Hits on the parent per hour under babble | W4 | written down; her withdrawals and "oh!" counted |
 | C31 | The G1's falls under the final servo law: strike forces from the sits, from rolls and from a fall off its elbows, against F_pain (the custom child's head struck at 260–890 N at 9.45 kg) | W4 | written down; the pain law is not changed by them (A12) |
@@ -2051,3 +2215,7 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | C36 | The tests of understanding: how many items each kind of never-taught test has before its items are taught, and whether that can reach p < 0.01 at its chance (A28) | P4 (the items listed), then the first life days | a kind that cannot is reported "not testable yet"; more items are added only before birth |
 | C37 | The real G1's damage limits per link (Unitree's documents) | before the robot | if any link is damaged below 1,012 N, the next body's pain law takes that limit (A12) |
 | C38 | The born movement units on the G1: their lengths under the gate's continuation draw at the born p_act (about 0.29, so about 1.4 ticks on average), and the rolls, travel and reaches they give (section 3.6) | R6h, then W4 on a replica and at S5a on the real core, every learning rate 0 | written down as chance. If the units are far shorter than newborns' movements (general movements last seconds), the unit's born length is decided before birth on that biology, as a disclosed constant; never on a roll count, and never after birth |
+| C39 | The born face template's constants, from its own sources. On the parent's face of human proportions it detected her face in 1 of 48 fovea readings at 0.3–2 m (4 of 810 in a verifier's sweep, all at 1.1–1.2 m, where her face is about the smallest size's width) and never in the periphery; its other matches were chance, as strong on the window upside down. Its sizes (8–23 px) fit her face in the fovea only at about 0.63–1.8 m, and in her kneeling attend pose her face lies sideways in the fovea of the G1 on its back, where an upright template cannot match. As built, the event line "a face in the fovea" and orienting's face cue would run on chance | before birth: the template's layout, sizes, contrast polarity, orientation and threshold read from CONSPEC's sources (Johnson and Morton 1991; Goren 1975; Farroni et al. 2005 on polarity) at a newborn's acuity; then measured on her face, upright and turned, under each light | set from the sources alone, never on her face or on a hit rate, and her face is never changed toward it (A30). Until then the event line and the periphery cue stay the template as built, never the world's face test (A1); orienting's sound cue is unaffected |
+| C40 | A learned tuning of the withdrawal: the adult's local sign, learned from the tactile feedback of the body's own movements, twitches in sleep among them (Petersson et al. 2003; Waldenström et al. 2003) | a design item, not built | designed only as learning from the body's own movements, in the core's terms; never a born kinematic copy (A31) |
+| C41 | Fists closed on its own fingers: under babble the grasp fired on 14% of hand-ticks, 40% of those with only its own fingers on the palm (`palm_own_N`) | W4 | written down; if they hinder reaching or letting go, the reflex's trigger is decided on its biology before birth, never on a rate |
+| C42 | A sound with nothing above threshold below about 760 Hz gets no side from the born lateral read (it reads the 80–757 Hz bands), so both "sound on the left / right" event lines fire | W5, with the toys' sounds | written down; a side for such sounds would change the born read's design, decided on the brainstem's biology before birth |
