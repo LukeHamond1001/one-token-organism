@@ -4,13 +4,14 @@ protocol in serve.py; nothing here reads the caregiver's mind or edits the body'
 
 HOW TO READ THIS FILE. `PHYSIOLOGY` holds every constant, grouped by organ; the served body's effective set is its save plus
 ops/BASE_FLAGS.txt (ops/served_cfg.py prints it), and the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md,
-not here. `Life.__init__` wires the organs (body/model.py: `Organs` the learned parts, `Store` the hippocampus) and the state a tick
-touches. `tick()` is one moment of the body's clock in eight phases, each a method in this order: `_sense` (the world's symbol or
-its quiet, the offset by the count, the face felt as reward), `_hear` (the symbol enters the stream, the store writes what surprised
-it, the offset by the settle law), `_learn_values` (every critic learns; the fast band's error is dopamine), `_own_face`, `_choose`
-(whether to speak, then what: the readout at the mood's sharpness, the actor's chunk or plan), `_act` (its own symbol or rest enters
-the stream, the credits), `_feel_and_learn` (the feelings, the gate's lesson, the waking cortex lesson), `_bookkeep` (the page, the
-record, the sleep switch).
+not here. `Life.__init__` wires the organs (body/model.py: `Organs` the learned parts, `Store` the hippocampus) and the state a
+tick touches. `tick()` is one moment of the body's clock in eight phases, each a method in this order: `_sense` (the world's symbol
+or its quiet, the offset by the count, the face felt as reward, then the reward's other terms: the anatomy's reward sources in
+their order), `_hear` (the symbol enters the stream, the store writes what surprised it, the offset by the settle law),
+`_learn_values` (every critic learns; the fast band's error is dopamine), `_own_face`, `_choose` (whether to speak, then what: the
+readout at the mood's sharpness, the actor's chunk or plan), `_act` (its own symbol or rest enters the stream, the credits),
+`_feel_and_learn` (the feelings, the gate's lesson, the waking cortex lesson), `_bookkeep` (the page, the record, the sleep
+switch).
 `night()` runs NREM (the dreams from `dreams()`, batched, the cortex learning with the recall off as its input), REM
 (`_rem_imagine`, `_rem_rollout`), the value replay, the store's fade, the save. `type_text`, `set_face`, `state` and `insides`
 are the page's endpoints; `save`, `load` and `birth` are the body on disk.
@@ -19,7 +20,7 @@ WHERE THE METHODS LIVE (the split of 2026-09-23, review 2026-09-22 section 4, st
 `tick()` and the read-only `tok` (the anatomy's tokenizer; the core refactor's step R2, docs/SIM_DESIGN.md 8.4); every other method
 was moved verbatim into a mixin in body/core/ (its __init__.py has the map): senses, memory, cortex, mouth, critics, actor, night,
 persistence and instruments, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here; the anatomy, the body's senses,
-effectors and reward sources declared, is body/core/anatomy.py."""
+effectors and reward sources declared, is body/core/anatomy.py, and the frame, the world at one tick, body/core/world.py."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401

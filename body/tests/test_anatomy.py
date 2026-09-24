@@ -1,13 +1,17 @@
-"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 and R2). Run: python3 -m body.tests.test_anatomy
+"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 to R3). Run: python3 -m body.tests.test_anatomy
 (the organ tests run these too). `LanguageAnatomy(tok, cfg)` must rebuild exactly the symbols a life derived from its tokenizer before
 R2, under every constant that moves them and on a tokenizer laid out otherwise, and building it must leave the body untouched (R1). The
 life is built with it and reads its symbols and its text there, never the tokenizer; a life given the anatomy in the tokenizer's place
-is the same life; an anatomy declared under other constants, or not a language one, is refused (R2)."""
+is the same life; an anatomy declared under other constants, or not a language one, is refused (R2). The tick's reward is the
+anatomy's reward sources, felt in their declared order and added one at a time in it: bit for bit the reward `_sense` summed before
+R3, on every tick, under the switches the pinned digests do not reach (cost_in_reward, world_mask off, own_store) (R3)."""
 import collections
 import os
 import pickle
+import random
 import sys
 import time
+import types
 
 import torch
 from tokenizers import Tokenizer, models
@@ -15,7 +19,9 @@ from tokenizers import Tokenizer, models
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)   # this tree's body, not a fixed one
 from body.life import Life, PHYSIOLOGY  # noqa: E402
-from body.core.anatomy import Anatomy, Channel, Effector, LanguageAnatomy, RewardSource, anatomy_for  # noqa: E402
+from body.core.anatomy import (Anatomy, Channel, Effector, EffortReward, FaceReward, LanguageAnatomy, RewardSource,  # noqa: E402
+                                WorldWordsReward, anatomy_for)
+from body.core.world import Frame  # noqa: E402
 
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 FIELDS = ("sil", "nl", "space_id", "eot", "end_id", "reserved", "bans")
@@ -49,6 +55,9 @@ def _same(a, life, label):
     assert a.partner is ear and a.channels == [ear, face] and (face.kind, face.size, face.partner) == ("vector", 2, False), label
     assert (voice.name, voice.factors, voice.rest_id, voice.end_id, voice.reserved) == ("voice", [life.m.vocab], life.sil, life.space_id, life.bans), label
     assert [s.name for s in a.rewards] == ["face", "world_r", "cost"], label
+    assert [type(s) for s in a.rewards] == [FaceReward, WorldWordsReward, EffortReward], label
+    assert [s.clip for s in a.rewards] == [2, None, None], label
+    assert [s.keys for s in a.rewards] == [(), ("world_r", "world_mask"), ("cost_in_reward", "symbol_cost", "gate_fatigue")], label
     a.check()
 
 
@@ -93,7 +102,8 @@ def test_language_anatomy_is_inert():
 
 def test_anatomy_check():
     """anatomy 3: the declaration's own check refuses two partners, a rest that is reserved, a symbol outside the alphabet, an
-    unknown kind, a name twice, no effector, and a reward source reading an unknown constant"""
+    unknown kind, a name twice, no effector, a reward source reading an unknown constant, no reward source and a clip not above zero;
+    a bare RewardSource declares no feeling"""
     def ok():
         return Anatomy([Channel("ear", "symbol", 5, rest_id=0, end_id=1, reserved=[4], partner=True), Channel("face", "vector", 2)],
                        [Effector("voice", [5], rest_id=0, end_id=2, reserved=[4])], [RewardSource("face"), RewardSource("cost", ("symbol_cost",))])
@@ -107,6 +117,8 @@ def test_anatomy_check():
     a = ok(); a.channels[1].name = "ear"; bad.append(("a name twice", a))
     a = ok(); a.effectors = []; bad.append(("no effector", a))
     a = ok(); a.rewards[1].keys = ("symbol_cots",); bad.append(("an unknown constant", a))
+    a = ok(); a.rewards = []; bad.append(("no reward source", a))
+    a = ok(); a.rewards[0].clip = 0; bad.append(("a clip of zero", a))
     for label, a in bad:
         try:
             a.check()
@@ -114,13 +126,20 @@ def test_anatomy_check():
             continue
         raise AssertionError(f"the check let pass {label}")
     for call in (lambda: Channel("x", "symbol", 3).encode(1), lambda: Effector("v", [3]).gate_inputs(None, None),
-                 lambda: Effector("v", [3]).cost(0, None), lambda: RewardSource("r").felt(None, None)):
+                 lambda: Effector("v", [3]).cost(0, None)):
         try:
             call()
         except NotImplementedError:
             continue
         raise AssertionError("a method not yet wired answered")
-    print("anatomy 3: the check refuses", len(bad), "faulty declarations; the methods of later steps are not yet wired")
+    try:
+        RewardSource("r").felt(Frame(0, {"ear": 0}, 0.0), None)
+    except NotImplementedError:
+        pass
+    else:
+        raise AssertionError("a bare RewardSource felt something")
+    print("anatomy 3: the check refuses", len(bad), "faulty declarations; the methods of later steps are not yet wired;",
+          "a bare reward source feels nothing")
 
 
 def _differs(A, B):
@@ -267,8 +286,205 @@ def test_the_body_reads_text_through_its_anatomy():
           f"through the anatomy ({a.calls['symbol']} symbols typed or read, {a.calls['decode']} decoded)")
 
 
+def _reward_before_r3(self, u):
+    """the reward as `_sense` summed it before step R3 (body/core/senses.py at commit 96f72a9; the ring and the actor's lines are
+    anatomy 8's): the reference the sources are held to. Returns the felt event, the face's term and the reward."""
+    # the face: a change is felt; a held face is silence; easing off is not an event
+    lvl = max(-6, min(6, int(self.face_now)))
+    felt = 0
+    if lvl != self.level:
+        if abs(lvl) > abs(self.level) or lvl * self.level < 0:
+            felt = lvl
+        self.level = lvl
+    r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
+    r_face = r
+    if u != self.sil:
+        wr = float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
+        if wr and not (int(self.cfg.get("world_mask", 0)) and getattr(self, "_acted_last", False)):
+            r += wr                                     # not heard over its own voice (world_mask)
+    if self.cfg.get("cost_in_reward") and getattr(self, "_acted_last", False):
+        r -= float(self.cfg["symbol_cost"]) * (1.0 + (self.fatigue / float(self.cfg["gate_fatigue"])) ** 2)
+    return felt, r_face, r
+
+
+def _reward_by_sources(a, life, u):
+    """the anatomy's sources felt on one frame, in their order, and summed in it (as `_sense` sums them)"""
+    frame = Frame(0, {"ear": u}, life.face_now)
+    judge, *others = a.rewards
+    felt = judge.felt(frame, life)
+    r_face = r = judge.term(felt)
+    for s_ in others:
+        v_ = s_.felt(frame, life)
+        if v_ is not None:
+            r += s_.term(v_)
+    return felt, r_face, r
+
+
+def _same_bits(w, g):
+    return type(w) is type(g) and (w.hex() == g.hex() if isinstance(w, float) else w == g)
+
+
+def test_reward_sources_feel_todays_rule():
+    """anatomy 7 (step R3): the diary's reward sources, felt in their order, give bit for bit (the sign of a zero too) the felt event,
+    the face's term and the reward `_sense` summed before R3, and leave the held face level where it left it, over 40000 random
+    states: faces rising, held, easing, changing sign, past +-6 and fractional; the world's symbol or its rest; world_r off, on,
+    negative and tiny; world_mask; an act on the last tick, none, or none recorded yet; the effort on or off, at random costs and
+    fatigue"""
+    rng = random.Random(0)
+    a = LanguageAnatomy(TOK, {}); sil = a.sil
+    seen = collections.Counter()
+    for i in range(40000):
+        cfg = dict(PHYSIOLOGY, world_r=rng.choice([0.0, -0.0, 0.3, -0.25, 1e-17, rng.uniform(-3, 3)]), world_mask=rng.choice([0, 1]),
+                   cost_in_reward=rng.choice([0, 1, 0.0, True]), symbol_cost=rng.choice([0.12, 0.0, rng.uniform(0, 1)]),
+                   gate_fatigue=rng.choice([10.0, rng.uniform(0.5, 30)]))
+        st = dict(sil=sil, level=rng.randint(-6, 6), fatigue=rng.choice([0.0, rng.uniform(0, 30), rng.expovariate(1.0)]),
+                  face_now=rng.choice([float(rng.randint(-6, 6)), rng.uniform(-8, 8), -0.5, 0.99, 6.0, -6.0]))
+        acted = rng.choice([True, False, None])
+        if acted is not None:
+            st["_acted_last"] = acted
+        u = rng.choice([sil, sil, 5, 42])
+        A = types.SimpleNamespace(cfg=cfg, **st); B = types.SimpleNamespace(cfg=dict(cfg), **st)
+        want, got = _reward_before_r3(A, u), _reward_by_sources(a, B, u)
+        for w, g, what in zip(want, got, ("the felt event", "the face's term", "the reward")):
+            assert _same_bits(w, g), f"state {i}: {what} {g!r}, before R3 {w!r} (u {u}, {st}, world_r {cfg['world_r']}, mask {cfg['world_mask']}, cost {cfg['cost_in_reward']})"
+        assert A.level == B.level and type(A.level) is type(B.level), f"state {i}: the held level {B.level!r}, before R3 {A.level!r}"
+        world_ = u != sil and cfg["world_r"] and not (cfg["world_mask"] and acted)
+        cost_ = bool(cfg["cost_in_reward"]) and bool(acted)
+        seen["felt"] += want[0] != 0; seen["clipped"] += abs(want[0]) > 2; seen["world"] += bool(world_); seen["effort"] += cost_
+        seen["both"] += bool(world_) and cost_; seen["eased"] += want[0] == 0 and A.level != st["level"]
+    assert min(seen.values()) >= 1000, dict(seen)
+    print("anatomy 7: the sources feel today's rule bit for bit over 40000 states:", ", ".join(f"{k} {v}" for k, v in seen.items()))
+
+
+def _sense_before_r3(self):
+    """`_sense` as it was before step R3 (body/core/senses.py at commit 96f72a9), verbatim: the reference a life lives beside"""
+    m = self.m
+    u = self.queue.popleft() if self.queue else self.sil
+    who = (self.queue_who.popleft() if self.queue_who else "") if u != self.sil else ""
+    # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
+    # saying meanwhile (with the body's silence required too, a babbling body never let it fire: run 41 held
+    # two turn-end memories after six days)
+    off = int(self.cfg.get("offset_ticks", 0)); settle_form = str(self.cfg.get("offset_form", "count")) == "settle"
+    ps_ = self._pace_mode()                                    # under the sensed pace (2) the pause outlasted (M2, _pace_hear) replaces the count
+    if u == self.sil and off > 0 and not self._offset_done and not settle_form and ps_ < 2 and self.ticks - self._last_world >= off:
+        self._offset(settled=False); self._offset_done = True
+    first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
+    if u != self.sil:
+        if ps_:
+            self._pace_heard(ps_ >= 2)                          # the gap just ended is a heard event (before the world's last symbol moves)
+        self._last_world = self.ticks; self._offset_done = False; self._turn_open = False; self._ear_release_at = None
+    # the face: a change is felt; a held face is silence; easing off is not an event
+    lvl = max(-6, min(6, int(self.face_now)))
+    felt = 0
+    if lvl != self.level:
+        if abs(lvl) > abs(self.level) or lvl * self.level < 0:
+            felt = lvl
+        self.level = lvl
+    r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
+    self._ring_r.append(r)
+    if self._act_pending:                               # the actor's reliability: the reward of the ticks after each act, on its vote for that act
+        H = int(self.cfg.get("actor_horizon", 16))
+        for p_ in self._act_pending:
+            p_[2] += r
+        while self._act_pending and self.ticks - self._act_pending[0][0] >= H:
+            t0_, v_, g_ = self._act_pending.popleft(); self._arel_update(v_, g_)
+    if u != self.sil:
+        wr = float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
+        if wr and not (int(self.cfg.get("world_mask", 0)) and getattr(self, "_acted_last", False)):
+            r += wr                                     # not heard over its own voice (world_mask)
+    if self.cfg.get("cost_in_reward") and getattr(self, "_acted_last", False):
+        # THE EFFORT IN THE REWARD: the cost of the last act is felt as the next tick's reward, so both critics
+        # predict it and the gate reads their error alone. Added to the act's credit outside the critics (the
+        # earlier form, with a tonic drive of 0.25 cancelling it) it was never predicted away and, with the drive
+        # gone, held every act at a loss; with both gone the gate saturated at 0.98 (runs 69-72).
+        r -= float(self.cfg["symbol_cost"]) * (1.0 + (self.fatigue / float(self.cfg["gate_fatigue"])) ** 2)
+    if int(self.cfg.get("own_store", 0)):
+        thr = float(self.cfg.get("own_store_r", 1.0))
+        if float(r) >= thr and not getattr(self, "_own_stored", False) and self.ticks - getattr(self, "_own_store_tick", -10 ** 9) >= int(self.cfg.get("own_store_gap", 40)):
+            self._own_stored = True; self._own_store_tick = self.ticks; self._consolidate_own(float(r) * float(self.cfg.get("own_store_gain", 0.3)))
+        elif float(r) < 0.5 * thr:
+            self._own_stored = False
+    return u, who, felt, r, off, settle_form, first_after_pause
+
+
+
+def test_a_life_feels_as_before():
+    """anatomy 8 (step R3): two lives born alike live the same script with the same faces (rising, held, easing, changing sign, past
+    +-2), one feeling through its anatomy's sources (`_sense`), one through `_sense` as it was before R3; under the served constants
+    with the effort in the reward and the own store on, and under the physiology with the world's words unmasked and the effort on,
+    every tick's felt event and reward (bit for bit), the anticipation ring, the actor's pending rewards and reliability (the served
+    constants' actor), the tick's record, the page and the whole life are equal"""
+    faces = {5: 2.0, 6: 2.0, 7: 4.0, 9: 2.0, 12: -2.0, 14: 0.0, 20: 6.0, 22: -3.5, 25: 0.0, 33: 1.0, 40: -6.0, 41: 0.0, 50: 3.0,
+             52: 0.0, 70: 2.0, 71: 0.0, 88: -2.0, 89: 0.0, 100: 5.0, 101: 0.0}
+    lines = ("what do you want?", "I want milk", "do you see the ball?", "yes. the ball is red")
+    sc = _served_cfg()
+    cases = [("the physiology, the world's words unmasked, the effort", dict(world_r=0.25, world_mask=0, cost_in_reward=1), False)]
+    if sc is not None:
+        cases.insert(0, ("the served constants, the effort, the own store", dict(sc, cost_in_reward=1, own_store=1, own_store_r=0.2), True))
+    for label, cfg, actor_ in cases:
+        lives = []
+        for sense in (None, _sense_before_r3):
+            torch.manual_seed(5); L = _born(TOK, cfg); rec = []
+            f = types.MethodType(sense, L) if sense else L._sense
+
+            def rec_sense(f=f, rec=rec, L=L):
+                out = f()
+                rec.append((out[2], out[3].hex(), L._ring_r[-1].hex(), [list(p) for p in L._act_pending], list(L._arel)))
+                return out
+            L._sense = rec_sense
+            _live(L, lines=lines, faces=faces, ticks=120)
+            lives.append((L, rec))
+        (A, ra), (B, rb) = lives
+        bad = next((t for t in range(max(len(ra), len(rb))) if t >= min(len(ra), len(rb)) or ra[t] != rb[t]), None)
+        assert bad is None, f"{label}: tick {bad} felt {ra[bad] if bad < len(ra) else None}, before R3 {rb[bad] if bad < len(rb) else None}"
+        assert _differs(A, B) is None, f"{label}: {_differs(A, B)} differs"
+        assert A.last == B.last and [e for e in A.page] == [e for e in B.page] and A.level == B.level, f"{label}: the record, the page or the level differs"
+        others_ = sum(1 for x in ra if x[1] != x[2]); felt_ = sum(1 for x in ra if x[0]); pend_ = sum(1 for x in ra if x[3])
+        assert others_ >= 5 and felt_ >= 8 and (pend_ >= 5 or not actor_), f"{label}: the script reached too little: {others_} ticks with other terms, {felt_} felt, {pend_} with acts pending"
+        print(f"anatomy 8 ({label}): 120 ticks felt as before R3, bit for bit; {felt_} felt faces, {others_} ticks with other terms, {pend_} with acts pending")
+
+
+class _Const(RewardSource):
+    """a source felt at one value every tick (None: always silent)"""
+
+    def __init__(self, name, v, clip=None):
+        super().__init__(name, (), clip)
+        self.v = v
+
+    def felt(self, frame, life):
+        return self.v
+
+
+def test_the_declared_order_is_the_sums():
+    """anatomy 9 (step R3): the tick's reward is the anatomy's sources added one at a time in their declared order (1 + 1e-16 + 1e-16
+    is 1, where a sum of the later terms taken first gives 1 + 2e-16; 1 + 1e-16 - 1 and 1 - 1 + 1e-16 differ as their orders do); a
+    silent source adds nothing and a clipped one its clip; source 0, the judgment, alone is the felt event and the reward the ring and
+    the actor's pending acts read"""
+    a = LanguageAnatomy(TOK, {}); life = _born(a, {}); judge = a.rewards[0]
+    assert life.anatomy is a
+
+    def sense(face, others):
+        a.rewards = [judge, *others]; life.level = 0; life.set_face(face)
+        out = life._sense()
+        return out[2], out[3], life._ring_r[-1]
+    cases = [("the later terms one at a time", 1.0, [_Const("x", 1e-16), _Const("y", 1e-16)], 1, 1.0, 1.0),
+             ("1 + 1e-16 - 1", 0.0, [_Const("x", 1.0), _Const("y", 1e-16), _Const("z", -1.0)], 0, 0.0, 0.0),
+             ("1 - 1 + 1e-16", 0.0, [_Const("x", 1.0), _Const("z", -1.0), _Const("y", 1e-16)], 0, 1e-16, 0.0),
+             ("a silent, a clipped, a negative", 4.0, [_Const("q", None), _Const("c", 5.0, clip=2), _Const("n", -0.5)], 4, 3.5, 2.0),
+             ("the face alone", -3.0, [], -3, -2.0, -2.0)]
+    for what, face, others, felt, r, ring in cases:
+        got = sense(face, others)
+        assert got[0] == felt and _same_bits(got[1], float(r)) and _same_bits(got[2], float(ring)), f"{what}: felt, reward, ring {got}, want {(felt, r, ring)}"
+    life._act_pending.append([life.ticks, 0.5, 0.0])
+    got = sense(2.0, [_Const("x", 0.75)])
+    assert got == (2, 2.75, 2.0) and life._act_pending[-1][2] == 2.0, f"the actor's pending act read {life._act_pending[-1][2]}, the tick {got}"
+    print("anatomy 9: the reward is the sources in their declared order, one at a time; a silent source adds nothing; the judgment's",
+          "term alone reaches the ring and the actor's pending acts")
+
+
 ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
-                 test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy]
+                 test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy,
+                 test_reward_sources_feel_todays_rule, test_a_life_feels_as_before, test_the_declared_order_is_the_sums]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

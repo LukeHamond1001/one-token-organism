@@ -1,12 +1,15 @@
 """the senses (a mixin of `Life`, body/life.py): the feelings' own recovery each tick (`_decay_feelings`); the tick's first two
-phases, `_sense` (the world's symbol or its quiet off the queue, the offset by the count, the face felt as reward, the reward's other
-terms) and `_hear` (the start mark, the world's symbol enters the stream, the offset by the settle law, the sensed pace's end, the
-striatal events); the offset itself (`_offset`: the last world position marked ended, the utterance memory's entry, the working
-memory's latch); and the world's two hands on the page (`type_text`, `set_face`).
+phases, `_sense` (the world's symbol or its quiet off the queue, the offset by the count, the reward: the anatomy's reward sources felt
+in their order on the tick's frame, the face first, since step R3 of the core refactor, docs/SIM_DESIGN.md 8.4) and `_hear` (the start
+mark, the world's symbol enters the stream, the offset by the settle law, the sensed pace's end, the striatal events); the offset
+itself (`_offset`: the last world position marked ended, the utterance memory's entry, the working memory's latch); and the world's
+two hands on the page (`type_text`, `set_face`).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Not every attribute they touch is born in `Life.__init__`:
 twenty are first set later, by a phase of the tick or by the night, and thirteen of those are read here with a `getattr` default."""
 import torch
+
+from .world import Frame
 
 
 class SensesMixin:
@@ -81,7 +84,8 @@ class SensesMixin:
         self._utt_cur = []; self._utt_felt = 0.0
 
     def _sense(self):
-        """the world's symbol (or its quiet) off the queue, the offset by the count, the face felt as reward, the reward's other terms"""
+        """the world's symbol (or its quiet) off the queue, the offset by the count, the reward felt from the anatomy's sources in their
+        order (the face first, then the reward's other terms)"""
         m = self.m
         u = self.queue.popleft() if self.queue else self.sil
         who = (self.queue_who.popleft() if self.queue_who else "") if u != self.sil else ""
@@ -97,14 +101,15 @@ class SensesMixin:
             if ps_:
                 self._pace_heard(ps_ >= 2)                          # the gap just ended is a heard event (before the world's last symbol moves)
             self._last_world = self.ticks; self._offset_done = False; self._turn_open = False; self._ear_release_at = None
-        # the face: a change is felt; a held face is silence; easing off is not an event
-        lvl = max(-6, min(6, int(self.face_now)))
-        felt = 0
-        if lvl != self.level:
-            if abs(lvl) > abs(self.level) or lvl * self.level < 0:
-                felt = lvl
-            self.level = lvl
-        r = float(max(-2, min(2, felt)))                    # the world's reward: the felt face, clipped like a press
+        # THE FELT REWARD (the core refactor's step R3, docs/SIM_DESIGN.md 8.4): the anatomy's reward sources (body/core/anatomy.py),
+        # felt in their declared order on this tick's frame and added one at a time in that order, the float order of the sum. The
+        # diary's: the face, then the world's words (world_r, not over its own voice under world_mask), then the effort (cost_in_reward).
+        frame = Frame(self.ticks, {"ear": u}, self.face_now)   # this tick of the world, built here from the queue (no draw moves)
+        judge, *others = self.anatomy.rewards
+        # source 0, the world's judgment (the face: a change is felt; a held face is silence; easing off is not an event): its
+        # feeling is the tick's felt event, and its term alone is the world's reward the ring and the actor's reliability read
+        felt = judge.felt(frame, self)
+        r = judge.term(felt)                                # the world's reward: the felt face, clipped like a press
         self._ring_r.append(r)
         if self._act_pending:                               # the actor's reliability: the reward of the ticks after each act, on its vote for that act
             H = int(self.cfg.get("actor_horizon", 16))
@@ -112,16 +117,10 @@ class SensesMixin:
                 p_[2] += r
             while self._act_pending and self.ticks - self._act_pending[0][0] >= H:
                 t0_, v_, g_ = self._act_pending.popleft(); self._arel_update(v_, g_)
-        if u != self.sil:
-            wr = float(self.cfg.get("world_r", 0.0))        # the world's words as reward (0 = off)
-            if wr and not (int(self.cfg.get("world_mask", 0)) and getattr(self, "_acted_last", False)):
-                r += wr                                     # not heard over its own voice (world_mask)
-        if self.cfg.get("cost_in_reward") and getattr(self, "_acted_last", False):
-            # THE EFFORT IN THE REWARD: the cost of the last act is felt as the next tick's reward, so both critics
-            # predict it and the gate reads their error alone. Added to the act's credit outside the critics (the
-            # earlier form, with a tonic drive of 0.25 cancelling it) it was never predicted away and, with the drive
-            # gone, held every act at a loss; with both gone the gate saturated at 0.98 (runs 69-72).
-            r -= float(self.cfg["symbol_cost"]) * (1.0 + (self.fatigue / float(self.cfg["gate_fatigue"])) ** 2)
+        for s_ in others:                                   # the reward's other terms, in their order; a silent source adds nothing
+            v_ = s_.felt(frame, self)
+            if v_ is not None:
+                r += s_.term(v_)
         if int(self.cfg.get("own_store", 0)):
             thr = float(self.cfg.get("own_store_r", 1.0))
             if float(r) >= thr and not getattr(self, "_own_stored", False) and self.ticks - getattr(self, "_own_store_tick", -10 ** 9) >= int(self.cfg.get("own_store_gap", 40)):
