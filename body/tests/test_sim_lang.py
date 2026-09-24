@@ -13,7 +13,12 @@ cost) is built and measured by tools/sim_parent_ear.py.
 Tests 17-23 are the P3 verifier's findings, each failing on 5ea4c4e at its own assertion: an approximation smiled at out of context
 (17), an ask met unanswered (18), a word the talk-over stopped counted as said (19), a second new word erasing the first (20), the
 acts losing their object (21), the line check blind to what a line claims (22), the small items (23); and a write reaching her
-ear (in 10). Test 24 replays the whole speech side across processes from snapshots taken mid-line and mid-turn."""
+ear (in 10). Test 24 replays the whole speech side across processes from snapshots taken mid-line and mid-turn.
+Tests 25-30 are the P3 verifier's second findings (d053dff), each failing there at its own first assertion: Claude's lines asking
+past the check (25, with the claims it could not hold), a name ask met by a word made before its question was heard (26), calls
+the child could not answer by a look counted as missed and the call's window (27), words introduced that the world cannot
+show (28, with the pace of 1 a minute), a give before its word counted as missed (29), deliberate writes to her ear uncaught
+(30)."""
 import json
 import os
 import shutil
@@ -502,15 +507,16 @@ def test_cut_words_not_said():
 
 
 def test_new_words_in_a_day():
-    """finding 4: a second new word in one day erased the first ("rattle" then "ring": only "ring" joined at the night)."""
+    """finding 4: a second new word in one day erased the first ("rattle" then "ring": only "ring" joined at the night). The
+    requests come a minute apart (NEW_EVERY, A14; test 28 holds the pace)."""
     toys = TOYS + seen(("rattle", "rattle", "purple", "mat", True), ("ring", "ring", "green", "mat", True),
                        ("stacker", "stacker", "orange", "mat", True), ("book", "book", "white", "mat", True))
     con = C.Conduct(seed=5)
     said = []
-    for t in range(400):
-        if t in (0, 100, 200, 300):
-            con.request("new_word", word=("rattle", "ring", "stacker", "book")[t // 100], o=("rattle", "ring", "stacker",
-                                                                                             "book")[t // 100])
+    for t in range(4 * K.NEW_EVERY):
+        if t % K.NEW_EVERY == 0:
+            k = t // K.NEW_EVERY
+            con.request("new_word", word=("rattle", "ring", "stacker", "book")[k], o=("rattle", "ring", "stacker", "book")[k])
         s = con.tick(t, P(t, seen=toys))
         if s.line is not None:
             said.append((t, s.line))
@@ -1151,6 +1157,345 @@ def test_replay_across_processes():
           f"and every tick")
 
 
+# ------------------------------------------------------------ the P3 verifier's second findings (d053dff), each tested both ways
+def _fill_all(intent):
+    """every line an intent's frames make, filled with each toy she sees and the child's name (no line check)."""
+    out = set()
+    for fr in TP.FRAMES[intent]:
+        for o in TOYS:
+            got = TP.fill(fr, o=o, w="duck", b="foot")
+            if got is not None:
+                out.add(got[0])
+    return out
+
+
+def test_claude_never_asks():
+    """finding 1: Claude's lines could still ask, and nothing judged the ask: after the child's name ("pip where is the ball?",
+    a call with none of the call's rules), ending on a full stop ("where is the ball."), after a greeting; test 22 tried asks only
+    at a sentence's start. And finding 8: claims the check could not hold passed ("the ball is here.", "you roll.", "it is a
+    mat.", "no.")."""
+    p = P(0, child_target="ball", child_holds=("cup",))
+    found = ["pip where is the ball?", "pip give me the cup.", "pip look at the ball.", "pip look at mama.",
+             "where is the ball.", "what is this.", "hi pip where is the ball?"]
+    for text in found:
+        ok, why = TP.check(text, VOCAB, None, p, (), source="claude")
+        assert not ok and "ask" in why, f"Claude's {text!r} passed the check ({why!r})"
+        assert not C.FastLayer(1).add_steer(text, "any", 0)[0], text
+    # every line of every intent that asks, calls or questions (the expectant pause's), filled with each toy she sees, at every
+    # place in a line and with every ending: whatever the fast layer's own check would let it say, Claude may not
+    asks, n_said_fast = set(), 0
+    for intent, it in C.INTENTS.items():
+        if not it.expect and it.ask is None:
+            continue
+        for base in _fill_all(intent):
+            body = base[:-1]
+            for end in ".?!":
+                for pre in ("", "pip ", "hi pip ", "oh! ", "the duck. ", "mama is here. ", "look. "):
+                    asks.add(pre + body + end)
+                    asks.add(pre + body.replace(". ", " ").replace("? ", " ") + end)
+                asks.add(base + " the duck" + end)
+    refused_as_ask = 0
+    for text in sorted(asks):
+        fast_ok = TP.check(text, VOCAB, None, p, ())[0]
+        ok, why = TP.check(text, VOCAB, None, p, (), source="claude")
+        assert not ok, f"Claude may say the ask {text!r}"
+        n_said_fast += fast_ok
+        refused_as_ask += fast_ok and ("ask" in why or "judgment" in why)
+    assert n_said_fast > 500 and refused_as_ask == n_said_fast, (refused_as_ask, n_said_fast)
+    # said through a conduct: each placed in Claude's rows directly (past add_steer's check), never said
+    con = C.Conduct(seed=1)
+    for text in found + ["more?", "sit.", "no.", "peekaboo!", "bye bye.", "night night."]:
+        con.fast.steer.append(dict(text=text, situation="any", uses=0, tick_from=0, ttl=2000))
+    said, _ = run(con, [P(t, child_target=None) for t in range(400)])
+    assert not [ln for _, ln in said if ln.source == "claude"], [ln.text for _, ln in said if ln.source == "claude"]
+    # finding 8: what a Claude line claims is held true, or the line is refused
+    fell = [(0, "fell", "ball")]
+    blocks = TOYS[:3] + seen(("block", "block", "blue", "sofa", False))
+    for text, ev, pp in (("the ball is here.", (), p), ("it is a mat.", (), p), ("no.", (), p), ("you roll.", (), p),
+                         ("sit.", (), p), ("hi.", (), p), ("bye bye.", (), p), ("peekaboo!", (), p), ("more?", (), p),
+                         ("look here.", (), p), ("your duck.", (), p), ("it is a duck.", (), p), ("the duck fell.", fell, p),
+                         ("you see the block.", (), P(0, seen=blocks)), ("mama is here.", (), P(0, present=False)),
+                         ("the cup is red.", (), p), ("the ball is down.", (), p), ("it is yellow.", (), p)):
+        ok, why = TP.check(text, VOCAB + ("fell", "red", "yellow", "green"), None, pp, (), source="claude",
+                           recent_events=ev)
+        assert not ok and "her word" not in why, f"Claude's {text!r} passed ({why!r})"
+    good = [("a duck.", ()), ("the duck!", ()), ("you see the duck?", ()), ("look. the ball.", ()), ("it is a ball.", ()),
+            ("your cup.", ()), ("it is your cup.", ()), ("the ball is on the mat.", ()), ("mama is here.", ()),
+            ("oh! you roll.", [(0, "rolled", None)]), ("the ball fell.", fell), ("uh oh. the ball is down.", fell),
+            ("see? the duck.", ()), ("the cup is green.", ()), ("see the duck?", ()), ("oh.", ()), ("your foot.", ())]
+    for text, ev in good:
+        ok, why = TP.check(text, VOCAB + ("fell", "red", "yellow", "green"), None, p, (), source="claude",
+                           recent_events=ev)
+        assert ok, (text, why)
+    print(f"25 Claude's lines never ask: the verifier's 7 ({', '.join(repr(x) for x in found[:2])}, ...) refused as asks at "
+          f"add_steer and at the check; {len(asks)} variants of the asking intents' lines (every frame, toy and ending; a name, "
+          f"a greeting or a sentence before; the sentences run together; a sentence after), {n_said_fast} of them lines the "
+          f"fast layer itself may say: every one refused for Claude ({refused_as_ask} of those {n_said_fast} as an ask or a "
+          f"judgment); placed in Claude's rows past the check, none said in 400 ticks; 18 claims she cannot hold refused, "
+          f"{len(good)} true lines passed")
+
+
+def test_name_ask_answered_after_its_question():
+    """finding 2: "what is it?" about the cup ends at tick 8; the child's "cup" token made at tick 1, held until her line ended
+    and read at tick 9, was scored a met ask (worth 2): the answer was timed by when she read it, not when it was made."""
+    def go(*tok_at):
+        con = C.Conduct(seed=6, transcriber=Transcriber(None))
+        for x in ("duck", "ball", "cup", "block", "block_red"):
+            con.fast.last_set[x] = con.fast.last_named[x] = -1000
+        con.request("ask_what", o="cup")
+        judg, heard, pend = [], [], None
+        for t in range(40):
+            s = con.tick(t, P(t, child_target=None), token=LX.WORD_ID["cup"] if t in tok_at else None)
+            if pend is None and con.pending is not None:
+                pend = dict(con.pending)
+            judg += s.judgments
+            heard += s.heard
+        return con, pend, judg, heard
+    con, pend, judg, heard = go(1)
+    cw = [c for c in heard if c.word == "cup"]
+    assert pend is not None and pend["kind"] == "name" and pend["open"] > 1, pend
+    assert cw and cw[0].start == 1 and cw[0].tick >= pend["open"], cw
+    assert not [j for j in judg if j[1] == "met_ask"], f"a word made before the question was heard met it: {judg}"
+    assert judg == [] and con.pending is None and con.ledger.trials == [], (judg, con.pending)
+    con, _p, judg, heard = go(1, cw[0].tick + 12)                  # said again after her echo of it: the ask was void
+    assert judg == [], f"the ask, answered before it was heard and echoed by her, was met after: {judg}"
+    con, pend2, judg, heard = go(pend["open"] + 2)
+    assert [j[:2] for j in judg] == [(2, "met_ask")], judg
+    con, pend3, judg, heard = go(pend["open"])
+    assert [j[:2] for j in judg] == [(2, "met_ask")], f"a word begun on the tick the question was heard: {judg}"
+    for start, want in ((pend["open"] - 2, []), (pend["open"] + 1, [(2, "met_ask")])):   # the tract's turn likewise
+        con = C.Conduct(seed=6, stage=2)
+        con._say(TP.Line("what is it?", "ask_what", "question", None, None, ("cup",)), 0, P(0), C.Say())
+        out = C.Say()
+        con._owe_reply(12, ChildWord(12, "tract", "cup", True, start, 12, ("cup",)), P(12, child_target=None), out)
+        assert [j[:2] for j in out.judgments] == want and con.pending is None and con.ledger.trials == [], \
+            (start, out.judgments, con.pending)
+    print(f"26 'what is it?' of the cup, heard at tick {pend['open']}: the child's 'cup' made at tick 1, held through her line "
+          f"and read at tick {cw[0].tick}, is no answer (no smile; the ask void, as a gaze ask with its X already in the fovea, "
+          f"so its word said again after her echo meets nothing); made at tick {pend['open']} or later: met, a smile of 2; "
+          f"the tract's turn the same by the tick its sound began")
+
+
+def test_calls_out_of_sight():
+    """finding 3: three calls from the hall, where the child cannot see her, left the name's record at [0, 0, 0] (a call no look
+    can answer, counted a missed ask of 'pip'). And finding 7: the call's window ran from its name's end to 20 ticks after the
+    line's end (21-30 ticks by frame), not a gaze ask's 20."""
+    away = dict(present=False, seen_by_child=False, seen=(), child_target=None)
+    con = C.Conduct(seed=9, transcriber=Transcriber(None))
+    said = []
+    for t in range(3 * 300):
+        if t % 300 == 0:
+            con.request("hall_call")
+        s = con.tick(t, P(t, **away))
+        if s.line is not None:
+            said.append(s.line)
+    assert [ln.intent for ln in said] == ["hall_call"] * 3, [ln.text for ln in said]
+    assert con.ledger.standing(LX.NAME)["asks"] == [], f"calls from the hall counted: {con.ledger.standing(LX.NAME)}"
+    # a call while she is where its eyes cannot reach her (behind its head): void, counted neither way
+    con = C.Conduct(seed=9, transcriber=Transcriber(None))
+    con.request("call")
+    for t in range(60):
+        con.tick(t, P(t, seen_by_child=False, child_target=None))
+    assert con.ledger.standing(LX.NAME)["asks"] == [] and con.pending is None, con.ledger.standing(LX.NAME)
+    con = C.Conduct(seed=9, transcriber=Transcriber(None))                   # the control: seen, unanswered: missed
+    con.request("call")
+    for t in range(60):
+        con.tick(t, P(t, child_target=None))
+    assert con.ledger.standing(LX.NAME)["asks"] == [0], con.ledger.standing(LX.NAME)
+    # every call frame: judged 20 ticks from the end of the name, as a gaze ask
+    wins = []
+    for fr in TP.FRAMES["call"]:
+        con = C.Conduct(seed=9)
+        text, focus, _r = TP.fill(fr)
+        con._say(TP.Line(text, "call", "calling", focus, focus, ()), 0, P(0), C.Say())
+        name_end = 3 - 1                                              # no voice: 3 ticks a word, the name first
+        wins.append((text, con.pending["open"], con.pending["until"] - con.pending["open"]))
+        assert con.pending["open"] == name_end and con.pending["until"] - con.pending["open"] == K.JUDGE_GAZE, wins[-1]
+    print(f"27 three calls from the hall: said, not judged (the name's record empty); a call where the child cannot see her: "
+          f"void; seen and unanswered: missed; each call frame judged {K.JUDGE_GAZE} ticks from the end of its name "
+          f"({', '.join(f'{a!r} {c}' for a, _b, c in wins)})")
+
+
+def test_introduce_only_what_she_can_show():
+    """finding 4: nothing in the conduct asked showable(): 'toes' was introduced with a touch on the G1's toes it does not have
+    ('here is your toes!'), and 'big', 'hot', 'want', 'sing', 'happy' and 'clap' likewise ('it is hot.', 'it is happy.')."""
+    room = TOYS + seen(("rattle", "rattle", "purple", "mat", True), ("ring", "ring", "pink", "mat", True),
+                       ("stacker", "stacker", "white", "mat", True), ("bear", "bear", "brown", "mat", True),
+                       ("drum", "drum", "cyan", "mat", True), ("car", "car", "orange", "mat", True))
+    fix = frozenset({"mat", "sofa", "window", "table", "shelf", "door", "light", "floor"})
+    events = (("fell", "ball"), ("rolled", None), ("sat", None), ("got", "cup"), ("gave", "duck"))
+
+    def intro(word, con=None, t0=0):
+        con = con or C.Conduct(seed=5)
+        con.request("new_word", word=word)
+        got = []
+        for t in range(t0, t0 + 60):
+            s = con.tick(t, P(t, seen=room, fixtures=fix, events=events if (t - t0) % 10 == 0 else ()))
+            if s.line is not None and s.line.intent == "new_word":
+                got.append((s.line.text, s.acts))
+        return con, got
+    waiting = ("toes", "big", "hot", "want", "sing", "happy", "clap")
+    for w in waiting:
+        con, got = intro(w)
+        assert not got, f"{w!r} introduced though the world cannot show it: {got}"
+    words = [w for w, c in TP.GROWTH if c != "frame"]
+    introduced, refused = set(), {}
+    for w in words:
+        con, got = intro(w)
+        if got:
+            assert len(got) == 3 and all(TP.words(x[0])[-1] == w for x in got), (w, got)
+            introduced.add(w)
+        else:
+            refused[w] = [r[2] for r in con.fast.refused if r[1] == "new_word"][-1:]
+    p0 = P(0, seen=room, fixtures=fix, events=events)
+    want = {w for w in words if TP.showable(w, con.world)[0] and TP.show_now(w, p0, [(0, k, o) for k, o in events])[0]}
+    assert introduced == want, (sorted(introduced - want), sorted(want - introduced))
+    assert all(r and "waits" in r[0] for w, r in refused.items() if w in waiting), {w: refused[w] for w in waiting}
+
+    class Clapper(C.StubMotion):                          # a verb waits for her motion: one that can clap (W2's to declare)
+        DOES = C.StubMotion.DOES + ("clap",)
+    con, got = intro("clap", C.Conduct(seed=5, motion=Clapper()))
+    assert len(got) == 3 and C.Act("do", "clap") in got[0][1], got
+    # moments: a toy she does not see, a fixture out of her view, a fall she did not see
+    for w, pp in (("rattle", dict(seen=TOYS)), ("table", dict(fixtures=frozenset({"mat"}))), ("drop", {})):
+        con = C.Conduct(seed=5)
+        con.request("new_word", word=w)
+        for t in range(12):
+            s = con.tick(t, P(t, **pp))
+            assert s.line is None or s.line.intent != "new_word", (w, s.line)
+        assert "cannot be shown now" in con.fast.refused[-1][2], (w, con.fast.refused[-1])
+    # the colour twins (B2): 'red' waits until two red toys are in the world, then is shown on one that is no held-out pair
+    twins = room + seen(("block_red2", "block", "red", "mat", True))
+    con = C.Conduct(seed=5)
+    con.request("new_word", word="red")
+    con.tick(0, P(0, seen=twins))
+    assert "fewer than two red" in con.fast.refused[-1][2], con.fast.refused[-1]
+    con.set_world(dict(TP.ROOM_AT_BIRTH, objects=dict(TP.ROOM_AT_BIRTH["objects"], block=["blue", "red"])))
+    con.request("new_word", word="red")
+    got = []
+    for t in range(1, 40):
+        s = con.tick(t, P(t, seen=twins))
+        if s.line is not None and s.line.intent == "new_word":
+            got.append(s.line)
+    assert len(got) == 3 and all(ln.refs and ln.refs[0].startswith("block") for ln in got), got
+    # the pace (A14): a second new word within a minute is refused and logged; after the minute it is said
+    con, got = intro("rattle")
+    con.request("new_word", word="ring")
+    con.tick(100, P(100, seen=room))
+    assert "at most 1 new word a minute" in con.fast.refused[-1][2], con.fast.refused[-1]
+    con, got2 = intro("ring", con, t0=K.NEW_EVERY)
+    assert len(got2) == 3, got2
+    print(f"28 a growth word enters only when the world can show it (showable, against the room's inventory and her motion's "
+          f"acts) and she can show it now (show_now): of the {len(words)} with frames, {len(introduced)} introduced here "
+          f"(exactly those), {len(refused)} wait, each logged ({', '.join(waiting)} among them: no 'here is your toes!'); a "
+          f"motion that can clap introduces 'clap' with the act; a toy unseen, a fixture out of view, a fall not seen: not "
+          f"now; 'red' only once the world has two red toys, and on a red block, never the red ball; at most 1 new word a "
+          f"minute")
+
+
+def test_give_before_its_word():
+    """finding 5: the child giving the cup during "give me the cup.", before "cup" was heard, counted a missed ask of 'cup' (a
+    look before its word voids a gaze ask; a give before its word was no answer, and no failure either)."""
+    def go(give_at):
+        con = C.Conduct(seed=4, transcriber=Transcriber(None))
+        for x in ("duck", "ball", "cup", "block", "block_red"):
+            con.fast.last_set[x] = con.fast.last_named[x] = -1000
+        con.request("ask_give", o="cup")
+        judg, opened = [], None
+        for t in range(60):
+            s = con.tick(t, P(t, child_target=None, events=(("gave", "cup"),) if t == give_at else ()))
+            if opened is None and con.pending is not None:
+                opened = con.pending["open"]
+            judg += s.judgments
+        return con, opened, judg
+    con, opened, judg = go(1)
+    assert opened > 1 and judg == [], (opened, judg)
+    assert con.ledger.standing("cup")["asks"] == [], f"a give before its word counted: {con.ledger.standing('cup')}"
+    con, opened, judg = go(opened + 3)
+    assert [j[1] for j in judg] == ["met_ask"] and con.ledger.standing("cup")["asks"] == [1], judg
+    print(f"29 'give me the cup.' (heard at tick {opened}): the cup given at tick 1: void, counted neither way; given after "
+          f"it was heard: met, counted")
+
+
+def test_ear_deliberate_writes():
+    """finding 6: her ear could still be written on purpose (through ear.__dict__ or object.__setattr__): her longest template,
+    her words' order and the module's DCT changed what she heard, and verify() still passed; it checked the digest kept inside
+    the ear, not an outside pin."""
+    ear = tiny_ear()
+    words = tuple(SOUNDS)
+    x = say("ball", 0.35, seed=21)
+    probe = ear.hear(x, ("ball", "see"), words).as_dict()
+    pin = tuple(ear.pin) if hasattr(ear, "pin") else None
+
+    def caught(name, write, undo):
+        """a deliberate write -> verify() must raise; undone, it holds again."""
+        write()
+        try:
+            try:
+                ear.verify()
+            except ValueError:
+                return True
+            raise AssertionError(f"{name}: a deliberate write went uncaught by verify()")
+        finally:
+            undo()
+    if hasattr(ear, "__dict__"):                                     # the verifier's own write
+        d, ml0 = ear.__dict__, ear.max_len
+        caught("ear.__dict__['max_len']", lambda: d.__setitem__("max_len", 1), lambda: d.__setitem__("max_len", ml0))
+    ml, order, dct, slope, coch = ear.max_len, ear.order, PE.DCT, K.EAR_SLOPE, PE.E.cochlea
+    swapped = dict(order)
+    swapped["ball"], swapped["see"] = swapped["see"], swapped["ball"]
+    writes = [("max_len", lambda: object.__setattr__(ear, "max_len", 1), lambda: object.__setattr__(ear, "max_len", ml)),
+              ("order", lambda: object.__setattr__(ear, "order", swapped), lambda: object.__setattr__(ear, "order", order)),
+              ("the module's DCT", lambda: setattr(PE, "DCT", dct * 1.001), lambda: setattr(PE, "DCT", dct)),
+              ("the slope", lambda: setattr(K, "EAR_SLOPE", 3.0), lambda: setattr(K, "EAR_SLOPE", slope)),
+              ("the cochlea", lambda: setattr(PE.E, "cochlea", lambda a: coch(a) * 1.01), lambda: setattr(PE.E, "cochlea", coch))]
+    heard_other = 0
+    for name, w, u in writes:
+        w()
+        try:
+            heard_other += ear.hear(x, ("see", "ball"), words).as_dict() != probe
+        finally:
+            u()
+        assert caught(name, w, u)
+    assert ear.verify() and ear.hear(x, ("ball", "see"), words).as_dict() == probe
+    assert not hasattr(ear, "__dict__") and not hasattr(ear._stacks["ball"], "__dict__"), "the ear has a __dict__"
+    # the digest kept inside the ear can itself be written: the life's pin (taken at load, saved with the world) catches it
+    other = tiny_ear(margins={k: -2.5 for k in range(1, 9)})
+    margins0 = ear.margins
+    object.__setattr__(ear, "margins", other.margins)
+    object.__setattr__(ear, "digest", other.digest)                  # the margins and the digest written together
+    try:
+        assert ear.verify(), "the ear's own digest agrees with its arrays"
+        try:
+            ear.verify(pin)
+            raise AssertionError("the margins and the digest written together went uncaught by the pin")
+        except ValueError:
+            pass
+        con = C.Conduct(seed=5, transcriber=Transcriber(other), vocab=tuple(SOUNDS))
+        con.transcriber.ear, con.transcriber.pin = ear, pin            # the life loaded `ear` (its pin); `ear` was written since
+        try:
+            con.night()
+            raise AssertionError("a night passed with her ear written")
+        except ValueError:
+            pass
+    finally:
+        object.__setattr__(ear, "margins", margins0)
+        object.__setattr__(ear, "digest", pin[0])
+    assert ear.verify(pin)
+    tx = Transcriber(ear)                                            # a world saved with one ear is not restored with another
+    st = json.loads(json.dumps(tx.state(), default=_np))
+    try:
+        Transcriber(other).load_state(st)
+        raise AssertionError("a world saved with one ear restored with another")
+    except ValueError:
+        pass
+    Transcriber(tiny_ear()).load_state(st)
+    print(f"30 deliberate writes to her ear ({', '.join(n for n, _w, _u in writes)}): {heard_other} of {len(writes)} changed "
+          f"what she heard, and verify() caught every one; no __dict__ on the ear or its stacks; its margins and digest "
+          f"written together agree with each other but not with the life's pin (taken at load, saved with the world): "
+          f"verify(pin) and the night refuse it; a world saved with one ear is not restored with another")
+
+
 def _have_engine():
     return sys.platform == "darwin" and shutil.which("swiftc") is not None
 
@@ -1198,7 +1543,8 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
          test_ear_exact_across_threads, test_approximation_in_context, test_asks_answered, test_cut_words_not_said,
          test_new_words_in_a_day, test_acts_carry_the_object, test_line_check_truth, test_small_items,
-         test_replay_across_processes]
+         test_replay_across_processes, test_claude_never_asks, test_name_ask_answered_after_its_question,
+         test_calls_out_of_sight, test_introduce_only_what_she_can_show, test_give_before_its_word, test_ear_deliberate_writes]
 
 if __name__ == "__main__":
     t0 = time.time()

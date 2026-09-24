@@ -113,10 +113,13 @@ def read_letters(s, vocab, near=()):
 
 
 class Transcriber:
-    """ear: body/sim/parent_ear.ParentEar (None: the tract's turns are heard as turns with no word)."""
+    """ear: body/sim/parent_ear.ParentEar (None: the tract's turns are heard as turns with no word). pin: the ear's (digest,
+    method) taken here, when her ear is loaded, and saved with the world: the conduct verifies her ear against it at every night
+    boundary, and a saved world restored with another ear is refused."""
 
     def __init__(self, ear=None):
         self.ear = ear
+        self.pin = None if ear is None else tuple(ear.pin)
         self.utt = None                   # the utterance under way: dict(start, in_pause, quiet, x=[pa per tick])
         self.sounding = False
         self.turn_start = None            # the tick the current turn started (this tick's value, for the conduct)
@@ -227,9 +230,13 @@ class Transcriber:
     def state(self):
         return dict(utt=None if self.utt is None else dict(self.utt, x=[np.array(a) for a in self.utt["x"]]),
                     sounding=self.sounding, turn_start=self.turn_start, turn_end=self.turn_end, letters=self.letters,
-                    letters_start=self.letters_start, rests=self.rests, held=[list(h) for h in self.held], n_utts=self.n_utts)
+                    letters_start=self.letters_start, rests=self.rests, held=[list(h) for h in self.held], n_utts=self.n_utts,
+                    pin=None if self.pin is None else list(self.pin))
 
     def load_state(self, s):
+        if s["pin"] is not None and (self.pin is None or tuple(s["pin"]) != self.pin):
+            raise ValueError(f"the saved world heard with her ear {s['pin'][0][:16]}, not this one "
+                             f"{None if self.pin is None else self.pin[0][:16]}: the ear is fixed for the life (A27)")
         self.utt = None if s["utt"] is None else dict(s["utt"], x=[np.array(a) for a in s["utt"]["x"]])
         self.sounding, self.turn_start, self.turn_end = s["sounding"], s["turn_start"], s["turn_end"]
         self.letters, self.letters_start, self.rests = s["letters"], s["letters_start"], s["rests"]

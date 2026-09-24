@@ -17,8 +17,9 @@ THE RECORD. One JSON line per event, keys sorted, in the life's folder (ledger.j
               'where is the X?'") and its window; a base-rate trial (the same test at a random moment with no ask: scheduled by
               the day plan, P4)
   outcome     an ask's or a trial's result: met, missed, or void (a gaze or call trial whose target is already in the child's
-              fovea, or a gaze trial whose X is out of its view, when it is judged from: 4.8's "X visible but not in the
-              fovea"; an ask cut before its word; a base trial in whose window she said its word)
+              fovea, a gaze trial whose X is out of its view, or a call while the child cannot see her (she is away, or where
+              its eyes cannot reach her), when it is judged from: 4.8's "X visible but not in the fovea"; an act trial whose act
+              was done before its word was heard; an ask cut before its word; a base trial in whose window she said its word)
 
 EACH WORD'S STANDING (4.8), from those events alone:
   heard       said by her with its referent in the child's view (an object word: an object of that name the child sees; a body
@@ -227,6 +228,12 @@ class Ledger:
         """the child's own base rate: the same test at a random moment with no word said (4.8; the day plan draws the moments)."""
         return self.ask(t, word, kind, obj, window, base=True)
 
+    @staticmethod
+    def _act_done(tr, p):
+        """the act an act trial asks for, done this tick: its toy given her (an X: either twin), or its act word's act."""
+        return any(k == "gave" and o is not None and p.obj(o) is not None and p.obj(o).name == tr["word"]
+                   for k, o in p.events) or any(k in ACT_WORDS.get(tr["word"], ()) for k, _o in p.events)
+
     def observe(self, t, p):
         """one tick of the open trials against what she sees -> [(word, kind, trial id, "met" | "missed" | "void")] for her
         asks resolved this tick (base trials resolve silently)."""
@@ -234,10 +241,13 @@ class Ledger:
         out, keep = [], []
         tg = p.target_obj()
         for tr in self.trials:
-            if t < tr["open"]:
-                keep.append(tr)
-                continue
             ok = None
+            if t < tr["open"]:
+                if tr["kind"] == "act" and self._act_done(tr, p):   # done before its word was heard: no answer to it (4.8)
+                    tr["void"], ok = f"its act done before {tr['word']!r} was heard", False
+                else:
+                    keep.append(tr)
+                    continue
             if tr["base"] and tr["void"] is None and any(tr["tick"] <= tk <= t for tk in self.said_ticks.get(tr["word"], ())):
                 tr["void"] = "she said its word in its window"
             if not tr["opened"]:
@@ -249,6 +259,8 @@ class Ledger:
                         tr["void"] = f"no {tr['word']} in its view when the word was heard"
                 elif tr["kind"] == "call" and p.child_target == "mama":
                     tr["void"] = "already looking at her face when its name was heard"
+                elif tr["kind"] == "call" and not (p.present and p.seen_by_child):
+                    tr["void"] = "the child cannot see her when its name was heard: no look can answer it"
                 if tr["void"] is not None:
                     ok = False                                       # resolved now, as void
             if ok is None and tr["void"] is None:
@@ -259,8 +271,7 @@ class Ledger:
                     tr["run"] = tr["run"] + 1 if p.child_target == "mama" else 0
                     ok = tr["run"] >= K.HOLD or None
                 elif tr["kind"] == "act":
-                    ok = any(k == "gave" and o is not None and p.obj(o) is not None and p.obj(o).name == tr["word"]
-                             for k, o in p.events) or any(k in ACT_WORDS.get(tr["word"], ()) for k, _o in p.events) or None
+                    ok = self._act_done(tr, p) or None
             if ok is None and t >= tr["until"]:
                 ok = False
             if ok is None:
@@ -282,11 +293,11 @@ class Ledger:
                 return True
         return False
 
-    def named(self, t, word):
-        """a name ask ("what is this?", "more?") met by the child's word (the conduct calls it when the word is heard, once
-        the question has been heard)."""
+    def named(self, t, word, start):
+        """a name ask ("what is this?", "more?") met by the child's word, read at t and begun at start (the tick the child made
+        it): met only when begun once the question had been heard (4.8; a word made before it and read at its end is none)."""
         for tr in list(self.trials):
-            if tr["kind"] == "name" and tr["word"] == word and not tr["base"] and t >= tr["open"]:
+            if tr["kind"] == "name" and tr["word"] == word and not tr["base"] and start >= tr["open"]:
                 self.trials.remove(tr)
                 self._outcome(t, tr, True)
                 return True

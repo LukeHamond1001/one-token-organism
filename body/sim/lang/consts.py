@@ -24,6 +24,8 @@ SAME_OBJECT = 20                      # the same object named at most once per 2
 SET_PER_OBJECT = 120                  # at most one variation set per object per 120 ticks (4.5)
 SET_LINES = (2, 3)                    # a variation set is 2-3 lines sharing the focus word (4.5); a new word's set is 3 (4.8)
 NEW_PER_DAY = 3                       # at most 3 new words a life day, each joining her words at the night (4.8, A14, A15)
+NEW_EVERY = 400                       # and at most 1 a minute (A14; 60 s at 150 ms a tick), whoever asks: a new word's set of 3
+                                      # lines takes its minute (4.8)
 REDIRECT_AFTER = 40                   # she redirects ("look! the drum.", with a point) only after 40 ticks with no target (4.10)
 TARGET_TICKS = 3                      # the child's target: what its fovea's central ray hits 3 ticks running (4.10, B14)
 ECHO_WINDOW = 10                      # anything the child says within 10 ticks of her saying it is an echo (4.8, A27)
@@ -41,6 +43,11 @@ HALL_CALL_EVERY = 600                 # away: she calls from the hall about ever
 MAX_WORDS = 6                         # at most 6 words a line (4.4, 4.5; Fernald and Mazzie 1991's short phrases)
 PUNCT = ".?!"                         # the only punctuation (4.5; the form's pattern, templates._FORM, is built from it)
 PRAISE = ("yes", "good")              # Claude may not write praise: "yes", "good", the approval register (A14)
+REPRIMAND = ("no",)                   # nor stage 2's "no." (4.10: the frown's line): a judgment too, the fast layer's (A14)
+ASK_WORDS = ("where", "what", "give", "more")   # nor an ask (A14), anywhere in the line: "where is ...", "what is ...", "give
+                                      # me ...", the meal's "more?" (a name ask, judged); nor "look" with a word after it in its
+                                      # sentence ("look at ...", "look here"), nor the child's name (the call: an ask, judged, at
+                                      # most once per 240 ticks, A13); templates.claude_claims
 STEER_USES = 3                        # each of Claude's lines is used at most 3 times (4.5)
 
 # The never-taught pairs (A28, B2): each held out of every line (templates, Claude's, recasts, echoes) until its test opens, as

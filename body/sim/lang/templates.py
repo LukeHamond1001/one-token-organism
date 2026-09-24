@@ -26,25 +26,39 @@ THE LINE CHECK (check()) holds every line, the templates' and Claude's alike, to
               is about (its filled object) or, for a line with none (Claude's), what the child looks at or holds; "the X is on
               the Y." an X resting on the Y ("in the Y": containment she cannot see, refused); "the X is down." / "it is down." an
               X she saw fall in the last RECENT ticks; "you see the X." an X in the child's view
-  Claude's    no praise ("yes", "good") and no approval register (A14); no ask ("where is ...?", "what is ...?", "give me ...",
-              "look at ..."): an ask is judged (4.8's test, the worth table's met ask), and a judgment is the fast layer's (A14):
-              Claude asks for one through the conduct's request(), never by a line
+  Claude's    (A14, claude_claims) no praise ("yes", "good"), no reprimand ("no": stage 2's frown line) and no approval
+              register: a judgment is the fast layer's; no ask anywhere in the line ("where", "what", "give", the meal's
+              "more", "look" with a word after it in its sentence, or the child's name, which is the call): an ask is judged
+              (4.8's test, the worth table's met ask), so Claude asks for one through the conduct's request(), never by a
+              line; and each sentence one of the forms whose claim the check can hold true as she sees it (CLAUDE_FORMS: a
+              name; "oh", "uh", "look", "see" alone; "see the X" / "you see the X", an X in the child's view; "it / this /
+              that / here / there is a X" or "is C", what the child looks at or holds; "the X is on the Y" / "is down" / "is
+              C"; "the X fell"; "mama is here", she is present; "you roll" / "you sit", its roll or sit seen in the last
+              RECENT ticks). A sentence of any other form ("the ball is here.", "it is a mat.", "sit.") claims what she
+              cannot check, and is refused. The fast layer's own lines come from its frames, each said with the act or in the
+              moment that makes it true (a body word with her touch on it), and are held to the rules above them.
 The design's form rules (4.5) are the first three; "perceived" and "true" are the fast layer's rule that its lines are "filled
 from what the parent can see" (4.5), made a check so Claude's lines are held to it too.
 
 THE GROWTH QUEUE (4.8; GROWTH): the design's 76 words in its order, plus "ring" and "stacker" after "rattle" (4.8: "the world's
 rattle, stacker and ring are named through the queue", though its list of 76 lacks the two). Each word has a class and the frames
 of its introduction: a variation set of 3 lines, the word last (4.8), in the new-word register (4.4). A word enters only when its
-referent or act is in the world and she can show it (A15): NEEDS names what that takes; a word whose need is absent from the world
-(a "bath", a "book", "toes" on a G1 whose feet have none, "hot", "sing") waits, reported by showable(). Words that no
-infant-directed line can end on ("and", "to", "with", "my", "i", "has", "not", "do") have no introduction frames and cannot enter by
-4.8's rule (sentence-final); they wait for a later stage's method (reported, never forced).
+referent or act is in the world and she can show it (A15): NEEDS names what that takes, showable() tests it against the world's
+inventory (ROOM_AT_BIRTH until the world passes its own; the acts are her motion's), and show_now() against the moment (what she
+perceives, and what she saw in the last RECENT ticks); the conduct asks both before it introduces a word, and logs why a word
+waits. Waiting: a word whose need is absent from the world (a "bath", a "book", "toes" on a G1 whose feet have none, "hot",
+"sing"; a verb whose act her motion cannot do); "happy" and "sad" (her face smiles only at a judged act and shows concern only at
+the child's pain, 4.3: she cannot show either at will); the social words with no referent or act ("all", "done", "wow", "thanks",
+...), whose moment is the day plan's (P4). Words that no infant-directed line can end on ("and", "to", "with", "my", "i", "has",
+"not", "do") have no introduction frames and cannot enter by 4.8's rule (sentence-final); they wait for a later stage's method
+(reported, never forced).
 """
 import re
 from dataclasses import dataclass
 
 from . import consts as K
-from .lexicon import BIRTH_WORDS, GROUPS, NAME
+from .lexicon import BIRTH_WORDS, GROUPS, NAME, PARENT_NAME
+from .percept import EVENT_KINDS
 
 # ------------------------------------------------------------------------------------------------ the words by kind
 TOYS = dict(GROUPS)["toys"]                                           # ball duck block cup bear car drum bottle
@@ -102,6 +116,22 @@ NEEDS = {
     "sat": ("event", "sat"), "rolled": ("event", "rolled"), "fell": ("event", "fell"), "got": ("event", "got"),
     "did": ("event", "rolled"),
 }
+NEEDS.update({                       # her face shows these only as her feelings make it (4.3), never at will
+    "happy": ("never", "her face smiles only at a judged act (4.3's one law): she cannot show 'happy' at will"),
+    "sad": ("never", "her face shows concern only at the child's pain or distress (4.3): she cannot show 'sad' at will"),
+})
+NEEDS.update({w: ("moment",) for w, c in GROWTH if c == "social" and w not in NEEDS})   # no referent or act: a moment (P4's)
+assert all(w in NEEDS for w, c in GROWTH if c != "frame"), [w for w, c in GROWTH if c != "frame" and w not in NEEDS]
+
+# the living room of 5.1-5.2 at birth, as the world's inventory for showable() (A15): its toys and their colours (the colour
+# twins come later, before the colour words: B2, the world adds them), its fixtures (the mat, the sofa, the window, the low
+# table, the cube shelves, the doorway, the floor lamp, the oak floor), the events it makes (percept.EVENT_KINDS) and her face.
+# The world (W2-W3) passes its own from its scene; the acts are her motion's (StubMotion.DOES until W2).
+ROOM_AT_BIRTH = dict(
+    objects={"ball": ["red"], "block": ["blue"], "duck": ["yellow"], "cup": ["green"], "rattle": ["purple"], "car": ["orange"],
+             "bear": ["brown"], "stacker": ["white"], "drum": ["cyan"], "ring": ["pink"], "bottle": []},
+    fixtures=["mat", "sofa", "window", "table", "shelf", "door", "light", "floor"],
+    events=list(EVENT_KINDS), face=["any"], acts=[])
 
 # -------------------------------------------------------------------------------------------------------- the frames
 F = lambda text, focus=None: (text, focus)   # noqa: E731
@@ -212,14 +242,135 @@ def _new_words(new_word):
     return (new_word,) if isinstance(new_word, str) else tuple(new_word)
 
 
-_ASK = re.compile(r"(?:^|[.?!] )(?:where\b[^.?!]*\?|what\b[^.?!]*\?|give\b|look at\b)")
 _DEIXIS = ("it", "this", "that")
 _DETS = ("a", "the", "your")
 
+# ------------------------------------------------------------------------------------------- Claude's lines (A14, 4.5)
+CLAUDE_INTERJ = frozenset({"oh", "uh", "look", "see"})      # a sentence of these alone claims nothing ("oh!", "look.", "see?")
+NAMEABLE = OBJECT_NOUNS | FIXTURE_NOUNS | CHILD_BODY | HER_FACE | {PARENT_NAME}
+CLAUDE_DID = {"roll": "rolled", "rolled": "rolled", "sit": "sat", "sat": "sat"}   # "you roll." / "you sat.": its event, seen
+CLAUDE_FORMS = ("a name ('the duck.', 'your foot.', 'a red block.'); 'oh', 'uh', 'look' or 'see' alone; 'see the X' or 'you "
+                "see the X'; 'it / this / that / here / there is a X' or '... is C'; 'the X is on the Y', 'is down' or 'is C'; "
+                "'the X fell'; 'mama is here'; 'you roll' or 'you sit'")
 
-def ask_form(text):
-    """does the line ask (an ask frame's form: "where is ...?", "what is ...?", "give me ...", "look at ...")?"""
-    return bool(_ASK.search(text))
+
+def _noun_phrase(ws):
+    """[the | a | your] [colour] noun -> (det, colour, noun), or None."""
+    i, det, col = 0, None, None
+    if i < len(ws) and ws[i] in _DETS:
+        det, i = ws[i], i + 1
+    if i < len(ws) and ws[i] in COLOURS:
+        col, i = ws[i], i + 1
+    return (det, col, ws[i]) if i == len(ws) - 1 and ws[i] in NAMEABLE else None
+
+
+def _sentences(text):
+    return [ws for ws in (words(x) for x in re.split(r"[.?!]", text)) if ws]
+
+
+def claude_claims(text):
+    """Claude's line (A14, 4.5) -> (claims, "") or (None, why): refused when it judges (praise, the reprimand), asks (an ask's
+    word anywhere, "look" with a word after it in its sentence, the child's name), or has a sentence of a form whose claim the
+    check cannot hold true (CLAUDE_FORMS); else the claims its sentences make, each held true against what she perceives when
+    the line is said (_claude_true)."""
+    for w in words(text):
+        if w in K.PRAISE or w in K.REPRIMAND:
+            return None, f"praise and the reprimand are the fast layer's judgments (A14): {w!r}"
+        if w in K.ASK_WORDS:
+            return None, f"an ask is the fast layer's: it is judged (A14: Claude requests the intent, never says the ask): {w!r}"
+        if w == NAME:
+            return None, ("an ask is the fast layer's: the child's name is the call (judged, at most once per 240 ticks, never "
+                          "while it looks at her: A13, 4.6); Claude requests the call, the greeting or the goodnight")
+    claims = []
+    for ws in _sentences(text):
+        bad = (f"not a claim she can hold true: {' '.join(ws)!r} (Claude's lines take these forms only: {CLAUDE_FORMS})")
+        if "look" in ws[:-1]:
+            return None, "an ask is the fast layer's: 'look' with a word after it ('look at ...', 'look here') asks a look"
+        if all(w in CLAUDE_INTERJ for w in ws):
+            continue
+        np_ = _noun_phrase(ws)
+        if np_ is not None:
+            claims.append(("name",) + np_)
+            continue
+        k = 2 if ws[:2] == ["you", "see"] else (1 if ws[0] == "see" else 0)
+        if k:
+            np_ = _noun_phrase(ws[k:])
+            if np_ is None or np_[2] not in OBJECT_NOUNS:
+                return None, bad
+            claims.append(("sees",) + np_)
+            continue
+        if len(ws) >= 3 and ws[1] == "is" and ws[0] in _DEIXIS + ("here", "there"):
+            rest = ws[2:]
+            if len(rest) == 1 and rest[0] in COLOURS:
+                claims.append(("its_colour", rest[0]))
+                continue
+            np_ = _noun_phrase(rest)
+            if np_ is None or np_[2] not in OBJECT_NOUNS:
+                return None, bad
+            claims.append(("is",) + np_)
+            continue
+        i = 1 if ws[0] in _DETS else 0
+        if len(ws) > i + 1 and ws[i] in OBJECT_NOUNS:
+            n, pred = ws[i], ws[i + 1:]
+            if pred == ["fell"]:
+                claims.append(("down", n))
+                continue
+            if pred[0] == "is" and len(pred) >= 2:
+                p2 = pred[1:]
+                if p2[0] == "in":
+                    return None, f"not seen: a thing in the {p2[-1]} (containment she cannot see)"
+                if len(p2) == 3 and p2[:2] == ["on", "the"]:
+                    claims.append(("on", n, p2[2]))
+                    continue
+                if p2 == ["down"]:
+                    claims.append(("down", n))
+                    continue
+                if len(p2) == 1 and p2[0] in COLOURS:
+                    claims.append(("colour", n, p2[0]))
+                    continue
+            return None, bad
+        if ws == [PARENT_NAME, "is", "here"]:
+            claims.append(("present",))
+            continue
+        if len(ws) == 2 and ws[0] == "you" and ws[1] in CLAUDE_DID:
+            claims.append(("did", CLAUDE_DID[ws[1]]))
+            continue
+        return None, bad
+    return claims, ""
+
+
+def _claude_true(claims, percept, seen, recent_events):
+    """each of a Claude line's claims held against what she perceives now and saw in the last RECENT ticks."""
+    att = [o for o in [percept.target_obj()] + [percept.obj(h) for h in percept.child_holds] if o is not None]
+    held = [o for o in (percept.obj(h) for h in percept.child_holds) if o is not None]
+    fell = {ob for _, k, ob in recent_events if k == "fell"}
+    kinds = {k for _, k, _o in recent_events}
+
+    def like(o, n, col):
+        return o.name == n and (col is None or o.colour == col)
+    for c in claims:
+        kind = c[0]
+        if kind in ("name", "sees", "is"):
+            det, col, n = c[1:]
+            if det == "your" and n not in CHILD_BODY and not any(like(o, n, col) for o in held):
+                return False, f"not true: 'your {n}': the child holds no {n}"
+            if kind == "sees" and not any(like(o, n, col) and o.child_sees for o in seen.values()):
+                return False, f"not true: the child does not see a {n}"
+            if kind == "is" and not any(like(o, n, col) for o in att):
+                return False, f"not true: it is not a {n} (it names what the child looks at or holds)"
+        elif kind == "its_colour" and not any(o.colour == c[1] for o in att):
+            return False, f"not true: what the child looks at or holds is not {c[1]}"
+        elif kind == "on" and not any(o.name == c[1] and o.on == c[2] for o in seen.values()):
+            return False, f"not true: no {c[1]} on the {c[2]} as she sees it"
+        elif kind == "down" and not any(o.name == c[1] and o.id in fell for o in seen.values()):
+            return False, f"not seen happen: a {c[1]} falling in the last {K.RECENT} ticks"
+        elif kind == "colour" and not any(o.name == c[1] and o.colour == c[2] for o in seen.values()):
+            return False, f"not true: no {c[2]} {c[1]} she sees"
+        elif kind == "present" and not percept.present:
+            return False, "not true: she is away"
+        elif kind == "did" and c[1] not in kinds:
+            return False, f"not seen happen: the child {c[1]} (not in the last {K.RECENT} ticks)"
+    return True, ""
 
 
 def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, source="fast", register=None,
@@ -248,12 +399,14 @@ def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, 
     for a, b in held:
         if a in wset and b in wset:
             return False, f"held-out pair ({a}, {b})"
+    claims = None
     if source == "claude":
         praise = [w for w in ws if w in K.PRAISE]
         if praise or register == "approval":
             return False, f"praise is the fast layer's: {praise[0] if praise else 'the approval register'!r}"
-        if ask_form(text):
-            return False, "an ask is the fast layer's: it is judged (A14: Claude requests the intent, never says the ask)"
+        claims, why = claude_claims(text)
+        if claims is None:
+            return False, why
     if percept is None:
         return True, ""
     seen = {s.id: s for s in percept.seen}
@@ -280,7 +433,10 @@ def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, 
             return False, f"unseen: the child's {w}"
         if w in PAST_EVENTS and not any(k in PAST_EVENTS[w] for _, k, _o in recent_events):
             return False, f"not seen happen: {w!r}"
-    return _true(text, percept, seen, refs, recent_events)
+    ok, why = _true(text, percept, seen, refs, recent_events)
+    if ok and claims is not None:
+        return _claude_true(claims, percept, seen, recent_events)
+    return ok, why
 
 
 def _attended(percept, seen, refs):
@@ -375,14 +531,16 @@ def intro_frames(word):
 
 
 def showable(word, world):
-    """can a growth word enter (A15)? world: dict(objects={name: [colours]}, fixtures=set, acts=set, events=set, face=set).
-    -> (ok, why not)."""
+    """can a growth word enter (A15)? world: dict(objects={name: [colours]}, fixtures=[...], acts=[...], events=[...], face=[...])
+    (ROOM_AT_BIRTH, the acts her motion's). -> (ok, why not)."""
     if GROWTH_CLASS.get(word) == "frame":
         return False, "no infant-directed line ends on it (4.8's rule: sentence-final)"
     need = NEEDS.get(word, ("never", "no need listed"))
     kind = need[0]
     if kind == "never":
         return False, need[1]
+    if kind == "moment":
+        return False, "a word with no referent or act to show: its moment is the day plan's (P4), not yet built"
     if kind == "child":
         return True, ""
     arg = need[1]
@@ -392,8 +550,39 @@ def showable(word, world):
         n = sum(1 for cs in world.get("objects", {}).values() for c in cs if c == arg)
         return (n >= 2, "" if n >= 2 else f"fewer than two {arg} toys (B2's colour twins)")
     if kind == "face":
-        return (bool(have["face"]) if arg == "any" else arg in have["face"]), f"her face shows no {arg}"
-    return (arg in have[kind], f"no {kind} {arg!r} in the world")
+        ok = bool(have["face"]) if arg == "any" else arg in have["face"]
+        return ok, "" if ok else f"her face shows no {arg}"
+    ok = arg in have[kind]
+    return ok, "" if ok else (f"her motion cannot {arg!r} (W2 declares what it can do)" if kind == "act" else
+                              f"no {kind} {arg!r} in the world")
+
+
+def show_now(word, percept, recent_events=()):
+    """can she show a growth word now (A15: "the parent can show it within the minute"), from what she perceives and saw in the
+    last RECENT ticks? -> (what its set is said of: [Seen], or [None] for a word with no object; "") or ([], why not). A toy, a
+    colour and a quality of a toy ("soft": the bear) are shown on an object she sees (she can fetch it); a fixture she must see;
+    the child's body, the child in her view; her face and her own acts, the child able to see her; an event, one she saw."""
+    need = NEEDS.get(word, ("never", "no need listed"))
+    kind = need[0]
+    if kind == "obj":
+        c = [x for x in percept.seen if x.name == need[1]]
+        return (c, "") if c else ([], f"she sees no {need[1]}")
+    if kind == "twins":
+        c = [x for x in percept.seen if x.colour == need[1]]
+        return (c, "") if c else ([], f"she sees nothing {need[1]}")
+    if kind == "fixture":
+        return ([None], "") if need[1] in percept.fixtures else ([], f"she does not see the {need[1]}")
+    if kind == "child":
+        return ([None], "") if percept.child_in_view else ([], "the child is out of her view")
+    if kind in ("face", "act"):
+        return ([None], "") if percept.present and percept.seen_by_child else ([], "the child cannot see her")
+    if kind == "event":
+        obs = [ob for _, k, ob in recent_events if k == need[1]]
+        if not obs:
+            return [], f"no {need[1]!r} she saw in the last {K.RECENT} ticks"
+        c = [percept.obj(ob) for ob in obs if ob is not None and percept.obj(ob) is not None]
+        return (c or [None]), ""
+    return [], showable(word, {})[1]
 
 
 def birth_lines(vocab=BIRTH_WORDS, objects=None, fixtures=ROOM):

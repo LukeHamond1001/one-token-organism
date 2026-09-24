@@ -27,10 +27,17 @@ WHAT NEVER CHANGES. The templates, the bank and the margins are fixed before bir
 add_template (the prototype had one, "the child's own accepted productions"; A27 refuses it, since each accepted production added
 would widen what passes, so the child's own chance acceptances would loosen the criterion over time). Every array she scores
 with (the templates, the bank, the stacks the DTW reads) is a view of an immutable bytes buffer, so no flag can make it writable;
-the margins, the words and the tables are read-only mappings; no attribute can be set after the build. verify() rebuilds the
-digest from the very arrays she scores with (load() calls it, and the conduct at every night boundary). hear() reads them and
-writes nothing. So the same utterance in the same situation is heard the same way on the first day and the hundredth
-(body/tests/test_sim_lang.py holds it, and that no write reaches her ear).
+the margins, the words and the tables are read-only mappings; the ear and its stacks have no __dict__ (slots) and refuse an
+attribute set after the build. hear() reads them and writes nothing. No line of the code writes to her ear; Python cannot stop a
+deliberate write (object.__setattr__ on a slot, a module's globals such as DCT or a constant), so verify() catches one instead:
+it rebuilds the digest from the very arrays she scores with, checks every table derived from them (her words' order, her longest
+template, each stack's sizes, norms and masks), checks how she hears (method_digest(): the constants, the DCT and a fixed probe
+through the cochlea, trim, cepstra and DTW as they stand) against the method recorded when the ear was built (in its file), and,
+given the pin the transcriber took when the ear was loaded (saved with the world), that she is still that ear: the digest kept
+inside the ear could itself be written. load() calls it, and the conduct at every night boundary; a failure pauses the life. So
+the same utterance in the same situation is heard the same way on the first day and the hundredth (body/tests/test_sim_lang.py
+holds it, and that each such write is caught). A change to the code itself (a method replaced) is a change of the build, caught by
+review and the tests, not by verify().
 
 HER TEMPLATES (A27; consts.EAR_VOICES): each word she knows said alone by her own voice at the plain and approval pitch, by the
 same synthesizer at the old child pitch, and by 8 other macOS voices (Flo, Sandy, Shelley, Eddy, Reed, Junior, Kathy, Fred:
@@ -92,6 +99,33 @@ def template_of(x_pa):
     return ceps(trim(log_bands(x_pa)), 0)
 
 
+def _probe():
+    """a fixed sound for method_digest(): 250, 500, 750, 1,000 and 2,500 Hz at falling amplitudes, with a 50 ms rise and fall,
+    0.3 s at 16 kHz, about 73 dB SPL: pure arithmetic, the same bits on every run."""
+    t = np.arange(4800) / 16000.0
+    env = np.minimum(1.0, np.minimum(t, 0.3 - t) / 0.05)
+    x = sum(np.sin(2 * np.pi * f * t) / k for k, f in enumerate((250.0, 500.0, 750.0, 1000.0, 2500.0), 1))
+    return 0.1 * env * x
+
+
+def method_digest():
+    """sha256 of how she hears, apart from what she hears against: the constants (the cepstra, the shifts, the trim, the slope),
+    her threshold and the DCT as the module holds them, and a fixed probe's features and DTW distances through the functions as
+    they stand (the cochlea, trim, the cepstra, the DTW; templates of the probe's own length, half, a third and three times, so
+    the slope constraint is exercised). A changed constant, table or function changes it."""
+    h = hashlib.sha256()
+    h.update(json.dumps([NCEP, list(SHIFTS), K.EAR_NCEP, list(K.EAR_SHIFTS), K.EAR_TRIM_DB, K.EAR_SLOPE]).encode())
+    h.update(np.ascontiguousarray(DCT).tobytes())
+    h.update(np.ascontiguousarray(FLOOR, np.float64).tobytes())
+    B = trim(log_bands(_probe()))
+    feats = [ceps(B, s) for s in SHIFTS]
+    st = _Stack([feats[0], feats[0][::2], feats[0][::3], np.repeat(feats[0], 3, 0)])
+    for q in feats:
+        h.update(np.ascontiguousarray(q).tobytes())
+        h.update(np.ascontiguousarray(dtw(q, st)).tobytes())
+    return h.hexdigest()
+
+
 def frozen(a, dtype=np.float64):
     """a copy of a as a view of an immutable bytes buffer: read-only, and no flag can make it writable."""
     a = np.ascontiguousarray(a, dtype)
@@ -100,6 +134,7 @@ def frozen(a, dtype=np.float64):
 
 class _Stack:
     """templates stacked for the DTW: frames [K, M, d] padded, lengths, squared norms; frozen once built."""
+    __slots__ = ("K", "L", "M", "valid", "flat", "t2", "_built")
 
     def __init__(self, items):
         self.K = len(items)
@@ -122,6 +157,13 @@ class _Stack:
         """the templates as scored (for verify)."""
         T = self.flat.reshape(self.K, max(self.M, 1), NCEP)
         return [T[i, :int(n)] for i, n in enumerate(self.L)]
+
+    def consistent(self):
+        """its sizes, norms and masks as its frames and lengths make them (for verify)."""
+        Mf = max(self.M, 1)
+        return self.K == len(self.L) and self.M == (int(self.L.max()) if self.K else 0) and \
+            self.flat.shape == (self.K * Mf, NCEP) and np.array_equal(self.t2, (self.flat ** 2).sum(1)) and \
+            np.array_equal(self.valid, np.arange(Mf)[None, :] < self.L[:, None])
 
 
 def dtw(q, st):
@@ -169,9 +211,12 @@ class Hearing:
 
 class ParentEar:
     """her ear, fixed: templates {word: [cepstra, ...]} in her words' order (with a voice label each), the babble bank [cepstra],
-    the margins m and delta by expected-set size. Read-only after build."""
+    the margins m and delta by expected-set size; method: method_digest() when it was built (its file keeps it; default now).
+    Read-only after build."""
+    __slots__ = ("words", "order", "_w", "labels", "bank", "_bank", "_stacks", "max_len", "margins", "deltas", "meta", "method",
+                 "digest")
 
-    def __init__(self, templates, bank, margins=None, deltas=None, meta=None):
+    def __init__(self, templates, bank, margins=None, deltas=None, meta=None, method=None):
         self.words = tuple(templates)
         self.order = MappingProxyType({w: i for i, w in enumerate(self.words)})
         self._w = MappingProxyType({w: tuple(frozen(it[1] if isinstance(it, tuple) else it) for it in items)
@@ -185,6 +230,7 @@ class ParentEar:
         self.margins = MappingProxyType({int(k): float(v) for k, v in (margins if margins is not None else K.EAR_M).items()})
         self.deltas = MappingProxyType({int(k): float(v) for k, v in (deltas if deltas is not None else K.EAR_DELTA).items()})
         self.meta = MappingProxyType(json.loads(json.dumps(dict(meta or {}))))
+        self.method = method if method is not None else method_digest()
         self.digest = self._digest()
 
     def __setattr__(self, k, v):
@@ -205,15 +251,28 @@ class ParentEar:
         h.update(json.dumps(sorted((int(k), float(v)) for k, v in self.deltas.items())).encode())
         return h.hexdigest()
 
-    def verify(self):
-        """her ear as built: the digest rebuilt from the arrays she keeps and from the stacks she scores with (their norms
-        and masks too) must be the one fixed at build; else ValueError (the life pauses)."""
+    @property
+    def pin(self):
+        """what the life records when it loads her ear (the transcriber keeps it and saves it with the world)."""
+        return (self.digest, self.method)
+
+    def verify(self, pin=None):
+        """her ear as built, and as she hears: the digest rebuilt from the arrays she keeps and from the stacks she scores with
+        must be the one fixed at build; every table derived from them (her words' order, her longest template, each stack's
+        sizes, norms and masks) as they make it; how she hears (method_digest()) the method recorded at build; and, given pin
+        (the (digest, method) the life recorded when her ear was loaded), still that ear. Else ValueError (the life pauses)."""
         ok = self._digest() == self.digest and self._digest(scored=True) == self.digest
+        if pin is not None:
+            ok = ok and tuple(pin) == (self.digest, self.method)
+        ok = ok and method_digest() == self.method
+        ok = ok and tuple(self._w) == self.words and tuple(self._stacks) == self.words and tuple(self.labels) == self.words
+        ok = ok and dict(self.order) == {w: i for i, w in enumerate(self.words)}
+        ok = ok and self.max_len == max([len(a) for arrs in self._w.values() for a in arrs] + [0])
         for st in list(self._stacks.values()) + [self._bank]:
-            ok = ok and np.array_equal(st.t2, (st.flat ** 2).sum(1)) and \
-                np.array_equal(st.valid, np.arange(max(st.M, 1))[None, :] < st.L[:, None])
+            ok = ok and st.consistent()
         if not ok:
-            raise ValueError("the parent's ear no longer matches its digest: something changed it after its build (A27)")
+            raise ValueError("the parent's ear no longer matches its digest, its method or the life's pin: something changed "
+                             "it after its build (A27)")
         return True
 
     def missing(self, words):
@@ -297,7 +356,8 @@ class ParentEar:
                 tv.append(lab)
                 frames.append(a)
         manifest = dict(words=list(self.words), voices=tv, margins={str(k): v for k, v in self.margins.items()},
-                        deltas={str(k): v for k, v in self.deltas.items()}, meta=dict(self.meta), digest=self.digest)
+                        deltas={str(k): v for k, v in self.deltas.items()}, meta=dict(self.meta), digest=self.digest,
+                        method=self.method)
         tmp = str(path) + ".tmp.npz"
         np.savez(tmp, tmpl=np.concatenate(frames) if frames else np.zeros((0, NCEP)), tmpl_len=np.array(tl, np.int64),
                  tmpl_word=np.array(tw, np.int64), bank=np.concatenate(self.bank) if self.bank else np.zeros((0, NCEP)),
@@ -320,7 +380,7 @@ class ParentEar:
             bank.append(z["bank"][off:off + L])
             off += int(L)
         ear = cls(tmpl, bank, {int(k): v for k, v in man["margins"].items()}, {int(k): v for k, v in man["deltas"].items()},
-                  man["meta"])
+                  man["meta"], man.get("method"))        # a file from before the method was kept: taken as now
         if ear.digest != man["digest"]:
             raise ValueError(f"the parent's ear at {path} does not match its digest: it changed after it was built")
         ear.verify()
