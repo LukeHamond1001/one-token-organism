@@ -879,10 +879,16 @@ class Organs(nn.Module):
         """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
         thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot).
         THE LATER EFFECTORS' BLOCKS (the core refactor's step R5): each later effector of `effectors` (the anatomy's; effector 0 is the
-        voice, whose own symbols are the language block's) has a delay line of its own k acts (stri_mline) and a block of born rows,
-        k x its acts, appended after the language block (rows from k (2V + 3) on, drawn from the same generator after the thresholds), so
-        the language block, the thresholds and the voice's heads are born exactly as before; and its actor head, sized as the voice's
-        (born at zero, the global random stream left where it was). The diary declares none."""
+        voice, whose own symbols are the language block's) has a delay line of its own k acts (stri_mline) and a block of born rows
+        appended after the language block (rows from k (2V + 3) on, drawn from the same generator after the thresholds), so the language
+        block, the thresholds and the voice's heads are born exactly as before; and its actor head, sized as the voice's (born at zero,
+        the global random stream left where it was). The diary declares none.
+        ROWS PER JOINT (step R5b, 2026-09-24): an effector's block holds, for each of the line's k positions, a row for every setting of
+        every joint (K_1 + .. + K_J rows, joint 0 first, as its acts' table holds them), and an act at a position adds its joints'
+        settings' rows, as its row in the table is the sum of its joints'. Each row is drawn at 1 / sqrt(k J), so an act of J joints
+        weighs in the expansion as one event of the language line. Until R5b the block held a row for every flat act, k x the product
+        of the settings: a limb of six joints of five settings needed 125000 rows (about 1 GB at the served 2048 units); per joint a
+        body of 34 joints of five needs 1360 (about 11 MB)."""
         n_in = int(k) * (2 * self.vocab + 3)                                   # heard | own | warm face, cold face, a tick of quiet
         g = torch.Generator().manual_seed(int(seed) + 7919); dev = self.E.weight.device
         self.stri_W = (torch.randn(n_in, int(m), generator=g) / math.sqrt(float(k))).to(dev)
@@ -902,11 +908,12 @@ class Organs(nn.Module):
         if motor:
             base = int(k) * (2 * self.vocab + 3); blocks = []; rows = []
             for e in motor:
-                rows.append(torch.randn(int(k) * e.n_acts, int(m), generator=g) / math.sqrt(float(k)))
-                blocks.append((base, e.n_acts)); base += int(k) * e.n_acts
+                fac = tuple(int(f_) for f_ in e.factors); S = sum(fac)
+                rows.append(torch.randn(int(k) * S, int(m), generator=g) / math.sqrt(float(k) * len(fac)))   # per joint (step R5b)
+                blocks.append((base, fac)); base += int(k) * S
             self.stri_W = torch.cat([self.stri_W, torch.cat(rows).to(dev)])
             self.stri_mline = torch.full((len(motor), int(k)), -1, dtype=torch.long, device=dev)
-            self.stri_blocks = blocks                                          # (its first row, its acts) per later effector
+            self.stri_blocks = blocks                                          # (its first row, its joints' settings) per later effector
             with torch.random.fork_rng(devices=[]):
                 for e in motor:
                     a_ = nn.Linear(width, sum(int(f_) for f_ in e.factors)).to(dev)
@@ -929,14 +936,19 @@ class Organs(nn.Module):
             self.stri_mline[j, 0] = int(act)
 
     def striatum_acts(self, z):
-        """the later effectors' events added to the expansion's sum z in place (step R5), after the language line's: each line's acts'
-        born rows from its block, one effector after another; nothing for the diary, which declares none"""
-        for j, (base, n) in enumerate(getattr(self, "stri_blocks", None) or ()):
-            line = self.stri_mline[j]
-            for p_ in range(line.numel()):
-                a = int(line[p_])
+        """the later effectors' events added to the expansion's sum z in place (step R5), after the language line's: one effector after
+        another, position by position, each act's joints' settings' born rows from its block, joint 0 first (step R5b: the flat act's
+        mixed-radix digits, joint 0 the most significant, as its acts' table reads them); nothing for the diary, which declares none"""
+        for j, (base, fac) in enumerate(getattr(self, "stri_blocks", None) or ()):
+            S = sum(fac)
+            for p_, a in enumerate(self.stri_mline[j].tolist()):
                 if a >= 0:
-                    z += self.stri_W[base + p_ * n + a]
+                    dg = []
+                    for K in reversed(fac):
+                        dg.append(a % K); a //= K
+                    off = base + p_ * S
+                    for d_, K in zip(reversed(dg), fac):
+                        z += self.stri_W[off + d_]; off += K
         return z
 
     def striatum_read(self):

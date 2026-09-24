@@ -25,7 +25,8 @@ the acts' own rates); act_pred's targets position by position
 (its own acts, act_inv's reading of what moved it where it rested at act_inv's reliability, the rest for an effector with no inverse
 model), its gradient and its learning; the forward half foreseeing each tick's body sense, its error correcting the proposal and
 steering a chunk; the learned stops (act_pred's rest, the gate's own no, the reflex, the declared end, chunk_max) and the reflex's
-tick (its act to the world, no draw, no credit, no eligibility)."""
+tick (its act to the world, no draw, no credit, no eligibility). The striatum's rows per joint (R5b): a body of 34 joints as eight
+limbs builds within memory (the language block first and as the diary's) and lives."""
 import collections
 import copy
 import math
@@ -1223,8 +1224,8 @@ def test_a_later_effector():
     """anatomy 18 (step R5): a body of the diary's anatomy and two later effectors (an arm of two joints of five, a grip of three whose
     gate reads an input of its own). Its organs: the diary's bit for bit (the global random stream left where the diary's leaves it),
     then each effector's table (unit rows per joint from the body's seed alone), gate (born as the voice's, over its declared inputs)
-    and actor; its striatum: the language block, thresholds and heads as the diary's, the effectors' blocks appended, their lines read
-    after the language line's. The per-joint readout and the acts' rows; each tick the voice draws first (its choice the diary's on the
+    and actor; its striatum: the language block, thresholds and heads as the diary's, the effectors' blocks appended (since R5b rows
+    per joint: an act adds its joints' settings' rows), their lines read after the language line's. The per-joint readout and the acts' rows; each tick the voice draws first (its choice the diary's on the
     first tick), then each effector its gate and its joints; the window holds each act under its field and the input adds each act's
     row after the voice's own sound; every effector's gate and actor learn; the night rests them; a save keeps them; organs that do not
     match the anatomy are refused"""
@@ -1261,9 +1262,13 @@ def test_a_later_effector():
     torch.manual_seed(4); o1.striatum_init(8, 64, seed=2, wm=1); q1 = torch.get_rng_state()
     torch.manual_seed(4); o3.striatum_init(8, 64, seed=2, wm=1, effectors=a.effectors); q3 = torch.get_rng_state()
     nl = 8 * (2 * V + 3)
-    assert torch.equal(q1, q3) and o3.stri_W.shape == (nl + 8 * 25 + 8 * 3, 64) and torch.equal(o3.stri_W[:nl], o1.stri_W)
+    assert torch.equal(q1, q3) and o3.stri_W.shape == (nl + 8 * 10 + 8 * 3, 64) and torch.equal(o3.stri_W[:nl], o1.stri_W)
     assert torch.equal(o3.stri_b, o1.stri_b) and torch.equal(o3.actor.weight, o1.actor.weight) and torch.equal(o3.vfast.weight, o1.vfast.weight)
-    assert o3.stri_blocks == [(nl, 25), (nl + 200, 3)] and o3.actors["arm"].weight.shape == (10, 64 * 2) and o3.actors["grip"].weight.shape == (3, 128)
+    assert o3.stri_blocks == [(nl, (5, 5)), (nl + 80, (3,))] and o3.actors["arm"].weight.shape == (10, 64 * 2) and o3.actors["grip"].weight.shape == (3, 128)
+    # the rows per joint (step R5b), drawn after the thresholds from the striatum's own generator: the arm's 8 positions x (5 + 5)
+    # settings at 1/sqrt(8 x 2), then the grip's 8 x 3 at 1/sqrt(8 x 1)
+    g_ = torch.Generator().manual_seed(2 + 7919); torch.randn(nl, 64, generator=g_); torch.rand(64, generator=g_)
+    assert torch.equal(o3.stri_W[nl:], torch.cat([torch.randn(80, 64, generator=g_) / math.sqrt(16.0), torch.randn(24, 64, generator=g_) / math.sqrt(8.0)]))
     for o_ in (o1, o3):
         o_.striatum_push(0, 5); o_.striatum_push(1, 7); o_.striatum_push(2, 1)
     o3.striatum_push_act(0, 7); o3.striatum_push_act(0, 12); o3.striatum_push_act(1, 2)
@@ -1272,12 +1277,19 @@ def test_a_later_effector():
         e_ = int(o1.stri_line[p_])
         if e_ >= 0:
             z += o1.stri_W[p_ * (2 * V + 3) + e_]
-    for j_, (base_, n_) in enumerate(o3.stri_blocks):
+    z0 = z.clone()
+    for j_, (base_, fac_) in enumerate(o3.stri_blocks):          # each act's joints' settings (its table's digits), joint 0 first
+        tab_ = o3.acts[a.effectors[1 + j_].name]
         for p_ in range(8):
             x_ = int(o3.stri_mline[j_, p_])
             if x_ >= 0:
-                z += o3.stri_W[base_ + p_ * n_ + x_]
+                off_ = base_ + p_ * sum(fac_)
+                for d_, k_ in zip(tab_.digits(torch.tensor(x_)).tolist(), fac_):
+                    z += o3.stri_W[off_ + d_]; off_ += k_
+    # by hand: the arm's 12 (2, 2) at position 0 and its 7 (1, 2) at position 1, the grip's 2 at position 0
+    by_hand = z0 + o3.stri_W[nl + 2] + o3.stri_W[nl + 5 + 2] + o3.stri_W[nl + 10 + 1] + o3.stri_W[nl + 10 + 5 + 2] + o3.stri_W[nl + 80 + 2]
     assert o3.stri_mline[0, :3].tolist() == [12, 7, -1] and torch.equal(o3.striatum_read(), torch.relu(z)) and not torch.equal(o3.striatum_read(), o1.striatum_read())
+    assert torch.allclose(z, by_hand, atol=1e-6)
     o3.striatum_reset(); assert int(o3.stri_mline.max()) == -1 and int(o3.stri_line.max()) == -1
     # the life: the voice draws first; its first choice is the diary's
     lines = ("what do you want?", "I want milk", "do you see the ball?", "yes. the ball is red")
@@ -2818,6 +2830,149 @@ def test_the_learned_stops():
           f"lesson with it zero); the grip's declared end; without chunk_gate every act fresh; the night ends the chunk")
 
 
+# ---------------- step R5b: the striatum's rows per joint ----------------
+
+class _Humanoid(LanguageAnatomy):
+    """the diary's words and face, a body sense of 34 joints' velocities (a channel of the world's frames encoded by its own map, body_in), and
+    34 joints of five settings (the middle, 2, holds) as eight limbs: two legs of six, a waist of three, two arms of seven (each with an
+    inverse model), a head of three, two grips of one; each limb senses its own joints and rests with every joint held"""
+    LIMBS = (("leg_l", 6), ("leg_r", 6), ("waist", 3), ("arm_l", 7), ("arm_r", 7), ("head", 3), ("grip_l", 1), ("grip_r", 1))
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.channels.append(Channel("body", "vector", 34, organ="body_in"))
+        j0 = 0
+        for name, J in self.LIMBS:
+            self.effectors.append(Effector(name, [5] * J, rest_id=(5 ** J - 1) // 2, effort=0.01, sense="body", sense_idx=list(range(j0, j0 + J)),
+                                           inverse=name.startswith("arm"), inv_hidden=16))
+            j0 += J
+
+
+def _body_world():
+    """a stub of the simulated world for a body of 34 joints: each joint's velocity the step its setting in the tick's act makes (a
+    rest holds every joint), a short line on the words now and then, a smile now and then"""
+    from body.core.world import SimWorld
+
+    class BodyWorld(SimWorld):
+        LINE = "up we go "
+
+        def __init__(self):
+            self.t = 0; self.v = [0.0] * 34; self.paused = False; self.applied = []
+
+        def frame(self):
+            assert not self.paused, "a frame taken while the world is paused"
+            obs = {"body": list(self.v)}
+            k = self.t % 40 - 5
+            if 0 <= k < len(self.LINE):
+                obs["ear"] = TOK.token_to_id(self.LINE[k])
+            return Frame(self.t, obs, 2.0 if self.t % 30 == 20 else 0.0, {"who": "parent"})
+
+        def apply(self, acts):
+            assert not self.paused, "the world moved while paused"
+            self.applied.append(dict(acts)); j0 = 0
+            for name, J in _Humanoid.LIMBS:
+                a = int(acts.get(name, (5 ** J - 1) // 2))
+                for j in range(J - 1, -1, -1):                             # joint 0 the most significant digit
+                    self.v[j0 + j] = 0.1 * (a % 5 - 2); a //= 5
+                j0 += J
+            self.t += 1
+
+        def pause(self):
+            self.paused = True
+
+        def resume(self):
+            self.paused = False
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.v))
+
+        def load_state(self, blob):
+            self.t, self.v = pickle.loads(blob)
+    return BodyWorld()
+
+
+def _stri_ref(o, effectors):
+    """the striatal expansion by hand: the language line's events, then each later effector's acts, position by position, each act's
+    joints' settings (its table's digits) at their rows in the effector's block, joint 0 first"""
+    V = o.vocab; k = o.stri_line.numel(); z = o.stri_b.clone()
+    for p_ in range(k):
+        e_ = int(o.stri_line[p_])
+        if e_ >= 0:
+            z += o.stri_W[p_ * (2 * V + 3) + e_]
+    base = k * (2 * V + 3)
+    for j_, e in enumerate(effectors[1:]):
+        S = sum(e.factors)
+        for p_ in range(k):
+            x_ = int(o.stri_mline[j_, p_])
+            if x_ >= 0:
+                off = base + p_ * S
+                for d_, K in zip(o.acts[e.name].digits(torch.tensor(x_)).tolist(), e.factors):
+                    z += o.stri_W[off + d_]; off += K
+        base += k * S
+    return torch.relu(z)
+
+
+def test_a_34_joint_body_builds():
+    """anatomy 30 (step R5b): the striatum holds a later effector's events by joint, not by flat act, so a body of 34 joints builds
+    within memory. At the served striatum (8 events, 2048 units, the working-memory slot) the body's organs hold the language block,
+    thresholds and heads bit for bit as the diary's, first (the global random stream left where the diary's leaves it), then a block
+    per limb of 8 x its joints' settings rows at 1/sqrt(8 J): 1360 rows, 11.1 MB, where a row per flat act would have needed 1.5
+    million rows (12.3 GB; not built); an act's event is its joints' settings' rows. Born as a life at those sizes it lives in a stub
+    world: every limb acts and its acts enter its own line, the striatal read equal to the expansion by hand, the arms' act_inv
+    counting one confusion per joint"""
+    from body.core.world import WorldLoop
+    k, m = 8, 2048
+    a = _Humanoid(TOK); V = a.vocab; motor = a.effectors[1:]
+    J = [len(e.factors) for e in motor]; S = [sum(e.factors) for e in motor]
+    assert sum(J) == 34 and len(motor) == 8 and sum(S) == 170
+    torch.manual_seed(9); o1 = Organs(V, d=64, layers=2, heads=2, window=32); o1.striatum_init(k, m, seed=2, wm=1); r1 = torch.get_rng_state()
+    torch.manual_seed(9); o3 = Organs(V, d=64, layers=2, heads=2, window=32, channels=a.channels, effectors=a.effectors, born_seed=3)
+    o3.striatum_init(k, m, seed=2, wm=1, effectors=a.effectors); r3 = torch.get_rng_state()
+    nl = k * (2 * V + 3)
+    assert torch.equal(r1, r3) and torch.equal(o3.stri_W[:nl], o1.stri_W) and torch.equal(o3.stri_b, o1.stri_b)
+    assert torch.equal(o3.vfast.weight, o1.vfast.weight) and torch.equal(o3.actor.weight, o1.actor.weight) and o3.wm_slot.shape == o1.wm_slot.shape
+    starts = [nl + k * sum(S[:j_]) for j_ in range(len(motor))]
+    assert o3.stri_W.shape == (nl + k * 170, m) and o3.stri_blocks == [(s_, tuple(e.factors)) for s_, e in zip(starts, motor)]
+    for (s_, fac_), j_ in zip(o3.stri_blocks, J):                       # each limb's rows at 1/sqrt(k J)
+        sd_ = float(o3.stri_W[s_:s_ + k * sum(fac_)].std())
+        assert abs(sd_ * math.sqrt(k * j_) - 1.0) < 0.03, (fac_, sd_)
+    motor_mb = (o3.stri_W.shape[0] - nl) * m * o3.stri_W.element_size() / 1e6
+    flat_gb = k * sum(e.n_acts for e in motor) * m * 4 / 1e9            # a row per flat act (R5's layout): computed, never built
+    assert abs(motor_mb - 11.14) < 0.01 and flat_gb > 12.0, (motor_mb, flat_gb)
+    assert all(o3.actors[e.name].weight.shape == (sum(e.factors), 2 * m) for e in motor)
+    # an act's event: its joints' settings' rows (the left arm's seven joints, settings 0..4 and 2, 2 at position 0)
+    arm = motor.index(next(e for e in motor if e.name == "arm_l"))
+    act = o3.acts["arm_l"].flat([0, 1, 2, 3, 4, 2, 2])
+    before = o3.striatum_read().clone(); o3.striatum_push_act(arm, act)
+    rows = starts[arm] + torch.tensor([0, 5 + 1, 10 + 2, 15 + 3, 20 + 4, 25 + 2, 30 + 2])
+    assert torch.allclose(o3.striatum_read(), torch.relu(o3.stri_b + o3.stri_W[rows].sum(0)), atol=1e-6) and not torch.equal(o3.striatum_read(), before)
+    del o1, o3
+    # born as a life at those sizes, it lives
+    cfg = dict(wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.5, fast_rls=1, fast_input="striatum", actor=1,
+               stri_k=k, stri_m=m, wm=1)
+    w = _body_world(); t0 = time.time(); torch.manual_seed(0); ha = _Humanoid(TOK, cfg)
+    ho = Organs(ha.vocab, d=64, layers=2, heads=2, window=32, channels=ha.channels, effectors=ha.effectors, born_seed=0)
+    ho.body_in = torch.nn.Linear(34, 64)                                # the body sense's own map (the sim's encoder is a later step)
+    L = Life(ho, ha, cfg=cfg, device="cpu", seed=0, world=w); built = time.time() - t0
+    assert L.m.stri_W.shape == (nl + k * 170, m) and L.m.stri_blocks == [(s_, tuple(e.factors)) for s_, e in zip(starts, motor)]
+    state_mb = sum(t_.numel() * t_.element_size() for t_ in L.m.state_dict().values()) / 1e6
+    assert state_mb < 256, state_mb                                     # the fast critic's evidence (4097^2 float64) is most of it
+    run = WorldLoop(L); acted = [0] * len(motor)
+    for _ in range(40):
+        run.step()
+        for j_, st_ in enumerate(L.motor):
+            acted[j_] += int(st_["now"]["acted"])
+    assert all(n_ > 0 for n_ in acted) and all(int((L.m.stri_mline[j_] >= 0).sum()) == min(k, n_) for j_, n_ in enumerate(acted)), acted
+    assert torch.allclose(L.m.striatum_read(), _stri_ref(L.m, L.anatomy.effectors), atol=1e-5)
+    arms = [L.motor[j_] for j_, e in enumerate(motor) if e.inverse]
+    assert len(arms) == 2 and all(len(st_["inv_conf"]) == 7 and st_["inv_n"] > 0 for st_ in arms)
+    assert len(w.applied) == 40 and all(set(e.name for e in motor) <= set(x_) for x_ in w.applied)
+    print(f"anatomy 30: a body of 34 joints of five as eight limbs, at the served striatum (8 events, 2048 units): the language block",
+          f"first and as the diary's, then 1360 rows per joint, {motor_mb:.1f} MB (a row per flat act would need {flat_gb:.1f} GB, not",
+          f"built); an act's event its joints' rows; born as a life in {built:.1f} s (its organs {state_mb:.0f} MB), 40 ticks lived, the",
+          f"limbs acting {acted} times, the striatal read equal to the expansion by hand, the arms' act_inv counting 7 joints each")
+
+
 ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
                  test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy,
                  test_reward_sources_feel_todays_rule, test_a_life_feels_as_before, test_the_declared_order_is_the_sums,
@@ -2826,7 +2981,8 @@ ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_langua
                  test_the_gate_lesson_as_before, test_the_switches, test_a_later_effector, test_every_call_site_passes_the_effectors,
                  test_the_diary_world, test_a_world_of_frames, test_the_loop_deadline_and_pace,
                  test_the_timing_part_is_built_last, test_act_inv_learns_online, test_act_pred_targets, test_the_forward_half,
-                 test_the_learned_stops, test_demonstrations_count_as_earned, test_act_inv_reliability_is_kappa]
+                 test_the_learned_stops, test_demonstrations_count_as_earned, test_act_inv_reliability_is_kappa,
+                 test_a_34_joint_body_builds]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -144,7 +144,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                 if str(self.cfg.get("fast_input", "band")) == "striatum":
                     k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
                     wm_ = int(self.cfg.get("wm", 0))
-                    rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * e_.n_acts for e_ in self.anatomy.effectors[1:])   # the language block, then the later effectors' (step R5)
+                    rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in self.anatomy.effectors[1:])   # the language block, then the later effectors' per joint (steps R5, R5b)
                     if (organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != rows_
                             or organs.vfast.weight.shape[1] != m_ * (1 + wm_)):
                         organs.striatum_init(k_, m_, seed=seed, wm=wm_, effectors=self.anatomy.effectors)   # born (or re-born at a new size)
