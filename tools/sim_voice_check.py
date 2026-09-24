@@ -4,11 +4,13 @@ RMS behind SYNTH_RMS, is a level, written into body/sim/voice/synth.py by hand a
 
   voice      the engine bit for bit across two server processes; its wall time a line (warm); the plain register's speech level;
              words a second and seconds a line per register; the words channel at one symbol a tick (tokens on their word's end
-             tick or late); the cache's size for the lines; SSML emphasis on a focus word (its pitch and length, with and without)
+             tick or late); the cache's size for the lines; SSML emphasis on a focus word (its pitch and length, with and without);
+             the talk-over stop cut at every tick of every line (ticks to the stop, words broken off by the 3-tick cap, and how
+             many cuts the uncapped finish would have taken past 3 ticks)
   tract      its cost a tick (a held vowel, a glide, a hiss, rest; best and median of repeats on this shared Mac); its /a/ against
              the parent's loud frames
-  ears       the born lateral read on the parent's voice from -80 to +80 degrees at 1.5 m; the child's own voice (level over the
-             parent at 1.5 m, its lateral read); the cost a tick with three sources
+  ears       the born lateral read on the parent's voice from -90 to +90 degrees at 1.5 m; the code's two halves' scale on it; the
+             child's own voice (level over the same sound from 1.5 m, its lateral read); the cost a tick with three sources
 
 Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N]
   --lines  one line a line (default: 16 lines written here; the commit used the all-out study's 331 birth template lines)
@@ -30,6 +32,7 @@ sys.path.insert(0, ROOT)
 from body.sim import ears as E  # noqa: E402
 from body.sim.lang import lexicon as LX  # noqa: E402
 from body.sim.voice import synth as V  # noqa: E402
+from body.sim.voice.playback import CUT_MAX, Utterance  # noqa: E402
 from body.sim import tract as T  # noqa: E402
 
 FALLBACK = ["look at the duck.", "where is the ball?", "here is your bottle.", "hi pip. mama is here.", "yes. the duck!",
@@ -62,7 +65,7 @@ def sounding_rms(pcm):
 
 def voice(lines, cache, n_det):
     print("== the parent's voice")
-    s1, s2 = V.SynthServer(cache.root / "bin"), V.SynthServer(cache.root / "bin")
+    s1, s2 = V.SynthServer(), V.SynthServer()
     info = s1.info()
     print(f"engine: {info['name']} ({info['identifier']}), quality {info['quality']}, {info['os']}")
     same, walls = 0, []
@@ -79,7 +82,7 @@ def voice(lines, cache, n_det):
     t0 = time.perf_counter()
     clips = [cache.clip(ln, "plain") for ln in lines]
     wall = time.perf_counter() - t0
-    size = sum(p.stat().st_size for p in cache.clips.glob("*/*"))
+    size = cache.kept_size + cache.size
     rms = np.array([sounding_rms(c.pcm) for c in clips])
     print(f"{len(lines)} lines synthesized and cached in {wall:.1f} s; the cache {size / 2 ** 20:.1f} MB (16 kHz int16 + meta)")
     print(f"the plain register's sounding-frame RMS: mean {rms.mean():.4f}, median {np.median(rms):.4f}, sd {rms.std():.4f} "
@@ -128,6 +131,22 @@ def voice(lines, cache, n_det):
           f"{np.nanmean(r[:, 1, 0]):.0f} Hz ({100 * (np.nanmean(r[:, 1, 0] / r[:, 0, 0]) - 1):+.0f}%), length "
           f"{1e3 * np.nanmean(r[:, 0, 1]):.0f} -> {1e3 * np.nanmean(r[:, 1, 1]):.0f} ms "
           f"({100 * (np.nanmean(r[:, 1, 1] / r[:, 0, 1]) - 1):+.0f}%) over {len(r)} words")
+    # the talk-over stop at every tick of every line
+    left, broken, over, n_words = [], 0, 0, LX.Words()
+    for c in clips:
+        for at in range(1, int(math.ceil(len(c.pcm) / 2400))):
+            u = Utterance(c, 0)
+            for t in range(at):
+                u.tick(t, n_words)
+            cur = [end for _, on, end in c.words if on < u.pos < end]
+            over += bool(cur) and int(math.ceil((cur[0] - u.pos) / 2400)) > CUT_MAX
+            left.append(u.cut(n_words))
+            broken += u.broken is not None
+    left = np.array(left)
+    print(f"the talk-over stop cut at every tick of the {len(clips)} lines ({len(left)} cuts): ticks to the stop "
+          + ", ".join(f"{k}: {100 * np.mean(left == k):.1f}%" for k in range(0, int(left.max()) + 1))
+          + f"; {broken} ({100 * broken / len(left):.2f}%) broke a word off at {CUT_MAX} ticks (the uncapped finish: {over} cuts "
+          f"past {CUT_MAX} ticks)")
     s1.close()
     return clips, rms
 
@@ -181,7 +200,7 @@ def ears(clips):
     eL, eR, mouth = E.head_from_torso(np.array([0.0, 0.0, 0.6]), np.eye(3))
     centre = 0.5 * (eL + eR)
     res, tt = {}, []
-    for az in range(-80, 81, 20):
+    for az in range(-90, 91, 10):
         a = math.radians(az)
         src = centre + 1.5 * np.array([math.cos(a), math.sin(a), 0.0])
         got = []
@@ -195,11 +214,25 @@ def ears(clips):
                 if h.lateral_weight > 0:
                     got.append(math.degrees(h.lateral))
         res[az] = np.array(got)
-    err = np.concatenate([np.abs(v - az) for az, v in res.items()])
+    err = np.concatenate([np.abs(v - az) for az, v in res.items() if abs(az) <= 80])
     print("the born lateral read on the parent's voice at 1.5 m (mean over sounding ticks): " +
           ", ".join(f"{az:+d}: {v.mean():+.1f}" for az, v in res.items()))
-    print(f"  absolute error: mean {err.mean():.1f}, median {np.median(err):.1f}, 90th pct {np.percentile(err, 90):.1f} degrees "
-          f"over {len(err)} ticks; one source {1e3 * np.median(tt):.2f} ms a tick median")
+    print(f"  absolute error within 80 degrees: mean {err.mean():.1f}, median {np.median(err):.1f}, 90th pct "
+          f"{np.percentile(err, 90):.1f} degrees over {len(err)} ticks; one source {1e3 * np.median(tt):.2f} ms a tick median")
+    # the code's two halves on the parent's speech at 1.5 m, 30 degrees
+    codes = []
+    src = centre + 1.5 * np.array([math.cos(math.radians(30)), math.sin(math.radians(30)), 0.0])
+    for c in clips[:20]:
+        ea, x = E.Ears(), c.pa()
+        for k in range(len(x) // 2400):
+            h = ea.tick(eL, eR, {"parent": (x[k * 2400:(k + 1) * 2400], src)})
+            if k:
+                codes.append(h.code())
+    codes = np.array(codes)
+    nco = 2 * E.NF * E.NB
+    print(f"the code on the parent's speech (20 lines, 1.5 m, 30 degrees): cochlea RMS "
+          f"{np.sqrt((codes[:, :nco] ** 2).mean()):.3f}, delay lines RMS {np.sqrt((codes[:, nco:] ** 2).mean()):.3f} "
+          f"(largest {np.abs(codes[:, nco:]).max():.3f})")
     # the child's own voice against the parent at 1.5 m, the same sound
     tr = T.Tract(1)
     x = T.NEUTRAL.copy()

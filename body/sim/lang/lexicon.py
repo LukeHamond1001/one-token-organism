@@ -7,7 +7,8 @@ arrives as its letters, one a tick from its onset, then a space, so no code chan
 The words channel (the scaffold, channel 0) carries one symbol a tick: the parent's own label for the word it said, beside the
 sound the ears hear. Words.word() queues a birth word's token for the tick its sound ends, a later word's letters from the tick
 its sound starts, then a space; Words.end() queues END on the tick the line's sound ends (the voice's playback, body/sim/voice/
-playback.py, calls both as each word starts to sound, so a line cut at a word's end labels exactly what was said);
+playback.py, calls both as each word starts to sound, so a line cut at a word's end labels exactly what was said, and withdraws
+a word broken off by the talk-over stop's cap);
 Words.tick() hands out one symbol a tick, in the words' order, each once it is due (so a token can be a tick late behind a busy
 channel, and a word after a spelled one waits for its letters; measured in tools/sim_voice_check.py), and REST when nothing is
 due. Symbols arrive only while the parent is audible (the caller says so each tick, by audible() below: a symbol due while the
@@ -83,18 +84,32 @@ class Words:
         self.order = 0
         self.late = []                       # (symbol, ticks after its due tick) per delivered symbol: an instrument
         self.dropped = 0
+        self.withdrawn = 0
 
     def word(self, word, on_tick, end_tick):
         """queue one word's symbols: a birth word's token for end_tick (the tick its sound ends), a later word's letters one a
-        tick from on_tick (the tick its sound starts), then a space."""
+        tick from on_tick (the tick its sound starts), then a space. Returns their orders (for withdraw())."""
         syms = symbols_for(word)
         if len(syms) == 1:
             due = [end_tick]
         else:
             due = [on_tick + k for k in range(len(syms))]
+        orders = []
         for s, t in zip(syms, due):
             self.queue.append(_Due(t, self.order, s, word))
+            orders.append(self.order)
             self.order += 1
+        return orders
+
+    def withdraw(self, orders):
+        """drop a word's symbols still queued (a word broken off by the talk-over stop is not labelled as said); returns how
+        many were withdrawn."""
+        drop = set(orders)
+        keep = [d for d in self.queue if d.order not in drop]
+        n = len(self.queue) - len(keep)
+        self.queue = keep
+        self.withdrawn += n
+        return n
 
     def end(self, tick):
         """queue END for the tick a line's sound ends (whole, or cut at a word's end)."""
@@ -124,8 +139,9 @@ class Words:
         return d.sym
 
     def state(self):
-        return dict(queue=[(d.tick, d.order, d.sym, d.word) for d in self.queue], order=self.order, dropped=self.dropped)
+        return dict(queue=[(d.tick, d.order, d.sym, d.word) for d in self.queue], order=self.order, dropped=self.dropped,
+                    withdrawn=self.withdrawn)
 
     def load_state(self, s):
         self.queue = [_Due(*q) for q in s["queue"]]
-        self.order, self.dropped = s["order"], s["dropped"]
+        self.order, self.dropped, self.withdrawn = s["order"], s["dropped"], s["withdrawn"]

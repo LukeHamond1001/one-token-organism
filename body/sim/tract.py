@@ -29,7 +29,9 @@ THE EFFECTOR (the voice's joints): 10 articulators (NAMES), each taking one of S
 tick, re-anchored on where it is (the servo law); at rest the targets relax to the silent rest posture (NEUTRAL: nose breathing,
 lips nearly closed) with a time constant of 1 tick. Its body sense (proprio()): the 10 positions, their 10 velocities and the
 breath left: 21 numbers for the body channel. Its random numbers (jitter, shimmer, both noises) come from its own stream of the
-body's seed (STREAM), carried by state() and load_state(), so a replay is exact.
+body's seed, a PCG64 from SeedSequence(seed, spawn_key=(STREAM,)), the world's convention (body/sim/world.py: its own stream is
+spawn key 1; the tract's is 2, ours). The tract owns its generator (none is handed in, so restoring it can never rewind a stream
+another part draws from); state() and load_state() carry it, so a replay is exact.
 
 THE CALIBRATION (the study's; all ours, anatomy; disclosed):
   - the child's tract: 12 cm glottis to lips (a young child's; an adult woman's is about 14.5-15), 24 sections, a nasal branch at
@@ -38,7 +40,8 @@ THE CALIBRATION (the study's; all ours, anatomy; disclosed):
     constriction held at its anatomical place (Wood 1979): /i/ 344/2719 Hz, /a/ 938/1625 Hz, rounded /u/ about 375/1250 Hz.
     The honest gap: the vowel space is about an adult woman's size (front vowels short in F2, 2700 against 3200; low vowels
     short in F1, about 900 against 1030)
-  - levels: the steady /a/ at the parent's speech level (GAIN; measured 62.2 dB SPL at 1 m against the parent's 62.0); the
+  - levels: the steady /a/ at the parent's speech level (GAIN; measured 62.2 dB SPL at 1 m against the parent's 62.0 on the
+    study's stream, 62.5 on the tract's own stream of seed 1, the jitter's and shimmer's draws); the
     turbulence constants set so a steady alveolar hiss is -14.1 dB and a steady /h/ -13.4 dB re /a/ (measured; Fletcher's
     relative phonetic powers put /s/ about -16 dB and /sh/ -9 dB re /a/)
   - the breath reservoir: 400 cm^3 usable (about 2.5 s of speech), a full breath in 0.8 s at rest
@@ -46,14 +49,12 @@ THE CALIBRATION (the study's; all ours, anatomy; disclosed):
 Its cost (this Mac, shared with other jobs; tools/sim_voice_check.py, 2026-09-24): a sounding tick 1.7-3.2 ms (a held vowel, a
 glide, a hiss; best of repeats at load averages 3.4-5.5), up to 7.4 ms under heavier load; at rest 0.1-0.2 ms.
 """
-import zlib
-
 import numpy as np
 from scipy.signal import lfilter
 
 from .voice.synth import PA_PER_UNIT  # noqa: F401  (the engine units -> pascals at 1 m, shared with the parent's voice)
 
-STREAM = zlib.crc32(b"voice.tract")   # the tract's own random stream of the body's seed
+STREAM = 2                   # the tract's own random stream of the body's seed: SeedSequence(seed, spawn_key=(2,)) (the world: 1)
 
 SR = 16000
 TICK = 2400                  # 150 ms
@@ -281,9 +282,9 @@ def _rest_last(vol):
 class Tract:
     """one child's tract; its state carries across ticks (positions, velocities, targets, breath, phase, overlap tails)."""
 
-    def __init__(self, seed=1, rng=None):
-        """seed: the body's seed (the tract draws from its own stream of it); or rng, a numpy Generator the world hands it."""
-        self.rng = rng if rng is not None else np.random.default_rng(np.random.SeedSequence([int(seed), STREAM]))
+    def __init__(self, seed=1):
+        """seed: the body's seed (the tract draws from its own stream of it, spawn key STREAM)."""
+        self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(STREAM,))))
         self.x = NEUTRAL.copy()
         self.v = np.zeros(N_ART)
         self.target = NEUTRAL.copy()

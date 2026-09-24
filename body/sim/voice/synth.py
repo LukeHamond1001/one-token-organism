@@ -1,24 +1,33 @@
 """THE PARENT'S VOICE (docs/SIM_DESIGN.md 4.4 and 4.5; package P1): macOS speech through a small Swift server, 16 kHz clips with
 their words' onsets and ends, and a content-addressed cache on disk whose every clip's digest is kept for good.
 
-  SynthServer   builds synth_server.swift with swiftc (once per source digest) and runs it at nice 10, off the tick loop; one warm
-                synthesizer answers one request at a time (a cache miss makes the lockstep world wait; it costs no sim time)
-  VoiceCache    clip(text, register, emphasis) -> Clip. Keyed by sha256 of the request (the voice, the line as SSML with the
-                register's pitch and rate, the clip format); the samples are 16 kHz int16 PCM; a size limit (300 MB) drops the least
-                recently used clips. The LEDGER (ledger.jsonl) keeps every clip's digest (its samples and word marks) and is
-                never trimmed: a clip synthesized again after it was dropped must equal its digest bit for bit, or the voice
-                refuses it (VoiceChanged) and the life pauses at that tick, never swapping a line (the decision log's rule for
-                the voice server)
+  SynthServer   builds synth_server.swift with swiftc (once per source digest, into BIN_DIR, a build product outside git) and runs
+                it at nice 10, off the tick loop; one warm synthesizer answers one request at a time (a cache miss makes the
+                lockstep world wait; it costs no sim time)
+  VoiceCache    VoiceCache(root): root is the life's voice folder, saved beside the body (the design's 4.4: "saved beside the
+                body, so a replay is exact"), never the source tree. clip(text, register, emphasis) -> Clip. Keyed by sha256 of
+                the request (the voice, the line as SSML with the register's pitch and rate, the clip format); the samples are
+                16 kHz int16 PCM. Two stores: kept/ holds every clip the life has HEARD (clip(..., heard=True), the default: what
+                the parent says), never trimmed, so a replay reads the very samples the life heard; clips/ holds lines made
+                ahead (warm(), as at a night boundary, heard=False), with a size limit (300 MB) that drops the least recently
+                used. The LEDGER (ledger.jsonl) keeps every clip's digest (its samples and word marks) and is never trimmed.
+                Every read is checked: the clip's own digest, its request (the key and the SSML it was made from), and the
+                ledger's digest for the key; a clip that fails any is made again, and a clip made again must equal the ledger's
+                digest bit for bit, or the voice refuses it (VoiceChanged) and the life pauses at that tick, never swapping a line
+                (the decision log's rule for the voice server)
   Clip          the samples as pascals at 1 m in front of the parent's mouth (for the ears' spatializer, body/sim/ears.py), each
                 word with its first and last sample, and the register's level
 
 DETERMINISM, and which part gives it. The engine is deterministic on this Mac: the same request synthesized twice, in two server
 processes with the cache bypassed, gives the same float32 samples bit for bit (measured, test_sim_voice.py). That holds for one OS
-build and one voice asset; an OS update may change the voice. So the cache is what makes a replay exact across time: a replay reads
-the clips the life heard (each checked against its digest as it is read), and a clip made again after it was dropped is checked
-against the ledger's digest (sha256 of the int16 PCM and the word marks), so a changed engine can never silently change a replayed
-day. A clip's words are computed from its samples and marks as it is read, so the cache holds no derived number. The resampling
-to 16 kHz (scipy's polyphase filter) and the rounding to int16 are exact functions of the engine's samples.
+build and one voice asset; an OS update may change the voice. So the life's own folder is what makes a replay exact across time: a
+replay reads from kept/ the clips the life heard (each checked against its digest, its request and the ledger as it is read); the
+ledger detects a changed engine (a line made again that differs from its digest: a line made ahead and dropped, or a kept clip
+damaged) and pauses the life rather than let it hear a changed voice; whether to go on in the new voice is the owner's call. A
+clip's words are computed from its samples and marks as it is read, so the cache holds no derived number. The resampling to 16 kHz
+(scipy's polyphase filter) and the rounding to int16 are exact functions of the engine's samples. Disk: the birth's 331 lines are
+13.3 MB (40 KB a line, measured); kept/ grows only by lines the life hears for the first time (Claude's fresh lines, the growth
+words' lines): not yet measured, at 100 new lines a life day it would be 4 MB a day, which the disk rule counts.
 
 EVERY LINE IS SSML. The engine ignores an utterance's own rate and pitch when it is given SSML. So each line goes as SSML with
 the register's pitch and rate as one prosody around it (rate r is r / 0.5 of the engine's default): a plain line so made is the
@@ -44,7 +53,8 @@ THE CONSTANTS (disclosed; section 10's "voices" row):
   sample rate       16 kHz (the ears' rate, section 3.4); the engine's own 22,050 Hz resampled with scipy's polyphase filter
   word end          a word ends at its last 10 ms frame above -40 dB of the clip's loudest frame, and at the latest where the
                     next word starts
-  cache             body/sim/voice/cache/ by default; 300 MB; least recently used dropped first (by the file's access mark)
+  cache             the life's voice folder (given by the world); lines made ahead: 300 MB, least recently used dropped first
+                    (by the file's access mark); heard lines kept
 """
 import hashlib
 import json
@@ -62,7 +72,7 @@ from scipy.signal import resample_poly
 
 HERE = Path(__file__).resolve().parent
 SWIFT_SRC = HERE / "synth_server.swift"
-DEFAULT_CACHE = HERE / "cache"
+BIN_DIR = HERE / "cache" / "bin"            # the server's binary, one per source digest (a build product; gitignored)
 
 SR = 16000
 HOP = 160                                  # 10 ms frames for the word ends and the level
@@ -105,7 +115,7 @@ class SynthServer:
     """the Swift server as a child process: one request at a time, a JSON line each way."""
 
     def __init__(self, bin_dir=None, nice=NICE):
-        self.bin_dir = Path(bin_dir or DEFAULT_CACHE / "bin")
+        self.bin_dir = Path(bin_dir or BIN_DIR)
         self.nice = nice
         self.proc = None
         self.lock = threading.Lock()
@@ -283,12 +293,15 @@ def request(text, register="plain", emphasis=None, voice=PARENT_VOICE):
 
 
 class VoiceCache:
-    """the clips on disk, addressed by their request; the ledger of digests kept for good."""
+    """the life's clips on disk, addressed by their request: kept/ (heard, never trimmed) and clips/ (made ahead, 300 MB, least
+    recently used dropped); the ledger of digests kept for good."""
 
-    def __init__(self, root=DEFAULT_CACHE, limit=CACHE_LIMIT, server=None):
+    def __init__(self, root, limit=CACHE_LIMIT, server=None):
         self.root = Path(root)
         self.clips = self.root / "clips"
+        self.kept = self.root / "kept"
         self.clips.mkdir(parents=True, exist_ok=True)
+        self.kept.mkdir(parents=True, exist_ok=True)
         self.limit = int(limit)
         self.server = server
         self._own_server = server is None
@@ -299,36 +312,77 @@ class VoiceCache:
                 if line.strip():
                     j = json.loads(line)
                     self.ledger[j["key"]] = j
-        self.hits = self.misses = 0
+        self.hits = self.misses = self.refused = 0
         self.wall_miss = 0.0
         self.size = sum(p.stat().st_size for p in self.clips.glob("*/*"))
 
+    @property
+    def kept_size(self):
+        return sum(p.stat().st_size for p in self.kept.glob("*/*"))
+
     def _server(self):
         if self.server is None:
-            self.server = SynthServer(self.root / "bin")
+            self.server = SynthServer()
         return self.server
 
-    def _paths(self, key):
-        d = self.clips / key[:2]
+    def _paths(self, key, store=None):
+        d = (store or self.clips) / key[:2]
         return d / f"{key}.pcm", d / f"{key}.json"
 
-    def clip(self, text, register="plain", emphasis=None, voice=PARENT_VOICE):
-        """the line in a register (and, if emphasis names one of its words, with that word emphasized) -> Clip."""
-        key, req, gain = request(text, register, emphasis, voice)
-        pp, pj = self._paths(key)
-        if pp.exists() and pj.exists():
+    def _read(self, key, req, store):
+        """a stored clip, checked: its own digest, its request (key and SSML), and the ledger's digest for its key. -> (pcm,
+        meta) or None (absent); a clip failing a check is removed (made again by the caller, and checked by the ledger)."""
+        pp, pj = self._paths(key, store)
+        if not (pp.exists() and pj.exists()):
+            return None
+        try:
             meta = json.loads(pj.read_text())
             pcm = np.fromfile(pp, np.int16)
-            marks = [tuple(m) for m in meta["marks"]]
-            if clip_digest(pcm, marks) == meta["digest"]:
+            ok = (meta.get("key") == key and meta.get("ssml") == req["ssml"] and meta.get("voice") == req["voice"]
+                  and clip_digest(pcm, [tuple(m) for m in meta["marks"]]) == meta["digest"]
+                  and key in self.ledger and self.ledger[key]["digest"] == meta["digest"])
+        except (ValueError, KeyError, TypeError):
+            ok = False
+        if ok:
+            return pcm, meta
+        self.refused += 1
+        for q in (pp, pj):
+            if store is self.clips:
+                self.size -= q.stat().st_size
+            q.unlink()
+        return None
+
+    def _write(self, key, pcm, meta, store):
+        pp, pj = self._paths(key, store)
+        pp.parent.mkdir(parents=True, exist_ok=True)
+        for q, data in ((pp, pcm.tobytes()), (pj, json.dumps(meta).encode())):
+            tmp = q.with_name(q.name + ".tmp")
+            tmp.write_bytes(data)
+            os.replace(tmp, q)
+        if store is self.clips:
+            self.size += pp.stat().st_size + pj.stat().st_size
+
+    def clip(self, text, register="plain", emphasis=None, voice=PARENT_VOICE, heard=True):
+        """the line in a register (and, if emphasis names one of its words, with that word emphasized) -> Clip. heard: the
+        life hears it (the parent says it): the clip is kept for good; heard=False: made ahead (warm()), trimmed by the limit."""
+        key, req, gain = request(text, register, emphasis, voice)
+        got = self._read(key, req, self.kept)
+        if got is None:
+            got = self._read(key, req, self.clips)
+            if got is not None:
+                pp, _ = self._paths(key, self.clips)
                 now = time.time()
                 os.utime(pp, (now, now))
-                self.hits += 1
-                return Clip(key, text, register, pcm, words_of(pcm, meta["engine_sr"], marks, req["ssml"]), meta["digest"],
-                            gain, meta)
-            for q in (pp, pj):                                   # a damaged file: made again, and checked by the ledger
-                self.size -= q.stat().st_size
-                q.unlink()
+                if heard:                                            # heard now: moved to kept/, never dropped
+                    self._write(key, got[0], got[1], self.kept)
+                    for q in self._paths(key, self.clips):
+                        self.size -= q.stat().st_size
+                        q.unlink()
+        if got is not None:
+            pcm, meta = got
+            self.hits += 1
+            return Clip(key, text, register, pcm, words_of(pcm, meta["engine_sr"], [tuple(m) for m in meta["marks"]],
+                                                           req["ssml"]), meta["digest"], gain, meta)
         t0 = time.perf_counter()
         x, sr_in, marks, secs = self._server().synth(req["ssml"], voice, ENGINE_RATE, 1.0, ssml=True)
         pcm = to_16k(x, sr_in)
@@ -337,17 +391,12 @@ class VoiceCache:
         if old is not None and old["digest"] != digest:
             raise VoiceChanged(f"{text!r} ({register}) synthesized again differs from the ledger's digest {old['digest'][:12]}")
         meta = dict(req, key=key, digest=digest, n=len(pcm), marks=marks, engine_sr=sr_in, engine_secs=secs)
-        pp.parent.mkdir(parents=True, exist_ok=True)
-        tmp = pp.with_name(pp.name + ".tmp")
-        pcm.tofile(tmp)
-        os.replace(tmp, pp)
-        pj.write_text(json.dumps(meta))
         if old is None:
             self.ledger[key] = dict(key=key, digest=digest, n=len(pcm), text=text, register=register, voice=voice,
                                     ssml=req["ssml"])
             with open(self.ledger_path, "a") as f:
                 f.write(json.dumps(self.ledger[key]) + "\n")
-        self.size += pp.stat().st_size + pj.stat().st_size
+        self._write(key, pcm, meta, self.kept if heard else self.clips)
         self.misses += 1
         self.wall_miss += time.perf_counter() - t0
         if self.size > self.limit:
@@ -355,7 +404,7 @@ class VoiceCache:
         return Clip(key, text, register, pcm, words_of(pcm, sr_in, marks, req["ssml"]), digest, gain, meta)
 
     def trim(self, keep=0.9):
-        """drop the least recently used clips until the cache holds at most keep x its limit (the ledger stays)."""
+        """drop the least recently used lines made ahead until they take at most keep x the limit (kept/ and the ledger stay)."""
         files = sorted(self.clips.glob("*/*.pcm"), key=lambda p: p.stat().st_mtime)
         for p in files:
             if self.size <= keep * self.limit:
@@ -369,10 +418,11 @@ class VoiceCache:
                     pass
 
     def warm(self, lines):
-        """pre-synthesize (text, register) pairs, as at a night boundary; returns the misses' count."""
+        """make (text, register) pairs ahead, as at a night boundary (not heard: trimmed by the limit); returns the misses'
+        count."""
         m0 = self.misses
         for text, register in lines:
-            self.clip(text, register)
+            self.clip(text, register, heard=False)
         return self.misses - m0
 
     def close(self):

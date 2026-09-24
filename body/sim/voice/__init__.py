@@ -9,8 +9,10 @@ effector's physics (10 articulators, a 24-section tube, the glottal source, turb
 THE CHILD'S VOICE AND THE WORD SCAFFOLD: what we chose, and why.
   - The child's voice is its tract (the owner's decision 5; the decision log's B3 default), not section 4.9's synthesized child
     voice (the engine at pitch 1.45 and rate 0.3, 50 token clips, letter runs synthesized as words). Every sound the child makes
-    comes from its articulators, and it hears it through its own ears from its head's front (body/sim/ears.py: +14 dB over the
-    parent at 1.5 m, read at the midline), an act at tick t heard at t + 1. So section 11's P1 items "the child's 50 clips" and
+    comes from its articulators, and it hears it through its own ears from its head's front (body/sim/ears.py: the rigid
+    sphere's level for a source on its surface 90 degrees from each ear, +19.8 dB over the same sound from 1.5 m in front,
+    read at the midline; the design's +14 dB was the prototype's 0.3 m floor, not a measurement), an act at tick t heard at
+    t + 1. So section 11's P1 items "the child's 50 clips" and
     "letter runs" in the child's voice are not built: nothing of the child is synthesized by the engine.
   - The 79-row table (body/sim/lang/lexicon.py) stays at birth on both sides. In: the words channel (channel 0), the parent's
     own label beside the sound, unchanged from section 4.9. Out: a SILENT effector beside the tract, with its own gate, whose
@@ -29,5 +31,9 @@ THE CHILD'S VOICE AND THE WORD SCAFFOLD: what we chose, and why.
     (ears.cochlea). The bank stays fixed (adding rejected near-words in life would lock those pronunciations out), and the
     margin is re-set for the real context sets (P3, P6). The babbler's accepted approximations are written down as chance, and
     the tract's first accepted word is milestone M6t.
+  - Every figure of the parent's ear in the design (4.9: the margin m = -0.35, 94-100% and 72-96% recognized, 2 of 12 echoes
+    accepted, the tract's reach table) was measured in the voice study through the prototype cochlea (allout/lang/ear2.py),
+    whose filters were 1.6 ERB wide; the committed cochlea's are 1.00 ERB. They are the study's numbers, not this cochlea's:
+    P3v measures them again on ears.cochlea before any is used.
   - The risk: tokens are the easier road to reward. The removal test watches it.
 """

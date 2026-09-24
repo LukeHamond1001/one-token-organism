@@ -2,13 +2,17 @@
 (body/sim/tract.py), the parent's voice (body/sim/voice/synth.py and playback.py) and the words channel
 (body/sim/lang/lexicon.py). Run: python3 -m body.tests.test_sim_voice
 
-The tract: its vowels' formants where the study left them; the same acts from the same seed give the same samples, and save and
-restore continue bit for bit; a closure stops voicing by itself (velum raised) and a lowered velum keeps a nasal murmur; rest is
-silent; the breath runs out and refills; its body sense; its cost. The parent's voice (macOS only; skipped without swiftc): the
-engine bit for bit across two server processes; the cache's hits, its ledger, a damaged file made again, a changed engine
-refused, the size limit; the words' onsets and ends; the registers' pitch and level, and plain speech at 62 dB SPL; a line played
-tick by tick into the words channel, a talk-over cut at a word's end, and its save and restore. The table: 79 rows, "a" the word
-apart from "a" the letter, a later word spelled, and the channel's audibility."""
+The tract: its vowels' formants where the study left them; the same acts from the same seed give the same samples, its stream the
+world's convention (spawn key 2), and save and restore continue bit for bit; a closure stops voicing by itself (velum raised) and
+a lowered velum keeps a nasal murmur; rest is silent; the breath runs out and refills; its body sense; its cost. The parent's
+voice (macOS only; skipped without swiftc): the engine bit for bit across two server processes; the cache in the life's folder
+(no default in the source tree): its hits, its ledger, a damaged file made again, a clip and its record swapped for another
+line's refused and made again, a changed engine refused, the size limit dropping only lines made ahead while every heard line is
+kept and read back with no engine at all; the words' onsets and ends; the registers' pitch and level, and plain speech at 62 dB
+SPL; a line played tick by tick into the words channel; the talk-over stop cut at every tick of seven lines (never more than 3
+ticks; a word broken off by the cap withdrawn from the channel, the rest labelled exactly as said) and its save and restore. The
+table: 79 rows, "a" the word apart from "a" the letter, a later word spelled, and the channel's audibility."""
+import json
 import math
 import os
 import shutil
@@ -97,6 +101,10 @@ def test_tract_deterministic():
     tr3, _ = babble(2, 40)
     y3 = np.concatenate([tr3.tick(a) for a in acts])
     assert not np.array_equal(y1, y3), "another seed gave the same jitter and noise"
+    want = np.random.Generator(np.random.PCG64(np.random.SeedSequence(1, spawn_key=(2,)))).bit_generator.state
+    assert T.Tract(1).rng.bit_generator.state == want and T.STREAM == 2, "the tract's stream is not the world's convention"
+    world = np.random.Generator(np.random.PCG64(np.random.SeedSequence(1, spawn_key=(1,)))).bit_generator.state
+    assert want != world, "the tract's stream is the world's own"
     tr4, _ = babble(1, 40)
     for a in acts[:17]:
         tr4.tick(a)
@@ -106,8 +114,8 @@ def test_tract_deterministic():
     tr5.load_state(st)
     rest2 = np.concatenate([tr5.tick(a) for a in acts[17:]])
     assert np.array_equal(rest, rest2) and np.array_equal(rest, y1[17 * TICK:]), "save and restore did not continue exactly"
-    print(f"2 the tract is exact: the same seed and acts give the same {len(y1)} samples, another seed differs, and a restored "
-          f"tract continues bit for bit")
+    print(f"2 the tract is exact: the same seed and acts give the same {len(y1)} samples, another seed differs, its stream is "
+          f"SeedSequence(seed, spawn_key=(2,)) (the world's is 1), and a restored tract continues bit for bit")
 
 
 def test_closure_stops_voicing():
@@ -207,8 +215,18 @@ def _have_engine():
     return sys.platform == "darwin" and shutil.which("swiftc") is not None
 
 
-def _cache(tmp):
-    return V.VoiceCache(tmp, server=V.SynthServer(V.DEFAULT_CACHE / "bin"))
+def _cache(tmp, **kw):
+    return V.VoiceCache(tmp, server=V.SynthServer(), **kw)
+
+
+class _NoEngine:
+    """a server that fails if asked: a replay from the life's folder must never need the engine."""
+
+    def synth(self, *a, **k):
+        raise AssertionError("the engine was asked for a clip the life's folder should hold")
+
+    def close(self):
+        pass
 
 
 LINES = ["look at the duck.", "where is the ball?", "hi pip. mama is here.", "here is your bottle.", "yes. the drum!",
@@ -219,7 +237,7 @@ def test_engine_bit_for_bit():
     if not _have_engine():
         print("7 skipped: no swiftc / AVSpeech here")
         return
-    s1, s2 = V.SynthServer(V.DEFAULT_CACHE / "bin"), V.SynthServer(V.DEFAULT_CACHE / "bin")
+    s1, s2 = V.SynthServer(), V.SynthServer()
     try:
         for ln in LINES[:3]:
             q = V.request(ln)[1]["ssml"]
@@ -239,6 +257,9 @@ def test_cache_and_ledger():
     if not _have_engine():
         print("8 skipped")
         return
+    import inspect
+    assert inspect.signature(V.VoiceCache).parameters["root"].default is inspect.Parameter.empty, \
+        "the voice cache has a default folder: it must be the life's, beside the body"
     tmp = tempfile.mkdtemp(prefix="voice_test_")
     try:
         c = _cache(tmp)
@@ -248,12 +269,29 @@ def test_cache_and_ledger():
         assert c.hits == 1 and np.array_equal(a.pcm, b.pcm) and a.words == b.words and a.digest == b.digest
         led = [ln for ln in open(os.path.join(tmp, "ledger.jsonl")) if ln.strip()]
         assert len(led) == 1 and a.digest in led[0]
-        pp, pj = c._paths(a.key)
+        pp, pj = c._paths(a.key, c.kept)
+        assert pp.exists(), "a heard clip is not in kept/"
         raw = bytearray(pp.read_bytes())
         raw[1000] ^= 0xFF
         pp.write_bytes(bytes(raw))                                 # a damaged file is made again, and equals the ledger
         d = c.clip(LINES[0])
         assert c.misses == 2 and np.array_equal(d.pcm, a.pcm)
+        # a clip and its record swapped for another line's: refused (its request is not this line's), made again
+        e = c.clip(LINES[1])
+        qp, qj = c._paths(e.key, c.kept)
+        for src, dst in ((qp, pp), (qj, pj)):
+            dst.write_bytes(src.read_bytes())
+        r0 = c.refused
+        f = c.clip(LINES[0])
+        assert c.refused == r0 + 1 and np.array_equal(f.pcm, a.pcm) and f.digest == a.digest, "a swapped clip was served"
+        # the same swap with the record rewritten to claim this line: refused by the ledger's digest for this line
+        meta = json.loads(qj.read_text())
+        meta.update(key=a.key, ssml=V.request(LINES[0])[1]["ssml"])
+        pp.write_bytes(qp.read_bytes())
+        pj.write_text(json.dumps(meta))
+        r0 = c.refused
+        g = c.clip(LINES[0])
+        assert c.refused == r0 + 1 and g.digest == a.digest, "a clip whose record claims this line was served against the ledger"
         os.unlink(pp)
         os.unlink(pj)
         c.ledger[a.key]["digest"] = "0" * 64                       # an engine that changed under the life is refused
@@ -263,20 +301,29 @@ def test_cache_and_ledger():
         except V.VoiceChanged:
             pass
         c.close()
-        c2 = V.VoiceCache(tmp, limit=150_000, server=V.SynthServer(V.DEFAULT_CACHE / "bin"))
+        c2 = _cache(tmp, limit=150_000)
         assert c2.ledger[a.key]["digest"] == a.digest, "the ledger was not read back"
-        for ln in LINES:
-            c2.clip(ln)
+        for ln in LINES:                                           # made ahead, as at a night boundary: under the limit
+            c2.warm([(ln, "approval")])
             time.sleep(0.01)
         assert c2.size <= c2.limit and len(list(c2.clips.glob("*/*.pcm"))) < len(LINES), "the size limit dropped nothing"
         kept = {p.stem for p in c2.clips.glob("*/*.pcm")}
-        assert V.request(LINES[-1])[0] in kept and V.request(LINES[1])[0] not in kept, "not the least recently used dropped"
-        assert len(c2.ledger) == len(LINES), "the ledger lost a clip's digest"
+        assert V.request(LINES[-1], "approval")[0] in kept and V.request(LINES[1], "approval")[0] not in kept, \
+            "not the least recently used dropped"
+        heard = [c2.clip(ln) for ln in LINES]                      # heard: kept for good, whatever the limit
+        assert all(c2._paths(h.key, c2.kept)[0].exists() for h in heard) and c2.kept_size > c2.limit, \
+            "a heard line was dropped by the size limit"
+        assert len(c2.ledger) == 2 * len(LINES), "the ledger lost a clip's digest"
         c2.close()
+        c3 = V.VoiceCache(tmp, server=_NoEngine())                 # a replay: every heard line from the life's folder, no engine
+        again = [c3.clip(ln) for ln in LINES]
+        assert all(np.array_equal(p.pcm, q.pcm) and p.words == q.words for p, q in zip(heard, again))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-    print("8 the cache: a hit returns the same clip; the ledger keeps its digest; a damaged file is made again equal; a changed "
-          "engine is refused; the size limit drops the least recently used and the ledger keeps them all")
+    print("8 the cache is the life's folder (no default): a hit returns the same clip; the ledger keeps its digest; a damaged "
+          "file is made again equal; a clip and its record swapped in from another line are refused (by its request, then by the "
+          "ledger) and the line made again; a changed engine is refused; the size limit drops only lines made ahead (least "
+          "recently used first); every heard line is kept past the limit and read back with no engine")
 
 
 def test_words_registers_and_level():
@@ -335,31 +382,44 @@ def test_playback_into_the_words_channel():
         for (t, s), (word, on, end) in zip(toks, k.words):
             assert 0 <= t - (100 + (end - 1) // TICK) <= 1, (s, t, end)
         assert got[-1][1] == "<end>" or any(s == "<end>" for _, s in got)
-        # talk-over: cut two ticks in; the word sounding is finished, the rest is never said nor labelled
-        u2, w2 = Utterance(k, 0), LX.Words()
-        u2.tick(0, w2)
-        u2.tick(1, w2)
-        st = u2.state()
-        left = u2.cut()
-        assert 0 <= left <= 3, f"the cut takes {left} ticks more"
-        seq = [u2.tick(t, w2) for t in range(2, 2 + left + 2)]
-        said = [x for x in k.words if x[1] < u2.stop_at]
-        assert u2.done and all(e <= u2.stop_at for _, _, e in said), (said, u2.stop_at)
-        labels = []
-        for t in range(0, 12):
-            s = LX.TABLE[w2.tick(t)]
-            if s not in ("<rest>",):
-                labels.append(s)
-        assert labels == [x[0] for x in said] + ["<end>"], (labels, said)
-        u3 = Utterance.restore(k, st)
-        u3.cut()
-        seq3 = [u3.tick(t) for t in range(2, 2 + left + 2)]
-        assert all(np.array_equal(a, b) for a, b in zip(seq, seq3)), "a restored line did not continue exactly"
+        # talk-over, cut at every tick of seven lines (two of them long words said slowly, where the cap bites)
+        cuts = [(ln, reg, em) for ln in LINES[:5] for reg, em in (("plain", None),)] + \
+            [("peekaboo!", "comfort", "peekaboo"), ("look. a bottle.", "new_word", "bottle")]
+        n_cut = n_broken = worst = 0
+        for ln, reg, em in cuts:
+            kk = c.clip(ln, reg, emphasis=em)
+            n_ticks = int(np.ceil(len(kk.pcm) / TICK))
+            for at_tick in range(1, n_ticks):
+                u2, w2 = Utterance(kk, 0), LX.Words()
+                for t in range(at_tick):
+                    u2.tick(t, w2)
+                st, wst = u2.state(), w2.state()
+                left = u2.cut(w2)
+                worst = max(worst, left)
+                assert 0 <= left <= 3, f"{ln!r} cut at tick {at_tick} takes {left} ticks more"
+                seq = [u2.tick(t, w2) for t in range(at_tick, at_tick + left + 2)]
+                assert u2.done and not np.any(np.concatenate(seq)[u2.stop_at - at_tick * TICK:]), "sound after the stop"
+                said = [x for x in kk.words if x[2] <= u2.stop_at]
+                broken = [x for x in kk.words if x[1] < u2.stop_at < x[2]]
+                assert (u2.broken is not None) == bool(broken), (ln, at_tick, u2.broken, broken)
+                labels = [s for s in (LX.TABLE[w2.tick(t)] for t in range(0, at_tick + left + 12)) if s != "<rest>"]
+                assert labels == [x[0] for x in said] + ["<end>"], (ln, at_tick, labels, said, broken)
+                n_cut += 1
+                n_broken += bool(broken)
+                u3, w3 = Utterance.restore(kk, st), LX.Words()               # a restored line and channel continue exactly
+                w3.load_state(wst)
+                u3.cut(w3)
+                seq3 = [u3.tick(t, w3) for t in range(at_tick, at_tick + left + 2)]
+                assert all(np.array_equal(a, b) for a, b in zip(seq, seq3)), "a restored line did not continue exactly"
+                labels3 = [s for s in (LX.TABLE[w3.tick(t)] for t in range(0, at_tick + left + 12)) if s != "<rest>"]
+                assert labels3 == labels, ("a restored line labelled differently", labels3, labels)
+        assert n_broken > 0, "no cut reached the cap: the test does not exercise it"
         c.close()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-    print(f"10 a line played tick by tick is its clip; each token arrives on its word's end tick (or one late); a talk-over "
-          f"cut finishes the word ({left} ticks) and labels only what was said: {labels}; a restored line continues exactly")
+    print(f"10 a line played tick by tick is its clip; each token arrives on its word's end tick (or one late); the talk-over "
+          f"stop cut at every tick of 7 lines ({n_cut} cuts): at most {worst} ticks more; {n_broken} broke a long word off at "
+          f"3 ticks and withdrew its label; every cut labels exactly the words said; a restored line continues exactly")
 
 
 TESTS = [test_tract_vowels, test_tract_deterministic, test_closure_stops_voicing, test_rest_is_silent_and_breath, test_tract_cost,
