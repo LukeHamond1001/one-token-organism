@@ -281,3 +281,10 @@ def eye_option():
     for g in (3, 4, 5):
         opt.geomgroup[g] = 0
     return opt
+
+
+# the G1 prototype's names (main's 1eb268b: body/sim/g1eyes.py, tools/sim_look_g1.py read them), kept so the prototype's stills
+# still run against the built scene: its World is this Scene; its periphery pool and fovea size are the eyes' (body/sim/eyes.py)
+World = Scene
+POOL = 3
+FOVEA = 32

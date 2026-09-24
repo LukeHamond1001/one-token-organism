@@ -1,5 +1,5 @@
-"""Loading the living room and driving its kinematic parts: the parent's mocap segments and geoms, the child's screen
-face, the welds (from the 2026-09-24 prototype; SimWorld grows from it)."""
+"""Loading the CUSTOM CHILD's living room (kept for reference; the child is now the stock G1: g1scene.py) and driving its
+kinematic parts: the parent's mocap segments and geoms, the child's screen face, the welds (from the 2026-09-24 prototype)."""
 import math
 import sys
 from pathlib import Path
@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import parent_kin as kin  # noqa: E402
 
-XML = HERE / "livingroom.xml"
+XML = HERE / "livingroom_customchild.xml"
 
 # the child's birth pose (degrees): supine, arms relaxed a little out from the sides with the elbows half bent, hips a
 # little flexed and turned out, knees half bent (the resting posture of an infant on its back)
@@ -148,9 +148,9 @@ class World:
 
     def birth(self, settle_s=1.5, cache=True):
         """The birth state: the child supine on the mat (settled for settle_s under its servos), toys settled, the parent
-        standing by the door. Cached to birth_state.npy."""
+        standing by the door. Cached to birth_state_customchild.npy."""
         m, d = self.m, self.d
-        cp = HERE / "birth_state.npy"
+        cp = HERE / "birth_state_customchild.npy"
         if cache and cp.exists() and cp.stat().st_mtime > XML.stat().st_mtime:
             st = np.load(cp)
             mujoco.mj_setState(m, d, st, mujoco.mjtState.mjSTATE_INTEGRATION)

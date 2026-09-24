@@ -1,5 +1,9 @@
 """The parent's acts around the child (from the 2026-09-24 prototype): each finds a kneeling posture whose arms reach by
-two-bone IK inside human ranges, searching the trunk's lean (hip flexion) and spine flexion from upright."""
+two-bone IK inside human ranges, searching the trunk's lean (hip flexion) and spine flexion from upright.
+
+An act never chooses the parent's face: expr defaults to None, which leaves the pose's face as it is (neutral in a new
+pose). The face comes from the parent's feelings (parent_feel.py), set on the pose each tick; a caller that passes an
+expr (a still, a physics test) sets it for that picture only."""
 import math
 
 import numpy as np
@@ -17,7 +21,7 @@ def reach_errors(p):
     return {k: r["reach_err_m"] for k, r in p.report.items() if isinstance(r, dict) and "reach_err_m" in r}
 
 
-def solve(at, yaw, hands, mode="heels", knee_w=.115, look_at=None, expr=0.0, twist=0.0, max_lean=60, max_spine=45,
+def solve(at, yaw, hands, mode="heels", knee_w=.115, look_at=None, expr=None, twist=0.0, max_lean=60, max_spine=45,
           shifts=(0.0,)):
     """hands: {side: fn(pose) -> reach error} or a list of such dicts (alternatives, e.g. either hand); each fn places
     that hand (it may read the pose's chest). Tries the smallest trunk bend first; returns (pose, info); info['ok'] is
@@ -44,7 +48,8 @@ def solve(at, yaw, hands, mode="heels", knee_w=.115, look_at=None, expr=0.0, twi
                 errs = [fn(p) for fn in hands.values()]
                 if look_at is not None:
                     kin.look(p, look_at)
-                p.expr = expr
+                if expr is not None:
+                    p.expr = expr
                 bad = violations(p)
                 score = sum(errs) + .05 * len(bad)
                 if best is None or score < best[0]:
@@ -82,7 +87,7 @@ def toy_pos(m, d, k):
 
 
 # ---------------------------------------------------------------- acts
-def attend(cv, at, yaw, expr=1.0, touch=None):
+def attend(cv, at, yaw, expr=None, touch=None):
     """Kneel on the heels beside the child, look at its face, smile; one hand resting on its tummy if touch."""
     hands = {}
     if touch:
@@ -95,7 +100,7 @@ def attend(cv, at, yaw, expr=1.0, touch=None):
     return p, info
 
 
-def point(cv, at, yaw, target, side=None, look_at=None, expr=.6):
+def point(cv, at, yaw, target, side=None, look_at=None, expr=None):
     """Point at a world target with either hand (the one that can, inside the ranges); the trunk may turn up to 30 deg."""
     sides = [side] if side else ["R", "L"]
     best = None
@@ -110,7 +115,7 @@ def point(cv, at, yaw, target, side=None, look_at=None, expr=.6):
     return best
 
 
-def show(cv, at, yaw, side="R", dist=.30, expr=1.0):
+def show(cv, at, yaw, side="R", dist=.30, expr=None):
     """Hold a toy (at the grip point) dist in front of the child's eyes, the palm on the far side of the toy."""
     tgt = cv.eyes + cv.face_dir * dist
     palm_n = -cv.face_dir                                  # the palm faces the child: the toy between hand and child
@@ -121,7 +126,7 @@ def show(cv, at, yaw, side="R", dist=.30, expr=1.0):
     return p, info
 
 
-def hand_over(cv, at, yaw, child_side="L", side="R", expr=.8):
+def hand_over(cv, at, yaw, child_side="L", side="R", expr=None):
     """Bring a held toy to the child's hand: the parent's grip point at the child's grasp point."""
     tgt = cv.grasp[child_side]
     hands = {side: lambda p: P.reach(p, side, tgt + np.array([0, 0, .035]), [0, 0, -1],
@@ -131,7 +136,7 @@ def hand_over(cv, at, yaw, child_side="L", side="R", expr=.8):
     return p, info
 
 
-def pick_up(cv, at, yaw, toy_xyz, expr=.3):
+def pick_up(cv, at, yaw, toy_xyz, expr=None):
     """Reach a toy on the floor or mat from kneeling, either hand: the grip point just above its centre, palm down,
     the fingers pointing away from the parent."""
     alts = []
@@ -156,7 +161,7 @@ def approach_spot(toy_xy, child_xy, dist=.62, avoid_r=.45):
     return spot, yaw
 
 
-def guide(cv, at, yaw, child_side="L", side="R", expr=.5):
+def guide(cv, at, yaw, child_side="L", side="R", expr=None):
     """Hold the child's forearm at its hold point (the soft weld's anchor), palm on the forearm."""
     tgt = cv.hold[child_side]
     axis = cv.forearm_R[child_side][:, 2]
@@ -172,7 +177,7 @@ def guide(cv, at, yaw, child_side="L", side="R", expr=.5):
     return solve(at, yaw, alts, look_at=cv.eyes, expr=expr)
 
 
-def prop(cv, at, yaw, expr=.8, knee_w=.21, chest=None, chest_R=None, mode="heels"):
+def prop(cv, at, yaw, expr=None, knee_w=.21, chest=None, chest_R=None, mode="heels"):
     """Both hands on the child's chest sides (the prop sites), palms facing each other, fingers up the back."""
     chest = cv.chest if chest is None else chest
     cR = cv.chest_R if chest_R is None else chest_R

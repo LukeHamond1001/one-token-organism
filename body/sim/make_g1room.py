@@ -1,5 +1,5 @@
 """Writes body/sim/g1room.xml: the living room with the STOCK UNITREE G1 as the child (docs/SIM_DESIGN.md sections 3, 5 and
-15; the G1 amendment of 2026-09-24; from the G1 prototype of the same day, a copy of make_livingroom.py with the custom child
+15; the G1 amendment of 2026-09-24; from the G1 prototype of the same day, a copy of make_livingroom_customchild.py with the custom child
 taken out). The XML is generated: edit the numbers here and re-run, never the XML.
 
   THE CHILD   the stock Unitree G1 with the Dex3 hands (MuJoCo Menagerie unitree_g1/g1_with_hands.xml), INCLUDED
@@ -13,7 +13,7 @@ taken out). The XML is generated: edit the numbers here and re-run, never the XM
               an immovable body; holds toys, the child's wrist or its torso through welds that start switched off. Its face
               carries the graded face's extra geoms (parent_kin.face_extra_geoms_xml: a lower lip, the named cheeks), which
               g1scene.Scene draws from the parent's feelings (the parent lane's parent_feel.py).
-  THE ROOM    as in make_livingroom.py, with the play mat enlarged for a 1.32 m body (2.8 x 2.0 m) and the toys placed
+  THE ROOM    as in make_livingroom_customchild.py, with the play mat enlarged for a 1.32 m body (2.8 x 2.0 m) and the toys placed
               around the G1.
 
 Units: RADIANS in this file (the G1's compiler says angle="radian", and MuJoCo applies the last compiler element to
