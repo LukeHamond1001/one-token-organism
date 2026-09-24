@@ -10,9 +10,9 @@ it is not labelled as said; letters of a later word already delivered stay, as t
 by the tick its sound stops, so the run is closed); between words it stops at once. A line cut before any of its words sounded
 ends unheard: no END is queued for it (the P1-P2 verifier's nit: a lone END with no sound).
 Measured over the 331 birth lines (plain) cut at every tick (tools/sim_voice_check.py): without the cap 82 of the 2,913 cuts
-(2.8%) needed 4-5 ticks to finish the word (a long word said slowly, "peekaboo!", or a line's last word), and an emphasized new
-word up to 7 (test_sim_voice.py); with it none passes 3. The line's last 10 ms
-before a cut fade out on a raised cosine (ours: at a word's end the clip is already 40 dB down, so the fade only removes the step
+(2.8%) needed 4-5 ticks to finish the word (a long word said slowly, "peekaboo!", or a line's last word); over the same lines as
+new-word lines (the new word lengthened, about 630 ms) 405 of 3,636 (11.1%) needed 4-6; with the cap none passes 3. The line's
+last 10 ms before a cut fade out on a raised cosine (ours: at a word's end the clip is already 40 dB down, so the fade only removes the step
 a hard stop would add). mouth() is the tick's loudness for the face.
 
 Nothing here draws a random number; state() and Utterance.restore(clip, state) carry the play position, a cut and the words

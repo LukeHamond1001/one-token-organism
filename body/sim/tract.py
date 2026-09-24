@@ -40,8 +40,9 @@ THE CALIBRATION (the study's; all ours, anatomy; disclosed):
     constriction held at its anatomical place (Wood 1979): /i/ 344/2719 Hz, /a/ 938/1625 Hz, rounded /u/ about 375/1250 Hz.
     The honest gap: the vowel space is about an adult woman's size (front vowels short in F2, 2700 against 3200; low vowels
     short in F1, about 900 against 1030)
-  - levels: the steady /a/ at the parent's speech level (GAIN; measured 62.2 dB SPL at 1 m against the parent's 62.0 on the
-    study's stream, 62.5 on the tract's own stream of seed 1, the jitter's and shimmer's draws); the
+  - levels: the steady /a/ at ANSI S3.5-1997's "normal" vocal effort at 1 m, 62 dB SPL (GAIN), the same reference level the
+    parent's speech takes (synth.SPEECH_PA), not a fit to her voice (measured 62.2 dB SPL at 1 m on the study's stream, 62.5 on
+    the tract's own stream of seed 1, the jitter's and shimmer's draws); the
     turbulence constants set so a steady alveolar hiss is -14.1 dB and a steady /h/ -13.4 dB re /a/ (measured; Fletcher's
     relative phonetic powers put /s/ about -16 dB and /sh/ -9 dB re /a/)
   - the breath reservoir: 400 cm^3 usable (about 2.5 s of speech), a full breath in 0.8 s at rest
@@ -52,7 +53,10 @@ glide, a hiss; best of repeats at load averages 3.4-5.5), up to 7.4 ms under hea
 import numpy as np
 from scipy.signal import lfilter
 
-from .voice.synth import PA_PER_UNIT  # noqa: F401  (the engine units -> pascals at 1 m, shared with the parent's voice)
+try:
+    from .voice.synth import PA_PER_UNIT  # noqa: F401  (the engine units -> pascals at 1 m, shared with the parent's voice)
+except ImportError:                       # imported as a top-level module from body/sim/ (the study's scripts, parent_ear.py)
+    from voice.synth import PA_PER_UNIT  # noqa: F401
 
 STREAM = 2                   # the tract's own random stream of the body's seed: SeedSequence(seed, spawn_key=(2,)) (the world: 1)
 
@@ -101,7 +105,7 @@ REFILL_S = 0.8               # a full breath in at rest, seconds
 # the sources' peak amplitudes in speech (a steady /a/, /h/, hiss) at 4 sd of the noise: the silence gate's reference
 SRC_REF = (160.0, 8.5e-9 * (8000.0 ** 2 - RE_C ** 2) * 4, 7.5e-6 * (6000.0 ** 2 - RE_C ** 2) * 4)
 TILT_LO, TILT_HI = 700.0, 2500.0   # the return phase's corner, breathy .. pressed (Hz); Klatt's spectral tilt
-GAIN = 3.67e-7                   # output scale (the tract's /a/ at the parent's speech level: t_calib2.py)
+GAIN = 3.67e-7                   # output scale (the tract's /a/ at ANSI's normal effort, 62 dB SPL at 1 m: t_calib2.py)
 
 # ---- the articulators (the voice effector's joints) ----
 NAMES = ['lungs', 'glottis', 'pitch', 'jaw', 'tongue_front', 'tongue_height', 'tongue_tip', 'lips', 'rounding', 'velum']

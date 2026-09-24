@@ -8,9 +8,11 @@ a lowered velum keeps a nasal murmur; rest is silent; the breath runs out and re
 voice (macOS only; skipped without swiftc): the engine bit for bit across two server processes; the cache in the life's folder
 (no default in the source tree): its hits, its ledger, a damaged file made again, a clip and its record swapped for another
 line's refused and made again, a changed engine refused, the size limit dropping only lines made ahead while every heard line is
-kept and read back with no engine at all; the words' onsets and ends; the registers' pitch and level, and plain speech at 62 dB
-SPL; a new word's line refused without its new word emphasized, and under 3 words a second with it (C25); a line played tick by
-tick into the words channel; the talk-over stop cut at every tick of seven lines (never more than 3 ticks; a word broken off by
+kept and read back with no engine at all, a ledger line cut short dropped on load, a lost ledger restored from the heard clips'
+own records (a damaged one made again held to its record); the words' onsets and ends; the registers' pitch and level, and plain
+speech at 62 dB SPL; a new word's line refused without its new word emphasized; the new word longer and higher than in the same
+line unemphasized and in the plain line on ".", "?" and "!" lines alike, no punctuation read aloud as a word (SpokenMark), and
+the variation set for a new word at most 3 words a second (C25); a line played tick by tick into the words channel; the talk-over stop cut at every tick of seven lines (never more than 3 ticks; a word broken off by
 the cap withdrawn from the channel, the rest labelled exactly as said) and its save and restore; a line cut before it sounds
 ends unheard, and a spelled word broken off keeps its closing space; the server's 60 s deadline (a hung server, one that keeps
 dying, one that comes back), with stand-in servers. The table: 79 rows, "a" the word apart from "a" the letter, a later word
@@ -319,10 +321,12 @@ def test_engine_bit_for_bit():
         return fd, path
     V.tempfile.mkstemp = spy
     try:
-        for ln in LINES[:3]:
-            q = V.request(ln)[1]["ssml"]
+        reqs = [V.request(ln) for ln in LINES[:3]] + [V.request(ln, "new_word", w) for ln, w in
+                                                         (("look. a duck.", "duck"), ("see the ball?", "ball"), ("yes. the drum!", "drum"))]
+        for _, req, _ in reqs:
+            q = req["ssml"]
             a, b = s1.synth(q, rate=V.ENGINE_RATE, pitch=1.0, ssml=True), s2.synth(q, rate=V.ENGINE_RATE, pitch=1.0, ssml=True)
-            assert np.array_equal(a[0], b[0]) and a[1] == b[1] and a[2] == b[2], f"{ln!r} differs between two server processes"
+            assert np.array_equal(a[0], b[0]) and a[1] == b[1] and a[2] == b[2], f"{q!r} differs between two server processes"
         plain = s1.synth(LINES[0], rate=0.25, pitch=1.15)
         ssml = s1.synth(V.request(LINES[0])[1]["ssml"], rate=V.ENGINE_RATE, pitch=1.0, ssml=True)
         assert np.array_equal(plain[0], ssml[0]), "the line in SSML is not the utterance at the register's pitch and rate"
@@ -334,7 +338,8 @@ def test_engine_bit_for_bit():
     assert made and not any(os.path.realpath(q).startswith(os.path.realpath(src)) for q in made), \
         f"the clips' temporary files were written into the source tree: {made[0]}"
     assert not any(os.path.exists(q) for q in made), "a clip's temporary file was left behind"
-    print("7 the engine is exact: three lines bit for bit across two server processes; a line in SSML is, bit for bit, the "
+    print("7 the engine is exact: six lines (three plain, three new-word lines ending '.', '?' and '!') bit for bit across two "
+          "server processes; a line in SSML is, bit for bit, the "
           "utterance at its register's pitch and rate; its temporary files outside the source tree, and removed")
 
 
@@ -403,18 +408,55 @@ def test_cache_and_ledger():
         c3 = V.VoiceCache(tmp, server=_NoEngine())                 # a replay: every heard line from the life's folder, no engine
         again = [c3.clip(ln) for ln in LINES]
         assert all(np.array_equal(p.pcm, q.pcm) and p.words == q.words for p, q in zip(heard, again))
+        # the ledger's last line cut short (a full disk or a kill mid-append): dropped on load, never a failure to load
+        ledger = os.path.join(tmp, "ledger.jsonl")
+        with open(ledger, "a") as f:
+            f.write('{"key": "' + heard[1].key[:20])
+        c4 = V.VoiceCache(tmp, server=_NoEngine())
+        assert len(c4.ledger) == 2 * len(LINES) and open(ledger).read().endswith("}\n"), "a cut ledger line was kept or failed"
+        # the ledger lost: every heard clip whose own record holds is served with no engine, and the ledger restored from it
+        os.unlink(ledger)
+        c5 = V.VoiceCache(tmp, server=_NoEngine())
+        again = [c5.clip(ln) for ln in LINES]
+        assert all(np.array_equal(p.pcm, q.pcm) for p, q in zip(heard, again)) and c5.recovered == len(LINES), \
+            "a heard clip was deleted and made again because the ledger was lost"
+        assert {json.loads(ln)["key"] for ln in open(ledger) if ln.strip()} == {h.key for h in heard}
+        # the ledger lost and a heard clip damaged: made again and held to the digest its own record kept
+        os.unlink(ledger)
+        pp, pj = c5._paths(heard[0].key, c5.kept)
+        raw = bytearray(pp.read_bytes())
+        raw[1000] ^= 0xFF
+        pp.write_bytes(bytes(raw))
+        c6 = _cache(tmp)
+        d = c6.clip(LINES[0])
+        assert c6.misses == 1 and np.array_equal(d.pcm, heard[0].pcm)
+        c6.close()
+        os.unlink(ledger)                                          # again, with the record holding another digest: refused
+        pp.write_bytes(bytes(raw))
+        meta = json.loads(pj.read_text())
+        meta["digest"] = "1" * 64
+        pj.write_text(json.dumps(meta))
+        c7 = _cache(tmp)
+        try:
+            c7.clip(LINES[0])
+            raise AssertionError("with the ledger lost, a damaged heard clip was made again unchecked")
+        except V.VoiceChanged:
+            pass
+        c7.close()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print("8 the cache is the life's folder (no default): a hit returns the same clip; the ledger keeps its digest; a damaged "
           "file is made again equal; a clip and its record swapped in from another line are refused (by its request, then by the "
           "ledger) and the line made again; a changed engine is refused; the size limit drops only lines made ahead (least "
-          "recently used first); every heard line is kept past the limit and read back with no engine")
+          "recently used first); every heard line is kept past the limit and read back with no engine; a ledger line cut short "
+          "is dropped on load; with the ledger lost, heard clips are served by their own records and the ledger restored, and a "
+          "damaged one made again is held to its record's digest")
 
 
 def test_words_registers_and_level():
     try:
         V.request("look. a bottle.", "new_word")
-        raise AssertionError("a new word's line without its new word emphasized was accepted (C25: 3.39 words a second)")
+        raise AssertionError("a new word's line without its new word emphasized was accepted")
     except ValueError:
         pass
     if not _have_engine():
@@ -439,19 +481,76 @@ def test_words_registers_and_level():
         rms = np.array([sounding_rms(c.clip(ln).pcm) for ln in LINES])
         spl = 20 * math.log10(np.sqrt(np.mean(rms ** 2)) * V.PA_PER_UNIT / 20e-6)
         assert abs(spl - 62.0) < 1.5, f"plain speech at 1 m is {spl:.1f} dB SPL"
-        e = c.clip("look. a duck.", emphasis="duck")
-        p = c.clip("look. a duck.")
-        de, dp = [x for x in e.words if x[0] == "duck"][0], [x for x in p.words if x[0] == "duck"][0]
-        assert de[2] - de[1] > 1.3 * (dp[2] - dp[1]), "the emphasized word is not longer"
-        nw = [c.clip(ln, "new_word", emphasis=ln.strip(".?! ").split()[-1]) for ln in LINES]
-        wps = sum(len(k.words) for k in nw) / sum((k.words[-1][2] - k.words[0][1]) / V.SR for k in nw)
-        assert wps <= 3.0, f"new-word lines run at {wps:.2f} words a second (C25: at most 3)"
         c.close()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print(f"9 the words' onsets and ends in order; F0 comfort {f0['comfort']:.0f} < plain {f0['plain']:.0f} < approval "
-          f"{f0['approval']:.0f} Hz; calling +6 dB; plain speech {spl:.1f} dB SPL at 1 m; an emphasized word longer; a new word's "
-          f"line refused without its emphasis, and with it {wps:.2f} words a second (C25: at most 3)")
+          f"{f0['approval']:.0f} Hz; calling +6 dB; plain speech {spl:.1f} dB SPL at 1 m; a new word's line refused without its "
+          f"emphasis")
+
+
+def f0_word(x):
+    """an instrument (tools/sim_voice_check.py's): a word's F0 median over its voiced frames, frames more than a factor 1.6 from
+    the word's median dropped (a stop's burst can read as a periodic run near 520 Hz)."""
+    v = f0_track(x)
+    v = v[v > 0]
+    m = np.median(v)
+    return float(np.median(v[(v < 1.6 * m) & (v > m / 1.6)]))
+
+
+BY_ENDING = ["look. a duck.", "here is your bottle.", "where is the duck?", "see the ball?", "yes. the drum!", "good. the cup!"]
+
+
+def test_new_word_emphasis_by_ending():
+    """the parent introduces a new word on its pitch peak and lengthened (Fernald and Mazzie 1991; Albin and Echols 1996) on every
+    line she uses for it: on ".", "?" and "!" lines alike the focus word is longer and higher than in the same line unemphasized
+    (the same register) and than in the plain line; no punctuation is read aloud as a word (a "." left outside the word's
+    prosody is spoken as "period": refused, SpokenMark); and the design's variation set for a new word runs at most 3 words a
+    second (C25)."""
+    q = V.line_ssml("where is the duck?", *V.REGISTERS["new_word"][:2], emphasis="duck")
+    assert 'rate="21%">duck?</prosody>' in q, ("the focus word's prosody must hold its punctuation, at 0.7 x the line's rate", q)
+    if not _have_engine():
+        print("13 skipped (the emphasis's SSML checked only)")
+        return
+    tmp = tempfile.mkdtemp(prefix="voice_test_")
+    try:
+        c = _cache(tmp)
+        srv = c._server()
+        spoken = '<speak><prosody pitch="+15%" rate="30%">look. a <prosody pitch="+30%" rate="21%">duck</prosody>.</prosody></speak>'
+        x, sr, marks, _ = srv.synth(spoken, rate=V.ENGINE_RATE, pitch=1.0, ssml=True)
+        try:
+            V.words_of(V.to_16k(x, sr), sr, marks, spoken)
+            raise AssertionError("a '.' left outside the focus word's prosody (spoken as 'period') was not refused")
+        except V.SpokenMark:
+            pass
+        p, r, _ = V.REGISTERS["new_word"]
+        rows = {}
+        for ln in BY_ENDING:
+            fw = "".join(ch if ch.isalpha() else " " for ch in ln).split()[-1]
+            e, pl = c.clip(ln, "new_word", emphasis=fw), c.clip(ln, "plain")
+            qu = V.line_ssml(ln, p, r)                                # the same line unemphasized (the voice never says it)
+            x, sr, marks, _ = srv.synth(qu, rate=V.ENGINE_RATE, pitch=1.0, ssml=True)
+            u = V.to_16k(x, sr)
+            got = {}
+            for name, pcm, ws in (("e", e.pcm, e.words), ("u", u, V.words_of(u, sr, marks, qu)), ("p", pl.pcm, pl.words)):
+                _, on, end = [w for w in ws if w[0] == fw][-1]
+                got[name] = ((end - on) / V.SR, f0_word(pcm[on:end]))
+            lu, lp = got["e"][0] / got["u"][0], got["e"][0] / got["p"][0]
+            fu, fp = got["e"][1] / got["u"][1], got["e"][1] / got["p"][1]
+            assert lu > 1.08 and lp > 1.15, f"{ln!r}: the new word is x{lu:.2f} as long as unemphasized, x{lp:.2f} the plain line's"
+            assert fu > 1.15 and fp > 1.15, f"{ln!r}: the new word's F0 is x{fu:.2f} unemphasized, x{fp:.2f} the plain line's"
+            rows.setdefault(ln[-1], []).append((lu, lp, fu, fp))
+        assert set(rows) == {".", "?", "!"}
+        cs = [c.clip(ln, "new_word", emphasis="duck") for ln in ("a duck.", "the duck!", "you see the duck?")]
+        wps = sum(len(k.words) for k in cs) / sum((k.words[-1][2] - k.words[0][1]) / V.SR for k in cs)
+        assert wps <= 3.0, f"the variation set for a new word runs at {wps:.2f} words a second (C25: at most 3)"
+        c.close()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("13 a new word on its pitch peak and lengthened on every ending: " + "; ".join(
+        f"'{k}' length x{min(v[0] for v in vs):.2f}+ (x{min(v[1] for v in vs):.2f}+ the plain line's), F0 x{min(v[2] for v in vs):.2f}+ "
+        f"(x{min(v[3] for v in vs):.2f}+)" for k, vs in rows.items()) + f"; a '.' read aloud as 'period' refused; the variation set "
+        f"'a duck.' / 'the duck!' / 'you see the duck?' at {wps:.2f} words a second (C25: at most 3)")
 
 
 def test_playback_into_the_words_channel():
@@ -518,7 +617,7 @@ def test_playback_into_the_words_channel():
 
 TESTS = [test_tract_vowels, test_tract_deterministic, test_closure_stops_voicing, test_rest_is_silent_and_breath, test_tract_cost,
          test_table_and_channel, test_engine_bit_for_bit, test_cache_and_ledger, test_words_registers_and_level,
-         test_playback_into_the_words_channel, test_playback_edges, test_server_deadline]
+         test_playback_into_the_words_channel, test_playback_edges, test_server_deadline, test_new_word_emphasis_by_ending]
 
 if __name__ == "__main__":
     t0 = time.time()

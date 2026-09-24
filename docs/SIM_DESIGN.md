@@ -565,7 +565,7 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 ### 4.4 Its voice
 
 - **The engine:** macOS speech through a small Swift server (`AVSpeechSynthesizer.write`, with word markers).
-  - It returns exact word onsets and is byte-identical on every run.
+  - It returns exact word onsets and is byte-identical on every run. (Not after an SSML `<break>`, which moves the next word's mark 90–210 ms before its sound; so no line has a break.)
   - A sentence takes about 45 ms once warm (median 42–50 ms, 95th percentile 53–68 ms).
   - It runs at nice 10, off the tick loop. A cache miss makes the lockstep world wait about 50 ms of wall time and costs no sim time.
 - **The voice:** compact Samantha, at rate 0.25 and pitch 1.15. None of the installed voices is at enhanced or premium quality.
@@ -579,16 +579,31 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 | calling | 1.25 | 0.25, +6 dB | rising | the child's name |
 | question | plain | 0.25 | rising (the synthesizer raises the pitch on "?" itself) | asks |
 | "no." (stage 2 only) | 1.0 | 0.3 | short, low | a hit or talk-over |
+| new word | 1.15 | 0.15 | the new word on its pitch peak and lengthened, on any ending | the day's new word (4.8) |
 
 - **Infant-directed speech** (the owner's decision 6):
-  - lines of at most 6 words, the focus word last (Fernald and Mazzie 1991);
-  - the focus word on a pitch peak through SSML (`<prosody pitch="+30%" rate="70%">`). Measured (P1): the focus word's F0 +37% and its length +91%. Every line goes to the engine as SSML, its register's pitch and rate as one prosody around it (a plain line so made is the same clip, bit for bit, as the utterance);
-  - the new word's lines at rate 0.2, with the new word always emphasized: 2.84 words a second over 40 birth lines (C25's limit is 3). Unemphasized they ran at 3.39 (the engine's rates come in steps), so the voice refuses a new-word line without its emphasis.
-- **Its lines:** 4.0 words and 1.11 s (7.4 ticks) on average, 3.6 words a second.
+  - lines of at most 6 words, the focus word last (Fernald and Mazzie 1991: mothers put a focused new word in final position on the utterance's pitch peak in speech to infants, and not consistently in speech to adults);
+  - the focus word on a pitch peak and lengthened through SSML: a prosody around the word and the punctuation after it, pitch +30% on the line's, rate 0.7 × the line's (lengthening: Albin and Echols 1996, word- and sentence-final lengthening in infant-directed speech). Every line goes to the engine as SSML, its register's pitch and rate as one prosody around it (a plain line so made is the same clip, bit for bit, as the utterance).
+    - What the engine does, measured: a nested prosody's rate is read against the engine's default, not the line's; its pitch against the line's; a "." left outside the word's prosody is spoken aloud as "period" (bit for bit), so the voice refuses any word mark without a letter.
+    - The first build (87a4194 and before) left the punctuation outside and wrote the rate as 70% of the default. Its "+37% F0, +91% length" was measured only on "." lines, where the parent said "period" after the word; on "?" and "!" lines the word came out 15% shorter.
+    - Measured on every one of the 331 birth lines, the line's last word emphasized in the plain register: 1.17 times as long and F0 1.29–1.30 times the unemphasized line's, on ".", "?" and "!" lines alike;
+  - the new word's lines in the new-word register (rate 0.15, the new word always emphasized; the voice refuses a new-word line without it). Measured over the 331 birth lines as new-word lines, the line's last word as the new word:
+
+| line ends in | lines (distinct) | the new word's length, × the same line unemphasized (least) | × the plain line (least) | its F0, × unemphasized (least) | × the plain line (least) | words a second, pooled | lines over 3 |
+|---|---|---|---|---|---|---|---|
+| "." | 275 (258) | 1.14 (1.12) | 1.32 (1.28) | 1.30 (1.23) | 1.30 (1.22) | 2.93 | 116 |
+| "?" | 37 (37) | 1.15 (1.12) | 1.33 (1.29) | 1.29 (1.24) | 1.29 (1.26) | 2.90 | 13 |
+| "!" | 19 (19) | 1.14 (1.12) | 1.32 (1.29) | 1.30 (1.28) | 1.30 (1.27) | 2.51 | 2 |
+
+- **The new word, measured further** (`tools/sim_voice_check.py`):
+  - it lasts about 630 ms, against 552–554 ms unemphasized and 473–481 ms in the plain line; its F0 is about 195 Hz on "." and "!" lines and 232 Hz on questions, against 150 and 178;
+  - C25 is pooled: 2.91 words a second over all 331 new-word lines, and 2.40–2.83 (2.61 on average) over the variation set for a new word ("a X." / "the X!" / "you see the X?", each of the 8 toys). A line of 4–6 words alone can run up to 3.9; no line of 1–2 words runs over 3;
+  - at rate 0.2 (the parent spec's D3) the emphasized lines ran at 3.12 and 3.10 words a second on "." and "?" lines, over C25, so the register is 0.15. Questions keep the new word: the engine does it on every ending.
+- **Its lines:** 4.0 words and 1.12 s (7.5 ticks) on average, 3.56 words a second (measured over the 331 birth lines; plain F0 203 Hz, approval 239, comfort 184 at 3.08 words a second, calling 219 at +6 dB).
   - At one symbol a tick, 95% of word tokens arrive on the tick their word ends and 5% one tick late.
 - **The cache** is the life's voice folder, saved beside the body (never the source tree), keyed by the request: the voice, the line as SSML in its register, the clip format.
-  - Every line the life hears is kept for good (`kept/`), so a replay reads the very samples heard, and a ledger keeps every clip's digest. A clip made again must equal its digest, or the voice refuses it and the life pauses (an OS update may change the voice).
-  - At each night boundary it pre-synthesizes every template line for the current vocabulary: 331 lines in 15 s, 13.3 MB (40 KB a line). Lines made ahead and not yet heard (`clips/`) have a 300 MB limit that drops the least recently used.
+  - Every line the life hears is kept for good (`kept/`), so a replay reads the very samples heard, and a ledger keeps every clip's digest. A clip made again must equal its digest, or the voice refuses it and the life pauses (an OS update may change the voice). A ledger line cut short (a full disk, a kill) is dropped on load, and a line the ledger lost is restored from the heard clip's own record; a damaged clip so recorded is made again and held to that record.
+  - At each night boundary it pre-synthesizes every template line for the current vocabulary: 331 lines (314 distinct) in 8–15 s, 13.3 MB (40 KB a line). Lines made ahead and not yet heard (`clips/`) have a 300 MB limit that drops the least recently used.
   - `kept/` grows by 40 KB for each line heard for the first time: at most about 25 MB a life day at 4.6's density even if every line were new, and the day's fresh lines in practice (section 9).
   - The server answers within 60 s or the life pauses at that tick (the decision log's rule, in `SynthServer`).
 - **Its mouth** opens each tick with the clip's loudness in that tick (the jaw parameter).
@@ -596,7 +611,7 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 ### 4.5 Its sentences
 
 - **Two layers.**
-  - **The fast layer** is scripted, deterministic and seeded. It picks short sentences from templates, filled from what the parent can see: what the child looks at, holds, or just said. It carries every judgment that must land within ticks. There are 331 distinct lines at birth.
+  - **The fast layer** is scripted, deterministic and seeded. It picks short sentences from templates, filled from what the parent can see: what the child looks at, holds, or just said. It carries every judgment that must land within ticks. There are 331 template lines at birth, 314 of them distinct (17 "." lines repeat).
   - **Claude, between wall minutes,** reads a plain-text digest of the last minute and writes one steering row: the focus toys, the next activity, fresh lines tied to situations, and the one new word to introduce.
   - Claude never controls a feeling, the face, the gaze or a judgment, and never sees anything inside the child. A14 lists what it may and may not do.
 - **Intents, with examples:**
@@ -617,7 +632,7 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 | leave, return | "bye bye pip." / "hi pip! mama is here." |
 | peekaboo, comfort, night | "peekaboo!" / "night night pip." |
 
-- **Variation sets** (Küntay and Slobin; Onnis et al. 2008): 2–3 lines sharing the focus word, with frames differing by at least one word ("a duck." / "the duck!" / "you see the duck?"), 6 ticks apart. A set counts as one naming. At most one set per object per 120 ticks.
+- **Variation sets** (Küntay and Slobin; Onnis et al. 2008): 2–3 lines sharing the focus word, with frames differing by at least one word ("a duck." / "the duck!" / "you see the duck?"), 6 ticks apart. A set counts as one naming. At most one set per object per 120 ticks. A new word's set is in the new-word register, the word on its pitch peak and lengthened in each line whatever its ending: 2.40–2.83 words a second (C25).
 - **The line check** applies to every line, templates and Claude's alike:
   - at most 6 words;
   - only `. ? !` as punctuation;
@@ -637,7 +652,7 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 - **The child's turn:**
   - it ends when the tract has rested 2 ticks (silent) after sounding;
   - the parent replies 3 ticks later, answering what the child said: an expansion, a recast, an echo of its babble, or an answer (Goldstein et al. 2003; Goldstein and Schwade 2008, from memory).
-- **Talk-over.** If the child starts sounding during the parent's clip, the parent finishes the current word (at most 3 ticks), stops, and looks at the child with a listening face. A word that would need longer (2.8–2.9% of cuts over the birth lines: a long word said slowly, or a line's last word) is broken off at 3 ticks and not labelled as said: its token is withdrawn from channel 0, and a spelled word's letters already given are closed by its space.
+- **Talk-over.** If the child starts sounding during the parent's clip, the parent finishes the current word (at most 3 ticks), stops, and looks at the child with a listening face. A word that would need longer (2.8–2.9% of cuts over the birth lines: a long word said slowly, or a line's last word; 11.1% of cuts over the same lines as new-word lines, whose lengthened new word takes about 630 ms, 4–6 ticks to finish) is broken off at 3 ticks and not labelled as said: its token is withdrawn from channel 0, and a spelled word's letters already given are closed by its space.
 - **Repeats:**
   - the call at most once per 240 ticks;
   - the same line not within 60 ticks;
@@ -703,7 +718,7 @@ Anything urgent comes before the plan, in the behaviour system's order (section 
 - **Growth pace.** About 12 content words are active at a time.
   - The next word enters when at least half of the active set is understood.
   - At least one new word every 2 life days, at most 3 a life day.
-  - A new word is said sentence-final, in 3 lines within a minute (one variation set).
+  - A new word is said sentence-final, in 3 lines within a minute (one variation set), on its pitch peak and lengthened in every line of the set, whether it ends in ".", "?" or "!" (4.4: measured on all 331 birth lines by ending, the word 1.14 times as long and its F0 1.30 times the same line's unemphasized, 1.32 and 1.30 times the plain line's; the set at 2.40–2.83 words a second).
 
 ### 4.9 The child's voice: the vocal tract, and the word scaffold
 
@@ -1307,7 +1322,7 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 | store | capacity set before birth to hold 19 life days of the measured writes | physiology | ours |
 | episode cap | 24,000 ticks | physiology | ours |
 | switches at birth | fixes #1, #4, #5, #8 on; `amyg` on; `chunk_gate` 1 per effector | physiology | ours (off for language) |
-| voices | parent: compact Samantha, rate 0.25, pitch 1.15, and the registers; the child: its tract | world, anatomy | owner (default) / ours |
+| voices | parent: compact Samantha, rate 0.25, pitch 1.15, and the registers (the new word's at rate 0.15); the focus word's prosody: pitch +30% on the line's, rate 0.7 × the line's, holding its punctuation (Fernald and Mazzie 1991; Albin and Echols 1996); the child: its tract | world, anatomy | owner (default) / ours |
 | light | the sun across the window from morning to dusk; the lamp at winding down; dark at night | world | owner (decision 3) |
 | the room, toys, charger, names | sections 5 and 4.8 | world | owner (defaults) |
 
@@ -1930,7 +1945,7 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 - **A rest is silence.** At rest the targets relax, with a time constant of 1 tick, to a silent resting posture: nose breathing, the lips nearly closed, the velum down. The gate's "no" means quiet, as a limb's rest means still.
 - **One target per articulator per tick** gives at most 3.3 syllables a second, about canonical babbling's rate. A word takes 4–6 ticks. Nothing sequences sounds inside a tick.
 - **Physics, not rules.** The articulators move with damped muscle dynamics (57–120 ms), so sounds glide into each other; breath (400 cm³, about 2.6 s, refilled in 0.8 s) makes breath groups. No phoneme table exists anywhere.
-- **Fitted to children's vowels, never to the teacher.** The tongue's corners were fitted to children's vowel means (Peterson and Barney). Nothing was fitted to the parent's words or voice.
+- **Fitted to children's vowels, never to the teacher.** The tongue's corners were fitted to children's vowel means (Peterson and Barney). Nothing was fitted to the parent's words or voice. Its level (GAIN) puts its /a/ at ANSI S3.5-1997's "normal" vocal effort at 1 m, 62 dB SPL: the standard's level, which the parent's speech also takes, not a fit to her voice.
 - **Not tuned to reach a word.** "bye" was reached by no act tried, and "hi", "pip", "up" and "see" only by hand. The tract stays as it is, and the first 50 words stay as they are. A word it cannot yet say is still one it can understand, and name by tokens while the scaffold lasts.
 - **It hears itself at t+1,** through its own ears, about 19–20 dB above the same sound from 1.5 m (the exact sphere's level for its speaker on the head's front), with no bone conduction.
 - **The silent token output** (effector 1) is a second, separate effector with its own gate.
@@ -2041,7 +2056,7 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | C22 | The flexor withdrawal on each G1 limb, and whether it ever drives a limb into a worse contact | W1, then W4 | written down; no withdrawal that raises the pain it answers |
 | C23 | The tick's parts not yet measured: per-step contact forces for touch and the pain filter, the face test's rays, the parent's ear at the babble rate | S5a | inside the 150 ms mean |
 | C24 | The parent's contingency: the child's acts answered within 7 ticks | P6 | at least 90% |
-| C25 | SSML's effect on per-word prosody, and the parent's word rate | P1 | at most 3 words a second on new words. Measured: the focus word +37% F0, +91% length; new-word lines 2.84 words a second with the new word emphasized (3.39 without), so they are always emphasized |
+| C25 | SSML's effect on per-word prosody, and the parent's word rate | P1 | at most 3 words a second on new words, pooled over the lines (a set, or an ending's lines). Measured on all 331 birth lines as new-word lines (rate 0.15, the new word emphasized), by ending: the new word 1.14–1.15 times as long as unemphasized and 1.32–1.33 times the plain line's, its F0 1.29–1.30 times both, on ".", "?" and "!" lines alike; 2.93, 2.90 and 2.51 words a second pooled (2.91 over all), the variation set 2.40–2.83; single lines of 4–6 words up to 3.9. The first build's "+37% F0, +91% length, 2.84 words a second" was "." lines only, with "period" spoken |
 | C26 | Real frictions (the world's surfaces 1.0 now; the G1's feet 0.6 at priority 1, as shipped) and a friction model that does not creep (the G1 crept 5 cm at 146–199 N) | W1 | the measured sliding force matches μ × weight, set through the world's geoms at contact priority 2 and world options only; the G1's file and geoms untouched (A21) |
 | C27 | The parent's ear in life: its cost at the babble rate, its false accepts, m at the real context sizes; how often an accepted word is also exact (A27); whether the fixed babble bank still rejects babble once the child's babble has changed | P3v and P6, then the first life days | chance written down before birth; the rule never loosened after it |
 | C28 | The grasp on the six holdable toys under the resting servo law, and B1's choice | W3–W4 | written down |

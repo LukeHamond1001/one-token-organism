@@ -17,7 +17,9 @@ their words' onsets and ends, and a content-addressed cache on disk whose every 
                 Every read is checked: the clip's own digest, its request (the key and the SSML it was made from), and the
                 ledger's digest for the key; a clip that fails any is made again, and a clip made again must equal the ledger's
                 digest bit for bit, or the voice refuses it (VoiceChanged) and the life pauses at that tick, never swapping a line
-                (the decision log's rule for the voice server)
+                (the decision log's rule for the voice server). A ledger whose last line was cut short (a full disk, a kill)
+                drops that line on load; a line the ledger lost is restored from the stored clip's own record when the clip
+                holds to it, and a damaged clip so recorded is made again held to that record's digest
   Clip          the samples as pascals at 1 m in front of the parent's mouth (for the ears' spatializer, body/sim/ears.py), each
                 word with its first and last sample, and the register's level
 
@@ -38,21 +40,37 @@ EVERY LINE IS SSML. The engine ignores an utterance's own rate and pitch when it
 the register's pitch and rate as one prosody around it (rate r is r / 0.5 of the engine's default): a plain line so made is the
 same clip, bit for bit, as the utterance at that pitch and rate (measured), SSML reaches below the utterance rate's floor, and a
 focus word can be emphasized inside it (the parent spec's D3). The engine's rates come in steps (measured: utterance rates 0.15
-and 0.2 are one pace, as are 0.3 and 0.35; SSML's 40 and 45%, 50 to 60%, 65 and 70%), so the "no." register's 0.3 speaks at
-plain's pace: it is set apart by its pitch and its one word.
+and 0.2 are one pace, as are 0.3 and 0.35; SSML's 15% and below (a floor), 20%, 22 to 28%, 30 to 36%, 40 and 45%, 50 to 60%,
+65 and 70%), so the "no." register's 0.3 speaks at plain's pace: it is set apart by its pitch and its one word. What the engine
+does with a prosody nested in the line's (measured, 2026-09-24): its rate is read against the engine's default, not the line's
+(40% inside the line's 40% changes nothing), its pitch against the line's (+30% inside raises the word's F0 by 1.30); a "." left
+just outside it is read aloud as "period" (the clip is, bit for bit, the line with "period" written out), and "?" and "!" so left
+get marks of their own; after an SSML break the next word's mark comes 90-210 ms before its sound. So the focus word's prosody
+holds its punctuation, its rate is written as a share of the line's, no line has a break, and a mark without a letter is refused
+(SpokenMark). The first build (87a4194 and before) wrote the word's rate as 70% of the default and left the punctuation outside:
+on "." lines the parent said "period" after every emphasized word (the "+91% length" it reported was the word and "period"), and
+on "?" and "!" lines, where 70% of the default was faster than the line's 40%, the new word came out 15% shorter.
 
 THE CONSTANTS (disclosed; section 10's "voices" row):
   voice             compact Samantha (com.apple.voice.compact.en-US.Samantha): the owner's default (B13); none of the installed
                     voices is at enhanced or premium quality
   registers         REGISTERS below: pitch and rate as the design's 4.4 table and the parent spec's D3 table (ours; Fernald 1989's
-                    infant-directed contours); calling +6 dB is a level, applied here, not by the engine. Measured over 40 of the
-                    birth lines (tools/sim_voice_check.py): plain 3.65 words a second over the spoken span (the design's 3.6),
-                    F0 211 Hz; approval 246 Hz; comfort 3.16 words a second, 188 Hz; calling 229 Hz at +6 dB
-  new word          rate 0.2 (the parent spec D3), and its new word always emphasized: request() refuses a new-word line without
-                    it. C25's limit is 3 words a second on new words; measured over 40 of the birth lines, a new-word line runs
-                    at 3.39 words a second unemphasized (the engine's rates come in steps, above) and 2.84 with its new word on
-                    its pitch peak (tools/sim_voice_check.py; test_sim_voice.py measures it on its own lines)
-  emphasis          EMPHASIS: SSML pitch +30%, rate 70% on the focus word (the parent spec D3; ours): measured F0 +37%, length +91%
+                    infant-directed contours); calling +6 dB is a level, applied here, not by the engine. Measured over the 331
+                    birth template lines, every ending (tools/sim_voice_check.py): plain 3.56 words a second over the spoken
+                    span, F0 203 Hz; approval 239 Hz; comfort 3.08 words a second, 184 Hz; calling 219 Hz at +6 dB
+  new word          the parent introduces a new word utterance-finally, on an exaggerated pitch peak (Fernald and Mazzie 1991:
+                    mothers put the focused new word on the utterance's pitch peak, in final position, in speech to infants and
+                    not consistently in speech to adults) and lengthened (Albin and Echols 1996: word- and sentence-final
+                    lengthening in infant-directed speech), on every line she uses for it: the new_word register (rate 0.15; D3's
+                    0.2 ran over C25 once the word stopped saying "period") with the new word emphasized, request() refusing a
+                    new-word line without it. Measured over the 331 birth lines in it, the line's last word taken as the new word
+                    (tools/sim_voice_check.py): on ".", "?" and "!" lines alike the word is 1.14-1.15 times as long as in the same
+                    line unemphasized (1.12 at the least) and 1.32-1.33 times the plain line's; its F0 1.29-1.30 times both (1.22
+                    at the least); 2.93, 2.90 and 2.51 words a second pooled over the ".", "?" and "!" lines, 2.91 over all,
+                    and 2.40-2.83 over the design's variation set for a new word ("a X." / "the X!" / "you see the X?") (C25: at
+                    most 3, pooled; a line of 4-6 words alone runs up to 3.9)
+  emphasis          EMPHASIS: the focus word's prosody, pitch +30% on the line's and rate 0.7 x the line's (the parent spec D3's;
+                    ours). In the plain register: the word 1.17 times as long, F0 1.29-1.30 times, on every ending
   level             SPEECH_PA: the plain register's speech at 1 m in front of the mouth, 62 dB SPL (0.0252 Pa RMS over the sounding
                     10 ms frames): ANSI S3.5-1997's "normal" vocal effort at 1 m (62.35 dB), recalled from memory, not checked
                     against the standard. SYNTH_RMS is the engine's own RMS over those frames, 0.159 over the 331 birth template
@@ -80,7 +98,7 @@ from scipy.signal import resample_poly
 
 HERE = Path(__file__).resolve().parent
 SWIFT_SRC = HERE / "synth_server.swift"
-BIN_DIR = HERE / "cache" / "bin"            # the server's binary, one per source digest (a build product; gitignored)
+BIN_DIR = HERE / "build"                   # the server's binary, one per source digest (a build product, gitignored)
 
 SR = 16000
 HOP = 160                                  # 10 ms frames for the word ends and the level
@@ -95,12 +113,12 @@ REGISTERS = {
     "calling":  (1.25, 0.25, 6.0),
     "question": (1.15, 0.25, 0.0),         # the engine raises the pitch on "?" itself
     "no":       (1.00, 0.30, 0.0),         # stage 2's short, low "no." (the parent spec D3)
-    "new_word": (1.15, 0.20, 0.0),         # a new word's lines, slower (the parent spec D3)
+    "new_word": (1.15, 0.15, 0.0),         # a new word's lines, slower (the parent spec D3's 0.2, slowed to 0.15 for C25)
 }
 SPEECH_PA = 0.0252                         # 62 dB SPL re 20 uPa: plain speech at 1 m (ANSI S3.5-1997 "normal", from memory)
 SYNTH_RMS = 0.159                          # the engine's RMS over the plain register's sounding frames (331 lines, measured)
 PA_PER_UNIT = SPEECH_PA / SYNTH_RMS        # engine units -> pascals at 1 m
-EMPHASIS = ("+30%", "70%")                 # a focus word's SSML prosody: pitch, rate (the parent spec D3; ours)
+EMPHASIS = ("+30%", 0.7)                   # the focus word: pitch on the line's, rate x the line's (the parent spec D3; ours)
 ENGINE_RATE = 0.5                          # the engine's default utterance rate (AVSpeechUtteranceDefaultSpeechRate): SSML's 100%
 WORD_END_DB = -40.0
 CACHE_LIMIT = 300 * 2 ** 20
@@ -279,16 +297,24 @@ def _letters(s):
     return "".join(ch for ch in s.lower() if "a" <= ch <= "z")
 
 
+class SpokenMark(SynthError):
+    """the engine marked a word with no letter in it: a punctuation mark it read as a word. Measured: a "." left outside the
+    prosody that closes the word before it is spoken aloud as "period" (bit for bit the clip of the line with "period" written
+    out), and "?" and "!" so left get marks of their own. No line of the parent's may say it, and its words' ends would be wrong."""
+
+
 def words_of(pcm, sr_in, marks, text):
-    """the engine's word marks -> [(word, first sample, end sample)] at 16 kHz. A mark whose text holds no letter is dropped."""
+    """the engine's word marks -> [(word, first sample, end sample)] at 16 kHz. A mark whose text holds no letter is refused
+    (SpokenMark): the parent's lines hold only words and ". ? !", so such a mark is punctuation the engine read as a word."""
     e = frame_rms(pcm)
     thr = e.max() * 10 ** (WORD_END_DB / 20) if e.max() > 0 else np.inf
     active = e > thr
     ws = []
     for fr, loc, ln in marks:
         w = _letters(text[loc:loc + ln])
-        if w:
-            ws.append((w, int(round(fr * SR / sr_in))))
+        if not w:
+            raise SpokenMark(f"the engine read {text[loc:loc + ln]!r} as a word in {text!r}")
+        ws.append((w, int(round(fr * SR / sr_in))))
     out = []
     for i, (w, on) in enumerate(ws):
         nxt = ws[i + 1][1] if i + 1 < len(ws) else len(pcm)
@@ -326,9 +352,13 @@ def _pct(x):
 def line_ssml(text, pitch, rate, emphasis=None):
     """a line as SSML: the register's pitch multiplier and rate as one prosody around it (the engine ignores an utterance's own
     rate and pitch when it is given SSML, and honours SSML's rate below the utterance rate's floor), and, if emphasis names one
-    of its words, its last occurrence on a pitch peak and slower (infant-directed speech's focus word; Fernald and Mazzie 1991;
-    the parent spec's D3). A plain line in SSML is the same clip, bit for bit, as the utterance with that pitch and rate
-    (measured on the three test lines)."""
+    of its words, its last occurrence on a pitch peak and slower: infant-directed speech's focus word, a new word said
+    utterance-finally on an exaggerated pitch peak (Fernald and Mazzie 1991) and lengthened (Albin and Echols 1996), the parent
+    spec's D3. The focus word's prosody holds the punctuation that follows it (a "." left outside it is read aloud as "period":
+    SpokenMark), and its rate is EMPHASIS's share of the line's own (the engine reads a nested prosody's rate against its
+    default rate, not the enclosing one: measured, 40% inside 40% changes nothing; its pitch it reads against the enclosing
+    one: +30% inside the line's raises the word's F0 by 1.30). A plain line in SSML is the same clip, bit for bit, as the
+    utterance with that pitch and rate (measured on the three test lines)."""
     esc = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     if emphasis:
         low, w = esc.lower(), emphasis.lower()
@@ -340,15 +370,19 @@ def line_ssml(text, pitch, rate, emphasis=None):
                 break
         if i < 0:
             raise ValueError(f"{emphasis!r} is not a word of {text!r}")
-        p, r = EMPHASIS
-        esc = f'{esc[:i]}<prosody pitch="{p}" rate="{r}">{esc[i:i + len(w)]}</prosody>{esc[i + len(w):]}'
+        j = i + len(w)
+        while j < len(esc) and esc[j] in ".?!":                       # the word's own punctuation goes inside its prosody
+            j += 1
+        p, f = EMPHASIS
+        esc = f'{esc[:i]}<prosody pitch="{p}" rate="{_pct(f * rate / ENGINE_RATE * 100)}">{esc[i:j]}</prosody>{esc[j:]}'
     return f'<speak><prosody pitch="{_pct((pitch - 1) * 100) if pitch < 1 else "+" + _pct((pitch - 1) * 100)}" ' \
            f'rate="{_pct(rate / ENGINE_RATE * 100)}">{esc}</prosody></speak>'
 
 
 def request(text, register="plain", emphasis=None, voice=PARENT_VOICE):
-    """-> (the key, the request, the register's level in dB). A new word's line must name its new word as emphasis (C25: at rate
-    0.2 the engine speaks it at 3.39 words a second, over the limit of 3; with the new word on its pitch peak, 2.84)."""
+    """-> (the key, the request, the register's level in dB). A new word's line must name its new word as emphasis: the parent
+    introduces a new word on its pitch peak and lengthened, on every line she uses for it (". ? !" alike; the design's 4.4 and
+    C25, measured by ending in tools/sim_voice_check.py)."""
     if register == "new_word" and not emphasis:
         raise ValueError(f"a new word's line must emphasize its new word: {text!r}")
     p, r, g = REGISTERS[register]
@@ -372,10 +406,21 @@ class VoiceCache:
         self._own_server = server is None
         self.ledger_path = self.root / "ledger.jsonl"
         self.ledger = {}
+        self.recovered = 0                        # ledger lines restored from a stored clip's own record (a lost or cut ledger)
         if self.ledger_path.exists():
-            for line in self.ledger_path.read_text().splitlines():
+            raw = self.ledger_path.read_bytes()
+            done, nl, tail = raw.rpartition(b"\n")
+            if tail.strip():                      # the last line has no newline: an append cut short (a full disk, a kill)
+                try:
+                    json.loads(tail)
+                    with open(self.ledger_path, "ab") as f:
+                        f.write(b"\n")            # whole, only its newline lost
+                except ValueError:
+                    os.truncate(self.ledger_path, len(done) + len(nl))   # a half line: dropped; its clip's record restores it
+                    raw = done + nl
+            for line in raw.decode().splitlines():
                 if line.strip():
-                    j = json.loads(line)
+                    j = json.loads(line)          # a damaged line before the last is not an interrupted append: it raises
                     self.ledger[j["key"]] = j
         self.hits = self.misses = self.refused = 0
         self.wall_miss = 0.0
@@ -394,28 +439,41 @@ class VoiceCache:
         d = (store or self.clips) / key[:2]
         return d / f"{key}.pcm", d / f"{key}.json"
 
-    def _read(self, key, req, store):
-        """a stored clip, checked: its own digest, its request (key and SSML), and the ledger's digest for its key. -> (pcm,
-        meta) or None (absent); a clip failing a check is removed (made again by the caller, and checked by the ledger)."""
+    def _ledger_add(self, key, digest, n, text, register, voice, ssml):
+        self.ledger[key] = dict(key=key, digest=digest, n=n, text=text, register=register, voice=voice, ssml=ssml)
+        with open(self.ledger_path, "a") as f:
+            f.write(json.dumps(self.ledger[key]) + "\n")
+
+    def _read(self, key, req, store, text, register):
+        """a stored clip, checked: its own digest, its request (key and SSML), and the ledger's digest for its key. -> (pcm, meta)
+        or None, and the digest a clip made again must equal (the ledger's; or, when the ledger has lost this line, the stored
+        record's). A clip failing a check is removed (made again by the caller, and checked against that digest). A clip whose
+        own record holds but whose line the ledger lost (a lost ledger, or its last line cut short) is served, and the ledger
+        line is restored from it: it is what the life heard, and deleting it would let a changed engine replace it unchecked."""
         pp, pj = self._paths(key, store)
         if not (pp.exists() and pj.exists()):
-            return None
+            return None, None
+        led, record = self.ledger.get(key), None
         try:
             meta = json.loads(pj.read_text())
             pcm = np.fromfile(pp, np.int16)
-            ok = (meta.get("key") == key and meta.get("ssml") == req["ssml"] and meta.get("voice") == req["voice"]
-                  and clip_digest(pcm, [tuple(m) for m in meta["marks"]]) == meta["digest"]
-                  and key in self.ledger and self.ledger[key]["digest"] == meta["digest"])
+            mine = meta.get("key") == key and meta.get("ssml") == req["ssml"] and meta.get("voice") == req["voice"]
+            record = meta["digest"] if mine else None
+            whole = mine and clip_digest(pcm, [tuple(m) for m in meta["marks"]]) == meta["digest"]
         except (ValueError, KeyError, TypeError):
-            ok = False
-        if ok:
-            return pcm, meta
+            whole = False
+        if whole and led is None:
+            self._ledger_add(key, meta["digest"], len(pcm), text, register, req["voice"], req["ssml"])
+            self.recovered += 1
+            return (pcm, meta), None
+        if whole and led["digest"] == meta["digest"]:
+            return (pcm, meta), None
         self.refused += 1
         for q in (pp, pj):
             if store is self.clips:
                 self.size -= q.stat().st_size
             q.unlink()
-        return None
+        return None, (led["digest"] if led is not None else record)
 
     def _write(self, key, pcm, meta, store):
         pp, pj = self._paths(key, store)
@@ -431,9 +489,10 @@ class VoiceCache:
         """the line in a register (and, if emphasis names one of its words, with that word emphasized) -> Clip. heard: the
         life hears it (the parent says it): the clip is kept for good; heard=False: made ahead (warm()), trimmed by the limit."""
         key, req, gain = request(text, register, emphasis, voice)
-        got = self._read(key, req, self.kept)
+        got, expect = self._read(key, req, self.kept, text, register)
         if got is None:
-            got = self._read(key, req, self.clips)
+            got, ahead = self._read(key, req, self.clips, text, register)
+            expect = expect or ahead
             if got is not None:
                 pp, _ = self._paths(key, self.clips)
                 now = time.time()
@@ -453,20 +512,19 @@ class VoiceCache:
         pcm = to_16k(x, sr_in)
         digest = clip_digest(pcm, marks)
         old = self.ledger.get(key)
-        if old is not None and old["digest"] != digest:
-            raise VoiceChanged(f"{text!r} ({register}) synthesized again differs from the ledger's digest {old['digest'][:12]}")
+        ref = old["digest"] if old is not None else expect
+        if ref is not None and ref != digest:
+            raise VoiceChanged(f"{text!r} ({register}) synthesized again differs from the digest kept for it {ref[:12]}")
+        words = words_of(pcm, sr_in, marks, req["ssml"])                # SpokenMark before anything is kept
         meta = dict(req, key=key, digest=digest, n=len(pcm), marks=marks, engine_sr=sr_in, engine_secs=secs)
         if old is None:
-            self.ledger[key] = dict(key=key, digest=digest, n=len(pcm), text=text, register=register, voice=voice,
-                                    ssml=req["ssml"])
-            with open(self.ledger_path, "a") as f:
-                f.write(json.dumps(self.ledger[key]) + "\n")
+            self._ledger_add(key, digest, len(pcm), text, register, voice, req["ssml"])
         self._write(key, pcm, meta, self.kept if heard else self.clips)
         self.misses += 1
         self.wall_miss += time.perf_counter() - t0
         if self.size > self.limit:
             self.trim()
-        return Clip(key, text, register, pcm, words_of(pcm, sr_in, marks, req["ssml"]), digest, gain, meta)
+        return Clip(key, text, register, pcm, words, digest, gain, meta)
 
     def trim(self, keep=0.9):
         """drop the least recently used lines made ahead until they take at most keep x the limit (kept/ and the ledger stay)."""
