@@ -20,7 +20,8 @@ load time through MjSpec, as cameras and sites only (no geom, no mass, no joint,
 The model file's own directional light (a Menagerie scene light, not part of the robot) is switched off at load. Nothing
 here sets the G1's servo gains: the body's servo law does, in body/sim/world.py. The parent's face is the graded face, the
 room's face of human proportions (parent_kin.py; the W1 verifier's third round): a scalar expression is drawn through
-parent_kin.scalar_to_params, a dict of face parameters (the parent's feelings, parent_feel.py) directly."""
+parent_kin.scalar_to_params, a dict of face parameters (the parent's feelings, parent_feel.py) directly; her face's moving meshes
+(the lids, the irises) are posed through their compiled offsets (parent_face.py; the W1 verifier's fourth round)."""
 import math
 import sys
 from pathlib import Path
@@ -132,6 +133,13 @@ class Scene:
         self.mocap = {s: m.body_mocapid[m.body(f"parent_{s}").id] for s in kin.SEGS}
         self.gid = lambda n: m.geom(n).id
         self.face_ids = {n: self.gid(f"parent_{n}") for n in kin.FACE_GEOMS}     # her face's moving geoms (all of them: the room has them)
+        # her moving meshes (the lids, the irises): MuJoCo stores a mesh about its own centre and axes and puts that offset in the
+        # geom's pose, so a pose from parent_face (the mesh's authored frame) is composed with it
+        self.mesh_offset = {}
+        for n, g in self.face_ids.items():
+            if m.geom_type[g] == mujoco.mjtGeom.mjGEOM_MESH:
+                mid = m.geom_dataid[g]
+                self.mesh_offset[n] = (m.mesh_pos[mid].copy(), m.mesh_quat[mid].copy())
         self.hand_ids = {sd: {n: self.gid(f"parent_{n}") for n in kin.hand_geoms(sd).keys()} for sd in ("L", "R")}
         for g in list(self.face_ids.values()) + [i for h in self.hand_ids.values() for i in h.values()]:
             m.geom_sameframe[g] = 0                    # moved at run time: MuJoCo's same-frame shortcut must be off for them
@@ -157,6 +165,12 @@ class Scene:
             expr = kin.scalar_to_params(expr)          # the old one-number expression, as graded parameters
         for n, (p, q, sz) in kin.face_geoms_graded(expr, gaze).items():
             g = self.face_ids[n]
+            if n in self.mesh_offset:                      # compose the mesh's compiled offset
+                mp, mq = self.mesh_offset[n]
+                R = np.zeros(9); mujoco.mju_quat2Mat(R, np.asarray(q, float))
+                qq = np.zeros(4); mujoco.mju_mulQuat(qq, np.asarray(q, float), mq)
+                m.geom_pos[g] = np.asarray(p) + R.reshape(3, 3) @ mp; m.geom_quat[g] = qq
+                continue
             m.geom_pos[g] = p; m.geom_quat[g] = q
             if sz is not None:
                 if m.geom_type[g] == mujoco.mjtGeom.mjGEOM_CAPSULE:

@@ -36,8 +36,11 @@ choice), `sim_grasp.py` (the G1 study's grasp trials on the built room, at a giv
 with and without the sun's shadow; `--c2 N`, the face test's rays against a segmentation render on babbled frames with the parent
 at 0.3-3.5 m with her head kept inside the room, and the born face template's hits, false alarms and best correlation: C2, C3),
 `sim_face_template.py` (the born face template on the parent's face at 0.3-2 m in the fovea and the periphery under the room's
-lights, and in her attending pose: C3), `sim_face_photometry.py` (her face's feature contrasts in CIE L* against a young woman's, Russell
-et al. 2017, and the calibration that set her sclera's, brows' and lips' colours: 4.1, C3), `sim_pain.py` (pain under babble, the contact pairs that carry it, each withdrawal (the
+lights, and in her attending pose, each match told as a detection of her face or a chance match, with an upside-down control: C3),
+`sim_face_photometry.py` (her face's feature contrasts in CIE L* against a young woman's, Russell et al. 2017, photographed under a
+studio's frontal light, and the calibration that set her iris's, brows' and lips' colours: 4.1, C3), `sim_face_measure.py` (her face
+measured on the drawn geometry against its norms; `--collision`, a hand's rays at her face against her collision shapes; `lids`,
+her moving lids against her skin and her eye in nine lid states: 4.1), `sim_pain.py` (pain under babble, the contact pairs that carry it, each withdrawal (the
 newborn's flexion) against resting and the babble from the same state, either tick counted and each apart, and phantom pain by the
 filter, on still ticks and at rest: C5, C18, C22). `sim_look.py` renders the one-arm high chair's
 stills; `sim_look_g1.py` the G1 room's (main's prototype stills).

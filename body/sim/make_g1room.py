@@ -11,9 +11,10 @@ taken out). The XML is generated: edit the numbers here and re-run, never the XM
               file's kp 500 being Menagerie's placeholder ("needs tuning"). It is born lying on its back (g1scene.birth()).
   THE PARENT  kinematic: 16 mocap segments (see parent_kin.py) posed by scripted IK each step; touches toys and the child as
               an immovable body; holds toys, the child's wrist or its torso through welds that start switched off. Her face is
-              of human proportions and a real face's photometry (parent_kin.py: the static relief face_static_xml and the
-              moving features face_moving_xml, which g1scene.Scene draws from the parent's feelings, the parent lane's
-              parent_feel.py; the W1 verifier's third round).
+              built to a real face's proportions and photometry (parent_face.py, through parent_kin.py: one smooth head sheet
+              with its eye openings, the moving lids, irises, lashes, brows and lips, which g1scene.Scene poses from the
+              parent's feelings, the parent lane's parent_feel.py; its meshes, texture and rig written by build_assets at
+              each build; the W1 verifier's third and fourth rounds).
   THE ROOM    as in make_livingroom_customchild.py, with the play mat enlarged for a 1.32 m body (2.8 x 2.0 m) and the toys placed
               around the G1.
 
@@ -92,6 +93,15 @@ def lights_xml():
     return "\n    ".join(f'<light name="{n}" {a} diffuse="{f(*dif)}" ambient="{f(*(ROOM_INDIRECT * np.array(dif)))}" specular="{f(*spe)}"/>'
                           for n, a, dif, spe in LIGHTS)
 
+# her face's calibrated albedos (tools/sim_face_photometry.py --calibrate; Russell, Kramer and Jones 2017, under a studio's frontal
+# light with her own shading in): the eyes by the iris's lightness (the prototype's brown, its hue kept), the brows and lips as her
+# hair's and the prototype's lip colour over her skin at the found share (the hue kept, the strength found). Not calibrated, ours:
+# the sclera's off-white and the lash line at half her hair's colour over her skin (sparse lashes)
+SCLERA_RGB = ".88 .86 .82 1"      # a sclera's off-white (ours; not calibrated: the eyes' strength is the iris's)
+LASH_RGB = ".55 .405 .32 1"        # the lash line: her hair's colour over her skin at half (sparse lashes; ours)
+BROW_RGB = ".6316 .4721 .3779 1"
+LIPS_RGB = ".7642 .5258 .4506 1"
+IRIS_RGB = ".3137 .1881 .1045 1"   # a medium brown iris: the prototype's brown, its lightness found
 MAT = dict(
     # the parent: skin, a teal sweater, denim trousers, white shoes, dark brown hair; face features
     skin=dict(rgba=".86 .66 .54 1", specular=".12", shininess=".25"),
@@ -102,26 +112,28 @@ MAT = dict(
     denim=dict(rgba=".22 .27 .38 1", specular=".1", shininess=".2"),
     shoe=dict(rgba=".95 .95 .94 1", specular=".2", shininess=".4"),
     sole=dict(rgba=".62 .60 .58 1", specular=".1", shininess=".2"),
-    # her face's photometry (the W1 verifier's third round): the sclera, the brows and the lips each at the albedo whose CIE L*
-    # contrast against the skin around it is a young woman's (Russell, Kramer and Jones 2017, table 2, no cosmetics: the eyes 0.152,
-    # the brows 0.126, the lips 0.092), found by tools/sim_face_photometry.py --calibrate (the sclera's grey; the brows as her hair's
-    # colour over her skin, 33% of their area; the lips as the prototype's lip colour over her skin, 35%: the prototype's brows
-    # .30 .20 .13 and lips .56 .24 .26 read 0.49 and 0.32, far darker than a real face's) and checked by body/tests/test_sim_eyes.py;
-    # the eye's and the lids' materials also carry her sockets' shade of the room's indirect light, baked in when written
-    # (socket_shaded below)
-    sclera=dict(rgba=".9118 .9118 .9025 1", specular=".5", shininess=".8"),
-    iris=dict(rgba=".30 .18 .10 1", specular=".6", shininess=".9"),
-    pupil=dict(rgba=".03 .03 .03 1", specular=".8", shininess=".9"),
-    glint=dict(rgba="1 1 1 1", specular=".5", shininess=".9"),      # the corneal highlight: drawn, not a lamp (no emission: dark at night)
-    lash=dict(rgba=".12 .08 .06 1", specular=".2", shininess=".4"),
-    lid_up=dict(rgba=".86 .66 .54 1", specular=".12", shininess=".25"),       # her skin (the socket's occlusion is baked in when written)
-    lid_lo=dict(rgba=".86 .66 .54 1", specular=".12", shininess=".25"),
-    lips=dict(rgba=".7541 .5118 .4412 1", specular=".25", shininess=".5"),
+    # HER FACE (body/sim/parent_face.py; the W1 verifier's fourth round). The sheet's skin carries her shade of the room's indirect
+    # light as a texture (computed from her geometry: parent_face.ao_texture); the eye's parts, the lids and the caruncle carry
+    # theirs in their albedo, baked when written (face_shaded below). The sclera, the brows and the lips are each at the albedo
+    # whose CIE L* contrast against the skin around it is a young woman's under a studio's frontal light, her own shading in
+    # (Russell, Kramer and Jones 2017, table 2, no cosmetics: the eyes 0.152, the brows 0.126, the lips 0.092), found by
+    # tools/sim_face_photometry.py --calibrate (the sclera's grey; the brows as her hair's colour over her skin; the lips as the
+    # prototype's lip colour over her skin: each keeps its hue, only its strength is found) and checked by body/tests/
+    # test_sim_eyes.py eyes 13. No drawn highlight on the eyes (the W1 verifier's specks): the corneas' own specular gives the
+    # room's lamps' reflections, dark at night.
+    skin_face=dict(rgba=".86 .66 .54 1", texture="parent_face_ao", specular=".08", shininess=".2"),
+    sclera=dict(rgba=SCLERA_RGB, specular=".3", shininess=".7"),
+    iris=dict(rgba=IRIS_RGB, specular=".35", shininess=".85"),
+    pupil=dict(rgba=".03 .03 .03 1", specular=".35", shininess=".85"),
+    lash=dict(rgba=LASH_RGB, specular=".1", shininess=".3"),
+    lid=dict(rgba=".86 .66 .54 1", specular=".08", shininess=".2"),         # her skin (the lids' shade is baked in when written)
+    caruncle=dict(rgba=".78 .50 .47 1", specular=".25", shininess=".6"),
+    fornix=dict(rgba=".52 .30 .29 1", specular=".1", shininess=".3"),
+    lips=dict(rgba=LIPS_RGB, specular=".15", shininess=".4"),
     mouth_in=dict(rgba=".30 .06 .08 1", specular=".1", shininess=".2"),
-    teeth=dict(rgba=".97 .96 .93 1", specular=".3", shininess=".5"),
-    brow=dict(rgba=".656 .4922 .3952 1", specular=".1", shininess=".2"),
+    teeth=dict(rgba=".97 .96 .93 1", specular=".2", shininess=".4"),
+    brow=dict(rgba=BROW_RGB, specular=".05", shininess=".2"),
     belt=dict(rgba=".30 .20 .13 1", specular=".1", shininess=".2"),
-    blush=dict(rgba=".88 .60 .54 1", specular="0"),
     # the room
     floor=dict(texture="floor_oak", texrepeat="4 2.2", specular=".12", shininess=".35", reflectance=".015"),
     wall=dict(rgba=".93 .91 .87 1", specular="0", shininess="0"),
@@ -191,6 +203,30 @@ def mirror_pos(p):
 
 
 # ================================================================== THE PARENT (mocap segments)
+# HER HAIR (a dark brown bob with a bun, the film's) fitted to her head of [P]'s breadth and length: the cap over her head from the
+# hairline (parent_face.hair_mesh), a side-swept fringe, the bob's sides over the ears to the jaw (behind her cheeks), the nape, the
+# bun (ours: the style). Her ears ([F]: 59.6 mm long, inclined 17.5 deg back) under the sides (ours: where).
+# (name, type, centre, euler deg, size, material), m
+HAIR = [("fringe", "ellipsoid", (.090, -.012, .246), (-14, -30, 0), (.022, .056, .013), "hair"),
+        ("side_L", "ellipsoid", (-.010, .072, .152), (0, -10, 0), (.048, .014, .080), "hair"),
+        ("side_R", "ellipsoid", (-.010, -.072, .152), (0, -10, 0), (.048, .014, .080), "hair"),
+        ("bun", "sphere", (-.108, 0, .214), (0, 0, 0), (.040, .040, .040), "hair"),
+        ("nape", "ellipsoid", (-.046, 0, .128), (0, 0, 0), (.054, .066, .052), "hair")]
+HEAD_SOLID = ((.005, 0, .180), (.078, .064, .086))     # inside her sheet at every point (ours; checked by body/tests/test_sim_eyes.py)
+EARS = [("ear_L", "ellipsoid", (.000, .0705, .150), (0, -17.5, 0), (.015, .006, .0298), "skin_d"),
+        ("ear_R", "ellipsoid", (.000, -.0705, .150), (0, -17.5, 0), (.015, .006, .0298), "skin_d")]
+
+
+def hair_shapes():
+    """her hair as (centre, semi-axes, rotation) for her shade's occupancy (parent_face.Occupancy)"""
+    from scipy.spatial.transform import Rotation as Rot
+    out = []
+    for n, t, c, e, sz, mt in HAIR:
+        out.append((np.array(c), np.array(sz), Rot.from_euler("XYZ", e, degrees=True).as_matrix()))
+    out.append((np.array(HEAD_SOLID[0]), np.array(HEAD_SOLID[1]), np.eye(3)))
+    return out
+
+
 def parent_segment_geoms(seg):
     """The parent's geoms in a segment's own frame. Collision geoms (bit 8) are the solid shapes; faces, fingers and
     trim are seen only."""
@@ -210,21 +246,15 @@ def parent_segment_geoms(seg):
               f'<geom type="sphere" pos="0 -.15 .2" size=".045" material="sweater" {DECOR}/>',
               f'<geom type="cylinder" pos=".01 0 .243" size=".056 .014" material="sweater_d" {DECOR}/>']
     elif seg == "head":
-        (hc, hs) = kin.HEAD_BASE
         g += ['<camera name="parent_portrait" pos=".62 0 .145" xyaxes="0 1 0 0 0 1" fovy="30"/>',
               f'<geom type="capsule" fromto=".008 0 -.01 .02 0 .08" size=".041" material="skin" {DECOR}/>',
-              f'<geom name="{P}" type="ellipsoid" pos="{f(*hc)}" size="{f(*hs)}" rgba="0 0 0 0" group="3" {PARENT}/>',   # her head's collision shape (the sheet is drawn)
-              f'<geom type="ellipsoid" pos="{f(*hc)}" size="{f(*(np.asarray(hs) - .003))}" material="skin" {DECOR}/>',   # her head's solid
-              # inside the sheet (3 mm in): it casts her head's shadow and fills behind the sheet's open edges
-              f'<geom name="parent_hair" type="ellipsoid" pos="-.022 0 .172" size=".108 .094 .112" material="hair" {DECOR}/>',
-              f'<geom name="parent_fringe" type="ellipsoid" pos=".072 -.012 .226" euler="-18 -40 0" size=".034 .07 .02" material="hair" {DECOR}/>',
-              f'<geom name="parent_side_L" type="ellipsoid" pos=".012 .078 .158" euler="0 -12 0" size=".058 .022 .09" material="hair" {DECOR}/>',
-              f'<geom name="parent_side_R" type="ellipsoid" pos=".012 -.078 .158" euler="0 -12 0" size=".058 .022 .09" material="hair" {DECOR}/>',
-              f'<geom name="parent_bun" type="sphere" pos="-.095 0 .215" size=".047" material="hair" {DECOR}/>',
-              f'<geom name="parent_nape" type="ellipsoid" pos="-.045 0 .12" size=".06 .078 .06" material="hair" {DECOR}/>',
-              f'<geom type="ellipsoid" pos="-.002 .083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
-              f'<geom type="ellipsoid" pos="-.002 -.083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
-              ] + kin.face_static_xml("skin", DECOR) + kin.face_moving_xml(DECOR)   # her face: human proportions (parent_kin.py)
+              f'<geom name="{P}" type="ellipsoid" pos="{f(*HEAD_SOLID[0])}" size="{f(*HEAD_SOLID[1])}" rgba="0 0 0 0" group="3" {PARENT}/>',
+              # her head's core (collision): inside her sheet everywhere; her face's and her hair's pieces are its surface
+              f'<geom type="ellipsoid" pos="{f(*HEAD_SOLID[0])}" size="{f(*HEAD_SOLID[1])}" material="skin" {DECOR}/>',   # her head's solid
+              # inside the sheet: it casts her head's shadow and fills behind the sheet where it is clipped under her hair
+              ] + [f'<geom name="parent_{n}" type="{t}" pos="{f(*c)}" euler="{f(*e)}" size="{f(*sz)}" material="{mt}" {DECOR}/>'
+                   for n, t, c, e, sz, mt in HAIR + EARS] \
+            + kin.face.static_xml(DECOR, PARENT) + kin.face.moving_xml(DECOR, kin.FACE_NEUTRAL)   # her face (parent_face.py)
     elif seg.startswith("upper_arm"):
         g += [f'<geom name="{P}" type="capsule" fromto="0 0 -.01 0 0 -.285" size=".041" material="sweater" {PARENT}/>']
     elif seg.startswith("forearm"):
@@ -632,26 +662,34 @@ def build():
     (HERE / "textures").mkdir(exist_ok=True)
     floor_texture(HERE / "textures" / "room_floor_oak.png")
     sky_texture(HERE / "textures" / "room_window_sky.png")
+    if "skip-face" not in ARGS:                                        # her face's meshes, texture and rig (parent_face.build_assets)
+        info = kin.face.build_assets(HERE / "textures", hair=hair_shapes(), room_indirect=ROOM_INDIRECT)
+        print("her face:", info)
     out.write_text(scene_xml(out.parent))
     return out
 
 
-def socket_shaded(mat):
-    """the materials with her sockets' shade of the room's indirect light baked into the eye's and the lids' albedo (parent_kin
-    socket_occlusion: computed from her geometry, never set; MuJoCo draws no occlusion of a light's ambient term)"""
-    ao = kin.socket_occlusion()
+def face_shaded(mat):
+    """the materials with the eye's parts' shade of the room's indirect light baked into their albedo (parent_face: computed from
+    her geometry by the build, stored in assets/parent/rig.npz; never set): albedo x (1 - share x (1 - AO)), the share
+    ROOM_INDIRECT / (ROOM_INDIRECT + 0.5) (parent_face.ao_share)"""
+    rig = kin.face.rig()
+    share = kin.face.ao_share(ROOM_INDIRECT)
+    ao = {"eye": float(rig["ao_eye"]), "lid": float(rig["ao_lid"]), "caruncle": float(rig["ao_caruncle"])}
+    parts = {"sclera": "eye", "iris": "eye", "pupil": "eye", "fornix": "eye", "lid": "lid", "caruncle": "caruncle"}   # the lash line's
+    # colour is calibrated as seen (tools/sim_face_photometry.py), its shade in
     out = {k: dict(v) for k, v in mat.items()}
-    for part, names in kin.SOCKET_MATERIALS.items():
-        for n in names:
-            rgba = [float(x) for x in out[n]["rgba"].split()]
-            out[n]["rgba"] = " ".join(f"{x * ao[part]:.4g}" for x in rgba[:3]) + f" {rgba[3]:g}"
+    for n, part in parts.items():
+        rgba = [float(x) for x in out[n]["rgba"].split()]
+        k = 1 - share * (1 - ao[part])
+        out[n]["rgba"] = " ".join(f"{x * k:.4g}" for x in rgba[:3]) + f" {rgba[3]:g}"
     return out
 
 
 def scene_xml(folder=HERE):
     """the scene's XML text, its paths relative to `folder` (where it is to be written)"""
     rel = lambda p: os.path.relpath(HERE / p, Path(folder).resolve())     # every path in the XML relative to the XML's own folder
-    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in socket_shaded(MAT).items())
+    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in face_shaded(MAT).items())
     cams = dict(room=((2.45, -2.2, 1.7), (-.2, -.2, .35), 52), mat=((1.6, -2.0, 1.15), (-.1, -.55, .2), 42),
                 top=((0, -.6, 3.2), (0, -.599, 0), 50))
     cam_xml = "\n    ".join(f'<camera name="{k}" pos="{f(*p)}" xyaxes="{lookat_xyaxes(p, t)}" fovy="{fv}"/>' for k, (p, t, fv) in cams.items())
@@ -735,7 +773,7 @@ def scene_xml(folder=HERE):
     <mesh name="pillow" builtin="supersphere" params="24 .45 .5" scale=".20 .07 .19"/>
     <mesh name="table_top" builtin="supersphere" params="32 .25 .2" scale=".58 .30 .035"/>
     <mesh name="basket" builtin="supersphere" params="24 .2 .15" scale=".17 .17 .14"/>
-    {kin.face_mesh_asset_xml()}
+    {chr(10).join('    ' + x for x in kin.face.asset_xml(lambda q: os.path.relpath(q, HERE / G1_DIR / 'assets'))).strip()}
   </asset>
   <custom>
     {sounds}

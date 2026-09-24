@@ -79,11 +79,12 @@ EYE_GROUPS = np.array([1, 1, 1, 0, 0, 0], dtype=np.uint8)   # the eyes see group
 # its pixels with the template over the ellipse is at least TEMPLATE_R (a quarter of the pixels' variance explained) and the
 # blobs are darker than the face by at least TEMPLATE_CONTRAST (Weber; a newborn's contrast threshold at its best spatial
 # frequencies is of this order or higher: Banks and Salapatek 1978, recalled). None of these was set on the parent's face or
-# on any hit or false alarm; the eye check (tools/sim_eye_check.py, C3) measures them. On her face of human proportions with a
-# real face's photometry (the W1 verifier's third round; body/sim/parent_kin.py) the template, unchanged, fires on 1 of 24 facing
-# placements in the fovea at 0.3-2 m under the three lights (at 0.45 m, midday) and never in the periphery (tools/
-# sim_face_template.py, body/tests/test_sim_eyes.py eyes 15): a finding for the design (C3), which the template's own source
-# decides; neither side is fitted to the other.
+# on any hit or false alarm; the eye check (tools/sim_eye_check.py, C3) measures them. On her face as built to a real face's
+# proportions and photometry (the W1 verifier's fourth round; body/sim/parent_face.py) the template, unchanged, matches HER FACE
+# (centred on it, at its size) in 1 of 48 fovea readings at 0.3-2 m under the three lights (dusk, 1.25 m, r 0.51, where her face
+# is the smallest size's width) and by chance elsewhere in the window in 5 more (0.3-0.6 m, the window upside down scoring as
+# high), and never in the periphery (tools/sim_face_template.py, body/tests/test_sim_eyes.py eyes 15): a finding for the design
+# (C3), which the template's own source decides; neither side is fitted to the other.
 TEMPLATE_EYES = ((-0.22, 0.12), (0.22, 0.12))   # the eye blobs' centres, (x / W, y / H)
 TEMPLATE_EYE_D = 0.20                           # their diameter / W
 TEMPLATE_MOUTH = ((0.0, -0.25), (0.36, 0.10))   # the mouth's centre (x / W, y / H) and its size (width / W, height / H)

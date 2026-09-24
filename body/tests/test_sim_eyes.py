@@ -16,9 +16,12 @@ the same world and in a new one. NO LAMP AT THE EYES (the W1 verifier's fifth fi
 one; what they see is rendered again when any light's term changes (the ambient, the specular, a light moved: its tenth finding);
 with the room's lights off the eyes see the dark. THE PARENT'S FACE AS DRAWN (its first finding): at birth her face is drawn, so
 in the fovea her mouth and her eyes are darker than her cheeks; the born template's reading of it is printed (C3 measures it).
-HER FACE (the W1 verifier's third round, the owner's decision): of human proportions, each measure against its cited adult female
-norm; with a real face's photometry (Russell, Kramer and Jones 2017) and her sockets' shade computed from her geometry; her graded
-expressions working; the born template, unchanged, measured on her face at 0.3-2 m and written down (a finding, no bar)."""
+HER FACE (the W1 verifier's third and fourth rounds, the owner's decision): of human proportions MEASURED ON THE DRAWN GEOMETRY, each
+against its cited adult female norm; with a real face's photometry (Russell, Kramer and Jones 2017) as the source photographed its
+faces, her shading in; her graded expressions working on the drawn face; the born template, unchanged, measured on her face at 0.3-2
+m and written down, its matches told apart as detections of her face or chance matches (a finding, no bar); her collision her drawn
+face (a hand stops at it); her face smooth, whole and clean (one sheet, its own normals, the lips one tube each, the brows on her skin,
+the lids never through it)."""
 import math
 import os
 import sys
@@ -30,6 +33,7 @@ import numpy as np
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
+sys.path.insert(0, os.path.join(ROOT, "body", "sim"))
 from body.sim import eyes as E  # noqa: E402
 from body.sim import world as W  # noqa: E402
 
@@ -428,129 +432,127 @@ def test_the_parents_face_as_drawn():
           f"template is changed for it)")
 
 
-def _limbus_d(g, side):
-    """the visible iris's diameter (m) from the drawn geoms: the circle where the iris's cap sphere meets the globe"""
-    (ci, _, si), (ec, _, se) = g[f"iris_{side}"], g[f"sclera_{side}"]
-    dd = float(np.linalg.norm(np.asarray(ci) - np.asarray(ec)))
-    R, Rc = se[0], si[0]
-    x = (R * R - Rc * Rc + dd * dd) / (2 * dd)
-    return 2 * math.sqrt(R * R - x * x)
-
-
-def _margins(g, side):
-    """the lids' margins over the pupil (m, about it): where the upper and the lower lid spheres leave the globe's front"""
-    ec = kin.EYE_C[side]
-    (cu, _, su), (cl, _, sl) = g[f"lid_up_{side}"], g[f"lid_lo_{side}"]
-    up = kin.lid_margin_at(0.0, cu[2] - ec[2], su[0], ec[0] - cu[0], True)
-    lo = kin.lid_margin_at(0.0, cl[2] - ec[2], sl[0], ec[0] - cl[0], False)
-    return up, lo
-
-
 def test_her_face_of_human_proportions():
-    """eyes 12: HER FACE OF HUMAN PROPORTIONS (the owner's decision, made for him in the W1 verifier's third round; the verifier's
-    first blocker: irises 19.6 mm, whites 27 mm tall, eyes 72 mm apart). Measured on her drawn face (neutral), each against its
-    cited adult female norm (body/sim/parent_kin.py's sources): the pupils 61.7 mm apart [Dodgson]; the visible iris 11.7 mm across
-    [Ruefer]; the eye fissure 10.9 mm tall [Farkas]; the mouth 50.2 mm wide [Farkas]; the brow's lower margin 18.5 mm [Gao] and its
-    top 25 mm [McKinney] over the pupil; the eyes set in: the brow's soft tissue about 10 mm and the cheek's prominence about 2 mm
-    in front of the cornea [Yaremchuk]. The prototype's face fails every one"""
-    g = kin.face_geoms_graded(kin.FACE_NEUTRAL)
-    ipd = float(np.linalg.norm(kin.EYE_C["L"] - kin.EYE_C["R"]))
-    iris = [_limbus_d(g, s_) for s_ in "LR"]
-    fissure = [u - l for u, l in (_margins(g, s_) for s_ in "LR")]
-    c0, c1, c5, c4 = (np.asarray(g[f"mouth{i}"][0]) for i in (0, 1, 5, 4))
-    mouth = float(np.linalg.norm((c5 + (c5 - c4) / 2) - (c0 - (c1 - c0) / 2)))     # corner to corner (the segments are evenly spaced)
-    # the brow over the pupil: its first arc's midline and thickness where it crosses the pupil's line
-    (b0, q0, sb) = g["brow_L"]
-    Rb = np.zeros(9); mujoco.mju_quat2Mat(Rb, np.asarray(q0)); ax = Rb.reshape(3, 3)[:, 2]
-    a_, b_ = np.asarray(b0) - ax * sb[1], np.asarray(b0) + ax * sb[1]
-    t = (kin.EYE_C["L"][1] - a_[1]) / (b_[1] - a_[1])
-    zmid = float(a_[2] + t * (b_[2] - a_[2])) - kin.PUPIL_Z
-    brow_low, brow_top = zmid - sb[0], zmid + sb[0]
-    brow_ahead = kin.head_surface_x(kin.IPD / 2, kin.Z_BROW) - kin.X_CORNEA
-    cheek_ahead = max(kin.head_surface_x(y, z) for y in np.arange(.030, .055, .001) for z in np.arange(.125, .150, .001)) - kin.X_CORNEA
-    checks = {"pupils apart": (ipd, .0617, .0005), "iris L": (iris[0], .0117, .0003), "iris R": (iris[1], .0117, .0003),
-              "fissure L": (fissure[0], .0109, .0003), "fissure R": (fissure[1], .0109, .0003), "mouth wide": (mouth, .0502, .002),
-              "brow low": (brow_low, .0185, .001), "brow top": (brow_top, .025, .001), "brow ahead": (brow_ahead, .010, .0025),
-              "cheek ahead": (cheek_ahead, .002, .0025)}
-    for k, (v, want, tol) in checks.items():
-        assert abs(v - want) <= tol, (k, v, want)
-    print("eyes 12: her face of human proportions (mm, measured on the drawn face; the norm):",
-          ", ".join(f"{k} {1e3 * v:.1f} ({1e3 * want:.1f})" for k, (v, want, tol) in checks.items()))
+    """eyes 12: HER FACE OF HUMAN PROPORTIONS, MEASURED ON THE DRAWN GEOMETRY (the owner's decision, made for him; the W1 verifier's
+    fourth round: the third round's face declared the norms and did not build them: its eye opening 22.0 mm wide against 30.7, its
+    inner eye corners 41.6 mm apart against 31.8, its head 168 mm wide; this test would have failed it on every one). Everything is
+    read off what is drawn, by rays and by the drawn meshes' vertices (tools/sim_face_measure.py): the canthi as the drawn lid margins'
+    corners (the sheet's rim on the opening's outline, where calipers go: within 0.4 mm) and as seen (the eye's contents seen from the
+    front, the sides and above and below: their extreme points along the canthal line, within 1.5 mm, the corners' last half
+    millimetre being too narrow to see into), the fissure's height at the pupil, the pupils, the iris, the mouth
+    and the vermilion's heights, the brows over the canthi, the lid and the pupil, the midline profile's nasion, pronasale,
+    subnasale and gnathion, the trichion at her hair, the nose's width, the head's and the jaw's and the face's widths, and
+    Yaremchuk's depths, each against its cited norm (body/sim/parent_face.py's sources) within the stated tolerance"""
+    import sim_face_measure as M
+    res = M.measure()
+    tol = {"ex-en L": .0015, "ex-en R": .0015, "en-en": .0015, "ex-ex": .0015}   # seen: the corners' last half millimetre is too
+    # narrow to see into; the drawn lid margins' corners (where calipers go) are held to 0.4 mm
+    bad = []
+    for k, (v, want, t, src) in res.items():
+        t = tol.get(k, t)
+        if t is None:
+            assert v <= want + 1e-9, (k, v, want)
+        elif abs(v - want) > t:
+            bad.append((k, round(v * 1e3, 2), round(want * 1e3, 2), round(t * 1e3, 2)))
+    assert not bad, bad
+    print("eyes 12: her face of human proportions, measured on the drawn geometry (mm; the norm):",
+          ", ".join(f"{k} {1e3 * v:.1f} ({1e3 * want:.1f})" for k, (v, want, t, src) in res.items()))
 
 
 def test_her_face_photometry():
-    """eyes 13: HER FACE'S PHOTOMETRY (the owner's decision; the verifier's first blocker: her eye region read as light as her
-    cheeks): rendered from the front under a uniform light and read in CIE L* as the source reads photographs (Russell, Kramer and
-    Jones 2017: young women, no cosmetics), each feature against the skin around it is within 0.01 of a real face's: the eyes 0.152,
-    the brows 0.126, the lips 0.092 (the prototype's: brows 0.49, lips 0.32); her sockets' shade of the room's indirect light is
-    computed from her geometry (the eye's and the lids' materials are their albedo x parent_kin.socket_occlusion, exactly), and
-    darkens the eye against its surround as drawn"""
+    """eyes 13: HER FACE'S PHOTOMETRY (the owner's decision; Russell, Kramer and Jones 2017, table 2: young women, no cosmetics): her
+    face photographed as the source's faces were (tools/sim_face_photometry.py: from the front under a studio's frontal lamp, exposed
+    so her cheek reads L* 65, everything she carries in: her geometry's shading, her sheet's shade of the room's indirect light, the
+    eye's parts'), each feature's CIE L* contrast against the skin around it is within 0.005 of a real face's: the eyes (the eye
+    with the band of skin around its lashes) 0.152, the brows 0.126, the lips 0.092; no face material glows (her eyes' highlight is
+    the room's lamps' reflection in her corneas, dark at night)"""
     from sim_face_photometry import Photometry, RUSSELL
     p = Photometry()
     c = p.contrasts()
+    m = p.sc.m
     p.close()
-    q = Photometry(albedo=False)
-    drawn = q.contrasts()
-    m = q.sc.m
-    q.close()
     for k, want in RUSSELL.items():
-        assert abs(c[k]["contrast"] - want) <= 0.01, (k, c[k], want)
-    sys.path.insert(0, os.path.join(ROOT, "body", "sim"))
-    import make_g1room as M
-    ao = kin.socket_occlusion()
-    for part, names in kin.SOCKET_MATERIALS.items():
-        assert 0.3 < ao[part] < 1.0, (part, ao)
-        for n in names:
-            base = np.array([float(x) for x in M.MAT[n]["rgba"].split()][:3])
-            assert np.allclose(m.mat_rgba[m.material(n).id, :3], base * ao[part], atol=6e-4), (n, part)
-    assert drawn["eyes"]["contrast"] > c["eyes"]["contrast"] + 0.02, (drawn["eyes"], c["eyes"])
-    print(f"eyes 13: her face's photometry (CIE L*, feature against the skin around it; a young woman's): the eyes",
-          f"{c['eyes']['contrast']:.3f} (0.152), the brows {c['brows']['contrast']:.3f} (0.126), the lips {c['lips']['contrast']:.3f}",
-          f"(0.092); her sockets' occlusion of the room's indirect light, computed from her geometry: the eye {ao['eye']:.2f}, the",
-          f"upper lid {ao['lid_up']:.2f}, the lower {ao['lid_lo']:.2f}, baked into their materials; as drawn the eyes read",
-          f"{drawn['eyes']['contrast']:.3f} against their surround")
+        assert abs(c[k]["contrast"] - want) <= 0.005, (k, c[k], want)
+    for n in ("skin_face", "sclera", "iris", "pupil", "lash", "lid", "caruncle", "fornix", "lips", "brow", "teeth", "mouth_in"):
+        assert m.mat_emission[m.material(n).id] == 0, n
+    assert not any((m.geom(g).name or "").startswith("parent_glint") for g in range(m.ngeom))
+    print(f"eyes 13: her face's photometry (CIE L*, feature against the skin around it, as the source photographed its faces; a young",
+          f"woman's): the eyes {c['eyes']['contrast']:.3f} (0.152), the brows {c['brows']['contrast']:.3f} (0.126), the lips",
+          f"{c['lips']['contrast']:.3f} (0.092); no face material glows, no drawn highlight")
+
+
+def _opening(f, sd="L"):
+    """the eye's opening at the pupil's vertical (m, about the pupil): the lowest and highest heights where a ray from the front meets
+    the eye's contents"""
+    C = kin.EYE_C[sd]
+    hits = []
+    for y in (C[1] - .0004, C[1] + .0004):
+        for z in np.arange(C[2] - .009, C[2] + .008, 1e-4):
+            _, n, _ = f.ray([.25, y, z], [-1, 0, 0])
+            if n.startswith(("parent_sclera_" + sd, "parent_iris_" + sd, "parent_pupil_" + sd)):
+                hits.append(z - C[2])
+    return (min(hits), max(hits)) if hits else (0.0, 0.0)
 
 
 def test_her_expressions():
-    """eyes 14: her graded face still moves (the owner's decision: keep her graded expressions working): a smile lifts the mouth's
-    corners and a frown drops them (the born reading, the corners' pull, unchanged: 2 x (smile - frown)); the blink brings the upper
-    lid down to the lower and covers the iris; AU5 widens the fissure; AU6 raises the lower lid; AU4 lowers the brows' heads; AU1
-    raises them; the jaw and the "oh" open the lips"""
-    n = kin.face_geoms_graded(kin.FACE_NEUTRAL)
-    sm = kin.face_geoms_graded(kin.scalar_to_params(1.0))
-    fr = kin.face_geoms_graded(kin.scalar_to_params(-1.0))
-    corner = lambda g: (g["mouth0"][0][2] + g["mouth5"][0][2]) / 2
-    assert corner(sm) > corner(n) + .004 and corner(fr) < corner(n) - .003
+    """eyes 14: her graded face still moves (the owner's decision: keep her graded expressions working), measured on the drawn face:
+    the smile lifts the mouth's corners and the frown drops them (the born reading, the corners' pull, unchanged: 2 x (smile -
+    frown)); the blink closes the opening (no eye seen at the pupil's line); AU5 widens it, AU6 raises its lower edge; AU1 raises the
+    brows' heads, AU4 lowers them; the jaw and the "oh" open the lips; the canthi never move (the lids turn about the canthal line)"""
+    import sim_face_measure as M
+    f = M.Face()
+    sc = f.sc
+
+    def pose(**kw):
+        p = G.born_parent(); p.expr = kin.face_params(**kw); sc.set_parent(p); mujoco.mj_forward(sc.m, sc.d)
+        hb = sc.m.body("parent_head").id
+        f.p0, f.R = sc.d.xpos[hb].copy(), sc.d.xmat[hb].reshape(3, 3).copy()
+
+    def geom(n):
+        g = sc.m.geom("parent_" + n).id
+        return f.R.T @ (sc.d.geom_xpos[g] - f.p0), f.R.T @ sc.d.geom_xmat[g].reshape(3, 3), sc.m.geom_size[g]
+
+    def corners():
+        out = []
+        for n in ("mouth0", f"mouth{kin.face.LIP_UP_N - 1}"):
+            c, R, sz = geom(n)
+            out += [c - R[:, 2] * sz[1], c + R[:, 2] * sz[1]]
+        return float(np.mean([min(out[:2], key=lambda p: -abs(p[1]))[2], min(out[2:], key=lambda p: -abs(p[1]))[2]]))
+
+    pose()
+    c0, op0, brow0 = corners(), _opening(f), geom("brow0_L")[0][2]
+    lo0 = geom("lip_lo8")[0][2]
+    pose(**kin.scalar_to_params(1.0)); c_sm = corners()
+    pose(**kin.scalar_to_params(-1.0)); c_fr = corners()
+    assert c_sm > c0 + .004 and c_fr < c0 - .003, (c0, c_sm, c_fr)
     assert kin.face_reading(kin.scalar_to_params(1.0)) == 2.0 and kin.face_reading(kin.scalar_to_params(-1.0)) == -2.0
-    up0, lo0 = _margins(n, "L")
-    bl = kin.face_geoms_graded(kin.face_params(blink=1.0))
-    ub, lb = _margins(bl, "L")
-    (cu, _, su) = bl["lid_up_L"]
-    (ci, _, si) = bl["iris_L"]
-    apex = np.asarray(ci) + np.array([si[0], 0, 0])
-    assert ub - lb < .001 and np.linalg.norm(apex - np.asarray(cu)) < su[0], (ub, lb)
-    wide = _margins(kin.face_geoms_graded(kin.face_params(lid_up=1.0)), "L")
-    assert wide[0] > up0 + .0015
-    ck = _margins(kin.face_geoms_graded(kin.face_params(cheek=1.0)), "L")
-    assert ck[1] > lo0 + .003
-    head = lambda g: g["brow_L"][0][2]
-    assert head(kin.face_geoms_graded(kin.face_params(brow_low=1.0))) < head(n) - .002
-    assert head(kin.face_geoms_graded(kin.face_params(brow_in=1.0))) > head(n) + .003
+    pose(blink=1.0); bl = _opening(f)
+    assert bl == (0.0, 0.0), bl                                              # closed: no eye seen at the pupil's line
+    pose(lid_up=1.0); wide = _opening(f)
+    assert wide[1] > op0[1] + .0015, (wide, op0)
+    pose(cheek=1.0); ck = _opening(f)
+    assert ck[0] > op0[0] + .003, (ck, op0)
+    pose(brow_in=1.0); b_in = geom("brow0_L")[0][2]
+    pose(brow_low=1.0); b_lo = geom("brow0_L")[0][2]
+    assert b_in > brow0 + .003 and b_lo < brow0 - .002, (brow0, b_in, b_lo)
     for k in ("jaw", "round"):
-        o = kin.face_geoms_graded(kin.face_params(**{k: 1.0}))
-        assert o["lip_lo2"][0][2] < n["lip_lo2"][0][2] - .008, k
-    print(f"eyes 14: her expressions: the smile lifts the corners {1e3 * (corner(sm) - corner(n)):.1f} mm, the frown drops them",
-          f"{1e3 * (corner(n) - corner(fr)):.1f} mm (the born reading +2 / -2); the blink closes the fissure ({1e3 * (up0 - lo0):.1f} mm",
-          f"open at rest) over the iris; AU5 opens it {1e3 * (wide[0] - up0):.1f} mm more, AU6 lifts the lower lid {1e3 * (ck[1] - lo0):.1f}",
-          f"mm; AU4 and AU1 move the brows' heads; the jaw and the oh open the lips")
+        pose(**{k: 1.0})
+        assert geom("lip_lo8")[0][2] < lo0 - .008, k
+    print(f"eyes 14: her expressions, on the drawn face: the smile lifts the corners {1e3 * (c_sm - c0):.1f} mm, the frown drops them",
+          f"{1e3 * (c0 - c_fr):.1f} mm (the born reading +2 / -2); the opening at the pupil {1e3 * (op0[1] - op0[0]):.1f} mm at rest,",
+          f"closed by the blink, AU5 raises its top {1e3 * (wide[1] - op0[1]):.1f} mm, AU6 its bottom {1e3 * (ck[0] - op0[0]):.1f} mm;",
+          f"AU1 raises the brows' heads {1e3 * (b_in - brow0):.1f} mm, AU4 lowers them {1e3 * (brow0 - b_lo):.1f} mm; the jaw and the oh",
+          f"open the lips")
 
 
 def test_the_template_on_her_face():
     """eyes 15: THE BORN TEMPLATE ON HER REAL FACE, MEASURED (the owner's decision: fix the world, not the detector; measure it and
     report it plainly): the template's constants are the committed ones (its layout, sizes, r 0.5, contrast 0.1: never changed for
     her face); her head facing the left eye at 0.3-2 m, lit by the room's lights (no lamp at the eye), the face test passing in both
-    eyes' fovea: the template's best reading in each fovea and on her face in each periphery is written down, with no bar (whether
-    it fires is a finding for the design, SIM_DESIGN.md C3)"""
+    eyes: the template's best reading in each fovea, whether it is a DETECTION OF HER FACE (the W1 verifier's fourth round: a match on
+    her face, at her face's size: tools/sim_face_template.detection) or a chance match (anywhere else, or at another size), the same
+    window upside down as the control, and its best reading on her face in each periphery; written down, no bar (whether it fires on
+    her face is a finding for the design, SIM_DESIGN.md C3)"""
     assert (E.TEMPLATE_R, E.TEMPLATE_CONTRAST, E.TEMPLATE_WIDTHS, E.TEMPLATE_EYES, E.TEMPLATE_EYE_D, E.TEMPLATE_MOUTH) == \
         (0.5, 0.10, (8, 11, 16, 23), ((-0.22, 0.12), (0.22, 0.12)), 0.20, ((0.0, -0.25), (0.36, 0.10)))
     import sim_face_template as T
@@ -563,18 +565,120 @@ def test_the_template_on_her_face():
         v = T.read_view(w, ey, c, fovea_aim=True)
         assert v["face_test"] == {"L": "passes", "R": "passes"}, (D, v["face_test"])
         best = max(v[s_]["fovea_best"]["r"] or -1 for s_ in "LR")
+        her = sum(bool(v[s_]["fovea_best"]["her_face"]) for s_ in "LR")
+        chance = sum(bool(v[s_]["fovea_best"]["match"]) and not v[s_]["fovea_best"]["her_face"] for s_ in "LR")
+        flip = max(v[s_]["fovea_best"]["upside_down_r"] or -1 for s_ in "LR")
         peri = max((v[s_].get("periphery_on_her_face") or {"r": -1})["r"] for s_ in "LR")
-        rows.append((D, best, peri, int(v["event_line_face_fovea"])))
+        rows.append((D, best, her, chance, flip, peri, int(v["event_line_face_fovea"])))
     ey.close()
-    print("eyes 15: the born template (unchanged) on her face of human proportions, the room's midday light, facing: fovea best r /",
-          "periphery on her face r / fired:", "; ".join(f"{D:g} m {b:.2f} / {p:.2f} / {f}" for D, b, p, f in rows),
+    print("eyes 15: the born template (unchanged) on her face of human proportions, the room's midday light, facing, both eyes:",
+          "fovea best r / detections of her face / chance matches / upside-down r / periphery on her face r / the event line:",
+          "; ".join(f"{D:g} m {b:.2f} / {h} / {c} / {fl:.2f} / {p:.2f} / {e}" for D, b, h, c, fl, p, e in rows),
           f"(a match needs r {E.TEMPLATE_R} and contrast {E.TEMPLATE_CONTRAST}; written down for the design, C3)")
+
+
+def test_her_collision():
+    """eyes 16: HER COLLISION IS HER DRAWN FACE (the W1 verifier's fourth round: her visible face stood 2-5 cm in front of her collision
+    shape, 53 mm at the nose's tip, 55 at the chin, 34 at the lips, so a hand passed that far into her face before it touched her;
+    this test would have failed it). A hand coming at her face: rays from the front and from 30-60 deg to the sides, above and below,
+    on a 1.5 mm grid (tools/sim_face_measure.collision): where a ray meets her drawn face, the first of her collision shapes is met
+    within 3 mm behind it at worst (her lashes and brows stand that proud of her skin at a slant), on fewer than 0.5% of rays more than
+    0.5 mm behind; and at the median within 0.5 mm, 95% of rays within 5 mm in front of it (her hulls bridge her hollows)"""
+    import sim_face_measure as M
+    c = M.collision()
+    a = c["all"]
+    assert a["min"] > -3.0 and a["into her face (< -0.5)"] < .005 * a["n"], a
+    assert abs(a["median"]) < 0.5 and a["p95"] < 5.0, a
+    print(f"eyes 16: her collision is her drawn face: {a['n']} rays at her face from the front and 30-60 deg about; the collision met",
+          f"at worst {-a['min']:.1f} mm behind the drawn surface ({a['into her face (< -0.5)']} rays more than 0.5 mm), median",
+          f"{a['median']:+.2f} mm, 95% within {a['p95']:.1f} mm in front, 99% within {a['p99']:.1f} mm (by region: " +
+          ", ".join(f"{k} {v['median']:+.1f} / {v['p95']:.1f}" for k, v in c.items() if k != "all") + " mm, median / p95)")
+
+
+def test_her_look():
+    """eyes 17: HER FACE IS SMOOTH, WHOLE AND CLEAN (the W1 verifier's fourth round: lumpy cheeks, brows standing off her forehead, a
+    nose of a cylinder and balls, segmented lips, faceted patchy shading, bright specks): her head is one connected sheet whose
+    normals are its own surface's (smooth shading: the drawn normals agree with the sheet's faces'); her nose is part of it; her lips
+    are one smooth tube each (every segment of one radius, end to end); her brows lie on her skin in every expression (never
+    sunk into it; at rest and in the smile within 0.6 mm of it, in the frown or a full brow raise or lowering within 1.2 mm: a rigid
+    strip over the forehead's curve); her lids and lashes never show through her skin as they turn (the blink, AU5, AU6, AU7 and
+    their mixtures) and a blink closes her eye (the W1 fix's own finding: a rigid lid turned about the frontal line opened the
+    lateral corner in a blink, and one turned to the pupil's line alone left the medial half open); her head's solid stays inside
+    her sheet; nothing on her face is white but her teeth and nothing glows (eyes 13)"""
+    F = kin.face
+    raw = np.fromfile(F.ASSETS / "face.msh", dtype=np.int32, count=4)
+    nv = int(raw[0])
+    buf = np.fromfile(F.ASSETS / "face.msh", dtype=np.float32)
+    V = buf[4:4 + 3 * nv].reshape(-1, 3).astype(float)
+    Nr = buf[4 + 3 * nv:4 + 6 * nv].reshape(-1, 3).astype(float)
+    T = np.frombuffer(open(F.ASSETS / "face.msh", "rb").read()[16 + 4 * 8 * nv:], dtype=np.int32).reshape(-1, 3)
+    comp = F.largest_component(V, T)[1]
+    # vertices shared between the texture's charts are duplicates of one place: join them to count the sheet's pieces
+    key = np.unique(np.round(V, 7), axis=0, return_inverse=True)[1].reshape(-1)
+    Tj = key[T]
+    n_parts = F.largest_component(np.zeros((key.max() + 1, 3)), Tj)[1]
+    assert n_parts == 1, n_parts
+    Vj = np.zeros((key.max() + 1, 3)); Vj[key] = V
+    geo = F.vertex_normals(Vj, Tj)[key]                                      # the sheet's own normals, its charts' seams joined
+    dots = (geo * Nr).sum(1)
+    # the rolled rims of the openings and the nostrils' cut edges are creases, drawn with their faces' own normals
+    rim = np.minimum(np.linalg.norm(V - kin.EYE_C["L"], axis=1), np.linalg.norm(V - kin.EYE_C["R"], axis=1)) < .0175
+    nostril = (F.nose_sdf(V) < .003) & (V[:, 2] < F.SN[2] + .006)
+    smooth = ~rim & ~nostril
+    assert np.median(dots) > .999 and np.mean(dots[smooth] > .95) > .995, (np.median(dots), np.mean(dots[smooth] > .95))
+    lips = F._lips(0.0, 0.0, 0.0, 0.0, 0.0)
+    radii = {k[:5]: set() for k in lips}
+    for k, (p_, q_, sz) in lips.items():
+        if k.startswith(("mouth", "lip_lo")) and k != "mouth_open":
+            radii[k[:5]].add(round(sz[0], 9))
+    assert all(len(v) == 1 for k, v in radii.items() if k in ("mouth", "lip_l")), radii
+    worst = {}
+    for nm, kw, bar in (("rest", {}, .0006), ("smile", kin.scalar_to_params(1.0), .0006), ("frown", kin.scalar_to_params(-1.0), .0012),
+                        ("AU1", dict(brow_in=1.0), .0012), ("AU2", dict(brow_out=1.0), .0012), ("AU4", dict(brow_low=1.0), .0012),
+                        ("AU1+4", dict(brow_in=1.0, brow_low=1.0), .0012)):
+        g = F.face_geoms(kin.face_params(**kw))
+        lo_, hi_ = 1.0, 0.0
+        for k in range(F.BROW_PIECES):
+            P, q, _ = g[f"brow{k}_L"]
+            R = np.zeros(9); mujoco.mju_quat2Mat(R, np.asarray(q, float)); R = R.reshape(3, 3)
+            Wv = P + F.rig()[f"brow{k}"] @ R.T                          # the left brow's strips
+            gap = Wv[:, 0] - F.head_surface_x(Wv[:, 1], Wv[:, 2])
+            lo_, hi_ = min(lo_, float(gap.min())), max(hi_, float(gap.max()))
+        worst[nm] = (lo_, hi_)
+        assert lo_ >= F.BROW_MIN_LIFT - 1e-5 and hi_ <= bar, (nm, lo_, hi_)       # never sunk; at rest and in the smile
+        # within 0.6 mm of the skin, in the frown or a full brow raise or lowering within 1.2 (a rigid strip over a curve)
+    # the lids against her skin and her eye (tools/sim_face_measure.py lids): in nine lid states, rays at the left eye from the front
+    # and from 35 deg to either side on a 0.5 mm grid: no lid or lash stands out of her skin (more than half a portrait pixel along
+    # the globe's radius, away from the opening's rim; the lashes within their thickness of it); in the blinks, at five gazes, no
+    # ray from the front meets the globe, the iris or the pupil, and from 35 deg the eye shows over less than 2 mm^2 a gaze (the
+    # fissure's ends, where the lids meet at the canthi)
+    import sim_face_measure as M
+    lids = M.lids(step=5e-4)
+    for st, r_ in lids.items():
+        assert r_["through skin"] == 0, (st, r_["through skin"], r_["where"])
+        assert r_["eye seen from the front"] == 0, (st, r_.get("eye where"))
+        assert r_["eye seen from 35 deg"] * .25 / r_["gazes"] < 2.0, (st, r_["eye seen from 35 deg"])
+    import make_g1room as MK
+    (c_, r_) = MK.HEAD_SOLID
+    u = np.random.default_rng(0).normal(size=(4000, 3)); u /= np.linalg.norm(u, axis=1)[:, None]
+    Ps = np.asarray(c_) + u * np.asarray(r_)
+    assert (F.head_sdf(Ps) < -.001).all()
+    m = G.load_model()
+    white = [m.material(i).name for i in range(m.nmat) if m.material(i).name in ("sclera", "iris", "pupil", "lash", "lid", "brow", "lips",
+             "skin_face", "caruncle", "fornix") and (m.mat_rgba[i, :3] > .9).all()]
+    assert not white, white
+    print(f"eyes 17: her face smooth, whole and clean: one connected sheet ({len(T)} faces), its drawn normals its surface's (median",
+          f"agreement {np.median(dots):.5f}); her lips one tube each (one radius a lip); her brows on her skin (mm over it: " +
+          ", ".join(f"{k} {1e3 * a:.2f}-{1e3 * b:.2f}" for k, (a, b) in worst.items()) + f"); her lids never through her skin in",
+          f"nine lid states, a blink closed from the front at five gazes (from 35 deg: " +
+          ", ".join(f"{k} {.25 * v['eye seen from 35 deg'] / v['gazes']:.2f} mm^2" for k, v in lids.items() if v["gazes"] > 1) +
+          "); her head's solid inside her sheet everywhere; nothing white but her teeth")
 
 
 EYE_TESTS = [test_the_gaze, test_the_vor_exact, test_the_vor_in_the_world, test_the_eyes_render, test_the_face_test,
              test_the_vor_quick_phase, test_the_face_template, test_exact_replay_with_the_eyes, test_no_lamp_at_the_eyes,
              test_the_parents_face_as_drawn, test_her_face_of_human_proportions, test_her_face_photometry, test_her_expressions,
-             test_the_template_on_her_face]
+             test_the_template_on_her_face, test_her_collision, test_her_look]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

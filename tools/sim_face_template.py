@@ -11,7 +11,10 @@ centre (yaw 0, pitch 0) for the fovea, and 20 deg off it (in the periphery, wher
 periphery. For each view, the template (body/sim/eyes.py, its constants untouched) is read in each eye:
   FOVEA      the gaze aimed at her face's centre (the instrument's aim): the template on each eye's 32 px window, its best match
              anywhere in the window (what the event line reads) and whether it matches (r >= TEMPLATE_R and contrast >=
-             TEMPLATE_CONTRAST);
+             TEMPLATE_CONTRAST); and whether the match is a DETECTION OF HER FACE (the W1 verifier's fourth round: an 8 px match on a
+             33 px face is not one): centred within a third of her face's width of her face's centre, at a width within the bank's
+             step (sqrt 2) of her face's in the template's own terms (her pupils' distance / 0.44: 140 mm); else a chance match. The
+             control: the same window upside down (no face's layout) read by the same template;
   PERIPHERY  the template on each eye's 56 x 32 px periphery, its best match anywhere, and its best match centred on her face
              (within a third of her face's width of her face's centre in the image), with r and contrast, so a miss can be placed:
              too small for the template's smallest size (8 px), too little correlation, or too little contrast.
@@ -84,10 +87,27 @@ def best_near(img, cx, cy, radius):
     return best
 
 
+# her face in the template's own terms: the template's eye blobs are 0.44 W apart (eyes.TEMPLATE_EYES), so her face's template width
+# is her pupils' distance / 0.44 (140 mm), its height by the template's ellipse (FACE_FRONT_M's aspect), its centre 0.12 H under her
+# pupils (the template's eyes sit 0.12 H over its centre)
+FACE_W = kin.IPD / (2 * E.TEMPLATE_EYES[1][0])
+FACE_H = FACE_W * E.FACE_FRONT_M[1] / E.FACE_FRONT_M[0]
+
+
 def face_centre_local():
-    """her face's centre in the head's frame (the template's ellipse centre: midway between her pupils and her mouth)"""
-    z = (kin.EYE_C["L"][2] + kin.MOUTH_Z) / 2 if hasattr(kin, "MOUTH_Z") else 0.15
+    """her face's centre in the head's frame, where the template's ellipse centre falls on her face"""
+    z = kin.PUPIL_Z - E.TEMPLATE_EYES[1][1] * FACE_H
     return np.array([kin.head_surface_x(0, z), 0.0, z])
+
+
+def detection(best, fp, x0=0.0, y0=0.0, pool=1.0):
+    """whether a template match (r, contrast, width, col, row) is a detection of HER face: a match (r and contrast over the bars),
+    centred within a third of her face's width of her face's centre, at a width within the bank's step (sqrt 2) of her face's (a match
+    elsewhere or at another size is the template firing on something else: a chance match)"""
+    if fp is None or not E.template_match(best):
+        return False
+    cx, cy, fw = (fp[0] / pool - x0), (fp[1] / pool - y0), fp[2] / pool
+    return bool(math.hypot(best[3] - cx, best[4] - cy) <= fw / 3 and fw / math.sqrt(2) <= best[2] <= fw * math.sqrt(2))
 
 
 def place_head(w, dist, yaw, pitch, expr):
@@ -115,7 +135,7 @@ def face_px(w, side, centre):
     pr = E.project(m, d, side, centre)
     if pr is None:
         return None
-    return pr[0], pr[1], E.FACE_FRONT_M[0] * W.EYE_F_PX / pr[2]
+    return pr[0], pr[1], FACE_W * W.EYE_F_PX / pr[2]
 
 
 def read_view(w, ey, centre, fovea_aim=True):
@@ -132,10 +152,12 @@ def read_view(w, ey, centre, fovea_aim=True):
         rec = {}
         if fovea_aim:
             b = tr["template_fovea"][s]
+            x0, y0 = E.window_corner(s, w.gaze)
+            flipped = E.face_template(tr["fovea"][s][::-1].copy())          # the control: the same pixels upside down (no face's layout)
             rec["fovea_best"] = {"r": round(b[0], 3) if np.isfinite(b[0]) else None, "contrast": round(b[1], 3), "width_px": b[2],
-                                 "match": E.template_match(b)}
+                                 "match": E.template_match(b), "her_face": detection(b, fp, x0, y0),
+                                 "upside_down_r": round(flipped[0], 3) if np.isfinite(flipped[0]) else None}
             if fp is not None:
-                x0, y0 = E.window_corner(s, w.gaze)
                 nb = best_near(tr["fovea"][s], fp[0] - x0, fp[1] - y0, fp[2] / 3)
                 rec["fovea_on_her_face"] = None if nb is None else {"r": round(nb[0], 3), "contrast": round(nb[1], 3), "width_px": nb[2]}
         b = tr["template_periphery"][s]
@@ -148,6 +170,7 @@ def read_view(w, ey, centre, fovea_aim=True):
             rec["periphery_on_her_face"] = None if nb is None else {"r": round(nb[0], 3), "contrast": round(nb[1], 3), "width_px": nb[2]}
             if b[2]:
                 rec["periphery_best_is_her_face"] = bool(math.hypot(b[3] - px, b[4] - py) <= max(pw / 3, 1.5))
+            rec["periphery_her_face"] = detection(b, fp, pool=E.POOL)
         out[s] = rec
     out["face_test"] = {s: tr["face_test"][s][1] or "passes" for s in "LR"}
     out["event_line_face_fovea"] = float(seen["face_fovea"][0]) if fovea_aim else None
@@ -201,6 +224,20 @@ def main(lights=("midday", "morning", "dusk"), expr="neutral"):
         m.light_ambient[sun] = ROOM_INDIRECT * sun0[1]
         out["lights"][L] = res
     ey.close()
+    # the plain count: in how many views did the template detect HER face (a match on her face at her face's size), and how many of
+    # its matches were chance matches (elsewhere, or at another size)
+    tally = {"fovea views": 0, "fovea detections of her face": 0, "fovea chance matches": 0, "periphery views": 0,
+             "periphery detections of her face": 0, "periphery chance matches": 0}
+    for L, res in out["lights"].items():
+        for where in ("fovea", "periphery"):
+            for D, v in res[where].items():
+                for s in "LR":
+                    tally[f"{where} views"] += 1
+                    b = v[s].get("fovea_best" if where == "fovea" else "periphery_best", {})
+                    her = v[s].get("fovea_best", {}).get("her_face") if where == "fovea" else v[s].get("periphery_her_face")
+                    tally[f"{where} detections of her face"] += int(bool(her))
+                    tally[f"{where} chance matches"] += int(bool(b.get("match")) and not her)
+    out["tally"] = tally
     return out
 
 

@@ -249,8 +249,13 @@ def test_birth_and_touch():
     face = kin.face_geoms(kin.scalar_to_params(0.0), None)
     for n, (pp, q, sz) in face.items():
         g = w.scene.face_ids[n]
+        if n in w.scene.mesh_offset:                                   # a mesh: its pose composed with its compiled offset
+            mp, mq = w.scene.mesh_offset[n]
+            R = np.zeros(9); mujoco.mju_quat2Mat(R, np.asarray(q, float))
+            qq = np.zeros(4); mujoco.mju_mulQuat(qq, np.asarray(q, float), mq)
+            pp, q = np.asarray(pp) + R.reshape(3, 3) @ mp, qq
         assert np.allclose(m.geom_pos[g], pp) and np.allclose(m.geom_quat[g], q), n
-    for n in ("mouth0", "brow_L", "lip_lo0"):                          # on the face's front, not at the head's origin
+    for n in ("mouth0", "brow1_L", "lip_lo0"):                         # on the face's front, not at the head's origin
         assert m.geom_pos[w.scene.face_ids[n]][0] > 0.09, n
     hid = m.body_mocapid[m.body("parent_head").id]
     want = kin.fk(G.born_parent())["head"][0]

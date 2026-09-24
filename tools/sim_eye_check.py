@@ -15,7 +15,9 @@ test 11 read born codes, since the body's reader is a cortex, not a linear map. 
 code through the channel's born code (a fixed projection into the cortex's d, SIM_DESIGN.md 3.4) into the cortex's learned blocks
 (attention and a GELU MLP in each), so what it can tell apart is what a learned nonlinear map of the code can; the one-hidden-layer
 readout is the instrument's stand-in for it, and the nearest mean and the ridge are reported beside as linear lower bounds, never
-the verdict. The lights are stand-ins
+the verdict. Beside it (the W1 verifier's fourth round): the same readout on the code as the core receives it (proj256_mlp: a fixed
+random projection into d = 256 and the input's LayerNorm), and both readouts trained on a third, two thirds and all of the training
+views, so the verdict's dependence on the views a class shows. The lights are stand-ins
 until the day's light is built (W5): the sun as built (midday), low from the window's side and warm (morning), low and orange
 (dusk). C2: for the face views (a third of them with a toy put on the line between the eye and the mouth, at a random place
 along it), the face test's verdict in the left eye against a segmentation render's: the same test with the ray replaced by the
@@ -91,6 +93,18 @@ def mlp_acc(Xtr, ytr, Xte, k, seed=0, hidden=256, epochs=300):
         opt.zero_grad(); torch.nn.functional.cross_entropy(net(X), y).backward(); opt.step()
     with torch.no_grad():
         return net(torch.tensor(Xte, dtype=torch.float32)).argmax(1).numpy()
+
+
+CURVE_SHARES = (1 / 3, 2 / 3, 1.0)
+PROJ_D, PROJ_SEED = 256, 0
+
+
+def proj_ln(X, d=PROJ_D, seed=PROJ_SEED):
+    """the codes through a fixed Gaussian projection (unit variance a column over the input's width, drawn from a seed) and a
+    LayerNorm without its affine (the born cortex's input: SIM_DESIGN.md 3.4's born code, the core's in_ln at birth)"""
+    P = np.random.default_rng(seed).normal(size=(X.shape[1], d)) / math.sqrt(X.shape[1])
+    Z = X @ P
+    return (Z - Z.mean(1, keepdims=True)) / (Z.std(1, keepdims=True) + 1e-5)
 
 
 def balanced(pred, y):
@@ -224,8 +238,21 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
         nm = np.array(cs)[((Xn[te][:, None, :] - C[None]) ** 2).sum(-1).argmin(1)]
         rd = ridge_acc(Xn[tr], y[tr], Xn[te], y[te], len(CLASSES), lam=float(len(tr)) * 0.1)
         mp = mlp_acc(Xn[tr], y[tr], Xn[te], len(CLASSES))
+        # THE CORE'S VIEW (the W1 verifier's fourth round): the code through a fixed random projection into the cortex's d (256,
+        # the channel's born code, from a seed) and the input's LayerNorm, then the same nonlinear readout
+        Z = proj_ln(X)
+        mz = mlp_acc(Z[tr], y[tr], Z[te], len(CLASSES))
+        # HOW THE VERDICT DEPENDS ON THE VIEWS (the verifier's: 60 a class and 100 a class gave different verdicts): the readouts
+        # trained on the first share of the training views (the same test views), by the training views a class
+        curve = {}
+        for share in CURVE_SHARES:
+            sub = tr[: max(len(CLASSES), int(round(len(tr) * share)))]
+            per = round(len(sub) / len(set(y[sub].tolist())), 1)
+            curve[str(per)] = {"mlp": round(balanced(mlp_acc(Xn[sub], y[sub], Xn[te], len(CLASSES)), y[te]), 3),
+                               "proj256_mlp": round(balanced(mlp_acc(Z[sub], y[sub], Z[te], len(CLASSES)), y[te]), 3)}
         out["results"][key] = {"nearest_mean": round(balanced(nm, y[te]), 3), "ridge": round(balanced(rd, y[te]), 3),
-                               "mlp": round(balanced(mp, y[te]), 3),
+                               "mlp": round(balanced(mp, y[te]), 3), "proj256_mlp": round(balanced(mz, y[te]), 3),
+                               "by_training_views_a_class": curve,
                                "face_mlp": round(float(np.mean(mp[y[te] == len(TOYS)] == len(TOYS))), 3) if (y[te] == len(TOYS)).any() else None,
                                                         "face_ridge": round(float(np.mean(rd[y[te] == len(TOYS)] == len(TOYS))), 3) if (y[te] == len(TOYS)).any() else None}
     if facecmp:
