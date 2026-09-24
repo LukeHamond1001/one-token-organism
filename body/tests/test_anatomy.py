@@ -2234,11 +2234,12 @@ def test_act_inv_learns_online():
 
 def _timing_ref(L, i, C, obs, gain):
     """act_pred's and the forward half's lesson recomputed position by position (the reference): returns (the proposal's loss, the
-    forward loss, the targets, the weights, each position's kind)"""
+    forward loss, the targets, the weights, each position's kind). The weighted errors averaged over the positions (the weights
+    absolute; the reference shared the lesson's old division by the weights' sum until the R6 verifier's first finding)"""
     e = L.anatomy.effectors[i]; tm = L.m.timing[e.name]; tab = L.m.get_submodule(e.organ)
     acts = [int(x) for x in obs[e.name]]; T = len(acts); rest = int(e.rest_id)
     s = obs[e.sense][:, list(e.sense_idx) if e.sense_idx is not None else slice(None)].float() if e.sense is not None else None
-    num = torch.zeros(()); den = 0.0; tg = []; ws = []; kinds = []
+    num = torch.zeros(()); tg = []; ws = []; kinds = []
     with torch.no_grad():
         for t in range(1, T):
             p = tm.pred(C[t - 1])
@@ -2252,12 +2253,12 @@ def _timing_ref(L, i, C, obs, gain):
                 tgt, wt, kd = rest, 0.0, "last"
             else:
                 tgt, wt, kd = rest, 1.0, "rest"
-            num = num + wt * 0.5 * ((p - tab(torch.tensor(tgt))) ** 2).sum(); den += wt
+            num = num + wt * 0.5 * ((p - tab(torch.tensor(tgt))) ** 2).sum()
             tg.append(tgt); ws.append(wt); kinds.append(kd)
         lf = None
         if s is not None:
             lf = sum(0.5 * float(((tm.fwd(C[t]) - s[t + 1]) ** 2).sum()) for t in range(T - 1)) / (T - 1)
-    return float(num) / max(den, 1e-6), lf, tg, ws, kinds
+    return float(num) / (T - 1), lf, tg, ws, kinds
 
 
 def test_act_pred_targets():
@@ -2355,6 +2356,80 @@ def test_act_pred_targets():
           f"parent's hand's act; the gradient reaches act_pred, the correction, the forward half and the cortex, never act_inv; on a",
           f"fixed window act_pred's error {first['arm']['pred']} -> {last['arm']['pred']}, the forward half's {first['arm']['fwd']} ->",
           f"{last['arm']['fwd']}, the best guess matching {match} of {len(own_k)} own acts; a window with no word teaches them")
+
+
+def _closed_arm(L):
+    """the arm's gate shut (its weights at zero, its bias far below, the spontaneous floor 0): the arm never acts, it only rests"""
+    with torch.no_grad():
+        L.m.gates["arm"].weight.zero_(); L.m.gates["arm"].bias.fill_(-60.0)
+    L.cfg["gate_floor"] = 0.0
+
+
+def _lesson_at(L, obs, whos, bundles, gain):
+    """the arm's timing lesson on a window at act_inv's reliability `gain`: (the loss, act_pred's and the correction's gradient, the
+    forward half's gradient, the report)"""
+    L.motor[0]["inv_gain"] = gain
+    L.m.zero_grad(set_to_none=True)
+    C = L.m.stream(L.m.inputs(L.anatomy, obs, whos, bundles))
+    lt, rp = L._timing_loss(1, C, obs); lt.backward()
+    tm = L.m.timing["arm"]
+    g_pred = torch.cat([tm.pred.weight.grad.flatten(), tm.pred.bias.grad.flatten(), tm.cor.weight.grad.flatten()]).clone()
+    g_fwd = torch.cat([tm.fwd.weight.grad.flatten(), tm.fwd.bias.grad.flatten()]).clone()
+    L.m.zero_grad(set_to_none=True)
+    return float(lt.detach()), g_pred, g_fwd, rp
+
+
+def test_demonstrations_count_as_earned():
+    """anatomy 28 (the R6 verifier's first finding; SIM_DESIGN.md 5.4): act_pred's lesson weighs a rest's label by act_inv's
+    reliability ABSOLUTELY, the weighted errors averaged over the window's positions, so a demonstration counts only as far as act_inv
+    has earned. On a window of rests alone (the arm's gate shut, nothing moving it) and on a window of pure demonstration (the gate
+    shut, the parent's hand moving the arm at every tick), the lesson's proposal term and act_pred's gradient (with the correction's)
+    scale exactly with the reliability: none at 0, a hundredth of the full lesson at 0.01, a quarter at 0.25; the forward half's
+    lesson does not depend on it. On a window with own acts beside the rests the lesson is linear in the reliability, its own acts'
+    part the same at every reliability. (Divided by the weights' sum, as it was, the reliability only reweighted: at 0.01 a window of
+    rests taught as at 1)"""
+    from body.core.world import WorldLoop
+    cfg = dict(_LR0, wake_ticks=100000, wake_every=10 ** 6, gate_every=10 ** 6, write_floor=1e-30, gate_floor=0.5, fast_rls=0,
+               act_inv_lr=1e-2, act_inv_tau=2000)
+    w = _arm_world(); torch.manual_seed(5); L = _born_in(_Timed(TOK, cfg), cfg, w)
+    run = WorldLoop(L)
+    for _ in range(400):                                          # act_inv learns on the arm's own acts
+        run.step()
+    mixed = L._window_tensors()
+    assert int((mixed[0]["arm"] != 12).sum()) >= 5 and int((mixed[0]["arm"] == 12).sum()) >= 5
+    _closed_arm(L)
+    for _ in range(40):                                           # rests alone: nothing moves the arm
+        run.step()
+    rests = L._window_tensors()
+    assert all(r_ == (12, "still") for r_ in w.moved[-32:]) and int((rests[0]["arm"] != 12).sum()) == 0
+    for _ in range(40):                                           # pure demonstration: the parent's hand at every tick
+        w.guide[:] = [[6, 7, 11, 13, 8, 16, 17, 18][len(w.moved) % 8]]
+        run.step()
+    demo = L._window_tensors()
+    assert all(who == "guide" for _, who in w.moved[-32:]) and int((demo[0]["arm"] != 12).sum()) == 0
+    gains = (0.0, 0.01, 0.25, 1.0); out = {}
+    for name, (obs, whos, bundles, reads) in (("rests", rests), ("demonstration", demo), ("mixed", mixed)):
+        res = {g: _lesson_at(L, obs, whos, bundles, g) for g in gains}
+        lt0, gp0, gf0, _ = res[0.0]; lt1, gp1, gf1, rp1 = res[1.0]
+        full = lt1 - lt0                                          # the rests' part of the lesson at reliability 1 (the forward half's cancels)
+        assert full > 1e-3, (name, full)
+        for g in gains:
+            lt_, gp_, gf_, rp_ = res[g]
+            assert abs((lt_ - lt0) - g * full) <= 1e-5 * max(1.0, full), (name, g, lt_ - lt0, g * full)
+            assert torch.allclose(gp_ - gp0, g * (gp1 - gp0), rtol=1e-4, atol=1e-7), (name, g, float((gp_ - gp0).norm()), g * float((gp1 - gp0).norm()))
+            assert torch.equal(gf_, gf0), (name, g, "the forward half's lesson moved with the reliability")
+            assert rp_["demo_w"] == round(g, 3)
+        if name != "mixed":                                       # no own act: nothing is taught at reliability 0
+            assert float(gp0.abs().max()) == 0.0 and abs(lt0 - rp1["fwd"]) <= 1e-4, (name, float(gp0.abs().max()))
+            ratio = float(res[0.01][1].norm()) / float(gp1.norm())
+            assert abs(ratio - 0.01) <= 1e-4, (name, ratio)
+        else:
+            assert float(gp0.abs().max()) > 0.0                   # its own acts teach at every reliability
+        out[name] = (round(full, 4), round(float(gp1.norm()), 4), round(float(res[0.01][1].norm()), 6))
+    print(f"anatomy 28: act_pred's lesson scales with act_inv's reliability (the weights absolute): the rests' part of the lesson and",
+          f"act_pred's gradient at 1 and at 0.01 (lesson, |grad| at 1, |grad| at 0.01): rests alone {out['rests']}, pure demonstration",
+          f"{out['demonstration']}, own acts beside rests {out['mixed']} (linear in the reliability, the own acts' part fixed); the forward",
+          f"half's lesson the same at every reliability")
 
 
 def test_the_forward_half():
@@ -2634,7 +2709,7 @@ ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_langua
                  test_the_gate_lesson_as_before, test_the_switches, test_a_later_effector, test_every_call_site_passes_the_effectors,
                  test_the_diary_world, test_a_world_of_frames, test_the_loop_deadline_and_pace,
                  test_the_timing_part_is_built_last, test_act_inv_learns_online, test_act_pred_targets, test_the_forward_half,
-                 test_the_learned_stops]
+                 test_the_learned_stops, test_demonstrations_count_as_earned]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -14,8 +14,9 @@ WHEN EACH PART RUNS, for a later effector at tick t (after the voice's choice, i
 - in the waking lesson (`_timing_loss`, body/core/cortex.py), over the window, whose positions are the ticks: at every position t >= 1
   act_pred(C[t-1]) + cor(s[t] - fwd(C[t-1])) is taught the act at t, its efference copy where it acted; where it rested (whatever
   moved it: the parent's hand, a collision, a reflex, or nothing, which reads as the hold) act_inv's label for (s[t], s[t+1]),
-  weighted by act_inv's reliability (a demonstration counts only as far as the inverse model has earned), or, for an effector with no
-  inverse model, its rest; and fwd(C[t]) is taught s[t+1]. Through the cortex, at the waking lesson's rate, as a channel's forecast.
+  weighted by act_inv's reliability (a demonstration counts only as far as the inverse model has earned: the weights are absolute, the
+  weighted errors averaged over the window's positions), or, for an effector with no inverse model, its rest; and fwd(C[t]) is taught
+  s[t+1]. Through the cortex, at the waking lesson's rate, as a channel's forecast.
 THE LEARNED STOPS (chunk_gate, every later effector; `_choose_effector`): a chunk of acts continues, the act act_pred's best guess
 (each joint's most likely setting, no draw), until that guess is the effector's rest (the learned end), its gate's own draw closes,
 its reflex fires, its declared end act closed the chunk before, or chunk_max acts have run (a ceiling: the next act is a fresh
@@ -143,7 +144,12 @@ class TimingMixin:
         C [T, d] (with its gradient) and observations: act_pred's squared error to the target act's row at every position t >= 1, from
         the stream at t-1 and the forward half's error at t, weighted (1 at its own acts; at its rests act_inv's reliability on act_inv's
         label, none at the last position, whose next sense is not yet felt; 1 on its rest for an effector with no inverse model); and
-        the forward half's squared error to the sense at t+1 from the stream at t. Returns (loss, report)"""
+        the forward half's squared error to the sense at t+1 from the stream at t. Returns (loss, report).
+        THE WEIGHTS ARE ABSOLUTE (the R6 verifier's first finding, 2026-09-24): the weighted errors are averaged over the window's
+        positions (T - 1), never over the weights' sum. Divided by the weights' sum, the reliability only reweighted the rests against
+        the own acts and never scaled them: a window of rests alone, or of the parent's hand alone, taught at full strength at any
+        reliability above 0 (the verifier's probe: the same loss and gradient at 0.01 as at 1). Over the positions, a label act_inv
+        has not earned teaches only in proportion to what it has earned, and an own act teaches as it did in a window of own acts."""
         e = self.anatomy.effectors[i]; st = self.motor[i - 1]
         tm = self.m.timing[e.name]; tab = self.m.get_submodule(e.organ)
         acts = obs[e.name]
@@ -174,7 +180,7 @@ class TimingMixin:
         with torch.no_grad():
             rows = tab(tgt[1:])
         w1 = wt[1:]
-        lp = (0.5 * ((P.float() - rows.float()) ** 2).sum(-1) * w1).sum() / w1.sum().clamp(min=1e-6)
+        lp = (0.5 * ((P.float() - rows.float()) ** 2).sum(-1) * w1).sum() / float(T - 1)   # over the positions: the weights absolute
         loss = lp if lf is None else lp + lf
         rep = {"pred": round(float(lp.detach()), 4), "own": int(own[1:].sum()), "demo_w": round(gain, 3)}
         if lf is not None:
