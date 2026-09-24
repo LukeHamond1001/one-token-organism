@@ -32,9 +32,10 @@ WHAT THE BODY SENSES (3.4; the channels of the frame, each the raw observation t
                report angle, velocity and torque); then the gaze's state and its velocity (6): BODY_SIZE 178 (the tract's 21
                numbers are the voice lane's to append)
   touch        per touch zone (ZONES: 45, one per G1 link's collision shape, the head and the palm apart from the torso and the
-               wrist they are fixed to) [log(1 + F / 1 N), onset], F the zone's summed normal contact force (self-contact
-               included, but for a link inside a compound joint against that joint's other links: `joint_blind`, A12) averaged over the tick's 75 steps, onset the rise of the log force since the last tick (the slowly and
-               rapidly adapting afferents); a hold of the parent's (a weld on a G1 body) adds its force to that body's zone
+               wrist they are fixed to) [log(1 + F / 1 N), onset], F the zone's summed normal contact force averaged over the
+               tick's 75 steps (self-contact included: A12's blind spots are the pairs pressing at rest, `rest_blind`, none for
+               the G1 as born), onset the rise of the log force since the last tick (the slowly and rapidly adapting
+               afferents); a hold of the parent's (a weld on a G1 body) adds its force to that body's zone
   vestibular   per IMU (imu_in_torso, which moves with the head: the vestibule; imu_in_pelvis: the trunk's graviceptors)
                [accelerometer mean (3), peak (3), gyro mean (3), peak (3)] over the tick's 75 samples (the peak per axis the
                signed sample of largest size), with the model's own declared noise and ranges
@@ -42,6 +43,13 @@ WHAT THE BODY SENSES (3.4; the channels of the frame, each the raw observation t
 and, for the reward's pain source and the spinal reflexes (a disclosed exception, 3.4: pain is the contact force on a zone),
   pain         per zone 1 when the tick's largest 10 ms mean (PAIN_WINDOW_STEPS physics steps) of its force exceeds F_PAIN, the
                threshold from the body's declared mass: PAIN_WEIGHTS x its weight from the model file (3 x 337.4 N = 1012 N)
+  pain_site    per zone 6 numbers, 0 unless the zone is in pain: WHERE on its link it hurts, the nociceptors' own place (the
+               afferent the withdrawal's local sign reads, body/sim/reflexes.py; no channel of the cortex's): the force-weighted
+               mean of the contact points (3) and of the link's outward surface normals there (3; its length is how far the
+               pressing sites agree: 1 for one direction, near 0 for a limb squeezed from opposite sides), in the link's own
+               frame (so no world truth: a skin site and its normal are the body's anatomy), over the tick's steps on which the
+               zone's force passed F_pain (a window can pass F_pain only with a step past it; a pain carried in from the last
+               tick's steps keeps that tick's site)
   eye_p, eye_f the eyes' retina codes (2 x 168, 2 x 384), when eyes are attached (body/sim/eyes.py, W3), with the born face
                template's two readings from the same pixels: face_fovea (1: the event line "a face in the fovea", either eye) and
                face_periph (orienting's cue: 1 and where the best match lies from the window, or 0s). A1's face test is world truth
@@ -57,7 +65,9 @@ bottle is built) touching a palm feeds FEED_RATE a tick. h is born full.
 THE REFLEXES are the body's (body/sim/reflexes.py). The withdrawal is declared on each limb's effector (the core's hook: it takes
 the limb's tick) and its act reaches the world as any act. The palmar grasp is the spinal cord's: `apply` sums it into each hand's
 own act before anything moves (the truth's `spinal` logs it), so the hand's own act that tick can open it (A11). `spinal=False`
-switches it off (an instrument's switch).
+switches it off (an instrument's switch). The grasp fires on anything pressing the palm, its own fingers included (a fist closed
+on nothing keeps itself closed until the hand's own act opens it, as newborns' hands are fisted); the truth's `palm_own_N` (the
+palm's tick-mean force from its own hand's links) lets W4 count those fists (the W1 verifier's eighth finding).
 
 FAULTS (A18). The scene disables MuJoCo's auto-reset (`<flag autoreset="disable"/>`, checked at load), so a bad state is never
 silently replaced by the start pose; MuJoCo still counts it in its warning counters, and a few contacts can stop it outright
@@ -123,10 +133,15 @@ FOVEA_PX = 32                   # the fovea window, px of the native image (abou
 
 # THE G1'S TORQUE LIMITS (N m) are the model's own (SIM_DESIGN.md 3.2, 10 and A21): each joint's actuatorfrcrange in the stock
 # Menagerie file, read at load and never changed there (weakness scales them each tick, the one change A21 allows). Unitree's own
-# MJCF (unitree_mujoco g1_29dof.xml) gives the same; Unitree's URDF of this revision (unitree_ros g1_29dof_with_hand_rev_1_0.urdf)
-# gives 35 for the ankles' pitch and roll and the waist's roll and pitch where both MJCF files give 50: two Unitree sources
-# disagree, and the design takes the model's (flagged for the robot, C37's kind of question). body/tests/test_sim_world.py checks
-# the limits read against 3.2's table.
+# sources agree neither with it nor with each other (the W1 verifier's sixth finding; each read again 2026-09-24):
+#   - Unitree's URDF of this revision (unitree_ros robots/g1_description/g1_29dof_with_hand_rev_1_0.urdf, <limit effort>) gives
+#     35 for the ankles' pitch and roll and the waist's roll and pitch, where Menagerie gives 50; its hip roll is Menagerie's 139;
+#   - Unitree's MJCF (unitree_mujoco unitree_robots/g1/g1_29dof.xml, its motors' ctrlrange) gives those four Menagerie's 50, but
+#     the hip roll 88, where Menagerie and the URDF give 139;
+#   - Unitree's G1 page gives the knee 90 N m (the G1) or 120 (the EDU), where all three files give 139.
+# So these are Menagerie's limits, not "the real motors' limits as Unitree publishes them" (3.2's wording: flagged for the
+# design); the design takes the model's (A21), and the robot's own are a question for before the robot (C37's kind).
+# body/tests/test_sim_world.py checks the limits read against 3.2's table and against the stock file.
 
 
 # ---------------------------------------------------------------- the effectors
@@ -194,51 +209,27 @@ def touch_zones(m, g1_set):
     return names, zone_of_geom, body_zone
 
 
-AXES = ("pitch", "roll", "yaw")
-
-
-def joint_blind(m, g1_set):
-    """THE SKIN'S BLIND SPOTS INSIDE A JOINT (A12; 3.4): the G1's hip, waist, shoulder, wrist and ankle are each two or three hinges
-    in series (the model's own joints `<side>_<joint>_<pitch|roll|yaw>_joint`), and the short links between the hinges (the hip's
-    pitch and roll links, the shoulder's pitch and roll links, the wrist's roll and pitch links, the ankle's pitch link, the waist's
-    yaw and roll links) are the joint itself, its motor housings, with no skin of their own on a body. MuJoCo already ignores
-    contacts across a single hinge (parent and child), which A12 counts on; across a compound joint it does not, so a link inside
-    the joint meets the joint's outer links where the joint reaches the end of its range (the pelvis the hip's roll link, the torso
-    the shoulder's roll link: under babble 1.3-2.5 kN, most of the pain it felt). That is the range, not a blow, and pain at a
-    joint's range is not born (A12). So a pair of links of one compound joint, one of them inside it, is a blind spot of touch and
-    pain. The joint's two outer links still feel each other (the thigh on the belly, the upper arm on the chest, the foot on the
-    shin), and every pair stays in collision (the G1's self-collision as shipped). Derived from the model's own joint names, never
-    listed by hand. Returns (a boolean nbody x nbody matrix, the pairs as (joint, body, body))."""
-    groups = {}
-    for j in range(m.njnt):
-        b = int(m.jnt_bodyid[j])
-        if b not in g1_set or m.jnt_type[j] != mujoco.mjtJoint.mjJNT_HINGE:
-            continue
-        nm = m.joint(j).name
-        base = nm[:-len("_joint")] if nm.endswith("_joint") else nm
-        head, _, axis = base.rpartition("_")
-        if axis not in AXES or not head:
-            continue
-        groups.setdefault(head, []).append(b)
+def rest_blind(m, d, g1_set):
+    """THE SKIN'S BLIND SPOTS (A12, exactly as the design writes it): MuJoCo already ignores the contacts between a link and the
+    link it hinges on; any OTHER pair of the G1's links that presses into itself AT REST is listed in the world (never by editing
+    the G1's file), as a sensor's blind spot of touch and pain, and stays in collision (the G1's self-collision as shipped).
+    Derived from the state it is given, the settled born state (the G1 at rest: g1scene.birth), never listed by hand: every pair
+    of G1 bodies in a contact carrying a positive normal force there. For the G1 as born the list is EMPTY (no link of it touches
+    another at rest: body/tests/test_sim_world.py, worlds 4 and 10), so every self-contact is felt, a kick to its own leg and two
+    motor housings struck together alike. (The W1 fix listed the pairs inside a compound joint as blind, reasoning that they meet
+    only at a joint's range; the W1 verifier measured under babble that 35% of their contacts over F_pain came with every hinge of
+    the joint more than 0.2 rad from its range's ends: the collision shapes' hulls meeting, the robot's housings struck. That rule
+    went beyond A12 and decided how much of the body has skin, the owner's call (B18), so it is gone.) Returns (a boolean nbody x
+    nbody matrix, the pairs as (body, body) names)."""
     blind = np.zeros((m.nbody, m.nbody), dtype=bool)
     pairs = []
-    for head, hinged in sorted(groups.items()):
-        chain = sorted(set(hinged), key=lambda x: _depth(m, x))          # the hinges in the order of the chain
-        links = [int(m.body_parentid[chain[0]])] + chain                 # the joint's first outer link, then each hinge's link
-        inner = set(links[1:-1])                                         # the links between its first and last hinge
-        for i, x in enumerate(links):
-            for y in links[i + 1:]:
-                if (x in inner or y in inner) and not (m.body_parentid[x] == y or m.body_parentid[y] == x):
-                    blind[x, y] = blind[y, x] = True
-                    pairs.append((head, m.body(x).name, m.body(y).name))
+    for i in range(d.ncon):
+        c = d.contact[i]
+        a, b = int(m.geom_bodyid[c.geom[0]]), int(m.geom_bodyid[c.geom[1]])
+        if a in g1_set and b in g1_set and c.efc_address >= 0 and d.efc_force[c.efc_address] > 0 and not blind[a, b]:
+            blind[a, b] = blind[b, a] = True
+            pairs.append((m.body(a).name, m.body(b).name))
     return blind, pairs
-
-
-def _depth(m, b):
-    n = 0
-    while b:
-        b = int(m.body_parentid[b]); n += 1
-    return n
 
 
 def zone_groups(zones):
@@ -342,7 +333,7 @@ class WorldFault(RuntimeError):
 # the model's fields the world (and the parent's drivers) change at run time: saved with the world so a restore is exact
 MUTABLE_MODEL_FIELDS = ("jnt_actfrcrange", "eq_data", "geom_pos", "geom_quat", "geom_size", "geom_rgba", "geom_contype",
                         "geom_conaffinity", "light_active", "light_castshadow", "light_diffuse", "light_ambient", "light_specular",
-                        "mat_rgba", "mat_emission")
+                        "light_pos", "light_dir", "mat_rgba", "mat_emission")     # (the day's light moves the sun: W5)
 STATE_SPEC = mujoco.mjtState.mjSTATE_INTEGRATION
 
 
@@ -380,13 +371,22 @@ class G1World(SimWorld):
         self._set_servo_law()
         # the touch zones, the pain threshold, the chargers, the parent's holds on the G1
         self.zones, self.zone_of_geom, self.body_zone = touch_zones(m, self.scene.g1_set)
-        self.blind, self.blind_pairs = joint_blind(m, self.scene.g1_set)
         self.nz = len(self.zones)
+        self.zone_body = np.full(self.nz, -1, dtype=np.int64)          # each zone's link (a skin site's frame)
+        for g in range(m.ngeom):
+            z = int(self.zone_of_geom[g])
+            if z >= 0:
+                if self.zone_body[z] not in (-1, int(m.geom_bodyid[g])):
+                    raise ValueError(f"touch zone {self.zones[z]!r} spans two links")
+                self.zone_body[z] = int(m.geom_bodyid[g])
         self.groups = zone_groups(self.zones)
         self.body_mass = float(m.body_subtreemass[m.body("pelvis").id])
         self.f_pain = PAIN_WEIGHTS * self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.palm_zones = [self.zones.index(f"{s}_hand_palm") for s in ("left", "right")]
         self.palm_of_hand = {"hand_l": self.palm_zones[0], "hand_r": self.palm_zones[1]}
+        self.own_hand = np.zeros((2, self.nz + 1), dtype=bool)          # each hand's other links (index nz: no zone), for palm_own_N
+        for h, grp in enumerate(("hand_l", "hand_r")):
+            self.own_hand[h, [z for z in self.groups[grp] if z != self.palm_zones[h]]] = True
         self.spinal = bool(spinal)                                      # the palmar grasp at the spinal cord (off: an instrument's switch)
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
             raise ValueError("the scene leaves MuJoCo's auto-reset on (A18: <flag autoreset=\"disable\"/>)")
@@ -413,6 +413,7 @@ class G1World(SimWorld):
         self.paused = False
         self._apply_weakness()
         self.scene.birth()
+        self.blind, self.blind_pairs = rest_blind(m, d, self.scene.g1_set)     # A12: the pairs pressing at rest (none as born)
         self._last_acts = {}
         self._spinal = {}; self._vor_quick = 0
         self._sense_birth()
@@ -454,7 +455,7 @@ class G1World(SimWorld):
         body = np.concatenate([np.stack([np.sin(ang), np.cos(ang), d.qvel[self.dof], effort], axis=1).reshape(-1), self.gaze, self.gaze_v])
         touch = np.stack([s["touch_log"], s["touch_onset"]], axis=1).reshape(-1)
         obs = {"body": body, "touch": touch, "vestibular": s["vestibular"].copy(), "charge": np.array([self.h, self.dh]),
-               "pain": (s["pain_force"] > self.f_pain).astype(np.float64)}
+               "pain": (s["pain_force"] > self.f_pain).astype(np.float64), "pain_site": s["pain_site"].reshape(-1).copy()}
         truth = self._truth()
         if self.eyes is not None:                                       # the eyes' retina codes (W3; body/sim/eyes.py)
             seen = self.eyes.see()
@@ -506,6 +507,7 @@ class G1World(SimWorld):
         rest_q = self.qadr[rest_idx] if rest_idx else None
         n, nz = STEPS_PER_TICK, self.nz
         F = np.zeros((n, nz)); imu = np.zeros((n, 12)); eff = np.zeros(n); fed = False
+        sites = np.zeros((nz, 7)); own = np.zeros(2)                     # pain's skin sites; the palms' own-hand force
         alpha = self.alpha
         try:
             for s in range(n):
@@ -514,7 +516,8 @@ class G1World(SimWorld):
                 t0 = time.perf_counter()
                 mujoco.mj_step(m, d)
                 t_phys += time.perf_counter() - t0
-                F[s] = self._zone_forces()
+                F[s] = self._zone_forces(sites)
+                own += self._palm_own
                 imu[s] = d.sensordata[self.imu_adr]
                 tq = d.qfrc_actuator[self.dof]
                 eff[s] = float(tq @ tq)
@@ -535,7 +538,7 @@ class G1World(SimWorld):
             raise WorldFault(self.tick, f"MuJoCo's warnings {warned}{said}" if warned else f"the tick's end state: {bad}")
         # the tick's senses
         imu = self._imu_noisy(imu)
-        self._sense_tick(F, imu)
+        self._sense_tick(F, imu, sites, own / n)
         reach = (GAZE_REACH_YAW - self.gaze[2] / 2, GAZE_REACH_PITCH)
         yaw, pitch, quick = vor(self.gaze[0], self.gaze[1], imu[:, 3:6] @ self.gyro_to_cam.T, m.opt.timestep, reach=reach)   # the VOR
         self.gaze = clamp_gaze([yaw, pitch, self.gaze[2]])
@@ -580,11 +583,15 @@ class G1World(SimWorld):
         self._restore(st)
 
     # ---------------------------------------------------------------- the senses
-    def _zone_forces(self):
+    def _zone_forces(self, sites=None):
         """this step's summed normal force on each touch zone (N): every contact touching a G1 zone (self-contact counts on both
-        zones), plus each of the parent's active holds on a G1 body on that body's zone"""
+        zones; A12's rest blind spots, none as born, felt by neither), plus each of the parent's active holds on a G1 body on
+        that body's zone. Also this step's force on each palm from its own hand's other links (`_palm_own`); and, given `sites`
+        (nz x 7) and a zone whose force this step passes F_pain, each contact on that zone adds [F, F x the contact point, F x
+        the link's outward normal there], both in the link's own frame (pain_site's sums)"""
         d, zg, nz = self.d, self.zone_of_geom, self.nz
         out = np.zeros(nz)
+        self._palm_own = np.zeros(2)
         nc = d.ncon
         if nc:
             con = d.contact
@@ -592,13 +599,27 @@ class G1World(SimWorld):
             ok = adr >= 0
             geom = con.geom
             bod = self.m.geom_bodyid[geom]
-            ok &= ~self.blind[bod[:, 0], bod[:, 1]]                     # a pair inside one joint: the skin's blind spot (A12)
+            ok &= ~self.blind[bod[:, 0], bod[:, 1]]                     # a pair pressing at rest: the skin's blind spot (A12)
             fn = np.where(ok, d.efc_force[np.where(ok, adr, 0)], 0.0)     # the elliptic cone's first row: the normal force
+            z = zg[geom]
             for col in (0, 1):
-                z = zg[geom[:, col]]
-                sel = z >= 0
+                zc = z[:, col]
+                sel = zc >= 0
                 if sel.any():
-                    out += np.bincount(z[sel], weights=fn[sel], minlength=nz)
+                    out += np.bincount(zc[sel], weights=fn[sel], minlength=nz)
+            for h, pz in enumerate(self.palm_zones):                    # the palm pressed by its own hand's links (the grasp's log)
+                mine = ((z[:, 0] == pz) & self.own_hand[h][z[:, 1]]) | ((z[:, 1] == pz) & self.own_hand[h][z[:, 0]])
+                if mine.any():
+                    self._palm_own[h] = float(fn[mine].sum())
+            if sites is not None and out.max() > self.f_pain:
+                hot = out > self.f_pain
+                for col, sgn in ((0, 1.0), (1, -1.0)):                 # the frame's normal points from geom 0 to geom 1
+                    zc = z[:, col]
+                    idx = np.nonzero((zc >= 0) & (fn > 0))[0]
+                    for i in idx[hot[zc[idx]]]:
+                        b = int(bod[i, col])
+                        Rb = d.xmat[b].reshape(3, 3)
+                        sites[zc[i]] += fn[i] * np.concatenate([[1.0], Rb.T @ (con.pos[i] - d.xpos[b]), Rb.T @ (sgn * con.frame[i, :3])])
         if self.g1_welds:
             act = d.eq_active[self.g1_welds]
             if act.any():
@@ -620,8 +641,9 @@ class G1World(SimWorld):
                 return True
         return False
 
-    def _sense_tick(self, F, imu):
-        """the tick's aggregates: touch (the mean force's log, its onset), pain's filtered force, the IMUs (their noisy samples)"""
+    def _sense_tick(self, F, imu, sites=None, palm_own=None):
+        """the tick's aggregates: touch (the mean force's log, its onset), pain's filtered force and its skin sites, the IMUs
+        (their noisy samples), the palms' own-hand force"""
         s = self._sensed
         lf = np.log1p(F.mean(axis=0) / TOUCH_UNIT_N)
         onset = np.maximum(0.0, lf - s["touch_log"])
@@ -631,8 +653,15 @@ class G1World(SimWorld):
         win = (c[w:] - c[:-w]) / w
         pain_force = win[-len(F):].max(axis=0)
         vest = self._vestibular(imu)
+        site = np.zeros((self.nz, 6))
+        for z in np.nonzero(pain_force > self.f_pain)[0]:
+            if sites is not None and sites[z, 0] > 0:
+                site[z] = sites[z, 1:] / sites[z, 0]                   # the mean point and the mean outward normal (not unit)
+            else:
+                site[z] = s["pain_site"][z]                             # a pain carried in from the last tick's steps: its site
         self._sensed = {"touch_log": lf, "touch_onset": onset, "touch_force": F.mean(axis=0), "pain_force": pain_force,
-                        "carry": F[-(w - 1):].copy(), "vestibular": vest, "peak_force": F.max(axis=0)}
+                        "carry": F[-(w - 1):].copy(), "vestibular": vest, "peak_force": F.max(axis=0), "pain_site": site,
+                        "palm_own": np.zeros(2) if palm_own is None else np.asarray(palm_own, float).copy()}
 
     def _imu_noisy(self, imu):
         """the IMUs' samples as the sensors give them: the model's declared noise from the world's stream, clipped at their ranges"""
@@ -656,7 +685,7 @@ class G1World(SimWorld):
         lf = np.log1p(F[0] / TOUCH_UNIT_N)
         self._sensed = {"touch_log": lf, "touch_onset": np.zeros(self.nz), "touch_force": F[0].copy(), "pain_force": F[0].copy(),
                         "carry": np.repeat(F, PAIN_WINDOW_STEPS - 1, axis=0), "vestibular": self._vestibular(self._imu_noisy(imu)),
-                        "peak_force": F[0].copy()}
+                        "peak_force": F[0].copy(), "pain_site": np.zeros((self.nz, 6)), "palm_own": self._palm_own.copy()}
         self._drain = 0.0; self._fed = False
 
     def _truth(self):
@@ -667,7 +696,8 @@ class G1World(SimWorld):
         return {"time": float(d.time), "pelvis": d.qpos[0:7].copy(), "torso": d.xpos[m.body("torso_link").id].copy(),
                 "toys": toys, "touch_N": s["touch_force"].copy(), "pain_N": s["pain_force"].copy(), "peak_N": s["peak_force"].copy(),
                 "f_pain": self.f_pain, "drain": self._drain, "fed": self._fed, "ncon": int(d.ncon), "acts": dict(self._last_acts),
-                "gaze": self.gaze.copy(), "spinal": dict(self._spinal), "vor_quick": self._vor_quick}
+                "gaze": self.gaze.copy(), "spinal": dict(self._spinal), "vor_quick": self._vor_quick,
+                "palm_own_N": {"hand_l": float(s["palm_own"][0]), "hand_r": float(s["palm_own"][1])}}
 
     # ---------------------------------------------------------------- the state
     def _capture(self):

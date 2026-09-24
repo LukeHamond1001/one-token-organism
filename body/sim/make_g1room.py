@@ -67,6 +67,27 @@ MAT_HX, MAT_HY, MAT_T = 1.40, 1.00, .012   # a 2.8 x 2.0 m foam mat (7 x 5 tiles
                                            # lengths, as the 1.6 m mat was for the 0.75 m child
 ROOM_X, ROOM_Y, ROOM_H = 2.6, 2.3, 2.6
 
+# ------------------------------------------------------------------ the light (5.1, 5.4; the W1 verifier's fifth finding)
+# THE ROOM'S LIGHTS are its only light: a sun through the window, a key spot and a fill (LIGHTS). There is NO HEADLIGHT: MuJoCo's
+# headlight is a lamp at the viewing camera, which for the child's eyes would be a lamp shining from its own head, one the G1
+# does not have, so its room would never be dark at night (the owner's decision 3). What a lamp at the eye stood in for is the
+# room's own indirect light: the light the walls, floor and ceiling give back, which reaches a face bent over a child from
+# below and every side. MuJoCo's renderer computes no bounced light, so each light carries it as its ambient term, ROOM_INDIRECT
+# of its own diffuse (about the prototype's headlight ambient, 0.32 over the three lights' 0.94, carried onto the lights that
+# make it: world, ours). It goes where its light goes: a light darkened takes its indirect light with it, and the day's light (W5)
+# scales it with the diffuse (W5: darken the lights' terms, never switch every light off, which makes MuJoCo draw the scene
+# unlit; the emissive surfaces still glow). The room's cameras for people (room, mat, top) see the same light.
+ROOM_INDIRECT = 1 / 3
+LIGHTS = (('sun', 'type="directional" pos="-2 -.1 3" dir=".62 .18 -.76" castshadow="true"', (.30, .285, .25), (.08, .08, .08)),
+          ('key', 'type="spot" pos="1.6 -2.0 2.3" dir="-.5 .45 -.62" cutoff="45" exponent="2" castshadow="true" bulbradius=".2"',
+           (.42, .41, .40), (.12, .12, .12)),
+          ('fill', 'type="directional" pos="0 0 2.5" dir="-.2 .5 -.84" castshadow="false"', (.22, .22, .23), (0, 0, 0)))
+
+
+def lights_xml():
+    return "\n    ".join(f'<light name="{n}" {a} diffuse="{f(*dif)}" ambient="{f(*(ROOM_INDIRECT * np.array(dif)))}" specular="{f(*spe)}"/>'
+                          for n, a, dif, spe in LIGHTS)
+
 MAT = dict(
     # the parent: skin, a teal sweater, denim trousers, white shoes, dark brown hair; face features
     skin=dict(rgba=".86 .66 .54 1", specular=".12", shininess=".25"),
@@ -227,7 +248,7 @@ def parent_segment_geoms(seg):
     return "\n      ".join(g)
 
 
-PARENT_START = dict(pos=(1.9, -1.5, kin.HIP_Z), yaw=math.radians(150))
+from g1scene import PARENT_BIRTH as PARENT_START  # noqa: E402  (where the scene's birth draws her: one place for both)
 
 
 def parent():
@@ -266,10 +287,12 @@ TOYS = dict(
 # bear and drum at no scale from 0.6 to 1.0, so the cup was made 0.8. That was the soft contacts' creep: re-run at impratio 10
 # (the option below, 2026-09-24, 90 trials at 1.0, none unstable) the hand held the ball 9 of 9, the block 9, the duck 8, the
 # cup 9 (at its own size), the rattle 6 of 6 hand-overs (0 of 3 top grasps), the car 8, the bear 2, the stacker 9 and the ring 6
-# of 6 hand-overs; the drum 0. So the cup is its own size again, and only the drum (and mostly the bear) cannot be held: things
-# to look at, push, roll, hit and name. (These are at the stock servo gains closing to the range's end; the grasp reflex's small
-# steps under the body's servo law press less, measured in W4.)
-TOY_SCALE = dict(ball=1.0, block=1.0, duck=1.0, cup=1.0, rattle=1.0, car=1.0, bear=1.0, stacker=1.0, drum=1.0, ring=1.0)
+# of 6 hand-overs; the drum 0. (These are at the stock servo gains closing to the range's end; the grasp reflex's small steps
+# under the body's servo law press less, measured in W4.) THE CUP STAYS AT 0.8 (the W1 verifier's fourth finding): its size is
+# the owner's call (SIM_DESIGN.md B1: "the cup's size was changed to fit the robot's hand, which is the world fitted to the body,
+# so it is your call"), and the design uses B1's default, 0.8, until the owner says otherwise. B1's premise has changed at
+# impratio 10 (the cup held 9 of 9 at its own size, the ball 9 and the duck 8 of 9), which goes to the owner with B1.
+TOY_SCALE = dict(ball=1.0, block=1.0, duck=1.0, cup=0.8, rattle=1.0, car=1.0, bear=1.0, stacker=1.0, drum=1.0, ring=1.0)
 TOY_MESHES = dict(cup=("cup_rim", "cup_handle"), drum=("drum_rim",), ring=("teether",),
                   stacker=("ring0", "ring1", "ring2", "ring3", "ring4"))
 ARGS = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
@@ -656,7 +679,7 @@ def scene_xml(folder=HERE):
   <visual>
     <global offwidth="1920" offheight="1080" fovy="45"/>
     <quality shadowsize="4096" offsamples="8"/>
-    <headlight ambient=".32 .32 .33" diffuse=".18 .18 .18" specular=".02 .02 .02"/>
+    <headlight active="0" ambient="0 0 0" diffuse="0 0 0" specular="0 0 0"/>
     <map znear=".001" zfar="30" shadowclip="2.6" shadowscale=".6"/>
   </visual>
   <default>
@@ -689,9 +712,8 @@ def scene_xml(folder=HERE):
     {sounds}
   </custom>
   <worldbody>
-    <light name="sun" type="directional" pos="-2 -.1 3" dir=".62 .18 -.76" castshadow="true" diffuse=".30 .285 .25" specular=".08 .08 .08"/>
-    <light name="key" type="spot" pos="1.6 -2.0 2.3" dir="-.5 .45 -.62" cutoff="45" exponent="2" castshadow="true" bulbradius=".2" diffuse=".42 .41 .40" specular=".12 .12 .12"/>
-    <light name="fill" type="directional" pos="0 0 2.5" dir="-.2 .5 -.84" castshadow="false" diffuse=".22 .22 .23" specular="0 0 0"/>
+    <!-- the room's lights, each carrying the room's indirect light as its ambient (ROOM_INDIRECT of its diffuse); no headlight -->
+    {lights_xml()}
     {cam_xml}
     <body name="room" childclass="room">
     {room()}

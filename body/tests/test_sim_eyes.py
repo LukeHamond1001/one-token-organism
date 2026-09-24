@@ -12,7 +12,10 @@ too far); it stays in the truth, never in the body's channels (the W1 verifier's
 three dark blobs fire on a drawn face at every size of the bank and anywhere in the fovea, not on the same face with light blobs
 (Farroni's polarity) nor on noise; the frame's face_fovea and face_periph are the template on the frame's own pixels, and the body's
 channels are the sensors' alone. THE EXACT REPLAY with the eyes: every frame's eye codes bit for bit after a save and a restore, in
-the same world and in a new one."""
+the same world and in a new one. NO LAMP AT THE EYES (the W1 verifier's fifth finding): the room has no headlight and the eyes refuse
+one; what they see is rendered again when any light's term changes (the ambient, the specular, a light moved: its tenth finding);
+with the room's lights off the eyes see the dark. THE PARENT'S FACE AS DRAWN (its first finding): at birth her face is drawn, so
+in the fovea her mouth and her eyes are darker than her cheeks; the born template's reading of it is printed (C3 measures it)."""
 import math
 import os
 import sys
@@ -151,7 +154,7 @@ def test_the_eyes_render():
     d.qpos[a:a + 3] = P; mujoco.mj_forward(m, d)
     w.gaze = W.clamp_gaze(E.gaze_at(m, d, P))
     fov = w.frame().truth["eyes"]["fovea"]
-    red = lambda im: float(np.mean((im[..., 0].astype(int) - im[..., 1].astype(int) > 50) & (im[..., 0] > 80)))
+    red = lambda im: float(np.mean((im[..., 0] > 20) & (im[..., 0].astype(float) > 0.6 * im.astype(float).sum(-1))))   # red-dominant (the room's own light)
     assert red(fov["L"][12:20, 12:20]) > 0.9 and red(fov["R"][12:20, 12:20]) > 0.9, (red(fov["L"][12:20, 12:20]), red(fov["R"][12:20, 12:20]))
     w.gaze = W.clamp_gaze(w.gaze + [-0.5, 0.2, 0])
     fov2 = w.frame().truth["eyes"]["fovea"]
@@ -195,6 +198,8 @@ def test_the_face_test():
     assert E.face_test(m, d, w.gaze)["L"] == (False, "not in the fovea") and w.frame().truth["eyes"]["face_test"]["L"][0] is False
     _face_rig(w, 0.6, turn_deg=80)
     assert E.face_test(m, d, w.gaze)["L"] == (False, "turned away")
+    _face_rig(w, 0.6, turn_deg=88)                                      # the ray meets her own lip's corner 2 cm before the mouth
+    assert E.face_test(m, d, w.gaze)["L"] == (False, "turned away")     # point: her mouth, not a block (C2 in the W1 fix 2)
     _face_rig(w, 3.4)                                                   # (the ceiling is 3.8 m out along this axis)
     assert E.face_test(m, d, w.gaze)["L"] == (False, "too small")
     _face_rig(w, 2.5)
@@ -206,7 +211,8 @@ def test_the_face_test():
     assert E.face_test(m, d, w.gaze)["L"] == (False, "blocked")
     ey.close()
     print("eyes 5: the face test: the parent's face 0.6 m out and facing is seen by both eyes (in the truth only); out of the window,",
-          "turned 80 deg, 3.4 m away or behind a block it is not (each condition alone); at 2.5 m facing it is")
+          "turned 80 deg, 3.4 m away or behind a block it is not (each condition alone; turned 88 deg, where the ray meets her own",
+          "lip first, it is turned away, not blocked); at 2.5 m facing it is")
 
 
 def test_the_vor_quick_phase():
@@ -282,7 +288,8 @@ def test_the_face_template():
     for dist in (0.45, 0.8, 1.5):
         _face_rig(w, dist)
         f = w.frame()
-        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "eye_p", "eye_f", "face_fovea", "face_periph"}, sorted(f.obs)
+        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "pain_site", "eye_p", "eye_f", "face_fovea",
+                              "face_periph"}, sorted(f.obs)
         t = f.truth["eyes"]
         assert t["face_test"]["L"][0] and t["face_test"]["R"][0]
         for side in "LR":
@@ -334,8 +341,92 @@ def test_exact_replay_with_the_eyes():
           f"every frame's eye codes, the template's readings and the senses bit for bit, with the sun's shadow and without")
 
 
+def test_no_lamp_at_the_eyes():
+    """eyes 10: the room has no headlight and the eyes refuse one; each light term they see by (the ambient, the specular, a light
+    moved) renders them again when it changes; with the room's lights off, they see the dark"""
+    w, ey = _world()
+    m = w.m
+    assert m.vis.headlight.active == 0
+    f0 = w.frame()
+    img0 = f0.truth["eyes"]["images"]["L"].astype(float)
+    m.vis.headlight.active = 1
+    try:
+        ey._cache = None
+        w.frame()
+    except ValueError as e:
+        assert "headlight" in str(e)
+    else:
+        raise AssertionError("the eyes rendered with a lamp at the eye")
+    finally:
+        m.vis.headlight.active = 0
+    sun = m.light("sun").id
+    for field, val in (("light_ambient", m.light_ambient[sun] * 3), ("light_specular", m.light_specular[sun] + 0.5),
+                       ("light_pos", m.light_pos[sun] + [0.5, 0, 0]), ("light_dir", [0.0, 0.0, -1.0])):
+        keep = getattr(m, field)[sun].copy()
+        r0 = ey.timing["renders"]
+        getattr(m, field)[sun] = val
+        w.frame()
+        getattr(m, field)[sun] = keep
+        assert ey.timing["renders"] == r0 + 1, field                    # the cache never serves a stale image
+    assert np.array_equal(w.frame().truth["eyes"]["images"]["L"], f0.truth["eyes"]["images"]["L"])
+    terms = {f: getattr(m, f).copy() for f in ("light_diffuse", "light_ambient", "light_specular")}
+    for f in terms:
+        getattr(m, f)[:] = 0.0
+    glow = w.frame().truth["eyes"]["images"]["L"].astype(float)          # the lights dark: only the emissive surfaces
+    emis = m.mat_emission.copy(); m.mat_emission[:] = 0.0
+    dark = w.frame().truth["eyes"]["images"]["L"].astype(float)
+    m.mat_emission[:] = emis
+    for f, v in terms.items():
+        getattr(m, f)[:] = v
+    act = m.light_active.copy(); m.light_active[:] = 0
+    unlit = w.frame().truth["eyes"]["images"]["L"].astype(float)         # every light switched off: MuJoCo draws the scene unlit
+    m.light_active[:] = act
+    ey.close()
+    assert dark.max() == 0 and glow.mean() < img0.mean() and unlit.mean() > img0.mean(), (dark.max(), glow.mean(), unlit.mean(), img0.mean())
+    print(f"eyes 10: no headlight, and the eyes refuse one; a change of any light's ambient, specular, place or direction renders",
+          f"them again; with every light's terms at zero the eyes see only the emissive surfaces (mean {glow.mean():.1f} of 255 against",
+          f"{img0.mean():.1f} lit: the ceiling's, the window's, the lamp's, the dock's and her eyes' glints, W5's night), with those too",
+          f"at zero, black; every light switched off instead, MuJoCo draws the room unlit (mean {unlit.mean():.1f}): the night must",
+          f"darken the lights, never switch them all off (for W5)")
+
+
+def test_the_parents_face_as_drawn():
+    """eyes 11: the parent's face drawn at birth (the W1 verifier's first finding: never drawn, her face had no mouth or brows,
+    its irises hidden inside the whites and its lids at their placeholders): in both eyes' images at 0.45-0.8 m, facing, her mouth
+    is darker than her cheeks and each eye shows its dark iris; the born template's best reading of her face is printed (C3
+    measures its hits)"""
+    w, ey = _world()
+    m, d = w.m, w.d
+    hb = m.body("parent_head").id
+    pts = {"mouth": np.array([kin.head_surface_x(0, kin.MOUTH_Z), 0.0, kin.MOUTH_Z]),
+           "eye_L": kin.EYE_C["L"] + [0.009, 0, 0], "eye_R": kin.EYE_C["R"] + [0.009, 0, 0],
+           "cheek_L": np.array([kin.head_surface_x(0.05, 0.14), 0.05, 0.14]),
+           "cheek_R": np.array([kin.head_surface_x(-0.05, 0.14), -0.05, 0.14])}
+    reads = {}
+    for dist in (0.45, 0.6, 0.8):
+        _face_rig(w, dist)
+        f = w.frame()
+        t = f.truth["eyes"]
+        for side in "LR":
+            img = t["images"][side].astype(float).mean(axis=-1)
+            lum = {}
+            for k, pl in pts.items():
+                c, r_, _ = E.project(m, d, side, d.xpos[hb] + d.xmat[hb].reshape(3, 3) @ pl)
+                ci, ri = int(c), int(r_)
+                lum[k] = img[ri, ci] if not k.startswith("eye") else img[ri - 1:ri + 2, ci - 1:ci + 2].min()   # an eye: its iris
+            cheek = min(lum["cheek_L"], lum["cheek_R"])
+            assert lum["mouth"] < 0.8 * cheek and lum["eye_L"] < 0.5 * cheek and lum["eye_R"] < 0.5 * cheek, (dist, side, lum)
+        reads[dist] = (int(f.obs["face_fovea"][0]), round(max(t["template_fovea"]["L"][0], t["template_fovea"]["R"][0]), 2))
+    ey.close()
+    print(f"eyes 11: the parent's face drawn at birth: at 0.45 / 0.6 / 0.8 m her mouth darker than her cheeks and her irises dark;",
+          f"the born template on her face: face_fovea {[reads[k][0] for k in (0.45, 0.6, 0.8)]}, best r",
+          f"{[reads[k][1] for k in (0.45, 0.6, 0.8)]} (a match needs r {E.TEMPLATE_R}; C3 measures it; neither her face nor the",
+          f"template is changed for it)")
+
+
 EYE_TESTS = [test_the_gaze, test_the_vor_exact, test_the_vor_in_the_world, test_the_eyes_render, test_the_face_test,
-             test_the_vor_quick_phase, test_the_face_template, test_exact_replay_with_the_eyes]
+             test_the_vor_quick_phase, test_the_face_template, test_exact_replay_with_the_eyes, test_no_lamp_at_the_eyes,
+             test_the_parents_face_as_drawn]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

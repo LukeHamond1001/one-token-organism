@@ -4,18 +4,24 @@ output byte for byte, every path in it relative; the stock G1 file is byte for b
 the one the G1 study fixed (the elliptic cone, multi-point CCD off) with impratio 10 against the soft contacts' creep, and MuJoCo's
 auto-reset disabled (A18); the world's geoms and the toys at contact priority 2, so their surfaces decide the G1's contacts (C26);
 the parent's shapes touch the G1; the mat's collision box is thick (a foot sphere can never pass its
-mid-plane); an act out of range moves nothing. THE BODY'S LIMITS are the model's own (3.2), equal to 3.2's table. THE SERVO LAW:
+mid-plane); an act out of range moves nothing; NO LAMP AT THE CHILD'S EYES (the room has no headlight; each room light carries the
+room's indirect light as its ambient, a third of its diffuse); the cup at B1's default, 0.8. THE BODY'S LIMITS are the model's own (3.2), equal to 3.2's table. THE SERVO LAW:
 each actuator's gains from its limit (kp = limit / 0.25 rad, the Dex3's / 0.1 rad; kv = 0.04 s x kp), weakness scaling the limits
 with the charge, an act re-anchoring the targets at the measured angle plus its steps and a rest relaxing them to the measured angle
 at 3 ticks, bit for bit a hand-written replica of the law. BIRTH: on its back on the mat, the whole weight on the touch zones, no
-self-contact at rest, deterministic. THE SENSES: joint sense, touch per zone, pain's 10 ms filter and its threshold from the body's
-declared mass, the skin's blind spots inside a compound joint (A12: felt by neither touch nor pain, still in collision), the IMUs
-with the model's declared noise, the charge's drain and a charger in the palm. THE REFLEXES: each flexion and closing sign measured
-on the G1's own geometry; the withdrawal on a limb's pain (a real blow: a weight dropped on the shin) for 2 ticks, none for the
-trunk; the grasp summed at the spinal cord into the hand's own act of the same tick. LETTING GO (A11; the W1 verifier's first
+self-contact at rest, deterministic; the parent drawn (her face at its neutral expression, her hands shaped: the W1 verifier's first
+finding). THE SENSES: joint sense, touch per zone, pain's 10 ms filter, its threshold from the body's declared mass and its skin
+site (where on the link it hurts, in the link's frame), A12's blind spots exactly as written (the pairs pressing at rest: none as
+born; the motor housings struck together felt on both zones: the W1 verifier's second finding), the IMUs with the model's declared
+noise, the charge's drain and a charger in the palm. THE REFLEXES: the withdrawal's local sign (each stepped joint withdraws the
+painful site, checked by finite differences on the G1's own geometry; a squeeze gives no direction; a hand's pain withdraws its
+arm), for 2 ticks, none for the trunk; in the world, a withdrawal moves the site away; the grasp summed at the spinal cord into
+the hand's own act of the same tick, and a fist closed on nothing counted in the truth (palm_own_N). C22 (the W1 verifier's third
+finding): the housings struck together at the hip under babble, the withdrawal clears the pain by its second tick where rest does
+not. LETTING GO (A11; the W1 verifier's first
 finding): a ball kept in the palm, the hand closes on it at rest and opens by its own act while the ball still touches the palm.
-THE EXACT REPLAY TEST: N ticks of babble, a save, M more; restored (in the same world and in a new one), the M again: every frame and
-the final state bit for bit. THE NIGHT: frozen, nothing seen or moved, the morning the same as never pausing. FAULTS (A18): a tick
+THE EXACT REPLAY TEST: N ticks of babble with the withdrawal live and the sun moved (the model's light fields saved), a save, M
+more; restored (in the same world and in a new one), the M again: every frame and the final state bit for bit. THE NIGHT: frozen, nothing seen or moved, the morning the same as never pausing. FAULTS (A18): a tick
 MuJoCo cannot live raises WorldFault and leaves the world where the tick began: a bad state within the tick, a bad velocity left by
 the tick's last step (which MuJoCo itself checks only at the next step), a stop in the tick's closing forward pass; no MuJoCo log
 file written. THE BABBLER: deterministic, its units and rests as declared. THE WORLD IN THE CORE: a tiny body of the world's
@@ -44,14 +50,18 @@ from body.sim.world import G1World, WorldFault  # noqa: E402
 G = W.G
 SIM = os.path.join(ROOT, "body", "sim")
 G1_FILE_SHA256 = "2d41a3c6783fbf9e17349608d9c2222d970163b1db315ce9f30c4a97631fc078"   # g1_with_hands.xml at dd8640e (MuJoCo Menagerie)
-# SIM_DESIGN.md 3.2's table (N m; the model's own, as Menagerie and Unitree's MJCF declare them)
+# SIM_DESIGN.md 3.2's table (N m; the model's own: MuJoCo Menagerie's g1_with_hands.xml)
 DESIGN_LIMITS = dict(hip_pitch=88, hip_roll=139, hip_yaw=88, knee=139, ankle_pitch=50, ankle_roll=50, waist_yaw=88, waist_roll=50,
                      waist_pitch=50, shoulder_pitch=25, shoulder_roll=25, shoulder_yaw=25, elbow=25, wrist_roll=25, wrist_pitch=5,
                      wrist_yaw=5, hand_thumb_0=2.45, hand_thumb_1=1.4, hand_thumb_2=1.4, hand_index_0=1.4, hand_index_1=1.4,
                      hand_middle_0=1.4, hand_middle_1=1.4)
-# Unitree's URDF of this revision (unitree_ros g1_29dof_with_hand_rev_1_0.urdf, <limit effort>) differs on these, 35 N m: two Unitree
-# sources disagree; the design takes the model's (3.2, A21)
+# Unitree's own sources differ from Menagerie and from each other (read 2026-09-24; body/sim/world.py's note; the W1 verifier's sixth
+# finding): its URDF of this revision (unitree_ros g1_29dof_with_hand_rev_1_0.urdf, <limit effort>) on these four; its MJCF
+# (unitree_mujoco unitree_robots/g1/g1_29dof.xml, the motors' ctrlrange) on the hip roll; its G1 page on the knee (the G1, the EDU).
+# The design takes the model's (3.2, A21): these are Menagerie's, not "as Unitree publishes them"
 URDF_DIFFERS = {"ankle_pitch": 35, "ankle_roll": 35, "waist_roll": 35, "waist_pitch": 35}
+MJCF_DIFFERS = {"hip_roll": 88}
+PAGE_KNEE = (90, 120)
 
 
 def _babbler(seed=5, p_rest=0.3):
@@ -64,7 +74,8 @@ def _same_frame(a, b):
         return False
     if not all(np.array_equal(a.obs[k], b.obs[k]) for k in a.obs):
         return False
-    for k in ("time", "pelvis", "torso", "touch_N", "pain_N", "peak_N", "drain", "fed", "ncon", "acts", "spinal", "vor_quick", "gaze"):
+    for k in ("time", "pelvis", "torso", "touch_N", "pain_N", "peak_N", "drain", "fed", "ncon", "acts", "spinal", "vor_quick", "gaze",
+              "palm_own_N"):
         x, y = a.truth[k], b.truth[k]
         if not (np.array_equal(x, y) if isinstance(x, np.ndarray) else x == y):
             return False
@@ -109,10 +120,19 @@ def test_the_scene():
     assert feet and all(w.d.contact[i].friction[0] == m.geom_friction[m.geom("mat").id][0] != 0.6 for i in feet)   # the mat decides
     assert all(m.light(i).name or not m.light_active[i] for i in range(m.nlight))   # the Menagerie scene light off
     assert [m.camera(f"eye_{s}").id >= 0 for s in "LR"] and [m.site(f"ear_{s}").id >= 0 for s in "LR"]
+    # NO LAMP AT THE CHILD'S EYES (the W1 verifier's fifth finding): no headlight; the room's indirect light on its own lights
+    hl = m.vis.headlight
+    assert hl.active == 0 and not np.any(hl.ambient) and not np.any(hl.diffuse) and not np.any(hl.specular)
+    lit = [i for i in range(m.nlight) if m.light_active[i]]
+    assert sorted(m.light(i).name for i in lit) == ["fill", "key", "sun"]
+    assert all(np.allclose(m.light_ambient[i], M.ROOM_INDIRECT * m.light_diffuse[i], atol=1e-5) and m.light_ambient[i].min() > 0 for i in lit)
+    # the cup at B1's default (0.8: the owner's call; the W1 verifier's fourth finding)
+    assert M.TOY_SCALE["cup"] == 0.8 and abs(m.geom_size[m.geom("cup").id][0] - 0.8 * 0.042) < 1e-9
     print("world 1: g1room.xml is the maker's output (paths relative), the stock G1 file unchanged (sha256 pinned), 43 servos, 45 touch",
           "zones, the elliptic cone with multi-point CCD off and impratio 10, MuJoCo's auto-reset off, the world's geoms and the toys at",
           "contact priority 2 (a foot on the mat takes the mat's friction, not the foot's 0.6), the parent's shapes touching the G1, the mat's collision box",
-          "10 cm deep under its top, the eyes and ears added; an act out of range refused before anything moves")
+          "10 cm deep under its top, the eyes and ears added; an act out of range refused before anything moves; no headlight (no lamp at",
+          "the child's eyes), each room light's ambient a third of its diffuse; the cup at 0.8 (B1's default)")
 
 
 def test_torque_limits_are_the_models():
@@ -133,9 +153,10 @@ def test_torque_limits_are_the_models():
         assert tuple(m.jnt_actfrcrange[w.jid[k]]) == (-stock[jn], stock[jn]), jn          # born full: h = 1
     kp_ankle = w.kp[W.JOINTS.index("left_ankle_pitch_joint")]
     assert kp_ankle == 200.0                                             # 3.3: 200 N m per rad for the ankles
-    print(f"world 2: all 43 limits are the model's own (88-139 N m legs, 50 ankles and the waist's roll and pitch, 25 arms, 5 wrists,",
-          f"1.4-2.45 hands), 3.2's table; the ankles' kp {kp_ankle:.0f} N m per rad; Unitree's URDF differs on {len(URDF_DIFFERS)} joint",
-          f"kinds (35 N m), flagged, the model's kept")
+    assert all(DESIGN_LIMITS[k] != v for k, v in {**URDF_DIFFERS, **MJCF_DIFFERS}.items()) and DESIGN_LIMITS["knee"] not in PAGE_KNEE
+    print(f"world 2: all 43 limits are the model's own (Menagerie: 88-139 N m legs, 50 ankles and the waist's roll and pitch, 25 arms,",
+          f"5 wrists, 1.4-2.45 hands), 3.2's table; the ankles' kp {kp_ankle:.0f} N m per rad; Unitree's URDF differs on {len(URDF_DIFFERS)}",
+          f"joint kinds (35 N m), its MJCF on the hip roll (88), its G1 page on the knee ({PAGE_KNEE[0]} / {PAGE_KNEE[1]} N m): flagged, the model's kept")
 
 
 # ---------------------------------------------------------------- the servo law
@@ -175,7 +196,7 @@ def test_the_servo_law():
         assert np.allclose(w.limits_now(), w.tau_max * share)
     w.h = 1.0
     b = _babbler(3)
-    acts = [b.acts() for _ in range(12)] + [{}] * 4 + [{"arm_l": R.flexion_act("arm_l")}] + [{}] * 3
+    acts = [b.acts() for _ in range(12)] + [{}] * 4 + [{"arm_l": W.act_flat([2, 2, 2, 0, 2, 2, 2])}] + [{}] * 3
     twin = G1World(seed=1, spinal=False)
     for i, a in enumerate(acts):
         q0 = w.d.qpos[w.qadr].copy(); h = w.h
@@ -198,7 +219,7 @@ def test_the_servo_law():
         w2.apply({})
     assert z() < z_up - 0.05, (z_up, z())
     print(f"world 3: kp = limit / 0.25 rad (the Dex3's / 0.1 rad), kv = 0.04 s x kp on every servo; limits x 0.3 at h 0, x 0.65 at h 0.5; 20 ticks of acts,",
-          f"rests and a reflex's act bit for bit the law written out by hand; a raised hand at rest sank {100 * (z_up - z()):.0f} cm in 3 s")
+          f"rests and an elbow's big step bit for bit the law written out by hand; a raised hand at rest sank {100 * (z_up - z()):.0f} cm in 3 s")
 
 
 # ---------------------------------------------------------------- birth and the senses
@@ -220,13 +241,25 @@ def test_birth_and_touch():
     assert {"torso", "pelvis"} <= set(touched), touched
     assert np.allclose(f.obs["touch"][0::2], np.log1p(f.truth["touch_N"])) and not f.obs["pain"].any()
     assert G1World(seed=1).save_state() == w.save_state()
+    # THE PARENT DRAWN AT BIRTH (the W1 verifier's first finding): her face's and hands' geoms where set_parent puts them, the face at
+    # its neutral expression; the file's own places for them are placeholders (the mouth and brows inside her head at its origin)
+    kin = G.kin
+    face = kin.face_geoms(kin.scalar_to_params(0.0), None)
+    for n, (pp, q, sz) in face.items():
+        g = w.scene.face_ids[n]
+        assert np.allclose(m.geom_pos[g], pp) and np.allclose(m.geom_quat[g], q), n
+    for n in ("mouth0", "brow_L", "lip_lo0"):                          # on the face's front, not at the head's origin
+        assert m.geom_pos[w.scene.face_ids[n]][0] > 0.09, n
+    hid = m.body_mocapid[m.body("parent_head").id]
+    want = kin.fk(G.born_parent())["head"][0]
+    assert np.allclose(d.mocap_pos[hid], want) and w.scene.pose is not None and kin.face_reading(kin.scalar_to_params(0.0)) == 0.0
     for _ in range(20):
         w.apply({})
     s20 = float(w.frame().truth["touch_N"].sum())
     assert abs(s20 - weight) < 0.05 * weight, (s20, weight)
     print(f"world 4: born supine on the mat (head toward -x), no self-contact at rest, the touch zones carrying {s:.1f} N of its",
           f"{weight:.1f} N at birth and {s20:.1f} N after 3 s at rest ({len(touched)} zones touched: {', '.join(touched[:6])}...);",
-          f"birth the same every time")
+          f"birth the same every time; the parent drawn at birth ({len(face)} face geoms at her neutral face, her head where the maker stands her)")
 
 
 def test_joint_sense_and_vestibule():
@@ -258,7 +291,8 @@ def test_joint_sense_and_vestibule():
 
 def test_pain():
     """world 6: F_pain from the declared mass; the tick's largest 10 ms mean, windows across the tick's start included; a real
-    blow (10 kg dropped 0.6 m on the shin) hurts the leg's zones and withdraws the leg for 2 ticks, not the trunk"""
+    blow (10 kg dropped 0.6 m on the shin) hurts the leg's zones, with a skin site on each zone in pain (on its link, in the
+    link's frame) and none elsewhere, and the leg's withdrawal takes 2 ticks, not the trunk's"""
     w = G1World(seed=1)
     assert abs(w.f_pain - 3 * 34.394 * 9.81) < 0.2
     z = w.zones.index("left_knee")
@@ -286,10 +320,10 @@ def test_pain():
     qa = m.jnt_qposadr[m.body_jntadr[m.body("rig_weight").id]]
     d.qpos[qa:qa + 3] = [mid[0], mid[1], mid[2] + 0.6]; d.qpos[qa + 3:qa + 7] = [1, 0, 0, 0]
     mujoco.mj_forward(m, d)
-    rf = R.Reflexes(w.zones); st = {"leg_l": {}, "leg_r": {}, "arm_l": {}}
-    hurt, wd = [], []
+    rf = R.Reflexes(w); st = {"leg_l": {}, "leg_r": {}, "arm_l": {}}
+    hurt, wd, frames = [], [], []
     for k in range(6):
-        f = w.frame()
+        f = w.frame(); frames.append(f)
         acts = {}
         for limb in st:
             a = rf.withdrawal(f, limb, st[limb])
@@ -300,9 +334,20 @@ def test_pain():
     first = next(k for k, h in enumerate(hurt) if h)
     assert "left_knee" in hurt[first] and all(w.zones.index(zn) in rf.limb_zones["leg_l"] for zn in hurt[first]), hurt
     assert wd[:2] == [(first, "leg_l"), (first + 1, "leg_l")] and all(l_ == "leg_l" for _, l_ in wd), wd
+    # pain's skin site: on each zone in pain, on its own link (within the reach of the link's collision shapes), 0 elsewhere
+    for f in frames:
+        site = f.obs["pain_site"].reshape(w.nz, 6)
+        pz = np.nonzero(f.obs["pain"])[0]
+        assert all(np.any(site[z]) for z in pz) and not np.any(np.delete(site, pz, axis=0)), f.tick
+        for z in pz:
+            reach = max(float(np.linalg.norm(m.geom_pos[g])) + float(m.geom_rbound[g]) for g in range(m.ngeom) if w.zone_of_geom[g] == z)
+            assert np.linalg.norm(site[z, :3]) <= reach + 1e-6 and np.linalg.norm(site[z, 3:]) <= 1 + 1e-9, (w.zones[z], site[z])
+    zk = w.zones.index("left_knee")
+    coh = float(np.linalg.norm(frames[first].obs["pain_site"].reshape(w.nz, 6)[zk, 3:]))
     print(f"world 6: F_pain {w.f_pain:.1f} N (3 x the declared 34.394 kg); a 2 ms spike of 3000 N is a 600 N mean (no pain), 10 ms",
           f"at 1100 N hurts, a blow across the tick's start counts; 10 kg dropped 0.6 m on the shin hurt {hurt[first]} at tick {first}",
-          f"and withdrew the left leg for {len(wd)} ticks (the trunk and the other limbs none)")
+          f"(the shin's skin site on its link, its pressing sites agreeing {coh:.2f}) and took the left leg for {len(wd)} ticks (the",
+          f"trunk and the other limbs none)")
 
 
 def test_the_charge():
@@ -330,45 +375,90 @@ def test_the_charge():
           f"declared; a charger touching the palm fed +0.01 a tick")
 
 
+def _synthetic_pain(w, f, zone, u_local, length=1.0):
+    """a copy of frame f with pain on one zone only, at a skin site on its link: the point along u (the link's own frame) on its
+    first collision shape's bounding sphere, the outward normal u x length (1: one pressing direction; short: a squeeze)"""
+    from body.core.world import Frame
+    m = w.m
+    z = w.zones.index(zone)
+    g = [g for g in range(m.ngeom) if w.zone_of_geom[g] == z][0]
+    u = np.asarray(u_local, float); u = u / np.linalg.norm(u)
+    p = m.geom_pos[g] + u * m.geom_rbound[g]
+    obs = dict(f.obs)
+    pain = np.zeros(w.nz); pain[z] = 1.0
+    site = np.zeros((w.nz, 6)); site[z] = np.concatenate([p, u * length])
+    obs["pain"], obs["pain_site"] = pain, site.reshape(-1)
+    return Frame(f.tick, obs, f.face, f.truth), z, p, u
+
+
+def _fd_drive(w, limb, z, p_l, n_l, eps=1e-6):
+    """each of the limb's joints' withdrawal of a skin site (m per rad along the inward normal), by finite differences on the
+    world's own state (the G1 as it lies; the reflex's own kinematics never used)"""
+    m = w.m
+    dd = mujoco.MjData(m); dd.qpos[:] = w.d.qpos; mujoco.mj_kinematics(m, dd)
+    b = int(w.zone_body[z])
+    place = lambda: (dd.xpos[b] + dd.xmat[b].reshape(3, 3) @ p_l, dd.xmat[b].reshape(3, 3) @ n_l)
+    p0, n0 = place(); n0 = n0 / np.linalg.norm(n0)
+    out = []
+    for j in dict(G.EFFECTORS)[limb]:
+        a = m.jnt_qposadr[m.joint(j).id]; q = dd.qpos[a]
+        dd.qpos[a] = q + eps; mujoco.mj_kinematics(m, dd); p1 = place()[0]
+        dd.qpos[a] = q; mujoco.mj_kinematics(m, dd)
+        out.append(-float((p1 - p0) @ n0) / eps)
+    return np.array(out)
+
+
 def test_the_reflexes():
-    """world 8: each flexion and closing sign measured on the G1 (at qpos0, standing); the withdrawal's two ticks; the grasp on a
-    palm touch, not after the hand's own opening; a withdrawal's act flexes the elbow in the world"""
+    """world 8: THE WITHDRAWAL'S LOCAL SIGN (the W1 verifier's third finding; 3.7, C22): on the G1 as born, for skin sites on six
+    sides of a shin, a thigh's housing (the hip's roll link), a forearm and a palm, the reflex's drive for each joint equals the
+    site's withdrawal by finite differences on the world's own state; each joint at least half the strongest steps big the
+    withdrawing way, the others hold; the opposite side flips every step; a squeeze (the sites' mean normal under half a unit)
+    gives the rest; a hand's pain withdraws its arm; the trunk none; the act lasts two ticks; in the world, the act moves the site
+    away. The grasp: on a palm touch, summed into the hand's own act of the same tick, not after the hand's own opening"""
     w = G1World(seed=1)
     m, d = w.m, w.d
-    mujoco.mj_resetData(m, d); mujoco.mj_kinematics(m, d)
-    pos = lambda b: d.xpos[m.body(b).id].copy()
-
-    def moved(joint, delta, fn):
-        q0 = d.qpos.copy(); a = fn(); d.qpos[m.jnt_qposadr[m.joint(joint).id]] += delta; mujoco.mj_kinematics(m, d); b = fn()
-        d.qpos[:] = q0; mujoco.mj_kinematics(m, d); return b - a
-    for sd, s in (("left", "l"), ("right", "r")):
-        fl = R.FLEXION[f"leg_{s}"]; fa = R.FLEXION[f"arm_{s}"]
-        e = 0.1 * fa[f"{sd}_elbow_joint"]
-        assert moved(f"{sd}_elbow_joint", e, lambda: np.linalg.norm(pos(f"{sd}_wrist_yaw_link") - pos(f"{sd}_shoulder_pitch_link"))) < -0.005
-        d.qpos[m.jnt_qposadr[m.joint(f"{sd}_knee_joint").id]] = 0.5; mujoco.mj_kinematics(m, d)       # from a bent knee
-        assert moved(f"{sd}_knee_joint", 0.1 * fl[f"{sd}_knee_joint"], lambda: np.linalg.norm(pos(f"{sd}_ankle_roll_link") - pos(f"{sd}_hip_pitch_link"))) < -0.005
-        assert moved(f"{sd}_hip_pitch_joint", 0.1 * fl[f"{sd}_hip_pitch_joint"], lambda: pos(f"{sd}_knee_link")[0]) > 0.02    # the knee forward
-        toe = [g for g in range(m.ngeom) if m.geom_bodyid[g] == m.body(f"{sd}_ankle_roll_link").id and m.geom_pos[g][0] > 0.1][0]
-        heel = [g for g in range(m.ngeom) if m.geom_bodyid[g] == m.body(f"{sd}_ankle_roll_link").id and m.geom_pos[g][0] < 0][0]
-        assert moved(f"{sd}_ankle_pitch_joint", 0.1 * fl[f"{sd}_ankle_pitch_joint"], lambda: d.geom_xpos[toe][2] - d.geom_xpos[heel][2]) > 0.01
-        for j, sg in R.CLOSING[f"hand_{s}"].items():                   # each closing joint brings the thumb and the fingers together
-            gap = lambda: np.linalg.norm(d.xipos[m.body(f"{sd}_hand_thumb_2_link").id] - (d.xipos[m.body(f"{sd}_hand_index_1_link").id] + d.xipos[m.body(f"{sd}_hand_middle_1_link").id]) / 2)
-            lo, hi = m.jnt_range[m.joint(j).id]
-            assert (lo < 0 < hi) or (sg > 0 and lo == 0) or (sg < 0 and hi == 0), (j, lo, hi)   # a finger opens at 0, closes into its range
-            if j.endswith(("thumb_1_joint", "thumb_2_joint")):
-                d.qpos[m.jnt_qposadr[m.joint(j).id]] = 0.3 * sg if lo < 0 < hi else 0.0
-                mujoco.mj_kinematics(m, d)
-                assert moved(j, 0.2 * sg, gap) < 0, j
-    w = G1World(seed=1)
-    rf = R.Reflexes(w.zones)
+    rf = R.Reflexes(w)
     f = w.frame()
     assert rf.withdrawal(f, "arm_l", {}) is None and not hasattr(rf, "grasp")      # the grasp is no core hook (it would take the tick)
+    cases = [("leg_l", "left_knee"), ("leg_l", "left_hip_roll"), ("leg_r", "right_knee"), ("arm_l", "left_elbow"),
+             ("arm_l", "left_hand_palm"), ("arm_r", "right_elbow")]
+    axes = [np.eye(3)[i] * sg for i in range(3) for sg in (1, -1)]
+    stepped = 0
+    for limb, zone in cases:
+        for u in axes:
+            fz, z, p_l, n_l = _synthetic_pain(w, f, zone, u)
+            e, used = rf.drive(fz, limb, [z])
+            fd = _fd_drive(w, limb, z, p_l, n_l)
+            assert used == 1 and np.allclose(e, fd, atol=1e-4), (zone, u, e, fd)
+            dig = W.act_digits(rf.withdrawal_act(fz, limb, [z]), len(e))
+            top = np.abs(e).max()
+            for k, x in enumerate(e):
+                if abs(x) >= R.RF_HALF * top:
+                    assert dig[k] == (4 if x > 0 else 0) and fd[k] * (1 if x > 0 else -1) > 0, (zone, u, k, dig, fd)   # withdraws
+                    stepped += 1
+                else:
+                    assert dig[k] == 2, (zone, u, k, dig)
+            back = W.act_digits(rf.withdrawal_act(_synthetic_pain(w, f, zone, -u)[0], limb, [z]), len(e))
+            assert back == [4 - x for x in dig], (zone, u, dig, back)                 # the other side: every step flipped
+            squeeze = _synthetic_pain(w, f, zone, u, length=0.3)[0]
+            assert rf.withdrawal_act(squeeze, limb, [z]) == W.EFFECTOR_REST[limb]      # pressed from opposite sides: no direction
+    fz = _synthetic_pain(w, f, "left_hand_palm", [0, 0, 1])[0]
+    assert rf.withdrawal(fz, "arm_l", {}) is not None and rf.withdrawal(fz, "arm_r", {}) is None     # a hand's pain: its arm's
+    ft = _synthetic_pain(w, f, "pelvis", [0, 0, -1])[0]
+    assert all(rf.withdrawal(ft, limb, {}) is None for limb in R.LIMBS) and rf.withdrawal(ft, "waist", {}) is None   # the trunk: none
     st = {}
-    f.obs["pain"][w.zones.index("left_hand_palm")] = 1.0                 # a hand's pain withdraws its arm
-    seq = [rf.withdrawal(f, "arm_l", st)]
-    f2 = w.frame(); seq += [rf.withdrawal(f2, "arm_l", st), rf.withdrawal(f2, "arm_l", st)]
-    assert seq == [R.flexion_act("arm_l")] * 2 + [None], seq
-    assert rf.withdrawal(f, "waist", {}) is None and rf.withdrawal(f, "arm_r", {}) is None
+    fz, z, p_l, n_l = _synthetic_pain(w, f, "left_elbow", [0, 1, 0])
+    seq = [rf.withdrawal(fz, "arm_l", st), rf.withdrawal(f, "arm_l", st), rf.withdrawal(f, "arm_l", st)]
+    act = rf.withdrawal_act(fz, "arm_l", [z])
+    assert seq == [act, act, None] and act != W.EFFECTOR_REST["arm_l"], seq
+    # in the world: the act, two ticks, moves the site along its inward normal
+    b = int(w.zone_body[z])
+    place = lambda: (d.xpos[b] + d.xmat[b].reshape(3, 3) @ p_l, d.xmat[b].reshape(3, 3) @ n_l)
+    p0, n0 = place()
+    for a in seq:
+        w.apply({"arm_l": a} if a is not None else {})
+    moved = float((place()[0] - p0) @ n0)
+    assert moved < -0.02, moved
     # the grasp at the spinal cord: the hand's own act this tick, summed
     touched, light = math.log1p(0.31), math.log1p(0.29)
     rest_l = W.EFFECTOR_REST["hand_l"]
@@ -383,15 +473,27 @@ def test_the_reflexes():
     got = W.act_digits(R.grasp("hand_l", turn, touched)[0], 7)
     assert got[0] == 4 and got[1:] == W.act_digits(R.closing_act("hand_l"), 7)[1:], got
     assert R.grasp("hand_r", None, touched)[0] == R.closing_act("hand_r")
-    el = lambda: float(w.d.qpos[w.qadr[W.JOINTS.index("left_elbow_joint")]])
-    e0 = el()
-    for a in seq:
-        w.apply({"arm_l": a} if a is not None else {})
-    assert el() < e0 - 0.3, (e0, el())
-    print(f"world 8: every flexion sign (the elbow, the hip, the knee, the ankle's dorsiflexion) and closing sign measured on the",
-          f"G1; the withdrawal two ticks on the limb in pain (a hand's pain withdraws its arm), none for the trunk; the grasp at a palm",
-          f"touch of 0.3 N summed into the hand's own act of the same tick (an opening act passes, a big closing one is kept); the",
-          f"reflex's act flexed the elbow {e0 - el():.2f} rad in two ticks")
+    # each closing sign closes the hand (measured on the G1 at qpos0): a finger opens at 0 and closes into its range; the thumb's two
+    # flexing joints bring it toward the fingers
+    mujoco.mj_resetData(m, d); mujoco.mj_kinematics(m, d)
+
+    def shifted(joint, delta, fn):
+        q0 = d.qpos.copy(); a = fn(); d.qpos[m.jnt_qposadr[m.joint(joint).id]] += delta; mujoco.mj_kinematics(m, d); b = fn()
+        d.qpos[:] = q0; mujoco.mj_kinematics(m, d); return b - a
+    for sd, s_ in (("left", "l"), ("right", "r")):
+        gap = lambda: np.linalg.norm(d.xipos[m.body(f"{sd}_hand_thumb_2_link").id] - (d.xipos[m.body(f"{sd}_hand_index_1_link").id] + d.xipos[m.body(f"{sd}_hand_middle_1_link").id]) / 2)
+        for j, sg in R.CLOSING[f"hand_{s_}"].items():
+            lo, hi = m.jnt_range[m.joint(j).id]
+            assert (lo < 0 < hi) or (sg > 0 and lo == 0) or (sg < 0 and hi == 0), (j, lo, hi)
+            if j.endswith(("thumb_1_joint", "thumb_2_joint")):
+                d.qpos[m.jnt_qposadr[m.joint(j).id]] = 0.3 * sg if lo < 0 < hi else 0.0
+                mujoco.mj_kinematics(m, d)
+                assert shifted(j, 0.2 * sg, gap) < 0, j
+    print(f"world 8: the withdrawal's local sign on {len(cases)} links x 6 sides: every drive equal to the site's withdrawal by finite",
+          f"differences, {stepped} joints stepped big the withdrawing way (at least half the strongest), the rest held; the other side",
+          f"flips every step; a squeeze gives the rest; a hand's pain withdraws its arm, the trunk none; two ticks; in the world the",
+          f"forearm's site moved {-100 * moved:.1f} cm away along its normal; the grasp at a palm touch of 0.3 N summed into the hand's",
+          f"own act of the same tick (an opening act passes, a big closing one is kept)")
 
 
 def _ball_in_palm(side="left", r=0.03):
@@ -414,7 +516,9 @@ def _closure(w, hand):
 def test_letting_go():
     """world 9: A11 (the W1 verifier's first finding): a ball kept in the left palm; at rest the grasp closes the hand on it every
     tick; the hand's own act opening it passes the spinal cord as it was sent (the grasp overridden) and the hand opens while the
-    ball still touches the palm; resting again, it closes again"""
+    ball still touches the palm; resting again, it closes again. A FIST CLOSED ON NOTHING (the W1 verifier's eighth finding): the
+    left hand closed by its own acts, then resting, keeps itself closed on its own fingers, and the truth's palm_own_N says so
+    (all of the palm's force its own hand's), for W4 to count"""
     w = _ball_in_palm()
     z = w.zones.index("left_hand_palm")
     cl = R.CLOSING["hand_l"]
@@ -433,28 +537,34 @@ def test_letting_go():
         log.append((phase, c0, _closure(w, "hand_l")))
     (_, a0, a1), (_, b0, b1), (_, c0, c1) = log
     assert a1 > a0 + 0.3 and b1 < b0 - 0.3 and c1 > c0 + 0.2, log
+    ball_own = w.frame().truth["palm_own_N"]["hand_l"]
+    # a fist closed on nothing
+    fist = G1World(seed=1)
+    close = W.act_flat([2 if j not in cl else (4 if cl[j] > 0 else 0) for j in dict(G.EFFECTORS)["hand_l"]])
+    own = []
+    for t in range(12):
+        fist.apply({"hand_l": close} if t < 6 else {})
+        g = fist.frame().truth
+        if t >= 6:
+            own.append((g["spinal"].get("hand_l"), g["touch_N"][z], g["palm_own_N"]["hand_l"]))
+    assert all(ev == "grasp" and n_own >= R.GRASP_N for ev, n_all, n_own in own), own   # its own fingers alone would hold it shut
+    alone = sum(abs(n_all - n_own) < 1e-9 for _, n_all, n_own in own)
+    assert alone >= 3, own                                               # ticks on which all of the palm's force was its own
     print(f"world 9: a ball kept in the left palm: at rest the grasp closed the hand {a1 - a0:.2f} rad in 8 ticks; its own opening act",
           f"passed the spinal cord as sent (the grasp overridden, 8 of 8 ticks) and opened it {b0 - b1:.2f} rad with the ball still in the",
-          f"palm; at rest again it closed {c1 - c0:.2f} rad: letting go is the hand's own act (A11)")
+          f"palm; at rest again it closed {c1 - c0:.2f} rad: letting go is the hand's own act (A11); a fist closed on nothing kept",
+          f"itself closed 6 of 6 resting ticks, its own fingers pressing the palm {own[-1][2]:.1f} N (palm_own_N; all of the palm's",
+          f"force on {alone} of them; with the ball, {ball_own:.1f} N of its own)")
 
 
-def test_blind_inside_a_joint():
-    """world 10: A12: a link inside a compound joint (the hip's, the shoulder's, the wrist's, the waist's) pressing that joint's
-    other links is felt by neither touch nor pain, derived from the model's joint names; the pair stays in collision; the joint's
-    outer links still feel each other"""
+def test_blind_spots_are_a12s():
+    """world 10: A12 as the design writes it (the W1 verifier's second finding): the skin's blind spots are the pairs pressing at
+    rest, derived from the born state: none for the G1 as born. The motor housings struck together (the shoulder's roll link
+    driven into the torso, 1 kN and more) are felt on both zones' touch and pain, and stay in collision; given a state where a pair
+    presses at rest, the derivation lists exactly that pair and the world's touch drops it"""
     w = G1World(seed=1)
     m, d = w.m, w.d
-    names = sorted(f"{a}|{b}" for _, a, b in w.blind_pairs)
-    want = []
-    for sd in ("left", "right"):
-        want += [f"pelvis|{sd}_hip_roll_link", f"{sd}_hip_pitch_link|{sd}_hip_yaw_link", f"torso_link|{sd}_shoulder_roll_link",
-                 f"{sd}_shoulder_pitch_link|{sd}_shoulder_yaw_link", f"{sd}_elbow_link|{sd}_wrist_pitch_link",
-                 f"{sd}_wrist_roll_link|{sd}_wrist_yaw_link"]
-    want += ["pelvis|waist_roll_link", "waist_yaw_link|torso_link"]
-    norm = lambda p: "|".join(sorted(p.split("|"), key=lambda x: m.body(x).id))
-    assert names == sorted(norm(x) for x in want), names
-    assert not w.blind[m.body("pelvis").id, m.body("left_hip_yaw_link").id]            # the thigh on the pelvis: felt
-    assert not w.blind[m.body("torso_link").id, m.body("left_shoulder_yaw_link").id]   # the upper arm on the chest: felt
+    assert w.blind_pairs == [] and not w.blind.any()
     mujoco.mj_resetData(m, d)
     d.qpos[m.jnt_qposadr[m.joint("left_shoulder_roll_joint").id]] = -1.2              # the shoulder's roll link into the torso
     mujoco.mj_forward(m, d)
@@ -464,12 +574,75 @@ def test_blind_inside_a_joint():
     assert pair and f_pair > 1000, f_pair                                              # in collision, hard
     zt, zs = w.zones.index("torso"), w.zones.index("left_shoulder_roll")
     felt = w._zone_forces()
-    blind = w.blind.copy(); w.blind[:] = False
-    unblind = w._zone_forces(); w.blind[:] = blind
-    assert abs((unblind[zs] - felt[zs]) - f_pair) < 1e-6 * f_pair and abs((unblind[zt] - felt[zt]) - f_pair) < 1e-6 * f_pair
-    print(f"world 10: {len(w.blind_pairs)} blind spots inside the compound joints (the hips, shoulders, wrists, waist), from the model's",
-          f"joint names; the shoulder's roll link driven {f_pair:.0f} N into the torso: in collision, felt on neither zone; the thigh on",
-          f"the pelvis and the upper arm on the chest still felt")
+    assert felt[zs] >= f_pair - 1e-6 and felt[zt] >= f_pair - 1e-6, (felt[zs], felt[zt], f_pair)   # felt on both
+    w._sense_tick(np.tile(felt, (W.STEPS_PER_TICK, 1)), np.zeros((W.STEPS_PER_TICK, 12)))
+    pain = w._sensed["pain_force"] > w.f_pain
+    assert pain[zs] == (felt[zs] > w.f_pain) and pain[zt], (felt[zs], felt[zt])       # and pain, past F_pain
+    blind, pairs = W.rest_blind(m, d, w.scene.g1_set)                                  # a state taken as "at rest": what presses there
+    g1 = w.scene.g1_set
+    pressing, lost = set(), np.zeros(w.nz)
+    for i in range(d.ncon):
+        c = d.contact[i]
+        a_, b_ = int(m.geom_bodyid[c.geom[0]]), int(m.geom_bodyid[c.geom[1]])
+        if a_ in g1 and b_ in g1 and c.efc_address >= 0 and d.efc_force[c.efc_address] > 0:
+            pressing.add(frozenset((m.body(a_).name, m.body(b_).name)))
+    for i in range(d.ncon):                                             # every contact of a listed pair: its force leaves both zones
+        c = d.contact[i]
+        if c.efc_address >= 0 and frozenset((m.body(int(m.geom_bodyid[c.geom[0]])).name, m.body(int(m.geom_bodyid[c.geom[1]])).name)) in pressing:
+            for gg in c.geom:
+                lost[w.zone_of_geom[gg]] += float(d.efc_force[c.efc_address])
+    assert {frozenset(x) for x in pairs} == pressing and frozenset(("torso_link", "left_shoulder_roll_link")) in pressing, pairs
+    w.blind = blind
+    unfelt = w._zone_forces()
+    assert np.allclose(felt - unfelt, lost, rtol=1e-9, atol=1e-6) and lost[zs] >= f_pair - 1e-6, (felt - unfelt, lost)
+    print(f"world 10: A12's blind spots are the pairs pressing at rest: none for the G1 as born; the shoulder's roll link driven",
+          f"{f_pair:.0f} N into the torso is felt on both zones (touch and pain) and stays in collision; taking that pose as rest, the",
+          f"derivation lists exactly the {len(pairs)} pairs pressing there (the torso with the shoulder's roll and yaw links and the",
+          f"elbow) and touch drops exactly their force")
+
+
+def test_withdrawal_c22():
+    """world 16: C22 (the W1 verifier's third finding) on the pain babble meets most, the motor housings struck together at the hip:
+    the left leg flexed and drawn in by its own big steps until the hip's roll link presses the pelvis past F_pain. From that saved
+    state, two ticks three ways: the withdrawal (live), rest (tone) and pushing on. By the withdrawal's second tick the housings are
+    apart (its force under F_pain and under rest's, which stays pressed near F_pain; pushing on presses harder): it drives the limb
+    into no worse contact. Its first tick's force rises while the housing slides off: the elliptic cone's friction coupling (with
+    the pair frictionless, the same first tick presses less than the onset did: diagnosed here, flagged for the design with C5
+    and C22)"""
+    w = G1World(seed=1)
+    m = w.m
+    z = w.zones.index("left_hip_roll")
+    push = W.act_flat([0, 0, 2, 2, 2, 2])                               # hip flexion and adduction, big
+    for _ in range(12):
+        f = w.frame()
+        if f.obs["pain"][z]:
+            break
+        w.apply({"leg_l": push})
+    assert f.obs["pain"][z] and not f.obs["pain"][[w.zones.index(x) for x in w.zones if x.startswith("right_")]].any()
+    blob, at = w.save_state(), float(f.truth["pain_N"][z])
+
+    def two(form):
+        w.load_state(blob)
+        rf, st, out = R.Reflexes(w), {}, []
+        for _ in range(2):
+            g = w.frame()
+            a = rf.withdrawal(g, "leg_l", st) if form == "withdraw" else W.EFFECTOR_REST["leg_l"] if form == "rest" else push
+            w.apply({"leg_l": a}); out.append(float(w.frame().truth["pain_N"][z]))
+        return out
+    wd, rs, pu = two("withdraw"), two("rest"), two("push")
+    assert wd[1] < w.f_pain and wd[1] < rs[1] and rs[1] > 0.8 * w.f_pain and pu[1] > at, (at, wd, rs, pu)
+    # the first tick's rise: the cone's coupling of friction into the normal force while the housing slides off
+    geoms = [g for g in range(m.ngeom) if w.zone_of_geom[g] in (z, w.zones.index("pelvis"))]
+    cd = m.geom_condim[geoms].copy()
+    m.geom_condim[geoms] = 1
+    try:
+        free = two("withdraw")
+    finally:
+        m.geom_condim[geoms] = cd
+    assert free[0] < at < wd[0] and free[1] < w.f_pain, (at, wd, free)
+    print(f"world 16: C22, the hip's housings struck together ({at:.0f} N on the roll link): the withdrawal's second tick {wd[1]:.0f} N",
+          f"(apart), rest's {rs[1]:.0f} N (still pressed), pushing on {pu[1]:.0f} N; its first tick {wd[0]:.0f} N while the housing",
+          f"slides off, {free[0]:.0f} N with the pair frictionless: the elliptic cone's friction coupling, not a push into the pelvis")
 
 
 # ---------------------------------------------------------------- determinism
@@ -479,32 +652,52 @@ def test_exact_replay():
     N, M = 60, 60
     w = G1World(seed=1)
     b = _babbler(7, 0.3)
-    for _ in range(N):
-        w.apply(b.acts())
-    blob, bst = w.save_state(), b.state()
-    frames1 = [w.frame()]
-    for _ in range(M):
-        w.apply(b.acts()); frames1.append(w.frame())
+    sun = w.m.light("sun").id
+
+    def live(world, n, frames=None, st=None):
+        """n ticks of babble with the withdrawal live (its state carried in st), the frames kept"""
+        rf = R.Reflexes(world)
+        for _ in range(n):
+            f = world.frame()
+            if frames is not None:
+                frames.append(f)
+            acts = b.acts()
+            for limb in R.LIMBS:
+                a = rf.withdrawal(f, limb, st[limb])
+                if a is not None:
+                    acts[limb] = a
+            world.apply(acts)
+        if frames is not None:
+            frames.append(world.frame())
+    st1 = {limb: {} for limb in R.LIMBS}
+    live(w, N, st=st1)
+    w.m.light_dir[sun] = [0.3, -0.5, -0.81]; w.m.light_pos[sun] = [-1.0, 1.0, 3.0]    # the day's light moved (W5): saved with the world
+    blob, bst, sst = w.save_state(), b.state(), {k: dict(v) for k, v in st1.items()}
+    frames1 = []
+    live(w, M, frames1, st1)
     end1 = w.save_state()
     for where in ("the same world", "a new world"):
         w2 = w if where == "the same world" else G1World(seed=1)
+        if where == "the same world":
+            w2.m.light_dir[sun] = [0.62, 0.18, -0.76]; w2.m.light_pos[sun] = [-2.0, -0.1, 3.0]
         w2.load_state(blob); b.load(bst)
-        frames2 = [w2.frame()]
-        for _ in range(M):
-            w2.apply(b.acts()); frames2.append(w2.frame())
-        assert all(_same_frame(x, y) for x, y in zip(frames1, frames2)), where
+        assert np.allclose(w2.m.light_dir[sun], [0.3, -0.5, -0.81]) and np.allclose(w2.m.light_pos[sun], [-1.0, 1.0, 3.0]), where
+        frames2 = []
+        live(w2, M, frames2, {k: dict(v) for k, v in sst.items()})
+        assert all(_same_frame(x, y) for x, y in zip(frames1, frames2)) and len(frames1) == len(frames2), where
         assert w2.save_state() == end1, where
+    pained = sum(bool(x.obs["pain"].any()) for x in frames1)
     moved = float(np.linalg.norm(frames1[-1].truth["pelvis"][:2] - frames1[0].truth["pelvis"][:2]))
     w3 = G1World(seed=2)
     assert w3.save_state() != G1World(seed=1).save_state()             # the world's stream is the seed's
     w3.load_state(blob)                                                 # a save carries its stream: seed 2's world continues seed 1's life
     b.load(bst)
-    for _ in range(M):
-        w3.apply(b.acts())
+    live(w3, M, None, {k: dict(v) for k, v in sst.items()})
     assert w3.save_state() == end1
-    print(f"world 11: the exact replay: {N} ticks of babble, a save ({len(blob) / 1e3:.0f} KB), {M} more; restored in the same world and",
-          f"in a new one, the {M} again bit for bit (every frame, the final state; the pelvis moved {100 * moved:.1f} cm); a save",
-          f"carries the world's random stream")
+    print(f"world 11: the exact replay: {N} ticks of babble with the withdrawal live, the sun moved, a save ({len(blob) / 1e3:.0f} KB),",
+          f"{M} more ({pained} frames in pain); restored in the same world (its sun put back first) and in a new one, the {M} again",
+          f"bit for bit (every frame, pain's sites included, the final state, the moved sun; the pelvis moved {100 * moved:.1f} cm); a",
+          f"save carries the world's random stream")
 
 
 def test_the_night():
@@ -644,11 +837,11 @@ def test_the_world_in_the_core():
     from body.model import Organs
     tok = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
     w = _ball_in_palm()
-    rf = R.Reflexes(w.zones)
+    rf = R.Reflexes(w)
 
     class Limb(Effector):
         def reflex(self, frame, life, state):
-            return rf.withdrawal(frame, self.name, state) if self.name in R.FLEXION else None
+            return rf.withdrawal(frame, self.name, state) if self.name in R.LIMBS else None
 
     class Pain(RewardSource):
         def felt(self, frame, life):
@@ -723,8 +916,8 @@ def test_the_world_in_the_core():
 
 
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
-               test_pain, test_the_charge, test_the_reflexes, test_letting_go, test_blind_inside_a_joint, test_exact_replay, test_the_night,
-               test_faults, test_the_babbler, test_the_world_in_the_core]
+               test_pain, test_the_charge, test_the_reflexes, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
+               test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

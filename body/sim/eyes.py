@@ -17,7 +17,8 @@ check), never to the body.
 
 THE FACE TEST (A1; the reward carrier's gate, world truth, never a channel of the body): an eye sees the parent's face this tick
 when all four hold: the parent's mouth point lies inside that eye's fovea window; a ray from the eye to it over the geoms the eyes
-render hits nothing first (the child's own hand, a toy, the parent's hand or hair block it); the face is turned within 75 deg of
+render hits nothing first but her face within 2 cm of it or her own lips (the child's own hand, a toy, the parent's hand or hair
+block it; her lips are her mouth, met first when her face is turned); the face is turned within 75 deg of
 the eye; and its front (an ellipse 0.17 x 0.21 m) covers at least 20 fovea px x the cosine of the turn. Either eye counts. It goes
 to the frame's truth (`face_test`), where the face channel's gate (the born reading's 2 consecutive ticks and its 30-tick hold,
 P3/S5a) and the parent read it.
@@ -26,6 +27,13 @@ pixels (`face_template`; its constants below). On the fovea it is the event line
 fovea": obs face_fovea, either eye); on the periphery it is orienting's cue (obs face_periph: the best match and where it lies from
 the window). So the body's value never reads world truth beyond the reward's carrier: given A1's test instead, it would read a
 perfect face detector (A1).
+
+NO LAMP AT THE EYES (the W1 verifier's fifth finding). The G1 carries no lamp, so the eyes see by the room's lights alone: the room
+has no headlight (MuJoCo's lamp at the viewing camera), and `Eyes` refuses to render with one on. The room's own indirect light,
+which a lamp at the eye had stood in for, is its lights' ambient term (body/sim/make_g1room.py, ROOM_INDIRECT), so a face bent
+over the child is lit from below and the side as a real room lights it, and it goes out with its lights. For W5's night: darken
+the lights' terms, never switch every light off (MuJoCo then draws the scene unlit, at full brightness), and the emissive surfaces
+(the ceiling, the window, the lamp shade, the dock, her eyes' glints) still glow (body/tests/test_sim_eyes.py, eyes 10).
 
 SHADOWS. The room has a sun, a key spot and a fill. `shadows`: "sun" (the sun's shadow only: the body's eyes, 3.4), "all" or
 "none". The sun's shadow stays in the body's eyes: it is part of the owner's complete reality (decision 3), never decided by the
@@ -57,6 +65,8 @@ FACE_TURN_DEG = 75.0            # the face test (A1; innate, ours)
 FACE_FRONT_M = (0.17, 0.21)
 FACE_MIN_PX = 20.0
 RAY_SLACK_M = 0.02              # a ray's first hit within 2 cm of the mouth point is the face itself
+MOUTH_PARTS = ("parent_mouth", "parent_lip_lo", "parent_teeth")   # her drawn mouth's geoms: a ray's first hit on them is her mouth
+_MOUTH_GEOMS = {}
 EYE_GROUPS = np.array([1, 1, 1, 0, 0, 0], dtype=np.uint8)   # the eyes see groups 0-2: never collision proxies, sites or markers
 # THE BORN FACE TEMPLATE (3.4, 3.7, A1, A22; innate, ours): CONSPEC's three dark blobs (Johnson and Morton 1991; Goren 1975), two
 # for the eyes above one for the mouth, darker than the face around them (newborns turn to this configuration only in that
@@ -213,6 +223,14 @@ def mouth_point(m, d):
     return d.xpos[b] + R @ local, R[:, 0].copy(), d.xpos[b] + R @ centre
 
 
+def mouth_geoms(m):
+    """her drawn mouth's geoms (the lips, their opening, the teeth), by name, once per model"""
+    key = id(m)
+    if key not in _MOUTH_GEOMS or _MOUTH_GEOMS[key][0] is not m:
+        _MOUTH_GEOMS[key] = (m, frozenset(g for g in range(m.ngeom) if (m.geom(g).name or "").startswith(MOUTH_PARTS)))
+    return _MOUTH_GEOMS[key][1]
+
+
 def face_test(m, d, gaze):
     """A1's test for each eye: {side: (passes, why)}; why names the first condition that failed ("" when it passes)"""
     mouth, fwd, centre = mouth_point(m, d)
@@ -230,8 +248,9 @@ def face_test(m, d, gaze):
         dist = float(np.linalg.norm(to))
         gid = np.array([-1], dtype=np.int32)
         hit = mujoco.mj_ray(m, d, eye, to / dist, EYE_GROUPS, 1, -1, gid)
-        if 0 <= hit < dist - RAY_SLACK_M:                              # something before the mouth (its own surface is at dist)
-            out[side] = (False, "blocked"); continue
+        if 0 <= hit < dist - RAY_SLACK_M and int(gid[0]) not in mouth_geoms(m):   # something before the mouth (its own surface is
+            out[side] = (False, "blocked"); continue                            # at dist; her own lips, met first when her face is
+                                                                                # turned, are her mouth: the W1 fix 2's C2 finding)
         to_eye = eye - centre
         cos_turn = float(fwd @ to_eye / np.linalg.norm(to_eye))
         if cos_turn < math.cos(math.radians(FACE_TURN_DEG)):
@@ -289,6 +308,8 @@ class Eyes:
         """both eyes' native images {side: rows x cols x 3 uint8, row 0 at the top}, one read-back"""
         t0 = time.perf_counter()
         m, d = self.m, self.world.d
+        if m.vis.headlight.active:
+            raise ValueError("the eyes see by the room's lights alone: the model's headlight (a lamp at the eye) is on")
         self.ctx.make_current()
         cast = m.light_castshadow.copy()
         if self.shadows == "sun":
@@ -313,9 +334,12 @@ class Eyes:
         are the pixels' own; A1's face test (world truth: the reward's gate) stays in the truth."""
         w = self.world
         m, d = self.m, w.d
+        hl = m.vis.headlight
         key = hashlib.blake2b(b"".join(np.ascontiguousarray(x).tobytes() for x in (
             d.qpos, d.mocap_pos, d.mocap_quat, w.gaze, m.geom_pos, m.geom_quat, m.geom_size, m.geom_rgba, m.light_active,
-            m.light_diffuse, m.light_dir, m.light_pos, m.light_castshadow, m.mat_rgba, m.mat_emission))).digest()      # what the eyes would see: rendered again only if it moved
+            m.light_diffuse, m.light_ambient, m.light_specular, m.light_dir, m.light_pos, m.light_castshadow, m.mat_rgba,
+            m.mat_emission, np.array([hl.active], float), hl.ambient, hl.diffuse, hl.specular))).digest()
+        # what the eyes would see (the state, the gaze, the scene's run-time fields, every light's terms): rendered again only if it moved
         if self._cache is None or self._cache[0] != key:
             imgs = self.render()
             per = {s: periphery(imgs[s]) for s in "LR"}

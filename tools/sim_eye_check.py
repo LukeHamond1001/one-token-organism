@@ -18,9 +18,11 @@ render (8 x the eye's resolution, so the mouth resolves: the pixel at the mouth 
 counted in the window; their agreement, and the ray's verdict against the render's visibility alone.
 THE C2 AND C3 CHECK ON BABBLED FRAMES (--c2 N): N frames of the babbling G1 (a tick of the babbler between frames; the design's
 2,000), each with the parent's head put at a random distance 0.3-3.5 m from the left eye (uniform in distance) in a random direction
-within the fovea's reach, turned at random up to 90 deg about her up axis and nodded up to 20 deg, a toy on the line between the
-eye and her mouth in a third of the frames; the gaze aimed at her mouth with a 3 deg error per axis (so the mouth is sometimes
-outside the window). C2: the face test's verdict (the left eye) against the segmentation render's (as above), by distance. C3: the
+within the fovea's reach, KEPT INSIDE THE ROOM (the W1 verifier's seventh finding: 231 of 300 placements had put her head beyond the
+ceiling or a wall, where the ray and the render agree trivially): a placement whose head is not at least HEAD_CLEAR_M inside the
+walls, the floor and the ceiling is drawn again (the distances reached are reported by bin), turned at random up to 90 deg about
+her up axis and nodded up to 20 deg, a toy on the line between the eye and her mouth in a third of the frames; the gaze aimed at
+her mouth with a 3 deg error per axis (so the mouth is sometimes outside the window). C2: the face test's verdict (the left eye) against the segmentation render's (as above), by distance. C3: the
 born face template (body/sim/eyes.py) on the frame's own pixels against the face test: its hits (the template fires on a frame the
 test passes), and its false alarms on frames the test fails and on frames with no face at all (her head moved out of the room),
 under each light. The face test decides nothing here; both are only compared.
@@ -51,6 +53,13 @@ LIGHTS = {"midday": None,
           "morning": dict(dir=(0.85, 0.35, -0.40), diffuse=(0.32, 0.28, 0.22)),
           "dusk": dict(dir=(0.85, -0.35, -0.40), diffuse=(0.30, 0.18, 0.10))}
 AIM_ERR_DEG = 1.5
+HEAD_CLEAR_M = 0.15             # her head's centre at least this far inside the room's walls, floor and ceiling (C2's sampler)
+sys.path.insert(0, os.path.join(ROOT, "body", "sim"))
+from make_g1room import ROOM_H, ROOM_X, ROOM_Y  # noqa: E402
+
+
+def inside_room(p, clear=HEAD_CLEAR_M):
+    return abs(p[0]) <= ROOM_X - clear and abs(p[1]) <= ROOM_Y - clear and clear <= p[2] <= ROOM_H - clear
 
 
 def rot(axis, a):
@@ -229,12 +238,13 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
 
 
 def seg_face(m, d, seg, seg8, opt, gaze, head, mouth_geoms, up):
-    """the segmentation render's verdict for the left eye: (the mouth point in the window, the mouth visible at 8x, the face's
-    pixels in the window at 1x)"""
+    """the segmentation render's verdict for the left eye: (the mouth point in the window, her head at the mouth point's pixel at
+    8x, the face's pixels in the window at 1x, her MOUTH at that pixel: one of the drawn mouth's geoms, her lips, their opening or
+    her teeth)"""
     mouth = E.mouth_point(m, d)[0]
     pr = E.project(m, d, "L", mouth)
     if pr is None:
-        return False, False, 0
+        return False, False, 0, False
     x0, y0 = E.window_corner("L", gaze)
     seg.update_scene(d, camera="eye_L", scene_option=opt)
     s1 = seg.render()
@@ -245,12 +255,13 @@ def seg_face(m, d, seg, seg8, opt, gaze, head, mouth_geoms, up):
     s8 = seg8.render()
     r8, c8 = int(pr[1] * up), int(pr[0] * up)
     inside = 0 <= r8 < s8.shape[0] and 0 <= c8 < s8.shape[1]
-    visible = False
+    visible = mouth_seen = False
     if inside:
         gid8, typ8 = s8[r8, c8]
         visible = bool(typ8 == geom and gid8 >= 0 and m.geom_bodyid[gid8] == head)
+        mouth_seen = bool(visible and mouth_geoms is not None and int(gid8) in mouth_geoms)
     in_win = x0 <= pr[0] < x0 + W.FOVEA_PX and y0 <= pr[1] < y0 + W.FOVEA_PX
-    return bool(in_win), visible, face_px
+    return bool(in_win), visible, face_px, mouth_seen
 
 
 def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
@@ -270,22 +281,30 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
     head = m.body("parent_head").id
     hid = m.body_mocapid[head]
     toys = [m.body(f"toy_{t}").id for t in TOYS]
+    mouth_geoms = {g for g in range(m.ngeom) if (m.geom(g).name or "").startswith(("parent_mouth", "parent_lip_lo", "parent_teeth"))}
     camL = m.camera("eye_L").id
     b = Babbler(seed=seed, p_rest=0.6)
-    rows = []
+    rows, skipped = [], 0
     t0 = time.perf_counter()
     for k in range(frames):
         w.apply(b.acts())
         live = w.save_state()                                           # the babbling life goes on from here, untouched by the rig
         noface = rng.random() < 0.2                                     # a fifth of the frames: no face anywhere (C3's false alarms)
-        dist = rng.uniform(0.3, 3.5)
-        yaw, pitch = math.radians(rng.uniform(-38, 38)), math.radians(rng.uniform(-20, 20))
+        R = d.cam_xmat[camL].reshape(3, 3)
+        for _ in range(1000):                                           # her head inside the room (drawn again until it is)
+            dist = rng.uniform(0.3, 3.5)
+            yaw, pitch = math.radians(rng.uniform(-38, 38)), math.radians(rng.uniform(-20, 20))
+            dirc = np.array([math.tan(yaw), math.tan(pitch), -1.0]); dirc /= np.linalg.norm(dirc)
+            p = d.cam_xpos[camL] + R @ dirc * dist
+            if noface or inside_room(p):
+                break
+        else:                                                           # its eyes face the floor or a wall too near: no room for a face
+            skipped += 1
+            w.load_state(live)
+            continue
         turn, nod = rng.uniform(-90, 90), rng.uniform(-20, 20)
         block = rng.random() < 1 / 3
         aim = rng.normal(0, math.radians(3.0), 2)
-        R = d.cam_xmat[camL].reshape(3, 3)
-        dirc = np.array([math.tan(yaw), math.tan(pitch), -1.0]); dirc /= np.linalg.norm(dirc)
-        p = d.cam_xpos[camL] + R @ dirc * dist
         if noface:
             d.mocap_pos[hid] = [0.0, 0.0, -5.0]                         # under the floor: no face in the room
         else:
@@ -309,7 +328,17 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
         g = E.gaze_at(m, d, mouth)
         w.gaze = W.clamp_gaze([g[0] + aim[0], g[1] + aim[1], g[2]])
         ft = E.face_test(m, d, w.gaze)["L"]
-        in_win, visible, face_px = seg_face(m, d, seg, seg8, opt, w.gaze, head, None, UP)
+        blocked_by = ""
+        if ft[1] == "blocked":                                          # what the ray met first
+            eye = d.cam_xpos[camL].copy(); to = mouth - eye
+            gid = np.array([-1], dtype=np.int32)
+            mujoco.mj_ray(m, d, eye, to / np.linalg.norm(to), E.EYE_GROUPS, 1, -1, gid)
+            bb = int(m.geom_bodyid[gid[0]]) if gid[0] >= 0 else -1
+            blocked_by = ("her own head" if bb == head else "a toy" if bb in toys else "the G1" if bb in w.scene.g1_set
+                          else "her hands or arms" if bb >= 0 and m.body(bb).name.startswith("parent") else "the room")
+            if bb == head:
+                blocked_by += f" ({m.geom(int(gid[0])).name or 'unnamed'})"
+        in_win, visible, face_px, mouth_seen = seg_face(m, d, seg, seg8, opt, w.gaze, head, mouth_geoms, UP)
         facing = ft[1] not in ("turned away", "behind the eye")
         seg_ok = bool(in_win and visible and facing and face_px >= E.FACE_MIN_PX) if not noface else False
         tmpl = {}
@@ -319,9 +348,11 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
             else:
                 m.light_dir[sun] = np.asarray(spec["dir"]) / np.linalg.norm(spec["dir"]); m.light_diffuse[sun] = spec["diffuse"]
             seen = ey.see()
-            tmpl[L] = int(seen["face_fovea"][0]), int(E.template_match(seen["truth"]["template_fovea"]["L"]))
+            tf = seen["truth"]["template_fovea"]
+            tmpl[L] = int(seen["face_fovea"][0]), int(E.template_match(tf["L"])), max(tf["L"][0], tf["R"][0])
         m.light_dir[sun], m.light_diffuse[sun] = sun0
-        rows.append(dict(dist=dist, noface=noface, block=block, test=bool(ft[0]) and not noface, why=ft[1], seg=seg_ok, in_win=in_win,
+        rows.append(dict(dist=dist, noface=noface, block=block, test=bool(ft[0]) and not noface, why=ft[1], by=blocked_by, seg=seg_ok, in_win=in_win,
+                         mouth_seen=mouth_seen,
                          visible=visible, face_px=face_px, tmpl=tmpl))
         w.load_state(live)
     secs = time.perf_counter() - t0
@@ -340,11 +371,25 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
     for r in face:
         why[r["why"] or "passes"] = why.get(r["why"] or "passes", 0) + 1
     out = {"frames": frames, "with_a_face": len(face), "no_face": len(rows) - len(face), "seconds": round(secs, 1),
+           "head_inside_room": "every placement (drawn again until its centre is 0.15 m inside the walls, floor and ceiling)",
+           "frames_with_no_room_for_a_face": skipped,
+           "face_distances": {f"{lo}-{hi} m": sum(lo <= r["dist"] < hi for r in face) for lo, hi in bins},
            "C2": {"what": "the ray's verdict against the 8x segmentation render's (the mouth point visible), on the frames the test's "
                           "geometry passes (in the window, turned within 75 deg, big enough)",
-                  "frames": len(geo), "agree": round(float(np.mean([ray_ok(r) == r["visible"] for r in geo])), 4) if geo else None,
+                  "frames": len(geo), "ray_clear": sum(ray_ok(r) for r in geo), "ray_blocked": sum(not ray_ok(r) for r in geo),
+                  "with_a_toy_on_the_line": sum(r["block"] for r in geo),
+                  "agree": round(float(np.mean([ray_ok(r) == r["visible"] for r in geo])), 4) if geo else None,
                   "ray_clear_render_hidden": sum(ray_ok(r) and not r["visible"] for r in geo),
-                  "ray_blocked_render_visible": sum(not ray_ok(r) and r["visible"] for r in geo), "by_distance": by,
+                  "ray_blocked_render_visible": sum(not ray_ok(r) and r["visible"] for r in geo),
+                  "ray_blocked_render_visible_by": {k: sum(1 for r in geo if not ray_ok(r) and r["visible"] and r["by"] == k)
+                                                    for k in sorted({r["by"] for r in geo if not ray_ok(r)})},
+                  "ray_blocked_by": {k: sum(1 for r in geo if not ray_ok(r) and r["by"] == k) for k in sorted({r["by"] for r in geo if not ray_ok(r)})},
+                  "note": "the render's verdict is the head's pixel at the mouth point: any part of her head, so a mouth hidden behind "
+                          "her own nose or chin reads visible to it and blocked to the ray",
+                  "agree_with_her_mouth_at_the_pixel": round(float(np.mean([ray_ok(r) == r["mouth_seen"] for r in geo])), 4) if geo else None,
+                  "ray_clear_mouth_not_at_the_pixel": sum(ray_ok(r) and not r["mouth_seen"] for r in geo),
+                  "ray_blocked_mouth_at_the_pixel": sum(not ray_ok(r) and r["mouth_seen"] for r in geo),
+                  "by_distance": by,
                   "whole_test_vs_render": {"agree": round(float(np.mean([r["test"] == r["seg"] for r in face])), 4),
                                            "note": "the render's size criterion counts the whole head's pixels (hair included), the test "
                                                    "the face front's ellipse, so they part at the far end: informative only"},
@@ -358,6 +403,8 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
         out["C3_template"][L] = {"hits": f"{hit(pos)} of {len(pos)} frames the face test passes",
                                  "false_alarms_face_not_seen": f"{hit(neg)} of {len(neg)}",
                                  "false_alarms_no_face": f"{hit(nof)} of {len(nof)}",
+                                 "best_r_where_the_test_passes": {q: round(float(np.percentile([r["tmpl"][L][2] for r in pos], k)), 3)
+                                                                  for q, k in (("median", 50), ("p90", 90), ("max", 100))} if pos else None,
                                  "hits_by_distance": {f"{lo}-{hi} m": f"{hit([r for r in pos if lo <= r['dist'] < hi])} of "
                                                       f"{len([r for r in pos if lo <= r['dist'] < hi])}" for lo, hi in bins}}
     out["render_ms"] = round(1e3 * ey.timing["render_s"] / max(1, ey.timing["renders"]), 1)

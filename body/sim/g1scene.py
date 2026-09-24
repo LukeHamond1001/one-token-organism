@@ -108,6 +108,17 @@ BIRTH = dict(shoulder_pitch=0.0, shoulder_roll=0.35, shoulder_yaw=0.0, elbow=1.1
              hip_pitch=-0.35, hip_roll=0.12, hip_yaw=0.15, knee=0.55, ankle_pitch=-0.05)
 BIRTH_XY = (-0.05, -0.62)       # the pelvis on the mat; the head toward -x, its left toward +y
 BIRTH_SETTLE_S = 1.5            # settled under its servos holding the birth pose
+# THE PARENT AT BIRTH: standing by the door where the maker stands her (make_g1room.py writes her 16 segments from this pose),
+# her face drawn at its neutral expression, looking straight ahead, her hands at the Pose's default shape. The face's and the
+# hands' geoms have no place of their own in the file (the file's are placeholders inside the head and the hands): only
+# set_parent puts them where a face and hands are, so birth draws her (the W1 verifier's first finding: never drawn, her face had
+# no mouth or brows and its lids and irises sat at their placeholders, and the born face template never fired on it).
+PARENT_BIRTH = dict(pos=(1.9, -1.5, kin.HIP_Z), yaw=math.radians(150))
+
+
+def born_parent():
+    """the parent's pose at birth (kin.Pose: standing at PARENT_BIRTH, the neutral face, the default hands)"""
+    return kin.Pose(PARENT_BIRTH["pos"], kin.rz(PARENT_BIRTH["yaw"]))
 
 
 class Scene:
@@ -266,9 +277,11 @@ class Scene:
     def birth(self):
         """The birth state: the G1 on its back on the mat (head toward -x, its left toward +y), settled BIRTH_SETTLE_S under
         its servos holding the birth pose (under whatever servo law the model carries: the world sets the body's first);
-        the toys settled; the parent where the maker stood it, by the door. Deterministic; computed, never cached."""
+        the toys settled; the parent where the maker stood it, by the door, drawn (born_parent: her face at its neutral
+        expression, her hands shaped). Deterministic; computed, never cached."""
         m, d = self.m, self.d
         self.place_on_mat(BIRTH, kin.ry(-math.pi / 2), BIRTH_XY)
+        self.set_parent(born_parent())
         d.qvel[:] = 0
         d.qacc_warmstart[:] = 0
         mujoco.mj_forward(m, d)
