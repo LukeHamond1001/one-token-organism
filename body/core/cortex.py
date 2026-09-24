@@ -118,9 +118,16 @@ class CortexMixin:
             # looped on the cue's last word: runs 20 to 22.) Its own half then fills the open position
             # or, the world quiet, opens one of its own; a tick with nothing sounded leaves a rest.
             entry = {"bundle": self.bands.clone(), "read": read.clone(), "r": float(r)}
+            # THE LATER EFFECTORS' ACTS (step R5): each effector after the voice holds its act under its window field, the efference copy
+            # the cortex hears beside its own sound: its act this tick at the tick's own step (its rest where it did not act), its rest
+            # at a position the world opens. The diary declares none: its positions are as before.
+            acts_ = ({e_.field: (int(st_["now"]["act"]) if who == 1 else int(e_.rest_id)) for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
+                     if len(self.anatomy.effectors) > 1 else None)
             if who == 0:
                 if x != self.sil or not self.win:
                     self.win.append({**obs_, "xo": self.sil, **entry}); self._pos_open = True
+                    if acts_:
+                        self.win[-1].update(acts_)
                 else:
                     self._pos_open = False
             else:
@@ -128,6 +135,8 @@ class CortexMixin:
                     self.win[-1]["xo"] = int(x)                # its own sound joins the world's time step
                 else:
                     self.win.append({**obs_, "xo": int(x), **entry})
+                if acts_:
+                    self.win[-1].update(acts_)                 # the later effectors' acts join it too
                 self._pos_open = False
             if who == 0 and not self._pos_open and getattr(self, "_C_last", None) is not None:
                 C = self._C_last                               # the last filled position's stream, and its forecast
@@ -148,11 +157,13 @@ class CortexMixin:
 
     def _window_tensors(self, win=None):
         """THE WINDOW AS TENSORS, PER CHANNEL (step R4): obs, each of the anatomy's channels by name, its field at every position ([T]
-        symbols of a symbol channel, [T, size] of a vector channel: the diary's ear [T] and face [T, 2]); whos [T] its own symbol at each
-        position; bundles [T, nb, d]; reads [T, d]"""
+        symbols of a symbol channel, [T, size] of a vector channel: the diary's ear [T] and face [T, 2]), and each later effector's acts
+        by its name ([T], step R5); whos [T] its own symbol at each position; bundles [T, nb, d]; reads [T, d]"""
         win = list(self.win if win is None else win)
         obs = {c_.name: (torch.tensor([w[c_.field] for w in win], device=self.dev) if c_.kind == "symbol" else torch.stack([w[c_.field] for w in win]))
                for c_ in self.anatomy.channels}
+        for e_ in self.anatomy.effectors[1:]:                          # each later effector's acts, by its name (step R5)
+            obs[e_.name] = torch.tensor([w[e_.field] for w in win], device=self.dev)
         whos = torch.tensor([w["xo"] for w in win], device=self.dev)   # its own symbols, one per tick
         bundles = torch.stack([w["bundle"] for w in win])
         reads = torch.stack([w["read"] for w in win])

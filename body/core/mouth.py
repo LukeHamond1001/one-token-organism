@@ -4,11 +4,20 @@ readiness, the wait and the floor; `_pace_*`); the tick's `_choose` (whether to 
 (the feelings from dopamine, the gate's buffer and the turns of the gate's and the waking lesson); and the gate's lesson.
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). The review's Reflexes object is not made here: it would
-change method bodies, which this step does not."""
+change method bodies, which this step does not.
+
+THE EFFECTORS (the core refactor's step R5, docs/SIM_DESIGN.md 8.4): `_choose`, `_act` and the gate's lessons run over the anatomy's
+effectors. The voice is effector 0 and keeps its code and names (its ear, now the gate inputs it declares, is `_voice_ear`); `_choose`
+also returns its gate's own draw. Each later effector follows it: `_choose_effector` (its gate, its draw, its joints read and drawn),
+`_act_effectors` (its actor's trace, its cost, its striatal event) and `_gate_lesson(i)`, the voice's lesson on its own gate. The
+defect fixes 4 (gate_own_draw), 5 (actor_trace_tick) and 8 (elig_from) are switches, off by their absence (physiology.py SWITCHES)."""
+import collections
 import math
 
 import torch
 import torch.nn.functional as F
+
+from .world import Frame
 
 
 class MouthMixin:
@@ -19,6 +28,8 @@ class MouthMixin:
         with torch.no_grad():
             win = list(self.win); line = m.stri_line.clone(); sym = int(first); zero_read = torch.zeros(m.d, device=self.dev)
             held = {c_.field: c_.observe(self, self.sil, 1, still=True) for c_ in self.anatomy.channels}   # an imagined position: the world quiet, the face held (step R4)
+            for e_ in self.anatomy.effectors[1:]:
+                held[e_.field] = int(e_.rest_id)                  # the later effectors at rest while it imagines speaking (step R5)
             said = []
             for step in range(int(h)):
                 said.append(sym)
@@ -41,6 +52,7 @@ class MouthMixin:
                 e = int(line[p_])
                 if e >= 0:
                     z += m.stri_W[p_ * width + e]
+            m.striatum_acts(z)                                    # the later effectors' lines as they stand (step R5; none for the diary)
             z = torch.relu(z)
             if getattr(m, "stri_wm", 0):
                 z = torch.cat([z, m.wm_slot * m.wm_on])
@@ -273,8 +285,42 @@ class MouthMixin:
                 "releases": n, "release_median": ((rel[(n - 1) // 2] + rel[n // 2]) / 2.0 if n else None), "release_lapsed": d["lapsed"],
                 "release_cancelled": d["cancel"], "ear_w": ew}
 
+    def _voice_ear(self, u):
+        """THE VOICE'S OWN EAR (step R5: what VoiceEffector.gate_inputs reads, the gate's inputs beyond the stream and the feelings; the
+        code as it stood in `_choose`): under gate_ear, [the ear's world input, its own act last tick] (the ear under the sensed pace, or
+        the world's symbol this tick with its trace and gain), or None without the ear"""
+        live_ = self._pace_mode() >= 2
+        if int(self.cfg.get("gate_ear", 0)) and live_:
+            # THE EAR UNDER THE SENSED PACE (M3, M5): held at 1 from the world's symbol until an end lets it go (M2 at once, M4 when the
+            # reply is ready), then the wait; no trace, no gain
+            ear_w = self._pace_ear(u); self._ear_now = ear_w
+            return torch.tensor([ear_w, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)
+        elif int(self.cfg.get("gate_ear", 0)):
+            # THE EAR: the world's symbol this tick, its own act last tick (sensed, not inferred)
+            ear_w = 1.0 if u != self.sil else 0.0
+            ed_ = float(self.cfg.get("gate_ear_decay", 0.0))
+            ra_ = getattr(self, "_ear_release_at", None)
+            if ra_ is not None and self.ticks >= ra_:
+                self._ear_trace = 0.0; self._ear_release_at = None   # the ear released the tick after the perceived end (gate_ear_release 2)
+            if ed_ > 0.0:
+                # THE EAR'S TRACE (gate_ear_decay; 2026-09-19, the review and the diagnostic probe of item 45): with the ear reading
+                # the tick alone, the learned gate (its ear weight -49 on a symbol's tick, +14 on its own act) was shut on the ticks a
+                # symbol arrived and free on the quiet ticks between a slow typist's keystrokes, and every word said over a
+                # one-handed line came through it with the floor shut. A sense persists past its stimulus (the auditory trace,
+                # the simplest sensory memory): the ear's world input decays by gate_ear_decay a tick from each symbol instead of
+                # falling to zero, so the gate's learned weight keeps it shut while a person is still typing at any pace and
+                # frees it as the ringing fades. A disclosed constant; nothing about content; the typist's fast lines unchanged.
+                self._ear_trace = max(ed_ * float(getattr(self, "_ear_trace", 0.0)), ear_w); ear_w = self._ear_trace
+            ear_w = ear_w * float(self.cfg.get("gate_ear_gain", 1.0))     # THE EAR'S GAIN (2026-09-20): the learned weight on the ear (-49, built over weeks) moved by 0.05 in five days of frowns; the input's scale is the constant that sets how hard the ringing ear holds the gate
+            return torch.tensor([ear_w, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)
+        return None
+
     def _choose(self, C1, pred1, u, level, stri):
-        """the mouth's half: whether to speak (the gate), then what (the readout at the mood's sharpness; the actor's chunk, plan or vote)"""
+        """the tick's choice for every effector, in the anatomy's order: the voice (effector 0) first, whether to speak (the gate), then
+        what (the readout at the mood's sharpness; the actor's chunk, plan or vote), its draws on self.gen the tick's first, exactly as
+        before step R5; then each later effector (`_choose_effector`: its gate, then its act, joint by joint), its draws after the voice's.
+        Returns the voice's choice and the gate's own draw (`drew`: the gate's yes or no before the readout's choice could make a yes a
+        rest; a chunk's letter run without the gate, a yes at p 1), which the lesson takes as the act under gate_own_draw (defect 4)"""
         m = self.m
         # --- the mouth's half: whether (the gate), then what (the lexicon) ---
         # DECISIVENESS from tonic dopamine (songbirds: variability is high when unrewarded and falls as
@@ -318,29 +364,12 @@ class MouthMixin:
                     m.mouth_gate.bias.fill_(self._gate_c + wmu); self._gate_wmu_last = wmu
                 feat = feat - self._feat_mu
             live_ = self._pace_mode() >= 2
-            if int(self.cfg.get("gate_ear", 0)) and live_:
-                # THE EAR UNDER THE SENSED PACE (M3, M5): held at 1 from the world's symbol until an end lets it go (M2 at once, M4 when the
-                # reply is ready), then the wait; no trace, no gain
-                ear_w = self._pace_ear(u); self._ear_now = ear_w
-                feat = torch.cat([feat, torch.tensor([ear_w, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
-            elif int(self.cfg.get("gate_ear", 0)):
-                # THE EAR: the world's symbol this tick, its own act last tick (sensed, not inferred)
-                ear_w = 1.0 if u != self.sil else 0.0
-                ed_ = float(self.cfg.get("gate_ear_decay", 0.0))
-                ra_ = getattr(self, "_ear_release_at", None)
-                if ra_ is not None and self.ticks >= ra_:
-                    self._ear_trace = 0.0; self._ear_release_at = None   # the ear released the tick after the perceived end (gate_ear_release 2)
-                if ed_ > 0.0:
-                    # THE EAR'S TRACE (gate_ear_decay; 2026-09-19, the review and the diagnostic probe of item 45): with the ear reading
-                    # the tick alone, the learned gate (its ear weight -49 on a symbol's tick, +14 on its own act) was shut on the ticks a
-                    # symbol arrived and free on the quiet ticks between a slow typist's keystrokes, and every word said over a
-                    # one-handed line came through it with the floor shut. A sense persists past its stimulus (the auditory trace,
-                    # the simplest sensory memory): the ear's world input decays by gate_ear_decay a tick from each symbol instead of
-                    # falling to zero, so the gate's learned weight keeps it shut while a person is still typing at any pace and
-                    # frees it as the ringing fades. A disclosed constant; nothing about content; the typist's fast lines unchanged.
-                    self._ear_trace = max(ed_ * float(getattr(self, "_ear_trace", 0.0)), ear_w); ear_w = self._ear_trace
-                ear_w = ear_w * float(self.cfg.get("gate_ear_gain", 1.0))     # THE EAR'S GAIN (2026-09-20): the learned weight on the ear (-49, built over weeks) moved by 0.05 in five days of frowns; the input's scale is the constant that sets how hard the ringing ear holds the gate
-                feat = torch.cat([feat, torch.tensor([ear_w, 1.0 if getattr(self, "_acted_last", False) else 0.0], device=self.dev)])
+            # THE VOICE'S OWN EAR (step R5): the gate's inputs beyond the stream and the feelings are the effector's own, declared by it
+            # (VoiceEffector.gate_inputs: `_voice_ear` below, on this tick's frame); appended after the adapted input, as always
+            frame = Frame(self.ticks, {self.anatomy.words.name: u}, self.face_now)   # this tick of the world, as _sense built it (no draw)
+            ear_ = self.anatomy.effectors[0].gate_inputs(frame, self)
+            if ear_ is not None:
+                feat = torch.cat([feat, ear_])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
             gy_ = float(self.cfg.get("gate_yield", 0.0))
             if gy_ > 0.0 and not live_:                                       # under the sensed pace M5's wait holds the gate instead
@@ -396,6 +425,7 @@ class MouthMixin:
             self._floor_now = fl
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))                          # spontaneous activity as the floor
             acted = bool(torch.rand(1, generator=self.gen).item() < p_act)
+            drew = acted                                                               # the gate's own draw (defect 4: gate_own_draw)
             # DECISIVENESS BY CERTAINTY (sharp_conf; 2026-09-15, the live ruler): each word's first symbol is sampled from this readout, and
             # at a fixed sharpness a three-word answer needed three lucky starts where the forecast's margin was thin (the live mouth
             # answered 3 of 30 questions the greedy readout answered 20 of). A selection's noise falls as its evidence rises (the
@@ -505,7 +535,7 @@ class MouthMixin:
                         nxt, p_choice = self.sil, 0.0
                         self._chunk_stops = getattr(self, "_chunk_stops", 0) + 1
                 else:
-                    acted = True; p_act = 1.0; self._chunk_cont = True
+                    acted = True; p_act = 1.0; self._chunk_cont = True; drew = True     # the program runs with no gate decision: a yes at p 1
                     nxt = int(torch.argmax(logits)); p_choice = float(probs[nxt]); self._chunk_len = getattr(self, "_chunk_len", 0) + 1
                     self._chunk_ticks = getattr(self, "_chunk_ticks", 0) + 1
                     if nxt == self.sil:
@@ -523,12 +553,70 @@ class MouthMixin:
                 nxt, p_choice = self.sil, 0.0
             self._last_choice = {"p_act": float(p_act), "acted": bool(acted), "nxt": int(nxt), "p_choice": float(p_choice), "norm": float(pred1.norm()),
                                  "top": int(torch.argmax(logits)), "sharp": float(getattr(self, "_sharp_eff", m.read_sharp))}   # the tick's choice, for the instruments
-        return acted, nxt, p_act, p_choice, probs, feat, ent, act_on
+        for i_ in range(1, len(self.anatomy.effectors)):                   # THE LATER EFFECTORS (step R5), after the voice, in their order
+            self._choose_effector(i_, frame, C1, level, stri)
+        return acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew
 
-    def _act(self, u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on):
-        """the act: the actor's credit, the intrinsic credit, its own symbol (or its rest) enters the stream, the gate's tag"""
+    @staticmethod
+    def _motor_state_new():
+        """a later effector's working state (step R5; one per effector after the voice, life.motor): its gate's buffer (the voice's
+        gate_buf's twin), its lesson's baseline and report, its act last tick, its actor's eligibility trace, and the tick's choice"""
+        return {"buf": collections.deque(maxlen=96), "g_base": None, "last": None, "acted_last": False, "e_actor": None, "now": None}
+
+    def _choose_effector(self, i, frame, C1, level, stri):
+        """A LATER EFFECTOR'S CHOICE (step R5; effector i > 0, after the voice's, its draws on self.gen after the voice's): whether (its
+        own gate, born as the voice's, on the stream, the feelings, its proposal's salience, the level and its own inputs, flattened by
+        stress, over the spontaneous floor; its draw), then what (the per-joint readout of its proposal at the mood's sharpness, the
+        striatal actor's bias added joint by joint under the actor, each joint drawn in turn; the act its joints' settings, a draw of its
+        rest no act). The voice's reflexes (the ear, the pace, the listening, the babble drive, the chunk) are the voice's alone. Kept in
+        its state for the act, the lesson and the instruments."""
+        m = self.m; e = self.anatomy.effectors[i]; st = self.motor[i - 1]; tab = m.get_submodule(e.organ)
+        with torch.no_grad():
+            pred = e.propose(self, C1)                                    # none before act_pred (step R6)
+            sal = float(self.cfg["gate_salience"]) * (float(pred.norm()) if pred is not None else 0.0)
+            own = torch.as_tensor(e.gate_inputs(frame, self, st), dtype=torch.float32, device=self.dev).reshape(-1)
+            if own.numel() != int(e.n_in):
+                raise ValueError(f"the effector {e.name!r} declares {e.n_in} gate inputs and gave {own.numel()}")
+            feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
+                              torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0, sal, level], device=self.dev), own])
+            z = m.get_submodule(e.gate)(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)
+            fl = float(self.cfg["gate_floor"])
+            p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))
+            drew = bool(torch.rand(1, generator=self.gen).item() < p_act)
+            logits = tab.logits(pred, float(m.read_sharp))
+            act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
+            if act_on:                                                    # the striatum disposes: its bias on each joint's proposal
+                a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.get_submodule(e.actor)(self._z_now))
+                logits = [lg + b_ for lg, b_ in zip(logits, tab.split(a_bias))]
+            if e.reserved:                                                # a one-joint alphabet's reserved acts are never drawn
+                logits[0] = logits[0].clone(); logits[0][list(e.reserved)] = float("-inf")
+            probs = [torch.softmax(lg, -1) for lg in logits]
+            if drew:
+                dig = [int(torch.multinomial(p_.cpu(), 1, generator=self.gen)) for p_ in probs]
+                act = tab.flat(dig); p_choice = 1.0
+                for p_, a_ in zip(probs, dig):
+                    p_choice *= float(p_[a_])
+                acted = act != int(e.rest_id)                             # a draw of its rest: no act
+            else:
+                act = int(e.rest_id); acted = False; p_choice = 0.0
+                dig = [int(x_) for x_ in tab.digits(torch.tensor(act)).tolist()]
+        st["now"] = {"act": int(act), "acted": bool(acted), "drew": bool(drew), "p_act": float(p_act), "p_choice": float(p_choice),
+                     "digits": dig, "probs": probs, "feat": feat.cpu(), "act_on": act_on, "cost": 0.0}
+
+    def _act(self, u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew=None):
+        """the act: the actor's credit, the intrinsic credit, its own symbol (or its rest) enters the stream, the gate's tag; each later
+        effector's credit, cost and striatal event after the voice's (step R5: their acts enter the stream in the voice's own step)"""
         m = self.m
         int_t = 0.0
+        tick_tr = int(self.cfg.get("actor_trace_tick", 0))
+        if tick_tr:
+            # DEFECT 5 FIXED (actor_trace_tick): the actor's eligibility decays by dopamine's discount every tick (the lesson multiplies
+            # it by the dopamine of every tick), so an act's credit fades with time, not with the acts that follow it
+            g_tr = float(gam[int(self.cfg["dopamine_band"])])
+            if getattr(self, "_e_actor", None) is not None:
+                self._e_actor = g_tr * self._e_actor
+            if getattr(self, "_e_chooser", None) is not None:
+                self._e_chooser = g_tr * self._e_chooser
         if acted and act_on and not self._chunk_cont:            # the actor's act and credit: once per word under the chunk form
             self._ring_torn.append(1.0 if self._torn_now else 0.0); self._ring_ent.append(float(self._ent_now)); self._torn_now = False
             if getattr(self, "_a_bias_now", None) is not None:
@@ -537,13 +625,14 @@ class MouthMixin:
                 spk_ = ab_.clone(); spk_[self.sil] = float("-inf"); spk_[self.bans] = float("-inf")
                 self._act_agree.append(1.0 if int(spk_.argmax()) == nxt else 0.0)
             with torch.no_grad():                                      # the actor's eligibility: what it said against what it expected, on this input
+                g_act = 1.0 if tick_tr else float(gam[int(self.cfg["dopamine_band"])])   # decayed per tick above under actor_trace_tick
                 if str(self.cfg.get("actor_form", "add")) == "softmax":
-                    self._chooser_credit(nxt, float(gam[int(self.cfg["dopamine_band"])]))
+                    self._chooser_credit(nxt, g_act)
                 else:
                     oh = torch.zeros_like(probs); oh[nxt] = 1.0
                     e_new = torch.outer(oh - probs.detach(), self._z_now)
                     ea = getattr(self, "_e_actor", None)
-                    self._e_actor = (float(gam[int(self.cfg["dopamine_band"])]) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
+                    self._e_actor = (g_act * ea if ea is not None else torch.zeros_like(e_new)) + e_new
         if acted:
             hab = float(self.cfg["gate_habit"])
             if str(self.cfg.get("gate_int_form", "value")) == "error":
@@ -572,17 +661,46 @@ class MouthMixin:
                 m.striatum_push(1, int(nxt))                      # its own symbol is an event of the stream
             elif u == self.sil and not felt and int(self.cfg.get("stri_quiet", 0)):
                 m.striatum_push(3, 0)                             # a tick of quiet is an event too (the line carries time)
+        if len(self.anatomy.effectors) > 1:
+            self._act_effectors(u, stri, gam, tick_tr)            # the later effectors (step R5), after the voice
         self._acted_last = bool(acted)
         if float(self.cfg.get("gate_slow_lr", 0.0)) > 0.0:
             with torch.no_grad():
                 g_ = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
                 tag_in = torch.cat([feat.detach(), torch.ones(1, device=self.dev)])
                 prev = getattr(self, "_gate_tag", None)
-                self._gate_tag = ((g_ * prev) if prev is not None else torch.zeros_like(tag_in)) + (float(acted) - p_act) * tag_in
+                a_tag = float(drew) if (drew is not None and int(self.cfg.get("gate_own_draw", 0))) else float(acted)   # the gate's own draw (defect 4)
+                self._gate_tag = ((g_ * prev) if prev is not None else torch.zeros_like(tag_in)) + (a_tag - p_act) * tag_in
         return int_t
 
-    def _feel_and_learn(self, delta, delta_slow, delta_long, feat, acted, int_t, p_act):
-        """the feelings from dopamine; the gate's buffer and its lesson; the waking cortex lesson"""
+    def _act_effectors(self, u, stri, gam, tick_tr):
+        """THE LATER EFFECTORS' ACTS (step R5), each after the voice's, in the anatomy's order: its actor's eligibility (per act, or
+        decayed every tick under actor_trace_tick), the one-hot of each joint's setting against that joint's probabilities, on the
+        striatal input, as the voice's actor's over which symbol; its cost (its declaration's) to the body's fatigue; its act an event of
+        its own striatal line; its act last tick. Its act entered the stream in the tick's own step (`_step`, its window field)."""
+        m = self.m; g_ = float(gam[int(self.cfg["dopamine_band"])])
+        frame = Frame(self.ticks, {self.anatomy.words.name: u}, self.face_now)
+        for i_, (e_, st_) in enumerate(zip(self.anatomy.effectors[1:], self.motor)):
+            now = st_["now"]
+            if tick_tr and st_["e_actor"] is not None:
+                st_["e_actor"] = g_ * st_["e_actor"]
+            if now["acted"] and now["act_on"]:
+                with torch.no_grad():
+                    oh = torch.cat([F.one_hot(torch.tensor(a_), int(k_)).to(p_.dtype).to(p_.device) - p_
+                                    for a_, k_, p_ in zip(now["digits"], e_.factors, now["probs"])])
+                    e_new = torch.outer(oh, self._z_now)
+                    ea = st_["e_actor"]
+                    st_["e_actor"] = ((1.0 if tick_tr else g_) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
+            if now["acted"]:
+                now["cost"] = float(e_.cost(now["act"], frame, self))
+                self.fatigue += now["cost"]
+                if stri:
+                    m.striatum_push_act(i_, now["act"])           # its act is an event of its own line
+            st_["acted_last"] = bool(now["acted"])
+
+    def _feel_and_learn(self, delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew=None):
+        """the feelings from dopamine; the gate's buffer and its lesson, for every effector (the voice's, then each later one's: the
+        same credit, the effector's own act, draw and cost); the waking cortex lesson"""
         m = self.m
         # --- feelings from dopamine ---
         self.mood = max(-6.0, min(6.0, self.mood + float(self.cfg["mood_gain"]) * delta))
@@ -595,13 +713,27 @@ class MouthMixin:
         else:
             vw = float(self.cfg.get("vcrit_w", 0.0)) * (self._vrel_gain if int(self.cfg.get("vcrit_auto", 0)) else 1.0)
         self._vw_now = vw
-        self.gate_buf.append([feat.cpu(), acted, delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long, int_t, self.fatigue,
-                              float(m.r_tr[int(self.cfg.get("gate_tonic_clock", 4))]), p_act])   # the felt-reward trace at the tick, for the drive; the probability it acted with
-        if self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0 and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
+        credit = delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long
+        r_tr = float(m.r_tr[int(self.cfg.get("gate_tonic_clock", 4))])
+        row = [feat.cpu(), acted, credit, int_t, self.fatigue, r_tr, p_act]   # the felt-reward trace at the tick, for the drive; the probability it acted with
+        if drew is not None and int(self.cfg.get("gate_own_draw", 0)):
+            row.append(bool(drew))                                     # the gate's own draw (defect 4)
+        self.gate_buf.append(row)
+        for st_ in getattr(self, "motor", ()):                         # the later effectors' rows (step R5): its draw and its act's cost always
+            n_ = st_["now"]
+            st_["buf"].append([n_["feat"], n_["acted"], credit, 0.0, self.fatigue, r_tr, n_["p_act"], n_["drew"], n_["cost"]])
+        lesson_now = self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0
+        if lesson_now and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:
                 self._gate_lesson()
             except Exception as e:
                 self._gate_last = {"error": str(e)[:120]}
+        for i_, st_ in enumerate(getattr(self, "motor", ()), 1):
+            if lesson_now and len(st_["buf"]) >= 16 + int(self.cfg["elig_ticks"]):
+                try:
+                    self._gate_lesson(i_)
+                except Exception as e:
+                    st_["last"] = {"error": str(e)[:120]}
         # --- the waking cortex ---
         if self.ticks > 0 and self.ticks % int(self.cfg["wake_every"]) == 0:
             try:
@@ -610,38 +742,54 @@ class MouthMixin:
                 self._wake_last = {"error": str(e)[:120]}
 
     # ---------------- the gate's lesson (the striatum's opponent rule) ----------------
-    def _gate_lesson(self):
-        buf = list(self.gate_buf)
+    def _gate_lesson(self, i=0):
+        """THE GATE'S LESSON for effector i (step R5: the lesson is the same for every effector, each on its own gate, buffer, baseline
+        and report: the voice's (i = 0) m.mouth_gate with opt_gate, gate_buf, _g_base and _gate_last as always; a later effector's
+        gates[name] with opt_motor and its state in life.motor, its effort its act's recorded cost where the voice's is symbol_cost).
+        Under gate_own_draw (defect 4) the eligibility's act is the gate's own draw, recorded in the row; under elig_from 1 (defect 8)
+        the credit sums the dopamine from the tick after the act on."""
+        if i == 0:
+            buf_, gate_, opt_, st_ = self.gate_buf, self.m.mouth_gate, self.opt_gate, None
+        else:
+            buf_, gate_, opt_, st_ = self.motor[i - 1]["buf"], self.m.get_submodule(self.anatomy.effectors[i].gate), self.opt_motor, self.motor[i - 1]
+        buf = list(buf_)
         K = int(self.cfg["elig_ticks"]); dec = float(self.cfg["elig_decay"])
-        n = len(buf) - K
+        s_ = 1 if int(self.cfg.get("elig_from", 0)) else 0              # the credit from the act's own tick (0), or from the tick after it (1)
+        n = len(buf) - K - s_
         if n < 4:
             return
         cost = float(self.cfg["symbol_cost"]); f0 = float(self.cfg["gate_fatigue"]); w_int = float(self.cfg["gate_int"])
         tonic = float(self.cfg["gate_tonic"]); vig = float(self.cfg["gate_vigor"])
         feats = torch.stack([b[0] for b in buf[:n]]).to(self.dev)
-        acts = torch.tensor([1.0 if b[1] else 0.0 for b in buf[:n]])
+        own_ = int(self.cfg.get("gate_own_draw", 0))
+        acts = torch.tensor([1.0 if (b[7] if (own_ and len(b) > 7) else b[1]) else 0.0 for b in buf[:n]])   # the gate's own draw (defect 4), or the act
         G = torch.zeros(n)
         for t in range(n):
-            g = sum((dec ** k) * float(buf[t + k][2]) for k in range(K))     # the dopamine that followed
+            g = sum((dec ** k) * float(buf[t + s_ + k][2]) for k in range(K))     # the dopamine that followed
             if buf[t][1]:
                 # acting pays a tonic drive (babble is its own reward, not contingent on confidence) plus
                 # the belief it had in its choice (habituating), minus an effort cost convex in fatigue
                 # (linear, 0.59 at fatigue's ceiling never beat a confident recitation's drive of 0.7:
                 # run 19, gate 0.97 all day, fatigue pinned at 40; convex, the mouth speaks in bouts).
                 # With the effort in the reward (cost_in_reward) the cost is the critics' to predict, not the act's
+                c_t = cost if i == 0 else float(buf[t][8])                       # the voice's symbol_cost; a later effector's act's own cost
                 drive_t = tonic + (float(self.cfg.get("gate_tonic_rate", 0.0)) * float(buf[t][5]) if len(buf[t]) > 5 else 0.0)   # THE DRIVE FOLLOWS THE REWARD RATE
-                g += drive_t + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else cost * (1.0 + (float(buf[t][4]) / f0) ** 2))
+                g += drive_t + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else c_t * (1.0 + (float(buf[t][4]) / f0) ** 2))
             G[t] = g
         # the credit is taken against a running baseline (dopamine is an error, not a value)
-        base = getattr(self, "_g_base", None)
+        base = getattr(self, "_g_base", None) if i == 0 else st_["g_base"]
         if base is None:
             base = float(G.mean())
         A = G - base
-        self._g_base = float(self.cfg["gate_baseline"]) * base + (1.0 - float(self.cfg["gate_baseline"])) * float(G.mean())
+        g_base_new = float(self.cfg["gate_baseline"]) * base + (1.0 - float(self.cfg["gate_baseline"])) * float(G.mean())
+        if i == 0:
+            self._g_base = g_base_new
+        else:
+            st_["g_base"] = g_base_new
         if float(A.abs().max()) < 1e-4:
             return
-        self.m.mouth_gate.train()
-        z = self.m.mouth_gate(feats).squeeze(-1)
+        gate_.train()
+        z = gate_(feats).squeeze(-1)
         fl = float(self.cfg["gate_floor"])
         # the probability the gate actually acted with (stress divisor and all), carried in the buffer (review 2026-09-06: recomputed
         # here without the divisor, (act - p) was biased with stress); older samples without it fall back to the recomputation
@@ -652,10 +800,14 @@ class MouthMixin:
         # itself, tonic dopamine setting the rate of acting whatever it did
         elig = (acts.to(self.dev) - p) + vig
         loss = -(A.to(self.dev) * elig * z).mean()
-        self.opt_gate.zero_grad(set_to_none=True); loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.m.mouth_gate.parameters(), 1.0)
-        self.opt_gate.step(); self.m.mouth_gate.eval()
-        self._gate_last = {"n": n, "credit_mean": round(float(G.mean()), 4), "baseline": round(float(base), 4),
-                           "acted": round(float(sum(1 for b in buf[:n] if b[1]) / n), 3), "tick": self.ticks}
-        for _ in range(min(len(self.gate_buf), n)):                 # the samples the lesson consumed (review: popping gate_every left a third to be learned twice)
-            self.gate_buf.popleft()
+        opt_.zero_grad(set_to_none=True); loss.backward()
+        torch.nn.utils.clip_grad_norm_(gate_.parameters(), 1.0)
+        opt_.step(); gate_.eval()
+        last = {"n": n, "credit_mean": round(float(G.mean()), 4), "baseline": round(float(base), 4),
+                "acted": round(float(sum(1 for b in buf[:n] if b[1]) / n), 3), "tick": self.ticks}
+        if i == 0:
+            self._gate_last = last
+        else:
+            st_["last"] = last
+        for _ in range(min(len(buf_), n)):                         # the samples the lesson consumed (review: popping gate_every left a third to be learned twice)
+            buf_.popleft()

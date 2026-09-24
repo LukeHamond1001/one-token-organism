@@ -1,10 +1,10 @@
-"""the body's anatomy, declared (docs/SIM_DESIGN.md section 8.2; the core refactor, steps R1 to R4): what a body senses (`Channel`), how it
+"""the body's anatomy, declared (docs/SIM_DESIGN.md section 8.2; the core refactor, steps R1 to R5): what a body senses (`Channel`), how it
 acts (`Effector`) and what it feels as reward (`RewardSource`), gathered in an `Anatomy`, so that the core can serve a body other than
 the diary's. `LanguageAnatomy(tok, cfg)` is the diary's body: it derives from the tokenizer and the physiology exactly the symbols
 `Life.__init__` derived before step R2 and now reads from it (the rest `sil`, the display symbol `nl`, the space, the turn-end token
 `eot`, the end the offset teaches `end_id`, the `reserved` the world never types and the `bans` the mouth never says) and declares the
-ear (`EarChannel`), the face (`FaceChannel`), the voice and the reward's three sources in their order (`FaceReward`, `WorldWordsReward`,
-`EffortReward`).
+ear (`EarChannel`), the face (`FaceChannel`), the voice (`VoiceEffector`) and the reward's three sources in their order (`FaceReward`,
+`WorldWordsReward`, `EffortReward`).
 
 STEP R1 declared it; STEP R2 builds the life with it: `Life(organs, tok)`, `Life.birth(tok)` and `Life.load(path, tok)` keep their
 signatures, and `anatomy_for` turns the tokenizer into the diary's `LanguageAnatomy` inside (or takes an anatomy given in its place). The
@@ -18,9 +18,21 @@ ladder's bundle and the efference copy joining after the first `inner_at` channe
 order of the sum before); a channel's code is made by the organ it names (`organ`: the ear's the lexicon `E`, the face's the learned
 `face_in`, born at zero); channel 0 is the words, whose forecast head is `latent_pred`, and a later channel that declares a forecast
 has a head of its own, built by the organs after every other organ (`Organs(..., channels=)`) and taught by the waking lesson.
-body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its reward equal to today's rule and its input sum,
-window and heads equal to today's. The anatomy names the organs and never holds them (no module, no tensor: the organs are the body's
-and are saved with it); the methods that read a frame or a life for a later step raise until the step named on them wires them.
+STEP R5 wires the effectors: effector 0 is the voice (`VoiceEffector`), naming the organs it always had (the lexicon E it shares with the
+ear, mouth_gate with its opt_gate and gate_buf, actor, its act the window's "xo"); its gate's own inputs are its ear (`gate_inputs`, the
+life's `_voice_ear`) and its choice, act and lesson are today's code, its draws on self.gen the tick's first. A later effector
+(`Effector`) names the organs the organs build for it after every other organ (`Organs(..., effectors=)`: `acts.<name>`, a fixed table of
+unit rows per joint from the body's seed; `gates.<name>`, born as the voice's gate; `actors.<name>`, sized with the striatum, whose
+event block for its acts is appended after the language block) and the window field of its act; each tick it chooses after the voice
+(`_choose_effector`: its gate over the shared inputs and its own `gate_inputs`, its draw, then the per-joint readout of its proposal
+with the striatal actor's bias per joint, each joint drawn in turn), acts (`_act_effectors`: its act's row enters the cortex's input
+after the voice's own sound, its cost the body's fatigue, its act its striatal line's event) and learns (`_gate_lesson(i)`, the
+voice's lesson on its own gate, buffer and baseline; its actor as the voice's). Its proposal head (act_pred) is step R6; until then it
+proposes nothing and the actor's bias alone shapes its draws. The defect fixes 4, 5 and 8 are switches (physiology.py `SWITCHES`), off
+by their absence. body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its reward equal to today's rule, its
+input sum, window and heads equal to today's, and its gate's lesson equal to today's. The anatomy names the organs and never holds them (no module, no tensor: the organs are the body's
+and are saved with it); the methods that read a frame or a life for a later step raise until the step named on them wires them (a
+channel's `observe` for a world's frames, step R9).
 Building an anatomy builds no module, draws no random number and touches no life (SIM_DESIGN.md 8.3, item 4); a channel and a reward
 source keep no state of their own (the face's held level is the life's `level`, its last face the life's `face_prev`, as before)."""
 from dataclasses import dataclass, field as dc_field
@@ -101,25 +113,86 @@ class FaceChannel(Channel):
 @dataclass(eq=False)
 class Effector:
     """ONE WAY OF ACTING. `factors` is the shape of its alphabet: [K] one choice among K acts (the voice: the lexicon), [5, 5] two
-    joints of five settings each (an act's row the sum of its joints' rows). `table` holds the acts' rows (the voice shares the ear's
-    lexicon); `rest_id` is the act of doing nothing, `end_id` the act that closes a chunk (the voice: the space, the word's end where
-    the planning actor decides), `reserved` the acts it never makes (the voice: today's `bans`). `gate` decides whether to act (the
-    voice's is m.mouth_gate; its optimizer `opt_gate` and its buffer `gate_buf` keep their names). Effector 0 is the voice."""
+    joints of five settings each. An act is one flat id, its joints' settings as mixed-radix digits (joint 0 the most significant: the
+    act (a, b) of [5, 5] is 5a + b), and its row is the sum of its joints' rows. `rest_id` is the act of doing nothing (its gate's no,
+    or a draw of it), `end_id` the act that closes a chunk (the voice: the space, the word's end where the planning actor decides),
+    `reserved` the acts it never makes (the voice: today's `bans`; only a one-joint alphabet can reserve acts, since a factored one
+    draws its joints apart). Effector 0 is the voice (`VoiceEffector`).
+    Step R5: an effector names its organs and never holds them (the anatomy stays stateless, as the steps before kept it): `organ` its
+    acts' table (the voice's the lexicon E, the table it shares with the ear; a later effector's `acts.<name>`, fixed unit rows born
+    from the body's seed), `gate` its gate (the voice's m.mouth_gate, whose optimizer `opt_gate` and buffer `gate_buf` keep their
+    names; a later effector's `gates.<name>`), `actor` its striatal actor head (the voice's m.actor; a later effector's
+    `actors.<name>`), `field` the window position's key for its act, the efference copy (the voice's the core's own "xo"; a later
+    effector's its name). The organs build a later effector's organs under those names after every other organ (Organs(...,
+    effectors=)). `n_in` is the number of its gate's own inputs beside the shared [C/sqrt(d), fatigue, mood, stress, salience, level]
+    (the base effector's one: its own act last tick), `effort` the fatigue an act costs (the base's cost; a body's effector may
+    declare a cost of its own). 8.2 sketched gate_inputs(frame, life) and cost(act, frame): the effector's working state and the life
+    are passed as well, since the anatomy keeps no state of its own and the constants are the life's."""
     name: str
     factors: list
     rest_id: Optional[int] = None
     end_id: Optional[int] = None
     reserved: list = dc_field(default_factory=list)
-    table: object = None                  # Tensor [K, d], bound by the life
-    gate: object = None                   # Module, bound by the life
+    organ: Optional[str] = None           # its acts' table (default acts.<name>)
+    gate: Optional[str] = None            # its gate (default gates.<name>)
+    actor: Optional[str] = None           # its striatal actor head (default actors.<name>)
+    field: Optional[str] = None           # the window position's key for its act (default its name)
+    n_in: int = 1                         # its gate's own inputs (the base: its own act last tick)
+    effort: float = 0.0                   # the fatigue an act costs (the base's cost)
 
-    def gate_inputs(self, frame, life):
-        """the gate's own "ear": what it reads besides the stream (the effectors of step R5)"""
-        raise NotImplementedError("Effector.gate_inputs: the effectors are wired in step R5 (SIM_DESIGN.md 8.4)")
+    def __post_init__(self):
+        if self.organ is None:
+            self.organ = f"acts.{self.name}"
+        if self.gate is None:
+            self.gate = f"gates.{self.name}"
+        if self.actor is None:
+            self.actor = f"actors.{self.name}"
+        if self.field is None:
+            self.field = self.name
 
-    def cost(self, act, frame):
-        """the effort of an act (the effectors of step R5)"""
-        raise NotImplementedError("Effector.cost: the effectors are wired in step R5 (SIM_DESIGN.md 8.4)")
+    @property
+    def n_acts(self):
+        """the size of its alphabet: the product of its joints' settings"""
+        n = 1
+        for k in self.factors:
+            n *= int(k)
+        return n
+
+    def gate_inputs(self, frame, life, state):
+        """its gate's own "ear" (step R5): the `n_in` numbers it reads beside the stream and the feelings, on the world's `frame` and
+        the effector's working `state` in the life (life.motor); the base effector's is its own act last tick (sensed, not inferred)"""
+        return [1.0 if state["acted_last"] else 0.0]
+
+    def cost(self, act, frame, life):
+        """the effort of an act (step R5), added to the body's fatigue when it acts: the base effector's is its declared `effort`"""
+        return float(self.effort)
+
+    def propose(self, life, C):
+        """its proposal (step R5): the vector its per-joint readout reads, each joint's logits the readout's sharpness times the
+        proposal's cosine with that joint's rows, or None (every setting of every joint equally likely, the striatal actor's bias
+        alone shaping the draw). The voice's is the words' forecast, read in `_choose` as always; a later effector's proposal head
+        (act_pred) comes with step R6 (SIM_DESIGN.md 8.4), so until then it proposes nothing"""
+        return None
+
+
+@dataclass(eq=False)
+class VoiceEffector(Effector):
+    """THE VOICE, EFFECTOR 0 (step R5): its acts are the words' symbols, read from the lexicon it shares with the ear (organ E); its
+    gate is m.mouth_gate (with opt_gate and gate_buf), its actor m.actor, its act the window's "xo"; its gate's inputs beyond the
+    stream are its own ear (the partner's symbol, its trace or the sensed pace's hold, and its own act last tick: `_voice_ear`, under
+    gate_ear), widened on the gate as they always were; its cost is symbol_cost a symbol. The voice's choice, act and lesson are
+    today's code (the mouth mixin), its draws on self.gen the tick's first."""
+    organ: Optional[str] = "E"
+    gate: Optional[str] = "mouth_gate"
+    actor: Optional[str] = "actor"
+    field: Optional[str] = "xo"
+    n_in: int = 0
+
+    def gate_inputs(self, frame, life, state=None):
+        return life._voice_ear(frame.obs[life.anatomy.words.name])
+
+    def cost(self, act, frame, life):
+        return float(life.cfg["symbol_cost"])
 
 
 @dataclass(eq=False)
@@ -257,14 +330,37 @@ class Anatomy:
         for e in self.effectors:
             if not e.factors or any(int(k) < 1 for k in e.factors):
                 raise ValueError(f"anatomy: effector {e.name!r} of factors {e.factors}")
-            n = 1
-            for k in e.factors:
-                n *= int(k)
+            n = e.n_acts
             ids = [i for i in [e.rest_id, e.end_id, *e.reserved] if i is not None]
             if any(not 0 <= int(i) < n for i in ids):
                 raise ValueError(f"anatomy: effector {e.name!r} declares an act outside its {n}")
             if e.rest_id is not None and e.rest_id in e.reserved:
                 raise ValueError(f"anatomy: effector {e.name!r}'s rest is reserved")
+        # step R5: effector 0 is the voice, sharing the words' table; a later effector names the organs the organs build for it
+        v, w = self.effectors[0], self.channels[0]
+        if (v.organ, v.gate, v.actor, v.field) != (w.organ, "mouth_gate", "actor", "xo") or [int(k) for k in v.factors] != [int(w.size)]:
+            raise ValueError(f"anatomy: effector 0 ({v.name!r}) must be the voice (VoiceEffector): one choice among the words' {w.size} symbols from "
+                             f"the table it shares with the ear (organ {w.organ!r}), its gate mouth_gate, its actor 'actor', its act the window's 'xo'; "
+                             f"it declares factors {v.factors}, organ {v.organ!r}, gate {v.gate!r}, actor {v.actor!r}, field {v.field!r}")
+        chan_names, chan_fields = {c.name for c in self.channels}, {c.field for c in self.channels}
+        seen_fields = set()
+        for e in self.effectors[1:]:
+            if not (isinstance(e.name, str) and e.name.isidentifier()):
+                raise ValueError(f"anatomy: effector name {e.name!r} is not an identifier (it names the effector's organs)")
+            if (e.organ, e.gate, e.actor) != (f"acts.{e.name}", f"gates.{e.name}", f"actors.{e.name}"):
+                raise ValueError(f"anatomy: a later effector's organs are acts.<name>, gates.<name> and actors.<name> (the organs build them); "
+                                 f"{e.name!r} names {e.organ!r}, {e.gate!r}, {e.actor!r}")
+            if e.name in chan_names:
+                raise ValueError(f"anatomy: effector {e.name!r} shares a channel's name (the cortex's input reads both by name)")
+            if not (isinstance(e.field, str) and e.field) or e.field in chan_fields or e.field in CORE_FIELDS or e.field in seen_fields:
+                raise ValueError(f"anatomy: effector {e.name!r}'s window field {e.field!r} is a channel's, the core's own {CORE_FIELDS} or another effector's")
+            seen_fields.add(e.field)
+            if e.rest_id is None:
+                raise ValueError(f"anatomy: effector {e.name!r} declares no rest (the act of its gate's no)")
+            if e.reserved and len(e.factors) > 1:
+                raise ValueError(f"anatomy: effector {e.name!r} reserves acts of a factored alphabet (its joints are drawn apart)")
+            if int(e.n_in) < 0:
+                raise ValueError(f"anatomy: effector {e.name!r} declares {e.n_in} gate inputs")
         if not self.rewards:
             raise ValueError("anatomy: no reward source (source 0 is the world's judgment)")
         for s in self.rewards:
@@ -305,7 +401,7 @@ class LanguageAnatomy(Anatomy):
         ear = EarChannel("ear", "symbol", self.vocab, organ="E", field="x", forecast=True, rest_id=self.sil, end_id=self.end_id,
                          reserved=self.reserved, partner=True)
         face = FaceChannel("face", "vector", 2, organ="face_in", field="face")
-        voice = Effector("voice", [self.vocab], rest_id=self.sil, end_id=self.space_id, reserved=self.bans)
+        voice = VoiceEffector("voice", [self.vocab], rest_id=self.sil, end_id=self.space_id, reserved=self.bans)   # effector 0 (step R5)
         rewards = [FaceReward("face", clip=2),
                    WorldWordsReward("world_r", ("world_r", "world_mask")),
                    EffortReward("cost", ("cost_in_reward", "symbol_cost", "gate_fatigue"))]
@@ -331,13 +427,13 @@ def anatomy_for(body, cfg=None):
     tokenizer always went. A tokenizer gives the diary's `LanguageAnatomy` under the constants `cfg` (updating the physiology, as the
     life's own cfg does). A language anatomy given in its place is taken if it declares the symbols its tokenizer gives under `cfg`,
     since a body's rest and ends are named by its physiology (one declared under other constants is refused, not mixed); it may declare
-    channels beyond the diary's two (step R4 wires channels into the core). Any other anatomy is refused until step R5 wires the
-    effectors (and R9 the world loop): until then the life reads the language symbols and the diary's tick."""
+    channels beyond the diary's two (step R4 wires channels into the core) and effectors beyond the voice (step R5 wires effectors).
+    Any other anatomy is refused until step R9's world loop: until then the life lives the diary's tick (the queue, the page, the text)."""
     if not isinstance(body, Anatomy):
         return LanguageAnatomy(body, cfg)
     if not isinstance(body, LanguageAnatomy):
-        raise NotImplementedError(f"anatomy_for: the core serves the language anatomy only until the core refactor's step R5 wires the "
-                                  f"effectors (SIM_DESIGN.md 8.4); given {type(body).__name__}")
+        raise NotImplementedError(f"anatomy_for: the core lives the diary's tick, on the language anatomy (with any later channels and "
+                                  f"effectors), until the core refactor's step R9 brings the world loop (SIM_DESIGN.md 8.4); given {type(body).__name__}")
     body.check()
     want = LanguageAnatomy(body.tok, cfg).symbols()
     if want != body.symbols():

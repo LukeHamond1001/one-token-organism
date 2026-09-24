@@ -47,7 +47,7 @@ class PersistenceMixin:
         anatomy = anatomy_for(tok, c)                     # the body's anatomy under the save's constants, then the caller's (no draw), before
                                                           # the organs: a later channel's forecast head is built with them (step R4)
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]),
-                        channels=anatomy.channels)
+                        channels=anatomy.channels, effectors=anatomy.effectors)   # a later effector's organs too (step R5; the tables from the save)
         w = blob["organs"].get("mouth_gate.weight")
         if w is not None and w.shape[1] > organs.mouth_gate.weight.shape[1]:
             organs.widen_gate(w.shape[1] - organs.mouth_gate.weight.shape[1])   # a body with the ear
@@ -59,10 +59,16 @@ class PersistenceMixin:
             blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
         st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias", "wm_slot", "wm_on", "wm_age") if k_ in blob["organs"]}   # the striatal input, sized by the life below
+        st_saved.update({k_: blob["organs"].pop(k_) for k_ in [k_ for k_ in blob["organs"] if k_ == "stri_mline" or k_.startswith("actors.")]})   # the later effectors' (step R5)
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
-        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("wm_"))]:
-            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
+        motor_ = {e_.name for e_ in anatomy.effectors[1:]}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
+        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates")]
+                         + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
+        if dropped:
+            print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)
+        if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))]:
+            print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
         life = cls(organs, anatomy, cfg=c, device=device, seed=seed, save_path=save_path or path)
         saved_norm = vc_saved.get("vc_mu") is not None and vc_saved["vc_mu"].numel() > 0; norm_on = int(c.get("vcrit_norm_tau", 0)) > 0
         saved_form = float(vc_saved["vc_form"]) if vc_saved.get("vc_form") is not None else 1.0
@@ -85,6 +91,13 @@ class PersistenceMixin:
                     life.m.actor.weight.copy_(st_saved["actor.weight"].to(device)); life.m.actor.bias.copy_(st_saved["actor.bias"].to(device))
                 if st_saved.get("wm_slot") is not None and st_saved["wm_slot"].shape == life.m.wm_slot.shape:
                     life.m.wm_slot.copy_(st_saved["wm_slot"].to(device)); life.m.wm_on.copy_(st_saved["wm_on"].to(device)); life.m.wm_age.copy_(st_saved["wm_age"].to(device))
+                if st_saved.get("stri_mline") is not None and "stri_mline" in life.m._buffers and st_saved["stri_mline"].shape == life.m.stri_mline.shape:
+                    life.m.stri_mline.copy_(st_saved["stri_mline"].to(device))   # the later effectors' lines and actors (step R5)
+                for e_ in life.anatomy.effectors[1:]:
+                    w_, b_ = st_saved.get(e_.actor + ".weight"), st_saved.get(e_.actor + ".bias")
+                    a_ = life.m.get_submodule(e_.actor)
+                    if w_ is not None and b_ is not None and w_.shape == a_.weight.shape:
+                        a_.weight.copy_(w_.to(device)); a_.bias.copy_(b_.to(device))
         life.store.load_state_dict(blob["store"])
         life.store.saturate = bool(int(life.cfg.get("store_sat", 0)))
         if life.store.saturate and not life.store.sat_done:
@@ -165,5 +178,6 @@ class PersistenceMixin:
         torch.manual_seed(int(seed))
         anatomy = anatomy_for(tok, cfg)                 # the body's anatomy (a tokenizer's: the diary's); built with no draw, before the organs
         organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])),
-                        channels=anatomy.channels)       # a later channel's forecast head built last (step R4); the diary declares none
+                        channels=anatomy.channels, effectors=anatomy.effectors, born_seed=seed)   # a later channel's forecast head and a later effector's
+                                                         # organs built last (steps R4, R5; their tables from the body's seed); the diary declares none
         return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path)

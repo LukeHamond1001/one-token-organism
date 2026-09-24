@@ -1,5 +1,5 @@
 """the physiology table (moved from body/life.py, review 2026-09-22 section 4, step 2): `PHYSIOLOGY`, every disclosed constant,
-grouped by organ. body/life.py re-exports it (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save
+grouped by organ; and `SWITCHES`, the core refactor's defect-fix switches, declared and off by their absence (docs/SIM_DESIGN.md 8.4). body/life.py re-exports it (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save
 plus ops/BASE_FLAGS.txt (ops/served_cfg.py prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
 
 PHYSIOLOGY = dict(
@@ -238,4 +238,22 @@ PHYSIOLOGY = dict(
     face_every=64,
     face_input="cortex",
     face_lr=1e-3,
+)
+
+# THE CORE REFACTOR'S SWITCHES (docs/SIM_DESIGN.md 8.4; the defect fixes of ops/review_2026-09-22.md section 1, each a switch): declared
+# here and OFF BY THEIR ABSENCE. A life's cfg holds one only when it is set (`cfg.get(name, off)` reads it), so the language body's
+# constants, its save and its pinned digests stay what they were while the switch is off (8.3: the language life gains no key); a body
+# born with one on (the sim is born with them on, 5.3) keeps it in its save. Adopting one on the language body is a measurement on a
+# copy, applied at a boundary (8.6). Life.__init__ and serve.py know them as they know PHYSIOLOGY's keys.
+SWITCHES = dict(
+    # defect 4 (step R5): 1 = the gate's lesson and its synaptic tag take the gate's own draw as the act, so a word that ends in a
+    # sampled rest, or a chunk's continuation that is the rest, is no longer recorded as the gate saying no (acted 0 at p 1: an
+    # eligibility of -1 on a tick the gate never decided); a chunk's letters run without the gate (chunk_gate 0) are its draw at p 1
+    gate_own_draw=0,
+    # defect 5 (step R5): 1 = the actor's eligibility trace (and the chooser's) decays by dopamine's discount every tick, not once per
+    # act, so its credit no longer smears across about sixteen words and through the silences between them
+    actor_trace_tick=0,
+    # defect 8 (step R5): 1 = the gate's credit sums the dopamine from the tick after the act on (the act's own consequences), not from
+    # the act's own tick, whose dopamine was computed before the act (unbiased, but about 21 percent more noise)
+    elig_from=0,
 )

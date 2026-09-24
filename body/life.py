@@ -22,7 +22,9 @@ was moved verbatim into a mixin in body/core/ (its __init__.py has the map): sen
 persistence and instruments, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here; the anatomy, the body's senses,
 effectors and reward sources declared, is body/core/anatomy.py, and the frame, the world at one tick, body/core/world.py. Since step
 R4 the window holds each of the anatomy's channels under its field and the cortex's input is their codes summed in the anatomy's
-order (`Organs.inputs(anatomy, obs, own, bundles)`)."""
+order (`Organs.inputs(anatomy, obs, own, bundles)`). Since step R5 the tick's choice, act and gate lessons run over the anatomy's
+effectors: the voice first (effector 0, today's code and names; `_choose` returns its gate's own draw too), then each later effector
+(its working state in `motor`, its gates' optimizer `opt_motor`; neither exists for the diary)."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401
@@ -32,7 +34,7 @@ import torch
 import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
-from .core.physiology import PHYSIOLOGY
+from .core.physiology import PHYSIOLOGY, SWITCHES
 from .core.anatomy import anatomy_for
 from .core.senses import SensesMixin
 from .core.memory import MemoryMixin
@@ -50,7 +52,7 @@ __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store",
 
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None):
-        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY)
+        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES)   # the switches are known, off by their absence
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
@@ -71,6 +73,24 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         _undeclared = sorted(set(getattr(organs, "chan_pred", {}).keys()) - {c_.name for c_ in self.anatomy.channels[1:] if c_.forecast})
         if _undeclared:
             raise ValueError(f"Life: the organs hold forecast heads for channels the anatomy does not declare: {_undeclared}")
+        # ITS EFFECTORS IN THE ORGANS (step R5): each effector's table, gate and actor are the organs its declaration names (the voice's
+        # the lexicon E, mouth_gate and actor; a later effector's built by Organs(..., effectors=anatomy.effectors)); read here, nothing kept
+        for i_, e_ in enumerate(self.anatomy.effectors):
+            for what_, nm_ in (("table", e_.organ), ("gate", e_.gate), ("actor", e_.actor)):
+                try:
+                    organs.get_submodule(nm_)
+                except AttributeError:
+                    raise ValueError(f"Life: the effector {e_.name!r}'s {what_} is the organ {nm_!r}, which these organs do not have "
+                                     f"(a later effector's are built by Organs(..., effectors=anatomy.effectors))") from None
+            if i_ and organs.get_submodule(e_.gate).in_features != organs.d + 5 + int(e_.n_in):
+                raise ValueError(f"Life: the effector {e_.name!r}'s gate reads {organs.get_submodule(e_.gate).in_features} inputs, its declaration "
+                                 f"{organs.d + 5 + int(e_.n_in)}")
+            if i_ and tuple(getattr(organs.get_submodule(e_.organ), "factors", ())) != tuple(int(k_) for k_ in e_.factors):
+                raise ValueError(f"Life: the effector {e_.name!r}'s table has the joints {getattr(organs.get_submodule(e_.organ), 'factors', None)}, "
+                                 f"its declaration {list(e_.factors)}")
+        _undeclared = sorted(set(getattr(organs, "acts", {}).keys()) - {e_.name for e_ in self.anatomy.effectors[1:]})
+        if _undeclared:
+            raise ValueError(f"Life: the organs hold the organs of effectors the anatomy does not declare: {_undeclared}")
         vb = str(self.cfg.get("vcrit_bands", "") or "").strip()
         if vb:
             with torch.no_grad():
@@ -109,9 +129,10 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                 if str(self.cfg.get("fast_input", "band")) == "striatum":
                     k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
                     wm_ = int(self.cfg.get("wm", 0))
-                    if (organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != k_ * (2 * organs.vocab + 3)
+                    rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * e_.n_acts for e_ in self.anatomy.effectors[1:])   # the language block, then the later effectors' (step R5)
+                    if (organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != rows_
                             or organs.vfast.weight.shape[1] != m_ * (1 + wm_)):
-                        organs.striatum_init(k_, m_, seed=seed, wm=wm_)        # born (or re-born at a new size)
+                        organs.striatum_init(k_, m_, seed=seed, wm=wm_, effectors=self.anatomy.effectors)   # born (or re-born at a new size)
                     kf = m_ * (1 + wm_) + 1
                 else:
                     kf = int(organs.value[fb].weight.shape[1]) + 1
@@ -255,6 +276,16 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
             self.opt_gate = torch.optim.Adam(self.m.mouth_gate.parameters(), lr=float(self.cfg.get("gate_adam_lr", 1e-3)))
         else:
             self.opt_gate = torch.optim.SGD(self.m.mouth_gate.parameters(), lr=float(self.cfg["gate_lr"]))
+        # THE LATER EFFECTORS (step R5): each one's working state (its gate's buffer, its lesson's baseline and report, its act last tick,
+        # its actor's trace, the tick's choice) in life.motor, in the anatomy's order after the voice; their gates' optimizer, of the
+        # voice's kind, one for all (each lesson steps its own gate alone). The diary declares none: its life gains nothing.
+        if len(self.anatomy.effectors) > 1:
+            self.motor = [self._motor_state_new() for _ in self.anatomy.effectors[1:]]
+            gp_ = [p_ for e_ in self.anatomy.effectors[1:] for p_ in self.m.get_submodule(e_.gate).parameters()]
+            if str(self.cfg.get("gate_opt", "sgd")) == "adam":
+                self.opt_motor = torch.optim.Adam(gp_, lr=float(self.cfg.get("gate_adam_lr", 1e-3)))
+            else:
+                self.opt_motor = torch.optim.SGD(gp_, lr=float(self.cfg["gate_lr"]))
         # the critic's optimizer: the value heads and the Go/NoGo gates. The bands' input maps are fixed
         # (born): trained by the critic's own bootstrapped error they are the deadly triad, and at any
         # rate they ran away (1e-3: saturated by day 6, run 26; 1e-5: saturated by day 15, run 28) while
@@ -282,7 +313,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         C1, pred1, surp1, conf1, stri = self._hear(u, r, felt, off, settle_form, first_after_pause)
         delta, delta_slow, delta_long, vlong, level, gam = self._learn_values(r, felt, stri)
         its_face = self._own_face(C1, r)
-        acted, nxt, p_act, p_choice, probs, feat, ent, act_on = self._choose(C1, pred1, u, level, stri)
-        int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on)
-        self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act)
+        acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew = self._choose(C1, pred1, u, level, stri)
+        int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew)
+        self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew)
         self._bookkeep(u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs)

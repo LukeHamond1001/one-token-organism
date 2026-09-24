@@ -5,7 +5,8 @@ strength), `read` (recall by content: a softmax over the keys at a fixed tempera
 `fade` (the night's forgetting), `sample_starts` (where dreams begin). `Organs` holds everything learned: the cortex stream
 (`stream`, `forecast`, `readout`), the band ladder and its value heads (`band_update`, `values`), the critics (`vcrit_*`,
 `fast_*`), the striatum and working memory (`striatum_*`, `wm_*`), the gate's inputs (`widen_gate`), the losses of the night
-(`latent_loss`, `forecast_loss`).
+(`latent_loss`, `forecast_loss`). `ActTable` is a later effector's acts (the core refactor's step R5): per-joint unit rows, the per-joint
+readout, an act's row the sum of its joints'.
 
 Everything learned lives in `Organs` (an nn.Module, saved with the body). The hippocampus
 is `Store`, a table of slots whose tensors are saved beside the weights. Nothing here decides
@@ -392,6 +393,55 @@ class Store:
                         self.EPI.setdefault(sl, []).append((t, q))
 
 
+class ActTable(nn.Module):
+    """A LATER EFFECTOR'S ACTS (the core refactor's step R5, docs/SIM_DESIGN.md 8.4): per-joint alphabets of fixed unit rows, born from
+    a generator of their own (the body's seed; never the global random stream) and saved with the body (a buffer: no lesson moves
+    them, as no lesson moves the lexicon). `factors` [K_1, .., K_J]: joint j's K_j settings hold the rows [K_1 + .. + K_j-1, +K_j). An
+    act is one flat id whose mixed-radix digits are its joints' settings (joint 0 the most significant); its row, the efference copy
+    the cortex hears and the table's code, is the sum of its joints' rows. `logits` is the per-joint readout: each joint's settings
+    scored by the readout's law, the sharpness times the proposal's cosine with the setting's row."""
+
+    def __init__(self, factors, d, gen):
+        super().__init__()
+        self.factors = tuple(int(k) for k in factors)
+        self.register_buffer("rows", F.normalize(torch.randn(sum(self.factors), int(d), generator=gen), dim=-1))
+
+    def digits(self, acts):
+        """flat acts [..] (long) -> their joints' settings [.., J]"""
+        out = []; r = acts
+        for k in reversed(self.factors):
+            out.append(r % k); r = torch.div(r, k, rounding_mode="floor")
+        return torch.stack(out[::-1], dim=-1)
+
+    def flat(self, digits):
+        """the joints' settings (ints, joint 0 first) -> the flat act"""
+        a = 0
+        for k, x in zip(self.factors, digits):
+            a = a * k + int(x)
+        return a
+
+    def split(self, v):
+        """a vector over every joint's settings [.., K_1 + .. + K_J] -> one piece per joint (the actor's bias per joint)"""
+        return list(torch.split(v, list(self.factors), dim=-1))
+
+    def forward(self, acts):
+        """flat acts [..] -> their rows [.., d], each the sum of its joints' rows"""
+        dg = self.digits(acts); off = 0; u = None
+        for j, k in enumerate(self.factors):
+            r = self.rows[off + dg[..., j]]
+            u = r if u is None else u + r
+            off += k
+        return u
+
+    def logits(self, pred, sharp):
+        """the per-joint readout of the proposal `pred` [d] (None: no proposal, every setting at 0): a list of [K_j], joint by joint"""
+        out = []; off = 0
+        for k in self.factors:
+            R = self.rows[off:off + k]; off += k
+            out.append(float(sharp) * (pred @ R.t()) if pred is not None else torch.zeros(k, device=R.device))
+        return out
+
+
 class Block(nn.Module):
     def __init__(self, d, heads):
         super().__init__()
@@ -409,7 +459,7 @@ class Block(nn.Module):
 class Organs(nn.Module):
     """all the learned organs, one module, saved with the body"""
 
-    def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None):
+    def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None, effectors=None, born_seed=0):
         super().__init__()
         self.vocab, self.d, self.window = int(vocab), int(d), int(window)
         self.clocks = tuple(int(c) for c in clocks)
@@ -559,6 +609,25 @@ class Organs(nn.Module):
                 h = nn.Linear(d, d)
                 nn.init.normal_(h.weight, std=4e-4); nn.init.zeros_(h.bias)
                 self.chan_pred[c.name] = h
+        # THE LATER EFFECTORS' ORGANS (the core refactor's step R5): `effectors` is the anatomy's effector list; effector 0 is the voice,
+        # whose organs are above (the lexicon E it shares with the ear, mouth_gate, actor, chooser). Each later effector gets its acts'
+        # table (acts[name]: fixed unit rows per joint, from a generator seeded by the body's seed, `born_seed`), its gate (gates[name]:
+        # born as the voice's, weights at zero and the bias at the birth rate, over the shared inputs and its own n_in) and a place for its
+        # striatal actor head (actors[name], sized with the striatum, as the voice's actor is). Built after every other organ, only when
+        # declared, and with the global random stream left where it was (fork_rng): the diary declares none, so its organs are built as
+        # they always were, and a body with later effectors has the diary's organs bit for bit beside them.
+        motor = list(effectors or [])[1:]
+        if motor:
+            g_acts = torch.Generator().manual_seed(int(born_seed) + 15485863)
+            with torch.random.fork_rng(devices=[]):
+                self.acts = nn.ModuleDict(); self.gates = nn.ModuleDict(); self.actors = nn.ModuleDict()
+                for e in motor:
+                    self.acts[e.name] = ActTable(e.factors, d, g_acts)
+                    gt = nn.Linear(d + 5 + int(e.n_in), 1)
+                    nn.init.zeros_(gt.weight); nn.init.constant_(gt.bias, math.log(birth_act / (1.0 - birth_act)))
+                    self.gates[e.name] = gt
+                    self.actors[e.name] = nn.Linear(1, 1)          # a placeholder until the striatum is sized (as the voice's actor)
+            self.register_buffer("stri_mline", torch.full((len(motor), 0), -1, dtype=torch.long))   # their striatal delay lines (sized with the striatum)
 
     # ---- the cortex over a window ----
 
@@ -576,8 +645,9 @@ class Organs(nn.Module):
         observations ([T] symbols of a symbol channel, [T, size] of a vector channel), each encoded by the organ the channel names (the
         diary's ear by the lexicon E, its face, [T, 2], by the learned face_in); bundles [T, nb, d] the ladder's states handed over; xos
         [T] its own symbol in the same tick (or its quiet). The terms are added one at a time in this order, the sum's float order: the
-        first `anatomy.inner_at` channels, the ladder's bundle, its own sound, then the later channels (the diary's: ear + face + bundle
-        + own, the order they were always summed in). The store's recall is not an input (see forecast).
+        first `anatomy.inner_at` channels, the ladder's bundle, its own sound, each later effector's own act (step R5: `obs` holds its
+        acts under the effector's name, each entering as its act's row at own_gain, its rest as nothing), then the later channels (the
+        diary's: ear + face + bundle + own, the order they were always summed in). The store's recall is not an input (see forecast).
         All the sounds of a tick superpose in one time step, its own attenuated by corollary discharge
         (own_gain; measured in cortex at a third to a half). With two positions per tick (the world's,
         then its own, mostly a rest) the stream read "d . o . g ." awake and "d o g" in the dreams
@@ -596,6 +666,12 @@ class Organs(nn.Module):
             # instrument's fault (a store holding only the cue), not the cortex's.
             own = (xos != self.sil_id).to(u.dtype).unsqueeze(-1)
             u = u + float(self.own_gain) * own * self.E(xos)
+        for e in anatomy.effectors[1:]:
+            # A LATER EFFECTOR'S OWN ACT (step R5), its efference copy at the same corollary discharge, after the voice's: `obs` holds its
+            # acts under its name ([T] flat acts, its rest where it did not act); its rest sounds nothing, as the voice's does
+            acts = obs[e.name]
+            own = (acts != int(e.rest_id)).to(u.dtype).unsqueeze(-1)
+            u = u + float(self.own_gain) * own * self.get_submodule(e.organ)(acts)
         for c in anatomy.channels[k:]:
             u = u + c.encode(self, obs[c.name])
         return self.in_ln(u)
@@ -738,9 +814,14 @@ class Organs(nn.Module):
             out.register_buffer(n, b.cpu())
         return out
 
-    def striatum_init(self, k, m, seed=0, wm=0):
+    def striatum_init(self, k, m, seed=0, wm=0, effectors=None):
         """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
-        thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot)"""
+        thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot).
+        THE LATER EFFECTORS' BLOCKS (the core refactor's step R5): each later effector of `effectors` (the anatomy's; effector 0 is the
+        voice, whose own symbols are the language block's) has a delay line of its own k acts (stri_mline) and a block of born rows,
+        k x its acts, appended after the language block (rows from k (2V + 3) on, drawn from the same generator after the thresholds), so
+        the language block, the thresholds and the voice's heads are born exactly as before; and its actor head, sized as the voice's
+        (born at zero, the global random stream left where it was). The diary declares none."""
         n_in = int(k) * (2 * self.vocab + 3)                                   # heard | own | warm face, cold face, a tick of quiet
         g = torch.Generator().manual_seed(int(seed) + 7919); dev = self.E.weight.device
         self.stri_W = (torch.randn(n_in, int(m), generator=g) / math.sqrt(float(k))).to(dev)
@@ -756,6 +837,21 @@ class Organs(nn.Module):
         self.actor = nn.Linear(width, self.vocab).to(dev)
         with torch.no_grad():
             self.vfast.weight.zero_(); self.vfast.bias.zero_(); self.actor.weight.zero_(); self.actor.bias.zero_()
+        motor = list(effectors or [])[1:]
+        if motor:
+            base = int(k) * (2 * self.vocab + 3); blocks = []; rows = []
+            for e in motor:
+                rows.append(torch.randn(int(k) * e.n_acts, int(m), generator=g) / math.sqrt(float(k)))
+                blocks.append((base, e.n_acts)); base += int(k) * e.n_acts
+            self.stri_W = torch.cat([self.stri_W, torch.cat(rows).to(dev)])
+            self.stri_mline = torch.full((len(motor), int(k)), -1, dtype=torch.long, device=dev)
+            self.stri_blocks = blocks                                          # (its first row, its acts) per later effector
+            with torch.random.fork_rng(devices=[]):
+                for e in motor:
+                    a_ = nn.Linear(width, sum(int(f_) for f_ in e.factors)).to(dev)
+                    with torch.no_grad():
+                        a_.weight.zero_(); a_.bias.zero_()
+                    self.actors[e.name] = a_
 
     def striatum_push(self, kind, idx):
         """an event enters the delay line: kind 0 a heard symbol, 1 an own symbol, 2 a felt face (idx 0 warm, 1 cold), 3 a tick
@@ -765,14 +861,33 @@ class Organs(nn.Module):
             self.stri_line = torch.roll(self.stri_line, 1)
             self.stri_line[0] = int(kind) * self.vocab + int(idx) if int(kind) < 2 else 2 * self.vocab + (int(idx) if int(kind) == 2 else 2)
 
+    def striatum_push_act(self, j, act):
+        """a later effector's act enters its own delay line (step R5; j its place among the later effectors, act the flat act)"""
+        with torch.no_grad():
+            self.stri_mline[j] = torch.roll(self.stri_mline[j], 1)
+            self.stri_mline[j, 0] = int(act)
+
+    def striatum_acts(self, z):
+        """the later effectors' events added to the expansion's sum z in place (step R5), after the language line's: each line's acts'
+        born rows from its block, one effector after another; nothing for the diary, which declares none"""
+        for j, (base, n) in enumerate(getattr(self, "stri_blocks", None) or ()):
+            line = self.stri_mline[j]
+            for p_ in range(line.numel()):
+                a = int(line[p_])
+                if a >= 0:
+                    z += self.stri_W[base + p_ * n + a]
+        return z
+
     def striatum_read(self):
-        """the expansion now: relu(the born rows of the line's events + thresholds), [m]"""
+        """the expansion now: relu(the born rows of the line's events + thresholds), [m]; the later effectors' lines added after the
+        language line's (step R5)"""
         with torch.no_grad():
             width = 2 * self.vocab + 3; z = self.stri_b.clone()
             for p_ in range(self.stri_line.numel()):
                 e = int(self.stri_line[p_])
                 if e >= 0:
                     z += self.stri_W[p_ * width + e]
+            self.striatum_acts(z)
             return torch.relu(z)
 
     def stri_in(self):
@@ -797,6 +912,8 @@ class Organs(nn.Module):
     def striatum_reset(self):
         with torch.no_grad():
             self.stri_line.fill_(-1)
+            if "stri_mline" in self._buffers:
+                self.stri_mline.fill_(-1)                                     # the later effectors' lines too (step R5)
 
     def fast_value(self, z):
         """the fast critic's value of a striatal input"""

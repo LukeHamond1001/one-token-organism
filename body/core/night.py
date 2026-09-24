@@ -161,8 +161,12 @@ class NightMixin:
     def _dream_obs(self, xs):
         """A DREAM'S OBSERVATIONS BY CHANNEL (the core refactor's step R4): the dream's symbols `xs` ([T], or [B, T] for a batch) on the
         words (channel 0), every other channel quiet over the same positions (its rest; a vector channel's zeros, the face a dream has
-        always had). The night over frames, each channel's own stored codes, is step R8."""
-        return {c_.name: (xs if i_ == 0 else c_.quiet(tuple(xs.shape), self.dev)) for i_, c_ in enumerate(self.anatomy.channels)}
+        always had). Each later effector rests over them (step R5: its acts its rest; its own acts replayed are step R8). The night over
+        frames, each channel's own stored codes, is step R8."""
+        obs = {c_.name: (xs if i_ == 0 else c_.quiet(tuple(xs.shape), self.dev)) for i_, c_ in enumerate(self.anatomy.channels)}
+        for e_ in self.anatomy.effectors[1:]:
+            obs[e_.name] = torch.full(tuple(xs.shape), int(e_.rest_id), dtype=torch.long, device=self.dev)
+        return obs
 
     def _dream_inputs(self, ids, mem_on):
         """a dream as a window: fresh bands (a night's working state), the store leading if mem_on. Returns obs (by channel: the words
@@ -390,6 +394,8 @@ class NightMixin:
             self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
+            for st_ in getattr(self, "motor", ()):                 # the later effectors' working state begins afresh, as the voice's (step R5)
+                st_["buf"].clear(); st_["g_base"] = None; st_["e_actor"] = None; st_["acted_last"] = False; st_["now"] = None
             if getattr(self.m, "stri_wm", 0):
                 self.m.wm_clear()
             if self.m.stri_W.numel() > 0:
@@ -471,6 +477,7 @@ class NightMixin:
             return 0, 0.0
         L = int(self.cfg["rem_steps"]); gf = float(m.gammas()[int(self.cfg["dopamine_band"])])
         line_saved = m.stri_line.clone()
+        mline_saved = m.stri_mline.clone() if "stri_mline" in m._buffers else None   # the later effectors' lines (step R5), restored after
         wm_saved = (m.wm_slot.clone(), m.wm_on.clone(), m.wm_age.clone()) if getattr(m, "stri_wm", 0) else None
         m.striatum_reset()
         if wm_saved is not None:
@@ -500,6 +507,8 @@ class NightMixin:
                     n_up += 1; rsum += abs(f_prev)
                 z_prev = z_now; f_prev = self._foresee(z_now.detach().cpu().double() if str(self.cfg.get("face_input", "cortex")) == "striatum" else C.detach().cpu().double())   # the felt reward foreseen for the next imagined tick
         m.stri_line.copy_(line_saved)
+        if mline_saved is not None:
+            m.stri_mline.copy_(mline_saved)
         if wm_saved is not None:
             m.wm_slot.copy_(wm_saved[0]); m.wm_on.copy_(wm_saved[1]); m.wm_age.copy_(wm_saved[2])
         return n_up, rsum

@@ -28,6 +28,9 @@ class InstrumentsMixin:
                      "store": self.store.n(), "store_conf": round(conf1, 3), "surprise": round(surp1, 3),
                      "own": [self.anatomy.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
                      "gate_lesson": self._gate_last, "wake": self._wake_last}
+        if len(self.anatomy.effectors) > 1:                        # the later effectors' acts this tick and their gates (step R5)
+            self.last["acts"] = {e_.name: {"act": st_["now"]["act"], "acted": st_["now"]["acted"], "gate": round(st_["now"]["p_act"], 3)}
+                                 for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
         if self.sleep_pressure >= int(self.cfg["wake_ticks"]) and len(self.win) >= 8:
             self._sleep_now()
 
@@ -102,4 +105,6 @@ class InstrumentsMixin:
                 "ent_mean": (round(sum(self._ring_ent) / len(self._ring_ent), 3) if self._ring_ent else None)}
         if int(self.cfg.get("pace_sense", 0)):
             d["pace"] = self._pace_report()                         # the sensed pace's instruments, the day so far
+        if len(self.anatomy.effectors) > 1:                        # the later effectors (step R5): the act last tick, the gate's last lesson
+            d["effectors"] = {e_.name: {"acted_last": st_["acted_last"], "gate_lesson": st_["last"]} for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
         return d

@@ -1,4 +1,4 @@
-"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 to R4). Run: python3 -m body.tests.test_anatomy
+"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 to R5). Run: python3 -m body.tests.test_anatomy
 (the organ tests run these too). `LanguageAnatomy(tok, cfg)` must rebuild exactly the symbols a life derived from its tokenizer before
 R2, under every constant that moves them and on a tokenizer laid out otherwise, and building it must leave the body untouched (R1). The
 life is built with it and reads its symbols and its text there, never the tokenizer; a life given the anatomy in the tokenizer's place
@@ -7,7 +7,12 @@ anatomy's reward sources, felt in their declared order and added one at a time i
 R3, on every tick, under the switches the pinned digests do not reach (cost_in_reward, world_mask off, own_store) (R3). The cortex's
 input is the anatomy's channel codes summed in its declared order, bit for bit the sum before R4 for the diary's (gradients too); the
 window holds each channel under its declared field and every reader goes through it; a later channel's forecast head is built last
-and taught; all eleven places the input is made pass the anatomy's channels (R4)."""
+and taught; all eleven places the input is made pass the anatomy's channels (R4). The voice is effector 0 with its organs' names, its
+ear and its cost, and the diary gains nothing from the effectors' wiring; its gate's lesson is bit for bit the lesson before R5; the
+defect fixes 4, 5 and 8 are switches off by their absence, each the lesson with only its fix written in, and live; a body with later
+effectors has the diary's organs and striatum bit for bit beside its effectors' (built last, their blocks appended), draws the voice
+first each tick, reads each effector's joints, hears each act after its own sound, teaches each gate and actor, rests them at night
+and keeps them through a save; all eleven places the input is made pass the effectors' acts (R5)."""
 import collections
 import math
 import os
@@ -25,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, ROOT)   # this tree's body, not a fixed one
 from body.life import Life, PHYSIOLOGY  # noqa: E402
 from body.core.anatomy import (Anatomy, Channel, EarChannel, Effector, EffortReward, FaceChannel, FaceReward,  # noqa: E402
-                                LanguageAnatomy, RewardSource, WorldWordsReward, anatomy_for)
+                                LanguageAnatomy, RewardSource, VoiceEffector, WorldWordsReward, anatomy_for)
 from body.model import Organs  # noqa: E402
 from body.core.world import Frame  # noqa: E402
 
@@ -62,6 +67,7 @@ def _same(a, life, label):
     assert (type(ear), ear.organ, ear.field, ear.forecast, type(face), face.organ, face.field, face.forecast, a.inner_at, a.words) == \
         (EarChannel, "E", "x", True, FaceChannel, "face_in", "face", False, 2, ear), label
     assert (voice.name, voice.factors, voice.rest_id, voice.end_id, voice.reserved) == ("voice", [life.m.vocab], life.sil, life.space_id, life.bans), label
+    assert (type(voice), voice.organ, voice.gate, voice.actor, voice.field, a.effectors) == (VoiceEffector, "E", "mouth_gate", "actor", "xo", [voice]), label
     assert [s.name for s in a.rewards] == ["face", "world_r", "cost"], label
     assert [type(s) for s in a.rewards] == [FaceReward, WorldWordsReward, EffortReward], label
     assert [s.clip for s in a.rewards] == [2, None, None], label
@@ -115,7 +121,7 @@ def test_anatomy_check():
     def ok():
         return Anatomy([Channel("ear", "symbol", 5, organ="E", forecast=True, rest_id=0, end_id=1, reserved=[4], partner=True),
                         Channel("face", "vector", 2, organ="face_in")],
-                       [Effector("voice", [5], rest_id=0, end_id=2, reserved=[4])], [RewardSource("face"), RewardSource("cost", ("symbol_cost",))])
+                       [VoiceEffector("voice", [5], rest_id=0, end_id=2, reserved=[4])], [RewardSource("face"), RewardSource("cost", ("symbol_cost",))])
     ok().check()
     bad = []
     a = ok(); a.channels[1].partner = True; bad.append(("two partners", a))
@@ -144,8 +150,7 @@ def test_anatomy_check():
         except ValueError:
             continue
         raise AssertionError(f"the check let pass {label}")
-    for call in (lambda: Channel("x", "symbol", 3).observe(None, 0, 0), lambda: Effector("v", [3]).gate_inputs(None, None),
-                 lambda: Effector("v", [3]).cost(0, None)):
+    for call in (lambda: Channel("x", "symbol", 3).observe(None, 0, 0),):         # the effectors' gate_inputs and cost are wired in R5 (anatomy 15)
         try:
             call()
         except NotImplementedError:
@@ -218,7 +223,7 @@ def test_an_anatomy_in_the_tokenizers_place():
     """anatomy 5 (step R2): `Life.birth` and `Life.load` given a LanguageAnatomy in the tokenizer's place give the same life as the
     tokenizer does (the same weights, symbols, attributes, random streams, and the same page after a minute of the script), and the
     same random streams after the birth; an anatomy declared under other constants is refused, and one not of language is refused
-    until step R5"""
+    until step R9 (the world loop; R5 wires the effectors, and a language anatomy with later effectors is taken: anatomy 18)"""
     import tempfile
     for label, cfg in (("the physiology", {}), ("the served constants", _served_cfg() or {})):
         torch.manual_seed(123); A = _born(TOK, cfg); gA = torch.get_rng_state().clone()
@@ -245,13 +250,13 @@ def test_an_anatomy_in_the_tokenizers_place():
             refused.append(what); continue
         raise AssertionError(f"the life took {what}")
     other = Anatomy([Channel("words", "symbol", 5, organ="E", forecast=True, rest_id=0, partner=True), Channel("eye", "vector", 4, organ="face_in")],
-                    [Effector("arm", [5, 5], rest_id=12)], [RewardSource("face")]).check()
+                    [VoiceEffector("voice", [5], rest_id=0), Effector("arm", [5, 5], rest_id=12)], [RewardSource("face")]).check()
     for call in (lambda: anatomy_for(other, {}), lambda: _born(other, {}), lambda: Life(A.m, other)):
         try:
             call()
         except NotImplementedError:
             continue
-        raise AssertionError("a life was built on an anatomy not of language before step R5")
+        raise AssertionError("a life was built on an anatomy not of language before step R9 (the world loop)")
     print("anatomy 5: born and loaded from a LanguageAnatomy in the tokenizer's place, the same life under 2 constant sets;",
           f"refused: {len(refused)} anatomies declared under other constants, and one not of language")
 
@@ -573,7 +578,7 @@ def test_the_input_is_the_channels_in_order():
 
     def toy(order, inner_at):
         chans = [Channel("w", "symbol", 4, organ="E", forecast=True, rest_id=0)] + [Channel(n_, "vector", 1, organ=n_) for n_ in order]
-        return Anatomy(chans, [Effector("v", [4], rest_id=0)], [RewardSource("r")], inner_at=inner_at).check()
+        return Anatomy(chans, [VoiceEffector("v", [4], rest_id=0)], [RewardSource("r")], inner_at=inner_at).check()
     x = torch.zeros(3, dtype=torch.long); o = {k_: torch.zeros(3, 1) for k_ in ("big", "eps1", "eps2")}; o["w"] = x
     bund = torch.zeros(3, len(om.clocks), 8)
     one_up = float(torch.tensor(1.0) + torch.tensor(2.0 ** -23))
@@ -847,11 +852,556 @@ def test_imagination_as_before():
           f"imagined with the face moving, {moved} of them would differ)")
 
 
+# ---------------- step R5: the effectors ----------------
+
+class _Arm(LanguageAnatomy):
+    """the diary's anatomy and two later effectors: an arm of two joints of five settings (its rest the middle of each, act 12), and a
+    grip of three settings (its rest 1) whose gate reads a second input of its own (a touch that moves with the tick)"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.effectors += [Effector("arm", [5, 5], rest_id=12, effort=0.05), _Grip("grip", [3], rest_id=1, n_in=2, effort=0.03)]
+
+
+class _Grip(Effector):
+    def gate_inputs(self, frame, life, state):
+        return [1.0 if state["acted_last"] else 0.0, math.sin(frame.tick / 5.0)]
+
+
+def test_the_voice_is_effector_0():
+    """anatomy 15 (step R5): the diary's effector 0 is the voice, naming the organs it always had (the lexicon E it shares with the
+    ear, mouth_gate, actor, its act the window's xo); its gate's own inputs are today's ear (read through the effector) and its cost
+    symbol_cost. The check refuses an anatomy whose effector 0 is not the voice and a later effector that names other organs than its
+    own, shares a channel's name or a window field, has no rest, reserves acts of a factored alphabet or declares negative inputs. The
+    diary's organs, striatum, life, window and dreams gain nothing from the effectors' wiring"""
+    for label, cfg in (("the physiology", dict(gate_ear=1, gate_ear_decay=0.9, gate_ear_gain=1.5)), ("the served constants", _served_cfg() or {})):
+        L = _born(TOK, cfg); v = L.anatomy.effectors[0]
+        assert type(v) is VoiceEffector and (v.organ, v.gate, v.actor, v.field) == ("E", "mouth_gate", "actor", "xo")
+        assert v.cost(0, None, L) == float(L.cfg["symbol_cost"])
+        _live(L, ticks=40)
+        u = TOK.token_to_id("w"); fr = Frame(L.ticks, {"ear": u}, L.face_now)
+        keep = (getattr(L, "_ear_trace", None), getattr(L, "_ear_now", None), getattr(L, "_ear_release_at", None))
+        got = v.gate_inputs(fr, L)
+        L._ear_trace, L._ear_now, L._ear_release_at = keep
+        want = L._voice_ear(u)
+        assert got is not None and torch.equal(got, want) and got.shape == (2,), (label, got, want)
+    L0 = _born(TOK, {}); assert L0.anatomy.effectors[0].gate_inputs(Frame(0, {"ear": 5}, 0.0), L0) is None   # no ear, no inputs
+    # the check
+    def ok():
+        return _Arm(TOK, {})
+    ok().check()
+    bad = []
+    a = ok(); a.effectors = a.effectors[1:] + a.effectors[:1]; bad.append(("the voice not first", a))
+    a = ok(); a.effectors[0] = Effector("voice", [a.vocab], rest_id=a.sil); bad.append(("the voice a plain effector", a))
+    a = ok(); a.effectors[0].factors = [a.vocab - 1]; bad.append(("the voice not over the words", a))
+    a = ok(); a.effectors[1].gate = "mouth_gate"; bad.append(("a later effector naming the voice's gate", a))
+    a = ok(); a.effectors[1].organ = "E"; bad.append(("a later effector naming the lexicon", a))
+    a = ok(); a.effectors[1].name = "face"; a.effectors[1].organ, a.effectors[1].gate, a.effectors[1].actor = "acts.face", "gates.face", "actors.face"; bad.append(("an effector with a channel's name", a))
+    a = ok(); a.effectors[1].field = "x"; bad.append(("an effector's field a channel's", a))
+    a = ok(); a.effectors[1].field = "xo"; bad.append(("an effector's field the core's", a))
+    a = ok(); a.effectors[2].field = "arm"; bad.append(("two effectors' fields alike", a))
+    a = ok(); a.effectors[1].rest_id = None; bad.append(("a later effector without a rest", a))
+    a = ok(); a.effectors[1].reserved = [3]; bad.append(("a factored alphabet's reserved act", a))
+    a = ok(); a.effectors[2].n_in = -1; bad.append(("negative inputs", a))
+    a = ok(); a.effectors[1].rest_id = 25; bad.append(("a rest outside the alphabet", a))
+    for label, a in bad:
+        try:
+            a.check()
+        except ValueError:
+            continue
+        raise AssertionError(f"the check let pass {label}")
+    # the diary's organs, striatum and life gain nothing
+    V = LanguageAnatomy(TOK, {}).vocab; eff = LanguageAnatomy(TOK, {}).effectors
+    torch.manual_seed(9); o1 = Organs(V, d=64, layers=2, heads=2, window=32); r1 = torch.get_rng_state()
+    torch.manual_seed(9); o2 = Organs(V, d=64, layers=2, heads=2, window=32, effectors=eff, born_seed=3); r2 = torch.get_rng_state()
+    s1, s2 = o1.state_dict(), o2.state_dict()
+    assert torch.equal(r1, r2) and list(s1) == list(s2) and all(torch.equal(s1[k], s2[k]) for k in s1), "the diary's organs are built otherwise"
+    assert not any(hasattr(o2, n_) for n_ in ("acts", "gates", "actors", "stri_mline", "stri_blocks"))
+    torch.manual_seed(4); o1.striatum_init(8, 64, seed=2, wm=1); r1 = torch.get_rng_state()
+    torch.manual_seed(4); o2.striatum_init(8, 64, seed=2, wm=1, effectors=eff); r2 = torch.get_rng_state()
+    s1, s2 = o1.state_dict(), o2.state_dict()
+    assert torch.equal(r1, r2) and list(s1) == list(s2) and all(torch.equal(s1[k], s2[k]) for k in s1), "the diary's striatum is born otherwise"
+    assert not hasattr(o2, "stri_blocks") and vars(o1).keys() == vars(o2).keys()
+    L = _born(TOK, dict(_served_cfg() or {}, wake_ticks=100000)); _live(L, ticks=60)
+    assert not any(hasattr(L, n_) for n_ in ("motor", "opt_motor")), "the diary's life gained the later effectors' state"
+    assert all(set(w) <= {"x", "face", "xo", "bundle", "read", "r", "end"} for w in L.win) and list(L._dream_obs(torch.tensor([3, 4]))) == ["ear", "face"]
+    assert all(len(r_) == 7 for r_ in L.gate_buf) and "acts" not in L.last and "effectors" not in L.insides()
+    print(f"anatomy 15: the voice is effector 0 with its organs' names, its ear and its cost; the check refuses {len(bad)} faulty effectors;",
+          "the diary's organs, striatum, life, window, dreams, gate rows and record gain nothing")
+
+
+def _gate_lesson_before_r5(self):
+    """`_gate_lesson` as it was before step R5 (body/core/mouth.py at commit e948e7b), verbatim"""
+    buf = list(self.gate_buf)
+    K = int(self.cfg["elig_ticks"]); dec = float(self.cfg["elig_decay"])
+    n = len(buf) - K
+    if n < 4:
+        return
+    cost = float(self.cfg["symbol_cost"]); f0 = float(self.cfg["gate_fatigue"]); w_int = float(self.cfg["gate_int"])
+    tonic = float(self.cfg["gate_tonic"]); vig = float(self.cfg["gate_vigor"])
+    feats = torch.stack([b[0] for b in buf[:n]]).to(self.dev)
+    acts = torch.tensor([1.0 if b[1] else 0.0 for b in buf[:n]])
+    G = torch.zeros(n)
+    for t in range(n):
+        g = sum((dec ** k) * float(buf[t + k][2]) for k in range(K))     # the dopamine that followed
+        if buf[t][1]:
+            # acting pays a tonic drive (babble is its own reward, not contingent on confidence) plus
+            # the belief it had in its choice (habituating), minus an effort cost convex in fatigue
+            # (linear, 0.59 at fatigue's ceiling never beat a confident recitation's drive of 0.7:
+            # run 19, gate 0.97 all day, fatigue pinned at 40; convex, the mouth speaks in bouts).
+            # With the effort in the reward (cost_in_reward) the cost is the critics' to predict, not the act's
+            drive_t = tonic + (float(self.cfg.get("gate_tonic_rate", 0.0)) * float(buf[t][5]) if len(buf[t]) > 5 else 0.0)   # THE DRIVE FOLLOWS THE REWARD RATE
+            g += drive_t + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else cost * (1.0 + (float(buf[t][4]) / f0) ** 2))
+        G[t] = g
+    # the credit is taken against a running baseline (dopamine is an error, not a value)
+    base = getattr(self, "_g_base", None)
+    if base is None:
+        base = float(G.mean())
+    A = G - base
+    self._g_base = float(self.cfg["gate_baseline"]) * base + (1.0 - float(self.cfg["gate_baseline"])) * float(G.mean())
+    if float(A.abs().max()) < 1e-4:
+        return
+    self.m.mouth_gate.train()
+    z = self.m.mouth_gate(feats).squeeze(-1)
+    fl = float(self.cfg["gate_floor"])
+    # the probability the gate actually acted with (stress divisor and all), carried in the buffer (review 2026-09-06: recomputed
+    # here without the divisor, (act - p) was biased with stress); older samples without it fall back to the recomputation
+    p = torch.tensor([float(b[6]) if len(b) > 6 else float("nan") for b in buf[:n]], device=self.dev)
+    p = torch.where(torch.isnan(p), (fl + (1.0 - fl) * torch.sigmoid(z)).detach(), p)
+    # THE THREE-FACTOR RULE: credit x (action - p) has expectation cov(credit, acting), what a policy
+    # must learn (Go for acts that paid, NoGo for acts that cost); plus vigor: the average credit
+    # itself, tonic dopamine setting the rate of acting whatever it did
+    elig = (acts.to(self.dev) - p) + vig
+    loss = -(A.to(self.dev) * elig * z).mean()
+    self.opt_gate.zero_grad(set_to_none=True); loss.backward()
+    torch.nn.utils.clip_grad_norm_(self.m.mouth_gate.parameters(), 1.0)
+    self.opt_gate.step(); self.m.mouth_gate.eval()
+    self._gate_last = {"n": n, "credit_mean": round(float(G.mean()), 4), "baseline": round(float(base), 4),
+                       "acted": round(float(sum(1 for b in buf[:n] if b[1]) / n), 3), "tick": self.ticks}
+    for _ in range(min(len(self.gate_buf), n)):                 # the samples the lesson consumed (review: popping gate_every left a third to be learned twice)
+        self.gate_buf.popleft()
+
+
+def _lesson_fixed(self, buf_, gate_, opt_, base, own, s, cost_of):
+    """the lesson before R5 with only the two fixes written in, on any gate: the eligibility's act the recorded draw b[7] (own, defect 4)
+    and the credit from buf[t + s + k] (s 1, defect 8), the effort cost_of(row); returns (the new baseline, the report)"""
+    buf = list(buf_)
+    K = int(self.cfg["elig_ticks"]); dec = float(self.cfg["elig_decay"])
+    n = len(buf) - K - s
+    if n < 4:
+        return base, None
+    f0 = float(self.cfg["gate_fatigue"]); w_int = float(self.cfg["gate_int"])
+    tonic = float(self.cfg["gate_tonic"]); vig = float(self.cfg["gate_vigor"])
+    feats = torch.stack([b[0] for b in buf[:n]]).to(self.dev)
+    acts = torch.tensor([1.0 if (b[7] if own else b[1]) else 0.0 for b in buf[:n]])
+    G = torch.zeros(n)
+    for t in range(n):
+        g = sum((dec ** k) * float(buf[t + s + k][2]) for k in range(K))
+        if buf[t][1]:
+            drive_t = tonic + (float(self.cfg.get("gate_tonic_rate", 0.0)) * float(buf[t][5]) if len(buf[t]) > 5 else 0.0)
+            g += drive_t + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else cost_of(buf[t]) * (1.0 + (float(buf[t][4]) / f0) ** 2))
+        G[t] = g
+    if base is None:
+        base = float(G.mean())
+    A = G - base
+    new_base = float(self.cfg["gate_baseline"]) * base + (1.0 - float(self.cfg["gate_baseline"])) * float(G.mean())
+    if float(A.abs().max()) < 1e-4:
+        return new_base, None
+    gate_.train()
+    z = gate_(feats).squeeze(-1)
+    fl = float(self.cfg["gate_floor"])
+    p = torch.tensor([float(b[6]) if len(b) > 6 else float("nan") for b in buf[:n]], device=self.dev)
+    p = torch.where(torch.isnan(p), (fl + (1.0 - fl) * torch.sigmoid(z)).detach(), p)
+    elig = (acts.to(self.dev) - p) + vig
+    loss = -(A.to(self.dev) * elig * z).mean()
+    opt_.zero_grad(set_to_none=True); loss.backward()
+    torch.nn.utils.clip_grad_norm_(gate_.parameters(), 1.0)
+    opt_.step(); gate_.eval()
+    last = {"n": n, "credit_mean": round(float(G.mean()), 4), "baseline": round(float(base), 4),
+            "acted": round(float(sum(1 for b in buf[:n] if b[1]) / n), 3), "tick": self.ticks}
+    for _ in range(min(len(buf_), n)):
+        buf_.popleft()
+    return new_base, last
+
+
+def _rows(g, n, width, kind):
+    """n random rows of a gate's buffer: kind 7 today's, 8 with the gate's draw, 9 a later effector's (draw and cost), "old" a mix of the
+    older rows (no p, no reward trace); acted implies drawn; a draw that ended in a rest is acted 0; some p at 1 (a program's letters)"""
+    out = []
+    for t in range(n):
+        drew = bool(torch.rand(1, generator=g) < 0.6); acted = drew and bool(torch.rand(1, generator=g) < 0.8)
+        p = float(torch.rand(1, generator=g)) if t % 7 else 1.0
+        row = [torch.randn(width, generator=g), acted, float(torch.randn(1, generator=g)), float(torch.rand(1, generator=g)) * 0.3,
+               float(torch.rand(1, generator=g)) * 20.0, float(torch.randn(1, generator=g)) * 0.1, p]
+        if kind == "old":
+            row = row[:5 + (t % 3)]
+        elif kind >= 8:
+            row.append(drew)
+            if kind == 9:
+                row.append(float(torch.rand(1, generator=g)) * 0.1)
+        out.append(row)
+    return out
+
+
+def _gate_state(L, gate_):
+    return ({k: v.clone() for k, v in gate_.state_dict().items()}, L.opt_gate.state_dict() if gate_ is L.m.mouth_gate else L.opt_motor.state_dict())
+
+
+def _same_opt(a, b):
+    sa, sb = a["state"], b["state"]
+    return sorted(sa) == sorted(sb) and all(sorted(sa[k]) == sorted(sb[k]) and all(
+        (torch.equal(sa[k][f], sb[k][f]) if torch.is_tensor(sa[k][f]) else sa[k][f] == sb[k][f]) for f in sa[k]) for k in sa)
+
+
+def test_the_gate_lesson_as_before():
+    """anatomy 16 (step R5): the gate's lesson, now one lesson for every effector, is for the voice with the switches off bit for bit the
+    lesson before R5 (verbatim in this test): the gate's weights, its optimizer's state, the baseline, the report and the rows left,
+    over two lessons in a row, under SGD and Adam, the effort in the reward or not, the drive on the reward rate, no vigor, and rows of
+    today's form and older forms; a lived day's rows are today's seven numbers"""
+    n_cases = 0
+    for label, extra in (("sgd", {}), ("adam", dict(gate_opt="adam")), ("the effort in the reward", dict(cost_in_reward=1)),
+                         ("the drive on the rate, no vigor", dict(gate_tonic_rate=0.7, gate_vigor=0.0, gate_int=0.4)),
+                         ("the served constants", dict(_served_cfg() or {}))):
+        cfg = dict(extra, wake_ticks=100000, gate_every=10 ** 9)
+        lives = []
+        for _ in range(2):
+            torch.manual_seed(5); L = _born(TOK, cfg); _live(L, ticks=40); lives.append(L)
+        A, B = lives
+        assert all(len(r_) == 7 for r_ in A.gate_buf) and len(A.gate_buf) == 40
+        width = A.m.mouth_gate.in_features
+        for kind in (7, "old"):
+            for L in (A, B):
+                L.gate_buf.clear(); L.gate_buf.extend(_rows(torch.Generator().manual_seed(17), 60, width, kind))
+            for _ in range(2):
+                _gate_lesson_before_r5(A); B._gate_lesson()
+                (wa, oa), (wb, ob) = _gate_state(A, A.m.mouth_gate), _gate_state(B, B.m.mouth_gate)
+                assert all(torch.equal(wa[k], wb[k]) for k in wa) and _same_opt(oa, ob), f"{label}, rows {kind}: the gate moved otherwise"
+                assert A._g_base == B._g_base and A._gate_last == B._gate_last, (label, kind, A._gate_last, B._gate_last)
+                assert len(A.gate_buf) == len(B.gate_buf) and all(ra[1:] == rb[1:] and torch.equal(ra[0], rb[0]) for ra, rb in zip(A.gate_buf, B.gate_buf))
+                A.gate_buf.extend(_rows(torch.Generator().manual_seed(18), 30, width, kind)); B.gate_buf.extend(_rows(torch.Generator().manual_seed(18), 30, width, kind))
+                n_cases += 1
+    print(f"anatomy 16: the voice's gate lesson as before R5, bit for bit ({n_cases} lessons: SGD, Adam, the effort in the reward, the drive on",
+          "the rate, the served constants; today's rows and older ones)")
+
+
+def test_the_switches():
+    """anatomy 17 (step R5; ops/review_2026-09-22.md section 1): the three defect fixes are switches, off by their absence (a life's cfg
+    holds none unless set). gate_own_draw (defect 4): each row carries the gate's own draw, a go that ended in a rest is recorded as the
+    go, a letter run without the gate as a go at p 1, and the lesson's eligibility takes the draw; elig_from 1 (defect 8): the credit
+    sums the dopamine from the tick after the act; the lesson under each is the lesson before R5 with only that fix written in, for the
+    voice and for a later effector (its cost its own row's); actor_trace_tick (defect 5): the actor's trace (and the chooser's)
+    decays by dopamine's discount on every tick, where without it a tick with no act leaves it as it was"""
+    from body.core.physiology import SWITCHES
+    assert sorted(SWITCHES) == ["actor_trace_tick", "elig_from", "gate_own_draw"] and all(v == 0 for v in SWITCHES.values())
+    assert not any(k in _born(TOK, {}).cfg for k in SWITCHES) and not any(k in PHYSIOLOGY for k in SWITCHES)
+    # the lessons: the voice, then a later effector, under each switch, against the lesson with the fix written in
+    n = 0
+    for own, s in ((1, 0), (0, 1), (1, 1)):
+        cfg = dict(wake_ticks=100000, gate_every=10 ** 9, gate_own_draw=own, elig_from=s, fast_rls=1, fast_input="striatum", actor=1)
+        torch.manual_seed(5); A = _born(_Arm(TOK, cfg), cfg); torch.manual_seed(5); B = _born(_Arm(TOK, cfg), cfg)
+        _live(A, ticks=30); _live(B, ticks=30)
+        assert all(len(r_) == 7 + own for r_ in A.gate_buf) and all(len(r_) == 9 for r_ in A.motor[0]["buf"])
+        for i in (0, 1, 2):
+            gA = A.m.mouth_gate if i == 0 else A.m.get_submodule(A.anatomy.effectors[i].gate)
+            gB = B.m.mouth_gate if i == 0 else B.m.get_submodule(B.anatomy.effectors[i].gate)
+            bufA = A.gate_buf if i == 0 else A.motor[i - 1]["buf"]; bufB = B.gate_buf if i == 0 else B.motor[i - 1]["buf"]
+            kind = (7 + own) if i == 0 else 9
+            for buf_ in (bufA, bufB):
+                buf_.clear(); buf_.extend(_rows(torch.Generator().manual_seed(21 + i), 60, gA.in_features, kind))
+            cost_of = (lambda b: float(A.cfg["symbol_cost"])) if i == 0 else (lambda b: float(b[8]))
+            baseA = getattr(A, "_g_base", None) if i == 0 else A.motor[i - 1]["g_base"]
+            baseA, lastA = _lesson_fixed(A, bufA, gA, A.opt_gate if i == 0 else A.opt_motor, baseA, own, s, cost_of)
+            B._gate_lesson(i)
+            baseB = getattr(B, "_g_base", None) if i == 0 else B.motor[i - 1]["g_base"]; lastB = B._gate_last if i == 0 else B.motor[i - 1]["last"]
+            (wa, oa), (wb, ob) = _gate_state(A, gA), _gate_state(B, gB)
+            assert lastA is not None and all(torch.equal(wa[k], wb[k]) for k in wa) and _same_opt(oa, ob), f"own {own}, from {s}, effector {i}: the gate moved otherwise"
+            assert baseA == baseB and lastA == lastB and len(bufA) == len(bufB) == 60 - lastA["n"] and lastA["n"] == 60 - 12 - s, (own, s, i, lastA, lastB)
+            n += 1
+    # the draw recorded, live: the plain mouth with the rest as the end, its probe readout leaning to the rest (every go draws the rest),
+    # and the served chunk mouth (its turn-taking reflexes off), its probe leaning to the rest inside a word (every letter after the
+    # first is the rest)
+    rows = {}
+    for mouth, base_cfg in (("plain", dict(end_rest=1)), ("chunk", dict(_served_cfg() or {}, actor_form="chunk", gate_listen=0.0, gate_yield=0.0,
+                                                                         gate_quiet_tau=0, pace_sense=0))):
+        for own in (0, 1):
+            cfg = dict(base_cfg, wake_ticks=100000, gate_every=10 ** 9, gate_floor=0.9, gate_own_draw=own)
+            torch.manual_seed(5); L = _born(TOK, cfg); got = []
+            ro_ = L.m.readout; bump_ = torch.zeros(L.m.vocab); bump_[L.sil] = 1000.0
+
+            def lean(pred, prior=None, ro_=ro_, bump_=bump_, L=L, mouth=mouth):
+                inside = getattr(L, "_acted_last", False) and getattr(L, "_own_last", None) not in (None, L.space_id)
+                return ro_(pred, prior) + (bump_ if (mouth == "plain" or inside) else 0.0)
+            L.m.readout = lean
+            f = L._feel_and_learn
+
+            def rec(*a, f=f, got=got, L=L):
+                f(*a); got.append(list(L.gate_buf[-1][1:]))
+            L._feel_and_learn = rec
+            _live(L, lines=("what do you want?", "I want milk", "do you see the ball?", "yes. the ball is red", "go up"), ticks=150)
+            rows[(mouth, own)] = got
+    assert all(len(r_) == 6 for k_, rs_ in rows.items() if not k_[1] for r_ in rs_), "the rows' form without the switch"
+    assert all(len(r_) == 7 for k_, rs_ in rows.items() if k_[1] for r_ in rs_), "the rows' form with the switch"
+    r1 = rows[("plain", 1)] + rows[("chunk", 1)]
+    assert all(r_[6] or not r_[0] for r_ in r1) and all(r_[6] for r_ in r1 if r_[5] == 1.0), "an act without a draw, or a program's letter not a go"
+    ended = sum(1 for r_ in rows[("plain", 1)] if r_[6] and not r_[0] and r_[5] < 1.0)
+    letters = sum(1 for r_ in rows[("chunk", 1)] if r_[6] and not r_[0] and r_[5] == 1.0)
+    before = sum(1 for r_ in rows[("chunk", 0)] if not r_[0] and r_[5] == 1.0)     # without the switch: the gate's no at p 1, never decided
+    acted = sum(1 for r_ in r1 if r_[0])
+    assert ended >= 20 and letters >= 10 and before >= 10 and acted >= 10, (ended, letters, before, acted)
+    # the actor's trace, per act or per tick, under the add form (the actor's) and the softmax form (the chooser's)
+    moved = {}
+    for form, name in (("add", "_e_actor"), ("softmax", "_e_chooser")):
+        for tt in (0, 1):
+            cfg = dict(wake_ticks=100000, fast_rls=1, fast_input="striatum", actor=1, actor_form=form, gate_floor=0.3, actor_margin=8.0,
+                       actor_trace_tick=tt)
+            torch.manual_seed(5); L = _born(TOK, cfg); gam = float(L.m.gammas()[int(L.cfg["dopamine_band"])]); seen = []
+            f = L._act
+
+            def rec(*a, f=f, seen=seen, L=L, name=name):
+                prev = getattr(L, name, None); prev = prev.clone() if prev is not None else None
+                out = f(*a); now = getattr(L, name, None)
+                seen.append((prev, now.clone() if now is not None else None, bool(a[5] and a[11] and not L._chunk_cont))); return out
+            L._act = rec
+            _live(L, lines=("what do you want?", "I want milk", "do you see the ball?"), ticks=90)
+            quiet = [(p_, n_) for p_, n_, act_ in seen if p_ is not None and not act_]
+            assert len(quiet) >= 10 and sum(1 for _, _, a_ in seen if a_) >= 3, (form, tt, len(quiet))
+            if tt:
+                assert all(torch.equal(n_, gam * p_) for p_, n_ in quiet), f"{form}: a quiet tick did not decay the trace by the discount"
+            else:
+                assert all(torch.equal(n_, p_) for p_, n_ in quiet), f"{form}: without the switch a quiet tick moved the trace"
+            moved[(form, tt)] = len(quiet)
+    print(f"anatomy 17: the switches off by their absence; {n} lessons under gate_own_draw and elig_from equal the lesson with the fix",
+          f"written in (the voice and two later effectors); live, {ended} drawn rests at a word's start and {letters} program letters that",
+          f"were the rest recorded as goes (without the switch {before} such letters read as the gate's no at p 1), every program letter",
+          f"a go at p 1; the actor's and the chooser's traces decay every tick under actor_trace_tick ({moved[('add', 1)]} and",
+          f"{moved[('softmax', 1)]} quiet ticks) and stand still without it")
+
+
+def test_a_later_effector():
+    """anatomy 18 (step R5): a body of the diary's anatomy and two later effectors (an arm of two joints of five, a grip of three whose
+    gate reads an input of its own). Its organs: the diary's bit for bit (the global random stream left where the diary's leaves it),
+    then each effector's table (unit rows per joint from the body's seed alone), gate (born as the voice's, over its declared inputs)
+    and actor; its striatum: the language block, thresholds and heads as the diary's, the effectors' blocks appended, their lines read
+    after the language line's. The per-joint readout and the acts' rows; each tick the voice draws first (its choice the diary's on the
+    first tick), then each effector its gate and its joints; the window holds each act under its field and the input adds each act's
+    row after the voice's own sound; every effector's gate and actor learn; the night rests them; a save keeps them; organs that do not
+    match the anatomy are refused"""
+    cfg = dict(wake_ticks=120, wake_every=8, gate_every=8, night_rounds=1, night_starts=4, night_batch=4, rem_dreams=2, rem_steps=2,
+               write_floor=1e-30, fast_rls=1, fast_input="striatum", actor=1, stri_k=8, stri_m=64, gate_floor=0.3)
+    a = _Arm(TOK, cfg); V = a.vocab
+    assert anatomy_for(a, cfg) is a and [e.n_acts for e in a.effectors[1:]] == [25, 3]
+    # the organs
+    torch.manual_seed(9); o1 = Organs(V, d=64, layers=2, heads=2, window=32); r1 = torch.get_rng_state()
+    torch.manual_seed(9); o3 = Organs(V, d=64, layers=2, heads=2, window=32, effectors=a.effectors, born_seed=3); r3 = torch.get_rng_state()
+    torch.manual_seed(1); o4 = Organs(V, d=64, layers=2, heads=2, window=32, effectors=a.effectors, born_seed=3)
+    torch.manual_seed(9); o5 = Organs(V, d=64, layers=2, heads=2, window=32, effectors=a.effectors, born_seed=4)
+    s1, s3 = o1.state_dict(), o3.state_dict()
+    new = [k for k in s3 if k not in s1]
+    assert torch.equal(r1, r3) and [k for k in s3 if k in s1] == list(s1) and all(torch.equal(s1[k], s3[k]) for k in s1), "the diary's organs are built otherwise"
+    assert new == ["stri_mline", "acts.arm.rows", "acts.grip.rows", "gates.arm.weight", "gates.arm.bias", "gates.grip.weight", "gates.grip.bias",
+                   "actors.arm.weight", "actors.arm.bias", "actors.grip.weight", "actors.grip.bias"], new
+    assert torch.equal(o3.acts["arm"].rows, o4.acts["arm"].rows) and not torch.equal(o3.acts["arm"].rows, o5.acts["arm"].rows), "the tables not the body's seed's alone"
+    assert o3.acts["arm"].rows.shape == (10, 64) and torch.allclose(o3.acts["arm"].rows.norm(dim=-1), torch.ones(10))
+    assert (o3.gates["arm"].in_features, o3.gates["grip"].in_features) == (64 + 5 + 1, 64 + 5 + 2)
+    assert float(o3.gates["grip"].weight.detach().abs().max()) == 0.0 and torch.equal(o3.gates["grip"].bias, o3.mouth_gate.bias)
+    # the table: digits and flat acts, rows, the per-joint readout
+    t = o3.acts["arm"]
+    allacts = torch.arange(25)
+    dg = t.digits(allacts)
+    assert all(t.flat(dg[i].tolist()) == i for i in range(25)) and dg[12].tolist() == [2, 2] and dg[7].tolist() == [1, 2]
+    assert torch.equal(t(allacts), t.rows[dg[:, 0]] + t.rows[5 + dg[:, 1]]) and t(torch.tensor([[3, 4]])).shape == (1, 2, 64)
+    pred = torch.randn(64)
+    lg = t.logits(pred, 7.0)
+    assert len(lg) == 2 and torch.equal(lg[0], 7.0 * (pred @ t.rows[:5].t())) and torch.equal(lg[1], 7.0 * (pred @ t.rows[5:].t()))
+    assert all(torch.equal(x_, torch.zeros(5)) for x_ in t.logits(None, 7.0))
+    # the striatum: the diary's block, thresholds and heads, then the effectors' blocks; their lines read after the language line's
+    torch.manual_seed(4); o1.striatum_init(8, 64, seed=2, wm=1); q1 = torch.get_rng_state()
+    torch.manual_seed(4); o3.striatum_init(8, 64, seed=2, wm=1, effectors=a.effectors); q3 = torch.get_rng_state()
+    nl = 8 * (2 * V + 3)
+    assert torch.equal(q1, q3) and o3.stri_W.shape == (nl + 8 * 25 + 8 * 3, 64) and torch.equal(o3.stri_W[:nl], o1.stri_W)
+    assert torch.equal(o3.stri_b, o1.stri_b) and torch.equal(o3.actor.weight, o1.actor.weight) and torch.equal(o3.vfast.weight, o1.vfast.weight)
+    assert o3.stri_blocks == [(nl, 25), (nl + 200, 3)] and o3.actors["arm"].weight.shape == (10, 64 * 2) and o3.actors["grip"].weight.shape == (3, 128)
+    for o_ in (o1, o3):
+        o_.striatum_push(0, 5); o_.striatum_push(1, 7); o_.striatum_push(2, 1)
+    o3.striatum_push_act(0, 7); o3.striatum_push_act(0, 12); o3.striatum_push_act(1, 2)
+    z = o1.stri_b.clone()
+    for p_ in range(8):
+        e_ = int(o1.stri_line[p_])
+        if e_ >= 0:
+            z += o1.stri_W[p_ * (2 * V + 3) + e_]
+    for j_, (base_, n_) in enumerate(o3.stri_blocks):
+        for p_ in range(8):
+            x_ = int(o3.stri_mline[j_, p_])
+            if x_ >= 0:
+                z += o3.stri_W[base_ + p_ * n_ + x_]
+    assert o3.stri_mline[0, :3].tolist() == [12, 7, -1] and torch.equal(o3.striatum_read(), torch.relu(z)) and not torch.equal(o3.striatum_read(), o1.striatum_read())
+    o3.striatum_reset(); assert int(o3.stri_mline.max()) == -1 and int(o3.stri_line.max()) == -1
+    # the life: the voice draws first; its first choice is the diary's
+    lines = ("what do you want?", "I want milk", "do you see the ball?", "yes. the ball is red")
+    faces = {10: 2.0, 11: 0.0, 40: -2.0, 41: 0.0, 70: 2.0, 71: 0.0}
+    torch.manual_seed(5); D = _born(TOK, cfg); torch.manual_seed(5); M = _born(_Arm(TOK, cfg), cfg)
+    sd, sm = D.m.state_dict(), M.m.state_dict()
+    assert all(torch.equal(sd[k], sm[k][:sd[k].shape[0]] if k == "stri_W" else sm[k]) for k in sd), "born beside later effectors, the diary's organs differ"
+    D.type_text("hello", who="parent"); M.type_text("hello", who="parent"); D.tick(); M.tick()
+    assert D._last_choice == M._last_choice, (D._last_choice, M._last_choice)
+    calls = []; o_rand, o_mn = torch.rand, torch.multinomial
+
+    def rand(*a_, generator=None, **k_):
+        if generator is M.gen:
+            f_ = sys._getframe(1); calls.append((M.ticks, f_.f_code.co_name, f_.f_locals.get("i", 0), "rand"))
+        return o_rand(*a_, generator=generator, **k_)
+
+    def mn(*a_, generator=None, **k_):
+        if generator is M.gen:
+            f_ = sys._getframe(1); calls.append((M.ticks, f_.f_code.co_name, f_.f_locals.get("i", 0), "draw"))
+        return o_mn(*a_, generator=generator, **k_)
+    torch.rand, torch.multinomial = rand, mn
+    try:
+        _live(M, lines=lines, faces=faces, ticks=119)
+    finally:
+        torch.rand, torch.multinomial = o_rand, o_mn
+    assert M.nights == 1 and not (M.last_night or {}).get("error"), (M.last_night or {}).get("error")
+    day = [c_ for c_ in calls if c_[1] in ("_choose", "_choose_effector")]
+    by_tick = collections.defaultdict(list)
+    for c_ in day:
+        by_tick[c_[0]].append((c_[2], c_[3]))
+    joints = {0: 1, 1: 2, 2: 1}; n_draws = collections.Counter()
+    for tk, seq in by_tick.items():
+        assert [x_ for x_ in seq if x_[1] == "rand"] == [(0, "rand"), (1, "rand"), (2, "rand")], (tk, seq)
+        assert [x_[0] for x_ in seq] == sorted(x_[0] for x_ in seq), f"tick {tk}: an effector drew before the one before it: {seq}"
+        for i_ in (0, 1, 2):
+            k_ = sum(1 for x_ in seq if x_ == (i_, "draw")); n_draws[i_] += k_
+            assert k_ in (0, joints[i_]), (tk, i_, seq)
+    assert len(by_tick) == 119 and min(n_draws.values()) >= 5, (len(by_tick), n_draws)
+    # the window, the input and the record (after the night: the morning's positions)
+    _live(M, lines=("go up", "we go up"), ticks=40)
+    win = list(M.win); obs, whos, bundles, reads = M._window_tensors()
+    assert list(obs) == ["ear", "face", "arm", "grip"] and all("arm" in w and "grip" in w for w in win)
+    assert torch.equal(obs["arm"], torch.tensor([w["arm"] for w in win])) and int((obs["arm"] != 12).sum()) >= 3 and int((obs["grip"] != 1).sum()) >= 3
+    diary = LanguageAnatomy(TOK, M.cfg); ln = M.m.in_ln; M.m.in_ln = torch.nn.Identity()
+    try:
+        with torch.no_grad():
+            u_m, u_d = M.m.inputs(M.anatomy, obs, whos, bundles), M.m.inputs(diary, obs, whos, bundles)
+            g_ = float(M.m.own_gain)
+            want = u_d + g_ * (obs["arm"] != 12).float().unsqueeze(-1) * M.m.acts["arm"](obs["arm"])
+            want = want + g_ * (obs["grip"] != 1).float().unsqueeze(-1) * M.m.acts["grip"](obs["grip"])
+    finally:
+        M.m.in_ln = ln
+    assert torch.equal(u_m, want) and not torch.equal(u_m, u_d), "the effectors' acts are not the sum's terms after its own sound"
+    assert set(M.last["acts"]) == {"arm", "grip"} and set(M.insides()["effectors"]) == {"arm", "grip"}
+    # one choice read closely: the gate's probability over the floor, and the actor's bias joint by joint (no proposal before R6)
+    st_ = M.motor[0]; saved_ = (M.m.actors["arm"].weight.detach().clone(), M.m.actors["arm"].bias.detach().clone(), M.gen.get_state())
+    with torch.no_grad():
+        M.m.actors["arm"].weight.zero_(); M.m.actors["arm"].bias.copy_(torch.arange(10, dtype=torch.float32) / 3.0 - 1.5)
+    C1 = M._C_last; lvl = 0.25; fr = Frame(M.ticks, {"ear": M.sil}, M.face_now)
+    M._choose_effector(1, fr, C1, lvl, True)
+    now = st_["now"]; beta = float(M.cfg.get("actor_beta", 1.0)); b_ = beta * torch.tanh(M.m.actors["arm"].bias.detach())
+    assert torch.allclose(now["probs"][0], torch.softmax(b_[:5], -1)) and torch.allclose(now["probs"][1], torch.softmax(b_[5:], -1)), now["probs"]
+    with torch.no_grad():
+        f_ = torch.cat([C1 / math.sqrt(64.0), torch.tensor([M.fatigue / 10.0, M.mood / 6.0, M.stress / 10.0, 0.0, lvl]), torch.tensor([1.0 if st_["acted_last"] else 0.0])])
+        z_ = M.m.gates["arm"](f_.unsqueeze(0))[0, 0] / (1.0 + M.stress / 10.0)
+    fl_ = float(M.cfg["gate_floor"]); assert abs(now["p_act"] - (fl_ + (1.0 - fl_) * float(torch.sigmoid(z_)))) < 1e-6 and torch.equal(now["feat"], f_)
+    with torch.no_grad():
+        M.m.actors["arm"].weight.copy_(saved_[0]); M.m.actors["arm"].bias.copy_(saved_[1])
+    M.gen.set_state(saved_[2])
+    assert all(len(r_) == 7 for r_ in M.gate_buf) and all(len(r_) == 9 for st_ in M.motor for r_ in st_["buf"])
+    for e_, st_ in zip(M.anatomy.effectors[1:], M.motor):
+        assert st_["last"] and "n" in st_["last"], (e_.name, st_["last"])
+        assert float(M.m.gates[e_.name].weight.detach().abs().max()) > 0 and float(M.m.actors[e_.name].weight.detach().abs().max()) > 0, e_.name
+    # the night rests them; a save keeps them; the loaded body lives on
+    L2 = _born(_Arm(TOK, cfg), cfg); _live(L2, lines=lines, ticks=120)
+    assert L2.nights == 1 and L2.sleep_pressure == 0, (L2.nights, L2.sleep_pressure)
+    for st_ in L2.motor:
+        assert len(st_["buf"]) == 0 and st_["e_actor"] is None and st_["now"] is None and not st_["acted_last"]
+    assert int(L2.m.stri_mline.max()) == -1
+    import contextlib
+    import io
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        M.save(path)
+        C = Life.load(path, _Arm(TOK, M.cfg), save_path=None)
+        said = io.StringIO()
+        with contextlib.redirect_stdout(said):
+            Dl = Life.load(path, TOK, save_path=None)             # the diary's anatomy: the effectors' organs are said, not loaded
+    finally:
+        os.remove(path)
+    note = [l_ for l_ in said.getvalue().splitlines() if "does not declare" in l_]
+    assert len(note) == 1 and all(k_ in note[0] for k_ in ("acts.arm.rows", "gates.grip.weight", "actors.arm.weight", "stri_mline")), said.getvalue()
+    assert not hasattr(Dl, "motor") and not hasattr(Dl.m, "acts") and Dl.m.stri_W.shape[0] == 8 * (2 * V + 3)
+    sM, sC = M.m.state_dict(), C.m.state_dict()
+    assert list(sM) == list(sC) and all(torch.equal(sM[k], sC[k]) for k in sM), [k for k in sM if not torch.equal(sM[k], sC[k])]
+    _live(C, ticks=10); assert C.ticks == M.ticks + 10
+    # organs that do not match the anatomy
+    refused = []
+    wide = _Arm(TOK, {}); wide.effectors[2].n_in = 3
+    flat = _Arm(TOK, {}); flat.effectors[1].factors = [25]
+    for what, call in (("organs without the effectors' organs", lambda: Life(o1, _Arm(TOK, {}))),
+                       ("organs with an undeclared effector's", lambda: Life(o3, TOK)),
+                       ("a gate narrower than its declaration", lambda: Life(o4, wide)),
+                       ("a table of other joints", lambda: Life(o4, flat))):
+        try:
+            call()
+        except ValueError:
+            refused.append(what); continue
+        raise AssertionError(f"the life took {what}")
+    print(f"anatomy 18: the diary's organs and striatum as the diary's, the effectors' built last and appended; the per-joint readout;",
+          f"the voice draws first on each of {len(by_tick)} ticks ({n_draws[0]} words drawn), then the arm ({n_draws[1]} acts, two joints",
+          f"each) and the grip ({n_draws[2]}); the acts in the window and the sum after its own sound; gates and actors learn; the night",
+          f"rests them; a save keeps them; refused: {'; '.join(refused)}")
+
+
+def test_every_call_site_passes_the_effectors():
+    """anatomy 19 (step R5): the eleven places the cortex's input is made all pass each later effector's acts beside the channels (a
+    dream's, imagination's and REM's at the effector's rest), in the shape of its own sound"""
+    import body.model as BM
+    cfg = dict(wake_ticks=100000, wake_every=8, gate_every=8, night_rounds=1, night_starts=6, night_batch=4, rem_dreams=2, rem_steps=2,
+               rem_rounds=1, write_floor=1e-30, fast_rls=1, fast_input="striatum", face_form="foresee", rem_form="forecast", rem_temp=1.0,
+               actor=1, gate_floor=0.3)
+    torch.manual_seed(5); L = _born(_Arm(TOK, cfg), cfg)
+    names = [c.name for c in L.anatomy.channels] + [e.name for e in L.anatomy.effectors[1:]]
+    seen = collections.Counter(); bad = []; rests = collections.Counter()
+    orig = BM.Organs.inputs
+
+    def spy(self, anatomy, obs, xos, bundles):
+        where = sys._getframe(1).f_code.co_name + ("[batch]" if bundles.dim() == 4 and sys._getframe(1).f_code.co_name == "night" else "")
+        seen[where] += 1
+        if anatomy is not L.anatomy or list(obs) != names or any(obs[k].shape[:len(xos.shape)] != xos.shape for k in names):
+            bad.append(where)
+        if bool((obs["arm"] == 12).all()) and bool((obs["grip"] == 1).all()):
+            rests[where] += 1
+        return orig(self, anatomy, obs, xos, bundles)
+    BM.Organs.inputs = spy
+    try:
+        _live(L, lines=("what do you want?", "I want milk", "do you see the ball?"), faces={20: 2.0, 21: 0.0}, ticks=90)
+        L._imagine_value(TOK.token_to_id("a"), 3)
+        dreams = L.dreams(6)
+        L.gauge(dreams); L.cfg["night_batch"] = 0; L.gauge(dreams)
+        L._frel_corr = 0.5
+        ids = max(dreams, key=len)
+        lines0 = (L.m.stri_line.clone(), L.m.stri_mline.clone())
+        L._rem_imagine(ids)
+        assert torch.equal(L.m.stri_line, lines0[0]) and torch.equal(L.m.stri_mline, lines0[1]) and int(lines0[1].max()) >= 0, "REM left the lines moved"
+        L._rem_rollout(ids, 0.0)
+        L.cfg["night_batch"] = 4; r1 = L.night()
+        L.cfg["night_batch"] = 0; r2 = L.night()
+    finally:
+        BM.Organs.inputs = orig
+    assert not r1.get("error") and not r2.get("error"), (r1.get("error"), r2.get("error"))
+    want = {"_stream_now", "_wake_lesson", "_imagine_value", "_dream_inputs", "_dream_batch", "night[batch]", "night", "_rem_imagine",
+            "_rem_rollout", "_gauge_batched", "gauge"}
+    assert set(seen) == want, f"reached {sorted(seen)}, want {sorted(want)}"
+    assert not bad, f"these passed another anatomy or not all its channels and effectors: {sorted(set(bad))}"
+    dreamt = want - {"_stream_now", "_wake_lesson", "_imagine_value"}
+    assert all(rests[w_] == seen[w_] for w_ in dreamt) and rests["_stream_now"] < seen["_stream_now"], (dict(rests), dict(seen))
+    print("anatomy 19: all eleven call sites pass the effectors' acts beside the channels; the dreams' at rest, the lived window's acting")
+
+
 ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
                  test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy,
                  test_reward_sources_feel_todays_rule, test_a_life_feels_as_before, test_the_declared_order_is_the_sums,
                  test_the_input_is_the_channels_in_order, test_the_window_holds_each_channel_under_its_field, test_a_later_channel,
-                 test_every_call_site_passes_the_channels, test_imagination_as_before]
+                 test_every_call_site_passes_the_channels, test_imagination_as_before, test_the_voice_is_effector_0,
+                 test_the_gate_lesson_as_before, test_the_switches, test_a_later_effector, test_every_call_site_passes_the_effectors]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -15,6 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from tokenizers import Tokenizer
 
 from .life import Life, PHYSIOLOGY
+from .core.physiology import SWITCHES
 
 PAGE = """<!doctype html><meta charset=utf-8><title>the diary, second body</title>
 <style>body{margin:0;background:#f5f1e6;color:#222;font:16px/1.6 Georgia,serif}
@@ -95,8 +96,10 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     for k, v in PHYSIOLOGY.items():
         ap.add_argument("--" + k.replace("_", "-"), type=type(v), default=None, help=f"physiology (default {v})")
+    for k, v in SWITCHES.items():                  # the core refactor's defect-fix switches: off by their absence, set only when given
+        ap.add_argument("--" + k.replace("_", "-"), type=type(v), default=None, help=f"switch (off, {v}, when not given)")
     a = ap.parse_args()
-    cfg = {k: getattr(a, k) for k in PHYSIOLOGY if getattr(a, k) is not None}
+    cfg = {k: getattr(a, k) for k in list(PHYSIOLOGY) + list(SWITCHES) if getattr(a, k) is not None}
     tok = Tokenizer.from_file(a.tok)
     if a.load:
         life = Life.load(a.load, tok, device=a.dev, cfg=cfg, seed=a.seed, save_path=a.load)
