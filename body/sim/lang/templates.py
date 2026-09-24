@@ -21,9 +21,16 @@ THE LINE CHECK (check()) holds every line, the templates' and Claude's alike, to
               of that colour she sees (of the named kind, when the line names one); a fixture word, a fixture she sees; the
               child's body, the child in her view; a past form ("fell", "rolled", "sat", "got", "did"), an event she saw in the
               last RECENT ticks. Only what a person in her place could see or hear.
-  Claude's    no praise ("yes", "good") and no approval register (A14)
-The design's form rules (4.5) are the first three; "perceived" is the fast layer's rule that its lines are "filled from what the
-parent can see" (4.5), made a check so Claude's lines are held to it too.
+  true        what the line says of a thing holds as she sees it (her grammar is small, so its few claims are checked, not only
+              that the things exist): "it is a X." / "this is the X." / "it is your X." / "it is C." name or colour what the line
+              is about (its filled object) or, for a line with none (Claude's), what the child looks at or holds; "the X is on
+              the Y." an X resting on the Y ("in the Y": containment she cannot see, refused); "the X is down." / "it is down." an
+              X she saw fall in the last RECENT ticks; "you see the X." an X in the child's view
+  Claude's    no praise ("yes", "good") and no approval register (A14); no ask ("where is ...?", "what is ...?", "give me ...",
+              "look at ..."): an ask is judged (4.8's test, the worth table's met ask), and a judgment is the fast layer's (A14):
+              Claude asks for one through the conduct's request(), never by a line
+The design's form rules (4.5) are the first three; "perceived" and "true" are the fast layer's rule that its lines are "filled
+from what the parent can see" (4.5), made a check so Claude's lines are held to it too.
 
 THE GROWTH QUEUE (4.8; GROWTH): the design's 76 words in its order, plus "ring" and "stacker" after "rattle" (4.8: "the world's
 rattle, stacker and ring are named through the queue", though its list of 76 lacks the two). Each word has a class and the frames
@@ -172,18 +179,13 @@ INTRO_WORD = {                                                             # wor
 }
 
 _SLOT = re.compile(r"\{([a-z])\}")
-_FORM = re.compile(r"[a-z]+(?:[.?!]? [a-z]+)*[.?!]")
+_P = re.escape(K.PUNCT)
+_FORM = re.compile(rf"[a-z]+(?:[{_P}]? [a-z]+)*[{_P}]")
 _WORD = re.compile(r"[a-z]+")
 
 
 def words(text):
     return _WORD.findall(text)
-
-
-def _last_is_focus(text, focus):
-    if focus is None:
-        return True
-    return words(text)[-1] == (focus if not focus.startswith("{") else focus)
 
 
 for _k, _fs in list(FRAMES.items()) + list(INTRO.items()) + list(INTRO_WORD.items()):
@@ -204,23 +206,44 @@ class Line:
 
 
 # ------------------------------------------------------------------------------------------------------ the line check
+def _new_words(new_word):
+    if new_word is None:
+        return ()
+    return (new_word,) if isinstance(new_word, str) else tuple(new_word)
+
+
+_ASK = re.compile(r"(?:^|[.?!] )(?:where\b[^.?!]*\?|what\b[^.?!]*\?|give\b|look at\b)")
+_DEIXIS = ("it", "this", "that")
+_DETS = ("a", "the", "your")
+
+
+def ask_form(text):
+    """does the line ask (an ask frame's form: "where is ...?", "what is ...?", "give me ...", "look at ...")?"""
+    return bool(_ASK.search(text))
+
+
 def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, source="fast", register=None,
           recent_events=()):
-    """-> (ok, reason). vocab: the words she has (the birth words and the growth words entered); new_word: the day's new word
-    (allowed, and only last); percept: what she perceives now (body/sim/lang/percept.Percept; None skips the perceived rule:
-    for listing lines ahead, never for a line she says); refs: the object ids a line's slots were filled from; held: the
-    never-taught pairs still held out; source: "fast" or "claude"; recent_events: the (tick, kind, object) she saw in the last
-    RECENT ticks."""
+    """-> (ok, reason). vocab: the words she has (the birth words and the growth words entered); new_word: the day's new words
+    (a word or a tuple of up to NEW_PER_DAY: each allowed, one a line, and only last); percept: what she perceives now
+    (body/sim/lang/percept.Percept; None skips the perceived and true rules: for listing lines ahead, never for a line she
+    says); refs: the object ids the line is about (its filled slots, or the object an intent was given); held: the never-taught
+    pairs still held out; source: "fast" or "claude"; recent_events: the (tick, kind, object) she saw in the last RECENT
+    ticks."""
     if not isinstance(text, str) or not _FORM.fullmatch(text):
         return False, "form: lowercase words, single spaces, '. ? !' only after a word, ending in one"
     ws = words(text)
     if len(ws) > K.MAX_WORDS:
         return False, f"too long: {len(ws)} words"
-    oov = [w for w in ws if w not in vocab and w != new_word]
+    new = _new_words(new_word)
+    oov = [w for w in ws if w not in vocab and w not in new]
     if oov:
         return False, f"not her word: {oov[0]!r}"
-    if new_word is not None and new_word in ws and ws[-1] != new_word:
-        return False, f"the new word {new_word!r} not last"
+    said_new = [w for w in ws if w in new and w not in vocab]
+    if len(set(said_new)) > 1:
+        return False, f"two new words in one line: {sorted(set(said_new))}"
+    if said_new and ws[-1] != said_new[0]:
+        return False, f"the new word {said_new[0]!r} not last"
     wset = set(ws)
     for a, b in held:
         if a in wset and b in wset:
@@ -229,6 +252,8 @@ def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, 
         praise = [w for w in ws if w in K.PRAISE]
         if praise or register == "approval":
             return False, f"praise is the fast layer's: {praise[0] if praise else 'the approval register'!r}"
+        if ask_form(text):
+            return False, "an ask is the fast layer's: it is judged (A14: Claude requests the intent, never says the ask)"
     if percept is None:
         return True, ""
     seen = {s.id: s for s in percept.seen}
@@ -255,6 +280,53 @@ def check(text, vocab, new_word=None, percept=None, refs=(), held=K.HELD_PAIRS, 
             return False, f"unseen: the child's {w}"
         if w in PAST_EVENTS and not any(k in PAST_EVENTS[w] for _, k, _o in recent_events):
             return False, f"not seen happen: {w!r}"
+    return _true(text, percept, seen, refs, recent_events)
+
+
+def _attended(percept, seen, refs):
+    """what "it" / "this" / "that" can point at: the line's own objects, else what the child looks at or holds."""
+    if refs:
+        return [seen[r] for r in refs if r in seen]
+    out = [percept.target_obj()] + [percept.obj(h) for h in percept.child_holds]
+    return [o for o in out if o is not None]
+
+
+def _true(text, percept, seen, refs, recent_events):
+    """the few claims her lines can make, held to what she sees (the check's "true" rule)."""
+    att = _attended(percept, seen, refs)
+    objs = [seen[r] for r in refs if r in seen] or list(seen.values())
+    for sent in re.split(r"[.?!] ?", text):
+        ws = words(sent)
+        for i, w in enumerate(ws):
+            if w != "is" or i == 0 or i + 1 >= len(ws):
+                continue
+            subj, rest = ws[i - 1], ws[i + 1:]
+            if subj in _DEIXIS:
+                x = rest[1] if rest[0] in _DETS and len(rest) > 1 else rest[0]
+                if x in OBJECT_NOUNS and not any(o.name == x for o in att):
+                    return False, f"not true: {subj!r} is not a {x} (it names what the line is about, or what the child " \
+                                  f"looks at or holds)"
+                if x in COLOURS and not any(o.colour == x for o in att):
+                    return False, f"not true: {subj!r} is not {x}"
+                subj_objs = att
+            elif subj in OBJECT_NOUNS:
+                subj_objs = [o for o in objs if o.name == subj]
+            else:
+                continue
+            if rest[0] in ("on", "in") and len(rest) >= 3 and rest[1] == "the":
+                if rest[0] == "in":
+                    return False, f"not seen: a thing in the {rest[2]} (containment she cannot see)"
+                if not any(o.on == rest[2] for o in subj_objs):
+                    return False, f"not true: no {subj if subj not in _DEIXIS else 'such thing'} on the {rest[2]} as she sees it"
+            if rest[0] == "down" and not any(k == "fell" and any(o.id == ob for o in subj_objs)
+                                             for _, k, ob in recent_events):
+                return False, f"not seen happen: {subj!r} down (no fall she saw in the last {K.RECENT} ticks)"
+        for i in range(len(ws) - 2):
+            if ws[i] == "you" and ws[i + 1] == "see":
+                rest = ws[i + 2:]
+                x = rest[1] if rest[0] in _DETS and len(rest) > 1 else rest[0]
+                if x in OBJECT_NOUNS and not any(o.name == x and o.child_sees for o in objs):
+                    return False, f"not true: the child does not see a {x}"
     return True, ""
 
 

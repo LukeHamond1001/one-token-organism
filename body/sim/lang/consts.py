@@ -6,7 +6,7 @@ Each line gives its value, its unit, and where it comes from: a section of the d
 Mazzie 1991, Goldstein et al. 2003, Kuntay and Slobin, Onnis et al. 2008, Tomasello and Farrar 1986, Wood and Middleton 1975),
 or "ours" where the design leaves the number to the build.
 """
-from .lexicon import BIRTH_WORDS, NAME, PARENT_NAME
+from .lexicon import BIRTH_WORDS, PARENT_NAME
 
 TICKS_PER_DAY = 24000                 # a life day (section 10)
 
@@ -19,25 +19,27 @@ HOLD = 2                              # a gaze ask is met when X lands in the fo
 TURN_END_REST = 2                     # the child's turn ends when its voice has rested 2 ticks after sounding (4.6)
 REPLY_AFTER = 3                       # she replies 3 ticks after the child's turn ends (4.6; Goldstein et al. 2003)
 CALL_EVERY = 240                      # the call at most once per 240 ticks (4.6, A13)
-CALLS_UNANSWERED = (3, 720)           # after 3 calls unanswered in 720 ticks she carries on where the child looks (A13)
 SAME_LINE = 60                        # the same line not within 60 ticks (4.6)
 SAME_OBJECT = 20                      # the same object named at most once per 20 ticks; a variation set counts as one naming (4.6)
 SET_PER_OBJECT = 120                  # at most one variation set per object per 120 ticks (4.5)
 SET_LINES = (2, 3)                    # a variation set is 2-3 lines sharing the focus word (4.5); a new word's set is 3 (4.8)
-IDLE_EVERY = 40                       # idle (watching): at most one line per 40 ticks (4.10)
-WIND_DOWN_EVERY = 40                  # winding down: at most one line per 40 ticks, no asks, no new toys (4.7)
+NEW_PER_DAY = 3                       # at most 3 new words a life day, each joining her words at the night (4.8, A14, A15)
 REDIRECT_AFTER = 40                   # she redirects ("look! the drum.", with a point) only after 40 ticks with no target (4.10)
 TARGET_TICKS = 3                      # the child's target: what its fovea's central ray hits 3 ticks running (4.10, B14)
 ECHO_WINDOW = 10                      # anything the child says within 10 ticks of her saying it is an echo (4.8, A27)
 VOCAL_TURN_EVERY = 60                 # stage 1: a vocal turn in a pause while looking earns a smile at most once per 60 ticks (4.6)
 NONSTOP = (0.7, 40, 20)               # babble that never stops: sounding on over 70% of 40 ticks; she waits 20, then speaks (A13)
+RECENT = 40                           # ticks an event she saw or heard stays sayable ("uh oh. the ball is down."): ours
+# The day plan's (P4, body/sim/lang/day.py to come): disclosed here with their sources, read by no code of P3's.
+CALLS_UNANSWERED = (3, 720)           # after 3 calls unanswered in 720 ticks she carries on where the child looks (A13)
+IDLE_EVERY = 40                       # idle (watching): at most one line per 40 ticks (4.10; the episodes' idle lines are P4's)
+WIND_DOWN_EVERY = 40                  # winding down: at most one line per 40 ticks, no asks, no new toys (4.7)
 BID_ANSWER = 5                        # away: she answers a bid from afar within 5 ticks ("mama is here.") (4.7, 4.10)
 HALL_CALL_EVERY = 600                 # away: she calls from the hall about every 600 ticks (4.7, 4.10)
-RECENT = 40                           # ticks an event she saw or heard stays sayable ("uh oh. the ball is down."): ours
 
 # ------------------------------------------------------------------------------------------------ the line check (4.5)
 MAX_WORDS = 6                         # at most 6 words a line (4.4, 4.5; Fernald and Mazzie 1991's short phrases)
-PUNCT = ".?!"                         # the only punctuation (4.5)
+PUNCT = ".?!"                         # the only punctuation (4.5; the form's pattern, templates._FORM, is built from it)
 PRAISE = ("yes", "good")              # Claude may not write praise: "yes", "good", the approval register (A14)
 STEER_USES = 3                        # each of Claude's lines is used at most 3 times (4.5)
 
@@ -69,7 +71,10 @@ EAR_SLOPE = 2.0                       # Itakura's constraint: a template 1/2 to 
 # turns of the stand-in babbler, seed 8; held out: 93 turns of seed 7 x 200 random sets a size for m, the 8 other voices' 50 words
 # with their own templates held out x 80 sets a size for delta), 2026-09-24. The stand-in is the voice study's babbler; W4's
 # babbler records the bank before birth (P3v), and both tables are measured again on it then. (The study's m = -0.35 was on its
-# own cochlea's scale, 1.6 ERB filters and another floor.)
+# own cochlea's scale, 1.6 ERB filters and another floor.) Checked on the ear with all 128 words (1,408 templates, the P3
+# verifier's item 10): m over sets of the 120 words she can come to have is more lenient at every size (-4.50 to -5.30), so these,
+# the stricter, hold as her vocabulary grows (the tool keeps the stricter per size); delta only tightens as words are added. What
+# delta costs the tract's own words is measured in 4.9 (it takes "hi", "duck" and "pip" to 0%): delta stands only after P3v.
 EAR_FALSE_PASS = 0.02
 EAR_M = {1: -4.15, 2: -4.20, 3: -4.20, 4: -4.40, 5: -4.40, 6: -4.40, 7: -4.45, 8: -4.85}
 EAR_DELTA = {1: 3.30, 2: 3.35, 3: 3.55, 4: 3.55, 5: 3.65, 6: 3.90, 7: 3.90, 8: 3.90}
@@ -113,8 +118,9 @@ PREFIX_MIN = 2                        # or a prefix of at least 2 letters of wha
 # ------------------------------------------------------------------------------------------------ the worth table (4.3)
 WORTH_RIGHT_NAME = 2                  # a met ask; a right name (exact); the call answered, until the name is understood
 WORTH_MET_ASK = 2
-WORTH_APPROX = 1                      # stage 2: an approximation of a word, until the exact word has been said 3 times
+WORTH_APPROX = 1                      # stage 2: an approximation of a word, until the exact word has been said 3 times, and only
+                                      # where the exact word would be a right name (its referent in the child's fovea or hand,
+                                      # her face for "mama", or the answer to her name ask): never looser than the exact word
 WORTH_VOCAL_TURN = 1                  # stage 1: a vocal turn in a pause while looking, at most once per 60 ticks
 
-SPEAKERS = (NAME, PARENT_NAME)
 assert all(w in BIRTH_WORDS for ws in EXPECT_ROUTINES.values() for w in ws)

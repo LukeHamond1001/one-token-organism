@@ -13,6 +13,17 @@ never part of a body. Nothing it measures reaches the child; the margins it meas
             delta
   cost      her ear per utterance (the expected words and the bank; her other words only when a word is accepted), and the
             transcriber per tick over the babble stream (listening on every tick, hearing at each turn's end)
+  reach     the tract's own words on this ear (4.9's reach table): the voice study's instrument productions for 9 words, its
+            hand scores and its searched acts (written by us, never given to the body: REACH_HAND, REACH_SEARCHED below),
+            through the committed tract (body/sim/tract.py, seed 1) and her ear at 1 m, in 50 random expected sets of each size
+            1-8 holding the word: accepted and exact, with delta and without it (A27's rule alone). The searched acts were
+            searched against the study's ear, not this one: what they reach here is measured, never searched again for her.
+
+The templates are made for every word she will have (--words all, the default: the birth words and the growth queue's, before
+birth, 4.9), so a word that enters in life can be heard from its first day; m, delta, the voices and the reach are measured on the
+birth words (the words she has at birth, where the rule starts), and with --words all m is also measured over sets drawn from all
+of them (the rule as her vocabulary grows; delta only tightens as words are added, since "the nearest of all her words" can only
+come nearer).
 
 THE BABBLER is the voice study's ($S/g1/voice/t_reject.py, babble_utts): each tick a movement unit starts with probability 1 / 14.5,
 lasting 1-8 ticks (uniform), each articulator's step drawn uniformly from the five and held through the unit; the tract otherwise
@@ -21,7 +32,8 @@ before birth (P3v): the bank, and the margins measured on it, are this stand-in'
 ticks), held-out 7 (4,000 ticks), as in the study; the tract's own stream is the babbler's seed (a pre-birth instrument, not the
 life's seed 1).
 
-Run: nice -n 19 python3 tools/sim_parent_ear.py --root DIR [--words birth|all] [--write-margins] [--out results.json]
+Run: nice -n 19 python3 tools/sim_parent_ear.py --root DIR [--words all|birth] [--write-margins] [--out results.json]
+     [--skip margins,voices,cost,reach]
 """
 import argparse
 import json
@@ -106,10 +118,10 @@ def build(root, words, server_nice=0):          # the server inherits this proce
                      t_bank_s=round(t_bank, 1), digest=ear.digest)
 
 
-def per_template(ear, feats):
-    """{word: distances to each of its templates, min over the shifts}."""
+def per_template(ear, feats, words=None):
+    """{word: distances to each of its templates, min over the shifts} (for words, default all hers)."""
     out = {}
-    for w in ear.words:
+    for w in (words if words is not None else ear.words):
         st = ear._stacks[w]
         out[w] = np.min([PE.dtw(q, st) for q in feats], axis=0)
     return out
@@ -129,7 +141,7 @@ def measure_margins(ear, words, rng, sets=200):
     rows = []
     for _, _, x in held:
         feats, n = ear.features(x)
-        pt = per_template(ear, feats)
+        pt = per_template(ear, feats, words)
         d = {w: float(pt[w].min()) for w in words}
         rows.append((d, ear.bank_distance(feats)))
     out = {}
@@ -174,7 +186,7 @@ def voice_rows(ear, words, root):
         for w in words:
             x = cache.clip(w, "ear", voice=voice, prosody=(pitch, rate)).pa()
             feats, _ = ear.features(x)
-            pt = per_template(ear, feats)
+            pt = per_template(ear, feats, words)
             d = {v: float(min((dv for dv, lv in zip(pt[v], ear.labels[v]) if lv != lab), default=math.inf)) for v in words}
             rows.append((lab, w, d, ear.bank_distance(feats)))
     cache.close()
@@ -241,6 +253,121 @@ def measure_voices(rows, words, margins, deltas, rng, sets=40):
     return res, top1
 
 
+# ------------------------------------------------------------------------------------------------ the reach instrument
+# The voice study's productions ($S/g1/voice/words.py SCORES and reach_<word>.json acts, 2026-09-24): instruments written by us to
+# measure what the tract can say, never given to the body or the parent. A hand score is one dict of absolute targets per tick,
+# quantized to the step alphabet from where the tract is (the study's util.acts_for); a searched act is the step indices per tick.
+_ON, _OFF = dict(lungs=0.6, glottis=0.7), dict(lungs=0.0, glottis=0.1)
+_A = dict(jaw=0.75, tongue_front=0.0, tongue_height=0.0, lips=0.6, rounding=0.2)          # an open back vowel
+_I = dict(jaw=0.15, tongue_front=1.0, tongue_height=0.85, lips=0.6, rounding=0.0)         # a close front vowel
+_O = dict(jaw=0.35, tongue_front=0.0, tongue_height=0.45, lips=0.4, rounding=0.8)
+_U = dict(jaw=0.35, tongue_front=0.3, tongue_height=0.45, lips=0.6, rounding=0.2)         # a mid central vowel
+
+
+def _m(*ds, **kw):
+    out = {}
+    for d in ds:
+        out.update(d)
+    out.update(kw)
+    return out
+
+
+REACH_HAND = {
+    "mama": [_m(_ON, lips=0.0, jaw=0.15, velum=1.0), _m(_ON, _A, velum=0.4), _m(_ON, lips=0.0, jaw=0.15, velum=1.0),
+             _m(_ON, _A, velum=0.4), _m(_ON, _A, velum=0.0), _OFF],
+    "ball": [dict(lips=0.0, velum=0.4), _m(_ON, lips=0.0, velum=0.0), _m(_ON, _O, jaw=0.55, velum=0.0),
+             _m(_ON, _O, tongue_tip=0.6), _OFF],
+    "bye": [dict(lips=0.0, velum=0.4), _m(_ON, lips=0.0, velum=0.0), _m(_ON, _A), _m(_ON, _I), _OFF],
+    "hi": [_m(_A, lungs=0.6, glottis=0.1, velum=0.4), _m(_ON, _A, velum=0.0), _m(_ON, _I), _OFF],
+    "up": [_m(_ON, _U, velum=0.4), _m(_ON, _U, velum=0.0), _m(_ON, lips=0.0, glottis=0.1), dict(lungs=0.0, glottis=0.1, lips=0.6)],
+    "pip": [dict(lips=0.0, velum=0.4), dict(lungs=0.6, glottis=0.1, lips=0.0, velum=0.0),
+            _m(_ON, lips=0.6, jaw=0.3, tongue_front=1.0, tongue_height=0.65), dict(lungs=0.6, glottis=0.1, lips=0.0),
+            dict(lungs=0.0, glottis=0.1, lips=0.6)],
+    "no": [dict(tongue_tip=0.6, velum=1.0), _m(_ON, tongue_tip=1.0, velum=1.0), _m(_ON, _O, tongue_tip=0.4, velum=0.4),
+           _m(_ON, _O, tongue_tip=0.0, velum=0.0), _OFF],
+    "see": [dict(lungs=0.6, glottis=0.1, tongue_tip=0.6, velum=0.4, jaw=0.15, lips=0.6),
+            dict(lungs=0.6, glottis=0.1, tongue_tip=0.8, velum=0.0, jaw=0.15, lips=0.6), _m(_ON, _I, tongue_tip=0.0),
+            _m(_ON, _I), _OFF],
+    "duck": [dict(tongue_tip=0.6, velum=0.4), _m(_ON, tongue_tip=1.0, velum=0.0), _m(_ON, _U, tongue_tip=0.4),
+             _m(_ON, _U, tongue_height=1.0, tongue_tip=0.0), _m(_U, lungs=0.0, glottis=0.1, tongue_height=0.45)],
+}
+REACH_SEARCHED = {
+    "mama": [[4, 4, 2, 4, 3, 4, 2, 3, 4, 2], [4, 3, 2, 3, 0, 0, 1, 3, 0, 1], [1, 2, 0, 0, 3, 2, 0, 0, 1, 4],
+             [2, 2, 0, 4, 1, 4, 1, 4, 0, 4], [2, 2, 2, 2, 2, 4, 3, 1, 2, 2], [1, 2, 2, 1, 1, 4, 0, 2, 3, 2]],
+    "ball": [[3, 2, 4, 1, 0, 2, 3, 1, 4, 3], [4, 4, 1, 2, 1, 2, 1, 2, 1, 0], [4, 4, 2, 3, 0, 0, 2, 3, 4, 2],
+             [2, 2, 0, 1, 3, 3, 4, 1, 1, 2], [3, 1, 0, 2, 2, 3, 2, 2, 2, 2]],
+    "duck": [[4, 0, 4, 2, 3, 2, 4, 0, 4, 0], [4, 4, 1, 2, 4, 2, 4, 2, 4, 1], [2, 2, 2, 2, 1, 1, 4, 2, 2, 2],
+             [2, 3, 0, 2, 3, 2, 2, 2, 3, 3], [0, 1, 1, 2, 3, 4, 0, 1, 2, 2]],
+    "up": [[4, 4, 2, 4, 1, 2, 1, 4, 1, 0], [2, 2, 2, 2, 3, 2, 3, 2, 3, 2], [0, 1, 2, 2, 3, 2, 2, 1, 2, 3],
+           [0, 1, 3, 2, 2, 2, 3, 0, 2, 2]],
+    "see": [[4, 2, 3, 0, 2, 4, 0, 1, 2, 1], [4, 4, 0, 0, 2, 3, 4, 2, 2, 0], [2, 3, 2, 2, 4, 4, 0, 3, 0, 2],
+            [2, 2, 2, 2, 3, 4, 1, 2, 1, 2], [0, 2, 2, 2, 2, 3, 2, 2, 4, 2]],
+    "no": [[2, 3, 2, 0, 4, 0, 4, 2, 2, 2], [4, 4, 2, 2, 4, 2, 0, 1, 4, 2], [2, 4, 1, 3, 0, 3, 3, 3, 4, 3],
+           [2, 2, 1, 4, 1, 3, 0, 0, 1, 4], [0, 0, 0, 4, 2, 3, 0, 2, 4, 0]],
+    "pip": [[4, 2, 2, 0, 2, 2, 1, 1, 2, 0], [2, 2, 2, 2, 2, 2, 2, 3, 2, 3], [2, 4, 2, 1, 4, 3, 2, 4, 3, 2],
+            [2, 2, 2, 2, 2, 2, 2, 4, 2, 2], [4, 2, 0, 2, 2, 4, 0, 4, 3, 2]],
+    "hi": [[4, 2, 2, 2, 0, 0, 2, 1, 4, 0], [1, 3, 1, 2, 2, 2, 2, 2, 4, 0], [2, 4, 2, 0, 4, 4, 2, 2, 1, 2],
+           [1, 3, 2, 4, 3, 1, 2, 1, 2, 2]],
+    "bye": [[2, 1, 2, 4, 2, 2, 4, 1, 1, 0], [4, 3, 2, 4, 2, 4, 1, 1, 0, 0], [4, 3, 2, 3, 0, 3, 0, 1, 2, 2],
+            [4, 2, 2, 3, 2, 4, 2, 4, 1, 2], [1, 2, 3, 2, 0, 4, 0, 2, 2, 2]],
+}
+
+
+def _hand_acts(score):
+    """a hand score quantized to the step alphabet from where the tract is, tick by tick (the study's util.acts_for)."""
+    tr, acts = T.Tract(1), []
+    for want in score:
+        a = np.full(T.N_ART, 2)
+        for k, v in want.items():
+            i = T.NAMES.index(k)
+            a[i] = int(np.argmin(np.abs(tr.x[i] + T.STEPS - v)))
+        acts.append(a)
+        tr.tick(a)
+    return acts
+
+
+def reach_sound(acts, tail=12):
+    """the production through the committed tract (seed 1), as she hears it at 1 m: the transcriber's first turn (Pa), and how
+    many turns it made (its sound rings on about 3 ticks after the last act; a turn ends after 2 quiet ticks)."""
+    tr = T.Tract(1)
+    stream = [tr.tick(np.asarray(a)) for a in acts] + [tr.tick(None) for _ in range(tail)]
+    utts = utterances(stream)
+    return (utts[0][2] if utts else None), len(utts)
+
+
+def measure_reach(ear, words, rng, settings, sets=50):
+    """settings: {name: (m by size, delta by size)} -> {"hand mama": dict(rank, nearest, turns, sizes: {k: {name: (accepted,
+    exact)}}), ...}; the same random sets for every setting."""
+    order = {w: i for i, w in enumerate(words)}
+    out = {}
+    for how, table in (("hand", {w: _hand_acts(sc) for w, sc in REACH_HAND.items()}), ("searched", REACH_SEARCHED)):
+        for w, acts in table.items():
+            x, n_turns = reach_sound(acts)
+            if x is None:
+                out[f"{how} {w}"] = dict(sounded=False)
+                continue
+            feats, _ = ear.features(x)
+            d = ear.distances(feats, words)
+            db = ear.bank_distance(feats)
+            best = min(words, key=lambda v: (d[v], order[v]))
+            rank = sorted(words, key=lambda v: (d[v], order[v])).index(w) + 1
+            others = [v for v in words if v != w]
+            row = dict(rank=rank, nearest=best, d=round(d[w], 3), d_nearest=round(d[best], 3), d_bank=round(db, 3), turns=n_turns,
+                       sizes={})
+            for k in SIZES:
+                acc = {name: [0, 0] for name in settings}
+                for _ in range(sets):
+                    c = [w] + list(rng.choice(others, k - 1, replace=False))
+                    near = min(c, key=lambda v: (d[v], order[v]))
+                    for name, (mg, dl) in settings.items():
+                        ok = near == w and d[w] - db < -mg[k] and (best == w or d[w] - d[best] < dl[k])
+                        acc[name][0] += ok
+                        acc[name][1] += ok and best == w
+                row["sizes"][k] = {name: (a0 / sets, a1 / sets) for name, (a0, a1) in acc.items()}
+            out[f"{how} {w}"] = row
+    return out
+
+
 def measure_cost(ear, words, rng):
     stream = babble(HELD_SEED, HELD_TICKS)
     tx = Transcriber(ear)
@@ -263,15 +390,18 @@ def measure_cost(ear, words, rng):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True)
-    ap.add_argument("--words", default="birth", choices=("birth", "all"))
+    ap.add_argument("--words", default="all", choices=("all", "birth"),
+                    help="the templates: every word she will have (the default, 4.9) or the birth words only")
     ap.add_argument("--write-margins", action="store_true")
     ap.add_argument("--out", default=None)
-    ap.add_argument("--skip", default="", help="comma list of: margins, voices, cost")
+    ap.add_argument("--skip", default="", help="comma list of: margins, voices, cost, reach")
     a = ap.parse_args()
-    words = list(LX.BIRTH_WORDS) + (list(TP.GROWTH_WORDS) if a.words == "all" else [])
+    all_words = list(LX.BIRTH_WORDS) + (list(TP.GROWTH_WORDS) if a.words == "all" else [])
+    words = list(LX.BIRTH_WORDS)                                   # the rule is measured on the words she has at birth ...
+    can_have = [w for w in all_words if TP.GROWTH_CLASS.get(w) != "frame"]   # ... and m on those she can come to have
     os.makedirs(a.root, exist_ok=True)
     rng = np.random.default_rng(2)
-    ear, info = build(a.root, words)
+    ear, info = build(a.root, all_words)
     print(f"built: {info}")
     res = dict(build=info)
     skip = set(a.skip.split(","))
@@ -283,6 +413,18 @@ def main():
         for k, r in mm.items():
             print(f"  size {k}: m = {r['m']:+.2f} (passes {100 * r['pass_rate']:.2f}% of {r['trials']} trials)")
         margins = {k: r["m"] for k, r in mm.items()}
+        if len(can_have) > len(words):
+            # m is fixed before birth and never loosened, so it must hold for the vocabulary she grows into: per size, the
+            # stricter of the birth words' sets and the sets of every word she can come to have (the growth queue's, less the
+            # 8 function words no line ends on, which never enter)
+            ma, _, _ = measure_margins(ear, can_have, np.random.default_rng(7))
+            res["margins_grown"] = ma
+            print(f"m over sets drawn from the {len(can_have)} words she can come to have: " +
+                  ", ".join(f"{k}: {r['m']:+.2f}" for k, r in ma.items()))
+            margins = {k: max(margins[k], ma[k]["m"]) for k in SIZES}     # accepted when d - d_bank < -m: the larger m is stricter
+            print("m fixed (the stricter of the two, per size): " + ", ".join(f"{k}: {v:+.2f}" for k, v in margins.items()))
+        res["m"] = margins
+    deltas = dict(K.EAR_DELTA)
     if "voices" not in skip:
         rows = voice_rows(ear, words, a.root)
         before, _ = measure_voices(rows, words, margins, {k: 1e9 for k in SIZES}, np.random.default_rng(3))
@@ -312,6 +454,23 @@ def main():
                                dict(ear.meta, margins_source="tools/sim_parent_ear.py on the stand-in babbler"))
             ear.save(os.path.join(a.root, "parent_ear.npz"))
             print(f"  m and delta written into the ear: digest {ear.digest[:16]}")
+    if "reach" not in skip:
+        none = {k: 1e9 for k in SIZES}
+        settings = {"fixed": (margins, deltas), "no_delta": (margins, none),
+                    "p3_consts": ({k: K.EAR_M[k] for k in SIZES}, {k: K.EAR_DELTA[k] for k in SIZES}),
+                    "p3_no_delta": ({k: K.EAR_M[k] for k in SIZES}, none)}
+        rr = measure_reach(ear, words, np.random.default_rng(8), settings)
+        res["reach"] = rr
+        print("the tract's reach on this ear (the study's productions; accepted in 50 sets a size holding the word, mean over "
+              "sizes 1-8 (exact); m and delta as fixed / without delta / the consts as they were / those without delta):")
+        for k, r in rr.items():
+            if not r.get("sizes"):
+                print(f"  {k:14s} silent")
+                continue
+            mean = {nm: (np.mean([v[nm][0] for v in r["sizes"].values()]), np.mean([v[nm][1] for v in r["sizes"].values()]))
+                    for nm in settings}
+            print(f"  {k:14s} rank {r['rank']:2d} (nearest {r['nearest']!r}, {r['turns']} turn(s)): " +
+                  " / ".join(f"{100 * mean[nm][0]:5.1f}% ({100 * mean[nm][1]:3.0f}%)" for nm in settings))
     if "cost" not in skip:
         c = measure_cost(ear, words, rng)
         res["cost"] = c

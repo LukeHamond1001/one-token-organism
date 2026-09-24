@@ -25,9 +25,12 @@ held-out babble for m, the held-out voices' other words for delta) passes as the
 
 WHAT NEVER CHANGES. The templates, the bank and the margins are fixed before birth, and nothing in life adds to them: there is no
 add_template (the prototype had one, "the child's own accepted productions"; A27 refuses it, since each accepted production added
-would widen what passes, so the child's own chance acceptances would loosen the criterion over time). The arrays are read-only and
-their digest is fixed at build; hear() reads them and writes nothing. So the same utterance in the same situation is heard the
-same way on the first day and the hundredth (body/tests/test_sim_lang.py holds it).
+would widen what passes, so the child's own chance acceptances would loosen the criterion over time). Every array she scores
+with (the templates, the bank, the stacks the DTW reads) is a view of an immutable bytes buffer, so no flag can make it writable;
+the margins, the words and the tables are read-only mappings; no attribute can be set after the build. verify() rebuilds the
+digest from the very arrays she scores with (load() calls it, and the conduct at every night boundary). hear() reads them and
+writes nothing. So the same utterance in the same situation is heard the same way on the first day and the hundredth
+(body/tests/test_sim_lang.py holds it, and that no write reaches her ear).
 
 HER TEMPLATES (A27; consts.EAR_VOICES): each word she knows said alone by her own voice at the plain and approval pitch, by the
 same synthesizer at the old child pitch, and by 8 other macOS voices (Flo, Sandy, Shelley, Eddy, Reed, Junior, Kathy, Fred:
@@ -47,6 +50,7 @@ the design's figures for it (94-100% within the synthesizer, 72-96% across held-
 import hashlib
 import json
 import math
+from types import MappingProxyType
 
 import numpy as np
 
@@ -88,19 +92,36 @@ def template_of(x_pa):
     return ceps(trim(log_bands(x_pa)), 0)
 
 
+def frozen(a, dtype=np.float64):
+    """a copy of a as a view of an immutable bytes buffer: read-only, and no flag can make it writable."""
+    a = np.ascontiguousarray(a, dtype)
+    return np.frombuffer(a.tobytes(), dtype).reshape(a.shape)
+
+
 class _Stack:
-    """templates stacked for the DTW: frames [K, M, d] padded, lengths, squared norms."""
+    """templates stacked for the DTW: frames [K, M, d] padded, lengths, squared norms; frozen once built."""
 
     def __init__(self, items):
         self.K = len(items)
-        self.L = np.array([len(t) for t in items], np.int64)
+        self.L = frozen([len(t) for t in items], np.int64)
         self.M = int(self.L.max()) if self.K else 0
         T = np.zeros((self.K, max(self.M, 1), NCEP))
         for i, t in enumerate(items):
             T[i, :len(t)] = t
-        self.valid = np.arange(max(self.M, 1))[None, :] < self.L[:, None]
-        self.flat = T.reshape(self.K * max(self.M, 1), NCEP)
-        self.t2 = (self.flat ** 2).sum(1)
+        self.valid = frozen(np.arange(max(self.M, 1))[None, :] < self.L[:, None], np.bool_)
+        self.flat = frozen(T.reshape(self.K * max(self.M, 1), NCEP))
+        self.t2 = frozen((self.flat ** 2).sum(1))
+        self._built = True
+
+    def __setattr__(self, k, v):
+        if getattr(self, "_built", False):
+            raise AttributeError("the parent's ear is fixed before birth (A27): nothing in life changes it")
+        object.__setattr__(self, k, v)
+
+    def items(self):
+        """the templates as scored (for verify)."""
+        T = self.flat.reshape(self.K, max(self.M, 1), NCEP)
+        return [T[i, :int(n)] for i, n in enumerate(self.L)]
 
 
 def dtw(q, st):
@@ -152,26 +173,18 @@ class ParentEar:
 
     def __init__(self, templates, bank, margins=None, deltas=None, meta=None):
         self.words = tuple(templates)
-        self.order = {w: i for i, w in enumerate(self.words)}
-        self._w = {}
-        for w, items in templates.items():
-            arrs = []
-            for it in items:
-                a = np.array(it[1] if isinstance(it, tuple) else it, np.float64)
-                a.setflags(write=False)
-                arrs.append(a)
-            self._w[w] = tuple(arrs)
-        self.labels = {w: tuple(it[0] if isinstance(it, tuple) else "" for it in items) for w, items in templates.items()}
-        bank = [np.array(b, np.float64) for b in bank]
-        for b in bank:
-            b.setflags(write=False)
-        self.bank = tuple(bank)
+        self.order = MappingProxyType({w: i for i, w in enumerate(self.words)})
+        self._w = MappingProxyType({w: tuple(frozen(it[1] if isinstance(it, tuple) else it) for it in items)
+                                    for w, items in templates.items()})
+        self.labels = MappingProxyType({w: tuple(it[0] if isinstance(it, tuple) else "" for it in items)
+                                        for w, items in templates.items()})
+        self.bank = tuple(frozen(b) for b in bank)
         self._bank = _Stack(self.bank)
-        self._stacks = {w: _Stack(a) for w, a in self._w.items()}
+        self._stacks = MappingProxyType({w: _Stack(a) for w, a in self._w.items()})
         self.max_len = max([len(a) for arrs in self._w.values() for a in arrs] + [0])
-        self.margins = {int(k): float(v) for k, v in (margins if margins is not None else K.EAR_M).items()}
-        self.deltas = {int(k): float(v) for k, v in (deltas if deltas is not None else K.EAR_DELTA).items()}
-        self.meta = dict(meta or {})
+        self.margins = MappingProxyType({int(k): float(v) for k, v in (margins if margins is not None else K.EAR_M).items()})
+        self.deltas = MappingProxyType({int(k): float(v) for k, v in (deltas if deltas is not None else K.EAR_DELTA).items()})
+        self.meta = MappingProxyType(json.loads(json.dumps(dict(meta or {}))))
         self.digest = self._digest()
 
     def __setattr__(self, k, v):
@@ -179,17 +192,33 @@ class ParentEar:
             raise AttributeError("the parent's ear is fixed before birth (A27): nothing in life changes it")
         object.__setattr__(self, k, v)
 
-    def _digest(self):
+    def _digest(self, scored=False):
+        """sha256 of her words, templates, bank and margins; scored=True: of the arrays the DTW actually reads."""
         h = hashlib.sha256()
         for w in self.words:
             h.update(w.encode() + b"\0")
-            for a in self._w[w]:
+            for a in (self._stacks[w].items() if scored else self._w[w]):
                 h.update(np.ascontiguousarray(a).tobytes())
-        for b in self.bank:
+        for b in (self._bank.items() if scored else self.bank):
             h.update(np.ascontiguousarray(b).tobytes())
         h.update(json.dumps(sorted((int(k), float(v)) for k, v in self.margins.items())).encode())
         h.update(json.dumps(sorted((int(k), float(v)) for k, v in self.deltas.items())).encode())
         return h.hexdigest()
+
+    def verify(self):
+        """her ear as built: the digest rebuilt from the arrays she keeps and from the stacks she scores with (their norms
+        and masks too) must be the one fixed at build; else ValueError (the life pauses)."""
+        ok = self._digest() == self.digest and self._digest(scored=True) == self.digest
+        for st in list(self._stacks.values()) + [self._bank]:
+            ok = ok and np.array_equal(st.t2, (st.flat ** 2).sum(1)) and \
+                np.array_equal(st.valid, np.arange(max(st.M, 1))[None, :] < st.L[:, None])
+        if not ok:
+            raise ValueError("the parent's ear no longer matches its digest: something changed it after its build (A27)")
+        return True
+
+    def missing(self, words):
+        """the words she has no templates for (her ear is built with every word before birth, 4.9)."""
+        return [w for w in words if w not in self._w]
 
     @staticmethod
     def _by_size(table, size):
@@ -268,7 +297,7 @@ class ParentEar:
                 tv.append(lab)
                 frames.append(a)
         manifest = dict(words=list(self.words), voices=tv, margins={str(k): v for k, v in self.margins.items()},
-                        deltas={str(k): v for k, v in self.deltas.items()}, meta=self.meta, digest=self.digest)
+                        deltas={str(k): v for k, v in self.deltas.items()}, meta=dict(self.meta), digest=self.digest)
         tmp = str(path) + ".tmp.npz"
         np.savez(tmp, tmpl=np.concatenate(frames) if frames else np.zeros((0, NCEP)), tmpl_len=np.array(tl, np.int64),
                  tmpl_word=np.array(tw, np.int64), bank=np.concatenate(self.bank) if self.bank else np.zeros((0, NCEP)),
@@ -294,4 +323,5 @@ class ParentEar:
                   man["meta"])
         if ear.digest != man["digest"]:
             raise ValueError(f"the parent's ear at {path} does not match its digest: it changed after it was built")
+        ear.verify()
         return ear

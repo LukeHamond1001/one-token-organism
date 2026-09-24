@@ -15,8 +15,12 @@ in which register, and the acts her talk accompanies.
                ticks, the same line not within 60, the same object named at most once per 20 (a variation set counts as one
                naming), at most one set per object per 120, idle at most one line per 40. Variation sets: 2-3 lines sharing the
                focus word, frames differing by at least a word, 6 ticks apart (Kuntay and Slobin; Onnis et al. 2008). A new
-               word's set: 3 lines in the new-word register, the word last and emphasized (4.4, 4.8). Claude's steering lines
-               (4.5, A14): each held to the line check (and its situation), used at most 3 times. Every refusal is logged.
+               word's set: 3 lines in the new-word register, the word last and emphasized, its referent shown (4.4, 4.8, A15);
+               up to NEW_PER_DAY = 3 new words a day, each joining her words at the night. Claude's steering lines (4.5, A14):
+               each held to the line check (and its situation), used at most 3 times, a line ending on the day's new word said in
+               the new-word register and emphasized. Every refusal, and every request dropped, is logged.
+               A word counts as said when its sound has ended: the talk-over's cut withdraws the words it stopped (4.6), from her
+               echo window, her last focus word and the ledger alike.
   Conduct      the speech side of L2 (4.10), by its priority: the child's pain or distress (comfort), being hit ("oh!", stage 2
                "no."), a low charge (the meal's line), the child's vocal turn (a reply 3 ticks after it ends: a confirmation, a
                recast, an echo or an answer, by what her ear accepted), finishing her word (the talk-over stop: she stops and
@@ -25,6 +29,12 @@ in which register, and the acts her talk accompanies.
                intents through request(). The judgments she makes by talk (a right name, a met ask, an approximation, stage 1's
                vocal turn: 4.3's worth table) are returned for her feelings (body/sim/parent_feel.Feelings.judge); she never
                makes a feeling here. The motor judgments (a roll, a reach) and the face are the world's.
+               A right name is an exact word whose referent is in the child's fovea or hand (her face in its fovea for "mama"),
+               or the answer to her name ask ("what is this?"); an approximation earns its smile of 1 only there too (stage 2),
+               never where the exact word would earn nothing. The ear's wider expected set (her last focus word, the routine's
+               words) lets her hear and echo a word, not smile at it. An ask ("where is the X?", "give me the X", the call) is
+               judged from the moment its word has been heard: X in the child's view and no X in its fovea then (else the ask
+               is void), X landing in its fovea within the window and staying 2 ticks (4.8).
 
 Built here from 4.10: the talk and its timing. Left to W2 and P3's day 4 / P4: L1's gaze and face each tick, the scaffolding
 ladders' acts, the routines' order, and the motor judgments; the acts are requested here and carried out there.
@@ -39,8 +49,8 @@ import numpy as np
 
 from . import consts as K
 from . import templates as TP
-from .lexicon import BIRTH_WORDS, NAME
-from ..voice.playback import CUT_MAX
+from .lexicon import BIRTH_WORDS, NAME, PARENT_NAME
+from ..voice.playback import CUT_MAX, TICK
 
 STREAM = 3                                    # the fast layer's random stream of the body's seed (ours; world 1, tract 2)
 REFUSED_KEEP = 500                            # refusals kept for the digest and the instruments (the ledger keeps what she said)
@@ -65,10 +75,12 @@ ACT_KINDS = {
     "walk": "walk to the target (the door, the sofa, the child's side: A6's paths)",
     "cover_face": "her hands over her face (peekaboo)",
     "reveal_face": "her hands away from her face (the reveal)",
+    "do": "her own body does the named act while she says its word (a verb's introduction: its act from templates.NEEDS, "
+          "e.g. 'clap', 'push', 'stand'; W2 refuses what it cannot do, and templates.showable() keeps such a word waiting)",
 }
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
               "withdraw": 2, "offer_bottle": 12, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
-              "reveal_face": 2}                # the stub's nominal times, ours; W2 measures its own
+              "reveal_face": 2, "do": 7}       # the stub's nominal times, ours; W2 measures its own
 
 
 @dataclass(frozen=True)
@@ -82,8 +94,9 @@ class Act:
 
 
 class StubMotion:
-    """the motion interface W2 implements: request(act, tick) -> id; status(id, tick) -> 'running' | 'done' | 'refused';
-    cancel(id); state() / load_state(). The stub runs each act for its nominal time and moves nothing."""
+    """the motion interface W2 implements: request(act, tick) -> id; status(id, tick) -> 'running' | 'done' | 'refused' |
+    'cancelled' (after cancel(id)); state() / load_state(). The stub runs each act for its nominal time and moves nothing (it
+    never refuses)."""
 
     def __init__(self):
         self.acts = []                        # [(id, tick, kind, target, during, done_tick, cancelled)]
@@ -159,9 +172,9 @@ INTENTS = {
     "night": Intent("comfort", False, None, (Act("walk", "sofa"),)),
     "new_word": Intent("new_word", False, None, (LOOK_O, EYES)),
 }
-INTRO_ACTS = {"toy": (Act("show", "{o}"), EYES), "fixture": (Act("point", "{w}"), LOOK_O), "body": (Act("touch", "{w}"),),
-              "face": (EYES,), "colour": (Act("show", "{o}"), EYES), "adj": (LOOK_O, EYES), "verb": (EYES,),
-              "past": (EYES,), "social": (EYES,)}
+INTRO_ACTS = {"toy": (Act("show", "{o}"), EYES), "fixture": (Act("point", "{w}"), Act("look", "{w}", "focus")),
+              "body": (Act("touch", "{w}"),), "face": (EYES,), "colour": (Act("show", "{o}"), EYES), "adj": (LOOK_O, EYES),
+              "verb": (Act("do", "{v}"), EYES), "past": (EYES,), "social": (EYES,)}
 assert all(k in TP.FRAMES for k in INTENTS if k != "new_word"), [k for k in INTENTS if k not in TP.FRAMES]
 assert set(TP.FRAMES) <= set(INTENTS), set(TP.FRAMES) - set(INTENTS)
 
@@ -173,6 +186,9 @@ def register_for(intent, text):
 
 
 def acts_for(intent, refs=(), b=None, w=None, word_class=None):
+    """the acts a line accompanies. refs: the objects the line is about (its filled slots, or the object its intent was given:
+    "what is this?" shows the object it asks about, "a rattle." shows the rattle); an act on "{o}" with no object is dropped
+    (an intent that needs one is refused before it is said: the ask for a name, the gaze and give asks)."""
     tmpl = INTRO_ACTS.get(word_class, ()) if intent == "new_word" else INTENTS[intent].acts
     out = []
     for a in tmpl:
@@ -185,6 +201,11 @@ def acts_for(intent, refs=(), b=None, w=None, word_class=None):
             tgt = b
         elif tgt == "{w}":
             tgt = w
+        elif tgt == "{v}":
+            need = TP.NEEDS.get(w, ())
+            if len(need) < 2 or need[0] != "act":
+                continue
+            tgt = need[1]
         out.append(Act(a.kind, tgt, a.during))
     return tuple(out)
 
@@ -204,14 +225,14 @@ class Say:
 
 
 class FastLayer:
-    """her lines and their manners. vocab: the words she has (birth words, then the growth words as they enter); new_word: the
-    day's new word (said only last, in the new-word register; it joins her words at the next night); held: the never-taught
-    pairs still held out."""
+    """her lines and their manners. vocab: the words she has (birth words, then the growth words as they enter); new_words: the
+    day's new words (at most NEW_PER_DAY; each said only last, one a line, in the new-word register; they join her words at
+    the next night); held: the never-taught pairs still held out."""
 
     def __init__(self, seed=1, vocab=BIRTH_WORDS, stage=1):
         self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(STREAM,))))
         self.vocab = tuple(vocab)
-        self.new_word = None
+        self.new_words = ()
         self.held = tuple(tuple(h) for h in K.HELD_PAIRS)
         self.stage = stage
         self.last_said = {}                   # text -> tick
@@ -220,10 +241,11 @@ class FastLayer:
         self.last_call = NEVER
         self.last_line = NEVER                # tick her last line ended
         self.last_expect = NEVER              # tick her last question, ask or call ended
-        self.last_focus = None                # the focus word of her last line (A27: expected as an echo)
+        self.last_focus = None                # the focus word of the last line she finished (A27: expected as an echo)
         self.said_word = {}                   # word -> the tick she last finished saying it (the echo window, 4.8)
         self.busy_until = NEVER               # her current line sounds until this tick (exclusive)
         self.current = None                   # the line sounding
+        self.spans = None                     # its words as they sound: dict(start, words=[[word, first sample, end sample]])
         self.queue = []                       # a set's later lines, each said 6 ticks after the last one ended
         self.recent = []                      # (tick, kind, object) she saw or heard in the last RECENT ticks
         self.steer = []                       # Claude's lines: [dict(text, situation, uses, tick_from, ttl)]
@@ -243,10 +265,13 @@ class FastLayer:
         return t < self.busy_until
 
     def night(self):
-        """a night boundary: the day's new word joins her words."""
-        if self.new_word is not None and self.new_word not in self.vocab:
-            self.vocab = self.vocab + (self.new_word,)
-        self.new_word = None
+        """a night boundary: the day's new words join her words, in the order she introduced them."""
+        self.vocab = self.vocab + tuple(w for w in self.new_words if w not in self.vocab)
+        self.new_words = ()
+
+    def words_known(self):
+        """her words and the day's new ones (what her ear and her transcript know, A15)."""
+        return self.vocab + tuple(w for w in self.new_words if w not in self.vocab)
 
     def open_pair(self, pair):
         """a never-taught pair's test opens (A28): it is no longer held out of her lines."""
@@ -262,11 +287,12 @@ class FastLayer:
             if got is None:
                 continue
             text, focus, refs = got
+            refs = refs or ((o.id,) if o is not None else ())      # the object the line is about, slot or not ("what is this?")
             if text in skip or self.last_said.get(text, NEVER) > t - K.SAME_LINE:
                 continue
-            reg = "new_word" if (intent == "new_word" or (focus is not None and focus == self.new_word)) else \
+            reg = "new_word" if (intent == "new_word" or (focus is not None and focus in self.new_words)) else \
                 register_for(intent, text)
-            ok, why = TP.check(text, self.vocab, self.new_word, p, refs, self.held, recent_events=self.recent)
+            ok, why = TP.check(text, self.vocab, self.new_words, p, refs, self.held, recent_events=self.recent)
             if not ok:
                 self.refused.append((t, text, why))
                 continue
@@ -305,19 +331,40 @@ class FastLayer:
             return False, "the same object named within 20 ticks"
         return True, ""
 
-    def commit(self, line, t, n_ticks, word_ends=(), in_set=False):
-        """she starts the line at t, sounding n_ticks; word_ends: [(word, the tick its sound ends)]."""
+    def commit(self, line, t, n_ticks, spans, in_set=False):
+        """she starts the line at t, sounding n_ticks; spans: [(word, first sample, end sample)] from the line's start. Her
+        words count as said only as their sound ends (voiced()), so a word the talk-over stops is never said."""
         self.last_said[line.text] = t
         self.busy_until = t + max(1, int(n_ticks))
         self.current = line
+        self.spans = dict(start=int(t), words=[[w, int(a), int(e)] for w, a, e in spans])
         self.n_lines += 1
         if line.intent in ("call", "hall_call"):
             self.last_call = t
         if line.refs and line.focus is not None and not in_set and line.intent in NAMING:
             self.last_named[line.refs[0]] = t
-        self.last_focus = line.focus
-        for w, te in word_ends:
-            self.said_word[w] = te
+        self.last_focus = None                # set again when this line's focus word has been said (voiced)
+
+    def voiced(self, w, te, last):
+        """her word w finished sounding at te (the ledger's voiced(), each word once); last: it was the line's last word."""
+        self.said_word[w] = te
+        if last and self.current is not None:
+            self.last_focus = self.current.focus
+
+    def cut_point(self, t):
+        """the talk-over at tick t (the child's sound heard at t; her line's samples up to the end of tick t have sounded):
+        -> (the tick her line stops, the number of its words said), by the playback's own rule (body/sim/voice/playback.py
+        Utterance.cut): the word sounding is finished if its end is at most CUT_MAX ticks away, else broken off at CUT_MAX
+        ticks and not said; between words she stops at once; later words are never said."""
+        sp = self.spans
+        pos = (t + 1 - sp["start"]) * TICK
+        stop = pos
+        for _w, on, end in sp["words"]:
+            if on < pos < end:
+                stop = end if end - pos <= CUT_MAX * TICK else pos + CUT_MAX * TICK
+                break
+        kept = sum(1 for _w, _on, end in sp["words"] if end <= stop)
+        return sp["start"] + -(-stop // TICK), kept
 
     def ended(self, t):
         """her line stopped sounding at t (whole, or cut by the talk-over)."""
@@ -326,13 +373,14 @@ class FastLayer:
             if INTENTS[self.current.intent].expect:
                 self.last_expect = t
             self.current = None
+            self.spans = None
         self.busy_until = min(self.busy_until, t)
 
     # ------------------------------------------------------------------ Claude's lines (4.5, A14)
     def add_steer(self, text, situation, t, ttl=2000):
         """a steering row's line tied to a situation ("any", "holds:duck", "target:ball", "sees:drum"); checked now for form,
-        vocabulary, the held-out pairs and praise, and again for what she perceives each time it is said. -> (ok, why)."""
-        ok, why = TP.check(text, self.vocab, self.new_word, None, (), self.held, source="claude")
+        vocabulary, the held-out pairs, praise and asks, and again for what she perceives each time it is said. -> (ok, why)."""
+        ok, why = TP.check(text, self.vocab, self.new_words, None, (), self.held, source="claude")
         if ok:
             self.steer.append(dict(text=text, situation=situation, uses=0, tick_from=int(t), ttl=int(ttl)))
         else:
@@ -359,35 +407,43 @@ class FastLayer:
                 continue
             if not self.situation(s["situation"], p) or self.last_said.get(s["text"], NEVER) > t - K.SAME_LINE:
                 continue
-            ok, why = TP.check(s["text"], self.vocab, self.new_word, p, (), self.held, source="claude",
+            ok, why = TP.check(s["text"], self.vocab, self.new_words, p, (), self.held, source="claude",
                                recent_events=self.recent)
             if not ok:
                 self.refused.append((t, s["text"], "steer: " + why))
                 continue
             s["uses"] += 1
-            return TP.Line(s["text"], "steer", register_for("steer", s["text"]), None, None, (), "claude", s["situation"])
+            last = TP.words(s["text"])[-1]
+            focus = None if last in TP.FUNCTION else last          # her focus word, as in the frames: the last content word
+            reg = "new_word" if last in self.new_words and last not in self.vocab else register_for("steer", s["text"])
+            return TP.Line(s["text"], "steer", reg, focus, focus, (), "claude", s["situation"])
         return None
 
     # ------------------------------------------------------------------ save
     def state(self):
-        return dict(rng=self.rng.bit_generator.state, vocab=list(self.vocab), new_word=self.new_word,
+        return dict(rng=self.rng.bit_generator.state, vocab=list(self.vocab), new_words=list(self.new_words),
                     held=[list(h) for h in self.held], stage=self.stage, last_said=dict(self.last_said),
                     last_named=dict(self.last_named), last_set=dict(self.last_set), last_call=self.last_call,
                     last_line=self.last_line, last_expect=self.last_expect,
                     last_focus=self.last_focus, said_word=dict(self.said_word), busy_until=self.busy_until,
-                    current=None if self.current is None else _line_d(self.current), queue=[_line_d(ln) for ln in self.queue],
+                    current=None if self.current is None else _line_d(self.current),
+                    spans=None if self.spans is None else dict(start=self.spans["start"],
+                                                               words=[list(x) for x in self.spans["words"]]),
+                    queue=[_line_d(ln) for ln in self.queue],
                     recent=[list(e) for e in self.recent], steer=[dict(s) for s in self.steer],
                     refused=[list(r) for r in self.refused], n_lines=self.n_lines)
 
     def load_state(self, s):
         self.rng.bit_generator.state = s["rng"]
-        self.vocab, self.new_word = tuple(s["vocab"]), s["new_word"]
+        self.vocab, self.new_words = tuple(s["vocab"]), tuple(s["new_words"])
         self.held, self.stage = tuple(tuple(h) for h in s["held"]), s["stage"]
         self.last_said, self.last_named, self.last_set = dict(s["last_said"]), dict(s["last_named"]), dict(s["last_set"])
         self.last_call, self.last_line, self.last_expect = s["last_call"], s["last_line"], s["last_expect"]
         self.last_focus, self.said_word = s["last_focus"], dict(s["said_word"])
         self.busy_until = s["busy_until"]
         self.current = None if s["current"] is None else _line_l(s["current"])
+        self.spans = None if s["spans"] is None else dict(start=s["spans"]["start"],
+                                                          words=[list(x) for x in s["spans"]["words"]])
         self.queue = [_line_l(d) for d in s["queue"]]
         self.recent = [tuple(e) for e in s["recent"]]
         self.steer = [dict(x) for x in s["steer"]]
@@ -409,6 +465,9 @@ def _line_l(d):
 
 
 # ------------------------------------------------------------------------------------------------------------- conduct
+ASKS_NEEDING_O = {"ask_where", "ask_give", "ask_what"}                # asks about an object: refused without one
+
+
 class Conduct:
     """the speech side of L2. voice: anything with clip(text, register, emphasis=) -> a clip with .words [(word, first sample,
     end sample)], .pcm, .key and .digest (body/sim/voice/synth.VoiceCache; None: a line is timed at 3 ticks a word and has no
@@ -423,9 +482,10 @@ class Conduct:
         self.ledger = ledger if ledger is not None else Ledger()
         self.motion = motion if motion is not None else StubMotion()
         self.routine = None                   # the routine under way (L3 sets it: "feed", "greet", "leave", "peekaboo", ...)
-        self.pending = None                   # the ask she is judging: dict(kind, word, obj, tick, until)
+        self.pending = None                   # the ask she is judging: dict(kind, word, obj, tick, open, until, trial)
         self.reply_due = None                 # the reply owed to the child's turn: dict(tick, kind, word, obj)
         self.target_run = [None, 0]           # the child's target and how many ticks running
+        self.no_target_since = 0              # the tick since which the child has had no target (the redirect, 4.10)
         self.last_vocal_smile = NEVER
         self.turn = None                      # the child's turn under way: dict(start, in_pause, looked)
         self.sound_hist = []                  # the last NONSTOP[1] ticks: was the child sounding
@@ -438,8 +498,21 @@ class Conduct:
         return self.fast.stage
 
     def request(self, intent, **kw):
-        """an episode's or Claude's intent (L3, P4; P5), said when the priorities allow."""
+        """an episode's or Claude's intent (L3, P4; P5), said when the priorities allow (a request that cannot be said is
+        dropped and logged in fast.refused)."""
         self.requests.append((intent, dict(kw)))
+
+    def night(self):
+        """a night boundary: the day's new words join her words; her ear is checked against its digest (A27: nothing changed
+        it) and must know every word she now has."""
+        self.fast.night()
+        ear = None if self.transcriber is None else self.transcriber.ear
+        if ear is not None:
+            ear.verify()
+            missing = ear.missing(self.fast.vocab)
+            if missing:
+                raise ValueError(f"her ear has no templates for {missing}: it is built with every word before birth "
+                                 f"(tools/sim_parent_ear.py --words all)")
 
     # ------------------------------------------------------------------ the tick
     def tick(self, t, p, tract=None, distance_m=1.0, token=None, voice_done=None):
@@ -449,16 +522,20 @@ class Conduct:
         length ends it. -> Say."""
         f = self.fast
         f.observe(p)
+        for w, te, last in self.ledger.voiced(t, p):        # her words whose sound has ended by now: said (4.6, 4.8)
+            f.voiced(w, te, last)
         if voice_done is not None:
             f.ended(voice_done)
         elif f.current is not None and t >= f.busy_until:
             f.ended(f.busy_until)
         out = Say()
         self.target_run = [p.child_target, self.target_run[1] + 1 if p.child_target == self.target_run[0] else 1]
+        if p.child_target is not None:
+            self.no_target_since = t + 1
         # her ears (the transcriber): the child's turn, its words at the turn's end
         heard, sounding = [], p.child_sounding
         if self.transcriber is not None:
-            vocab = f.vocab + ((f.new_word,) if f.new_word else ())       # her ear knows her words and the day's new one
+            vocab = f.words_known()                          # her ear knows her words and the day's new ones
             exp = self.transcriber.expected(p, self.pending, f.last_focus, self.routine, vocab)
             heard = self.transcriber.tick(t, tract, distance_m, token, f.speaking(t), exp, p, f.said_word, vocab)
             sounding = self.transcriber.sounding
@@ -470,21 +547,28 @@ class Conduct:
             if f.speaking(t):                               # the talk-over: she finishes her word, stops, listens (4.6)
                 out.cut, out.listen = True, True
                 self.cuts += 1
-                self.ledger.cut(t, f.current)
-                f.busy_until = min(f.busy_until, t + CUT_MAX)   # the playback's cap; the world's voice_done may end it sooner
+                stop, kept = f.cut_point(t)
+                self.ledger.cut(t, f.current, kept, stop)
+                f.busy_until = min(f.busy_until, stop)      # the world's voice_done may end it sooner
                 f.queue = []
+                if self.pending is not None and self.pending["tick"] == f.spans["start"] and \
+                        self.pending["open_idx"] >= kept:        # her ask stopped before its word was said: withdrawn
+                    self.ledger.withdraw(t, self.pending["trial"], "cut before its word was said")
+                    self.pending = None
         if self.turn is not None:
             self.turn["looked"] |= p.child_target == "mama"
         self.sound_hist = (self.sound_hist + [bool(sounding)])[-K.NONSTOP[1]:]
         nonstop = len(self.sound_hist) == K.NONSTOP[1] and np.mean(self.sound_hist) > K.NONSTOP[0]
         self.nonstop_since = (self.nonstop_since if self.nonstop_since is not None else t) if nonstop else None
-        # the asks she is judging (4.6: 20 ticks for a gaze, 40 for an act)
-        for word, kind in self.ledger.observe(t, p):
-            if self.pending is not None and self.pending["word"] == word:
+        # the asks she is judging (4.6: 20 ticks for a gaze, 40 for an act; 4.8: from the moment the word was heard)
+        for word, kind, tid, result in self.ledger.observe(t, p):
+            if self.pending is None or self.pending["trial"] != tid:
+                continue
+            if result == "met":
                 if kind != "call" or not self.ledger.understood(NAME):     # the call answered, until the name is understood
                     out.judgments.append((K.WORTH_MET_ASK, "met_ask", word))
                 self.reply_due = dict(tick=t, kind="confirm", word=word, obj=self.pending.get("obj"))
-                self.pending = None
+            self.pending = None
         if self.pending is not None and t > self.pending["until"]:
             self.pending = None
         for cw in heard:                                    # the child's turn ended (or its tokens were read): judge, reply
@@ -497,26 +581,39 @@ class Conduct:
             self._say(got[0], t, p, out, in_set=got[1])
         return out
 
+    def _right(self, w, t, p):
+        """is w the right word here (4.3's right name)? -> (right, asked): its referent in the child's fovea or hand, her face
+        in its fovea for "mama", or the answer to her name ask once its question was heard."""
+        tgt = p.target_obj()
+        near = {s.name for s in ([tgt] if tgt else []) + [p.obj(h) for h in p.child_holds if p.obj(h) is not None]}
+        if p.child_target == "mama":
+            near.add(PARENT_NAME)
+        asked = self.pending is not None and self.pending["kind"] == "name" and self.pending["word"] == w and \
+            t >= self.pending["open"]
+        return (w in near or asked), asked
+
     def _owe_reply(self, t, cw, p, out):
         """the child's turn ended with cw: the judgment now, the reply 3 ticks later (4.6, 4.3's worth table, A27)."""
         tgt = p.target_obj()
-        near = {s.name: s for s in ([tgt] if tgt else []) + [p.obj(h) for h in p.child_holds if p.obj(h) is not None]}
         kind, obj, w = "reply", tgt, cw.word
         if w is not None:
-            asked = self.pending is not None and self.pending["word"] == w
-            obj = near.get(w) or (p.obj(self.pending["obj"]) if asked and self.pending.get("obj") else None) or \
+            right, asked = self._right(w, t, p)
+            named = {s.name: s for s in ([tgt] if tgt else []) + [p.obj(h) for h in p.child_holds if p.obj(h) is not None]}
+            obj = named.get(w) or (p.obj(self.pending["obj"]) if asked and self.pending.get("obj") else None) or \
                 next((s for s in p.seen if s.name == w), None)
-            if cw.exact and (w in near or asked):
+            if cw.exact and right:
                 out.judgments.append((K.WORTH_RIGHT_NAME, "met_ask" if asked else "right_name", w))
                 kind = "confirm"
                 if asked:
                     self.ledger.named(t, w)
                     self.pending = None
-            elif not cw.exact and self.stage >= 2 and self.ledger.exact_count(w, cw.channel) < K.EXACT_UNTIL:
+            elif not cw.exact and right and self.stage >= 2 and self.ledger.exact_count(w, cw.channel) < K.EXACT_UNTIL:
                 out.judgments.append((K.WORTH_APPROX, "approximation", w))
                 kind = "recast"
+            elif cw.exact or w in cw.expected:
+                kind = "echo"                                  # heard in context: echoed, no smile
             else:
-                kind = "echo"
+                kind, w, obj = "reply", None, tgt              # an approximation out of context: answered as a vocal turn
         if self.stage == 1 and cw.channel == "tract" and self.turn is not None and self.turn["in_pause"] and \
                 self.turn["looked"] and t - self.last_vocal_smile >= K.VOCAL_TURN_EVERY:
             out.judgments.append((K.WORTH_VOCAL_TURN, "vocal_turn", None))
@@ -565,7 +662,7 @@ class Conduct:
             if not f.allowed(ln, t, in_set=True)[0]:
                 return None
             f.queue.pop(0)
-            ok, why = TP.check(ln.text, f.vocab, f.new_word, p, ln.refs, f.held, recent_events=f.recent)
+            ok, why = TP.check(ln.text, f.vocab, f.new_words, p, ln.refs, f.held, recent_events=f.recent)
             if ok:
                 return ln, True
             f.refused.append((t, ln.text, "set: " + why))
@@ -590,52 +687,84 @@ class Conduct:
         ln = f.steer_line(t, p)
         if ln is not None and f.allowed(ln, t)[0]:
             return ln, False
-        # 9. idle: she watches (at most one line per 40 ticks; the episodes' idle lines are P4's)
+        # 9. idle: she watches (the episodes' idle lines, at most one per 40 ticks, are P4's)
+        return None
+
+    def _drop(self, t, intent, why):
+        self.fast.refused.append((t, intent, "request: " + why))
         return None
 
     def _compose_request(self, intent, t, p, kw):
+        """an intent asked for by L3 or Claude -> a Line, or None (dropped, and logged in fast.refused with why)."""
         f = self.fast
         if intent == "new_word":
             return self._introduce(kw["word"], t, p, kw.get("o"))
         o = p.obj(kw["o"]) if kw.get("o") else None
         if kw.get("o") and o is None:
-            f.refused.append((t, intent, f"unseen: {kw['o']!r}"))
-            return None
-        if intent in ("label", "label_held", "label_colour", "show", "redirect") and o is not None:
-            if f.last_set.get(o.id, NEVER) > t - K.SET_PER_OBJECT:
-                return None
-            lines = f.variation_set(intent, t, p, o=o, n=kw.get("n"))
-            if lines and f.allowed(lines[0], t)[0]:
-                f.last_set[o.id] = t
-                f.queue = lines[1:]
-                return lines[0]
-            return None
+            return self._drop(t, intent, f"unseen: {kw['o']!r}")
         it = INTENTS[intent]
-        if it.ask == "gaze" and o is not None and (not o.child_sees or p.child_target == o.id):
-            f.refused.append((t, intent, "an ask needs its object in the child's view and not in its fovea (4.8)"))
-            return None
+        if intent in ("label", "label_held", "label_colour", "show", "redirect") and o is not None:
+            if intent == "redirect" and t < self.no_target_since + K.REDIRECT_AFTER:
+                return self._drop(t, intent, f"a redirect only after {K.REDIRECT_AFTER} ticks with no target (4.10)")
+            if f.last_set.get(o.id, NEVER) > t - K.SET_PER_OBJECT:
+                return self._drop(t, intent, f"a set on {o.id!r} within {K.SET_PER_OBJECT} ticks")
+            lines = f.variation_set(intent, t, p, o=o, n=kw.get("n"))
+            if not lines:
+                return self._drop(t, intent, "no line passes the check")
+            ok, why = f.allowed(lines[0], t)
+            if not ok:
+                return self._drop(t, intent, why)
+            f.last_set[o.id] = t
+            f.queue = lines[1:]
+            return lines[0]
+        if intent in ASKS_NEEDING_O and o is None:
+            return self._drop(t, intent, "an ask about an object needs its object")
+        if it.ask == "gaze" or it.ask == "act":
+            tg = p.target_obj()
+            if not o.child_sees:
+                return self._drop(t, intent, "an ask needs its object in the child's view (4.8)")
+            if it.ask == "gaze" and tg is not None and tg.name == o.name:
+                return self._drop(t, intent, f"a {o.name} already in the child's fovea: the ask would be met unasked (4.8)")
+        if it.ask == "call" and p.child_target == "mama":
+            return self._drop(t, intent, "the child already looks at her face: nothing to call it to")
+        if it.ask is not None and self.pending is not None:
+            return self._drop(t, intent, "an ask is already pending")
         ln = f.compose(intent, t, p, o=o, b=kw.get("b"), w=kw.get("w"))
-        if ln is None or not f.allowed(ln, t)[0]:
-            return None
-        if it.ask in ("gaze", "act", "name"):
-            word = o.name if o is not None else ln.focus
-            win = K.JUDGE_ACT if it.ask == "act" else K.JUDGE_GAZE
-            self.pending = dict(kind=it.ask, word=word, obj=None if o is None else o.id, tick=t, until=t + win)
-            self.ledger.ask(t, word, it.ask, None if o is None else o.id, win)
+        if ln is None:
+            return self._drop(t, intent, "no line passes the check")
+        ok, why = f.allowed(ln, t)
+        if not ok:
+            return self._drop(t, intent, why)
         return ln
 
     def _introduce(self, word, t, p, oid=None):
-        """a new word's set (4.8): 3 lines, the word last and emphasized, in the new-word register, its referent shown."""
+        """a new word's set (4.8): 3 lines, the word last and emphasized, in the new-word register, its referent shown (A15);
+        at most NEW_PER_DAY a day, each kept until the night (a second new word never displaces the first)."""
         f = self.fast
-        prev, f.new_word = f.new_word, word
-        o = p.obj(oid) if oid else next((s for s in p.seen if s.name == word), None)
-        if o is None and TP.GROWTH_CLASS.get(word) == "colour":
-            o = next((s for s in p.seen if s.colour == word), None)
-        lines = f.variation_set("new_word", t, p, o=o, w=word, n=3, frames=TP.intro_frames(word))
+        if word in f.vocab:
+            return self._drop(t, "new_word", f"{word!r} is already hers")
+        if word not in f.new_words and len(f.new_words) >= K.NEW_PER_DAY:
+            return self._drop(t, "new_word", f"{word!r}: at most {K.NEW_PER_DAY} new words a life day (4.8)")
+        ear = None if self.transcriber is None else self.transcriber.ear
+        if ear is not None and ear.missing((word,)):
+            return self._drop(t, "new_word", f"{word!r}: her ear has no templates for it (built before birth, --words all)")
+        prev = f.new_words
+        if word not in f.new_words:
+            f.new_words = f.new_words + (word,)
+        if oid:
+            cands = [p.obj(oid)] if p.obj(oid) is not None else []
+        elif TP.GROWTH_CLASS.get(word) == "colour":
+            cands = [s for s in p.seen if s.colour == word] or [None]
+        else:
+            cands = [next((s for s in p.seen if s.name == word), None)]
+        lines = []
+        for o in cands:                                   # a colour on each toy of it in turn (never a held-out pair's noun)
+            lines = f.variation_set("new_word", t, p, o=o, w=word, n=3, frames=TP.intro_frames(word))
+            if len(lines) == 3:
+                break
         if len(lines) < 3 or not f.allowed(lines[0], t)[0]:
-            f.new_word = prev
-            f.refused.append((t, word, f"new word: {len(lines)} of its 3 lines pass"))
-            return None
+            f.new_words = prev
+            return self._drop(t, "new_word", f"{word!r}: {len(lines)} of its 3 lines pass")
         f.queue = lines[1:]
         return lines[0]
 
@@ -659,27 +788,50 @@ class Conduct:
         clip = None
         if self.voice is not None:
             clip = self.voice.clip(line.text, line.register, emphasis=line.emphasis)
-            n = int(math.ceil(len(clip.pcm) / 2400))
-            word_ends = [(w, t + (max(e, 1) - 1) // 2400) for w, _, e in clip.words]
+            n = int(math.ceil(len(clip.pcm) / TICK))
+            spans = [(w, int(a), int(e)) for w, a, e in clip.words]
         else:
             ws = TP.words(line.text)
             n = 3 * len(ws)                                  # no voice: 3 ticks a word (an instrument's timing, ours)
-            word_ends = [(w, t + 3 * i + 2) for i, w in enumerate(ws)]
-        f.commit(line, t, n, word_ends, in_set=in_set)
-        if line.intent in ("call", "hall_call") and self.pending is None:
-            self.pending = dict(kind="call", word=NAME, obj=None, tick=t, until=t + n + K.PAUSE_EXPECT)
-            self.ledger.ask(t, NAME, "call", None, n + K.PAUSE_EXPECT)
+            spans = [(w, 3 * i * TICK, (3 * i + 3) * TICK) for i, w in enumerate(ws)]
+        word_ends = [(w, t + (max(e, 1) - 1) // TICK) for w, _a, e in spans]
+        f.commit(line, t, n, spans, in_set=in_set)
+        self.ledger.said(t, line, p, clip=clip, n_ticks=n, word_ends=word_ends)
+        it = INTENTS[line.intent] if line.intent in INTENTS else None
+        if it is not None and it.ask is not None and self.pending is None:
+            self._open_ask(line, it, t, n, word_ends, p)
         cls = TP.GROWTH_CLASS.get(line.focus) if line.intent == "new_word" else None
         acts = acts_for(line.intent, line.refs, b=line.focus, w=line.focus, word_class=cls)
         for a in acts:
             self.motion.request(a, t)
         out.line, out.clip, out.acts = line, clip, acts
-        self.ledger.said(t, line, p, clip=clip, n_ticks=n, word_ends=word_ends)
+
+    def _open_ask(self, line, it, t, n, word_ends, p):
+        """her ask is judged from the tick its word has been heard (4.8): a gaze or act ask from the end of its object's word, a
+        name ask from the end of its question, the call from the end of the child's name."""
+        o = p.obj(line.refs[0]) if line.refs else None
+        if it.ask == "call":
+            word, win_end = NAME, t + n + K.PAUSE_EXPECT
+        elif it.ask == "name":
+            word = o.name if o is not None else line.focus
+        else:
+            word = o.name
+        if word is None:
+            return
+        ws = [w for w, _te in word_ends]
+        idx = len(ws) - 1 if it.ask == "name" or word not in ws else ws.index(word)
+        opened = word_ends[idx][1]
+        if it.ask != "call":
+            win_end = opened + (K.JUDGE_ACT if it.ask == "act" else K.JUDGE_GAZE)
+        tid = self.ledger.ask(t, word, it.ask, None if o is None else o.id, win_end - opened, open_at=opened)
+        self.pending = dict(kind=it.ask, word=word, obj=None if o is None else o.id, tick=t, open=opened, open_idx=idx,
+                            until=win_end, trial=tid)
 
     # ------------------------------------------------------------------ save
     def state(self):
         return dict(fast=self.fast.state(), routine=self.routine, pending=self.pending, reply_due=self.reply_due,
-                    target_run=list(self.target_run), last_vocal_smile=self.last_vocal_smile, turn=self.turn,
+                    target_run=list(self.target_run), no_target_since=self.no_target_since,
+                    last_vocal_smile=self.last_vocal_smile, turn=self.turn,
                     sound_hist=list(self.sound_hist), nonstop_since=self.nonstop_since,
                     requests=[[i, dict(k)] for i, k in self.requests], cuts=self.cuts, motion=self.motion.state(),
                     ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state())
@@ -687,7 +839,8 @@ class Conduct:
     def load_state(self, s):
         self.fast.load_state(s["fast"])
         self.routine, self.pending, self.reply_due = s["routine"], s["pending"], s["reply_due"]
-        self.target_run, self.last_vocal_smile, self.turn = list(s["target_run"]), s["last_vocal_smile"], s["turn"]
+        self.target_run, self.no_target_since = list(s["target_run"]), s["no_target_since"]
+        self.last_vocal_smile, self.turn = s["last_vocal_smile"], s["turn"]
         self.sound_hist, self.nonstop_since = list(s["sound_hist"]), s["nonstop_since"]
         self.requests, self.cuts = [(i, dict(k)) for i, k in s["requests"]], s["cuts"]
         self.motion.load_state(s["motion"])

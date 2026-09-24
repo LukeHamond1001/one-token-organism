@@ -14,7 +14,9 @@ has two outputs, and she reads both here, on the world's side:
   and the run is read as the word it spells exactly, else a word within edit distance 1 (2 for words of 6 letters or more),
   else a word of which it is a prefix of at least 2 letters among the names of what the child sees or holds; nearest first,
   ties to what it sees or holds, then her words' order. Only her words are read (A15: a queue word said before it is introduced
-  is not recognised). A token made while she is speaking is read when her line ends (A26: it never talks over her).
+  is not recognised). A token made while she is speaking is read when her line ends (A26: it never talks over her). Each
+  reading carries the words she expected at that moment (A27's set, as for the tract), so a letter run read as a word she did
+  not expect ("z" read as "a", "qp" as "up") is not taken as said in context (the ledger, the conduct's judgments).
 
 A ChildWord's echo mark: said within ECHO_WINDOW = 10 ticks of her saying that word (4.8: it counts only as an echo, never toward
 "says"). The ledger keeps the two channels apart from birth (A26).
@@ -157,9 +159,9 @@ class Transcriber:
                     self.held.append((t, int(token)))
             else:
                 for tk, s in self.held:
-                    out += self._symbol(tk, s, t, vocab, p, said_word)
+                    out += self._symbol(tk, s, t, vocab, p, said_word, expected)
                 self.held = []
-                out += self._symbol(t, LX.ID[LX.REST] if token is None else int(token), t, vocab, p, said_word)
+                out += self._symbol(t, LX.ID[LX.REST] if token is None else int(token), t, vocab, p, said_word, expected)
         return out
 
     def _hear(self, t, expected, vocab, said_word):
@@ -184,13 +186,13 @@ class Transcriber:
     def _echo(self, word, start, said_word):
         return word is not None and word in said_word and abs(start - said_word[word]) <= K.ECHO_WINDOW
 
-    def _symbol(self, tk, s, t, vocab, p, said_word):
+    def _symbol(self, tk, s, t, vocab, p, said_word, expected=()):
         out = []
         if s < LX.N_BIRTH:                                                   # a word token
-            out += self._close(t, vocab, p, said_word)
+            out += self._close(t, vocab, p, said_word, expected)
             w = LX.TABLE[s]
             if w in vocab:
-                out.append(ChildWord(t, "token", w, True, tk, tk, (), self._echo(w, tk, said_word), True,
+                out.append(ChildWord(t, "token", w, True, tk, tk, tuple(expected), self._echo(w, tk, said_word), True,
                                      dict(symbols=[w])))
             self.rests = 0
         elif s in LX.LETTER_ID.values():
@@ -201,13 +203,13 @@ class Transcriber:
         elif s == LX.ID[LX.REST]:
             self.rests += 1
             if self.rests >= K.TURN_END_REST:
-                out += self._close(t, vocab, p, said_word)
+                out += self._close(t, vocab, p, said_word, expected)
         else:                                                                # a space or the end row
-            out += self._close(t, vocab, p, said_word)
+            out += self._close(t, vocab, p, said_word, expected)
             self.rests = 0
         return out
 
-    def _close(self, t, vocab, p, said_word):
+    def _close(self, t, vocab, p, said_word, expected=()):
         if not self.letters:
             return []
         s, start = self.letters, self.letters_start
@@ -218,7 +220,7 @@ class Transcriber:
                 if o.child_sees or o.id in p.child_holds or o.id == p.child_target:
                     near.add(o.name)
         w, exact, how = read_letters(s, vocab, near)
-        return [ChildWord(t, "token", w, exact, start, t, (), self._echo(w, start, said_word), True,
+        return [ChildWord(t, "token", w, exact, start, t, tuple(expected), self._echo(w, start, said_word), True,
                           dict(letters=s, read=how))]
 
     # ------------------------------------------------------------------ save
