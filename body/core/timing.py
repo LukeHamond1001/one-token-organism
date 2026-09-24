@@ -174,7 +174,24 @@ class TimingMixin:
         Until 2026-09-24 this was the critics' estimator (the running moments of prediction and outcome, the slope clipped to [0, 1]),
         its samples every setting of every joint pooled: chance was 1/K for every setting, so the body's own base rates read as skill
         (the verifier's probe: a label that always said 'hold' earned 0.51 when 60% of the acts held the joint, and 0.75 at 80%; a
-        label drawn at the acts' own rates, blind to the act, 0.26 at 60%). Kappa reads all of them 0"""
+        label drawn at the acts' own rates, blind to the act, 0.26 at 60%). Kappa reads all of them 0.
+        ITS LIMIT (the R6 verifier's third look, measured 2026-09-24; not corrected yet): the chance is taken from the label's and the
+        acts' rates pooled over the confusion's whole horizon (act_inv_tau acts). Where the acts' rates shift between regimes within it,
+        a label that follows the regime's most common setting without reading the motion agrees beyond the pooled chance and reads as
+        skill: a label that is the mode read 0.26 to 0.65 when a joint's mode flipped (hold <-> +big at 80%, hold <-> +small at 50%,
+        +small <-> -small at 60%) every 250 to 6000 acts; act_inv itself, blind (its sense pair constant) and learning online at the
+        served rate, follows the mode and read 0.02 to 0.16 at 250 acts a regime, 0.20 to 0.55 at 1000, 0.24 to 0.62 at 6000 (the
+        means); 0 whenever the mode stays, however far the other rates shift (hold 80% <-> 50%). For the designed child such flips are
+        plausible once act_pred's acts depend on the episode (floor play, motor time, the feeds: some 250 to 2500 acts of a limb each at
+        a quarter to a half of the ticks acting), never at birth (the born proposal is flat, so no setting is the mode); the parent's
+        guidance never enters (a guided move is not an own act). The body sense's posture can name the regime at once, the worst case.
+        THE PROPOSED CORRECTION, tested on a probe (acts drawn at known rates): each label's chance the probability the act's own choice
+        gave the label's setting (the per-joint probabilities of the draw, known before the act, st["now"]["probs"], conditioned on the
+        draw not being the rest; 1 or 0 for an act chosen without a draw), accumulated over the same horizon, kappa_j = (p_o - mean
+        chance) / (1 - mean chance): for any label made before the act E[agree - chance] = 0 whatever the rates do, so blind labels read
+        at most 0.018 in every regime above, and a label right 90% reads as Cohen's on stationary acts (0.87 at hold 60%) and 0.80 to
+        0.89 when the mode flips. Left for R6h, which defines the choice's probability for a held act (the movement units) and weighs
+        chunk_gate's continuations (an act chosen without a draw shows no skill when the label is right, only its absence when wrong)"""
         d = 1.0 - 1.0 / float(self._motor_const("act_inv_tau"))
         if st.get("inv_conf") is None:
             st["inv_conf"] = self._inv_conf_new(e)

@@ -400,7 +400,8 @@ class ActTable(nn.Module):
     them, as no lesson moves the lexicon). `factors` [K_1, .., K_J]: joint j's K_j settings hold the rows [K_1 + .. + K_j-1, +K_j). An
     act is one flat id whose mixed-radix digits are its joints' settings (joint 0 the most significant); its row, the efference copy
     the cortex hears and the table's code, is the sum of its joints' rows. `logits` is the per-joint readout: each joint's settings
-    scored by the readout's law, the sharpness times the proposal's cosine with the setting's row."""
+    scored by the readout's law, the sharpness times the proposal's cosine with the setting's row. The flat id is an int64 wherever it
+    is a tensor: at most 27 joints of five (5^27 < 2^63; body/core/anatomy.py `Effector` says the limit)."""
 
     def __init__(self, factors, d, gen):
         super().__init__()

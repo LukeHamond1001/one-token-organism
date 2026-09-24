@@ -135,7 +135,10 @@ class Effector:
     act (a, b) of [5, 5] is 5a + b), and its row is the sum of its joints' rows. `rest_id` is the act of doing nothing (its gate's no,
     or a draw of it), `end_id` the act that closes a chunk (the voice: the space, the word's end where the planning actor decides),
     `reserved` the acts it never makes (the voice: today's `bans`; only a one-joint alphabet can reserve acts, since a factored one
-    draws its joints apart). Effector 0 is the voice (`VoiceEffector`).
+    draws its joints apart). Effector 0 is the voice (`VoiceEffector`). THE FLAT ACT'S LIMIT (the R6 verifier, 2026-09-24; said here, not
+    checked): the window, the striatal line and the table read a flat act as an int64 (torch.long), so one effector holds at most 27
+    joints of five settings (5^27 < 2^63 <= 5^28; the 28th overflows: torch.tensor refuses the id, a flat act built of tensors wraps
+    silently); the humanoid's widest limb has 7 (78125 acts). A wider limb is two effectors, as the design's limbs are.
     Step R5: an effector names its organs and never holds them (the anatomy stays stateless, as the steps before kept it): `organ` its
     acts' table (the voice's the lexicon E, the table it shares with the ear; a later effector's `acts.<name>`, fixed unit rows born
     from the body's seed), `gate` its gate (the voice's m.mouth_gate, whose optimizer `opt_gate` and buffer `gate_buf` keep their

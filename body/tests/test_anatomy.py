@@ -3154,6 +3154,59 @@ def test_act_pred_learns_by_reliability():
           f"a constant gradient scaled by g, n = {n} steps (Adam's least, GatedAdam's most, in steps of the rate): {walk}")
 
 
+def test_a_striatum_saved_before_r5b_loads():
+    """anatomy 32 (the R5b verifier's finding, 2026-09-24): a save of a body with later effectors taken before R5b holds their striatal
+    block as a row for every flat act, so its striatum's shape is not the body's and the loader kept none of it, the voice's heads, its
+    line and its slot included. Now the save's language block (the first k (2V + 3) rows), thresholds, lines, heads (the fast critic's
+    and the voice's actor), working-memory slot and the effectors' actors are kept, said once, and only the effectors' rows are born
+    again per joint, as the body's birth draws them; a save of the present layout loads whole as before; the loaded body lives on"""
+    import contextlib
+    import io
+    cfg = dict(wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=1, fast_input="striatum", actor=1, stri_k=8,
+               stri_m=64, wm=1, gate_floor=0.3)
+    L = _born(_Arm(TOK, cfg), cfg); _live(L, ticks=40); V = L.m.vocab; k = 8
+    g = torch.Generator().manual_seed(11)
+    with torch.no_grad():                                          # every held or learned piece at values of its own, so a copy shows
+        for t_ in (L.m.vfast.weight, L.m.vfast.bias, L.m.actor.weight, L.m.actor.bias, L.m.actors["arm"].weight, L.m.actors["arm"].bias,
+                   L.m.actors["grip"].weight, L.m.actors["grip"].bias, L.m.wm_slot, L.m.stri_b):
+            t_.copy_(torch.randn(t_.shape, generator=g))
+        L.m.wm_on.fill_(1.0); L.m.wm_age.fill_(3.0)
+        L.m.stri_line.copy_(torch.randint(0, 2 * V + 3, (k,), generator=g))
+        L.m.stri_mline.copy_(torch.tensor([[int(x) for x in torch.randint(0, 25, (k,), generator=g)], [int(x) for x in torch.randint(0, 3, (k,), generator=g)]]))
+    nl = k * (2 * V + 3)
+    assert L.m.stri_W.shape == (nl + k * (10 + 3), 64)
+    held = ["stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias", "wm_slot", "wm_on", "wm_age", "stri_mline",
+            "actors.arm.weight", "actors.arm.bias", "actors.grip.weight", "actors.grip.bias"]
+    sL = {k_: v_.detach().clone() for k_, v_ in L.m.state_dict().items()}
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd); fd2, path2 = tempfile.mkstemp(suffix=".pt"); os.close(fd2)
+    said = io.StringIO()
+    try:
+        L.save(path); blob = torch.load(path, map_location="cpu", weights_only=False)
+        old = copy.deepcopy(blob)                                  # the layout before R5b: the language block, then k rows per flat act
+        old["organs"]["stri_W"] = torch.cat([blob["organs"]["stri_W"][:nl], torch.randn(k * (25 + 3), 64, generator=g)])
+        torch.save(old, path2)
+        with contextlib.redirect_stdout(said):
+            C = Life.load(path, _Arm(TOK, L.cfg), save_path=None)
+        now_said = said.getvalue(); said = io.StringIO()
+        with contextlib.redirect_stdout(said):
+            O = Life.load(path2, _Arm(TOK, L.cfg), save_path=None)
+    finally:
+        os.remove(path); os.remove(path2)
+    sC, sO = C.m.state_dict(), O.m.state_dict()
+    assert all(torch.equal(sL[k_], sC[k_]) for k_ in sL) and "R5b" not in now_said, "the present layout does not load whole"
+    note = [l_ for l_ in said.getvalue().splitlines() if "before R5b" in l_]
+    assert len(note) == 1 and f"{nl + k * 28} rows" in note[0] and f"({nl + k * 13} rows)" in note[0], said.getvalue()
+    assert O.m.stri_W.shape == L.m.stri_W.shape and torch.equal(sO["stri_W"][:nl], sL["stri_W"][:nl]), "the language block"
+    assert torch.equal(sO["stri_W"][nl:], sL["stri_W"][nl:]), "the effectors' rows are not born again per joint as the birth draws them"
+    assert all(torch.equal(sO[k_], sL[k_]) for k_ in held), [k_ for k_ in held if not torch.equal(sO[k_], sL[k_])]
+    assert float(sL["vfast.weight"].abs().max()) > 0 and float(sL["actor.weight"].abs().max()) > 0      # (zeros, as born, before the fix)
+    assert all(torch.equal(sO[k_], sL[k_]) for k_ in sL), [k_ for k_ in sL if not torch.equal(sO[k_], sL[k_])]
+    _live(O, ticks=10); assert O.ticks == L.ticks + 10
+    print(f"anatomy 32: a striatum saved before R5b ({nl + k * 28} rows, a row per flat act) loads with its language block ({nl} rows),",
+          f"thresholds, lines, heads, slot and actors kept ({len(held)} tensors) and the effectors' rows born again per joint ({k * 13} rows,",
+          f"as the birth drew them), said once; the present layout loads whole; the loaded body lives on")
+
+
 ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
                  test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy,
                  test_reward_sources_feel_todays_rule, test_a_life_feels_as_before, test_the_declared_order_is_the_sums,
@@ -3163,7 +3216,8 @@ ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_langua
                  test_the_diary_world, test_a_world_of_frames, test_the_loop_deadline_and_pace,
                  test_the_timing_part_is_built_last, test_act_inv_learns_online, test_act_pred_targets, test_the_forward_half,
                  test_the_learned_stops, test_demonstrations_count_as_earned, test_act_inv_reliability_is_kappa,
-                 test_a_34_joint_body_builds, test_act_pred_learns_by_reliability]
+                 test_a_34_joint_body_builds, test_act_pred_learns_by_reliability,
+                 test_a_striatum_saved_before_r5b_loads]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

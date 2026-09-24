@@ -90,9 +90,28 @@ class PersistenceMixin:
             # at the first solve; the running body was never affected, only its copies, stalks and restarts)
             for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n"):
                 getattr(life.m, k_).copy_(vf_saved[k_].cpu())
-        if st_saved and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None and st_saved["stri_W"].shape == life.m.stri_W.shape:
+        same_ = bool(st_saved) and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None and st_saved["stri_W"].shape == life.m.stri_W.shape
+        # A LATER EFFECTOR'S STRIATUM SAVED BEFORE ITS ROWS PER JOINT (step R5b; the R5b verifier's finding, 2026-09-24): the save's
+        # effectors' block holds a row for every flat act, so the striatum's shape is not this body's, and until now nothing of it was
+        # kept, the voice's heads and lines included. Its language block (the first k (2V + 3) rows), thresholds, lines, heads, slot and
+        # actors are this body's: kept; only the effectors' rows are born again, per joint (as the life's birth of the striatum drew them).
+        # Its fast critic's evidence and its heads were learned on units whose effectors' part the new rows change; the voice's is as saved.
+        nl_ = int(life.m.stri_line.numel()) * (2 * int(life.m.vocab) + 3)
+        pre_r5b_ = (not same_ and bool(st_saved) and len(life.anatomy.effectors) > 1 and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None
+                    and tuple(st_saved["stri_W"].shape) == (nl_ + sum(int(life.m.stri_line.numel()) * int(e_.n_acts) for e_ in life.anatomy.effectors[1:]),
+                                                            int(life.m.stri_W.shape[1]))
+                    and st_saved.get("stri_line") is not None and st_saved["stri_line"].shape == life.m.stri_line.shape
+                    and st_saved.get("vfast.weight") is not None and st_saved["vfast.weight"].shape == life.m.vfast.weight.shape)
+        if pre_r5b_:
+            print(f"load: the striatum was saved with a row per flat act (before R5b, 2026-09-24; {int(st_saved['stri_W'].shape[0])} rows): its language "
+                  f"block, thresholds, lines, heads and actors are kept, the effectors' rows born again per joint ({int(life.m.stri_W.shape[0])} rows)", flush=True)
+        if same_ or pre_r5b_:
             with torch.no_grad():                                  # the striatal input as born, its line, and its head
-                life.m.stri_W.copy_(st_saved["stri_W"].to(device)); life.m.stri_b.copy_(st_saved["stri_b"].to(device)); life.m.stri_line.copy_(st_saved["stri_line"].to(device))
+                if same_:
+                    life.m.stri_W.copy_(st_saved["stri_W"].to(device))
+                else:
+                    life.m.stri_W[:nl_].copy_(st_saved["stri_W"][:nl_].to(device))   # the language block; the effectors' rows as born (R5b)
+                life.m.stri_b.copy_(st_saved["stri_b"].to(device)); life.m.stri_line.copy_(st_saved["stri_line"].to(device))
                 life.m.vfast.weight.copy_(st_saved["vfast.weight"].to(device)); life.m.vfast.bias.copy_(st_saved["vfast.bias"].to(device))
                 if st_saved.get("actor.weight") is not None and st_saved["actor.weight"].shape == life.m.actor.weight.shape:
                     life.m.actor.weight.copy_(st_saved["actor.weight"].to(device)); life.m.actor.bias.copy_(st_saved["actor.bias"].to(device))
