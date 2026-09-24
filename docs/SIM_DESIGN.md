@@ -198,7 +198,7 @@ MuJoCo 3.9, one file `body/sim/highchair.xml`, 2 ms physics steps, 75 per tick.
 - **The child's head:** 0.36 m up; pan ±60°, tilt −75° to +20°.
 - **Objects:** ball, cube, duck, cup; 60 g each, 1.3× C's size, saturated colours.
 - **Charge pad:** a flat magenta disc of radius 4.5 cm (no object shares its colour). It charges while the mitten is over the disc.
-- **The teacher:** mocap across the table, with no physics of its own. A torso, a head with a two-capsule mouth that shows smile and frown, and one hand. The hand carries objects and can hold the child's forearm through a soft weld to guide it.
+- **The parent (the owner's decision, 2026-09-23: "the teacher a robot like the model itself, teaching it like a parent would"):** a second robot of the same body across the table: the same planar arm and sticky mitten, the same pan/tilt head, and a face (a two-capsule mouth that shows smile and frown). It is driven by the scripted SimTeacher below (motion by inverse kinematics inside the same per-joint alphabet), with Opus steering what to teach between minutes. It shows by doing: it pushes, takes and names with its own arm, in the child's view, so imitation is of a body like its own; it can still guide the child's forearm (the soft weld below). Its arm has physics like the child's, so its touches and pushes are real events in the world. (A raised body could one day be the parent of the next: out of scope for the first life.) The original mocap teacher's parts follow:
   - The charge drain counts only the arm's own actuator torque, capped by its declared limit, so being guided costs at most that cap.
   - The weld's constraint force is not a contact, so it is never pain.
   - S1 measures the tracking and the servo's torque under a scripted guide.
@@ -211,7 +211,7 @@ Each channel's code is born (fixed, random, from the body's seed), unit-scaled a
 | channel | kind | raw | born code |
 |---|---|---|---|
 | `words` (the partner) | symbol | the teacher's word token, arriving on the tick its sound ends; rest otherwise | a fixed random lexicon: about 20 words, the child's name, rest and end; letter rows reserved for the fallback |
-| `ear` | vector | 15×40 log-mel: the teacher's cached clips scaled by distance, the child's own voice, contact clicks | fixed random projection |
+| `ear` | vector | 15×40 log-mel: the parent's cached voice clips scaled by distance, the child's own voice, and the world's sounds (the owner's decision, 2026-09-23): contact clicks, and each object's own sound when it is touched or moves (the duck squeaks, the ball taps, the cup clinks, the cube knocks; cached clips, scaled by distance and speed) | fixed random projection |
 | `eye_p` (periphery) | vector | 64×64 RGB + inverse depth (capped) | 8×8 cells × 6 random colour-depth mixes = 384, then a fixed projection |
 | `eye_f` (fovea) | vector | 32×32 RGB | 8×8 cells of 4 px × 6 mixes = 384, then a fixed projection |
 | `body` | vector | sin/cos of the 4 joint angles (arm and head), velocities, grip state, servo effort | fixed linear map, scaled by the ranges in the model file |
@@ -319,6 +319,28 @@ It counts sim ticks and keeps every constant in one file, `body/sim/teacher_cons
 **Opus as the listening teacher (the owner's ruling of 2026-09-17).** From the first boundary after birth, Opus reads a text log of the scene every wall minute, as `ops/parent_brief_human.txt` has it listen in the diary. It sets the teacher's focus (which object to show next, what to ask, when to demonstrate) through the queue/JSONL protocol.
 - It never acts inside the tick loop. The per-tick judgments above stay scripted, because they must land within ticks.
 - It is built after birth, off the critical path, and joins at a boundary like any change of method.
+
+### 5.8 The owner's decisions of 2026-09-23 (evening): faces, looking, two ears, two new parts
+
+These override the sections above where they differ. They add about 3–4 working days before birth (S1–S3).
+
+- **Both robots have faces.**
+  - **The parent's face** (a mouth that smiles and frowns, eyes, a head that turns) is the reward's only carrier. The number-beside-the-mouth scaffold of decision 3 is dropped.
+  - **The child's face** shows its own face readout (the face organ, ARCHITECTURE.md §6: its forecast of the felt reward) as an expression on its own head. The parent sees it, as the diary's caregiver sees the page.
+- **The child must look to be rewarded.** A smile or frown is felt only while the parent's face is in the child's fovea (the same test the teacher already uses for "facing": at least 20 of the fovea's 1024 pixels on 2 ticks). An unseen smile is not felt. This makes joint attention (look at the face, follow its gaze to the thing named) the road to reward.
+- **Two innate mechanisms** (disclosed, like the withdrawal reflex):
+  - **Orienting:** a born bias of the gaze effector toward a face-like blob in the periphery and toward the side a voice comes from (the two ears below). A bias on the gaze proposal, never a forced move; without it a newborn that never looks is never rewarded.
+  - **A born expression reading:** when the parent's face is in the fovea, a fixed read of the mouth's curvature gives the smile or frown level that the face reward (section 5.6, item 1) feels. It reads the rendered mouth only; world truth still never enters the body.
+- **Two new parts from birth:**
+  - **A valence learner (fast, one-shot-ish):** it learns which cues predict the good and the bad (the parent's face turning, a voice's tone, what hurt), from the felt reward and pain. Its output biases orienting toward or away and raises the fast memory's write strength for those moments. It is disclosed as the one new organ; its learning rule is the critics' own least squares on a short horizon.
+  - **A motor timing part:** the forward model (`act_pred`) and inverse model (`act_inv`) of section 5.4, named as one part and extended to predict each effector's next body sense, so reaching is corrected smoothly within a chunk.
+  - Other parts (attention gating, a learned visual hierarchy, body-mapped motor and touch areas) are added only when the body shows it needs them, each measured.
+- **Hearing, the human way at the level of function:**
+  - **Two ears** on the child's head (left and right), each a fixed cochlea-shaped filterbank (gammatone-like, log energy, 40 bands), so the interaural level and time differences tell the side a sound comes from.
+  - **The parent's voice** (synthesised, one voice at three rates) and **the world's sounds** (contacts; each object's own sound) reach both ears scaled by distance and direction.
+  - **The words channel** (the parent's word tokens) stays at birth as a scaffold and is removed at a boundary; hearing words from sound alone is itself a milestone.
+  - The child speaks cached word clips in its own voice; a vocal tract that babbles is a later body.
+- **No live human teacher.** The parent robot raises it day and night, with Opus steering its focus between minutes. The owner does not teach live.
 
 ## 6. Tick, speed, size, compute and disk
 
@@ -714,11 +736,11 @@ Wall hours assume 40–55 minutes a life day (6.2). At the ops guard's 1× real 
 - Learned encoders and SIGReg (built, off); pretrained vision, unless the owner picks it.
 - Hearing from audio alone: the word tokens run beside the audio at birth.
 - A synthesised voice (the numpy vocal tract): the child speaks cached word clips.
-- More than one teacher voice; two ears.
-- Imitating a twin or avatar (the correspondence problem beyond kinesthetic guidance).
+- More than one teacher voice.
+- Learning to imitate the parent robot by watching alone, with no guidance, is not assumed at birth: the parent's own arm makes it possible (the same body), and it is measured as a milestone, not built in.
 - Wheels, legs, balance; a 3D arm, fingers, lifting (the next body).
 - Deadline mode as the default.
-- A camera that reads the teacher's face: the face is a number beside the visible mouth.
+- A learned reading of faces beyond the born expression reading (section 5.8).
 - Opus in the tick loop (it listens between, section 5.7).
 - Torch on the GPU (MPS). Only the renderer uses the GPU.
 - Real sleep (sleep pressure, a safe posture): sleep is a pause of the world by tick count.
@@ -726,6 +748,8 @@ Wall hours assume 40–55 minutes a life day (6.2). At the ops guard's 1× real 
 - The full dead-code clean-up beyond the seams.
 
 ## 12. The owner's decisions (the world's shape, then two others)
+
+Decided by the owner on 2026-09-23: the teacher is a parent robot with the same body (section 5.1); the world has sound (section 5.2: the objects' own sounds besides the voices and contacts). S1 grows by about 1 day (the parent's arm with physics and its inverse kinematics), S2 by about half a day (the object sounds). Later that evening (section 5.8): both robots have faces; the reward is felt only when the child looks at the parent's face; innate orienting and a born expression reading; a valence learner and a named motor timing part from birth; two ears with cochlea-shaped filterbanks; no live human teacher. About 3–4 more working days before birth.
 
 1. **The body and the world.**
    - Option 1 (recommended): the high chair's 2-joint planar arm with a sticky mitten and a pan/tilt head. The fastest to learning.
