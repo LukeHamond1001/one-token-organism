@@ -10,14 +10,13 @@ THE EFFECTORS (the core refactor's step R5, docs/SIM_DESIGN.md 8.4): `_choose`, 
 effectors. The voice is effector 0 and keeps its code and names (its ear, now the gate inputs it declares, is `_voice_ear`); `_choose`
 also returns its gate's own draw. Each later effector follows it: `_choose_effector` (its gate, its draw, its joints read and drawn),
 `_act_effectors` (its actor's trace, its cost, its striatal event) and `_gate_lesson(i)`, the voice's lesson on its own gate. The
-defect fixes 4 (gate_own_draw), 5 (actor_trace_tick) and 8 (elig_from) are switches, off by their absence (physiology.py SWITCHES)."""
+defect fixes 4 (gate_own_draw), 5 (actor_trace_tick) and 8 (elig_from) are switches, off by their absence (physiology.py SWITCHES).
+Since step R9 the frame the effectors' gate inputs and costs read is the world's, the one `_sense` took (`_tick_frame`)."""
 import collections
 import math
 
 import torch
 import torch.nn.functional as F
-
-from .world import Frame
 
 
 class MouthMixin:
@@ -366,7 +365,7 @@ class MouthMixin:
             live_ = self._pace_mode() >= 2
             # THE VOICE'S OWN EAR (step R5): the gate's inputs beyond the stream and the feelings are the effector's own, declared by it
             # (VoiceEffector.gate_inputs: `_voice_ear` below, on this tick's frame); appended after the adapted input, as always
-            frame = Frame(self.ticks, {self.anatomy.words.name: u}, self.face_now)   # this tick of the world, as _sense built it (no draw)
+            frame = self._tick_frame(u)                                  # this tick of the world, the one _sense took (step R9; no draw)
             ear_ = self.anatomy.effectors[0].gate_inputs(frame, self)
             if ear_ is not None:
                 feat = torch.cat([feat, ear_])
@@ -679,7 +678,7 @@ class MouthMixin:
         striatal input, as the voice's actor's over which symbol; its cost (its declaration's) to the body's fatigue; its act an event of
         its own striatal line; its act last tick. Its act entered the stream in the tick's own step (`_step`, its window field)."""
         m = self.m; g_ = float(gam[int(self.cfg["dopamine_band"])])
-        frame = Frame(self.ticks, {self.anatomy.words.name: u}, self.face_now)
+        frame = self._tick_frame(u)                                      # this tick of the world, the one _sense took (step R9)
         for i_, (e_, st_) in enumerate(zip(self.anatomy.effectors[1:], self.motor)):
             now = st_["now"]
             if tick_tr and st_["e_actor"] is not None:
@@ -771,7 +770,8 @@ class MouthMixin:
                 # the belief it had in its choice (habituating), minus an effort cost convex in fatigue
                 # (linear, 0.59 at fatigue's ceiling never beat a confident recitation's drive of 0.7:
                 # run 19, gate 0.97 all day, fatigue pinned at 40; convex, the mouth speaks in bouts).
-                # With the effort in the reward (cost_in_reward) the cost is the critics' to predict, not the act's
+                # With the effort in the reward (cost_in_reward) the cost is the critics' to predict, not the act's (the reward feels the
+                # voice's effort alone: a later effector's then reaches neither; EffortReward, body/core/anatomy.py)
                 c_t = cost if i == 0 else float(buf[t][8])                       # the voice's symbol_cost; a later effector's act's own cost
                 drive_t = tonic + (float(self.cfg.get("gate_tonic_rate", 0.0)) * float(buf[t][5]) if len(buf[t]) > 5 else 0.0)   # THE DRIVE FOLLOWS THE REWARD RATE
                 g += drive_t + w_int * float(buf[t][3]) - (0.0 if self.cfg.get("cost_in_reward") else c_t * (1.0 + (float(buf[t][4]) / f0) ** 2))

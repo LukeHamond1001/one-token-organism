@@ -1,9 +1,10 @@
 """the senses (a mixin of `Life`, body/life.py): the feelings' own recovery each tick (`_decay_feelings`); the tick's first two
-phases, `_sense` (the world's symbol or its quiet off the queue, the offset by the count, the reward: the anatomy's reward sources felt
-in their order on the tick's frame, the face first, since step R3 of the core refactor, docs/SIM_DESIGN.md 8.4) and `_hear` (the start
+phases, `_sense` (the world's frame, since step R9 of the core refactor the one its world shows, the diary's its symbol or its quiet off
+the queue as always; the offset by the count; the reward: the anatomy's reward sources felt in their order on the tick's frame, the
+face first, since step R3, docs/SIM_DESIGN.md 8.4) and `_hear` (the start
 mark, the world's symbol enters the stream, the offset by the settle law, the sensed pace's end, the striatal events); the offset
-itself (`_offset`: the last world position marked ended, the utterance memory's entry, the working memory's latch); and the world's
-two hands on the page (`type_text`, `set_face`).
+itself (`_offset`: the last world position marked ended, the utterance memory's entry, the working memory's latch); the world's two
+hands on the page (`type_text`, `set_face`; the DiaryWorld reaches them); and the frame this tick is lived on (`_tick_frame`).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Not every attribute they touch is born in `Life.__init__`:
 twenty are first set later, by a phase of the tick or by the night, and thirteen of those are read here with a `getattr` default."""
@@ -84,12 +85,20 @@ class SensesMixin:
                 i = min(range(len(self.utt_S)), key=lambda k: self.utt_S[k]); del self.utts[i]; del self.utt_S[i]; del self.utt_N[i]
         self._utt_cur = []; self._utt_felt = 0.0
 
-    def _sense(self):
-        """the world's symbol (or its quiet) off the queue, the offset by the count, the reward felt from the anatomy's sources in their
-        order (the face first, then the reward's other terms)"""
+    def _sense(self, frame=None):
+        """the world's frame (the diary's: its symbol, or its quiet, off the queue), the offset by the count, the reward felt from the
+        anatomy's sources in their order (the face first, then the reward's other terms). THE WORLD'S FRAME (the core refactor's step R9,
+        docs/SIM_DESIGN.md 8.2): `frame`, when the loop hands one in, or the one the life's world shows now (`world.frame()`: the diary's
+        pops the queue here, where it was always read, and reads the face its hand holds, so nothing moves); kept as the world's `now`,
+        the frame this tick is lived on (a channel of the world's frames observes it; the mouth reads it for the effectors). The words
+        channel's symbol in it is the tick's world symbol (the rest where the frame names none); who sent it is the frame's truth."""
         m = self.m
-        u = self.queue.popleft() if self.queue else self.sil
-        who = (self.queue_who.popleft() if self.queue_who else "") if u != self.sil else ""
+        if frame is None:
+            frame = self.world.frame()
+        self.world.now = frame
+        u = frame.obs.get(self.anatomy.words.name)
+        u = self.sil if u is None else int(u)
+        who = frame.truth.get("who", "") if u != self.sil else ""
         # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
         # saying meanwhile (with the body's silence required too, a babbling body never let it fire: run 41 held
         # two turn-end memories after six days)
@@ -105,7 +114,6 @@ class SensesMixin:
         # THE FELT REWARD (the core refactor's step R3, docs/SIM_DESIGN.md 8.4): the anatomy's reward sources (body/core/anatomy.py),
         # felt in their declared order on this tick's frame and added one at a time in that order, the float order of the sum. The
         # diary's: the face, then the world's words (world_r, not over its own voice under world_mask), then the effort (cost_in_reward).
-        frame = Frame(self.ticks, {"ear": u}, self.face_now)   # this tick of the world, built here from the queue (no draw moves)
         judge, *others = self.anatomy.rewards
         # source 0, the world's judgment (the face: a change is felt; a held face is silence; easing off is not an event): its
         # feeling is the tick's felt event, and its term alone is the world's reward the ring and the actor's reliability read
@@ -193,3 +201,9 @@ class SensesMixin:
     def set_face(self, expr):
         self.face_now = max(-6.0, min(6.0, float(expr)))
         return {"you": self.face_now}
+
+    def _tick_frame(self, u):
+        """the frame this tick is lived on (the world's `now`, since `_sense` took it; step R9), or, where the tick's senses kept none,
+        the diary's frame of the world's symbol `u` as the tick built it before R9 (only the words are read from it there)"""
+        f = self.world.now
+        return f if f is not None else Frame(self.ticks, {self.anatomy.words.name: u}, self.face_now)

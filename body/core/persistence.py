@@ -2,7 +2,8 @@
 `birth`. `load` and `birth` are classmethods: `cls` is `Life`. Their `tok` is what it always was, a tokenizer, or an anatomy in its
 place (the core refactor's step R2): the life builds its anatomy from it (body/core/anatomy.py `anatomy_for`), and a birth sizes the
 organs' alphabet from that anatomy. Both build the anatomy before the organs (a load under the save's constants, then the caller's), so
-the organs build the forecast heads its later channels declare (step R4; the diary declares none).
+the organs build the forecast heads its later channels declare (step R4; the diary declares none). Both take the world the life lives
+in (`world`, step R9; the diary's DiaryWorld when none is given): the world is not saved with the body.
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import os
@@ -38,7 +39,7 @@ class PersistenceMixin:
         return {"saved": path}
 
     @classmethod
-    def load(cls, path, tok, device="cpu", cfg=None, seed=0, save_path=None):
+    def load(cls, path, tok, device="cpu", cfg=None, seed=0, save_path=None, world=None):
         blob = torch.load(path, map_location="cpu", weights_only=False)
         a = blob["arch"]
         c = dict(blob.get("cfg") or {})
@@ -69,7 +70,7 @@ class PersistenceMixin:
             print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)
         if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))]:
             print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
-        life = cls(organs, anatomy, cfg=c, device=device, seed=seed, save_path=save_path or path)
+        life = cls(organs, anatomy, cfg=c, device=device, seed=seed, save_path=save_path or path, world=world)
         saved_norm = vc_saved.get("vc_mu") is not None and vc_saved["vc_mu"].numel() > 0; norm_on = int(c.get("vcrit_norm_tau", 0)) > 0
         saved_form = float(vc_saved["vc_form"]) if vc_saved.get("vc_form") is not None else 1.0
         if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved.get("vc_A") is not None and vc_saved["vc_A"].shape == life.m.vc_A.shape and saved_norm == norm_on and (not norm_on or saved_form == float(life.m.vc_form)):
@@ -174,10 +175,10 @@ class PersistenceMixin:
         return life
 
     @classmethod
-    def birth(cls, tok, device="cpu", d=256, layers=6, heads=4, window=64, cfg=None, seed=0, save_path=None):
+    def birth(cls, tok, device="cpu", d=256, layers=6, heads=4, window=64, cfg=None, seed=0, save_path=None, world=None):
         torch.manual_seed(int(seed))
         anatomy = anatomy_for(tok, cfg)                 # the body's anatomy (a tokenizer's: the diary's); built with no draw, before the organs
         organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])),
                         channels=anatomy.channels, effectors=anatomy.effectors, born_seed=seed)   # a later channel's forecast head and a later effector's
                                                          # organs built last (steps R4, R5; their tables from the body's seed); the diary declares none
-        return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path)
+        return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path, world=world)

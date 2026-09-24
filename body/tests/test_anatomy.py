@@ -1,4 +1,4 @@
-"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 to R5). Run: python3 -m body.tests.test_anatomy
+"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 to R5 and R9). Run: python3 -m body.tests.test_anatomy
 (the organ tests run these too). `LanguageAnatomy(tok, cfg)` must rebuild exactly the symbols a life derived from its tokenizer before
 R2, under every constant that moves them and on a tokenizer laid out otherwise, and building it must leave the body untouched (R1). The
 life is built with it and reads its symbols and its text there, never the tokenizer; a life given the anatomy in the tokenizer's place
@@ -12,7 +12,13 @@ ear and its cost, and the diary gains nothing from the effectors' wiring; its ga
 defect fixes 4, 5 and 8 are switches off by their absence, each the lesson with only its fix written in, and live; a body with later
 effectors has the diary's organs and striatum bit for bit beside its effectors' (built last, their blocks appended), draws the voice
 first each tick, reads each effector's joints, hears each act after its own sound, teaches each gate and actor, rests them at night
-and keeps them through a save; all eleven places the input is made pass the effectors' acts (R5)."""
+and keeps them through a save; all eleven places the input is made pass the effectors' acts (R5); each later effector's act adds its
+declared cost to the fatigue, a one-joint effector's reserved acts are never drawn and the later effectors' traces decay every tick under
+actor_trace_tick (the R5 verifier's three). The body lives in a world (R9): the diary's world is today's queue and face, and a life
+through the world loop, its sleep switch pausing the world, is the whole life before R9; a stub of the simulated world ticks a body of
+frames (its words, its face, a sense of its frames, two effectors acting on it; every learning rate at 0) through a day, a night that
+pauses it and a morning; the deadline switch is off, and on lets the world run on its own clock; the pace log records the ticks and the
+nights and changes nothing."""
 import collections
 import math
 import os
@@ -117,7 +123,7 @@ def test_language_anatomy_is_inert():
 def test_anatomy_check():
     """anatomy 3: the declaration's own check refuses two partners, a rest that is reserved, a symbol outside the alphabet, an
     unknown kind, a name twice, no effector, a reward source reading an unknown constant, no reward source and a clip not above zero;
-    a bare RewardSource declares no feeling"""
+    a bare RewardSource declares no feeling (a bare Channel observes the world's frames since step R9: anatomy 21)"""
     def ok():
         return Anatomy([Channel("ear", "symbol", 5, organ="E", forecast=True, rest_id=0, end_id=1, reserved=[4], partner=True),
                         Channel("face", "vector", 2, organ="face_in")],
@@ -150,20 +156,13 @@ def test_anatomy_check():
         except ValueError:
             continue
         raise AssertionError(f"the check let pass {label}")
-    for call in (lambda: Channel("x", "symbol", 3).observe(None, 0, 0),):         # the effectors' gate_inputs and cost are wired in R5 (anatomy 15)
-        try:
-            call()
-        except NotImplementedError:
-            continue
-        raise AssertionError("a method not yet wired answered")
     try:
         RewardSource("r").felt(Frame(0, {"ear": 0}, 0.0), None)
     except NotImplementedError:
         pass
     else:
         raise AssertionError("a bare RewardSource felt something")
-    print("anatomy 3: the check refuses", len(bad), "faulty declarations; the methods of later steps are not yet wired;",
-          "a bare reward source feels nothing")
+    print("anatomy 3: the check refuses", len(bad), "faulty declarations; a bare reward source feels nothing")
 
 
 def _differs(A, B):
@@ -223,7 +222,8 @@ def test_an_anatomy_in_the_tokenizers_place():
     """anatomy 5 (step R2): `Life.birth` and `Life.load` given a LanguageAnatomy in the tokenizer's place give the same life as the
     tokenizer does (the same weights, symbols, attributes, random streams, and the same page after a minute of the script), and the
     same random streams after the birth; an anatomy declared under other constants is refused, and one not of language is refused
-    until step R9 (the world loop; R5 wires the effectors, and a language anatomy with later effectors is taken: anatomy 18)"""
+    (the core's words are a language's, read through a tokenizer; a language anatomy with later channels and effectors is taken:
+    anatomies 12 and 18, and since step R9 lives in a world of frames: anatomy 21)"""
     import tempfile
     for label, cfg in (("the physiology", {}), ("the served constants", _served_cfg() or {})):
         torch.manual_seed(123); A = _born(TOK, cfg); gA = torch.get_rng_state().clone()
@@ -256,7 +256,7 @@ def test_an_anatomy_in_the_tokenizers_place():
             call()
         except NotImplementedError:
             continue
-        raise AssertionError("a life was built on an anatomy not of language before step R9 (the world loop)")
+        raise AssertionError("a life was built on an anatomy not of language (its words read through no tokenizer)")
     print("anatomy 5: born and loaded from a LanguageAnatomy in the tokenizer's place, the same life under 2 constant sets;",
           f"refused: {len(refused)} anatomies declared under other constants, and one not of language")
 
@@ -868,6 +868,14 @@ class _Grip(Effector):
         return [1.0 if state["acted_last"] else 0.0, math.sin(frame.tick / 5.0)]
 
 
+class _Tap(LanguageAnatomy):
+    """the diary's anatomy and a later effector of one joint of four settings, its rest 1 and its act 3 reserved"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.effectors += [Effector("tap", [4], rest_id=1, reserved=[3], effort=0.02)]
+
+
 def test_the_voice_is_effector_0():
     """anatomy 15 (step R5): the diary's effector 0 is the voice, naming the organs it always had (the lexicon E it shares with the
     ear, mouth_gate, actor, its act the window's xo); its gate's own inputs are today's ear (read through the effector) and its cost
@@ -1170,11 +1178,37 @@ def test_the_switches():
             else:
                 assert all(torch.equal(n_, p_) for p_, n_ in quiet), f"{form}: without the switch a quiet tick moved the trace"
             moved[(form, tt)] = len(quiet)
+    # THE LATER EFFECTORS' TRACES (the R5 verifier's third): each later effector's actor trace decays by dopamine's discount on every
+    # tick it did not act under actor_trace_tick, and stands still on such a tick without it, as the voice's
+    for tt in (0, 1):
+        cfg = dict(wake_ticks=100000, fast_rls=1, fast_input="striatum", actor=1, gate_floor=0.3, actor_trace_tick=tt)
+        torch.manual_seed(5); L = _born(_Arm(TOK, cfg), cfg); seen = []
+        f = L._act_effectors
+
+        def rec(u, stri, gam, tick_tr, f=f, seen=seen, L=L):
+            prev = [st_["e_actor"].clone() if st_["e_actor"] is not None else None for st_ in L.motor]
+            went = [bool(st_["now"]["acted"] and st_["now"]["act_on"]) for st_ in L.motor]
+            out = f(u, stri, gam, tick_tr)
+            g_ = float(gam[int(L.cfg["dopamine_band"])])
+            seen.append([(p_, st_["e_actor"].clone() if st_["e_actor"] is not None else None, a_, g_) for p_, st_, a_ in zip(prev, L.motor, went)])
+            return out
+        L._act_effectors = rec
+        _live(L, lines=("what do you want?", "I want milk", "do you see the ball?"), ticks=90)
+        for i_, e_ in enumerate(L.anatomy.effectors[1:]):
+            quiet = [(p_, n_, g_) for row_ in seen for p_, n_, a_, g_ in (row_[i_],) if p_ is not None and not a_]
+            went = sum(1 for row_ in seen if row_[i_][2])
+            assert len(quiet) >= 10 and went >= 3, (e_.name, tt, len(quiet), went)
+            if tt:
+                assert all(torch.equal(n_, g_ * p_) for p_, n_, g_ in quiet), f"{e_.name}: a quiet tick did not decay its trace by the discount"
+            else:
+                assert all(torch.equal(n_, p_) for p_, n_, g_ in quiet), f"{e_.name}: without the switch a quiet tick moved its trace"
+            moved[(e_.name, tt)] = len(quiet)
     print(f"anatomy 17: the switches off by their absence; {n} lessons under gate_own_draw and elig_from equal the lesson with the fix",
           f"written in (the voice and two later effectors); live, {ended} drawn rests at a word's start and {letters} program letters that",
           f"were the rest recorded as goes (without the switch {before} such letters read as the gate's no at p 1), every program letter",
           f"a go at p 1; the actor's and the chooser's traces decay every tick under actor_trace_tick ({moved[('add', 1)]} and",
-          f"{moved[('softmax', 1)]} quiet ticks) and stand still without it")
+          f"{moved[('softmax', 1)]} quiet ticks) and stand still without it, and so do the later effectors' ({moved[('arm', 1)]} and",
+          f"{moved[('grip', 1)]} quiet ticks)")
 
 
 def test_a_later_effector():
@@ -1331,6 +1365,43 @@ def test_a_later_effector():
     sM, sC = M.m.state_dict(), C.m.state_dict()
     assert list(sM) == list(sC) and all(torch.equal(sM[k], sC[k]) for k in sM), [k for k in sM if not torch.equal(sM[k], sC[k])]
     _live(C, ticks=10); assert C.ticks == M.ticks + 10
+    # THE EFFORT (the R5 verifier's first): each later effector's act adds its declared cost to the body's fatigue, after the voice's,
+    # in the anatomy's order, one at a time; a tick it does not act adds nothing and records no cost
+    cfg3 = dict(cfg, wake_ticks=100000, gate_floor=0.5)
+    torch.manual_seed(5); L3 = _born(_Arm(TOK, cfg3), cfg3); rows = []
+    f = L3._act_effectors
+
+    def rec(u, stri, gam, tick_tr, f=f, rows=rows, L3=L3):
+        before = L3.fatigue; out = f(u, stri, gam, tick_tr)
+        rows.append((before, L3.fatigue, [(st_["now"]["acted"], st_["now"]["cost"]) for st_ in L3.motor])); return out
+    L3._act_effectors = rec
+    _live(L3, lines=lines, faces=faces, ticks=90)
+    efforts = [e_.effort for e_ in L3.anatomy.effectors[1:]]
+    for before, after, per in rows:
+        want = before
+        for (acted_, cost_), eff_ in zip(per, efforts):
+            assert cost_ == (float(eff_) if acted_ else 0.0), (per, efforts)
+            if acted_:
+                want += cost_
+        assert after == want, f"the fatigue went {before!r} -> {after!r}, the effectors' costs give {want!r}"
+    n_cost = [sum(1 for r_ in rows if r_[2][i_][0]) for i_ in range(2)]
+    assert len(rows) == 90 and min(n_cost) >= 5 and len(rows) - max(n_cost) >= 5, n_cost
+    # THE RESERVED ACTS (the R5 verifier's second): a one-joint effector's reserved acts are never drawn, the actor's bias on them or not
+    # (their probability exactly 0), while its other acts are
+    cfg4 = dict(cfg, wake_ticks=100000, gate_floor=0.9)
+    torch.manual_seed(5); L4 = _born(_Tap(TOK, cfg4), cfg4); drawn = collections.Counter(); n_draw = 0
+    for t in range(150):
+        if t % 30 == 0 and t // 30 < len(lines):
+            L4.type_text(lines[t // 30], who="parent")
+        if t in faces:
+            L4.set_face(faces[t])
+        L4.tick()
+        now_ = L4.motor[0]["now"]
+        assert float(now_["probs"][0][3]) == 0.0, now_["probs"]
+        if now_["drew"]:
+            n_draw += 1; drawn[now_["act"]] += 1
+    assert drawn[3] == 0 and n_draw >= 100 and drawn[0] >= 10 and drawn[2] >= 10, (n_draw, drawn)
+    assert L4.motor[0]["now"]["act_on"], "the actor's bias was not on the reserved act's draw"
     # organs that do not match the anatomy
     refused = []
     wide = _Arm(TOK, {}); wide.effectors[2].n_in = 3
@@ -1347,7 +1418,9 @@ def test_a_later_effector():
     print(f"anatomy 18: the diary's organs and striatum as the diary's, the effectors' built last and appended; the per-joint readout;",
           f"the voice draws first on each of {len(by_tick)} ticks ({n_draws[0]} words drawn), then the arm ({n_draws[1]} acts, two joints",
           f"each) and the grip ({n_draws[2]}); the acts in the window and the sum after its own sound; gates and actors learn; the night",
-          f"rests them; a save keeps them; refused: {'; '.join(refused)}")
+          f"rests them; a save keeps them; each act's declared cost reaches the fatigue in order ({n_cost[0]} and {n_cost[1]} acts);",
+          f"a one-joint effector's reserved act never drawn in {n_draw} draws ({drawn[0]}, {drawn[1]}, {drawn[2]} of its others);",
+          f"refused: {'; '.join(refused)}")
 
 
 def test_every_call_site_passes_the_effectors():
@@ -1396,12 +1469,473 @@ def test_every_call_site_passes_the_effectors():
     print("anatomy 19: all eleven call sites pass the effectors' acts beside the channels; the dreams' at rest, the lived window's acting")
 
 
+# ---------------- step R9: the world loop ----------------
+
+def _sense_before_r9(self):
+    """`_sense` as it was before step R9 (body/core/senses.py at commit 0562112), verbatim"""
+    m = self.m
+    u = self.queue.popleft() if self.queue else self.sil
+    who = (self.queue_who.popleft() if self.queue_who else "") if u != self.sil else ""
+    # THE OFFSET: the world quiet for offset_ticks after its utterance, once per pause, whatever the body is
+    # saying meanwhile (with the body's silence required too, a babbling body never let it fire: run 41 held
+    # two turn-end memories after six days)
+    off = int(self.cfg.get("offset_ticks", 0)); settle_form = str(self.cfg.get("offset_form", "count")) == "settle"
+    ps_ = self._pace_mode()                                    # under the sensed pace (2) the pause outlasted (M2, _pace_hear) replaces the count
+    if u == self.sil and off > 0 and not self._offset_done and not settle_form and ps_ < 2 and self.ticks - self._last_world >= off:
+        self._offset(settled=False); self._offset_done = True
+    first_after_pause = (u != self.sil and self._offset_done)  # the first symbol after a perceived pause begins an utterance
+    if u != self.sil:
+        if ps_:
+            self._pace_heard(ps_ >= 2)                          # the gap just ended is a heard event (before the world's last symbol moves)
+        self._last_world = self.ticks; self._offset_done = False; self._turn_open = False; self._ear_release_at = None
+    # THE FELT REWARD (the core refactor's step R3, docs/SIM_DESIGN.md 8.4): the anatomy's reward sources (body/core/anatomy.py),
+    # felt in their declared order on this tick's frame and added one at a time in that order, the float order of the sum. The
+    # diary's: the face, then the world's words (world_r, not over its own voice under world_mask), then the effort (cost_in_reward).
+    frame = Frame(self.ticks, {"ear": u}, self.face_now)   # this tick of the world, built here from the queue (no draw moves)
+    judge, *others = self.anatomy.rewards
+    # source 0, the world's judgment (the face: a change is felt; a held face is silence; easing off is not an event): its
+    # feeling is the tick's felt event, and its term alone is the world's reward the ring and the actor's reliability read
+    felt = judge.felt(frame, self)
+    r = judge.term(felt)                                # the world's reward: the felt face, clipped like a press
+    self._ring_r.append(r)
+    if self._act_pending:                               # the actor's reliability: the reward of the ticks after each act, on its vote for that act
+        H = int(self.cfg.get("actor_horizon", 16))
+        for p_ in self._act_pending:
+            p_[2] += r
+        while self._act_pending and self.ticks - self._act_pending[0][0] >= H:
+            t0_, v_, g_ = self._act_pending.popleft(); self._arel_update(v_, g_)
+    for s_ in others:                                   # the reward's other terms, in their order; a silent source adds nothing
+        v_ = s_.felt(frame, self)
+        if v_ is not None:
+            r += s_.term(v_)
+    if int(self.cfg.get("own_store", 0)):
+        thr = float(self.cfg.get("own_store_r", 1.0))
+        if float(r) >= thr and not getattr(self, "_own_stored", False) and self.ticks - getattr(self, "_own_store_tick", -10 ** 9) >= int(self.cfg.get("own_store_gap", 40)):
+            self._own_stored = True; self._own_store_tick = self.ticks; self._consolidate_own(float(r) * float(self.cfg.get("own_store_gain", 0.3)))
+        elif float(r) < 0.5 * thr:
+            self._own_stored = False
+    return u, who, felt, r, off, settle_form, first_after_pause
+
+
+def _sleep_now_before_r9(self):
+    """`_sleep_now` as it was before step R9 (body/core/night.py at commit 0562112), verbatim"""
+    self.queue.clear(); self.queue_who.clear()
+    self.night()
+
+
+def _canon(g, x, path):
+    """every value fed to the hash with its type and shape (as tools/determinism_check.py's --full); an unknown kind stops the test"""
+    if torch.is_tensor(x):
+        t = x.detach().cpu().contiguous(); g.update(f"T{t.dtype}{tuple(t.shape)}".encode()); g.update(t.numpy().tobytes())
+    elif isinstance(x, dict):
+        g.update(b"{")
+        for k in sorted(x, key=repr):
+            g.update(repr(k).encode() + b":"); _canon(g, x[k], f"{path}.{k}")
+        g.update(b"}")
+    elif isinstance(x, collections.deque):
+        g.update(f"Q{x.maxlen}[".encode())
+        for i, v in enumerate(x):
+            _canon(g, v, f"{path}[{i}]")
+        g.update(b"]")
+    elif isinstance(x, (list, tuple)):
+        g.update(b"[" if isinstance(x, list) else b"(")
+        for i, v in enumerate(x):
+            _canon(g, v, f"{path}[{i}]")
+        g.update(b"]")
+    elif isinstance(x, (set, frozenset)):
+        g.update(b"S"); _canon(g, sorted(x, key=repr), path)
+    elif x is None or isinstance(x, (bool, int, float, str, bytes)):
+        g.update((type(x).__name__ + repr(x) + ";").encode())
+    elif isinstance(x, (torch.dtype, torch.device)):
+        g.update(repr(x).encode())
+    else:
+        raise TypeError(f"no hash for {type(x).__name__} at {path}")
+
+
+def _whole(L):
+    """the whole life, section by section (the organs with their gradients and plain attributes, the store, the optimizers, the random
+    streams, every working attribute but the interface objects, the constants, the page): a hash per section"""
+    import hashlib
+    m = L.m; OPTS = sorted(k for k, v in vars(L).items() if isinstance(v, torch.optim.Optimizer))
+    org = [("sd", dict(m.state_dict())), ("grad", {n: p.grad for n, p in m.named_parameters()}), ("buf", dict(m.named_buffers()))]
+    for mn, mod in m.named_modules():
+        org.append(("attrs:" + (mn or "."), {k: v for k, v in vars(mod).items() if not k.startswith("_") and not isinstance(v, torch.nn.Module)}))
+    SKIP = {"m", "store", "tok", "gen", "cfg", "save_path", "_t_feel", "anatomy", "effectors", "world"} | set(OPTS)
+    out = {}
+    for name, items in (("organs", org), ("store", sorted(vars(L.store).items())), ("optim", [(k, getattr(L, k).state_dict()) for k in OPTS]),
+                        ("rng", [("gen", L.gen.get_state()), ("torch", torch.get_rng_state())]),
+                        ("work", [(k, v) for k, v in sorted(vars(L).items()) if k not in SKIP]), ("cfg", [("cfg", L.cfg)])):
+        g = hashlib.sha256()
+        for k, v in items:
+            g.update(k.encode() + b"="); _canon(g, v, name + "." + k)
+        out[name] = g.hexdigest()[:16]
+    return out
+
+
+def test_the_diary_world():
+    """anatomy 20 (step R9): the language body's world is the DiaryWorld, today's page queue and face reached where the life always held
+    them: its frame is the queue's symbol (or the rest), who typed it and the face, at the life's tick; its pause lets the queue go, as
+    the sleep switch always did; it keeps no body alive and is not saved with it; its state goes and comes back as bytes; a lapse lets
+    queued symbols go by. Lived through the world loop (the frame taken inside the tick, the acts returned and applied, the sleep switch
+    pausing the world before the night and resuming it after), under the physiology and the served constants, with symbols queued at
+    dusk and a morning after, a life is the whole life a tick before R9 lived (its `_sense` and `_sleep_now` verbatim), section by
+    section; its acts are the voice's symbols on its page; the pause falls once at dusk and the resume once after the night"""
+    import gc
+    from body.core.world import World, DiaryWorld, WorldLoop
+    # the world itself
+    L = _born(TOK, {}); w = L.world
+    assert type(w) is DiaryWorld and isinstance(w, World) and w.life is L and w.now is None
+    L.type_text("ab", who="parent"); L.set_face(3.0)
+    f1 = w.frame(); f2 = w.frame(); f3 = w.frame()
+    a_, b_ = TOK.token_to_id("a"), TOK.token_to_id("b")
+    assert (f1.tick, f1.obs, f1.face, f1.truth) == (L.ticks, {"ear": a_}, 3.0, {"who": "parent"}), f1
+    assert (f2.obs, f2.truth, f3.obs, f3.truth) == ({"ear": b_}, {"who": "parent"}, {"ear": L.sil}, {"who": ""}) and not L.queue and not L.queue_who
+    L.type_text("hello", who="you"); blob = w.save_state(); w.frame(); w.frame(); L.set_face(-1.0)
+    w.load_state(blob)
+    assert [TOK.decode([i]) for i in L.queue] == list("hello") and list(L.queue_who) == ["you"] * 5 and L.face_now == 3.0
+    w.lapse(2); assert [TOK.decode([i]) for i in L.queue] == list("llo") and len(L.queue_who) == 3
+    w.pause(); assert not L.queue and not L.queue_who
+    assert w.apply({"voice": a_}) is None and w.resume() is None and not L.queue and L.face_now == 3.0
+    assert w.type_text("hi", who="parent") == {"queued": 2} and w.set_face(9.0) == {"you": 6.0} and L.face_now == 6.0
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path); blob_ = torch.load(path, map_location="cpu", weights_only=False)
+    finally:
+        os.remove(path)
+    assert not any("world" in str(k_) or "now" == k_ for k_ in blob_["life"]), sorted(blob_["life"])
+    w2 = _born(TOK, {}).world; gc.collect()
+    try:
+        w2.life
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("the diary's world kept its body alive")
+    try:
+        Life(_born(TOK, {}).m, TOK, world=object())
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("a life took a world that is no World")
+    # the language body through the world loop against the body a tick before R9
+    lines = ("what do you want?", "I want milk", "do you see the ball?", "yes. the ball is red", "what is cold?", "ice is cold")
+    faces = {10: 2.0, 11: 0.0, 40: -2.0, 41: 0.0, 75: 2.0, 76: 4.0, 77: 0.0, 130: -2.0, 131: 0.0}
+    tiny = dict(wake_ticks=100, wake_every=8, gate_every=8, night_rounds=1, night_starts=4, night_batch=4, rem_dreams=2, rem_steps=2,
+                write_floor=1e-30)
+    cases = [("the physiology", dict(tiny))]
+    sc = _served_cfg()
+    if sc is not None:
+        cases.append(("the served constants", dict(sc, **tiny)))
+    for label, cfg in cases:
+        torch.manual_seed(5); A = _born(TOK, cfg); torch.manual_seed(5); B = _born(TOK, cfg)
+        B._sense = types.MethodType(_sense_before_r9, B); B._sleep_now = types.MethodType(_sleep_now_before_r9, B)
+        calls = []; pause_, resume_ = A.world.pause, A.world.resume
+
+        def pause(pause_=pause_, calls=calls, A=A):
+            calls.append(("pause", A.ticks, A.nights, len(A.queue), A.asleep)); pause_()
+
+        def resume(resume_=resume_, calls=calls, A=A):
+            calls.append(("resume", A.ticks, A.nights, len(A.queue), A.asleep)); resume_()
+        A.world.pause, A.world.resume = pause, resume
+        run = WorldLoop(A); acts = []; dusk_q = None
+        for t in range(160):
+            for L_ in (A, B):
+                if t % 30 == 0 and t // 30 < len(lines):
+                    L_.type_text(lines[t // 30], who="parent" if t // 30 % 2 == 0 else "other")
+                if t == 95:
+                    L_.type_text("are you warm now?", who="parent")      # still queued when the night falls, at the hundredth tick
+                if t in faces:
+                    L_.set_face(faces[t])
+            if t == 99:
+                dusk_q = len(A.queue)
+            acts.append(run.step()); B.tick()
+        del B._sense, B._sleep_now                                   # the verbatim methods were the life's own attributes: the class's again
+        assert A.nights == B.nights == 1 and not (A.last_night or {}).get("error"), (A.nights, (A.last_night or {}).get("error"))
+        assert _differs(A, B) is None, f"{label}: {_differs(A, B)} differs"
+        wa, wb = _whole(A), _whole(B)
+        assert wa == wb, f"{label}: the sections {[k for k in wa if wa[k] != wb[k]]} differ from the life before R9"
+        assert A.page == B.page and A.last == B.last and list(A.queue) == list(B.queue)
+        said = [e[0] for e in A.page if e[1] == 1]
+        assert [set(a) for a in acts] == [{"voice"}] * 160 and [TOK.decode([a["voice"]]) if a["voice"] != A.sil else "" for a in acts] == said
+        assert run.lived == 160 and run.lapsed == 0 and sum(1 for s_ in said if s_) >= 10
+        assert dusk_q and [c[0] for c in calls] == ["pause", "resume"], calls
+        assert calls[0][1:] == (100, 0, dusk_q - 1, False) and calls[1][1:] == (100, 1, 0, False), (calls, dusk_q)
+        print(f"anatomy 20 ({label}): 160 ticks through the world loop, a night at the hundredth with {dusk_q} symbols queued at dusk,",
+              f"the whole life as before R9 ({', '.join(sorted(wa))}); {sum(1 for s_ in said if s_)} symbols said, each the tick's act")
+    print("anatomy 20: the diary's world is the queue, who typed and the face; its pause lets the queue go; it keeps no body alive and is",
+          "not saved; its state goes and comes back; a lapse lets symbols go by")
+
+
+class _FrameGrip(Effector):
+    """a grip whose gate's own input reads the world's frame (the touch the world shows), and which records every frame it is given"""
+    seen = []                                                    # the test's record, not the anatomy's (a class list the test clears)
+
+    def gate_inputs(self, frame, life, state):
+        _FrameGrip.seen.append(("gate", frame))
+        return [1.0 if state["acted_last"] else 0.0, float(frame.obs["touch"][0])]
+
+    def cost(self, act, frame, life):
+        _FrameGrip.seen.append(("cost", frame))
+        return float(self.effort)
+
+
+class _WorldArm(LanguageAnatomy):
+    """the diary's words and face, a sense of the world's frames (a touch of two numbers, a bare Channel encoded by the face's map),
+    an arm of two joints of five and the frame-reading grip"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.channels.append(Channel("touch", "vector", 2, organ="face_in"))
+        self.effectors += [Effector("arm", [5, 5], rest_id=12, effort=0.05), _FrameGrip("grip", [3], rest_id=1, n_in=2, effort=0.03)]
+
+
+def _stub_world(clock=None):
+    """a stub of the simulated world (the SimWorld interface; body/sim/world.py will be the MuJoCo scene): a touch that moves with its
+    tick and the arm's acts, the parent's line on the words channel now and then, a smile now and then; it refuses to be seen or moved
+    while paused; its state goes and comes back; `clock` (a fake clock's list) moves by each tick's cost in `cost`"""
+    from body.core.world import SimWorld
+
+    class Stub(SimWorld):
+        LINE = "go up we go "
+
+        def __init__(self):
+            self.t = 0; self.x = 0.0; self.paused = False; self.log = []; self.shown = []; self.applied = []; self.lapses = 0
+            self.cost = []; self.night_s = 0.0
+
+        def frame(self):
+            assert not self.paused, "a frame taken while the world is paused"
+            obs = {"touch": [math.sin(self.t / 7.0), self.x]}
+            k = self.t % 60 - 10
+            if 0 <= k < len(self.LINE):
+                obs["ear"] = TOK.token_to_id(self.LINE[k])
+            f = Frame(self.t, obs, 2.0 if self.t % 45 == 30 else 0.0, {"who": "parent", "x": self.x})
+            self.shown.append((f, clock[0] if clock is not None else None)); return f
+
+        def apply(self, acts):
+            assert not self.paused, "the world moved while paused"
+            if not acts:
+                self.lapses += 1
+            else:
+                self.applied.append(dict(acts))
+                if clock is not None and self.cost:
+                    clock[0] += self.cost.pop(0)
+            a = int(acts.get("arm", 12)); self.x += 0.01 * (a // 5 - 2); self.t += 1
+
+        def pause(self):
+            self.paused = True; self.log.append(("pause", self.t))
+            if clock is not None:
+                clock[0] += self.night_s
+
+        def resume(self):
+            self.paused = False; self.log.append(("resume", self.t))
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.x))
+
+        def load_state(self, blob):
+            self.t, self.x = pickle.loads(blob)
+    return Stub()
+
+
+def test_a_world_of_frames():
+    """anatomy 21 (step R9): the SimWorld is an interface the sim must write whole (it and a half-written one cannot be made). A stub of
+    it, with the diary's words and face, a sense of its frames and two later effectors, and every learning rate at 0 (plumbing, not a
+    life): through the world loop one frame is taken and one apply given each tick, in order; the frame's words are the tick's world
+    symbol on the page, its face is felt, its touch is in every window position the tick opens (a bare Channel observes the world's
+    frames), the grip's gate input and each act's cost read the tick's frame, the world takes each tick's acts as the life recorded
+    them; the night pauses the world at dusk and the morning resumes it where it stood, nothing seen or moved between; every
+    parameter is as born after a day, a night and a morning; a frame handed to the tick is the one it lives; the world is not saved
+    with the body, and a loaded body lives on in a world given to it"""
+    from body.core.world import SimWorld, WorldLoop
+    for bad in ("the interface", "half of it"):
+        try:
+            if bad == "the interface":
+                SimWorld()
+            else:
+                type("Half", (SimWorld,), {"frame": lambda s: None, "apply": lambda s, a: None})()
+        except TypeError:
+            continue
+        raise AssertionError(f"{bad} was made without the sim's methods")
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0)
+    cfg = dict(LR0, wake_ticks=120, wake_every=8, gate_every=8, night_rounds=1, night_starts=4, night_batch=4, rem_dreams=2, rem_steps=2,
+               write_floor=1e-30, gate_floor=0.3, fast_rls=0)
+    w = _stub_world()
+    torch.manual_seed(5); L = _born_in(_WorldArm(TOK, cfg), cfg, w)
+    assert L.world is w and w.now is None
+    p0 = {k: v.detach().clone() for k, v in L.m.named_parameters()}
+    run = WorldLoop(L); _FrameGrip.seen.clear(); rec = []
+    for t in range(200):
+        last_pos = L.win[-1] if L.win else None; n_seen = len(_FrameGrip.seen)
+        acts = run.step()
+        f, _ = w.shown[-1]
+        opened = bool(L.win) and L.win[-1] is not last_pos                # (the night empties the window)
+        rec.append((f, acts, dict(L.last["acts"]), L.last["felt"], L.page[-2][0], L.page[-1][0], opened,
+                    L.win[-1]["touch"].clone() if L.win else None, _FrameGrip.seen[n_seen:]))
+    assert (L.ticks, L.nights, w.t, len(w.shown), len(w.applied), run.lived) == (200, 1, 200, 200, 200, 200), (L.ticks, L.nights, w.t, len(w.shown), len(w.applied))
+    assert [f.tick for f, _ in w.shown] == list(range(200)) and w.lapses == 0
+    for i, (f, acts, last, felt, heard, said, opened, touch, seen) in enumerate(rec):
+        assert w.applied[i] == acts and set(acts) == {"voice", "arm", "grip"}, (i, acts)
+        assert acts["arm"] == last["arm"]["act"] and acts["grip"] == last["grip"]["act"], (i, acts, last)
+        assert said == (TOK.decode([acts["voice"]]) if acts["voice"] != L.sil else ""), (i, said, acts)
+        u = f.obs.get("ear")
+        assert heard == (TOK.decode([u]) if u is not None else ""), (i, heard, u)
+        assert felt == (2 if f.tick % 45 == 30 else 0), (i, felt)
+        if opened:
+            assert torch.equal(touch, torch.tensor(f.obs["touch"], dtype=torch.float32)), (i, touch, f.obs["touch"])
+        assert seen and all(fr_ is f for _, fr_ in seen) and seen[0][0] == "gate", f"tick {i}: the grip read another frame than the tick's"
+        assert any(k_ == "cost" for k_, _ in seen) == (acts["grip"] != 1), (i, seen, acts)
+    assert w.log == [("pause", 119), ("resume", 119)] and L.nights == 1, w.log
+    heard_n = sum(1 for r_ in rec if r_[4]); opened_n = sum(1 for r_ in rec if r_[6]); felt_n = sum(1 for r_ in rec if r_[3])
+    arm_n = sum(1 for r_ in rec if r_[1]["arm"] != 12); grip_n = sum(1 for r_ in rec if r_[1]["grip"] != 1)
+    assert heard_n >= 30 and opened_n >= 100 and felt_n >= 4 and arm_n >= 10 and grip_n >= 10, (heard_n, opened_n, felt_n, arm_n, grip_n)
+    moved = [k for k, v in L.m.named_parameters() if not torch.equal(v, p0[k])]
+    assert not moved, f"with every learning rate at 0 these moved: {moved}"
+    # a frame handed to the tick is the frame it lives
+    fr = Frame(999, {"ear": TOK.token_to_id("z"), "touch": [0.5, -0.5]}, 0.0, {"who": "parent"})
+    n_shown = len(w.shown); last_pos = L.win[-1]
+    got = L.tick(fr)
+    assert len(w.shown) == n_shown and w.now is fr and set(got) == {"voice", "arm", "grip"} and L.page[-2][0] == "z"
+    assert L.win[-1] is not last_pos and torch.equal(L.win[-1]["touch"], torch.tensor([0.5, -0.5]))
+    # the world is not saved with the body; a loaded body lives on in the world given it
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path)
+        blob = torch.load(path, map_location="cpu", weights_only=False)
+        w2 = _stub_world(); w2.load_state(w.save_state())
+        C = Life.load(path, _WorldArm(TOK, L.cfg), save_path=None, world=w2)
+    finally:
+        os.remove(path)
+    assert not any("world" in str(k_) for k_ in blob["life"]) and (w2.t, w2.x) == (w.t, w.x) and C.world is w2
+    run2 = WorldLoop(C)
+    for _ in range(10):
+        run2.step()
+    assert C.ticks == L.ticks + 10 and w2.t == w.t + 10 and len(w2.applied) == 10
+    print(f"anatomy 21: SimWorld cannot be made unwritten; a stub world ticks a body of frames 200 ticks, a night inside, every learning",
+          f"rate at 0: {heard_n} world symbols heard, {felt_n} smiles felt, the touch in {opened_n} opened positions, the arm acting",
+          f"{arm_n} and the grip {grip_n} times, each act to the world as recorded, every frame the tick's; paused at dusk, resumed where",
+          "it stood; no parameter moved; a frame handed in is lived; the world not saved, a loaded body lives on in the world given it")
+
+
+def _born_in(anatomy, cfg, world):
+    return Life.birth(anatomy, device="cpu", d=64, layers=2, heads=2, window=32, cfg=cfg, seed=0, world=world)
+
+
+def test_the_loop_deadline_and_pace():
+    """anatomy 22 (step R9): THE DEADLINE SWITCH is off by default: however long a tick takes the world waits (no tick lapses, one
+    world tick a tick lived); it needs the world's period; on (a test switch), the world runs a tick a period on its own clock: at
+    every pass the body lives the tick that is due (the ticks the world ran past lapse unseen, a body ahead of the clock waits), and
+    the night stops the clock (nothing lapses for it). THE PACE LOG: a line every `every` ticks (their seconds inside the tick, the wall
+    seconds from start to start, the ticks over the period) and one each morning (the night's seconds), the night and the interval
+    across it left out of the tick lines; a log that cannot be written is said once and never stops the loop; a life with the log is
+    the life without it"""
+    from body.core.world import PaceLog, WorldLoop
+    tiny = dict(wake_ticks=100000, wake_every=8, gate_every=8, night_rounds=1, night_starts=4, night_batch=4, rem_dreams=2, rem_steps=2,
+                write_floor=1e-30)
+    # lockstep: every tick five periods long, and the world waits
+    now = [0.0]; w = _stub_world(now); w.cost = [5.0] * 30
+    torch.manual_seed(5); L = _born_in(_WorldArm(TOK, tiny), tiny, w)
+    run = WorldLoop(L, period=1.0, clock=lambda: now[0], sleep=lambda s: now.__setitem__(0, now[0] + s))
+    for _ in range(30):
+        run.step()
+    assert not run.deadline and run.lapsed == 0 and w.lapses == 0 and w.t == 30 and now[0] == 150.0
+    try:
+        WorldLoop(L, deadline=True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("the deadline switch ran without the world's period")
+    # the deadline: ticks of scripted lengths (in periods), a night inside at the thirtieth
+    cost = [0.5, 2.5, 0.2, 0.3, 3.7, 1.0, 0.1, 4.2, 0.4, 0.6, 1.5, 0.05, 2.0, 0.9] * 4
+    now = [0.0]; w = _stub_world(now); w.cost = list(cost); w.night_s = 500.0
+    cfg = dict(tiny, wake_ticks=30)
+    torch.manual_seed(5); L = _born_in(_WorldArm(TOK, cfg), cfg, w)
+    run = WorldLoop(L, period=1.0, deadline=True, clock=lambda: now[0], sleep=lambda s: now.__setitem__(0, now[0] + s))
+    for _ in range(len(cost)):
+        run.step()
+    dusk_t = w.shown[29][0].tick; morning = 30; t_m = w.shown[morning][1]
+    assert L.nights == 1 and w.log == [("pause", dusk_t), ("resume", dusk_t)] and w.shown[morning][0].tick == dusk_t + 1, (L.nights, w.log, dusk_t)
+    for i, (f, t_) in enumerate(w.shown):
+        if i < morning:
+            assert f.tick == int(t_ // 1.0), f"pass {i}: the body lived the world's tick {f.tick} at {t_}, the tick due is {int(t_)}"
+        else:
+            assert f.tick - w.shown[morning][0].tick == int((t_ - t_m) // 1.0), (i, f.tick, t_)
+    assert len(w.shown) == len(cost) and run.lapsed == w.lapses and w.t == run.lived + run.lapsed and run.lapsed >= 10, (run.lapsed, w.lapses)
+    n_dead, n_lapsed = len(w.shown), run.lapsed
+    # a quick body waits for the world's clock (every tick a tenth of a period)
+    now = [0.0]; w = _stub_world(now); w.cost = [0.1] * 12
+    torch.manual_seed(5); L = _born_in(_WorldArm(TOK, tiny), tiny, w)
+    run = WorldLoop(L, period=1.0, deadline=True, clock=lambda: now[0], sleep=lambda s: now.__setitem__(0, now[0] + s))
+    for _ in range(12):
+        run.step()
+    assert run.lapsed == 0 and [t_ for _, t_ in w.shown] == [float(k) for k in range(12)], [t_ for _, t_ in w.shown]
+    # the pace log: a line every 5 ticks and one each morning, the night left out
+    import json
+    d_ = tempfile.mkdtemp(); path = os.path.join(d_, "logs", "pace.jsonl")
+    try:
+        cost = [0.1, 0.2, 0.05, 0.3, 0.1, 0.12, 0.08, 0.4, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+        now = [0.0]; w = _stub_world(now); w.cost = list(cost); w.night_s = 40.0
+        cfg = dict(tiny, wake_ticks=12)
+        torch.manual_seed(5); L = _born_in(_WorldArm(TOK, cfg), cfg, w)
+        pace = PaceLog(path, 0.15, every=5, stamp=lambda: 7.0)
+        run = WorldLoop(L, period=0.15, pace=pace, clock=lambda: now[0])
+        starts = []
+        for _ in range(len(cost)):
+            t0 = now[0]; starts.append(t0); run.step()
+            now[0] += max(0.0, 0.15 - (now[0] - t0))            # the serve's padding to its period
+        rows = [json.loads(l_) for l_ in open(path)]
+    finally:
+        import shutil
+        shutil.rmtree(d_, ignore_errors=True)
+    assert L.nights == 1 and [r_["kind"] for r_ in rows] == ["ticks", "ticks", "night", "ticks"], rows
+    night_i = 11                                                    # the twelfth tick holds the night
+    awake = [i for i in range(len(cost)) if i != night_i]
+    for r_, idx in zip([r_ for r_ in rows if r_["kind"] == "ticks"], [awake[0:5], awake[5:10], awake[10:15], awake[15:19]]):
+        if len(idx) < 5:
+            break
+        busy = sum(cost[i] for i in idx)
+        gaps = [starts[i] - starts[i - 1] for i in idx if i - 1 >= 0 and i - 1 != night_i and i != night_i + 1 and (i - 1) in awake]
+        assert r_["n"] == 5 and abs(r_["busy"] - busy) < 1e-6 and r_["over"] == sum(1 for i in idx if cost[i] > 0.15), (r_, busy)
+        assert r_["periods"] == len(gaps) and abs(r_["wall"] - sum(gaps)) < 1e-6 and r_["period"] == 0.15 and r_["t"] == 7.0, (r_, gaps)
+    nr = rows[2]
+    assert nr["night"] == 1 and nr["tick"] == 12 and abs(nr["seconds"] - (40.0 + cost[night_i])) < 1e-6, nr
+    bad = PaceLog(tempfile.gettempdir(), 0.15, every=1)               # a directory: no line can be written
+    import contextlib
+    import io
+    said = io.StringIO()
+    with contextlib.redirect_stdout(said):
+        for k in range(3):
+            bad.record(float(k), float(k) + 0.1, k, 0)
+    assert bad.failed == 3 and bad.lines == 0 and said.getvalue().count("[pace]") == 1, said.getvalue()
+    # a life with the pace log is the life without it (logging only)
+    cfg = dict(tiny, wake_ticks=60)
+    lives = []
+    for with_pace in (False, True):
+        torch.manual_seed(5); D = _born(TOK, cfg)
+        fd, p_ = tempfile.mkstemp(suffix=".jsonl"); os.close(fd)
+        try:
+            run = WorldLoop(D, period=0.15, pace=PaceLog(p_, 0.15, every=10) if with_pace else None)
+            for t in range(90):
+                if t % 30 == 0:
+                    D.type_text(("what do you want?", "I want milk", "go up")[t // 30], who="parent")
+                run.step()
+            n_lines = sum(1 for _ in open(p_))
+        finally:
+            os.remove(p_)
+        lives.append((D, n_lines))
+    (D0, n0), (D1, n1) = lives
+    assert n0 == 0 and n1 == 9 and _differs(D0, D1) is None and _whole(D0) == _whole(D1), (n0, n1)
+    print(f"anatomy 22: lockstep, the world waits (30 ticks of 5 periods, none lapsed); the deadline switch needs a period; on, the body",
+          f"lives the due tick at each of {n_dead} passes ({n_lapsed} world ticks lapsed unseen), a quick body waits for the clock, the night",
+          f"stops it; the pace log: {len(rows)} lines, the night's {nr['seconds']} s left out of the tick lines; a failing log said once;",
+          "the life the same with the log and without")
+
+
 ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
                  test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy,
                  test_reward_sources_feel_todays_rule, test_a_life_feels_as_before, test_the_declared_order_is_the_sums,
                  test_the_input_is_the_channels_in_order, test_the_window_holds_each_channel_under_its_field, test_a_later_channel,
                  test_every_call_site_passes_the_channels, test_imagination_as_before, test_the_voice_is_effector_0,
-                 test_the_gate_lesson_as_before, test_the_switches, test_a_later_effector, test_every_call_site_passes_the_effectors]
+                 test_the_gate_lesson_as_before, test_the_switches, test_a_later_effector, test_every_call_site_passes_the_effectors,
+                 test_the_diary_world, test_a_world_of_frames, test_the_loop_deadline_and_pace]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

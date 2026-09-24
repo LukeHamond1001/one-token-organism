@@ -1,6 +1,7 @@
 """the night (a mixin of `Life`, body/life.py): the corpus as the body hears it, the dreams (`dreams`), the dreams as windows and
 lockstep batches, `night()` itself (NREM, REM, the value replay, the gauge before and after, the store's fade, the report, the save),
-the night on another device, REM's imagination and rollout, the value replay, and the sleep switch's call (`_sleep_now`).
+the night on another device, REM's imagination and rollout, the value replay, and the sleep switch's call (`_sleep_now`: since the
+core refactor's step R9 the world is paused before the night and resumed after it).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import os
@@ -570,5 +571,11 @@ class NightMixin:
             torch.stack(terms).mean().backward(); self.opt_value.step()
 
     def _sleep_now(self):
-        self.queue.clear(); self.queue_who.clear()
-        self.night()
+        """THE SLEEP SWITCH'S CALL (the tick's last phase): the world pauses (the core refactor's step R9, body/core/world.py: the diary's
+        lets its queue go, what this call always did first), the night runs, and the morning resumes the world where it stood. A night
+        called by hand (a tool's, on a copy) leaves the world as it is, as it left the queue."""
+        self.world.pause()
+        try:
+            self.night()
+        finally:
+            self.world.resume()

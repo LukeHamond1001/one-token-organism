@@ -5,6 +5,11 @@
 
 POST /type {"text", "who"}   POST /face {"expr"}   GET /state?since=N   POST /save {}   (no /sleep: the day ends by the body alone; the review of 2026-09-08)
 GET /talk   the visitor's page (2026-09-11; redrawn 2026-09-17): a conversation, each line a bubble, the body's speech its own; the letters flow in as typed, no box; the number keys are the face (5 neutral, held until the next); the typist yields for a minute after a visitor types
+
+THE WORLD LOOP (the core refactor's step R9, body/core/world.py): the serve wraps the body's world, the DiaryWorld (the page's queue and
+the face: /type and /face are its hands), and ticks it in lockstep through a WorldLoop, a pass every --period seconds as before; the
+loop's PaceLog appends one line every 1000 ticks and one each morning to --pace-log (logs/diary_pace.jsonl; "" for none), the ops
+guard's record (SIM_DESIGN.md section 3, graft 5). Logging only: the body is the same.
 """
 import argparse
 import json
@@ -16,6 +21,7 @@ from tokenizers import Tokenizer
 
 from .life import Life, PHYSIOLOGY
 from .core.physiology import SWITCHES
+from .core.world import PaceLog, WorldLoop
 
 PAGE = """<!doctype html><meta charset=utf-8><title>the diary, second body</title>
 <style>body{margin:0;background:#f5f1e6;color:#222;font:16px/1.6 Georgia,serif}
@@ -94,6 +100,7 @@ def main():
     ap.add_argument("--d", type=int, default=256); ap.add_argument("--layers", type=int, default=6)
     ap.add_argument("--heads", type=int, default=4); ap.add_argument("--window", type=int, default=64)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--pace-log", default="logs/diary_pace.jsonl", help="the pace log (the ops guard's record); empty for none")
     for k, v in PHYSIOLOGY.items():
         ap.add_argument("--" + k.replace("_", "-"), type=type(v), default=None, help=f"physiology (default {v})")
     for k, v in SWITCHES.items():                  # the core refactor's defect-fix switches: off by their absence, set only when given
@@ -109,6 +116,8 @@ def main():
         life.save()
         print(f"[body] born: {sum(p.numel() for p in life.m.parameters())/1e6:.1f}M parameters, saved {a.birth}", flush=True)
     lock = threading.RLock()
+    world = life.world                              # the diary's world: the page's queue and the face (DiaryWorld, body/core/world.py)
+    run = WorldLoop(life, period=a.period, pace=(PaceLog(a.pace_log, a.period) if a.pace_log else None))   # lockstep (the deadline switch off)
 
     def loop():
         while True:
@@ -116,7 +125,7 @@ def main():
             try:
                 with lock:
                     if not life.asleep:
-                        life.tick()
+                        run.step()                  # the world's frame, the tick, its acts to the world
             except Exception as e:
                 life.last = {"error": str(e)[:200], "tick": life.ticks}
                 print(f"[body] tick error: {e}", flush=True)
@@ -153,9 +162,9 @@ def main():
             body = json.loads(self.rfile.read(n).decode() or "{}") if n else {}
             try:
                 if self.path == "/type":
-                    self._json(life.type_text(str(body.get("text", "")), who=str(body.get("who", "you"))))   # the diary page's keys are a visitor's too
+                    self._json(world.type_text(str(body.get("text", "")), who=str(body.get("who", "you"))))   # the diary page's keys are a visitor's too
                 elif self.path == "/face":
-                    self._json(life.set_face(body.get("expr", 0)))
+                    self._json(world.set_face(body.get("expr", 0)))
                 elif self.path == "/save":
                     with lock:
                         self._json(life.save())

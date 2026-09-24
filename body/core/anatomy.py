@@ -1,6 +1,6 @@
-"""the body's anatomy, declared (docs/SIM_DESIGN.md section 8.2; the core refactor, steps R1 to R5): what a body senses (`Channel`), how it
-acts (`Effector`) and what it feels as reward (`RewardSource`), gathered in an `Anatomy`, so that the core can serve a body other than
-the diary's. `LanguageAnatomy(tok, cfg)` is the diary's body: it derives from the tokenizer and the physiology exactly the symbols
+"""the body's anatomy, declared (docs/SIM_DESIGN.md section 8.2; the core refactor, steps R1 to R5 and R9): what a body senses
+(`Channel`), how it acts (`Effector`) and what it feels as reward (`RewardSource`), gathered in an `Anatomy`, so that the core can
+serve a body other than the diary's. `LanguageAnatomy(tok, cfg)` is the diary's body: it derives from the tokenizer and the physiology exactly the symbols
 `Life.__init__` derived before step R2 and now reads from it (the rest `sil`, the display symbol `nl`, the space, the turn-end token
 `eot`, the end the offset teaches `end_id`, the `reserved` the world never types and the `bans` the mouth never says) and declares the
 ear (`EarChannel`), the face (`FaceChannel`), the voice (`VoiceEffector`) and the reward's three sources in their order (`FaceReward`,
@@ -29,10 +29,11 @@ with the striatal actor's bias per joint, each joint drawn in turn), acts (`_act
 after the voice's own sound, its cost the body's fatigue, its act its striatal line's event) and learns (`_gate_lesson(i)`, the
 voice's lesson on its own gate, buffer and baseline; its actor as the voice's). Its proposal head (act_pred) is step R6; until then it
 proposes nothing and the actor's bias alone shapes its draws. The defect fixes 4, 5 and 8 are switches (physiology.py `SWITCHES`), off
-by their absence. body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its reward equal to today's rule, its
-input sum, window and heads equal to today's, and its gate's lesson equal to today's. The anatomy names the organs and never holds them (no module, no tensor: the organs are the body's
-and are saved with it); the methods that read a frame or a life for a later step raise until the step named on them wires them (a
-channel's `observe` for a world's frames, step R9).
+by their absence. STEP R9 wires the world (body/core/world.py): a channel that declares no observation of its own is a channel of the
+world's frames (`Channel.observe`: its observation in the frame the tick is lived on, `life.world.now`, under its name), and an
+effector's gate inputs and cost read that frame. body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its
+reward equal to today's rule, its input sum, window and heads equal to today's, and its gate's lesson equal to today's. The anatomy
+names the organs and never holds them (no module, no tensor: the organs are the body's and are saved with it).
 Building an anatomy builds no module, draws no random number and touches no life (SIM_DESIGN.md 8.3, item 4); a channel and a reward
 source keep no state of their own (the face's held level is the life's `level`, its last face the life's `face_prev`, as before)."""
 from dataclasses import dataclass, field as dc_field
@@ -88,10 +89,23 @@ class Channel:
         return torch.zeros(*shape, int(self.size), device=device)
 
     def observe(self, life, x, who, still=False):
-        """the channel's observation at the window position a step of the diary's tick opens (`x` the symbol the step enters, `who` 0
-        the world's, 1 its own; `still`: an imagined position, nothing changing). The diary's channels declare it; a body whose
-        world gives frames observes those (the world loop, step R9)."""
-        raise NotImplementedError(f"Channel.observe: the channel {self.name!r} declares no observation of the diary's tick (a world's frames come with step R9, SIM_DESIGN.md 8.4)")
+        """the channel's observation at the window position a step of the tick opens (`x` the symbol the step enters, `who` 0 the
+        world's, 1 its own; `still`: an imagined position, nothing changing). The diary's channels declare their own (the ear, the face).
+        A CHANNEL OF THE WORLD'S FRAMES (step R9, the world loop): its observation in the frame the tick is lived on (`life.world.now`,
+        the one the tick's senses took), under the channel's name, the same at both halves of the tick and held at an imagined position;
+        its quiet where there is no frame yet or the frame names it not. A symbol channel's observation is its symbol; a vector
+        channel's its `size` numbers, as float32 on the life's device."""
+        f_ = getattr(life.world, "now", None)
+        o_ = None if f_ is None else f_.obs.get(self.name)
+        if self.kind == "symbol":
+            if o_ is None:
+                if self.rest_id is None:
+                    raise ValueError(f"channel {self.name!r}: a symbol channel without a rest has no quiet")
+                return int(self.rest_id)
+            return int(o_)
+        if o_ is None:
+            return torch.zeros(int(self.size), device=life.dev)
+        return torch.as_tensor(o_, dtype=torch.float32, device=life.dev).reshape(int(self.size))
 
 
 class EarChannel(Channel):
@@ -126,8 +140,10 @@ class Effector:
     effector's its name). The organs build a later effector's organs under those names after every other organ (Organs(...,
     effectors=)). `n_in` is the number of its gate's own inputs beside the shared [C/sqrt(d), fatigue, mood, stress, salience, level]
     (the base effector's one: its own act last tick), `effort` the fatigue an act costs (the base's cost; a body's effector may
-    declare a cost of its own). 8.2 sketched gate_inputs(frame, life) and cost(act, frame): the effector's working state and the life
-    are passed as well, since the anatomy keeps no state of its own and the constants are the life's."""
+    declare a cost of its own; under cost_in_reward it reaches neither the reward nor the gate's lesson: see EffortReward). 8.2
+    sketched gate_inputs(frame, life) and cost(act, frame): the effector's working state and the life are passed as well, since the
+    anatomy keeps no state of its own and the constants are the life's. The frame is the one the tick is lived on (step R9: the
+    world's; a gate's own input may read the world's observations there)."""
     name: str
     factors: list
     rest_id: Optional[int] = None
@@ -189,7 +205,8 @@ class VoiceEffector(Effector):
     n_in: int = 0
 
     def gate_inputs(self, frame, life, state=None):
-        return life._voice_ear(frame.obs[life.anatomy.words.name])
+        u = frame.obs.get(life.anatomy.words.name)                  # the world's symbol this tick (a frame that names none: the rest)
+        return life._voice_ear(life.sil if u is None else int(u))
 
     def cost(self, act, frame, life):
         return float(life.cfg["symbol_cost"])
@@ -235,12 +252,13 @@ class FaceReward(RewardSource):
 
 
 class WorldWordsReward(RewardSource):
-    """THE WORLD'S WORDS AS REWARD (world_r; 0 = off): each symbol the partner sends on the ear (`frame.obs["ear"]`, not its rest) is
-    felt at world_r beside the face; under world_mask, the corollary discharge, not on a tick after the voice acted (not heard over its
-    own voice). Silent otherwise."""
+    """THE WORLD'S WORDS AS REWARD (world_r; 0 = off): each symbol the partner sends on the ear (`frame.obs["ear"]`, not its rest; a
+    frame that names none is quiet, step R9) is felt at world_r beside the face; under world_mask, the corollary discharge, not on a tick
+    after the voice acted (not heard over its own voice). Silent otherwise."""
 
     def felt(self, frame, life):
-        if frame.obs["ear"] != life.sil:
+        u = frame.obs.get("ear")
+        if u is not None and u != life.sil:
             wr = float(life.cfg.get("world_r", 0.0))
             if wr and not (int(life.cfg.get("world_mask", 0)) and getattr(life, "_acted_last", False)):
                 return wr
@@ -252,7 +270,11 @@ class EffortReward(RewardSource):
     gate_fatigue)^2), is felt as the next tick's reward, negative, so both critics predict it and the gate reads their error alone.
     Added to the act's credit outside the critics (the earlier form, with a tonic drive of 0.25 cancelling it) it was never predicted
     away and, with the drive gone, held every act at a loss; with both gone the gate saturated at 0.98 (runs 69-72). Silent on a tick
-    after no act. The feeling is the cost negated: adding it is the IEEE subtraction of the cost (x + (-c) is x - c, bit for bit)."""
+    after no act. The feeling is the cost negated: adding it is the IEEE subtraction of the cost (x + (-c) is x - c, bit for bit).
+    THE VOICE'S EFFORT ONLY (the R5 verifier's note): it feels the voice's act (symbol_cost), and under cost_in_reward the gate's lesson
+    leaves every effector's effort to the reward, so a later effector's effort reaches neither the reward nor its gate's lesson (only
+    the fatigue). A body with later effectors keeps cost_in_reward 0 (the sim's effort is felt through its charge) or declares an
+    effort source of its own for them."""
 
     def felt(self, frame, life):
         if life.cfg.get("cost_in_reward") and getattr(life, "_acted_last", False):
@@ -427,13 +449,16 @@ def anatomy_for(body, cfg=None):
     tokenizer always went. A tokenizer gives the diary's `LanguageAnatomy` under the constants `cfg` (updating the physiology, as the
     life's own cfg does). A language anatomy given in its place is taken if it declares the symbols its tokenizer gives under `cfg`,
     since a body's rest and ends are named by its physiology (one declared under other constants is refused, not mixed); it may declare
-    channels beyond the diary's two (step R4 wires channels into the core) and effectors beyond the voice (step R5 wires effectors).
-    Any other anatomy is refused until step R9's world loop: until then the life lives the diary's tick (the queue, the page, the text)."""
+    channels beyond the diary's two (step R4 wires channels into the core) and effectors beyond the voice (step R5 wires effectors);
+    since step R9 its later channels observe the world's frames and its later effectors act on the world (body/core/world.py). Any other
+    anatomy is refused: the core's words are a language's, its rest and ends, the typing, the page and the night's report read through
+    a tokenizer (the sim's words channel is the parent's word tokens, declared on a language anatomy of its own; SIM_DESIGN.md 5.8)."""
     if not isinstance(body, Anatomy):
         return LanguageAnatomy(body, cfg)
     if not isinstance(body, LanguageAnatomy):
-        raise NotImplementedError(f"anatomy_for: the core lives the diary's tick, on the language anatomy (with any later channels and "
-                                  f"effectors), until the core refactor's step R9 brings the world loop (SIM_DESIGN.md 8.4); given {type(body).__name__}")
+        raise NotImplementedError(f"anatomy_for: the core's words are a language's (its rest, its ends, the typing, the page and the night's "
+                                  f"report through a tokenizer): a body declares them on a LanguageAnatomy, with any later channels and "
+                                  f"effectors (SIM_DESIGN.md 8.2); given {type(body).__name__}")
     body.check()
     want = LanguageAnatomy(body.tok, cfg).symbols()
     if want != body.symbols():

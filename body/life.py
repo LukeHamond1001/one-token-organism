@@ -24,7 +24,10 @@ effectors and reward sources declared, is body/core/anatomy.py, and the frame, t
 R4 the window holds each of the anatomy's channels under its field and the cortex's input is their codes summed in the anatomy's
 order (`Organs.inputs(anatomy, obs, own, bundles)`). Since step R5 the tick's choice, act and gate lessons run over the anatomy's
 effectors: the voice first (effector 0, today's code and names; `_choose` returns its gate's own draw too), then each later effector
-(its working state in `motor`, its gates' optimizer `opt_motor`; neither exists for the diary)."""
+(its working state in `motor`, its gates' optimizer `opt_motor`; neither exists for the diary). Since step R9 the body lives in a world
+(`life.world`, body/core/world.py; the diary's DiaryWorld, today's queue and face, unless one is given): the tick takes the world's frame
+at its senses' phase (or the frame the loop hands in) and returns its acts for the world; the sleep switch pauses the world for the
+night; body/serve.py runs it all through a WorldLoop."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401
@@ -36,6 +39,7 @@ import torch.nn.functional as F  # noqa: F401
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
 from .core.physiology import PHYSIOLOGY, SWITCHES
 from .core.anatomy import anatomy_for
+from .core.world import World, DiaryWorld
 from .core.senses import SensesMixin
 from .core.memory import MemoryMixin
 from .core.cortex import CortexMixin
@@ -51,7 +55,7 @@ __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store",
 
 
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin):
-    def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None):
+    def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
         unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES)   # the switches are known, off by their absence
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
@@ -265,6 +269,12 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         self.queue = collections.deque()
         self.queue_who = collections.deque()             # who typed each queued symbol ("parent", "you"): the page shows it, nothing inside reads it
         self.page = []; self.page_base = 0
+        # THE WORLD (the core refactor's step R9, body/core/world.py): what the body lives in, frame by frame. The diary's (DiaryWorld)
+        # unless one is given: the page's queue and the face its hand holds, read where they always were (the queue above, face_now);
+        # the tick takes its frame from it at the senses' phase and the sleep switch pauses it for the night. Not saved with the body.
+        if world is not None and not isinstance(world, World):
+            raise TypeError(f"Life: the world is a body/core/world.py World, not {type(world).__name__}")
+        self.world = DiaryWorld(self) if world is None else world
         self.stream = collections.deque(maxlen=96)       # (id, who)
         self.last = {}
         self.credit = collections.deque(maxlen=64)
@@ -305,15 +315,23 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         return self.anatomy.tok
 
     # ---------------- the tick ----------------
-    def tick(self):
-        """one moment of the body's clock, in eight phases (each a method below, in this order)"""
+    def tick(self, frame=None):
+        """one moment of the body's clock, in eight phases (each a method below, in this order). THE WORLD LOOP (step R9): the tick is
+        lived on the world's frame, `frame` when the loop hands one in, else the one its world shows at the senses' phase (the diary's:
+        built there from the queue, as always); it returns the tick's acts for the world, {effector name: act} (the voice's symbol or
+        its rest, then each later effector's act or its rest), taken before the sleep switch's night rests them"""
         self._ring_vf.append(self.fast_value())            # the fast critic's value before this tick (the anticipation reading; the supervisor's, never the body's)
         self._decay_feelings()
-        u, who, felt, r, off, settle_form, first_after_pause = self._sense()
+        self.world.now = None                               # the frame of this tick is the one its senses take
+        u, who, felt, r, off, settle_form, first_after_pause = self._sense() if frame is None else self._sense(frame)
         C1, pred1, surp1, conf1, stri = self._hear(u, r, felt, off, settle_form, first_after_pause)
         delta, delta_slow, delta_long, vlong, level, gam = self._learn_values(r, felt, stri)
         its_face = self._own_face(C1, r)
         acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew = self._choose(C1, pred1, u, level, stri)
         int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew)
         self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew)
+        acts = {self.anatomy.effectors[0].name: int(nxt)}
+        for e_, st_ in zip(self.anatomy.effectors[1:], getattr(self, "motor", ())):
+            acts[e_.name] = int(st_["now"]["act"])
         self._bookkeep(u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs)
+        return acts
