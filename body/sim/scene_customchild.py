@@ -10,6 +10,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import parent_kin as kin  # noqa: E402
+import parent_face_customchild as face_cc  # noqa: E402  (the custom child's parent keeps the prototype's face)
 
 XML = HERE / "livingroom_customchild.xml"
 
@@ -39,7 +40,7 @@ class World:
         self.mocap = {s: m.body_mocapid[m.body(f"parent_{s}").id] for s in kin.SEGS}
         self.gid = lambda n: m.geom(n).id
         self.face_ids = {}
-        for n in kin.face_geoms(0.0).keys():
+        for n in face_cc.face_geoms(0.0).keys():
             self.face_ids[n] = self.gid(f"parent_{n}")
         self.hand_ids = {sd: {n: self.gid(f"parent_{n}") for n in kin.hand_geoms(sd).keys()} for sd in ("L", "R")}
         self.cface_ids = {n: self.gid(n) for n in kin.child_face_geoms(0).keys()}
@@ -61,8 +62,8 @@ class World:
         hp, hR = segs["head"]
         gaze = None
         if pose.gaze is not None:
-            gaze = {sd: hR.T @ (pose.gaze - (hp + hR @ kin.EYE_C[sd])) for sd in ("L", "R")}
-        for n, (p, q, sz) in kin.face_geoms(pose.expr, gaze).items():
+            gaze = {sd: hR.T @ (pose.gaze - (hp + hR @ face_cc.EYE_C[sd])) for sd in ("L", "R")}
+        for n, (p, q, sz) in face_cc.face_geoms(pose.expr, gaze).items():
             g = self.face_ids[n]
             m.geom_pos[g] = p; m.geom_quat[g] = q
             if sz is not None:

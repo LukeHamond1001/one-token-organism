@@ -33,7 +33,8 @@ has no headlight (MuJoCo's lamp at the viewing camera), and `Eyes` refuses to re
 which a lamp at the eye had stood in for, is its lights' ambient term (body/sim/make_g1room.py, ROOM_INDIRECT), so a face bent
 over the child is lit from below and the side as a real room lights it, and it goes out with its lights. For W5's night: darken
 the lights' terms, never switch every light off (MuJoCo then draws the scene unlit, at full brightness), and the emissive surfaces
-(the ceiling, the window, the lamp shade, the dock, her eyes' glints) still glow (body/tests/test_sim_eyes.py, eyes 10).
+(the ceiling, the window, the lamp shade, the dock) still glow (body/tests/test_sim_eyes.py, eyes 10); her eyes' highlights no
+longer do (drawn, not lamps: the W1 verifier's third round).
 
 SHADOWS. The room has a sun, a key spot and a fill. `shadows`: "sun" (the sun's shadow only: the body's eyes, 3.4), "all" or
 "none". The sun's shadow stays in the body's eyes: it is part of the owner's complete reality (decision 3), never decided by the
@@ -78,7 +79,11 @@ EYE_GROUPS = np.array([1, 1, 1, 0, 0, 0], dtype=np.uint8)   # the eyes see group
 # its pixels with the template over the ellipse is at least TEMPLATE_R (a quarter of the pixels' variance explained) and the
 # blobs are darker than the face by at least TEMPLATE_CONTRAST (Weber; a newborn's contrast threshold at its best spatial
 # frequencies is of this order or higher: Banks and Salapatek 1978, recalled). None of these was set on the parent's face or
-# on any hit or false alarm; the eye check (tools/sim_eye_check.py, C3) measures them.
+# on any hit or false alarm; the eye check (tools/sim_eye_check.py, C3) measures them. On her face of human proportions with a
+# real face's photometry (the W1 verifier's third round; body/sim/parent_kin.py) the template, unchanged, fires on 1 of 24 facing
+# placements in the fovea at 0.3-2 m under the three lights (at 0.45 m, midday) and never in the periphery (tools/
+# sim_face_template.py, body/tests/test_sim_eyes.py eyes 15): a finding for the design (C3), which the template's own source
+# decides; neither side is fitted to the other.
 TEMPLATE_EYES = ((-0.22, 0.12), (0.22, 0.12))   # the eye blobs' centres, (x / W, y / H)
 TEMPLATE_EYE_D = 0.20                           # their diameter / W
 TEMPLATE_MOUTH = ((0.0, -0.25), (0.36, 0.10))   # the mouth's centre (x / W, y / H) and its size (width / W, height / H)

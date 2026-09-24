@@ -10,7 +10,12 @@ instrument's aim), and the two eyes render. The label is what fills the left fov
 same views are rendered under each light and shadow setting (paired). The code read is the retina's fovea code of both eyes (2 x
 384, body/sim/eyes.py), standardized on the training views; readouts: the nearest class mean and a ridge one-hot, trained on 2/3
 of the views and tested on the rest, balanced over the classes present; and a small nonlinear readout (one hidden layer of 256), as
-test 11 read born codes, since the body's reader is a cortex, not a linear map. The design's bar is 0.75 (C3). The lights are stand-ins
+test 11 read born codes, since the body's reader is a cortex, not a linear map. The design's bar is 0.75 (C3). WHICH READOUT DECIDES
+(the W1 verifier's third round): the nonlinear one. The core reads the eye channel as it reads every vector channel: the retina's
+code through the channel's born code (a fixed projection into the cortex's d, SIM_DESIGN.md 3.4) into the cortex's learned blocks
+(attention and a GELU MLP in each), so what it can tell apart is what a learned nonlinear map of the code can; the one-hidden-layer
+readout is the instrument's stand-in for it, and the nearest mean and the ridge are reported beside as linear lower bounds, never
+the verdict. The lights are stand-ins
 until the day's light is built (W5): the sun as built (midday), low from the window's side and warm (morning), low and orange
 (dusk). C2: for the face views (a third of them with a toy put on the line between the eye and the mouth, at a random place
 along it), the face test's verdict in the left eye against a segmentation render's: the same test with the ray replaced by the

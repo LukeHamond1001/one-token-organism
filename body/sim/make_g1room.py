@@ -10,9 +10,10 @@ taken out). The XML is generated: edit the numbers here and re-run, never the XM
               take new children in XML. Its servo gains are set at load by the body's servo law (body/sim/world.py), the
               file's kp 500 being Menagerie's placeholder ("needs tuning"). It is born lying on its back (g1scene.birth()).
   THE PARENT  kinematic: 16 mocap segments (see parent_kin.py) posed by scripted IK each step; touches toys and the child as
-              an immovable body; holds toys, the child's wrist or its torso through welds that start switched off. Its face
-              carries the graded face's extra geoms (parent_kin.face_extra_geoms_xml: a lower lip, the named cheeks), which
-              g1scene.Scene draws from the parent's feelings (the parent lane's parent_feel.py).
+              an immovable body; holds toys, the child's wrist or its torso through welds that start switched off. Her face is
+              of human proportions and a real face's photometry (parent_kin.py: the static relief face_static_xml and the
+              moving features face_moving_xml, which g1scene.Scene draws from the parent's feelings, the parent lane's
+              parent_feel.py; the W1 verifier's third round).
   THE ROOM    as in make_livingroom_customchild.py, with the play mat enlarged for a 1.32 m body (2.8 x 2.0 m) and the toys placed
               around the G1.
 
@@ -101,14 +102,25 @@ MAT = dict(
     denim=dict(rgba=".22 .27 .38 1", specular=".1", shininess=".2"),
     shoe=dict(rgba=".95 .95 .94 1", specular=".2", shininess=".4"),
     sole=dict(rgba=".62 .60 .58 1", specular=".1", shininess=".2"),
-    sclera=dict(rgba=".98 .98 .97 1", specular=".5", shininess=".8"),
+    # her face's photometry (the W1 verifier's third round): the sclera, the brows and the lips each at the albedo whose CIE L*
+    # contrast against the skin around it is a young woman's (Russell, Kramer and Jones 2017, table 2, no cosmetics: the eyes 0.152,
+    # the brows 0.126, the lips 0.092), found by tools/sim_face_photometry.py --calibrate (the sclera's grey; the brows as her hair's
+    # colour over her skin, 33% of their area; the lips as the prototype's lip colour over her skin, 35%: the prototype's brows
+    # .30 .20 .13 and lips .56 .24 .26 read 0.49 and 0.32, far darker than a real face's) and checked by body/tests/test_sim_eyes.py;
+    # the eye's and the lids' materials also carry her sockets' shade of the room's indirect light, baked in when written
+    # (socket_shaded below)
+    sclera=dict(rgba=".9118 .9118 .9025 1", specular=".5", shininess=".8"),
     iris=dict(rgba=".30 .18 .10 1", specular=".6", shininess=".9"),
     pupil=dict(rgba=".03 .03 .03 1", specular=".8", shininess=".9"),
-    glint=dict(rgba="1 1 1 1", emission=".8", specular="0"),
-    lips=dict(rgba=".56 .24 .26 1", specular=".25", shininess=".5"),
+    glint=dict(rgba="1 1 1 1", specular=".5", shininess=".9"),      # the corneal highlight: drawn, not a lamp (no emission: dark at night)
+    lash=dict(rgba=".12 .08 .06 1", specular=".2", shininess=".4"),
+    lid_up=dict(rgba=".86 .66 .54 1", specular=".12", shininess=".25"),       # her skin (the socket's occlusion is baked in when written)
+    lid_lo=dict(rgba=".86 .66 .54 1", specular=".12", shininess=".25"),
+    lips=dict(rgba=".7541 .5118 .4412 1", specular=".25", shininess=".5"),
     mouth_in=dict(rgba=".30 .06 .08 1", specular=".1", shininess=".2"),
     teeth=dict(rgba=".97 .96 .93 1", specular=".3", shininess=".5"),
-    brow=dict(rgba=".30 .20 .13 1", specular=".1", shininess=".2"),
+    brow=dict(rgba=".656 .4922 .3952 1", specular=".1", shininess=".2"),
+    belt=dict(rgba=".30 .20 .13 1", specular=".1", shininess=".2"),
     blush=dict(rgba=".88 .60 .54 1", specular="0"),
     # the room
     floor=dict(texture="floor_oak", texrepeat="4 2.2", specular=".12", shininess=".35", reflectance=".015"),
@@ -189,7 +201,7 @@ def parent_segment_geoms(seg):
     g = []
     if seg == "pelvis":
         g += [f'<geom name="{P}" type="ellipsoid" pos="-.015 0 .035" size=".11 .165 .115" material="denim" {PARENT}/>',
-              f'<geom type="ellipsoid" pos="-.005 0 .105" size=".113 .158 .03" material="brow" {DECOR}/>']
+              f'<geom type="ellipsoid" pos="-.005 0 .105" size=".113 .158 .03" material="belt" {DECOR}/>']
     elif seg == "abdomen":
         g += [f'<geom name="{P}" type="ellipsoid" pos="-.005 0 .075" size=".098 .145 .12" material="sweater" {PARENT}/>']
     elif seg == "chest":
@@ -198,9 +210,12 @@ def parent_segment_geoms(seg):
               f'<geom type="sphere" pos="0 -.15 .2" size=".045" material="sweater" {DECOR}/>',
               f'<geom type="cylinder" pos=".01 0 .243" size=".056 .014" material="sweater_d" {DECOR}/>']
     elif seg == "head":
+        (hc, hs) = kin.HEAD_BASE
         g += ['<camera name="parent_portrait" pos=".62 0 .145" xyaxes="0 1 0 0 0 1" fovy="30"/>',
               f'<geom type="capsule" fromto=".008 0 -.01 .02 0 .08" size=".041" material="skin" {DECOR}/>',
-              f'<geom name="{P}" type="ellipsoid" pos=".015 0 .16" size=".098 .084 .106" material="skin" {PARENT}/>',
+              f'<geom name="{P}" type="ellipsoid" pos="{f(*hc)}" size="{f(*hs)}" rgba="0 0 0 0" group="3" {PARENT}/>',   # her head's collision shape (the sheet is drawn)
+              f'<geom type="ellipsoid" pos="{f(*hc)}" size="{f(*(np.asarray(hs) - .003))}" material="skin" {DECOR}/>',   # her head's solid
+              # inside the sheet (3 mm in): it casts her head's shadow and fills behind the sheet's open edges
               f'<geom name="parent_hair" type="ellipsoid" pos="-.022 0 .172" size=".108 .094 .112" material="hair" {DECOR}/>',
               f'<geom name="parent_fringe" type="ellipsoid" pos=".072 -.012 .226" euler="-18 -40 0" size=".034 .07 .02" material="hair" {DECOR}/>',
               f'<geom name="parent_side_L" type="ellipsoid" pos=".012 .078 .158" euler="0 -12 0" size=".058 .022 .09" material="hair" {DECOR}/>',
@@ -209,21 +224,7 @@ def parent_segment_geoms(seg):
               f'<geom name="parent_nape" type="ellipsoid" pos="-.045 0 .12" size=".06 .078 .06" material="hair" {DECOR}/>',
               f'<geom type="ellipsoid" pos="-.002 .083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
               f'<geom type="ellipsoid" pos="-.002 -.083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
-              f'<geom name="parent_nose" type="ellipsoid" pos=".107 0 .147" size=".011 .0095 .016" material="skin_d" {DECOR}/>',
-              ] + kin.face_extra_geoms_xml(DECOR)      # the named cheeks (the blush) and a lower lip: the graded face
-        for s2 in ("L", "R"):
-            c = kin.EYE_C[s2]
-            g += [f'<geom name="parent_sclera_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0085 .0175 .0135" material="sclera" {DECOR}/>',
-                  f'<geom name="parent_iris_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0022 .0098 .0098" material="iris" {DECOR}/>',
-                  f'<geom name="parent_pupil_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0016 .0052 .0052" material="pupil" {DECOR}/>',
-                  f'<geom name="parent_glint_{s2}" type="sphere" pos="{f(*c)}" size=".0021" material="glint" {DECOR}/>',
-                  f'<geom name="parent_lid_lo_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0082 .0195 .0065" material="skin" {DECOR}/>',
-                  f'<geom name="parent_lid_up_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0085 .0195 .005" material="skin" {DECOR}/>',
-                  f'<geom name="parent_brow_{s2}" type="capsule" size=".0034 .015" material="brow" {DECOR}/>']
-        for i in range(kin.FACE_MOUTH_N - 1):
-            g.append(f'<geom name="parent_mouth{i}" type="capsule" size=".0048 .006" material="lips" {DECOR}/>')
-        g += [f'<geom name="parent_mouth_open" type="ellipsoid" size=".004 .02 .006" material="mouth_in" {DECOR}/>',
-              f'<geom name="parent_teeth" type="ellipsoid" size=".003 .015 .002" material="teeth" {DECOR}/>']
+              ] + kin.face_static_xml("skin", DECOR) + kin.face_moving_xml(DECOR)   # her face: human proportions (parent_kin.py)
     elif seg.startswith("upper_arm"):
         g += [f'<geom name="{P}" type="capsule" fromto="0 0 -.01 0 0 -.285" size=".041" material="sweater" {PARENT}/>']
     elif seg.startswith("forearm"):
@@ -635,10 +636,22 @@ def build():
     return out
 
 
+def socket_shaded(mat):
+    """the materials with her sockets' shade of the room's indirect light baked into the eye's and the lids' albedo (parent_kin
+    socket_occlusion: computed from her geometry, never set; MuJoCo draws no occlusion of a light's ambient term)"""
+    ao = kin.socket_occlusion()
+    out = {k: dict(v) for k, v in mat.items()}
+    for part, names in kin.SOCKET_MATERIALS.items():
+        for n in names:
+            rgba = [float(x) for x in out[n]["rgba"].split()]
+            out[n]["rgba"] = " ".join(f"{x * ao[part]:.4g}" for x in rgba[:3]) + f" {rgba[3]:g}"
+    return out
+
+
 def scene_xml(folder=HERE):
     """the scene's XML text, its paths relative to `folder` (where it is to be written)"""
     rel = lambda p: os.path.relpath(HERE / p, Path(folder).resolve())     # every path in the XML relative to the XML's own folder
-    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in MAT.items())
+    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in socket_shaded(MAT).items())
     cams = dict(room=((2.45, -2.2, 1.7), (-.2, -.2, .35), 52), mat=((1.6, -2.0, 1.15), (-.1, -.55, .2), 42),
                 top=((0, -.6, 3.2), (0, -.599, 0), 50))
     cam_xml = "\n    ".join(f'<camera name="{k}" pos="{f(*p)}" xyaxes="{lookat_xyaxes(p, t)}" fovy="{fv}"/>' for k, (p, t, fv) in cams.items())
@@ -722,6 +735,7 @@ def scene_xml(folder=HERE):
     <mesh name="pillow" builtin="supersphere" params="24 .45 .5" scale=".20 .07 .19"/>
     <mesh name="table_top" builtin="supersphere" params="32 .25 .2" scale=".58 .30 .035"/>
     <mesh name="basket" builtin="supersphere" params="24 .2 .15" scale=".17 .17 .14"/>
+    {kin.face_mesh_asset_xml()}
   </asset>
   <custom>
     {sounds}

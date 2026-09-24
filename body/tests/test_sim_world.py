@@ -21,7 +21,9 @@ the truth (palm_own_N). C22 WRITTEN DOWN AS THE NEWBORN'S: the housings struck t
 on each written down, and the count taking either of the reflex's ticks. LETTING GO (A11; the W1 verifier's first
 finding): a ball kept in the palm, the hand closes on it at rest and opens by its own act while the ball still touches the palm.
 THE EXACT REPLAY TEST: N ticks of babble with the withdrawal live and the sun moved (the model's light fields saved), a save, M
-more; restored (in the same world and in a new one), the M again: every frame and the final state bit for bit. THE NIGHT: frozen, nothing seen or moved, the morning the same as never pausing. FAULTS (A18): a tick
+more; restored (in the same world and in a new one), the M again: every frame and the final state bit for bit. THE PARENT'S POSE
+(Scene.pose) is saved with the world and restored with it. IMPRATIO BY PHYSICS: below its sliding force a box holds (the soft model's
+creep at most 2 mm in 2 s), above it it slides as Coulomb's law says, and the convex model's slip coupling is as disclosed. THE NIGHT: frozen, nothing seen or moved, the morning the same as never pausing. FAULTS (A18): a tick
 MuJoCo cannot live raises WorldFault and leaves the world where the tick began: a bad state within the tick, a bad velocity left by
 the tick's last step (which MuJoCo itself checks only at the next step), a stop in the tick's closing forward pass; no MuJoCo log
 file written. THE BABBLER: deterministic, its units and rests as declared. THE WORLD IN THE CORE: a tiny body of the world's
@@ -682,6 +684,37 @@ def test_exact_replay():
           f"save carries the world's random stream")
 
 
+def test_the_parents_pose_is_saved():
+    """world 18: Scene.pose is saved with the world (the W1 verifier's third round): the parent drawn in a new pose (kneeling
+    place, a smile, her eyes on the child's), saved; drawn again elsewhere; restored in the same world and in a new one: the scene's
+    pose is the saved one (its place, turn, joints, hands, expression and gaze) and her face's and body's geoms and mocap with it"""
+    kin = G.kin
+    w = G1World(seed=1)
+    m, d = w.m, w.d
+    p = kin.Pose((0.6, -0.1, kin.HIP_Z - 0.3), kin.rz(2.4))
+    p.expr = kin.face_params(smile=0.8, cheek=0.6, brow_in=0.3)
+    kin.spine(p, lumbar=(20, 0, 5)); p.hand["R"]["curl"] = 1.1
+    kin.look(p, d.cam_xpos[m.camera("eye_L").id].copy())
+    w.scene.set_parent(p); mujoco.mj_forward(m, d)
+    blob = w.save_state()
+    face = {n: m.geom_pos[g].copy() for n, g in w.scene.face_ids.items()}
+    other = G.born_parent(); other.expr = kin.face_params(frown=1.0)
+    w.scene.set_parent(other)
+    after = []
+    for where, w2 in (("the same world", w), ("a new world", G1World(seed=1))):
+        w2.load_state(blob)
+        q = w2.scene.pose
+        assert q is not None and q is not p and np.allclose(q.pos, p.pos) and np.allclose(q.R, p.R), where
+        assert q.expr == p.expr and np.allclose(q.gaze, p.gaze) and q.hand == p.hand, where
+        assert all(np.allclose(q.local[k], p.local[k]) for k in kin.SEGS), where
+        assert all(np.allclose(w2.m.geom_pos[g], face[n]) for n, g in w2.scene.face_ids.items()), where
+        w2.apply({"arm_l": W.EFFECTOR_REST["arm_l"] + 1})
+        after.append(w2.save_state())
+    assert after[0] == after[1]
+    print("world 18: the parent's pose (her place, turn, spine, hands, expression and gaze) is saved with the world and restored",
+          "with it, in the same world and in a new one, her face's geoms and mocap with it; a tick after, the two worlds bit for bit")
+
+
 def test_the_night():
     """world 12: the night freezes the world: nothing is seen or moved, and the morning is the same as never pausing"""
     w, twin = G1World(seed=1), G1World(seed=1)
@@ -899,7 +932,8 @@ def test_the_world_in_the_core():
 
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_the_charge, test_the_reflexes, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
-               test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism]
+               test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
+               test_the_parents_pose_is_saved]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

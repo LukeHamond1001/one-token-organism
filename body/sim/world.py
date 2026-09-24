@@ -74,6 +74,7 @@ raises WorldFault, so the fault never reaches the body.
 
 DETERMINISM. One seed; the world's own stream (the IMU noise) is a numpy PCG64 from SeedSequence(seed, spawn_key=(1,)), saved
 with the world, as are the gaze and its velocity. A saved world restored anywhere continues bit for bit (body/tests/test_sim_world.py, the exact replay test)."""
+import json
 import math
 import pickle
 import sys
@@ -316,6 +317,39 @@ def _catch_mujoco_warnings():
     decide a fault; the text goes into its reason). Set once per process, unless a handler is already set."""
     if mujoco.get_mju_user_warning() is None:
         mujoco.set_mju_user_warning(_mujoco_warning)
+
+
+def _pose_state(pose):
+    """the parent's kinematic pose (parent_kin.Pose) as the scene holds it, in a canonical plain form for the save (None: none
+    drawn): arrays rebuilt from their numbers, floats, every name interned and every mapping sorted, so equal poses always
+    pickle to equal bytes (a pickled array keeps its dtype object, and an unpickled one's is not numpy's own: rebuilding them
+    keeps a save made after a restore the same bytes as one made without it)"""
+    if pose is None:
+        return None
+    k = sys.intern
+    arr = lambda v: np.array(np.asarray(v, float).tolist(), dtype=np.float64)
+    expr = tuple(sorted((k(a), float(v)) for a, v in pose.expr.items())) if isinstance(pose.expr, dict) else float(pose.expr)
+    return (arr(pose.pos), arr(pose.R),
+            tuple(sorted((k(a), arr(v)) for a, v in pose.local.items())),
+            tuple(sorted((k(a), arr(v)) for a, v in pose.world_override.items())),
+            tuple(sorted((k(sd), tuple(sorted((k(a), None if v is None else float(v)) for a, v in h.items()))) for sd, h in pose.hand.items())),
+            expr, None if pose.gaze is None else arr(pose.gaze),
+            k(json.dumps(pose.report, sort_keys=True, default=float)))
+
+
+def _pose_from_state(st):
+    """the pose back from _pose_state's form"""
+    if st is None:
+        return None
+    pos, R, local, override, hand, expr, gaze, report = st
+    p = G.kin.Pose(pos, R)
+    p.local = {a: v.copy() for a, v in local}
+    p.world_override = {a: v.copy() for a, v in override}
+    p.hand = {sd: dict(h) for sd, h in hand}
+    p.expr = dict(expr) if isinstance(expr, tuple) else float(expr)
+    p.gaze = None if gaze is None else gaze.copy()
+    p.report = json.loads(report)
+    return p
 
 
 class WorldFault(RuntimeError):
@@ -567,8 +601,8 @@ class G1World(SimWorld):
         self.paused = False
 
     def save_state(self):
-        """the whole world as bytes: the physics, the model's run-time fields, the charge, the senses' carry and the world's random
-        stream"""
+        """the whole world as bytes: the physics, the model's run-time fields, the charge, the senses' carry, the world's random
+        stream and the parent's pose as the scene last drew it (Scene.pose: the W1 verifier's third round)"""
         return pickle.dumps(self._capture(), protocol=4)
 
     def load_state(self, blob):
@@ -688,7 +722,7 @@ class G1World(SimWorld):
                 "tick": self.tick, "h": self.h, "dh": self.dh, "paused": self.paused, "seed": self.seed,
                 "sensed": {k: v.copy() for k, v in self._sensed.items()}, "drain": self._drain, "fed": self._fed,
                 "last_acts": dict(self._last_acts), "rng": self.rng.bit_generator.state, "gaze": self.gaze.copy(), "gaze_v": self.gaze_v.copy(),
-                "spinal": dict(self._spinal), "vor_quick": self._vor_quick,
+                "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "scene_pose": _pose_state(self.scene.pose),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
 
     def _restore(self, st):
@@ -707,4 +741,6 @@ class G1World(SimWorld):
         self.rng.bit_generator.state = st["rng"]
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()
-        mujoco.mj_forward(m, d)
+        if "scene_pose" in st:                                          # the parent's pose as the scene last drew it (W2 goes on
+            self.scene.pose = _pose_from_state(st["scene_pose"])        # from it); her mocap and face geoms are in the physics and
+        mujoco.mj_forward(m, d)                                         # the model fields above
