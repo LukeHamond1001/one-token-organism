@@ -18,7 +18,9 @@ load time through MjSpec, as cameras and sites only (no geom, no mass, no joint,
     in the model, with the model's own declared noise and ranges.
   - JOINT SENSE and TOUCH: read by body/sim/world.py from the joints, the actuators and the contacts.
 The model file's own directional light (a Menagerie scene light, not part of the robot) is switched off at load. Nothing
-here sets the G1's servo gains: the body's servo law does, in body/sim/world.py."""
+here sets the G1's servo gains: the body's servo law does, in body/sim/world.py. The parent's face is the graded face when the
+model has its extra geoms (make_g1room.py adds them): a scalar expression is drawn through parent_kin.scalar_to_params, a dict of
+face parameters (the parent's feelings, parent_feel.py) directly."""
 import math
 import sys
 from pathlib import Path
@@ -120,6 +122,12 @@ class Scene:
         self.gid = lambda n: m.geom(n).id
         self.face_ids = {n: self.gid(f"parent_{n}") for n in kin.face_geoms(0.0).keys()}
         self.hand_ids = {sd: {n: self.gid(f"parent_{n}") for n in kin.hand_geoms(sd).keys()} for sd in ("L", "R")}
+        self.face_graded = True                        # the graded face's extra geoms (a lower lip, the cheeks), when the model has them
+        for n in kin.FACE_EXTRA:
+            try:
+                self.face_ids[n] = self.gid(f"parent_{n}")
+            except KeyError:
+                self.face_graded = False
         for g in list(self.face_ids.values()) + [i for h in self.hand_ids.values() for i in h.values()]:
             m.geom_sameframe[g] = 0                    # moved at run time: MuJoCo's same-frame shortcut must be off for them
         self.g1_bodies = g1_body_ids(m)
@@ -139,7 +147,12 @@ class Scene:
         gaze = None
         if pose.gaze is not None:
             gaze = {sd: hR.T @ (pose.gaze - (hp + hR @ kin.EYE_C[sd])) for sd in ("L", "R")}
-        for n, (p, q, sz) in kin.face_geoms(pose.expr, gaze).items():
+        expr = pose.expr
+        if self.face_graded and not isinstance(expr, dict):
+            expr = kin.scalar_to_params(expr)          # a model with the graded geoms always draws the graded face
+        for n, (p, q, sz) in kin.face_geoms(expr, gaze).items():
+            if n not in self.face_ids:                 # a graded geom this model lacks
+                continue
             g = self.face_ids[n]
             m.geom_pos[g] = p; m.geom_quat[g] = q
             if sz is not None:

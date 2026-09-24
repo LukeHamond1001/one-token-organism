@@ -432,8 +432,12 @@
       <geom type="ellipsoid" pos="-.002 .083 .152" size=".018 .011 .027" material="skin_d" contype="0" conaffinity="0"/>
       <geom type="ellipsoid" pos="-.002 -.083 .152" size=".018 .011 .027" material="skin_d" contype="0" conaffinity="0"/>
       <geom name="parent_nose" type="ellipsoid" pos=".107 0 .147" size=".011 .0095 .016" material="skin_d" contype="0" conaffinity="0"/>
-      <geom type="ellipsoid" pos=".093 .052 .132" euler="0 0 0.558505" size=".0015 .011 .007" material="blush" contype="0" conaffinity="0"/>
-      <geom type="ellipsoid" pos=".093 -.052 .132" euler="0 0 -0.558505" size=".0015 .011 .007" material="blush" contype="0" conaffinity="0"/>
+      <geom name="parent_lip_lo0" type="capsule" size=".0044 .006" material="lips" contype="0" conaffinity="0"/>
+      <geom name="parent_lip_lo1" type="capsule" size=".0044 .006" material="lips" contype="0" conaffinity="0"/>
+      <geom name="parent_lip_lo2" type="capsule" size=".0044 .006" material="lips" contype="0" conaffinity="0"/>
+      <geom name="parent_lip_lo3" type="capsule" size=".0044 .006" material="lips" contype="0" conaffinity="0"/>
+      <geom name="parent_cheek_L" type="ellipsoid" pos=".093 0.052 .132" euler="0 0 0.558505" size=".0015 .011 .007" material="blush" contype="0" conaffinity="0"/>
+      <geom name="parent_cheek_R" type="ellipsoid" pos=".093 -0.052 .132" euler="0 0 -0.558505" size=".0015 .011 .007" material="blush" contype="0" conaffinity="0"/>
       <geom name="parent_sclera_L" type="ellipsoid" pos="0.098 0.036 0.172" size=".0085 .0175 .0135" material="sclera" contype="0" conaffinity="0"/>
       <geom name="parent_iris_L" type="ellipsoid" pos="0.098 0.036 0.172" size=".0022 .0098 .0098" material="iris" contype="0" conaffinity="0"/>
       <geom name="parent_pupil_L" type="ellipsoid" pos="0.098 0.036 0.172" size=".0016 .0052 .0052" material="pupil" contype="0" conaffinity="0"/>

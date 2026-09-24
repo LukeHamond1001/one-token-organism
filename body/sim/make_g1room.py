@@ -10,7 +10,9 @@ taken out). The XML is generated: edit the numbers here and re-run, never the XM
               take new children in XML. Its servo gains are set at load by the body's servo law (body/sim/world.py), the
               file's kp 500 being Menagerie's placeholder ("needs tuning"). It is born lying on its back (g1scene.birth()).
   THE PARENT  kinematic: 16 mocap segments (see parent_kin.py) posed by scripted IK each step; touches toys and the child as
-              an immovable body; holds toys, the child's wrist or its torso through welds that start switched off.
+              an immovable body; holds toys, the child's wrist or its torso through welds that start switched off. Its face
+              carries the graded face's extra geoms (parent_kin.face_extra_geoms_xml: a lower lip, the named cheeks), which
+              g1scene.Scene draws from the parent's feelings (the parent lane's parent_feel.py).
   THE ROOM    as in make_livingroom.py, with the play mat enlarged for a 1.32 m body (2.8 x 2.0 m) and the toys placed
               around the G1.
 
@@ -175,8 +177,7 @@ def parent_segment_geoms(seg):
               f'<geom type="ellipsoid" pos="-.002 .083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
               f'<geom type="ellipsoid" pos="-.002 -.083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
               f'<geom name="parent_nose" type="ellipsoid" pos=".107 0 .147" size=".011 .0095 .016" material="skin_d" {DECOR}/>',
-              f'<geom type="ellipsoid" pos=".093 .052 .132" euler="0 0 32" size=".0015 .011 .007" material="blush" {DECOR}/>',
-              f'<geom type="ellipsoid" pos=".093 -.052 .132" euler="0 0 -32" size=".0015 .011 .007" material="blush" {DECOR}/>']
+              ] + kin.face_extra_geoms_xml(DECOR)      # the named cheeks (the blush) and a lower lip: the graded face
         for s2 in ("L", "R"):
             c = kin.EYE_C[s2]
             g += [f'<geom name="parent_sclera_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0085 .0175 .0135" material="sclera" {DECOR}/>',
