@@ -1,4 +1,4 @@
-"""A first look at the high chair world (docs/SIM_DESIGN.md 5.1 and 5.8): renders body/sim/highchair.xml into video/sim_look/.
+"""A first look at the high chair world (the design of 2026-09-23, docs/SIM_DESIGN.md 5.1 and 5.8 at commit e144afa): renders body/sim/highchair_onearm.xml (the one-arm reference) into video/sim_look/.
 
   hero.png        1920x1080 from 'hero': the two robots side by side across the table, both turned to the viewer, smiling
   overview.png    1920x1080 from 'overview' (three-quarter, behind the child): the parent smiling at the child, the child
@@ -26,10 +26,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from body.sim import make_highchair as H  # noqa: E402  (the scene's numbers and the robots' kinematics)
+from body.sim import make_highchair_onearm as H  # noqa: E402  (the scene's numbers and the robots' kinematics)
 
 OUT = ROOT / "video" / "sim_look"
-XML = ROOT / "body" / "sim" / "highchair.xml"
+XML = ROOT / "body" / "sim" / "highchair_onearm.xml"
 FONT = "/System/Library/Fonts/Avenir Next.ttc"
 SMILE, FROWN = .5, -.5        # the mouth's half-angle in radians (the face actuator's range is +-0.6)
 TICK, STEPS = .15, 75         # the body's tick: 75 physics steps of 2 ms
