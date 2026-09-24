@@ -18,9 +18,11 @@ WHEN EACH PART RUNS, for a later effector at tick t (after the voice's choice, i
   weighted errors averaged over the window's positions), or, for an effector with no inverse model, its rest; and fwd(C[t]) is taught
   s[t+1]. Through the cortex, at the waking lesson's rate, as a channel's forecast, except act_inv's labels, which reach act_pred and
   the correction and never the stream. ACT_PRED'S PLASTICITY IS GATED BY ITS LABELS' RELIABILITY (`GatedAdam`, `_timing_step`):
-  act_pred and its correction step with an optimizer of their own, a group per effector, each lesson a sample of weight the lesson's
-  mean label weight in the group's moments and in its step size, its gradient bounded by its own norm; every other parameter steps
-  with the waking lesson's Adam as before, bounded by theirs.
+  act_pred and its correction step with optimizers of their own, a group per effector, and a lesson is TWO SAMPLES, each with its
+  own moments: its own acts (opt_pred; weight 1 each, and an effector's rests where it has no inverse model) and act_inv's labels
+  (opt_lab; weight act_inv's reliability each), each sample's weight, its mean over the window's positions, in its moments and in its
+  step size, its gradient bounded by its own norm; every other parameter steps with the waking lesson's Adam as before, bounded by
+  theirs.
 THE LEARNED STOPS (chunk_gate, every later effector; `_choose_effector`): a chunk of acts continues, the act act_pred's best guess
 (each joint's most likely setting, no draw), until that guess is the effector's rest (the learned end), its gate's own draw closes,
 its reflex fires, its declared end act closed the chunk before, or chunk_max acts have run (a ceiling: the next act is a fresh
@@ -38,8 +40,9 @@ from .physiology import MOTOR
 
 class GatedAdam(torch.optim.Optimizer):
     """ACT_PRED'S PLASTICITY, GATED BY THE RELIABILITY OF ITS LABELS (the R6 verifier's third finding, 2026-09-24; SIM_DESIGN.md 5.4):
-    Adam in which each step is one sample of weight `gain` (each group's, set before the step: the lesson's mean label weight over
-    the window's positions, 1 at an own act, its efference copy, and act_inv's reliability at a rest act_inv labelled). The gradient is
+    Adam in which each step is one sample of weight `gain` (each group's, set before the step: the sample's mean label weight over
+    the window's positions, 1 at an own act, its efference copy, in the own acts' sample, and act_inv's reliability at a rest act_inv
+    labelled in the labels' sample; below). The gradient is
     taken per unit of that weight, u = the gradient / gain (the lesson's weighted error averages the weights over the positions; u is
     the gradient of the error averaged over the labels' weights), and the gain enters twice, as a neuromodulator gates plasticity:
     - THE MOMENTS ARE MOVED IN PROPORTION: m <- m + (1 - beta1) gain (u - m), v <- v + (1 - beta2) gain (u^2 - v), the share of each
@@ -55,12 +58,29 @@ class GatedAdam(torch.optim.Optimizer):
       teach (anatomy 31: the same label mass given whole teaches as much).
     At gain 1 on every step this is Adam exactly (the same betas and eps, its moments, bias corrections and step: an effector with no
     inverse model, and a window of own acts, learn as with Adam; the lesson's gradient bounded per effector, `_timing_step`); at gain 0
-    nothing moves, the moments included (nothing learned, nothing forgotten). A lesson's plasticity is the weight of the labels it
+    nothing moves, the moments included (nothing learned, nothing forgotten). A sample's plasticity is the weight of the labels it
     carries, so own acts in a window whose rests act_inv has not earned (reliability 0) teach at the share of the window they fill
     (20 of 31 positions: 0.65 of a whole step), where the day's Adam taught them whole (the R6 verifier: 86% of the old learning over
     1000 lessons at the served rate, early in life, before act_inv earns its labels). Its gain gates act_pred and the correction only:
     act_inv's labels never reach the stream (`_timing_loss`). No constant is added: the rate is the waking lesson's (live_lr), the
-    betas and eps Adam's defaults, as the waking lesson's optimizer has them."""
+    betas and eps Adam's defaults, as the waking lesson's optimizer has them.
+    ONE SAMPLE PER SOURCE OF LABELS, EACH WITH ITS OWN MOMENTS (the R6 verifier's fifth look, 2026-09-24): a lesson of an effector
+    with an inverse model is two samples, its own acts (`Life.opt_pred`, gain the own acts' share of the window's positions) and
+    act_inv's labels (`Life.opt_lab`, a second GatedAdam over the same parameters, gain the reliability times the labels' share), each
+    its gradient per unit of its own weight. As one sample, the lesson's gain was its mean label weight, which the own acts dominate
+    (0.65 of it for 20 own acts in 31 positions), and inside the lesson the labels' share was set only by the loss's weights; once
+    act_pred predicted the own acts well their gradient was small, the moments settled to the labels' gradient per unit of the whole
+    lesson's weight, and Adam's division by the recent gradient size re-inflated the labels to that 0.65 of a step at any
+    reliability (the verifier, the tiny arm with its own acts fitted in the mixed window, at the served rate: act_pred's step at
+    reliability 0.01 / 0.05 / 0.25 was 0.070 / 0.27 / 0.66 of its step at 1, and 1000 lessons at 0.01 taught 0.18 of what they
+    taught at 1, 3.1 times what the same labels taught given whole, every hundredth lesson at 1). Two samples sharing one set of
+    moments are not enough (7.7 times the reliability in the verifier's miniature: the own acts' small gradients still set the second
+    moment that divides the labels' step). With moments of their own, the labels' moments hold only the labels' gradient per unit of
+    their weight, whatever the own acts do, and the step carries the reliability: from the same state, 0.011 / 0.050 / 0.249 of a whole
+    step, and 1000 lessons at 0.01 taught 0.013 of what they taught at 1, 0.70 of the same mass given whole (anatomy 31). At
+    reliability 1 a label beside own acts now teaches as a label beside rests does, at its share of the window (11 of 31 positions:
+    0.35 of a step), where the one sample stepped it whole once the own acts were fitted, and pulled act_pred off them (the own acts'
+    error after 1000 such lessons 0.0001 now, 0.050 before)."""
 
     def __init__(self, groups, lr, betas=(0.9, 0.999), eps=1e-8):
         super().__init__(groups, dict(lr=float(lr), betas=tuple(betas), eps=float(eps), gain=0.0))
@@ -98,10 +118,31 @@ class TimingMixin:
         tm = self.m.timing[e.name]
         return list(tm.pred.parameters()) + (list(tm.cor.parameters()) if tm.sense_n else [])
 
-    def _timing_step(self, rep, clip):
-        """ACT_PRED'S AND THE CORRECTION'S STEP IN THE WAKING LESSON (after the waking lesson's own step): each later effector's group
-        at the gain of its lesson, the mean weight of the window's labels (`_timing_loss`'s report "w"; 0 where it had no lesson), its
-        gradient bounded by its own norm: the gradient per unit of the labels' weight (u, what GatedAdam's moments take) at most
+    def _gated_names(self, e):
+        """the names of `_gated_params(e)` in its order, within e's timing organ (pred.weight, pred.bias, cor.weight)"""
+        tm = self.m.timing[e.name]
+        return [f"pred.{n}" for n, _ in tm.pred.named_parameters()] + ([f"cor.{n}" for n, _ in tm.cor.named_parameters()] if tm.sense_n else [])
+
+    def _timing_label_grads(self, labs):
+        """THE LABELS' SAMPLE'S GRADIENT (the R6 verifier's fifth look): for each later effector whose lesson carried act_inv's labels
+        (`_timing_loss`'s third value, at the waking lesson's scale), their gradient on act_pred and the correction alone (they never
+        reach the stream), taken before the lesson's backward frees the graph they share with the own acts' sample: {name: [grads]}"""
+        out = {}
+        for g_ in (self.opt_lab.param_groups if labs else ()):
+            lb_ = labs.get(g_["name"])
+            if lb_ is None:
+                continue
+            gs_ = torch.autograd.grad(lb_, g_["params"], retain_graph=True, allow_unused=True)
+            out[g_["name"]] = [torch.zeros_like(p_) if q_ is None else q_ for p_, q_ in zip(g_["params"], gs_)]
+        return out
+
+    def _timing_step(self, rep, clip, glab=None):
+        """ACT_PRED'S AND THE CORRECTION'S STEPS IN THE WAKING LESSON (after the waking lesson's own step), TWO SAMPLES, EACH WITH ITS
+        OWN MOMENTS (the R6 verifier's fifth look; `GatedAdam`): first the own acts', each later effector's group of opt_pred at their
+        share of the window's positions (`_timing_loss`'s report "w_own": 1 at an own act and at the rest of an effector with no
+        inverse model; 0 where it had no lesson), on the gradient the lesson's backward left; then act_inv's labels', each effector's
+        group of opt_lab at the reliability times their share ("w_lab"), on their own gradient (`_timing_label_grads`, `glab`). Each
+        sample's gradient bounded by its own norm: its gradient per unit of its weight (u, what GatedAdam's moments take) at most
         `clip`, the waking lesson's bound, so a lesson is bounded alike at every reliability. EACH OPTIMIZER'S OWN BOUND (the R6
         verifier's fourth look, 2026-09-24): with one bound over every parameter, as before, act_pred's gradient, which grows with
         act_inv's reliability, set the size of every step of the stream (on the tiny arm the bound held at every lesson, the joint
@@ -110,10 +151,55 @@ class TimingMixin:
         reliabilities; with the bounds apart, not at all (the stream the same to the bit at every reliability, anatomy 31)"""
         for g_ in self.opt_pred.param_groups:
             r_ = rep.get(g_["name"])
-            g_["gain"] = float(r_["w"]) if r_ is not None else 0.0
+            g_["gain"] = float(r_["w_own"]) if r_ is not None else 0.0
             if g_["gain"] > 0.0:
                 torch.nn.utils.clip_grad_norm_(g_["params"], float(clip) * g_["gain"])   # |u| = |the gradient| / gain at most clip
         self.opt_pred.step()
+        if glab:
+            for g_ in self.opt_lab.param_groups:
+                r_, q_ = rep.get(g_["name"]), glab.get(g_["name"])
+                g_["gain"] = float(r_["w_lab"]) if (r_ is not None and q_ is not None) else 0.0
+                if g_["gain"] > 0.0:
+                    for p_, d_ in zip(g_["params"], q_):
+                        p_.grad = d_
+                    torch.nn.utils.clip_grad_norm_(g_["params"], float(clip) * g_["gain"])
+            self.opt_lab.step()
+
+    def _gated_moments(self, e):
+        """later effector e's act_pred and correction moments, each sample's (the own acts' in opt_pred, act_inv's labels' in
+        opt_lab), by parameter name, copied to the CPU: {"own": {name: {m, v, q1, q2}}, "labels": {..}} (a sample that has not stepped
+        holds none). Saved with the body (body/core/persistence.py)"""
+        out = {}
+        for key, opt in (("own", getattr(self, "opt_pred", None)), ("labels", getattr(self, "opt_lab", None))):
+            g_ = next((x_ for x_ in (opt.param_groups if opt is not None else ()) if x_["name"] == e.name), None)
+            if g_ is None:
+                continue
+            out[key] = {n_: {"m": opt.state[p_]["m"].detach().cpu().clone(), "v": opt.state[p_]["v"].detach().cpu().clone(),
+                             "q1": float(opt.state[p_]["q1"]), "q2": float(opt.state[p_]["q2"])}
+                        for n_, p_ in zip(self._gated_names(e), g_["params"]) if opt.state.get(p_)}
+        return out
+
+    def _gated_moments_load(self, e, saved):
+        """a save's moments for later effector e (`_gated_moments`' form) into opt_pred and opt_lab, where each parameter's name and
+        shape match; returns what could not be loaded (sample.name), those moments as born"""
+        bad = []
+        for key, opt in (("own", getattr(self, "opt_pred", None)), ("labels", getattr(self, "opt_lab", None))):
+            sv_ = (saved or {}).get(key) or {}
+            g_ = next((x_ for x_ in (opt.param_groups if opt is not None else ()) if x_["name"] == e.name), None)
+            if g_ is None:
+                bad += [f"{key}.{n_}" for n_ in sv_]
+                continue
+            names = self._gated_names(e)
+            bad += [f"{key}.{n_}" for n_ in sv_ if n_ not in names]
+            for n_, p_ in zip(names, g_["params"]):
+                s_ = sv_.get(n_)
+                if s_ is None:
+                    continue
+                if tuple(s_["m"].shape) != tuple(p_.shape) or tuple(s_["v"].shape) != tuple(p_.shape):
+                    bad.append(f"{key}.{n_}"); continue
+                opt.state[p_] = {"m": s_["m"].to(p_.device, p_.dtype).clone(), "v": s_["v"].to(p_.device, p_.dtype).clone(),
+                                 "q1": float(s_["q1"]), "q2": float(s_["q2"])}
+        return bad
 
     def _body_sense(self, e):
         """effector e's body sense this tick [sense_n] (float32, detached): its sense channel's observation at the tick's position (the
@@ -258,7 +344,12 @@ class TimingMixin:
         C [T, d] (with its gradient) and observations: act_pred's squared error to the target act's row at every position t >= 1, from
         the stream at t-1 and the forward half's error at t, weighted (1 at its own acts; at its rests act_inv's reliability on act_inv's
         label, none at the last position, whose next sense is not yet felt; 1 on its rest for an effector with no inverse model); and
-        the forward half's squared error to the sense at t+1 from the stream at t. Returns (loss, report).
+        the forward half's squared error to the sense at t+1 from the stream at t. Returns (loss, report, labels): `loss` the own acts'
+        sample (their errors, and the rests of an effector with no inverse model) and the forward half's, which the waking lesson's
+        backward carries; `labels` act_inv's labels' sample (their weighted errors, over the same positions), a second sample stepped
+        with moments of its own (`_timing_step`; the R6 verifier's fifth look), None where no label carries weight. The whole lesson is
+        loss + labels. The report's "w_own" and "w_lab" are the two samples' gains (their weights' means over the positions), "w" the
+        lesson's mean label weight, their sum.
         THE WEIGHTS ARE ABSOLUTE (the R6 verifier's first finding, 2026-09-24): the weighted errors are averaged over the window's
         positions (T - 1), never over the weights' sum. Divided by the weights' sum, the reliability only reweighted the rests against
         the own acts and never scaled them: a window of rests alone, or of the parent's hand alone, taught at full strength at any
@@ -290,7 +381,7 @@ class TimingMixin:
         acts = obs[e.name]
         T = int(acts.shape[0])
         if T < 2:
-            return None, None
+            return None, None, None
         rest = int(e.rest_id)
         own = acts != rest
         tgt = acts.clone()
@@ -320,13 +411,25 @@ class TimingMixin:
         with torch.no_grad():
             rows = tab(tgt[1:])
         w1 = wt[1:]
-        lp = (0.5 * ((P.float() - rows.float()) ** 2).sum(-1) * w1).sum() / float(T - 1)   # over the positions: the weights absolute
+        err = 0.5 * ((P.float() - rows.float()) ** 2).sum(-1)
+        # THE TWO SAMPLES (the R6 verifier's fifth look): the own acts' (and an uninverted effector's rests) and act_inv's labels', each
+        # its weighted errors over the window's positions (the weights absolute); a window with no labelled rest is the own acts' alone,
+        # as before, and so is one at reliability 0 (its labels weigh nothing)
+        w_own, w_lab = w1, None
+        if e.inverse and bool(rested[1:].any()):
+            lab1 = rested[1:]
+            w_own = torch.where(lab1, torch.zeros_like(w1), w1); w_lab = torch.where(lab1, w1, torch.zeros_like(w1))
+        lp = (err * w_own).sum() / float(T - 1)                           # over the positions: the weights absolute
+        lb = (err * w_lab).sum() / float(T - 1) if w_lab is not None and float(w_lab.sum()) > 0.0 else None
         loss = lp if lf is None else lp + lf
-        rep = {"pred": round(float(lp.detach()), 4), "own": int(own[1:].sum()), "demo_w": round(gain, 3),
-               "w": float(w1.sum()) / float(T - 1)}                       # the lesson's mean label weight: act_pred's plasticity (GatedAdam)
+        rep = {"pred": round(float(lp.detach()) + (float(lb.detach()) if lb is not None else 0.0), 4), "own": int(own[1:].sum()),
+               "demo_w": round(gain, 3),
+               "w": float(w1.sum()) / float(T - 1),                       # the lesson's mean label weight
+               "w_own": float(w_own.sum()) / float(T - 1),                # the own acts' sample's gain (opt_pred)
+               "w_lab": float(w_lab.sum()) / float(T - 1) if lb is not None else 0.0}   # act_inv's labels' sample's gain (opt_lab)
         if lf is not None:
             rep["fwd"] = round(float(lf.detach()), 4)
-        return loss, rep
+        return loss, rep, lb
 
     def _timing_report(self, i):
         """the timing part's instruments for later effector i: act_inv's reliability and last lesson, the chunks and their stops"""
