@@ -288,7 +288,7 @@ def test_the_face_template():
     for dist in (0.45, 0.8, 1.5):
         _face_rig(w, dist)
         f = w.frame()
-        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "pain_site", "eye_p", "eye_f", "face_fovea",
+        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "eye_p", "eye_f", "face_fovea",
                               "face_periph"}, sorted(f.obs)
         t = f.truth["eyes"]
         assert t["face_test"]["L"][0] and t["face_test"]["R"][0]

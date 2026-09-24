@@ -28,12 +28,17 @@ The shell helper `typist_chain.sh` runs the served typist day after day (live).
 
 The simulated world's instruments (docs/SIM_DESIGN.md 11: W1, W3; never the body, and nothing of the language body): `sim_babble.py`
 (the babbler, smooth random acts in movement units for the world's tests; run, the world's speed on this Mac, `--eyes` with the
-eyes), `sim_sink.py` (how fast each posture gives way under the resting servo law), `sim_friction.py` (creep below the sliding
-force and the slide at mu x weight, C26), `sim_eye_check.py` (the fovea's identity on the ten toys and the face under three lights,
+eyes), `sim_sink.py` (how fast each posture gives way under the resting servo law), `sim_friction.py` (the friction model at
+impratio 1 and 10: creep below the sliding force, the slide above it against Coulomb's, the normal force of a pressed contact
+starting to slide, and the G1's hip housings under the newborn's flexion with and without friction: C5, C22, C26, the impratio
+choice), `sim_grasp.py` (the G1 study's grasp trials on the built room, at a given impratio and toy scale: 3.8, B1, C28),
+`sim_eye_check.py` (the fovea's identity on the ten toys and the face under three lights,
 with and without the sun's shadow; `--c2 N`, the face test's rays against a segmentation render on babbled frames with the parent
 at 0.3-3.5 m with her head kept inside the room, and the born face template's hits, false alarms and best correlation: C2, C3),
-`sim_pain.py` (pain under babble, the contact pairs that carry it, and each withdrawal against resting and the babble from the same
-state, its first tick and its second apart: C5, C18, C22). `sim_look.py` renders the one-arm high chair's
+`sim_face_template.py` (the born face template on the parent's face at 0.3-2 m in the fovea and the periphery under the room's
+lights, and in her attending pose: C3), `sim_pain.py` (pain under babble, the contact pairs that carry it, each withdrawal (the
+newborn's flexion) against resting and the babble from the same state, either tick counted and each apart, and phantom pain by the
+filter, on still ticks and at rest: C5, C18, C22). `sim_look.py` renders the one-arm high chair's
 stills; `sim_look_g1.py` the G1 room's (main's prototype stills).
 
 `archive/` (moved 2026-09-23) holds the retired tools, kept as the ledger's record and not run: the earlier lineage's watchers and stalkers (a body under the fast parent, every tick logged: `watch_life.py`, `stalk_day.py`, `record_day.py`, `fit_return.py`, `gate_context.py`, `vf_profile.py`, `ceiling_smile.py`, `ceiling_line.py`, `play_by_play.py`, `watch_trend.py`, `compare_credit.py`), the body2-era readers and probes (`diary_check.py`, `probe.py`, `sequence_probe.py`, `boundary_restart.sh`, `run_days.sh`, `teach_days.sh`), the settled night and gate questions (`night_lab.py`, `dream_lived.py`, `norm_probe.py`), the pod pretraining (`pretrain_cortex.py`, item 44) and `baseline_train.py` (never run, by the house rule against ordinary-training comparisons). Those that find the repo by `dirname(dirname(__file__))` (`watch_life.py`, `stalk_day.py`, `record_day.py`, `pretrain_cortex.py`) would now look inside tools/ and need that path changed before they could run again.

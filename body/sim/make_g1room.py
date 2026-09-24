@@ -25,9 +25,12 @@ mesh folder, the textures), so the scene loads from any checkout.
 THE SOLVER (the G1 study, 2026-09-24): the elliptic friction cone, multi-point CCD off, and impratio 10. With the pyramidal cone a block
 squeezed in a Dex3 hand stopped MuJoCo 3.9 ("FactorizeHessian: rank-deficient sparse Hessian"); with multi-point CCD on,
 8 of 360 grasp trials blew up to NaN about 0.1 s into the fingers' closing and MuJoCo silently reset them; elliptic with
-multi-point CCD off gave 0 of 360 and a clean babble. impratio 10 stops the soft contacts' creep (the resting G1 slid
-2.6 cm in 2 s under a 150 N push at impratio 1, 0.7 cm at 10; see the option's comment). MuJoCo's auto-reset is off (A18), so a
-bad state is never silently replaced by the start pose: the world finds it and stops the tick.
+multi-point CCD off gave 0 of 360 and a clean babble. IMPRATIO 10 IS CHOSEN BY THE PHYSICS OF THESE CONTACTS AND MUJOCO'S GUIDANCE
+(the owner's decision of 2026-09-24, made for him in the W1 verifier's third round; never by pain rates or by which toys can be
+held; tools/sim_friction.py, see the option's comment): rubber-soled fingertips on plastic toys, toys and the body on a foam mat,
+and motor housings on housings are all contacts that hold without a slide below their sliding force; MuJoCo's soft contacts creep
+there by design, and MuJoCo 3.9's documentation names the remedy (elliptic cones with a large impratio and the Newton solver).
+MuJoCo's auto-reset is off (A18), so a bad state is never silently replaced by the start pose: the world finds it and stops the tick.
 
 Collision bits: world 1 (floor, walls, mat, furniture); the G1 keeps its own contype 1 / conaffinity 1 (self-collision
 on, as shipped); toys 4; parent 8, with conaffinity 1 so it touches the G1 (a mocap body and the static world are
@@ -282,16 +285,17 @@ TOYS = dict(
 
 
 # Each toy's size relative to the all-out maker's (made for the 12-month-old's mitten): every toy at its own size. The G1 study
-# (m_grasp_g1.py: a stock Dex3 hand at its stock gains, a hand-over into the palm 6 tries and a top grasp from a surface 3, per
-# toy) found at impratio 1 only the block, rattle, car, stacker and ring held at 1.0, the cup only at 0.8, and the ball, duck,
-# bear and drum at no scale from 0.6 to 1.0, so the cup was made 0.8. That was the soft contacts' creep: re-run at impratio 10
-# (the option below, 2026-09-24, 90 trials at 1.0, none unstable) the hand held the ball 9 of 9, the block 9, the duck 8, the
-# cup 9 (at its own size), the rattle 6 of 6 hand-overs (0 of 3 top grasps), the car 8, the bear 2, the stacker 9 and the ring 6
-# of 6 hand-overs; the drum 0. (These are at the stock servo gains closing to the range's end; the grasp reflex's small steps
-# under the body's servo law press less, measured in W4.) THE CUP STAYS AT 0.8 (the W1 verifier's fourth finding): its size is
-# the owner's call (SIM_DESIGN.md B1: "the cup's size was changed to fit the robot's hand, which is the world fitted to the body,
-# so it is your call"), and the design uses B1's default, 0.8, until the owner says otherwise. B1's premise has changed at
-# impratio 10 (the cup held 9 of 9 at its own size, the ball 9 and the duck 8 of 9), which goes to the owner with B1.
+# (m_grasp_g1.py, now tools/sim_grasp.py: a stock Dex3 hand at its stock gains, a hand-over into the palm 6 tries and a top grasp
+# from a surface 3, per toy) found at impratio 1 the ball, duck, bear and drum held at no scale from 0.6 to 1.0 and the cup only at
+# 0.8, so the cup was made 0.8. That was the soft contacts' creep. With impratio chosen by physics (10, the option's comment;
+# tools/sim_grasp.py on the built room, 2026-09-24, none unstable): at 1 the ball 0 of 9, the block 9, the duck 0, the cup at 0.8
+# 5 and at its own size 0, the rattle 5, the car 5, the bear 0, the stacker 3, the drum 0, the ring 6 of 6 hand-overs; at 10 the
+# ball 9, the block 9, the duck 7, the cup at 0.8 9 and at its own size 9, the rattle 6 of 6 hand-overs (0 of 3 top grasps), the
+# car 8, the bear 2, the stacker 9, the drum 0, the ring 6 of 6 hand-overs. (Stock gains closing to the range's end; the grasp
+# reflex's small steps under the body's servo law press less, W4.) THE CUP STAYS AT 0.8 (the W1 verifier's fourth finding): its
+# size is the owner's call (SIM_DESIGN.md B1), and the design uses B1's default until the owner says otherwise. B1'S PREMISE
+# FOLLOWS FROM THE PHYSICS: the hand holds the cup at its own size, so the shrink no longer has the reason it was made for (a
+# world fitted to the body with no need), and of the four toys B1 names only the bear and the drum are not held.
 TOY_SCALE = dict(ball=1.0, block=1.0, duck=1.0, cup=0.8, rattle=1.0, car=1.0, bear=1.0, stacker=1.0, drum=1.0, ring=1.0)
 TOY_MESHES = dict(cup=("cup_rim", "cup_handle"), drum=("drum_rim",), ring=("teether",),
                   stacker=("ring0", "ring1", "ring2", "ring3", "ring4"))
@@ -662,12 +666,23 @@ def scene_xml(folder=HERE):
        "FactorizeHessian: rank-deficient sparse Hessian"; CG or a dense Jacobian: NaN accelerations and a reset) -->
   <!-- multi-point CCD off: with it on (MuJoCo 3.9's default) 2-4 of 12 hand-overs of the block or the car into a Dex3
        hand blew up about 0.1 s into the fingers' closing (NaN accelerations, an automatic reset); off, none did -->
-  <!-- impratio 10: friction's impedance ten times the normal's (MuJoCo's own remedy for the soft contacts' creep). As
-       built with 1, the resting G1 crept 1.5 / 2.6 / 3.7 cm in 2 s under a steady 100 / 150 / 200 N sideways push at the
-       pelvis, well below the 337 N its friction holds (the parent study's "creep at 146-199 N"); at 10, 0.3 / 0.7 / 2.3 cm,
-       as little as the noslip solver's 0.2 / 0.5 / 2.2 cm (the body's own give) at no added cost (the noslip solver nearly
-       doubled the tick): the world's measurement m_creep, 2026-09-24. With it the Dex3 hand holds the toys it could not
-       (see TOY_SCALE in the maker) -->
+  <!-- impratio 10: friction's impedance ten times the normal's. CHOSEN BY THE PHYSICS OF THESE CONTACTS (the owner's decision
+       of 2026-09-24, made for him; tools/sim_friction.py, measured 2026-09-24 at 1 and 10, never by pain rates or grasp counts):
+       real rubber, plastic, foam and housings hold without a slide below mu N; MuJoCo's soft contacts creep there "by design"
+       (MuJoCo 3.9 docs, Overview, "Softness and slip"), and the docs name the remedy: "using the Newton solver with elliptic
+       friction cones and large value of impratio is the recommended way of reducing slip" (ibid.; Modeling, "Preventing
+       slip": "Increase the impratio parameter. This will reduce (but not entirely prevent) slow slippage. Note that high
+       impratio values work well only with elliptic cones"); MuJoCo Menagerie's hand and gripper models (the Shadow hand, the
+       Allegro hand, the Robotiq 2F-85, ALOHA) ship cone="elliptic" impratio="10". Measured: a 10 kg box on the mat's contact
+       pushed at 0.3-0.97 mu M g slid 3.6-21 mm in 2 s at 1 and 0.4-1.8 mm at 10 (real: none); the resting G1 pushed at 100 /
+       150 / 200 N at the pelvis slid 1.9 / 3.1 / 4.4 cm at 1 and 0.4 / 0.7 / 1.9 cm at 10; above mu M g both slide as Coulomb's
+       law says (0.99-1.00 of its distance). THE COST, disclosed (C5, C22): the convex contact model couples a slip to the normal
+       direction ("the only way to initiate slip is to generate some motion in the normal direction", Computation), so a
+       pressed box that starts to slide is pressed 22-24% harder than its load for about 10 ms at either setting, steady 0.5-5%
+       after; and in the G1's hip housings pressed together and slid apart by the newborn's flexion, friction raises the normal
+       force at 10 (1,795 N against 1,553 N with the pair frictionless) where at 1 it lowers it (1,333 against 1,646): a
+       pressed housing that slides reads harder at 10. The noslip solver would stop the slip entirely, but MuJoCo says it no
+       longer solves a well-defined problem and can be unstable, and it nearly doubled the tick. -->
   <!-- auto-reset off (A18): MuJoCo would otherwise put a state with a bad position, velocity or acceleration back to the
        start pose by itself and go on; off, the bad state stays as it is, and the world (body/sim/world.py) finds it on the
        tick it happens, before that tick's frame reaches the body -->

@@ -42,14 +42,10 @@ WHAT THE BODY SENSES (3.4; the channels of the frame, each the raw observation t
   charge       [h, the change of h this tick]: the body's own need (the robot's battery)
 and, for the reward's pain source and the spinal reflexes (a disclosed exception, 3.4: pain is the contact force on a zone),
   pain         per zone 1 when the tick's largest 10 ms mean (PAIN_WINDOW_STEPS physics steps) of its force exceeds F_PAIN, the
-               threshold from the body's declared mass: PAIN_WEIGHTS x its weight from the model file (3 x 337.4 N = 1012 N)
-  pain_site    per zone 6 numbers, 0 unless the zone is in pain: WHERE on its link it hurts, the nociceptors' own place (the
-               afferent the withdrawal's local sign reads, body/sim/reflexes.py; no channel of the cortex's): the force-weighted
-               mean of the contact points (3) and of the link's outward surface normals there (3; its length is how far the
-               pressing sites agree: 1 for one direction, near 0 for a limb squeezed from opposite sides), in the link's own
-               frame (so no world truth: a skin site and its normal are the body's anatomy), over the tick's steps on which the
-               zone's force passed F_pain (a window can pass F_pain only with a step past it; a pain carried in from the last
-               tick's steps keeps that tick's site)
+               threshold from the body's declared mass: PAIN_WEIGHTS x its weight from the model file (3 x 337.4 N = 1012 N). Pain
+               alone, no place on the link: the newborn's withdrawal is generalized over the limb (body/sim/reflexes.py), so no
+               approved part reads where on a link it hurts (the W1 fix 2's skin-site afferent, `pain_site`, is gone with the
+               local sign it served)
   eye_p, eye_f the eyes' retina codes (2 x 168, 2 x 384), when eyes are attached (body/sim/eyes.py, W3), with the born face
                template's two readings from the same pixels: face_fovea (1: the event line "a face in the fovea", either eye) and
                face_periph (orienting's cue: 1 and where the best match lies from the window, or 0s). A1's face test is world truth
@@ -372,7 +368,7 @@ class G1World(SimWorld):
         # the touch zones, the pain threshold, the chargers, the parent's holds on the G1
         self.zones, self.zone_of_geom, self.body_zone = touch_zones(m, self.scene.g1_set)
         self.nz = len(self.zones)
-        self.zone_body = np.full(self.nz, -1, dtype=np.int64)          # each zone's link (a skin site's frame)
+        self.zone_body = np.full(self.nz, -1, dtype=np.int64)          # each zone's link (one link a zone)
         for g in range(m.ngeom):
             z = int(self.zone_of_geom[g])
             if z >= 0:
@@ -455,7 +451,7 @@ class G1World(SimWorld):
         body = np.concatenate([np.stack([np.sin(ang), np.cos(ang), d.qvel[self.dof], effort], axis=1).reshape(-1), self.gaze, self.gaze_v])
         touch = np.stack([s["touch_log"], s["touch_onset"]], axis=1).reshape(-1)
         obs = {"body": body, "touch": touch, "vestibular": s["vestibular"].copy(), "charge": np.array([self.h, self.dh]),
-               "pain": (s["pain_force"] > self.f_pain).astype(np.float64), "pain_site": s["pain_site"].reshape(-1).copy()}
+               "pain": (s["pain_force"] > self.f_pain).astype(np.float64)}
         truth = self._truth()
         if self.eyes is not None:                                       # the eyes' retina codes (W3; body/sim/eyes.py)
             seen = self.eyes.see()
@@ -507,7 +503,7 @@ class G1World(SimWorld):
         rest_q = self.qadr[rest_idx] if rest_idx else None
         n, nz = STEPS_PER_TICK, self.nz
         F = np.zeros((n, nz)); imu = np.zeros((n, 12)); eff = np.zeros(n); fed = False
-        sites = np.zeros((nz, 7)); own = np.zeros(2)                     # pain's skin sites; the palms' own-hand force
+        own = np.zeros(2)                                              # the palms' own-hand force
         alpha = self.alpha
         try:
             for s in range(n):
@@ -516,7 +512,7 @@ class G1World(SimWorld):
                 t0 = time.perf_counter()
                 mujoco.mj_step(m, d)
                 t_phys += time.perf_counter() - t0
-                F[s] = self._zone_forces(sites)
+                F[s] = self._zone_forces()
                 own += self._palm_own
                 imu[s] = d.sensordata[self.imu_adr]
                 tq = d.qfrc_actuator[self.dof]
@@ -538,7 +534,7 @@ class G1World(SimWorld):
             raise WorldFault(self.tick, f"MuJoCo's warnings {warned}{said}" if warned else f"the tick's end state: {bad}")
         # the tick's senses
         imu = self._imu_noisy(imu)
-        self._sense_tick(F, imu, sites, own / n)
+        self._sense_tick(F, imu, own / n)
         reach = (GAZE_REACH_YAW - self.gaze[2] / 2, GAZE_REACH_PITCH)
         yaw, pitch, quick = vor(self.gaze[0], self.gaze[1], imu[:, 3:6] @ self.gyro_to_cam.T, m.opt.timestep, reach=reach)   # the VOR
         self.gaze = clamp_gaze([yaw, pitch, self.gaze[2]])
@@ -583,12 +579,10 @@ class G1World(SimWorld):
         self._restore(st)
 
     # ---------------------------------------------------------------- the senses
-    def _zone_forces(self, sites=None):
+    def _zone_forces(self):
         """this step's summed normal force on each touch zone (N): every contact touching a G1 zone (self-contact counts on both
         zones; A12's rest blind spots, none as born, felt by neither), plus each of the parent's active holds on a G1 body on
-        that body's zone. Also this step's force on each palm from its own hand's other links (`_palm_own`); and, given `sites`
-        (nz x 7) and a zone whose force this step passes F_pain, each contact on that zone adds [F, F x the contact point, F x
-        the link's outward normal there], both in the link's own frame (pain_site's sums)"""
+        that body's zone. Also this step's force on each palm from its own hand's other links (`_palm_own`)"""
         d, zg, nz = self.d, self.zone_of_geom, self.nz
         out = np.zeros(nz)
         self._palm_own = np.zeros(2)
@@ -611,15 +605,6 @@ class G1World(SimWorld):
                 mine = ((z[:, 0] == pz) & self.own_hand[h][z[:, 1]]) | ((z[:, 1] == pz) & self.own_hand[h][z[:, 0]])
                 if mine.any():
                     self._palm_own[h] = float(fn[mine].sum())
-            if sites is not None and out.max() > self.f_pain:
-                hot = out > self.f_pain
-                for col, sgn in ((0, 1.0), (1, -1.0)):                 # the frame's normal points from geom 0 to geom 1
-                    zc = z[:, col]
-                    idx = np.nonzero((zc >= 0) & (fn > 0))[0]
-                    for i in idx[hot[zc[idx]]]:
-                        b = int(bod[i, col])
-                        Rb = d.xmat[b].reshape(3, 3)
-                        sites[zc[i]] += fn[i] * np.concatenate([[1.0], Rb.T @ (con.pos[i] - d.xpos[b]), Rb.T @ (sgn * con.frame[i, :3])])
         if self.g1_welds:
             act = d.eq_active[self.g1_welds]
             if act.any():
@@ -641,9 +626,9 @@ class G1World(SimWorld):
                 return True
         return False
 
-    def _sense_tick(self, F, imu, sites=None, palm_own=None):
-        """the tick's aggregates: touch (the mean force's log, its onset), pain's filtered force and its skin sites, the IMUs
-        (their noisy samples), the palms' own-hand force"""
+    def _sense_tick(self, F, imu, palm_own=None):
+        """the tick's aggregates: touch (the mean force's log, its onset), pain's filtered force, the IMUs (their noisy samples),
+        the palms' own-hand force"""
         s = self._sensed
         lf = np.log1p(F.mean(axis=0) / TOUCH_UNIT_N)
         onset = np.maximum(0.0, lf - s["touch_log"])
@@ -653,14 +638,8 @@ class G1World(SimWorld):
         win = (c[w:] - c[:-w]) / w
         pain_force = win[-len(F):].max(axis=0)
         vest = self._vestibular(imu)
-        site = np.zeros((self.nz, 6))
-        for z in np.nonzero(pain_force > self.f_pain)[0]:
-            if sites is not None and sites[z, 0] > 0:
-                site[z] = sites[z, 1:] / sites[z, 0]                   # the mean point and the mean outward normal (not unit)
-            else:
-                site[z] = s["pain_site"][z]                             # a pain carried in from the last tick's steps: its site
         self._sensed = {"touch_log": lf, "touch_onset": onset, "touch_force": F.mean(axis=0), "pain_force": pain_force,
-                        "carry": F[-(w - 1):].copy(), "vestibular": vest, "peak_force": F.max(axis=0), "pain_site": site,
+                        "carry": F[-(w - 1):].copy(), "vestibular": vest, "peak_force": F.max(axis=0),
                         "palm_own": np.zeros(2) if palm_own is None else np.asarray(palm_own, float).copy()}
 
     def _imu_noisy(self, imu):
@@ -685,7 +664,7 @@ class G1World(SimWorld):
         lf = np.log1p(F[0] / TOUCH_UNIT_N)
         self._sensed = {"touch_log": lf, "touch_onset": np.zeros(self.nz), "touch_force": F[0].copy(), "pain_force": F[0].copy(),
                         "carry": np.repeat(F, PAIN_WINDOW_STEPS - 1, axis=0), "vestibular": self._vestibular(self._imu_noisy(imu)),
-                        "peak_force": F[0].copy(), "pain_site": np.zeros((self.nz, 6)), "palm_own": self._palm_own.copy()}
+                        "peak_force": F[0].copy(), "palm_own": self._palm_own.copy()}
         self._drain = 0.0; self._fed = False
 
     def _truth(self):
