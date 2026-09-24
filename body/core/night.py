@@ -281,6 +281,11 @@ class NightMixin:
                 # into a step many times the rate, which the global clip does not bound (night 226's loss rose 0.23 -> 0.34 in one
                 # round and the cortex was left in a basin the rate cannot climb). At 0.99 the moment forms in a hundred steps, before
                 # the rounds where the night's outliers arrive. A disclosed constant; 0.999 = as before.
+                # act_pred and the corrections take no gradient at night (anatomy 31 guards it). R8's replay of act_pred's targets, each
+                # weighted by the replayed dopamine's credit, must step them through their gate (body/core/timing.py GatedAdam, at the
+                # replayed weight), and whatever share of a weighted target reaches the stream would be taught whole by this Adam, as by
+                # the day's (it divides each parameter's step by its recent gradient size): the waking lesson keeps act_inv's labels out
+                # of the stream for that reason (`_timing_loss`)
                 opt = torch.optim.Adam(m.parameters(), lr=float(self.cfg["night_lr"]), betas=(0.9, float(self.cfg.get("night_beta2", 0.999))))   # sleep's own plasticity
                 sig = float(self.cfg["sigreg"])
                 # THE PLASTICITY RAMPS (night_warm, 0 = off; 2026-09-06): a fresh optimizer's first steps move every weight

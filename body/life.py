@@ -317,7 +317,8 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                 self.opt_inv = torch.optim.Adam(ip_, lr=float(self.cfg.get("act_inv_lr", MOTOR["act_inv_lr"])))
             # ACT_PRED'S PLASTICITY GATED BY ITS LABELS' RELIABILITY (the R6 verifier's third finding): act_pred and the correction learn in
             # the waking lesson at the waking lesson's rate, a group per later effector, each lesson a sample of weight the mean weight of
-            # its labels (body/core/timing.py GatedAdam; at weight 1 the day's Adam exactly)
+            # its labels (body/core/timing.py GatedAdam; at weight 1 Adam exactly), each group's gradient bounded by its own norm; the
+            # labels act_inv reads reach these alone, never the stream (the verifier's fourth look)
             self.opt_pred = GatedAdam([{"params": self._gated_params(e_), "name": e_.name} for e_ in self.anatomy.effectors[1:]],
                                       lr=float(self.cfg["live_lr"]))
         # the critic's optimizer: the value heads and the Go/NoGo gates. The bands' input maps are fixed

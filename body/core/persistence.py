@@ -96,6 +96,10 @@ class PersistenceMixin:
         # kept, the voice's heads and lines included. Its language block (the first k (2V + 3) rows), thresholds, lines, heads, slot and
         # actors are this body's: kept; only the effectors' rows are born again, per joint (as the life's birth of the striatum drew them).
         # Its fast critic's evidence and its heads were learned on units whose effectors' part the new rows change; the voice's is as saved.
+        # ITS LIMIT (the R6 verifier's fourth look): the layouts are told apart by the striatum's shape alone, so a save of an anatomy
+        # whose effectors' flat acts number as many as their joints' settings (a product equal to a sum: only an effector of two joints
+        # of two settings, 2 x 2 = 2 + 2, beside effectors of one joint) loads by the present layout, its flat acts' rows read as its
+        # joints'. No such save exists.
         nl_ = int(life.m.stri_line.numel()) * (2 * int(life.m.vocab) + 3)
         pre_r5b_ = (not same_ and bool(st_saved) and len(life.anatomy.effectors) > 1 and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None
                     and tuple(st_saved["stri_W"].shape) == (nl_ + sum(int(life.m.stri_line.numel()) * int(e_.n_acts) for e_ in life.anatomy.effectors[1:]),

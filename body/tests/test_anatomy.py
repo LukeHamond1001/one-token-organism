@@ -2305,8 +2305,10 @@ def test_act_pred_targets():
     t and t+1 at act_inv's reliability (none at the last position, whose next sense is not felt yet); for the grip and the tap (no
     inverse model) their rest, weight 1. The window holds a reflex's tick as a rest (the world moved by the reflex's act). Once act_inv
     has learned, its label at a demonstrated position is the act the parent's hand made. The lesson's gradient reaches act_pred, the
-    correction, the forward half and the cortex, never act_inv. A window in which the world never spoke still teaches them; and the
-    lesson teaches: on a window held fixed act_pred's and the forward half's errors fall and act_pred's best guesses come to match"""
+    correction, the forward half and the cortex, never act_inv; the cortex's the same at every reliability (act_inv's labels reach
+    act_pred and the correction alone: the R6 verifier's fourth look, anatomy 31). A window in which the world never spoke still
+    teaches them; and the lesson teaches: on a window held fixed act_pred's and the forward half's errors fall and act_pred's best
+    guesses come to match"""
     from body.core.world import WorldLoop
     cfg = dict(_LR0, wake_ticks=100000, wake_every=10 ** 6, gate_every=8, write_floor=1e-30, gate_floor=0.5, fast_rls=0, act_inv_lr=1e-2, act_inv_tau=2000)
     w = _arm_world(wall=0.45); torch.manual_seed(5); L = _born_in(_Timed(TOK, cfg), cfg, w)
@@ -2353,13 +2355,21 @@ def test_act_pred_targets():
     with torch.no_grad():
         right = sum(1 for k in dem if L.m.acts["arm"].flat([int(x.argmax()) for x in tm.inverse_logits(s[k], s[k + 1])]) == w.moved[t0 + k][0])
     assert len(dem) >= 5 and right >= 0.9 * len(dem), (len(dem), right)
-    # the gradient: act_pred, the correction, the forward half and the cortex; never act_inv
-    L.m.zero_grad(set_to_none=True)
-    C2 = L.m.stream(L.m.inputs(L.anatomy, obs, whos, bundles))
-    lt, _ = L._timing_loss(1, C2, obs); lt.backward()
-    gr = {k: (v.grad is not None and float(v.grad.abs().max()) > 0) for k, v in L.m.named_parameters()}
+    # the gradient: act_pred, the correction, the forward half and the cortex; never act_inv; the cortex's the same at every reliability
+    grads = {}
+    for gain in (0.0, 0.37, 1.0):
+        L.motor[0]["inv_gain"] = gain
+        L.m.zero_grad(set_to_none=True)
+        C2 = L.m.stream(L.m.inputs(L.anatomy, obs, whos, bundles))
+        lt, _ = L._timing_loss(1, C2, obs); lt.backward()
+        grads[gain] = {k: (v.grad.detach().clone() if v.grad is not None else None) for k, v in L.m.named_parameters()}
+    gr = {k: (v is not None and float(v.abs().max()) > 0) for k, v in grads[0.37].items()}
     assert gr["timing.arm.pred.weight"] and gr["timing.arm.cor.weight"] and gr["timing.arm.fwd.weight"] and gr["blocks.0.attn.in_proj_weight"], gr
     assert not any(gr[k] for k in gr if k.startswith("timing.arm.inv.")) and not any(gr[k] for k in gr if k.startswith("timing.grip."))
+    cx_ = [k for k in grads[0.37] if not k.startswith("timing.") and grads[0.37][k] is not None]
+    assert cx_ and all(torch.equal(grads[g_][k], grads[0.37][k]) for g_ in (0.0, 1.0) for k in cx_), "act_inv's labels reached the cortex"
+    assert not torch.equal(grads[0.0]["timing.arm.pred.weight"], grads[1.0]["timing.arm.pred.weight"])
+    L.motor[0]["inv_gain"] = 0.37
     L.m.zero_grad(set_to_none=True)
     # the lesson teaches, on a window held fixed (the waking rate raised for the test, the day's and act_pred's)
     win0 = list(L.win)
@@ -2390,7 +2400,8 @@ def test_act_pred_targets():
     assert out3 is not None and out3["n_world"] == 0 and set(out3["motor"]) == {"arm", "grip", "tap"}, out3
     print(f"anatomy 25: act_pred's lesson recomputed position by position for the arm (at three reliabilities), the grip and the tap:",
           f"{dict(kinds_all)}; {len(rfx)} reflex ticks recorded as rests (the window's acts the efference copies); act_inv read {right} of {len(dem)} demonstrations as the",
-          f"parent's hand's act; the gradient reaches act_pred, the correction, the forward half and the cortex, never act_inv; on a",
+          f"parent's hand's act; the gradient reaches act_pred, the correction, the forward half and the cortex (the same at 0, 0.37 and",
+          f"1: {len(cx_)} tensors), never act_inv; on a",
           f"fixed window act_pred's error {first['arm']['pred']} -> {last['arm']['pred']}, the forward half's {first['arm']['fwd']} ->",
           f"{last['arm']['fwd']}, the best guess matching {match} of {len(own_k)} own acts; a window with no word teaches them")
 
@@ -2973,7 +2984,7 @@ def test_a_34_joint_body_builds():
           f"limbs acting {acted} times, the striatal read equal to the expansion by hand, the arms' act_inv counting 7 joints each")
 
 
-# ---------------- the R6 verifier's third finding: act_pred's plasticity gated by its labels' reliability ----------------
+# ---------------- the R6 verifiers' third and fourth findings: what act_pred learns, gated by its labels' reliability ----------------
 
 def _proposal_error(L, win):
     """the arm's proposal (act_pred and the correction, through the cortex as it is now) against act_inv's labels at a window's
@@ -2997,44 +3008,77 @@ def _arm_gated(L):
     return torch.cat([p.detach().flatten().clone() for p in list(tm.pred.parameters()) + list(tm.cor.parameters())])
 
 
+def _stream_params(L):
+    """the parameters the waking lesson's Adam steps (all but act_pred's and the corrections' since R6 fix 3), copied"""
+    return [p_.detach().clone() for g_ in L.opt_day.param_groups for p_ in g_["params"]]
+
+
 def _snap(L):
     """the organs and every optimizer the body has, copied"""
     return copy.deepcopy(L.m.state_dict()), {k: copy.deepcopy(v.state_dict()) for k, v in sorted(vars(L).items()) if isinstance(v, torch.optim.Optimizer)}
 
 
 def _lessons_from(L, snap, win, gain, n):
-    """n waking lessons on a window held fixed at act_inv's reliability `gain`, from a saved state (copied in again: an optimizer's
-    loaded state shares its tensors with what it was loaded from, so its steps would change the saved state)"""
+    """n waking lessons on a window held fixed at act_inv's reliability `gain` (a number, or lesson i's: gain(i)), from a saved state
+    (copied in again: an optimizer's loaded state shares its tensors with what it was loaded from, so its steps would change the saved
+    state)"""
     L.m.load_state_dict(snap[0])
     for k, sd in snap[1].items():
         getattr(L, k).load_state_dict(copy.deepcopy(sd))
-    L.motor[0]["inv_gain"] = gain
     out = None
-    for _ in range(n):
+    for i in range(n):
+        L.motor[0]["inv_gain"] = float(gain(i) if callable(gain) else gain)
         L.win.clear(); L.win.extend(win); out = L._wake_lesson()
     return out
 
 
+def _waking_rate(L, lr):
+    """the waking lesson's rate, the day's Adam's and act_pred's (a body from before R6 fix 3 has no opt_pred)"""
+    for k in ("opt_day", "opt_pred"):
+        for g_ in (getattr(L, k).param_groups if hasattr(L, k) else []):
+            g_["lr"] = float(lr)
+
+
 def test_act_pred_learns_by_reliability():
-    """anatomy 31 (the R6 verifier's third finding, 2026-09-24; SIM_DESIGN.md 5.4): WHAT act_pred LEARNS from a lesson scales with the
-    reliability of the lesson's labels, under the real optimizer. R6 fix 1 scaled the lesson's loss by act_inv's reliability, and the
-    waking lesson's Adam, which divides each parameter's step by its recent gradient size, undid the scale: at 0.01 act_pred learned
-    0.44 to 0.95 of what it learned at 1. The tiny arm (act_inv learned on 400 ticks of its own acts) at the served waking rate
-    (live_lr), through the real `_wake_lesson` and the body's own optimizers, on three windows held fixed: rests alone (the gate shut,
-    nothing moving the arm), the parent's guidance alone (the gate shut, the hand on every tick) and a mixed window (own acts beside
-    rests); 300 lessons on each at act_inv's reliability 0, 0.01, 0.05, 0.25 and 1, from a fresh optimizer and from one whose moments
-    100 lessons of the arm's own acts built. Measured: the proposal's error (act_pred and the correction, through the cortex as the
-    lessons left it) to act_inv's labels at the labelled rests; the share learned at g is (err(0) - err(g)) / (err(0) - err(1)). It
-    rises with the reliability and is at most five times it at 0.01 and at 0.05, and so is act_pred's and the correction's move where
-    only the rests' labels teach. THE BOUND: a lesson at reliability g steps g of a whole step, so over N lessons it learns what the
-    whole lessons learn in their first g N, more than g of their N as the curve bends (learning slows as the error falls; up to 3.5 g
-    here); five times leaves room for the bend and sits at a tenth of the old code's 0.44 to 0.95 at 0.01. And from a fresh
-    optimizer N lessons at g learn what g N whole lessons learn (within 0.7 to 1.5). Then the optimizer itself: act_pred and the
-    corrections (the arm's and the grip's; the tap senses nothing, its act_pred alone) in opt_pred, a group per effector, every other
-    parameter in the day's Adam as before; the lesson's gain its labels' mean weight; at weight 1 on every lesson GatedAdam is the day's
-    Adam (every parameter after 20 lessons on the mixed window at reliability 1 as with act_pred in the day's Adam); at gain 0 act_pred,
-    the correction and their moments do not move; on a constant gradient scaled by g (a lesson's loss at reliability g) Adam moves n
-    whole steps whatever g, GatedAdam n g; the language body has no opt_pred and its day's Adam holds every parameter, as before"""
+    """anatomy 31 (the R6 verifiers' third finding and fourth look, 2026-09-24; SIM_DESIGN.md 5.4): WHAT act_pred LEARNS from a lesson
+    scales with the reliability of the lesson's labels, under the real optimizers, from birth and once it has learned. R6 fix 1 scaled
+    the lesson's loss by act_inv's reliability, and the waking lesson's Adam, which divides each parameter's step by its recent gradient
+    size, undid the scale (at 0.01 act_pred learned 0.44 to 0.95 of what it learned at 1); fix 3 gave act_pred and the correction an
+    optimizer whose step carries the gain (GatedAdam), but the share of act_inv's labels that reached the stream through the proposal was
+    still taught whole by the day's Adam once act_pred had learned (9 to 21 times its earned share), and act_pred's gradient, bounded
+    with the stream's, set the stream's steps. Now act_inv's labels reach act_pred and the correction alone and each optimizer's gradient
+    has its own bound. The tiny arm (act_inv learned on 400 ticks of its own acts) at the served waking rate (live_lr), through the real
+    `_wake_lesson`, on three windows held fixed: rests alone (the gate shut, nothing moving the arm), the parent's guidance alone (the
+    gate shut, the hand on every tick) and a mixed window (own acts beside rests); 300 lessons on each at act_inv's reliability 0, 0.01,
+    0.05, 0.25 and 1, from three states: fresh; own acts first (100 lessons of the mixed window, its rests unlabelled, at the served
+    rate); and trained (300 lessons of the arm's own acts at a hundred times the served rate). Measured: the proposal's error (act_pred
+    and the correction, through the stream as the lessons left it) to act_inv's labels at the labelled rests; the share learned at g is
+    (err(0) - err(g)) / (err(0) - err(1)). Asserted, from every state:
+    - THE SHARE rises strictly with the reliability and is at most five times it at 0.01 and at 0.05. THE BOUND, and why: the stream
+      learns the same at every reliability (below), so the share is act_pred's and the correction's; a lesson at g steps g of a whole
+      step, so N lessons at g learn about what the whole lessons learn in their first g N, which is more than g of their N as the curve
+      bends (learning slows as the error falls): up to 3.7 g here, at 300 lessons. Five times leaves room for that bend and stays
+      under what the old codes learned at 0.01 (fix 1 alone 0.21 to 0.95; fix 3, once act_pred had learned, 0.12 and 0.34, where
+      it learned 0.002 and 0.003 now). Over a longer horizon the bend grows (the verifier read 7 times at 1000 lessons), so:
+    - THE SAME LABEL MASS GIVEN WHOLE TEACHES THE SAME: 300 lessons at 0.05 against 300 lessons of which every twentieth is at 1 and the
+      others at 0 (the same windows, steps and stream at every lesson; only how the labels' weight is spread differs): the ratio of what
+      they taught is within 0.5 to 2 on rests and on guidance from every state. An honest gate reads about 1 (measured 0.87 to 1.00: a
+      barely earned lesson's direction enters the momentum in proportion, so the spread labels are the slower); a re-inflating one
+      more (fix 3 from the trained state 3.7 and 6.2; fix 1 alone 1.5 to 5.8).
+    - THE STREAM NEVER LEARNS act_inv's LABELS: after the 300 lessons on rests alone or guidance alone the day's parameters are the same
+      to the bit at every reliability, from every state. (Beside own acts they are not: the own acts teach the stream through act_pred,
+      whose weights the labels move as far as their reliability allows, so the stream's lesson from its own acts differs by that much.)
+    - act_pred and the correction do not move at 0 where only the rests' labels teach, and move at most five times the reliability's
+      share of the whole move at 0.01 and 0.05.
+    Then the optimizers: act_pred and the corrections (the arm's and the grip's; the tap senses nothing, its act_pred alone) in opt_pred,
+    a group per effector, every other parameter in the day's Adam as before; the lesson's gain its labels' mean weight; at weight 1 on
+    every lesson GatedAdam is Adam to the bit (every tensor of the body after 20 lessons on the mixed window at reliability 1, against
+    act_pred and the corrections in a torch Adam under the same bounds); at gain 0 act_pred, the correction and their moments do not
+    move; on a constant gradient scaled by g (a lesson's loss at reliability g) Adam moves n whole steps whatever g, GatedAdam n g; one
+    step at gain g moves the moments (1 - beta) g of their way to the gradient per unit weight; the language body has no opt_pred and
+    its day's Adam holds every parameter, as before. And THE NIGHT does not teach act_pred: a night at the night's rate moves the stream
+    and leaves act_pred, the corrections and their moments as the day left them (R8, which replays act_pred's targets, must step them
+    through their gate, body/core/night.py)"""
     from body.core.world import WorldLoop
     LR = float((_served_cfg() or PHYSIOLOGY)["live_lr"])
     cfg = dict(_LR0, live_lr=LR, wake_ticks=100000, wake_every=10 ** 6, gate_every=10 ** 6, write_floor=1e-30, gate_floor=0.5, fast_rls=0,
@@ -3054,37 +3098,52 @@ def test_act_pred_learns_by_reliability():
         run.step()
     guide = list(L.win)
     assert all(who == "guide" for _, who in w.moved[-32:])
+    with torch.no_grad():
+        L.m.gates["arm"].bias.fill_(60.0)                         # the gate wide open: the arm acts (a chunk may end at its rest)
+    for _ in range(40):
+        run.step()
+    own = list(L.win)
+    assert sum(1 for _, who in w.moved[-32:] if who == "own") >= 24, w.moved[-32:]
     n_lab = {k: _proposal_error(L, v)[1] for k, v in (("rests", rests), ("guidance", guide), ("mixed", mixed))}
     assert n_lab["rests"] == n_lab["guidance"] == 30 and 5 <= n_lab["mixed"] <= 25 and L.motor[0]["inv_gain"] > 0.3, (n_lab, L.motor[0]["inv_gain"])
-    N = 300; gains = (0.0, 0.01, 0.05, 0.25, 1.0); table = {}
     fresh = _snap(L)
-    L.motor[0]["inv_gain"] = 0.0
-    for _ in range(100):                                          # the moments built by the arm's own acts (the rests unlabelled)
-        L.win.clear(); L.win.extend(mixed); L._wake_lesson()
+    _lessons_from(L, fresh, mixed, 0.0, 100)                      # own acts first: the moments built by its own acts (the rests unlabelled)
     built = _snap(L)
-    for reg, snap in (("fresh", fresh), ("own acts first", built)):
+    L.m.load_state_dict(fresh[0])
+    for k, sd in fresh[1].items():
+        getattr(L, k).load_state_dict(copy.deepcopy(sd))
+    _waking_rate(L, 100 * LR)                                     # trained: 300 lessons of its own acts at a hundred times the rate
+    for _ in range(300):
+        L.motor[0]["inv_gain"] = 1.0; L.win.clear(); L.win.extend(own); L._wake_lesson()
+    _waking_rate(L, LR)
+    trained = _snap(L)
+    N = 300; gains = (0.0, 0.01, 0.05, 0.25, 1.0); shares = {}; moves = {}; clean = {}; same = {}
+    for reg, snap in (("fresh", fresh), ("own acts first", built), ("trained", trained)):
         for name, win in (("rests", rests), ("guidance", guide), ("mixed", mixed)):
-            L.m.load_state_dict(snap[0]); e0 = _proposal_error(L, win)[0]; th0 = _arm_gated(L)
-            res = {}
+            L.m.load_state_dict(snap[0]); th0 = _arm_gated(L)
+            res = {}; st = {}
             for g in gains:
                 _lessons_from(L, snap, win, g, N)
-                res[g] = (_proposal_error(L, win)[0], float((_arm_gated(L) - th0).norm()))
+                res[g] = (_proposal_error(L, win)[0], float((_arm_gated(L) - th0).norm())); st[g] = _stream_params(L)
             full = res[0.0][0] - res[1.0][0]
-            share = {g: (res[0.0][0] - res[g][0]) / full for g in gains}
-            moved = {g: res[g][1] / res[1.0][1] for g in gains}
-            table[(reg, name)] = {g: round(share[g], 3) for g in gains[1:-1]}
-            assert full > 0.05, (reg, name, e0, res)              # the whole lesson teaches
-            assert all(share[a] < share[b] for a, b in zip(gains, gains[1:])), (reg, name, "the share learned does not rise", share)
-            assert share[0.01] <= 5 * 0.01 and share[0.05] <= 5 * 0.05, (reg, name, "learned more than the reliability allows", share)
-            if name != "mixed":                                   # only the rests' labels teach: act_pred moves by the reliability
-                assert moved[0.0] == 0.0 and moved[0.01] <= 5 * 0.01 and moved[0.05] <= 5 * 0.05, (reg, name, moved)
-            if reg == "fresh" and name != "mixed":                # N lessons at g learn what g N whole lessons learn
-                eq = []
-                for g in (0.01, 0.05, 0.25):
-                    _lessons_from(L, snap, win, 1.0, round(g * N))
-                    eq.append((e0 - res[g][0]) / (e0 - _proposal_error(L, win)[0]))
-                assert all(0.7 <= r_ <= 1.5 for r_ in eq), (name, eq)
-                table[(reg, name + " (N at g / gN whole)")] = [round(r_, 3) for r_ in eq]
+            shares[(reg, name)] = (full, {g: (res[0.0][0] - res[g][0]) / full for g in gains})
+            moves[(reg, name)] = {g: res[g][1] / res[1.0][1] for g in gains}
+            same[(reg, name)] = all(torch.equal(a_, b_) for g in gains[1:] for a_, b_ in zip(st[0.0], st[g]))
+            if name != "mixed":                                   # the same label mass given whole: every twentieth lesson at 1, the rest at 0
+                _lessons_from(L, snap, win, lambda i: 1.0 if i % 20 == 19 else 0.0, N)
+                clean[(reg, name)] = (res[0.0][0] - res[0.05][0]) / (res[0.0][0] - _proposal_error(L, win)[0])
+    table = {k: {g: round(v[1][g], 3) for g in gains[1:-1]} for k, v in shares.items()}
+    said = (table, {k: round(v, 3) for k, v in clean.items()})
+    for key, (full, share) in shares.items():
+        assert full > 0.05, (key, "the whole lesson does not teach", full, said)
+        assert all(share[a] < share[b] for a, b in zip(gains, gains[1:])), (key, "the share learned does not rise", said)
+        assert share[0.01] <= 5 * 0.01 and share[0.05] <= 5 * 0.05, (key, "learned more than the reliability allows", said)
+    for key, r_ in clean.items():
+        assert 0.5 <= r_ <= 2.0, (key, "the spread labels taught otherwise than the same mass given whole", said)
+    assert all(v_ for k_, v_ in same.items() if k_[1] != "mixed"), ("the stream learned act_inv's labels", [k for k, v in same.items() if not v], said)
+    for key, mv in moves.items():
+        if key[1] != "mixed":                                     # only the rests' labels teach: act_pred moves by the reliability
+            assert mv[0.0] == 0.0 and mv[0.01] <= 5 * 0.01 and mv[0.05] <= 5 * 0.05, (key, mv)
     # THE OPTIMIZER: act_pred and the corrections in opt_pred, a group per effector; every other parameter in the day's Adam as before
     from body.core.timing import GatedAdam
     tim = L.m.timing
@@ -3105,22 +3164,19 @@ def test_act_pred_learns_by_reliability():
     ia = [k_ for k_ in range(3)]                                  # the arm's parameters come first in opt_pred
     assert torch.equal(_arm_gated(L), torch.cat([built[0][k_].flatten() for k_ in ("timing.arm.pred.weight", "timing.arm.pred.bias", "timing.arm.cor.weight")]))
     assert all(torch.equal(sb[k_]["m"], sn[k_]["m"]) and torch.equal(sb[k_]["v"], sn[k_]["v"]) and (sb[k_]["q1"], sb[k_]["q2"]) == (sn[k_]["q1"], sn[k_]["q2"]) for k_ in ia)
-    # at weight 1 on every lesson it is the day's Adam: 20 lessons on the mixed window at reliability 1 (its last position an own act),
-    # then again with act_pred and the corrections in the day's Adam (opt_pred's rate 0): every parameter the same
+    # at weight 1 on every lesson it is Adam: 20 lessons on the mixed window at reliability 1 (its last position an own act), then again
+    # with act_pred and the corrections in a torch Adam of the same groups under the same bounds: every tensor of the body the same
     out = _lessons_from(L, fresh, mixed, 1.0, 20)
     assert all(v_["w"] == 1.0 for v_ in out["motor"].values()), out["motor"]
     sA = copy.deepcopy(L.m.state_dict())
-    keep = (L.opt_day, L.opt_pred)
-    L.m.load_state_dict(fresh[0])
-    L.opt_day = torch.optim.Adam(L.m.parameters(), lr=LR)
-    L.opt_pred = GatedAdam([dict(g_, params=list(g_["params"])) for g_ in keep[1].param_groups], lr=0.0)
-    for g_ in L.opt_pred.param_groups:
-        g_["lr"] = 0.0
+    keep = L.opt_pred
+    L.m.load_state_dict(fresh[0]); L.opt_day.load_state_dict(copy.deepcopy(fresh[1]["opt_day"]))
+    L.opt_pred = torch.optim.Adam([dict(params=list(g_["params"]), name=g_["name"], gain=0.0) for g_ in keep.param_groups], lr=LR)
     for _ in range(20):
         L.win.clear(); L.win.extend(mixed); L._wake_lesson()
-    sB = L.m.state_dict(); L.opt_day, L.opt_pred = keep
-    same = [k_ for k_ in sA if torch.equal(sA[k_], sB[k_])]
-    assert len(same) == len(sA), [k_ for k_ in sA if k_ not in same]
+    sB = L.m.state_dict(); L.opt_pred = keep
+    same_t = [k_ for k_ in sA if torch.equal(sA[k_], sB[k_])]
+    assert len(same_t) == len(sA), [k_ for k_ in sA if k_ not in same_t]
     # on a constant gradient scaled by g: Adam re-inflates it to whole steps, GatedAdam steps g of them
     G = torch.tensor([0.5, -2.0, 1e-3]); n = 50; walk = {}
     for g in (1.0, 0.25, 0.01):
@@ -3142,16 +3198,29 @@ def test_act_pred_learns_by_reliability():
             pg.grad = G.clone(); og.param_groups[0]["gain"] = 1.0; og.step()
         m0_, v0_ = og.state[pg]["m"].clone(), og.state[pg]["v"].clone()
         pg.grad = g * G2; og.param_groups[0]["gain"] = g; og.step()
-        assert torch.allclose(og.state[pg]["m"], m0_ + (1.0 - 0.9) * g * (G2 - m0_), rtol=1e-5, atol=1e-8), (g, og.state[pg]["m"], m0_)
-        assert torch.allclose(og.state[pg]["v"], v0_ + (1.0 - 0.999) * g * (G2 * G2 - v0_), rtol=1e-5, atol=1e-10), (g, og.state[pg]["v"], v0_)
+        assert torch.allclose(og.state[pg]["m"], m0_ + (1.0 - 0.9) * g * (G2 - m0_), rtol=1e-5, atol=1e-8), ("the first moment did not move (1 - beta1) g of its way", g, og.state[pg]["m"], m0_)
+        assert torch.allclose(og.state[pg]["v"], v0_ + (1.0 - 0.999) * g * (G2 * G2 - v0_), rtol=1e-5, atol=1e-10), ("the second moment did not move (1 - beta2) g of its way", g, og.state[pg]["v"], v0_)
     # the language body: no opt_pred, its day's Adam holds every parameter as before
     D = _born(TOK, dict(wake_ticks=100000))
     assert not hasattr(D, "opt_pred") and len(D.opt_day.param_groups) == 1 and [id(p_) for p_ in D.opt_day.param_groups[0]["params"]] == [id(p_) for p_ in D.m.parameters()]
+    # THE NIGHT does not teach act_pred (R8 will, through the gate): a night at the night's rate, after the trained state's lessons
+    _lessons_from(L, trained, own, 1.0, 1)
+    gp_ = [p_ for g_ in L.opt_pred.param_groups for p_ in g_["params"]]
+    g0_ = [p_.detach().clone() for p_ in gp_]; o0_ = copy.deepcopy(L.opt_pred.state_dict()); s0_ = _stream_params(L)
+    L.cfg["night_lr"] = 1e-3
+    rep_ = L.night()
+    assert all(torch.equal(a_, p_.detach()) for a_, p_ in zip(g0_, gp_)), "the night moved act_pred or a correction"
+    o1_ = L.opt_pred.state_dict()
+    assert all(torch.equal(o0_["state"][k_]["m"], o1_["state"][k_]["m"]) and torch.equal(o0_["state"][k_]["v"], o1_["state"][k_]["v"]) for k_ in o0_["state"])
+    nmv_ = sum(1 for a_, b_ in zip(s0_, _stream_params(L)) if not torch.equal(a_, b_))
+    assert nmv_ > 0, ("the night moved nothing: the guard would be empty", rep_)
     print(f"anatomy 31: what act_pred learns scales with its labels' reliability, at the served rate {LR} through the real waking lesson",
-          f"(300 lessons on each window held fixed; the share learned at 0.01, 0.05, 0.25): {table};",
-          f"opt_pred holds act_pred and the corrections (a group per effector), the day's Adam everything else; the gain the labels'",
-          f"mean weight; at weight 1 the day's Adam to the bit ({len(same)} tensors after 20 lessons); at gain 0 nothing moves;",
-          f"a constant gradient scaled by g, n = {n} steps (Adam's least, GatedAdam's most, in steps of the rate): {walk}")
+          f"(300 lessons on each window held fixed; the share learned at 0.01, 0.05, 0.25): {table}; the same label mass given whole",
+          f"(300 lessons at 0.05 against every twentieth at 1): {said[1]}; the stream the same to the bit at every reliability",
+          f"({sum(1 for k_ in same if k_[1] != 'mixed')} windows and states with no own act); opt_pred holds act_pred and the corrections (a group per effector), the day's Adam everything",
+          f"else, each bounded by its own norm; the gain the labels' mean weight; at weight 1 Adam to the bit ({len(same_t)} tensors after",
+          f"20 lessons); at gain 0 nothing moves; a constant gradient scaled by g, n = {n} steps (Adam's least, GatedAdam's most, in steps",
+          f"of the rate): {walk}; a night moved {nmv_} of the stream's tensors and none of act_pred's or the corrections'")
 
 
 def test_a_striatum_saved_before_r5b_loads():

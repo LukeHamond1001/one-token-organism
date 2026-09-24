@@ -7,7 +7,8 @@ window position holds each of the anatomy's channels under its field, the window
 their codes summed in the anatomy's order (`Organs.inputs`), and the waking lesson teaches a later channel's own forecast head. Since step
 R6 it also teaches each later effector's motor timing part (act_pred and the forward half, body/core/timing.py `_timing_loss`), and a body
 with later effectors has its lesson whether or not the world spoke in the window (their acts are targets on every position); act_pred and
-the correction step with an optimizer of their own, their plasticity gated by the reliability of the lesson's labels (`GatedAdam`)."""
+the correction step with an optimizer of their own, their plasticity gated by the reliability of the lesson's labels (`GatedAdam`), the
+labels act_inv reads reach them and never the stream, and each optimizer's gradient has its own bound (the language body's is as it was)."""
 import torch
 import torch.nn.functional as F
 
@@ -246,7 +247,8 @@ class CortexMixin:
                     ll = ll + 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
             # THE LATER EFFECTORS' TIMING PARTS (step R6): act_pred taught the act at each position from the stream before it (its own
             # act, or where it rested what act_inv reads moved it, weighted by act_inv's reliability), the forward half its next body sense;
-            # act_pred and the correction step with opt_pred at their labels' mean weight (body/core/timing.py GatedAdam), the rest here
+            # act_pred and the correction step with opt_pred at their labels' mean weight (body/core/timing.py GatedAdam), the rest here;
+            # act_inv's labels reach act_pred and the correction alone, never the stream (`_timing_loss`)
             mrep = {}
             for i_ in range(1, len(self.anatomy.effectors)):
                 lt_, rt_ = self._timing_loss(i_, C, obs)
@@ -264,10 +266,15 @@ class CortexMixin:
             if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+            if motor_:
+                # EACH OPTIMIZER'S GRADIENT BOUNDED BY ITS OWN NORM (the R6 verifier's fourth look): the day's parameters here, act_pred's
+                # and the corrections' per effector in _timing_step, so their labels' reliability never sets the stream's step
+                torch.nn.utils.clip_grad_norm_([p_ for g_ in self.opt_day.param_groups for p_ in g_["params"]], 1.0)
+            else:
+                torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
             self.opt_day.step()
             if motor_:
-                self._timing_step(mrep)                                # act_pred and the corrections: each effector's step at its labels' weight
+                self._timing_step(mrep, 1.0)                           # act_pred and the corrections: each effector's step at its labels' weight
             out = {"latent_cos": round(lc, 3), "forecast_cos": round(fc, 3), "n_world": int(w.sum()), "tick": self.ticks}
             if motor_:
                 out["motor"] = {k_: dict(v_, w=round(v_["w"], 4)) for k_, v_ in mrep.items()}   # the timing parts' lesson (step R6)
