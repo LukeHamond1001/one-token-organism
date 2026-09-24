@@ -10,6 +10,8 @@ actor.py        the chooser's eligibility and lesson, the actor's reliability
 night.py        dreams, night (NREM, REM, the value replay, the fade), the night's device, the sleep switch's call (the world paused)
 persistence.py  save, load, birth
 instruments.py  _bookkeep (the page, the record, the sleep switch), gauge, state, anticipation, insides
+timing.py       step R6 of the core refactor: each later effector's motor timing part (act_pred its proposal, the forward half and its
+                correction, act_inv learning online with its reliability; the waking lesson's share); the diary has no later effector
 anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
                 8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
                 `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward
@@ -19,7 +21,8 @@ anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, Rew
                 R5 its effectors: the voice is effector 0 (VoiceEffector: the lexicon E, mouth_gate, actor and "xo", its choice, act
                 and lesson today's), and each later effector (Effector) names the organs the organs build for it (acts.<name>,
                 gates.<name>, actors.<name>) and is chosen, acts and learns after the voice (`_choose_effector`, `_act_effectors`,
-                `_gate_lesson(i)`); physiology.py's SWITCHES hold the defect fixes 4, 5 and 8, off by their absence
+                `_gate_lesson(i)`); physiology.py's SWITCHES hold the defect fixes 4, 5 and 8, off by their absence; since step R6 a later
+                effector declares its body sense, its inverse model and its reflex (timing.py), and MOTOR holds their constants
 world.py        not a mixin: `Frame`, the world at one tick as the body meets it (docs/SIM_DESIGN.md 8.2; step R3: the reward sources
                 read it); since step R9 the world loop: `World` (frame, apply, pause, resume, save_state, load_state), the diary's
                 `DiaryWorld` (today's queue and face; `life.world` unless another is given; body/serve.py wraps it), the `SimWorld`

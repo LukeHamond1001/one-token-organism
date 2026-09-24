@@ -6,7 +6,8 @@ strength), `read` (recall by content: a softmax over the keys at a fixed tempera
 (`stream`, `forecast`, `readout`), the band ladder and its value heads (`band_update`, `values`), the critics (`vcrit_*`,
 `fast_*`), the striatum and working memory (`striatum_*`, `wm_*`), the gate's inputs (`widen_gate`), the losses of the night
 (`latent_loss`, `forecast_loss`). `ActTable` is a later effector's acts (the core refactor's step R5): per-joint unit rows, the per-joint
-readout, an act's row the sum of its joints'.
+readout, an act's row the sum of its joints'. `MotorTiming` is a later effector's motor timing part (step R6): act_pred, the forward half
+and its correction, act_inv.
 
 Everything learned lives in `Organs` (an nn.Module, saved with the body). The hippocampus
 is `Store`, a table of slots whose tensors are saved beside the weights. Nothing here decides
@@ -420,6 +421,13 @@ class ActTable(nn.Module):
             a = a * k + int(x)
         return a
 
+    def flat_many(self, digits):
+        """the joints' settings as tensors, one [..] (long) per joint, joint 0 first -> the flat acts [..] (step R6)"""
+        a = torch.zeros_like(digits[0])
+        for k, x in zip(self.factors, digits):
+            a = a * k + x
+        return a
+
     def split(self, v):
         """a vector over every joint's settings [.., K_1 + .. + K_J] -> one piece per joint (the actor's bias per joint)"""
         return list(torch.split(v, list(self.factors), dim=-1))
@@ -440,6 +448,44 @@ class ActTable(nn.Module):
             R = self.rows[off:off + k]; off += k
             out.append(float(sharp) * (pred @ R.t()) if pred is not None else torch.zeros(k, device=R.device))
         return out
+
+
+class MotorTiming(nn.Module):
+    """A LATER EFFECTOR'S MOTOR TIMING PART (the core refactor's step R6; docs/SIM_DESIGN.md 5.4 and 5.8: the forward model and the
+    inverse model named as one part), born from a generator of its own (the body's seed; never the global random stream):
+    - `pred`, ACT_PRED: the stream [d] -> the forecast of its own next act [d], read by the effector's per-joint readout (the words'
+      readout law: trained by squared error to the act's row, the sum of its joints' unit rows, it is the conditional mean of that row,
+      so its dot product with a joint's row is that setting's probability). Born unsure, as latent_pred is.
+    - `fwd`, THE FORWARD HALF (when the effector declares a body sense of `sense_n` numbers): the stream at a position [d] -> its body
+      sense at the next position [sense_n]; the stream there holds the act just taken, so it foresees the act's consequence. Born unsure.
+    - `cor`, ITS CORRECTION: the error of that forecast, the sense felt now less the sense foreseen [sense_n] -> a term of the proposal
+      [d], born at zero (the reach corrected within a chunk as far as the lesson finds the error worth reading).
+    - `inv`, ACT_INV (when declared): its body sense at t and at t+1 -> its per-joint act's logits [K_1 + .. + K_J], through `hidden`
+      tanh units; its input is the pair as the sense and its change (a fixed linear recoding of the pair). It learns online from the
+      body's own acts (body/core/timing.py), never through the waking lesson."""
+
+    def __init__(self, factors, d, sense_n, inverse, hidden, gen):
+        super().__init__()
+        self.factors = tuple(int(k) for k in factors); self.sense_n = int(sense_n); self.inverse = bool(inverse)
+        self.pred = nn.Linear(d, d)
+        with torch.no_grad():
+            self.pred.weight.copy_(torch.randn(d, d, generator=gen) * 4e-4); self.pred.bias.zero_()
+        if self.sense_n:
+            self.fwd = nn.Linear(d, self.sense_n)
+            self.cor = nn.Linear(self.sense_n, d, bias=False)
+            with torch.no_grad():
+                self.fwd.weight.copy_(torch.randn(self.sense_n, d, generator=gen) * 4e-4); self.fwd.bias.zero_(); self.cor.weight.zero_()
+        if self.inverse:
+            h = int(hidden); n_in = 2 * self.sense_n
+            self.inv = nn.Sequential(nn.Linear(n_in, h), nn.Tanh(), nn.Linear(h, sum(self.factors)))
+            with torch.no_grad():
+                self.inv[0].weight.copy_(torch.randn(h, n_in, generator=gen) / math.sqrt(float(n_in))); self.inv[0].bias.zero_()
+                self.inv[2].weight.copy_(torch.randn(sum(self.factors), h, generator=gen) / math.sqrt(float(h))); self.inv[2].bias.zero_()
+
+    def inverse_logits(self, s0, s1):
+        """act_inv: the sense at t [.., sense_n] and at t+1 -> one piece of logits per joint, [.., K_j] each"""
+        z = self.inv(torch.cat([s0, s1 - s0], dim=-1))
+        return list(torch.split(z, list(self.factors), dim=-1))
 
 
 class Block(nn.Module):
@@ -628,6 +674,21 @@ class Organs(nn.Module):
                     self.gates[e.name] = gt
                     self.actors[e.name] = nn.Linear(1, 1)          # a placeholder until the striatum is sized (as the voice's actor)
             self.register_buffer("stri_mline", torch.full((len(motor), 0), -1, dtype=torch.long))   # their striatal delay lines (sized with the striatum)
+            # THE MOTOR TIMING PART (the core refactor's step R6, docs/SIM_DESIGN.md 5.4 and 5.8): each later effector's act_pred, its
+            # forward half and correction when it declares a body sense, its act_inv when it declares one (MotorTiming above). Built
+            # after the effectors' organs, from a generator of its own seeded by the body's seed, with the global random stream left where
+            # it was, so the diary's organs and the effectors' tables, gates and actors are born exactly as before beside it
+            chans = {c.name: c for c in (channels or [])}
+            g_tim = torch.Generator().manual_seed(int(born_seed) + 32452843)
+            with torch.random.fork_rng(devices=[]):
+                self.timing = nn.ModuleDict()
+                for e in motor:
+                    sn = 0
+                    if getattr(e, "sense", None) is not None:
+                        if e.sense not in chans:
+                            raise ValueError(f"Organs: the effector {e.name!r} senses its body on {e.sense!r}, a channel the organs were not given")
+                        sn = len(e.sense_idx) if e.sense_idx is not None else int(chans[e.sense].size)
+                    self.timing[e.name] = MotorTiming(e.factors, d, sn, bool(getattr(e, "inverse", False)), int(getattr(e, "inv_hidden", 64)), g_tim)
 
     # ---- the cortex over a window ----
 

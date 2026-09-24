@@ -1,6 +1,8 @@
 """the physiology table (moved from body/life.py, review 2026-09-22 section 4, step 2): `PHYSIOLOGY`, every disclosed constant,
-grouped by organ; and `SWITCHES`, the core refactor's defect-fix switches, declared and off by their absence (docs/SIM_DESIGN.md 8.4). body/life.py re-exports it (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save
-plus ops/BASE_FLAGS.txt (ops/served_cfg.py prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
+grouped by organ; `SWITCHES`, the core refactor's defect-fix switches, declared and off by their absence (docs/SIM_DESIGN.md 8.4); and
+`MOTOR`, the motor timing part's constants (step R6), absent from a body's cfg unless given. body/life.py re-exports PHYSIOLOGY
+(`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
+prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
 
 PHYSIOLOGY = dict(
     # The disclosed constants, grouped by organ. The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
@@ -256,4 +258,16 @@ SWITCHES = dict(
     # defect 8 (step R5): 1 = the gate's credit sums the dopamine from the tick after the act on (the act's own consequences), not from
     # the act's own tick, whose dopamine was computed before the act (unbiased, but about 21 percent more noise)
     elig_from=0,
+)
+
+# THE MOTOR TIMING PART'S CONSTANTS (the core refactor's step R6, docs/SIM_DESIGN.md 5.4 and 5.8; body/core/timing.py): declared here
+# and ABSENT FROM A BODY'S CFG unless given (`cfg.get(name, MOTOR[name])` reads them), so the language body, which has no motor
+# effector, gains no key (8.3, item 4) and its pinned digests stay what they were. A body with motor effectors (the sim) may set them
+# at birth and keeps them in its save. Life.__init__ knows them as it knows PHYSIOLOGY's keys and the SWITCHES.
+MOTOR = dict(
+    # act_inv's online rate (Adam, one step a tick of its own act): the inverse model learns from the body's own acts from birth
+    act_inv_lr=1e-3,
+    # act_inv's running reliability: the critics' estimator (the running moments of prediction and outcome, decaying over this many
+    # samples; zero until 64 samples), each sample one setting of one joint of an own act (its label against its efference copy)
+    act_inv_tau=8192,
 )

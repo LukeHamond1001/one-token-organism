@@ -31,7 +31,11 @@ voice's lesson on its own gate, buffer and baseline; its actor as the voice's). 
 proposes nothing and the actor's bias alone shapes its draws. The defect fixes 4, 5 and 8 are switches (physiology.py `SWITCHES`), off
 by their absence. STEP R9 wires the world (body/core/world.py): a channel that declares no observation of its own is a channel of the
 world's frames (`Channel.observe`: its observation in the frame the tick is lived on, `life.world.now`, under its name), and an
-effector's gate inputs and cost read that frame. body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its
+effector's gate inputs and cost read that frame. STEP R6 wires the motor timing part (SIM_DESIGN.md 5.4 and 5.8; body/core/timing.py): a
+later effector's proposal is its act_pred head's (`propose`), corrected by the error of the forward half when it declares a body sense
+(`sense`, a vector channel, and `sense_idx`, its own numbers there); it may declare an inverse model (`inverse`, act_inv, over its
+sense) and a reflex (`reflex`, spinal: the act it forces this tick, which stops a chunk); its chunks and learned stops run under
+chunk_gate. The voice declares none of it. body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its
 reward equal to today's rule, its input sum, window and heads equal to today's, and its gate's lesson equal to today's. The anatomy
 names the organs and never holds them (no module, no tensor: the organs are the body's and are saved with it).
 Building an anatomy builds no module, draws no random number and touches no life (SIM_DESIGN.md 8.3, item 4); a channel and a reward
@@ -143,7 +147,14 @@ class Effector:
     declare a cost of its own; under cost_in_reward it reaches neither the reward nor the gate's lesson: see EffortReward). 8.2
     sketched gate_inputs(frame, life) and cost(act, frame): the effector's working state and the life are passed as well, since the
     anatomy keeps no state of its own and the constants are the life's. The frame is the one the tick is lived on (step R9: the
-    world's; a gate's own input may read the world's observations there)."""
+    world's; a gate's own input may read the world's observations there).
+    Step R6, THE MOTOR TIMING PART (SIM_DESIGN.md 5.4 and 5.8; body/core/timing.py), built for every later effector by the organs
+    (timing.<name>) and declared here: `sense` names a vector channel that holds its body sense (the arm's joint angles and
+    velocities) and `sense_idx` its own numbers in it (None: all of them); the forward half then foresees that sense at the next
+    position and the error of its forecast corrects the proposal. `inverse` gives it act_inv, a small network of `inv_hidden` units
+    from its sense at t and t+1 to its per-joint act, learning online from its own acts (the grip and the gaze have none at birth).
+    `propose` is act_pred's proposal; `reflex` is its spinal reflex (none by default), the act it forces on the world this tick,
+    which stops a chunk and is sensed, never heard as its own act."""
     name: str
     factors: list
     rest_id: Optional[int] = None
@@ -155,6 +166,10 @@ class Effector:
     field: Optional[str] = None           # the window position's key for its act (default its name)
     n_in: int = 1                         # its gate's own inputs (the base: its own act last tick)
     effort: float = 0.0                   # the fatigue an act costs (the base's cost)
+    sense: Optional[str] = None           # step R6: the vector channel of its body sense (None: no forward half)
+    sense_idx: Optional[list] = None      # its own numbers in that channel (None: all)
+    inverse: bool = False                 # an inverse model (act_inv) from birth, over its sense
+    inv_hidden: int = 64                  # act_inv's hidden units
 
     def __post_init__(self):
         if self.organ is None:
@@ -184,10 +199,19 @@ class Effector:
         return float(self.effort)
 
     def propose(self, life, C):
-        """its proposal (step R5): the vector its per-joint readout reads, each joint's logits the readout's sharpness times the
-        proposal's cosine with that joint's rows, or None (every setting of every joint equally likely, the striatal actor's bias
-        alone shaping the draw). The voice's is the words' forecast, read in `_choose` as always; a later effector's proposal head
-        (act_pred) comes with step R6 (SIM_DESIGN.md 8.4), so until then it proposes nothing"""
+        """its proposal: the vector its per-joint readout reads, each joint's logits the readout's sharpness times the proposal's dot
+        product with that joint's rows, or None (every setting of every joint equally likely, the striatal actor's bias alone shaping
+        the draw). Step R6: act_pred's, the forecast of its own next act from the stream `C` (m.timing[name].pred), plus, when it
+        declares a body sense, the forward half's correction of the error its sense shows now (`life._timing_propose`,
+        body/core/timing.py). A body's effector may add to it (the gaze's born orienting, SIM_DESIGN.md 5.8)."""
+        return life._timing_propose(self, C)
+
+    def reflex(self, frame, life, state):
+        """ITS SPINAL REFLEX (step R6; SIM_DESIGN.md 5.5): the act the reflex forces on the world this tick, or None. The base effector
+        has none. A reflex stops a chunk under way; its act goes to the world while the effector's own act is its rest (no gate draw,
+        no efference copy: the cortex senses it through the body, act_pred's target there is act_inv's reading of what moved it); its
+        tick gives the gate no eligibility and the actor no credit. `state` is the effector's working state (life.motor), where a
+        reflex that lasts keeps its count."""
         return None
 
 
@@ -210,6 +234,10 @@ class VoiceEffector(Effector):
 
     def cost(self, act, frame, life):
         return float(life.cfg["symbol_cost"])
+
+    def propose(self, life, C):
+        """the voice's proposal is the words' forecast, read in `_choose` as always (it has no act_pred)"""
+        return None
 
 
 @dataclass(eq=False)
@@ -306,6 +334,12 @@ class Anatomy:
     def effector(self, name):
         return next(e for e in self.effectors if e.name == name)
 
+    def sense_size(self, e):
+        """step R6: the number of body-sense numbers effector `e` reads (0: none)"""
+        if e.sense is None:
+            return 0
+        return len(e.sense_idx) if e.sense_idx is not None else int(self.channel(e.sense).size)
+
     @property
     def partner(self):
         """the turn-taking source's channel, or None"""
@@ -364,6 +398,8 @@ class Anatomy:
             raise ValueError(f"anatomy: effector 0 ({v.name!r}) must be the voice (VoiceEffector): one choice among the words' {w.size} symbols from "
                              f"the table it shares with the ear (organ {w.organ!r}), its gate mouth_gate, its actor 'actor', its act the window's 'xo'; "
                              f"it declares factors {v.factors}, organ {v.organ!r}, gate {v.gate!r}, actor {v.actor!r}, field {v.field!r}")
+        if v.sense is not None or v.sense_idx is not None or v.inverse:
+            raise ValueError(f"anatomy: the voice ({v.name!r}) has no motor timing part (its proposal is the words' forecast)")
         chan_names, chan_fields = {c.name for c in self.channels}, {c.field for c in self.channels}
         seen_fields = set()
         for e in self.effectors[1:]:
@@ -383,6 +419,20 @@ class Anatomy:
                 raise ValueError(f"anatomy: effector {e.name!r} reserves acts of a factored alphabet (its joints are drawn apart)")
             if int(e.n_in) < 0:
                 raise ValueError(f"anatomy: effector {e.name!r} declares {e.n_in} gate inputs")
+            # step R6: its body sense (a vector channel, its own numbers in it) and its inverse model over that sense
+            if e.sense is not None:
+                sc = next((c for c in self.channels if c.name == e.sense), None)
+                if sc is None or sc.kind != "vector":
+                    raise ValueError(f"anatomy: effector {e.name!r} senses its body on {e.sense!r}, not a vector channel of this anatomy")
+                idx = list(e.sense_idx) if e.sense_idx is not None else list(range(int(sc.size)))
+                if not idx or len(set(int(j) for j in idx)) != len(idx) or any(not 0 <= int(j) < int(sc.size) for j in idx):
+                    raise ValueError(f"anatomy: effector {e.name!r}'s own numbers {e.sense_idx} in the {sc.size} of {e.sense!r}")
+            elif e.sense_idx is not None:
+                raise ValueError(f"anatomy: effector {e.name!r} declares its own numbers of no sense")
+            if e.inverse and e.sense is None:
+                raise ValueError(f"anatomy: effector {e.name!r} declares an inverse model and no body sense for it to read")
+            if int(e.inv_hidden) < 1:
+                raise ValueError(f"anatomy: effector {e.name!r}'s inverse model of {e.inv_hidden} units")
         if not self.rewards:
             raise ValueError("anatomy: no reward source (source 0 is the world's judgment)")
         for s in self.rewards:

@@ -4,7 +4,9 @@ waking lesson (`_wake_lesson`), and the readout's calibrated sharpness (`_sharp_
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Since the core refactor's step R4 (docs/SIM_DESIGN.md 8.4) a
 window position holds each of the anatomy's channels under its field, the window's tensors are per channel, the stream's input is
-their codes summed in the anatomy's order (`Organs.inputs`), and the waking lesson teaches a later channel's own forecast head."""
+their codes summed in the anatomy's order (`Organs.inputs`), and the waking lesson teaches a later channel's own forecast head. Since step
+R6 it also teaches each later effector's motor timing part (act_pred and the forward half, body/core/timing.py `_timing_loss`), and a body
+with later effectors has its lesson whether or not the world spoke in the window (their acts are targets on every position)."""
 import torch
 import torch.nn.functional as F
 
@@ -217,7 +219,8 @@ class CortexMixin:
                     else:
                         w[t] = 0.0                                 # unsure: nothing owed
             self._wake_recall_targets = getattr(self, "_wake_recall_targets", 0) + n_rec
-        if float(w.sum()) < 1:
+        motor_ = len(self.anatomy.effectors) > 1                   # step R6: a later effector's acts are targets whether or not the world spoke
+        if float(w.sum()) < 1 and not motor_:
             return None
         m = self.m; m.train()
         try:
@@ -238,6 +241,13 @@ class CortexMixin:
                     with torch.no_grad():
                         tgt_ = c_.encode(m, obs[c_.name][1:])
                     ll = ll + 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
+            # THE LATER EFFECTORS' TIMING PARTS (step R6): act_pred taught the act at each position from the stream before it (its own
+            # act, or where it rested what act_inv reads moved it, weighted by act_inv's reliability), the forward half its next body sense
+            mrep = {}
+            for i_ in range(1, len(self.anatomy.effectors)):
+                lt_, rt_ = self._timing_loss(i_, C, obs)
+                if lt_ is not None:
+                    ll = ll + lt_; mrep[self.anatomy.effectors[i_].name] = rt_
             if str(self.cfg.get("rem_form", "forecast")) == "imagine":
                 fl, fc = torch.zeros((), device=self.dev), 1.0            # the forecast heads retired (§5c: their target was the stream's own dynamics)
             else:
@@ -253,6 +263,8 @@ class CortexMixin:
             torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
             self.opt_day.step()
             out = {"latent_cos": round(lc, 3), "forecast_cos": round(fc, 3), "n_world": int(w.sum()), "tick": self.ticks}
+            if motor_:
+                out["motor"] = mrep                                    # the timing parts' lesson (step R6)
         finally:
             self.opt_day.zero_grad(set_to_none=True); m.eval()
         self._wake_last = out

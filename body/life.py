@@ -27,7 +27,9 @@ effectors: the voice first (effector 0, today's code and names; `_choose` return
 (its working state in `motor`, its gates' optimizer `opt_motor`; neither exists for the diary). Since step R9 the body lives in a world
 (`life.world`, body/core/world.py; the diary's DiaryWorld, today's queue and face, unless one is given): the tick takes the world's frame
 at its senses' phase (or the frame the loop hands in) and returns its acts for the world; the sleep switch pauses the world for the
-night; body/serve.py runs it all through a WorldLoop."""
+night; body/serve.py runs it all through a WorldLoop. Since step R6 each later effector has its motor timing part (body/core/timing.py,
+the organs' m.timing[name]: act_pred its proposal, the forward half its correction, act_inv learning online with its own optimizer
+`opt_inv`) and, under chunk_gate, its chunks and learned stops; the diary has none of it."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401
@@ -37,7 +39,7 @@ import torch
 import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
-from .core.physiology import PHYSIOLOGY, SWITCHES
+from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR
 from .core.anatomy import anatomy_for
 from .core.world import World, DiaryWorld
 from .core.senses import SensesMixin
@@ -49,14 +51,15 @@ from .core.actor import ActorMixin
 from .core.night import NightMixin
 from .core.persistence import PersistenceMixin
 from .core.instruments import InstrumentsMixin
+from .core.timing import TimingMixin
 
 # `from body.life import *` gives exactly the names it gave before the split (the mixins stay reachable as attributes)
 __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
 
 
-class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin):
+class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
-        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES)   # the switches are known, off by their absence
+        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR)   # the switches and the motor constants are known, absent unless given
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
@@ -92,7 +95,15 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
             if i_ and tuple(getattr(organs.get_submodule(e_.organ), "factors", ())) != tuple(int(k_) for k_ in e_.factors):
                 raise ValueError(f"Life: the effector {e_.name!r}'s table has the joints {getattr(organs.get_submodule(e_.organ), 'factors', None)}, "
                                  f"its declaration {list(e_.factors)}")
-        _undeclared = sorted(set(getattr(organs, "acts", {}).keys()) - {e_.name for e_ in self.anatomy.effectors[1:]})
+            if i_:                                                  # step R6: its motor timing part as declared (joints, body sense, inverse model)
+                tm_ = organs.timing[e_.name] if (hasattr(organs, "timing") and e_.name in organs.timing) else None
+                want_ = (tuple(int(k_) for k_ in e_.factors), self.anatomy.sense_size(e_), bool(e_.inverse))
+                if tm_ is None or (tm_.factors, tm_.sense_n, tm_.inverse) != want_ or \
+                        (e_.inverse and tm_.inv[0].out_features != int(e_.inv_hidden)):
+                    raise ValueError(f"Life: the effector {e_.name!r}'s motor timing part (timing.{e_.name}) is "
+                                     f"{None if tm_ is None else (tm_.factors, tm_.sense_n, tm_.inverse)}, its declaration (joints, sense, inverse) {want_} "
+                                     f"(built by Organs(..., channels=anatomy.channels, effectors=anatomy.effectors))")
+        _undeclared = sorted((set(getattr(organs, "acts", {}).keys()) | set(getattr(organs, "timing", {}).keys())) - {e_.name for e_ in self.anatomy.effectors[1:]})
         if _undeclared:
             raise ValueError(f"Life: the organs hold the organs of effectors the anatomy does not declare: {_undeclared}")
         vb = str(self.cfg.get("vcrit_bands", "") or "").strip()
@@ -296,6 +307,11 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                 self.opt_motor = torch.optim.Adam(gp_, lr=float(self.cfg.get("gate_adam_lr", 1e-3)))
             else:
                 self.opt_motor = torch.optim.SGD(gp_, lr=float(self.cfg["gate_lr"]))
+            # THE INVERSE MODELS' OPTIMIZER (step R6): act_inv learns online from its own acts, a step a tick it acted, one optimizer for
+            # every effector that declares one (each lesson steps its own alone); the waking lesson never reaches it
+            ip_ = [p_ for e_ in self.anatomy.effectors[1:] if e_.inverse for p_ in self.m.timing[e_.name].inv.parameters()]
+            if ip_:
+                self.opt_inv = torch.optim.Adam(ip_, lr=float(self.cfg.get("act_inv_lr", MOTOR["act_inv_lr"])))
         # the critic's optimizer: the value heads and the Go/NoGo gates. The bands' input maps are fixed
         # (born): trained by the critic's own bootstrapped error they are the deadly triad, and at any
         # rate they ran away (1e-3: saturated by day 6, run 26; 1e-5: saturated by day 15, run 28) while
@@ -319,7 +335,8 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         """one moment of the body's clock, in eight phases (each a method below, in this order). THE WORLD LOOP (step R9): the tick is
         lived on the world's frame, `frame` when the loop hands one in, else the one its world shows at the senses' phase (the diary's:
         built there from the queue, as always); it returns the tick's acts for the world, {effector name: act} (the voice's symbol or
-        its rest, then each later effector's act or its rest), taken before the sleep switch's night rests them"""
+        its rest, then each later effector's act or its rest; step R6: its reflex's act on a tick a reflex took), taken before the sleep
+        switch's night rests them"""
         self._ring_vf.append(self.fast_value())            # the fast critic's value before this tick (the anticipation reading; the supervisor's, never the body's)
         self._decay_feelings()
         self.world.now = None                               # the frame of this tick is the one its senses take
@@ -332,6 +349,6 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew)
         acts = {self.anatomy.effectors[0].name: int(nxt)}
         for e_, st_ in zip(self.anatomy.effectors[1:], getattr(self, "motor", ())):
-            acts[e_.name] = int(st_["now"]["act"])
+            acts[e_.name] = int(st_["now"]["world"])
         self._bookkeep(u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs)
         return acts

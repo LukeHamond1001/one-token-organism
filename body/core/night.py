@@ -397,6 +397,7 @@ class NightMixin:
             self._z_prev = None; self._z_now = None; self._e_actor = None
             for st_ in getattr(self, "motor", ()):                 # the later effectors' working state begins afresh, as the voice's (step R5)
                 st_["buf"].clear(); st_["g_base"] = None; st_["e_actor"] = None; st_["acted_last"] = False; st_["now"] = None
+                st_["chunk"] = 0; st_["sense"] = None; st_["fwd"] = None; st_["err"] = None     # step R6: no chunk, no sense or foresight carried over
             if getattr(self.m, "stri_wm", 0):
                 self.m.wm_clear()
             if self.m.stri_W.numel() > 0:

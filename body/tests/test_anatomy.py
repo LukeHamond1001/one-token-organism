@@ -1,4 +1,4 @@
-"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 to R5 and R9). Run: python3 -m body.tests.test_anatomy
+"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 to R6 and R9). Run: python3 -m body.tests.test_anatomy
 (the organ tests run these too). `LanguageAnatomy(tok, cfg)` must rebuild exactly the symbols a life derived from its tokenizer before
 R2, under every constant that moves them and on a tokenizer laid out otherwise, and building it must leave the body untouched (R1). The
 life is built with it and reads its symbols and its text there, never the tokenizer; a life given the anatomy in the tokenizer's place
@@ -18,7 +18,13 @@ actor_trace_tick (the R5 verifier's three). The body lives in a world (R9): the 
 through the world loop, its sleep switch pausing the world, is the whole life before R9; a stub of the simulated world ticks a body of
 frames (its words, its face, a sense of its frames, two effectors acting on it; every learning rate at 0) through a day, a night that
 pauses it and a morning; the deadline switch is off, and on lets the world run on its own clock; the pace log records the ticks and the
-nights and changes nothing."""
+nights and changes nothing. The motor timing part (R6), on a tiny arm in a stub world (two joints, its body sense their velocities, a
+touch of pain and the parent's hand, a wall, demonstrations): built last from the body's seed and absent from the language body;
+act_inv learning online on its own acts alone, its reliability the critics' estimator; act_pred's targets position by position
+(its own acts, act_inv's reading of what moved it where it rested at act_inv's reliability, the rest for an effector with no inverse
+model), its gradient and its learning; the forward half foreseeing each tick's body sense, its error correcting the proposal and
+steering a chunk; the learned stops (act_pred's rest, the gate's own no, the reflex, the declared end, chunk_max) and the reflex's
+tick (its act to the world, no draw, no credit, no eligibility)."""
 import collections
 import math
 import os
@@ -1108,7 +1114,7 @@ def test_the_switches():
         cfg = dict(wake_ticks=100000, gate_every=10 ** 9, gate_own_draw=own, elig_from=s, fast_rls=1, fast_input="striatum", actor=1)
         torch.manual_seed(5); A = _born(_Arm(TOK, cfg), cfg); torch.manual_seed(5); B = _born(_Arm(TOK, cfg), cfg)
         _live(A, ticks=30); _live(B, ticks=30)
-        assert all(len(r_) == 7 + own for r_ in A.gate_buf) and all(len(r_) == 9 for r_ in A.motor[0]["buf"])
+        assert all(len(r_) == 7 + own for r_ in A.gate_buf) and all(len(r_) == 10 for r_ in A.motor[0]["buf"])   # R6: the reflex's flag last
         for i in (0, 1, 2):
             gA = A.m.mouth_gate if i == 0 else A.m.get_submodule(A.anatomy.effectors[i].gate)
             gB = B.m.mouth_gate if i == 0 else B.m.get_submodule(B.anatomy.effectors[i].gate)
@@ -1233,7 +1239,8 @@ def test_a_later_effector():
     new = [k for k in s3 if k not in s1]
     assert torch.equal(r1, r3) and [k for k in s3 if k in s1] == list(s1) and all(torch.equal(s1[k], s3[k]) for k in s1), "the diary's organs are built otherwise"
     assert new == ["stri_mline", "acts.arm.rows", "acts.grip.rows", "gates.arm.weight", "gates.arm.bias", "gates.grip.weight", "gates.grip.bias",
-                   "actors.arm.weight", "actors.arm.bias", "actors.grip.weight", "actors.grip.bias"], new
+                   "actors.arm.weight", "actors.arm.bias", "actors.grip.weight", "actors.grip.bias",
+                   "timing.arm.pred.weight", "timing.arm.pred.bias", "timing.grip.pred.weight", "timing.grip.pred.bias"], new   # act_pred since R6
     assert torch.equal(o3.acts["arm"].rows, o4.acts["arm"].rows) and not torch.equal(o3.acts["arm"].rows, o5.acts["arm"].rows), "the tables not the body's seed's alone"
     assert o3.acts["arm"].rows.shape == (10, 64) and torch.allclose(o3.acts["arm"].rows.norm(dim=-1), torch.ones(10))
     assert (o3.gates["arm"].in_features, o3.gates["grip"].in_features) == (64 + 5 + 1, 64 + 5 + 2)
@@ -1323,22 +1330,27 @@ def test_a_later_effector():
         M.m.in_ln = ln
     assert torch.equal(u_m, want) and not torch.equal(u_m, u_d), "the effectors' acts are not the sum's terms after its own sound"
     assert set(M.last["acts"]) == {"arm", "grip"} and set(M.insides()["effectors"]) == {"arm", "grip"}
-    # one choice read closely: the gate's probability over the floor, and the actor's bias joint by joint (no proposal before R6)
+    # one choice read closely: the gate's probability over the floor (the proposal's salience in it), and the per-joint readout of the
+    # proposal (act_pred's since R6) with the actor's bias joint by joint
     st_ = M.motor[0]; saved_ = (M.m.actors["arm"].weight.detach().clone(), M.m.actors["arm"].bias.detach().clone(), M.gen.get_state())
     with torch.no_grad():
         M.m.actors["arm"].weight.zero_(); M.m.actors["arm"].bias.copy_(torch.arange(10, dtype=torch.float32) / 3.0 - 1.5)
     C1 = M._C_last; lvl = 0.25; fr = Frame(M.ticks, {"ear": M.sil}, M.face_now)
     M._choose_effector(1, fr, C1, lvl, True)
     now = st_["now"]; beta = float(M.cfg.get("actor_beta", 1.0)); b_ = beta * torch.tanh(M.m.actors["arm"].bias.detach())
-    assert torch.allclose(now["probs"][0], torch.softmax(b_[:5], -1)) and torch.allclose(now["probs"][1], torch.softmax(b_[5:], -1)), now["probs"]
     with torch.no_grad():
-        f_ = torch.cat([C1 / math.sqrt(64.0), torch.tensor([M.fatigue / 10.0, M.mood / 6.0, M.stress / 10.0, 0.0, lvl]), torch.tensor([1.0 if st_["acted_last"] else 0.0])])
+        pr_ = M.m.timing["arm"].pred(C1); lg_ = M.m.acts["arm"].logits(pr_, float(M.m.read_sharp))
+    assert torch.allclose(now["probs"][0], torch.softmax(lg_[0] + b_[:5], -1)) and torch.allclose(now["probs"][1], torch.softmax(lg_[1] + b_[5:], -1)), now["probs"]
+    assert float(lg_[0].abs().max()) > 0, "act_pred proposed nothing"
+    with torch.no_grad():
+        sal_ = float(M.cfg["gate_salience"]) * float(pr_.norm())
+        f_ = torch.cat([C1 / math.sqrt(64.0), torch.tensor([M.fatigue / 10.0, M.mood / 6.0, M.stress / 10.0, sal_, lvl]), torch.tensor([1.0 if st_["acted_last"] else 0.0])])
         z_ = M.m.gates["arm"](f_.unsqueeze(0))[0, 0] / (1.0 + M.stress / 10.0)
     fl_ = float(M.cfg["gate_floor"]); assert abs(now["p_act"] - (fl_ + (1.0 - fl_) * float(torch.sigmoid(z_)))) < 1e-6 and torch.equal(now["feat"], f_)
     with torch.no_grad():
         M.m.actors["arm"].weight.copy_(saved_[0]); M.m.actors["arm"].bias.copy_(saved_[1])
     M.gen.set_state(saved_[2])
-    assert all(len(r_) == 7 for r_ in M.gate_buf) and all(len(r_) == 9 for st_ in M.motor for r_ in st_["buf"])
+    assert all(len(r_) == 7 for r_ in M.gate_buf) and all(len(r_) == 10 and r_[9] is False for st_ in M.motor for r_ in st_["buf"])
     for e_, st_ in zip(M.anatomy.effectors[1:], M.motor):
         assert st_["last"] and "n" in st_["last"], (e_.name, st_["last"])
         assert float(M.m.gates[e_.name].weight.detach().abs().max()) > 0 and float(M.m.actors[e_.name].weight.detach().abs().max()) > 0, e_.name
@@ -1360,8 +1372,8 @@ def test_a_later_effector():
     finally:
         os.remove(path)
     note = [l_ for l_ in said.getvalue().splitlines() if "does not declare" in l_]
-    assert len(note) == 1 and all(k_ in note[0] for k_ in ("acts.arm.rows", "gates.grip.weight", "actors.arm.weight", "stri_mline")), said.getvalue()
-    assert not hasattr(Dl, "motor") and not hasattr(Dl.m, "acts") and Dl.m.stri_W.shape[0] == 8 * (2 * V + 3)
+    assert len(note) == 1 and all(k_ in note[0] for k_ in ("acts.arm.rows", "gates.grip.weight", "actors.arm.weight", "stri_mline", "timing.arm.pred.weight")), said.getvalue()
+    assert not hasattr(Dl, "motor") and not hasattr(Dl.m, "acts") and not hasattr(Dl.m, "timing") and not hasattr(Dl, "opt_inv") and Dl.m.stri_W.shape[0] == 8 * (2 * V + 3)
     sM, sC = M.m.state_dict(), C.m.state_dict()
     assert list(sM) == list(sC) and all(torch.equal(sM[k], sC[k]) for k in sM), [k for k in sM if not torch.equal(sM[k], sC[k])]
     _live(C, ticks=10); assert C.ticks == M.ticks + 10
@@ -1929,13 +1941,700 @@ def test_the_loop_deadline_and_pace():
           "the life the same with the log and without")
 
 
+# ---------------- step R6: the motor timing part and the learned stops ----------------
+
+_STEPS = (-0.27, -0.09, 0.0, 0.09, 0.27)
+_LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+            night_rounds=1, night_starts=4, night_batch=4, rem_dreams=2, rem_steps=2)
+
+
+def _arm_world(wall=None, words=True):
+    """a stub of the simulated world for the motor timing part: a planar arm of two joints, each tick moved by the arm's act (each
+    joint's setting one of five steps, -0.27 to 0.27 rad); its body sense the joints' velocities (rad/s over the 0.15 s tick); a touch
+    of [pain, the parent's hand on the forearm]; the parent's hand moves the resting arm through the acts queued in `guide` (a
+    demonstration: the body is told nothing, it feels the hand and the motion); an optional wall on joint 0 at `wall` rad that stops
+    the arm there and hurts; a short line on the words now and then (none without `words`). It records every frame it shows and every move (the act that
+    moved the arm and who made it: "own" for the body's act to the world, "guide" for the parent's hand, "still")"""
+    from body.core.world import SimWorld
+
+    class ArmWorld(SimWorld):
+        LINE = "up we go "
+
+        def __init__(self):
+            self.t = 0; self.q = [0.0, 0.0]; self.v = [0.0, 0.0]; self.pain = 0.0; self.hand = 0.0; self.paused = False
+            self.guide = []; self.moved = []; self.shown = []; self.log = []
+
+        def frame(self):
+            assert not self.paused, "a frame taken while the world is paused"
+            obs = {"body": [self.v[0], self.v[1]], "touch": [self.pain, self.hand]}
+            k = self.t % 60 - 5
+            if words and 0 <= k < len(self.LINE):
+                obs["ear"] = TOK.token_to_id(self.LINE[k])
+            f = Frame(self.t, obs, 0.0, {"who": "parent", "q": list(self.q)})
+            self.shown.append(f); return f
+
+        def apply(self, acts):
+            assert not self.paused, "the world moved while paused"
+            a = int(acts.get("arm", 12)); who = "own" if a != 12 else "still"; self.hand = 0.0
+            if a == 12 and self.guide:
+                a = int(self.guide.pop(0)); who = "guide"; self.hand = 1.0
+            q0 = self.q[0] + _STEPS[a // 5]; q1 = self.q[1] + _STEPS[a % 5]; self.pain = 0.0
+            if wall is not None and q0 > wall:
+                q0 = wall; self.pain = 1.0
+            self.v = [(q0 - self.q[0]) / 0.15, (q1 - self.q[1]) / 0.15]; self.q = [q0, q1]
+            self.moved.append((a, who)); self.t += 1
+
+        def pause(self):
+            self.paused = True; self.log.append(("pause", self.t))
+
+        def resume(self):
+            self.paused = False; self.log.append(("resume", self.t))
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.q, self.v, self.pain, self.hand, self.guide))
+
+        def load_state(self, blob):
+            self.t, self.q, self.v, self.pain, self.hand, self.guide = pickle.loads(blob)
+    return ArmWorld()
+
+
+class _Reach(Effector):
+    """the tiny arm's reach with a withdrawal reflex (SIM_DESIGN.md 5.5, in small): on a tick of pain it reverses its last move for 2
+    ticks (the reflex's count kept in its working state)"""
+
+    def reflex(self, frame, life, state):
+        if float(frame.obs["touch"][0]) > 0.5 and not state.get("rfx_n", 0):
+            last = int(state["now"]["world"]) if state["now"] is not None else int(self.rest_id)
+            state["rfx_act"] = (4 - last // 5) * 5 + (4 - last % 5); state["rfx_n"] = 2
+        if state.get("rfx_n", 0):
+            state["rfx_n"] -= 1
+            return state["rfx_act"]
+        return None
+
+
+class _Timed(LanguageAnatomy):
+    """the diary's words and face, the arm's body sense (the joints' velocities) and a touch (pain, the parent's hand), each a channel
+    of the world's frames encoded by the face's map; an arm of two joints of five (its rest 12, both held) sensing its body, with an
+    inverse model and (reflex) the withdrawal reflex; a grip of three (its rest 1) sensing the pain alone (touch's number 0), no inverse
+    model, its end act `grip_end`; a tap of four (its rest 1, its act 3 reserved) with no body sense"""
+
+    def __init__(self, tok, cfg=None, reflex=True, grip_end=None):
+        super().__init__(tok, cfg)
+        self.channels += [Channel("body", "vector", 2, organ="face_in"), Channel("touch", "vector", 2, organ="face_in")]
+        self.effectors += [(_Reach if reflex else Effector)("arm", [5, 5], rest_id=12, effort=0.05, sense="body", inverse=True, inv_hidden=32),
+                           Effector("grip", [3], rest_id=1, effort=0.03, sense="touch", sense_idx=[0], end_id=grip_end),
+                           Effector("tap", [4], rest_id=1, reserved=[3], effort=0.02)]
+
+
+def _row(L, name, act):
+    """an act's row in its effector's table"""
+    return L.m.acts[name](torch.tensor(int(act))).detach().clone()
+
+
+def test_the_timing_part_is_built_last():
+    """anatomy 23 (step R6; SIM_DESIGN.md 5.4, 5.8 and 8.3): each later effector's motor timing part (timing.<name>: act_pred, and the
+    forward half with its correction where the effector declares a body sense, and act_inv where it declares one) is built after
+    every other organ, from a generator of its own seeded by the body's seed: the diary's organs and the effectors' tables, gates and
+    actors are born as before beside it, the global random stream is left where it was; act_pred and the forward half born unsure,
+    the correction at zero, act_inv sized by its declaration. The declaration is checked (a sense that is no vector channel, its
+    numbers out of range, an inverse model with no sense, a voice with a sense) and organs that do not match it are refused. The
+    language body has none of it: no timing organ, no optimizer, no motor state, no key in its cfg or its save; the motor constants are
+    absent from a body's cfg unless given, and known when given"""
+    from body.model import ActTable
+    from body.core.physiology import MOTOR, SWITCHES
+    a = _Timed(TOK, {}); V = a.vocab
+    assert a.check() is a and [a.sense_size(e) for e in a.effectors] == [0, 2, 1, 0]
+    torch.manual_seed(9); o1 = Organs(V, d=64, layers=2, heads=2, window=32); r1 = torch.get_rng_state()
+    torch.manual_seed(9); o3 = Organs(V, d=64, layers=2, heads=2, window=32, channels=a.channels, effectors=a.effectors, born_seed=3); r3 = torch.get_rng_state()
+    torch.manual_seed(1); o4 = Organs(V, d=64, layers=2, heads=2, window=32, channels=a.channels, effectors=a.effectors, born_seed=3)
+    torch.manual_seed(9); o5 = Organs(V, d=64, layers=2, heads=2, window=32, channels=a.channels, effectors=a.effectors, born_seed=4)
+    s1, s3, s4, s5 = o1.state_dict(), o3.state_dict(), o4.state_dict(), o5.state_dict()
+    assert torch.equal(r1, r3) and [k for k in s3 if k in s1] == list(s1) and all(torch.equal(s1[k], s3[k]) for k in s1), "the diary's organs are built otherwise"
+    new = [k for k in s3 if k not in s1]
+    tim = [k for k in new if k.startswith("timing.")]
+    assert new[:len(new) - len(tim)] == ["stri_mline", "acts.arm.rows", "acts.grip.rows", "acts.tap.rows", "gates.arm.weight", "gates.arm.bias",
+                                          "gates.grip.weight", "gates.grip.bias", "gates.tap.weight", "gates.tap.bias", "actors.arm.weight",
+                                          "actors.arm.bias", "actors.grip.weight", "actors.grip.bias", "actors.tap.weight", "actors.tap.bias"], new
+    assert tim == ["timing.arm.pred.weight", "timing.arm.pred.bias", "timing.arm.fwd.weight", "timing.arm.fwd.bias", "timing.arm.cor.weight",
+                   "timing.arm.inv.0.weight", "timing.arm.inv.0.bias", "timing.arm.inv.2.weight", "timing.arm.inv.2.bias",
+                   "timing.grip.pred.weight", "timing.grip.pred.bias", "timing.grip.fwd.weight", "timing.grip.fwd.bias", "timing.grip.cor.weight",
+                   "timing.tap.pred.weight", "timing.tap.pred.bias"] and new[-len(tim):] == tim, tim
+    # the effectors' tables as step R5 drew them (their generator's draws, in their order, untouched by the timing part's)
+    g_ = torch.Generator().manual_seed(3 + 15485863)
+    for e in a.effectors[1:]:
+        assert torch.equal(o3.acts[e.name].rows, ActTable(e.factors, 64, g_).rows), e.name
+    assert all(torch.equal(s3[k], s4[k]) for k in tim) and not any(torch.equal(s3[k], s5[k]) for k in tim if "weight" in k and "cor" not in k), \
+        "the timing part is not the body's seed's alone"
+    t_ = o3.timing["arm"].requires_grad_(False)
+    assert float(t_.pred.weight.std()) < 1e-3 and float(t_.pred.bias.abs().max()) == 0.0 and float(t_.fwd.weight.std()) < 1e-3
+    assert float(t_.cor.weight.abs().max()) == 0.0 and t_.fwd.weight.shape == (2, 64) and t_.cor.weight.shape == (64, 2)
+    assert t_.inv[0].weight.shape == (32, 4) and t_.inv[2].weight.shape == (10, 32) and (t_.factors, t_.sense_n, t_.inverse) == ((5, 5), 2, True)
+    assert not hasattr(o3.timing["grip"], "inv") and not hasattr(o3.timing["tap"], "fwd") and o3.timing["grip"].sense_n == 1
+    lg = t_.inverse_logits(torch.randn(3, 2), torch.randn(3, 2))
+    assert [x.shape for x in lg] == [(3, 5), (3, 5)]
+    t_.requires_grad_(True)
+    # the declaration checked
+    bad = {"a sense on a symbol channel": dict(sense="ear"), "a sense on no channel": dict(sense="nose"), "numbers out of range": dict(sense_idx=[0, 2]),
+           "numbers twice": dict(sense_idx=[1, 1]), "numbers of no sense": dict(sense=None, inverse=False, sense_idx=[0]),
+           "an inverse model with no sense": dict(sense=None), "an inverse model of no unit": dict(inv_hidden=0)}
+    for what, ch in bad.items():
+        b = _Timed(TOK, {})
+        for k_, v_ in ch.items():
+            setattr(b.effectors[1], k_, v_)
+        try:
+            b.check()
+        except ValueError:
+            continue
+        raise AssertionError(f"the anatomy took {what}")
+    b = _Timed(TOK, {}); b.effectors[0].sense = "body"
+    try:
+        b.check()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("the anatomy took a voice with a body sense")
+    # organs that do not match the declaration
+    cfg = dict(wake_ticks=100000)
+    refused = []
+    other = _Timed(TOK, cfg); other.effectors[1].inv_hidden = 16
+    blind = _Timed(TOK, cfg); blind.effectors[2].sense = None; blind.effectors[2].sense_idx = None
+    noinv = _Timed(TOK, cfg); noinv.effectors[1].inverse = False
+    o6 = Organs(V, d=64, layers=2, heads=2, window=32, channels=a.channels, effectors=a.effectors, born_seed=3)
+    del o6.timing["tap"]
+    for what, call in (("an inverse model of other units", lambda: Life(o3, other)), ("a sense the effector does not declare", lambda: Life(o3, blind)),
+                       ("an inverse model the effector does not declare", lambda: Life(o3, noinv)), ("no timing part", lambda: Life(o6, _Timed(TOK, cfg)))):
+        try:
+            call()
+        except ValueError:
+            refused.append(what); continue
+        raise AssertionError(f"the life took {what}")
+    # the language body has none of it
+    D = _born(TOK, cfg)
+    assert not hasattr(D.m, "timing") and not hasattr(D, "opt_inv") and not hasattr(D, "motor")
+    assert not any(k in D.cfg for k in MOTOR) and not any(k in PHYSIOLOGY or k in SWITCHES for k in MOTOR)
+    torch.manual_seed(9); o7 = Organs(V, d=64, layers=2, heads=2, window=32, channels=LanguageAnatomy(TOK, {}).channels,
+                                      effectors=LanguageAnatomy(TOK, {}).effectors); r7 = torch.get_rng_state()
+    assert torch.equal(r7, r1) and list(o7.state_dict()) == list(s1) and not hasattr(o7, "timing")
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        _live(D, ticks=20); D.save(path); blob = torch.load(path, map_location="cpu", weights_only=False)
+    finally:
+        os.remove(path)
+    assert "motor" not in blob["life"] and not any(k.startswith("timing.") for k in blob["organs"])
+    import contextlib
+    import io
+    said = io.StringIO()
+    with contextlib.redirect_stdout(said):
+        L = _born(_Timed(TOK, dict(cfg, act_inv_lr=0.01, act_inv_tau=500)), dict(cfg, act_inv_lr=0.01, act_inv_tau=500))
+    assert "unknown" not in said.getvalue() and L.cfg["act_inv_lr"] == 0.01 and L._motor_const("act_inv_tau") == 500
+    assert abs(L.opt_inv.param_groups[0]["lr"] - 0.01) < 1e-12 and [id(p_) for p_ in L.opt_inv.param_groups[0]["params"]] == [id(p_) for p_ in L.m.timing["arm"].inv.parameters()]
+    L2 = _born(_Timed(TOK, cfg), cfg)
+    assert L2._motor_const("act_inv_lr") == MOTOR["act_inv_lr"] and "act_inv_lr" not in L2.cfg
+    print(f"anatomy 23: the timing part built last from the body's seed ({len(tim)} tensors: act_pred for three effectors, the forward",
+          f"half for two, act_inv for the arm), the diary's organs and the effectors' tables as before, the global stream untouched;",
+          f"the declaration checked ({len(bad) + 1} faults refused); refused: {'; '.join(refused)}; the language body has none of it")
+
+
+def test_act_inv_learns_online():
+    """anatomy 24 (step R6; SIM_DESIGN.md 5.4): act_inv learns online from birth on the body's own acts, the efference copy the label:
+    one lesson on the tick after each own act, on the pair of body senses the act moved between (the frames the world showed) and the
+    act the world applied; never after a rest, a demonstration (the parent's hand) or a night; the grip, with no inverse model, none.
+    Its reliability is the critics' estimator on the label it gave before each lesson against the efference copy (recomputed here,
+    equal to the bit), zero until 64 samples. With every other learning rate at 0 only act_inv moves. It learns: its labels right on
+    nearly every joint of the last own acts, its reliability high. The reliability survives the night and a save and a load"""
+    from body.core.world import WorldLoop
+    cfg = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.85, fast_rls=0, act_inv_lr=1e-2, act_inv_tau=2000)
+    w = _arm_world(); torch.manual_seed(5); L = _born_in(_Timed(TOK, cfg), cfg, w)
+    p0 = {k: v.detach().clone() for k, v in L.m.named_parameters()}
+    lessons = []; pairs = []
+    f_les, f_rel = L._inverse_lesson, L._inv_rel_update
+
+    def les(i, s0, s1, act):
+        with torch.no_grad():
+            lab = [int(x.argmax()) for x in L.m.timing["arm"].inverse_logits(s0, s1)]
+        out = f_les(i, s0, s1, act)
+        lessons.append((L.ticks, i, s0.clone(), s1.clone(), act, lab, L.motor[0]["inv_gain"])); return out
+
+    def rel(e, st, label, true):
+        pairs.append((e.name, list(label), list(true))); return f_rel(e, st, label, true)
+    L._inverse_lesson = les; L._inv_rel_update = rel
+    run = WorldLoop(L); rec = []
+    for t in range(1500):
+        if t % 50 == 20:
+            w.guide.extend([7, 13, 8])                            # the parent's hand, now and then, on the resting arm
+        run.step(); rec.append(dict(L.last["acts"]["arm"]))
+    guided = [t for t, (a_, who) in enumerate(w.moved) if who == "guide"]
+    want = [t + 1 for t in range(len(rec) - 1) if rec[t]["acted"]]
+    assert [l_[0] for l_ in lessons] == want and len(guided) >= 20, (len(lessons), len(want), len(guided))
+    for tk, i, s0, s1, act, lab, g_ in lessons:
+        t = tk - 1
+        assert i == 1 and act == rec[t]["act"] == w.moved[t][0] and w.moved[t][1] == "own", (tk, act, rec[t], w.moved[t])
+        assert torch.equal(s0, torch.tensor(w.shown[t].obs["body"], dtype=torch.float32)) and torch.equal(s1, torch.tensor(w.shown[t + 1].obs["body"], dtype=torch.float32))
+    assert not any(t + 1 in set(want) for t in guided), "a demonstration was taken for an own act"
+    # the reliability: the critics' estimator on the labels given before each lesson, recomputed
+    assert [p_[1] for p_ in pairs] == [l_[5] for l_ in lessons] and all(p_[0] == "arm" for p_ in pairs)
+    assert all(p_[2] == [l_[4] // 5, l_[4] % 5] for p_, l_ in zip(pairs, lessons))
+    m_ = [0.0] * 6; d_ = 1.0 - 1.0 / 2000.0; gains = []
+    for _, label, true in pairs:
+        for j in range(2):
+            for k in range(5):
+                v = 1.0 if label[j] == k else 0.0; g = 1.0 if true[j] == k else 0.0
+                m_[0] = d_ * m_[0] + 1.0; m_[1] = d_ * m_[1] + v; m_[2] = d_ * m_[2] + g; m_[3] = d_ * m_[3] + v * v; m_[4] = d_ * m_[4] + g * g; m_[5] = d_ * m_[5] + v * g
+        n = m_[0]; mv, mg = m_[1] / n, m_[2] / n; var_v, var_g = m_[3] / n - mv * mv, m_[4] / n - mg * mg; cov = m_[5] / n - mv * mg
+        gains.append((float(max(0.0, min(1.0, cov / max(var_v, 1e-9)))) if n > 64 else 0.0,
+                      float(cov / math.sqrt(max(var_v, 1e-9) * max(var_g, 1e-9))) if n > 64 else 0.0))
+    st = L.motor[0]
+    assert st["inv_m"] == m_ and (st["inv_gain"], st["inv_corr"]) == gains[-1] and [l_[6] for l_ in lessons] == [g_[0] for g_ in gains]
+    assert all(g_ == (0.0, 0.0) for g_ in gains[:6]) and gains[6] != (0.0, 0.0), gains[:8]
+    assert st["inv_n"] == len(lessons) and L.motor[1]["inv_n"] == 0 and L.motor[1]["inv_m"] == [0.0] * 6 and not hasattr(L.m.timing["grip"], "inv")
+    # only act_inv moved
+    moved = sorted(k for k, v in L.m.named_parameters() if not torch.equal(v, p0[k]))
+    assert moved == ["timing.arm.inv.0.bias", "timing.arm.inv.0.weight", "timing.arm.inv.2.bias", "timing.arm.inv.2.weight"], moved
+    # it learned
+    hits = [sum(1 for l_ in lessons[-100:] if l_[5][j] == [l_[4] // 5, l_[4] % 5][j]) / 100.0 for j in (0, 1)]
+    first = [sum(1 for l_ in lessons[:50] if l_[5][j] == [l_[4] // 5, l_[4] % 5][j]) / 50.0 for j in (0, 1)]
+    assert min(hits) >= 0.95 and st["inv_gain"] >= 0.9 and max(first) < 0.8, (first, hits, st["inv_gain"])
+    rep = L.insides()["effectors"]["arm"]["timing"]
+    assert rep["inv_gain"] == round(st["inv_gain"], 3) and rep["inv_n"] == len(lessons)
+    # the night keeps the reliability and leaves no pair across it (the sleep switch's night, then a night by hand); a save and a load
+    # keep it
+    L.cfg["wake_ticks"] = L.sleep_pressure + 3; n_les = len(lessons); kept = []
+    f_night = L.night
+
+    def night_spy():
+        kept.append((list(st["inv_m"]), st["inv_gain"], st["inv_corr"], st["inv_n"])); out = f_night()
+        kept.append((list(st["inv_m"]), st["inv_gain"], st["inv_corr"], st["inv_n"])); return out
+    L.night = night_spy
+    while L.nights == 0:
+        run.step(); rec.append(dict(L.last["acts"]["arm"]))
+    dusk = L.ticks - 1; L.cfg["wake_ticks"] = 100000
+    assert len(kept) == 2 and kept[0] == kept[1] and st["sense"] is None and st["now"] is None and not (L.last_night or {}).get("error")
+    for _ in range(6):
+        run.step(); rec.append(dict(L.last["acts"]["arm"]))
+    assert len(lessons) > n_les and all(l_[0] != dusk + 1 for l_ in lessons[n_les:]), "a lesson on the pair across the night"
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path); blob = torch.load(path, map_location="cpu", weights_only=False)
+        w2 = _arm_world(); w2.load_state(w.save_state())
+        C = Life.load(path, _Timed(TOK, L.cfg), save_path=None, world=w2)
+    finally:
+        os.remove(path)
+    assert sorted(blob["life"]["motor"]) == ["arm", "grip", "tap"] and blob["life"]["motor"]["arm"]["inv_m"] == st["inv_m"]
+    assert C.motor[0]["inv_m"] == st["inv_m"] and (C.motor[0]["inv_gain"], C.motor[0]["inv_corr"], C.motor[0]["inv_n"]) == (st["inv_gain"], st["inv_corr"], st["inv_n"])
+    sL, sC = L.m.state_dict(), C.m.state_dict()
+    assert all(torch.equal(sL[k], sC[k]) for k in sL if k.startswith("timing.")) and C.opt_inv is not None
+    run2 = WorldLoop(C)
+    for _ in range(5):
+        run2.step()
+    print(f"anatomy 24: act_inv learned online on {len(lessons)} own acts, one lesson the tick after each (never after a rest or one of",
+          f"{len(guided)} demonstrations), its pair the frames' senses; its reliability the critics' estimator, equal to the bit, zero",
+          f"for the first 6 acts; only act_inv moved; its labels right on {first} of the first 50 joints and {hits} of the last 100,",
+          f"its reliability {st['inv_gain']:.3f}; kept through the night (no pair across it) and a save and a load")
+
+
+def _timing_ref(L, i, C, obs, gain):
+    """act_pred's and the forward half's lesson recomputed position by position (the reference): returns (the proposal's loss, the
+    forward loss, the targets, the weights, each position's kind)"""
+    e = L.anatomy.effectors[i]; tm = L.m.timing[e.name]; tab = L.m.get_submodule(e.organ)
+    acts = [int(x) for x in obs[e.name]]; T = len(acts); rest = int(e.rest_id)
+    s = obs[e.sense][:, list(e.sense_idx) if e.sense_idx is not None else slice(None)].float() if e.sense is not None else None
+    num = torch.zeros(()); den = 0.0; tg = []; ws = []; kinds = []
+    with torch.no_grad():
+        for t in range(1, T):
+            p = tm.pred(C[t - 1])
+            if s is not None:
+                p = p + tm.cor(s[t] - tm.fwd(C[t - 1]))
+            if acts[t] != rest:
+                tgt, wt, kd = acts[t], 1.0, "own"
+            elif e.inverse and t < T - 1:
+                tgt, wt, kd = tab.flat([int(x.argmax()) for x in tm.inverse_logits(s[t], s[t + 1])]), float(gain), "read"
+            elif e.inverse:
+                tgt, wt, kd = rest, 0.0, "last"
+            else:
+                tgt, wt, kd = rest, 1.0, "rest"
+            num = num + wt * 0.5 * ((p - tab(torch.tensor(tgt))) ** 2).sum(); den += wt
+            tg.append(tgt); ws.append(wt); kinds.append(kd)
+        lf = None
+        if s is not None:
+            lf = sum(0.5 * float(((tm.fwd(C[t]) - s[t + 1]) ** 2).sum()) for t in range(T - 1)) / (T - 1)
+    return float(num) / max(den, 1e-6), lf, tg, ws, kinds
+
+
+def test_act_pred_targets():
+    """anatomy 25 (step R6; SIM_DESIGN.md 5.4): act_pred's lesson over the waking window, recomputed position by position: the proposal
+    at position t from the stream at t-1 and the forward half's error at t; its target the act at t where the effector acted (its
+    efference copy, weight 1); where it rested (still, moved by the parent's hand, or by its reflex), act_inv's label for the senses at
+    t and t+1 at act_inv's reliability (none at the last position, whose next sense is not felt yet); for the grip and the tap (no
+    inverse model) their rest, weight 1. The window holds a reflex's tick as a rest (the world moved by the reflex's act). Once act_inv
+    has learned, its label at a demonstrated position is the act the parent's hand made. The lesson's gradient reaches act_pred, the
+    correction, the forward half and the cortex, never act_inv. A window in which the world never spoke still teaches them; and the
+    lesson teaches: on a window held fixed act_pred's and the forward half's errors fall and act_pred's best guesses come to match"""
+    from body.core.world import WorldLoop
+    cfg = dict(_LR0, wake_ticks=100000, wake_every=10 ** 6, gate_every=8, write_floor=1e-30, gate_floor=0.5, fast_rls=0, act_inv_lr=1e-2, act_inv_tau=2000)
+    w = _arm_world(wall=0.45); torch.manual_seed(5); L = _born_in(_Timed(TOK, cfg), cfg, w)
+    run = WorldLoop(L); rec = []
+    for t in range(1600):
+        if t >= 1600 - 40:
+            w.guide[:] = [[6, 7, 11, 13, 8, 2][t % 6]]                 # the parent's hand on every resting tick of the last forty (never into the wall)
+        elif t % 40 == 5:
+            w.guide.extend([6, 11])
+        run.step(); rec.append(dict(L.last["acts"]["arm"]))
+    rfx = [t for t, r_ in enumerate(rec) if r_["world"] != r_["act"]]
+    assert len(rfx) >= 4 and all(rec[t]["act"] == 12 and not rec[t]["acted"] for t in rfx), len(rfx)
+    obs, whos, bundles, reads = L._window_tensors(); T = obs["arm"].shape[0]; t0 = L.ticks - T
+    assert T == 32 and [int(x) for x in obs["arm"]] == [rec[t0 + k]["act"] for k in range(T)], "the window's acts are not the efference copies"
+    assert torch.equal(obs["body"], torch.tensor([w.shown[t0 + k].obs["body"] for k in range(T)], dtype=torch.float32))
+    with torch.no_grad():
+        C = L.m.stream(L.m.inputs(L.anatomy, obs, whos, bundles))
+    kinds_all = collections.Counter()
+    for i in (1, 2, 3):
+        for gain in (0.37, 0.0, 1.0):
+            if i == 1:
+                L.motor[0]["inv_gain"] = gain
+            lt, rp = L._timing_loss(i, C, obs)
+            lp_ref, lf_ref, tg, ws, kinds = _timing_ref(L, i, C, obs, gain if i == 1 else 0.0)
+            assert abs(rp["pred"] - round(lp_ref, 4)) <= 1e-4 and (lf_ref is None) == ("fwd" not in rp), (i, gain, rp, lp_ref, lf_ref)
+            want = lp_ref + (lf_ref or 0.0)
+            assert abs(float(lt.detach()) - want) <= 1e-5 * max(1.0, abs(want)), (i, gain, float(lt.detach()), want)
+            if lf_ref is not None:
+                assert abs(rp["fwd"] - round(lf_ref, 4)) <= 1e-4, (rp, lf_ref)
+            if gain == 0.37:
+                kinds_all.update(f"{L.anatomy.effectors[i].name}:{k_}" for k_ in kinds)
+    L.motor[0]["inv_gain"] = 0.37
+    # a window that ends at a rest: its last position has no label (its next sense not felt yet), weight 0
+    k_end = max(k for k in range(T) if int(obs["arm"][k]) == 12 and k >= 8)
+    obs_c = {k_: v_[:k_end + 1] for k_, v_ in obs.items()}
+    lt, rp = L._timing_loss(1, C[:k_end + 1], obs_c)
+    lp_ref, lf_ref, tg, ws, kinds = _timing_ref(L, 1, C[:k_end + 1], obs_c, 0.37)
+    assert kinds[-1] == "last" and ws[-1] == 0.0 and abs(float(lt.detach()) - (lp_ref + lf_ref)) <= 1e-5 * max(1.0, lp_ref + lf_ref), (float(lt.detach()), lp_ref, lf_ref)
+    kinds_all.update(["arm:last"])
+    assert kinds_all["arm:own"] >= 5 and kinds_all["arm:read"] >= 5 and kinds_all["grip:rest"] >= 5 and kinds_all["tap:rest"] >= 5, kinds_all
+    # the demonstrations: act_inv, learned, reads the parent's hand's act where the arm rested and was guided (the last forty ticks)
+    tm = L.m.timing["arm"]; s = obs["body"]
+    dem = [k for k in range(T - 1) if w.moved[t0 + k][1] == "guide"]
+    with torch.no_grad():
+        right = sum(1 for k in dem if L.m.acts["arm"].flat([int(x.argmax()) for x in tm.inverse_logits(s[k], s[k + 1])]) == w.moved[t0 + k][0])
+    assert len(dem) >= 5 and right >= 0.9 * len(dem), (len(dem), right)
+    # the gradient: act_pred, the correction, the forward half and the cortex; never act_inv
+    L.m.zero_grad(set_to_none=True)
+    C2 = L.m.stream(L.m.inputs(L.anatomy, obs, whos, bundles))
+    lt, _ = L._timing_loss(1, C2, obs); lt.backward()
+    gr = {k: (v.grad is not None and float(v.grad.abs().max()) > 0) for k, v in L.m.named_parameters()}
+    assert gr["timing.arm.pred.weight"] and gr["timing.arm.cor.weight"] and gr["timing.arm.fwd.weight"] and gr["blocks.0.attn.in_proj_weight"], gr
+    assert not any(gr[k] for k in gr if k.startswith("timing.arm.inv.")) and not any(gr[k] for k in gr if k.startswith("timing.grip."))
+    L.m.zero_grad(set_to_none=True)
+    # the lesson teaches, on a window held fixed (the waking rate raised for the test)
+    win0 = list(L.win)
+    for g_ in L.opt_day.param_groups:
+        g_["lr"] = 3e-3
+    first = last = None
+    for k in range(60):
+        L.win.clear(); L.win.extend(win0)
+        out = L._wake_lesson()
+        if k == 0:
+            first = out["motor"]
+        last = out["motor"]
+    assert last["arm"]["pred"] < 0.5 * first["arm"]["pred"] and last["arm"]["fwd"] < 0.5 * first["arm"]["fwd"] and last["grip"]["pred"] < 0.5 * first["grip"]["pred"], (first, last)
+    L.win.clear(); L.win.extend(win0)
+    with torch.no_grad():
+        C3 = L.m.stream(L.m.inputs(L.anatomy, obs, whos, bundles))
+        _, _, tg, ws, kinds = _timing_ref(L, 1, C3, obs, 0.37)
+        fw = tm.fwd(C3[:-1]); P = tm.pred(C3[:-1]) + tm.cor(s[1:] - fw)
+        best = [L._best_guess(L.anatomy.effectors[1], P[k]) for k in range(T - 1)]
+    own_k = [k for k in range(T - 1) if kinds[k] == "own"]
+    match = sum(1 for k in own_k if best[k] == tg[k])
+    assert match >= 0.8 * len(own_k), (match, len(own_k))
+    # a window in which the world never spoke still teaches the motor heads
+    w3 = _arm_world(words=False); torch.manual_seed(5); L3 = _born_in(_Timed(TOK, cfg), cfg, w3); run3 = WorldLoop(L3)
+    for _ in range(40):
+        run3.step()
+    out3 = L3._wake_lesson()
+    assert out3 is not None and out3["n_world"] == 0 and set(out3["motor"]) == {"arm", "grip", "tap"}, out3
+    print(f"anatomy 25: act_pred's lesson recomputed position by position for the arm (at three reliabilities), the grip and the tap:",
+          f"{dict(kinds_all)}; {len(rfx)} reflex ticks recorded as rests (the window's acts the efference copies); act_inv read {right} of {len(dem)} demonstrations as the",
+          f"parent's hand's act; the gradient reaches act_pred, the correction, the forward half and the cortex, never act_inv; on a",
+          f"fixed window act_pred's error {first['arm']['pred']} -> {last['arm']['pred']}, the forward half's {first['arm']['fwd']} ->",
+          f"{last['arm']['fwd']}, the best guess matching {match} of {len(own_k)} own acts; a window with no word teaches them")
+
+
+def test_the_forward_half():
+    """anatomy 26 (step R6; SIM_DESIGN.md 5.8: the motor timing part extended to foresee each effector's next body sense): after each
+    tick's own step the forward half foresees the next tick's body sense from the stream there (the act just taken in it); at the next
+    tick the error is the sense felt less the sense foreseen, and the proposal is act_pred's plus the correction of that error; the
+    morning's first tick has no foresight and no correction; an effector with no sense has neither. The correction steers a chunk
+    under way: a reach the world blocked (the sense falling short of the foreseen) moves act_pred's best guess, and the chunk's act
+    with it"""
+    from body.core.world import WorldLoop
+    cfg = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.5, fast_rls=0, chunk_gate=1, chunk_max=6)
+    w = _arm_world(wall=0.45); torch.manual_seed(5); L = _born_in(_Timed(TOK, cfg), cfg, w)
+    with torch.no_grad():
+        L.m.timing["arm"].cor.weight.copy_(torch.randn(64, 2, generator=torch.Generator().manual_seed(3)) * 0.1)   # a correction to read
+        L.m.timing["grip"].cor.weight.copy_(torch.randn(64, 1, generator=torch.Generator().manual_seed(4)) * 0.1)
+    seen = []; props = []; after = []
+    f_fore, f_prop = L._timing_foresee, L._timing_propose
+
+    def fore(i):
+        out = f_fore(i); st_ = L.motor[i - 1]
+        # after the tick's own step: the window's last position is this tick's (this frame's body sense, the tick's own acts in it) and
+        # the stream the forward half read is that position's
+        pos = L.win[-1]
+        with torch.no_grad():
+            now_ = L._stream_now()
+        after.append(torch.equal(pos["body"], torch.tensor(w.shown[L.ticks].obs["body"], dtype=torch.float32)) and
+                     all(s_["now"] is not None and pos[e_.field] == s_["now"]["act"] for e_, s_ in zip(L.anatomy.effectors[1:], L.motor)) and torch.equal(L._C_last, now_))
+        seen.append((L.ticks, i, None if st_["fwd"] is None else st_["fwd"].clone(), L._C_last.clone())); return out
+
+    def prop(e, C):
+        st_ = L.motor[L.anatomy.effectors.index(e) - 1]
+        out = f_prop(e, C)
+        props.append((L.ticks, e.name, C.clone(), None if st_["err"] is None else st_["err"].clone(), None if st_["sense"] is None else st_["sense"].clone(), out.clone()))
+        return out
+    L._timing_foresee = fore; L._timing_propose = prop
+    run = WorldLoop(L)
+    for _ in range(200):
+        run.step()
+    L.cfg["wake_ticks"] = L.sleep_pressure + 2
+    while L.nights == 0:
+        run.step()
+    dusk = L.ticks - 1; L.cfg["wake_ticks"] = 100000
+    for _ in range(10):
+        run.step()
+    fwd_at = {(tk, i): (f_, C_) for tk, i, f_, C_ in seen}
+    n_err = n_none = 0
+    for tk, name, C, err, sense, out in props:
+        i = [e.name for e in L.anatomy.effectors].index(name); tm = L.m.timing[name]; e = L.anatomy.effectors[i]
+        with torch.no_grad():
+            want = tm.pred(C)
+            if e.sense is None:
+                assert err is None and (tk, i) in fwd_at and fwd_at[(tk, i)][0] is None
+            else:
+                idx = e.sense_idx if e.sense_idx is not None else [0, 1]
+                assert torch.equal(sense, torch.tensor([w.shown[tk].obs[e.sense][j] for j in idx], dtype=torch.float32)), (tk, name)
+                prev = fwd_at.get((tk - 1, i))
+                if tk == dusk + 1 or prev is None:
+                    assert err is None, (tk, name); n_none += 1
+                else:
+                    f_, C_ = prev
+                    assert torch.equal(f_, tm.fwd(C_)) and torch.equal(err, sense - f_), (tk, name)
+                    want = want + tm.cor(err); n_err += 1
+        assert torch.equal(out, want), (tk, name)
+    assert all(after) and len(after) == 3 * (L.ticks), (sum(after), len(after), L.ticks)
+    assert n_err >= 350 and n_none == 4, (n_err, n_none)                  # the first tick of life and the morning's, for the arm and the grip
+    assert L.motor[2]["fwd"] is None and L.motor[2]["err"] is None and not hasattr(L.m.timing["tap"], "cor")
+    # the correction steers a chunk under way
+    e = L.anatomy.effectors[1]; st = L.motor[0]; tm = L.m.timing["arm"]
+    R = L.m.acts["arm"].rows
+    with torch.no_grad():
+        tm.pred.weight.zero_(); tm.pred.bias.copy_(R[3] + R[5 + 2])                   # act_pred: joint 0 up by 0.09, joint 1 held (act 17)
+        tm.cor.weight.zero_(); tm.cor.weight[:, 0] = 2.0 * (R[3] - R[1]) / 1.8          # a shortfall on joint 0 turns its best guess down
+        L.m.gates["arm"].weight.zero_(); L.m.gates["arm"].bias.fill_(30.0)
+    acts = {}
+    for label, felt in (("as foreseen", [1.8, 0.0]), ("blocked", [0.0, 0.0])):
+        prev_now = dict(st["now"] or {}, act=17, world=17, acted=True)
+        st["now"] = prev_now; st["acted_last"] = True; st["chunk"] = 2; st["sense"] = None; st["fwd"] = torch.tensor([1.8, 0.0]); st["rfx_n"] = 0
+        fr = Frame(L.ticks, {"body": felt, "touch": [0.0, 0.0]}, 0.0); L.world.now = fr
+        L._choose_effector(1, fr, L._C_last, 0.0, False)
+        acts[label] = (st["now"]["act"], st["now"]["cont"], [round(float(x), 3) for x in st["err"]])
+    assert acts["as foreseen"][:2] == (17, True) and acts["blocked"][:2] == (7, True), acts
+    print(f"anatomy 26: the forward half foresaw each tick's body sense from the stream after the act, the error the sense less the",
+          f"foresight on {n_err} proposals (none on the first tick of life and the morning's), each proposal act_pred's plus the",
+          f"correction; the tap has neither; within a chunk the reach as foreseen goes on ({acts['as foreseen'][0]}) and a blocked one",
+          f"turns ({acts['blocked'][0]}, error {acts['blocked'][2]})")
+
+
+def _draw_spy(L, calls):
+    """record every draw on the life's stream from the effectors' choices: (tick, effector, kind)"""
+    o_rand, o_mn = torch.rand, torch.multinomial
+
+    def rand(*a_, generator=None, **k_):
+        if generator is L.gen:
+            f_ = sys._getframe(1)
+            if f_.f_code.co_name in ("_choose", "_choose_effector"):
+                calls.append((L.ticks, f_.f_locals.get("i", 0), "rand"))
+        return o_rand(*a_, generator=generator, **k_)
+
+    def mn(*a_, generator=None, **k_):
+        if generator is L.gen:
+            f_ = sys._getframe(1)
+            if f_.f_code.co_name in ("_choose", "_choose_effector"):
+                calls.append((L.ticks, f_.f_locals.get("i", 0), "draw"))
+        return o_mn(*a_, generator=generator, **k_)
+    torch.rand, torch.multinomial = rand, mn
+    return o_rand, o_mn
+
+
+def test_the_learned_stops():
+    """anatomy 27 (step R6; SIM_DESIGN.md 5.3 and 5.4): under chunk_gate a later effector's acts run in chunks. A chunk begins with a
+    fresh decision (the gate's draw, each joint drawn); while it is under way each act is act_pred's best guess (no joint drawn), the
+    gate's own draw deciding whether it goes on (recorded as the draw); it ends where act_pred's best guess is the rest (the learned
+    end, the gate having said yes), where the gate's own draw says no, where the reflex fires, where the effector's declared end act
+    closed it, or at chunk_max (a ceiling: the next act is a fresh decision). Only a chunk's first act is the actor's to credit. A
+    reflex takes the tick: its act to the world, the effector's own act its rest (the window's), no draw on the body's stream, its
+    cost to the fatigue, no striatal event, no actor credit, and no eligibility in the gate's lesson (the lesson equal to the lesson
+    with those rows' eligibility zero). Without chunk_gate every act is a fresh decision, as before R6. The night ends any chunk"""
+    from body.core.world import WorldLoop
+    base = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=10 ** 9, write_floor=1e-30, gate_floor=0.0, fast_rls=1, fast_input="striatum",
+                actor=1, chunk_gate=1, chunk_max=4, gate_own_draw=1)
+
+    def born(act_arm, gate_arm, cfg=base, wall=None, grip_end=None, act_grip=None, scale=1.0):
+        w_ = _arm_world(wall=wall); torch.manual_seed(5); L_ = _born_in(_Timed(TOK, cfg, grip_end=grip_end), cfg, w_)
+        with torch.no_grad():
+            for name, act in (("arm", act_arm), ("grip", act_grip)):
+                if act is not None:                                   # act_pred set to propose one act (its best guess), at `scale`
+                    tm_ = L_.m.timing[name]; tm_.pred.weight.zero_(); tm_.pred.bias.copy_(scale * _row(L_, name, act))
+            L_.m.gates["arm"].weight.zero_(); L_.m.gates["arm"].bias.fill_(gate_arm)
+        return L_, w_, WorldLoop(L_)
+
+    def live(L_, run_, n, calls=None, extra=None):
+        rows = []
+        o_ = _draw_spy(L_, calls) if calls is not None else None
+        try:
+            for _ in range(n):
+                ea = [None if st_["e_actor"] is None else st_["e_actor"].clone() for st_ in L_.motor]
+                run_.step()
+                rows.append((dict(L_.last["acts"]["arm"]), dict(L_.motor[0]["now"]), ea, [None if st_["e_actor"] is None else st_["e_actor"].clone() for st_ in L_.motor],
+                             dict(L_.last["acts"]["grip"])))
+                if extra is not None:
+                    extra(L_, rows)
+        finally:
+            if o_ is not None:
+                torch.rand, torch.multinomial = o_
+        return rows
+    # A. the chunk runs act_pred's best guess to its ceiling: act 17 (joint 0 up by 0.09), the gate open
+    calls = []; L, w, run = born(17, 30.0)
+    rows = live(L, run, 60, calls)
+    by = collections.defaultdict(list)
+    for tk, i, kind in calls:
+        if i == 1:
+            by[tk].append(kind)
+    k_run = 0; starts = 0
+    for tk, (rec, now, ea0, ea1, _) in enumerate(rows):
+        assert rec["acted"] and now["drew"], (tk, rec)                                   # the gate open (p about 1)
+        if rec["cont"]:
+            k_run += 1
+            assert rec["act"] == 17 and by[tk] == ["rand"] and 1 <= k_run <= 3 and now["p_choice"] == float(now["probs"][0][3]) * float(now["probs"][1][2]), (tk, rec, by[tk])
+            assert torch.equal(ea0[0], ea1[0]), f"tick {tk}: a continuation credited the actor"
+        else:
+            assert by[tk] == ["rand", "draw", "draw"] and (tk == 0 or k_run == 3), (tk, by[tk], k_run)
+            assert rec["stop"] == (None if tk == 0 else "max"), (tk, rec)
+            assert ea1[0] is not None and (ea0[0] is None or not torch.equal(ea0[0], ea1[0])), f"tick {tk}: a chunk's start not credited"
+            k_run = 0; starts += 1
+    st = L.motor[0]
+    assert starts == 15 and st["stops"]["max"] == 14 and st["chunks"] == 15, (starts, st["stops"], st["chunks"])
+    # B. the learned end: act_pred's best guess is the rest (a weak proposal, so a fresh draw still acts); each chunk is its first act,
+    # then the gate's yes with no act
+    L, w, run = born(12, 30.0, scale=0.05)
+    rows = live(L, run, 60)
+    n_rest = 0
+    for tk, (rec, now, ea0, ea1, _) in enumerate(rows):
+        if tk and rows[tk - 1][0]["acted"]:
+            assert rec["cont"] and not rec["acted"] and now["drew"] and rec["act"] == 12 and rec["stop"] == "rest", (tk, rec)
+            n_rest += 1
+        else:
+            assert not rec["cont"] and rec["stop"] is None, (tk, rec)
+    assert all(b_[1] is False and b_[7] is True for k_, b_ in enumerate(L.motor[0]["buf"]) if rows[k_][0]["cont"]), "the gate's yes not recorded at the learned end"
+    assert n_rest >= 20 and L.motor[0]["stops"]["rest"] == n_rest, (n_rest, L.motor[0]["stops"])
+    # C. the gate's own draw closes it: act_pred's guess 17, the gate at even odds
+    calls = []; L, w, run = born(17, 0.0)
+    rows = live(L, run, 300, calls)
+    n_gate = n_go = 0
+    for tk, (rec, now, ea0, ea1, _) in enumerate(rows):
+        if rec["cont"]:
+            if now["drew"]:
+                assert rec["act"] == 17 and rec["acted"] and rec["stop"] is None; n_go += 1
+            else:
+                assert rec["act"] == 12 and not rec["acted"] and rec["stop"] == "gate"; n_gate += 1
+    assert n_gate >= 15 and n_go >= 15 and L.motor[0]["stops"]["gate"] == n_gate, (n_gate, n_go)
+    # D. the reflex: the arm reaches up into a wall, it hurts, the reflex reverses the last move for 2 ticks
+    calls = []; L, w, run = born(17, 30.0, wall=0.3)
+    pushes = []; o_push = L.m.striatum_push_act
+    L.m.striatum_push_act = lambda j, act: (pushes.append((L.ticks, j)), o_push(j, act))[1]
+    fat = []; f_act = L._act_effectors
+
+    def act_rec(u, stri, gam, tick_tr):
+        before = L.fatigue; out = f_act(u, stri, gam, tick_tr)
+        fat.append((before, L.fatigue, [(st_["now"]["acted"], st_["now"]["reflex"], st_["now"]["cost"]) for st_ in L.motor])); return out
+    L._act_effectors = act_rec
+    wins = []
+    rows = live(L, run, 80, calls, extra=lambda L_, rows_: wins.append(int(L_.win[-1]["arm"])))
+    by = collections.defaultdict(list)
+    for tk, i, kind in calls:
+        if i == 1:
+            by[tk].append(kind)
+    rfx = [tk for tk, r_ in enumerate(rows) if r_[1]["reflex"]]
+    assert len(rfx) >= 6, len(rfx)
+    for tk in rfx:
+        rec, now, ea0, ea1, _ = rows[tk]
+        assert rec["act"] == 12 and not rec["acted"] and not now["drew"] and not rec["cont"] and rec["world"] != 12 and w.moved[tk] == (rec["world"], "own"), (tk, rec, w.moved[tk])
+        assert by[tk] == [] and wins[tk] == 12 and (tk, 0) not in pushes, (tk, by[tk], wins[tk])
+        assert (ea0[0] is None and ea1[0] is None) or torch.equal(ea0[0], ea1[0])
+        before, after, per = fat[tk]
+        assert per[0] == (False, True, 0.05) and abs(after - before - sum(c_ for a_, r_, c_ in per if a_ or r_)) < 1e-12, fat[tk]
+    first_rfx = [tk for tk in rfx if not rows[tk - 1][1]["reflex"]]
+    for tk in first_rfx:
+        pw = rows[tk - 1][1]["world"]
+        assert rows[tk][0]["stop"] == "reflex" and w.shown[tk].obs["touch"][0] == 1.0 and rows[tk][0]["world"] == (4 - pw // 5) * 5 + (4 - pw % 5), (tk, rows[tk][0], pw)
+        assert rows[tk + 1][1]["reflex"] and rows[tk + 1][0]["world"] == rows[tk][0]["world"] if tk + 1 < len(rows) else True
+    assert all(bool(b_[9]) == rows[len(rows) - len(L.motor[0]["buf"]) + k_][1]["reflex"] for k_, b_ in enumerate(L.motor[0]["buf"]))
+    # the gate's lesson on those rows: no eligibility on a reflex's tick (the lesson equal to the lesson with those rows' eligibility zero)
+    for own_, s_ in ((1, 0), (0, 1)):
+        cfg2 = dict(base, gate_own_draw=own_, elig_from=s_, gate_lr=0.05)
+        LA, wA, runA = born(17, 2.0, cfg=cfg2, wall=0.3); LB, wB, runB = born(17, 2.0, cfg=cfg2, wall=0.3)   # the gate short of sure (its p under 1)
+        live(LA, runA, 70); live(LB, runB, 70)
+        bufA, bufB = LA.motor[0]["buf"], LB.motor[0]["buf"]
+        n_rf = sum(1 for b_ in bufB if b_[9])
+        assert n_rf >= 4 and [b_[9] for b_ in bufA] == [b_[9] for b_ in bufB]
+        assert all(abs(float(b_[6]) - float(LA.cfg["gate_vigor"])) > 0.05 for b_ in bufB if b_[9]), "a reflex row whose eligibility is zero anyway"
+        vig = float(LA.cfg["gate_vigor"])
+        ref = [(list(b_[:6]) + [vig, False] + list(b_[8:])) if b_[9] else list(b_) for b_ in bufA]
+        assert all(not b_[1] for b_ in bufA if b_[9])
+        bufA.clear(); bufA.extend(ref)
+        gA, gB = LA.m.gates["arm"], LB.m.gates["arm"]
+        baseA, lastA = _lesson_fixed(LA, bufA, gA, LA.opt_motor, LA.motor[0]["g_base"], own_, s_, lambda b: float(b[8]))
+        LB._gate_lesson(1)
+        (wa, oa), (wb, ob) = _gate_state(LA, gA), _gate_state(LB, gB)
+        assert lastA is not None and all(torch.equal(wa[k], wb[k]) for k in wa) and _same_opt(oa, ob), f"own {own_}, from {s_}: the reflex's rows kept eligibility"
+        assert baseA == LB.motor[0]["g_base"] and lastA == LB.motor[0]["last"]
+    # E. the declared end: the grip's end act 0 closes its chunk, the next act a fresh decision
+    cfgE = dict(base)
+    L, w, run = born(None, 30.0, cfg=cfgE, grip_end=0, act_grip=0)
+    with torch.no_grad():
+        L.m.gates["grip"].weight.zero_(); L.m.gates["grip"].bias.fill_(30.0)
+    rows = live(L, run, 40)
+    g_ = [r_[4] for r_ in rows]
+    for tk in range(1, len(g_)):
+        if g_[tk - 1]["act"] == 0 and g_[tk - 1]["acted"]:
+            assert not g_[tk]["cont"] and g_[tk]["stop"] == "end", (tk, g_[tk - 1], g_[tk])
+        elif g_[tk - 1]["acted"]:
+            assert g_[tk]["cont"] and g_[tk]["act"] == 0, (tk, g_[tk])
+    assert L.motor[1]["stops"]["end"] >= 10
+    # F. without chunk_gate every act is a fresh decision (as before R6); the night ends any chunk
+    calls = []; L, w, run = born(17, 30.0, cfg=dict(base, chunk_gate=0))
+    rows = live(L, run, 30, calls)
+    assert not any(r_[0]["cont"] for r_ in rows) and all(sorted(k_ for t_, i_, k_ in calls if t_ == tk and i_ == 1) == ["draw", "draw", "rand"] for tk in range(30))
+    assert L.motor[0]["chunks"] == 0 and L.motor[0]["chunk"] == 0 and sum(L.motor[0]["stops"].values()) == 0
+    L, w, run = born(17, 30.0); live(L, run, 20)
+    assert L.motor[0]["chunk"] >= 1 and L.motor[0]["sense"] is not None and L.motor[0]["fwd"] is not None
+    L.night()
+    assert all(st_["chunk"] == 0 and st_["sense"] is None and st_["fwd"] is None and st_["err"] is None for st_ in L.motor)
+    rows = live(L, run, 1)
+    assert not rows[0][0]["cont"] and rows[0][0]["stop"] is None
+    print(f"anatomy 27: under chunk_gate the arm's chunks ran act_pred's best guess with only the gate drawing, {starts} chunks of",
+          f"chunk_max 4 each re-decided at the ceiling, the actor credited at the starts alone; the learned end ({n_rest} stops at the rest,",
+          f"the gate's yes recorded); the gate's own no ({n_gate} stops against {n_go} goes); {len(rfx)} reflex ticks (the reversal to",
+          f"the world, a rest in the window, no draw, its cost, no striatal event, no credit, no eligibility in the lesson, equal to the",
+          f"lesson with it zero); the grip's declared end; without chunk_gate every act fresh; the night ends the chunk")
+
+
 ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
                  test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy,
                  test_reward_sources_feel_todays_rule, test_a_life_feels_as_before, test_the_declared_order_is_the_sums,
                  test_the_input_is_the_channels_in_order, test_the_window_holds_each_channel_under_its_field, test_a_later_channel,
                  test_every_call_site_passes_the_channels, test_imagination_as_before, test_the_voice_is_effector_0,
                  test_the_gate_lesson_as_before, test_the_switches, test_a_later_effector, test_every_call_site_passes_the_effectors,
-                 test_the_diary_world, test_a_world_of_frames, test_the_loop_deadline_and_pace]
+                 test_the_diary_world, test_a_world_of_frames, test_the_loop_deadline_and_pace,
+                 test_the_timing_part_is_built_last, test_act_inv_learns_online, test_act_pred_targets, test_the_forward_half,
+                 test_the_learned_stops]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

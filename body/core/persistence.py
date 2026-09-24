@@ -3,7 +3,9 @@
 place (the core refactor's step R2): the life builds its anatomy from it (body/core/anatomy.py `anatomy_for`), and a birth sizes the
 organs' alphabet from that anatomy. Both build the anatomy before the organs (a load under the save's constants, then the caller's), so
 the organs build the forecast heads its later channels declare (step R4; the diary declares none). Both take the world the life lives
-in (`world`, step R9; the diary's DiaryWorld when none is given): the world is not saved with the body.
+in (`world`, step R9; the diary's DiaryWorld when none is given): the world is not saved with the body. A body with later effectors
+keeps their act_inv's reliability (step R6: the critics' running moments, as the actor's and the face organ's are kept) under the save's
+life["motor"], a key only such a body's save has; their timing organs are in the organs' state (timing.<name>).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import os
@@ -35,6 +37,9 @@ class PersistenceMixin:
                          "utt_N": self.utt_N, "utt_serial": int(self._utt_serial), "c_mu": self._c_mu.clone(), "c_n": int(self._c_n), "ctx_cur": self.ctx_cur.clone(), "ctx_prev": self.ctx_prev.clone(),
                          "bands": self.bands.detach().cpu().clone(), "writes_today": int(getattr(self, "_writes_today", 0)), "store_fresh": bool(getattr(self, "_store_fresh", False)), "utt_open": bool(self._utt_open),
                          "pace": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pq.items()}, "pace_day": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pace_day.items()}}}
+        if len(self.anatomy.effectors) > 1:                         # the later effectors' act_inv reliability (step R6); the diary's save has no such key
+            blob["life"]["motor"] = {e_.name: {"inv_m": [float(x_) for x_ in st_["inv_m"]], "inv_gain": float(st_["inv_gain"]), "inv_corr": float(st_["inv_corr"]),
+                                               "inv_n": int(st_["inv_n"])} for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -64,7 +69,7 @@ class PersistenceMixin:
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         motor_ = {e_.name for e_ in anatomy.effectors[1:]}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
-        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates")]
+        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing")]
                          + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
         if dropped:
             print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)
@@ -162,6 +167,12 @@ class PersistenceMixin:
             print(f"load: pace_sense 2 (live) with the partner's returns not settled ({len(life._pq['warm'])} of {max(1, int(round(1.0 / max(float(life.cfg.get('pace_eta', 0.05)), 1e-9))))}"
                   f" heard past its pauses; {int(life._pq.get('n_ret', 0))} returns, {int(life._pq.get('n_pause', 0))} pauses in all; P {P_:.1f} ticks):"
                   f" the shadow day (pace_sense 1) comes first", flush=True)
+        if isinstance(L.get("motor"), dict):                          # the later effectors' act_inv reliability (step R6), for those this anatomy declares
+            for e_, st_ in zip(life.anatomy.effectors[1:], getattr(life, "motor", ())):
+                mv_ = L["motor"].get(e_.name)
+                if isinstance(mv_, dict) and len(mv_.get("inv_m") or []) == 6:
+                    st_["inv_m"] = [float(x_) for x_ in mv_["inv_m"]]; st_["inv_gain"] = float(mv_.get("inv_gain", 0.0))
+                    st_["inv_corr"] = float(mv_.get("inv_corr", 0.0)); st_["inv_n"] = int(mv_.get("inv_n", 0))
         if L.get("store_after_night") is not None:
             life._store_after_night = int(L["store_after_night"])
         elif isinstance(L.get("last_night"), dict) and L["last_night"].get("store_slots") is not None:
