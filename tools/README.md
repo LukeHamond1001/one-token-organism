@@ -26,7 +26,7 @@ The page log read back: `word_rate.py` (the share of the child's runs of letters
 
 The shell helper `typist_chain.sh` runs the served typist day after day (live).
 
-The simulated world's instruments (docs/SIM_DESIGN.md 11: W1, W3; never the body, and nothing of the language body): `sim_babble.py`
+The simulated world's instruments (docs/SIM_DESIGN.md 11: W1, W2, W3; never the body, and nothing of the language body): `sim_babble.py`
 (the babbler, smooth random acts in movement units for the world's tests; run, the world's speed on this Mac, `--eyes` with the
 eyes), `sim_sink.py` (how fast each posture gives way under the resting servo law), `sim_friction.py` (the friction model at
 impratio 1 and 10: creep below the sliding force, the slide above it against Coulomb's, the normal force of a pressed contact
@@ -42,7 +42,10 @@ studio's frontal light, and the calibration that set her iris's, brows' and lips
 measured on the drawn geometry against its norms; `--collision`, a hand's rays at her face against her collision shapes; `lids`,
 her moving lids against her skin and her eye in nine lid states: 4.1), `sim_pain.py` (pain under babble, the contact pairs that carry it, each withdrawal (the
 newborn's flexion) against resting and the babble from the same state, either tick counted and each apart, and phantom pain by the
-filter, on still ticks and at rest: C5, C18, C22). `sim_look.py` renders the one-arm high chair's
+filter, on still ticks and at rest: C5, C18, C22), `sim_parent_motion.py` (W2: the parent's acts one by one from fresh worlds: each
+act's status, reason and ticks, her reach error, every hold's peak force against its cap, her effort against her caps, her body's
+contacts with the child and her yields, what her acts did to the G1 (a lift, a slide, a sit-up), her cost a tick; `guide_pace`, the
+guide's peak force against the arm's own push at each candidate pace: 4.2, A4-A10, A22, A25, C6, C7, C34). `sim_look.py` renders the one-arm high chair's
 stills; `sim_look_g1.py` the G1 room's (main's prototype stills).
 
 `archive/` (moved 2026-09-23) holds the retired tools, kept as the ledger's record and not run: the earlier lineage's watchers and stalkers (a body under the fast parent, every tick logged: `watch_life.py`, `stalk_day.py`, `record_day.py`, `fit_return.py`, `gate_context.py`, `vf_profile.py`, `ceiling_smile.py`, `ceiling_line.py`, `play_by_play.py`, `watch_trend.py`, `compare_credit.py`), the body2-era readers and probes (`diary_check.py`, `probe.py`, `sequence_probe.py`, `boundary_restart.sh`, `run_days.sh`, `teach_days.sh`), the settled night and gate questions (`night_lab.py`, `dream_lived.py`, `norm_probe.py`), the pod pretraining (`pretrain_cortex.py`, item 44) and `baseline_train.py` (never run, by the house rule against ordinary-training comparisons). Those that find the repo by `dirname(dirname(__file__))` (`watch_life.py`, `stalk_day.py`, `record_day.py`, `pretrain_cortex.py`) would now look inside tools/ and need that path changed before they could run again.

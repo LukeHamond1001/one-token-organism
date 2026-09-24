@@ -147,15 +147,20 @@ class Scene:
         self.g1_set = set(self.g1_bodies)
         self.act = {m.actuator(i).name: i for i in range(m.nu)}
         self.pose = None
+        self._hand_cache = {}
 
     # ---- the parent
-    def set_parent(self, pose):
+    def set_parent(self, pose, mocap=True, face=True):
+        """Draw the parent in `pose`: her 16 mocap segments (unless mocap=False: the parent's motion, body/sim/parent_motion.py,
+        moves them itself through the tick's physics steps), her face's moving geoms from its expression and gaze (unless face=False:
+        drawn as they last were, when neither changed; a face costs about 24 ms to draw) and her hands' shapes."""
         m, d = self.m, self.d
         segs = kin.fk(pose)
-        for s, (p, R) in segs.items():
-            i = self.mocap[s]
-            d.mocap_pos[i] = p
-            d.mocap_quat[i] = kin.mjquat(R)
+        if mocap:
+            for s, (p, R) in segs.items():
+                i = self.mocap[s]
+                d.mocap_pos[i] = p
+                d.mocap_quat[i] = kin.mjquat(R)
         hp, hR = segs["head"]
         gaze = None
         if pose.gaze is not None:
@@ -163,7 +168,7 @@ class Scene:
         expr = pose.expr
         if not isinstance(expr, dict):
             expr = kin.scalar_to_params(expr)          # the old one-number expression, as graded parameters
-        for n, (p, q, sz) in kin.face_geoms_graded(expr, gaze).items():
+        for n, (p, q, sz) in (kin.face_geoms_graded(expr, gaze).items() if face else ()):
             g = self.face_ids[n]
             if n in self.mesh_offset:                      # compose the mesh's compiled offset
                 mp, mq = self.mesh_offset[n]
@@ -179,7 +184,12 @@ class Scene:
                     m.geom_size[g] = sz
         for sd in ("L", "R"):
             h = pose.hand[sd]
-            for n, (p, q, hl) in kin.hand_geoms(sd, h["curl"], h["thumb"], h["index"]).items():
+            key = (sd, h["curl"], h["thumb"], h["index"])
+            if key not in self._hand_cache:                # a hand's shape drawn once per shape (2.6 ms a hand otherwise)
+                if len(self._hand_cache) > 512:
+                    self._hand_cache.clear()
+                self._hand_cache[key] = kin.hand_geoms(sd, h["curl"], h["thumb"], h["index"])
+            for n, (p, q, hl) in self._hand_cache[key].items():
                 g = self.hand_ids[sd][n]
                 m.geom_pos[g] = p
                 m.geom_quat[g] = q

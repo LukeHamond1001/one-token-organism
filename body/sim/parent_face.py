@@ -998,12 +998,28 @@ def front_table():
     return _FRONT
 
 
+_FRONT_COEF = None
+FRONT_PAD = 12          # scipy's own pre-padding for a cubic spline in mode "nearest" (scipy.ndimage._prepad_for_spline_filter)
+
+
+def front_coefficients():
+    """the frontal table's cubic spline coefficients, computed once: the table padded by its edge and spline-filtered exactly as
+    scipy's map_coordinates(order=3, mode="nearest") does on every call, so head_surface_x reads them with prefilter=False and gives
+    the same numbers bit for bit (body/tests/test_sim_parent.py checks it) at about a 300th of the cost (the W2 build: drawing her
+    face every tick took 213 ms, 0.6 ms of each of its ~320 table reads re-filtering the whole table)"""
+    global _FRONT_COEF
+    if _FRONT_COEF is None:
+        from scipy.ndimage import spline_filter
+        _FRONT_COEF = spline_filter(np.pad(front_table(), FRONT_PAD, mode="edge"), 3, output=np.float64, mode="nearest")
+    return _FRONT_COEF
+
+
 def head_surface_x(y, z):
     """the front of her face at (y, z) in her head's frame (m): the sheet's frontmost surface (bicubic on the 1 mm table)"""
     from scipy.ndimage import map_coordinates
-    T = front_table()
     fy = (np.asarray(y, float) - FRONT_Y[0]) / .001; fz = (np.asarray(z, float) - FRONT_Z[0]) / .001
-    v = map_coordinates(T, [np.atleast_1d(fz), np.atleast_1d(fy)], order=3, mode="nearest")
+    v = map_coordinates(front_coefficients(), [np.atleast_1d(fz) + FRONT_PAD, np.atleast_1d(fy) + FRONT_PAD], order=3, mode="nearest",
+                        prefilter=False)
     return float(v[0]) if np.ndim(y) == 0 else v
 
 
@@ -1711,8 +1727,8 @@ def build_assets(tex_dir, hair=(), room_indirect=1 / 3):
     iv, if_ = iris_mesh()
     write_msh(ASSETS / "iris.msh", iv, if_, vertex_normals(iv, if_))
     np.save(ASSETS / "front.npy", np.round(front_grid(), 7).astype(np.float32))
-    global _FRONT
-    _FRONT = None
+    global _FRONT, _FRONT_COEF
+    _FRONT = _FRONT_COEF = None
     brows = brow_meshes()
     for k, (bv, bf) in brows.items():
         bn = vertex_normals(bv, bf)

@@ -35,7 +35,8 @@ WHAT THE BODY SENSES (3.4; the channels of the frame, each the raw observation t
                wrist they are fixed to) [log(1 + F / 1 N), onset], F the zone's summed normal contact force averaged over the
                tick's 75 steps (self-contact included: A12's blind spots are the pairs pressing at rest, `rest_blind`, none for
                the G1 as born), onset the rise of the log force since the last tick (the slowly and rapidly adapting
-               afferents); a hold of the parent's (a weld on a G1 body) adds its force to that body's zone
+               afferents); a hold of the parent's (a capped spring on a G1 link: body/sim/parent_motion.py) adds its force to
+               that link's zone, each physics step (being held is felt, 4.2)
   vestibular   per IMU (imu_in_torso, which moves with the head: the vestibule; imu_in_pelvis: the trunk's graviceptors)
                [accelerometer mean (3), peak (3), gyro mean (3), peak (3)] over the tick's 75 samples (the peak per axis the
                signed sample of largest size), with the model's own declared noise and ranges
@@ -64,6 +65,14 @@ own act before anything moves (the truth's `spinal` logs it), so the hand's own 
 switches it off (an instrument's switch). The grasp fires on anything pressing the palm, its own fingers included (a fist closed
 on nothing keeps itself closed until the hand's own act opens it, as newborns' hands are fisted); the truth's `palm_own_N` (the
 palm's tick-mean force from its own hand's links) lets W4 count those fists (the W1 verifier's eighth finding).
+
+THE PARENT'S MOTION (W2; body/sim/parent_motion.py) runs inside the tick: `parent.tick_begin()` before the physics (her acts
+advance and her pose at the tick's end is found), `before_step(s)` and `after_step(s)` around each of the 75 steps (her segments
+drawn between the tick's start and end, her holds' capped springs applied as outside forces, her contacts with the child read for
+her yield and her pain), `tick_end()` after. No weld may hold the G1 (a world with one refuses to be born: every hold on it is a
+capped spring, 4.1). Her motion's state is saved and restored with the world's, and rolled back with it when a tick faults.
+`parent=False` builds the world without her motion (an instrument's switch); the truth's `parent` is her motion as her conduct and
+the instruments see it.
 
 FAULTS (A18). The scene disables MuJoCo's auto-reset (`<flag autoreset="disable"/>`, checked at load), so a bad state is never
 silently replaced by the start pose; MuJoCo still counts it in its warning counters, and a few contacts can stop it outright
@@ -372,7 +381,7 @@ class G1World(SimWorld):
     from it); `extra(spec)` adds an instrument's rig to the scene before it compiles (tests only). Born at construction: the G1 on
     its back on the mat, settled, the charge full, tick 0."""
 
-    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True):
+    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True):
         global R
         from body.sim import reflexes as R                              # the body's spinal cord (it reads this module's constants)
         _catch_mujoco_warnings()
@@ -421,8 +430,9 @@ class G1World(SimWorld):
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
             raise ValueError("the scene leaves MuJoCo's auto-reset on (A18: <flag autoreset=\"disable\"/>)")
         self.chargers = np.array([g for g in range(m.ngeom) if (m.geom(g).name or "").startswith(CHARGER_PREFIX)], dtype=np.int64)
-        self.g1_welds = [e for e in range(m.neq) if m.eq_type[e] == mujoco.mjtEq.mjEQ_WELD and int(m.eq_obj2id[e]) in self.scene.g1_set]
-        self.weld_zone = np.array([self.body_zone[int(m.eq_obj2id[e])] for e in self.g1_welds], dtype=np.int64)
+        if any(m.eq_type[e] == mujoco.mjtEq.mjEQ_WELD and (int(m.eq_obj1id[e]) in self.scene.g1_set or int(m.eq_obj2id[e]) in self.scene.g1_set)
+               for e in range(m.neq)):
+            raise ValueError("a weld on the G1: every hold on it is a capped spring (SIM_DESIGN.md 4.1, 4.2, A25)")
         # the IMUs: the model's four sensors (gyro and accelerometer on each site), their declared noise and ranges
         names = [m.sensor(i).name for i in range(m.nsensor)]
         self.imu_order = [names.index(n) for n in ("imu-torso-linear-acceleration", "imu-torso-angular-velocity",
@@ -446,8 +456,12 @@ class G1World(SimWorld):
         self.blind, self.blind_pairs = rest_blind(m, d, self.scene.g1_set)     # A12: the pairs pressing at rest (none as born)
         self._last_acts = {}
         self._spinal = {}; self._vor_quick = 0
+        self.parent = None
         self._sense_birth()
-        self.timing = {"ticks": 0, "apply_s": 0.0, "physics_s": 0.0}      # wall clock, an instrument (never saved, never sensed)
+        if parent:                                                      # THE PARENT'S MOTION (W2; body/sim/parent_motion.py): her
+            from body.sim import parent_motion as PM                    # acts, holds and yield, run inside the tick's physics
+            self.parent = PM.ParentMotion(self)
+        self.timing = {"ticks": 0, "apply_s": 0.0, "physics_s": 0.0, "parent_s": 0.0}   # wall clock, an instrument (never saved or sensed)
 
     # ---------------------------------------------------------------- the servo law
     def _set_servo_law(self):
@@ -520,6 +534,11 @@ class G1World(SimWorld):
         gaze_step = np.zeros(3) if a is None else np.array([GAZE_SETTINGS[j][k] for j, k in enumerate(act_digits(a, len(GAZE_JOINTS)))])
         start = self._capture()
         warn0 = [int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))]
+        par = self.parent
+        t_par = time.perf_counter()
+        if par is not None:
+            par.tick_begin()                                            # her acts advance; her pose at the tick's end (L1)
+        t_par = time.perf_counter() - t_par
         self._apply_weakness()
         rest_idx = []
         q = d.qpos[self.qadr]
@@ -543,9 +562,17 @@ class G1World(SimWorld):
             for s in range(n):
                 if rest_a is not None:
                     d.ctrl[rest_a] += alpha * (d.qpos[rest_q] - d.ctrl[rest_a])
+                if par is not None:
+                    t0 = time.perf_counter()
+                    par.before_step(s)                                  # her segments drawn, her holds' capped springs (L0)
+                    t_par += time.perf_counter() - t0
                 t0 = time.perf_counter()
                 mujoco.mj_step(m, d)
                 t_phys += time.perf_counter() - t0
+                if par is not None:
+                    t0 = time.perf_counter()
+                    par.after_step(s)                                   # her contacts with the child: the yield, her pain (L0)
+                    t_par += time.perf_counter() - t0
                 F[s] = self._zone_forces()
                 own += self._palm_own
                 imu[s] = d.sensordata[self.imu_adr]
@@ -554,6 +581,8 @@ class G1World(SimWorld):
                 if self.chargers.size and not fed:
                     fed = self._palm_on_charger()
             mujoco.mj_forward(m, d)                                     # the tick's end: its accelerations, contacts and sensors
+            if par is not None:
+                par.tick_end()
         except mujoco.FatalError as e:
             self._restore(start)
             raise WorldFault(self.tick, f"MuJoCo stopped: {e}")
@@ -581,6 +610,7 @@ class G1World(SimWorld):
         self._drain = drain; self._fed = fed
         self.tick += 1
         self.timing["ticks"] += 1; self.timing["physics_s"] += t_phys; self.timing["apply_s"] += time.perf_counter() - t_apply
+        self.timing["parent_s"] += t_par
 
     def _unsound(self):
         """what MuJoCo's own checks would call bad in the state as it stands (a position, velocity or acceleration not finite or
@@ -639,14 +669,8 @@ class G1World(SimWorld):
                 mine = ((z[:, 0] == pz) & self.own_hand[h][z[:, 1]]) | ((z[:, 1] == pz) & self.own_hand[h][z[:, 0]])
                 if mine.any():
                     self._palm_own[h] = float(fn[mine].sum())
-        if self.g1_welds:
-            act = d.eq_active[self.g1_welds]
-            if act.any():
-                eq = mujoco.mjtConstraint.mjCNSTR_EQUALITY
-                for e, z, on in zip(self.g1_welds, self.weld_zone, act):
-                    if on and z >= 0:
-                        rows = np.nonzero((d.efc_type[:d.nefc] == eq) & (d.efc_id[:d.nefc] == e))[0][:3]
-                        out[z] += float(np.linalg.norm(d.efc_force[rows]))
+        if self.parent is not None and self.parent.holds:            # being held is felt (4.2): each capped spring's force on the
+            out += self.parent.hold_zone                                # zone of the link it holds, this step's
         return out
 
     def _palm_on_charger(self):
@@ -710,7 +734,8 @@ class G1World(SimWorld):
                 "toys": toys, "touch_N": s["touch_force"].copy(), "pain_N": s["pain_force"].copy(), "peak_N": s["peak_force"].copy(),
                 "f_pain": self.f_pain, "drain": self._drain, "fed": self._fed, "ncon": int(d.ncon), "acts": dict(self._last_acts),
                 "gaze": self.gaze.copy(), "spinal": dict(self._spinal), "vor_quick": self._vor_quick,
-                "palm_own_N": {"hand_l": float(s["palm_own"][0]), "hand_r": float(s["palm_own"][1])}}
+                "palm_own_N": {"hand_l": float(s["palm_own"][0]), "hand_r": float(s["palm_own"][1])},
+                "parent": None if self.parent is None else self.parent.truth()}
 
     # ---------------------------------------------------------------- the state
     def _capture(self):
@@ -723,6 +748,7 @@ class G1World(SimWorld):
                 "sensed": {k: v.copy() for k, v in self._sensed.items()}, "drain": self._drain, "fed": self._fed,
                 "last_acts": dict(self._last_acts), "rng": self.rng.bit_generator.state, "gaze": self.gaze.copy(), "gaze_v": self.gaze_v.copy(),
                 "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "scene_pose": _pose_state(self.scene.pose),
+                "parent": None if self.parent is None else self.parent.state(),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
 
     def _restore(self, st):
@@ -743,4 +769,6 @@ class G1World(SimWorld):
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()
         if "scene_pose" in st:                                          # the parent's pose as the scene last drew it (W2 goes on
             self.scene.pose = _pose_from_state(st["scene_pose"])        # from it); her mocap and face geoms are in the physics and
-        mujoco.mj_forward(m, d)                                         # the model fields above
+        if self.parent is not None and st.get("parent") is not None:    # the model fields above; her motion's own state
+            self.parent.load_state(st["parent"])
+        mujoco.mj_forward(m, d)
