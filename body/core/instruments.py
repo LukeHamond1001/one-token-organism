@@ -13,8 +13,8 @@ class InstrumentsMixin:
         m = self.m
         # --- bookkeeping ---
         self.stream.append((int(u), 0)); self.stream.append((int(nxt), 1))
-        self.page.append(((self.tok.decode([int(u)]) if u != self.sil else ""), 0, round(self.face_now, 2), round(its_face, 2), who))
-        self.page.append(((self.tok.decode([int(nxt)]) if nxt != self.sil else ""), 1, round(self.face_now, 2), round(its_face, 2), False))
+        self.page.append(((self.anatomy.decode([int(u)]) if u != self.sil else ""), 0, round(self.face_now, 2), round(its_face, 2), who))
+        self.page.append(((self.anatomy.decode([int(nxt)]) if nxt != self.sil else ""), 1, round(self.face_now, 2), round(its_face, 2), False))
         if len(self.page) > 40000:
             del self.page[:20000]; self.page_base += 20000
         self.face_prev = self.face_now
@@ -22,11 +22,11 @@ class InstrumentsMixin:
         self.last = {"tick": self.ticks, "you": round(self.face_now, 2), "face": round(its_face, 2), "vrel": round(self._vrel_corr, 3),
                      "mood": round(self.mood, 2), "cort": round(self.fatigue, 2), "fatigue": round(self.fatigue, 2),
                      "stress": round(self.stress, 2), "ent": round(ent, 2), "felt": felt,
-                     "said": (self.tok.decode([int(nxt)]) if nxt != self.sil else ""),
+                     "said": (self.anatomy.decode([int(nxt)]) if nxt != self.sil else ""),
                      "gate": round(p_act, 3), "dopamine": round(delta, 3), "doses": self.n_bursts, "level": round(level, 3), "r": round(float(r), 3),
                      "vlong": round(vlong, 3), "dlong": round(delta_long, 3),
                      "store": self.store.n(), "store_conf": round(conf1, 3), "surprise": round(surp1, 3),
-                     "own": [self.tok.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
+                     "own": [self.anatomy.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
                      "gate_lesson": self._gate_last, "wake": self._wake_last}
         if self.sleep_pressure >= int(self.cfg["wake_ticks"]) and len(self.win) >= 8:
             self._sleep_now()

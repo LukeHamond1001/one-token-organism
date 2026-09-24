@@ -27,7 +27,7 @@ class NightMixin:
             for s_ in re.split(r"(?<=[.?!])\s+", raw):
                 s_ = re.sub(r"\s+", " ", s_).strip()
                 if 8 <= len(s_) <= W_ and all(ch in ok for ch in s_):
-                    ids = [self.tok.token_to_id(ch) for ch in s_]
+                    ids = [self.anatomy.symbol(ch) for ch in s_]
                     if all(i is not None for i in ids):
                         pool.append(ids)
         self._corpus_cache = pool
@@ -254,10 +254,10 @@ class NightMixin:
             rep["corpus_dreams"] = int(getattr(self, "_n_corpus_dreams", 0))
             rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new); rep["draw_serials"] = list(getattr(self, "_last_draw", []))
             if owns is not None:                                        # its own symbols in capitals, to be read
-                rep["examples"] = ["".join(self.tok.decode([i]).upper() if o else self.tok.decode([i]) for i, o in zip(d, w_))[:32] for d, w_ in zip(dreams[:8], owns[:8])]
+                rep["examples"] = ["".join(self.anatomy.decode([i]).upper() if o else self.anatomy.decode([i]) for i, o in zip(d, w_))[:32] for d, w_ in zip(dreams[:8], owns[:8])]
                 rep["own_share"] = round(sum(sum(w_) for w_ in owns) / max(1, sum(len(w_) for w_ in owns)), 3)
             else:
-                rep["examples"] = [self.tok.decode(d)[:32] for d in dreams[:8]]
+                rep["examples"] = [self.anatomy.decode(d)[:32] for d in dreams[:8]]
             rep["mean_len"] = round(sum(len(d) for d in dreams) / len(dreams), 1) if dreams else 0
             if not dreams:
                 rep["note"] = "the store holds nothing to dream"

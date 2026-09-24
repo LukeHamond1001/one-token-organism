@@ -15,9 +15,11 @@ record, the sleep switch).
 (`_rem_imagine`, `_rem_rollout`), the value replay, the store's fade, the save. `type_text`, `set_face`, `state` and `insides`
 are the page's endpoints; `save`, `load` and `birth` are the body on disk.
 
-WHERE THE METHODS LIVE (the split of 2026-09-23, review 2026-09-22 section 4, step 2): this file keeps `Life.__init__` and
-`tick()`; every other method was moved verbatim into a mixin in body/core/ (its __init__.py has the map): senses, memory, cortex,
-mouth, critics, actor, night, persistence and instruments, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here."""
+WHERE THE METHODS LIVE (the split of 2026-09-23, review 2026-09-22 section 4, step 2): this file keeps `Life.__init__`,
+`tick()` and the read-only `tok` (the anatomy's tokenizer; the core refactor's step R2, docs/SIM_DESIGN.md 8.4); every other method
+was moved verbatim into a mixin in body/core/ (its __init__.py has the map): senses, memory, cortex, mouth, critics, actor, night,
+persistence and instruments, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here; the anatomy, the body's senses,
+effectors and reward sources declared, is body/core/anatomy.py."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401
@@ -28,6 +30,7 @@ import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
 from .core.physiology import PHYSIOLOGY
+from .core.anatomy import anatomy_for
 from .core.senses import SensesMixin
 from .core.memory import MemoryMixin
 from .core.cortex import CortexMixin
@@ -48,8 +51,12 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
-        self.tok = tok; self.dev = device
+        self.dev = device
         self.cfg = dict(PHYSIOLOGY); self.cfg.update(cfg or {})
+        # THE BODY'S ANATOMY (the core refactor's step R2, docs/SIM_DESIGN.md 8.4): what it senses, how it acts, what it feels as reward
+        # (body/core/anatomy.py). `tok` is what the callers always passed: a tokenizer builds the diary's LanguageAnatomy under this
+        # life's constants; an anatomy may stand in its place. The tokenizer stays inside the language anatomy, for text only.
+        self.anatomy = anatomy_for(tok, self.cfg)
         vb = str(self.cfg.get("vcrit_bands", "") or "").strip()
         if vb:
             with torch.no_grad():
@@ -106,19 +113,21 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         # to a half); the "ttle tin" loop is the cortex forecasting from its own babble in the window, so the fraction is the lever
         self.m.own_gain = float(self.cfg.get("own_gain", 0.5))
         # THE BODY'S OWN SYMBOLS, DECLARED (anatomy, 2026-09-08): its rest, the world's turn-end, and a display symbol the world
-        # never types, named in the physiology by the body that is born, never found by a fixed string in the code.
-        self.sil = tok.token_to_id(str(self.cfg.get("rest_token", "<pad>")))
+        # never types, named in the physiology by the body that is born, never found by a fixed string in the code. Derived by the
+        # anatomy from its tokenizer since step R2 (LanguageAnatomy, body/core/anatomy.py, derives them as this method did).
+        a_ = self.anatomy
+        self.sil = a_.sil
         self.m.sil_id = self.sil                          # the cortex's inputs know its rest
-        self.nl = tok.token_to_id(str(self.cfg.get("display_token", "\n")))
-        self.space_id = tok.token_to_id(" ")                  # the word boundary the planning actor decides at
-        self.eot = tok.token_to_id(str(self.cfg.get("end_token", "<eot_human>")))
-        self.end_id = self.sil if str(self.cfg.get("end_symbol", "eot")) == "rest" else self.eot   # what the offset teaches the cortex to expect         # the world's turn ended: the offset (§2), never the mouth's
+        self.nl = a_.nl
+        self.space_id = a_.space_id                           # the word boundary the planning actor decides at
+        self.eot = a_.eot
+        self.end_id = a_.end_id                               # what the offset teaches the cortex to expect (the rest under end_symbol "rest", else the world's turn-end): the offset (§2), never the mouth's
         # THE RESERVED SYMBOLS (anatomy, declared, 2026-09-08): the lexicon's control tokens, every `<...>` the tokenizer
         # defines (the world's turn-end, the old face tokens), except the rest; and this body's newline, a display symbol the
-        # world never types. Neither the mouth nor the typing admits them. Declared from the tokenizer, never counted.
-        _vocab = tok.get_vocab(); _specials = sorted(i for s_, i in _vocab.items() if s_.startswith("<") and s_.endswith(">"))
-        self.reserved = [i for i in _specials if i != self.sil] + ([self.nl] if self.nl is not None else [])
-        self.bans = list(self.reserved)
+        # world never types. Neither the mouth nor the typing admits them. Declared from the tokenizer, never counted. The life's
+        # own copies: nothing the life does can move the anatomy's declaration.
+        self.reserved = list(a_.reserved)
+        self.bans = list(a_.bans)
         self._last_world = -10 ** 9; self._offset_done = True; self._last_write = None; self._start_pending = False
         # THE SENSED TURN-TAKING (pace_sense): the partner's pace in log ticks (saved as life["pace"]): its pauses (P) and its returns (R_lo,
         # R_hi, from the first return heard); the gap's labels (a foreseen end in it, an end by the pause), the ear held by a line, the reply's
@@ -243,6 +252,12 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         for p_ in self.m.band_in.parameters():
             p_.requires_grad_(False)
         self.opt_face = torch.optim.Adam(self.m.face_head.parameters(), lr=float(self.cfg["face_lr"]))
+
+    @property
+    def tok(self):
+        """the language anatomy's tokenizer, read-only (step R2: the body reads its anatomy; the tools and tests that turn text into
+        symbols or back still find the tokenizer here)"""
+        return self.anatomy.tok
 
     # ---------------- the tick ----------------
     def tick(self):

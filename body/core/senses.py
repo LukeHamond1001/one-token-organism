@@ -185,7 +185,7 @@ class SensesMixin:
         the parent yields to a visitor it can see on the page; the tag is on the page, never inside)"""
         n = 0; who = str(who)[:8]
         for ch in s:
-            i = self.tok.token_to_id(ch)
+            i = self.anatomy.symbol(ch)
             if i is not None and i != self.sil and i not in self.reserved and len(self.queue) < 600:   # the reserved symbols are not typed
                 self.queue.append(i); self.queue_who.append(who); n += 1
         return {"queued": n}

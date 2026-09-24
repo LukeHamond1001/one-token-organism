@@ -1,6 +1,9 @@
-"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's step R1). Run: python3 -m body.tests.test_anatomy (the
-organ tests run these too). `LanguageAnatomy(tok, cfg)` must rebuild exactly the symbols a life derives from its tokenizer today, under
-every constant that moves them and on a tokenizer laid out otherwise, and building it must leave the body untouched."""
+"""the anatomy declared (docs/SIM_DESIGN.md 8.2 and 8.3; the core refactor's steps R1 and R2). Run: python3 -m body.tests.test_anatomy
+(the organ tests run these too). `LanguageAnatomy(tok, cfg)` must rebuild exactly the symbols a life derived from its tokenizer before
+R2, under every constant that moves them and on a tokenizer laid out otherwise, and building it must leave the body untouched (R1). The
+life is built with it and reads its symbols and its text there, never the tokenizer; a life given the anatomy in the tokenizer's place
+is the same life; an anatomy declared under other constants, or not a language one, is refused (R2)."""
+import collections
 import os
 import pickle
 import sys
@@ -12,7 +15,7 @@ from tokenizers import Tokenizer, models
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)   # this tree's body, not a fixed one
 from body.life import Life, PHYSIOLOGY  # noqa: E402
-from body.core.anatomy import Anatomy, Channel, Effector, LanguageAnatomy, RewardSource  # noqa: E402
+from body.core.anatomy import Anatomy, Channel, Effector, LanguageAnatomy, RewardSource, anatomy_for  # noqa: E402
 
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
 FIELDS = ("sil", "nl", "space_id", "eot", "end_id", "reserved", "bans")
@@ -120,7 +123,152 @@ def test_anatomy_check():
     print("anatomy 3: the check refuses", len(bad), "faulty declarations; the methods of later steps are not yet wired")
 
 
-ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check]
+def _differs(A, B):
+    """the first difference between two lives' weights, symbols, working attributes' names, random streams and pages, or None"""
+    sa, sb = A.m.state_dict(), B.m.state_dict()
+    if sorted(sa) != sorted(sb):
+        return "the organs' names"
+    for k in sa:
+        if not torch.equal(sa[k], sb[k]):
+            return f"the organ {k}"
+    for f in FIELDS:
+        if getattr(A, f) != getattr(B, f):
+            return f"the symbol {f}"
+    if sorted(vars(A)) != sorted(vars(B)):
+        return "the working attributes' names"
+    if not torch.equal(A.gen.get_state(), B.gen.get_state()):
+        return "the life's random stream"
+    if [e[:2] for e in A.page] != [e[:2] for e in B.page]:
+        return "the page"
+    return None
+
+
+def _live(life, lines=("what do you want?", "I want milk"), faces={9: 2.0, 10: 0.0}, ticks=60):
+    for t in range(ticks):
+        if t % 30 == 0 and t // 30 < len(lines):
+            life.type_text(lines[t // 30], who="parent")
+        if t in faces:
+            life.set_face(faces[t])
+        life.tick()
+
+
+def test_life_reads_its_anatomy():
+    """anatomy 4 (step R2): a life born of a tokenizer holds the diary's anatomy, built under the life's own constants; its symbols
+    are the anatomy's, in lists of its own (nothing the life does can move the declaration); the tokenizer is no attribute of the
+    life, only the anatomy's (read through `life.tok`); the anatomy is still unbound (no module, no tensor)"""
+    for label, cfg in (("the physiology", {}), ("rest as the end, another display symbol", dict(end_symbol="rest", display_token="\t")),
+                       ("the served constants", _served_cfg() or {})):
+        life = _born(TOK, cfg); a = life.anatomy
+        assert type(a) is LanguageAnatomy and a.symbols() == LanguageAnatomy(TOK, life.cfg).symbols(), label
+        _same(a, life, label)
+        assert life.reserved is not a.reserved and life.bans is not a.bans and life.bans is not life.reserved, f"{label}: the life shares the anatomy's lists"
+        assert "tok" not in vars(life) and "anatomy" in vars(life) and life.tok is TOK and a.tok is TOK, f"{label}: the tokenizer is not the anatomy's alone"
+        parts = [a, *a.channels, *a.effectors, *a.rewards]
+        bound = [(type(p).__name__, k) for p in parts for k, v in vars(p).items() if isinstance(v, (torch.nn.Module, torch.Tensor))]
+        assert not bound, f"{label}: the life bound modules or tensors into its anatomy: {bound}"
+    try:
+        life.tok = TOK
+    except AttributeError:
+        pass
+    else:
+        raise AssertionError("life.tok could be set: the tokenizer is the anatomy's, read-only")
+    print("anatomy 4: the life holds the diary's anatomy under its own constants and reads its symbols there, in its own lists;",
+          "the tokenizer is only the anatomy's; the anatomy is unbound")
+
+
+def test_an_anatomy_in_the_tokenizers_place():
+    """anatomy 5 (step R2): `Life.birth` and `Life.load` given a LanguageAnatomy in the tokenizer's place give the same life as the
+    tokenizer does (the same weights, symbols, attributes, random streams, and the same page after a minute of the script), and the
+    same random streams after the birth; an anatomy declared under other constants is refused, and one not of language is refused
+    until steps R4-R5"""
+    import tempfile
+    for label, cfg in (("the physiology", {}), ("the served constants", _served_cfg() or {})):
+        torch.manual_seed(123); A = _born(TOK, cfg); gA = torch.get_rng_state().clone()
+        torch.manual_seed(123); B = _born(LanguageAnatomy(TOK, cfg), cfg); gB = torch.get_rng_state().clone()
+        assert torch.equal(gA, gB), f"{label}: a birth from the anatomy left the global random stream elsewhere"
+        assert _differs(A, B) is None, f"{label}: born from the anatomy, {_differs(A, B)} differs"
+        _live(A); _live(B)
+        assert _differs(A, B) is None and len(A.page) == 120, f"{label}: a minute lived, {_differs(A, B)} differs"
+        fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+        try:
+            A.save(path)
+            torch.manual_seed(7); C = Life.load(path, TOK, save_path=None)          # a load builds its organs from the global stream
+            torch.manual_seed(7); D = Life.load(path, LanguageAnatomy(TOK, C.cfg), save_path=None)   # (the parts a save does not hold)
+        finally:
+            os.remove(path)
+        assert _differs(C, D) is None and C.ticks == D.ticks == 60, f"{label}: loaded from the anatomy, {_differs(C, D)} differs"
+    refused = []
+    for what, call in (("an anatomy under another rest", lambda: _born(LanguageAnatomy(TOK, dict(rest_token="<eot_model>")), {})),
+                       ("an anatomy under another end", lambda: _born(LanguageAnatomy(TOK, dict(end_symbol="eot")), dict(end_symbol="rest"))),
+                       ("an anatomy with the life's constants given later", lambda: Life(A.m, LanguageAnatomy(TOK, {}), cfg=dict(display_token="\t")))):
+        try:
+            call()
+        except ValueError:
+            refused.append(what); continue
+        raise AssertionError(f"the life took {what}")
+    other = Anatomy([Channel("eye", "vector", 4)], [Effector("arm", [5, 5], rest_id=12)], [RewardSource("face")]).check()
+    for call in (lambda: anatomy_for(other, {}), lambda: _born(other, {}), lambda: Life(A.m, other)):
+        try:
+            call()
+        except NotImplementedError:
+            continue
+        raise AssertionError("a life was built on an anatomy not of language before steps R4-R5")
+    print("anatomy 5: born and loaded from a LanguageAnatomy in the tokenizer's place, the same life under 2 constant sets;",
+          f"refused: {len(refused)} anatomies declared under other constants, and one not of language")
+
+
+class _CountingAnatomy(LanguageAnatomy):
+    """the diary's anatomy whose text passes through counters, its tokenizer held apart (so the life's own reaches can be refused)"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self._t = tok; self.calls = collections.Counter()
+
+    def symbol(self, ch):
+        self.calls["symbol"] += 1
+        return self._t.token_to_id(ch)
+
+    def decode(self, ids):
+        self.calls["decode"] += 1
+        return self._t.decode(ids)
+
+
+class _NoTokenizer:
+    """stands where the tokenizer was: any reach for it is an error"""
+
+    def __getattr__(self, name):
+        raise AssertionError(f"the body reached for the tokenizer ({name}) past its anatomy")
+
+
+def test_the_body_reads_text_through_its_anatomy():
+    """anatomy 6 (step R2): with the anatomy's tokenizer taken away (only its `symbol` and `decode` keep one), a life types, hears,
+    speaks, sleeps a night on its utterances and a corpus (the report's examples) and lives on: the text passes through the anatomy
+    alone, and the page reads as the tokenizer would write it"""
+    import tempfile
+    f = tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False)
+    f.write("The cat sat on the mat. It was a good day.\n"); f.close()
+    try:
+        cfg = dict(wake_ticks=80, wake_every=8, gate_every=8, night_rounds=1, night_starts=4, night_batch=4, rem_dreams=2, rem_steps=2,
+                   dream_source="utterances", dream_who=1, night_load=0.0, write_floor=1e-30, dream_corpus_n=2, dream_corpus_file=f.name)
+        a = _CountingAnatomy(TOK, cfg)
+        life = _born(a, cfg)
+        assert life.anatomy is a
+        a.tok = _NoTokenizer()
+        _live(life, lines=("go up", "we go up"), ticks=90)
+        assert life.nights == 1 and not (life.last_night or {}).get("error"), (life.nights, (life.last_night or {}).get("error"))
+        assert (life.last_night or {}).get("examples"), "the night's report wrote no examples"
+    finally:
+        os.remove(f.name)
+    assert a.calls["symbol"] >= len("go up") + len("we go up") and a.calls["decode"] >= 2 * 90, dict(a.calls)
+    heard = "".join(e[0] for e in life.page if e[1] == 0)
+    assert heard.startswith("go up") and "we go up" in heard, heard
+    assert len(life._corpus_pool()) == 2 and a.calls["symbol"] > len("go up") + len("we go up"), dict(a.calls)
+    print(f"anatomy 6: a day, a night on the utterances and a corpus, and a morning with the tokenizer out of reach: the text went",
+          f"through the anatomy ({a.calls['symbol']} symbols typed or read, {a.calls['decode']} decoded)")
+
+
+ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
+                 test_life_reads_its_anatomy, test_an_anatomy_in_the_tokenizers_place, test_the_body_reads_text_through_its_anatomy]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

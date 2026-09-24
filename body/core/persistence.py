@@ -1,5 +1,7 @@
 """the body on disk (a mixin of `Life`, body/life.py): `save`, `load` (a reload: the save's own constants, then the caller's) and
-`birth`. `load` and `birth` are classmethods: `cls` is `Life`.
+`birth`. `load` and `birth` are classmethods: `cls` is `Life`. Their `tok` is what it always was, a tokenizer, or an anatomy in its
+place (the core refactor's step R2): the life builds its anatomy from it (body/core/anatomy.py `anatomy_for`), and a birth sizes the
+organs' alphabet from that anatomy.
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import os
@@ -7,6 +9,7 @@ import os
 import torch
 
 from ..model import Organs
+from .anatomy import anatomy_for
 from .physiology import PHYSIOLOGY
 
 
@@ -156,5 +159,6 @@ class PersistenceMixin:
     @classmethod
     def birth(cls, tok, device="cpu", d=256, layers=6, heads=4, window=64, cfg=None, seed=0, save_path=None):
         torch.manual_seed(int(seed))
-        organs = Organs(tok.get_vocab_size(), d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])))
-        return cls(organs, tok, cfg=cfg, device=device, seed=seed, save_path=save_path)
+        anatomy = anatomy_for(tok, cfg)                 # the body's anatomy (a tokenizer's: the diary's); built with no draw, before the organs
+        organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])))
+        return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path)

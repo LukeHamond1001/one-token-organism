@@ -1,14 +1,17 @@
-"""the body's anatomy, declared (docs/SIM_DESIGN.md section 8.2; the core refactor, step R1): what a body senses (`Channel`), how it
+"""the body's anatomy, declared (docs/SIM_DESIGN.md section 8.2; the core refactor, steps R1 and R2): what a body senses (`Channel`), how it
 acts (`Effector`) and what it feels as reward (`RewardSource`), gathered in an `Anatomy`, so that the core can serve a body other than
-the diary's. `LanguageAnatomy(tok, cfg)` is the diary's body: it rebuilds from the tokenizer and the physiology exactly the symbols
-`Life.__init__` derives today (body/life.py: the rest `sil`, the display symbol `nl`, the space, the turn-end token `eot`, the end the
-offset teaches `end_id`, the `reserved` the world never types and the `bans` the mouth never says) and declares the ear, the face, the
-voice and the reward's three terms in their order.
+the diary's. `LanguageAnatomy(tok, cfg)` is the diary's body: it derives from the tokenizer and the physiology exactly the symbols
+`Life.__init__` derived before step R2 and now reads from it (the rest `sil`, the display symbol `nl`, the space, the turn-end token
+`eot`, the end the offset teaches `end_id`, the `reserved` the world never types and the `bans` the mouth never says) and declares the
+ear, the face, the voice and the reward's three terms in their order.
 
-STEP R1: declarations only. `Life` does not use this module yet; body/tests/test_anatomy.py holds the language anatomy equal to the
-fields a life derives from its tokenizer. The tables, the encoder and the gate are the organs' (`m.E`, `m.face_in`, `m.mouth_gate`) and
-stay None until a life binds them; the methods that read a frame or a life raise until the step named on them wires them. Building an
-anatomy builds no module, draws no random number and touches no life (SIM_DESIGN.md 8.3, item 4)."""
+STEP R1 declared it; STEP R2 builds the life with it: `Life(organs, tok)`, `Life.birth(tok)` and `Life.load(path, tok)` keep their
+signatures, and `anatomy_for` turns the tokenizer into the diary's `LanguageAnatomy` inside (or takes an anatomy given in its place). The
+life reads its symbols from the anatomy (`life.anatomy`), and the tokenizer stays inside the language anatomy for text: the world's
+typing (`symbol`), the page, the tick's record and the night's report (`decode`). body/tests/test_anatomy.py holds the language anatomy
+equal to today's fields. The tables, the encoder and the gate are the organs' (`m.E`, `m.face_in`, `m.mouth_gate`) and stay None until
+a later step binds them; the methods that read a frame or a life raise until the step named on them wires them. Building an anatomy
+builds no module, draws no random number and touches no life (SIM_DESIGN.md 8.3, item 4)."""
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -137,21 +140,22 @@ class Anatomy:
 class LanguageAnatomy(Anatomy):
     """THE DIARY'S BODY: one ear on the typed page (the partner), the face as a sense, the voice as its one effector, the reward felt
     from the face, then the world's words (world_r, not over its own voice under world_mask), then the effort (under cost_in_reward;
-    0 on the served body). The symbols are derived as `Life.__init__` derives them (body/life.py), from `tok` and the physiology
-    updated by `cfg`, so they are declared by the body that is born, never found by a fixed string."""
+    0 on the served body). The symbols are derived here as `Life.__init__` derived them before step R2 (the life now copies them from
+    its anatomy), from `tok` and the physiology updated by `cfg`, so they are declared by the body that is born, never found by a fixed
+    string."""
 
     def __init__(self, tok, cfg=None):
         c = dict(PHYSIOLOGY); c.update(cfg or {})
         self.tok = tok
         self.vocab = int(tok.get_vocab_size())
-        # the body's own symbols (life.py): its rest, a display symbol the world never types, the word boundary, the world's turn-end,
+        # the body's own symbols: its rest, a display symbol the world never types, the word boundary, the world's turn-end,
         # and what the offset teaches the cortex to expect
         self.sil = tok.token_to_id(str(c.get("rest_token", "<pad>")))
         self.nl = tok.token_to_id(str(c.get("display_token", "\n")))
         self.space_id = tok.token_to_id(" ")
         self.eot = tok.token_to_id(str(c.get("end_token", "<eot_human>")))
         self.end_id = self.sil if str(c.get("end_symbol", "eot")) == "rest" else self.eot
-        # the reserved symbols (life.py): every `<...>` the tokenizer defines except the rest, and the display symbol
+        # the reserved symbols: every `<...>` the tokenizer defines except the rest, and the display symbol
         _vocab = tok.get_vocab(); _specials = sorted(i for s_, i in _vocab.items() if s_.startswith("<") and s_.endswith(">"))
         self.reserved = [i for i in _specials if i != self.sil] + ([self.nl] if self.nl is not None else [])
         self.bans = list(self.reserved)
@@ -162,3 +166,35 @@ class LanguageAnatomy(Anatomy):
                    RewardSource("world_r", ("world_r", "world_mask")),
                    RewardSource("cost", ("cost_in_reward", "symbol_cost", "gate_fatigue"))]
         super().__init__([ear, face], [voice], rewards)
+
+    # the tokenizer stays for text (step R2): the language body's only readers of it
+    def symbol(self, ch):
+        """the ear's symbol for one typed character, or None where the alphabet has none (the world's hand, `type_text`; the corpus
+        as the body hears it)"""
+        return self.tok.token_to_id(ch)
+
+    def decode(self, ids):
+        """symbols as text, as the tokenizer writes them (the page, the tick's record, the night's report)"""
+        return self.tok.decode(ids)
+
+    def symbols(self):
+        """the symbols this anatomy declares, in one tuple (two language anatomies of one body agree on it)"""
+        return (self.vocab, self.sil, self.nl, self.space_id, self.eot, self.end_id, tuple(self.reserved), tuple(self.bans))
+
+
+def anatomy_for(body, cfg=None):
+    """THE ANATOMY A LIFE IS BUILT WITH (step R2; SIM_DESIGN.md 8.2, "the signatures stay"): `body` is what the caller passed where the
+    tokenizer always went. A tokenizer gives the diary's `LanguageAnatomy` under the constants `cfg` (updating the physiology, as the
+    life's own cfg does). A language anatomy given in its place is taken if it declares the symbols its tokenizer gives under `cfg`,
+    since a body's rest and ends are named by its physiology (one declared under other constants is refused, not mixed). Any other
+    anatomy is refused until steps R4-R5 wire channels and effectors into the core: until then the life reads the language symbols."""
+    if not isinstance(body, Anatomy):
+        return LanguageAnatomy(body, cfg)
+    if not isinstance(body, LanguageAnatomy):
+        raise NotImplementedError(f"anatomy_for: the core serves the language anatomy only until the core refactor's steps R4-R5 wire "
+                                  f"channels and effectors (SIM_DESIGN.md 8.4); given {type(body).__name__}")
+    want = LanguageAnatomy(body.tok, cfg).symbols()
+    if want != body.symbols():
+        raise ValueError(f"anatomy_for: this language anatomy was declared under other constants than the life's (its rest, display, "
+                         f"space, turn-end and end {body.symbols()[1:6]}; the life's {want[1:6]})")
+    return body
