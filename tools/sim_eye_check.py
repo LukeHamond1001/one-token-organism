@@ -16,10 +16,18 @@ until the day's light is built (W5): the sun as built (midday), low from the win
 along it), the face test's verdict in the left eye against a segmentation render's: the same test with the ray replaced by the
 render (8 x the eye's resolution, so the mouth resolves: the pixel at the mouth point is the parent's head) and the face's pixels
 counted in the window; their agreement, and the ray's verdict against the render's visibility alone.
+THE C2 AND C3 CHECK ON BABBLED FRAMES (--c2 N): N frames of the babbling G1 (a tick of the babbler between frames; the design's
+2,000), each with the parent's head put at a random distance 0.3-3.5 m from the left eye (uniform in distance) in a random direction
+within the fovea's reach, turned at random up to 90 deg about her up axis and nodded up to 20 deg, a toy on the line between the
+eye and her mouth in a third of the frames; the gaze aimed at her mouth with a 3 deg error per axis (so the mouth is sometimes
+outside the window). C2: the face test's verdict (the left eye) against the segmentation render's (as above), by distance. C3: the
+born face template (body/sim/eyes.py) on the frame's own pixels against the face test: its hits (the template fires on a frame the
+test passes), and its false alarms on frames the test fails and on frames with no face at all (her head moved out of the room),
+under each light. The face test decides nothing here; both are only compared.
 With --codes, the same views' fovea is also read (under the first light, no shadow) as its raw pixels (both eyes, 2 x 3,072) and
 as a finer retina (2 px cells: 16 x 16 x 6 per eye), to place what the retina's 4 px cells keep of the pixels' identity.
-Run: nice -n 19 python3 tools/sim_eye_check.py [--views 60] [--seed 1] [--lights midday,morning,dusk] [--codes]  (JSON on stdout;
-nothing written)"""
+Run: nice -n 19 python3 tools/sim_eye_check.py [--views 60] [--seed 1] [--lights midday,morning,dusk] [--codes] [--c2 2000]
+(JSON on stdout; nothing written)"""
 import argparse
 import json
 import math
@@ -220,11 +228,152 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
     return out
 
 
+def seg_face(m, d, seg, seg8, opt, gaze, head, mouth_geoms, up):
+    """the segmentation render's verdict for the left eye: (the mouth point in the window, the mouth visible at 8x, the face's
+    pixels in the window at 1x)"""
+    mouth = E.mouth_point(m, d)[0]
+    pr = E.project(m, d, "L", mouth)
+    if pr is None:
+        return False, False, 0
+    x0, y0 = E.window_corner("L", gaze)
+    seg.update_scene(d, camera="eye_L", scene_option=opt)
+    s1 = seg.render()
+    win = s1[y0:y0 + W.FOVEA_PX, x0:x0 + W.FOVEA_PX].reshape(-1, 2)
+    geom = int(mujoco.mjtObj.mjOBJ_GEOM)
+    face_px = int(sum(1 for gid, typ in win if typ == geom and gid >= 0 and m.geom_bodyid[gid] == head))
+    seg8.update_scene(d, camera="eye_L", scene_option=opt)
+    s8 = seg8.render()
+    r8, c8 = int(pr[1] * up), int(pr[0] * up)
+    inside = 0 <= r8 < s8.shape[0] and 0 <= c8 < s8.shape[1]
+    visible = False
+    if inside:
+        gid8, typ8 = s8[r8, c8]
+        visible = bool(typ8 == geom and gid8 >= 0 and m.geom_bodyid[gid8] == head)
+    in_win = x0 <= pr[0] < x0 + W.FOVEA_PX and y0 <= pr[1] < y0 + W.FOVEA_PX
+    return bool(in_win), visible, face_px
+
+
+def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
+    """C2 and C3 on babbled frames (see the module's doc)"""
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from sim_babble import Babbler
+    rng = np.random.default_rng(seed)
+    w = W.G1World(seed=seed)
+    m, d = w.m, w.d
+    ey = E.Eyes(w, shadows="sun")
+    UP = 8
+    seg = mujoco.Renderer(m, G.EYE_H, G.EYE_W); seg.enable_segmentation_rendering()
+    seg8 = mujoco.Renderer(m, G.EYE_H * UP, G.EYE_W * UP); seg8.enable_segmentation_rendering()
+    opt = G.eye_option()
+    sun = [i for i in range(m.nlight) if m.light(i).name == "sun"][0]
+    sun0 = (m.light_dir[sun].copy(), m.light_diffuse[sun].copy())
+    head = m.body("parent_head").id
+    hid = m.body_mocapid[head]
+    toys = [m.body(f"toy_{t}").id for t in TOYS]
+    camL = m.camera("eye_L").id
+    b = Babbler(seed=seed, p_rest=0.6)
+    rows = []
+    t0 = time.perf_counter()
+    for k in range(frames):
+        w.apply(b.acts())
+        live = w.save_state()                                           # the babbling life goes on from here, untouched by the rig
+        noface = rng.random() < 0.2                                     # a fifth of the frames: no face anywhere (C3's false alarms)
+        dist = rng.uniform(0.3, 3.5)
+        yaw, pitch = math.radians(rng.uniform(-38, 38)), math.radians(rng.uniform(-20, 20))
+        turn, nod = rng.uniform(-90, 90), rng.uniform(-20, 20)
+        block = rng.random() < 1 / 3
+        aim = rng.normal(0, math.radians(3.0), 2)
+        R = d.cam_xmat[camL].reshape(3, 3)
+        dirc = np.array([math.tan(yaw), math.tan(pitch), -1.0]); dirc /= np.linalg.norm(dirc)
+        p = d.cam_xpos[camL] + R @ dirc * dist
+        if noface:
+            d.mocap_pos[hid] = [0.0, 0.0, -5.0]                         # under the floor: no face in the room
+        else:
+            x = d.cam_xpos[camL] - p; x /= np.linalg.norm(x)
+            z = R @ np.array([0.0, 1.0, 0.0]); z = z - x * float(x @ z); z /= np.linalg.norm(z)   # upright in the eye's image
+            x = rot(z, math.radians(turn)) @ x
+            x = rot(np.cross(z, x), math.radians(nod)) @ x
+            z = z - x * float(x @ z); z /= np.linalg.norm(z)
+            Rh = np.column_stack([x, np.cross(z, x), z])
+            local = np.array([kin.head_surface_x(0, kin.MOUTH_Z) + .0015, 0.0, kin.MOUTH_Z])
+            d.mocap_pos[hid] = p - Rh @ local
+            d.mocap_quat[hid] = kin.mjquat(Rh)
+        mujoco.mj_forward(m, d)
+        if block and not noface:
+            mouth = E.mouth_point(m, d)[0]
+            tb = toys[int(rng.integers(len(toys)))]
+            a = m.jnt_qposadr[m.body_jntadr[tb]]
+            d.qpos[a:a + 3] = d.cam_xpos[camL] + (mouth - d.cam_xpos[camL]) * rng.uniform(0.3, 0.9)
+            mujoco.mj_forward(m, d)
+        mouth = E.mouth_point(m, d)[0]
+        g = E.gaze_at(m, d, mouth)
+        w.gaze = W.clamp_gaze([g[0] + aim[0], g[1] + aim[1], g[2]])
+        ft = E.face_test(m, d, w.gaze)["L"]
+        in_win, visible, face_px = seg_face(m, d, seg, seg8, opt, w.gaze, head, None, UP)
+        facing = ft[1] not in ("turned away", "behind the eye")
+        seg_ok = bool(in_win and visible and facing and face_px >= E.FACE_MIN_PX) if not noface else False
+        tmpl = {}
+        for L, spec in {L_: LIGHTS[L_] for L_ in lights}.items():
+            if spec is None:
+                m.light_dir[sun], m.light_diffuse[sun] = sun0
+            else:
+                m.light_dir[sun] = np.asarray(spec["dir"]) / np.linalg.norm(spec["dir"]); m.light_diffuse[sun] = spec["diffuse"]
+            seen = ey.see()
+            tmpl[L] = int(seen["face_fovea"][0]), int(E.template_match(seen["truth"]["template_fovea"]["L"]))
+        m.light_dir[sun], m.light_diffuse[sun] = sun0
+        rows.append(dict(dist=dist, noface=noface, block=block, test=bool(ft[0]) and not noface, why=ft[1], seg=seg_ok, in_win=in_win,
+                         visible=visible, face_px=face_px, tmpl=tmpl))
+        w.load_state(live)
+    secs = time.perf_counter() - t0
+    face = [r for r in rows if not r["noface"]]
+    bins = [(0.3, 0.6), (0.6, 1.0), (1.0, 1.5), (1.5, 2.5), (2.5, 3.5)]
+    geo = [r for r in face if r["why"] in ("", "blocked")]             # the mouth in the window, the face turned toward the eye and big
+                                                                        # enough by the test's own geometry: what the ray decides
+    ray_ok = lambda r: r["why"] != "blocked"
+    by = {}
+    for lo, hi in bins:
+        rr = [r for r in geo if lo <= r["dist"] < hi]
+        if rr:
+            by[f"{lo}-{hi} m"] = {"frames": len(rr), "ray_clear": sum(ray_ok(r) for r in rr), "render_visible": sum(r["visible"] for r in rr),
+                                 "agree": round(float(np.mean([ray_ok(r) == r["visible"] for r in rr])), 3)}
+    why = {}
+    for r in face:
+        why[r["why"] or "passes"] = why.get(r["why"] or "passes", 0) + 1
+    out = {"frames": frames, "with_a_face": len(face), "no_face": len(rows) - len(face), "seconds": round(secs, 1),
+           "C2": {"what": "the ray's verdict against the 8x segmentation render's (the mouth point visible), on the frames the test's "
+                          "geometry passes (in the window, turned within 75 deg, big enough)",
+                  "frames": len(geo), "agree": round(float(np.mean([ray_ok(r) == r["visible"] for r in geo])), 4) if geo else None,
+                  "ray_clear_render_hidden": sum(ray_ok(r) and not r["visible"] for r in geo),
+                  "ray_blocked_render_visible": sum(not ray_ok(r) and r["visible"] for r in geo), "by_distance": by,
+                  "whole_test_vs_render": {"agree": round(float(np.mean([r["test"] == r["seg"] for r in face])), 4),
+                                           "note": "the render's size criterion counts the whole head's pixels (hair included), the test "
+                                                   "the face front's ellipse, so they part at the far end: informative only"},
+                  "test_verdicts": why},
+           "C3_template": {}}
+    for L in lights:
+        pos = [r for r in face if r["test"]]
+        neg = [r for r in face if not r["test"]]
+        nof = [r for r in rows if r["noface"]]
+        hit = lambda rr: sum(r["tmpl"][L][0] for r in rr)
+        out["C3_template"][L] = {"hits": f"{hit(pos)} of {len(pos)} frames the face test passes",
+                                 "false_alarms_face_not_seen": f"{hit(neg)} of {len(neg)}",
+                                 "false_alarms_no_face": f"{hit(nof)} of {len(nof)}",
+                                 "hits_by_distance": {f"{lo}-{hi} m": f"{hit([r for r in pos if lo <= r['dist'] < hi])} of "
+                                                      f"{len([r for r in pos if lo <= r['dist'] < hi])}" for lo, hi in bins}}
+    out["render_ms"] = round(1e3 * ey.timing["render_s"] / max(1, ey.timing["renders"]), 1)
+    seg.close(); seg8.close(); ey.close()
+    return out
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--views", type=int, default=60)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--lights", default=",".join(LIGHTS))
     ap.add_argument("--codes", action="store_true")
+    ap.add_argument("--c2", type=int, default=0, help="C2 and C3 on this many babbled frames instead of the identity check")
     a = ap.parse_args()
-    print(json.dumps(main(a.views, a.seed, tuple(a.lights.split(",")), a.codes), indent=1))
+    if a.c2:
+        print(json.dumps(c2c3(a.c2, a.seed, tuple(a.lights.split(","))), indent=1))
+    else:
+        print(json.dumps(main(a.views, a.seed, tuple(a.lights.split(",")), a.codes), indent=1))

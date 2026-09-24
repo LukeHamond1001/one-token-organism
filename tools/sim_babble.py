@@ -11,7 +11,7 @@ Run (the speed of the world at the served tick, on this Mac, under babble; JSON 
   nice -n 19 python3 tools/sim_babble.py --ticks 400 [--seed 1] [--p-rest 0.6] [--rest-ticks 40] [--eyes [--shadows sun|none|all]]
 It reports the wall ms of a tick (the world's apply: the physics' mj_step alone, and the world's own Python: the servo law, the
 touch zones, pain's filter, the IMUs, the charge), of frame() (the senses read out; with --eyes the eyes' render, its split into
-periphery and fovea, the retina's code and the face test, W3),
+periphery and fovea, the retina's code, the born face template and the face test, W3),
 with the real-time factor (150 ms of sim time a tick), MuJoCo's contacts, the tick's largest 10 ms force against F_pain, the pain
 ticks and the charge's drain."""
 import argparse

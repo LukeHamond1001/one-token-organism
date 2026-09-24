@@ -26,11 +26,15 @@ THE SOLVER (the G1 study, 2026-09-24): the elliptic friction cone, multi-point C
 squeezed in a Dex3 hand stopped MuJoCo 3.9 ("FactorizeHessian: rank-deficient sparse Hessian"); with multi-point CCD on,
 8 of 360 grasp trials blew up to NaN about 0.1 s into the fingers' closing and MuJoCo silently reset them; elliptic with
 multi-point CCD off gave 0 of 360 and a clean babble. impratio 10 stops the soft contacts' creep (the resting G1 slid
-2.6 cm in 2 s under a 150 N push at impratio 1, 0.7 cm at 10; see the option's comment).
+2.6 cm in 2 s under a 150 N push at impratio 1, 0.7 cm at 10; see the option's comment). MuJoCo's auto-reset is off (A18), so a
+bad state is never silently replaced by the start pose: the world finds it and stops the tick.
 
 Collision bits: world 1 (floor, walls, mat, furniture); the G1 keeps its own contype 1 / conaffinity 1 (self-collision
 on, as shipped); toys 4; parent 8, with conaffinity 1 so it touches the G1 (a mocap body and the static world are
-both welded to the world, so they never collide with each other). Run: python3 body/sim/make_g1room.py  (writes
+both welded to the world, so they never collide with each other). The world's geoms and the toys take contact priority 2
+(WORLD_PRIORITY; 5.1, A21, C26), so their friction and softness decide every contact with the G1 (the stock feet's own
+priority 1 and friction 0.6 included) and nothing on the G1 is changed. Their frictions are still the prototype's 1.0: the
+real surfaces' values are C26's, open (the W1 fix's report). Run: python3 body/sim/make_g1room.py  (writes
 g1room.xml and textures/room_*.png, the living room's own two textures, byte for byte the same)."""
 import math
 import os
@@ -47,8 +51,13 @@ G1_XML = G1_DIR / "g1_with_hands.xml"          # included unchanged
 import parent_kin as kin  # noqa: E402
 
 # ------------------------------------------------------------------ collision classes
-WORLD = 'contype="1" conaffinity="0"'
-TOY = 'contype="4" conaffinity="13"'
+# The world's geoms (the floor, walls, mat and furniture) and the toys take contact priority 2 (5.1, A21, C26): where one of them
+# touches the G1 (whose feet carry priority 1 in the stock file, its other shapes 0), MuJoCo takes the contact's friction, condim
+# and softness from the world's geom alone, so the world's surfaces decide how the stock robot meets them and the G1's file and
+# geoms stay untouched. Two priority-2 geoms (a toy on the floor) combine as MuJoCo does (the larger friction; mixed softness).
+WORLD_PRIORITY = 2
+WORLD = f'contype="1" conaffinity="0" priority="{WORLD_PRIORITY}"'
+TOY = f'contype="4" conaffinity="13" priority="{WORLD_PRIORITY}"'
 PARENT = 'contype="8" conaffinity="1"'
 DECOR = 'contype="0" conaffinity="0"'
 VIS0 = DECOR + ' density="0"'          # massless and seen only (on dynamic bodies)
@@ -636,8 +645,11 @@ def scene_xml(folder=HERE):
        as little as the noslip solver's 0.2 / 0.5 / 2.2 cm (the body's own give) at no added cost (the noslip solver nearly
        doubled the tick): the world's measurement m_creep, 2026-09-24. With it the Dex3 hand holds the toys it could not
        (see TOY_SCALE in the maker) -->
+  <!-- auto-reset off (A18): MuJoCo would otherwise put a state with a bad position, velocity or acceleration back to the
+       start pose by itself and go on; off, the bad state stays as it is, and the world (body/sim/world.py) finds it on the
+       tick it happens, before that tick's frame reaches the body -->
   <option timestep="0.002" integrator="implicitfast" cone="elliptic" impratio="10">
-    <flag multiccd="disable"/>
+    <flag multiccd="disable" autoreset="disable"/>
   </option>
   <size memory="128M"/>
   <statistic center="0 -.5 .3" extent="2.5"/>

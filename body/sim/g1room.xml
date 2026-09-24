@@ -17,8 +17,11 @@
        as little as the noslip solver's 0.2 / 0.5 / 2.2 cm (the body's own give) at no added cost (the noslip solver nearly
        doubled the tick): the world's measurement m_creep, 2026-09-24. With it the Dex3 hand holds the toys it could not
        (see TOY_SCALE in the maker) -->
+  <!-- auto-reset off (A18): MuJoCo would otherwise put a state with a bad position, velocity or acceleration back to the
+       start pose by itself and go on; off, the bad state stays as it is, and the world (body/sim/world.py) finds it on the
+       tick it happens, before that tick's frame reaches the body -->
   <option timestep="0.002" integrator="implicitfast" cone="elliptic" impratio="10">
-    <flag multiccd="disable"/>
+    <flag multiccd="disable" autoreset="disable"/>
   </option>
   <size memory="128M"/>
   <statistic center="0 -.5 .3" extent="2.5"/>
@@ -138,21 +141,21 @@
     <camera name="mat" pos="1.6 -2 1.15" xyaxes="0.64895 0.76083 -0 -0.2977 0.25392 0.92027" fovy="42"/>
     <camera name="top" pos="0 -0.6 3.2" xyaxes="1 -0 0 0 1 0.0003125" fovy="50"/>
     <body name="room" childclass="room">
-    <geom name="floor" type="plane" size="2.6 2.3 .1" material="floor" contype="1" conaffinity="0"/>
+    <geom name="floor" type="plane" size="2.6 2.3 .1" material="floor" contype="1" conaffinity="0" priority="2"/>
     <geom name="ceiling" type="box" pos="0 0 2.63" size="2.6 2.3 .03" material="ceiling" contype="0" conaffinity="0"/>
-    <geom name="wall_back" type="box" pos="0 2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall_accent" contype="1" conaffinity="0"/>
-    <geom name="wall_front" type="box" pos="0 -2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall" contype="1" conaffinity="0"/>
-    <geom name="wall_left" type="box" pos="-2.65 0 1.3" size=".05 2.4 1.3" material="wall" contype="1" conaffinity="0"/>
-    <geom name="wall_right_a" type="box" pos="2.65 0.625 1.3" size=".05 1.675 1.3" material="wall" contype="1" conaffinity="0"/>
-    <geom name="wall_right_b" type="box" pos="2.65 -2.125 1.3" size=".05 0.175 1.3" material="wall" contype="1" conaffinity="0"/>
+    <geom name="wall_back" type="box" pos="0 2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall_accent" contype="1" conaffinity="0" priority="2"/>
+    <geom name="wall_front" type="box" pos="0 -2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
+    <geom name="wall_left" type="box" pos="-2.65 0 1.3" size=".05 2.4 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
+    <geom name="wall_right_a" type="box" pos="2.65 0.625 1.3" size=".05 1.675 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
+    <geom name="wall_right_b" type="box" pos="2.65 -2.125 1.3" size=".05 0.175 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
     <geom type="box" pos="2.65 -1.5 2.325" size=".05 0.45 0.275" material="wall" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.595 -1.95 1.025" size=".012 .045 1.025" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.595 -1.05 1.025" size=".012 .045 1.025" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.595 -1.5 2.09" size=".012 0.495 .04" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="3.6 -1.5 -.001" size=".95 1.2 .001" material="floor" contype="0" conaffinity="0"/>
-    <geom name="hall_end" type="box" pos="4.55 -1.5 1.3" size=".05 1.2 1.3" material="hall" contype="1" conaffinity="0"/>
-    <geom name="hall_side_a" type="box" pos="3.6 -0.3 1.3" size=".95 .05 1.3" material="hall" contype="1" conaffinity="0"/>
-    <geom name="hall_side_b" type="box" pos="3.6 -2.7 1.3" size=".95 .05 1.3" material="hall" contype="1" conaffinity="0"/>
+    <geom name="hall_end" type="box" pos="4.55 -1.5 1.3" size=".05 1.2 1.3" material="hall" contype="1" conaffinity="0" priority="2"/>
+    <geom name="hall_side_a" type="box" pos="3.6 -0.3 1.3" size=".95 .05 1.3" material="hall" contype="1" conaffinity="0" priority="2"/>
+    <geom name="hall_side_b" type="box" pos="3.6 -2.7 1.3" size=".95 .05 1.3" material="hall" contype="1" conaffinity="0" priority="2"/>
     <geom type="box" pos="0 2.288 0.05" size="2.6 0.012 0.05" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="0 -2.288 0.05" size="2.6 0.012 0.05" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="-2.588 0 0.05" size="0.012 2.3 0.05" material="trim" contype="0" conaffinity="0"/>
@@ -181,10 +184,10 @@
     <geom type="capsule" fromto="-2.465 0.97 .03 -2.465 0.97 2.28" size="0.028" material="curtain" contype="0" conaffinity="0"/>
     <geom type="capsule" fromto="-2.465 1.02 .03 -2.465 1.02 2.28" size="0.034" material="curtain" contype="0" conaffinity="0"/>
     <geom type="capsule" fromto="-2.465 1.07 .03 -2.465 1.07 2.28" size="0.028" material="curtain" contype="0" conaffinity="0"/>
-    <geom name="sofa_base" type="box" pos="0.15 1.8199999999999998 .24" size="1.05 .44 .16" material="sofa_d" contype="1" conaffinity="0"/>
-    <geom name="sofa_back" type="box" pos="0.15 2.1599999999999997 .58" size="1.05 .12 .30" material="sofa" contype="1" conaffinity="0"/>
-    <geom name="sofa_arm_l" type="box" pos="-0.8099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="1" conaffinity="0"/>
-    <geom name="sofa_arm_r" type="box" pos="1.1099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="1" conaffinity="0"/>
+    <geom name="sofa_base" type="box" pos="0.15 1.8199999999999998 .24" size="1.05 .44 .16" material="sofa_d" contype="1" conaffinity="0" priority="2"/>
+    <geom name="sofa_back" type="box" pos="0.15 2.1599999999999997 .58" size="1.05 .12 .30" material="sofa" contype="1" conaffinity="0" priority="2"/>
+    <geom name="sofa_arm_l" type="box" pos="-0.8099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="1" conaffinity="0" priority="2"/>
+    <geom name="sofa_arm_r" type="box" pos="1.1099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="1" conaffinity="0" priority="2"/>
     <geom type="mesh" mesh="cushion" pos="-0.42 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
     <geom type="mesh" mesh="back_cushion" pos="-0.42 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
     <geom type="mesh" mesh="cushion" pos="0.15 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
@@ -197,16 +200,16 @@
     <geom type="cylinder" pos="-0.83 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="1.13 1.46 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="1.13 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
-    <geom name="table_top" type="mesh" mesh="table_top" pos="0.15 0.95 .40" material="wood" contype="1" conaffinity="0"/>
+    <geom name="table_top" type="mesh" mesh="table_top" pos="0.15 0.95 .40" material="wood" contype="1" conaffinity="0" priority="2"/>
     <geom type="box" pos="0.15 0.95 .18" size=".48 .22 .012" material="wood" contype="0" conaffinity="0"/>
-    <geom name="table_leg_lf" type="cylinder" pos="-0.31 0.75 .19" size=".025 .19" material="wood" contype="1" conaffinity="0"/>
-    <geom name="table_leg_lb" type="cylinder" pos="-0.31 1.15 .19" size=".025 .19" material="wood" contype="1" conaffinity="0"/>
-    <geom name="table_leg_rf" type="cylinder" pos="0.61 0.75 .19" size=".025 .19" material="wood" contype="1" conaffinity="0"/>
-    <geom name="table_leg_rb" type="cylinder" pos="0.61 1.15 .19" size=".025 .19" material="wood" contype="1" conaffinity="0"/>
+    <geom name="table_leg_lf" type="cylinder" pos="-0.31 0.75 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
+    <geom name="table_leg_lb" type="cylinder" pos="-0.31 1.15 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rf" type="cylinder" pos="0.61 0.75 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rb" type="cylinder" pos="0.61 1.15 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
     <geom type="cylinder" pos="0.4 1 .43" size=".055 .012" material="pot" contype="0" conaffinity="0"/>
     <geom type="box" pos="-0.07 0.93 .423" euler="0 0 0.20944" size=".11 .08 .012" material="book2" contype="0" conaffinity="0"/>
     <geom type="box" pos="-0.07 0.93 .443" euler="0 0 0.0698132" size=".1 .075 .009" material="book1" contype="0" conaffinity="0"/>
-    <geom name="shelf" type="box" pos="2.39 0.55 0.42" size="0.195 0.78 0.42" material="shelf" contype="1" conaffinity="0" rgba="0 0 0 0"/>
+    <geom name="shelf" type="box" pos="2.39 0.55 0.42" size="0.195 0.78 0.42" material="shelf" contype="1" conaffinity="0" priority="2" rgba="0 0 0 0"/>
     <geom type="box" pos="2.39 -0.23 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.39 0.16 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.39 0.55 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
@@ -291,7 +294,7 @@
     <geom type="cylinder" pos="0.542 2.266 1.501" zaxis="0 1 0" size="0.153 .003" material="art_d" contype="0" conaffinity="0"/>
     <geom type="box" pos="0.685 2.264 1.382" size="0.091 .003 0.119" material="art_a" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="0 .3 2.58" size=".22 .02" material="lamp_shade" contype="0" conaffinity="0"/>
-    <geom name="mat" type="box" pos="0.0 -0.6 -0.038" size="1.4 1.0 0.05" material="mat_edge" friction="1 .01 .001" solref=".03 1" solimp=".85 .95 .004" contype="1" conaffinity="0"/>
+    <geom name="mat" type="box" pos="0.0 -0.6 -0.038" size="1.4 1.0 0.05" material="mat_edge" friction="1 .01 .001" solref=".03 1" solimp=".85 .95 .004" contype="1" conaffinity="0" priority="2"/>
     <geom type="box" pos="-1.2 -1.4 0.0064" size="0.198 0.198 0.006" material="tile_a" contype="0" conaffinity="0"/>
     <geom type="box" pos="-1.2 -1 0.0064" size="0.198 0.198 0.006" material="tile_b" contype="0" conaffinity="0"/>
     <geom type="box" pos="-1.2 -0.6 0.0064" size="0.198 0.198 0.006" material="tile_a" contype="0" conaffinity="0"/>
@@ -331,47 +334,47 @@
     <geom type="mesh" mesh="pad_ring" pos="1.2 0.2 0.018" material="pad_ring" contype="0" conaffinity="0"/>
     </body>
     <body name="toy_ball" childclass="room" pos="0.45 -1.12 0.073" euler="0 0 0"><freejoint name="toy_ball"/>
-      <geom name="ball" type="sphere" size="0.06" mass="0.12" material="t_red" condim="6" friction="1 .01 .002" contype="4" conaffinity="13"/>
+      <geom name="ball" type="sphere" size="0.06" mass="0.12" material="t_red" condim="6" friction="1 .01 .002" contype="4" conaffinity="13" priority="2"/>
       <geom type="sphere" pos="0 0 0" size="0.0602" material="t_red" contype="0" conaffinity="0" density="0" rgba="1 1 1 0"/>
     </body>
     <body name="toy_block" childclass="room" pos="-0.26 -0.02 0.048" euler="0 0 0.349066"><freejoint name="toy_block"/>
-      <geom name="block" type="box" size="0.035 0.035 0.035" mass="0.09" material="t_blue" friction="1 .01 .001" contype="4" conaffinity="13"/>
+      <geom name="block" type="box" size="0.035 0.035 0.035" mass="0.09" material="t_blue" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
       <geom type="box" pos="0 0 0.0352" size="0.022 0.022 0.0005" material="t_white" contype="0" conaffinity="0" density="0"/>
       <geom type="box" pos="0.0352 0 0" size="0.0005 0.022 0.022" material="t_white" contype="0" conaffinity="0" density="0"/>
       <geom type="box" pos="0 -0.0352 0" size="0.022 0.0005 0.022" material="t_white" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="toy_duck" childclass="room" pos="0.5 0.04 0.049" euler="0 0 -2.26893"><freejoint name="toy_duck"/>
-      <geom name="duck" type="ellipsoid" size="0.056 0.042 0.036" mass="0.06" material="t_yellow" friction="1 .01 .001" contype="4" conaffinity="13"/>
-      <geom name="duck_head" type="sphere" pos="0.032 0 0.044" size="0.027" mass="0.015" material="t_yellow" friction="1 .01 .001" contype="4" conaffinity="13"/>
+      <geom name="duck" type="ellipsoid" size="0.056 0.042 0.036" mass="0.06" material="t_yellow" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
+      <geom name="duck_head" type="sphere" pos="0.032 0 0.044" size="0.027" mass="0.015" material="t_yellow" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
       <geom type="ellipsoid" pos="0.062 0 0.04" size="0.017 0.014 0.0055" material="t_beak" contype="0" conaffinity="0" density="0"/>
       <geom type="sphere" pos="0.05 0.0155 0.053" size="0.0045" material="t_black" contype="0" conaffinity="0" density="0"/>
       <geom type="sphere" pos="0.05 -0.0155 0.053" size="0.0045" material="t_black" contype="0" conaffinity="0" density="0"/>
       <geom type="ellipsoid" pos="-0.052 0 0.02" euler="0 -0.610865 0" size="0.02 0.017 0.009" material="t_yellow" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="toy_cup" childclass="room" pos="-0.58 -0.12 0.058" euler="0 0 0.523599"><freejoint name="toy_cup"/>
-      <geom name="cup" type="cylinder" size="0.042 0.045" mass="0.06" material="t_green" condim="6" friction="1 .01 .002" contype="4" conaffinity="13"/>
+      <geom name="cup" type="cylinder" size="0.042 0.045" mass="0.06" material="t_green" condim="6" friction="1 .01 .002" contype="4" conaffinity="13" priority="2"/>
       <geom type="cylinder" pos="0 0 0.0452" size="0.036 0.0006" material="t_green_d" contype="0" conaffinity="0" density="0"/>
       <geom type="mesh" mesh="cup_rim" pos="0 0 0.044" material="t_green" contype="0" conaffinity="0" density="0"/>
       <geom type="mesh" mesh="cup_handle" pos="0.047 0 0" euler="1.5708 0 0" material="t_green" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="toy_rattle" childclass="room" pos="0.08 -0.97 0.039" euler="0 0 1.0472"><freejoint name="toy_rattle"/>
-      <geom name="rattle" type="capsule" fromto="-0.06 0 0 0.03 0 0" size="0.012" mass="0.04" material="t_purple" friction="1 .01 .001" contype="4" conaffinity="13"/>
-      <geom name="rattle_head" type="sphere" pos="0.062 0 0" size="0.026" mass="0.04" material="t_purple" condim="6" friction="1 .01 .002" contype="4" conaffinity="13"/>
+      <geom name="rattle" type="capsule" fromto="-0.06 0 0 0.03 0 0" size="0.012" mass="0.04" material="t_purple" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
+      <geom name="rattle_head" type="sphere" pos="0.062 0 0" size="0.026" mass="0.04" material="t_purple" condim="6" friction="1 .01 .002" contype="4" conaffinity="13" priority="2"/>
       <geom type="cylinder" pos="0.032 0 0" zaxis="1 0 0" size="0.018 0.004" material="t_white" contype="0" conaffinity="0" density="0"/>
       <geom type="sphere" pos="-0.064 0 0" size="0.017" material="t_white" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="toy_car" childclass="room" pos="1.02 -0.45 0.041" euler="0 0 3.49066"><freejoint name="toy_car"/>
-      <geom name="car" type="box" pos="0 0 0.01" size="0.07 0.036 0.022" mass="0.1" material="t_orange" friction="1 .01 .001" contype="4" conaffinity="13"/>
+      <geom name="car" type="box" pos="0 0 0.01" size="0.07 0.036 0.022" mass="0.1" material="t_orange" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
       <geom type="ellipsoid" pos="-0.008 0 0.036" size="0.042 0.032 0.022" material="t_orange" contype="0" conaffinity="0" density="0"/>
       <geom type="ellipsoid" pos="-0.004 0 0.04" size="0.034 0.0325 0.014" material="t_cyan" contype="0" conaffinity="0" density="0" rgba=".75 .92 1 1"/>
-      <geom type="cylinder" pos="-0.042 -0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" mass="0.005"/>
-      <geom type="cylinder" pos="-0.042 0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" mass="0.005"/>
-      <geom type="cylinder" pos="0.042 -0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" mass="0.005"/>
-      <geom type="cylinder" pos="0.042 0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" mass="0.005"/>
+      <geom type="cylinder" pos="-0.042 -0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" priority="2" mass="0.005"/>
+      <geom type="cylinder" pos="-0.042 0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" priority="2" mass="0.005"/>
+      <geom type="cylinder" pos="0.042 -0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" priority="2" mass="0.005"/>
+      <geom type="cylinder" pos="0.042 0.036 -0.006" zaxis="0 1 0" size="0.022 0.008" material="t_black" contype="4" conaffinity="13" priority="2" mass="0.005"/>
     </body>
     <body name="toy_bear" childclass="room" pos="-1.08 -0.38 0.075" euler="0 0 -0.698132"><freejoint name="toy_bear"/>
-      <geom name="bear" type="ellipsoid" pos="0 0 0" size="0.05 0.058 0.062" mass="0.09" material="t_brown" friction="1 .01 .001" contype="4" conaffinity="13"/>
-      <geom name="bear_head" type="sphere" pos="0.005 0 0.095" size="0.046" mass="0.05" material="t_brown" friction="1 .01 .001" contype="4" conaffinity="13"/>
+      <geom name="bear" type="ellipsoid" pos="0 0 0" size="0.05 0.058 0.062" mass="0.09" material="t_brown" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
+      <geom name="bear_head" type="sphere" pos="0.005 0 0.095" size="0.046" mass="0.05" material="t_brown" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
       <geom type="sphere" pos="0 0.034 0.132" size="0.017" material="t_brown" contype="0" conaffinity="0" density="0"/>
       <geom type="sphere" pos="0 -0.034 0.132" size="0.017" material="t_brown" contype="0" conaffinity="0" density="0"/>
       <geom type="ellipsoid" pos="0.045 0 0.084" size="0.016 0.022 0.016" material="t_brown_l" contype="0" conaffinity="0" density="0"/>
@@ -381,12 +384,12 @@
       <geom type="ellipsoid" pos="0.04 0 0" size="0.012 0.036 0.04" material="t_brown_l" contype="0" conaffinity="0" density="0"/>
       <geom type="capsule" fromto="0.02 0.05 0.02 0.05 0.07 -0.03" size="0.018" material="t_brown" contype="0" conaffinity="0" density="0"/>
       <geom type="capsule" fromto="0.02 -0.05 0.02 0.05 -0.07 -0.03" size="0.018" material="t_brown" contype="0" conaffinity="0" density="0"/>
-      <geom type="capsule" fromto="0.02 0.03 -0.045 0.08 0.045 -0.05" size="0.02" mass="0.01" material="t_brown" contype="4" conaffinity="13"/>
-      <geom type="capsule" fromto="0.02 -0.03 -0.045 0.08 -0.045 -0.05" size="0.02" mass="0.01" material="t_brown" contype="4" conaffinity="13"/>
+      <geom type="capsule" fromto="0.02 0.03 -0.045 0.08 0.045 -0.05" size="0.02" mass="0.01" material="t_brown" contype="4" conaffinity="13" priority="2"/>
+      <geom type="capsule" fromto="0.02 -0.03 -0.045 0.08 -0.045 -0.05" size="0.02" mass="0.01" material="t_brown" contype="4" conaffinity="13" priority="2"/>
     </body>
     <body name="toy_stacker" childclass="room" pos="-0.98 -1.28 0.085" euler="0 0 0"><freejoint name="toy_stacker"/>
-      <geom name="stacker" type="cylinder" pos="0 0 -0.06" size="0.055 0.012" mass="0.06" material="t_white" friction="1 .01 .001" contype="4" conaffinity="13"/>
-      <geom name="stacker_stack" type="cylinder" pos="0 0 0" size="0.04 0.05" mass="0.08" material="t_white" friction="1 .01 .001" contype="4" conaffinity="13" rgba="0 0 0 0" group="3"/>
+      <geom name="stacker" type="cylinder" pos="0 0 -0.06" size="0.055 0.012" mass="0.06" material="t_white" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
+      <geom name="stacker_stack" type="cylinder" pos="0 0 0" size="0.04 0.05" mass="0.08" material="t_white" friction="1 .01 .001" contype="4" conaffinity="13" priority="2" rgba="0 0 0 0" group="3"/>
       <geom type="capsule" fromto="0 0 -0.05 0 0 0.085" size="0.009" material="t_white" contype="0" conaffinity="0" density="0"/>
       <geom type="sphere" pos="0 0 0.09" size="0.017" material="t_yellow" contype="0" conaffinity="0" density="0"/>
       <geom type="mesh" mesh="ring0" pos="0 0 -0.036" material="t_red" contype="0" conaffinity="0" density="0"/>
@@ -396,13 +399,13 @@
       <geom type="mesh" mesh="ring4" pos="0 0 0.056" material="t_blue" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="toy_drum" childclass="room" pos="1.62 0.32 0.056" euler="0 0 0"><freejoint name="toy_drum"/>
-      <geom name="drum" type="cylinder" size="0.075 0.055" mass="0.2" material="t_cyan" condim="6" friction="1 .01 .002" contype="4" conaffinity="13"/>
+      <geom name="drum" type="cylinder" size="0.075 0.055" mass="0.2" material="t_cyan" condim="6" friction="1 .01 .002" contype="4" conaffinity="13" priority="2"/>
       <geom type="cylinder" pos="0 0 0.0552" size="0.07 0.0006" material="t_white" contype="0" conaffinity="0" density="0"/>
       <geom type="mesh" mesh="drum_rim" pos="0 0 0.052" material="t_yellow" contype="0" conaffinity="0" density="0"/>
       <geom type="mesh" mesh="drum_rim" pos="0 0 -0.052" material="t_yellow" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="toy_ring" childclass="room" pos="0.98 -1.34 0.029" euler="0 0 0"><freejoint name="toy_ring"/>
-      <geom name="ring" type="mesh" mesh="teether" mass="0.04" material="t_pink" friction="1 .01 .001" contype="4" conaffinity="13"/>
+      <geom name="ring" type="mesh" mesh="teether" mass="0.04" material="t_pink" friction="1 .01 .001" contype="4" conaffinity="13" priority="2"/>
     </body>
 
     <!-- ======================= THE PARENT: kinematic, 16 mocap segments posed by parent_kin.py ======================= -->

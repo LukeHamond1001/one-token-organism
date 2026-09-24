@@ -2,12 +2,17 @@
 it renders, so it needs the Mac's GL). THE GAZE: the software fovea's effector moves both windows by its declared steps (conjugate
 yaw and pitch, vergence), held in reach (each window inside its image, the vergence within the near point); its state and velocity
 are the body channel's last six numbers. THE VOR: the window's ray counter-turned by the gyro's rotation, exactly the world-fixed
-direction under any constant rotation; in the world, a far point fixated before the trunk turns stays fixated. THE EYES: two
+direction under any constant rotation (the slow phase); its QUICK PHASE (A23; the W1 verifier's third finding): a window carried to
+its reach jumps back by half the reach in the direction of the turn, never sits pinned at the edge, in a synthetic turn and with the
+trunk turned by the waist in the world; in the world, a far point fixated before the trunk turns stays fixated. THE EYES: two
 native renders, the periphery 3 x 3 averaged, the fovea window where the gaze puts it (a ball aimed at fills its centre, and leaves
 it when the gaze turns away), the retina's opponent ON/OFF code equal to its hand computation. THE FACE TEST (A1): the parent's
 face in front and facing passes, and each of its four conditions fails it alone (out of the window, blocked by a toy, turned away,
-too far). THE EXACT REPLAY with the eyes: every frame's eye codes bit for bit after a save and a restore, in the same world and in a
-new one."""
+too far); it stays in the truth, never in the body's channels (the W1 verifier's second finding). THE BORN FACE TEMPLATE: CONSPEC's
+three dark blobs fire on a drawn face at every size of the bank and anywhere in the fovea, not on the same face with light blobs
+(Farroni's polarity) nor on noise; the frame's face_fovea and face_periph are the template on the frame's own pixels, and the body's
+channels are the sensors' alone. THE EXACT REPLAY with the eyes: every frame's eye codes bit for bit after a save and a restore, in
+the same world and in a new one."""
 import math
 import os
 import sys
@@ -86,7 +91,7 @@ def test_the_vor_exact():
         yaw, pitch = rng.uniform(-0.6, 0.6), rng.uniform(-0.3, 0.3)
         omega = rng.normal(0, 1.5, 3)                                   # rad/s in the camera frame
         n, dt = 75, 0.002
-        y2, p2 = W.vor(yaw, pitch, np.tile(omega, (n, 1)), dt)
+        y2, p2, _ = W.vor(yaw, pitch, np.tile(omega, (n, 1)), dt)
         r = np.array([math.tan(yaw), math.tan(pitch), -1.0]); r /= np.linalg.norm(r)
         a = float(np.linalg.norm(omega)) * n * dt
         R = _rot(omega, a)                                              # the head turned by omega over the tick
@@ -94,7 +99,7 @@ def test_the_vor_exact():
         want = (math.atan2(rn[0], -rn[2]), math.atan2(rn[1], -rn[2]))
         worst = max(worst, abs(y2 - want[0]), abs(p2 - want[1]))
     assert worst < 1e-9, worst
-    assert np.allclose(W.vor(0.3, -0.1, np.zeros((75, 3)), 0.002), (0.3, -0.1), atol=1e-12, rtol=0)
+    assert np.allclose(W.vor(0.3, -0.1, np.zeros((75, 3)), 0.002)[:2], (0.3, -0.1), atol=1e-12, rtol=0)
     print(f"eyes 2: the VOR's window ray equals the world-fixed direction under 200 random head rotations to {worst:.1e} rad")
 
 
@@ -185,9 +190,9 @@ def test_the_face_test():
     mouth = _face_rig(w, 0.6)
     f = w.frame()
     ft = f.truth["eyes"]["face_test"]
-    assert ft["L"] == (True, "") and ft["R"] == (True, "") and f.obs["face_seen"][0] == 1.0, ft
+    assert ft["L"] == (True, "") and ft["R"] == (True, "") and "face_seen" not in f.obs, (ft, sorted(f.obs))
     w.gaze = W.clamp_gaze(w.gaze + [0.4, 0, 0])
-    assert E.face_test(m, d, w.gaze)["L"] == (False, "not in the fovea") and w.frame().obs["face_seen"][0] == 0.0
+    assert E.face_test(m, d, w.gaze)["L"] == (False, "not in the fovea") and w.frame().truth["eyes"]["face_test"]["L"][0] is False
     _face_rig(w, 0.6, turn_deg=80)
     assert E.face_test(m, d, w.gaze)["L"] == (False, "turned away")
     _face_rig(w, 3.4)                                                   # (the ceiling is 3.8 m out along this axis)
@@ -200,12 +205,107 @@ def test_the_face_test():
     d.qpos[a:a + 3] = d.cam_xpos[c] + (mouth - d.cam_xpos[c]) * 0.5; mujoco.mj_forward(m, d)
     assert E.face_test(m, d, w.gaze)["L"] == (False, "blocked")
     ey.close()
-    print("eyes 5: the face test: the parent's face 0.6 m out and facing is seen by both eyes (face_seen 1); out of the window, turned",
-          "80 deg, 3.4 m away or behind a block it is not (each condition alone); at 2.5 m facing it is")
+    print("eyes 5: the face test: the parent's face 0.6 m out and facing is seen by both eyes (in the truth only); out of the window,",
+          "turned 80 deg, 3.4 m away or behind a block it is not (each condition alone); at 2.5 m facing it is")
+
+
+def test_the_vor_quick_phase():
+    """eyes 7: A23: the VOR's quick phase. A synthetic steady turn: the window's slow phase carries it to its reach, where it jumps
+    back by half the reach in the direction of the turn, and it never passes the reach; in the world, the trunk turned by the waist
+    with the window near its edge: never pinned at the reach, the quick phases in the truth"""
+    reach = (W.GAZE_REACH_YAW, W.GAZE_REACH_PITCH)
+    for axis, k in ((np.array([0.0, 1.0, 0.0]), 0), (np.array([1.0, 0.0, 0.0]), 1)):
+        for sgn in (1.0, -1.0):
+            g = [0.0, 0.0]; quick = 0; jumps = []
+            for _ in range(60 * 75):                                    # 60 ticks of a 1.2 rad/s turn, sample by sample
+                prev = g[k]
+                y, p, q = W.vor(g[0], g[1], (sgn * 1.2 * axis)[None, :], 0.002, reach=reach)
+                g = [y, p]; quick += q
+                assert abs(g[0]) <= reach[0] + 1e-12 and abs(g[1]) <= reach[1] + 1e-12, g
+                if q:
+                    jumps.append((prev, g[k]))
+            y60, p60, q60 = W.vor(0.0, 0.0, np.tile(sgn * 1.2 * axis, (60 * 75, 1)), 0.002, reach=reach)
+            assert q60 == quick and abs([y60, p60][k] - g[k]) < 1e-9, (q60, quick)       # a whole run in one call: the same
+            assert quick >= 3, (axis, sgn, quick)
+            drift = np.sign(jumps[0][0])                                # the slow phase drifts toward this edge
+            for a_, b_ in jumps:                                        # each jump: from the edge back by half the reach (less a sample's drift)
+                assert np.sign(b_ - a_) == -drift and abs(a_) > reach[k] - 0.003 and abs(abs(b_) - reach[k] / 2) < 0.003, (a_, b_)
+    # in the world: the window near its edge, the trunk turned by the waist
+    pinned, quicks, turned = 0, 0, 0.0
+    for start in (+1, -1):
+        w = W.G1World(seed=1)
+        c = w.m.camera("eye_L").id
+        R0 = w.d.cam_xmat[c].reshape(3, 3).copy()
+        w.gaze = np.array([start * (W.GAZE_REACH_YAW - 0.02), 0.0, 0.0])
+        for _ in range(8):
+            w.apply({"waist": W.act_flat([4, 2, 2]), "gaze": W.EFFECTOR_REST["gaze"]})
+            quicks += w.frame().truth["vor_quick"]
+            pinned += int(abs(w.gaze[0]) >= W.GAZE_REACH_YAW - 1e-4)
+        R1 = w.d.cam_xmat[c].reshape(3, 3)
+        turned = max(turned, math.degrees(math.acos(min(1.0, (np.trace(R0.T @ R1) - 1) / 2))))
+    assert turned > 10 and quicks >= 1 and pinned == 0, (turned, quicks, pinned)
+    print(f"eyes 7: the VOR's quick phase: in a steady synthetic turn (yaw and pitch, both ways) the window jumps back by half its reach",
+          f"in the direction of the turn and never passes it; in the world, the trunk turned {turned:.0f} deg by the waist with the window",
+          f"at its edge: {quicks} quick phases, 0 of 16 ticks pinned at the reach")
+
+
+def _drawn_face(size, cx, cy, polarity=1, bg=0.45, skin=0.75, dark=0.30, H=32, Wd=32):
+    """a drawn face (not the parent's): a light ellipse, two eyes and a mouth darker (polarity 1) or lighter (-1) than it"""
+    img = np.full((H, Wd), bg)
+    yy, xx = np.mgrid[0:H, 0:Wd] + 0.5
+    a, b = size / 2, size / 0.81 / 2
+    ell = ((xx - cx) / a) ** 2 + ((yy - cy) / b) ** 2 <= 1
+    img[ell] = skin
+    blob = np.zeros_like(ell)
+    for ex in (-0.21, 0.21):
+        blob |= ((xx - cx - ex * size) ** 2 + (yy - cy + 0.1 * size / 0.81) ** 2) <= (0.11 * size) ** 2
+    blob |= ((xx - cx) / (0.2 * size)) ** 2 + ((yy - cy - 0.27 * size / 0.81) / (0.06 * size / 0.81)) ** 2 <= 1
+    img[blob & ell] = dark if polarity > 0 else 1.0
+    return (np.repeat(img[..., None], 3, -1) * 255).round().astype(np.uint8)
+
+
+def test_the_face_template():
+    """eyes 8: the born face template (CONSPEC; the W1 verifier's second finding): it fires on a drawn face at each size of its bank
+    and at places across the fovea, not on the same face with light blobs (Farroni's polarity) nor on noise; in the world the
+    frame's face_fovea and face_periph are the template on the frame's own pixels, and the body's channels are the sensors' alone
+    (A1's face test only in the truth). Its reading of the parent's face as she is drawn is printed (C3 measures it)"""
+    for size in (8, 12, 16, 22, 28):
+        for cx, cy in ((15, 16),) + (((11, 13), (20, 19)) if size <= 16 else ()):   # (the larger faces fill the fovea)
+            b = E.face_template(_drawn_face(size, cx, cy))
+            assert E.template_match(b), (size, cx, cy, b)
+        assert not E.template_match(E.face_template(_drawn_face(size, 15, 16, polarity=-1))), size
+    rng = np.random.default_rng(0)
+    for _ in range(100):
+        assert not E.template_match(E.face_template((rng.random((32, 32, 3)) * 255).astype(np.uint8)))
+    w, ey = _world()
+    reads = {}
+    for dist in (0.45, 0.8, 1.5):
+        _face_rig(w, dist)
+        f = w.frame()
+        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "eye_p", "eye_f", "face_fovea", "face_periph"}, sorted(f.obs)
+        t = f.truth["eyes"]
+        assert t["face_test"]["L"][0] and t["face_test"]["R"][0]
+        for side in "LR":
+            assert E.face_template(t["fovea"][side]) == t["template_fovea"][side]
+            assert E.face_template(t["periphery"][side]) == t["template_periphery"][side]
+        assert f.obs["face_fovea"][0] == float(E.template_match(t["template_fovea"]["L"]) or E.template_match(t["template_fovea"]["R"]))
+        hits = [s_ for s_ in "LR" if E.template_match(t["template_periphery"][s_])]
+        assert (f.obs["face_periph"][0] == 1.0) == bool(hits) and (hits or not f.obs["face_periph"].any())
+        reads[dist] = (int(f.obs["face_fovea"][0]), round(float(t["template_fovea"]["L"][0]), 2), round(float(t["template_fovea"]["L"][1]), 2))
+    t0 = time.perf_counter()
+    for _ in range(10):
+        for side in "LR":
+            E.face_template(t["fovea"][side]); E.face_template(t["periphery"][side])
+    ms = (time.perf_counter() - t0) / 10 * 1e3
+    ey.close()
+    print(f"eyes 8: the born template fires on a drawn face at 8-28 px anywhere in the fovea, not with light blobs nor on noise; the",
+          f"frame's face_fovea and face_periph are the template on its own pixels, the channels the sensors' alone; {ms:.1f} ms a tick",
+          f"for both eyes' fovea and periphery. On the parent's face as drawn, facing at 0.45 / 0.8 / 1.5 m (A1 passing):",
+          f"face_fovea {[reads[k][0] for k in (0.45, 0.8, 1.5)]} (best r {[reads[k][1] for k in (0.45, 0.8, 1.5)]}): C3 measures it")
 
 
 def test_exact_replay_with_the_eyes():
-    """eyes 6: the eyes' codes bit for bit after a save and a restore, in the same world and in a new one (with the sun's shadow,
+    """eyes 9: the eyes' codes bit for bit after a save and a restore, in the same world and in a new one (with the sun's shadow,
     the body's, and without)"""
     from sim_babble import Babbler
     for shadows in ("sun", "none"):
@@ -225,17 +325,17 @@ def test_exact_replay_with_the_eyes():
             for _ in range(15):
                 w.apply(b.acts()); f2.append(w.frame())
             for x, y in zip(f1, f2):
-                for k in ("eye_p", "eye_f", "face_seen", "body", "touch", "vestibular"):
+                for k in ("eye_p", "eye_f", "face_fovea", "face_periph", "body", "touch", "vestibular"):
                     assert np.array_equal(x.obs[k], y.obs[k]), (shadows, where, x.tick, k)
         moved = float(np.abs(np.diff([x.obs["eye_f"] for x in f1], axis=0)).sum())
         assert moved > 1.0
         ey.close()
-    print(f"eyes 6: 15 ticks of babble (the gaze among the effectors), a save, 15 more; restored in the same world and in a new one,",
-          f"every frame's eye codes, face test and senses bit for bit, with the sun's shadow and without")
+    print(f"eyes 9: 15 ticks of babble (the gaze among the effectors), a save, 15 more; restored in the same world and in a new one,",
+          f"every frame's eye codes, the template's readings and the senses bit for bit, with the sun's shadow and without")
 
 
 EYE_TESTS = [test_the_gaze, test_the_vor_exact, test_the_vor_in_the_world, test_the_eyes_render, test_the_face_test,
-             test_exact_replay_with_the_eyes]
+             test_the_vor_quick_phase, test_the_face_template, test_exact_replay_with_the_eyes]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
