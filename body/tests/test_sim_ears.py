@@ -1,13 +1,15 @@
 """the ears (docs/SIM_DESIGN.md 3.4 channel 2, 3.7's orienting; package P2): body/sim/ears.py. Run: python3 -m body.tests.test_sim_ears
 Each test fails when the ears stop doing their job: the code's size and silence; the sphere's series against scipy's spherical
 Bessel functions; the ear signals' interaural delay, level difference and level against that exact rigid sphere, near and far,
-and the delay lines' lags covering the head's own delays; the delay lines' scale (a correlation at most 1, a coherent sound at
+from 250 Hz to the top band's centre (7.6 kHz), and the delay lines' lags covering the head's own delays; the delay lines' scale (a correlation at most 1, a coherent sound at
 its band's loudness, the two halves of the code of one scale); the cochlea's calibration; the delay lines at the head's own
 delay and the born lateral read over -80..+80 degrees; the level difference growing with frequency; the level following the
 sphere all the way in, with no floor; the child's own voice at the sphere's level, read at the midline; streaming by ticks equal
 to one block; a moving source without a click; the onsets and the two event lines; save and restore (a source leaving and coming
 back); a scene with the child's tract heard the same in a single-thread process and restored there from a pickle; the ear sites
-against the world's; the cost. Numpy and scipy only, seconds."""
+against the world's; the cost; a white source moved by eighths of a sample, every band's level and level difference holding still
+(the P1-P2 verifier's blocker: the 16 kHz fractional delay line swung the top band 6 dB and its level difference 8-10 dB); the
+ears' converter (the top bands' centre tones at their level, the fixed roll-off above 7.6 kHz). Numpy and scipy only, seconds."""
 import ast
 import math
 import os
@@ -122,26 +124,82 @@ def test_sphere_series():
 def test_against_the_exact_sphere():
     rows, worst = [], [0.0, 0.0, 0.0]
     for d in (1.5, 0.3, 0.12):
-        for f in (250.0, 500.0, 4000.0):
-            for az in (30, 60, 90):
+        for f in (250.0, 500.0, 4000.0, 7200.0, E.CF[-1]):              # up to the top band's centre (7.6 kHz)
+            for az in (30, 60, 90, 150):
                 hs = run({"t": (tone(f, 8), at(az, d))}, 8)
                 yl = np.concatenate([h.ear_l for h in hs[3:]])
                 yr = np.concatenate([h.ear_r for h in hs[3:]])
                 pl, pr = at_f(yl, f), at_f(yr, f)
-                hl, hr = exact(d / A, f, math.radians(90 - az)), exact(d / A, f, math.radians(90 + az))
+                hl, hr = exact(d / A, f, math.radians(abs(90 - az))), exact(d / A, f, math.radians(min(90 + az, 270 - az)))
                 itd, itd_x = np.angle(pl / pr) / (2 * np.pi * f), np.angle(hl / hr) / (2 * np.pi * f)
                 ild, ild_x = 20 * math.log10(abs(pl / pr)), 20 * math.log10(abs(hl / hr))
                 lvl, lvl_x = 20 * math.log10(abs(pl) / (0.02 * math.sqrt(2))), 20 * math.log10(abs(hl) / d)
-                e = (abs(itd - itd_x) * 1e6, abs(ild - ild_x), abs(lvl - lvl_x))
+                lvr, lvr_x = 20 * math.log10(abs(pr) / (0.02 * math.sqrt(2))), 20 * math.log10(abs(hr) / d)
+                e = (abs(np.angle((pl / pr) / (hl / hr))) / (2 * np.pi * f) * 1e6, abs(ild - ild_x),
+                     max(abs(lvl - lvl_x), abs(lvr - lvr_x)))
                 worst = [max(w, v) for w, v in zip(worst, e)]
-                assert e[0] < 2 and e[1] < 0.1 and e[2] < 0.1, (d, f, az, itd * 1e6, itd_x * 1e6, ild, ild_x, lvl, lvl_x)
+                assert e[0] < 2 and e[1] < 0.1 and e[2] < 0.1, (d, f, az, itd * 1e6, itd_x * 1e6, ild, ild_x, lvl, lvl_x, lvr, lvr_x)
                 if az == 90 and f < 1000:
                     rows.append((d, f, itd * 1e6))
                     assert abs(itd) * E.SR < E.LAGS, f"{d} m {f} Hz: the head's own delay {itd * E.SR:.2f} samples, lags +-{E.LAGS}"
-    print(f"3 the ears against the exact sphere (scipy's series) at 0.12, 0.3 and 1.5 m, 250 Hz to 4 kHz, 30-90 degrees: the "
-          f"interaural delay within {worst[0]:.2f} us, level difference within {worst[1]:.3f} dB, level within {worst[2]:.3f} dB; "
+    print(f"3 the ears against the exact sphere (scipy's series) at 0.12, 0.3 and 1.5 m, 250 Hz to 7.6 kHz (the top band's centre), "
+          f"30-150 degrees: the interaural delay within {worst[0]:.2f} us, level difference within {worst[1]:.3f} dB, the level at "
+          f"each ear within {worst[2]:.3f} dB; "
           f"at 90 degrees " + ", ".join(f"{d} m {f:.0f} Hz {t:.0f} us" for d, f, t in rows)
           + f" (inside the lags' {E.LAGS / E.SR * 1e6:.0f} us)")
+
+
+def test_sub_sample_distance():
+    """the P1-P2 verifier's blocker: with a fractional delay line at 16 kHz the top bands' level and level difference swung by
+    several dB with where between two samples a source's delay fell (a 16-tap kernel is 0 to -8.3 dB at 7.6 kHz by the fraction).
+    A source moved by eighths of a sample: every band's level, less the sphere's own change over the step, and its level difference
+    must hold still."""
+    x = np.random.default_rng(41).standard_normal(8 * T) * 0.02         # white to 8 kHz: the top bands at their fullest
+    step = E.C_SOUND / E.SR / 8                                         # an eighth of a sample (2.7 mm)
+    worst_l, worst_i, rows = np.zeros(E.NB), np.zeros(E.NB), []
+    for az, d0 in ((40, 1.5), (-65, 0.5), (90, 0.25)):
+        lv, il = [], []
+        for k in range(9):
+            d = d0 + k * step
+            hs = run({"s": (x, at(az, d))}, 8)
+            L = np.mean([h.left ** 3 for h in hs[3:]], axis=(0, 1))
+            R = np.mean([h.right ** 3 for h in hs[3:]], axis=(0, 1))
+            mu = 2 * np.pi * E.CF * A / E.C_SOUND
+            hl = np.abs(E.sphere_H(d / A, mu, [math.radians(abs(90 - az))])[:, 0]) / d
+            hr = np.abs(E.sphere_H(d / A, mu, [math.radians(min(90 + az, 270 - az))])[:, 0]) / d
+            lv.append(10 * np.log10(L) - 20 * np.log10(hl))                 # less the sphere's own change
+            il.append(10 * np.log10(L / R) - 20 * np.log10(hl / hr))
+        sw_l, sw_i = np.ptp(lv, 0), np.ptp(il, 0)
+        worst_l, worst_i = np.maximum(worst_l, sw_l), np.maximum(worst_i, sw_i)
+        rows.append(f"{az:+d} deg {d0} m: top band {sw_l[-1]:.3f} / {sw_i[-1]:.3f} dB")
+    assert worst_l.max() < 0.1 and worst_i.max() < 0.1, \
+        f"moved by eighths of a sample, a band's level swings {worst_l.max():.2f} dB (band {E.CF[worst_l.argmax()]:.0f} Hz) " \
+        f"and its level difference {worst_i.max():.2f} dB (band {E.CF[worst_i.argmax()]:.0f} Hz): {rows}"
+    print(f"17 a white sound moved by eighths of a sample (1.5, 0.5, 0.25 m): every band's level, less the sphere's own change, "
+          f"holds within {worst_l.max():.3f} dB and its level difference within {worst_i.max():.3f} dB (the top two bands "
+          f"{worst_l[-2:].max():.3f} / {worst_i[-2:].max():.3f}; the 16 kHz delay line swung them by up to 6 / 10 dB):", "; ".join(rows))
+
+
+def test_converter():
+    """the ears' converter: flat to the top band's centre, the same fixed roll-off above it for every source and fraction, and nothing
+    of the 32 kHz images left: a tone at each band's centre reads its level through the whole chain, a tone above 8 kHz's image
+    region is gone, and the band levels of white noise from straight ahead match between the ears to rounding."""
+    got = []
+    for f in (E.CF[-3], E.CF[-2], E.CF[-1]):
+        hs = run({"tone": (tone(f, 8), at(0, 1.0))}, 8)
+        b = (hs[-1].left ** 3 * E.E_CODE).mean(0)
+        tot = 10 * math.log10(b[-4:].max() / E.P_REF ** 2)
+        want = 60 + 20 * math.log10(abs(exact(1.0 / A, f, math.pi / 2)))
+        assert abs(tot - want) < 0.5, f"{f:.0f} Hz: the band reads {tot:.1f} dB SPL, the ear receives {want:.1f}"
+        got.append(f"{f:.0f} Hz {tot:.1f} ({want:.1f})")
+    resp = {}
+    for f in (7700.0, 7800.0, 7900.0, 7990.0):
+        hs = run({"t": (tone(f, 8), at(0, 1.0))}, 8)
+        pl = at_f(np.concatenate([h.ear_l for h in hs[3:]]), f)
+        resp[f] = 20 * math.log10(abs(pl) / (0.02 * math.sqrt(2)) / abs(exact(1.0 / A, f, math.pi / 2)))
+    assert resp[7700.0] > -3 and resp[7990.0] < -50 and all(b < a for a, b in zip(list(resp.values()), list(resp.values())[1:])), resp
+    print("18 the ears' converter: a tone at each of the top three bands' centres reads its level (dB SPL, the ear's in brackets):",
+          "; ".join(got), "; above 7.6 kHz the fixed roll-off:", ", ".join(f"{f:.0f} Hz {v:+.1f} dB" for f, v in resp.items()))
 
 
 def loudness(h):
@@ -285,14 +343,15 @@ def test_streaming_equals_one_block():
     hs = run({"n": (x, p)}, 12)
     got = np.concatenate([h.ear_l for h in hs]), np.concatenate([h.ear_r for h in hs])
     rho, th, path, a = E.source_geometry(p, EAR_L, EAR_R)
-    buf = np.concatenate([np.zeros(E.HIST), x])
+    up = E.convert_block(np.concatenate([np.zeros(E.HIST), x]))          # the converter over the whole signal at once
     for e in (0, 1):
         d = path[e] / E.C_SOUND * E.SR + E.LOOKAHEAD
-        y = E.frac_read(buf, E.HIST + np.arange(len(x)) - d) / path[e]
+        y = E.frac_read(up, E.OS * (E.HIST + np.arange(len(x)) - d)) / path[e]
         y = np.convolve(y, E.residual_fir(rho, th[e]))[:len(x)]
         err = np.abs(got[e] - y).max() / np.abs(y).max()
         assert err < 1e-9, f"ear {e}: the ticks differ from one block by {err:.1e}"
-    print("10 twelve ticks streamed equal one block computed at once (both ears, to 1e-9 of the peak: rounding only)")
+    print("10 twelve ticks streamed equal one block computed at once (the converter, the delay line and the sphere over the whole "
+          "signal; both ears, to 1e-9 of the peak: rounding only)")
 
 
 def test_moving_source():
@@ -457,7 +516,7 @@ def test_cost():
 TESTS = [test_code_and_silence, test_sphere_series, test_against_the_exact_sphere, test_delay_line_scale, test_cochlea_calibrated,
          test_delay_lines_and_lateral_read, test_level_difference_grows_with_frequency, test_distance_no_floor, test_own_voice,
          test_streaming_equals_one_block, test_moving_source, test_onsets_and_events, test_save_and_restore,
-         test_exact_across_processes, test_ear_sites_are_the_worlds, test_cost]
+         test_exact_across_processes, test_ear_sites_are_the_worlds, test_cost, test_sub_sample_distance, test_converter]
 
 if __name__ == "__main__":
     t0 = time.time()

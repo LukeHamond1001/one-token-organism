@@ -1,4 +1,4 @@
-"""THE CHILD'S VOCAL TRACT (the owner's decision 5, 2026-09-24; docs/SIM_DESIGN.md 4.9 and the decision log's B3): the voice
+"""THE CHILD'S VOCAL TRACT (the owner's decision 5, 2026-09-24; docs/SIM_DESIGN.md 4.9 and the decision log's B6): the voice
 effector's physics. A source-filter articulatory synthesizer in numpy, brought in from the G1 amendment's voice study
 ($S/g1/voice/tract.py, 2026-09-24) with its calibration unchanged; what is new here is the seeded stream, save and restore, the
 body sense, and the level in pascals.

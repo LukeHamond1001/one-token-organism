@@ -3,7 +3,10 @@ their words' onsets and ends, and a content-addressed cache on disk whose every 
 
   SynthServer   builds synth_server.swift with swiftc (once per source digest, into BIN_DIR, a build product outside git) and runs
                 it at nice 10, off the tick loop; one warm synthesizer answers one request at a time (a cache miss makes the
-                lockstep world wait; it costs no sim time)
+                lockstep world wait; it costs no sim time). Its clips pass through a temporary file in the system's temporary
+                folder, removed at once. The decision log's rule for the voice server is here: a request not answered within
+                DOWN_S = 60 s raises VoiceDown (a server that dies is started again and asked again until then; one that hangs is
+                killed at the deadline), and the world pauses the life at that tick; a line is never skipped or swapped
   VoiceCache    VoiceCache(root): root is the life's voice folder, saved beside the body (the design's 4.4: "saved beside the
                 body, so a replay is exact"), never the source tree. clip(text, register, emphasis) -> Clip. Keyed by sha256 of
                 the request (the voice, the line as SSML with the register's pitch and rate, the clip format); the samples are
@@ -27,7 +30,9 @@ damaged) and pauses the life rather than let it hear a changed voice; whether to
 clip's words are computed from its samples and marks as it is read, so the cache holds no derived number. The resampling to 16 kHz
 (scipy's polyphase filter) and the rounding to int16 are exact functions of the engine's samples. Disk: the birth's 331 lines are
 13.3 MB (40 KB a line, measured); kept/ grows only by lines the life hears for the first time (Claude's fresh lines, the growth
-words' lines): not yet measured, at 100 new lines a life day it would be 4 MB a day, which the disk rule counts.
+words' lines), so its growth is bounded by what the parent says: at the design's density (4.6: at most 2,500 words a life day,
+4.0 words a line, so at most about 625 lines) it grows by at most about 25 MB a life day even if every line were new, and by the
+day's fresh lines in practice (VoiceCache.kept_size reports it); the design's section 9 counts it under the disk rule.
 
 EVERY LINE IS SSML. The engine ignores an utterance's own rate and pitch when it is given SSML. So each line goes as SSML with
 the register's pitch and rate as one prosody around it (rate r is r / 0.5 of the engine's default): a plain line so made is the
@@ -37,14 +42,16 @@ and 0.2 are one pace, as are 0.3 and 0.35; SSML's 40 and 45%, 50 to 60%, 65 and 
 plain's pace: it is set apart by its pitch and its one word.
 
 THE CONSTANTS (disclosed; section 10's "voices" row):
-  voice             compact Samantha (com.apple.voice.compact.en-US.Samantha): the owner's default (B10); none of the installed
+  voice             compact Samantha (com.apple.voice.compact.en-US.Samantha): the owner's default (B13); none of the installed
                     voices is at enhanced or premium quality
   registers         REGISTERS below: pitch and rate as the design's 4.4 table and the parent spec's D3 table (ours; Fernald 1989's
                     infant-directed contours); calling +6 dB is a level, applied here, not by the engine. Measured over 40 of the
                     birth lines (tools/sim_voice_check.py): plain 3.65 words a second over the spoken span (the design's 3.6),
                     F0 211 Hz; approval 246 Hz; comfort 3.16 words a second, 188 Hz; calling 229 Hz at +6 dB
-  new word          rate 0.2 (the parent spec D3): 3.39 words a second, over the spec's target of 3; with its new word emphasized
-                    2.84 (the emphasis is the conduct's to ask for: clip(..., emphasis=word))
+  new word          rate 0.2 (the parent spec D3), and its new word always emphasized: request() refuses a new-word line without
+                    it. C25's limit is 3 words a second on new words; measured over 40 of the birth lines, a new-word line runs
+                    at 3.39 words a second unemphasized (the engine's rates come in steps, above) and 2.84 with its new word on
+                    its pitch peak (tools/sim_voice_check.py; test_sim_voice.py measures it on its own lines)
   emphasis          EMPHASIS: SSML pitch +30%, rate 70% on the focus word (the parent spec D3; ours): measured F0 +37%, length +91%
   level             SPEECH_PA: the plain register's speech at 1 m in front of the mouth, 62 dB SPL (0.0252 Pa RMS over the sounding
                     10 ms frames): ANSI S3.5-1997's "normal" vocal effort at 1 m (62.35 dB), recalled from memory, not checked
@@ -60,6 +67,7 @@ import hashlib
 import json
 import math
 import os
+import select
 import subprocess
 import tempfile
 import threading
@@ -97,6 +105,7 @@ ENGINE_RATE = 0.5                          # the engine's default utterance rate
 WORD_END_DB = -40.0
 CACHE_LIMIT = 300 * 2 ** 20
 NICE = 10
+DOWN_S = 60.0                              # the decision log's rule: a voice server down this long pauses the life at that tick
 
 
 class VoiceChanged(RuntimeError):
@@ -111,15 +120,27 @@ def _sha(b):
     return hashlib.sha256(b).hexdigest()
 
 
-class SynthServer:
-    """the Swift server as a child process: one request at a time, a JSON line each way."""
+class VoiceDown(SynthError):
+    """the voice server has not answered for DOWN_S seconds (it hung, or it died and would not come back): the life pauses at this
+    tick (the decision log's rule for the voice server); a line is never skipped or swapped."""
 
-    def __init__(self, bin_dir=None, nice=NICE):
+
+class SynthServer:
+    """the Swift server as a child process: one request at a time, a JSON line each way. A request is answered within DOWN_S
+    seconds or VoiceDown is raised: a server that dies is started again and asked again until then; one that hangs is killed at
+    the deadline. cmd: the server's command (default: the built synth_server; a test gives its own)."""
+
+    def __init__(self, bin_dir=None, nice=NICE, cmd=None, tmp_dir=None, down_s=None):
         self.bin_dir = Path(bin_dir or BIN_DIR)
         self.nice = nice
+        self.cmd = list(cmd) if cmd else None
+        self.tmp_dir = tmp_dir                    # the clips' temporary files (default: the system's temporary folder)
+        self.down_s = DOWN_S if down_s is None else float(down_s)
         self.proc = None
         self.lock = threading.Lock()
         self.n = 0
+        self.starts = 0
+        self._buf = b""
 
     def binary(self):
         src = SWIFT_SRC.read_bytes()
@@ -137,24 +158,66 @@ class SynthServer:
         if self.proc is not None and self.proc.poll() is None:
             return
         nice = self.nice
-        self.proc = subprocess.Popen([str(self.binary())], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1,
+        self.proc = subprocess.Popen(self.cmd or [str(self.binary())], stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=0,
                                      preexec_fn=(lambda: os.nice(nice)) if nice else None)
+        self._buf = b""
+        self.starts += 1
+
+    def _kill(self):
+        if self.proc is not None:
+            try:
+                self.proc.kill()
+                self.proc.wait(timeout=5)
+            except Exception:
+                pass
+        self.proc = None
+        self._buf = b""
+
+    def _readline(self, deadline):
+        """one reply line, or None if the server closed its end; raises TimeoutError at the deadline."""
+        fd = self.proc.stdout.fileno()
+        while b"\n" not in self._buf:
+            left = deadline - time.monotonic()
+            if left <= 0:
+                raise TimeoutError
+            r, _, _ = select.select([fd], [], [], left)
+            if not r:
+                raise TimeoutError
+            chunk = os.read(fd, 1 << 16)
+            if not chunk:
+                return None
+            self._buf += chunk
+        line, self._buf = self._buf.split(b"\n", 1)
+        return line
 
     def ask(self, req):
+        if self.cmd is None:
+            self.binary()                                            # a first build (swiftc) is not the server being down
+        deadline = time.monotonic() + self.down_s
         with self.lock:
-            self.start()
             self.n += 1
-            req = dict(req, id=self.n)
-            self.proc.stdin.write(json.dumps(req) + "\n")
-            self.proc.stdin.flush()
-            line = self.proc.stdout.readline()
-            if not line:
-                self.proc = None
-                raise SynthError("the voice server stopped")
-            out = json.loads(line)
-            if not out.get("ok"):
-                raise SynthError(out.get("error", "the voice server refused"))
-            return out
+            msg = (json.dumps(dict(req, id=self.n)) + "\n").encode()
+            while True:
+                try:
+                    self.start()
+                    self.proc.stdin.write(msg)
+                    self.proc.stdin.flush()
+                    line = self._readline(deadline)
+                except TimeoutError:
+                    self._kill()
+                    raise VoiceDown(f"the voice server did not answer in {self.down_s:.0f} s")
+                except (BrokenPipeError, ConnectionResetError, OSError):
+                    line = None
+                if line is None:                                     # it died: started again and asked again, until the deadline
+                    self._kill()
+                    if time.monotonic() + 0.5 >= deadline:
+                        raise VoiceDown(f"the voice server stopped and did not come back in {self.down_s:.0f} s")
+                    time.sleep(0.5)
+                    continue
+                out = json.loads(line)
+                if not out.get("ok"):
+                    raise SynthError(out.get("error", "the voice server refused"))
+                return out
 
     def info(self, voice=PARENT_VOICE):
         return self.ask({"op": "info", "voice": voice})
@@ -165,8 +228,7 @@ class SynthServer:
     def synth(self, text, voice=PARENT_VOICE, rate=0.25, pitch=1.15, ssml=False):
         """-> (float32 samples at the engine's rate, the rate, [(frame, loc, len)], wall seconds). The marks' text ranges are the
         engine's UTF-16 offsets into `text`: the lines are ASCII, where they are the string's own indices."""
-        self.bin_dir.mkdir(parents=True, exist_ok=True)
-        fd, path = tempfile.mkstemp(suffix=".f32", prefix="synth_", dir=self.bin_dir)
+        fd, path = tempfile.mkstemp(suffix=".f32", prefix="synth_", dir=self.tmp_dir)
         os.close(fd)
         try:
             out = self.ask({"op": "synth", "voice": voice, "rate": float(rate), "pitch": float(pitch), "volume": 1.0,
@@ -183,7 +245,7 @@ class SynthServer:
     def close(self):
         if self.proc is not None and self.proc.poll() is None:
             try:
-                self.proc.stdin.write(json.dumps({"op": "quit"}) + "\n")
+                self.proc.stdin.write(b'{"op": "quit"}\n')
                 self.proc.stdin.flush()
                 self.proc.wait(timeout=5)
             except Exception:
@@ -285,7 +347,10 @@ def line_ssml(text, pitch, rate, emphasis=None):
 
 
 def request(text, register="plain", emphasis=None, voice=PARENT_VOICE):
-    """-> (the key, the request, the register's level in dB)."""
+    """-> (the key, the request, the register's level in dB). A new word's line must name its new word as emphasis (C25: at rate
+    0.2 the engine speaks it at 3.39 words a second, over the limit of 3; with the new word on its pitch peak, 2.84)."""
+    if register == "new_word" and not emphasis:
+        raise ValueError(f"a new word's line must emphasize its new word: {text!r}")
     p, r, g = REGISTERS[register]
     req = {"format": FORMAT, "sr": SR, "voice": voice, "ssml": line_ssml(text, p, r, emphasis)}
     key = _sha(json.dumps(req, sort_keys=True, separators=(",", ":")).encode())

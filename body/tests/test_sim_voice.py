@@ -9,9 +9,12 @@ voice (macOS only; skipped without swiftc): the engine bit for bit across two se
 (no default in the source tree): its hits, its ledger, a damaged file made again, a clip and its record swapped for another
 line's refused and made again, a changed engine refused, the size limit dropping only lines made ahead while every heard line is
 kept and read back with no engine at all; the words' onsets and ends; the registers' pitch and level, and plain speech at 62 dB
-SPL; a line played tick by tick into the words channel; the talk-over stop cut at every tick of seven lines (never more than 3
-ticks; a word broken off by the cap withdrawn from the channel, the rest labelled exactly as said) and its save and restore. The
-table: 79 rows, "a" the word apart from "a" the letter, a later word spelled, and the channel's audibility."""
+SPL; a new word's line refused without its new word emphasized, and under 3 words a second with it (C25); a line played tick by
+tick into the words channel; the talk-over stop cut at every tick of seven lines (never more than 3 ticks; a word broken off by
+the cap withdrawn from the channel, the rest labelled exactly as said) and its save and restore; a line cut before it sounds
+ends unheard, and a spelled word broken off keeps its closing space; the server's 60 s deadline (a hung server, one that keeps
+dying, one that comes back), with stand-in servers. The table: 79 rows, "a" the word apart from "a" the letter, a later word
+spelled, and the channel's audibility."""
 import json
 import math
 import os
@@ -210,6 +213,76 @@ def test_table_and_channel():
           "its word's end tick, a tick late behind a busy channel; nothing delivered while the parent is not audible:", got)
 
 
+def _clip(words, n_ticks, text="synthetic"):
+    """a clip without the engine: a tone for n_ticks with the given words' marks (the playback and the channel read only these)."""
+    n = n_ticks * TICK
+    pcm = (8000 * np.sin(2 * np.pi * 220 * np.arange(n) / 16000)).astype(np.int16)
+    return V.Clip("k" * 64, text, "plain", pcm, list(words), "d" * 64)
+
+
+def test_playback_edges():
+    # a line cut before its first tick: nothing sounds and nothing reaches the channel, not even END (the verifier's nit)
+    u, w = Utterance(_clip([("look", 0, 3000), ("ball", 3000, 7000)], 3), 0), LX.Words()
+    assert u.cut(w) == 0
+    got = [(np.any(u.tick(t, w)), LX.TABLE[w.tick(t)]) for t in range(4)]
+    assert got == [(False, "<rest>")] * 4 and u.done and not w.queue, got
+    # a spelled word broken off by the cap, with some of its letters already out: they are closed by its space, and the rest go
+    clip = _clip([("look", 0, 2000), ("rattle", 2400, 8 * TICK)], 9)
+    u, w, labels = Utterance(clip, 0), LX.Words(), []
+    for t in range(3):
+        u.tick(t, w)
+        labels.append(LX.TABLE[w.tick(t)])
+    assert labels == ["look", "r", "a"], labels
+    assert u.cut(w) == 3 and u.broken == 1
+    for t in range(3, 12):
+        u.tick(t, w)
+        labels.append(LX.TABLE[w.tick(t)])
+    said = [x for x in labels if x != "<rest>"]
+    assert said == ["look", "r", "a", "<space>", "<end>"], labels
+    assert labels.index("<space>") <= (u.stop_at - 1) // TICK + 1, ("the closing space came late", labels)
+    print("11 a line cut before it sounds ends unheard (no END); a spelled word broken off by the cap keeps its closing space, "
+          "due by the tick its sound stops:", labels)
+
+
+def test_server_deadline():
+    """the decision log's rule: the voice server down for DOWN_S (60 s) pauses the life (VoiceDown); a server that dies is
+    started again and asked again until then. Three stand-in servers (python), with the deadline shortened to 2 s."""
+    py = sys.executable
+    hang = V.SynthServer(cmd=[py, "-c", "import sys, time; sys.stdin.readline(); time.sleep(120)"], nice=0, down_s=2.0)
+    t0 = time.monotonic()
+    try:
+        hang.ask({"op": "info"})
+        raise AssertionError("a hung server was waited on past its deadline")
+    except V.VoiceDown:
+        waited = time.monotonic() - t0
+    assert 1.9 < waited < 5 and hang.proc is None, (waited, hang.proc)
+    dead = V.SynthServer(cmd=[py, "-c", "import sys; sys.stdin.readline(); sys.exit(3)"], nice=0, down_s=2.0)
+    t0 = time.monotonic()
+    try:
+        dead.ask({"op": "info"})
+        raise AssertionError("a server that kept dying was not declared down")
+    except V.VoiceDown:
+        waited2 = time.monotonic() - t0
+    assert waited2 < 5 and dead.starts >= 2, (waited2, dead.starts)
+    tmp = tempfile.mkdtemp(prefix="voice_down_")
+    try:
+        mark = os.path.join(tmp, "started")
+        code = ("import json, os, sys\n"
+                f"m = {mark!r}\n"
+                "if not os.path.exists(m):\n    open(m, 'w').close(); sys.stdin.readline(); sys.exit(1)\n"
+                "for line in sys.stdin:\n    r = json.loads(line); print(json.dumps({'ok': True, 'id': r.get('id'), 'name': 'stand-in'}), flush=True)\n")
+        back = V.SynthServer(cmd=[py, "-c", code], nice=0, down_s=10.0)
+        out = back.ask({"op": "info"})
+        assert out["name"] == "stand-in" and back.starts == 2, (out, back.starts)
+        back.close()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    assert V.DOWN_S == 60.0
+    print(f"12 the voice server's deadline (the decision log's 60 s, 2 s here): a hung server killed and VoiceDown raised after "
+          f"{waited:.1f} s; one that keeps dying started {dead.starts} times, then VoiceDown; one that dies once is started "
+          f"again and answers")
+
+
 # ---------------------------------------------------------------------------------------------------------- the parent's voice
 def _have_engine():
     return sys.platform == "darwin" and shutil.which("swiftc") is not None
@@ -238,6 +311,13 @@ def test_engine_bit_for_bit():
         print("7 skipped: no swiftc / AVSpeech here")
         return
     s1, s2 = V.SynthServer(), V.SynthServer()
+    made, mk = [], V.tempfile.mkstemp
+
+    def spy(*a, **k):
+        fd, path = mk(*a, **k)
+        made.append(path)
+        return fd, path
+    V.tempfile.mkstemp = spy
     try:
         for ln in LINES[:3]:
             q = V.request(ln)[1]["ssml"]
@@ -247,10 +327,15 @@ def test_engine_bit_for_bit():
         ssml = s1.synth(V.request(LINES[0])[1]["ssml"], rate=V.ENGINE_RATE, pitch=1.0, ssml=True)
         assert np.array_equal(plain[0], ssml[0]), "the line in SSML is not the utterance at the register's pitch and rate"
     finally:
+        V.tempfile.mkstemp = mk
         s1.close()
         s2.close()
+    src = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    assert made and not any(os.path.realpath(q).startswith(os.path.realpath(src)) for q in made), \
+        f"the clips' temporary files were written into the source tree: {made[0]}"
+    assert not any(os.path.exists(q) for q in made), "a clip's temporary file was left behind"
     print("7 the engine is exact: three lines bit for bit across two server processes; a line in SSML is, bit for bit, the "
-          "utterance at its register's pitch and rate")
+          "utterance at its register's pitch and rate; its temporary files outside the source tree, and removed")
 
 
 def test_cache_and_ledger():
@@ -327,8 +412,13 @@ def test_cache_and_ledger():
 
 
 def test_words_registers_and_level():
+    try:
+        V.request("look. a bottle.", "new_word")
+        raise AssertionError("a new word's line without its new word emphasized was accepted (C25: 3.39 words a second)")
+    except ValueError:
+        pass
     if not _have_engine():
-        print("9 skipped")
+        print("9 skipped (a new word's line without its emphasis is refused)")
         return
     tmp = tempfile.mkdtemp(prefix="voice_test_")
     try:
@@ -353,11 +443,15 @@ def test_words_registers_and_level():
         p = c.clip("look. a duck.")
         de, dp = [x for x in e.words if x[0] == "duck"][0], [x for x in p.words if x[0] == "duck"][0]
         assert de[2] - de[1] > 1.3 * (dp[2] - dp[1]), "the emphasized word is not longer"
+        nw = [c.clip(ln, "new_word", emphasis=ln.strip(".?! ").split()[-1]) for ln in LINES]
+        wps = sum(len(k.words) for k in nw) / sum((k.words[-1][2] - k.words[0][1]) / V.SR for k in nw)
+        assert wps <= 3.0, f"new-word lines run at {wps:.2f} words a second (C25: at most 3)"
         c.close()
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print(f"9 the words' onsets and ends in order; F0 comfort {f0['comfort']:.0f} < plain {f0['plain']:.0f} < approval "
-          f"{f0['approval']:.0f} Hz; calling +6 dB; plain speech {spl:.1f} dB SPL at 1 m; an emphasized word longer")
+          f"{f0['approval']:.0f} Hz; calling +6 dB; plain speech {spl:.1f} dB SPL at 1 m; an emphasized word longer; a new word's "
+          f"line refused without its emphasis, and with it {wps:.2f} words a second (C25: at most 3)")
 
 
 def test_playback_into_the_words_channel():
@@ -424,7 +518,7 @@ def test_playback_into_the_words_channel():
 
 TESTS = [test_tract_vowels, test_tract_deterministic, test_closure_stops_voicing, test_rest_is_silent_and_breath, test_tract_cost,
          test_table_and_channel, test_engine_bit_for_bit, test_cache_and_ledger, test_words_registers_and_level,
-         test_playback_into_the_words_channel]
+         test_playback_into_the_words_channel, test_playback_edges, test_server_deadline]
 
 if __name__ == "__main__":
     t0 = time.time()

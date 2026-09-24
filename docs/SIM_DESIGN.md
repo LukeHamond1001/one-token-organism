@@ -281,7 +281,7 @@ Everything else the body gets comes from its sensors. Orienting's triggers are a
 |---|---|---|---|
 | 0 | words (the scaffold) | one symbol from 79 | The parent's word token, arriving on the tick its sound ends; letters for words after the first 50 (section 4.9). Its forecast is today's `latent_pred`. |
 | 1 | face | 2 | The born expression reading of the parent's graded face: 2 × (smile − frown), its level and change. It updates only while the face passes the face test (A1). Out of view it holds its last value for 30 ticks, then reads neutral (A2). |
-| 2 | ears | 1,557 | Two cochleas (15 frames × 40 bands each, per tick) plus the brainstem's delay lines (21 low bands × 17 lags). The spatializer's head radius is the G1's, 0.078 m. |
+| 2 | ears | 1,725 | Two cochleas (15 frames × 40 bands each, per tick) plus the brainstem's delay lines (21 low bands × 25 lags: ±12 samples, the head's own largest delay in those bands, 0.71 ms; ±8 would saturate the lateral read near 46° in the lowest bands). The spatializer is the exact rigid sphere through the two ear sites (radius 0.079 m, half their 15.8 cm), behind the ears' converter (flat to 7.6 kHz, gone by 8 kHz). Amended by P2 from 1,557 (`body/sim/ears.py`). |
 | 3 | eye_p (periphery) | 2 × 168 | Per eye: 56 × 32 px, coded retinotopically as 7 × 4 cells of 8 px (about 12.5° × 14.5°, near the custom child's 12.5°) × 6 fixed colour mixes. |
 | 4 | eye_f (fovea) | 2 × 384 | Per eye: the 32 × 32 window, coded as 8 × 8 cells × 6 fixed colour mixes. |
 | 5 | body (joint sense) | 199 | Per joint (43): sin and cos of the scaled angle, velocity, and servo effort (torque ÷ limit). The gaze state and its velocity (6). The tract's 10 positions and velocities, and breath left (21). |
@@ -289,7 +289,7 @@ Everything else the body gets comes from its sensors. Orienting's triggers are a
 | 7 | vestibular | 24 | Both inertial units: the accelerometer (which way is down) and the gyro (how the trunk turns), each as the tick's mean and peak. |
 | 8 | charge | 2 | h and Δh (the body's own need). |
 
-- About 2,970 numbers a tick, plus one symbol.
+- About 3,140 numbers a tick, plus one symbol (the ears' 1,725 in place of 1,557: the core's born encoders, R6h day 3, take this size).
 - **Keeping raw codes costs nothing measurable.** Storing each channel's raw code in the window and re-encoding every tick measured 58.8 against 58.0 ms (paired), so the window keeps the raw codes, which are smaller.
 
 ### 3.5 Effectors
@@ -582,13 +582,15 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 
 - **Infant-directed speech** (the owner's decision 6):
   - lines of at most 6 words, the focus word last (Fernald and Mazzie 1991);
-  - the focus word on a pitch peak through SSML (`<prosody pitch="+30%" rate="70%">`). SSML was probed but its effect is not measured (P1). The fallback is a one-word echo at the approval pitch ("duck!");
-  - the new word's lines at rate 0.2; P1 measures words a second, with a target of at most 3.
+  - the focus word on a pitch peak through SSML (`<prosody pitch="+30%" rate="70%">`). Measured (P1): the focus word's F0 +37% and its length +91%. Every line goes to the engine as SSML, its register's pitch and rate as one prosody around it (a plain line so made is the same clip, bit for bit, as the utterance);
+  - the new word's lines at rate 0.2, with the new word always emphasized: 2.84 words a second over 40 birth lines (C25's limit is 3). Unemphasized they ran at 3.39 (the engine's rates come in steps), so the voice refuses a new-word line without its emphasis.
 - **Its lines:** 4.0 words and 1.11 s (7.4 ticks) on average, 3.6 words a second.
   - At one symbol a tick, 95% of word tokens arrive on the tick their word ends and 5% one tick late.
-- **The cache:** `body/sim/voice/cache/`, keyed by (line, register), with a 300 MB limit that drops the least recently used lines.
-  - At each night boundary it pre-synthesizes every template line for the current vocabulary: 331 lines in 15 s, 14 MB.
-  - It is saved beside the body, so a replay is exact.
+- **The cache** is the life's voice folder, saved beside the body (never the source tree), keyed by the request: the voice, the line as SSML in its register, the clip format.
+  - Every line the life hears is kept for good (`kept/`), so a replay reads the very samples heard, and a ledger keeps every clip's digest. A clip made again must equal its digest, or the voice refuses it and the life pauses (an OS update may change the voice).
+  - At each night boundary it pre-synthesizes every template line for the current vocabulary: 331 lines in 15 s, 13.3 MB (40 KB a line). Lines made ahead and not yet heard (`clips/`) have a 300 MB limit that drops the least recently used.
+  - `kept/` grows by 40 KB for each line heard for the first time: at most about 25 MB a life day at 4.6's density even if every line were new, and the day's fresh lines in practice (section 9).
+  - The server answers within 60 s or the life pauses at that tick (the decision log's rule, in `SynthServer`).
 - **Its mouth** opens each tick with the clip's loudness in that tick (the jaw parameter).
 
 ### 4.5 Its sentences
@@ -635,7 +637,7 @@ The grades are visible at the lean-in distance. Beyond about 1 m, only the born 
 - **The child's turn:**
   - it ends when the tract has rested 2 ticks (silent) after sounding;
   - the parent replies 3 ticks later, answering what the child said: an expansion, a recast, an echo of its babble, or an answer (Goldstein et al. 2003; Goldstein and Schwade 2008, from memory).
-- **Talk-over.** If the child starts sounding during the parent's clip, the parent finishes the current word (at most 3 ticks), stops, and looks at the child with a listening face.
+- **Talk-over.** If the child starts sounding during the parent's clip, the parent finishes the current word (at most 3 ticks), stops, and looks at the child with a listening face. A word that would need longer (2.8–2.9% of cuts over the birth lines: a long word said slowly, or a line's last word) is broken off at 3 ticks and not labelled as said: its token is withdrawn from channel 0, and a spelled word's letters already given are closed by its space.
 - **Repeats:**
   - the call at most once per 240 ticks;
   - the same line not within 60 ticks;
@@ -728,7 +730,7 @@ The owner's decision 5: the voice is an articulatory vocal tract, so the child b
 | sounding (vowel, glide, fricative), a quieter moment | 1.8–3.0 |
 | sounding, under heavy load | 7–10 |
 | at rest | 0.12 |
-| its own voice to both ears | +0.17 |
+| its own voice to both ears | +0.37 a sounding tick (0.75–0.95 under heavy load), +0.05 at rest |
 | the babble average (6% of ticks sound), under load | about 1.6 |
 
 **The alphabet and the gate.**
@@ -747,7 +749,7 @@ The owner's decision 5: the voice is an articulatory vocal tract, so the child b
 **How the child hears itself.**
 - The tract is a software organ driving the G1's own loudspeaker, as the software fovea keeps the body stock. That the real G1 has a speaker, and where it sits, is from memory and still to check (B5).
 - In the sim the sound comes from the head's front and is spatialized to the two microphones.
-- It goes through the same cochleas and brainstem (channel 2). Its own voice arrives about 14 dB above the parent's at 1.5 m. There is no bone conduction.
+- It goes through the same cochleas and brainstem (channel 2). Its own voice arrives about 19–20 dB above the same sound from 1.5 m in front (the exact sphere's level for a source on its surface: +19.8 dB at 500 Hz, +19.1 dB for a held /a/, 78.7 dB SPL; the earlier "about 14 dB" was the prototype's 0.3 m level floor), and reads at the midline. There is no bone conduction.
 - An act at tick t is heard at t+1, as with the limbs.
 - The tract's 10 positions and velocities, plus breath left, join the body channel (21 numbers).
 
@@ -768,7 +770,7 @@ The owner's decision 5: the voice is an articulatory vocal tract, so the child b
   - So early imitation rests on the cortex learning to hear across voices. `act_inv`'s reliability is measured on its own voice, so it overstates on the parent's.
   - A method for the parent: echo the child's babble back (Goldstein and Schwade 2008).
 
-**How the parent hears the child's words** (`body/sim/parent_ear.py`; its cochlea `body/sim/ears.py`).
+**How the parent hears the child's words** (`body/sim/parent_ear.py`, the study's prototype). Every figure below was measured through the study's cochlea (filters about 1.6 ERB wide), which the prototype still uses (`body/sim/parent_ear_cochlea.py`). P3v moves the parent's ear onto the child's cochlea (`ears.cochlea`, 1.00 ERB, calibrated) and measures them again before any is used.
 - **Features:** the same cochlea → log bands → a shift of 0–4 bands (the parent adapting to a shorter tract) → cepstra c1–c12, mean-normalized → slope-constrained DTW (Itakura).
 - **How well it recognizes, as measured:**
   - across voices of the same synthesizer: 94–100% right among the 50 birth words;
@@ -1184,8 +1186,8 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 | the parent's mocap and its Python, every step | 4.3 | measured |
 | the parent's plan (solved per act and once a second, warm-started, interpolated) | 1–3 after W2 | estimate |
 | two eyes, 168 × 96 each, the sun's shadow: render, read-back, the split into periphery and fovea | 37.6 (16.5 without shadows) | measured |
-| ears: three sources, both cochleas, the brainstem | 2.3 | measured |
-| the child's tract: the babble average, plus its sound to both ears | 1.6 + 0.2 | measured |
+| ears: three sources, both cochleas, the brainstem | 1.4 (0.23 + about 0.37 a source; 2.8 under heavy load) | measured |
+| the child's tract: the babble average, plus its sound to both ears | 1.6 + 0.1 (its sound: 0.37 a sounding tick, 0.05 at rest) | measured |
 | the parent's ear: 287 ms per child utterance, at the born babble's 6.4–7.8 utterances a minute | about 5 on average (4.6–5.6; 287 ms at an utterance's end) | measured per utterance; the rate from the born babble |
 | the parent's voice | 0 on a cache hit | measured |
 | the core at the humanoid's size, at the critics' current solve rate | mean 56–84, median 39–53 | measured (paired against the language core: 84.4 against 74.3 mean) |
@@ -1227,15 +1229,16 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 
 | item | size | kept |
 |---|---|---|
-| the save, written as `.tmp` then renamed | about 1.3–1.7 GB (up to 3.4 GB at peak with its `.tmp`); the amygdala adds 2.3 MB. The earlier 0.95 GB had no source and is below the language body's own save (1.28 GB on disk today), while the sim's core has more parameters (35.2M against 28.8M), a larger store (98,304 slots against 65,536: +134 MB) and the day's tape (141 MB). S5b measures it | one |
-| the day's tape (about 3,000 numbers a tick, fp16: 6 KB) | about 141 MB a life day, inside the episodes (cap 24,000 ticks) | in the save |
+| the save, written as `.tmp` then renamed | about 1.3–1.7 GB (up to 3.4 GB at peak with its `.tmp`); the amygdala adds 2.3 MB. The earlier 0.95 GB had no source and is below the language body's own save (1.28 GB on disk today), while the sim's core has more parameters (35.2M against 28.8M), a larger store (98,304 slots against 65,536: +134 MB) and the day's tape (149 MB). S5b measures it | one |
+| the day's tape (about 3,140 numbers a tick, fp16: 6.3 KB) | about 149 MB a life day, inside the episodes (cap 24,000 ticks) | in the save |
 | each tick's record for the amygdala (16 B) | 384 KB a life day | in the tape |
 | world states for exact replay and redrawn films | about 7.6 KB a tick, 180 MB a life day | the last 3 days, 0.55 GB |
-| the voice cache | at most 300 MB | always |
+| the voice cache (the life's folder) | lines made ahead: at most 300 MB. Lines heard: kept for good, 40 KB each (13.3 MB for the 331 birth lines), growing by at most about 25 MB a life day | always |
 | the parent's JSONL log | rotated at 100 MB | the last file |
 | **peak** | **about 4.4 GB** | |
 
 - The tract's sound is not saved: the tract is deterministic from its seed and the acts, so a replay regenerates it.
+- The voice's kept lines grow with the life: at most about 25 MB a life day (0.75 GB over 30 days if every line were new), the day's fresh lines in practice. The disk rule counts them.
 - **The rule.** The sim writes nothing that would leave less free space than the larger of the two bodies' saves (the sim's, about 1.7 GB until S5b measures it) plus 1 GB: about 2.7 GB. It skips the write, logs why, and pauses at its next boundary.
 - **Birth needs at least 8 GB free:** the peak of 4.4 GB plus the rule's floor of 2.7 GB, and a margin.
 - **The owner's folders** `data/backups` and `data/first_lineage` are never touched.
@@ -1264,7 +1267,7 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 | the IMUs' noise | the model file's own declared noise (gyro 5e-4, accelerometer 1e-2), added by the world from its own seeded stream, since MuJoCo 3.9 does not apply it | world | the robot's (its file) |
 | the event line "a face in the fovea" | the born three-blob face template on each fovea's pixels (either eye), never the world's face test | innate | ours |
 | contacts with the world | the world's geoms at contact priority 2, so their friction and softness decide contacts with the G1; the G1's file untouched (A21, C26) | world | ours |
-| born codes | retinotopic: periphery 7 × 4 cells × 6 colour mixes per eye, fovea 8 × 8 × 6; ears 40-band gammatone, ERB-spaced 80–7,600 Hz, cube-root, delay lines ±8 samples in 21 bands, head radius 0.078 m; random projections from the seed | anatomy | ours |
+| born codes | retinotopic: periphery 7 × 4 cells × 6 colour mixes per eye, fovea 8 × 8 × 6; ears 40-band gammatone (the power response, 1.00 ERB, calibrated in Pa²), ERB-spaced 80–7,600 Hz, cube-root re 60 dB SPL, delay lines ±12 samples in 21 bands (a correlation times the band's loudness), the exact rigid sphere of radius 0.079 m, the ears' converter (flat to 7.6 kHz, 60 dB down from 8 kHz); random projections from the seed | anatomy | ours |
 | ears' places | two sites on the head's sides, 15.8 cm apart | anatomy | owner (default, B5) |
 | the tract | 12 cm, 24 sections plus a nasal branch; pitch 180–546 Hz, resting about 265 Hz; breath 400 cm³, refilled in 0.8 s; rest relax 1 tick; its calibration (section 4.9) | anatomy | ours (identity: B6) |
 | face reward | the increment rule: rises of the positive part felt positive, rises of the negative part felt negative, falls never felt, clipped ±2; felt only via the born reading while the face test passes on 2 consecutive ticks | reward | ours |
@@ -1520,8 +1523,9 @@ The render cost is mostly fixed overhead (the pixel count barely matters), and p
 | `parent_poses.py`, `parent_acts.py` | its scripted motions and acts, each with a report of joint ranges; an act never chooses the face |
 | `parent_feel.py` | the parent's feelings, their display on the graded face, the born reading with the increment rule, and the no-farming self-test |
 | `tract.py` | the child's articulatory vocal tract |
-| `ears.py` | the two ears (the born cochlea, the brainstem's delay lines, the spatializer) |
-| `parent_ear.py` | the parent's ear for the child's words, with the context and babble-bank decision rule |
+| `ears.py` | the two ears (built, P2): the spatializer (the exact rigid sphere behind the ears' converter), two calibrated cochleas, the brainstem's delay lines, the born lateral read, the onsets |
+| `parent_ear.py`, `parent_ear_cochlea.py` | the parent's ear for the child's words, with the context and babble-bank decision rule, and the study's cochlea it was measured through (until P3v moves it onto `ears.cochlea`) |
+| `voice/`, `lang/lexicon.py` | built (P1): the parent's voice (the Swift server, SSML registers, the life's cache and ledger, playback with the talk-over stop) and the born table of 79 rows with the words channel |
 | `make_livingroom_customchild.py` → `livingroom_customchild.xml`; `scene_customchild.py` | the custom child's room and loader, kept for reference (section 15) |
 | `highchair_onearm.xml`, `make_highchair_onearm.py` | the one-arm high chair, kept for reference (`tools/sim_look.py` renders it) |
 | `assets/unitree_g1/` | the stock G1 (commit dd8640e) |
@@ -1928,14 +1932,14 @@ Where a decision changes an earlier section, that section points here. W, P, R a
 - **Physics, not rules.** The articulators move with damped muscle dynamics (57–120 ms), so sounds glide into each other; breath (400 cm³, about 2.6 s, refilled in 0.8 s) makes breath groups. No phoneme table exists anywhere.
 - **Fitted to children's vowels, never to the teacher.** The tongue's corners were fitted to children's vowel means (Peterson and Barney). Nothing was fitted to the parent's words or voice.
 - **Not tuned to reach a word.** "bye" was reached by no act tried, and "hi", "pip", "up" and "see" only by hand. The tract stays as it is, and the first 50 words stay as they are. A word it cannot yet say is still one it can understand, and name by tokens while the scaffold lasts.
-- **It hears itself at t+1,** through its own ears, about 14 dB above the parent at 1.5 m, with no bone conduction.
+- **It hears itself at t+1,** through its own ears, about 19–20 dB above the same sound from 1.5 m (the exact sphere's level for its speaker on the head's front), with no bone conduction.
 - **The silent token output** (effector 1) is a second, separate effector with its own gate.
   - It never talks over her: a token made during her line is read when her line ends, and it never earns a frown.
   - The ledger keeps what is said by the tract and by tokens apart from birth.
 - **Deterministic** from its seed and the acts; its sound is not saved.
 
 **A27. The parent's ear: how she recognises the child's words** (section 4.9; `body/sim/parent_ear.py`)
-- **It is in the world, never in the body.** It uses the same born cochlea as the child, a shift of 0–4 bands, cepstra c1–c12 and Itakura DTW.
+- **It is in the world, never in the body.** It uses the same born cochlea as the child (from P3v; the prototype still hears through the study's), a shift of 0–4 bands, cepstra c1–c12 and Itakura DTW.
 - **Its templates:** the parent's own voice at plain and approval pitch; the same synthesizer at the old child pitch; and 8 other macOS voices (Flo, Sandy, Shelley, Eddy, Reed, Junior, Kathy, Fred). These are other synthesizers, not recordings of people.
 - **Fixed before birth: the templates, the babble bank and the expected sets.**
   - The child's accepted productions are never added as templates (`add_template` stays unused in life). Each one added would widen what passes, so the child's own chance acceptances (2% of babble) would loosen the criterion over time.
@@ -2037,7 +2041,7 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | C22 | The flexor withdrawal on each G1 limb, and whether it ever drives a limb into a worse contact | W1, then W4 | written down; no withdrawal that raises the pain it answers |
 | C23 | The tick's parts not yet measured: per-step contact forces for touch and the pain filter, the face test's rays, the parent's ear at the babble rate | S5a | inside the 150 ms mean |
 | C24 | The parent's contingency: the child's acts answered within 7 ticks | P6 | at least 90% |
-| C25 | SSML's effect on per-word prosody, and the parent's word rate | P1 | at most 3 words a second on new words |
+| C25 | SSML's effect on per-word prosody, and the parent's word rate | P1 | at most 3 words a second on new words. Measured: the focus word +37% F0, +91% length; new-word lines 2.84 words a second with the new word emphasized (3.39 without), so they are always emphasized |
 | C26 | Real frictions (the world's surfaces 1.0 now; the G1's feet 0.6 at priority 1, as shipped) and a friction model that does not creep (the G1 crept 5 cm at 146–199 N) | W1 | the measured sliding force matches μ × weight, set through the world's geoms at contact priority 2 and world options only; the G1's file and geoms untouched (A21) |
 | C27 | The parent's ear in life: its cost at the babble rate, its false accepts, m at the real context sizes; how often an accepted word is also exact (A27); whether the fixed babble bank still rejects babble once the child's babble has changed | P3v and P6, then the first life days | chance written down before birth; the rule never loosened after it |
 | C28 | The grasp on the six holdable toys under the resting servo law, and B1's choice | W3–W4 | written down |

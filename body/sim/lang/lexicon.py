@@ -101,10 +101,18 @@ class Words:
             self.order += 1
         return orders
 
-    def withdraw(self, orders):
+    def withdraw(self, orders, close_tick=None):
         """drop a word's symbols still queued (a word broken off by the talk-over stop is not labelled as said); returns how
-        many were withdrawn."""
+        many were withdrawn. A spelled word some of whose letters were already delivered keeps its closing space, due by
+        close_tick (the tick its broken sound stops), so the letters that came are closed off as a run, as every word's are."""
         drop = set(orders)
+        queued = {d.order for d in self.queue}
+        if len(orders) > 1 and any(o not in queued for o in orders[:-1]):      # letters out: the space (its last symbol) stays
+            drop.discard(orders[-1])
+            if close_tick is not None:
+                for d in self.queue:
+                    if d.order == orders[-1]:
+                        d.tick = min(d.tick, close_tick)
         keep = [d for d in self.queue if d.order not in drop]
         n = len(self.queue) - len(keep)
         self.queue = keep

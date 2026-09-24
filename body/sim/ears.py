@@ -13,24 +13,45 @@ two ear sites' positions and every sounding source (its 2,400 samples as pressur
   turning head is heard without a click:
     - the bulk path, per ear: the ray model's path (the straight line when the ear is in view of the source, else the tangent
       line and the arc around the head: Woodworth's, exact for a near source as well as a far one), as a fractional delay line
-      (a 16-tap Kaiser-windowed sinc: flat within 0.1 dB to 6 kHz and 2.2 dB down at 7 kHz at the worst fraction; a cubic
-      Lagrange was 5 dB down at 6 kHz) with its 1 / path spreading, both swept linearly across the tick from the last tick's
-      path to this one's (and with them the Doppler shift)
+      at twice the rate: the source, through the ears' converter (below) at 32 kHz, read at the path's delay by an 8-tap
+      Kaiser-windowed sinc (beta 6, 512 phases: flat within 0.012 dB and 0.09 us to 8 kHz at every fraction), with its 1 / path
+      spreading, both swept linearly across the tick from the last tick's path to this one's (and with them the Doppler shift)
     - the rest of the sphere, per ear: the residual R = H (path / r) e^{ik (path - r)}, the sphere's response less the bulk
       path's delay and spreading, as a 97-tap FIR (a Tukey-tapered window of +-48 samples around its own zero lag), from a
-      table built once, when the first Ears is made (0.2 s), over 1 / rho (25 steps from 0 to 1 / RHO_MIN) and theta (1 degree
-      steps), bilinear between them;
+      table built once, when the first Ears is made (0.15 s idle, about 1 s under load), over 1 / rho (25 steps from 0 to
+      1 / RHO_MIN) and theta (1 degree steps), bilinear between them; above the converter's pass edge the residual is tapered to
+      0 at 8 kHz (a raised cosine over 7.6-8 kHz), so the FIR's window does not ring into the pass band from the Nyquist bin;
       when the source moves against the head, last tick's filter is faded into this tick's across the tick
-  Against the exact series (measured when the table was chosen, 2026-09-24): the FIR within 0.55 dB (99th percentile 0.10 dB)
-  and 0.2 us of phase delay below 1.5 kHz; the table's interpolation within 0.03 dB in 1 / rho and 0.17 dB in theta. Every path
-  carries a common latency of 3.5 ms (the delay line's 8 samples and the FIR's 48), which changes no difference between the ears.
+  THE EARS' CONVERTER (the G1's microphones' converter, as a sim part: the first build read the 16 kHz samples directly with a
+  16-tap kernel, whose gain at the top band's centre ran from 0 to -8.3 dB with the delay's fraction of a sample, so moving a
+  source by eighths of a sample swung the top band's level by 6 dB and its level difference by 8-10 dB: the P1-P2 verifier's
+  blocker). Each source's samples are band-limited and interpolated to 32 kHz once a tick, for both ears, by one fixed
+  linear-phase low-pass (Kaiser's window method: pass edge 7.6 kHz, the top band's centre; stop edge 8 kHz, the 16 kHz
+  Nyquist; 60 dB; 293 taps at 32 kHz, M = 73 samples of latency at 16 kHz, its two phases applied by FFT). A real 16 kHz
+  converter's anti-alias filter passes to about 0.45-0.475 of the rate and stops by about 0.5 (from memory); the edges here are
+  ours, the pass edge anchored at the cochlea's top centre so every band's centre tone is heard at its level. It is flat within
+  0.009 dB to 7.6 kHz; with the residual's taper the ears' response above it is -2.6 dB at 7.7 kHz, -12 dB at 7.8, -35 dB at 7.9
+  and gone by 8 kHz (measured through the chain), the same for every source, fraction, distance and ear: a white sound's top band
+  reads 1.45 dB less than a band cut at the Nyquist would, the next band 0.08 dB (computed from the responses). What is left of
+  the fraction: a white source moved by eighths of a sample changes no band's level by more than 0.012 dB, nor its level
+  difference by more than 0.022 dB (test_sim_ears 17).
+  Against the exact series (measured on a grid off the table's steps, 2026-09-24): the FIR within 0.1 dB below 6.5 kHz, 0.17 dB
+  to 7.2 kHz and 0.42 dB to 7.6 kHz (99th percentiles 0.06, 0.11 and 0.28 dB; the worst on the far side's interference notches
+  near 168 degrees, between the table's 1 degree steps), and 0.18 us of phase delay below 1.5 kHz; the whole chain (test 3:
+  0.12-1.5 m, 30-150 degrees, 250 Hz to 7.6 kHz) within 0.19 us of interaural delay, 0.034 dB of level difference and 0.024 dB
+  of each ear's level. Every path carries a common latency of 7.7 ms (the converter's 73 samples, the read's 2 and the FIR's
+  48), which changes no difference between the ears.
   A source at or inside the sphere (the child's own speaker, on the head's front) is taken just off its surface, at RHO_MIN =
   1.02 (1.6 mm), where the series converges; its level at the ears changes by under 0.05 dB between rho 1.005 and 1.1. There is
   no floor on the level: pressure falls as the sphere's law says all the way in (the prototype's 1 / max(r, 0.3 m) is gone).
   No room echo here: the decision log's B9 (a first-order echo from the room's six surfaces, if it costs under 1 ms a tick) is
   W5's to measure and would enter as image sources through this same spatializer (at about 0.4 ms a source a tick, measured,
   six images would not fit B9's 1 ms: a cheaper far-field path for images is W5's to build). Sources beyond 20 m are heard as
-  at 20 m (the delay line's length; never in this room).
+  at 20 m (the delay line's length; never in this room). Cost (this Mac, load 2-3): 0.23 ms a tick for the cochleas and the
+  brainstem in silence, and 0.37-0.40 ms for each sounding source (its converter, both ears' delay lines and FIRs), the child's
+  own voice included (the P1-P2 verifier measured 0.75-0.95 ms a source at load 5-7); a source whose delay line and FIR tails
+  hold only zeros (the child's tract at rest, 94% of the born babble's ticks) costs nothing more: its silence is exact, so the
+  reads are skipped.
 
   THE COCHLEAS. Per ear, 40 bands ERB-spaced 80-7,600 Hz, each a 4th-order gammatone's power response (Patterson; Glasberg and
   Moore's ERB) applied to a short-time spectrum (25 ms Hann, 10 ms hop, 512-point FFT): 15 frames a tick. Each band's power is in
@@ -57,7 +78,9 @@ two ear sites' positions and every sounding source (its 2,400 samples as pressur
   around the peak, turned into an angle by that band's own law: the exact sphere's far-field interaural phase delay at the band's
   centre over azimuth 0..90 degrees, inverted (the head's own acoustics, as anatomy; a lag past the law's 90 degrees reads 90);
   the angles averaged weighted by each band's power above threshold; + is left. It is 0 with no weight when no such band is
-  above threshold. No learning.
+  above threshold: a sound with no energy below about 760 Hz above threshold (a high hiss) has no side here, and both event
+  lines fire for it (the verifier's check: a 1.2 kHz high-passed hiss still read right through the filters' skirts; the level
+  differences of the higher bands are in the code for the cortex, not in the born read). No learning.
 
   ONSETS (the cochlear nucleus's onset cells; the orienting trigger and the amygdala's two event lines): per ear and frame, the
   mean over bands of each band's rise in dB above its own running level, which adapts with a 50 ms time constant (the auditory
@@ -67,14 +90,16 @@ two ear sites' positions and every sounding source (its 2,400 samples as pressur
   interaural delay by the lowest read band's law (2.58 degrees; a sound there fires both).
 
 The channel code (the born projection reads it): the two cochleas' 15 x 40 frames and the 21 x 25 delay lines, 1,725 numbers a
-tick (the design's 1,557 was 17 lags). On speech at 1.5 m the two parts are of one scale (RMS 0.23-0.25 each: the test and
+tick (the design's first 1,557 had 17 lags; amended in its 3.4 by P2). On speech at 1.5 m the two parts are of one scale (RMS 0.23-0.25 each: the test and
 tools/sim_voice_check.py measure it). World truth never enters it: Heard.levels (each source's level at each ear this tick,
 dB SPL) and Heard.gains (each source's ray-path spreading to each ear, dB re 1 m, whatever it plays; the head's diffraction is
 in the levels) are for the world's side only (the words channel's "audible", the instruments).
 
 THE CONSTANTS (disclosed; ours unless marked): SR 16 kHz, the tick 2,400 samples; the speed of sound 343 m/s (world: air at 20 C);
 the head a rigid sphere through the ear sites (anatomy: the real head is not a sphere, and the pinnae's cues are absent, as on the
-G1's microphones); RHO_MIN 1.02; the residual's table (25 x 181, 256-point spectra) and its 97-tap Tukey window; the bands as
+G1's microphones); RHO_MIN 1.02; the residual's table (25 x 181, 256-point spectra), its 97-tap Tukey window and its taper over
+7.6-8 kHz; the delay line at 32 kHz with its 8-tap kernel; the converter's pass edge 7.6 kHz (the top band's centre), stop edge
+8 kHz (the Nyquist) and 60 dB (ours; a real converter's, from memory, above); the bands as
 above; the delay lines' bands below 1,500 Hz and L from the head's own delays (anatomy); THRESH_DB 10 dB SPL per band (a young
 ear's threshold is about 0-10 dB SPL at 1-4 kHz and higher at the extremes: from memory, one flat value here); the code's
 reference 60 dB SPL; ONSET_TAU 50 ms and ONSET_DB 10 dB. Nothing here draws a random number; state() and load_state() continue
@@ -102,14 +127,16 @@ THRESH_DB = 10.0
 CODE_REF_DB = 60.0
 ONSET_TAU = 5                            # frames (50 ms)
 ONSET_DB = 10.0
+OS = 2                                   # the delay line runs at twice the rate (32 kHz)
+AA_PASS, AA_STOP, AA_DB = 7600.0, 8000.0, 60.0   # the ears' converter: flat to the top band's centre, 60 dB down from 8 kHz
 RHO_MIN = 1.02                           # a source at or inside the head is taken this far out (radii): the series converges
 N_U, TH_STEP_DEG = 25, 1.0               # the residual's table: 1 / rho in 25 steps, theta in 1 degree steps
 R_NFFT, FIR_K = 256, 48                  # its spectra (62.5 Hz apart) and the FIR's half-length (+-48 samples, 3 ms)
 TOL = 1e-7                               # the series is summed until rho^-m falls below this
 
 # the G1's head, in torso_link's frame (metres): the ear sites the world adds (g1scene: on the head's sides, at its widest point,
-# 0.078 m from the midline; the real G1's 4-microphone array positions are not in the model: flagged) and the voice's source
-# (the tract drives the G1's own loudspeaker; placed on the head's front, on the midline, below the camera window: assumed)
+# 0.078 m from the midline; the real G1's 4-microphone array positions are not in the model: the owner's B5) and the voice's
+# source (the tract drives the G1's own loudspeaker; placed on the head's front, on the midline, below the camera window: B5)
 EAR_SITES = {"L": np.array([0.005, 0.079, 0.395]), "R": np.array([0.005, -0.079, 0.395])}
 MOUTH_SITE = np.array([0.06, 0.0, 0.38])
 HEAD_RADIUS = 0.079
@@ -218,12 +245,14 @@ def residual_table(radius=HEAD_RADIUS):
     th = np.radians(np.arange(0.0, 180.0 + TH_STEP_DEG / 2, TH_STEP_DEG))
     us = np.linspace(0.0, 1.0 / RHO_MIN, N_U)
     win = _tukey(FIR_K)
+    x = np.clip((f - AA_PASS) / (AA_STOP - AA_PASS), 0.0, 1.0)
+    taper = 0.5 + 0.5 * np.cos(np.pi * x)                           # 1 to the converter's pass edge, 0 at 8 kHz (see above)
     fir = np.empty((N_U, len(th), 2 * FIR_K + 1))
     for i, u in enumerate(us):
         rho = 1e4 if u == 0 else 1.0 / u                            # u = 0: a plane wave (a source 790 m away)
         H = sphere_H(rho, mu, th)                                   # [F, th]
         p = ray_path(rho, th)
-        R = H * (p / rho)[None, :] * np.exp(1j * mu[:, None] * (p - rho)[None, :])
+        R = H * (p / rho)[None, :] * np.exp(1j * mu[:, None] * (p - rho)[None, :]) * taper[:, None]
         ir = np.fft.irfft(R.T, R_NFFT, axis=-1)                     # [th, R_NFFT], zero lag at 0
         ir = np.concatenate([ir[:, -FIR_K:], ir[:, :FIR_K + 1]], 1)
         fir[i] = ir * win
@@ -299,8 +328,9 @@ def residual_fir(rho, theta, radius=HEAD_RADIUS):
     return ((1 - fx) * ((1 - fy) * fir[i, j] + fy * fir[i, j + 1]) + fx * ((1 - fy) * fir[i + 1, j] + fy * fir[i + 1, j + 1]))
 
 
-def _kernel_table(taps=16, phases=512, beta=6.0):
-    """the fractional delay's kernel: a Kaiser-windowed sinc of `taps` taps (k = -taps/2+1 .. taps/2) at phases+1 fractions."""
+def _kernel_table(taps=8, phases=512, beta=6.0):
+    """the fractional delay's kernel at the delay line's rate: a Kaiser-windowed sinc of `taps` taps (k = -taps/2+1 .. taps/2) at
+    phases+1 fractions."""
     k = np.arange(-taps // 2 + 1, taps // 2 + 1)
     f = np.arange(phases + 1)[:, None] / phases
     t = k[None, :] - f
@@ -309,15 +339,32 @@ def _kernel_table(taps=16, phases=512, beta=6.0):
     return h / h.sum(1, keepdims=True)
 
 
-TAPS, PHASES = 16, 512
+def _converter(f_pass=AA_PASS, f_stop=AA_STOP, atten=AA_DB, rate=OS * SR):
+    """the ears' converter: a linear-phase low-pass at the delay line's rate by the Kaiser window method (Kaiser's formulas for
+    the window's beta and length from the attenuation and the transition), 4 M + 1 taps so its latency is M whole samples at
+    16 kHz; its gain is OS (the zero-stuffed input's) -> (the taps, M)."""
+    dw = 2 * math.pi * (f_stop - f_pass) / rate
+    beta = 0.1102 * (atten - 8.7)
+    m = int(math.ceil((math.ceil((atten - 8) / (2.285 * dw))) / 4))
+    n = np.arange(4 * m + 1) - 2 * m
+    fc = 0.5 * (f_pass + f_stop) / rate
+    g = 2 * fc * np.sinc(2 * fc * n) * np.kaiser(4 * m + 1, beta)
+    return g / g.sum() * OS, m
+
+
+TAPS, PHASES = 8, 512                    # the fractional read at the delay line's rate (32 kHz)
 KERNEL = _kernel_table(TAPS, PHASES)
-LOOKAHEAD = TAPS // 2                    # the delay line's latency (0.5 ms); the FIR adds FIR_K (3 ms): 3.5 ms on every path
-LATENCY = LOOKAHEAD + FIR_K
+AA, AA_M = _converter()                  # 293 taps at 32 kHz; M = 73 samples at 16 kHz (4.56 ms)
+N_UP = 2700                              # the converter by FFT: TICK + 4 M samples, rounded up (2^2 3^3 5^2)
+_AA_E = np.fft.rfft(AA[0::2], N_UP)      # its two phases' spectra: the 32 kHz samples on the 16 kHz grid, and between
+_AA_O = np.fft.rfft(AA[1::2], N_UP)
+LOOKAHEAD = AA_M + TAPS // (2 * OS)      # the bulk path's latency in 16 kHz samples: the converter's M and the read's 2
+LATENCY = LOOKAHEAD + FIR_K              # with the sphere's FIR: 123 samples (7.7 ms) on every path
 N_CONV = 2592                            # the FIR by FFT: TICK + 2 FIR_K + 2 FIR_K samples (2^5 3^4)
 
 
 def frac_read(buf, pos):
-    """buf read at fractional positions pos (a 16-tap Kaiser-windowed sinc, its phase interpolated from a 512-phase table)."""
+    """buf read at fractional positions pos (an 8-tap Kaiser-windowed sinc, its phase interpolated from a 512-phase table)."""
     i = np.floor(pos).astype(np.int64)
     p = (pos - i) * PHASES
     j = np.minimum(np.floor(p).astype(np.int64), PHASES - 1)
@@ -325,6 +372,29 @@ def frac_read(buf, pos):
     W = KERNEL[j] + (KERNEL[j + 1] - KERNEL[j]) * t
     win = np.lib.stride_tricks.sliding_window_view(buf, TAPS)[i - (TAPS // 2 - 1)]
     return (win * W).sum(1)
+
+
+def convert(seg):
+    """the converter on one tick: seg is the source's last 2 M samples and this tick's (16 kHz) -> the 2 x TICK samples at 32 kHz
+    for the times [start - M, end - M) of this tick (its value at a time t uses the samples t - M .. t + M, so the converted
+    stream runs M samples behind the source's)."""
+    X = np.fft.rfft(seg, N_UP)
+    e = np.fft.irfft(X * _AA_E, N_UP)[2 * AA_M:2 * AA_M + TICK]
+    o = np.fft.irfft(X * _AA_O, N_UP)[2 * AA_M:2 * AA_M + TICK]
+    out = np.empty(2 * TICK)
+    out[0::2], out[1::2] = e, o
+    return out
+
+
+def convert_block(x):
+    """the converter on a whole signal at once (an instrument for the tests: the streamed ticks must equal it): -> 2 len(x)
+    samples at 32 kHz, sample 2 t at the time t, zero phase (the samples before the start and after the end taken as silence)."""
+    x = np.asarray(x, np.float64)
+    xp = np.concatenate([np.zeros(AA_M), x, np.zeros(AA_M)])
+    out = np.empty(2 * len(x))
+    out[0::2] = np.convolve(xp, AA[0::2])[2 * AA_M:2 * AA_M + len(x)]
+    out[1::2] = np.convolve(xp, AA[1::2])[2 * AA_M:2 * AA_M + len(x)]
+    return out
 
 
 def fir_apply(y_ext, firs):
@@ -335,16 +405,20 @@ def fir_apply(y_ext, firs):
 
 
 class _Source:
-    __slots__ = ("hist", "delay", "gain", "fir", "ytail", "pos", "quiet")
+    __slots__ = ("raw", "up", "delay", "gain", "fir", "ytail", "pos", "quiet")
 
     def __init__(self):
-        self.hist = np.zeros(HIST)
-        self.delay = None                 # samples, per ear
+        self.raw = np.zeros(2 * AA_M)     # its last 2 M samples at 16 kHz (the converter's overlap)
+        self.up = np.zeros(OS * HIST)     # its converted history at 32 kHz: the delay line
+        self.delay = None                 # samples at 16 kHz, per ear
         self.gain = None
         self.fir = None                   # per ear: the sphere's residual FIR last tick
         self.ytail = np.zeros((2, 2 * FIR_K))   # per ear: the bulk path's last 2 FIR_K samples
         self.pos = None
         self.quiet = 0                    # ticks since it last sounded
+
+    def silent(self):
+        return not (np.any(self.raw) or np.any(self.up) or np.any(self.ytail))
 
 
 class Heard:
@@ -398,26 +472,30 @@ class Ears:
             fir = [residual_fir(rho, th[e], self.radius) for e in (0, 1)]
             if s.delay is None:
                 s.delay, s.gain, s.fir = delay.copy(), gain.copy(), fir
-            buf = np.concatenate([s.hist, x])
-            lv = []
-            for e, out in ((0, L), (1, R)):
-                d = s.delay[e] + (delay[e] - s.delay[e]) * ramp
-                g = s.gain[e] + (gain[e] - s.gain[e]) * ramp
-                y = frac_read(buf, HIST + n - d) * g
-                y_ext = np.concatenate([s.ytail[e], y])
-                s.ytail[e] = y[-2 * FIR_K:]
-                if np.array_equal(s.fir[e], fir[e]):
-                    o, = fir_apply(y_ext, [fir[e]])
-                else:                                            # the source moved against the head: last tick's faded
-                    o0, o1 = fir_apply(y_ext, [s.fir[e], fir[e]])  # into this one's
-                    o = o0 + (o1 - o0) * ramp
-                out += o
-                lv.append(10 * math.log10(max(float(np.mean(o * o)), 1e-30) / P_REF ** 2))
+            seg = np.concatenate([s.raw, x])
+            buf = np.concatenate([s.up, convert(seg) if np.any(seg) else np.zeros(OS * TICK)])   # times [start - M - HIST, end - M)
+            if not (np.any(buf) or np.any(s.ytail)):                  # silence in, silence out, exactly: the reads skipped
+                lv = [10 * math.log10(1e-30 / P_REF ** 2)] * 2
+            else:
+                lv = []
+                for e, out in ((0, L), (1, R)):
+                    d = s.delay[e] + (delay[e] - s.delay[e]) * ramp
+                    g = s.gain[e] + (gain[e] - s.gain[e]) * ramp
+                    y = frac_read(buf, OS * (HIST + AA_M + n - d)) * g
+                    y_ext = np.concatenate([s.ytail[e], y])
+                    s.ytail[e] = y[-2 * FIR_K:]
+                    if np.array_equal(s.fir[e], fir[e]):
+                        o, = fir_apply(y_ext, [fir[e]])
+                    else:                                            # the source moved against the head: last tick's faded
+                        o0, o1 = fir_apply(y_ext, [s.fir[e], fir[e]])  # into this one's
+                        o = o0 + (o1 - o0) * ramp
+                    out += o
+                    lv.append(10 * math.log10(max(float(np.mean(o * o)), 1e-30) / P_REF ** 2))
             levels[name] = tuple(lv)
             self.gains[name] = tuple(20 * math.log10(float(g)) for g in gain)
-            s.hist = buf[-HIST:]
+            s.raw, s.up = seg[-2 * AA_M:], buf[-OS * HIST:]
             s.delay, s.gain, s.fir = delay, gain, fir
-            if name not in sources and s.quiet * TICK > HIST + 4 * FIR_K and not np.any(s.ytail):
+            if name not in sources and s.silent():
                 del self.src[name]
         return L, R, levels
 
@@ -485,7 +563,7 @@ class Ears:
     # ---------------------------------------------------------------------------------------------------- save, restore
     def state(self):
         return dict(radius=self.radius, tail=self.tail.copy(), run=None if self.run is None else self.run.copy(), ticks=self.ticks,
-                    src={k: dict(hist=s.hist.copy(), delay=None if s.delay is None else s.delay.copy(),
+                    src={k: dict(raw=s.raw.copy(), up=s.up.copy(), delay=None if s.delay is None else s.delay.copy(),
                                  gain=None if s.gain is None else s.gain.copy(), ytail=s.ytail.copy(),
                                  fir=None if s.fir is None else [f.copy() for f in s.fir],
                                  pos=None if s.pos is None else s.pos.copy(), quiet=s.quiet) for k, s in self.src.items()})
@@ -497,7 +575,7 @@ class Ears:
         self.src = {}
         for k, v in st["src"].items():
             s = _Source()
-            s.hist = v["hist"].copy()
+            s.raw, s.up = v["raw"].copy(), v["up"].copy()
             s.delay = None if v["delay"] is None else v["delay"].copy()
             s.gain = None if v["gain"] is None else v["gain"].copy()
             s.ytail = v["ytail"].copy()

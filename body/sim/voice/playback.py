@@ -6,7 +6,9 @@ body/sim/lang/lexicon.Words) on the tick its sound starts, with the tick its sou
 nothing else. cut(words) is the talk-over stop (4.6: "the parent finishes the current word (at most 3 ticks), stops"): the word
 sounding now is finished and the line stops at its end, unless that end is more than CUT_MAX ticks away, when the parent breaks
 off at CUT_MAX ticks and the broken word's symbols still queued in the words channel are withdrawn (its sound was not finished, so
-it is not labelled as said; letters of a later word already delivered stay, as they came); between words it stops at once.
+it is not labelled as said; letters of a later word already delivered stay, as they came, and its closing space stays too, due
+by the tick its sound stops, so the run is closed); between words it stops at once. A line cut before any of its words sounded
+ends unheard: no END is queued for it (the P1-P2 verifier's nit: a lone END with no sound).
 Measured over the 331 birth lines (plain) cut at every tick (tools/sim_voice_check.py): without the cap 82 of the 2,913 cuts
 (2.8%) needed 4-5 ticks to finish the word (a long word said slowly, "peekaboo!", or a line's last word), and an emphasized new
 word up to 7 (test_sim_voice.py); with it none passes 3. The line's last 10 ms
@@ -62,7 +64,7 @@ class Utterance:
         self.pos += TICK
         if self.pos >= self.stop_at:
             self.done = True
-            if words is not None:
+            if words is not None and self.next_word > 0:                # a line cut before any word sounded ends unheard
                 words.end(self.start + (max(self.stop_at, 1) - 1) // TICK)
         self._last = seg
         return seg
@@ -88,7 +90,7 @@ class Utterance:
                 break
         self.stop_at = min(self.stop_at, stop)
         if self.broken is not None and words is not None and self.broken in self.handed:
-            words.withdraw(self.handed[self.broken])
+            words.withdraw(self.handed[self.broken], close_tick=self.start + (self.stop_at - 1) // TICK)
         self.fade_from = max(self.pos, self.stop_at - FADE)
         self._fade(self.fade_from, self.stop_at)
         self.cut_at_tick = self.start + self.pos // TICK

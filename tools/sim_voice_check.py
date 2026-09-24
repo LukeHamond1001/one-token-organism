@@ -10,7 +10,8 @@ RMS behind SYNTH_RMS, is a level, written into body/sim/voice/synth.py by hand a
   tract      its cost a tick (a held vowel, a glide, a hiss, rest; best and median of repeats on this shared Mac); its /a/ against
              the parent's loud frames
   ears       the born lateral read on the parent's voice from -90 to +90 degrees at 1.5 m; the code's two halves' scale on it; the
-             child's own voice (level over the same sound from 1.5 m, its lateral read); the cost a tick with three sources
+             child's own voice (level over the same sound from 1.5 m, its lateral read); the cost a tick with three sources;
+             the parent's speech moved by eighths of a sample (the top bands' level and level difference must hold still)
 
 Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N]
   --lines  one line a line (default: 16 lines written here; the commit used the all-out study's 331 birth template lines)
@@ -90,7 +91,7 @@ def voice(lines, cache, n_det):
           f"{20 * math.log10(np.sqrt((rms ** 2).mean()) * V.PA_PER_UNIT / E.P_REF):.1f} dB SPL")
     sub = lines[:40]
     for reg in ("plain", "question", "approval", "comfort", "calling", "no", "new_word"):
-        for emph in ((False, True) if reg in ("plain", "new_word") else (False,)):
+        for emph in ((False, True) if reg == "plain" else (True,) if reg == "new_word" else (False,)):   # new words: always
             cs = [cache.clip(ln, reg, emphasis=(ln.strip(".?! ").split()[-1] if emph else None)) for ln in sub]
             nw = sum(len(c.words) for c in cs)
             span = np.array([(c.words[-1][2] - c.words[0][1]) / V.SR for c in cs])
@@ -233,6 +234,23 @@ def ears(clips):
     print(f"the code on the parent's speech (20 lines, 1.5 m, 30 degrees): cochlea RMS "
           f"{np.sqrt((codes[:, :nco] ** 2).mean()):.3f}, delay lines RMS {np.sqrt((codes[:, nco:] ** 2).mean()):.3f} "
           f"(largest {np.abs(codes[:, nco:]).max():.3f})")
+    # the P1-P2 verifier's blocker, on the parent's real speech: moved by eighths of a sample at 1.5 m (40 degrees), the top two
+    # bands' level and level difference (the 16 kHz delay line swung them 6.4 and 10.4 dB; physics, about 0.1 and 0)
+    x = np.concatenate([c.pa() for c in clips[:6]])
+    n = len(x) // 2400
+    lvl, ild = [], []
+    for k in range(9):
+        a, d = math.radians(40), 1.5 + k * E.C_SOUND / E.SR / 8
+        src = centre + d * np.array([math.cos(a), math.sin(a), 0.0])
+        ea, L, R = E.Ears(), 0.0, 0.0
+        for j in range(n):
+            h = ea.tick(eL, eR, {"parent": (x[j * 2400:(j + 1) * 2400], src)})
+            L, R = L + (h.left[:, -2:] ** 3).sum(0), R + (h.right[:, -2:] ** 3).sum(0)
+        lvl.append(10 * np.log10(L) + 20 * math.log10(d))
+        ild.append(10 * np.log10(L / R))
+    print(f"the parent's speech (6 lines) moved by eighths of a sample at 1.5 m, 40 degrees: the top two bands' level (less the "
+          f"spreading) swings {np.ptp(lvl, 0)[0]:.3f} / {np.ptp(lvl, 0)[1]:.3f} dB, their level difference "
+          f"{np.ptp(ild, 0)[0]:.3f} / {np.ptp(ild, 0)[1]:.3f} dB")
     # the child's own voice against the parent at 1.5 m, the same sound
     tr = T.Tract(1)
     x = T.NEUTRAL.copy()
