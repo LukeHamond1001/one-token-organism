@@ -41,13 +41,14 @@ pattern generators' and the born cry's steps below the gates, per joint in the j
 
 THE CEREBELLUM'S MOSSY INPUT (SIM_DESIGN.md 7.5, A44; the lead's decision for the G1: THE BODY'S OWN SIGNALS ONLY, NO VISION AND NO
 HEARING AT BIRTH): the numbers the world hands the cerebellum at each sub-step below the tick (every 10 ms, body/core/world.py
-`SubFrame.mossy`), 298 in this order, each named in `SimAnatomy.mossy` and declared to the organ by `SimAnatomy.cerebellar`:
-  (1) THE EFFERENCE COPY OF EVERY EFFECTOR'S ACTS (the pontine route of the motor command: Ito 1984, The Cerebellum and Neural Control;
-      Apps and Garwicz 2005, Nat Rev Neurosci 6:297-311), the tick's own act held through its sub-steps, in the effectors' declared
-      order: each joint's setting of the tract (10), then the words' silent output as one line per symbol of its 79, 1 on the symbol
-      the tick's act gave (its rest included) and 0 on every other (a symbol has no joint and no scale, so its copy is its line), then
-      each joint's setting of the gaze (3: yaw, pitch, vergence), the waist (3), the arms (7 + 7), the Dex3 hands (7 + 7) and the legs
-      (6 + 6): 135. Each setting is 0-4, the hold 2. The gate's own act: never the cord's patterns or a reflex's forced act.
+`SubFrame.mossy`), 219 in this order, each named in `SimAnatomy.mossy` and declared to the organ by `SimAnatomy.cerebellar`:
+  (1) THE EFFERENCE COPY OF EVERY MOTOR EFFECTOR'S ACTS (the pontine route of the motor command: Ito 1984, The Cerebellum and Neural
+      Control; Apps and Garwicz 2005, Nat Rev Neurosci 6:297-311), the tick's own act held through its sub-steps, in the effectors'
+      declared order: each joint's setting of the tract (10: its articulators), the gaze (3: yaw, pitch, vergence), the waist (3), the
+      arms (7 + 7), the Dex3 hands (7 + 7) and the legs (6 + 6): 56. Each setting is 0-4, the hold 2. The gate's own act: never the
+      cord's patterns or a reflex's forced act. THE WORDS' SILENT OUTPUT (effector 1, the token output) IS NOT AMONG THEM (the lead's
+      decision, 2026-09-25): the cerebellum smooths joints, and the token output moves no joint and has no body sense to predict; its
+      79 symbol lines, which e351813 read into "every effector", left the efference copy (298 numbers then, 219 now).
   (2) THE JOINTS' POSITIONS AND VELOCITIES (the spinocerebellar proprioception: Bosco and Poppele 2001, Physiol Rev 81:539-568): each
       of the 43 joints' angle (rad, through the encoder) in BODY_JOINTS' order, then each one's velocity (rad/s): 86. The gaze's window
       and the tract, whose states the body channel also carries, are not spinal joints and are not among them (their acts are in 1).
@@ -61,11 +62,11 @@ HEARING AT BIRTH): the numbers the world hands the cerebellum at each sub-step b
       limit, then the base's outside wrench over the body's weight (force, then torque, each x y z in the pelvis's frame): 65, each as
       the touch channel carries it, at the sub-step (the observer runs every 10 ms, the sub-step's period), onsets not among them.
 Each number's declared middle and half-range (the organ reads it as the fibre's rate 1 + (x - middle) / half-range, held to [0, 2]): a
-setting 2 and 2; a symbol's line 0.5 and 0.5 (silent unless its symbol was said); an angle its joint's range's middle and half (RANGES,
-the model's own); a velocity and a gyro's turn 0 and MOSSY_SPEED; an accelerometer's axis 0 and MOSSY_G; touch and contact 0 and 1
-(the touch channel's own units: the log of newtons, each joint's limit, where its pain begins, the body's weight). THE READOUTS (7.5):
-the 29 joints of the waist, the arms and the legs (CEREB_JOINTS; the Dex3's joints none), each a torque added to its servo inside its
-limit this tick; THE FLOCCULUS on the gaze window's yaw and pitch (the VOR's axes)."""
+setting 2 and 2; an angle its joint's range's middle and half (RANGES, the model's own); a velocity and a gyro's turn 0 and MOSSY_SPEED;
+an accelerometer's axis 0 and MOSSY_G; touch and contact 0 and 1 (the touch channel's own units: the log of newtons, each joint's limit,
+where its pain begins, the body's weight). THE READOUTS (7.5): the 29 joints of the waist, the arms and the legs (CEREB_JOINTS; the
+Dex3's joints none), each a torque added to its servo inside its limit this tick; THE FLOCCULUS on the gaze window's yaw and pitch (the
+VOR's axes)."""
 import math
 from dataclasses import dataclass
 
@@ -300,14 +301,12 @@ class SimAnatomy(LanguageAnatomy):
 
         def fibre(name, mid, hr):
             mossy.append(name); off.append(float(mid)); half.append(float(hr))
-        for e in self.effectors:                                       # (1) the efference copy of every effector's acts
+        for e in self.effectors:                                       # (1) the efference copy of every motor effector's acts
             if e is voice:
-                for k in range(self.vocab):
-                    fibre(f"act words.{k}", 0.5, 0.5)                  # the words' symbol k: its line, silent unless said
-            else:
-                jn = TRACT if e is tract else (("yaw", "pitch", "vergence") if e is gaze else tuple(BODY_JOINTS[j] for j in e.joints))
-                for j in jn:
-                    fibre(f"act {e.name}.{j}", 2.0, 2.0)               # a joint's setting, 0-4 about the hold
+                continue                                               # the words' token output: no joint, no body sense (the lead's)
+            jn = TRACT if e is tract else (("yaw", "pitch", "vergence") if e is gaze else tuple(BODY_JOINTS[j] for j in e.joints))
+            for j in jn:
+                fibre(f"act {e.name}.{j}", 2.0, 2.0)                   # a joint's setting, 0-4 about the hold
         for (lo, hi), j in zip(RANGES, BODY_JOINTS):                   # (2) the joints' positions, then their velocities
             fibre(f"angle {j}", (lo + hi) / 2.0, (hi - lo) / 2.0)
         for j in BODY_JOINTS:

@@ -940,8 +940,8 @@ def test_orienting_and_the_vor():
 
 def _g1_mossy(anatomy, acts, R):
     """the G1's mossy numbers for one sub-step as a world hands them, in the anatomy's declared order (SimAnatomy.mossy; an instrument of
-    motor 11): the efference copy from the tick's acts (each joint's setting, its flat act's base-5 digit, joint 0 the most significant;
-    the words' line 1 on the symbol the act gave), every other number drawn about its declared middle within 1.1 of its half-range"""
+    motor 11): the efference copy from the tick's acts (each motor effector's joint's setting, its flat act's base-5 digit, joint 0 the
+    most significant), every other number drawn about its declared middle within 1.1 of its half-range"""
     cb = anatomy.cerebellar; digits = {}
     for e in anatomy.motors:
         a = int(acts.get(e.name, e.rest_id)); J = len(e.factors)
@@ -950,11 +950,8 @@ def _g1_mossy(anatomy, acts, R):
     for name, mid, hr in zip(anatomy.mossy, cb.mossy_offset, cb.mossy_scale):
         kind, what = name.split(" ", 1)
         if kind == "act":
-            eff, j = what.split(".", 1)
-            if eff == "words":
-                out.append(1.0 if int(j) == int(acts.get("words", anatomy.sil)) else 0.0)
-            else:
-                out.append(float(digits[eff][seen[eff]])); seen[eff] += 1
+            eff = what.split(".", 1)[0]
+            out.append(float(digits[eff][seen[eff]])); seen[eff] += 1
         else:
             out.append(mid + hr * R.uniform(-1.1, 1.1))
     return out
@@ -1025,21 +1022,22 @@ def test_the_g1_anatomy():
     and every other gate's rows (the words', the voice of the code, included) carry 0 on every tick; the legs' and arms' patterns and the
     gaze's VOR reach the world; each of the tract's lessons takes the credit 3.5 discloses (the dopamine that followed, the tonic drive
     0.25 + 4.656 x the reward's mean, 0.5 x its performance error, its cost at its own fatigue), its mean checked by hand.
-    THE CEREBELLUM ON AT BIRTH (7.5, A44; the lead's mossy list): the G1 declares its cerebellar interface, 298 mossy numbers named in
-    order, the body's own signals only (no vision, no hearing): (1) the efference copy of every effector's acts (each joint's setting
-    of the tract, the gaze, the waist, the arms, the hands and the legs in the declared order, and the words' 79 symbols' lines in their
-    place: 135), (2) the 43 joints' angles and velocities (86), (3) both inertial units' accelerometer and gyro (12), (4) touch and
+    THE CEREBELLUM ON AT BIRTH (7.5, A44; the lead's mossy list): the G1 declares its cerebellar interface, 219 mossy numbers named in
+    order (every one checked against the order written again here), the body's own signals only (no vision, no hearing): (1) the
+    efference copy of every motor effector's acts (each joint's setting of the tract, the gaze, the waist, the arms, the hands and the
+    legs in the declared order: 56; the words' token output none, the lead's decision of 2026-09-25: it moves no joint and has no body
+    sense to predict), (2) the 43 joints' angles and velocities (86), (3) both inertial units' accelerometer and gyro (12), (4) touch and
     contact (the Dex3's 16 zones, the observer's torque on the 43 joints, the base's wrench: 65); each number's declared middle and
-    half-range by its rule (a setting 2 and 2, a symbol's line 0.5 and 0.5, an angle its joint's range from the model's file, a velocity
-    and a gyro 0 and 1.8 rad/s, an accelerometer 0 and 9.81 m/s^2, touch and contact 0 and 1); the readouts on the 29 joints of the
-    waist, the arms and the legs, none on the hands'; the flocculus on the gaze's yaw and pitch. SIM_CFG switches it on; the organs
-    build it at birth for that declaration and the world's hook is the life's; the stub calls it 15 times a tick and every sub-step
-    runs the law, its answers inside the limit and the flocculus's at sub-step 0 alone"""
+    half-range by its rule (a setting 2 and 2, an angle its joint's range from the model's file, a velocity and a gyro 0 and 1.8 rad/s,
+    an accelerometer 0 and 9.81 m/s^2, touch and contact 0 and 1); the readouts on the 29 joints of the waist, the arms and the legs,
+    none on the hands'; the flocculus on the gaze's yaw and pitch. SIM_CFG switches it on; the organs build it at birth for that
+    declaration and the world's hook is the life's; the stub calls it 15 times a tick and every sub-step runs the law, its answers inside
+    the limit and the flocculus's at sub-step 0 alone"""
     import itertools
     from body.core.anatomy import Cerebellar
     from body.core.cerebellum import Below
     from body.model import Organs
-    from body.sim.anatomy import BODY_JOINTS, CEREB_JOINTS, LIMBS, MOSSY_G, MOSSY_SPEED, RANGES, SIM_CFG, SimAnatomy, born_table, TRACT
+    from body.sim.anatomy import BODY_JOINTS, CEREB_JOINTS, LIMBS, MOSSY_G, MOSSY_SPEED, RANGES, SIM_CFG, SimAnatomy, born_table, TRACT, ZONES
     a = SimAnatomy(born_table(), SIM_CFG).check()
     assert [c.name for c in a.channels] == ["words", "face", "ears", "eye_p", "eye_f", "body", "touch", "vestibular", "charge"]
     assert [c.size for c in a.channels] == [79, 2, 1725, 172, 1536, 242, 130, 24, 2] and sum(c.size for c in a.channels[1:]) == 3833
@@ -1101,20 +1099,26 @@ def test_the_g1_anatomy():
     # THE CEREBELLUM ON AT BIRTH: the declaration (the lead's list, the body's own signals only), each number's rule, the organ and its hook
     cb, nm = a.cerebellar, list(a.mossy)
     kinds = collections.Counter(n_.split(" ", 1)[0] for n_ in nm)
-    assert SIM_CFG["cereb"] == 1 and isinstance(cb, Cerebellar) and cb.n_mossy == len(nm) == 298, (SIM_CFG.get("cereb"), len(nm))
-    assert kinds == {"act": 135, "angle": 43, "velocity": 43, "acc": 6, "gyro": 6, "touch": 16, "contact": 49}, kinds
+    assert SIM_CFG["cereb"] == 1 and isinstance(cb, Cerebellar) and cb.n_mossy == len(nm) == 219, (SIM_CFG.get("cereb"), len(nm))
+    assert kinds == {"act": 56, "angle": 43, "velocity": 43, "acc": 6, "gyro": 6, "touch": 16, "contact": 49}, kinds
     eff = [n_.split(" ", 1)[1].split(".", 1)[0] for n_ in nm if n_.startswith("act ")]
-    assert [k_ for k_, _ in itertools.groupby(eff)] == names, eff
-    jn = {"voice": list(TRACT), "gaze": ["yaw", "pitch", "vergence"], "words": [str(k_) for k_ in range(79)]}
+    assert [k_ for k_, _ in itertools.groupby(eff)] == [e_.name for e_ in a.motors] == [n_ for n_ in names if n_ != "words"], eff
+    jn = {"voice": list(TRACT), "gaze": ["yaw", "pitch", "vergence"], "words": []}
     for e_ in a.effectors:
-        want_ = jn.get(e_.name) or [BODY_JOINTS[j_] for j_ in e_.joints]
+        want_ = jn[e_.name] if e_.name in jn else [BODY_JOINTS[j_] for j_ in e_.joints]
         assert [n_.split(".", 1)[1] for n_ in nm if n_.startswith(f"act {e_.name}.")] == want_, e_.name
+    order = ([f"act {e_.name}.{j_}" for e_ in a.motors for j_ in (jn[e_.name] if e_.name in jn else [BODY_JOINTS[k_] for k_ in e_.joints])]
+             + [f"angle {j_}" for j_ in BODY_JOINTS] + [f"velocity {j_}" for j_ in BODY_JOINTS]
+             + [f"{k_} {u_}.{x_}" for u_ in ("torso", "pelvis") for k_ in ("acc", "gyro") for x_ in "xyz"]
+             + [f"touch {z_}" for z_ in ZONES] + [f"contact {j_}" for j_ in BODY_JOINTS]
+             + [f"contact base.{w_}" for w_ in ("force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z")])
+    assert nm == order and not any("words" in n_ for n_ in nm), [(i_, x_, y_) for i_, (x_, y_) in enumerate(zip(nm, order)) if x_ != y_][:3]
     assert [n_ for n_ in nm if not n_.startswith("act ")][:86] == [f"angle {j_}" for j_ in BODY_JOINTS] + [f"velocity {j_}" for j_ in BODY_JOINTS]
     assert [n_ for n_ in nm if n_.split(" ", 1)[0] in ("acc", "gyro")] == [f"{k_} {u_}.{x_}" for u_ in ("torso", "pelvis") for k_ in ("acc", "gyro") for x_ in "xyz"]
     for n_, o_, h_ in zip(nm, cb.mossy_offset, cb.mossy_scale):
         kind, what = n_.split(" ", 1)
         if kind == "act":
-            assert (o_, h_) == ((0.5, 0.5) if what.startswith("words.") else (2.0, 2.0)), n_
+            assert (o_, h_) == (2.0, 2.0), n_
         elif kind == "angle":
             lo_, hi_ = RANGES[BODY_JOINTS.index(what)]
             assert (o_, h_) == ((lo_ + hi_) / 2.0, (hi_ - lo_) / 2.0) and h_ > 0, n_
@@ -1127,7 +1131,7 @@ def test_the_g1_anatomy():
     assert list(cb.joints) == list(CEREB_JOINTS) == [j_ for n_, js_ in LIMBS if not n_.startswith("hand") for j_ in js_] and len(cb.joints) == 29
     assert not set(cb.joints) & {j_ for n_, js_ in LIMBS if n_.startswith("hand") for j_ in js_} and list(cb.vor) == ["yaw", "pitch"]
     org = L.m.cereb
-    assert isinstance(org, torch.nn.Module) and org.declares(L.anatomy.cerebellar) and (org.n_mossy, len(org.joints), len(org.vor)) == (298, 29, 2)
+    assert isinstance(org, torch.nn.Module) and org.declares(L.anatomy.cerebellar) and (org.n_mossy, len(org.joints), len(org.vor)) == (219, 29, 2)
     assert isinstance(w.below, Below) and w.below._life() is L and w.below.calls == 15 * 120 == len(w.answers)
     assert (int(org.n_sub), int(org.n_limb), int(org.n_vor)) == (15 * 120, 15 * 120, 119), (int(org.n_sub), int(org.n_limb), int(org.n_vor))
     assert all(ans_.torque is not None and len(ans_.torque) == 29 and max(abs(float(x_)) for x_ in ans_.torque) <= 25.0 for _, ans_ in w.answers)

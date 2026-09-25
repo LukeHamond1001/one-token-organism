@@ -12,12 +12,12 @@ C54 (the generator's measured newborn rhythm, a movement of 2 + 3 ticks and a pa
 each arm's own) the cycles drawn over the run (every cycle whose start fell inside it: their number, mean and SD in seconds, shortest,
 longest, the share held at 1.0 s and at 8.5 s), per limb the share of ticks in flexion, extension and the pause, and its own
 movement-to-movement intervals (the right leg's are half of one cycle and half of the next).
-THE CEREBELLUM (on in SIM_CFG, the G1's mossy list): the stub calls it below each tick as SimWorld's contract says (every 10 ms, 15 a
-tick): the mossy numbers in the anatomy's order (the efference copy from the tick's acts, every other number drawn about its declared
-middle within its half-range from the stub's own stream), a teacher at each readout's joint (drawn within +-5 N m) under the model's
-torque limits, and at sub-step 0 a slip and a turn; so every sub-step runs the whole law (the leak, the lesson, the bound; the
-flocculus once a tick). It writes down the law's wall time a tick inside the hook (the organ's cost; the stub's building of the numbers
-is the world's and is timed apart) and the organ's lessons.
+THE CEREBELLUM (on in SIM_CFG, the G1's mossy list, 219 numbers): the stub calls it below each tick as SimWorld's contract says (every
+10 ms, 15 a tick): the mossy numbers in the anatomy's order (the efference copy from the tick's acts of every motor effector, the words'
+token output none; every other number drawn about its declared middle within its half-range from the stub's own stream), a teacher at
+each readout's joint (drawn within +-5 N m) under the model's torque limits, and at sub-step 0 a slip and a turn; so every sub-step runs
+the whole law (the leak, the lesson, the bound; the flocculus once a tick). It writes down the law's wall time a tick inside the hook
+(the organ's cost; the stub's building of the numbers is the world's and is timed apart) and the organ's lessons.
 usage: nice -n 19 python3 tools/motor_units.py [--ticks 3000] [--d 512] [--seed 1] [--unbatched 1]"""
 import collections
 import math
@@ -78,11 +78,8 @@ class Quiet(SimWorld):
                 for name, mid, hr in zip(an.mossy, cb.mossy_offset, cb.mossy_scale):
                     kind, what = name.split(" ", 1)
                     if kind == "act":
-                        eff, j = what.split(".", 1)
-                        if eff == "words":
-                            mossy.append(1.0 if int(j) == int(acts.get("words", an.sil)) else 0.0)
-                        else:
-                            mossy.append(float(dig[eff][seen[eff]])); seen[eff] += 1
+                        eff = what.split(".", 1)[0]
+                        mossy.append(float(dig[eff][seen[eff]])); seen[eff] += 1
                     else:
                         mossy.append(mid + hr * R.uniform(-1.0, 1.0))
                 teach = [max(-l_, min(l_, R.uniform(-5.0, 5.0))) for l_ in lim]
