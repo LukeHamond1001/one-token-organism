@@ -1,0 +1,506 @@
+"""THE PARENT'S LANE (S5a; docs/SIM_DESIGN.md 4.3-4.10, A1-A3, A29, A40, A49, A51): her conduct (body/sim/lang/conduct.py, P3),
+her voice (body/sim/voice, P1), her feelings and face (body/sim/parent_feel.py) and her body's acts (body/sim/parent_motion.py,
+W2) joined to the G1's world tick by tick. Nothing here is the child's: what reaches the body is the frame's words symbol, the face
+pair and her voice's sound at its ears, as the world gives them.
+
+The world (body/sim/world.G1World) holds one as world.lane (ParentLane(world) sets it) and calls:
+  tick(world)          in apply, by day, after the physics and the child's tract and before the ears: one tick of hers. Her
+                       Percept of the tick from world truth (below), her conduct's tick on it (the child's tract samples and
+                       token of the tick, her distance, her playback's stop), her new line begun and its first samples played,
+                       her feelings and her face set on her body, the born reading of her face (A1, A2, A49), and the words
+                       channel's symbol. Returns her voice as the ears' source {"parent": (Pa at 1 m, her mouth)}.
+  after_apply(world)   at the tick's end, day or night: by night her day's lane is quiet (the words at rest, the face held as
+                       the reading holds it, her line ended at dusk).
+  word_now, face_seen  the next frame's words symbol (the anatomy's born table: rest 0, end 1, space 2, letters 3-28, the 50
+                       words 29-78) and face pair [the reading, its change this tick]
+  dusk(world), dawn(world), state(), load_state(s)
+
+HER PERCEPT (percept.py's fields, filled only from what a person in her place could see or hear; A40: never the child's inside,
+never its fovea's window):
+  present         she is awake (at birth she never leaves the room; the day plan's absences are P4's)
+  child_in_view   a ray from her face to the G1's torso meets the G1 first
+  seen_by_child   her face lies within the child's camera field about its head's line (CAMERA_FIELD_DEG; a person knows when a
+                  baby cannot see her)
+  child_target    Reader.look over the toys she sees and her face ("mama"), from the G1's head camera: the midpoint of its two
+                  eye cameras and their axes (forward, left, up), the G1 having no neck (A22)
+  child_holds     the toys touching a link of its hands (its wrist's yaw link, which carries the palm, and the Dex3's fingers)
+  child_reaches   Reader.reaches from its two grasp points (her planner's, parent_motion.Child.grasp), after look (A40's order)
+  seen            each toy a ray from her face meets first: its word and colour (the room's inventory at birth,
+                  templates.ROOM_AT_BIRTH), what it rests on (her hand "mama", the child's "hand", else the fixture its
+                  contacts name), child_sees from look's field, child_can_reach (in its hand, or within its arm's reach of a
+                  shoulder: the chain's length in the model, shoulder to grasp point), near (Reader.near)
+  fixtures        the words of the room's fixtures with shapes in the model (mat, sofa, window, table, shelf, floor)
+  events          fell (a toy falling faster than FALL_MPS, not in a hand; once a drop), got (a toy come into its hand with
+                  no hand-over of hers in the last HANDOVER_TICKS), lost_toy (a toy gone from its hand), gave (a toy come
+                  into her hand from its within GAVE_TICKS), rolled (its lying posture turned between back and front), sat
+                  (it came to sit), pain (what a person perceives of its pain: its born cry sounding, which she hears, or
+                  a blow to its body past the base's pain force, F_pain, while she sees it; never its joints' own pain flags,
+                  which are its inside), distress (lying
+                  face down DISTRESS_TICKS running, A13's first sign), charge_low (its charge under CHARGE_LOW). Not made
+                  here: hit_her and reflex_hit (A25c: her body passes no contact to it), and the arm and hand movements her
+                  copying reads (arm_raise, wave, shake, open_hand: A52's copying waits for their readers)
+  child_sounding  its tract sounded this tick (the transcriber's own reading replaces it)
+Every threshold here is ours unless a source is named; each is disclosed.
+
+HER FACE (A1, A2, A49): the face test (body/sim/eyes.face_test: A1's four conditions for either eye) passing this tick and the
+last is "seen" (her feelings' input and the reading's gate); the born reading takes 2 x (smile - frown) of the face she shows
+(parent_kin.face_reading) while seen, holds it READING_HOLD ticks out of view, then reads 0. Until the child's own mouth-corner
+reader works this is the world's value, a disclosed scaffold (A49).
+
+THE WORDS CHANNEL (A29): her playback hands each word to the channel as its sound starts (voice/playback.py); a symbol goes out
+only while she is audible at the child's nearer ear (lexicon.audible, her plain speech's 62 dB at 1 m and the ears' 1/r paths),
+and only while the scaffold is on (her conduct's scaffold).
+
+Nothing here draws a random number but her own streams (the conduct's, the reader's, her feelings' blinks). state() and
+load_state() carry all of it, the clip of a line under way included, so a replay continues exactly.
+"""
+import math
+
+import mujoco
+import numpy as np
+
+from body.sim import anatomy as AN
+from body.sim import ears as EA
+from body.sim import eyes as EY
+from body.sim import parent_feel as PF
+from body.sim import parent_kin as kin
+from body.sim.lang import conduct as C
+from body.sim.lang import consts as K
+from body.sim.lang import lexicon as LX
+from body.sim.lang import percept as PC
+from body.sim.lang import templates as TP
+from body.sim.lang.transcriber import Transcriber
+from body.sim.voice import synth as V
+from body.sim.voice.playback import TICK, Utterance
+
+SOURCE = "parent"                      # her voice's name among the ears' sources
+FALL_MPS = 0.5                         # a toy falling faster than this, not in a hand: "fell" (once a drop; ours)
+REST_MPS = 0.05                        # a toy slower than this has come to rest: its next drop is a new one (ours)
+HANDOVER_TICKS = 40                    # a toy she let go of within 40 ticks is her hand-over, never its own "got" (A2's 40 ticks)
+GAVE_TICKS = 3                         # a toy come into her hand from its within 3 ticks: "gave" (ours)
+DISTRESS_TICKS = 100                   # face down this many ticks running: distress (A13's "face down over 100 ticks")
+CHARGE_LOW = 0.35                      # the charge light low (4.7's meal: h < 0.35)
+READING_HOLD = PF.FEEL["reading_hold"]  # the born reading holds its last value 30 ticks out of view (A2)
+FIXTURE_WORDS = ("mat", "sofa", "window", "table", "shelf", "floor")   # her fixture words that name shapes in the room
+SPEECH_DB = 20.0 * math.log10(V.SPEECH_PA / 20e-6)                   # her plain speech at 1 m (62 dB SPL)
+
+
+def _table_maps():
+    """her lexicon's ids to the anatomy's born table and back, read from the table itself (born_table(LX.BIRTH_WORDS))"""
+    tok = AN.born_table(LX.BIRTH_WORDS)
+    v = tok.get_vocab()
+    to_an = np.zeros(LX.N_TABLE, np.int64)
+    for i, s in enumerate(LX.TABLE):
+        if i < LX.N_BIRTH:
+            key = AN.word_key(s)
+        elif s == LX.SPACE:
+            key = " "
+        else:
+            key = s
+        to_an[i] = v[key]
+    assert len(set(to_an.tolist())) == LX.N_TABLE, "the two tables do not map one to one"
+    to_lx = np.zeros(LX.N_TABLE, np.int64)
+    to_lx[to_an] = np.arange(LX.N_TABLE)
+    return to_an, to_lx
+
+
+LX_TO_AN, AN_TO_LX = _table_maps()
+AN_REST = int(LX_TO_AN[LX.ID[LX.REST]])
+
+
+def _pl(x):
+    """a plain, picklable copy (numpy to lists and numbers)"""
+    if isinstance(x, np.ndarray):
+        return x.tolist()
+    if isinstance(x, np.generic):
+        return x.item()
+    if isinstance(x, dict):
+        return {k: _pl(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_pl(v) for v in x]
+    return x
+
+
+class ParentLane:
+    """her lane over a G1World (module doc). voice: body/sim/voice/synth.VoiceCache (or anything with its clip()); None: her
+    lines are timed at 3 ticks a word and make no sound and no symbol (the conduct's instrument timing). ear: her ear
+    (body/sim/parent_ear.ParentEar) or None (the child's turns are heard with no word). level2: her registered nouns (A60b)."""
+
+    def __init__(self, world, seed=1, voice=None, ear=None, level2=(), stage=1, imperfect=True):
+        m = world.m
+        self.voice = voice
+        self.conduct = C.Conduct(seed=seed, voice=voice, transcriber=Transcriber(ear), motion=world.parent, stage=stage,
+                                 imperfect=imperfect, level2=level2, world=self._inventory(m))
+        world.parent.bind_conduct(self.conduct)
+        self.feel = PF.Feelings(seed)
+        self.words = LX.Words()
+        self.utt = None                                   # her line under way (playback.Utterance)
+        self.voice_done = None                            # the tick a cut line's sound stopped, for the conduct's next tick
+        self.word_now = AN_REST
+        self.face_seen = np.zeros(2)
+        self.reading = 0.0                                # the born reading (A2), its last value
+        self.reading_t = -10 ** 9                         # the tick it last updated in view
+        self.test_prev = False                            # the face test passed last tick
+        self.fp = dict(kin.FACE_NEUTRAL)                  # the face she shows
+        self.toy_z = {}                                   # toy -> its last height (the fall)
+        self.falling = set()                              # toys in a drop already reported
+        self.child_had = ()                               # the toys in its hands last tick
+        self.child_held_at = {}                           # toy -> the last tick it was in its hands
+        self.her_had = {}                                 # her hands' toys last tick
+        self.released = {}                                # toy -> the tick her hand let it go
+        self.posture = None                               # its lying posture, back or front, last seen stable
+        self.face_down = 0                                # ticks lying face down running
+        self.last = {}                                    # instruments: the tick's percept summary and her output
+        self.n_lines = 0
+        self._geom(world)
+        world.lane = self
+
+    # ------------------------------------------------------------------ the model's names, once
+    @staticmethod
+    def _inventory(m):
+        names = {m.body(b).name[4:] for b in range(m.nbody) if m.body(b).name.startswith("toy_")}
+        objects = {k: v for k, v in TP.ROOM_AT_BIRTH["objects"].items() if k in names}
+        gnames = [m.geom(g).name or "" for g in range(m.ngeom)]
+        fixtures = [f for f in FIXTURE_WORDS if any(n == f or n.startswith(f + "_") for n in gnames)]
+        return dict(objects=objects, fixtures=fixtures, events=list(PC.EVENT_KINDS), face=["any"])
+
+    def _geom(self, world):
+        m = world.m
+        self.toys = sorted(m.body(b).name[4:] for b in range(m.nbody) if m.body(b).name.startswith("toy_"))
+        self.toy_body = {t: m.body("toy_" + t).id for t in self.toys}
+        root = m.body_rootid
+        self.toy_of_root = {int(root[b]): t for t, b in self.toy_body.items()}
+        self.parent_bodies = frozenset(b for b in range(m.nbody) if m.body(b).name.startswith("parent_"))
+        self.g1_root = int(root[m.body("pelvis").id])
+        hand = {}
+        for side in ("left", "right"):
+            hand[side] = frozenset(b for b in range(m.nbody) if m.body(b).name.startswith(f"{side}_hand_")
+                                   or m.body(b).name == f"{side}_wrist_yaw_link")
+        self.hand = hand
+        self.hand_any = hand["left"] | hand["right"]
+        fx = {}
+        for g in range(m.ngeom):
+            n = m.geom(g).name or ""
+            for f in FIXTURE_WORDS:
+                if n == f or n.startswith(f + "_"):
+                    fx[g] = f
+        self.fixture_geom = fx
+        self.fixtures = frozenset(fx.values())
+        self.head_b = m.body("parent_head").id
+        self.cam = {sd: m.camera(f"eye_{sd}").id for sd in "LR"}
+        self.shoulder = {s: m.body(f"{s}_shoulder_pitch_link").id for s in ("left", "right")}
+        chain = ("shoulder_roll_link", "shoulder_yaw_link", "elbow_link", "wrist_roll_link", "wrist_pitch_link", "wrist_yaw_link")
+        self.arm_reach = {s: float(sum(np.linalg.norm(m.body_pos[m.body(f"{s}_{c}").id]) for c in chain)
+                                   + np.linalg.norm([0.13, 0.06, 0.0])) for s in ("left", "right")}
+
+    # ------------------------------------------------------------------ what she sees
+    def _ray_first(self, m, d, a, b):
+        """the root body a ray from a to b meets first past her own body, or None when it meets nothing before b"""
+        v = np.asarray(b, float) - np.asarray(a, float)
+        dist = float(np.linalg.norm(v))
+        if dist < 1e-9:
+            return None
+        u = v / dist
+        p = np.asarray(a, float).copy()
+        gid = np.array([-1], dtype=np.int32)
+        gone = 0.0
+        for _ in range(6):
+            h = mujoco.mj_ray(m, d, p, u, EY.EYE_GROUPS, 1, -1, gid)
+            if h < 0 or gone + h > dist + 0.02:
+                return None
+            body = int(m.geom_bodyid[int(gid[0])])
+            if body in self.parent_bodies:                   # her own head or hand in the way of her own look: past it
+                p = p + u * (h + 1e-3)
+                gone += h + 1e-3
+                continue
+            return int(m.body_rootid[body])
+        return None
+
+    def _contacts(self, m, d):
+        """per toy: the child's hand sides touching it, her own touching it, and the fixture words under it"""
+        touch = {t: dict(child=set(), fixture=set()) for t in self.toys}
+        for i in range(d.ncon):
+            c = d.contact[i]
+            for g, o in ((c.geom1, c.geom2), (c.geom2, c.geom1)):
+                t = self.toy_of_root.get(int(m.body_rootid[int(m.geom_bodyid[g])]))
+                if t is None:
+                    continue
+                ob = int(m.geom_bodyid[o])
+                for side in ("left", "right"):
+                    if ob in self.hand[side]:
+                        touch[t]["child"].add(side)
+                f = self.fixture_geom.get(int(o))
+                if f is not None:
+                    touch[t]["fixture"].add(f)
+        return touch
+
+    def _head(self, d):
+        """the G1's head camera as a person reads it: the eyes' midpoint and its forward, left and up axes (rows)"""
+        R = d.cam_xmat[self.cam["L"]].reshape(3, 3)
+        pos = (d.cam_xpos[self.cam["L"]] + d.cam_xpos[self.cam["R"]]) / 2
+        return pos.copy(), np.stack([-R[:, 2], -R[:, 0], R[:, 1]])
+
+    def _percept(self, world, t):
+        m, d = world.m, world.d
+        pm = world.parent
+        mouth, fwd, face = EY.mouth_point(m, d)
+        present = not pm.asleep
+        head, axes = self._head(d)
+        pos = {tt: d.xpos[b].copy() for tt, b in self.toy_body.items()}
+        in_view = self._ray_first(m, d, face, d.xpos[m.body("torso_link").id]) == self.g1_root
+        ang = PC._angles(face - head, axes)
+        seen_by_child = ang is not None and abs(ang[0]) <= K.CAMERA_FIELD_DEG[0] / 2 and abs(ang[1]) <= K.CAMERA_FIELD_DEG[1] / 2
+        visible = [tt for tt in self.toys if self._ray_first(m, d, face, pos[tt]) == int(m.body_rootid[self.toy_body[tt]])]
+        things = [(tt, pos[tt]) for tt in visible] + [("mama", face)]
+        rd = self.conduct.reader
+        target, before = rd.look(head, axes, things)
+        touch = self._contacts(m, d)
+        holds = tuple(tt for tt in self.toys if touch[tt]["child"])
+        ch = PM_child(world)
+        grasp = {"left": ch.grasp["L"], "right": ch.grasp["R"]}
+        reaches = rd.reaches(grasp, [(tt, pos[tt]) for tt in visible], holds)
+        her = {tt for tt in (pm.holding or {}).values() if tt is not None}
+        on_pairs = []
+        seen = []
+        for tt in visible:
+            if tt in her:
+                on = "mama"
+            elif tt in holds:
+                on = "hand"
+            else:
+                fs = sorted(touch[tt]["fixture"])
+                on = fs[0] if fs else ""
+            if on in self.fixtures:
+                pass
+            reach = tt in holds or any(np.linalg.norm(pos[tt] - d.xpos[self.shoulder[s]]) <= self.arm_reach[s] for s in self.shoulder)
+            seen.append((tt, on, reach))
+        near = PC.Reader.near(head, things, on=on_pairs)
+        cols = self.conduct.world["objects"]
+        seen_t = tuple(PC.Seen(id=tt, name=tt, colour=(cols.get(tt) or [""])[0], on=on, child_sees=tt in before,
+                               child_can_reach=bool(reach) and tt not in her, near=near.get(tt)) for tt, on, reach in seen)
+        events = self._events(world, t, pos, holds, her, ch, in_view)
+        raw = world.tract_raw
+        sounding = raw is not None and bool(np.any(raw))
+        p = PC.Percept(tick=t, present=present, child_in_view=bool(in_view), seen_by_child=bool(seen_by_child),
+                       child_target=target, child_holds=holds, seen=seen_t, fixtures=frozenset(self.fixtures) if present else frozenset(),
+                       events=tuple(events), child_sounding=sounding, child_reaches=tuple(reaches), face_near=near.get("mama"))
+        return PC.check_events(p), mouth, face
+
+    def _events(self, world, t, pos, holds, her, ch, in_view):
+        ev = []
+        for tt in self.toys:                                            # a toy's fall, once a drop
+            z0 = self.toy_z.get(tt)
+            z = float(pos[tt][2])
+            self.toy_z[tt] = z
+            if z0 is None:
+                continue
+            v = (z0 - z) / (TICK / V.SR)
+            if v > FALL_MPS and tt not in holds and tt not in her and tt not in self.falling:
+                ev.append(("fell", tt))
+                self.falling.add(tt)
+            elif abs(v) < REST_MPS:
+                self.falling.discard(tt)
+        for tt, tk in list(self.her_had.items()):                      # her hand let a toy go: its hand-over's tick
+            if tt not in her:
+                self.released[tt] = t
+        for tt in holds:
+            if tt not in self.child_had and t - self.released.get(tt, -10 ** 9) > HANDOVER_TICKS:
+                ev.append(("got", tt))
+        for tt in self.child_had:
+            if tt not in holds:
+                ev.append(("lost_toy", tt))
+        for tt in sorted(her):
+            if tt not in self.her_had and t - self.child_held_at.get(tt, -10 ** 9) <= GAVE_TICKS:
+                ev.append(("gave", tt))
+        for tt in holds:
+            self.child_held_at[tt] = t
+        self.child_had = tuple(holds)
+        self.her_had = {tt: t for tt in her}
+        post = ch.posture
+        if post in ("back", "front"):
+            if self.posture is not None and post != self.posture:
+                ev.append(("rolled", None))
+            self.posture = post
+        if post == "sitting" and self.last.get("posture") != "sitting":
+            ev.append(("sat", None))
+        self.last["posture"] = post
+        self.face_down = self.face_down + 1 if post == "front" else 0
+        if self.face_down == DISTRESS_TICKS:
+            ev.append(("distress", None))
+        if world.crying or (in_view and float(world._sensed["base_peak"]) > world.f_pain):
+            ev.append(("pain", None))                                   # its cry heard, or a blow to its body she sees
+        if world.h < CHARGE_LOW:
+            ev.append(("charge_low", None))
+        return ev
+
+    # ------------------------------------------------------------------ one tick of hers (by day)
+    def tick(self, world):
+        t = int(world.tick)
+        m, d = world.m, world.d
+        p, mouth, face = self._percept(world, t)
+        self._p = p
+        raw = world.tract_raw
+        tract = None if raw is None or not np.any(raw) else np.asarray(raw, float)
+        tp = d.xpos[m.body("torso_link").id]
+        tR = d.xmat[m.body("torso_link").id].reshape(3, 3)
+        ear_l, ear_r, cmouth = EA.head_from_torso(tp, tR)
+        dist = float(np.linalg.norm(cmouth - d.xpos[self.head_b]))
+        tok = world.words_out
+        token = None if tok is None else int(AN_TO_LX[int(tok)])
+        if token == LX.ID[LX.REST]:
+            token = None
+        vd, self.voice_done = self.voice_done, None
+        out = self.conduct.tick(t, p, tract=tract, distance_m=dist, token=token, voice_done=vd)
+        scaffold = self.conduct.scaffold
+        words = self.words if scaffold else None
+        if out.cut and self.utt is not None:
+            self.utt.cut(words)
+        if out.line is not None:
+            self.n_lines += 1
+            if out.clip is not None:
+                if self.utt is not None and not self.utt.done:
+                    self.utt.cut(words)                     # (the conduct says a line only when her voice is free)
+                self.utt = Utterance(out.clip, t)
+        pa = np.zeros(TICK, np.float32)
+        if self.utt is not None:
+            if self.utt.start + self.utt.pos // TICK == t:
+                was = self.utt.done
+                pa = self.utt.tick(t, words)
+                if self.utt.done and not was and self.utt.cut_at_tick is not None:
+                    self.voice_done = self.utt.start + (max(self.utt.stop_at, 1) - 1) // TICK
+            if self.utt.done:
+                self.utt = None
+        # her feelings and her face (4.3): her judgments, frowns and concern; the face test's two ticks (A1)
+        for w, kind, _word in out.judgments:
+            self.feel.judge(w, kind)
+        if out.frown == "hit":
+            self.feel.harm()
+        elif out.frown == "talk_over":
+            self.feel.talk_over()
+        for k, _o in p.events:
+            if k == "pain":
+                self.feel.child_pain()
+            elif k == "distress":
+                self.feel.distress()
+        self.feel.set_engagement(1.0 if p.present else 0.0)
+        self.feel.set_question(1.0 if self.conduct.pending is not None else 0.0)
+        loud = 0.0 if self.utt is None and not np.any(pa) else float(np.sqrt(np.mean(pa.astype(np.float64) ** 2)))
+        self.feel.set_speech(min(1.0, loud / V.SPEECH_PA))
+        test = any(v[0] for v in EY.face_test(m, d, world.gaze).values())
+        seen = test and self.test_prev
+        self.test_prev = test
+        fp = self.feel.step(seen)
+        self.fp = dict(kin.FACE_NEUTRAL) if self.conduct.still else fp       # a trial's face: its neutral set (4.8)
+        world.parent.set_face(self.fp)
+        self._read_face(t, seen)
+        # the words channel: a symbol only while she is audible at its nearer ear and the scaffold is on (A29)
+        path = EA.paths(mouth, ear_l, ear_r)[0]
+        audible = LX.audible(SPEECH_DB, [-20.0 * math.log10(max(float(x), 1e-6)) for x in path])
+        sym = self.words.tick(t, audible) if scaffold else LX.ID[LX.REST]
+        self.word_now = int(LX_TO_AN[int(sym)])
+        self.last = dict(posture=self.last.get("posture"), target=p.child_target, holds=p.child_holds, seen=len(p.seen),
+                         events=[list(e) for e in p.events], line=None if out.line is None else out.line.text,
+                         heard=[cw.word for cw in out.heard], judged=[list(j) for j in out.judgments], cut=bool(out.cut),
+                         face_test=bool(test), reading=self.reading, word=self.word_now, in_view=p.child_in_view,
+                         seen_by_child=p.seen_by_child, present=p.present)
+        return {SOURCE: (pa.astype(np.float64), mouth)}
+
+    def _read_face(self, t, seen):
+        """the born reading (A1, A2, A49): 2 x (smile - frown) of the face she shows while seen; held READING_HOLD ticks out of
+        view, then 0; the frame's pair is [the reading, its change]"""
+        prev = self.reading
+        if seen:
+            self.reading = kin.face_reading(self.fp)
+            self.reading_t = t
+        elif t - self.reading_t > READING_HOLD:
+            self.reading = 0.0
+        self.face_seen = np.array([self.reading, self.reading - prev])
+
+    def after_apply(self, world):
+        if world.night:
+            self.word_now = AN_REST
+            self.face_seen = np.array([self.reading, 0.0])
+
+    # ------------------------------------------------------------------ night and morning
+    def dusk(self, world):
+        """her line ends where it is (its words withdrawn as a cut withdraws them), her feelings rest, and her conduct's night
+        boundary is kept (the day's new words join hers; her ear checked)"""
+        if self.utt is not None and not self.utt.done:
+            self.utt.cut(self.words if self.conduct.scaffold else None)
+        self.utt = None
+        self.words.queue = []
+        self.conduct.night()
+        self.feel.set_engagement(0.0)
+        self.word_now = AN_REST
+
+    def dawn(self, world):
+        self.feel.set_engagement(1.0)
+
+    # ------------------------------------------------------------------ the save
+    def state(self):
+        f = self.feel
+        pulse = lambda q: None if q is None else dict(n=q.n, t0=q.t0, a=q.a, kind=q.kind, seen_at=q.seen_at, started=q.started)
+        feel = dict(rng=f.rng.bit_generator.state, t=f.t, pulse=pulse(f.pulse), queued=pulse(f.queued), frown_t0=f.frown_t0,
+                    frown_amp=f.frown_amp, U=f.U, Cn=f.Cn, A=f.A, M=f.M, A_target=f.A_target, q=f.q, loud=f.loud, wind=f.wind,
+                    sudden_log=[list(x) for x in f.sudden_log], flash_t0=f.flash_t0, last_seen=f.last_seen, was_seen=f.was_seen,
+                    neutral_run=f.neutral_run, last_seen_L=f.last_seen_L, last_seen_t=f.last_seen_t, next_blink=f.next_blink,
+                    log=[list(x) for x in f.log[-200:]], state=_pl(getattr(f, "state", None)))
+        utt = None
+        if self.utt is not None:
+            c = self.utt.clip
+            utt = dict(clip=dict(key=c.key, text=c.text, register=c.register, pcm=np.asarray(c.pcm).copy(),
+                                 words=[list(w) for w in c.words], digest=c.digest, gain_db=float(c.gain_db), meta=_pl(dict(c.meta))),
+                       play=_pl(self.utt.state()))
+        return dict(conduct=self.conduct.state(), feel=feel, words=dict(queue=[[q.tick, q.order, q.sym, q.word] for q in self.words.queue],
+                    order=self.words.order, dropped=self.words.dropped, withdrawn=self.words.withdrawn),
+                    utt=utt, voice_done=self.voice_done, word_now=self.word_now, face_seen=self.face_seen.copy(),
+                    reading=self.reading, reading_t=self.reading_t, test_prev=self.test_prev, fp=_pl(self.fp),
+                    toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had),
+                    child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released),
+                    posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines)
+
+    def load_state(self, s):
+        self.conduct.load_state(s["conduct"])
+        f, fs = self.feel, s["feel"]
+        f.rng.bit_generator.state = fs["rng"]
+
+        def pulse(q):
+            if q is None:
+                return None
+            p = PF.Pulse.__new__(PF.Pulse)
+            p.n, p.t0, p.a, p.kind, p.seen_at, p.started = q["n"], q["t0"], q["a"], q["kind"], q["seen_at"], q["started"]
+            return p
+        f.t, f.pulse, f.queued = fs["t"], pulse(fs["pulse"]), pulse(fs["queued"])
+        for k in ("frown_t0", "frown_amp", "U", "Cn", "A", "M", "A_target", "q", "loud", "wind", "flash_t0", "last_seen", "was_seen",
+                  "neutral_run", "last_seen_L", "last_seen_t", "next_blink"):
+            setattr(f, k, fs[k])
+        f.sudden_log = [tuple(x) for x in fs["sudden_log"]]
+        f.log = [tuple(x) for x in fs["log"]]
+        if fs["state"] is not None:
+            f.state = dict(fs["state"])
+        w = s["words"]
+        self.words.queue = [LX._Due(int(a), int(b), int(c), str(e)) for a, b, c, e in w["queue"]]
+        self.words.order, self.words.dropped, self.words.withdrawn = w["order"], w["dropped"], w["withdrawn"]
+        self.utt = None
+        if s["utt"] is not None:
+            c = s["utt"]["clip"]
+            clip = V.Clip(c["key"], c["text"], c["register"], np.asarray(c["pcm"], np.int16).copy(),
+                          [(str(a), int(b), int(e)) for a, b, e in c["words"]], c["digest"], float(c["gain_db"]), dict(c["meta"]))
+            pl = dict(s["utt"]["play"])
+            pl["last"] = np.asarray(pl["last"], np.float32)
+            self.utt = Utterance.restore(clip, pl)
+        self.voice_done, self.word_now = s["voice_done"], int(s["word_now"])
+        self.face_seen = np.asarray(s["face_seen"], float).copy()
+        self.reading, self.reading_t, self.test_prev = float(s["reading"]), int(s["reading_t"]), bool(s["test_prev"])
+        self.fp = dict(s["fp"])
+        self.toy_z = dict(s["toy_z"]); self.falling = set(s["falling"]); self.child_had = tuple(s["child_had"])
+        self.child_held_at = dict(s["child_held_at"]); self.her_had = dict(s["her_had"]); self.released = dict(s["released"])
+        self.posture, self.face_down = s["posture"], int(s["face_down"])
+        self.last = dict(posture=s["last_posture"])
+        self.n_lines = int(s["n_lines"])
+
+
+def PM_child(world):
+    """the G1 as her planner sees it (parent_motion.Child: world truth for her, never the body's)"""
+    from body.sim import parent_motion as PM                  # noqa: PLC0415
+    return PM.Child(world.m, world.d, world.parent.scene.g1_set)
