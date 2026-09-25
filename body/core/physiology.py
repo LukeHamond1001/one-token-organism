@@ -1,6 +1,7 @@
 """the physiology table (moved from body/life.py, review 2026-09-22 section 4, step 2): `PHYSIOLOGY`, every disclosed constant,
 grouped by organ; `SWITCHES`, the core refactor's defect-fix switches, declared and off by their absence (docs/SIM_DESIGN.md 8.4); and
-`MOTOR`, the motor timing part's constants (step R6), absent from a body's cfg unless given. body/life.py re-exports PHYSIOLOGY
+`MOTOR`, the motor timing part's constants (step R6), absent from a body's cfg unless given; and `CEREB`, the cerebellum's switch and
+constants (step R6c), absent likewise. body/life.py re-exports PHYSIOLOGY
 (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
 prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
 
@@ -271,4 +272,37 @@ MOTOR = dict(
     # counts decaying over this many own acts (since 2026-09-24; before, the critics' estimator's samples, one per setting of each
     # joint of an act, so the memory in acts was this over the joints' settings); zero until 64 acts
     act_inv_tau=8192,
+)
+
+# THE CEREBELLUM'S SWITCH AND CONSTANTS (the core refactor's step R6c, docs/SIM_DESIGN.md 7.5, A44 and C50; body/core/cerebellum.py):
+# declared here and ABSENT FROM A BODY'S CFG unless given (`cfg.get(name, CEREB[name])` reads them), so the language body, whose anatomy
+# declares no cerebellar interface, gains no key, builds no organ and runs none of it (8.3, item 4), and its pinned digests stay what
+# they were. A body born with the switch on (the sim: SIM_DESIGN.md 10's switches at birth) keeps it in its save, and its anatomy
+# declares what the world feeds the organ below the tick (body/core/anatomy.py `Cerebellar`). Every value is ours, after the sources
+# named; C50 settles the expansion's size and sparsity and the rates from their sources before birth (the citations here are recalled,
+# not re-read, for this build).
+CEREB = dict(
+    # the switch: 1 = the organs build the cerebellum (Organs(..., cerebellum=)) and the life sets its world's sub-tick hook (World.below)
+    cereb=0,
+    # the loop's period in sim time: the world calls the hook every 10 ms (5 physics steps of 2 ms: 15 a tick). SIM_DESIGN.md 7.5; ours,
+    # the rate the real robot's computer runs it at beside the servo loop (100 Hz)
+    cereb_period_s=0.010,
+    # the granule layer's size: a born expansion of the mossy input about 27 times wider than it (4,096 for the humanoid's about 150
+    # numbers); ours, after Marr 1969 and Albus 1971's expansion recoding (an adaptive filter's basis: Fujita 1982)
+    cereb_granule=4096,
+    # mossy fibres per granule unit: the granule cell's four dendrites (Eccles, Ito and Szentagothai 1967), Marr 1969's codon; the
+    # in-degree found near optimal for such an expansion (Litwin-Kumar et al. 2017; Billings et al. 2014)
+    cereb_fan_in=4,
+    # the fraction of granule units active at each sub-step, held constant by the Golgi cells' inhibition (Marr 1969; Albus 1971): the
+    # units above the threshold that leaves this fraction active pass their excess, the rest are silent; ours ("about 10%", 7.5)
+    cereb_coding=0.1,
+    # the limbs' Purkinje readouts' step, least mean squares normalized by the granule layer's activity (w += rate e g / |g|^2), each
+    # sub-step: a state held constant has the torque its teacher asks for learned with a time constant of 1 / rate = 100 sub-steps (1 s),
+    # about 25 times the servo's damping time (0.04 s), so the lesson is slow beside the loop that teaches it, the separation of time
+    # scales feedback-error learning assumes (Kawato and Gomi 1992); ours
+    cereb_rate=0.01,
+    # the flocculus's step, once a tick (retinal slip is seen once a tick), least mean squares over its two regressors (the head's turn
+    # for the gain, 1 for the offset) normalized by their power and the granule layer's activity: an offset held in a constant context is
+    # learned with a time constant of 1 / rate = 20 ticks (3 s), the gain with 1 / (rate turn^2) ticks; ours
+    cereb_vor_rate=0.05,
 )

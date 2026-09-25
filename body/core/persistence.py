@@ -9,13 +9,16 @@ act_pred's and the correction's moments in opt_pred (since R6 fix 5; one set, th
 or with R6 fix 5's two samples, loads with a note, the moments born again) under the save's life["motor"], a key only such a body's
 save has; their timing organs are in the organs' state (timing.<name>).
 
-Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
+Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Since step R6c a body whose cerebellum is on has it built by the
+organs at birth and at load (`cerebellum_spec`: the anatomy's declaration and the born sizes, under the save's constants at a load), and
+its every weight, its eligibility and its counters are in the organs' state (cereb.*): nothing of it is in the save's life dict."""
 import os
 
 import torch
 
 from ..model import Organs
 from .anatomy import anatomy_for
+from .cerebellum import cerebellum_spec
 from .physiology import PHYSIOLOGY
 
 
@@ -61,7 +64,8 @@ class PersistenceMixin:
         anatomy = anatomy_for(tok, c)                     # the body's anatomy under the save's constants, then the caller's (no draw), before
                                                           # the organs: a later channel's forecast head is built with them (step R4)
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]),
-                        channels=anatomy.channels, effectors=anatomy.effectors)   # a later effector's organs too (step R5; the tables from the save)
+                        channels=anatomy.channels, effectors=anatomy.effectors,   # a later effector's organs too (step R5; the tables from the save)
+                        cerebellum=cerebellum_spec(anatomy, c))                     # and the cerebellum when its switch is on (step R6c; from the save)
         w = blob["organs"].get("mouth_gate.weight")
         if w is not None and w.shape[1] > organs.mouth_gate.weight.shape[1]:
             organs.widen_gate(w.shape[1] - organs.mouth_gate.weight.shape[1])   # a body with the ear
@@ -77,10 +81,11 @@ class PersistenceMixin:
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         motor_ = {e_.name for e_ in anatomy.effectors[1:]}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
-        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing")]
+        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing", "cereb")]
                          + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
         if dropped:
-            print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)
+            print("load: the save holds organs of channels or effectors this anatomy does not declare, or a cerebellum its constants switch off "
+                  "(not loaded):", dropped, flush=True)
         if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))]:
             print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
         life = cls(organs, anatomy, cfg=c, device=device, seed=seed, save_path=save_path or path, world=world)
@@ -252,6 +257,7 @@ class PersistenceMixin:
         torch.manual_seed(int(seed))
         anatomy = anatomy_for(tok, cfg)                 # the body's anatomy (a tokenizer's: the diary's); built with no draw, before the organs
         organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])),
-                        channels=anatomy.channels, effectors=anatomy.effectors, born_seed=seed)   # a later channel's forecast head and a later effector's
-                                                         # organs built last (steps R4, R5; their tables from the body's seed); the diary declares none
+                        channels=anatomy.channels, effectors=anatomy.effectors, born_seed=seed,   # a later channel's forecast head and a later effector's
+                        cerebellum=cerebellum_spec(anatomy, cfg))   # organs built last (steps R4, R5; their tables from the body's seed), then the
+                                                                    # cerebellum when its switch is on (step R6c); the diary declares none of them
         return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path, world=world)

@@ -12,6 +12,9 @@ persistence.py  save, load, birth
 instruments.py  _bookkeep (the page, the record, the sleep switch), gauge, state, anticipation, insides
 timing.py       step R6 of the core refactor: each later effector's motor timing part (act_pred its proposal, the forward half and its
                 correction, act_inv learning online with its reliability; the waking lesson's share); the diary has no later effector
+cerebellum.py   step R6c: the cerebellum below the tick, an organ (Cerebellum, m.cereb: the born granule expansion, the Purkinje readouts
+                taught by the servo's corrective torque, the flocculus taught by retinal slip) and a mixin (the world's sub-tick hook,
+                `Below`); built only under the switch `cereb` (physiology.py's CEREB), which the diary's cfg does not hold
 anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
                 8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
                 `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward
@@ -26,7 +29,8 @@ anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, Rew
 world.py        not a mixin: `Frame`, the world at one tick as the body meets it (docs/SIM_DESIGN.md 8.2; step R3: the reward sources
                 read it); since step R9 the world loop: `World` (frame, apply, pause, resume, save_state, load_state), the diary's
                 `DiaryWorld` (today's queue and face; `life.world` unless another is given; body/serve.py wraps it), the `SimWorld`
-                interface the sim implements, `WorldLoop` (lockstep; the deadline switch off) and the `PaceLog`
+                interface the sim implements, `WorldLoop` (lockstep; the deadline switch off) and the `PaceLog`; since step R6c the
+                loop below the tick (`World.below`, `sub_tick`, `SubFrame`, `SubActs`), which only a simulated world calls
 
 Every method was moved verbatim; `Life` keeps `__init__` (the organs and the state, in their order), `tick` and (step R2) the
 read-only `tok`, its anatomy's tokenizer. The mixins hold no state and no class attributes, and no method name is defined twice, so

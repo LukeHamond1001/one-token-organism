@@ -13,6 +13,11 @@
   never the default) lets the world run on without it.
 - `PaceLog`: the ops guard's record (SIM_DESIGN.md section 3, graft 5): the loop the serve runs around the DiaryWorld appends one line
   every 1000 ticks and one each morning to logs/diary_pace.jsonl.
+STEP R6c, THE LOOP BELOW THE TICK (SIM_DESIGN.md 7.5, A44): `World.below`, the body's sub-tick hook (none unless a life whose cerebellum
+is on sets it: body/core/cerebellum.py `Below`), and `World.sub_tick(SubFrame) -> SubActs`, which a simulated world calls from `apply`
+every 10 ms of sim time; `SubFrame` is what the world hands the cerebellum (the mossy input, the servo's corrective torque as its
+teacher, and once a tick the retinal slip with the head's turn), `SubActs` what it takes back (a torque per cerebellar joint added to its
+servo, the VOR's gain correction and offset). The diary's world never calls it.
 
 A life is born with a world (`Life(..., world=None)`: the DiaryWorld unless one is given; `life.world`) and asks it for the tick's frame
 at the senses' phase (`_sense`, body/core/senses.py), where the queue was always read, so the draw order does not move. The sleep switch
@@ -40,6 +45,39 @@ class Frame:
     truth: dict = field(default_factory=dict)
 
 
+@dataclass(eq=False)
+class SubFrame:
+    """ONE SUB-STEP BELOW THE TICK, as a simulated world hands it to the body's loop below the tick (step R6c; SIM_DESIGN.md 7.5): the
+    world calls `sub_tick` with one every `below.period_s` of sim time inside `apply` (10 ms: every 5 physics steps of 2 ms, 15 a tick),
+    before the physics steps it governs. `tick` is the world's tick and `sub` the sub-step within it (0 at the tick's start, after the
+    act re-anchored the servo's targets). `mossy` is the cerebellum's input: the numbers the anatomy declares (`Cerebellar`), in its
+    order, raw (the organ scales them by the declared offsets and scales). `teach` is its climbing fibres at the limbs: the servo law's own
+    corrective torque at each cerebellar joint now (N m), kp (target - angle) - kv velocity held to the joint's limit, the torque the servo
+    alone spends pulling the joint to its target (the cerebellum's torque is not in it); None when the world has none. At sub-step 0
+    only, the flocculus's teacher: `slip`, the retinal slip over the last tick in each VOR axis (rad: the fixated image's motion
+    relative to the fovea window, positive along the axis), and `turn`, the head's rotation over that tick as the gyro read it in the same
+    axes (rad: the VOR's input); both None on a tick whose gaze moved, whose VOR jumped (its quick phase) or on which nothing held still
+    in the fovea, since slip then teaches nothing about the VOR."""
+    tick: int
+    sub: int
+    mossy: object
+    teach: object = None
+    slip: object = None
+    turn: object = None
+
+
+@dataclass(eq=False)
+class SubActs:
+    """WHAT THE LOOP BELOW THE TICK GIVES BACK for one sub-step (step R6c): `torque`, a torque per cerebellar joint (N m, the anatomy's
+    order), which the world adds to that joint's servo torque until the next sub-step, inside the joint's limit and the weakness clip;
+    at sub-step 0 only, the flocculus's `vor_gain` (a correction added to the VOR's born gain) and `vor_offset` (rad a tick) per VOR
+    axis, which the world holds through the tick: the window counter-shifts by -(born gain + vor_gain) x turn - vor_offset. None where
+    the anatomy declares none (no joints, no VOR axes, a sub-step other than 0)."""
+    torque: object = None
+    vor_gain: object = None
+    vor_offset: object = None
+
+
 class World(abc.ABC):
     """A WORLD, AS THE BODY MEETS IT (step R9). One tick, lockstep: `frame()` shows the world as it is (no time passes), the body lives
     the tick on it, `apply(acts)` takes the body's acts ({effector name: act}, a rest being an act) and moves the world on by a tick.
@@ -47,8 +85,19 @@ class World(abc.ABC):
     morning. `save_state()` gives the world's state as bytes and `load_state(blob)` gives it back exactly; a world's state is saved beside
     the body's save, never inside it. `now` is the frame the body lives this tick: the tick's senses set it (`_sense`), and a channel of
     the world's frames observes it (`Channel.observe`); none before the first tick. `lapse(n)` (the deadline switch only): n ticks of the
-    world pass without the body; by default n moves with no act (every effector at its rest)."""
+    world pass without the body; by default n moves with no act (every effector at its rest).
+    THE LOOP BELOW THE TICK (step R6c): `below` is the body's sub-tick hook, a callable taking a SubFrame and giving SubActs (or None),
+    with its period in sim time (`below.period_s`) and the interface it serves (`below.joints`, `below.vor`, `below.n_mossy`: the
+    anatomy's `Cerebellar`); None unless a life whose cerebellum is on sets it at its birth or load (body/core/cerebellum.py `Below`,
+    which holds its life weakly). `sub_tick(sf)` is the world's call: a simulated world makes it from `apply` (SimWorld), the diary's
+    never does. A class attribute: a world no body hooks gains nothing."""
     now = None
+    below = None
+
+    def sub_tick(self, sf):
+        """the body's answer to one sub-step below the tick (a SubFrame), or None when no loop below the tick is hooked"""
+        hook = self.below
+        return None if hook is None else hook(sf)
 
     @abc.abstractmethod
     def frame(self):
@@ -161,7 +210,22 @@ class SimWorld(World):
     - pause(): the night falls. The world freezes exactly where it is: nothing is moved, no scripted posture, the teacher's clock stops.
     - resume(): the morning. The world goes on from the same state.
     - save_state() / load_state(blob): the whole world (the physics, the teacher's state and clocks, the world's own random streams) as
-      bytes, and back exactly (the sim's exact-replay test); saved beside the body's save, never inside it."""
+      bytes, and back exactly (the sim's exact-replay test); saved beside the body's save, never inside it.
+    THE LOOP BELOW THE TICK (step R6c; SIM_DESIGN.md 7.5, A44), when `below` is set (a life whose cerebellum is on sets it):
+    - apply(acts) calls `self.sub_tick(SubFrame(...))` every n = below.period_s / its physics step steps (the period must divide the
+      tick: 5 steps of 2 ms, 15 sub-steps a tick), before the steps it governs, sub-step 0 at the tick's start once the act has
+      re-anchored the targets; the SubFrame's mossy numbers are the anatomy's `Cerebellar` numbers in its order, raw, and its teacher is
+      the servo law's own corrective torque at each cerebellar joint, kp (target - angle) - kv velocity held to the joint's limit, without
+      the cerebellum's torque.
+    - The answer's torque at each cerebellar joint is added to that joint's servo torque until the next sub-step, inside the joint's
+      limit and the weakness clip: over MuJoCo's position servo, the actuator's constant bias term (actuator_biasprm[a, 0]), so the
+      joint's actuator force range clips the sum, and the target and its tone at rest stay the servo law's own. The torque applied is
+      the world's state: saved and restored with it.
+    - At sub-step 0 the SubFrame carries the last tick's retinal slip and the gyro's turn over it (or None: the gaze moved, a quick phase
+      jumped, nothing held still in the fovea), and the answer's VOR gain correction and offset hold through the tick: the window
+      counter-shifts by -(born gain + gain) x turn - offset.
+    - The night (the world paused) calls nothing: the cerebellum learns wherever the world runs (R8's live night will run it on the
+      twitches)."""
 
     @abc.abstractmethod
     def frame(self):

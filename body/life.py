@@ -19,7 +19,10 @@ are the page's endpoints; `save`, `load` and `birth` are the body on disk.
 WHERE THE METHODS LIVE (the split of 2026-09-23, review 2026-09-22 section 4, step 2): this file keeps `Life.__init__`,
 `tick()` and the read-only `tok` (the anatomy's tokenizer; the core refactor's step R2, docs/SIM_DESIGN.md 8.4); every other method
 was moved verbatim into a mixin in body/core/ (its __init__.py has the map): senses, memory, cortex, mouth, critics, actor, night,
-persistence and instruments, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here; the anatomy, the body's senses,
+persistence, instruments and (step R6c) the cerebellum, with `PHYSIOLOGY` in body/core/physiology.py, re-exported here (a body whose
+switch `cereb` is on has a cerebellum below the tick, body/core/cerebellum.py: the organs' m.cereb, its constants CEREB, absent unless
+given; the life sets its world's sub-tick hook and the world calls it every 10 ms inside `apply`; nothing of the tick reads it, and the
+diary has none of it); the anatomy, the body's senses,
 effectors and reward sources declared, is body/core/anatomy.py, and the frame, the world at one tick, body/core/world.py. Since step
 R4 the window holds each of the anatomy's channels under its field and the cortex's input is their codes summed in the anatomy's
 order (`Organs.inputs(anatomy, obs, own, bundles)`). Since step R5 the tick's choice, act and gate lessons run over the anatomy's
@@ -41,9 +44,10 @@ import torch
 import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
-from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR
+from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR, CEREB
 from .core.anatomy import anatomy_for
 from .core.world import World, DiaryWorld
+from .core.cerebellum import CerebellumMixin
 from .core.senses import SensesMixin
 from .core.memory import MemoryMixin
 from .core.cortex import CortexMixin
@@ -59,9 +63,10 @@ from .core.timing import TimingMixin, GatedAdam
 __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
 
 
-class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin):
+class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin,
+           CerebellumMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
-        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR)   # the switches and the motor constants are known, absent unless given
+        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB)   # the switches, the motor and the cerebellum's constants are known, absent unless given
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
@@ -288,6 +293,11 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         if world is not None and not isinstance(world, World):
             raise TypeError(f"Life: the world is a body/core/world.py World, not {type(world).__name__}")
         self.world = DiaryWorld(self) if world is None else world
+        # THE CEREBELLUM (step R6c; body/core/cerebellum.py): a body whose switch is on has its organs' cerebellum checked against its
+        # anatomy's declaration and its world's sub-tick hook set; organs that hold one under a switch that is off are refused. The
+        # diary's cfg has no switch and its organs no cerebellum: nothing runs, nothing is added
+        if int(self.cfg.get("cereb", CEREB["cereb"])) or "cereb" in self.m._modules:
+            self._cereb_attach()
         self.stream = collections.deque(maxlen=96)       # (id, who)
         self.last = {}
         self.credit = collections.deque(maxlen=64)
