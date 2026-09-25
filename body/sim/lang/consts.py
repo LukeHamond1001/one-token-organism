@@ -167,10 +167,18 @@ KIND_DISTRACTORS = 2                  # two levels (the lead's decision A60b): t
                                       # spent as the record's from its block's KIND_FIRST-th trial (the lead's; Waxman and Booth
                                       # 2001, category labels): a child keyed to one particular thing passes level 1 and fails
                                       # level 2, a knower of the kind passes both
+LEVEL2_MAX = 6                        # level 2 runs only for a REGISTERED SHORT LIST of tested nouns fixed before birth, at most
+                                      # 6 (the nouns First 2's tests and the word clause need: the lead's decision after 176da4e;
+                                      # the conduct's level2, P4's to register; a probe of a noun off it refused): the room holds
+                                      # at least 24 new exemplars of each and 4 of every other tested noun (A53), so every
+                                      # registered block of 24 runs with its things matched in newness, the conduct's draw
+                                      # keeping each unfinished block's own back (Conduct._exemplar_set); a block's next test at
+                                      # 48 the room carries only with at most 2 nouns registered (SIM_DESIGN A60b, disclosed)
 KIND_FIRST = 24                       # level 2's block is 24 registered trials (the lead's decision after 67741fd, for power: a
                                       # foil's control is chance among the three things, not a known word's zero): its first test
                                       # at its 24th registered trial at 0.005, then 48 at 0.0025, ... (0.01 a life, as level 1's);
-                                      # 8 exemplars at 3 fresh presentations each (A53: at least 8 a tested noun), a void's
+                                      # 8 exemplars at 3 fresh presentations each (A53: at least 24 a registered noun since the
+                                      # lead's decision after 176da4e, LEVEL2_MAX; 8 a tested noun before), a void's
                                       # presentation spent, so the conduct draws a further exemplar when one is needed
 NOUN_FOILS = {"ball": "zeb", "bear": "fep", "block": "gub", "bottle": "tuma", "car": "tam", "cup": "tuv", "drum": "koob",
               "rattle": "modi", "ring": "kem", "tower": "zibo"}
@@ -193,14 +201,18 @@ NOUN_SYLLABLES = {"ball": 1, "bear": 1, "block": 1, "book": 1, "bottle": 2, "box
                                       # trochees, as the form's contour, TRIAL_F0, holds them)
 FOIL_EXPOSURE = (0.1, 2)              # EXPOSURE-MATCHED FOILS (the lead's decision after 67741fd; ours, disclosed: the standard
                                       # studies use novel foils, ours are matched-exposure nonwords): her non-teaching chatter
-                                      # carries each registered noun's foil at its noun's running rate, so before and through its
-                                      # level-2 block the child has heard the foil about as often as the noun (a child that turns
-                                      # from what it can name only at a word heard often enough meets the same familiarity at
-                                      # both); an exemplar probe runs only while its foil's hearings are at least its noun's less
-                                      # 10% of them or 2, whichever more (ours), each trial logging both counts
-FOIL_CHATTER_GAP = 20                 # her chatter's foil lines ("oh. tuv.": never a label, no act, no object named, said only
-                                      # while the child's head line is on no thing and its hands hold none, as she reads it) at
-                                      # most one a 20 ticks (3 s; ours), and each line at most once a SAME_LINE, as any
+                                      # carries each registered noun's foil at its noun's running rate as her idle slot allows
+                                      # (FOIL_CHATTER_GAP), so before and through its level-2 block the child has heard the foil
+                                      # about as often as the noun (a child that turns from what it can name only at a word
+                                      # heard often enough meets the same familiarity at both); an exemplar probe runs only while
+                                      # its foil's hearings are at least its noun's less 10% of them or 2, whichever more (ours),
+                                      # each trial logging both counts
+FOIL_CHATTER_GAP = 40                 # her chatter's foil lines ("oh. tuv.": never a label, no act, no object named, said only
+                                      # while the child's head line is on no thing and its hands hold none, as she reads it) take
+                                      # her IDLE SLOT (4.10: idle, at most one line a 40 ticks), so they replace her filler rather
+                                      # than add to it (the lead's decision after 176da4e): a foil line due takes the slot first,
+                                      # and P4's idle lines share it (Conduct.idle_free, note_idle); each line at most once a
+                                      # SAME_LINE, as any
 PERM_EXACT_N = 36                     # the permutation test's p exact (every relabeling counted, two halves of the trials each
                                       # enumerated: meet in the middle) up to 36 trials; past them PERM_DRAWS relabelings drawn
 PERM_DRAWS = 20000                    # from the stream PERM_SEED, p = (1 + those at least as far) / (draws + 1), a valid p at any

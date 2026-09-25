@@ -535,7 +535,7 @@ class Ledger:
         target (1, 0) both; left out, 1); items: the never-taught items it presents (each one presentation more);
         stimulus: its sentences' one timeline (their ticks, the test word's onset tick, the sentences, their test words' shapes,
         whether the words channel was held to it: P3's twelfth round); exposure: an exemplar trial's {its noun: her hearings of
-        it, its foil: of the foil} before the sentence (A60b 12: matched in exposure, logged beside each other)."""
+        it, its foil: of the foil} before the sentence (A60b 13: matched in exposure, logged beside each other)."""
         if form not in K.TRIAL_FORMS:
             raise ValueError(f"not a trial form: {form!r}")
         w0, w1 = (int(x) for x in window)
@@ -685,7 +685,7 @@ class Ledger:
 
     def exposure(self, w):
         """how often she has said the word so far, its sound ended (voiced(): each word of her lines, whatever it named): a
-        noun's and its foil's, matched in exposure (A60b 12)."""
+        noun's and its foil's, matched in exposure (A60b 13)."""
         return int((self.words.get(w) or {}).get("said", 0))
 
     def was_named(self, oid):
@@ -736,7 +736,7 @@ class Ledger:
             st.pop("forms", None)
             if s.get("scoring") in LEVEL2_OLD:            # its new-exemplar block stood against another thing's known word,
                 st["seq2"], st["tests2"], st["kind_at"] = [], [], None   # or a foil beside familiar things, not heard as often:
-                if kinded(w_):                            # that block starts again (A60b 9, 12, 13), no "understood" of it kept
+                if kinded(w_):                            # that block starts again (A60b 9, 13, 14), no "understood" of it kept
                     st["understood_at"] = None            # (fail-closed); its record (level 1) stands
             elif s.get("scoring") != SCORING:             # a save before A60b scored first looks (by intention to treat, or
                 st["seq"], st["trials"], st["yoked"], st["tests"] = [], [], [], []   # before it), which a child timed from

@@ -695,7 +695,7 @@ def foil_line(foil):
     raise ValueError(f"not a foil: {foil!r} (consts.NAME_FOILS, consts.NOUN_FOILS)")
 
 
-FOIL_CHATTER = F("oh. {f}.", "{f}")     # her chatter's foil line (A60b 12, consts.FOIL_EXPOSURE): no label, no object, no act
+FOIL_CHATTER = F("oh. {f}.", "{f}")     # her chatter's foil line (A60b 13, consts.FOIL_EXPOSURE): no label, no object, no act
 
 
 def foil_chatter(foil):
