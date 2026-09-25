@@ -177,9 +177,13 @@ class Effector:
     on its symbol, as always); the G1's words output does not, its vocal tract does (C61). `fwd_gate`: its forward half's error is one of
     its gate's own inputs (SIM_DESIGN.md 3.5: each limb's forward error feeds its gate), counted in `n_in`.
     Step R6h, THE BORN PATTERNS SUMMED AT THE CORD (body/core/cord.py; SIM_DESIGN.md 3.7, A35, A47, A48): `spg` names the joints its
-    spinal pattern generator moves and each one's flexion sense, `spg_phase` its born phase (None: drawn at birth from the body's seed);
-    `cry` declares the tract's born cry (its posture's steps, its lungs, where its breath left and the charge are sensed, and the reward
-    source whose felt pain sets it off). Each is added below the gate to the effector's own act, which keeps its eligibility.
+    spinal pattern generator moves and each one's flexion sense, `spg_phase` its born phase (the fraction of its cycle lived at birth, a
+    cycle beginning with its movement; None: drawn at birth from the body's seed); `spg_rhythm` (C54) names the rhythm it keeps: limbs
+    that name the same rhythm share its cycles, drawn from the body's seed, the first of them in the declared order leading it and each
+    other moving its own phase's lag behind the leader within every cycle (the G1's legs, the right half a cycle after the left); None,
+    a rhythm of its own (the arms: no coupling written between them and the legs or each other); `cry` declares the tract's born cry (its
+    posture's steps, its lungs, where its breath left and the charge are sensed, and the reward source whose felt pain sets it off). Each
+    is added below the gate to the effector's own act, which keeps its eligibility.
     Step R6h, THE BORN BIASES (body/core/cord.py; SIM_DESIGN.md 3.7, A23, A43): `orient` names the joints the born orienting bias acts
     on (the gaze's yaw and pitch, the waist's yaw), each with the axis it turns and its sense, toward the anatomy's declared cues
     (`Anatomy.orienting`); `orient_gate` gives its gate the born input "a cue appeared" (counted in `n_in`); `vor` names the joints the
@@ -203,6 +207,7 @@ class Effector:
     fwd_gate: bool = False                # step R6h: its forward half's error is one of its gate's own inputs (counted in n_in)
     spg: Optional[dict] = None            # step R6h: its spinal pattern generator's joints, {joint: its flexion sense, +1 or -1} (A48)
     spg_phase: Optional[float] = None     # its born phase, a fraction of the cycle; None: drawn at birth from the body's seed
+    spg_rhythm: Optional[str] = None      # C54: the rhythm it keeps, shared with the limbs that name it (the first leads); None: its own
     cry: Optional[dict] = None            # step R6h: its born cry (A47): {"posture": {joint: step}, "lungs": joint, "breath": (channel,
                                           # number), "charge": (channel, number), "pain": the reward source whose felt pain sets it off}
     orient: Optional[dict] = None         # step R6h: its joints the born orienting bias acts on, {joint: ("yaw" or "pitch", the sense its
@@ -589,6 +594,8 @@ class Anatomy:
                 raise ValueError(f"anatomy: effector {e.name!r}'s VOR axes {e.vor}: distinct joints among its {J_}")
             if e.spg_phase is not None and not 0.0 <= float(e.spg_phase) < 1.0:
                 raise ValueError(f"anatomy: effector {e.name!r}'s pattern generator's phase {e.spg_phase}: a fraction of the cycle, in [0, 1)")
+            if e.spg_rhythm is not None and (e.spg is None or not (isinstance(e.spg_rhythm, str) and e.spg_rhythm.isidentifier())):
+                raise ValueError(f"anatomy: effector {e.name!r}'s rhythm {e.spg_rhythm!r}: a name (an identifier), on a limb with a pattern generator")
             if e.cry is not None:
                 cy_ = e.cry
                 ok_ = isinstance(cy_, dict) and {"posture", "lungs", "breath", "charge"} <= set(cy_) and cy_["posture"] and \

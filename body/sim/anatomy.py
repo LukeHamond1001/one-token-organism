@@ -221,7 +221,10 @@ class SimAnatomy(LanguageAnatomy):
             zones = tuple(k for k, z in enumerate(ZONES) if name.startswith("hand") and z.startswith("left" if name.endswith("_l") else "right"))
             kw = dict(joints=ji, zones=zones, pain_joints=pain_j, limits=tuple(lim[j] for j in ji) if lim else ())
             if kind in FLEXION:
-                kw.update(spg=dict(FLEXION[kind]), spg_phase=({"leg_l": 0.0, "leg_r": 0.5}.get(name)))
+                # the spinal pattern generators (A48, C54): the legs keep one rhythm, the left leading it and the right half of each cycle
+                # behind (born at phases 0 and 0.5); each arm a rhythm of its own, its phase drawn at birth from the body's seed
+                kw.update(spg=dict(FLEXION[kind]), spg_phase=({"leg_l": 0.0, "leg_r": 0.5}.get(name)),
+                          spg_rhythm=("legs" if kind == "leg" else None))
             if name == "waist":
                 # the waist yaw's positive step turns the trunk, and the head's cameras with it, to the left (a rotation about the torso's
                 # up axis), so a cue on the right (+ yaw in the image) is turned toward by its negative step: sense -1 (S5a checks the sign
@@ -252,6 +255,8 @@ SIM_CFG = dict(
     gate_int=0.5, gate_int_form="error", gate_vigor=0.0,
     # R6h's motor effectors (MOTOR): movement units, act_inv batched every 8 ticks with the kappa correction, fatigue per effector
     unit_margin=math.log(4.0), act_inv_every=8, act_inv_chance=1, own_fatigue=1,
-    # the born patterns and biases (REFLEX): the spinal pattern generators, the born cry, orienting, the VOR
+    # the born patterns and biases (REFLEX): the spinal pattern generators (their shape and cycles REFLEX's, C54: a movement of 2 ticks'
+    # flexion and 3 ticks' extension, then a pause, each cycle drawn from the seed, 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry,
+    # orienting, the VOR
     spg=1, cry=1, orient=1, vor=1,
 )

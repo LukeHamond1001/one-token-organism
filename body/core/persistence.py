@@ -15,7 +15,9 @@ its every weight, its eligibility and its counters are in the organs' state (cer
 whose switch differs from the save's organs (a cerebellum saved and switched off, or none saved and switched on) is refused (A20).
 Since step R6h a motor effector's life["motor"] entry also keeps, where it has them, its performance error's running means ("perf"), its
 own fatigue ("fatigue"), the kappa correction's running agreement and chance ("inv_ch") and act_inv's pairs gathered for the next batch
-("inv_batch"); the born codes (encs.*) and the pattern generators' born phases (spg_phase) are in the organs' state."""
+("inv_batch"); the born codes (encs.*) and the pattern generators' born phases (spg_phase) are in the organs' state, and since C54
+their rhythms' seed (spg_seed): a rhythm is a function of the tick and these, so nothing of it is in the life dict and a load goes on
+with it where the save left it (body/core/cord.py)."""
 import os
 
 import torch
@@ -100,7 +102,7 @@ class PersistenceMixin:
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         motor_ = {e_.name for e_ in anatomy.motors}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
-        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing", "encs", "spg_phase")]
+        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing", "encs", "spg_phase", "spg_seed")]
                          + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
         if dropped:
             print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)

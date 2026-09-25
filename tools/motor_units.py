@@ -8,7 +8,11 @@ its gate's draw said no, chunk_max ended it or its proposal passed the margin to
 of one tick, the longest; the gate's p_act; the pattern generator's amplitude; and the tick's cost with its R6h parts (the born codes over
 the window, act_inv's lessons batched every 8 ticks and, on a second body, unbatched, the cord's patterns, the orienting bias, the units'
 hold). Rolls, travel and reaches need the physics: W4's.
-usage: nice -n 19 python3 tools/motor_units.py [--ticks 3000] [--d 512] [--seed 1]"""
+C54 (the generator's measured newborn rhythm, a movement of 2 + 3 ticks and a pause drawn from the seed): per rhythm (the legs' one,
+each arm's own) the cycles drawn over the run (every cycle whose start fell inside it: their number, mean and SD in seconds, shortest,
+longest, the share held at 1.0 s and at 8.5 s), per limb the share of ticks in flexion, extension and the pause, and its own
+movement-to-movement intervals (the right leg's are half of one cycle and half of the next).
+usage: nice -n 19 python3 tools/motor_units.py [--ticks 3000] [--d 512] [--seed 1] [--unbatched 1]"""
 import collections
 import math
 import os
@@ -79,6 +83,49 @@ def timed(L, name, box):
     setattr(L, name, w)
 
 
+def spg_report(L, place, T):
+    """C54: the drawn cycles of each rhythm over the run and each limb's places (the tool's doc)"""
+    tick = 0.15
+    lo, hi = L._reflex_const("spg_cycle_min"), L._reflex_const("spg_cycle_max")
+    rhythms = {}
+    for i, e in enumerate(L.anatomy.motors, 1):
+        if e.spg:
+            r, lead, lag = L._spg_rhythm(i, e)
+            rhythms.setdefault(r, []).append(e.name)
+    print(f"C54, THE SPINAL PATTERN GENERATOR'S CYCLES over {T} ticks ({T * tick:.0f} s): a movement of {L._reflex_const('spg_flex')} ticks' flexion "
+          f"and {L._reflex_const('spg_ext')} ticks' extension, then a pause; each cycle drawn from the seed (the law: 3.56 +- 1.93 s held to "
+          f"1.0-8.5 s, the held law's moments 3.514 +- 1.742 s)")
+    pooled = []
+    for r, limbs in rhythms.items():
+        e0 = L.anatomy.motors[r]; lead = L._spg_phase0(r + 1, e0)
+        s_, n, cyc = None, 0, []
+        while True:
+            Ln = L._spg_cycle(r, n); s_ = -lead * Ln if s_ is None else s_
+            if s_ >= T:
+                break
+            if s_ + Ln > 0:
+                cyc.append(Ln)                                             # a cycle under way at some tick of the run
+            s_ += Ln; n += 1
+        pooled += cyc
+        sec = [tick * x for x in cyc]
+        print(f"  the rhythm of {'+'.join(limbs):12s}: {len(cyc):4d} cycles, mean {statistics.mean(sec):.3f} s, sd {statistics.pstdev(sec):.3f} s, "
+              f"shortest {min(sec):.2f} s, longest {max(sec):.2f} s; held at 1.0 s {sum(1 for x in cyc if x == lo)}, at 8.5 s {sum(1 for x in cyc if x == hi)}")
+    sec = [tick * x for x in pooled]
+    print(f"  all {len(pooled)} cycles drawn: mean {statistics.mean(sec):.3f} s, sd {statistics.pstdev(sec):.3f} s ({statistics.mean(pooled):.2f} +- "
+          f"{statistics.pstdev(pooled):.2f} ticks); held at 1.0 s {sum(1 for x in pooled if x == lo) / len(pooled):.3f}, at 8.5 s "
+          f"{sum(1 for x in pooled if x == hi) / len(pooled):.3f}")
+    tot = collections.Counter()
+    for n, pl in place.items():
+        c = collections.Counter(pl); tot.update(c)
+        starts = [t for t in range(1, len(pl)) if pl[t] == 1 and pl[t - 1] != 1] + ([0] if pl and pl[0] == 1 else [])
+        starts.sort(); iv = [tick * (b - a) for a, b in zip(starts, starts[1:])]
+        print(f"  {n:6s} flexion {c[1] / len(pl):.4f}  extension {c[-1] / len(pl):.4f}  pause {c[0] / len(pl):.4f}  "
+              f"({len(starts)} movements; movement to movement {statistics.mean(iv):.3f} +- {statistics.pstdev(iv):.3f} s)")
+    k = sum(tot.values())
+    print(f"  all limbs: flexion {tot[1] / k:.4f}, extension {tot[-1] / k:.4f}, pause {tot[0] / k:.4f} (the law's: 2 / 23.425 = 0.0854, "
+          f"3 / 23.425 = 0.1281, 0.7866)")
+
+
 def main():
     T = arg("ticks", 3000); d = arg("d", 512); seed = arg("seed", 1)
     torch.set_num_threads(1)
@@ -96,10 +143,13 @@ def main():
     names = [e.name for e in L.anatomy.motors]
     units = {n: [] for n in names}; cur = {n: 0 for n in names}; pacts = {n: [] for n in names}; held = {n: 0 for n in names}
     cont_n = {n: 0 for n in names}; spg = collections.defaultdict(list); tick_s = []
+    place = collections.defaultdict(list)                                  # C54: each limb's place in its rhythm, tick by tick
     for t in range(T):
         t0 = time.perf_counter(); run.step(); tick_s.append(time.perf_counter() - t0)
         for e, st in zip(L.anatomy.motors, L.motor):
             now = st["now"]; n = e.name; pacts[n].append(now["p_act"])
+            if e.spg:
+                place[n].append(now.get("spg"))
             if now["acted"]:
                 if now["cont"]:
                     cur[n] += 1; cont_n[n] += 1; held[n] += int(now["digits"] == prev[n])
@@ -124,6 +174,7 @@ def main():
     print(f"all {len(allu)} units: mean {statistics.mean(allu):.3f} ticks ({0.15 * statistics.mean(allu):.3f} s), share of one tick "
           f"{sum(1 for x in allu if x == 1) / len(allu):.3f}, longest {max(allu)}; the law at p_act {p:.4f}: mean "
           f"{(1 - p ** 8) / (1 - p):.3f}, share of one {1 - p:.3f}")
+    spg_report(L, place, T)
     # the born codes' cost: every channel's code of one position, timed over a window's worth, times the positions the tick encoded
     x = {c.name: torch.randn(64, int(c.size)) for c in L.anatomy.channels[1:]}
     with torch.no_grad():
@@ -140,6 +191,8 @@ def main():
           f"{1e6 * per_pos:.1f} us each for the eight channels); act_inv batched every 8 {per('_inverse_batch'):.2f} ms; the cord's patterns "
           f"{per('_cord'):.3f} ms; the orienting bias {per('_orient_bias'):.3f} ms; the units' hold {per('_unit_hold'):.3f} ms; "
           f"the nine motor effectors' choices in all {per('_choose_effector'):.2f} ms")
+    if not arg("unbatched", 1):
+        return
     # act_inv unbatched, on a body born the same, for the design's figure (4-6 ms a tick unbatched)
     L2 = born(dict(cfg, act_inv_every=1, act_inv_chance=0), d, seed); run2 = WorldLoop(L2); box2 = collections.Counter()
     timed(L2, "_inverse_lesson", box2); timed(L2, "_inverse_batch", box2)

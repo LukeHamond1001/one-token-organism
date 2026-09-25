@@ -568,7 +568,9 @@ class MouthMixin:
         effector with no inverse model, each joint's kappa and their mean clipped, the reliability; kept through the night and saved
         with the body), its lessons and the last; the chunks begun and their stops. Step R6h's: its performance error's running means
         (when it declares the term), its own fatigue, the movement unit's held settings, act_inv's pairs gathered for the next batch, the
-        cord's patterns' counts and the born cry's breath clock"""
+        cord's patterns' counts and the born cry's breath clock; C54's, where its pattern generator stands in its rhythm (the cycle under
+        way and the next: a function of the tick and the organs' spg_seed and spg_phase, so it is found again from birth after a load and
+        never saved; body/core/cord.py `_spg_where`)"""
         return {"buf": collections.deque(maxlen=96), "g_base": None, "last": None, "acted_last": False, "e_actor": None, "now": None,
                 "chunk": 0, "sense": None, "fwd": None, "err": None,
                 "inv_conf": ([[[0.0] * int(K) for _ in range(int(K))] for K in e.factors] if e.inverse else None),
@@ -576,9 +578,9 @@ class MouthMixin:
                 "chunks": 0, "stops": {"rest": 0, "gate": 0, "reflex": 0, "end": 0, "max": 0},
                 # step R6h: its performance error's running means (A41), when it declares one; its own fatigue (own_fatigue); the movement
                 # unit's held settings (unit_margin); act_inv's pairs gathered for the next batch (act_inv_every); the cord's patterns'
-                # ticks (logged as reflex) and the born cry's breath clock
+                # ticks (logged as reflex) and the born cry's breath clock; C54: its pattern generator's place in its rhythm (none yet)
                 "perf": ([[0.0] * int(K) for K in e.factors] if getattr(e, "intrinsic", False) else None),
-                "fatigue": 0.0, "unit": None, "inv_batch": [], "cord_n": {}, "cry_t": 0}
+                "fatigue": 0.0, "unit": None, "inv_batch": [], "cord_n": {}, "cry_t": 0, "spg_cyc": None}
 
     def _choose_effector(self, i, frame, C1, level, stri):
         """A LATER EFFECTOR'S CHOICE (step R5; effector i > 0, after the voice's, its draws on self.gen after the voice's): whether (its

@@ -7,15 +7,17 @@ reaches only the gate of the effector that declares it, per joint for a motor ef
 a movement unit holds its act unless the choice passes the persistence margin, and the born units' lengths are the gate's continuation
 draw's law (motor 2, C38 at the core); act_inv's reliability takes each label's chance from the act's own choice (motor 3); act_inv's
 lessons are batched (motor 4); each motor effector's fatigue is its own, and its forward error reaches its gate (motor 5); the spinal
-pattern generator and the born cry are summed below the gate, each by its rule (motors 6 and 7); a vector channel's born code is fixed
-from the body's seed (motor 8); the born orienting bias, its gate input and the VOR's constants (motor 9); the G1's anatomy numbers
-its effectors as the design does and its performance error lands on the tract's gate alone (motor 11). Each is a switch or a
+pattern generator (C54: a movement of 2 + 3 ticks, then a pause drawn from the seed; the legs one rhythm) and the born cry are summed
+below the gate, each by its rule (motors 6 and 7); a vector channel's born code is fixed from the body's seed (motor 8); the born
+orienting bias, its gate input and the VOR's constants (motor 9); the G1's anatomy numbers its effectors as the design does and its
+performance error lands on the tract's gate alone (motor 11). Each is a switch or a
 declaration the language body does not hold: it has none of it (the eight pinned digests are the guard's, tools/pins/digests.txt). The
 stub worlds here are instruments of these tests, not the G1's world."""
 import collections
 import math
 import os
 import pickle
+import statistics
 import sys
 import tempfile
 import time
@@ -495,14 +497,47 @@ def test_fatigue_per_effector_and_the_forward_error():
 
 class _Kicker(LanguageAnatomy):
     """the diary's words and face; two legs of three joints (hip pitch, knee, ankle pitch: flexion senses -1, +1, -1, as the G1's
-    withdrawal measured them), each with a spinal pattern generator, born half a cycle apart; an arm of two joints (shoulder pitch,
-    elbow: -1, -1) with one whose phase is drawn at birth from the body's seed"""
+    withdrawal measured them), each with a spinal pattern generator, keeping one rhythm ("legs", the left leading it), born half a cycle
+    apart; an arm of two joints (shoulder pitch, elbow: -1, -1) with one of its own, whose phase is drawn at birth from the body's seed"""
 
     def __init__(self, tok, cfg=None):
         super().__init__(tok, cfg)
-        self.effectors += [Effector("leg_l", [5, 5, 5], rest_id=62, effort=0.05, spg={0: -1, 1: 1, 2: -1}, spg_phase=0.0),
-                           Effector("leg_r", [5, 5, 5], rest_id=62, effort=0.05, spg={0: -1, 1: 1, 2: -1}, spg_phase=0.5),
+        self.effectors += [Effector("leg_l", [5, 5, 5], rest_id=62, effort=0.05, spg={0: -1, 1: 1, 2: -1}, spg_phase=0.0, spg_rhythm="legs"),
+                           Effector("leg_r", [5, 5, 5], rest_id=62, effort=0.05, spg={0: -1, 1: 1, 2: -1}, spg_phase=0.5, spg_rhythm="legs"),
                            Effector("arm", [5, 5], rest_id=12, effort=0.05, spg={0: -1, 1: -1})]
+
+
+def _spg_law(seed, n_motor, r, n):
+    """C54's cycle written again for the tests (body/core/cord.py `_spg_cycle`): cycle n of the rhythm led by motor effector r, in ticks
+    of 0.15 s: the standard normal of the generator seeded seed + n_motor x n + r, through the log-normal of mean 3.56 s and SD 1.93 s,
+    held to 1.0-8.5 s; with the unheld draw beside it"""
+    z = float(torch.randn((), generator=torch.Generator().manual_seed(int(seed) + int(n_motor) * int(n) + int(r)), dtype=torch.float64))
+    mean, sd = 3.56 / 0.15, 1.93 / 0.15
+    s2 = math.log(1.0 + (sd / mean) ** 2)
+    x = math.exp(math.log(mean) - s2 / 2.0 + math.sqrt(s2) * z)
+    return min(max(x, 1.0 / 0.15), 8.5 / 0.15), x
+
+
+def _spg_starts(seed, n_motor, r, lead, lag, T):
+    """the ticks a limb's movements begin, from the rhythm's first cycle to past tick T: cycle n runs from s_n (s_0 = -lead x its length)
+    and the limb's movement in it begins at the first tick at or after s_n + lag x its length; with each cycle (s_n, its length)"""
+    starts, cycles, s, n = [], [], None, 0
+    while True:
+        Ln = _spg_law(seed, n_motor, r, n)[0]
+        s = -lead * Ln if s is None else s
+        starts.append(math.ceil(s + lag * Ln)); cycles.append((s, Ln))
+        if starts[-1] > T:
+            return starts, cycles
+        s += Ln; n += 1
+
+
+def _spg_place(starts, t):
+    """+1 flexion (the movement's first 2 ticks), -1 extension (its next 3), 0 the pause: the rule at tick t, written again"""
+    m = max([x for x in starts if x <= t], default=None)
+    if m is None:
+        return 0
+    d = t - m
+    return 1 if d < 2 else (-1 if d < 5 else 0)
 
 
 def _cord_world(extra=None):
@@ -535,54 +570,106 @@ def _cord_world(extra=None):
 
 
 def test_the_spinal_pattern_generator():
-    """motor 6 (step R6h; SIM_DESIGN.md 3.6, 3.7, 10, A35, A48, C54): each limb's half-centre oscillator, summed at the cord with its own
-    act. On every tick of 300, for each limb, the step the world receives on each declared flexion joint is +-(its gate's p_act x 0.09
-    rad) in its flexion sense, + in the first half of its cycle (phase0 + tick / 7, the fraction below 1/2) and - in the second, 0 where
-    the own act steps that joint against it, 0 on every other joint: a function of the tick, the phase, p_act and the own act alone
-    (no posture, balance or gravity term: it reads no sense). The legs, born half a cycle apart, are in antiphase on every tick; the
-    arm's phase is drawn at birth from the body's seed (the same for the same seed, another for another, saved with the organs). The
-    gate draws every tick and its rows' acts are its own; its ticks are counted as reflex. Switched off, the world receives no cord"""
+    """motor 6 (step R6h, C54 closed; SIM_DESIGN.md 3.6, 3.7, 10, A35, A48, C54): each limb's half-centre generator, summed at the cord
+    with its own act, its cycle a short movement and a pause. On every tick of 400, for each limb, its place is the rule written again
+    here (_spg_law, _spg_starts, _spg_place): its rhythm's cycles drawn from the organs' spg_seed (the generator seeded spg_seed + 3n + r
+    for cycle n of the rhythm led by motor effector r), each a log-normal of mean 3.56 s and SD 1.93 s held to 1.0-8.5 s, in ticks of
+    0.15 s; the limb's movement begins at the first tick at or after its cycle's start plus its lag; flexion its first 2 ticks,
+    extension its next 3, then the pause. The step the world receives on each declared flexion joint is +(its gate's p_act x 0.09 rad)
+    in its flexion sense in the flexion, - in the extension, nothing in the pause, 0 where the own act steps that joint against it, 0 on
+    every other joint: a function of the tick, the rhythm, p_act and the own act alone (no posture, balance or gravity term: it reads
+    no sense). THE LEGS keep one rhythm (the left leading): in every cycle the right leg's movement begins half the cycle after the
+    left's and before the left's next; THE ARM keeps its own, its phase drawn at birth from the body's seed. THE LAW OF THE DRAWS over
+    20,000 cycles of one rhythm: every cycle inside 6.67-56.67 ticks, the held draws' mean and SD the clipped law's (23.425 and 11.613
+    ticks: 3.514 and 1.742 s), the unheld the log-normal's own (3.56 and 1.93 s), about 1.2% and 2.5% held at the bounds. The rhythm is
+    the tick's: a body saved and loaded stands where the one that lived on stands, tick for tick (its acts drawn afresh). The gate draws
+    every tick and its rows' acts are its own; its ticks are counted as reflex. Refused: a rhythm named on a limb with no generator.
+    Switched off, the world receives no cord"""
     cfg = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.3, spg=1)
     w = _cord_world(); L = _born(_Kicker(TOK, cfg), cfg, w); run = WorldLoop(L)
-    ph = [0.0, 0.5, float(L.m.spg_phase[2])]
-    assert 0.0 <= ph[2] < 1.0 and L.m.spg_phase.dtype == torch.float64
-    n_cancel = n_sum = anti = 0
-    for t in range(300):
+    seed = int(L.m.spg_seed); ph = [0.0, 0.5, float(L.m.spg_phase[2])]
+    assert 0 <= seed < 2 ** 31 and 0.0 <= ph[2] < 1.0 and L.m.spg_phase.dtype == torch.float64
+    T = 400
+    rhythm = {"leg_l": (0, 0.0, 0.0), "leg_r": (0, 0.0, 0.5), "arm": (2, ph[2], 0.0)}    # (its leader's place, the leader's phase, its lag)
+    ref = {n_: _spg_starts(seed, 3, *rhythm[n_], T) for n_ in rhythm}
+    n_cancel = n_sum = 0; places = collections.Counter()
+    for t in range(T):
         run.step()
-        for k_, (e_, st_) in enumerate(zip(L.anatomy.motors, L.motor)):
-            now = st_["now"]; phi = (ph[k_] + float(L.ticks - 1) / 7.0) % 1.0; half = 1.0 if phi < 0.5 else -1.0
+        for e_, st_ in zip(L.anatomy.motors, L.motor):
+            now = st_["now"]; want_place = _spg_place(ref[e_.name][0], L.ticks - 1)
+            assert now["spg"] == want_place, (t, e_.name, now["spg"], want_place)
+            places[(e_.name, want_place)] += 1
             A = float(now["p_act"]) * 0.09; want = [0.0] * len(e_.factors)
             for j_, sg_ in e_.spg.items():
-                own = (now["digits"][j_] > 2) - (now["digits"][j_] < 2); step = half * sg_ * A
+                if not want_place:
+                    continue
+                own = (now["digits"][j_] > 2) - (now["digits"][j_] < 2); step = want_place * sg_ * A
                 if own != 0 and (own > 0) != (step > 0):
                     n_cancel += 1; continue
                 want[j_] = step; n_sum += int(own != 0)
             got = w.cords[-1].get(e_.name)
             assert (got is None and not any(want)) or (got is not None and all(abs(a_ - b_) < 1e-12 for a_, b_ in zip(got, want))), (t, e_.name, got, want)
             assert st_["buf"][-1][1] == now["acted"] and st_["buf"][-1][9] is False
-        hl = w.cords[-1].get("leg_l"); hr = w.cords[-1].get("leg_r")
-        if hl is not None and hr is not None and hl[0] != 0 and hr[0] != 0:
-            anti += int((hl[0] > 0) != (hr[0] > 0))
-            assert (hl[0] > 0) != (hr[0] > 0), (t, hl, hr)
-    assert anti >= 100 and n_cancel >= 20 and n_sum >= 20, (anti, n_cancel, n_sum)
-    assert all(st_["cord_n"].get("spg", 0) >= 250 for st_ in L.motor), [st_["cord_n"] for st_ in L.motor]
-    # the arm's phase: the body's seed's
+    # the legs: one rhythm, the right leg half of each cycle behind the left and before its next movement
+    (sl, cyc), (sr, _) = ref["leg_l"], ref["leg_r"]
+    n_alt = 0
+    for n_ in range(min(len(sl) - 1, len(sr))):
+        s_, Ln = cyc[n_]
+        assert sl[n_] == math.ceil(s_) and sr[n_] == math.ceil(s_ + 0.5 * Ln) and sl[n_] < sr[n_] < sl[n_ + 1], (n_, sl[n_], sr[n_], sl[n_ + 1])
+        assert abs((sr[n_] - sl[n_]) - 0.5 * Ln) < 1.0; n_alt += 1
+    assert n_alt >= 12 and ref["arm"][0] != sl, n_alt
+    for e_, st_ in zip(L.anatomy.motors, L.motor):                     # the life's own rhythm is the rule's: its cycle under way
+        r_, lead_, lag_ = rhythm[e_.name]; cy = st_["spg_cyc"]
+        assert (cy["r"], cy["lag"]) == (r_, lag_) and abs(cy["L"] - _spg_law(seed, 3, r_, cy["n"])[0]) < 1e-9 * cy["L"]
+    assert all(places[(n_, p_)] > 0 for n_ in rhythm for p_ in (1, -1, 0)), places
+    assert all(st_["cord_n"].get("spg", 0) >= 40 for st_ in L.motor), [st_["cord_n"] for st_ in L.motor]
+    # the law of the draws, over 20,000 cycles of the legs' rhythm (the life's own `_spg_cycle` against the law written again)
+    held, free = [], []
+    for n_ in range(20000):
+        h_, f_ = _spg_law(seed, 3, 0, n_)
+        assert abs(L._spg_cycle(0, n_) - h_) < 1e-9 * h_
+        held.append(h_); free.append(f_)
+    mh, sh = statistics.mean(held), statistics.pstdev(held); mf, sf = statistics.mean(free), statistics.pstdev(free)
+    lo_, hi_ = sum(1 for x_ in held if x_ == 1.0 / 0.15) / len(held), sum(1 for x_ in held if x_ == 8.5 / 0.15) / len(held)
+    assert min(held) >= 1.0 / 0.15 and max(held) <= 8.5 / 0.15 and abs(mh - 23.425) < 0.35 and abs(sh - 11.613) < 0.45, (mh, sh)
+    assert abs(mf - 3.56 / 0.15) < 0.4 and abs(sf - 1.93 / 0.15) < 0.8 and 0.008 < lo_ < 0.017 and 0.019 < hi_ < 0.031, (mf, sf, lo_, hi_)
+    # the phases and the rhythms' seed: the body's seed's
     B = _born(_Kicker(TOK, cfg), cfg, _cord_world(), seed=0); C = _born(_Kicker(TOK, cfg), cfg, _cord_world(), seed=1)
     assert torch.equal(B.m.spg_phase, L.m.spg_phase) and not torch.equal(C.m.spg_phase, L.m.spg_phase)
+    assert int(B.m.spg_seed) == seed and int(C.m.spg_seed) != seed
+    # the rhythm is the tick's: saved at tick 400 and loaded, the body stands where the one that lives on stands, tick for tick
     fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
     try:
         L.save(path); D = Life.load(path, _Kicker(TOK, L.cfg), save_path=None, world=_cord_world())
     finally:
         os.remove(path)
-    assert torch.equal(D.m.spg_phase, L.m.spg_phase)
+    assert torch.equal(D.m.spg_phase, L.m.spg_phase) and int(D.m.spg_seed) == seed and all(st_["spg_cyc"] is None for st_ in D.motor)
+    rD = WorldLoop(D)
+    for _ in range(60):
+        run.step(); rD.step()
+        assert [st_["now"]["spg"] for st_ in D.motor] == [st_["now"]["spg"] for st_ in L.motor] == \
+            [_spg_place(_spg_starts(seed, 3, *rhythm[e_.name], L.ticks)[0], L.ticks - 1) for e_ in L.anatomy.motors]
+    # refused: a rhythm named on a limb with no generator
+    a = _Kicker(TOK, cfg); a.effectors[-1].spg = None; a.effectors[-1].spg_rhythm = "legs"
+    try:
+        a.check()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("a rhythm named on a limb with no pattern generator was taken")
     # switched off: no cord
     w0 = _cord_world(); E = _born(_Kicker(TOK, dict(cfg, spg=0)), dict(cfg, spg=0), w0); r_ = WorldLoop(E)
     for _ in range(30):
         r_.step()
-    assert all(c_ == {} for c_ in w0.cords) and all(not st_["cord_n"] for st_ in E.motor)
-    print(f"motor 6: the pattern generator on 300 ticks: each limb's step the law's (+-p_act x 0.09 rad, its phase's half; {n_cancel}",
-          f"joint-ticks cancelled by an own act against it, {n_sum} summed with an own act), the legs in antiphase on {anti} ticks, the arm's",
-          f"phase {ph[2]:.3f} the seed's (another seed another; saved), the gate's rows its own; off, no cord")
+    assert all(c_ == {} for c_ in w0.cords) and all(not st_["cord_n"] for st_ in E.motor) and all(st_["spg_cyc"] is None for st_ in E.motor)
+    fr = {n_: [places[(n_, p_)] / T for p_ in (1, -1, 0)] for n_ in rhythm}
+    print(f"motor 6: the pattern generator on {T} ticks: each limb's place and step the rule's (a movement of 2 ticks' flexion and 3",
+          f"ticks' extension at +-p_act x 0.09 rad, then the drawn pause; {n_cancel} joint-ticks cancelled by an own act against it, {n_sum}",
+          f"summed with one); flexion, extension, pause {', '.join(f'{n_} ' + '/'.join(f'{x_:.3f}' for x_ in v_) for n_, v_ in fr.items())};",
+          f"the legs one rhythm, the right half a cycle behind in all {n_alt} cycles; the arm its own (phase {ph[2]:.3f}, the seed's); 20,000",
+          f"draws held {0.15 * mh:.3f} +- {0.15 * sh:.3f} s (the clipped law's 3.514 +- 1.742), unheld {0.15 * mf:.3f} +- {0.15 * sf:.3f} s",
+          f"(3.56 +- 1.93), {100 * lo_:.1f}% and {100 * hi_:.1f}% at the bounds; a load stands where the life stands; a stray rhythm refused;",
+          "off, no cord")
 
 
 class _Pain(__import__("body.core.anatomy", fromlist=["RewardSource"]).RewardSource):
@@ -898,9 +985,9 @@ def test_the_g1_anatomy():
     and with a forecast head of its own); its ten effectors are numbered as 3.5 numbers them: effector 0 the vocal tract (10 articulators
     of five settings, its consequence sense the ears, act_inv over them, the performance error, the born cry), effector 1 the words'
     silent output (the voice of the code: the 79 rows, mouth_gate, no intrinsic term), 2 the gaze (orienting, the VOR), 3 the waist
-    (orienting), 4-5 the arms and 8-9 the legs (the pattern generators, the legs half a cycle apart), 6-7 the Dex3 hands: 56 joint readouts
-    of five; its reward face, pain, charge. SIM_CFG sets the gates' drives as disclosed (0.25 + 4.656 x the reward's mean at the 256-tick
-    clock, the error at 0.5, gate_vigor 0). Born at a small width under SIM_CFG in a stub of its world, it lives 120 ticks: every effector
+    (orienting), 4-5 the arms and 8-9 the legs (the pattern generators: the legs one rhythm, half a cycle apart; each arm its own), 6-7
+    the Dex3 hands: 56 joint readouts of five; its reward face, pain, charge. SIM_CFG sets the gates' drives as disclosed (0.25 + 4.656 x
+    the reward's mean at the 256-tick clock, the error at 0.5, gate_vigor 0). Born at a small width under SIM_CFG in a stub of its world, it lives 120 ticks: every effector
     acts, each tick's acts in the design's order; THE PERFORMANCE ERROR LANDS ON THE TRACT'S GATE: its rows carry it on the ticks it acted
     and every other gate's rows (the words', the voice of the code, included) carry 0 on every tick; the legs' and arms' patterns and the
     gaze's VOR reach the world; each of the tract's lessons takes the credit 3.5 discloses (the dopamine that followed, the tonic drive
@@ -919,6 +1006,7 @@ def test_the_g1_anatomy():
     assert [len(e.factors) for e in a.motors] == [10, 3, 3, 7, 7, 7, 7, 6, 6] and sum(len(e.factors) for e in a.motors) == 56
     assert [e.name for e in a.motors if e.intrinsic] == ["voice"] and [e.name for e in a.motors if e.spg] == ["arm_l", "arm_r", "leg_l", "leg_r"]
     assert (a.effector("leg_l").spg_phase, a.effector("leg_r").spg_phase) == (0.0, 0.5) and a.effector("gaze").vor == [0, 1]
+    assert [(e.name, e.spg_rhythm) for e in a.motors if e.spg] == [("arm_l", None), ("arm_r", None), ("leg_l", "legs"), ("leg_r", "legs")]
     assert [e.name for e in a.motors if e.orient] == ["gaze", "waist"] and [r.name for r in a.rewards] == ["face", "pain", "charge"]
     assert abs(SIM_CFG["gate_tonic_rate"] - 4.656402) < 1e-6 and (SIM_CFG["gate_tonic"], SIM_CFG["gate_tonic_clock"], SIM_CFG["gate_int"],
                                                                   SIM_CFG["gate_int_form"], SIM_CFG["gate_vigor"]) == (0.25, 4, 0.5, "error", 0.0)
@@ -949,7 +1037,7 @@ def test_the_g1_anatomy():
         acted["words"] += int(L._acted_last)
     assert list(w.applied[-1]) == names and all(acted[n] > 0 for n in names), acted
     assert tract_int >= 10 and L.perf == {} and L.motor[0]["perf"] is not None, (tract_int, L.perf)
-    assert any("leg_l" in a_.cord and "arm_r" in a_.cord for a_ in w.applied) and all("gaze" in a_.vor for a_ in w.applied)
+    assert all(any(n_ in a_.cord for a_ in w.applied) for n_ in ("arm_l", "arm_r", "leg_l", "leg_r")) and all("gaze" in a_.vor for a_ in w.applied)
     # THE DRIVES AS DISCLOSED, in the tract's own lessons (A41; 3.5's credit): on each tick it acted, G_t = the dopamine that followed
     # (from the tick after, elig_from: sum over k < 12 of 0.8^k) + 0.25 + 4.656 x the felt reward's mean at the 256-tick clock + 0.5 x its
     # performance error - its act's cost x (1 + (its own fatigue / 10)^2); the lesson's mean credit by hand

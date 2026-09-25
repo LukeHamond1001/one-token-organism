@@ -359,19 +359,35 @@ CEREB = dict(
 # every switch on (SIM_DESIGN.md 10's switches at birth; body/sim/anatomy.py SIM_CFG). The effectors declare where each acts (their
 # `spg`, `cry`, `orient` and `vor`, body/core/anatomy.py); the constants here are the body's, the same for every limb.
 REFLEX = dict(
-    # THE SPINAL PATTERN GENERATOR (A48; 3.7): a half-centre oscillator per limb that declares one (Brown 1911; per-limb rhythm
-    # generators, as the per-muscle oscillators that gave a simulated neonate its motor patterns: Kuniyoshi and Sangawa 2006), summed
-    # at the cord with the limb's own act like the grasp (A35). 1 = on
+    # THE SPINAL PATTERN GENERATOR (A48; 3.7; C54 closed): a half-centre generator per limb that declares one (Brown 1911; per-limb
+    # rhythm generators, as the per-muscle oscillators that gave a simulated neonate its motor patterns: Kuniyoshi and Sangawa 2006),
+    # summed at the cord with the limb's own act like the grasp (A35). ITS SHAPE, the measured newborn rhythm: each cycle is a short
+    # movement, flexion for spg_flex ticks then extension for spg_ext ticks, then a pause; the movement's ticks are fixed and the pause
+    # stretches, each cycle's length drawn from the body's seed (body/core/cord.py). 1 = on
     spg=0,
-    # its period in ticks: 7 (1.05 s). OURS, pending C54: the sources read for this build bound it and do not give it: newborns' limb
-    # movements last 94-4836 ms (1st-99th centile; Whitehead, Meek, Fabrizi and Smith 2020, 11 full-term newborns), and their
-    # spontaneous kicks alternate in 74% of kicks, in bouts of a median of 5 consecutive alternating kicks each within 3 s of the last
-    # (Sylos-Labini et al. 2020, PNAS 117:9604); Thelen and Fisher 1983's phase durations (J Mot Behav 15:353; newborn kicks' movement
-    # phases temporally constrained, their pauses not) and Thelen 1979's were not reachable for this build. A kick cycle of about a
-    # second, flexion then extension, is ours until C54 reads them; never set on a roll count
-    spg_period=7.0,
-    # its amplitude: the limb's gate's p_act x this, rad a tick (3.7: the gate's tonic readiness drives it, as the brainstem's drive
-    # enables the cord's generator; at the born p_act 0.2875, 0.026 rad a tick, about a small step's third); ours (the design's)
+    # THE MOVEMENT (the lead's decision on C54): flexion 2 ticks (0.30 s): newborns' flexion lasts "a little over 300 msec" in both kicks
+    # and steps (Thelen and Fisher 1982, Dev Psychol 18:760-775), about 320 ms at 2 and 4 weeks (Thelen and Fisher 1983, J Mot Behav
+    # 15:353-372); extension 3 ticks (0.45 s): 420 ms in steps and 586 ms in kicks (Thelen and Fisher 1982). Fixed: the movement's phases
+    # are temporally constrained (Thelen and Fisher 1983) and the pause is what varies (Thelen 1981, Dev Psychol 17:237-257: the pause's
+    # coefficient of variation about 140%). At the body's tick of 0.15 s (SIM_DESIGN.md 10), as every constant here is written in ticks
+    spg_flex=2,
+    spg_ext=3,
+    # THE CYCLE (the lead's decision on C54): each cycle's length, the movement and its pause, drawn per cycle from the body's seed from a
+    # log-normal of mean 3.56 s and standard deviation 1.93 s: newborns' kicking at birth, 3.56 +- 1.93 s (Hinnekens et al. 2023, eLife
+    # 12:e87463, n = 15); their stepping agrees: 3.29 +- 1.21 s there, 3.03 +- 1.07 s (La Scaleia et al. 2018), about 3.5 s (Sylos-Labini
+    # et al. 2017), 0.34 Hz (Dewolf et al. 2022). Clipped to 1.0-8.5 s: per-infant means from under 1 s to over 8 s (Thelen, Bradshaw and
+    # Ward 1981), Hinnekens et al.'s per-infant range 1.19-8.51 s. The log-normal's own mean and SD are the sources' (sigma 0.508, the
+    # median 3.13 s); the clip moves its 1.2% below 1.0 s and 2.5% above 8.5 s to the bounds, so the drawn cycles average 3.514 s with
+    # an SD of 1.742 s (the clipped law's moments, exactly), the pause 2.76 s on average, its coefficient of variation 0.63 (written
+    # down: below Thelen 1981's about 1.4; the cycle's moments are Hinnekens et al.'s, never fitted to the pause's). In ticks of 0.15 s,
+    # as written: 23.73, 12.87, 6.67 and 56.67
+    spg_cycle=3.56 / 0.15,
+    spg_cycle_sd=1.93 / 0.15,
+    spg_cycle_min=1.0 / 0.15,
+    spg_cycle_max=8.5 / 0.15,
+    # its amplitude: the limb's gate's p_act x this, rad a tick, + along the flexion joints' senses in the flexion, - in the extension
+    # (3.7: the gate's tonic readiness drives it, as the brainstem's drive enables the cord's generator; at the born p_act 0.2875, 0.026
+    # rad a tick, about a small step's third); ours (the design's), kept from R6h
     spg_amp=0.09,
     # THE BORN CRY (A47; 3.7; Jurgens 2002: the cry is innate and patterned by the periaqueductal grey): on a pain tick, or while the
     # charge is below cry_charge, the tract's cry posture is added to its targets in breath groups, its own act overriding it

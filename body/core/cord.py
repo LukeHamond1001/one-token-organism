@@ -11,15 +11,30 @@ one additive step per joint in the joint's own units (rad for the G1's joints, a
 which the world adds to the target its own act re-anchors (target = measured + own step + cord step), under the same clip. A joint
 the pattern does not move gets 0.
 
-THE SPINAL PATTERN GENERATOR (`_spg_step`; A48): a half-centre oscillator per limb (Brown 1911), its phase advancing each tick,
-phi = frac(phase0 + ticks / spg_period): in its flexion half (phi < 1/2) a step of +A along each of the limb's declared flexion joints in
-its flexion sense (the withdrawal's joints: a leg's hip pitch, knee and ankle pitch; an arm's shoulder pitch and elbow), in its
-extension half the opposite, A = the limb's gate's p_act this tick x spg_amp (the gate's tonic readiness drives it). An own act
-against the step on a joint cancels it there (its setting's step of the opposite sign); an own act with it, or holding, sums with it.
-The legs' born phases are half a cycle apart (newborns' kicks alternate in 74% of kicks: Sylos-Labini et al. 2020; Thelen 1979); a
-limb that declares no phase takes one drawn at birth from the body's seed (the organs' `spg_phase`: the arms, uncoupled from the legs
-and from each other, as the neonate model's oscillators were coupled only through the body: Kuniyoshi and Sangawa 2006; C54 open). No
-posture, balance or gravity term: it reads the tick, its phase, the gate's p_act and the own act, never a sense.
+THE SPINAL PATTERN GENERATOR (`_spg_step`; A48; C54 closed on the measured newborn rhythm): a half-centre generator per limb (Brown
+1911) whose cycle is A SHORT MOVEMENT FOLLOWED BY A PAUSE: flexion for spg_flex ticks (2: 0.30 s; Thelen and Fisher 1982, 1983),
+then extension for spg_ext ticks (3: 0.45 s; Thelen and Fisher 1982), then the pause until the cycle's end. In the flexion a step of
++A along each of the limb's declared flexion joints in its flexion sense (the withdrawal's joints: a leg's hip pitch, knee and ankle
+pitch; an arm's shoulder pitch and elbow), in the extension the opposite, in the pause none; A = the limb's gate's p_act this tick x
+spg_amp (the gate's tonic readiness drives it), so a movement moves the targets 2A toward flexion and 3A back. EACH CYCLE'S LENGTH IS
+DRAWN FROM THE BODY'S SEED (`_spg_cycle`): a log-normal of mean spg_cycle and SD spg_cycle_sd (3.56 and 1.93 s: newborns' kicking at
+birth, Hinnekens et al. 2023; physiology.py REFLEX gives every source), clipped to spg_cycle_min..spg_cycle_max (1.0-8.5 s); the
+movement's 5 ticks are fixed and only the pause stretches (the pause is what varies: Thelen 1981). A cycle's length is real (in
+ticks), its movement beginning at the first tick at or after the cycle's start, so the long run's cycles average the law's mean
+exactly, and a limb's movements begin at least 6 ticks apart (the shortest cycle is 6.67), each ending before the next. THE RHYTHM (`_spg_rhythm`, `_spg_where`): a limb keeps its own rhythm unless it names one
+(`Effector.spg_rhythm`) that limbs share: the first of them in the declared order leads it, the rhythm's cycles beginning at its
+movements, and each other moves its own phase's lag behind the leader's within every cycle, so the G1's legs (born at phases 0 and
+0.5, both naming "legs") share their drawn cycles and the right leg moves half of each cycle after the left (newborns' kicks alternate
+in 74% of kicks: Sylos-Labini et al. 2020; Thelen 1979); since the right leg's movement sits half-way through each cycle, its own
+movement-to-movement intervals are half of one cycle and half of the next (the same mean, a smaller spread). A limb that declares no
+phase takes one drawn at birth from the body's seed (the organs' `spg_phase`: the fraction of its first cycle lived at birth) and keeps
+a rhythm of its own (the arms: uncoupled from the legs and from each other, as the neonate model's oscillators were coupled only
+through the body: Kuniyoshi and Sangawa 2006). Cycle n of the rhythm led by motor effector r is drawn from a generator of its own
+seeded spg_seed + (the motor effectors' count) x n + r (the organs' buffer, drawn at birth from the body's seed), so the rhythm is a
+function of the tick alone: it draws nothing from the life's streams, it goes on through the night, and after a load it is found again
+from birth, where the save left it. An own act against the step on a joint cancels it there (its setting's step of the opposite sign);
+an own act with it, or holding, sums with it. No posture, balance or gravity term: it reads the tick, its rhythm, the gate's p_act and
+the own act, never a sense.
 
 THE BORN CRY (`_cry_step`; A47; Jurgens 2002): while the body felt pain this tick (the named reward source's term below 0) or its charge
 is below cry_charge, the tract's declared cry posture is added to its targets in breath groups: cry_expire ticks of the posture (the
@@ -38,6 +53,8 @@ learned proposal can outweigh it and it fades by learning; the gain is the amygd
 born gate input (`_orient_in`): 1 on a tick a cue appeared (a sound's or a sudden change's onset; the face's fire after a tick without
 it). THE VOR (`_vor_acts`): the body's born reflex on the gaze's window, handed to the world with the tick's acts (Acts.vor: the axes,
 the born gain, the quick phase's jump) for it to apply at its samples of the gyro."""
+import math
+
 import torch
 
 from .physiology import REFLEX
@@ -57,13 +74,18 @@ class CordMixin:
     def _cord(self, i, frame, p_act, dig, reflex):
         """THE CORD'S PATTERNS FOR MOTOR EFFECTOR i THIS TICK: the per-joint additive steps its spinal pattern generator and its born cry
         add below the gate, after the own act's cancellation, or None when neither adds anything. A tick its reflex (the withdrawal)
-        took has none: the reflex takes the limb"""
+        took has none: the reflex takes the limb, and the generator's rhythm runs on under it (its place this tick is kept for the
+        instruments, st["now"]["spg"]: +1 flexion, -1 extension, 0 the pause)"""
         e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
+        spg_on = bool(e.spg) and bool(int(self._reflex_const("spg")))
+        where = self._spg_where(i, e, st) if spg_on else None
+        if spg_on and st.get("now") is not None:
+            st["now"]["spg"] = where
         if reflex:
             return None
         out = None
-        if e.spg and int(self._reflex_const("spg")):
-            s_ = self._spg_step(i, e, st, p_act, dig)
+        if spg_on:
+            s_ = self._spg_step(e, where, p_act, dig)
             if s_ is not None:
                 out = s_; st["cord_n"]["spg"] = int(st["cord_n"].get("spg", 0)) + 1
         if e.cry and int(self._reflex_const("cry")):
@@ -74,21 +96,70 @@ class CordMixin:
         return out
 
     def _spg_phase0(self, i, e):
-        """the limb's born phase: its declaration's, else the one drawn at birth from the body's seed (the organs' spg_phase)"""
+        """the limb's born phase (the fraction of its cycle lived at birth, a cycle beginning with its movement): its declaration's, else
+        the one drawn at birth from the body's seed (the organs' spg_phase)"""
         if e.spg_phase is not None:
             return float(e.spg_phase)
         return float(self.m.spg_phase[i - 1])
 
-    def _spg_step(self, i, e, st, p_act, dig):
-        """the half-centre oscillator's step this tick (the module's doc): +-A along each declared flexion joint, cancelled where the own
-        act steps that joint against it; None when every step is 0"""
-        per = float(self._reflex_const("spg_period"))
-        phi = (self._spg_phase0(i, e) + float(self.ticks) / per) % 1.0
-        half = 1.0 if phi < 0.5 else -1.0                              # the flexion half, then the extension half
+    def _spg_rhythm(self, i, e):
+        """THE RHYTHM LIMB i KEEPS (the module's doc): (r, the leader's born phase, this limb's lag within each cycle), r the place among
+        the motor effectors of the limb that leads it (the first in the declared order that names the rhythm; the limb itself when it
+        names none), the lag (the leader's phase less its own, a fraction of the cycle: 0 for the leader, 0.5 for the G1's right leg)"""
+        motors = self.anatomy.motors
+        r = i - 1
+        if e.spg_rhythm is not None:
+            r = next(k for k, x in enumerate(motors) if x.spg and x.spg_rhythm == e.spg_rhythm)
+        lead = self._spg_phase0(r + 1, motors[r])
+        return r, lead, (lead - self._spg_phase0(i, e)) % 1.0
+
+    def _spg_cycle(self, r, n):
+        """CYCLE n OF THE RHYTHM LED BY MOTOR EFFECTOR r (0 is the one under way at birth): its length in ticks, drawn from a generator
+        of its own seeded spg_seed + (the motor effectors' count) x n + r (a seed per cycle and rhythm; the body's seed through the organs'
+        spg_seed), one standard normal z: exp(mu + sigma z), the log-normal whose mean and SD are spg_cycle and spg_cycle_sd (sigma^2 =
+        ln(1 + (sd / mean)^2), mu = ln(mean) - sigma^2 / 2), held to spg_cycle_min..spg_cycle_max"""
+        mean, sd = float(self._reflex_const("spg_cycle")), float(self._reflex_const("spg_cycle_sd"))
+        key = int(self.m.spg_seed) + len(self.anatomy.motors) * int(n) + int(r)
+        z = float(torch.randn((), generator=torch.Generator().manual_seed(key), dtype=torch.float64))
+        s2 = math.log1p((sd / mean) ** 2)
+        x = math.exp(math.log(mean) - 0.5 * s2 + math.sqrt(s2) * z)
+        return min(max(x, float(self._reflex_const("spg_cycle_min"))), float(self._reflex_const("spg_cycle_max")))
+
+    def _spg_where(self, i, e, st):
+        """WHERE LIMB i'S GENERATOR STANDS THIS TICK: +1 in its movement's flexion, -1 in its extension, 0 in the pause. Its rhythm's
+        cycle n runs from s_n (s_0 = -the leader's born phase x its length, s_n+1 = s_n + its length) and the limb's movement in it
+        begins at the first tick at or after s_n + its lag x the cycle's length; the limb stands in the movement that began last. Kept
+        in st["spg_cyc"] (the cycle under way and the next), a function of the tick: found from birth when none is kept (a new body, a
+        load), then advanced one cycle at a time"""
+        t = int(self.ticks)
+        cy = st.get("spg_cyc")
+        if cy is None or int(cy["t"]) > t:
+            r, lead, lag = self._spg_rhythm(i, e)
+            L0 = self._spg_cycle(r, 0); s0 = -lead * L0
+            cy = {"r": r, "lag": lag, "n": 0, "s": s0, "L": L0, "m": math.ceil(s0 + lag * L0), "next": None, "t": t}
+            st["spg_cyc"] = cy
+        while True:
+            if cy["next"] is None:
+                n1 = int(cy["n"]) + 1; s1 = float(cy["s"]) + float(cy["L"]); L1 = self._spg_cycle(int(cy["r"]), n1)
+                cy["next"] = (n1, s1, L1, math.ceil(s1 + float(cy["lag"]) * L1))
+            n1, s1, L1, m1 = cy["next"]
+            if m1 > t:
+                break
+            cy.update(n=n1, s=s1, L=L1, m=m1, next=None)              # the next movement has begun: its cycle is the one under way
+        cy["t"] = t
+        d = t - int(cy["m"])
+        F, E = int(self._reflex_const("spg_flex")), int(self._reflex_const("spg_ext"))
+        return 1 if 0 <= d < F else (-1 if F <= d < F + E else 0)
+
+    def _spg_step(self, e, where, p_act, dig):
+        """the generator's step this tick (the module's doc): +-A along each declared flexion joint in the movement's flexion (+1) or
+        extension (-1), cancelled where the own act steps that joint against it; None in the pause or when every step is 0"""
+        if not where:
+            return None
         A = float(p_act) * float(self._reflex_const("spg_amp"))
         out = [0.0] * len(e.factors); moved = False
         for j, sg in e.spg.items():
-            step = half * float(sg) * A
+            step = float(where) * float(sg) * A
             own = self._setting_sign(dig[int(j)], e.factors[int(j)])
             if own != 0 and (own > 0) != (step > 0):
                 continue                                               # an own act against the step cancels it

@@ -715,10 +715,14 @@ class Organs(nn.Module):
             # THE PATTERN GENERATORS' BORN PHASES (the core refactor's step R6h, docs/SIM_DESIGN.md 3.7, A48; body/core/cord.py): when a motor
             # effector declares a spinal pattern generator, one phase per motor effector (a fraction of the cycle) drawn from a generator of
             # its own seeded by the body's seed, for those whose declaration names none (the arms: no coupling written between them and the
-            # legs); a buffer, saved with the body. The diary declares none, so its organs are built as they always were
+            # legs); a buffer, saved with the body. The diary declares none, so its organs are built as they always were. C54: then, from
+            # the same generator, the rhythms' seed (`spg_seed`, below 2^31): each rhythm's cycle n is drawn from a generator of its own
+            # seeded spg_seed + (the motor effectors' count) x n + (its leading limb's place), so every cycle of every rhythm has a seed of
+            # its own and the rhythm is a function of the tick alone (body/core/cord.py `_spg_cycle`); a buffer, saved with the body
             if any(getattr(e, "spg", None) for e in motor):
                 g_spg = torch.Generator().manual_seed(int(born_seed) + 67867967)
                 self.register_buffer("spg_phase", torch.rand(len(motor), generator=g_spg, dtype=torch.float64))
+                self.register_buffer("spg_seed", torch.randint(0, 2 ** 31, (), generator=g_spg, dtype=torch.long))
         # THE CHANNELS' BORN CODES (the core refactor's step R6h, docs/SIM_DESIGN.md 3.4; `BornCode`): each vector channel whose organ is
         # encs.<its name> has its fixed code built here, in the channels' order, from a generator of its own seeded by the body's seed (the
         # global random stream untouched), after every organ above; the diary's channels name the lexicon and face_in, so none is built
