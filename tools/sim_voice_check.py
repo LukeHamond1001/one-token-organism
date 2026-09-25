@@ -29,8 +29,10 @@ RMS behind SYNTH_RMS, is a level, written into body/sim/voice/synth.py by hand a
              and its foils, "where is the C X?" of each held pair's noun) each test word said at every step, its timeline taken
              (lang/stimuli.timeline); the form's timeline the one the most words reach with every tick loud or silent, each
              word's rate the step nearest its natural one and its pitch matching its contour to the form's (TRIAL_F0); the
-             words unmatched, with why; each word's words-channel symbols. Writes the table the conduct reads
-             (body/sim/lang/trial_lines.json)
+             words unmatched, with why; each word's words-channel symbols; each form's one carrier recording (its first
+             matched word's sentence, P3's thirteenth round), every matched sentence spliced onto it and checked one
+             timeline, sample for sample the same before its test word's onset tick (lang/stimuli.splice). Writes the table
+             the conduct reads (body/sim/lang/trial_lines.json)
 
 Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N] [--growth] [--peak [--write]] [--trial
      [--write]]
@@ -59,7 +61,7 @@ sys.path.insert(0, ROOT)
 from body.sim import ears as E  # noqa: E402
 from body.sim.lang import lexicon as LX  # noqa: E402
 from body.sim.voice import synth as V  # noqa: E402
-from body.sim.voice.playback import CUT_MAX, Utterance  # noqa: E402
+from body.sim.voice.playback import CUT_MAX, TICK, Utterance  # noqa: E402
 from body.sim import tract as T  # noqa: E402
 
 FALLBACK = ["look at the duck.", "where is the ball?", "here is your bottle.", "hi pip. mama is here.", "yes. the duck!",
@@ -546,8 +548,11 @@ def trial_table(cache, write=False):
     nearest its natural rate, then the pitch that best matches its contour to the form's (the median of its words' 10th, 50th
     and 90th percentile F0; the name's own for its foils, the name said as she always says it), within TRIAL_F0; a rate is
     tried only within TRIAL_RATE_SPAN of the natural one (the span her own registers' rates run). A word that reaches no step on the timeline, or whose contour cannot be matched,
-    is unmatched, with why. Reports each form's words, their channel (a birth word's token, or its letters) and which pairs
-    share it; writes the table the conduct reads (body/sim/lang/trial_lines.json)."""
+    is unmatched, with why. The form's carrier (P3's thirteenth round): its first matched word's sentence, whose samples before
+    the test word's onset tick every sentence of the form takes (lang/stimuli.splice), each matched sentence so spliced checked
+    one timeline with the others (stimuli.same, their samples before the tick among it). Reports each form's words, their
+    channel (a birth word's token, or its letters) and which pairs share it; writes the table the conduct reads
+    (body/sim/lang/trial_lines.json)."""
     from body.sim.lang import consts as K                                   # noqa: PLC0415
     from body.sim.lang import stimuli as ST                                 # noqa: PLC0415
     from body.sim.lang import templates as TP                               # noqa: PLC0415
@@ -576,7 +581,7 @@ def trial_table(cache, write=False):
         for w in words:
             for r in reps:
                 c = render(w, r, nat_p)
-                tl = ST.timeline(c.words, len(c.pcm), c.pcm, slot=slot)
+                tl = ST.timeline(c.words, len(c.pcm), c.pcm, slot=slot, pre=False)
                 clips[(w, r)] = (c, tl)
                 if "?" in tl["sound"]:
                     continue
@@ -607,7 +612,7 @@ def trial_table(cache, write=False):
                 p0 = round(((1 + nat_p / 100.0) * k_ - 1) * 100)
                 for p in (p0 - 1, p0, p0 + 1):
                     c = render(w, r, float(p))
-                    tl = ST.timeline(c.words, len(c.pcm), c.pcm, slot=slot)
+                    tl = ST.timeline(c.words, len(c.pcm), c.pcm, slot=slot, pre=False)
                     ct = f0_contour(c.pcm[c.words[slot][1]:c.words[slot][2]])
                     if json.loads(json.dumps(tl, sort_keys=True)) == tl_ref and ct and _dev(ct, ref) < best_d:
                         best_p, best_d, best_c = float(p), _dev(ct, ref), ct
@@ -643,9 +648,11 @@ def trial_table(cache, write=False):
         rms = np.median([v["rms"] for v in rec.values()]) if rec else 1.0
         for v in rec.values():
             v["rms"] = round(v["rms"] / rms, 3)
+        # the form's one carrier recording (P3's thirteenth round): its first matched word's sentence (none before a name)
+        car = sorted(rec)[0] if rec and tl_ref["words"][slot][0] > 0 else None
         out[key] = dict(text=text, register=reg, emphasis="{w}" if emph else TP.words(text.replace("{w}", "x"))[-1], slot=slot,
                         natural=dict(rate=nat_r, pitch=nat_p), timeline=tl_ref, f0=[round(v, 1) for v in ref],
-                        words=dict(sorted(rec.items())), unmatched=dict(sorted(unmatched.items())))
+                        words=dict(sorted(rec.items())), unmatched=dict(sorted(unmatched.items())), carrier=car)
         chans = {}
         for w in rec:
             chans.setdefault("a token" if rec[w]["channel"] == 1 else f"{rec[w]['channel'] - 1} letters", []).append(w)
@@ -655,6 +662,16 @@ def trial_table(cache, write=False):
         print("   the words channel: " + "; ".join(f"{k}: {', '.join(v)}" for k, v in sorted(chans.items())))
         for w, why in unmatched.items():
             print(f"   unmatched {w}: {why}")
+        if car is not None:                                             # every sentence on it: one timeline, sample for
+            at = tl_ref["words"][slot][0] * TICK                        # sample the same before its test word's onset tick
+            cc = render(car, rec[car]["rate"], rec[car]["pitch"])
+            tls = {}
+            for w, v in rec.items():
+                sc = ST.splice(cc, render(w, v["rate"], v["pitch"]), at)
+                tls[w] = ST.timeline(sc.words, len(sc.pcm), sc.pcm, slot=slot)
+            why = ST.same(list(tls.values()), list(tls))
+            print(f"   its one carrier: {car!r}'s sentence, every sample before tick {tl_ref['words'][slot][0]} "
+                  f"({at} samples) taken by each: " + ("one timeline" if why is None else f"NOT one timeline: {why}"))
     print(f"  the engine's per-word rate steps (first rate of each, %): {steps}; {time.perf_counter() - t0:.0f} s")
     if write:
         info = cache._server().info()
@@ -664,6 +681,9 @@ def trial_table(cache, write=False):
                     band_rule="a tick loud when its RMS is above the first (dB of full scale), silent when its loudest 10 ms is "
                               "below the second, else neither (a timeline no level makes one)",
                     rate_span=K.TRIAL_RATE_SPAN,
+                    carrier="each form's one carrier recording (P3's thirteenth round): its first matched word's sentence, "
+                            "whose samples before the test word's onset tick every sentence of the form takes "
+                            "(lang/stimuli.splice: a 10 ms raised cosine into the sentence's own at that tick)",
                     rule="a form's timeline: the one the most test words reach (every tick loud or silent) at a rate within "
                          "the span of her registers' rates of its natural one (the name: said at its own; ties: the least "
                          "change of rate); each word's rate the step nearest its natural rate, its pitch the one matching its "

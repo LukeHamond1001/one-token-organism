@@ -306,15 +306,22 @@ class SpokenMark(SynthError):
 def words_of(pcm, sr_in, marks, text):
     """the engine's word marks -> [(word, first sample, end sample)] at 16 kHz. A mark whose text holds no letter is refused
     (SpokenMark): the parent's lines hold only words and ". ? !", so such a mark is punctuation the engine read as a word."""
-    e = frame_rms(pcm)
-    thr = e.max() * 10 ** (WORD_END_DB / 20) if e.max() > 0 else np.inf
-    active = e > thr
     ws = []
     for fr, loc, ln in marks:
         w = _letters(text[loc:loc + ln])
         if not w:
             raise SpokenMark(f"the engine read {text[loc:loc + ln]!r} as a word in {text!r}")
         ws.append((w, int(round(fr * SR / sr_in))))
+    return ends_of(pcm, ws)
+
+
+def ends_of(pcm, ws):
+    """[(word, first sample)] of a 16 kHz clip -> [(word, first sample, end sample)]: each word's end at its last 10 ms frame
+    within 40 dB of the clip's loudest (WORD_END_DB) before the next word's first sample (words_of's rule; a formal trial's
+    spliced sentence finds its words' ends by it again, lang/stimuli.splice)."""
+    e = frame_rms(pcm)
+    thr = e.max() * 10 ** (WORD_END_DB / 20) if e.max() > 0 else np.inf
+    active = e > thr
     out = []
     for i, (w, on) in enumerate(ws):
         nxt = ws[i + 1][1] if i + 1 < len(ws) else len(pcm)

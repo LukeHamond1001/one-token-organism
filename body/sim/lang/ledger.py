@@ -30,10 +30,16 @@ THE RECORD. One JSON line per event, keys sorted, in the life's folder (ledger.j
               words' shapes, the words channel held to it or not), the never-taught items presented, and what it scores
               (each of its two things that is a fresh never-taught item scores for its word, named or the other named; the
               name test for its name, its name or a foil said)
-  trial_outcome  met (the child's first look or reach on the target; for the name test its turn to her face), missed (on the
-              distractor; no turn), none (no look to either: counted neither way), or void (logged with why: it already attended
-              one at the onset, both at once, her attention log showed anything but her mouth moving, the world stopped her
-              sentence; never the child's voice: P3's eleventh round)
+  trial_outcome  met (the child's first look or reach on the target; for the name test its turn to her face in its window),
+              missed (on the distractor; for the name test no turn through its window and the span a foil's "no turn" is held
+              to), none (no look to either; for the name test a turn after its window within that span), or void (logged with
+              why: it already attended one at the onset, both at once, her attention log showed anything but her mouth moving,
+              the world stopped her sentence, its pain, distress or hit; never the child's voice: P3's eleventh round). Scored
+              BY INTENTION TO TREAT (P3's thirteenth round): every trial whose window opened is scored, a none or a void from
+              its onset's tick on against it (neither on its thing nor where the word sent it; the row's "scored"); only an
+              end before that tick, and the onset's own reading of where the child already looks, which nothing of the draw
+              can reach (her reading is held 3 ticks, and all she sounds before the test word's onset tick is one carrier
+              recording, sample for sample: lang/stimuli.splice), count for nothing
   displayed   a probe dropped after its two things were brought into the child's view, never said: the never-taught items it
               displayed, each one presentation more (fail-closed: her follow-in naming may label a thing in its new place)
 
@@ -46,21 +52,30 @@ EACH WORD'S STANDING (4.8), from those events alone:
                 (i)  of the trials naming it, its first look on its thing, at least UNDERSTOOD_MIN = 5 times;
                 (ii) over all of them, its first look where the word said sent it (on its thing when it was named, on the
                      other when the other was).
-              (ii) is chance by counterbalancing made exact. Which is named is a fair coin her trial stream draws fresh each
-              trial, so for a child whose first look does not depend on the word said (a favourite of either thing at any
-              strength, one that grows or shifts, a child that repeats whatever her smiles rewarded before) each trial goes
-              where the word sent it with probability exactly 1/2 whatever came before: the count is Binomial(n, 1/2), no rate
-              estimated (the design's randomization test; a martingale, so it holds whatever the child learns between
-              trials). (i) keeps the credit on this word: a child that knows only the other word looks at the other thing when
-              that is named, which (ii) alone would credit here. Together they are the design's "50%, or its yoked rate where
-              higher" (the yoked rate: its first looks on its thing when the other was named), tested on one stretch of trials
-              instead of against a rate carried from other times and treated as known (P3's ninth verifier: a child whose
-              favourite, or whose turning to any voice, grew over its life reached "understood" far more often than a fair
-              coin). The name: (ii) over its last 20 name-test trials (a turn to her face after its name, no turn after a
-              foil in the same voice: Mandel, Jusczyk and Pisoni 1995), with at least 5 turns after its name; a child that turns
-              to any voice, at any rate and however it changes, meets (ii) on exactly half. Only looks, reaches and turns meet
-              a trial: a word never does. Re-tested after every trial and kept once reached (4.8, C64: a child whose looks do
-              not depend on the word reaches it at most as often as a fair coin's trials reach (ii) alone)
+              (ii) is chance by counterbalancing, made exact by intention to treat. Which is named is a fair coin her trial stream
+              draws fresh each trial, and every trial whose window opened is scored, its none or void against it, so for a child
+              whose first look's thing does not depend on the word said (a favourite of either thing at any strength, one that
+              grows or shifts, a child that repeats whatever her smiles rewarded before), whatever it times its looks, hits, pain
+              or distress from (her sound 10 ms by 10 ms, at any level, through its own ears: P3's twelfth verifier), each trial
+              goes where the word sent it with probability at most 1/2 whatever came before, exactly 1/2 when it always looks in
+              the window: the count is at most Binomial(n, 1/2), no rate estimated (the design's randomization test; a martingale,
+              so it holds whatever the child learns between trials). A trial and the same trial with the other thing named never
+              both go where the word sent them: its timing can move a met to a none, never to a met for the other thing. (Scoring
+              only met and missed had let such a child choose which trials were scored: a look 16 ticks after its ears last heard
+              her above 33 dB SPL met every "ball" trial and fell after every "car" trial's window, "ball" understood in 12 of 12
+              lives.) (i) keeps the credit on this word: a child that knows only the other word looks at the other thing when that
+              is named, which (ii) alone would credit here. Together they are the design's "50%, or its yoked rate where higher"
+              (the yoked rate: its first looks on its thing when the other was named), tested on one stretch of trials instead of
+              against a rate carried from other times and treated as known (P3's ninth verifier: a child whose favourite, or whose
+              turning to any voice, grew over its life reached "understood" far more often than a fair coin). The name: (ii) over
+              its last 20 name-test trials (a turn to her face in its window after its name, no turn after a foil through its
+              window and the span beyond it that the name's own sound could shift a turn by: Mandel, Jusczyk and Pisoni 1995),
+              with at least 5 turns after its name; a child that turns to any voice, at any rate and however it changes, meets
+              (ii) on at most half, and so does one that turns at any latency from any moment of her sound (P3's thirteenth round:
+              timed from the moment her mouth last opened above -31 dB, such a child's turn had fallen in the window after "pip."
+              and just after it after every foil, "pip" understood in 20 of 20 lives). Only looks, reaches and turns meet a trial:
+              a word never does. Re-tested after every trial and kept once reached (4.8, C64: a child whose looks do not depend on
+              the word reaches it at most as often as a fair coin's trials reach (ii) alone)
   says        (per channel) the child says X with X where she reads it looking, in its hand or reached toward ("mama": she reads
               it looking at her face, or she is away), or right after its act (an act word: the act within the last 40 ticks), or,
               for a word with no referent or act ("hi", "more"), in context: among the words she expected then (A27's set: the
@@ -94,6 +109,8 @@ from . import templates as TP
 from .lexicon import NAME, PARENT_NAME
 
 ACT_WORDS = {"roll": ("rolled",), "sit": ("sat",), "give": ("gave",), "up": ("sat",), "down": ("fell",), "look": ()}
+SCORING = "itt"                           # its trials scored by intention to treat (P3's thirteenth round): a save without it is
+                                          # an older rule's, its record started again (load_state)
 
 
 class LedgerDiverged(RuntimeError):
@@ -121,16 +138,19 @@ def binom_tail(k, n, p0=0.5):
 def two_part(seq, name=False, last=None):
     """the ledger's test (4.8) over a record of scored trials [[named, on], ...] in their order (named: 1 when its word was said
     (the name test: its name), 0 when the other thing's (a foil); on: 1 when its first look was on its thing (its turn to her
-    face)), over the last `last` of them (all when None) -> dict(n, named, on_named, where, p_named, p_where): (i) its first
-    looks on its thing when it was named, against 1/2; (ii) its first looks where the word said sent it (named and on, or not
-    named and not on), against 1/2. Both are one-sided binomial tails; (ii) is exact for any child whose look does not depend on
-    the word said (which is named is a fair coin drawn fresh each trial), (i) is not needed for the name (its foils are no
-    words)."""
-    w = [(int(a), int(b)) for a, b in (seq if last is None else seq[-int(last):])]
+    face in its window), 0 when on the other (no turn through the name test's span), None when neither (a none or a void after
+    its window opened, scored by intention to treat: P3's thirteenth round)), over the last `last` of them (all when None) ->
+    dict(n, named, on_named, where, p_named, p_where): (i) its first looks on its thing when it was named, against 1/2; (ii) its
+    first looks where the word said sent it (named and on, or not named and on the other; a None never), against 1/2. Both are
+    one-sided binomial tails; (ii) is at most chance for any child whose look's thing does not depend on the word said, however
+    it is timed (which is named is a fair coin drawn fresh each trial, and no trial is left out by what the child did after it
+    opened), (i) is not needed for the name (its foils are no words)."""
+    w = [(int(a), None if b is None else int(b)) for a, b in (seq if last is None else seq[-int(last):])]
     named = [on for nm, on in w if nm]
-    where = sum(int(on == nm) for nm, on in w)
-    return dict(n=len(w), named=len(named), on_named=sum(named), where=where,
-                p_named=None if name else binom_tail(sum(named), len(named), K.CHANCE_2AFC),
+    where = sum(int(on is not None and on == nm) for nm, on in w)
+    on_named = sum(int(on == 1) for on in named)
+    return dict(n=len(w), named=len(named), on_named=on_named, where=where,
+                p_named=None if name else binom_tail(on_named, len(named), K.CHANCE_2AFC),
                 p_where=binom_tail(where, len(w), K.CHANCE_2AFC))
 
 
@@ -393,24 +413,29 @@ class Ledger:
         """a never-taught item's presentations in trials so far (A28: a probe only on its first 3)."""
         return int(self.items.get(item, 0))
 
-    def trial(self, t, form, target, distractor, open_at, window, said, sides=None, score=(), items=(), stimulus=None):
+    def trial(self, t, form, target, distractor, open_at, window, said, sides=None, score=(), items=(), stimulus=None,
+              span=None):
         """a formal trial's test sentence said at t -> its id. target, distractor: dict(id, word) (distractor None for the name
         test); open_at: the target word's onset (its window's first tick); said: the word said there (its name or a foil, for
         the name test); score: [[key, "trials" | "yoked", value if met, value if missed]], one for each of its things that is a
         fresh never-taught item ("trials": its word the one said; "yoked": the other's; the value 1 when the first look is on
         that thing: for the name test, its turn to her face); items: the never-taught items it presents (each one presentation
         more); stimulus: its sentences' one timeline (their ticks, the test word's onset tick, the sentences, their test words'
-        shapes, whether the words channel was held to it: P3's twelfth round)."""
+        shapes, whether the words channel was held to it: P3's twelfth round); span: the name test's, the ticks from its onset
+        a foil's "no turn" is held to (P3's thirteenth round)."""
         if form not in K.TRIAL_FORMS:
             raise ValueError(f"not a trial form: {form!r}")
         tid = self.n
         for it in items:
             self.items[it] = self.items.get(it, 0) + 1
         sc = [list(x) for x in score]
-        self.formal[str(tid)] = dict(id=tid, form=form, score=sc)
-        self._rec(dict(ev="trial", t=int(t), form=form, target=target, distractor=distractor, said=said,
-                       sides=None if sides is None else list(sides), open=int(open_at), window=int(window), score=sc,
-                       items=list(items), stimulus=stimulus))
+        self.formal[str(tid)] = dict(id=tid, form=form, score=sc, open=int(open_at))
+        row = dict(ev="trial", t=int(t), form=form, target=target, distractor=distractor, said=said,
+                   sides=None if sides is None else list(sides), open=int(open_at), window=int(window), score=sc,
+                   items=list(items), stimulus=stimulus)
+        if span is not None:
+            row["span"] = int(span)
+        self._rec(row)
         return tid
 
     def displayed(self, t, form, items, why):
@@ -421,28 +446,37 @@ class Ledger:
             self.items[it] = self.items.get(it, 0) + 1
         self._rec(dict(ev="displayed", t=int(t), form=form, items=list(items), why=why))
 
-    def trial_outcome(self, t, tid, result, why=None):
-        """a formal trial's result: "met", "missed", "none" or "void" (with why). Met and missed score it: each of its words'
-        record (named or not, its first look on its thing or not), its form's record (section 12's, the trial once); none and
-        void count for nothing."""
+    def trial_outcome(self, t, tid, result, why=None, at_onset=False):
+        """a formal trial's result: "met", "missed", "none" or "void" (with why), scored by intention to treat (P3's thirteenth
+        round): met and missed, and a none or a void ended on its window's first tick (the onset's) or after it, score it: each
+        of its words' record (named or not; its first look on its thing, on the other, or None: neither, never where the word
+        sent it), its form's record (section 12's, the trial once). Counted for nothing: a void ended before the onset, and the
+        onset's own reading of where the child already looks (at_onset: on one of the two, on her face, or not seeing them or
+        her), which her reading, held 3 ticks, took before the test word began; all of it on the carrier every sentence the
+        draw could give shares sample for sample, so which trials are scored never depends on which was named, whatever the
+        child did after it began."""
         tr = self.formal.pop(str(tid), None)
         if tr is None:
             raise ValueError(f"no open trial {tid!r}")
         if result not in ("met", "missed", "none", "void"):
             raise ValueError(f"not a trial's result: {result!r}")
-        if result in ("met", "missed") and tr["score"]:
+        opened = tr.get("open")                  # (an open trial of an older save: its none or void counts for nothing)
+        scored = result in ("met", "missed") or (opened is not None and int(t) >= int(opened) and not at_onset)
+        if scored and tr["score"]:
             where = None
             for key, lst, on_met, on_missed in tr["score"]:
                 st = self._w(key)
-                named, v = int(lst == "trials"), int(on_met if result == "met" else on_missed)
+                named = int(lst == "trials")
+                v = int(on_met) if result == "met" else int(on_missed) if result == "missed" else None
                 st[lst].append(v)
                 st["seq"].append([named, v])
-                where = int(v == named)          # its look where the word said sent it: the same for each of its things
+                where = int(v is not None and v == named)   # where the word said sent it: the same for each of its things
                 if st["understood_at"] is None and self._understood(key, st):
                     st["understood_at"] = int(t)
             fresh_named = int(any(x[1] == "trials" for x in tr["score"]))
             self.forms.setdefault(tr["form"], []).append([fresh_named, where, sorted({x[0] for x in tr["score"]})])
-        self._rec(dict(ev="trial_outcome", t=int(t), trial=int(tid), form=tr["form"], result=result, why=why))
+        self._rec(dict(ev="trial_outcome", t=int(t), trial=int(tid), form=tr["form"], result=result, why=why,
+                       scored=bool(scored)))
         return result
 
     # ------------------------------------------------------------------ standing
@@ -504,7 +538,7 @@ class Ledger:
     def state(self):
         return json.loads(json.dumps(dict(words=self.words, trials=self.trials, formal=self.formal, items=self.items,
                                           forms=self.forms, n=self.n, chain=self.chain, recent_events=self.recent_events,
-                                          voicing=self.voicing, size=self.size)))
+                                          voicing=self.voicing, size=self.size, scoring=SCORING)))
 
     def load_state(self, s):
         s = json.loads(json.dumps(s))
@@ -519,9 +553,14 @@ class Ledger:
                 st.setdefault(k_, v)
             st.pop("base", None)
             st.pop("forms", None)
-        self.trials = [tr for tr in self.trials if not tr.get("base")]
+            if s.get("scoring") != SCORING:               # a save before P3's thirteenth round scored its trials without
+                st["seq"], st["trials"], st["yoked"] = [], [], []   # their nones and voids, which a child could choose by
+                st["understood_at"] = None                # timing its acts from her sound: its record starts again, and
+        self.trials = [tr for tr in self.trials if not tr.get("base")]        # no "understood" of it is kept (fail-closed)
         self.formal, self.items = dict(s.get("formal", {})), dict(s.get("items", {}))
         self.forms = {f: [list(r) for r in rows] for f, rows in dict(s.get("forms", {})).items()}
+        if s.get("scoring") != SCORING:                   # (section 12's rows the same)
+            self.forms = {}
         self.recent_events = [tuple(e) for e in s["recent_events"]]
         self.voicing = s["voicing"]
         self.size = s["size"]
