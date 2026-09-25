@@ -12,6 +12,12 @@ C54 (the generator's measured newborn rhythm, a movement of 2 + 3 ticks and a pa
 each arm's own) the cycles drawn over the run (every cycle whose start fell inside it: their number, mean and SD in seconds, shortest,
 longest, the share held at 1.0 s and at 8.5 s), per limb the share of ticks in flexion, extension and the pause, and its own
 movement-to-movement intervals (the right leg's are half of one cycle and half of the next).
+THE CEREBELLUM (on in SIM_CFG, the G1's mossy list): the stub calls it below each tick as SimWorld's contract says (every 10 ms, 15 a
+tick): the mossy numbers in the anatomy's order (the efference copy from the tick's acts, every other number drawn about its declared
+middle within its half-range from the stub's own stream), a teacher at each readout's joint (drawn within +-5 N m) under the model's
+torque limits, and at sub-step 0 a slip and a turn; so every sub-step runs the whole law (the leak, the lesson, the bound; the
+flocculus once a tick). It writes down the law's wall time a tick inside the hook (the organ's cost; the stub's building of the numbers
+is the world's and is timed apart) and the organ's lessons.
 usage: nice -n 19 python3 tools/motor_units.py [--ticks 3000] [--d 512] [--seed 1] [--unbatched 1]"""
 import collections
 import math
@@ -25,8 +31,14 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.ins
 import torch  # noqa: E402
 
 from body.life import Life  # noqa: E402
-from body.core.world import Frame, SimWorld, WorldLoop  # noqa: E402
-from body.sim.anatomy import SIM_CFG, SIZES, SimAnatomy, born_table  # noqa: E402
+from body.core.world import Frame, SimWorld, SubFrame, WorldLoop  # noqa: E402
+from body.sim.anatomy import BODY_JOINTS, CEREB_JOINTS, SIM_CFG, SIZES, SimAnatomy, born_table  # noqa: E402
+
+# the model's own torque limits at the cerebellum's readouts (Menagerie's g1_with_hands.xml, each joint's actuatorfrcrange; 3.2): the
+# stub's limit this tick, with no weakness (the charge full)
+LIMIT = dict(zip(BODY_JOINTS, (88, 50, 50) + (25,) * 5 + (5, 5) + (25,) * 5 + (5, 5) + (2.45, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4) * 2
+                 + (88, 139, 88, 139, 50, 50) * 2))
+assert len(LIMIT) == len(BODY_JOINTS) == 43
 
 
 def arg(name, default):
@@ -45,7 +57,7 @@ class Quiet(SimWorld):
     pain, no word: the born loop's draws alone decide what it does"""
 
     def __init__(self, seed):
-        self.t = 0; self.rng = random.Random(seed)
+        self.t = 0; self.rng = random.Random(seed); self.rng_cb = random.Random(seed + 1); self.world_s = 0.0
 
     def frame(self):
         R = self.rng
@@ -54,6 +66,30 @@ class Quiet(SimWorld):
         return Frame(self.t, obs, 0.0, {})
 
     def apply(self, acts):
+        b = self.below
+        if b is not None:                                                 # the loop below the tick (the tool's doc)
+            an = b._life().anatomy; cb = an.cerebellar; R = self.rng_cb
+            lim = [float(LIMIT[j]) for j in CEREB_JOINTS]; dig = {}
+            for e in an.motors:
+                a = int(acts.get(e.name, e.rest_id)); J = len(e.factors)
+                dig[e.name] = [(a // 5 ** (J - 1 - k)) % 5 for k in range(J)]
+            for s in range(15):
+                t0 = time.perf_counter(); seen = collections.Counter(); mossy = []
+                for name, mid, hr in zip(an.mossy, cb.mossy_offset, cb.mossy_scale):
+                    kind, what = name.split(" ", 1)
+                    if kind == "act":
+                        eff, j = what.split(".", 1)
+                        if eff == "words":
+                            mossy.append(1.0 if int(j) == int(acts.get("words", an.sil)) else 0.0)
+                        else:
+                            mossy.append(float(dig[eff][seen[eff]])); seen[eff] += 1
+                    else:
+                        mossy.append(mid + hr * R.uniform(-1.0, 1.0))
+                teach = [max(-l_, min(l_, R.uniform(-5.0, 5.0))) for l_ in lim]
+                sf = SubFrame(self.t, s, mossy, teach, [R.uniform(-0.01, 0.01), R.uniform(-0.01, 0.01)] if s == 0 else None,
+                              [R.uniform(-0.1, 0.1), R.uniform(-0.1, 0.1)] if s == 0 else None, limit=lim)
+                self.world_s += time.perf_counter() - t0
+                self.sub_tick(sf)
         self.t += 1
 
     def pause(self):
@@ -175,6 +211,13 @@ def main():
           f"{sum(1 for x in allu if x == 1) / len(allu):.3f}, longest {max(allu)}; the law at p_act {p:.4f}: mean "
           f"{(1 - p ** 8) / (1 - p):.3f}, share of one {1 - p:.3f}")
     spg_report(L, place, T)
+    b = L.world.below
+    if b is not None:
+        org = L.m.cereb
+        print(f"THE CEREBELLUM (on; the G1's mossy list: {b.n_mossy} fibres, {len(b.joints)} readouts, the flocculus on {list(b.vor)}): "
+              f"{b.calls / T:.0f} calls a tick, the law {1000 * b.seconds / T:.2f} ms a tick ({1e6 * b.seconds / max(1, b.calls):.0f} us a "
+              f"sub-step) inside the hook; its lessons: limbs {int(org.n_limb)} of {int(org.n_sub)} sub-steps, flocculus {int(org.n_vor)}; "
+              f"the stub's building of the numbers (the world's, apart) {1000 * L.world.world_s / T:.2f} ms a tick")
     # the born codes' cost: every channel's code of one position, timed over a window's worth, times the positions the tick encoded
     x = {c.name: torch.randn(64, int(c.size)) for c in L.anatomy.channels[1:]}
     with torch.no_grad():

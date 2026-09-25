@@ -938,15 +938,40 @@ def test_orienting_and_the_vor():
 
 # ---------------- motor 11: the G1's anatomy (the numbering, the drives) ----------------
 
+def _g1_mossy(anatomy, acts, R):
+    """the G1's mossy numbers for one sub-step as a world hands them, in the anatomy's declared order (SimAnatomy.mossy; an instrument of
+    motor 11): the efference copy from the tick's acts (each joint's setting, its flat act's base-5 digit, joint 0 the most significant;
+    the words' line 1 on the symbol the act gave), every other number drawn about its declared middle within 1.1 of its half-range"""
+    cb = anatomy.cerebellar; digits = {}
+    for e in anatomy.motors:
+        a = int(acts.get(e.name, e.rest_id)); J = len(e.factors)
+        digits[e.name] = [(a // 5 ** (J - 1 - k)) % 5 for k in range(J)]
+    out, seen = [], collections.Counter()
+    for name, mid, hr in zip(anatomy.mossy, cb.mossy_offset, cb.mossy_scale):
+        kind, what = name.split(" ", 1)
+        if kind == "act":
+            eff, j = what.split(".", 1)
+            if eff == "words":
+                out.append(1.0 if int(j) == int(acts.get("words", anatomy.sil)) else 0.0)
+            else:
+                out.append(float(digits[eff][seen[eff]])); seen[eff] += 1
+        else:
+            out.append(mid + hr * R.uniform(-1.1, 1.1))
+    return out
+
+
 def _g1_world(seed=0):
     """a stub of the G1's world for motor 11 (never the sim's: random unit-scaled senses at every key of SimAnatomy's frame, the charge
-    falling, now and then pain and the orienting cues), recording each tick's acts"""
+    falling, now and then pain and the orienting cues), recording each tick's acts; when a life hooks its cerebellum below the tick, it
+    calls it 15 times a tick as SimWorld's contract says, the mossy numbers from the tick's acts and a stream of its own (_g1_mossy), a
+    teacher at each of the readouts' joints, a limit of 25 N m, and at sub-step 0 a slip and a turn, recording each answer"""
     import random as _r
+    from body.core.world import SubFrame
     from body.sim.anatomy import SIZES
 
     class G1Stub(SimWorld):
         def __init__(self):
-            self.t = 0; self.rng = _r.Random(seed); self.applied = []
+            self.t = 0; self.rng = _r.Random(seed); self.applied = []; self.rng_cb = _r.Random(seed + 1); self.answers = []
 
         def frame(self):
             t = self.t; R = self.rng
@@ -963,7 +988,15 @@ def _g1_world(seed=0):
             return Frame(t, obs, 0.0, {"who": "parent"})
 
         def apply(self, acts):
-            self.applied.append(acts); self.t += 1
+            self.applied.append(acts)
+            if self.below is not None:                                   # the loop below the tick (the cerebellum on: SIM_CFG)
+                life = self.below._life(); J = len(self.below.joints); R = self.rng_cb
+                for s_ in range(15):
+                    sf = SubFrame(self.t, s_, _g1_mossy(life.anatomy, acts, R), [R.uniform(-2.0, 2.0) for _ in range(J)],
+                                  [R.uniform(-0.01, 0.01) for _ in range(2)] if s_ == 0 else None,
+                                  [R.uniform(-0.1, 0.1) for _ in range(2)] if s_ == 0 else None, limit=[25.0] * J)
+                    self.answers.append((s_, self.sub_tick(sf)))
+            self.t += 1
 
         def pause(self):
             pass
@@ -991,9 +1024,22 @@ def test_the_g1_anatomy():
     acts, each tick's acts in the design's order; THE PERFORMANCE ERROR LANDS ON THE TRACT'S GATE: its rows carry it on the ticks it acted
     and every other gate's rows (the words', the voice of the code, included) carry 0 on every tick; the legs' and arms' patterns and the
     gaze's VOR reach the world; each of the tract's lessons takes the credit 3.5 discloses (the dopamine that followed, the tonic drive
-    0.25 + 4.656 x the reward's mean, 0.5 x its performance error, its cost at its own fatigue), its mean checked by hand"""
+    0.25 + 4.656 x the reward's mean, 0.5 x its performance error, its cost at its own fatigue), its mean checked by hand.
+    THE CEREBELLUM ON AT BIRTH (7.5, A44; the lead's mossy list): the G1 declares its cerebellar interface, 298 mossy numbers named in
+    order, the body's own signals only (no vision, no hearing): (1) the efference copy of every effector's acts (each joint's setting
+    of the tract, the gaze, the waist, the arms, the hands and the legs in the declared order, and the words' 79 symbols' lines in their
+    place: 135), (2) the 43 joints' angles and velocities (86), (3) both inertial units' accelerometer and gyro (12), (4) touch and
+    contact (the Dex3's 16 zones, the observer's torque on the 43 joints, the base's wrench: 65); each number's declared middle and
+    half-range by its rule (a setting 2 and 2, a symbol's line 0.5 and 0.5, an angle its joint's range from the model's file, a velocity
+    and a gyro 0 and 1.8 rad/s, an accelerometer 0 and 9.81 m/s^2, touch and contact 0 and 1); the readouts on the 29 joints of the
+    waist, the arms and the legs, none on the hands'; the flocculus on the gaze's yaw and pitch. SIM_CFG switches it on; the organs
+    build it at birth for that declaration and the world's hook is the life's; the stub calls it 15 times a tick and every sub-step
+    runs the law, its answers inside the limit and the flocculus's at sub-step 0 alone"""
+    import itertools
+    from body.core.anatomy import Cerebellar
+    from body.core.cerebellum import Below
     from body.model import Organs
-    from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table, TRACT
+    from body.sim.anatomy import BODY_JOINTS, CEREB_JOINTS, LIMBS, MOSSY_G, MOSSY_SPEED, RANGES, SIM_CFG, SimAnatomy, born_table, TRACT
     a = SimAnatomy(born_table(), SIM_CFG).check()
     assert [c.name for c in a.channels] == ["words", "face", "ears", "eye_p", "eye_f", "body", "touch", "vestibular", "charge"]
     assert [c.size for c in a.channels] == [79, 2, 1725, 172, 1536, 242, 130, 24, 2] and sum(c.size for c in a.channels[1:]) == 3833
@@ -1052,10 +1098,47 @@ def test_the_g1_anatomy():
         assert last["n"] == n and abs(round(sum(G) / n, 4) - last["credit_mean"]) < 1.5e-4, (last, sum(G) / n)
         n_les += 1
     assert n_les >= 3, n_les
+    # THE CEREBELLUM ON AT BIRTH: the declaration (the lead's list, the body's own signals only), each number's rule, the organ and its hook
+    cb, nm = a.cerebellar, list(a.mossy)
+    kinds = collections.Counter(n_.split(" ", 1)[0] for n_ in nm)
+    assert SIM_CFG["cereb"] == 1 and isinstance(cb, Cerebellar) and cb.n_mossy == len(nm) == 298, (SIM_CFG.get("cereb"), len(nm))
+    assert kinds == {"act": 135, "angle": 43, "velocity": 43, "acc": 6, "gyro": 6, "touch": 16, "contact": 49}, kinds
+    eff = [n_.split(" ", 1)[1].split(".", 1)[0] for n_ in nm if n_.startswith("act ")]
+    assert [k_ for k_, _ in itertools.groupby(eff)] == names, eff
+    jn = {"voice": list(TRACT), "gaze": ["yaw", "pitch", "vergence"], "words": [str(k_) for k_ in range(79)]}
+    for e_ in a.effectors:
+        want_ = jn.get(e_.name) or [BODY_JOINTS[j_] for j_ in e_.joints]
+        assert [n_.split(".", 1)[1] for n_ in nm if n_.startswith(f"act {e_.name}.")] == want_, e_.name
+    assert [n_ for n_ in nm if not n_.startswith("act ")][:86] == [f"angle {j_}" for j_ in BODY_JOINTS] + [f"velocity {j_}" for j_ in BODY_JOINTS]
+    assert [n_ for n_ in nm if n_.split(" ", 1)[0] in ("acc", "gyro")] == [f"{k_} {u_}.{x_}" for u_ in ("torso", "pelvis") for k_ in ("acc", "gyro") for x_ in "xyz"]
+    for n_, o_, h_ in zip(nm, cb.mossy_offset, cb.mossy_scale):
+        kind, what = n_.split(" ", 1)
+        if kind == "act":
+            assert (o_, h_) == ((0.5, 0.5) if what.startswith("words.") else (2.0, 2.0)), n_
+        elif kind == "angle":
+            lo_, hi_ = RANGES[BODY_JOINTS.index(what)]
+            assert (o_, h_) == ((lo_ + hi_) / 2.0, (hi_ - lo_) / 2.0) and h_ > 0, n_
+        elif kind in ("velocity", "gyro"):
+            assert (o_, h_) == (0.0, MOSSY_SPEED) and abs(MOSSY_SPEED - 1.8) < 1e-12, n_
+        elif kind == "acc":
+            assert (o_, h_) == (0.0, MOSSY_G) and MOSSY_G == 9.81, n_
+        else:
+            assert (o_, h_) == (0.0, 1.0), n_
+    assert list(cb.joints) == list(CEREB_JOINTS) == [j_ for n_, js_ in LIMBS if not n_.startswith("hand") for j_ in js_] and len(cb.joints) == 29
+    assert not set(cb.joints) & {j_ for n_, js_ in LIMBS if n_.startswith("hand") for j_ in js_} and list(cb.vor) == ["yaw", "pitch"]
+    org = L.m.cereb
+    assert isinstance(org, torch.nn.Module) and org.declares(L.anatomy.cerebellar) and (org.n_mossy, len(org.joints), len(org.vor)) == (298, 29, 2)
+    assert isinstance(w.below, Below) and w.below._life() is L and w.below.calls == 15 * 120 == len(w.answers)
+    assert (int(org.n_sub), int(org.n_limb), int(org.n_vor)) == (15 * 120, 15 * 120, 119), (int(org.n_sub), int(org.n_limb), int(org.n_vor))
+    assert all(ans_.torque is not None and len(ans_.torque) == 29 and max(abs(float(x_)) for x_ in ans_.torque) <= 25.0 for _, ans_ in w.answers)
+    assert all((ans_.vor_gain is not None and ans_.vor_offset is not None) == (s_ == 0) for s_, ans_ in w.answers)
+    assert float(org.pc_w.abs().sum()) > 0.0 and float(org.fl_w.abs().sum()) > 0.0
     print(f"motor 11: the G1's anatomy: 9 channels at 3.4's sizes (3,833 numbers and a symbol), 10 effectors numbered as 3.5 (the tract",
           f"0, the words 1), 56 joint readouts; the drives as disclosed; born at d 32 it lived 120 ticks, every effector acting ({dict(acted)});",
           f"the performance error on the tract's gate on {tract_int} ticks and 0 on every other gate's {others} rows and the words' {voice_rows};",
-          f"the drives by hand in the tract's {n_les} lessons")
+          f"the drives by hand in the tract's {n_les} lessons; THE CEREBELLUM on at birth: {cb.n_mossy} mossy numbers ({dict(kinds)}), each by",
+          f"its rule, 29 readouts (none on the hands), the flocculus on yaw and pitch; hooked, {w.below.calls} calls in 120 ticks, the law on",
+          f"every sub-step ({int(org.n_limb)} limb lessons, {int(org.n_vor)} of the flocculus)")
 
 
 MOTOR_TESTS = [test_the_voice_at_any_place, test_movement_units, test_the_kappa_correction, test_act_inv_batched,

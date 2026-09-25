@@ -1,11 +1,12 @@
 """THE G1'S ANATOMY AS THE CORE MEETS IT (docs/SIM_DESIGN.md 3.4, 3.5, 3.6, 3.7, 6 and 10; the core refactor's step R6h, C61): the stock
 Unitree G1's nine channels at 3.4's sizes, its ten effectors numbered as 3.5 numbers them (the vocal tract effector 0, the words'
 silent output effector 1, the gaze 2, the waist 3, the arms 4-5, the Dex3 hands 6-7, the legs 8-9), and its three reward sources in
-section 6's order (face, pain, charge); and SIM_CFG, the core's constants the sim is born with that R6h decides (the gates' drives,
-the switches of the motor effectors, the cord's patterns and the born biases). A declaration: it builds no module, draws no random
-number and keeps no state (the core's law for an anatomy, body/core/anatomy.py). S5a builds the world against it (the frames' keys
-below) and completes what is marked for it; the words are the parent's birth words (body/sim/lang's BIRTH_WORDS on the parent's branch),
-passed in (`words`), placeholders in the core's tests.
+section 6's order (face, pain, charge); its cerebellar interface (7.5, A44: the mossy input the world hands the cerebellum below the
+tick, its readouts, the flocculus's axes); and SIM_CFG, the core's constants the sim is born with that R6h decides (the gates' drives,
+the switches of the motor effectors, the cord's patterns and the born biases) and the cerebellum's switch. A declaration: it builds no
+module, draws no random number and keeps no state (the core's law for an anatomy, body/core/anatomy.py). S5a builds the world against
+it (the frames' keys below) and completes what is marked for it; the words are the parent's birth words (body/sim/lang's BIRTH_WORDS on
+the parent's branch), passed in (`words`), placeholders in the core's tests.
 
 THE NUMBERING (C61): 3.5 numbers the tract 0 and the words' output 1; the code's voice is the lexicon's effector (the words' symbols,
 mouth_gate), which since R6h may stand at any place (`Anatomy.voice`), so the numbering is the design's: effectors[0] is the tract,
@@ -36,13 +37,41 @@ and beside the channels, read by the reward, the born reflexes and the gates' ow
   onset_periph [fired, yaw, pitch]: the born sudden local change in the grey periphery, habituating (A43; C49)
 THE ACTS THE WORLD RECEIVES (body/core/world.py `Acts`): each effector's flat act by its name (the tract's 10 articulators and every
 limb's joints as base-5 digits, joint 0 the most significant, in the joint orders below; the words' symbol), `acts.cord` (the spinal
-pattern generators' and the born cry's steps below the gates, per joint in the joint's units) and `acts.vor` (the gaze's VOR)."""
+pattern generators' and the born cry's steps below the gates, per joint in the joint's units) and `acts.vor` (the gaze's VOR).
+
+THE CEREBELLUM'S MOSSY INPUT (SIM_DESIGN.md 7.5, A44; the lead's decision for the G1: THE BODY'S OWN SIGNALS ONLY, NO VISION AND NO
+HEARING AT BIRTH): the numbers the world hands the cerebellum at each sub-step below the tick (every 10 ms, body/core/world.py
+`SubFrame.mossy`), 298 in this order, each named in `SimAnatomy.mossy` and declared to the organ by `SimAnatomy.cerebellar`:
+  (1) THE EFFERENCE COPY OF EVERY EFFECTOR'S ACTS (the pontine route of the motor command: Ito 1984, The Cerebellum and Neural Control;
+      Apps and Garwicz 2005, Nat Rev Neurosci 6:297-311), the tick's own act held through its sub-steps, in the effectors' declared
+      order: each joint's setting of the tract (10), then the words' silent output as one line per symbol of its 79, 1 on the symbol
+      the tick's act gave (its rest included) and 0 on every other (a symbol has no joint and no scale, so its copy is its line), then
+      each joint's setting of the gaze (3: yaw, pitch, vergence), the waist (3), the arms (7 + 7), the Dex3 hands (7 + 7) and the legs
+      (6 + 6): 135. Each setting is 0-4, the hold 2. The gate's own act: never the cord's patterns or a reflex's forced act.
+  (2) THE JOINTS' POSITIONS AND VELOCITIES (the spinocerebellar proprioception: Bosco and Poppele 2001, Physiol Rev 81:539-568): each
+      of the 43 joints' angle (rad, through the encoder) in BODY_JOINTS' order, then each one's velocity (rad/s): 86. The gaze's window
+      and the tract, whose states the body channel also carries, are not spinal joints and are not among them (their acts are in 1).
+  (3) THE INERTIAL UNITS' ORIENTATION AND ANGULAR VELOCITY (the vestibular mossy fibres: Apps and Garwicz 2005): the torso's unit (it
+      moves with the head) then the pelvis's, each its accelerometer (m/s^2) then its gyro (rad/s), the sub-step's samples through the
+      sensors' models, both units as 3.4's vestibular channel declares them: 12. THE ANATOMY DECLARES NO ORIENTATION ESTIMATE (no
+      attitude, no quaternion: the vestibular channel carries the accelerometer and the gyro alone), so the accelerometer's specific
+      force, which way is down, stands for the orientation, as the otoliths' own signal does; nothing is estimated for it.
+  (4) TOUCH AND CONTACT (the cutaneous spinocerebellar input: Apps and Garwicz 2005): the Dex3's 16 zones' log(1 + F / 1 N) of the
+      sub-step's normal force on the arrays' faces (ZONES' order), then the observer's outside torque on each of the 43 joints over its
+      limit, then the base's outside wrench over the body's weight (force, then torque, each x y z in the pelvis's frame): 65, each as
+      the touch channel carries it, at the sub-step (the observer runs every 10 ms, the sub-step's period), onsets not among them.
+Each number's declared middle and half-range (the organ reads it as the fibre's rate 1 + (x - middle) / half-range, held to [0, 2]): a
+setting 2 and 2; a symbol's line 0.5 and 0.5 (silent unless its symbol was said); an angle its joint's range's middle and half (RANGES,
+the model's own); a velocity and a gyro's turn 0 and MOSSY_SPEED; an accelerometer's axis 0 and MOSSY_G; touch and contact 0 and 1
+(the touch channel's own units: the log of newtons, each joint's limit, where its pain begins, the body's weight). THE READOUTS (7.5):
+the 29 joints of the waist, the arms and the legs (CEREB_JOINTS; the Dex3's joints none), each a torque added to its servo inside its
+limit this tick; THE FLOCCULUS on the gaze window's yaw and pitch (the VOR's axes)."""
 import math
 from dataclasses import dataclass
 
 from tokenizers import Tokenizer, models
 
-from body.core.anatomy import Channel, EarChannel, Effector, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
+from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
 
 # ---------------------------------------------------------------- the G1's joints, in the order the world writes them (3.2, 3.5)
 WAIST = ("waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint")
@@ -77,6 +106,33 @@ FOVEA_HALF = math.radians(64.0 / 3.0 / 2.0)
 # cry lasts: the pitch at 546 Hz, inside newborns' phonated cries of 250-700 Hz). Ours, from its sources' description; C53 reads the
 # pattern's figures (its breath groups are REFLEX's cry_expire and cry_inspire, from Robb, Sinton-White and Kaipa 2011)
 CRY_POSTURE = {0: 0.6, 1: 0.6, 2: 0.6, 3: 0.6}
+# ---------------------------------------------------------------- the cerebellum's interface (7.5, A44; the module's doc)
+# THE G1'S JOINT RANGES (rad, in BODY_JOINTS' order): the model's own, each joint's `range` in Menagerie's g1_with_hands.xml (the file
+# committed in dd8640e and loaded unchanged; 3.2 gives them in degrees), the angle fibres' middles and half-ranges. The cerebellum is
+# born with them (its organ keeps its declared middles and half-ranges and a load checks them), so they are the file's, written here;
+# S5a's world reads the same file and checks them against it
+RANGES = ((-2.618, 2.618), (-0.52, 0.52), (-0.52, 0.52),                                                            # the waist
+          (-3.0892, 2.6704), (-1.5882, 2.2515), (-2.618, 2.618), (-1.0472, 2.0944),                                   # the left arm
+          (-1.97222, 1.97222), (-1.61443, 1.61443), (-1.61443, 1.61443),
+          (-3.0892, 2.6704), (-2.2515, 1.5882), (-2.618, 2.618), (-1.0472, 2.0944),                                   # the right arm
+          (-1.97222, 1.97222), (-1.61443, 1.61443), (-1.61443, 1.61443),
+          (-1.0472, 1.0472), (-0.724312, 1.0472), (0.0, 1.74533), (-1.5708, 0.0), (-1.74533, 0.0), (-1.5708, 0.0),     # the left hand
+          (-1.74533, 0.0),
+          (-1.0472, 1.0472), (-1.0472, 0.724312), (-1.74533, 0.0), (0.0, 1.5708), (0.0, 1.74533), (0.0, 1.5708),       # the right hand
+          (0.0, 1.74533),
+          (-2.5307, 2.8798), (-0.5236, 2.9671), (-2.7576, 2.7576), (-0.087267, 2.8798), (-0.87267, 0.5236),           # the left leg
+          (-0.2618, 0.2618),
+          (-2.5307, 2.8798), (-2.9671, 0.5236), (-2.7576, 2.7576), (-0.087267, 2.8798), (-0.87267, 0.5236),           # the right leg
+          (-0.2618, 0.2618))
+# THE CEREBELLUM'S READOUTS (7.5): one per joint of the waist, the arms and the legs (29), in BODY_JOINTS' order; the Dex3's joints none
+CEREB_JOINTS = tuple(j for name, js in LIMBS if not name.startswith("hand") for j in js)
+# THE HALF-RANGES THE MODEL FILE DOES NOT GIVE (ours, disclosed): the file declares no joint velocity, and the inertial units' ranges only
+# as their sensors' full scales (cutoff 34.9 rad/s and 157 m/s^2, under which a turn or a tilt would barely move a fibre). A joint's
+# velocity and a gyro's turn are read over MOSSY_SPEED, the big step's pace (0.27 rad a tick of 0.15 s, 1.8 rad/s: the fastest the body's
+# own act moves a joint's target, the waist's the trunk's; 3.5), faster saturating; an accelerometer's axis over MOSSY_G, one g (9.81
+# m/s^2), so which way is down spans the fibre's range and a jolt past one g saturates
+MOSSY_SPEED = 0.27 / 0.15
+MOSSY_G = 9.81
 
 
 def born_table(words=None):
@@ -238,12 +294,42 @@ class SimAnatomy(LanguageAnatomy):
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
                           OrientCue("onset", "onset_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF, onset=True)]
+        # THE CEREBELLUM'S INTERFACE (7.5, A44; the module's doc): the mossy numbers in their order, each named and declared by its
+        # middle and half-range; the readouts on the waist's, the arms' and the legs' joints; the flocculus on the gaze's yaw and pitch
+        mossy, off, half = [], [], []
+
+        def fibre(name, mid, hr):
+            mossy.append(name); off.append(float(mid)); half.append(float(hr))
+        for e in self.effectors:                                       # (1) the efference copy of every effector's acts
+            if e is voice:
+                for k in range(self.vocab):
+                    fibre(f"act words.{k}", 0.5, 0.5)                  # the words' symbol k: its line, silent unless said
+            else:
+                jn = TRACT if e is tract else (("yaw", "pitch", "vergence") if e is gaze else tuple(BODY_JOINTS[j] for j in e.joints))
+                for j in jn:
+                    fibre(f"act {e.name}.{j}", 2.0, 2.0)               # a joint's setting, 0-4 about the hold
+        for (lo, hi), j in zip(RANGES, BODY_JOINTS):                   # (2) the joints' positions, then their velocities
+            fibre(f"angle {j}", (lo + hi) / 2.0, (hi - lo) / 2.0)
+        for j in BODY_JOINTS:
+            fibre(f"velocity {j}", 0.0, MOSSY_SPEED)
+        for unit in ("torso", "pelvis"):                               # (3) the inertial units: which way is down, and the turn
+            for ax in "xyz":
+                fibre(f"acc {unit}.{ax}", 0.0, MOSSY_G)
+            for ax in "xyz":
+                fibre(f"gyro {unit}.{ax}", 0.0, MOSSY_SPEED)
+        for z in ZONES:                                                # (4) touch, then contact from the joints' efforts
+            fibre(f"touch {z}", 0.0, 1.0)
+        for j in BODY_JOINTS:
+            fibre(f"contact {j}", 0.0, 1.0)
+        for w in ("force.x", "force.y", "force.z", "torque.x", "torque.y", "torque.z"):
+            fibre(f"contact base.{w}", 0.0, 1.0)
+        self.mossy = tuple(mossy)
+        self.cerebellar = Cerebellar(off, half, joints=list(CEREB_JOINTS), vor=["yaw", "pitch"])
 
 
 # THE CORE'S CONSTANTS THE SIM IS BORN WITH THAT R6h DECIDES (SIM_DESIGN.md 3.5, 3.6, 3.7, 10; A41, A47, A48; the language body holds none
-# of them). S5a adds the rest of section 10's sim constants (the critics' solve every 256 ticks, the ventral critic's bands, the store's
-# capacity) and the cerebellum's switch with its mossy declaration (7.5; the humanoid's list is the lead's, R6c's report: `cereb` stays
-# off here until the anatomy declares its Cerebellar).
+# of them), and the cerebellum's switch (7.5, A44: on at birth, the anatomy declaring its mossy list, the lead's). S5a adds the rest of
+# section 10's sim constants (the critics' solve every 256 ticks, the ventral critic's bands, the store's capacity).
 SIM_CFG = dict(
     rest_token="<rest>", end_token="<end>", end_symbol="eot",          # the born table's rest and end (4.9)
     # the switches at birth (10): fixes #4, #5 and #8; chunk_gate 1 for every effector; chunk_max 8, a ceiling only (3.6)
@@ -259,4 +345,9 @@ SIM_CFG = dict(
     # flexion and 3 ticks' extension, then a pause, each cycle drawn from the seed, 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry,
     # orienting, the VOR
     spg=1, cry=1, orient=1, vor=1,
+    # THE CEREBELLUM ON AT BIRTH (7.5, A44; SimAnatomy.cerebellar, the lead's mossy list): its constants CEREB's, as R6c and its fix
+    # settled them and none given here (the rate 0.01 a sub-step; the leak rate / 3, after Smith, Ghazizadeh and Shadmehr 2006; the bound
+    # that steps a lesson back onto the limit; each readout held inside its joint's limit this tick; the flocculus's 0.05 a tick; 4,096
+    # granule units of 4 fibres, 10% active), its readouts per joint of the waist, the arms and the legs
+    cereb=1,
 )
