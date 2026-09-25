@@ -33,13 +33,14 @@ THE RECORD. One JSON line per event, keys sorted, in the life's folder (ledger.j
   trial_outcome  met (the child's first look or reach on the target; for the name test its turn to her face in its window),
               missed (on the distractor; for the name test no turn through its window and the span a foil's "no turn" is held
               to), none (no look to either; for the name test a turn after its window within that span), or void (logged with
-              why: it already attended one at the onset, both at once, her attention log showed anything but her mouth moving,
-              the world stopped her sentence, its pain, distress or hit; never the child's voice: P3's eleventh round). Scored
-              BY INTENTION TO TREAT (P3's thirteenth round): every trial whose window opened is scored, a none or a void from
-              its onset's tick on against it (neither on its thing nor where the word sent it; the row's "scored"); only an
-              end before that tick, and the onset's own reading of where the child already looks, which nothing of the draw
-              can reach (her reading is held 3 ticks, and all she sounds before the test word's onset tick is one carrier
-              recording, sample for sample: lang/stimuli.splice), count for nothing
+              why: it already attended one just before the onset or did not see both, both at once, her attention log showed
+              anything but her mouth moving, a tick not read, the world stopped her sentence, its pain, distress or hit; never
+              the child's voice: P3's eleventh round). Scored BY INTENTION TO TREAT (P3's thirteenth round): every trial whose
+              window opened is scored, a none or a void from its onset's tick on against it (neither on its thing nor where
+              the word sent it; the row's "scored"); only an end before that tick counts for nothing, the onset's own reading
+              among them, which the conduct takes on the tick before the onset's (P3's fourteenth round), so no sample of the
+              test word can reach it whatever order the world gives a tick (all she sounds before the test word's onset tick
+              is one carrier recording, sample for sample: lang/stimuli.splice)
   displayed   a probe dropped after its two things were brought into the child's view, never said: the never-taught items it
               displayed, each one presentation more (fail-closed: her follow-in naming may label a thing in its new place)
 
@@ -63,8 +64,14 @@ EACH WORD'S STANDING (4.8), from those events alone:
               both go where the word sent them: its timing can move a met to a none, never to a met for the other thing. (Scoring
               only met and missed had let such a child choose which trials were scored: a look 16 ticks after its ears last heard
               her above 33 dB SPL met every "ball" trial and fell after every "car" trial's window, "ball" understood in 12 of 12
-              lives.) (i) keeps the credit on this word: a child that knows only the other word looks at the other thing when that
-              is named, which (ii) alone would credit here. Together they are the design's "50%, or its yoked rate where higher"
+              lives.) A child that times its acts from her voice's start or her sound's stop is such a child since P3's
+              fourteenth round, however it hears them: at every level those moments lie in the carrier before the test word and
+              the tag after it, one recording each whichever is named (lang/stimuli.py; its thirteenth verifier: with one
+              recording a word, a child with a favourite toy, one look at a fixed tick and one timed from her sound's stop, had
+              the order of its two looks follow the word said, "drum" understood in 12 of 12 lives). A child whose choice of
+              thing follows the test word's own sound hears the word said, which is what the trial asks about (C69). (i) keeps
+              the credit on this word: a child that knows only the other word looks at the other thing when that is named,
+              which (ii) alone would credit here. Together they are the design's "50%, or its yoked rate where higher"
               (the yoked rate: its first looks on its thing when the other was named), tested on one stretch of trials instead of
               against a rate carried from other times and treated as known (P3's ninth verifier: a child whose favourite, or whose
               turning to any voice, grew over its life reached "understood" far more often than a fair coin). The name: (ii) over
@@ -109,8 +116,10 @@ from . import templates as TP
 from .lexicon import NAME, PARENT_NAME
 
 ACT_WORDS = {"roll": ("rolled",), "sit": ("sat",), "give": ("gave",), "up": ("sat",), "down": ("fell",), "look": ()}
-SCORING = "itt"                           # its trials scored by intention to treat (P3's thirteenth round): a save without it is
-                                          # an older rule's, its record started again (load_state)
+SCORING = "itt-carrier"                   # its trials scored by intention to treat (P3's thirteenth round) on stimuli spliced
+                                          # into one carrier phrase (its fourteenth): a save without it is an older rule's or an
+                                          # older stimulus's (whose sentences stopped at moments that differed by the word
+                                          # said), its record started again (load_state)
 
 
 class LedgerDiverged(RuntimeError):
@@ -446,22 +455,22 @@ class Ledger:
             self.items[it] = self.items.get(it, 0) + 1
         self._rec(dict(ev="displayed", t=int(t), form=form, items=list(items), why=why))
 
-    def trial_outcome(self, t, tid, result, why=None, at_onset=False):
+    def trial_outcome(self, t, tid, result, why=None):
         """a formal trial's result: "met", "missed", "none" or "void" (with why), scored by intention to treat (P3's thirteenth
         round): met and missed, and a none or a void ended on its window's first tick (the onset's) or after it, score it: each
         of its words' record (named or not; its first look on its thing, on the other, or None: neither, never where the word
-        sent it), its form's record (section 12's, the trial once). Counted for nothing: a void ended before the onset, and the
-        onset's own reading of where the child already looks (at_onset: on one of the two, on her face, or not seeing them or
-        her), which her reading, held 3 ticks, took before the test word began; all of it on the carrier every sentence the
-        draw could give shares sample for sample, so which trials are scored never depends on which was named, whatever the
-        child did after it began."""
+        sent it), its form's record (section 12's, the trial once). Counted for nothing: a void ended before the onset's tick,
+        its onset's own reading among them (where the child already looks, or whether it sees them or her), which the conduct
+        takes on the tick before the onset's (P3's fourteenth round), so that no sample of the test word can reach it whatever
+        order the world gives a tick; all she sounds before the onset's tick is one carrier recording, sample for sample
+        (lang/stimuli.splice), so which trials are scored never depends on which was named, whatever the child did."""
         tr = self.formal.pop(str(tid), None)
         if tr is None:
             raise ValueError(f"no open trial {tid!r}")
         if result not in ("met", "missed", "none", "void"):
             raise ValueError(f"not a trial's result: {result!r}")
         opened = tr.get("open")                  # (an open trial of an older save: its none or void counts for nothing)
-        scored = result in ("met", "missed") or (opened is not None and int(t) >= int(opened) and not at_onset)
+        scored = result in ("met", "missed") or (opened is not None and int(t) >= int(opened))
         if scored and tr["score"]:
             where = None
             for key, lst, on_met, on_missed in tr["score"]:
@@ -554,8 +563,9 @@ class Ledger:
             st.pop("base", None)
             st.pop("forms", None)
             if s.get("scoring") != SCORING:               # a save before P3's thirteenth round scored its trials without
-                st["seq"], st["trials"], st["yoked"] = [], [], []   # their nones and voids, which a child could choose by
-                st["understood_at"] = None                # timing its acts from her sound: its record starts again, and
+                st["seq"], st["trials"], st["yoked"] = [], [], []   # their nones and voids, one before its fourteenth on
+                st["understood_at"] = None                # sentences whose stop followed the word said: a child could time
+                                                          # its acts from her sound to pass: its record starts again, and
         self.trials = [tr for tr in self.trials if not tr.get("base")]        # no "understood" of it is kept (fail-closed)
         self.formal, self.items = dict(s.get("formal", {})), dict(s.get("items", {}))
         self.forms = {f: [list(r) for r in rows] for f, rows in dict(s.get("forms", {})).items()}

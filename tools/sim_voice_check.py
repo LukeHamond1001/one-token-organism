@@ -547,12 +547,17 @@ def trial_table(cache, write=False):
     reach with every tick loud or silent (ties: the least change of rate from the natural); each word on it takes the step
     nearest its natural rate, then the pitch that best matches its contour to the form's (the median of its words' 10th, 50th
     and 90th percentile F0; the name's own for its foils, the name said as she always says it), within TRIAL_F0; a rate is
-    tried only within TRIAL_RATE_SPAN of the natural one (the span her own registers' rates run). A word that reaches no step on the timeline, or whose contour cannot be matched,
-    is unmatched, with why. The form's carrier (P3's thirteenth round): its first matched word's sentence, whose samples before
-    the test word's onset tick every sentence of the form takes (lang/stimuli.splice), each matched sentence so spliced checked
-    one timeline with the others (stimuli.same, their samples before the tick among it). Reports each form's words, their
-    channel (a birth word's token, or its letters) and which pairs share it; writes the table the conduct reads
-    (body/sim/lang/trial_lines.json)."""
+    tried only within TRIAL_RATE_SPAN of the natural one (the span her own registers' rates run). A word that reaches no step on
+    the timeline, or whose contour cannot be matched, is unmatched, with why. The form's carrier phrase (P3's fourteenth
+    round): one recording before the test word (its first matched word's sentence; for the name "hi."), the test word's own
+    sentence from its onset tick through its last loud tick and one silent tick, one tag after it ("see?"; for the name
+    "hi."), spliced (lang/stimuli.splice); every word at one loudest 10 ms, the form's target, set so that every window of
+    2.5 ms to a tick overlapping the slot is TRIAL_CEILING_DB under the loudest wholly before it and after it, and every 10 ms
+    frame the child's own ears hear of the slot (body/sim/ears.Ears, either ear, her mouth 0.3-3 m away at 0-180 degrees round
+    its head) TRIAL_CEILING_EAR_DB under their loudest before and after it (the level ceiling: her voice's start and her
+    sound's stop at every level then lie outside the slot); each spliced sentence held one timeline with the others (stimuli.
+    same). Reports each form's words, their gains, the ceiling's least margins, their channel (a birth word's token, or its
+    letters); writes the table the conduct reads (body/sim/lang/trial_lines.json)."""
     from body.sim.lang import consts as K                                   # noqa: PLC0415
     from body.sim.lang import stimuli as ST                                 # noqa: PLC0415
     from body.sim.lang import templates as TP                               # noqa: PLC0415
@@ -648,30 +653,80 @@ def trial_table(cache, write=False):
         rms = np.median([v["rms"] for v in rec.values()]) if rec else 1.0
         for v in rec.values():
             v["rms"] = round(v["rms"] / rms, 3)
-        # the form's one carrier recording (P3's thirteenth round): its first matched word's sentence (none before a name)
-        car = sorted(rec)[0] if rec and tl_ref["words"][slot][0] > 0 else None
-        out[key] = dict(text=text, register=reg, emphasis="{w}" if emph else TP.words(text.replace("{w}", "x"))[-1], slot=slot,
-                        natural=dict(rate=nat_r, pitch=nat_p), timeline=tl_ref, f0=[round(v, 1) for v in ref],
-                        words=dict(sorted(rec.items())), unmatched=dict(sorted(unmatched.items())), carrier=car)
+        form = dict(text=text, register=reg, emphasis="{w}" if emph else TP.words(text.replace("{w}", "x"))[-1], slot=slot,
+                    natural=dict(rate=nat_r, pitch=nat_p), timeline=None, own_timeline=tl_ref, f0=[round(v, 1) for v in ref],
+                    words={}, unmatched=dict(sorted(unmatched.items())), pre=None, tag=None, own=None, said=None)
+        out[key] = form
+        if not rec:
+            print(f"{key}: none matched")
+            continue
+        # the carrier phrase (P3's fourteenth round): one recording before the test word, its own sentence through its slot
+        # (its last loud tick and one silent tick after it), one tag after it; every word at the form's one loudest 10 ms
+        on = tl_ref["words"][slot][0]
+        last = max(i for i, x in enumerate(tl_ref["sound"]) if x == "loud")
+        n_own = last + 2 - on
+        tag_text, tag_reg = TRIAL_TAGS[key.split(":")[0]]
+        if key == "name":
+            pre_d = dict(text=TRIAL_PRE_NAME, register=reg, emphasis=None, shape=None)
+            pre_clip = cache.clip(TRIAL_PRE_NAME, reg, heard=False)
+            prof = ST.profile(pre_clip.pcm)
+            at_t, own_from = max(i for i, x in enumerate(prof) if x == "loud") + 2, on
+        else:
+            car = sorted(rec)[0]
+            pre_d = dict(text=text.replace("{w}", car), register=reg, emphasis=car if emph else TP.words(text)[-1],
+                         shape=[car, rec[car]["rate"], rec[car]["pitch"]])
+            pre_clip = render(car, rec[car]["rate"], rec[car]["pitch"])
+            at_t, own_from = on, on
+        tag_clip = cache.clip(tag_text, tag_reg, heard=False)
+        at, n_s = at_t * TICK, n_own * TICK
+        said = TP.FRAMES[{"where": "trial_where", "name": "trial_name"}.get(key, "trial_combo")][0][0]
+        own_clips = {w: render(w, v["rate"], v["pitch"]) for w, v in rec.items()}
+
+        def build(w, g, own_clips=own_clips, pre_clip=pre_clip, tag_clip=tag_clip, at=at, own_from=own_from, n_s=n_s):
+            return ST.splice(pre_clip, own_clips[w], tag_clip, at, own_from * TICK, n_s, g)
+        peak10 = {w: _slot_peak(build(w, 0.0).pcm, 160, at, at + n_s) for w in rec}
+        target = min(_slot_peak(build(w, 0.0).pcm, 160, at, at + n_s) + ST.headroom(build(w, 0.0).pcm, at, at + n_s, (win,))
+                     for w in rec for win in ST.WINDOWS) - K.TRIAL_CEILING_DB
+        for _it in range(6):                                            # the ears' ceiling, measured: lower the target
+            gains = {w: round(target - peak10[w], 3) for w in rec}      # until every geometry holds it
+            comps = {w: build(w, gains[w]) for w in rec}
+            ear_h, worst = _ear_headroom(comps, at, at + n_s)
+            if ear_h >= K.TRIAL_CEILING_EAR_DB:
+                break
+            target -= K.TRIAL_CEILING_EAR_DB - ear_h + 0.05
+        clip_h = min(ST.headroom(c.pcm, at, at + n_s) for c in comps.values())
+        tls = {w: ST.timeline(c.words, len(c.pcm), c.pcm, slot=[x for x, _a, _e in c.words].index(w), tag_at=at + n_s)
+               for w, c in comps.items()}                               # (its slot in the spliced sentence: the name's is 1)
+        for w in list(rec):                                             # a word the gain puts off the band: unmatched
+            why_w = ST.same([tls[w]], [w])
+            if why_w is not None:
+                unmatched[w] = f"at the form's level ({gains[w]:+.2f} dB) {why_w}"
+                rec.pop(w)
+        why = ST.same([tls[w] for w in rec], list(rec)) if rec else "none left"
+        for w, v in rec.items():
+            v["gain"] = gains[w]
+        tl_c = dict(tls[sorted(rec)[0]]) if rec else None
+        if tl_c is not None:
+            tl_c.pop("pre", None)
+            tl_c.pop("post", None)
+        form.update(timeline=tl_c, words=dict(sorted(rec.items())), unmatched=dict(sorted(unmatched.items())), said=said,
+                    pre=dict(pre_d, at=at_t), tag=dict(text=tag_text, register=tag_reg, emphasis=None),
+                    own=dict(ticks=n_own), target=round(target, 3), headroom=dict(clip=round(clip_h, 3), ear=round(ear_h, 3),
+                                                                                   ear_worst=worst))
+        form["own"]["from"] = own_from
         chans = {}
         for w in rec:
             chans.setdefault("a token" if rec[w]["channel"] == 1 else f"{rec[w]['channel'] - 1} letters", []).append(w)
-        print(f"{key}: {tl_ref['ticks']} ticks, its test word on ticks {tl_ref['words'][slot]}; matched {len(rec)} of "
-              f"{len(words)}: " + ", ".join(f"{w} (rate {v['rate']:g}%, pitch {v['pitch']:+g}%, F0 {v['f0_dev']:.0%} off, "
-                                              f"{v['ms']} ms, rms {v['rms']:.2f})" for w, v in rec.items()))
+        print(f"{key}: {said!r}, {tl_c['ticks'] if tl_c else '-'} ticks, its test word from tick {at_t} (its slot {n_own} "
+              f"ticks, the tag from tick {at_t + n_own}); matched {len(rec)} of {len(words)}: " +
+              ", ".join(f"{w} (rate {v['rate']:g}%, pitch {v['pitch']:+g}%, gain {v['gain']:+.2f} dB, F0 {v['f0_dev']:.0%} "
+                        f"off, {v['ms']} ms, rms {v['rms']:.2f})" for w, v in rec.items()))
+        print(f"   one loudest 10 ms {target:.2f} dB of full scale; the level ceiling's least margin {clip_h:.2f} dB at the clip "
+              f"(windows 2.5 ms to a tick), {ear_h:.2f} dB at the child's ears ({len(EAR_GEOS)} places, either ear; the least "
+              f"at {worst}); one timeline: " + ("yes" if why is None else f"NO: {why}"))
         print("   the words channel: " + "; ".join(f"{k}: {', '.join(v)}" for k, v in sorted(chans.items())))
-        for w, why in unmatched.items():
-            print(f"   unmatched {w}: {why}")
-        if car is not None:                                             # every sentence on it: one timeline, sample for
-            at = tl_ref["words"][slot][0] * TICK                        # sample the same before its test word's onset tick
-            cc = render(car, rec[car]["rate"], rec[car]["pitch"])
-            tls = {}
-            for w, v in rec.items():
-                sc = ST.splice(cc, render(w, v["rate"], v["pitch"]), at)
-                tls[w] = ST.timeline(sc.words, len(sc.pcm), sc.pcm, slot=slot)
-            why = ST.same(list(tls.values()), list(tls))
-            print(f"   its one carrier: {car!r}'s sentence, every sample before tick {tl_ref['words'][slot][0]} "
-                  f"({at} samples) taken by each: " + ("one timeline" if why is None else f"NOT one timeline: {why}"))
+        for w, why_u in unmatched.items():
+            print(f"   unmatched {w}: {why_u}")
     print(f"  the engine's per-word rate steps (first rate of each, %): {steps}; {time.perf_counter() - t0:.0f} s")
     if write:
         info = cache._server().info()
@@ -681,17 +736,29 @@ def trial_table(cache, write=False):
                     band_rule="a tick loud when its RMS is above the first (dB of full scale), silent when its loudest 10 ms is "
                               "below the second, else neither (a timeline no level makes one)",
                     rate_span=K.TRIAL_RATE_SPAN,
-                    carrier="each form's one carrier recording (P3's thirteenth round): its first matched word's sentence, "
-                            "whose samples before the test word's onset tick every sentence of the form takes "
-                            "(lang/stimuli.splice: a 10 ms raised cosine into the sentence's own at that tick)",
+                    carrier="each form's one carrier phrase (P3's fourteenth round): pre, the recording before the test "
+                            "word (its first matched word's sentence; the name's \"hi.\"), whose samples before the test "
+                            "word's onset tick (pre.at) every sentence of the form takes; own, the test word's own sentence "
+                            "from that tick (own.from) through its last loud tick and one silent tick (own.ticks), at its "
+                            "gain; tag, one recording after it, whole (lang/stimuli.splice: a 10 ms raised cosine from the "
+                            "pre into the own at that tick)",
+                    ceiling=dict(clip=K.TRIAL_CEILING_DB, ear=K.TRIAL_CEILING_EAR_DB, windows=list(ST_WINDOWS()),
+                                 ear_places=[list(g) for g in EAR_GEOS],
+                                 rule="every word of a form at one loudest 10 ms (target, dB of full scale; its gain), set so "
+                                      "that every window of 2.5 ms to a tick overlapping its slot is at least clip dB under "
+                                      "the loudest wholly before it and wholly after it, and every 10 ms frame the child's "
+                                      "ears hear of it (either ear, each place: metres, degrees round its head) ear dB under "
+                                      "their loudest before and after it; headroom: the least margins found"),
                     rule="a form's timeline: the one the most test words reach (every tick loud or silent) at a rate within "
                          "the span of her registers' rates of its natural one (the name: said at its own; ties: the least "
                          "change of rate); each word's rate the step nearest its natural rate, its pitch the one matching its "
                          "contour (10th, 50th, 90th percentile F0) to the form's median; the conduct holds every trial to the "
                          "rendered timelines (stimuli.same), the words channel added while the scaffold labels her lines",
-                    fields="words: rate (% of the engine's default), pitch (% over the line's), natural (the word said as "
-                           "before), f0 (Hz at 10/50/90%), f0_dev (the largest off the form's), rms (relative to the form's "
-                           "median), ms (the word's length), channel (its symbols on the words channel)")
+                    fields="words: rate (% of the engine's default), pitch (% over the line's), gain (dB, its level on the "
+                           "carrier phrase), natural (the word said as before), f0 (Hz at 10/50/90%), f0_dev (the largest off "
+                           "the form's), rms (relative to the form's median, as said), ms (the word's length), channel (its "
+                           "symbols on the words channel); timeline: the spliced sentence's (stimuli.timeline, its digests "
+                           "left out); own_timeline: the test word's own sentence's, the search's")
         path = os.path.join(ROOT, "body", "sim", "lang", K.TRIAL_FILE)
         with open(path, "w") as fh:
             fh.write('{"meta": ' + json.dumps(meta, sort_keys=True) + ',\n "forms": {\n')
@@ -699,6 +766,64 @@ def trial_table(cache, write=False):
             fh.write("\n}}\n")
         print(f"  written: {path} ({os.path.getsize(path) / 1024:.0f} KB)")
     return out
+
+
+TRIAL_TAGS = {"where": ("see?", "question"), "combination": ("see?", "question"), "name": ("hi.", "calling")}
+TRIAL_PRE_NAME = "hi."                                                  # the name's carrier before it (its own register)
+EAR_GEOS = tuple((d, a) for d in (0.3, 0.5, 0.7, 1.0, 1.5, 3.0) for a in (0, 30, 60, 90, 120, 150, 180))   # m, degrees
+
+
+def ST_WINDOWS():
+    from body.sim.lang import stimuli as ST                                 # noqa: PLC0415
+    return ST.WINDOWS
+
+
+def _slot_peak(pcm, w, at, tag_at):
+    """the loudest window of w samples overlapping the slot [at, tag_at), dB of full scale."""
+    x = np.asarray(pcm, np.float64) / 32767.0
+    c = np.concatenate([[0.0], np.cumsum(x * x)])
+    a, b = max(0, at - w + 1), min(len(x) - w, tag_at - 1)
+    return 10 * math.log10(max(float(((c[a + w:b + w + 1] - c[a:b + 1]) / w).max()), 1e-30))
+
+
+def ear_levels(pcm, gain_db, pos):
+    """an instrument: a clip heard by the child's own ears (body/sim/ears.Ears), her mouth at pos (m, from the midpoint of its
+    ears) -> (left, right): each 10 ms frame's level, dB SPL (the band powers its cochleas code, summed), two ticks past the
+    clip's end."""
+    x = np.asarray(pcm, np.float64) * (V.PA_PER_UNIT / 32767.0 * 10 ** (gain_db / 20))
+    n = -(-len(x) // TICK) + 2
+    x = np.pad(x, (0, n * TICK - len(x)))
+    mid = (E.EAR_SITES["L"] + E.EAR_SITES["R"]) / 2
+    ears, out = E.Ears(), ([], [])
+    for u in range(n):
+        h = ears.tick(E.EAR_SITES["L"], E.EAR_SITES["R"], {"mama": (x[u * TICK:(u + 1) * TICK], mid + np.asarray(pos))})
+        for side, acc in ((h.left, out[0]), (h.right, out[1])):
+            acc.extend(10 * np.log10(np.maximum((side.astype(np.float64) ** 3 * E.E_CODE).sum(1), 1e-30) / E.P_REF ** 2))
+    return np.array(out[0]), np.array(out[1])
+
+
+def _ear_headroom(comps, at, tag_at, geos=EAR_GEOS):
+    """the level ceiling at the child's own ears: for each spliced sentence, each place (distance, degrees round its head in
+    the plane of its ears) and each ear, the frames its test word's slot reaches (those that differ from the same sentence with
+    its slot silent by more than 1e-6 dB: float rounding in the ears' FFTs spreads a few ticks further, at 1e-12) against the
+    loudest frame before them and the loudest after them -> (the least margin, dB; where it was)."""
+    worst, where = math.inf, None
+    for d, adeg in geos:
+        a = math.radians(adeg)
+        pos = (d * math.cos(a), d * math.sin(a), 0.0)
+        for w, c in comps.items():
+            quiet = np.asarray(c.pcm).copy()
+            quiet[at:tag_at] = 0
+            lv, lq = ear_levels(c.pcm, c.gain_db, pos), ear_levels(quiet, c.gain_db, pos)
+            for e in (0, 1):
+                dif = np.nonzero(np.abs(lv[e] - lq[e]) > 1e-6)[0]
+                if not len(dif):
+                    continue
+                d0, d1 = dif[0], dif[-1]
+                h = min(lv[e][:d0].max(), lv[e][d1 + 1:].max()) - lv[e][d0:d1 + 1].max()
+                if h < worst:
+                    worst, where = h, [w, d, adeg, "left" if e == 0 else "right"]
+    return worst, where
 
 
 def _brief(v):

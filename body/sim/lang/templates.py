@@ -142,7 +142,7 @@ ROOM_AT_BIRTH = dict(
 F = lambda text, focus=None: (text, focus)   # noqa: E731
 FRAMES = {
     "call": [F("{n}.", "{n}"), F("{n}. look at mama.", "mama"), F("{n}. look here.")],   # her teaching's call (4.5); the name
-                                                        # test is trial_name's (its name or a foil, alone: 4.8, 12)
+                                                        # test is trial_name's (its name or a foil: 4.8, 12)
     "hall_call": [F("{n}.", "{n}"), F("{n}? mama is here.")],
     "greet": [F("hi {n}.", "{n}"), F("hi. hi {n}.", "{n}"), F("hi {n}. mama is here.")],
     "return": [F("hi {n}! mama is here."), F("hi {n}. hi.", "hi")],
@@ -183,10 +183,12 @@ FRAMES = {
     "no": [F("no.")],
     "no_talkover": [F("no.")],
     "night": [F("night night {n}.", "{n}"), F("night night.", "night")],
-    # a formal trial's single test sentence (4.8, 12, the lead's decision): said with no act, only her mouth moving
-    "trial_where": [F("where is the {o}?", "{o}")],                     # place and exemplar (M6(a); Quinn et al. 1993)
-    "trial_combo": [F("where is the {c} {o}?", "{o}")],                 # the combination never heard (M6(b), A28, A55)
-    "trial_name": [F("{n}.", "{n}")],                                   # its name; a foil in its place (foil_line)
+    # a formal trial's single test sentence (4.8, 12, the lead's decision): said with no act, only her mouth moving; since P3's
+    # fourteenth round each its test word spliced into one carrier phrase, a recording before it and a tag after it, as
+    # looking-while-listening's "where's the X? can you find it?" (lang/stimuli.py)
+    "trial_where": [F("where is the {o}? see?", "{o}")],                # place and exemplar (M6(a); Quinn et al. 1993)
+    "trial_combo": [F("where is the {c} {o}? see?", "{o}")],            # the combination never heard (M6(b), A28, A55)
+    "trial_name": [F("hi. {n}. hi.", "{n}")],                           # its name; a foil in its place (foil_line)
 }
 TRIAL_FRAMES = ("trial_where", "trial_combo", "trial_name")   # a trial tests known words: never a new word's line (new_word_lines)
 
@@ -261,8 +263,9 @@ def key(text):
 
 
 for _k, _fs in list(FRAMES.items()) + list(INTRO.items()) + list(INTRO_WORD.items()):
-    for _t, _f in _fs:
-        assert _f is None or words(_t.replace("{", "").replace("}", ""))[-1] == _f.strip("{}"), (_k, _t, _f)
+    for _t, _f in _fs:                                # the focus said last (a trial's test word: before its one tag, P3's
+        _ws = words(_t.replace("{", "").replace("}", ""))                                              # fourteenth round)
+        assert _f is None or _ws[-2 if _k in TRIAL_FRAMES else -1] == _f.strip("{}"), (_k, _t, _f)
 
 
 @dataclass(frozen=True)
@@ -270,7 +273,7 @@ class Line:
     text: str
     intent: str
     register: str = "plain"
-    focus: str = None               # the focus word (said last), or None
+    focus: str = None               # the focus word (said last; a trial's test word, before its tag), or None
     emphasis: str = None            # the word the voice puts on a pitch peak and lengthens (4.4): the focus
     refs: tuple = ()                # the object ids its slots were filled from
     source: str = "fast"            # "fast" (the templates) or "claude" (a steering row's line)
@@ -679,12 +682,12 @@ def fill(frame, o=None, b=None, w=None, fixtures=()):
 
 
 def foil_line(foil):
-    """the name test's foil (4.8, 12; Mandel, Jusczyk and Pisoni 1995): "<foil>." for a foil in consts.NAME_FOILS, a name she
-    never uses for it or for anything, said in its name's register and stillness. The only line she says that is not of her
-    words (the line check's vocabulary): refused for anything else, and never Claude's."""
+    """the name test's foil (4.8, 12; Mandel, Jusczyk and Pisoni 1995): "hi. <foil>. hi." (the name's frame, trial_name) for a
+    foil in consts.NAME_FOILS, a name she never uses for it or for anything, said in its name's register and stillness. The
+    only line she says that is not of her words (the line check's vocabulary): refused for anything else, and never Claude's."""
     if foil not in K.NAME_FOILS:
         raise ValueError(f"not a foil name: {foil!r} (consts.NAME_FOILS)")
-    return f"{foil}."
+    return FRAMES["trial_name"][0][0].replace("{n}", foil)
 
 
 def frames_for(intent):
@@ -765,8 +768,8 @@ def birth_lines(vocab=BIRTH_WORDS, objects=None, fixtures=ROOM):
     objs = objects or [(t, "", p) for t in TOYS for p in ("mat", "sofa")]
     out = set()
     for intent, frames in FRAMES.items():
-        if intent not in INTENTS:
-            continue
+        if intent not in INTENTS or intent in TRIAL_FRAMES:      # a trial's sentence is never made whole: its parts are
+            continue                                             # (lang/stimuli.parts), when its probe runs
         for fr in frames:
             opts = []
             slots = set(_SLOT.findall(fr[0]))

@@ -10,9 +10,11 @@ schedule (P1); and P3's fast layer:
                   attention each tick, A51's log, fail-closed; a stub until then), her voice's manners (FastLayer), the speech
                   side of L2 (Conduct), and her formal trials of what the child understands (4.8, 12: the only place it is
                   scored; her everyday asks are her teaching)
-  stimuli.py      a formal trial's stimuli, time-matched by construction (P3's twelfth round): what a child can time from in a
-                  sentence (timeline), whether every sentence a trial's draw could give is one (same), and the recipe measured
-                  before birth (trial_lines.json, tools/sim_voice_check.py --trial)
+  stimuli.py      a formal trial's stimuli, time-matched by construction (P3's twelfth round; its fourteenth: one carrier
+                  phrase a form, the test word spliced between one recording before it and one tag after it, under the level
+                  ceiling): what a child can time from in a sentence (timeline), whether every sentence a trial's draw could
+                  give is one (same), the parts and the splice, and the recipe measured before birth (trial_lines.json,
+                  tools/sim_voice_check.py --trial)
   transcriber.py  how she hears the child: its tract through her ear (body/sim/parent_ear.py) at each turn's end, its silent token
                   output as a transcript
   ledger.py       every line she says, every word she accepts, her asks (teaching) and her trials, each word's standing (heard,

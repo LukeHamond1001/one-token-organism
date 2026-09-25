@@ -179,11 +179,12 @@ TRIAL_WINDOW = 20                     # a trial's window: 20 ticks (3 s) from th
 TRIAL_EAR_TICKS = 1                   # the child hears her sound at most a tick after it plays: its ears' 7.7 ms of latency and
                                       # the 25 ms frame that ends 10 ms after it (body/sim/ears.py), with no room echo there yet
                                       # (B9's first-order echo, W5's to add, would lie within 30 ms in this room). The name test
-                                      # holds a foil's "no turn" past its window by every tick from the name's onset to her
-                                      # clip's end and this one (P3's thirteenth round: a turn timed from any moment of her
-                                      # sound, at any level or precision, lands at most that many ticks later after one name than
-                                      # after another, so it can never be in the window after its name and outside the span
-                                      # after a foil); must grow if W5's echo outlasts a tick (ours)
+                                      # holds a foil's "no turn" past its window by the name's slot (its onset tick to the tag's
+                                      # first) and this one: since P3's fourteenth round nothing she sounds outside the slot
+                                      # differs between the name and a foil, sample for sample, so a turn timed from any moment of
+                                      # her sound outside it lands on the same tick after either, and one timed from inside it
+                                      # at most that many ticks later after one than after another; must grow if W5's echo
+                                      # outlasts a tick (ours)
 TRIAL_WAIT = 400                      # a probe whose things are not placed, or whose settle or display does not hold, within 400
                                       # ticks (a minute) of its start is dropped and logged, never said (ours)
 CHANCE_2AFC = 0.5                     # a pair trial's chance: 50% by counterbalancing (her trial stream draws which of the two is
@@ -201,16 +202,19 @@ NAME_FOILS = ("viv", "vib", "pew")    # the name's foils (Mandel, Jusczyk and Pi
                                       # ms, "viv." 717, "vib." 729 and "pew." 727; energy 99%, 103% and 101%; the loudest 10
                                       # ms 93%, 93% and 90% of the name's; its rise to half of that 100 ms, as the name's;
                                       # median F0 242, 242 and 276 Hz against 250; the word by the voice's marks 380, 420 and
-                                      # 430 ms against 360. Left, disclosed (C66): the name's loudest moment 7-10% above each
-                                      # foil's. The ninth round's "tib", "vek" and "jem" ran 6 ticks, 490-570 ms and 109-176%
-                                      # of its energy: a child drawn to short or quiet sounds would have turned after its name
-                                      # more. test_sim_lang holds them to FOIL_MATCH where the engine is present
+                                      # 430 ms against 360. The name's loudest moment was 7-10% above each foil's (C66): in her
+                                      # trials since P3's fourteenth round each is said at the form's one loudest 10 ms (its
+                                      # gain, stimuli.parts), so none is louder. The ninth round's "tib",
+                                      # "vek" and "jem" ran 6 ticks, 490-570 ms and 109-176% of its energy: a child drawn to
+                                      # short or quiet sounds would have turned after its name more. test_sim_lang holds them
+                                      # to FOIL_MATCH where the engine is present
 FOIL_MATCH = dict(energy=0.05, peak=0.12, rise_ms=10, f0=0.12)   # the foils' match to the name's clip, relative (energy, the
                                       # loudest 10 ms, F0) and in ms (the rise to half the loudest), its ticks equal
 # Time-matched stimuli by construction (P3's twelfth round, the lead's decision on C67; body/sim/lang/stimuli.py): every sentence a
 # trial's draw could give is said on one timeline, its test word at the engine's own per-word rate and its pitch contour matched,
-# and (its thirteenth round) on one carrier recording before its test word, checked on the rendered audio; a set that is not one
-# timeline is not used for a trial.
+# and since P3's fourteenth round spliced into one carrier phrase a form, one recording before the test word and one tag after
+# it ("where is the X? see?", "hi. pip. hi."), the test word at one level under both (the level ceiling), checked on the
+# rendered audio; a set that is not one timeline is not used for a trial.
 TRIAL_FILE = "trial_lines.json"       # the recipe, beside this file (tools/sim_voice_check.py --trial --write)
 TRIAL_LOUD_DB = -36.0                 # each tick of a trial sentence loud (its RMS above -36 dB of the engine's full scale: within
 TRIAL_SILENT_DB = -60.0               # 20 dB, a tenth of the pressure, of her plain speech's level, synth.SYNTH_RMS's -16) or
@@ -218,12 +222,20 @@ TRIAL_SILENT_DB = -60.0               # 20 dB, a tenth of the pressure, of her p
                                       # SPL, so -60 is 18 dB SPL, under the words channel's 20, lexicon.AUDIBLE_DB), none between,
                                       # the loud ticks the same in every sentence (ours). A tick's RMS is at most its loudest 10
                                       # ms, so her sound and her mouth (the tick's loudness the face shows, playback.Utterance.
-                                      # mouth) start, stop and pause on the same ticks of the clip at any level in the band: on
-                                      # the clip's tick grid only, not as the child's ears hear it (their 7.7 ms and 25 ms frames
-                                      # carry a word's last sound into the next tick), nor 10 ms by 10 ms, nor above -36, where no
-                                      # two words are alike: the trial's scoring answers that (ledger: intention to treat; the
-                                      # name's span, TRIAL_EAR_TICKS; P3's thirteenth round). The engine's own floor after a line
-                                      # is -75 to -85
+                                      # mouth) start, stop and pause on the same ticks of the test word's slot at any level in the
+                                      # band (since P3's fourteenth round the band holds the slot's ticks only: everything
+                                      # before and after it is one recording, sample for sample). The engine's own floor after
+                                      # a line is -75 to -85
+TRIAL_CEILING_DB = 1.0                # the level ceiling (P3's fourteenth round): every test word of a form said at one
+TRIAL_CEILING_EAR_DB = 0.5            # loudest 10 ms (the form's target, a gain a word: tools/sim_voice_check.py --trial), so
+                                      # every window of her sound from 2.5 ms to a tick (stimuli.WINDOWS) overlapping its slot is
+                                      # at least 1 dB quieter than the loudest wholly in the carrier before it and the loudest
+                                      # wholly in the tag after it, and every 10 ms frame the child's own ears hear of the slot
+                                      # (either ear, her mouth 0.3-3 m away at any angle round its head) 0.5 dB quieter than
+                                      # their loudest before it and after it: so her voice's start and her sound's stop at every
+                                      # level lie in the carrier and the tag, the same whichever is named. At run time the
+                                      # conduct holds the clip to its ceiling (above 0 dB: stimuli.headroom); the margins are
+                                      # for what it does not measure there, the ears among it (ours)
 TRIAL_RATE_SPAN = 2.0                 # a test word's own rate at most a factor of 2 from its natural rate (the emphasis's 35% of
                                       # the engine's default): the span her own registers' rates run (synth.REGISTERS, 0.15 for
                                       # comfort and the new word to 0.30 for "no."), so a test word is never said faster or
