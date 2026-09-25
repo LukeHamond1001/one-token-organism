@@ -755,7 +755,7 @@ def test_every_call_site_passes_the_channels():
     orig = BM.Organs.inputs
 
     def spy(self, anatomy, obs, xos, bundles):
-        where = sys._getframe(1).f_code.co_name + ("[batch]" if bundles.dim() == 4 and sys._getframe(1).f_code.co_name == "night" else "")
+        where = sys._getframe(1).f_code.co_name + ("[batch]" if bundles.dim() == 4 and sys._getframe(1).f_code.co_name == "_night_words" else "")
         seen[where] += 1
         if anatomy is not L.anatomy or list(obs) != names or any(obs[k].shape[:len(xos.shape)] != xos.shape for k in names):
             bad.append(where)
@@ -776,7 +776,7 @@ def test_every_call_site_passes_the_channels():
     finally:
         BM.Organs.inputs = orig
     assert not r1.get("error") and not r2.get("error"), (r1.get("error"), r2.get("error"))
-    want = {"_stream_now", "_wake_lesson", "_imagine_value", "_dream_inputs", "_dream_batch", "night[batch]", "night", "_rem_imagine",
+    want = {"_stream_now", "_wake_lesson", "_imagine_value", "_dream_inputs", "_dream_batch", "_night_words[batch]", "_night_words", "_rem_imagine",
             "_rem_rollout", "_gauge_batched", "gauge"}
     assert set(seen) == want, f"reached {sorted(seen)}, want {sorted(want)}"
     assert not bad, f"these passed another anatomy or not all its channels: {sorted(set(bad))}"
@@ -1468,7 +1468,7 @@ def test_every_call_site_passes_the_effectors():
     orig = BM.Organs.inputs
 
     def spy(self, anatomy, obs, xos, bundles):
-        where = sys._getframe(1).f_code.co_name + ("[batch]" if bundles.dim() == 4 and sys._getframe(1).f_code.co_name == "night" else "")
+        where = sys._getframe(1).f_code.co_name + ("[batch]" if bundles.dim() == 4 and sys._getframe(1).f_code.co_name == "_night_words" else "")
         seen[where] += 1
         if anatomy is not L.anatomy or list(obs) != names or any(obs[k].shape[:len(xos.shape)] != xos.shape for k in names):
             bad.append(where)
@@ -1492,7 +1492,7 @@ def test_every_call_site_passes_the_effectors():
     finally:
         BM.Organs.inputs = orig
     assert not r1.get("error") and not r2.get("error"), (r1.get("error"), r2.get("error"))
-    want = {"_stream_now", "_wake_lesson", "_imagine_value", "_dream_inputs", "_dream_batch", "night[batch]", "night", "_rem_imagine",
+    want = {"_stream_now", "_wake_lesson", "_imagine_value", "_dream_inputs", "_dream_batch", "_night_words[batch]", "_night_words", "_rem_imagine",
             "_rem_rollout", "_gauge_batched", "gauge"}
     assert set(seen) == want, f"reached {sorted(seen)}, want {sorted(want)}"
     assert not bad, f"these passed another anatomy or not all its channels and effectors: {sorted(set(bad))}"
