@@ -2,8 +2,9 @@
 grouped by organ; `SWITCHES`, the core refactor's defect-fix switches, declared and off by their absence (docs/SIM_DESIGN.md 8.4); and
 `MOTOR`, the motor timing part's constants (step R6; step R6h's movement units, act_inv's batches, the kappa correction and fatigue per
 effector among them), absent from a body's cfg unless given; `CEREB`, the cerebellum's switch and constants (step R6c), absent likewise;
-and `REFLEX`, the born patterns summed at the cord and the born biases (step R6h: the spinal pattern generator, the born cry, orienting,
-the VOR), absent likewise. body/life.py re-exports PHYSIOLOGY
+`REFLEX`, the born patterns summed at the cord and the born biases (step R6h: the spinal pattern generator, the born cry, orienting,
+the VOR), absent likewise; and `FRAMES`, the body in frames (step R7: the frame writes, the event ends, the tick's record), absent
+likewise. body/life.py re-exports PHYSIOLOGY
 (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
 prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
 
@@ -421,4 +422,28 @@ REFLEX = dict(
     vor=0,
     vor_gain=1.0,                 # born gain 1 (3.7; ours: the reflex's ideal, which the flocculus tunes)
     vor_quick=0.5,                # at the reach, a jump back of half the reach, in the direction of the turn (A23; ours)
+)
+
+# THE BODY IN FRAMES (the core refactor's step R7, docs/SIM_DESIGN.md 7.2, 7.4, 7.6, 8's R7 row, 10; body/core/frames.py): each a switch
+# or a constant ABSENT FROM A BODY'S CFG unless given (`cfg.get(name, FRAMES[name])`), so the language body, which lives on the page
+# alone, gains no key, runs none of it and keeps its pinned digests. The sim is born with every switch on (SIM_DESIGN.md 10's switches at
+# birth; body/sim/anatomy.py SIM_CFG).
+FRAMES = dict(
+    # STEP R7b, THE FRAMES (7.4's "the fast memory's writes", 9's store, 10's "event end"): 1 = at each tick's end the frame's surprise
+    # (each forecasting channel's error, the words' the tick's surprise and every later channel's its head's squared error to the code
+    # that came, each scaled by its own running mean, their mean: all channels weighted equally), the event's end by today's settle law
+    # on it (offset_fast, offset_slow, offset_settle: the first settled tick after one that was not), the store's marks there (the last
+    # frame written ends an event, the next begins one), the surprise-gated write of the frame (its codes under the key of the stream
+    # before it) and the tick's record (surprise, dopamine, tag, the net reward received: 16 B a tick, R8's tape). 0 = off
+    frames=0,
+    # the write gate's share: a frame is written when its surprise x (1 + tag) passes this running quantile of the same (7.4, 10; the
+    # design's 0.9: about 2,400 frames in a life day of 24,000 ticks, section 9's store)
+    write_q=0.9,
+    # the running quantile's step, in log units, a tick: q <- q + eta (write_q - [ln x <= q]); its first 1/eta samples settle it as
+    # their sample quantile, and nothing is written while it settles (the body's running quantiles are the sensed pace's trackers'
+    # law and step, pace_eta; ours)
+    write_eta=0.05,
+    # each channel's forecast error's running mean, the rate 1 / min(n, err_tau) (the first ticks exact averages): the critics' own
+    # statistics' horizon (fast_rls_forget, vcrit_norm_tau, 36,000 ticks; ours)
+    err_tau=36000,
 )

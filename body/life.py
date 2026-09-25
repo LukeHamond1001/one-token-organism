@@ -50,7 +50,7 @@ import torch
 import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
-from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR, CEREB, REFLEX
+from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR, CEREB, REFLEX, FRAMES
 from .core.anatomy import anatomy_for
 from .core.world import World, DiaryWorld, Acts
 from .core.cerebellum import CerebellumMixin
@@ -74,7 +74,8 @@ __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store",
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin,
            CerebellumMixin, CordMixin, FramesMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
-        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB and k_ not in REFLEX)   # the switches, the motor's, the cerebellum's and (R6h) the born patterns' constants are known, absent unless given
+        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB and k_ not in REFLEX
+                         and k_ not in FRAMES)   # the switches, the motor's, the cerebellum's, (R6h) the born patterns' and (R7) the frames' constants are known, absent unless given
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
@@ -395,6 +396,8 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew = self._choose(C1, pred1, u, level, stri)
         int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew)
         self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew)
+        if self._frames_on():                               # step R7b: the frame's surprise, the event's end, the gated write, the record
+            self._frame_tick(u, delta, r)
         acts = {self.anatomy.voice.name: int(nxt)}
         if len(self.anatomy.effectors) > 1:                 # step R6h: every effector's act in the declared order, the voice at its place
             wa_ = {e_.name: int(st_["now"]["world"]) for e_, st_ in zip(self.anatomy.motors, self.motor)}

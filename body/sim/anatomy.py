@@ -397,4 +397,7 @@ SIM_CFG = dict(
     # that steps a lesson back onto the limit; each readout held inside its joint's limit this tick; the flocculus's 0.05 a tick; 4,096
     # granule units of 4 fibres, 10% active), its readouts per joint of the waist, the arms and the legs
     cereb=1,
+    # STEP R7 (FRAMES; body/core/frames.py): the body lives in frames (R7b: the frame's surprise, the event's end for frames, the
+    # surprise-gated writes at its running 0.9 quantile, the tick's record), its constants FRAMES' (none given here)
+    frames=1,
 )

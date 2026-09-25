@@ -90,51 +90,55 @@ class NightMixin:
                     out += [list(pool[k]) + end_ for k in idx_c]
                     self._n_corpus_dreams = len(idx_c)
             return (out, [[False] * len(d) for d in out]) if with_who else out
-        who_on = int(self.cfg.get("dream_who", 0)) > 0 and self.store.n() > 0
-        starts = self.store.sample_starts(n, gen=self.gen, mask=(self.store.W != 1) if who_on else None)
+        st_ = self.store
+        if self._frames_on() and st_.n() > 0 and bool((st_.W == 2).any()):
+            st_ = self._words_store()                               # step R7b: the words' dreams read the store's words alone (the frames,
+                                                                    # who 2, are the night over frames', R8's; body/core/frames.py)
+        who_on = int(self.cfg.get("dream_who", 0)) > 0 and st_.n() > 0
+        starts = st_.sample_starts(n, gen=self.gen, mask=(st_.W != 1) if who_on else None)
         outw = []
-        d_ = float(self.cfg["bag_decay"]); ref = self.store.self_confidence(qnorm=(1.0 / (1.0 - d_ * d_)) ** 0.5)   # a full context's norm
+        d_ = float(self.cfg["bag_decay"]); ref = st_.self_confidence(qnorm=(1.0 / (1.0 - d_ * d_)) ** 0.5)   # a full context's norm
         floor = float(self.cfg["dream_floor_rel"]) * ref
         out = []
         a_hit, a_rec = float(self.cfg["dream_adapt"]), float(self.cfg["dream_recover"])
-        chain = int(self.cfg.get("store_chain", 0)) and self.store.N.shape[0] == self.store.n()
+        chain = int(self.cfg.get("store_chain", 0)) and st_.N.shape[0] == st_.n()
         with torch.no_grad():
             for j in starts:
-                if chain and int((self.store.N[j] >= 0).sum()) > 0:
+                if chain and int((st_.N[j] >= 0).sum()) > 0:
                     # THE EPISODE AS LIVED: the onset's first symbol, then the slots in the order they were written, to the utterance's
                     # end; at a branch (a frame heard with several continuations) a draw by strength, the recent and the rewarded more
-                    ids = [self.m.nearest(self.store.K[j])]; k = int(j); seen = {k}
-                    who = [bool(self.store.W[j] == 1)]                    # who said each symbol: the onset's first by its own slot
+                    ids = [self.m.nearest(st_.K[j])]; k = int(j); seen = {k}
+                    who = [bool(st_.W[j] == 1)]                    # who said each symbol: the onset's first by its own slot
                     tag = None
                     if int(self.cfg.get("dream_tag", 0)) > 0:
                         # THE DREAM FOLLOWS ONE UTTERANCE (dream_tag; the twenty-second defect): at the onset a continuation is drawn by
                         # strength as before, and the dream then follows the utterance that wrote it, slot by slot, ending where its
                         # trace ends; without the tag a chain drew a successor from another utterance at every shared slot, and half
                         # a night's dream text was stitched across lines after four symbols. A link from before the tags follows as before.
-                        _, t_ = self.store.draw_link(j, gen=self.gen); tag = int(t_) if t_ >= 0 else None
+                        _, t_ = st_.draw_link(j, gen=self.gen); tag = int(t_) if t_ >= 0 else None
                     for _ in range(int(self.cfg["dream_max"])):
-                        ids.append(self.m.nearest(self.store.V[k])); who.append(bool(self.store.W[k] == 1))
-                        nk = self.store.successor(k, gen=self.gen, tag=tag)
+                        ids.append(self.m.nearest(st_.V[k])); who.append(bool(st_.W[k] == 1))
+                        nk = st_.successor(k, gen=self.gen, tag=tag)
                         if nk < 0 or nk in seen:
-                            if bool(self.store.B[k]) and int(self.cfg.get("offset_ticks", 0)) > 0:
-                                ids.append(self.end_id); who.append(bool(self.store.W[k] == 1))   # the memory ends where the world went quiet
+                            if bool(st_.B[k]) and int(self.cfg.get("offset_ticks", 0)) > 0:
+                                ids.append(self.end_id); who.append(bool(st_.W[k] == 1))   # the memory ends where the world went quiet
                             break
                         k = nk; seen.add(k)
                     if len(ids) >= 2:
                         out.append(ids); outw.append(who)
                     continue
-                bag = self.store.K[j].clone()                           # a dream's context: per symbol, as the keys are
+                bag = st_.K[j].clone()                           # a dream's context: per symbol, as the keys are
                 # the dream begins with the context's own last symbol, read from the key (a key is the bag before the
                 # memory's symbol, its newest term whole): at an onset that is the utterance's first symbol, which the
                 # store never kept as a memory of its own (dreams began 'og will go', and the cortex lost every line's
                 # first symbols: its trace fell from 60 to 38 of 82, runs 53/54)
                 ids = [self.m.nearest(bag)]
-                adapt = torch.ones(self.store.n(), device=self.dev)      # neural adaptation: a recalled memory tires
+                adapt = torch.ones(st_.n(), device=self.dev)      # neural adaptation: a recalled memory tires
                 fa_ = float(self.cfg.get("store_floor_abs", 0.0))      # the forgetting floor: absolute when set (the thirty-first defect)
-                s_floor = fa_ if fa_ > 0 else float(self.cfg["store_floor_rel"]) * float(self.store.S.mean())
+                s_floor = fa_ if fa_ > 0 else float(self.cfg["store_floor_rel"]) * float(st_.S.mean())
                 for _ in range(int(self.cfg["dream_max"])):
-                    pred, conf, win = self.store.read(bag, adapt=adapt)
-                    if conf < floor or (win >= 0 and (float(self.store.S[win] * adapt[win]) < s_floor
+                    pred, conf, win = st_.read(bag, adapt=adapt)
+                    if conf < floor or (win >= 0 and (float(st_.S[win] * adapt[win]) < s_floor
                                                       or float(adapt[win]) < float(self.cfg["dream_exhaust"]))):
                         break                                             # unsure, or the memory is exhausted (a slot fires at most twice)
                     lg = self.m.readout(pred).clone()
@@ -145,13 +149,13 @@ class NightMixin:
                     if nid == self.sil:                                   # the rest form: the recall itself expects the quiet
                         ids.append(self.sil); break
                     ids.append(nid)
-                    if int(self.cfg.get("offset_ticks", 0)) > 0 and win >= 0 and bool(self.store.B[win]):
+                    if int(self.cfg.get("offset_ticks", 0)) > 0 and win >= 0 and bool(st_.B[win]):
                         ids.append(self.end_id); break                    # the memory ends where the world went quiet
                     adapt = 1.0 - a_rec * (1.0 - adapt)                   # recovery toward 1
                     # the recalled memory tires fully each time it fires, and every slot tires in
                     # proportion to how much it fired (neural adaptation), so a cycle exhausts itself
                     # even when the attention is spread over near-duplicate memories of one context
-                    adapt = adapt * (1.0 - (1.0 - a_hit) * self.store._last_w)
+                    adapt = adapt * (1.0 - (1.0 - a_hit) * st_._last_w)
                     if win >= 0:
                         adapt[win] *= a_hit
                     bag = float(self.cfg["bag_decay"]) * self.m.shift(bag) + self.m.E.weight[nid]
@@ -239,6 +243,8 @@ class NightMixin:
             # THE NIGHT ENDS EVERY UTTERANCE (the review of 2026-09-19): the switch fires on the tick count, blind to a line in progress;
             # a line the night fell inside was kept open until the morning, glued to the first line of the day under the dusk's tag
             self._offset(); self._offset_done = True
+        if self._frames_on():
+            self._frames_nightfall()                                  # and every event of the frames (step R7b, body/core/frames.py)
         try:
             # SLEEP NEED SCALES WITH THE DAY'S PLASTICITY (night_load, 0 = off; 2026-09-11, nights 114-115): with the parent talking
             # twice as much, the day wrote twice the memories and the night, dreaming its fixed 48 starts, consolidated less far (the
@@ -400,6 +406,8 @@ class NightMixin:
             self._gap_foreseen = False; self._gap_paused = False; self._sh_done = True     # the gap's labels cleared, the trackers kept (the partner is the same)
             self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
             self._bands_prev = None; self._C_last = None; self.v_prev = None
+            if self._frames_on():
+                self._frames_night()                               # step R7b: the frames' working state wakes fresh (body/core/frames.py)
             self._z_prev = None; self._z_now = None; self._e_actor = None
             for i_, st_ in enumerate(getattr(self, "motor", ()), 1):  # the later effectors' working state begins afresh, as the voice's (step R5)
                 if st_.get("inv_batch"):

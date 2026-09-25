@@ -159,7 +159,11 @@ class SensesMixin:
             elif getattr(self, "_start_armed", False):
                 self._start_pending = True; self._start_armed = False
                 self.store.episode += 1                                    # a new utterance of the world's: the links it writes carry its tag
+        fr_ = self._frames_on()                                              # step R7b: the words' error on the frame (a forecast made)
+        fw_ = fr_ and getattr(self, "pred_prev", None) is not None
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
+        if fr_:
+            self._fw_err = float(self._surp_tick) if fw_ else None
         ps_ = self._pace_mode()
         if settle_form and off > 0 and ps_ < 2:                              # THE EVENT'S END BY THE LAW: two running averages of the
             st_ = float(getattr(self, "_surp_tick", 0.0))                     # tick's surprise; the world stops, the surprise jumps and
