@@ -283,8 +283,8 @@ class NightMixin:
                 # the rounds where the night's outliers arrive. A disclosed constant; 0.999 = as before.
                 # act_pred and the corrections take no gradient at night (anatomy 31 guards it). R8's replay of act_pred's targets, each
                 # weighted by the replayed dopamine's credit, must step them through their gate (body/core/timing.py GatedAdam, at the
-                # replayed weight, each source of labels a sample with moments of its own: the own acts' opt_pred, act_inv's labels'
-                # opt_lab; a weighted source sharing moments with a whole one is re-inflated, the R6 verifier's fifth look), and
+                # replayed weight, one step a replay, the scale the replay with every target whole: a scale taken from the weighted
+                # targets re-inflates them, the R6 verifier's fifth look, and scales of their own per source fight, its sixth), and
                 # whatever share of a weighted target reaches the stream would be taught whole by this Adam, as by the day's (it
                 # divides each parameter's step by its recent gradient size): the waking lesson keeps act_inv's labels out of the
                 # stream for that reason (`_timing_loss`)
