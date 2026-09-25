@@ -19,3 +19,4 @@ rescue_volume/
 .pytest_cache/
 .claude/worktrees/
 video/
+MUJOCO_LOG.TXT
