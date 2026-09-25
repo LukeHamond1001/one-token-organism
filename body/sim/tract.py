@@ -1,8 +1,12 @@
-"""The child's vocal tract: a source-filter articulatory synthesizer in numpy (docs/SIM_DESIGN.md section 4.9; from the
-2026-09-24 prototype). It is the voice effector's physics, run on the world's side like MuJoCo: the body sends one step
-per articulator per tick and hears the result only through its own ears.
+"""THE CHILD'S VOCAL TRACT (the owner's decision 5, 2026-09-24; docs/SIM_DESIGN.md 4.9 and the decision log's B6): the voice
+effector's physics. A source-filter articulatory synthesizer in numpy, brought in from the G1 amendment's voice study
+($S/g1/voice/tract.py, 2026-09-24) with its calibration unchanged; what is new here is the seeded stream, save and restore, the
+body sense, and the level in pascals.
 
-One call per 150 ms tick: tract.tick(act) -> 2400 samples at 16 kHz (the sound the tract radiates in that tick).
+One call per 150 ms tick: Tract.tick(act) -> 2,400 samples at 16 kHz, the sound the tract radiates in that tick, in the parent
+voice's engine units at 1 m in front of the mouth (x PA_PER_UNIT for pascals; the ears place it at the G1's head, body/sim/ears.py,
+from its speaker's place on the head's front).
+The samples run from 10 ms before the tick's start to 10 ms before its end (half a control frame: the sound lags the articulators).
 
 Structure (a hybrid time/frequency-domain synthesizer in the manner of Sondhi & Schroeter 1987):
   articulators (10, each 0..1)  --second-order muscle dynamics, 10 ms control frames-->  positions
@@ -16,11 +20,45 @@ Structure (a hybrid time/frequency-domain synthesizer in the manner of Sondhi & 
   filtering: each 20 ms Hann frame of each source times its transfer function (zero-padded FFT), overlap-added;
       the radiation (d/dt) applied as j*omega.
 
-No sound category is written anywhere: a vowel, a nasal murmur, a hiss, a burst, a stop's silence all come out of the
-same geometry and the same aerodynamic law. Every constant below is disclosed (anatomy, ours).
+No sound category is written anywhere: a vowel, a nasal murmur, a hiss, a burst, a stop's silence all come out of the same
+geometry and the same aerodynamic law. A closure stops voicing by itself: with the lips (or the tongue) shut and the velum raised
+the pressure across the glottis falls to nothing and the folds stop; with the velum lowered the air leaves by the nose and the
+voice goes on as a nasal murmur (test_sim_voice.py measures both).
+
+THE EFFECTOR (the voice's joints): 10 articulators (NAMES), each taking one of STEPS = {-0.6, -0.2, 0, +0.2, +0.6} of its range a
+tick, re-anchored on where it is (the servo law); at rest the targets relax to the silent rest posture (NEUTRAL: nose breathing,
+lips nearly closed) with a time constant of 1 tick. Its body sense (proprio()): the 10 positions, their 10 velocities and the
+breath left: 21 numbers for the body channel. Its random numbers (jitter, shimmer, both noises) come from its own stream of the
+body's seed, a PCG64 from SeedSequence(seed, spawn_key=(STREAM,)), the world's convention (body/sim/world.py: its own stream is
+spawn key 1; the tract's is 2, ours). The tract owns its generator (none is handed in, so restoring it can never rewind a stream
+another part draws from); state() and load_state() carry it, so a replay is exact.
+
+THE CALIBRATION (the study's; all ours, anatomy; disclosed):
+  - the child's tract: 12 cm glottis to lips (a young child's; an adult woman's is about 14.5-15), 24 sections, a nasal branch at
+    its middle; resting pitch about 265 Hz (180-546 Hz over the pitch articulator's range)
+  - the tongue's four corners (place, least area) fitted once to children's vowel means (Peterson & Barney 1952), each
+    constriction held at its anatomical place (Wood 1979): /i/ 344/2719 Hz, /a/ 938/1625 Hz, rounded /u/ about 375/1250 Hz.
+    The honest gap: the vowel space is about an adult woman's size (front vowels short in F2, 2700 against 3200; low vowels
+    short in F1, about 900 against 1030)
+  - levels: the steady /a/ at ANSI S3.5-1997's "normal" vocal effort at 1 m, 62 dB SPL (GAIN), the same reference level the
+    parent's speech takes (synth.SPEECH_PA), not a fit to her voice (measured 62.2 dB SPL at 1 m on the study's stream, 62.5 on
+    the tract's own stream of seed 1, the jitter's and shimmer's draws); the
+    turbulence constants set so a steady alveolar hiss is -14.1 dB and a steady /h/ -13.4 dB re /a/ (measured; Fletcher's
+    relative phonetic powers put /s/ about -16 dB and /sh/ -9 dB re /a/)
+  - the breath reservoir: 400 cm^3 usable (about 2.5 s of speech), a full breath in 0.8 s at rest
+  - the muscles: critically damped, natural periods TAU_MS (a step 95% done in 57-120 ms)
+Its cost (this Mac, shared with other jobs; tools/sim_voice_check.py, 2026-09-24): a sounding tick 1.7-3.2 ms (a held vowel, a
+glide, a hiss; best of repeats at load averages 3.4-5.5), up to 7.4 ms under heavier load; at rest 0.1-0.2 ms.
 """
 import numpy as np
 from scipy.signal import lfilter
+
+try:
+    from .voice.synth import PA_PER_UNIT  # noqa: F401  (the engine units -> pascals at 1 m, shared with the parent's voice)
+except ImportError:                       # imported as a top-level module from body/sim/ (the study's scripts)
+    from voice.synth import PA_PER_UNIT  # noqa: F401
+
+STREAM = 2                   # the tract's own random stream of the body's seed: SeedSequence(seed, spawn_key=(2,)) (the world: 1)
 
 SR = 16000
 TICK = 2400                  # 150 ms
@@ -67,7 +105,7 @@ REFILL_S = 0.8               # a full breath in at rest, seconds
 # the sources' peak amplitudes in speech (a steady /a/, /h/, hiss) at 4 sd of the noise: the silence gate's reference
 SRC_REF = (160.0, 8.5e-9 * (8000.0 ** 2 - RE_C ** 2) * 4, 7.5e-6 * (6000.0 ** 2 - RE_C ** 2) * 4)
 TILT_LO, TILT_HI = 700.0, 2500.0   # the return phase's corner, breathy .. pressed (Hz); Klatt's spectral tilt
-GAIN = 3.67e-7                   # output scale (the tract's /a/ at the parent's speech level: t_calib2.py)
+GAIN = 3.67e-7                   # output scale (the tract's /a/ at ANSI's normal effort, 62 dB SPL at 1 m: t_calib2.py)
 
 # ---- the articulators (the voice effector's joints) ----
 NAMES = ['lungs', 'glottis', 'pitch', 'jaw', 'tongue_front', 'tongue_height', 'tongue_tip', 'lips', 'rounding', 'velum']
@@ -246,10 +284,11 @@ def _rest_last(vol):
 
 
 class Tract:
-    """one child's tract; state carries across ticks (positions, velocities, targets, breath, phase, overlap tail)."""
+    """one child's tract; its state carries across ticks (positions, velocities, targets, breath, phase, overlap tails)."""
 
     def __init__(self, seed=1):
-        self.rng = np.random.default_rng(seed)
+        """seed: the body's seed (the tract draws from its own stream of it, spawn key STREAM)."""
+        self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(STREAM,))))
         self.x = NEUTRAL.copy()
         self.v = np.zeros(N_ART)
         self.target = NEUTRAL.copy()
@@ -267,6 +306,27 @@ class Tract:
         self.last = {}
         self.tilt_y = 0.0
         self.quiet = True
+
+    STATE = ("x", "v", "target", "vol", "phase", "tail", "src_prev", "tilt_y", "quiet")
+
+    def state(self):
+        """everything the next ticks depend on (the positions, velocities, targets, breath, the glottal phase, the overlap
+        tails, the tilt filter's memory and the random stream): load_state() continues exactly."""
+        out = {k: (np.array(getattr(self, k)) if isinstance(getattr(self, k), np.ndarray) else getattr(self, k))
+               for k in self.STATE}
+        out["rng"] = self.rng.bit_generator.state
+        return out
+
+    def load_state(self, s):
+        for k in self.STATE:
+            v = s[k]
+            setattr(self, k, np.array(v) if isinstance(v, np.ndarray) else v)
+        self.rng.bit_generator.state = s["rng"]
+        self.last = {}
+
+    def proprio(self):
+        """the voice's body sense: 10 positions (0..1), 10 velocities (range per second) and the breath left (0..1)."""
+        return np.concatenate([self.x, self.v, [self.vol]])
 
     def set_act(self, act):
         """act: None (the voice rests) or int[10] in 0..4 (per-articulator steps). Returns the targets."""
