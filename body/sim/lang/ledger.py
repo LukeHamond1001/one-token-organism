@@ -25,12 +25,14 @@ THE RECORD. One JSON line per event, keys sorted, in the life's folder (ledger.j
               heard)
   trial       a formal trial (4.8, 12; the conduct's probe): its form (consts.TRIAL_FORMS), the target and the distractor (their
               ids and the words they stand for), the sides, the word said (its name or a foil, for the name test), the tick
-              its window opens (the target word's onset) and its length, the never-taught items presented, and what it scores
+              its window opens (the target word's onset on the trial's one timeline: the latest of every sentence its draw
+              could have given) and its length, the never-taught items presented, and what it scores
               (each of its two things that is a fresh never-taught item scores for its word, named or the other named; the
               name test for its name, its name or a foil said)
   trial_outcome  met (the child's first look or reach on the target; for the name test its turn to her face), missed (on the
               distractor; no turn), none (no look to either: counted neither way), or void (logged with why: it already attended
-              one at the onset, both at once, her attention log showed anything but her mouth moving, its sentence cut)
+              one at the onset, both at once, her attention log showed anything but her mouth moving, the world stopped her
+              sentence; never the child's voice: P3's eleventh round)
   displayed   a probe dropped after its two things were brought into the child's view, never said: the never-taught items it
               displayed, each one presentation more (fail-closed: her follow-in naming may label a thing in its new place)
 
@@ -509,7 +511,8 @@ class Ledger:
             if "trials" not in st:                        # "understood" by them
                 st["understood_at"] = None
             if "seq" not in st:                           # a save before P3's tenth round: its trials' order unknown, so its
-                st["seq"] = []                            # record starts again (fail-closed: "understood" as it stood)
+                st["seq"] = []                            # record starts again, and an "understood" the ninth round's rule
+                st["understood_at"] = None                # gave is not kept (fail-closed: its trials are tested again)
             for k_, v in _blank().items():
                 st.setdefault(k_, v)
             st.pop("base", None)

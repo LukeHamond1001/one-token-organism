@@ -173,7 +173,9 @@ TRIAL_FORMS = {                       # the design's never-taught forms (section
 TRIAL_WINDOW = 20                     # a trial's window: 20 ticks (3 s) from the target word's onset (the lead's decision; 4.6's
                                       # 20 ticks for a gaze ask, opened at the onset as looking-while-listening measures from it:
                                       # Fernald et al. 2008); the first look (her reading of its head line, held TARGET_TICKS, or a
-                                      # reach) to the target or the distractor decides it
+                                      # reach) to the target or the distractor decides it. The onset is the latest of every
+                                      # sentence the trial's draw could have given, and her voice is held to the latest of their
+                                      # ends (one timeline whichever is named: P3's eleventh round)
 TRIAL_WAIT = 400                      # a probe whose things are not placed, or whose settle or display does not hold, within 400
                                       # ticks (a minute) of its start is dropped and logged, never said (ours)
 CHANCE_2AFC = 0.5                     # a pair trial's chance: 50% by counterbalancing (her trial stream draws which of the two is
@@ -198,7 +200,9 @@ NAME_FOILS = ("viv", "vib", "pew")    # the name's foils (Mandel, Jusczyk and Pi
 FOIL_MATCH = dict(energy=0.05, peak=0.12, rise_ms=10, f0=0.12)   # the foils' match to the name's clip, relative (energy, the
                                       # loudest 10 ms, F0) and in ms (the rise to half the loudest), its ticks equal
 NOVEL_PRESENTATIONS = 3               # a never-taught item counts only on its first 3 presentations (A28): a place, an angle or an
-                                      # exemplar displayed in a trial (as either thing), a combination said
+                                      # exemplar displayed in a trial (as either thing), a combination's pair in each of its
+                                      # trials, whichever is named (P3's eleventh round: counted when said, it had depended on
+                                      # her coins)
 
 # ------------------------------------------------------------------------------------------ the parent's ear (4.9, A27)
 EAR_SHIFTS = (0, 1, 2, 3, 4)          # the child's bands shifted down 0-4 (she adapts to a shorter tract) (4.9)

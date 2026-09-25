@@ -77,18 +77,30 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                (TRIAL_STREAM), each a fair coin, so chance is 50%: any child whose first look does not depend on the word, a
                follower of her gaze or her hands, a side's or a toy's favourite, scores 50% trial by trial; nothing she does
                before the sentence depends on the draw (W2's placing, the settle, the display's checks, the line check of both
-               things' sentences, whichever is named). The window opens at
-               the target word's onset (TRIAL_WINDOW = 20 ticks); the measure is the child's first look (her reading of its head
+               things' sentences, whichever is named). ONE TIMELINE (P3's eleventh round): every sentence the draw could have
+               given (the two things', or its name's and each foil's) is timed in her voice before one is said, and the trial
+               runs on one timeline for all of them: the window opens at the latest of their target words' onsets and runs
+               TRIAL_WINDOW = 20 ticks, and her voice is held to the latest of their ends whichever is said, so no rule reads a
+               time that depends on which was named (her voice makes "where is the ball?" 10 ticks and "where is the block?"
+               11; the tenth round's rules read the named sentence's own timing, and a child that knew no word, sounding at a
+               fixed time from her voice, had every "block" trial voided by her talk-over frown or cut and "ball" understood).
+               Nothing the child's voice does voids a trial: through its sentence and window she makes no talk-over stop and
+               no frown and judges no turn of the child's (her face holds its neutral set; the turn is answered after the trial
+               as any she makes no judgment of). The measure is the child's first look (her reading of its head
                line, held 3 ticks, A40) or reach to the target against the distractor: met, missed, or none (no look to either);
                void if it already attended one at the onset, or both at once, or if her attention log shows anything but her
                mouth moving from the sentence's first tick to the decision (a tick not read voids it before that tick's percept
-               is read: fail-closed). The name
+               is read: fail-closed), or the child's pain, distress or hit, or the world stopping her sentence (her voice is
+               stopped only by the conduct, Say.cut, never in a trial). For a child whose looks, reaches and acts do not depend
+               on the word said (its voice may: a turn-taker's turn follows her sentence's own length), which trials are scored
+               then does not depend on which was named. The name
                test: its name or a foil (NAME_FOILS, stress-matched names she never uses, matched to its name's clip in her voice:
                its ticks, energy, loudest moment and rise), drawn by the same stream, in the same voice and stillness, no things;
                the measure is its turn to her face after its name against after the foil. Her
                judgment follows a trial as any ask's (A28: never withheld, never added): a smile for its first look on the
                target, and for its turn to its name until the name is understood; none for a turn to a foil. A trial counts
-               for a word only when its thing is a fresh never-taught item (its first NOVEL_PRESENTATIONS = 3, A28), whichever
+               for a word only when its thing is a fresh never-taught item (its first NOVEL_PRESENTATIONS = 3, A28; both things
+               count as presented whichever is named, a combination's pair on each of its trials), whichever
                of the two was named, and the ledger's "understood" reads only such trials (ledger.two_part, over its last 20):
                its first look on its thing when named, at least 5 times and above 1/2, and its first look where the word said
                sent it above 1/2, each one-sided p < 0.05; the second is exact for a child whose look does not depend on the
@@ -113,7 +125,8 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                copies of its arm and hand movements within 1-2 s, at most about 6 a minute (Pawlby 1977). No miss touches a
                judgment: a judged turn is always answered.
                STAGE 2's TALK-OVER (4.4, 4.6, A13): a turn begun during her line stops her at the word's end, frowns
-               (Say.frown), and is answered "no." (the "no." register), not judged; never for babble that never stops.
+               (Say.frown), and is answered "no." (the "no." register), not judged; never for babble that never stops, and
+               never over a formal trial's sentence (no stop in either stage: she says it whole, 4.8).
                REDIRECTS (4.10): a redirect (the "redirect" intent, or a Claude line naming a toy the child does not attend as
                she reads it) is said only after 40 ticks with no target and while the day's follow-in namings number at least
                2 for each redirect (Tomasello and Farrar 1986).
@@ -1053,11 +1066,11 @@ class Conduct:
         form, a, b = pr["form"], pr["a"], pr["b"]
         u = [float(x) for x in self.trial_rng.random(3)]
         tr = dict(form=form, phase="bring", since=int(t), run=0, act=None, tid=None, onset=None, until=None, line_start=None,
-                  word_idx=None, why=None, new=pr["new"], shown=pr["shown"])
+                  line_end=None, sound_end=None, why=None, new=pr["new"], shown=pr["shown"])
         if form == "name":
             name = u[0] < 0.5
             foil = K.NAME_FOILS[min(len(K.NAME_FOILS) - 1, int(u[2] * len(K.NAME_FOILS)))]
-            tr.update(phase="settle", name=bool(name), said=NAME if name else foil)
+            tr.update(phase="settle", name=bool(name), said=NAME if name else foil, foil=foil)
             self.trial = tr
             return
         oa, ob = p.obj(a), p.obj(b)
@@ -1121,7 +1134,11 @@ class Conduct:
         X?" (the target's word), "where is the C X?" (a combination: the held-out pair allowed in this line alone), its name or
         a foil ("pip." / "viv.", in its name's register), each with no act. The sentence of either thing failing the line check
         (a word not hers, a new word off its peak) drops the probe whichever is named: a drop that followed the draw would name
-        the sayable thing every time it ran, and a child's favourite among the two would score above chance."""
+        the sayable thing every time it ran, and a child's favourite among the two would score above chance. Every sentence
+        the draw could have given (the two things', or its name's and each foil's) is timed in her voice (_timing), and the
+        trial runs on one timeline for all of them (P3's eleventh round): its window opens at the latest of their target
+        words' onsets, and her voice is held until the latest of their ends, so no rule reads a time that depends on which
+        was named."""
         tr = self.trial
         if tr is None or tr["phase"] != "settle" or tr["run"] < K.SETTLE:
             return None
@@ -1131,11 +1148,13 @@ class Conduct:
             return None
         f = self.fast
         if tr["form"] == "name":
-            if tr["name"]:
-                return TP.Line(f"{NAME}.", "trial_name", "calling", NAME, NAME, (), "fast", "{n}.")
-            return TP.Line(TP.foil_line(tr["said"]), "trial_name", "calling", None, tr["said"], (), "fast", "{f}.")
+            lines = {NAME: TP.Line(f"{NAME}.", "trial_name", "calling", NAME, NAME, (), "fast", "{n}.")}
+            for x in K.NAME_FOILS:
+                lines[x] = TP.Line(TP.foil_line(x), "trial_name", "calling", None, x, (), "fast", "{f}.")
+            self._trial_timeline(tr, [(ln, w) for w, ln in lines.items()])
+            return lines[NAME if tr["name"] else tr["foil"]]
         intent = "trial_combo" if tr["form"] == "combination" else "trial_where"
-        lines = {}
+        lines, cands = {}, []
         for oid in (tr["target"], tr["distractor"]):        # both sentences held to the check, whichever is named, so a
             o = p.obj(oid)                                  # probe is never dropped by which of the two her stream drew
             text, focus, refs = TP.fill(TP.FRAMES[intent][0], o=o)
@@ -1147,14 +1166,46 @@ class Conduct:
                 self._probe_drop(t, tr["form"], f"the sentence {text!r} (of either thing) fails the line check: {why}", tr)
                 return None
             lines[oid] = TP.Line(text, intent, register_for(intent, text), focus, focus, (), "fast", TP.FRAMES[intent][0][0])
+            cands.append((lines[oid], o.colour if tr["form"] == "combination" else o.name))
+        self._trial_timeline(tr, sorted(cands, key=lambda c: c[0].text))
         return lines[tr["target"]]                          # (no refs: the line leaves her as Say.line, and neither W2 nor
                                                             # the world is ever told which thing is named; its words are)
 
-    def _trial_said(self, line, t, spans, p, out):
-        """her test sentence begins at t: its window opens at the target word's onset (the word that tells the two apart: the
-        noun, a combination's colour, its name or the foil) and runs TRIAL_WINDOW ticks; the ledger records the trial, what it
-        scores (the named word's test when its thing is a fresh never-taught item, A28; the distractor's yoked rate when its
-        thing is; for the name, its test or its foil rate) and the items it presents."""
+    def _timing(self, line, word, heard=False):
+        """a line as her voice says it -> (its ticks, the tick of word's onset from its start, the clip or None): the voice's
+        clip (not heard: made ahead, as a night's warm() makes lines, so a sentence she does not say is not kept as heard),
+        or with no voice 3 ticks a word."""
+        if self.voice is None:
+            ws = TP.words(line.text)
+            return 3 * len(ws), 3 * (ws.index(word) if word in ws else len(ws) - 1), None
+        try:
+            clip = self.voice.clip(line.text, line.register, emphasis=line.emphasis, heard=heard)
+        except TypeError:                                   # a voice without warm()'s made-ahead store (a test's)
+            clip = self.voice.clip(line.text, line.register, emphasis=line.emphasis)
+        spans = [(w, int(a), int(e)) for w, a, e in clip.words]
+        ws = [w for w, _a, _e in spans]
+        at = spans[ws.index(word)][1] if word in ws else spans[-1][1]
+        return int(math.ceil(len(clip.pcm) / TICK)), at // TICK, clip
+
+    def _trial_timeline(self, tr, cands):
+        """the trial's one timeline over every sentence its draw could have given, cands [(Line, the word that tells them
+        apart)], in an order that does not depend on the draw: its ticks, the latest (her voice held to it whichever is said)
+        and the onset, the latest of the words' (its window opens there whichever is named). Her reading of a look holds 3
+        ticks (A40), so a knower's look begun at the earlier of two onsets is read 2 ticks after it at the soonest: onsets a
+        tick apart void no knower (her voice today puts every trial word's onset on tick 4)."""
+        got = [self._timing(ln, w) for ln, w in cands]
+        tr["ticks"] = max(g[0] for g in got)
+        tr["onset_at"] = max(g[1] for g in got)
+
+    def _trial_said(self, line, t, n_own, p, out):
+        """her test sentence begins at t (its own sound n_own ticks): its window opens at the target word's onset (the word
+        that tells the two apart: the noun, a combination's colour, its name or the foil), on the trial's one timeline (the
+        latest onset of every sentence the draw could have given), and runs TRIAL_WINDOW ticks; her voice is held to the
+        timeline's end (line_end). The ledger records the trial, what it scores (the named word's test when its thing is a
+        fresh never-taught item, A28; the distractor's yoked rate when its thing is; for the name, its test or its foil rate)
+        and the items it presents: both things displayed, whichever is named (a combination's pair on every trial of it, its
+        twin shown beside its original, P3's eleventh round: counted only when said, its fresh trials had depended on her
+        coins), so which trials are fresh never depends on which was named."""
         tr = self.trial
         if tr["form"] == "name":
             word_at, score = tr["said"], [[NAME, "trials" if tr["name"] else "yoked", 1, 0]]
@@ -1167,7 +1218,7 @@ class Conduct:
                 pair = f"{p.obj(tr['twin']).colour} {p.obj(tr['twin']).name}"
                 it_t = pair if tr["target"] == tr["twin"] else None
                 it_d = pair if tr["distractor"] == tr["twin"] else None
-                items = [pair] if it_t else []                 # a combination is presented when it is said
+                items = [pair]                                 # its twin displayed beside its original, named or not
             else:
                 it_t, it_d = tr["new"].get(tr["target"]), tr["new"].get(tr["distractor"])
                 items = [x for x in (it_t, it_d) if x]         # a place, an angle, an exemplar: when it is displayed
@@ -1176,10 +1227,9 @@ class Conduct:
             score = ([[kt, "trials", 1, 0]] if fresh(it_t) else []) + ([[kd, "yoked", 0, 1]] if fresh(it_d) else [])
             target, distractor = dict(id=ot.id, word=kt), dict(id=od.id, word=kd)
             sides = (tr["left"], tr["right"])
-        ws = [w for w, _a, _e in spans]
-        idx = ws.index(word_at) if word_at in ws else len(ws) - 1
-        onset = int(t) + spans[idx][1] // TICK
-        tr.update(phase="said", line_start=int(t), word_idx=idx, onset=onset, until=onset + K.TRIAL_WINDOW, word=word_at)
+        onset = int(t) + tr["onset_at"]                      # the trial's one timeline (_trial_timeline), whichever is named
+        tr.update(phase="said", line_start=int(t), line_end=int(t) + tr["ticks"] - 1, sound_end=int(t) + n_own, onset=onset,
+                  until=onset + K.TRIAL_WINDOW, word=word_at)
         tr["tid"] = self.ledger.trial(t, tr["form"], target, distractor, onset, K.TRIAL_WINDOW, tr["said"] if tr["form"] ==
                                       "name" else word_at, sides=sides, score=score, items=items)
         self._prompt(t, t, onset + K.TRIAL_WINDOW)
@@ -1226,7 +1276,9 @@ class Conduct:
         tr = self.trial
         if tr is None:
             return
-        ev = {k for k, _o in p.events}
+        if tr["phase"] == "said" and tr.get("line_end") is None:   # a save from before P3's eleventh round, mid-trial: its
+            return self._trial_end(t, "void", "saved before its trial had one timeline (fail-closed)", out, p)   # window
+        ev = {k for k, _o in p.events}                              # was the named sentence's own
         if ev & {"pain", "distress", "hit_her"}:
             return self._trial_end(t, "void", "she answered its pain, distress or hit (4.10's priority)", out, p)
         e = self.attn[-1] if self.attn and self.attn[-1]["t"] == t else None
@@ -1362,12 +1414,19 @@ class Conduct:
         self._focus_step(t, start=True, p=p)                # her looks on a naming word that begins now
         for w, te, last in self.ledger.voiced(t, p):        # her words whose sound has ended by now: said (4.6, 4.8)
             f.voiced(w, te, last)
+        out = Say()
+        tr = self.trial
+        held = tr is not None and tr["phase"] == "said"     # her trial's sentence: her voice held to its one timeline's end
+        if voice_done is not None and held and voice_done >= tr.get("sound_end", NEVER):
+            voice_done = None                               # its sound's own end, whichever was said (4.8): not a stop
         if voice_done is not None:
             f.ended(voice_done)
             self._focus_clip(voice_done)
+            if held:                                        # the world stopped it: only the conduct stops her voice
+                self._trial_end(t, "void", "the world stopped her sentence (her voice is stopped only by the conduct, "
+                                           "Say.cut, and never in a trial: fail-closed)", out, p)
         elif f.current is not None and t >= f.busy_until:
             f.ended(f.busy_until)
-        out = Say()
         if self.stage >= 2 and any(k == "hit_her" for k, _o in p.events):
             out.frown = "hit"                               # stage 2: the frown (-1) for its own act that hit her (4.10)
         if p.child_target is not None or p.child_holds or p.child_reaches:
@@ -1387,10 +1446,10 @@ class Conduct:
         self.nonstop_since = (self.nonstop_since if self.nonstop_since is not None else t) if nonstop else None
         if sounding and self.turn is None:
             self.turn = dict(start=t, in_pause=not f.speaking(t), looked=False, over=False)
-            if f.speaking(t):                               # the talk-over: she finishes her word, stops, listens (4.6)
-                out.cut, out.listen = True, True
-                self.cuts += 1
-                stop, kept = f.cut_point(t)
+            if f.speaking(t) and self.trial is None:        # the talk-over: she finishes her word, stops, listens (4.6);
+                out.cut, out.listen = True, True            # never in a trial, whose sentence she says whole and whose
+                self.cuts += 1                              # stillness no frown breaks (4.8: nothing the child's voice does
+                stop, kept = f.cut_point(t)                 # voids a trial; P3's eleventh round)
                 self.ledger.cut(t, f.current, kept, stop)
                 f.busy_until = min(f.busy_until, stop)      # the world's voice_done may end it sooner
                 f.queue = []
@@ -1399,10 +1458,6 @@ class Conduct:
                         self.pending["open_idx"] >= kept:        # her ask stopped before its word was said: withdrawn
                     self.ledger.withdraw(t, self.pending["trial"], "cut before its word was said")
                     self.pending = None
-                tr = self.trial                             # her trial's sentence stopped before its word: void
-                if tr is not None and tr["phase"] == "said" and tr["line_start"] == f.spans["start"] and \
-                        tr["word_idx"] >= kept:
-                    self._trial_end(t, "void", "its sentence cut before its word was said", out, p)
                 if self.stage >= 2 and self.nonstop_since is None:   # stage 2: the talk-over frown, and "no." for its turn
                     out.frown = "talk_over"                          # (never for babble that never stops, A13)
                     self.turn["over"] = True
@@ -1453,10 +1508,14 @@ class Conduct:
         be, so it may earn her smile (her method: a parent answers imitation, Goldstein and Schwade 2008), but it counts toward
         nothing in the ledger, neither "says" nor "understood" nor a met ask: a name ask answered by an echo is void. A turn that
         talked over her in stage 2 is answered "no." and not judged (the frown, 4.4, 4.6). A turn she makes no judgment of she
-        misses at MISS_TURN (A52); a judged one she always answers."""
+        misses at MISS_TURN (A52); a judged one she always answers. A turn that ends while her formal trial's sentence or
+        window is open is judged by nothing (4.8: her face holds its neutral set until the trial is decided, so nothing the
+        child's voice does can move her and void it; P3's eleventh round): it is answered, after the trial, as any turn she
+        makes no judgment of."""
         tgt = p.target_obj()
         kind, obj, w = "reply", tgt, cw.word
         n_judg = len(out.judgments)
+        hold = self.trial is not None and self.trial["phase"] == "said"
         pd = self.pending
         if w is not None and pd is not None and pd["kind"] == "name" and pd["word"] == w and cw.start < pd["open"]:
             # its word begun before her question was heard: no answer to it, and her reply would echo the answer, so the
@@ -1471,7 +1530,7 @@ class Conduct:
             named = {s.name: s for s in p.attended()}
             obj = named.get(w) or (p.obj(self.pending["obj"]) if asked and self.pending.get("obj") else None) or \
                 next((s for s in p.seen if s.name == w), None)
-            if cw.exact and right:
+            if cw.exact and right and not hold:
                 label = "echo" if cw.echo else ("met_ask" if asked else "right_name")
                 out.judgments.append((K.WORTH_RIGHT_NAME, label, w))
                 kind = "confirm"
@@ -1481,15 +1540,16 @@ class Conduct:
                     else:
                         self.ledger.named(t, w, cw.start)
                     self.pending = None
-            elif not cw.exact and right and self.stage >= 2 and self.ledger.exact_count(w, cw.channel) < K.EXACT_UNTIL:
+            elif not cw.exact and right and not hold and self.stage >= 2 and \
+                    self.ledger.exact_count(w, cw.channel) < K.EXACT_UNTIL:
                 out.judgments.append((K.WORTH_APPROX, "approximation", w))
                 kind = "recast"
             elif cw.exact or w in cw.expected:
                 kind = "echo"                                  # heard in context: echoed, no smile
             else:
                 kind, w, obj = "reply", None, tgt              # an approximation out of context: answered as a vocal turn
-        if not over and self.stage == 1 and cw.channel == "tract" and self.turn is not None and self.turn["in_pause"] and \
-                self.turn["looked"] and t - self.last_vocal_smile >= K.VOCAL_TURN_EVERY:
+        if not over and not hold and self.stage == 1 and cw.channel == "tract" and self.turn is not None and \
+                self.turn["in_pause"] and self.turn["looked"] and t - self.last_vocal_smile >= K.VOCAL_TURN_EVERY:
             out.judgments.append((K.WORTH_VOCAL_TURN, "vocal_turn", None))
             self.last_vocal_smile = t
         after = self._latency()
@@ -1729,6 +1789,9 @@ class Conduct:
             ws = TP.words(line.text)
             n = 3 * len(ws)                                  # no voice: 3 ticks a word (an instrument's timing, ours)
             spans = [(w, 3 * i * TICK, (3 * i + 3) * TICK) for i, w in enumerate(ws)]
+        n_own = n
+        if line.intent in TRIAL_INTENTS and self.trial is not None:
+            n = max(n, self.trial["ticks"])                  # her voice held to the trial's one timeline's end (4.8)
         word_ends = [(w, t + (max(e, 1) - 1) // TICK) for w, _a, e in spans]
         f.commit(line, t, n, spans, in_set=in_set)
         self.ledger.said(t, line, p, clip=clip, n_ticks=n, word_ends=word_ends)
@@ -1749,7 +1812,7 @@ class Conduct:
         self._focus_step(t, start=True, p=p)
         out.line, out.clip, out.acts = line, clip, acts
         if line.intent in TRIAL_INTENTS and self.trial is not None:
-            self._trial_said(line, t, spans, p, out)        # her formal trial's sentence: its window from its word's onset
+            self._trial_said(line, t, n_own, p, out)        # her formal trial's sentence: its window from its word's onset
 
     def _open_ask(self, line, it, t, n, word_ends, p):
         """her ask is judged from the tick its word has been heard (4.8): a gaze or act ask from the end of its object's word, a
