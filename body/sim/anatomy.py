@@ -33,8 +33,23 @@ and beside the channels, read by the reward, the born reflexes and the gates' ow
                joint's own limit, then the base's (its outside force past 3 x the body's weight) (A37)
   face_periph  [fired, direction from the fovea's centre in yaw (rad, + right), in pitch (rad, + up)]: the born face template's
                strongest fire in the periphery (orienting's cue; C39)
+  face_fovea   [fired]: the born face template's fire on either fovea's own pixels (the event line "a face in the fovea"; never the
+               world's face test: 3.4, A42, A49; C39)
   sound_side   [an onset heard, the born lateral read's angle (rad, + left)] (the cochlea's onset cells and the lateral read)
   onset_periph [fired, yaw, pitch]: the born sudden local change in the grey periphery, habituating (A43; C49)
+THE EVENT LINES (R7a; 7.2, 7.4's low road, A37, A43; body/core/anatomy.py `EventLine`), 13, read from the frame above by the born rule
+(a line fires when any of its numbers is above 0; on its side where it has one; not where a line further along its limb fires):
+  touch_trunk, touch_arm_l, touch_arm_r, touch_hand_l, touch_hand_r, touch_leg_l, touch_leg_r: touch onset in 7 groups from the
+      observer and the hands' arrays: the touch channel's onsets on the group's joints (the trunk: the waist's joints and the base's
+      wrench, since the observer cannot tell the head from the torso and a touch on the pelvis shows only in the base's wrench; a hand:
+      its 7 joints and its 8 zones of the Dex3's arrays). ISOLATION (Haddadin et al. 2017): a contact shows on every joint between the
+      pelvis and the touched link, so the furthest group that feels it names it: an arm's line fires only when its hand's does not, the
+      trunk's only when no limb's does. THE WORLD'S ONSET is a rise beyond the observer's noise (C43, W1 reopened; the line fires on any
+      onset above 0 the world reports, as the limbs' gates read it)
+  pain: any of the pain flags (a joint's, or the base's)
+  face_fovea: the born face template in either fovea
+  sound_l, sound_r: a sound's onset, on the left (the lateral read's angle above 0) or the right (below 0); both where it has no side
+  visual_l, visual_r: a sudden local change in the periphery, on the left (its yaw below 0) or the right (above 0); both at the centre
 THE ACTS THE WORLD RECEIVES (body/core/world.py `Acts`): each effector's flat act by its name (the tract's 10 articulators and every
 limb's joints as base-5 digits, joint 0 the most significant, in the joint orders below; the words' symbol), `acts.cord` (the spinal
 pattern generators' and the born cry's steps below the gates, per joint in the joint's units) and `acts.vor` (the gaze's VOR).
@@ -72,7 +87,7 @@ from dataclasses import dataclass
 
 from tokenizers import Tokenizer, models
 
-from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
+from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLine, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
 
 # ---------------------------------------------------------------- the G1's joints, in the order the world writes them (3.2, 3.5)
 WAIST = ("waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint")
@@ -190,6 +205,38 @@ class ChargeRelief(RewardSource):
 
 def _joint_index(name):
     return BODY_JOINTS.index(name)
+
+
+def event_lines():
+    """THE G1'S 13 BORN EVENT LINES (R7a; the module's doc; SIM_DESIGN.md 7.4's low road, A37, A43), in the design's order: touch onset in 7
+    groups (the trunk, each arm, each hand, each leg: the touch channel's onsets, its joints' in BODY_JOINTS' order and a hand's zones'
+    in ZONES' order), pain, a face in the fovea, a sound onset on the left and the right, a visual onset on the left and the right"""
+    Z, J, B = len(ZONES), len(BODY_JOINTS), 6
+    joint_on = lambda j: 2 * Z + 2 * j + 1                                  # noqa: E731  (a joint's onset in the touch channel)
+    zone_on = lambda z: 2 * z + 1                                           # noqa: E731  (a zone's onset)
+    base_on = tuple(2 * Z + 2 * J + 2 * w + 1 for w in range(B))             # the base's wrench, its 6 onsets
+    touch = []
+    for name, js in LIMBS:
+        on = tuple(joint_on(_joint_index(j)) for j in js)
+        if name.startswith("hand"):
+            side = "left" if name.endswith("_l") else "right"
+            on += tuple(zone_on(k) for k, z in enumerate(ZONES) if z.startswith(side))
+        grp = "trunk" if name == "waist" else name
+        if grp == "trunk":
+            on += base_on
+            distal = tuple(f"touch_{n}" for n, _ in LIMBS if n != "waist")    # any limb's contact also loads the waist or the base
+        elif grp.startswith("arm"):
+            distal = ("touch_" + HAND_OF_ARM[grp],)                           # a hand's contact also loads its arm
+        else:
+            distal = ()
+        touch.append(EventLine(f"touch_{grp}", "touch", fired=on, distal=distal))
+    assert [x.name for x in touch] == ["touch_trunk", "touch_arm_l", "touch_arm_r", "touch_hand_l", "touch_hand_r", "touch_leg_l", "touch_leg_r"]
+    return touch + [EventLine("pain", "pain", fired=tuple(range(J + 1))),
+                    EventLine("face_fovea", "face_fovea", fired=(0,)),
+                    EventLine("sound_l", "sound_side", fired=(0,), side=(1, 1.0)),       # the lateral read's angle: + left
+                    EventLine("sound_r", "sound_side", fired=(0,), side=(1, -1.0)),
+                    EventLine("visual_l", "onset_periph", fired=(0,), side=(1, -1.0)),   # the change's yaw: + right
+                    EventLine("visual_r", "onset_periph", fired=(0,), side=(1, 1.0))]
 
 
 @dataclass(eq=False)
@@ -324,6 +371,7 @@ class SimAnatomy(LanguageAnatomy):
             fibre(f"contact base.{w}", 0.0, 1.0)
         self.mossy = tuple(mossy)
         self.cerebellar = Cerebellar(off, half, joints=list(CEREB_JOINTS), vor=["yaw", "pitch"])
+        self.events = event_lines()                                    # R7a: the born event lines (the module's doc)
 
 
 # THE CORE'S CONSTANTS THE SIM IS BORN WITH THAT R6h DECIDES (SIM_DESIGN.md 3.5, 3.6, 3.7, 10; A41, A47, A48; the language body holds none

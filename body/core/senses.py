@@ -191,6 +191,8 @@ class SensesMixin:
                 m.striatum_push(2, 0 if felt > 0 else 1)          # the felt face is an event of the stream
             if u != self.sil:
                 m.striatum_push(0, int(u))
+            if self.anatomy.events:
+                self._events_push(u)                               # step R7a: the tick's fired event lines (body/core/frames.py)
             self._z_now = m.stri_in()
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         return C1, pred1, surp1, conf1, stri

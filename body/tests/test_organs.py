@@ -2347,6 +2347,8 @@ if __name__ == "__main__":
     tests += CEREB_TESTS
     from body.tests.test_motor import MOTOR_TESTS         # the motor effectors of the G1's design (docs/SIM_DESIGN.md 3.5-3.7; the core refactor, step R6h)
     tests += MOTOR_TESTS
+    from body.tests.test_frames import FRAME_TESTS        # the body in frames (docs/SIM_DESIGN.md 7.2, 7.4, 7.6; the core refactor, step R7)
+    tests += FRAME_TESTS
     failed = 0
     for t in tests:
         try:

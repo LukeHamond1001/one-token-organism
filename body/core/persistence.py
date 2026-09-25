@@ -121,7 +121,8 @@ class PersistenceMixin:
                                                           # the organs: a later channel's forecast head is built with them (step R4)
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]),
                         channels=anatomy.channels, effectors=anatomy.effectors,   # a later effector's organs too (step R5; the tables from the save)
-                        cerebellum=cerebellum_spec(anatomy, c))                     # and the cerebellum when its switch is on (step R6c; from the save)
+                        cerebellum=cerebellum_spec(anatomy, c),                     # and the cerebellum when its switch is on (step R6c; from the save)
+                        events=anatomy.events)                                      # and the event lines' striatal line when declared (step R7a)
         # A BODY IS BORN WITH ITS SWITCHES (SIM_DESIGN.md A20; the R6c verifier's fourth finding): a save whose organs hold a cerebellum
         # loads only with the switch on, and one whose organs hold none only with it off, every one of the organ's entries from the save
         # (none born fresh at a load, none dropped); the language body's save holds none and its constants no switch, so nothing changes
@@ -142,12 +143,13 @@ class PersistenceMixin:
             blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
         st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias", "wm_slot", "wm_on", "wm_age") if k_ in blob["organs"]}   # the striatal input, sized by the life below
-        st_saved.update({k_: blob["organs"].pop(k_) for k_ in [k_ for k_ in blob["organs"] if k_ == "stri_mline" or k_.startswith("actors.")]})   # the later effectors' (step R5)
+        st_saved.update({k_: blob["organs"].pop(k_) for k_ in [k_ for k_ in blob["organs"] if k_ in ("stri_mline", "stri_eline") or k_.startswith("actors.")]})   # the later effectors' (step R5), the event lines' (R7a)
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         motor_ = {e_.name for e_ in anatomy.motors}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
         dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing", "encs", "spg_phase", "spg_seed")]
-                         + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
+                         + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)
+                            or (k_ == "stri_eline" and not anatomy.events)])
         if dropped:
             print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)
         if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))]:
@@ -200,6 +202,8 @@ class PersistenceMixin:
                     life.m.wm_slot.copy_(st_saved["wm_slot"].to(device)); life.m.wm_on.copy_(st_saved["wm_on"].to(device)); life.m.wm_age.copy_(st_saved["wm_age"].to(device))
                 if st_saved.get("stri_mline") is not None and "stri_mline" in life.m._buffers and st_saved["stri_mline"].shape == life.m.stri_mline.shape:
                     life.m.stri_mline.copy_(st_saved["stri_mline"].to(device))   # the later effectors' lines and actors (step R5)
+                if st_saved.get("stri_eline") is not None and "stri_eline" in life.m._buffers and st_saved["stri_eline"].shape == life.m.stri_eline.shape:
+                    life.m.stri_eline.copy_(st_saved["stri_eline"].to(device))   # the event lines' line (step R7a)
                 for e_ in life.anatomy.motors:
                     w_, b_ = st_saved.get(e_.actor + ".weight"), st_saved.get(e_.actor + ".bias")
                     a_ = life.m.get_submodule(e_.actor)
@@ -355,6 +359,7 @@ class PersistenceMixin:
         anatomy = anatomy_for(tok, cfg)                 # the body's anatomy (a tokenizer's: the diary's); built with no draw, before the organs
         organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])),
                         channels=anatomy.channels, effectors=anatomy.effectors, born_seed=seed,   # a later channel's forecast head and a later effector's
-                        cerebellum=cerebellum_spec(anatomy, cfg))   # organs built last (steps R4, R5; their tables from the body's seed), then the
-                                                                    # cerebellum when its switch is on (step R6c); the diary declares none of them
+                        cerebellum=cerebellum_spec(anatomy, cfg),   # organs built last (steps R4, R5; their tables from the body's seed), then the
+                        events=anatomy.events)                      # cerebellum when its switch is on (step R6c), the event lines' striatal line (R7a);
+                                                                    # the diary declares none of them
         return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path, world=world)

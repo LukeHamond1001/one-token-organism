@@ -8,7 +8,8 @@ strength), `read` (recall by content: a softmax over the keys at a fixed tempera
 (`latent_loss`, `forecast_loss`). `ActTable` is a later effector's acts (the core refactor's step R5): per-joint unit rows, the per-joint
 readout, an act's row the sum of its joints'. `MotorTiming` is a later effector's motor timing part (step R6): act_pred, the forward half
 and its correction, act_inv. The cerebellum (step R6c) is body/core/cerebellum.py's `Cerebellum`, which the organs build last as `cereb`
-when a body's switch is on (`Organs(..., cerebellum=)`).
+when a body's switch is on (`Organs(..., cerebellum=)`). The event lines (step R7a) have a delay line of their own in the striatum
+(`stri_eline`, when the anatomy declares them: `Organs(..., events=)`) and a block of born rows after the effectors' (`striatum_init`).
 
 Everything learned lives in `Organs` (an nn.Module, saved with the body). The hippocampus
 is `Store`, a table of slots whose tensors are saved beside the weights. Nothing here decides
@@ -527,7 +528,7 @@ class Organs(nn.Module):
     """all the learned organs, one module, saved with the body"""
 
     def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None, effectors=None, born_seed=0,
-                 cerebellum=None):
+                 cerebellum=None, events=None):
         super().__init__()
         self.vocab, self.d, self.window = int(vocab), int(d), int(window)
         self.clocks = tuple(int(c) for c in clocks)
@@ -723,6 +724,12 @@ class Organs(nn.Module):
                 g_spg = torch.Generator().manual_seed(int(born_seed) + 67867967)
                 self.register_buffer("spg_phase", torch.rand(len(motor), generator=g_spg, dtype=torch.float64))
                 self.register_buffer("spg_seed", torch.randint(0, 2 ** 31, (), generator=g_spg, dtype=torch.long))
+        # THE EVENT LINES' STRIATAL DELAY LINE (the core refactor's step R7a, docs/SIM_DESIGN.md 7.2, 7.4; body/core/anatomy.py EventLine):
+        # when the anatomy declares event lines (`events`), a buffer of the line's last events (each the tick's fired lines as one int's
+        # bits; -1 none), sized with the striatum, whose rows striatum_init appends after the effectors' blocks. No draw here; the diary
+        # declares none, so its organs are built as they always were
+        if events:
+            self.register_buffer("stri_eline", torch.full((0,), -1, dtype=torch.long))
         # THE CHANNELS' BORN CODES (the core refactor's step R6h, docs/SIM_DESIGN.md 3.4; `BornCode`): each vector channel whose organ is
         # encs.<its name> has its fixed code built here, in the channels' order, from a generator of its own seeded by the body's seed (the
         # global random stream untouched), after every organ above; the diary's channels name the lexicon and face_in, so none is built
@@ -927,7 +934,7 @@ class Organs(nn.Module):
             out.register_buffer(n, b.cpu())
         return out
 
-    def striatum_init(self, k, m, seed=0, wm=0, effectors=None):
+    def striatum_init(self, k, m, seed=0, wm=0, effectors=None, events=0):
         """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
         thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot).
         THE LATER EFFECTORS' BLOCKS (the core refactor's step R5): each later effector of `effectors` (the anatomy's; effector 0 is the
@@ -940,7 +947,12 @@ class Organs(nn.Module):
         settings' rows, as its row in the table is the sum of its joints'. Each row is drawn at 1 / sqrt(k J), so an act of J joints
         weighs in the expansion as one event of the language line. Until R5b the block held a row for every flat act, k x the product
         of the settings: a limb of six joints of five settings needed 125000 rows (about 1 GB at the served 2048 units); per joint a
-        body of 34 joints of five needs 1360 (about 11 MB)."""
+        body of 34 joints of five needs 1360 (about 11 MB).
+        THE EVENT LINES' BLOCK (step R7a; SIM_DESIGN.md 7.2, 7.4): a body that declares `events` event lines has a delay line of its own k
+        events (stri_eline: each the fired lines of one tick, as one int's bits) and a block of born rows appended after the effectors'
+        blocks, drawn from the same generator after them (so every row before is born as it was), a row for every line at each of the k
+        positions, each drawn at 1 / sqrt(k): each line that fires is one event of the language line's weight (a touch and a pain on one
+        tick are two events). The diary declares none."""
         n_in = int(k) * (2 * self.vocab + 3)                                   # heard | own | warm face, cold face, a tick of quiet
         g = torch.Generator().manual_seed(int(seed) + 7919); dev = self.E.weight.device
         self.stri_W = (torch.randn(n_in, int(m), generator=g) / math.sqrt(float(k))).to(dev)
@@ -973,6 +985,12 @@ class Organs(nn.Module):
                     with torch.no_grad():
                         a_.weight.zero_(); a_.bias.zero_()
                     self.actors[e.name] = a_
+        E = int(events or 0)
+        if E:                                                                  # the event lines' block (step R7a), after every other row
+            base = int(self.stri_W.shape[0])
+            self.stri_W = torch.cat([self.stri_W, (torch.randn(int(k) * E, int(m), generator=g) / math.sqrt(float(k))).to(dev)])
+            self.stri_eline = torch.full((int(k),), -1, dtype=torch.long, device=dev)
+            self.stri_eblock = (base, E)                                       # (its first row, the number of lines)
 
     def striatum_push(self, kind, idx):
         """an event enters the delay line: kind 0 a heard symbol, 1 an own symbol, 2 a felt face (idx 0 warm, 1 cold), 3 a tick
@@ -987,6 +1005,28 @@ class Organs(nn.Module):
         with torch.no_grad():
             self.stri_mline[j] = torch.roll(self.stri_mline[j], 1)
             self.stri_mline[j, 0] = int(act)
+
+    def striatum_push_events(self, mask):
+        """the tick's fired event lines enter their own delay line (step R7a): `mask` their bits (line i fired: bit i), 0 a tick none fired
+        (pushed only under stri_quiet: the line carries time, as the language line's quiet does)"""
+        with torch.no_grad():
+            self.stri_eline = torch.roll(self.stri_eline, 1)
+            self.stri_eline[0] = int(mask)
+
+    def striatum_events(self, z):
+        """the event lines' events added to the expansion's sum z in place (step R7a), after the effectors': position by position, each fired
+        line's born row from the block; nothing for a body that declares no event lines"""
+        eb = getattr(self, "stri_eblock", None)
+        if not eb:
+            return z
+        base, E = eb
+        for p_, mask in enumerate(self.stri_eline.tolist()):
+            if mask > 0:
+                off = base + p_ * E
+                for i in range(E):
+                    if (mask >> i) & 1:
+                        z += self.stri_W[off + i]
+        return z
 
     def striatum_acts(self, z):
         """the later effectors' events added to the expansion's sum z in place (step R5), after the language line's: one effector after
@@ -1014,6 +1054,7 @@ class Organs(nn.Module):
                 if e >= 0:
                     z += self.stri_W[p_ * width + e]
             self.striatum_acts(z)
+            self.striatum_events(z)                                           # the event lines' (step R7a; none for the diary)
             return torch.relu(z)
 
     def stri_in(self):
@@ -1040,6 +1081,8 @@ class Organs(nn.Module):
             self.stri_line.fill_(-1)
             if "stri_mline" in self._buffers:
                 self.stri_mline.fill_(-1)                                     # the later effectors' lines too (step R5)
+            if "stri_eline" in self._buffers:
+                self.stri_eline.fill_(-1)                                     # and the event lines' (step R7a)
 
     def fast_value(self, z):
         """the fast critic's value of a striatal input"""

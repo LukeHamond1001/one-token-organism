@@ -49,7 +49,11 @@ body/tests/test_anatomy.py holds the language anatomy equal to today's fields, i
 reward equal to today's rule, its input sum, window and heads equal to today's, and its gate's lesson equal to today's. The anatomy
 names the organs and never holds them (no module, no tensor: the organs are the body's and are saved with it).
 Building an anatomy builds no module, draws no random number and touches no life (SIM_DESIGN.md 8.3, item 4); a channel and a reward
-source keep no state of their own (the face's held level is the life's `level`, its last face the life's `face_prev`, as before)."""
+source keep no state of their own (the face's held level is the life's `level`, its last face the life's `face_prev`, as before).
+STEP R7a, THE EVENT LINES (SIM_DESIGN.md 7.2, 7.4's low road; A37, A43): `Anatomy.events`, a list of `EventLine`, each read from the
+tick's frame by a born rule (a line fires when any of its numbers is above 0, on its side where it has one, and not where a line
+further along its limb's chain fires); one declaration read by the striatal expansion (the critics) and the amygdala. The diary declares
+none: its striatum is born and read as it was."""
 from dataclasses import dataclass, field as dc_field
 from typing import Optional
 
@@ -366,6 +370,28 @@ class OrientCue:
 
 
 @dataclass(eq=False)
+class EventLine:
+    """ONE BORN EVENT LINE (the core refactor's step R7a; SIM_DESIGN.md 7.2 and 7.4's low road, A37, A43): a line that fires on a tick, read
+    from the world's frame by a born rule from the body's own senses (never the world's list of events), and read by the striatal
+    expansion (the critics) and the amygdala alike (one declaration). `obs` names the frame's observation it reads (a channel's, or a born
+    reader's beside the channels: the pain flags, the face template's fire in the fovea, a sound's onset and side, a sudden change in the
+    periphery); `fired` the indices of its numbers, the line firing when any of them is above 0 (as an orienting cue's `fired`); `side`,
+    when given, (the index of a direction, its sense): the line fires only where that direction lies on its side (sense x direction above
+    0) or has no side (exactly 0: a sound with nothing below about 760 Hz gets no side from the born lateral read, so both of its lines
+    fire: C42); `distal`, the lines further along its limb's chain from the base (ISOLATION: a contact shows on every joint between the
+    pelvis and the touched link, so the furthest that feels it names the limb, Haddadin et al. 2017): the line fires only when none of
+    them fires, so a touch on a hand fires the hand's line and not its arm's or the trunk's. The G1's 13 (body/sim/anatomy.py): touch
+    onset in 7 groups (the trunk with the head and the pelvis, each arm, each hand, each leg), from the observer and the hands' arrays;
+    pain (any joint, or the base); a face in the fovea; a sound onset on the left and on the right; a visual onset in the periphery on
+    the left and on the right. The anatomy names them and holds no state"""
+    name: str
+    obs: str
+    fired: tuple = ()
+    side: Optional[tuple] = None
+    distal: tuple = ()
+
+
+@dataclass(eq=False)
 class RewardSource:
     """ONE TERM OF THE FELT REWARD (step R3). Each tick a source feels (`felt`: a number, or None when it is silent this tick) and its
     feeling enters the reward as its term (`term`: clipped to +-`clip`, like a press, when a clip is declared; else the feeling as it
@@ -440,9 +466,12 @@ class Anatomy:
     input sum (the ladder's bundle and the efference copy of its own acts joining after the first `inner_at` channels; by default
     after all of them), channel 0 is the words, effector 0 is the voice, the reward sources are summed in their order and source 0 is
     the world's judgment. `cerebellar` (step R6c) is the cerebellum's interface, a `Cerebellar`, or None (the class's: an anatomy that
-    declares none, the diary's, gains no attribute); a body's anatomy sets it on itself as it adds its channels and effectors"""
+    declares none, the diary's, gains no attribute); a body's anatomy sets it on itself as it adds its channels and effectors. `events`
+    (step R7a) is its born event lines, a list of `EventLine` read from each tick's frame by the striatal expansion and the amygdala, or
+    None (the class's: the diary declares none, so its striatum and its life are as they were)"""
     cerebellar = None
     orienting = None                                  # step R6h: the born orienting cues (a list of OrientCue), none by default
+    events = None                                     # step R7a: the born event lines (a list of EventLine), none by default (the diary's)
 
     def __init__(self, channels, effectors, rewards, inner_at=None):
         self.channels = list(channels)
@@ -623,6 +652,22 @@ class Anatomy:
                     raise ValueError(f"anatomy: the cerebellum's {what_} names must be distinct names: {xs_}")
             if not cb.joints and not cb.vor:
                 raise ValueError("anatomy: the cerebellum declares no joint and no VOR axis (nothing for it to learn or add to)")
+        ev_ = self.events                                              # step R7a: the born event lines, when declared
+        if ev_ is not None:
+            if not isinstance(ev_, (list, tuple)) or not ev_ or not all(isinstance(x_, EventLine) for x_ in ev_):
+                raise ValueError(f"anatomy: the event lines are a non-empty list of EventLine, not {ev_!r}")
+            if len(ev_) > 62:
+                raise ValueError(f"anatomy: {len(ev_)} event lines (at most 62: a tick's lines are held as one int64's bits in the striatum's line)")
+            names_ = [x_.name for x_ in ev_]
+            if len(set(names_)) != len(names_) or not all(isinstance(n_, str) and n_.isidentifier() for n_ in names_):
+                raise ValueError(f"anatomy: the event lines' names must be distinct identifiers: {names_}")
+            for x_ in ev_:
+                if not (isinstance(x_.obs, str) and x_.obs) or not x_.fired or not all(isinstance(i_, int) and i_ >= 0 for i_ in x_.fired):
+                    raise ValueError(f"anatomy: event line {x_.name!r} reads {x_.obs!r} at {x_.fired}: a frame observation's name and at least one index")
+                if x_.side is not None and (len(x_.side) != 2 or not isinstance(x_.side[0], int) or x_.side[0] < 0 or float(x_.side[1]) not in (-1.0, 1.0)):
+                    raise ValueError(f"anatomy: event line {x_.name!r}'s side {x_.side}: (the index of its direction, a sense of +1 or -1)")
+                if any(d_ not in names_ or d_ == x_.name for d_ in x_.distal):
+                    raise ValueError(f"anatomy: event line {x_.name!r}'s distal lines {x_.distal}: other lines of this anatomy")
         if not self.rewards:
             raise ValueError("anatomy: no reward source (source 0 is the world's judgment)")
         for s in self.rewards:

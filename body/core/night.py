@@ -490,6 +490,7 @@ class NightMixin:
         L = int(self.cfg["rem_steps"]); gf = float(m.gammas()[int(self.cfg["dopamine_band"])])
         line_saved = m.stri_line.clone()
         mline_saved = m.stri_mline.clone() if "stri_mline" in m._buffers else None   # the later effectors' lines (step R5), restored after
+        eline_saved = m.stri_eline.clone() if "stri_eline" in m._buffers else None   # and the event lines' (step R7a)
         wm_saved = (m.wm_slot.clone(), m.wm_on.clone(), m.wm_age.clone()) if getattr(m, "stri_wm", 0) else None
         m.striatum_reset()
         if wm_saved is not None:
@@ -521,6 +522,8 @@ class NightMixin:
         m.stri_line.copy_(line_saved)
         if mline_saved is not None:
             m.stri_mline.copy_(mline_saved)
+        if eline_saved is not None:
+            m.stri_eline.copy_(eline_saved)
         if wm_saved is not None:
             m.wm_slot.copy_(wm_saved[0]); m.wm_on.copy_(wm_saved[1]); m.wm_age.copy_(wm_saved[2])
         return n_up, rsum

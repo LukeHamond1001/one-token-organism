@@ -65,13 +65,14 @@ from .core.persistence import PersistenceMixin
 from .core.instruments import InstrumentsMixin
 from .core.timing import TimingMixin, GatedDescent
 from .core.cord import CordMixin
+from .core.frames import FramesMixin
 
 # `from body.life import *` gives exactly the names it gave before the split (the mixins stay reachable as attributes)
 __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
 
 
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin,
-           CerebellumMixin, CordMixin):
+           CerebellumMixin, CordMixin, FramesMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
         unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB and k_ not in REFLEX)   # the switches, the motor's, the cerebellum's and (R6h) the born patterns' constants are known, absent unless given
         if unknown:
@@ -126,6 +127,10 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         _undeclared = sorted((set(getattr(organs, "acts", {}).keys()) | set(getattr(organs, "timing", {}).keys())) - {e_.name for e_ in self.anatomy.motors})
         if _undeclared:
             raise ValueError(f"Life: the organs hold the organs of effectors the anatomy does not declare: {_undeclared}")
+        # STEP R7a: the event lines' striatal delay line is the organs' when the anatomy declares event lines, and only then
+        if bool(self.anatomy.events) != ("stri_eline" in organs._buffers):
+            raise ValueError(f"Life: the anatomy declares {len(self.anatomy.events or ())} event lines and the organs "
+                             f"{'hold' if 'stri_eline' in organs._buffers else 'hold no'} delay line for them (built by Organs(..., events=anatomy.events))")
         # STEP R6h (A41, C61): a motor effector's intrinsic term is the performance error per joint, its one form: under another form with
         # a weight on it, refused (the voice keeps both forms, as always)
         _int_ = [e_.name for e_ in self.anatomy.motors if e_.intrinsic]
@@ -170,10 +175,11 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                 if str(self.cfg.get("fast_input", "band")) == "striatum":
                     k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
                     wm_ = int(self.cfg.get("wm", 0))
-                    rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in self.anatomy.motors)   # the language block, then the later effectors' per joint (steps R5, R5b)
+                    ne_ = len(self.anatomy.events or ())             # step R7a: the event lines' block after the effectors' (none for the diary)
+                    rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in self.anatomy.motors) + k_ * ne_   # the language block, then the later effectors' per joint (steps R5, R5b), then the event lines' (R7a)
                     if (organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != rows_
                             or organs.vfast.weight.shape[1] != m_ * (1 + wm_)):
-                        organs.striatum_init(k_, m_, seed=seed, wm=wm_, effectors=self.anatomy.effectors)   # born (or re-born at a new size)
+                        organs.striatum_init(k_, m_, seed=seed, wm=wm_, effectors=self.anatomy.effectors, events=ne_)   # born (or re-born at a new size)
                     kf = m_ * (1 + wm_) + 1
                 else:
                     kf = int(organs.value[fb].weight.shape[1]) + 1

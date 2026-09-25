@@ -55,6 +55,7 @@ class MouthMixin:
                 if e >= 0:
                     z += m.stri_W[p_ * width + e]
             m.striatum_acts(z)                                    # the later effectors' lines as they stand (step R5; none for the diary)
+            m.striatum_events(z)                                  # and the event lines' (step R7a; none for the diary)
             z = torch.relu(z)
             if getattr(m, "stri_wm", 0):
                 z = torch.cat([z, m.wm_slot * m.wm_on])
