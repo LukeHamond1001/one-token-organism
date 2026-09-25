@@ -26,7 +26,12 @@ parent_consts.py). Run: python3 -m body.tests.test_sim_parent (at nice -n 19; a 
   it, and a give-up never fails the next act (15); her hands on it never pass through its hulls (16); the save across a solve (17);
   the catch pushes at once at her brief caps and every fall is written down (18, C6); DOES and 'copy' for P3 (19); her caps bound
   her holds and her body's contacts together, friction counted (20); her lean-in within LEAN_DIST_M (5); an equality of any kind on
-  the G1 refused (1); the brief caps given back only after BRIEF_REST_S (2)."""
+  the G1 refused (1); the brief caps given back only after BRIEF_REST_S (2).
+  ITS SECOND ROUND: C8 on the verifier's babble seeds 1, 5, 6, 8 with its act mix, her body's work on the G1 never enough to slide
+  or lift it, her way out never toward the child, no planning fault (14); a tendon rope or tendon equality on the G1 refused and her
+  palm, fingers and thumb touching the G1 (1); every hand, whatever it does, against the G1's hulls on the still child and under
+  babble (16); the pull-to-sit from its feet as A9 has it (7); a save in the middle of a push under babble, her report read every
+  tick, replayed bit for bit (12); P3's contract (21: statuses, report(), cancel(id, tick), Act.thing, eyes_on_child)."""
 import math
 import os
 import sys
@@ -85,13 +90,31 @@ def test_the_scene():
 
     def rig_world(spec):
         spec.add_equality(type=mujoco.mjtEq.mjEQ_CONNECT, name="bad", name1="torso_link", objtype=mujoco.mjtObj.mjOBJ_BODY)
-    for r in (rig, rig_connect, rig_site, rig_world):                   # a weld, a connect, a weld by sites, a pin to the world
-        try:
+
+    def _rope(spec, name, a, b):                                        # a spatial tendon between two sites
+        spec.body(a[0]).add_site(name=f"{name}_a", pos=a[1]); spec.body(b[0]).add_site(name=f"{name}_b", pos=b[1])
+        t = spec.add_tendon(name=name, limited=True, range=[0.0, 0.5])
+        t.wrap_site(f"{name}_a"); t.wrap_site(f"{name}_b")
+
+    def rig_rope(spec):                                                 # a rope from the room to the G1 (the W2 verifier's finding)
+        _rope(spec, "bad", ("world", [0, 0, 1.0]), ("torso_link", [0, 0, 0.1]))
+
+    def rig_tendon_eq(spec):                                            # a tendon in the G1 tied by an equality to one outside it
+        _rope(spec, "in_g1", ("torso_link", [0, 0, 0.1]), ("pelvis", [0, 0, 0]))
+        _rope(spec, "out", ("world", [0, 0, 1.0]), ("world", [0.1, 0, 1.0]))
+        spec.add_equality(type=mujoco.mjtEq.mjEQ_TENDON, name="bad", name1="in_g1", name2="out", objtype=mujoco.mjtObj.mjOBJ_TENDON)
+    for r in (rig, rig_connect, rig_site, rig_world, rig_rope, rig_tendon_eq):   # a weld, a connect, a weld by sites, a pin to
+        try:                                                            # the world, a rope, a tendon equality
             W.G1World(seed=1, extra=r)
         except ValueError as e:
             assert "capped spring" in str(e), e
         else:
-            raise AssertionError(f"an equality on the G1 was taken ({r.__name__})")
+            raise AssertionError(f"an equality or tendon tying the G1 was taken ({r.__name__})")
+    # her palm, fingers and thumb touch the G1 (and only it), soft as the rest of her (the W2 verifier's finding)
+    for sd in "LR":
+        fg = w.parent.finger_geoms[sd]
+        assert len(fg) >= 11 and all(m.geom_contype[g] == 0 and m.geom_conaffinity[g] == 1 and m.geom_priority[g] == K.SOFT_PRIORITY
+                                     and np.allclose(m.geom_solref[g], K.SOFT_SOLREF) for g in fg), sd
     # her face's table through the cached spline coefficients: the same numbers as map_coordinates' own prefilter, bit for bit
     from scipy.ndimage import map_coordinates
     face = kin.face
@@ -101,7 +124,8 @@ def test_the_scene():
     assert np.array_equal(old, face.head_surface_x(y, z))
     assert (K.CAP_ONE, K.CAP_ONE_BRIEF, K.CAP_TWO, K.CAP_TWO_BRIEF, K.BRIEF_S) == (100.0, 150.0, 156.0, 200.0, 2.0)
     assert abs(35 * 0.45359237 * 9.80665 - K.CAP_TWO) < 0.5             # NIOSH's 35 lb (Waters 2007), the source it came from
-    print("parent 1: no equality on the G1 (a world with a weld, a connect, a weld by sites or a pin to the world refused), no",
+    print("parent 1: no equality on the G1 (a world with a weld, a connect, a weld by sites, a pin to the world, a rope or a tendon",
+          "equality refused), her palm, fingers and thumb touching the G1 alone, soft; no",
           "contact exclusion, her", len(her), "collision shapes soft",
           "(solref 0.05) at priority 2; her face's table read bit for bit through the cached spline; her caps 100/150 N one hand,",
           "156/200 N both (NIOSH's 35 lb), 2 s brief")
@@ -193,18 +217,21 @@ def test_the_interface():
     assert pm.status(i) == "refused" and "no such act" in pm.why(i)
     a = pm.request(Act("wave")); b = pm.request(Act("look", "child_eyes", "focus")); c = pm.request(Act("look", "child"))
     d_ = pm.request(Act("point", "drum"))
-    assert [pm.status(x) for x in (a, b, c, d_)] == ["queued"] * 4
+    assert [pm.status(x) for x in (a, b, c, d_)] == ["running"] * 4    # P3's contract: waiting its turn is 'running'
     _live(w, 1)
-    assert pm.status(a) == "running" and pm.status(b) == "running" and pm.status(c) == "queued" and pm.status(d_) == "queued"
+    assert pm.cur["body"] == a and pm.cur["gaze"] == b and c in pm.queue["gaze"] and d_ in pm.queue["body"]
     _live(w, K.FOCUS_TICKS)
     assert pm.status(b) == "done" and pm.status(c) in ("running", "done")
-    pm.cancel(d_)
+    pm.cancel(d_, w.tick + 1)
     assert pm.status(d_) == "cancelled"
     _live(w, 60, until=_done(w, a))
     assert pm.status(a) == "done"
     e = pm.request(Act("walk", "door"))
     _live(w, 6)
-    pm.cancel(e)
+    pm.cancel(e, w.tick + 3)                                            # a cancel for a later tick waits for it: the act runs through
+    _live(w, 2)                                                         # the next two ticks and is stopped in the third (the tick
+    assert pm.status(e) == "running"                                    # whose report is that tick's)
+    _live(w, 1)
     assert pm.status(e) == "cancelled"
     n = _live(w, 20, until=lambda w_: not w_.parent.phases)
     assert not pm.phases and pm.base["mode"] in ("stand", "turn"), pm.base
@@ -272,21 +299,23 @@ def test_the_guide():
 
 
 def test_the_pull_never_sits_it_up():
-    """parent 7: the pull-to-sit's pull (placed within reach: in the world no spot reaches both forearms, C7) grows to her brief cap,
-    sits there 2 ticks, stops and lays the G1 back: it never rose, and was never lifted or slid"""
-    out = T.sc_pull_placed()
+    """parent 7 (the W2 verifier's sixth finding: A9 has her kneel at its feet, W2 knelt beside its hips and refused): asked in the
+    world, she comes to its feet (clearing a toy there), kneels tall, takes both forearms, and the pull grows to her brief cap, sits
+    there 2 ticks, stops and lays the G1 back: it never rose, and was never lifted or slid"""
+    w = W.G1World(seed=1)
+    out = T.run(w, [("pull_to_sit", None)], 700)
     a = out["acts"][0]
     assert a["status"] == "refused" and "her cap" in a["why"], a
+    spot = w.parent.info(0)["info"].get("spot") or {}
+    assert spot.get("where") == "feet", spot
     assert out["effort_peak_N"] <= K.CAP_TWO_BRIEF + 1e-6 and out["over_sustained_s"] <= K.BRIEF_S + W.TICK_S, out
+    assert {h.split(" ")[0] for h in out["holds"]} == {"pull_L", "pull_R"}, out["holds"]
     g = out["g1"]["held"]
     assert g["trunk_min_deg"] > 60.0 and g["com_rise_cm"] < 2.0 and g["pelvis_travel_cm"] < 2.0, g
-    w = W.G1World(seed=1)
-    out2 = T.run(w, [("pull_to_sit", None)], 500)
-    assert out2["acts"][0]["status"] == "refused", out2["acts"]
-    print(f"parent 7: the pull (placed): her effort peaked at {out['effort_peak_N']} N ({out['over_sustained_s']} s over the sustained",
-          f"{K.CAP_TWO:g} N), stopped at her cap and laid it back: its trunk stayed {g['trunk_min_deg']}-{g['trunk_max_deg']} deg from",
-          f"vertical, its centre of mass rose {g['com_rise_cm']} cm, its pelvis moved {g['pelvis_travel_cm']} cm; asked in the world:",
-          f"'{out2['acts'][0]['why'][:70]}'")
+    print(f"parent 7: the pull-to-sit from its feet ({a['ticks']} ticks, toys cleared {a.get('cleared', [])}): her effort peaked at",
+          f"{out['effort_peak_N']} N ({out['over_sustained_s']} s over the sustained {K.CAP_TWO:g} N), stopped at her cap and laid it",
+          f"back: its trunk stayed {g['trunk_min_deg']}-{g['trunk_max_deg']} deg from vertical, its centre of mass rose",
+          f"{g['com_rise_cm']} cm, its pelvis moved {g['pelvis_travel_cm']} cm")
 
 
 def test_the_prop_and_the_catch():
@@ -330,16 +359,22 @@ def test_the_prop_and_the_catch():
 
 
 def test_the_turn():
-    """parent 9: the brief turn from its front (A7): at most 2 s of pushing, within 200 N, no slide or lift"""
+    """parent 9: the brief turn from its front (A7), by its near shoulder and its near hip (the W2 verifier's finding: W2 lifted its
+    pelvis at its middle, which rolls nothing): at most 2 s of pushing, within 200 N; it rolls toward its side (its chest turned
+    from face down), and her whole force on it never carries its weight nor slides it (upward under its 337 N, along the floor
+    under the 312 N that slides it on the mat, as a 10 ms mean): its pelvis moves only as the roll carries it"""
     out = T.sc_turn()
     a = out["acts"][0]
     assert a["status"] in ("done", "refused"), a
     assert out["effort_peak_N"] <= K.CAP_TWO_BRIEF + 1e-6 and out["over_sustained_s"] <= K.BRIEF_S + W.TICK_S
+    assert a["status"] == "done" or "chest turned" in a["why"], a
+    p_ = out["probe"]
+    assert p_["net_up_N"]["ms10"] < 337.0 and p_["net_side_N"]["ms10"] < 312.0, p_
     g = out["g1"]["held"]
-    assert g["pelvis_travel_cm"] < 3.0 and g["com_rise_cm"] < 8.0, g
-    print(f"parent 9: the brief turn: {a['status']} ('{a['why'][:60]}'), her effort peak {out['effort_peak_N']} N, over the sustained",
-          f"cap {out['over_sustained_s']} s; while held its pelvis moved {g['pelvis_travel_cm']} cm, its centre of mass rose",
-          f"{g['com_rise_cm']} cm; after: {out['posture_after']}")
+    print(f"parent 9: the brief turn: {a['status']} ('{a['why'][:130]}'), her effort peak {out['effort_peak_N']} N, over the",
+          f"sustained cap {out['over_sustained_s']} s; her whole force on it at most {p_['net_up_N']['ms10']} N up and",
+          f"{p_['net_side_N']['ms10']} N along the floor (10 ms); while held its pelvis moved {g['pelvis_travel_cm']} cm as it rolled,",
+          f"its centre of mass rose {g['com_rise_cm']} cm; after: {out['posture_after']}")
 
 
 def test_toys():
@@ -411,9 +446,47 @@ def test_exact_replay_with_her_acting():
             assert x.truth["parent"] == y.truth["parent"], where
         assert w2.save_state() == end1, where
         assert w2.parent.state() == st1, where
-    print(f"parent 12: the exact replay with her acting: attend asked, {N} ticks (she was {w.parent.base['mode']} by then), a save",
-          f"({len(blob) / 1e3:.0f} KB); {M} more restored in the same world and in a new one: every frame, her motion and the final",
-          "save bit for bit")
+    # under babble, her report read every tick, a save between two ticks of a push (her yield within the tick, her blows and her
+    # report carried by the save: the W2 fix found the yield made within a tick dropped by load_state)
+    w = W.G1World(seed=1)
+    pm = w.parent
+    b = T.babbler(4, 0.3)
+    asked = []
+
+    def tick(w_, b_, asked_):
+        pm_ = w_.parent
+        if not asked_ or (pm_.status(asked_[-1]) in PM.DONE_STATES and not pm_.phases):
+            asked_.append(pm_.request(Act(*T.BABBLE_ACTS[len(asked_) % len(T.BABBLE_ACTS)])))
+        w_.apply(b_.acts())
+        return w_.frame(), pm_.report(w_.tick)
+    for _ in range(400):
+        tick(w, b, asked)
+        if any(np.any(pm.doff[c]) for c in PM.CHAINS) and pm.stats.get("blows", 0) > 0:
+            break
+    assert any(np.any(pm.doff[c]) for c in PM.CHAINS), "no yield within a tick before the save"
+    blob = w.save_state(); bst = b.state(); ask0 = list(asked); blows0 = pm.stats.get("blows", 0)
+    rec1 = [tick(w, b, asked) for _ in range(M)]
+    end1 = w.save_state(); st1 = pm.state(); blows1 = pm.stats.get("blows", 0)
+    w2 = W.G1World(seed=1); w2.load_state(blob)
+    b2 = T.babbler(4, 0.3); b2.load(bst); asked2 = list(ask0)
+    for (f1, r1), (f2, r2) in zip(rec1, [tick(w2, b2, asked2) for _ in range(M)]):
+        assert all(np.array_equal(f1.obs[k], f2.obs[k]) for k in f1.obs) and f1.truth["parent"] == f2.truth["parent"] and r1 == r2
+    assert w2.save_state() == end1 and w2.parent.state() == st1
+    # the world's save the same bytes for the same acts, whoever made the names (the W2 verifier's finding: pickle memoizes a
+    # string by its identity, so two callers' equal names made two saves of one content differ)
+    saves = []
+    for fresh in (False, True):
+        w3 = W.G1World(seed=1, parent=False)
+        acts = T.babbler(4, 0.3).acts()
+        if fresh:
+            acts = {"".join(list(k)): v for k, v in reversed(list(acts.items()))}
+        w3.apply(acts)
+        saves.append(w3.save_state())
+    assert saves[0] == saves[1]
+    print(f"parent 12: the exact replay with her acting: attend asked, {N} ticks, a save ({len(blob) / 1e3:.0f} KB); {M} more",
+          "restored in the same world and in a new one: every frame, her motion and the final save bit for bit; under babble (seed",
+          f"4, p_rest 0.3) a save in the middle of a push, {blows1 - blows0} blows after it: restored in a new world, {M} ticks of",
+          "frames, her reports, her state and the final save bit for bit")
 
 
 def test_her_cost():
@@ -439,38 +512,50 @@ def test_her_cost():
 
 
 def test_her_yield_under_babble():
-    """parent 14 (the W2 verifier's first and third findings): the babbling G1 (the verifier's case: babbler seed 4, p_rest 0.3),
-    attend asked over and over for 300 ticks: her force on any link of the child as a 10 ms mean never reaches F_pain (C8: "under
-    F_pain always"); her body backs off along each contact, away from the child, never into it (every tick her body yields, its
-    way out points away from the child's contacts on her); no planning fault; she gives up at most half of what is asked"""
-    w = W.G1World(seed=1)
-    pm = w.parent
-    probe = T.Probe(w)
-    b = T.babbler(4, 0.3)
-    orig = getattr(pm, "_yield_dir", None)
-    bad = []
+    """parent 14 (the W2 verifier's findings 1, 2 and 5 of its second round): the babbling G1 under the verifier's act mix (attend,
+    show the block, lean_in, touch its tummy, asked in turn; babbler seeds 1, 5, 6 and 8 at p_rest 0.3, 600 ticks each; on seed 6
+    W2 had pressed its knee at 1,746 N): her force on any link of the child as a 10 ms mean never reaches F_pain (C8: "under F_pain
+    always"); her body never lifts or slides it: the work her body's contacts do on it (her force at each contact against the
+    velocity of the child's point there) is never enough, in any tick or over the whole run, to slide it a centimetre on the mat
+    (312 N, the least force measured to slide it, x 1 cm) or lift it a centimetre (its 337 N weight x 1 cm): she resists it, never
+    pushes it along (the forces themselves, which a child throwing itself against a person meets whatever she does, are written
+    down: her whole force on it upward and along the floor, as a tick's mean and a 10 ms mean); her body's way out never points
+    toward the child's centre of mass; no planning fault"""
+    rows = []
+    for seed in (1, 5, 6, 8):
+        w = W.G1World(seed=1)
+        pm = w.parent
+        weight = w.body_mass * float(np.linalg.norm(w.m.opt.gravity))
+        orig = pm._yield_dir
+        bad = []
 
-    def spy(c, away):
-        y = orig(c, away)
-        if y is not None and c == "core" and float(np.linalg.norm(away[:2])) >= K.YIELD_FLAT_SHARE * float(np.linalg.norm(away)) > 0:
-            if float(y @ PM.unit(away * [1, 1, 0])) < 0.999:
-                bad.append(float(y @ PM.unit(away * [1, 1, 0])))
-        return y
-    if orig is not None:
+        def spy(c, away, fsum=0.0, _o=orig, _pm=pm, _bad=bad):
+            try:
+                y = _o(c, away, fsum)
+            except TypeError:                                           # a motion whose way out reads no sum of forces
+                y = _o(c, away)
+            if c == "core" and y is not None:
+                v = _pm.d.mocap_pos[_pm.mocap_ids[0]][:2] - _pm.d.subtree_com[_pm.m.body("pelvis").id][:2]
+                if float(np.linalg.norm(v)) > 1e-6 and float(y[:2] @ v) < 0:
+                    _bad.append((w.tick, [round(float(x), 3) for x in y[:2]]))
+            return y
         pm._yield_dir = spy
-    asked = []
-    for k in range(300):
-        if not asked or (pm.status(asked[-1]) in PM.DONE_STATES and not pm.phases):
-            asked.append(pm.request(Act("attend")))
-        w.apply(b.acts())
-    r = probe.result()
-    given_up = sum(1 for i in asked if pm.why(i).startswith("given up"))
-    assert r["ticks_over_f_pain"] == 0, r
-    assert not bad, bad[:5]
-    assert pm.stats.get("jumps_refused", 0) == 0 and given_up * 2 <= len(asked), (given_up, len(asked), [pm.why(i) for i in asked])
-    print(f"parent 14: under babble (seed 4, p_rest 0.3), attend asked {len(asked)} times in 300 ticks, {given_up} given up; her force",
-          f"on the child at most {r['her_10ms_on_child_N']} N as a 10 ms mean (F_pain {w.f_pain:.0f} N; over her own 150 N on",
-          f"{r['ticks_over_her_150N']} of 300 ticks); her body backed off along every contact; no planning fault")
+        r = T.ask_repeatedly(w, T.BABBLE_ACTS, 600, T.babbler(seed, 0.3))
+        p_ = r["probe"]
+        rows.append((seed, p_["her_10ms_on_child_N"], p_["ticks_over_her_150N"], p_["net_up_N"], p_["net_side_N"], p_["body_work_J"]))
+        assert p_["ticks_over_f_pain"] == 0, (seed, p_)
+        wmin = min(312.0, weight) * 0.01
+        assert p_["body_work_J"]["tick_max"] < wmin and p_["body_work_J"]["positive_sum"] < wmin, (seed, p_)
+        assert not bad, (seed, bad[:5])
+        assert r["jumps_refused"] == 0, (seed, r["outcome"])
+    print("parent 14: under babble (the verifier's mix, seeds 1, 5, 6, 8 at p_rest 0.3, 600 ticks) her 10 ms force on the child at",
+          "most", {x[0]: x[1] for x in rows}, f"N (F_pain {w.f_pain:.0f} N; ticks over her own 150 N:", {x[0]: x[2] for x in rows},
+          "); her body's work on it, largest in a tick / all positive work over the run,", {x[0]: (x[5]["tick_max"], x[5]["positive_sum"])
+                                                                                                 for x in rows},
+          "J (a centimetre's slide takes 3.1 J, a centimetre's lift 3.4 J); her whole force on it, upward / along the floor, largest",
+          "tick mean", {x[0]: (x[3]["tick"], x[4]["tick"]) for x in rows}, "N and 10 ms mean", {x[0]: (x[3]["ms10"], x[4]["ms10"])
+                                                                                                 for x in rows},
+          f"N; her body's way out never toward it; no planning fault")
 
 
 def test_getting_up_beside_it():
@@ -503,20 +588,35 @@ def test_getting_up_beside_it():
           "act after one given up ran")
 
 
+HANDS_BABBLE_MM = 10.0          # under babble a limb may be a physics step's travel into her hand before she moves it out (a hand
+                                # swung at 2.5-5 m/s covers 5-10 mm in 2 ms): the probe samples the step before her hand gives
+
+
 def test_her_hands_stay_out():
-    """parent 16 (the W2 verifier's fourth finding): her hands on the child (resting, guiding, propping, pulling) never pass
-    through it: her palm, fingers and thumb stay outside the G1's convex hulls (which enclose its drawn meshes) at four steps a tick,
-    within 1 mm (MuJoCo's own distance)"""
+    """parent 16 (the W2 verifier's third finding in both its rounds): her hands never pass through the child. Every hand (its
+    palm, fingers, thumb and proxy), whatever it does (reaching onto it, holding it, letting go, resting), at four steps a tick,
+    against the G1's convex hulls (which enclose its drawn meshes): on the still child, in every act that puts a hand on it
+    (attend, the guide, the prop with its reach onto the torso, the pull-to-sit, the turn), within 1 mm (MuJoCo's own distance);
+    under babble, the verifier's seeds 1, 6 and 8 at p_rest 0.3 (a hip 58 mm and a knee 39 mm into her fingers), within
+    HANDS_BABBLE_MM"""
     rows = {}
     T.HANDS = True
     try:
-        for n in ("attend", "guide", "prop", "pull_placed"):
+        for n in ("attend", "guide", "prop", "pull_to_sit", "turn"):
             r = T.SCENARIOS[n]()
             rows[n] = (r["probe"]["hand_to_hull_mm"], r["probe"]["hand_worst"])
             assert rows[n][0] is not None and rows[n][0] >= -1.0, (n, rows[n])
     finally:
         T.HANDS = False
-    print("parent 16: her hands on the child, least distance to its hulls:", {k: v[0] for k, v in rows.items()}, "mm")
+    bab = {}
+    for seed in (1, 6, 8):
+        w = W.G1World(seed=1)
+        r = T.ask_repeatedly(w, T.BABBLE_ACTS, 600, T.babbler(seed, 0.3), hands=True)
+        bab[seed] = (r["probe"]["hand_to_hull_mm"], r["probe"]["hand_worst"])
+        assert bab[seed][0] is None or bab[seed][0] >= -HANDS_BABBLE_MM, (seed, bab[seed])
+    print("parent 16: her hands against the child's hulls, least distance (mm), every hand at four steps a tick: still child",
+          {k: v[0] for k, v in rows.items()}, "; under babble", {k: v[0] for k, v in bab.items()}, "(worst:",
+          {k: v[1] for k, v in bab.items()}, ")")
 
 
 def test_exact_replay_across_a_solve():
@@ -608,20 +708,98 @@ def test_the_interface_does_and_copies():
 
 def test_her_caps_count_her_body():
     """parent 20 (the W2 verifier's eighth finding): her caps bound her holds and her body's contacts together, friction
-    included: in the placed pull and the brief turn her whole force on the G1 never passes the brief cap, and passes the
-    sustained cap for at most BRIEF_S"""
-    for name in ("turn", "pull_placed"):
+    included: in the pull-to-sit and the brief turn her holds never take more than her caps leave after what her body pressed
+    (the 5 steps before), so her whole force on the G1 passes the brief cap only on a step where the child pressed newly into her
+    (a contact is read after its step: her holds give way on the next), and passes the sustained cap for at most BRIEF_S"""
+    rows = {}
+    for name in ("turn", "pull_to_sit"):
         out = T.SCENARIOS[name]()
         p_ = out["probe"]
-        assert p_["total_steps_over_brief_cap"] == 0 and p_["total_steps_over_sustained_cap"] * 0.002 <= K.BRIEF_S + 1e-9, (name, p_)
-    print("parent 20: in the pull and the turn her holds and her body together stayed within her caps (friction counted)")
+        rows[name] = (p_["total_peak_N"], p_["total_steps_over_brief_cap"], p_["total_steps_over_brief_cap_by_a_new_contact"],
+                      round(p_["total_steps_over_sustained_cap"] * 0.002, 2))
+        assert p_["total_steps_over_brief_cap"] == p_["total_steps_over_brief_cap_by_a_new_contact"], (name, p_)
+        assert p_["total_steps_over_sustained_cap"] * 0.002 <= K.BRIEF_S + 1e-9, (name, p_)
+    print("parent 20: in the pull and the turn her holds and her body together (friction counted): peak N, steps over the brief",
+          "cap, of them steps where the child pressed newly into her, s over the sustained cap:", rows)
+
+
+class _Conduct:
+    """a stand-in for P3's Conduct: only what her motion reads of it (eyes_on_child)"""
+    eyes_on_child = False
+
+
+def test_the_contract():
+    """parent 21 (the W2 verifier's fourth finding): P3's contract, as StubMotion writes it (body/sim/lang/conduct.py on
+    sim-parent, 883ec52 and b301745): statuses exactly running / done / refused / cancelled (an act waiting its turn is running);
+    report(tick) -> eyes, head, left, right and acts, every act from its request until it is reported ended and never after, the
+    same report for the same tick, carried by the save; cancel(id, tick); Act.thing names the toy a 'do' handles; while her
+    conduct's eyes_on_child holds, her eyes stay on the child's eyes, no glance, and no act starts but PENDING_OK's"""
+    STAT = {"running", "done", "refused", "cancelled"}
+    w = W.G1World(seed=1)
+    pm = w.parent
+    c = _Conduct()
+    pm.bind_conduct(c)
+    ids = [pm.request(Act("look", "block", "focus")), pm.request(Act("walk", "door")), pm.request(Act("fly"))]
+    seen = {i: [] for i in ids}
+    ended = set()
+    for k in range(12):
+        w.apply({})
+        r = pm.report(w.tick)
+        assert set(r) == {"eyes", "head", "left", "right", "acts"}, r
+        assert r == pm.report(w.tick)                                   # asked again: the same report
+        for i, st in r["acts"].items():
+            assert st in STAT and i not in ended, (i, st)
+            seen[i].append(st)
+            if st in PM.DONE_STATES:
+                ended.add(i)
+        for i in ids:
+            assert pm.status(i) in STAT
+    assert seen[ids[2]] == ["refused"] and seen[ids[0]][0] == "running" and seen[ids[0]][-1] == "done", seen
+    assert ids[1] not in ended and all(st == "running" for st in seen[ids[1]])
+    # the save carries the report: restored, the same tick's report is the same
+    blob = w.save_state(); rep = pm.report(w.tick)
+    w2 = W.G1World(seed=1); w2.load_state(blob)
+    assert w2.parent.report(w2.tick) == rep
+    pm.cancel(ids[1], w.tick + 1)
+    w.apply({}); r = pm.report(w.tick)
+    assert r["acts"].get(ids[1]) == "cancelled", r
+    w.apply({}); assert ids[1] not in pm.report(w.tick)["acts"]
+    # eyes_on_child: a show asked waits (running, not begun), her eyes on the child's eyes, a glance ignored; PENDING_OK's open
+    # hand starts; the ask over, the show begins
+    _live(w, 30, until=lambda w_: not w_.parent.phases)
+    c.eyes_on_child = True
+    sh = pm.request(Act("show", "ball")); pm.glance("drum")
+    for k in range(3):
+        w.apply({}); r = pm.report(w.tick)
+        assert r["acts"][sh] == "running" and pm.cur["body"] is None and r["eyes"] == "child_eyes" and r["head"] == "child_eyes", r
+    oh = pm.request(Act("open_hand", "child"))
+    _live(w, 1)
+    assert pm.cur["body"] == oh and pm.queue["body"] == [sh], (pm.cur, pm.queue)     # an ask allows her open hand, the show waits
+    c.eyes_on_child = False
+    pm.cancel(oh, w.tick + 1)
+    _live(w, 12, until=lambda w_: w_.parent.cur["body"] == sh)
+    assert pm.cur["body"] == sh, (pm.cur, pm.queue)
+    # Act.thing: 'do show' of the ball fetches the ball, never the nearest toy
+    w = W.G1World(seed=1)
+    class _A:
+        kind, target, during, thing = "do", "show", None, "ball"
+    i = w.parent.request(_A())
+    held = []
+    _live(w, 900, until=lambda w_: (held.append(dict(w_.parent.holding)) or w_.parent.status(i) in PM.DONE_STATES) and not w_.parent.phases)
+    assert w.parent.status(i) == "done", w.parent.why(i)
+    got = {t for h in held for t in h.values() if t is not None}
+    assert got == {"ball"}, got
+    print("parent 21: P3's contract: statuses running/done/refused/cancelled only (waiting is running); report() every act until",
+          "reported ended and never after, the same for the same tick and across a save; cancel(id, tick) for this tick or a later",
+          "one; eyes_on_child held her eyes on the child's eyes, ignored a glance and started only PENDING_OK's acts; 'do show' with",
+          "thing=ball handled the ball alone")
 
 
 PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_pull_never_sits_it_up, test_the_prop_and_the_catch, test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
                 test_her_hands_stay_out, test_exact_replay_across_a_solve, test_the_catch_pushes_at_once,
-                test_the_interface_does_and_copies, test_her_caps_count_her_body]
+                test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

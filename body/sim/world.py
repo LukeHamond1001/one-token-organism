@@ -376,9 +376,33 @@ MUTABLE_MODEL_FIELDS = ("jnt_actfrcrange", "eq_data", "geom_pos", "geom_quat", "
 STATE_SPEC = mujoco.mjtState.mjSTATE_INTEGRATION
 
 
+def _canon_acts(acts):
+    """the tick's acts as the save keeps them: {effector: int}, sorted, every name interned, so equal acts always pickle to equal
+    bytes (pickle memoizes a string by its identity: the same names from two callers, as two objects, had made the save's bytes
+    differ with the same content; the W2 verifier's finding)"""
+    return {sys.intern(str(k)): int(v) for k, v in sorted(dict(acts).items()) if k in EFFECTOR_REST}
+
+
+def _tendon_bodies(m, t):
+    """the bodies a tendon passes through: its sites' and wrapping geoms' bodies (a spatial tendon), its joints' (a fixed one)"""
+    out = set()
+    for w in range(int(m.tendon_adr[t]), int(m.tendon_adr[t]) + int(m.tendon_num[t])):
+        typ, oid = int(m.wrap_type[w]), int(m.wrap_objid[w])
+        if oid < 0:
+            continue
+        if typ == int(mujoco.mjtWrap.mjWRAP_SITE):
+            out.add(int(m.site_bodyid[oid]))
+        elif typ in (int(mujoco.mjtWrap.mjWRAP_SPHERE), int(mujoco.mjtWrap.mjWRAP_CYLINDER)):
+            out.add(int(m.geom_bodyid[oid]))
+        elif typ == int(mujoco.mjtWrap.mjWRAP_JOINT):
+            out.add(int(m.jnt_bodyid[oid]))
+    return out
+
+
 def _eq_owner(m, e, oid):
     """the body an equality constraint's end belongs to: a body's own id, a site's body, a joint's body; the world (0) for an end
-    left open (a weld or connect to the world, a joint held at a value); None for a tendon's or a flex's (none in the scene)"""
+    left open (a weld or connect to the world, a joint held at a value); None for a tendon's (its bodies: _tendon_bodies) or a
+    flex's (none in the scene)"""
     if oid < 0:
         return 0
     t = int(m.eq_objtype[e])
@@ -445,11 +469,24 @@ class G1World(SimWorld):
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
             raise ValueError("the scene leaves MuJoCo's auto-reset on (A18: <flag autoreset=\"disable\"/>)")
         self.chargers = np.array([g for g in range(m.ngeom) if (m.geom(g).name or "").startswith(CHARGER_PREFIX)], dtype=np.int64)
+        g1 = self.scene.g1_set
         for e in range(m.neq):                                          # no equality ties the G1 to anything outside it: a weld, a
             ends = [_eq_owner(m, e, int(m.eq_obj1id[e])), _eq_owner(m, e, int(m.eq_obj2id[e]))]   # connect (by body or by
-            if None not in ends and (ends[0] in self.scene.g1_set) != (ends[1] in self.scene.g1_set):   # site), a joint held
+            if None not in ends and (ends[0] in g1) != (ends[1] in g1):                            # site), a joint held
                 raise ValueError("an equality constraint on the G1 (a weld, a connect or a joint held): every hold on it is a "
                                  "capped spring (SIM_DESIGN.md 4.1, 4.2, A25)")
+            if int(m.eq_type[e]) == int(mujoco.mjtEq.mjEQ_TENDON):     # a tendon equality: the bodies its tendons pass through
+                bodies = set()
+                for t in (int(m.eq_obj1id[e]), int(m.eq_obj2id[e])):
+                    bodies |= _tendon_bodies(m, t) if t >= 0 else {0}
+                if bodies & g1 and bodies - g1:
+                    raise ValueError("a tendon equality ties the G1 to something outside it: every hold on it is a capped spring "
+                                     "(SIM_DESIGN.md 4.1, 4.2, A25)")
+        for t in range(m.ntendon):                                      # nor a tendon (a rope) from the world or the room to it
+            bodies = _tendon_bodies(m, t)
+            if bodies & g1 and bodies - g1:
+                raise ValueError("a tendon runs from the G1 to something outside it: every hold on it is a capped spring "
+                                 "(SIM_DESIGN.md 4.1, 4.2, A25)")
         # the IMUs: the model's four sensors (gyro and accelerometer on each site), their declared noise and ranges
         names = [m.sensor(i).name for i in range(m.nsensor)]
         self.imu_order = [names.index(n) for n in ("imu-torso-linear-acceleration", "imu-torso-angular-velocity",
@@ -565,7 +602,7 @@ class G1World(SimWorld):
                 rest_idx.extend(range(sl.start, sl.stop))
                 continue
             d.ctrl[self.aid[sl]] = np.clip(q[sl] + steps[name], self.lo[sl], self.hi[sl])
-        self._last_acts = {k: int(v) for k, v in acts.items() if k in EFFECTOR_REST}
+        self._last_acts = _canon_acts(acts)
         self._spinal = spinal
         gaze0 = self.gaze.copy()
         self.gaze = clamp_gaze(self.gaze + gaze_step)                  # the gaze's act: the windows jump at the tick's start
@@ -779,7 +816,7 @@ class G1World(SimWorld):
         self.seed = int(st["seed"])
         self._sensed = {k: v.copy() for k, v in st["sensed"].items()}
         self._drain, self._fed = st["drain"], st["fed"]
-        self._last_acts = dict(st["last_acts"])
+        self._last_acts = _canon_acts(st["last_acts"])
         self._spinal = dict(st.get("spinal", {})); self._vor_quick = int(st.get("vor_quick", 0))
         self.rng.bit_generator.state = st["rng"]
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)

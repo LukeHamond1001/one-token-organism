@@ -109,7 +109,8 @@ LAY_BACK_S = 2.0                # s: laying the child back gently eases her hold
 # most upright while she propped it (a person catching pushes back; she does not merely stop where her hands met it); they pull
 # at most BRIEF_S, and a trunk not back within PROP_MAX_DEG by then is laid back gently. C6 counts a fall as caught when it is
 # stopped short of CATCH_STOP_DEG (back within PROP_MAX_DEG, or held until she lays it back) and neither its trunk, head nor
-# pelvis feels pain (A12's filter) while it falls (tools/sim_parent_motion.py catch)
+# pelvis strikes the mat, the floor, the furniture or a toy at F_pain (A12's 10 ms filter) while it falls, never counting its own
+# links pressing each other (tools/sim_parent_motion.py catch, Strike)
 CATCH_STOP_DEG = 60.0           # a fall stopped short of this is caught (ours: past 60 deg its upper body lies closer to the mat
                                 # than to upright, and its head is within about 0.2 m of the mat)
 
@@ -123,24 +124,33 @@ YIELD_MAX_M = 0.12              # m: backed off this far in one push and still p
                                 # length) and gets out of its way at her own pace (WALK_MPS standing, SHUFFLE_MPS kneeling,
                                 # REACH_MPS a hand), still along the contact and never into furniture (along it), until the push
                                 # ends; at rest, where it pushed her is where she stays
-YIELD_FLAT_SHARE = 0.3          # her body backs off on the floor plan only: a push on it mostly up or down (its floor-plan share
-                                # under this) is backed off from along the line from the child's middle out through her pelvis (ours)
 YIELD_BACK_M_PER_TICK = 0.01    # m a tick: a chain backed off comes back at half the yield's rate once the child has left it
                                 # alone for her reaction time (REACTION_TICKS), and only where it stays CLEAR_M from the child
                                 # (A4: "the act resumes when the force is gone"; ours)
-BLOW_GIVE_M_PER_STEP = 0.01     # m a physics step (5 m/s): a blow on her (a contact over her own pain, HER_PAIN_N: the child's
-                                # kick) knocks the chain it strikes back along the contact by as deep as it went in, each step from
-                                # the first (no 2-step wait), up to this: her body gives as a person's does, never a wall (a kick into her kinematic head reached
-                                # 8.3 kN on its knee as a 10 ms mean, W2; a 5 kg head struck at 2 m/s moves at about that speed;
-                                # ours)
+# Her body backs off on the floor plan away from the child's centre of mass, turned toward the contacts' own way out as far as they
+# agree (no constant: the W2 verifier's seed 6 had two contacts pointing opposite ways, a leg between her shins, flip her way out
+# every step); her arms along their contacts (an arm low by the floor drawn out along it). A BLOW, a contact over her own pain
+# (HER_PAIN_N, 4.10: the child's kick), moves the struck chain out at once by as far as her own shapes went in (the contact's
+# depth; a toy in her hand is left out), each step from the first, along the contacts' own way out as far as they agree, the rest
+# away from the child's centre of mass through where she is struck (her head leaning over it goes up and back; risen, she comes
+# down again only clear of the child): her body gives with a blow as a person's does, never a wall, as her hands are never let
+# into the child. No speed constant of its own: the give is what the child's own motion put into her (the W2 verifier's finding:
+# W2's BLOW_GIVE_M_PER_STEP, 5 m/s, had been reasoned from a head struck at 2 m/s). An arm is given at most YIELD_MAX_M in a tick
+# (a forearm pinned under the child, given its depth every step, had run 1.6 m in a tick), and an arm pushed back farther than
+# YIELD_MAX_M gives the rest to her whole body at her own pace (SHUFFLE_MPS kneeling, WALK_MPS standing).
+# A4's 2 cm a tick is kept for a press under her pain. The lead's decision is asked for: the design's A4 says "2 cm a tick" only
 PATIENCE_TICKS = 40             # ticks: an act held up this long in a row by the child pressing against her is given up (6 s; ours)
 HAND_CLEAR_M = 0.003            # m: her hand (its palm, fingers and thumb) kept this far outside the G1's collision surface (its
                                 # convex hulls, which enclose its drawn meshes) while it holds or rests on it: the spring is her
                                 # grip, so her hand's shapes never pass through the child (A4; ours)
 HAND_FREE_M = 0.01              # m: ... and this far from every other link of the child (they move on their own: a dangling wrist
                                 # swung 1.6 cm nearer her thumb in a tick than its velocity carried it, W2). Both measured as her
-                                # hand is drawn at the tick's end (the child now and a tick ahead) and again every 20 ms within the
-                                # tick, the hand moved out along the held surface's normal by what it lacks (ours)
+                                # hand is drawn at the tick's end (the child now and a tick ahead) and again within the tick (the
+                                # held link every 20 ms, every other link every step: the W2 verifier's finding, a babbling limb
+                                # passed into her fingers), the hand moved out along the held surface's normal by what it lacks; a
+                                # hand pushed off its hold a hand's length (HOLD_SLIP_M) has slipped. Her hand not holding touches
+                                # the G1 with its palm, fingers and thumb (their collision shapes on) and is moved out of it at once
+                                # by as far as it went in (ours)
 HOLD_SHAPE = (0.10, 0.0)        # her hand's (curl, thumb) on the child: open and flat, the fingers along its surface (a curled
                                 # grip's fingers passed 3.6 cm into its torso: the W2 verifier's finding; ours)
 HER_PAIN_N = 150.0              # N: her own pain, on any segment, as a 10 ms mean (4.10; a person's, ours)
@@ -150,6 +160,9 @@ SUPPORT_BEND_DEG = 45.0         # leaning (lean + spine) this far, her free hand
                                 # far lean reached down onto the child; the floor beside her knee was where its arm lay: W2; ours)
 SUPPORT_OFF_DEG = 35.0          # ... and lets it hang again once she straightens past this (ours: 10 deg under, so it does not
                                 # flicker at the edge)
+OFFER_HOLD_TICKS = 40           # ticks: her open hand held out for a toy (the give ask's level 0), or her hands over her face
+                                # (peekaboo), wait at most this long for the next act (ours: A4's own patience with the child's
+                                # hand, 40 ticks for a hand-over's release); the act is under way while they wait (P3's contract)
 GESTURE_HOLD_TICKS = 4          # ticks: a hand held out (an open hand, a raised arm, a fist) stays this long before it rests
                                 # (ours: 0.6 s, long enough to be seen at the child's 150 ms tick)
 DO_WALK_M = 1.0                 # m: 'do walk' (a verb's showing): a few steps, about three strides, away and turned back to the
@@ -177,8 +190,12 @@ KNEEL_ALONG_M = 0.10            # m: ... toward its feet from its trunk's middle
 HIPS_ALONG_M = (0.30, 0.40, 0.20)   # m toward its feet from its trunk's middle, tried in turn: beside its hips, where she kneels
                                 # to bend its far knee over (A8) or to take both its forearms (A9): from beside its chest the
                                 # far knee lies beyond her reach (W2: 12 cm short). Ours
-PULL_OFF_TRY = (0.66, 0.70, 0.75, 0.62)   # m from its centre line, beside its hips, for the pull-to-sit: close enough that
-                                # one trunk of hers reaches both its forearms (W2, C7). Ours
+PULL_FEET_M = (0.35, 0.40, 0.45, 0.50, 0.55)   # m beyond its feet (0.70 m from its pelvis along it) where she kneels on her
+                                # heels for the pull-to-sit, facing its head (A9: "she kneels at the G1's feet and holds both
+                                # forearms"), nearest first: her knees about 0.34 m ahead of her heels' spot, so from just beyond
+                                # its soles; a spot is taken only where every kneeling frame keeps 3 cm from it (A4) and one trunk
+                                # of hers reaches both its forearms (C7). Ours (the W2 verifier's finding: W2 had knelt beside its
+                                # hips, which A9 does not say, and refused even there)
 KNEEL_CLEAR_FRONT_M = 0.6       # m: kneeling down needs this clear in front, so she kneels a step back and shuffles in (4.1)
 KNEEL_FOOTPRINT_R = 0.35        # m: toys within this of her knees' line where she kneels are cleared first (ours)
 TOY_ASIDE_M = 0.35              # m: a cleared toy is set down this far beyond her footprint, away from the child (ours)

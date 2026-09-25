@@ -786,18 +786,18 @@
       <geom type="capsule" fromto="0 0 -.19 0 0 -.245" size=".025" material="skin" contype="0" conaffinity="0"/>
     </body>
     <body name="parent_hand_L" childclass="room" mocap="true" pos="1.811 -1.6542 0.815" quat="0.25882 0 0 0.96593">
-      <geom name="parent_hand_L_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="0"/>
+      <geom name="parent_hand_L_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
       <geom name="parent_hand_L" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" contype="8" conaffinity="1" priority="2" solref=".05 1"/>
-      <geom name="parent_f00_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f01_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f10_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f11_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f20_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f21_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f30_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f31_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_t0_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_t1_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="0"/>
+      <geom name="parent_f00_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f01_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f10_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f11_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f20_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f21_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f30_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f31_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_t0_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_t1_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
       <site name="parent_hand_L_grip" pos="0 -0.045 -0.1" size=".008" group="4"/>
     </body>
     <body name="parent_upper_arm_R" childclass="room" mocap="true" pos="1.989 -1.3458 1.365" quat="0.25882 0 0 0.96593">
@@ -809,18 +809,18 @@
       <geom type="capsule" fromto="0 0 -.19 0 0 -.245" size=".025" material="skin" contype="0" conaffinity="0"/>
     </body>
     <body name="parent_hand_R" childclass="room" mocap="true" pos="1.989 -1.3458 0.815" quat="0.25882 0 0 0.96593">
-      <geom name="parent_hand_R_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="0"/>
+      <geom name="parent_hand_R_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
       <geom name="parent_hand_R" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" contype="8" conaffinity="1" priority="2" solref=".05 1"/>
-      <geom name="parent_f00_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f01_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f10_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f11_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f20_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f21_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f30_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_f31_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_t0_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="0"/>
-      <geom name="parent_t1_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="0"/>
+      <geom name="parent_f00_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f01_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f10_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f11_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f20_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f21_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f30_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_f31_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_t0_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
+      <geom name="parent_t1_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="1" priority="2" solref=".05 1"/>
       <site name="parent_hand_R_grip" pos="0 0.045 -0.1" size=".008" group="4"/>
     </body>
     <body name="parent_thigh_L" childclass="room" mocap="true" pos="1.855 -1.5779 0.89" quat="0.25882 0 0 0.96593">

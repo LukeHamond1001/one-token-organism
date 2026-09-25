@@ -69,6 +69,10 @@ TOY = f'contype="4" conaffinity="13" priority="{WORLD_PRIORITY}"'
 # every contact's with the G1 (priority 0, its feet 1) and nothing on the G1 changes (A21's mechanism; body/sim/parent_consts.SOFT_*)
 PARENT = 'contype="8" conaffinity="1" priority="2" solref=".05 1"'
 DECOR = 'contype="0" conaffinity="0"'
+HAND_TOUCH = 'contype="0" conaffinity="1" priority="2" solref=".05 1"'   # her palm, fingers and thumb: they touch the G1 (contype 1)
+# and nothing else (a toy's contype is 4; the room is static like her), soft as the rest of her; compiled collidable so MuJoCo's
+# midphase keeps them (a geom compiled with no collision bits is never tested, whatever its bits later: the W2 verifier's third
+# finding, her fingers passing through a babbling limb); her motion switches them off with her hand's proxy while she holds
 VIS0 = DECOR + ' density="0"'          # massless and seen only (on dynamic bodies)
 
 MAT_CENTER = np.array([0.0, -0.60])
@@ -232,8 +236,8 @@ def hair_shapes():
 
 
 def parent_segment_geoms(seg):
-    """The parent's geoms in a segment's own frame. Collision geoms (bit 8) are the solid shapes; faces, fingers and
-    trim are seen only."""
+    """The parent's geoms in a segment's own frame. Collision geoms (bit 8) are the solid shapes; her palm, fingers and thumb
+    touch the G1 alone (HAND_TOUCH); faces and trim are seen only."""
     sd = seg[-1] if seg[-2] == "_" else ""
     sg = 1 if sd == "L" else -1
     m = (lambda p: p) if sd != "R" else mirror_pos
@@ -266,13 +270,13 @@ def parent_segment_geoms(seg):
               f'<geom type="cylinder" pos="0 0 -.19" size=".037 .012" material="sweater_d" {DECOR}/>',
               f'<geom type="capsule" fromto="0 0 -.19 0 0 -.245" size=".025" material="skin" {DECOR}/>']
     elif seg.startswith("hand"):
-        g += [f'<geom name="{P}_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" {DECOR}/>',
+        g += [f'<geom name="{P}_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" {HAND_TOUCH}/>',
               f'<geom name="{P}" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" {PARENT}/>']
         for i in range(4):
             for j in range(2):
-                g.append(f'<geom name="parent_f{i}{j}_{sd}" type="capsule" size="{kin.FINGER_R - .0006 * i} .02" material="skin" {DECOR}/>')
+                g.append(f'<geom name="parent_f{i}{j}_{sd}" type="capsule" size="{kin.FINGER_R - .0006 * i} .02" material="skin" {HAND_TOUCH}/>')
         for j in range(2):
-            g.append(f'<geom name="parent_t{j}_{sd}" type="capsule" size=".0098 .016" material="skin" {DECOR}/>')
+            g.append(f'<geom name="parent_t{j}_{sd}" type="capsule" size=".0098 .016" material="skin" {HAND_TOUCH}/>')
         g.append(f'<site name="{P}_grip" pos="{f(*m((0, -.045, -.10)))}" size=".008" group="4"/>')
     elif seg.startswith("thigh"):
         g += [f'<geom name="{P}" type="capsule" fromto="0 0 -.02 0 0 -.39" size=".07" material="denim" {PARENT}/>']
