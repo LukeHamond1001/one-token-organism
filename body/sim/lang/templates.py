@@ -141,9 +141,8 @@ ROOM_AT_BIRTH = dict(
 # -------------------------------------------------------------------------------------------------------- the frames
 F = lambda text, focus=None: (text, focus)   # noqa: E731
 FRAMES = {
-    "call": [F("{n}.", "{n}"), F("{n}. look at mama.", "mama"), F("{n}. look here.")],   # the judged call is said by a frame
-                                                        # ending on the name (conduct: her voice after it would be at her face,
-                                                        # the call's X, while it is judged; A51, P3's eighth round)
+    "call": [F("{n}.", "{n}"), F("{n}. look at mama.", "mama"), F("{n}. look here.")],   # her teaching's call (4.5); the name
+                                                        # test is trial_name's (its name or a foil, alone: 4.8, 12)
     "hall_call": [F("{n}.", "{n}"), F("{n}? mama is here.")],
     "greet": [F("hi {n}.", "{n}"), F("hi. hi {n}.", "{n}"), F("hi {n}. mama is here.")],
     "return": [F("hi {n}! mama is here."), F("hi {n}. hi.", "hi")],
@@ -184,7 +183,12 @@ FRAMES = {
     "no": [F("no.")],
     "no_talkover": [F("no.")],
     "night": [F("night night {n}.", "{n}"), F("night night.", "night")],
+    # a formal trial's single test sentence (4.8, 12, the lead's decision): said with no act, only her mouth moving
+    "trial_where": [F("where is the {o}?", "{o}")],                     # place and exemplar (M6(a); Quinn et al. 1993)
+    "trial_combo": [F("where is the {c} {o}?", "{o}")],                 # the combination never heard (M6(b), A28, A55)
+    "trial_name": [F("{n}.", "{n}")],                                   # its name; a foil in its place (foil_line)
 }
+TRIAL_FRAMES = ("trial_where", "trial_combo", "trial_name")   # a trial tests known words: never a new word's line (new_word_lines)
 
 # a new word's introduction (4.8: a variation set of 3 lines, the word last, frames differing by at least one word, 4.5): each
 # class's frames, of which she says only those measured to put the word on the line's pitch peak (A34: the line check's peak
@@ -321,14 +325,16 @@ def intro_on_peak(word, o=None):
 def new_word_lines():
     """every line the fast layer can say with a growth word as the day's new word (said last, emphasized, in the new-word
     register) -> sorted [(text, the new word)]: each word's introduction frames (INTRO, INTRO_WORD; {o} filled with every object
-    word), and every frame of her intents whose focus a growth word fills ({o} a growth toy, {c} a colour, {p} a growth
-    fixture, {b} a growth body word, {w} any growth word her ear can hear: her recasts and echoes; a literal focus that is a
-    growth word: "all done."), each passing the line check's other rules with every other word hers. What
+    word), and every frame of her intents (a trial's aside: it tests known words) whose focus a growth word fills ({o} a
+    growth toy, {c} a colour, {p} a growth fixture, {b} a growth body word, {w} any growth word her ear can hear: her recasts
+    and echoes; a literal focus that is a growth word: "all done."), each passing the line check's other rules with every
+    other word hers. What
     tools/sim_voice_check.py --peak measures; Claude's lines ending on the new word pass only if among them."""
     from .percept import Seen                                          # noqa: PLC0415
     growth = [g for g in GROWTH_WORDS if GROWTH_CLASS[g] != "frame"]
     objs = sorted(OBJECT_NOUNS)
-    frames = [(fr, None) for fs in FRAMES.values() for fr in fs] + [(fr, w) for w in growth for fr in intro_frames(w)]
+    frames = [(fr, None) for k, fs in FRAMES.items() if k not in TRIAL_FRAMES for fr in fs] + \
+        [(fr, w) for w in growth for fr in intro_frames(w)]
     out = set()
     for fr, word in frames:
         slots = set(_SLOT.findall(fr[0]))
@@ -668,6 +674,15 @@ def fill(frame, o=None, b=None, w=None, fixtures=()):
     out = _SLOT.sub(lambda m: vals[m.group(1)], text)
     f = None if focus is None else (vals[focus[1]] if focus.startswith("{") else focus)
     return out, f, refs
+
+
+def foil_line(foil):
+    """the name test's foil (4.8, 12; Mandel, Jusczyk and Pisoni 1995): "<foil>." for a foil in consts.NAME_FOILS, a name she
+    never uses for it or for anything, said in its name's register and stillness. The only line she says that is not of her
+    words (the line check's vocabulary): refused for anything else, and never Claude's."""
+    if foil not in K.NAME_FOILS:
+        raise ValueError(f"not a foil name: {foil!r} (consts.NAME_FOILS)")
+    return f"{foil}."
 
 
 def frames_for(intent):

@@ -25,11 +25,11 @@ The world (W2-W3) fills one each tick from her senses, never from anything a per
                   person judges a baby's reach; never on her), so "give me the X" is asked only of a toy some act can give;
                   near, the ids of the things a look at it could be read as (Reader.near: every thing she sees within
                   NEAR_DEG = 20 degrees of it as seen from the child's head, and every thing resting on or in it or it on or
-                  in; A51, P3's eighth round: a cue at the box the ball rests in, or at a toy beside the ball, is a cue at the
-                  ball), None when the world does not say (then a look at it stands for every thing: fail-closed)
+                  in), None when the world does not say: a formal trial's two things must lie beyond each other's near, so its
+                  first look can be read as one of them (4.8; unknown: its sentence waits, fail-closed)
   face_near       the ids of the things a look at her face could be read as (Reader.near's entry for her face: within
-                  NEAR_DEG of it as seen from the child's head), None when unknown (fail-closed: a look at her, and the mutual
-                  gaze every ask is made in, stands for every thing)
+                  NEAR_DEG of it as seen from the child's head), None when unknown: neither of a trial's two things may be among
+                  them (a look at her, as she speaks the test sentence, must never be read as one of them; unknown: it waits)
   fixtures        the room's words she can see ("mat", "sofa", "window", and the growth queue's "table", "shelf", ...)
   events          what she saw or heard happen this tick: (kind, object id or None), kind one of EVENT_KINDS
   child_sounding  she hears the child's voice this tick (the transcriber's own reading of it)
@@ -77,7 +77,7 @@ class Seen:
     child_sees: bool = False      # in the child's view as she reads it (before its head's camera, A40)
     child_can_reach: bool = False  # within its reach as she sees it: in its hand, or where its hands can get to (never on her)
     near: tuple = None            # the ids a look at it could be read as (Reader.near: within NEAR_DEG of it from the child's
-                                  # head, or resting on or in it, or it on or in them); None: unknown, at every thing (A51)
+                                  # head, or resting on or in it, or it on or in them); None: unknown (a trial waits, 4.8)
 
 
 @dataclass(frozen=True)
@@ -94,7 +94,7 @@ class Percept:
     child_sounding: bool = False
     extra: dict = field(default_factory=dict)   # instruments only; the fast layer never reads it
     child_reaches: tuple = ()     # the object ids its hands reach toward, as she sees them (A40)
-    face_near: tuple = None       # the ids a look at her face could be read as (Reader.near's "mama"); None: unknown (A51)
+    face_near: tuple = None       # the ids a look at her face could be read as (Reader.near's "mama"); None: unknown (4.8)
 
     def obj(self, oid):
         for s in self.seen:
@@ -160,7 +160,7 @@ class Reader:
     near(head_pos, things, on=()) -> {id: the ids a look at it could be read as}: every other thing within NEAR_DEG of it as seen
       from the child's head (the angle between their lines from head_pos, her face as "mama" among them), and those resting on
       or in it or it on or in (on: [(id, the id it rests on or in)]); the world fills each Seen's near and the Percept's
-      face_near from it once a tick (A51). It draws nothing from her stream.
+      face_near from it once a tick (a formal trial's display, 4.8). It draws nothing from her stream.
     The world calls look and reaches once a tick, in that order, and near, and fills the Percept from them; the conduct keeps the
     Reader and saves it."""
 

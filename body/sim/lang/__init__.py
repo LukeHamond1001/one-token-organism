@@ -7,11 +7,12 @@ schedule (P1); and P3's fast layer:
   templates.py    her frames by intent, the growth queue and what each word needs to be shown, and the line check (with the
                   new word's pitch-peak table, peak_lines.json: A34)
   conduct.py      her intents and the acts they accompany (the interface W2's motion implements, with its report of her
-                  attention each tick: A51's one log, fail-closed; a stub until then), her voice's manners (FastLayer) and the
-                  speech side of L2 (Conduct)
+                  attention each tick, A51's log, fail-closed; a stub until then), her voice's manners (FastLayer), the speech
+                  side of L2 (Conduct), and her formal trials of what the child understands (4.8, 12: the only place it is
+                  scored; her everyday asks are her teaching)
   transcriber.py  how she hears the child: its tract through her ear (body/sim/parent_ear.py) at each turn's end, its silent token
                   output as a transcript
-  ledger.py       every line she says and every word she accepts, each word's standing (heard, understood, says), saved with the
-                  world and checked on a replay
+  ledger.py       every line she says, every word she accepts, her asks (teaching) and her trials, each word's standing (heard,
+                  understood from trials alone, says), saved with the world and checked on a replay
 To come: day.py (P4: the day plan, routines, stages, leaving and returning, the never-taught pairs' probes), the digest and the
 steering check (P5)."""

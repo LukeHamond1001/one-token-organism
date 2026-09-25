@@ -1,5 +1,5 @@
-"""THE PARENT'S FAST LAYER AND HER INTENTS (docs/SIM_DESIGN.md 4.4-4.6, 4.10, A13, A14, A27; package P3): what she says, when,
-in which register, and the acts her talk accompanies.
+"""THE PARENT'S FAST LAYER AND HER INTENTS (docs/SIM_DESIGN.md 4.3-4.10, 12, A13, A14, A27, A28, A51; package P3): what she says,
+when, in which register, the acts her talk accompanies, and her formal trials of what the child understands.
 
   INTENTS      her intents (4.5's table, 4.10's conduct): each with its register (4.4, P1's voice registers: plain, approval,
                comfort, calling, question, "no", the new word's), whether it opens an expectant pause (20 ticks: a question, an
@@ -30,9 +30,11 @@ in which register, and the acts her talk accompanies.
   Conduct      the speech side of L2 (4.10), by its priority: the child's pain or distress (comfort), being hit ("oh!", stage 2
                "no."), a low charge (the meal's line), the child's vocal turn (a reply after her latency: a confirmation, a
                recast, an echo or an answer, by what her ear accepted), finishing her word (the talk-over stop: she stops and
-               listens), a pending ask (judged over its window), joint attention (a follow-in variation set naming its target
-               as she reads it), and idle. Episodes (L3: the day plan, P4) and Claude's rows (P5) ask for intents through
-               request(). The judgments she makes by talk (a right name, a met ask, an approximation, stage 1's vocal turn: 4.3's
+               listens), a formal trial under way (she says only its sentence), a pending ask (judged over its window), joint
+               attention (a follow-in variation set naming its target as she reads it), and idle. Episodes (L3: the day plan,
+               P4) and Claude's rows (P5) ask for intents through request(); the day plan asks for formal trials through
+               probe() (never Claude: a trial's sentence requested as an intent is refused). The judgments she makes by talk
+               (a right name, a met ask, a trial's first look on its target, an approximation, stage 1's vocal turn: 4.3's
                worth table) are returned for her feelings (body/sim/parent_feel.Feelings.judge), and stage 2's frowns
                (Say.frown: a turn that talked over her, being hit) for Feelings.talk_over / harm; she never makes a feeling
                here. The motor judgments (a roll, a reach) and the face are the world's.
@@ -53,52 +55,52 @@ in which register, and the acts her talk accompanies.
                or a hand reaching toward one within the window and holding 2 ticks (4.8); a give done before its word was heard
                is void, not missed; the call is a gaze ask at her face, 20 ticks from the end of its name, void when the child
                cannot see her then; a call from the hall is not judged (no look can answer it there).
-               HER ATTENTION LOG (A51; Golinkoff et al. 1987; the lead's decision in P3's sixth round: one log, fail-closed, in
-               place of a rule for each route by which her body could cue an answer). Every tick, before the conduct runs, her
-               motion (W2; StubMotion until W2 merges) reports where her body physically points (report()): her eyes', her
-               head's and each hand's target, from the tick it leaves the child (or rest) until it is back (a thing's id; the
-               child itself, only for her eyes or face on its face or a hand held open or waved toward it; the part of the child
-               a hand touches or her eyes rest on; a place, a raised or shaken hand's among them; her own face; or none; a hand
-               holding a thing is at it), her face ("mama" on a tick its expression moves), and the status of every act asked of
-               it by anyone, exactly "running", "done", "refused" or "cancelled" (any other status, or an act of hers not
-               reported, is running: fail-closed); L1's own gaze (to a sudden event, to the child's act or target) is in her
-               eyes' and head's fields as it happens. The conduct keeps the log (attn, the last CUE_CLEAR + 1 ticks, saved), each
-               field as every thing a look that follows it could be read as attending (_words; her Reader reads a look as the
-               nameable thing nearest its line, with her error, A40): a thing she sees is its word and those of every thing near
-               it (Seen.near, from the world's Reader.near: within NEAR_DEG = 20 degrees of it as seen from the child's head, or
-               resting on or in it, or it on or in them; P3's eighth round: a glance at the box the ball rests in held back no
-               ask about the ball); the child itself (the mutual gaze every ask is made in: a look that follows it comes back to
-               her face) and her face ("mama") are those and the things beside her face (Percept.face_near) and in her hands;
-               and anything else, a place, a part of the child, a thing she does not see now, an id or a word she cannot name,
-               or a thing (or her face) whose near the world does not give, is UNNAMED, which stands for every thing. Her face
-               moving (the report, and FACE_COURSE ticks from each judgment or frown of hers, A3's longest smile) and her voice
-               (a word of her line sounding) are in the log at her face. Her face, the call's X, is also where every movement of
-               her body is, or beside it: for the call a tick with her eyes or head off the child, a hand not at rest, her face
-               moving, her voice, or an act of hers under way but her eyes on its eyes is a cue at her face (_hits). An act she
-               asks for is in the log from that tick (with what it directs her body at, as asked and as each tick's percept
-               names it), before her motion's first report of it; an act in the report she did not ask for (P4's, W2's own) is
-               in it, at every thing, until it is reported ended. An ask about X (a gaze ask, a give, the call about her face, a
-               name ask) opens only if every tick of her life among its tick and the CUE_CLEAR = 44 ticks (6.6 s) before it is
-               in the log (a tick never read is a cue at every thing; a save that does not say when she was born, every tick
-               before its log) and none could cue X (a look within that time may follow her cue, not the word: Brooks and
-               Meltzoff 2005 scored infants' following looks over 6.5 s from an adult's head turn), no act is running, queued
-               or of unknown status but those she may make while an ask is pending and asked for herself (PENDING_OK: her eyes
-               on its eyes, her open hand to it, her face into its periphery, a hand withdrawn when hit), and the log shows her
-               eyes and head on the child and her hands at rest or at it. While it is pending each tick's percept judges it
-               first (an answer a tick shows was made before it: a look held 3 readings and 2 ticks, a give at the end of its
-               hand's path; the given toy in her hand never voids the give it answers, P3's eighth round), then the tick's log
-               is held to it (_hold): her body not still, or X in the log, voids it (fail-closed: W2 broke its contract, or her
-               face moved with a judgment), as do ticks the world did not tick her. Her lines' acts are held to PENDING_OK's
-               (blind()), and for the call to her eyes on its eyes alone; while the call is pending she says no line (her
-               voice is at her face; the reply she owes waits), the child's pain or its hit voiding it first; the call is said
-               from where her face already rests, with no lean-in, and ends on its name. A copy of its movement due then is
-               not made (a late copy is no copy), no new word is shown, the meal's first line waits, and L1 keeps her eyes on
-               the child (eyes_on_child). Her look on a line's naming word (during='focus', 4.3) is requested as that word begins
-               and cancelled as it ends, so the log shows it there. So a name ask shows nothing: "what is this?" is asked of a
-               thing the child attends, as she reads it. Never a gaze or act ask about an X in her own hands (a look at her
-               would meet it); and "give me the X" only with an X within the child's reach as she sees it
-               (Seen.child_can_reach), so no ask is one no act of its could answer. cue_clear() is the same rule, read from the
-               log, for P4's base-rate trials.
+               HER ASKS ARE HER TEACHING, NEVER A MEASURE (the lead's decision after P3's eighth round; 4.8): a met ask may earn
+               her smile (4.3's worth table), and the ledger records every ask and its outcome as teaching only: no ask counts
+               toward "understood", "says" or any milestone, and a word the child says in answer to one (or naming a formal
+               trial's thing in its window) never counts toward "says". In an ask her eyes stay on the child and she does not
+               point or show (A51, her method: blind(), eyes_on_child), and a copy of its movement due then is not made (a late
+               copy is no copy); never a gaze or act ask about an X in her own hands (a look at her would meet it), and "give me
+               the X" only with an X within the child's reach as she sees it (Seen.child_can_reach), so no ask is one no act of
+               its could answer.
+               UNDERSTANDING IS SCORED ONLY IN FORMAL TRIALS, as infant labs score it (intermodal preferential looking: Golinkoff
+               et al. 1987; looking-while-listening: Fernald et al. 2008, Bergelson and Swingley 2012; its name against a foil
+               name in the same voice: Mandel, Jusczyk and Pisoni 1995). At a probe (probe(): scheduled by her day plan's stage,
+               P4, never by the child's rates) she brings two things of the same kind of test into the child's view side by side
+               ("present": W2 places them at matched distance and salience as far as the room allows, and is never told which
+               will be named), settles, then holds still: her eyes on the child's eyes, her hands resting on her thighs, her face
+               in its neutral set, no act (still; SETTLE = 44 ticks of it before the sentence, so a look that follows her placing
+               them has ended: Brooks and Meltzoff 2005's 6.5 s). She says the single test sentence of the design's never-taught
+               forms (consts.TRIAL_FORMS: "where is the X?" of a thing in a place or at an angle it has never been seen in, or a
+               never-seen exemplar; "where is the C X?", a combination never heard, only once both its words are understood alone,
+               A28), with no act: only her mouth moves. Which of the two is named and the sides are drawn by her trial stream
+               (TRIAL_STREAM), each a fair coin, so chance is 50%: any child whose first look does not depend on the word, a
+               follower of her gaze or her hands, a side's or a toy's favourite, scores 50% trial by trial; nothing she does
+               before the sentence depends on the draw (W2's placing, the settle, the display's checks, the line check of both
+               things' sentences, whichever is named). The window opens at
+               the target word's onset (TRIAL_WINDOW = 20 ticks); the measure is the child's first look (her reading of its head
+               line, held 3 ticks, A40) or reach to the target against the distractor: met, missed, or none (no look to either);
+               void if it already attended one at the onset, or both at once, or if her attention log shows anything but her
+               mouth moving from the sentence's first tick to the decision (a tick not read voids it before that tick's percept
+               is read: fail-closed). The name
+               test: its name or a foil (NAME_FOILS, stress-matched names she never uses), drawn by the same stream, in the same
+               voice and stillness, no things; the measure is its turn to her face after its name against after the foil. Her
+               judgment follows a trial as any ask's (A28: never withheld, never added): a smile for its first look on the
+               target, and for its turn to its name until the name is understood; none for a turn to a foil. Only a trial whose
+               named thing is a fresh never-taught item (its first NOVEL_PRESENTATIONS = 3, A28) counts for its word, and the
+               ledger's "understood" reads only such trials: at least 5 of its last 10 on the named thing, one-sided binomial
+               p < 0.05 against chance (50%, or its yoked rate where higher: its first looks to its thing when the other was
+               named; the name's, its turn rate after a foil).
+               HER ATTENTION LOG (A51; kept for the trials' void rule and for P4's probes, which hold her still the same way:
+               still_over()). Every tick, before the conduct runs, her motion (W2; StubMotion until W2 merges) reports where her
+               body physically points (report()): her eyes', her head's and each hand's target (a thing's id; the child itself,
+               "child", "child_eyes" or "child_periphery"; a part of the child, a place, her own face; None at rest: her hands
+               resting on her thighs), her face ("mama" on a tick its expression moves), and the status of every act asked of it
+               by anyone, exactly "running", "done", "refused" or "cancelled". Fail-closed: any other status, an act left out of
+               the report (its status asked of the motion itself, running unless it answers ended), a field left out (her
+               face left out: moving), an act in the report she did not ask for (until reported ended), a toy her percept shows
+               in her hands, her face within FACE_COURSE ticks of a judgment or frown of hers, and a tick never read all count as
+               her body moving (moving()). The log keeps the last SETTLE + 1 ticks, saved.
                HER IMPERFECTION (A52; consts, from human dyads, her own stream): her reply's latency jittered (Gratier et al.
                2015's switching pauses, 2.91 ticks after the turn's end on average), a turn she makes no judgment of missed 30%
                of the time (Gros-Louis et al. 2006: mothers answered over 70% of vocalizations within 2 s), and her mirrored
@@ -110,16 +112,19 @@ in which register, and the acts her talk accompanies.
                she reads it) is said only after 40 ticks with no target and while the day's follow-in namings number at least
                2 for each redirect (Tomasello and Farrar 1986).
 
-Built here from 4.10: the talk and its timing, her reading of the child (A40), her imperfection and copying (A52), her attention
-log (A51). Left to W2 and P4: L1's gaze and face each tick (W2 reads eyes_on_child and reports L1's gaze and her face in the
-attention log, StubMotion's contract), the world's Seen.near and Percept.face_near (percept.Reader.near), the scaffolding ladders'
-acts (4.10: the judged give is level 0 alone; its point and touch only once its window has closed unmet), the routines' order, her
-spells of distraction (P4's own-tasks episode), the base-rate trials' moments (drawn where cue_clear() holds, as her asks are),
-and the motor judgments; the acts are requested here and carried out there.
+Built here from 4.10: the talk and its timing, her reading of the child (A40), her imperfection and copying (A52), her formal
+trials and her attention log (4.8, A51). Left to W2 and P4: L1's gaze and face each tick (W2 reads eyes_on_child and still, and
+reports L1's gaze and her face in the log, StubMotion's contract), the "present" act and the world's Seen.near and
+Percept.face_near (percept.Reader.near: the two things of a trial each beyond NEAR_DEG of the other and of her face, as the child
+sees them, so its first look can be read as one of them), the probes' schedule by her day plan's stage and their items (which
+places, angles and exemplars are never-taught, and their presentations outside trials), the scaffolding ladders' acts (4.10: the
+give's level 0 is her open hand and the ask, teaching like every ask; its point and touch only once its window has closed unmet),
+the routines' order, her spells of distraction (P4's own-tasks episode), and the motor judgments; the acts are requested here and
+carried out there.
 
 Nothing here draws a random number but her own streams of the body's seed (her lines' STREAM = 3, her reading's READ_STREAM = 4,
-her imperfection's IMPERFECT_STREAM = 5); state() and load_state() carry everything, so a replay is exact (a saved Conduct
-restored continues its lines, choices and ledger bit for bit: body/tests/test_sim_lang.py).
+her imperfection's IMPERFECT_STREAM = 5, her trials' TRIAL_STREAM = 6); state() and load_state() carry everything, so a replay is
+exact (a saved Conduct restored continues its lines, choices, trials and ledger bit for bit: body/tests/test_sim_lang.py).
 """
 import math
 from dataclasses import dataclass, field
@@ -163,11 +168,15 @@ ACT_KINDS = {
           "the Act's thing, the one the new word's set is said of, and W2 handles that toy and no other",
     "copy": "her own arm or hand makes the movement the child's just made, mirrored as she faces it (target 'kind:side', the "
             "side hers: its left arm raised, her right raised; A52), asking nothing and earning nothing",
+    "present": "a formal trial's two things set down side by side in the child's view (target 'left_id|right_id', the sides as "
+               "the child sees them), at matched distance from its eyes and matched salience as far as the room allows, each "
+               "beyond NEAR_DEG of the other and of her face as the child sees them, both hands at once; then her hands back to "
+               "rest on her thighs (4.8, 12). W2 is never told which of the two will be named",
 }
 STUB_FOCUS = 60                               # the stub runs a during='focus' act until the conduct cancels it (its word's end)
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
               "withdraw": 2, "offer_bottle": 12, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
-              "reveal_face": 2, "do": 7, "copy": 7}       # the stub's nominal times, ours; W2 measures its own
+              "reveal_face": 2, "do": 7, "copy": 7, "present": 12}   # the stub's nominal times, ours; W2 measures its own
 
 
 @dataclass(frozen=True)
@@ -185,62 +194,47 @@ class Act:
 FIELDS = ("eyes", "head", "left", "right", "face")   # her motion's report every tick: where her eyes, head and each hand
                                               # physically point, and her face ("mama" on a tick its expression moves)
 HANDS = ("left", "right")
-LOG_FIELDS = FIELDS + ("voice",)              # her log's: those, and her voice (a word of her line sounding: the conduct's own)
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
-UNNAMED = "?"                                 # a target that could be read as any thing: it stands for every thing (fail-closed)
+UNNAMED = "?"                                 # a field her motion left out or gave as no word: it points anywhere (fail-closed)
 AT_CHILD = ("child", "child_eyes", "child_periphery")   # the child itself: her eyes or face on its face, her hand held open or
                                                          # waved toward it, touching nothing (a part she touches is a place)
 OUTSIDE = "?act"                              # the kind of an act in her motion's report she did not ask for (P4's, W2's own)
 PENDING_OK = (("look", "child_eyes"), ("open_hand", "child"), ("lean_in", "child_periphery"), ("withdraw", "child"))
-# the acts she may make while an ask about a thing is pending, and the only ones that may still be running (or queued, or
-# unreported) when one opens, each one she asked for herself: her eyes on its eyes, her open hand held out to it, her face into
-# its periphery (a comfort's lean-in), a hand withdrawn when hit (L1's). Every other act, and every act she did not ask for,
-# could direct its attention, to its X or anywhere (A51; the lead's decision, P3's sixth round; the seventh's for an act she did
-# not ask for). While the call is pending (its X her face, where every movement of her body is) only her eyes on its eyes
-# (blind(acts, "mama"); P3's eighth round: the call has no lean-in of its own).
-ATTN_KEEP = K.CUE_CLEAR + 1                   # ticks of the log kept: an ask's tick and the CUE_CLEAR ticks before it
-
-
-def _still_act(a):
-    """an open act of the log (its entry [id, kind, target, status, at]) she may make while an ask is pending: PENDING_OK's, and
-    one she asked for herself (an act she did not ask for is never one: OUTSIDE)."""
-    return a[1] != OUTSIDE and (a[1], a[2]) in PENDING_OK
+# her lines' acts while an everyday ask is pending (A51, her method: blind()): her eyes on its eyes, her open hand held out to it,
+# her face into its periphery, a hand withdrawn when hit; never a point, a show, a turn to a thing, a touch or a demonstration
+ATTN_KEEP = K.SETTLE + 1                      # ticks of the log kept: a trial's settle and the tick after it
 
 
 def _act_str(a):
-    """an open act of the log ([id, kind, target, status, at]) in words."""
+    """an open act of the log ([id, kind, target, status]) in words."""
     if a[1] == OUTSIDE:
         return f"an act she did not ask for (her motion's id {a[0]!r}, reported {a[3]!r})"
-    return f"her {a[1]} at {', '.join(w for w in a[4] if w) or a[2] or 'nothing'} ({a[3]})"
+    return f"her {a[1]} at {a[2] or 'nothing'} ({a[3]})"
 
 
-def _fmt(ws):
-    """a field of her log (the words a look that follows it could be read as) in words."""
-    return "/".join(ws) if ws else "rest"
-
-
-def _unstill(e):
-    """None when a tick of her attention log shows her body as an ask needs it (her eyes and head on the child, her hands at
-    rest or held open to it, no act running but PENDING_OK's she asked for herself), else what it shows."""
-    bad = [f"her {f} at {_fmt(e[f])}" for f in ("eyes", "head") if "child" not in e[f]]
-    bad += [f"her {f} hand at {_fmt(e[f])}" for f in HANDS if e[f] and "child" not in e[f]]
-    bad += [_act_str(a) for a in e["acts"] if not _still_act(a)]
+def moving(e):
+    """what moves in a tick of her attention log other than her mouth, or None when only her mouth may (4.8's formal trial, the
+    lead's decision: her eyes and head on the child, her hands resting on her thighs, her face in its neutral set, no act of
+    hers or anyone's under way; A51): the trial's void rule and its settle, and P4's probes' (still_over)."""
+    bad = [f"her {f} at {e[f]}" for f in ("eyes", "head") if e[f] not in AT_CHILD]
+    bad += [f"her {f} hand at {e[f]}" for f in HANDS if e[f] is not None]
+    if e["face"] is not None:
+        bad.append("her face moving")
+    bad += [_act_str(a) for a in e["acts"]]
     return "; ".join(bad) if bad else None
 
 
 def at_rest(target):
-    """a field's target that cues no thing: none, or the child itself (a part of it she touches or looks at is a place)."""
+    """a field's target that is still: none, or the child itself (a part of it she touches or looks at is a place)."""
     return target is None or target in AT_CHILD
 
 
 def directs(act):
     """the attention log's fields an act of hers drives while it runs, and at what: what StubMotion reports of it, and the least
     W2 reports (W2 reports its own truth, L1's gaze with it) -> [(field, target)]. field: "eyes", "head", "hand" (one hand: the
-    stub's right, else its left), "both" (both hands), or "left" / "right" (a copy's side); target: a thing's id, the child itself
-    ("child", "child_eyes", "child_periphery": her eyes or face on its face, her hand held open or waved toward it), the part of
-    the child she touches or guides (a body word, "trunk", "far_arm": a place, 4.3), a place word, "mama" (her own face), None
-    (at rest), or UNNAMED where the act points at a place or does not say (a copy's raised arm or shaken hand, a demonstration
-    that handles no named toy: fail-closed)."""
+    stub's right, else its left), "both" (both hands), or "left" / "right" (a side); target: a thing's id, the child itself
+    ("child", "child_eyes", "child_periphery"), the part of the child she touches or guides, a place word, "mama" (her own
+    face), None (at rest), or UNNAMED where the act does not say."""
     k, tg = act.kind, act.target
     if k in ("look", "walk"):
         return [("eyes", tg), ("head", tg)]
@@ -263,6 +257,9 @@ def directs(act):
     if k == "copy":                                                   # her arm raised or her hand shaken points at a place;
         kind, _, side = (tg or "").partition(":")                     # her hand waved or held open, toward the child
         return [(side if side in HANDS else "hand", "child" if kind in ("wave", "open_hand") else UNNAMED)]
+    if k == "present":                                                # a trial's two things, one in each hand (4.8)
+        left, _, right = (tg or "").partition("|")
+        return [("left", left or UNNAMED), ("right", right or UNNAMED)]
     if k == "do":
         if tg in TP.TOY_ACTS:
             return [("hand", act.thing if act.thing is not None else UNNAMED)]
@@ -280,36 +277,31 @@ class StubMotion:
       status(id, tick) -> 'running' | 'done' | 'refused' | 'cancelled';
       cancel(id, tick): the act stopped from that tick (the conduct cancels her look on a naming word as the word ends);
       report(tick) -> dict(eyes, head, left, right, face, acts): HER ATTENTION LOG'S FIELDS (A51), made once a tick BEFORE the
-        conduct runs (the conduct reads it first thing in its tick, and a tick whose report it never read counts as a cue at
-        every thing): eyes, head, left and right, where each physically points (a thing's id; the child itself: "child",
-        "child_eyes" or "child_periphery", only for her eyes or face on its face or her hand held open or waved toward it,
-        touching nothing; the part of the child a hand touches or guides, or her eyes rest on, by its word ("hand", "foot",
-        "arm", "trunk"); a place word, and a hand raised or shaken at nothing points at a place; "mama" for her own face; or None
-        at rest), from the tick it leaves the child (or rest) until the tick it is back, whatever target the act asked for (a
-        look asked for and cancelled within a tick still shows on the ticks her eyes moved; P3's seventh round), L1's own gaze
-        included as it happens (to a sudden event, to the child's act or its target), and a hand holding a thing at it (the
-        given toy in her hand on the tick the child gives it: the conduct judges an ask by that tick's percept before it holds
-        the tick's log to it, P3's eighth round); face, "mama" on a tick her face's expression moves (a smile's or a frown's
-        onset, hold or easing: the face is W2's), None while it is still (her voice is the conduct's own: it logs her words as
-        they sound); and acts, {id: status} for every act asked of it by anyone (the conduct, P4, its own) that it has not yet
-        reported ended, each status exactly 'running', 'done', 'refused' or 'cancelled'. Anything else ('queued', 'waiting', a
-        typo), a field left out (eyes, head or a hand: at every thing; the face: moving), or an act of hers left out of the
-        report counts as running, at every thing (fail-closed); an act in the report the conduct did not ask for blocks every
-        ask until it is reported ended, and voids a pending one: so W2 reports every act from its request until it reports it
-        ended, keeps 'running' while it waits its turn or directs the child's eyes at all (the show held beside her face, the
-        offer held out, the look held), ends every act, and reads Conduct.eyes_on_child each tick (while an ask is pending her
-        eyes and head stay on the child and her hands at rest or held open to it: L1 turns to nothing, W2 and P4 start nothing
-        else);
+        conduct runs (the conduct reads it first thing in its tick; a tick whose report it never read counts as her body moving):
+        eyes, head, left and right, where each physically points (a thing's id; the child itself, "child", "child_eyes" or
+        "child_periphery", for her eyes or face on its face or her hand held open or waved toward it, touching nothing; the part
+        of the child a hand touches or guides; a place word; "mama" for her own face; or None at rest, her hands resting on her
+        thighs), from the tick it leaves the child (or rest) until the tick it is back, L1's own gaze included as it happens (to
+        a sudden event, to the child's act or its target), a hand holding a thing at it; face, "mama" on a tick her face's
+        expression moves (a smile's or a frown's onset, hold or easing: the face is W2's; her jaw with her speech is her mouth,
+        not her face), None while it is still; and acts, {id: status} for every act asked of it by anyone (the conduct, P4, its
+        own) that it has not yet reported ended, each status exactly 'running', 'done', 'refused' or 'cancelled'. Anything else
+        ('queued', 'waiting', a typo), a field left out (the face left out: moving), an act of hers left out of the report, and
+        an act in the report the conduct did not ask for count as her body moving (fail-closed), which voids a formal trial
+        (4.8): so W2 reports every act from its request until it reports it ended, keeps 'running' while it waits its turn,
+        ends every act, and reads Conduct.eyes_on_child (an ask or a trial: her eyes and head on the child's eyes, L1 turns to
+        nothing) and Conduct.still (a trial's settle, sentence and window: also her hands resting on her thighs, her face in its
+        neutral set, no act started by W2 or P4) each tick;
       state() / load_state(); DOES, the acts her own body can show a verb by (templates.NEEDS' ("act", kind): the 'do' act's
         targets), which templates.showable() reads.
     The stub runs each act for its nominal time and moves nothing (it never refuses); its fields are what directs() gives for the
     acts running (an act asked for at a tick shows from the next report: the report of that tick was made before it), her eyes
     and head on the child at rest, her face still (the stub has no face: the conduct logs her face from its own judgments). An
     act cancelled from a tick still shows on that tick (her eyes or hand on the way back) and is 'cancelled' from the next, so
-    every act shows on at least one tick. glance() stands in for W2's L1 (the world calls it for
-    a sudden event: her eyes and head on it from that tick; a gaze for a tick already reported starts at the next report, keeping
-    its length, so the log never loses it). Its DOES are the acts W2's parent_acts.py or ACT_KINDS already name (shake and hold:
-    the show; go and walk: the walk; the wave; get: pick_up; open: the open hand). W2 declares its own (a clap, a push, ...)."""
+    every act shows on at least one tick. glance() stands in for W2's L1 (the world calls it for a sudden event: her eyes and
+    head on it from that tick; a gaze for a tick already reported starts at the next report, keeping its length, so the log
+    never loses it). Its DOES are the acts W2's parent_acts.py or ACT_KINDS already name (shake and hold: the show; go and walk:
+    the walk; the wave; get: pick_up; open: the open hand). W2 declares its own (a clap, a push, ...)."""
 
     DOES = ("show", "walk", "wave", "pick_up", "open_hand")
 
@@ -408,9 +400,8 @@ class Intent:
 LOOK_O = Act("look", "{o}", "focus")
 EYES = Act("look", "child_eyes")
 INTENTS = {
-    "call": Intent("calling", True, "call", (EYES,)),        # said from where her face already rests in its periphery,
-                                                             # still (A3): no lean-in, whose movement a look could follow
-                                                             # (A51; P3's eighth round)
+    "call": Intent("calling", True, "call", (Act("lean_in", "child_periphery"),)),   # her face into its periphery (A3); her
+                                                             # teaching's call: the name test is trial_name's (4.8)
     "hall_call": Intent("calling", True, None),                      # not judged: from the hall no look can answer it (4.7)
     "greet": Intent("plain", False, None, (Act("lean_in", "child_periphery"), EYES)),
     "return": Intent("plain", False, None, (Act("walk", "child"), Act("lean_in", "child_periphery"))),
@@ -451,7 +442,12 @@ INTENTS = {
     "no_talkover": Intent("no", False, None, (EYES,)),              # stage 2's "no." to a turn that talked over her (4.4, 4.6)
     "night": Intent("comfort", False, None, (Act("walk", "sofa"),)),
     "new_word": Intent("new_word", False, None, (LOOK_O, EYES)),
+    # a formal trial's test sentence (4.8, 12): no act at all, only her mouth moves; judged by the trial, never as an ask
+    "trial_where": Intent("plain", True, None, ()),
+    "trial_combo": Intent("plain", True, None, ()),
+    "trial_name": Intent("calling", True, None, ()),
 }
+TRIAL_INTENTS = ("trial_where", "trial_combo", "trial_name")
 INTRO_ACTS = {"toy": (Act("show", "{o}"), EYES), "fixture": (Act("point", "{w}"), Act("look", "{w}", "focus")),
               "body": (Act("touch", "{w}"),), "face": (EYES,), "colour": (Act("show", "{o}"), EYES), "adj": (LOOK_O, EYES),
               "verb": (Act("do", "{v}"), EYES), "past": (EYES,), "social": (EYES,)}
@@ -493,11 +489,11 @@ def acts_for(intent, refs=(), b=None, w=None, word_class=None):
     return tuple(out)
 
 
-def blind(acts, x=None):
-    """her acts while an ask about x is pending (A51; Golinkoff et al. 1987; the attention log's rule): only PENDING_OK's, her
-    head and eyes on the child's eyes and her open hand held out to it, her face into its periphery, a hand withdrawn when hit;
-    no point, show, turn, touch, guide, wave or demonstration: her hands at rest or open to it until the ask is judged. For the
-    call (x her face, where every movement of her body is) her eyes on its eyes alone: no act that would put x in her log."""
+def blind(acts):
+    """her lines' acts while an everyday ask is pending (A51, her method; Golinkoff et al. 1987): only PENDING_OK's, her head and
+    eyes on the child's eyes and her open hand held out to it, her face into its periphery, a hand withdrawn when hit; no point,
+    show, turn, touch, guide, wave or demonstration until the ask is judged. (Her asks are her teaching; a formal trial holds her
+    wholly still: 4.8.)"""
     out = []
     for a in acts:
         if a.kind == "look":
@@ -506,7 +502,7 @@ def blind(acts, x=None):
             b = Act("open_hand", "child")
         else:
             b = a
-        if (b.kind, b.target) in PENDING_OK and b not in out and (x != PARENT_NAME or b == EYES):
+        if (b.kind, b.target) in PENDING_OK and b not in out:
             out.append(b)
     return tuple(out)
 
@@ -792,23 +788,20 @@ NAMING = {"label", "label_held", "label_colour", "show", "redirect", "narrate_on
 INTENTS["steer"] = Intent("plain", False, None, (EYES,))        # Claude's line: plain (never the approval register, A14)
 
 
-def _old_words(ws):
-    """the words an older save's log gave a field or an act (one word, or a list that may hold None) -> this round's, fail-closed:
-    those words and every thing (what lay near them, and beside her face, that save did not keep), or none at rest."""
-    ws = [w for w in (ws if isinstance(ws, list) else [ws]) if w is not None]
-    return sorted(set(ws) | {UNNAMED}) if ws else []
-
-
 def _old_entry(e):
-    """a tick of her log from an older save (P3's seventh round and before: each field one word, no face or voice) -> this
-    round's form, fail-closed: each field's word and every thing, a face or voice it did not log moving, each act's words and
-    every thing."""
-    if all(isinstance(e.get(f), list) for f in LOG_FIELDS):
-        return e
-    out = dict(e)
-    for f in LOG_FIELDS:
-        out[f] = _old_words(e.get(f, UNNAMED))
-    out["acts"] = [list(a[:4]) + [_old_words(a[4])] for a in e.get("acts", ())]
+    """a tick of her log from an older save (P3's seventh and eighth rounds: each field the words a look that follows it could be
+    read as; before, one word) -> this form, fail-closed: a field's lone "child" is the child, an empty one at rest, anything else
+    points anywhere; her face logged at all, or left out, moving (her voice was her mouth); each act kept, open."""
+    def one(v):
+        if isinstance(v, list):
+            return None if not v else ("child" if v == ["child"] else UNNAMED)
+        return v if v is None or isinstance(v, str) else UNNAMED
+    out = dict(t=e["t"])
+    for f in FIELDS[:4]:
+        out[f] = one(e.get(f, UNNAMED))
+    face = e.get("face", PARENT_NAME)
+    out["face"] = None if face is None or face == [] else PARENT_NAME
+    out["acts"] = [list(a[:4]) for a in e.get("acts", ())]
     return out
 
 
@@ -829,7 +822,8 @@ class Conduct:
     """the speech side of L2. voice: anything with clip(text, register, emphasis=) -> a clip with .words [(word, first sample,
     end sample)], .pcm, .key and .digest (body/sim/voice/synth.VoiceCache; None: a line is timed at 3 ticks a word and has no
     clip). transcriber: body/sim/lang/transcriber.Transcriber (None: the child is not heard). ledger: body/sim/lang/ledger.Ledger.
-    motion: W2's (default StubMotion), whose report of each tick, read first in it, is her attention log (A51). world: the
+    motion: W2's (default StubMotion), whose report of each tick, read first in it, is her attention log (A51); her formal trials
+    are asked for by probe() (P4's day plan, by its stage). world: the
     world's inventory for a growth word's showing (A15; templates.showable: its objects and their colours, fixtures, events and
     her face), filled by the world from its scene (default: the living room at birth, templates.ROOM_AT_BIRTH); its acts are the
     motion's DOES. set_world() changes it (the colour twins' arrival, B2).
@@ -854,15 +848,16 @@ class Conduct:
         self.pending = None                   # the ask she is judging: dict(kind, word, obj, tick, open, until, trial)
         self.reply_due = None                 # the reply owed to the child's turn: dict(tick, kind, word, obj)
         self.no_target_since = 0              # the tick since which it has attended nothing, as she reads it (the redirect)
-        self.attn = []                        # her attention log (A51): dict(t, eyes, head, left, right, acts) a tick, each field
-                                              # by what a look that follows it would be read as (_word), acts [id, kind, target,
-                                              # status, at] her acts not yet reported ended (those she asks for on the tick
-                                              # among them) and those in her motion's report she did not ask for; the last
-                                              # ATTN_KEEP ticks
-        self.acts_open = []                   # her acts not yet reported ended: [motion id, kind, target, thing, tick, status,
-                                              # at (the words it directs her body at)]; OUTSIDE's kind for one she did not ask for
-        self.born = None                      # the first tick she lived (a tick of hers since then with no log is a cue at every
-                                              # thing: fail-closed; none before it)
+        self.attn = []                        # her attention log (A51): dict(t, eyes, head, left, right, face, acts) a tick, each
+                                              # field its target as reported (UNNAMED where left out or no word), face "mama"
+                                              # while it moves, acts [id, kind, target, status] of every act not yet reported
+                                              # ended (hers, and OUTSIDE's she did not ask for); the last ATTN_KEEP ticks
+        self.acts_open = []                   # acts not yet reported ended: [motion id, kind, target, thing, tick, status];
+                                              # OUTSIDE's kind for one she did not ask for
+        self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
+        self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, new, shown)]
+        self.trial = None                     # the formal trial under way: dict(form, phase "bring" | "settle" | "said", ...)
+        self.trial_rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(K.TRIAL_STREAM,))))
         self.face_until = NEVER               # her face moves through this tick (FACE_COURSE after a judgment or a frown: A3)
         self.focus_acts = []                  # her line's acts on its naming word (during='focus', 4.3): [the word's first
                                               # tick, its last, kind, target, thing, motion id once requested]
@@ -882,10 +877,16 @@ class Conduct:
 
     @property
     def eyes_on_child(self):
-        """an ask is pending (a gaze, a give, the call, a name): W2 keeps her head and eyes on the child's eyes and her hands at
-        rest or held open to it, L1 turns to nothing (no gaze to its target or to a sudden event), and nothing else starts until
-        it is judged (A51; her attention log must show it, or the ask is void; for the call her face moving voids it too)."""
-        return self.pending is not None
+        """an everyday ask is pending, or a formal trial holds her still: W2 keeps her head and eyes on the child's eyes, L1 turns
+        to nothing (no gaze to its target or to a sudden event), and nothing else starts until it is judged (A51)."""
+        return self.pending is not None or self.still
+
+    @property
+    def still(self):
+        """a formal trial's settle, sentence and window (4.8): W2 holds her wholly still but her mouth, her eyes and head on the
+        child's eyes, her hands resting on her thighs, her face in its neutral set, and starts no act (nor does P4); her attention
+        log must show it, or the trial is void."""
+        return self.trial is not None and self.trial["phase"] in ("settle", "said")
 
     def set_world(self, world):
         """the world's inventory (plain data, saved with the conduct); its acts are her motion's."""
@@ -895,61 +896,13 @@ class Conduct:
                           face=sorted(w.get("face", ())), acts=sorted(getattr(self.motion, "DOES", ())))
 
     # ------------------------------------------------------------------ her attention log (A51)
-    def _words(self, target, p):
-        """a field's target by every thing a look that follows it could be read as attending (A40, A51): her Reader reads a look
-        as the nameable thing nearest its line (4.10), with her error, so a look at a thing may be read as any thing near it, and
-        a place or a part of the child is no thing of its own -> the sorted words:
-          None (at rest) -> [];
-          the child itself ("child", "child_eyes", "child_periphery": her eyes or face on its face, her hand held open or waved
-            toward it, touching nothing) -> "child", and the things beside her face: a look that follows it comes back to her,
-            the mutual gaze every ask is made in, read as her face or a thing beside it;
-          her own face ("mama") -> "mama" and the things beside it;
-          a thing she sees (an id in the tick's percept: a twin's id is its word's) -> its word, and the words of every thing
-            its near names (Seen.near: within NEAR_DEG of it as seen from the child's head, or resting on or in it, or it on or
-            in them) and of every thing resting on or in it or it on or in (Seen.on) (P3's eighth round: a look at the box the
-            ball rests in, or at a toy a few degrees from the ball, may be read as the ball);
-          anything else -> UNNAMED, which stands for every thing (fail-closed): a place (the shelf, the door, the floor, the
-            window, the air a raised hand points at), the part of the child a hand touches or guides or her eyes rest on, a
-            thing she does not see now, an id or a word she cannot name, and a thing (or her face) whose near the world does not
-            give (None). The things beside her face (Percept.face_near) and in her hands (on "mama") are near her face."""
-        if target is None:
-            return []
-        if not isinstance(target, str) or p is None:
-            return [UNNAMED]
-        if target in AT_CHILD or target == PARENT_NAME:
-            base, near = {"child" if target in AT_CHILD else PARENT_NAME}, getattr(p, "face_near", None)
-            rests = {s_.name for s_ in p.seen if s_.on == PARENT_NAME}
-        else:
-            o = p.obj(target)
-            if o is None:
-                return [UNNAMED]
-            base, near = {o.name}, getattr(o, "near", None)
-            rests = {s_.name for s_ in p.seen if s_.on == o.id}
-            if p.obj(o.on) is not None:
-                rests.add(p.obj(o.on).name)
-        if near is None:
-            return sorted(base | {UNNAMED})
-        for z in near:
-            q = p.obj(z) if z != PARENT_NAME else None
-            base.add(PARENT_NAME if z == PARENT_NAME else q.name if q is not None else UNNAMED)
-        return sorted(base | rests)
-
-    def _at(self, act, p):
-        """the words an act of hers directs her body at (directs(), each by _words), for her log from the tick she asks for it."""
-        out = set()
-        for _f, tg in directs(act):
-            out |= set(self._words(tg, p))
-        return sorted(out)
-
     def _request(self, act, t, p):
         """an act asked of her motion: kept open (running, whatever it reports but done, refused or cancelled) until her motion
-        reports it ended (A51: an ask waits for every act of hers but PENDING_OK's), and in her log from this tick, with what it
-        directs her body at, before her motion's first report of it (so a look asked for and cancelled at once is in it)."""
+        reports it ended, and in her log from this tick, before her motion's first report of it."""
         mid = self.motion.request(act, t)
-        at = self._at(act, p)
-        self.acts_open.append([mid, act.kind, act.target, act.thing, int(t), "unreported", at])
+        self.acts_open.append([mid, act.kind, act.target, act.thing, int(t), "unreported"])
         if self.attn and self.attn[-1]["t"] == t:
-            self.attn[-1]["acts"].append([mid, act.kind, act.target, "asked", list(at)])
+            self.attn[-1]["acts"].append([mid, act.kind, act.target, "asked"])
         return mid
 
     def _focus_step(self, t, start, p):
@@ -972,156 +925,343 @@ class Conduct:
         self.focus_acts = [fa[:1] + [min(fa[1], stop - 1)] + fa[2:] for fa in self.focus_acts if fa[5] is not None or
                            fa[0] < stop]
 
-    def _sounding(self, t):
-        """a word of her line sounds on tick t (her voice, at her face: the log's voice field)."""
-        f = self.fast
-        if f.spans is None or t >= f.busy_until:
-            return False
-        s0 = f.spans["start"]
-        return any(s0 + a // TICK <= t <= s0 + (max(e_, 1) - 1) // TICK for _w, a, e_ in f.spans["words"])
-
     def _attend(self, t, p):
-        """the tick's report from her motion into her attention log (A51): each of eyes, head and hands by _words (a field not
-        reported is UNNAMED); her face moving where the report says so or leaves it out, or within FACE_COURSE ticks of a
-        judgment of hers; her voice where a word of her line sounds; each of her open acts' status as reported (only done,
-        refused or cancelled end it: anything else, or none, is running) and what it directs her body at, as asked and as this
-        tick's percept names it; an act in the report she did not ask for (P4's, W2's own) kept open, OUTSIDE, until it is
-        reported ended; a toy the percept shows in her hands at a hand (her first at rest, else her left) if the report names it
-        at neither. Ticks since the last it read void a pending ask (fail-closed: the world did not tick her, and her body then
-        could have cued the answer this tick shows); the tick's own log is held to a pending ask only once this tick's percept
-        has judged it (_hold)."""
+        """the tick's report from her motion into her attention log (A51): eyes, head and hands as reported (a field left out, or
+        not a word, UNNAMED); her face moving where the report says so or leaves it out, or within FACE_COURSE ticks of a
+        judgment or frown of hers; each act's status as reported (only done, refused or cancelled end it: anything else is
+        running; one left out is asked of the motion, _status), the acts reported ended this tick kept in `ended`; an
+        act in the report she did not ask for (P4's, W2's own) kept open, OUTSIDE, until it is reported ended; a toy the percept
+        shows in her hands at a hand (her first at rest, else her left) if the report names it at neither."""
         rep = self.motion.report(t)
         got = rep.get("acts") if isinstance(rep.get("acts"), dict) else {}
         known = {a[0] for a in self.acts_open}
-        keep = []
+        keep, self.ended = [], {}
         for a in self.acts_open:
-            st = got.get(a[0], "unreported")
+            st = got[a[0]] if a[0] in got else self._status(a, t)
             if st in ENDED:
+                self.ended[a[0]] = st
                 continue
             a[5] = st if isinstance(st, str) else "unreported"
-            if a[1] != OUTSIDE:
-                a[6] = sorted(set(a[6]) | set(self._at(Act(a[1], a[2], None, a[3]), p)))
             keep.append(a)
         for mid, st in got.items():                          # an act she did not ask for: running until reported ended
             if mid not in known and st not in ENDED:
-                keep.append([mid, OUTSIDE, None, None, int(t), st if isinstance(st, str) else "unreported", [UNNAMED]])
+                keep.append([mid, OUTSIDE, None, None, int(t), st if isinstance(st, str) else "unreported"])
         self.acts_open = keep
         e = dict(t=int(t))
         for fld in FIELDS[:4]:
-            e[fld] = self._words(rep.get(fld, UNNAMED), p)
+            v = rep.get(fld, UNNAMED)
+            e[fld] = v if v is None or isinstance(v, str) else UNNAMED
         face = rep.get("face", PARENT_NAME)                 # left out: her face may be moving (fail-closed)
-        e["face"] = self._words(PARENT_NAME, p) if face is not None or t <= self.face_until else []
-        e["voice"] = self._words(PARENT_NAME, p) if self._sounding(t) else []
-        raw = {f: rep.get(f) for f in HANDS}
+        e["face"] = PARENT_NAME if face is not None or t <= self.face_until else None
         for s_ in p.seen:                                   # a toy she sees in her own hands: a hand is at it, whatever the
             if s_.on != PARENT_NAME:                        # report says (the stub models no hold)
                 continue
             if any(v == s_.id or (isinstance(v, str) and p.obj(v) is not None and p.obj(v).name == s_.name)
-                   for v in raw.values()):
+                   for v in (e["left"], e["right"])):
                 continue
-            h = next((f for f in HANDS if not e[f] or "child" in e[f]), "left")
-            e[h], raw[h] = self._words(s_.id, p), s_.id
-        e["acts"] = [[a[0], a[1], a[2], a[5], list(a[6])] for a in keep]
-        prev = self.attn[-1]["t"] if self.attn else None
+            h = next((f for f in HANDS if at_rest(e[f])), "left")
+            e[h] = s_.id
+        e["acts"] = [[a[0], a[1], a[2], a[5]] for a in keep]
         self.attn = (self.attn + [e])[-ATTN_KEEP:]
-        pd = self.pending
-        if pd is not None and t > pd["tick"] and prev is not None and t - prev > 1:
-            self.ledger.withdraw(t, pd["trial"], f"her attention log while it was pending: ticks {prev + 1}-{t - 1} never read "
-                                                 f"(A51: fail-closed)")
-            self.pending = None
 
-    def _mark(self, t, fld, p):
-        """her face or her voice at her face on tick t, logged by the conduct itself (a judgment's smile, a frown, a line
-        begun)."""
+    def _status(self, a, t):
+        """an act her motion's report left out (hers, or one she did not ask for that it reported before): its status asked of
+        the motion itself (status(), the contract's), so an ended act whose one report of its end was never read (a tick the
+        world did not tick her) does not hold her unstill for good; running unless it answers done, refused or cancelled, or if
+        the motion cannot say (fail-closed)."""
+        try:
+            st = self.motion.status(a[0], t)
+        except Exception:                                   # noqa: BLE001 (a motion that cannot say: running)
+            return "unreported"
+        return st if st in ENDED else "unreported"
+
+    def _mark(self, t, p):
+        """her face moving on tick t, logged by the conduct itself (a judgment's smile, a frown)."""
         if self.attn and self.attn[-1]["t"] == t:
-            self.attn[-1][fld] = self._words(PARENT_NAME, p)
+            self.attn[-1]["face"] = PARENT_NAME
 
-    @staticmethod
-    def _hits(e, x):
-        """what in a tick of her log could cue X: a field at X or at a target that stands for every thing (UNNAMED), an act at
-        either (her acts from the tick she asks for them; one she did not ask for, at every thing) -> (who, at what) or None.
-        Her own face (X of the call) is where every movement of her body is, or beside it: a look drawn to her turning head or
-        to her hand, whatever it points at, is read as her face, the nameable thing nearest its line (A40). So for her face a
-        tick with her eyes or head off the child, a hand not at rest, her face moving, her voice, or any act of hers under way
-        but her eyes on its eyes could cue it (P3's seventh and eighth rounds)."""
-        flds = [f for f in LOG_FIELDS if x in e[f] or UNNAMED in e[f]]
-        acts = [a for a in e["acts"] if x in a[4] or UNNAMED in a[4]]
-        body = False
-        if x == PARENT_NAME:
-            moved = [f for f in ("eyes", "head") if "child" not in e[f]] + [f for f in HANDS + ("face", "voice") if e[f]]
-            others = [a for a in e["acts"] if a[1] == OUTSIDE or (a[1], a[2]) != ("look", "child_eyes")]
-            body = bool(moved or others)
-            flds += [f for f in moved if f not in flds]
-            acts += [a for a in others if a not in acts]
-        if not flds and not acts:
-            return None
-        who = (["her " + " and ".join(flds)] if flds else []) + \
-            ["an act she did not ask for" if a[1] == OUTSIDE else f"her {a[1]}" for a in acts]
-        at_x = any(x in e[f] for f in flds) or any(x in a[4] for a in acts)
-        return ", ".join(who), (x if at_x else "her body, by her face" if body else "a place or a thing she cannot name")
+    def _face(self, t, out, p):
+        """a judgment or a frown this tick: her face moves for FACE_COURSE ticks from it (A3), in her log from this tick."""
+        if out.judgments or out.frown:
+            self.face_until = max(self.face_until, t + K.FACE_COURSE)
+            self._mark(t, p)
 
-    def _pending_why(self, e, pd):
-        """why a tick of her log voids the pending ask pd, or None (A51): her body not still (_unstill), or its X in the log
-        (_hits: the conduct refuses every line and act that would put it there, so only W2's report, L1's or the world's face
-        can). For the call her voice until its name has been heard is the ask itself."""
-        x = PARENT_NAME if pd["kind"] == "call" else pd["word"]
-        ee = dict(e, voice=[]) if pd["kind"] == "call" and e["t"] <= pd["open"] else e
-        hit = self._hits(ee, x)
-        parts = [w for w in (_unstill(e), None if hit is None else f"{hit[0]} at {hit[1]}") if w]
-        return "; ".join(parts) or None
-
-    def _hold(self, t):
-        """the tick's log held to the ask still pending once this tick's percept has judged it (A51; P3's eighth round). An
-        answer the percept of a tick shows was made before that tick (a look held 3 readings and then 2 ticks, a reach closing
-        over 3, a give at the end of its hand's path), so her body on the tick cannot have cued it, and every tick before was
-        held on its own tick: the given toy in her hand on the tick the child gives it never voids the give it answers. A tick
-        whose log shows her body not still, or X in it, voids an ask still pending (fail-closed: W2 broke its contract, or her
-        face moved with a judgment)."""
-        pd = self.pending
-        if pd is None or t <= pd["tick"] or not self.attn or self.attn[-1]["t"] != t:
-            return
-        why = self._pending_why(self.attn[-1], pd)
-        if why is not None:
-            self.ledger.withdraw(t, pd["trial"], f"her attention log while it was pending: {why} (A51: fail-closed)")
-            self.pending = None
-
-    def _ask_block(self, x, t):
-        """why an ask about X may not open at t, or None (A51; the lead's decision in P3's sixth round, the seventh's naming, the
-        eighth's near things and face): an act still running, queued or unreported that she may not make while an ask is
-        pending, or any act in her motion's report she did not ask for; a look on a naming word still to come; a tick of her life
-        among t and the CUE_CLEAR before it with no log (never read: a cue at every thing), or whose log could cue X (_hits: X,
-        a thing a look at X could be read as, or a place or a thing she cannot name, which stands for every thing; for her face,
-        any movement of her body, her face or her voice); her eyes or head off the child or a hand at anything but it on t."""
-        for a in self.acts_open:
-            if a[1] == OUTSIDE or (a[1], a[2]) not in PENDING_OK:
-                who = f"an act she did not ask for (her motion's id {a[0]!r})" if a[1] == OUTSIDE else \
-                    f"her {a[1]} at {a[3] or a[2] or 'nothing'}"
-                return (f"{who} is still under way (her motion reports it {a[5]!r}; only done, refused or cancelled end an "
-                        f"act: fail-closed)")
-        for fa in self.focus_acts:
-            return f"her {fa[2]} at {fa[3]} on her line's naming word is still to come (tick {fa[0]})"
+    def still_over(self, t0, t1):
+        """her attention log shows only her mouth moving on every tick from t0 to t1 (each read, none moving: moving()), or why
+        not: the formal trial's rule (4.8), read for P4's probes, which hold her still the same way (12: "her eyes stay on the
+        child through it") -> None when still, else why."""
         log = {e["t"]: e for e in self.attn}
-        first = t - K.CUE_CLEAR if self.born is None else max(self.born, t - K.CUE_CLEAR)
-        for u in range(t, first - 1, -1):
+        for u in range(int(t0), int(t1) + 1):
             e = log.get(u)
             if e is None:
-                return (f"her attention log has no report of tick {u} (never read): a tick not read is a cue at every thing "
-                        f"(fail-closed)")
-            hit = self._hits(e, x)
-            if hit is not None:
-                when = f"is under way ({hit[0]} at {hit[1]} on this tick)" if u == t else \
-                    f"({hit[0]} at {hit[1]}, tick {u}) ended {t - u - 1} ticks ago"
-                return (f"her own cue at a {x} {when}: a look or a reach within {K.CUE_CLEAR} ticks of it may follow her, not "
-                        f"the word (Brooks and Meltzoff 2005's 6.5 s)")
-        why = _unstill(log[t])
-        if why is not None:
-            return f"{why}: an ask opens only with her eyes and head on the child and her hands at rest or open to it"
+                return f"tick {u} is not in her attention log (never read, or older than its {ATTN_KEEP} ticks: fail-closed)"
+            why = moving(e)
+            if why is not None:
+                return f"tick {u}: {why}"
         return None
 
-    def cue_clear(self, x, t):
-        """an ask about X may open at t (a thin reader of her attention log: _ask_block's rule); P4's base-rate trials are drawn
-        under the same rule, so the base rate is measured as the asks are."""
-        return self._ask_block(x, t) is None
+    # ------------------------------------------------------------------ her formal trials (4.8, 12; the lead's decision)
+    def probe(self, form, a=None, b=None, new=None, shown=None):
+        """a formal trial asked for by her day plan (P4: at a probe its stage schedules, never by the child's rates), run when she
+        is free (no ask pending, no trial under way); one that cannot run is dropped and logged (fast.refused), never said.
+        form: consts.TRIAL_FORMS. a, b: the two things' ids (none for "name"): for "place" and "exemplar" two things of different
+        words, for "combination" a colour twin and its original (one word, two colours, one of them with the word a held-out
+        pair, A55). new: {id: item} for each thing shown in a never-taught presentation (a place or an angle it has never been
+        seen in, a never-seen exemplar: the world's record, P4's; a combination's item is its pair, taken here). shown: {item:
+        its presentations outside trials} (P4's count, beside the ledger's own of trials: A28's first 3 count)."""
+        if form not in K.TRIAL_FORMS:
+            raise ValueError(f"not a trial form: {form!r} ({', '.join(K.TRIAL_FORMS)})")
+        if (form == "name") != (a is None and b is None) or (form != "name" and (a is None or b is None or a == b)):
+            raise ValueError(f"a {form!r} trial takes {'no things' if form == 'name' else 'two things'}: {a!r}, {b!r}")
+        self.probes.append(dict(form=form, a=a, b=b, new=dict(new or {}), shown=dict(shown or {})))
+
+    def _probe_drop(self, t, form, why):
+        self.fast.refused.append((t, f"trial:{form}", "probe: " + why))
+
+    def _trial_begin(self, t, p):
+        """the next probe begins: her trial stream draws which of the two is named, the sides and (for the name) its name or a
+        foil and which foil, three draws a trial whatever its form, so a replay is exact; she brings the two things into its
+        view side by side ("present", W2 never told which will be named), or for the name holds still where she is."""
+        pr = self.probes.pop(0)
+        form, a, b = pr["form"], pr["a"], pr["b"]
+        u = [float(x) for x in self.trial_rng.random(3)]
+        tr = dict(form=form, phase="bring", since=int(t), run=0, act=None, tid=None, onset=None, until=None, line_start=None,
+                  word_idx=None, why=None, new=pr["new"], shown=pr["shown"])
+        if form == "name":
+            name = u[0] < 0.5
+            foil = K.NAME_FOILS[min(len(K.NAME_FOILS) - 1, int(u[2] * len(K.NAME_FOILS)))]
+            tr.update(phase="settle", name=bool(name), said=NAME if name else foil)
+            self.trial = tr
+            return
+        oa, ob = p.obj(a), p.obj(b)
+        if oa is None or ob is None:
+            return self._probe_drop(t, form, f"she does not see {a if oa is None else b!r}")
+        if form == "combination":
+            if oa.name != ob.name or oa.colour == ob.colour or not oa.colour or not ob.colour:
+                return self._probe_drop(t, form, f"a combination needs one word in two colours: {oa.id}, {ob.id}")
+            twins = [o for o in (oa, ob) if (o.colour, o.name) in {tuple(h) for h in K.HELD_PAIRS}]
+            if len(twins) != 1:
+                return self._probe_drop(t, form, f"a combination needs exactly one held-out pair between them (A55)")
+            col = twins[0].colour
+            if not (self.ledger.understood(col) and self.ledger.understood(oa.name)):
+                return self._probe_drop(t, form, f"'{col} {oa.name}' is tested only once both its words are understood "
+                                                 f"alone (A28)")
+            tr["twin"] = twins[0].id
+        elif oa.name == ob.name or oa.name not in TP.OBJECT_NOUNS or ob.name not in TP.OBJECT_NOUNS:
+            return self._probe_drop(t, form, f"a {form} trial needs two things of different words: {oa.id}, {ob.id}")
+        target, other = (a, b) if u[0] < 0.5 else (b, a)
+        left, right = (a, b) if u[1] < 0.5 else (b, a)
+        tr.update(target=target, distractor=other, left=left, right=right)
+        tr["act"] = self._request(Act("present", f"{left}|{right}"), t, p)
+        self.trial = tr
+
+    def _key(self, tr, o):
+        """the word a trial's thing stands for in the ledger: its word, or for a combination its colour and word ('blue ball')."""
+        return f"{o.colour} {o.name}" if tr["form"] == "combination" else o.name
+
+    def _display(self, tr, p):
+        """why its sentence cannot be said now, or None: the two things in the child's view, in no hand, each beyond NEAR_DEG of
+        the other and of her face as the child sees them (the world's Seen.near and Percept.face_near; not given: fail-closed),
+        so its first look can be read as one of them; the child attending neither; for the name, the child able to see her and
+        not already looking at her face."""
+        if not (p.present and p.child_in_view):
+            return "she is away, or cannot see the child"
+        if tr["form"] == "name":
+            if not p.seen_by_child:
+                return "the child cannot see her"
+            return "it already looks at her face" if p.child_target == PARENT_NAME else None
+        ot, od = p.obj(tr["target"]), p.obj(tr["distractor"])
+        for oid, o in ((tr["target"], ot), (tr["distractor"], od)):
+            if o is None:
+                return f"she does not see {oid!r}"
+            if not o.child_sees:
+                return f"{oid!r} is not in the child's view"
+            if o.on in ("hand", PARENT_NAME) or oid in p.child_holds:
+                return f"{oid!r} is in a hand"
+        if ot.near is None or od.near is None or getattr(p, "face_near", None) is None:
+            return "the world does not say what lies near them (fail-closed)"
+        if od.id in ot.near or ot.id in od.near:
+            return f"the two within {K.NEAR_DEG:g} degrees of each other as the child sees them"
+        if ot.id in p.face_near or od.id in p.face_near:
+            return f"one of them within {K.NEAR_DEG:g} degrees of her face as the child sees it"
+        att = {o.id for o in p.attended()}
+        if ot.id in att or od.id in att:
+            return "it already attends one of them"
+        return None
+
+    def _trial_line(self, t, p):
+        """her trial's single test sentence once its settle has held SETTLE ticks and its display holds, or None: "where is the
+        X?" (the target's word), "where is the C X?" (a combination: the held-out pair allowed in this line alone), its name or
+        a foil ("pip." / "tib.", in its name's register), each with no act. The sentence of either thing failing the line check
+        (a word not hers, a new word off its peak) drops the probe whichever is named: a drop that followed the draw would name
+        the sayable thing every time it ran, and a child's favourite among the two would score above chance."""
+        tr = self.trial
+        if tr is None or tr["phase"] != "settle" or tr["run"] < K.SETTLE:
+            return None
+        why = self._display(tr, p)
+        if why is not None:
+            tr["why"] = why
+            return None
+        f = self.fast
+        if tr["form"] == "name":
+            if tr["name"]:
+                return TP.Line(f"{NAME}.", "trial_name", "calling", NAME, NAME, (), "fast", "{n}.")
+            return TP.Line(TP.foil_line(tr["said"]), "trial_name", "calling", None, tr["said"], (), "fast", "{f}.")
+        intent = "trial_combo" if tr["form"] == "combination" else "trial_where"
+        lines = {}
+        for oid in (tr["target"], tr["distractor"]):        # both sentences held to the check, whichever is named, so a
+            o = p.obj(oid)                                  # probe is never dropped by which of the two her stream drew
+            text, focus, refs = TP.fill(TP.FRAMES[intent][0], o=o)
+            twin = p.obj(tr.get("twin")) if tr.get("twin") else None
+            held = tuple(h for h in f.held if twin is None or tuple(h) != (twin.colour, twin.name))
+            ok, why = TP.check(text, f.vocab, f.new_words, p, refs, held, recent_events=f.recent)
+            if not ok:
+                self.trial = None
+                self._probe_drop(t, tr["form"], f"the sentence {text!r} (of either thing) fails the line check: {why}")
+                return None
+            lines[oid] = TP.Line(text, intent, register_for(intent, text), focus, focus, refs, "fast", TP.FRAMES[intent][0][0])
+        return lines[tr["target"]]
+
+    def _trial_said(self, line, t, spans, p, out):
+        """her test sentence begins at t: its window opens at the target word's onset (the word that tells the two apart: the
+        noun, a combination's colour, its name or the foil) and runs TRIAL_WINDOW ticks; the ledger records the trial, what it
+        scores (the named word's test when its thing is a fresh never-taught item, A28; the distractor's yoked rate when its
+        thing is; for the name, its test or its foil rate) and the items it presents."""
+        tr = self.trial
+        if tr["form"] == "name":
+            word_at, score = tr["said"], [[NAME, "trials" if tr["name"] else "yoked", 1, 0]]
+            target, distractor, items, sides = dict(id=None, word=tr["said"]), None, [], None
+        else:
+            ot, od = p.obj(tr["target"]), p.obj(tr["distractor"])
+            word_at = ot.colour if tr["form"] == "combination" else ot.name
+            kt, kd = self._key(tr, ot), self._key(tr, od)
+            if tr["form"] == "combination":
+                pair = f"{p.obj(tr['twin']).colour} {p.obj(tr['twin']).name}"
+                it_t = pair if tr["target"] == tr["twin"] else None
+                it_d = pair if tr["distractor"] == tr["twin"] else None
+                items = [pair] if it_t else []                 # a combination is presented when it is said
+            else:
+                it_t, it_d = tr["new"].get(tr["target"]), tr["new"].get(tr["distractor"])
+                items = [x for x in (it_t, it_d) if x]         # a place, an angle, an exemplar: when it is displayed
+            fresh = lambda it: it is not None and self.ledger.presented(it) + int(tr["shown"].get(it, 0)) < \
+                K.NOVEL_PRESENTATIONS                                                          # noqa: E731
+            score = ([[kt, "trials", 1, 0]] if fresh(it_t) else []) + ([[kd, "yoked", 0, 1]] if fresh(it_d) else [])
+            target, distractor = dict(id=ot.id, word=kt), dict(id=od.id, word=kd)
+            sides = (tr["left"], tr["right"])
+        ws = [w for w, _a, _e in spans]
+        idx = ws.index(word_at) if word_at in ws else len(ws) - 1
+        onset = int(t) + spans[idx][1] // TICK
+        tr.update(phase="said", line_start=int(t), word_idx=idx, onset=onset, until=onset + K.TRIAL_WINDOW, word=word_at)
+        tr["tid"] = self.ledger.trial(t, tr["form"], target, distractor, onset, K.TRIAL_WINDOW, tr["said"] if tr["form"] ==
+                                      "name" else word_at, sides=sides, score=score, items=items)
+        if onset == t:                                       # the name: its onset is the line's first tick
+            res, why = self._trial_judge(tr, t, p)
+            if res is not None:
+                self._trial_end(t, res, why, out, p)
+
+    def _trial_judge(self, tr, t, p):
+        """a tick of its window judged by her percept (A40: her reading of its head line, held 3 ticks, and its hands) -> (result,
+        why) or (None, None). At the onset: void if it already attends either thing (for the name, already looks at her face),
+        or cannot see them (her); after it, the first look or reach on one of them decides it (on both at once: void); for the
+        name, its turn to her face."""
+        if tr["form"] == "name":
+            if not (p.present and p.seen_by_child):
+                return "void", "the child cannot see her"
+            looking = p.child_target == PARENT_NAME
+            if t <= tr["onset"]:
+                return ("void", "it already looked at her face at the name's onset") if looking else (None, None)
+            return ("met", "its turn to her face") if looking else (None, None)
+        att = {o.id for o in p.attended()}
+        ht, hd = tr["target"] in att, tr["distractor"] in att
+        if t <= tr["onset"]:
+            if ht or hd:
+                return "void", "it already attended one of them at the word's onset"
+            if not all(p.obj(x) is not None and p.obj(x).child_sees for x in (tr["target"], tr["distractor"])):
+                return "void", "the two not both in its view at the word's onset"
+            return None, None
+        if ht and hd:
+            return "void", "its first look or reach on both at once"
+        if ht:
+            return "met", "its first look or reach on the target"
+        if hd:
+            return "missed", "its first look or reach on the distractor"
+        return None, None
+
+    def _trial_tick(self, t, p, out):
+        """her trial under way, each tick: the present act until her motion reports it done (refused or cancelled: dropped);
+        the settle, counting ticks her log shows still (moving(): only her mouth may move; a tick not read restarts it); once its
+        sentence is said, each tick from the onset judged by the percept first (a look a tick's percept shows was made before
+        that tick, once the tick before was read: a tick not read voids it first), then the tick's log held to it: anything but
+        her mouth moving voids it; its window's end with no look: none (the name: missed, no turn). The child's pain or distress,
+        or its hit, ends it (void once said)."""
+        tr = self.trial
+        if tr is None:
+            return
+        ev = {k for k, _o in p.events}
+        if ev & {"pain", "distress", "hit_her"}:
+            return self._trial_end(t, "void", "she answered its pain, distress or hit (4.10's priority)", out, p)
+        e = self.attn[-1] if self.attn and self.attn[-1]["t"] == t else None
+        read = e is not None and len(self.attn) >= 2 and self.attn[-2]["t"] == t - 1
+        if tr["phase"] == "bring":
+            st = self.ended.get(tr["act"])
+            if st is None:
+                if t - tr["since"] > K.TRIAL_WAIT:
+                    self._trial_end(t, "void", f"the two not placed within {K.TRIAL_WAIT} ticks", out, p)
+                return
+            if st != "done":
+                return self._trial_end(t, "void", f"her motion reported the present act {st}", out, p)
+            tr["phase"] = "settle"
+        if tr["phase"] == "settle":
+            still = e is not None and moving(e) is None
+            tr["run"] = (tr["run"] + 1 if read else 1) if still else 0
+            if t - tr["since"] > K.TRIAL_WAIT:
+                self._trial_end(t, "void", f"not said within {K.TRIAL_WAIT} ticks ({tr['why'] or 'her body not still'})",
+                                out, p)
+            return
+        if t > tr["line_start"]:                            # the sentence's first tick was held as the settle's last
+            if not read:                                    # the tick before never read: her body then unknown, and a look
+                return self._trial_end(t, "void", "her attention log: a tick not read (fail-closed; only her mouth may "
+                                                  "move)", out, p)      # this tick shows may follow it
+            if t >= tr["onset"]:
+                res, why = self._trial_judge(tr, t, p)
+                if res is not None:
+                    return self._trial_end(t, res, why, out, p)
+            why = moving(e)
+            if why is not None:
+                return self._trial_end(t, "void", f"her attention log: {why} (only her mouth may move)", out, p)
+            if t >= tr["until"]:
+                return self._trial_end(t, "missed" if tr["form"] == "name" else "none",
+                                       "no turn to her face in its window" if tr["form"] == "name" else
+                                       "no look or reach on either in its window", out, p)
+
+    def _trial_end(self, t, res, why, out, p):
+        """the trial ends: never said, dropped and logged; said, its outcome in the ledger, and her judgment as any ask's (A28:
+        never withheld, never added): a smile for the first look on the target, for its turn to its name until the name is
+        understood, with her confirm after it; none for a turn to a foil (it is not its name), a miss, none or a void."""
+        tr, self.trial = self.trial, None
+        if tr["tid"] is None:
+            return self._probe_drop(t, tr["form"], why)
+        self.ledger.trial_outcome(t, tr["tid"], res, why)
+        if res != "met":
+            return
+        if tr["form"] == "name":
+            if tr["name"] and not self.ledger.understood(NAME):
+                out.judgments.append((K.WORTH_MET_ASK, "met_trial", NAME))
+                self.reply_due = dict(tick=t, kind="confirm", word=NAME, obj=None)
+            return
+        out.judgments.append((K.WORTH_MET_ASK, "met_trial", tr["word"] if tr["form"] != "combination" else
+                              p.obj(tr["target"]).name if p.obj(tr["target"]) is not None else tr["word"]))
+        self.reply_due = dict(tick=t, kind="confirm", word=None, obj=tr["target"])
+
+    def _teaching(self, cw):
+        """a word of the child's that answers her pending ask, or names her trial's thing in its window: teaching only, never
+        toward "says" (the lead's decision)."""
+        if cw.word is None:
+            return False
+        if self.pending is not None and self.pending.get("word") == cw.word:
+            return True
+        tr = self.trial
+        return tr is not None and tr["phase"] == "said" and cw.word in (tr.get("word"), NAME if tr["form"] == "name" else None)
 
     def request(self, intent, **kw):
         """an episode's or Claude's intent (L3, P4; P5), said when the priorities allow (a request that cannot be said is
@@ -1155,8 +1295,9 @@ class Conduct:
 
     def _copying(self, t, p, out):
         """her copies of its visible arm and hand movements (A52; Ray and Heyes 2011): one seen while she attends it, when her
-        copying's gap allows, is copied mirrored within 1-2 s; never while an ask is pending (her hands stay still, A51): a
-        copy due then is dropped, not made late (a copy after the ask would come 1-2 s past the movement, no copy of it)."""
+        copying's gap allows, is copied mirrored within 1-2 s; never while an ask is pending or a trial is under way (her hands
+        stay still, A51, 4.8): a copy due then is dropped, not made late (a copy after it would come 1-2 s past the movement,
+        no copy of it)."""
         if self.imperfect and p.present and p.child_in_view:
             for kind, side in p.events:
                 if kind in K.COPY_KINDS and t >= self.copy_next:
@@ -1165,7 +1306,7 @@ class Conduct:
                     self.copy_next = t + max(1, int(round(self.imp.exponential(K.COPY_GAP_S / (TICK / SR)))))
         due = [c for c in self.copies if c[0] <= t]
         self.copies = [c for c in self.copies if c[0] > t]
-        if self.eyes_on_child:
+        if self.eyes_on_child or self.trial is not None:
             return
         acts = tuple(Act("copy", f"{kind}:{side}") for _t, kind, side in due)
         for a in acts:
@@ -1181,8 +1322,6 @@ class Conduct:
         tick (StubMotion.report: W2 makes it before this runs) is read first, into her attention log (A51). -> Say."""
         f = self.fast
         f.observe(p)
-        if self.born is None:
-            self.born = int(t)
         self._attend(t, p)                                  # her motion's report of this tick: her attention log (A51)
         self._focus_step(t, start=True, p=p)                # her looks on a naming word that begins now
         for w, te, last in self.ledger.voiced(t, p):        # her words whose sound has ended by now: said (4.6, 4.8)
@@ -1205,7 +1344,7 @@ class Conduct:
             heard = self.transcriber.tick(t, tract, distance_m, token, f.speaking(t), exp, p, f.said_word, vocab)
             sounding = self.transcriber.sounding
             for cw in heard:
-                self.ledger.accepted(cw, p)
+                self.ledger.accepted(cw, p, teaching=self._teaching(cw))
         out.heard = heard
         self.sound_hist = (self.sound_hist + [bool(sounding)])[-K.NONSTOP[1]:]
         nonstop = len(self.sound_hist) == K.NONSTOP[1] and np.mean(self.sound_hist) > K.NONSTOP[0]
@@ -1224,6 +1363,10 @@ class Conduct:
                         self.pending["open_idx"] >= kept:        # her ask stopped before its word was said: withdrawn
                     self.ledger.withdraw(t, self.pending["trial"], "cut before its word was said")
                     self.pending = None
+                tr = self.trial                             # her trial's sentence stopped before its word: void
+                if tr is not None and tr["phase"] == "said" and tr["line_start"] == f.spans["start"] and \
+                        tr["word_idx"] >= kept:
+                    self._trial_end(t, "void", "its sentence cut before its word was said", out, p)
                 if self.stage >= 2 and self.nonstop_since is None:   # stage 2: the talk-over frown, and "no." for its turn
                     out.frown = "talk_over"                          # (never for babble that never stops, A13)
                     self.turn["over"] = True
@@ -1243,10 +1386,9 @@ class Conduct:
         for cw in heard:                                    # the child's turn ended (or its tokens were read): judge, reply
             if cw.channel == "tract" or cw.word is not None:
                 self._owe_reply(t, cw, p, out)
-        if out.judgments or out.frown:                      # her face will move (a smile, a frown): at her face in her log
-            self.face_until = max(self.face_until, t + K.FACE_COURSE)
-            self._mark(t, "face", p)
-        self._hold(t)                                       # the tick's log held to an ask its percept has not judged (A51)
+        self._face(t, out, p)                               # her face will move (a smile, a frown): in her log from now
+        self._trial_tick(t, p, out)                         # her formal trial: judged by the percept, then held to her log
+        self._face(t, out, p)                               # (a trial's own smile, once it is decided)
         if (self.transcriber is not None and self.transcriber.turn_end == t) or (self.transcriber is None and not sounding):
             self.turn = None                                # (with no transcriber, the world's own sounding flag ends the turn)
         self._copying(t, p, out)
@@ -1339,15 +1481,6 @@ class Conduct:
         if not f.voice_free(t):
             return None
         ev = {k for k, _ in p.events}
-        # while the call is pending her voice is at its X, her face (A51): no line until it is judged (the reply she owes
-        # waits), but the child's pain or distress, or being hit, which void it first
-        pd = self.pending
-        if pd is not None and pd["kind"] == "call":
-            if not ((ev & {"pain", "distress"} and p.present) or "hit_her" in ev):
-                return None
-            self.ledger.withdraw(t, pd["trial"], "her attention log while it was pending: her voice at mama (she answered "
-                                                 "its pain or its hit; A51)")
-            self.pending = None
         # 1. the child's pain or distress: comfort (never a smile)
         if ev & {"pain", "distress"} and p.present:
             ln = f.compose("comfort", t, p)
@@ -1366,6 +1499,11 @@ class Conduct:
             return None
         if self.reply_due is not None and t < self.reply_due["tick"]:
             return None
+        # her formal trial under way (4.8): she says nothing but its test sentence, once settled; the reply she owes, the meal's
+        # first line and everything below wait for its end (its pain, distress or hit, above, end it first)
+        if self.trial is not None:
+            ln = self._trial_line(t, p)
+            return (ln, False, None) if ln is not None else None
         # 3. a low charge: the meal's first line (L3 runs the routine); it waits while a gaze, act or call ask is judged, whose
         #    window is shorter than her 200 ticks to check (4.7), since its bottle in hand would cue the child (A51)
         if "charge_low" in ev and p.present and self.routine != "feed" and not self.eyes_on_child:
@@ -1401,7 +1539,12 @@ class Conduct:
                 f.last_set[o.id] = t
                 f.queue = lines[1:]
                 return lines[0], False, "follow_in"
-        # 8. the episode's act: an intent asked for by L3 or Claude, and Claude's lines for the moment
+        # 8. the episode's act: a formal trial her day plan asked for (4.8: she brings its things, or holds still for the name),
+        #    an intent asked for by L3 or Claude, and Claude's lines for the moment
+        if self.probes:
+            self._trial_begin(t, p)
+            if self.trial is not None:
+                return None
         while self.requests:
             intent, kw = self.requests.pop(0)
             got = self._compose_request(intent, t, p, kw)
@@ -1420,6 +1563,9 @@ class Conduct:
     def _compose_request(self, intent, t, p, kw):
         """an intent asked for by L3 or Claude -> a Line, or None (dropped, and logged in fast.refused with why)."""
         f = self.fast
+        if intent in TRIAL_INTENTS:                         # said only in its trial (4.8), never requested (Claude's rows too)
+            return self._drop(t, intent, "a formal trial's sentence is said only in its trial (probe(): her day plan's, by "
+                                         "its stage; 4.8)")
         if intent == "new_word":
             return self._introduce(kw["word"], t, p, kw.get("o"))
         o = p.obj(kw["o"]) if kw.get("o") else None
@@ -1460,20 +1606,12 @@ class Conduct:
         if it.ask == "name" and o.id not in {s.id for s in p.attended()}:
             return self._drop(t, intent, f"a name ask is of what the child attends as she reads it (its head's line on it, "
                                          f"in its hand or reached toward): while it is pending she shows nothing, so "
-                                         f"'what is this?' can mean only that (A51's attention log)")
+                                         f"'what is this?' can mean only that (A51)")
         if it.ask == "call" and p.child_target == "mama":
             return self._drop(t, intent, "she reads the child already looking at her face: nothing to call it to")
         if it.ask is not None and self.pending is not None:
             return self._drop(t, intent, "an ask is already pending")
-        if it.ask is not None:                              # her attention log (A51): one rule for every ask, fail-closed
-            why = self._ask_block(PARENT_NAME if it.ask == "call" else o.name, t)
-            if why is not None:
-                return self._drop(t, intent, why + " (A51)")
-        frames = None
-        if it.ask == "call":                                # her voice is at her face, the call's X: its line ends on its name,
-            frames = [fr for fr in TP.FRAMES[intent]        # so no word of hers follows it while it is judged (A51)
-                      if TP.words(TP.fill(fr)[0])[-1:] == [NAME]]
-        ln = f.compose(intent, t, p, o=o, b=kw.get("b"), w=kw.get("w"), frames=frames)
+        ln = f.compose(intent, t, p, o=o, b=kw.get("b"), w=kw.get("w"))
         if ln is None:
             return self._drop(t, intent, "no line passes the check")
         ok, why = f.allowed(ln, t)
@@ -1563,9 +1701,8 @@ class Conduct:
             self._open_ask(line, it, t, n, word_ends, p)
         cls = TP.GROWTH_CLASS.get(line.focus) if line.intent == "new_word" else None
         acts = acts_for(line.intent, line.refs, b=line.focus, w=line.focus, word_class=cls)
-        if self.eyes_on_child:                              # an ask she is judging: only acts that keep her still and put
-            pd = self.pending                               # nothing of its X in her log (A51)
-            acts = blind(acts, PARENT_NAME if pd["kind"] == "call" else pd["word"])
+        if self.pending is not None:                        # an ask she is judging: her eyes on the child, no point or show
+            acts = blind(acts)                              # (A51, her method)
         for a in acts:
             if a.during == "focus":                         # on the naming word only (4.3): requested as it begins
                 fw = [(wa, we) for w, wa, we in spans if w == line.focus] or [(wa, we) for _w, wa, we in spans[-1:]]
@@ -1574,9 +1711,9 @@ class Conduct:
             else:
                 self._request(a, t, p)
         self._focus_step(t, start=True, p=p)
-        if self._sounding(t):                               # her voice from this tick, at her face (the log's voice field)
-            self._mark(t, "voice", p)
         out.line, out.clip, out.acts = line, clip, acts
+        if line.intent in TRIAL_INTENTS and self.trial is not None:
+            self._trial_said(line, t, spans, p, out)        # her formal trial's sentence: its window from its word's onset
 
     def _open_ask(self, line, it, t, n, word_ends, p):
         """her ask is judged from the tick its word has been heard (4.8): a gaze or act ask from the end of its object's word, a
@@ -1604,7 +1741,8 @@ class Conduct:
         return dict(fast=self.fast.state(), routine=self.routine, pending=self.pending, reply_due=self.reply_due,
                     no_target_since=self.no_target_since, attn=[dict(e, acts=[list(a) for a in e["acts"]]) for e in self.attn],
                     acts_open=[list(a) for a in self.acts_open], focus_acts=[list(a) for a in self.focus_acts],
-                    born=self.born, face_until=self.face_until,
+                    face_until=self.face_until, probes=[dict(x) for x in self.probes],
+                    trial=None if self.trial is None else dict(self.trial), trial_rng=self.trial_rng.bit_generator.state,
                     last_vocal_smile=self.last_vocal_smile, turn=self.turn,
                     sound_hist=list(self.sound_hist), nonstop_since=self.nonstop_since,
                     requests=[[i, dict(k)] for i, k in self.requests], cuts=self.cuts, world=dict(self.world),
@@ -1617,13 +1755,14 @@ class Conduct:
         self.fast.load_state(s["fast"])
         self.routine, self.pending, self.reply_due = s["routine"], s["pending"], s["reply_due"]
         self.no_target_since = s["no_target_since"]
-        pad = lambda a, n: list(a) + [[UNNAMED]] * (n - len(a))              # noqa: E731 (a save before P3's seventh round:
-        self.attn = [_old_entry(dict(e, acts=[pad(a, 5) for a in e["acts"]])) for e in s["attn"]]   # its acts' words unknown)
-        self.acts_open = [pad(a, 7) for a in s["acts_open"]]
-        for a in self.acts_open:                            # (a seventh-round save's words may hold None: at rest)
-            a[6] = [w for w in a[6] if w is not None]
-        self.born = s.get("born", NEVER)                    # unknown in an older save: every tick before its log unread
+        self.attn = [_old_entry(e) for e in s["attn"]]     # (an older save's log: fail-closed, _old_entry)
+        self.acts_open = [list(a)[:6] for a in s["acts_open"]]
+        self.ended = {}
         self.face_until = s.get("face_until", NEVER)
+        self.probes = [dict(x) for x in s.get("probes", ())]
+        self.trial = None if s.get("trial") is None else dict(s["trial"])
+        if "trial_rng" in s:
+            self.trial_rng.bit_generator.state = s["trial_rng"]
         self.focus_acts = [list(a) for a in s["focus_acts"]]
         self.last_vocal_smile, self.turn = s["last_vocal_smile"], s["turn"]
         self.sound_hist, self.nonstop_since = list(s["sound_hist"]), s["nonstop_since"]

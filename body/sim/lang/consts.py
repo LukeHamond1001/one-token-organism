@@ -38,20 +38,20 @@ TARGET_TICKS = 3                      # the child's target as she reads it (4.10
                                       # held 3 ticks running (percept.Reader.look: her reading moves to a thing, or to nothing,
                                       # only once read() has given it 3 ticks running; every rule reads this held reading); or
                                       # what its hand holds or reaches toward
-CUE_CLEAR = 44                        # she asks about an X (any ask: a gaze, a give, the call about her face, a name) only when
-                                      # her attention log (her motion's report of where her eyes, head and hands are directed,
-                                      # L1's gaze with it) shows no X on the ask's tick or the 44 ticks (6.6 s) before it: her
-                                      # last cue at an X ended 44 ticks or more ago, and a look within that time may follow her
-                                      # cue, not the word (A51; her method, ours; P3's sixth round, one log for every route).
-                                      # 6.5 s is the response period over which infants' looks after an adult's head turn were
-                                      # scored as following it (Brooks and Meltzoff 2005, Dev Sci 8:535-543: "each 6.5-s trial
-                                      # began with the onset of the adult head movement"), in whole ticks from the cue's end
+SETTLE = 44                           # a formal trial's settle (4.8, 12; the lead's decision: understanding is scored only in
+                                      # formal trials): once the two things are placed, she holds still (her eyes on the child's
+                                      # eyes, her hands resting on her thighs, her face in its neutral set, no act) for 44 ticks
+                                      # (6.6 s) before the test sentence, so a look that follows her placing them has ended
+                                      # before its window: 6.5 s is the response period over which infants' looks after an
+                                      # adult's head turn were scored as following it (Brooks and Meltzoff 2005, Dev Sci
+                                      # 8:535-543: "each 6.5-s trial began with the onset of the adult head movement"), in whole
+                                      # ticks. Her attention log keeps the last SETTLE + 1 ticks
 FACE_COURSE = 77                      # her face moves for at most 77 ticks after a judgment of hers or a frown (A3, and FEEL in
                                       # parent_feel.py: a smile waits at most 40 ticks from its judgment, reaches its apex in 2,
                                       # is held until seen for at most 20 ticks and 10 more once seen, and eases off over 5:
                                       # 40 + 2 + 30 + 5; a frown's 10 + 5 within it). Her attention log holds her face moving for
-                                      # that long from the tick she judges (A51: her face is the call's X; P3's eighth round),
-                                      # whatever her motion reports
+                                      # that long from the tick she judges, whatever her motion reports: no trial's settle or
+                                      # window runs through it (only her mouth may move)
 ECHO_WINDOW = 10                      # anything the child says within 10 ticks of her saying it is an echo (4.8, A27)
 VOCAL_TURN_EVERY = 60                 # stage 1: a vocal turn in a pause while looking earns a smile at most once per 60 ticks (4.6)
 NONSTOP = (0.7, 40, 20)               # babble that never stops: sounding on over 70% of 40 ticks; she waits 20, then speaks (A13)
@@ -70,11 +70,11 @@ FOVEA_REACH_DEG = (38.0, 20.0)        # its target is within the fovea's reach o
 NEAR_DEG = 20.0                       # a look at a thing could be read as any thing within 20 degrees of it as seen from the
                                       # child's head (5 x READ_ERR_DEG; percept.Reader.near fills Seen.near and Percept.face_near
                                       # from it): measured with the Reader itself, 4,000 trials each, a head resting exactly on
-                                      # one thing is read as another for a met gaze ask (held 3 readings, then 2 ticks) within
-                                      # 40 ticks at 8 degrees 12%, 12 degrees 0.8%, 16 degrees 0.08%, and at 18 and 20 degrees
-                                      # in none (A51; P3's eighth round: the ball in the box, and a toy a few degrees off the one
-                                      # she cued, held back no ask). A child's own following error widens it (a follow off by a
-                                      # further 4 degrees sd is read 20 degrees over in 3.9%): the child's, not her cue's (11)
+                                      # one thing is read as another for a look held 3 readings then 2 ticks within 40 ticks at
+                                      # 8 degrees 12%, 12 degrees 0.8%, 16 degrees 0.08%, and at 18 and 20 degrees in none (P3's
+                                      # eighth round). So a formal trial's two things lie beyond it of each other and of her face
+                                      # as the child sees them, or its sentence waits (4.8): its first look can be read as one of
+                                      # them, never the other, and never as her face (the lead's decision)
 CAMERA_FIELD_DEG = (88.3, 58.0)       # "in the child's view" as she reads it: before its head camera's field (the D435's grey
                                       # imagers, A38), about the line she reads
 REACH_TICKS = 3                       # reaching toward: the hand's path over the last 3 ticks closing on the object (4.10)
@@ -138,14 +138,52 @@ HELD_PAIRS = (("blue", "ball"), ("red", "block"), ("yellow", "cup"), ("green", "
 PEAK_FILE = "peak_lines.json"         # beside this file
 
 # ------------------------------------------------------------------------------------------------ the ledger (4.8)
-UNDERSTOOD_LAST = 10                  # understood: met on at least 5 of the last 10 asks (4.8) ...
-UNDERSTOOD_MIN = 5
-UNDERSTOOD_P = 0.05                   # ... and above the child's own base rate, one-sided binomial p < 0.05 (4.8)
-BASE_MIN = 10                         # the base rate counts only once it has 10 trials (ours: the design names no minimum, and a
-                                      # rate from 1 or 2 random moments would let 5 lucky asks pass)
+UNDERSTOOD_LAST = 10                  # understood (4.8): over its last 10 formal trials, never-taught and fresh (A28), the first
+UNDERSTOOD_MIN = 5                    # look on the named thing at least 5 times ...
+UNDERSTOOD_P = 0.05                   # ... and above chance by a one-sided binomial p < 0.05 (4.8): chance 50% by counterbalancing
+                                      # or its yoked rate where higher (CHANCE_2AFC); the name's, its turn rate after a foil. Her
+                                      # everyday asks never count (the lead's decision). Section 12's claims are one-sided p < 0.01
+                                      # on the same trials, pooled by A19's rule (Ledger.pooled)
+BASE_MIN = 10                         # a word's yoked rate, and the name's foil rate, count only once they have 10 trials (ours:
+                                      # the design names no minimum, and a rate from 1 or 2 trials would let 5 lucky ones pass);
+                                      # until then its word is not understood (fail-closed)
 SAYS_TIMES = 3                        # says: 3 times over at least 2 life days, never within ECHO_WINDOW of her saying it (4.8)
 SAYS_DAYS = 2
 EXACT_UNTIL = 3                       # an approximation earns a recast and a smile until the exact word is said 3 times (4.6, A27)
+
+# ------------------------------------------------------------------------ formal trials (4.8, 12, A28; the lead's decision)
+# Understanding is scored only in formal trials, as infant labs score it: intermodal preferential looking (Golinkoff et al.
+# 1987), looking-while-listening (Fernald et al. 2008; Bergelson and Swingley 2012), and name recognition against a foil name in
+# the same voice (Mandel, Jusczyk and Pisoni 1995). Her everyday asks are her teaching: they may earn her smile, and count toward
+# nothing ("understood", "says" or any milestone).
+TRIAL_STREAM = 6                      # her trials' random stream of the body's seed (ours; world 1, tract 2, her lines 3, her
+                                      # reading 4, her imperfection 5): which of the two things is named, the sides, name or foil
+TRIAL_FORMS = {                       # the design's never-taught forms (section 12, A28, A55), each said as one test sentence
+    "place": "a known word's thing seen in a place within its view it has never been seen in, or from a new angle, beside "
+             "another known thing: 'where is the X?' (M6(a))",
+    "exemplar": "a never-seen exemplar of X beside a known non-X: 'where is the X?' (M6; Quinn, Eimas and Rosenkrantz 1993)",
+    "combination": "known words in a combination never heard, the colour twin beside its original: 'where is the C X?' (M6(b), "
+                   "A28, A55); run only once both its words are understood alone (A28)",
+    "name": "its name or a foil name, same voice, same stillness, no things (Mandel, Jusczyk and Pisoni 1995)",
+}
+TRIAL_WINDOW = 20                     # a trial's window: 20 ticks (3 s) from the target word's onset (the lead's decision; 4.6's
+                                      # 20 ticks for a gaze ask, opened at the onset as looking-while-listening measures from it:
+                                      # Fernald et al. 2008); the first look (her reading of its head line, held TARGET_TICKS, or a
+                                      # reach) to the target or the distractor decides it
+TRIAL_WAIT = 400                      # a probe whose things are not placed, or whose settle or display does not hold, within 400
+                                      # ticks (a minute) of its start is dropped and logged, never said (ours)
+CHANCE_2AFC = 0.5                     # a pair trial's chance: 50% by counterbalancing (her trial stream draws which of the two is
+                                      # named and the sides, each a fair coin, so any child whose first look does not depend on
+                                      # the word said scores 50% trial by trial); a word's chance is its yoked rate where higher
+                                      # (its own share of first looks to its thing when the other was named: A19's "the same
+                                      # body's own rate", the M6 exemplar test's stated chance), so a favourite toy looked at
+                                      # first whatever is said never has its word understood
+NAME_FOILS = ("tib", "vek", "jem")    # stress-matched foils for its name (one stressed syllable, as "pip"), names she never uses
+                                      # for it or for anything (none within edit distance 1 of any of her 128 words), said in the
+                                      # name's register and stillness (Mandel, Jusczyk and Pisoni 1995's foils matched its name's
+                                      # stress); the name's chance is its turn rate after them
+NOVEL_PRESENTATIONS = 3               # a never-taught item counts only on its first 3 presentations (A28): a place, an angle or an
+                                      # exemplar displayed in a trial (as either thing), a combination said
 
 # ------------------------------------------------------------------------------------------ the parent's ear (4.9, A27)
 EAR_SHIFTS = (0, 1, 2, 3, 4)          # the child's bands shifted down 0-4 (she adapts to a shorter tract) (4.9)
