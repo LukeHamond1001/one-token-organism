@@ -55,22 +55,35 @@ in which register, and the acts her talk accompanies.
                cannot see her then; a call from the hall is not judged (no look can answer it there).
                HER ATTENTION LOG (A51; Golinkoff et al. 1987; the lead's decision in P3's sixth round: one log, fail-closed, in
                place of a rule for each route by which her body could cue an answer). Every tick, before the conduct runs, her
-               motion (W2; StubMotion until W2 merges) reports what her body is directed at (report()): her eyes' target, her
-               head's, each hand's (a thing's id, the child, a place, her own face, or none) and the status of each act she has
-               asked of it, exactly "running", "done", "refused" or "cancelled" (any other status, or none reported, is
+               motion (W2; StubMotion until W2 merges) reports where her body physically points (report()): her eyes', her
+               head's and each hand's target, from the tick it leaves the child (or rest) until it is back (a thing's id; the
+               child itself, only for her eyes or face on its face or a hand held open or waved toward it; the part of the child
+               a hand touches or her eyes rest on; a place; her own face; or none), and the status of every act asked of it by
+               anyone, exactly "running", "done", "refused" or "cancelled" (any other status, or an act of hers not reported, is
                running: fail-closed); L1's own gaze (to a sudden event, to the child's act or target) is in her eyes' and head's
-               fields as it happens. The conduct keeps the log (attn, the last CUE_CLEAR + 1 ticks, saved), each field by its
-               word (a twin's id is its word's; a target she cannot name is UNNAMED, which stands for every thing). An ask about
-               X (a gaze ask, a give, the call about her face, a name ask) opens only if X (or UNNAMED) is in none of the fields
-               on its tick or the CUE_CLEAR = 44 ticks (6.6 s) before it (a look within that time may follow her cue, not the
-               word: Brooks and Meltzoff 2005 scored infants' following looks over 6.5 s from an adult's head turn), no act of
-               hers is running, queued or of unknown status but those she may make while an ask is pending (PENDING_OK: her eyes
-               on its eyes, her open hand to it, her face into its periphery, a hand withdrawn when hit), and the log shows her
-               eyes and head on the child and her hands at rest or at it. While it is pending her lines' acts are held to those
-               (blind()), a copy of its movement due then is not made (a late copy is no copy), no new word is shown, the meal's
-               first line waits, and L1 keeps her eyes on the child (eyes_on_child); a tick whose log shows otherwise voids the
-               ask (fail-closed: W2 broke its contract). Her look on a line's naming word (during='focus', 4.3) is requested as
-               that word begins and cancelled as it ends, so the log shows it there. So a name ask shows nothing: "what is
+               fields as it happens. The conduct keeps the log (attn, the last CUE_CLEAR + 1 ticks, saved), each field by what a
+               look that follows it would be read as attending (_word; her Reader reads a look as the nameable thing nearest its
+               line, A40): the child itself cues no thing (the mutual gaze every ask is made in), a thing she can name is its
+               word (a twin's id its word's), her face is "mama", and anything else, a place (the shelf, the door, the floor), a
+               part of the child (its hand she touches, its arm she guides), an id or a word she cannot name, is UNNAMED, which
+               stands for every thing (P3's seventh round: a point and a look at the shelf where the ball rested held back no
+               ask about the ball). Her own face, the call's X, is where every movement of her body is, or beside it: for the
+               call, a tick with her eyes or head off the child, a hand not at rest, or an act of hers under way but her eyes on
+               its eyes is a cue at her face (_hits; the call's own lean-in, A3, is its ask). An act she asks for is in the log
+               from that tick (with what it directs her body at), before
+               her motion's first report of it; an act in the report she did not ask for (P4's, W2's own) is in it, at every
+               thing, until it is reported ended. An ask about X (a gaze ask, a give, the call about her face, a name ask) opens
+               only if every tick of her life among its tick and the CUE_CLEAR = 44 ticks (6.6 s) before it is in the log (a
+               tick never read is a cue at every thing) and none has X (or UNNAMED) in a field or an act (a look within that time
+               may follow her cue, not the word: Brooks and Meltzoff 2005 scored infants' following looks over 6.5 s from an
+               adult's head turn), no act is running, queued or of unknown status but those she may make while an ask is pending
+               and asked for herself (PENDING_OK: her eyes on its eyes, her open hand to it, her face into its periphery, a hand
+               withdrawn when hit), and the log shows her eyes and head on the child and her hands at rest or at it. While it is
+               pending her lines' acts are held to those (blind()), a copy of its movement due then is not made (a late copy is
+               no copy), no new word is shown, the meal's first line waits, and L1 keeps her eyes on the child (eyes_on_child); a
+               tick whose log shows otherwise (an act she did not ask for among it), or ticks the world did not tick her, voids
+               the ask (fail-closed: W2 broke its contract). Her look on a line's naming word (during='focus', 4.3) is requested
+               as that word begins and cancelled as it ends, so the log shows it there. So a name ask shows nothing: "what is
                this?" is asked of a thing the child attends, as she reads it. Never a gaze or act ask about an X in her own
                hands (a look at her would meet it); and "give me the X" only with an X within the child's reach as she sees it
                (Seen.child_can_reach), so no ask is one no act of its could answer. cue_clear() is the same rule, read from the
@@ -159,48 +172,68 @@ class Act:
 # ---------------------------------------------------------------------------------------- her attention log (A51, for W2)
 FIELDS = ("eyes", "head", "left", "right")    # what her body is directed at, reported by her motion every tick
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
-UNNAMED = "?"                                 # a target she cannot name: it stands for every thing (fail-closed)
-AT_CHILD = ("child", "child_eyes", "child_periphery")   # the child (or any part of it: TP.CHILD_BODY)
+UNNAMED = "?"                                 # a target that could be read as any thing: it stands for every thing (fail-closed)
+AT_CHILD = ("child", "child_eyes", "child_periphery")   # the child itself: her eyes or face on its face, her hand held open or
+                                                         # waved toward it, touching nothing (a part she touches is a place)
+OUTSIDE = "?act"                              # the kind of an act in her motion's report she did not ask for (P4's, W2's own)
 PENDING_OK = (("look", "child_eyes"), ("open_hand", "child"), ("lean_in", "child_periphery"), ("withdraw", "child"))
 # the acts she may make while an ask is pending, and the only ones that may still be running (or queued, or unreported) when one
-# opens: her eyes on its eyes, her open hand held out to it, her face into its periphery (the call's, A3), a hand withdrawn when
-# hit (L1's). Every other act could direct its attention, to its X or anywhere (A51; the lead's decision, P3's sixth round).
+# opens, each one she asked for herself: her eyes on its eyes, her open hand held out to it, her face into its periphery (the
+# call's, A3), a hand withdrawn when hit (L1's). Every other act, and every act she did not ask for, could direct its attention,
+# to its X or anywhere (A51; the lead's decision, P3's sixth round; the seventh's for an act she did not ask for).
 ATTN_KEEP = K.CUE_CLEAR + 1                   # ticks of the log kept: an ask's tick and the CUE_CLEAR ticks before it
+
+
+def _still_act(a):
+    """an open act of the log (its entry [id, kind, target, status, at]) she may make while an ask is pending: PENDING_OK's, and
+    one she asked for herself (an act she did not ask for is never one: OUTSIDE)."""
+    return a[1] != OUTSIDE and (a[1], a[2]) in PENDING_OK
+
+
+def _act_str(a):
+    """an open act of the log ([id, kind, target, status, at]) in words."""
+    if a[1] == OUTSIDE:
+        return f"an act she did not ask for (her motion's id {a[0]!r}, reported {a[3]!r})"
+    return f"her {a[1]} at {', '.join(w for w in a[4] if w) or a[2] or 'nothing'} ({a[3]})"
 
 
 def _unstill(e):
     """None when a tick of her attention log shows her body as an ask needs it (her eyes and head on the child, her hands at
-    rest or at it, no act of hers running but PENDING_OK's), else what it shows."""
+    rest or held open to it, no act running but PENDING_OK's she asked for herself), else what it shows."""
     bad = [f"her {f} at {e[f]}" for f in ("eyes", "head") if e[f] != "child"]
     bad += [f"her {f} hand at {e[f]}" for f in ("left", "right") if e[f] not in (None, "child")]
-    bad += [f"her {a[1]} at {a[2]} {a[3]}" for a in e["acts"] if (a[1], a[2]) not in PENDING_OK]
+    bad += [_act_str(a) for a in e["acts"] if not _still_act(a)]
     return "; ".join(bad) if bad else None
 
 
 def at_rest(target):
-    """a field's target that cues no thing: none, or the child (or a part of it)."""
-    return target is None or target in AT_CHILD or target in TP.CHILD_BODY
+    """a field's target that cues no thing: none, or the child itself (a part of it she touches or looks at is a place)."""
+    return target is None or target in AT_CHILD
 
 
 def directs(act):
     """the attention log's fields an act of hers drives while it runs, and at what: what StubMotion reports of it, and the least
     W2 reports (W2 reports its own truth, L1's gaze with it) -> [(field, target)]. field: "eyes", "head", "hand" (one hand: the
-    stub's right, else its left), "both" (both hands), or "left" / "right" (a copy's side); target: a thing's id, the child (its
-    eyes, its periphery, a part of it), a place word, "mama" (her own face), None (at rest, or moving at nothing: a copy), or
-    UNNAMED where the act does not say (a demonstration that handles no named toy: fail-closed)."""
+    stub's right, else its left), "both" (both hands), or "left" / "right" (a copy's side); target: a thing's id, the child itself
+    ("child", "child_eyes", "child_periphery": her eyes or face on its face, her hand held open or waved toward it), the part of
+    the child she touches or guides (a body word, "trunk", "far_arm": a place, 4.3), a place word, "mama" (her own face), None
+    (at rest, or moving at nothing: a copy), or UNNAMED where the act does not say (a demonstration that handles no named toy:
+    fail-closed)."""
     k, tg = act.kind, act.target
     if k in ("look", "walk"):
         return [("eyes", tg), ("head", tg)]
     if k == "lean_in":
         return [("head", "child")]
     if k == "attend":
-        return [("head", "child"), ("hand", "child")]
+        return [("head", "child"), ("hand", "trunk")]                # one hand resting on its trunk
     if k in ("show", "point", "open_hand", "hand_over", "offer_bottle"):
         return [("hand", tg)]
-    if k in ("touch", "guide", "wave"):
+    if k in ("touch", "guide"):
+        return [("hand", tg)]                                         # the part she touches, the limb she guides
+    if k == "wave":
         return [("hand", "child")]
     if k == "pull_to_sit":
-        return [("both", "child")]
+        return [("both", "arm")]                                      # by the forearms (A9)
     if k == "withdraw":
         return [("hand", None)]
     if k in ("cover_face", "reveal_face"):
@@ -224,53 +257,73 @@ class StubMotion:
       request(act, tick) -> id: the act asked for (W2 carries it out under the caps, or refuses it);
       status(id, tick) -> 'running' | 'done' | 'refused' | 'cancelled';
       cancel(id, tick): the act stopped from that tick (the conduct cancels her look on a naming word as the word ends);
-      report(tick) -> dict(eyes, head, left, right, acts): HER ATTENTION LOG'S FIELDS (A51), made every tick BEFORE the conduct
-        runs (the conduct reads it first thing in its tick): eyes, head, left and right, the target each is directed at (a
-        thing's id, the child: "child", "child_eyes", "child_periphery" or a body word, a place word, "mama" for her own face, or
-        None at rest), L1's own gaze included as it happens (to a sudden event, to the child's act or its target); and acts,
-        {id: status} for every act asked of it that it has not yet reported ended, each status exactly 'running', 'done',
-        'refused' or 'cancelled'. Anything else ('queued', 'waiting', a typo), a field left out, or an act left out of the
-        report counts as running, at every thing (fail-closed): so W2 reports every act from its request until it reports it
-        ended, keeps 'running' while it waits its turn or directs the child's eyes at all (the show held beside her face, the
-        offer held out, the look held), ends every act, and reads Conduct.eyes_on_child each tick (while an ask is pending her
-        eyes and head stay on the child and her hands at rest or held open to it: L1 turns to nothing, W2 starts nothing else);
+      report(tick) -> dict(eyes, head, left, right, acts): HER ATTENTION LOG'S FIELDS (A51), made once a tick BEFORE the conduct
+        runs (the conduct reads it first thing in its tick, and a tick whose report it never read counts as a cue at every
+        thing): eyes, head, left and right, where each physically points (a thing's id; the child itself: "child", "child_eyes"
+        or "child_periphery", only for her eyes or face on its face or her hand held open or waved toward it, touching nothing;
+        the part of the child a hand touches or guides, or her eyes rest on, by its word ("hand", "foot", "arm", "trunk"); a
+        place word; "mama" for her own face; or None at rest), from the tick it leaves the child (or rest) until the tick it is
+        back, whatever target the act asked for (a look asked for and cancelled within a tick still shows on the ticks her eyes
+        moved; P3's seventh round), L1's own gaze included as it happens (to a sudden event, to the child's act or its target);
+        and acts, {id: status} for every act asked of it by anyone (the conduct, P4, its own) that it has not yet reported ended,
+        each status exactly 'running', 'done', 'refused' or 'cancelled'. Anything else ('queued', 'waiting', a typo), a field
+        left out, or an act of hers left out of the report counts as running, at every thing (fail-closed); an act in the report
+        the conduct did not ask for blocks every ask until it is reported ended, and voids a pending one: so W2 reports every act
+        from its request until it reports it ended, keeps 'running' while it waits its turn or directs the child's eyes at all
+        (the show held beside her face, the offer held out, the look held), ends every act, and reads Conduct.eyes_on_child each
+        tick (while an ask is pending her eyes and head stay on the child and her hands at rest or held open to it: L1 turns to
+        nothing, W2 and P4 start nothing else);
       state() / load_state(); DOES, the acts her own body can show a verb by (templates.NEEDS' ("act", kind): the 'do' act's
         targets), which templates.showable() reads.
     The stub runs each act for its nominal time and moves nothing (it never refuses); its fields are what directs() gives for the
     acts running (an act asked for at a tick shows from the next report: the report of that tick was made before it), her eyes
-    and head on the child at rest; glance() stands in for W2's L1 (the world calls it for a sudden event: her eyes and head on
-    it from that tick). Its DOES are the acts W2's parent_acts.py or ACT_KINDS already name (shake and hold: the show; go and
-    walk: the walk; the wave; get: pick_up; open: the open hand). W2 declares its own (a clap, a push, ...)."""
+    and head on the child at rest. An act cancelled from a tick still shows on that tick (her eyes or hand on the way back) and
+    is 'cancelled' from the next, so every act shows on at least one tick. glance() stands in for W2's L1 (the world calls it for
+    a sudden event: her eyes and head on it from that tick; a gaze for a tick already reported starts at the next report, keeping
+    its length, so the log never loses it). Its DOES are the acts W2's parent_acts.py or ACT_KINDS already name (shake and hold:
+    the show; go and walk: the walk; the wave; get: pick_up; open: the open hand). W2 declares its own (a clap, a push, ...)."""
 
     DOES = ("show", "walk", "wave", "pick_up", "open_hand")
 
     def __init__(self):
-        self.acts = []                        # [id, tick, kind, target, during, done_tick, cancelled, thing]
+        self.acts = []                        # [id, tick, kind, target, during, end tick, stopped at (or None), thing]
         self.live = []                        # the ids not yet reported ended
         self.glances = []                     # L1's gazes (the world's, until W2): [target, from tick, until tick]
+        self.reported = None                  # the last tick reported (saved: a cancel or a gaze never rewrites a report made)
         self._rep = None                      # (tick, report): a tick's report, given again if asked again
 
     def request(self, act, tick):
         i = len(self.acts)
         n = STUB_FOCUS if act.during == "focus" else STUB_TICKS[act.kind]
-        self.acts.append([i, int(tick), act.kind, act.target, act.during, int(tick) + n, False, act.thing])
+        self.acts.append([i, int(tick), act.kind, act.target, act.during, int(tick) + n, None, act.thing])
         self.live.append(i)
         return i
 
     def status(self, i, tick):
         a = self.acts[i]
-        return "cancelled" if a[6] else ("done" if tick >= a[5] else "running")
+        if tick < a[5]:
+            return "running"
+        return "cancelled" if a[6] is not None else "done"
+
+    def _next(self):
+        """the first tick not yet reported (None before the first report)."""
+        return None if self.reported is None else self.reported + 1
 
     def cancel(self, i, tick=None):
-        """the act stopped from tick (a look on a naming word at the word's end): 'cancelled' in every later report."""
-        self.acts[i][6] = True
-        if tick is not None:
-            self.acts[i][5] = min(self.acts[i][5], int(tick))
+        """the act stopped from tick (a look on a naming word at the word's end; None: from the next report): shown on that tick
+        (on its way back) and 'cancelled' from the next, never from a tick already reported (that report showed it running)."""
+        a = self.acts[i]
+        s = max(x for x in (None if tick is None else int(tick), self._next(), a[1] + 1) if x is not None)
+        if s < a[5]:
+            a[6], a[5] = s, s + 1
 
     def glance(self, target, tick, ticks=2):
         """L1's reflexive gaze (W2's; the world calls it until W2): her eyes and head on target from tick for `ticks` ticks (its
-        latency and hold are W2's; 2, the stub's)."""
-        self.glances.append([target, int(tick), int(tick) + max(1, int(ticks))])
+        latency and hold are W2's; 2, the stub's); a gaze for a tick already reported starts at the next report, keeping its
+        length (the conduct has read that tick: the log never loses it)."""
+        n = max(1, int(ticks))
+        start = int(tick) if self._next() is None else max(int(tick), self._next())
+        self.glances.append([target, start, start + n])
 
     def report(self, tick):
         if self._rep is not None and self._rep[0] == tick:
@@ -295,15 +348,23 @@ class StubMotion:
         self.live = [i for i in self.live if acts[i] not in ENDED]
         self.glances = [g for g in self.glances if g[2] > tick]
         self._rep = (tick, dict(f, acts=acts))
+        self.reported = tick if self.reported is None else max(self.reported, int(tick))
         return dict(f, acts=dict(acts))
 
     def state(self):
-        return dict(acts=[list(a) for a in self.acts], live=list(self.live), glances=[list(g) for g in self.glances])
+        return dict(acts=[list(a) for a in self.acts], live=list(self.live), glances=[list(g) for g in self.glances],
+                    reported=self.reported)
 
     def load_state(self, s):
         self.acts = [list(a) + [None] * (8 - len(a)) for a in s["acts"]]
+        for a in self.acts:                   # a save before P3's seventh round: a[6] a flag, a[5] the tick it was stopped
+            if a[6] is True:
+                a[6] = a[5] - 1
+            elif a[6] is False:
+                a[6] = None
         self.live = list(s.get("live", ()))
         self.glances = [list(g) for g in s.get("glances", ())]
+        self.reported = s.get("reported")
         self._rep = None
 
 
@@ -743,8 +804,14 @@ class Conduct:
         self.reply_due = None                 # the reply owed to the child's turn: dict(tick, kind, word, obj)
         self.no_target_since = 0              # the tick since which it has attended nothing, as she reads it (the redirect)
         self.attn = []                        # her attention log (A51): dict(t, eyes, head, left, right, acts) a tick, each field
-                                              # by its word, acts her acts not yet reported ended; the last ATTN_KEEP ticks
-        self.acts_open = []                   # her acts not yet reported ended: [motion id, kind, target, thing, tick, status]
+                                              # by what a look that follows it would be read as (_word), acts [id, kind, target,
+                                              # status, at] her acts not yet reported ended (those she asks for on the tick
+                                              # among them) and those in her motion's report she did not ask for; the last
+                                              # ATTN_KEEP ticks
+        self.acts_open = []                   # her acts not yet reported ended: [motion id, kind, target, thing, tick, status,
+                                              # at (the words it directs her body at)]; OUTSIDE's kind for one she did not ask for
+        self.born = None                      # the first tick she lived (a tick of hers since then with no log is a cue at every
+                                              # thing: fail-closed; none before it)
         self.focus_acts = []                  # her line's acts on its naming word (during='focus', 4.3): [the word's first
                                               # tick, its last, kind, target, thing, motion id once requested]
         self.things = {}                      # object id -> its word, for every thing she has seen (a twin's id is its word's)
@@ -778,14 +845,25 @@ class Conduct:
 
     # ------------------------------------------------------------------ her attention log (A51)
     def _word(self, target, p=None):
-        """a field's target by its word: None (at rest), "child" (the child or a part of it), "mama" (her own face), a thing's
-        word (an id in the tick's percept or one she has seen: a twin's id is its word's), a nameable word itself (a place, a
-        toy's word), else UNNAMED, which stands for every thing (fail-closed: an id she cannot name could be any X)."""
+        """a field's target by what a look that follows it would be read as attending (A40, A51): her Reader reads a look as the
+        nameable thing nearest its line (4.10), so a place or a part of the child is no thing of its own:
+          None (at rest) -> None;
+          the child itself ("child", "child_eyes", "child_periphery": her eyes or face on its face, her hand held open or waved
+            toward it, touching nothing) -> "child": a look that follows it comes back to her, the mutual gaze every ask is made
+            in, so it cues no thing;
+          her own face ("mama") -> "mama";
+          a thing she can name (an id in the tick's percept, or one she has seen: a twin's id is its word's; a toy's word) -> its
+            word;
+          anything else -> UNNAMED, which stands for every thing (fail-closed): a place (the shelf, the door, the floor, the
+            window), the part of the child a hand touches or guides or her eyes rest on (its hand, its arm, its foot, its trunk),
+            an id or a word she cannot name. A look that follows it is read as whatever thing is nearest its line (the ball on the
+            shelf, the cup in the hand she touched, a toy by its foot), which the log cannot know (P3's seventh round: a point
+            and a look at the shelf where the ball rested had held back no "where is the ball?")."""
         if target is None:
             return None
         if not isinstance(target, str):
             return UNNAMED
-        if target in AT_CHILD or target in TP.CHILD_BODY:
+        if target in AT_CHILD:
             return "child"
         if target == PARENT_NAME:
             return PARENT_NAME
@@ -794,15 +872,28 @@ class Conduct:
             return o.name
         if target in self.things:
             return self.things[target]
-        if target in TP.NAMEABLE:
+        if target in TP.OBJECT_NOUNS:
             return target
         return UNNAMED
 
+    def _at(self, act):
+        """the words an act of hers directs her body at (directs(), each by _word), for her log from the tick she asks for it."""
+        out = []
+        for _f, tg in directs(act):
+            w = self._word(tg)
+            if w not in out:
+                out.append(w)
+        return out
+
     def _request(self, act, t):
         """an act asked of her motion: kept open (running, whatever it reports but done, refused or cancelled) until her motion
-        reports it ended (A51: an ask waits for every act of hers but PENDING_OK's)."""
+        reports it ended (A51: an ask waits for every act of hers but PENDING_OK's), and in her log from this tick, with what it
+        directs her body at, before her motion's first report of it (so a look asked for and cancelled at once is in it)."""
         mid = self.motion.request(act, t)
-        self.acts_open.append([mid, act.kind, act.target, act.thing, int(t), "unreported"])
+        at = self._at(act)
+        self.acts_open.append([mid, act.kind, act.target, act.thing, int(t), "unreported", at])
+        if self.attn and self.attn[-1]["t"] == t:
+            self.attn[-1]["acts"].append([mid, act.kind, act.target, "asked", list(at)])
         return mid
 
     def _focus_step(self, t, start):
@@ -826,13 +917,16 @@ class Conduct:
                            fa[0] < stop]
 
     def _attend(self, t, p):
-        """the tick's report from her motion into her attention log (A51): each field by its word, each open act's status as
-        reported (only done, refused or cancelled end it: anything else, or none, is running); a field not reported is UNNAMED;
-        a toy the percept shows in her hands is at a hand (her first at rest, else her left) if the report names it nowhere.
-        While an ask is pending a tick whose log shows her eyes or head off the child, a hand at anything but the child, or an
-        act of hers running that she may not make while it is pending, voids it (fail-closed: W2 broke its contract)."""
+        """the tick's report from her motion into her attention log (A51): each field by _word (a field not reported is
+        UNNAMED); each of her open acts' status as reported (only done, refused or cancelled end it: anything else, or none, is
+        running); an act in the report she did not ask for (P4's, W2's own) kept open, OUTSIDE, until it is reported ended; a
+        toy the percept shows in her hands at a hand (her first at rest, else her left) if the report names it nowhere.
+        While an ask is pending a tick whose log shows her eyes or head off the child, a hand at anything but the child, an act
+        running that she may not make while it is pending (or did not ask for), or ticks since the last it read, voids it
+        (fail-closed: W2 broke its contract, or the world did not tick her)."""
         rep = self.motion.report(t)
-        got = rep.get("acts") or {}
+        got = rep.get("acts") if isinstance(rep.get("acts"), dict) else {}
+        known = {a[0] for a in self.acts_open}
         keep = []
         for a in self.acts_open:
             st = got.get(a[0], "unreported")
@@ -840,6 +934,9 @@ class Conduct:
                 continue
             a[5] = st if isinstance(st, str) else "unreported"
             keep.append(a)
+        for mid, st in got.items():                          # an act she did not ask for: running until reported ended
+            if mid not in known and st not in ENDED:
+                keep.append([mid, OUTSIDE, None, None, int(t), st if isinstance(st, str) else "unreported", [UNNAMED]])
         self.acts_open = keep
         e = dict(t=int(t))
         for fld in FIELDS:
@@ -847,40 +944,71 @@ class Conduct:
         for s_ in p.seen:                                   # a toy she sees in her own hands: a hand is at it, whatever the
             if s_.on == PARENT_NAME and s_.name not in [e[f] for f in FIELDS]:      # report says (the stub models no hold)
                 e[next((f for f in ("left", "right") if e[f] in (None, "child")), "left")] = s_.name
-        e["acts"] = [[a[0], a[1], a[2], a[5]] for a in keep]
+        e["acts"] = [[a[0], a[1], a[2], a[5], list(a[6])] for a in keep]
+        prev = self.attn[-1]["t"] if self.attn else None
         self.attn = (self.attn + [e])[-ATTN_KEEP:]
         pd = self.pending
         if pd is not None and t > pd["tick"]:
-            why = _unstill(e)
+            why = f"ticks {prev + 1}-{t - 1} never read" if prev is not None and t - prev > 1 else _unstill(e)
             if why is not None:
                 self.ledger.withdraw(t, pd["trial"], f"her attention log while it was pending: {why} (A51: fail-closed)")
                 self.pending = None
 
+    @staticmethod
+    def _hits(e, x):
+        """what in a tick of her log could cue X: a field at X or at a target that stands for every thing (UNNAMED), an act at
+        either (her acts from the tick she asks for them; one she did not ask for, at every thing) -> (who, at what) or None.
+        Her own face (X of the call) is where every movement of her body is, or beside it: a look drawn to her turning head or
+        to her hand, whatever it points at, is read as her face, the nameable thing nearest its line (A40). So for her face a
+        tick with her eyes or head off the child, a hand not at rest, or any act of hers under way but her eyes on its eyes
+        could cue it (P3's seventh round; the call's own lean-in, A3, is its ask, allowed while it is pending)."""
+        flds = [f for f in FIELDS if e[f] in (x, UNNAMED)]
+        acts = [a for a in e["acts"] if x in a[4] or UNNAMED in a[4]]
+        body = x == PARENT_NAME and bool(
+            [f for f in ("eyes", "head") if e[f] != "child"] + [f for f in ("left", "right") if e[f] is not None] +
+            [a for a in e["acts"] if a[1] == OUTSIDE or (a[1], a[2]) != ("look", "child_eyes")])
+        if body:
+            flds += [f for f in ("eyes", "head") if e[f] != "child" and f not in flds] + \
+                [f for f in ("left", "right") if e[f] is not None and f not in flds]
+            acts += [a for a in e["acts"] if a not in acts and (a[1] == OUTSIDE or (a[1], a[2]) != ("look", "child_eyes"))]
+        if not flds and not acts:
+            return None
+        who = (["her " + " and ".join(flds)] if flds else []) + \
+            ["an act she did not ask for" if a[1] == OUTSIDE else f"her {a[1]}" for a in acts]
+        at_x = any(e[f] == x for f in flds) or any(x in a[4] for a in acts)
+        return ", ".join(who), (x if at_x else "her body, by her face" if body and x == PARENT_NAME else
+                                "a place or a thing she cannot name")
+
     def _ask_block(self, x, t):
-        """why an ask about X may not open at t, or None (A51; the lead's decision in P3's sixth round): an act of hers still
-        running, queued or unreported that she may not make while an ask is pending; X (or UNNAMED) in a field of her attention
-        log on t or the CUE_CLEAR ticks before it; her eyes or head off the child or a hand at anything but it on t (for a later
-        t, as far as the log goes now)."""
+        """why an ask about X may not open at t, or None (A51; the lead's decision in P3's sixth round, the seventh's naming): an
+        act still running, queued or unreported that she may not make while an ask is pending, or any act in her motion's report
+        she did not ask for; a look on a naming word still to come; a tick of her life among t and the CUE_CLEAR before it with
+        no log (never read: a cue at every thing), or whose log could cue X (_hits: X, or a place or a thing she cannot name,
+        which stands for every thing); her eyes or head off the child or a hand at anything but it on t."""
         for a in self.acts_open:
-            if (a[1], a[2]) not in PENDING_OK:
-                return (f"her {a[1]} at {a[3] or a[2] or 'nothing'} is still under way (her motion reports it "
-                        f"{a[5]!r}; only done, refused or cancelled end an act: fail-closed)")
+            if a[1] == OUTSIDE or (a[1], a[2]) not in PENDING_OK:
+                who = f"an act she did not ask for (her motion's id {a[0]!r})" if a[1] == OUTSIDE else \
+                    f"her {a[1]} at {a[3] or a[2] or 'nothing'}"
+                return (f"{who} is still under way (her motion reports it {a[5]!r}; only done, refused or cancelled end an "
+                        f"act: fail-closed)")
         for fa in self.focus_acts:
             return f"her {fa[2]} at {fa[3]} on her line's naming word is still to come (tick {fa[0]})"
-        hits = [e for e in self.attn if t - K.CUE_CLEAR <= e["t"] <= t and any(e[f] in (x, UNNAMED) for f in FIELDS)]
-        if hits:
-            e = hits[-1]
-            flds = [f for f in FIELDS if e[f] in (x, UNNAMED)]
-            what = x if any(e[f] == x for f in flds) else "a thing she cannot name"
-            when = f"is under way (her {' and '.join(flds)} at {what} on this tick)" if e["t"] == t else \
-                f"(her {' and '.join(flds)} at {what}, tick {e['t']}) ended {t - e['t'] - 1} ticks ago"
-            return (f"her own cue at a {x} {when}: a look or a reach within {K.CUE_CLEAR} ticks of it may follow her, not "
-                    f"the word (Brooks and Meltzoff 2005's 6.5 s)")
-        now = next((e for e in self.attn if e["t"] == t), None)
-        if now is not None:
-            why = _unstill(now)
-            if why is not None:
-                return f"{why}: an ask opens only with her eyes and head on the child and her hands at rest or open to it"
+        log = {e["t"]: e for e in self.attn}
+        first = t - K.CUE_CLEAR if self.born is None else max(self.born, t - K.CUE_CLEAR)
+        for u in range(t, first - 1, -1):
+            e = log.get(u)
+            if e is None:
+                return (f"her attention log has no report of tick {u} (never read): a tick not read is a cue at every thing "
+                        f"(fail-closed)")
+            hit = self._hits(e, x)
+            if hit is not None:
+                when = f"is under way ({hit[0]} at {hit[1]} on this tick)" if u == t else \
+                    f"({hit[0]} at {hit[1]}, tick {u}) ended {t - u - 1} ticks ago"
+                return (f"her own cue at a {x} {when}: a look or a reach within {K.CUE_CLEAR} ticks of it may follow her, not "
+                        f"the word (Brooks and Meltzoff 2005's 6.5 s)")
+        why = _unstill(log[t])
+        if why is not None:
+            return f"{why}: an ask opens only with her eyes and head on the child and her hands at rest or open to it"
         return None
 
     def cue_clear(self, x, t):
@@ -946,6 +1074,8 @@ class Conduct:
         tick (StubMotion.report: W2 makes it before this runs) is read first, into her attention log (A51). -> Say."""
         f = self.fast
         f.observe(p)
+        if self.born is None:
+            self.born = int(t)
         for s_ in p.seen:                                   # the things she has seen, by id (her log names them by it)
             self.things[s_.id] = s_.name
         self._attend(t, p)                                  # her motion's report of this tick: her attention log (A51)
@@ -1349,7 +1479,7 @@ class Conduct:
         return dict(fast=self.fast.state(), routine=self.routine, pending=self.pending, reply_due=self.reply_due,
                     no_target_since=self.no_target_since, attn=[dict(e, acts=[list(a) for a in e["acts"]]) for e in self.attn],
                     acts_open=[list(a) for a in self.acts_open], focus_acts=[list(a) for a in self.focus_acts],
-                    things=dict(self.things),
+                    things=dict(self.things), born=self.born,
                     last_vocal_smile=self.last_vocal_smile, turn=self.turn,
                     sound_hist=list(self.sound_hist), nonstop_since=self.nonstop_since,
                     requests=[[i, dict(k)] for i, k in self.requests], cuts=self.cuts, world=dict(self.world),
@@ -1362,8 +1492,10 @@ class Conduct:
         self.fast.load_state(s["fast"])
         self.routine, self.pending, self.reply_due = s["routine"], s["pending"], s["reply_due"]
         self.no_target_since = s["no_target_since"]
-        self.attn = [dict(e, acts=[list(a) for a in e["acts"]]) for e in s["attn"]]
-        self.acts_open, self.things = [list(a) for a in s["acts_open"]], dict(s["things"])
+        pad = lambda a, n: list(a) + [[UNNAMED]] * (n - len(a))              # noqa: E731 (a save before P3's seventh round:
+        self.attn = [dict(e, acts=[pad(a, 5) for a in e["acts"]]) for e in s["attn"]]   # what its acts point at unknown)
+        self.acts_open, self.things = [pad(a, 7) for a in s["acts_open"]], dict(s["things"])
+        self.born = s.get("born")                           # (unknown in an older save: every tick before its log unread)
         self.focus_acts = [list(a) for a in s["focus_acts"]]
         self.last_vocal_smile, self.turn = s["last_vocal_smile"], s["turn"]
         self.sound_hist, self.nonstop_since = list(s["sound_hist"]), s["nonstop_since"]
