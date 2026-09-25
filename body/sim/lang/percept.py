@@ -22,7 +22,14 @@ The world (W2-W3) fills one each tick from her senses, never from anything a per
                   before its head's camera about the line she reads (Reader.look), never the render (the ledger's "heard"; a
                   person can tell whether a toy is before a baby's face); child_can_reach those it can get as she sees them: in
                   its hand, or where its hands can get to from where its body is (the world's reach from its posture, 3.8, as a
-                  person judges a baby's reach; never on her), so "give me the X" is asked only of a toy some act can give
+                  person judges a baby's reach; never on her), so "give me the X" is asked only of a toy some act can give;
+                  near, the ids of the things a look at it could be read as (Reader.near: every thing she sees within
+                  NEAR_DEG = 20 degrees of it as seen from the child's head, and every thing resting on or in it or it on or
+                  in; A51, P3's eighth round: a cue at the box the ball rests in, or at a toy beside the ball, is a cue at the
+                  ball), None when the world does not say (then a look at it stands for every thing: fail-closed)
+  face_near       the ids of the things a look at her face could be read as (Reader.near's entry for her face: within
+                  NEAR_DEG of it as seen from the child's head), None when unknown (fail-closed: a look at her, and the mutual
+                  gaze every ask is made in, stands for every thing)
   fixtures        the room's words she can see ("mat", "sofa", "window", and the growth queue's "table", "shelf", ...)
   events          what she saw or heard happen this tick: (kind, object id or None), kind one of EVENT_KINDS
   child_sounding  she hears the child's voice this tick (the transcriber's own reading of it)
@@ -69,6 +76,8 @@ class Seen:
     on: str = ""                  # what it rests on as she sees it: a fixture word, "hand" (the child's) or "mama" (hers)
     child_sees: bool = False      # in the child's view as she reads it (before its head's camera, A40)
     child_can_reach: bool = False  # within its reach as she sees it: in its hand, or where its hands can get to (never on her)
+    near: tuple = None            # the ids a look at it could be read as (Reader.near: within NEAR_DEG of it from the child's
+                                  # head, or resting on or in it, or it on or in them); None: unknown, at every thing (A51)
 
 
 @dataclass(frozen=True)
@@ -85,6 +94,7 @@ class Percept:
     child_sounding: bool = False
     extra: dict = field(default_factory=dict)   # instruments only; the fast layer never reads it
     child_reaches: tuple = ()     # the object ids its hands reach toward, as she sees them (A40)
+    face_near: tuple = None       # the ids a look at her face could be read as (Reader.near's "mama"); None: unknown (A51)
 
     def obj(self, oid):
         for s in self.seen:
@@ -147,8 +157,12 @@ class Reader:
     reaches(hands, things, holds=()) -> the ids its hands reach toward: hands, {hand: its position}; a thing is reached toward
       when the hand's distance to it fell on each of the last REACH_TICKS ticks, by at least REACH_CLOSE_M in all; per hand the
       one it closed on most; never one it holds.
-    The world calls both once a tick, in that order, and fills the Percept from them; the conduct keeps the Reader and saves
-    it."""
+    near(head_pos, things, on=()) -> {id: the ids a look at it could be read as}: every other thing within NEAR_DEG of it as seen
+      from the child's head (the angle between their lines from head_pos, her face as "mama" among them), and those resting on
+      or in it or it on or in (on: [(id, the id it rests on or in)]); the world fills each Seen's near and the Percept's
+      face_near from it once a tick (A51). It draws nothing from her stream.
+    The world calls look and reaches once a tick, in that order, and near, and fills the Percept from them; the conduct keeps the
+    Reader and saves it."""
 
     def __init__(self, seed=1):
         self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(K.READ_STREAM,))))
@@ -186,6 +200,31 @@ class Reader:
                 if best is None or off < best[0]:
                     best = (off, tid)
         return (None if best is None else best[1]), before
+
+    @staticmethod
+    def near(head_pos, things, on=()):
+        h = np.asarray(head_pos, np.float64)
+        dirs = {}
+        for tid, pos in things:
+            v = np.asarray(pos, np.float64) - h
+            n = float(np.linalg.norm(v))
+            dirs[tid] = v / n if n > 0 else None
+        out = {tid: set() for tid in dirs}
+        ids = sorted(dirs)
+        for i, a in enumerate(ids):
+            for b in ids[i + 1:]:
+                if dirs[a] is None or dirs[b] is None:          # at its head: no line to read (near every thing)
+                    close = True
+                else:
+                    close = math.degrees(math.acos(max(-1.0, min(1.0, float(np.dot(dirs[a], dirs[b])))))) <= K.NEAR_DEG
+                if close:
+                    out[a].add(b)
+                    out[b].add(a)
+        for a, b in on:
+            if a in out and b in out and a != b:
+                out[a].add(b)
+                out[b].add(a)
+        return {k: tuple(sorted(v)) for k, v in sorted(out.items())}
 
     def reaches(self, hands, things, holds=()):
         out = []

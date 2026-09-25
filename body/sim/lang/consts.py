@@ -46,6 +46,12 @@ CUE_CLEAR = 44                        # she asks about an X (any ask: a gaze, a 
                                       # 6.5 s is the response period over which infants' looks after an adult's head turn were
                                       # scored as following it (Brooks and Meltzoff 2005, Dev Sci 8:535-543: "each 6.5-s trial
                                       # began with the onset of the adult head movement"), in whole ticks from the cue's end
+FACE_COURSE = 77                      # her face moves for at most 77 ticks after a judgment of hers or a frown (A3, and FEEL in
+                                      # parent_feel.py: a smile waits at most 40 ticks from its judgment, reaches its apex in 2,
+                                      # is held until seen for at most 20 ticks and 10 more once seen, and eases off over 5:
+                                      # 40 + 2 + 30 + 5; a frown's 10 + 5 within it). Her attention log holds her face moving for
+                                      # that long from the tick she judges (A51: her face is the call's X; P3's eighth round),
+                                      # whatever her motion reports
 ECHO_WINDOW = 10                      # anything the child says within 10 ticks of her saying it is an echo (4.8, A27)
 VOCAL_TURN_EVERY = 60                 # stage 1: a vocal turn in a pause while looking earns a smile at most once per 60 ticks (4.6)
 NONSTOP = (0.7, 40, 20)               # babble that never stops: sounding on over 70% of 40 ticks; she waits 20, then speaks (A13)
@@ -61,6 +67,14 @@ READ_ERR_DEG = 4.0                    # her error reading its head's line: yaw a
                                       # Heylen 2007 (Perception 36:971-979), observers judging which target another's head is
                                       # oriented toward, a mean angular error close to 5 degrees (C58)
 FOVEA_REACH_DEG = (38.0, 20.0)        # its target is within the fovea's reach of that line, +-38 x +-20 degrees (4.10, A40)
+NEAR_DEG = 20.0                       # a look at a thing could be read as any thing within 20 degrees of it as seen from the
+                                      # child's head (5 x READ_ERR_DEG; percept.Reader.near fills Seen.near and Percept.face_near
+                                      # from it): measured with the Reader itself, 4,000 trials each, a head resting exactly on
+                                      # one thing is read as another for a met gaze ask (held 3 readings, then 2 ticks) within
+                                      # 40 ticks at 8 degrees 12%, 12 degrees 0.8%, 16 degrees 0.08%, and at 18 and 20 degrees
+                                      # in none (A51; P3's eighth round: the ball in the box, and a toy a few degrees off the one
+                                      # she cued, held back no ask). A child's own following error widens it (a follow off by a
+                                      # further 4 degrees sd is read 20 degrees over in 3.9%): the child's, not her cue's (11)
 CAMERA_FIELD_DEG = (88.3, 58.0)       # "in the child's view" as she reads it: before its head camera's field (the D435's grey
                                       # imagers, A38), about the line she reads
 REACH_TICKS = 3                       # reaching toward: the hand's path over the last 3 ticks closing on the object (4.10)

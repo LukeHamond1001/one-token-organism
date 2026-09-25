@@ -239,6 +239,14 @@ class Ledger:
         return any(k == "gave" and o is not None and p.obj(o) is not None and p.obj(o).name == tr["word"]
                    for k, o in p.events) or any(k in ACT_WORDS.get(tr["word"], ()) for k, _o in p.events)
 
+    @staticmethod
+    def _gave_other(tr, p):
+        """the child gave her a toy other than the one an act trial asks for ("give me the ball", the cup given): its answer,
+        missed (4.8; P3's eighth round: the toy is then in her hand, which would void the ask by her attention log, so a wrong
+        give went uncounted while a right one was met; asks and base trials alike)."""
+        return tr["word"] in TP.OBJECT_NOUNS and any(k == "gave" and o is not None and p.obj(o) is not None and
+                                                     p.obj(o).name != tr["word"] for k, o in p.events)
+
     def observe(self, t, p):
         """one tick of the open trials against what she sees -> [(word, kind, trial id, "met" | "missed" | "void")] for her
         asks resolved this tick (base trials resolve silently)."""
@@ -282,7 +290,7 @@ class Ledger:
                     tr["run"] = tr["run"] + 1 if p.child_target == "mama" else 0
                     ok = tr["run"] >= K.HOLD or None
                 elif tr["kind"] == "act":
-                    ok = self._act_done(tr, p) or None
+                    ok = self._act_done(tr, p) or (False if self._gave_other(tr, p) else None)
             if ok is None and t >= tr["until"]:
                 ok = False
             if ok is None:

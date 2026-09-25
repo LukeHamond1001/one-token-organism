@@ -141,7 +141,9 @@ ROOM_AT_BIRTH = dict(
 # -------------------------------------------------------------------------------------------------------- the frames
 F = lambda text, focus=None: (text, focus)   # noqa: E731
 FRAMES = {
-    "call": [F("{n}.", "{n}"), F("{n}. look at mama.", "mama"), F("{n}. look here.")],
+    "call": [F("{n}.", "{n}"), F("{n}. look at mama.", "mama"), F("{n}. look here.")],   # the judged call is said by a frame
+                                                        # ending on the name (conduct: her voice after it would be at her face,
+                                                        # the call's X, while it is judged; A51, P3's eighth round)
     "hall_call": [F("{n}.", "{n}"), F("{n}? mama is here.")],
     "greet": [F("hi {n}.", "{n}"), F("hi. hi {n}.", "{n}"), F("hi {n}. mama is here.")],
     "return": [F("hi {n}! mama is here."), F("hi {n}. hi.", "hi")],
