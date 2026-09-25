@@ -38,12 +38,14 @@ TARGET_TICKS = 3                      # the child's target as she reads it (4.10
                                       # held 3 ticks running (percept.Reader.look: her reading moves to a thing, or to nothing,
                                       # only once read() has given it 3 ticks running; every rule reads this held reading); or
                                       # what its hand holds or reaches toward
-CUE_CLEAR = 44                        # she asks about an X (a gaze or act ask) only 44 ticks (6.6 s) or more after her last cue
-                                      # at an X ended (a look, point, show, hand-over or offer at it, hers or L1's): a look within
-                                      # that time may follow her cue, not the word (A51; her method, ours). 6.5 s is the response
-                                      # period over which infants' looks after an adult's head turn were scored as following
-                                      # it (Brooks and Meltzoff 2005, Dev Sci 8:535-543: "each 6.5-s trial began with the onset
-                                      # of the adult head movement"), in whole ticks from the cue's end
+CUE_CLEAR = 44                        # she asks about an X (any ask: a gaze, a give, the call about her face, a name) only when
+                                      # her attention log (her motion's report of where her eyes, head and hands are directed,
+                                      # L1's gaze with it) shows no X on the ask's tick or the 44 ticks (6.6 s) before it: her
+                                      # last cue at an X ended 44 ticks or more ago, and a look within that time may follow her
+                                      # cue, not the word (A51; her method, ours; P3's sixth round, one log for every route).
+                                      # 6.5 s is the response period over which infants' looks after an adult's head turn were
+                                      # scored as following it (Brooks and Meltzoff 2005, Dev Sci 8:535-543: "each 6.5-s trial
+                                      # began with the onset of the adult head movement"), in whole ticks from the cue's end
 ECHO_WINDOW = 10                      # anything the child says within 10 ticks of her saying it is an echo (4.8, A27)
 VOCAL_TURN_EVERY = 60                 # stage 1: a vocal turn in a pause while looking earns a smile at most once per 60 ticks (4.6)
 NONSTOP = (0.7, 40, 20)               # babble that never stops: sounding on over 70% of 40 ticks; she waits 20, then speaks (A13)
@@ -198,5 +200,8 @@ WORTH_APPROX = 1                      # stage 2: an approximation of a word, unt
                                       # its hand or reached toward, A40; her face for "mama"; or the answer to her name ask):
                                       # never looser than the exact word
 WORTH_VOCAL_TURN = 1                  # stage 1: a vocal turn in a pause while looking, at most once per 60 ticks
+WORTH_SCAFFOLD_GIVE = 1               # a give after the give ask's scaffolding (her point or touch, once the judged trial's window
+                                      # has closed unmet), for its release; counted toward nothing in the ledger (4.10; P4 builds
+                                      # the ladders)
 
 assert all(w in BIRTH_WORDS for ws in EXPECT_ROUTINES.values() for w in ws)

@@ -124,6 +124,8 @@ NEEDS.update({                       # her face shows these only as her feelings
     "sad": ("never", "her face shows concern only at the child's pain or distress (4.3): she cannot show 'sad' at will"),
 })
 NEEDS.update({w: ("moment",) for w, c in GROWTH if c == "social" and w not in NEEDS})   # no referent or act: a moment (P4's)
+TOY_ACTS = ("show", "pick_up")       # her acts that handle a toy: a verb shown by one ("shake", "hold", "get") is shown on a toy
+                                     # she sees, named to her motion (the 'do' act's thing), so her attention log names it (A51)
 assert all(w in NEEDS for w, c in GROWTH if c != "frame"), [w for w, c in GROWTH if c != "frame" and w not in NEEDS]
 
 # the living room of 5.1-5.2 at birth, as the world's inventory for showable() (A15): its toys and their colours (the colour
@@ -705,7 +707,9 @@ def show_now(word, percept, recent_events=()):
     """can she show a growth word now (A15: "the parent can show it within the minute"), from what she perceives and saw in the
     last RECENT ticks? -> (what its set is said of: [Seen], or [None] for a word with no object; "") or ([], why not). A toy, a
     colour and a quality of a toy ("soft": the bear) are shown on an object she sees (she can fetch it); a fixture she must see;
-    the child's body, the child in her view; her face and her own acts, the child able to see her; an event, one she saw."""
+    the child's body, the child in her view; her face and her own acts, the child able to see her, and a verb shown by an act
+    that handles a toy (TOY_ACTS) on a toy in the child's view and not in its hand, so the act names its toy (A51); an event,
+    one she saw."""
     need = NEEDS.get(word, ("never", "no need listed"))
     kind = need[0]
     if kind == "obj":
@@ -718,6 +722,11 @@ def show_now(word, percept, recent_events=()):
         return ([None], "") if need[1] in percept.fixtures else ([], f"she does not see the {need[1]}")
     if kind == "child":
         return ([None], "") if percept.child_in_view else ([], "the child is out of her view")
+    if kind == "act" and need[1] in TOY_ACTS:           # shown on a toy in the child's view, never one in its hand
+        if not (percept.present and percept.seen_by_child):
+            return [], "the child cannot see her"
+        c = sorted((x for x in percept.seen if x.name in OBJECT_NOUNS and x.on != "hand" and x.child_sees), key=lambda x: x.id)
+        return (c, "") if c else ([], f"no toy in the child's view she can {need[1].replace('_', ' ')} to show it")
     if kind in ("face", "act"):
         return ([None], "") if percept.present and percept.seen_by_child else ([], "the child cannot see her")
     if kind == "event":

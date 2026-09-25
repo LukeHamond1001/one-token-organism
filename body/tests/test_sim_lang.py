@@ -30,7 +30,14 @@ at its X, met by a child that only follows her cues (39, A51); asks about a toy 
 her reading of its head's line held 3 ticks only for follow-in naming (41, 4.10, A40); the low items (42).
 Tests 43-45 are the P3 verifier's fifth findings (c816b5a), each failing there at its own first assertion: her cue's end taken
 as her line's end, not her act's, so a child that only follows an offer outlasting its line met the ask (43, A51, the verifier's
-probe both ways); cued() dropping a cue at a twin's id silently (44); the low items (45)."""
+probe both ways); cued() dropping a cue at a twin's id silently (44); the low items (45).
+Tests 46-50 are the P3 verifier's sixth findings (6449921) under the lead's decision (stop patching routes, close the class: one
+attention log, fail-closed, A51), each failing there at its own first assertion: L1's gaze while under way (46), a verb's
+demonstration with a toy it never named (47), a queued act failing open (48), a copy starting as an ask opened (49), and the
+property over random lives with a W2-like motion (50: no ask about X opens with X in her log within 44 ticks, none sees X enter
+it, her body still while one is pending; the same lives with the ask's gate switched off break each). Tests 21, 26, 39, 43 and
+44 were moved to the log (the name ask shows nothing, a cue's end is the log's, a target she cannot name stands for every
+thing)."""
 import json
 import math
 import os
@@ -580,16 +587,25 @@ def test_new_words_in_a_day():
 
 
 def test_acts_carry_the_object():
-    """finding 5: the motion interface dropped the object of a line with no object slot ("what is this?", "a rattle.")."""
+    """finding 5: the motion interface dropped the object of a line with no object slot ("what is this?", "a rattle."). (Since
+    P3's sixth round a name ask shows nothing, A51's attention log: "what is this?" is asked of what the child attends.)"""
     toys = TOYS + seen(("rattle", "rattle", "purple", "mat", True))
+    held = tuple(s_ for s_ in toys if s_.id != "cup") + seen(("cup", "cup", "green", "hand", True))
     con = C.Conduct(seed=6)
+    _no_sets(con)
     con.request("ask_what", o="cup")
     s = None
     for t in range(3):
-        s = con.tick(t, P(t, seen=toys))
+        s = con.tick(t, P(t, seen=held, child_holds=("cup",)))
         if s.line is not None:
             break
-    assert s.line.intent == "ask_what" and C.Act("show", "cup") in s.acts, (s.line, s.acts)
+    assert s.line.intent == "ask_what" and s.line.refs == ("cup",) and s.acts == (C.Act("look", "child_eyes"),), \
+        (s.line, s.acts)
+    con1 = C.Conduct(seed=6)
+    _no_sets(con1)
+    con1.request("ask_what", o="cup")
+    assert all(con1.tick(t, P(t, seen=toys)).line is None for t in range(3))          # a cup it does not attend: not asked
+    assert any(r[1] == "ask_what" and "what the child attends" in r[2] for r in con1.fast.refused), con1.fast.refused[-1:]
     con2 = C.Conduct(seed=6)
     con2.request("new_word", word="rattle", o="rattle")
     got = []
@@ -604,9 +620,10 @@ def test_acts_carry_the_object():
     assert not [a for a in C.acts_for("ask_where", ("ball",)) if a.kind in ("show", "point")]
     kinds = {a.kind for m in (con.motion, con2.motion) for a in [C.Act(x[2], x[3], x[4]) for x in m.acts]}
     assert "show" in kinds, kinds
-    print("21 the motion interface is asked to show: 'what is this?' shows the cup it asks about; each of a new toy's 3 "
-          "lines shows the toy (A15); a new fixture is pointed at, a verb done, a colour shown on its toy; an ask for a gaze "
-          "never shows or points at its answer")
+    print("21 the motion interface is asked to show: 'what is this?' is asked of the cup the child holds, her eyes on it and "
+          "nothing shown (A51's log; not asked of a cup it does not attend); each of a new toy's 3 lines shows the toy (A15); a "
+          "new fixture is pointed at, a verb done, a colour shown on its toy; an ask for a gaze never shows or points at its "
+          "answer")
 
 
 def test_line_check_truth():
@@ -1268,14 +1285,19 @@ def test_claude_never_asks():
 def test_name_ask_answered_after_its_question():
     """finding 2: "what is it?" about the cup ends at tick 8; the child's "cup" token made at tick 1, held until her line ended
     and read at tick 9, was scored a met ask (worth 2): the answer was timed by when she read it, not when it was made."""
+    held = tuple(s_ for s_ in TOYS if s_.id != "cup") + seen(("cup", "cup", "green", "hand", True))
+
     def go(*tok_at):
+        """(since P3's sixth round a name ask is of what the child attends, A51: here the cup in its hand, so its word there is a
+        right name whatever the ask; the ask is what the timing decides)"""
         con = C.Conduct(seed=6, transcriber=Transcriber(None))
         for x in ("duck", "ball", "cup", "block", "block_red"):
-            con.fast.last_set[x] = con.fast.last_named[x] = -1000
+            con.fast.last_set[x], con.fast.last_named[x] = 0, -1000
         con.request("ask_what", o="cup")
         judg, heard, pend = [], [], None
         for t in range(40):
-            s = con.tick(t, P(t, child_target=None), token=LX.WORD_ID["cup"] if t in tok_at else None)
+            s = con.tick(t, P(t, child_target=None, child_holds=("cup",), seen=held),
+                         token=LX.WORD_ID["cup"] if t in tok_at else None)
             if pend is None and con.pending is not None:
                 pend = dict(con.pending)
             judg += s.judgments
@@ -1286,9 +1308,10 @@ def test_name_ask_answered_after_its_question():
     assert pend is not None and pend["kind"] == "name" and pend["open"] > 1, pend
     assert cw and cw[0].start == 1 and cw[0].tick >= pend["open"], cw
     assert not [j for j in judg if j[1] == "met_ask"], f"a word made before the question was heard met it: {judg}"
-    assert judg == [] and con.pending is None and con.ledger.trials == [], (judg, con.pending)
+    assert [j[1] for j in judg] == ["right_name"] and con.pending is None and con.ledger.trials == [], (judg, con.pending)
     con, _p, judg, heard = go(1, cw[0].tick + 12)                  # said again after her echo of it: the ask was void
-    assert judg == [], f"the ask, answered before it was heard and echoed by her, was met after: {judg}"
+    assert not [j for j in judg if j[1] == "met_ask"], f"the ask, answered before it was heard and echoed by her, was met " \
+                                                        f"after: {judg}"
     con, pend2, judg, heard = go(pend["open"] + 2)
     assert [j[:2] for j in judg] == [(2, "met_ask")], judg
     con, pend3, judg, heard = go(pend["open"])
@@ -1300,10 +1323,10 @@ def test_name_ask_answered_after_its_question():
         con._owe_reply(12, ChildWord(12, "tract", "cup", True, start, 12, ("cup",)), P(12, child_target=None), out)
         assert [j[:2] for j in out.judgments] == want and con.pending is None and con.ledger.trials == [], \
             (start, out.judgments, con.pending)
-    print(f"26 'what is it?' of the cup, heard at tick {pend['open']}: the child's 'cup' made at tick 1, held through her line "
-          f"and read at tick {cw[0].tick}, is no answer (no smile; the ask void, as a gaze ask with its X already where she reads "
-          f"it looking, so its word said again after her echo meets nothing); made at tick {pend['open']} or later: met, a "
-          f"smile of 2; the tract's turn the same by the tick its sound began")
+    print(f"26 'what is it?' of the cup in its hand, heard at tick {pend['open']}: the child's 'cup' made at tick 1, held through "
+          f"her line and read at tick {cw[0].tick}, is no answer (a right name of what it holds, never a met ask; the ask void, "
+          f"as a gaze ask with its X already where she reads it looking, so its word said again after her echo meets no ask); "
+          f"made at tick {pend['open']} or later: met, a smile of 2; the tract's turn the same by the tick its sound began")
 
 
 def test_calls_out_of_sight():
@@ -2150,7 +2173,8 @@ def test_ask_after_her_cue():
     def probe(cue, lat, answer=False, n=170):
         """she cues the ball (a label set, a show, a redirect), then L3 asks "where is the ball?" every tick from the cue's end
         until it is said; the child follows each look, point or show of hers at a thing lat ticks later for 5 ticks, and looks at
-        the duck otherwise (at nothing, for the redirect); answer: it also turns to the ball 2 ticks after the ask's word."""
+        the duck otherwise (at nothing, for the redirect); answer: it also turns to the ball 2 ticks after the ask's word. (Since
+        P3's sixth round cue_end is the last tick after which her attention log showed no ball: the gap is the log's.)"""
         con = _perfect(seed=4, transcriber=Transcriber(None))
         _no_sets(con)
         con.fast.last_set.pop("ball")                                        # her cue is a set on the ball
@@ -2158,7 +2182,7 @@ def test_ask_after_her_cue():
         con.fast.follow_in = 4                                               # the redirect's 2 to 1 (4.10)
         rest = None if cue == "redirect" else "duck"
         at = 45 if cue == "redirect" else 2                                  # a redirect after 40 ticks with no target
-        follows, judg, asked, cue_end = [], [], None, None
+        follows, judg, asked, cue_end, lastx = [], [], None, None, None
         for t in range(n):
             if t == at:
                 con.request(cue, o="ball")
@@ -2171,13 +2195,16 @@ def test_ask_after_her_cue():
             judg += s.judgments
             if s.line is not None and s.line.intent == "ask_where":
                 asked = t
+            if asked is None and "ball" in [con.attn[-1][f] for f in C.FIELDS]:
+                lastx = t                                                    # her log shows a ball (her eyes, head, hand)
             for a in s.acts:
                 if a.kind in ("look", "point", "show") and a.target not in ("child_eyes", "child", None):
                     follows.append((t + lat, a.target))
             if cue_end is None and s.line is not None and s.line.intent == cue and not con.fast.queue:
                 cue_end = con.fast.busy_until                                # the cue's last line ends
+        runs_x.append(lastx)
         return con, judg, asked, cue_end
-    met, runs = [], []
+    met, runs, runs_x = [], [], []
     for cue in ("label", "show", "redirect"):
         for lat in range(17, 26):
             con, judg, asked, cue_end = probe(cue, lat)
@@ -2185,39 +2212,42 @@ def test_ask_after_her_cue():
             if [j for j in judg if j[1] == "met_ask"] or 1 in con.ledger.standing("ball")["asks"]:
                 met.append((cue, lat, asked - cue_end if asked is not None else None))
     assert not met, f"a child that only follows her cues met the ask: {met}"
-    assert all(a is not None and a >= e + K.CUE_CLEAR for _c, _l, a, e, _s in runs), runs          # asked, after the gap
+    assert all(a is not None and x is not None and a >= x + 1 + K.CUE_CLEAR and a >= e
+               for (_c, _l, a, e, _s), x in zip(runs, runs_x)), list(zip(runs, runs_x))     # asked after the log's gap
     con, judg, asked, cue_end = probe("label", 20)
     assert any(r[1] == "ask_where" and "her own cue at a ball" in r[2] for r in con.fast.refused), con.fast.refused[-2:]
     # both ways: after the gap, a child that turns to the ball once the word is heard meets it (a smile of 2, counted)
     con, judg, asked, cue_end = probe("label", 20, answer=True)
     assert [j[1] for j in judg if j[1] == "met_ask"] == ["met_ask"] and con.ledger.standing("ball")["asks"] == [1], judg
-    # L1's own gaze at a thing (W2 reports it: cued()) holds an ask about it back likewise; an ask about another toy is not
+    # L1's own gaze at a thing (in her attention log as it happens: W2's report, the stub's glance) holds an ask about it back
+    # likewise; an ask about another toy is not
     con = _perfect(seed=4, transcriber=Transcriber(None))
     _no_sets(con)
-    p0 = P(0, child_target="duck", seen=twins)
-    con.cued(0, "ball_blue", p0)
+    con.motion.glance("ball_blue", 0, 1)                                    # her eyes on the blue ball on tick 0
+    con.tick(0, P(0, child_target="duck", seen=twins))
     con.request("ask_where", o="ball")
     con.request("ask_where", o="cup")
     said = [(t, s.line.text) for t in range(1, 60) for s in [con.tick(t, P(t, child_target="duck", seen=twins))]
             if s.line is not None]
     assert said and "cup" in said[0][1] and not [x for _t, x in said if "ball" in x], said
-    assert any("her own cue at a ball ended 1 ticks ago" in r[2] for r in con.fast.refused), con.fast.refused[-3:]
+    assert any("her own cue at a ball (her eyes and head at ball, tick 0) ended 0 ticks ago" in r[2]
+               for r in con.fast.refused), con.fast.refused[-3:]
     con = _perfect(seed=4, transcriber=Transcriber(None))
     _no_sets(con)
-    con.cued(0, "ball_blue", p0)
-    for t in range(1, 60):
-        if t in (K.CUE_CLEAR - 1, K.CUE_CLEAR):
+    con.motion.glance("ball_blue", 0, 1)
+    for t in range(0, 60):
+        if t in (K.CUE_CLEAR, K.CUE_CLEAR + 1):
             con.request("ask_where", o="ball")
         s = con.tick(t, P(t, child_target="duck", seen=twins))
         if s.line is not None:
             break
-    assert s.line is not None and s.line.intent == "ask_where" and t == K.CUE_CLEAR, (t, s.line)
+    assert s.line is not None and s.line.intent == "ask_where" and t == K.CUE_CLEAR + 1, (t, s.line)
     print(f"39 no ask right after her cue (A51): a child that only follows her looks, points and shows ({len(runs)} runs: a "
           f"label set, a show and a redirect of the ball, following 17-25 ticks later for 5 ticks) never meets 'where is the "
           f"ball?', which she says only {K.CUE_CLEAR} ticks (6.6 s; Brooks and Meltzoff 2005's 6.5-s response period) after "
-          f"her cue at a ball ended (the request dropped before, logged); after the gap a child that turns to the ball once "
-          f"the word is heard meets it; L1's gaze at the blue ball (cued()) holds back an ask about a ball for "
-          f"{K.CUE_CLEAR} ticks, not one about the cup")
+          f"her attention log last showed a ball (the request dropped before, logged); after the gap a child that turns to "
+          f"the ball once the word is heard meets it; L1's gaze at the blue ball on tick 0 (in her log) holds back an ask about "
+          f"a ball to tick {K.CUE_CLEAR + 1}, not one about the cup")
 
 
 def test_asks_she_can_judge():
@@ -2397,6 +2427,10 @@ def test_low_items_fourth():
 
 
 # ------------------------------------------------------------- the P3 verifier's fifth findings (c816b5a), each tested both ways
+CUE_KINDS = ("look", "point", "show", "hand_over", "offer_bottle", "open_hand")   # her acts that may be at a thing
+NOT_A_THING = (None, "child", "child_eyes", "child_periphery")
+
+
 class _SlowMotion(C.StubMotion):
     """a motion whose acts at a thing run `extra` ticks beyond the stub's nominal times (W2's act times are unknown: a show held
     while she shakes it, an offer held out until the bottle is taken)."""
@@ -2407,7 +2441,7 @@ class _SlowMotion(C.StubMotion):
 
     def request(self, act, tick):
         i = super().request(act, tick)
-        if act.kind in C.CUE_KINDS and act.target not in C.NOT_A_THING:
+        if act.kind in CUE_KINDS and act.target not in NOT_A_THING:
             self.acts[i][5] += self.extra
         return i
 
@@ -2449,7 +2483,7 @@ def _cue_probe(cue, x, extra=0, lat=None, answer=False, block=(), n=220, seed=0,
             con.request(cue, o=x)
         if line_end is not None and asked is None and t >= line_end:
             con.request("ask_where", o=x)
-        ends = [a[5] for a in con.motion.acts if a[2] in C.CUE_KINDS and a[3] == x]
+        ends = [a[5] for a in con.motion.acts if a[2] in CUE_KINDS and a[3] == x]
         tg = next((x for e in ends if lat is not None and e + lat <= t < e + lat + 5), rest)
         if answer and con.pending is not None and t >= con.pending["open"] + 2:
             tg = x
@@ -2462,7 +2496,7 @@ def _cue_probe(cue, x, extra=0, lat=None, answer=False, block=(), n=220, seed=0,
                 asked = t
             if line_end is None and s.line.intent == cue and not con.fast.queue:
                 line_end = con.fast.busy_until                                  # the cue's last line ends
-    act_end = max([a[5] for a in con.motion.acts if a[2] in C.CUE_KINDS and a[3] == x and (asked is None or a[1] < asked)] +
+    act_end = max([a[5] for a in con.motion.acts if a[2] in CUE_KINDS and a[3] == x and (asked is None or a[1] < asked)] +
                   [line_end or 0])
     return con, judg, asked, act_end, said
 
@@ -2508,6 +2542,8 @@ def test_cue_ends_with_her_act():
     # the tick 44 after the motion reports it ended; a cancelled act ends its cue on the tick it is cancelled
     con = _perfect(seed=4, transcriber=Transcriber(None), motion=_SlowMotion(60))
     _no_sets(con)
+    for y in ("duck", "cup", "block", "block_red", "bottle"):
+        con.fast.last_set[y] = 10 ** 6                                      # no follow-in set in the way (its acts would run)
     con.fast.last_set.pop("ball")
     con.fast.last_named.pop("ball")
     con.request("show", o="ball", n=2)
@@ -2528,8 +2564,9 @@ def test_cue_ends_with_her_act():
         con.tick(t, P(t, child_target="duck", seen=BOTTLE_ROOM))
         if t == 20:                                                          # after its line ended (at most 12 ticks)
             con.motion.cancel(0)
-    assert con.cue_until.get("ball") == 21 and not con.cue_clear("ball", 20 + K.CUE_CLEAR) and \
-        con.cue_clear("ball", 21 + K.CUE_CLEAR), con.cue_until
+    lastx = max(e["t"] for e in con.attn if "ball" in [e[f] for f in C.FIELDS])
+    assert lastx == 20 and not con.cue_clear("ball", 20 + K.CUE_CLEAR) and con.cue_clear("ball", 21 + K.CUE_CLEAR), \
+        (lastx, con.attn[-4:])
     # her cue acts under way are saved: a snapshot taken while the offer runs restores to the same lines and the same ask
     _c, _j, asked0, _e, said0 = _cue_probe("feed", "bottle", extra=30, answer=True)
     _c, _j, asked1, _e, said1 = _cue_probe("feed", "bottle", extra=30, answer=True, snap_at=20)
@@ -2544,53 +2581,63 @@ def test_cue_ends_with_her_act():
 
 
 def test_cued_refuses_what_she_cannot_name():
-    """finding 2: Conduct.cued(t, target, p=None) silently dropped a cue: an object id with no percept, or one she no longer saw,
-    was taken as a word, and a twin's id ("ball_blue") is no word, so nothing was recorded and "look at the ball." was said on
-    the next tick. The colour twins are A55's targets. Now an id she has seen is named by its word (the percept of the tick or
-    her memory of the things she has seen), a nameable word stands for itself, and anything else is refused (ValueError)."""
+    """finding 2: Conduct.cued(t, target, p=None) silently dropped a cue at an id with no percept, or one she no longer saw (a
+    twin's id, "ball_blue", is no word), and "look at the ball." was said on the next tick; the fifth round made it raise. Since
+    P3's sixth round L1's gaze and every act of hers are in her attention log (A51), each field by its word: an id she has seen
+    is named by its word (the tick's percept, or her memory of the things she has seen), a nameable word stands for itself, and
+    a target she cannot name is UNNAMED, which stands for every thing: no ask of any kind opens on its tick or within 44 ticks
+    after it (fail-closed, where raising would stop the life)."""
     twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True))
-    con = _perfect(seed=4, transcriber=Transcriber(None))
-    _no_sets(con)
-    raised = None
-    try:
-        con.cued(0, "ball_blue")                                          # never seen, and no percept: refused
-    except ValueError as e:
-        raised = str(e)
-    assert raised is not None and "ball_blue" in raised, f"a cue at an id she cannot name was dropped silently: {con.cue_until}"
-    for bad in ("zebra", "ball_red_3", ""):
-        try:
-            con.cued(0, bad, P(0, seen=twins))
-            assert False, f"a cue at {bad!r} was accepted: {con.cue_until}"
-        except ValueError:
-            pass
-    assert con.cue_until == {}, con.cue_until
-    # the verifier's probe: she has seen the blue ball; W2 reports L1's look at it by its id with no percept (or one in which
-    # she no longer sees it): the cue is at a ball, and "look at the ball." waits 44 ticks, while an ask about the cup does not
-    for pct in (None, P(1, seen=TOYS)):
+
+    def after(target, first, then=TOYS, n=70):
+        """she sees `first` on tick 0, `then` after; L1's gaze on `target` on tick 1 (W2's report); L3 asks where the ball and
+        where the cup are every tick until each is said -> (the conduct, her log's eyes on tick 1, {toy: the tick its ask was
+        said})."""
         con = _perfect(seed=4, transcriber=Transcriber(None))
         _no_sets(con)
-        con.tick(0, P(0, child_target="duck", seen=twins))
-        con.cued(0, "ball_blue", pct)
-        assert con.cue_until == {"ball": 0}, con.cue_until
-        said = []
-        for t in range(1, 80):
-            if t < 70:
-                con.request("ask_where", o="ball")
-            s = con.tick(t, P(t, child_target="duck", seen=twins))
-            if s.line is not None:
-                said.append((t, s.line.text))
-                if s.line.intent == "ask_where":
-                    break
-        assert said and said[0][0] == K.CUE_CLEAR and "ball" in said[0][1], said
-    # a nameable word stands for itself (a fixture, her face, a toy's word): recorded, no error
-    con = _perfect(seed=4, transcriber=Transcriber(None))
-    for w in ("window", "ball", "bottle"):
-        con.cued(3, w)
-    assert con.cue_until == {"window": 3, "ball": 3, "bottle": 3}, con.cue_until
-    print("44 cued() refuses what she cannot name: an object id she has never seen, with no percept, and words that are no "
-          "word ('zebra') raise, recording nothing (the fourth round dropped them silently); the blue ball's id, reported with "
-          "no percept or one where she no longer sees it, is a cue at a ball once she has seen it, and 'look at the ball.' "
-          f"waits {K.CUE_CLEAR} ticks (the fourth round said it on the next tick); a nameable word stands for itself")
+        con.tick(0, P(0, child_target="duck", seen=first))
+        con.motion.glance(target, 1, 1)
+        said, eyes = {}, None
+        for t in range(1, n):
+            for o in ("ball", "cup"):
+                if o not in said:
+                    con.request("ask_where", o=o)
+            s = con.tick(t, P(t, child_target="duck", seen=then))
+            eyes = con.attn[-1]["eyes"] if t == 1 else eyes
+            if s.line is not None and s.line.intent == "ask_where":
+                said[s.line.refs[0]] = t
+        return con, eyes, said
+
+    for bad in ("zebra", "ball_red_3", "", 7):                                # never seen, and no word: UNNAMED
+        con, eyes, said = after(bad, TOYS)
+        assert eyes == C.UNNAMED, (bad, eyes)
+        assert said.get("ball", 99) >= 1 + 1 + K.CUE_CLEAR and said.get("cup", 99) >= 1 + 1 + K.CUE_CLEAR, (bad, said)
+        assert any("a thing she cannot name" in r[2] for r in con.fast.refused), (bad, con.fast.refused[-1:])
+    con, _e, said = after("zebra", TOYS, n=80)
+    assert sorted(said.values())[0] == 1 + 1 + K.CUE_CLEAR, said                # and at once after the gap
+    # the verifier's probe: she has seen the blue ball; L1's gaze at it is reported by its id where she no longer sees it (or
+    # sees it): her log names it a ball, and "where is the ball?" waits 44 ticks, while an ask about the cup does not
+    for then in (TOYS, twins):
+        con, eyes, said = after("ball_blue", twins, then)
+        assert eyes == "ball" and said["ball"] == 1 + 1 + K.CUE_CLEAR and said["cup"] == 2, (eyes, said)   # (tick 1: her
+                                                                                  # eyes not on the child, so no ask then)
+    # a nameable word stands for itself (a place): it holds back no ask about a toy
+    con, eyes, said = after("window", TOYS)
+    assert eyes == "window" and 2 in said.values(), (eyes, said)
+    lg = _log_word_probe()
+    assert lg == {"zebra": C.UNNAMED, "ball_blue": "ball", "window": "window", "child_eyes": "child", "foot": "child",
+                  "mama": "mama", None: None}, lg
+    print(f"44 a target she cannot name is no dropped cue: an id she has never seen in her attention log (L1's gaze on it) is "
+          f"UNNAMED and holds back every ask, the ball's and the cup's, to tick {1 + 1 + K.CUE_CLEAR} (fail-closed; the "
+          f"fourth round dropped it, the fifth raised); the blue ball's id, seen before, is a ball wherever she sees it now: "
+          f"'where is the ball?' waits {K.CUE_CLEAR} ticks and the cup's ask goes on the next; a place stands for itself")
+
+
+def _log_word_probe():
+    """her log's word for each kind of target (Conduct._word): she has seen the blue ball."""
+    con = _perfect(seed=4)
+    con.tick(0, P(0, seen=TOYS + seen(("ball_blue", "ball", "blue", "mat", True))))
+    return {x: con._word(x, P(1)) for x in ("zebra", "ball_blue", "window", "child_eyes", "foot", "mama", None)}
 
 
 def _latency_mean():
@@ -2631,6 +2678,554 @@ def test_low_items_fifth():
     print(f"45 the low items: the conduct's docstring gives her latency as {got.group(1)} ticks after the turn's end on average, "
           f"the exact mean of her draws ({exact:.3f}; it said 3.16), as consts does; tests 9, 12, 17, 18 and 26 say what she "
           f"reads (where she reads it looking, its hand), not its fovea")
+
+# ------------------------------------------ the P3 verifier's sixth findings (6449921): one attention log, fail-closed (A51)
+AT_CHILD_T = ("child", "child_eyes", "child_periphery")
+STILL_T = (("look", "child_eyes"), ("open_hand", "child"), ("lean_in", "child_periphery"), ("withdraw", "child"))
+
+
+def _rest(tg):
+    return tg is None or tg in AT_CHILD_T or tg in TP.CHILD_BODY
+
+
+class _W2:
+    """a W2-like motion, written here (the test's own, so these tests run on the conduct before P3's sixth round too, which read
+    status() and took L1's gaze through cued() as it ended). Each act runs `lengths` ticks (drawn 0-40 from its own stream; None:
+    the stub's nominal times; `fixed`: kind -> (wait, length)); some first wait their turn, reported as `wait_status` ("queued":
+    not one of the four statuses); a demonstration handles the toy its act names or, naming none, one it picks itself; L1's gaze
+    goes to a toy that falls or is taken, and to where the child looks, from its own stream, never while eyes_on_child (W2's
+    contract), and to what `glances` says ([target, from, until]). truth(t) is where her eyes, head and hands are directed on
+    tick t and which acts run: the checker's log, independent of the conduct's; report(t) gives it the conduct (StubMotion's
+    contract)."""
+    DOES = ("show", "walk", "wave", "pick_up", "open_hand")
+
+    def __init__(self, seed=0, lengths=(0, 40), queue_p=0.3, queue_max=15, l1=True, wait_status="queued", fixed=None,
+                 glances=(), omit=()):
+        self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(77,))))
+        self.lengths, self.queue_p, self.queue_max, self.l1 = lengths, queue_p, queue_max, l1
+        self.wait_status, self.fixed, self.omit = wait_status, dict(fixed or {}), tuple(omit)
+        self.acts = []                        # [id, tick, kind, target, during, thing, start, end, cancelled at]
+        self.active = []                      # ids that may still run
+        self.live = []                        # ids not yet reported ended
+        self.glances = [list(g) for g in glances]
+        self.last_target = None
+        self.p = None                         # the tick's percept (step())
+
+    def request(self, act, tick):
+        i = len(self.acts)
+        thing = getattr(act, "thing", None)
+        if act.kind == "do" and act.target in ("show", "pick_up") and thing is None:   # it names no toy: W2 takes one it sees
+            thing = next((x.id for x in sorted(self.p.seen, key=lambda x: x.id) if x.child_sees and x.on != "hand"), None)
+        if act.kind in self.fixed:
+            wait, n = self.fixed[act.kind]
+        elif self.lengths is None:
+            wait, n = 0, (60 if act.during == "focus" else C.STUB_TICKS[act.kind])
+        else:
+            wait = int(self.rng.integers(1, self.queue_max + 1)) if self.rng.random() < self.queue_p else 0
+            n = int(self.rng.integers(self.lengths[0], self.lengths[1] + 1))
+        self.acts.append([i, int(tick), act.kind, act.target, act.during, thing, int(tick) + wait, int(tick) + wait + n, None])
+        self.active.append(i)
+        self.live.append(i)
+        return i
+
+    def status(self, i, tick):
+        a = self.acts[i]
+        if a[8] is not None and tick >= a[8]:
+            return "cancelled"
+        return self.wait_status if tick < a[6] else ("running" if tick < a[7] else "done")
+
+    def cancel(self, i, tick=None):
+        a = self.acts[i]
+        a[8] = -10 ** 9 if tick is None else min(int(tick), a[8] if a[8] is not None else 10 ** 9)
+
+    def _runs(self, a, tick):
+        return a[1] < tick and a[6] <= tick < a[7] and not (a[8] is not None and tick >= a[8])
+
+    @staticmethod
+    def _directs(a):
+        k, tg, thing = a[2], a[3], a[5]
+        if k in ("look", "walk"):
+            return [("eyes", tg), ("head", tg)]
+        if k == "lean_in":
+            return [("head", "child")]
+        if k in ("show", "point", "open_hand", "hand_over", "offer_bottle"):
+            return [("hand", tg)]
+        if k in ("attend", "touch", "guide", "wave"):
+            return [("hand", "child")]
+        if k == "pull_to_sit":
+            return [("both", "child")]
+        if k in ("cover_face", "reveal_face"):
+            return [("both", "mama")]
+        if k == "withdraw":
+            return [("hand", None)]
+        if k == "copy":
+            return [((tg or ":").partition(":")[2] or "hand", None)]
+        if k == "do":
+            if tg in ("show", "pick_up"):
+                return [("hand", thing)]
+            if tg == "walk":
+                return [("eyes", "door"), ("head", "door")]
+            return [("hand", "child")]
+        return []
+
+    def truth(self, tick):
+        """-> ({eyes, head, left, right}: where each is directed on this tick, the raw target; [(kind, target)] running)."""
+        self.active = [i for i in self.active if self.acts[i][7] > tick and not (self.acts[i][8] is not None and
+                                                                                    self.acts[i][8] <= tick)]
+        f = dict(eyes="child", head="child", left=None, right=None)
+        claimed, run = set(), []
+        for i in self.active:
+            a = self.acts[i]
+            if not self._runs(a, tick):
+                continue
+            run.append((a[2], a[3]))
+            for fld, tg in self._directs(a):
+                if fld == "hand":
+                    fld = "right" if "right" not in claimed else ("left" if "left" not in claimed else "right")
+                for x in (("left", "right") if fld == "both" else (fld,)):
+                    if x not in claimed or _rest(f[x]) or not _rest(tg):
+                        f[x] = tg
+                    claimed.add(x)
+        for g in self.glances:
+            if g[1] <= tick < g[2]:
+                f["eyes"] = f["head"] = g[0]
+        word = {x.id: x.name for x in self.p.seen} if self.p is not None else {}
+        for x in (self.p.seen if self.p is not None else ()):                # a toy in her hands: a hand at it (the contract)
+            if x.on == LX.PARENT_NAME and x.name not in [word.get(v, v) for v in f.values()]:
+                f[next((k for k in ("left", "right") if _rest(f[k])), "left")] = x.id
+        return f, run
+
+    def step(self, t, p, con):
+        """L1 on tick t, before the conduct's: a gaze broken off while an ask is pending (eyes_on_child), a gaze ended reported
+        through cued() where the conduct has it (its contract before P3's sixth round: as it ends), and new gazes."""
+        self.p = p
+        if con.eyes_on_child:
+            for g in self.glances:
+                g[2] = max(g[1], min(g[2], t))
+        for g in self.glances:
+            if g[2] == t and g[2] > g[1] and hasattr(con, "cued"):
+                con.cued(t, g[0], p)
+        self.glances = [g for g in self.glances if g[2] > t]
+        if self.l1 and not con.eyes_on_child:
+            for k, o in p.events:
+                if o is not None and k in ("fell", "got", "lost_toy", "gave") and self.rng.random() < 0.9:
+                    d = int(self.rng.integers(0, 3))
+                    self.glances.append([o, t + d, t + d + int(self.rng.integers(2, 13))])
+            if p.child_target not in (None, "mama", self.last_target) and self.rng.random() < 0.5:
+                d = int(self.rng.integers(1, 3))
+                self.glances.append([p.child_target, t + d, t + d + int(self.rng.integers(2, 9))])
+        self.last_target = p.child_target
+
+    def report(self, tick):
+        f, _run = self.truth(tick)
+        acts = {i: self.status(i, tick) for i in self.live if i not in self.omit}
+        self.live = [i for i in self.live if acts.get(i) not in ("done", "refused", "cancelled")]
+        return dict(f, acts=acts)
+
+    def state(self):
+        return dict(rng=self.rng.bit_generator.state, acts=[list(a) for a in self.acts], active=list(self.active),
+                    live=list(self.live), glances=[list(g) for g in self.glances], last_target=self.last_target)
+
+    def load_state(self, s):
+        self.rng.bit_generator.state = s["rng"]
+        self.acts = [list(a) for a in s["acts"]]
+        self.active, self.live = list(s["active"]), list(s["live"])
+        self.glances, self.last_target = [list(g) for g in s["glances"]], s["last_target"]
+
+
+def _names(f, room):
+    """the truth's fields by word (the checker's own naming: a toy's id its word, the child and its parts "child")."""
+    ids = {x.id: x.name for x in room}
+    return {k: (None if v is None else "child" if _rest(v) else ids.get(v, v)) for k, v in f.items()}
+
+
+def _pending_bad(names, run, x):
+    """-> (X in her body's fields, what is not still) for a tick of a pending ask about x."""
+    hit = [k for k, v in names.items() if v == x]
+    unstill = [k for k in ("eyes", "head") if names[k] != "child"] + \
+        [k for k in ("left", "right") if names[k] not in (None, "child")] + [r for r in run if r not in STILL_T]
+    return hit, unstill
+
+
+def test_log_l1_gaze_under_way():
+    """finding 1 (blocking, A51's purpose): cued() was documented "as it ends", so while L1's gaze was on X an ask about X could
+    be made: the ball fell at tick 3 and her gaze went to it, "look at the ball." was said at tick 4, and a child that follows
+    her head turn 13-31 ticks later met it in 19 of 43 latencies. Now L1's gaze is in her attention log as it happens (W2's
+    report, before the conduct's tick), and no ask about X opens while X is in it or within 44 ticks after; and a W2 that turns
+    her eyes to X while the ask is pending voids it (fail-closed)."""
+    twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True))
+
+    def probe(lat, hold=20, answer=False, rogue=None, n=150, path=None):
+        """the ball falls at tick 3 and L1's gaze holds it `hold` ticks; L3 asks where the ball is every tick from 4 until it is
+        said; the child looks at the ball lat ticks after her head turned (for 5 ticks), at the duck otherwise; answer: it
+        turns to the ball 2 ticks after the word is heard; rogue: a tick after the ask's word when W2 turns her eyes to the
+        blue ball anyway."""
+        mo = _W2(lengths=None, queue_p=0, l1=False, glances=[["ball", 3, 3 + hold]])
+        con = _perfect(seed=4, stage=2, transcriber=Transcriber(None), motion=mo, ledger=Ledger(path))
+        _no_sets(con)
+        judg, asked, head = [], None, []
+        for t in range(n):
+            tg = "ball" if lat is not None and 3 + lat <= t < 3 + lat + 5 else "duck"
+            if answer and con.pending is not None and t >= con.pending["open"] + 2:
+                tg = "ball_blue"
+            p = P(t, child_target=tg, seen=twins, events=(("fell", "ball"),) if t == 3 else ())
+            mo.step(t, p, con)
+            if rogue is not None and con.pending is not None and t == con.pending["open"] + rogue:
+                mo.glances.append(["ball_blue", t, t + 3])                    # a W2 that breaks eyes_on_child
+            head.append(_names(mo.truth(t)[0], twins)["head"])
+            if t >= 4 and asked is None:
+                con.request("ask_where", o="ball")
+            s = con.tick(t, p)
+            judg += s.judgments
+            if s.line is not None and s.line.intent == "ask_where" and asked is None:
+                asked = t
+        return con, judg, asked, head
+    runs = []
+    for lat in range(13, 32):
+        con, judg, asked, head = probe(lat)
+        last = max(t for t, h in enumerate(head[:asked + 1 if asked is not None else None]) if h == "ball")
+        runs.append((lat, asked, last, [j[1] for j in judg], con.ledger.standing("ball")["asks"]))
+    assert all(a is not None and a >= last + 1 + K.CUE_CLEAR for _l, a, last, _j, _s in runs), \
+        f"an ask about the ball while L1's gaze held it, or within {K.CUE_CLEAR} ticks after: {runs[:3]}"
+    assert not [r for r in runs if "met_ask" in r[3] or 1 in r[4]], f"a child following her head turn met the ask: {runs}"
+    assert {a for _l, a, _x, _j, _s in runs} == {3 + 20 + K.CUE_CLEAR}, runs                     # at once after the gap
+    con, judg, asked, head = probe(20)
+    why = [r[2] for r in con.fast.refused if r[1] == "ask_where"]
+    assert "her own cue at a ball is under way (her eyes and head at ball on this tick)" in why[0], why[:2]
+    # both ways: after the gap, a child that turns to the ball once its word is heard meets the ask
+    con, judg, asked, head = probe(None, answer=True)
+    assert [j[1] for j in judg] == ["met_ask"] and con.ledger.standing("ball")["asks"] == [1], judg
+    # fail-closed: a W2 that turns her eyes to a ball while the ask is pending voids it (counted neither way), whatever the
+    # child does then
+    tmp = tempfile.mkdtemp()
+    try:
+        con, judg, asked, head = probe(None, answer=True, rogue=0, path=os.path.join(tmp, "ledger.jsonl"))
+        rows = [json.loads(x) for x in open(os.path.join(tmp, "ledger.jsonl"))]
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    void = [r for r in rows if r["ev"] == "outcome"]
+    assert judg == [] and con.ledger.standing("ball")["asks"] == [] and con.pending is None, (judg, con.pending)
+    assert len(void) == 1 and void[0]["result"] == "void" and "her attention log while it was pending: her eyes at ball" in \
+        void[0]["why"], void
+    print(f"46 L1's gaze under way (A51): the ball falls at tick 3 and her gaze holds it 20 ticks; 'where is the ball?' is said "
+          f"only at tick {3 + 20 + K.CUE_CLEAR}, {K.CUE_CLEAR} ticks after her log last showed it (the fifth round said it at "
+          f"tick 4), and a child following her head turn 13-31 ticks later never meets it ({len(runs)} latencies); after the "
+          f"gap a child turning on the word meets it; a W2 that turns her eyes to a ball while the ask is pending voids it")
+
+
+def test_log_demonstration_names_its_toy():
+    """finding 2 (medium): a verb's demonstration handled a toy the conduct never named: "shake" and "hold" introduce with
+    Act("do", "show") and "get" with Act("do", "pick_up"), no toy, and "do" was no cue kind, so nothing was recorded: after
+    "look. shake!", "see? shake.", "you shake?", "where is the ball?" was said at tick 30 while the third show ran to 31. Now the
+    act names its toy (the one its set is said of: templates.show_now, a toy in the child's view and not in its hand), her log
+    shows her hand at it, and no ask opens while any demonstration runs, nor about its toy within 44 ticks after."""
+    room = seen(("ball", "ball", "red", "mat", True), ("cup", "cup", "green", "mat", True),
+                ("duck", "duck", "yellow", "hand", True), ("block", "block", "blue", "sofa", False))
+
+    def probe(x, n=160):
+        mo = _W2(lengths=None, queue_p=0, l1=False)
+        con = _perfect(seed=4, stage=2, transcriber=Transcriber(None), motion=mo)
+        for y in ("ball", "cup", "duck", "block"):
+            con.fast.last_set[y], con.fast.last_named[y] = 0, -1000              # no follow-in set in the way
+        con.request("new_word", word="shake")
+        asked, hands, demos, lines = None, [], [], []
+        for t in range(n):
+            p = P(t, child_target="duck", child_holds=("duck",), seen=room)
+            mo.step(t, p, con)
+            f, run = mo.truth(t)
+            hands.append(_names(f, room))
+            demos.append(any(k == "do" for k, _tg in run))
+            if t >= 1 and asked is None:
+                con.request("ask_where", o=x)
+            s = con.tick(t, p)
+            if s.line is not None:
+                lines.append((t, s.line.text))
+                if s.line.intent == "ask_where" and asked is None:
+                    asked = t
+        return con, asked, hands, demos, lines
+    con, asked, hands, demos, lines = probe("ball")
+    last = max([t for t, h in enumerate(hands[:asked + 1 if asked is not None else None]) if "ball" in h.values()] or [-1])
+    assert asked is not None and not demos[asked] and last >= 0 and asked >= last + 1 + K.CUE_CLEAR, \
+        f"an ask about the ball while her demonstration ran, or within {K.CUE_CLEAR} ticks of it: {(asked, last, lines[:4])}"
+    dos = [a for a in con.motion.acts if a[2] == "do"]
+    assert len(dos) == 3 and all(a[3] == "show" and a[5] == "ball" for a in dos), dos        # the act names its toy
+    assert [ln for ln in lines if "shake" in ln[1]] and asked == max(a[7] for a in dos) - 1 + 1 + K.CUE_CLEAR, (asked, dos)
+    # an ask about another toy waits only while a demonstration runs (her act at the ball could cue the child anywhere), and is
+    # said on the tick her motion reports the last one ended
+    con, asked_c, hands, demos, lines = probe("cup")
+    dos = [a for a in con.motion.acts if a[2] == "do"]
+    assert asked_c == max(a[7] for a in dos), (asked_c, dos, lines)
+    why = [r[2] for r in con.fast.refused if r[1] == "ask_where"]
+    assert any("her do at ball is still under way" in w for w in why), why[:3]
+    print(f"47 a verb's demonstration names its toy (A51): 'shake' shown by 3 shows of the ball (the act's thing, the toy its "
+          f"set is said of), her log with her hand at it; 'where is the ball?' said only {K.CUE_CLEAR} ticks after the last show "
+          f"ended (tick {asked}; the fifth round said it at 30, the third show running to 31), 'where is the cup?' on the tick "
+          f"the last show ended (tick {asked_c}), held while any ran")
+
+
+def test_log_queued_status_fails_closed():
+    """finding 3 (low): _cue_poll failed open: any status but "running" ended a cue, so a show waiting its turn, reported
+    "queued" (it then ran 20-27), closed at its line's end, and the ask came 29 ticks after the show ended. Now only done,
+    refused and cancelled end an act; anything else, or an act left out of the report, is running (fail-closed)."""
+    def probe(wait_status="queued", omit=(), n=160):
+        mo = _W2(lengths=None, queue_p=0, l1=False, fixed={"show": (20, 7)}, wait_status=wait_status, omit=omit)
+        con = _perfect(seed=4, stage=2, transcriber=Transcriber(None), motion=mo)
+        _no_sets(con)
+        for y in ("duck", "cup", "block", "block_red"):
+            con.fast.last_set[y] = 10 ** 6
+        con.fast.last_set.pop("ball")
+        con.fast.last_named.pop("ball")
+        asked, line_end, hands = None, None, []
+        for t in range(n):
+            p = P(t, child_target="duck")
+            mo.step(t, p, con)
+            hands.append(_names(mo.truth(t)[0], TOYS))
+            if t == 2:
+                con.request("show", o="ball", n=1)
+            if line_end is not None and asked is None and t >= line_end:
+                con.request("ask_where", o="ball")
+            s = con.tick(t, p)
+            if s.line is not None and s.line.intent == "show":
+                line_end = con.fast.busy_until
+            if s.line is not None and s.line.intent == "ask_where" and asked is None:
+                asked = t
+        return con, asked, hands, line_end
+    con, asked, hands, line_end = probe()
+    last = max(t for t, h in enumerate(hands) if "ball" in h.values())
+    assert asked is not None and asked >= last + 1 + K.CUE_CLEAR, \
+        f"the ask came {asked - last - 1} ticks after the show, queued until tick 22, ended: {(asked, last, line_end)}"
+    assert (last, asked) == (28, 28 + 1 + K.CUE_CLEAR), (last, asked)
+    why = [r[2] for r in con.fast.refused if r[1] == "ask_where"]
+    assert any("still under way (her motion reports it 'queued'" in w for w in why), why[:2]
+    for st in ("waiting", None, "Running", "", 3, "done "):                 # any status but the four is running
+        _c, a2, _h, _e = probe(wait_status=st)
+        assert a2 == asked, (st, a2, asked)
+    con, a3, _h, _e = probe(omit=(0,))                                     # an act never reported: running for good
+    assert a3 is None and any("reports it 'unreported'" in r[2] for r in con.fast.refused), con.fast.refused[-1:]
+    print(f"48 a queued act fails closed (A51): a show reported 'queued' until tick 22 (then running to 28) holds 'where is the "
+          f"ball?' to tick {asked}, {K.CUE_CLEAR} ticks after it ended (the fifth round asked 29 ticks after, at its line's "
+          f"end); 'waiting', None, 'Running', '', 3 and 'done ' likewise; an act left out of her motion's report is running for "
+          f"good: no ask")
+
+
+def test_log_copy_before_an_ask():
+    """finding 4 (low): _copying ran before _choose, so a copy began on the tick an ask opened (seed 6, stage 1, tick 1235: "where
+    is the ball?" with a copy, open_hand:right, running 7 ticks into it): her hands were not still. Now a copy is an act like any
+    other in her log: no ask opens while one runs, is queued or is unreported, and none is made while an ask is pending."""
+    runs = []
+    for seed in range(8):
+        mo = _W2(lengths=None, queue_p=0, l1=False)
+        con = C.Conduct(seed=seed, stage=1, transcriber=Transcriber(None), motion=mo)     # imperfect: she copies (A52)
+        _no_sets(con)
+        due, asked, bad = None, None, []
+        for t in range(120):
+            p = P(t, child_target=None, events=(("open_hand", "left"),) if t == 5 else ())
+            mo.step(t, p, con)
+            f, run = mo.truth(t)
+            if con.pending is not None:
+                hit, unstill = _pending_bad(_names(f, TOYS), run, "ball")
+                if hit or unstill:
+                    bad.append((t, hit, unstill))
+            if due is not None and t >= due and asked is None:
+                con.request("ask_where", o="ball")                          # asked for from the tick its copy is due
+            s = con.tick(t, p)
+            if t == 5 and con.copies:
+                due = con.copies[0][0]
+            if s.line is not None and s.line.intent == "ask_where" and asked is None:
+                asked = t
+        runs.append((seed, due, asked, bad[:2]))
+    assert all(a is not None and not b for _s, _d, a, b in runs), f"her hands not still while the ask was pending: {runs}"
+    assert all(a == d + C.STUB_TICKS["copy"] for _s, d, a, _b in runs), runs          # said as her copy ended
+    print(f"49 a copy is in her log (A51): its copy of an open hand due on the tick L3 asks where the ball is ({len(runs)} "
+          f"seeds): the ask waits until her motion reports the copy ended ({C.STUB_TICKS['copy']} ticks), and while it is "
+          f"pending her eyes and head stay on the child and her hands at rest (the fifth round opened it with the copy running "
+          f"7 ticks into it)")
+
+
+PROP_ROOM = (("duck", "duck", "yellow"), ("ball", "ball", "red"), ("cup", "cup", "green"), ("block_red", "block", "red"),
+             ("ball_blue", "ball", "blue"), ("bottle", "bottle", ""))
+PROP_REQS = (("ask_where", 3), ("ask_give", 2), ("ask_what", 2), ("call", 1), ("show", 2), ("label", 1), ("redirect", 1),
+             ("new_word", 1), ("peekaboo_hide", 1), ("peekaboo", 1))
+PROP_VERBS = ("shake", "hold", "get", "go")
+
+
+def _prop_world(seed, stage, n):
+    """a random life's script, from its own stream: where the child looks and what it holds, a ball resting in her hands at
+    times, the events (falls and takes she may glance at, movements she may copy, a low charge, hits, pain), L3's requests (asks
+    of every kind, shows, labels, redirects, verbs to demonstrate, peekaboo), and the draws its answers use (it answers a pending
+    ask now and then: the world reads con.pending, so a replay from a snapshot is exact)."""
+    rng = np.random.default_rng([seed, stage, 5150])
+    ids = [r[0] for r in PROP_ROOM]
+    names, wts = zip(*PROP_REQS)
+    tgt, holds, hers, ev, req = [], [], [], [], [[] for _ in range(n)]
+    cur_t = cur_h = cur_m = None
+    for t in range(n):
+        if rng.random() < 1 / 30:
+            cur_t = ([None, "mama"] + ids)[int(rng.integers(len(ids) + 2))]
+        if rng.random() < 1 / 150:
+            cur_h = (None, None, "cup", "duck")[int(rng.integers(4))]
+        if rng.random() < 1 / 200:
+            cur_m = (None, None, None, "ball", "ball_blue")[int(rng.integers(5))]
+        tgt.append(cur_t)
+        holds.append(cur_h)
+        hers.append(cur_m if cur_m != cur_h else None)
+        e = []
+        if rng.random() < 0.012:
+            e.append(("fell", ids[int(rng.integers(len(ids)))]))
+        if rng.random() < 0.004:
+            e.append(("got", ids[int(rng.integers(len(ids)))]))
+        if rng.random() < 0.03:
+            e.append((("wave", "arm_raise", "shake", "open_hand")[int(rng.integers(4))], ("left", "right")[int(rng.integers(2))]))
+        if rng.random() < 0.002:
+            e.append(("charge_low", None))
+        if rng.random() < 0.002:
+            e.append(("hit_her", None))
+        if rng.random() < 0.001:
+            e.append(("pain", None))
+        ev.append(tuple(e))
+        if rng.random() < 0.08:
+            k = names[int(rng.choice(len(names), p=np.array(wts) / sum(wts)))]
+            o = ids[int(rng.integers(len(ids)))]
+            kw = {"call": {}, "peekaboo_hide": {}, "peekaboo": {},
+                  "new_word": dict(word=PROP_VERBS[int(rng.integers(len(PROP_VERBS)))])}.get(k, dict(o=o))
+            for u in ((t,) if not k.startswith("ask") and k != "call" else range(t, min(n, t + 121), 5)):
+                req[u].append((k, kw))                                 # an ask the episode keeps wanting for 120 ticks
+    return dict(tgt=tgt, holds=holds, hers=hers, ev=ev, req=req, u=rng.random(n), v=rng.random(n))
+
+
+def _prop_percept(w, t, con):
+    """the tick's percept and token: the script (the toy in her hands as it was when an ask pending opened: she takes or puts down
+    nothing during one), and the child's answer to a pending ask when its draw says so (a look at the ask's X, a look at her
+    face for the call, the give, the name's word)."""
+    tg, hold, ev = w["tgt"][t], w["holds"][t], list(w["ev"][t])
+    her = w["hers"][t if con.pending is None else con.pending["tick"]]     # she takes or puts down no toy during an ask
+    word = {i: nm for i, nm, _c in PROP_ROOM}
+    pd, tok = con.pending, None
+    if pd is not None and w["u"][t] < 0.2:
+        pick = next((i for i, nm, _c in PROP_ROOM if nm == pd["word"] and i not in (hold, her)), None)
+        if pd["kind"] == "gaze" and pick is not None:
+            tg = pick
+        elif pd["kind"] == "call":
+            tg = "mama"
+        elif pd["kind"] == "act" and pick is not None and w["u"][t] < 0.05:
+            ev.append(("gave", pick))
+        elif pd["kind"] == "name" and w["u"][t] < 0.1:
+            tok = LX.WORD_ID.get(pd["word"])
+    if tok is None and w["v"][t] < 0.01 and tg in word:
+        tok = LX.WORD_ID.get(word[tg])
+    room = tuple(seen1(i, nm, c, "hand" if i == hold else (LX.PARENT_NAME if i == her else "mat"), True)
+                 for i, nm, c in PROP_ROOM) + seen(("block", "block", "blue", "sofa", False))
+    return P(t, child_target=tg, child_holds=(hold,) if hold else (), seen=room, events=tuple(ev)), tok, room
+
+
+def _prop_life(seed, stage, n, snaps=(), start=None, rule=True):
+    """one random life with the W2-like motion (acts 0-40 ticks, 30% of them queued first, L1's gazes) -> (the conduct, the
+    violations, the asks opened, a record per tick, the snapshots taken). The checker reads the motion's truth, not the
+    conduct's log: an ask about X opened with X in her body's fields on its tick or the 44 before ("opened"); X in them while it
+    is pending ("pending"); her eyes or head off the child, a hand at anything but it, or an act running but those she may make
+    while an ask is pending ("still"); the conduct's log not the truth ("log", this round's code only). rule=False: the ask's
+    gate switched off (both ways: the checker must find what it guards)."""
+    w = _prop_world(seed, stage, n)
+
+    def fresh():
+        return C.Conduct(seed=seed, stage=stage, transcriber=Transcriber(None), motion=_W2(seed))
+    con, t0 = fresh(), 0
+    if start is not None:
+        t0 = start[0]
+        con.load_state(json.loads(json.dumps(start[1])))
+    if not rule:
+        con._ask_block = lambda x, t: None
+    viol = dict(opened=[], pending=[], still=[], log=[])
+    hist, asks, recs, snapped = {}, [], [], {}
+    for t in range(t0, n):
+        if t in snaps:
+            snapped[t] = json.loads(json.dumps(con.state(), default=_np))
+        p, tok, room = _prop_percept(w, t, con)
+        con.motion.step(t, p, con)
+        f, run = con.motion.truth(t)
+        hist[t] = names = _names(f, room)
+        pd = con.pending
+        if pd is not None:
+            x = LX.PARENT_NAME if pd["kind"] == "call" else pd["word"]
+            hit, unstill = _pending_bad(names, run, x)
+            if hit:
+                viol["pending"].append((pd["tick"], x, t, hit))
+            if unstill:
+                viol["still"].append((pd["tick"], x, t, unstill))
+        for intent, kw in w["req"][t]:
+            con.request(intent, **kw)
+        before = None if pd is None else pd["trial"]
+        s = con.tick(t, p, token=tok)
+        if getattr(con, "attn", None):
+            got = {k: con.attn[-1][k] for k in C.FIELDS}
+            if got != names:
+                viol["log"].append((t, got, names))
+        pa = con.pending
+        if pa is not None and pa["trial"] != before:
+            x = LX.PARENT_NAME if pa["kind"] == "call" else pa["word"]
+            asks.append((t, pa["kind"], x))
+            bad = [(u, k) for u in range(max(t0, t - K.CUE_CLEAR), t + 1) for k, v in hist[u].items() if v == x]
+            if bad:
+                viol["opened"].append((t, x, bad[-1]))
+        recs.append((t, None if s.line is None else s.line.text,
+                     tuple((a.kind, a.target, a.during, getattr(a, "thing", None)) for a in s.acts),
+                     tuple(s.judgments), tuple(a.target for a in s.copy), None if pa is None else pa["trial"],
+                     None if not getattr(con, "attn", None) else json.dumps(con.attn[-1], sort_keys=True)))
+    return con, viol, asks, recs, snapped
+
+
+def _prop_size():
+    """the property test's size: SIM_LANG_PROP="seeds,ticks" (default 7 seeds x both stages x 2,400 ticks, the lead's)."""
+    a, b = os.environ.get("SIM_LANG_PROP", "7,2400").split(",")
+    return int(a), int(b)
+
+
+def test_log_property():
+    """the lead's decision in P3's sixth round (five rounds each closed one route and the verifier found another): close the
+    class. Random lives, both stages, with a W2-like motion whose acts run 0-40 ticks (30% queued first, reported "queued"),
+    L1's gazes at falls and takes and at where the child looks, demonstrations, copies, asks of every kind, shows, labels,
+    redirects, peekaboo, a ball in her hands at times, hits, pain, a low charge and the child's answers: no ask about X ever opens
+    with X in her body's log on its tick or the 44 before, no pending ask ever sees X enter it, and while one is pending her eyes
+    and head are on the child, her hands at rest or open to it, and nothing else runs; the conduct's log is the motion's truth
+    every tick. Both ways: the same lives with the ask's gate switched off break each property. Snapshots replay exactly."""
+    seeds, n = _prop_size()
+    tot = dict(lives=0, ticks=0, lines=0, asks={}, held=0, demos=0, copies=0, glances=0, queued=0, void_log=0)
+    for seed in range(seeds):
+        for stage in (1, 2):
+            snaps = (n // 3, (2 * n) // 3) if seed < 2 else ()
+            con, viol, asks, recs, snapped = _prop_life(seed, stage, n, snaps=snaps)
+            assert not any(viol.values()), (seed, stage, {k: v[:3] for k, v in viol.items() if v})
+            tot["lives"] += 1
+            tot["ticks"] += n
+            tot["lines"] += sum(1 for r in recs if r[1] is not None)
+            for _t, k, _x in asks:
+                tot["asks"][k] = tot["asks"].get(k, 0) + 1
+            tot["held"] += sum(1 for r in con.fast.refused if r[1] in ("ask_where", "ask_give", "ask_what", "call") and
+                               "(A51)" in r[2])
+            tot["demos"] += sum(1 for a in con.motion.acts if a[2] == "do")
+            tot["copies"] += sum(1 for a in con.motion.acts if a[2] == "copy")
+            tot["queued"] += sum(1 for a in con.motion.acts if a[6] > a[1])
+            for k, st in snapped.items():                                    # a snapshot restored into a fresh conduct
+                c2, _v, _a, recs2, _s = _prop_life(seed, stage, n, start=(k, st))
+                assert recs2 == [r for r in recs if r[0] >= k] and c2.ledger.digest == con.ledger.digest, (seed, stage, k)
+    assert tot["asks"].get("gaze", 0) >= 7 and tot["asks"].get("act", 0) >= 3 and tot["asks"].get("name", 0) >= 1 and \
+        tot["asks"].get("call", 0) >= 3 and tot["demos"] >= 3 and tot["copies"] >= 20, tot
+    # both ways: the ask's gate switched off, the checker finds an ask opened with its X in her log, one that saw its X enter
+    # it (an act queued or running at the opening, then at X), and her body not still while one was pending
+    found = {}
+    for seed in range(seeds):
+        for stage in (1, 2):
+            _c, viol, _a, _r, _s = _prop_life(seed, stage, n, rule=False)
+            for k in ("opened", "pending", "still"):
+                found[k] = found.get(k, 0) + len(viol[k])
+    assert all(found[k] for k in ("opened", "pending", "still")), found
+    print(f"50 one attention log, fail-closed (A51; the property): {tot['lives']} random lives ({seeds} seeds x both stages x "
+          f"{n} ticks) with a W2-like motion (acts 0-40 ticks, {tot['queued']} queued first; L1's gazes; {tot['demos']} "
+          f"demonstrations; {tot['copies']} copies): {tot['lines']} lines, asks opened {tot['asks']}, {tot['held']} held back "
+          f"by the log's rule; no ask opened with its X in her log within {K.CUE_CLEAR} ticks, none saw its X enter it, her body "
+          f"still through every one, her log the motion's truth every tick; with the gate off the same lives break it "
+          f"({found}); {2 * min(seeds, 2) * 2} snapshots replayed exactly")
+
 
 def _have_engine():
     return sys.platform == "darwin" and shutil.which("swiftc") is not None
@@ -2684,7 +3279,9 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_gaze_leak_closed, test_new_word_on_its_peak, test_reads_trunk_and_hands, test_held_pairs_a55, test_echoes,
          test_claude_shows_and_forms, test_imperfect_parent_and_talk_over, test_sets_distinct_in_words, test_ask_after_her_cue,
          test_asks_she_can_judge, test_reading_held_three_ticks, test_low_items_fourth, test_cue_ends_with_her_act,
-         test_cued_refuses_what_she_cannot_name, test_low_items_fifth]
+         test_cued_refuses_what_she_cannot_name, test_low_items_fifth, test_log_l1_gaze_under_way,
+         test_log_demonstration_names_its_toy, test_log_queued_status_fails_closed, test_log_copy_before_an_ask,
+         test_log_property]
 
 if __name__ == "__main__":
     t0 = time.time()
