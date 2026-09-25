@@ -266,7 +266,7 @@ class CortexMixin:
             # tick's share, raised by the dopamine of the moment and by the running surprise (the rewarded and the novel are written,
             # the rest weakly); at the defaults (1, 0, 0) the lesson is as before
             gate_ = float(self.cfg.get("wake_base", 1.0)) + float(self.cfg.get("wake_dopa", 0.0)) * abs(float(getattr(self, "_dopa", 0.0))) + float(self.cfg.get("wake_novel", 0.0)) * float(getattr(self, "_surp_run", 0.0))
-            loss = (ll + fl) * (1.0 + self.stress / 10.0) * gate_      # stress raises plasticity (act_pred's plain step keeps this scale; Adam's steps do not)
+            loss = (ll + fl) * (1.0 + self.stress / 10.0) * gate_      # stress raises plasticity (the day's; act_pred's plain step divides it out)
             if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
             loss.backward()
@@ -279,7 +279,10 @@ class CortexMixin:
                 torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
             self.opt_day.step()
             if motor_:
-                self._timing_step()                                    # act_pred and the corrections: one plain step, each element bounded
+                # act_pred and the corrections: one plain step on the lesson's own gradient, the plasticity scale above divided out
+                # (R6 fix 8, the R6 verifier's eighth look: kept, it made act_pred the one waking parameter stress reached, four times at
+                # the ceiling, and at a hundred times the served rate its bound held every element and the arm diverged), each element bounded
+                self._timing_step((1.0 + self.stress / 10.0) * gate_)
             out = {"latent_cos": round(lc, 3), "forecast_cos": round(fc, 3), "n_world": int(w.sum()), "tick": self.ticks}
             if motor_:
                 out["motor"] = {k_: dict(v_, w=round(v_["w"], 4), w_own=round(v_["w_own"], 4), w_lab=round(v_["w_lab"], 4),

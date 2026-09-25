@@ -45,9 +45,10 @@ class GatedDescent(torch.optim.Optimizer):
         step = clamp(lr_motor x G, -B, +B),    G = (the sum over the window's positions of w_i x grad_i) / (the number of positions)
 
     grad_i the gradient of position i's squared error (the proposal against its target's row), w_i its weight: 1 at an own act (its
-    efference copy) and at an uninverted effector's rest, act_inv's reliability at act_inv's label, 0 at the last rest (`_timing_loss`),
-    all times the waking lesson's plasticity scale, (1 + stress / 10) x the wake gate, as every parameter's gradient carries it
-    (`_wake_lesson`). NO STATE: nothing of one lesson reaches the next but the weights themselves. So WHAT A LABEL TEACHES IS ITS
+    efference copy) and at an uninverted effector's rest, act_inv's reliability at act_inv's label, 0 at the last rest (`_timing_loss`).
+    The waking lesson's plasticity scale ((1 + stress / 10) x the wake gate, which the lesson's backward leaves on every parameter's
+    gradient, `_wake_lesson`) is divided out before this step (`_timing_step`; R6 fix 8), so G is the lesson's own gradient at any
+    stress and any gate. NO STATE: nothing of one lesson reaches the next but the weights themselves. So WHAT A LABEL TEACHES IS ITS
     RELIABILITY TIMES WHAT IT TEACHES WHOLE, BY CONSTRUCTION: below the bound the step is linear in G, and G is linear in each weight;
     no running normalisation divides a small gradient back up to a whole step. A synapse changes with its error and with a
     neuromodulatory signal of how far the teaching may be trusted (acetylcholine as expected uncertainty; Yu and Dayan 2005), with no
@@ -74,8 +75,8 @@ class GatedDescent(torch.optim.Optimizer):
     unit row's error on an input carrying the LayerNorm's whole norm (|x_j| <= sqrt(d)). No lesson at birth asks that much of an element,
     so it holds only a gradient no lesson at birth can make (a proposal run away, a body sense far outside its range through the
     correction), never an ordinary lesson (anatomy 31 and 35: the largest element's step in every state measured, at the served rate
-    and a hundred times it, 0.17 of the bound at most, some 20 times the rate; over 3000-lesson runs from every state 0.23; at the
-    stress ceiling 0.26), and the linearity above holds wherever it is not reached. For the sim body (SIM_DESIGN.md 6.3: d 512, the served rate 1e-5): lr_motor = 2 sqrt(512) x 1e-5 = 4.5e-4 per unit of
+    and a hundred times it, 0.17 of the bound at most, some 20 times the rate; over 3000-lesson runs from every state 0.23; the same
+    at any stress and gate, the scale divided out, R6 fix 8), and the linearity above holds wherever it is not reached. For the sim body (SIM_DESIGN.md 6.3: d 512, the served rate 1e-5): lr_motor = 2 sqrt(512) x 1e-5 = 4.5e-4 per unit of
     gradient, B = 1.0e-2 per element per lesson (1024 times the rate).
     WHAT IT CHANGES (the tiny arm, the served rate unless said; the tables in R6 fix 7's commit message):
     - A LABEL TEACHES ITS RELIABILITY'S SHARE IN EVERY STATE: one lesson's gradient at 0.01, 0.05 and 0.25 is that share of its change
@@ -93,12 +94,22 @@ class GatedDescent(torch.optim.Optimizer):
     - THE CORRECTION steps by its input's size, the body sense's error in the world's units, where Adam stepped each weight the rate
       whatever that size (from birth on the arm's own acts Adam moved it 30 to 33 times the rate per unit of its gradient, the plain
       step 16; where the sense does not move, as on rests alone, it does not learn).
-    - STRESS reaches act_pred's plasticity: the lesson's scale ((1 + stress / 10) x the wake gate, "stress raises plasticity") was
-      divided out by Adam and is kept by the plain step: up to four times at the stress ceiling (30), each element still bounded.
+    - STRESS AND THE WAKE GATE DO NOT REACH THIS STEP (R6 fix 8, the R6 verifier's eighth look): the lesson's scale ((1 + stress / 10)
+      x the wake gate, "stress raises plasticity") multiplies every parameter's gradient; Adam cancels a steady scale (it divides each
+      step by the gradient's recent size), so on the day's parameters it moves the step only while it changes. The plain step has no
+      such division, and R6 fix 7 kept the scale on it, so act_pred was the one waking parameter stress reached, and to the full: four
+      times at the ceiling (30), one lesson's largest element 0.63 of the bound from birth on the tiny arm (0.16 at stress 0); at a
+      hundred times the served rate the bound held every element and the arm diverged (its errors 1.1 -> 257 in 10 lessons at
+      reliability 1, 59 at 0.25; the verifier's own states read 181 to 231, reliability's order inverted), and at the sim body's width
+      (the arm born at d 512) four times the served rate under stress 30 diverged (1.0 -> 2530 in 25 lessons). The lead's step has no
+      scale in it (G above), so `_timing_step` divides the scale out: the step is the one at stress 0 and gate 1 at any stress and any
+      gate, to float32's rounding (anatomy 35); at a hundred times the served rate under stress 30 the arm learns as at stress 0, and
+      at d 512 eight times the served rate under stress 30 learns (1.0 -> 0.08 in 200 lessons, its largest element 0.016 of the
+      bound). A lesson the gate shuts wholly (a scale of 0) leaves no gradient to step, act_pred's included: it writes nothing.
     - STABILITY: plain descent is stable while lr_motor x the lesson's largest curvature stays below 2. That curvature is about d on
       these windows (the LayerNorm'd stream's positions share a direction: 0.11 d to 0.98 d measured), so the product is about 2 d^1.5 x
       live_lr: on the arm 0.01 at the served rate and at most 1.0 at a hundred times it (where anatomy 31 and 35 run); for the sim body
-      (d 512, 1e-5) about 0.23, so stable up to some eight times the served rate (two at the stress ceiling). Past that the stiffest
+      (d 512, 1e-5) about 0.23, so stable up to some eight times the served rate, at any stress (R6 fix 8). Past that the stiffest
       direction oscillates, each element held at the bound (anatomy 25 raises act_pred's waking rate to 1e-3, not the day's 3e-3).
       act_pred_rate could rise to about 4 before a hundred times the rate turns unstable on the arm.
     - THE SAVE holds no optimizer state for act_pred (R6 fix 5 and 6's saves load with a note, their moments not read); the lesson
@@ -136,10 +147,16 @@ class TimingMixin:
         tm = self.m.timing[e.name]
         return [f"pred.{n}" for n, _ in tm.pred.named_parameters()] + ([f"cor.{n}" for n, _ in tm.cor.named_parameters()] if tm.sense_n else [])
 
-    def _timing_step(self):
+    def _timing_step(self, scale=1.0):
         """ACT_PRED'S AND THE CORRECTION'S STEP IN THE WAKING LESSON (after the waking lesson's own step): each later effector's group
         of opt_pred (`GatedDescent`), one plain step a lesson on the gradient the lesson's backward left on them, the own acts' and
-        act_inv's labels' at their reliability (`_timing_loss`, body/core/cortex.py), each element's step bounded (R6 fix 7). EACH
+        act_inv's labels' at their reliability (`_timing_loss`, body/core/cortex.py), each element's step bounded (R6 fix 7).
+        THE LESSON'S OWN GRADIENT (R6 fix 8, the R6 verifier's eighth look): `scale` is the waking lesson's plasticity scale ((1 +
+        stress / 10) x the wake gate), which its backward left on every parameter's gradient; it is divided out of act_pred's and the
+        corrections' before their step, so the step is the plain step on the lesson's own gradient at any stress and gate (kept,
+        stress stepped act_pred up to four times over and a hundred times the served rate diverged: `GatedDescent`). The day's
+        parameters keep it, their Adam as before. A scale of 1 divides nothing (the step to the bit as before); a scale of 0 left
+        nothing to divide (the lesson shut, no gradient anywhere). EACH
         OPTIMIZER'S OWN BOUND (the R6 verifier's fourth look, 2026-09-24): with one bound over every parameter, as before, act_pred's
         gradient, which grows with act_inv's reliability, set the size of every step of the stream (on the tiny arm the bound held at
         every lesson, the joint norm 9 to 13, act_pred's and the corrections' the larger part), so the labels' reliability still moved
@@ -148,6 +165,13 @@ class TimingMixin:
         31). The day's norm bound stays the day's; act_pred's bound is GatedDescent's, element by element and out of ordinary lessons'
         reach, never a norm over the group (R6 fix 3 to 6 bounded each group's norm per unit of the lesson's weight; a norm bound that
         binds sets the step's size whatever the gradient's, as Adam does)"""
+        s_ = float(scale)
+        if s_ != 1.0 and s_ != 0.0:
+            with torch.no_grad():
+                for g_ in self.opt_pred.param_groups:
+                    for p_ in g_["params"]:
+                        if p_.grad is not None:
+                            p_.grad.div_(s_)
         self.opt_pred.step()
 
     def _body_sense(self, e):

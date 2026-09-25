@@ -3536,6 +3536,11 @@ def test_act_preds_step_is_bounded():
     - AFTER A FITTED CONFLICT: the mixed window at reliability 1 at a hundred times the rate for 2000 lessons (own acts and labels
       settled together), then the reliability dips to 0.9, 0.25 and 0: the step the rate times the gradient, the labels' part
       withdrawn in proportion;
+    - UNDER STRESS AND THE WAKE GATE (the R6 verifier's eighth look, R6 fix 8): at stress 10 and 30 (the ceiling), and at 30 with the
+      wake gate at 0.3, from birth and after the fitted conflict, the step the one at stress 0 and gate 1 to float32's rounding (the
+      lesson's plasticity scale divided out of act_pred's gradient: R6 fix 7 kept it, four times at the ceiling, and at a hundred
+      times the rate the bound held every element and the arm diverged); and 60 lessons at a hundred times the rate under stress 30
+      from birth, both errors falling below birth at every reading and each lesson's largest element below half the bound;
     each below the bound, and opt_pred holds no state. And a miniature of the settled conflict (a linear readout of 8 features, 31
     targets, own acts and labels pulling one weight apart until their gradients cancel at reliability 1): after the dip each element's
     step is the rate times (1 - g) times the labels' gradient, where R6 fix 6 stepped it 37406 times the rate. The bound itself: a
@@ -3613,6 +3618,58 @@ def test_act_preds_step_is_bounded():
     el_, eo_, _, _ = _two_errors(L, W["mixed"])
     assert el_ < 0.05 and eo_ < 0.05, ("the conflict did not settle", el_, eo_)
     look("after a fitted conflict", settled, gains=(1.0, 0.9, 0.25, 0.0), wins=("mixed",))
+    # UNDER STRESS AND THE WAKE GATE (the R6 verifier's eighth look; R6 fix 8): the waking lesson's plasticity scale ((1 + stress / 10)
+    # x the wake gate) multiplies every parameter's gradient, and `_timing_step` divides it out of act_pred's and the corrections'
+    # before their plain step. So at stress 10 and 30 (the ceiling), and at 30 with the wake gate at 0.3, the first lesson's step from
+    # birth (every window) and after the fitted conflict (its mixed window) is the one at stress 0 and gate 1, to float32's rounding,
+    # at 1x and 100x, at reliability 0, 0.25 and 1 (with the scale kept, R6 fix 7: four times at 30, 0.63 of the bound from birth)
+    wb0_ = L.cfg.get("wake_base"); press = 0.0
+    for tag, snap, wins, gains in (("from birth", fresh, tuple(W), (0.0, 0.25, 1.0)), ("after a fitted conflict", settled, ("mixed",), (1.0, 0.25, 0.0))):
+        for x_ in (1, 100):
+            for name in wins:
+                for g in gains:
+                    base = None
+                    for sv, gb in ((0.0, 1.0), (10.0, 1.0), (30.0, 1.0), (30.0, 0.3)):
+                        L.stress = sv; L.cfg["wake_base"] = gb
+                        try:
+                            th0 = _one_lesson(L, snap, W[name], g, x_ * LR)
+                        finally:
+                            L.stress = 0.0
+                            if wb0_ is None:
+                                L.cfg.pop("wake_base", None)
+                            else:
+                                L.cfg["wake_base"] = wb0_
+                        _waking_rate(L, LR)
+                        st_ = _all_gated(L) - th0
+                        use[(f"under stress, {tag}", x_, name, g, sv, gb)] = float(st_.abs().max()) / (x_ * LR * B)
+                        if base is None:
+                            base = st_
+                            continue
+                        grain = max(float(th0.abs().max()), float((th0 + st_).abs().max())) * 2.0 ** -22 + 1e-5 * float(base.abs().max())
+                        dev_ = float((st_ - base).abs().max())
+                        press = max(press, dev_ / float(base.abs().max()))
+                        assert dev_ <= grain, ((tag, x_, name, g, sv, gb), "stress or the wake gate reached act_pred's step", dev_, grain)
+    # and at a hundred times the served rate under stress 30, 60 lessons of the mixed window at reliability 1 from birth: the proposal's
+    # two errors fall below their birth values at every reading and each lesson's largest element stays below half the bound (with the
+    # scale kept the bound held every element and the errors rose from 1.1 to 257 in 10 lessons)
+    runs = {}
+    for sv in (0.0, 30.0):
+        L.m.load_state_dict(fresh[0])
+        for k, sd in fresh[1].items():
+            getattr(L, k).load_state_dict(copy.deepcopy(sd))
+        _waking_rate(L, 100 * LR); L.stress = sv; rows = [_two_errors(L, W["mixed"])[:2]]; top = 0.0
+        try:
+            for i in range(60):
+                th0 = _all_gated(L)
+                L.motor[0]["inv_gain"] = 1.0; L.win.clear(); L.win.extend(W["mixed"]); L._wake_lesson()
+                top = max(top, float((_all_gated(L) - th0).abs().max()) / (100 * LR * B))
+                if i + 1 in (10, 20, 40, 60):
+                    rows.append(_two_errors(L, W["mixed"])[:2])
+        finally:
+            L.stress = 0.0; _waking_rate(L, LR)
+        runs[sv] = ([(round(a_, 3), round(b_, 3)) for a_, b_ in rows], round(top, 3))
+        assert all(r_[0] < rows[0][0] and r_[1] < rows[0][1] for r_ in rows[1:]) and rows[-1][0] < 0.5 * rows[0][0] and rows[-1][1] < 0.5 * rows[0][1], (sv, "under stress at a hundred times the rate the arm did not learn", runs)
+        assert top < 0.5, (sv, "under stress an element's step came near the bound", runs)
     worst = max(use.values())
     assert worst < 0.5, ("an element's step came near the bound", {k: round(v, 3) for k, v in use.items() if v >= 0.5})
     # the miniature of the settled conflict: one weight, own acts pulling it to +1 and labels to -1 in equal measure; at reliability 1
@@ -3645,7 +3702,10 @@ def test_act_preds_step_is_bounded():
           f"step as a share of the bound from birth, after a reload, after a quiet spell (2000 lessons of rests at 0) and after a fitted",
           f"conflict and a dip, at 1x and 100x the rate, every window at 0, 0.25 and 1: {worst:.3f} at most",
           f"({ {k_: round(max(v for kk, v in use.items() if kk[0] == k_), 4) for k_ in dict.fromkeys(k[0] for k in use)} }); no state kept;",
-          f"the reloaded body's first lesson the saved body's; the miniature's settled conflict, the step after the dip in rates: {mini}")
+          f"the reloaded body's first lesson the saved body's; under stress 10 and 30 and the wake gate at 0.3 the step the one at stress 0",
+          f"(the largest departure {press:.1e} of its largest element); at 100x under stress 30, 60 lessons from birth (the two errors at 0,",
+          f"10, 20, 40, 60; the largest share of the bound): {runs[30.0]} (at stress 0 {runs[0.0]}); the miniature's settled conflict, the",
+          f"step after the dip in rates: {mini}")
 
 
 ANATOMY_TESTS = [test_language_anatomy_equals_the_tokenizers_fields, test_language_anatomy_is_inert, test_anatomy_check,
