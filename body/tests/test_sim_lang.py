@@ -27,7 +27,10 @@ and her imperfection and stage 2's "no." to a talk-over (37, A52).
 Tests 38-42 are the P3 verifier's fourth findings (1ae6942), each failing there at its own first assertion: a variation set with
 two lines of the same words, and the colour words short of a set where A55 puts them (38, 4.5); an ask made right after her cue
 at its X, met by a child that only follows her cues (39, A51); asks about a toy in her hands or beyond the child's reach (40);
-her reading of its head's line held 3 ticks only for follow-in naming (41, 4.10, A40); the low items (42)."""
+her reading of its head's line held 3 ticks only for follow-in naming (41, 4.10, A40); the low items (42).
+Tests 43-45 are the P3 verifier's fifth findings (c816b5a), each failing there at its own first assertion: her cue's end taken
+as her line's end, not her act's, so a child that only follows an offer outlasting its line met the ask (43, A51, the verifier's
+probe both ways); cued() dropping a cue at a twin's id silently (44); the low items (45)."""
 import json
 import math
 import os
@@ -407,14 +410,14 @@ def test_approximation_in_context():
     con, said, judg, _ = _token_turn(2, [LX.WORD_ID["mama"]], target="mama")
     assert judg == [(2, "right_name", "mama")], judg
     print("17 stage 2: 'z' and 'x' (read as 'a'), 'qp' ('up'), 'bal' ('ball') with nothing in view: no smile, no recast, not "
-          "'says'; 'bal' with the ball in its fovea or hand: a recast and a smile of 1; 'duk' or 'duck' when she only expects "
-          "it as an echo of her last line: echoed, no smile (the approximation never looser than the exact word); the tract's "
-          "approximation likewise; 'mama' at her face: a right name")
+          "'says'; 'bal' with the ball where she reads it looking or in its hand: a recast and a smile of 1; 'duk' or 'duck' "
+          "when she only expects it as an echo of her last line: echoed, no smile (the approximation never looser than the "
+          "exact word); the tract's approximation likewise; 'mama' at her face: a right name")
 
 
 def test_asks_answered():
-    """finding 2: an ask met without an answer (a twin already in the fovea; the call while it already looks at her; a look
-    before the word was heard)."""
+    """finding 2: an ask met without an answer (a twin already where she reads it looking; the call while it already looks at
+    her; a look before the word was heard)."""
     twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True))
 
     def ask_run(target_at, intent="ask_where", o="ball", n=60):
@@ -430,7 +433,7 @@ def test_asks_answered():
                 said.append((t, s.line))
             judg += s.judgments
         return con, said, judg
-    # asked of the red ball while the blue one is in its fovea: not asked (it would be met unasked)
+    # asked of the red ball while she reads it looking at the blue one: not asked (it would be met unasked)
     con, said, judg = ask_run(lambda t, c: "ball_blue")
     assert not [ln for _, ln in said if ln.intent == "ask_where"] and judg == [], (said, judg)
     assert any("already where she reads the child looking" in r[2] for r in con.fast.refused), con.fast.refused[-3:]
@@ -461,10 +464,10 @@ def test_asks_answered():
         s = con.tick(t, P(t, child_target=None, seen=twins), token=LX.WORD_ID["ball"] if t == 30 else None)
         judg += s.judgments
     assert not [j for j in judg if j[1] == "met_ask"], f"a word met a gaze ask: {judg}"
-    print("18 an ask of the red ball with the blue one in its fovea is not made (logged); a look landing on a ball before its "
-          "word is heard voids the ask (no smile, not counted); a look after it: met, a smile of 2, counted; the call is "
-          "not made while it looks at her face, a turn during its name is void, a turn after it is met; a spoken word never "
-          "meets a gaze ask")
+    print("18 an ask of the red ball while she reads it looking at the blue one is not made (logged); a look landing on a "
+          "ball before its word is heard voids the ask (no smile, not counted); a look after it: met, a smile of 2, counted; "
+          "the call is not made while it looks at her face, a turn during its name is void, a turn after it is met; a spoken "
+          "word never meets a gaze ask")
 
 
 class _FakeClip:
@@ -726,8 +729,8 @@ def test_transcriber():
     print("9 the token output read as a transcript: a token exactly, letters exactly, within edit distance 1 (2 at 6 letters), "
           "a 2-letter prefix only of what it sees or holds, and what it sees or holds first ('bo' holding the bottle is "
           "'bottle', else 'no'), a queue word not before it entered; a token made during her line "
-          "read when it ends; her expected set is A27's (names in fovea and hand, the ask, her last focus, the routine; 'mama' "
-          "when away), kept to her words")
+          "read when it ends; her expected set is A27's (names where she reads it looking and in its hand, the ask, her "
+          "last focus, the routine; 'mama' when away), kept to her words")
 
 
 # --------------------------------------------------------------------------------------------------------------- the ear
@@ -939,7 +942,7 @@ def test_ledger_standing():
             led3.observe(t, P(t, child_target="duck" if t >= t0 + 3 else None))
     assert not led3.understood("duck"), "understood with no base rate"
     assert abs(binom_tail(6, 10, 0.1) - 1.46902600e-4) < 1e-11 and binom_tail(5, 5, 0.6) > K.UNDERSTOOD_P
-    # says: 3 times over 2 days, per channel, never an echo, the referent in fovea or hand
+    # says: 3 times over 2 days, per channel, never an echo, the referent where she reads it looking or in its hand
     led4 = Ledger()
     for t, ch, tg, echo in ((10, "tract", "duck", False), (20, "tract", None, False), (30, "tract", "duck", True),
                             (24010, "tract", "duck", False), (24050, "token", "duck", False), (24090, "tract", "duck", False)):
@@ -952,7 +955,7 @@ def test_ledger_standing():
     assert not led5.says("duck", "tract"), "says reached within one day"
     print("12 the ledger: 'heard' only with the referent in the child's view; understood at 6 of 10 against a base rate of 1 in "
           "10 (p = 0.00015), not against its own base rate of 6 in 10, not with no base rate; 'says' 3 times over 2 days per "
-          "channel, the echo and the referent out of its fovea not counted, never within one day")
+          "channel, the echo and a referent not where she reads it looking not counted, never within one day")
 
 
 def test_replay_exact():
@@ -1298,9 +1301,9 @@ def test_name_ask_answered_after_its_question():
         assert [j[:2] for j in out.judgments] == want and con.pending is None and con.ledger.trials == [], \
             (start, out.judgments, con.pending)
     print(f"26 'what is it?' of the cup, heard at tick {pend['open']}: the child's 'cup' made at tick 1, held through her line "
-          f"and read at tick {cw[0].tick}, is no answer (no smile; the ask void, as a gaze ask with its X already in the fovea, "
-          f"so its word said again after her echo meets nothing); made at tick {pend['open']} or later: met, a smile of 2; "
-          f"the tract's turn the same by the tick its sound began")
+          f"and read at tick {cw[0].tick}, is no answer (no smile; the ask void, as a gaze ask with its X already where she reads "
+          f"it looking, so its word said again after her echo meets nothing); made at tick {pend['open']} or later: met, a "
+          f"smile of 2; the tract's turn the same by the tick its sound began")
 
 
 def test_calls_out_of_sight():
@@ -2393,6 +2396,242 @@ def test_low_items_fourth():
           "line and hands; a copy due during an ask is dropped, never made late; her realized pause 735 ms (test 37)")
 
 
+# ------------------------------------------------------------- the P3 verifier's fifth findings (c816b5a), each tested both ways
+class _SlowMotion(C.StubMotion):
+    """a motion whose acts at a thing run `extra` ticks beyond the stub's nominal times (W2's act times are unknown: a show held
+    while she shakes it, an offer held out until the bottle is taken)."""
+
+    def __init__(self, extra=0):
+        super().__init__()
+        self.extra = extra
+
+    def request(self, act, tick):
+        i = super().request(act, tick)
+        if act.kind in C.CUE_KINDS and act.target not in C.NOT_A_THING:
+            self.acts[i][5] += self.extra
+        return i
+
+
+BOTTLE_ROOM = TOYS + seen(("bottle", "bottle", "", "mat", True))
+FEED_ONLY = ("here is your bottle.", "bottle. your bottle.")                 # the feed's other frames ("bottle?" left)
+ASK_ONLY = ("where is the bottle?", "look at the bottle.")                  # the ask's ("the bottle? where is the bottle?")
+
+
+def _cue_probe(cue, x, extra=0, lat=None, answer=False, block=(), n=220, seed=0, stage=2, snap_at=None):
+    """she cues x (the feed's line with its offer of the bottle at tick 2, a show, or a redirect with its point after 40 ticks
+    with no target), then L3 asks "where is the x?" every tick from the end of the cue's last line until it is said; the child
+    follows each act of hers at a thing lat ticks after her motion ends it, for 5 ticks, and looks at the duck otherwise (at
+    nothing, for the redirect); answer: it turns to x 2 ticks after the ask's word is heard. block: her lines said at tick 40
+    (not again within 60 ticks: the frames the verifier drew are left). snap_at: at that tick her state is saved, restored into a fresh conduct and the run continued
+    there. -> (con, judgments, the tick the ask was said, the last end of her cue acts at x before it, the lines said)."""
+    def fresh():
+        con = _perfect(seed=seed, stage=stage, transcriber=Transcriber(None), motion=_SlowMotion(extra))
+        _no_sets(con, ("duck", "ball", "cup", "block", "block_red", "bottle"))
+        for y in ("duck", "cup", "block", "block_red", "bottle", "ball"):
+            con.fast.last_set[y] = 10 ** 6                                      # no follow-in set in the way
+        if cue != "feed":
+            con.fast.last_set.pop(x)
+            con.fast.last_named.pop(x)
+        con.fast.follow_in = 4                                                  # the redirect's 2 to 1 (4.10)
+        for k in block:
+            con.fast.last_said[TP.key(k) if hasattr(TP, "key") else k] = 40
+        return con
+    con = fresh()
+    rest = None if cue == "redirect" else "duck"
+    at = 45 if cue == "redirect" else 2
+    judg, asked, line_end, said = [], None, None, []
+    for t in range(n):
+        if snap_at is not None and t == snap_at:
+            st = json.loads(json.dumps(con.state(), default=_np))
+            con = fresh()
+            con.load_state(st)
+        if cue != "feed" and t == at:
+            con.request(cue, o=x)
+        if line_end is not None and asked is None and t >= line_end:
+            con.request("ask_where", o=x)
+        ends = [a[5] for a in con.motion.acts if a[2] in C.CUE_KINDS and a[3] == x]
+        tg = next((x for e in ends if lat is not None and e + lat <= t < e + lat + 5), rest)
+        if answer and con.pending is not None and t >= con.pending["open"] + 2:
+            tg = x
+        ev = (("charge_low", None),) if cue == "feed" and t == at else ()
+        s = con.tick(t, P(t, child_target=tg, seen=BOTTLE_ROOM, events=ev))
+        judg += s.judgments
+        if s.line is not None:
+            said.append((t, s.line.text))
+            if s.line.intent == "ask_where" and asked is None:
+                asked = t
+            if line_end is None and s.line.intent == cue and not con.fast.queue:
+                line_end = con.fast.busy_until                                  # the cue's last line ends
+    act_end = max([a[5] for a in con.motion.acts if a[2] in C.CUE_KINDS and a[3] == x and (asked is None or a[1] < asked)] +
+                  [line_end or 0])
+    return con, judg, asked, act_end, said
+
+
+def test_cue_ends_with_her_act():
+    """finding 1 (A51's purpose): her cue's end was taken as her line's end, not her act's. An offer, a show or a point can
+    outlast its line: the verifier's probe, stage 2, seed 0: "bottle?" ended at tick 5 but its offer of the bottle at 14; "the
+    bottle? where is the bottle?" was said at 49 (its word heard at 54), and a child that only follows the offer, 41-43 ticks
+    after it ended, met it, counted toward "understood". Now a cue in her lines' acts ends when her motion reports the act ended
+    (its status read each tick), or with the line if that is later, and no ask about its X is made while it runs."""
+    # the verifier's probe, its frames as it drew them: the stub's offer (12 ticks) outlasting "bottle?" (3 ticks)
+    met, setup = [], []
+    for lat in (41, 42, 43):
+        con, judg, asked, act_end, said = _cue_probe("feed", "bottle", lat=lat, block=FEED_ONLY + ASK_ONLY)
+        setup.append((said[0], act_end))
+        if [j for j in judg if j[1] == "met_ask"] or 1 in con.ledger.standing("bottle")["asks"]:
+            met.append((lat, asked, said[1]))
+    assert not met, f"a child that only follows her offer, 41-43 ticks after it ended, met the ask: {met}"
+    assert setup == [((2, "bottle?"), 14)] * 3, setup                     # the probe as the verifier ran it
+    assert asked >= 14 + K.CUE_CLEAR and said[1] == (asked, "the bottle? where is the bottle?"), (asked, said[:2])
+    con, judg, asked, act_end, said = _cue_probe("feed", "bottle", block=FEED_ONLY + ASK_ONLY)        # the child on the duck
+    assert said[:2] == [(2, "bottle?"), (14 + K.CUE_CLEAR, "the bottle? where is the bottle?")], said[:2]
+    why = [(r[0], r[2]) for r in con.fast.refused if r[1] == "ask_where"]
+    assert [w for t, w in why if t < 14 and "still under way" in w] and \
+        [w for t, w in why if t >= 14 and "ended" in w], why[:3]
+    # a W2 whose acts at a thing outlast their lines by 30 ticks: the feed's offer, a show set, a redirect's point; a child
+    # that follows each act 1-43 ticks after it ends never meets the ask, said only 44 ticks after the last act's end
+    runs, met = [], []
+    for cue, x in (("feed", "bottle"), ("show", "ball"), ("redirect", "ball")):
+        for lat in range(1, K.CUE_CLEAR, 3):
+            con, judg, asked, act_end, said = _cue_probe(cue, x, extra=30, lat=lat)
+            runs.append((cue, lat, asked, act_end))
+            if [j for j in judg if j[1] == "met_ask"] or 1 in con.ledger.standing(x)["asks"]:
+                met.append((cue, lat, asked, act_end))
+    assert not met, f"a child that only follows her acts met the ask: {met}"
+    assert all(a is not None and a >= e + K.CUE_CLEAR and (a == e + K.CUE_CLEAR or lat + 5 > K.CUE_CLEAR)
+               for _c, lat, a, e in runs), runs                               # later only while it looks at x (4.8)
+    # both ways: after the gap, a child that turns to the bottle once the word is heard meets the ask (a smile of 2, counted)
+    con, judg, asked, act_end, said = _cue_probe("feed", "bottle", extra=30, answer=True)
+    assert asked == act_end + K.CUE_CLEAR and [j[1] for j in judg] == ["met_ask"] and \
+        con.ledger.standing("bottle")["asks"] == [1], (asked, act_end, judg)
+    # cue_clear (P4's base-rate trials use it) is false while the act runs, even past 44 ticks after its line, and holds from
+    # the tick 44 after the motion reports it ended; a cancelled act ends its cue on the tick it is cancelled
+    con = _perfect(seed=4, transcriber=Transcriber(None), motion=_SlowMotion(60))
+    _no_sets(con)
+    con.fast.last_set.pop("ball")
+    con.fast.last_named.pop("ball")
+    con.request("show", o="ball", n=2)
+    clear = {}
+    for t in range(200):
+        con.tick(t, P(t, child_target="duck", seen=BOTTLE_ROOM))
+        clear[t] = con.cue_clear("ball", t)
+    shows = [a for a in con.motion.acts if a[2] == "show"]
+    end = max(a[5] for a in shows)
+    assert len(shows) == 2 and not any(clear[t] for t in range(end + K.CUE_CLEAR)) and \
+        all(clear[t] for t in range(end + K.CUE_CLEAR, 200)), (end, [t for t in clear if clear[t]][:2])
+    con = _perfect(seed=4, transcriber=Transcriber(None), motion=_SlowMotion(60))
+    _no_sets(con)
+    con.fast.last_set.pop("ball")
+    con.fast.last_named.pop("ball")
+    con.request("show", o="ball", n=1)
+    for t in range(24):
+        con.tick(t, P(t, child_target="duck", seen=BOTTLE_ROOM))
+        if t == 20:                                                          # after its line ended (at most 12 ticks)
+            con.motion.cancel(0)
+    assert con.cue_until.get("ball") == 21 and not con.cue_clear("ball", 20 + K.CUE_CLEAR) and \
+        con.cue_clear("ball", 21 + K.CUE_CLEAR), con.cue_until
+    # her cue acts under way are saved: a snapshot taken while the offer runs restores to the same lines and the same ask
+    _c, _j, asked0, _e, said0 = _cue_probe("feed", "bottle", extra=30, answer=True)
+    _c, _j, asked1, _e, said1 = _cue_probe("feed", "bottle", extra=30, answer=True, snap_at=20)
+    assert asked1 == asked0 and said1 == said0, (asked0, asked1)
+    print(f"43 her cue ends when her act ends (A51): the verifier's probe ('bottle?' ended at tick 5, its offer at 14): 'the "
+          f"bottle? where is the bottle?' said at {14 + K.CUE_CLEAR}, not 49, and a child that only follows the offer 41-43 "
+          f"ticks after it ended never meets it (the fourth round's met it, counted); with a W2 whose acts outlast their lines "
+          f"by 30 ticks (the feed's offer, a show, a redirect's point), {len(runs)} runs of a child following 1-43 ticks after "
+          f"each act's end: none met, every ask said {K.CUE_CLEAR} ticks after the last act's end (later only while it looks "
+          f"at the toy); after the gap a child that turns once the word is heard meets it; cue_clear false while a show runs "
+          f"past its line, true from 44 ticks after it ends or is cancelled; her cue acts under way saved and restored exactly")
+
+
+def test_cued_refuses_what_she_cannot_name():
+    """finding 2: Conduct.cued(t, target, p=None) silently dropped a cue: an object id with no percept, or one she no longer saw,
+    was taken as a word, and a twin's id ("ball_blue") is no word, so nothing was recorded and "look at the ball." was said on
+    the next tick. The colour twins are A55's targets. Now an id she has seen is named by its word (the percept of the tick or
+    her memory of the things she has seen), a nameable word stands for itself, and anything else is refused (ValueError)."""
+    twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True))
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con)
+    raised = None
+    try:
+        con.cued(0, "ball_blue")                                          # never seen, and no percept: refused
+    except ValueError as e:
+        raised = str(e)
+    assert raised is not None and "ball_blue" in raised, f"a cue at an id she cannot name was dropped silently: {con.cue_until}"
+    for bad in ("zebra", "ball_red_3", ""):
+        try:
+            con.cued(0, bad, P(0, seen=twins))
+            assert False, f"a cue at {bad!r} was accepted: {con.cue_until}"
+        except ValueError:
+            pass
+    assert con.cue_until == {}, con.cue_until
+    # the verifier's probe: she has seen the blue ball; W2 reports L1's look at it by its id with no percept (or one in which
+    # she no longer sees it): the cue is at a ball, and "look at the ball." waits 44 ticks, while an ask about the cup does not
+    for pct in (None, P(1, seen=TOYS)):
+        con = _perfect(seed=4, transcriber=Transcriber(None))
+        _no_sets(con)
+        con.tick(0, P(0, child_target="duck", seen=twins))
+        con.cued(0, "ball_blue", pct)
+        assert con.cue_until == {"ball": 0}, con.cue_until
+        said = []
+        for t in range(1, 80):
+            if t < 70:
+                con.request("ask_where", o="ball")
+            s = con.tick(t, P(t, child_target="duck", seen=twins))
+            if s.line is not None:
+                said.append((t, s.line.text))
+                if s.line.intent == "ask_where":
+                    break
+        assert said and said[0][0] == K.CUE_CLEAR and "ball" in said[0][1], said
+    # a nameable word stands for itself (a fixture, her face, a toy's word): recorded, no error
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    for w in ("window", "ball", "bottle"):
+        con.cued(3, w)
+    assert con.cue_until == {"window": 3, "ball": 3, "bottle": 3}, con.cue_until
+    print("44 cued() refuses what she cannot name: an object id she has never seen, with no percept, and words that are no "
+          "word ('zebra') raise, recording nothing (the fourth round dropped them silently); the blue ball's id, reported with "
+          "no percept or one where she no longer sees it, is a cue at a ball once she has seen it, and 'look at the ball.' "
+          f"waits {K.CUE_CLEAR} ticks (the fourth round said it on the next tick); a nameable word stands for itself")
+
+
+def _latency_mean():
+    """the exact mean of her reply's latency in ticks (A52): round(pause / 150 ms) - TURN_END_REST at least 0, the pause lognormal
+    with REPLY_PAUSE_MS's mean and sd, clipped to its range (conduct._latency), summed over the ticks from the lognormal's CDF."""
+    m, sd, lo, hi = K.REPLY_PAUSE_MS
+    s2 = math.log(1.0 + (sd / m) ** 2)
+    mu, sg = math.log(m) - s2 / 2, math.sqrt(s2)
+
+    def cdf(x):
+        return 0.5 * (1.0 + math.erf((math.log(x) - mu) / (sg * math.sqrt(2.0))))
+    tm = 1000.0 * C.TICK / C.SR
+
+    def ticks(j):
+        return max(0, j - K.TURN_END_REST)
+    e = cdf(lo) * ticks(round(lo / tm)) + (1.0 - cdf(hi)) * ticks(round(hi / tm))
+    for j in range(int(hi / tm) + 2):
+        a, b = max(lo, (j - 0.5) * tm), min(hi, (j + 0.5) * tm)
+        if b > a:
+            e += (cdf(b) - cdf(a)) * ticks(j)
+    return e
+
+
+def test_low_items_fifth():
+    """finding 3 (low): the conduct's docstring said her latency averages 3.16 ticks, where it is 2.91; the print strings of tests
+    18 and 26 (and 9, 12 and 17 alike) still said "in its fovea" of what she reads, where she reads its head's line and hands."""
+    import inspect                                                           # noqa: PLC0415
+    import re                                                                # noqa: PLC0415
+    got = re.search(r"(\d+\.\d+) ticks after the turn's end on average", C.__doc__)
+    exact = _latency_mean()
+    assert got is not None and float(got.group(1)) == round(exact, 2), (got and got.group(1), exact)
+    assert f"({round(exact, 2):.2f})" in inspect.getsource(K), "consts' REPLY_AFTER comment"
+    stale = ("in its fovea", "in the fovea", "fovea or hand", "fovea and hand", "out of its fovea")
+    for fn in (test_transcriber, test_ledger_standing, test_approximation_in_context, test_asks_answered,
+               test_name_ask_answered_after_its_question):
+        src = inspect.getsource(fn)
+        assert not [x for x in stale if x in src], (fn.__name__, [x for x in stale if x in src])
+    print(f"45 the low items: the conduct's docstring gives her latency as {got.group(1)} ticks after the turn's end on average, "
+          f"the exact mean of her draws ({exact:.3f}; it said 3.16), as consts does; tests 9, 12, 17, 18 and 26 say what she "
+          f"reads (where she reads it looking, its hand), not its fovea")
+
 def _have_engine():
     return sys.platform == "darwin" and shutil.which("swiftc") is not None
 
@@ -2444,7 +2683,8 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_calls_out_of_sight, test_introduce_only_what_she_can_show, test_give_before_its_word, test_ear_deliberate_writes,
          test_gaze_leak_closed, test_new_word_on_its_peak, test_reads_trunk_and_hands, test_held_pairs_a55, test_echoes,
          test_claude_shows_and_forms, test_imperfect_parent_and_talk_over, test_sets_distinct_in_words, test_ask_after_her_cue,
-         test_asks_she_can_judge, test_reading_held_three_ticks, test_low_items_fourth]
+         test_asks_she_can_judge, test_reading_held_three_ticks, test_low_items_fourth, test_cue_ends_with_her_act,
+         test_cued_refuses_what_she_cannot_name, test_low_items_fifth]
 
 if __name__ == "__main__":
     t0 = time.time()
