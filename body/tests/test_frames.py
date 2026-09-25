@@ -270,8 +270,9 @@ def test_the_frames():
     from body.sim.anatomy import SIM_CFG
     assert SIM_CFG["frames"] == 1
     cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=16, night_rounds=1,
-               night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0, recall=0)   # R7b's law alone: the tag 0 (the tag's is amyg
-                                                                                          # 6's), the value the codes alone (recall's is frames 5's)
+               night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0, recall=0,   # R7b's law alone: the tag 0 (the tag's is amyg
+               night_frames=0)                                                            # 6's), the value the codes alone (recall's is frames
+                                                                                          # 5's), the words' night (R8's over frames: night 4's)
     w = _g1_events_world(burst=True); L = _g1(cfg, w); m = L.m
     run = WorldLoop(L)
     caught = []; fw = L._frame_write; ft = L._frame_tick

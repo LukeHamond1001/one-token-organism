@@ -420,4 +420,15 @@ SIM_CFG = dict(
     # tick taped beside its record, the day cut into episodes at nightfall at the frames' event ends, their entries and windows from the
     # tag reaching back over the day's record, kept across nights up to the episodes' cap
     night_frames=1,
+    # THE NIGHT'S PASSES OVER FRAMES (R8b; PHYSIOLOGY's night_* and rem_*: "the core's night passes run as before", 5.4): the served
+    # language body's own (ops/BASE_FLAGS.txt and its save's constants, tools/pins/served_cfg.pkl): the dreams in lockstep batches of 16,
+    # 6 rounds, a dream for each memory the day added, never fewer than 1,024 or more than 2,048; the night's Adam at 1e-5 (the waking
+    # rate), warmed over 8 steps, its second moment at 0.99; REM's words drawn at temperature 1 (its 6 rounds of 8 dreams of 8 free steps
+    # are PHYSIOLOGY's, the served body's too; the served REM form, "imagine", reads the striatal critic, which the sim does not hold at
+    # birth: REM on frames is the forecast form)
+    night_batch=16, night_rounds=6, night_starts=1024, night_starts_max=2048, night_load=1.0, night_lr=1e-5, night_warm=8,
+    night_beta2=0.99, rem_temp=1.0,
+    # THE LIFE DAY AND THE NIGHT (10, 5.4, A46, B19): 24,000 waking ticks, then a night as long (the night takes time: the critics
+    # discount across it, night_ticks, and the live night steps the world that many ticks, R8c)
+    wake_ticks=24000, night_ticks=24000,
 )

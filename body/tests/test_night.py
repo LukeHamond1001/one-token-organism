@@ -85,7 +85,8 @@ def test_the_tape():
     """night 2 (step R8a; SIM_DESIGN.md 9's tape, 8's R8 row): THE DAY'S TAPE. The G1 (SimAnatomy, SIM_CFG, d 32) lives 300 ticks in a stub
     of its world with bursts (so the frames' events end) and a word every 29 ticks (so the offset ends utterances): each tick's row is its
     window position as the cortex received it, every vector channel's 3,833 numbers at fp16 (the position's float32 rounded), the words'
-    symbol, the voice's own symbol and every motor effector's act; the tape's rows are the record's rows (one a tick); the end flags are
+    symbol, the voice's own symbol, every motor effector's act and the ladder's bands the cortex received (fp16; the lead's item 1); the
+    tape's rows are the record's rows (one a tick); the end flags are
     the offset's marks on the window, set when the offset fell (after the row was taped); the rows sit in blocks of TAPE_BLOCK. About 7.8
     KB a row at the G1's sizes"""
     from body.sim.anatomy import SIZES
@@ -106,19 +107,23 @@ def test_the_tape():
         assert int(rows["s"][t, 0]) == int(w["x"]) and int(rows["xo"][t]) == int(w["xo"])
         assert [int(x) for x in rows["a"][t]] == [int(w[e.field]) for e in L.anatomy.motors]
         assert bool(rows["end"][t]) == bool(w.get("end", False)), t
+        assert torch.equal(L._tape_bands(t), w["bundle"].half())         # the bands the cortex received there (the lead's item 1)
         ends += int(bool(w.get("end", False))); words += int(int(w["x"]) != L.sil)
     assert words >= 9 and ends >= 8, (words, ends)
     per = rows["v"].element_size() * V + 8 * (1 + 1 + len(L.anatomy.motors)) + 1 + 16
+    bb = 2 * len(L.m.clocks) * int(L.m.d)
     print(f"night 2: the tape: {n} rows in {len(L._tape)} block(s) of {TAPE_BLOCK}, each its window position (the 3,833 numbers at fp16,",
-          f"the word, the voice's symbol, the {len(L.anatomy.motors)} motor acts) and the record's row; the offset's {ends} end marks of {words}",
-          f"words on it; {per:,} bytes a tick with the record (the design's 7.7 KB of fp16)")
+          f"the word, the voice's symbol, the {len(L.anatomy.motors)} motor acts, the bands it received) and the record's row; the offset's",
+          f"{ends} end marks of {words} words on it; {per:,} bytes a tick with the record (the design's 7.7 KB of fp16) and the bands' {bb:,}",
+          f"here ({2 * 8 * 512:,} at d 512)")
 
 
 # ---------------- night 3: the episodes ----------------
 
 def test_the_episodes():
     """night 3 (step R8a; SIM_DESIGN.md 7.4 item 2, 9, 10's episode cap): THE EPISODES. At nightfall the G1's day of 300 ticks is cut at the
-    frames' event ends (the night ending the last); over the day's record the tag reaches back (the fast tag* equals R7d's tag_star to the
+    frames' event ends (the night ending the last), each keeping the day's bands at its window's first tick; over the day's record the tag
+    reaches back (the fast tag* equals R7d's tag_star to the
     bit), each episode's entry and T_e are R7d's episode_entries (the bias-corrected running mean of 64 entries, moved in place and
     kept), its window of the cortex's length ends at the tick whose discounted tag is T_e (its value T_e to the bit) or at its last tick
     where T_e is under 0.1, reaching back before its start within the day, and each row's replayed dopamine's credit is the sum over the
@@ -130,7 +135,7 @@ def test_the_episodes():
     run = WorldLoop(L)
     for _ in range(300):
         run.step()
-    n = int(L._tape_n); tape = L._tape_rows(n)
+    n = int(L._tape_n); tape = L._tape_rows(n); bands = torch.stack([L._tape_bands(r_) for r_ in range(n)])
     rec = L._rec[:n].clone().double(); ends = list(L._rec_ends); mean0 = list(getattr(L, "_ep_mean", None) or [0.0, 0])
     tags = rec[:, 2]
     ts_slow = tag_star(tags.tolist(), G, 64); ts_fast = tag_star_fast(tags, G, 64)
@@ -167,6 +172,7 @@ def test_the_episodes():
         rows = L._episode_rows(ep)
         assert torch.equal(rows["v"], tape["v"][w0:p + 1]) and torch.equal(rows["a"], tape["a"][w0:p + 1]) and torch.equal(rows["G"], G_[w0:p + 1])
         assert torch.equal(rows["end"], tape["end"][w0:p + 1]) and torch.equal(rows["s"], tape["s"][w0:p + 1])
+        assert torch.equal(ep["bands0"], bands[w0])                     # its dreams begin in the day's bands at the window's start
     assert j == len(eps) == E["kept"] and at_peak >= 1 and E["tagged"] >= 1, (j, len(eps), E)
     assert not hasattr(L, "_tape") or int(L._tape_n) == 0
     # the cap: a second day, then a cap of 30 ticks
@@ -220,7 +226,141 @@ def test_the_episodes():
           f"{len(olds)} of day 1 kept at 0.81 of their entries")
 
 
-NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes]
+# ---------------- night 4: the night over frames ----------------
+
+def test_the_night_over_frames():
+    """night 4 (step R8b; SIM_DESIGN.md 7.4 item 2, 8's R8 row; the night's note since R6 fix 7): THE NIGHT OVER FRAMES, on the G1's day of
+    300 ticks. THE DRAW: the day's episodes with T_e >= 1 first, highest first, at most half the night, the rest by entry; no words'
+    dream (neither the store's nor its words-only copy). THE BATCH: each channel's observations from the reels (the fp16 numbers as
+    float32), the words, the voice's symbol and every motor effector's act as the day received them, right-padded, and each window's
+    bands from the day's at its first tick (the lead's decision, item 1 of the PFC study); the words' targets
+    the waking lesson's (the next symbol, the offset's end) by hand. ACT_PRED'S NIGHT WEIGHT: a window whose credit is -2 at every
+    position (weight clip(1 + G, 0, 1) = 0) gives act_pred, its correction and the maps exactly no gradient, while the forward half's is
+    not zero; at credit +1 (weight 1) act_pred's is not zero; and every other parameter's gradient (the stream's, every head's) is the
+    same to the bit at either weight: act_pred's weighted targets never reach the stream. THE TWO OPTIMIZERS: the night's Adam holds
+    every trainable parameter but act_pred's, its correction's and the maps'; act_pred steps by its plain step once a batch, by hand
+    (clamp(lr_motor x grad, +-bound)). ACT_INV REPLAYED over the windows' own acts, its reliability left as it was. REM ON FRAMES: from a
+    window's first positions the cortex runs free (the words drawn, every vector channel's code its head's forecast) and only the
+    prefrontal heads take a gradient. The night reports its dreams, steps, weights and gauge"""
+    import body.core.sleep as S
+    L = _g1(_cfg(night_starts=12, night_starts_max=12, night_rounds=2, night_batch=4), _events_world())
+    run = WorldLoop(L)
+    for _ in range(300):
+        run.step()
+    # what the night draws, and that no words' dream is drawn
+    calls = {"dreams": 0, "ws": 0}; dr = L.dreams; wsf = L._words_store
+    L.dreams = lambda *a, **k: (calls.__setitem__("dreams", calls["dreams"] + 1), dr(*a, **k))[1]
+    L._words_store = lambda *a, **k: (calls.__setitem__("ws", calls["ws"] + 1), wsf(*a, **k))[1]
+    seen = {}; nd = S.night_draw
+
+    def spy_draw(entries, tags, n, gen, nd=nd, seen=seen):
+        out = nd(entries, tags, n, gen); seen.update(entries=list(entries), tags=list(tags), n=n, out=list(out)); return out
+    S.night_draw = spy_draw
+    # the optimizers: the night's Adam's parameters, act_pred's plain step by hand
+    adam_ids = []; Adam = torch.optim.Adam
+
+    class SpyAdam(Adam):
+        def __init__(self, params, *a, **k):
+            params = list(params); adam_ids.append({id(p_) for p_ in params}); super().__init__(params, *a, **k)
+    S.torch.optim.Adam = SpyAdam
+    op = L.opt_pred; ost = op.step; steps = []
+
+    def spy_step(ost=ost, op=op, steps=steps):
+        g0 = op.param_groups[0]; p0 = g0["params"][0]
+        before = p0.detach().clone(); gr = p0.grad.detach().clone() if p0.grad is not None else None
+        out = ost(); steps.append((before, gr, p0.detach().clone(), float(g0["lr"]) * float(g0["rate"]), float(g0["lr"]) * float(g0["bound"])))
+        return out
+    op.step = spy_step
+    rel0 = [(dict((k_, st_[k_]) for k_ in ("inv_kappa", "inv_gain", "inv_n")), [[list(r) for r in c] for c in st_["inv_conf"]] if st_["inv_conf"] else None,
+             [list(r) for r in st_["inv_ch"]] if st_.get("inv_ch") else None) for st_ in L.motor]
+    inv0 = {e.name: [p_.detach().clone() for p_ in L.m.timing[e.name].inv.parameters()] for e in L.anatomy.motors if e.inverse}
+    nf = L._night_frames; rel_after = []
+
+    def spy_nf(rep_, nf=nf, L=L, rel_after=rel_after):
+        out = nf(rep_)
+        rel_after.extend((dict((k_, st_[k_]) for k_ in ("inv_kappa", "inv_gain", "inv_n")), [[list(r) for r in c] for c in st_["inv_conf"]] if st_["inv_conf"] else None,
+                          [list(r) for r in st_["inv_ch"]] if st_.get("inv_ch") else None) for st_ in L.motor)
+        rel_after.append({e.name: [p_.detach().clone() for p_ in L.m.timing[e.name].inv.parameters()] for e in L.anatomy.motors if e.inverse})
+        return out
+    L._night_frames = spy_nf
+    try:
+        rep = L.night()
+    finally:
+        S.night_draw = nd; S.torch.optim.Adam = Adam; del L.opt_pred.step; del L._night_frames; del L.dreams; del L._words_store
+    assert not rep.get("error"), rep.get("error")
+    assert calls == {"dreams": 0, "ws": 0}, calls
+    tags, out, n = seen["tags"], seen["out"], seen["n"]
+    firsts = sorted([i for i, t_ in enumerate(tags) if t_ >= 1.0], key=lambda i: (-tags[i], i))[:n // 2]
+    assert out[:len(firsts)] == firsts and len(out) == n == rep["dreams"] == 12 and rep["tagged_first"] == len(firsts) >= 1, (out, firsts, rep)
+    gated = {id(p_) for e_ in L.anatomy.motors for p_ in L._gated_params(e_)}
+    trainable = {id(p_) for p_ in L.m.parameters() if p_.requires_grad}
+    assert len(adam_ids) == 1 and not (adam_ids[0] & gated) and adam_ids[0] | gated >= trainable, len(adam_ids)
+    assert len(steps) == rep["nrem_steps"] == 2 * 3, (len(steps), rep["nrem_steps"])
+    for before, gr, after, s_, b_ in steps:
+        assert gr is not None and torch.equal(after, before - (gr * s_).clamp(-b_, b_))
+    # act_inv replayed: its weights moved, its reliability as it was
+    assert all(r_ == a_ for r_, a_ in zip(rel0, rel_after[:len(rel0)])), "the replay moved act_inv's reliability"
+    moved = [n_ for n_, ps_ in inv0.items() if any(not torch.equal(p_, q_) for p_, q_ in zip(ps_, rel_after[-1][n_]))]
+    assert moved and rep["act_inv_pairs"] > 0, (moved, rep["act_inv_pairs"])
+    # the batch, the words' targets, act_pred's weight
+    eps = L._episodes; batch = eps[:3]
+    obs, xos, bundles, ends, G_, mask, lens = L._frames_batch(batch)
+    off = 0
+    for c in [c for c in L.anatomy.channels if c.kind == "vector"]:
+        for b, ep in enumerate(batch):
+            assert torch.equal(obs[c.name][b, :lens[b]], L._episode_rows(ep)["v"][:, off:off + c.size].float())
+            assert float(obs[c.name][b, lens[b]:].abs().sum()) == 0.0
+        off += c.size
+    for b, ep in enumerate(batch):
+        r_ = L._episode_rows(ep)
+        assert torch.equal(bundles[b, 0], ep["bands0"].float())           # each window from the day's bands at its start (the lead's item 1)
+        assert torch.equal(obs["words"][b, :lens[b]], r_["s"][:, 0]) and torch.equal(xos[b, :lens[b]], r_["xo"])
+        assert all(torch.equal(obs[e.name][b, :lens[b]], r_["a"][:, j]) for j, e in enumerate(L.anatomy.motors))
+    y, w = L._word_targets(obs["words"], ends, lens)
+    for b in range(len(batch)):
+        xs = obs["words"][b].tolist(); en = ends[b].tolist()
+        for t in range(lens[b]):
+            nx = next((u for u in range(t + 1, lens[b]) if xs[u] != L.sil), None)
+            want = (L.end_id, 1.0) if en[t] else ((xs[nx], 1.0) if nx is not None else (None, 0.0))
+            assert float(w[b, t]) == want[1] and (want[0] is None or int(y[b, t]) == want[0]), (b, t)
+    ep = max(eps, key=lambda e_: e_["w1"] - e_["w0"])
+    grads = {}
+    for tag_, gval in (("harm", -2.0), ("full", 1.0)):
+        rows = L._reels[ep["reel"]]; saved = rows["G"].clone(); rows["G"][ep["w0"]:ep["w1"] + 1] = gval
+        try:
+            L.m.zero_grad(set_to_none=True)
+            loss, parts = L._frames_lesson([ep]); loss.backward()
+        finally:
+            rows["G"].copy_(saved)
+        grads[tag_] = {n_: (p_.grad.clone() if p_.grad is not None else None) for n_, p_ in L.m.named_parameters()}
+    L.m.zero_grad(set_to_none=True)
+    gnames = {n_ for n_, p_ in L.m.named_parameters() if id(p_) in gated}
+    for n_ in gnames:
+        g_ = grads["harm"][n_]
+        assert g_ is None or float(g_.abs().max()) == 0.0, n_
+    assert any(grads["full"][n_] is not None and float(grads["full"][n_].abs().max()) > 0.0 for n_ in gnames if ".pred." in n_)
+    fwd = [n_ for n_ in grads["harm"] if ".fwd." in n_]
+    assert fwd and all(grads["harm"][n_] is not None and float(grads["harm"][n_].abs().max()) > 0.0 for n_ in fwd if n_.endswith("weight"))
+    other = [n_ for n_ in grads["harm"] if n_ not in gnames]
+    same = [n_ for n_ in other if (grads["harm"][n_] is None) == (grads["full"][n_] is None) and (grads["harm"][n_] is None or torch.equal(grads["harm"][n_], grads["full"][n_]))]
+    assert same == other, [n_ for n_ in other if n_ not in same][:5]
+    # REM on frames: only the prefrontal heads learn
+    L.m.zero_grad(set_to_none=True)
+    fl, fc = L._rem_frames(eps[0]); fl.backward()
+    with_grad = sorted({n_.split(".")[0] for n_, p_ in L.m.named_parameters() if p_.grad is not None and float(p_.grad.abs().sum()) > 0})
+    L.m.zero_grad(set_to_none=True)
+    assert with_grad == ["pfc_pred"], with_grad
+    assert rep["rem_steps"] == int(L.cfg["rem_rounds"]) and rep["gauge"]["before"] and rep["act_pred_weight"]["positions"] > 0
+    print(f"night 4: the night over frames: {rep['dreams']} dreams ({rep['tagged_first']} tagged first, highest first; no words' dream),",
+          f"{rep['nrem_steps']} NREM steps in batches of 4, act_pred by its plain step by hand at each, the night's Adam over every other",
+          f"parameter; act_inv replayed on {rep['act_inv_pairs']} own acts, its reliability as it was; a window of net harm gives act_pred no",
+          f"gradient and the forward half its own, the stream's gradients the same to the bit at weight 0 and 1 ({len(other)} parameters);",
+          f"act_pred's weights below 1 on {rep['act_pred_weight']['below_1']:.3f} of the positions, 0 on {rep['act_pred_weight']['zero']:.3f};",
+          f"REM on frames {rep['rem_steps']} steps (only the prefrontal heads learn); the gauge's words {rep['gauge']['before']['words']} ->",
+          f"{rep['gauge']['after']['words']}, its channels {rep['gauge']['before']['channels']} -> {rep['gauge']['after']['channels']}")
+
+
+NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames]
 
 
 if __name__ == "__main__":

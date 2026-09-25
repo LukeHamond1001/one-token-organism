@@ -781,7 +781,7 @@ class Organs(nn.Module):
         new.weight.zero_(); new.weight[:, :old.in_features] = old.weight; new.bias.copy_(old.bias)
         self.mouth_gate = new.to(old.weight.device)
 
-    def inputs(self, anatomy, obs, xos, bundles):
+    def inputs(self, anatomy, obs, xos, bundles, codes=None):
         """one position per tick -> u [T, d] (a batch of windows: [B, T, d]). THE ANATOMY'S CHANNEL CODES SUMMED IN ITS DECLARED ORDER
         (the core refactor's step R4, docs/SIM_DESIGN.md 8.4), then the input's LayerNorm: `obs` maps each channel's name to its
         observations ([T] symbols of a symbol channel, [T, size] of a vector channel), each encoded by the organ the channel names (the
@@ -793,11 +793,14 @@ class Organs(nn.Module):
         All the sounds of a tick superpose in one time step, its own attenuated by corollary discharge
         (own_gain; measured in cortex at a third to a half). With two positions per tick (the world's,
         then its own, mostly a rest) the stream read "d . o . g ." awake and "d o g" in the dreams
-        the night trains on, and the cortex forecast "d" after everything awake (run 17, day 6)."""
+        the night trains on, and the cortex forecast "d" after everything awake (run 17, day 6).
+        `codes` (step R8b, REM on frames: body/core/sleep.py): {channel name: its code [.., d]} for the channels whose code is given in
+        place of an observation (a vector channel's head's forecast in a dream's free-running part), added in the channel's own place in
+        the order; None (every caller before R8): each channel's observation encoded, as always"""
         k = int(anatomy.inner_at)
         u = None
         for c in anatomy.channels[:k]:
-            code = c.encode(self, obs[c.name])
+            code = codes[c.name] if (codes is not None and c.name in codes) else c.encode(self, obs[c.name])
             u = code if u is None else u + code
         b = self.bundle_in(bundles.reshape(*bundles.shape[:-2], -1))   # [T, nb, d] or [B, T, nb, d]
         u = b if u is None else u + b
@@ -815,7 +818,7 @@ class Organs(nn.Module):
             own = (acts != int(e.rest_id)).to(u.dtype).unsqueeze(-1)
             u = u + float(self.own_gain) * own * self.get_submodule(e.organ)(acts)
         for c in anatomy.channels[k:]:
-            u = u + c.encode(self, obs[c.name])
+            u = u + (codes[c.name] if (codes is not None and c.name in codes) else c.encode(self, obs[c.name]))
         return self.in_ln(u)
 
     def head(self, anatomy, i):

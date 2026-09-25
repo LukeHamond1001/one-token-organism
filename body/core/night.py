@@ -1,5 +1,7 @@
 """the night (a mixin of `Life`, body/life.py): the corpus as the body hears it, the dreams (`dreams`), the dreams as windows and
-lockstep batches, `night()` itself (NREM, REM, the value replay, the gauge before and after, the store's fade, the report, the save),
+lockstep batches, `night()` itself (the words' night, `_night_words`: NREM, REM, the value replay, the gauge before and after; a body
+in frames under the core refactor's step R8 dreams its episodes instead, body/core/sleep.py `_night_frames`; then the store's fade,
+the report, the save),
 the night on another device, REM's imagination and rollout, the value replay, and the sleep switch's call (`_sleep_now`: since the
 core refactor's step R9 the world is paused before the night and resumed after it).
 
@@ -250,143 +252,9 @@ class NightMixin:
         try:
             if self._night_frames_on():
                 self._episodes_nightfall(rep)                         # step R8: the day's tape cut into episodes (body/core/sleep.py)
-            # SLEEP NEED SCALES WITH THE DAY'S PLASTICITY (night_load, 0 = off; 2026-09-11, nights 114-115): with the parent talking
-            # twice as much, the day wrote twice the memories and the night, dreaming its fixed 48 starts, consolidated less far (the
-            # gauge after it 0.88 -> 0.71, the loss ending 0.09 -> 0.18). Slow-wave activity in a brain grows with the plasticity of
-            # the wake before it (the synaptic homeostasis of Tononi and Cirelli); here the number of dreams a night starts grows
-            # with the memories the day added to the store, night_load dreams per new slot, never fewer than night_starts and never
-            # more than night_starts_max. A disclosed constant, not a rule about content; the store's own count, nothing read from
-            # the parent.
-            # --- the dreams drawn: as many as the day's new memories ask for, between night_starts and night_starts_max ---
-            n_new = (self.store.n() - int(self._store_after_night)) if self._store_after_night is not None else 0
-            n_new = max(n_new, int(getattr(self, "_writes_today", 0)))   # at the capacity the store's count stops growing (the review of 2026-09-19); the day's writes are the measure
-            load = float(self.cfg.get("night_load", 0.0)); n_starts = None
-            if load > 0.0:
-                n_starts = int(min(int(self.cfg.get("night_starts_max", 192)), max(int(self.cfg["night_starts"]), round(load * max(0, n_new)))))
-            who_on = int(self.cfg.get("dream_who", 0)) > 0 and int(self.cfg.get("night_batch", 0)) > 0
-            self._n_corpus_dreams = 0
-            if who_on:
-                dreams, owns = self.dreams(n_starts, with_who=True)
+                self._night_frames(rep)                               # step R8b: the night over frames (body/core/sleep.py)
             else:
-                dreams = self.dreams(n_starts); owns = None
-            n_own_ = len(dreams) - int(getattr(self, "_n_corpus_dreams", 0))       # the gauge reads the body's own dreams only (the review of 2026-09-19): comparable across nights with and without reading
-            g_dreams = dreams[:n_own_] if n_own_ > 0 else dreams
-            g_owns = (owns[:len(g_dreams)] if owns is not None else None)
-            rep["corpus_dreams"] = int(getattr(self, "_n_corpus_dreams", 0))
-            rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new); rep["draw_serials"] = list(getattr(self, "_last_draw", []))
-            if owns is not None:                                        # its own symbols in capitals, to be read
-                rep["examples"] = ["".join(self.anatomy.decode([i]).upper() if o else self.anatomy.decode([i]) for i, o in zip(d, w_))[:32] for d, w_ in zip(dreams[:8], owns[:8])]
-                rep["own_share"] = round(sum(sum(w_) for w_ in owns) / max(1, sum(len(w_) for w_ in owns)), 3)
-            else:
-                rep["examples"] = [self.anatomy.decode(d)[:32] for d in dreams[:8]]
-            rep["mean_len"] = round(sum(len(d) for d in dreams) / len(dreams), 1) if dreams else 0
-            if not dreams:
-                rep["note"] = "the store holds nothing to dream"
-            else:
-                # --- NREM: sleep's own optimizer; the dreams in batches (night_batch > 0) or one step per round ---
-                self._night_away()                                  # the night's lessons on night_dev (the dreams already drawn at home)
-                before, nsym = self.gauge(g_dreams, g_owns); before_cos = self._gauge_cos
-                # THE MOMENT'S HORIZON (night_beta2; 2026-09-16, night 226): a fresh optimizer's second moment forms over about a thousand
-                # steps at 0.999, so at the third round an outlier gradient on a parameter whose moment is still small is normalised
-                # into a step many times the rate, which the global clip does not bound (night 226's loss rose 0.23 -> 0.34 in one
-                # round and the cortex was left in a basin the rate cannot climb). At 0.99 the moment forms in a hundred steps, before
-                # the rounds where the night's outliers arrive. A disclosed constant; 0.999 = as before.
-                # act_pred and the corrections take no gradient at night (anatomy 31 guards it). R8's replay of act_pred's targets, each
-                # weighted by the replayed dopamine's credit, must step them plainly as the day does (body/core/timing.py GatedDescent:
-                # the plain step on the replay's gradient, each target at its weight, each element bounded; never this Adam, whose
-                # division by the recent gradient size re-inflates a weighted target, the R6 verifiers' first to seventh looks), and
-                # whatever share of a weighted target reaches the stream would be taught whole by this Adam, as by the day's: the waking
-                # lesson keeps act_inv's labels out of the stream for that reason (`_timing_loss`)
-                opt = torch.optim.Adam(m.parameters(), lr=float(self.cfg["night_lr"]), betas=(0.9, float(self.cfg.get("night_beta2", 0.999))))   # sleep's own plasticity
-                sig = float(self.cfg["sigreg"])
-                # THE PLASTICITY RAMPS (night_warm, 0 = off; 2026-09-06): a fresh optimizer's first steps move every weight
-                # by the whole rate at once, and on a wide, deep cortex that first step is a shove (the 179M body's NREM loss
-                # doubled or tripled at step one every night and spent the night recovering; the 32M reference never did).
-                # Sleep's plasticity in a brain rises over the first minutes of NREM; here the rate climbs linearly over the
-                # first night_warm steps, then holds. A disclosed constant, not a rule about content.
-                warm_ = int(self.cfg.get("night_warm", 0)); base_lr_ = float(self.cfg["night_lr"]); nstep_ = 0
-                m.train()
-                nrem = 0; losses = []
-                # A SYNAPTIC CHANGE PER RIPPLE, NOT PER NIGHT (night_batch, 0 = off; 2026-09-13, the twentieth defect): with one step
-                # per round, a night of 512 dreams and three rounds was three weight updates, and the cortex's accuracy on the parent's
-                # unreplayed lines stood at 0.52 for a hundred nights while its recall of the few replayed ones read 0.86. A sharp-wave
-                # ripple induces its plasticity as it happens, thousands a night, the replays interleaved (the complementary learning
-                # systems of McClelland, McNaughton and O'Reilly); here the optimizer steps after every night_batch dreams, the dreams
-                # shuffled each round and run in lockstep. A disclosed constant, not a rule about content.
-                nbatch_ = int(self.cfg.get("night_batch", 0))
-                for _ in range(int(self.cfg["night_rounds"]) if nbatch_ > 0 else 0):
-                    order = torch.randperm(len(dreams), generator=self.gen).tolist(); tot = 0.0; ok = 0
-                    for i0 in range(0, len(order), nbatch_):
-                        opt.zero_grad(set_to_none=True)
-                        obs, xos, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]],
-                                                                           [owns[j] for j in order[i0:i0 + nbatch_]] if owns is not None else None)
-                        C = m.stream(m.inputs(self.anatomy, obs, xos, bundles))
-                        ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
-                        if not bool(torch.isfinite(ll.detach())):
-                            continue
-                        ll.backward(); tot += float(ll.detach()); ok += 1; nstep_ += 1
-                        if warm_:
-                            for g_ in opt.param_groups:
-                                g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
-                        self._night_step(opt); nrem += 1
-                    losses.append(round(tot / max(1, ok), 3))
-                for _ in range(int(self.cfg["night_rounds"]) if nbatch_ <= 0 else 0):
-                    opt.zero_grad(set_to_none=True); tot = 0.0; ok = 0
-                    for ids in dreams:
-                        # the hippocampus replays the sequence; the cortex must carry it itself (the read
-                        # is not an input to the lesson, or the cortex learns to copy the recall and the
-                        # gauge, taken alone, stays flat: run 6, day 4)
-                        obs, whos, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
-                        C = m.stream(m.inputs(self.anatomy, obs, whos, bundles))
-                        ll, _ = m.latent_loss(m.latent_pred(C), y)          # no SIGReg: with a fixed lexicon and the PFC's
-                                                                             # objective off the trunk, nothing can collapse
-                        if not bool(torch.isfinite(ll.detach())):
-                            continue
-                        (ll / len(dreams)).backward(); tot += float(ll.detach()) / len(dreams); ok += 1
-                    if ok:
-                        nstep_ += 1
-                        if warm_:
-                            for g_ in opt.param_groups:
-                                g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
-                        self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
-                mid, _ = self.gauge(g_dreams, g_owns); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
-                # --- REM: the cortex runs free from each dream's first symbols on its own readout,
-                # a quarter of the night in rounds (biology's share), each round one batched step
-                rem_cos = []; rem_steps = 0; rem_imag = None
-                if str(self.cfg.get("rem_form", "forecast")) == "imagine":
-                    rem_imag = self._rem_imagine_rounds(dreams); rem_steps = rem_imag["rounds"]
-                else:
-                  for _ in range(int(self.cfg["rem_rounds"])):
-                    opt.zero_grad(set_to_none=True); rc = []
-                    for ids in dreams[:int(self.cfg["rem_dreams"])]:
-                        fl, fc = self._rem_rollout(ids, sig)
-                        if fl is None or not bool(torch.isfinite(fl.detach())):
-                            continue
-                        (fl / max(1, min(len(dreams), int(self.cfg["rem_dreams"])))).backward(); rc.append(fc)
-                    if rc:
-                        self._night_step(opt); rem_steps += 1; rem_cos.append(sum(rc) / len(rc))
-                # --- the value ladder replays its lived pairs once; the gauge after; a non-finite night reloads the evening's organs ---
-                self._night_home()                                  # home before the value replay, the gauge after, the fade and the save
-                self._value_replay()
-                m.eval()
-                del opt
-                finite = all(bool(torch.isfinite(p).all()) for p in m.parameters())
-                after, _ = self.gauge(g_dreams, g_owns); after_cos = self._gauge_cos
-                # THE NIGHT STANDS (the user's word, 2026-09-11 20:00: 'remove night rollback'): from night 106 to 115 a night whose dream recall
-                # fell by more than 0.15 was discarded and the organs returned to the evening's save; nothing in biology does that, and it
-                # never fired after the night it was built for. A night is kept whatever it does. Only a non-finite lesson (the arithmetic
-                # broken, not a learning outcome) reloads the evening's organs, so the body is not left with NaN for weights.
-                rep["discarded"] = not finite; rep["undone_for"] = "non-finite" if not finite else None
-                if rep["discarded"] and self.save_path and os.path.exists(self.save_path):
-                    sd = torch.load(self.save_path, map_location="cpu", weights_only=False)
-                    m.load_state_dict(sd["organs"]); m.to(self.dev)
-                    after, _ = self.gauge(g_dreams, g_owns); after_cos = self._gauge_cos
-                rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
-                            "nrem_curve": [round(float(x), 4) for x in losses],   # the whole curve (2026-09-12): to read where the rounds stop paying
-                            "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
-                            "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None), "rem_imagined": rem_imag,
-                            "gauge": {"before": before, "after_nrem": mid, "after": after, "symbols": nsym,
-                                      "cos_before": before_cos, "cos_after_nrem": mid_cos, "cos_after": after_cos}})
+                self._night_words(rep)                                # the words' night, as it always was
             # --- the rest: the store fades, the working state wakes fresh, the body is saved ---
             if getattr(self, "_store_fresh", False):
                 # A REBUILT STORE LIVES A DAY BEFORE ITS FIRST FADE (the ledger's rule, now the body's; the review of 2026-09-19): raw
@@ -450,6 +318,150 @@ class NightMixin:
             self._night_home()                                         # a failed night never leaves the day on the night's device
             self.asleep = False
         return rep
+
+    def _night_words(self, rep):
+        """THE WORDS' NIGHT (night()'s passes as they always were, moved here verbatim when step R8b gave a body in frames its night over
+        frames, body/core/sleep.py): the dreams drawn from the store or the utterance memory (dreams()); NREM, the cortex learning on
+        them with the recall off as its input; REM; the value replay; the gauge before and after; a non-finite lesson reloading the
+        evening's organs. The report's fields go into `rep`"""
+        m = self.m
+        # SLEEP NEED SCALES WITH THE DAY'S PLASTICITY (night_load, 0 = off; 2026-09-11, nights 114-115): with the parent talking
+        # twice as much, the day wrote twice the memories and the night, dreaming its fixed 48 starts, consolidated less far (the
+        # gauge after it 0.88 -> 0.71, the loss ending 0.09 -> 0.18). Slow-wave activity in a brain grows with the plasticity of
+        # the wake before it (the synaptic homeostasis of Tononi and Cirelli); here the number of dreams a night starts grows
+        # with the memories the day added to the store, night_load dreams per new slot, never fewer than night_starts and never
+        # more than night_starts_max. A disclosed constant, not a rule about content; the store's own count, nothing read from
+        # the parent.
+        # --- the dreams drawn: as many as the day's new memories ask for, between night_starts and night_starts_max ---
+        n_new = (self.store.n() - int(self._store_after_night)) if self._store_after_night is not None else 0
+        n_new = max(n_new, int(getattr(self, "_writes_today", 0)))   # at the capacity the store's count stops growing (the review of 2026-09-19); the day's writes are the measure
+        load = float(self.cfg.get("night_load", 0.0)); n_starts = None
+        if load > 0.0:
+            n_starts = int(min(int(self.cfg.get("night_starts_max", 192)), max(int(self.cfg["night_starts"]), round(load * max(0, n_new)))))
+        who_on = int(self.cfg.get("dream_who", 0)) > 0 and int(self.cfg.get("night_batch", 0)) > 0
+        self._n_corpus_dreams = 0
+        if who_on:
+            dreams, owns = self.dreams(n_starts, with_who=True)
+        else:
+            dreams = self.dreams(n_starts); owns = None
+        n_own_ = len(dreams) - int(getattr(self, "_n_corpus_dreams", 0))       # the gauge reads the body's own dreams only (the review of 2026-09-19): comparable across nights with and without reading
+        g_dreams = dreams[:n_own_] if n_own_ > 0 else dreams
+        g_owns = (owns[:len(g_dreams)] if owns is not None else None)
+        rep["corpus_dreams"] = int(getattr(self, "_n_corpus_dreams", 0))
+        rep["dreams"] = len(dreams); rep["new_slots"] = int(n_new); rep["draw_serials"] = list(getattr(self, "_last_draw", []))
+        if owns is not None:                                        # its own symbols in capitals, to be read
+            rep["examples"] = ["".join(self.anatomy.decode([i]).upper() if o else self.anatomy.decode([i]) for i, o in zip(d, w_))[:32] for d, w_ in zip(dreams[:8], owns[:8])]
+            rep["own_share"] = round(sum(sum(w_) for w_ in owns) / max(1, sum(len(w_) for w_ in owns)), 3)
+        else:
+            rep["examples"] = [self.anatomy.decode(d)[:32] for d in dreams[:8]]
+        rep["mean_len"] = round(sum(len(d) for d in dreams) / len(dreams), 1) if dreams else 0
+        if not dreams:
+            rep["note"] = "the store holds nothing to dream"
+        else:
+            # --- NREM: sleep's own optimizer; the dreams in batches (night_batch > 0) or one step per round ---
+            self._night_away()                                  # the night's lessons on night_dev (the dreams already drawn at home)
+            before, nsym = self.gauge(g_dreams, g_owns); before_cos = self._gauge_cos
+            # THE MOMENT'S HORIZON (night_beta2; 2026-09-16, night 226): a fresh optimizer's second moment forms over about a thousand
+            # steps at 0.999, so at the third round an outlier gradient on a parameter whose moment is still small is normalised
+            # into a step many times the rate, which the global clip does not bound (night 226's loss rose 0.23 -> 0.34 in one
+            # round and the cortex was left in a basin the rate cannot climb). At 0.99 the moment forms in a hundred steps, before
+            # the rounds where the night's outliers arrive. A disclosed constant; 0.999 = as before.
+            # act_pred and the corrections take no gradient at night (anatomy 31 guards it). R8's replay of act_pred's targets, each
+            # weighted by the replayed dopamine's credit, must step them plainly as the day does (body/core/timing.py GatedDescent:
+            # the plain step on the replay's gradient, each target at its weight, each element bounded; never this Adam, whose
+            # division by the recent gradient size re-inflates a weighted target, the R6 verifiers' first to seventh looks), and
+            # whatever share of a weighted target reaches the stream would be taught whole by this Adam, as by the day's: the waking
+            # lesson keeps act_inv's labels out of the stream for that reason (`_timing_loss`)
+            opt = torch.optim.Adam(m.parameters(), lr=float(self.cfg["night_lr"]), betas=(0.9, float(self.cfg.get("night_beta2", 0.999))))   # sleep's own plasticity
+            sig = float(self.cfg["sigreg"])
+            # THE PLASTICITY RAMPS (night_warm, 0 = off; 2026-09-06): a fresh optimizer's first steps move every weight
+            # by the whole rate at once, and on a wide, deep cortex that first step is a shove (the 179M body's NREM loss
+            # doubled or tripled at step one every night and spent the night recovering; the 32M reference never did).
+            # Sleep's plasticity in a brain rises over the first minutes of NREM; here the rate climbs linearly over the
+            # first night_warm steps, then holds. A disclosed constant, not a rule about content.
+            warm_ = int(self.cfg.get("night_warm", 0)); base_lr_ = float(self.cfg["night_lr"]); nstep_ = 0
+            m.train()
+            nrem = 0; losses = []
+            # A SYNAPTIC CHANGE PER RIPPLE, NOT PER NIGHT (night_batch, 0 = off; 2026-09-13, the twentieth defect): with one step
+            # per round, a night of 512 dreams and three rounds was three weight updates, and the cortex's accuracy on the parent's
+            # unreplayed lines stood at 0.52 for a hundred nights while its recall of the few replayed ones read 0.86. A sharp-wave
+            # ripple induces its plasticity as it happens, thousands a night, the replays interleaved (the complementary learning
+            # systems of McClelland, McNaughton and O'Reilly); here the optimizer steps after every night_batch dreams, the dreams
+            # shuffled each round and run in lockstep. A disclosed constant, not a rule about content.
+            nbatch_ = int(self.cfg.get("night_batch", 0))
+            for _ in range(int(self.cfg["night_rounds"]) if nbatch_ > 0 else 0):
+                order = torch.randperm(len(dreams), generator=self.gen).tolist(); tot = 0.0; ok = 0
+                for i0 in range(0, len(order), nbatch_):
+                    opt.zero_grad(set_to_none=True)
+                    obs, xos, bundles, reads, y, w = self._dream_batch([dreams[j] for j in order[i0:i0 + nbatch_]],
+                                                                       [owns[j] for j in order[i0:i0 + nbatch_]] if owns is not None else None)
+                    C = m.stream(m.inputs(self.anatomy, obs, xos, bundles))
+                    ll, _ = m.latent_loss(m.latent_pred(C), y, w=w)
+                    if not bool(torch.isfinite(ll.detach())):
+                        continue
+                    ll.backward(); tot += float(ll.detach()); ok += 1; nstep_ += 1
+                    if warm_:
+                        for g_ in opt.param_groups:
+                            g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
+                    self._night_step(opt); nrem += 1
+                losses.append(round(tot / max(1, ok), 3))
+            for _ in range(int(self.cfg["night_rounds"]) if nbatch_ <= 0 else 0):
+                opt.zero_grad(set_to_none=True); tot = 0.0; ok = 0
+                for ids in dreams:
+                    # the hippocampus replays the sequence; the cortex must carry it itself (the read
+                    # is not an input to the lesson, or the cortex learns to copy the recall and the
+                    # gauge, taken alone, stays flat: run 6, day 4)
+                    obs, whos, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
+                    C = m.stream(m.inputs(self.anatomy, obs, whos, bundles))
+                    ll, _ = m.latent_loss(m.latent_pred(C), y)          # no SIGReg: with a fixed lexicon and the PFC's
+                                                                         # objective off the trunk, nothing can collapse
+                    if not bool(torch.isfinite(ll.detach())):
+                        continue
+                    (ll / len(dreams)).backward(); tot += float(ll.detach()) / len(dreams); ok += 1
+                if ok:
+                    nstep_ += 1
+                    if warm_:
+                        for g_ in opt.param_groups:
+                            g_["lr"] = base_lr_ * min(1.0, nstep_ / warm_)
+                    self._night_step(opt); nrem += 1; losses.append(round(tot, 3))
+            mid, _ = self.gauge(g_dreams, g_owns); mid_cos = self._gauge_cos      # the gauge after NREM, before REM
+            # --- REM: the cortex runs free from each dream's first symbols on its own readout,
+            # a quarter of the night in rounds (biology's share), each round one batched step
+            rem_cos = []; rem_steps = 0; rem_imag = None
+            if str(self.cfg.get("rem_form", "forecast")) == "imagine":
+                rem_imag = self._rem_imagine_rounds(dreams); rem_steps = rem_imag["rounds"]
+            else:
+              for _ in range(int(self.cfg["rem_rounds"])):
+                opt.zero_grad(set_to_none=True); rc = []
+                for ids in dreams[:int(self.cfg["rem_dreams"])]:
+                    fl, fc = self._rem_rollout(ids, sig)
+                    if fl is None or not bool(torch.isfinite(fl.detach())):
+                        continue
+                    (fl / max(1, min(len(dreams), int(self.cfg["rem_dreams"])))).backward(); rc.append(fc)
+                if rc:
+                    self._night_step(opt); rem_steps += 1; rem_cos.append(sum(rc) / len(rc))
+            # --- the value ladder replays its lived pairs once; the gauge after; a non-finite night reloads the evening's organs ---
+            self._night_home()                                  # home before the value replay, the gauge after, the fade and the save
+            self._value_replay()
+            m.eval()
+            del opt
+            finite = all(bool(torch.isfinite(p).all()) for p in m.parameters())
+            after, _ = self.gauge(g_dreams, g_owns); after_cos = self._gauge_cos
+            # THE NIGHT STANDS (the user's word, 2026-09-11 20:00: 'remove night rollback'): from night 106 to 115 a night whose dream recall
+            # fell by more than 0.15 was discarded and the organs returned to the evening's save; nothing in biology does that, and it
+            # never fired after the night it was built for. A night is kept whatever it does. Only a non-finite lesson (the arithmetic
+            # broken, not a learning outcome) reloads the evening's organs, so the body is not left with NaN for weights.
+            rep["discarded"] = not finite; rep["undone_for"] = "non-finite" if not finite else None
+            if rep["discarded"] and self.save_path and os.path.exists(self.save_path):
+                sd = torch.load(self.save_path, map_location="cpu", weights_only=False)
+                m.load_state_dict(sd["organs"]); m.to(self.dev)
+                after, _ = self.gauge(g_dreams, g_owns); after_cos = self._gauge_cos
+            rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
+                        "nrem_curve": [round(float(x), 4) for x in losses],   # the whole curve (2026-09-12): to read where the rounds stop paying
+                        "rem_steps": rem_steps, "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None),
+                        "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None), "rem_imagined": rem_imag,
+                        "gauge": {"before": before, "after_nrem": mid, "after": after, "symbols": nsym,
+                                  "cos_before": before_cos, "cos_after_nrem": mid_cos, "cos_after": after_cos}})
 
     def _night_away(self):
         """THE NIGHT ON ANOTHER DEVICE (night_dev; 2026-09-22): the cortex and the day's small state move for the night's lessons; the

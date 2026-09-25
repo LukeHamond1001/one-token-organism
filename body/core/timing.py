@@ -424,7 +424,7 @@ class TimingMixin:
             lg[0] = lg[0].clone(); lg[0][list(e.reserved)] = float("-inf")
         return tab.flat([int(x.argmax()) for x in lg])
 
-    def _timing_loss(self, i, C, obs, wpos=None):
+    def _timing_loss(self, i, C, obs, wpos=None, night=False):
         """THE WAKING LESSON OF LATER EFFECTOR i'S TIMING PART (step R6; body/core/cortex.py `_wake_lesson`), over the window's stream
         C [T, d] (with its gradient) and observations: act_pred's squared error to the target act's row at every position t >= 1, from
         the stream at t-1 and the forward half's error at t, weighted (1 at its own acts; at its rests act_inv's reliability on act_inv's
@@ -466,7 +466,11 @@ class TimingMixin:
         THE NIGHT'S WEIGHT (step R7d, the amygdala's side of R8; SIM_DESIGN.md 7.4 item 2): `wpos` [T], when given, weighs act_pred's error
         at each position (its own acts' and act_inv's labels' alike): the night replays a window with act_pred's lesson at position t
         weighted clip(1 + G_t, 0, 1), G_t the replayed dopamine's credit (body/core/amygdala.py `act_pred_night_weight`), so acts followed
-        by net harm are not taught as acts to make; the forward half's lesson is not weighted. None (the day's): as before, to the bit"""
+        by net harm are not taught as acts to make; the forward half's lesson is not weighted. None (the day's): as before, to the bit.
+        `night` (step R8b, the night over frames: body/core/sleep.py): act_pred reads the stream detached at every position, so its
+        weighted targets (the own acts' too) reach act_pred, the correction and the recall map alone, stepped plainly (GatedDescent), and
+        never the stream, whose night Adam would teach whatever share of a weighted target reached it whole (the night's note since R6
+        fix 7); the forward half still learns through the stream at weight 1, as by day. False (the day's): as before, to the bit"""
         e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
         tm = self.m.timing[e.name]; tab = self.m.get_submodule(e.organ)
         acts = obs[e.name]
@@ -489,7 +493,9 @@ class TimingMixin:
             if bool(rested[-1]):
                 wt[-1] = 0.0                                               # its next sense is not yet felt: no label
         Cp = C[:-1]
-        if e.inverse and bool(rested[1:].any()):
+        if night:
+            Cp = Cp.detach()                                               # step R8b: the night's weighted targets never reach the stream
+        elif e.inverse and bool(rested[1:].any()):
             # ACT_INV'S LABELS TEACH THE PROPOSAL, NOT THE STREAM: at a position whose target is act_inv's label the stream is read
             # detached, so that lesson reaches act_pred and the correction alone (their plasticity gated by the label's reliability)
             Cp = torch.where(rested[1:].unsqueeze(-1), Cp.detach(), Cp)
