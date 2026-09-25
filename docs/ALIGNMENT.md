@@ -43,7 +43,7 @@ One page that says what each project is for, what is decided, where each stands 
 | sim-world | W1, W3 READY earlier; **W2 (the physical parent) being rebuilt** structurally; C6 (catch rate 36% vs 95%) and C7 (turn 28° in 2 s) to re-measure after it; W3 to reopen for the real D435 views, the camera model and lighter meshes. |
 | sim-face | The top-heavy face bias: **fix in verification** (round 2). Nothing silent gets merged. |
 | sim-parent | P3 time-matched trials: **fix 3 in verification**. Acceptance is the invariance property: flipping the draw changes nothing for any non-knower. |
-| Design | `docs/SIM_DESIGN.md` at 7bdc141 (A1–A59, B1–B21, C1–C63). In flight: the PFC-maturation study and the firsts-and-speed research (what counts as a first, checked against the state of the art; the local levers in §9). |
+| Design | `docs/SIM_DESIGN.md` at cfa7cf5 (A1–A66, B1–B21, C1–C72): the owner's bar of 2026-09-25 folded in after a state-of-the-art check and a skeptic's review — local only, no spending, ever (A61); fast learning measured as sample efficiency, life hours and exposures to each milestone and the overnight gain, never an "N× faster" figure (A62); the registered firsts (A63); the local speed levers with build steps R10, P7, W7, R8 (A64); B3 (a) yes, (b) and (c) no (A65); the human-pace ledger an optional report (A66). In flight: the PFC-maturation study. |
 
 ## 4. The order of the work left
 
@@ -62,7 +62,11 @@ One page that says what each project is for, what is decided, where each stands 
 5. W3 reopened; W4–W6; P4–P6.
 6. The local speed levers (§9), measured, with no reduced precision and no looser world.
 7. S5a plumbing, S5b, birth.
-8. **The firsts.** From the research in flight, name the first three, each with the published state of the art it beats and the trial that shows it. The candidates the lead expects to survive: a word told once and acted on the next day by a robot body; reaching, grasping and standing learned from a parent's face alone, with no reward engineering and no demonstrations; one architecture, two bodies, bit-identical core.
+8. **The firsts, as registered (SIM_DESIGN A63; each bar frozen with a digest before birth, the exact replay released, nothing claimed until a skeptic has read it against the log).**
+   - **First 1.** In one life with no resets, the stock G1 learns to orient, reach and grasp (the full claim adds rolling) within 60 life hours, from a scripted parent's sparse smiles felt only while it looks at her, every intervention counted and printed beside the claim; level 2 repeats it on the smile read by its own camera; the long-run clause at 200 life hours: savings, plasticity and retention hold. No learner has done these together from random weights in a real robot's whole body.
+   - **First 2.** It passes 3 of 4 hard tests of understanding it was never taught (the ball behind the table, the toy under the cover, her silent head turn, a look to her at a new toy); a test counts only if the born state fails it.
+   - Dropped as firsts, with reasons in the design: speed alone, a face reward alone, lifelong learning alone, compositional words, one core with two bodies, a first word from its own tract. The real G1 is the endgame. "A word told once and acted on after a night" waits for a skeptic's review before it is registered.
+   - Wall time at the lever pace (A64, A65): 60 life hours ≈ 1.6–3.3 calendar days running around the clock; 200 ≈ 5–11 days.
 9. **The discovery line.** Each mechanism must predict a human measurement it was never fitted to (a signature: the shape of a curve, a ratio, an order of firsts). Measured on copies at night boundaries, reported with the prediction written down before the measurement. A signature no one put in is the discovery.
 
 ## 5. Who does what
