@@ -165,7 +165,7 @@ class NightMixin:
         always had). Each later effector rests over them (step R5: its acts its rest; its own acts replayed are step R8). The night over
         frames, each channel's own stored codes, is step R8."""
         obs = {c_.name: (xs if i_ == 0 else c_.quiet(tuple(xs.shape), self.dev)) for i_, c_ in enumerate(self.anatomy.channels)}
-        for e_ in self.anatomy.effectors[1:]:
+        for e_ in self.anatomy.motors:
             obs[e_.name] = torch.full(tuple(xs.shape), int(e_.rest_id), dtype=torch.long, device=self.dev)
         return obs
 

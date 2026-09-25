@@ -30,7 +30,7 @@ class MouthMixin:
         with torch.no_grad():
             win = list(self.win); line = m.stri_line.clone(); sym = int(first); zero_read = torch.zeros(m.d, device=self.dev)
             held = {c_.field: c_.observe(self, self.sil, 1, still=True) for c_ in self.anatomy.channels}   # an imagined position: the world quiet, the face held (step R4)
-            for e_ in self.anatomy.effectors[1:]:
+            for e_ in self.anatomy.motors:
                 held[e_.field] = int(e_.rest_id)                  # the later effectors at rest while it imagines speaking (step R5)
             said = []
             for step in range(int(h)):
@@ -369,7 +369,7 @@ class MouthMixin:
             # THE VOICE'S OWN EAR (step R5): the gate's inputs beyond the stream and the feelings are the effector's own, declared by it
             # (VoiceEffector.gate_inputs: `_voice_ear` below, on this tick's frame); appended after the adapted input, as always
             frame = self._tick_frame(u)                                  # this tick of the world, the one _sense took (step R9; no draw)
-            ear_ = self.anatomy.effectors[0].gate_inputs(frame, self)
+            ear_ = self.anatomy.voice.gate_inputs(frame, self)
             if ear_ is not None:
                 feat = torch.cat([feat, ear_])
             z = m.mouth_gate(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)   # stress flattens the choice
@@ -555,8 +555,8 @@ class MouthMixin:
                 nxt, p_choice = self.sil, 0.0
             self._last_choice = {"p_act": float(p_act), "acted": bool(acted), "nxt": int(nxt), "p_choice": float(p_choice), "norm": float(pred1.norm()),
                                  "top": int(torch.argmax(logits)), "sharp": float(getattr(self, "_sharp_eff", m.read_sharp))}   # the tick's choice, for the instruments
-        for i_ in range(1, len(self.anatomy.effectors)):                   # THE LATER EFFECTORS (step R5), after the voice, in their order
-            self._choose_effector(i_, frame, C1, level, stri)
+        for i_ in range(1, len(self.anatomy.motors) + 1):                  # THE LATER EFFECTORS (step R5), after the voice, in their order
+            self._choose_effector(i_, frame, C1, level, stri)              # (step R6h: the motor effectors, wherever the voice stands)
         return acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew
 
     @staticmethod
@@ -571,7 +571,9 @@ class MouthMixin:
                 "chunk": 0, "sense": None, "fwd": None, "err": None,
                 "inv_conf": ([[[0.0] * int(K) for _ in range(int(K))] for K in e.factors] if e.inverse else None),
                 "inv_kappa": [0.0] * len(e.factors), "inv_gain": 0.0, "inv_n": 0, "inv_last": None,
-                "chunks": 0, "stops": {"rest": 0, "gate": 0, "reflex": 0, "end": 0, "max": 0}}
+                "chunks": 0, "stops": {"rest": 0, "gate": 0, "reflex": 0, "end": 0, "max": 0},
+                "perf": ([[0.0] * int(K) for K in e.factors] if getattr(e, "intrinsic", False) else None)}   # step R6h: its performance error's
+                                                                                                             # running means (A41), when it declares one
 
     def _choose_effector(self, i, frame, C1, level, stri):
         """A LATER EFFECTOR'S CHOICE (step R5; effector i > 0, after the voice's, its draws on self.gen after the voice's): whether (its
@@ -587,7 +589,7 @@ class MouthMixin:
         draw decides whether it goes on, and the act is act_pred's best guess (no draw); the chunk ends where that guess is its rest or
         the gate says no. Otherwise (a chunk at its ceiling, its end, no chunk under way, chunk_gate 0) the choice is a fresh decision,
         as before R6, and under chunk_gate an act of it begins a chunk."""
-        m = self.m; e = self.anatomy.effectors[i]; st = self.motor[i - 1]; tab = m.get_submodule(e.organ)
+        m = self.m; e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]; tab = m.get_submodule(e.organ)
         self._timing_sense(i)                                             # act_inv's lesson on the last tick, the forward error now (step R6)
         prev = st["now"]
         with torch.no_grad():
@@ -657,7 +659,7 @@ class MouthMixin:
                 st["stops"][stop] = int(st["stops"].get(stop, 0)) + 1
         st["now"] = {"act": int(act), "acted": bool(acted), "drew": bool(drew), "p_act": float(p_act), "p_choice": float(p_choice),
                      "digits": dig, "probs": probs, "feat": feat.cpu(), "act_on": act_on, "cost": 0.0,
-                     "cont": bool(cont), "stop": stop, "reflex": rfx is not None, "world": int(rfx) if rfx is not None else int(act)}
+                     "cont": bool(cont), "stop": stop, "reflex": rfx is not None, "world": int(rfx) if rfx is not None else int(act), "int": 0.0}
 
     def _act(self, u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew=None):
         """the act: the actor's credit, the intrinsic credit, its own symbol (or its rest) enters the stream, the gate's tag; each later
@@ -691,7 +693,9 @@ class MouthMixin:
                     self._e_actor = (g_act * ea if ea is not None else torch.zeros_like(e_new)) + e_new
         if acted:
             hab = float(self.cfg["gate_habit"])
-            if str(self.cfg.get("gate_int_form", "value")) == "error":
+            if not self.anatomy.voice.intrinsic:
+                pass                                              # STEP R6h (C61): a voice that declares no intrinsic term carries none (the G1's words)
+            elif str(self.cfg.get("gate_int_form", "value")) == "error":
                 # THE PERFORMANCE ERROR: the forecast's belief in what it said against that syllable's usual
                 # belief (a running mean per symbol), positive when it did better than usual, negative when
                 # worse, habituating as the expectation catches up (Gadagkar 2016: dopamine neurons encode
@@ -739,7 +743,7 @@ class MouthMixin:
         the forward half foresees the next tick's body sense from the stream after this tick's own step (`_timing_foresee`)."""
         m = self.m; g_ = float(gam[int(self.cfg["dopamine_band"])])
         frame = self._tick_frame(u)                                      # this tick of the world, the one _sense took (step R9)
-        for i_, (e_, st_) in enumerate(zip(self.anatomy.effectors[1:], self.motor)):
+        for i_, (e_, st_) in enumerate(zip(self.anatomy.motors, self.motor)):
             now = st_["now"]
             if tick_tr and st_["e_actor"] is not None:
                 st_["e_actor"] = g_ * st_["e_actor"]
@@ -750,6 +754,8 @@ class MouthMixin:
                     e_new = torch.outer(oh, self._z_now)
                     ea = st_["e_actor"]
                     st_["e_actor"] = ((1.0 if tick_tr else g_) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
+            if now["acted"] and e_.intrinsic:
+                now["int"] = self._perf_error(e_, st_, now)       # step R6h: its performance error, when it declares one (A41, C61)
             if now["acted"] or now["reflex"]:
                 now["cost"] = float(e_.cost(now["world"], frame, self))
                 self.fatigue += now["cost"]
@@ -757,6 +763,22 @@ class MouthMixin:
                     m.striatum_push_act(i_, now["act"])           # its act is an event of its own line
             st_["acted_last"] = bool(now["acted"])
             self._timing_foresee(i_ + 1)                          # the forward half: the next tick's body sense (step R6)
+
+    def _perf_error(self, e, st, now):
+        """THE PERFORMANCE ERROR OF A MOTOR EFFECTOR THAT DECLARES IT (step R6h; SIM_DESIGN.md 3.5, A41 and C61; Gadagkar et al. 2016: a
+        singing bird's dopamine neurons encode its performance against its own expectation), on a tick it acted: per joint, the belief
+        its choice gave the setting it made (that joint's probability of it) less that setting's usual belief (a running mean per joint
+        and setting, moving (1 - gate_habit) of the way a tick it is made: the tract's 10 articulators x 5 settings, 50 means), averaged
+        over its joints. The voice's own form, on its symbol, joint by joint; zero-mean once its expectations catch up, and it compares
+        the effector with its own past, never with anyone. It enters its gate's credit at gate_int (the lesson's w_int x e_t) and nothing
+        else: not the reward, the critics, dopamine or any other gate (under gate_int_form "error", the one form a motor effector carries:
+        Life refuses another)"""
+        hab = float(self.cfg["gate_habit"]); perf = st["perf"]; errs = []
+        for j, (p_, a_) in enumerate(zip(now["probs"], now["digits"])):
+            b_ = float(p_[int(a_)]); m_ = float(perf[j][int(a_)])
+            errs.append(b_ - m_)
+            perf[j][int(a_)] = m_ + (1.0 - hab) * (b_ - m_)
+        return float(sum(errs) / len(errs))
 
     def _feel_and_learn(self, delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew=None):
         """the feelings from dopamine; the gate's buffer and its lesson, for every effector (the voice's, then each later one's: the
@@ -781,7 +803,7 @@ class MouthMixin:
         self.gate_buf.append(row)
         for st_ in getattr(self, "motor", ()):                         # the later effectors' rows (step R5): its draw and its act's cost always;
             n_ = st_["now"]                                             # step R6: whether a reflex took the tick (no eligibility)
-            st_["buf"].append([n_["feat"], n_["acted"], credit, 0.0, self.fatigue, r_tr, n_["p_act"], n_["drew"], n_["cost"], n_["reflex"]])
+            st_["buf"].append([n_["feat"], n_["acted"], credit, n_["int"], self.fatigue, r_tr, n_["p_act"], n_["drew"], n_["cost"], n_["reflex"]])
         lesson_now = self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0
         if lesson_now and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:
@@ -812,7 +834,7 @@ class MouthMixin:
         if i == 0:
             buf_, gate_, opt_, st_ = self.gate_buf, self.m.mouth_gate, self.opt_gate, None
         else:
-            buf_, gate_, opt_, st_ = self.motor[i - 1]["buf"], self.m.get_submodule(self.anatomy.effectors[i].gate), self.opt_motor, self.motor[i - 1]
+            buf_, gate_, opt_, st_ = self.motor[i - 1]["buf"], self.m.get_submodule(self.anatomy.motors[i - 1].gate), self.opt_motor, self.motor[i - 1]
         buf = list(buf_)
         K = int(self.cfg["elig_ticks"]); dec = float(self.cfg["elig_decay"])
         s_ = 1 if int(self.cfg.get("elig_from", 0)) else 0              # the credit from the act's own tick (0), or from the tick after it (1)

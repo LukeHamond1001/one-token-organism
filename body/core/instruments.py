@@ -31,7 +31,7 @@ class InstrumentsMixin:
         if len(self.anatomy.effectors) > 1:                        # the later effectors' acts this tick and their gates (step R5)
             self.last["acts"] = {e_.name: {"act": st_["now"]["act"], "acted": st_["now"]["acted"], "gate": round(st_["now"]["p_act"], 3),
                                            "world": st_["now"]["world"], "cont": st_["now"]["cont"], "stop": st_["now"]["stop"]}   # step R6: the act to the world, a chunk's continuation, its stop
-                                 for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
+                                 for e_, st_ in zip(self.anatomy.motors, self.motor)}
         if self.sleep_pressure >= int(self.cfg["wake_ticks"]) and len(self.win) >= 8:
             self._sleep_now()
 
@@ -108,5 +108,5 @@ class InstrumentsMixin:
             d["pace"] = self._pace_report()                         # the sensed pace's instruments, the day so far
         if len(self.anatomy.effectors) > 1:                        # the later effectors (step R5): the act last tick, the gate's last lesson
             d["effectors"] = {e_.name: {"acted_last": st_["acted_last"], "gate_lesson": st_["last"], "timing": self._timing_report(i_)}   # step R6: its timing part
-                              for i_, (e_, st_) in enumerate(zip(self.anatomy.effectors[1:], self.motor), 1)}
+                              for i_, (e_, st_) in enumerate(zip(self.anatomy.motors, self.motor), 1)}
         return d

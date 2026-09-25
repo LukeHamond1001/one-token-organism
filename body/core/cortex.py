@@ -126,7 +126,7 @@ class CortexMixin:
             # THE LATER EFFECTORS' ACTS (step R5): each effector after the voice holds its act under its window field, the efference copy
             # the cortex hears beside its own sound: its act this tick at the tick's own step (its rest where it did not act), its rest
             # at a position the world opens. The diary declares none: its positions are as before.
-            acts_ = ({e_.field: (int(st_["now"]["act"]) if who == 1 else int(e_.rest_id)) for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
+            acts_ = ({e_.field: (int(st_["now"]["act"]) if who == 1 else int(e_.rest_id)) for e_, st_ in zip(self.anatomy.motors, self.motor)}
                      if len(self.anatomy.effectors) > 1 else None)
             if who == 0:
                 if x != self.sil or not self.win:
@@ -167,7 +167,7 @@ class CortexMixin:
         win = list(self.win if win is None else win)
         obs = {c_.name: (torch.tensor([w[c_.field] for w in win], device=self.dev) if c_.kind == "symbol" else torch.stack([w[c_.field] for w in win]))
                for c_ in self.anatomy.channels}
-        for e_ in self.anatomy.effectors[1:]:                          # each later effector's acts, by its name (step R5)
+        for e_ in self.anatomy.motors:                          # each later effector's acts, by its name (step R5)
             obs[e_.name] = torch.tensor([w[e_.field] for w in win], device=self.dev)
         whos = torch.tensor([w["xo"] for w in win], device=self.dev)   # its own symbols, one per tick
         bundles = torch.stack([w["bundle"] for w in win])
@@ -252,10 +252,10 @@ class CortexMixin:
             # opt_pred (body/core/timing.py GatedDescent: one plain step a lesson on this gradient, each element bounded, R6 fix 7), the
             # rest here; act_inv's labels reach act_pred and the correction alone, never the stream (`_timing_loss`)
             mrep = {}
-            for i_ in range(1, len(self.anatomy.effectors)):
+            for i_ in range(1, len(self.anatomy.motors) + 1):
                 lt_, rt_, lb_ = self._timing_loss(i_, C, obs)
                 if lt_ is not None:
-                    ll = ll + lt_; mrep[self.anatomy.effectors[i_].name] = rt_
+                    ll = ll + lt_; mrep[self.anatomy.motors[i_ - 1].name] = rt_
                     if lb_ is not None and rt_["rel"] > 0.0:
                         ll = ll + rt_["rel"] * lb_                      # act_inv's labels at their reliability (they reach act_pred alone)
             if str(self.cfg.get("rem_form", "forecast")) == "imagine":

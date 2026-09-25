@@ -665,7 +665,8 @@ class Organs(nn.Module):
         # striatal actor head (actors[name], sized with the striatum, as the voice's actor is). Built after every other organ, only when
         # declared, and with the global random stream left where it was (fork_rng): the diary declares none, so its organs are built as
         # they always were, and a body with later effectors has the diary's organs bit for bit beside them.
-        motor = list(effectors or [])[1:]
+        from .core.anatomy import motor_effectors
+        motor = motor_effectors(effectors)                        # every effector but the voice, in its order (step R6h: the voice's place)
         if motor:
             g_acts = torch.Generator().manual_seed(int(born_seed) + 15485863)
             with torch.random.fork_rng(devices=[]):
@@ -739,7 +740,7 @@ class Organs(nn.Module):
             # instrument's fault (a store holding only the cue), not the cortex's.
             own = (xos != self.sil_id).to(u.dtype).unsqueeze(-1)
             u = u + float(self.own_gain) * own * self.E(xos)
-        for e in anatomy.effectors[1:]:
+        for e in anatomy.motors:
             # A LATER EFFECTOR'S OWN ACT (step R5), its efference copy at the same corollary discharge, after the voice's: `obs` holds its
             # acts under its name ([T] flat acts, its rest where it did not act); its rest sounds nothing, as the voice's does
             acts = obs[e.name]
@@ -916,7 +917,8 @@ class Organs(nn.Module):
         self.actor = nn.Linear(width, self.vocab).to(dev)
         with torch.no_grad():
             self.vfast.weight.zero_(); self.vfast.bias.zero_(); self.actor.weight.zero_(); self.actor.bias.zero_()
-        motor = list(effectors or [])[1:]
+        from .core.anatomy import motor_effectors
+        motor = motor_effectors(effectors)                                     # every effector but the voice (step R6h)
         if motor:
             base = int(k) * (2 * self.vocab + 3); blocks = []; rows = []
             for e in motor:

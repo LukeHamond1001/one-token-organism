@@ -909,7 +909,11 @@ def test_the_voice_is_effector_0():
         return _Arm(TOK, {})
     ok().check()
     bad = []
-    a = ok(); a.effectors = a.effectors[1:] + a.effectors[:1]; bad.append(("the voice not first", a))
+    # step R6h (SIM_DESIGN.md C61): the voice may stand at any place (the G1 numbers its vocal tract 0 and the words' output 1), so a
+    # voice not first is no fault; exactly one effector is the voice (a plain effector in its place leaves none, a second naming its
+    # gate makes two: both refused below)
+    a = ok(); a.effectors = a.effectors[1:] + a.effectors[:1]; a.check()
+    assert a.voice_at == len(a.effectors) - 1 and a.voice.name == "voice" and [e_.name for e_ in a.motors] == [e_.name for e_ in ok().effectors[1:]]
     a = ok(); a.effectors[0] = Effector("voice", [a.vocab], rest_id=a.sil); bad.append(("the voice a plain effector", a))
     a = ok(); a.effectors[0].factors = [a.vocab - 1]; bad.append(("the voice not over the words", a))
     a = ok(); a.effectors[1].gate = "mouth_gate"; bad.append(("a later effector naming the voice's gate", a))

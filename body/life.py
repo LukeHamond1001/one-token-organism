@@ -89,20 +89,22 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
             raise ValueError(f"Life: the organs hold forecast heads for channels the anatomy does not declare: {_undeclared}")
         # ITS EFFECTORS IN THE ORGANS (step R5): each effector's table, gate and actor are the organs its declaration names (the voice's
         # the lexicon E, mouth_gate and actor; a later effector's built by Organs(..., effectors=anatomy.effectors)); read here, nothing kept
+        v_at_ = self.anatomy.voice_at                           # step R6h: the voice may stand at any place; every other effector is a motor one
         for i_, e_ in enumerate(self.anatomy.effectors):
+            mot_ = i_ != v_at_
             for what_, nm_ in (("table", e_.organ), ("gate", e_.gate), ("actor", e_.actor)):
                 try:
                     organs.get_submodule(nm_)
                 except AttributeError:
                     raise ValueError(f"Life: the effector {e_.name!r}'s {what_} is the organ {nm_!r}, which these organs do not have "
                                      f"(a later effector's are built by Organs(..., effectors=anatomy.effectors))") from None
-            if i_ and organs.get_submodule(e_.gate).in_features != organs.d + 5 + int(e_.n_in):
+            if mot_ and organs.get_submodule(e_.gate).in_features != organs.d + 5 + int(e_.n_in):
                 raise ValueError(f"Life: the effector {e_.name!r}'s gate reads {organs.get_submodule(e_.gate).in_features} inputs, its declaration "
                                  f"{organs.d + 5 + int(e_.n_in)}")
-            if i_ and tuple(getattr(organs.get_submodule(e_.organ), "factors", ())) != tuple(int(k_) for k_ in e_.factors):
+            if mot_ and tuple(getattr(organs.get_submodule(e_.organ), "factors", ())) != tuple(int(k_) for k_ in e_.factors):
                 raise ValueError(f"Life: the effector {e_.name!r}'s table has the joints {getattr(organs.get_submodule(e_.organ), 'factors', None)}, "
                                  f"its declaration {list(e_.factors)}")
-            if i_:                                                  # step R6: its motor timing part as declared (joints, body sense, inverse model)
+            if mot_:                                                # step R6: its motor timing part as declared (joints, body sense, inverse model)
                 tm_ = organs.timing[e_.name] if (hasattr(organs, "timing") and e_.name in organs.timing) else None
                 want_ = (tuple(int(k_) for k_ in e_.factors), self.anatomy.sense_size(e_), bool(e_.inverse))
                 if tm_ is None or (tm_.factors, tm_.sense_n, tm_.inverse) != want_ or \
@@ -110,9 +112,15 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                     raise ValueError(f"Life: the effector {e_.name!r}'s motor timing part (timing.{e_.name}) is "
                                      f"{None if tm_ is None else (tm_.factors, tm_.sense_n, tm_.inverse)}, its declaration (joints, sense, inverse) {want_} "
                                      f"(built by Organs(..., channels=anatomy.channels, effectors=anatomy.effectors))")
-        _undeclared = sorted((set(getattr(organs, "acts", {}).keys()) | set(getattr(organs, "timing", {}).keys())) - {e_.name for e_ in self.anatomy.effectors[1:]})
+        _undeclared = sorted((set(getattr(organs, "acts", {}).keys()) | set(getattr(organs, "timing", {}).keys())) - {e_.name for e_ in self.anatomy.motors})
         if _undeclared:
             raise ValueError(f"Life: the organs hold the organs of effectors the anatomy does not declare: {_undeclared}")
+        # STEP R6h (A41, C61): a motor effector's intrinsic term is the performance error per joint, its one form: under another form with
+        # a weight on it, refused (the voice keeps both forms, as always)
+        _int_ = [e_.name for e_ in self.anatomy.motors if e_.intrinsic]
+        if _int_ and float(self.cfg.get("gate_int", 0.0)) != 0.0 and str(self.cfg.get("gate_int_form", "value")) != "error":
+            raise ValueError(f"Life: the motor effectors {_int_} declare the intrinsic term, whose one form is the performance error "
+                             f"(gate_int_form 'error'); this body's is {self.cfg.get('gate_int_form')!r} at gate_int {self.cfg.get('gate_int')}")
         vb = str(self.cfg.get("vcrit_bands", "") or "").strip()
         if vb:
             with torch.no_grad():
@@ -151,7 +159,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                 if str(self.cfg.get("fast_input", "band")) == "striatum":
                     k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
                     wm_ = int(self.cfg.get("wm", 0))
-                    rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in self.anatomy.effectors[1:])   # the language block, then the later effectors' per joint (steps R5, R5b)
+                    rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in self.anatomy.motors)   # the language block, then the later effectors' per joint (steps R5, R5b)
                     if (organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != rows_
                             or organs.vfast.weight.shape[1] != m_ * (1 + wm_)):
                         organs.striatum_init(k_, m_, seed=seed, wm=wm_, effectors=self.anatomy.effectors)   # born (or re-born at a new size)
@@ -303,7 +311,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         self.credit = collections.deque(maxlen=64)
         # optimizers: the day's (the cortex and its forecasts), the striatum's (the gate), the critic's. A body with later effectors:
         # the day's holds every parameter but act_pred's and the corrections', which step with opt_pred (below; the diary has none)
-        gated_ = {id(p_) for e_ in self.anatomy.effectors[1:] for p_ in self._gated_params(e_)}
+        gated_ = {id(p_) for e_ in self.anatomy.motors for p_ in self._gated_params(e_)}
         self.opt_day = torch.optim.Adam([p_ for p_ in self.m.parameters() if id(p_) not in gated_] if gated_ else self.m.parameters(), lr=float(self.cfg["live_lr"]))
         if int(self.cfg.get("gate_ear", 0)) and self.m.mouth_gate.in_features == self.m.d + 5:
             self.m.widen_gate(2)                                # THE EAR: two inputs, born at zero
@@ -315,15 +323,15 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         # its actor's trace, the tick's choice) in life.motor, in the anatomy's order after the voice; their gates' optimizer, of the
         # voice's kind, one for all (each lesson steps its own gate alone). The diary declares none: its life gains nothing.
         if len(self.anatomy.effectors) > 1:
-            self.motor = [self._motor_state_new(e_) for e_ in self.anatomy.effectors[1:]]
-            gp_ = [p_ for e_ in self.anatomy.effectors[1:] for p_ in self.m.get_submodule(e_.gate).parameters()]
+            self.motor = [self._motor_state_new(e_) for e_ in self.anatomy.motors]
+            gp_ = [p_ for e_ in self.anatomy.motors for p_ in self.m.get_submodule(e_.gate).parameters()]
             if str(self.cfg.get("gate_opt", "sgd")) == "adam":
                 self.opt_motor = torch.optim.Adam(gp_, lr=float(self.cfg.get("gate_adam_lr", 1e-3)))
             else:
                 self.opt_motor = torch.optim.SGD(gp_, lr=float(self.cfg["gate_lr"]))
             # THE INVERSE MODELS' OPTIMIZER (step R6): act_inv learns online from its own acts, a step a tick it acted, one optimizer for
             # every effector that declares one (each lesson steps its own alone); the waking lesson never reaches it
-            ip_ = [p_ for e_ in self.anatomy.effectors[1:] if e_.inverse for p_ in self.m.timing[e_.name].inv.parameters()]
+            ip_ = [p_ for e_ in self.anatomy.motors if e_.inverse for p_ in self.m.timing[e_.name].inv.parameters()]
             if ip_:
                 self.opt_inv = torch.optim.Adam(ip_, lr=float(self.cfg.get("act_inv_lr", MOTOR["act_inv_lr"])))
             # ACT_PRED'S PLASTICITY GATED BY ITS LABELS' RELIABILITY (the R6 verifier's third finding; R6 fix 7, the lead's decision):
@@ -332,7 +340,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
             # rate per unit of gradient, each element's at most act_pred_bound x sqrt(d) such steps (body/core/timing.py GatedDescent;
             # MOTOR); the labels act_inv reads reach these alone, never the stream (the verifier's fourth look)
             fan_ = float(self.m.d) ** 0.5                                # act_pred's fan-in, the stream's width d: sqrt(d)
-            self.opt_pred = GatedDescent([{"params": self._gated_params(e_), "name": e_.name} for e_ in self.anatomy.effectors[1:]],
+            self.opt_pred = GatedDescent([{"params": self._gated_params(e_), "name": e_.name} for e_ in self.anatomy.motors],
                                          lr=float(self.cfg["live_lr"]), rate=float(self._motor_const("act_pred_rate")) * fan_,
                                          bound=float(self._motor_const("act_pred_bound")) * fan_ * float(self._motor_const("act_pred_rate")) * fan_)
         # the critic's optimizer: the value heads and the Go/NoGo gates. The bands' input maps are fixed
@@ -370,8 +378,9 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew = self._choose(C1, pred1, u, level, stri)
         int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew)
         self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew)
-        acts = {self.anatomy.effectors[0].name: int(nxt)}
-        for e_, st_ in zip(self.anatomy.effectors[1:], getattr(self, "motor", ())):
-            acts[e_.name] = int(st_["now"]["world"])
+        acts = {self.anatomy.voice.name: int(nxt)}
+        if len(self.anatomy.effectors) > 1:                 # step R6h: every effector's act in the declared order, the voice at its place
+            wa_ = {e_.name: int(st_["now"]["world"]) for e_, st_ in zip(self.anatomy.motors, self.motor)}
+            acts = {e_.name: (acts[e_.name] if e_.name in acts else wa_[e_.name]) for e_ in self.anatomy.effectors}
         self._bookkeep(u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs)
         return acts

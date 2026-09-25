@@ -2345,6 +2345,8 @@ if __name__ == "__main__":
     tests += ANATOMY_TESTS
     from body.tests.test_cerebellum import CEREB_TESTS   # the cerebellum below the tick (docs/SIM_DESIGN.md 7.5; the core refactor, step R6c)
     tests += CEREB_TESTS
+    from body.tests.test_motor import MOTOR_TESTS         # the motor effectors of the G1's design (docs/SIM_DESIGN.md 3.5-3.7; the core refactor, step R6h)
+    tests += MOTOR_TESTS
     failed = 0
     for t in tests:
         try:

@@ -194,7 +194,7 @@ class TimingMixin:
     def _timing_sense(self, i):
         """THE TICK'S BODY SENSE for later effector i (step R6), before its choice: act_inv's lesson on the tick before (when the
         effector acted then: an own act, its efference copy the label), the forward half's error now, the sense kept for the next tick"""
-        e = self.anatomy.effectors[i]; st = self.motor[i - 1]
+        e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
         if e.sense is None:
             return
         s_now = self._body_sense(e)
@@ -208,7 +208,7 @@ class TimingMixin:
         """ACT_INV LEARNS ONLINE (step R6; SIM_DESIGN.md 5.4): the pair of senses (s0 before the act, s1 after it) and the act the body
         made, its efference copy, the label. Its reliability is updated first, on the label it gives now against the efference copy
         (a prediction, not a fit), then one step of its own optimizer on the cross-entropy of each joint's setting"""
-        e = self.anatomy.effectors[i]; st = self.motor[i - 1]
+        e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
         tm = self.m.timing[e.name]; tab = self.m.get_submodule(e.organ)
         true = [int(x) for x in tab.digits(torch.tensor(int(act))).tolist()]
         with torch.no_grad():
@@ -284,7 +284,7 @@ class TimingMixin:
     def _timing_propose(self, e, C):
         """ACT_PRED'S PROPOSAL (the base Effector's `propose`; step R6): the forecast of its own next act from the stream C, plus the
         forward half's correction of the error its body sense shows now (none before the forward half has foreseen a tick)"""
-        st = self.motor[self.anatomy.effectors.index(e) - 1]
+        st = self.motor[self.anatomy.motors.index(e)]
         tm = self.m.timing[e.name]
         p = tm.pred(C)
         if e.sense is not None and st["err"] is not None:
@@ -294,7 +294,7 @@ class TimingMixin:
     def _timing_foresee(self, i):
         """THE FORWARD HALF AFTER THE ACT (step R6): the body sense at the next tick foreseen from the stream after this tick's own step
         (the act just taken is in it), kept for the next tick's error"""
-        e = self.anatomy.effectors[i]; st = self.motor[i - 1]
+        e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
         if e.sense is None:
             return
         C = getattr(self, "_C_last", None)
@@ -351,7 +351,7 @@ class TimingMixin:
         a second whole step beside the day's wherever demonstrations are, needs a gain for the shared stream where several effectors'
         labels meet (their weights' sum passes one), costs a second backward pass through the stream and its moments twice over, and
         its own ratio to the same labels given whole wandered (0.17 to 1.46), the stream's path then depending on the reliability."""
-        e = self.anatomy.effectors[i]; st = self.motor[i - 1]
+        e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
         tm = self.m.timing[e.name]; tab = self.m.get_submodule(e.organ)
         acts = obs[e.name]
         T = int(acts.shape[0])
@@ -415,7 +415,7 @@ class TimingMixin:
 
     def _timing_report(self, i):
         """the timing part's instruments for later effector i: act_inv's reliability and last lesson, the chunks and their stops"""
-        e = self.anatomy.effectors[i]; st = self.motor[i - 1]
+        e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
         out = {"chunks": int(st["chunks"]), "stops": dict(st["stops"]), "chunk": int(st["chunk"])}
         if e.inverse:
             out.update({"inv_gain": round(float(st["inv_gain"]), 3), "inv_kappa": [round(float(k_), 3) for k_ in st["inv_kappa"]],

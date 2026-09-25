@@ -161,7 +161,7 @@ class CriticsMixin:
                     with torch.no_grad():                        # THE ACTOR'S LESSON: dopamine times the eligibility, the weights forgetting
                         m.actor.weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)
                 if int(self.cfg.get("actor", 0)):
-                    for e_, st_ in zip(self.anatomy.effectors[1:], getattr(self, "motor", ())):   # each later effector's actor, the same lesson (step R5)
+                    for e_, st_ in zip(self.anatomy.motors, getattr(self, "motor", ())):   # each later effector's actor, the same lesson (step R5)
                         if st_["e_actor"] is not None:
                             with torch.no_grad():
                                 m.get_submodule(e_.actor).weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * st_["e_actor"])

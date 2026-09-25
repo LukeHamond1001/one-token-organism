@@ -38,6 +38,13 @@ sense) and a reflex (`reflex`, spinal: the act it forces this tick, which stops 
 chunk_gate. The voice declares none of it. STEP R6c declares the cerebellum's interface (`Cerebellar`, `Anatomy.cerebellar`, none by
 default): what the world feeds the organ below the tick (the mossy fibres' numbers with their declared offsets and scales), the joints
 whose servo it teaches and adds to, and the VOR's axes (SIM_DESIGN.md 7.5; body/core/cerebellum.py); the diary declares none.
+STEP R6h, THE VOICE'S PLACE AND THE GATES' DRIVES (SIM_DESIGN.md 3.5, A41, C61): the voice (the lexicon's effector: its gate the
+lexicon's mouth_gate, its acts the words' symbols) may stand at any place among the effectors, so a body numbers its effectors as its
+design does: the diary's voice is effector 0 as always, and the G1's vocal tract is effector 0 with the words' silent output, the
+voice of the code, effector 1 (body/sim/anatomy.py). The effectors other than the voice, in their declared order, are the MOTOR
+EFFECTORS (`Anatomy.motors`: until R6h `effectors[1:]`, "the later effectors"; the same list wherever the voice is first), each with its
+working state in life.motor at its place among them. The gate's intrinsic term, the performance error (A41), is carried by the effector
+that declares it (`intrinsic`): the diary's voice, as always; a motor effector per joint (the tract per articulator); none else.
 body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its
 reward equal to today's rule, its input sum, window and heads equal to today's, and its gate's lesson equal to today's. The anatomy
 names the organs and never holds them (no module, no tensor: the organs are the body's and are saved with it).
@@ -160,7 +167,12 @@ class Effector:
     position and the error of its forecast corrects the proposal. `inverse` gives it act_inv, a small network of `inv_hidden` units
     from its sense at t and t+1 to its per-joint act, learning online from its own acts (the grip and the gaze have none at birth).
     `propose` is act_pred's proposal; `reflex` is its spinal reflex (none by default), the act it forces on the world this tick,
-    which stops a chunk and is sensed, never heard as its own act."""
+    which stops a chunk and is sensed, never heard as its own act.
+    Step R6h: `intrinsic` declares that its gate's credit carries the intrinsic term, gate_int times the performance error (Gadagkar
+    et al. 2016; SIM_DESIGN.md 3.5, A41): for a motor effector, on a tick it acted, the mean over its joints of each joint's belief in
+    the setting it chose (its choice's probability) less that setting's running mean (gate_habit), under gate_int_form "error", the
+    one form a motor effector carries; every effector that does not declare it carries none. The voice declares it (the diary's term,
+    on its symbol, as always); the G1's words output does not, its vocal tract does (C61)."""
     name: str
     factors: list
     rest_id: Optional[int] = None
@@ -176,6 +188,7 @@ class Effector:
     sense_idx: Optional[list] = None      # its own numbers in that channel (None: all)
     inverse: bool = False                 # an inverse model (act_inv) from birth, over its sense
     inv_hidden: int = 64                  # act_inv's hidden units
+    intrinsic: bool = False               # step R6h: its gate's credit carries the intrinsic term (gate_int x the performance error, A41)
 
     def __post_init__(self):
         if self.organ is None:
@@ -227,12 +240,15 @@ class VoiceEffector(Effector):
     gate is m.mouth_gate (with opt_gate and gate_buf), its actor m.actor, its act the window's "xo"; its gate's inputs beyond the
     stream are its own ear (the partner's symbol, its trace or the sensed pace's hold, and its own act last tick: `_voice_ear`, under
     gate_ear), widened on the gate as they always were; its cost is symbol_cost a symbol. The voice's choice, act and lesson are
-    today's code (the mouth mixin), its draws on self.gen the tick's first."""
+    today's code (the mouth mixin), its draws on self.gen the tick's first. Its gate carries the intrinsic term (`intrinsic`, as
+    always: gate_int times its form on its symbol); a body whose words are a silent output with no such term declares it off (the G1's,
+    SIM_DESIGN.md 3.5 and C61). Since R6h it may stand at any place among the effectors (`Anatomy.voice`)."""
     organ: Optional[str] = "E"
     gate: Optional[str] = "mouth_gate"
     actor: Optional[str] = "actor"
     field: Optional[str] = "xo"
     n_in: int = 0
+    intrinsic: bool = True
 
     def gate_inputs(self, frame, life, state=None):
         u = frame.obs.get(life.anatomy.words.name)                  # the world's symbol this tick (a frame that names none: the rest)
@@ -244,6 +260,23 @@ class VoiceEffector(Effector):
     def propose(self, life, C):
         """the voice's proposal is the words' forecast, read in `_choose` as always (it has no act_pred)"""
         return None
+
+
+def voice_index(effectors):
+    """THE VOICE'S PLACE among `effectors` (step R6h; SIM_DESIGN.md 3.5, C61): the effector whose gate is the lexicon's mouth_gate (the
+    voice's, which the organs build with the lexicon); 0 when none names it (the rule before R6h: effector 0)"""
+    for i, e in enumerate(effectors or ()):
+        if getattr(e, "gate", None) == "mouth_gate":
+            return i
+    return 0
+
+
+def motor_effectors(effectors):
+    """THE MOTOR EFFECTORS (step R6h): every effector but the voice, in their declared order (until R6h effectors[1:], the later
+    effectors; the same list wherever the voice is first). The organs build their tables, gates, actors and timing parts in this
+    order, their striatal blocks are appended in it, and their working states (life.motor) keep it"""
+    v = voice_index(effectors)
+    return [e for i, e in enumerate(effectors or ()) if i != v]
 
 
 @dataclass(eq=False)
@@ -374,6 +407,21 @@ class Anatomy:
     def effector(self, name):
         return next(e for e in self.effectors if e.name == name)
 
+    @property
+    def voice_at(self):
+        """step R6h: the voice's place among the effectors (0 for the diary; the G1's words output is effector 1)"""
+        return voice_index(self.effectors)
+
+    @property
+    def voice(self):
+        """step R6h: the voice, the lexicon's effector (its acts the words' symbols, its gate mouth_gate), wherever it stands"""
+        return self.effectors[self.voice_at]
+
+    @property
+    def motors(self):
+        """step R6h: the motor effectors, every effector but the voice in the declared order (the later effectors of R5 and R6)"""
+        return motor_effectors(self.effectors)
+
     def sense_size(self, e):
         """step R6: the number of body-sense numbers effector `e` reads (0: none)"""
         if e.sense is None:
@@ -432,17 +480,22 @@ class Anatomy:
                 raise ValueError(f"anatomy: effector {e.name!r} declares an act outside its {n}")
             if e.rest_id is not None and e.rest_id in e.reserved:
                 raise ValueError(f"anatomy: effector {e.name!r}'s rest is reserved")
-        # step R5: effector 0 is the voice, sharing the words' table; a later effector names the organs the organs build for it
-        v, w = self.effectors[0], self.channels[0]
+        # step R5: the voice shares the words' table; a motor effector names the organs the organs build for it. Step R6h (C61): the
+        # voice may stand at any place among the effectors, and exactly one effector is it (its gate the lexicon's mouth_gate)
+        nv_ = [i for i, e in enumerate(self.effectors) if getattr(e, "gate", None) == "mouth_gate"]
+        if len(nv_) != 1:
+            raise ValueError(f"anatomy: exactly one effector is the voice (VoiceEffector: its gate the lexicon's mouth_gate); effectors {nv_} name "
+                             f"that gate among {[e.name for e in self.effectors]}")
+        v, w = self.voice, self.channels[0]
         if (v.organ, v.gate, v.actor, v.field) != (w.organ, "mouth_gate", "actor", "xo") or [int(k) for k in v.factors] != [int(w.size)]:
-            raise ValueError(f"anatomy: effector 0 ({v.name!r}) must be the voice (VoiceEffector): one choice among the words' {w.size} symbols from "
+            raise ValueError(f"anatomy: the voice ({v.name!r}, effector {self.voice_at}) must be the voice (VoiceEffector): one choice among the words' {w.size} symbols from "
                              f"the table it shares with the ear (organ {w.organ!r}), its gate mouth_gate, its actor 'actor', its act the window's 'xo'; "
                              f"it declares factors {v.factors}, organ {v.organ!r}, gate {v.gate!r}, actor {v.actor!r}, field {v.field!r}")
         if v.sense is not None or v.sense_idx is not None or v.inverse:
             raise ValueError(f"anatomy: the voice ({v.name!r}) has no motor timing part (its proposal is the words' forecast)")
         chan_names, chan_fields = {c.name for c in self.channels}, {c.field for c in self.channels}
         seen_fields = set()
-        for e in self.effectors[1:]:
+        for e in self.motors:
             if not (isinstance(e.name, str) and e.name.isidentifier()):
                 raise ValueError(f"anatomy: effector name {e.name!r} is not an identifier (it names the effector's organs)")
             if (e.organ, e.gate, e.actor) != (f"acts.{e.name}", f"gates.{e.name}", f"actors.{e.name}"):

@@ -49,8 +49,9 @@ class PersistenceMixin:
             # review 2026-09-22 item 20)
             blob["life"]["motor"] = {e_.name: {"inv_conf": (None if st_["inv_conf"] is None else [[[float(x_) for x_ in r_] for r_ in c_] for c_ in st_["inv_conf"]]),
                                                "inv_kappa": [float(x_) for x_ in st_["inv_kappa"]], "inv_gain": float(st_["inv_gain"]),
-                                               "inv_n": int(st_["inv_n"])}
-                                     for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
+                                               "inv_n": int(st_["inv_n"]),
+                                               **({"perf": [[float(x_) for x_ in r_] for r_ in st_["perf"]]} if st_.get("perf") is not None else {})}
+                                     for e_, st_ in zip(self.anatomy.motors, self.motor)}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -89,7 +90,7 @@ class PersistenceMixin:
         st_saved.update({k_: blob["organs"].pop(k_) for k_ in [k_ for k_ in blob["organs"] if k_ == "stri_mline" or k_.startswith("actors.")]})   # the later effectors' (step R5)
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
-        motor_ = {e_.name for e_ in anatomy.effectors[1:]}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
+        motor_ = {e_.name for e_ in anatomy.motors}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
         dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing")]
                          + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
         if dropped:
@@ -122,7 +123,7 @@ class PersistenceMixin:
         # joints'. No such save exists.
         nl_ = int(life.m.stri_line.numel()) * (2 * int(life.m.vocab) + 3)
         pre_r5b_ = (not same_ and bool(st_saved) and len(life.anatomy.effectors) > 1 and life.m.stri_W.numel() > 0 and st_saved.get("stri_W") is not None
-                    and tuple(st_saved["stri_W"].shape) == (nl_ + sum(int(life.m.stri_line.numel()) * int(e_.n_acts) for e_ in life.anatomy.effectors[1:]),
+                    and tuple(st_saved["stri_W"].shape) == (nl_ + sum(int(life.m.stri_line.numel()) * int(e_.n_acts) for e_ in life.anatomy.motors),
                                                             int(life.m.stri_W.shape[1]))
                     and st_saved.get("stri_line") is not None and st_saved["stri_line"].shape == life.m.stri_line.shape
                     and st_saved.get("vfast.weight") is not None and st_saved["vfast.weight"].shape == life.m.vfast.weight.shape)
@@ -143,7 +144,7 @@ class PersistenceMixin:
                     life.m.wm_slot.copy_(st_saved["wm_slot"].to(device)); life.m.wm_on.copy_(st_saved["wm_on"].to(device)); life.m.wm_age.copy_(st_saved["wm_age"].to(device))
                 if st_saved.get("stri_mline") is not None and "stri_mline" in life.m._buffers and st_saved["stri_mline"].shape == life.m.stri_mline.shape:
                     life.m.stri_mline.copy_(st_saved["stri_mline"].to(device))   # the later effectors' lines and actors (step R5)
-                for e_ in life.anatomy.effectors[1:]:
+                for e_ in life.anatomy.motors:
                     w_, b_ = st_saved.get(e_.actor + ".weight"), st_saved.get(e_.actor + ".bias")
                     a_ = life.m.get_submodule(e_.actor)
                     if w_ is not None and b_ is not None and w_.shape == a_.weight.shape:
@@ -213,11 +214,14 @@ class PersistenceMixin:
                   f" the shadow day (pace_sense 1) comes first", flush=True)
         if isinstance(L.get("motor"), dict):                          # the later effectors' act_inv reliability (step R6), for those this anatomy declares
             adam_ = []
-            for e_, st_ in zip(life.anatomy.effectors[1:], getattr(life, "motor", ())):
+            for e_, st_ in zip(life.anatomy.motors, getattr(life, "motor", ())):
                 mv_ = L["motor"].get(e_.name)
                 if not isinstance(mv_, dict):
                     continue
                 st_["inv_n"] = int(mv_.get("inv_n", 0))
+                pf_ = mv_.get("perf")                             # step R6h: its performance error's running means, when it declares one
+                if st_.get("perf") is not None and isinstance(pf_, list) and [len(r_) for r_ in pf_] == [int(k_) for k_ in e_.factors]:
+                    st_["perf"] = [[float(x_) for x_ in r_] for r_ in pf_]
                 # ACT_PRED'S MOMENTS, SAVED BY R6 FIX 5 OR 6 (2026-09-24): their Adam's (R6 fix 5's two samples, "own" and "labels"; R6 fix
                 # 6's one set, "lesson"); act_pred steps plainly since R6 fix 7, with no state to give back: not read (said once)
                 if isinstance(mv_.get("moments"), dict) and any(mv_["moments"].values()):
