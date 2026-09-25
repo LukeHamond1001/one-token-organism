@@ -401,9 +401,13 @@ class NightMixin:
             self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             self._z_prev = None; self._z_now = None; self._e_actor = None
-            for st_ in getattr(self, "motor", ()):                 # the later effectors' working state begins afresh, as the voice's (step R5)
+            for i_, st_ in enumerate(getattr(self, "motor", ()), 1):  # the later effectors' working state begins afresh, as the voice's (step R5)
+                if st_.get("inv_batch"):
+                    self._inverse_batch(i_)                        # step R6h: act_inv's pairs gathered before dusk, learned at nightfall
                 st_["buf"].clear(); st_["g_base"] = None; st_["e_actor"] = None; st_["acted_last"] = False; st_["now"] = None
                 st_["chunk"] = 0; st_["sense"] = None; st_["fwd"] = None; st_["err"] = None     # step R6: no chunk, no sense or foresight carried over
+                st_["unit"] = None; st_["fatigue"] = 0.0          # step R6h: no unit under way; its own fatigue rested, as the body's
+                st_["cry_t"] = 0                                   # and no cry under way
             if getattr(self.m, "stri_wm", 0):
                 self.m.wm_clear()
             if self.m.stri_W.numel() > 0:

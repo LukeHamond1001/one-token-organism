@@ -19,6 +19,8 @@ class SensesMixin:
         """feelings recover on the body's own clock (per tick), so its physiology does not change
         with the speed the serve happens to run at"""
         self.fatigue *= 0.5 ** (1.0 / float(self.cfg["fatigue_half_life"]))
+        for st_ in getattr(self, "motor", ()):                         # step R6h: each motor effector's own fatigue, at the same half-life
+            st_["fatigue"] = float(st_["fatigue"]) * 0.5 ** (1.0 / float(self.cfg["fatigue_half_life"]))
         self.stress *= 0.5 ** (1.0 / float(self.cfg["stress_half_life"]))
         self.mood *= 0.5 ** (1.0 / float(self.cfg["mood_half_life"]))
 
@@ -119,6 +121,8 @@ class SensesMixin:
         # feeling is the tick's felt event, and its term alone is the world's reward the ring and the actor's reliability read
         felt = judge.felt(frame, self)
         r = judge.term(felt)                                # the world's reward: the felt face, clipped like a press
+        terms_ = {judge.name: r} if getattr(self, "motor", None) else None   # step R6h: each source's term this tick, for a body with motor
+                                                                             # effectors (the born cry's pain: body/core/cord.py)
         self._ring_r.append(r)
         if self._act_pending:                               # the actor's reliability: the reward of the ticks after each act, on its vote for that act
             H = int(self.cfg.get("actor_horizon", 16))
@@ -130,6 +134,10 @@ class SensesMixin:
             v_ = s_.felt(frame, self)
             if v_ is not None:
                 r += s_.term(v_)
+                if terms_ is not None:
+                    terms_[s_.name] = s_.term(v_)
+        if terms_ is not None:
+            self._terms_now = terms_
         if int(self.cfg.get("own_store", 0)):
             thr = float(self.cfg.get("own_store_r", 1.0))
             if float(r) >= thr and not getattr(self, "_own_stored", False) and self.ticks - getattr(self, "_own_store_tick", -10 ** 9) >= int(self.cfg.get("own_store_gap", 40)):

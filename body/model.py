@@ -452,6 +452,25 @@ class ActTable(nn.Module):
         return out
 
 
+class BornCode(nn.Module):
+    """A CHANNEL'S BORN CODE (the core refactor's step R6h; docs/SIM_DESIGN.md 3.4 and 10, "born codes: random projections from the seed"):
+    a vector channel's `size` numbers into the cortex's d, fixed at birth from a generator of its own (the body's seed) and saved with the
+    body as a buffer that no lesson moves, as the lexicon's rows. Each number owns a fixed unit row [d]; the code is the sum of the rows,
+    each times its number, over sqrt(size): so the code's size is the observation's root mean square (a channel of unit-scaled numbers
+    weighs in the cortex's input sum about as one word's row does, whatever its width: the eyes' 1,536 numbers no more than the charge's
+    2), and a number's direction in the code is its own (the rows of distinct numbers nearly orthogonal at d 512). Unit-scaling the
+    numbers is the world's (each sensor's own units over its range: 3.4's table); the projection and its scale are ours, disclosed"""
+
+    def __init__(self, size, d, gen):
+        super().__init__()
+        self.size = int(size)
+        self.register_buffer("rows", F.normalize(torch.randn(self.size, int(d), generator=gen), dim=-1))
+
+    def forward(self, x):
+        """observations [.., size] -> codes [.., d]"""
+        return (x.to(self.rows.dtype) @ self.rows) / math.sqrt(float(self.size))
+
+
 class MotorTiming(nn.Module):
     """A LATER EFFECTOR'S MOTOR TIMING PART (the core refactor's step R6; docs/SIM_DESIGN.md 5.4 and 5.8: the forward model and the
     inverse model named as one part), born from a generator of its own (the body's seed; never the global random stream):
@@ -693,6 +712,22 @@ class Organs(nn.Module):
                             raise ValueError(f"Organs: the effector {e.name!r} senses its body on {e.sense!r}, a channel the organs were not given")
                         sn = len(e.sense_idx) if e.sense_idx is not None else int(chans[e.sense].size)
                     self.timing[e.name] = MotorTiming(e.factors, d, sn, bool(getattr(e, "inverse", False)), int(getattr(e, "inv_hidden", 64)), g_tim)
+            # THE PATTERN GENERATORS' BORN PHASES (the core refactor's step R6h, docs/SIM_DESIGN.md 3.7, A48; body/core/cord.py): when a motor
+            # effector declares a spinal pattern generator, one phase per motor effector (a fraction of the cycle) drawn from a generator of
+            # its own seeded by the body's seed, for those whose declaration names none (the arms: no coupling written between them and the
+            # legs); a buffer, saved with the body. The diary declares none, so its organs are built as they always were
+            if any(getattr(e, "spg", None) for e in motor):
+                g_spg = torch.Generator().manual_seed(int(born_seed) + 67867967)
+                self.register_buffer("spg_phase", torch.rand(len(motor), generator=g_spg, dtype=torch.float64))
+        # THE CHANNELS' BORN CODES (the core refactor's step R6h, docs/SIM_DESIGN.md 3.4; `BornCode`): each vector channel whose organ is
+        # encs.<its name> has its fixed code built here, in the channels' order, from a generator of its own seeded by the body's seed (the
+        # global random stream untouched), after every organ above; the diary's channels name the lexicon and face_in, so none is built
+        born_ = [c for c in (channels or []) if getattr(c, "organ", None) == f"encs.{c.name}"]
+        if born_:
+            g_enc = torch.Generator().manual_seed(int(born_seed) + 86028121)
+            self.encs = nn.ModuleDict()
+            for c in born_:
+                self.encs[c.name] = BornCode(int(c.size), d, g_enc)
         # THE CEREBELLUM (the core refactor's step R6c, docs/SIM_DESIGN.md 7.5 and A44; body/core/cerebellum.py): `cerebellum` is what
         # body/core/cerebellum.py `cerebellum_spec` gives for a body whose switch is on (the anatomy's Cerebellar and the born sizes), None
         # otherwise. Built after every other organ, from a generator of its own seeded by the body's seed, with the global random stream

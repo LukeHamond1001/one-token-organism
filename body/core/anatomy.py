@@ -90,8 +90,10 @@ class Channel:
 
     def encode(self, m, obs):
         """the observation's code, the cortex's input term (step R4): the organ the channel names, among the organs `m`, applied to it
-        (a symbol channel: [..] symbols -> [.., d] rows; a vector channel: [.., size] -> [.., d])"""
-        return getattr(m, self.organ)(obs)
+        (a symbol channel: [..] symbols -> [.., d] rows; a vector channel: [.., size] -> [.., d]). Step R6h: a vector channel's organ may
+        be its born code, `encs.<name>` (body/model.py `BornCode`: fixed unit rows from the body's seed, SIM_DESIGN.md 3.4), which the
+        organs build for it"""
+        return (getattr(m, self.organ) if "." not in self.organ else m.get_submodule(self.organ))(obs)
 
     def quiet(self, shape, device=None):
         """the channel's observation of nothing over `shape` positions (step R4): a symbol channel's rest, a vector channel's zeros. A
@@ -172,7 +174,16 @@ class Effector:
     et al. 2016; SIM_DESIGN.md 3.5, A41): for a motor effector, on a tick it acted, the mean over its joints of each joint's belief in
     the setting it chose (its choice's probability) less that setting's running mean (gate_habit), under gate_int_form "error", the
     one form a motor effector carries; every effector that does not declare it carries none. The voice declares it (the diary's term,
-    on its symbol, as always); the G1's words output does not, its vocal tract does (C61)."""
+    on its symbol, as always); the G1's words output does not, its vocal tract does (C61). `fwd_gate`: its forward half's error is one of
+    its gate's own inputs (SIM_DESIGN.md 3.5: each limb's forward error feeds its gate), counted in `n_in`.
+    Step R6h, THE BORN PATTERNS SUMMED AT THE CORD (body/core/cord.py; SIM_DESIGN.md 3.7, A35, A47, A48): `spg` names the joints its
+    spinal pattern generator moves and each one's flexion sense, `spg_phase` its born phase (None: drawn at birth from the body's seed);
+    `cry` declares the tract's born cry (its posture's steps, its lungs, where its breath left and the charge are sensed, and the reward
+    source whose felt pain sets it off). Each is added below the gate to the effector's own act, which keeps its eligibility.
+    Step R6h, THE BORN BIASES (body/core/cord.py; SIM_DESIGN.md 3.7, A23, A43): `orient` names the joints the born orienting bias acts
+    on (the gaze's yaw and pitch, the waist's yaw), each with the axis it turns and its sense, toward the anatomy's declared cues
+    (`Anatomy.orienting`); `orient_gate` gives its gate the born input "a cue appeared" (counted in `n_in`); `vor` names the joints the
+    VOR counter-turns (the gaze's window), whose born constants go to the world with the tick's acts."""
     name: str
     factors: list
     rest_id: Optional[int] = None
@@ -189,6 +200,15 @@ class Effector:
     inverse: bool = False                 # an inverse model (act_inv) from birth, over its sense
     inv_hidden: int = 64                  # act_inv's hidden units
     intrinsic: bool = False               # step R6h: its gate's credit carries the intrinsic term (gate_int x the performance error, A41)
+    fwd_gate: bool = False                # step R6h: its forward half's error is one of its gate's own inputs (counted in n_in)
+    spg: Optional[dict] = None            # step R6h: its spinal pattern generator's joints, {joint: its flexion sense, +1 or -1} (A48)
+    spg_phase: Optional[float] = None     # its born phase, a fraction of the cycle; None: drawn at birth from the body's seed
+    cry: Optional[dict] = None            # step R6h: its born cry (A47): {"posture": {joint: step}, "lungs": joint, "breath": (channel,
+                                          # number), "charge": (channel, number), "pain": the reward source whose felt pain sets it off}
+    orient: Optional[dict] = None         # step R6h: its joints the born orienting bias acts on, {joint: ("yaw" or "pitch", the sense its
+                                          # positive step turns: +1 toward + right / + up, -1 the other way)} (3.7, A43)
+    orient_gate: bool = False             # step R6h: the born gate input "a face, a sound onset or a sudden change appeared" (in n_in)
+    vor: Optional[list] = None            # step R6h: its joints the VOR counter-turns (the gaze's yaw and pitch: 3.7, A23)
 
     def __post_init__(self):
         if self.organ is None:
@@ -210,8 +230,15 @@ class Effector:
 
     def gate_inputs(self, frame, life, state):
         """its gate's own "ear" (step R5): the `n_in` numbers it reads beside the stream and the feelings, on the world's `frame` and
-        the effector's working `state` in the life (life.motor); the base effector's is its own act last tick (sensed, not inferred)"""
-        return [1.0 if state["acted_last"] else 0.0]
+        the effector's working `state` in the life (life.motor); the base effector's is its own act last tick (sensed, not inferred),
+        and (step R6h, `fwd_gate`) its forward half's error now (`life._fwd_err_in`: its size, the root mean square over its sense's
+        numbers, 0 before the forward half has foreseen a tick), which tells a movement it made from one done to it (SIM_DESIGN.md 3.6)"""
+        own = [1.0 if state["acted_last"] else 0.0]
+        if self.fwd_gate:
+            own.append(life._fwd_err_in(state))
+        if self.orient_gate:
+            own.append(life._orient_in(frame))                            # step R6h: a born cue appeared this tick (1 or 0)
+        return own
 
     def cost(self, act, frame, life):
         """the effort of an act (step R5), added to the body's fatigue when it acts: the base effector's is its declared `effort`"""
@@ -312,6 +339,28 @@ class Cerebellar:
 
 
 @dataclass(eq=False)
+class OrientCue:
+    """ONE BORN ORIENTING CUE (the core refactor's step R6h; SIM_DESIGN.md 3.7, A43; body/core/cord.py), as the world's frame carries it
+    from the body's own senses (never the world's list of events): `obs` names the frame's observation, `fired` the index of its number
+    that is above 0 when the cue fires this tick, `yaw` and `pitch` the indices of its direction from the fovea's centre (rad; None: no
+    such axis), `sense` the sign that makes that direction + right / + up (the ears' born lateral read gives + left: -1), `zone` the
+    half-width inside which the cue is already foveated and pulls nothing on that axis (the fovea's, rad; 0 for a side with no size),
+    `side_only` a direction with no size (the sound's side: its sign alone), `onset` a cue that is itself an onset (a sound's, a sudden
+    change's); another (the face) appears on a tick it fires after one it did not. The G1's three: the born face template in the
+    periphery (face_periph), the sound's side at an onset (the cochlea's onset and the born lateral read) and the sudden local change
+    in the grey periphery (A43). The anatomy names them and holds no state."""
+    name: str
+    obs: str
+    fired: int = 0
+    yaw: Optional[int] = None
+    pitch: Optional[int] = None
+    sense: float = 1.0
+    zone: float = 0.0
+    side_only: bool = False
+    onset: bool = False
+
+
+@dataclass(eq=False)
 class RewardSource:
     """ONE TERM OF THE FELT REWARD (step R3). Each tick a source feels (`felt`: a number, or None when it is silent this tick) and its
     feeling enters the reward as its term (`term`: clipped to +-`clip`, like a press, when a clip is declared; else the feeling as it
@@ -388,6 +437,7 @@ class Anatomy:
     the world's judgment. `cerebellar` (step R6c) is the cerebellum's interface, a `Cerebellar`, or None (the class's: an anatomy that
     declares none, the diary's, gains no attribute); a body's anatomy sets it on itself as it adds its channels and effectors"""
     cerebellar = None
+    orienting = None                                  # step R6h: the born orienting cues (a list of OrientCue), none by default
 
     def __init__(self, channels, effectors, rewards, inner_at=None):
         self.channels = list(channels)
@@ -461,8 +511,9 @@ class Anatomy:
                 raise ValueError(f"anatomy: channel {c.name!r} of size {c.size}")
             if not (isinstance(c.name, str) and c.name.isidentifier()):
                 raise ValueError(f"anatomy: channel name {c.name!r} is not an identifier (it names the channel's forecast head)")
-            if not (isinstance(c.organ, str) and c.organ.isidentifier()):
-                raise ValueError(f"anatomy: channel {c.name!r} names no organ to encode it ({c.organ!r})")
+            if not (isinstance(c.organ, str) and (c.organ.isidentifier() or (c.kind == "vector" and c.organ == f"encs.{c.name}"))):
+                raise ValueError(f"anatomy: channel {c.name!r} names no organ to encode it ({c.organ!r}; a vector channel's born code is "
+                                 f"'encs.{c.name}', step R6h)")
             if c.kind == "symbol":
                 ids = [i for i in [c.rest_id, c.end_id, *c.reserved] if i is not None]
                 if any(not 0 <= int(i) < int(c.size) for i in ids):
@@ -524,6 +575,31 @@ class Anatomy:
                 raise ValueError(f"anatomy: effector {e.name!r} declares its own numbers of no sense")
             if e.inverse and e.sense is None:
                 raise ValueError(f"anatomy: effector {e.name!r} declares an inverse model and no body sense for it to read")
+            if e.fwd_gate and e.sense is None:
+                raise ValueError(f"anatomy: effector {e.name!r} feeds its forward error to its gate and declares no body sense to foresee")
+            J_ = len(e.factors)
+            if e.spg is not None and (not e.spg or any(not 0 <= int(j_) < J_ or float(v_) not in (-1.0, 1.0) for j_, v_ in e.spg.items())):
+                raise ValueError(f"anatomy: effector {e.name!r}'s pattern generator {e.spg}: its joints among its {J_}, each sense +1 or -1")
+            if e.orient is not None and (not e.orient or any(not 0 <= int(j_) < J_ or not isinstance(v_, (tuple, list)) or len(v_) != 2
+                                                             or v_[0] not in ("yaw", "pitch") or float(v_[1]) not in (-1.0, 1.0)
+                                                             for j_, v_ in e.orient.items())):
+                raise ValueError(f"anatomy: effector {e.name!r}'s orienting joints {e.orient}: each among its {J_}, turning 'yaw' or 'pitch' "
+                                 f"with a sense of +1 or -1")
+            if e.vor is not None and (not e.vor or any(not 0 <= int(j_) < J_ for j_ in e.vor) or len(set(int(j_) for j_ in e.vor)) != len(e.vor)):
+                raise ValueError(f"anatomy: effector {e.name!r}'s VOR axes {e.vor}: distinct joints among its {J_}")
+            if e.spg_phase is not None and not 0.0 <= float(e.spg_phase) < 1.0:
+                raise ValueError(f"anatomy: effector {e.name!r}'s pattern generator's phase {e.spg_phase}: a fraction of the cycle, in [0, 1)")
+            if e.cry is not None:
+                cy_ = e.cry
+                ok_ = isinstance(cy_, dict) and {"posture", "lungs", "breath", "charge"} <= set(cy_) and cy_["posture"] and \
+                    all(0 <= int(j_) < J_ for j_ in cy_["posture"]) and int(cy_["lungs"]) in {int(j_) for j_ in cy_["posture"]}
+                for key_ in ("breath", "charge"):
+                    c_ = next((c for c in self.channels if ok_ and c.name == cy_[key_][0]), None)
+                    ok_ = ok_ and c_ is not None and c_.kind == "vector" and 0 <= int(cy_[key_][1]) < int(c_.size)
+                ok_ = ok_ and (cy_.get("pain") is None or cy_["pain"] in {r_.name for r_ in self.rewards})
+                if not ok_:
+                    raise ValueError(f"anatomy: effector {e.name!r}'s cry {cy_}: its posture's joints among its {J_}, its lungs among them, its breath "
+                                     f"and charge a vector channel's numbers, its pain one of the reward sources")
             if int(e.inv_hidden) < 1:
                 raise ValueError(f"anatomy: effector {e.name!r}'s inverse model of {e.inv_hidden} units")
         cb = self.cerebellar                                           # step R6c: the cerebellum's interface, when declared

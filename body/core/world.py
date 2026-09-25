@@ -86,6 +86,26 @@ class SubActs:
     vor_offset: object = None
 
 
+class Acts(dict):
+    """THE TICK'S ACTS (the core refactor's step R6h), as a body with motor effectors returns them: {effector name: act}, in the anatomy's
+    declared order (a plain dict for everything that reads them so), and beside them what the body adds below its gates:
+    - `cord`: {effector name: a tuple of one additive step per joint, in the joint's own units (rad for the G1's joints and the gaze's
+      axes, a fraction of the range for the tract's articulators)}: the born patterns summed at the cord this tick (the spinal pattern
+      generator, the born cry: body/core/cord.py), after the own act's cancellation; the world adds each to the target the effector's
+      own act re-anchors (target = the measured position + its own step + the cord's), under the same clip. An effector with none this
+      tick is absent.
+    - `vor`: {effector name: {"axes": [its joints the VOR counter-turns], "gain": the VOR's born gain, "quick": the quick phase's jump
+      as a fraction of the reach}}: the body's own vestibulo-ocular reflex (SIM_DESIGN.md 3.7, A23), which the world applies through
+      the tick at its samples of the gyro, as it applies the servo law (the flocculus's learned correction and offset arrive at sub-step
+      0 through SubActs when the cerebellum is on); an effector with no VOR is absent.
+    The diary's tick returns a plain dict, as always."""
+
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        self.cord = {}
+        self.vor = {}
+
+
 class World(abc.ABC):
     """A WORLD, AS THE BODY MEETS IT (step R9). One tick, lockstep: `frame()` shows the world as it is (no time passes), the body lives
     the tick on it, `apply(acts)` takes the body's acts ({effector name: act}, a rest being an act) and moves the world on by a tick.

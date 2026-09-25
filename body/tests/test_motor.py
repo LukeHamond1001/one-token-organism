@@ -4,8 +4,13 @@ refactor's step R6h). Run: python3 -m body.tests.test_motor (the organ tests run
 What must hold: the voice (the lexicon's effector) may stand at any place among the effectors, so a body numbers its effectors as its
 design does, and the place changes nothing of its life but the numbering (motor 1); the gate's intrinsic term, the performance error,
 reaches only the gate of the effector that declares it, per joint for a motor effector, and never a voice that declares none (motor 1);
-the language body has none of it (the eight pinned digests are the guard's, tools/pins/digests.txt). The stub worlds here are
-instruments of these tests, not the G1's world."""
+a movement unit holds its act unless the choice passes the persistence margin, and the born units' lengths are the gate's continuation
+draw's law (motor 2, C38 at the core); act_inv's reliability takes each label's chance from the act's own choice (motor 3); act_inv's
+lessons are batched (motor 4); each motor effector's fatigue is its own, and its forward error reaches its gate (motor 5); the spinal
+pattern generator and the born cry are summed below the gate, each by its rule (motors 6 and 7); a vector channel's born code is fixed
+from the body's seed (motor 8); the born orienting bias, its gate input and the VOR's constants (motor 9). Each is a switch or a
+declaration the language body does not hold: it has none of it (the eight pinned digests are the guard's, tools/pins/digests.txt). The
+stub worlds here are instruments of these tests, not the G1's world."""
 import collections
 import math
 import os
@@ -171,7 +176,676 @@ def test_the_voice_at_any_place():
           f"({sum(1 for iv, _ in cv if iv != 0.0)} ticks); a motor term under the value form refused; its means saved")
 
 
-MOTOR_TESTS = [test_the_voice_at_any_place]
+# ---------------- motor 2-5: movement units, the kappa correction, act_inv batched, fatigue per effector, the forward error ----------------
+
+class _Limbs(LanguageAnatomy):
+    """the diary's words and face; two senses of the world's frames through the face's map (the "body": a limb's two joints'
+    velocities; the "touch": a grip's velocity and a 0); a limb of two joints of five settings (its rest 12) with act_inv and (fwd) its
+    forward error among its gate's inputs; a grip of one joint of three settings (its rest 1) sensing its touch"""
+
+    def __init__(self, tok, cfg=None, fwd=False):
+        super().__init__(tok, cfg)
+        self.channels += [Channel("body", "vector", 2, organ="face_in"), Channel("touch", "vector", 2, organ="face_in")]
+        self.effectors += [Effector("limb", [5, 5], rest_id=12, effort=0.05, sense="body", inverse=True, inv_hidden=16,
+                                    fwd_gate=bool(fwd), n_in=2 if fwd else 1),
+                           Effector("grip", [3], rest_id=1, effort=0.03, sense="touch", sense_idx=[0])]
+
+
+_STEP5 = (-0.27, -0.09, 0.0, 0.09, 0.27)
+
+
+def _limb_world(guide_every=0):
+    """a stub world for motor 2-5: each joint's velocity is the step its setting in the tick's act makes (rad a tick over 0.15 s); the
+    parent's hand moves the resting limb now and then (every `guide_every` ticks, one act of a fixed cycle: a demonstration); a short
+    line on the words now and then"""
+
+    class LimbWorld(SimWorld):
+        LINE = "up we go "
+
+        def __init__(self):
+            self.t = 0; self.v = [0.0] * 3; self.applied = []; self.k = 0
+
+        def frame(self):
+            obs = {"body": list(self.v[:2]), "touch": [self.v[2], 0.0]}
+            k = self.t % 40 - 5
+            if 0 <= k < len(self.LINE):
+                obs["ear"] = TOK.token_to_id(self.LINE[k])
+            return Frame(self.t, obs, 2.0 if self.t % 33 == 20 else 0.0, {"who": "parent"})
+
+        def apply(self, acts):
+            self.applied.append(dict(acts))
+            a = int(acts.get("limb", 12))
+            if a == 12 and guide_every and self.t % guide_every == 0:
+                a = (7, 18, 3, 22)[self.k % 4]; self.k += 1
+            dg = [a // 5, a % 5]
+            g = int(acts.get("grip", 1))
+            self.v = [_STEP5[x] / 0.15 for x in dg] + [0.5 * (g - 1)]
+            self.t += 1
+
+        def pause(self):
+            pass
+
+        def resume(self):
+            pass
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.v, self.k))
+
+        def load_state(self, blob):
+            self.t, self.v, self.k = pickle.loads(blob)
+    return LimbWorld()
+
+
+def _born_limbs(cfg, world, fwd=False, seed=0):
+    return _born(_Limbs(TOK, cfg, fwd=fwd), cfg, world, seed=seed)
+
+
+_LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+            act_inv_lr=0.0)
+
+
+def test_movement_units():
+    """motor 2 (step R6h; SIM_DESIGN.md 3.6, 10, C38): THE MOVEMENT UNIT. Under chunk_gate and unit_margin a unit under way holds its act
+    joint by joint, a joint taking another setting only where the choice's logits prefer it to the held setting by more than the margin
+    (log 4): checked on every continuation of a body whose act_pred is made strong (its weights x 300), where holds and switches both
+    occur, each by the rule. Absent (R6), the continuation is act_pred's best guess, the choice's argmax. THE BORN UNITS (C38's
+    measurement at the core, every learning rate 0): at birth the gate's p_act is the floor plus (1 - floor) x birth_act, 0.2875, and
+    the born proposal never passes the margin, so a unit holds its first act whole until its gate's own draw closes it or chunk_max
+    (8) ends it: the lengths are geometric, P(length 1) = 1 - 0.2875, mean (1 - 0.2875^8) / (1 - 0.2875) = 1.40 ticks (0.21 s), the
+    units measured over 6000 ticks inside their binomial error; every continuation held its unit's act"""
+    import math as _m
+    base = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, chunk_gate=1, chunk_max=8,
+                unit_margin=_m.log(4.0))
+    # the rule, where holds and switches both occur
+    L = _born_limbs(dict(base, gate_floor=0.8), _limb_world())
+    with torch.no_grad():
+        L.m.timing["limb"].pred.weight.mul_(300.0)
+    rec = []; f = L._choose_effector
+
+    def spy(i, frame, C1, level, stri, f=f, L=L, rec=rec):
+        st_ = L.motor[i - 1]; held = list(st_["unit"]) if st_["unit"] is not None else None
+        out = f(i, frame, C1, level, stri)
+        now = st_["now"]
+        if i == 1 and now["cont"] and now["drew"]:
+            with torch.no_grad():
+                lg = L.m.acts["limb"].logits(L.m.timing["limb"].pred(C1) + (L.m.timing["limb"].cor(st_["err"]) if st_["err"] is not None else 0.0),
+                                             float(L.m.read_sharp))
+            rec.append((held, [x_.clone() for x_ in lg], list(now["digits"])))
+        return out
+    L._choose_effector = spy
+    run = WorldLoop(L)
+    for _ in range(400):
+        run.step()
+    holds = switches = 0
+    for held, lg, dig in rec:
+        for j, (l_, h_, a_) in enumerate(zip(lg, held, dig)):
+            b_ = int(l_.argmax()); want = b_ if float(l_[b_]) - float(l_[h_]) > _m.log(4.0) else h_
+            assert a_ == want, (j, h_, a_, want, l_)
+            holds += int(a_ == h_); switches += int(a_ != h_)
+    assert len(rec) >= 40 and holds >= 20 and switches >= 20, (len(rec), holds, switches)
+    # absent: R6's best guess
+    B = _born_limbs(dict(base, gate_floor=0.8, unit_margin=None), _limb_world())
+    with torch.no_grad():
+        B.m.timing["limb"].pred.weight.mul_(300.0)
+    rb = []; fb = B._choose_effector
+
+    def spyb(i, frame, C1, level, stri, f=fb, L=B, rec=rb):
+        out = f(i, frame, C1, level, stri); now = L.motor[i - 1]["now"]
+        if i == 1 and now["cont"] and now["drew"]:
+            rec.append((list(now["digits"]), L._best_guess(L.anatomy.motors[0], L.anatomy.motors[0].propose(L, C1))))
+        return out
+    B._choose_effector = spyb
+    run = WorldLoop(B)
+    for _ in range(200):
+        run.step()
+    assert rb and all(B.m.acts["limb"].flat(d_) == g_ for d_, g_ in rb), rb[:3]
+    # the born units (C38 at the core): every learning rate 0, the gate at birth
+    C = _born_limbs(dict(base), _limb_world()); run = WorldLoop(C)
+    p_act = float(C.cfg["gate_floor"]) + (1.0 - float(C.cfg["gate_floor"])) * float(C.cfg["birth_act"])
+    lens = []; cur = 0; held_all = True; prev_dig = None
+    for _ in range(6000):
+        run.step(); now = C.motor[0]["now"]
+        assert abs(now["p_act"] - p_act) < 1e-6, now["p_act"]
+        if now["acted"]:
+            if now["cont"]:
+                held_all &= now["digits"] == prev_dig; cur += 1
+            else:
+                if cur:
+                    lens.append(cur)
+                cur = 1
+            prev_dig = list(now["digits"])
+        else:
+            if cur:
+                lens.append(cur)
+            cur = 0
+    n = len(lens); mean = sum(lens) / n; p1 = sum(1 for x in lens if x == 1) / n
+    want_mean = (1.0 - p_act ** 8) / (1.0 - p_act); want_p1 = 1.0 - p_act
+    sd_p1 = _m.sqrt(want_p1 * (1 - want_p1) / n)
+    assert held_all and n >= 400 and abs(p1 - want_p1) < 4 * sd_p1 and abs(mean - want_mean) < 0.08, (n, mean, want_mean, p1, want_p1)
+    assert max(lens) <= 8
+    print(f"motor 2: the movement unit's rule on {len(rec)} continuations of a strong proposal ({holds} joints held, {switches} switched past",
+          f"log 4); absent, R6's best guess on {len(rb)}; the born units (p_act {p_act:.4f}): {n} units over 6000 ticks, mean",
+          f"{mean:.3f} ticks (the law {want_mean:.3f}), {p1:.3f} of length 1 (the law {want_p1:.3f}), the longest {max(lens)}, every",
+          "continuation holding its unit's act")
+
+
+def test_the_kappa_correction():
+    """motor 3 (step R6h; R6's verifiers, 6d6d246's proposal, 8's R6h row): act_inv's reliability with each label's chance taken from the
+    act's own choice. A probe of one joint of five, the acts drawn at known rates whose mode flips (hold 80% <-> +big 80%, every 500
+    acts, the draw's own probabilities known before each act): a blind label that names the regime's mode reads 0.26-0.65 under R6's
+    pooled kappa (the verifier's finding) and near 0 under the correction; a label right 90% of the time reads high under both; an act
+    chosen without a draw (a held unit's) adds its chance 1 where the label is right and 0 where it is wrong, so it shows no skill when
+    right. In a living body under act_inv_chance the reliability is the corrected kappa, the pooled one kept beside it"""
+    import random as _r
+    from body.core.timing import TimingMixin
+
+    class _Probe(TimingMixin):
+        def __init__(self, chance):
+            self.cfg = dict(act_inv_tau=8192, act_inv_chance=int(chance))
+    e = Effector("j", [5], rest_id=2)
+    out = {}
+    for kind in ("blind", "skilled"):
+        for chance in (0, 1):
+            P = _Probe(chance); st = {"inv_conf": None}; rng = _r.Random(3)
+            for t in range(6000):
+                mode = 2 if (t // 500) % 2 == 0 else 4
+                probs = [0.0] * 5; probs[mode] = 0.8; other = 4 if mode == 2 else 2; probs[other] = 0.2
+                a_ = mode if rng.random() < 0.8 else other
+                if kind == "blind":
+                    lab = mode
+                else:
+                    lab = a_ if rng.random() < 0.9 else rng.choice([k for k in range(5) if k != a_])
+                P._inv_rel_update(e, st, [lab], [a_], chance=[torch.tensor(probs)], held=False)   # the draw's own probabilities
+            out[(kind, chance)] = st["inv_gain"]
+    assert 0.2 < out[("blind", 0)] and abs(out[("blind", 1)]) < 0.03 and out[("skilled", 0)] > 0.6 and out[("skilled", 1)] > 0.6, out
+    # the chance of a drawn act, given that the draw was not the rest (`_act_chance`), against the joint law enumerated
+    L0 = _born_limbs(dict(_LR0, wake_ticks=100000, fast_rls=0), _limb_world())
+    p0, p1 = torch.tensor([0.1, 0.2, 0.4, 0.2, 0.1]), torch.tensor([0.05, 0.15, 0.6, 0.1, 0.1])
+    q = L0._act_chance(L0.anatomy.motors[0], {"cont": False, "probs": [p0, p1]})
+    for j_, qj in enumerate(q):
+        for s_ in range(5):
+            num = sum(float(p0[a0] * p1[a1]) for a0 in range(5) for a1 in range(5) if (a0, a1) != (2, 2) and (a0, a1)[j_] == s_)
+            assert abs(float(qj[s_]) - num / (1.0 - 0.24)) < 1e-6, (j_, s_, float(qj[s_]), num / 0.76)
+    assert L0._act_chance(L0.anatomy.motors[0], {"cont": True, "probs": [p0, p1]}) is None
+    # held acts: chance 1 where the label is right, 0 where wrong
+    P = _Probe(1); st = {"inv_conf": None}
+    for t in range(200):
+        P._inv_rel_update(e, st, [3], [3], chance=None, held=True)
+    assert st["inv_ch"][0][1] == st["inv_ch"][0][2] and st["inv_gain"] == 0.0, st["inv_ch"]
+    # in a living body: the corrected kappa is the reliability, the pooled kept beside it
+    L = _born_limbs(dict(wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.6, act_inv_chance=1,
+                         act_inv_lr=3e-3), _limb_world()); run = WorldLoop(L)
+    for _ in range(400):
+        run.step()
+    st = L.motor[0]
+    assert st["inv_ch"] is not None and st["inv_ch"][0][0] > 64 and "inv_kappa_pooled" in st and st["inv_gain"] > 0.2, (st["inv_gain"], st.get("inv_kappa_pooled"))
+    print(f"motor 3: the kappa correction: a blind label on the regime's mode reads {out[('blind', 0)]:.3f} pooled and",
+          f"{out[('blind', 1)]:.3f} corrected; a label right 90% reads {out[('skilled', 0)]:.3f} and {out[('skilled', 1)]:.3f}; held acts",
+          f"show no skill when right; a living limb's reliability {st['inv_gain']:.3f} corrected (pooled kappas {[round(k, 3) for k in st['inv_kappa_pooled']]})")
+
+
+def test_act_inv_batched():
+    """motor 4 (step R6h; SIM_DESIGN.md 3.6: act_inv's lessons batched every 8 ticks; unbatched they cost 4-6 ms a tick at the humanoid's
+    size): with act_inv_every 8 act_inv steps only on ticks divisible by 8, once, on the pairs gathered since (each the sense before and
+    after an own act and the act), labelled by act_inv as it stood before the step, the step the mean of the joints' summed
+    cross-entropy (checked against a copy stepped by hand); a batch of one is R6's lesson to the bit; the pairs gathered at dusk are
+    learned at nightfall; pairs pending at a save come back with the load"""
+    import copy as _c
+    cfg = dict(wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.6, act_inv_every=8)
+    L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
+    steps = []; fb = L._inverse_batch
+
+    def spy(i, f=fb, L=L):
+        st_ = L.motor[i - 1]; pairs = list(st_["inv_batch"])
+        inv0 = _c.deepcopy(L.m.timing["limb"].inv); opt0 = _c.deepcopy(L.opt_inv.state_dict())
+        f(i); steps.append((L.ticks, len(pairs), pairs, inv0, opt0, _c.deepcopy(L.m.timing["limb"].inv)))
+    L._inverse_batch = spy
+    for _ in range(120):
+        run.step()
+    assert steps and all(t_ % 8 == 0 for t_, *_ in steps) and all(1 <= n_ <= 8 for _, n_, *_ in steps), [(t_, n_) for t_, n_, *_ in steps]
+    t_, n_, pairs, inv0, opt0, inv1 = steps[3]
+    with torch.no_grad():
+        want = _c.deepcopy(inv0)
+    o = torch.optim.Adam(want.parameters(), lr=float(L.cfg.get("act_inv_lr", 1e-3))); o.load_state_dict(opt0)
+    S0 = torch.stack([p_[0] for p_ in pairs]); S1 = torch.stack([p_[1] for p_ in pairs])
+    tab = L.m.acts["limb"]; tr = torch.stack([tab.digits(torch.tensor(p_[2])) for p_ in pairs])
+    z = want(torch.cat([S0, S1 - S0], -1)); lg = torch.split(z, [5, 5], -1)
+    loss = sum(torch.nn.functional.cross_entropy(l_, tr[:, j_]) for j_, l_ in enumerate(lg)); o.zero_grad(); loss.backward(); o.step()
+    assert all(torch.equal(a_, b_) for a_, b_ in zip(want.parameters(), inv1.parameters())), "the batch's step is not the mean lesson"
+    # a batch of one is R6's lesson to the bit
+    A1 = _born_limbs(dict(cfg, act_inv_every=1), _limb_world()); B1 = _born_limbs(dict(cfg, act_inv_every=1), _limb_world())
+    for L_ in (A1, B1):
+        r_ = WorldLoop(L_)
+        for _ in range(30):
+            r_.step()
+    s0, s1 = torch.randn(2), torch.randn(2)
+    A1._inverse_lesson(1, s0, s1, 18); B1.motor[0]["inv_batch"] = [(s0, s1, 18, None)]; B1._inverse_batch(1)
+    assert all(torch.equal(a_, b_) for a_, b_ in zip(A1.m.timing["limb"].inv.parameters(), B1.m.timing["limb"].inv.parameters()))
+    assert A1.motor[0]["inv_kappa"] == B1.motor[0]["inv_kappa"] and A1.motor[0]["inv_n"] == B1.motor[0]["inv_n"]
+    # nightfall learns the pairs gathered; a save keeps pending pairs
+    del L._inverse_batch
+    L.motor[0]["inv_batch"] = [(torch.randn(2), torch.randn(2), 7, None), (torch.randn(2), torch.randn(2), 18, None)]
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path); D = Life.load(path, _Limbs(TOK, L.cfg), save_path=None, world=_limb_world())
+    finally:
+        os.remove(path)
+    assert [(torch.equal(a_[0], b_[0]), torch.equal(a_[1], b_[1]), a_[2] == b_[2]) for a_, b_ in zip(L.motor[0]["inv_batch"], D.motor[0]["inv_batch"])] == [(True, True, True)] * 2
+    n0 = L.motor[0]["inv_n"]; L.night()
+    assert L.motor[0]["inv_n"] == n0 + 2 and L.motor[0]["inv_batch"] == []
+    print(f"motor 4: act_inv batched every 8 ticks: {len(steps)} steps in 120 ticks, each on ticks divisible by 8 over 2-8 pairs, the step",
+          "the mean lesson by hand; a batch of one R6's lesson to the bit; pairs pending at dusk learned at nightfall, kept by a save")
+
+
+def test_fatigue_per_effector_and_the_forward_error():
+    """motor 5 (step R6h; SIM_DESIGN.md 3.5, 3.6, 10): FATIGUE PER EFFECTOR. Under own_fatigue each motor effector's acts' cost is its own
+    fatigue: it rises by its cost on each act, recovers at the body's half-life, is what its gate reads (the feature fatigue / 10) and
+    what its lesson's rows carry, rests at nightfall and goes through a save; the body's fatigue takes the voice's cost alone. Absent
+    (R5), every cost joins the body's one fatigue. THE FORWARD ERROR INTO THE GATE: a limb that declares it reads, beside its own act last
+    tick, the root mean square of its body sense less what its forward half foresaw (0 before the first foresight); a declaration whose
+    inputs do not count it is refused as its gate is read"""
+    cfg = dict(wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.6, own_fatigue=1)
+    L = _born_limbs(cfg, _limb_world(), fwd=True); run = WorldLoop(L)
+    hl = 0.5 ** (1.0 / float(L.cfg["fatigue_half_life"])); f_prev = [0.0, 0.0]; body_prev = 0.0; checked = 0
+    for t in range(200):
+        run.step()
+        for j_, st_ in enumerate(L.motor):
+            now = st_["now"]; want = f_prev[j_] * hl + (now["cost"] if (now["acted"] or now["reflex"]) else 0.0)
+            assert abs(st_["fatigue"] - want) < 1e-12, (t, j_, st_["fatigue"], want)
+            assert abs(float(now["feat"][32]) - f_prev[j_] * hl / 10.0) < 1e-6, (float(now["feat"][32]), f_prev[j_] * hl / 10.0)
+            assert st_["buf"][-1][4] == st_["fatigue"]
+            f_prev[j_] = st_["fatigue"]
+        said = L.page[-1][0] != ""
+        want_b = body_prev * hl + (float(L.cfg["symbol_cost"]) if L._acted_last else 0.0)
+        assert abs(L.fatigue - want_b) < 1e-9, (t, L.fatigue, want_b)
+        body_prev = L.fatigue
+        # the forward error: the limb's gate input is the RMS of its error now
+        st0 = L.motor[0]; err = st0["err"]
+        want_e = 0.0 if err is None else float(err.float().pow(2).mean().sqrt())
+        assert abs(float(st0["now"]["feat"][-1]) - want_e) < 1e-6 and st0["now"]["feat"].numel() == 32 + 5 + 2
+        checked += int(err is not None and want_e > 0)
+    assert min(f_prev) > 0 and checked >= 150, (f_prev, checked)
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path); D = Life.load(path, _Limbs(TOK, L.cfg, fwd=True), save_path=None, world=_limb_world())
+    finally:
+        os.remove(path)
+    assert [st_["fatigue"] for st_ in D.motor] == [st_["fatigue"] for st_ in L.motor]
+    L.night(); assert all(st_["fatigue"] == 0.0 for st_ in L.motor)
+    # absent: every cost joins the body's fatigue (R5)
+    B = _born_limbs(dict(cfg, own_fatigue=0), _limb_world()); run = WorldLoop(B)
+    for _ in range(60):
+        run.step()
+    assert all(st_["fatigue"] == 0.0 for st_ in B.motor) and B.fatigue > 0
+    # a declaration that does not count the forward error is refused
+    a = _Limbs(TOK, cfg, fwd=True); a.effectors[1].n_in = 1
+    try:
+        X = _born(a, cfg, _limb_world()); r_ = WorldLoop(X); r_.step(); r_.step()
+    except ValueError as e_:
+        assert "gate inputs" in str(e_)
+    else:
+        raise AssertionError("a forward error not counted in the gate's inputs was taken")
+    print(f"motor 5: fatigue per effector over 200 ticks (limb {f_prev[0]:.3f}, grip {f_prev[1]:.3f}; the body's the voice's alone,",
+          f"{L.fatigue if L.nights == 0 else body_prev:.3f}): its cost, its half-life, its gate's feature, its rows, its night and its save;",
+          f"absent, the body's one fatigue; the forward error's RMS in the limb's gate on {checked} ticks; uncounted, refused")
+
+
+# ---------------- motor 6-7: the born patterns summed at the cord (the spinal pattern generator, the born cry) ----------------
+
+class _Kicker(LanguageAnatomy):
+    """the diary's words and face; two legs of three joints (hip pitch, knee, ankle pitch: flexion senses -1, +1, -1, as the G1's
+    withdrawal measured them), each with a spinal pattern generator, born half a cycle apart; an arm of two joints (shoulder pitch,
+    elbow: -1, -1) with one whose phase is drawn at birth from the body's seed"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.effectors += [Effector("leg_l", [5, 5, 5], rest_id=62, effort=0.05, spg={0: -1, 1: 1, 2: -1}, spg_phase=0.0),
+                           Effector("leg_r", [5, 5, 5], rest_id=62, effort=0.05, spg={0: -1, 1: 1, 2: -1}, spg_phase=0.5),
+                           Effector("arm", [5, 5], rest_id=12, effort=0.05, spg={0: -1, 1: -1})]
+
+
+def _cord_world(extra=None):
+    """a stub world that records each tick's acts and what the body added below its gates (acts.cord); `extra` (a function of the tick)
+    gives the frame's other observations"""
+
+    class CordWorld(SimWorld):
+        def __init__(self):
+            self.t = 0; self.applied = []; self.cords = []; self.last = None
+
+        def frame(self):
+            obs = dict(extra(self) if extra else {})
+            return Frame(self.t, obs, 0.0, {"who": "parent"})
+
+        def apply(self, acts):
+            self.applied.append(dict(acts)); self.cords.append(dict(getattr(acts, "cord", {}))); self.last = acts; self.t += 1
+
+        def pause(self):
+            pass
+
+        def resume(self):
+            pass
+
+        def save_state(self):
+            return pickle.dumps(self.t)
+
+        def load_state(self, blob):
+            self.t = pickle.loads(blob)
+    return CordWorld()
+
+
+def test_the_spinal_pattern_generator():
+    """motor 6 (step R6h; SIM_DESIGN.md 3.6, 3.7, 10, A35, A48, C54): each limb's half-centre oscillator, summed at the cord with its own
+    act. On every tick of 300, for each limb, the step the world receives on each declared flexion joint is +-(its gate's p_act x 0.09
+    rad) in its flexion sense, + in the first half of its cycle (phase0 + tick / 7, the fraction below 1/2) and - in the second, 0 where
+    the own act steps that joint against it, 0 on every other joint: a function of the tick, the phase, p_act and the own act alone
+    (no posture, balance or gravity term: it reads no sense). The legs, born half a cycle apart, are in antiphase on every tick; the
+    arm's phase is drawn at birth from the body's seed (the same for the same seed, another for another, saved with the organs). The
+    gate draws every tick and its rows' acts are its own; its ticks are counted as reflex. Switched off, the world receives no cord"""
+    cfg = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.3, spg=1)
+    w = _cord_world(); L = _born(_Kicker(TOK, cfg), cfg, w); run = WorldLoop(L)
+    ph = [0.0, 0.5, float(L.m.spg_phase[2])]
+    assert 0.0 <= ph[2] < 1.0 and L.m.spg_phase.dtype == torch.float64
+    n_cancel = n_sum = anti = 0
+    for t in range(300):
+        run.step()
+        for k_, (e_, st_) in enumerate(zip(L.anatomy.motors, L.motor)):
+            now = st_["now"]; phi = (ph[k_] + float(L.ticks - 1) / 7.0) % 1.0; half = 1.0 if phi < 0.5 else -1.0
+            A = float(now["p_act"]) * 0.09; want = [0.0] * len(e_.factors)
+            for j_, sg_ in e_.spg.items():
+                own = (now["digits"][j_] > 2) - (now["digits"][j_] < 2); step = half * sg_ * A
+                if own != 0 and (own > 0) != (step > 0):
+                    n_cancel += 1; continue
+                want[j_] = step; n_sum += int(own != 0)
+            got = w.cords[-1].get(e_.name)
+            assert (got is None and not any(want)) or (got is not None and all(abs(a_ - b_) < 1e-12 for a_, b_ in zip(got, want))), (t, e_.name, got, want)
+            assert st_["buf"][-1][1] == now["acted"] and st_["buf"][-1][9] is False
+        hl = w.cords[-1].get("leg_l"); hr = w.cords[-1].get("leg_r")
+        if hl is not None and hr is not None and hl[0] != 0 and hr[0] != 0:
+            anti += int((hl[0] > 0) != (hr[0] > 0))
+            assert (hl[0] > 0) != (hr[0] > 0), (t, hl, hr)
+    assert anti >= 100 and n_cancel >= 20 and n_sum >= 20, (anti, n_cancel, n_sum)
+    assert all(st_["cord_n"].get("spg", 0) >= 250 for st_ in L.motor), [st_["cord_n"] for st_ in L.motor]
+    # the arm's phase: the body's seed's
+    B = _born(_Kicker(TOK, cfg), cfg, _cord_world(), seed=0); C = _born(_Kicker(TOK, cfg), cfg, _cord_world(), seed=1)
+    assert torch.equal(B.m.spg_phase, L.m.spg_phase) and not torch.equal(C.m.spg_phase, L.m.spg_phase)
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path); D = Life.load(path, _Kicker(TOK, L.cfg), save_path=None, world=_cord_world())
+    finally:
+        os.remove(path)
+    assert torch.equal(D.m.spg_phase, L.m.spg_phase)
+    # switched off: no cord
+    w0 = _cord_world(); E = _born(_Kicker(TOK, dict(cfg, spg=0)), dict(cfg, spg=0), w0); r_ = WorldLoop(E)
+    for _ in range(30):
+        r_.step()
+    assert all(c_ == {} for c_ in w0.cords) and all(not st_["cord_n"] for st_ in E.motor)
+    print(f"motor 6: the pattern generator on 300 ticks: each limb's step the law's (+-p_act x 0.09 rad, its phase's half; {n_cancel}",
+          f"joint-ticks cancelled by an own act against it, {n_sum} summed with an own act), the legs in antiphase on {anti} ticks, the arm's",
+          f"phase {ph[2]:.3f} the seed's (another seed another; saved), the gate's rows its own; off, no cord")
+
+
+class _Pain(__import__("body.core.anatomy", fromlist=["RewardSource"]).RewardSource):
+    """pain as a reward source for the tests: -1 on a tick the frame's `pain` is above 0 (the G1's is the joints' observer's, A37)"""
+
+    def felt(self, frame, life):
+        p_ = frame.obs.get("pain")
+        return -1.0 if p_ is not None and float(p_) > 0 else None
+
+
+class _Crier(LanguageAnatomy):
+    """the diary's words and face; the tract's breath left and its charge, senses of the world's frames through the face's map; pain as
+    the fourth reward source; a tract of four articulators (lungs, glottis, pitch, jaw; its rest 312, all held) with the born cry: its
+    posture every articulator's big step up, its lungs articulator 0"""
+
+    def __init__(self, tok, cfg=None):
+        super().__init__(tok, cfg)
+        self.channels += [Channel("body", "vector", 2, organ="face_in"), Channel("charge", "vector", 2, organ="face_in")]
+        self.rewards.append(_Pain("pain"))
+        self.effectors.append(Effector("tract", [5, 5, 5, 5], rest_id=312, effort=0.12,
+                                       cry={"posture": {0: 0.6, 1: 0.6, 2: 0.6, 3: 0.6}, "lungs": 0, "breath": ("body", 0),
+                                            "charge": ("charge", 0), "pain": "pain"}))
+
+
+def test_the_born_cry():
+    """motor 7 (step R6h; SIM_DESIGN.md 3.7, 10, A47, C53; Jurgens 2002; Robb, Sinton-White and Kaipa 2011): the born cry, summed below
+    the tract's gate. It cries on the ticks pain is felt and on every tick the charge is below 0.2, and never else; its breath groups
+    are 5 ticks of the posture (each articulator's step up) then 2 of the lungs drawn back, the expiration cut short where the breath
+    left is 0; where the tract's own act steps an articulator the cry's step there is dropped (the cortex can hush it), and a tick wholly
+    overridden adds nothing; its ticks are counted as reflex and recorded; the gate draws on every tick and its rows are its own. Each
+    tick checked against the rule written again here. Switched off it never cries"""
+    def extra(w):
+        br = getattr(w, "breath", 1.0); last = w.last
+        if last is not None:
+            c_ = getattr(last, "cord", {}).get("tract"); own = int(last.get("tract", 312)); lungs_own = own // 125 - 2
+            push = (c_ is not None and c_[0] > 0) or lungs_own > 0
+            br = max(0.0, br - 0.3) if push else min(1.0, br + 0.2)
+        w.breath = br
+        h = 0.5 - 0.004 * w.t
+        return {"body": [br, 0.0], "charge": [h, -0.004], **({"pain": 1.0} if w.t in (7, 8, 30) else {})}
+    cfg = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.2, cry=1)
+    w = _cord_world(extra); L = _born(_Crier(TOK, cfg), cfg, w); run = WorldLoop(L)
+    t_ = 0; cries = hushed = early = 0
+    for t in range(160):
+        run.step(); st_ = L.motor[0]; now = st_["now"]; f_ = L.world.now
+        pain = f_.obs.get("pain") is not None; low = f_.obs["charge"][0] < 0.2
+        want = None
+        if pain or low:
+            k = t_ % 7
+            if k < 5 and f_.obs["body"][0] <= 0.0:
+                k = 5; t_ = (t_ // 7) * 7 + 5; early += 1
+            want = [0.6, 0.6, 0.6, 0.6] if k < 5 else [-0.6, 0.0, 0.0, 0.0]
+            t_ += 1
+            dg = now["digits"]
+            want = [0.0 if dg[j] != 2 else v for j, v in enumerate(want)]
+            if not any(want):
+                want = None; hushed += 1
+        else:
+            t_ = 0
+        got = w.cords[-1].get("tract")
+        assert (want is None and got is None) or (got is not None and list(got) == want), (t, pain, low, got, want, now["digits"])
+        assert now["cord"] == (None if want is None else want) and st_["buf"][-1][9] is False and st_["buf"][-1][1] == now["acted"]
+        cries += int(want is not None)
+    assert cries >= 60 and early >= 3 and st_["cord_n"].get("cry", 0) == cries, (cries, early, hushed, st_["cord_n"])
+    assert L.last["acts"]["tract"]["cord"] == now["cord"]
+    w0 = _cord_world(extra); E = _born(_Crier(TOK, dict(cfg, cry=0)), dict(cfg, cry=0), w0); r_ = WorldLoop(E)
+    for _ in range(80):
+        r_.step()
+    assert all(c_ == {} for c_ in w0.cords)
+    print(f"motor 7: the born cry on 160 ticks: {cries} crying (on pain and below the 0.2 charge line, never else), in groups of 5 out and",
+          f"2 in, {early} expirations cut short by an empty reservoir, {hushed} ticks wholly hushed by its own acts; counted as reflex;",
+          "the gate's rows its own; off, never")
+
+
+# ---------------- motor 8-10: the born codes, orienting, the VOR ----------------
+
+class _Seer(LanguageAnatomy):
+    """the diary's words and face; three senses of the world's frames through born codes (encs.<name>): "eyes" (40 numbers), "ears" (12)
+    and "gazes" (the gaze's state, 3); the orienting cues (a face in the periphery, a sound's side, a sudden change); a gaze of three
+    joints (yaw, pitch, vergence) that orients on its yaw and pitch, reads the cues' appearance at its gate and carries the VOR on its
+    yaw and pitch; a waist of three joints that orients on its yaw, its positive step turning left"""
+
+    def __init__(self, tok, cfg=None):
+        from body.core.anatomy import OrientCue
+        super().__init__(tok, cfg)
+        self.channels += [Channel("eyes", "vector", 40, organ="encs.eyes", forecast=True), Channel("ears", "vector", 12, organ="encs.ears"),
+                          Channel("gazes", "vector", 3, organ="encs.gazes")]
+        self.effectors += [Effector("gaze", [5, 5, 5], rest_id=62, effort=0.03, sense="gazes", orient={0: ("yaw", 1), 1: ("pitch", 1)},
+                                    orient_gate=True, vor=[0, 1], n_in=2),
+                           Effector("waist", [5, 5, 5], rest_id=62, effort=0.05, orient={0: ("yaw", -1)}, orient_gate=True, n_in=2)]
+        self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, zone=0.18),
+                          OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
+                          OrientCue("onset", "onset_periph", fired=0, yaw=1, pitch=2, zone=0.18, onset=True)]
+
+
+def _seer_world():
+    """a stub world for motor 8-10: random eyes and ears, the gaze's state from its acts; a face in the periphery on ticks 10-29 (right
+    and above, then foveated from 20), a sound on the left at ticks 40 and 41, a sudden change right and below at 50, both the face (left)
+    and the sound (right) at 60"""
+    import random as _r
+
+    class SeerWorld(SimWorld):
+        def __init__(self):
+            self.t = 0; self.g = [0.0, 0.0, 0.0]; self.rng = _r.Random(4); self.applied = []
+
+        def frame(self):
+            t = self.t; obs = {"eyes": [self.rng.uniform(-1, 1) for _ in range(40)], "ears": [self.rng.uniform(0, 1) for _ in range(12)],
+                               "gazes": list(self.g)}
+            if 10 <= t < 30 or t == 60:
+                obs["face_periph"] = [1.0, 0.4 if t < 20 else (0.05 if t < 30 else -0.5), 0.3 if t < 20 else 0.02]
+            if t in (40, 41, 60):
+                obs["sound_side"] = [1.0, 0.6 if t < 60 else -0.6]
+            if t == 50:
+                obs["onset_periph"] = [1.0, 0.5, -0.4]
+            return Frame(t, obs, 0.0, {"who": "parent"})
+
+        def apply(self, acts):
+            self.applied.append(acts); a = int(acts.get("gaze", 62))
+            self.g = [0.07 * (a // 25 - 2), 0.07 * ((a // 5) % 5 - 2), 0.03 * (a % 5 - 2)]; self.t += 1
+
+        def pause(self):
+            pass
+
+        def resume(self):
+            pass
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.g))
+
+        def load_state(self, blob):
+            self.t, self.g = pickle.loads(blob)
+    return SeerWorld()
+
+
+def test_the_born_codes():
+    """motor 8 (step R6h; SIM_DESIGN.md 3.4, 10: each channel's code born fixed from the body's seed, unit-scaled and projected to d): a
+    vector channel whose organ is encs.<its name> is encoded by its born code, built by the organs last from a generator of their own
+    (the global random stream untouched), one fixed unit row per number, the code the rows' sum weighted by the numbers over sqrt(size)
+    (its size the observation's root mean square: measured at d 512 over a hundred random observations of 1,536 numbers); a buffer that
+    no lesson moves (a day of waking lessons leaves it as born), the same for the same seed and another for another, kept by a save;
+    the window keeps the raw numbers and the input sum encodes them each time. A channel naming another's code is refused"""
+    from body.model import BornCode, Organs
+    g0 = torch.get_rng_state().clone()
+    bc = BornCode(1536, 512, torch.Generator().manual_seed(3))
+    assert torch.equal(g0, torch.get_rng_state()) and not list(bc.parameters()) and torch.allclose(bc.rows.norm(dim=-1), torch.ones(1536), atol=1e-5)
+    xs = torch.randn(100, 1536, generator=torch.Generator().manual_seed(5)) * 0.7
+    ratio = (bc(xs).norm(dim=-1) / xs.pow(2).mean(-1).sqrt())
+    assert abs(float(ratio.mean()) - 1.0) < 0.05 and float(ratio.std()) < 0.1, (float(ratio.mean()), float(ratio.std()))
+    assert torch.allclose(bc(xs[0]), (xs[0] @ bc.rows) / math.sqrt(1536.0))
+    cfg = dict(wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.5, live_lr=1e-3)
+    L = _born(_Seer(TOK, cfg), cfg, _seer_world()); rows0 = {k_: v_.rows.clone() for k_, v_ in L.m.encs.items()}
+    assert list(L.m.encs) == ["eyes", "ears", "gazes"] and not any(id(p_) in {id(q_) for g_ in L.opt_day.param_groups for q_ in g_["params"]}
+                                                                  for p_ in L.m.encs.parameters())
+    run = WorldLoop(L)
+    for _ in range(80):
+        run.step()
+    assert L._wake_last and "latent_cos" in L._wake_last, L._wake_last
+    assert all(torch.equal(v_.rows, rows0[k_]) for k_, v_ in L.m.encs.items()), "a lesson moved a born code"
+    assert L.win[-1]["eyes"].shape == (40,) and torch.equal(L.win[-1]["eyes"], torch.tensor(L.world.now.obs["eyes"], dtype=torch.float32))
+    obs, whos, bundles, reads = L._window_tensors()
+    ch = L.anatomy.channel("eyes")
+    assert torch.allclose(ch.encode(L.m, obs["eyes"]), (obs["eyes"] @ L.m.encs["eyes"].rows) / math.sqrt(40.0))
+    B = _born(_Seer(TOK, cfg), cfg, _seer_world()); C = _born(_Seer(TOK, cfg), cfg, _seer_world(), seed=1)
+    assert torch.equal(B.m.encs["eyes"].rows, rows0["eyes"]) and not torch.equal(C.m.encs["eyes"].rows, rows0["eyes"])
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path); D = Life.load(path, _Seer(TOK, L.cfg), save_path=None, world=_seer_world())
+    finally:
+        os.remove(path)
+    assert all(torch.equal(D.m.encs[k_].rows, rows0[k_]) for k_ in rows0)
+    a = _Seer(TOK, cfg); a.channels[2].organ = "encs.ears"
+    try:
+        a.check()
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("a channel naming another's born code was taken")
+    print(f"motor 8: the born codes: unit rows from the seed, the global stream untouched, no parameter; the code's size the",
+          f"observation's RMS x {float(ratio.mean()):.3f} (sd {float(ratio.std()):.3f}) at d 512 over 1,536 numbers; fixed through 80 ticks",
+          "of waking lessons; the window raw, encoded in the sum; the seed's (another seed another; saved)")
+
+
+def test_orienting_and_the_vor():
+    """motor 9 (step R6h; SIM_DESIGN.md 3.7, 10, A23, A43): THE BORN ORIENTING BIAS. On each tick of 70 the gaze's and the waist's choice
+    probabilities are the softmax of their proposal's logits plus the born bias by the rule written again here: each cue that fires with
+    a direction outside the fovea's zone (or a sound's side) adds log 4 x the gain (exactly 1 at birth) to each setting stepping toward
+    it on each joint that orients on its axis and takes as much from each stepping away, the hold untouched (the face right and up pulls
+    the gaze right and up and the waist, whose positive step turns left, the other way; foveated from tick 20, it pulls nothing; a sound
+    on the left, read + left by the ears, pulls left; a face left and a sound right at once cancel on the yaw); the born gate input is 1
+    exactly on the ticks a cue appeared (the face's first tick, the sound's onsets, the change's). Off, nothing pulls and the input is 0.
+    THE VOR (motor 10's part): the tick's acts carry the gaze's VOR, its axes, born gain 1 and quick phase 0.5; off, none; the diary's
+    tick returns a plain dict"""
+    import math as _m
+    from body.core.world import Acts
+    cfg = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.5, orient=1, vor=1)
+    w = _seer_world(); L = _born(_Seer(TOK, cfg), cfg, w)
+    rec = []; f = L._choose_effector
+
+    def spy(i, frame, C1, level, stri, f=f, L=L, rec=rec):
+        out = f(i, frame, C1, level, stri)
+        e_ = L.anatomy.motors[i - 1]; st_ = L.motor[i - 1]
+        with torch.no_grad():
+            lg = L.m.acts[e_.name].logits(e_.propose(L, C1), float(L.m.read_sharp))
+        rec.append((L.ticks, e_.name, frame, lg, [p_.clone() for p_ in st_["now"]["probs"]], float(st_["now"]["feat"][-1])))
+        return out
+    L._choose_effector = spy
+    run = WorldLoop(L)
+    for _ in range(70):
+        run.step()
+    last_face = False; pulls = 0; appeared_ticks = []
+    for t, name, fr, lg, probs, gin in rec:
+        cues = []
+        fp, ss, op = fr.obs.get("face_periph"), fr.obs.get("sound_side"), fr.obs.get("onset_periph")
+        face_on = fp is not None and fp[0] > 0
+        dy = dp = 0
+        if face_on:
+            dy += (1 if fp[1] > 0 else -1) if abs(fp[1]) > 0.18 else 0; dp += (1 if fp[2] > 0 else -1) if abs(fp[2]) > 0.18 else 0
+        if ss is not None and ss[0] > 0:
+            dy += -1 if ss[1] > 0 else 1
+        if op is not None and op[0] > 0:
+            dy += (1 if op[1] > 0 else -1) if abs(op[1]) > 0.18 else 0; dp += (1 if op[2] > 0 else -1) if abs(op[2]) > 0.18 else 0
+        appeared = (face_on and not last_face) or (ss is not None and ss[0] > 0) or (op is not None and op[0] > 0)
+        if name == "waist":
+            last_face = face_on
+        axes = {"gaze": {0: ("yaw", 1), 1: ("pitch", 1)}, "waist": {0: ("yaw", -1)}}[name]
+        want = []
+        for j_, l_ in enumerate(lg):
+            b_ = torch.zeros(5)
+            if j_ in axes:
+                ax, sg = axes[j_]; d_ = dy if ax == "yaw" else dp
+                b_ = torch.tensor([_m.log(4.0) * d_ * sg * ((k > 2) - (k < 2)) for k in range(5)], dtype=torch.float32)
+                pulls += int(d_ != 0)
+            want.append(torch.softmax(l_ + b_, -1))
+        assert all(torch.allclose(p_, w_, atol=1e-6) for p_, w_ in zip(probs, want)), (t, name, probs, want)
+        assert gin == (1.0 if appeared else 0.0), (t, name, gin, appeared)
+        if appeared and name == "gaze":
+            appeared_ticks.append(t)
+    assert appeared_ticks == [10, 40, 41, 50, 60] and pulls >= 30, (appeared_ticks, pulls)
+    # the VOR in the tick's acts
+    assert all(isinstance(a_, Acts) and a_.vor == {"gaze": {"axes": [0, 1], "gain": 1.0, "quick": 0.5}} for a_ in w.applied)
+    # off: nothing pulls, the input 0, no VOR
+    w0 = _seer_world(); E = _born(_Seer(TOK, dict(cfg, orient=0, vor=0)), dict(cfg, orient=0, vor=0), w0); r_ = WorldLoop(E); fe = E._choose_effector
+    zero = []
+
+    def spy0(i, frame, C1, level, stri, f=fe, L=E):
+        out = f(i, frame, C1, level, stri); e_ = L.anatomy.motors[i - 1]; st_ = L.motor[i - 1]
+        with torch.no_grad():
+            lg = L.m.acts[e_.name].logits(e_.propose(L, C1), float(L.m.read_sharp))
+        zero.append(all(torch.allclose(p_, torch.softmax(l_, -1), atol=1e-6) for p_, l_ in zip(st_["now"]["probs"], lg)) and float(st_["now"]["feat"][-1]) == 0.0)
+        return out
+    E._choose_effector = spy0
+    for _ in range(70):
+        r_.step()
+    assert all(zero) and all(a_.vor == {} for a_ in w0.applied)
+    D = _born(LanguageAnatomy(TOK, {}), {}, None); assert type(D.tick()) is dict
+    print(f"motor 9: the born orienting bias by the rule on the gaze's and the waist's choices over 70 ticks ({pulls} joint-ticks pulled:",
+          "a face right and up, foveated from tick 20, a sound on the left, a change right and below, a face left against a sound right);",
+          f"the born gate input on the ticks a cue appeared {appeared_ticks}; the VOR's gain 1 and quick phase 0.5 in every tick's acts;",
+          "off, nothing pulls, no input, no VOR; the diary's acts a plain dict")
+
+
+MOTOR_TESTS = [test_the_voice_at_any_place, test_movement_units, test_the_kappa_correction, test_act_inv_batched,
+               test_fatigue_per_effector_and_the_forward_error, test_the_spinal_pattern_generator, test_the_born_cry,
+               test_the_born_codes, test_orienting_and_the_vor]
 
 
 if __name__ == "__main__":

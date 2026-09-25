@@ -30,7 +30,14 @@ decision). With chunk_gate 0 every tick is a fresh decision, as before R6.
 The one-tick timing the forward half serves: on a tick the world is quiet the choice reads the stream of the last full position, the
 tick before, so the sense felt now enters the proposal only through the forward half's error (SIM_DESIGN.md 5.2's one forward a tick
 for the sim, its own acts entering at the next frame, is a later step). On a tick a world symbol opens a position the choice reads it
-there, while the lesson teaches act_pred from the position before, as the words' lesson does."""
+there, while the lesson teaches act_pred from the position before, as the words' lesson does.
+
+STEP R6h (SIM_DESIGN.md 3.5, 3.6; each under a MOTOR constant absent unless given, R6's law without it): THE MOVEMENT UNIT (`_unit_hold`,
+unit_margin): a unit under way holds its act joint by joint unless the choice prefers another setting by more than the persistence
+margin, in place of act_pred's best guess; ACT_INV BATCHED (`_inverse_batch`, act_inv_every): its pairs gathered and learned in one step
+every so many ticks, a batch of one R6's lesson; THE KAPPA CORRECTION (`_act_chance`, act_inv_chance): each label's chance the act's own
+choice's probability of it; THE FORWARD ERROR AT THE GATE (`_fwd_err_in`, the effector's `fwd_gate`): the size of the error its body
+sense shows now against its forward half's foresight, one of its gate's own inputs."""
 import torch
 import torch.nn.functional as F
 
@@ -199,8 +206,15 @@ class TimingMixin:
             return
         s_now = self._body_sense(e)
         prev = st["now"]
+        every_ = int(self._motor_const("act_inv_every")); chance_ = int(self._motor_const("act_inv_chance"))
         if e.inverse and st["sense"] is not None and prev is not None and prev["acted"]:
-            self._inverse_lesson(i, st["sense"], s_now, int(prev["act"]))
+            if every_ <= 1 and not chance_:
+                self._inverse_lesson(i, st["sense"], s_now, int(prev["act"]))       # R6's: a step a tick, its reliability Cohen's kappa
+            else:
+                # STEP R6h: the pair gathered for the batch, with the chance the act's own choice gave each setting (the kappa correction)
+                st["inv_batch"].append((st["sense"], s_now, int(prev["act"]), self._act_chance(e, prev) if chance_ else None))
+        if e.inverse and st.get("inv_batch") and self.ticks % max(1, every_) == 0:
+            self._inverse_batch(i)                                             # step R6h: one step on the pairs gathered since the last
         st["err"] = (s_now - st["fwd"]) if st["fwd"] is not None else None
         st["sense"] = s_now
 
@@ -227,13 +241,68 @@ class TimingMixin:
         st["inv_n"] = int(st["inv_n"]) + 1
         st["inv_last"] = {"tick": self.ticks, "loss": round(float(loss.detach()), 4), "hit": [int(a == b) for a, b in zip(label, true)]}
 
+    def _act_chance(self, e, now):
+        """THE CHANCE THE ACT'S OWN CHOICE GAVE EACH SETTING (step R6h, the kappa correction; R6's verifiers, 6d6d246): for an act its gate
+        drew (a fresh choice, each joint drawn from its probabilities), per joint the probability of each setting given that the draw
+        was not the effector's rest (the act was an own act): q_j(s) = (p_j(s) - [s = r_j] P(rest)) / (1 - P(rest)), P(rest) the
+        product of the joints' probabilities of the rest's settings r_j; for an act chosen without a draw (a movement unit's held act, a
+        chunk's continuation: `cont`), None, its chance 1 where a label names its setting and 0 elsewhere. Known before the act, so a
+        label made before it agrees beyond this chance only as far as it reads the motion"""
+        if now.get("cont"):
+            return None
+        tab = self.m.get_submodule(e.organ)
+        r_ = [int(x_) for x_ in tab.digits(torch.tensor(int(e.rest_id))).tolist()]
+        ps = [p_.detach().float().cpu() for p_ in now["probs"]]
+        pr = 1.0
+        for p_, k_ in zip(ps, r_):
+            pr *= float(p_[k_])
+        if not 1.0 - pr > 1e-12:
+            return [p_.clone() for p_ in ps]
+        out = []
+        for p_, k_ in zip(ps, r_):
+            q_ = p_.clone(); q_[k_] = q_[k_] - pr
+            out.append((q_ / (1.0 - pr)).clamp_(min=0.0))
+        return out
+
+    def _inverse_batch(self, i):
+        """ACT_INV'S LESSONS BATCHED (step R6h; SIM_DESIGN.md 3.6: unbatched they cost 4-6 ms a tick at the humanoid's size): the pairs
+        gathered since the last batch (act_inv_every ticks), each (the sense before the act, after it, the act made, the chance its
+        choice gave each setting), labelled by act_inv as it stands, its reliability updated on each label in the order they came (a
+        prediction, not a fit), then one step of its optimizer on the mean over the pairs of the joints' summed cross-entropy (a batch
+        of one is R6's lesson to the float)"""
+        e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
+        pairs = st["inv_batch"]; st["inv_batch"] = []
+        if not pairs:
+            return
+        tm = self.m.timing[e.name]; tab = self.m.get_submodule(e.organ)
+        S0 = torch.stack([p_[0] for p_ in pairs]); S1 = torch.stack([p_[1] for p_ in pairs])
+        trues = [[int(x_) for x_ in tab.digits(torch.tensor(int(p_[2]))).tolist()] for p_ in pairs]
+        with torch.no_grad():
+            labels = torch.stack([lg.argmax(-1) for lg in tm.inverse_logits(S0, S1)], dim=-1).tolist()
+        for lab_, true_, p_ in zip(labels, trues, pairs):
+            self._inv_rel_update(e, st, lab_, true_, chance=p_[3], held=p_[3] is None)
+        tt = torch.tensor(trues, dtype=torch.long)
+        with torch.enable_grad():
+            self.opt_inv.zero_grad(set_to_none=True)
+            lg = tm.inverse_logits(S0, S1)
+            loss = None
+            for j_, l_ in enumerate(lg):
+                ce = F.cross_entropy(l_, tt[:, j_].to(l_.device))
+                loss = ce if loss is None else loss + ce
+            loss.backward()
+            self.opt_inv.step()
+            self.opt_inv.zero_grad(set_to_none=True)
+        st["inv_n"] = int(st["inv_n"]) + len(pairs)
+        st["inv_last"] = {"tick": self.ticks, "loss": round(float(loss.detach()), 4), "n": len(pairs),
+                          "hit": [round(sum(int(a == b) for a, b in zip(lab_, true_)) / len(true_), 3) for lab_, true_ in zip(labels, trues)]}
+
     @staticmethod
     def _inv_conf_new(e):
         """act_inv's running confusion at birth: per joint a K x K table of zeros (the row the setting act_inv's label chose, the
         column the setting the efference copy made)"""
         return [[[0.0] * int(K) for _ in range(int(K))] for K in e.factors]
 
-    def _inv_rel_update(self, e, st, label, true):
+    def _inv_rel_update(self, e, st, label, true, chance=None, held=False):
         """ACT_INV'S RELIABILITY: COHEN'S KAPPA OVER ITS RUNNING CONFUSION, JOINT BY JOINT (the R6 verifier's second finding,
         2026-09-24). Each own act adds one count to each joint's confusion (st["inv_conf"][j]: the row the setting act_inv's label
         chose, the column the setting the efference copy made), every count decaying over act_inv_tau acts. A joint's kappa is its
@@ -280,6 +349,23 @@ class TimingMixin:
         on = n > 64
         st["inv_kappa"] = [float(k) if on else 0.0 for k in kap]
         st["inv_gain"] = float(sum(max(0.0, min(1.0, k)) for k in kap) / len(kap)) if on else 0.0
+        if int(self._motor_const("act_inv_chance")):
+            # STEP R6h, THE KAPPA CORRECTION (6d6d246's proposal): per joint the running agreement and the running chance the act's own
+            # choice gave the label's setting (`_act_chance`; an act chosen without a draw: 1 where the label names its setting, else 0),
+            # over the same horizon; kappa_j = (p_o - mean chance) / (1 - mean chance); zero until 64 acts. It replaces the pooled kappa
+            # above as the reliability (the confusion is kept, its pooled kappa reported as inv_kappa_pooled)
+            if st.get("inv_ch") is None:
+                st["inv_ch"] = [[0.0, 0.0, 0.0] for _ in e.factors]
+            kc = []
+            for j, row in enumerate(st["inv_ch"]):
+                c_ = (1.0 if int(label[j]) == int(true[j]) else 0.0) if (held or chance is None) else float(chance[j][int(label[j])])
+                row[0] = d * row[0] + 1.0; row[1] = d * row[1] + (1.0 if int(label[j]) == int(true[j]) else 0.0); row[2] = d * row[2] + c_
+                pc = row[2] / row[0]
+                kc.append((row[1] / row[0] - pc) / (1.0 - pc) if 1.0 - pc > 1e-9 else 0.0)
+            on = st["inv_ch"][0][0] > 64
+            st["inv_kappa_pooled"] = st["inv_kappa"]
+            st["inv_kappa"] = [float(k) if on else 0.0 for k in kc]
+            st["inv_gain"] = float(sum(max(0.0, min(1.0, k)) for k in kc) / len(kc)) if on else 0.0
 
     def _timing_propose(self, e, C):
         """ACT_PRED'S PROPOSAL (the base Effector's `propose`; step R6): the forecast of its own next act from the stream C, plus the
@@ -300,6 +386,26 @@ class TimingMixin:
         C = getattr(self, "_C_last", None)
         with torch.no_grad():
             st["fwd"] = self.m.timing[e.name].fwd(C).detach().clone() if C is not None else None
+
+    def _fwd_err_in(self, st):
+        """THE FORWARD ERROR AS A GATE INPUT (step R6h; SIM_DESIGN.md 3.5, 3.6: each limb's forward error feeds its gate): the size of the
+        error its body sense shows now against what its forward half foresaw at the tick before, the root mean square over its sense's
+        numbers (in the sense's own units); 0 before the forward half has foreseen a tick"""
+        err = st.get("err")
+        if err is None:
+            return 0.0
+        return float(err.float().pow(2).mean().sqrt())
+
+    def _unit_hold(self, e, st, logits, margin):
+        """THE MOVEMENT UNIT (step R6h; SIM_DESIGN.md 3.6, 10: the persistence margin, unit_margin): a unit under way holds its act, joint
+        by joint: a joint takes another setting only where the choice's logits prefer it to the held setting by more than the margin
+        (then the most preferred); the flat act. Infant movement units (von Hofsten) and newborns' smooth general movements (Prechtl)
+        are never white noise; at birth act_pred knows nothing and its best guess is a fresh random act every tick (3.6's evidence)"""
+        held = st["unit"]; out = []
+        for lg, h_ in zip(logits, held):
+            b_ = int(lg.argmax())
+            out.append(b_ if float(lg[b_]) - float(lg[int(h_)]) > float(margin) else int(h_))
+        return self.m.get_submodule(e.organ).flat(out)
 
     def _best_guess(self, e, pred):
         """act_pred's best guess: each joint's most likely setting under its proposal (a one-joint alphabet's reserved acts never), as

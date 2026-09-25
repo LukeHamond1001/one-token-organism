@@ -12,7 +12,10 @@ saves hold are not read (said once).
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Since step R6c a body whose cerebellum is on has it built by the
 organs at birth and at load (`cerebellum_spec`: the anatomy's declaration and the born sizes, under the save's constants at a load), and
 its every weight, its eligibility and its counters are in the organs' state (cereb.*): nothing of it is in the save's life dict. A load
-whose switch differs from the save's organs (a cerebellum saved and switched off, or none saved and switched on) is refused (A20)."""
+whose switch differs from the save's organs (a cerebellum saved and switched off, or none saved and switched on) is refused (A20).
+Since step R6h a motor effector's life["motor"] entry also keeps, where it has them, its performance error's running means ("perf"), its
+own fatigue ("fatigue"), the kappa correction's running agreement and chance ("inv_ch") and act_inv's pairs gathered for the next batch
+("inv_batch"); the born codes (encs.*) and the pattern generators' born phases (spg_phase) are in the organs' state."""
 import os
 
 import torch
@@ -50,7 +53,13 @@ class PersistenceMixin:
             blob["life"]["motor"] = {e_.name: {"inv_conf": (None if st_["inv_conf"] is None else [[[float(x_) for x_ in r_] for r_ in c_] for c_ in st_["inv_conf"]]),
                                                "inv_kappa": [float(x_) for x_ in st_["inv_kappa"]], "inv_gain": float(st_["inv_gain"]),
                                                "inv_n": int(st_["inv_n"]),
-                                               **({"perf": [[float(x_) for x_ in r_] for r_ in st_["perf"]]} if st_.get("perf") is not None else {})}
+                                               **({"perf": [[float(x_) for x_ in r_] for r_ in st_["perf"]]} if st_.get("perf") is not None else {}),
+                                               # step R6h: its own fatigue; the kappa correction's running agreement and chance; act_inv's
+                                               # pairs gathered for the next batch (each key only where it has something)
+                                               **({"fatigue": float(st_["fatigue"])} if float(st_.get("fatigue", 0.0)) != 0.0 else {}),
+                                               **({"inv_ch": [[float(x_) for x_ in r_] for r_ in st_["inv_ch"]]} if st_.get("inv_ch") is not None else {}),
+                                               **({"inv_batch": [(p_[0].tolist(), p_[1].tolist(), int(p_[2]), (None if p_[3] is None else [q_.tolist() for q_ in p_[3]]))
+                                                                 for p_ in st_["inv_batch"]]} if st_.get("inv_batch") else {})}
                                      for e_, st_ in zip(self.anatomy.motors, self.motor)}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
@@ -91,7 +100,7 @@ class PersistenceMixin:
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         motor_ = {e_.name for e_ in anatomy.motors}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
-        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing")]
+        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing", "encs", "spg_phase")]
                          + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
         if dropped:
             print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)
@@ -219,6 +228,13 @@ class PersistenceMixin:
                 if not isinstance(mv_, dict):
                     continue
                 st_["inv_n"] = int(mv_.get("inv_n", 0))
+                st_["fatigue"] = float(mv_.get("fatigue", 0.0))   # step R6h: its own fatigue
+                ch_ = mv_.get("inv_ch")                           # the kappa correction's running agreement and chance
+                if e_.inverse and isinstance(ch_, list) and len(ch_) == len(e_.factors):
+                    st_["inv_ch"] = [[float(x_) for x_ in r_] for r_ in ch_]
+                if e_.inverse and isinstance(mv_.get("inv_batch"), list):   # act_inv's pairs gathered for the next batch
+                    st_["inv_batch"] = [(torch.tensor(p_[0], dtype=torch.float32, device=device), torch.tensor(p_[1], dtype=torch.float32, device=device), int(p_[2]),
+                                         (None if p_[3] is None else [torch.tensor(q_, dtype=torch.float32) for q_ in p_[3]])) for p_ in mv_["inv_batch"]]
                 pf_ = mv_.get("perf")                             # step R6h: its performance error's running means, when it declares one
                 if st_.get("perf") is not None and isinstance(pf_, list) and [len(r_) for r_ in pf_] == [int(k_) for k_ in e_.factors]:
                     st_["perf"] = [[float(x_) for x_ in r_] for r_ in pf_]

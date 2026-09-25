@@ -30,7 +30,8 @@ class InstrumentsMixin:
                      "gate_lesson": self._gate_last, "wake": self._wake_last}
         if len(self.anatomy.effectors) > 1:                        # the later effectors' acts this tick and their gates (step R5)
             self.last["acts"] = {e_.name: {"act": st_["now"]["act"], "acted": st_["now"]["acted"], "gate": round(st_["now"]["p_act"], 3),
-                                           "world": st_["now"]["world"], "cont": st_["now"]["cont"], "stop": st_["now"]["stop"]}   # step R6: the act to the world, a chunk's continuation, its stop
+                                           "world": st_["now"]["world"], "cont": st_["now"]["cont"], "stop": st_["now"]["stop"],   # step R6: the act to the world, a chunk's continuation, its stop
+                                           "cord": st_["now"].get("cord")}                                                         # step R6h: the cord's patterns (logged as reflex)
                                  for e_, st_ in zip(self.anatomy.motors, self.motor)}
         if self.sleep_pressure >= int(self.cfg["wake_ticks"]) and len(self.win) >= 8:
             self._sleep_now()

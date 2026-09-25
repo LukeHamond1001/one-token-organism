@@ -572,7 +572,10 @@ class MouthMixin:
                 "inv_conf": ([[[0.0] * int(K) for _ in range(int(K))] for K in e.factors] if e.inverse else None),
                 "inv_kappa": [0.0] * len(e.factors), "inv_gain": 0.0, "inv_n": 0, "inv_last": None,
                 "chunks": 0, "stops": {"rest": 0, "gate": 0, "reflex": 0, "end": 0, "max": 0},
-                "perf": ([[0.0] * int(K) for K in e.factors] if getattr(e, "intrinsic", False) else None)}   # step R6h: its performance error's
+                "perf": ([[0.0] * int(K) for K in e.factors] if getattr(e, "intrinsic", False) else None),
+                "fatigue": 0.0, "unit": None, "inv_batch": [],                # step R6h: its own fatigue (own_fatigue), the movement unit's
+                                                                              # held settings (unit_margin), act_inv's pairs gathered (act_inv_every),
+                "cord_n": {}, "cry_t": 0}                                     # the cord's patterns' ticks (logged as reflex), the cry's breath clock   # step R6h: its performance error's
                                                                                                              # running means (A41), when it declares one
 
     def _choose_effector(self, i, frame, C1, level, stri):
@@ -598,8 +601,9 @@ class MouthMixin:
             own = torch.as_tensor(e.gate_inputs(frame, self, st), dtype=torch.float32, device=self.dev).reshape(-1)
             if own.numel() != int(e.n_in):
                 raise ValueError(f"the effector {e.name!r} declares {e.n_in} gate inputs and gave {own.numel()}")
+            fat_ = float(st["fatigue"]) if int(self._motor_const("own_fatigue")) else self.fatigue   # step R6h: its own fatigue (own_fatigue)
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
-                              torch.tensor([self.fatigue / 10.0, self.mood / 6.0, self.stress / 10.0, sal, level], device=self.dev), own])
+                              torch.tensor([fat_ / 10.0, self.mood / 6.0, self.stress / 10.0, sal, level], device=self.dev), own])
             z = m.get_submodule(e.gate)(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))
@@ -615,6 +619,10 @@ class MouthMixin:
             if act_on:                                                    # the striatum disposes: its bias on each joint's proposal
                 a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.get_submodule(e.actor)(self._z_now))
                 logits = [lg + b_ for lg, b_ in zip(logits, tab.split(a_bias))]
+            if e.orient and int(self._reflex_const("orient")):            # STEP R6h: the born orienting bias (body/core/cord.py; 3.7, A43)
+                ob_ = self._orient_bias(e, frame, tab)
+                if ob_ is not None:
+                    logits = [lg + b_ for lg, b_ in zip(logits, ob_)]
             if e.reserved:                                                # a one-joint alphabet's reserved acts are never drawn
                 logits[0] = logits[0].clone(); logits[0][list(e.reserved)] = float("-inf")
             probs = [torch.softmax(lg, -1) for lg in logits]
@@ -625,7 +633,11 @@ class MouthMixin:
                     stop = "reflex"
             elif cont:                                                    # THE CHUNK GOES ON while its gate's own draw says so
                 if drew:
-                    act = self._best_guess(e, pred)                       # act_pred's best guess, no draw
+                    um_ = self._motor_const("unit_margin")
+                    if um_ is None:
+                        act = self._best_guess(e, pred)                   # act_pred's best guess, no draw (R6)
+                    else:
+                        act = self._unit_hold(e, st, logits, float(um_))  # STEP R6h: the movement unit holds its act (the persistence margin)
                     dig = [int(x_) for x_ in tab.digits(torch.tensor(act)).tolist()]
                     acted = act != rest
                     p_choice = 1.0
@@ -648,6 +660,7 @@ class MouthMixin:
                 else:
                     act = rest; acted = False; p_choice = 0.0
                     dig = [int(x_) for x_ in tab.digits(torch.tensor(act)).tolist()]
+            st["unit"] = list(dig) if acted else None                    # step R6h: the settings a unit under way holds
             if int(self.cfg.get("chunk_gate", 0)):
                 if acted:
                     st["chunk"] = int(st["chunk"]) + 1 if cont else 1
@@ -660,6 +673,9 @@ class MouthMixin:
         st["now"] = {"act": int(act), "acted": bool(acted), "drew": bool(drew), "p_act": float(p_act), "p_choice": float(p_choice),
                      "digits": dig, "probs": probs, "feat": feat.cpu(), "act_on": act_on, "cost": 0.0,
                      "cont": bool(cont), "stop": stop, "reflex": rfx is not None, "world": int(rfx) if rfx is not None else int(act), "int": 0.0}
+        # STEP R6h: THE CORD'S PATTERNS (body/core/cord.py): its spinal pattern generator and its born cry, added below the gate to the act
+        # this tick (the world adds them to the targets it re-anchors: acts.cord); the gate's draw and the act's eligibility are the gate's
+        st["now"]["cord"] = self._cord(i, frame, p_act, dig, rfx is not None) if (e.spg or e.cry) else None
 
     def _act(self, u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew=None):
         """the act: the actor's credit, the intrinsic credit, its own symbol (or its rest) enters the stream, the gate's tag; each later
@@ -758,7 +774,10 @@ class MouthMixin:
                 now["int"] = self._perf_error(e_, st_, now)       # step R6h: its performance error, when it declares one (A41, C61)
             if now["acted"] or now["reflex"]:
                 now["cost"] = float(e_.cost(now["world"], frame, self))
-                self.fatigue += now["cost"]
+                if int(self._motor_const("own_fatigue")):
+                    st_["fatigue"] = float(st_["fatigue"]) + now["cost"]  # step R6h: its own fatigue (SIM_DESIGN.md 3.5)
+                else:
+                    self.fatigue += now["cost"]
                 if now["acted"] and stri:
                     m.striatum_push_act(i_, now["act"])           # its act is an event of its own line
             st_["acted_last"] = bool(now["acted"])
@@ -803,7 +822,8 @@ class MouthMixin:
         self.gate_buf.append(row)
         for st_ in getattr(self, "motor", ()):                         # the later effectors' rows (step R5): its draw and its act's cost always;
             n_ = st_["now"]                                             # step R6: whether a reflex took the tick (no eligibility)
-            st_["buf"].append([n_["feat"], n_["acted"], credit, n_["int"], self.fatigue, r_tr, n_["p_act"], n_["drew"], n_["cost"], n_["reflex"]])
+            st_["buf"].append([n_["feat"], n_["acted"], credit, n_["int"], (float(st_["fatigue"]) if int(self._motor_const("own_fatigue")) else self.fatigue),
+                               r_tr, n_["p_act"], n_["drew"], n_["cost"], n_["reflex"]])
         lesson_now = self.ticks > 0 and self.ticks % int(self.cfg["gate_every"]) == 0
         if lesson_now and len(self.gate_buf) >= 16 + int(self.cfg["elig_ticks"]):
             try:

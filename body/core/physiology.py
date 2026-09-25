@@ -1,7 +1,9 @@
 """the physiology table (moved from body/life.py, review 2026-09-22 section 4, step 2): `PHYSIOLOGY`, every disclosed constant,
 grouped by organ; `SWITCHES`, the core refactor's defect-fix switches, declared and off by their absence (docs/SIM_DESIGN.md 8.4); and
-`MOTOR`, the motor timing part's constants (step R6), absent from a body's cfg unless given; and `CEREB`, the cerebellum's switch and
-constants (step R6c), absent likewise. body/life.py re-exports PHYSIOLOGY
+`MOTOR`, the motor timing part's constants (step R6; step R6h's movement units, act_inv's batches, the kappa correction and fatigue per
+effector among them), absent from a body's cfg unless given; `CEREB`, the cerebellum's switch and constants (step R6c), absent likewise;
+and `REFLEX`, the born patterns summed at the cord and the born biases (step R6h: the spinal pattern generator, the born cry, orienting,
+the VOR), absent likewise. body/life.py re-exports PHYSIOLOGY
 (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
 prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
 
@@ -277,6 +279,28 @@ MOTOR = dict(
     # width); each element's step bounded by act_pred_bound x sqrt(d) such steps. Derived and measured in GatedDescent's docstring
     act_pred_rate=2.0,
     act_pred_bound=1.0,
+    # --- STEP R6h (SIM_DESIGN.md 3.5, 3.6, 10; each absent, R6's law, unless given: the sim is born with them, SIM_CFG in
+    # body/sim/anatomy.py) ---
+    # THE MOVEMENT UNIT'S PERSISTENCE MARGIN (3.6; ours, disclosed): under chunk_gate a unit under way holds its act joint by joint, a
+    # joint taking another setting only where the choice's logits (the proposal at the readout's sharpness, the striatal actor's bias
+    # and the born orienting bias in them) prefer it to the held setting by more than this; None: R6's continuation, act_pred's best
+    # guess (each joint's argmax, which at birth, act_pred knowing nothing, is a fresh random act every tick: 3.6's evidence, 0 rolls).
+    # The sim: log 4 (a setting four times as likely as the held one takes the joint). No roll count set it; none will tune it
+    unit_margin=None,
+    # ACT_INV'S LESSONS BATCHED (3.6): one step of its optimizer every this many ticks, on the mean over the pairs gathered since (each
+    # labelled, and its reliability updated, by act_inv as it stood before the step); 1: R6's step a tick. The sim: 8 (unbatched the
+    # lessons cost 4-6 ms a tick at the humanoid's size, section 9)
+    act_inv_every=1,
+    # THE KAPPA CORRECTION (R6's verifiers' finding, 6d6d246's proposal; 8's R6h row): act_inv's reliability takes each label's chance
+    # agreement from the act's own choice, the probability the choice gave the label's setting (a drawn act's per-joint probabilities,
+    # conditioned on the draw not being the rest; 1 or 0 for an act chosen without a draw: a movement unit's held act, a chunk's
+    # continuation), kappa_j = (p_o - mean chance) / (1 - mean chance) over the same horizon; 0: R6's Cohen's kappa, its chance from
+    # the pooled rates (which reads a label following the regime's mode as skill when the acts' rates shift). The sim: 1
+    act_inv_chance=0,
+    # FATIGUE PER EFFECTOR (3.5; section 10's fatigue): each motor effector's acts' cost is its own fatigue, recovering at the body's
+    # half-life, read by its own gate and weighed by its own lesson; 0: R5's, every cost added to the body's one fatigue (which would
+    # add up nine limbs' costs and silence the voice). The sim: 1
+    own_fatigue=0,
 )
 
 # THE CEREBELLUM'S SWITCH AND CONSTANTS (the core refactor's step R6c, docs/SIM_DESIGN.md 7.5, A44 and C50; body/core/cerebellum.py):
@@ -327,4 +351,55 @@ CEREB = dict(
     # for the gain, 1 for the offset) normalized by their power and the granule layer's activity: an offset held in a constant context is
     # learned with a time constant of 1 / rate = 20 ticks (3 s), the gain with 1 / (rate turn^2) ticks; ours
     cereb_vor_rate=0.05,
+)
+
+# THE BORN PATTERNS SUMMED AT THE CORD, AND THE BORN BIASES (the core refactor's step R6h, docs/SIM_DESIGN.md 3.5-3.7, 10, A43, A47, A48,
+# C53, C54; body/core/cord.py): each a switch or a constant ABSENT FROM A BODY'S CFG unless given (`cfg.get(name, REFLEX[name])`), so the
+# language body, whose effectors declare none of them, gains no key, runs none of it and keeps its pinned digests. The sim is born with
+# every switch on (SIM_DESIGN.md 10's switches at birth; body/sim/anatomy.py SIM_CFG). The effectors declare where each acts (their
+# `spg`, `cry`, `orient` and `vor`, body/core/anatomy.py); the constants here are the body's, the same for every limb.
+REFLEX = dict(
+    # THE SPINAL PATTERN GENERATOR (A48; 3.7): a half-centre oscillator per limb that declares one (Brown 1911; per-limb rhythm
+    # generators, as the per-muscle oscillators that gave a simulated neonate its motor patterns: Kuniyoshi and Sangawa 2006), summed
+    # at the cord with the limb's own act like the grasp (A35). 1 = on
+    spg=0,
+    # its period in ticks: 7 (1.05 s). OURS, pending C54: the sources read for this build bound it and do not give it: newborns' limb
+    # movements last 94-4836 ms (1st-99th centile; Whitehead, Meek, Fabrizi and Smith 2020, 11 full-term newborns), and their
+    # spontaneous kicks alternate in 74% of kicks, in bouts of a median of 5 consecutive alternating kicks each within 3 s of the last
+    # (Sylos-Labini et al. 2020, PNAS 117:9604); Thelen and Fisher 1983's phase durations (J Mot Behav 15:353; newborn kicks' movement
+    # phases temporally constrained, their pauses not) and Thelen 1979's were not reachable for this build. A kick cycle of about a
+    # second, flexion then extension, is ours until C54 reads them; never set on a roll count
+    spg_period=7.0,
+    # its amplitude: the limb's gate's p_act x this, rad a tick (3.7: the gate's tonic readiness drives it, as the brainstem's drive
+    # enables the cord's generator; at the born p_act 0.2875, 0.026 rad a tick, about a small step's third); ours (the design's)
+    spg_amp=0.09,
+    # THE BORN CRY (A47; 3.7; Jurgens 2002: the cry is innate and patterned by the periaqueductal grey): on a pain tick, or while the
+    # charge is below cry_charge, the tract's cry posture is added to its targets in breath groups, its own act overriding it
+    # articulator by articulator. 1 = on
+    cry=0,
+    # the charge line: ours (C53), below the parent's feeding line (0.35), so the cry is the body's own alarm, never timed to her
+    cry_charge=0.2,
+    # its breath groups, in ticks: expiration 5 (0.75 s), inspiration 2 (0.30 s), from pain cries of healthy full-term newborns recorded in
+    # their first two weeks: 57 breaths a minute, the inspiratory phase 27% of the cycle (Robb, Sinton-White and Kaipa 2011, Int J
+    # Pediatr Otorhinolaryngol 75:1265), so a cycle of 1.05 s, 0.77 s out and 0.28 s in: 5 and 2 ticks of 0.15 s (a cycle of 7, its
+    # inspiration 29%). Its expiration ends early when the reservoir runs empty (the tract's breath left at 0: its own physics)
+    cry_expire=5,
+    cry_inspire=2,
+    # ORIENTING (3.7, A43; Goren 1975, Johnson and Morton 1991: newborns prefer faces; Muir and Field 1979: they turn toward sounds;
+    # Johnson 1990: they orient to peripheral visual onsets through the subcortical route): a born bias on the proposals of the joints
+    # an effector declares (the gaze's yaw and pitch, the waist's yaw) toward each cue the anatomy declares (a face-like blob in the
+    # periphery, a sound's side, a sudden local change), and a born gate input "a cue appeared". 1 = on
+    orient=0,
+    # the bias, in logits, on each setting stepping toward the cue (and against it on each stepping away; the hold none), times the
+    # orienting gain (the amygdala's, exactly 1 at birth: 7.4, R7e): log 4, ours: the size of the movement unit's persistence margin,
+    # so a cue can turn a held unit toward it (its toward-setting gains log 4 and the held away-setting loses log 4: 2 log 4 past the
+    # margin) and a proposal the cortex has learned as strongly can outweigh it; never set on a looking rate
+    orient_bias=1.3862943611198906,
+    # THE VOR (3.7, A23; brainstem, present at birth): the gaze's window counter-turns by the torso gyro's rotation in each camera's frame
+    # (the world applies it through the tick at its samples of the gyro, as it applies the servo law); the body's born gain and the
+    # quick phase's jump back, a fraction of the axis's reach, handed to the world with the tick's acts (Acts.vor); the flocculus's
+    # learned correction and offset come through the sub-tick hook (7.5). 1 = on
+    vor=0,
+    vor_gain=1.0,                 # born gain 1 (3.7; ours: the reflex's ideal, which the flocculus tunes)
+    vor_quick=0.5,                # at the reach, a jump back of half the reach, in the direction of the turn (A23; ours)
 )

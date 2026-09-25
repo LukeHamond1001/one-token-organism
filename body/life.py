@@ -34,7 +34,13 @@ night; body/serve.py runs it all through a WorldLoop. Since step R6 each later e
 the organs' m.timing[name]: act_pred its proposal, the forward half its correction, act_inv learning online with its own optimizer
 `opt_inv`; act_pred and the correction learning in the waking lesson with `opt_pred`, plain steps on the lesson's gradient, its
 labels at their reliability, each element bounded, since R6 fix 7) and, under chunk_gate, its chunks and learned stops;
-the diary has none of it."""
+the diary has none of it. Since step R6h the voice may stand at any place among the effectors (the G1 numbers its vocal tract 0 and the
+words' output 1: body/sim/anatomy.py), every other effector a motor effector in the declared order (`anatomy.motors`); a motor effector
+may carry the performance error (declared), its own fatigue, movement units, act_inv's batched lessons with the kappa correction, its
+forward error at its gate (body/core/timing.py, physiology.py's MOTOR), the born patterns summed at the cord and the born biases
+(body/core/cord.py, `CordMixin`, physiology.py's REFLEX); a vector channel may be read through its born code (body/model.py
+`BornCode`, encs.<name>); the tick's acts are then an `Acts` (body/core/world.py), with the cord's steps and the VOR's constants beside
+them. The diary has none of it."""
 import collections
 import math  # noqa: F401  (math, os and F: module names body.life had before the split; the moved methods import their own)
 import os  # noqa: F401
@@ -44,9 +50,9 @@ import torch
 import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
-from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR, CEREB
+from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR, CEREB, REFLEX
 from .core.anatomy import anatomy_for
-from .core.world import World, DiaryWorld
+from .core.world import World, DiaryWorld, Acts
 from .core.cerebellum import CerebellumMixin
 from .core.senses import SensesMixin
 from .core.memory import MemoryMixin
@@ -58,15 +64,16 @@ from .core.night import NightMixin
 from .core.persistence import PersistenceMixin
 from .core.instruments import InstrumentsMixin
 from .core.timing import TimingMixin, GatedDescent
+from .core.cord import CordMixin
 
 # `from body.life import *` gives exactly the names it gave before the split (the mixins stay reachable as attributes)
 __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
 
 
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin,
-           CerebellumMixin):
+           CerebellumMixin, CordMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
-        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB)   # the switches, the motor and the cerebellum's constants are known, absent unless given
+        unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB and k_ not in REFLEX)   # the switches, the motor's, the cerebellum's and (R6h) the born patterns' constants are known, absent unless given
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
@@ -79,7 +86,11 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         # ITS CHANNELS IN THE ORGANS (step R4): each channel's code is made by the organ it names, and each later channel that declares
         # a forecast has its head (Organs(..., channels=anatomy.channels) builds them); read here, nothing kept
         for i_, c_ in enumerate(self.anatomy.channels):
-            if not isinstance(getattr(organs, c_.organ, None), torch.nn.Module):
+            try:
+                org_ = getattr(organs, c_.organ, None) if "." not in c_.organ else organs.get_submodule(c_.organ)   # step R6h: encs.<name>
+            except AttributeError:
+                org_ = None
+            if not isinstance(org_, torch.nn.Module):
                 raise ValueError(f"Life: the channel {c_.name!r} is encoded by the organ {c_.organ!r}, which these organs do not have")
             if i_ and c_.forecast and c_.name not in getattr(organs, "chan_pred", {}):
                 raise ValueError(f"Life: the channel {c_.name!r} declares a forecast, and these organs have no head for it "
@@ -381,6 +392,9 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         acts = {self.anatomy.voice.name: int(nxt)}
         if len(self.anatomy.effectors) > 1:                 # step R6h: every effector's act in the declared order, the voice at its place
             wa_ = {e_.name: int(st_["now"]["world"]) for e_, st_ in zip(self.anatomy.motors, self.motor)}
-            acts = {e_.name: (acts[e_.name] if e_.name in acts else wa_[e_.name]) for e_ in self.anatomy.effectors}
+            acts = Acts({e_.name: (acts[e_.name] if e_.name in acts else wa_[e_.name]) for e_ in self.anatomy.effectors})
+            acts.cord = {e_.name: tuple(float(x_) for x_ in st_["now"]["cord"]) for e_, st_ in zip(self.anatomy.motors, self.motor)
+                         if st_["now"].get("cord") is not None}              # the cord's patterns this tick (body/core/cord.py)
+            acts.vor = self._vor_acts()                                      # the VOR's born constants (body/core/cord.py)
         self._bookkeep(u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs)
         return acts
