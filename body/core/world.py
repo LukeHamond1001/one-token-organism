@@ -18,6 +18,11 @@ is on sets it: body/core/cerebellum.py `Below`), and `World.sub_tick(SubFrame) -
 every 10 ms of sim time; `SubFrame` is what the world hands the cerebellum (the mossy input, the servo's corrective torque as its
 teacher, and once a tick the retinal slip with the head's turn), `SubActs` what it takes back (a torque per cerebellar joint added to its
 servo, the VOR's gain correction and offset). The diary's world never calls it.
+STEP R8c, THE LIVE, DARK NIGHT (SIM_DESIGN.md 5.4, A46; C74): `World.live_night` (False: the world stands still at night, `pause()` and
+`resume()`, the diary's), and for a world that runs through the night (the sim's) `dusk()` and `dawn()`: between them the body steps it
+tick by tick with `frame()` and `apply(acts)` as by day, every effector at rest but the brainstem's twitches (body/core/sleep.py). The
+world loop calls the life's `tick_end()` after `apply` (C74: a body in frames sleeps there, between ticks, after the world has applied the
+tick's acts and run the cerebellum's sub-steps, and its night's save is written there; the diary's night stays inside its tick).
 
 A life is born with a world (`Life(..., world=None)`: the DiaryWorld unless one is given; `life.world`) and asks it for the tick's frame
 at the senses' phase (`_sense`, body/core/senses.py), where the queue was always read, so the draw order does not move. The sleep switch
@@ -110,7 +115,8 @@ class World(abc.ABC):
     """A WORLD, AS THE BODY MEETS IT (step R9). One tick, lockstep: `frame()` shows the world as it is (no time passes), the body lives
     the tick on it, `apply(acts)` takes the body's acts ({effector name: act}, a rest being an act) and moves the world on by a tick.
     `pause()` freezes the world where it stands when the night falls (nothing is moved) and `resume()` goes on from the same state in the
-    morning. `save_state()` gives the world's state as bytes and `load_state(blob)` gives it back exactly; a world's state is saved beside
+    morning; a world that runs through the night instead (`live_night`, step R8c) goes dark at `dusk()` and wakes at `dawn()`, the body
+    stepping it between them. `save_state()` gives the world's state as bytes and `load_state(blob)` gives it back exactly; a world's state is saved beside
     the body's save, never inside it. `now` is the frame the body lives this tick: the tick's senses set it (`_sense`), and a channel of
     the world's frames observes it (`Channel.observe`); none before the first tick. `lapse(n)` (the deadline switch only): n ticks of the
     world pass without the body; by default n moves with no act (every effector at its rest).
@@ -118,9 +124,15 @@ class World(abc.ABC):
     with its period in sim time (`below.period_s`) and the interface it serves (`below.joints`, `below.vor`, `below.n_mossy`: the
     anatomy's `Cerebellar`); None unless a life whose cerebellum is on sets it at its birth or load (body/core/cerebellum.py `Below`,
     which holds its life weakly). `sub_tick(sf)` is the world's call: a simulated world makes it from `apply` (SimWorld), the diary's
-    never does. A class attribute: a world no body hooks gains nothing."""
+    never does. A class attribute: a world no body hooks gains nothing.
+    THE LIVE, DARK NIGHT (step R8c; SIM_DESIGN.md 5.4, A46): `live_night`, a class attribute, False: the world pauses at night. A world that
+    runs through the night sets it and implements `dusk()` (the night falls: its lights dim to the night's, the parent asleep, the eyes
+    not rendered and the ears not run, so its frames carry the body's own senses alone) and `dawn()` (the morning: its light returns, the
+    eyes and ears on); between them a body in frames steps it with `frame()` and `apply(acts)` for its night's ticks (body/core/sleep.py
+    `_live_night`)."""
     now = None
     below = None
+    live_night = False
 
     def sub_tick(self, sf):
         """the body's answer to one sub-step below the tick (a SubFrame), or None when no loop below the tick is hooked"""
@@ -155,6 +167,14 @@ class World(abc.ABC):
         """n ticks of the world pass without the body (the deadline switch): n moves with no act"""
         for _ in range(int(n)):
             self.apply({})
+
+    def dusk(self):
+        """the night falls on a world that runs through it (live_night, step R8c): dark, the parent asleep, the eyes and ears off"""
+        raise NotImplementedError(f"{type(self).__name__}: a world that runs through the night (live_night) implements dusk() and dawn()")
+
+    def dawn(self):
+        """the morning of a world that ran through the night (live_night, step R8c): its light, the eyes and ears on again"""
+        raise NotImplementedError(f"{type(self).__name__}: a world that runs through the night (live_night) implements dusk() and dawn()")
 
 
 class DiaryWorld(World):
@@ -237,6 +257,16 @@ class SimWorld(World):
       law); each act is sensed in the next tick's frame. `acts` empty: every effector at rest (a lapse).
     - pause(): the night falls. The world freezes exactly where it is: nothing is moved, no scripted posture, the teacher's clock stops.
     - resume(): the morning. The world goes on from the same state.
+    THE LIVE, DARK NIGHT (step R8c; SIM_DESIGN.md 5.4, A46, A17; the G1's world sets `live_night` and does not pause): at the end of goodnight
+    the world does not freeze. `dusk()`: the lights dim to the night's (dimmed, never switched off: 5.4's measure), the parent sleeps on the
+    sofa touching nothing (every hold released at tick 23,700, A17), the eyes are not rendered and the ears not run; each night `frame()`
+    then carries the body's own senses alone (the joints and the tract in `body`, the observer's contact in `touch` and the `pain` flags,
+    the inertial units in `vestibular` and `imu_torso`, the charge), every other channel absent (quiet), and `truth` for the instruments;
+    each night `apply(acts)` is one tick of sim time with every effector at rest (the servo law at rest re-anchoring its targets) but the
+    brainstem's twitch (one joint's small step, the act as by day), the withdrawal still acting (spinal and lifelong), the charge's basal
+    drain stopped and the twitches' effort draining as by day, and the cerebellum's hook called every 10 ms as by day (it learns wherever
+    the world runs: the servo's corrective torque its teacher, no slip with the eyes off). `dawn()`: the morning's light returns over the
+    wake's first 30 ticks, the eyes and ears on; the world resumes from wherever the night left it (a twitch may have moved a limb).
     - save_state() / load_state(blob): the whole world (the physics, the teacher's state and clocks, the world's own random streams) as
       bytes, and back exactly (the sim's exact-replay test); saved beside the body's save, never inside it.
     THE LOOP BELOW THE TICK (step R6c; SIM_DESIGN.md 7.5, A44), when `below` is set (a life whose cerebellum is on sets it):
@@ -256,8 +286,8 @@ class SimWorld(World):
     - At sub-step 0 the SubFrame carries the last tick's retinal slip and the gyro's turn over it (or None: the gaze moved, a quick phase
       jumped, nothing held still in the fovea), and the answer's VOR gain correction and offset hold through the tick: the window
       counter-shifts by -(born gain + gain) x turn - offset.
-    - The night (the world paused) calls nothing: the cerebellum learns wherever the world runs (R8's live night will run it on the
-      twitches)."""
+    - A paused night calls nothing; the live, dark night (above, R8c) calls the hook as by day: the cerebellum learns wherever the world
+      runs, the twitches among its lessons."""
 
     @abc.abstractmethod
     def frame(self):
@@ -334,6 +364,10 @@ class PaceLog:
 
 class WorldLoop:
     """THE WORLD LOOP (step R9; SIM_DESIGN.md 8.2): `frame = world.frame(); acts = life.tick(frame); world.apply(acts)`, one pass a tick,
+    then (step R8c, C74) the life's `tick_end()`, between ticks: a body in frames sleeps there when its sleep switch fired in the tick, after
+    the world has applied the tick's acts and run the cerebellum's sub-steps (its night's save is then exact between ticks), and a world
+    that runs through the night (`live_night`) is stepped dark through it; the diary's night stays inside its tick and its tick_end does
+    nothing.
     over the life's own world (`life.world`). The frame is taken inside the tick, at its senses' phase (`_sense` asks the world; the
     diary's is built there from the queue, where the queue was always read, so the draw order does not move), and the acts the tick
     returns go to the world. The night comes inside a tick (the sleep switch), which pauses the world and resumes it in the morning; that
@@ -377,6 +411,9 @@ class WorldLoop:
         dusk = life.last_night
         acts = life.tick()
         world.apply(acts)
+        te_ = getattr(life, "tick_end", None)
+        if te_ is not None:
+            te_()                                             # step R8c (C74): the tick's end, between ticks (a body in frames sleeps here)
         t1 = self.clock()
         self.lived += 1
         night = life.last_night is not dusk                   # the night's report is new (a night that failed leaves one too)

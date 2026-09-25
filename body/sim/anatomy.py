@@ -339,7 +339,7 @@ class SimAnatomy(LanguageAnatomy):
                 kw.update(orient={0: ("yaw", -1)}, orient_gate=True)
             n_in = 2 + (1 if name == "waist" else 0) + 2
             limbs.append(Limb(name, [5] * J, rest_id=(5 ** J - 1) // 2, sense="body", sense_idx=idx(js), inverse=True, fwd_gate=True,
-                              n_in=n_in, **kw))
+                              n_in=n_in, twitch=True, **kw))                        # R8c: its joints twitch in active sleep (3.7, A46)
         rewards = [FaceIncrement("face", clip=2), JointPain("pain", signs=(-1.0,)), ChargeRelief("charge")]   # R7d: the heads face +/-, pain -, charge +/-
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
@@ -431,4 +431,8 @@ SIM_CFG = dict(
     # THE LIFE DAY AND THE NIGHT (10, 5.4, A46, B19): 24,000 waking ticks, then a night as long (the night takes time: the critics
     # discount across it, night_ticks, and the live night steps the world that many ticks, R8c)
     wake_ticks=24000, night_ticks=24000,
+    # STEP R8c: THE TWITCHES OF ACTIVE SLEEP IN THE LIVE, DARK NIGHT (3.7, 5.4, A46; body/core/sleep.py; physiology.py SLEEP): the world
+    # stepped dark through the night (its `live_night`), the waist's, the arms', the hands' and the legs' joints twitching one at a time in
+    # active sleep, each twitch's pair teaching act_inv and the forward half, the cerebellum learning wherever the world runs
+    twitch=1,
 )

@@ -74,7 +74,32 @@ body/core/night.py, as it always was):
   at rest), the prefrontal forecast heads learning along the free run, the stream held (as the words' REM, `_rem_rollout`).
 - Then the value ladder's replay, the gauge after (the words' next symbols and the channels' scaled errors on the night's first
   windows, an instrument) and, as the words' night, only a non-finite lesson reloads the evening's organs.
-The live, dark night is R8c (below)."""
+STEP R8c, THE LIVE, DARK NIGHT (SIM_DESIGN.md 3.6, 3.7, 5.4, A46, C74; the switch `twitch`, which needs `night_frames`):
+- THE NIGHT AT THE TICK'S END (C74; `tick_end`): a body under the night over frames sleeps at the end of the tick its sleep switch fired
+  in (`_sleep_now` marks it due), after the world has applied that tick's acts and run the cerebellum's sub-steps, so its night's own
+  save is written between ticks, where the core's save is exact; the world loop calls it (body/core/world.py), and a night still due
+  runs at the next tick's start for a caller that lives ticks by hand. The diary's night stays inside its tick (its save path unchanged).
+- THE WORLD'S NIGHT (World.live_night, dusk, dawn): a world that runs through the night is stepped dark by the night (`_live_night`),
+  night_ticks ticks of it (24,000 for the sim: as long as the day, B19's compressed hour), after the night's replay; a world that does
+  not is paused and resumed around the night, as the diary's (the stub worlds of the tests; nothing twitches then).
+- EVERY EFFECTOR AT REST (its gates closed, its servos at rest under the resting law: the world's) but THE BRAINSTEM'S TWITCHES: no cord
+  pattern (the pattern generator's amplitude is its gate's readiness, and the born cry answers a felt pain, which the sleeping body does
+  not feel: nothing sensed at night reaches a reward, a critic, the amygdala or a gate, 5.4) and no VOR (the eyes are off): THE BUILDER'S
+  READING, for the lead (5.4 names the withdrawal alone, which is the world's). THE BORN TWITCH GENERATOR (`_twitch_schedule`): in
+  active sleep (each sleep cycle of sleep_cycle ticks, 47 minutes, its first sleep_active half: the newborn's sleep begins in active
+  sleep) each tick twitches with probability twitch_rate (10 a minute of active sleep), one joint (uniform among every joint of the
+  effectors that declare `twitch`: the G1's waist, arms, hands and legs, 43 joints) one small step (the setting beside its hold: 0.09
+  rad on the G1's limbs), its sign drawn; from a generator seeded by the organs' twitch_seed and the night's number, so a night's
+  twitches are a function of the body's seed and the night alone, and nothing of them is saved (a save falls between ticks, never
+  inside a night). Each twitch is logged as reflex (the cord's counts), and the night's event lines (pain, touch) are counted, logged
+  never felt. The cerebellum learns below each night tick through the world's hook, as by day: it learns wherever the world runs.
+- THE PAIRS TEACH (`_twitch_lessons`, after the replay: the fixed order a night whose physics runs on another core merges in, SIM_DESIGN.md
+  9's lever): act_inv on each twitch's pair (the sense before and after, the twitch its label), its reliability first with the chance the
+  generator gave each setting (the kappa correction's law); the twitching limb's forward half from the stream at the twitch (the night's
+  frame, the twitch its efference copy, the bands the night holds), the stream held.
+- The live night's physics and the replay touch nothing of each other (the physics steps the world and the cerebellum with the born
+  generator's acts; the replay teaches the cortex, act_pred and act_inv from the reels), so they may run on separate cores and merge
+  before the twitch lessons in this fixed order (A64's lever): not built here, written down for R10."""
 import math
 
 import torch
@@ -135,9 +160,17 @@ class SleepMixin:
 
     def _sleep_check(self):
         """THE SWITCHES THAT NEED WHAT THEY READ (step R8), at birth and at a load: the night over frames cuts R7b's record and event ends,
-        so it needs `frames`; refused otherwise. The diary holds none of the keys, so nothing is refused"""
+        so it needs `frames`; the twitches (R8c) are the night over frames' live night, and need joints that declare them and the organs'
+        born generator's seed (a body is born with its switches: A20); each refused otherwise. The diary holds none of the keys, so
+        nothing is refused"""
         if self._night_frames_on() and not self._frames_on():
             raise ValueError("Life: the night over frames (night_frames 1) cuts the frames' record into episodes and needs the frames (frames 1)")
+        if int(self.cfg.get("twitch", SLEEP["twitch"])):
+            if not self._night_frames_on():
+                raise ValueError("Life: the twitches (twitch 1) are the live night of the night over frames and need it (night_frames 1)")
+            if not self._twitch_joints() or "twitch_seed" not in self.m._buffers:
+                raise ValueError("Life: the twitches are switched on (twitch 1) and no motor effector declares them (Effector.twitch), or the "
+                                 "organs hold no born twitch generator (twitch_seed; built by Organs(..., effectors=anatomy.effectors))")
 
     # ---------------- step R8a: the day's tape ----------------
     def _tape_layout(self):
@@ -307,8 +340,22 @@ class SleepMixin:
     def _night_frames(self, rep):
         """THE NIGHT OVER FRAMES (step R8b; the module's doc): the draw over the kept episodes (the day's tagged first), NREM on their
         windows in per-channel batches, REM on frames, the value ladder's replay, the gauge before and after, a non-finite lesson
-        reloading the evening's organs (as the words' night). The report's fields go into `rep`"""
+        reloading the evening's organs (as the words' night). The report's fields go into `rep`. Returns the night's Adam and its
+        parameters, which the live night's twitch lessons step after it (R8c). THE DAY'S PENDING PAIRS of act_inv (gathered before dusk)
+        are learned first, at nightfall, before the night's lessons (the words' night learns them after its passes, R6h's place; for a body
+        in frames the builder's reading, for the lead: they were gathered before the night, so they are learned before it)"""
         m = self.m
+        for i_, st_ in enumerate(getattr(self, "motor", ()), 1):
+            if st_.get("inv_batch"):
+                self._inverse_batch(i_)                               # act_inv's pairs gathered before dusk, learned at nightfall (R6h)
+        # THE NIGHT'S TWO OPTIMIZERS (8's R8 row; the night's note since R6 fix 7): the night's Adam (night_lr, night_beta2, warmed over
+        # night_warm steps, as the words' night) over every parameter but act_pred's, its correction's and the recall maps', each step's
+        # gradient bounded by its own norm over them; act_pred, its correction and the maps by their own plain step (GatedDescent,
+        # opt_pred, at the day's constants: THE BUILDER'S READING, for the lead: "stepped by act_pred's plain step", the day's lr_motor
+        # and bound; at night_lr its product with the lesson's curvature would pass 2 at d 512, where the day's has about 8 times headroom)
+        gated = {id(p_) for e_ in self.anatomy.motors for p_ in self._gated_params(e_)}
+        params = [p_ for p_ in m.parameters() if id(p_) not in gated]
+        opt = torch.optim.Adam(params, lr=float(self.cfg["night_lr"]), betas=(0.9, float(self.cfg.get("night_beta2", 0.999))))
         eps = getattr(self, "_episodes", None) or []
         day = int(self.nights)
         # --- how many dreams: as the words' night, the day's new memories (frames and words) between night_starts and night_starts_max ---
@@ -327,19 +374,11 @@ class SleepMixin:
                     "mean_len": (round(sum(eps[i]["w1"] - eps[i]["w0"] + 1 for i in draw) / len(draw), 1) if draw else 0)})
         if not draw:
             rep["note"] = "no episode to dream"
-            return
+            return opt, params
         dreams = [eps[i] for i in draw]
         self._night_away()                                        # the night's lessons on night_dev (the draw made at home)
         g_dreams = dreams[:32]                                    # the gauge's windows: the night's first (the tagged first among them)
         before = self._frames_gauge(g_dreams)
-        # THE NIGHT'S TWO OPTIMIZERS (8's R8 row; the night's note since R6 fix 7): the night's Adam (night_lr, night_beta2, warmed over
-        # night_warm steps, as the words' night) over every parameter but act_pred's, its correction's and the recall maps', each step's
-        # gradient bounded by its own norm over them; act_pred, its correction and the maps by their own plain step (GatedDescent,
-        # opt_pred, at the day's constants: THE BUILDER'S READING, for the lead: "stepped by act_pred's plain step", the day's lr_motor
-        # and bound; at night_lr its product with the lesson's curvature would pass 2 at d 512, where the day's has about 8 times headroom)
-        gated = {id(p_) for e_ in self.anatomy.motors for p_ in self._gated_params(e_)}
-        params = [p_ for p_ in m.parameters() if id(p_) not in gated]
-        opt = torch.optim.Adam(params, lr=float(self.cfg["night_lr"]), betas=(0.9, float(self.cfg.get("night_beta2", 0.999))))
         warm_ = int(self.cfg.get("night_warm", 0)); base_lr_ = float(self.cfg["night_lr"]); nstep_ = 0
         m.train()
         nb = max(1, int(self.cfg.get("night_batch", 0)))          # night_batch 0: a dream a batch (THE BUILDER'S READING: windows of frames
@@ -388,7 +427,6 @@ class SleepMixin:
         self._night_home()                                        # home before the value replay, the gauge after, the fade and the save
         self._value_replay()
         m.eval()
-        del opt
         finite = all(bool(torch.isfinite(p_).all()) for p_ in m.parameters())
         after = self._frames_gauge(g_dreams)
         rep["discarded"] = not finite; rep["undone_for"] = "non-finite" if not finite else None
@@ -403,6 +441,7 @@ class SleepMixin:
                     "act_pred_weight": {"positions": wstats[0], "below_1": round(wstats[1] / pos, 4), "zero": round(wstats[2] / pos, 4)},
                     "act_inv_pairs": inv_pairs,
                     "gauge": {"before": before, "after_nrem": mid, "after": after}})
+        return opt, params
 
     def _frames_batch(self, batch):
         """A NIGHT'S BATCH OF WINDOWS (step R8b; "per-channel batches from stored codes"): each channel's observations [B, T, ..] from the
@@ -625,6 +664,188 @@ class SleepMixin:
         if C_free.shape[0] < 2:
             return None, None
         return m.forecast_loss(C_free, B_next, sig=0.0)
+
+    # ---------------- step R8c: the live, dark night ----------------
+    def _twitch_on(self):
+        """the switch `twitch` (step R8c): 0 for the diary, whose cfg holds no such key"""
+        return bool(int(self.cfg.get("twitch", SLEEP["twitch"])))
+
+    def tick_end(self):
+        """THE TICK'S END (step R8c; SIM_DESIGN.md C74), called by the world loop after the world has applied the tick's acts and run the
+        cerebellum's sub-steps, between ticks: a body in frames whose sleep switch fired in the tick sleeps here (`_sleep_now` defers it),
+        so its night's own save is written between ticks, where the core's save is exact; a world that runs through the night
+        (World.live_night) is stepped dark through it by the night (`_live_night`), any other paused and resumed around it. The diary's
+        night stays inside its tick, so nothing is due here for it. A caller that lives ticks by hand without calling it meets a night
+        still due at the next tick's start (`tick`), before that tick's frame: the same place between ticks"""
+        if not getattr(self, "_night_due", False):
+            return
+        self._night_due = False
+        live = bool(getattr(self.world, "live_night", False))
+        if not live:
+            self.world.pause()
+        try:
+            self.night()
+        finally:
+            if not live:
+                self.world.resume()
+
+    def _sleep_cycle_active(self, t):
+        """whether the night's tick t is in active sleep (the module's doc): its place in its sleep cycle (sleep_cycle ticks, active sleep
+        first) below sleep_active of it"""
+        cyc = float(self._sleep_const("sleep_cycle"))
+        return (float(t) % cyc) < float(self._sleep_const("sleep_active")) * cyc
+
+    def _twitch_joints(self):
+        """every joint that twitches: (its motor effector's place among the motor effectors plus one, the joint), in the declared order"""
+        return [(i, j) for i, e in enumerate(self.anatomy.motors, 1) if getattr(e, "twitch", False) for j in range(len(e.factors))]
+
+    def _twitch_schedule(self, N):
+        """THE BORN TWITCH GENERATOR'S NIGHT (the module's doc): {night tick: ((effector place, joint), sign 0 or 1)} over the night's N ticks,
+        from a generator of its own seeded by the organs' twitch_seed and the night's number (a function of the body's seed and the night
+        alone): each tick of active sleep twitches with probability twitch_rate, the joint uniform among every twitching joint, the sign
+        uniform"""
+        joints = self._twitch_joints()
+        if not joints or N <= 0:
+            return {}
+        g = torch.Generator().manual_seed(int(self.m.twitch_seed) + 1000003 * int(self.nights))
+        u = torch.rand(N, generator=g, dtype=torch.float64)
+        pick = torch.randint(len(joints), (N,), generator=g)
+        sign = torch.randint(2, (N,), generator=g)
+        p = float(self._sleep_const("twitch_rate"))
+        return {t: (joints[int(pick[t])], int(sign[t])) for t in range(N) if float(u[t]) < p and self._sleep_cycle_active(t)}
+
+    def _twitch_act(self, e, j, sign):
+        """a twitch's act: joint j of effector e one small step (the setting beside its hold: below it for sign 0, above for 1), every other
+        joint holding; (the flat act, its settings)"""
+        dig = [(int(k_) - 1) // 2 for k_ in e.factors]
+        dig[int(j)] += 1 if int(sign) else -1
+        return int(self.m.get_submodule(e.organ).flat(dig)), dig
+
+    def _twitch_chance(self, e):
+        """THE CHANCE THE TWITCH GENERATOR GAVE EACH SETTING (act_inv's kappa correction on a twitch's pair, as `_act_chance` gives a drawn
+        act's): given that the twitch fell on effector e, per joint: its hold 1 - 1/J, each small step 1/(2J), every other setting 0"""
+        J = len(e.factors); out = []
+        for K in e.factors:
+            q = torch.zeros(int(K)); h = (int(K) - 1) // 2
+            q[h] = 1.0 - 1.0 / J; q[h - 1] = 0.5 / J; q[h + 1] = 0.5 / J
+            out.append(q)
+        return out
+
+    def _frame_sense(self, e, frame):
+        """effector e's body sense in a night's frame (float32 [sense_n]; its channel's zeros where the frame names it not)"""
+        c = self.anatomy.channel(e.sense)
+        o_ = frame.obs.get(c.name)
+        x = torch.zeros(int(c.size)) if o_ is None else torch.as_tensor(o_, dtype=torch.float32).reshape(int(c.size))
+        if e.sense_idx is not None:
+            x = x[torch.tensor([int(k_) for k_ in e.sense_idx])]
+        return x.to(self.dev)
+
+    def _live_night(self, rep, opt, params):
+        """THE LIVE, DARK NIGHT (step R8c; the module's doc; SIM_DESIGN.md 5.4, A46): dusk; night_ticks ticks of the world stepped with every
+        effector at rest (no cord pattern: the gates are closed in sleep, and the pattern generator's amplitude is its gate's readiness;
+        no VOR: the eyes are off) but the born generator's twitches in active sleep; each twitch's pair kept (the frame before, its act,
+        the frame after), the night's event lines counted (pain and falls at night are logged, never felt: nothing sensed at night reaches
+        a reward, a critic, the amygdala or a gate); dawn; then the pairs' lessons (`_twitch_lessons`). The cerebellum learns below each
+        night tick through the world's hook, as by day"""
+        from .frames import read_event_lines
+        from .world import Acts
+        m = self.m; w = self.world; N = int(self.cfg.get("night_ticks", 0))
+        mot = list(self.anatomy.motors)
+        sched = self._twitch_schedule(N) if self._twitch_on() else {}
+        rest = {e_.name: int(e_.rest_id) for e_ in self.anatomy.effectors}
+        ev = list(self.anatomy.events or ()); counts = {ln.name: 0 for ln in ev}
+        cb0 = int(m.cereb.n_sub) if "cereb" in m._modules else None
+        pairs = []; pending = None; by = {}; active = 0
+        w.dusk()
+        try:
+            for t in range(N):
+                f = w.frame()
+                if pending is not None:
+                    pairs.append(pending + (f,)); pending = None
+                if ev:
+                    for ln, v in zip(ev, read_event_lines(ev, f.obs)):
+                        counts[ln.name] += int(v > 0.0)
+                active += int(self._sleep_cycle_active(t))
+                acts = Acts(rest)
+                tw = sched.get(t)
+                if tw is not None:
+                    (i, j), sg = tw; e = mot[i - 1]
+                    a, dig = self._twitch_act(e, j, sg)
+                    acts[e.name] = a
+                    pending = (i, a, j, f)
+                    cn = self.motor[i - 1]["cord_n"]; cn["twitch"] = int(cn.get("twitch", 0)) + 1   # logged as reflex (3.7)
+                    by[e.name] = by.get(e.name, 0) + 1
+                w.apply(acts)
+            if pending is not None:
+                pairs.append(pending + (w.frame(),))
+        finally:
+            w.dawn()
+        les = self._twitch_lessons(pairs, opt, params)
+        rep["live"] = {"ticks": N, "active": active, "twitches": len(pairs), "by": by, "events": {k_: v_ for k_, v_ in counts.items() if v_},
+                       "cereb_sub": (int(m.cereb.n_sub) - cb0 if cb0 is not None else None), **les}
+
+    def _twitch_lessons(self, pairs, opt, params):
+        """THE TWITCHES TEACH (step R8c; SIM_DESIGN.md 3.6, A46: "each twitch and its reafference is a clean single-joint pair for act_inv
+        and the forward half"), after the night's replay (the fixed order a parallel night merges in: SIM_DESIGN.md 9, A64): ACT_INV on each
+        pair in the order they came (the sense before and after, the twitch's act its label), its reliability updated first on its label
+        (a prediction, not a fit) with the chance the generator gave each setting, one step of its own optimizer every act_inv_every pairs
+        (its day's batched lesson, `_inverse_batch`); THE FORWARD HALF of the twitching effector, from the stream at the twitch's tick (the
+        night's frame, the twitch its efference copy; the ladder's bands as the night holds them: THE BUILDER'S READING, for the lead: a
+        night's frame was never lived awake, so its bands are the evening's, the states the night keeps) to its sense at the next tick, the
+        stream held (the cortex does not learn from the night's frames: 5.4 names act_inv, the forward half and the cerebellum), one step of
+        the night's Adam a batch of night_batch pairs. The cerebellum learned from them below the tick as the world ran"""
+        mot = list(self.anatomy.motors); m = self.m
+        if not pairs:
+            return {"act_inv_twitch": 0, "fwd_steps": 0}
+        every = max(1, int(self._motor_const("act_inv_every")))
+        n_inv = 0
+        for i, e in enumerate(mot, 1):
+            if not e.inverse:
+                continue
+            st = self.motor[i - 1]; mine = [p_ for p_ in pairs if p_[0] == i]
+            ch = self._twitch_chance(e)
+            for k0 in range(0, len(mine), every):
+                keep = st["inv_batch"]
+                st["inv_batch"] = [(self._frame_sense(e, p_[3]), self._frame_sense(e, p_[4]), int(p_[1]), [q.clone() for q in ch])
+                                   for p_ in mine[k0:k0 + every]]
+                self._inverse_batch(i)
+                st["inv_batch"] = keep
+                n_inv += len(mine[k0:k0 + every])
+        sym, vec, _ = self._tape_layout()
+        nb = max(1, int(self.cfg.get("night_batch", 0))); steps = 0
+        for k0 in range(0, len(pairs), nb):
+            chunk = pairs[k0:k0 + nb]; B = len(chunk)
+            obs = {}
+            for c_ in sym:
+                obs[c_.name] = torch.tensor([[int(c_.rest_id) if p_[3].obs.get(c_.name) is None else int(p_[3].obs[c_.name])] for p_ in chunk],
+                                            dtype=torch.long, device=self.dev)
+            for c_ in vec:
+                obs[c_.name] = torch.stack([(torch.zeros(int(c_.size)) if p_[3].obs.get(c_.name) is None else
+                                             torch.as_tensor(p_[3].obs[c_.name], dtype=torch.float32).reshape(int(c_.size))) for p_ in chunk]
+                                           ).unsqueeze(1).to(self.dev)
+            for i, e in enumerate(mot, 1):
+                obs[e.name] = torch.tensor([[int(p_[1]) if p_[0] == i else int(e.rest_id)] for p_ in chunk], dtype=torch.long, device=self.dev)
+            xos = torch.full((B, 1), int(self.sil), dtype=torch.long, device=self.dev)
+            bundles = self.bands.detach().to(self.dev).unsqueeze(0).unsqueeze(0).expand(B, 1, -1, -1).clone()
+            with torch.no_grad():
+                C0 = m.stream(m.inputs(self.anatomy, obs, xos, bundles))[:, 0]
+            loss = None
+            for b, p_ in enumerate(chunk):
+                e = mot[p_[0] - 1]
+                if e.sense is None:
+                    continue
+                s1 = self._frame_sense(e, p_[4])
+                le = 0.5 * ((m.timing[e.name].fwd(C0[b]).float() - s1.float()) ** 2).sum()
+                loss = le if loss is None else loss + le
+            if loss is None:
+                continue
+            opt.zero_grad(set_to_none=True)
+            (loss / float(B)).backward()
+            gn = torch.nn.utils.clip_grad_norm_(params, 1.0)
+            if bool(torch.isfinite(gn)):
+                opt.step()
+            opt.zero_grad(set_to_none=True); steps += 1
+        return {"act_inv_twitch": n_inv, "fwd_steps": steps}
 
     def _episodes_back(self, saved):
         """THE EPISODES GIVEN BACK at a load (body/core/persistence.py; saved in the life, life["episodes"]): the reels, the episodes, the

@@ -1180,14 +1180,17 @@ def _g1_replay_world(seed=0):
     ticks 60 and 147; a face held in the periphery on ticks 140-159 (across the save at 150) and for one tick in every 30; a sound's
     onset every 45 ticks, a sudden change every 37, a word every 17; the torso's unit turning (R7f's heading) and a face in the fovea
     every 23 ticks (R7a's line), functions of the tick; the cerebellum's hook called 15 times a tick as motor 11's stub calls it, from
-    the world's second stream"""
+    the world's second stream. It RUNS THROUGH THE NIGHT (step R8c, the live, dark night): at dusk its frames carry the body's own senses
+    alone (the eyes, the ears, the face and the words off), the hook is called with no slip, and its dark goes with its save"""
     import random as _r
     from body.core.world import SubFrame
     from body.sim.anatomy import SIZES
 
     class G1Replay(SimWorld):
+        live_night = True
+
         def __init__(self):
-            self.t = 0; self.rng = _r.Random(seed); self.rng_cb = _r.Random(seed + 1)
+            self.t = 0; self.rng = _r.Random(seed); self.rng_cb = _r.Random(seed + 1); self.dark = False
 
         def frame(self):
             t = self.t; R = self.rng
@@ -1209,6 +1212,9 @@ def _g1_replay_world(seed=0):
                                 0.1 * math.sin(t / 7.0) + 0.02]
             if t % 23 == 5:
                 obs["face_fovea"] = [1.0]
+            if self.dark:                                                # the live, dark night: the eyes and the ears off (R8c)
+                for k in ("ears", "eye_p", "eye_f", "face", "words", "face_periph", "sound_side", "onset_periph", "face_fovea"):
+                    obs.pop(k, None)
             return Frame(t, obs, 0.0, {"who": "parent"})
 
         def apply(self, acts):
@@ -1216,8 +1222,8 @@ def _g1_replay_world(seed=0):
                 life = self.below._life(); J = len(self.below.joints); R = self.rng_cb
                 for s_ in range(15):
                     self.sub_tick(SubFrame(self.t, s_, _g1_mossy(life.anatomy, acts, R), [R.uniform(-2.0, 2.0) for _ in range(J)],
-                                           [R.uniform(-0.01, 0.01) for _ in range(2)] if s_ == 0 else None,
-                                           [R.uniform(-0.1, 0.1) for _ in range(2)] if s_ == 0 else None, limit=[25.0] * J))
+                                           [R.uniform(-0.01, 0.01) for _ in range(2)] if (s_ == 0 and not self.dark) else None,
+                                           [R.uniform(-0.1, 0.1) for _ in range(2)] if (s_ == 0 and not self.dark) else None, limit=[25.0] * J))
             self.t += 1
 
         def pause(self):
@@ -1226,11 +1232,17 @@ def _g1_replay_world(seed=0):
         def resume(self):
             pass
 
+        def dusk(self):
+            self.dark = True
+
+        def dawn(self):
+            self.dark = False
+
         def save_state(self):
-            return pickle.dumps((self.t, self.rng.getstate(), self.rng_cb.getstate()))
+            return pickle.dumps((self.t, self.rng.getstate(), self.rng_cb.getstate(), self.dark))
 
         def load_state(self, blob):
-            self.t, a_, b_ = pickle.loads(blob); self.rng.setstate(a_); self.rng_cb.setstate(b_)
+            self.t, a_, b_, self.dark = pickle.loads(blob); self.rng.setstate(a_); self.rng_cb.setstate(b_)
     return G1Replay()
 
 
@@ -1245,8 +1257,11 @@ def test_the_day_saved():
         (the breath clock, the unit, the chunk, the act last tick, the foresight, the counts) are the saved life's, but for the pattern
         generator's cache of its cycle (found again from birth at the next tick) and the gradients the last lesson left (each lesson
         makes its own again before it steps);
-    (ii) AT A NIGHT'S BOUNDARY: the sleep switch's night inside tick 225, the save after that tick;
+    (ii) AT A NIGHT'S BOUNDARY: the sleep switch fires in tick 225 and the night runs at that tick's end (C74, R8c), the save after it;
     (iii) ACROSS A NIGHT: saved at tick 150 and living on through that night.
+    THE NIGHT IS R8's (SIM_CFG's night over frames and twitches, in a world that runs through the night, 120 night ticks here): the day's
+    tape, the episodes and their reels, the entries' running mean, the frames' dreams, REM on frames, the live night's twitches and their
+    lessons, the cerebellum learning at night; the tape inside the day (i) and the episodes after the night (ii, iii) go with the save.
     The process's global stream is not the body's: a load draws from it for the organs it builds before reading the save (anatomy 5), so
     the test seeds it as the birth did and gives it back after. AN OLDER SAVE (a motor body's save from before A70: its day taken out)
     loads with one line saying so and begins its day afresh (R6h's rule for older saves: no cry, unit or chunk under way, the stream from
@@ -1256,8 +1271,8 @@ def test_the_day_saved():
     import io
     from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table
     from body.tests.test_anatomy import _canon, _whole
-    base = dict(SIM_CFG, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=64, night_rounds=2, night_batch=8,
-                rem_dreams=4, rem_steps=4, night_dev="")
+    base = dict(SIM_CFG, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=64, night_starts_max=64, night_rounds=2,
+                night_batch=8, rem_dreams=4, rem_steps=4, night_dev="", night_ticks=120)   # a night of 120 ticks, R8's whole night in it
     plain, night = dict(base, wake_ticks=100000), dict(base, wake_ticks=225)
 
     def born(c):
@@ -1316,6 +1331,7 @@ def test_the_day_saved():
     # R7's state under way at the save (SIM_CFG's frames, amyg, recall): the heading turned, frames written, the record, the amygdala
     r7 = (float(B._heading), int(B._fwrites), int(B._rec_n), int(B.m.amyg.n_solve), int(B.m.amyg.ring_n), len(B._fboosts or ()))
     assert r7[0] != 0.0 and r7[1] > 0 and r7[2] == 150 and r7[3] > 0 and r7[4] > 0 and B._frec_now is not None, r7
+    assert int(B._tape_n) == 150 and len(B._tape) == 1                  # R8's day's tape under way at the save
     C1, said1, size1 = reborn(B, wB)
     life_, mot_, opt_, org_, gen_, grads1 = lost(B, C1)
     assert not said1 and (life_, mot_, opt_, org_, gen_) == ([], ["spg_cyc"], [], [], True), (said1, life_, mot_, opt_, org_, gen_)
@@ -1326,6 +1342,9 @@ def test_the_day_saved():
     B2, wB2 = born(night); live(B2, 150)
     C3, said3, _ = reborn(B2, wB2)
     live(B2, 75); assert (B2.ticks, B2.nights) == (225, 1), (B2.ticks, B2.nights)
+    r8 = B2.last_night
+    assert not r8.get("error") and r8["episodes"]["kept"] > 0 and r8["dreams"] == 64 and r8["live"]["ticks"] == 120 and r8["rem_steps"] > 0, r8
+    assert len(B2._episodes) == r8["episodes"]["kept"] and int(B2._tape_n) == 0
     C2, said2, _ = reborn(B2, wB2)
     life2_, mot2_, opt2_, org2_, gen2_, grads2 = lost(B2, C2)
     assert not said2 and not said3 and (life2_, mot2_, opt2_, org2_, gen2_) == ([], ["spg_cyc"], [], [], True), (life2_, mot2_, opt2_, org2_)
@@ -1340,7 +1359,9 @@ def test_the_day_saved():
     live(C4, 150); h4 = _whole(C4)
     parted = [k_ for k_ in h1 if h4[k_] != h1[k_]]
     assert "work" in parted and "rng" in parted, parted
-    print(f"motor 12: a life saved anywhere goes on as the life that went on: (i) saved at tick 150 mid-cry (its breath clock {cry}, in an",
+    print(f"motor 12: a life saved anywhere goes on as the life that went on (R8's night: {r8['episodes']['kept']} episodes kept,",
+          f"{r8['dreams']} dreams, {r8['live']['twitches']} twitches in {r8['live']['ticks']} live night ticks):",
+          f"(i) saved at tick 150 mid-cry (its breath clock {cry}, in an",
           f"expiration), {len(under)} units under way ({', '.join(under)}), a face held across the save, R7's state under way (the heading",
           f"{r7[0]:+.3f} rad, {r7[1]} frames written, the record's {r7[2]} rows, the amygdala's {r7[3]} solves and {r7[4]} forecasts pending,",
           f"{r7[5]} boosts pending); at the load all of it but the",

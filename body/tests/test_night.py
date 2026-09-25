@@ -271,6 +271,10 @@ def test_the_night_over_frames():
         out = ost(); steps.append((before, gr, p0.detach().clone(), float(g0["lr"]) * float(g0["rate"]), float(g0["lr"]) * float(g0["bound"])))
         return out
     op.step = spy_step
+    pend = sum(len(st_.get("inv_batch") or []) for st_ in L.motor)
+    for i_, st_ in enumerate(L.motor, 1):                                 # the day's pending pairs (learned at nightfall, before the night's
+        if st_.get("inv_batch"):                                          # lessons: R8c) learned here first, so the replay's own is seen
+            L._inverse_batch(i_)
     rel0 = [(dict((k_, st_[k_]) for k_ in ("inv_kappa", "inv_gain", "inv_n")), [[list(r) for r in c] for c in st_["inv_conf"]] if st_["inv_conf"] else None,
              [list(r) for r in st_["inv_ch"]] if st_.get("inv_ch") else None) for st_ in L.motor]
     inv0 = {e.name: [p_.detach().clone() for p_ in L.m.timing[e.name].inv.parameters()] for e in L.anatomy.motors if e.inverse}
@@ -299,7 +303,7 @@ def test_the_night_over_frames():
     for before, gr, after, s_, b_ in steps:
         assert gr is not None and torch.equal(after, before - (gr * s_).clamp(-b_, b_))
     # act_inv replayed: its weights moved, its reliability as it was
-    assert all(r_ == a_ for r_, a_ in zip(rel0, rel_after[:len(rel0)])), "the replay moved act_inv's reliability"
+    assert pend > 0 and all(r_ == a_ for r_, a_ in zip(rel0, rel_after[:len(rel0)])), "the replay moved act_inv's reliability"
     moved = [n_ for n_, ps_ in inv0.items() if any(not torch.equal(p_, q_) for p_, q_ in zip(ps_, rel_after[-1][n_]))]
     assert moved and rep["act_inv_pairs"] > 0, (moved, rep["act_inv_pairs"])
     # the batch, the words' targets, act_pred's weight
@@ -360,7 +364,174 @@ def test_the_night_over_frames():
           f"{rep['gauge']['after']['words']}, its channels {rep['gauge']['before']['channels']} -> {rep['gauge']['after']['channels']}")
 
 
-NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames]
+# ---------------- night 5: the live, dark night ----------------
+
+def _live_world(seed=0):
+    """a stub of the G1's world that runs through the night (never the sim's): motor 12's random senses, loud 6 ticks in every 40 (so the
+    frames' events end), a word every 17 ticks, a smile every 40, pain every 97, the torso's unit turning, the cerebellum's hook called 15
+    times a tick as SimWorld's contract says; at dusk its frames carry the body's own senses alone (the body, touch, the inertial units,
+    the charge, the pain flags, the torso's unit), the eyes and the ears off and no word; it records every call (each apply by day or by
+    night with its acts, dusk, dawn, pause, resume) and its whole state goes with its save"""
+    import pickle
+    import random as _r
+    from body.core.world import Frame, SimWorld, SubFrame
+    from body.sim.anatomy import SIZES
+    from body.tests.test_motor import _g1_mossy
+
+    class LiveG1(SimWorld):
+        live_night = True
+
+        def __init__(self):
+            self.t = 0; self.rng = _r.Random(seed); self.rng_cb = _r.Random(seed + 1); self.dark = False; self.log = []
+
+        def frame(self):
+            t = self.t; R = self.rng; a_ = 3.0 if t % 40 < 6 else 0.3
+            obs = {n: [a_ * R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
+            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [max(0.3, 0.9 - 0.001 * t), -0.001]
+            obs["body"][241] = R.uniform(0.2, 1.0)
+            obs["pain"] = [1.0 if (t % 97 == 50 and k == 5) else 0.0 for k in range(44)]
+            if t % 17 == 0:
+                obs["words"] = R.randrange(3, 79)
+            obs["imu_torso"] = [0.3 * math.sin(t / 11.0), 0.2 * math.cos(t / 13.0), 9.81, 0.05 * math.cos(t / 5.0), 0.04 * math.sin(t / 9.0),
+                                0.1 * math.sin(t / 7.0) + 0.02]
+            if self.dark:
+                for k in ("ears", "eye_p", "eye_f", "face", "words"):
+                    obs.pop(k, None)
+            return Frame(t, obs, 0.0, {"who": "parent", "yaw": 0.01 * t})
+
+        def apply(self, acts):
+            self.log.append(("night" if self.dark else "day", self.t, dict(acts)))
+            if self.below is not None:
+                life = self.below._life(); J = len(self.below.joints); R = self.rng_cb
+                for s_ in range(15):
+                    self.sub_tick(SubFrame(self.t, s_, _g1_mossy(life.anatomy, acts, R), [R.uniform(-2.0, 2.0) for _ in range(J)],
+                                           None if self.dark else ([R.uniform(-0.01, 0.01) for _ in range(2)] if s_ == 0 else None),
+                                           None if self.dark else ([R.uniform(-0.1, 0.1) for _ in range(2)] if s_ == 0 else None),
+                                           limit=[25.0] * J))
+            self.t += 1
+
+        def dusk(self):
+            self.dark = True; self.log.append(("dusk", self.t, None))
+
+        def dawn(self):
+            self.dark = False; self.log.append(("dawn", self.t, None))
+
+        def pause(self):
+            self.log.append(("pause", self.t, None))
+
+        def resume(self):
+            self.log.append(("resume", self.t, None))
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.rng.getstate(), self.rng_cb.getstate(), self.dark))
+
+        def load_state(self, blob):
+            self.t, a_, b_, self.dark = pickle.loads(blob); self.rng.setstate(a_); self.rng_cb.setstate(b_)
+    return LiveG1()
+
+
+def test_the_live_dark_night():
+    """night 5 (step R8c; SIM_DESIGN.md 3.6, 3.7, 5.4, A46, C74): THE LIVE, DARK NIGHT. The G1 (d 32) lives 150 ticks in a stub of its world
+    that runs through the night (a sleep cycle shortened to 400 ticks and a twitch rate of 0.1 a tick of active sleep, the test's, so the
+    phases and the rate are seen in a night of 600 ticks). THE NIGHT AT THE TICK'S END (C74): the sleep switch fires in tick 149 and the
+    night runs after the world has applied that tick's acts and run its cerebellum's sub-steps; dusk, 600 night ticks, dawn; no pause.
+    EVERY NIGHT ACT A REST BUT THE TWITCHES: each twitch one joint's small step (the setting beside its hold) on the waist, an arm, a hand
+    or a leg, never the tract or the gaze; only in active sleep (the first half of each cycle); their count over the active ticks within
+    3 sigma of the rate; the born generator's schedule (a function of the body's seed and the night); logged as reflex (the cord's counts);
+    the night's frames with the eyes and the ears off. THE CEREBELLUM called 15 times a night tick (it learns wherever the world runs).
+    THE PAIRS TEACH act_inv (its reliability updated on each, its weights moved) and the twitching limb's forward half, the stream held.
+    THE NIGHT'S OWN SAVE is written after dawn, between ticks: a life loaded from it goes on 75 ticks as the life that went on, bit for
+    bit. At the rate as read (0.025) and the 47-minute cycle a night of 24,000 ticks has about 365 twitches (the law's expectation)"""
+    from body.tests.test_anatomy import _whole
+    cfg = _cfg(wake_ticks=150, night_ticks=600, sleep_cycle=400.0, twitch_rate=0.1, night_starts=8, night_starts_max=8, night_rounds=1,
+               night_batch=4)
+    L = _g1(cfg, _live_world()); w = L.world; run = WorldLoop(L)
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd); L.save_path = path
+    sv = L.save
+    L.save = lambda p_=None, sv=sv, w=w: (w.log.append(("save", w.t, None)), sv(p_))[1]
+    cortex = [n_ for n_, _ in L.m.named_parameters() if n_.split(".")[0] in ("blocks", "lnf", "in_ln", "bundle_in", "latent_pred", "chan_pred")]
+    tl = L._twitch_lessons; seen = {}
+
+    def spy_tl(pairs, opt, params, tl=tl, L=L, seen=seen):
+        sd0 = {n_: p_.detach().clone() for n_, p_ in L.m.named_parameters()}
+        inv0 = [int(st_["inv_n"]) for st_ in L.motor]
+        out = tl(pairs, opt, params)
+        seen.update(pairs=list(pairs), sd0=sd0, sd1={n_: p_.detach().clone() for n_, p_ in L.m.named_parameters()}, inv0=inv0,
+                    inv1=[int(st_["inv_n"]) for st_ in L.motor])
+        return out
+    L._twitch_lessons = spy_tl
+    cb0 = int(L.m.cereb.n_sub)
+    try:
+        for _ in range(150):
+            run.step()
+        assert L.nights == 1 and not L.last_night.get("error"), L.last_night.get("error")
+        wB = w.save_state()
+        Lc = None
+        g_ = torch.get_rng_state(); torch.manual_seed(0)
+        from body.sim.anatomy import SimAnatomy, born_table
+        w2 = _live_world(); w2.load_state(wB)
+        Lc = Life.load(path, SimAnatomy(born_table(), L.cfg), save_path=None, world=w2); torch.set_rng_state(g_)
+    finally:
+        os.remove(path)
+    del L.save; del L._twitch_lessons; L.save_path = None
+    log = w.log; kinds = [k_ for k_, _, _ in log]
+    i_d = kinds.index("dusk"); i_w = kinds.index("dawn")
+    assert log[i_d - 1][:2] == ("day", 149) and kinds[i_d + 1:i_w] == ["night"] * 600 and kinds[i_w + 1] == "save", kinds[i_d - 2:i_d + 3]
+    assert "pause" not in kinds and "resume" not in kinds and log[i_w][1] == 750
+    names = {e.name: e for e in L.anatomy.effectors}; rest = {n_: int(e.rest_id) for n_, e in names.items()}
+    tw = []
+    for k, (_, t, acts) in enumerate(log[i_d + 1:i_w]):
+        moved = [(n_, a) for n_, a in acts.items() if a != rest[n_]]
+        assert len(moved) <= 1, (k, moved)
+        if moved:
+            n_, a = moved[0]; e = names[n_]; tab = L.m.acts[n_]
+            dig = [int(x) for x in tab.digits(torch.tensor(a)).tolist()]
+            off = [(j, x - 2) for j, x in enumerate(dig) if x != 2]
+            assert e.twitch and len(off) == 1 and off[0][1] in (-1, 1), (n_, dig)
+            tw.append((k, n_, off[0][0], off[0][1]))
+    assert all(names[n_].name not in ("voice", "gaze", "words") for _, n_, _, _ in tw)
+    act_ticks = [k for k in range(600) if (k % 400) < 200]
+    assert all((k % 400) < 200 for k, _, _, _ in tw) and tw, tw[:3]
+    n_act = len(act_ticks); mu = 0.1 * n_act; sd = math.sqrt(n_act * 0.1 * 0.9)
+    assert abs(len(tw) - mu) <= 3 * sd, (len(tw), mu, sd)
+    L.nights -= 1
+    try:
+        sched = L._twitch_schedule(600)
+    finally:
+        L.nights += 1
+    mot = list(L.anatomy.motors)
+    assert [(k, mot[i - 1].name, j, 1 if sg else -1) for k, ((i, j), sg) in sorted(sched.items())] == tw
+    assert sum(int(st_["cord_n"].get("twitch", 0)) for st_ in L.motor) == len(tw) == L.last_night["live"]["twitches"]
+    assert L.last_night["live"]["cereb_sub"] == 15 * 600 and int(L.m.cereb.n_sub) - cb0 >= 15 * 750
+    # the pairs' lessons
+    pairs = seen["pairs"]; assert len(pairs) == len(tw)
+    d_inv = [b_ - a_ for a_, b_ in zip(seen["inv0"], seen["inv1"])]
+    want = [sum(1 for p_ in pairs if p_[0] == i) if e.inverse else 0 for i, e in enumerate(mot, 1)]
+    assert d_inv == want, (d_inv, want)
+    assert all(torch.equal(seen["sd0"][n_], seen["sd1"][n_]) for n_ in cortex), "the twitch lessons moved the stream"
+    fwd_moved = sorted({n_.split(".")[1] for n_ in seen["sd0"] if ".fwd." in n_ and not torch.equal(seen["sd0"][n_], seen["sd1"][n_])})
+    assert fwd_moved == sorted({mot[p_[0] - 1].name for p_ in pairs}), fwd_moved
+    inv_moved = sorted({n_.split(".")[1] for n_ in seen["sd0"] if ".inv." in n_ and not torch.equal(seen["sd0"][n_], seen["sd1"][n_])})
+    assert inv_moved == fwd_moved, (inv_moved, fwd_moved)
+    # the night's own save: loaded, the life goes on as the life that went on
+    for _ in range(75):
+        run.step()
+    run2 = WorldLoop(Lc)
+    for _ in range(75):
+        run2.step()
+    hA, hC = _whole(L), _whole(Lc)
+    assert hA == hC, [k_ for k_ in hA if hA[k_] != hC[k_]]
+    live = L.last_night["live"]
+    print(f"night 5: the live, dark night at the tick's end (tick 149's acts applied, then dusk, 600 night ticks, dawn, the save; no pause):",
+          f"{len(tw)} twitches on {n_act} active ticks (the rate 0.1: {mu:.0f} +- {sd:.1f}), none in quiet sleep, each one joint's small step",
+          f"on {sorted({n_ for _, n_, _, _ in tw})}, the born generator's schedule, logged as reflex; the cerebellum {live['cereb_sub']}",
+          f"sub-steps in the night; act_inv learned {sum(d_inv)} pairs (its reliability on each) and the forward halves of {fwd_moved},",
+          f"the stream held; the night's events {live['events']}; the night's own save, loaded, went on 75 ticks as the life that went on",
+          f"({' '.join(f'{k_} {v_[:10]}' for k_, v_ in hA.items())}); at the design's law a night of 24,000 ticks has about",
+          f"{0.025 * (9400 + 5200):.0f} twitches")
+
+
+NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames, test_the_live_dark_night]
 
 
 if __name__ == "__main__":

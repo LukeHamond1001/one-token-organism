@@ -770,6 +770,14 @@ class Organs(nn.Module):
         if amygdala is not None:
             from .core.amygdala import Amygdala
             self.amyg = Amygdala(int(d) + int(amygdala["events"]) + 1, amygdala["heads"], amygdala["reach"])
+        # THE TWITCHES' SEED (the core refactor's step R8c, docs/SIM_DESIGN.md 3.7, 5.4, A46; body/core/sleep.py): when a motor effector
+        # declares twitches, the born twitch generator's seed (below 2^31), drawn at birth from a generator of its own seeded by the body's
+        # seed; each night's twitches are drawn from a generator seeded by it and the night's number, so they are a function of the body's
+        # seed and the night alone (nothing of the life's streams). A buffer, saved with the body; built after every other organ, the
+        # global random stream untouched; the diary declares none, so its organs are built as they always were
+        if motor and any(getattr(e, "twitch", False) for e in motor):
+            g_tw = torch.Generator().manual_seed(int(born_seed) + 122949823)
+            self.register_buffer("twitch_seed", torch.randint(0, 2 ** 31, (), generator=g_tw, dtype=torch.long))
 
     # ---- the cortex over a window ----
 

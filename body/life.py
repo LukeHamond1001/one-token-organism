@@ -397,6 +397,8 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         built there from the queue, as always); it returns the tick's acts for the world, {effector name: act} (the voice's symbol or
         its rest, then each later effector's act or its rest; step R6: its reflex's act on a tick a reflex took), taken before the sleep
         switch's night rests them"""
+        if getattr(self, "_night_due", False):
+            self.tick_end()                                 # step R8c (C74): a night due at the last tick's end, never called there (body/core/sleep.py)
         self._ring_vf.append(self.fast_value())            # the fast critic's value before this tick (the anticipation reading; the supervisor's, never the body's)
         self._decay_feelings()
         self.world.now = None                               # the frame of this tick is the one its senses take

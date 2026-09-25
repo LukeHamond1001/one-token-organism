@@ -271,7 +271,7 @@ def test_the_frames():
     assert SIM_CFG["frames"] == 1
     cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=16, night_rounds=1,
                night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0, recall=0,   # R7b's law alone: the tag 0 (the tag's is amyg
-               night_frames=0)                                                            # 6's), the value the codes alone (recall's is frames
+               night_frames=0, twitch=0)                                                  # 6's), the value the codes alone (recall's is frames
                                                                                           # 5's), the words' night (R8's over frames: night 4's)
     w = _g1_events_world(burst=True); L = _g1(cfg, w); m = L.m
     run = WorldLoop(L)
@@ -789,14 +789,14 @@ def test_the_latch_on_event_ends():
     # the switches that read the frames are refused without them (a silent no-op otherwise; wm_frames would silence the utterances' latch)
     refused = []
     for k in ("err_scale", "wm_frames"):
-        c = dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0, night_frames=0); c[k] = 1   # (R8's night reads them too)
+        c = dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0, night_frames=0, twitch=0); c[k] = 1   # (R8's night reads them too)
         try:
             _g1(c, _g1_events_world())
         except ValueError as ex:
             assert k in str(ex) and "frames 1" in str(ex), str(ex)
             refused.append(k)
     assert refused == ["err_scale", "wm_frames"], refused
-    L0 = _g1(dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0, night_frames=0), _g1_events_world())   # with both off it is born
+    L0 = _g1(dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0, night_frames=0, twitch=0), _g1_events_world())   # with both off it is born
     assert not L0._frames_on()
     print(f"frames 6: under wm_frames working memory latched at the {len(ends1)} frame event ends and at none of the {len(offs1)} utterance",
           f"ends; without it at the {len(offs0)} utterance ends and at none of the frames'; err_scale and wm_frames refused without frames")

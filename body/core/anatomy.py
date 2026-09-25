@@ -194,7 +194,10 @@ class Effector:
     Step R6h, THE BORN BIASES (body/core/cord.py; SIM_DESIGN.md 3.7, A23, A43): `orient` names the joints the born orienting bias acts
     on (the gaze's yaw and pitch, the waist's yaw), each with the axis it turns and its sense, toward the anatomy's declared cues
     (`Anatomy.orienting`); `orient_gate` gives its gate the born input "a cue appeared" (counted in `n_in`); `vor` names the joints the
-    VOR counter-turns (the gaze's window), whose born constants go to the world with the tick's acts."""
+    VOR counter-turns (the gaze's window), whose born constants go to the world with the tick's acts.
+    Step R8c, THE TWITCHES (body/core/sleep.py; SIM_DESIGN.md 3.7, 5.4, A46): `twitch` declares that its joints twitch in the live,
+    dark night's active sleep: the born twitch generator moves one joint at a time among every declaring effector's joints, one small
+    step (the settings beside the hold), its sign drawn. The G1's waist, arms, hands and legs declare it; the tract and the gaze do not."""
     name: str
     factors: list
     rest_id: Optional[int] = None
@@ -221,6 +224,7 @@ class Effector:
                                           # positive step turns: +1 toward + right / + up, -1 the other way)} (3.7, A43)
     orient_gate: bool = False             # step R6h: the born gate input "a face, a sound onset or a sudden change appeared" (in n_in)
     vor: Optional[list] = None            # step R6h: its joints the VOR counter-turns (the gaze's yaw and pitch: 3.7, A23)
+    twitch: bool = False                  # step R8c: its joints twitch in active sleep, one at a time, one small step (3.7, A46)
 
     def __post_init__(self):
         if self.organ is None:
@@ -602,6 +606,8 @@ class Anatomy:
                              f"it declares factors {v.factors}, organ {v.organ!r}, gate {v.gate!r}, actor {v.actor!r}, field {v.field!r}")
         if v.sense is not None or v.sense_idx is not None or v.inverse:
             raise ValueError(f"anatomy: the voice ({v.name!r}) has no motor timing part (its proposal is the words' forecast)")
+        if getattr(v, "twitch", False):
+            raise ValueError(f"anatomy: the voice ({v.name!r}) has no joints to twitch (step R8c: a motor effector's joints twitch)")
         chan_names, chan_fields = {c.name for c in self.channels}, {c.field for c in self.channels}
         seen_fields = set()
         for e in self.motors:
@@ -662,6 +668,9 @@ class Anatomy:
                                      f"and charge a vector channel's numbers, its pain one of the reward sources")
             if int(e.inv_hidden) < 1:
                 raise ValueError(f"anatomy: effector {e.name!r}'s inverse model of {e.inv_hidden} units")
+            if e.twitch and any(int(k_) < 3 or int(k_) % 2 == 0 for k_ in e.factors):
+                raise ValueError(f"anatomy: effector {e.name!r} twitches, and a twitch is a small step beside the hold: each joint needs an odd "
+                                 f"number of settings, at least 3 (its {list(e.factors)})")
         cb = self.cerebellar                                           # step R6c: the cerebellum's interface, when declared
         if cb is not None:
             if not isinstance(cb, Cerebellar):

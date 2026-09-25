@@ -252,7 +252,10 @@ class NightMixin:
         try:
             if self._night_frames_on():
                 self._episodes_nightfall(rep)                         # step R8: the day's tape cut into episodes (body/core/sleep.py)
-                self._night_frames(rep)                               # step R8b: the night over frames (body/core/sleep.py)
+                opt_, params_ = self._night_frames(rep)               # step R8b: the night over frames (body/core/sleep.py)
+                if getattr(self.world, "live_night", False):
+                    self._live_night(rep, opt_, params_)              # step R8c: the world stepped dark through the night, the twitches
+                del opt_
             else:
                 self._night_words(rep)                                # the words' night, as it always was
             # --- the rest: the store fades, the working state wakes fresh, the body is saved ---
@@ -616,7 +619,12 @@ class NightMixin:
     def _sleep_now(self):
         """THE SLEEP SWITCH'S CALL (the tick's last phase): the world pauses (the core refactor's step R9, body/core/world.py: the diary's
         lets its queue go, what this call always did first), the night runs, and the morning resumes the world where it stood. A night
-        called by hand (a tool's, on a copy) leaves the world as it is, as it left the queue."""
+        called by hand (a tool's, on a copy) leaves the world as it is, as it left the queue. A body in frames under the night over frames
+        (step R8c, SIM_DESIGN.md C74) sleeps at the tick's end instead (`tick_end`, body/core/sleep.py), after the world has applied the
+        tick's acts and the cerebellum's sub-steps, so its night's save is written between ticks"""
+        if self._night_frames_on():
+            self._night_due = True
+            return
         self.world.pause()
         try:
             self.night()

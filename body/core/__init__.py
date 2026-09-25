@@ -37,7 +37,10 @@ sleep.py        step R8: the night over frames (the switch `night_frames`, physi
                 episodes kept across nights, fading as the store does, the weakest giving way past the episodes' cap; the night over
                 frames (R8b): the day's tagged dreamt first, then by entry, each episode's window replayed in per-channel batches (every
                 channel's forecast, the forward half and act_inv at weight 1; every effector's acts as efference copies and act_pred's
-                targets weighted by the replayed dopamine's credit and stepped by its own plain step), REM on frames
+                targets weighted by the replayed dopamine's credit and stepped by its own plain step), REM on frames; the live, dark
+                night (R8c, the switch `twitch`): the night at the tick's end (`tick_end`, C74), a world that runs through the night
+                stepped dark with every effector at rest but the born twitch generator's twitches in active sleep, each twitch's pair
+                teaching act_inv and the forward half, the cerebellum learning below the tick wherever the world runs
 anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
                 8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
                 `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward
