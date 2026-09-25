@@ -566,17 +566,19 @@ class MouthMixin:
         the tick's choice. Step R6, its timing part's: the chunk's length (0: none under way), its body sense last tick, the sense its
         forward half foresaw for this tick and the error now; act_inv's reliability (its running confusion per joint, None for an
         effector with no inverse model, each joint's kappa and their mean clipped, the reliability; kept through the night and saved
-        with the body), its lessons and the last; the chunks begun and their stops"""
+        with the body), its lessons and the last; the chunks begun and their stops. Step R6h's: its performance error's running means
+        (when it declares the term), its own fatigue, the movement unit's held settings, act_inv's pairs gathered for the next batch, the
+        cord's patterns' counts and the born cry's breath clock"""
         return {"buf": collections.deque(maxlen=96), "g_base": None, "last": None, "acted_last": False, "e_actor": None, "now": None,
                 "chunk": 0, "sense": None, "fwd": None, "err": None,
                 "inv_conf": ([[[0.0] * int(K) for _ in range(int(K))] for K in e.factors] if e.inverse else None),
                 "inv_kappa": [0.0] * len(e.factors), "inv_gain": 0.0, "inv_n": 0, "inv_last": None,
                 "chunks": 0, "stops": {"rest": 0, "gate": 0, "reflex": 0, "end": 0, "max": 0},
+                # step R6h: its performance error's running means (A41), when it declares one; its own fatigue (own_fatigue); the movement
+                # unit's held settings (unit_margin); act_inv's pairs gathered for the next batch (act_inv_every); the cord's patterns'
+                # ticks (logged as reflex) and the born cry's breath clock
                 "perf": ([[0.0] * int(K) for K in e.factors] if getattr(e, "intrinsic", False) else None),
-                "fatigue": 0.0, "unit": None, "inv_batch": [],                # step R6h: its own fatigue (own_fatigue), the movement unit's
-                                                                              # held settings (unit_margin), act_inv's pairs gathered (act_inv_every),
-                "cord_n": {}, "cry_t": 0}                                     # the cord's patterns' ticks (logged as reflex), the cry's breath clock   # step R6h: its performance error's
-                                                                                                             # running means (A41), when it declares one
+                "fatigue": 0.0, "unit": None, "inv_batch": [], "cord_n": {}, "cry_t": 0}
 
     def _choose_effector(self, i, frame, C1, level, stri):
         """A LATER EFFECTOR'S CHOICE (step R5; effector i > 0, after the voice's, its draws on self.gen after the voice's): whether (its
@@ -591,7 +593,11 @@ class MouthMixin:
         under way (it acted last tick and its last act was not its declared end) and has run fewer than chunk_max acts, its gate's own
         draw decides whether it goes on, and the act is act_pred's best guess (no draw); the chunk ends where that guess is its rest or
         the gate says no. Otherwise (a chunk at its ceiling, its end, no chunk under way, chunk_gate 0) the choice is a fresh decision,
-        as before R6, and under chunk_gate an act of it begins a chunk."""
+        as before R6, and under chunk_gate an act of it begins a chunk.
+        STEP R6h: `i` is its place among the motor effectors plus one (the voice may stand anywhere); its gate reads its own fatigue
+        (own_fatigue); the born orienting bias joins its logits where it declares one (body/core/cord.py); under unit_margin a unit
+        under way holds its act joint by joint (`_unit_hold`) in place of act_pred's best guess; after the choice the cord's patterns
+        for this tick (the spinal pattern generator, the born cry) are kept for the world (st["now"]["cord"])."""
         m = self.m; e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]; tab = m.get_submodule(e.organ)
         self._timing_sense(i)                                             # act_inv's lesson on the last tick, the forward error now (step R6)
         prev = st["now"]
