@@ -51,15 +51,16 @@ STEP R7f, RECALL INTO ACTION (7.6, A45; the switch `recall`, and `wm_frames`; ph
 - RECALL (`_frame_recall`, at the choice, before the motor effectors choose): the store's nearest keys give back their values for the
   stream the choice reads, through the store's own search: under key_form "cortex" the words' read of this tick itself (the same query),
   else a read of its own with that query (no tiring); kept for the tick (`_frec_now`) and in the tick's window position ("frec").
-- THE MAPS (`_recall_term`): each motor effector's proposal (act_pred's, a direction in the stream's d, read against its acts' rows R
-  [its settings, d] for its logits) gains M((r R^T) R) R, for the recalled value r: the recalled value's part in its acts' rows (the
-  recalled act's embedding, (r R^T) R), through its map M born at zero (the organs' recall[name], d -> a score per setting), read back
-  through its rows into the proposal (as the proposal's own terms are). It learns through act_pred's own lesson (`_timing_loss`: the
-  same targets, the same weights, act_pred's plain step, GatedDescent): recall moves an act only as far as recalled acts have predicted
-  the acts made (Lengyel and Dayan 2007: episodic control, the hippocampus's "third way" into action). The step's constants are
-  act_pred's (lr_motor, the bound: its fan-in d, the map's too; the builder's reading, for the lead: 7.6 says "act_pred's plain lesson"
-  and no rate of its own); the map's input, a recalled act's embedding, is smaller than the LayerNorm'd stream act_pred reads, so it
-  steps less per lesson, by the size of what is recalled, as the plain step does everywhere.
+- THE MAPS (`_recall_term`; one per motor effector, `recall_spec`): each motor effector's proposal (act_pred's, a direction in the
+  stream's d, read against its acts' rows R [its settings, d] for its logits) gains M((r R^T) R) R, for the recalled value r: the
+  recalled value's part in its acts' rows (the recalled act's embedding, (r R^T) R), through its map M born at zero (the organs'
+  recall[name], d -> a score per setting), read back through its rows into the proposal (as the proposal's own terms are). It
+  learns through act_pred's own lesson (`_timing_loss`: the same targets, the same weights, act_pred's plain step, GatedDescent):
+  recall moves an act only as far as recalled acts have predicted the acts made (Lengyel and Dayan 2007: episodic control, the
+  hippocampus's "third way" into action). The step's constants are act_pred's (lr_motor, the bound: its fan-in d, the map's too; the
+  builder's reading, for the lead: 7.6 says "act_pred's plain lesson" and no rate of its own); the map's input, a recalled act's
+  embedding, is smaller than the LayerNorm'd stream act_pred reads, so it steps less per lesson, by the size of what is recalled, as
+  the plain step does everywhere.
 - THE WORKING-MEMORY LATCH (wm_frames): working memory latches the striatal expansion at the frames' event ends (R7b) in place of the
   utterances' ends; the language body's latch is unchanged."""
 import math
@@ -72,7 +73,10 @@ from .physiology import FRAMES
 
 def recall_spec(anatomy, cfg):
     """WHAT THE ORGANS BUILD FOR RECALL INTO ACTION (Organs(..., recall=)): None while the switch is off (the diary's); else each motor
-    effector's name and its settings' count (its map's outputs). The switch needs `frames` (the frames the store recalls)"""
+    effector's name and its settings' count (its map's outputs). The switch needs `frames` (the frames the store recalls). A map per
+    MOTOR effector, nine for the G1: the words' effector's proposal is the cortex's forecast read through the lexicon, which already
+    reads the store's recall through the hippocampal pathway (7.6: "before R7f, recall reached only the words"), and it has no act_pred
+    for a map to learn beside (THE BUILDER'S READING, for the lead: 7.6's "ten small maps" counts the words' effector too)"""
     c = cfg or {}
     if not int(c.get("recall", FRAMES["recall"])):
         return None
@@ -445,6 +449,19 @@ class FramesMixin:
                         self.utt_S[self.utt_N.index(serial)] = float(f_) * (1.0 + c) / float(mhat)
             keep.append(b)
         self._utt_boosts = keep
+
+    def _frames_check(self):
+        """THE SWITCHES THAT NEED THE FRAMES (step R7), checked at birth and at a load: err_scale divides each channel's error by the
+        frames' own running means (R7c) and wm_frames latches working memory at the frames' event ends (R7f), so either without `frames`
+        would be a silent no-op (and wm_frames would silence the utterances' latch): refused, as recall is (`recall_spec`). The diary
+        holds none of the three keys, so nothing is refused"""
+        if self._frames_on():
+            return
+        on = [k_ for k_ in ("err_scale", "wm_frames") if int(self._frame_const(k_))]
+        if on:
+            raise ValueError(f"Life: {' and '.join(on)} need the frames they read (frames 1): without them "
+                             f"{'the scale has no running means' if 'err_scale' in on else ''}"
+                             f"{' and ' if len(on) == 2 else ''}{'working memory would never latch' if 'wm_frames' in on else ''}")
 
     # ---------------- step R7f: recall into action ----------------
     def _recall_on(self):

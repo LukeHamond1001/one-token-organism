@@ -470,19 +470,20 @@ FRAMES = dict(
     # channel's head's squared error to the next born code is divided by that channel's running mean of its error (the frames' own,
     # above), so every channel's forecast teaches the stream about as much as another, whatever its code's size (the eyes' 1,536 numbers
     # and the charge's 2 weigh alike, as the frames' surprise weighs them); 0 = the sum as R4 built it. A channel with no running mean
-    # yet is taken as it is
+    # yet is taken as it is. Needs `frames` (its running means are the frames' own)
     err_scale=0,
     # STEP R7f, RECALL INTO ACTION (7.6, A45; body/core/frames.py): 1 = a frame's key is the cortex's stream plus a heading (the trunk's
     # yaw integrated from the torso gyro since birth, the anatomy's `heading`; McNaughton et al. 2006), the stream's pattern-separated
     # direction and the heading's born code (cos, sin through two fixed unit rows from the body's seed) weighing alike, the words' cortex
     # key too; its value the frame's codes and the efference copy of every effector's act; each tick the store's nearest keys give back
     # their values through the store's own search (under key_form "cortex" the words' read itself, else a read of its own), and each
-    # motor effector's proposal gains its map, born at zero, from the recalled act's embedding (the recall's part in its acts' rows) to
-    # its logits (through its rows), learned by act_pred's own lesson and plain step (Lengyel and Dayan 2007: episodic control). Needs
-    # `frames`. 0 = off
+    # motor effector's proposal gains its map, born at zero, from the recalled act's embedding (the recall's part in its acts' rows) to a
+    # score per setting, read back through its rows into the proposal, learned by act_pred's own lesson and plain step (Lengyel and Dayan
+    # 2007: episodic control). Needs `frames`. 0 = off
     recall=0,
     # STEP R7f, THE WORKING-MEMORY LATCH ON THE FRAMES' EVENT ENDS (7.6, 10's "event end"): 1 = working memory (wm) latches the striatal
-    # expansion at the frames' event ends (R7b) in place of the utterances' ends; 0 = at the utterances' ends (the language body's)
+    # expansion at the frames' event ends (R7b) in place of the utterances' ends; 0 = at the utterances' ends (the language body's).
+    # Needs `frames`
     wm_frames=0,
 )
 

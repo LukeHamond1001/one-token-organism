@@ -750,7 +750,8 @@ def test_recall_into_action():
 def test_the_latch_on_event_ends():
     """frames 6 (step R7f; SIM_DESIGN.md 7.6, 10's "event end"): WORKING MEMORY LATCHES AT THE FRAMES' EVENT ENDS under wm_frames (on in
     SIM_CFG): at each frame event end the slot holds the striatal expansion of that moment and is on; at the words' utterance ends it does
-    not latch. Without wm_frames the latch is the utterances' as before and nothing latches at a frame's end"""
+    not latch. Without wm_frames the latch is the utterances' as before and nothing latches at a frame's end. Without `frames` the switches
+    that read them, err_scale and wm_frames, are refused at birth"""
     from body.sim.anatomy import SIM_CFG
     res = {}
     for wf in (1, 0):
@@ -784,8 +785,20 @@ def test_the_latch_on_event_ends():
     lat1, ends1, offs1 = res[1]; lat0, ends0, offs0 = res[0]
     assert ends1 and offs1 and [k for _, k in lat1] == ["frame"] * len(lat1) and len(lat1) == len(ends1), (lat1[:5], len(ends1))
     assert offs0 and all(k == "utterance" for _, k in lat0) and len(lat0) == len(offs0), (lat0[:5], len(offs0))
+    # the switches that read the frames are refused without them (a silent no-op otherwise; wm_frames would silence the utterances' latch)
+    refused = []
+    for k in ("err_scale", "wm_frames"):
+        c = dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0); c[k] = 1
+        try:
+            _g1(c, _g1_events_world())
+        except ValueError as ex:
+            assert k in str(ex) and "frames 1" in str(ex), str(ex)
+            refused.append(k)
+    assert refused == ["err_scale", "wm_frames"], refused
+    L0 = _g1(dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0), _g1_events_world())   # with both off it is born
+    assert not L0._frames_on()
     print(f"frames 6: under wm_frames working memory latched at the {len(ends1)} frame event ends and at none of the {len(offs1)} utterance",
-          f"ends; without it at the {len(offs0)} utterance ends and at none of the frames'")
+          f"ends; without it at the {len(offs0)} utterance ends and at none of the frames'; err_scale and wm_frames refused without frames")
 
 
 FRAME_TESTS = [test_the_event_lines, test_the_frames, test_the_fixes_1_and_6, test_error_scales_and_the_partners_pace, test_recall_into_action,

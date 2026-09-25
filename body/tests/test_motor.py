@@ -1002,6 +1002,12 @@ def _g1_world(seed=0):
                 obs["sound_side"] = [1.0, 0.5]
             if t % 17 == 0:
                 obs["words"] = R.randrange(3, 79)
+            # the torso's unit, turning and a little tilted (R7f's heading integrates it; a function of the tick, drawing nothing), and
+            # a face in the fovea every 23 ticks (R7a's event line)
+            obs["imu_torso"] = [0.3 * math.sin(t / 11.0), 0.2 * math.cos(t / 13.0), 9.81, 0.05 * math.cos(t / 5.0), 0.04 * math.sin(t / 9.0),
+                                0.1 * math.sin(t / 7.0) + 0.02]
+            if t % 23 == 5:
+                obs["face_fovea"] = [1.0]
             return Frame(t, obs, 0.0, {"who": "parent"})
 
         def apply(self, acts):
@@ -1172,8 +1178,9 @@ def _g1_replay_world(seed=0):
     asks, so a world saved and loaded goes on exactly): motor 11's random senses; the charge falling below the born cry's line (0.2) from
     tick 134, so the cry runs from there on; the breath left empty on ticks 170 and 260 (expirations cut short after the save); pain on
     ticks 60 and 147; a face held in the periphery on ticks 140-159 (across the save at 150) and for one tick in every 30; a sound's
-    onset every 45 ticks, a sudden change every 37, a word every 17; the cerebellum's hook called 15 times a tick as motor 11's stub
-    calls it, from the world's second stream"""
+    onset every 45 ticks, a sudden change every 37, a word every 17; the torso's unit turning (R7f's heading) and a face in the fovea
+    every 23 ticks (R7a's line), functions of the tick; the cerebellum's hook called 15 times a tick as motor 11's stub calls it, from
+    the world's second stream"""
     import random as _r
     from body.core.world import SubFrame
     from body.sim.anatomy import SIZES
@@ -1196,6 +1203,12 @@ def _g1_replay_world(seed=0):
                 obs["onset_periph"] = [1.0, -0.3, 0.1]
             if t % 17 == 0:
                 obs["words"] = R.randrange(3, 79)
+            # the torso's unit, turning and a little tilted (R7f's heading integrates it; a function of the tick, drawing nothing), and
+            # a face in the fovea every 23 ticks (R7a's event line)
+            obs["imu_torso"] = [0.3 * math.sin(t / 11.0), 0.2 * math.cos(t / 13.0), 9.81, 0.05 * math.cos(t / 5.0), 0.04 * math.sin(t / 9.0),
+                                0.1 * math.sin(t / 7.0) + 0.02]
+            if t % 23 == 5:
+                obs["face_fovea"] = [1.0]
             return Frame(t, obs, 0.0, {"who": "parent"})
 
         def apply(self, acts):
@@ -1300,6 +1313,9 @@ def test_the_day_saved():
     assert B.anatomy.motors[0].cry and cry > 0 and 0 < cry % 7 < 5, cry                          # in an expiration (5 out, 2 in)
     assert len(under) >= 2 and B._orient_last["face"] and all(B.motor[i_]["cord_n"] for i_ in (0, 3, 4, 7, 8)), (under, getattr(B, "_orient_last", None))
     assert any(s_["inv_batch"] for s_ in B.motor) and any(float(s_["fatigue"]) > 0.0 for s_ in B.motor)
+    # R7's state under way at the save (SIM_CFG's frames, amyg, recall): the heading turned, frames written, the record, the amygdala
+    r7 = (float(B._heading), int(B._fwrites), int(B._rec_n), int(B.m.amyg.n_solve), int(B.m.amyg.ring_n), len(B._fboosts or ()))
+    assert r7[0] != 0.0 and r7[1] > 0 and r7[2] == 150 and r7[3] > 0 and r7[4] > 0 and B._frec_now is not None, r7
     C1, said1, size1 = reborn(B, wB)
     life_, mot_, opt_, org_, gen_, grads1 = lost(B, C1)
     assert not said1 and (life_, mot_, opt_, org_, gen_) == ([], ["spg_cyc"], [], [], True), (said1, life_, mot_, opt_, org_, gen_)
@@ -1325,7 +1341,9 @@ def test_the_day_saved():
     parted = [k_ for k_ in h1 if h4[k_] != h1[k_]]
     assert "work" in parted and "rng" in parted, parted
     print(f"motor 12: a life saved anywhere goes on as the life that went on: (i) saved at tick 150 mid-cry (its breath clock {cry}, in an",
-          f"expiration), {len(under)} units under way ({', '.join(under)}), a face held across the save; at the load all of it but the",
+          f"expiration), {len(under)} units under way ({', '.join(under)}), a face held across the save, R7's state under way (the heading",
+          f"{r7[0]:+.3f} rad, {r7[1]} frames written, the record's {r7[2]} rows, the amygdala's {r7[3]} solves and {r7[4]} forecasts pending,",
+          f"{r7[5]} boosts pending); at the load all of it but the",
           f"rhythm's cache and {grads1} gradients of the last lesson; at tick 300 the whole state the uninterrupted life's in every section",
           f"({', '.join(h1)}); (ii) saved at the night's boundary (tick 225, {grads2} gradients left) and (iii) saved at 150 and living",
           f"through the night: the same; the save {size1[0]:,} bytes, {size1[0] - size1[1]:,} of them the day; an older save (no day) said",

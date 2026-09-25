@@ -332,6 +332,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         # RECALL INTO ACTION (step R7f; body/core/frames.py): a body whose switch is on has its organs' maps and the heading's code checked
         if self._recall_on() or "recall" in self.m._modules:
             self._recall_attach()
+        self._frames_check()                             # step R7: err_scale and wm_frames need the frames (body/core/frames.py)
         self.stream = collections.deque(maxlen=96)       # (id, who)
         self.last = {}
         self.credit = collections.deque(maxlen=64)
