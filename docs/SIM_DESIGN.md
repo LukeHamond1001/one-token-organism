@@ -6,6 +6,8 @@ This amends the all-out design written this morning with the owner's nine decisi
 
 It is amended again, on the evening of 2026-09-24, by the lead's decisions on the owner's bar: "robot need to be like we put human brain in g1 and sim is reality", and an architecture worth billions when all is complete. The owner's standing rule is to decide rather than ask, so the lead decided for him and reports; he may overrule any of it. Each decision is in the decision log with its reason and source (A36–A57). They answer B4, B14 and B18, reopen A23, reverse the refusals of the stepping generator and the born cry, and add a cerebellum (R6c). The audits they answer are in `docs/audit/`.
 
+Later that evening it is amended once more, on the owner's word "humanoid with our human architecture going in sim training; we need it at learning speed and understanding level of human". Two decisions answer it, taken for him in the same way (A58, A59). The human-pace ledger (section 12) reports each milestone against an infant's waking hours to the same capacity; it is a ruler, never a target. The speed plan (section 9) says how fast the life can run without changing anything the body senses or does. Spending on a rented machine is the owner's call (B21).
+
 Sources:
 - the all-out studies (the world, the core at this scale, learning to move, the parent's language);
 - four studies run today for the amendment, on this Mac: the G1 in the room, the parent's feelings and its limits with the G1, the vocal tract, the amygdala;
@@ -36,7 +38,7 @@ Section 17 lists the files.
   - a spinal pattern generator per limb, summed at the cord with the limb's own act (A48);
   - the gates' two disclosed drives: a tonic drive that follows the reward rate, and the tract's performance error (A41);
   - six disclosed reflexes (withdrawal, grasp, orienting to faces, voices and sudden visual change, the VOR with its quick phase, a born cry, brainstem twitches in sleep) and the born expression reading (section 3.7).
-- **The parent** moves by scripted inverse kinematics. It has a small scripted state of feeling shown on a graded face of human proportions, and answers the child within about a second, imperfectly, as a person does (A52). It follows the child's attention as a person could read it (its trunk and hands, A40), speaks infant-directed sentences in varied voices (A50), scaffolds, copies its movements, and keeps routines. Claude steers what it teaches between wall minutes.
+- **The parent** moves by scripted inverse kinematics. It has a small scripted state of feeling shown on a graded face of human proportions, and answers the child within about a second, imperfectly, as a person does (A52). It follows the child's attention as a person could read it (its trunk and hands, A40), speaks infant-directed sentences in varied voices (A50), scaffolds, copies its movements, and keeps routines. Claude steers what it teaches once every 400 ticks (A59).
 - **Reward** comes only from the parent's face, and only while the child looks at it, plus pain and a charge need. The face is read by the child's own eyes once its born face detector works; until then it is read from the world, a disclosed scaffold with its removal test (A49).
 
 **What already exists** (built and measured today; section 17 lists the files):
@@ -92,7 +94,14 @@ Section 17 lists the files.
 - A life day with its night takes about 65–110 wall minutes (55–90 before the lead's decisions: the tick grows, and the night is live, section 9).
 - Sitting alone, crawling, standing and its first word from its own tract are not forecast (section 12).
 
-**What it costs.** This Mac only: no pod and no GPU training. Claude acts between wall minutes, never inside the tick. Nothing here loads the language body's save.
+**What it costs.** This Mac only, until the owner chooses otherwise (B21): no pod and no GPU training. Claude acts once every 400 ticks (A59), never inside the tick. Nothing here loads the language body's save.
+
+**Against an infant, and how fast** (A58, A59, B21):
+- **The human-pace ledger** (section 12). A life day's wake is one waking hour, so each milestone is reported against the waking hours an infant has lived when it shows the same capacity: about 890 by 3 months, 1,870 by 6 and 3,925 by 12 (Galland et al. 2012's sleep by age). The headline is the robot's waking-hour age, placed in the milestone's own age distribution. Learning speed is also reported as exposures to criterion, and understanding only by which never-taught tests pass.
+- **It is a ruler, never a target.** Nothing in the body, the parent, the brief, the tests or the build reads it. It is frozen before birth, and every row is reported, passes and failures alike.
+- **This Mac** runs the life at about 0.8–1.3× real time on a quiet, cool machine. Sustained speed is unmeasured. Running around the clock, an infant's first 3 months of waking hours take about 40–68 calendar days, and 12 months about 177–300. Exact engineering, which changes nothing the body senses or does, brings 12 months to about 133–228.
+- **A rented Linux machine with a graphics card** might reach 2.2–4.7× (49–106 days to 12 months). That is an estimate, unmeasured; spending on it is the owner's call (B21).
+- **The language body on the same ruler** lived 197.5 waking hours, not 404: about a three-week-old's.
 
 **Understanding.** The owner's goal is a human brain architecture that gains understanding. Every milestone carries a test by something never taught (section 12): a voice from a place the parent never called from, a toy never shown, known words in a combination never heard, a word used to get something.
 
@@ -112,7 +121,7 @@ Section 17 lists the files.
 
 Section 13 adds risks 13–23; of those the lead's decisions brought, the one a viewer meets first is risk 19: **the parent sees only its trunk and hands** (A40). A look made by the fovea alone is invisible to her, as it would be on the real robot: fewer asks are met, and the ledger may run slow.
 
-**The owner's decisions.** The nine decisions of the G1 amendment are folded in; section 14 lists where each one lands. The lead's decisions of 2026-09-24 on the owner's bar (A36–A57) are folded in too, each the owner's to overrule: they answer B18 (touch only where the real G1 has it), B4 (the D435's own sensors as the eyes) and B14 (the parent reads its trunk and hands). The decision log's part B asks what the design still defaults. Two are needed before birth: B3 (the eyes' render shortcuts, the sun's shadow among them; there are now three views to render) and B1 (the cup, shrunk for a creep that is gone). B5 (the microphones' and the speaker's places) must be read from Unitree's documents before birth, or the real robot would not be a change of world (A36). The build's fix rounds decided six questions under the laws, recorded as ours: the parent's face made real and the detector left alone, the newborn's withdrawal, impratio by physics, what decides the eye check, a new word on its pitch peak, and the grasp summed at the spinal cord (A30–A35).
+**The owner's decisions.** The nine decisions of the G1 amendment are folded in; section 14 lists where each one lands. The lead's decisions of 2026-09-24 on the owner's bar (A36–A59) are folded in too, each the owner's to overrule: they answer B18 (touch only where the real G1 has it), B4 (the D435's own sensors as the eyes) and B14 (the parent reads its trunk and hands). The decision log's part B asks what the design still defaults. Two are needed before birth: B3 (the eyes' render shortcuts, the sun's shadow among them; there are now three views to render) and B1 (the cup, shrunk for a creep that is gone). B5 (the microphones' and the speaker's places) must be read from Unitree's documents before birth, or the real robot would not be a change of world (A36). B21 (spending on a rented machine) defaults to none, with birth on this Mac. The build's fix rounds decided six questions under the laws, recorded as ours: the parent's face made real and the detector left alone, the newborn's withdrawal, impratio by physics, what decides the eye check, a new word on its pitch peak, and the grasp summed at the spinal cord (A30–A35).
 
 ### Words used here
 
@@ -134,6 +143,8 @@ Section 13 adds risks 13–23; of those the lead's decisions brought, the one a 
 | the amygdala | the core's valence tagger (section 7.4): it learns fast which cues predict good and bad, and tags each moment's weight |
 | tag | the amygdala's mark on a moment: what the moment is expected to bring plus what it brought, in reward units |
 | never-taught test | a milestone's test of understanding by something the parent never taught (section 12) |
+| the human-pace ledger | section 12's report of each milestone against the waking hours an infant has lived at the same capacity: a ruler, never a target (A58). "The ledger" alone is still the parent's ledger of words |
+| waking-hour age | the infant age at which an infant at mean sleep has lived as many waking hours as the robot has lived life days (one waking hour each) to a milestone: the human-pace ledger's headline |
 | the observer | the born software estimator of contact from the joints' own efforts (a momentum observer, A37): what the real G1 can feel outside its hands |
 | the cerebellum | the core's loop below the tick (R6c, 7.5): a born expansion whose weights learn load compensation and the VOR's gain, never balance |
 | twitch | a brief single-joint act the brainstem makes in sleep, in the live, dark night (A46) |
@@ -157,10 +168,11 @@ Section 13 adds risks 13–23; of those the lead's decisions brought, the one a 
 | The architecture biology uses | One gate per limb (parallel basal ganglia loops), movement units, forward and inverse models, a vestibulo-ocular reflex, cochlea-shaped filterbanks with a brainstem delay line, a born centre-surround and oriented bank in the fovea, the amygdala as a named organ (a fast valence tagger), a cerebellum below the tick, a spinal pattern generator, recall into action from the hippocampal store, twitches in active sleep, vocal learning through the body's own ears | 3, 4.9, 7 |
 | Survives a change of body | Every mechanism is written against the Anatomy (channels, effectors, reward sources), never against these joints. The per-joint alphabet grows linearly with the joints. The robot's own model is the body. | 8 |
 | Understanding, tested by what was never taught | Every milestone has a test the parent never taught toward, judged by the body's own rulers and by sitting with it, never by a baseline run | 12 |
+| Human pace: a ruler, never a target | Each milestone is also reported against an infant's waking hours to the same capacity. Published norms are a reference; they are never run and never targeted. The ledger is frozen before birth, and nothing in the body, the parent, the brief, the tests or the build reads it (A58) | 12 |
 | Disclosed constants | One table, saying who sets each | 10 |
 | One seed per body | Seed 1 is the only life. Plumbing and timing runs have every learning rate at 0. The babbler is an instrument of the world, and no weight of the body learns from it. | 11 |
 | Nothing fitted to the environment's pace | The world waits for the child (lockstep). The pain thresholds come from the body's declared model: each joint's torque limit, and for the free base its mass (A37). Store writes are gated by the body's own running quantile. The parent's timings are set before birth and never tuned to the child's rates. | 3, 4, 6 |
-| The environment's shape is the owner's | Decided: the nine decisions of the G1 amendment, and before them the parent, the room, the ears and the reward's route; and the lead's decisions of 2026-09-24 for him, which he may overrule (A36–A57). Everything else defaulted is flagged. | 14 |
+| The environment's shape is the owner's | Decided: the nine decisions of the G1 amendment, and before them the parent, the room, the ears and the reward's route; and the lead's decisions of 2026-09-24 for him, which he may overrule (A36–A59). Everything else defaulted is flagged. | 14 |
 | The teacher's method and the body's constants are ours | The parent's timings, feelings, priorities and force caps live in its constants files. The body's constants are in section 10. | 4, 10 |
 | Measure on copies, change at boundaries | The refactor lives in a worktree. After birth, fixes are measured on copies and applied at night boundaries. | 8, 11 |
 
@@ -754,7 +766,7 @@ In either case the smile waits for 2 neutral ticks, and is dropped and logged if
     - Built in P3 (`body/sim/lang/templates.py`, `conduct.py`): 38 intents' frames, every focus word its line's last; 457 lines at birth over the 8 toys, the 4 body words and the mat and sofa (454 distinct: 313 plain, 93 approval, 35 question, 10 comfort, 5 calling, 1 "no."). P1's figures (4.4, C25) were measured over the all-out study's 331 prototype lines (314 distinct), the same forms.
     - Her choices come from her own random stream (the body's seed, spawn key 3; the world's is 1, the tract's 2), drawn only when there is a choice, so a replay is exact.
     - What she perceives is handed to her each tick (`percept.py`): whether she is present and sees the child, where she reads the child looking, what it holds and what its hands reach toward (A40: its head's line and its hands as a person sees them, never its fovea's window, which a real G1 does not show), the objects and fixtures she sees with their colours and where they rest, and the events she saw or heard. Nothing inside the child.
-  - **Claude, between wall minutes,** reads a plain-text digest of the last minute and writes one steering row: the focus toys, the next activity, fresh lines tied to situations, and the one new word to introduce.
+  - **Claude, once every 400 ticks** (60 s of sim time; A59), reads a plain-text digest of the last window and writes one steering row: the focus toys, the next activity, fresh lines tied to situations, and the one new word to introduce.
   - Claude never controls a feeling, the face, the gaze or a judgment, and never sees anything inside the child. A14 lists what it may and may not do.
 - **Intents, with examples:**
 
@@ -787,9 +799,9 @@ In either case the smile waits for 2 neutral ticks, and is dropped and logged if
   - Claude's lines are held to 4.10's redirect rule (P3's third round: "look! the X." and "see the X!" had passed as shows): a line naming a toy the child does not attend, as she reads it, is a redirect, said only after 40 ticks with no target and while the day's follow-in namings number at least 2 for each redirect; a line naming only what it attends is a follow-in naming, and counts as one.
   - A Claude line ending on the day's new word is said in the new-word register, the word emphasized; its other lines emphasize their last content word, as the frames do.
 - **The digest and steering.**
-  - Every wall minute, `tools/sim_digest.py` writes about 40 lines of outward events only: posture; where its trunk faced and its hands went, as she reads them (A40), never its fovea's window, which a real G1 does not show; what it touched or held; what it said and when; the asks and their outcomes; the face events seen and unseen; pain; the ledger; the parent's last lines.
+  - Every 400 ticks (A59; the first draft said every wall minute), `tools/sim_digest.py` writes about 40 lines of outward events only: posture; where its trunk faced and its hands went, as she reads them (A40), never its fovea's window, which a real G1 does not show; what it touched or held; what it said and when; the asks and their outcomes; the face events seen and unseen; pain; the ledger; the parent's last lines.
   - Claude appends a row to `data/sim_steer.jsonl`: {tick_from, ttl 2,000 ticks, focus, episode, task, away_ticks, introduce, lines, note}.
-  - The fast layer checks each line, takes the row at the next utterance boundary, and uses each of Claude's lines at most 3 times.
+  - The fast layer checks each line, takes the row at its fixed tick (the digest's tick + 400, then the next utterance boundary), and uses each of Claude's lines at most 3 times. A row not ready by its tick makes the world wait; a row that fails leaves the fast layer alone for that window, and the log says so (A59).
   - Rows are logged by tick, so a replay is exact.
   - Without Claude, the fast layer runs alone. The brief is `ops/sim_parent_brief.txt`, in the manner of `ops/parent_brief_human.txt`.
 
@@ -1072,7 +1084,7 @@ The owner's decision 6 calls the parent the environment's most important part. I
 - Stage 1: surprise, "oh!", and she withdraws her hand. No frown.
 - Stage 2: a frown (−1) and "no.", but only for the child's own motor act. A reflex she triggered is logged as her defect.
 
-**What Claude steers between minutes** (A14, extended):
+**What Claude steers between minutes** (A14, extended; each "minute" is a steering window of 400 ticks since A59):
 - **May:** choose the episode, the focus toys and which scaffolding task to work on; write situation lines and variation-set frames, each passing the line check; choose the day's new word and the away time; write notes; propose method changes, applied only at a night boundary after a test on a copy.
 - **Must never:** set or nudge a feeling, the face, the gaze, a judgment, a worth, a help level or a force; write praise or use the approval register; loosen a criterion, or choose activities for their smile rate; see the child's insides (the digest reports face events, not feeling numbers); act inside a minute or at night; exceed the word pace, or name what cannot be shown within the minute.
 
@@ -1426,11 +1438,11 @@ That is about 13.25 working days of core work (it was 9.5 before the lead's deci
 
 Nothing in the sim waits for it.
 
-## 9. Compute, memory and disk on this Mac
+## 9. Compute, memory and disk on this Mac, and how fast the life can run
 
 M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet window measures more. The body runs at `nice 10`.
 
-**Wall time per tick** (measured under load from other sessions; conservative):
+**Wall time per tick.** These were measured under the moderate load of other sessions: about 3.7 where the load was recorded (3.8). They are conservative against that load only. At a load of 10–15 the eyes' render ran about 4× slower (the speed plan, below):
 
 | part | ms | source |
 |---|---|---|
@@ -1509,6 +1521,115 @@ M4 MacBook Air (fanless): 10 cores, 16 GB RAM. One torch thread until a quiet wi
 - **The rule.** The sim writes nothing that would leave less free space than the larger of the two bodies' saves (the sim's, about 1.7 GB until S5b measures it) plus 1 GB: about 2.7 GB. It skips the write, logs why, and pauses at its next boundary.
 - **Birth needs at least 8 GB free:** the peak of about 4.5 GB plus the rule's floor of 2.7 GB, and a margin.
 - **The owner's folders** `data/backups` and `data/first_lineage` are never touched.
+
+### How fast the life can run: the speed plan (the evening of 2026-09-24; A59, B21)
+
+The arithmetic is in `$S/pace/calc.py` and `fold.py` (section 17). Every figure marked "estimate" is unmeasured.
+
+**The real-time factor on this Mac:**
+- **0.8–1.3× real time on a quiet, cool machine.** That follows from the tick of 117–190 ms above: a life day with its night takes 65–110 wall minutes.
+  - Sustained speed is unmeasured. The Air is fanless and throttles under a long load, so S5b's two heat-soaked hours decide it (C12).
+- **Under other sessions' load it is slower.** On the evening of 2026-09-24, at a load of 10–15, the prototype's two eyes with the sun's shadow took 142 ms to render: the median of 40 renders (`$S/pace/rbench.py`).
+  - `mjv_updateScene` took 0.11 ms and the read-back 5 ms. Against the quiet 31–38 ms that is about 4× slower, and the whole cost is the GL draw (Apple deprecated OpenGL in 2018).
+  - One scene update shared across both views gave bit-identical pixels but saved nothing. Repeated renders were bit-identical.
+- **This is the owner's working laptop.** The calendar below assumes the life runs around the clock at its quiet tick, so it must be divided by the share of wall time the life actually gets (a duty factor).
+- **In lockstep a slower tick costs wall time only,** never anything in the life (A18).
+
+**Where the tick goes** (from the table above; 117–190 ms in all):
+
+| part | ms a tick |
+|---|---|
+| the core at the 256-tick solves (about half of it the critics) | 36–77 |
+| three renders | 50–66 |
+| physics, the world's Python and the parent | 20–25 |
+| everything else | 12–23 |
+
+**The exact levers (ours).** None of them changes anything the body senses or does. They are built in the core session's free days 15–16 (section 11), and none is needed for birth.
+
+| lever | saves (estimate) |
+|---|---|
+| the critics' rank-one updates on a second performance core: they feed only the next solve, so they are joined before each solve and each save | 14–26 ms |
+| the parent's ear off the tick, joined at her reply tick | about 5 ms |
+| the ears, the tract, touch and the observer computed while the GPU draws | 4–8 ms |
+| the world's per-step Python compiled, bit-equal to the Python it replaces | 2–4 ms |
+| R8 built so the live night's physics and the replay run on separate cores, merged in a fixed order | the night takes 12–25 wall minutes, not 18–32 |
+
+Three rules bind every lever:
+1. Every asynchronous join happens at a fixed sim tick, and blocks if the work is late. Nothing is joined "when ready".
+2. The BLAS thread count is pinned per operation.
+3. A lever stays only if all eight language digests, the `sim` profile and SimWorld's exact replay are unchanged by it.
+
+The fanless Air's heat will take back part of what they save.
+
+**The owner's render levers** (B3): a lighter copy of the G1's own meshes (−8 to −18 ms), and the colour taken from the left eye's render (−10 to −15 ms). With both, and the exact levers, the life runs at about 1.2–2.5×. We do not recommend dropping the sun's shadow (−21 ms).
+
+**Refused.** Each would change the body or the world, or need a second seed:
+- **float16, bfloat16 or TF32 on any GPU.** A change of precision is a change of body. The gain would be small anyway: at batch 1 the work is limited by kernel launches. Determinism on Apple's GPU backend (MPS) is also unproven.
+- **A longer physics step, a looser solver, or self-collision off.** Each changes the world.
+- **GPU physics.** MuJoCo's documentation says MJX on JAX "can be 10x slower than MuJoCo" for a single scene. MuJoCo Warp is unmeasured here, and it is a different pipeline, so it would be a different world.
+- **Parallel lives.** There is one seed.
+- **Each lesson applied a tick late, or the critics' solve applied at a fixed later tick.** Either would let learning run beside the next tick's physics. But each changes the body, for at most about 20% more speed.
+
+**The steering keyed to ticks** (A59). As first written, Claude's row came every wall minute (4.5).
+- At 1× a wall minute is about 400 ticks; at 4× it is 1,600. So the teaching would thin as the machine got faster, and it already drifted with heat.
+- Now the digest is written every 400 ticks (60 s of sim time), and each row is applied at a fixed later tick: the digest's tick + 400.
+- A late row makes the world wait, which costs wall time only. If Claude fails, the fast layer runs alone for that window and the log says so.
+- Claude's round trip then caps the pace. At a round trip of R seconds, the life runs at most 60/R × real time (at 5×, a window is 12 wall seconds). The round trip is measured at P5.
+
+**Off this Mac** (B21; estimates, none measured):
+- **Physics is serial.** In MuJoCo's documentation, "the output of one mj_step is the input to the next". A server core is usually slower per thread than the M4's; a desktop core such as the i5-13500 (up to 4.8 GHz) is close to it. Physics, the world and the parent: 18–30 ms.
+- **Three renders:** 5–15 ms over EGL on NVIDIA's native driver, since the Mac's cost is the driver.
+- **The core:**
+  - the cortex in CUDA float32, with TF32 off: 10–25 ms (limited by kernel launches at batch 1);
+  - the critics and the amygdala stay float64 and on the CPU, as on this Mac. Graphics-class GPUs run float64 at a small fraction of their float32 rate (about 1/64 on the L4, to be read from NVIDIA's datasheets);
+  - the critics' updates take 14–26 ms if run serially, and are hidden on a second core with the exact levers;
+  - their solves cost about 2–7 ms a tick, amortized at the 256-tick rate (a quarter of their cost at the 64-tick rate; solving every 256 ticks saves 7–20 ms in the table above).
+- **Everything else** (the ears, the tract, the parent's ear and her conduct): about 8–15 ms.
+- **Totals.** The speed study's serial estimate was 41–85 ms, with the critics on the GPU. With their float64 work moved to the CPU it becomes 57–118 ms (1.3–2.6×). With the exact overlaps the study's 30–60 ms becomes 32–67 ms (2.2–4.7×), since the solves stay on the tick.
+- **The ceiling for one seed is about 6×.** Each tick is a serial chain of 75 physics steps, three renders and the core's forward pass. No extra machine shortens it.
+
+**Its conditions,** each met before birth:
+- **The hardware:** a graphics-class GPU (L4, A40, L40S, RTX A6000, RTX 4090 or RTX 4000 Ada), and at least four physical cores.
+  - It needs EGL with the driver's "graphics" capability. Without it, MuJoCo falls back to software rendering.
+- **A driver we pin,** so a VM or bare metal. A container's driver comes from its host, and the pixels can change when the host does. RunPod's pods are containers.
+- **The voice.** The parent's voice is macOS Samantha, which Linux cannot make, so this Mac (or a rented Mac) stays the voice server.
+  - The clips are held to their digests.
+  - On a cache miss the lockstep world waits, which costs wall time only.
+- **The steering keyed to ticks** (A59), which runs on this Mac too.
+- **A one-hour paid test,** on the owner's yes (B21, C63), before any rental.
+
+**The same body, one seed, across machines:**
+- **Expect every digest to change on Linux or CUDA.** MuJoCo's documentation promises exact reproducibility only "within a single version, on the same architecture". PyTorch's does not promise it across platforms, or between CPU and GPU. cuBLAS's results depend on the GPU model and the library's version.
+- **What stays the same:**
+  - the commit and every disclosed constant;
+  - seed 1's born state, kept as one digested file that every machine loads rather than rebuilds;
+  - every random stream, drawn from numpy or a CPU generator, never CUDA's;
+  - float32 for the core, float64 for the critics and the amygdala;
+  - the G1's file byte-identical, MuJoCo 3.9.0, and the step, solver, impratio and cone;
+  - the render's sizes, shadow, multisampling, meshes and lights;
+  - the voice clips, and the steering rows logged by tick.
+- **What is pinned beside it:** PyTorch's deterministic algorithms turned on, `CUBLAS_WORKSPACE_CONFIG` set, and the GPU model. The machine's fingerprint is pinned with the digests: CPU, GPU, driver, CUDA, cuBLAS, torch, numpy, OS and thread counts.
+- **Re-pinning:**
+  - A new machine gets its own `tools/pins/digests.<machine>.txt`, and the Mac's pins are never overwritten.
+  - All eight language digests, the `sim` profile and SimWorld's replay are run on it.
+- **The machine is chosen before birth, and seed 1 is born on it.**
+  - A move after birth happens only at a night boundary, and is disclosed.
+  - The life continues exactly from the save, as the same body, not a new seed.
+  - Exact replay then holds per machine segment: each segment replays exactly only on its own fingerprint.
+- **The real G1 runs at exactly 1×.** Reality supplies the physics and the renders there. The core must fit into 150 ms on the robot's own computer, which is unmeasured.
+
+**Calendar days to an infant's waking experience.** Section 12's conversion gives about 889, 1,870 and 3,925 waking hours by 3, 6 and 12 months (Galland et al. 2012), so that many life days. The table assumes the life runs around the clock; fixes, pauses and the duty factor add to it.
+
+| case | real time | wall minutes a life day | life days a calendar day | calendar days to 3 months | to 6 months | to 12 months |
+|---|---|---|---|---|---|---|
+| A. this Mac as designed, quiet and cool | 0.8–1.3× | 65–110 | 13–22 | 40–68 | 84–143 | 177–300 |
+| B. A with the exact levers | 1.0–1.6× | 49–84 | 17–30 | 30–52 | 63–109 | 133–228 |
+| C. B with B3's (a) and (c) | 1.2–2.5× | 36–77 | 19–40 | 22–47 | 46–99 | 97–209 |
+| D. a rented graphics machine, the same code, serial | 1.3–2.6× | 30–63 | 23–48 | 18–39 | 39–82 | 81–172 |
+| E. D with the exact overlaps | 2.2–4.7× | 18–39 | 37–81 | 11–24 | 23–50 | 49–106 |
+
+- **This is a planning reference for wall time.** It never forecasts a milestone and is never a target (A58). Cases D and E stay estimates until the one-hour test (C63).
+- **Claude's steering is the same on every machine:** 60 rows a life day at the 400-tick key. That is about 53,000 rows to 3 months of waking hours and 235,500 to 12. Its cost is in B21.
 
 ## 10. The disclosed constants
 
@@ -1626,15 +1747,15 @@ Re-estimated for the lead's decisions (A57): the new steps are R6c; the addition
 | 5 | R6c's last quarter; R7a–b: the 13 event lines; surprise-gated writes, the event end for frames, the tick's record | W3 reopened (A42): the fovea's born bank at 3 px a degree; the eye check again at the core's d (C3, C48); the visual onset cue measured (C49) | P1b: the eight variants of every line (A50), measured through the parent's ear and for the new word's peak by frame (C56) |
 | 6 | R7c: fixes #1 and #6 (`tag_trace`), error scaling, pace on the partner channel | W1 reopened (A37, A39): the observer and the hands' arrays; pain from the joints; the withdrawal's trigger; Unitree's gains; the motor, gyro and heat models; the sink rates again (C43, C44, C46) | P3v: the tract as effector 0 in the world; the parent's ear (`parent_ear.py`): the babble bank recorded before birth, templates from P1, m re-set for the context sizes; the cry heard as distress (A13) |
 | 7 | R7d–e: the amygdala, its tests, the orienting gain on the three cues, `amyg_pav` off | W4: the born body's own motor timing on the G1, with the pattern generator and the cry (per effector: its gate's draw at the born p_act, the continuation draw, the margin, `chunk_max`; a replica here, repeated on the real core at every learning rate 0 at S5a, each run discarded after), under the final law: unit lengths, rolls by direction, travel, time off the mat, pain from the joints with the share from hulls meeting (A54, C59), thumps, the leaning sit's fall time, bottle visits, hits on the parent; every hold and guide against the joints' pain law (C43). Written down as chance. | P4: the day plan, routines, stages, leaving and returning; the never-taught pairs held out by the line check; the tests of understanding by milestone listed with their items and chances (A55, C36) |
-| 8 | R7f: recall into action; the working-memory latch on event ends (7.6, A45) | W4 continued: if the hulls carry the pain, the convex-decomposed collision copy loaded world-side and W4's pain measured again (A54) | P5: the digest (its trunk and hands, never its fovea: A40), `ops/sim_parent_brief.txt`, the steering check; P6: `tools/sim_parent_rates.py` with W4's babbler, her declared rates checked (C24, C57, C58) |
+| 8 | R7f: recall into action; the working-memory latch on event ends (7.6, A45) | W4 continued: if the hulls carry the pain, the convex-decomposed collision copy loaded world-side and W4's pain measured again (A54) | P5: the digest (its trunk and hands, never its fovea: A40), `ops/sim_parent_brief.txt`, the steering check; the digest and the row keyed to every 400 ticks, and Claude's round trip measured (A59); P6: `tools/sim_parent_rates.py` with W4's babbler, her declared rates checked (C24, C57, C58) |
 | 9 | R7f's last quarter; R8: night batches from stored codes; the tape and episodes | W5: sounds from physical events; the room's echo (B9); the ears in the frame; the tract's sound from the head's front; the day's light and the lamp; the live, dark night's world (the dim, the eyes and ears off, the parent asleep: A46); every channel from the scene | W3r: the born mouth-corner reader on the fovea's map, with sim-face's detector once C39 settles; the scaffold's removal test fixed (A49, C55) |
 | 10 | R8: every effector's acts replayed; the entries, the tagged first, `act_pred`'s weight from the replayed dopamine | W5b: the richer room: textures, containers, the cover, at least 3 examples of each tested noun, the inventory and its calendar (A53, C60); the eye check again under W5's lights | W5b with session 2: the new objects' sounds, holds by a Dex3 hand and the cover's lift (C60) |
 | 11 | R8: `act_inv` and the forward half replayed; REM on frames; the entries' mean saved | W6: the `/sim` page on port 8030: the room camera, the three views with their fovea windows, the parent's face, charge, the ten gates, a two-voice transcript, instruments | (S5a) |
 | 12 | R8: the live, dark night: the world's night, the twitches and their lessons (A46) | S5a (sessions 2 and 3): the SimAnatomy (9 channels, 10 effectors, 3 reward sources) on the core as it stands; a plumbing run at every learning rate 0 | (S5a) |
 | 13 | R8's last quarter | the parent's rates with the babbler: smiles per ask, calls answered, asks met, her declared contingency and the voice-free share, written down as chance. There is no target rate. Before birth the method changes only for a stated reason (such as an ask no body could meet from where it lies), never to reach a number. | |
 | 14 | the full guard with `--roundtrip`; the `sim` profile pinned | the plumbing re-run on R7 and R8; heat checks | |
-| 15 | — | S5a again on the finished core: every channel, effector and reward source through a live night | |
-| 16 | — | S5b: two days and nights at every learning rate 0 on the whole core: the mean tick with the three views, the night's length and the store's write rate written down; the store's cap set; the birth checklist | |
+| 15 | the exact levers (section 9, A59), each kept only if the eight digests, the `sim` profile and SimWorld's replay are unchanged | S5a again on the finished core: every channel, effector and reward source through a live night | |
+| 16 | the levers' last quarter, then S5b with session 2 | S5b: two days and nights at every learning rate 0 on the whole core: the mean tick with the three views, the night's length and the store's write rate written down; the store's cap set; the birth checklist | |
 | 17 | — | **S6: birth (seed 1)**: day 1, its first night, day 2, the save round trip; the first hour watched at 1× | |
 
 **Where the build stands** (section 0's build status):
@@ -1677,6 +1798,11 @@ Re-estimated for the lead's decisions (A57): the new steps are R6c; the addition
 - The eye check passes by A33's readout at the core's d, under W5's lights, on the grey pair, the colour camera and the born bank (C3, C48).
 - The parent's force caps are in its constants file and checked against their sources; no act drives the G1 over them.
 - The babble bank for the parent's ear is recorded and fixed; the never-taught pairs are listed and held out.
+- The human-pace ledger (section 12) is frozen (A58):
+  - its recalled rows are read at their sources (C62);
+  - its rows, sources, criteria and conversion are committed with a digest;
+  - nothing in the body, the parent, the brief, the tests or the build reads it.
+- The machine is chosen (B21): this Mac by default. On any other machine, its own digests are pinned on its fingerprint and the one-hour test has passed (C63). The steering is keyed to ticks (A59).
 
 After birth, it lives days with a report each day, judged by sitting with it. Defects are fixed on copies and applied at boundaries, never tuned.
 
@@ -1684,17 +1810,19 @@ After birth, it lives days with a report each day, judged by sitting with it. De
 
 Each milestone is judged by sitting with the child on `/sim` and by its own rulers, never by a baseline run. A19 gives each ruler, its chance level and when it counts as reached. These are estimates: no life has been run. Wall hours assume 55–90 minutes per life day; at the 65–110 minutes the lead's decisions bring (section 9), each is about a fifth longer.
 
-| | what the viewer sees | its own rulers | life days | wall hours |
-|---|---|---|---|---|
-| **M0: it lives** | a day, a night and a day; the fovea windows, gates and the parent's face moving | its forecasts of its own next body sense and periphery beat "nothing changes" | birth day | the first |
-| **M1: it orients** | its fovea, then its trunk, turn to the parent's voice and name, and it holds the smiling face in view | turns within 20 ticks above the born rate; the share of ticks with the parent's face in the fovea | 1–3 | about 1–5 |
-| **M2: it reaches** | its hand touches a toy held over its chest | touches above the babble rate | first 5–25; reliable 20–60 | 5–38; 18–90 |
-| **M3: it grasps** | it reaches, then holds one of the eight holdable toys (the reflex holds from hour 0 when a toy meets the palm) | reach then hold for at least 3 ticks, above chance | 15–60 | 14–90 |
-| **M4: it rolls on purpose** | it rolls toward the parent or a toy | rolls by direction against the babbler's share under the same parent placement (A19); the trunk turning first | 15–60 | 14–90 |
-| **M5: it sits with help** | it helps the pull-to-sit with its own flexion, then, held near upright, keeps its trunk up and looks at the face (her face low and ahead, where its eyes reach; in the leaning sit only by raising its trunk: A22) | its share of the rise; the trunk-up share and face looks while held; less hold needed over the days | 20–80 (open) | 18–120 |
-| **M6: it names** | it names what is in its fovea or hand (by the scaffold's output first) | the ledger's "says"; right names above 1 in 4 | first right names 15–40; 1 in 4 at 30–80 (open) | 14–60; 28–120 |
-| **M6t: its first word from its own tract** | a word the parent's ear accepts, from the tract alone | M6's ruler on the tract's sound; the precursor: its first accepted echo | not forecast | — |
-| **M7: it sits alone** | the leaning sit, hands on its knees, without the parent's hands | seated time without her hands | not forecast | — |
+The last column is the human-pace ledger's (A58, below). It gives the waking hours an infant has lived when it shows the same capacity: the age's hours at mean sleep, with the age window in brackets. It is reported against the body's own ruler in the third column, never used as a target, and read by nothing in the body, the parent, the brief, the tests or the build. † marks a row recalled from memory and still to be read at its source (C62).
+
+| | what the viewer sees | its own rulers | life days | wall hours | an infant's waking hours to the same capacity (the human-pace ledger) |
+|---|---|---|---|---|---|
+| **M0: it lives** | a day, a night and a day; the fovea windows, gates and the parent's face moving | its forecasts of its own next body sense and periphery beat "nothing changes" | birth day | the first | its tests only: 9 for its own touch told from another's (a day old†); 1,209–1,372 for a sound matched to its sight (4–4.5 months†) |
+| **M1: it orients** | its fovea, then its trunk, turn to the parent's voice and name, and it holds the smiling face in view | turns within 20 ticks above the born rate; the share of ticks with the parent's face in the fovea | 1–3 | about 1–5 | from 9–66 (a newborn orienting to a voice in its first days†) up to at most 1,209 (the CDC's 4-month turn, ≥75%); no single figure |
+| **M2: it reaches** | its hand touches a toy held over its chest | touches above the babble rate | first 5–25; reliable 20–60 | 5–38; 18–90 | 835 [813–1,870]: first reach contact at 12.3 weeks, a first occurrence |
+| **M3: it grasps** | it reaches, then holds one of the eight holdable toys (the reflex holds from hour 0 when a toy meets the palm) | reach then hold for at least 3 ticks, above chance | 15–60 | 14–90 | 1,106: first grasp after a reach at 16.0 weeks, a first occurrence |
+| **M4: it rolls on purpose** | it rolls toward the parent or a toy | rolls by direction against the babbler's share under the same parent placement (A19); the trunk turning first | 15–60 | 14–90 | 1,569 [610–2,587]: rolls back to front at 5.1 months, a mean |
+| **M5: it sits with help** | it helps the pull-to-sit with its own flexion, then, held near upright, keeps its trunk up and looks at the face (her face low and ahead, where its eyes reach; in the leaning sit only by raising its trunk: A22) | its share of the rise; the trunk-up share and face looks while held; less hold needed over the days | 20–80 (open) | 18–120 | at most 1,870: leans on its hands when sitting (≥75% by 6 months); at most 1,209: head steady when held (≥75% by 4 months) |
+| **M6: it names** | it names what is in its fovea or hand (by the scaffold's output first) | the ledger's "says"; right names above 1 in 4 | first right names 15–40; 1 in 4 at 30–80 (open) | 14–60; 28–120 | at most 3,925: calls a parent "mama" or "dada" (≥75% by 12 months); M6 reads the scaffold's tokens first, not speech |
+| **M6t: its first word from its own tract** | a word the parent's ear accepts, from the tract alone | M6's ruler on the tract's sound; the precursor: its first accepted echo | not forecast | — | 813–1,404 for vowels imitated (12–20 weeks†); at most 3,243 for canonical babbling (by 10 months†); a first word as M6 |
+| **M7: it sits alone** | the leaning sit, hands on its knees, without the parent's hands | seated time without her hands | not forecast | — | 1,837 [1,144–2,967]: sits without support at 5.9 months, WHO's median (1st–99th percentiles); WHO's criterion allows no arm support, M7's leaning sit does |
 
 - Crawling, standing and walking are not forecast. The G1 cannot crawl on flat palms (its wrists), and upright sitting tips it backward (section 3.8).
 - Rolls under babble are not yet measured on the G1 (W4). Rolling on purpose is what the months buy.
@@ -1730,6 +1858,122 @@ Each milestone is judged by sitting with the child on `/sim` and by its own rule
 | M6 | the colour twins as targets, each colour word heard on at least 2 kinds (M6(b) above); combinations of colour and noun come after the first year in infants, so a pass is not expected in year 1 | the noun-alone rate on that twin | Wagner, Dobkins and Barner 2013; Fernald, Thorpe and Marchman 2010 |
 | M6 | it says "more" at a charge below 0.35, against above 0.7 | its rate of "more" at a charge above 0.7 | ours (the understanding audit's): a word used for its own need |
 
+### The human-pace ledger (A58)
+
+It reports the G1's milestones against infant norms, in waking hours, as the owner's bar asks: "learning speed and understanding level of human".
+- **It is a ruler, never a target.** Nothing in the body, the parent, the brief, the tests or the build reads it.
+- **It maps no month onto a life day inside the body** (A56).
+- **Its arithmetic is in the study's `$S/pace/hours.py`.** A tool that reproduces it is committed with the ledger's digest before birth.
+
+**The ruler:**
+- **Robot hours, H_r(m).** Count the waking ticks from birth to the end of the first of A19's two consecutive days on milestone m's ruler, then multiply by 0.15 s.
+  - For a never-taught test, count to the day it first passes.
+  - A life day's wake is 24,000 ticks, which is one hour (B19). Nights are excluded, as an infant's sleep is.
+- **Infant hours, H_i(m).** These are the waking hours from birth to the norm's age: 24 h minus the mean 24-hour sleep at each age, integrated.
+  - The sleep figures are from Galland et al. 2012, Table 2: 14.6 h at 0–2 months, 13.6 at about 3, 12.9 at about 6, 12.6 at about 9, 12.9 at about 12 and 12.6 at 1–2 years.
+  - They are placed at 1, 3, 6, 9, 12 and 18 months, linear between and flat outside, over months of 30.4375 days.
+  - The table's ±1.96 SD limits run from 9.3–20.0 h at 0–2 months to 10.1–15.8 h at 12. They scale H_i by about ×0.5–1.5 at 4 months and ×0.6–1.4 at 12.
+- **The headline is the waking-hour age, A_r.** This is the infant age at which an infant at mean sleep has lived H_r waking hours, with its range under the sleep limits.
+  - A_r is placed in the milestone's own age distribution, using WHO's percentiles where they exist.
+  - For M7 those are: 1st percentile 3.8 months, 5th 4.3, 25th 5.2, 50th 5.9, 75th 6.7, 95th 8.0 and 99th 9.2. In waking hours: 1,144, 1,306, 1,602, 1,837, 2,108, 2,552 and 2,967.
+- **Second, the ratio S = H_i / H_r,** printed at the median age, over the age window, and over the sleep limits.
+  - S = 1 means an infant's pace per waking hour.
+  - One seed gives one H_r against a population, so S carries false precision. It is printed beside A_r, never alone.
+  - It is never printed for M1, whose infant range runs from a newborn's orienting to the CDC's 4-month item.
+- **The honest measure of learning speed is exposures to criterion** (the second table below).
+- **"Understanding level" is answered only by which never-taught tests pass,** and at what A_r. A motor row never answers it.
+
+**Waking hours by age.** The first row is at mean sleep. The second is under the sleep limits. The third is the hours with a face in view (see the exposures table below), interpolated linearly between 1 and 11 months and flat outside them:
+
+| age | 1 day | 1 week | 1 month | 3 months | 4 months | 6 months | 9 months | 12 months | 18 months |
+|---|---|---|---|---|---|---|---|---|---|
+| waking hours | 9 | 66 | 286 | 889 | 1,209 | 1,870 | 2,898 | 3,925 | 5,979 |
+| under the sleep limits | 4–15 | 28–103 | 122–447 | 432–1,339 | 625–1,787 | 1,035–2,700 | 1,729–4,060 | 2,478–5,362 | 4,030–7,909 |
+| with a face in view | 2 | 16 | 72 | 212 | 279 | 400 | 545 | 642 | 814 |
+
+**The ledger.** The kinds of criterion:
+- **first:** a first occurrence, an earliest age;
+- **mean** or **median:** attainment;
+- **≥75%:** the age by which at least 75% attain (the CDC's items: Zubler et al. 2022), an upper bound on the median;
+- **group:** the age of the lab group tested, which gives no onset age.
+
+H_i is the median age's hours at mean sleep, with the age window in brackets.
+
+| M | infant capacity | age | criterion | source | H_i |
+|---|---|---|---|---|---|
+| M0 test | tells its own touch from another's | 24 h | group | Rochat and Hespos 1997† | 9 |
+| M0 test | matches a sound to its sight | 4–4.5 months | group | Spelke 1976†; Kuhl and Meltzoff 1982† | 1,209–1,372 |
+| M1 | turns to a voice | within its first days; the learned turn returns after a dip at 2–3 months; 4 months | group; ≥75% | Muir and Field 1979†; Muir, Clifton and Clarkson 1989†; the CDC ("turns head toward the sound of your voice") | from 9–66 up to at most 1,209; no single figure |
+| M1 test | explores the object that broke its expectation | 11 months | group | Stahl and Feigenson 2015† | 3,586 |
+| M1 test | follows her head turn | a first stage at about 6 months (a third of trials under 4 months; nearly all at 11–14) | groups | Butterworth and Jarrett 1991†; Scaife and Bruner 1975 | 1,870 [under 1,209 to 4,604] |
+| M1–M2 test | the occluded ball: surprise at its violation; an anticipatory look | 3.5–4.5 months; 6 months | groups | Baillargeon 1987†; Johnson, Amso and Slemmer 2003† | 1,048–1,372; 1,870 |
+| M2 | first reach contact | a mean of 12.3 weeks (n 7); first reaches at 12–22 weeks (n 4); "reaches to grab a toy he wants" by 6 months | first; ≥75% | Clifton et al. 1993; Thelen et al. 1993; the CDC | 835 [813–1,870] |
+| M2 test | looks to the parent's face at a new toy | the 10–13-month group; 12 months | group | Walden and Ogan 1988; Sorce et al. 1985† | 3,243–4,264 |
+| M3 | first grasp after a reach | a mean of 16.0 weeks (n 7) | first | Clifton et al. 1993 | 1,106 |
+| M3 test | acts for a contingent effect | 10 weeks | group | Rovee and Rovee 1969† | 671 |
+| M3 test | the hand prepares for the grasp before touch | 5–6 months was the youngest group tested, so there is no onset age; whether that group closed the hand before touch is read at the source (C62) | group | von Hofsten and Rönnqvist 1988 | at most 1,536–1,870 if it did |
+| M3 test | searches under a cover | from about 7.5 months; "looks for things he sees you hide, like a toy under a blanket" by 12 months | group; ≥75% | Diamond 1985; the CDC | 2,381 [to at most 3,925] |
+| M4 | rolls back to front | 5.1 months, SD 1.5 (n 240) [±2 SD: 2.1–8.1]; "rolls from tummy to back" by 6 months | mean; ≥75% | Nelson et al. 2004 (Hong Kong); the CDC | 1,569 [610–2,587] |
+| M4–M5 test | its eyes reach another's goal before her hand | 12 months, not at 6 | groups | Falck-Ytter, Gredebäck and von Hofsten 2006† | 3,925 (not by 1,870) |
+| M5 | leans on its hands when sitting; head steady when held | by 6 months; by 4 months | ≥75% | the CDC | at most 1,870; at most 1,209 |
+| M6 | calls a parent "mama" or "dada"; tries 1 or 2 other words | by 12 months; by 15 months | ≥75% | the CDC | at most 3,925; at most 4,945 |
+| M6 tests | understands common nouns; forms a category from exemplars; points to ask for something; combines a colour with a noun | 6–9 months; 3–4 months; by 15 months; after year 1 | groups; ≥75% | Bergelson and Swingley 2012; Quinn, Eimas and Rosenkrantz 1993†; the CDC; Wagner, Dobkins and Barner 2013† | 1,870–2,898; 889–1,209; at most 4,945; over 3,925 |
+| M6t | cooing; vowels imitated; canonical babbling; a first word | 1–4 months; 12–20 weeks; onset by 10 months in hearing infants, usually from 6 (a mode of about 7); as M6 | groups; onset | Oller 2000†; Kuhl and Meltzoff 1996†; Oller and Eilers 1988†; Eilers and Oller 1994 | 286–1,209; 813–1,404; at most 3,243 [1,870–3,243] |
+| M7 | sits without support (no arm support allowed) | a median of 5.9 months [3.8–9.2, 1st–99th percentiles] (n 816) | median | WHO Multicentre Growth Reference Study Group 2006, Table II | 1,837 [1,144–2,967] |
+
+**Exposures per waking hour, on both sides.** These are reported beside each row:
+
+| exposure | an infant | the robot |
+|---|---|---|
+| words heard | about 12,300 adult words in a 12-hour recorded day (15,439 at 2 months, SD 8,234), with 221–271 conversational turns at 2–6 months (LENA: Gilkerson et al. 2017). The count includes overheard speech and the recording's naps, so it is neither per waking hour nor child-directed | the parent's 1,500–2,500 directed words a life day (4.6), all inside its waking hour. The ratio to an infant's directed words is unknown. It is reported, and never moved toward any norm |
+| a face in view | about 15 minutes a waking hour at 1 month, about 5 at 11 months (22 infants' head cameras: Jayaraman, Fausey and Smith 2015) | its own share of ticks with her face in its fovea (M1's second ruler), measured, never assumed |
+| contingent replies | a caregiver's, at the rates of human dyads | her declared rates (A52, C24, C57), and the logged ones |
+| sleep per waking hour | 1.55 h at 0–2 months, 1.16 at 12 months (Galland's means) | 1.0: a night of 24,000 ticks for each day of 24,000 (A46) |
+
+**Exposures to criterion: the second ledger.** Each entry is a lab paradigm, set against the body's own count of the same kind of exposure:
+
+| paradigm | an infant | the body's own count |
+|---|---|---|
+| a contingent effect (conjugate reinforcement) | learned within one session at 10 weeks (Rovee and Rovee 1969†) | the rattle's holds and its arm's acts until M3's rattle test passes |
+| a word from labelings | a new word from 9 labelings at 13 months (Woodward, Markman and Fitzsimmons 1994†) | the parent's namings of a word (a variation set counts as one, 4.5) until its looks on "where is the X?" pass A19's test for that word |
+| words found in running speech | segmented after 2 minutes of speech at 8 months (Saffran, Aslin and Newport 1996†) | none yet. It stays only if an instrument for it is fixed before C36 (A55); otherwise it is dropped before the freeze |
+
+**Reading it:**
+- **The criteria differ.**
+  - A first occurrence is an earliest age.
+  - The CDC's ages are upper bounds on the median.
+  - A lab group's age gives no onset.
+  - A19's rule (two consecutive days at p < 0.01) is stricter than a first occurrence, so it reads the robot late against those rows.
+- **Motor rows mix learning with growth.** Infants' motor milestones wait on growth and maturation. This body is born at full strength and never grows. The never-taught tests are the fairer comparison.
+- **The tasks differ.**
+  - The G1 has no neck.
+  - Its sit leans with its hands on its knees. WHO's criterion excludes arm support, so M7's ruler is the easier task and the WHO row flatters the robot. The CDC's "leans on hands" is the nearer norm (M5).
+  - It rolls from its back. Western infants usually roll front to back first; Nelson's sample rolled back to front first.
+- **Waking is not alert.** A newborn's waking includes feeding, crying and drowsiness, so the early H_i overstate the usable hours. The face-in-view row partly corrects this.
+- **Hours before birth.** Infants hear before birth (DeCasper and Fifer 1980). The robot's born parts stand in for gestation and evolution, disclosed as innate (section 10), and no weight learns before birth (section 11). Neither side counts these hours.
+- **The samples.** Clifton (n 7) and Thelen (n 4) are small; WHO (n 816) and Nelson (n 240) are large.
+  - Galland's limits are individual ±1.96 SD, so holding one limit across all of infancy widens the range.
+  - Galland's Asian samples slept about 59 minutes less.
+- **What was read at the source.** The Galland, WHO and CDC tables, and the Clifton, Thelen, Nelson, Eilers and Oller, Jayaraman, Gilkerson, Diamond, Bergelson and Swingley, Walden and Ogan, von Hofsten and Rönnqvist, and Scaife and Bruner summaries. The rows marked † are recalled and are read before the freeze (C62).
+
+**The firewall** (A58):
+- **The freeze.** The ledger is frozen before birth and committed with a digest: its rows, sources, criteria and conversion. After birth no row is added, removed or re-sourced.
+- **Every row is reported,** passes and failures alike.
+- **Nothing reads it.** No parent brief, planner prompt, test, build step or constant reads the ledger or quotes an infant age.
+- **The parent's word rate and timings are never moved** toward LENA or any other norm.
+- **The owner's bar is answered by architecture alone.**
+  - A low reading can lead only to a change of the learning machinery, justified on general grounds. After birth, that is a new seed (A20).
+  - It never leads to a change of the parent, the room, the pace, or a constant chosen to move a row.
+
+**The language body on this ruler** (an illustration; no S is printed for it):
+- **Its hours: 197.5.** The save written after life day 404 holds 4,740,012 waking ticks; the counter in `body/core/instruments.py` moves only in the waking tick.
+- **"404 life days of about an hour"** (`video/film5_design/life_montage.md`) is about twice too high.
+  - Days were 7,200 ticks for a stretch (DIARY_BODY.md), and 24,000 only from 2026-09-18 (`ops/teaching_method.md` item 10).
+  - Days 1–10 held 5.2 hours.
+- **A child reaches 197.5 waking hours at about 21 days old** (14–48 under the sleep limits).
+- **What it heard:** about 235,000 words in 51,066 lines, about 1,190 a waking hour. LENA's 1,025 a recorded hour is not comparable (overheard speech; naps).
+- **Why no S.** It typed from a small alphabet, with no articulator and no body, and it was heavily drilled: "a lemon is sour" was typed 423 times.
+
 ## 13. Risks and how we see them
 
 The numbers follow section 0.
@@ -1747,7 +1991,7 @@ The numbers follow section 0.
 | 9 | Vision: a newborn's acuity in the fovea (3 px a degree through the born bank, A42), in grey, with colour from one camera beside the left eye (A38); on its back it sees mostly the ceiling and its own body, and the parent only when she leans over its chest or stands toward its feet; face down only the mat; sitting or standing only what is low and ahead (A22); the light changes through the day; the born face template, as built, rarely detects a real face, so the face event line and orienting's face cue may run on chance (C39) | the eye check at W3, again on the new code (fovea identity at least 0.75 on the ten toys and the face, under each light, by A33's readout: C3, C48); the fovea's forecast error on shown toys; the template's detections of her face (C39) |
 | 10 | Vocal imitation near chance at birth (2 of 12 echoes accepted); tokens are the easier road to reward | the first accepted echo; the tract's share of "says"; the copy tests before removing either scaffold (section 4.9) |
 | 11 | Disk and heat | the disk rule; one copy at a time; the mean tick over long runs |
-| 12 | The tick: about 117–190 ms with the lead's additions and the colour camera's own view, past 150 ms at its upper end (section 9) | the tick heat-soaked with the three views (C12, C48); the levers in section 9, B3's the owner's |
+| 12 | The tick: about 117–190 ms with the lead's additions and the colour camera's own view, past 150 ms at its upper end (section 9) | the tick heat-soaked with the three views (C12, C48); the levers in section 9, B3's the owner's. Other sessions' load slows it: at a load of 10–15 the eyes' render alone ran about 4× slower (section 9) |
 | 13 | Smiles drifting into shaping; the parent talking too much | the neutral resting face; the one law; the born reading's hold; `tools/sim_parent_rates.py` (at least 40% of play ticks free of her voice) |
 | 14 | The charge need is weak (drive reduction nets zero over a cycle), and feeds are frequent under babble (about 5–6 a day) | feeds the child starts itself; the bottle's stages |
 | 15 | The amygdala's "away" gain could teach it not to look at a parent whose face predicts frowns | the share of ticks on her face after days with frowns (7.4) |
@@ -1759,6 +2003,7 @@ The numbers follow section 0.
 | 21 | The pixel reader never works, so the world-truth smile stays and the robot cannot be reached | C39 and C55 before birth; the scaffold's removal test on copies after birth (A49) |
 | 22 | An imperfect parent pays fewer smiles, and credit across the delay (risk 1) gets harder | her declared rates against her logged ones (C24, C57); the felt reward per life day |
 | 23 | The live night: its wall cost, and a twitch pressing housings into pain while no one is awake | the night's wall minutes and its pain ticks (C52) |
+| 24 | The human-pace ledger read as a target, or quoted as a headline before a life: a norm pulling the parent's pace, a brief, a test or a constant toward it; a guessed multiple reaching the film | the firewall (A58): the ledger frozen with its digest before birth, read by nothing that acts, every row reported, passes and failures alike |
 
 ## 14. The owner's decisions
 
@@ -1787,6 +2032,8 @@ The numbers follow section 0.
 | 5 | Understanding: the roadmap's tests by milestone, with their chance levels, fixed before C36 | 12 | A55 |
 | 6 | Dropped: a learning-progress reward; noradrenaline, acetylcholine and serotonin controllers; thalamic gain; a breath rhythm; an auditory-target reward; an acuity schedule and plasticity windows in year 1; a balance law | 6, 7.3 | A56 |
 | 7 | The build plan re-estimated: birth about day 17 (range 15–22); the tick re-checked, about 117–190 ms | 0, 9, 11 | A57 |
+| 8 | Human pace (later that evening): each milestone reported against an infant's waking hours to the same capacity, a ruler frozen before birth and never a target | 1, 12 | A58 |
+| 9 | The speed plan: exact levers that change nothing the body senses or does, the steering keyed to ticks, reduced precision and a looser world refused, a rented machine only under conditions | 9, 4.5 | A59 |
 
 **Still defaulted, each with a recommendation** (the decision log's part B asks each as a plain question):
 - the two toys a Dex3 hand cannot hold (the bear and the drum), and the cup, scaled to 0.8 for a creep that impratio 10 removed (B1);
@@ -1804,7 +2051,8 @@ The numbers follow section 0.
 - the parent's strength: a person's (B16);
 - the word tokens, if the child's ears and voice never pass the tests for removing them (B17);
 - a life day of one simulated hour, so the sun crosses the window in an hour (B19);
-- the G1's own motor hum (B20).
+- the G1's own motor hum (B20);
+- spending on a rented graphics machine: none by default, and birth on this Mac (B21).
 
 **Ours, decided here and disclosed:**
 - the servo law, its gains set at load, and the step sizes;
@@ -1822,7 +2070,7 @@ The numbers follow section 0.
 - the tests of understanding and the scaffold's removal (A28, A29).
 - the parent's face made real and the detector left alone (A30); the newborn's generalized withdrawal (A31); impratio 10 by the contacts' physics (A32); what decides the eye check (A33); a new word on its pitch peak, on every ending (A34); the grasp summed at the spinal cord (A35);
 - the stock model's torque limits, with Unitree's differing values recorded (3.2).
-- the constants of the lead's decisions, each ours and fixed before birth: the observer's gain and the joints' pain line (A37); the camera model's form (A38); the gates' drive and error weights (A41); the fovea's bank (A42); the visual onset cue (A43); the cerebellum's expansion and law (A44); recall's maps (A45); the night's length and twitch step (A46); the cry's posture and line (A47); the pattern generator's form (A48); the mouth-corner reader and the scaffold's removal test (A49); the voice variants' ranges (A50); the parent's gaze in asks, her imperfection, her copying and her reading error (A51, A52, A40); the room's calendar (A53).
+- the constants of the lead's decisions, each ours and fixed before birth: the observer's gain and the joints' pain line (A37); the camera model's form (A38); the gates' drive and error weights (A41); the fovea's bank (A42); the visual onset cue (A43); the cerebellum's expansion and law (A44); recall's maps (A45); the night's length and twitch step (A46); the cry's posture and line (A47); the pattern generator's form (A48); the mouth-corner reader and the scaffold's removal test (A49); the voice variants' ranges (A50); the parent's gaze in asks, her imperfection, her copying and her reading error (A51, A52, A40); the room's calendar (A53); the human-pace ledger's conversion and its firewall (A58); the steering's 400-tick key and the exact levers' rules (A59).
 
 ## 15. The stock G1: what it changed from the custom child
 
@@ -1916,12 +2164,22 @@ The render cost is mostly fixed overhead (the pixel count barely matters), and p
 - `$S/allout/`: the all-out world and the custom child; the core at this scale (`t20_humanoid_tick.py`, `t21_parts.py`, `t22_paired.py`, `t23_rss.py`, `prof20.py`); `move/` (learning to move); `lang/` (the parent's language: `synth.swift`, `voices.swift`, `ear2.py`, `parent_lang.py`, the tests); `owner_amendment_0924.md`.
 - `$S/sim_wf/`: the old design's measurements that still hold.
 - `$S/build/world/` (`fix` to `fix4`): the world track's measurements (friction, pain, grasps, the template, C2 and C3, the face's pixels); `$S/build/parent/`: the voice and ears track's logs.
+- `$S/pace/`: the human-pace study and the speed plan (A58, A59, B21):
+  - `norms.md`, `speed.md` and the skeptic's review folded into sections 9 and 12;
+  - `hours.py`: the waking hours by age;
+  - `calc.py` and `fold.py`: the calendar days and the costs;
+  - `rbench.py`: the render measured under load;
+  - the tables read: `galland2012.pdf`, `who2006.pdf`, `zubler2022.pdf`.
 
 **Sources for the G1's senses and limits:** Unitree's `unitree_ros` `robots/g1_description/g1_29dof_with_hand_rev_1_0.urdf` (the `d435_joint`; its torque limits); Unitree's `unitree_mujoco` `unitree_robots/g1/g1_29dof.xml`; Unitree's G1 product page; the Menagerie `unitree_g1` README.
 
 **Sources for the world, the parent's face and her voice:** MuJoCo 3.9's documentation (Overview, "Softness and slip"; Modeling, "Solver settings"; Computation, "Physical realism and soft contacts"); the face's norms and photometry (section 4.1: Farkas via Husein et al. 2010 and Virdi et al. 2019, Dodgson 2004, Rüfer et al. 2005, Gao et al. 2025, McKinney et al. 1991, Yaremchuk, Park et al., EyeWiki, Russell, Kramer and Jones 2017); the withdrawal's (section 3.7, A31); the voice's (Fernald and Mazzie 1991; Albin and Echols 1996, through Soderstrom and Bortfeld's review).
 
 **Sources for the lead's decisions:** the Intel RealSense D400 series datasheet (the D435's imagers, colour camera and projector); Unitree's unitree_sdk2 G1 and Dex3 examples, unitree_rl_gym's G1 configuration, the unitree_hg `MotorState` and the Dex3-1 documentation (to read before birth: C44–C46); and the references cited in A36–A57.
+
+**Sources for the human-pace ledger and the speed plan:**
+- the norms: Galland et al. 2012, Table 2; the WHO Multicentre Growth Reference Study Group 2006, Table II; Zubler et al. 2022 (the CDC's milestones); Gilkerson et al. 2017 (LENA); Jayaraman, Fausey and Smith 2015; and the rest cited in section 12 (those marked † recalled, C62);
+- the speed plan: MuJoCo's and PyTorch's documentation on reproducibility; RunPod's, AWS's and Hetzner's price pages, read on 2026-09-24; Anthropic's API prices (as of 2026-06).
 
 **Documents:** ARCHITECTURE.md, BODY_SPEC.md and ops/review_2026-09-22.md (the defect numbers); `docs/audit/` (the roadmap, the brain systems map, the reality gap, understanding, value, the skeptic's verdicts).
 
@@ -1932,7 +2190,7 @@ This log settles the design's open decisions and edge cases, in three parts:
 - **(B) The owner's calls:** plain questions, each with a recommended default.
 - **(C) Open until measured:** what decides each one, and where it is measured.
 
-Where a decision changes an earlier section, that section points here. W, P, R and S refer to the build plan (section 11). A36–A57 were decided by the lead for the owner, on his bar, under his standing rule to decide rather than ask; the owner may overrule any of them.
+Where a decision changes an earlier section, that section points here. W, P, R and S refer to the build plan (section 11). A36–A57 were decided by the lead for the owner, on his bar, under his standing rule to decide rather than ask; the owner may overrule any of them. A58 and A59, the human-pace ledger and the speed plan, were decided the same way later that evening, on his bar of human learning speed and understanding; B21 asks him about spending.
 
 **What the edge cases were found from:**
 - The all-out world (this morning, the custom child):
@@ -1974,6 +2232,11 @@ Where a decision changes an earlier section, that section points here. W, P, R a
   - 35% of the contacts over F_pain came with every hinge more than 0.2 rad from its range's ends: collision hulls meeting, measured on the per-joint instrument, not the born loop (A54);
   - the colour-twin test's chance could sit near its ceiling (A28, A55);
   - no organ acted below the tick, and a loop added there later would be a new body (A44).
+- The human-pace study (later on the evening of 2026-09-24; `$S/pace/`, reviewed by a skeptic):
+  - the language body's "404 life days of about an hour" was about twice its waking hours (197.5) (A58);
+  - a column of what the ratio would read if the forecasts held turned guesses into headline multiples before any life (A58);
+  - Claude's steering by wall minute tied the teaching's density to the machine's speed and heat (A59);
+  - at a load of 10–15 from other sessions, the eyes' render ran about 4× slower than section 9's figure (section 9).
 
 ### (A) Decided here (ours)
 
@@ -2148,6 +2411,7 @@ Where a decision changes an earlier section, that section points here. W, P, R a
   - introduce more than 1 word a minute or 3 a life day, or a word whose referent the parent cannot show within that minute (the conduct holds all three for any request: `consts.NEW_EVERY`, `NEW_PER_DAY`, and `templates.showable` and `show_now`);
   - say a held-out never-taught pair before its test.
 - **When Claude is silent or fails,** the fast layer runs alone, and the log says so. Rows are logged by tick, so a replay is exact whatever Claude did.
+- **Amended by A59:** "a minute" in this entry is now a steering window of 400 ticks (60 s of sim time). Each row is applied at a fixed tick, so the teaching's density no longer drifts with the machine's speed or heat.
 
 **A15. Sentences and vocabulary growth** (section 4.8)
 - A queue word enters only when its referent or act is in the world and the parent can show it within the minute. Colour words wait for the colour twins (B2). The conduct asks both before every introduction (`templates.showable` against the world's inventory, `templates.show_now` against the moment; P3's second fix), whoever requests it.
@@ -2565,6 +2829,44 @@ A36–A57 were decided by the lead for the owner on the evening of 2026-09-24, o
 - **The steps:** R6c (1 day); R6h +0.75 (the drives, the pattern generator, the cry); R7 +1 (the visual onset, recall into action, the latch); R8 +1 (the live night and its twitches); W1 and W3 reopened; W4's hull share; W5's live night and W5b's richer room; P1b's variants; P3's leak, imperfection, copying and reading; P4's tests; the pixel reader. Core work rises from 9.5 to about 13.25 days, the critical path. Birth moves from about day 13 to about day 17 (range 15–22) with three sessions, about 24 with two, about 41 with one.
 - **The tick:** about 2–15 ms for the additions (the roadmap's +2–7 ms was their lower half) and about 10–15 ms for the colour camera's own view: about 117–190 ms with the sun's shadow. Its upper end is past 150 ms, so the birth checklist's rule stands: at most 150 ms heat-soaked, or the owner chooses between B3's render choices and a slower life.
 
+**A58. The human-pace ledger: infant norms in waking hours, a ruler never a target** (decided for the owner on his bar, "humanoid with our human architecture going in sim training; we need it at learning speed and understanding level of human", as A36–A57 were; section 12; the study in `$S/pace/`, reviewed by a skeptic)
+- **Decided:** each milestone and each never-taught test is reported against an infant's waking hours to the same capacity (section 12's human-pace ledger).
+  - The robot's hours are its waking ticks to the milestone × 0.15 s.
+  - The infant's hours run from birth to the norm's age, from Galland et al. 2012's mean sleep by age, with its sleep limits as the range.
+  - The headline is the waking-hour age A_r, placed in the milestone's own age distribution. The ratio S = H_i / H_r is secondary, and is never printed for M1.
+  - Beside each row go the exposures per waking hour on both sides (words, a face in view, contingent replies, sleep).
+  - A second table counts exposures to criterion, the honest measure of learning speed.
+  - "Understanding level" is answered only by which never-taught tests pass, and at what A_r.
+- **The firewall** (section 12):
+  - frozen before birth with a digest, never re-sourced after it;
+  - every row reported, passes and failures alike;
+  - read by no brief, prompt, test, build step or constant;
+  - the parent's word rate and timings never moved toward a norm.
+  - A low reading can lead only to a change of the learning machinery on general grounds, and after birth that is a new seed (A20). It never leads to a change of the parent, the room, the pace, or a constant chosen to move a row.
+- **Why:**
+  - The bar asks for a human's learning speed and understanding. Wall time depends on the machine, and a life day is the body's own unit. Waking hours match what both sides live awake, with sleep excluded on both: the robot sleeps 1.0 hour per waking hour, an infant 1.55 at 0–2 months and 1.16 at 12.
+  - The laws allow published norms as a reference and forbid a baseline run, so the norms are a ruler: never run, never targeted (section 1).
+  - It maps no month onto a life day inside the body, so A56's refusal of an acuity schedule stands.
+- **Dropped in review:**
+  - a column of what S would read if section 12's forecasts held, which turned guesses into headline multiples of 33–167× before any life;
+  - what S = 1 costs in wall days (it stays in section 9 as life days, with no milestone attached);
+  - a single S for M1;
+  - a words ratio of 1.5–2.4×, since LENA's count includes overheard speech and naps;
+  - a deferred-imitation row and crawling, which no ruler of the body's reads.
+- **Found by it:** the language body lived 197.5 waking hours, not 404: about a three-week-old's (21 days; 14–48 under the sleep limits).
+- **Open:** the recalled rows are read at their sources before the freeze (C62).
+
+**A59. The speed plan: exact levers, the steering keyed to ticks, and the refusals** (decided for the owner in the same way; section 9, B21)
+- **Decided:**
+  - **The exact levers of section 9,** each under its three rules: joins at fixed ticks that block if the work is late, the BLAS thread count pinned per operation, and each lever kept only if the eight digests, the `sim` profile and SimWorld's replay are unchanged. They are built in the core session's free days 15–16.
+  - **The steering keyed to ticks.** The digest is written every 400 ticks, and each row is applied at the digest's tick + 400. The world waits for a late row; a failed row leaves the fast layer alone, logged. This amends 4.5, 4.10 and A14: "a minute" there is now a window of 400 ticks, 60 s of sim time.
+  - **The refusals:** reduced precision (float16, bfloat16, TF32), a longer step or a looser solver, GPU physics, parallel lives, and the lesson lag and the late solve, which would change the body for at most about 20% more speed.
+  - **Off this Mac only under section 9's conditions,** with the machine chosen before birth and birth on it. The spending is the owner's (B21).
+- **Why:**
+  - Lockstep makes speed a matter of wall time only, so nothing the body senses or does may change for it (the laws: one seed, exact determinism, nothing fitted to the environment's pace).
+  - Steering by wall minute let the machine's speed and heat set how dense the teaching was, which tied the environment's pace to the hardware. A row keyed to ticks is the same at any speed, and replays exactly.
+- **What it costs:** a late row costs wall time. Claude's round trip caps the pace at 60/R × real time (R in seconds), measured at P5.
+
 ### (B) The owner's calls, with recommended defaults
 
 The nine decisions of the G1 amendment are settled (section 14). These are the environment's remaining shapes, each with the default the design uses until the owner says otherwise. B4, B14 and B18 were answered by the lead for the owner on 2026-09-24 (A37, A38, A40); he may overrule each.
@@ -2591,6 +2893,7 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | B18 | The real G1 feels touch only in its hands. Should our G1 feel touch (and pain) on its whole body, like a baby's skin, though the robot has no skin there? | **Answered by the lead for the owner (A37):** no. Touch is felt in the Dex3 hands, as on the robot, and contact and pain elsewhere are estimated from the joints' efforts, as a robot's collision detector does (Haddadin et al. 2017). (The first default was yes, with an added skin or the joints' estimate named as the robot's options.) | Pain stays one of its three rewards, read from what the robot can feel; a blow is felt through the joints it loads. The old skin's rates (6–12% of babble ticks, mostly its own housings) are measured again under the joints' law, with the share from hulls meeting (C43, A54). |
 | B19 | A life day is one simulated hour, so the sun crosses the window in an hour, not a day. Keep that? | Yes. A real-length day would make each life day 24 times longer in wall time. | How fast the light changes. |
 | B20 | The real G1's motors hum as they work, and its microphones hear it. Add that sound, growing with each motor's effort? | Yes, if it costs under 1 ms a tick; otherwise no, and we report it. | It hears its own effort; nothing rewards it. |
+| B21 | On this Mac the life runs at about 0.8–1.3× real time (on a quiet, cool machine; sustained speed is unmeasured). So an infant's first year of waking hours, about 3,925 life days, would take about 177–300 days of running around the clock, or 133–228 with our exact levers. A rented Linux machine with a graphics card might run it at 2.2–4.7× (49–106 days), but that is an estimate, unmeasured. May we spend on (1) a one-hour test on such a machine, about $1–2, and then, if it reaches 2.5× or better, (2) renting it for the life? | No spending now. First our exact levers here, and the heat-soaked tick (S5b, C12). Then, only on your yes, one paid hour on a VM or bare-metal graphics machine with a pinned driver (C63). If it reaches 2.5× or better with every digest pinned on its own fingerprint, you choose whether to rent it for the life; Hetzner's GEX44 fits best on paper. Otherwise seed 1 is born here, which costs only wall time. Until you say, birth is on this Mac. | Only how many calendar days the life takes: nothing the body senses or does changes (A59). Costs to 12 months of an infant's waking hours at the estimated 2.2–4.7× (from public price pages read on 2026-09-24; read them again before any spend): (a) Hetzner GEX44 (bare metal: an i5-13500 and an RTX 4000 SFF Ada), €184–234 a month plus setup (the sources differ), billed by the month: 2–4 months, about €370–940. (b) AWS g6 (an L4, a VM): $0.80 an hour for the g6.xlarge, but it has only 2 physical cores, so a larger size is needed: more than $930–2,030. (c) RunPod: an L4 at $0.44–0.49 an hour ($510–1,240), or an RTX 4090, A40 or A6000 at $0.33–0.74 ($380–1,880). Its pods are containers whose host driver can change the pixels mid-life, so only if one host is held for the whole life. (d) AWS mac-m4.metal: $1.23 an hour with a 24-hour minimum. It runs at this Mac's speed but cooled, about $3,900–6,700 at 1.0–1.6×, and it could serve the voice. (e) This Mac: $0. Claude's steering costs the same on every machine: 60 rows a life day, about 235,500 to 12 months. We assume, per row, 2,000 cached brief tokens (the language body's human brief is 7,821 bytes), 1,000 digest tokens, and 300–2,300 output tokens with thinking. At the API's list prices (Opus 5.5: $4 in and $20 out a million tokens, cache reads $0.20; Opus 5: $5, $25 and $0.50) that is about 1–6 cents a row, $0.6–3.8 a life day, and about $2,400–15,000 to 12 months. The tokens per row are measured at P5. Served by a Claude Code session on your plan, it is usage, not a bill. A machine changed after birth splits the exact replay into segments, one per machine (section 9). |
 ### (C) Open until measured
 
 | # | open question | measured in | what decides it |
@@ -2656,3 +2959,5 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | C59 | Hull pain: the share of the joints' pain from contacts with every hinge more than 0.2 rad from its range's ends, on the born loop | W4 | if the hulls carry it, the decomposed collision copy is loaded world-side and pain measured again (A54); the pain law is not changed by it |
 | C60 | The richer room: each new object's holds by a Dex3 hand, its sounds, and the render's cost; the cover lifted by a Dex3 hand | W5b, and before each object joins | written down; an object is never shaped to be easier for the child (the cup's lesson, B1) |
 | C61 | The performance error's route: in the code it is computed on effector 0's symbol and every later effector carries 0; which effector the SimAnatomy numbers 0 (section 3.5 numbers the tract 0; `anatomy_for` makes a language's symbol voice effector 0) | R6h | the error reaches the tract's gate and no other; the token output gets none (A41) |
+| C62 | The human-pace ledger's recalled rows (marked † in section 12): each age read at its source. Among them: whether von Hofsten and Rönnqvist's youngest group closed the hand before touch; canonical babbling's onset range; Muir and Field 1979's newborn orienting; Woodward, Markman and Fitzsimmons 1994's 9 labelings; Saffran, Aslin and Newport 1996's 2 minutes | before birth (P4, with the tests' items) | each row read at its source; a row that cannot be sourced is removed before the freeze, never after; then the ledger is frozen with its digest (A58) |
+| C63 | The tick on a rented graphics machine: the full tick with the three views, EGL's pixels bit-identical on a repeat run, every digest pinned on its own fingerprint | a one-hour paid test, only on the owner's yes (B21) | a mean tick of at most 60 ms (2.5×) with every digest pinned there; otherwise seed 1 is born on this Mac |
