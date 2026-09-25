@@ -775,10 +775,21 @@ FOIL_CANDIDATES = {1: ("dax", "zeb", "fep", "gub", "nef", "gaf", "tam", "koob", 
                        "tepa", "gobi", "fema")}
 # never-told foil words for the "where" form's level-2 control (the lead's decision A60b, the skeptic's design in
 # docs/audit/first2_word_clause.md): one and two written syllables (the tested nouns': ball, bear, block, car, cup, drum, ring;
-# bottle, rattle, tower), each beyond edit distance 1 of every one of her 128 words, the name and its foils (ours)
+# bottle, rattle, tower), each beyond edit distance 1 of every one of her 128 words, the name and its foils (ours); since the
+# lead's decision after 67741fd one foil a tested noun (consts.NOUN_FOILS), heard as often as its noun
 
 
-def trial_foils(cache, write=False, per=3):
+def _edit(a, b):
+    """the edit distance between two words (insertions, deletions, substitutions)."""
+    d = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        prev, d[0] = d[0], i
+        for j, cb in enumerate(b, 1):
+            prev, d[j] = d[j], min(d[j] + 1, d[j - 1] + 1, prev + (ca != cb))
+    return d[-1]
+
+
+def trial_foils(cache, write=False, per=None):
     """A60b's second level (the lead's decision after 200e57a): its control is a never-told foil word F in the same carrier
     phrase ("where is the F? see?"), matched in syllables and stress to the noun it stands against, in the same voice and
     register, drawn by her trial stream. Each candidate (FOIL_CANDIDATES, by syllables) is said at every step of the engine's
@@ -786,9 +797,10 @@ def trial_foils(cache, write=False, per=3):
     contour, its carrier phrase and its one loudest 10 ms: nothing of the table's words changes); on the form's timeline, at the
     step nearest its natural rate and the pitch matching its contour to the form's (TRIAL_F0: the stress's pitch), spliced onto
     the form's carrier phrase at the form's level (its gain), one timeline with the form's words (stimuli.same), under the level
-    ceiling at the clip (TRIAL_CEILING_DB) and at the child's ears (TRIAL_CEILING_EAR_DB, EAR_GEOS): a foil; the first `per` of
-    each syllable count kept (their order in FOIL_CANDIDATES). Writes them into the table's "where" form, "foils" (and
-    "foils_unmatched", with why), the rest of the table byte for byte as it was."""
+    ceiling at the clip (TRIAL_CEILING_DB) and at the child's ears (TRIAL_CEILING_EAR_DB, EAR_GEOS): a foil; of each syllable
+    count as many kept as the form tests nouns of it (one foil a tested noun, consts.NOUN_FOILS: the lead's decision after
+    67741fd; `per` overrides), in their order in FOIL_CANDIDATES, none within edit distance 1 of another kept. Writes them into
+    the table's "where" form, "foils" (and "foils_unmatched", with why), the rest of the table byte for byte as it was."""
     from body.sim.lang import consts as K                                   # noqa: PLC0415
     from body.sim.lang import stimuli as ST                                 # noqa: PLC0415
     t0 = time.perf_counter()
@@ -814,11 +826,15 @@ def trial_foils(cache, write=False, per=3):
     rms_n = np.median([float(np.sqrt(np.mean(render(w, v["rate"], v["pitch"]).pcm[
         slice(*render(w, v["rate"], v["pitch"]).words[slot][1:])].astype(np.float64) ** 2))) for w, v in f["words"].items()])
     rec, unmatched = {}, {}
+    need = {syl: sum(1 for w in f["words"] if K.NOUN_SYLLABLES.get(w) == syl) for syl in FOIL_CANDIDATES}
     for syl, cands in sorted(FOIL_CANDIDATES.items()):
         kept = 0
         for w in cands:
-            if kept >= per:
+            if kept >= (per if per is not None else need[syl]):
                 break
+            if any(_edit(w, x) < 2 for x in rec):
+                unmatched[w] = f"within edit distance 1 of the foil {min(rec, key=lambda x: _edit(w, x))!r}"
+                continue
             on = [r for r in reps if json.loads(json.dumps(ST.timeline((c := render(w, r, nat_p)).words, len(c.pcm), c.pcm,
                                                                                 slot=slot, pre=False), sort_keys=True))
                   == tl_ref]
@@ -877,8 +893,9 @@ def trial_foils(cache, write=False, per=3):
             d = json.load(fh)
         d["forms"]["where"]["foils"] = dict(sorted(rec.items()))
         d["forms"]["where"]["foils_unmatched"] = dict(sorted(unmatched.items()))
-        d["meta"]["foils"] = ("the \"where\" form's never-told foil words (A60b's second level, its control): each on the form's "
-                              "timeline, at the step of the engine's per-word rate nearest its natural one and the pitch "
+        d["meta"]["foils"] = ("the \"where\" form's never-told foil words (A60b's second level, its control; one a tested noun, "
+                              "consts.NOUN_FOILS): each on the form's timeline, at the step of the engine's per-word rate "
+                              "nearest its natural one and the pitch "
                               "matching its contour to the form's (TRIAL_F0), spliced onto the form's carrier phrase at the "
                               "form's one loudest 10 ms (its gain), one timeline with the form's words and under the level "
                               "ceiling at the clip and the child's ears; syllables as written (tools/sim_voice_check.py "

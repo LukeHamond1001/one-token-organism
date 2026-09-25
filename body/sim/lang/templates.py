@@ -685,13 +685,26 @@ def foil_line(foil):
     """a trial's foil (4.8, 12): the name test's, "hi. <foil>. hi." (the name's frame, trial_name; Mandel, Jusczyk and Pisoni
     1995) for a foil in consts.NAME_FOILS, a name she never uses for it or for anything, said in its name's register and
     stillness; an exemplar trial's, "where is the <foil>? see?" (trial_where's frame; A60b's level 2, the skeptic's design) for
-    a foil in consts.WORD_FOILS, a word she never tells, said as the form's words are. The only lines she says that are not of
-    her words (the line check's vocabulary): refused for anything else, and never Claude's."""
+    a foil in consts.NOUN_FOILS, a word she never tells, said as the form's words are. With her chatter's (foil_chatter) the
+    only lines she says that are not of her words (the line check's vocabulary): refused for anything else, and never
+    Claude's."""
     if foil in K.NAME_FOILS:
         return FRAMES["trial_name"][0][0].replace("{n}", foil)
-    if any(foil in fs for fs in K.WORD_FOILS.values()):
+    if foil in K.NOUN_FOILS.values():
         return FRAMES["trial_where"][0][0].replace("{o}", foil)
-    raise ValueError(f"not a foil: {foil!r} (consts.NAME_FOILS, consts.WORD_FOILS)")
+    raise ValueError(f"not a foil: {foil!r} (consts.NAME_FOILS, consts.NOUN_FOILS)")
+
+
+FOIL_CHATTER = F("oh. {f}.", "{f}")     # her chatter's foil line (A60b 12, consts.FOIL_EXPOSURE): no label, no object, no act
+
+
+def foil_chatter(foil):
+    """her non-teaching chatter carrying a registered noun's never-told foil (the lead's decision after 67741fd: the foil heard
+    as often as its noun): "oh. <foil>." (FOIL_CHATTER), a sound of hers with no referent, never a label, no act, no object
+    named; never in FRAMES, so no template, set or request makes it; refused for anything but a noun's foil."""
+    if foil not in K.NOUN_FOILS.values():
+        raise ValueError(f"not a noun's foil: {foil!r} (consts.NOUN_FOILS)")
+    return FOIL_CHATTER[0].replace("{f}", foil)
 
 
 def frames_for(intent):

@@ -143,11 +143,12 @@ UNDERSTOOD_P = 0.01                   # understood (4.8, the lead's decision A60
                                       # to its thing when its word was said against the same thing's when the other word was
                                       # (the foil condition), one-sided p < 0.01 by a permutation test over the draw labels
                                       # (ledger.perm_test; the name: its face's share of the window after its name against after
-                                      # a foil; level 2, its new exemplar's share after its word against after a never-told
-                                      # foil). A life re-tests a word as its trials come, so the 0.01 is a life's, spent over
-                                      # its tests (ours, C64's "alpha spent over the looks"): its j-th test at UNDERSTOOD_P / 2^j
-                                      # (0.005, 0.0025, ...), whose sum is 0.01, so a child whose looking does not depend on the
-                                      # word said reaches "understood" in at most 1 life in 100, however long it lives
+                                      # a foil; level 2, its new exemplar's share after its word against after its never-told
+                                      # foil, from its block's 24th trial: KIND_FIRST). A life re-tests a word as its trials
+                                      # come, so the 0.01 is a life's, spent over its tests (ours, C64's "alpha spent over the
+                                      # looks"): its j-th test at UNDERSTOOD_P / 2^j (0.005, 0.0025, ...), whose sum is 0.01,
+                                      # so a child whose looking does not depend on the word said reaches "understood" in at
+                                      # most 1 life in 100, however long it lives
 UNDERSTOOD_FIRST = 12                 # its first test at its 12th registered trial, each next at twice as many (24, 48, 96, ...),
                                       # over all its registered trials so far; a test is taken only when its level is reachable,
                                       # a perfect separation's p (1 / C(n, k), k of n trials naming it) under it: at 12 trials and
@@ -156,31 +157,50 @@ UNDERSTOOD_FIRST = 12                 # its first test at its 12th registered tr
 KIND_DISTRACTORS = 2                  # two levels (the lead's decision A60b): the test above over its record is level 1, "maps"
                                       # (its word to the trained thing); "understood", level 2, for an object noun, is the same
                                       # test passed also in its new-exemplar block, a separate registered block of "exemplar"
-                                      # trials, each a new exemplar of its kind never named before the probe (A28's first 3
-                                      # presentations, A53's calendar: at least 4 exemplars a tested noun, so its 12 trials are
-                                      # reachable) set down beside KIND_DISTRACTORS = 2 things of two other words, its word said
-                                      # or a never-told foil (WORD_FOILS: the control, the lead's decision after 200e57a, the
-                                      # skeptic's design, so a child that knows only the other words, turning from what it can
-                                      # name at any word it cannot, passes no word by exclusion), its new exemplar's share of the
-                                      # looking at the three after its word against after a foil, tested as the record is, its
-                                      # levels spent the same way (the lead's; Waxman and Booth 2001, category labels): a child
-                                      # keyed to one particular thing passes level 1 and fails level 2, a knower of the kind
-                                      # passes both
-WORD_FOILS = {1: ("zeb", "fep", "gub"), 2: ("tuma", "modi", "zibo")}
-                                      # level 2's never-told foils by written syllables (the tested nouns': ball, bear, block,
-                                      # car, cup, drum, ring; bottle, rattle, tower), drawn by her trial stream, said in the
-                                      # "where" form's carrier phrase as its words are ("where is the zeb? see?"): the skeptic's
-                                      # design (docs/audit/first2_word_clause.md: "F never told, matched in syllables and stress,
-                                      # same voice and register"); each beyond edit distance 1 of her 128 words, the name and
-                                      # its foils, and measured in her voice on the form's timeline and contour (the stress's
+                                      # trials, each a new exemplar of its kind never named before the probe and fresh (A28's
+                                      # first 3 presentations) set down beside KIND_DISTRACTORS = 2 new exemplars of two other
+                                      # kinds as new as it (never named, fresh, presented as often: the lead's decision after
+                                      # 67741fd, the conduct's to draw and enforce), its word said or its never-told foil
+                                      # (NOUN_FOILS: the control, the lead's decision after 200e57a, the skeptic's design, so a
+                                      # child that knows only the other words passes no word by exclusion), its new exemplar's
+                                      # share of the looking at the three after its word against after its foil, its levels
+                                      # spent as the record's from its block's KIND_FIRST-th trial (the lead's; Waxman and Booth
+                                      # 2001, category labels): a child keyed to one particular thing passes level 1 and fails
+                                      # level 2, a knower of the kind passes both
+KIND_FIRST = 24                       # level 2's block is 24 registered trials (the lead's decision after 67741fd, for power: a
+                                      # foil's control is chance among the three things, not a known word's zero): its first test
+                                      # at its 24th registered trial at 0.005, then 48 at 0.0025, ... (0.01 a life, as level 1's);
+                                      # 8 exemplars at 3 fresh presentations each (A53: at least 8 a tested noun), a void's
+                                      # presentation spent, so the conduct draws a further exemplar when one is needed
+NOUN_FOILS = {"ball": "zeb", "bear": "fep", "block": "gub", "bottle": "tuma", "car": "tam", "cup": "tuv", "drum": "koob",
+              "rattle": "modi", "ring": "kem", "tower": "zibo"}
+                                      # level 2's never-told foils, one a tested noun (the lead's decision after 67741fd: its
+                                      # foil heard as often as it, FOIL_EXPOSURE), said in the "where" form's carrier phrase as
+                                      # its words are ("where is the tuv? see?"): the skeptic's design
+                                      # (docs/audit/first2_word_clause.md: "F never told, matched in syllables and stress, same
+                                      # voice and register"); each beyond edit distance 1 of her 128 words, the name, its foils
+                                      # and one another, measured in her voice on the form's timeline and contour (the stress's
                                       # pitch within TRIAL_F0), at the form's one loudest 10 ms under the level ceiling
-                                      # (tools/sim_voice_check.py --trial-foils: margins 1.26-1.53 dB at the clip, 1.12-1.58
-                                      # at the child's ears); "dax" left, its final stop's release between loud and silent
+                                      # (tools/sim_voice_check.py --trial-foils: margins 1.26-1.53 dB at the clip, 1.04-1.58 at
+                                      # the child's ears; "dax", "nef", "gaf" and "dap" left, no step of the engine's rate
+                                      # putting them on the timeline); each noun its own, the first of its written syllables in
+                                      # the measured order (zeb, fep, gub, tam, koob, kem, tuv; tuma, modi, zibo) whose first and
+                                      # last sounds differ from the noun's (c, k and q one sound), each foil once (ours)
 NOUN_SYLLABLES = {"ball": 1, "bear": 1, "block": 1, "book": 1, "bottle": 2, "box": 1, "car": 1, "cup": 1, "drum": 1, "duck": 1,
                   "rattle": 2, "ring": 1, "stacker": 2, "tower": 2}
                                       # the object nouns' written syllables (templates.OBJECT_NOUNS; ours): each tested noun's
-                                      # foils are WORD_FOILS' of its count, its stress on the first (the two-syllable nouns and
-                                      # foils trochees, as the form's contour, TRIAL_F0, holds them)
+                                      # foil is of its count, its stress on the first (the two-syllable nouns and foils
+                                      # trochees, as the form's contour, TRIAL_F0, holds them)
+FOIL_EXPOSURE = (0.1, 2)              # EXPOSURE-MATCHED FOILS (the lead's decision after 67741fd; ours, disclosed: the standard
+                                      # studies use novel foils, ours are matched-exposure nonwords): her non-teaching chatter
+                                      # carries each registered noun's foil at its noun's running rate, so before and through its
+                                      # level-2 block the child has heard the foil about as often as the noun (a child that turns
+                                      # from what it can name only at a word heard often enough meets the same familiarity at
+                                      # both); an exemplar probe runs only while its foil's hearings are at least its noun's less
+                                      # 10% of them or 2, whichever more (ours), each trial logging both counts
+FOIL_CHATTER_GAP = 20                 # her chatter's foil lines ("oh. tuv.": never a label, no act, no object named, said only
+                                      # while the child's head line is on no thing and its hands hold none, as she reads it) at
+                                      # most one a 20 ticks (3 s; ours), and each line at most once a SAME_LINE, as any
 PERM_EXACT_N = 36                     # the permutation test's p exact (every relabeling counted, two halves of the trials each
                                       # enumerated: meet in the middle) up to 36 trials; past them PERM_DRAWS relabelings drawn
 PERM_DRAWS = 20000                    # from the stream PERM_SEED, p = (1 + those at least as far) / (draws + 1), a valid p at any
@@ -202,12 +222,13 @@ EXACT_UNTIL = 3                       # an approximation earns a recast and a sm
 # nothing ("understood", "says" or any milestone).
 TRIAL_STREAM = 6                      # her trials' random stream of the body's seed (ours; world 1, tract 2, her lines 3, her
                                       # reading 4, her imperfection 5): which of the two things is named, the sides, name or foil
-                                      # (an exemplar trial: its word or a foil, the three things' order, which foil)
+                                      # (an exemplar trial: its word or its foil, the three things' order; its third unused)
 TRIAL_FORMS = {                       # the design's never-taught forms (section 12, A28, A55), each said as one test sentence
     "place": "a known word's thing seen in a place within its view it has never been seen in, or from a new angle, beside "
              "another known thing: 'where is the X?' (M6(a))",
-    "exemplar": "a new exemplar of X, never named before the probe, set down beside two things of two other words, and 'where "
-                "is the X?' or 'where is the F?', F a never-told foil (M6; Quinn, Eimas and Rosenkrantz 1993; A60b's level 2)",
+    "exemplar": "a new exemplar of X, never named before the probe, set down beside new exemplars of two other kinds as new as "
+                "it, and 'where is the X?' or 'where is the F?', F its never-told foil heard as often as X (M6; Quinn, Eimas and "
+                "Rosenkrantz 1993; A60b's level 2)",
     "combination": "known words in a combination never heard, the colour twin beside its original: 'where is the C X?' (M6(b), "
                    "A28, A55); run only once both its words are understood alone (A28)",
     "name": "its name or a foil name, same voice, same stillness, no things (Mandel, Jusczyk and Pisoni 1995)",
