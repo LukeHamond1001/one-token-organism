@@ -358,6 +358,8 @@ class FramesMixin:
                 self._frame_write(key, total, base * (1.0 + float(tag_w)), base=base, tag_w=tag_w)
         self._record_tick(s if s is not None else 0.0, delta, tag, r)
         self._frame_foresee()
+        if self._night_frames_on():
+            self._tape_tick()                                         # step R8: the tick taped beside its record (body/core/sleep.py)
 
     def _frames_nightfall(self):
         """THE NIGHT ENDS EVERY EVENT (the module's doc; called as the night begins): an event still open ends at nightfall"""

@@ -55,7 +55,9 @@ from .physiology import PHYSIOLOGY
 # world's hands); the feelings' wall clock (never read)
 DAY_NOT = frozenset({"m", "store", "gen", "cfg", "save_path", "anatomy", "world", "motor", "dev", "asleep", "_t_feel", "queue", "queue_who",
                      "sil", "nl", "space_id", "eot", "end_id", "reserved", "bans", "_differential", "_fh_n", "_vc_idx", "_vc_delta",
-                     "_vf_delta"})
+                     "_vf_delta",
+                     "_reels", "_episodes", "_ep_mean", "_ep_serial"})   # step R8: the episodes are the body's memory across nights, saved in its
+                                                                         # life (life["episodes"]) as the utterances heard are, never in a day
 # each motor effector's keys life["motor"] keeps in its own form (its rules for older saves stay theirs), and its pattern generator's
 # cache of its cycle (found again from birth): not in the day
 DAY_MOTOR_NOT = frozenset({"inv_conf", "inv_kappa", "inv_gain", "inv_n", "perf", "fatigue", "inv_ch", "inv_batch", "spg_cyc"})
@@ -88,6 +90,10 @@ class PersistenceMixin:
                          "pace": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pq.items()}, "pace_day": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pace_day.items()}}}
         if int(self.cfg.get("tag_trace", 0)):                         # defect 7 (tag_trace, R7c): the felt entries' running mean saved (a key only
             blob["life"]["utt_felt"] = {"m": float(getattr(self, "_utt_felt_m", 0.0)), "n": int(getattr(self, "_utt_felt_n", 0))}   # under the switch)
+        if hasattr(self, "_episodes"):                                # step R8: the episodes, their reels, the entries' running mean (saved and
+            blob["life"]["episodes"] = {"reels": list(self._reels or []), "episodes": [dict(ep) for ep in self._episodes],   # bias-corrected:
+                                        "mean": [float(self._ep_mean[0]), int(self._ep_mean[1])],                           # defect 7's fix)
+                                        "serial": int(getattr(self, "_ep_serial", 0))}                                      # and the serials
         if len(self.anatomy.effectors) > 1:                         # the later effectors' act_inv reliability (step R6); the diary's save has no such key
             # (act_pred's and the correction's plain step has no state since R6 fix 7: nothing of opt_pred is saved; R6 fix 5 and 6
             # saved their Adam's moments here, "moments"; the day's Adam and the others were born again at every load, as they always
@@ -326,6 +332,8 @@ class PersistenceMixin:
                       f"not read, act_pred steps plainly since R6 fix 7 (no state)", flush=True)
         if isinstance(L.get("utt_felt"), dict) and int(life.cfg.get("tag_trace", 0)):   # defect 7 (tag_trace, R7c): the felt entries' mean
             life._utt_felt_m = float(L["utt_felt"].get("m", 0.0)); life._utt_felt_n = int(L["utt_felt"].get("n", 0))
+        if isinstance(L.get("episodes"), dict):                        # step R8: the episodes kept across nights (body/core/sleep.py)
+            life._episodes_back(L["episodes"])
         if L.get("store_after_night") is not None:
             life._store_after_night = int(L["store_after_night"])
         elif isinstance(L.get("last_night"), dict) and L["last_night"].get("store_slots") is not None:

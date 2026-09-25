@@ -248,6 +248,8 @@ class NightMixin:
         if self._amyg_on():
             self._amyg_nightfall()                                    # the amygdala's pending forecasts finalized (step R7d, body/core/amygdala.py)
         try:
+            if self._night_frames_on():
+                self._episodes_nightfall(rep)                         # step R8: the day's tape cut into episodes (body/core/sleep.py)
             # SLEEP NEED SCALES WITH THE DAY'S PLASTICITY (night_load, 0 = off; 2026-09-11, nights 114-115): with the parent talking
             # twice as much, the day wrote twice the memories and the night, dreaming its fixed 48 starts, consolidated less far (the
             # gauge after it 0.88 -> 0.71, the loss ending 0.09 -> 0.18). Slow-wave activity in a brain grows with the plasticity of
@@ -408,6 +410,9 @@ class NightMixin:
             self._gap_foreseen = False; self._gap_paused = False; self._sh_done = True     # the gap's labels cleared, the trackers kept (the partner is the same)
             self._ear_held = False; self._ready_E = None; self._pred_ready = None; self._d_max = 0.0
             self._bands_prev = None; self._C_last = None; self.v_prev = None
+            if self._night_frames_on():
+                self._episodes_fade(rep)                           # step R8: the episodes fade, the weakest give way past the cap (sleep.py)
+                self._tape_nightfall_reset()                       # and the day's tape is let go
             if self._frames_on():
                 self._frames_night()                               # step R7b: the frames' working state wakes fresh (body/core/frames.py)
             if int(self.cfg.get("tag_trace", 0)):

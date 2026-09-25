@@ -31,6 +31,10 @@ amygdala.py     step R7d: the amygdala, the valence tagger, an organ (Amygdala, 
                 after the critics and the face organ, before the choice); built only under the switch `amyg` (physiology.py's AMYG), which
                 the diary's cfg does not hold; the night's side of it (tag*, the entries, the tagged first, act_pred's night weight) is R8's
                 to wire
+sleep.py        step R8: the night over frames (the switch `night_frames`, physiology.py's SLEEP, which the diary's cfg does not hold): each
+                awake tick's frame taped as the cortex received it beside its record; at nightfall the day cut into episodes at the
+                frames' event ends, their entries, T_e and windows at the peak tag from the tag reaching back over the day's record; the
+                episodes kept across nights, fading as the store does, the weakest giving way past the episodes' cap
 anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
                 8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
                 `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward

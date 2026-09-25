@@ -36,7 +36,10 @@ class SensesMixin:
         f_ = self.anatomy.words.field                                  # the words' window field (the diary's "x"; step R4)
         for w in reversed(self.win):
             if w[f_] != self.sil:
-                w["end"] = True; break
+                w["end"] = True
+                if "tape" in w:
+                    self._tape_mark_end(int(w["tape"]))              # step R8: the end kept on the day's tape too (body/core/sleep.py)
+                break
         if self._last_write is not None and not self.cfg.get("store_off"):
             self.store.mark_boundary(*self._last_write)                # the memory of the last symbol carries the boundary
         self._prev_slot = -1                                           # the utterance ended: the next symbol begins a new chain

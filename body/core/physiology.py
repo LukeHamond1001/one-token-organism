@@ -4,7 +4,8 @@ grouped by organ; `SWITCHES`, the core refactor's defect-fix switches, declared 
 effector among them), absent from a body's cfg unless given; `CEREB`, the cerebellum's switch and constants (step R6c), absent likewise;
 `REFLEX`, the born patterns summed at the cord and the born biases (step R6h: the spinal pattern generator, the born cry, orienting,
 the VOR), absent likewise; `FRAMES`, the body in frames (step R7: the frame writes, the event ends, the tick's record), absent
-likewise; and `AMYG`, the amygdala's switch and constants (step R7d), absent likewise. body/life.py re-exports PHYSIOLOGY
+likewise; `AMYG`, the amygdala's switch and constants (step R7d), absent likewise; and `SLEEP`, the night over frames and the live,
+dark night (step R8: the tape, the episodes, the twitches), absent likewise. body/life.py re-exports PHYSIOLOGY
 (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
 prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
 
@@ -527,4 +528,57 @@ AMYG = dict(
     amyg_pav=0,
     amyg_pav_beta=1.0,
     amyg_pav_clip=2.0,
+)
+
+# THE NIGHT OVER FRAMES AND THE LIVE, DARK NIGHT (the core refactor's step R8, docs/SIM_DESIGN.md 3.6, 3.7, 5.4, 7.3, 7.4 item 2, 8's R8
+# row, 9, 10; A46; body/core/sleep.py): each a switch or a constant ABSENT FROM A BODY'S CFG unless given (`cfg.get(name, SLEEP[name])`),
+# so the language body, which lives on the page alone, gains no key, runs none of it and keeps its pinned digests. The sim is born with
+# both switches on (SIM_DESIGN.md 10's switches at birth; body/sim/anatomy.py SIM_CFG). The night's length is PHYSIOLOGY's night_ticks
+# (the night takes time: the critics discount across it, and a live night steps the world that many ticks); the entries fade as the
+# store fades (store_fade); the night's passes keep PHYSIOLOGY's night_* and rem_* constants
+SLEEP = dict(
+    # STEP R8, THE NIGHT OVER FRAMES (7.4 item 2, 8's R8 row, 9's tape): 1 = each awake tick's frame as the cortex received it (every
+    # channel's numbers at fp16, the words' symbol and whether the offset ended an utterance there, the voice's symbol and every motor
+    # effector's act) is taped beside the tick's record (R7b's); at nightfall the day's tape is cut into episodes at the frames' event
+    # ends, each episode's entry [its mean surprise x (1 + |dopamine|)] x (1 + T_e) over the bias-corrected running mean of entry_tau
+    # entries, T_e the largest tag* over it (the tag reaching back, over the day's record); the night draws every episode of the day with
+    # T_e >= 1 once, highest first, at most half the night, then the rest by entry; each dream is the episode's window of the cortex's
+    # length ending at its peak tag (at its end below peak_floor), replayed as per-channel batches (every channel's forecast, the forward
+    # half and act_inv at weight 1; every effector's acts as efference copies and act_pred's targets, act_pred's weighted clip(1 + G, 0,
+    # 1) by the replayed dopamine's credit and stepped by its own plain step, never the night's Adam); REM on frames; the episodes kept
+    # across nights, fading as the store does, the weakest giving way past episode_cap. Needs `frames`. 0 = off
+    night_frames=0,
+    # THE EPISODES' CAP, in ticks of tape (section 10's "episode cap"; 9's tape "inside the episodes (cap 24,000 ticks)"): the kept
+    # episodes' windows hold at most this many distinct ticks of tape (about 184 MB at the G1's 3,834 numbers a tick in fp16); past it
+    # the weakest episode (the lowest entry; of equals the oldest) gives way, as the store's weakest slot does. A life day's ticks; ours
+    episode_cap=24000,
+    # THE ENTRIES' RUNNING MEAN, its horizon in episodes (7.4 item 2: "over a running mean of 64 episodes (saved and bias-corrected:
+    # defect 7's fix)"); ours (the utterances' felt entry's, utt_entry_tau 64)
+    entry_tau=64,
+    # THE WINDOW'S FLOOR (7.4 item 2: "An episode whose tag never reaches 0.1 is dreamt to its end"): an episode whose T_e is below it is
+    # dreamt in the window ending at its last tick, else in the window ending at its peak tag; ours (the design's)
+    peak_floor=0.1,
+    # STEP R8, THE TWITCHES OF ACTIVE SLEEP IN THE LIVE, DARK NIGHT (3.7, 5.4, A46): 1 = when its world runs through the night (the
+    # sim's: World.live_night) the night steps it dark for night_ticks ticks, every effector at rest, and in active sleep the born twitch
+    # generator moves one joint at a time one small step (its sign drawn; the joint among every joint of the effectors that declare
+    # `twitch`: the G1's waist, arms, hands and legs, never the tract or the gaze), a function of the body's seed and the night alone;
+    # each twitch's pair (the body sense before and after, the act) teaches act_inv (its reliability updated first, the twitch's chance
+    # the generator's own law) and the forward half, and the cerebellum learns below the tick wherever the world runs. A world that
+    # does not run through the night pauses as the diary's does, and nothing twitches. Needs `night_frames`. 0 = off
+    twitch=0,
+    # THE TWITCHES' RATE, per tick of active sleep: about 10 a minute (Sokoloff, Hickerson, Wen, Tobias, McMurray and Blumberg 2020, Dev
+    # Psychobiol 62:697-710, Figure 5a: twitches per minute of active sleep across all body segments; the sessions of infants under two
+    # months lie at about 6 to 21, near 10 at their middle; the paper tabulates no single rate, so this is the figure read, C52), at 400
+    # ticks of 0.15 s a minute: 10 / 400. Each tick of active sleep twitches with this probability, independently (the source's bursts,
+    # about half its intervals under 1-2 s, and its hands' and feet's larger share are not reproduced: written down, C52); ours as read
+    twitch_rate=10.0 / 400.0,
+    # THE SLEEP CYCLE, in ticks (5.4: "Its REM phases, about half of it"): 47 minutes, the mean sleep cycle of healthy term infants (Stern,
+    # Parmelee, Akiyama, Schultz and Wenner 1969, Pediatrics 43:65-70; as quoted in the review Promoting and Protecting Infant Sleep, Adv
+    # Neonatal Care 2012; the primary read at C52), 47 x 400 = 18,800 ticks of 0.15 s. Each cycle begins in active sleep (the newborn's
+    # sleep begins in active sleep; the changeover to quiet sleep at its beginning comes later in the first year: Tarullo, Balsam and
+    # Fifer 2011, Inf Child Dev 20:35-46, citing Fagioli and Salzarulo 1982 and Hoppenbrouwers et al. 1982) and spends sleep_active of it
+    # there: half (Roffwarg, Muzio and Dement 1966; "over half" in Anders et al. 1995), then quiet sleep. A night of 24,000 ticks is then
+    # active sleep on its first 9,400 ticks and its last 5,200: 0.61 of it; ours as read
+    sleep_cycle=47.0 * 400.0,
+    sleep_active=0.5,
 )

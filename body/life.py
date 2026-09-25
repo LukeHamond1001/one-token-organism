@@ -50,7 +50,7 @@ import torch
 import torch.nn.functional as F  # noqa: F401
 
 from .model import Organs, Store, FastStore  # noqa: F401  (Organs and Store: the names body.life always offered)
-from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR, CEREB, REFLEX, FRAMES, AMYG
+from .core.physiology import PHYSIOLOGY, SWITCHES, MOTOR, CEREB, REFLEX, FRAMES, AMYG, SLEEP
 from .core.anatomy import anatomy_for
 from .core.world import World, DiaryWorld, Acts
 from .core.cerebellum import CerebellumMixin
@@ -67,16 +67,17 @@ from .core.timing import TimingMixin, GatedDescent
 from .core.cord import CordMixin
 from .core.frames import FramesMixin
 from .core.amygdala import AmygdalaMixin
+from .core.sleep import SleepMixin
 
 # `from body.life import *` gives exactly the names it gave before the split (the mixins stay reachable as attributes)
 __all__ = ["collections", "math", "os", "time", "torch", "F", "Organs", "Store", "FastStore", "PHYSIOLOGY", "Life"]
 
 
 class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, ActorMixin, NightMixin, PersistenceMixin, InstrumentsMixin, TimingMixin,
-           CerebellumMixin, CordMixin, FramesMixin, AmygdalaMixin):
+           CerebellumMixin, CordMixin, FramesMixin, AmygdalaMixin, SleepMixin):
     def __init__(self, organs, tok, cfg=None, device="cpu", seed=0, save_path=None, world=None):
         unknown = sorted(k_ for k_ in (cfg or {}) if k_ not in PHYSIOLOGY and k_ not in SWITCHES and k_ not in MOTOR and k_ not in CEREB and k_ not in REFLEX
-                         and k_ not in FRAMES and k_ not in AMYG)   # the switches, the motor's, the cerebellum's, (R6h) the born patterns', (R7) the frames' and (R7d) the amygdala's constants are known, absent unless given
+                         and k_ not in FRAMES and k_ not in AMYG and k_ not in SLEEP)   # the switches, the motor's, the cerebellum's, (R6h) the born patterns', (R7) the frames', (R7d) the amygdala's and (R8) the night's constants are known, absent unless given
         if unknown:
             print("physiology: unknown keys (ignored):", unknown, flush=True)     # review 2026-09-06: a typo was a silent no-op for 21 days
         self.m = organs.to(device); self.m.eval()
@@ -333,6 +334,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         if self._recall_on() or "recall" in self.m._modules:
             self._recall_attach()
         self._frames_check()                             # step R7: err_scale and wm_frames need the frames (body/core/frames.py)
+        self._sleep_check()                              # step R8: the night over frames needs the frames (body/core/sleep.py)
         self.stream = collections.deque(maxlen=96)       # (id, who)
         self.last = {}
         self.credit = collections.deque(maxlen=64)

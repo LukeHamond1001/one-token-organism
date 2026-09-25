@@ -416,4 +416,8 @@ SIM_CFG = dict(
     # its codes and every effector's efference copy, each motor effector's map from the recalled act born at zero; and working memory
     # latching at the frames' event ends in place of the utterances' (wm_frames)
     recall=1, wm_frames=1,
+    # STEP R8: THE NIGHT OVER FRAMES (SIM_DESIGN.md 7.4 item 2, 8's R8 row, 9's tape; body/core/sleep.py; physiology.py SLEEP): each awake
+    # tick taped beside its record, the day cut into episodes at nightfall at the frames' event ends, their entries and windows from the
+    # tag reaching back over the day's record, kept across nights up to the episodes' cap
+    night_frames=1,
 )

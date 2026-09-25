@@ -63,8 +63,9 @@ import torch
 from .physiology import PHYSIOLOGY
 
 KINDS = ("symbol", "vector")
-CORE_FIELDS = ("xo", "bundle", "read", "r", "end", "frec")   # the keys the core writes into a window position beside the channels' own fields
-                                                                 # ("frec": the tick's recall into action, step R7f)
+CORE_FIELDS = ("xo", "bundle", "read", "r", "end", "frec", "tape")   # the keys the core writes into a window position beside the channels' own
+                                                                         # fields ("frec": the tick's recall into action, step R7f; "tape": the
+                                                                         # position's row of the day's tape, step R8)
 
 
 @dataclass(eq=False)

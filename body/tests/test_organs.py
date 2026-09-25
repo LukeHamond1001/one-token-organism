@@ -2351,6 +2351,8 @@ if __name__ == "__main__":
     tests += FRAME_TESTS
     from body.tests.test_amygdala import AMYG_TESTS       # the amygdala (docs/SIM_DESIGN.md 7.4; the core refactor, step R7d)
     tests += AMYG_TESTS
+    from body.tests.test_night import NIGHT_TESTS         # the night over frames and the live, dark night (docs/SIM_DESIGN.md 7.4, 5.4; step R8)
+    tests += NIGHT_TESTS
     failed = 0
     for t in tests:
         try:

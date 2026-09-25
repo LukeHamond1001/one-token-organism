@@ -788,14 +788,14 @@ def test_the_latch_on_event_ends():
     # the switches that read the frames are refused without them (a silent no-op otherwise; wm_frames would silence the utterances' latch)
     refused = []
     for k in ("err_scale", "wm_frames"):
-        c = dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0); c[k] = 1
+        c = dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0, night_frames=0); c[k] = 1   # (R8's night reads them too)
         try:
             _g1(c, _g1_events_world())
         except ValueError as ex:
             assert k in str(ex) and "frames 1" in str(ex), str(ex)
             refused.append(k)
     assert refused == ["err_scale", "wm_frames"], refused
-    L0 = _g1(dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0), _g1_events_world())   # with both off it is born
+    L0 = _g1(dict(SIM_CFG, frames=0, recall=0, err_scale=0, wm_frames=0, amyg=0, night_frames=0), _g1_events_world())   # with both off it is born
     assert not L0._frames_on()
     print(f"frames 6: under wm_frames working memory latched at the {len(ends1)} frame event ends and at none of the {len(offs1)} utterance",
           f"ends; without it at the {len(offs0)} utterance ends and at none of the frames'; err_scale and wm_frames refused without frames")
