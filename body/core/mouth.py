@@ -621,6 +621,11 @@ class MouthMixin:
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
                               torch.tensor([fat_ / 10.0, self.mood / 6.0, self.stress / 10.0, sal, level], device=self.dev), own])
             z = m.get_submodule(e.gate)(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)
+            if self._amyg_on() and int(self._amyg_const("amyg_pav")) and getattr(self, "_amyg_now", None) is not None:
+                # APPROACH AND AVOID (step R7e, amyg_pav; SIM_DESIGN.md 7.4 item 4): the gate's logit gains beta x clip(N, -c, c), a Go bias
+                # toward good and a freeze toward bad (Guitart-Masip et al. 2012); built and off at birth (physiology.py AMYG)
+                c_ = float(self._amyg_const("amyg_pav_clip"))
+                z = z + float(self._amyg_const("amyg_pav_beta")) * max(-c_, min(c_, float(self._amyg_now["N"])))
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))
             rfx = e.reflex(frame, self, st)                               # its spinal reflex this tick (step R6), or None

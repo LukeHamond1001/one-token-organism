@@ -395,13 +395,127 @@ def test_amyg_the_nights_side():
         fwd_ = float(rep.get("fwd", 0.0))
         total = loss + (lb if lb is not None else 0.0)
         total.backward()
-        out[tag_] = (float(loss), tm.pred.weight.grad.clone(), fwd_, float(total))
+        out[tag_] = (float(loss.detach()), tm.pred.weight.grad.clone(), fwd_, float(total.detach()))
     assert out["one"][0] == out["day"][0] and torch.equal(out["one"][1], out["day"][1])
     assert float(out["harm"][1].abs().max()) == 0.0 and out["harm"][2] == out["day"][2] and out["harm"][2] > 0.0, (out["harm"][2], out["day"][2])
     print(f"amyg 7: tag* reaches back (0.52 of a smile 10 ticks before it, 0.28 20 before, none 64 before); {len(eps)} episodes' entries by",
           f"the law over the bias-corrected mean; the tagged first ({firsts}: every T_e >= 1 once, highest first, at most half) and the rest by",
           f"entry, each of 6 episodes within 3 sigma over {N_} seeded nights; amyg 8: act_pred at night, a window of net harm (G -2, weight 0)",
           f"gives act_pred exactly no gradient, the forward half's loss unchanged ({out['harm'][2]:.4f}), weight 1 the day's lesson to the bit")
+
+
+# ---------------- amyg 9 and 10: the orienting gain and amyg_pav (R7e) ----------------
+
+def _force(L, yplus, yminus):
+    """a forced reliable forecast: the organ's first positive head forecasts `yplus` and its first negative head `yminus` from the level
+    alone, every reliability 1 (a perfectly correlated sample of weight 10^9), no solve, the moments still"""
+    org = L.m.amyg
+    heads = [s_ for _, s_ in org.heads]; ip, im = heads.index(1.0), heads.index(-1.0)
+    org.W.zero_(); org.W[-1, ip] = float(yplus); org.W[-1, im] = float(yminus)
+    N0 = 1e9
+    org.rel.copy_(torch.tensor([[N0, N0, N0, 2 * N0, 2 * N0, 2 * N0]] * len(heads), dtype=torch.float64)); org.pairs.fill_(10 ** 6)
+
+
+def test_amyg_orienting_gain():
+    """amyg 9 (7.4 item 9; step R7e): THE ORIENTING GAIN: exactly 1 at birth (every reliability 0: N is 0); with a forced reliable forecast
+    (a head's weight on the level, its reliability 1) it follows clip(1 + N, -0.5, 2) (N 0.6, -3, 1.5, -0.4: gains 1.6, -0.5, 2, 0.6), and
+    the born bias on the tiny arm's yaw at a chime is that gain times the born pull, exactly; on the G1 all three cues (the face in the
+    periphery, a sound's side, a sudden change) pull the gaze and the waist by the same gain; the gate's draw is identical (its p_act and
+    its draw, and the stream the tick drew from, whatever the gain)"""
+    import math as _m
+    cfg = dict(_CFG, orient=1, amyg_every=10 ** 9, amyg_rel_tau=1e15)
+    def chimes(t):
+        return {"chime": t % 10 == 5, "chime_side": 0.5}
+    L = _tiny(cfg, _script_world(chimes)); _live(L, 3)
+    assert L._orient_gain() == 1.0 and L._amyg_now["N"] == 0.0
+    e = L.anatomy.motors[0]; tab = L.m.acts[e.name]; lg4 = _m.log(4.0)
+    got = {}
+    for yp, ym, g in ((0.6, 0.0, 1.6), (0.0, 3.0, -0.5), (1.5, 0.0, 2.0), (0.0, 0.4, 0.6)):
+        _force(L, yp, ym)
+        run = WorldLoop(L)
+        while True:
+            run.step()
+            if L._event_lines()[1] == 1.0:
+                break
+        N = L._amyg_now["N"]
+        assert abs(N - (yp - ym)) < 1e-12 and L._orient_gain() == max(-0.5, min(2.0, 1.0 + N)), (N, L._orient_gain())
+        assert abs(L._orient_gain() - g) < 1e-12
+        b = L._orient_bias(e, L.world.now, tab)
+        want = torch.tensor([(L._orient_gain() * lg4) * 1.0 * 1.0 * L._setting_sign(k, 5) for k in range(5)])
+        assert torch.equal(b[0], want) and torch.equal(b[1], torch.zeros(5)), (b, want)
+        got[g] = [round(float(x), 4) for x in b[0]]
+    # the G1: all three cues, the gaze and the waist, by the same gain
+    from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table
+    from body.tests.test_frames import _g1_events_world
+    gc = dict(SIM_CFG, wake_ticks=100000, gate_floor=0.3, write_floor=1e-30, amyg_every=10 ** 9, amyg_rel_tau=1e15)
+    torch.manual_seed(0)
+    G1 = Life.birth(SimAnatomy(born_table(), gc), device="cpu", d=32, layers=1, heads=2, window=8, cfg=gc, seed=0, world=_g1_events_world())
+    run = WorldLoop(G1)
+    for _ in range(3):
+        run.step()
+    _force(G1, 0.7, 0.0); run.step()
+    frame = Frame(G1.ticks, {"face_periph": [1.0, 0.4, -0.3], "sound_side": [1.0, 0.5], "onset_periph": [1.0, -0.3, 0.2]}, 0.0)
+    G1._orient_now = None; cues = G1._orient_cues(frame)
+    assert [c.name for c, *_ in cues] == ["face", "sound", "onset"] and all(dy != 0 for _, dy, _, _ in cues)
+    gain = G1._orient_gain(); assert abs(gain - 1.7) < 1e-12
+    for name in ("gaze", "waist"):
+        e_ = G1.anatomy.effector(name); tab_ = G1.m.acts[name]
+        b_ = G1._orient_bias(e_, frame, tab_)
+        for j, (ax, sg) in e_.orient.items():
+            dsum = sum((dy if ax == "yaw" else dp) for _, dy, dp, _ in cues)
+            want = torch.tensor([(gain * lg4) * float(dsum) * float(sg) * G1._setting_sign(k, 5) for k in range(5)])
+            assert torch.equal(b_[j], want), (name, j, b_[j], want)
+    # the gate's draw identical whatever the gain
+    rows = {}
+    for forced in (None, 0.6, -2.0):
+        Lx = _tiny(cfg, _script_world(chimes)); ra = Lx._amygdala
+
+        def spy(C1, frame, ra=ra, Lx=Lx, forced=forced):
+            ra(C1, frame)
+            if forced is not None:
+                Lx._amyg_now["N"] = forced
+        Lx._amygdala = spy
+        run = WorldLoop(Lx); r_ = []
+        for _ in range(40):
+            gs = Lx.gen.get_state().clone(); run.step()
+            st = Lx.motor[0]["now"]; r_.append((st["p_act"], st["drew"], Lx.gen.get_state().clone()))
+        rows[forced] = r_
+    for forced in (0.6, -2.0):
+        assert all(a[0] == b[0] and a[1] == b[1] and torch.equal(a[2], b[2]) for a, b in zip(rows[None], rows[forced])), forced
+    print(f"amyg 9: the orienting gain 1.0 exactly at birth; with a forced reliable forecast clip(1 + N, -0.5, 2) (N 0.6, -3, 1.5, -0.4:",
+          f"{sorted(got)}), the arm's born pull at a chime times it exactly ({got[1.6]} at 1.6); on the G1 the face, the sound and the change",
+          f"pull the gaze and the waist by the same gain (1.7); the gate's p_act, its draw and the stream the same over 40 ticks at any gain")
+
+
+def test_amyg_pav():
+    """amyg 10 (7.4 item 10; step R7e): AMYG_PAV, built and off at birth: off, the motor gate's logit is unchanged whatever N (its p_act the
+    same at N forced to 0.6 as at 0); on, z gains amyg_pav_beta x clip(N, -2, 2): p_act = floor + (1 - floor) sigmoid(z + beta clip(N)), z
+    the gate's own logit on its recorded input, N forced to 0.6, 3 (clipped to 2) and -1"""
+    from body.core.physiology import AMYG
+    assert AMYG["amyg_pav"] == 0
+    def run_with(pav, forced):
+        c = dict(_CFG, orient=0, amyg_pav=pav)
+        Lx = _tiny(c, _script_world(lambda t: {})); ra = Lx._amygdala
+
+        def spy(C1, frame, ra=ra, Lx=Lx):
+            ra(C1, frame); Lx._amyg_now["N"] = forced
+        Lx._amygdala = spy
+        run = WorldLoop(Lx); out = []
+        for _ in range(12):
+            run.step(); st = Lx.motor[0]["now"]
+            z0 = Lx.m.gates["arm"](st["feat"].unsqueeze(0))[0, 0] / (1.0 + Lx.stress / 10.0)
+            out.append((st["p_act"], float(z0.detach())))
+        return out, float(Lx.cfg["gate_floor"])
+    base, fl = run_with(0, 0.0)
+    off, _ = run_with(0, 0.6)
+    assert [a[0] for a in base] == [a[0] for a in off]
+    n_checked = 0
+    for forced in (0.6, 3.0, -1.0):
+        on, _ = run_with(1, forced)
+        for p_act, z0 in on:
+            want = fl + (1.0 - fl) * float(torch.sigmoid(torch.tensor(z0) + max(-2.0, min(2.0, forced))))
+            assert abs(p_act - want) < 1e-6, (forced, p_act, want); n_checked += 1
+    print(f"amyg 10: amyg_pav off at birth: the gate's p_act unchanged by N; on, z + clip(N, -2, 2) on {n_checked} ticks (N 0.6, 3 -> 2, -1)")
 
 
 # ---------------- amyg 11: the save round trip ----------------
@@ -483,7 +597,7 @@ def test_amyg_its_cost():
 
 
 AMYG_TESTS = [test_amyg_inert_for_language, test_amyg_the_law_exact, test_amyg_one_pairing, test_amyg_split_valence_and_the_tags_bounds, test_amyg_the_later_boost,
-              test_amyg_the_nights_side, test_amyg_the_save_round_trip, test_amyg_the_sim_twice, test_amyg_its_cost]
+              test_amyg_the_nights_side, test_amyg_orienting_gain, test_amyg_pav, test_amyg_the_save_round_trip, test_amyg_the_sim_twice, test_amyg_its_cost]
 
 
 if __name__ == "__main__":

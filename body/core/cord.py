@@ -53,7 +53,8 @@ THE BORN BIASES (step R6h; SIM_DESIGN.md 3.7, A23, A43): ORIENTING (`_orient_bia
 once (`_orient_cues`); on each joint an effector declares for it (the gaze's yaw and pitch, the waist's yaw), every cue that fires with
 a direction on that joint's axis (outside the fovea's zone, or a side) adds orient_bias x the orienting gain to each setting stepping
 toward it and takes as much from each stepping away, the hold untouched: a bias on the choice's logits, never a forced move, so a
-learned proposal can outweigh it and it fades by learning; the gain is the amygdala's, exactly 1 at birth (`_orient_gain`; R7e). The
+learned proposal can outweigh it and it fades by learning; the gain is the amygdala's, clip(1 + N, -0.5, 2) on all three cues alike,
+exactly 1 at birth (`_orient_gain`; step R7e, body/core/amygdala.py). The
 born gate input (`_orient_in`): 1 on a tick a cue appeared (a sound's or a sudden change's onset; the face's fire after a tick without
 it). The memory of each cue's last fire (`_orient_last`) runs on across the night and is saved with the body's day (A70), so a face held
 across a save does not appear again at the load. THE VOR (`_vor_acts`): the body's born reflex on the gaze's window, handed to the world
@@ -208,9 +209,15 @@ class CordMixin:
 
     # ---------------- the born biases: orienting and the VOR ----------------
     def _orient_gain(self):
-        """the orienting gain: the amygdala's clip(1 + N, -0.5, 2) once it is built (SIM_DESIGN.md 7.4, R7e); exactly 1 at birth and until
-        then"""
-        return 1.0
+        """THE ORIENTING GAIN (step R7e; SIM_DESIGN.md 7.4 item 3, A16): the amygdala's clip(1 + N, amyg_orient_lo, amyg_orient_hi), N the
+        net valence of the tick's reliable forecasts (body/core/amygdala.py), on all three born cues alike (the face, the sound's side, the
+        sudden change: `_orient_bias` scales their summed pull); a context that predicts one reward unit of good doubles the born pull, one
+        that predicts 1.5 units of bad turns it into a weak turn away (at most half the born pull: the owner's "toward or away"). Exactly
+        1 at birth (every reliability 0, so N is 0) and while the amygdala is off"""
+        now = getattr(self, "_amyg_now", None) if self._amyg_on() else None
+        if now is None:
+            return 1.0
+        return max(float(self._amyg_const("amyg_orient_lo")), min(float(self._amyg_const("amyg_orient_hi")), 1.0 + float(now["N"])))
 
     def _orient_cues(self, frame):
         """the tick's born orienting cues, read once a tick from its frame (cached for the tick): [(cue, direction on yaw, direction on
