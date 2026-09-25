@@ -245,6 +245,8 @@ class NightMixin:
             self._offset(); self._offset_done = True
         if self._frames_on():
             self._frames_nightfall()                                  # and every event of the frames (step R7b, body/core/frames.py)
+        if self._amyg_on():
+            self._amyg_nightfall()                                    # the amygdala's pending forecasts finalized (step R7d, body/core/amygdala.py)
         try:
             # SLEEP NEED SCALES WITH THE DAY'S PLASTICITY (night_load, 0 = off; 2026-09-11, nights 114-115): with the parent talking
             # twice as much, the day wrote twice the memories and the night, dreaming its fixed 48 starts, consolidated less far (the

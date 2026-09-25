@@ -3,8 +3,8 @@ grouped by organ; `SWITCHES`, the core refactor's defect-fix switches, declared 
 `MOTOR`, the motor timing part's constants (step R6; step R6h's movement units, act_inv's batches, the kappa correction and fatigue per
 effector among them), absent from a body's cfg unless given; `CEREB`, the cerebellum's switch and constants (step R6c), absent likewise;
 `REFLEX`, the born patterns summed at the cord and the born biases (step R6h: the spinal pattern generator, the born cry, orienting,
-the VOR), absent likewise; and `FRAMES`, the body in frames (step R7: the frame writes, the event ends, the tick's record), absent
-likewise. body/life.py re-exports PHYSIOLOGY
+the VOR), absent likewise; `FRAMES`, the body in frames (step R7: the frame writes, the event ends, the tick's record), absent
+likewise; and `AMYG`, the amygdala's switch and constants (step R7d), absent likewise. body/life.py re-exports PHYSIOLOGY
 (`from body.life import PHYSIOLOGY` holds). The served body's effective set is its save plus ops/BASE_FLAGS.txt (ops/served_cfg.py
 prints it); the history of every value is in BODY_SPEC.md's appendix and ITERATIONS.md."""
 
@@ -472,4 +472,46 @@ FRAMES = dict(
     # and the charge's 2 weigh alike, as the frames' surprise weighs them); 0 = the sum as R4 built it. A channel with no running mean
     # yet is taken as it is
     err_scale=0,
+)
+
+# THE AMYGDALA (the owner's decision 2; the core refactor's step R7d; docs/SIM_DESIGN.md 7.4, 10, A16; body/core/amygdala.py): its switch
+# and constants, ABSENT FROM A BODY'S CFG unless given (`cfg.get(name, AMYG[name])`), so the language body gains no key, builds no organ
+# and runs none of it. The sim is born with it on (SIM_DESIGN.md 10's switches at birth; body/sim/anatomy.py SIM_CFG). Its discount is
+# dopamine's own (the dopamine band's, 0.9375 a tick: no new time constant), its cap the judgment's clip (source 0's: 2), its horizon
+# and the tag's reach back FRAMES' tag_reach (64): none of them is a constant of its own. Every value is ours, fixed before birth and
+# never fitted to a rate (A16)
+AMYG = dict(
+    # the switch: 1 = the organs build the amygdala (Organs(..., amygdala=): m.amyg, built last) and the tick runs it after the critics'
+    # lesson and the face organ, before the choice (`_amygdala`); 0 = none
+    amyg=0,
+    # ITS MEMORY: its evidence forgets 1 - 1/tau_a a tick, tau_a the ladder's clock at this band: band 6's, 4,096 ticks, about ten
+    # minutes of life, about eight times its 526 inputs so the fit is determined; few-trial learning comes from least squares taking a
+    # full step along a direction it has rarely seen, not from tau_a, which sets how fast it follows a drifting cortex and a changed world
+    # (7.4, A16; the old valence learner's forgetting of 0.998 remembered about 500 ticks, fewer than its inputs)
+    amyg_clock=6,
+    # ITS PRIOR: the ridge R_ii = amyg_prior x tau_a x each input's running variance (its rate 1 / min(n, tau_a)), the level free: the
+    # critics' own prior (fast_rls_prior 0.3, 36,000 ticks there; 7.4, A16: a prior of 1.0 was measured, an event line learned faster and
+    # stream cues slower, and not adopted)
+    amyg_prior=0.3,
+    # ITS SOLVE, every this many ticks: W = (A + R)^-1 b, a Cholesky solve over the inputs that have varied (an input that never has is
+    # left out, its weight 0: the minimum-norm answer), falling back to least squares (7.4: 0.69 ms a solve, 0.19 ms a tick measured)
+    amyg_every=8,
+    # ITS RELIABILITY: each head's running correlation of its forecast with the realized target (finalized tag_reach ticks later, or at
+    # nightfall), the moments decaying over the critics' 36,000 ticks (the face organ's own measure), clipped to 0-1 and 0 until this
+    # many finalized pairs exist (7.4, A16): at birth every forecast reaches nothing
+    amyg_rel_tau=36000,
+    amyg_pairs=64,
+    # THE ORIENTING GAIN (R7e; 7.4 item 3, A16): each born orienting cue's bias times clip(1 + N, lo, hi), N the net valence the reliable
+    # forecasts carry; exactly 1 at birth. The upper bound at most doubles the born pull; the lower is the owner's "toward or away" at its
+    # weakest, a turn away never stronger than half the born pull toward (risk 15)
+    amyg_orient_lo=-0.5,
+    amyg_orient_hi=2.0,
+    # APPROACH AND AVOID ON THE LIMBS (R7e; 7.4 item 4, Guitart-Masip et al. 2012: a Go bias toward good and a freeze toward bad): 1 = each
+    # motor gate's logit gains amyg_pav_beta x clip(N, -amyg_pav_clip, amyg_pav_clip); BUILT AND OFF AT BIRTH (7.4 gives why: the gates
+    # already learn from the same outcomes; a born Pavlovian bias impairs learning to hold still for reward and to act to avoid harm;
+    # infants' fear-driven inhibition comes after mobility; it would add to risk 5), tried on a copy once an aversive head's reliability
+    # reaches 0.2
+    amyg_pav=0,
+    amyg_pav_beta=1.0,
+    amyg_pav_clip=2.0,
 )

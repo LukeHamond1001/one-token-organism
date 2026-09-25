@@ -528,7 +528,7 @@ class Organs(nn.Module):
     """all the learned organs, one module, saved with the body"""
 
     def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None, effectors=None, born_seed=0,
-                 cerebellum=None, events=None):
+                 cerebellum=None, events=None, amygdala=None):
         super().__init__()
         self.vocab, self.d, self.window = int(vocab), int(d), int(window)
         self.clocks = tuple(int(c) for c in clocks)
@@ -748,6 +748,13 @@ class Organs(nn.Module):
             g_cb = torch.Generator().manual_seed(int(born_seed) + 49979687)
             with torch.random.fork_rng(devices=[]):
                 self.cereb = Cerebellum(cerebellum["decl"], g_cb, cerebellum["granule"], cerebellum["fan_in"], cerebellum["coding"])
+        # THE AMYGDALA (the core refactor's step R7d, docs/SIM_DESIGN.md 7.4, A16; body/core/amygdala.py): `amygdala` is what
+        # body/core/amygdala.py `amygdala_spec` gives for a body whose switch is on (its event lines, its heads, its horizon), None otherwise.
+        # Built last, after every other organ; it draws no random number (its evidence and weights born at zero), so every organ above is
+        # born exactly as it is without it; the language body's switch is off, so it has none
+        if amygdala is not None:
+            from .core.amygdala import Amygdala
+            self.amyg = Amygdala(int(d) + int(amygdala["events"]) + 1, amygdala["heads"], amygdala["reach"])
 
     # ---- the cortex over a window ----
 

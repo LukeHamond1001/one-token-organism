@@ -183,17 +183,68 @@ class FramesMixin:
         self._fq = float(q) + eta * (p - (1.0 if lx <= float(q) else 0.0))
         return passed
 
-    def _frame_write(self, key, value, strength):
+    def _frame_write(self, key, value, strength, base=None, tag_w=0.0):
         """the frame written (the module's doc): its codes under the key of the stream before it, at `strength`, who 2; its start mark
-        when an event ended since the last write; kept as the event's last frame for its end mark. True when the store kept it"""
+        when an event ended since the last write; kept as the event's last frame for its end mark; under the amygdala (R7d) its later
+        boosts pending (`base` its strength without the tag, `tag_w` the tag it was written with). True when the store kept it"""
         st = self.store
         if not st.write(key, value, float(strength), 2):
             return False
+        self._boosts_remap(st.last_remap)                             # a write beyond the capacity moves the slots the boosts follow
         self._flast_write = (key.clone(), value.clone())
         if getattr(self, "_fstart_armed", False):
             st.mark_start(key, value); self._fstart_armed = False
         self._fwrites = int(getattr(self, "_fwrites", 0)) + 1
+        if base is not None and self._amyg_on() and st.last_idx >= 0:
+            bs = getattr(self, "_fboosts", None)
+            if bs is None:
+                bs = []; self._fboosts = bs
+            bs.append([int(st.last_idx), float(base), float(tag_w), int(self.ticks)])
         return True
+
+    def _boosts_remap(self, remap):
+        """THE BOOSTS FOLLOW THE SLOTS (R7d; 7.4: "the boost follows last_remap; a dropped slot gets nothing"): a write's eviction remap
+        (old index -> new, -1 dropped) applied to every pending boost's slot, a dropped slot's boost let go (called after every store
+        write while boosts are pending: the frames' here, the words' in body/core/cortex.py and body/core/memory.py)"""
+        bs = getattr(self, "_fboosts", None)
+        if remap is None or not bs:
+            return
+        keep = []
+        for b in bs:
+            j = int(b[0])
+            j = int(remap[j]) if 0 <= j < int(remap.numel()) else -1
+            if j >= 0:
+                b[0] = j; keep.append(b)
+        self._fboosts = keep
+
+    def _frame_boosts(self, tag):
+        """THE LATER BOOSTS (R7d; SIM_DESIGN.md 7.4 item 1): for tag_reach ticks after a frame's write, each larger g^dt x tag (g dopamine's
+        discount, dt the ticks since the write, `tag` this tick's) adds s0 x (its increase in (1 + g^dt tag)) to the slot, s0 the write's
+        strength without the tag, through the store's own saturating merge (store_sat: s x m / (m + S), m the store's mean strength; else
+        added whole); the factor never passes 3 (the tag's cap is 2)"""
+        bs = getattr(self, "_fboosts", None)
+        if not bs:
+            return
+        st = self.store; g = self._tag_gamma(); reach = int(self._frame_const("tag_reach")); keep = []
+        for b in bs:
+            j, s0, T, t0 = int(b[0]), float(b[1]), float(b[2]), int(b[3])
+            dt = int(self.ticks) - t0
+            if dt >= reach:
+                continue
+            if dt >= 1:
+                c = (g ** dt) * float(tag)
+                if c > T:
+                    if 0 <= j < st.n():
+                        ds = s0 * (c - T)
+                        with torch.no_grad():
+                            if st.saturate:
+                                m_ = float(st.S.mean())
+                                st.S[j] += ds * m_ / (m_ + float(st.S[j]))
+                            else:
+                                st.S[j] += ds
+                    b[2] = c
+            keep.append(b)
+        self._fboosts = keep
 
     def _record_tick(self, s, delta, tag, r):
         """THE TICK'S RECORD (the module's doc): (surprise, dopamine, tag, the net reward received) as float32, a row of the day's record"""
@@ -226,9 +277,14 @@ class FramesMixin:
         self._fkey_prev = self._frame_key(C)
 
     def _tag_now(self):
-        """the tag of this tick and the tag at a write (this tick's received part plus the forecast made the tick before): the amygdala's
-        (R7d); 0 while it is off"""
-        return 0.0, 0.0
+        """the tag of this tick and the tag at a write (this tick's received part plus the forecast made the tick before, capped at the
+        judgment's clip): the amygdala's (R7d, body/core/amygdala.py); 0 while it is off"""
+        now = getattr(self, "_amyg_now", None) if self._amyg_on() else None
+        if now is None:
+            return 0.0, 0.0
+        cap = self.anatomy.rewards[0].clip
+        tw = float(now["R"]) + float(getattr(self, "_amyg_prev", 0.0))
+        return float(now["tag"]), (min(float(cap), tw) if cap is not None else tw)
 
     def _frame_tick(self, u, delta, r):
         """THE FRAME'S TICK (the module's doc), at the tick's end: the frame's codes and surprise, the event's end, the gated write, the
@@ -236,12 +292,14 @@ class FramesMixin:
         codes, total = self._frame_codes(u)
         s = self._frame_surprise(codes)
         tag, tag_w = self._tag_now()
+        self._frame_boosts(tag)                                       # R7d: the tag of this tick reaching back onto the frames written
         if s is not None:
             if self._frame_settle(s):
                 self._frame_end()
             key = getattr(self, "_fkey_prev", None)
             if key is not None and self._frame_gate(float(s) * (1.0 + float(tag_w))):
-                self._frame_write(key, total, float(s) * (1.0 + abs(float(delta))) * (1.0 + float(tag_w)))
+                base = float(s) * (1.0 + abs(float(delta)))
+                self._frame_write(key, total, base * (1.0 + float(tag_w)), base=base, tag_w=tag_w)
         self._record_tick(s if s is not None else 0.0, delta, tag, r)
         self._frame_foresee()
 
@@ -269,6 +327,8 @@ class FramesMixin:
         first); the running means, the settle law's averages and the write gate's quantile kept"""
         self._ffc = None; self._fkey_prev = None; self._fw_err = None; self._flast_write = None; self._fstart_armed = True
         self._rec = None; self._rec_n = 0; self._rec_ends = []
+        if getattr(self, "_fboosts", None) is not None:
+            self._fboosts = []                                        # R7d: the later boosts end at the night (its fade remaps the slots)
 
     # ---------------- step R7c: the error scales, the received tag and its reach onto an utterance (tag_trace, defect 6) ----------------
     def _err_scales(self):

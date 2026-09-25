@@ -270,13 +270,13 @@ def test_the_frames():
     from body.sim.anatomy import SIM_CFG
     assert SIM_CFG["frames"] == 1
     cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=16, night_rounds=1,
-               night_batch=4, rem_dreams=2, rem_steps=2, night_dev="")
+               night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0)   # the tag 0: R7b's law alone (the tag's is amyg 6's)
     w = _g1_events_world(burst=True); L = _g1(cfg, w); m = L.m
     run = WorldLoop(L)
     caught = []; fw = L._frame_write; ft = L._frame_tick
 
-    def spy_write(key, value, strength, fw=fw, caught=caught, L=L):
-        out = fw(key, value, strength); caught.append((L.ticks, key.clone(), value.clone(), float(strength), out)); return out
+    def spy_write(key, value, strength, base=None, tag_w=0.0, fw=fw, caught=caught, L=L):
+        out = fw(key, value, strength, base=base, tag_w=tag_w); caught.append((L.ticks, key.clone(), value.clone(), float(strength), out)); return out
 
     def spy_tick(u, delta, r, ft=ft, L=L):
         L._probe = (int(u), float(delta), float(r)); return ft(u, delta, r)

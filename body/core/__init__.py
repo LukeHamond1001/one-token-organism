@@ -24,6 +24,11 @@ frames.py       step R7: the body in the world's frames: the anatomy's born even
                 mean in the waking lesson (R7c, `err_scale`); the received tag and its reach back onto an utterance's entry (R7c,
                 physiology.py's SWITCHES `tag_trace`, defect 6; defect 1's `tire_recover` is memory.py's); the diary declares none of it
                 and holds no such switch, so none of it runs for it
+amygdala.py     step R7d: the amygdala, the valence tagger, an organ (Amygdala, m.amyg: its least-squares Rescorla-Wagner law over the
+                stream, the event lines and the level, one head per reward source and sign, its reliability, the tag) and a mixin (its tick
+                after the critics and the face organ, before the choice); built only under the switch `amyg` (physiology.py's AMYG), which
+                the diary's cfg does not hold; the night's side of it (tag*, the entries, the tagged first, act_pred's night weight) is R8's
+                to wire
 anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
                 8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
                 `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward

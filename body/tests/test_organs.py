@@ -2349,6 +2349,8 @@ if __name__ == "__main__":
     tests += MOTOR_TESTS
     from body.tests.test_frames import FRAME_TESTS        # the body in frames (docs/SIM_DESIGN.md 7.2, 7.4, 7.6; the core refactor, step R7)
     tests += FRAME_TESTS
+    from body.tests.test_amygdala import AMYG_TESTS       # the amygdala (docs/SIM_DESIGN.md 7.4; the core refactor, step R7d)
+    tests += AMYG_TESTS
     failed = 0
     for t in tests:
         try:

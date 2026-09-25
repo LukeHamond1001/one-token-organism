@@ -44,6 +44,7 @@ import torch
 from ..model import Organs
 from .anatomy import anatomy_for
 from .cerebellum import cerebellum_spec
+from .amygdala import amygdala_spec
 from .physiology import PHYSIOLOGY
 
 # THE DAY (A70; the module's doc): what of the life's attributes the day does not hold, being held elsewhere or not the life's state: the
@@ -124,7 +125,8 @@ class PersistenceMixin:
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]),
                         channels=anatomy.channels, effectors=anatomy.effectors,   # a later effector's organs too (step R5; the tables from the save)
                         cerebellum=cerebellum_spec(anatomy, c),                     # and the cerebellum when its switch is on (step R6c; from the save)
-                        events=anatomy.events)                                      # and the event lines' striatal line when declared (step R7a)
+                        events=anatomy.events,                                      # and the event lines' striatal line when declared (step R7a)
+                        amygdala=amygdala_spec(anatomy, c))                         # and the amygdala when its switch is on (step R7d; from the save)
         # A BODY IS BORN WITH ITS SWITCHES (SIM_DESIGN.md A20; the R6c verifier's fourth finding): a save whose organs hold a cerebellum
         # loads only with the switch on, and one whose organs hold none only with it off, every one of the organ's entries from the save
         # (none born fresh at a load, none dropped); the language body's save holds none and its constants no switch, so nothing changes
@@ -134,6 +136,12 @@ class PersistenceMixin:
             raise ValueError(f"load: the save's organs hold {len(cb_saved)} entries of a cerebellum and its constants under this load switch it "
                              f"{'on' if cb_built else 'off'} ({len(cb_built)} entries): a body is born with its switches (SIM_DESIGN.md A20), so a "
                              f"cerebellum is neither dropped nor grown at a load")
+        am_saved = sorted(k_ for k_ in blob["organs"] if k_.split(".")[0] == "amyg")          # step R7d: the amygdala likewise (A20)
+        am_built = sorted("amyg." + k_ for k_ in organs.amyg.state_dict()) if "amyg" in organs._modules else []
+        if am_saved != am_built:
+            raise ValueError(f"load: the save's organs hold {len(am_saved)} entries of an amygdala and its constants under this load switch it "
+                             f"{'on' if am_built else 'off'} ({len(am_built)} entries): a body is born with its switches (SIM_DESIGN.md A20), so an "
+                             f"amygdala is neither dropped nor grown at a load")
         w = blob["organs"].get("mouth_gate.weight")
         if w is not None and w.shape[1] > organs.mouth_gate.weight.shape[1]:
             organs.widen_gate(w.shape[1] - organs.mouth_gate.weight.shape[1])   # a body with the ear
@@ -364,6 +372,6 @@ class PersistenceMixin:
         organs = Organs(anatomy.vocab, d=d, layers=layers, heads=heads, window=window, birth_act=float((cfg or {}).get("birth_act", PHYSIOLOGY["birth_act"])),
                         channels=anatomy.channels, effectors=anatomy.effectors, born_seed=seed,   # a later channel's forecast head and a later effector's
                         cerebellum=cerebellum_spec(anatomy, cfg),   # organs built last (steps R4, R5; their tables from the body's seed), then the
-                        events=anatomy.events)                      # cerebellum when its switch is on (step R6c), the event lines' striatal line (R7a);
-                                                                    # the diary declares none of them
+                        events=anatomy.events,                      # cerebellum when its switch is on (step R6c), the event lines' striatal line (R7a),
+                        amygdala=amygdala_spec(anatomy, cfg))       # the amygdala when its switch is on (R7d, the last); the diary declares none of them
         return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path, world=world)

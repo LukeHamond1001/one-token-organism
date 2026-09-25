@@ -59,6 +59,8 @@ class CortexMixin:
                 if self.store.write(key_, ex, surp * (1.0 + abs(dopamine)), who):   # the world's quiet is not a memory
                     self._writes_today = int(getattr(self, "_writes_today", 0)) + 1   # the day's kept writes (the night's count; the store's growth stops at the capacity)
                 rm_ = getattr(self.store, "last_remap", None)
+                if rm_ is not None and getattr(self, "_fboosts", None):
+                    self._boosts_remap(rm_)                          # step R7d: the frames' pending boosts follow the slots too (body/core/frames.py)
                 if rm_ is not None:
                     # THE THIRTY-SECOND DEFECT (2026-09-18, read at the rekey; confirmed on a tiny body: at the capacity 25 of 52 links joined
                     # the wrong slots, under it 138 of 138): a write beyond the capacity evicts the weakest slot and re-sorts the store by

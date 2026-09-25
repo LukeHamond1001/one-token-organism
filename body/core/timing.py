@@ -418,7 +418,7 @@ class TimingMixin:
             lg[0] = lg[0].clone(); lg[0][list(e.reserved)] = float("-inf")
         return tab.flat([int(x.argmax()) for x in lg])
 
-    def _timing_loss(self, i, C, obs):
+    def _timing_loss(self, i, C, obs, wpos=None):
         """THE WAKING LESSON OF LATER EFFECTOR i'S TIMING PART (step R6; body/core/cortex.py `_wake_lesson`), over the window's stream
         C [T, d] (with its gradient) and observations: act_pred's squared error to the target act's row at every position t >= 1, from
         the stream at t-1 and the forward half's error at t, weighted (1 at its own acts; at its rests act_inv's reliability on act_inv's
@@ -456,7 +456,11 @@ class TimingMixin:
         the old route (0.20 / 0.33 / 0.62 against 0.20 / 0.34 / 0.87). The gated second optimizer was not taken: it gives the stream
         a second whole step beside the day's wherever demonstrations are, needs a gain for the shared stream where several effectors'
         labels meet (their weights' sum passes one), costs a second backward pass through the stream and its moments twice over, and
-        its own ratio to the same labels given whole wandered (0.17 to 1.46), the stream's path then depending on the reliability."""
+        its own ratio to the same labels given whole wandered (0.17 to 1.46), the stream's path then depending on the reliability.
+        THE NIGHT'S WEIGHT (step R7d, the amygdala's side of R8; SIM_DESIGN.md 7.4 item 2): `wpos` [T], when given, weighs act_pred's error
+        at each position (its own acts' and act_inv's labels' alike): the night replays a window with act_pred's lesson at position t
+        weighted clip(1 + G_t, 0, 1), G_t the replayed dopamine's credit (body/core/amygdala.py `act_pred_night_weight`), so acts followed
+        by net harm are not taught as acts to make; the forward half's lesson is not weighted. None (the day's): as before, to the bit"""
         e = self.anatomy.motors[i - 1]; st = self.motor[i - 1]
         tm = self.m.timing[e.name]; tab = self.m.get_submodule(e.organ)
         acts = obs[e.name]
@@ -504,6 +508,8 @@ class TimingMixin:
             if bool(rested[-1]):
                 lab_f[-1] = False                                          # the last rest: its next sense not felt, no label
             w_own = torch.where(lab1, torch.zeros_like(w1), w1)
+        if wpos is not None:
+            err = err * wpos[1:].to(err.dtype)                            # step R7d: the night's weight on act_pred's error (R8's replay)
         lp = (err * w_own).sum() / float(T - 1)                           # over the positions: the weights absolute
         n_lab = int(lab_f.sum()) if lab_f is not None else 0
         lb = (err * lab_f.float()).sum() / float(T - 1) if n_lab else None   # act_inv's labels, every one earned

@@ -180,6 +180,8 @@ class MemoryMixin:
                     continue
                 ex = m.E.weight[i]
                 if bag.norm() > 1e-6 and self.store.write(bag, ex, float(strength), 1):
+                    if getattr(self, "_fboosts", None):
+                        self._boosts_remap(self.store.last_remap)     # step R7d: the frames' pending boosts follow the slots (body/core/frames.py)
                     j = self.store.last_idx; n += 1
                     if n == 2:
                         self.store.mark_start(bag, ex)         # the start mark on the second symbol's slot, as the world's onsets are marked

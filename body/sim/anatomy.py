@@ -404,4 +404,8 @@ SIM_CFG = dict(
     # scaled by its own running mean in the waking lesson (FRAMES' err_scale; 10's "forecast heads"); tag_trace (defect 6) stays off,
     # the language body's utterance entry (the sim's tags reach its store and its night through the amygdala, R7d and R8)
     tire_recover=1, err_scale=1,
+    # STEP R7d: THE AMYGDALA ON AT BIRTH (7.4, 10, A16; body/core/amygdala.py): its 5 heads (face +/-, pain -, charge +/-) over the
+    # stream, the 13 event lines and the level; its constants AMYG's (none given here: tau_a band 6's clock, 4,096 ticks; the critics'
+    # prior 0.3; the solve every 8 ticks; the reliability over 36,000 ticks, earned after 64 pairs)
+    amyg=1,
 )
