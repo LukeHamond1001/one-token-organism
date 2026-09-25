@@ -35,7 +35,10 @@ effector's gate inputs and cost read that frame. STEP R6 wires the motor timing 
 later effector's proposal is its act_pred head's (`propose`), corrected by the error of the forward half when it declares a body sense
 (`sense`, a vector channel, and `sense_idx`, its own numbers there); it may declare an inverse model (`inverse`, act_inv, over its
 sense) and a reflex (`reflex`, spinal: the act it forces this tick, which stops a chunk); its chunks and learned stops run under
-chunk_gate. The voice declares none of it. body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its
+chunk_gate. The voice declares none of it. STEP R6c declares the cerebellum's interface (`Cerebellar`, `Anatomy.cerebellar`, none by
+default): what the world feeds the organ below the tick (the mossy fibres' numbers with their declared offsets and scales), the joints
+whose servo it teaches and adds to, and the VOR's axes (SIM_DESIGN.md 7.5; body/core/cerebellum.py); the diary declares none.
+body/tests/test_anatomy.py holds the language anatomy equal to today's fields, its
 reward equal to today's rule, its input sum, window and heads equal to today's, and its gate's lesson equal to today's. The anatomy
 names the organs and never holds them (no module, no tensor: the organs are the body's and are saved with it).
 Building an anatomy builds no module, draws no random number and touches no life (SIM_DESIGN.md 8.3, item 4); a channel and a reward
@@ -244,6 +247,38 @@ class VoiceEffector(Effector):
 
 
 @dataclass(eq=False)
+class Cerebellar:
+    """THE CEREBELLUM'S INTERFACE, DECLARED (the core refactor's step R6c; SIM_DESIGN.md 7.5 and A44; the organ is body/core/cerebellum.py):
+    what a world hands the body's loop below the tick at each sub-step (body/core/world.py `SubFrame`) and what it takes back
+    (`SubActs`), in the order declared here, so the organ is written against the anatomy and never against these joints.
+    - `mossy_offset`, `mossy_scale`: one pair per number of the mossy input, each number's declared middle and half-range (from the
+      body's model file: a joint's angle about the middle of its range, a velocity over its declared limit, a torque over its limit, a
+      target as its angle); the organ reads each as a mossy fibre's rate, 1 + (x - offset) / scale held to [0, 2] (a tonic rate
+      modulated both ways, saturating at silence and at twice the tonic rate). For the humanoid, 7.5 lists the 29 joints of the arms,
+      the legs and the waist, each its angle, velocity, estimated torque and the servo's current target (the efference copy of the
+      tick's act), then both inertial units, then the hands' touch: about 150 numbers. MEASURED IN R6c (the test limb over a life day,
+      tools/cereb_day.py; body/tests/test_cerebellum.py cereb 10): with each joint's estimated torque among them (the torque the motor
+      applies, which carries the servo's correction and the cerebellum's own torque back into its input) the pure law's readout drifted
+      and carried the limb into oscillation at its torque limit within a life day; under the leak (CEREB's cereb_leak) it holds all day,
+      as the angles, velocities and targets alone do (1.83 and 1.83 N m at the shoulder, off 4.80). The loop through the organ's own
+      torque is untested at the G1's scope (with its inertial units and touch: W4). Which numbers the humanoid declares is the lead's
+      decision (reported with R6c); the organ reads whatever is declared.
+    - `joints`: the joints with a Purkinje readout, in order: the world adds each one's learned torque to that joint's servo, and hands
+      in that joint's servo corrective torque as its teacher (the humanoid's 29; the hands' joints have none).
+    - `vor`: the VOR's axes (the fovea window's yaw and pitch), each with the flocculus's gain correction and offset; none for a body
+      without a VOR.
+    It names no module and holds no tensor (the organ is the body's, built by the organs when the switch is on)."""
+    mossy_offset: list
+    mossy_scale: list
+    joints: list = dc_field(default_factory=list)
+    vor: list = dc_field(default_factory=list)
+
+    @property
+    def n_mossy(self):
+        return len(self.mossy_scale)
+
+
+@dataclass(eq=False)
 class RewardSource:
     """ONE TERM OF THE FELT REWARD (step R3). Each tick a source feels (`felt`: a number, or None when it is silent this tick) and its
     feeling enters the reward as its term (`term`: clipped to +-`clip`, like a press, when a clip is declared; else the feeling as it
@@ -317,7 +352,9 @@ class Anatomy:
     """a body's senses, effectors and reward sources, each list in its order: the channels' order is the float order of the cortex's
     input sum (the ladder's bundle and the efference copy of its own acts joining after the first `inner_at` channels; by default
     after all of them), channel 0 is the words, effector 0 is the voice, the reward sources are summed in their order and source 0 is
-    the world's judgment"""
+    the world's judgment. `cerebellar` (step R6c) is the cerebellum's interface, a `Cerebellar`, or None (the class's: an anatomy that
+    declares none, the diary's, gains no attribute); a body's anatomy sets it on itself as it adds its channels and effectors"""
+    cerebellar = None
 
     def __init__(self, channels, effectors, rewards, inner_at=None):
         self.channels = list(channels)
@@ -436,6 +473,20 @@ class Anatomy:
                 raise ValueError(f"anatomy: effector {e.name!r} declares an inverse model and no body sense for it to read")
             if int(e.inv_hidden) < 1:
                 raise ValueError(f"anatomy: effector {e.name!r}'s inverse model of {e.inv_hidden} units")
+        cb = self.cerebellar                                           # step R6c: the cerebellum's interface, when declared
+        if cb is not None:
+            if not isinstance(cb, Cerebellar):
+                raise ValueError(f"anatomy: the cerebellar interface is a Cerebellar, not {type(cb).__name__}")
+            off_, sc_ = list(cb.mossy_offset), list(cb.mossy_scale)
+            if not sc_ or len(off_) != len(sc_) or not all(isinstance(x_, (int, float)) and x_ == x_ and abs(x_) != float("inf") for x_ in off_ + sc_) \
+                    or not all(x_ > 0 for x_ in sc_):
+                raise ValueError(f"anatomy: the cerebellum's mossy input declares {len(off_)} offsets and {len(sc_)} scales (as many, finite, each "
+                                 f"scale above zero, at least one number)")
+            for what_, xs_ in (("joint", list(cb.joints)), ("VOR axis", list(cb.vor))):
+                if len(set(xs_)) != len(xs_) or not all(isinstance(x_, str) and x_ for x_ in xs_):
+                    raise ValueError(f"anatomy: the cerebellum's {what_} names must be distinct names: {xs_}")
+            if not cb.joints and not cb.vor:
+                raise ValueError("anatomy: the cerebellum declares no joint and no VOR axis (nothing for it to learn or add to)")
         if not self.rewards:
             raise ValueError("anatomy: no reward source (source 0 is the world's judgment)")
         for s in self.rewards:

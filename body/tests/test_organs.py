@@ -2343,6 +2343,8 @@ if __name__ == "__main__":
               test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing, test_pace_false_ends_and_settling, test_pace_edges, test_pace_end_by_its_own_measure]
     from body.tests.test_anatomy import ANATOMY_TESTS    # the anatomy declared (docs/SIM_DESIGN.md 8.2; the core refactor, step R1)
     tests += ANATOMY_TESTS
+    from body.tests.test_cerebellum import CEREB_TESTS   # the cerebellum below the tick (docs/SIM_DESIGN.md 7.5; the core refactor, step R6c)
+    tests += CEREB_TESTS
     failed = 0
     for t in tests:
         try:

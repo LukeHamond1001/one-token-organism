@@ -7,7 +7,8 @@ strength), `read` (recall by content: a softmax over the keys at a fixed tempera
 `fast_*`), the striatum and working memory (`striatum_*`, `wm_*`), the gate's inputs (`widen_gate`), the losses of the night
 (`latent_loss`, `forecast_loss`). `ActTable` is a later effector's acts (the core refactor's step R5): per-joint unit rows, the per-joint
 readout, an act's row the sum of its joints'. `MotorTiming` is a later effector's motor timing part (step R6): act_pred, the forward half
-and its correction, act_inv.
+and its correction, act_inv. The cerebellum (step R6c) is body/core/cerebellum.py's `Cerebellum`, which the organs build last as `cereb`
+when a body's switch is on (`Organs(..., cerebellum=)`).
 
 Everything learned lives in `Organs` (an nn.Module, saved with the body). The hippocampus
 is `Store`, a table of slots whose tensors are saved beside the weights. Nothing here decides
@@ -506,7 +507,8 @@ class Block(nn.Module):
 class Organs(nn.Module):
     """all the learned organs, one module, saved with the body"""
 
-    def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None, effectors=None, born_seed=0):
+    def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None, effectors=None, born_seed=0,
+                 cerebellum=None):
         super().__init__()
         self.vocab, self.d, self.window = int(vocab), int(d), int(window)
         self.clocks = tuple(int(c) for c in clocks)
@@ -690,6 +692,15 @@ class Organs(nn.Module):
                             raise ValueError(f"Organs: the effector {e.name!r} senses its body on {e.sense!r}, a channel the organs were not given")
                         sn = len(e.sense_idx) if e.sense_idx is not None else int(chans[e.sense].size)
                     self.timing[e.name] = MotorTiming(e.factors, d, sn, bool(getattr(e, "inverse", False)), int(getattr(e, "inv_hidden", 64)), g_tim)
+        # THE CEREBELLUM (the core refactor's step R6c, docs/SIM_DESIGN.md 7.5 and A44; body/core/cerebellum.py): `cerebellum` is what
+        # body/core/cerebellum.py `cerebellum_spec` gives for a body whose switch is on (the anatomy's Cerebellar and the born sizes), None
+        # otherwise. Built after every other organ, from a generator of its own seeded by the body's seed, with the global random stream
+        # left where it was, so every organ above is born exactly as it is without it; the language body's switch is off, so it has none
+        if cerebellum is not None:
+            from .core.cerebellum import Cerebellum
+            g_cb = torch.Generator().manual_seed(int(born_seed) + 49979687)
+            with torch.random.fork_rng(devices=[]):
+                self.cereb = Cerebellum(cerebellum["decl"], g_cb, cerebellum["granule"], cerebellum["fan_in"], cerebellum["coding"])
 
     # ---- the cortex over a window ----
 
