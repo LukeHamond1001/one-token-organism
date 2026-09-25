@@ -45,7 +45,11 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # PYTHONHASHSEED 1 and 4242.
 # Pinned at R8d (2026-09-25, fc152f9): threaded 7e76fe0c4b6f975c59ca1f3b, one-thread 44d7f62b27584bf596241f19 (consts 2ad019e8abba).
 # Re-pinned at A71 (2026-09-25: SIM_CFG born at the served values, amyg_pav's weight earned; the lead's decision on the PFC-maturation study):
-digest  sim                   threaded 9f0e343e471530a65a008b17 consts c61b44d6eef1 | --profile sim
-digest  sim                   pinned   32163810db656e3d0f76e529 consts c61b44d6eef1 | --profile sim
-full    sim                   threaded organs 594050323810 store 411f4fd43396 optim b9eb24ae7899 rng 9d68eaba8173 work 595265190f25 cfg b7dfa94c584a
-full    sim                   pinned   organs 7ffd5421c8f4 store 87aff9eed34a optim 8ff405f45da8 rng 9d68eaba8173 work 18c74976e258 cfg b7dfa94c584a
+# (was: threaded 9f0e343e471530a65a008b17, one-thread 32163810db656e3d0f76e529.)
+# Re-pinned at S5a (2026-09-25, on branch sim: the flexor withdrawal moved from the world's zones into the anatomy's Limb.reflex on
+# the joints' pain, 3.7 and A37; the stub's two pain ticks now withdraw a limb for 2 ticks). The committed tree before it reproduced
+# the A71 pins exactly; the anatomy's reflex alone moves them. Each the same under PYTHONHASHSEED 1 and 4242:
+digest  sim                   threaded b171489467d8bc321e3ef168 consts c61b44d6eef1 | --profile sim
+digest  sim                   pinned   1950c5d205b90fd521dc8d2d consts c61b44d6eef1 | --profile sim
+full    sim                   threaded organs 9a1ffb750679 store 3580f0092457 optim 21549ede2d6c rng 2d7c341ee738 work fcb0bcfc93e2 cfg b7dfa94c584a
+full    sim                   pinned   organs 6a203377558f store a2100dd7c217 optim 62f1ffd4d502 rng 2d7c341ee738 work a2b9ee0e487c cfg b7dfa94c584a

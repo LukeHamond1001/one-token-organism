@@ -338,8 +338,13 @@ class Tract:
             self.target = np.clip(self.x + STEPS[np.asarray(act)], 0, 1)    # re-anchored on the measured position
         return self.target
 
-    def tick(self, act):
+    def tick(self, act, cord=None):
+        """one tick: the act (None at rest, else int[10] in 0..4) and the cord's steps below the gate (S5a: body/core/world.py Acts.cord,
+        the born cry's per-articulator steps as a fraction of the range, added to the targets the act re-anchors, clipped to the
+        range) -> the tick's radiated samples"""
         self.set_act(act)
+        if cord is not None:
+            self.target = np.clip(self.target + np.asarray(cord, float), 0, 1)
         if act is None and self.quiet and not np.any(self.target != NEUTRAL) and np.allclose(self.x, NEUTRAL, atol=1e-3) \
                 and not self.tail.any():
             self.x, self.v = NEUTRAL.copy(), np.zeros(N_ART)                 # at rest and silent: nothing to compute

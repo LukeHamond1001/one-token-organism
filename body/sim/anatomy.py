@@ -125,6 +125,8 @@ FOVEA_HALF = math.radians(64.0 / 3.0 / 2.0)
 # cry lasts: the pitch at 546 Hz, inside newborns' phonated cries of 250-700 Hz). Ours, from its sources' description; C53 reads the
 # pattern's figures (its breath groups are REFLEX's cry_expire and cry_inspire, from Robb, Sinton-White and Kaipa 2011)
 CRY_POSTURE = {0: 0.6, 1: 0.6, 2: 0.6, 3: 0.6}
+# THE WITHDRAWAL'S LENGTH (3.7; body/sim/reflexes.py's WITHDRAW_TICKS: a big flexion step a tick for 2 ticks; innate, ours)
+WITHDRAW_TICKS = 2
 # ---------------------------------------------------------------- the cerebellum's interface (7.5, A44; the module's doc)
 # THE G1'S JOINT RANGES (rad, in BODY_JOINTS' order): the model's own, each joint's `range` in Menagerie's g1_with_hands.xml (the file
 # committed in dd8640e and loaded unchanged; 3.2 gives them in degrees), the angle fibres' middles and half-ranges. The cerebellum is
@@ -157,17 +159,24 @@ MOSSY_G = 9.81
 def born_table(words=None):
     """THE WORD SCAFFOLD'S BORN TABLE (4.9: 50 word tokens, 26 letters, a space, rest and end: 79 rows), as a tokenizer for the language
     anatomy: the rest `<rest>` 0, the end `<end>` 1, the space 2, the letters a-z 3-28, the 50 words 29-78. `words`: the parent's 50
-    birth words (placeholders qaa-qbx when none are given: the core's tests); a word spelled as one letter is refused (it is that letter's
-    row)"""
+    birth words (placeholders qaa-qbx when none are given: the core's tests); a word spelled as one letter keeps its own row, keyed by
+    word_key"""
     words = list(words) if words is not None else ["q" + chr(97 + k // 26) + chr(97 + k % 26) for k in range(50)]
-    if len(words) != 50 or len(set(words)) != 50 or any(len(w) < 2 or not w.isalpha() or w != w.lower() for w in words):
-        raise ValueError(f"born_table: 50 distinct lower-case words of at least two letters, given {len(words)}")
+    if len(words) != 50 or len(set(words)) != 50 or any(not w or not w.isalpha() or w != w.lower() for w in words):
+        raise ValueError(f"born_table: 50 distinct lower-case words, given {len(words)}")
     vocab = {"<rest>": 0, "<end>": 1, " ": 2}
     for k, ch in enumerate("abcdefghijklmnopqrstuvwxyz"):
         vocab[ch] = 3 + k
     for k, w in enumerate(words):
-        vocab[w] = 29 + k
+        vocab[word_key(w)] = 29 + k
     return Tokenizer(models.WordLevel(vocab=vocab, unk_token="<rest>"))
+
+
+def word_key(w):
+    """a birth word's key in the born table's vocabulary: the word itself, and a one-letter word (the parent's article "a") as
+    "a_", so its own row never meets the letter's (the lexicon keeps the two apart: its word row and its letter row; S5a, the
+    lead's reading of the two branches' tables, which disagreed only here)"""
+    return w if len(w) > 1 else w + "_"
 
 
 class FaceIncrement(RewardSource):
@@ -266,6 +275,28 @@ class Limb(Effector):
         p_ = frame.obs.get("pain")
         pain = 1.0 if p_ is not None and any(float(p_[j]) > 0.0 for j in self.pain_joints) else 0.0
         return own + [onset, pain]
+
+    def reflex(self, frame, life, state):
+        """THE FLEXOR WITHDRAWAL (3.7, A11, A37; S5a moves it from the world's zones to the joints' pain): a leg or an arm (the limbs
+        with flexion joints, FLEXION) whose pain joints (an arm's include its hand's) carry a pain flag this tick is taken for
+        WITHDRAW_TICKS ticks: a big flexion step on each of its flexion joints in its flexion sense a tick, its other joints held
+        (setting 2), whatever its last move was and wherever on the limb it hurts: generalized and crude, as a newborn's is (Andrews
+        and Fitzgerald 1994; Cornelissen et al. 2013; Holmberg and Schouenborg 1996). The count is kept in the effector's working
+        state (saved with the body's day, A70). None when it does not fire"""
+        if not self.spg:
+            return None
+        p_ = frame.obs.get("pain")
+        if p_ is not None and any(float(p_[j]) > 0.0 for j in self.pain_joints):
+            state["withdraw"] = WITHDRAW_TICKS
+        k = int(state.get("withdraw", 0))
+        if k <= 0:
+            return None
+        state["withdraw"] = k - 1
+        a = 0
+        for j in range(len(self.factors)):
+            sg = self.spg.get(j)
+            a = a * 5 + (2 if sg is None else (4 if sg > 0 else 0))
+        return a
 
     def cost(self, act, frame, life):
         b_ = frame.obs.get("body")

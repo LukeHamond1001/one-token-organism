@@ -213,6 +213,13 @@ HEELS_BACK = 0.338 - 0.03                   # parent_poses: the heels kneel's pe
 STAND_BACK = 0.30                           # parent_poses.kneel_down: its standing start lies this far behind the tall kneel's pelvis
 
 
+class _Plain:
+    """an act asked by the world itself (the night's walk to the sofa and back), in the shape of P3's Act"""
+
+    def __init__(self, kind, target=None, during=None, thing=None):
+        self.kind, self.target, self.during, self.thing = kind, target, during, thing
+
+
 class Refuse(Exception):
     """an act she cannot do, with the reason (it is refused, never faked)"""
 
@@ -780,6 +787,7 @@ class ParentMotion:
         self.carry = {"L": None, "R": None}                                 # a toy in her hand: its centre in her hand's frame
         self.lift = {"L": None, "R": None}                                  # where a hand lifts to when it lets go of the child
         self.holds = []
+        self.asleep = False                                                 # the night's (sleep, wake)
         self.offset = {c: np.zeros(3) for c in CHAINS}                      # her plan moved where the child pushed her (A4), per chain
         self._offset_at_start = {c: np.zeros(3) for c in CHAINS}            # her offsets as this tick began (not state: set each tick)
         self.over = {c: 0 for c in CHAINS}
@@ -846,7 +854,7 @@ class ParentMotion:
     def _state(self):
         return dict(live=list(self.live), cancels=[list(c) for c in self.cancels], glances=_plain(self.glances),
                     rep=None if self.rep is None else [self.rep[0], _plain(dict(self.rep[1], acts=[[int(k), v] for k, v in self.rep[1]["acts"].items()]))],
-                    eoc_set=self.eoc_set, still_set=self.still_set, eoc=self.eoc, still=self.still,
+                    eoc_set=self.eoc_set, still_set=self.still_set, eoc=self.eoc, still=self.still, asleep=bool(self.asleep),
                     aim=None if self.aim is None else {k: list(v) for k, v in self.aim.items()},
                     arrived=dict(self.arrived), arrived_now=dict(self.arrived_now),
                     acts=_plain(self.acts), first_id=self.first_id, old=[[int(k), v] for k, v in self.old.items()], queue={k: list(v) for k, v in self.queue.items()}, cur=dict(self.cur),
@@ -879,6 +887,7 @@ class ParentMotion:
         self.rep = None if r is None else (int(r[0]), dict(_unplain(r[1]), acts={int(k): v for k, v in r[1]["acts"]}))
         self.eoc_set = bool(s.get("eoc_set", False)); self.eoc = bool(s.get("eoc", False))
         self.still_set = bool(s.get("still_set", False)); self.still = bool(s.get("still", False))
+        self.asleep = bool(s.get("asleep", False))
         am = s.get("aim")
         self.aim = None if am is None else {k: (int(v[0]), float(v[1])) for k, v in am.items()}
         self.aim_f = {"L": 0.0, "R": 0.0}
@@ -1001,6 +1010,19 @@ class ParentMotion:
             self._abort_body()
         else:
             self._gaze_back(a)
+
+    def sleep(self):
+        """THE NIGHT (5.4, A46, A17; the world's dusk): every act of hers stops where it is, her holds let go, and she walks to the
+        sofa and sits there, touching nothing, until the morning (wake)"""
+        for i in list(self.live):
+            self.cancel(i)
+        self.asleep = True
+        self.request(_Plain("walk", "sofa"))
+
+    def wake(self):
+        """THE MORNING (the world's dawn): she comes back to the child"""
+        self.asleep = False
+        self.request(_Plain("walk", "child"))
 
     def bind_conduct(self, conduct):
         """her conduct (P3's Conduct), whose eyes_on_child she reads every tick (A51): while an ask is pending her eyes and head

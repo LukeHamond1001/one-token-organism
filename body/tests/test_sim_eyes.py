@@ -72,12 +72,13 @@ def test_the_gaze():
     w.apply({"gaze": W.act_flat([3, 1, 3])})                           # yaw +small, pitch -small, vergence +small
     assert np.allclose(w.gaze[1:], [-0.07, 0.03], atol=2e-3) and abs(w.gaze[0] - 0.07) < 2e-3, w.gaze   # (the VOR moves it a little)
     f = w.frame()
-    assert f.obs["body"].shape == (W.BODY_SIZE,) == (178,) and np.array_equal(f.obs["body"][172:175], w.gaze)
-    assert np.allclose(f.obs["body"][175:], w.gaze / 0.15, atol=0.02)
+    assert f.obs["body"].shape == (242,) and np.array_equal(f.obs["body"][215:218], w.gaze)     # S5a: the anatomy's body channel
+    assert np.allclose(f.obs["body"][218:221], w.gaze / 0.15, atol=0.02)
     for _ in range(10):
         w.apply({"gaze": W.act_flat([4, 4, 4])})
     assert abs(w.gaze[2] - W.VERG_MAX) < 1e-12 and abs(w.gaze[1] - W.GAZE_REACH_PITCH) < 0.01      # (the VOR's small turn within)
-    assert abs(w.gaze[0] - (W.GAZE_REACH_YAW - W.VERG_MAX / 2)) < 0.01 and w.gaze[0] <= W.GAZE_REACH_YAW - W.VERG_MAX / 2
+    ry = W.GAZE_REACH_YAW - W.VERG_MAX / 2                              # at the reach, or jumped back by the VOR's quick phase (a
+    assert ry / 2 - 0.01 <= w.gaze[0] <= ry                              # head swaying on softer servos, A39), never past it
     for side in "LR":                                                   # both windows inside their images at the reach
         x0, y0 = E.window_corner(side, w.gaze)
         cx, cy = E.window_centre(side, w.gaze)
@@ -123,7 +124,7 @@ def test_the_vor_in_the_world():
     held = w.gaze.copy()
     R0 = d.cam_xmat[c].reshape(3, 3).copy()
     turn = W.act_flat([4, 2, 3])                                         # the waist: yaw +big, pitch +small
-    for _ in range(4):
+    for _ in range(10):                                                  # (Unitree's waist gain turns it slower: A39)
         w.apply({"waist": turn, "gaze": W.EFFECTOR_REST["gaze"]})
     err_vor = _ray_angle(w, "L", P)
     R1 = d.cam_xmat[c].reshape(3, 3)
@@ -131,8 +132,9 @@ def test_the_vor_in_the_world():
     to = P - d.cam_xpos[c]; to /= np.linalg.norm(to)
     err_fixed = math.degrees(math.acos(min(1.0, float((R1 @ r) @ to))))
     turned = math.degrees(math.acos(min(1.0, (np.trace(R0.T @ R1) - 1) / 2)))
-    assert turned > 10 and err_fixed > 5 and err_vor < 0.25 * err_fixed and err_vor < 3.0, (turned, err_fixed, err_vor)
-    print(f"eyes 3: the trunk turned {turned:.0f} deg by the waist in 0.6 s: a window held fixed would be {err_fixed:.1f} deg off the",
+    assert turned > 4 and err_fixed > 1.5 and err_vor < 0.25 * err_fixed and err_vor < 3.0, (turned, err_fixed, err_vor)   # (the lying
+    # trunk turned against the mat by Unitree's softer waist: A39)
+    print(f"eyes 3: the trunk turned {turned:.0f} deg by the waist in 1.5 s: a window held fixed would be {err_fixed:.1f} deg off the",
           f"point 3 m away; with the VOR it is {err_vor:.2f} deg off (the rest: the eyes' translation and roll)")
 
 
@@ -248,16 +250,16 @@ def test_the_vor_quick_phase():
         c = w.m.camera("eye_L").id
         R0 = w.d.cam_xmat[c].reshape(3, 3).copy()
         w.gaze = np.array([start * (W.GAZE_REACH_YAW - 0.02), 0.0, 0.0])
-        for _ in range(8):
+        for _ in range(16):                                              # (Unitree's waist gain: A39)
             w.apply({"waist": W.act_flat([4, 2, 2]), "gaze": W.EFFECTOR_REST["gaze"]})
             quicks += w.frame().truth["vor_quick"]
             pinned += int(abs(w.gaze[0]) >= W.GAZE_REACH_YAW - 1e-4)
         R1 = w.d.cam_xmat[c].reshape(3, 3)
         turned = max(turned, math.degrees(math.acos(min(1.0, (np.trace(R0.T @ R1) - 1) / 2))))
-    assert turned > 10 and quicks >= 1 and pinned == 0, (turned, quicks, pinned)
+    assert turned > 5 and quicks >= 1 and pinned == 0, (turned, quicks, pinned)
     print(f"eyes 7: the VOR's quick phase: in a steady synthetic turn (yaw and pitch, both ways) the window jumps back by half its reach",
           f"in the direction of the turn and never passes it; in the world, the trunk turned {turned:.0f} deg by the waist with the window",
-          f"at its edge: {quicks} quick phases, 0 of 16 ticks pinned at the reach")
+          f"at its edge: {quicks} quick phases, 0 of 32 ticks pinned at the reach")
 
 
 def _drawn_face(size, cx, cy, polarity=1, bg=0.45, skin=0.75, dark=0.30, H=32, Wd=32):
@@ -293,8 +295,8 @@ def test_the_face_template():
     for dist in (0.45, 0.8, 1.5):
         _face_rig(w, dist)
         f = w.frame()
-        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "eye_p", "eye_f", "face_fovea",
-                              "face_periph"}, sorted(f.obs)
+        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "eye_p", "eye_f", "face_fovea", "face_periph", "imu_torso",
+                              "words", "face", "ears", "sound_side", "onset_periph"}, sorted(f.obs)
         t = f.truth["eyes"]
         assert t["face_test"]["L"][0] and t["face_test"]["R"][0]
         for side in "LR":
