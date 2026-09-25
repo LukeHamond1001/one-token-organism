@@ -34,7 +34,7 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                attention (a follow-in variation set naming its target as she reads it), and idle. Episodes (L3: the day plan,
                P4) and Claude's rows (P5) ask for intents through request(); the day plan asks for formal trials through
                probe() (never Claude: a trial's sentence requested as an intent is refused). The judgments she makes by talk
-               (a right name, a met ask, a trial's looking more on its target, an approximation, stage 1's vocal turn: 4.3's
+               (a right name, a met ask, an approximation, stage 1's vocal turn, never a formal trial (A60b): 4.3's
                worth table) are returned for her feelings (body/sim/parent_feel.Feelings.judge), and stage 2's frowns
                (Say.frown: a turn that talked over her, being hit) for Feelings.talk_over / harm; she never makes a feeling
                here. The motor judgments (a roll, a reach) and the face are the world's.
@@ -109,15 +109,20 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                same (on and off turned over). The name test: its name or a foil (NAME_FOILS, stress-matched names she never uses,
                matched to its name's clip in her voice: its ticks, energy, loudest moment and rise), drawn by the same stream,
                in the same voice and stillness, no things; the measure its face's share of the window after its name against
-               after a foil. Her judgment follows a trial as any ask's (A28: never withheld, never added), at its window's end:
-               a smile, with her confirm, when its looking went more to the target than to the distractor, and for its turn to
-               her face after its name until the name is understood; none after a foil. A trial counts for a word only when its
-               thing is a fresh never-taught item (its first NOVEL_PRESENTATIONS = 3, A28; both things count as presented
-               whichever is named, a combination's pair on each of its trials), whichever of the two was named, and the ledger's
-               "understood" reads only such trials (ledger.perm_test): its thing's share of the looking when its word was said
-               against when the other was, by a permutation test over the draw labels, one-sided p < 0.01 for the life, spent
-               over its tests (UNDERSTOOD_P, UNDERSTOOD_FIRST); for a child whose looking does not depend on the word the labels
-               are exchangeable, the named thing a fresh fair coin each trial, so it is null by construction. A probe dropped
+               after a foil. NO FEEDBACK IN A TRIAL (the lead's decision A60b, as labs give none in test trials): she gives
+               nothing for it, no smile and no confirm, her face neutral through the window and after it; a rewarded trial is
+               trainable by construction, so her smiles and her teaching stay in her everyday asks, which never count. A trial
+               counts for a word only when its thing is a fresh never-taught item (its first NOVEL_PRESENTATIONS = 3, A28;
+               both things count as presented whichever is named, a combination's pair on each of its trials), whichever of the
+               two was named, and the ledger's tests read only such trials (ledger.perm_test): its thing's share of the looking
+               when its word was said against when the other was, by a permutation test over the draw labels, one-sided p <
+               0.01 for the life, spent over its tests (UNDERSTOOD_P, UNDERSTOOD_FIRST); for a child whose looking does not
+               depend on the word the labels are exchangeable, the named thing a fresh fair coin each trial, so it is null by
+               construction. TWO LEVELS (A60b): the word's record, place trials of its trained thing, is level 1, "maps"; an
+               object noun is "understood", level 2, once the same test is passed also in its new-exemplar block, "exemplar"
+               trials each of a new exemplar of its kind never named by her before the probe (Ledger.was_named), a separate
+               registered block, testable once it stands against at least KIND_DISTRACTORS other things' words: a child keyed
+               to one particular thing passes level 1 and fails level 2, a knower of the kind passes both. A probe dropped
                once its two things were brought into view counts as a presentation of them all the same, and her trial's line
                carries no object (Say.line.refs empty): W2 and the world hear its words and are told nothing more.
                HER ATTENTION LOG (A51; kept for the trials' void rule and for P4's probes, which hold her still the same way:
@@ -1321,9 +1326,11 @@ class Conduct:
             else:
                 it_t, it_d = tr["new"].get(tr["target"]), tr["new"].get(tr["distractor"])
                 items = [x for x in (it_t, it_d) if x]         # a place, an angle, an exemplar: when it is displayed
-            fresh = lambda it: it is not None and self.ledger.presented(it) + int(tr["shown"].get(it, 0)) < \
-                K.NOVEL_PRESENTATIONS                                                          # noqa: E731
-            score = ([[kt, "trials", 1, 0]] if fresh(it_t) else []) + ([[kd, "yoked", 0, 1]] if fresh(it_d) else [])
+            level = 2 if tr["form"] == "exemplar" else 1        # a new exemplar of its kind: its word's second level (A60b),
+            fresh = lambda it, oid: it is not None and self.ledger.presented(it) + int(tr["shown"].get(it, 0)) < \
+                K.NOVEL_PRESENTATIONS and (level == 1 or not self.ledger.was_named(oid))       # noqa: E731   # never named
+            score = ([[kt, "trials", 1, 0, level]] if fresh(it_t, ot.id) else []) + \
+                ([[kd, "yoked", 0, 1, level]] if fresh(it_d, od.id) else [])                   # before the probe
             target, distractor = dict(id=ot.id, word=kt), dict(id=od.id, word=kd)
             sides = (tr["left"], tr["right"])
         onset = int(t) + tr["onset_at"]                      # the trial's one timeline (_trial_stimuli), whichever is named
@@ -1411,11 +1418,12 @@ class Conduct:
 
     def _trial_end(self, t, res, why, out, p):
         """the trial ends: never said, dropped and logged; said, its outcome in the ledger (ledger.trial_outcome: scored by its
-        window's looks, or void, never scored), and her judgment as any ask's (A28: never withheld, never added), at its
-        window's end, once her face has held its neutral set through it: a smile, with her confirm after it, when its looking
-        went more to the target than to the distractor (the share its test reads, above 1/2), and for its turn to her face in
-        its window after its name (HOLD ticks of it) until the name is understood; none after a foil (it is not its name), and
-        none for a void."""
+        window's looks, or void, never scored). NO FEEDBACK (the lead's decision A60b, as infant labs give none in test trials:
+        Fernald et al. 2008; Golinkoff et al. 1987): she gives nothing for a trial, no smile, no confirm, no line about it; her
+        face holds its neutral set through the window and after it, and nothing she does after it reads which thing was named.
+        A rewarded trial is trainable by construction (a child that learned its delay from her smiles after trials reached
+        "understood" in up to 8 of 12 lives keyed on one band of its ear); her smiles and her teaching stay in her everyday asks,
+        which never count."""
         tr, self.trial = self.trial, None
         if tr["tid"] is None:
             return self._probe_drop(t, tr["form"], why, tr)
@@ -1423,16 +1431,6 @@ class Conduct:
             self.ledger.trial_outcome(t, tr["tid"], "scored", why, on=tr["on"], off=tr["off"])
         else:
             self.ledger.trial_outcome(t, tr["tid"], "void", why)
-            return
-        if tr["form"] == "name":
-            if tr["name"] and tr["on"] >= K.HOLD and not self.ledger.understood(NAME):
-                out.judgments.append((K.WORTH_MET_ASK, "met_trial", NAME))
-                self.reply_due = dict(tick=t, kind="confirm", word=NAME, obj=None)
-            return
-        if tr["on"] > tr["off"]:
-            out.judgments.append((K.WORTH_MET_ASK, "met_trial", tr["word"] if tr["form"] != "combination" else
-                                  p.obj(tr["target"]).name if p.obj(tr["target"]) is not None else tr["word"]))
-            self.reply_due = dict(tick=t, kind="confirm", word=None, obj=tr["target"])
 
     def _prompt(self, t, t0, t1):
         """an ask or a trial of hers spans ticks t0..t1 (its line's first tick to its window's last): kept PROMPT_KEEP ticks."""

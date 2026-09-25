@@ -152,6 +152,14 @@ UNDERSTOOD_FIRST = 12                 # its first test at its 12th registered tr
                                       # a perfect separation's p (1 / C(n, k), k of n trials naming it) under it: at 12 trials and
                                       # 0.005 when 3 to 9 named it (96% of lives), else that test is not testable and its level
                                       # is not spent elsewhere (ours: the fewest trials whose tests reach 0.005 in most lives)
+KIND_DISTRACTORS = 2                  # two levels (the lead's decision A60b): the test above over its record is level 1, "maps"
+                                      # (its word to the trained thing); "understood", level 2, for an object noun, is the same
+                                      # test passed also in its new-exemplar block, a separate registered block of "exemplar"
+                                      # trials, each a new exemplar of its kind never named before the probe (A28's first 3
+                                      # presentations, A53's calendar), tested as the record is, its levels spent the same way,
+                                      # and testable only once its trials stand against at least 2 other things' words (the
+                                      # lead's; Waxman and Booth 2001, category labels): a child keyed to one particular thing
+                                      # passes level 1 and fails level 2, a knower of the kind passes both
 PERM_EXACT_N = 36                     # the permutation test's p exact (every relabeling counted, two halves of the trials each
                                       # enumerated: meet in the middle) up to 36 trials; past them PERM_DRAWS relabelings drawn
 PERM_DRAWS = 20000                    # from the stream PERM_SEED, p = (1 + those at least as far) / (draws + 1), a valid p at any
