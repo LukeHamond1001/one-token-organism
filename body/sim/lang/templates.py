@@ -275,6 +275,8 @@ class Line:
     refs: tuple = ()                # the object ids its slots were filled from
     source: str = "fast"            # "fast" (the templates) or "claude" (a steering row's line)
     frame: str = ""                 # the frame it was filled from
+    shape: tuple = None             # a formal trial's test word's own rate and pitch: (word, rate, pitch), the recipe that puts
+                                    # every sentence its draw could give on one timeline (stimuli.py, synth.line_ssml)
 
 
 # ---------------------------------------------------------------------------------------- the new word's pitch peak (A34)

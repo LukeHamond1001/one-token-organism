@@ -77,13 +77,19 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                (TRIAL_STREAM), each a fair coin, so chance is 50%: any child whose first look does not depend on the word, a
                follower of her gaze or her hands, a side's or a toy's favourite, scores 50% trial by trial; nothing she does
                before the sentence depends on the draw (W2's placing, the settle, the display's checks, the line check of both
-               things' sentences, whichever is named). ONE TIMELINE (P3's eleventh round): every sentence the draw could have
-               given (the two things', or its name's and each foil's) is timed in her voice before one is said, and the trial
-               runs on one timeline for all of them: the window opens at the latest of their target words' onsets and runs
-               TRIAL_WINDOW = 20 ticks, and her voice is held to the latest of their ends whichever is said, so no rule reads a
-               time that depends on which was named (her voice makes "where is the ball?" 10 ticks and "where is the block?"
-               11; the tenth round's rules read the named sentence's own timing, and a child that knew no word, sounding at a
-               fixed time from her voice, had every "block" trial voided by her talk-over frown or cut and "ball" understood).
+               things' sentences, whichever is named). TIME-MATCHED STIMULI, BY CONSTRUCTION (P3's twelfth round, the lead's
+               decision on C67, as infant labs match theirs; stimuli.py): every sentence the draw could give (the two things',
+               or its name and each foil) is made before anything is brought, on one carrier a form, its test word said at the
+               engine's own per-word rate and pitch from the table measured before birth (trial_lines.json: the word's length
+               to one common duration, its pitch contour matched), and timed on its rendered clip: they must be one timeline
+               (the clip's ticks, each word's first and last tick, every tick loud or silent alike, its RMS above -36 or its
+               loudest 10 ms below -60 dB of full scale, and while the word scaffold labels her lines the words channel's symbols), or the probe is
+               dropped and logged, never said; the clip she says is held to it again. So the test word's onset (the window's
+               first tick, TRIAL_WINDOW = 20 ticks), its end, her sentence's end and her voice's ticks are the same ticks
+               whichever is named, and no rule, nor any child timing a look, a sound, a reach or an act from her voice or her
+               sound's stop, reads a time that depends on the draw (the eleventh round's one timeline took the latest onset and
+               end of sentences her voice said at 10-12 ticks, and a child timed from her sound's stop still met or voided one
+               word's trials and not the other's: C67; the tenth round's rules read the named sentence's own timing).
                Nothing the child's voice does voids a trial: through its sentence and window she makes no talk-over stop and
                no frown and judges no turn of the child's (her face holds its neutral set; the turn is answered after the trial
                as any she makes no judgment of). The measure is the child's first look (her reading of its head
@@ -91,9 +97,8 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                void if it already attended one at the onset, or both at once, or if her attention log shows anything but her
                mouth moving from the sentence's first tick to the decision (a tick not read voids it before that tick's percept
                is read: fail-closed), or the child's pain, distress or hit, or the world stopping her sentence (her voice is
-               stopped only by the conduct, Say.cut, never in a trial). For a child whose looks, reaches and acts do not depend
-               on the word said (its voice may: a turn-taker's turn follows her sentence's own length), which trials are scored
-               then does not depend on which was named. The name
+               stopped only by the conduct, Say.cut, never in a trial). For a child whose looks, reaches, sounds and acts do not
+               depend on the word said, every trial ends the same with the other thing named (a met for a missed). The name
                test: its name or a foil (NAME_FOILS, stress-matched names she never uses, matched to its name's clip in her voice:
                its ticks, energy, loudest moment and rise), drawn by the same stream, in the same voice and stillness, no things;
                the measure is its turn to her face after its name against after the foil. Her
@@ -145,12 +150,14 @@ Nothing here draws a random number but her own streams of the body's seed (her l
 her imperfection's IMPERFECT_STREAM = 5, her trials' TRIAL_STREAM = 6); state() and load_state() carry everything, so a replay is
 exact (a saved Conduct restored continues its lines, choices, trials and ledger bit for bit: body/tests/test_sim_lang.py).
 """
+import json
 import math
 from dataclasses import dataclass, field
 
 import numpy as np
 
 from . import consts as K
+from . import stimuli as ST
 from . import templates as TP
 from .lexicon import BIRTH_WORDS, NAME, PARENT_NAME
 from .percept import Reader
@@ -839,11 +846,12 @@ def _old_entry(e):
 
 def _line_d(ln):
     return dict(text=ln.text, intent=ln.intent, register=ln.register, focus=ln.focus, emphasis=ln.emphasis, refs=list(ln.refs),
-                source=ln.source, frame=ln.frame)
+                source=ln.source, frame=ln.frame, shape=None if ln.shape is None else list(ln.shape))
 
 
 def _line_l(d):
-    return TP.Line(d["text"], d["intent"], d["register"], d["focus"], d["emphasis"], tuple(d["refs"]), d["source"], d["frame"])
+    return TP.Line(d["text"], d["intent"], d["register"], d["focus"], d["emphasis"], tuple(d["refs"]), d["source"], d["frame"],
+                   None if d.get("shape") is None else tuple(d["shape"]))
 
 
 # ------------------------------------------------------------------------------------------------------------- conduct
@@ -864,7 +872,7 @@ class Conduct:
     for a test isolating another rule (then she answers every turn, REPLY_AFTER ticks after it, and copies nothing)."""
 
     def __init__(self, seed=1, voice=None, transcriber=None, ledger=None, motion=None, vocab=BIRTH_WORDS, stage=1, world=None,
-                 imperfect=True):
+                 imperfect=True, scaffold=True):
         from .ledger import Ledger                                   # noqa: PLC0415 (the ledger imports nothing of this)
         self.fast = FastLayer(seed, vocab, stage)
         self.voice = voice
@@ -873,6 +881,9 @@ class Conduct:
         self.motion = motion if motion is not None else StubMotion()
         self.reader = Reader(seed)
         self.imperfect = bool(imperfect)
+        self.scaffold = bool(scaffold)        # the words channel labels her lines (the world's scaffold, A29: on from birth until
+                                              # its removal test silences it on a copy; set_scaffold): a trial's stimuli are one
+                                              # timeline on it too (4.8)
         self.imp = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(K.IMPERFECT_STREAM,))))
         self.world = None
         self.set_world(world if world is not None else TP.ROOM_AT_BIRTH)
@@ -922,6 +933,11 @@ class Conduct:
         child's eyes, her hands resting on her thighs, her face in its neutral set, and starts no act (nor does P4); her attention
         log must show it, or the trial is void."""
         return self.trial is not None and self.trial["phase"] in ("settle", "said")
+
+    def set_scaffold(self, on):
+        """the world's word scaffold (A29): True while the words channel labels her lines, False once its removal test has
+        silenced it (on a copy, at a night boundary)."""
+        self.scaffold = bool(on)
 
     def set_world(self, world):
         """the world's inventory (plain data, saved with the conduct); its acts are her motion's."""
@@ -1071,6 +1087,9 @@ class Conduct:
             name = u[0] < 0.5
             foil = K.NAME_FOILS[min(len(K.NAME_FOILS) - 1, int(u[2] * len(K.NAME_FOILS)))]
             tr.update(phase="settle", name=bool(name), said=NAME if name else foil, foil=foil)
+            why = self._trial_stimuli(tr)
+            if why is not None:
+                return self._probe_drop(t, form, why)
             self.trial = tr
             return
         oa, ob = p.obj(a), p.obj(b)
@@ -1092,6 +1111,9 @@ class Conduct:
         target, other = (a, b) if u[0] < 0.5 else (b, a)
         left, right = (a, b) if u[1] < 0.5 else (b, a)
         tr.update(target=target, distractor=other, left=left, right=right)
+        why = self._trial_stimuli(tr, oa, ob)               # before anything is brought: a pair not one timeline in her
+        if why is not None:                                 # voice is never presented
+            return self._probe_drop(t, form, why)
         tr["act"] = self._request(Act("present", f"{left}|{right}"), t, p)
         self.trial = tr
 
@@ -1132,13 +1154,11 @@ class Conduct:
     def _trial_line(self, t, p):
         """her trial's single test sentence once its settle has held SETTLE ticks and its display holds, or None: "where is the
         X?" (the target's word), "where is the C X?" (a combination: the held-out pair allowed in this line alone), its name or
-        a foil ("pip." / "viv.", in its name's register), each with no act. The sentence of either thing failing the line check
-        (a word not hers, a new word off its peak) drops the probe whichever is named: a drop that followed the draw would name
-        the sayable thing every time it ran, and a child's favourite among the two would score above chance. Every sentence
-        the draw could have given (the two things', or its name's and each foil's) is timed in her voice (_timing), and the
-        trial runs on one timeline for all of them (P3's eleventh round): its window opens at the latest of their target
-        words' onsets, and her voice is held until the latest of their ends, so no rule reads a time that depends on which
-        was named."""
+        a foil ("pip." / "viv.", in its name's register), each with no act, its test word said as its stimulus is made
+        (_trial_stimuli: its shape, so every sentence the draw could give runs on one timeline in her voice). The sentence of
+        either thing failing the line check (a word not hers, a new word off its peak) drops the probe whichever is named: a
+        drop that followed the draw would name the sayable thing every time it ran, and a child's favourite among the two would
+        score above chance."""
         tr = self.trial
         if tr is None or tr["phase"] != "settle" or tr["run"] < K.SETTLE:
             return None
@@ -1147,61 +1167,95 @@ class Conduct:
             tr["why"] = why
             return None
         f = self.fast
+        lines = {k: _line_l(d) for k, d in tr["lines"].items()}
         if tr["form"] == "name":
-            lines = {NAME: TP.Line(f"{NAME}.", "trial_name", "calling", NAME, NAME, (), "fast", "{n}.")}
-            for x in K.NAME_FOILS:
-                lines[x] = TP.Line(TP.foil_line(x), "trial_name", "calling", None, x, (), "fast", "{f}.")
-            self._trial_timeline(tr, [(ln, w) for w, ln in lines.items()])
             return lines[NAME if tr["name"] else tr["foil"]]
-        intent = "trial_combo" if tr["form"] == "combination" else "trial_where"
-        lines, cands = {}, []
         for oid in (tr["target"], tr["distractor"]):        # both sentences held to the check, whichever is named, so a
-            o = p.obj(oid)                                  # probe is never dropped by which of the two her stream drew
-            text, focus, refs = TP.fill(TP.FRAMES[intent][0], o=o)
+            ln = lines[oid]                                 # probe is never dropped by which of the two her stream drew
             twin = p.obj(tr.get("twin")) if tr.get("twin") else None
             held = tuple(h for h in f.held if twin is None or tuple(h) != (twin.colour, twin.name))
-            ok, why = TP.check(text, f.vocab, f.new_words, p, refs, held, recent_events=f.recent)
+            ok, why = TP.check(ln.text, f.vocab, f.new_words, p, (oid,), held, recent_events=f.recent)
             if not ok:
                 self.trial = None
-                self._probe_drop(t, tr["form"], f"the sentence {text!r} (of either thing) fails the line check: {why}", tr)
+                self._probe_drop(t, tr["form"], f"the sentence {ln.text!r} (of either thing) fails the line check: {why}", tr)
                 return None
-            lines[oid] = TP.Line(text, intent, register_for(intent, text), focus, focus, (), "fast", TP.FRAMES[intent][0][0])
-            cands.append((lines[oid], o.colour if tr["form"] == "combination" else o.name))
-        self._trial_timeline(tr, sorted(cands, key=lambda c: c[0].text))
         return lines[tr["target"]]                          # (no refs: the line leaves her as Say.line, and neither W2 nor
                                                             # the world is ever told which thing is named; its words are)
 
-    def _timing(self, line, word, heard=False):
-        """a line as her voice says it -> (its ticks, the tick of word's onset from its start, the clip or None): the voice's
-        clip (not heard: made ahead, as a night's warm() makes lines, so a sentence she does not say is not kept as heard),
-        or with no voice 3 ticks a word."""
+    def _clip(self, line, heard=True):
+        """a line's clip in her voice (its test word's shape, a trial's stimulus, when it has one); heard=False: made ahead, as
+        a night's warm() makes lines, so a sentence she does not say is never kept as heard."""
+        kw = dict(emphasis=line.emphasis)
+        if line.shape is not None:
+            kw["shape"] = tuple(line.shape)
+        if not heard:
+            try:
+                return self.voice.clip(line.text, line.register, heard=False, **kw)
+            except TypeError:                               # a voice without warm()'s made-ahead store (a test's)
+                pass
+        return self.voice.clip(line.text, line.register, **kw)
+
+    def _timeline(self, line, word, clip=None):
+        """a sentence as the child can time from it (stimuli.timeline): its clip in her voice, and while the word scaffold labels
+        her lines (self.scaffold, A29) the words channel's symbols as the world's playback hands them; with no voice, the
+        instrument's 3 ticks a word (no clip, no playback, no channel)."""
         if self.voice is None:
             ws = TP.words(line.text)
-            return 3 * len(ws), 3 * (ws.index(word) if word in ws else len(ws) - 1), None
-        try:
-            clip = self.voice.clip(line.text, line.register, emphasis=line.emphasis, heard=heard)
-        except TypeError:                                   # a voice without warm()'s made-ahead store (a test's)
-            clip = self.voice.clip(line.text, line.register, emphasis=line.emphasis)
-        spans = [(w, int(a), int(e)) for w, a, e in clip.words]
-        ws = [w for w, _a, _e in spans]
-        at = spans[ws.index(word)][1] if word in ws else spans[-1][1]
-        return int(math.ceil(len(clip.pcm) / TICK)), at // TICK, clip
+            spans = [(w, 3 * i * TICK, (3 * i + 3) * TICK) for i, w in enumerate(ws)]
+            return ST.timeline(spans, 3 * len(ws) * TICK, None, False, ws.index(word) if word in ws else None)
+        clip = clip if clip is not None else self._clip(line, heard=False)
+        ws = [w for w, _a, _e in clip.words]
+        return ST.timeline(clip.words, len(clip.pcm), clip.pcm, self.scaffold, ws.index(word) if word in ws else None)
 
-    def _trial_timeline(self, tr, cands):
-        """the trial's one timeline over every sentence its draw could have given, cands [(Line, the word that tells them
-        apart)], in an order that does not depend on the draw: its ticks, the latest (her voice held to it whichever is said)
-        and the onset, the latest of the words' (its window opens there whichever is named). Her reading of a look holds 3
-        ticks (A40), so a knower's look begun at the earlier of two onsets is read 2 ticks after it at the soonest: onsets a
-        tick apart void no knower (her voice today puts every trial word's onset on tick 4)."""
-        got = [self._timing(ln, w) for ln, w in cands]
-        tr["ticks"] = max(g[0] for g in got)
-        tr["onset_at"] = max(g[1] for g in got)
+    def _trial_stimuli(self, tr, oa=None, ob=None):
+        """a trial's stimuli, made before anything is brought (P3's twelfth round, the lead's decision on C67: time-matched
+        by construction, as infant labs match theirs) -> why they cannot be used, or None. Every sentence its draw could give
+        (the two things' "where is the X?" or a combination's "where is the C X?", or its name and each foil) is made with its
+        test word's shape from the table (stimuli.shape: the engine's own per-word rate and a matched pitch contour, measured
+        before birth; with no voice none is needed) and timed on its rendered clip, made ahead and never kept as heard
+        (_timeline); they must be one timeline (stimuli.same: the clip's ticks, each word's first and last tick, every tick
+        loud or silent alike, and the words channel's symbols while the scaffold labels her lines), or the probe is dropped and
+        logged, never said. So whichever is named, her test word's onset, its end, her sentence's end and her voice's ticks
+        fall on the same ticks, and no rule of the trial, nor any child timing an act from her sound, reads a time that
+        depends on the draw. Kept in tr: each sentence's line (lines), its common ticks, the test word's onset tick from its
+        start (onset_at), and the timeline itself (checked again on the clip she says)."""
+        form = tr["form"]
+        if form == "name":
+            key = ST.form_key("name")
+            cands = [(NAME, TP.Line(f"{NAME}.", "trial_name", "calling", NAME, NAME, (), "fast", "{n}."), NAME)] + \
+                [(x, TP.Line(TP.foil_line(x), "trial_name", "calling", None, x, (), "fast", "{f}."), x) for x in K.NAME_FOILS]
+        else:
+            intent = "trial_combo" if form == "combination" else "trial_where"
+            key = ST.form_key(form, oa.name)
+            cands = []
+            for o in (oa, ob):
+                text, focus, _refs = TP.fill(TP.FRAMES[intent][0], o=o)
+                cands.append((o.id, TP.Line(text, intent, register_for(intent, text), focus, focus, (), "fast",
+                                            TP.FRAMES[intent][0][0]), o.colour if form == "combination" else o.name))
+        cands.sort(key=lambda c: c[1].text)                 # an order that does not depend on the draw
+        lines, tls = {}, []
+        for k, ln, word in cands:
+            if self.voice is not None:
+                shp, why = ST.shape(key, word)
+                if shp is None:
+                    return why
+                ln = TP.Line(ln.text, ln.intent, ln.register, ln.focus, ln.emphasis, ln.refs, ln.source, ln.frame, shp)
+            lines[k] = ln
+            tls.append(self._timeline(ln, word))
+        why = ST.same(tls, [ln.text for _k, ln, _w in cands])
+        if why is not None:
+            return f"the sentences its draw could give are not one timeline in her voice: {why}"
+        slot = tls[0]["carrier"].index("_")
+        tr.update(lines={k: _line_d(ln) for k, ln in lines.items()}, ticks=tls[0]["ticks"],
+                  onset_at=tls[0]["words"][slot][0], timeline=json.dumps(tls[0], sort_keys=True))
+        return None
 
     def _trial_said(self, line, t, n_own, p, out):
         """her test sentence begins at t (its own sound n_own ticks): its window opens at the target word's onset (the word
-        that tells the two apart: the noun, a combination's colour, its name or the foil), on the trial's one timeline (the
-        latest onset of every sentence the draw could have given), and runs TRIAL_WINDOW ticks; her voice is held to the
-        timeline's end (line_end). The ledger records the trial, what it scores (the named word's test when its thing is a
+        that tells the two apart: the noun, a combination's colour, its name or the foil), on the trial's one timeline (its
+        stimuli's, the same for every sentence the draw could have given: _trial_stimuli), and runs TRIAL_WINDOW ticks; her
+        voice is held to the timeline's end (line_end), the sentence's own. The ledger records the trial, its stimuli (their
+        ticks, the onset and the sentences made one timeline), what it scores (the named word's test when its thing is a
         fresh never-taught item, A28; the distractor's yoked rate when its thing is; for the name, its test or its foil rate)
         and the items it presents: both things displayed, whichever is named (a combination's pair on every trial of it, its
         twin shown beside its original, P3's eleventh round: counted only when said, its fresh trials had depended on her
@@ -1227,12 +1281,18 @@ class Conduct:
             score = ([[kt, "trials", 1, 0]] if fresh(it_t) else []) + ([[kd, "yoked", 0, 1]] if fresh(it_d) else [])
             target, distractor = dict(id=ot.id, word=kt), dict(id=od.id, word=kd)
             sides = (tr["left"], tr["right"])
-        onset = int(t) + tr["onset_at"]                      # the trial's one timeline (_trial_timeline), whichever is named
+        onset = int(t) + tr["onset_at"]                      # the trial's one timeline (_trial_stimuli), whichever is named
         tr.update(phase="said", line_start=int(t), line_end=int(t) + tr["ticks"] - 1, sound_end=int(t) + n_own, onset=onset,
                   until=onset + K.TRIAL_WINDOW, word=word_at)
+        stim = dict(ticks=tr["ticks"], onset=tr["onset_at"], sentences=sorted(d["text"] for d in tr["lines"].values()),
+                    shapes=sorted([list(d["shape"]) for d in tr["lines"].values() if d.get("shape")]),
+                    channel=bool(self.scaffold and self.voice is not None))
         tr["tid"] = self.ledger.trial(t, tr["form"], target, distractor, onset, K.TRIAL_WINDOW, tr["said"] if tr["form"] ==
-                                      "name" else word_at, sides=sides, score=score, items=items)
+                                      "name" else word_at, sides=sides, score=score, items=items, stimulus=stim)
         self._prompt(t, t, onset + K.TRIAL_WINDOW)
+        if tr.get("stray"):                                  # her sentence as said is not its stimulus's timeline (a voice
+            return self._trial_end(t, "void", "her sentence as said is not the timeline its stimuli were made on "   # changed)
+                                              "(fail-closed)", out, p)
         if onset == t:                                       # the name: its onset is the line's first tick
             res, why = self._trial_judge(tr, t, p)
             if res is not None:
@@ -1276,9 +1336,10 @@ class Conduct:
         tr = self.trial
         if tr is None:
             return
-        if tr["phase"] == "said" and tr.get("line_end") is None:   # a save from before P3's eleventh round, mid-trial: its
-            return self._trial_end(t, "void", "saved before its trial had one timeline (fail-closed)", out, p)   # window
-        ev = {k for k, _o in p.events}                              # was the named sentence's own
+        if tr.get("timeline") is None:                     # a save from before P3's twelfth round, mid-trial: its sentences
+            return self._trial_end(t, "void" if tr["phase"] == "said" else "dropped",      # were not made one timeline
+                                   "saved before its stimuli were time-matched (fail-closed)", out, p)
+        ev = {k for k, _o in p.events}
         if ev & {"pain", "distress", "hit_her"}:
             return self._trial_end(t, "void", "she answered its pain, distress or hit (4.10's priority)", out, p)
         e = self.attn[-1] if self.attn and self.attn[-1]["t"] == t else None
@@ -1782,7 +1843,7 @@ class Conduct:
         f = self.fast
         clip = None
         if self.voice is not None:
-            clip = self.voice.clip(line.text, line.register, emphasis=line.emphasis)
+            clip = self._clip(line)
             n = int(math.ceil(len(clip.pcm) / TICK))
             spans = [(w, int(a), int(e)) for w, a, e in clip.words]
         else:
@@ -1791,7 +1852,12 @@ class Conduct:
             spans = [(w, 3 * i * TICK, (3 * i + 3) * TICK) for i, w in enumerate(ws)]
         n_own = n
         if line.intent in TRIAL_INTENTS and self.trial is not None:
-            n = max(n, self.trial["ticks"])                  # her voice held to the trial's one timeline's end (4.8)
+            n = max(n, self.trial["ticks"])                  # her voice held to the trial's one timeline's end (4.8): its
+            tr = self.trial                                  # stimuli are one timeline, so this is its own
+            word = tr["said"] if tr["form"] == "name" else line.focus if tr["form"] != "combination" else \
+                p.obj(tr["target"]).colour if p.obj(tr["target"]) is not None else None
+            if json.dumps(self._timeline(line, word, clip), sort_keys=True) != tr["timeline"]:
+                tr["stray"] = True                           # said, then void at once: not its stimulus's timeline
         word_ends = [(w, t + (max(e, 1) - 1) // TICK) for w, _a, e in spans]
         f.commit(line, t, n, spans, in_set=in_set)
         self.ledger.said(t, line, p, clip=clip, n_ticks=n, word_ends=word_ends)
@@ -1846,7 +1912,7 @@ class Conduct:
                     last_vocal_smile=self.last_vocal_smile, turn=self.turn,
                     sound_hist=list(self.sound_hist), nonstop_since=self.nonstop_since,
                     requests=[[i, dict(k)] for i, k in self.requests], cuts=self.cuts, world=dict(self.world),
-                    motion=self.motion.state(), reader=self.reader.state(), imperfect=self.imperfect,
+                    motion=self.motion.state(), reader=self.reader.state(), imperfect=self.imperfect, scaffold=self.scaffold,
                     imp=self.imp.bit_generator.state, turns=list(self.turns), copy_next=self.copy_next,
                     copies=[list(c) for c in self.copies],
                     ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state())
@@ -1872,6 +1938,7 @@ class Conduct:
         self.motion.load_state(s["motion"])
         self.reader.load_state(s["reader"])
         self.imperfect = s["imperfect"]
+        self.scaffold = s.get("scaffold", True)             # (a save before P3's twelfth round: the scaffold on, as at birth)
         self.imp.bit_generator.state = s["imp"]
         self.turns, self.copy_next = list(s["turns"]), s["copy_next"]
         self.copies = [tuple(c) for c in s["copies"]]

@@ -349,7 +349,29 @@ def _pct(x):
     return f"{x:.4g}%"
 
 
-def line_ssml(text, pitch, rate, emphasis=None):
+def _signed(x):
+    return f"{'+' if x >= 0 else ''}{x:.4g}%"
+
+
+def _word_at(esc, word, text):
+    """the last whole-word occurrence of word in the escaped line -> (its first index, the end of the punctuation that follows
+    it: a word's own punctuation goes inside its prosody)."""
+    low, w = esc.lower(), word.lower()
+    i = -1
+    for k in range(len(low) - len(w), -1, -1):
+        if low[k:k + len(w)] == w and (k == 0 or not low[k - 1].isalpha()) and \
+                (k + len(w) == len(low) or not low[k + len(w)].isalpha()):
+            i = k
+            break
+    if i < 0:
+        raise ValueError(f"{word!r} is not a word of {text!r}")
+    j = i + len(w)
+    while j < len(esc) and esc[j] in ".?!":
+        j += 1
+    return i, j
+
+
+def line_ssml(text, pitch, rate, emphasis=None, shape=None):
     """a line as SSML: the register's pitch multiplier and rate as one prosody around it (the engine ignores an utterance's own
     rate and pitch when it is given SSML, and honours SSML's rate below the utterance rate's floor), and, if emphasis names one
     of its words, its last occurrence on a pitch peak and slower: infant-directed speech's focus word, a new word said
@@ -358,37 +380,43 @@ def line_ssml(text, pitch, rate, emphasis=None):
     SpokenMark), and its rate is EMPHASIS's share of the line's own (the engine reads a nested prosody's rate against its
     default rate, not the enclosing one: measured, 40% inside 40% changes nothing; its pitch it reads against the enclosing
     one: +30% inside the line's raises the word's F0 by 1.30). A plain line in SSML is the same clip, bit for bit, as the
-    utterance with that pitch and rate (measured on the three test lines)."""
+    utterance with that pitch and rate (measured on the three test lines).
+    shape: (word, rate, pitch), a formal trial's test word said at its own rate (percent of the engine's default rate, the
+    engine's own per-word rate: its steps, tools/sim_voice_check.py --trial) and pitch (percent over the line's), so every
+    sentence a trial's draw could give runs on one timeline in her voice (docs/SIM_DESIGN.md 4.8, P3's twelfth round; its
+    values from body/sim/lang/trial_lines.json); on the emphasized word it takes the place of EMPHASIS's values, on another
+    word (a combination's colour) it is that word's own prosody. None: the SSML is as it was, bit for bit."""
     esc = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    marks = []                                                          # [first index, end, pitch, rate]
     if emphasis:
-        low, w = esc.lower(), emphasis.lower()
-        i = -1
-        for k in range(len(low) - len(w), -1, -1):
-            if low[k:k + len(w)] == w and (k == 0 or not low[k - 1].isalpha()) and \
-                    (k + len(w) == len(low) or not low[k + len(w)].isalpha()):
-                i = k
-                break
-        if i < 0:
-            raise ValueError(f"{emphasis!r} is not a word of {text!r}")
-        j = i + len(w)
-        while j < len(esc) and esc[j] in ".?!":                       # the word's own punctuation goes inside its prosody
-            j += 1
+        i, j = _word_at(esc, emphasis, text)
         p, f = EMPHASIS
-        esc = f'{esc[:i]}<prosody pitch="{p}" rate="{_pct(f * rate / ENGINE_RATE * 100)}">{esc[i:j]}</prosody>{esc[j:]}'
+        marks.append([i, j, p, _pct(f * rate / ENGINE_RATE * 100)])
+    if shape:
+        w, r_pct, p_pct = shape
+        i, j = _word_at(esc, w, text)
+        m = next((m for m in marks if m[0] == i), None)
+        if m is None:
+            marks.append([i, j, _signed(float(p_pct)), _pct(float(r_pct))])
+        else:
+            m[2], m[3] = _signed(float(p_pct)), _pct(float(r_pct))
+    for i, j, p, r in sorted(marks, reverse=True):                     # the later word first: the earlier's index holds
+        esc = f'{esc[:i]}<prosody pitch="{p}" rate="{r}">{esc[i:j]}</prosody>{esc[j:]}'
     return f'<speak><prosody pitch="{_pct((pitch - 1) * 100) if pitch < 1 else "+" + _pct((pitch - 1) * 100)}" ' \
            f'rate="{_pct(rate / ENGINE_RATE * 100)}">{esc}</prosody></speak>'
 
 
-def request(text, register="plain", emphasis=None, voice=PARENT_VOICE, prosody=None):
+def request(text, register="plain", emphasis=None, voice=PARENT_VOICE, prosody=None, shape=None):
     """-> (the key, the request, the register's level in dB). A new word's line must name its new word as emphasis: the parent
     introduces a new word on its pitch peak and lengthened, on every line she uses for it (". ? !" alike; the design's 4.4 and
     C25, measured by ending in tools/sim_voice_check.py). prosody: (pitch, rate) in place of a register's, at the plain level,
     for the parent's ear's templates only (body/sim/parent_ear.py: other voices, the old child pitch; lang/consts.EAR_VOICES);
-    never a line she says, whose register is always one of REGISTERS."""
+    never a line she says, whose register is always one of REGISTERS. shape: a formal trial's test word's own rate and pitch
+    (line_ssml)."""
     if register == "new_word" and not emphasis:
         raise ValueError(f"a new word's line must emphasize its new word: {text!r}")
     p, r, g = REGISTERS[register] if prosody is None else (float(prosody[0]), float(prosody[1]), 0.0)
-    req = {"format": FORMAT, "sr": SR, "voice": voice, "ssml": line_ssml(text, p, r, emphasis)}
+    req = {"format": FORMAT, "sr": SR, "voice": voice, "ssml": line_ssml(text, p, r, emphasis, shape)}
     key = _sha(json.dumps(req, sort_keys=True, separators=(",", ":")).encode())
     return key, req, g
 
@@ -487,12 +515,12 @@ class VoiceCache:
         if store is self.clips:
             self.size += pp.stat().st_size + pj.stat().st_size
 
-    def clip(self, text, register="plain", emphasis=None, voice=PARENT_VOICE, heard=True, prosody=None):
+    def clip(self, text, register="plain", emphasis=None, voice=PARENT_VOICE, heard=True, prosody=None, shape=None):
         """the line in a register (and, if emphasis names one of its words, with that word emphasized) -> Clip. heard: the
         life hears it (the parent says it): the clip is kept for good; heard=False: made ahead (warm()), trimmed by the limit.
-        (The parent's ear's templates are made with heard=True: kept for good, as part of the life's fixed ear.) prosody: see
-        request()."""
-        key, req, gain = request(text, register, emphasis, voice, prosody)
+        (The parent's ear's templates are made with heard=True: kept for good, as part of the life's fixed ear.) prosody, shape:
+        see request()."""
+        key, req, gain = request(text, register, emphasis, voice, prosody, shape)
         got, expect = self._read(key, req, self.kept, text, register)
         if got is None:
             got, ahead = self._read(key, req, self.clips, text, register)

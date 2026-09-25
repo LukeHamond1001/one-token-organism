@@ -25,8 +25,9 @@ THE RECORD. One JSON line per event, keys sorted, in the life's folder (ledger.j
               heard)
   trial       a formal trial (4.8, 12; the conduct's probe): its form (consts.TRIAL_FORMS), the target and the distractor (their
               ids and the words they stand for), the sides, the word said (its name or a foil, for the name test), the tick
-              its window opens (the target word's onset on the trial's one timeline: the latest of every sentence its draw
-              could have given) and its length, the never-taught items presented, and what it scores
+              its window opens (the target word's onset on the trial's one timeline, every sentence its draw could have given
+              made on it: P3's twelfth round) and its length, its stimuli (their ticks, the onset, the sentences, their test
+              words' shapes, the words channel held to it or not), the never-taught items presented, and what it scores
               (each of its two things that is a fresh never-taught item scores for its word, named or the other named; the
               name test for its name, its name or a foil said)
   trial_outcome  met (the child's first look or reach on the target; for the name test its turn to her face), missed (on the
@@ -392,13 +393,14 @@ class Ledger:
         """a never-taught item's presentations in trials so far (A28: a probe only on its first 3)."""
         return int(self.items.get(item, 0))
 
-    def trial(self, t, form, target, distractor, open_at, window, said, sides=None, score=(), items=()):
+    def trial(self, t, form, target, distractor, open_at, window, said, sides=None, score=(), items=(), stimulus=None):
         """a formal trial's test sentence said at t -> its id. target, distractor: dict(id, word) (distractor None for the name
         test); open_at: the target word's onset (its window's first tick); said: the word said there (its name or a foil, for
         the name test); score: [[key, "trials" | "yoked", value if met, value if missed]], one for each of its things that is a
         fresh never-taught item ("trials": its word the one said; "yoked": the other's; the value 1 when the first look is on
         that thing: for the name test, its turn to her face); items: the never-taught items it presents (each one presentation
-        more)."""
+        more); stimulus: its sentences' one timeline (their ticks, the test word's onset tick, the sentences, their test words'
+        shapes, whether the words channel was held to it: P3's twelfth round)."""
         if form not in K.TRIAL_FORMS:
             raise ValueError(f"not a trial form: {form!r}")
         tid = self.n
@@ -408,7 +410,7 @@ class Ledger:
         self.formal[str(tid)] = dict(id=tid, form=form, score=sc)
         self._rec(dict(ev="trial", t=int(t), form=form, target=target, distractor=distractor, said=said,
                        sides=None if sides is None else list(sides), open=int(open_at), window=int(window), score=sc,
-                       items=list(items)))
+                       items=list(items), stimulus=stimulus))
         return tid
 
     def displayed(self, t, form, items, why):
