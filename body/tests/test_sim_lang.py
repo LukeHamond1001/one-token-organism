@@ -6277,14 +6277,16 @@ def _levels_life(kid, probes, voice, seed, toys, fav=None, pool=None, n2=24, fli
     registered trials or the pool has no set left; label: an exemplar she names first (her follow-in label of it, asked for);
     the child shown each trial's things (a place probe's in its order; an exemplar trial's as they are set down, left to
     right) -> (the ledger, her judgments, her lines after each trial, dict(chatter: [(tick, line, the child's target, its
-    holds)], dropped: [why])). flip: every draw of her stream turned over (_Flip)."""
+    holds)], dropped: [why], her talk's density (4.6): ticks, words (hers said, their sound ended), chatter_words, sounding
+    (ticks her voice sounded), play (ticks with no formal trial under way), play_sounding)). flip: every draw of her stream
+    turned over (_Flip)."""
     con = _conduct(seed=seed, stage=1 + seed % 2, imperfect=False, voice=voice, ledger=_TapLedger(),
                    transcriber=Transcriber(None), scaffold=True, level2=(fav,) if fav and pool else ())
     if flip:
         con.trial_rng = _Flip(con.trial_rng)
     _no_sets(con, tuple(o.id for o in toys))
     k, t, last, busy, judg, after, shown_at = 0, 0, -100, False, [], [], None
-    info, n_ref, block, labelled = dict(chatter=[], dropped=[]), 0, False, label is None
+    info, n_ref, block, labelled = dict(chatter=[], dropped=[], sounding=0, play=0, play_sounding=0), 0, False, label is None
     cap = 400 * (len(probes) + (3 * n2 if pool else 0))
     while t < cap:
         idle = con.trial is None and not con.probes and t > last + 30
@@ -6311,6 +6313,10 @@ def _levels_life(kid, probes, voice, seed, toys, fav=None, pool=None, n2=24, fli
         got = kid.at(t)
         tg, holds = got[0], ()
         s = con.tick(t, P(t, child_target=tg, child_reaches=got[3], events=got[4], seen=toys), tract=got[1], token=got[2])
+        info["sounding"] += int(con.fast.speaking(t))    # her voice sounding this tick (her talk's density, 4.6), and on a
+        if con.trial is None:                               # play tick (no formal trial under way)
+            info["play"] += 1
+            info["play_sounding"] += int(con.fast.speaking(t))
         if con.trial is not None and con.trial.get("sides") and shown_at != con.trial["since"]:
             shown_at = con.trial["since"]
             kid.show(*con.trial["sides"])
@@ -6327,11 +6333,14 @@ def _levels_life(kid, probes, voice, seed, toys, fav=None, pool=None, n2=24, fli
         busy = now
         t += 1
     info["dropped"] = [w for _t, x, w in con.fast.refused if x == "trial:exemplar"]
+    info["ticks"] = t
+    info["words"] = sum(int(st_.get("said", 0)) for st_ in con.ledger.words.values())
+    info["chatter_words"] = sum(len(TP.words(x)) for _t, x, *_r in info["chatter"])
     return con.ledger, judg, after, info
 
 
 LEVEL_KIDS = (   # (label, the child (seed, fav, trained things), maps within, understood within): 12 lives each, 24 place probes
-    # and exemplar probes to a block of 24 registered trials (A60b 10-13)
+    # and exemplar probes to a block of 24 registered trials (A60b 9, 12-14)
     ("a knower of the kind, its look at a foil on one of the three", lambda s_, f_, t_: _Knows(seed=s_), (11, 12), (8, 12)),
     ("a knower of the kind, its looks at a foil spread over the three", lambda s_, f_, t_: _Knows(seed=s_, spread=True),
      (11, 12), (11, 12)),
@@ -6375,12 +6384,18 @@ def test_trial_levels_no_feedback():
     measured in her voice; her chatter's lines where the child attends nothing; the named exemplar never drawn; a probe with no
     matched set, a foil of hers, a foil not yet heard as often as its noun, a noun not registered, or under the scaffold, dropped
     before it is said; a non-knower's exemplar trials alike with the draw turned over; no judgment or line of hers follows a
-    trial."""
+    trial. After 176da4e (the lead's two calls): level 2 only for a REGISTERED SHORT LIST of at most 6 nouns (a seventh refused
+    at her construction and in a save she loads, a noun off the list refused its probe), the room at A53's numbers (24 new
+    exemplars of each registered noun, 4 of each other tested noun) carrying every registered block to 24 with its things
+    matched in newness, its blocks one after another or a trial of each in turn, the draw keeping each unfinished block's own
+    exemplars back; her foil lines in her IDLE SLOT (at most one line a 40 ticks, shared with P4's idle lines: they replace her
+    filler rather than add to it), her talk over these lives within 4.6's upper bound and at least 40% of its play ticks (no
+    formal trial under way), and of all its ticks, free of her voice."""
     import inspect                                                        # noqa: PLC0415
-    assert hasattr(K, "NOUN_FOILS") and hasattr(K, "KIND_FIRST") and \
-        "noun" in inspect.signature(C.Conduct.probe).parameters, \
-        "level 2 as 67741fd built it: a block of 12, its foil not heard as often as its noun, beside familiar things (the " \
-        "lead's decisions after 67741fd)"
+    assert hasattr(K, "NOUN_FOILS") and hasattr(K, "KIND_FIRST") and hasattr(K, "LEVEL2_MAX") and \
+        hasattr(C.Conduct, "idle_free") and "noun" in inspect.signature(C.Conduct.probe).parameters, \
+        "level 2 with no registered short list, its foil lines outside her idle slot (the lead's decisions after 67741fd " \
+        "and 176da4e)"
     assert hasattr(Ledger, "maps") and hasattr(K, "KIND_DISTRACTORS"), "one level of 'understood' only (A60b's two levels)"
     # the foils: words she never tells, none near her words, the name, its foils or one another, none sayable; each tested
     # noun's measured in her voice, of its written syllables; each noun its own, first and last sounds unlike its noun's
@@ -6406,6 +6421,7 @@ def test_trial_levels_no_feedback():
         voices.append(("real", V.VoiceCache(os.path.join(tmp, "v"), server=V.SynthServer(nice=19))))
     rows, flips, fb, drops = {}, {}, dict(judgments=0, confirms=0, lives=0), {}
     chat = dict(lines=0, bad=0, first=[])
+    dens = dict(words=0, ticks=0, sounding=0, chatter=0, play=0, play_sounding=0)
     try:
         for vname, voice in voices:
             fav, toys = ("cup", KIND_TIMED) if vname == "timed" else ("drum", KIND_REAL)
@@ -6426,6 +6442,9 @@ def test_trial_levels_no_feedback():
                     fb["judgments"] += sum(j[1] == "met_trial" for j in judg)
                     fb["confirms"] += sum(x.startswith("yes") for _t, x in after)
                     chat["lines"] += len(info["chatter"])
+                    for k_ in ("words", "ticks", "sounding", "play", "play_sounding"):
+                        dens[k_] += info[k_]
+                    dens["chatter"] += info["chatter_words"]
                     chat["bad"] += sum(bool(tg is not None or hd or rf or ac) for _t, _x, tg, hd, rf, ac in info["chatter"])
                     if ex:
                         e0 = ex[0]["exposure"]
@@ -6451,6 +6470,58 @@ def test_trial_levels_no_feedback():
                 n_ex += 1
             flips[vname] = (same, n_ex)
             assert same == n_ex, (vname, same, n_ex)
+        # the room at A53's numbers (the lead's decision after 176da4e): a registered short list of at most 6 nouns, 24 new
+        # exemplars of each and 4 of each other tested noun; the conduct's draw, each unfinished block's own kept back, runs
+        # every registered block to 24 with its things matched in newness (its blocks one after another, or a trial of each
+        # in turn; no voids), a seventh noun refused, at her construction and in a save she loads, a noun off the list
+        # refused its probe (below)
+        regs, rest = ("ball", "bear", "block", "car", "cup", "drum"), ("ring", "bottle", "rattle", "tower")
+        room = seen(*[(f"{w}_{k}", w, "", "mat", True) for w in regs for k in range(24)] +
+                    [(f"{w}_{k}", w, "", "mat", True) for w in rest for k in range(4)])
+        blocks, spare = {}, {}
+        for order in ("in turn", "round robin"):
+            con_r = _conduct(seed=1, stage=1, imperfect=False, ledger=Ledger(), level2=regs)
+            p_r, new_r = P(0, seen=room), {o.id: o.id for o in room}
+
+            def _draw(w, c_=con_r, p_=p_r, n_=new_r):        # one registered trial of w's block, its three drawn by the conduct
+                got_r, _why = c_._exemplar_set(p_, w, n_, {})
+                if got_r is None:
+                    return False
+                assert len({x.split("_")[0] for x in got_r}) == 3 and len({c_.ledger.presented(x) for x in got_r}) == 1, got_r
+                for x in got_r:
+                    c_.ledger.items[x] = c_.ledger.presented(x) + 1
+                c_.ledger._w(w)["seq2"].append([1, 8, 0, w])
+                return True
+            if order == "in turn":
+                for w in regs:
+                    while len(con_r.ledger._w(w)["seq2"]) < K.KIND_FIRST and _draw(w):
+                        pass
+            else:
+                live = list(regs)
+                while live:
+                    live = [w for w in live if len(con_r.ledger._w(w)["seq2"]) < K.KIND_FIRST and _draw(w)]
+            blocks[order] = {w: len(con_r.ledger._w(w)["seq2"]) for w in regs}
+            spare[order] = sum(1 for o in room if con_r.ledger.presented(o.id) == 0)
+        try:
+            _conduct(seed=1, level2=regs + ("ring",))
+            seventh = False
+        except ValueError:
+            seventh = True
+        st_r = _conduct(seed=1, level2=regs).state()
+        kept = _conduct(seed=1)
+        kept.load_state(st_r)
+        try:
+            _conduct(seed=1).load_state(dict(st_r, level2=list(regs) + ["ring"]))
+            seventh_saved = False
+        except ValueError:
+            seventh_saved = True
+        assert all(n == K.KIND_FIRST for b_ in blocks.values() for n in b_.values()) and seventh and seventh_saved and \
+            kept.level2 == regs, (blocks, seventh, seventh_saved, kept.level2)
+        # her talk's density with her chatter on, over these lives (the lead's decision after 176da4e): 4.6's bounds, at most
+        # 2,500 words a life day, at least 40% of play ticks free of her voice (a play tick: no formal trial under way), and
+        # of all its ticks
+        assert dens["words"] / dens["ticks"] * 24000 <= 2500 and 1 - dens["sounding"] / dens["ticks"] >= 0.4 and \
+            1 - dens["play_sounding"] / dens["play"] >= 0.4, dens
         # an exemplar she named before the block is never drawn (as its noun's or as another's)
         led_n, _j, _a, info_n = _levels_life(_Knows(seed=3), _level_probes("timed", "cup", 3), voices[0][1], 3, KIND_TIMED,
                                              fav="cup", pool=_level_pool("timed", "cup"), label="cup_2")
@@ -6496,8 +6567,16 @@ def test_trial_levels_no_feedback():
           f"registered exemplar trials, no smile and no confirm after any trial ({fb['judgments']} judgments, "
           f"{fb['confirms']} confirms); the foils {', '.join(f'{w} {f_}' for w, f_ in sorted(K.NOUN_FOILS.items()))}: none "
           f"within edit distance 1 of her 128 words, the name, its foils or one another, none sayable, each measured for its "
-          f"noun; her chatter's foil lines {chat['lines']}, every one while the child attended and held nothing, no act, no "
-          f"object named; at each block's first trial its noun heard {min(x for x, _y in fe)}-{max(x for x, _y in fe)} "
+          f"noun; her chatter's foil lines {chat['lines']} (her idle slot's, one a 40 ticks at most), every one while the child "
+          f"attended and held nothing, no act, no object named; her talk over these lives "
+          f"{dens['words'] / dens['ticks'] * 24000:.0f} words a life day ({dens['chatter'] / dens['words']:.0%} of them her "
+          f"chatter's), {1 - dens['play_sounding'] / dens['play']:.0%} of the play ticks free of her voice and "
+          f"{1 - dens['sounding'] / dens['ticks']:.0%} of all ({dens['play'] / dens['ticks']:.0%} of them play ticks; 4.6: at "
+          f"most 2,500 words, at least 40% free); the room at A53's numbers (6 registered nouns at 24 new exemplars, 4 others "
+          f"at 4): every registered block drawn to {min(n for b_ in blocks.values() for n in b_.values())} trials (" +
+          "; ".join(f"{o}, {spare[o]} new exemplars left unpresented" for o in blocks) +
+          "), a seventh noun refused at her construction and in a save; at each block's first trial its noun heard "
+          f"{min(x for x, _y in fe)}-{max(x for x, _y in fe)} "
           f"times, its foil {min(y for _x, y in fe)}-{max(y for _x, y in fe)}; 'maps' (level 1) and 'understood' (level 2: "
           f"its new exemplar's share after its word against after its foil, beside new exemplars of two other kinds as new "
           f"as it, from its 24th trial) in 12 lives each: " + "; ".join(

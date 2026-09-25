@@ -519,7 +519,7 @@ INTENTS = {
     "trial_where": Intent("plain", True, None, ()),
     "trial_combo": Intent("plain", True, None, ()),
     "trial_name": Intent("calling", True, None, ()),
-    # her chatter carrying a registered noun's never-told foil at its noun's running rate (A60b 12): no act, no object, no label
+    # her chatter carrying a registered noun's never-told foil at its noun's running rate (A60b 13): no act, no object, no label
     "foil_chatter": Intent("plain", False, None, ()),
 }
 TRIAL_INTENTS = ("trial_where", "trial_combo", "trial_name")
@@ -907,9 +907,11 @@ class Conduct:
     reader: her reading of the child's head and hands (percept.Reader, A40), which the world calls to fill each Percept; saved
     here. imperfect: her imperfection (A52: turns missed, the reply's latency jittered, copying), always on in a life; False only
     for a test isolating another rule (then she answers every turn, REPLY_AFTER ticks after it, and copies nothing).
-    level2: the object nouns whose level 2 is registered (section 12's items, fixed before birth: P4's), each with its
-    never-told foil (consts.NOUN_FOILS), which her chatter carries at its noun's running rate from birth (A60b 12), and only
-    whose new-exemplar blocks she runs (none registered: no exemplar probe runs, fail-closed)."""
+    level2: the REGISTERED SHORT LIST of object nouns whose level 2 is run (section 12's items, fixed before birth: P4's; at
+    most LEVEL2_MAX = 6, the nouns First 2's tests and the word clause need: the lead's decision after 176da4e), each with its
+    never-told foil (consts.NOUN_FOILS), which her chatter carries at its noun's running rate from birth (A60b 13), and only
+    whose new-exemplar blocks she runs (a noun not on it: its exemplar probe refused; none registered: no exemplar probe runs,
+    fail-closed). Fixed at construction and kept in her save: nothing changes it after birth."""
 
     def __init__(self, seed=1, voice=None, transcriber=None, ledger=None, motion=None, vocab=BIRTH_WORDS, stage=1, world=None,
                  imperfect=True, scaffold=True, level2=()):
@@ -925,11 +927,8 @@ class Conduct:
                                               # its removal test silences it on a copy; set_scaffold): a trial's stimuli are one
                                               # timeline on it too (4.8)
         self.imp = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(K.IMPERFECT_STREAM,))))
-        bad = [w for w in level2 if w not in K.NOUN_FOILS]
-        if bad:
-            raise ValueError(f"no never-told foil for {bad!r} (consts.NOUN_FOILS): its level 2 cannot be registered")
-        self.level2 = tuple(sorted(set(level2)))    # nouns whose level 2 is registered: their foils in her chatter (A60b 12)
-        self.last_chatter = NEVER                   # her last foil line (FOIL_CHATTER_GAP)
+        self.level2 = self._registered(level2)      # nouns whose level 2 is registered: their foils in her chatter (A60b 13)
+        self.last_chatter = NEVER                   # her idle slot's last line, a foil line or P4's (FOIL_CHATTER_GAP, note_idle)
         self.world = None
         self.set_world(world if world is not None else TP.ROOM_AT_BIRTH)
         self.routine = None                   # the routine under way (L3 sets it: "feed", "greet", "leave", "peekaboo", ...)
@@ -961,6 +960,18 @@ class Conduct:
         self.turns = [0, 0]                   # the child's turns with no judgment: answered, missed (A52; P6's ruler, C24)
         self.copy_next = 0                    # her next copy no sooner than this tick (A52: about 6 a minute at most)
         self.copies = []                      # her copies due: [(tick, kind, her side)]
+
+    @staticmethod
+    def _registered(level2):
+        """level 2's REGISTERED SHORT LIST (A60b 15), fixed before birth -> its nouns, sorted: ValueError for a noun with no
+        never-told foil (consts.NOUN_FOILS) or for more than LEVEL2_MAX nouns, at her construction and in a save she loads (one
+        made before the short list, registering more, is refused: fail-closed)."""
+        bad = [w for w in level2 if w not in K.NOUN_FOILS]
+        if bad:
+            raise ValueError(f"no never-told foil for {bad!r} (consts.NOUN_FOILS): its level 2 cannot be registered")
+        if len(set(level2)) > K.LEVEL2_MAX:
+            raise ValueError(f"level 2 registers a short list of at most {K.LEVEL2_MAX} nouns (A60b 15): {sorted(set(level2))}")
+        return tuple(sorted(set(level2)))
 
     @property
     def stage(self):
@@ -1191,7 +1202,7 @@ class Conduct:
                                              "draw: fail-closed)")
         if noun not in self.level2:
             return self._probe_drop(t, form, f"{noun!r}'s level 2 is not registered (its foil not carried in her chatter: "
-                                             f"A60b 12)")
+                                             f"A60b 13)")
         foil = K.NOUN_FOILS[noun]
         f = self.fast
         if foil in f.vocab or foil in f.new_words:
@@ -1200,7 +1211,7 @@ class Conduct:
         tol, slack = K.FOIL_EXPOSURE
         if nf < nw - max(slack, tol * nw):
             return self._probe_drop(t, form, f"its foil {foil!r} heard {nf} times against {noun!r}'s {nw}: not yet matched in "
-                                             f"exposure (A60b 12)")
+                                             f"exposure (A60b 13)")
         got, why = self._exemplar_set(p, noun, tr["new"], tr["shown"])
         if got is None:
             return self._probe_drop(t, form, why)
@@ -1222,9 +1233,12 @@ class Conduct:
         each one she sees of an object noun, fresh (its presentations in trials and outside them under NOVEL_PRESENTATIONS,
         A28) and never among her lines' referents (Ledger.was_named): its noun's with the most presentations first (a set drawn
         together stays together; a void's presentation spent, the next exemplar is drawn when one is needed), beside one each
-        of the KIND_DISTRACTORS other kinds with the most such exemplars presented exactly as often (ties by name, then by id):
-        no thing shown newer to the child than another, none named, so each noun's pool serves as targets and as others alike.
-        Nothing here reads the child or her trial stream."""
+        of the KIND_DISTRACTORS other kinds presented exactly as often: no thing shown newer to the child than another, none
+        named, so each noun's pool serves as targets and as others alike. A new set's others (none of them yet presented) come
+        from the kinds with the most such exemplars to spare, a registered noun's own still needed as targets for its
+        unfinished block (its KIND_FIRST registered trials, three a new exemplar) kept back, ties by name, then by id: so the
+        room's pools carry every registered block (A53's 24 a registered noun, the lead's decision after 176da4e). Nothing here
+        reads her trial stream or which word any trial said."""
         elig = {}
         for oid, item in sorted(new.items()):
             o = p.obj(oid)
@@ -1233,10 +1247,15 @@ class Conduct:
             n = self.ledger.presented(item) + int(shown.get(item, 0))
             if n < K.NOVEL_PRESENTATIONS and not self.ledger.was_named(oid):
                 elig.setdefault(o.name, []).append((n, oid))
+        keep = {}                                           # each registered block's own new exemplars still needed
+        for w in self.level2:
+            left = K.KIND_FIRST - len((self.ledger.words.get(w) or {}).get("seq2", ()))
+            if left > 0:
+                keep[w] = -(-left // K.NOVEL_PRESENTATIONS)
         for c in reversed(range(K.NOVEL_PRESENTATIONS)):
             mine = sorted(oid for n, oid in elig.get(noun, ()) if n == c)
-            kinds = sorted((-sum(1 for n, _o in v if n == c), k) for k, v in elig.items() if k != noun and
-                           any(n == c for n, _o in v))
+            spare = {k: sum(1 for n, _o in v if n == c) - (keep.get(k, 0) if c == 0 else 0) for k, v in elig.items()}
+            kinds = sorted((-spare[k], k) for k, v in elig.items() if k != noun and spare[k] > 0)
             if mine and len(kinds) >= K.KIND_DISTRACTORS:
                 others = [sorted(oid for n, oid in elig[k] if n == c)[0] for _m, k in kinds[:K.KIND_DISTRACTORS]]
                 return (mine[0], *others), None
@@ -1901,11 +1920,12 @@ class Conduct:
         ln, kind = f.steer_line(t, p, redirect_ok=t >= self.no_target_since + K.REDIRECT_AFTER)
         if ln is not None and f.allowed(ln, t)[0]:
             return ln, False, kind
-        # 9. her chatter: a registered noun's never-told foil, at its noun's running rate (A60b 12)
+        # 9. her idle slot (4.10: at most one line a 40 ticks): a registered noun's never-told foil when due, at its noun's
+        #    running rate as the slot allows (A60b 13, 16); P4's idle lines share the slot (idle_free, note_idle)
         ln = self._foil_chatter(t, p)
         if ln is not None:
             return ln, False, None
-        # 10. idle: she watches (the episodes' idle lines, at most one per 40 ticks, are P4's)
+        # 10. idle: she watches (the episodes' idle lines, in the same slot, are P4's)
         return None
 
     def _foil_chatter(self, t, p):
@@ -1915,19 +1935,37 @@ class Conduct:
         ended), she says "oh. <foil>." (templates.foil_chatter: no label, no act, no object named), the foil furthest behind
         first, only while she reads the child's head line on no thing and its hands holding none (no referent in view for it
         to take), at most one a FOIL_CHATTER_GAP ticks and as any line's pauses allow; never while an ask is judged or a trial
-        runs (her priorities above)."""
-        if not self.level2 or t < self.last_chatter + K.FOIL_CHATTER_GAP or not p.present or p.child_target is not None or \
-                p.child_holds:
+        runs (her priorities above). The line takes her idle slot (FOIL_CHATTER_GAP: 4.10's at most one idle line a 40 ticks),
+        so it replaces her filler rather than adds to it (the lead's decision after 176da4e)."""
+        if t < self.last_chatter + K.FOIL_CHATTER_GAP:
             return None
-        due = sorted((self.ledger.exposure(K.NOUN_FOILS[w]) - self.ledger.exposure(w), w) for w in self.level2)
-        if not due or due[0][0] >= 0:
+        foil = self._foil_due(p)
+        if foil is None:
             return None
-        foil = K.NOUN_FOILS[due[0][1]]
         ln = TP.Line(TP.foil_chatter(foil), "foil_chatter", "plain", foil, foil, (), "fast", TP.FOIL_CHATTER[0])
         if not self.fast.allowed(ln, t)[0]:
             return None
         self.last_chatter = int(t)
         return ln
+
+    def _foil_due(self, p):
+        """the registered noun's foil furthest behind its noun in her hearings (Ledger.exposure), when one is and the moment has
+        no referent for it (she reads the child's head line on no thing and its hands holding none, and she is here), else
+        None."""
+        if not self.level2 or not p.present or p.child_target is not None or p.child_holds:
+            return None
+        due = sorted((self.ledger.exposure(K.NOUN_FOILS[w]) - self.ledger.exposure(w), w) for w in self.level2)
+        return K.NOUN_FOILS[due[0][1]] if due and due[0][0] < 0 else None
+
+    def idle_free(self, t, p):
+        """her idle slot (4.10: idle, at most one line a FOIL_CHATTER_GAP = 40 ticks) free for P4's idle line: no line of the
+        slot in the last 40 ticks, and no registered noun's foil due now (its line takes the slot first: the foil lines replace
+        her filler rather than add to it, the lead's decision after 176da4e). P4 calls note_idle when it says one."""
+        return t >= self.last_chatter + K.FOIL_CHATTER_GAP and self._foil_due(p) is None
+
+    def note_idle(self, t):
+        """P4 said an idle line at t: the idle slot is taken (its foil lines wait FOIL_CHATTER_GAP ticks from it)."""
+        self.last_chatter = max(self.last_chatter, int(t))
 
     def _drop(self, t, intent, why):
         self.fast.refused.append((t, intent, "request: " + why))
@@ -2156,7 +2194,8 @@ class Conduct:
         self.reader.load_state(s["reader"])
         self.imperfect = s["imperfect"]
         self.scaffold = s.get("scaffold", True)             # (a save before P3's twelfth round: the scaffold on, as at birth)
-        self.level2 = tuple(s.get("level2", self.level2))   # (a save before A60b 12: its registered nouns as constructed)
+        self.level2 = self._registered(s.get("level2", self.level2))   # (a save before A60b 13: its registered nouns as
+                                                                     # constructed; one registering more than LEVEL2_MAX refused)
         self.last_chatter = s.get("last_chatter", NEVER)
         self.imp.bit_generator.state = s["imp"]
         self.turns, self.copy_next = list(s["turns"]), s["copy_next"]
