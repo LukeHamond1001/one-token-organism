@@ -138,15 +138,19 @@ HELD_PAIRS = (("blue", "ball"), ("red", "block"), ("yellow", "cup"), ("green", "
 PEAK_FILE = "peak_lines.json"         # beside this file
 
 # ------------------------------------------------------------------------------------------------ the ledger (4.8)
-UNDERSTOOD_LAST = 10                  # understood (4.8): over its last 10 formal trials, never-taught and fresh (A28), the first
-UNDERSTOOD_MIN = 5                    # look on the named thing at least 5 times ...
-UNDERSTOOD_P = 0.05                   # ... and above chance by a one-sided binomial p < 0.05 (4.8): chance 50% by counterbalancing
-                                      # or its yoked rate where higher (CHANCE_2AFC); the name's, its turn rate after a foil. Her
-                                      # everyday asks never count (the lead's decision). Section 12's claims are one-sided p < 0.01
-                                      # on the same trials, pooled by A19's rule (Ledger.pooled)
-BASE_MIN = 10                         # a word's yoked rate, and the name's foil rate, count only once they have 10 trials (ours:
-                                      # the design names no minimum, and a rate from 1 or 2 trials would let 5 lucky ones pass);
-                                      # until then its word is not understood (fail-closed)
+UNDERSTOOD_LAST = 20                  # understood (4.8): over its last 20 scored formal trials, its thing fresh and never-taught
+                                      # (A28), whichever of the two was named (about 10 of each: which is named is a fair coin),
+UNDERSTOOD_MIN = 5                    # (i) its first look on its thing at least 5 times when named, and above 1/2, and (ii) its
+UNDERSTOOD_P = 0.05                   # first look where the word said sent it above 1/2, each a one-sided binomial p < 0.05
+                                      # (ledger.two_part): (ii) exact whatever the child's favourites, drift or learning (the
+                                      # named thing a fresh fair coin each trial), (i) the credit on this word, not the other's;
+                                      # the name: (ii) with at least 5 turns after its name. Her everyday asks never count (the
+                                      # lead's decision). P3's ninth round measured the rule it replaces, against a yoked or foil
+                                      # rate estimated over all time and treated as known: a voice-turner's name understood in 15
+                                      # of 40 lives within 100 name trials, a growing one's in 94% within 120
+CLAIM_P = 0.01                        # section 12's claims: (i) and (ii) over a form's trials, each counted once, one-sided
+                                      # p < 0.01 (A19, A28; Ledger.pooled)
+ASKS_KEEP = 10                        # her everyday asks' last 10 outcomes kept in each word's record (teaching only)
 SAYS_TIMES = 3                        # says: 3 times over at least 2 life days, never within ECHO_WINDOW of her saying it (4.8)
 SAYS_DAYS = 2
 EXACT_UNTIL = 3                       # an approximation earns a recast and a smile until the exact word is said 3 times (4.6, A27)
@@ -174,14 +178,25 @@ TRIAL_WAIT = 400                      # a probe whose things are not placed, or 
                                       # ticks (a minute) of its start is dropped and logged, never said (ours)
 CHANCE_2AFC = 0.5                     # a pair trial's chance: 50% by counterbalancing (her trial stream draws which of the two is
                                       # named and the sides, each a fair coin, so any child whose first look does not depend on
-                                      # the word said scores 50% trial by trial); a word's chance is its yoked rate where higher
-                                      # (its own share of first looks to its thing when the other was named: A19's "the same
-                                      # body's own rate", the M6 exemplar test's stated chance), so a favourite toy looked at
-                                      # first whatever is said never has its word understood
-NAME_FOILS = ("tib", "vek", "jem")    # stress-matched foils for its name (one stressed syllable, as "pip"), names she never uses
-                                      # for it or for anything (none within edit distance 1 of any of her 128 words), said in the
-                                      # name's register and stillness (Mandel, Jusczyk and Pisoni 1995's foils matched its name's
-                                      # stress); the name's chance is its turn rate after them
+                                      # the word said goes where the word sends it on each trial with probability 1/2 exactly);
+                                      # the design's "or its yoked rate where higher" is the ledger's two-part test on one
+                                      # stretch of trials (ledger.two_part), never a rate carried from other times
+NAME_FOILS = ("viv", "vib", "pew")    # the name's foils (Mandel, Jusczyk and Pisoni 1995's name against a foil in the same voice):
+                                      # one stressed syllable as "pip", names she never uses for it or for anything (none within
+                                      # edit distance 1 of any of her 128 words), said in the name's register and stillness,
+                                      # and matched to "pip." in her voice as measured (P3's tenth round, over the 993 such
+                                      # consonant-vowel-consonant names: "X." in the calling register, emphasized as the name
+                                      # is, with its clip's ticks equal (5) and its energy within 5% of "pip."'s: four pass,
+                                      # and "hyd", spelled as her "hi" with a consonant after, is left out): "pip." 738
+                                      # ms, "viv." 717, "vib." 729 and "pew." 727; energy 99%, 103% and 101%; the loudest 10
+                                      # ms 93%, 93% and 90% of the name's; its rise to half of that 100 ms, as the name's;
+                                      # median F0 242, 242 and 276 Hz against 250; the word by the voice's marks 380, 420 and
+                                      # 430 ms against 360. Left, disclosed (C66): the name's loudest moment 7-10% above each
+                                      # foil's. The ninth round's "tib", "vek" and "jem" ran 6 ticks, 490-570 ms and 109-176%
+                                      # of its energy: a child drawn to short or quiet sounds would have turned after its name
+                                      # more. test_sim_lang holds them to FOIL_MATCH where the engine is present
+FOIL_MATCH = dict(energy=0.05, peak=0.12, rise_ms=10, f0=0.12)   # the foils' match to the name's clip, relative (energy, the
+                                      # loudest 10 ms, F0) and in ms (the rise to half the loudest), its ticks equal
 NOVEL_PRESENTATIONS = 3               # a never-taught item counts only on its first 3 presentations (A28): a place, an angle or an
                                       # exemplar displayed in a trial (as either thing), a combination said
 
