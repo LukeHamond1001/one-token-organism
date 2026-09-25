@@ -4,7 +4,7 @@ SD = docs/SIM_DESIGN.md; BS = BODY_SPEC.md; IT = ITERATIONS.md; wt_sim, wt_world
 
 ## Verdict
 
-Today the value is an option, not an asset. The language body has real evidence: facts added without displacing old ones, and a fact told once and recalled after a sleep. The G1 design is faithful and disclosed, and a life replays bit for bit. But no humanoid life has been run (SD l.1360), R7 and R8 are unbuilt (SD §8), and under the design's own law A20 nothing the sim child learns can reach the real G1 (SD l.1835). A lab would price it on the five demonstrations below; the fifth makes it a robotics company.
+Today the value is an option, not an asset. The language body has real evidence: facts added without displacing old ones, and a fact learned after one telling (told five times in all that day) and recalled after a sleep. The G1 design is faithful and disclosed, and a life replays bit for bit. But no humanoid life has been run (SD l.1360), R7 and R8 are unbuilt (SD §8), and under the design's own law A20 nothing the sim child learns can reach the real G1 (SD l.1835). A lab would price it on the five demonstrations below; the fifth makes it a robotics company.
 
 ## What a top lab or investor checks
 
@@ -12,7 +12,7 @@ Today the value is an option, not an asset. The language body has real evidence:
 |---|---|---|
 | body generality | the anatomy is declared (wt_sim body/core/anatomy.py:1-50); 8 language digests held through R1–R6 (SD §8) | one body has lived; `anatomy_for` refuses any anatomy that is not a language's (anatomy.py:509-514) |
 | sample efficiency | about 3,500 world symbols a day (IT:24), so about 1.2 M characters over its ~334 days | no motor result; the G1's milestones are forecasts (SD §12) |
-| continual learning | 30 facts in six days while held-out lines stayed at 0.666–0.702 (BS:1161-1170); "kiwi" told once, recalled after a sleep (DEMO_SCRIPT.md:28-35) | days, not months; the sim store holds about 19 nights (SD §9) |
+| continual learning | 30 facts in six days while held-out lines stayed at 0.666–0.702 (BS:1161-1170); "kiwi" learned after one telling (told five times in all before the night), recalled after a sleep (DEMO_SCRIPT.md:28-35; the correction in docs/audit/first2_word_clause.md) | days, not months; the sim store holds about 19 nights (SD §9) |
 | grounded language | never-taught tests fixed before birth (SD §12, A19) | channel 0 is the parent's own label (SD §3.4); imitation 2 of 12 (SD l.52) |
 | safety, interpretability | named organs; one constants table (SD §10); the amygdala cannot make reward (SD §7.4); reward only from face, pain and charge (SD §6) | on hardware: a 34 kg learner with no balance law (SD §3.3) |
 | sim-to-real | the stock G1 file, byte-identical; real torque limits; senses at the real sensors (SD §3.1–3.4, A21) | skin the robot lacks (B18), colour stereo (B4), placeholder servos (SD l.228), a face reward gated by world truth (wt_world body/sim/world.py:51-52) |
