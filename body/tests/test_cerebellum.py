@@ -829,25 +829,30 @@ def test_save_round_trip_and_replay():
 def test_its_cost():
     """cereb 9 (SIM_DESIGN.md 7.5's estimate, about 1 ms a tick; C50): the organ at the humanoid's size (4,096 granule units over 150
     mossy numbers, 29 joints, 2 VOR axes), 15 sub-steps a tick, every one taught, the flocculus taught at each tick's first: the wall
-    time of the law per tick, one thread, beside whatever else this machine runs (written down; the bound here is only against a runaway)"""
-    torch.set_num_threads(1)
-    M, J = 150, 29
-    decl = Cerebellar([0.0] * M, [1.0] * M, joints=[f"j{i}" for i in range(J)], vor=["yaw", "pitch"])
-    o = organ(decl, seed=6); rng = np.random.default_rng(2); x = rng.uniform(-1, 1, M); frames = []
-    for t in range(330):
-        for s in range(15):
-            x = np.clip(x + 0.02 * rng.standard_normal(M), -1.2, 1.2)
-            frames.append(SubFrame(t, s, x.copy(), rng.standard_normal(J) * 0.5, rng.standard_normal(2) * 0.01 if s == 0 else None,
-                                   rng.standard_normal(2) * 0.1 if s == 0 else None, limit=np.full(J, 50.0)))
-    hook = OrganHook(o)
-    for sf in frames[:450]:
-        hook(sf)
-    best = []
-    for rep in range(3):
-        t0 = time.perf_counter()
-        for sf in frames[450 + rep * 1500:450 + (rep + 1) * 1500]:
+    time of the law per tick, one thread, beside whatever else this machine runs (written down; the bound here is only against a runaway).
+    The thread count it takes is given back after (before R7's follow-up it was not, so every test after this one in the organ suite's
+    threaded run, the motor, frames and amygdala tests, ran on one thread)"""
+    nt = torch.get_num_threads(); torch.set_num_threads(1)
+    try:
+        M, J = 150, 29
+        decl = Cerebellar([0.0] * M, [1.0] * M, joints=[f"j{i}" for i in range(J)], vor=["yaw", "pitch"])
+        o = organ(decl, seed=6); rng = np.random.default_rng(2); x = rng.uniform(-1, 1, M); frames = []
+        for t in range(330):
+            for s in range(15):
+                x = np.clip(x + 0.02 * rng.standard_normal(M), -1.2, 1.2)
+                frames.append(SubFrame(t, s, x.copy(), rng.standard_normal(J) * 0.5, rng.standard_normal(2) * 0.01 if s == 0 else None,
+                                       rng.standard_normal(2) * 0.1 if s == 0 else None, limit=np.full(J, 50.0)))
+        hook = OrganHook(o)
+        for sf in frames[:450]:
             hook(sf)
-        best.append((time.perf_counter() - t0) / 100 * 1e3)
+        best = []
+        for rep in range(3):
+            t0 = time.perf_counter()
+            for sf in frames[450 + rep * 1500:450 + (rep + 1) * 1500]:
+                hook(sf)
+            best.append((time.perf_counter() - t0) / 100 * 1e3)
+    finally:
+        torch.set_num_threads(nt)
     ms = min(best)
     assert ms < 20.0, best
     print(f"cereb 9: its cost at the humanoid's size: {ms:.2f} ms a tick at best of three runs of 100 ticks ({', '.join(f'{b:.2f}' for b in best)};",
