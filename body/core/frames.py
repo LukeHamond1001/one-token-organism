@@ -37,8 +37,10 @@ Every state here is a working attribute of the life, saved with a motor body's d
 STEP R7f, RECALL INTO ACTION (7.6, A45; the switch `recall`, and `wm_frames`; physiology.py FRAMES):
 - THE HEADING (`_heading_step`): the trunk's yaw integrated from the torso gyro since birth, a head-direction signal by path integration
   (McNaughton et al. 2006): each tick, from the anatomy's `heading` source in the frame (the G1's `imu_torso`, raw), the gyro's rate about
-  the direction its accelerometer's specific force gives as up (which way is down standing for the orientation, A67), times the tick. A
-  real gyro drifts (Woodman 2007), so the heading drifts: disclosed and reported (C51), never corrected from world truth.
+  the direction its accelerometer's specific force gives as up (which way is down standing for the orientation, A67), times the tick
+  (THE BUILDER'S READING, for the lead: 7.6 says "the trunk's yaw" and names no axis; the vertical the body can sense is the specific
+  force's, as the cerebellum's mossy input reads it). A real gyro drifts (Woodman 2007), so the heading drifts: disclosed and reported
+  (C51), never corrected from world truth.
 - THE FRAME'S KEY: the cortex's stream plus the heading: the stream's pattern-separated direction (the store's cortex key) and the
   heading's born code (cos and sin of the heading through two fixed unit rows from the body's seed, the organs' head_code) summed at equal
   weight, at the key's scale (`query_from`, body/core/memory.py; the words' cortex key too, so frames and words share one search). THE
@@ -50,7 +52,9 @@ STEP R7f, RECALL INTO ACTION (7.6, A45; the switch `recall`, and `wm_frames`; ph
   key's context.
 - RECALL (`_frame_recall`, at the choice, before the motor effectors choose): the store's nearest keys give back their values for the
   stream the choice reads, through the store's own search: under key_form "cortex" the words' read of this tick itself (the same query),
-  else a read of its own with that query (no tiring); kept for the tick (`_frec_now`) and in the tick's window position ("frec").
+  else a read of its own with that query (no tiring); kept for the tick (`_frec_now`) and in the tick's window position ("frec"). (THE
+  BUILDER'S READING, for the lead: 7.6's "as it gives back words today" read as the store's own search; the words' waking read tires
+  what it recalls, and a second read of the same store in the same tick does not tire it again.)
 - THE MAPS (`_recall_term`; one per motor effector, `recall_spec`): each motor effector's proposal (act_pred's, a direction in the
   stream's d, read against its acts' rows R [its settings, d] for its logits) gains M((r R^T) R) R, for the recalled value r: the
   recalled value's part in its acts' rows (the recalled act's embedding, (r R^T) R), through its map M born at zero (the organs'
