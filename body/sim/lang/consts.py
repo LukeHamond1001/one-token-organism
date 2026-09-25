@@ -138,18 +138,28 @@ HELD_PAIRS = (("blue", "ball"), ("red", "block"), ("yellow", "cup"), ("green", "
 PEAK_FILE = "peak_lines.json"         # beside this file
 
 # ------------------------------------------------------------------------------------------------ the ledger (4.8)
-UNDERSTOOD_LAST = 20                  # understood (4.8): over its last 20 scored formal trials, its thing fresh and never-taught
-                                      # (A28), whichever of the two was named (about 10 of each: which is named is a fair coin),
-UNDERSTOOD_MIN = 5                    # (i) its first look on its thing at least 5 times when named, and above 1/2, and (ii) its
-UNDERSTOOD_P = 0.05                   # first look where the word said sent it above 1/2, each a one-sided binomial p < 0.05
-                                      # (ledger.two_part): (ii) exact whatever the child's favourites, drift or learning (the
-                                      # named thing a fresh fair coin each trial), (i) the credit on this word, not the other's;
-                                      # the name: (ii) with at least 5 turns after its name. Her everyday asks never count (the
-                                      # lead's decision). P3's ninth round measured the rule it replaces, against a yoked or foil
-                                      # rate estimated over all time and treated as known: a voice-turner's name understood in 15
-                                      # of 40 lives within 100 name trials, a growing one's in 94% within 120
-CLAIM_P = 0.01                        # section 12's claims: (i) and (ii) over a form's trials, each counted once, one-sided
-                                      # p < 0.01 (A19, A28; Ledger.pooled)
+UNDERSTOOD_P = 0.01                   # understood (4.8, the lead's decision A60b): over its registered trials (its thing a fresh
+                                      # never-taught item, A28, whichever of the two was named), the mean proportion of looking
+                                      # to its thing when its word was said against the same thing's when the other word was
+                                      # (the foil condition), one-sided p < 0.01 by a permutation test over the draw labels
+                                      # (ledger.perm_test; the name: its face's share of the window after its name against after
+                                      # a foil). A life re-tests a word as its trials come, so the 0.01 is a life's, spent over
+                                      # its tests (ours, C64's "alpha spent over the looks"): its j-th test at UNDERSTOOD_P / 2^j
+                                      # (0.005, 0.0025, ...), whose sum is 0.01, so a child whose looking does not depend on the
+                                      # word said reaches "understood" in at most 1 life in 100, however long it lives
+UNDERSTOOD_FIRST = 12                 # its first test at its 12th registered trial, each next at twice as many (24, 48, 96, ...),
+                                      # over all its registered trials so far; a test is taken only when its level is reachable,
+                                      # a perfect separation's p (1 / C(n, k), k of n trials naming it) under it: at 12 trials and
+                                      # 0.005 when 3 to 9 named it (96% of lives), else that test is not testable and its level
+                                      # is not spent elsewhere (ours: the fewest trials whose tests reach 0.005 in most lives)
+PERM_EXACT_N = 36                     # the permutation test's p exact (every relabeling counted, two halves of the trials each
+                                      # enumerated: meet in the middle) up to 36 trials; past them PERM_DRAWS relabelings drawn
+PERM_DRAWS = 20000                    # from the stream PERM_SEED, p = (1 + those at least as far) / (draws + 1), a valid p at any
+PERM_SEED = 60                        # number of draws (Phipson and Smyth 2010), at least 20 / level draws at a test (ours)
+CLAIM_P = 0.01                        # section 12's claims: over a form's trials, each counted once, the share of looking to the
+                                      # named thing against the other, one-sided p < 0.01 by the flip test over the draw labels
+                                      # (every trial's draw turned over or not; the name: the permutation test, its name against
+                                      # its foils) (A19, A28; Ledger.pooled)
 ASKS_KEEP = 10                        # her everyday asks' last 10 outcomes kept in each word's record (teaching only)
 SAYS_TIMES = 3                        # says: 3 times over at least 2 life days, never within ECHO_WINDOW of her saying it (4.8)
 SAYS_DAYS = 2
@@ -170,28 +180,29 @@ TRIAL_FORMS = {                       # the design's never-taught forms (section
                    "A28, A55); run only once both its words are understood alone (A28)",
     "name": "its name or a foil name, same voice, same stillness, no things (Mandel, Jusczyk and Pisoni 1995)",
 }
-TRIAL_WINDOW = 20                     # a trial's window: 20 ticks (3 s) from the target word's onset (the lead's decision; 4.6's
-                                      # 20 ticks for a gaze ask, opened at the onset as looking-while-listening measures from it:
-                                      # Fernald et al. 2008); the first look (her reading of its head line, held TARGET_TICKS, or a
-                                      # reach) to the target or the distractor decides it. Every sentence the trial's draw
-                                      # could have given is made on one identical timeline (P3's twelfth round: TRIAL_FILE,
-                                      # stimuli.py), so its onset and her sentence's end are the same ticks whichever is named
-TRIAL_EAR_TICKS = 1                   # the child hears her sound at most a tick after it plays: its ears' 7.7 ms of latency and
-                                      # the 25 ms frame that ends 10 ms after it (body/sim/ears.py), with no room echo there yet
-                                      # (B9's first-order echo, W5's to add, would lie within 30 ms in this room). The name test
-                                      # holds a foil's "no turn" past its window by the name's slot (its onset tick to the tag's
-                                      # first) and this one: since P3's fourteenth round nothing she sounds outside the slot
-                                      # differs between the name and a foil, sample for sample, so a turn timed from any moment of
-                                      # her sound outside it lands on the same tick after either, and one timed from inside it
-                                      # at most that many ticks later after one than after another; must grow if W5's echo
-                                      # outlasts a tick (ours)
+TRIAL_LOOK = (2, 24)                  # a trial's window (the lead's decision A60b: understanding scored by the proportion of
+                                      # looking over a fixed long window, as infant labs score it): the ticks from the test
+                                      # word's onset tick + 2 to its onset tick + 23, 22 ticks, 300 ms to 3.6 s after the onset
+                                      # (the tick 150 ms): 300 ms the earliest a shift guided by the word can begin (Fernald,
+                                      # Zangl, Portillo and Marchman 2008, "Looking while listening", in Sekerina, Fernandez and
+                                      # Clahsen eds.), the window long as looking-while-listening's proportion of looking to the
+                                      # target is taken over the seconds after the onset (Bergelson and Swingley 2012, PNAS
+                                      # 109:3253-3258). The same ticks whichever is named: nothing in it is timed from the word's
+                                      # sound. Each tick her reading of its head line (Percept.child_target, held TARGET_TICKS:
+                                      # A40, as every rule of hers reads it) is on the named thing (T), on the other (D), or on
+                                      # neither; for the name test, on her face or not. Nothing else about the ticks counts: not
+                                      # when they fall, not their order
+TRIAL_LOOK_MIN = 4                    # a pair's trial with fewer than 4 of its window's ticks on either thing (T + D < 4, 600 ms)
+                                      # is void, not scored, and counted (the lead's decision A60b; labs drop a trial with too
+                                      # little looking at either picture)
 TRIAL_WAIT = 400                      # a probe whose things are not placed, or whose settle or display does not hold, within 400
                                       # ticks (a minute) of its start is dropped and logged, never said (ours)
 CHANCE_2AFC = 0.5                     # a pair trial's chance: 50% by counterbalancing (her trial stream draws which of the two is
-                                      # named and the sides, each a fair coin, so any child whose first look does not depend on
-                                      # the word said goes where the word sends it on each trial with probability 1/2 exactly);
-                                      # the design's "or its yoked rate where higher" is the ledger's two-part test on one
-                                      # stretch of trials (ledger.two_part), never a rate carried from other times
+                                      # named and the sides, each a fair coin, so for any child whose looking does not depend on
+                                      # the word said, which of its trials named a thing is a fair coin independent of how it
+                                      # looked at it: its labels are exchangeable, the ledger's permutation and flip tests exact);
+                                      # the design's "or its yoked rate where higher" is the permutation test's comparison, the
+                                      # same thing's share when the other word was said, never a rate carried from other times
 NAME_FOILS = ("viv", "vib", "pew")    # the name's foils (Mandel, Jusczyk and Pisoni 1995's name against a foil in the same voice):
                                       # one stressed syllable as "pip", names she never uses for it or for anything (none within
                                       # edit distance 1 of any of her 128 words), said in the name's register and stillness,

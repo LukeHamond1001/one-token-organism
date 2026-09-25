@@ -15,9 +15,13 @@ PHRASE a form (splice):
   tag   the carrier after it: one recording ("see?", or for the name "hi."), whole, from the tick after that silent tick
 So everything she sounds before the test word's onset tick and from the tag on is the same, sample for sample, whichever is
 named, and the test word's slot between (its ticks, loud or silent alike) is never as loud as the loudest moment before it or
-after it. Her voice's start and her sound's stop at every level (each window of her sound from 2.5 ms to a tick, her mouth as
-the tick's loudness, and the child's own ears, 25 ms frames, near or far, either ear) therefore fall in the carrier or the tag:
-the same moment whichever is named (to the sample at the clip; at the ears, to their own float rounding, under 1e-6 dB). The recipe is measured before birth and kept in trial_lines.json
+after it. Her voice's start and her sound's stop at every level of her sound as a whole (each window of her sound from 2.5 ms
+to a tick, her mouth as the tick's loudness, and the child's own ears summed over their 40 bands, 25 ms frames, near or far,
+either ear) therefore fall in the carrier or the tag: the same moment whichever is named (to the sample at the clip; at the
+ears, to their own float rounding, under 1e-6 dB). Band by band at its ears they do not: the tag has little energy in many of
+the cochlea's bands, so in most of them her start and stop fall inside the slot and differ as the words' spectra do (P3's
+fourteenth verifier; docs/SIM_DESIGN.md C69b), which the trial's measure since the lead's decision A60b, the proportion of
+looking over a fixed window, never times anything from. The recipe is measured before birth and kept in trial_lines.json
 (tools/sim_voice_check.py --trial --write, the ears' ceiling measured there); the conduct holds every trial to it on the
 rendered audio (timeline(), same()): a set whose timelines differ in any way, or a sentence whose slot is not under its
 ceiling at the clip, is not used for a trial (the probe is dropped and logged).
@@ -149,7 +153,8 @@ def headroom(pcm, at, tag_at, windows=WINDOWS):
     """the level ceiling at the clip (P3's fourteenth round): over windows of her sound from 2.5 ms to a tick, the least margin
     (dB) by which every window that overlaps the test word's slot [at, tag_at) is quieter than the loudest wholly before it (the
     carrier) and the loudest wholly after it (the tag) -> dB (positive: the ceiling holds, so at every level her sound's first
-    and last moments above it lie in the carrier and the tag, the same whichever is named); per window, -inf where a part is
+    and last moments above it, her sound as a whole, lie in the carrier and the tag, the same whichever is named; band by band
+    at the child's ears they need not: C69b); per window, -inf where a part is
     empty. A single sample, or a window under 2.5 ms, is no measure the child has (its ears read 25 ms windows 10 ms apart)."""
     x = np.asarray(pcm, np.float64) / 32767.0
     c = np.concatenate([[0.0], np.cumsum(x * x)])

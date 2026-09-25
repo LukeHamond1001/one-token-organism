@@ -34,7 +34,7 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                attention (a follow-in variation set naming its target as she reads it), and idle. Episodes (L3: the day plan,
                P4) and Claude's rows (P5) ask for intents through request(); the day plan asks for formal trials through
                probe() (never Claude: a trial's sentence requested as an intent is refused). The judgments she makes by talk
-               (a right name, a met ask, a trial's first look on its target, an approximation, stage 1's vocal turn: 4.3's
+               (a right name, a met ask, a trial's looking more on its target, an approximation, stage 1's vocal turn: 4.3's
                worth table) are returned for her feelings (body/sim/parent_feel.Feelings.judge), and stage 2's frowns
                (Say.frown: a turn that talked over her, being hit) for Feelings.talk_over / harm; she never makes a feeling
                here. The motor judgments (a roll, a reach) and the face are the world's.
@@ -74,7 +74,7 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                forms (consts.TRIAL_FORMS: "where is the X?" of a thing in a place or at an angle it has never been seen in, or a
                never-seen exemplar; "where is the C X?", a combination never heard, only once both its words are understood alone,
                A28), with no act: only her mouth moves. Which of the two is named and the sides are drawn by her trial stream
-               (TRIAL_STREAM), each a fair coin, so chance is 50%: any child whose first look does not depend on the word, a
+               (TRIAL_STREAM), each a fair coin, so chance is 50%: any child whose looking does not depend on the word, a
                follower of her gaze or her hands, a side's or a toy's favourite, scores 50% trial by trial; nothing she does
                before the sentence depends on the draw (W2's placing, the settle, the display's checks, the line check of both
                things' sentences, whichever is named). TIME-MATCHED STIMULI, BY CONSTRUCTION (P3's twelfth round, the lead's
@@ -87,39 +87,39 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                clip's ticks, each word's first and last tick, every sample outside the test word's slot, every tick of the slot
                loud or silent alike, its RMS above -36 or its loudest 10 ms below -60 dB of full scale, the slot under its
                ceiling, and while the word scaffold labels her lines the words channel's symbols), or the probe is dropped and
-               logged, never said; the clip she says is held to it again. So the test word's onset (the window's first tick,
-               TRIAL_WINDOW = 20 ticks), its slot, her sentence's end and her voice's ticks are the same ticks whichever is
-               named, her voice's start and her sound's stop at every level are one moment however the child perceives them,
-               and no rule, nor any child timing a look, a sound, a reach or an act from her voice or her sound's stop, reads a
-               time that depends on the draw (the eleventh round's one timeline took the latest onset and end of sentences her
-               voice said at 10-12 ticks, and a child timed from her sound's stop still met or voided one word's trials and not
-               the other's: C67; the thirteenth, with one recording a word, left where each word stopped as the child hears it
-               the same against every other word, so a child with a favourite and two looks passed; the tenth round's rules
-               read the named sentence's own timing). Inside the slot what the child hears differs as the words do (C69).
-               Nothing the child's voice does voids a trial: through its sentence and window she makes no talk-over stop and
-               no frown and judges no turn of the child's (her face holds its neutral set; the turn is answered after the trial
-               as any she makes no judgment of). The measure is the child's first look (her reading of its head
-               line, held 3 ticks, A40) or reach to the target against the distractor: met, missed, or none (no look to either);
-               void if it already attended one just before the onset (her reading on the tick before it: no sample of the test
-               word can reach it, whatever the world's order of a tick), or both at once, or if her attention log shows
-               anything but her mouth moving from the sentence's first tick to the decision (a tick not read voids it before
-               that tick's percept is read: fail-closed), or the child's pain, distress or hit, or the world stopping her
-               sentence (her voice is stopped only by the conduct, Say.cut, never in a trial). For a child whose looks, reaches, sounds and acts do not
-               depend on the word said, every trial ends the same with the other thing named (a met for a missed). The name
-               test: its name or a foil (NAME_FOILS, stress-matched names she never uses, matched to its name's clip in her voice:
-               its ticks, energy, loudest moment and rise), drawn by the same stream, in the same voice and stillness, no things;
-               the measure is its turn to her face after its name against after the foil. Her
-               judgment follows a trial as any ask's (A28: never withheld, never added): a smile for its first look on the
-               target, and for its turn to its name until the name is understood; none for a turn to a foil. A trial counts
-               for a word only when its thing is a fresh never-taught item (its first NOVEL_PRESENTATIONS = 3, A28; both things
-               count as presented whichever is named, a combination's pair on each of its trials), whichever
-               of the two was named, and the ledger's "understood" reads only such trials (ledger.two_part, over its last 20):
-               its first look on its thing when named, at least 5 times and above 1/2, and its first look where the word said
-               sent it above 1/2, each one-sided p < 0.05; the second is exact for a child whose look does not depend on the
-               word, whatever its favourites, drift or learning, since the named thing is a fresh fair coin each trial (the
-               name: the second alone, a turn after its name or none after a foil, with at least 5 turns after its name). A
-               probe dropped once its two things were brought into view counts as a presentation of them all the same, and her
-               trial's line carries no object (Say.line.refs empty): W2 and the world hear its words and are told nothing more.
+               logged, never said; the clip she says is held to it again. So the test word's onset, its slot, her sentence's end
+               and her voice's ticks are the same ticks whichever is named, her voice's start and her sound's stop at every
+               level of her sound as a whole (10 ms by 10 ms, her mouth, the child's ears summed over their bands) are one
+               moment, and no rule of the trial reads a time that depends on the draw. Inside the slot what the child hears
+               differs as the words do, band by band at its ears where her sound starts and stops among it (C69, C69b: the
+               fourteenth verifier). Nothing the child's voice does voids a
+               trial: through its sentence and window she makes no talk-over stop and no frown and judges no turn of the
+               child's (her face holds its neutral set; the turn is answered after the trial as any she makes no judgment of).
+               THE MEASURE (the lead's decision A60b, as infant labs score it): the PROPORTION OF LOOKING over a fixed long
+               window, TRIAL_LOOK, the test word's onset tick + 2 (300 ms, the earliest a shift the word guides can begin:
+               Fernald et al. 2008) to its onset tick + 23 (3.6 s), the same ticks whichever is named: each tick of it, her
+               reading of its head line (held 3 ticks, A40) on the target (on), on the distractor (off), or on neither; for the
+               name, on her face or not. Nothing else about the ticks counts, not when they fall nor their order, so a look timed
+               from any moment of what it hears counts as the same look wherever it lands in the window. Void, counted and never
+               scored: a pair's trial with fewer than TRIAL_LOOK_MIN = 4 of its window's ticks on either thing; her attention
+               log showing anything but her mouth moving from the sentence's first tick to the window's last (a tick not read
+               among it: fail-closed); the child's pain, distress or hit (she answers it); the world stopping her sentence (her
+               voice is stopped only by the conduct, Say.cut, never in a trial). For a child whose looking does not depend on the
+               word said, a trial and the same trial with the other thing named end alike, the window's ticks on each thing the
+               same (on and off turned over). The name test: its name or a foil (NAME_FOILS, stress-matched names she never uses,
+               matched to its name's clip in her voice: its ticks, energy, loudest moment and rise), drawn by the same stream,
+               in the same voice and stillness, no things; the measure its face's share of the window after its name against
+               after a foil. Her judgment follows a trial as any ask's (A28: never withheld, never added), at its window's end:
+               a smile, with her confirm, when its looking went more to the target than to the distractor, and for its turn to
+               her face after its name until the name is understood; none after a foil. A trial counts for a word only when its
+               thing is a fresh never-taught item (its first NOVEL_PRESENTATIONS = 3, A28; both things count as presented
+               whichever is named, a combination's pair on each of its trials), whichever of the two was named, and the ledger's
+               "understood" reads only such trials (ledger.perm_test): its thing's share of the looking when its word was said
+               against when the other was, by a permutation test over the draw labels, one-sided p < 0.01 for the life, spent
+               over its tests (UNDERSTOOD_P, UNDERSTOOD_FIRST); for a child whose looking does not depend on the word the labels
+               are exchangeable, the named thing a fresh fair coin each trial, so it is null by construction. A probe dropped
+               once its two things were brought into view counts as a presentation of them all the same, and her trial's line
+               carries no object (Say.line.refs empty): W2 and the world hear its words and are told nothing more.
                HER ATTENTION LOG (A51; kept for the trials' void rule and for P4's probes, which hold her still the same way:
                still_over()). Every tick, before the conduct runs, her motion (W2; StubMotion until W2 merges) reports where her
                body physically points (report()): her trunk ("child" while it faces the child and holds still; a turn, a lean or
@@ -147,7 +147,7 @@ Built here from 4.10: the talk and its timing, her reading of the child (A40), h
 trials and her attention log (4.8, A51). Left to W2 and P4: L1's gaze and face each tick (W2 reads eyes_on_child and still, and
 reports L1's gaze and her face in the log, StubMotion's contract), the "present" act and the world's Seen.near and
 Percept.face_near (percept.Reader.near: the two things of a trial each beyond NEAR_DEG of the other and of her face, as the child
-sees them, so its first look can be read as one of them), the probes' schedule by her day plan's stage and their items (which
+sees them, so a look at either can be read as one of them), the probes' schedule by her day plan's stage and their items (which
 places, angles and exemplars are never-taught, and their presentations outside trials), the scaffolding ladders' acts (4.10: the
 give's level 0 is her open hand and the ask, teaching like every ask; its point and touch only once its window has closed unmet),
 the routines' order, her spells of distraction (P4's own-tasks episode), and the motor judgments; the acts are requested here and
@@ -1131,7 +1131,7 @@ class Conduct:
     def _display(self, tr, p):
         """why its sentence cannot be said now, or None: the two things in the child's view, in no hand, each beyond NEAR_DEG of
         the other and of her face as the child sees them (the world's Seen.near and Percept.face_near; not given: fail-closed),
-        so its first look can be read as one of them; the child attending neither; for the name, the child able to see her and
+        so a look at either can be read as one of them; the child attending neither; for the name, the child able to see her and
         not already looking at her face."""
         if not (p.present and p.child_in_view):
             return "she is away, or cannot see the child"
@@ -1246,10 +1246,12 @@ class Conduct:
         channel's symbols while the scaffold labels her lines), with a carrier before the test word (its onset at least a
         tick into the sentence), or the probe is dropped and logged, never said. So whichever is named, her test word's
         onset, its slot, her sentence's end and her voice's ticks fall on the same ticks, nothing she sounds outside the slot
-        differs at all, and her voice's start and her sound's stop at every level lie outside it: no rule of the trial reads
-        a time that depends on the draw, nor does any child timing its acts from her voice's start or her sound's stop,
-        however it hears them. Inside the slot what the child hears differs as the two words do: the ledger scores every
-        trial from its onset, its none or void against it (4.8, C67, C69). Kept in tr: each sentence's line (lines), its
+        differs at all, and her voice's start and her sound's stop at every level of her sound as a whole (10 ms by 10 ms,
+        her mouth, its ears summed over their bands) lie outside it: no rule of the trial reads a time that depends on the
+        draw, nor does any child timing its acts from those. Inside the slot what the child hears differs as the two words
+        do, band by band at its ears where her sound starts and stops among it (C69, C69b): a child that
+        looks where that sound sends it tells the words apart by their sound; the trial is scored by its window's looks, the
+        same ticks whichever is named (A60b). Kept in tr: each sentence's line (lines), its
         common ticks, the test word's onset tick from its start (onset_at), its slot's ticks (slot), and the timeline itself
         (checked again on the clip she says)."""
         form = tr["form"]
@@ -1293,14 +1295,14 @@ class Conduct:
         return None
 
     def _trial_said(self, line, t, n_own, p, out):
-        """her test sentence begins at t (its own sound n_own ticks): its window opens at the target word's onset (the word
-        that tells the two apart: the noun, a combination's colour, its name or the foil), on the trial's one timeline (its
-        stimuli's, the same for every sentence the draw could have given: _trial_stimuli), and runs TRIAL_WINDOW ticks (the
-        name test: a turn after it, a foil's "no turn" held to its span, span_end: _trial_judge); her voice is held to the
-        timeline's end (line_end), the sentence's own. The ledger records the trial, its stimuli (their
+        """her test sentence begins at t (its own sound n_own ticks): its window (the lead's decision A60b, TRIAL_LOOK) runs from
+        the test word's onset tick + 2 to its onset tick + 23 (the word that tells the two apart: the noun, a combination's
+        colour, its name or the foil), on the trial's one timeline (its stimuli's, the same for every sentence the draw could
+        have given: _trial_stimuli), so its ticks are the same whichever is named and none is timed from the word's sound; her
+        voice is held to the timeline's end (line_end), the sentence's own. The ledger records the trial, its stimuli (their
         ticks, the onset and the sentences made one timeline), what it scores (the named word's test when its thing is a
-        fresh never-taught item, A28; the distractor's yoked rate when its thing is; for the name, its test or its foil rate)
-        and the items it presents: both things displayed, whichever is named (a combination's pair on every trial of it, its
+        fresh never-taught item, A28; the distractor's yoked trial when its thing is; for the name, its name or a foil) and
+        the items it presents: both things displayed, whichever is named (a combination's pair on every trial of it, its
         twin shown beside its original, P3's eleventh round: counted only when said, its fresh trials had depended on her
         coins), so which trials are fresh never depends on which was named."""
         tr = self.trial
@@ -1326,89 +1328,51 @@ class Conduct:
             sides = (tr["left"], tr["right"])
         onset = int(t) + tr["onset_at"]                      # the trial's one timeline (_trial_stimuli), whichever is named
         line_end = int(t) + tr["ticks"] - 1
-        span_end = onset + K.TRIAL_WINDOW                    # the name test: a foil's "no turn" held past its window by every
-        if tr["form"] == "name":                             # tick on which what the child perceives of her can differ by the
-            span_end += int(tr.get("slot", tr["ticks"] - tr["onset_at"])) + K.TRIAL_EAR_TICKS   # draw: its slot and its ear's
-        tr.update(phase="said", line_start=int(t), line_end=line_end, sound_end=int(t) + n_own, onset=onset,
-                  until=onset + K.TRIAL_WINDOW, span_end=span_end, word=word_at)
+        first, last = onset + K.TRIAL_LOOK[0], onset + K.TRIAL_LOOK[1] - 1   # its window: the same ticks whichever is named
+        tr.update(phase="said", line_start=int(t), line_end=line_end, sound_end=int(t) + n_own, onset=onset, look_from=first,
+                  until=last, word=word_at, on=0, off=0)
         stim = dict(ticks=tr["ticks"], onset=tr["onset_at"], sentences=sorted(d["text"] for d in tr["lines"].values()),
                     shapes=sorted([list(d["shape"]) for d in tr["lines"].values() if d.get("shape")]),
                     channel=bool(self.scaffold and self.voice is not None))
-        tr["tid"] = self.ledger.trial(t, tr["form"], target, distractor, onset, K.TRIAL_WINDOW, tr["said"] if tr["form"] ==
-                                      "name" else word_at, sides=sides, score=score, items=items, stimulus=stim,
-                                      span=span_end - onset if tr["form"] == "name" else None)
-        self._prompt(t, t, span_end)
+        tr["tid"] = self.ledger.trial(t, tr["form"], target, distractor, onset, (first, last), tr["said"] if tr["form"] ==
+                                      "name" else word_at, sides=sides, score=score, items=items, stimulus=stim)
+        self._prompt(t, t, last)
         if tr.get("stray"):                                  # her sentence as said is not its stimulus's timeline (a voice
             return self._trial_end(t, "void", "her sentence as said is not the timeline its stimuli were made on "   # changed)
                                               "(fail-closed)", out, p)
-        if onset - 1 == t:                                   # its onset's reading on the sentence's first tick
-            res, why = self._trial_before(tr, p)
-            if res is not None:
-                self._trial_end(t, res, why, out, p)
 
-    def _trial_before(self, tr, p):
-        """its onset's reading, on the percept of the tick before the test word's onset tick (P3's fourteenth round, the
-        thirteenth verifier's finding 3) -> ("void", why) or (None, None): void if the child already attends either thing (her
-        reading of its head line, held 3 ticks, A40, or its hands) or does not see both (for the name, already looks at her
-        face, or cannot see her). Whatever order the world gives a tick's sound, the child's act on it and her percept of it,
-        no sample of the test word can have reached this percept: all it can follow is the carrier, the same recording
-        whichever is named, so this void never depends on the draw, and it ends the trial before its window opens, which the
-        ledger scores nothing of. From the onset's tick on every end is scored (_trial_judge)."""
+    def _trial_look(self, tr, t, p):
+        """a tick of its window (A60b): her reading of its head line (A40: Percept.child_target, held TARGET_TICKS, as every
+        rule of hers reads it) on the target (on) or the distractor (off); for the name, on her face (on) or not (off). Only how
+        many: never when, nor in what order."""
+        if not tr["look_from"] <= t <= tr["until"]:
+            return
         if tr["form"] == "name":
-            if not (p.present and p.seen_by_child):
-                return "void", "the child cannot see her before the name's onset"
-            if p.child_target == PARENT_NAME:
-                return "void", "it already looked at her face before the name's onset"
-            return None, None
-        att = {o.id for o in p.attended()}
-        if tr["target"] in att or tr["distractor"] in att:
-            return "void", "it already attended one of them before the word's onset"
-        if not all(p.obj(x) is not None and p.obj(x).child_sees for x in (tr["target"], tr["distractor"])):
-            return "void", "the two not both in its view before the word's onset"
-        return None, None
-
-    def _trial_judge(self, tr, t, p):
-        """a tick of its window, from the onset's tick on, judged by her percept (A40: her reading of its head line, held 3
-        ticks, and its hands) -> (result, why) or (None, None), every end scored (the ledger: intention to treat): the first
-        look or reach on one of them decides it (on both at once: void); for the name, its turn to her face within its window
-        (met, whichever was said: the ledger scores it against which), or after it but within the span a foil's "no turn" is
-        held to (none: against it either way), or no turn through that span (missed); the child unable to see her: void."""
-        if tr["form"] == "name":
-            if not (p.present and p.seen_by_child):
-                return "void", "the child cannot see her"
-            if p.child_target != PARENT_NAME:
-                return None, None
-            if t <= tr["until"]:
-                return "met", "its turn to her face"
-            return "none", ("its turn to her face after its window, within the span a foil's 'no turn' is held to (the "
-                            "name's slot and its ear's tick: a turn after its name or a foil alike, never where the word "
-                            "sent it)")
-        att = {o.id for o in p.attended()}
-        ht, hd = tr["target"] in att, tr["distractor"] in att
-        if ht and hd:
-            return "void", "its first look or reach on both at once"
-        if ht:
-            return "met", "its first look or reach on the target"
-        if hd:
-            return "missed", "its first look or reach on the distractor"
-        return None, None
+            face = p.child_target == PARENT_NAME
+            tr["on"] += int(face)
+            tr["off"] += int(not face)
+        else:
+            tr["on"] += int(p.child_target == tr["target"])
+            tr["off"] += int(p.child_target == tr["distractor"])
 
     def _trial_tick(self, t, p, out):
         """her trial under way, each tick: the present act until her motion reports it done (refused or cancelled: dropped);
         the settle, counting ticks her log shows still (moving(): only her mouth may move; a tick not read restarts it); once its
-        sentence is said, each tick from the onset judged by the percept first (a look a tick's percept shows was made before
-        that tick, once the tick before was read: a tick not read voids it first), then the tick's log held to it: anything but
-        her mouth moving voids it; its window's end with no look: none (the name: missed, no turn through the span a foil's "no
-        turn" is held to). The child's pain or distress, or its hit, ends it (void once said). Its onset's reading is taken on
-        the tick before the onset's (_trial_before); from the onset's tick every end is scored, a none or a void against it,
-        and an end before it is not (the ledger: P3's thirteenth round; its fourteenth: the reading moved off the onset's tick,
-        so no world's order of a tick can let the test word reach it)."""
+        sentence is said, each later tick: a tick not read voids it (fail-closed), a tick of its window counted by where her
+        reading of its head line is (_trial_look), then the tick's log held to it: anything but her mouth moving voids it; the
+        child's pain or distress, or its hit, voids it (she answers it). At its window's last tick it is scored by its looks
+        (A60b): a pair's with fewer than TRIAL_LOOK_MIN ticks on either thing void, counted, never scored. Where the child
+        looked before its window, and when in it, count for nothing (the onset's reading, and intention to treat, are retired
+        with the first look they were built for)."""
         tr = self.trial
         if tr is None:
             return
         if tr.get("timeline") is None or '"pre"' not in tr["timeline"] or "slot" not in tr:   # a save mid-trial from before
             return self._trial_end(t, "void" if tr["phase"] == "said" else "dropped",          # P3's fourteenth round
                                    "saved before its stimuli were time-matched on one carrier phrase (fail-closed)", out, p)
+        if tr["phase"] == "said" and "look_from" not in tr:                                     # a save mid-window from before
+            return self._trial_end(t, "void", "saved before its window was scored by the proportion of looking (A60b; "   # A60b
+                                              "fail-closed)", out, p)
         ev = {k for k, _o in p.events}
         if ev & {"pain", "distress", "hit_her"}:
             return self._trial_end(t, "void", "she answered its pain, distress or hit (4.10's priority)", out, p)
@@ -1432,45 +1396,43 @@ class Conduct:
                                 out, p)
             return
         if t > tr["line_start"]:                            # the sentence's first tick was held as the settle's last
-            if not read:                                    # the tick before never read: her body then unknown, and a look
+            if not read:                                    # the tick before never read: her body then unknown
                 return self._trial_end(t, "void", "her attention log: a tick not read (fail-closed; only her mouth may "
-                                                  "move)", out, p)      # this tick shows may follow it
-            if t == tr["onset"] - 1:                        # its onset's reading: the tick before the test word (unscored)
-                res, why = self._trial_before(tr, p)
-                if res is not None:
-                    return self._trial_end(t, res, why, out, p)
-            if t >= tr["onset"]:                            # from the onset's tick every end is scored
-                res, why = self._trial_judge(tr, t, p)
-                if res is not None:
-                    return self._trial_end(t, res, why, out, p)
+                                                  "move)", out, p)
+            self._trial_look(tr, t, p)                      # a tick of its window: where her reading of its head line is
             why = moving(e)
             if why is not None:
                 return self._trial_end(t, "void", f"her attention log: {why} (only her mouth may move)", out, p)
-            if tr["form"] == "name" and t >= tr["span_end"]:
-                return self._trial_end(t, "missed", "no turn to her face in its window, nor after it within the span a foil's "
-                                                    "'no turn' is held to", out, p)
-            if tr["form"] != "name" and t >= tr["until"]:
-                return self._trial_end(t, "none", "no look or reach on either in its window", out, p)
+            if t >= tr["until"]:                            # its window's last tick: scored by its looks
+                if tr["form"] != "name" and tr["on"] + tr["off"] < K.TRIAL_LOOK_MIN:
+                    return self._trial_end(t, "void", f"{tr['on'] + tr['off']} of its window's ticks on either thing, fewer "
+                                                      f"than {K.TRIAL_LOOK_MIN} (A60b: not scored)", out, p)
+                return self._trial_end(t, "scored", "its window's looks", out, p)
 
     def _trial_end(self, t, res, why, out, p):
-        """the trial ends: never said, dropped and logged; said, its outcome in the ledger (scored from the onset's tick on:
-        ledger.trial_outcome), and her judgment as any ask's (A28: never withheld, never added): a smile for the first look on
-        the target, for its turn to its name until the name is understood, with her confirm after it; none for a turn to a foil
-        (it is not its name), a miss, none or a void."""
+        """the trial ends: never said, dropped and logged; said, its outcome in the ledger (ledger.trial_outcome: scored by its
+        window's looks, or void, never scored), and her judgment as any ask's (A28: never withheld, never added), at its
+        window's end, once her face has held its neutral set through it: a smile, with her confirm after it, when its looking
+        went more to the target than to the distractor (the share its test reads, above 1/2), and for its turn to her face in
+        its window after its name (HOLD ticks of it) until the name is understood; none after a foil (it is not its name), and
+        none for a void."""
         tr, self.trial = self.trial, None
         if tr["tid"] is None:
             return self._probe_drop(t, tr["form"], why, tr)
-        self.ledger.trial_outcome(t, tr["tid"], res, why)
-        if res != "met":
+        if res == "scored":
+            self.ledger.trial_outcome(t, tr["tid"], "scored", why, on=tr["on"], off=tr["off"])
+        else:
+            self.ledger.trial_outcome(t, tr["tid"], "void", why)
             return
         if tr["form"] == "name":
-            if tr["name"] and not self.ledger.understood(NAME):
+            if tr["name"] and tr["on"] >= K.HOLD and not self.ledger.understood(NAME):
                 out.judgments.append((K.WORTH_MET_ASK, "met_trial", NAME))
                 self.reply_due = dict(tick=t, kind="confirm", word=NAME, obj=None)
             return
-        out.judgments.append((K.WORTH_MET_ASK, "met_trial", tr["word"] if tr["form"] != "combination" else
-                              p.obj(tr["target"]).name if p.obj(tr["target"]) is not None else tr["word"]))
-        self.reply_due = dict(tick=t, kind="confirm", word=None, obj=tr["target"])
+        if tr["on"] > tr["off"]:
+            out.judgments.append((K.WORTH_MET_ASK, "met_trial", tr["word"] if tr["form"] != "combination" else
+                                  p.obj(tr["target"]).name if p.obj(tr["target"]) is not None else tr["word"]))
+            self.reply_due = dict(tick=t, kind="confirm", word=None, obj=tr["target"])
 
     def _prompt(self, t, t0, t1):
         """an ask or a trial of hers spans ticks t0..t1 (its line's first tick to its window's last): kept PROMPT_KEEP ticks."""

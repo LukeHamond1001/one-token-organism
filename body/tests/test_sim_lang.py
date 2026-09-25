@@ -87,7 +87,23 @@ is one carrier phrase, its test word between one recording before it and one tag
 splice, headroom), so her voice's start and her sound's stop are one moment at every level, however perceived: 71 checks it on
 the rendered audio, turns her draw over for the verifier's kinds of child, runs its children over lives, and fails on 13fb5dc at
 its own first assertion; 1, 61, 63, 64 and 68-70 follow (the trial frames' tag, the name's "hi. X. hi.", the timed voice 2 dB
-softer after its first word, 63 over 49 lives, the onset's reading the tick before the onset's)."""
+softer after its first word, 63 over 49 lives, the onset's reading the tick before the onset's).
+Tests 70 and 72 are the lead's decision A60b on P3's fourteenth verifier's finding (f5ed8cd: band by band at the child's own ears
+her voice's start and her sound's stop fall inside the test word's slot and differ by word, so children timed from them passed):
+understanding is scored by the proportion of looking over a fixed window, the test word's onset tick + 2 to + 23, the same
+whichever is named (a pair's trial with under 4 of its ticks on either thing void, counted, never scored), and "understood" by a
+permutation test over the draw labels, its tests at a word's 12th, 24th, 48th, ... registered trial at 0.005, 0.0025, ..., 0.01 a
+life (ledger.perm_test; section 12's form by the flip test, ledger.flip_test). 70 (in place of intention to treat's) tests the
+window's share: only how many of its ticks, never when or in what order; the void rule; every child timed from any function of
+the sentence it hears alike with the draw turned over; a knower not. 72 is the lead's acceptance: the zoo of children that know
+no word over 12 lives each, the knowers detected, the flip, and the determinism across processes and threads; disclosed, the
+fourteenth verifier's children keyed on one band of the child's own ear (C69b). Each fails on f5ed8cd at its own first assertion.
+Tests 12, 59-61, 63-65, 68, 69 and 71 follow: 12's ledger records the window's ticks and holds the permutation test to brute
+force; 59 the window and its judgment at its end; 60, 61 and 63 count the trials whose looking went more to the named thing and
+hold "understood" to the rule as stated (_rule_share); 64's child talking over the sentence scored; 65 holds the permutation test
+to its level at one fixed test and a life's tests to 0.01 over 15 kinds of child; 68, 69 and 71 compare the window's ticks on
+each thing with the draw turned over (_same_but_named, _inv_same); 71's lives at 0.01 a life, the onset's own tick outside the
+window."""
 import json
 import math
 import os
@@ -105,7 +121,11 @@ from body.sim.lang import conduct as C  # noqa: E402
 from body.sim.lang import consts as K  # noqa: E402
 from body.sim.lang import lexicon as LX  # noqa: E402
 from body.sim.lang import templates as TP  # noqa: E402
-from body.sim.lang.ledger import Ledger, LedgerDiverged, binom_tail  # noqa: E402
+from body.sim.lang.ledger import Ledger, LedgerDiverged  # noqa: E402
+try:                                                     # the tests over the draw labels (the lead's decision A60b): absent
+    from body.sim.lang.ledger import flip_test, perm_test  # noqa: E402   # before, where the tests that read them fail at
+except ImportError:                                      # their own assertions
+    flip_test = perm_test = None
 try:                                                     # a trial's time-matched stimuli (P3's twelfth round): absent before,
     from body.sim.lang import stimuli as ST  # noqa: E402  # where the tests that read it fail at their own assertions
 except ImportError:
@@ -992,48 +1012,43 @@ def test_transcriber_with_ear():
 
 
 # ------------------------------------------------------------------------------------------------------------- the ledger
-def _ledger_trials(led, key, hits, yoked, voids=0, name=False, t0=5000, form="place"):
-    """formal trials recorded straight into a ledger (the conduct's calls), a test and a yoked trial in turn (as her stream draws
-    them, near enough): `hits` tests naming key (1: the first look on it); `yoked` trials with key's thing the distractor (1: the
-    first look on it all the same); `voids` more tests void before their onset (never scored) and as many with no look in
-    their window (scored against them: P3's thirteenth round). name: key is its name, the yoked trials its foils (1: a turn to
-    her after the foil)."""
+def _ledger_rows(led, key, rows, name=False, t0=5000, form="place", other="cup"):
+    """formal trials recorded straight into a ledger (the conduct's calls) in their order (the lead's decision A60b): rows
+    [(named, a, b)], named 1 when key's word was said (the name test: its name; 0: a foil, or the other thing's word), a and b
+    the window's ticks on key's thing (her face) and on the other thing (the window's other ticks); (named, None, why): a void."""
     t = t0
-    other = dict(id="cup", word="cup")
-    order = [("h", h) for h in hits]
-    for i, y in enumerate(yoked):
-        order.insert(min(len(order), 2 * i + 1), ("y", y))
-    for kind, v in order:
-        if kind == "h":
-            tid = led.trial(t, "name" if name else form, dict(id=None if name else key, word=key), None if name else other,
-                            t + 5, K.TRIAL_WINDOW, key, score=[[key, "trials", 1, 0]],
-                            items=[] if name else [f"{key}@{t}"])
-            led.trial_outcome(t + 9, tid, "met" if v else "missed")
+    for named, a, b in rows:
+        said = key if named else (K.NAME_FOILS[0] if name else other)
+        tgt = dict(id=None, word=said) if name else (dict(id=key, word=key) if named else dict(id=other, word=other))
+        dis = None if name else (dict(id=other, word=other) if named else dict(id=key, word=key))
+        tid = led.trial(t, "name" if name else form, tgt, dis, t + 5, (t + 7, t + 28), said,
+                        score=[[key, "trials" if named else "yoked"] + ([1, 0] if named or name else [0, 1])],
+                        items=[] if name else [f"{key}@{t}"])
+        if a is None:
+            led.trial_outcome(t + 28, tid, "void", b)
         else:
-            foil = K.NAME_FOILS[0] if name else None
-            tid = led.trial(t, "name" if name else form, dict(id=None, word=foil) if name else other,
-                            None if name else dict(id=key, word=key), t + 5, K.TRIAL_WINDOW, foil if name else "cup",
-                            score=[[key, "yoked", 1, 0]] if name else [[key, "yoked", 0, 1]])
-            led.trial_outcome(t + 9, tid, ("met" if v else "missed") if name else ("missed" if v else "met"))
-        t += 40
-    for res in ["void"] * voids + ["none"] * voids:
-        tid = led.trial(t, form, dict(id=key, word=key), other, t + 5, K.TRIAL_WINDOW, key, score=[[key, "trials", 1, 0]])
-        led.trial_outcome(t + 4 if res == "void" else t + 25, tid, res, "a test")
+            on, off = (a, b) if (name or named) else (b, a)
+            led.trial_outcome(t + 28, tid, "scored", "a test", on=on, off=off)
         t += 40
 
 
-def _ledger_seq(led, key, seq, name=False, t0=5000, form="place"):
-    """formal trials recorded straight into a ledger in their order: seq [(named, on)], named 1 when key's word was said (the name
-    test: its name; 0: a foil or the other thing's word), on 1 when its first look was on key's thing (its turn to her)."""
-    t = t0
-    for named, on in seq:
-        said = key if named else (K.NAME_FOILS[0] if name else "cup")
-        tgt = dict(id=None, word=said) if name else (dict(id=key, word=key) if named else dict(id="cup", word="cup"))
-        dis = None if name else (dict(id="cup", word="cup") if named else dict(id=key, word=key))
-        tid = led.trial(t, "name" if name else form, tgt, dis, t + 5, K.TRIAL_WINDOW, said,
-                        score=[[key, "trials" if named else "yoked"] + ([1, 0] if named or name else [0, 1])])
-        led.trial_outcome(t + 9, tid, "met" if (on if name else on == named) else "missed")
-        t += 40
+def _ledger_knows(led, key, n=12, name=False, t0=5000):
+    """a knower's n trials straight into a ledger, its word said and not in turn: its window's looks all on its thing when named
+    and on the other when not (its name: 12 ticks on her face after it, none after a foil)."""
+    rows = [(1, 12, 10) if name else (1, 8, 0), (0, 0, 22) if name else (0, 0, 8)] * (n // 2)
+    _ledger_rows(led, key, rows, name=name, t0=t0)
+
+
+def _brute_p(seq):
+    """the permutation test's p written again by brute force (every choice of which k trials named it), never the ledger's
+    code: seq [(named, a, b)] -> p."""
+    import itertools                                                      # noqa: PLC0415
+    from fractions import Fraction                                        # noqa: PLC0415
+    rows = [(nm, a, b) for nm, a, b in seq if a + b > 0]
+    n, k = len(rows), sum(r[0] for r in rows)
+    q = [Fraction(a, a + b) for _nm, a, b in rows]
+    s = sum(x for x, r in zip(q, rows) if r[0])
+    return sum(sum(q[i] for i in c) >= s for c in itertools.combinations(range(n), k)) / math.comb(n, k)
 
 
 def test_ledger_standing():
@@ -1047,7 +1062,7 @@ def test_ledger_standing():
              word_ends=[("look", 1), ("at", 1), ("the", 1), ("block", 1)])
     led.voiced(1, p_sees)
     assert led.standing("duck")["heard"] == 1 and led.standing("block")["heard"] == 0, "heard with its referent out of view"
-    # understood: from formal trials only (the lead's decision), at chance 50% by counterbalancing or its yoked rate where higher
+    # understood: from formal trials only (the lead's decision), by the proportion of looking and a permutation test (A60b)
     assert led.understood("duck") is False
     for i in range(10):                                   # her everyday asks, all met: teaching, counted toward nothing
         t0 = 1000 + 40 * i
@@ -1055,36 +1070,59 @@ def test_ledger_standing():
         for t in range(t0, t0 + 22):
             led.observe(t, P(t, child_target="duck" if t >= t0 + 3 else None))
     assert led.standing("duck")["asks"] == [1] * 10 and not led.understood("duck"), "understood by her everyday asks"
-    assert hasattr(led, "trial"), "no formal trials in her ledger"
-    _ledger_trials(led, "duck", hits=[1] * 9 + [0], yoked=[1, 1, 1] + [0] * 7)          # (i) 9 of 10, (ii) 16 of 20
-    assert led.understood("duck") and led.standing("duck")["trials"] == [1] * 9 + [0], led.standing("duck")
-    led2 = Ledger()
-    _ledger_trials(led2, "duck", hits=[1] * 9 + [0], yoked=[1] * 9 + [0])                # a favourite: 9 of 10 either way
+    assert hasattr(led, "trial") and perm_test is not None, "no permutation test over the draw labels in her ledger (A60b)"
+    # a knower at its 12th trial, 6 naming it: the one relabeling as far of C(12, 6) = 924, p = 0.0011 under the first test's
+    # 0.005; at its 11th, no test yet
+    _ledger_rows(led, "duck", [(1, 8, 0), (0, 0, 8)] * 5 + [(1, 7, 1)])
+    assert not led.understood("duck") and led.standing("duck")["tests"] == [], led.standing("duck")
+    _ledger_rows(led, "duck", [(0, 1, 7)], t0=9000)
+    st = led.standing("duck")
+    assert led.understood("duck") and st["trials"][:2] == [[8, 0], [8, 0]] and st["yoked"][0] == [0, 8] and \
+        len(st["tests"]) == 1 and abs(st["tests"][0][2] - 1 / 924) < 1e-12 and st["tests"][0][3] == 0.005, st
+    led2 = Ledger()                                       # a favourite: all its looking on the duck, whichever is said
+    _ledger_rows(led2, "duck", [(1, 8, 0), (0, 8, 0)] * 6)
     t2 = led2.test("duck")
-    assert not led2.understood("duck") and (t2["on_named"], t2["named"], t2["where"], t2["n"]) == (9, 10, 10, 20), t2
-    led3 = Ledger()
-    _ledger_trials(led3, "duck", hits=[1, 0] * 5, yoked=[0] * 10)                        # it knows only the other word
-    t3 = led3.test("duck")
-    assert not led3.understood("duck") and t3["where"] == 15 and t3["p_where"] < K.UNDERSTOOD_P, t3
-    led3b = Ledger()
-    _ledger_trials(led3b, "duck", hits=[1, 1, 0, 1, 1, 1, 0, 1, 1, 1], yoked=[0] * 10, voids=5)   # (i) 8 of 15 (its 5 nones
-    assert not led3b.understood("duck") and led3b.words["duck"]["trials"] == [1, 1, 0, 1, 1, 1, 0, 1, 1, 1] + [None] * 5, \
-        led3b.standing("duck")                                                           # against it; the voids never scored)
-    led3e = Ledger()
-    _ledger_trials(led3e, "duck", hits=[1] * 5, yoked=[0] * 5)                           # (i) 5 of 5, (ii) 10 of 10
-    assert led3e.understood("duck"), led3e.test("duck")
-    led3c = Ledger()                                      # the name: its turns after it against after a foil, one stretch
-    _ledger_trials(led3c, LX.NAME, hits=[1] * 8 + [0] * 2, yoked=[1, 1, 1] + [0] * 7, name=True)
-    led3d = Ledger()
-    _ledger_trials(led3d, LX.NAME, hits=[1] * 8 + [0] * 2, yoked=[1] * 8 + [0] * 2, name=True)
+    assert not led2.understood("duck") and t2["diff"] == 0.0 and t2["p"] == 1.0, t2
+    led2b = Ledger()                                      # its share on the duck grows, whichever is said
+    _ledger_rows(led2b, "duck", [(j % 2, 2 + j // 2, 10 - j // 2) for j in range(12)])
+    assert not led2b.understood("duck"), led2b.test("duck")
+    led3 = Ledger()                                       # it knows only the other word: the yoked comparison's own limit,
+    _ledger_rows(led3, "duck", [(1, 4, 4), (0, 0, 8)] * 6)    # disclosed (A60b): its share on the duck 1/2 when "duck" is
+    assert led3.understood("duck"), led3.test("duck")    # said, 0 when "cup" is, so "duck" is credited too
+    led3b = Ledger()                                      # voids never scored, counted: a scored pair with under 4 ticks on
+    _ledger_rows(led3b, "duck", [(1, None, "no look"), (0, None, "its pain")] * 3 + [(1, 8, 0), (0, 0, 8)] * 6)
+    sb = led3b.standing("duck")
+    assert led3b.understood("duck") and len(sb["seq"]) == 12 and sb["voids"] == 6 and led3b.voided == {"place": 6}, sb
+    try:                                                  # either thing is refused
+        _ledger_rows(Ledger(), "duck", [(1, 2, 1)])
+        refused = False
+    except ValueError:
+        refused = True
+    assert refused, "a pair's trial scored with 3 of its window's ticks on either thing"
+    led3e = Ledger()                                      # 2 of its 12 naming it: C(12, 2) = 66, its first test not testable at
+    _ledger_rows(led3e, "duck", [(1, 8, 0), (0, 0, 8), (0, 0, 8), (0, 0, 8), (0, 0, 8), (0, 0, 8)] * 2)   # 0.005: its level
+    assert not led3e.understood("duck") and led3e.standing("duck")["tests"][0][4] is False, led3e.standing("duck")   # unspent
+    _ledger_rows(led3e, "duck", [(1, 8, 0), (0, 0, 8)] * 6, t0=20000)                     # at its 24th, 0.0025: understood
+    assert led3e.understood("duck") and [x[3] for x in led3e.standing("duck")["tests"]] == [0.005, 0.0025]
+    led3c = Ledger()                                      # the name: its face's share after its name against after a foil
+    _ledger_knows(led3c, LX.NAME, 12, name=True)
+    led3d = Ledger()                                      # a voice-turner: 12 of 22 ticks on her face after either
+    _ledger_rows(led3d, LX.NAME, [(1, 12, 10), (0, 12, 10)] * 6, name=True)
     assert led3c.understood(LX.NAME) and not led3d.understood(LX.NAME), (led3c.test(LX.NAME), led3d.test(LX.NAME))
     led3f = Ledger()                                      # a rate from other times is never its chance: a child that turned
-    _ledger_seq(led3f, LX.NAME, [(1, 0), (0, 0)] * 20 + [(1, 1), (0, 1)] * 6, name=True)  # to no voice, then to every one
-    assert not led3f.understood(LX.NAME) and led3f.test(LX.NAME)["where"] == 10, led3f.test(LX.NAME)
-    assert abs(binom_tail(6, 10, 0.1) - 1.46902600e-4) < 1e-11 and binom_tail(5, 5, 0.6) > K.UNDERSTOOD_P
-    from scipy.stats import binom                                         # noqa: PLC0415
-    assert all(abs(binom_tail(k, 2000) - binom.sf(k - 1, 2000, 0.5)) <= 1e-9 * binom.sf(k - 1, 2000, 0.5) for k in
-               (1000, 1100, 1500)) and 0 < binom_tail(1500, 2000) < 1e-100
+    _ledger_rows(led3f, LX.NAME, [(1, 0, 22), (0, 0, 22)] * 20 + [(1, 14, 8), (0, 14, 8)] * 6, name=True)   # to no voice,
+    assert not led3f.understood(LX.NAME) and led3f.test(LX.NAME)["diff"] == 0.0, led3f.test(LX.NAME)   # then to every one
+    # the permutation test exact: against brute force, ties and all; the flip test likewise; the tests' levels spent
+    r_ = np.random.default_rng(12)
+    for _ in range(60):
+        seq = [(int(r_.random() < 0.5), int(r_.integers(0, 9)), int(r_.integers(1, 9))) for _ in range(int(r_.integers(3, 13)))]
+        if 0 < sum(s_[0] for s_ in seq) < len(seq):
+            assert abs(perm_test(seq, 0.01)["p"] - _brute_p(seq)) < 1e-12, seq
+    ft = flip_test([(8, 0)] * 7)
+    assert ft["testable"] and abs(ft["p"] - 0.5 ** 7) < 1e-15 and not flip_test([(8, 0)] * 6)["testable"], ft
+    from body.sim.lang.ledger import test_level                           # noqa: PLC0415
+    lv = [test_level(n_) for n_ in range(1, 400)]
+    assert [n_ for n_, x in enumerate(lv, 1) if x] == [12, 24, 48, 96, 192, 384] and sum(x for x in lv if x) < K.UNDERSTOOD_P
     # says: 3 times over 2 days, per channel, never an echo, the referent where she reads it looking or in its hand
     led4 = Ledger()
     for t, ch, tg, echo in ((10, "tract", "duck", False), (20, "tract", None, False), (30, "tract", "duck", True),
@@ -1096,14 +1134,17 @@ def test_ledger_standing():
     for t in (10, 20, 30):
         led5.accepted(ChildWord(t, "tract", "duck", True, t - 3, t), P(t, child_target="duck"))
     assert not led5.says("duck", "tract"), "says reached within one day"
-    print("12 the ledger: 'heard' only with the referent in the child's view; understood only from formal trials: never by 10 "
-          "met everyday asks; at (i) 9 of 10 naming it and (ii) 16 of 20 where the word sent it, and at 5 and 10 of 10; not "
-          "for a favourite (9 of 10 either way: (ii) 10 of 20), nor a child that knows only the other word ((ii) 15 of 20 but "
-          "(i) 5 of 10), nor at (i) 8 of 10 with 5 nones after their onsets against it (8 of 15, by intention to treat) and "
-          "5 voids before their onsets never scored; its name at 8 of 10 against 3 of 10 foils, not 8 of 10, nor for a child "
-          "that turned to no voice for 40 trials and then to every one ((ii) 10 of 20; a foil rate from other times, 6 of "
-          "26, had made its last 10 names, 6 turned, p = 0.013); the binomial tail exact to 2,000 trials; 'says' 3 times "
-          "over 2 days per channel, the echo and a referent not where she reads it looking not counted, never within one day")
+    print("12 the ledger: 'heard' only with the referent in the child's view; understood only from formal trials, by the "
+          "proportion of looking and a permutation test over the draw labels (A60b): never by 10 met everyday asks; a knower "
+          "at its 12th trial, 6 naming it (p = 1/924 under the first test's 0.005), not at its 11th (no test due); not for a "
+          "favourite (the same share either way: p = 1), nor one whose share grows either way; a child that knows only the "
+          "other word credited too (the yoked comparison's own limit, disclosed); 6 voids never scored and counted, a pair "
+          "scored with 3 of its ticks on either thing refused; 2 of 12 naming it: its first test not testable, its level "
+          "unspent, understood at its 24th at 0.0025; its name at 12 of 22 ticks on her face after it against none after a "
+          "foil, not a voice-turner's 12 after either, nor a child that turned to no voice for 40 trials and then to every "
+          "one; the permutation test exact against brute force over 60 records, the flip test's 2^-7; the tests at 12, 24, 48, "
+          "..., their levels summing under 0.01; 'says' 3 times over 2 days per channel, the echo and a referent not where she "
+          "reads it looking not counted, never within one day")
 
 
 def test_replay_exact():
@@ -2531,18 +2572,33 @@ class _TapLedger(Ledger):
 
 def _trials(led):
     """the formal trials a tap ledger recorded, each with its outcome: [dict(t, form, target, distractor, said, sides, open,
-    score, items, id, result, why, end, scored)] (result None while open; scored: the ledger's own, by intention to treat since
-    P3's thirteenth round, None before)."""
+    window, score, items, id, result, why, end, scored, on, off)] (result None while open; since the lead's decision A60b
+    "scored" or "void", on and off its window's ticks on the target and on the distractor, the name test's on her face and
+    off it)."""
     out, by = [], {}
     for i, r in enumerate(led.rows):
         if r["ev"] == "trial":
-            d = dict(r, id=None, result=None, why=None, end=None, n=i)
+            d = dict(r, id=None, result=None, why=None, end=None, n=i, on=None, off=None)
             out.append(d)
             by[len(out) - 1] = d
         elif r["ev"] == "trial_outcome":
             d = next(x for x in out if x["id"] is None and x["result"] is None)
-            d.update(id=r["trial"], result=r["result"], why=r["why"], end=r["t"], scored=r.get("scored"))
+            d.update(id=r["trial"], result=r["result"], why=r["why"], end=r["t"], scored=r.get("scored"), on=r.get("on"),
+                     off=r.get("off"))
     return out
+
+
+def _oc(x):
+    """a trial's end as the flip tests compare it: (result, why, its end's tick, form, the word said, on, off)."""
+    return (x["result"], x.get("why"), x.get("end"), x.get("form"), x.get("said"), x.get("on"), x.get("off"))
+
+
+def _share(x):
+    """a scored pair trial's share of the window's looking at either thing that went to the named thing (the name test: its
+    face's share of the window), or None."""
+    if x.get("result") != "scored":
+        return None
+    return x["on"] / (x["on"] + x["off"])
 
 
 def _has_trials():
@@ -2800,6 +2856,7 @@ class _Life:
         self.skip_p = skip_p
         self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(79,))))
         self.said, self.judg, self.skipped, self.face = [], [], set(), set()
+        self.face_at = []                                         # (tick, its judgments' kinds, a frown) her face moved from
         self.ids = {x.id for x in seen_}
         self.voiced = set()                                       # the ticks the child's voice sounded
 
@@ -2835,6 +2892,7 @@ class _Life:
         self.judg += [(t,) + j for j in s.judgments]
         if s.judgments or s.frown:
             self.face.update(range(t, t + K.FACE_COURSE + 1))
+            self.face_at.append((t, tuple(j[1] for j in s.judgments), bool(s.frown)))
         return s
 
     def run(self, t0, t1):
@@ -2847,6 +2905,7 @@ class _Life:
         return dict(con=json.loads(json.dumps(self.con.state(), default=_np)), motion=self.motion.state(),
                     kid=copy.deepcopy(self.kid), rng=self.rng.bit_generator.state, said=len(self.said),
                     judg=len(self.judg), skipped=sorted(self.skipped), face=sorted(self.face),
+                    face_at=[list(x) for x in self.face_at],
                     rows=len(self.con.ledger.rows))
 
 
@@ -2863,19 +2922,22 @@ def _pair_con(seed=1, stage=2, motion=None, led=None):
 
 
 def test_trial_protocol():
-    """the lead's decision: understanding is scored only in formal trials (4.8, 12). The protocol with her own stub motion: at a
-    probe she brings the two things into its view side by side (one 'present' act, W2 never told which will be named), settles
-    SETTLE ticks with only her mouth free, says the single test sentence with no act, and the window opens at the target word's
-    onset; the child's first look decides it, and it is void when it already attended one at the onset. Stillness enforced: a
-    motion that moves in the settle holds the sentence back; one that moves after it (a glance, a hand, its face, its trunk, an
-    act, an odd status, a field left out, a tick not read) voids the trial, logged with why."""
+    """the lead's decision: understanding is scored only in formal trials (4.8, 12), by the proportion of looking over a fixed
+    window (A60b). The protocol with her own stub motion: at a probe she brings the two things into its view side by side (one
+    'present' act, W2 never told which will be named), settles SETTLE ticks with only her mouth free, says the single test
+    sentence with no act; its window runs from the test word's onset tick + 2 to its onset tick + 23, the same ticks whichever is
+    named, and each tick her reading of its head line on the target, on the distractor or on neither is counted: only how many,
+    never when; a pair's trial with fewer than 4 of them on either thing is void. Her judgment at the window's end. Stillness
+    enforced: a motion that moves in the settle holds the sentence back; one that moves after it (a glance, a hand, its face,
+    its trunk, an act, an odd status, a field left out, a tick not read) voids the trial, logged with why."""
     assert _has_trials(), "no formal trial in her conduct: understanding is still scored in her everyday asks"
+    assert hasattr(K, "TRIAL_LOOK"), "no fixed window of looking: a trial is still decided by a look timed from its word (A60b)"
     con = _pair_con()
     con.probe("place", "ball", "duck", new={"ball": "ball@table", "duck": "duck@floor"})
     kid = _Kid("knower", seed=3, wander=0.0)
     run = _trial_life(con, kid, 140)
     trs = _trials(con.ledger)
-    assert len(trs) == 1 and trs[0]["result"] == "met", trs
+    assert len(trs) == 1 and trs[0]["result"] == "scored" and trs[0]["on"] > 0 == trs[0]["off"], trs
     tr = trs[0]
     acts = [a for a in con.motion.acts if a[2] == "present"]
     assert len(acts) == 1 and set(acts[0][3].split("|")) == {"ball", "duck"}, acts
@@ -2883,9 +2945,10 @@ def test_trial_protocol():
     line = next(ln for t, ln in run["said"] if ln.intent == "trial_where")
     assert line.text == f"where is the {tr['target']['word']}? see?" and line.register == "question", line
     assert t_line - acts[0][5] + 1 >= K.SETTLE, (t_line, acts[0][5])        # the sentence's own tick the settle's last
-    assert tr["open"] == t_line + 9 and tr["score"] == [[tr["target"]["word"], "trials", 1, 0],
-                                                        [tr["distractor"]["word"], "yoked", 0, 1]], tr
-    assert [j[1:] for j in run["judg"]] == [(2, "met_trial", tr["target"]["word"])], run["judg"]
+    assert tr["open"] == t_line + 9 and tr["window"] == [tr["open"] + 2, tr["open"] + 23] and tr["end"] == tr["open"] + 23 \
+        and tr["score"] == [[tr["target"]["word"], "trials", 1, 0], [tr["distractor"]["word"], "yoked", 0, 1]], tr
+    assert [j[1:] for j in run["judg"]] == [(2, "met_trial", tr["target"]["word"])] and run["judg"][0][0] == tr["end"], \
+        run["judg"]
     # no act with the sentence, and her hold on the child's eyes flagged for W2 through the settle and the window
     con2 = _pair_con()
     con2.probe("place", "cup", "duck", new={"cup": "c1", "duck": "d1"})
@@ -2900,17 +2963,29 @@ def test_trial_protocol():
     assert all(st and eo for t, st, eo, ph in flags if ph in ("settle", "said")) and \
         not any(st for t, st, eo, ph in flags if ph in ("bring", None)), flags[:20]
     none = _trials(con2.ledger)[0]
-    assert none["result"] == "none" and none["end"] == none["open"] + K.TRIAL_WINDOW, none
-    # it already attends one at the onset: void, logged, no smile
-    con3 = _pair_con()
-    con3.probe("place", "cup", "duck", new={"cup": "c1", "duck": "d1"})
-    judg3 = []
-    for t in range(120):
-        tr3 = con3.trial
-        tg = tr3["distractor"] if tr3 and tr3["phase"] == "said" else None
-        judg3 += con3.tick(t, P(t, child_target=tg)).judgments
-    v = _trials(con3.ledger)[0]
-    assert v["result"] == "void" and "already attended" in v["why"] and not judg3, (v, judg3)
+    assert none["result"] == "void" and "fewer than 4" in none["why"] and none["end"] == none["open"] + 23 and \
+        not none["scored"] and con2.ledger.voided == {"place": 1}, none
+    # only the window's ticks count, never when in it: on the distractor through it, scored, no smile; on the target from 2
+    # ticks before its onset, 2 after, 20 or 21 after it, 8 ticks each
+    shares, judg3 = {}, {}
+    for name, first in (("distractor", None), ("onset - 2", -2), ("onset + 2", 2), ("onset + 20", 20), ("onset + 21", 21)):
+        con3 = _pair_con()
+        con3.probe("place", "cup", "duck", new={"cup": "c1", "duck": "d1"})
+        judg3[name] = []
+        for t in range(140):
+            tr3 = con3.trial
+            tg = None
+            if tr3 and tr3["phase"] == "said":
+                if first is None:
+                    tg = tr3["distractor"]
+                elif tr3["onset"] + first <= t < tr3["onset"] + first + 8:
+                    tg = tr3["target"]
+            judg3[name] += con3.tick(t, P(t, child_target=tg)).judgments
+        v = _trials(con3.ledger)[0]
+        shares[name] = (v["result"], v["on"], v["off"])
+    assert shares == {"distractor": ("scored", 0, 22), "onset - 2": ("scored", 4, 0), "onset + 2": ("scored", 8, 0),
+                      "onset + 20": ("scored", 4, 0), "onset + 21": ("void", None, None)} and not judg3["distractor"] and \
+        judg3["onset + 2"], (shares, judg3)
     # stillness: each breach after the sentence voids it; in the settle it holds the sentence back (the settle restarts)
     breaches = dict(glance=dict(glance=1.0), hand=dict(hand=1.0), face=dict(face=1.0), trunk=dict(trunk=1.0),
                     outside=dict(outside=1.0), status=dict(status=1.0), omit=dict(omit=1.0))
@@ -2953,12 +3028,14 @@ def test_trial_protocol():
     assert v6["result"] == "void" and "not read" in v6["why"], v6
     print(f"59 a formal trial (4.8, 12): 'present' asked once for the two things (sides drawn, W2 never told which is named), "
           f"{t_line - acts[0][5] + 1} ticks of stillness from its end (the sentence's tick the last), then '{line.text}' "
-          f"with no act (only her mouth), its window "
-          f"from the target word's onset (tick {tr['open']}); a knower's first look on the target: met, a smile of 2, scored "
-          f"as the named word's test and the distractor's yoked trial; no look: none at the window's end; on one at the onset: "
-          f"void, no smile; W2 holds her still through the settle and window (still, eyes_on_child); each breach after the "
-          f"sentence ({', '.join(got)}) voids it, logged; in the settle it holds the sentence back (dropped after "
-          f"{K.TRIAL_WAIT} ticks); a tick not read voids it")
+          f"with no act (only her mouth), the test word's onset at tick {tr['open']} and its window ticks {tr['window'][0]}-"
+          f"{tr['window'][1]} (A60b); a knower {tr['on']} of them on the target, none on the other: scored, a smile of 2 at "
+          f"the window's end, scored as the named word's test and the distractor's yoked trial; no look: void (fewer than "
+          f"4 ticks on either), counted, never scored; on the distractor through it: scored 0 to 22, no smile; the same "
+          f"8-tick look on the target counted 4, 8, 4 and 3 ticks begun 2 before its onset, 2, 20 and 21 after it (the "
+          f"last void): only the window's ticks, never when; W2 holds her still through the settle and window (still, "
+          f"eyes_on_child); each breach after the sentence ({', '.join(got)}) voids it, logged; in the settle it holds the "
+          f"sentence back (dropped after {K.TRIAL_WAIT} ticks); a tick not read voids it")
 
 
 def _many_trials(kind, n_trials, seed=0, motion=None, rule=True, knows=None, forms=("place",), pairs=None, wander=0.3):
@@ -2999,13 +3076,14 @@ def _many_trials(kind, n_trials, seed=0, motion=None, rule=True, knows=None, for
 
 
 def _rate(trs):
-    c = [x for x in trs if x["result"] in ("met", "missed")]
-    k = sum(x["result"] == "met" for x in c)
-    return k, len(c)
+    """a child's scored pair trials whose looking was not even (A60b): how many went more to the named thing than to the other
+    -> (k, n). For a child whose looking does not depend on the word said, each is a fair coin (the named thing is)."""
+    c = [x for x in trs if x["result"] == "scored" and x["form"] != "name" and x["on"] != x["off"]]
+    return sum(x["on"] > x["off"] for x in c), len(c)
 
 
 def _btail(k, n, p0=0.5):
-    """P(X >= k), X ~ Binomial(n, p0), exact in rationals (the ledger's binom_tail is for its windows of 10)."""
+    """P(X >= k), X ~ Binomial(n, p0), exact in rationals."""
     from fractions import Fraction                                        # noqa: PLC0415
     q = Fraction(p0)
     return float(sum(math.comb(n, i) * q ** i * (1 - q) ** (n - i) for i in range(max(0, k), n + 1)))
@@ -3016,52 +3094,37 @@ def _two_sided(k, n, p0=0.5):
 
 
 def _crit(m, alpha):
-    """the fewest of m that a one-sided binomial test against 1/2 finds above it at alpha (scipy's, not the ledger's), or m + 1."""
+    """the fewest of m that a one-sided binomial test against 1/2 finds above it at alpha (scipy's), or m + 1."""
     from scipy.stats import binom                                         # noqa: PLC0415
     return next((k for k in range(m + 1) if binom.sf(k - 1, m, 0.5) < alpha), m + 1)
 
 
-def _rule_scipy(seq, name=False):
-    """the ledger's rule (4.8) written again from its statement with scipy's binomial tail, never the ledger's code: over the last
-    UNDERSTOOD_LAST of seq [(named, on)] re-tested after each trial, (i) its first looks on its thing when named, at least
-    UNDERSTOOD_MIN and above 1/2 (not for the name), (ii) its looks where the word sent it above 1/2 (the name: with at least
-    UNDERSTOOD_MIN turns after it); on None, a none or a void after its window opened, scored by intention to treat (P3's
-    thirteenth round): neither on its thing nor where the word sent it -> the index of the trial it was first reached at, or
-    None."""
-    for j in range(1, len(seq) + 1):
-        w = seq[max(0, j - K.UNDERSTOOD_LAST):j]
-        on_named = [int(on == 1) for nm, on in w if nm]
-        where = sum(int(on is not None and on == nm) for nm, on in w)
-        if sum(on_named) < K.UNDERSTOOD_MIN or where < _crit(len(w), K.UNDERSTOOD_P):
-            continue
-        if name or sum(on_named) >= _crit(len(on_named), K.UNDERSTOOD_P):
-            return j - 1
+def _rule_share(seq):
+    """the ledger's rule (4.8, the lead's decision A60b) as it states it, from a word's record [(named, a, b)] in its order:
+    tested at its 12th registered trial and at each doubling (24, 48, ...), the j-th over all its trials so far at 0.01 / 2^j,
+    only where 1 / C(n, k) is under that level, by the permutation test's p (exact: test 12 holds it to brute force) -> the index
+    of the trial it was first reached at, or None."""
+    n, j = K.UNDERSTOOD_FIRST, 1
+    while n <= len(seq):
+        w = [tuple(x) for x in seq[:n]]
+        r = perm_test(w, K.UNDERSTOOD_P / 2 ** j)
+        if 1.0 / math.comb(n, r["named"]) < K.UNDERSTOOD_P / 2 ** j and r["p"] < K.UNDERSTOOD_P / 2 ** j:
+            return n - 1
+        n, j = 2 * n, j + 1
     return None
 
 
-def _coin_bound(n, lives=20000, seed=0):
-    """how often a fair coin's n trials reach (ii) alone, re-tested after each over its last UNDERSTOOD_LAST (scipy's critical
-    counts): the most often a child whose look does not depend on the word said reaches "understood" (its (ii) is such a coin
-    exactly; the floor and (i) only lower it). C64's disclosed rate."""
-    rng = np.random.default_rng(seed)
-    x = (rng.random((lives, n)) < 0.5).astype(np.int32)
-    c = np.concatenate([np.zeros((lives, 1), np.int32), np.cumsum(x, axis=1)], axis=1)
-    hit = np.zeros(lives, bool)
-    for j in range(1, n + 1):
-        m = min(j, K.UNDERSTOOD_LAST)
-        hit |= (c[:, j] - c[:, j - m]) >= _crit(m, K.UNDERSTOOD_P)
-    return float(hit.mean())
-
-
 def test_trial_chance_and_counterbalance():
-    """chance is 50% by counterbalancing: her trial stream draws which of the two is named and the sides, each a fair coin, so a
-    child that follows her gaze or her hands (a W2 placing the two one hand after the other, L1 glancing at its targets before
-    the settle), a side's or a toy's favourite and a wanderer each score 50% (two-sided binomial), and a child that knows the
-    words scores far above it; a favourite's first looks on its toy when named are far above 1/2, and where the word sent them
-    at 1/2 (the ledger's (ii)); understood exactly as the rule gives (written again with scipy), a knower's words. Against a
-    motion that knew the target and glanced at it after the sentence, every such trial is void; with the void rule switched
-    off the gaze follower meets them: the rule is what holds it at chance."""
-    assert _has_trials(), "no formal trial in her conduct"
+    """chance is 50% by counterbalancing (the lead's decision A60b): her trial stream draws which of the two is named and the
+    sides, each a fair coin, so a child that follows her gaze or her hands (a W2 placing the two one hand after the other, L1
+    glancing at its targets before the settle), a side's or a toy's favourite and a wanderer each look more at the named thing
+    in half their trials (two-sided binomial), and a child that knows the words far more; a favourite's share of the looking on
+    its toy is high whichever is named, and its difference null; understood exactly as the rule gives (its tests at 12, 24, 48,
+    ... registered trials), a knower's words, and the non-knowers' no more often than its levels allow; section 12's flip test
+    of the form, each trial once: the knower's far below 0.01, the others' above. Against a motion that knew the target and
+    glanced at it after the sentence, every such trial is void; with the void rule switched off the gaze follower's looking
+    goes to the target: the rule is what holds it at chance."""
+    assert _has_trials() and perm_test is not None, "no formal trial scored by the proportion of looking (A60b)"
     res, rows = {}, []
     for i, kind in enumerate(("gaze", "hands", "side", "favourite", "random", "knower")):
         m = _TW2(seed=11, lengths=(4, 16), queue_p=0.2, l1_p=0.9, place_p=0.02) if kind in ("gaze", "hands") else None
@@ -3069,31 +3132,33 @@ def test_trial_chance_and_counterbalance():
         k, n = _rate(trs)
         res[kind] = (k, n, _two_sided(k, n), con)
         rows += trs
-    by_chance = []
+    by_chance, n_words = [], 0
     for kind in ("gaze", "hands", "side", "favourite", "random"):
         k, n, p2, con = res[kind]
-        assert n >= 100 and p2 > 0.01, f"a {kind} child scored {k} of {n} (two-sided p = {p2:.4f}), not chance"
+        assert n >= 100 and p2 > 0.01, f"a {kind} child looked more at the named thing in {k} of {n} (two-sided p = {p2:.4f})"
         for w in ("ball", "duck", "cup", "block"):
             st = con.ledger.words[w]
-            got = _rule_scipy(st["seq"])
-            assert (st["understood_at"] is not None) == (got is not None), (kind, w, got, st["understood_at"], st["seq"])
+            got = _rule_share(st["seq"])
+            assert (st["understood_at"] is not None) == (got is not None), (kind, w, got, st["understood_at"], st["tests"])
+            n_words += 1
             if got is not None:
                 by_chance.append(f"{kind}:{w}")
+    assert len(by_chance) <= 1, by_chance                # (at most 1% of words by construction: 20 words here)
     k, n, p2, con = res["knower"]
     assert n >= 100 and k / n > 0.8 and _btail(k, n) < 1e-12, (k, n)
     assert all(con.ledger.understood(w) for w in ("ball", "duck", "cup", "block")), \
-        {w: con.ledger.standing(w) for w in ("ball", "duck", "cup", "block")}
-    # the favourite's ball: its first look on the ball when named far above 1/2 ((i) alone would credit it), and where the word
-    # sent it at chance over all its trials ((ii): the named thing a fair coin, so a favourite goes there half the time)
-    from body.sim.lang.ledger import two_part                             # noqa: PLC0415
-    fav = two_part(res["favourite"][3].ledger.words["ball"]["seq"])
-    assert fav["on_named"] / fav["named"] > 0.8 and _two_sided(fav["where"], fav["n"]) > 0.01, fav
-    # section 12's test of the form (A19, A28): (i) and (ii) over its trials, each once, one-sided p < 0.01
+        {w: con.ledger.test(w) for w in ("ball", "duck", "cup", "block")}
+    # the favourite's ball: its share of the looking on the ball high when named and when not ((the old (i) alone would have
+    # credited it), its difference null: the permutation test's comparison is the same thing's share when the other is named
+    fav = res["favourite"][3].ledger.test("ball")
+    seqf = res["favourite"][3].ledger.words["ball"]["seq"]
+    sh = [a / (a + b) for _nm, a, b in seqf]
+    assert sum(sh) / len(sh) > 0.8 and fav["p"] > 0.01 and not res["favourite"][3].ledger.understood("ball"), fav
+    # section 12's test of the form (A19, A28): the flip test over its trials, each once, one-sided p < 0.01
     pooled = {kd: res[kd][3].ledger.pooled("place") for kd in res}
-    assert pooled["knower"]["p"] < 1e-6 and all(pooled[kd]["p"] > 0.01 for kd in res if kd != "knower"), \
-        {kd: (v["k"], v["n"], v["where"], v["n_where"], v["p"]) for kd, v in pooled.items()}
+    assert pooled["knower"]["p"] <= 1.0 / (K.PERM_DRAWS + 1) and all(pooled[kd]["p"] > 0.01 for kd in res if kd != "knower"), \
+        {kd: (v["n"], v["x"], v["p"]) for kd, v in pooled.items()}      # (its 300 trials' p drawn: at its floor, 1 / 20,001)
     least = min(v["p"] for kd, v in pooled.items() if kd != "knower")
-    fp = _coin_bound(60, lives=4000)
     # the counterbalance: over every trial, which of the two is named and which is on the left, each near half, independent
     named_left = [x["target"]["id"] == x["sides"][0] for x in rows if x["sides"]]
     k_left, n_all = sum(named_left), len(named_left)
@@ -3108,7 +3173,8 @@ def test_trial_chance_and_counterbalance():
     assert _two_sided(k_left, n_all) > 0.01 and _two_sided(k_first, n_all) > 0.01 and _two_sided(same, len(lr)) > 0.01, \
         (k_left, k_first, same, n_all)
     assert all(_two_sided(a, a + b) > 0.001 for a, b in both.values()), both
-    # a motion that knew the target and glanced at it after the sentence: void every time; without the rule, met
+    # a motion that knew the target and glanced at it after the sentence: void every time; without the rule, its follower's
+    # looking goes to the target
     cheat = _TW2(seed=12, lengths=(4, 8), queue_p=0.0, l1_p=0.0, place_p=0.0, rogue=dict(glance=0.3), cheat=True, when="said")
     trs_c, _ = _many_trials("gaze", 150, seed=8, motion=cheat)
     void = [x for x in trs_c if x["result"] == "void" and "her attention log" in (x["why"] or "")]
@@ -3119,28 +3185,30 @@ def test_trial_chance_and_counterbalance():
     ko, no = _rate(trs_o)
     assert len(void) >= 40 and (nc == 0 or _two_sided(kc, nc) > 0.01), (len(void), kc, nc)
     assert no >= 40 and ko / no > 0.8, (ko, no)
-    print(f"60 chance 50% by counterbalancing: over 300 probes each, a follower of her gaze {res['gaze'][0]}/{res['gaze'][1]}, "
-          f"of her hands {res['hands'][0]}/{res['hands'][1]} (a W2 placing one hand after the other, L1 at its targets before "
-          f"the settle), a side's favourite {res['side'][0]}/{res['side'][1]}, the ball's {res['favourite'][0]}/"
-          f"{res['favourite'][1]}, a wanderer {res['random'][0]}/{res['random'][1]} (each two-sided p > 0.01; the ball's "
-          f"favourite on the ball when named {fav['on_named']}/{fav['named']}, where the word sent it {fav['where']}/"
-          f"{fav['n']}; {len(by_chance)} of their 20 words reached the ledger's pacing criterion, exactly as the rule written "
-          f"again with scipy gives their trials, as a fair coin's 60 reach its (ii) {fp:.0%} of the time: the window re-tested "
-          f"after each trial, C64, no claim); a knower {k}/{n}, every word understood; section 12's test of the form, each "
-          f"trial once: the knower's p = {pooled['knower']['p']:.1e}, the others' each above 0.01 (least {least:.2f}); over "
-          f"its {n_all} trials the "
-          f"target the first of its pair {k_first}, on the left {k_left}, the two alike {same} (each two-sided p > 0.01); a "
-          f"motion that knew the target and glanced at it after the sentence: {len(void)} of {len(trs_c)} void (the rest "
-          f"{kc}/{nc}), and with the void rule off its follower met {ko}/{no}")
+    print(f"60 chance 50% by counterbalancing (A60b): over 300 probes each, the trials whose looking went more to the named "
+          f"thing: a follower of her gaze {res['gaze'][0]}/{res['gaze'][1]}, of her hands {res['hands'][0]}/"
+          f"{res['hands'][1]} (a W2 placing one hand after the other, L1 at its targets before the settle), a side's "
+          f"favourite {res['side'][0]}/{res['side'][1]}, the ball's {res['favourite'][0]}/{res['favourite'][1]}, a wanderer "
+          f"{res['random'][0]}/{res['random'][1]} (each two-sided p > 0.01; the ball's favourite's mean share on the ball "
+          f"{sum(sh) / len(sh):.2f} over {len(sh)} trials whichever was named, its difference {fav['diff']:+.3f}, p = "
+          f"{fav['p']:.2f}); {len(by_chance)} of their {n_words} words understood, exactly as the rule gives (its tests at 12, "
+          f"24, 48 and 96 registered trials, at 0.005, 0.0025, ...); a knower {k}/{n}, every word understood; section 12's "
+          f"flip test of the form, each trial once: the knower's p = {pooled['knower']['p']:.1e} (the floor of its 20,000 "
+          f"draws), "
+          f"the others' each above 0.01 "
+          f"(least {least:.2f}); over its {n_all} trials the target the first of its pair {k_first}, on the left {k_left}, "
+          f"the two alike {same} (each two-sided p > 0.01); a motion that knew the target and glanced at it after the "
+          f"sentence: {len(void)} of {len(trs_c)} void (the rest {kc}/{nc}), and with the void rule off its follower's "
+          f"looking went more to the target in {ko}/{no}")
 
 
 def test_name_trial_foil():
     """the name test (Mandel, Jusczyk and Pisoni 1995): its name or a foil name in the same voice (the calling register) and
-    stillness, drawn by her trial stream, no things; the measure is its turn to her after its name against after the foil. A
-    child that turns to any voice turns after both: where its name sent it at chance; a child that knows its name turns after it
-    alone: understood. The foil is no word of hers, never Claude's, and never said outside the name test; her everyday calls
-    answered count toward nothing."""
-    assert _has_trials(), "no name test in her conduct: the call's control was silence, so any voice met it"
+    stillness, drawn by her trial stream, no things; the measure its face's share of the window (the lead's decision A60b)
+    after its name against after a foil. A child that turns to any voice turns after both: its share the same, not understood;
+    a child that knows its name turns after it alone: understood. The foil is no word of hers, never Claude's, and never said
+    outside the name test; her everyday calls answered count toward nothing."""
+    assert _has_trials() and perm_test is not None, "no name test scored by its face's share of the window (A60b)"
     out = {}
     for kind in ("voice", "knower", "random"):
         led = _TapLedger()
@@ -3159,19 +3227,16 @@ def test_name_trial_foil():
                 lines.append(s.line)
             t += 1
         trs = [x for x in _trials(led) if x["result"] is not None]
-        nm = [x for x in trs if x["said"] == LX.NAME and x["result"] in ("met", "missed")]
-        fo = [x for x in trs if x["said"] != LX.NAME and x["result"] in ("met", "missed")]
-        out[kind] = (sum(x["result"] == "met" for x in nm), len(nm), sum(x["result"] == "met" for x in fo), len(fo),
-                     con.ledger.understood(LX.NAME), lines, trs, con.ledger.words.get(LX.NAME, {}).get("seq", []))
-    kn, nn, kf, nf, und, lines, trs, seq = out["voice"]
-    from body.sim.lang.ledger import two_part                             # noqa: PLC0415
-    tv = two_part(seq, name=True)
-    assert nn >= 25 and nf >= 25 and kn / nn > 0.8 and kf / nf > 0.8 and _two_sided(tv["where"], tv["n"]) > 0.01, \
-        (out["voice"][:5], tv)
-    kn2, nn2, kf2, nf2, und2, lines2, _, seq2 = out["knower"]
-    assert kn2 / nn2 > 0.8 and kf2 / max(1, nf2) < 0.3 and und2, out["knower"][:5]
-    for kind in out:                                      # understood exactly as the rule gives (scipy's, not the ledger's)
-        assert out[kind][4] == (_rule_scipy(out[kind][7], name=True) is not None), (kind, out[kind][4], out[kind][7])
+        nm = [_share(x) for x in trs if x["said"] == LX.NAME and x["result"] == "scored"]
+        fo = [_share(x) for x in trs if x["said"] != LX.NAME and x["result"] == "scored"]
+        out[kind] = (sum(nm) / len(nm), len(nm), sum(fo) / len(fo), len(fo), con.ledger.understood(LX.NAME), lines, trs,
+                     con.ledger.words.get(LX.NAME, {}).get("seq", []), con.ledger.test(LX.NAME))
+    fn, nn, ff, nf, und, lines, trs, seq, tv = out["voice"]
+    assert nn >= 25 and nf >= 25 and fn > 0.2 and ff > 0.2 and tv["p"] > 0.01 and not und, (out["voice"][:5], tv)
+    fn2, nn2, ff2, nf2, und2, lines2, _, seq2, tk = out["knower"]
+    assert fn2 > 0.3 and ff2 < 0.1 and und2, out["knower"][:5]
+    for kind in out:                                      # understood exactly as the rule gives
+        assert out[kind][4] == (_rule_share(out[kind][7]) is not None), (kind, out[kind][4], out[kind][8])
     foils = {ln.text for ln in lines if ln.intent == "trial_name" and LX.NAME not in TP.words(ln.text)}
     assert foils and foils <= {TP.foil_line(f_) for f_ in K.NAME_FOILS} and {ln.register for ln in lines if ln.intent ==
                                                                               "trial_name"} == {"calling"}, (foils, lines[:4])
@@ -3193,12 +3258,10 @@ def test_name_trial_foil():
     st = con.ledger.standing(LX.NAME)
     assert st["asks"] and all(st["asks"]) and not con.ledger.understood(LX.NAME) and st["trials"] == [], st
     print(f"61 the name test (Mandel et al. 1995): its name or a foil ({', '.join(K.NAME_FOILS)}) drawn by her stream "
-          f"({sum(draws)} names of {len(draws)}), each in 'hi. X. hi.' in the calling register, her body still; a child that "
-          f"turns to "
-          f"any voice turned after its name {kn}/{nn} and after a foil {kf}/{nf}: where its name sent it {tv['where']}/"
-          f"{tv['n']}, at chance ({'understood by chance, as C64 discloses' if und else 'not understood'}); one that knows its "
-          f"name {kn2}/{nn2} against {kf2}/{nf2}: understood; each as the rule written again with scipy gives; the foils no "
-          f"words of hers and refused to Claude; "
+          f"({sum(draws)} names of {len(draws)}), each in 'hi. X. hi.' in the calling register, her body still; its face's "
+          f"share of the window (A60b): a child that turns to any voice {fn:.2f} after its name ({nn} trials) and {ff:.2f} "
+          f"after a foil ({nf}), p = {tv['p']:.2f}, not understood; one that knows its name {fn2:.2f} against {ff2:.2f}: "
+          f"understood; each as the rule gives; the foils no words of hers and refused to Claude; "
           f"{len(st['asks'])} everyday calls all met: the name not understood (teaching only)")
 
 
@@ -3322,18 +3385,19 @@ def _prop_life(seed, n=5000):
 
 
 def _trial_of(rows, i0, since=None):
-    """the trial among ledger rows from i0: -> (result, why's first clause, its decision's tick, form), or ("dropped",)."""
+    """the trial among ledger rows from i0: -> (result, why's first clause, its end's tick, form, on, off), or ("dropped",)."""
     tr = next((r for r in rows[i0:] if r["ev"] == "trial"), None)
     if tr is None:
         return ("dropped",)
     oc = next((r for r in rows[i0:] if r["ev"] == "trial_outcome"), None)
-    return (oc["result"], (oc["why"] or "").split(":")[0], oc["t"], tr["form"])
+    return (oc["result"], (oc["why"] or "").split(":")[0], oc["t"], tr["form"], oc.get("on"), oc.get("off"))
 
 
 def _flipped(x, y):
-    """the base trial x and its run with the other thing named y: the same by every rule (met for missed in a pair's trial)."""
-    if x[0] in ("met", "missed") and x[3] != "name":
-        return y[0] == {"met": "missed", "missed": "met"}[x[0]] and y[2:] == x[2:]
+    """the base trial x and its run with the other thing named y: the same by every rule (A60b: a pair's scored trial with its
+    window's ticks on each thing the same, on and off turned over; the name's, its face's ticks the same)."""
+    if x[0] == "scored" and x[3] != "name":
+        return y[:4] == x[:4] and (y[4], y[5]) == (x[5], x[4])
     return y == x
 
 
@@ -3378,22 +3442,25 @@ def _flip_life(seed, n=5000):
 
 
 def _prop_check(lf):
-    """the property on one life -> (breaks, counted): no trial scored (met, missed, none) with anything but her mouth moving on a
-    tick from its sentence to its decision (the motion's own account, the ticks the world skipped, her face after her own
-    judgments); every trial her log voided with a movement on its void tick; the ledger's understood exactly what its trials
-    give by the rule as 4.8 states it, written again with scipy's binomial tail (_rule_scipy), never its asks."""
+    """the property on one life -> (breaks, counted): no trial scored with anything but her mouth moving on a tick from its
+    sentence to its window's end (the motion's own account, the ticks the world skipped, her face after her own judgments);
+    every trial her log voided with a movement on its void tick; the ledger's understood exactly what its trials give by the
+    rule as 4.8 states it (_rule_share), never its asks."""
     m, breaks, counted = lf.motion, [], []
     trs = [x for x in _trials(lf.con.ledger) if x["result"] is not None]
-    moved = lambda u: m.moved.get(u) or u in lf.skipped or u in lf.face                     # noqa: E731
+    def moved(u, end):                                    # her face from her judgments: but a trial's own, made at its end once
+        return m.moved.get(u) or u in lf.skipped or any(  # its last tick was held still (A60b: her judgment at its window's end)
+            f0 <= u <= f0 + K.FACE_COURSE and not (f0 == end and kinds == ("met_trial",) and not fr) for f0, kinds, fr in
+            lf.face_at)
     for x in trs:
-        last = x["end"] if "in its window" in (x["why"] or "") or x["result"] == "void" else x["end"] - 1
-        mv = [u for u in range(x["t"], last + 1) if moved(u)]
+        last = x["end"]
+        mv = [u for u in range(x["t"], last + 1) if moved(u, last)]
         if x["result"] != "void" and mv:
             breaks.append(("scored with her body moving", x["t"], x["result"], mv[:3], [m.moved.get(u) for u in mv[:3]]))
         if x["result"] == "void" and "her attention log" in (x["why"] or "") and \
-                not (moved(x["end"]) if "not read" not in x["why"] else x["end"] - 1 in lf.skipped):
+                not (moved(x["end"], x["end"]) if "not read" not in x["why"] else x["end"] - 1 in lf.skipped):
             breaks.append(("voided with her body still", x["t"], x["end"], x["why"]))
-        if x["result"] in ("met", "missed"):
+        if x["result"] == "scored":
             counted.append(x)
     rows = lf.con.ledger.rows                             # its stimuli time-matched (P3's twelfth round): every sentence its
     scaffold = getattr(lf.con, "scaffold", None)          # draw could have given one timeline, as the timed voice says them
@@ -3413,14 +3480,14 @@ def _prop_check(lf):
             breaks.append(("not one timeline", r["t"], r["said"], rows[i - 1].get("ticks"), r["open"] - r["t"], len(tls)))
     led = lf.con.ledger
     seqs = {}
-    for x in trs:                                         # each word's record from the trials' own rows, in their order,
-        if x["result"] not in ("met", "missed") and not x["scored"]:           # by intention to treat (P3's thirteenth
-            continue                                      # round): a none or a void from its onset's tick on against it
-        for key, lst, on_met, on_missed in x["score"]:
-            v = on_met if x["result"] == "met" else on_missed if x["result"] == "missed" else None
-            seqs.setdefault(key, []).append((int(lst == "trials"), v))
+    for x in trs:                                         # each word's record from the trials' own rows, in their order
+        if x["result"] != "scored":                       # (A60b: a void never scored)
+            continue
+        for key, lst, _a, _b in x["score"]:
+            nm = int(lst == "trials")
+            seqs.setdefault(key, []).append((nm,) + ((x["on"], x["off"]) if nm or x["form"] == "name" else (x["off"], x["on"])))
     for w, st in led.words.items():
-        got = _rule_scipy(seqs.get(w, []), name=w == LX.NAME)
+        got = _rule_share(seqs.get(w, []))
         if (st["understood_at"] is not None) != (got is not None):
             breaks.append(("understood not as its trials give", w, st["understood_at"], got, seqs.get(w)))
     return breaks, counted
@@ -3446,13 +3513,13 @@ def test_trial_property():
     plan's probes (place and name) and everyday asks between them, her sentences as her voice says them (the timed voice; the
     words channel labelling her lines in two lives of three: P3's twelfth round, every trial's sentences one timeline, a pair
     with no time-matched stimulus or the name while the channel runs never tried): no trial is scored with anything but her
-    mouth moving from
-    its sentence to its decision (the motion's own account, not her log), none voided by her log with her body still; the
-    ledger's understood is exactly what its trials give (the rule written again with scipy), never its asks; the non-knowers'
-    pooled first looks sit at chance, the
-    knowers' far above; the target's side and its name against a foil drawn near half and half; a life replays exactly, whole
-    and from snapshots taken in each phase of a trial."""
-    assert _has_trials(), "no formal trial in her conduct"
+    mouth moving from its sentence to its window's end (the motion's own account, not her log), none voided by her log with
+    her body still; the ledger's understood is exactly what its trials give (the rule as stated), never its asks; the
+    non-knowers' trials whose looking went more to the named thing sit at chance, the knowers' far above (A60b); each
+    non-knower's trial run again with the other thing named ends the same, its window's ticks on each thing the same; the
+    target's side and its name against a foil drawn near half and half; a life replays exactly, whole and from snapshots
+    taken in each phase of a trial."""
+    assert _has_trials() and perm_test is not None, "no formal trial scored by the proportion of looking (A60b)"
     lives, flips = [], []
     for seed in range(49):                           # (7 of each since P3's fourteenth round: 6 left a voice-turner 14 scored pair
         if PROP_KIDS[seed % len(PROP_KIDS)] == "knower":          # trials once her sentences took their tag)
@@ -3466,7 +3533,7 @@ def test_trial_property():
     bad = [f for f in flips if not _flipped(f[3], f[4])]
     assert not bad, (len(bad), len(flips), bad[:4])
     all_breaks, by_kind = [], {}
-    counts = dict(trials=0, void=0, void_log=0, void_trunk=0, none=0, asks=0, met_asks=0, stale=0, sounded=0, no_stim=0,
+    counts = dict(trials=0, void=0, void_log=0, void_trunk=0, few=0, asks=0, met_asks=0, stale=0, sounded=0, no_stim=0,
                   channel=0)
     for lf, kind in lives:
         br, counted = _prop_check(lf)
@@ -3477,7 +3544,7 @@ def test_trial_property():
         counts["void"] += sum(x["result"] == "void" for x in trs)
         counts["void_log"] += sum(x["result"] == "void" and "her attention log" in (x["why"] or "") for x in trs)
         counts["void_trunk"] += sum(x["result"] == "void" and "her trunk" in (x["why"] or "") for x in trs)
-        counts["none"] += sum(x["result"] == "none" for x in trs)
+        counts["few"] += sum(x["result"] == "void" and "fewer than" in (x["why"] or "") for x in trs)
         counts["sounded"] += sum(any(u in lf.voiced for u in range(x["t"], x["end"] + 1)) for x in trs)
         counts["stale"] += sum(x["form"] == "place" and not [s_ for s_ in x["score"] if s_[1] == "trials"] for x in trs)
         counts["asks"] += sum(r["ev"] == "ask" for r in lf.con.ledger.rows)
@@ -3487,11 +3554,10 @@ def test_trial_property():
     assert not all_breaks, all_breaks[:5]
     stats = {}
     for kind, xs in sorted(by_kind.items()):
-        pair = [x for x in xs if x["form"] != "name"]
-        k, n = sum(x["result"] == "met" for x in pair), len(pair)
+        k, n = _rate(xs)
         stats[kind] = (k, n)
-        if kind != "knower":
-            assert n >= 15 and _two_sided(k, n) > 0.001, (kind, k, n)
+        if kind != "knower":                              # (a voice-turner's pair trials mostly void: its looking on her face)
+            assert n >= 10 and _two_sided(k, n) > 0.001, (kind, k, n)
     kc, nc = sum(v[0] for kd, v in stats.items() if kd != "knower"), sum(v[1] for kd, v in stats.items() if kd != "knower")
     assert nc >= 120 and _two_sided(kc, nc) > 0.01, (kc, nc)
     k, n = stats["knower"]
@@ -3514,18 +3580,19 @@ def test_trial_property():
           f"tick 5; the words channel labelling her lines in two "
           f"lives of three; the child babbling and taking turns after her sound stops): {counts['trials']} trials "
           f"({counts['sounded']} with its voice in the sentence or window; "
-          f"{counts['void']} void, "
-          f"{counts['void_log']} of them by her log, {counts['void_trunk']} by her trunk; {counts['none']} with no look; "
-          f"{counts['stale']} of a place already shown 3 times, scored as no "
+          f"{counts['void']} void, never scored: "
+          f"{counts['void_log']} by her log, {counts['void_trunk']} of them by her trunk, {counts['few']} with fewer than 4 "
+          f"of its window's ticks on either thing; {counts['stale']} of a place already shown 3 times, scored as no "
           f"test), none scored with her body moving (the motion's own account) and none voided by her log with it still; "
           f"understood exactly as the trials give in every life, never by her {counts['asks']} everyday asks "
-          f"({counts['met_asks']} met); first looks on the target: {', '.join(f'{kd} {a}/{b}' for kd, (a, b) in stats.items())}"
+          f"({counts['met_asks']} met); its looking more on the named thing (A60b): "
+          f"{', '.join(f'{kd} {a}/{b}' for kd, (a, b) in stats.items())}"
           f" (each non-knower two-sided p > 0.001; together {kc}/{nc}, p > 0.01); the target on the left {left}/{len(rows)}, "
           f"its name {nm}/{len(names)}; every trial's sentences one timeline in the timed voice, the words channel's too where "
           f"it ran; never a pair with 'duck' ({counts['no_stim']} dropped: no time-matched stimulus) nor the name while the "
           f"channel ran ({counts['channel']} dropped); each of {len(flips)} trials of the non-knowers run again from its "
           f"settle with the other thing "
-          f"named ends the same by every rule (a met for a missed); a "
+          f"named ends the same by every rule (its window's ticks on each thing the same, on and off turned over); a "
           f"life replays exactly, and {snaps} snapshots (bring, settle, window) restored continue exactly")
 
 
@@ -3628,10 +3695,10 @@ def test_trial_low_items():
     con = C.Conduct(seed=1, stage=2, imperfect=False, ledger=_TapLedger(), transcriber=Transcriber(None))
     _no_sets(con, ("duck", "ball", "cup", "block", "block_red"))
     con.probe("place", "cup", "duck", new={"cup": "c", "duck": "d"})
-    got = _run_to(con, 90, tract=snd)
+    got = _run_to(con, 90, tract=snd, target=lambda t, c: "cup" if c.trial is not None and c.trial["phase"] == "said" else None)
     over = _trials(con.ledger)
     voiced = [r for r in con.ledger.rows if r["ev"] == "voiced" and r["text"].startswith("where")]
-    assert over and over[0]["t"] < 56 < over[0]["open"] and over[0]["result"] == "none" and \
+    assert over and over[0]["t"] < 56 < over[0]["open"] and over[0]["result"] == "scored" and \
         not [r for r in con.ledger.rows if r["ev"] == "cut"] and not [s for t, s in got if s.cut or s.frown] and \
         voiced and voiced[0]["said"] == TP.words(voiced[0]["text"]), (over, voiced)
     # a word not hers: dropped by the line check (the rattle before it is hers)
@@ -3652,7 +3719,7 @@ def test_trial_low_items():
     _run_to(con, 10, seen_=twins)
     assert "understood alone" in con.fast.refused[-1][2], con.fast.refused[-1:]
     for w in ("blue", "ball"):
-        _ledger_trials(con.ledger, w, hits=[1] * 10, yoked=[0] * 10)
+        _ledger_knows(con.ledger, w, 12)
     lines, keys = [], []
     for k in range(8):
         con.probe("combination", "ball_blue", "ball")
@@ -3742,7 +3809,7 @@ def test_trial_low_items():
     print(f"64 the protocol's edges: never said while the world does not say what lies near the two, or they lie within "
           f"{K.NEAR_DEG:g} degrees of each other or of her face (dropped after {K.TRIAL_WAIT} ticks, logged); the present act "
           f"refused: dropped; its pain after the sentence: void, before: dropped; the child's voice over its sentence before its "
-          f"word: said whole, no stop, no frown, not void; a word "
+          f"word: said whole, no stop, no frown, scored; a word "
           f"not hers as either thing: dropped by the line check whichever is named ({len(drops)} of 6; a drop after the draw "
           f"would have named the sayable thing every time); the combination refused until 'blue' and 'ball' are "
           f"understood alone (A28), "
@@ -3756,166 +3823,144 @@ def test_trial_low_items():
           f"trial's stimuli were time-matched void in its window and dropped in its settle")
 
 
-def _led_life(n, rng, look, name=False, form="place", led=None, key="ball", other="duck", fresh_other=False, knower=False):
+def _led_life(n, rng, look, name=False, form="place", led=None, key="ball", other="duck", fresh_other=False, knower=None):
     """one child's n scored trials straight through a ledger as the conduct records them (its thing a fresh never-taught item,
-    which of the two is named a fair coin from rng): look(j, last) its chance of a first look on key's thing (the name: of a turn
-    to her face) on trial j, which never sees the word said now; last: the trial before, (named, on): what her smile or its
-    absence told it (a smile for its first look on the named thing, for its turn to its name). fresh_other: the other thing
-    fresh too (its word scored as well). knower: the name's knower instead (a turn after its name 0.9, after a foil 0.1). ->
-    the ledger (a new one unless given)."""
+    which of the two is named a fair coin from rng; the lead's decision A60b): look(j, last) its share of looking at key's thing
+    (the name: at her face) on trial j, which never sees the word said now: its window's ticks on either thing drawn (4 to 22,
+    as it happens to look), key's thing's among them Binomial with that share (the name: of the window's 22); last: the trial
+    before, (named, smiled): what her smile or its absence told it (a smile when its looking went more to the target; after
+    its name, for 2 ticks on her face). fresh_other: the other thing fresh too (its word scored as well). knower: (share when
+    named, share when not) instead. -> the ledger (a new one unless given)."""
     led = Ledger() if led is None else led
     t, last = 1000, None
     for j in range(n):
         named = int(rng.random() < 0.5)
-        on = int(rng.random() < ((0.9 if named else 0.1) if knower else look(j, last)))
+        sh = (knower[0] if named else knower[1]) if knower is not None else look(j, last)
         if name:
+            a = int(rng.binomial(22, sh))
             said = LX.NAME if named else K.NAME_FOILS[0]
-            tid = led.trial(t, "name", dict(id=None, word=said), None, t + 1, K.TRIAL_WINDOW, said,
+            tid = led.trial(t, "name", dict(id=None, word=said), None, t + 5, (t + 7, t + 28), said,
                             score=[[LX.NAME, "trials" if named else "yoked", 1, 0]])
-            led.trial_outcome(t + 9, tid, "met" if on else "missed")
+            led.trial_outcome(t + 28, tid, "scored", "a test", on=a, off=22 - a)
+            last = (named, int(named and a >= K.HOLD))
         else:
+            m = int(rng.integers(4, 23))
+            a = int(rng.binomial(m, sh))                  # its ticks on key's thing, the rest on the other
             tg, ds = (key, other) if named else (other, key)
             sc = [[key, "trials", 1, 0] if named else [key, "yoked", 0, 1]]
             if fresh_other:
                 sc.append([other, "yoked", 0, 1] if named else [other, "trials", 1, 0])
-            tid = led.trial(t, form, dict(id=tg, word=tg), dict(id=ds, word=ds), t + 9, K.TRIAL_WINDOW, tg, score=sc)
-            led.trial_outcome(t + 15, tid, "met" if on == named else "missed")
-        last = (named, on)
+            on, off = (a, m - a) if named else (m - a, a)
+            tid = led.trial(t, form, dict(id=tg, word=tg), dict(id=ds, word=ds), t + 9, (t + 11, t + 32), tg, score=sc)
+            led.trial_outcome(t + 32, tid, "scored", "a test", on=on, off=off)
+            last = (named, int(on > off))
         t += 100
     return led
 
 
-H0_NAME = {                          # children whose turn to her face never depends on the word said now (the name test)
-    "rising 0.1-0.9": lambda j, last: 0.1 + 0.8 * j / 119,
+H0_NAME = {                          # children whose looking at her face never depends on the word said now (the name test)
+    "rising 0.1-0.9": lambda j, last: 0.1 + 0.8 * j / 47,
     "turns 0.3": lambda j, last: 0.3, "turns 0.5": lambda j, last: 0.5, "turns 0.7": lambda j, last: 0.7,
-    "step 0.3-0.6": lambda j, last: 0.3 if j < 60 else 0.6, "falling 0.9-0.1": lambda j, last: 0.9 - 0.8 * j / 119,
-    "turns again once smiled at": lambda j, last: 1.0 if last == (1, 1) else 0.3,
+    "step 0.3-0.6": lambda j, last: 0.3 if j < 24 else 0.6, "falling 0.9-0.1": lambda j, last: 0.9 - 0.8 * j / 47,
+    "turns again once smiled at": lambda j, last: 0.9 if last == (1, 1) else 0.3,
 }
-H0_WORD = {                          # children whose first look never depends on the word said now (a pair's trials)
+H0_WORD = {                          # children whose looking never depends on the word said now (a pair's trials)
     "favourite 0.6": lambda j, last: 0.6, "favourite 0.7": lambda j, last: 0.7, "favourite 0.95": lambda j, last: 0.95,
-    "shift 0.5-0.8": lambda j, last: 0.5 if j < 60 else 0.8, "shift 0.5-0.85": lambda j, last: 0.5 if j < 60 else 0.85,
-    "rising 0.2-0.95": lambda j, last: 0.2 + 0.75 * j / 119,
-    "repeats what was smiled at": lambda j, last: 0.5 if last is None or last[0] != last[1] else float(last[1]),
-    "looks where the last word sent it": lambda j, last: 0.5 if last is None else float(last[0]),
+    "shift 0.5-0.8": lambda j, last: 0.5 if j < 24 else 0.8, "shift 0.5-0.85": lambda j, last: 0.5 if j < 24 else 0.85,
+    "rising 0.2-0.95": lambda j, last: 0.2 + 0.75 * j / 47,
+    "repeats what was smiled at": lambda j, last: 0.5 if last is None else (0.9 if last == (1, 1) or last == (0, 0) else 0.1),
+    "looks where the last word sent it": lambda j, last: 0.5 if last is None else (0.9 if last[0] else 0.1),
 }
-
-
-def _word_life(n, rng, on_named, on_other, led=None):
-    """a pair's n scored trials straight through a ledger (the ball fresh, the duck not, which is named a fair coin): its first
-    look on the ball with chance on_named when "ball" is said, on_other when "duck" is -> the ledger."""
-    led = Ledger() if led is None else led
-    t = 1000
-    for j in range(n):
-        named = int(rng.random() < 0.5)
-        on = int(rng.random() < (on_named if named else on_other))
-        tg, ds = ("ball", "duck") if named else ("duck", "ball")
-        tid = led.trial(t, "place", dict(id=tg, word=tg), dict(id=ds, word=ds), t + 9, K.TRIAL_WINDOW, tg,
-                        score=[["ball", "trials", 1, 0] if named else ["ball", "yoked", 0, 1]])
-        led.trial_outcome(t + 15, tid, "met" if on == named else "missed")
-        t += 100
-    return led
 
 
 def test_understood_controlled():
-    """P3's ninth verifier (the rule that turns trial outcomes into "understood", its findings 1-3 and 5): a yoked or foil rate
-    counted over all time and treated as known, against the last 10 trials, let a child whose turning to any voice grew have its
-    name understood in 94% of lives within 120 name trials, and a favourite that shifted have its word understood far more often
-    than a fair coin. Now (ledger.two_part, 4.8): (ii) over the last 20 trials, where the word said sent its first look, is a fair
-    coin exactly for any child whose look does not depend on the word, whatever its favourites, drift or learning from her smiles,
-    so every such child reaches "understood" at most as often as a fair coin's trials reach (ii) (C64's disclosed rate, measured
-    here with scipy); at one fixed look (ii) rejects at most at its size; a child that knows only the other word is held by (i);
-    section 12's pooled test is exact at 0.01; the M6 exemplar test is testable with 5.2's three exemplars a noun; knowers pass.
-    Through her conduct too: a voice-turner whose turning rises, and a favourite that shifts, at most at the coin's rate."""
-    n, lives = 120, 200
-    bound = _coin_bound(n)
-    margin = 3 * math.sqrt(2 * bound * (1 - bound) / lives)
-    rng = np.random.default_rng(4)
-    rising = sum(_led_life(n, rng, H0_NAME["rising 0.1-0.9"], name=True).understood(LX.NAME) for _ in range(lives)) / lives
-    assert rising <= bound + margin, \
-        f"a voice-turner whose turning rises from 0.1 to 0.9 had its name understood in {rising:.0%} of lives within {n} name " \
-        f"trials, a fair coin's reach {bound:.0%}"
-    from body.sim.lang.ledger import two_part                             # noqa: PLC0415
+    """the rule that turns trials into "understood" (4.8, the lead's decision A60b): the permutation test over the draw labels is
+    exact for any child whose looking does not depend on the word said now, whatever its favourites, drift or learning from her
+    smiles (the named thing is a fresh fair coin each trial, so its labels are exchangeable): at one fixed test it rejects at
+    most at its level; a life's tests (at 12, 24, 48, ... registered trials, the j-th at 0.01 / 2^j) together at most at 0.01,
+    where the rule before re-tested its window of 20 after every trial at 0.05 and was reached by a fair coin's trials 23-63% of
+    the time (C64); section 12's flip test at its size; the M6 exemplar test testable with 5.2's three exemplars a noun;
+    knowers pass; a child that knows only the other word is credited (the yoked comparison's own limit, disclosed). Through her
+    conduct too: a voice-turner whose turning rises, and a favourite that shifts, at most at the rule's rate."""
+    assert perm_test is not None and hasattr(K, "UNDERSTOOD_FIRST"), "no permutation test over the draw labels (A60b)"
     kids = [(label, look, True) for label, look in H0_NAME.items()] + [(label, look, False) for label, look in H0_WORD.items()]
-    rates = {}
-    for i, (label, look, name) in enumerate(kids):
-        rng = np.random.default_rng(10 + i)
-        rates[label] = sum(_led_life(n, rng, look, name=name).understood(LX.NAME if name else "ball")
-                           for _ in range(lives)) / lives
-        assert rates[label] <= bound + margin, (label, rates[label], bound)
-    # a child that knows only the other word: on the duck whenever "duck" is said, a coin when "ball" is ((ii) far above 1/2 on
-    # the ball's trials, (i) a coin): held by (i)
-    rng = np.random.default_rng(5)
-    rates["knows only the other word"] = sum(_word_life(n, rng, 0.5, 0.0).understood("ball") for _ in range(lives)) / lives
-    assert rates["knows only the other word"] <= bound + margin, (rates["knows only the other word"], bound)
-    # at one fixed look (the 20th trial, once), (ii) rejects at most at its size, P(Bin(20, 1/2) >= 15) = 0.0207
-    size = binom_tail(_crit(20, K.UNDERSTOOD_P), 20)
-    fixed = {}
+    # at one fixed test (its 24th trial, at 0.01): the permutation test rejects at most at its level, each kind of child
+    fixed, reps = {}, 1500
     for i, (label, look, name) in enumerate(kids):
         rng = np.random.default_rng(40 + i)
         rej = 0
-        for _ in range(1000):
-            seq, last = [], None
-            for j in range(20):
-                named = int(rng.random() < 0.5)
-                on = int(rng.random() < look(6 * j, last))          # its drift over 120 trials, sampled
-                seq.append((named, on))
-                last = (named, on)
-            rej += two_part(seq)["p_where"] < K.UNDERSTOOD_P
-        fixed[label] = rej / 1000
-        assert fixed[label] <= size + 3 * math.sqrt(size * (1 - size) / 1000), (label, fixed[label], size)
-    # section 12's test of a form at 0.01, each trial once, over 60 trials of the form: at most at its size
+        for _ in range(reps):
+            led = _led_life(24, rng, lambda j, last, lk=look: lk(2 * j, last), name=name)
+            rej += perm_test(led.words[LX.NAME if name else "ball"]["seq"], 0.01)["p"] < 0.01
+        fixed[label] = rej / reps
+        assert fixed[label] <= 0.01 + 3 * math.sqrt(0.01 * 0.99 / reps), (label, fixed[label])
+    # a life of 48 trials, its tests at 12, 24 and 48 (0.005, 0.0025, 0.00125): at most 0.01 of lives, each kind of child
+    rates, lives = {}, 300
+    bound = sum(0.01 / 2 ** j for j in (1, 2, 3))
+    for i, (label, look, name) in enumerate(kids):
+        rng = np.random.default_rng(10 + i)
+        rates[label] = sum(_led_life(48, rng, look, name=name).understood(LX.NAME if name else "ball")
+                           for _ in range(lives)) / lives
+        assert rates[label] <= bound + 3 * math.sqrt(bound * (1 - bound) / lives), (label, rates[label], bound)
+    # a child that knows only the other word: on the duck whenever "duck" is said, its share 1/2 when "ball" is: credited to
+    # "ball" (disclosed: the yoked comparison's limit)
+    rng = np.random.default_rng(5)
+    other = sum(_led_life(24, rng, None, knower=(0.5, 0.0)).understood("ball") for _ in range(100)) / 100
+    assert other > 0.9, other
+    # section 12's flip test at 0.01, each trial once, over 40 trials of the form: at most at its size
     claims = {}
     for i, (label, name) in enumerate((("turns 0.5", True), ("rising 0.1-0.9", True), ("favourite 0.7", False),
                                        ("shift 0.5-0.85", False), ("repeats what was smiled at", False))):
         look = (H0_NAME if name else H0_WORD)[label]
         rng = np.random.default_rng(70 + i)
-        rej = sum(_led_life(60, rng, lambda j, last, lk=look: lk(2 * j, last), name=name,
-                            fresh_other=not name).pooled("name" if name else "place")["p"] < K.CLAIM_P for _ in range(600))
-        claims[label] = rej / 600
-        assert claims[label] <= K.CLAIM_P + 3 * math.sqrt(K.CLAIM_P * (1 - K.CLAIM_P) / 600), (label, claims[label])
+        rej = sum(_led_life(40, rng, look, name=name, fresh_other=not name).pooled("name" if name else "place")["p"] <
+                  K.CLAIM_P for _ in range(400))
+        claims[label] = rej / 400
+        assert claims[label] <= K.CLAIM_P + 3 * math.sqrt(K.CLAIM_P * (1 - K.CLAIM_P) / 400), (label, claims[label])
     # the M6 exemplar test (5.2: 3 exemplars a noun, each fresh on its first 3 presentations, beside a known non-X): testable
     led_k, led_n = Ledger(), Ledger()
     rng = np.random.default_rng(8)
     t = 1000
     for noun in ("ball", "duck", "cup", "block", "car", "bear", "drum", "bottle"):
-        for led, on_named, on_other in ((led_k, 0.9, 0.1), (led_n, 0.7, 0.7)):    # a knower; a lover of the new exemplar
+        for led, sh_named, sh_other in ((led_k, 0.9, 0.1), (led_n, 0.7, 0.7)):     # a knower; a lover of the new exemplar
             for ex in range(3):
                 for _rep in range(3):
                     named = int(rng.random() < 0.5)
-                    on = int(rng.random() < (on_named if named else on_other))
+                    m_ = int(rng.integers(4, 23))
+                    a = int(rng.binomial(m_, sh_named if named else sh_other))       # its ticks on the new exemplar
                     tg, ds = (f"{noun}{ex}", "mat_toy") if named else ("mat_toy", f"{noun}{ex}")
                     tid = led.trial(t, "exemplar", dict(id=tg, word=noun if named else "cup"),
-                                    dict(id=ds, word="cup" if named else noun), t + 9, K.TRIAL_WINDOW,
+                                    dict(id=ds, word="cup" if named else noun), t + 9, (t + 11, t + 32),
                                     noun if named else "cup", score=[[noun, "trials", 1, 0] if named else [noun, "yoked", 0, 1]],
                                     items=[f"{noun}{ex}"])
-                    led.trial_outcome(t + 15, tid, "met" if on == named else "missed")
+                    led.trial_outcome(t + 32, tid, "scored", "a test", on=a if named else m_ - a, off=m_ - a if named else a)
                     t += 100
     ek, en = led_k.pooled("exemplar"), led_n.pooled("exemplar")
     assert ek["testable"] and ek["p"] < K.CLAIM_P and en["testable"] and en["p"] > K.CLAIM_P, (ek, en)
-    # knowers pass: its name (a turn after it 0.9, after a foil 0.1), a word (its first look on the named thing 0.9)
+    # knowers pass: its name (0.6 of the window on her face after it, 0.05 after a foil), a word (0.9 of its looking on the
+    # named thing), within 24 trials
     rng = np.random.default_rng(9)
-    got_n = sum(_led_life(40, rng, lambda j, last: 0.5, name=True, led=None, knower=True).understood(LX.NAME)
-                for _ in range(lives))
-    got_w = sum(_word_life(40, rng, 0.9, 0.1).understood("ball") for _ in range(lives))
-    assert got_n / lives > 0.95 and got_w / lives > 0.95, (got_n, got_w, lives)
+    got_n = sum(_led_life(24, rng, None, name=True, knower=(0.6, 0.05)).understood(LX.NAME) for _ in range(100))
+    got_w = sum(_led_life(24, rng, None, knower=(0.9, 0.1)).understood("ball") for _ in range(100))
+    assert got_n >= 95 and got_w >= 95, (got_n, got_w)
     # through her conduct: a voice-turner whose turning rises (the name test), a favourite that shifts (place trials)
     con_rates = {}
-    for label, n_con, lives_con in (("voice rising 0.1-0.9", 80, 30), ("favourite shift 0.5-0.85", 60, 30)):
+    for label, n_con, lives_con in (("voice rising 0.1-0.9", 48, 20), ("favourite shift 0.5-0.85", 48, 20)):
         hits = sum(_con_life(label, seed, n_con) for seed in range(lives_con))
-        b = _coin_bound(n_con)
-        con_rates[label] = (hits, lives_con, b)
-        assert hits / lives_con <= b + 3 * math.sqrt(2 * b * (1 - b) / lives_con), (label, hits, lives_con, b)
+        con_rates[label] = (hits, lives_con)
+        assert hits <= 1, (label, hits, lives_con)       # (at most 0.00875 a life: Bin(20, 0.00875) >= 2 has p = 0.013)
     worst = max(rates.values())
-    print(f"65 'understood' controlled (P3's ninth verifier, findings 1-3 and 5): over {lives} lives of {n} trials each, a "
-          f"voice-turner whose turning rises from 0.1 to 0.9 had its name understood in {rising:.0%} (the rule before: 94%), "
-          f"and every child whose look does not depend on the word said at most {worst:.0%} "
-          f"({', '.join(f'{k} {v:.0%}' for k, v in rates.items())}), a fair coin's trials reaching (ii) {bound:.0%} of the "
-          f"time (C64); at one fixed look (ii) rejected at most {max(fixed.values()):.3f} (its size {size:.4f}); section 12's "
-          f"pooled test at 0.01 at most {max(claims.values()):.3f} over 600 lives of 60 trials; the M6 exemplar test "
-          f"testable with 5.2's 3 exemplars a noun ({ek['n_where']} trials: a knower p = {ek['p']:.1e}, a lover of the new "
-          f"exemplar p = {en['p']:.2f}); knowers understood in {got_n}/{lives} (its name) and {got_w}/{lives} (a word) within "
-          f"40 trials; through her conduct, "
-          f"{'; '.join(f'{k}: {h}/{m} lives, a coin {b:.0%}' for k, (h, m, b) in con_rates.items())}")
+    print(f"65 'understood' controlled (A60b): the permutation test over the draw labels at one fixed test (the 24th trial, "
+          f"0.01) rejected at most {max(fixed.values()):.3f} over {reps} lives of each of {len(kids)} children whose looking "
+          f"does not depend on the word said now ({', '.join(f'{k} {v:.3f}' for k, v in fixed.items())}); a life's tests at "
+          f"12, 24 and 48 trials (0.005, 0.0025, 0.00125: {bound:.5f} in all) reached at most {worst:.3f} of {lives} lives "
+          f"({', '.join(f'{k} {v:.3f}' for k, v in rates.items())}), where the rule before re-tested its last 20 after every "
+          f"trial and a fair coin's trials reached it 23-63% of the time (C64); a child that knows only the other word "
+          f"credited in {other:.0%} (the yoked comparison's limit, disclosed); section 12's flip test at 0.01 at most "
+          f"{max(claims.values()):.3f} over 400 lives of 40 trials; the M6 exemplar test testable with 5.2's 3 exemplars a "
+          f"noun ({ek['n']} trials: a knower p = {ek['p']:.1e}, a lover of the new exemplar p = {en['p']:.2f}); knowers "
+          f"understood in {got_n}/100 (its name) and {got_w}/100 (a word) within 24 trials; through her conduct, "
+          f"{'; '.join(f'{k}: {h} of {m} lives' for k, (h, m) in con_rates.items())}")
 
 
 def _con_life(label, seed, n, keep=None):
@@ -4310,12 +4355,13 @@ def _timed_trial(form, a, b, kid, stage, seed, flip=False, voice=None, n=300, sc
 
 
 def _same_but_named(x, y):
-    """two runs of one trial, the other thing named in the second: the same outcome by every rule (the same void and why, the
-    same none), a met for a missed (its look on the same thing), on the same tick; for the name, its turn to her face or none
-    the same (a turn is met after its name and after a foil alike: the ledger scores it against which was said)."""
-    if x["result"] in ("met", "missed") and x.get("form") != "name":
-        return y["result"] == {"met": "missed", "missed": "met"}[x["result"]] and y["end"] == x["end"]
-    return y["result"] == x["result"] and y.get("why") == x.get("why") and y.get("end") == x.get("end")
+    """two runs of one trial, the other thing named in the second: the same end by every rule (the same void and why on the same
+    tick), its window's ticks on each thing the same (A60b: a pair's on and off turned over; the name's, its face's ticks the
+    same: the ledger scores them against which was said)."""
+    if x["result"] == "scored" and x.get("form") != "name":
+        return y["result"] == "scored" and y["end"] == x["end"] and (y["on"], y["off"]) == (x["off"], x["on"])
+    return y["result"] == x["result"] and y.get("why") == x.get("why") and y.get("end") == x.get("end") and \
+        (y.get("on"), y.get("off")) == (x.get("on"), x.get("off"))
 
 
 def test_trial_one_timeline():
@@ -4328,8 +4374,9 @@ def test_trial_one_timeline():
     stimuli, stimuli.py), or the trial is not run. Tested by turning her trial stream's draw over: for children whose looks are
     timed from her voice's start, whose voice comes at any time from it or as a turn-taker's after her sound stops, with its
     head on her face and a right 'mama', in stage 1 and 2, pairs of matched things and the name test (the words channel silent),
-    every trial ends the same with the other thing named (the same void and why, the same none, a met for a missed, on the same
-    tick); her real voice too, where the engine is present; the verifier's lives score both things; the timeline itself; the
+    every trial ends the same with the other thing named (the same void and why on the same tick, its window's ticks on each
+    thing the same: A60b); her real voice too, where the engine is present; the verifier's lives score both things; the
+    timeline itself; the
     eleventh round's voice (TIMED_OLD: 10, 11 and 12 ticks) never runs a pair its sentences differ in; the distractor's
     sentence made, never kept as heard."""
     assert _has_trials(), "no formal trial in her conduct"
@@ -4368,7 +4415,7 @@ def test_trial_one_timeline():
                 assert _same_but_named(x, y), (stage, form, look_at, sound, face, x, y)
                 n_cfg += 1
                 res[x["result"]] = res.get(x["result"], 0) + 1
-    assert res.get("met", 0) + res.get("missed", 0) > n_cfg // 2 and "dropped" not in res, res
+    assert res.get("scored", 0) > n_cfg // 2 and "dropped" not in res, res
     # the timeline: the window at the test word's onset, her voice held to the sentence's own end, whichever is named
     tl = {}
     for seed in range(6):
@@ -4394,7 +4441,7 @@ def test_trial_one_timeline():
                 t0, n_own, busy = t, -(-len(s.clip.pcm) // 2400), con.fast.busy_until
         wd[name] = (_trials(con.ledger)[0], t0, n_own, busy, after)
     x, t0, n_own, busy, after = wd["end"]
-    assert x["result"] == "none" and busy == after == t0 + 12 and n_own == 12, wd["end"]
+    assert x["result"] == "void" and "fewer than" in x["why"] and busy == after == t0 + 12 and n_own == 12, wd["end"]
     x, t0, n_own, busy, after = wd["stop"]
     assert x["result"] == "void" and "world stopped" in x["why"] and after == t0 + 2, wd["stop"]
     v = _TimedVoice()
@@ -4417,7 +4464,7 @@ def test_trial_one_timeline():
                 s = con.tick(t, P(t, child_target=tg), tract=snd, token=tok)
                 kid.heard(t, s)
                 t += 1
-            sc = [x for x in _trials(con.ledger) if x["result"] in ("met", "missed")]
+            sc = [x for x in _trials(con.ledger) if x["result"] == "scored"]
             nb = sum(x["said"] == "ball" for x in sc)
             lives.append((stage, seed, nb, len(sc), con.ledger.understood("ball")))
             assert len(sc) >= 30 and 0.25 < nb / len(sc) < 0.75, lives[-1]
@@ -4451,11 +4498,13 @@ def test_trial_one_timeline():
           f"start or, a turn-taker's, from her sound's stop; its head on her face with a right 'mama'; stage 1 and 2; ball and "
           f"block, cup and ball, each 12 ticks with its noun on ticks 4-7; the name and its foils, 12 ticks, the name on 5-7, "
           f"the words channel silent) each the same whichever is named ({', '.join(f'{k} {v}' for k, v in sorted(res.items()))}); {real}; "
-          f"cup or ball named: the window at +4 and her voice held 12 ticks (its tag since P3's fourteenth round), the name's "
-          f"window at +5 and 12; the eleventh round's voice (10, 11 and 12 ticks, an onset a tick late) runs none of its "
+          f"cup or ball named: the test word's onset at +4 (its window +6 to +27, A60b) and her voice held 12 ticks (its tag "
+          f"since P3's fourteenth round), the name's onset at +5 and 12; the eleventh round's voice (10, 11 and 12 ticks, an "
+          f"onset a tick late) runs none of its "
           f"{len(old)} pairs (dropped before anything is brought, logged), its name and foils now one timeline on the carrier "
-          f"phrase; the world's report of her sentence's own end keeps her voice held, a stop "
-          f"before it voids the trial; the distractor's sentence made ahead, never kept as heard; the verifier's lives score "
+          f"phrase; the world's report of her sentence's own end keeps her voice held (a child that never looks: void, fewer "
+          f"than 4 ticks on either), a stop before it voids the trial; the distractor's sentence made ahead, never kept as "
+          f"heard; the verifier's lives score "
           f"both things: "
           + "; ".join(f"stage {st} seed {sd} ball named {nb} of {n}{', understood' if u else ''}" for st, sd, nb, n, u in lives))
 
@@ -4499,7 +4548,8 @@ def _heard_anchors(t, clip, text, channel, intent="trial_where"):
     if channel:
         ends = [i for i, kind in ST.channel(words, n) if kind == "end"]
         out["end"] = t + ends[0] if ends else None
-    out["close"] = out["onset"] + K.TRIAL_WINDOW
+    out["close"] = out["onset"] + (K.TRIAL_LOOK[1] if hasattr(K, "TRIAL_LOOK") else 20)   # the tick after its window's last
+                                                         # (A60b; before it, the 20 ticks from the onset)
     return out
 
 
@@ -4602,22 +4652,24 @@ class _Clock:
 
 
 def _inv_outcome(rows, i0, i1, refused, t0, t1):
-    """a trial's end in the ledger's rows i0..i1 (and her refusals of ticks t0..t1): (result, why, its decision's tick, form, the
-    word said) or ("dropped", why)."""
+    """a trial's end in the ledger's rows i0..i1 (and her refusals of ticks t0..t1): (result, why, its end's tick, form, the word
+    said, on, off) or ("dropped", why)."""
     tr = next((r for r in rows[i0:i1] if r["ev"] == "trial"), None)
     if tr is None:
         dr = [r for r in refused if t0 <= r[0] <= t1 and str(r[1]).startswith("trial:")]
         return ("dropped", dr[0][2] if dr else None)
     oc = next((r for r in rows[i0:i1] if r["ev"] == "trial_outcome"), None)
-    return (oc["result"] if oc else None, oc["why"] if oc else None, oc["t"] if oc else None, tr["form"], tr["said"])
+    return (oc["result"] if oc else None, oc["why"] if oc else None, oc["t"] if oc else None, tr["form"], tr["said"],
+            oc.get("on") if oc else None, oc.get("off") if oc else None)
 
 
 def _inv_same(x, y):
     """two runs of one trial, the other thing named in the second: the same end by every rule (the same void and why on the same
-    tick, the same none, the same drop), a met for a missed on the same tick (the name: its turn to her face or none, the same)."""
-    if x[0] in ("met", "missed") and x[3] != "name":
-        return y[0] == {"met": "missed", "missed": "met"}[x[0]] and y[2:4] == x[2:4] and y[4] != x[4]
-    return y[:4] == x[:4]
+    tick, the same drop), its window's ticks on each thing the same (A60b: a pair's scored trial's on and off turned over, the
+    other thing said; the name's, its face's ticks the same)."""
+    if x[0] == "scored" and x[3] != "name":
+        return y[:4] == x[:4] and y[4] != x[4] and (y[5], y[6]) == (x[6], x[5])
+    return y[:4] == x[:4] and y[5:] == x[5:]
 
 
 INV_PAIRS = (("ball", "block_red"), ("cup", "ball"), ("block_red", "cup"), ("ball", "duck"), ("cup", "block_red"))
@@ -4711,8 +4763,9 @@ def test_trial_invariance():
     by its RMS and its loudest 10 ms, the words channel while the scaffold labels her lines); a set that is not one timeline is
     never used; since P3's thirteenth round every sentence of a form on one carrier recording before its test word, since its
     fourteenth on one carrier phrase, a tag after it too (stimuli.parts, splice). The acceptance test on the tick grid:
-    for any child that does not know the words, every trial ends the same with the draw turned over (the same void and why, the
-    same none, a met for a missed, on the same tick), for children timed from her voice's start, her sound's stop (on the clip's
+    for any child that does not know the words, every trial ends the same with the draw turned over (the same void and why on
+    the same tick, its window's ticks on each thing the same: A60b), for children timed from her voice's start, her sound's stop
+    (on the clip's
     tick grid, at -36, -48 or -60 dB), her mouth's closing (the same), her clip's end, the test word's onset and end, the words
     channel's END and the window's close, with looks, reaches, sounds, its token, hits, pain and distress at every offset from -4
     to +30 ticks of each; in the suite's timed voice and her real voice (where the engine is present), stage 1 and 2, a pair and
@@ -4733,8 +4786,8 @@ def test_trial_invariance():
             for seed in range(4):
                 x = _timed_trial("place", "ball", "block_red", _Clock(acts), stage, seed)[0]
                 y = _timed_trial("place", "ball", "block_red", _Clock(acts), stage, seed, flip=True)[0]
-                xo = (x["result"], x.get("why"), x.get("end"), x.get("form"), x.get("said"))
-                yo = (y["result"], y.get("why"), y.get("end"), y.get("form"), y.get("said"))
+                xo = _oc(x)
+                yo = _oc(y)
                 assert x["result"] != "dropped" and _inv_same(xo, yo), (acts, stage, seed, xo, yo)
     # the sweep: every anchor, every offset, every kind of act, the suite's timed voice and her real voice
     voices = [("timed", _TimedVoice())]
@@ -4761,8 +4814,8 @@ def test_trial_invariance():
                                 x = _timed_trial(form, a, b, _Clock(act, channel=sc), stage, seed, voice=voice, scaffold=sc)[0]
                                 y = _timed_trial(form, a, b, _Clock(act, channel=sc), stage, seed, flip=True, voice=voice,
                                                  scaffold=sc)[0]
-                                xo = (x["result"], x.get("why"), x.get("end"), x.get("form"), x.get("said"))
-                                yo = (y["result"], y.get("why"), y.get("end"), y.get("form"), y.get("said"))
+                                xo = _oc(x)
+                                yo = _oc(y)
                                 assert x["result"] != "dropped" and _inv_same(xo, yo), (vname, form, stage, act, xo, yo)
                                 n_cfg += 1
                                 res[x["result"]] = res.get(x["result"], 0) + 1
@@ -4772,8 +4825,8 @@ def test_trial_invariance():
         for seed in range(6):
             x = _timed_trial("place", "ball", "block_red", _Clock(knower=True), 2, seed)[0]
             y = _timed_trial("place", "ball", "block_red", _Clock(knower=True), 2, seed, flip=True)[0]
-            kn.append(_inv_same((x["result"], x.get("why"), x.get("end"), x.get("form"), x.get("said")),
-                                (y["result"], y.get("why"), y.get("end"), y.get("form"), y.get("said"))))
+            kn.append(_inv_same(_oc(x),
+                                _oc(y)))
         assert not any(kn), kn
         # many lives: every trial turned over at its draw ends the same
         lives, flips, res_l, drops = 0, 0, {}, {}
@@ -4889,8 +4942,10 @@ def _perceived(clip, dists=(0.5, 0.7, 1.0)):
     """what a child perceives of a sentence of hers 10 ms by 10 ms (P3's twelfth verifier's three routes; kept by its clip) ->
     dict(frames: each 10 ms frame's RMS, dB of full scale (its ears at the clip); ticks: each tick's RMS (her mouth as the face
     shows it); ear: {distance: the louder of its two ears' level each 10 ms frame, dB SPL, through body/sim/ears.Ears with her
-    mouth that far in front of its head: their latency and 25 ms frames and all}; tag: the tick her tag begins on, since P3's
-    fourteenth round (its clip's end without one)), each frame ending at its hop."""
+    mouth that far in front of its head: their latency and 25 ms frames and all}; bands: {"L" | "R": each 10 ms frame's level
+    in each of the cochlea's 40 bands at that ear, dB SPL, her mouth 0.7 m in front of it: the fourteenth verifier's route};
+    tag: the tick her tag begins on, since P3's fourteenth round (its clip's end without one)), each frame ending at its
+    hop."""
     key = (clip.key, clip.digest, len(clip.pcm))
     if key in _PERC:
         return _PERC[key]
@@ -4902,7 +4957,7 @@ def _perceived(clip, dists=(0.5, 0.7, 1.0)):
     pa = clip.pa() if hasattr(clip, "pa") else x * (V.PA_PER_UNIT / 32767.0)
     pa = np.pad(np.asarray(pa, np.float64), (0, (n + 2) * 2400 - len(pa)))
     mid = (E.EAR_SITES["L"] + E.EAR_SITES["R"]) / 2
-    ear = {}
+    ear, bands = {}, {"L": [], "R": []}
     for d in dists:
         ears, lv = E.Ears(), []
         for u in range(n + 2):
@@ -4910,9 +4965,14 @@ def _perceived(clip, dists=(0.5, 0.7, 1.0)):
                           {"mama": (pa[u * 2400:(u + 1) * 2400], mid + np.array([d, 0.0, 0.0]))})
             pw = (np.maximum(h.left, h.right).astype(np.float64) ** 3 * E.E_CODE).sum(1)
             lv.extend(10 * np.log10(np.maximum(pw, 1e-30) / E.P_REF ** 2))
+            if d == 0.7:
+                for side, code in (("L", h.left), ("R", h.right)):
+                    bands[side].extend(10 * np.log10(np.maximum(code.astype(np.float64) ** 3 * E.E_CODE, 1e-30) /
+                                                     E.P_REF ** 2))
         ear[d] = np.array(lv)
     sp = getattr(clip, "spliced", None)
-    _PERC[key] = dict(frames=fr, ticks=tk, ear=ear, tag=sp["tag_at"] // 2400 if isinstance(sp, dict) else n)
+    _PERC[key] = dict(frames=fr, ticks=tk, ear=ear, bands={k_: np.array(v) for k_, v in bands.items()},
+                      tag=sp["tag_at"] // 2400 if isinstance(sp, dict) else n)
     return _PERC[key]
 
 
@@ -4920,10 +4980,18 @@ def _moment(perc, anchor):
     """when a child takes her sound to stop, in ticks from her sentence's start to the 10 ms: ("frame", L) the end of her last
     10 ms frame above L dB of full scale; ("mouth", L) the tick after her last tick above L (her mouth's last opening, as its
     eyes see her face); ("ear", d, L) the end of the last 10 ms frame its own ears hear above L dB SPL, her mouth d m in front
-    of it; ("start",) her voice's start; ("in", ...) the same within the test word's slot, before her tag's first tick (P3's
+    of it; ("band", ear, b, L, "stop" | "start") the end of the last 10 ms frame, or the start of the first, above L dB SPL in
+    band b (of body/sim/ears.Ears' 40) at its "L" or "R" ear, her mouth 0.7 m in front of it (the fourteenth verifier's
+    route); ("start",) her voice's start; ("in", ...) the same within the test word's slot, before her tag's first tick (P3's
     fourteenth round: a moment of the test word's own sound)."""
     if anchor[0] == "start":
         return 0.0
+    if anchor[0] == "band":
+        _b, side, b, lv_, which = anchor
+        up = np.nonzero(perc["bands"][side][:, b] > lv_)[0]
+        if not len(up):
+            return 0.0
+        return float(up[0]) / 15.0 if which == "start" else float(up[-1] + 1) / 15.0
     lim = None
     if anchor[0] == "in":
         anchor, lim = anchor[1:], perc["tag"]
@@ -4970,6 +5038,12 @@ class _KnowsName:
     def __init__(self):
         self.t0 = None
 
+    def show(self, a, b):
+        pass
+
+    def ended(self):
+        pass
+
     def heard(self, t, s):
         if s.line is not None and s.line.intent in C.TRIAL_INTENTS:
             on = [a for w, a, _e in s.clip.words if w == LX.NAME][:1] if s.clip is not None else \
@@ -4980,39 +5054,24 @@ class _KnowsName:
         return ("mama" if self.t0 is not None and self.t0 <= t < self.t0 + 8 else None), None, None, (), ()
 
 
-def _itt_where(x):
-    """a trial's end where the word said sent it: a pair's first look on its target; the name's turn after its name, or no turn
-    after a foil through the span its 'no turn' is held to."""
-    if x["form"] == "name":
-        return (x["said"] == LX.NAME and x["result"] == "met") or (x["said"] != LX.NAME and x["result"] == "missed")
-    return x["result"] == "met"
-
-
-def _itt_scored(x):
-    """scored by intention to treat, as the ledger's row says: met or missed, or a none or a void from its onset's tick on (the
-    onset's own reading of where the child already looks aside)."""
-    return bool(x.get("scored"))
-
-
-def _itt_run(form, a, b, acts, flip, stage, voice, seed=5):
-    """one trial of a child acting at fixed ticks from her sentence's start (_Clock's "start" anchor) -> dict(scored, where,
-    result, end: its end from the sentence, seq: the ledger's scored records it added, onset: from the sentence, extra: the name
-    test's span past its window, said)."""
+def _share_run(form, a, b, acts, flip, stage, voice, seed=5):
+    """one trial of a child acting at ticks from her sentence's start (_Clock's anchors: "start" its first tick) -> its trial's
+    row (_trials) with seq (the registered trials it added to its words' records), rel_end and onset (from the sentence's
+    start)."""
     keep = []
     x = _timed_trial(form, a, b, _Clock(acts, channel=form != "name"), stage, seed, flip=flip, voice=voice,
                      scaffold=form != "name", keep=keep)[0]
     assert x["result"] not in ("dropped", None), (form, acts, flip, x)
-    return dict(scored=_itt_scored(x), where=_itt_where(x), result=x["result"], end=x["end"] - x["t"], said=x["said"],
-                seq=sum(len(st["seq"]) for st in keep[0].ledger.words.values()), onset=x["open"] - x["t"],
-                extra=x.get("span", x["window"]) - x["window"])
+    return dict(x, seq=sum(len(st["seq"]) for st in keep[0].ledger.words.values()), rel_end=x["end"] - x["t"],
+                onset=x["open"] - x["t"])
 
 
-def _itt_sweep(form, a, b, stage, voice):
+def _share_sweep(form, a, b, stage, voice):
     """every child whose looks, reaches, turns, hits, pain and distress land on any tick after the test word's onset, the tick a
     function of the sentence it hears (so of any moment of its sound, however perceived), its looks on a thing the word never
-    chooses; one act, or a look and an event, one at a fixed tick and the other on the sentence's: each trial run with each
-    draw at each tick -> [(config, the draw's outcome by tick, the other draw's)], its onset from the sentence's start."""
-    first = _itt_run(form, a, b, [("start", 1, "sound", None, 1)], False, stage, voice)
+    chooses; one act, or a look and an event, one at a fixed tick and the other on the sentence's: each trial run with each draw
+    at each tick -> ([(config, {tick: (the draw's trial, the other draw's)})], its onset from the sentence's start)."""
+    first = _share_run(form, a, b, [("start", 1, "sound", None, 1)], False, stage, voice)
     on = first["onset"]
     offs = list(range(on + 1, on + 33))
     looks = [("look", a), ("look", b), ("look", "mama"), ("reach", a), ("reach", b)] if form != "name" else [("look", "mama")]
@@ -5029,12 +5088,11 @@ def _itt_sweep(form, a, b, stage, voice):
                          [("start", o, look[0], look[1], 8), ("start", f_, e, None, 1)]))
     out = []
     for name, mk in cfgs:
-        res = {fl: {o: _itt_run(form, a, b, mk(o), fl, stage, voice) for o in offs} for fl in (False, True)}
-        out.append((name, res[False], res[True]))
-    return out, on, first["extra"]
+        out.append((name, {o: tuple(_share_run(form, a, b, mk(o), fl, stage, voice) for fl in (False, True)) for o in offs}))
+    return out, on
 
 
-def _itt_life(kid, form, a, b, voice, seed, n_probes=24, toys=ITT_TOYS):
+def _share_life(kid, form, a, b, voice, seed, n_probes=24, toys=ITT_TOYS):
     """one life of formal trials through her conduct and ledger (its stub motion, still; stage 1 and 2 by seed; the words
     channel labelling her lines for a pair, silent for the name, as 4.8 runs them): n_probes probes of a form one after another,
     each pair's items fresh, the child in each -> the ledger."""
@@ -5062,8 +5120,8 @@ def _itt_life(kid, form, a, b, voice, seed, n_probes=24, toys=ITT_TOYS):
 
 def _exploit(m_good, m_bad, target):
     """the delay that puts an act timed from a moment on tick `target` for the sentence whose moment is m_good and on the tick
-    after it for m_bad (m_bad later): the eleventh and twelfth verifiers' construction, a look at the window's close or a hit
-    just before a look -> the delay, or None if one tick cannot part them."""
+    after it for m_bad (m_bad later): the eleventh and twelfth verifiers' construction -> the delay, or None if one tick cannot
+    part them."""
     lo, hi = target + 1 - m_bad, target + 1 - m_good                  # floor(m_good + d) = target, floor(m_bad + d) = target + 1
     if not m_bad > m_good or hi <= lo:
         return None
@@ -5071,78 +5129,78 @@ def _exploit(m_good, m_bad, target):
     return d if math.floor(m_good + d + 1e-9) == target and math.floor(m_bad + d + 1e-9) == target + 1 else None
 
 
-def test_trial_itt():
-    """P3's thirteenth round (the twelfth verifier's finding 1): the stimuli are one timeline on the tick grid, but not in what
-    the child perceives: 10 ms by 10 ms, at a level other than the band's two, or through its own ears, two words stop at
-    different moments (her sound's last frame above -36 dB: 113 for "ball", 107 for "block"; tick 7 of "ball" at -27.6 dB, of
-    "block" at -33.5; at the ear, "car" a tick after "ball"), and no two different words can be made the same there. A child
-    that always looked at the ball and timed its look (or a hit) from such a moment had every ball trial met and every other
-    trial none or void, which counted for nothing: "ball" understood in every life, and "pip" by a child turning to her 18
-    ticks after her mouth last opened above -31 dB. Now the ledger scores every trial by intention to treat (a none or a void
-    from its onset's tick on against it), everything she sounds before the test word's onset tick is one carrier recording,
-    sample for sample (stimuli.splice), and the name test holds a foil's "no turn" past its window by the span of moments that
-    can differ and the ear's tick (since P3's fourteenth round, when every sentence is one carrier phrase and her sound's stop
-    one moment at every level, the name's slot: test 71). Tested: over every child whose acts land on any tick after the
-    onset, the tick any function of the sentence it hears (every moment of its sound, however perceived), its looks on a thing
-    the word never chooses, in the suite's timed voice and her real voice, stage 1 and 2: a trial and the same trial with the
-    other thing named are both scored, and never both where the word sent them (the name: for ticks within that span of each
-    other; beyond it, a turn that much later after a foil is the child's own difference, disclosed); a knower's are (the check
-    tells it apart); her sound's stop, as perceived, one moment for every matched word since P3's fourteenth round, the moments
-    within the test word's slot different (the routes left there are real: C69), and the verifier's children, built from those,
-    reach "understood" no more often than a fair coin's trials (C64), where the rule before scored them every life; the
-    onset's reading taken the tick before the onset's; an older save's record starts again; a trial saved before its carrier
-    phrase is void."""
-    assert hasattr(C.Conduct, "probe") and ST is not None, "no formal trial in her conduct"
-    # the first child: its look on the ball 25 ticks after the word's onset when "ball" is said, 5 after it when "block" is (any
-    # moment of its sound could part them so): on the rule before, the first a none, never scored, the second a scored miss
-    said = {fl: _itt_run("place", "ball", "block_red", [], fl, 1, None)["said"] for fl in (False, True)}
-    fl_ball = next(fl for fl, w in said.items() if w == "ball")
-    x = _itt_run("place", "ball", "block_red", [("start", 4 + 25, "look", "ball", 8)], fl_ball, 1, None)
-    y = _itt_run("place", "ball", "block_red", [("start", 4 + 5, "look", "ball", 8)], not fl_ball, 1, None)
-    assert x["scored"] and y["scored"] and x["seq"] == y["seq"] == 2, ("both scored, whichever is named", x, y)
+def test_trial_window_share():
+    """the lead's decision A60b (P3's fifteenth round; it retires intention to treat, P3's thirteenth, with the first look it was
+    built for): a trial is scored by the proportion of looking over a fixed window, the test word's onset tick + 2 to its onset
+    tick + 23, the same ticks whichever is named: each tick her reading of its head line on the target, on the distractor or on
+    neither (the name: on her face or not), and nothing else about the ticks, not when they fall nor their order; a pair's trial
+    with fewer than 4 of them on either thing void, counted and never scored, as are the voids of her body, its pain, distress or
+    hit. Tested: looks of the same length anywhere in the window, or split, or in another order, score alike, and ticks before
+    and after it count for nothing; the void rule at 3 and 4 ticks; over every child whose acts land on any tick after the
+    onset, the tick any function of the sentence it hears, its looks on a thing the word never chooses (the twelfth
+    verifier's construction), in the suite's timed voice and her real voice, stage 1 and 2, a pair and the name: each trial and
+    the same trial with the other thing named end alike, the same void and why on the same tick, the window's ticks on each
+    thing the same; a knower's do not (the check tells it apart); the twelfth verifier's children, their one look timed from a
+    moment within the test word's slot to the old window's close, over lives: every trial of the word that moment puts later
+    void (fewer than 4 ticks), so none of its trials naming the other thing is scored and nothing is testable; an older save's
+    record starts again, and a trial saved mid-window before this rule is void."""
+    assert hasattr(K, "TRIAL_LOOK") and perm_test is not None, "a trial still decided by a look timed from its word (A60b)"
+    # (a) only how many of the window's ticks (+6 to +27 from her sentence's start in the timed voice, its onset at +4), never
+    # when or in what order; before and after it nothing
+    on0 = _share_run("place", "ball", "block_red", [], False, 1, None)["onset"]
+    w0, w1 = on0 + 2, on0 + 23
+    orders = {"8 on the ball at the window's start": [("start", w0, "look", "ball", 8)],
+              "8 at its end": [("start", w1 - 7, "look", "ball", 8)],
+              "4 and 4, apart": [("start", w0, "look", "ball", 4), ("start", w1 - 3, "look", "ball", 4)],
+              "four of 2, among nothing": [("start", w0 + 3 * i, "look", "ball", 2) for i in range(4)],
+              "8, and 6 before it and 6 after it": [("start", w0 - 6, "look", "ball", 6), ("start", w0 + 5, "look", "ball", 8),
+                                                   ("start", w1 + 1, "look", "ball", 6)]}
+    got_o = {k: _share_run("place", "ball", "block_red", acts, fl, 1, None) for k, acts in orders.items() for fl in (False,)}
+    shares = {k: (x["result"], x["on"] + x["off"], x["on"] if x["target"]["id"] == "ball" else x["off"])
+              for k, x in got_o.items()}
+    assert set(shares.values()) == {("scored", 8, 8)}, shares
+    mixed = {}
+    for k, acts in (("ball then block", [("start", w0, "look", "ball", 6), ("start", w0 + 6, "look", "block_red", 6)]),
+                    ("block then ball", [("start", w0, "look", "block_red", 6), ("start", w0 + 6, "look", "ball", 6)]),
+                    ("interleaved", [("start", w0 + 2 * i, "look", ("ball", "block_red")[i % 2], 2) for i in range(6)])):
+        x = _share_run("place", "ball", "block_red", acts, False, 1, None)
+        mixed[k] = (x["result"], x["on"], x["off"])
+    assert len(set(mixed.values())) == 1 and next(iter(mixed.values()))[1:] == (6, 6), mixed
+    # (b) the void rule: 3 ticks on either thing void, counted, never scored; 4 scored
+    v3 = _share_run("place", "ball", "block_red", [("start", w0, "look", "ball", 3)], False, 1, None)
+    v4 = _share_run("place", "ball", "block_red", [("start", w0, "look", "ball", 4)], False, 1, None)
+    assert v3["result"] == "void" and not v3["scored"] and v3["seq"] == 0 and "fewer than 4" in v3["why"] and \
+        v4["result"] == "scored" and v4["seq"] == 2, (v3, v4)
     voices = [("timed", _TimedVoice())]
     tmp = None
     if _have_engine():
         tmp = tempfile.mkdtemp()
         voices.append(("real", V.VoiceCache(os.path.join(tmp, "v"), server=V.SynthServer(nice=19))))
-    rows, lives, routes = {}, {}, {}
+    rows, lives = {}, {}
     try:
-        # the property: every child whose acts' ticks follow the sentence, its looks on a thing the word never chooses
+        # (c) the property: every child whose acts' ticks follow the sentence, its looks on a thing the word never chooses
         for vname, voice in voices:
             for form, a, b in (("place", "ball", "block_red"), ("name", None, None)):
                 for stage in (1, 2):
-                    sw, on, extra = _itt_sweep(form, a, b, stage, voice)
-                    assert (extra > 0) == (form == "name"), (form, extra)
-                    n_pairs, beyond = 0, 0
-                    for name, ox, oy in sw:
-                        for kx, rx in ox.items():
-                            assert rx["scored"] and rx["seq"] > 0, (vname, form, stage, name, kx, rx)
-                            for ky, ry in oy.items():
-                                assert ry["scored"] and ry["seq"] > 0 and rx["said"] != ry["said"], (vname, form, name, ky, ry)
-                                w2 = rx["where"] and ry["where"]
-                                if form == "name" and abs(kx - ky) > extra:   # a turn later by more than her sentence's
-                                    beyond += w2                               # span of moments: the child's own difference
-                                    continue
-                                n_pairs += 1
-                                assert not w2, ("both where the word sent them", vname, form, stage, name, kx, rx, ky, ry)
-                    rows[(vname, form, stage)] = (len(sw), n_pairs, beyond, extra)
-        # a knower's trials both go where the word sent them: the check tells it apart
+                    sw, on = _share_sweep(form, a, b, stage, voice)
+                    n_runs, res = 0, {}
+                    for name, by_off in sw:
+                        for o, (x, y) in by_off.items():
+                            assert x["said"] != y["said"] and _same_but_named(x, y), (vname, form, stage, name, o, _oc(x),
+                                                                                    _oc(y))
+                            n_runs += 1
+                            res[x["result"]] = res.get(x["result"], 0) + 1
+                    rows[(vname, form, stage)] = (len(sw), n_runs, res)
+        # (d) a knower's trials differ with the other thing named: the check tells it apart
         kn = [_timed_trial("place", "ball", "block_red", _Clock(knower=True), 2, s_, flip=fl)[0] for s_ in range(3)
               for fl in (False, True)]
         kn_name = [_timed_trial("name", None, None, _KnowsName(), 1, s_, flip=fl, scaffold=False)[0] for s_ in range(3)
                    for fl in (False, True)]
-        assert all(_itt_where(x_) for x_ in kn + kn_name), [(x_["said"], x_["result"]) for x_ in kn + kn_name]
-        # the onset's own reading of where it already looks (her reading: the harness's child_target), taken on the tick before
-        # the onset's since P3's fourteenth round, is not scored; a look first read on the onset's tick is, and a hit on it,
-        # against it
-        pre = _itt_run("place", "ball", "block_red", [("start", 3, "look", "ball", 8)], False, 1, None)
-        on0 = _itt_run("place", "ball", "block_red", [("start", 4, "look", "ball", 8)], False, 1, None)
-        hit0 = _itt_run("place", "ball", "block_red", [("start", 4, "hit", None, 1)], False, 1, None)
-        assert pre["result"] == "void" and not pre["scored"] and pre["seq"] == 0 and hit0["result"] == "void" and \
-            hit0["scored"] and hit0["seq"] == 2 and on0["result"] in ("met", "missed") and on0["scored"], (pre, on0, hit0)
-        # since P3's fourteenth round the moments a child can take her sound to stop at are one moment for every matched word
-        # (her tag is one recording, her slot under its ceiling); within the test word's slot they differ as the words do,
-        # and the twelfth verifier's children are built from those
+        assert not any(_same_but_named(kn[i], kn[i + 1]) for i in range(0, len(kn), 2)) and \
+            not any(_same_but_named(kn_name[i], kn_name[i + 1]) for i in range(0, len(kn_name), 2)), \
+            [_oc(x_) for x_ in kn + kn_name]
+        # (e) the twelfth verifier's children: one look (or a turn) timed from a moment within the test word's slot to the old
+        # window's close, over lives of 24 probes (the moments within the slot differ as the words do: C69)
         for vname, voice in voices:
             con = _conduct(seed=1, voice=voice, ledger=_TapLedger(), scaffold=True)
             clips = {}
@@ -5150,131 +5208,79 @@ def test_trial_itt():
                 ln = TP.Line(f"where is the {w}? see?", "trial_where", "question", w, w, (), "fast", "where is the {o}? see?",
                              ST.shape("where", w)[0])
                 clips[w] = con._clip(ln, heard=False)
-            for w in (LX.NAME,) + tuple(K.NAME_FOILS):
-                ln = TP.Line(TP.FRAMES["trial_name"][0][0].replace("{n}", w), "trial_name", "calling", w, w, (), "fast",
-                             TP.FRAMES["trial_name"][0][0], ST.shape("name", w)[0])
-                clips[w] = con._clip(ln, heard=False)
             perc = {w: _perceived(c) for w, c in clips.items()}
-            pre = {w: ST.timeline(c.words, len(c.pcm), c.pcm, False, 3)["pre"] for w, c in clips.items() if w not in
-                   (LX.NAME,) + tuple(K.NAME_FOILS)}
-            assert len(set(pre.values())) == 1, ("one carrier, sample for sample", vname, pre)
-            nouns = sorted(w for w in clips if w not in (LX.NAME,) + tuple(K.NAME_FOILS))
+            nouns = sorted(clips)
             pairs = [(u, v) for i, u in enumerate(nouns) for v in nouns[i + 1:]]
-            got = {}
-            for label, anchor in (("10 ms at -36", ("frame", -36)), ("mouth at -30", ("mouth", -30)),
-                                  ("ears at 0.7 m, 21 dB SPL", ("ear", 0.7, 21.0)),
-                                  ("ears at 0.7 m, 33 dB SPL", ("ear", 0.7, 33.0))):
-                for where_, a_ in (("stop", anchor), ("in the slot", ("in",) + anchor)):
-                    m = {w: _moment(perc[w], a_) for w in clips}
-                    got[f"{label}, {where_}"] = (sum(m[u] != m[v] for u, v in pairs), sum(int(m[u]) != int(m[v]) for u, v in
-                                                                                          pairs), len(pairs),
-                                                 sum(m[LX.NAME] != m[f_] for f_ in K.NAME_FOILS))
-            routes[vname] = got
-            assert all(v[0] == 0 and v[3] == 0 for k, v in got.items() if k.endswith("stop")), got   # her sound's stop: one
-            assert got["10 ms at -36, in the slot"][0] > 0, got              # within the slot: they differ as the words do
-            # the twelfth verifier's children, built from the moments within the slot (a look at the window's close, a hit
-            # just before a look, a turn at the name's window's close), over lives of 24 probes: each on one thing whatever
-            # the word, so intention to treat bounds them
-            kids = []
             onset = clips[nouns[0]].words[3][1] // 2400
-            for label, anchor in (("look 10 ms", ("in", "frame", -36)), ("look at the ear", ("in", "ear", 0.7, 33.0)),
-                                  ("look at the ear", ("in", "ear", 0.7, 21.0)), ("look at the mouth", ("in", "mouth", -30))):
+            kids = []
+            for label, anchor in (("a look 10 ms", ("in", "frame", -36)), ("a look at the ear", ("in", "ear", 0.7, 33.0)),
+                                  ("a look at the mouth", ("in", "mouth", -30))):
                 cand = [(u, v) for u, v in pairs if _moment(perc[u], anchor) != _moment(perc[v], anchor)]
                 for u, v in cand[:1]:
                     mu, mv = _moment(perc[u], anchor), _moment(perc[v], anchor)
                     good, bad = (u, v) if mu < mv else (v, u)
-                    d = _exploit(min(mu, mv), max(mu, mv), onset + K.TRIAL_WINDOW)
+                    d = _exploit(min(mu, mv), max(mu, mv), onset + 20)
                     if d is not None:
                         kids.append((f"{label}: on the {good} {d:.2f} ticks after {anchor}", good, bad,
                                      [(anchor, d, "look", good, 8)]))
-            hm = ("in", "mouth", -30)
-            cand = [(u, v) for u, v in pairs if _moment(perc[u], hm) != _moment(perc[v], hm)]
-            for u, v in cand[:1]:
-                mu, mv = _moment(perc[u], hm), _moment(perc[v], hm)
-                good, bad = (v, u) if mu < mv else (u, v)          # its hit first on the sentence whose mouth closes first
-                d = 6.0
-                kids.append((f"a hit {d:g} ticks after her mouth closes above -30 dB in the slot, a look on the {good}", good,
-                             bad, [(hm, d, "hit", None, 1), (("start",), float(int(min(mu, mv) + d)), "look", good, 8)]))
-            name_on = clips[LX.NAME].words[1][1] // 2400
-            name_kids = []
-            for anchor in (("in", "mouth", -31), ("in", "frame", -36)):
-                mp = _moment(perc[LX.NAME], anchor)
-                later = [_moment(perc[f_], anchor) for f_ in K.NAME_FOILS if _moment(perc[f_], anchor) > mp]
-                d = _exploit(mp, min(later), name_on + K.TRIAL_WINDOW) if later else None
-                if d is not None:
-                    name_kids.append((f"a turn to her face {d:.2f} ticks after {anchor}", [(anchor, d, "look", "mama", 8)],
-                                      len(later)))
             ids = {o.name: o.id for o in ITT_TOYS} if vname == "real" else dict(ball="ball", block="block_red", cup="cup")
             toys = ITT_TOYS if vname == "real" else TOYS
-            n_l = 12 if vname == "timed" else 6
-            runs = [(label, "place", good, bad, acts) for label, good, bad, acts in kids] + \
-                [(label + f" (later after {n_f} of 3 foils)", "name", LX.NAME, None, acts) for label, acts, n_f in name_kids]
-            for label, form, good, bad, acts in runs:
-                und, old, coin = 0, 0, 0
-                for s_ in range(n_l):
-                    led = _itt_life(_Hears(acts), form, ids.get(good), ids.get(bad), voice, s_, toys=toys)
+            for label, good, bad, acts in kids:
+                und, n_sc, n_other = 0, 0, 0
+                for s_ in range(6):
+                    led = _share_life(_Hears(acts), "place", ids.get(good), ids.get(bad), voice, s_, toys=toys)
                     seq = led.words[good]["seq"]
                     und += led.understood(good)
-                    old += _rule_scipy([(nm_, on_) for nm_, on_ in seq if on_ is not None], name=form == "name") is not None
-                    coin += _rule_scipy([(nm_, 1) for nm_, _on in seq], name=form == "name") is not None  # its (ii) a coin's:
-                lives[(vname, label)] = (und, old, coin, n_l)          # a child on its thing (or turning) in every window
-        for k_, (und, old, coin, n_l) in lives.items():                 # (i) and (ii) no more often than the draws alone give
-            assert und <= coin, ("reached 'understood' more often than her draws alone give", k_, und, coin, n_l)
-        assert lives and all(old == n_l for (und, old, coin, n_l) in lives.values()), lives   # the rule before: every life
-        # an older save: its record starts again, and its trial whose carrier was not one recording is void
+                    n_sc += len(seq)
+                    n_other += sum(1 for nm_, _a, _b in seq if not nm_)
+                lives[(vname, label)] = (und, n_sc, n_other, 6)
+        assert all(u == 0 for (u, _n, _o, _l) in lives.values()), lives
+        # (f) an older save: its record starts again; a trial saved mid-window before this rule is void
         led = _TapLedger()
-        _ledger_trials(led, "duck", hits=[1] * 9 + [0], yoked=[1, 1, 1] + [0] * 7)
+        _ledger_knows(led, "duck", 12)
         assert led.understood("duck")
         st_ = led.state()
-        st_.pop("scoring")
+        st_["scoring"] = "itt-carrier"                            # P3's fourteenth round's ledger
         led2 = Ledger()
         led2.load_state(st_)
         assert not led2.understood("duck") and led2.words["duck"]["seq"] == [] and led2.forms == {}, led2.standing("duck")
-        old_trial = {}
-        for phase_at in (50, 70):
-            con = _conduct(seed=3, stage=1, imperfect=False, voice=_TimedVoice(), ledger=_TapLedger(),
-                           transcriber=Transcriber(None), scaffold=True)
-            _no_sets(con)
-            con.probe("place", "ball", "block_red", new={"ball": "b@1", "block_red": "r@1"})
-            for t in range(phase_at):
-                con.tick(t, P(t))
-            st_ = json.loads(json.dumps(con.state(), default=_np))
-            tl = json.loads(st_["trial"]["timeline"])
-            tl.pop("pre")
-            st_["trial"]["timeline"] = json.dumps(tl, sort_keys=True)
-            con2 = _conduct(seed=3, stage=1, imperfect=False, voice=_TimedVoice(), ledger=_TapLedger(),
-                            transcriber=Transcriber(None), scaffold=True)
-            con2.load_state(st_)
-            con2.tick(phase_at, P(phase_at))
-            old_trial[con.trial["phase"]] = (con2.trial, [r for r in con2.ledger.rows if r["ev"] == "trial_outcome"],
-                                             con2.fast.refused[-1:] if con2.fast.refused else [])
-        assert old_trial["said"][0] is None and old_trial["said"][1][0]["result"] == "void" and \
-            "one carrier" in old_trial["said"][1][0]["why"], old_trial["said"]
-        assert old_trial["settle"][0] is None and "one carrier" in old_trial["settle"][2][0][2], old_trial["settle"]
+        con = _conduct(seed=3, stage=1, imperfect=False, voice=_TimedVoice(), ledger=_TapLedger(),
+                       transcriber=Transcriber(None), scaffold=True)
+        _no_sets(con)
+        con.probe("place", "ball", "block_red", new={"ball": "b@1", "block_red": "r@1"})
+        t = 0
+        while con.trial is None or con.trial["phase"] != "said":
+            con.tick(t, P(t))
+            t += 1
+        st_ = json.loads(json.dumps(con.state(), default=_np))
+        for k_ in ("look_from", "on", "off"):
+            st_["trial"].pop(k_)
+        con2 = _conduct(seed=3, stage=1, imperfect=False, voice=_TimedVoice(), ledger=_TapLedger(),
+                        transcriber=Transcriber(None), scaffold=True)
+        con2.load_state(st_)
+        con2.tick(t, P(t))
+        oc = [r for r in con2.ledger.rows if r["ev"] == "trial_outcome"]
+        assert con2.trial is None and oc and oc[0]["result"] == "void" and "proportion of looking" in oc[0]["why"], oc
     finally:
         for _v, voice in voices[1:]:
             voice.close()
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)
-    print(f"70 scored by intention to treat (P3's thirteenth round, the twelfth verifier's finding 1): every child whose looks, "
-          f"reaches, turns, hits, pain and distress land on any tick after the test word's onset, the tick any function of the "
-          f"sentence it hears, its looks on a thing the word never chooses: a trial and the same trial with the other thing "
-          f"named both scored, never both where the word sent them (" + "; ".join(
-              f"{v} voice {f} stage {s}: {c} children, {n} pairs of ticks" + (f" within {ex} of each other (the "
-                                                                             f"name's slot and its ear's tick); {bd} "
-                                                                             f"pairs further apart both where, disclosed"
-                                                                             if f == "name" else "")
-              for (v, f, s), (c, n, bd, ex) in sorted(rows.items())) +
-          f"); a knower's both where (the check tells it apart); the onset's reading taken the tick before it, unscored, a "
-          f"look first read on the onset's tick scored; the moments as perceived, her sound's stop one moment for every "
-          f"matched word and within the test word's slot as the words differ (" + "; ".join(
-              f"{v}: " + ", ".join(f"{k}: {a} of {n} pairs differ, {b} on different ticks, the name against {c} of 3 foils"
-                                   for k, (a, b, n, c) in g.items()) for v, g in routes.items()) +
-          f"); the twelfth verifier's children built from the moments within the slot, over lives of 24 probes: " +
-          "; ".join(f"{v} voice, {k}: understood in {u} of {n} (her draws alone: {c}; the rule before: {o} of {n})"
-                    for (v, k), (u, o, c, n) in lives.items()) +
-          "; an older save's record started again, its trial saved before one carrier phrase void in its window and "
-          "dropped in its settle")
+    print(f"70 the window's share of looking (A60b, P3's fifteenth round): its window +{w0 - on0} to +{w1 - on0} from the "
+          f"test word's onset (ticks {w0}-{w1} of its sentence); 8 ticks on the ball at its start, at its end, 4 and 4 apart, "
+          f"four of 2, "
+          f"or 8 with 6 before it and 6 after it: each scored 8 of 8; 6 on each thing in either order or interleaved: each 6 to "
+          f"6; 3 ticks on either thing void, counted, never scored, 4 scored; every child whose looks, reaches, turns, hits, "
+          f"pain and distress land on any tick after the onset, a function of the sentence it hears, its looks on a thing the "
+          f"word never chooses: each trial and the same trial with the other thing named alike (" + "; ".join(
+              f"{v} voice {f} stage {s}: {c} children, {n} trials each way (" +
+              ", ".join(f"{k} {m}" for k, m in sorted(r.items())) + ")"
+              for (v, f, s), (c, n, r) in sorted(rows.items())) +
+          f"); a knower's and a name-knower's differ; the twelfth verifier's children, one look timed from a moment within "
+          f"the test word's slot, over 6 lives of 24 probes: " + "; ".join(
+              f"{v} voice, {k}: understood in {u} of {nl} ({n} registered trials, {o} of them naming the other thing)"
+              for (v, k), (u, n, o, nl) in lives.items()) +
+          "; an older save's record started again, a trial saved mid-window before A60b void")
 
 
 # ------------------------------------------------------------ P3's fourteenth round: one carrier phrase, the test word under it
@@ -5386,12 +5392,14 @@ class _Onset:
         return (self.thing if start <= u < start + 8 else None), None, None, (), ()
 
 
-def _fav_life(kid, pairs, voice, seed, toys=ITT_TOYS, form="place"):
+def _fav_life(kid, pairs, voice, seed, toys=ITT_TOYS, form="place", flip=False):
     """one life of formal trials through her conduct and ledger (its stub motion, still; stage 1 and 2 by seed; the words
     channel labelling her lines for a pair, silent for the name): a probe for each pair in turn (each pair's items fresh), the
-    child shown the two things -> the ledger."""
+    child shown the two things; flip: every draw of which is named turned over (_Flip) -> the ledger."""
     con = _conduct(seed=seed, stage=1 + seed % 2, imperfect=False, voice=voice, ledger=_TapLedger(),
                    transcriber=Transcriber(None), scaffold=form != "name")
+    if flip:
+        con.trial_rng = _Flip(con.trial_rng)
     _no_sets(con, tuple(o.id for o in toys))
     k, t, last, busy = 0, 0, -100, False
     while (k < len(pairs) or con.trial is not None or con.probes) and t < 400 * len(pairs):
@@ -5462,11 +5470,11 @@ def test_trial_carrier_phrase():
     loudest 10 ms (C66); the verifier's children, and every child with a favourite and two looks timed from her voice's start
     or her sound's stop at 11 levels and measures, delays, fixed ticks, ties and roles, every gated name child, and every child
     with one act of any kind (a look, a reach, its voice, its token, a hit, pain, distress) timed from her sound's stop so
-    perceived at offsets from -4 to +30, each trial the same with the other thing named (the lead's invariance property); over lives, the verifier's children "understood" no
-    more often than her draws alone give (the learned child: no more than a fair coin's trials reach); a child's act on the
-    onset's own tick scored, its reading taken the tick before (the verifier's finding 3); an older save's stimuli void."""
+    perceived at offsets from -4 to +30, each trial the same with the other thing named (the lead's invariance property); over
+    lives, since the lead's decision A60b, the verifier's children, the learned child and the gated name child "understood" in
+    at most 1 of 12 (the rule's tests' levels sum under 0.01 a life); the window from the onset + 2; an older save's stimuli
+    void."""
     assert ST is not None and hasattr(ST, "parts"), "no carrier phrase for the test word (P3's fourteenth round)"
-    from scipy.stats import binom                                        # noqa: PLC0415
     voices = [("timed", _TimedVoice())]
     tmp = None
     if _have_engine():
@@ -5542,8 +5550,7 @@ def test_trial_carrier_phrase():
                                                                                     shown=(fav, other)),
                                                          1 + n_cfg % 2, n_cfg % 5, flip=fl, voice=voice, seen_=toys)[0]
                                             for fl in (False, True)]
-                                    xo, yo = ((r["result"], r.get("why"), r.get("end"), r.get("form"), r.get("said"))
-                                              for r in runs)
+                                    xo, yo = (_oc(r) for r in runs)
                                     assert xo[0] != "dropped" and _inv_same(xo, yo), (vname, fav, anchor, d, fixed, on, tie,
                                                                                       xo, yo)
                                     n_cfg += 1
@@ -5554,7 +5561,7 @@ def test_trial_carrier_phrase():
                     for gate in (8, 12, 15, 19, 25):
                         runs = [_timed_trial("name", None, None, _Gate(anchor, d, gate), 1 + n_gate % 2, n_gate % 5,
                                              flip=fl, voice=voice, scaffold=False)[0] for fl in (False, True)]
-                        xo, yo = ((r["result"], r.get("why"), r.get("end"), r.get("form"), r.get("said")) for r in runs)
+                        xo, yo = (_oc(r) for r in runs)
                         assert xo[0] != "dropped" and _inv_same(xo, yo), (vname, "name", anchor, d, gate, xo, yo)
                         n_gate += 1
                         res["name " + str(xo[0])] = res.get("name " + str(xo[0]), 0) + 1
@@ -5569,12 +5576,14 @@ def test_trial_carrier_phrase():
                             acts = [(anchor, float(off), kind, arg, 8)]
                             runs = [_timed_trial(form, a, b, _Acts(acts), 1 + n_acts % 2, n_acts % 5, flip=fl, voice=voice,
                                                  seen_=toys, scaffold=form != "name")[0] for fl in (False, True)]
-                            xo, yo = ((r["result"], r.get("why"), r.get("end"), r.get("form"), r.get("said")) for r in runs)
+                            xo, yo = (_oc(r) for r in runs)
                             assert xo[0] != "dropped" and _inv_same(xo, yo), (vname, form, acts, xo, yo)
                             n_acts += 1
             sweep[vname] = (n_cfg, n_gate, res, n_acts)
         # (C) the verifier's children over lives: P4's schedule (the favourite against each other toy in turn, 24 probes) and
-        # all 21 pairs at random (72 probes), 12 lives each; the learned child; the gated name child; each against her draws
+        # all 21 pairs at random (72 probes), 12 lives each; the learned child; the gated name child: each a child whose
+        # looking does not depend on the word said (her sound's stop one moment, however it hears it), so it reaches
+        # "understood" in at most 1 life in 100 by construction (A60b: its tests' levels sum under 0.01)
         vmap = dict(voices)
         for vname, fav, anchor, d, on in FAV_KIDS:
             if vname not in vmap:
@@ -5594,86 +5603,36 @@ def test_trial_carrier_phrase():
                                   ("learned", lambda s_: _Fav(fav, anchor, d, 14, on, learn=500 + s_))):
                     if label != "timed" and (sname != "P4" or fav != FAV_KIDS[0][1] and vname == "real"):
                         continue
-                    und, coin, words_und, n_sc = 0, 0, {}, []
+                    und, words_und, n_sc = 0, {}, []
                     for s_ in range(12):
                         led = _fav_life(mk(s_), pairs, voice, s_, toys=toys)
                         st = led.words.get(fav) or {"seq": []}
                         und += led.understood(fav)
-                        coin += _rule_scipy([(nm_, 1) for nm_, _on in st["seq"]]) is not None
                         n_sc.append(len(st["seq"]))
                         for w_, st_ in led.words.items():
-                            if st_.get("seq"):
+                            if st_.get("seq") and w_ != fav:
                                 words_und[w_] = words_und.get(w_, 0) + int(led.understood(w_))
-                    p_coin = _coin_bound(max(n_sc))
-                    lim = int(binom.ppf(0.999, 12, p_coin))
-                    if label == "learned":                        # its thing varies by trial, never by the word: a fair
-                        assert und <= lim, (vname, fav, sname, label, und, lim)     # coin's trials' rate bounds it
-                    else:
-                        assert und <= coin, (vname, fav, sname, label, und, coin)
-                    assert all(v_ <= lim for v_ in words_und.values()), (vname, fav, sname, label, words_und, lim)
-                    lives[(vname, fav, sname, label)] = (und, coin, lim, words_und)
-        # what stays, disclosed (C69): within the test word's slot the words' own sounds differ, and a child whose look is timed
-        # from a moment of the slot hears the word said; one so built with a favourite (the same two looks), in its voice
-        vname, voice = voices[-1]
-        toys = ITT_TOYS if vname == "real" else TOYS
-        ids = [o.id for o in toys if o.child_sees and (vname == "real" or o.id in ("ball", "cup", "block_red"))]
-        con = _conduct(seed=1, voice=voice, ledger=_TapLedger(), scaffold=False)
-        perc = {}
-        for w in ids:
-            nm = next(o.name for o in toys if o.id == w)
-            ln = TP.Line(f"where is the {nm}? see?", "trial_where", "question", nm, nm, (), "fast", "where is the {o}? see?",
-                         ST.shape("where", nm)[0])
-            perc[w] = _perceived(con._clip(ln, heard=False))
-        inside = None
-        for anchor in FAV_STOPS:
-            a_ = ("in",) + anchor
-            m = {w: _moment(perc[w], a_) for w in ids}
-            for fav in ids:
-                others = [o for o in ids if o != fav]
-                for d in np.arange(0.0, 20.0, 0.05):
-                    tf, to = math.floor(m[fav] + d + 1e-9), [math.floor(m[o] + d + 1e-9) for o in others]
-                    if tf > max(to) and max(to) == 14:
-                        inside = (fav, a_, float(d), "other")
-                    elif tf < min(to) and tf == 14:
-                        inside = (fav, a_, float(d), "fav")
-                    if inside:
-                        break
-                if inside:
-                    break
-            if inside:
-                break
-        if inside is not None:
-            fav, a_, d, on = inside
-            others = [x for x in ids if x != fav]
-            und, coin = 0, 0
-            for s_ in range(12):
-                led = _fav_life(_Fav(fav, a_, d, 14, on), [(fav, others[k % len(others)]) for k in range(24)], voice, s_,
-                                toys=toys)
-                st = led.words.get(fav) or {"seq": []}
-                und += led.understood(fav)
-                coin += _rule_scipy([(nm_, 1) for nm_, _on in st["seq"]]) is not None
-            lives[(vname, fav, "P4", f"timed from {a_}, within the slot: disclosed, C69")] = (und, coin, None, {})
+                    assert und <= 1 and all(v_ <= 1 for v_ in words_und.values()), (vname, fav, sname, label, und, words_und)
+                    lives[(vname, fav, sname, label)] = (und, sum(n_sc), words_und)
         for vname, voice in voices:                               # the gated name child, its turn 12.7 ticks after her
-            und, coin = 0, 0                                      # last 10 ms above -36 dB, gated at tick 15
+            und = 0                                               # last 10 ms above -36 dB, gated at tick 15
             for s_ in range(12):
                 led = _fav_life(_Gate(("frame", -36), 12.7, 15), [(None, None)] * 24, voice, s_,
                                 toys=ITT_TOYS if vname == "real" else TOYS, form="name")
-                st = led.words.get(LX.NAME) or {"seq": []}
                 und += led.understood(LX.NAME)
-                coin += _rule_scipy([(nm_, 1) for nm_, _on in st["seq"]], name=True) is not None   # (a turn after
-            assert und <= coin, (vname, "gate", und, coin)                    # every name: her draws alone)
-            gates[vname] = (und, coin)
-        # (D) the onset's reading, the tick before it; an act on the onset's own tick scored, whatever the world's order
+            assert und <= 1, (vname, "gate", und)
+            gates[vname] = und
+        # (D) the window from the onset + 2 (A60b): a look first read on the onset's own tick or the one before counts only
+        # for its ticks in the window; its view lost on the onset's tick alone, looking at nothing: void, fewer than 4
         for kind in ("view", "look_on", "look_before"):
             x = _timed_trial("place", "ball", "block_red", _Onset(kind), 1, 3)[0]
             y = _timed_trial("place", "ball", "block_red", _Onset(kind), 1, 3, flip=True)[0]
-            onset_rows[kind] = (x["result"], bool(x.get("scored")), x.get("end", 0) - x["t"], y["result"])
-        assert onset_rows["view"][:2] == ("none", True) and onset_rows["look_on"][1] and \
-            onset_rows["look_on"][0] in ("met", "missed") and onset_rows["look_before"][:2] == ("void", False) and \
-            onset_rows["look_before"][2] == 3, onset_rows
+            onset_rows[kind] = (x["result"], x["on"] + x["off"] if x["result"] == "scored" else None, _same_but_named(x, y))
+        assert onset_rows == {"view": ("void", None, True), "look_on": ("scored", 6, True),
+                              "look_before": ("scored", 5, True)}, onset_rows
         # (E) an older save: its record starts again; a trial saved before its stimuli were one carrier phrase is void
         led = _TapLedger()
-        _ledger_trials(led, "duck", hits=[1] * 9 + [0], yoked=[1, 1, 1] + [0] * 7)
+        _ledger_knows(led, "duck", 12)
         st_ = led.state()
         st_["scoring"] = "itt"                                    # P3's thirteenth round's ledger
         led2 = Ledger()
@@ -5712,16 +5671,317 @@ def test_trial_carrier_phrase():
               f"or distress, timed from her sound's stop at those levels and measures at every other offset from -4 to +30, "
               f"a pair and the name"
               for v, (nc, ng, r, na) in sweep.items()) +
-          f"); over 12 lives each: " + "; ".join(
-              f"{v} voice, the {fv} child ({sn}{'' if lb == 'timed' else ', ' + lb}): '{fv}' understood in {u} (her draws "
-              f"alone {c}" + (f"; a fair coin's trials' bound {lim}), other words {dict(sorted(wu.items()))}" if lim is not None
-                           else ")")
-              for (v, fv, sn, lb), (u, c, lim, wu) in lives.items()) +
-          "; the gated name child: " + "; ".join(f"{v} voice 'pip' understood in {u} of 12 (her draws alone {c})"
-                                                  for v, (u, c) in gates.items()) +
-          f"; its view lost on the onset's own tick: {onset_rows['view'][0]}, scored; a look read on it: "
-          f"{onset_rows['look_on'][0]}, scored; one read the tick before: void unscored; an older save's record started again, "
-          f"its trial saved before one carrier phrase void")
+          f"); over 12 lives each, by the proportion of looking and its tests (A60b): " + "; ".join(
+              f"{v} voice, the {fv} child ({sn}{'' if lb == 'timed' else ', ' + lb}): '{fv}' understood in {u} of 12 ({n} "
+              f"registered trials), other words {dict(sorted(wu.items()))}"
+              for (v, fv, sn, lb), (u, n, wu) in lives.items()) +
+          "; the gated name child: " + "; ".join(f"{v} voice 'pip' understood in {u} of 12" for v, u in gates.items()) +
+          f"; the window from the onset + 2: its view lost on the onset's own tick alone, no look: void; a look read from it "
+          f"and from the tick before it, 8 ticks: {onset_rows['look_on'][1]} and {onset_rows['look_before'][1]} of them "
+          f"counted, the same with the other thing named; an older save's record started again, its trial saved before one "
+          f"carrier phrase void")
+
+
+# ------------------------------------------------ the lead's decision A60b: the proportion of looking, tested by permutation
+BAND_KIDS = (("drum", ("band", "L", 1, 48.0, "stop")), ("drum", ("band", "L", 3, 62.5, "stop")),
+             ("bear", ("band", "L", 22, 51.5, "stop")), ("cup", ("band", "L", 2, 56.0, "stop")),
+             ("car", ("band", "L", 7, 61.0, "start")))
+# the fourteenth verifier's children (f5ed8cd): a favourite, and its timed look's moment one band of its own left ear, her mouth
+# 0.7 m ahead (107 Hz, 167 Hz, 1684 Hz, 136 Hz: body/sim/ears.Ears' bands 1, 3, 22, 2; the car's the 323 Hz band's start,
+# band 7); the name's, its turn keyed on the 2667 Hz band's stop (band 27) above 48.5 dB SPL
+BAND_NAME = ("band", "L", 27, 48.5, "stop")
+
+
+class _GateLook:
+    """a child that knows no word (written here), the fourteenth verifier's construction turned to the window (A60b): `gate`
+    ticks after her voice starts it looks for `hold` ticks at its favourite when a moment of her sound as it perceives it
+    (_moment, `delay` ticks after it) has not come before the gate (late; or, not late, when it has), else at the other thing
+    shown: a gate on the moment, not an order of looks. Timed from a moment within the test word's slot, its looking follows
+    the word's own sound."""
+
+    def __init__(self, fav, anchor, delay, gate, hold=16, shown=(), late=True):
+        self.fav, self.anchor, self.delay, self.gate, self.hold = fav, anchor, float(delay), int(gate), int(hold)
+        self.shown, self.plan, self.late = tuple(shown), None, bool(late)
+
+    def show(self, a, b):
+        self.shown = (a, b)
+
+    def heard(self, t, s):
+        if s.line is None or s.line.intent not in C.TRIAL_INTENTS:
+            return
+        tt = int(math.floor(_moment(_perceived(s.clip), self.anchor) + self.delay + 1e-9))
+        other = next((x for x in self.shown if x != self.fav), None)
+        self.plan = (t + self.gate, self.fav if (tt >= self.gate) == self.late else other)
+
+    def ended(self):
+        pass
+
+    def at(self, t):
+        tg = self.plan[1] if self.plan is not None and self.plan[0] <= t < self.plan[0] + self.hold else None
+        return tg, None, None, (), ()
+
+
+class _Knows:
+    """a child that knows the words (written here): from its test word's onset + `lat` ticks it looks for `hold` ticks at the
+    thing the word names, with chance p, else at the other thing shown; before its trial `from_` it knows none (a coin between the
+    two: a child that learns the word then). Its own stream."""
+
+    def __init__(self, p=1.0, lat=4, hold=12, from_=0, seed=0, shown=()):
+        self.p, self.lat, self.hold, self.from_, self.shown, self.plan, self.k = p, lat, hold, from_, tuple(shown), None, 0
+        self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(98,))))
+
+    def show(self, a, b):
+        self.shown = (a, b)
+
+    def heard(self, t, s):
+        if s.line is None or s.line.intent not in C.TRIAL_INTENTS:
+            return
+        self.k += 1
+        named = next((x for x in self.shown if x is not None and x.split("_")[0] == s.line.focus), None)
+        other = next((x for x in self.shown if x != named), None)
+        on = [a for w, a, _e in s.clip.words if w == s.line.focus][:1] if s.clip is not None else [9 * 2400]
+        right = self.rng.random() < (self.p if self.k > self.from_ else 0.5)
+        self.plan = (t + on[0] // 2400 + self.lat, named if right else other)
+
+    def ended(self):
+        pass
+
+    def at(self, t):
+        tg = self.plan[1] if self.plan is not None and self.plan[0] <= t < self.plan[0] + self.hold else None
+        return tg, None, None, (), ()
+
+
+def _zoo_pairs(vname, fav, n=24):
+    """P4's schedule: the favourite against each other toy shown in turn."""
+    ids = [o.id for o in (ITT_TOYS if vname == "real" else TOYS) if o.child_sees and
+           (vname == "real" or o.id in ("ball", "cup", "block_red"))]
+    others = [x for x in ids if x != fav]
+    return [(fav, others[k % len(others)]) for k in range(n)]
+
+
+def _zoo_life(label, vname, voice, seed, mk, fav, form="place", n=24, flip=False):
+    """one life of the zoo (_fav_life: her conduct, its stub motion still, stage 1 and 2 by seed; flip: every draw turned over)
+    -> the ledger."""
+    toys = ITT_TOYS if vname == "real" else TOYS
+    pairs = [(None, None)] * n if form == "name" else _zoo_pairs(vname, fav, n)
+    return _fav_life(mk(seed), pairs, voice, seed, toys=toys, form=form, flip=flip)
+
+
+def _zoo_digests(seeds=(0, 1)):
+    """lives of the zoo in the timed voice for the determinism check (a learner, the gated name child, a knower) -> [[the ledger's
+    chain, the sha256 of its rows]]."""
+    import hashlib                                                        # noqa: PLC0415
+    out = []
+    for s_ in seeds:
+        for mk, fav, form in ((lambda x: _Fav("cup", ("frame", -36), 7.3, 14, "fav", learn=500 + x), "cup", "place"),
+                              (lambda x: _Gate(("frame", -36), 12.7, 15), None, "name"),
+                              (lambda x: _Knows(p=0.8, seed=x), "ball", "place")):
+            led = _zoo_life("", "timed", _TimedVoice(), s_, mk, fav, form)
+            out.append([led.digest, hashlib.sha256(json.dumps(led.rows, sort_keys=True).encode()).hexdigest()])
+    return out
+
+
+def test_trial_acceptance_a60b():
+    """the lead's decision A60b and its acceptance (P3's fifteenth round): understanding scored by the proportion of looking
+    over a fixed window (the test word's onset tick + 2 to + 23, the same whichever is named), a trial with fewer than 4 of its
+    ticks on either thing void, and "understood" by a permutation test over the draw labels, its tests' levels summing to 0.01 a
+    life. Measured and reported: the zoo of children that know no word, 12 lives each through her conduct and ledger (P4's
+    schedule, the favourite against each other toy in turn, 24 probes; the name 24): a favourite that looks only at it, the
+    thirteenth verifier's children timed from her sound's stop at 11 levels and measures (her voice's start, 10 ms frames, her
+    mouth, its own ears), children timed from 12 anchors of what they hear and see (_Clock's), the gated name child, the child
+    that learns its delay from her smiles, in the suite's timed voice and her real voice (where the engine is present): each at
+    most 1 of its 12 lives, their total within Binomial(lives, 0.01)'s 0.999 quantile; every trial of theirs the same with the
+    draw turned over (its window's ticks on each thing), so their labels are exchangeable and the statistic's distribution the
+    same whichever was drawn. Knowers detected: a knower, one right 80% of the time, the name's, 12 of 12; one that learns the
+    word at its 12th trial, by its 48th. Disclosed (C69b), in her real voice: the fourteenth verifier's children timed from one
+    band of its own ear, as built and turned to the window (a gate on the band's moment), and a learner and the gated name
+    child on a band: their looking follows the test word's own sound (their trials differ with the draw turned over), and no
+    measure of looking tells them from a knower of that word. Determinism: zoo lives in two processes, threaded and on one
+    thread, the same ledger chains and rows."""
+    assert hasattr(K, "TRIAL_LOOK") and perm_test is not None, "understanding still scored by a first look (A60b)"
+    import subprocess                                                     # noqa: PLC0415
+    from scipy.stats import binom                                         # noqa: PLC0415
+    voices = [("timed", _TimedVoice())]
+    tmp = None
+    if _have_engine():
+        tmp = tempfile.mkdtemp()
+        voices.append(("real", V.VoiceCache(os.path.join(tmp, "v"), server=V.SynthServer(nice=19))))
+    zoo, flips, knowers, band, whole = {}, {}, {}, {}, {}
+    try:
+        for vname, voice in voices:
+            favs = (("cup", "ball") if vname == "timed" else ("drum", "bear", "cup"))
+            kinds = []                                    # (label, maker(seed), favourite, form)
+            for fav in favs:
+                kinds.append((f"favourite {fav}, looks only at it", lambda s_, f_=fav: _Fav(f_, ("start",), 99.0, 14, "other"),
+                              fav, "place"))
+            fav = favs[0]
+            for anchor in FAV_STOPS + (("start",),):
+                kinds.append((f"{fav}, its other look 7.3 ticks after {anchor}",
+                              lambda s_, a_=anchor, f_=fav: _Fav(f_, a_, 7.3, 14, "fav"), fav, "place"))
+            for vn, fv, anchor, d, on in FAV_KIDS:
+                if vn == vname:
+                    kinds.append((f"{fv}, the thirteenth verifier's ({anchor}, {d})",
+                                  lambda s_, f_=fv, a_=anchor, d_=d, o_=on: _Fav(f_, a_, d_, 14, o_), fv, "place"))
+            kinds.append((f"{fav}, learns its delay from her smiles ({FAV_STOPS[1]})",
+                          lambda s_, f_=fav: _Fav(f_, FAV_STOPS[1], 7.3, 14, "fav", learn=500 + s_), fav, "place"))
+            kinds.append(("the gated name child (her last 10 ms above -36 dB, 12.7 ticks, gate 15)",
+                          lambda s_: _Gate(("frame", -36), 12.7, 15), None, "name"))
+            kinds.append(("the gated name child (her mouth above -22 dB, 8.1 ticks, gate 12)",
+                          lambda s_: _Gate(("mouth", -22), 8.1, 12), None, "name"))
+            for label, mk, fv, form in kinds:
+                und, n_sc, ps = 0, 0, []
+                for s_ in range(12):
+                    led = _zoo_life(label, vname, voice, s_, mk, fv, form)
+                    key = LX.NAME if form == "name" else fv
+                    und += led.understood(key)
+                    st = led.words.get(key) or {"seq": []}
+                    n_sc += len(st["seq"])
+                    if st["seq"]:
+                        ps.append(led.test(key)["p"])
+                zoo[(vname, label)] = (und, n_sc, min(ps) if ps else None)
+                assert und <= 1, (vname, label, und)
+                # its trials with the draw turned over: the same window's ticks on each thing, 4 of them each
+                same = 0
+                pairs = [(None, None)] * 4 if form == "name" else _zoo_pairs(vname, fv, 4)
+                for j, (a, b) in enumerate(pairs):
+                    xs = []
+                    for fl in (False, True):
+                        kid = mk(j)
+                        if hasattr(kid, "show") and form != "name":
+                            kid.show(a, b)
+                        xs.append(_timed_trial(form, a, b, kid, 1 + j % 2, j, flip=fl, voice=voice,
+                                               scaffold=form != "name", seen_=ITT_TOYS if vname == "real" else TOYS)[0])
+                    same += _same_but_named(*xs)
+                flips[(vname, label)] = (same, len(pairs))
+                assert same == len(pairs), (vname, label, same)
+                if vname == "timed" and "learns" not in label:        # a whole life with every draw turned over: the same
+                    key = LX.NAME if form == "name" else fv         # looking in every trial, each label turned over, so
+                    s0 = (_zoo_life(label, vname, voice, 0, mk, fv, form).words.get(key) or {"seq": []})["seq"]
+                    s1 = (_zoo_life(label, vname, voice, 0, mk, fv, form, flip=True).words.get(key) or {"seq": []})["seq"]
+                    assert [x[1:] for x in s0] == [x[1:] for x in s1] and [1 - x[0] for x in s0] == [x[0] for x in s1], \
+                        (label, s0, s1)                             # its statistic's permutation distribution the same
+                    whole[label] = len(s0)
+            # knowers: detected
+            fk = favs[0]
+            for label, mk, n_pr, form, least in (("a knower", lambda s_: _Knows(seed=s_), 24, "place", 11),
+                                                 ("a knower right 80% of the time", lambda s_: _Knows(p=0.8, seed=s_), 48,
+                                                  "place", 9),
+                                                 ("one that learns the word at its 12th trial",
+                                                  lambda s_: _Knows(from_=12, seed=s_), 48, "place", 9),
+                                                 ("a knower of its name", lambda s_: _KnowsName(), 24, "name", 11)):
+                und = sum(_zoo_life(label, vname, voice, s_, mk, fk, form, n_pr).understood(LX.NAME if form == "name" else fk)
+                          for s_ in range(12))
+                knowers[(vname, label)] = (und, 12, n_pr)
+                assert und >= least, (vname, label, und)
+        total = sum(u for u, _n, _p in zoo.values())
+        n_lives = 12 * len(zoo)
+        assert total <= binom.ppf(0.999, n_lives, 0.01), (total, n_lives)
+        # disclosed (C69b): children timed from one band of its own ear, her real voice
+        if len(voices) > 1:
+            vname, voice = voices[1]
+            con = _conduct(seed=1, voice=voice, ledger=_TapLedger(), scaffold=False)
+            ids = [o.id for o in ITT_TOYS]
+            perc = {}
+            for w in ids:
+                ln = TP.Line(f"where is the {w}? see?", "trial_where", "question", w, w, (), "fast", "where is the {o}? see?",
+                             ST.shape("where", w)[0])
+                perc[w] = _perceived(con._clip(ln, heard=False))
+            for fav, anchor in BAND_KIDS:
+                m = {w: _moment(perc[w], anchor) for w in ids}
+                others = [w for w in ids if w != fav]
+                built = None                                  # as the verifier built it: the order of its two looks follows
+                for d in np.arange(0.0, 20.0, 0.05):          # the word (a look at tick 14, one timed from the band's moment)
+                    tf, to = math.floor(m[fav] + d + 1e-9), [math.floor(m[o] + d + 1e-9) for o in others]
+                    if tf >= 14 > max(to):
+                        built = (float(d), "other")
+                    elif tf < 14 <= min(to):
+                        built = (float(d), "fav")
+                    if built:
+                        break
+                gate = None                                   # turned to the window: a gate between its moment and all
+                for d in np.arange(0.0, 1.0, 0.01):           # the others', its moment the last of them or the first
+                    for g in range(6, 20):
+                        tf, to = math.floor(m[fav] + d + 1e-9), [math.floor(m[o] + d + 1e-9) for o in others]
+                        if tf >= g > max(to):
+                            gate = (float(d), g, True)
+                        elif tf < g <= min(to):
+                            gate = (float(d), g, False)
+                        if gate:
+                            break
+                    if gate:
+                        break
+                rows_b = {}
+                for label, mk in ((f"as built ({built})", None if built is None else
+                                   (lambda s_, d_=built[0], o_=built[1]: _Fav(fav, anchor, d_, 14, o_))),
+                                  (f"a gate ({gate})", None if gate is None else
+                                   (lambda s_, g_=gate: _GateLook(fav, anchor, g_[0], g_[1], late=g_[2]))),
+                                  ("learns its delay from her smiles", lambda s_: _Fav(fav, anchor, 7.0, 14, "other",
+                                                                                          learn=500 + s_))):
+                    if mk is None:
+                        continue
+                    und = sum(_zoo_life(label, vname, voice, s_, mk, fav).understood(fav) for s_ in range(12))
+                    kid0, kid1 = mk(0), mk(0)
+                    for k_ in (kid0, kid1):
+                        k_.show(fav, others[0])
+                    xs = [_timed_trial("place", fav, others[0], k_, 1, 0, flip=fl, voice=voice, seen_=ITT_TOYS)[0]
+                          for k_, fl in ((kid0, False), (kid1, True))]
+                    rows_b[label] = (und, _same_but_named(*xs))
+                band[(fav, anchor)] = (round(m[fav], 3), round(min(m[o] for o in others), 3),
+                                       round(max(m[o] for o in others), 3), rows_b)
+            mn = {}
+            for w in (LX.NAME,) + tuple(K.NAME_FOILS):
+                ln = TP.Line(TP.FRAMES["trial_name"][0][0].replace("{n}", w), "trial_name", "calling", w, w, (), "fast",
+                             TP.FRAMES["trial_name"][0][0], ST.shape("name", w)[0])
+                mn[w] = _moment(_perceived(con._clip(ln, heard=False)), BAND_NAME)
+            g_n = int(math.floor(mn[LX.NAME])) + 1             # its turn before the gate after "pip", never after a foil
+            assert all(math.floor(mn[f_]) >= g_n for f_ in K.NAME_FOILS), mn
+            und = sum(_zoo_life("band name", vname, voice, s_, lambda x: _Gate(BAND_NAME, 0.0, g_n), None, "name")
+                      .understood(LX.NAME) for s_ in range(12))
+            xs = [_timed_trial("name", None, None, _Gate(BAND_NAME, 0.0, g_n), 1, 0, flip=fl, voice=voice, scaffold=False)[0]
+                  for fl in (False, True)]
+            band[("pip", BAND_NAME)] = (round(mn[LX.NAME], 3), round(min(mn[f_] for f_ in K.NAME_FOILS), 3),
+                                        round(max(mn[f_] for f_ in K.NAME_FOILS), 3),
+                                        {f"a turn gated at tick {g_n}": (und, _same_but_named(*xs))})
+        # determinism: zoo lives in two processes, threaded (hash seed 1) and on one thread (hash seed 4242)
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        code = ("import json, sys; sys.path.insert(0, %r); import body.tests.test_sim_lang as M; "
+                "print(json.dumps(M._zoo_digests()))") % root
+        runs = []
+        for seed_, one in (("1", False), ("4242", True)):
+            env = dict(os.environ, PYTHONHASHSEED=seed_)
+            if one:
+                env.update(VECLIB_MAXIMUM_THREADS="1", OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1", OMP_NUM_THREADS="1")
+            r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env, timeout=1200)
+            assert r.returncode == 0, r.stderr[-1500:]
+            runs.append(json.loads(r.stdout.strip().splitlines()[-1]))
+        assert runs[0] == runs[1] == _zoo_digests(), "a zoo life differs across processes or threads"
+    finally:
+        for _v, voice in voices[1:]:
+            voice.close()
+        if tmp:
+            shutil.rmtree(tmp, ignore_errors=True)
+    print(f"72 the lead's decision A60b, its acceptance: the proportion of looking over the window (the test word's onset + 2 "
+          f"to + 23), void under 4 ticks on either thing, 'understood' by a permutation test over the draw labels at 0.005, "
+          f"0.0025, ... (0.01 a life). The zoo, 12 lives each, 'understood' / its registered trials / its least p: " + "; ".join(
+              f"{v} voice, {k}: {u} of 12 ({n} trials, least p {p:.3f})" if p is not None else f"{v} voice, {k}: {u} of 12"
+              for (v, k), (u, n, p) in zoo.items()) +
+          f"; in all {total} of {n_lives} lives (at 0.01 a life, Binomial's 0.999 quantile "
+          f"{binom.ppf(0.999, n_lives, 0.01):.0f}); "
+          f"their trials with the draw turned over: " + "; ".join(f"{v} {k}: {a} of {b} the same" for (v, k), (a, b) in
+                                                                 flips.items()) +
+          f"; a whole life with every draw turned over, each non-learner of the timed voice: its looking the same in every one "
+          f"of its registered trials, each label turned over (so its statistic's permutation distribution the same: " +
+          ", ".join(f"{n} trials" for n in whole.values()) + "); a learner's lives differ, her smiles following the draw" +
+          f"; knowers: " + "; ".join(f"{v} voice, {k}: {u} of {n} ({m} probes)" for (v, k), (u, n, m) in knowers.items()) +
+          ("; disclosed (C69b), children keyed on one band of its own left ear, her mouth 0.7 m ahead, 12 lives each: " +
+           "; ".join(f"the {w} child on {a} (its moment {mw} ticks, the others' {lo}-{hi}): " + ", ".join(
+               f"{lb}: '{w}' understood in {u} of 12" + ("" if same is None else ", its trial " +
+                                                          ("the same" if same else "not the same") +
+                                                          " with the draw turned over")
+               for lb, (u, same) in rows.items()) for (w, a), (mw, lo, hi, rows) in band.items())
+           if band else "; the engine absent here: the band children not run") +
+          "; zoo lives in two processes, threaded (hash seed 1) and on one thread (hash seed 4242): the same ledger chains "
+          "and rows")
 
 
 def _conduct(**kw):
@@ -5786,7 +6046,8 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_asks_she_can_judge, test_reading_held_three_ticks, test_low_items_fourth, test_low_items_fifth,
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
-         test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_itt, test_trial_carrier_phrase]
+         test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
+         test_trial_carrier_phrase, test_trial_acceptance_a60b]
 
 if __name__ == "__main__":
     t0 = time.time()
