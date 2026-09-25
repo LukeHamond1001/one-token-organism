@@ -337,7 +337,7 @@ class SimAnatomy(LanguageAnatomy):
             n_in = 2 + (1 if name == "waist" else 0) + 2
             limbs.append(Limb(name, [5] * J, rest_id=(5 ** J - 1) // 2, sense="body", sense_idx=idx(js), inverse=True, fwd_gate=True,
                               n_in=n_in, **kw))
-        rewards = [FaceIncrement("face", clip=2), JointPain("pain"), ChargeRelief("charge")]
+        rewards = [FaceIncrement("face", clip=2), JointPain("pain", signs=(-1.0,)), ChargeRelief("charge")]   # R7d: the heads face +/-, pain -, charge +/-
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
@@ -400,4 +400,8 @@ SIM_CFG = dict(
     # STEP R7 (FRAMES; body/core/frames.py): the body lives in frames (R7b: the frame's surprise, the event's end for frames, the
     # surprise-gated writes at its running 0.9 quantile, the tick's record), its constants FRAMES' (none given here)
     frames=1,
+    # STEP R7c: the tired memories recover (defect 1, SWITCHES; 10's switches at birth: fix #1 on) and each channel's forecast error
+    # scaled by its own running mean in the waking lesson (FRAMES' err_scale; 10's "forecast heads"); tag_trace (defect 6) stays off,
+    # the language body's utterance entry (the sim's tags reach its store and its night through the amygdala, R7d and R8)
+    tire_recover=1, err_scale=1,
 )

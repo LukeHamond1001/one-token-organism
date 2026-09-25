@@ -408,6 +408,8 @@ class NightMixin:
             self._bands_prev = None; self._C_last = None; self.v_prev = None
             if self._frames_on():
                 self._frames_night()                               # step R7b: the frames' working state wakes fresh (body/core/frames.py)
+            if int(self.cfg.get("tag_trace", 0)):
+                self._utt_boosts = []; self._utt_tag = 0.0         # defect 6 (tag_trace, R7c): the reach back ends at the night
             self._z_prev = None; self._z_now = None; self._e_actor = None
             for i_, st_ in enumerate(getattr(self, "motor", ()), 1):  # the later effectors' working state begins afresh, as the voice's (step R5)
                 if st_.get("inv_batch"):

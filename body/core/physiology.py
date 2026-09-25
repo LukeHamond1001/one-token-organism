@@ -246,7 +246,8 @@ PHYSIOLOGY = dict(
     face_lr=1e-3,
 )
 
-# THE CORE REFACTOR'S SWITCHES (docs/SIM_DESIGN.md 8.4; the defect fixes of ops/review_2026-09-22.md section 1, each a switch): declared
+# THE CORE REFACTOR'S SWITCHES (docs/SIM_DESIGN.md 8.4; the defect fixes of ops/review_2026-09-22.md section 1, each a switch; defects 1
+# and 6 since step R7c): declared
 # here and OFF BY THEIR ABSENCE. A life's cfg holds one only when it is set (`cfg.get(name, off)` reads it), so the language body's
 # constants, its save and its pinned digests stay what they were while the switch is off (8.3: the language life gains no key); a body
 # born with one on (the sim is born with them on, 5.3) keeps it in its save. Adopting one on the language body is a measurement on a
@@ -262,6 +263,21 @@ SWITCHES = dict(
     # defect 8 (step R5): 1 = the gate's credit sums the dopamine from the tick after the act on (the act's own consequences), not from
     # the act's own tick, whose dopamine was computed before the act (unbiased, but about 21 percent more noise)
     elig_from=0,
+    # defect 1 (step R7c): 1 = the tired memories recover: the waking read's recovery toward rest is written into the store's own
+    # availability in place, as its tiring is; without it the recovery went into a new tensor, which the next write of a new slot
+    # dropped (FastStore's views), so the store's buffer kept the tiring of every read and none of the recovery, and the most-read
+    # memories were pushed down all day (about -13.8 logits; ops/review_2026-09-22.md item 1: "gives exactly the behaviour of the Store
+    # used before 09-19")
+    tire_recover=0,
+    # defect 6 (step R7c; SIM_DESIGN.md 7.4 "the tag reaches back", 10's `tag_trace`): 1 = the received tag reaches back onto the felt
+    # entry of an utterance (utt_entry "felt"): its entry is its symbols' mean write strength times (1 + T), T the largest received tag
+    # (the reward felt this tick, min(the judgment's clip, the sum of |term| over the sources that reach the amygdala)) over the
+    # utterance's ticks and, reaching back, over the 64 ticks after its end at dopamine's discount a tick (later tags raise the entry
+    # already made); over a running mean of utt_entry_tau entries, saved with the body and bias-corrected (defect 7, the felt mean born
+    # cold and never saved, fixed with it). Before, the felt entry saw only the dopamine of the tick before each heard symbol, and the
+    # typist never typed within a tick of a smile: smiles tagged nothing (ops/review_2026-09-22.md items 6 and 7). Off; on the language
+    # body it is measured on a copy first (SIM_DESIGN.md 8)
+    tag_trace=0,
 )
 
 # THE MOTOR TIMING PART'S CONSTANTS (the core refactor's step R6, docs/SIM_DESIGN.md 5.4 and 5.8; body/core/timing.py): declared here
@@ -446,4 +462,14 @@ FRAMES = dict(
     # each channel's forecast error's running mean, the rate 1 / min(n, err_tau) (the first ticks exact averages): the critics' own
     # statistics' horizon (fast_rls_forget, vcrit_norm_tau, 36,000 ticks; ours)
     err_tau=36000,
+    # THE TAG'S REACH BACK, in ticks (SIM_DESIGN.md 7.4, "the tag reaches back": tag* = max over k < 64 of 0.9375^k x the tag k ticks
+    # later, dopamine's own discount a tick; 0.52 of a smile's weight after 10 ticks, 0.28 after 20: risk 1's 7-25-tick delay): tag_trace's
+    # reach onto an utterance (R7c), the store's later boosts after a frame's write (R7d), R8's tag* over the day's record; ours
+    tag_reach=64,
+    # STEP R7c, EACH CHANNEL'S FORECAST ERROR SCALED BY ITS OWN RUNNING MEAN (10's "forecast heads"): 1 = in the waking lesson each later
+    # channel's head's squared error to the next born code is divided by that channel's running mean of its error (the frames' own,
+    # above), so every channel's forecast teaches the stream about as much as another, whatever its code's size (the eyes' 1,536 numbers
+    # and the charge's 2 weigh alike, as the frames' surprise weighs them); 0 = the sum as R4 built it. A channel with no running mean
+    # yet is taken as it is
+    err_scale=0,
 )

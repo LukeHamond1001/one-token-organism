@@ -382,7 +382,183 @@ def test_the_frames():
           f"alone (no frame), and the morning's first frame was a start; the language body holds none of it")
 
 
-FRAME_TESTS = [test_the_event_lines, test_the_frames]
+# ---------------- frames 3: the defect fixes 1 and 6 as switches (R7c) ----------------
+
+def _lang(cfg, seed=0):
+    torch.manual_seed(seed)
+    return Life.birth(TOK, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=seed)
+
+
+def test_the_fixes_1_and_6():
+    """frames 3 (step R7c; ops/review_2026-09-22.md items 1, 6 and 7; SIM_DESIGN.md 7.4 "the tag reaches back", 10's `tag_trace`): the
+    two defect fixes are switches of physiology.py's SWITCHES, off by their absence. TIRE_RECOVER (defect 1): the waking read's tiring
+    (read_tire 0.2, the served) lives in the copy-free store's buffer; its recovery went into a new tensor that the next write of a new
+    slot dropped, so without the switch the store's availability parts from the old copying store's (the store before 09-19) at the
+    first such write, and with it the life is that store's life tick for tick (its availability, its reads, its page). TAG_TRACE (defects
+    6 and 7; utt_entry "felt"): an utterance's entry is its felt strength x (1 + T), T the largest received tag (min(2, |the face's
+    term|): what was felt) over its ticks, over the bias-corrected running mean of the entries before it (the first entry 1); a smile 10
+    ticks after its end raises it to f (1 + 0.9375^10 x 2) over the same mean, a smile after 64 ticks nothing; the mean saved with the
+    body (a key only under the switch) and read back; the reach back ends at the night. Without the switch the entry is the old felt
+    entry, bit for bit, and the save holds no such key"""
+    from body.core.physiology import SWITCHES
+    from body.model import Store
+    assert SWITCHES["tire_recover"] == 0 and SWITCHES["tag_trace"] == 0
+    assert "tire_recover" not in _lang({}).cfg and "tag_trace" not in _lang({}).cfg
+    # TIRE_RECOVER: against the old copying store
+    lines = ("what do you want?", "I want milk", "do you see the ball?", "yes. the ball is red", "what is cold?", "ice is cold")
+    base = dict(read_tire=0.2, read_recover=0.97, write_floor=1e-30, wake_ticks=100000)
+    parted = {}
+    for fix in (0, 1):
+        A = _lang(dict(base, tire_recover=fix)); B = _lang(dict(base, tire_recover=fix))
+        B.store = Store(B.m.d, cap=B.store.cap, temp=B.store.temp, device="cpu", links=B.store.NK)   # the store before 09-19 (copying)
+        first = None
+        for t in range(180):
+            if t % 30 == 0:
+                for L_ in (A, B):
+                    L_.type_text(lines[t // 30], who="parent")
+            n0 = A.store.n()
+            A.tick(); B.tick()
+            same = A.store.A.shape == B.store.A.shape and torch.equal(A.store.A, B.store.A)
+            if not same and first is None:
+                first = (t, A.store.n() > n0)
+        parted[fix] = first
+        if fix:
+            assert first is None and [e[0] for e in A.page] == [e[0] for e in B.page], first
+    assert parted[0] is not None and parted[0][1], parted[0]         # without the fix: parted at a tick whose write made a new slot
+    # TAG_TRACE: an utterance's entry and the smile reaching back onto it
+    cfg = dict(utt_entry="felt", tag_trace=1, offset_ticks=8, offset_form="count", write_floor=1e-30, wake_ticks=100000)
+    L = _lang(cfg); seen = []; te = L._tag_entry
+
+    def spy(f_, te=te, L=L, seen=seen):
+        T_ = max(float(getattr(L, "_utt_tag", 0.0)), float(getattr(L, "_rtag_now", 0.0)))
+        m_, n_ = float(getattr(L, "_utt_felt_m", 0.0)), int(getattr(L, "_utt_felt_n", 0))
+        out = te(f_); seen.append((L.ticks, float(f_), T_, m_, n_, out, int(L._utt_serial))); return out
+    L._tag_entry = spy
+    for t in range(400):
+        if t % 100 == 0:
+            L.type_text(("what do you want?", "I want milk", "the ball is red", "ice is cold")[t // 100], who="parent")
+        if len(seen) == 2 and seen[-1][0] + 10 == t:
+            L.set_face(2.0)                                           # a smile 10 ticks after the second line's end
+        if len(seen) == 2 and seen[-1][0] + 11 == t:
+            L.set_face(0.0)
+        if t == 5:
+            L.set_face(2.0)                                           # a smile inside the first line
+        if t == 6:
+            L.set_face(0.0)
+        if len(seen) == 3 and seen[-1][0] + 70 == t:
+            L.set_face(2.0)                                           # a smile 70 ticks after the third line's end: past the reach
+        if len(seen) == 3 and seen[-1][0] + 71 == t:
+            L.set_face(0.0)
+        L.tick()
+    assert len(seen) >= 4, len(seen)
+    beta = 1.0 - 1.0 / 64.0; m_ = 0.0
+    for k, (t_end, f_, T_, m0, n0, out, serial) in enumerate(seen):
+        mhat = m_ / (1.0 - beta ** k) if k else 0.0
+        assert abs(m0 - m_) < 1e-12 and n0 == k, (k, m0, m_)
+        want = 1.0 if not k else f_ * (1.0 + T_) / mhat
+        assert abs(out - want) < 1e-12, (k, out, want)
+        m_ = beta * m_ + (1.0 - beta) * f_ * (1.0 + T_)
+        final = L.utt_S[L.utt_N.index(serial)]
+        if k == 0:
+            assert T_ == 2.0 and final == 1.0, (T_, final)            # the smile inside the line: T 2; the first entry 1
+        elif k == 1:
+            want_b = f_ * (1.0 + 0.9375 ** 10 * 2.0) / mhat           # the smile 10 ticks after it
+            assert abs(final - want_b) < 1e-12 and final > out, (final, want_b, out)
+        elif k == 2:
+            assert final == out, (final, out)                         # a smile 70 ticks after: past the reach
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        L.save(path); blob = torch.load(path, map_location="cpu", weights_only=False)
+        B = Life.load(path, TOK, save_path=None)
+    finally:
+        os.remove(path)
+    assert blob["life"]["utt_felt"] == {"m": L._utt_felt_m, "n": L._utt_felt_n} and (B._utt_felt_m, B._utt_felt_n) == (L._utt_felt_m, L._utt_felt_n)
+    L._utt_boosts = [[1, 1.0, 1.0, 0.0, L.ticks]]; rep = L.night(); assert not rep.get("error") and L._utt_boosts == []
+    # without the switch: the old felt entry, bit for bit, and no key
+    cfg0 = dict(cfg); del cfg0["tag_trace"]
+    P = _lang(cfg0); Q = _lang(cfg0)
+    for t in range(300):
+        if t % 100 == 0:
+            for L_ in (P, Q):
+                L_.type_text(("what do you want?", "I want milk", "the ball is red")[t // 100], who="parent")
+        if t == 50:
+            P.set_face(2.0); Q.set_face(2.0)
+        P.tick(); Q.tick()
+    fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+    try:
+        P.save(path); blob0 = torch.load(path, map_location="cpu", weights_only=False)
+    finally:
+        os.remove(path)
+    assert "utt_felt" not in blob0["life"] and not hasattr(P, "_utt_boosts") and not hasattr(P, "_rtag_now") and P.utt_S == Q.utt_S
+    print(f"frames 3: the fixes are switches, off by their absence; tire_recover: without it the copy-free store's availability parted from",
+          f"the copying store's at tick {parted[0][0]}, a new slot's write; with it 180 ticks the same, availability and page; tag_trace:",
+          f"{len(seen)} entries by the law (x = f (1 + T) over the bias-corrected mean, the first 1), the smile inside a line T 2, a smile",
+          f"10 ticks after a line raising its entry {seen[1][5]:.3f} -> {L.utt_S[L.utt_N.index(seen[1][6])]:.3f}, one past the reach",
+          f"nothing; the mean saved and read back; the night ends the reach; without it the old entry and no key")
+
+
+# ---------------- frames 4: each channel's error scaled by its own running mean; the pace on the partner channel (R7c) ----------------
+
+def test_error_scales_and_the_partners_pace():
+    """frames 4 (step R7c; SIM_DESIGN.md 10's "forecast heads", 8's R7 row): ERR_SCALE (FRAMES, on in SIM_CFG): in the waking lesson each
+    later channel's head's squared error to the next born code is divided by that channel's running mean of its forecast error (the
+    frames' own, R7b): with the scales set to 2 and 4, each head's gradient is a half and a quarter of the unscaled one, bit for the float
+    (the lesson's own backward, before its bound); off, the lesson is R4's. THE PACE ON THE PARTNER CHANNEL: a body whose anatomy declares
+    no partner runs no turn-taking under pace_sense 2 (no tracker moves, no end is foreseen or outlasted, the ear is never held), while
+    the same body with its ear declared the partner runs it as before"""
+    from body.sim.anatomy import SIM_CFG
+    assert SIM_CFG["err_scale"] == 1
+    grads = {}
+    for es in (None, 2.0, 4.0):
+        cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=10 ** 9, gate_every=8, write_floor=1e-30, gate_floor=0.3, err_scale=0 if es is None else 1)
+        w = _g1_events_world(burst=True); L = _g1(cfg, w)
+        run = WorldLoop(L)
+        for _ in range(40):
+            run.step()
+        if es is not None:
+            L._err_scales = (lambda es=es, L=L: {c.name: es for c in L.anatomy.channels[1:]})
+        got = {}; clip = torch.nn.utils.clip_grad_norm_
+
+        def spy(params, max_norm, *a, clip=clip, L=L, got=got, **k):
+            if not got:
+                got.update({n: L.m.chan_pred[n].weight.grad.clone() for n in L.m.chan_pred})
+            return clip(params, max_norm, *a, **k)
+        torch.nn.utils.clip_grad_norm_ = spy
+        try:
+            out = L._wake_lesson()
+        finally:
+            torch.nn.utils.clip_grad_norm_ = clip
+        assert out and "skipped" not in out and len(got) == 8, out
+        grads[es] = got
+    for es in (2.0, 4.0):
+        for n, g0 in grads[None].items():
+            assert torch.allclose(grads[es][n] * es, g0, rtol=1e-5, atol=1e-12), (es, n, float((grads[es][n] * es - g0).abs().max()))
+    # the pace on the partner channel
+    class _NoPartner(LanguageAnatomy):
+        def __init__(self, tok, cfg=None, partner=False):
+            super().__init__(tok, cfg)
+            self.channels[0].partner = partner
+    cfg = dict(pace_sense=2, offset_ticks=8, gate_ear=1, write_floor=1e-30, wake_ticks=100000)
+    lives = {}
+    for partner in (True, False):
+        torch.manual_seed(0)
+        L = Life.birth(_NoPartner(TOK, cfg, partner), device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0)
+        pq0 = {k: (list(v) if isinstance(v, list) else v) for k, v in L._pq.items()}; held = 0
+        for t in range(240):
+            if t % 40 == 0:
+                L.type_text(("what do you want?", "I want milk", "do you see the ball?", "yes", "go", "ice is cold")[t // 40], who="parent")
+            L.tick(); held += int(L._ear_held)
+        lives[partner] = (L, pq0, held)
+    Lp, pq0, heldp = lives[True]; Ln, pq1, heldn = lives[False]
+    assert Lp._pace_mode() == 2 and Ln._pace_mode() == 0 and Ln.anatomy.partner is None and Lp.anatomy.partner is Lp.anatomy.words
+    assert int(Lp._pq["n_pause"]) > 0 and heldp > 0 and sum(v for v in Lp._pace_day.values() if isinstance(v, int)) > 0
+    assert Ln._pq == pq1 and heldn == 0 and all((v == 0 or v == []) for v in Ln._pace_day.values()), (Ln._pq, Ln._pace_day)
+    print(f"frames 4: err_scale: the eight heads' gradients at scales 2 and 4 a half and a quarter of the unscaled, each; the pace: with",
+          f"the partner declared it ran ({int(Lp._pq['n_pause'])} pauses heard, the ear held {heldp} ticks); with none declared it ran nothing",
+          f"(the trackers as born, the ear never held)")
+
+
+FRAME_TESTS = [test_the_event_lines, test_the_frames, test_the_fixes_1_and_6, test_error_scales_and_the_partners_pace]
 
 
 if __name__ == "__main__":

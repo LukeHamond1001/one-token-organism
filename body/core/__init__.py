@@ -20,8 +20,10 @@ cord.py         step R6h: the born patterns summed at the cord below the gate (t
                 REFLEX switches, which the diary's cfg does not hold; the effectors declare where each acts
 frames.py       step R7: the body in the world's frames: the anatomy's born event lines read from each frame (R7a) into the striatal
                 expansion and the amygdala; the frame's surprise, the event's end for frames, the surprise-gated writes of frames into the
-                store, the tick's record (R7b, under physiology.py's FRAMES switch `frames`); the diary declares none of it and holds no
-                such switch, so none of it runs for it
+                store, the tick's record (R7b, under physiology.py's FRAMES switch `frames`); each channel's error scaled by its running
+                mean in the waking lesson (R7c, `err_scale`); the received tag and its reach back onto an utterance's entry (R7c,
+                physiology.py's SWITCHES `tag_trace`, defect 6; defect 1's `tire_recover` is memory.py's); the diary declares none of it
+                and holds no such switch, so none of it runs for it
 anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
                 8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
                 `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward

@@ -241,11 +241,15 @@ class CortexMixin:
             # THE LATER CHANNELS' FORECASTS (step R4): each later channel that declares a forecast is foreseen by its own head, the
             # channel's code at the next position as the target (held still: the head learns to foresee the code, not the code to
             # meet the head), by the squared error latent_loss uses; the diary's face declares none, so its lesson is as before
+            es_ = self._err_scales()                                    # step R7c: each channel's error over its own running mean (err_scale)
             for i_, c_ in enumerate(self.anatomy.channels):
                 if i_ and c_.forecast:
                     with torch.no_grad():
                         tgt_ = c_.encode(m, obs[c_.name][1:])
-                    ll = ll + 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
+                    lc_ = 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
+                    if es_ and c_.name in es_:
+                        lc_ = lc_ / es_[c_.name]
+                    ll = ll + lc_
             # THE LATER EFFECTORS' TIMING PARTS (step R6): act_pred taught the act at each position from the stream before it (its own
             # act, or where it rested what act_inv reads moved it, weighted by act_inv's reliability), the forward half its next body sense;
             # the whole lesson the own acts' errors plus act_inv's labels' at their reliability; act_pred and the correction step with

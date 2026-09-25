@@ -1115,7 +1115,7 @@ def test_the_switches():
     voice and for a later effector (its cost its own row's); actor_trace_tick (defect 5): the actor's trace (and the chooser's)
     decays by dopamine's discount on every tick, where without it a tick with no act leaves it as it was"""
     from body.core.physiology import SWITCHES
-    assert sorted(SWITCHES) == ["actor_trace_tick", "elig_from", "gate_own_draw"] and all(v == 0 for v in SWITCHES.values())
+    assert sorted(SWITCHES) == ["actor_trace_tick", "elig_from", "gate_own_draw", "tag_trace", "tire_recover"] and all(v == 0 for v in SWITCHES.values())   # defects 1 and 6 since R7c (body/tests/test_frames.py, frames 3)
     assert not any(k in _born(TOK, {}).cfg for k in SWITCHES) and not any(k in PHYSIOLOGY for k in SWITCHES)
     # the lessons: the voice, then a later effector, under each switch, against the lesson with the fix written in
     n = 0

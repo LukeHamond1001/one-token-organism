@@ -53,7 +53,8 @@ source keep no state of their own (the face's held level is the life's `level`, 
 STEP R7a, THE EVENT LINES (SIM_DESIGN.md 7.2, 7.4's low road; A37, A43): `Anatomy.events`, a list of `EventLine`, each read from the
 tick's frame by a born rule (a line fires when any of its numbers is above 0, on its side where it has one, and not where a line
 further along its limb's chain fires); one declaration read by the striatal expansion (the critics) and the amygdala. The diary declares
-none: its striatum is born and read as it was."""
+none: its striatum is born and read as it was. STEP R7c: a reward source declares its `signs` (the amygdala's heads, R7d) and whether it
+reaches the amygdala and the received tag (`amyg`; the diary's effort does not)."""
 from dataclasses import dataclass, field as dc_field
 from typing import Optional
 
@@ -400,10 +401,15 @@ class RewardSource:
     always answers, its feeling is the tick's felt event (the striatum's face event, the tick's record `felt`), and its term alone is
     the reward the anticipation ring and the actor's reliability read, before the later terms are added. `keys` names the physiology
     constants the source reads (none: always on); it reads them from the life's constants every tick, as the reward always did, so a
-    constant changed on a living body is felt at the next tick. A subclass declares the feeling; a source keeps no state of its own."""
+    constant changed on a living body is felt at the next tick. A subclass declares the feeling; a source keeps no state of its own.
+    Step R7c-d (SIM_DESIGN.md 7.4, "each RewardSource declares its signs and whether it reaches the amygdala"): `signs` the senses its
+    term can take (the amygdala has a head for each: a head forecasts max(0, sign x term), good and bad kept apart), `amyg` whether it
+    reaches the amygdala and the received tag (the diary's effort, the body's own cost under cost_in_reward, does not)."""
     name: str
     keys: tuple = ()
     clip: Optional[float] = None
+    signs: tuple = (1.0, -1.0)
+    amyg: bool = True
 
     def felt(self, frame, life):
         """this tick's feeling on the world's `frame` (body/core/world.py) and the `life`'s state, or None (silent: nothing is added)"""
@@ -676,6 +682,9 @@ class Anatomy:
                 raise ValueError(f"anatomy: reward source {s.name!r} reads constants the physiology does not know: {unknown}")
             if s.clip is not None and not s.clip > 0:
                 raise ValueError(f"anatomy: reward source {s.name!r} clipped to +-{s.clip}")
+            sg_ = tuple(float(x_) for x_ in (s.signs or ()))
+            if not sg_ or len(set(sg_)) != len(sg_) or any(x_ not in (1.0, -1.0) for x_ in sg_):
+                raise ValueError(f"anatomy: reward source {s.name!r}'s signs {s.signs}: distinct senses, each +1 or -1 (step R7c)")
         return self
 
 
@@ -711,7 +720,7 @@ class LanguageAnatomy(Anatomy):
         voice = VoiceEffector("voice", [self.vocab], rest_id=self.sil, end_id=self.space_id, reserved=self.bans)   # effector 0 (step R5)
         rewards = [FaceReward("face", clip=2),
                    WorldWordsReward("world_r", ("world_r", "world_mask")),
-                   EffortReward("cost", ("cost_in_reward", "symbol_cost", "gate_fatigue"))]
+                   EffortReward("cost", ("cost_in_reward", "symbol_cost", "gate_fatigue"), amyg=False)]   # the body's own effort: no valence (R7c)
         super().__init__([ear, face], [voice], rewards, inner_at=2)
 
     # the tokenizer stays for text (step R2): the language body's only readers of it

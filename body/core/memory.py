@@ -24,7 +24,12 @@ class MemoryMixin:
         if rt_ > 0.0 and self.store.A.numel() == self.store.n():
             if win_ >= 0:
                 self.store.A[win_] *= (1.0 - rt_)                            # the winner tires
-            self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
+            if int(self.cfg.get("tire_recover", 0)):
+                # DEFECT 1 FIXED (tire_recover, step R7c): the recovery written in place, as the tiring is, so the store's own buffer keeps
+                # it through the next write of a new slot (physiology.py SWITCHES)
+                self.store.A.copy_(1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A))
+            else:
+                self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
 
     def _recall(self, bag, end_vec=None, tire=None):
         """the waking read, carrying the episode it is in when read_follow is on (the gain, > 1): after a read whose winner continues

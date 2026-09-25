@@ -269,3 +269,71 @@ class FramesMixin:
         first); the running means, the settle law's averages and the write gate's quantile kept"""
         self._ffc = None; self._fkey_prev = None; self._fw_err = None; self._flast_write = None; self._fstart_armed = True
         self._rec = None; self._rec_n = 0; self._rec_ends = []
+
+    # ---------------- step R7c: the error scales, the received tag and its reach onto an utterance (tag_trace, defect 6) ----------------
+    def _err_scales(self):
+        """STEP R7c (err_scale): each channel's running mean of its forecast error, {name: mean}, by which the waking lesson divides that
+        channel's head's error (body/core/cortex.py); None while err_scale is off (the diary's), a channel with no mean yet absent"""
+        if not int(self._frame_const("err_scale")):
+            return None
+        st = getattr(self, "_ferr", None) or {}
+        return {k: float(v[1]) for k, v in st.items() if float(v[1]) > 0.0}
+
+    def _tags_on(self):
+        """whether this body keeps the received tag each tick: under tag_trace (defect 6, R7c) or with the amygdala on (R7d)"""
+        return bool(int(self.cfg.get("tag_trace", 0))) or bool(int(self.cfg.get("amyg", 0)))
+
+    def _received_tag(self, terms):
+        """THE RECEIVED TAG (SIM_DESIGN.md 7.4: R_t = the sum of |term| over the sources that reach the amygdala, what was felt this tick,
+        capped at the judgment's clip, source 0's): `terms` the tick's terms by source"""
+        cap = self.anatomy.rewards[0].clip
+        tot = 0.0
+        for s_ in self.anatomy.rewards:
+            if s_.amyg and s_.name in terms:
+                tot += abs(float(terms[s_.name]))
+        return min(float(cap), tot) if cap is not None else tot
+
+    def _tag_gamma(self):
+        """dopamine's own discount a tick (the dopamine band's: 0.9375), the tag's reach back (7.4: no new time constant)"""
+        return float(self.m.gammas()[int(self.cfg["dopamine_band"])])
+
+    def _tag_entry(self, f_):
+        """DEFECT 6 FIXED (tag_trace, R7c; physiology.py SWITCHES), an utterance's entry at its end: x = its felt strength `f_` x (1 + T), T
+        the largest received tag over its ticks (and this tick's); relative to the bias-corrected running mean of the entries before it
+        (defect 7: saved, and corrected as it forms, m_n = b m_n-1 + (1 - b) x_n over (1 - b^n), b = 1 - 1/utt_entry_tau), the first
+        entry 1; kept for the reach back (`_tag_boosts`) while its 64 ticks run"""
+        T = max(float(getattr(self, "_utt_tag", 0.0)), float(getattr(self, "_rtag_now", 0.0)))
+        x = float(f_) * (1.0 + T)
+        beta = 1.0 - 1.0 / max(1.0, float(self.cfg.get("utt_entry_tau", 64)))
+        m_, n_ = float(getattr(self, "_utt_felt_m", 0.0)), int(getattr(self, "_utt_felt_n", 0))
+        mhat = m_ / (1.0 - beta ** n_) if n_ > 0 else 0.0
+        entry = x / mhat if mhat > 1e-6 else 1.0
+        self._utt_felt_m = beta * m_ + (1.0 - beta) * x; self._utt_felt_n = n_ + 1
+        self._utt_tag = 0.0
+        if mhat > 1e-6:
+            bs = getattr(self, "_utt_boosts", None)
+            if bs is None:
+                bs = []; self._utt_boosts = bs
+            bs.append([int(self._utt_serial), float(f_), float(mhat), float(T), int(self.ticks)])
+        return entry
+
+    def _tag_boosts(self):
+        """THE TAG REACHES BACK (tag_trace): for the tag_reach ticks after an utterance's end, a received tag g^dt x R larger than its T
+        raises its entry to f (1 + that) / the mean it was entered against (g dopamine's discount); after them, or at the night, none"""
+        bs = getattr(self, "_utt_boosts", None)
+        if not bs:
+            return
+        g = self._tag_gamma(); R = float(getattr(self, "_rtag_now", 0.0)); reach = int(self._frame_const("tag_reach")); keep = []
+        for b in bs:
+            serial, f_, mhat, T, t0 = b
+            dt = int(self.ticks) - int(t0)
+            if dt >= reach:
+                continue
+            if dt >= 1:
+                c = (g ** dt) * R
+                if c > T:
+                    b[3] = c
+                    if serial in self.utt_N:
+                        self.utt_S[self.utt_N.index(serial)] = float(f_) * (1.0 + c) / float(mhat)
+            keep.append(b)
+        self._utt_boosts = keep

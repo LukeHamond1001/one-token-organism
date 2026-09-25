@@ -103,7 +103,13 @@ class MouthMixin:
 
     def _pace_mode(self):
         """the sensed pace in force: pace_sense (0 off, 1 shadow, 2 live), or 0 when offset_ticks is 0: the pace senses and decides the
-        utterance's ends, and with the ends switched off nothing would ever let the held ear go"""
+        utterance's ends, and with the ends switched off nothing would ever let the held ear go. STEP R7c, THE PACE ON THE PARTNER CHANNEL
+        (SIM_DESIGN.md 8's R7 row; the first design's 8.1 seam D: "turn-taking only on the voice against the declared partner
+        channel"): 0 too for a body whose anatomy declares no partner (`Anatomy.partner`), since turn-taking is the voice's against the
+        partner's pauses and returns; the partner, when declared, is channel 0, the words (the anatomy's check), so the symbols the pace
+        hears are the partner's (THE BUILDER'S READING, for the lead)"""
+        if self.anatomy.partner is None:
+            return 0
         return int(self.cfg.get("pace_sense", 0)) if int(self.cfg.get("offset_ticks", 0)) > 0 else 0
 
     def _pace(self):

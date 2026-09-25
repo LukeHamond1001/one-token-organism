@@ -70,7 +70,11 @@ class SensesMixin:
             self._dopa_since_utt = 0.0
             self._utt_serial += 1
             entry_ = 1.0
-            if str(self.cfg.get("utt_entry", "flat")) == "felt":
+            if str(self.cfg.get("utt_entry", "flat")) == "felt" and int(self.cfg.get("tag_trace", 0)):
+                # DEFECT 6 AND 7 FIXED (tag_trace, step R7c; body/core/frames.py `_tag_entry`): the received tag over the utterance, reaching
+                # back from the 64 ticks after it, at a saved and bias-corrected running mean
+                entry_ = self._tag_entry(float(getattr(self, "_utt_felt", 0.0)) / max(1, len(self._utt_cur)))
+            elif str(self.cfg.get("utt_entry", "flat")) == "felt":
                 # THE TAG AT ENTRY (utt_entry felt; 2026-09-22, item 50): every utterance had entered the night's draw at 1.0, so the night
                 # replayed by recency alone and a line heard once, however new, had the same few dreams as the tenth hearing of a drill.
                 # The hippocampus tags an experience at encoding by its novelty and the reward around it and replays the tagged more;
@@ -121,8 +125,9 @@ class SensesMixin:
         # feeling is the tick's felt event, and its term alone is the world's reward the ring and the actor's reliability read
         felt = judge.felt(frame, self)
         r = judge.term(felt)                                # the world's reward: the felt face, clipped like a press
-        terms_ = {judge.name: r} if getattr(self, "motor", None) else None   # step R6h: each source's term this tick, for a body with motor
-                                                                             # effectors (the born cry's pain: body/core/cord.py)
+        terms_ = {judge.name: r} if (getattr(self, "motor", None) or self._tags_on()) else None   # step R6h: each source's term this tick, for a body
+                                                                             # with motor effectors (the born cry's pain: body/core/cord.py) or that
+                                                                             # keeps the received tag (R7c-d)
         self._ring_r.append(r)
         if self._act_pending:                               # the actor's reliability: the reward of the ticks after each act, on its vote for that act
             H = int(self.cfg.get("actor_horizon", 16))
@@ -138,6 +143,10 @@ class SensesMixin:
                     terms_[s_.name] = s_.term(v_)
         if terms_ is not None:
             self._terms_now = terms_
+            if self._tags_on():
+                self._rtag_now = self._received_tag(terms_)             # step R7c-d: what was felt this tick, the tag's received part
+                if int(self.cfg.get("tag_trace", 0)):
+                    self._tag_boosts()                                  # defect 6: the received tag reaching back onto the entries (body/core/frames.py)
         if int(self.cfg.get("own_store", 0)):
             thr = float(self.cfg.get("own_store_r", 1.0))
             if float(r) >= thr and not getattr(self, "_own_stored", False) and self.ticks - getattr(self, "_own_store_tick", -10 ** 9) >= int(self.cfg.get("own_store_gap", 40)):
@@ -164,6 +173,8 @@ class SensesMixin:
         C1, pred1, surp1, conf1 = self._step(u, 0, r=r, dopamine=getattr(self, "_dopa", 0.0))
         if fr_:
             self._fw_err = float(self._surp_tick) if fw_ else None
+        if self._utt_cur and int(self.cfg.get("tag_trace", 0)):          # defect 6 (tag_trace): the utterance heard carries the tags felt over it
+            self._utt_tag = max(float(getattr(self, "_utt_tag", 0.0)), float(self._rtag_now))
         ps_ = self._pace_mode()
         if settle_form and off > 0 and ps_ < 2:                              # THE EVENT'S END BY THE LAW: two running averages of the
             st_ = float(getattr(self, "_surp_tick", 0.0))                     # tick's surprise; the world stops, the surprise jumps and
