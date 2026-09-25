@@ -32,12 +32,54 @@ diary's cfg does not hold), at each tick's end (`_frame_tick`, after the tick's 
 - THE TICK'S RECORD (`_record_tick`): (the frame's surprise, dopamine, the tag, the net reward received), float32, 16 B a tick, in the
   day's record (`_rec`, its first `_rec_n` rows), R8's tape beside the codes; the day's ends beside it (`_rec_ends`). The night lets
   both go (R8 cuts and keeps them first).
-Every state here is a working attribute of the life, saved with a motor body's day (A70)."""
+Every state here is a working attribute of the life, saved with a motor body's day (A70).
+
+STEP R7f, RECALL INTO ACTION (7.6, A45; the switch `recall`, and `wm_frames`; physiology.py FRAMES):
+- THE HEADING (`_heading_step`): the trunk's yaw integrated from the torso gyro since birth, a head-direction signal by path integration
+  (McNaughton et al. 2006): each tick, from the anatomy's `heading` source in the frame (the G1's `imu_torso`, raw), the gyro's rate about
+  the direction its accelerometer's specific force gives as up (which way is down standing for the orientation, A67), times the tick. A
+  real gyro drifts (Woodman 2007), so the heading drifts: disclosed and reported (C51), never corrected from world truth.
+- THE FRAME'S KEY: the cortex's stream plus the heading: the stream's pattern-separated direction (the store's cortex key) and the
+  heading's born code (cos and sin of the heading through two fixed unit rows from the body's seed, the organs' head_code) summed at equal
+  weight, at the key's scale (`query_from`, body/core/memory.py; the words' cortex key too, so frames and words share one search). THE
+  BUILDER'S READING, for the lead: 7.6 names the two parts and no weight; equal is the one that prefers neither. And the words' key
+  carries the heading too (the builder's reading, for the lead): the store holds words and frames and searches them with one query, and
+  a key of one form would meet a query of the other only in part.
+- THE FRAME'S VALUE: its codes (R7b) plus the efference copy of what the body did (every effector's act of the tick, its acts' row: a
+  motor effector's unit rows summed over its joints, the voice's lexicon row; a rest adds nothing): the value is what came next after the
+  key's context.
+- RECALL (`_frame_recall`, at the choice, before the motor effectors choose): the store's nearest keys give back their values for the
+  stream the choice reads, through the store's own search: under key_form "cortex" the words' read of this tick itself (the same query),
+  else a read of its own with that query (no tiring); kept for the tick (`_frec_now`) and in the tick's window position ("frec").
+- THE MAPS (`_recall_term`): each motor effector's proposal (act_pred's, a direction in the stream's d, read against its acts' rows R
+  [its settings, d] for its logits) gains M((r R^T) R) R, for the recalled value r: the recalled value's part in its acts' rows (the
+  recalled act's embedding, (r R^T) R), through its map M born at zero (the organs' recall[name], d -> a score per setting), read back
+  through its rows into the proposal (as the proposal's own terms are). It learns through act_pred's own lesson (`_timing_loss`: the
+  same targets, the same weights, act_pred's plain step, GatedDescent): recall moves an act only as far as recalled acts have predicted
+  the acts made (Lengyel and Dayan 2007: episodic control, the hippocampus's "third way" into action). The step's constants are
+  act_pred's (lr_motor, the bound: its fan-in d, the map's too; the builder's reading, for the lead: 7.6 says "act_pred's plain lesson"
+  and no rate of its own); the map's input, a recalled act's embedding, is smaller than the LayerNorm'd stream act_pred reads, so it
+  steps less per lesson, by the size of what is recalled, as the plain step does everywhere.
+- THE WORKING-MEMORY LATCH (wm_frames): working memory latches the striatal expansion at the frames' event ends (R7b) in place of the
+  utterances' ends; the language body's latch is unchanged."""
 import math
 
 import torch
+import torch.nn.functional as F
 
 from .physiology import FRAMES
+
+
+def recall_spec(anatomy, cfg):
+    """WHAT THE ORGANS BUILD FOR RECALL INTO ACTION (Organs(..., recall=)): None while the switch is off (the diary's); else each motor
+    effector's name and its settings' count (its map's outputs). The switch needs `frames` (the frames the store recalls)"""
+    c = cfg or {}
+    if not int(c.get("recall", FRAMES["recall"])):
+        return None
+    if not int(c.get("frames", FRAMES["frames"])):
+        raise ValueError("recall into action (recall 1) needs the frames it recalls (frames 1)")
+    from .anatomy import motor_effectors
+    return dict(effectors=[(e.name, sum(int(k) for k in e.factors)) for e in motor_effectors(anatomy.effectors)])
 
 
 def read_event_lines(events, obs):
@@ -158,6 +200,9 @@ class FramesMixin:
         if lw is not None:
             self.store.mark_boundary(*lw)
         self._flast_write = None; self._fstart_armed = True
+        if int(self._frame_const("wm_frames")) and int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
+            with torch.no_grad():                                      # R7f: working memory latches at the frames' event end (wm_frames)
+                self.m.wm_latch(self.m.striatum_read())
         ends = getattr(self, "_rec_ends", None)
         if ends is None:
             ends = []; self._rec_ends = ends
@@ -286,10 +331,13 @@ class FramesMixin:
         tw = float(now["R"]) + float(getattr(self, "_amyg_prev", 0.0))
         return float(now["tag"]), (min(float(cap), tw) if cap is not None else tw)
 
-    def _frame_tick(self, u, delta, r):
-        """THE FRAME'S TICK (the module's doc), at the tick's end: the frame's codes and surprise, the event's end, the gated write, the
-        tick's record, the forecast and the key for the next frame"""
+    def _frame_tick(self, u, delta, r, nxt=None):
+        """THE FRAME'S TICK (the module's doc), at the tick's end: the frame's codes and surprise, the event's end, the gated write (its
+        value with the efference copies under recall, R7f; `nxt` the voice's act this tick), the tick's record, the forecast and the key
+        for the next frame"""
         codes, total = self._frame_codes(u)
+        if self._recall_on():
+            total = self._frame_value(total, self.sil if nxt is None else nxt)
         s = self._frame_surprise(codes)
         tag, tag_w = self._tag_now()
         self._frame_boosts(tag)                                       # R7d: the tag of this tick reaching back onto the frames written
@@ -397,3 +445,76 @@ class FramesMixin:
                         self.utt_S[self.utt_N.index(serial)] = float(f_) * (1.0 + c) / float(mhat)
             keep.append(b)
         self._utt_boosts = keep
+
+    # ---------------- step R7f: recall into action ----------------
+    def _recall_on(self):
+        """the switch `recall` (step R7f): 0 for the diary, whose cfg holds no such key"""
+        return bool(int(self.cfg.get("recall", FRAMES["recall"])))
+
+    def _recall_attach(self):
+        """BORN OR LOADED WITH THE SWITCH ON: the organs hold a map per motor effector (its settings wide) and the heading's code; with it
+        off, organs that hold them are refused (a body is born with its switches: A20)"""
+        has = "recall" in self.m._modules
+        if not self._recall_on():
+            if has:
+                raise ValueError("Life: the organs hold recall's maps (m.recall) and the life's constants switch recall off (recall 0)")
+            return
+        spec = recall_spec(self.anatomy, self.cfg)
+        got = [(n_, int(mp.out_features)) for n_, mp in self.m.recall.items()] if has else None
+        if got != [(n_, int(k_)) for n_, k_ in spec["effectors"]] or "head_code" not in self.m._buffers:
+            raise ValueError(f"Life: the organs' recall maps {got} are not the ones the anatomy declares ({spec['effectors']}; built by "
+                             f"Organs(..., recall=recall_spec(anatomy, cfg)))")
+
+    def _heading_step(self, frame):
+        """THE HEADING (the module's doc): the trunk's yaw integrated from the torso gyro since birth, from the anatomy's heading source in
+        this tick's frame: + dt x (the gyro's rate about the accelerometer's up); nothing on a tick the frame names no such source"""
+        hd = self.anatomy.heading
+        if hd is None:
+            return
+        o_ = frame.obs.get(hd.obs) if frame is not None else None
+        if o_ is None:
+            return
+        a = [float(o_[int(i)]) for i in hd.acc]; w = [float(o_[int(i)]) for i in hd.gyro]
+        n = math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
+        if n > 0.0:
+            self._heading = float(getattr(self, "_heading", 0.0)) + float(hd.dt) * (w[0] * a[0] + w[1] * a[1] + w[2] * a[2]) / n
+
+    def _heading_code(self):
+        """the heading's born code, a unit direction [d]: cos(heading) and sin(heading) through the organs' two fixed unit rows; None for a
+        body without recall"""
+        if not self._recall_on():
+            return None
+        h = float(getattr(self, "_heading", 0.0))
+        hc = self.m.head_code
+        return F.normalize(math.cos(h) * hc[0] + math.sin(h) * hc[1], dim=0)
+
+    def _frame_value(self, total, nxt):
+        """THE FRAME'S VALUE under recall (the module's doc): the frame's codes `total` plus the efference copy of every effector's act this
+        tick (a motor effector's own act, its rows' sum, where not its rest; the voice's symbol `nxt`, its lexicon row, where not the rest)"""
+        m = self.m; v = total.clone()
+        with torch.no_grad():
+            if int(nxt) != self.sil:
+                v = v + m.E.weight[int(nxt)]
+            for e_, st_ in zip(self.anatomy.motors, self.motor):
+                a_ = int(st_["now"]["act"])
+                if a_ != int(e_.rest_id):
+                    v = v + m.acts[e_.name](torch.tensor(a_, device=self.dev))
+        return v
+
+    def _frame_recall(self, C1):
+        """RECALL (the module's doc), at the choice: the recalled value for the stream the choice reads, the store's own search (under
+        key_form "cortex" the words' read of this tick, else a read of its own with the same query), kept for the tick"""
+        if str(self.cfg.get("key_form", "bag")) == "cortex":
+            r = getattr(self, "_read_prev", None)
+            r = torch.zeros(self.m.d, device=self.dev) if r is None else r
+        else:
+            r = self.store.read(self.query_from(C1, learn=False))[0] if self.store.n() > 0 else torch.zeros(self.m.d, device=self.dev)
+        self._frec_now = r.detach().clone()
+        return self._frec_now
+
+    def _recall_term(self, e, r):
+        """THE MAP'S TERM IN MOTOR EFFECTOR e's PROPOSAL (the module's doc) for recalled values `r` [.., d]: the recalled act's embedding (the
+        recall's part in e's rows, R^T R r), through its map (d -> its settings), read back through its rows: [.., d]"""
+        R = self.m.acts[e.name].rows                                   # [its settings, d]
+        emb = (r @ R.t()) @ R
+        return self.m.recall[e.name](emb) @ R

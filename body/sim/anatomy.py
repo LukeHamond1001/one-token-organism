@@ -37,6 +37,9 @@ and beside the channels, read by the reward, the born reflexes and the gates' ow
                world's face test: 3.4, A42, A49; C39)
   sound_side   [an onset heard, the born lateral read's angle (rad, + left)] (the cochlea's onset cells and the lateral read)
   onset_periph [fired, yaw, pitch]: the born sudden local change in the grey periphery, habituating (A43; C49)
+  imu_torso    [accelerometer x, y, z (m/s^2), gyro x, y, z (rad/s)]: the torso's inertial unit, the tick's means, raw (through its sensor's
+               models: noise, the gyro's walking bias), in the unit's frame: the heading's source (R7f, 7.6: the trunk's yaw integrated
+               from the torso gyro since birth; the vestibular channel carries the same, unit-scaled)
 THE EVENT LINES (R7a; 7.2, 7.4's low road, A37, A43; body/core/anatomy.py `EventLine`), 13, read from the frame above by the born rule
 (a line fires when any of its numbers is above 0; on its side where it has one; not where a line further along its limb fires):
   touch_trunk, touch_arm_l, touch_arm_r, touch_hand_l, touch_hand_r, touch_leg_l, touch_leg_r: touch onset in 7 groups from the
@@ -87,7 +90,7 @@ from dataclasses import dataclass
 
 from tokenizers import Tokenizer, models
 
-from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLine, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
+from body.core.anatomy import Cerebellar, Channel, EarChannel, Effector, EventLine, Heading, LanguageAnatomy, OrientCue, RewardSource, VoiceEffector
 
 # ---------------------------------------------------------------- the G1's joints, in the order the world writes them (3.2, 3.5)
 WAIST = ("waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint")
@@ -372,6 +375,7 @@ class SimAnatomy(LanguageAnatomy):
         self.mossy = tuple(mossy)
         self.cerebellar = Cerebellar(off, half, joints=list(CEREB_JOINTS), vor=["yaw", "pitch"])
         self.events = event_lines()                                    # R7a: the born event lines (the module's doc)
+        self.heading = Heading("imu_torso", acc=(0, 1, 2), gyro=(3, 4, 5), dt=0.15)   # R7f: the heading from the torso's unit (the module's doc)
 
 
 # THE CORE'S CONSTANTS THE SIM IS BORN WITH THAT R6h DECIDES (SIM_DESIGN.md 3.5, 3.6, 3.7, 10; A41, A47, A48; the language body holds none
@@ -408,4 +412,8 @@ SIM_CFG = dict(
     # stream, the 13 event lines and the level; its constants AMYG's (none given here: tau_a band 6's clock, 4,096 ticks; the critics'
     # prior 0.3; the solve every 8 ticks; the reliability over 36,000 ticks, earned after 64 pairs)
     amyg=1,
+    # STEP R7f: RECALL INTO ACTION (7.6, A45; FRAMES' recall): a frame's key the stream plus the heading from the torso gyro, its value
+    # its codes and every effector's efference copy, each motor effector's map from the recalled act born at zero; and working memory
+    # latching at the frames' event ends in place of the utterances' (wm_frames)
+    recall=1, wm_frames=1,
 )

@@ -30,9 +30,9 @@ class SensesMixin:
         a dream ends where the cortex, so taught, expects the quiet. Nothing enters the stream, the bags and the
         mouth's context stand, and the store keeps only what the world said next: written there too, the quiet
         after a cue blended with the answer's memory and the mouth read junk (runs 45 and 46, day 1)."""
-        if int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
-            with torch.no_grad():                            # WORKING MEMORY latches at the world's utterance end (a salience event)
-                self.m.wm_latch(self.m.striatum_read())
+        if int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0) and not int(self.cfg.get("wm_frames", 0)):
+            with torch.no_grad():                            # WORKING MEMORY latches at the world's utterance end (a salience event; under
+                self.m.wm_latch(self.m.striatum_read())      # wm_frames at the frames' event ends instead, step R7f)
         f_ = self.anatomy.words.field                                  # the words' window field (the diary's "x"; step R4)
         for w in reversed(self.win):
             if w[f_] != self.sil:
@@ -102,6 +102,8 @@ class SensesMixin:
         if frame is None:
             frame = self.world.frame()
         self.world.now = frame
+        if int(self.cfg.get("recall", 0)):
+            self._heading_step(frame)                                  # step R7f: the heading integrated from this tick's gyro (body/core/frames.py)
         u = frame.obs.get(self.anatomy.words.name)
         u = self.sil if u is None else int(u)
         who = frame.truth.get("who", "") if u != self.sil else ""

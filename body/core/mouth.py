@@ -562,6 +562,8 @@ class MouthMixin:
                 nxt, p_choice = self.sil, 0.0
             self._last_choice = {"p_act": float(p_act), "acted": bool(acted), "nxt": int(nxt), "p_choice": float(p_choice), "norm": float(pred1.norm()),
                                  "top": int(torch.argmax(logits)), "sharp": float(getattr(self, "_sharp_eff", m.read_sharp))}   # the tick's choice, for the instruments
+        if len(self.anatomy.effectors) > 1 and self._recall_on():
+            self._frame_recall(C1)                                         # step R7f: the recall into action for this tick's proposals (frames.py)
         for i_ in range(1, len(self.anatomy.motors) + 1):                  # THE LATER EFFECTORS (step R5), after the voice, in their order
             self._choose_effector(i_, frame, C1, level, stri)              # (step R6h: the motor effectors, wherever the voice stands)
         return acted, nxt, p_act, p_choice, probs, feat, ent, act_on, drew

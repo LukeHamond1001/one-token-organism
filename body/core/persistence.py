@@ -45,6 +45,7 @@ from ..model import Organs
 from .anatomy import anatomy_for
 from .cerebellum import cerebellum_spec
 from .amygdala import amygdala_spec
+from .frames import recall_spec
 from .physiology import PHYSIOLOGY
 
 # THE DAY (A70; the module's doc): what of the life's attributes the day does not hold, being held elsewhere or not the life's state: the
@@ -126,7 +127,8 @@ class PersistenceMixin:
                         channels=anatomy.channels, effectors=anatomy.effectors,   # a later effector's organs too (step R5; the tables from the save)
                         cerebellum=cerebellum_spec(anatomy, c),                     # and the cerebellum when its switch is on (step R6c; from the save)
                         events=anatomy.events,                                      # and the event lines' striatal line when declared (step R7a)
-                        amygdala=amygdala_spec(anatomy, c))                         # and the amygdala when its switch is on (step R7d; from the save)
+                        amygdala=amygdala_spec(anatomy, c),                         # and the amygdala when its switch is on (step R7d; from the save)
+                        recall=recall_spec(anatomy, c))                             # and recall's maps when its switch is on (step R7f; from the save)
         # A BODY IS BORN WITH ITS SWITCHES (SIM_DESIGN.md A20; the R6c verifier's fourth finding): a save whose organs hold a cerebellum
         # loads only with the switch on, and one whose organs hold none only with it off, every one of the organ's entries from the save
         # (none born fresh at a load, none dropped); the language body's save holds none and its constants no switch, so nothing changes
@@ -136,6 +138,11 @@ class PersistenceMixin:
             raise ValueError(f"load: the save's organs hold {len(cb_saved)} entries of a cerebellum and its constants under this load switch it "
                              f"{'on' if cb_built else 'off'} ({len(cb_built)} entries): a body is born with its switches (SIM_DESIGN.md A20), so a "
                              f"cerebellum is neither dropped nor grown at a load")
+        rc_saved = sorted(k_ for k_ in blob["organs"] if k_.split(".")[0] in ("recall", "head_code"))   # step R7f: recall's maps likewise (A20)
+        rc_built = sorted(["head_code"] + ["recall." + k_ for k_ in organs.recall.state_dict()]) if "recall" in organs._modules else []
+        if rc_saved != rc_built:
+            raise ValueError(f"load: the save's organs hold {len(rc_saved)} entries of recall into action and its constants under this load switch "
+                             f"it {'on' if rc_built else 'off'} ({len(rc_built)} entries): a body is born with its switches (SIM_DESIGN.md A20)")
         am_saved = sorted(k_ for k_ in blob["organs"] if k_.split(".")[0] == "amyg")          # step R7d: the amygdala likewise (A20)
         am_built = sorted("amyg." + k_ for k_ in organs.amyg.state_dict()) if "amyg" in organs._modules else []
         if am_saved != am_built:
@@ -373,5 +380,6 @@ class PersistenceMixin:
                         channels=anatomy.channels, effectors=anatomy.effectors, born_seed=seed,   # a later channel's forecast head and a later effector's
                         cerebellum=cerebellum_spec(anatomy, cfg),   # organs built last (steps R4, R5; their tables from the body's seed), then the
                         events=anatomy.events,                      # cerebellum when its switch is on (step R6c), the event lines' striatal line (R7a),
-                        amygdala=amygdala_spec(anatomy, cfg))       # the amygdala when its switch is on (R7d, the last); the diary declares none of them
+                        amygdala=amygdala_spec(anatomy, cfg),       # the amygdala when its switch is on (R7d, the last), recall's maps (R7f);
+                        recall=recall_spec(anatomy, cfg))           # the diary declares none of them
         return cls(organs, anatomy, cfg=cfg, device=device, seed=seed, save_path=save_path, world=world)

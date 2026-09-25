@@ -270,7 +270,8 @@ def test_the_frames():
     from body.sim.anatomy import SIM_CFG
     assert SIM_CFG["frames"] == 1
     cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=16, night_rounds=1,
-               night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0)   # the tag 0: R7b's law alone (the tag's is amyg 6's)
+               night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0, recall=0)   # R7b's law alone: the tag 0 (the tag's is amyg
+                                                                                          # 6's), the value the codes alone (recall's is frames 5's)
     w = _g1_events_world(burst=True); L = _g1(cfg, w); m = L.m
     run = WorldLoop(L)
     caught = []; fw = L._frame_write; ft = L._frame_tick
@@ -278,8 +279,8 @@ def test_the_frames():
     def spy_write(key, value, strength, base=None, tag_w=0.0, fw=fw, caught=caught, L=L):
         out = fw(key, value, strength, base=base, tag_w=tag_w); caught.append((L.ticks, key.clone(), value.clone(), float(strength), out)); return out
 
-    def spy_tick(u, delta, r, ft=ft, L=L):
-        L._probe = (int(u), float(delta), float(r)); return ft(u, delta, r)
+    def spy_tick(u, delta, r, nxt=None, ft=ft, L=L):
+        L._probe = (int(u), float(delta), float(r)); return ft(u, delta, r, nxt)
     L._frame_write = spy_write; L._frame_tick = spy_tick
     T = 400; mus = {}; hand_s = []; keys_prev = []; probes = []; tots = []
     for t in range(T):
@@ -558,7 +559,237 @@ def test_error_scales_and_the_partners_pace():
           f"(the trackers as born, the ear never held)")
 
 
-FRAME_TESTS = [test_the_event_lines, test_the_frames, test_the_fixes_1_and_6, test_error_scales_and_the_partners_pace]
+# ---------------- frames 5 and 6: recall into action; the working-memory latch on the frames' event ends (R7f) ----------------
+
+class _Recaller(LanguageAnatomy):
+    """the words, a 4-number cue channel (its born code, a forecast head), the voice and an arm of two joints of five (its rest 12), the
+    heading from the frame's `imu`"""
+
+    def __init__(self, tok, cfg=None):
+        from body.core.anatomy import Channel, Effector, Heading
+        super().__init__(tok, cfg)
+        self.channels = [self.channels[0], Channel("cue", "vector", 4, organ="encs.cue", forecast=True)]
+        self.effectors = [self.effectors[0], Effector("arm", [5, 5], rest_id=12, effort=0.05)]
+        self.heading = Heading("imu")
+
+
+def _cue_world(block=12, bias=0.0, seed=0):
+    """the cue in blocks of `block` ticks, A ([1, 1, 0, 0]) then B ([0, 0, 1, 1]), with a little noise; the torso's unit upright (the
+    specific force 9.81 m/s^2 up), turning 0.1 rad/s about the vertical in A blocks and -0.1 in B, plus a gyro bias about the vertical"""
+
+    class CW(SimWorld):
+        def __init__(self):
+            self.t = 0; self.rng = random.Random(seed)
+
+        def frame(self):
+            a_ = (self.t // block) % 2 == 0; R = self.rng
+            cue = [(1.0 if a_ else 0.0) + 0.05 * R.uniform(-1, 1) for _ in range(2)] + [(0.0 if a_ else 1.0) + 0.05 * R.uniform(-1, 1) for _ in range(2)]
+            imu = [0.0, 0.0, 9.81, 0.0, 0.0, (0.1 if a_ else -0.1) + bias]
+            return Frame(self.t, {"cue": cue, "imu": imu}, 0.0, {"who": "parent", "block": "A" if a_ else "B"})
+
+        def apply(self, acts):
+            self.t += 1
+
+        def pause(self):
+            pass
+
+        def resume(self):
+            pass
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.rng.getstate()))
+
+        def load_state(self, blob):
+            self.t, st_ = pickle.loads(blob); self.rng.setstate(st_)
+    return CW()
+
+
+def _scripted_arm(L, script):
+    """the arm's act each tick set by `script(block)` (a flat act) after its own choice: acted, its digits, the act to the world"""
+    f = L._choose_effector
+
+    def spy(i, frame, C1, level, stri, f=f, L=L):
+        out = f(i, frame, C1, level, stri)
+        st = L.motor[i - 1]; a = int(script(frame.truth["block"]))
+        st["now"].update(act=a, acted=a != 12, world=a, digits=[a // 5, a % 5], cont=False, drew=True)
+        return out
+    L._choose_effector = spy
+
+
+def test_recall_into_action():
+    """frames 5 (step R7f; SIM_DESIGN.md 7.6, A45, C51): RECALL INTO ACTION, the switch `recall` (on in SIM_CFG). Inert for language: a
+    language body's key (key_form "cortex") is the pattern-separated stream alone, no heading, no maps. THE HEADING: the torso gyro's
+    rate about the accelerometer's up, times the tick, summed since birth (by hand, 288 ticks); a gyro biased 0.01 rad/s drifts it
+    0.0015 rad a tick (0.432 rad over the 288 ticks whose turns cancel), reported, never corrected. THE KEY: the stream's pattern-separated direction plus the heading's born code (cos, sin
+    through two fixed unit rows from the seed), unit each, summed, at the key's scale. THE VALUE: the frame's codes plus the efference
+    copy of every effector's act (the arm's rows, the voice's lexicon row; a rest none), by hand at every write. RECALL: under key_form
+    "bag" a read of its own with the choice's query, under "cortex" the words' read itself; each tick's in its window position. AT BIRTH
+    THE MAPS LEAVE EVERY PROPOSAL EXACTLY UNCHANGED (the G1, every motor effector, 30 ticks: the proposal with the map's term equal to the
+    one without, the maps all zero). IN A SCRIPTED WORLD WHERE A RECALLED ACT PREDICTS THE NEXT ONE (the cue in blocks, the arm's act the
+    block's: 3 in A, 21 in B; the test writes every frame, write_q 0, and teaches at live_lr 1e-3), THE MAP'S WEIGHT GROWS, lesson by
+    lesson, from zero, and its logits at an A tick come to favour A's act's settings; in the same world with the arm's acts drawn at random
+    (the recalled act predicting nothing), it favours neither"""
+    from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table
+    import torch.nn.functional as F_
+    assert SIM_CFG["recall"] == 1 and SIM_CFG["wm_frames"] == 1
+    # inert for language
+    Lg = _lang(dict(key_form="cortex", write_floor=1e-30))
+    for _ in range(20):
+        Lg.tick()
+    q_ = Lg.query_from(Lg._C_last, learn=False)
+    assert torch.equal(q_, F_.normalize(Lg._C_last.detach().float() - Lg._c_mu, dim=0) * 2.5) and "recall" not in Lg.m._modules
+    assert not hasattr(Lg, "_heading") and not hasattr(Lg, "_frec_now") and "head_code" not in Lg.m._buffers
+    # the heading, the key, the value, the recall and its window, on the recaller (key_form bag, then cortex)
+    base = dict(frames=1, recall=1, wake_ticks=100000, write_floor=1e-30, gate_floor=0.3, wake_every=24, gate_every=24)
+    for kf in ("bag", "cortex"):
+        torch.manual_seed(0)
+        L = Life.birth(_Recaller(TOK, dict(base, key_form=kf)), device="cpu", d=32, layers=1, heads=2, window=16, cfg=dict(base, key_form=kf), seed=0,
+                       world=_cue_world(bias=0.01))
+        caught = []; fw = L._frame_write
+
+        def spy_w(key, value, strength, base=None, tag_w=0.0, fw=fw, L=L, caught=caught):
+            caught.append((L.ticks, value.clone())); return fw(key, value, strength, base=base, tag_w=tag_w)
+        L._frame_write = spy_w
+        at_choice = []; fr_ = L._frame_recall
+
+        def spy_r(C1, fr_=fr_, L=L, at_choice=at_choice):
+            rp = getattr(L, "_read_prev", None); rp = rp.clone() if rp is not None else None
+            out = fr_(C1)
+            own = L.store.read(L.query_from(C1, learn=False))[0] if L.store.n() > 0 else torch.zeros(L.m.d)   # the search at its moment
+            at_choice.append((out.clone(), rp, own)); return out
+        L._frame_recall = spy_r
+        run = WorldLoop(L); hd = 0.0; frecs = []; vals = {}
+        for t in range(288):
+            run.step()
+            a_ = L.world.now.truth["block"] == "A"
+            hd += 0.15 * ((0.1 if a_ else -0.1) + 0.01)
+            assert abs(L._heading - hd) < 1e-9, (t, L._heading, hd)
+            frecs.append(L._frec_now.clone())
+            codes = _codes_by_hand(L, L.sil)                              # (this world says no word)
+            tot = codes[L.anatomy.words.name] + codes["cue"]
+            st = L.motor[0]["now"]
+            if int(st["act"]) != 12:
+                tot = tot + L.m.acts["arm"](torch.tensor(int(st["act"])))
+            if L._acted_last:
+                tot = tot + L.m.E.weight[int(L.stream[-1][0])]
+            vals[t] = tot
+            out_, rp_, own_ = at_choice[-1]
+            if kf == "cortex":
+                assert rp_ is None or torch.equal(out_, rp_)                   # the words' read of this tick, the choice's query's
+            else:
+                assert torch.equal(out_, own_)                                 # a read of its own with the choice's query
+        assert abs(L._heading - 288 * 0.15 * 0.01) < 1e-9                # 12 A and 12 B blocks: their turns cancel; the bias's drift stays
+        for t, v in caught:
+            assert torch.allclose(v, vals[t], atol=1e-6), (kf, t)
+        assert len(caught) >= 15
+        # the key by hand
+        C = L._C_last; hc = L.m.head_code
+        want = F_.normalize(F_.normalize(C.detach().float() - L._c_mu, dim=0) + F_.normalize(math.cos(L._heading) * hc[0] + math.sin(L._heading) * hc[1], dim=0), dim=0) * 2.5
+        assert torch.equal(L.query_from(C, learn=False), want) and abs(float(hc.norm(dim=1)[0]) - 1.0) < 1e-6
+        # each position of the window holds its tick's recall
+        assert all(torch.equal(w["frec"], f) for w, f in zip(list(L.win), frecs[-len(L.win):]))
+        if kf == "bag":
+            q = L.query_from(L._C_last, learn=False); r_ = L.store.read(q)[0]
+            assert float(r_.norm()) > 0.0
+    # at birth the maps leave every proposal exactly unchanged (the G1)
+    from body.tests.test_frames import _g1_events_world as _ew
+    cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=10 ** 9, gate_every=8, write_floor=1e-30, gate_floor=0.3)
+    torch.manual_seed(0)
+    G1 = Life.birth(SimAnatomy(born_table(), cfg), device="cpu", d=32, layers=1, heads=2, window=8, cfg=cfg, seed=0, world=_ew(burst=True))
+    tp = G1._timing_propose; n_same = 0
+
+    def spy_p(e, C, tp=tp, G1=G1):
+        nonlocal n_same
+        p = tp(e, C)
+        st = G1.motor[G1.anatomy.motors.index(e)]; tm = G1.m.timing[e.name]
+        q = tm.pred(C)
+        if e.sense is not None and st["err"] is not None:
+            q = q + tm.cor(st["err"])
+        assert torch.equal(p, q) and float(G1.m.recall[e.name].weight.abs().sum()) == 0.0
+        n_same += 1
+        return p
+    G1._timing_propose = spy_p
+    run = WorldLoop(G1)
+    for _ in range(30):
+        run.step()
+    assert n_same == 30 * 9 and float(G1._frec_now.norm()) > 0.0, (n_same, float(G1._frec_now.norm()))
+    # the map's weight grows where a recalled act predicts the next one; not where it predicts nothing
+    lr = dict(live_lr=1e-3, write_q=0.0)       # the test's own settings: a faster waking rate, and every frame written (a surprise gate writes a
+    grow = {}                                   # block's changes, whose next act is the next block's: the store would hold the transitions alone)
+    for kind in ("predicts", "random"):
+        rng = random.Random(5)
+        c = dict(base, key_form="bag", **lr)
+        torch.manual_seed(0)
+        L = Life.birth(_Recaller(TOK, c), device="cpu", d=32, layers=1, heads=2, window=16, cfg=c, seed=0, world=_cue_world())
+        _scripted_arm(L, (lambda b: 3 if b == "A" else 21) if kind == "predicts" else (lambda b, rng=rng: rng.choice((3, 21))))
+        run = WorldLoop(L); norms = []
+        for t in range(1440):
+            run.step()
+            if t % 240 == 239:
+                norms.append(float(L.m.recall["arm"].weight.detach().norm()))
+        # the map's logits at A ticks: its term read through the arm's joint 0 rows (A's setting 0, B's setting 4)
+        pref = []
+        run2 = WorldLoop(L)
+        for t in range(48):
+            run2.step()
+            if L.world.now.truth["block"] == "A" and (L.world.t % 12) > 2:
+                lg = L.m.acts["arm"].logits(L._recall_term(L.anatomy.motors[0], L._frec_now), 1.0)
+                pref.append(float((lg[0][0] - lg[0][4]).detach()))
+        grow[kind] = (norms, sum(pref) / len(pref))
+    n_p, pr_p = grow["predicts"]; n_r, pr_r = grow["random"]
+    assert n_p[0] > 0.0 and all(b > a for a, b in zip(n_p, n_p[1:])), n_p
+    assert pr_p > 0.0 and pr_p > 4.0 * abs(pr_r), (pr_p, pr_r)
+    print(f"frames 5: recall into action: the language key the stream alone; the heading by hand over 288 ticks (the blocks' turns",
+          f"cancelled, the biased gyro's drift 0.432 rad kept); the key (stream + heading, equal weights) and every value (codes + the arm's",
+          f"and the voice's efference copies) by hand, under key_form bag and cortex (there the words' read itself); each position's recall",
+          f"in the window; at birth 270 proposals of the G1's nine motor effectors exactly unchanged by their maps; where the recalled act",
+          f"predicts the next the arm's map grew {' -> '.join(f'{x:.4f}' for x in n_p)} and favours A's act at A ({pr_p:+.4f} in logits), where",
+          f"it predicts nothing {pr_r:+.4f}")
+
+
+def test_the_latch_on_event_ends():
+    """frames 6 (step R7f; SIM_DESIGN.md 7.6, 10's "event end"): WORKING MEMORY LATCHES AT THE FRAMES' EVENT ENDS under wm_frames (on in
+    SIM_CFG): at each frame event end the slot holds the striatal expansion of that moment and is on; at the words' utterance ends it does
+    not latch. Without wm_frames the latch is the utterances' as before and nothing latches at a frame's end"""
+    from body.sim.anatomy import SIM_CFG
+    res = {}
+    for wf in (1, 0):
+        cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, fast_rls=1, fast_input="striatum",
+                   stri_k=4, stri_m=64, wm=1, wm_max=10 ** 6, wm_burst=1e9, wm_frames=wf, amyg=0)
+        w = _g1_events_world(burst=True); L = _g1(cfg, w)
+        latched = []; wl = L.m.wm_latch
+        def spy(z, wl=wl, L=L, latched=latched):
+            latched.append((L.ticks, "frame" if L._frames_latch_now else "utterance"))
+            assert torch.equal(z, L.m.striatum_read())                    # the striatal expansion of that moment
+            out = wl(z)
+            assert torch.equal(L.m.wm_slot, z[: L.m.wm_slot.numel()]) and float(L.m.wm_on) == 1.0 and float(L.m.wm_age) == 0.0
+            return out
+        L.m.wm_latch = spy; fe = L._frame_end
+        def spy_end(fe=fe, L=L):
+            L._frames_latch_now = True
+            try:
+                return fe()
+            finally:
+                L._frames_latch_now = False
+        L._frame_end = spy_end; L._frames_latch_now = False
+        so = L._offset; offs = []
+        def spy_off(settled=True, so=so, L=L, offs=offs):
+            offs.append(L.ticks); return so(settled)
+        L._offset = spy_off
+        run = WorldLoop(L)
+        for _ in range(400):
+            run.step()
+        res[wf] = (latched, list(L._rec_ends), offs)
+        del L.m.wm_latch
+    lat1, ends1, offs1 = res[1]; lat0, ends0, offs0 = res[0]
+    assert ends1 and offs1 and [k for _, k in lat1] == ["frame"] * len(lat1) and len(lat1) == len(ends1), (lat1[:5], len(ends1))
+    assert offs0 and all(k == "utterance" for _, k in lat0) and len(lat0) == len(offs0), (lat0[:5], len(offs0))
+    print(f"frames 6: under wm_frames working memory latched at the {len(ends1)} frame event ends and at none of the {len(offs1)} utterance",
+          f"ends; without it at the {len(offs0)} utterance ends and at none of the frames'")
+
+
+FRAME_TESTS = [test_the_event_lines, test_the_frames, test_the_fixes_1_and_6, test_error_scales_and_the_partners_pace, test_recall_into_action,
+               test_the_latch_on_event_ends]
 
 
 if __name__ == "__main__":

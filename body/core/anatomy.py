@@ -63,7 +63,8 @@ import torch
 from .physiology import PHYSIOLOGY
 
 KINDS = ("symbol", "vector")
-CORE_FIELDS = ("xo", "bundle", "read", "r", "end")    # the keys the core writes into a window position beside the channels' own fields
+CORE_FIELDS = ("xo", "bundle", "read", "r", "end", "frec")   # the keys the core writes into a window position beside the channels' own fields
+                                                                 # ("frec": the tick's recall into action, step R7f)
 
 
 @dataclass(eq=False)
@@ -393,6 +394,21 @@ class EventLine:
 
 
 @dataclass(eq=False)
+class Heading:
+    """THE HEADING'S SOURCE (the core refactor's step R7f; SIM_DESIGN.md 7.6, A45, C51): where the frame carries the inertial unit the
+    heading is integrated from, raw: `obs` the frame's observation, `acc` the indices of its accelerometer's specific force (m/s^2) and
+    `gyro` of its gyro's rate (rad/s), each the tick's mean, and `dt` the tick's length (s). The trunk's yaw is integrated from the torso
+    gyro since birth (a head-direction signal by path integration: McNaughton et al. 2006): each tick the rate about the direction the
+    specific force gives as up (the accelerometer's, which way is down, standing for the orientation as the cerebellum's mossy input
+    reads it, A67) times the tick. A real gyro drifts (Woodman 2007), so the heading drifts: disclosed and reported (C51), never corrected
+    from world truth. The G1's: the torso's unit (body/sim/anatomy.py, the frame's `imu_torso`); the diary declares none"""
+    obs: str
+    acc: tuple = (0, 1, 2)
+    gyro: tuple = (3, 4, 5)
+    dt: float = 0.15
+
+
+@dataclass(eq=False)
 class RewardSource:
     """ONE TERM OF THE FELT REWARD (step R3). Each tick a source feels (`felt`: a number, or None when it is silent this tick) and its
     feeling enters the reward as its term (`term`: clipped to +-`clip`, like a press, when a clip is declared; else the feeling as it
@@ -478,6 +494,7 @@ class Anatomy:
     cerebellar = None
     orienting = None                                  # step R6h: the born orienting cues (a list of OrientCue), none by default
     events = None                                     # step R7a: the born event lines (a list of EventLine), none by default (the diary's)
+    heading = None                                    # step R7f: the heading's source (a Heading), none by default (the diary's)
 
     def __init__(self, channels, effectors, rewards, inner_at=None):
         self.channels = list(channels)
@@ -658,6 +675,10 @@ class Anatomy:
                     raise ValueError(f"anatomy: the cerebellum's {what_} names must be distinct names: {xs_}")
             if not cb.joints and not cb.vor:
                 raise ValueError("anatomy: the cerebellum declares no joint and no VOR axis (nothing for it to learn or add to)")
+        hd_ = self.heading                                             # step R7f: the heading's source, when declared
+        if hd_ is not None and (not isinstance(hd_, Heading) or not (isinstance(hd_.obs, str) and hd_.obs) or len(hd_.acc) != 3
+                                or len(hd_.gyro) != 3 or not float(hd_.dt) > 0.0):
+            raise ValueError(f"anatomy: the heading's source {hd_!r}: a Heading naming a frame observation, 3 accelerometer and 3 gyro indices, a tick above 0")
         ev_ = self.events                                              # step R7a: the born event lines, when declared
         if ev_ is not None:
             if not isinstance(ev_, (list, tuple)) or not ev_ or not all(isinstance(x_, EventLine) for x_ in ev_):

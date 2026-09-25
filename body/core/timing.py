@@ -145,14 +145,18 @@ class TimingMixin:
 
     def _gated_params(self, e):
         """later effector e's parameters whose waking plasticity its labels' reliability gates (`GatedDescent`): act_pred and the
-        correction, the proposal's two terms (the forward half's lesson is its body sense's, a label felt, never read by act_inv)"""
+        correction, the proposal's two terms (the forward half's lesson is its body sense's, a label felt, never read by act_inv), and
+        (step R7f) its recall map, the proposal's third, which learns through the same lesson and the same plain step"""
         tm = self.m.timing[e.name]
-        return list(tm.pred.parameters()) + (list(tm.cor.parameters()) if tm.sense_n else [])
+        rc = list(self.m.recall[e.name].parameters()) if "recall" in self.m._modules else []   # step R7f: its recall map, the proposal's third term
+        return list(tm.pred.parameters()) + (list(tm.cor.parameters()) if tm.sense_n else []) + rc
 
     def _gated_names(self, e):
-        """the names of `_gated_params(e)` in its order, within e's timing organ (pred.weight, pred.bias, cor.weight)"""
+        """the names of `_gated_params(e)` in its order, within e's timing organ (pred.weight, pred.bias, cor.weight), then (step R7f)
+        its recall map's beside it (recall.weight: the organs' recall[e.name])"""
         tm = self.m.timing[e.name]
-        return [f"pred.{n}" for n, _ in tm.pred.named_parameters()] + ([f"cor.{n}" for n, _ in tm.cor.named_parameters()] if tm.sense_n else [])
+        rc = [f"recall.{n}" for n, _ in self.m.recall[e.name].named_parameters()] if "recall" in self.m._modules else []
+        return [f"pred.{n}" for n, _ in tm.pred.named_parameters()] + ([f"cor.{n}" for n, _ in tm.cor.named_parameters()] if tm.sense_n else []) + rc
 
     def _timing_step(self, scale=1.0):
         """ACT_PRED'S AND THE CORRECTION'S STEP IN THE WAKING LESSON (after the waking lesson's own step): each later effector's group
@@ -375,6 +379,8 @@ class TimingMixin:
         p = tm.pred(C)
         if e.sense is not None and st["err"] is not None:
             p = p + tm.cor(st["err"])
+        if self._recall_on():
+            p = p + self._recall_term(e, self._frec_now)               # step R7f: the recalled act through its map (body/core/frames.py)
         return p
 
     def _timing_foresee(self, i):
@@ -493,6 +499,8 @@ class TimingMixin:
             fw = tm.fwd(C[:-1])                                            # the sense at t+1 foreseen from the stream at t
             P = P + tm.cor(s[1:] - fw.detach())                          # the proposal at t+1 reads the error there
             lf = 0.5 * ((fw.float() - s[1:].float()) ** 2).sum(-1).mean()
+        if "@frec" in obs:
+            P = P + self._recall_term(e, obs["@frec"][1:])               # step R7f: the proposal at t+1 read the recall made at its choice
         with torch.no_grad():
             rows = tab(tgt[1:])
         w1 = wt[1:]

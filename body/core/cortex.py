@@ -144,6 +144,8 @@ class CortexMixin:
                     self.win.append({**obs_, "xo": int(x), **entry})
                 if acts_:
                     self.win[-1].update(acts_)                 # the later effectors' acts join it too
+                    if self._recall_on():
+                        self.win[-1]["frec"] = self._frec_now  # step R7f: the recall the tick's proposals read (body/core/frames.py)
                 self._pos_open = False
             if who == 0 and not self._pos_open and getattr(self, "_C_last", None) is not None:
                 C = self._C_last                               # the last filled position's stream, and its forecast
@@ -171,6 +173,9 @@ class CortexMixin:
                for c_ in self.anatomy.channels}
         for e_ in self.anatomy.motors:                          # each later effector's acts, by its name (step R5)
             obs[e_.name] = torch.tensor([w[e_.field] for w in win], device=self.dev)
+        if self.anatomy.motors and self._recall_on():           # step R7f: each position's recall into action (none: an imagined position's, zeros)
+            z_ = torch.zeros(self.m.d, device=self.dev)
+            obs["@frec"] = torch.stack([w.get("frec", z_) for w in win])
         whos = torch.tensor([w["xo"] for w in win], device=self.dev)   # its own symbols, one per tick
         bundles = torch.stack([w["bundle"] for w in win])
         reads = torch.stack([w["read"] for w in win])

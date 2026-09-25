@@ -18,6 +18,10 @@ class MemoryMixin:
         if learn:
             self._c_n += 1; a = max(1.0 / self._c_n, 1.0 - 0.9995)
             self._c_mu = self._c_mu + a * (c - self._c_mu)
+        if int(self.cfg.get("recall", 0)):
+            # STEP R7f (recall into action; body/core/frames.py): the key is the stream plus the heading, their unit directions at equal
+            # weight, at the key's scale
+            return F.normalize(F.normalize(c - self._c_mu, dim=0) + self._heading_code().to(c.dtype), dim=0) * float(self.cfg.get("key_scale", 2.5))
         return F.normalize(c - self._c_mu, dim=0) * float(self.cfg.get("key_scale", 2.5))
 
     def _tire(self, win_, rt_):

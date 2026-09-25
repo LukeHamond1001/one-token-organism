@@ -22,8 +22,10 @@ frames.py       step R7: the body in the world's frames: the anatomy's born even
                 expansion and the amygdala; the frame's surprise, the event's end for frames, the surprise-gated writes of frames into the
                 store, the tick's record (R7b, under physiology.py's FRAMES switch `frames`); each channel's error scaled by its running
                 mean in the waking lesson (R7c, `err_scale`); the received tag and its reach back onto an utterance's entry (R7c,
-                physiology.py's SWITCHES `tag_trace`, defect 6; defect 1's `tire_recover` is memory.py's); the diary declares none of it
-                and holds no such switch, so none of it runs for it
+                physiology.py's SWITCHES `tag_trace`, defect 6; defect 1's `tire_recover` is memory.py's); recall into action (R7f, the
+                switch `recall`: the heading integrated from the torso gyro in the frame's key, the efference copies in its value, the
+                store's recall at the choice through a map per motor effector into its proposal; `wm_frames`, working memory's latch at
+                the frames' event ends); the diary declares none of it and holds no such switch, so none of it runs for it
 amygdala.py     step R7d: the amygdala, the valence tagger, an organ (Amygdala, m.amyg: its least-squares Rescorla-Wagner law over the
                 stream, the event lines and the level, one head per reward source and sign, its reliability, the tag) and a mixin (its tick
                 after the critics and the face organ, before the choice); built only under the switch `amyg` (physiology.py's AMYG), which

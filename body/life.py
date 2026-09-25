@@ -329,6 +329,9 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         # organs that hold one under a switch that is off are refused. The diary's cfg has no switch and its organs no amygdala
         if self._amyg_on() or "amyg" in self.m._modules:
             self._amyg_attach()
+        # RECALL INTO ACTION (step R7f; body/core/frames.py): a body whose switch is on has its organs' maps and the heading's code checked
+        if self._recall_on() or "recall" in self.m._modules:
+            self._recall_attach()
         self.stream = collections.deque(maxlen=96)       # (id, who)
         self.last = {}
         self.credit = collections.deque(maxlen=64)
@@ -404,7 +407,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
         int_t = self._act(u, felt, stri, gam, delta, acted, nxt, p_act, p_choice, probs, feat, act_on, drew)
         self._feel_and_learn(delta, delta_slow, delta_long, feat, acted, int_t, p_act, drew)
         if self._frames_on():                               # step R7b: the frame's surprise, the event's end, the gated write, the record
-            self._frame_tick(u, delta, r)
+            self._frame_tick(u, delta, r, nxt)
         acts = {self.anatomy.voice.name: int(nxt)}
         if len(self.anatomy.effectors) > 1:                 # step R6h: every effector's act in the declared order, the voice at its place
             wa_ = {e_.name: int(st_["now"]["world"]) for e_, st_ in zip(self.anatomy.motors, self.motor)}

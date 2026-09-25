@@ -472,6 +472,18 @@ FRAMES = dict(
     # and the charge's 2 weigh alike, as the frames' surprise weighs them); 0 = the sum as R4 built it. A channel with no running mean
     # yet is taken as it is
     err_scale=0,
+    # STEP R7f, RECALL INTO ACTION (7.6, A45; body/core/frames.py): 1 = a frame's key is the cortex's stream plus a heading (the trunk's
+    # yaw integrated from the torso gyro since birth, the anatomy's `heading`; McNaughton et al. 2006), the stream's pattern-separated
+    # direction and the heading's born code (cos, sin through two fixed unit rows from the body's seed) weighing alike, the words' cortex
+    # key too; its value the frame's codes and the efference copy of every effector's act; each tick the store's nearest keys give back
+    # their values through the store's own search (under key_form "cortex" the words' read itself, else a read of its own), and each
+    # motor effector's proposal gains its map, born at zero, from the recalled act's embedding (the recall's part in its acts' rows) to
+    # its logits (through its rows), learned by act_pred's own lesson and plain step (Lengyel and Dayan 2007: episodic control). Needs
+    # `frames`. 0 = off
+    recall=0,
+    # STEP R7f, THE WORKING-MEMORY LATCH ON THE FRAMES' EVENT ENDS (7.6, 10's "event end"): 1 = working memory (wm) latches the striatal
+    # expansion at the frames' event ends (R7b) in place of the utterances' ends; 0 = at the utterances' ends (the language body's)
+    wm_frames=0,
 )
 
 # THE AMYGDALA (the owner's decision 2; the core refactor's step R7d; docs/SIM_DESIGN.md 7.4, 10, A16; body/core/amygdala.py): its switch

@@ -528,7 +528,7 @@ class Organs(nn.Module):
     """all the learned organs, one module, saved with the body"""
 
     def __init__(self, vocab, d=256, layers=6, heads=4, window=64, clocks=CLOCKS, birth_act=0.25, channels=None, effectors=None, born_seed=0,
-                 cerebellum=None, events=None, amygdala=None):
+                 cerebellum=None, events=None, amygdala=None, recall=None):
         super().__init__()
         self.vocab, self.d, self.window = int(vocab), int(d), int(window)
         self.clocks = tuple(int(c) for c in clocks)
@@ -748,6 +748,21 @@ class Organs(nn.Module):
             g_cb = torch.Generator().manual_seed(int(born_seed) + 49979687)
             with torch.random.fork_rng(devices=[]):
                 self.cereb = Cerebellum(cerebellum["decl"], g_cb, cerebellum["granule"], cerebellum["fan_in"], cerebellum["coding"])
+        # RECALL INTO ACTION (the core refactor's step R7f, docs/SIM_DESIGN.md 7.6, A45; body/core/frames.py): `recall` is what
+        # body/core/frames.py `recall_spec` gives for a body whose switch is on (each motor effector's name and its settings), None otherwise.
+        # Each motor effector's map from the recalled act's embedding to a score per setting, read back through its acts' rows into its
+        # proposal (recall[name]: d -> its settings, no bias, born at zero: at birth it leaves every proposal exactly as it is) and the heading's born code (head_code: two fixed unit rows [2, d], cos and
+        # sin of the heading, from a generator of its own seeded by the body's seed). Built after every other organ but the amygdala, the
+        # global random stream left where it was; the language body's switch is off, so it has none
+        if recall is not None:
+            g_hd = torch.Generator().manual_seed(int(born_seed) + 104729)
+            self.register_buffer("head_code", F.normalize(torch.randn(2, int(d), generator=g_hd), dim=-1))
+            with torch.random.fork_rng(devices=[]):
+                self.recall = nn.ModuleDict()
+                for name, n_set in recall["effectors"]:
+                    mp = nn.Linear(int(d), int(n_set), bias=False)
+                    nn.init.zeros_(mp.weight)
+                    self.recall[name] = mp
         # THE AMYGDALA (the core refactor's step R7d, docs/SIM_DESIGN.md 7.4, A16; body/core/amygdala.py): `amygdala` is what
         # body/core/amygdala.py `amygdala_spec` gives for a body whose switch is on (its event lines, its heads, its horizon), None otherwise.
         # Built last, after every other organ; it draws no random number (its evidence and weights born at zero), so every organ above is
