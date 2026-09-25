@@ -10,9 +10,10 @@ lessons are batched (motor 4); each motor effector's fatigue is its own, and its
 pattern generator (C54: a movement of 2 + 3 ticks, then a pause drawn from the seed; the legs one rhythm) and the born cry are summed
 below the gate, each by its rule (motors 6 and 7); a vector channel's born code is fixed from the body's seed (motor 8); the born
 orienting bias, its gate input and the VOR's constants (motor 9); the G1's anatomy numbers its effectors as the design does and its
-performance error lands on the tract's gate alone (motor 11). Each is a switch or a
-declaration the language body does not hold: it has none of it (the eight pinned digests are the guard's, tools/pins/digests.txt). The
-stub worlds here are instruments of these tests, not the G1's world."""
+performance error lands on the tract's gate alone (motor 11); a motor body saved anywhere (inside a day, at a night's boundary) goes on
+as the life that went on, bit for bit, its day saved whole (motor 12, A70). Each is a switch or a declaration the language body does
+not hold: it has none of it (the eight pinned digests are the guard's, tools/pins/digests.txt). The stub worlds here are instruments
+of these tests, not the G1's world."""
 import collections
 import math
 import os
@@ -1164,9 +1165,177 @@ def test_the_g1_anatomy():
           f"every sub-step ({int(org.n_limb)} limb lessons, {int(org.n_vor)} of the flocculus)")
 
 
+# ---------------- motor 12: the day saved (A70: exact replay across a save and a night) ----------------
+
+def _g1_replay_world(seed=0):
+    """a stub of the G1's world for motor 12 whose whole state goes with its save (its tick and both its streams, as SimWorld's contract
+    asks, so a world saved and loaded goes on exactly): motor 11's random senses; the charge falling below the born cry's line (0.2) from
+    tick 134, so the cry runs from there on; the breath left empty on ticks 170 and 260 (expirations cut short after the save); pain on
+    ticks 60 and 147; a face held in the periphery on ticks 140-159 (across the save at 150) and for one tick in every 30; a sound's
+    onset every 45 ticks, a sudden change every 37, a word every 17; the cerebellum's hook called 15 times a tick as motor 11's stub
+    calls it, from the world's second stream"""
+    import random as _r
+    from body.core.world import SubFrame
+    from body.sim.anatomy import SIZES
+
+    class G1Replay(SimWorld):
+        def __init__(self):
+            self.t = 0; self.rng = _r.Random(seed); self.rng_cb = _r.Random(seed + 1)
+
+        def frame(self):
+            t = self.t; R = self.rng
+            obs = {n: [R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
+            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [max(0.0, 0.6 - 0.003 * t), -0.003]
+            obs["body"][241] = 0.0 if t in (170, 260) else R.uniform(0.2, 1.0)
+            obs["pain"] = [1.0 if (t in (60, 147) and k == 5) else 0.0 for k in range(44)]
+            if 140 <= t < 160 or t % 30 == 3:
+                obs["face_periph"] = [1.0, 0.4, -0.2]
+            if t % 45 == 7:
+                obs["sound_side"] = [1.0, 0.5]
+            if t % 37 == 11:
+                obs["onset_periph"] = [1.0, -0.3, 0.1]
+            if t % 17 == 0:
+                obs["words"] = R.randrange(3, 79)
+            return Frame(t, obs, 0.0, {"who": "parent"})
+
+        def apply(self, acts):
+            if self.below is not None:
+                life = self.below._life(); J = len(self.below.joints); R = self.rng_cb
+                for s_ in range(15):
+                    self.sub_tick(SubFrame(self.t, s_, _g1_mossy(life.anatomy, acts, R), [R.uniform(-2.0, 2.0) for _ in range(J)],
+                                           [R.uniform(-0.01, 0.01) for _ in range(2)] if s_ == 0 else None,
+                                           [R.uniform(-0.1, 0.1) for _ in range(2)] if s_ == 0 else None, limit=[25.0] * J))
+            self.t += 1
+
+        def pause(self):
+            pass
+
+        def resume(self):
+            pass
+
+        def save_state(self):
+            return pickle.dumps((self.t, self.rng.getstate(), self.rng_cb.getstate()))
+
+        def load_state(self, blob):
+            self.t, a_, b_ = pickle.loads(blob); self.rng.setstate(a_); self.rng_cb.setstate(b_)
+    return G1Replay()
+
+
+def test_the_day_saved():
+    """motor 12 (A70, the lead's decision of 2026-09-25; SIM_DESIGN.md 6.5: exact replay across a save and a night is the law): A LIFE
+    SAVED ANYWHERE GOES ON AS THE LIFE THAT WENT ON, BIT FOR BIT. The G1 (SimAnatomy, SIM_CFG with its own learning rates, at d 32) lives
+    in a stub of its world whose state goes with its save. Against the life that went on, in every section of the whole state (the organs
+    with their gradients, the store, the optimizers, the random streams, every working attribute, the constants) at tick 300:
+    (i) INSIDE A DAY: saved at tick 150 mid-cry (its breath clock in an expiration), mid-chunk (units under way), a face held across the
+        save, the cord's counts running, act_inv's pairs pending. At the load every organ, the store, the random stream, the optimizers'
+        moments, every working attribute (among them the orienting's memory of the cues' last fire) and every motor effector's state
+        (the breath clock, the unit, the chunk, the act last tick, the foresight, the counts) are the saved life's, but for the pattern
+        generator's cache of its cycle (found again from birth at the next tick) and the gradients the last lesson left (each lesson
+        makes its own again before it steps);
+    (ii) AT A NIGHT'S BOUNDARY: the sleep switch's night inside tick 225, the save after that tick;
+    (iii) ACROSS A NIGHT: saved at tick 150 and living on through that night.
+    The process's global stream is not the body's: a load draws from it for the organs it builds before reading the save (anatomy 5), so
+    the test seeds it as the birth did and gives it back after. AN OLDER SAVE (a motor body's save from before A70: its day taken out)
+    loads with one line saying so and begins its day afresh (R6h's rule for older saves: no cry, unit or chunk under way, the stream from
+    the load's seed), so it parts from the life that went on. The language body saves no day (its digests are the guard's)."""
+    import contextlib
+    import hashlib
+    import io
+    from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table
+    from body.tests.test_anatomy import _canon, _whole
+    base = dict(SIM_CFG, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=64, night_rounds=2, night_batch=8,
+                rem_dreams=4, rem_steps=4, night_dev="")
+    plain, night = dict(base, wake_ticks=100000), dict(base, wake_ticks=225)
+
+    def born(c):
+        w_ = _g1_replay_world(); torch.manual_seed(0)
+        return Life.birth(SimAnatomy(born_table(), c), device="cpu", d=32, layers=1, heads=2, window=8, cfg=c, seed=0, world=w_), w_
+
+    def live(L_, n):
+        run_ = WorldLoop(L_)
+        for _ in range(n):
+            run_.step()
+
+    def reborn(L_, w_, strip=False):
+        fd, path = tempfile.mkstemp(suffix=".pt"); os.close(fd)
+        try:
+            L_.save(path); size = os.path.getsize(path)
+            if strip:                                              # a motor body's save from before A70: no day
+                blob = torch.load(path, map_location="cpu", weights_only=False); blob.pop("day"); torch.save(blob, path)
+            w2 = _g1_replay_world(); w2.load_state(w_.save_state())
+            g_ = torch.get_rng_state(); torch.manual_seed(0); said = io.StringIO()
+            with contextlib.redirect_stdout(said):
+                C_ = Life.load(path, SimAnatomy(born_table(), L_.cfg), save_path=None, world=w2)
+            C_.save_path = None                                    # a load saves back to its file at its nights; these lives never save,
+            torch.set_rng_state(g_)                                # as the lives that went on never do
+            if not strip:
+                blob = torch.load(path, map_location="cpu", weights_only=False); blob.pop("day"); torch.save(blob, path)
+                size = (size, os.path.getsize(path))                # the save, and the save without its day
+        finally:
+            os.remove(path)
+        return C_, [l_ for l_ in said.getvalue().splitlines() if l_.startswith("load:")], size
+
+    def hsh(x, name):
+        g = hashlib.sha256(); _canon(g, x, name); return g.hexdigest()
+
+    def lost(B_, C_):
+        """what of the saved life the loaded one does not hold: working attributes, motor keys, optimizers' states, organs, the stream,
+        the parameters whose gradient differs"""
+        skip = {"m", "store", "gen", "cfg", "save_path", "_t_feel", "anatomy", "world"}
+        life_ = [k_ for k_ in sorted(set(vars(B_)) | set(vars(C_))) if k_ not in skip and not isinstance(getattr(B_, k_, None), torch.optim.Optimizer)
+                 and k_ != "motor" and (k_ not in vars(B_) or k_ not in vars(C_) or hsh(getattr(B_, k_), k_) != hsh(getattr(C_, k_), k_))]
+        mot_ = sorted({k_ for sb_, sc_ in zip(B_.motor, C_.motor) for k_ in set(sb_) | set(sc_) if hsh(sb_.get(k_), k_) != hsh(sc_.get(k_), k_)})
+        opt_ = [k_ for k_, v_ in vars(B_).items() if isinstance(v_, torch.optim.Optimizer) and hsh(v_.state_dict(), k_) != hsh(getattr(C_, k_).state_dict(), k_)]
+        sB, sC = B_.m.state_dict(), C_.m.state_dict()
+        org_ = [k_ for k_ in sB if not torch.equal(sB[k_], sC[k_])]
+        grads = sum(1 for (n_, p_), (_, q_) in zip(B_.m.named_parameters(), C_.m.named_parameters()) if hsh(p_.grad, n_) != hsh(q_.grad, n_))
+        return life_, mot_, opt_, org_, torch.equal(B_.gen.get_state(), C_.gen.get_state()), grads
+    # the lives that went on
+    A1, _ = born(plain); live(A1, 300); h1 = _whole(A1)
+    A2, _ = born(night); live(A2, 300); h2 = _whole(A2)
+    assert (A1.nights, A2.nights) == (0, 1) and h1 != h2
+    # (i) inside a day: saved at 150, mid-cry and mid-chunk, a face held across the save
+    B, wB = born(plain); live(B, 150)
+    cry = B.motor[0]["cry_t"]; under = [e_.name for e_, s_ in zip(B.anatomy.motors, B.motor) if s_["chunk"] > 0 and s_["unit"] is not None]
+    assert B.anatomy.motors[0].cry and cry > 0 and 0 < cry % 7 < 5, cry                          # in an expiration (5 out, 2 in)
+    assert len(under) >= 2 and B._orient_last["face"] and all(B.motor[i_]["cord_n"] for i_ in (0, 3, 4, 7, 8)), (under, getattr(B, "_orient_last", None))
+    assert any(s_["inv_batch"] for s_ in B.motor) and any(float(s_["fatigue"]) > 0.0 for s_ in B.motor)
+    C1, said1, size1 = reborn(B, wB)
+    life_, mot_, opt_, org_, gen_, grads1 = lost(B, C1)
+    assert not said1 and (life_, mot_, opt_, org_, gen_) == ([], ["spg_cyc"], [], [], True), (said1, life_, mot_, opt_, org_, gen_)
+    assert C1.motor[0]["cry_t"] == cry and C1._orient_last == B._orient_last and all(s_["spg_cyc"] is None for s_ in C1.motor)
+    live(C1, 150)
+    assert _whole(C1) == h1, [k_ for k_ in h1 if _whole(C1)[k_] != h1[k_]]
+    # (ii) at the night's boundary and (iii) across the night
+    B2, wB2 = born(night); live(B2, 150)
+    C3, said3, _ = reborn(B2, wB2)
+    live(B2, 75); assert (B2.ticks, B2.nights) == (225, 1), (B2.ticks, B2.nights)
+    C2, said2, _ = reborn(B2, wB2)
+    life2_, mot2_, opt2_, org2_, gen2_, grads2 = lost(B2, C2)
+    assert not said2 and not said3 and (life2_, mot2_, opt2_, org2_, gen2_) == ([], ["spg_cyc"], [], [], True), (life2_, mot2_, opt2_, org2_)
+    live(C2, 75)
+    assert _whole(C2) == h2, [k_ for k_ in h2 if _whole(C2)[k_] != h2[k_]]
+    live(C3, 150); assert C3.nights == 1
+    assert _whole(C3) == h2, [k_ for k_ in h2 if _whole(C3)[k_] != h2[k_]]
+    # an older save: the day taken out; said once, begun afresh, and it parts from the life that went on
+    C4, said4, _ = reborn(B, wB, strip=True)
+    assert len(said4) == 1 and "holds no day" in said4[0] and "R6h's rule for older saves" in said4[0], said4
+    assert C4.motor[0]["cry_t"] == 0 and all(s_["chunk"] == 0 and s_["unit"] is None for s_ in C4.motor) and not hasattr(C4, "_orient_last")
+    live(C4, 150); h4 = _whole(C4)
+    parted = [k_ for k_ in h1 if h4[k_] != h1[k_]]
+    assert "work" in parted and "rng" in parted, parted
+    print(f"motor 12: a life saved anywhere goes on as the life that went on: (i) saved at tick 150 mid-cry (its breath clock {cry}, in an",
+          f"expiration), {len(under)} units under way ({', '.join(under)}), a face held across the save; at the load all of it but the",
+          f"rhythm's cache and {grads1} gradients of the last lesson; at tick 300 the whole state the uninterrupted life's in every section",
+          f"({', '.join(h1)}); (ii) saved at the night's boundary (tick 225, {grads2} gradients left) and (iii) saved at 150 and living",
+          f"through the night: the same; the save {size1[0]:,} bytes, {size1[0] - size1[1]:,} of them the day; an older save (no day) said",
+          f"once, begun afresh, parted in {parted}; the whole state at 300, straight and continued: (i) {' '.join(f'{k_} {v_[:12]}' for k_, v_ in h1.items())};",
+          f"(ii) and (iii) {' '.join(f'{k_} {v_[:12]}' for k_, v_ in h2.items())}; the older save's (i) {' '.join(f'{k_} {v_[:12]}' for k_, v_ in h4.items())}")
+
+
 MOTOR_TESTS = [test_the_voice_at_any_place, test_movement_units, test_the_kappa_correction, test_act_inv_batched,
                test_fatigue_per_effector_and_the_forward_error, test_the_spinal_pattern_generator, test_the_born_cry,
-               test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy]
+               test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy, test_the_day_saved]
 
 
 if __name__ == "__main__":

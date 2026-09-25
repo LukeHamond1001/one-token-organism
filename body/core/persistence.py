@@ -17,7 +17,26 @@ Since step R6h a motor effector's life["motor"] entry also keeps, where it has t
 own fatigue ("fatigue"), the kappa correction's running agreement and chance ("inv_ch") and act_inv's pairs gathered for the next batch
 ("inv_batch"); the born codes (encs.*) and the pattern generators' born phases (spg_phase) are in the organs' state, and since C54
 their rhythms' seed (spg_seed): a rhythm is a function of the tick and these, so nothing of it is in the life dict and a load goes on
-with it where the save left it (body/core/cord.py)."""
+with it where the save left it (body/core/cord.py).
+THE DAY (A70, the lead's decision of 2026-09-25: every state a save left out, saved; exact replay across a save and a night is the law).
+A body with motor effectors also saves its whole working state (blob["day"]), so a life continued from a save made anywhere (inside a
+day, mid-cry or mid-chunk; at a night's boundary) goes on as the life that went on, bit for bit (body/tests/test_motor.py, motor 12):
+  - the life's random stream (its generator's state; the load's seed then seeds nothing of it);
+  - the optimizers' moments (each one's state; its settings are the load's constants);
+  - every working attribute of the life but the interface objects and the body's constants born from its anatomy and cfg (DAY_NOT):
+    the window, the bags, the buffers, the page, the day's instruments, and among them the born orienting's memory of the cues' last
+    fire, which runs on across a night (A70's finding; body/core/cord.py);
+  - each motor effector's working state beyond what life["motor"] keeps: R6h's rest (the born cry's breath clock, the movement unit's
+    held settings, the cord's counts, the pooled kappa) and R5's and R6's own (a chunk under way, the act last tick and the tick's choice,
+    the forward half's foresight and error, the gate's buffer, the lesson's baseline and report, act_inv's last lesson, the chunks and
+    their stops). The pattern generator's cache of its cycle is left out: its rhythm is the tick's and is found again from birth.
+Before A70 a load began all of it afresh (the stream from the load's seed, the moments born again, the day as a night leaves it); a save
+at a night's end, where the night has begun most of the day afresh, lost less, but still the stream, the moments and what a night keeps
+(the orienting's memory, the value buffers, the day's rings). A motor body's save from before holds no day: the load says so once and
+begins it as before (R6h's rule for older saves). A day lived by another anatomy (its channels or joints) is said and not read. The
+day's tensors come back on the host (the sim's torch runs on the CPU, SIM_DESIGN.md 6.5). The language body's save holds none of it and
+loads as it always did (its digests are the guard's)."""
+import collections
 import os
 
 import torch
@@ -26,6 +45,23 @@ from ..model import Organs
 from .anatomy import anatomy_for
 from .cerebellum import cerebellum_spec
 from .physiology import PHYSIOLOGY
+
+# THE DAY (A70; the module's doc): what of the life's attributes the day does not hold, being held elsewhere or not the life's state: the
+# organs, the store, the random stream, the optimizers (each by its moments apart) and the motor effectors' states (apart); the world
+# and the save's path; the constants born with the life from its anatomy and cfg (its symbols, the critics' index and scales, the bands'
+# kinds, the face organ's width); the device; the night's flag (a save inside a night wakes at its load); the page's queue (the diary
+# world's hands); the feelings' wall clock (never read)
+DAY_NOT = frozenset({"m", "store", "gen", "cfg", "save_path", "anatomy", "world", "motor", "dev", "asleep", "_t_feel", "queue", "queue_who",
+                     "sil", "nl", "space_id", "eot", "end_id", "reserved", "bans", "_differential", "_fh_n", "_vc_idx", "_vc_delta",
+                     "_vf_delta"})
+# each motor effector's keys life["motor"] keeps in its own form (its rules for older saves stay theirs), and its pattern generator's
+# cache of its cycle (found again from birth): not in the day
+DAY_MOTOR_NOT = frozenset({"inv_conf", "inv_kappa", "inv_gain", "inv_n", "perf", "fatigue", "inv_ch", "inv_batch", "spg_cyc"})
+
+
+def _anatomy_sig(anatomy):
+    """what the day's working state is shaped by: each channel's name and size and each effector's name and joints"""
+    return ([(c_.name, int(c_.size)) for c_ in anatomy.channels], [(e_.name, [int(k_) for k_ in e_.factors]) for e_ in anatomy.effectors])
 
 
 class PersistenceMixin:
@@ -50,8 +86,8 @@ class PersistenceMixin:
                          "pace": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pq.items()}, "pace_day": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pace_day.items()}}}
         if len(self.anatomy.effectors) > 1:                         # the later effectors' act_inv reliability (step R6); the diary's save has no such key
             # (act_pred's and the correction's plain step has no state since R6 fix 7: nothing of opt_pred is saved; R6 fix 5 and 6
-            # saved their Adam's moments here, "moments"; the day's Adam and the others are born again at a load, as they always were,
-            # review 2026-09-22 item 20)
+            # saved their Adam's moments here, "moments"; the day's Adam and the others were born again at every load, as they always
+            # were (review 2026-09-22 item 20), until A70: a motor body's day keeps their moments, below)
             blob["life"]["motor"] = {e_.name: {"inv_conf": (None if st_["inv_conf"] is None else [[[float(x_) for x_ in r_] for r_ in c_] for c_ in st_["inv_conf"]]),
                                                "inv_kappa": [float(x_) for x_ in st_["inv_kappa"]], "inv_gain": float(st_["inv_gain"]),
                                                "inv_n": int(st_["inv_n"]),
@@ -63,6 +99,14 @@ class PersistenceMixin:
                                                **({"inv_batch": [(p_[0].tolist(), p_[1].tolist(), int(p_[2]), (None if p_[3] is None else [q_.tolist() for q_ in p_[3]]))
                                                                  for p_ in st_["inv_batch"]]} if st_.get("inv_batch") else {})}
                                      for e_, st_ in zip(self.anatomy.motors, self.motor)}
+            # THE DAY (A70; the module's doc): the stream, the optimizers' moments, the life's working attributes (a test's instrument
+            # wrapped round a method is code, not state: never saved) and each motor effector's working state beyond life["motor"]
+            opts_ = {k_: v_ for k_, v_ in vars(self).items() if isinstance(v_, torch.optim.Optimizer)}
+            blob["day"] = {"anatomy": _anatomy_sig(self.anatomy), "gen": self.gen.get_state(),
+                           "optim": {k_: o_.state_dict()["state"] for k_, o_ in opts_.items()},
+                           "life": {k_: v_ for k_, v_ in vars(self).items() if k_ not in DAY_NOT and k_ not in opts_ and not callable(v_)},
+                           "motor": {e_.name: {k_: v_ for k_, v_ in st_.items() if k_ not in DAY_MOTOR_NOT}
+                                     for e_, st_ in zip(self.anatomy.motors, self.motor)}}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
 
@@ -109,6 +153,7 @@ class PersistenceMixin:
         if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))]:
             print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
         life = cls(organs, anatomy, cfg=c, device=device, seed=seed, save_path=save_path or path, world=world)
+        born_ = set(vars(life))                                      # the working attributes a life is born with (the day's, A70, below)
         saved_norm = vc_saved.get("vc_mu") is not None and vc_saved["vc_mu"].numel() > 0; norm_on = int(c.get("vcrit_norm_tau", 0)) > 0
         saved_form = float(vc_saved["vc_form"]) if vc_saved.get("vc_form") is not None else 1.0
         if vc_saved and int(c.get("vcrit_rls", 0)) and vc_saved.get("vc_A") is not None and vc_saved["vc_A"].shape == life.m.vc_A.shape and saved_norm == norm_on and (not norm_on or saved_form == float(life.m.vc_form)):
@@ -268,7 +313,41 @@ class PersistenceMixin:
             rb = L["rbar"]; life.rbar = float(rb.mean()) if torch.is_tensor(rb) else float(rb)
         if L.get("heard") is not None:
             life.heard = L["heard"].to(device)
+        if len(life.anatomy.effectors) > 1:                         # THE DAY (A70; the module's doc), for a body with motor effectors
+            day_ = blob.get("day")
+            if isinstance(day_, dict) and day_.get("anatomy") == _anatomy_sig(life.anatomy):
+                life._day_back(day_, born_)
+            elif isinstance(day_, dict):
+                print("load: the save's day was lived by another anatomy (its channels or joints): not read; the working state begins as a "
+                      "night leaves it", flush=True)
+            elif isinstance(L.get("motor"), dict):
+                print("load: the save holds no day (a motor body's save from before A70, 2026-09-25): the working state begins as a night "
+                      "leaves it (no cry, unit or chunk under way, no act last tick, no foresight, the cord's counts from zero, no orienting "
+                      "cue seen before), the stream from the load's seed and the optimizers' moments born again: R6h's rule for older "
+                      "saves", flush=True)
         return life
+
+    def _day_back(self, day, born=()):
+        """THE DAY GIVEN BACK (A70; the module's doc): the random stream's state, each optimizer's moments under this load's settings, the
+        working attributes (a buffer kept at this life's length), and each motor effector's working state beyond life["motor"]. A working
+        attribute the load itself made after the birth of this life (`born`: the attributes it was born with) that the saved life did not
+        have is taken away again (the store's two day marks, read as absent: the day's own are the saved life's)"""
+        self.gen.set_state(day["gen"])
+        for k_, st_ in (day.get("optim") or {}).items():
+            o_ = getattr(self, k_, None)
+            if isinstance(o_, torch.optim.Optimizer):
+                sd_ = o_.state_dict(); sd_["state"] = st_; o_.load_state_dict(sd_)
+        life_ = day.get("life") or {}
+        for k_, v_ in life_.items():
+            cur_ = getattr(self, k_, None)
+            if isinstance(cur_, collections.deque) and isinstance(v_, collections.deque) and cur_.maxlen != v_.maxlen:
+                v_ = collections.deque(v_, maxlen=cur_.maxlen)
+            setattr(self, k_, v_)
+        for k_ in [k_ for k_, v_ in vars(self).items() if k_ not in life_ and k_ not in born and k_ not in DAY_NOT
+                   and not isinstance(v_, torch.optim.Optimizer) and not callable(v_)]:
+            delattr(self, k_)
+        for e_, st_ in zip(self.anatomy.motors, self.motor):
+            st_.update((day.get("motor") or {}).get(e_.name) or {})
 
     @classmethod
     def birth(cls, tok, device="cpu", d=256, layers=6, heads=4, window=64, cfg=None, seed=0, save_path=None, world=None):

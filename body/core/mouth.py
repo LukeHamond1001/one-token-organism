@@ -570,7 +570,8 @@ class MouthMixin:
         (when it declares the term), its own fatigue, the movement unit's held settings, act_inv's pairs gathered for the next batch, the
         cord's patterns' counts and the born cry's breath clock; C54's, where its pattern generator stands in its rhythm (the cycle under
         way and the next: a function of the tick and the organs' spg_seed and spg_phase, so it is found again from birth after a load and
-        never saved; body/core/cord.py `_spg_where`)"""
+        never saved; body/core/cord.py `_spg_where`). Since A70 (2026-09-25) a save keeps all of it but that cache: life["motor"] its
+        reliability, performance means, fatigue and act_inv's pending pairs, the body's day the rest (body/core/persistence.py)"""
         return {"buf": collections.deque(maxlen=96), "g_base": None, "last": None, "acted_last": False, "e_actor": None, "now": None,
                 "chunk": 0, "sense": None, "fwd": None, "err": None,
                 "inv_conf": ([[[0.0] * int(K) for _ in range(int(K))] for K in e.factors] if e.inverse else None),

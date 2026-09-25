@@ -30,6 +30,7 @@ tick (its act to the world, no draw, no credit, no eligibility). The striatum's 
 limbs builds within memory (the language block first and as the diary's) and lives."""
 import collections
 import copy
+import dataclasses
 import math
 import os
 import pickle
@@ -1579,6 +1580,9 @@ def _canon(g, x, path):
         g.update((type(x).__name__ + repr(x) + ";").encode())
     elif isinstance(x, (torch.dtype, torch.device)):
         g.update(repr(x).encode())
+    elif dataclasses.is_dataclass(x) and not isinstance(x, type):
+        # a declaration's record (an anatomy's OrientCue in the tick's cues, step R6h): its class and its fields, in their order
+        g.update(f"D{type(x).__name__}(".encode()); _canon(g, [(f_.name, getattr(x, f_.name)) for f_ in dataclasses.fields(x)], path); g.update(b")")
     else:
         raise TypeError(f"no hash for {type(x).__name__} at {path}")
 
@@ -3443,11 +3447,11 @@ def test_a_striatum_saved_before_r5b_loads():
 def test_act_pred_reloads_without_moments():
     """anatomy 33 (R6 fix 7; R6 fix 5 and 6 saved their Adam's moments): act_pred's and the correction's plain step keeps no state, so
     a body with later effectors saves none: its save's motor state holds act_inv's reliability and no moments, and the reloaded body's
-    next lesson is the saved body's to the bit (the organs given back; the day's Adam born again in both, as every load has it: the
-    saved body's is reset here to match). A save of R6 fix 6 (its one set of moments, "lesson") and one of R6 fix 5 (two samples', "own"
-    and "labels") load with one note each, said once, their moments not read, and live on, their next lesson the present body's to the
-    bit; a save from before R6 fix 5 (no moments) loads without a word about them and lives on. The language body's save has no motor
-    state, as before"""
+    next lesson is the saved body's to the bit (the organs given back; the day's Adam reset here in every one of them, the saved body's
+    too: since A70 a motor body's load gives its moments back with the day, before it bore them again). A save of R6 fix 6 (its one set
+    of moments, "lesson") and one of R6 fix 5 (two samples', "own" and "labels") load with one note each, said once, their moments not
+    read, and live on, their next lesson the present body's to the bit; a save from before R6 fix 5 (no moments) loads without a word
+    about them and lives on. The language body's save has no motor state, as before"""
     import contextlib
     import io
     from body.core.world import WorldLoop

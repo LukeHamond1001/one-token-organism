@@ -45,7 +45,8 @@ lungs pushing, the glottis pressed, the pitch raised, the jaw open), then cry_in
 reservoir refills at rest), the expiration ending early when the reservoir is empty (breath left at 0, the tract's own physics). The
 tract's own act overrides it articulator by articulator: where the own act steps an articulator (any setting but the hold) the cry's
 step there is dropped, so the cortex can hush it. Its ticks are logged as reflex (st["cord_n"]["cry"], the tick's record); a cry is
-never a vocal turn (the parent's side reads acts.cord).
+never a vocal turn (the parent's side reads acts.cord). Its breath clock (st["cry_t"]) is saved with the body's day (A70; body/core/
+persistence.py), so a life saved mid-cry goes on in the same breath group.
 
 THE BORN BIASES (step R6h; SIM_DESIGN.md 3.7, A23, A43): ORIENTING (`_orient_bias`): each tick the anatomy's born cues
 (`Anatomy.orienting`: the face template in the periphery, a sound's side at an onset, a sudden local change) are read from the frame
@@ -54,8 +55,10 @@ a direction on that joint's axis (outside the fovea's zone, or a side) adds orie
 toward it and takes as much from each stepping away, the hold untouched: a bias on the choice's logits, never a forced move, so a
 learned proposal can outweigh it and it fades by learning; the gain is the amygdala's, exactly 1 at birth (`_orient_gain`; R7e). The
 born gate input (`_orient_in`): 1 on a tick a cue appeared (a sound's or a sudden change's onset; the face's fire after a tick without
-it). THE VOR (`_vor_acts`): the body's born reflex on the gaze's window, handed to the world with the tick's acts (Acts.vor: the axes,
-the born gain, the quick phase's jump) for it to apply at its samples of the gyro."""
+it). The memory of each cue's last fire (`_orient_last`) runs on across the night and is saved with the body's day (A70), so a face held
+across a save does not appear again at the load. THE VOR (`_vor_acts`): the body's born reflex on the gaze's window, handed to the world
+with the tick's acts (Acts.vor: the axes, the born gain, the quick phase's jump) for it to apply at its samples of the gyro; the body
+keeps none of its state (the quick phase's is the world's)."""
 import math
 
 import torch
