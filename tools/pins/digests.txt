@@ -35,3 +35,15 @@ full    served_full_roundtrip pinned   organs 95ec3c662b36 store 4170ab1c13bc sa
 # the round trip's fixed point (known: a newborn store under store_sat 1 is never marked converted, so its first reload compresses it once)
 lost    served_full_roundtrip threaded store.S, store.sat
 lost    served_full_roundtrip pinned   store.S, store.sat
+#
+# THE SIM PROFILE (the core refactor's step R8d; SIM_DESIGN.md 8: "after the plumbing run, a sim profile joins the check"): tools/determinism_check.py
+# --profile sim runs tools/sim_profile.py, a tiny G1 (SimAnatomy under SIM_CFG, d 32) in a stub of its world, a day of 225 ticks and R8's whole
+# night (the episodes, the frames' dreams, REM on frames, a live night of 120 ticks with its twitches), 300 ticks in all; its digest is over the
+# whole state's sections, each on the full line (organs with their gradients, store, optimizers, random streams, working attributes, constants).
+# Run as the language digests are (from the main tree's directory, importing the tree under test). Pinned at R8d (2026-09-25), before A71's
+# config; the same under PYTHONHASHSEED 1 and 4242. A commit that changes the sim's life (SIM_CFG, the core under the sim's switches) re-pins
+# it and says so; a commit that must not change it keeps it.
+digest  sim                   threaded 7e76fe0c4b6f975c59ca1f3b consts 2ad019e8abba | --profile sim
+digest  sim                   pinned   44d7f62b27584bf596241f19 consts 2ad019e8abba | --profile sim
+full    sim                   threaded organs 8425a427f47c store bb0d2761ec69 optim 71bb1e133367 rng 1894c5a7ccdb work c50c3fc1326d cfg b3fe73a37b02
+full    sim                   pinned   organs 8e6c95fabf8a store 727f838c53db optim 9515955c46ed rng 1894c5a7ccdb work 7b7cadd8b91f cfg b3fe73a37b02

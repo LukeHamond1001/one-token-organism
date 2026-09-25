@@ -66,7 +66,9 @@ STEP R7f, RECALL INTO ACTION (7.6, A45; the switch `recall`, and `wm_frames`; ph
   embedding, is smaller than the LayerNorm'd stream act_pred reads, so it steps less per lesson, by the size of what is recalled, as
   the plain step does everywhere.
 - THE WORKING-MEMORY LATCH (wm_frames): working memory latches the striatal expansion at the frames' event ends (R7b) in place of the
-  utterances' ends; the language body's latch is unchanged."""
+  utterances' ends; the language body's latch is unchanged.
+- C51'S INSTRUMENT (step R8d; `heading_drift`): the heading against the world's true yaw (the frame's truth, never the body's), in the
+  night's report at dusk and in `insides`: reported, never corrected."""
 import math
 
 import torch
@@ -501,6 +503,21 @@ class FramesMixin:
         n = math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
         if n > 0.0:
             self._heading = float(getattr(self, "_heading", 0.0)) + float(hd.dt) * (w[0] * a[0] + w[1] * a[1] + w[2] * a[2]) / n
+
+    def heading_drift(self):
+        """C51'S INSTRUMENT (SIM_DESIGN.md 7.6, A45, C51; the core refactor's step R8d): the heading's drift against the world's true yaw, read
+        from the frame the body lives this tick: its `truth` (the instruments' and the teacher's alone, never the body's) holds the world's
+        own yaw of the torso since birth, unwrapped, in rad (`truth["yaw"]`: C73's list, the world's to supply); the drift is the heading
+        less it, and wrapped to (-pi, pi]. Reported (the night's report at dusk, `insides`), NEVER CORRECTED: nothing of the body reads it.
+        None where the body keeps no heading (recall off) or the frame carries no true yaw"""
+        if not self._recall_on() or self.anatomy.heading is None:
+            return None
+        f_ = getattr(self.world, "now", None)
+        y_ = None if f_ is None else f_.truth.get("yaw")
+        if y_ is None:
+            return None
+        h_ = float(getattr(self, "_heading", 0.0)); d_ = h_ - float(y_)
+        return {"heading": h_, "true_yaw": float(y_), "drift": d_, "drift_wrapped": math.atan2(math.sin(d_), math.cos(d_))}
 
     def _heading_code(self):
         """the heading's born code, a unit direction [d]: cos(heading) and sin(heading) through the organs' two fixed unit rows; None for a

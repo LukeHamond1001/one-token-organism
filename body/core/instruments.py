@@ -107,6 +107,8 @@ class InstrumentsMixin:
                 "ent_mean": (round(sum(self._ring_ent) / len(self._ring_ent), 3) if self._ring_ent else None)}
         if int(self.cfg.get("pace_sense", 0)):
             d["pace"] = self._pace_report()                         # the sensed pace's instruments, the day so far
+        if self._recall_on():
+            d["heading"] = self.heading_drift()                       # C51's instrument (step R8d): the heading against the world's true yaw
         if len(self.anatomy.effectors) > 1:                        # the later effectors (step R5): the act last tick, the gate's last lesson
             d["effectors"] = {e_.name: {"acted_last": st_["acted_last"], "gate_lesson": st_["last"], "timing": self._timing_report(i_)}   # step R6: its timing part
                               for i_, (e_, st_) in enumerate(zip(self.anatomy.motors, self.motor), 1)}

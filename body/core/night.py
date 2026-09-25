@@ -249,6 +249,10 @@ class NightMixin:
             self._frames_nightfall()                                  # and every event of the frames (step R7b, body/core/frames.py)
         if self._amyg_on():
             self._amyg_nightfall()                                    # the amygdala's pending forecasts finalized (step R7d, body/core/amygdala.py)
+        if self._recall_on():
+            hd_ = self.heading_drift()                                # C51's instrument at dusk (step R8d, body/core/frames.py): reported only
+            if hd_ is not None:
+                rep["heading"] = {k_: round(float(v_), 6) for k_, v_ in hd_.items()}
         try:
             if self._night_frames_on():
                 self._episodes_nightfall(rep)                         # step R8: the day's tape cut into episodes (body/core/sleep.py)

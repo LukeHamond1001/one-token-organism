@@ -531,7 +531,44 @@ def test_the_live_dark_night():
           f"{0.025 * (9400 + 5200):.0f} twitches")
 
 
-NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames, test_the_live_dark_night]
+# ---------------- night 6: C51's instrument ----------------
+
+def test_the_heading_drift():
+    """night 6 (step R8d; SIM_DESIGN.md 7.6, A45, C51): THE HEADING'S DRIFT AGAINST THE WORLD'S TRUE YAW, an instrument: the G1's heading
+    (R7f's path integration of the torso gyro about the accelerometer's up) against the true yaw the world keeps in its frame's truth
+    (the stub's: 0.01 rad a tick), the drift and its wrap by hand; reported in `insides` and at dusk in the night's report; never
+    corrected and never read by the body: two lives, one whose frames carry the true yaw and one whose do not, are the same life in every
+    section of the whole state over 120 ticks. The language body and a body without recall report none"""
+    from body.tests.test_anatomy import _whole
+    cfg = _cfg(wake_ticks=150, night_ticks=40, night_starts=8, night_starts_max=8, night_rounds=1, night_batch=4)
+    L = _g1(cfg, _live_world()); run = WorldLoop(L)
+    for _ in range(120):
+        run.step()
+    hd = L.heading_drift(); y = float(L.world.now.truth["yaw"]); h = float(L._heading)
+    assert hd == {"heading": h, "true_yaw": y, "drift": h - y, "drift_wrapped": math.atan2(math.sin(h - y), math.cos(h - y))}, hd
+    assert L.insides()["heading"] == hd and y == 0.01 * 119
+    for _ in range(30):
+        run.step()
+    rep = L.last_night; assert L.nights == 1 and "heading" in rep, rep.keys()
+    assert abs(rep["heading"]["drift"] - (rep["heading"]["heading"] - rep["heading"]["true_yaw"])) < 2e-6
+    # never read by the body: the same life without the truth
+    class NoTruth(type(_live_world())):
+        def frame(self):
+            f = super().frame(); f.truth.pop("yaw", None); return f
+    A = _g1(dict(cfg, wake_ticks=10 ** 6), _live_world()); B = _g1(dict(cfg, wake_ticks=10 ** 6), NoTruth())
+    ra, rb = WorldLoop(A), WorldLoop(B)
+    for _ in range(120):
+        ra.step(); rb.step()
+    assert _whole(A) == _whole(B) and B.heading_drift() is None and A.heading_drift() is not None
+    torch.manual_seed(0); Lg = Life.birth(TOK, device="cpu", d=32, layers=1, heads=2, window=8, cfg={}, seed=0)
+    Lg.tick(); assert Lg.heading_drift() is None and "heading" not in Lg.insides()
+    print(f"night 6: C51's instrument: after 120 ticks the heading {h:+.4f} rad against the world's true yaw {y:+.4f}, the drift",
+          f"{h - y:+.4f} (wrapped {hd['drift_wrapped']:+.4f}), in insides and at dusk in the night's report ({rep['heading']['drift']:+.4f});",
+          f"the same life with and without the truth in the frames; none for the language body")
+
+
+NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames, test_the_live_dark_night,
+               test_the_heading_drift]
 
 
 if __name__ == "__main__":

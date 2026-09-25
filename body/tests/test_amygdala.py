@@ -548,9 +548,9 @@ def test_amyg_the_save_round_trip():
 
 def test_amyg_the_sim_twice():
     """amyg 12 (7.4 item 12): the G1 (SimAnatomy, SIM_CFG with the amygdala on) in a stub of its world lives 300 ticks twice from its
-    birth: the same life in every section of the whole state. The `sim` profile of the determinism check, a tiny body on the SimAnatomy
-    fed a recorded script, is pinned with the amygdala on by the full guard's step (SIM_DESIGN.md 8, after R8); its digest here is written
-    down, not pinned"""
+    birth: the same life in every section of the whole state. The `sim` profile of the determinism check (tools/sim_profile.py: a tiny G1
+    under SIM_CFG, the amygdala on, in a stub of its world through a day and R8's whole night) is pinned with the amygdala on in
+    tools/pins/digests.txt since R8d, and the guard checks it threaded and one-thread; the digest here is written down, not pinned"""
     from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table
     from body.tests.test_anatomy import _whole
     from body.tests.test_frames import _g1_events_world
