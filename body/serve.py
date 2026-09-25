@@ -41,7 +41,7 @@ TALK = """<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport c
 --bg:#F5F5F7;--bg-img:none;--ink:#1D1D1F;--ink2:#3A3A3C;--mute:#6E6E73;--hair:rgba(0,0,0,.08);
 --bar:rgba(245,245,247,.985);--bar-line:rgba(0,0,0,.08);--panel:#FFFFFF;--panel-line:rgba(0,0,0,.08);--panel-shadow:0 1px 2px rgba(0,0,0,.04);
 --grid:rgba(0,0,0,.06);--zero:rgba(0,0,0,.14);--face:#3B7BC4;--its:#1D1D1F;--face-fill:rgba(59,123,196,.22);
---key:#FFFFFF;--key-line:rgba(0,0,0,.10);--key-ink:#6E6E73;--key-cool-ink:#4F7BAA;--key-warm-ink:#A86A43;--key-on:#1D1D1F;--key-on-ink:#FFFFFF;--key-shadow:0 1px 1px rgba(0,0,0,.03);
+--key:#FFFFFF;--key-line:rgba(0,0,0,.10);--key-ink:#6E6E73;--key-cool-ink:#3D6896;--key-warm-ink:#935A33;--key-on:#1D1D1F;--key-on-ink:#FFFFFF;--key-shadow:0 1px 1px rgba(0,0,0,.03);
 --warm:#E39B6B;--warm-ink:#2B1609;--warm-halo:rgba(227,155,107,.24);--cool:#7FB2E5;--cool-ink:#0C2036;--cool-halo:rgba(127,178,229,.30);
 --live:#3B7BC4;--live-halo:rgba(59,123,196,.20);--off:#C7C7CC;
 --you:#D0E1F6;--you-ink:#0F2E52;--you-line:rgba(15,46,82,.07);--parent:#FFFFFF;--parent-ink:#1D1D1F;--parent-line:rgba(0,0,0,.07);--parent-shadow:0 1px 2px rgba(0,0,0,.06);
