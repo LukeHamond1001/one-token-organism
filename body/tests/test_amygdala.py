@@ -573,7 +573,10 @@ def test_amyg_the_sim_twice():
 
 def test_amyg_its_cost():
     """amyg 13 (7.4 item 13): its cost at the sim's width (526 inputs: d 512, 13 event lines, the level; 5 heads), the law and the solve
-    every 8 ticks on one thread, under 0.5 ms a tick (7.4 measured 0.19 ms on a synthetic stream)"""
+    every 8 ticks on one thread, under 0.5 ms a tick (7.4 measured 0.19 ms on a synthetic stream). The bound is read on the process's
+    CPU time, which another session's load (descheduling this process) does not reach; the wall time is written down beside it. On the
+    wall clock one guard's pinned run read 0.510 ms at best of three (0.518, 0.571, 0.510) under a burst of other sessions' work, where
+    every other run read 0.18-0.28"""
     org = Amygdala(526, [("f", 1.0), ("f", -1.0), ("p", -1.0), ("c", 1.0), ("c", -1.0)], 64)
     g = torch.Generator().manual_seed(0)
     X = torch.randn(2400, 526, generator=g, dtype=torch.float64) / math.sqrt(512.0); X[:, -1] = 1.0
@@ -584,16 +587,17 @@ def test_amyg_its_cost():
         for t in range(400):
             org.step(X[t], U[t], G, 1 - 1 / 4096, 0.3, 4096.0, 8, 36000.0)
         for r in range(3):                                            # best of three runs of 640 ticks (80 solves each), as cereb 9 reads its
-            t0 = time.perf_counter()
+            t0 = time.perf_counter(); c0 = time.process_time()
             for t in range(400 + 640 * r, 400 + 640 * (r + 1)):
                 org.step(X[t % 2400], U[t % 2400], G, 1 - 1 / 4096, 0.3, 4096.0, 8, 36000.0)
-            runs.append(1000.0 * (time.perf_counter() - t0) / 640.0)
+            runs.append((1000.0 * (time.process_time() - c0) / 640.0, 1000.0 * (time.perf_counter() - t0) / 640.0))
     finally:
         torch.set_num_threads(nt)
-    ms = min(runs)
+    ms = min(c for c, _ in runs); wall = min(w for _, w in runs)
     assert ms < 0.5, runs
-    print(f"amyg 13: its cost at the sim's width (526 inputs, 5 heads, the solve every 8 ticks), one thread: {ms:.3f} ms a tick at best of",
-          f"three runs of 640 ticks ({', '.join(f'{x:.3f}' for x in runs)}; this machine's load {os.getloadavg()[0]:.1f})")
+    print(f"amyg 13: its cost at the sim's width (526 inputs, 5 heads, the solve every 8 ticks), one thread: {ms:.3f} ms of CPU a tick at",
+          f"best of three runs of 640 ticks ({', '.join(f'{c:.3f}' for c, _ in runs)}); on the wall clock {wall:.3f} ms",
+          f"({', '.join(f'{w:.3f}' for _, w in runs)}; this machine's load {os.getloadavg()[0]:.1f})")
 
 
 AMYG_TESTS = [test_amyg_inert_for_language, test_amyg_the_law_exact, test_amyg_one_pairing, test_amyg_split_valence_and_the_tags_bounds, test_amyg_the_later_boost,
