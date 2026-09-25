@@ -17,12 +17,11 @@ WHEN EACH PART RUNS, for a later effector at tick t (after the voice's choice, i
   weighted by act_inv's reliability (a demonstration counts only as far as the inverse model has earned: the weights are absolute, the
   weighted errors averaged over the window's positions), or, for an effector with no inverse model, its rest; and fwd(C[t]) is taught
   s[t+1]. Through the cortex, at the waking lesson's rate, as a channel's forecast, except act_inv's labels, which reach act_pred and
-  the correction and never the stream. ACT_PRED'S PLASTICITY IS GATED BY ITS LABELS' RELIABILITY (`GatedAdam`, `_timing_step`):
-  act_pred and its correction step with an optimizer of their own (opt_pred, a group per effector), one step a lesson: what it
-  writes is the lesson at its labels' weights (1 at an own act, and at an effector's rest where it has no inverse model; act_inv's
-  reliability at a label), in its first moment and its step size at the lesson's mean label weight; the scale it writes against,
-  its second moment, is the same lesson with every label earned, whatever the reliability; its gradient bounded by its own norm.
-  Every other parameter steps with the waking lesson's Adam as before, bounded by theirs.
+  the correction and never the stream. ACT_PRED LEARNS BY PLAIN STEPS, ITS LABELS AT THEIR RELIABILITY (`GatedDescent`,
+  `_timing_step`; R6 fix 7): act_pred and its correction step with an optimizer of their own (opt_pred, a group per effector), one
+  plain gradient step a lesson on the lesson's gradient, its labels weighted as above (1 at an own act, and at an effector's rest
+  where it has no inverse model; act_inv's reliability at a label), each element's step bounded, with no state, so a label teaches its
+  reliability times what it teaches whole. Every other parameter steps with the waking lesson's Adam as before, bounded by theirs.
 THE LEARNED STOPS (chunk_gate, every later effector; `_choose_effector`): a chunk of acts continues, the act act_pred's best guess
 (each joint's most likely setting, no draw), until that guess is the effector's rest (the learned end), its gate's own draw closes,
 its reflex fires, its declared end act closed the chunk before, or chunk_max acts have run (a ceiling: the next act is a fresh
@@ -38,98 +37,87 @@ import torch.nn.functional as F
 from .physiology import MOTOR
 
 
-class GatedAdam(torch.optim.Optimizer):
-    """ACT_PRED'S PLASTICITY, GATED BY THE RELIABILITY OF ITS LABELS (the R6 verifier's third finding, 2026-09-24; SIM_DESIGN.md 5.4):
-    Adam in which each step is one lesson of weight `gain` (each group's, set before the step: the lesson's mean label weight over the
-    window's positions, 1 at an own act, its efference copy, and act_inv's reliability at a rest act_inv labelled). The gradient is
-    taken per unit of that weight, u = the gradient / gain (the lesson's weighted error averages the weights over the positions; u is
-    the gradient of the error averaged over the labels' weights), and the gain enters twice, as a neuromodulator gates plasticity:
-    - THE MOMENTS ARE MOVED IN PROPORTION: m <- m + (1 - beta1) gain (u - m), v <- v + (1 - beta2) gain (u^2 - v), the share of each
-      still its birth's zero q <- q (1 - (1 - beta) gain), their estimates m / (1 - q1) and v / (1 - q2). A lesson whose labels are
-      barely earned moves the running averages barely, so its direction is not carried into later lessons by the momentum.
-    - THE STEP IS SCALED: lr gain m^ / (sqrt(v^) + eps). Adam divides each parameter's step by its recent gradient size, so a
-      gradient made small (the lesson's loss scaled by the reliability, as R6 fix 1 made it) is re-inflated to a whole step: in the
-      day's Adam, over 300 lessons on a window of rests alone or of the parent's guidance alone at the served rate, act_pred learned
-      at reliability 0.01 0.95 and 0.87 of what it learned at 1 from a fresh optimizer (the moments built by the small gradients
-      themselves: after one lesson m^ is its gradient and v^ its square, whatever its size), 0.48 and 0.44 after 100 lessons of its
-      own acts had built them (their size forgotten over the lessons). The gain on the step size is what scales the learning: a
-      lesson at reliability r moves act_pred r of a whole lesson's step, and over N lessons it learns about what N r whole lessons
-      teach (anatomy 31: the same label mass given whole teaches as much).
-    At gain 1 on every step this is Adam exactly (the same betas and eps, its moments, bias corrections and step: an effector with no
-    inverse model, and a window of own acts, learn as with Adam; the lesson's gradient bounded per effector, `_timing_step`); at gain 0
-    nothing is written. Its gain gates act_pred and the correction only: act_inv's labels never reach the stream (`_timing_loss`). No
-    constant is added: the rate is the waking lesson's (live_lr), the betas and eps Adam's defaults, as the waking lesson's optimizer
-    has them.
-    THE SCALE IS THE LESSON WITH EVERY LABEL EARNED (R6 fix 6, the R6 verifier's fifth and sixth looks, 2026-09-24). A lesson of an
-    effector with an inverse model carries two kinds of target, its own acts (weight 1) and act_inv's labels (weight the reliability
-    g), on the same act_pred and correction. What it writes, its first moment and its step, is the lesson at those weights: its
-    gradient the own acts' plus g times the labels' at full reliability, per unit of its mean label weight w = w_own + g s_lab (s_lab
-    the labels' share of the positions), moved and stepped in proportion to w as above. The scale it is written against, its second
-    moment, is the same lesson with every label earned: the own acts' gradient plus the labels' whole, per unit of its weight W = w_own
-    + s_lab, moved in proportion to W, whatever g (`step`'s `full`). So the step is Adam's step on the whole lesson with each label's
-    part of it taken at its reliability: the reliability gates what is written, never the scale it is written against. Where the
-    lesson has no label the two are one (W = w), as before.
-    - THE FIFTH LOOK: with the scale taken from the lesson as written (R6 fix 4, one sample of gain w), a lesson whose own acts were
-      fitted had a small gradient but for its labels', which the reliability had made small, and Adam's division by the recent
-      gradient size re-inflated them to w of a step at any g, the own acts' share (the verifier, the tiny arm with its own acts fitted
-      in the mixed window, at the served rate: act_pred's step at reliability 0.01 / 0.05 / 0.25 was 0.070 / 0.27 / 0.66 of its step at
-      1, and 1000 lessons at 0.01 taught 0.18 of what they taught at 1, 3.1 times what the same labels taught given whole). With the
-      scale the lesson with every label earned, it does not shrink with g, and the labels' part of the step is g times its part at 1:
-      from the same state (the verifier's fixture, the stream learning) 0.011 / 0.047 / 0.23 of a whole step, the share learned at 0.01
-      0.010 and 0.007 after 300 and 1000 lessons, the same labels given whole teaching as much (1.26 and 1.04); a reliability of 0.0001
-      and 0.001 taught 0.00012 and 0.0012 of what 1 did after 300 lessons from birth, the stream still (anatomy 31).
-    - THE SIXTH LOOK: R6 fix 5 made the own acts and the labels two samples, each with moments of its own (a second GatedAdam,
-      opt_lab), so each sample's step was divided by the recent size of its own gradient alone: each step the size of its weight
-      whatever the size of its error, and the two together did not descend the lesson's loss. Where the own acts and the labels pulled
-      act_pred apart, the sample of the larger weight won and the other was un-learned below its birth (the verifier, from birth at
-      reliability 1, the stream still, at a hundred times the served rate: the labels' error 1.26 -> 2.95 beside own acts fitted to
-      0.0003; in a window of labels mostly the own acts' error rose; the same at the served rate over 30000 lessons). One step through
-      one scale descends the whole lesson, as Adam does: from birth both errors fall together (anatomy 34), and at reliability 1 the
-      lesson is Adam's own on the whole lesson, as R6 fix 4's was (the same errors to four places on anatomy 34's windows).
-    - WHAT IT COSTS: the labels' size enters the scale whatever their reliability, at 0 too (a reliability of 0.0001 then writes 0.0001
-      of the labels' part and changes nothing else; a scale that took them only above 0 would change the own acts' steps at the
-      first earned label, as much at 0.0001 as at 1). So the own acts beside rests step as Adam would step them in the whole lesson,
-      their part of it, where R6 fix 3 to 5 stepped them at their share of the window against their own gradient's size alone: at
-      reliability 0 beside the mixed window's rests, the served rate, the own acts' error after 1000 lessons 0.25 from birth (0.23
-      under R6 fix 3 to 5), 0.17 after 300 lessons of own acts first (0.13), 0.005 from states trained on own acts (0.002 to 0.003);
-      at reliability 1, 0.14 from birth, as under R6 fix 4 (0.28 under R6 fix 5)."""
+class GatedDescent(torch.optim.Optimizer):
+    """ACT_PRED'S PLASTICITY: PLAIN GRADIENT DESCENT, GATED BY THE RELIABILITY OF ITS LABELS (R6 fix 7, the lead's decision of
+    2026-09-24 after the R6 verifiers' third finding and their fourth to seventh looks; SIM_DESIGN.md 5.4). Each lesson moves each
+    element of act_pred and its correction by
 
-    def __init__(self, groups, lr, betas=(0.9, 0.999), eps=1e-8):
-        super().__init__(groups, dict(lr=float(lr), betas=tuple(betas), eps=float(eps), gain=0.0))
+        step = clamp(lr_motor x G, -B, +B),    G = (the sum over the window's positions of w_i x grad_i) / (the number of positions)
+
+    grad_i the gradient of position i's squared error (the proposal against its target's row), w_i its weight: 1 at an own act (its
+    efference copy) and at an uninverted effector's rest, act_inv's reliability at act_inv's label, 0 at the last rest (`_timing_loss`),
+    all times the waking lesson's plasticity scale, (1 + stress / 10) x the wake gate, as every parameter's gradient carries it
+    (`_wake_lesson`). NO STATE: nothing of one lesson reaches the next but the weights themselves. So WHAT A LABEL TEACHES IS ITS
+    RELIABILITY TIMES WHAT IT TEACHES WHOLE, BY CONSTRUCTION: below the bound the step is linear in G, and G is linear in each weight;
+    no running normalisation divides a small gradient back up to a whole step. A synapse changes with its error and with a
+    neuromodulatory signal of how far the teaching may be trusted (acetylcholine as expected uncertainty; Yu and Dayan 2005), with no
+    running renormalisation.
+    WHY NOT ADAM (R6 fix 1 to 6): Adam divides each parameter's step by the recent size of its gradient, which undoes any scale put on a
+    lesson (fix 1: at reliability 0.01 act_pred learned 0.44 to 0.95 of what it learned at 1). Every adaptation left a state that could
+    re-inflate a small gradient or outgrow the rate: a gain on Adam's step and moments (fix 3) re-inflated the labels beside fitted own
+    acts (the fifth look: 0.07 of a whole step at 0.01); moments per source (fix 5) fought, un-learning one another (the sixth look); a
+    scale taken from another gradient (fix 6) had no bound per element, up to thousands of times the rate (the seventh look). The class
+    is closed: no adaptive second moment reaches act_pred or its correction.
+    THE CONSTANTS (physiology.py MOTOR; `lr` the group's, the waking lesson's rate live_lr, so a raised waking rate raises both):
+        lr_motor = act_pred_rate x sqrt(d) x live_lr = 2 sqrt(d) x live_lr,    B = act_pred_bound x sqrt(d) x lr_motor = 2 d x live_lr
+    d act_pred's fan-in, the stream's width. HOW THEY ARE DERIVED: at birth Adam moves every element of act_pred by exactly its rate.
+    The plain step moves element ij by lr_motor |G_ij|, and at birth |G_ij| is about c sqrt(J / d): the stream is LayerNorm'd (its
+    features, act_pred's inputs, of unit size), an act's row is the sum of its J joints' unit rows and the born proposal nearly 0, so the
+    error, of norm sqrt(J), is spread over act_pred's d outputs; c is the coherence of the window's positions (their targets and inputs
+    partly cancel). So lr_motor = sqrt(d) x live_lr / (c sqrt(J)): sqrt(d) from the fan-in, and 1 / (c sqrt(J)) = 2, act_pred_rate,
+    MEASURED on the tiny arm (d 64, J 2; 2026-09-24, under R6 fix 6's GatedAdam, which is Adam at weight 1): over its first 50 lessons
+    from birth on its own acts Adam moved act_pred 16.0 times the rate per unit of the lesson's gradient norm, the plain step 2 sqrt(64)
+    = 16. From birth on the other windows Adam's was 6.3 (rests alone: one label, the hold, makes the gradient coherent) to 12.2, and
+    from trained and fitted states 9 to 240 (Adam
+    steps the rate whatever the gradient's size; the plain step goes by the size of the error, so a fitted act steps little); over
+    every state and window at weight 1 the geometric mean was 23. THE BOUND is the step of a per-element gradient of sqrt(d): a whole
+    unit row's error on an input carrying the LayerNorm's whole norm (|x_j| <= sqrt(d)). No lesson at birth asks that much of an element,
+    so it holds only a gradient no lesson at birth can make (a proposal run away, a body sense far outside its range through the
+    correction), never an ordinary lesson (anatomy 31 and 35: the largest element's step in every state measured, at the served rate
+    and a hundred times it, 0.17 of the bound at most, some 20 times the rate; over 3000-lesson runs from every state 0.23; at the
+    stress ceiling 0.26), and the linearity above holds wherever it is not reached. For the sim body (SIM_DESIGN.md 6.3: d 512, the served rate 1e-5): lr_motor = 2 sqrt(512) x 1e-5 = 4.5e-4 per unit of
+    gradient, B = 1.0e-2 per element per lesson (1024 times the rate).
+    WHAT IT CHANGES (the tiny arm, the served rate unless said; the tables in R6 fix 7's commit message):
+    - A LABEL TEACHES ITS RELIABILITY'S SHARE IN EVERY STATE: one lesson's gradient at 0.01, 0.05 and 0.25 is that share of its change
+      from 0 to 1 to float32's rounding (anatomy 31), and the same label mass given whole teaches the same: on rests, guidance and the
+      mixed window from birth, own acts first, trained and fitted, 300 to 3000 lessons at the served rate, 0.93 to 1.03 at 0.05 and
+      0.99 to 1.00 at 0.25 (0.67 to 1.01 at 0.01, the side of teaching less, where 300 lessons hold three whole ones); nothing
+      re-inflates, as nothing is kept.
+    - OWN ACTS learn at weight 1 whatever the labels beside them, by the size of their error: the first lessons about as under Adam
+      (from birth on its own acts, the error 1.01 -> 0.76 after 300 lessons; Adam 0.66), the later ones slower, as descent slows
+      where the error is small and in the directions the lesson curves least, where Adam's division does not (0.53 and 0.087 after
+      1000 and 3000 lessons; Adam 0.14 and 0.006); at a hundred times the rate both fit (0.0004 against 0.0000 after 3000). With the
+      stream still (anatomy 34), 3000 lessons at a hundred times the rate leave 0.03 to 0.29 of the birth errors, at ten times 0.17
+      to 0.37 (Adam 0.0001 to 0.08, and 0.009 to 0.10). A state whose own acts are fitted steps them little, where Adam stepped the
+      rate.
+    - THE CORRECTION steps by its input's size, the body sense's error in the world's units, where Adam stepped each weight the rate
+      whatever that size (from birth on the arm's own acts Adam moved it 30 to 33 times the rate per unit of its gradient, the plain
+      step 16; where the sense does not move, as on rests alone, it does not learn).
+    - STRESS reaches act_pred's plasticity: the lesson's scale ((1 + stress / 10) x the wake gate, "stress raises plasticity") was
+      divided out by Adam and is kept by the plain step: up to four times at the stress ceiling (30), each element still bounded.
+    - STABILITY: plain descent is stable while lr_motor x the lesson's largest curvature stays below 2. That curvature is about d on
+      these windows (the LayerNorm'd stream's positions share a direction: 0.11 d to 0.98 d measured), so the product is about 2 d^1.5 x
+      live_lr: on the arm 0.01 at the served rate and at most 1.0 at a hundred times it (where anatomy 31 and 35 run); for the sim body
+      (d 512, 1e-5) about 0.23, so stable up to some eight times the served rate (two at the stress ceiling). Past that the stiffest
+      direction oscillates, each element held at the bound (anatomy 25 raises act_pred's waking rate to 1e-3, not the day's 3e-3).
+      act_pred_rate could rise to about 4 before a hundred times the rate turns unstable on the arm.
+    - THE SAVE holds no optimizer state for act_pred (R6 fix 5 and 6's saves load with a note, their moments not read); the lesson
+      takes one backward pass where R6 fix 5 and 6 took a second for the labels, and keeps no moments."""
+
+    def __init__(self, groups, lr, rate, bound):
+        super().__init__(groups, dict(lr=float(lr), rate=float(rate), bound=float(bound)))
 
     @torch.no_grad()
-    def step(self, full=None):
-        """one lesson's step. `full` (the waking lesson's, `_timing_step`): {group name: (W, [tensors])} for each group whose lesson
-        carried act_inv's labels, the lesson's gradient with every label at full reliability (bounded as p.grad) and W its weight,
-        which the second moment takes whatever the reliability; a group without it is its own acts' lesson alone (W = the gain, the
-        second moment on p.grad), as before"""
-        full = full or {}
+    def step(self):
+        """one lesson's step: each element moved by the plain step on its gradient, at most the bound"""
         for g_ in self.param_groups:
-            w = float(g_["gain"])
-            W, fl_ = full.get(g_.get("name"), (w, None))
-            W = float(W)
-            if not W > 0.0:
-                continue                                           # no label weighed, earned or not: nothing moves
-            b1, b2 = g_["betas"]; a1, a2 = (1.0 - b1) * w, (1.0 - b2) * W
-            for k_, p in enumerate(g_["params"]):
+            s_ = float(g_["lr"]) * float(g_["rate"]); b_ = float(g_["lr"]) * float(g_["bound"])
+            if not s_ > 0.0:
+                continue
+            for p in g_["params"]:
                 if p.grad is None:
                     continue
-                st = self.state[p]
-                if not st:
-                    st["m"] = torch.zeros_like(p, memory_format=torch.preserve_format); st["v"] = torch.zeros_like(p, memory_format=torch.preserve_format)
-                    st["q1"] = 1.0; st["q2"] = 1.0
-                gh = p.grad / w if w > 0.0 else None               # u: the gradient per unit of the labels' weight
-                fh = gh if fl_ is None else fl_[k_] / W            # the scale's: the same lesson with every label earned, per unit of W
-                if gh is not None:
-                    st["m"].lerp_(gh, a1)
-                st["v"].mul_(1.0 - a2).addcmul_(fh, fh, value=a2)
-                if gh is not None:
-                    st["q1"] *= 1.0 - a1
-                st["q2"] *= 1.0 - a2
-                if gh is None:
-                    continue                                       # nothing earned: nothing written (the scale taken)
-                den = (st["v"].sqrt() / (1.0 - st["q2"]) ** 0.5).add_(g_["eps"])
-                p.addcdiv_(st["m"], den, value=-float(g_["lr"]) * w / (1.0 - st["q1"]))
+                p.sub_((p.grad * s_).clamp_(-b_, b_))
 
 
 class TimingMixin:
@@ -138,7 +126,7 @@ class TimingMixin:
         return self.cfg.get(k, MOTOR[k])
 
     def _gated_params(self, e):
-        """later effector e's parameters whose waking plasticity its labels' reliability gates (`GatedAdam`): act_pred and the
+        """later effector e's parameters whose waking plasticity its labels' reliability gates (`GatedDescent`): act_pred and the
         correction, the proposal's two terms (the forward half's lesson is its body sense's, a label felt, never read by act_inv)"""
         tm = self.m.timing[e.name]
         return list(tm.pred.parameters()) + (list(tm.cor.parameters()) if tm.sense_n else [])
@@ -148,91 +136,19 @@ class TimingMixin:
         tm = self.m.timing[e.name]
         return [f"pred.{n}" for n, _ in tm.pred.named_parameters()] + ([f"cor.{n}" for n, _ in tm.cor.named_parameters()] if tm.sense_n else [])
 
-    def _timing_label_grads(self, labs):
-        """act_inv's labels' gradient on act_pred and the correction, AT FULL RELIABILITY: for each later effector whose lesson carried
-        labels (`_timing_loss`'s third value, every label at weight 1, at the waking lesson's scale), taken on act_pred's and the
-        correction's parameters alone (the labels never reach the stream) before the lesson's backward frees the graph: {name: [grads]}"""
-        out = {}
-        for g_ in (self.opt_pred.param_groups if labs else ()):
-            lb_ = labs.get(g_["name"])
-            if lb_ is None:
-                continue
-            gs_ = torch.autograd.grad(lb_, g_["params"], retain_graph=True, allow_unused=True)
-            out[g_["name"]] = [torch.zeros_like(p_) if q_ is None else q_ for p_, q_ in zip(g_["params"], gs_)]
-        return out
-
-    def _timing_step(self, rep, clip, glab=None):
+    def _timing_step(self):
         """ACT_PRED'S AND THE CORRECTION'S STEP IN THE WAKING LESSON (after the waking lesson's own step): each later effector's group
-        of opt_pred (GatedAdam), one step a lesson. A lesson without act_inv's labels (an effector with no inverse model, a window of
-        own acts) steps at its own acts' share of the positions ("w_own") on the gradient the lesson's backward left, bounded per unit
-        of that weight at `clip`, as before. A lesson with them: the gradient written is the lesson's at the labels' reliability g, the
-        own acts' (the backward's) plus g times the labels' at full reliability (`glab`), at the gain w = w_own + g s_lab; the scale is
-        the same lesson with every label earned, the own acts' plus the labels' whole, at its weight W = w_own + s_lab ("s_lab": the
-        labels' share of the positions), whatever g; both bounded by the one factor that bounds the whole lesson per unit of W at
-        `clip`, so the bound too is the same at every reliability. EACH OPTIMIZER'S OWN BOUND (the R6 verifier's fourth look,
-        2026-09-24): with one bound over every parameter, as before, act_pred's gradient, which grows with act_inv's reliability, set
-        the size of every step of the stream (on the tiny arm the bound held at every lesson, the joint norm 9 to 13, act_pred's and the
-        corrections' the larger part), so the labels' reliability still moved the stream's learning with their route to it closed: with
-        act_pred held still, the proposal's error on a trained body moved by up to 0.5 between reliabilities; with the bounds apart,
-        not at all (the stream the same to the bit at every reliability, anatomy 31)"""
-        full = {}
-        for g_ in self.opt_pred.param_groups:
-            r_ = rep.get(g_["name"]); q_ = (glab or {}).get(g_["name"])
-            if r_ is None:
-                g_["gain"] = 0.0
-                continue
-            if q_ is None:                                         # no label: the own acts' lesson alone, as before
-                g_["gain"] = float(r_["w_own"])
-                if g_["gain"] > 0.0:
-                    torch.nn.utils.clip_grad_norm_(g_["params"], float(clip) * g_["gain"])   # |u| = |the gradient| / gain at most clip
-                continue
-            W = float(r_["w_own"]) + float(r_["s_lab"]); rel = float(r_["rel"])
-            own_ = [p_.grad if p_.grad is not None else torch.zeros_like(p_) for p_ in g_["params"]]
-            whole = [a_ + b_ for a_, b_ in zip(own_, q_)]          # the lesson with every label earned
-            tot = torch.linalg.vector_norm(torch.stack([torch.linalg.vector_norm(x_) for x_ in whole]))
-            k_ = torch.clamp(float(clip) * W / (tot + 1e-6), max=1.0)   # its bound per unit of W, the one factor for both
-            for p_, a_, b_ in zip(g_["params"], own_, q_):
-                p_.grad = (a_ + rel * b_) * k_                     # what is written: the labels at their reliability
-            g_["gain"] = float(r_["w_own"]) + float(r_["w_lab"])
-            full[g_["name"]] = (W, [x_ * k_ for x_ in whole])
-        if full:
-            self.opt_pred.step(full=full)
-        else:
-            self.opt_pred.step()                                   # no label in any lesson: as before
-
-    def _gated_moments(self, e):
-        """later effector e's act_pred and correction moments in opt_pred, by parameter name, copied to the CPU: {"lesson": {name: {m,
-        v, q1, q2}}} (empty before its first lesson). Saved with the body (body/core/persistence.py)"""
-        opt = getattr(self, "opt_pred", None)
-        g_ = next((x_ for x_ in (opt.param_groups if opt is not None else ()) if x_["name"] == e.name), None)
-        if g_ is None:
-            return {}
-        return {"lesson": {n_: {"m": opt.state[p_]["m"].detach().cpu().clone(), "v": opt.state[p_]["v"].detach().cpu().clone(),
-                                "q1": float(opt.state[p_]["q1"]), "q2": float(opt.state[p_]["q2"])}
-                           for n_, p_ in zip(self._gated_names(e), g_["params"]) if opt.state.get(p_)}}
-
-    def _gated_moments_load(self, e, saved):
-        """a save's moments for later effector e (`_gated_moments`' form) into opt_pred, where each parameter's name and shape match;
-        returns what could not be loaded (as born): a parameter this organ has not, or a shape it has not, and every moment of a save
-        whose form is not this one (R6 fix 5's two samples, "own" and "labels", 2026-09-24: moments of another optimizer)"""
-        opt = getattr(self, "opt_pred", None)
-        saved = saved or {}
-        bad = [f"{k_}.{n_}" for k_, v_ in saved.items() if k_ != "lesson" for n_ in (v_ or {})]
-        sv_ = saved.get("lesson") or {}
-        g_ = next((x_ for x_ in (opt.param_groups if opt is not None else ()) if x_["name"] == e.name), None)
-        if g_ is None:
-            return bad + [f"lesson.{n_}" for n_ in sv_]
-        names = self._gated_names(e)
-        bad += [f"lesson.{n_}" for n_ in sv_ if n_ not in names]
-        for n_, p_ in zip(names, g_["params"]):
-            s_ = sv_.get(n_)
-            if s_ is None:
-                continue
-            if tuple(s_["m"].shape) != tuple(p_.shape) or tuple(s_["v"].shape) != tuple(p_.shape):
-                bad.append(f"lesson.{n_}"); continue
-            opt.state[p_] = {"m": s_["m"].to(p_.device, p_.dtype).clone(), "v": s_["v"].to(p_.device, p_.dtype).clone(),
-                             "q1": float(s_["q1"]), "q2": float(s_["q2"])}
-        return bad
+        of opt_pred (`GatedDescent`), one plain step a lesson on the gradient the lesson's backward left on them, the own acts' and
+        act_inv's labels' at their reliability (`_timing_loss`, body/core/cortex.py), each element's step bounded (R6 fix 7). EACH
+        OPTIMIZER'S OWN BOUND (the R6 verifier's fourth look, 2026-09-24): with one bound over every parameter, as before, act_pred's
+        gradient, which grows with act_inv's reliability, set the size of every step of the stream (on the tiny arm the bound held at
+        every lesson, the joint norm 9 to 13, act_pred's and the corrections' the larger part), so the labels' reliability still moved
+        the stream's learning with their route to it closed: with act_pred held still, the proposal's error on a trained body moved by
+        up to 0.5 between reliabilities; with the bounds apart, not at all (the stream the same to the bit at every reliability, anatomy
+        31). The day's norm bound stays the day's; act_pred's bound is GatedDescent's, element by element and out of ordinary lessons'
+        reach, never a norm over the group (R6 fix 3 to 6 bounded each group's norm per unit of the lesson's weight; a norm bound that
+        binds sets the step's size whatever the gradient's, as Adam does)"""
+        self.opt_pred.step()
 
     def _body_sense(self, e):
         """effector e's body sense this tick [sense_n] (float32, detached): its sense channel's observation at the tick's position (the
@@ -380,8 +296,9 @@ class TimingMixin:
         the forward half's squared error to the sense at t+1 from the stream at t. Returns (loss, report, labels): `loss` the own acts'
         errors (and the rests of an effector with no inverse model) and the forward half's, which the waking lesson's backward carries;
         `labels` act_inv's labels' errors AT FULL RELIABILITY (weight 1 at each labelled rest whose next sense is felt, over the same
-        positions), None where the window has none, whatever the reliability (the scale `_timing_step` steps against takes them whole,
-        R6 fix 6). The whole lesson is loss + reliability x labels. The report's "w" is the lesson's mean label weight, "w_own" and
+        positions), None where the window has none, whatever the reliability. The whole lesson is loss + reliability x labels (the
+        waking lesson adds them so, body/core/cortex.py, and act_pred steps plainly on its gradient, `GatedDescent`; kept apart since R6
+        fix 5, whose instruments and tests read the labels' part at full reliability). The report's "w" is the lesson's mean label weight, "w_own" and
         "w_lab" its own acts' and its labels' parts, "s_lab" the labels' share of the positions (their weight at full reliability) and
         "rel" the reliability they were weighed at.
         THE WEIGHTS ARE ABSOLUTE (the R6 verifier's first finding, 2026-09-24): the weighted errors are averaged over the window's
@@ -389,8 +306,8 @@ class TimingMixin:
         the own acts and never scaled them: a window of rests alone, or of the parent's hand alone, taught at full strength at any
         reliability above 0 (the verifier's probe: the same loss and gradient at 0.01 as at 1). Over the positions, a label act_inv
         has not earned teaches only in proportion to what it has earned, and an own act teaches as it did in a window of own acts.
-        The report's "w" is the lesson's mean label weight over the same positions, the gain at which act_pred and the correction step
-        (`GatedAdam`: the loss's weights reach the gradient, and Adam alone would undo their scale).
+        The report's "w" is the lesson's mean label weight over the same positions (the loss's weights reach the gradient, and act_pred's
+        plain step keeps their scale, `GatedDescent`; Adam undid it, R6 fix 1 to 6).
         ACT_INV'S LABELS TEACH act_pred AND THE CORRECTION, NEVER THE STREAM (the R6 verifier's fourth look, 2026-09-24): at a position
         whose target is act_inv's label the proposal reads the stream detached. The stream steps with the waking lesson's Adam, which
         divides each parameter's step by its recent gradient size, so the share of these labels that reached it through the proposal
@@ -446,10 +363,10 @@ class TimingMixin:
             rows = tab(tgt[1:])
         w1 = wt[1:]
         err = 0.5 * ((P.float() - rows.float()) ** 2).sum(-1)
-        # THE LABELS APART (the R6 verifier's fifth and sixth looks): the own acts' errors (and an uninverted effector's rests) and
-        # act_inv's labels' at full reliability (weight 1 at each labelled rest whose next sense is felt), each over the window's
-        # positions (the weights absolute); the lesson is the own acts' plus the reliability times the labels'. A window with no
-        # labelled rest is the own acts' alone, as before
+        # THE LABELS APART (since R6 fix 5): the own acts' errors (and an uninverted effector's rests) and act_inv's labels' at full
+        # reliability (weight 1 at each labelled rest whose next sense is felt), each over the window's positions (the weights
+        # absolute); the lesson is the own acts' plus the reliability times the labels'. A window with no labelled rest is the own
+        # acts' alone, as before
         w_own, lab_f = w1, None
         if e.inverse and bool(rested[1:].any()):
             lab1 = rested[1:]

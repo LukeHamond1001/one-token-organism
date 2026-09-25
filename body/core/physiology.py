@@ -271,4 +271,9 @@ MOTOR = dict(
     # counts decaying over this many own acts (since 2026-09-24; before, the critics' estimator's samples, one per setting of each
     # joint of an act, so the memory in acts was this over the joints' settings); zero until 64 acts
     act_inv_tau=8192,
+    # ACT_PRED'S PLAIN STEP (R6 fix 7; body/core/timing.py GatedDescent): act_pred and its correction learn by plain gradient descent,
+    # the step per unit of the lesson's gradient act_pred_rate x sqrt(d) x the waking rate (live_lr; d act_pred's fan-in, the stream's
+    # width); each element's step bounded by act_pred_bound x sqrt(d) such steps. Derived and measured in GatedDescent's docstring
+    act_pred_rate=2.0,
+    act_pred_bound=1.0,
 )

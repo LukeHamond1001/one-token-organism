@@ -7,8 +7,9 @@ window position holds each of the anatomy's channels under its field, the window
 their codes summed in the anatomy's order (`Organs.inputs`), and the waking lesson teaches a later channel's own forecast head. Since step
 R6 it also teaches each later effector's motor timing part (act_pred and the forward half, body/core/timing.py `_timing_loss`), and a body
 with later effectors has its lesson whether or not the world spoke in the window (their acts are targets on every position); act_pred and
-the correction step with an optimizer of their own, their plasticity gated by the reliability of the lesson's labels (`GatedAdam`), the
-labels act_inv reads reach them and never the stream, and each optimizer's gradient has its own bound (the language body's is as it was)."""
+the correction step with an optimizer of their own, plain steps on the lesson's gradient with its labels at their reliability
+(`GatedDescent`, R6 fix 7), the labels act_inv reads reach them and never the stream, and each optimizer's gradient has its own bound
+(the language body's is as it was)."""
 import torch
 import torch.nn.functional as F
 
@@ -247,16 +248,16 @@ class CortexMixin:
                     ll = ll + 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
             # THE LATER EFFECTORS' TIMING PARTS (step R6): act_pred taught the act at each position from the stream before it (its own
             # act, or where it rested what act_inv reads moved it, weighted by act_inv's reliability), the forward half its next body sense;
-            # act_pred and the correction step with opt_pred (body/core/timing.py GatedAdam), one step a lesson: what it writes the own
-            # acts and act_inv's labels at their reliability, the scale the lesson with every label earned; the rest here; act_inv's
-            # labels reach act_pred and the correction alone, never the stream (`_timing_loss`)
-            mrep = {}; mlab = {}
+            # the whole lesson the own acts' errors plus act_inv's labels' at their reliability; act_pred and the correction step with
+            # opt_pred (body/core/timing.py GatedDescent: one plain step a lesson on this gradient, each element bounded, R6 fix 7), the
+            # rest here; act_inv's labels reach act_pred and the correction alone, never the stream (`_timing_loss`)
+            mrep = {}
             for i_ in range(1, len(self.anatomy.effectors)):
                 lt_, rt_, lb_ = self._timing_loss(i_, C, obs)
                 if lt_ is not None:
                     ll = ll + lt_; mrep[self.anatomy.effectors[i_].name] = rt_
-                    if lb_ is not None:
-                        mlab[self.anatomy.effectors[i_].name] = lb_
+                    if lb_ is not None and rt_["rel"] > 0.0:
+                        ll = ll + rt_["rel"] * lb_                      # act_inv's labels at their reliability (they reach act_pred alone)
             if str(self.cfg.get("rem_form", "forecast")) == "imagine":
                 fl, fc = torch.zeros((), device=self.dev), 1.0            # the forecast heads retired (§5c: their target was the stream's own dynamics)
             else:
@@ -265,21 +266,20 @@ class CortexMixin:
             # tick's share, raised by the dopamine of the moment and by the running surprise (the rewarded and the novel are written,
             # the rest weakly); at the defaults (1, 0, 0) the lesson is as before
             gate_ = float(self.cfg.get("wake_base", 1.0)) + float(self.cfg.get("wake_dopa", 0.0)) * abs(float(getattr(self, "_dopa", 0.0))) + float(self.cfg.get("wake_novel", 0.0)) * float(getattr(self, "_surp_run", 0.0))
-            loss = (ll + fl) * (1.0 + self.stress / 10.0) * gate_      # stress raises plasticity
-            mlab = {k_: v_ * (1.0 + self.stress / 10.0) * gate_ for k_, v_ in mlab.items()}   # act_inv's labels, every one earned, at the lesson's scale
-            if not bool(torch.isfinite(loss.detach())) or not all(bool(torch.isfinite(v_.detach())) for v_ in mlab.values()):
+            loss = (ll + fl) * (1.0 + self.stress / 10.0) * gate_      # stress raises plasticity (act_pred's plain step keeps this scale; Adam's steps do not)
+            if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
-            glab = self._timing_label_grads(mlab) if mlab else None    # their gradient on act_pred and the correction, before the graph is freed
             loss.backward()
             if motor_:
-                # EACH OPTIMIZER'S GRADIENT BOUNDED BY ITS OWN NORM (the R6 verifier's fourth look): the day's parameters here, act_pred's
-                # and the corrections' per effector in _timing_step, so their labels' reliability never sets the stream's step
+                # EACH OPTIMIZER'S GRADIENT BOUNDED APART (the R6 verifier's fourth look): the day's parameters by their norm here,
+                # act_pred's and the corrections' element by element in their plain step (_timing_step), so their labels' reliability
+                # never sets the stream's step
                 torch.nn.utils.clip_grad_norm_([p_ for g_ in self.opt_day.param_groups for p_ in g_["params"]], 1.0)
             else:
                 torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
             self.opt_day.step()
             if motor_:
-                self._timing_step(mrep, 1.0, glab)                     # act_pred and the corrections: one step, the labels at their reliability
+                self._timing_step()                                    # act_pred and the corrections: one plain step, each element bounded
             out = {"latent_cos": round(lc, 3), "forecast_cos": round(fc, 3), "n_world": int(w.sum()), "tick": self.ticks}
             if motor_:
                 out["motor"] = {k_: dict(v_, w=round(v_["w"], 4), w_own=round(v_["w_own"], 4), w_lab=round(v_["w_lab"], 4),

@@ -4,10 +4,10 @@ place (the core refactor's step R2): the life builds its anatomy from it (body/c
 organs' alphabet from that anatomy. Both build the anatomy before the organs (a load under the save's constants, then the caller's), so
 the organs build the forecast heads its later channels declare (step R4; the diary declares none). Both take the world the life lives
 in (`world`, step R9; the diary's DiaryWorld when none is given): the world is not saved with the body. A body with later effectors
-keeps their act_inv's reliability (step R6; its running confusion per joint since 2026-09-24, the kappas and the reliability) and
-act_pred's and the correction's moments in opt_pred (since R6 fix 5; one set, the lesson's, since R6 fix 6: a save from before them,
-or with R6 fix 5's two samples, loads with a note, the moments born again) under the save's life["motor"], a key only such a body's
-save has; their timing organs are in the organs' state (timing.<name>).
+keeps their act_inv's reliability (step R6; its running confusion per joint since 2026-09-24, the kappas and the reliability) under
+the save's life["motor"], a key only such a body's save has; their timing organs are in the organs' state (timing.<name>). act_pred
+and the correction step plainly since R6 fix 7, with no optimizer state to keep: the moments of R6 fix 5 and 6's Adam that their
+saves hold are not read (said once).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import os
@@ -40,13 +40,12 @@ class PersistenceMixin:
                          "bands": self.bands.detach().cpu().clone(), "writes_today": int(getattr(self, "_writes_today", 0)), "store_fresh": bool(getattr(self, "_store_fresh", False)), "utt_open": bool(self._utt_open),
                          "pace": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pq.items()}, "pace_day": {k_: (list(v_) if isinstance(v_, list) else v_) for k_, v_ in self._pace_day.items()}}}
         if len(self.anatomy.effectors) > 1:                         # the later effectors' act_inv reliability (step R6); the diary's save has no such key
-            # and act_pred's and the correction's moments in opt_pred (R6 fix 5; the lesson's one set since R6 fix 6): the running
-            # record of what the lessons have written and of their scale, and how much of each is still its birth's zero (q1, q2),
-            # which the night leaves as it is, so a reload is no birth for them (the only optimizer state a save carries; the day's
-            # Adam and the others are born again at a load, as they always were, review 2026-09-22 item 20)
+            # (act_pred's and the correction's plain step has no state since R6 fix 7: nothing of opt_pred is saved; R6 fix 5 and 6
+            # saved their Adam's moments here, "moments"; the day's Adam and the others are born again at a load, as they always were,
+            # review 2026-09-22 item 20)
             blob["life"]["motor"] = {e_.name: {"inv_conf": (None if st_["inv_conf"] is None else [[[float(x_) for x_ in r_] for r_ in c_] for c_ in st_["inv_conf"]]),
                                                "inv_kappa": [float(x_) for x_ in st_["inv_kappa"]], "inv_gain": float(st_["inv_gain"]),
-                                               "inv_n": int(st_["inv_n"]), "moments": self._gated_moments(e_)}
+                                               "inv_n": int(st_["inv_n"])}
                                      for e_, st_ in zip(self.anatomy.effectors[1:], self.motor)}
         torch.save(blob, path + ".tmp"); os.replace(path + ".tmp", path)
         return {"saved": path}
@@ -199,25 +198,16 @@ class PersistenceMixin:
                   f" heard past its pauses; {int(life._pq.get('n_ret', 0))} returns, {int(life._pq.get('n_pause', 0))} pauses in all; P {P_:.1f} ticks):"
                   f" the shadow day (pace_sense 1) comes first", flush=True)
         if isinstance(L.get("motor"), dict):                          # the later effectors' act_inv reliability (step R6), for those this anatomy declares
-            unsaved_ = []; two_ = []
+            adam_ = []
             for e_, st_ in zip(life.anatomy.effectors[1:], getattr(life, "motor", ())):
                 mv_ = L["motor"].get(e_.name)
                 if not isinstance(mv_, dict):
                     continue
                 st_["inv_n"] = int(mv_.get("inv_n", 0))
-                # ACT_PRED'S MOMENTS (R6 fix 5; the lesson's one set since R6 fix 6): a save from before them (R6 fix 5, 2026-09-24) held
-                # none, and one of R6 fix 5 held two samples' (the own acts' and act_inv's labels', each with a scale of its own, which
-                # R6 fix 6 undid): act_pred's and the correction's moments born again (said once: a fresh GatedAdam steps each lesson
-                # at its weight, as a newborn's does)
-                mo_ = mv_.get("moments")
-                if isinstance(mo_, dict) and ("own" in mo_ or "labels" in mo_) and "lesson" not in mo_:
-                    two_.append(e_.name)
-                elif isinstance(mo_, dict):
-                    bad_ = life._gated_moments_load(e_, mo_)
-                    if bad_:
-                        print(f"load: {e_.name}'s act_pred moments saved for other parameters than its organs' (born again): {bad_}", flush=True)
-                else:
-                    unsaved_.append(e_.name)
+                # ACT_PRED'S MOMENTS, SAVED BY R6 FIX 5 OR 6 (2026-09-24): their Adam's (R6 fix 5's two samples, "own" and "labels"; R6 fix
+                # 6's one set, "lesson"); act_pred steps plainly since R6 fix 7, with no state to give back: not read (said once)
+                if isinstance(mv_.get("moments"), dict) and any(mv_["moments"].values()):
+                    adam_.append(e_.name)
                 cf_ = mv_.get("inv_conf")
                 if e_.inverse and isinstance(cf_, list) and [len(c_) for c_ in cf_] == [int(k_) for k_ in e_.factors] and \
                         all(len(r_) == len(c_) for c_ in cf_ for r_ in c_) and len(mv_.get("inv_kappa") or []) == len(e_.factors):
@@ -229,12 +219,9 @@ class PersistenceMixin:
                 elif e_.inverse and cf_ is not None:             # counts of other joints than this anatomy declares
                     print(f"load: {e_.name}'s act_inv confusion was saved for other joints than its declaration {list(e_.factors)}: it is "
                           f"earned again from its next act", flush=True)
-            if unsaved_:
-                print(f"load: act_pred's and the corrections' moments were not saved (a save from before R6 fix 5, 2026-09-24) for "
-                      f"{unsaved_}: born again from the next lesson", flush=True)
-            if two_:
-                print(f"load: act_pred's and the corrections' moments were saved as R6 fix 5's two samples (2026-09-24, before R6 fix 6) "
-                      f"for {two_}: born again from the next lesson", flush=True)
+            if adam_:
+                print(f"load: act_pred's and the corrections' moments were saved by R6 fix 5 or 6 (2026-09-24, their Adam's) for {adam_}: "
+                      f"not read, act_pred steps plainly since R6 fix 7 (no state)", flush=True)
         if L.get("store_after_night") is not None:
             life._store_after_night = int(L["store_after_night"])
         elif isinstance(L.get("last_night"), dict) and L["last_night"].get("store_slots") is not None:
