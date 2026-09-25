@@ -1,37 +1,42 @@
-"""the parent's motion (docs/SIM_DESIGN.md 4.1, 4.2, 4.10, A3-A10, A22, A25; the build plan's W2; body/sim/parent_motion.py and
-parent_consts.py). Run: python3 -m body.tests.test_sim_parent (at nice -n 19; a few minutes on this Mac).
+"""the parent's motion (docs/SIM_DESIGN.md 4.1, 4.2, 4.10, A3-A10, A22, A25, A25b; the build plan's W2; body/sim/parent_motion.py,
+parent_body.py and parent_consts.py). Run: python3 -m body.tests.test_sim_parent (at nice -n 19; about half an hour on this Mac).
   THE SCENE: no weld on the G1 (a world with one refuses to be born), no contact exclusion between her and it, her collision shapes
-  soft (solref 0.05) at contact priority 2 so her softness is every contact's with the G1; her face's spline table read bit for
-  bit as before its cache; her caps as checked against their sources (NIOSH's 35 lb: 156 N; 200 N brief; one hand 100 / 150 N).
+  at contact priority 2 so hers is every contact's with the G1 (MuJoCo's default time constant, 0.02; her hands' 0.006); her face's
+  spline table read bit for bit as before its cache; her caps as checked against their sources (NIOSH's 35 lb: 156 N; 200 N brief;
+  one hand 100 / 150 N).
+  HER BODY (the lead's decisions of 2026-09-25, A25b): 16 dynamic segments at de Leva's female masses; her muscles one actuator per
+  joint axis, its ranges her strength, damping inside, nothing else of hers on her joints; her trunk carried at her plan by a support
+  capped at 695.5 N (never down) and 257.4 N m; pushed along the floor past it she gives way upright, pushed down it never pulls her
+  down (22); her kneeling down at a person's pace, the floor under her legs never slammed (11).
   THE CAPPED SPRING: a hold pulled far past its cap applies exactly its cap on every step, as an outside force at the held point;
   her own caps bound her holds together (one hand 100 N, both 156 N, or 150 / 200 N for at most 2 s, then the sustained caps until
-  she has rested 2 s); its force is felt on the held link's touch zone; a hold at its cap for 2 ticks stops (the guide).
+  she has rested); its force is felt on the held link's touch zone; a hold at its cap for 2 ticks stops (the guide).
   THE INTERFACE (P3's StubMotion's: request, status, cancel, state): an unknown act refused with its reason; the gaze and the body
   on their own channels, each in the order asked; a look during a focus word held FOCUS_TICKS; a cancel mid-act lets a transition
   finish; pruned acts keep their final status.
-  HER ACTS ON THE G1: attend (she comes to it, kneels beside it and rests a hand on its trunk at TOUCH_N), lean_in (A1's face test
-  passes with the child's fovea on her mouth, 25 cm or more from its eyes, 15 deg or more off its fovea's born line: C34), the guide
-  (its cap the arm's own push x 1.5, at most 100 N; its peak within it), the pull-to-sit's pull placed within reach (stopped at her
-  cap, laid back, the G1 never sat up, lifted or slid), the prop (the trunk held within 30 deg at her sustained caps; the catch 2
-  ticks after the trunk passes 35 deg from hovering), the brief turn (at most 2 s, within 200 N, no slide); in every one her body
-  stops and backs off within 2 steps of a contact over a resting hand's weight, and no act lifts, slides or sits the G1 up.
+  HER ACTS ON THE G1: attend (she comes to it, kneels beside it and rests a hand on its trunk), lean_in (A1's face test passes with
+  the child's fovea on her mouth, 25 cm or more from its eyes, 15 deg or more off its fovea's born line: C34), the guide (its cap the
+  arm's own push x 1.5, at most 100 N; its peak within it), the pull-to-sit's pull placed within reach (stopped at her cap, laid
+  back, the G1 never sat up, lifted or slid), the prop (the trunk held within 30 deg at her sustained caps; the catch 2 ticks after
+  the trunk passes 35 deg from hovering), the brief turn (at most 2 s, within 200 N, no slide).
+  HER HANDS REACH AND TOUCH (16, in place of the 10 mm test): on the still child every hold engages with her grip within 3 cm of
+  where she planned it on the child's surface, her hand touching it.
+  UNDER BABBLE (23, the lead's criteria): 8 seeds at p_rest 0.3 and 0.6, every physics step measured: no pain on the child from her
+  by the joints' law; her hands' and forearms' forces within ISO/TS 15066; her trunk clear of its body and never resting on it;
+  her touches made; no kN spike, no contact deeper than a person's region gives at its bound, no lift; her work on it; her muscles
+  within her strength on every step.
   TOYS: the block handed into its hand ends in its hand; a toy the child touches is never taken (A4).
-  HER PACE: no segment of hers moves faster than a person does (walking, kneeling down: parent_consts.KNEEL_SEG_MPS; KNEEL_PATH as
-  measured on parent_poses.kneel_down); her idle cost a tick.
-  THE EXACT REPLAY TEST WITH HER ACTING: a world saved while she comes to the child and restored in the same world and in a new one
-  lives the same ticks bit for bit (every frame, her motion's state, the final save); and a save taken before one of her trunk
-  solves, restored in a new world (her solve's wall time is never her state).
+  HER PACE: no segment of hers moves faster than a person does (walking, kneeling down: parent_consts.KNEEL_SEG_MPS and
+  KNEEL_PELVIS_MPS; KNEEL_TIME as measured on parent_poses.kneel_down); her idle cost a tick.
+  THE EXACT REPLAY TESTS WITH HER ACTING: a world saved while she comes to the child and restored in the same world and in a new one
+  lives the same ticks bit for bit (every frame, her motion's state, the final save) (12); a save taken before one of her trunk
+  solves, restored in a new world (17); under babble across three processes, her muscles' controls and forces and her support's
+  force in every digest (24).
   THE W2 VERIFIER'S FINDINGS, each a test that would have caught it: under babble her force on the child stays under F_pain and
   her body backs off along the contact, never into it (14); from beside a still child she gets up and goes on without pressing on
-  it, and a give-up never fails the next act (15); her hands on it never pass through its hulls (16); the save across a solve (17);
-  the catch pushes at once at her brief caps and every fall is written down (18, C6); DOES and 'copy' for P3 (19); her caps bound
-  her holds and her body's contacts together, friction counted (20); her lean-in within LEAN_DIST_M (5); an equality of any kind on
-  the G1 refused (1); the brief caps given back only after BRIEF_REST_S (2).
-  ITS SECOND ROUND: C8 on the verifier's babble seeds 1, 5, 6, 8 with its act mix, her body's work on the G1 never enough to slide
-  or lift it, her way out never toward the child, no planning fault (14); a tendon rope or tendon equality on the G1 refused and her
-  palm, fingers and thumb touching the G1 (1); every hand, whatever it does, against the G1's hulls on the still child and under
-  babble (16); the pull-to-sit from its feet as A9 has it (7); a save in the middle of a push under babble, her report read every
-  tick, replayed bit for bit (12); P3's contract (21: statuses, report(), cancel(id, tick), Act.thing, eyes_on_child)."""
+  it, and a give-up never fails the next act (15); the save across a solve (17); the catch pushes at once at her brief caps and every
+  fall is written down (18, C6); DOES and 'copy' for P3 (19); her caps bound her holds and her body's contacts together, friction
+  counted (20); P3's contract (21: statuses, report(), cancel(id, tick), Act.thing, eyes_on_child)."""
 import math
 import os
 import sys
@@ -54,6 +59,15 @@ kin = G.kin
 Act = T.Act
 
 
+def _opened(f):
+    """a test of a controller built but closed at birth (parent_motion.NOT_AT_BIRTH, A25c): run with them opened"""
+    def g():
+        with PM.opened():
+            return f()
+    g.__name__, g.__doc__ = f.__name__, f.__doc__
+    return g
+
+
 def _live(w, n, until=None):
     for k in range(n):
         w.apply({})
@@ -74,11 +88,11 @@ def test_the_scene():
     assert not [e for e in range(m.neq) if m.eq_type[e] == mujoco.mjtEq.mjEQ_WELD and (m.eq_obj1id[e] in g1 or m.eq_obj2id[e] in g1)]
     assert m.nexclude == 0
     her = [g for g in range(m.ngeom) if m.body(int(m.geom_bodyid[g])).name.startswith("parent_") and m.geom_contype[g]]
-    limb = lambda g: m.body(int(m.geom_bodyid[g])).name.startswith(("parent_hand", "parent_forearm"))
-    assert len(her) > 100 and all(m.geom_priority[g] == K.SOFT_PRIORITY and np.allclose(m.geom_solref[g], K.LIMB_SOLREF if limb(g)
+    hand = lambda g: m.body(int(m.geom_bodyid[g])).name.startswith("parent_hand")
+    assert len(her) > 100 and all(m.geom_priority[g] == K.SOFT_PRIORITY and np.allclose(m.geom_solref[g], K.HAND_SOLREF if hand(g)
                                                                                            else K.SOFT_SOLREF) for g in her)
-    assert K.SOFT_SOLREF == (0.02, 1.0) and K.LIMB_SOLREF == K.SOFT_SOLREF   # MuJoCo's default time constant, the G1's own: her body
-    # gives by itself (the lead's decision of 2026-09-25; A4's 0.05 softened a kinematic body)
+    assert K.SOFT_SOLREF == (0.02, 1.0) and K.HAND_SOLREF == (0.006, 1.0)   # MuJoCo's default time constant, the G1's own: her body
+    # gives by itself (the lead's decision of 2026-09-25; A4's 0.05 softened a kinematic body); her hands three steps (A25b's build)
     assert max(int(m.geom_priority[g]) for g in range(m.ngeom) if m.geom_bodyid[g] in g1) < K.SOFT_PRIORITY
     # a weld on the G1 refuses the world (4.1: every hold on it is a capped spring)
     def rig(spec):
@@ -114,11 +128,12 @@ def test_the_scene():
             assert "capped spring" in str(e), e
         else:
             raise AssertionError(f"an equality or tendon tying the G1 was taken ({r.__name__})")
-    # her palm, fingers and thumb touch the G1 (and only it), soft as the rest of her (the W2 verifier's finding)
+    # her palm, fingers and thumb touch the room and the floor, never the G1 (A25c: every force she puts on the child is a capped
+    # spring or a toy), soft as the rest of her
     for sd in "LR":
         fg = w.parent.finger_geoms[sd]
-        assert len(fg) >= 11 and all(m.geom_contype[g] == 0 and m.geom_conaffinity[g] == 3 and m.geom_priority[g] == K.SOFT_PRIORITY
-                                     and np.allclose(m.geom_solref[g], K.LIMB_SOLREF) for g in fg), sd
+        assert len(fg) >= 11 and all(m.geom_contype[g] == 0 and m.geom_conaffinity[g] == 18 and m.geom_priority[g] == K.SOFT_PRIORITY
+                                     and np.allclose(m.geom_solref[g], K.HAND_SOLREF) for g in fg), sd
     # her face's table through the cached spline coefficients: the same numbers as map_coordinates' own prefilter, bit for bit
     from scipy.ndimage import map_coordinates
     face = kin.face
@@ -131,7 +146,7 @@ def test_the_scene():
     print("parent 1: no equality on the G1 (a world with a weld, a connect, a weld by sites, a pin to the world, a rope or a tendon",
           "equality refused), her palm, fingers and thumb touching the G1, the room and the floor, never a toy; no",
           "contact exclusion, her", len(her), "collision shapes",
-          "at priority 2 (solref 0.02, MuJoCo's default and the G1's own); her face's table read bit for bit through the cached spline; her caps 100/150 N one hand,"
+          "at priority 2 (solref 0.02, MuJoCo's default and the G1's own; her hands 0.006); her face's table read bit for bit through the cached spline; her caps 100/150 N one hand,"
           "156/200 N both (NIOSH's 35 lb), 2 s brief")
 
 
@@ -276,12 +291,15 @@ def test_lean_in():
     assert a["status"] == "done", a
     assert all(v[0] for v in f["face_test_on_her_mouth"].values()), f
     assert min(f["mouth_to_eyes_m"].values()) >= K.FACE_MIN_M and f["off_born_line_deg"] >= K.FACE_OFF_LINE_DEG, f
-    assert K.LEAN_DIST_M[0] <= min(f["mouth_to_eyes_m"].values()) <= K.LEAN_DIST_M[1], f   # the lean-in distance (the verifier's ninth)
+    assert K.LEAN_DIST_M[0] <= min(v[2] for v in f["plan"]["eyes"].values()) <= K.LEAN_DIST_M[1], f   # the lean-in distance planned (the
+    assert K.LEAN_DIST_M[0] - REACH_TOL_M <= min(f["mouth_to_eyes_m"].values()) <= K.LEAN_DIST_M[1] + REACH_TOL_M, f   # verifier's ninth),
+    # reached within her body's tracking of its plan (REACH_TOL_M: a physical body, A25b)
     print(f"parent 5: lean_in in {a['ticks']} ticks: her face ({f['plan']['mode']}, lean {f['plan']['lean']:g}, spine",
           f"{f['plan']['spine']:g}, twist {f['plan']['twist']:g}) {f['mouth_to_eyes_m']} m from its eyes, {f['off_born_line_deg']} deg off",
           f"its fovea's born line; A1's face test passes in both eyes with the fovea put on her mouth")
 
 
+@_opened
 def test_the_guide():
     """parent 6: the guide (A10): its cap min(1.5 x the arm's own push at that pose, 100 N); its peak within it; the wrist raised.
     The far knee bent over (A8) from beside its hips: within 76 N, stopped when it sat there 2 ticks; nothing lifted or slid"""
@@ -305,6 +323,7 @@ def test_the_guide():
           f"{ko['g1']['held']['pelvis_travel_cm']} cm")
 
 
+@_opened
 def test_the_pull_never_sits_it_up():
     """parent 7 (the W2 verifier's sixth finding: A9 has her kneel at its feet, W2 knelt beside its hips and refused): asked in the
     world, she comes to its feet (clearing a toy there), kneels tall, takes both forearms, and the pull grows to her brief cap, sits
@@ -327,6 +346,7 @@ def test_the_pull_never_sits_it_up():
           f"pelvis moved {g['pelvis_travel_cm']} cm")
 
 
+@_opened
 def test_the_prop_and_the_catch():
     """parent 8: the prop (A9) holds a trunk placed within 30 deg at her sustained caps; from hovering, the catch engages 2 ticks
     (her reaction) after the trunk passes 35 deg"""
@@ -425,12 +445,32 @@ def test_her_pace():
         if all(pm.status(i) in PM.DONE_STATES for i in ids) and not pm.phases:
             break
     assert pm.stats.get("jumps_refused", 0) == 0 and worst[0] <= PM.MAX_JUMP_M and worst[1] <= PM.MAX_LIMB_JUMP_M, worst
-    us = np.linspace(0.0, 0.25, 26)
-    pos = np.array([[kin.fk(PM.P.kneel_down((0, 0), 0.0, u))[s][0] for s in kin.SEGS] for u in us])
-    L = float(np.linalg.norm(np.diff(pos, axis=0), axis=2).max(axis=1).sum())
-    assert abs(L - PM.KNEEL_PATH[1]) < 0.02, L
+    kt = T.kneel_time(w)                                                # KNEEL_TIME measured again (her pelvis at KNEEL_PELVIS_MPS)
+    assert max(abs(a - b) for a, b in zip(kt, PM.KNEEL_TIME)) < 1e-3, [(a, b) for a, b in zip(kt, PM.KNEEL_TIME) if abs(a - b) >= 1e-3][:3]
+    # kneeling down and sitting back onto her heels, her carried pelvis never faster than KNEEL_PELVIS_MPS (the eased path's peak,
+    # measured on her body as the physics moves it), and her legs never meeting the floor with more than her weight
+    w2 = W.G1World(seed=1)
+    pm2 = w2.parent
+    j = pm2.request(Act("attend"))
+    pel = []; floor = []; prev = None
+    for _ in range(400):
+        w2.apply({})
+        pz = w2.d.xpos[pm2.bm.pelvis].copy()
+        if pm2.base["mode"] == "kneel_down" and prev is not None:
+            pel.append(float(np.linalg.norm(pz - prev)) / W.TICK_S)
+        prev = pz
+        floor.append(_floor_load(w2))
+        if pm2.status(j) in PM.DONE_STATES and not pm2.phases:
+            break
+    weight = K.BODY_MASS_KG * 9.81
+    assert pm2.status(j) == "done" and max(pel) <= K.KNEEL_PELVIS_MPS * 1.15 and max(floor) < 1.25 * weight, (pm2.why(j), max(pel),
+                                                                                                          max(floor))   # (no slam: the
+    # first carried build met the floor at 1.6 kN, 2.7 x her weight; a walking stance foot carries about her weight)
     print(f"parent 11: to the door and back to the child ({[pm.status(i) for i in ids]}): her pelvis moved at most {worst[0]:.3f} m",
-          f"a tick, any segment at most {worst[1]:.3f} m; KNEEL_PATH's first quarter {PM.KNEEL_PATH[1]} m, measured again {L:.3f} m")
+          f"a tick, any segment at most {worst[1]:.3f} m; KNEEL_TIME measured again ({PM.KNEEL_TIME[-1]} s at its segments' and her",
+          f"pelvis's paces from standing to her heels, eased to {PM.EASE_PEAK} x that: {PM.EASE_PEAK * PM.KNEEL_TIME[-1]:.1f} s);",
+          f"from standing to her heels); kneeling down beside the child her pelvis at most {max(pel):.2f} m/s (a tick's mean; her",
+          f"pace {K.KNEEL_PELVIS_MPS} m/s), the floor under her legs at most {max(floor):.0f} N (her weight {weight:.0f} N)")
 
 
 def test_exact_replay_with_her_acting():
@@ -470,11 +510,11 @@ def test_exact_replay_with_her_acting():
             asked_.append(pm_.request(Act(*T.BABBLE_ACTS[len(asked_) % len(T.BABBLE_ACTS)])))
         w_.apply(b_.acts())
         return w_.frame(), pm_.report(w_.tick)
-    for _ in range(400):
+    for k_ in range(400):
         tick(w, b, asked)
-        if any(pm.yielding.values()) and any(pm.stopped.values()):
-            break
-    assert any(pm.yielding.values()), "no push on her before the save"
+        if pm.phases and k_ >= 60:                                      # A25c: her body passes no contact to it, so the save is
+            break                                                       # taken with an act of hers under way
+    assert pm.phases, "no act of hers under way before the save"
     blob = w.save_state(); bst = b.state(); ask0 = list(asked); y0 = pm.stats["yield_ticks"]
     rec1 = [tick(w, b, asked) for _ in range(M)]
     end1 = w.save_state(); st1 = pm.state(); y1 = pm.stats["yield_ticks"]
@@ -607,38 +647,77 @@ def test_getting_up_beside_it():
           f"most: where, peak N, steps: {grazes}); an act after one given up ran")
 
 
-HANDS_MM = 10.0                 # her hands and forearms never inside the G1 beyond this (the lead's decision of 2026-09-25): she is a
-                                # body, so what goes in is her soft contact's own depth under the force it carries
+REACH_TOL_M = 0.03              # m: her grip within this of the held point she planned as her hold engages (a finger's length; the
+                                # hold's own GRIP_TOL_M: past it her grip holds the less)
+TOUCH_GAP_M = 0.02              # m: her hand rests on the child: within 2 cm of the held link (A25c: her hand passes no force, its
+                                # hold's capped spring does, so no contact holds it on the surface; a palm's thickness, ours)
 
 
-def test_her_hands_stay_out():
-    """parent 16 (the W2 verifier's third finding in both its rounds; the lead's decision of 2026-09-25): her hands and forearms never
-    pass into the child. Every hand (its palm, fingers, thumb and proxy) and forearm, whatever it does (reaching onto it, holding it,
-    letting go, resting), at four steps a tick against the G1's convex hulls (which enclose its drawn meshes, MuJoCo's own
-    distance), and every physics step by her contacts' own depth: on the still child, in every act that puts a hand on it (attend,
-    the guide, the prop with its reach onto the torso, the pull-to-sit, the turn), and under babble, the verifier's seeds 1, 6
-    and 8 at p_rest 0.3 (a hip 58 mm and a knee 39 mm into the kinematic parent's fingers), within HANDS_MM"""
-    rows = {}
-    T.HANDS = True
-    try:
-        for n in ("attend", "guide", "prop", "pull_to_sit", "turn"):
-            r = T.SCENARIOS[n]()
-            rows[n] = (r["probe"]["hand_to_hull_mm"], r["probe"]["hand_worst"], r["probe"]["contact_depth_mm"])
-            assert (rows[n][0] is None and n == "pull_to_sit" and "no spot" in r["acts"][0]["why"]) or \
-                (rows[n][0] is not None and rows[n][0] >= -HANDS_MM), (n, rows[n])   # (the pull refused before she went: parent 7)
-            assert max(rows[n][2]["hand"], rows[n][2]["forearm"]) <= HANDS_MM, (n, rows[n])
-    finally:
-        T.HANDS = False
-    bab = {}
-    for seed in (1, 6, 8):
+def _hold_watch(w, rows):
+    """an instrument every tick: for each of her holds on the child, her grip's distance to where the hold means it (the held
+    point and her grip's offset on it, as it engaged) and her hand's least distance to the held link (her palm, fingers, thumb and
+    capsule against its collision shapes, MuJoCo's own distance), its contact force with the child"""
+    pm, m, d = w.parent, w.m, w.d
+    ft = np.zeros(6)
+    for h in pm.holds:
+        arm = pm.arms.get(h.side, {})
+        if arm.get("mode") != "hold" or arm.get("hold") != h.name:
+            continue
+        Rl = d.xmat[h.body].reshape(3, 3)
+        want = h.point(d) + Rl @ np.asarray(arm.get("goff_plan", arm["goff0"]), float)   # where she planned her grip on it
+        err = float(np.linalg.norm(d.site_xpos[pm.grip_site[h.side]] - want))
+        best = 0.1
+        for g in pm.hand_all[h.side]:
+            for c in pm.g1_geoms:
+                if int(m.geom_bodyid[c]) != h.body:
+                    continue
+                if float(np.linalg.norm(d.geom_xpos[c] - d.geom_xpos[g])) - m.geom_rbound[c] - m.geom_rbound[g] > best:
+                    continue
+                best = min(best, float(mujoco.mj_geomDistance(m, d, int(g), int(c), best, ft)))
+        rows.append((h.kind, h.side, w.tick, err, best, float(pm.hold_touch.get(h.side, 0.0))))
+
+
+@_opened
+def test_her_hands_reach_and_touch():
+    """parent 16 (the lead's decision of 2026-09-25, A25b, in place of the 10 mm test): on the still child, every act that puts a hand
+    on it (attend, the guide, the prop with its reach onto the torso, the turn) brings her hand to its planned contact: as its hold
+    engages her grip is within REACH_TOL_M of the held point she planned (the child's surface there and her planned clearance,
+    HAND_CLEAR_M), and on every tick the hold lasts her hand touches the child (in contact, or within TOUCH_GAP_M of the held link,
+    MuJoCo's own distance) and stays there within REACH_TOL_M; attend again with the child turned 90 deg and by the wall. The
+    touches under babble are counted in the babble test (parent 23)"""
+    runs = {}
+    for name, make, seq in (("attend", None, [("attend", None)]), ("attend_rot90", "rot90", [("attend", None)]),
+                            ("attend_wall", "wall", [("attend", None)]), ("guide", None, [("guide", None)]),
+                            ("prop", "prop", [("prop", None)]), ("turn", "front", [("turn", None)])):
         w = W.G1World(seed=1)
-        r = T.ask_repeatedly(w, T.BABBLE_ACTS, 600, T.babbler(seed, 0.3), hands=True)
-        bab[seed] = (r["probe"]["hand_to_hull_mm"], r["probe"]["hand_worst"], r["probe"]["contact_depth_mm"])
-        assert bab[seed][0] is None or bab[seed][0] >= -HANDS_MM, (seed, bab[seed])
-        assert max(bab[seed][2]["hand"], bab[seed][2]["forearm"]) <= HANDS_MM, (seed, bab[seed])
-    print("parent 16: her hands and forearms against the child's hulls, least distance (mm) at four steps a tick: still child",
-          {k: v[0] for k, v in rows.items()}, "; under babble", {k: v[0] for k, v in bab.items()}, "; her contacts' deepest (mm):",
-          {k: v[2] for k, v in rows.items()}, {k: v[2] for k, v in bab.items()}, "(worst:", {k: v[1] for k, v in bab.items()}, ")")
+        if make in ("rot90", "wall"):
+            T.place_child(w, make)
+        elif make == "front":
+            T.place_g1(w, "front")
+        elif make == "prop":
+            T.place_g1(w, "sit")
+            ch = w.parent.child
+            fr = PM.unit(ch.torso_R[:, 0] * [1, 1, 0])[:2]
+            lat = np.array([-fr[1], fr[0]])
+            w.parent.place("heels", ch.pelvis[:2] + lat * 0.75 - fr * 0.10, math.atan2(-lat[1], -lat[0]))
+        rows = []
+        out = T.run(w, seq, 700 if make != "prop" else 120, on_tick=lambda w_, k, _r=rows: _hold_watch(w_, _r))
+        a = out["acts"][0]
+        first = {}
+        for kind, sd, tick, err, gap, f in rows:
+            first.setdefault((kind, sd), (err, gap))
+        runs[name] = dict(status=a["status"], why=a["why"][:80], holds=len(first),
+                          engage_err_cm=round(100 * max((e for e, _g in first.values()), default=float("nan")), 1),
+                          worst_err_cm=round(100 * max((r[3] for r in rows), default=float("nan")), 1),
+                          worst_gap_mm=round(1e3 * max((r[4] for r in rows), default=float("nan")), 1),
+                          touching=f"{sum(1 for r in rows if r[4] <= TOUCH_GAP_M)}/{len(rows)}")
+        assert first, (name, a)
+        assert max(e for e, _g in first.values()) <= REACH_TOL_M, (name, runs[name])
+        assert all(r[4] <= TOUCH_GAP_M and r[3] <= REACH_TOL_M for r in rows if r[0] in ("touch",)), (name, runs[name])
+        assert all(r[4] <= TOUCH_GAP_M for r in rows[:1]), (name, runs[name])
+    print("parent 16: her hands reach their planned contact on the still child (act: status, holds, her grip off its planned point",
+          "as the hold engaged and at worst after, cm; her hand's largest gap to the held link, mm; ticks touching of ticks held):",
+          runs)
 
 
 def test_exact_replay_across_a_solve():
@@ -677,6 +756,7 @@ def test_exact_replay_across_a_solve():
           f"restored in a new world, {n} ticks bit for bit")
 
 
+@_opened
 def test_the_catch_pushes_at_once():
     """parent 18 (the W2 verifier's sixth finding; C6): from hovering, 2 ticks after the trunk passes 35 deg her hands' springs pull
     at once toward where the trunk sat most upright (never merely holding where her hands met it), up to her brief caps, and
@@ -731,6 +811,7 @@ def test_the_interface_does_and_copies():
           "a kind she cannot show refused with its reason")
 
 
+@_opened
 def test_her_caps_count_her_body():
     """parent 20 (the W2 verifier's eighth finding): her caps bound her holds and her body's contacts together, friction
     included: in the pull-to-sit and the brief turn her holds never take more than her caps leave after what her body pressed
@@ -856,13 +937,25 @@ def _floor_load(w):
     return tot
 
 
+def _support_ok(pm):
+    """her support's force and torque on the last step within their caps and never downward (A25b)"""
+    f = pm.drive.sup
+    fz = float(f[2]); fn = float(np.linalg.norm(f[:3]))
+    # the torque applied is the turning torque plus the lever of the force carried at her centre of mass: the turning part is capped
+    return fz >= -1e-9 and fn <= K.SUP_F_MAX + 1e-6
+
+
 def test_her_body():
-    """parent 22 (the lead's decision of 2026-09-25: she is a body): her 16 segments dynamic in one tree (a free pelvis, 11 ball
-    joints, 6 hinges), no mocap; de Leva's female masses at her 62 kg (Harbo 2012's women's median); her strength per joint and
-    direction (Harbo 2012, Garces 2002, Nordin 1987); kneeling on her heels beside the child her weight rests on the floor through
-    her knees, shins and feet (her balance never lifts her: its vertical force is none while she is still); standing at the door
-    she stands upright; walking, her gait is carried with her floor contact off (a disclosed limit); a chain stopped holds where it
-    is"""
+    """parent 22 (the lead's decisions of 2026-09-25: she is a body, and her trunk is carried, A25b): her 16 segments dynamic in one
+    tree (a free pelvis, 11 ball joints, 6 hinges), no mocap; de Leva's female masses at her 62 kg (Harbo 2012's women's median). HER
+    MUSCLES: one MuJoCo actuator per axis of each joint, its control range and force range her strength there per direction (Harbo
+    2012, Garces 2002, Nordin 1987), its damping inside that range; no joint damping and no applied torque of hers on her joints.
+    HER SUPPORT: standing at the door, kneeling on her heels beside the child and walking, her pelvis is carried at her plan, her
+    weight carried at her centre of mass, the support's force never over SUP_F_MAX nor downward and its turning torque never over
+    SUP_T_MAX, on every step. PUSHED on her chest along the floor at 1.5 x the support's reach there, she gives way along the floor,
+    carried: her pelvis never sinks, her trunk stays upright, and the support never presses her down; pushed down on her back, the
+    support gives way (never pulls her down) and her weight is on what pushes. Her feet, knees and shins meet the floor by contact
+    (no gait of hers is carried through it). A chain stopped holds where it is"""
     w = W.G1World(seed=1)
     m, d, pm = w.m, w.d, w.parent
     bm = pm.bm
@@ -879,82 +972,199 @@ def test_her_body():
     assert lim["elbow_L"] == (-27.2, 26.5) and lim["knee_R"] == (-166.6, 59.3) and lim["shoulder_L.x"] == (-45.7, 38.0)
     assert lim["shoulder_R.x"] == (-38.0, 45.7) and lim["hip_L.y"] == (-104.4, 128.7) and lim["ankle_L.y"] == (-27.5, 76.4)
     assert lim["neck.y"] == (-26.5, 16.6) and lim["lumbar.y"] == (-103.0, 64.0) and lim["wrist_L.x"] == (-14.4, 6.01)
-    # standing at the door
-    _live(w, 20)
-    R = d.xmat[bm.pelvis].reshape(3, 3)
-    stand_tilt = math.degrees(math.acos(min(1.0, float(R[2, 2]))))
-    stand_load = _floor_load(w)
+    # her muscles: one actuator per dof, on that dof's joint and axis, its ranges her strength, its damping Kd; nothing else of hers
+    assert len(bm.act) == len(bm.dofs) == 39 and len(set(bm.act.tolist())) == 39
+    for k, a in enumerate(bm.act):
+        j = int(m.actuator_trnid[a, 0])
+        assert int(m.actuator_trntype[a]) == int(mujoco.mjtTrn.mjTRN_JOINT) and m.jnt_dofadr[j] <= bm.dofs[k] < m.jnt_dofadr[j] + 3
+        assert tuple(m.actuator_forcerange[a]) == tuple(m.actuator_ctrlrange[a]) == (bm.lo[k], bm.hi[k])
+        assert m.actuator_forcelimited[a] and m.actuator_ctrllimited[a]
+        assert m.actuator_gainprm[a, 0] == 1.0 and m.actuator_biasprm[a, 1] == 0.0 and m.actuator_biasprm[a, 2] == -bm.kd[k] < 0.0
+    assert not np.any(m.dof_damping[bm.dofs]) and not np.any(m.dof_armature[bm.dofs]) and not np.any(m.dof_frictionloss[bm.dofs])
+    assert not np.any(m.jnt_actfrclimited[[j for j in range(m.njnt) if (m.joint(j).name or "").startswith("parent_")]])
     weight = K.BODY_MASS_KG * 9.81
-    assert stand_tilt < 6.0 and abs(stand_load - weight) < 0.1 * weight, (stand_tilt, stand_load, weight)
-    # kneeling on her heels beside the child (placed): the floor carries her, her balance lifts nothing
+
+    def live(w_, n, push=None):
+        """n ticks; every step her muscles within her strength, nothing else of hers on her joints, her support within its caps;
+        push(w_, s): an outside force on her for the step"""
+        pm_ = w_.parent
+        worst = dict(muscle=0.0, other=0.0, sup_ok=True, pel_err=0.0, tilt=0.0)
+        orig = pm_.before_step
+
+        def before(s_, _o=orig, _w=w_):
+            _o(s_)
+            if push is not None:
+                push(_w, s_)
+        pm_.before_step = before
+        oa = pm_.after_step
+
+        def after(s_, _o=oa, _w=w_):
+            _o(s_)
+            af = _w.d.actuator_force[pm_.bm.act]
+            worst["muscle"] = max(worst["muscle"], float(np.max(np.maximum(af / pm_.bm.hi, af / pm_.bm.lo))))
+            worst["other"] = max(worst["other"], float(np.abs(_w.d.qfrc_applied[pm_.bm.dofs]).max()))
+            worst["sup_ok"] = worst["sup_ok"] and _support_ok(pm_)
+        pm_.after_step = after
+        try:
+            for _ in range(n):
+                w_.apply({})
+                worst["pel_err"] = max(worst["pel_err"], float(np.linalg.norm(w_.d.xpos[pm_.bm.pelvis] - pm_.drive.PR[-1])))
+                R_ = w_.d.xmat[pm_.bm.seg_body["chest"]].reshape(3, 3)
+                worst["tilt"] = max(worst["tilt"], math.degrees(math.acos(min(1.0, float(R_[2, 2])))))
+        finally:
+            pm_.before_step = orig; pm_.after_step = oa
+        return worst
+    # standing at the door
+    st = live(w, 20)
+    assert st["muscle"] <= 1.0 + 1e-9 and st["other"] == 0.0 and st["sup_ok"] and st["pel_err"] < 0.01 and st["tilt"] < 3.0, st
+    stand_sup = float(pm.drive.sup[2])
+    assert abs(stand_sup + _floor_load(w) - weight) < 0.1 * weight, (stand_sup, _floor_load(w))
+    # kneeling on her heels beside the child (placed): carried at her plan, her weight on her support, her legs resting on the floor
     w = _spring_world()
-    m, d, pm = w.m, w.d, w.parent
-    loads, lifts = [], []
-    for _ in range(30):
-        w.apply({})
-        loads.append(_floor_load(w)); lifts.append(float(pm.drive.bal[2]))
-    kneel_load = float(np.mean(loads[-10:]))
-    assert max(abs(x) for x in lifts) == 0.0 and abs(kneel_load - weight) < 0.1 * weight, (kneel_load, weight, max(lifts))
-    assert pm.support == 0.0 and int(m.geom_conaffinity[pm.body_geoms[0]]) == PM.BODY_AFFINITY
-    # walking (from the door to the sofa): her gait carried, her floor contact off
+    pm = w.parent
+    kn = live(w, 30)
+    assert kn["muscle"] <= 1.0 + 1e-9 and kn["other"] == 0.0 and kn["sup_ok"] and kn["pel_err"] < 0.01, kn
+    kneel_sup = float(pm.drive.sup[2]); kneel_floor = _floor_load(w)
+    assert abs(kneel_sup + kneel_floor - weight) < 0.1 * weight and kneel_floor < 0.25 * weight, (kneel_sup, kneel_floor)
+    # pushed along the floor on her chest at 1.5 x what her support holds along it: she gives way along the floor, carried upright
+    room = math.sqrt(K.SUP_F_MAX ** 2 - weight ** 2)
+    fpush = np.array([1.5 * room, 0.0, 0.0])
+    z0 = float(w.d.xpos[pm.bm.pelvis][2]); x0 = w.d.xpos[pm.bm.pelvis].copy()
+    cb = pm.bm.seg_body["chest"]
+
+    def push_side(w_, s_):
+        w_.d.xfrc_applied[cb, :3] = fpush
+    ps = live(w, 6, push_side)
+    w.d.xfrc_applied[cb] = 0.0
+    moved = float(np.linalg.norm((w.d.xpos[pm.bm.pelvis] - x0)[:2])); sank = z0 - float(w.d.xpos[pm.bm.pelvis][2])
+    assert ps["muscle"] <= 1.0 + 1e-9 and ps["sup_ok"] and moved > 0.05 and sank < 0.02 and ps["tilt"] < 30.0, (ps, moved, sank)
+    # pushed down on her back: the support gives way, never pulls her down (its force never below zero)
+    fdown = np.array([0.0, 0.0, -2.0 * weight])
+    low = []
+
+    def push_down(w_, s_):
+        w_.d.xfrc_applied[cb, :3] = fdown
+        low.append(float(pm.drive.sup[2]))
+    pd = live(w, 2, push_down)
+    w.d.xfrc_applied[cb] = 0.0
+    assert pd["muscle"] <= 1.0 + 1e-9 and pd["sup_ok"] and min(low) >= 0.0, (pd, min(low))
+    # walking (from the door to the sofa): carried at her plan, her feet on the floor by contact (no gait carried through it)
     w3 = W.G1World(seed=1)
     pm3 = w3.parent
     j = pm3.request(Act("walk", "sofa"))
-    n = _live(w3, 300, until=lambda w_: w_.parent.base["mode"] == "walk" and w_.parent.support == 1.0)
-    assert pm3.base["mode"] == "walk" and pm3.support == 1.0 and int(w3.m.geom_conaffinity[pm3.body_geoms[0]]) == PM.GAIT_AFFINITY, \
-        (pm3.base["mode"], pm3.support, n, pm3.status(j), pm3.why(j))
+    feet = []
+    oa3 = pm3.after_step
+
+    def watch(s_, _o=oa3):
+        _o(s_)
+        if pm3.base["mode"] == "walk":
+            feet.append(_floor_load(w3))
+    pm3.after_step = watch
+    wk = live(w3, 60)
+    assert wk["muscle"] <= 1.0 + 1e-9 and wk["other"] == 0.0 and wk["sup_ok"], wk
+    assert feet and np.mean(feet) > 0.1 * weight and int(w3.m.geom_conaffinity[pm3.body_geoms[0]]) == PM.BODY_AFFINITY, (np.mean(feet),)
     # a stopped chain holds its joints where they were at the stop
     w2 = _spring_world()
     pm2 = w2.parent
     w2.apply({})
     pm2.drive.hold_chain(0)
     held = pm2.drive.stop[0]
-    tb = pm2.drive.t1
     sel = pm2.bm.ball_chain == 0
-    assert np.array_equal(held[2][sel], w2.d.qpos[pm2.bm.ball_q][sel]) and pm2.drive.carry == 1.0
+    assert np.array_equal(held[2][sel], w2.d.qpos[pm2.bm.ball_q][sel])
     pm2.drive.hold_chain(2)
-    assert pm2.drive.carry == 0.0
+    assert np.array_equal(pm2.drive.PR[0], w2.d.qpos[pm2.bm.root_q:pm2.bm.root_q + 3]) and not np.any(pm2.drive.VR)
     print(f"parent 22: her body: 16 dynamic segments (a free pelvis, 11 balls, 6 hinges), {K.BODY_MASS_KG:g} kg in de Leva's female",
-          f"shares, her strength per joint (the elbow {lim['elbow_L']}, the knee {lim['knee_R']}, the hip {lim['hip_L.y']} N m);",
-          f"standing at the door upright within {stand_tilt:.1f} deg on {stand_load:.0f} N of floor; kneeling on her heels the floor",
-          f"carries {kneel_load:.0f} N of her {weight:.0f} N, her balance lifting nothing; walking, her gait carried and her floor",
-          "contact off; a stopped chain holds where it stopped")
+          f"shares; her muscles: 39 actuators, each ranged at her strength (the elbow {lim['elbow_L']}, the knee {lim['knee_R']}, the hip",
+          f"{lim['hip_L.y']} N m), damping inside, no joint damping or applied torque of hers; standing her pelvis within",
+          f"{100 * st['pel_err']:.1f} cm of her plan, upright within {st['tilt']:.1f} deg, carried {stand_sup:.0f} N; kneeling on her heels",
+          f"within {100 * kn['pel_err']:.1f} cm, her support carrying {kneel_sup:.0f} N and the floor {kneel_floor:.0f} N of her {weight:.0f} N;",
+          f"pushed along the floor at {fpush[0]:.0f} N (1.5 x her support's {room:.0f} N there) she gave way {100 * moved:.0f} cm, sank",
+          f"{100 * sank:.1f} cm, her chest within {ps['tilt']:.0f} deg of upright; pushed down at {-fdown[2]:.0f} N her support gave way",
+          f"(its least vertical force {min(low):.0f} N, never down); walking, her feet on the floor at {np.mean(feet):.0f} N on average;",
+          "every step within her strength and her support's caps; a stopped chain holds where it stopped")
 
 
-C8_SEEDS = (2, 4, 6)            # the babbler's seeds for C8 in this suite (tools/sim_parent_motion.py c8 runs 12)
+BABBLE_SEEDS = (1, 2, 3, 4, 5, 6, 7, 8)   # the babbler's seeds (the lead's decision of 2026-09-25: at least 8), each at p_rest 0.3 and 0.6
+BABBLE_TICKS = 600
+WORK_ACTS = T.BABBLE_ACTS                           # the verifier's mix (the guide is not at birth: A25c, parent_motion.NOT_AT_BIRTH)
 
 
-def test_c8_under_babble():
-    """parent 23 (the lead's decision of 2026-09-25: she is a body; C8, the W2 verifier's third round): the babbling G1 at p_rest
-    0.3 and 0.6, attend alone asked over and over (the verifier's failing case: seed 2 at 0.6) and the verifier's mix, 600 ticks
-    each: her 10 ms force on any link of the child (her holds and her body together) never reaches F_pain; her hands' and
-    forearms' contacts never go into it beyond HANDS_MM; her body's work on it never slides or lifts it a centimetre in a tick or
-    over the run (she resists it, never pushes it along); no planning fault. How many acts she did and was refused is written
-    down (she reaches the child under babble), and each tick over F_pain is told as hers (her contacts did positive work on that
-    link in those 10 ms: she pushed it) or the child's (it struck or pressed her: its own blow, as on the floor, C5)"""
-    rows = []; bad = []
-    for mix, kinds in (("attend", [("attend",)]), ("mix", list(T.BABBLE_ACTS))):
+def babble_row(seed, p_rest, kinds=WORK_ACTS, n=BABBLE_TICKS):
+    """one babbling run, her acts asked over and over, measured (the probe's per-step instruments): a row for parent 23's table"""
+    w = W.G1World(seed=1)
+    t0 = time.time()
+    r = T.ask_repeatedly(w, list(kinds), n, T.babbler(seed, p_rest))
+    p_ = r["probe"]
+    st = w.parent.stats
+    rg = p_["region_N"]
+    return dict(seed=seed, p_rest=p_rest, ms=round((time.time() - t0) / n * 1e3), asked=r["asked"], outcome=r["outcome"],
+                jumps=r["jumps_refused"], joint_law=p_["joint_law"], f_pain_ticks=p_["ticks_over_f_pain"],
+                hands=dict(ms10=max(rg["hand_L"]["ms10"], rg["hand_R"]["ms10"]), tick=max(rg["hand_L"]["tick"], rg["hand_R"]["tick"])),
+                forearms=dict(ms10=max(rg["forearm_L"]["ms10"], rg["forearm_R"]["ms10"]),
+                              tick=max(rg["forearm_L"]["tick"], rg["forearm_R"]["tick"])),
+                body=dict(ms10=max(rg[k]["ms10"] for k in ("upper_arm", "trunk", "head", "legs"))),
+                trunk=p_["trunk"], muscles=p_["muscles"], support=p_["support"], step_peak=p_["step_peak_N"], step_peak_at=p_["step_peak_at"],
+                depth=p_["depth_by_region_mm"], depth_at=p_["contact_depth_worst"], up=p_["net_up_N"], work=p_["body_work_J"],
+                holds=dict(tried=dict(st.get("hold_tries", {})), engaged=dict(st.get("holds_engaged", {}))),
+                calm_waits=st.get("calm_waits", 0), standoff_ticks=st.get("standoff_ticks", 0))
+
+
+def babble_verdict(r, weight):
+    """the lead's criteria (a) to (f) on one row: [(criterion, ok, what)]"""
+    jl = r["joint_law"]; tr = r["trunk"]; mu = r["muscles"]
+    dep = r["depth"]
+    return [
+        ("a: no pain on it from her (the joints' law, A37)", jl["ticks_over_a_joints_limit"] == 0 and jl["ticks_base_over_f_pain"] == 0
+         and r["f_pain_ticks"] == 0, (jl["ticks_over_a_joints_limit"], jl.get("by"), jl["worst"])),
+        ("b: her hands and forearms within ISO/TS 15066", r["hands"]["ms10"] <= K.HAND_N[1] and r["hands"]["tick"] <= K.HAND_N[0]
+         and r["forearms"]["ms10"] <= K.FOREARM_N[1] and r["forearms"]["tick"] <= K.FOREARM_N[0], (r["hands"], r["forearms"])),
+        ("c: her trunk clear of its body, never resting on it", tr["standoff_mm"] is None or tr["standoff_mm"] >= 1e3 * K.TRUNK_STANDOFF_M
+         and tr["longest_touch_run_ticks"] <= K.REST_TICKS, tr),
+        ("d: touches made (an instrument under babble since A25c; the still child's are parent 16's)", True, r["holds"]),
+        ("e: no kN spike, no deep contact, no lift", r["step_peak"] < 1000.0 and all(dep[k] <= 1e3 * K.DEPTH_M[k] + 1e-6 for k in K.DEPTH_M)
+         and r["up"]["tick"] < weight, (r["step_peak"], dep, r["up"])),
+        ("f: her work on it (the guides and placements asked)", r["jumps"] == 0 and
+         r["work"]["contact_max"] < 0.01 * min(312.0, weight), (r["outcome"], r["work"])),
+        ("her muscles within her strength", mu["largest_share_of_strength"] <= 1.0 + 1e-9 and mu["other_torque_max"] == 0.0, mu),
+        ("her support within its caps, never down", r["support"]["force_max_N"] <= K.SUP_F_MAX + 1e-6 and r["support"]["force_up_min_N"] >= 0.0
+         and r["support"]["torque_max_Nm"] <= K.SUP_T_MAX + 1e-6, r["support"]),
+    ]
+
+
+def test_babble():
+    """parent 23 (the lead's structural decision of 2026-09-25, A25b; C8): the babbling G1 on 8 seeds at p_rest 0.3 and 0.6 (the
+    design's sparse babble and a busy one), 600 ticks each, her acts asked over and over (attend, show the block, lean_in, touch its
+    tummy; the guide is not at birth, A25c), every physics step measured:
+      (a) NO PAIN ON IT FROM HER: her contacts' and holds' outside torque on each of its 43 joints (J^T f, the world's truth that its
+          born observer estimates) never past that joint's own limit as a 10 ms mean (A37), nor her force on its base or on any link
+          past F_pain; every tick over is written down with who did the work there (she pushed it, or it struck or pressed her);
+      (b) her hands' and forearms' contact forces with it within ISO/TS 15066's body-region bounds (hands and fingers 140 N
+          quasi-static, 280 N transient; lower arms 160 / 320 N: a tick's mean and a 10 ms mean);
+      (c) her trunk (pelvis, abdomen, chest and head) never nearer its body (its trunk's links) than TRUNK_STANDOFF_M at four
+          steps a tick, and her trunk, head and legs never touching it more than REST_TICKS in a row (never resting on it);
+      (d) her touches made: every touch whose hold she tried engaged on it at least once in the run;
+      (e) no single step's contact between them over 1 kN, no contact of hers deeper than DEPTH_M, her upward force on it never
+          as much as its weight (she never lifts it);
+      (f) her work on it: no act's plan faults, and no contact of her body puts more net energy into it than a centimetre's
+          slide (the energy her body gave it, net over each contact);
+      and her muscles within her strength on every step, nothing else of hers on her joints.
+    Every row and every criterion that fails is printed (the lead's per-seed table)"""
+    rows, bad = [], []
+    for seed in BABBLE_SEEDS:
         for pr in (0.3, 0.6):
-            for seed in C8_SEEDS:
-                w = W.G1World(seed=1)
-                weight = w.body_mass * float(np.linalg.norm(w.m.opt.gravity))
-                t0 = time.time()
-                r = T.ask_repeatedly(w, kinds, 600, T.babbler(seed, pr))
-                p_ = r["probe"]
-                done = r["outcome"].get("done", 0)
-                rows.append((mix, pr, seed, p_["her_10ms_on_child_N"], p_["ticks_over_f_pain_by"], p_["ticks_over_her_150N"],
-                             p_["contact_depth_mm"], p_["body_work_J"], done, r["asked"], round((time.time() - t0) / 600 * 1e3)))
-                wmin = min(312.0, weight) * 0.01
-                why = [k for k, ok in (("F_pain", p_["ticks_over_f_pain"] == 0),
-                                       ("depth", max(p_["contact_depth_mm"]["hand"], p_["contact_depth_mm"]["forearm"]) <= HANDS_MM),
-                                       ("work", p_["body_work_J"]["tick_max"] < wmin and p_["body_work_J"]["positive_sum"] < wmin),
-                                       ("planning fault", r["jumps_refused"] == 0)) if not ok]
-                if why:
-                    bad.append((mix, pr, seed, why, p_["f_pain_events"][:3], p_["contact_depth_worst"]))
-    assert not bad, (len(bad), "of", len(rows), bad, rows)
-    print("parent 23: C8 under babble (600 ticks each: mix, p_rest, seed -> her 10 ms force on it N, ticks over F_pain hers and the",
-          "child's, ticks over her own 150 N, her",
-          "contacts' depth mm, her body's work J, acts done of asked, ms a tick):", rows, f"; F_pain {w.f_pain:.0f} N")
+            r = babble_row(seed, pr)
+            w_ = 34.39 * 9.81
+            v = babble_verdict(r, w_)
+            rows.append(r)
+            fails = [(c, what) for c, ok, what in v if not ok]
+            if fails:
+                bad.append((seed, pr, fails))
+            print(f"   seed {seed} p_rest {pr}: {r['ms']} ms a tick; acts {r['outcome']}; (a) joints' law {r['joint_law']['ticks_over_a_joints_limit']} "
+                  f"ticks {r['joint_law'].get('by')}, F_pain {r['f_pain_ticks']}; (b) hands {r['hands']} forearms {r['forearms']}; (c) {r['trunk']};"
+                  f" (d) {r['holds']}; (e) peak {r['step_peak']} N, depth {r['depth']} mm, up {r['up']}; (f) body work {r['work']};"
+                  f" muscles {r['muscles']['largest_share_of_strength']}; support {r['support']}; calm waits {r['calm_waits']}", flush=True)
+    assert not bad, bad
+    print("parent 23: under babble, 8 seeds at p_rest 0.3 and 0.6: every criterion held")
 
 
 def test_replay_across_processes():
@@ -984,9 +1194,9 @@ def test_replay_across_processes():
 PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_pull_never_sits_it_up, test_the_prop_and_the_catch, test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
-                test_her_hands_stay_out, test_exact_replay_across_a_solve, test_the_catch_pushes_at_once,
+                test_her_hands_reach_and_touch, test_exact_replay_across_a_solve, test_the_catch_pushes_at_once,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
-                test_c8_under_babble, test_replay_across_processes]
+                test_babble, test_replay_across_processes]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

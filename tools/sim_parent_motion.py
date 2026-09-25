@@ -118,6 +118,7 @@ class Probe:
         self.link10 = 0.0; self.link10_ticks = []; self._tick10 = 0.0
         self.hand_min = None; self.hand_worst = None
         self.depth = {"hand": 0.0, "forearm": 0.0, "body": 0.0}; self.depth_worst = {}   # her shapes' deepest contact into the G1 (m)
+        self.depth_reg = {k: 0.0 for k in ("hand", "forearm", "upper_arm", "trunk", "head", "legs")}   # ... by her body's region
         self.net_tick = np.zeros(3); self.net_win = []                  # her whole force on the G1 as a vector (holds and body)
         self.up10 = self.side10 = self.upT = self.sideT = 0.0
         self.work_tick = 0.0; self.work_max = 0.0; self.work_pos = 0.0  # her body's work on the G1 (J): positive only if she pushes it
@@ -137,6 +138,43 @@ class Probe:
                 nm = PM.kin.SEGS[sg]
                 self.seg_kind[g] = "hand" if nm.startswith("hand") else "forearm" if nm.startswith("forearm") else "body"
         self.g1 = [g for g in range(m.ngeom) if m.geom_bodyid[g] in w.scene.g1_set and m.geom_contype[g]]
+        # THE JOINTS' LAW FROM HER (A37; C8 as the lead's decision of 2026-09-25 words it: the observer's torque over a joint's limit
+        # from her contacts): the outside torque her contacts and her holds put on each of the G1's 43 joints (J^T f at each point,
+        # the world's truth, which the born observer estimates) and the outside force on its free base, as 10 ms means (A12's 5
+        # steps), against each joint's own torque limit (the model's, world.tau_max) and F_pain
+        self.jdof = np.asarray(w.dof, dtype=np.int64); self.jlim = np.asarray(w.tau_max, float).copy()
+        self.jnames = [m.joint(int(j)).name for j in w.jid]
+        self.root_dof = int(m.jnt_dofadr[m.body("pelvis").jntadr[0]])
+        self.jwin = []; self.bwin = []
+        self.jt_ratio = 0.0; self.jt_worst = None; self.jt_over_ticks = 0; self._jt_tick_over = False
+        self.jt_events = []; self._segs_hist = []                     # (tick, joint, N m, limit, her segments touching it)
+        self.jt_by = {}; self._jt_tick_over_who = False               # the ticks over a joint's limit by who did the work
+        self.base10 = 0.0; self.base_over_ticks = 0; self._base_tick_over = False
+        # THE LEAD'S BABBLE CRITERIA (2026-09-25, A25b): her contacts with the child by her region (hand, forearm, upper arm, trunk,
+        # head, legs), as 10 ms means and tick means (ISO/TS 15066's body-region bounds for her hands and forearms: K.HAND_N,
+        # K.FOREARM_N), the largest single step's contact force (a spike), her trunk's least distance to the child's body (its trunk's
+        # links) at four steps a tick, the longest run of ticks her trunk, head or legs touched the child, and her muscles against
+        # their limits every step (the actuators' force over its range; any other torque of hers on her joints)
+        self.region = {}
+        for g, kd in self.seg_kind.items():
+            nm = PM.kin.SEGS[int(pm.geom_seg[g])]
+            self.region[g] = ("hand" if nm.startswith("hand") else "forearm" if nm.startswith("forearm") else
+                              "upper_arm" if nm.startswith("upper_arm") else "head" if nm == "head" else
+                              "legs" if nm.startswith(("thigh", "shin", "foot")) else "trunk")
+        self.reg_names = ("hand_L", "hand_R", "forearm_L", "forearm_R", "upper_arm", "trunk", "head", "legs")
+        self.reg_win = []; self.reg10 = {k: 0.0 for k in self.reg_names}; self.reg_tick = {k: 0.0 for k in self.reg_names}
+        self._reg_acc = {k: 0.0 for k in self.reg_names}
+        self.step_peak = 0.0; self.step_peak_at = None
+        self.core_run = 0; self.core_run_max = 0; self._core_touch_tick = False; self.core_touch_ticks = 0
+        self.core_down = 0.0                                            # her trunk, head or legs pressing down on the child (N, a tick)
+        self._core_down_acc = 0.0
+        body_ids = {m.body(n).id for n in PM.CHILD_BODY}
+        self.child_body = [g for g in self.g1 if int(m.geom_bodyid[g]) in body_ids]
+        self.core_geoms = [g for g, kd in self.region.items() if kd == "trunk" or   # her trunk and her head's solid (c: the lead's
+                           (kd == "head" and (m.geom(g).name or "") == "parent_head")]   # "her trunk"), against its body
+        self.standoff_min = None; self.standoff_worst = None
+        self.act_ratio = 0.0; self.act_worst = None; self.applied_max = 0.0
+        self.sup_f = 0.0; self.sup_fz_min = None; self.sup_t = 0.0      # her support's force (largest, least upward) and torque (A25b)
         self._orig = pm.after_step
         pm.after_step = self.after
 
@@ -144,6 +182,8 @@ class Probe:
         self._orig(s)
         w = self.w; m, d = w.m, w.d; pm = w.parent
         body = 0.0; per = {}; net = np.zeros(3); touched = False; wk = {}
+        tau = np.zeros(m.nv)                                            # her contacts' and holds' generalized force on the G1
+        segs_now = set(); reg = {}
         for i in range(d.ncon):
             c = d.contact[i]
             g0, g1 = int(c.geom[0]), int(c.geom[1])
@@ -157,16 +197,30 @@ class Probe:
                 continue
             mine = g0 if ch == g1 else g1
             kd = self.seg_kind.get(mine, "body")
+            segs_now.add((PM.kin.SEGS[int(pm.geom_seg[mine])] if pm.geom_seg[mine] >= 0 else "toy", m.body(int(m.geom_bodyid[ch])).name))
             if -float(c.dist) > self.depth[kd]:
                 self.depth[kd] = -float(c.dist)
                 self.depth_worst[kd] = (w.tick, s, m.geom(mine).name, m.body(int(m.geom_bodyid[ch])).name)
+            rk = self.region.get(mine, "trunk")
+            self.depth_reg[rk] = max(self.depth_reg[rk], -float(c.dist))
             mujoco.mj_contactForce(m, d, i, self.f6)
-            body += float(np.linalg.norm(self.f6[:3]))
+            fmag = float(np.linalg.norm(self.f6[:3]))
+            body += fmag
             lk = int(m.geom_bodyid[ch]); per[lk] = per.get(lk, 0.0) + float(self.f6[0])
             fw = np.asarray(c.frame).reshape(3, 3).T @ self.f6[:3]      # on the second geom, from the first (world frame)
             fc = fw if ch == g1 else -fw
+            rg = self.region.get(mine, "trunk")
+            if rg in ("hand", "forearm"):
+                rg = rg + "_" + PM.kin.SEGS[int(pm.geom_seg[mine])][-1]
+            reg[rg] = reg.get(rg, 0.0) + fmag
+            if fmag > self.step_peak:
+                self.step_peak = fmag; self.step_peak_at = (w.tick, s, m.geom(mine).name or rg, m.body(lk).name)
+            if rg in ("trunk", "head"):
+                self._core_touch_tick = True
+                self._core_down_acc += max(0.0, -float(fc[2]))            # her pushing the child down (its force from her, downward)
             net += fc
             mujoco.mj_jac(m, d, self.jac, None, np.asarray(c.pos), lk)   # the child's point there, moving
+            tau += self.jac.T @ fc
             dw = float(fc @ (self.jac @ d.qvel)) * m.opt.timestep
             self.work_tick += dw; self.ep += dw; touched = True
             wk[lk] = wk.get(lk, 0.0) + dw
@@ -178,6 +232,60 @@ class Probe:
                 self.ep_max = max(self.ep_max, self.ep); self.ep_pos += max(0.0, self.ep); self.ep = 0.0; self.ep_gap = 0
         for h in pm.holds:                                              # her holds' force on the link each holds (C8: her force on
             per[h.body] = per.get(h.body, 0.0) + float(np.linalg.norm(h.force))   # the child, holds and body together)
+            mujoco.mj_jac(m, d, self.jac, None, h.point(d), h.body)
+            tau += self.jac.T @ h.force
+        for h in pm.holds:                                              # a hold's force is her hand's on the child
+            k_ = "hand_" + h.side
+            reg[k_] = reg.get(k_, 0.0) + float(np.linalg.norm(h.force))
+        self.reg_win = (self.reg_win + [reg])[-5:]
+        for k_ in self.reg_names:
+            self._reg_acc[k_] += reg.get(k_, 0.0)
+            if len(self.reg_win) == 5:
+                self.reg10[k_] = max(self.reg10[k_], sum(r.get(k_, 0.0) for r in self.reg_win) / 5.0)
+        af = d.actuator_force[pm.bm.act]                                # HER MUSCLES against her strength, every step
+        r_ = float(np.max(np.maximum(af / pm.bm.hi, af / pm.bm.lo)))
+        if r_ > self.act_ratio:
+            j_ = int(np.argmax(np.maximum(af / pm.bm.hi, af / pm.bm.lo)))
+            self.act_ratio = r_; self.act_worst = (w.tick, s, j_, round(float(af[j_]), 2), float(pm.bm.lo[j_]), float(pm.bm.hi[j_]))
+        self.applied_max = max(self.applied_max, float(np.abs(d.qfrc_applied[pm.bm.dofs]).max()),
+                               float(np.abs(m.dof_damping[pm.bm.dofs]).max()))
+        sf = pm.drive.sup
+        self.sup_f = max(self.sup_f, float(np.linalg.norm(sf[:3])))
+        self.sup_fz_min = float(sf[2]) if self.sup_fz_min is None else min(self.sup_fz_min, float(sf[2]))
+        self.sup_t = max(self.sup_t, float(sum(np.linalg.norm(t_) for t_ in pm.drive.sup_t)))
+        if s in self.HAND_STEPS and self.child_body:                    # her trunk's standoff from the child's body
+            best = 0.2
+            gp = d.geom_xpos; rb = m.geom_rbound
+            for g in self.core_geoms:
+                for h in self.child_body:
+                    if float(np.linalg.norm(gp[h] - gp[g])) - rb[h] - rb[g] > best:
+                        continue
+                    best = min(best, float(mujoco.mj_geomDistance(m, d, g, h, best, self.ft)))
+            if self.standoff_min is None or best < self.standoff_min:
+                self.standoff_min = best; self.standoff_worst = (w.tick, s, pm.base["mode"], pm.phases[0]["type"] if pm.phases else None)
+        self._segs_hist = (self._segs_hist + [segs_now | {("hold:" + h.kind, m.body(h.body).name) for h in pm.holds}])[-5:]
+        self.jwin = (self.jwin + [tau[self.jdof]])[-5:]                 # the joints' law from her: 10 ms means
+        self.bwin = (self.bwin + [tau[self.root_dof:self.root_dof + 3]])[-5:]
+        if len(self.jwin) == 5:
+            jm = np.abs(sum(self.jwin) / 5.0) / self.jlim
+            k = int(np.argmax(jm))
+            if jm[k] > self.jt_ratio:
+                self.jt_ratio = float(jm[k]); self.jt_worst = (w.tick, s, self.jnames[k], round(float(jm[k] * self.jlim[k]), 1),
+                                                              float(self.jlim[k]))
+            if jm[k] > 1.0:
+                self._jt_tick_over = True
+                wsum = sum(sum(q) for q in self.wwin.values())          # who did the work at her contacts over those 10 ms: she
+                who = "hers" if wsum > 0.0 else "child"                 # (positive: she pushed it) or the child (it struck or
+                self.jt_by[who] = self.jt_by.get(who, 0) + (0 if self._jt_tick_over_who else 1)   # pressed her)
+                self._jt_tick_over_who = True
+                if len(self.jt_events) < 30 and (not self.jt_events or self.jt_events[-1][0] != w.tick):
+                    self.jt_events.append((w.tick, self.jnames[k], round(float(jm[k] * self.jlim[k]), 1), float(self.jlim[k]),
+                                           sorted(set().union(*self._segs_hist))[:5], sorted(h.kind for h in pm.holds),
+                                           pm.phases[0]["type"] if pm.phases else None, who, round(wsum, 4)))
+            bm_ = float(np.linalg.norm(sum(self.bwin) / 5.0))
+            self.base10 = max(self.base10, bm_)
+            if bm_ > w.f_pain:
+                self._base_tick_over = True
         for lk in set(self.win) | set(per):
             q = self.win.setdefault(lk, [])
             q.append(per.get(lk, 0.0)); del q[:-5]
@@ -217,6 +325,16 @@ class Probe:
         elif self.run:
             self.runs.append(self.run); self.run = 0
         if s == PM.STEPS - 1:
+            for k_ in self.reg_names:
+                self.reg_tick[k_] = max(self.reg_tick[k_], self._reg_acc[k_] / PM.STEPS); self._reg_acc[k_] = 0.0
+            self.core_down = max(self.core_down, self._core_down_acc / PM.STEPS); self._core_down_acc = 0.0
+            if self._core_touch_tick:
+                self.core_run += 1; self.core_touch_ticks += 1
+            else:
+                self.core_run = 0
+            self.core_run_max = max(self.core_run_max, self.core_run); self._core_touch_tick = False
+            self.jt_over_ticks += int(self._jt_tick_over); self._jt_tick_over = False; self._jt_tick_over_who = False
+            self.base_over_ticks += int(self._base_tick_over); self._base_tick_over = False
             self.link10_ticks.append(self._tick10); self._tick10 = 0.0
             if self._tick_fp is not None:
                 self.fp_by[self._tick_fp] += 1; self._tick_fp = None
@@ -247,7 +365,19 @@ class Probe:
                    net_side_N=dict(ms10=round(self.side10, 1), tick=round(self.sideT, 1)),
                    body_work_J=dict(tick_max=round(self.work_max, 3), positive_sum=round(self.work_pos, 3),
                                     contact_max=round(max(self.ep_max, self.ep), 3), contact_positive_sum=round(self.ep_pos + max(0.0, self.ep), 3)))
+        out["joint_law"] = dict(ticks_over_a_joints_limit=self.jt_over_ticks, largest_share_of_a_limit=round(self.jt_ratio, 3),
+                                worst=self.jt_worst, base_10ms_N=round(self.base10, 1), ticks_base_over_f_pain=self.base_over_ticks,
+                                by=dict(self.jt_by),
+                                events=list(self.jt_events))
+        out["region_N"] = {k: dict(ms10=round(self.reg10[k], 1), tick=round(self.reg_tick[k], 1)) for k in self.reg_names}
+        out["step_peak_N"] = round(self.step_peak, 1); out["step_peak_at"] = self.step_peak_at
+        out["trunk"] = dict(standoff_mm=None if self.standoff_min is None else round(self.standoff_min * 1e3, 1), standoff_at=self.standoff_worst,
+                            touch_ticks=self.core_touch_ticks, longest_touch_run_ticks=self.core_run_max, press_down_N=round(self.core_down, 1))
+        out["muscles"] = dict(largest_share_of_strength=round(self.act_ratio, 6), worst=self.act_worst, other_torque_max=self.applied_max)
+        out["support"] = dict(force_max_N=round(self.sup_f, 2), force_up_min_N=None if self.sup_fz_min is None else round(self.sup_fz_min, 2),
+                              torque_max_Nm=round(self.sup_t, 2))
         out["contact_depth_mm"] = {k: round(v * 1e3, 1) for k, v in self.depth.items()}
+        out["depth_by_region_mm"] = {k: round(v * 1e3, 1) for k, v in self.depth_reg.items()}
         out["contact_depth_worst"] = self.depth_worst
         if self.hands:
             out["hand_to_hull_mm"] = None if self.hand_min is None else round(self.hand_min * 1e3, 1)
@@ -496,6 +626,29 @@ def sc_costs():
     return out
 
 
+def kneel_time(w=None, step=0.01):
+    """parent_motion.KNEEL_TIME measured (A25b: her carried body kneels down at a person's pace): parent_poses.kneel_down at 301 values of
+    u (0 standing, 2 the tall kneel, 3 on her heels), each raised off the floor as her plan raises it (ParentMotion._floor_lift), and
+    for each step of u the time its slowest-allowed segment needs: her pelvis at parent_consts.KNEEL_PELVIS_MPS, every other segment at
+    KNEEL_SEG_MPS; the cumulative time at u = 0, 0.05, ... 3"""
+    w = W.G1World(seed=1) if w is None else w
+    pm = w.parent
+    n = int(round(3.0 / step))
+    us = np.linspace(0.0, 3.0, n + 1)
+    pos = []
+    for u in us:
+        p = PM.P.kneel_down((0.0, 0.0), 0.0, float(u))
+        segs = kin.fk(p)
+        lift = pm._floor_lift(p)
+        pos.append([segs[s_][0] + np.array([0.0, 0.0, lift]) for s_ in kin.SEGS])
+    d = np.linalg.norm(np.diff(np.array(pos), axis=0), axis=2)
+    lim = np.full(len(kin.SEGS), K.KNEEL_SEG_MPS)
+    lim[kin.SEGS.index("pelvis")] = K.KNEEL_PELVIS_MPS
+    T = np.concatenate([[0.0], np.cumsum((d / lim).max(axis=1))])
+    k = int(round(0.05 / step))
+    return tuple(round(float(T[i]), 4) for i in range(0, n + 1, k))
+
+
 # ---------------------------------------------------------------------------------------------------- the W2 verifier's cases
 PLACES = {"rot90": (G.BIRTH_XY, 90.0), "corner": ((-2.05, -1.75), 45.0), "wall": ((-2.2, -0.3), 90.0), "hall": ((3.9, -1.45), 90.0),
           "by_sofa": ((0.3, 1.15), 0.0), "by_table": ((0.25, 0.25), 0.0)}
@@ -740,7 +893,8 @@ def replay_proc(mode, path, seed=3, p_rest=0.3, t0=150, n=60):
     in turn and her report read every tick, writes the world's save and the babbler's and the asks' state to path + '.blob', then
     lives n ticks more; 'load' restores that save in a new process and lives the same n ticks; 'birth' lives from birth to t0 + n.
     Each writes, for each of the last n ticks, a digest of the frame's channels, her report, her motion's state, the physics'
-    qpos, qvel, qfrc_applied and xfrc_applied, and the final save's, to path + '.' + mode"""
+    qpos, qvel, qfrc_applied and xfrc_applied (her support's among them), the controls and the actuators' forces (her muscles'
+    among them), and the final save's, to path + '.' + mode"""
     import hashlib
     import pickle
     w = W.G1World(seed=1)
@@ -769,7 +923,8 @@ def replay_proc(mode, path, seed=3, p_rest=0.3, t0=150, n=60):
             d = w.d
             rows.append([w.tick, h(b"".join(np.ascontiguousarray(f.obs[k]).tobytes() for k in sorted(f.obs))),
                          h(repr(sorted((k, str(v)) for k, v in rep.items())).encode()), h(pickle.dumps(pm.state())),
-                         h(d.qpos.tobytes()), h(d.qvel.tobytes()), h(d.qfrc_applied.tobytes()), h(d.xfrc_applied.tobytes())])
+                         h(d.qpos.tobytes()), h(d.qvel.tobytes()), h(d.qfrc_applied.tobytes()), h(d.xfrc_applied.tobytes()),
+                         h(d.ctrl.tobytes()), h(d.actuator_force.tobytes())])
     rows.append(["save", h(w.save_state())])
     open(path + "." + mode, "w").write(json.dumps(dict(start=start, rows=rows, stops=pm.stats.get("over_run", 0),
                                                         yield_ticks=pm.stats.get("yield_ticks", 0))))

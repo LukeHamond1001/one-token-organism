@@ -37,9 +37,14 @@ Every constant that shapes her behaviour is here; parent_motion.py names only it
 # SHE IS A BODY (the lead's decision of 2026-09-25, after the W2 verifier's third round: a kinematic parent of infinite mass against
 # the 34 kg G1 gave kN spikes, hands and a forearm inside it, levitation from the blow rule and path refusals). Her 16 segments are
 # dynamic MuJoCo bodies in one tree (a free pelvis; ball joints at the lumbar, the thorax, the neck, the shoulders, wrists, hips
-# and ankles; hinges at the elbows, the forearms' pronation and the knees), with a person's masses and inertias, driven each physics
-# step toward the pose her planner makes by joint torques no larger than a woman's strength; her feet, knees and shins rest on the
-# floor through contact, and every contact with the child is resolved by the physics: she gives because she is a body.
+# and ankles; hinges at the elbows, the forearms' pronation and the knees), with a person's masses and inertias.
+# HER TRUNK IS CARRIED (the lead's structural decision of 2026-09-25, A25b, after the first physical build fell onto the child and
+# lay on it for minutes): a person does not fall over, and balance is the environment's business, never the child's. Her pelvis is
+# held toward the pelvis her planner means by a force-limited support (HER SUPPORT, below; parent_body.Drive), her spine and neck
+# stiff and limited, so her head follows her trunk; her limbs stay fully dynamic, each joint driven toward her plan by a MuJoCo
+# actuator whose force range IS her strength there (HER STRENGTH, below), its damping inside that range, so no torque of hers at a
+# joint ever exceeds a woman's. Her feet, knees and shins touch the floor through contact, always; every contact with the child is
+# resolved by the physics.
 BODY_MASS_KG = 62.0             # kg: Harbo, Brincks and Andersen 2012 (Eur J Appl Physiol 112:267-275), their 85 women's median
                                 # body mass (range 46-105 kg) at a median height of 1.67 m (her stature parent_kin.H: 1.68 m)
 # Segment masses as fractions of body mass, their centres of mass along the segment from its proximal end, and their radii of
@@ -73,14 +78,26 @@ SEG_LEN = dict(head=0.266, upper_arm=0.30, forearm=0.25, hand=0.094, thigh=0.41,
 # the shoulder's flexion and extension take its abduction and adduction figures; its rotation half the abduction's; pronation
 # the wrist's weakest (extension, 6.0); the wrist's deviation 6.0 and its twist 3.0; the neck's side bend and turn its flexion's;
 # the trunk's side bend its flexion's and its twist half; the hip's abduction and adduction 80 and rotation 30; the ankle's
-# inversion 20 and twist 10. Each limit binds her whole active torque at that joint (her posture's feedforward, her plan's
-# spring and her holds' effort together), so no act of hers exerts more than a woman can.
+# inversion 20 and twist 10. Each limit is her actuator's force range at that joint and direction (make_g1room.parent_actuators:
+# MuJoCo's forcerange, and ctrlrange the same), so it binds her whole torque there, her plan's spring, her damping, her posture's
+# feedforward, her tone and her holds' effort together: MuJoCo clamps the actuator's force, the damping included, and nothing
+# else of hers acts on her joints (no joint damping, no applied force on them). A ball joint's three actuators each bind one axis
+# of its own frame (the per-axis figures above; a torque along a diagonal may reach the axes' figures together, as the per-axis
+# measurements allow). body/tests/test_sim_parent.py reads her actuators' forces on every physics step under babble against
+# these limits.
 STRENGTH = dict(shoulder=dict(flex=38.0, ext=45.7, abd=38.0, add=45.7, rot=19.0), elbow=dict(flex=26.5, ext=27.2),
                 pron=dict(rot=6.0), wrist=dict(flex=14.4, ext=6.01, dev=6.0, rot=3.0),
                 neck=dict(flex=16.6, ext=26.5, lat=16.6, rot=16.6), trunk=dict(flex=64.0, ext=103.0, lat=64.0, rot=32.0),
                 hip=dict(flex=104.4, ext=128.7, abd=80.0, add=80.0, rot=30.0), knee=dict(flex=59.3, ext=166.6),
                 ankle=dict(dorsi=27.5, plantar=76.4, inv=20.0, rot=10.0))
-SAT_DEG = 20.0                  # each joint's stiffness toward her plan: its strength (the mean of its two directions) over this
+STIFF_SAT_DEG = 5.0             # her spine's two joints and her neck (her trunk carried above her pelvis, her head following it: the
+                                # lead's decision, "a stiff neck, limited"): each spends its whole strength 5 deg off her plan (ours:
+                                # four times SAT_DEG's stiffness; the strength still binds) ...
+LEG_REST_SAT_DEG = 60.0         # her legs' stiffness while her base is still (kneeling, standing or sitting where she is): they rest
+                                # where her carried pelvis puts them, on the floor, as a person's relaxed legs do (ours: at SAT_DEG a
+                                # leg planned on the floor pressed it with up to a leg's strength whenever her pelvis sat a centimetre
+                                # off her plan, 0.8-1 kN at the thigh, A25b's build) ...
+SAT_DEG = 20.0                  # ... every other joint's stiffness toward her plan: its strength (the mean of its two directions) over this
                                 # angle, so it spends its whole strength 20 deg off its plan (ours). The arm's endpoint stiffness it
                                 # gives (about 400 N/m at the shoulder's 120 N m/rad, the hand 0.55 m out) is of the order a person's
                                 # arm holds a posture with, a few hundred N/m (Mussa-Ivaldi, Hogan and Bizzi 1985, J Neurosci
@@ -95,38 +112,36 @@ TONE_STILL_RPS = 0.2            # rad/s: ... settling only on a joint whose plan
                                 # 30 cm past its target)
 DAMP_RATIO = 1.0                # each joint's damping, critical against its stiffness and the inertia it moves at her rest pose
                                 # (MuJoCo's dof_M0; ours)
-# HER BALANCE AND HER GAIT (ours, disclosed: a limitation of this build). A person keeps her balance and walks by her whole body's
-# strategies (the ankle, the hip, a step), which joint springs tracking a scripted pose do not carry out: measured on her body
-# (2026-09-25), her joints alone held her kneeling on her heels, kneeling tall and leaning 45 deg over (within 4 cm and 7 deg),
-# but she fell standing, and her scripted walk, kneeling down and knee shuffle stuck her feet and knees on the floor by their
-# friction under her weight. So her pelvis takes a spring toward where her plan puts it (the physics-based character's "residual
-# force", Yuan and Kitani 2020, NeurIPS, "Residual force control for agile human behavior imitation"), in two settings:
-#   STILL (standing, kneeling, sitting: every pose she takes beside the child): a horizontal spring and a turning spring only
-#     past dead bands (5 cm, 5 deg: her body rests as the physics leaves it), capped at 60 N and 150 N m (the order of a push a
-#     person's footing takes without a step; the turn about a woman's hip extensors, Harbo 2012's 128.7 N m), and NEVER vertical:
-#     her weight is on the floor through her feet, knees and shins, and the child's push moves her once it passes them;
-#   MOVING (walking, turning, kneeling down or getting up, shuffling on her knees, sitting down): her gait carried by stiff
-#     springs and her weight with it (her 608 N, and a vertical spring of at most 700 N either way), her body's floor contact off
-#     (make_g1room.FLOOR: her feet and knees never drag on the floor under a scripted gait), since no walking controller is built
-#     (a design item). Measured on her body: stood 20 ticks upright within 0.6 deg; knelt on her heels with the floor carrying all
-#     608 N of her weight and her balance lifting nothing.
-# Her motion eases between the two over BAL_EASE_TICKS. Her plan never walks her within A6's clearance of the child, and a chain of
-# hers that presses the child past its cap stops (A4), its springs' targets then her body where it is; from that step the stiff
-# springs let go for the tick (parent_body.Drive.carry)
-BAL_K_STILL = 3000.0            # N/m: the still horizontal spring (ours)
-BAL_F_STILL = 60.0              # N: its cap (ours)
-BAL_DEAD_M = 0.05               # m: its dead band (ours)
-BAL_KR_STILL = 1500.0           # N m/rad: the still turning spring (ours)
-BAL_T_STILL = 150.0             # N m: its cap (ours)
-BAL_DEAD_DEG = 5.0              # deg: its dead band (ours)
-BAL_CR = 150.0                  # N m s/rad: the turn's damping (ours)
-BAL_K_MOVE = 20000.0            # N/m: her gait's spring on her pelvis (ours) ...
-BAL_F_MOVE = 600.0              # N: ... its horizontal cap ...
-BAL_Z_MOVE = 700.0              # N: ... its vertical cap, either way (her weight, 608 N, and a little more) ...
-BAL_KR_MOVE = 3000.0            # N m/rad: ... its turning spring ...
-BAL_T_MOVE = 300.0              # N m: ... and cap (ours)
-BAL_EASE_TICKS = 3              # ticks: her balance eases from still to moving or back over this many (0.45 s; ours)
-
+# HER SUPPORT: HER TRUNK CARRIED (the lead's structural decision of 2026-09-25, A25b; amends A25 and the first physical build's
+# balance, whose residual force had carried her gait with her floor contact off, lifted her at up to 1,308 N while she touched the
+# child and let her fall onto it). A person does not fall over: balance is the environment's business, never the child's. Every
+# physics step her pelvis is pulled toward the pelvis her planner means (its place and its turn, from her plan at the last tick's
+# end to her plan at this one's) by a spring and a damper on it, and her weight is carried where it is (a force equal to her
+# weight, up, at her whole body's centre of mass: it carries her weight without twisting her). Its force together (her weight
+# carried and the spring's) is capped at SUP_F_MAX and never points down, and its torque is capped at SUP_T_MAX (parent_body.Drive:
+# computed each step as plain numbers, applied as an outside force on her pelvis). So she cannot be toppled by the child, cannot
+# press more than her own weight down through her trunk onto anything (the support never pushes her down), and cannot press more
+# than SUP_F_MAX along the floor; pushed harder than that she gives way along the floor, carried, and never falls. Her planner keeps
+# her trunk clear of the child (CLEAR_M, re-planned as it moves: parent_motion._standoff_tick), so the support carries her toward
+# no contact with it; where the child moves into her the physics resolves it and her plan backs off (A4).
+# The caps, a person's:
+SUP_F_MAX = 695.5               # N: her weight carried (BODY_MASS_KG x g: 62 kg x 9.81 = 608.2 N) and, along the floor, the most the
+                                # child can push anything with: its weight on the floor times the floor's friction (the G1's 34.39 kg
+                                # from its model file x 9.81 = 337.4 N; the mat and the floor at friction 1.0, section 4.2), so
+                                # |(608.2, 337.4)| = 695.5 N, 1.14 x her weight: the child's greatest steady push never topples her
+                                # (a kick's impulse is more for a few milliseconds; her body's mass takes it). Ours, from those
+                                # three sourced numbers (A25b)
+SUP_T_MAX = 257.4               # N m: the torque that holds her pelvis's turn is at most what her legs hold a pelvis with, her two
+                                # hips' extension strength (2 x 128.7 N m: Harbo, Brincks and Andersen 2012, the women's mean, as
+                                # STRENGTH's); the child's steady push (337.4 N) at her chest's height over her pelvis (about 0.5 m)
+                                # asks 169 N m (ours, A25b)
+SUP_K = 20000.0                 # N/m: the support's spring on her pelvis's place (ours: 1 cm off her plan per 200 N; her planner's
+                                # standoff and A4's yield do the rest) ...
+SUP_ZETA = 1.0                  # ... damped critically against her whole body's mass (2 sqrt(SUP_K x BODY_MASS_KG): 2,227 N s/m) ...
+SUP_KR = 2000.0                 # N m/rad: ... its spring on her pelvis's turn (ours: 1 deg per 35 N m) ...
+SUP_CR = 25.0                   # N m s/rad: ... and its damping (ours: the most an explicit damper on her pelvis's own inertia, about
+                                # 0.06 kg m^2 at 2 ms steps, bears with a margin of two: 0.06 / 0.002 / 2 = 15-30; her spine's and
+                                # hips' actuators damp the rest of her body's turn, implicitly)
 # ------------------------------------------------------------------------------------------------------ her caps (A25; ours, checked)
 CAP_ONE = 100.0                 # N, one hand, sustained (ours; under a woman's one-handed dynamic pulling strength, see above)
 CAP_ONE_BRIEF = 150.0           # N, one hand, for at most BRIEF_S (ours; the same)
@@ -156,8 +171,10 @@ GRIP_TOL_M = 0.03               # m: her hand within this of its grip on the hel
 TOUCH_N = 5.0                   # N: a hand resting on the child (attend, "touch"): the relaxed hand's weight, 0.6% of a 60 kg
                                 # woman's body weight (Winter's segment table: the hand 0.006 M), with some of the forearm's
                                 # (ours)
-ATTEND_PARTS = "tummy|leg|foot" # attend's resting hand: on its trunk (4.2), or, where only its feet leave her room to kneel (A6:
-                                # a child in a corner), on its leg or its foot, the first her hand reaches (ours)
+ATTEND_PARTS = "chest|tummy|leg|foot"   # attend's resting hand: on its trunk (4.2), its chest first (out of the fold of its hips:
+                                # its thighs close on its belly, 88 N m at the hip, and a hand there is caught between them: the
+                                # first physical build's stopped fix round, kept), or, where only its feet leave her room to kneel
+                                # (A6: a child in a corner), on its leg or its foot, the first her hand reaches (ours)
 TOUCH_DEPTH_M = 0.02            # m: a resting hand's target lies this far inside the surface along its normal (the cap decides
                                 # the force; ours)
 GUIDE_CAP_FACTOR = 1.5          # the guide's cap: min(1.5 x the limb's own push at that pose, CAP_ONE) (A10; ours)
@@ -220,7 +237,12 @@ SOFT_SOLREF = (0.02, 1.0)       # her collision shapes' contact: MuJoCo's defaul
                                 # body now gives by itself: at 0.05 her hand sank 9 mm into the child landing on it at 26 N, and a
                                 # babbling foot 39 mm into her kneeling thigh at 1.6 kN (10 ms mean), where at 0.02 the worst of the
                                 # same 8 runs was 0.9 kN (the physical build, 2026-09-25): a design change the lead is asked to ratify
-LIMB_SOLREF = SOFT_SOLREF       # her forearms' and hands' (tried apart at 0.02 with her body at 0.05: worse, above)
+HAND_SOLREF = (0.006, 1.0)      # her palm's, fingers', thumb's and hand capsule's contact: three physics steps (MuJoCo's guidance: at
+                                # least two). MuJoCo's contact is stiff in acceleration, so in force its stiffness scales with the
+                                # pair's effective mass, and a light hand sinks deepest: at 0.02 a babbling hip sank her fingertip 8.3
+                                # mm, at 0.006 3.2 mm (seed 18 at p_rest 0.6, the carried build, 2026-09-25). At 0.006 MuJoCo's
+                                # contact (20 / 0.006^2 per kg at its impedance 0.95) has ISO/TS 15066's hand stiffness, 75 N/mm (its
+                                # Table A.3), at 0.135 kg, a hand's effective mass at its fingers
 # (Tried: her shapes' impedance rising to 0.99 at 4 mm in, against MuJoCo's contact scaling to the pair's mass, under which a heavy
 # link of the child's sinks her light fingertip 17 mm at 25 N: the G1's pinch points (its hip's and knee's links closing on her hand
 # or face) then squeezed at 2 to 30 kN where the default let them sink at 1 to 2 kN; kept at MuJoCo's default, 2026-09-25)
@@ -265,6 +287,26 @@ TRUNK_STILL_DEG = 2.0           # ... and turns less than this over a tick (ours
 FACE_CHILD_DEG = 60.0           # deg: her trunk faces the child while her chest's forward lies within this of the way to its torso
                                 # on the floor plan (ours: kneeling beside it or at its feet, the child lies in front of her)
 HER_PAIN_N = 150.0              # N: her own pain, on any segment, as a 10 ms mean (4.10; a person's, ours)
+# WHAT A PERSON'S BODY BEARS AT ITS CONTACTS (the lead's babble criteria b and e, A25b): ISO/TS 15066:2016 ("Robots and robotic devices:
+# collaborative robots"), Annex A, read 2026-09-25 from the standard's text. Table A.2, the biomechanical limits (the pain onset of
+# 100 healthy adults, force values from a study of 188 sources; transient contact, where the body part can recoil, at least twice
+# the quasi-static): hands and fingers 140 N, lower arms and wrist joints 160 N, upper arms and elbows 150 N, chest 140 N, abdomen
+# 110 N, pelvis 180 N, thighs and knees 220 N, lower legs 130 N, skull and forehead 130 N (no transient allowed), face 65 N (none).
+# Table A.3, each region's effective spring constant: hands and fingers 75 N/mm, lower arms 40, upper arms 30, chest 25, abdomen
+# 10, pelvis 25, thighs and knees 50, lower legs 60, face 75, skull and forehead 150. Her contacts with the child are held to them:
+HAND_N = (140.0, 280.0)         # N: her hand's contact force on the child, a tick's mean (quasi-static) and a 10 ms mean (transient)
+FOREARM_N = (160.0, 320.0)      # N: her forearm's, the same
+DEPTH_M = dict(hand=280.0 / 75e3, forearm=320.0 / 40e3, upper_arm=300.0 / 30e3, trunk=280.0 / 25e3, legs=440.0 / 50e3,
+               head=130.0 / 150e3)   # m: how far a region of hers is ever pressed in by the child: that region's compression at its
+                                # transient bound (its skull's at its quasi-static one: no transient contact there), 3.7 mm at her
+                                # hands, 8.0 at her forearms, 10.0 at her upper arms, 11.2 at her trunk (the chest's), 8.8 at her
+                                # legs (the thighs'), 0.87 at her head (ISO/TS 15066 Tables A.2 and A.3; the lead's "no penetration
+                                # deeper than the solver's margin", read as the depth a person's body gives at its bound)
+TRUNK_STANDOFF_M = 0.0          # m: her trunk and head (their shapes as built) never touch the child's body (its trunk's links), as the
+                                # physics has them at four steps a tick (A25b: her plan keeps CLEAR_M; this is what her carried body
+                                # does with it) ...
+REST_TICKS = 2                  # ... and never touch the child at all for more than her reaction time in a row (REACTION_TICKS: a
+                                # touch longer than that is her resting on it)
 HER_PAIN_STEPS = 5              # the 10 ms mean: 5 physics steps (the child's pain filter's length, A12)
 WITHDRAW_M = 0.12               # m: a hand withdrawn when hit draws back this far (ours)
 SUPPORT_BEND_DEG = 45.0         # leaning (lean + spine) this far, her free hand rests on her own thigh (a hand hanging from a
@@ -279,12 +321,20 @@ GESTURE_HOLD_TICKS = 4          # ticks: a hand held out (an open hand, a raised
 DO_WALK_M = 1.0                 # m: 'do walk' (a verb's showing): a few steps, about three strides, away and turned back to the
                                 # child (ours)
 IDLE_RELAX_TICKS = 10           # a hand left out by a finished act relaxes after this long unless it holds something (ours)
-LEAN_CLEAR_M = 0.01             # m: her head and trunk kept this far from the child in a lean she reaches with (ours: the kinematic
-                                # parent's leans were never checked, and her physical face met the child's hip leaning to its forearms)
-CLEAR_M = 0.03                  # m: her legs, trunk and head kept this far from the child in every planned frame (A4)
-KNEE_HOLD_SHARE = 0.8           # a tall kneel's lean is one whose weight on her knees they hold within this share of her knee's
-                                # strength (ours: her tone reaches half of it, her joint springs the rest a few degrees off; tall and
-                                # leaning 60-70 deg with her arms out, her knees gave and she sank onto the child, 2026-09-25)
+CLEAR_M = 0.03                  # m: her legs, trunk and head kept this far from the child in every planned frame (A4), and each tick
+                                # from the child's body where it is now (the lead's standoff, A25b: parent_motion._standoff) ...
+STANDOFF_M_PER_TICK = 0.0375    # ... her base moved back off it this far a step (her knee shuffle's pace, SHUFFLE_MPS x a tick) ...
+STANDOFF_STEPS = 4              # ... at most this many steps a tick (15 cm; ours)
+# THE CALM STEP (A25b; C8: "her kneeling spot outside its leg sweep"; a parent beside a kicking baby waits for it to settle): beside the
+# child she moves her legs (a step, kneeling down, a shuffle on her knees, a turn on them) only on a tick when no shape of the child's
+# within CALM_NEAR_M of her legs moved more than CALM_MOVE_M since the last tick; otherwise her base waits where it is, carried, at
+# most CALM_WAIT_TICKS in a phase, then goes on (measured on the carried build, seeds 1-5 at p_rest 0.3 and 0.6: most ticks over a
+# joint's limit from her were its hands and feet meeting her shins, thighs and feet as she walked, knelt down or shuffled beside it;
+# waiting without end, she did two acts in 600 ticks)
+CALM_NEAR_M = 0.30              # m: its shapes this near her legs (a babbling limb's step in a tick, 0.27 rad at its hip or shoulder,
+                                # moves its hand or foot about 0.15 m: twice that; ours) ...
+CALM_MOVE_M = 0.02              # ... that moved this far in the last tick (about 0.13 m/s: a limb at rest drifts less; ours) ...
+CALM_WAIT_TICKS = 20            # ... she waits for, at most this long in a phase (3 s; ours)
 
 # ------------------------------------------------------------------------------------------------------------- her paths (A6)
 GRID_M = 0.05                   # the floor grid of her paths (A6)
@@ -306,6 +356,12 @@ SHUFFLE_MPS = 0.25              # shuffling on the knees (A6)
 TURN_DEG_PER_S = 180.0          # turning in place (ours: a half turn in a second)
 KNEEL_DOWN_S = 2.4              # s: standing to sitting on her heels at the least (ours: parent_poses.kneel_down's three parts)
 STAND_UP_S = 2.4                # s: the way back up at the least (ours)
+KNEEL_PELVIS_MPS = 0.5          # m/s: her pelvis's fastest kneeling down, sitting back onto her heels or getting up (A25b: her body is
+                                # carried, and a carried body starts and stops only as fast as its support lets it: 88 N over her
+                                # weight stops a 0.46 m/s drop in 7 cm, and the first carried build's drop onto her heels hit the floor
+                                # at 1.6 kN through her thighs). Ours: of the order of the centre of mass's vertical speed in rising
+                                # from a chair, about half a metre a second, recalled; her kneeling down eased in and out over a
+                                # fifth of its time at each end, its fastest moment at this pace (parent_motion.KNEEL_TIME, _ease)
 KNEEL_SEG_MPS = 0.8             # m/s: no segment of hers moves faster than this kneeling down or getting up (ours: her stepping foot
                                 # and her knee coming down set the pace; with parent_poses.kneel_down's own path, 3.1 s all the way)
 KNEEL_OFF_M = (0.72, 0.78)      # m: her kneeling spot from the G1's torso centre line, beside its chest (A6)
