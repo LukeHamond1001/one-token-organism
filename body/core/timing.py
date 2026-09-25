@@ -526,4 +526,10 @@ class TimingMixin:
         if e.inverse:
             out.update({"inv_gain": round(float(st["inv_gain"]), 3), "inv_kappa": [round(float(k_), 3) for k_ in st["inv_kappa"]],
                         "inv_n": int(st["inv_n"]), "inv_last": st["inv_last"]})
+            if st.get("inv_kappa_pooled") is not None:                    # step R6h: the pooled kappa beside the corrected one
+                out["inv_kappa_pooled"] = [round(float(k_), 3) for k_ in st["inv_kappa_pooled"]]
+        if int(self._motor_const("own_fatigue")):
+            out["fatigue"] = round(float(st.get("fatigue", 0.0)), 3)       # step R6h: its own fatigue
+        if st.get("cord_n"):
+            out["cord"] = dict(st["cord_n"])                               # step R6h: the cord's patterns' ticks (the reflex's log)
         return out

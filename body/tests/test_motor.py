@@ -8,7 +8,8 @@ a movement unit holds its act unless the choice passes the persistence margin, a
 draw's law (motor 2, C38 at the core); act_inv's reliability takes each label's chance from the act's own choice (motor 3); act_inv's
 lessons are batched (motor 4); each motor effector's fatigue is its own, and its forward error reaches its gate (motor 5); the spinal
 pattern generator and the born cry are summed below the gate, each by its rule (motors 6 and 7); a vector channel's born code is fixed
-from the body's seed (motor 8); the born orienting bias, its gate input and the VOR's constants (motor 9). Each is a switch or a
+from the body's seed (motor 8); the born orienting bias, its gate input and the VOR's constants (motor 9); the G1's anatomy numbers
+its effectors as the design does and its performance error lands on the tract's gate alone (motor 11). Each is a switch or a
 declaration the language body does not hold: it has none of it (the eight pinned digests are the guard's, tools/pins/digests.txt). The
 stub worlds here are instruments of these tests, not the G1's world."""
 import collections
@@ -722,7 +723,8 @@ def test_the_born_codes():
     (the global random stream untouched), one fixed unit row per number, the code the rows' sum weighted by the numbers over sqrt(size)
     (its size the observation's root mean square: measured at d 512 over a hundred random observations of 1,536 numbers); a buffer that
     no lesson moves (a day of waking lessons leaves it as born), the same for the same seed and another for another, kept by a save;
-    the window keeps the raw numbers and the input sum encodes them each time. A channel naming another's code is refused"""
+    the window keeps the raw numbers and the input sum encodes them each time. At the G1's channels (3.4) the born codes' sizes are
+    2, 1,725, 172, 1,536, 242, 130, 24 and 2. A channel naming another's code is refused"""
     from body.model import BornCode, Organs
     g0 = torch.get_rng_state().clone()
     bc = BornCode(1536, 512, torch.Generator().manual_seed(3))
@@ -752,6 +754,10 @@ def test_the_born_codes():
     finally:
         os.remove(path)
     assert all(torch.equal(D.m.encs[k_].rows, rows0[k_]) for k_ in rows0)
+    from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table
+    g = SimAnatomy(born_table(), SIM_CFG).check()
+    o = Organs(g.vocab, d=32, layers=1, heads=2, window=8, channels=g.channels, effectors=g.effectors)
+    assert {k_: v_.size for k_, v_ in o.encs.items()} == dict(face=2, ears=1725, eye_p=172, eye_f=1536, body=242, touch=130, vestibular=24, charge=2)
     a = _Seer(TOK, cfg); a.channels[2].organ = "encs.ears"
     try:
         a.check()
@@ -761,7 +767,7 @@ def test_the_born_codes():
         raise AssertionError("a channel naming another's born code was taken")
     print(f"motor 8: the born codes: unit rows from the seed, the global stream untouched, no parameter; the code's size the",
           f"observation's RMS x {float(ratio.mean()):.3f} (sd {float(ratio.std()):.3f}) at d 512 over 1,536 numbers; fixed through 80 ticks",
-          "of waking lessons; the window raw, encoded in the sum; the seed's (another seed another; saved)")
+          "of waking lessons; the window raw, encoded in the sum; the seed's (another seed another; saved); the G1's eight at 3.4's sizes")
 
 
 def test_orienting_and_the_vor():
@@ -843,9 +849,130 @@ def test_orienting_and_the_vor():
           "off, nothing pulls, no input, no VOR; the diary's acts a plain dict")
 
 
+# ---------------- motor 11: the G1's anatomy (the numbering, the drives) ----------------
+
+def _g1_world(seed=0):
+    """a stub of the G1's world for motor 11 (never the sim's: random unit-scaled senses at every key of SimAnatomy's frame, the charge
+    falling, now and then pain and the orienting cues), recording each tick's acts"""
+    import random as _r
+    from body.sim.anatomy import SIZES
+
+    class G1Stub(SimWorld):
+        def __init__(self):
+            self.t = 0; self.rng = _r.Random(seed); self.applied = []
+
+        def frame(self):
+            t = self.t; R = self.rng
+            obs = {n: [R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
+            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [max(0.0, 0.6 - 0.003 * t), -0.003]
+            obs["body"][241] = R.uniform(0, 1)
+            obs["pain"] = [1.0 if (t % 97 == 50 and k == 5) else 0.0 for k in range(44)]
+            if t % 30 == 3:
+                obs["face_periph"] = [1.0, 0.4, -0.2]
+            if t % 45 == 7:
+                obs["sound_side"] = [1.0, 0.5]
+            if t % 17 == 0:
+                obs["words"] = R.randrange(3, 79)
+            return Frame(t, obs, 0.0, {"who": "parent"})
+
+        def apply(self, acts):
+            self.applied.append(acts); self.t += 1
+
+        def pause(self):
+            pass
+
+        def resume(self):
+            pass
+
+        def save_state(self):
+            return pickle.dumps(self.t)
+
+        def load_state(self, blob):
+            self.t = pickle.loads(blob)
+    return G1Stub()
+
+
+def test_the_g1_anatomy():
+    """motor 11 (step R6h; SIM_DESIGN.md 3.4, 3.5, 6, 10, A41, C61): THE G1 AS THE CORE MEETS IT (body/sim/anatomy.py). Its check passes;
+    its nine channels are 3.4's (the words' 79 symbols, then 2, 1,725, 172, 1,536, 242, 130, 24 and 2 numbers, each through its born code
+    and with a forecast head of its own); its ten effectors are numbered as 3.5 numbers them: effector 0 the vocal tract (10 articulators
+    of five settings, its consequence sense the ears, act_inv over them, the performance error, the born cry), effector 1 the words'
+    silent output (the voice of the code: the 79 rows, mouth_gate, no intrinsic term), 2 the gaze (orienting, the VOR), 3 the waist
+    (orienting), 4-5 the arms and 8-9 the legs (the pattern generators, the legs half a cycle apart), 6-7 the Dex3 hands: 56 joint readouts
+    of five; its reward face, pain, charge. SIM_CFG sets the gates' drives as disclosed (0.25 + 4.656 x the reward's mean at the 256-tick
+    clock, the error at 0.5, gate_vigor 0). Born at a small width under SIM_CFG in a stub of its world, it lives 120 ticks: every effector
+    acts, each tick's acts in the design's order; THE PERFORMANCE ERROR LANDS ON THE TRACT'S GATE: its rows carry it on the ticks it acted
+    and every other gate's rows (the words', the voice of the code, included) carry 0 on every tick; the legs' and arms' patterns and the
+    gaze's VOR reach the world; each of the tract's lessons takes the credit 3.5 discloses (the dopamine that followed, the tonic drive
+    0.25 + 4.656 x the reward's mean, 0.5 x its performance error, its cost at its own fatigue), its mean checked by hand"""
+    from body.model import Organs
+    from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table, TRACT
+    a = SimAnatomy(born_table(), SIM_CFG).check()
+    assert [c.name for c in a.channels] == ["words", "face", "ears", "eye_p", "eye_f", "body", "touch", "vestibular", "charge"]
+    assert [c.size for c in a.channels] == [79, 2, 1725, 172, 1536, 242, 130, 24, 2] and sum(c.size for c in a.channels[1:]) == 3833
+    assert all(c.forecast for c in a.channels) and all(c.organ == f"encs.{c.name}" for c in a.channels[1:])
+    names = [e.name for e in a.effectors]
+    assert names == ["voice", "words", "gaze", "waist", "arm_l", "arm_r", "hand_l", "hand_r", "leg_l", "leg_r"], names
+    t_, w_ = a.effectors[0], a.effectors[1]
+    assert a.voice is w_ and a.voice_at == 1 and len(t_.factors) == len(TRACT) == 10 and t_.sense == "ears" and t_.inverse and t_.intrinsic and t_.cry
+    assert w_.factors == [79] and w_.gate == "mouth_gate" and not w_.intrinsic
+    assert [len(e.factors) for e in a.motors] == [10, 3, 3, 7, 7, 7, 7, 6, 6] and sum(len(e.factors) for e in a.motors) == 56
+    assert [e.name for e in a.motors if e.intrinsic] == ["voice"] and [e.name for e in a.motors if e.spg] == ["arm_l", "arm_r", "leg_l", "leg_r"]
+    assert (a.effector("leg_l").spg_phase, a.effector("leg_r").spg_phase) == (0.0, 0.5) and a.effector("gaze").vor == [0, 1]
+    assert [e.name for e in a.motors if e.orient] == ["gaze", "waist"] and [r.name for r in a.rewards] == ["face", "pain", "charge"]
+    assert abs(SIM_CFG["gate_tonic_rate"] - 4.656402) < 1e-6 and (SIM_CFG["gate_tonic"], SIM_CFG["gate_tonic_clock"], SIM_CFG["gate_int"],
+                                                                  SIM_CFG["gate_int_form"], SIM_CFG["gate_vigor"]) == (0.25, 4, 0.5, "error", 0.0)
+    cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3)
+    w = _g1_world(); torch.manual_seed(0)
+    L = Life.birth(SimAnatomy(born_table(), cfg), device="cpu", d=32, layers=1, heads=2, window=8, cfg=cfg, seed=0, world=w)
+    assert [L.m.get_submodule(e.gate).in_features - 32 - 5 for e in L.anatomy.motors] == [3, 3, 5, 4, 4, 4, 4, 4, 4]
+    caught = []; fg = L._gate_lesson
+
+    def spyg(i=0, f=fg, L=L, caught=caught):
+        before = list(L.motor[0]["buf"]) if i == 1 else None
+        out = f(i)
+        if i == 1 and L.motor[0]["last"] and L.motor[0]["last"].get("tick") == L.ticks:
+            caught.append((before, dict(L.motor[0]["last"])))
+        return out
+    L._gate_lesson = spyg
+    run = WorldLoop(L); acted = collections.Counter(); tract_int = 0; others = 0; voice_rows = 0
+    for _ in range(120):
+        run.step()
+        for e_, st_ in zip(L.anatomy.motors, L.motor):
+            acted[e_.name] += int(st_["now"]["acted"]); row = st_["buf"][-1]
+            if e_.name == "voice":
+                assert row[3] == st_["now"]["int"] and (row[3] != 0.0) <= st_["now"]["acted"]
+                tract_int += int(row[3] != 0.0)
+            else:
+                assert row[3] == 0.0, (e_.name, row[3]); others += 1
+        assert L.gate_buf[-1][3] == 0.0; voice_rows += 1
+        acted["words"] += int(L._acted_last)
+    assert list(w.applied[-1]) == names and all(acted[n] > 0 for n in names), acted
+    assert tract_int >= 10 and L.perf == {} and L.motor[0]["perf"] is not None, (tract_int, L.perf)
+    assert any("leg_l" in a_.cord and "arm_r" in a_.cord for a_ in w.applied) and all("gaze" in a_.vor for a_ in w.applied)
+    # THE DRIVES AS DISCLOSED, in the tract's own lessons (A41; 3.5's credit): on each tick it acted, G_t = the dopamine that followed
+    # (from the tick after, elig_from: sum over k < 12 of 0.8^k) + 0.25 + 4.656 x the felt reward's mean at the 256-tick clock + 0.5 x its
+    # performance error - its act's cost x (1 + (its own fatigue / 10)^2); the lesson's mean credit by hand
+    rate = sum(0.8 ** k for k in range(12)); n_les = 0
+    for buf, last in caught:
+        K = 12; n = len(buf) - K - 1; G = []
+        for t in range(n):
+            g_ = sum((0.8 ** k) * float(buf[t + 1 + k][2]) for k in range(K))
+            if buf[t][1]:
+                g_ += 0.25 + rate * float(buf[t][5]) + 0.5 * float(buf[t][3]) - float(buf[t][8]) * (1.0 + (float(buf[t][4]) / 10.0) ** 2)
+            G.append(g_)
+        assert last["n"] == n and abs(round(sum(G) / n, 4) - last["credit_mean"]) < 1.5e-4, (last, sum(G) / n)
+        n_les += 1
+    assert n_les >= 3, n_les
+    print(f"motor 11: the G1's anatomy: 9 channels at 3.4's sizes (3,833 numbers and a symbol), 10 effectors numbered as 3.5 (the tract",
+          f"0, the words 1), 56 joint readouts; the drives as disclosed; born at d 32 it lived 120 ticks, every effector acting ({dict(acted)});",
+          f"the performance error on the tract's gate on {tract_int} ticks and 0 on every other gate's {others} rows and the words' {voice_rows};",
+          f"the drives by hand in the tract's {n_les} lessons")
+
+
 MOTOR_TESTS = [test_the_voice_at_any_place, test_movement_units, test_the_kappa_correction, test_act_inv_batched,
                test_fatigue_per_effector_and_the_forward_error, test_the_spinal_pattern_generator, test_the_born_cry,
-               test_the_born_codes, test_orienting_and_the_vor]
+               test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy]
 
 
 if __name__ == "__main__":
