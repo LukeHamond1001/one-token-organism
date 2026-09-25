@@ -258,9 +258,10 @@ class Cerebellar:
       the legs and the waist, each its angle, velocity, estimated torque and the servo's current target (the efference copy of the
       tick's act), then both inertial units, then the hands' touch: about 150 numbers. MEASURED IN R6c (the test limb over a life day,
       tools/cereb_day.py; body/tests/test_cerebellum.py cereb 10): with each joint's estimated torque among them (the torque the motor
-      applies, which carries the servo's correction and the cerebellum's own torque back into its input) the readout's gain, raised by
-      a lesson blind to that loop, carries the limb into oscillation at its torque limit within a life day; with the angles,
-      velocities and targets alone it held all day, as the efference copy alone did. Which numbers the humanoid declares is the lead's
+      applies, which carries the servo's correction and the cerebellum's own torque back into its input) the pure law's readout drifted
+      and carried the limb into oscillation at its torque limit within a life day; under the leak (CEREB's cereb_leak) it holds all day,
+      as the angles, velocities and targets alone do (1.83 and 1.83 N m at the shoulder, off 4.80). The loop through the organ's own
+      torque is untested at the G1's scope (with its inertial units and touch: W4). Which numbers the humanoid declares is the lead's
       decision (reported with R6c); the organ reads whatever is declared.
     - `joints`: the joints with a Purkinje readout, in order: the world adds each one's learned torque to that joint's servo, and hands
       in that joint's servo corrective torque as its teacher (the humanoid's 29; the hands' joints have none).

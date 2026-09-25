@@ -5,10 +5,12 @@ mossy numbers of each kind named (body/tests/test_cerebellum.py MOSSY_KINDS: "st
 which the tests declare; "design", 7.5's list, adding each joint's estimated torque; "efference", the targets and the tick's steps;
 "efference+angle", "efference+velocity", "efference+torque"), and prints the servo's corrective torque at the shoulder per 2,000 ticks,
 the elbow's over the last 2,000, and the largest Purkinje weight. Every number is the body's CEREB unless --rate gives the limbs'
-rate. Measured 2026-09-24 (N m at the shoulder, off 4.8): state about 1.0 all day; efference 1.1 -> 1.6; efference+angle and
-efference+velocity 1.0 -> 1.5; design unstable from about tick 2,000 (22 at the limit), at --rate 0.002 from about tick 14,000;
-efference+torque unstable from about tick 4,000. Run at nice 19, one thread:
-  nice -n 19 python3 tools/cereb_day.py [--ticks 24000] [--rate 0.01] off state design ...
+rate or --leak their leak. Measured 2026-09-24 (N m at the shoulder, off 4.8), under the pure law (--leak 0): state about 1.0 all
+day; efference 1.1 -> 1.6; efference+angle and efference+velocity 1.0 -> 1.5; design unstable from about tick 2,000 (22 at the limit),
+at --rate 0.002 from about tick 14,000; efference+torque unstable from about tick 4,000. Under the leak (CEREB's 0.0033, after the R6c
+verifier): off 4.80; state 1.70 -> 1.83 (largest weight 0.023); design 1.73 -> 1.83 (0.048); efference+torque 1.73 -> 1.83 (0.130),
+each flat all day. Run at nice 19, one thread:
+  nice -n 19 python3 tools/cereb_day.py [--ticks 24000] [--rate 0.01] [--leak 0.0033] off state design ...
 """
 import os
 import sys
@@ -23,11 +25,11 @@ from body.core.physiology import CEREB  # noqa: E402
 from body.tests.test_cerebellum import MOSSY_KINDS, ArmWorld, OrganHook, arm_cerebellar, organ, run_limb  # noqa: E402
 
 
-def day(kind, ticks, rate):
+def day(kind, ticks, rate, leak):
     w = ArmWorld(mossy=kind if kind != "off" else "state")
     o = None
     if kind != "off":
-        o = organ(arm_cerebellar(kind), seed=1); w.below = OrganHook(o, rate=rate)
+        o = organ(arm_cerebellar(kind), seed=1); w.below = OrganHook(o, rate=rate, leak=leak)
     t0 = time.time()
     run_limb(w, ticks, load_at=400)
     x = np.array(w.teach_log)[:, 0]; y = np.array(w.teach_log)[:, 1]
@@ -38,16 +40,18 @@ def day(kind, ticks, rate):
 
 if __name__ == "__main__":
     torch.set_num_threads(1)
-    args = sys.argv[1:]; ticks = 24000; rate = CEREB["cereb_rate"]; kinds = []
+    args = sys.argv[1:]; ticks = 24000; rate = CEREB["cereb_rate"]; leak = CEREB["cereb_leak"]; kinds = []
     i = 0
     while i < len(args):
         if args[i] == "--ticks":
             ticks = int(args[i + 1]); i += 2
         elif args[i] == "--rate":
             rate = float(args[i + 1]); i += 2
+        elif args[i] == "--leak":
+            leak = float(args[i + 1]); i += 2
         elif args[i] == "off" or args[i] in MOSSY_KINDS:
             kinds.append(args[i]); i += 1
         else:
             sys.exit(f"cereb_day: unknown argument {args[i]!r}\n" + __doc__)
     for k in kinds or ["off", "state", "design"]:
-        day(k, ticks, rate)
+        day(k, ticks, rate, leak)

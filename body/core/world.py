@@ -51,25 +51,33 @@ class SubFrame:
     world calls `sub_tick` with one every `below.period_s` of sim time inside `apply` (10 ms: every 5 physics steps of 2 ms, 15 a tick),
     before the physics steps it governs. `tick` is the world's tick and `sub` the sub-step within it (0 at the tick's start, after the
     act re-anchored the servo's targets). `mossy` is the cerebellum's input: the numbers the anatomy declares (`Cerebellar`), in its
-    order, raw (the organ scales them by the declared offsets and scales). `teach` is its climbing fibres at the limbs: the servo law's own
-    corrective torque at each cerebellar joint now (N m), kp (target - angle) - kv velocity held to the joint's limit, the torque the servo
-    alone spends pulling the joint to its target (the cerebellum's torque is not in it); None when the world has none. At sub-step 0
+    order, raw (the organ scales them by the declared offsets and scales). `limit` is each cerebellar joint's torque limit THIS TICK (N m,
+    above zero), the weakness included (SIM_DESIGN.md 3.3: the limit x (0.3 + 0.7 h); on the G1 the actuator force range the world set for
+    this tick, `jnt_actfrcrange`), the one the physics clips the joint's summed torque to; the organ holds its torque inside it, and one
+    with joints refuses a SubFrame without it. `teach` is its climbing fibres at the limbs: the servo law's own corrective torque at each
+    cerebellar joint now (N m), kp (target - angle) - kv velocity held to that same limit this tick, the torque the servo alone spends
+    pulling the joint to its target (the cerebellum's torque is not in it); None when the world has none. At sub-step 0
     only, the flocculus's teacher: `slip`, the retinal slip over the last tick in each VOR axis (rad: the fixated image's motion
     relative to the fovea window, positive along the axis), and `turn`, the head's rotation over that tick as the gyro read it in the same
     axes (rad: the VOR's input); both None on a tick whose gaze moved, whose VOR jumped (its quick phase) or on which nothing held still
-    in the fovea, since slip then teaches nothing about the VOR."""
+    in the fovea, since slip then teaches nothing about the VOR. THE SIGN (the flocculus learns down the slip's gradient): the slip is
+    the image's motion left after the counter-shift, in the axis's positive sense, so with the born gain 1, no lens and no gyro bias it
+    is zero, and a counter-shift too small for the turn leaves a slip along the turn's own negative (the test head, body/tests/
+    test_cerebellum.py `Head`, is the reference: slip = -magnification x true turn - counter-shift)."""
     tick: int
     sub: int
     mossy: object
     teach: object = None
     slip: object = None
     turn: object = None
+    limit: object = None
 
 
 @dataclass(eq=False)
 class SubActs:
     """WHAT THE LOOP BELOW THE TICK GIVES BACK for one sub-step (step R6c): `torque`, a torque per cerebellar joint (N m, the anatomy's
-    order), which the world adds to that joint's servo torque until the next sub-step, inside the joint's limit and the weakness clip;
+    order), already inside the joint's limit this tick, which the world adds to that joint's servo torque until the next sub-step, the sum
+    clipped again to the same limit;
     at sub-step 0 only, the flocculus's `vor_gain` (a correction added to the VOR's born gain) and `vor_offset` (rad a tick) per VOR
     axis, which the world holds through the tick: the window counter-shifts by -(born gain + vor_gain) x turn - vor_offset. None where
     the anatomy declares none (no joints, no VOR axes, a sub-step other than 0)."""
@@ -214,13 +222,17 @@ class SimWorld(World):
     THE LOOP BELOW THE TICK (step R6c; SIM_DESIGN.md 7.5, A44), when `below` is set (a life whose cerebellum is on sets it):
     - apply(acts) calls `self.sub_tick(SubFrame(...))` every n = below.period_s / its physics step steps (the period must divide the
       tick: 5 steps of 2 ms, 15 sub-steps a tick), before the steps it governs, sub-step 0 at the tick's start once the act has
-      re-anchored the targets; the SubFrame's mossy numbers are the anatomy's `Cerebellar` numbers in its order, raw, and its teacher is
-      the servo law's own corrective torque at each cerebellar joint, kp (target - angle) - kv velocity held to the joint's limit, without
-      the cerebellum's torque.
+      re-anchored the targets; the SubFrame's mossy numbers are the anatomy's `Cerebellar` numbers in its order, raw, its `limit` each
+      cerebellar joint's torque limit this tick with the weakness (the actuator force range the world set for the tick), and its teacher
+      the servo law's own corrective torque at each cerebellar joint, kp (target - angle) - kv velocity held to that limit, without the
+      cerebellum's torque.
     - The answer's torque at each cerebellar joint is added to that joint's servo torque until the next sub-step, inside the joint's
       limit and the weakness clip: over MuJoCo's position servo, the actuator's constant bias term (actuator_biasprm[a, 0]), so the
       joint's actuator force range clips the sum, and the target and its tone at rest stay the servo law's own. The torque applied is
-      the world's state: saved and restored with it.
+      the world's state: saved and restored with it (actuator_biasprm[:, 0] in the world's save, beside the physics' own state).
+    - NOT YET BUILT FOR THE G1 (the sim-world branch's G1World.apply implements this contract): the teacher and the limit under the
+      weakness, the slip's sign as SubFrame says, and the bias term in the world's save; the test limb in body/tests/test_cerebellum.py
+      (`ArmWorld`) is the reference implementation.
     - At sub-step 0 the SubFrame carries the last tick's retinal slip and the gyro's turn over it (or None: the gaze moved, a quick phase
       jumped, nothing held still in the fovea), and the answer's VOR gain correction and offset hold through the tick: the window
       counter-shifts by -(born gain + gain) x turn - offset.

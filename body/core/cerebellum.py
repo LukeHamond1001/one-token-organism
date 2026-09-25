@@ -11,9 +11,9 @@ every tensor a buffer saved with the body; it stays on the host, as the robot ru
   hands' touch), each read as a fibre's rate r = 1 + (x - offset) / scale, held to [0, 2]: a tonic rate modulated both ways by the
   declared middle and half-range of its number, saturating at silence and at twice the tonic rate. MEASURED IN R6c: with each joint's
   estimated torque among them (the motor's torque, which carries the servo's correction and the cerebellum's own torque back into its
-  input) the readout's gain, raised by a lesson blind to that loop, carries the limb into oscillation at its torque limit within a life
-  day on the test limb; with the angles, velocities and targets alone it held all day (tools/cereb_day.py; cereb 10). The organ reads
-  whatever is declared; which numbers the humanoid declares is the lead's call.
+  input) the pure law's readout drifted and carried the test limb into oscillation at its torque limit within a life day; under the
+  leak it holds all day, as with the angles, velocities and targets alone (tools/cereb_day.py; cereb 10). The organ reads whatever is
+  declared; which numbers the humanoid declares is the lead's call (untested at the G1's scope: W4).
 - THE GRANULE LAYER, born and fixed: `cereb_granule` units, each summing `cereb_fan_in` distinct fibres (drawn at birth) through born
   weights (normal, signed: fibres that rise and fibres that fall with their number, as the vestibular nuclei's two types), and the
   Golgi cells' inhibition holding the active fraction constant (Marr 1969; Albus 1971): the threshold each sub-step is the value that
@@ -22,14 +22,23 @@ every tensor a buffer saved with the body; it stays on the host, as the robot ru
   not the same along every ray from the middle of the input's range. The active units are kept in ascending order (a canonical order
   for the sums below).
 - PURKINJE READOUTS, one per declared joint (the humanoid's 29 of the arms, the legs and the waist): tau_j = sum over the active units
-  of g_i w_ij, a torque (N m) the world adds to the joint's servo, inside the joint's limit and the weakness clip. Born at zero.
+  of g_i w_ij, held inside the joint's torque limit this tick (the world's `SubFrame.limit`, the weakness included: a nucleus's output
+  saturates), a torque (N m) the world adds to the joint's servo, the sum clipped again to the same limit. Born at zero.
 - THE FLOCCULUS, per declared VOR axis: a gain correction G_a = sum g_i f_ia and an offset O_a = sum g_i f_i(A+a), read once a tick
   at sub-step 0 and held through the tick by the world (the window counter-shifts by -(born gain + G) turn - O). Born at zero.
 - ITS TEACHERS, the climbing fibres:
   * at the limbs, every sub-step, THE SERVO LAW'S OWN CORRECTIVE TORQUE e_j (feedback-error learning: Kawato and Gomi 1992): the
-    readout is read first, then taught on the same sub-step's granule activity, w_ij += cereb_rate e_j g_i / |g|^2 (least mean
-    squares normalized by the granule layer's activity), so each readout learns to supply what the servo would have spent, before the
-    error appears. With no teacher (e all zero, or none) nothing is written;
+    readout is read first, then the rows of the sub-step's active units are restored by the leak and taught on its granule activity,
+    w_ij <- (1 - cereb_leak) w_ij + cereb_rate e_j g_i / |g|^2 (leaky least mean squares normalized by the granule layer's activity;
+    the leak is parallel-fibre activity without a climbing fibre, CEREB's note), so each readout learns to supply what the servo would
+    have spent, before the error appears. With no teacher (e all zero, or none) only the leak is written: a newborn's readouts stay
+    exactly zero, a learned torque at a still state fades by (1 - leak) a sub-step. THE BOUND: a lesson that would carry this code's
+    output past the joint's limit this tick is stepped back onto it along g (least mean squares' own step, w_ij -= over_j g_i / |g|^2),
+    so no weight is wound up behind the saturating output. At a still state the torque follows tau <- (1 - leak) tau + rate e: the
+    readout carries rate / (rate + leak) = 0.75 of a load held still (the rest stays the servo's correction) and a torque no teacher
+    drives fades with a time constant of 1 / leak sub-steps (3.0 s). Without the leak and the bound the law was a pure integrator there
+    (the R6c verifier: a limb pressed on a table wound it to -531 N m in 60 s and jammed at rest; a newborn's rested limb was held
+    where it was left within 1.5 s: body/tests/test_cerebellum.py cereb 11-13);
   * at the flocculus, once a tick, RETINAL SLIP s_a (Ito 1982) with the gyro's turn t_a over the tick it was seen in: the granule
     activity the flocculus read that tick is its eligibility (kept in the organ, so a save between ticks loses nothing), and at the
     next tick's sub-step 0 it is taught, least mean squares on its two regressors (the turn for the gain, 1 for the offset) normalized
@@ -40,8 +49,11 @@ every tensor a buffer saved with the body; it stays on the host, as the robot ru
 - WHAT IT CANNOT DO (A44): feedback-error learning needs an innate feedback controller for what it learns, and its teacher knows joint
   angles only (righting and equilibrium reactions are refused, 3.7), so it learns load compensation and the VOR's gain, never a sit or
   a balance. WHAT IT MAY DO, disclosed: a limb left to rest sinks against the servo's lagging target, and that lag is a corrective
-  torque, so the readout may learn part of a limb's own weight and slow a rested posture's sink (body/tests/test_cerebellum.py writes
-  down the sink with it learning; W4 again on the G1).
+  torque, so the readout may learn part of a limb's own weight and slow a rested posture's sink, never hold it: at a still state its
+  teacher falls to zero and the leak takes back what it learned, so a rested limb goes on sinking, at most 1 / (1 - 0.75) = 4 times
+  slower (cereb 13 writes the sink down from birth; cereb 5 after learning; W4 again on the G1). And a limb pressed on something that
+  does not give is a load the teacher cannot tell from a weight: while the press lasts the readout adds its share, inside the limit
+  (cereb 12: 55 N on the test limb's table against 36.5 without it, under a weakness of 0.6), and resting it fades within seconds.
 - REPLAY: it draws no random number after birth, every weight and its eligibility are buffers in the save, and the world calls it at
   fixed sub-steps, so a replay is exact.
 
@@ -132,23 +144,41 @@ class Cerebellum(nn.Module):
         return top, z[top] - theta
 
     @torch.no_grad()
-    def sub_step(self, sf, rate, vor_rate):
-        """ONE SUB-STEP OF THE LAW on the world's SubFrame `sf` at the life's rates: the limbs' torques read, then taught by the servo's
-        corrective torque; at sub-step 0, the flocculus taught by the last tick's slip on its eligibility, then read. Returns
-        (torque [J] or None, vor_gain [A] or None, vor_offset [A] or None), numpy float64."""
+    def sub_step(self, sf, rate, vor_rate, leak):
+        """ONE SUB-STEP OF THE LAW on the world's SubFrame `sf` at the life's rates: the limbs' torques read (each held inside its joint's
+        limit this tick, `sf.limit`), then their rows of this sub-step's active units restored by the leak and taught by the servo's
+        corrective torque, the readout's output for this code held inside the limit; at sub-step 0, the flocculus taught by the last
+        tick's slip on its eligibility, then read. Returns (torque [J] or None, vor_gain [A] or None, vor_offset [A] or None), numpy
+        float64."""
         J, A = len(self.joints), len(self.vor)
         top, g = self.granule_code(sf.mossy)
         n2 = float(np.einsum("i,i->", g, g))
         tau = None
         if J:
+            if sf.limit is None:
+                raise ValueError("Cerebellum: a SubFrame without the joints' torque limits this tick (SubFrame.limit), for an organ with joints")
+            lim = np.asarray(sf.limit, dtype=np.float64).reshape(J)
+            if not np.all(lim > 0.0) or not np.all(np.isfinite(lim)):
+                raise ValueError(f"Cerebellum: the joints' torque limits this tick must be finite and above zero: {lim}")
             pc = self.pc_w.numpy()
-            P = pc[top]
-            tau = np.einsum("i,ij->j", g, P)
-            if sf.teach is not None and n2 > 0.0:
-                e = np.asarray(sf.teach, dtype=np.float64).reshape(J)
-                if np.any(e != 0.0):
-                    pc[top] = P + (float(rate) / n2) * (g[:, None] * e[None, :])
-                    self.n_limb.add_(1)
+            P = pc[top]                                                # the active units' rows (a copy)
+            raw = np.einsum("i,ij->j", g, P)
+            tau = np.clip(raw, -lim, lim)                              # the nucleus's output, inside the joint's limit this tick
+            if n2 > 0.0:
+                lk = float(leak)
+                e = None if sf.teach is None else np.asarray(sf.teach, dtype=np.float64).reshape(J)
+                taught = e is not None and bool(np.any(e != 0.0))
+                if lk != 0.0 or taught:
+                    out = raw                                          # this code's output after the lesson, followed exactly:
+                    if lk != 0.0:                                      # the leak: the active units' synapses restored toward their birth's zero
+                        P *= 1.0 - lk; out = raw * (1.0 - lk)
+                    if taught:                                         # the climbing fibres' lesson (least mean squares): adds rate e to it
+                        P += g[:, None] * ((float(rate) / n2) * e)[None, :]; out = out + float(rate) * e
+                        self.n_limb.add_(1)
+                    over = out - np.clip(out, -lim, lim)               # the bound: no lesson carries this code's output past the limit;
+                    if np.any(over != 0.0):                            # the step back onto it is least mean squares' own (along g)
+                        P -= g[:, None] * (over / n2)[None, :]
+                    pc[top] = P
         gain = off = None
         if A and int(sf.sub) == 0:
             fw = self.fl_w.numpy()
@@ -224,5 +254,6 @@ class CerebellumMixin:
 
     def _cereb_sub(self, sf):
         """one sub-step below the tick (the world's call through Below): the organ's law at this life's rates, as SubActs"""
-        tau, gain, off = self.m.cereb.sub_step(sf, float(self._cereb_const("cereb_rate")), float(self._cereb_const("cereb_vor_rate")))
+        tau, gain, off = self.m.cereb.sub_step(sf, float(self._cereb_const("cereb_rate")), float(self._cereb_const("cereb_vor_rate")),
+                                               float(self._cereb_const("cereb_leak")))
         return SubActs(tau, gain, off)

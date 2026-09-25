@@ -297,10 +297,27 @@ CEREB = dict(
     # units above the threshold that leaves this fraction active pass their excess, the rest are silent; ours ("about 10%", 7.5)
     cereb_coding=0.1,
     # the limbs' Purkinje readouts' step, least mean squares normalized by the granule layer's activity (w += rate e g / |g|^2), each
-    # sub-step: a state held constant has the torque its teacher asks for learned with a time constant of 1 / rate = 100 sub-steps (1 s),
-    # about 25 times the servo's damping time (0.04 s), so the lesson is slow beside the loop that teaches it, the separation of time
-    # scales feedback-error learning assumes (Kawato and Gomi 1992); ours
+    # sub-step: at a state held constant the lesson alone moves the torque toward what its teacher asks with a time constant of 1 / rate
+    # = 100 sub-steps (1 s; with the leak below, 1 / (rate + leak) = 75 sub-steps), about 25 times the servo's damping time (0.04 s), so
+    # the lesson is slow beside the loop that teaches it, the separation of time scales feedback-error learning assumes (Kawato and Gomi
+    # 1992); ours
     cereb_rate=0.01,
+    # the limbs' readouts' leak, each sub-step, on the synapses of the granule units active in it (w <- (1 - leak) w before the lesson):
+    # leaky least mean squares (Widrow and Stearns 1985), the leakage an adaptive controller needs so its weights stay bounded when its
+    # error cannot be reduced by what it learns (the sigma-modification: Ioannou and Kokotovic 1983); in the cerebellar cortex, parallel
+    # fibre activity without a climbing fibre potentiates as their conjunction depresses (Lev-Ram et al. 2003; Jorntell and Hansel 2006),
+    # so a synapse the teacher no longer drives drifts back. Without it the law is a pure integrator of the servo's correction at a
+    # still state: a limb pressed on a table wound its readout without bound (-531 N m after a 60 s press, the servo's authority gone)
+    # and a newborn's rested limb was locked in place within 1.5 s (the R6c verifier). At a still state the readout's torque follows
+    # tau <- (1 - leak) tau + rate e, so a load held constant is carried rate / (rate + leak) by the readout at its asymptote and the rest
+    # stays the servo's correction, and a torque no teacher drives fades with a time constant of 1 / leak sub-steps (3.0 s). The value is
+    # rate / 3.0: 3.0 is the asymptotic compensation per unit of residual error of the two-rate model fitted to people adapting to a
+    # constant force field (Smith, Ghazizadeh and Shadmehr 2006: A = 0.992, B = 0.02 and A = 0.59, B = 0.21 a trial; B / (1 - A)
+    # summed, 2.50 + 0.51 = 3.01; their fitted values read from the paper for this build), so the readout carries 0.75 of a constant
+    # load, as their subjects' adaptation did; only the ratio is taken, the pace stays the rate's (a trial's length is not a sub-step's).
+    # The flocculus has none: its slip is always reduced by what it learns (the window's counter-shift moves the image) and its gain is
+    # to be kept between the turns that teach it. Ours, after the sources named
+    cereb_leak=0.0033,
     # the flocculus's step, once a tick (retinal slip is seen once a tick), least mean squares over its two regressors (the head's turn
     # for the gain, 1 for the offset) normalized by their power and the granule layer's activity: an offset held in a constant context is
     # learned with a time constant of 1 / rate = 20 ticks (3 s), the gain with 1 / (rate turn^2) ticks; ours

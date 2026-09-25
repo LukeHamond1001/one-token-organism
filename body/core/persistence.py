@@ -11,7 +11,8 @@ save has; their timing organs are in the organs' state (timing.<name>).
 
 Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Since step R6c a body whose cerebellum is on has it built by the
 organs at birth and at load (`cerebellum_spec`: the anatomy's declaration and the born sizes, under the save's constants at a load), and
-its every weight, its eligibility and its counters are in the organs' state (cereb.*): nothing of it is in the save's life dict."""
+its every weight, its eligibility and its counters are in the organs' state (cereb.*): nothing of it is in the save's life dict. A load
+whose switch differs from the save's organs (a cerebellum saved and switched off, or none saved and switched on) is refused (A20)."""
 import os
 
 import torch
@@ -66,6 +67,15 @@ class PersistenceMixin:
         organs = Organs(a["vocab"], d=a["d"], layers=a["layers"], heads=a["heads"], window=a["window"], clocks=tuple(a["clocks"]),
                         channels=anatomy.channels, effectors=anatomy.effectors,   # a later effector's organs too (step R5; the tables from the save)
                         cerebellum=cerebellum_spec(anatomy, c))                     # and the cerebellum when its switch is on (step R6c; from the save)
+        # A BODY IS BORN WITH ITS SWITCHES (SIM_DESIGN.md A20; the R6c verifier's fourth finding): a save whose organs hold a cerebellum
+        # loads only with the switch on, and one whose organs hold none only with it off, every one of the organ's entries from the save
+        # (none born fresh at a load, none dropped); the language body's save holds none and its constants no switch, so nothing changes
+        cb_saved = sorted(k_ for k_ in blob["organs"] if k_.split(".")[0] == "cereb")
+        cb_built = sorted("cereb." + k_ for k_ in organs.cereb.state_dict()) if "cereb" in organs._modules else []
+        if cb_saved != cb_built:
+            raise ValueError(f"load: the save's organs hold {len(cb_saved)} entries of a cerebellum and its constants under this load switch it "
+                             f"{'on' if cb_built else 'off'} ({len(cb_built)} entries): a body is born with its switches (SIM_DESIGN.md A20), so a "
+                             f"cerebellum is neither dropped nor grown at a load")
         w = blob["organs"].get("mouth_gate.weight")
         if w is not None and w.shape[1] > organs.mouth_gate.weight.shape[1]:
             organs.widen_gate(w.shape[1] - organs.mouth_gate.weight.shape[1])   # a body with the ear
@@ -81,11 +91,10 @@ class PersistenceMixin:
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
         motor_ = {e_.name for e_ in anatomy.effectors[1:]}   # a later channel's head or a later effector's organs the anatomy does not declare: said, not loaded
-        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing", "cereb")]
+        dropped = sorted([k_ for k_ in missing.unexpected_keys if k_.split(".")[0] in ("chan_pred", "acts", "gates", "timing")]
                          + [k_ for k_ in st_saved if (k_.startswith("actors.") and k_.split(".")[1] not in motor_) or (k_ == "stri_mline" and not motor_)])
         if dropped:
-            print("load: the save holds organs of channels or effectors this anatomy does not declare, or a cerebellum its constants switch off "
-                  "(not loaded):", dropped, flush=True)
+            print("load: the save holds organs of channels or effectors this anatomy does not declare (not loaded):", dropped, flush=True)
         if [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))]:
             print("load: organs without", [k_ for k_ in missing.missing_keys if not (k_.startswith("vc_") or k_.startswith("vf_") or k_.startswith("stri_") or k_.startswith("vfast.") or k_.startswith("actor.") or k_.startswith("actors.") or k_.startswith("wm_"))], "(an older recipe; born fresh where missing)")
         life = cls(organs, anatomy, cfg=c, device=device, seed=seed, save_path=save_path or path, world=world)

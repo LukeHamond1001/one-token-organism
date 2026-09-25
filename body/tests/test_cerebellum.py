@@ -3,10 +3,13 @@
 
 What must hold: the language body has none of it (no organ, no attribute, no key, no hook; the eight pinned digests are the guard's,
 tools/pins/digests.txt); a body whose switch is on has it built last from its own generator, every other organ born as without it; the
-law is least mean squares on the granule code, exact against numpy; with no teacher it writes nothing and adds nothing; it learns a
-limb's load (a weight added to a hand: the servo's corrective torque falls over time with it on, not off); the flocculus learns the VOR's
-gain from retinal slip under a magnifying lens and cancels a biased gyro; through a life, the world calls it fifteen times a tick and
-nothing of the tick reads it; a save round trip is exact and a replay across processes equal; its cost at the humanoid's size.
+law is leaky least mean squares on the granule code, bounded by the joint's limit this tick, exact against numpy; with no teacher it
+adds no torque of its own (a newborn's stays exactly zero, a learned one fades); it learns a limb's load (a weight added to a hand: the
+servo's corrective torque falls over time with it on, not off); the flocculus learns the VOR's gain from retinal slip under a magnifying
+lens and cancels a biased gyro; through a life, the world calls it fifteen times a tick and nothing of the tick reads it; a save round
+trip is exact and a replay across processes equal; its cost at the humanoid's size. Since the R6c verifier: it is no pure integrator
+(a constant teacher at a still state meets a ceiling), a limb pressed on a table never jams, a rested posture is never locked, the
+estimated torque in the mossy input no longer unsettles it, and a load cannot switch it on or off (cereb 10-14).
 
 The test limb is a MuJoCo arm of two hinges in a vertical plane (a shoulder and an elbow, 1 kg and 0.8 kg links of 0.2 m, a hand), each
 joint a position servo at the servo law's form (SIM_DESIGN.md 3.3: stiffness at the joint's limit for 0.25 rad of error, damping 0.04 s x
@@ -14,7 +17,9 @@ the stiffness, the torque held to the limit; an act re-anchors the target at the
 relaxes to the measured angle with a time constant of 3 ticks), the cerebellum's torque the actuators' constant bias term, as the
 SimWorld interface says. It is an instrument of these tests, not the G1's world. Its mossy numbers are the joints' state and the
 efference copy (each joint's angle, velocity and servo target: MOSSY_KINDS "state"); SIM_DESIGN.md 7.5's list adds each joint's
-estimated torque ("design"), with which the loop goes unstable on this limb within a life day (cereb 10; tools/cereb_day.py)."""
+estimated torque ("design"), with which the loop went unstable on this limb within a life day under the pure law and holds all day
+under the leak (cereb 10; tools/cereb_day.py). A table under the hand (`ArmWorld.table`) and a weakness (`ArmWorld.weaken`) serve
+cereb 12."""
 import math
 import os
 import pickle
@@ -58,10 +63,11 @@ ARM_XML = """
                actuatorfrclimited="true" actuatorfrcrange="-25 25"/>
         <geom type="capsule" fromto="0 0 0 0.2 0 0" size="0.025" mass="0.8" contype="0" conaffinity="0"/>
         <body name="hand" pos="0.2 0 0">
-          <geom type="sphere" size="0.03" mass="0.05" contype="0" conaffinity="0"/>
+          <geom name="hand" type="sphere" size="0.03" mass="0.05" contype="2" conaffinity="1"/>
         </body>
       </body>
     </body>
+    <geom name="table" type="box" pos="0 0 -10" size="0.1 0.1 0.01" contype="1" conaffinity="2"/>
   </worldbody>
   <actuator>
     <position name="shoulder" joint="shoulder" kp="1" kv="1"/>
@@ -72,8 +78,9 @@ ARM_VEL = 10.0                                      # the test limb's declared v
 # THE LIMB'S MOSSY NUMBERS, by kind: each quantity per joint (quantity by quantity, the joints in order), about its declared middle and
 # half-range. "state", which these tests declare, is the joints' state and the efference copy: each joint's angle, velocity and the
 # servo's target. "design" is SIM_DESIGN.md 7.5's list for the humanoid, which adds each joint's estimated torque: the torque the motor
-# applies, which carries the servo's correction and the cerebellum's own torque back into its input, and with it the loop goes unstable
-# on this limb within a life day (cereb 10; tools/cereb_day.py measures each kind over a whole day). The others are that instrument's
+# applies, which carries the servo's correction and the cerebellum's own torque back into its input; with it the loop went unstable on
+# this limb within a life day under the pure law, and holds all day under the leak (cereb 10; tools/cereb_day.py measures each kind over
+# a whole day). The others are that instrument's
 MOSSY_KINDS = {"state": ("angle", "velocity", "target"), "design": ("angle", "velocity", "torque", "target"), "efference": ("target", "step"),
                "efference+angle": ("target", "step", "angle"), "efference+velocity": ("target", "step", "velocity"),
                "efference+torque": ("target", "step", "torque")}
@@ -109,8 +116,9 @@ class ArmWorld(SimWorld):
         self.m = mujoco.MjModel.from_xml_string(ARM_XML); self.d = mujoco.MjData(self.m)
         m, d = self.m, self.d
         self.hand = m.body("hand").id; self.hand_mass0 = float(m.body_mass[self.hand])
+        self.hand_geom, self.table_geom = m.geom("hand").id, m.geom("table").id
         self.lo, self.hi = m.jnt_range[:, 0].copy(), m.jnt_range[:, 1].copy()
-        self.lim = m.jnt_actfrcrange[:, 1].copy()
+        self.lim = m.jnt_actfrcrange[:, 1].copy(); self.weak = 1.0     # the joints' full limits; the weakness's factor on them (1: none)
         self.kp = self.lim / 0.25; self.kv = 0.04 * self.kp            # the servo law's form (SIM_DESIGN.md 3.3's first law)
         for a in range(2):
             m.actuator_gainprm[a, :] = 0.0; m.actuator_gainprm[a, 0] = self.kp[a]
@@ -123,6 +131,34 @@ class ArmWorld(SimWorld):
     def load(self, kg):
         self.m.body_mass[self.hand] = self.hand_mass0 + float(kg)
 
+    def weaken(self, f):
+        """the weakness (SIM_DESIGN.md 3.3: the torque limits x (0.3 + 0.7 h)): every joint's limit this tick is its full limit x f, the
+        actuator force range the physics clips the servo's and the cerebellum's summed torque to, the teacher's clip and the limit handed
+        below the tick"""
+        self.weak = float(f)
+        self.m.jnt_actfrcrange[:, 0] = -self.lim * self.weak; self.m.jnt_actfrcrange[:, 1] = self.lim * self.weak
+
+    def limit(self):
+        """each joint's torque limit this tick (N m), the weakness included"""
+        return self.lim * self.weak
+
+    def table(self, top=None):
+        """a table under the hand, its top at height `top` (m) below the hand's x, or taken away (None: 10 m below the world, as it is
+        born); it touches the hand only"""
+        m = self.m; g = self.table_geom
+        m.geom_pos[g] = [0.0, 0.0, -10.0] if top is None else [float(self.d.geom_xpos[self.hand_geom][0]), 0.0, float(top) - float(m.geom_size[g][2])]
+        self.mj.mj_forward(m, self.d)
+
+    def hand_force(self):
+        """the normal force (N) of the hand's contacts now"""
+        mj, m, d = self.mj, self.m, self.d
+        f = np.zeros(6); tot = 0.0
+        for i in range(d.ncon):
+            c = d.contact[i]
+            if self.hand_geom in (c.geom1, c.geom2):
+                mj.mj_contactForce(m, d, i, f); tot += abs(float(f[0]))
+        return tot
+
     def q(self):
         return self.d.qpos.copy()
 
@@ -132,9 +168,9 @@ class ArmWorld(SimWorld):
         return Frame(self.t, {"body": [float(d.qvel[0]) / ARM_VEL, float(d.qvel[1]) / ARM_VEL]}, 0.0, {"q": d.qpos.copy()})
 
     def teacher(self):
-        """the servo law's own corrective torque now, held to the limit (the cerebellum's torque not in it)"""
+        """the servo law's own corrective torque now, held to the limit this tick (the cerebellum's torque not in it)"""
         d = self.d
-        return np.clip(self.kp * (d.ctrl - d.qpos) - self.kv * d.qvel, -self.lim, self.lim)
+        return np.clip(self.kp * (d.ctrl - d.qpos) - self.kv * d.qvel, -self.limit(), self.limit())
 
     def apply(self, acts, force=None):
         assert not self.paused, "the world moved while paused"
@@ -153,7 +189,7 @@ class ArmWorld(SimWorld):
                 teach = self.teacher(); te.append(np.abs(teach))
                 got = {"angle": d.qpos, "velocity": d.qvel, "torque": d.qfrc_actuator, "target": d.ctrl, "step": self.step}
                 mossy = np.concatenate([got[q] for q in self.kind])
-                ans = self.sub_tick(SubFrame(self.t, s // n, mossy, teach)); self.calls += 1
+                ans = self.sub_tick(SubFrame(self.t, s // n, mossy, teach, limit=self.limit())); self.calls += 1
                 if ans is not None and ans.torque is not None:
                     m.actuator_biasprm[:, 0] = np.asarray(ans.torque, dtype=np.float64)
             elif not n and s % 5 == 0:
@@ -179,12 +215,12 @@ class ArmWorld(SimWorld):
         spec = mj.mjtState.mjSTATE_INTEGRATION
         st = np.zeros(mj.mj_stateSize(self.m, spec)); mj.mj_getState(self.m, self.d, st, spec)
         return pickle.dumps(dict(state=st, bias=self.m.actuator_biasprm[:, 0].copy(), mass=float(self.m.body_mass[self.hand]), t=self.t,
-                                 paused=self.paused, step=self.step.copy()), protocol=4)
+                                 paused=self.paused, step=self.step.copy(), weak=self.weak), protocol=4)
 
     def load_state(self, blob):
         mj = self.mj
         b = pickle.loads(blob)
-        self.m.actuator_biasprm[:, 0] = b["bias"]; self.m.body_mass[self.hand] = b["mass"]
+        self.m.actuator_biasprm[:, 0] = b["bias"]; self.m.body_mass[self.hand] = b["mass"]; self.weaken(b["weak"])
         mj.mj_setState(self.m, self.d, b["state"], mj.mjtState.mjSTATE_INTEGRATION)
         mj.mj_forward(self.m, self.d)
         self.t = int(b["t"]); self.paused = bool(b["paused"]); self.step = np.array(b["step"], dtype=np.float64)
@@ -194,12 +230,12 @@ class OrganHook:
     """an organ's law as a world's hook, for the organ's own tests (the life's hook is body/core/cerebellum.py `Below`, whose call is the
     same law at the life's rates: test cereb 7)"""
 
-    def __init__(self, organ, rate=CEREB["cereb_rate"], vor_rate=CEREB["cereb_vor_rate"], period_s=CEREB["cereb_period_s"]):
-        self.organ, self.rate, self.vor_rate, self.period_s = organ, float(rate), float(vor_rate), float(period_s)
+    def __init__(self, organ, rate=CEREB["cereb_rate"], vor_rate=CEREB["cereb_vor_rate"], period_s=CEREB["cereb_period_s"], leak=CEREB["cereb_leak"]):
+        self.organ, self.rate, self.vor_rate, self.period_s, self.leak = organ, float(rate), float(vor_rate), float(period_s), float(leak)
         self.joints, self.vor, self.n_mossy = organ.joints, organ.vor, organ.n_mossy
 
     def __call__(self, sf):
-        return SubActs(*self.organ.sub_step(sf, self.rate, self.vor_rate))
+        return SubActs(*self.organ.sub_step(sf, self.rate, self.vor_rate, self.leak))
 
 
 def organ(decl, seed=1, **kw):
@@ -417,7 +453,8 @@ def test_built_last_from_its_own_generator():
 
 class RefLaw:
     """7.5's law written again plainly, for cereb 3: the rates, the granule drive as a sum over each unit's fibres, the threshold as the
-    (k+1)-th largest drive found by a full sort, the readouts and the lessons unit by unit"""
+    (k+1)-th largest drive found by a full sort, the readouts held to the limits, the leak, the lessons and the bound's step back unit by
+    unit"""
 
     def __init__(self, o):
         self.idx, self.w = o.mossy_idx.numpy().copy(), o.mossy_w.numpy().copy()
@@ -432,14 +469,26 @@ class RefLaw:
         top = [i for i in range(z.size) if z[i] > theta]
         return top, [float(z[i] - theta) for i in top]
 
-    def step(self, sf, rate, vor_rate):
+    def step(self, sf, rate, vor_rate, leak):
         top, g = self.code(sf.mossy)
         n2 = sum(v * v for v in g)
-        tau = [sum(g[n] * self.W[i, j] for n, i in enumerate(top)) for j in range(self.W.shape[1])]
-        if sf.teach is not None and n2 > 0 and any(e != 0 for e in sf.teach):
-            for n, i in enumerate(top):
-                for j, e in enumerate(sf.teach):
-                    self.W[i, j] += rate * float(e) * g[n] / n2
+        J = self.W.shape[1]
+        lim = [float(v) for v in sf.limit] if J else []
+        tau = [min(max(sum(g[n] * self.W[i, j] for n, i in enumerate(top)), -lim[j]), lim[j]) for j in range(J)]
+        if J and n2 > 0:
+            for i in top:
+                for j in range(J):
+                    self.W[i, j] *= (1.0 - leak)
+            if sf.teach is not None and any(e != 0 for e in sf.teach):
+                for n, i in enumerate(top):
+                    for j, e in enumerate(sf.teach):
+                        self.W[i, j] += rate * float(e) * g[n] / n2
+            for j in range(J):
+                out = sum(g[n] * self.W[i, j] for n, i in enumerate(top))
+                over = out - min(max(out, -lim[j]), lim[j])
+                if over != 0.0:
+                    for n, i in enumerate(top):
+                        self.W[i, j] -= over * g[n] / n2
         gain = off = None
         if self.A and sf.sub == 0:
             if sf.slip is not None and self.elig is not None:
@@ -456,13 +505,14 @@ class RefLaw:
 
 
 def test_the_law_against_numpy():
-    """cereb 3 (SIM_DESIGN.md 7.5's law, least mean squares normalized by the granule layer's activity, exact against numpy): an organ of
-    1,024 granule units over 12 mossy numbers, 3 joints and 2 VOR axes, and the law written again plainly (RefLaw), fed the same 240
-    sub-steps (a wandering input, teachers on most sub-steps and silent or absent on others, slips on most ticks' first sub-step, none on
-    others): the same active units at every sub-step, the torques, gains and offsets and every weight equal to 1e-12 of their size"""
+    """cereb 3 (SIM_DESIGN.md 7.5's law, least mean squares normalized by the granule layer's activity, with the leak and the bound,
+    exact against numpy): an organ of 1,024 granule units over 12 mossy numbers, 3 joints and 2 VOR axes, and the law written again
+    plainly (RefLaw), fed the same 240 sub-steps (a wandering input, teachers on most sub-steps and silent or absent on others, slips on
+    most ticks' first sub-step, none on others; limits low enough that the bound acts on some sub-steps, a weakness from tick 8): the
+    same active units at every sub-step, the torques, gains and offsets and every weight equal to 1e-12 of their size"""
     decl = Cerebellar([0.1 * i for i in range(12)], [0.5 + 0.1 * i for i in range(12)], joints=["a", "b", "c"], vor=["yaw", "pitch"])
     o = organ(decl, seed=5, granule=1024); ref = RefLaw(o)
-    rng = np.random.default_rng(3); x = np.array(decl.mossy_offset, float); worst = 0.0
+    rng = np.random.default_rng(3); x = np.array(decl.mossy_offset, float); worst = 0.0; bound = 0
     for t in range(16):
         for s in range(15):
             x = x + 0.2 * np.array(decl.mossy_scale) * rng.standard_normal(12)
@@ -470,9 +520,10 @@ def test_the_law_against_numpy():
             slip = turn = None
             if s == 0 and t % 5 != 4:
                 slip, turn = rng.standard_normal(2) * 0.02, rng.standard_normal(2) * 0.2
-            sf = SubFrame(t, s, x.copy(), teach, slip, turn)
-            tau, gain, off = o.sub_step(sf, CEREB["cereb_rate"], CEREB["cereb_vor_rate"])
-            rtop, rtau, rgain, roff = ref.step(sf, CEREB["cereb_rate"], CEREB["cereb_vor_rate"])
+            sf = SubFrame(t, s, x.copy(), teach, slip, turn, limit=np.array([0.4, 3.0, 50.0]) * (0.5 if t >= 8 else 1.0))
+            tau, gain, off = o.sub_step(sf, 0.2, CEREB["cereb_vor_rate"], CEREB["cereb_leak"])
+            rtop, rtau, rgain, roff = ref.step(sf, 0.2, CEREB["cereb_vor_rate"], CEREB["cereb_leak"])
+            bound += int(tau is not None and bool(np.any(np.abs(np.asarray(tau)) == sf.limit)))
             assert list(o.granule_code(x)[0]) == rtop, f"the active units differ at tick {t}, sub-step {s}"
             for mine, theirs in ((tau, rtau), (gain, rgain), (off, roff)):
                 if theirs is None:
@@ -483,48 +534,70 @@ def test_the_law_against_numpy():
         worst = max(worst, float(np.max(np.abs(mine - theirs)) / (1e-300 + np.max(np.abs(theirs)))))
     assert worst < 1e-12, worst
     assert int(o.n_sub) == 240 and int(o.n_limb) == 240 - 16 - 2 and int(o.n_vor) == 16 - 1 - 3, (int(o.n_sub), int(o.n_limb), int(o.n_vor))
-    print(f"cereb 3: the law against numpy over 240 sub-steps: the same active units, every output and weight within {worst:.1e} of its size")
+    assert bound > 20, bound
+    print(f"cereb 3: the law against numpy over 240 sub-steps (the bound acting on {bound}): the same active units, every output and weight",
+          f"within {worst:.1e} of its size")
 
 
 def test_silent_without_a_teacher():
-    """cereb 4 (A44: nothing but its teachers writes it): a newborn cerebellum at the humanoid's size, fed 600 sub-steps of states wandering
-    over their whole range with every teacher silent (zeros, or none) and no slip, gives exactly zero torque, gain and offset at every
-    one and writes nothing; one that has learned, given a state that does not change and a silent teacher, gives the same torque to the
-    bit at every sub-step and writes nothing; and the test limb resting in no gravity, its servo's teacher exactly zero, is given exactly
-    no torque"""
+    """cereb 4 (A44: nothing but its teachers writes it; the R6c verifier's first two findings): a newborn cerebellum at the humanoid's
+    size, fed 600 sub-steps of states wandering over their whole range with every teacher silent (zeros, or none) and no slip, gives
+    exactly zero torque, gain and offset at every one and writes nothing. One that has learned, given a state that does not change and a
+    silent teacher, never adds torque of its own: its torque fades by exactly (1 - leak) a sub-step, never growing and never changing
+    sign, only the rows of that state's active units restored, the flocculus kept to the bit; with the leak at 0 (the pure law) it gives
+    the same torque to the bit and writes nothing. And the test limb resting in no gravity, its servo's teacher exactly zero, is given
+    exactly no torque"""
     M, J = 150, 29
+    lk = CEREB["cereb_leak"]; big = np.full(J, 1e6)
     decl = Cerebellar([0.0] * M, [1.0] * M, joints=[f"j{i}" for i in range(J)], vor=["yaw", "pitch"])
     o = organ(decl, seed=2); rng = np.random.default_rng(1)
     for t in range(40):
         for s in range(15):
-            sf = SubFrame(t, s, rng.uniform(-1.5, 1.5, M), None if (t + s) % 3 == 0 else np.zeros(J), None if t % 2 else np.zeros(2), None if t % 2 else rng.standard_normal(2))
-            tau, gain, off = o.sub_step(sf, CEREB["cereb_rate"], CEREB["cereb_vor_rate"])
+            sf = SubFrame(t, s, rng.uniform(-1.5, 1.5, M), None if (t + s) % 3 == 0 else np.zeros(J), None if t % 2 else np.zeros(2), None if t % 2 else rng.standard_normal(2),
+                          limit=np.full(J, 50.0))
+            tau, gain, off = o.sub_step(sf, CEREB["cereb_rate"], CEREB["cereb_vor_rate"], lk)
             assert np.all(tau == 0.0) and (s or (np.all(gain == 0.0) and np.all(off == 0.0))), (t, s)
     assert not o.pc_w.any() and not o.fl_w.any() and int(o.n_limb) == 0 and int(o.n_vor) == 0 and int(o.n_sub) == 600
     for t in range(20):                                                  # it learns something
         for s in range(15):
-            o.sub_step(SubFrame(t, s, rng.uniform(-1, 1, M), rng.standard_normal(J), rng.standard_normal(2) * 0.01, rng.standard_normal(2) * 0.1), 0.01, 0.05)
-    pc0, fl0 = o.pc_w.clone(), o.fl_w.clone(); x = rng.uniform(-1, 1, M); outs = set()
-    for t in range(15):
-        for s in range(15):
-            tau, gain, off = o.sub_step(SubFrame(t, s, x, np.zeros(J)), 0.01, 0.05)
-            outs.add(tau.tobytes()); outs.add(("vor", gain.tobytes(), off.tobytes()) if s == 0 else None)
-    assert torch.equal(o.pc_w, pc0) and torch.equal(o.fl_w, fl0) and len(outs - {None}) == 2 and np.any(np.frombuffer(sorted(b for b in outs if isinstance(b, bytes))[0]) != 0)
+            o.sub_step(SubFrame(t, s, rng.uniform(-1, 1, M), rng.standard_normal(J), rng.standard_normal(2) * 0.01, rng.standard_normal(2) * 0.1, limit=big), 0.01, 0.05, lk)
+    x = rng.uniform(-1, 1, M); top = o.granule_code(x)[0]; rest = np.setdiff1d(np.arange(o.granule), top)
+    for leak in (lk, 0.0):
+        pc0, fl0 = o.pc_w.clone(), o.fl_w.clone(); taus = []; vor = set()
+        for t in range(15):
+            for s in range(15):
+                tau, gain, off = o.sub_step(SubFrame(t, s, x, np.zeros(J), limit=big), 0.01, 0.05, leak)
+                taus.append(tau)
+                if s == 0:
+                    vor.add((gain.tobytes(), off.tobytes()))
+        taus = np.array(taus); t0 = taus[0]
+        assert np.any(t0 != 0.0) and torch.equal(o.fl_w, fl0) and len(vor) == 1 and int(o.n_limb) == 300
+        assert torch.equal(o.pc_w[rest], pc0[rest]), "a row of a unit not active was written"
+        if leak:
+            want = t0[None, :] * (1.0 - leak) ** np.arange(len(taus))[:, None]
+            assert np.max(np.abs(taus - want)) < 1e-12 * np.max(np.abs(t0)), np.max(np.abs(taus - want))
+            assert np.all(np.abs(taus[1:]) <= np.abs(taus[:-1])) and np.all(np.sign(taus) == np.sign(t0)[None, :])
+            faded = float(np.max(np.abs(taus[-1])) / np.max(np.abs(t0)))
+        else:
+            assert np.all(taus == t0[None, :]) and torch.equal(o.pc_w, pc0)
     w = ArmWorld(); w.m.opt.gravity[:] = 0.0; o2 = organ(arm_cerebellar(), seed=3); w.below = OrganHook(o2)
     for _ in range(30):
         w.apply({"arm": REST})
     assert not np.array(w.teach_log).any() and not np.array(w.tau_log).any() and not o2.pc_w.any() and int(o2.n_sub) == 450
     print("cereb 4: silent without a teacher: 600 sub-steps of any state give exactly no torque, gain or offset and write nothing; a learned",
-          "one at a still state and a silent teacher gives one torque to the bit; the limb at rest in no gravity gets exactly none")
+          f"one at a still state and a silent teacher fades by exactly (1 - leak) a sub-step (to {faded:.3f} of itself in 225 sub-steps, the",
+          "flocculus kept), and with the leak at 0 gives one torque to the bit; the limb at rest in no gravity gets exactly none")
 
 
 def test_it_learns_a_limbs_load():
     """cereb 5 (SIM_DESIGN.md 7.5: feedback-error learning, Kawato and Gomi 1992): the test limb moves through four postures in turn
     (the instrument's driver, 25 ticks each, a cycle of 100 ticks), a 0.5 kg weight added to its hand at tick 400, as the fifth cycle
-    begins. Compared posture by posture: with the cerebellum off, the servo's corrective torque at the shoulder over the first posture
-    rises with the load and stays there, cycle after cycle; with it on, it rises at the load and falls over the next cycles, to a small
-    part of the off level, and every cycle after the load stays well below the off level. Written down, not asserted (C50): the whole
-    curve per cycle, the sink of the rested limb after learning, and how far a 10 N push at the hand moves the resting limb, on and off"""
+    begins, in its first posture. With the cerebellum off, the servo's corrective torque at the shoulder over that posture, once the
+    move's transient is past (ticks 401-405), stays where the load put it to the posture's end (ticks 419-424); with it on, it falls over
+    the posture as the readout learns, to a small part of the off level, and every cycle after the load stays well below the off level,
+    at the shoulder and at the elbow. At its asymptote the readout carries rate / (rate + leak) = 0.75 of a load held still (CEREB), so
+    part of the load stays the servo's. Written down, not asserted (C50): the whole curve per cycle, the sink of the rested limb after
+    learning, and how far a 10 N push at the hand moves the resting limb, on and off"""
     res, probe = {}, {}
     for on in (False, True):
         w = ArmWorld()
@@ -532,7 +605,7 @@ def test_it_learns_a_limbs_load():
             o = organ(arm_cerebellar(), seed=1); w.below = OrganHook(o)
         run_limb(w, 1600, load_at=400)
         x = np.array(w.teach_log)[:, 0]
-        res[on] = ([float(x[c * 100:c * 100 + 25].mean()) for c in range(16)], blocks(w.teach_log, 0), blocks(w.teach_log, 1))
+        res[on] = (float(x[401:406].mean()), float(x[419:425].mean()), blocks(w.teach_log, 0), blocks(w.teach_log, 1))
         run_limb(w, 40, t0=1600)                                         # to the first posture again, then rest 20 ticks
         q0 = w.q()
         for _ in range(20):
@@ -543,12 +616,12 @@ def test_it_learns_a_limbs_load():
         for _ in range(7):
             w.apply({"arm": REST}, force=np.array([0.0, 0.0, 10.0]))
         probe[on] = (sink, w.q() - q1)
-    (off0, off_s, off_e), (on0, on_s, on_e) = res[False], res[True]
-    assert off0[4] > 1.3 * off0[3] and max(off0[4:7]) - min(off0[4:7]) < 0.02 * off0[4], ("off, the first posture per cycle", off0)
-    assert on0[4] > 1.5 * on0[3] and on0[6] < 0.5 * on0[4] and on0[5] < on0[4], ("on, the first posture per cycle", on0)
+    (off_a, off_b, off_s, off_e), (on_a, on_b, on_s, on_e) = res[False], res[True]
+    assert off_b > 0.9 * off_a and min(off_s[4:]) > 1.3 * max(off_s[:4]), ("off: the load stays", off_a, off_b, off_s)
+    assert on_b < 0.7 * on_a and on_b < 0.35 * off_b, ("on: the posture's corrective torque falls as it learns", on_a, on_b, off_b)
     assert max(on_s[4:]) < 0.5 * min(off_s[4:]) and max(on_e[4:]) < 0.75 * min(off_e[4:]), ("on against off, per cycle", on_s, off_s, on_e, off_e)
-    print(f"cereb 5: a 0.5 kg load at tick 400: the shoulder's corrective torque over the first posture of cycles 4-7 (N m), off",
-          f"{' '.join(f'{b:.2f}' for b in off0[3:7])}, on {' '.join(f'{b:.2f}' for b in on0[3:7])}; per cycle, off {' '.join(f'{b:.2f}' for b in off_s)};",
+    print(f"cereb 5: a 0.5 kg load at tick 400: the shoulder's corrective torque in the loaded posture (N m), just after the load and at the",
+          f"posture's end, off {off_a:.2f} -> {off_b:.2f}, on {on_a:.2f} -> {on_b:.2f}; per cycle, off {' '.join(f'{b:.2f}' for b in off_s)};",
           f"on {' '.join(f'{b:.2f}' for b in on_s)}; the elbow's per cycle after the load at most {max(on_e[4:]):.2f} on, at least {min(off_e[4:]):.2f} off.",
           f"Rested 3 s after learning, the limb sinks {probe[True][0].round(4)} rad/s on, {probe[False][0].round(4)} off; a 10 N push for",
           f"1.05 s at rest moves it {probe[True][1].round(3)} rad on, {probe[False][1].round(3)} off")
@@ -628,7 +701,7 @@ def test_through_a_life():
             assert w.below._life() is L and w.below.calls == len(w.frames) == 400 * 15 == int(L.m.cereb.n_sub) and int(L.m.cereb.n_limb) > 5000
             assert [sf.sub for sf in w.frames[:30]] == list(range(15)) * 2 and all(isinstance(a_, SubActs) for a_ in w.answers)
             for sf, ans in zip(w.frames, w.answers):
-                tau, _, _ = twin.sub_step(sf, CEREB["cereb_rate"], CEREB["cereb_vor_rate"])
+                tau, _, _ = twin.sub_step(sf, CEREB["cereb_rate"], CEREB["cereb_vor_rate"], CEREB["cereb_leak"])
                 assert np.array_equal(tau, ans.torque)
             assert all(torch.equal(a_, b_) for a_, b_ in zip(twin.state_dict().values(), L.m.cereb.state_dict().values()))
             assert np.abs(np.array(w.tau_log)).max() > 0.5
@@ -765,7 +838,7 @@ def test_its_cost():
         for s in range(15):
             x = np.clip(x + 0.02 * rng.standard_normal(M), -1.2, 1.2)
             frames.append(SubFrame(t, s, x.copy(), rng.standard_normal(J) * 0.5, rng.standard_normal(2) * 0.01 if s == 0 else None,
-                                   rng.standard_normal(2) * 0.1 if s == 0 else None))
+                                   rng.standard_normal(2) * 0.1 if s == 0 else None, limit=np.full(J, 50.0)))
     hook = OrganHook(o)
     for sf in frames[:450]:
         hook(sf)
@@ -781,33 +854,202 @@ def test_its_cost():
           f"15 sub-steps, one thread, under this machine's load: {os.getloadavg()[0]:.1f})")
 
 
-def test_the_estimated_torque_unsettles_it():
-    """cereb 10 (C50; the reason the test limb declares no torque): the test limb as in cereb 5 for 6,000 ticks, the 0.5 kg load at
-    tick 400. With the joints' state and the efference copy as its mossy numbers (each joint's angle, velocity and target) the servo's
-    corrective torque at the shoulder stays a small part of the off level to the end, the weights bounded. With SIM_DESIGN.md 7.5's list,
-    which adds each joint's estimated torque (the motor's torque, carrying the servo's correction and the cerebellum's own torque back into
-    its input), the readout's gain, raised by a lesson blind to that loop, carries the limb into oscillation at its torque limit: its
-    corrective torque ends above the off level. Written down for the lead (the humanoid's declaration); over a whole day,
-    tools/cereb_day.py"""
+class _Pure(OrganHook):
+    """the pure law R6c was first built with, for cereb 10's contrast: no leak, and no bound of the organ's own (the limit it is handed
+    set out of reach; the world still clips the summed torque to the joint's limit)"""
+
+    def __call__(self, sf):
+        import dataclasses
+        big = None if sf.limit is None else np.full(len(self.joints), 1e12)
+        return SubActs(*self.organ.sub_step(dataclasses.replace(sf, limit=big), self.rate, self.vor_rate, 0.0))
+
+
+def test_the_estimated_torque_in_the_mossy_input():
+    """cereb 10 (C50; SIM_DESIGN.md 7.5's mossy list, the R6c verifier's third finding): the test limb as in cereb 5 for 6,000 ticks, the
+    0.5 kg load at tick 400. With the joints' state and the efference copy as its mossy numbers (each joint's angle, velocity and target)
+    and with 7.5's list, which adds each joint's estimated torque (the motor's torque, carrying the servo's correction and the
+    cerebellum's own torque back into its input), the servo's corrective torque at the shoulder stays a small part of the off level to
+    the end, the weights bounded. The contrast, asserted so the test can see it: under the pure law R6c was first built with (no leak,
+    no bound: `_Pure`), 7.5's list carries the limb into oscillation at its torque limit, its corrective torque ending above the off
+    level: the unbounded integrator's drift, which the leak bounds (the sigma-modification's purpose: Ioannou and Kokotovic 1983). Over
+    a whole life day, tools/cereb_day.py"""
     out = {}
-    for kind in (None, "state", "design"):
+    for kind, leak in ((None, 0.0), ("state", CEREB["cereb_leak"]), ("design", CEREB["cereb_leak"]), ("design", 0.0)):
         w = ArmWorld(mossy=kind or "state"); o = None
         if kind:
-            o = organ(arm_cerebellar(kind), seed=1); w.below = OrganHook(o)
+            o = organ(arm_cerebellar(kind), seed=1); w.below = OrganHook(o) if leak else _Pure(o)
         run_limb(w, 6000, load_at=400)
         x = np.array(w.teach_log)[:, 0]
-        out[kind] = ([float(x[i:i + 1000].mean()) for i in range(0, 6000, 1000)], 0.0 if o is None else float(o.pc_w.abs().max()))
-    off, (st, st_w), (de, de_w) = out[None][0], out["state"], out["design"]
-    assert st[-1] < 0.4 * off[-1] and st_w < 5.0, (st, st_w, off)
-    assert de[-1] > off[-1] and de_w > 10 * st_w, (de, de_w, off)
+        out[(kind, leak)] = ([float(x[i:i + 1000].mean()) for i in range(0, 6000, 1000)], 0.0 if o is None else float(o.pc_w.abs().max()))
+    lk = CEREB["cereb_leak"]
+    off, (st, st_w), (de, de_w), (raw, raw_w) = out[(None, 0.0)][0], out[("state", lk)], out[("design", lk)], out[("design", 0.0)]
+    assert st[-1] < 0.5 * off[-1] and de[-1] < 0.5 * off[-1] and max(st_w, de_w) < 1.0, (st, st_w, de, de_w, off)
+    assert raw[-1] > off[-1] and raw_w > 10 * de_w, (raw, raw_w, off)
     print(f"cereb 10: the shoulder's corrective torque per 1000 ticks (N m): off {' '.join(f'{b:.2f}' for b in off)}; the state and the",
-          f"efference copy {' '.join(f'{b:.2f}' for b in st)} (largest weight {st_w:.2f}); 7.5's list with the estimated torque",
-          f"{' '.join(f'{b:.2f}' for b in de)} (largest weight {de_w:.1f}): carried into oscillation at the limit")
+          f"efference copy {' '.join(f'{b:.2f}' for b in st)} (largest weight {st_w:.3f}); 7.5's list with the estimated torque",
+          f"{' '.join(f'{b:.2f}' for b in de)} (largest weight {de_w:.3f}); the same under the pure law {' '.join(f'{b:.2f}' for b in raw)}",
+          f"(largest weight {raw_w:.1f}): carried into oscillation at the limit")
+
+
+def test_a_leaky_bounded_integrator():
+    """cereb 11 (the R6c verifier's first and second findings: the law was a pure integrator of the servo's correction at a still state,
+    with no leak and no bound): an organ at the humanoid's size at one still state. A CONSTANT TEACHER of 1 N m on one joint: its torque
+    climbs to rate / leak = 3.0 N m and no further (after 10, 100 and 1,000 s of sub-steps; the pure law, the leak at 0, reached 10, 100
+    and 1,000), every other joint's torque exactly zero. A TEACHER OF 20 N m against a limit of 25: the torque is held at the limit, and
+    the readout's own output for that state is the limit exactly (no weight wound up behind the bound), so one silent sub-step later it
+    gives 25 (1 - leak). THE TEACHER SILENCED: the torque fades below 1% of itself within 15 s. A WEAKNESS (the limit this tick falling to
+    10): the torque read is held inside it at once"""
+    M, J = 150, 29
+    lk, rate = CEREB["cereb_leak"], CEREB["cereb_rate"]
+    decl = Cerebellar([0.0] * M, [1.0] * M, joints=[f"j{i}" for i in range(J)], vor=["yaw", "pitch"])
+    x = np.random.default_rng(4).uniform(-1, 1, M); lim = np.full(J, 25.0)
+    e1 = np.zeros(J); e1[3] = 1.0
+    got = {}
+    for leak in (lk, 0.0):
+        o = organ(decl, seed=8); marks = []
+        for n in range(100000):
+            tau, _, _ = o.sub_step(SubFrame(n // 15, n % 15, x, e1, limit=np.full(J, 1e9)), rate, 0.05, leak)
+            if n + 1 in (1000, 10000, 100000):
+                marks.append(float(tau[3])); assert not np.any(np.delete(tau, 3))
+        got[leak] = marks
+    ceil_ = rate / lk
+    assert all(0.9 * ceil_ < m_ <= ceil_ * (1 + 1e-9) for m_ in got[lk][1:]) and got[lk][0] < ceil_, (got[lk], ceil_)
+    assert got[0.0][-1] > 900.0, got[0.0]
+    o = organ(decl, seed=8); e20 = np.zeros(J); e20[3] = 20.0; peak = 0.0
+    for n in range(3000):
+        tau, _, _ = o.sub_step(SubFrame(n // 15, n % 15, x, e20, limit=lim), rate, 0.05, lk)
+        peak = max(peak, float(np.max(np.abs(tau))))
+    top, g = o.granule_code(x); raw = float(np.einsum("i,i->", g, o.pc_w.numpy()[top][:, 3]))
+    assert 25.0 - 1e-9 < peak <= 25.0 and abs(raw - 25.0) < 1e-9, (peak, raw)
+    fade = []
+    for n in range(1500):
+        tau, _, _ = o.sub_step(SubFrame(n // 15, n % 15, x, np.zeros(J), limit=lim), rate, 0.05, lk)
+        fade.append(float(tau[3]))
+    assert abs(fade[1] - 25.0 * (1 - lk)) < 1e-9 and fade[-1] < 0.01 * 25.0, (fade[1], fade[-1])
+    o = organ(decl, seed=8)
+    for n in range(3000):
+        o.sub_step(SubFrame(n // 15, n % 15, x, e20, limit=lim), rate, 0.05, lk)
+    tau, _, _ = o.sub_step(SubFrame(0, 0, x, None, limit=np.full(J, 10.0)), rate, 0.05, lk)
+    assert float(tau[3]) == 10.0, tau[3]
+    print(f"cereb 11: a constant 1 N m teacher at a still state: the torque {' '.join(f'{m_:.2f}' for m_ in got[lk])} N m after 10, 100 and 1,000 s",
+          f"(the ceiling rate / leak {ceil_:.2f}; the pure law {' '.join(f'{m_:.0f}' for m_ in got[0.0])}); a 20 N m teacher held at the 25 N m limit",
+          f"with the readout's own output {raw:.6f}, fading to {fade[-1]:.3f} N m in 15 s once silent; a weakness to 10 N m held at once")
+
+
+class _Watched(OrganHook):
+    """an organ's law as a world's hook, keeping the most any torque it gave exceeded its joint's limit this tick (N m; negative: never)"""
+    over = -math.inf
+
+    def __call__(self, sf):
+        ans = super().__call__(sf)
+        self.over = max(self.over, float(np.max(np.abs(ans.torque) - np.asarray(sf.limit))))
+        return ans
+
+
+def _press(on, leak=CEREB["cereb_leak"], weak_at=200):
+    """the test limb straight (the elbow at its stop), its hand on a table 2 mm below where it rests, its shoulder and elbow pressed down
+    by the small step for 60 s (400 ticks; a weakness to 0.6 of the limits from `weak_at` into the press), then at rest 15 s, then the
+    table taken away and 9 s more at rest; returns what cereb 12 compares"""
+    PRESS = 1 * 5 + 1                                                    # both joints at -0.09 rad a tick: down onto the table
+    w = ArmWorld(q0=(-0.5, -0.2))
+    if on:
+        w.below = _Watched(organ(arm_cerebellar(), seed=1), leak=leak)
+    w.table(float(w.d.geom_xpos[w.hand_geom][2]) - 0.032)
+    for _ in range(20):
+        w.apply({"arm": REST})
+    f_rest0 = w.hand_force(); f_press = []
+    for t in range(400):
+        if t == weak_at:
+            w.weaken(0.6)
+        w.apply({"arm": PRESS}); f_press.append(w.hand_force())
+    over = w.below.over if on else None
+    for _ in range(100):
+        w.apply({"arm": REST})
+    tau_rest, f_rest = np.abs(w.tau_log[-1]).copy(), w.hand_force()
+    q0 = w.q(); w.table(None); qs = []
+    for _ in range(60):
+        w.apply({"arm": REST}); qs.append(w.q() - q0)
+    return dict(f_rest0=f_rest0, f_press=float(np.mean(f_press[300:])), over=over, tau_rest=tau_rest, f_rest=f_rest, swing=np.array(qs)[:, 0],
+                limit=w.limit())
+
+
+def test_a_blocked_limb_never_jams():
+    """cereb 12 (the R6c verifier's first finding: a limb pressed on a table wound the readout to -125 N m after 15 s and -531 after 60 s,
+    and at rest the arm pressed at its full limit, lost its servo's authority and slammed into its stop when the table was taken away):
+    the test limb straight, its hand on a table, pressed down by the small step for 60 s, a weakness to 0.6 of the limits from 30 s, then
+    rested 15 s, then the table taken away. With the cerebellum on, its torque never leaves the joint's limit this tick (the weakness
+    included); while the press lasts it adds its share to the push (written down: the servo's correction cannot tell a load from a table,
+    so the readout carries up to rate / leak of it, inside the limit); rested 15 s its torque is under 5% of the limit and the hand
+    presses on the table as the limb without it does (within 1.5 N); and the table taken away, the arm moves no further in 1.5 s than
+    without it (0.05 rad more at most). The contrast, written down and asserted so the test can see a jam: with the leak at 0, the
+    bound alone holds the readout at the limit through the rest, and the hand presses on at several times the off force"""
+    off, on, jam = _press(False), _press(True), _press(True, leak=0.0)
+    assert on["over"] <= 0.0, on["over"]
+    assert np.all(on["tau_rest"] < 0.05 * on["limit"]) and abs(on["f_rest"] - off["f_rest"]) < 1.5, (on["tau_rest"], on["f_rest"], off["f_rest"])
+    assert abs(on["swing"][9]) < abs(off["swing"][9]) + 0.05 and abs(on["swing"][-1]) < abs(off["swing"][-1]) + 0.05, (on["swing"][[9, -1]], off["swing"][[9, -1]])
+    assert jam["over"] <= 0.0 and np.any(jam["tau_rest"] > 0.9 * jam["limit"]) and jam["f_rest"] > 3 * off["f_rest"], (jam["tau_rest"], jam["f_rest"])
+    print(f"cereb 12: a limb pressed on a table 60 s then rested 15 s: the cerebellum's torque never above the limit this tick; the push's",
+          f"force over its last 15 s {on['f_press']:.1f} N on, {off['f_press']:.1f} off; after the rest the torque {on['tau_rest'].round(2)} N m and the",
+          f"hand's force {on['f_rest']:.1f} N on, {off['f_rest']:.1f} off (at rest before the press {off['f_rest0']:.1f}); the table taken away, the",
+          f"shoulder moves {on['swing'][9]:.3f} rad in 1.5 s and {on['swing'][-1]:.3f} in 9 s on, {off['swing'][9]:.3f} and {off['swing'][-1]:.3f} off.",
+          f"With the leak at 0 the rest leaves the torque at {jam['tau_rest'].round(1)} N m and the hand pressing at {jam['f_rest']:.1f} N")
+
+
+def test_a_rested_posture_is_never_locked():
+    """cereb 13 (the R6c verifier's second finding: a newborn cerebellum held any posture it was left in within about 1.5 s, the tone
+    law's sink made a lock; SIM_DESIGN.md 3.3: a posture left to rest sinks, holding it is learned by acting; 7.5 and A44 allow only
+    that it slow a rested posture's sink): a newborn test limb left at rest from two raised postures for 60 s. With the cerebellum on it
+    goes on sinking through the whole minute (more than 0.2 rad at the shoulder in each half), since at a still state its teacher is
+    zero and the leak takes back what it learned; written down: how much it slows the sink against the limb without it. The contrast,
+    asserted so the test can see a lock: with the leak at 0 the limb stops within the first seconds and stays to the milliradian"""
+    out = {}
+    for q0 in ((0.6, 0.4), (0.0, 1.5)):
+        for label, on, leak in (("off", False, 0.0), ("on", True, CEREB["cereb_leak"]), ("no leak", True, 0.0)):
+            w = ArmWorld(q0=q0)
+            if on:
+                w.below = OrganHook(organ(arm_cerebellar(), seed=1), leak=leak)
+            qs = []
+            for _ in range(400):
+                w.apply({"arm": REST}); qs.append(w.q()[0])
+            out[(q0, label)] = (qs[9], qs[199], qs[399])
+        a, b, c = out[(q0, "on")]
+        assert b < a - 0.2 and c < b - 0.2, (q0, out[(q0, "on")])
+        a, b, c = out[(q0, "no leak")]
+        assert abs(c - b) < 1e-3, (q0, out[(q0, "no leak")])
+    print("cereb 13: rested from birth, the shoulder at 1.5, 30 and 60 s (rad):", "; ".join(
+        f"from {q0}: " + ", ".join(f"{lab} {' '.join(f'{v:.3f}' for v in out[(q0, lab)])}" for lab in ("off", "on", "no leak")) for q0 in ((0.6, 0.4), (0.0, 1.5))))
+
+
+def test_born_with_its_switch():
+    """cereb 14 (SIM_DESIGN.md A20, a body is born with its switches; the R6c verifier's fourth finding: a save with a cerebellum loaded
+    under cereb 0 lost it with a printed note, and one without it loaded under cereb 1 grew one from seed 0's expansion): a body born
+    with the switch on and saved is refused at a load that switches it off; a body born with it off and saved is refused at a load that
+    switches it on; each loads as it was born"""
+    tmp = tempfile.mkdtemp(prefix="cereb_")
+    try:
+        bad = []
+        for born_on in (True, False):
+            w = ArmWorld(); torch.manual_seed(0); L = born(dict(_LR0, gate_floor=0.5, **({"cereb": 1} if born_on else {})), w); run = WorldLoop(L)
+            for _ in range(5):
+                run.step()
+            p = os.path.join(tmp, "b.pt"); L.save(p)
+            try:
+                Life.load(p, ArmAnatomy(TOK, {}), device="cpu", seed=0, world=ArmWorld(), cfg=dict(cereb=0 if born_on else 1)); bad.append(born_on)
+            except ValueError:
+                pass
+            L2 = Life.load(p, ArmAnatomy(TOK, {}), device="cpu", seed=0, world=ArmWorld())
+            assert ("cereb" in L2.m._modules) == born_on
+            os.remove(p)
+        assert not bad, f"a load switched the cerebellum {'off' if bad[0] else 'on'}"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("cereb 14: born with its switch: a load switching the cerebellum off, or on for a body born without it, is refused; each loads as born")
 
 
 CEREB_TESTS = [test_absent_for_language, test_built_last_from_its_own_generator, test_the_law_against_numpy, test_silent_without_a_teacher,
                test_it_learns_a_limbs_load, test_the_vor_learns_from_slip, test_through_a_life, test_save_round_trip_and_replay, test_its_cost,
-               test_the_estimated_torque_unsettles_it]
+               test_the_estimated_torque_in_the_mossy_input, test_a_leaky_bounded_integrator, test_a_blocked_limb_never_jams,
+               test_a_rested_posture_is_never_locked, test_born_with_its_switch]
 
 
 if __name__ == "__main__":
