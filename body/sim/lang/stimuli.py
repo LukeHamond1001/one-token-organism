@@ -50,7 +50,8 @@ from inside the slot hears the word said: docs/SIM_DESIGN.md 4.8, C68, C69.
                 line's last tick, after them): a token and a word spelled in letters, or two spelled words of different
                 lengths, never share one
   same(timelines) -> None, or why not
-  STIMULI, shape(form, word) -> ((word, rate, pitch), None) or (None, why): the table's recipe for a test word
+  STIMULI, shape(form, word) -> ((word, rate, pitch), None) or (None, why): the table's recipe for a test word (or one of the
+      "where" form's never-told foils, its "foils": A60b's level-2 control, tools/sim_voice_check.py --trial-foils)
   parts(form, word) -> the recordings a sentence is built of and where (pre, own, tag, at, own_from, n_own, gain), or None
   headroom(pcm, at, tag_at) -> the level ceiling's least margin at the clip, dB
   splice(pre_clip, own_clip, tag_clip, at, own_from, n_own, gain_db, text) -> the sentence on its carrier phrase
@@ -96,9 +97,9 @@ def shape(key, word):
     f = STIMULI.get(key)
     if f is None:
         return None, f"no stimuli built for the form {key!r} ({K.TRIAL_FILE}: tools/sim_voice_check.py --trial)"
-    w = f["words"].get(word)
+    w = f["words"].get(word) or f.get("foils", {}).get(word)          # (a never-told foil of the form: A60b's level 2)
     if w is None:
-        why = f.get("unmatched", {}).get(word, "not measured")
+        why = f.get("unmatched", {}).get(word) or f.get("foils_unmatched", {}).get(word, "not measured")
         return None, f"{word!r} has no time-matched stimulus in her voice ({K.TRIAL_FILE}: {why})"
     if not f.get("pre") or not f.get("tag") or not f.get("own") or "gain" not in w:
         return None, f"the form {key!r} has no carrier phrase in {K.TRIAL_FILE} (built before P3's fourteenth round: fail-closed)"
@@ -117,8 +118,9 @@ def parts(key, word):
     own = (f["text"].replace("{w}", word), f["register"], word if f["emphasis"] == "{w}" else f["emphasis"], shp)
     pre = (p["text"], p["register"], p.get("emphasis"), None if p.get("shape") is None else tuple(p["shape"]))
     tag = (g["text"], g["register"], g.get("emphasis"), None)
+    w = f["words"].get(word) or f["foils"][word]
     return dict(pre=pre, own=own, tag=tag, at=int(p["at"]) * TICK, own_from=int(f["own"]["from"]) * TICK,
-                n_own=int(f["own"]["ticks"]) * TICK, gain=float(f["words"][word]["gain"]))
+                n_own=int(f["own"]["ticks"]) * TICK, gain=float(w["gain"]))
 
 
 def levels(pcm):

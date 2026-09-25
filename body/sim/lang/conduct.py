@@ -71,10 +71,11 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                will be named), settles, then holds still: her eyes on the child's eyes, her hands resting on her thighs, her face
                in its neutral set, no act (still; SETTLE = 44 ticks of it before the sentence, so a look that follows her placing
                them has ended: Brooks and Meltzoff 2005's 6.5 s). She says the single test sentence of the design's never-taught
-               forms (consts.TRIAL_FORMS: "where is the X?" of a thing in a place or at an angle it has never been seen in, or a
-               never-seen exemplar; "where is the C X?", a combination never heard, only once both its words are understood alone,
-               A28), with no act: only her mouth moves. Which of the two is named and the sides are drawn by her trial stream
-               (TRIAL_STREAM), each a fair coin, so chance is 50%: any child whose looking does not depend on the word, a
+               forms (consts.TRIAL_FORMS: "where is the X?" of a thing in a place or at an angle it has never been seen in, or of
+               a never-seen exemplar beside two things of other words, its word or a never-told foil said; "where is the C X?", a
+               combination never heard, only once both its words are understood alone, A28), with no act: only her mouth moves.
+               Which of the two is named and the sides are drawn by her trial stream (TRIAL_STREAM), each a fair coin, so
+               chance is 50%: any child whose looking does not depend on the word, a
                follower of her gaze or her hands, a side's or a toy's favourite, scores 50% trial by trial; nothing she does
                before the sentence depends on the draw (W2's placing, the settle, the display's checks, the line check of both
                things' sentences, whichever is named). TIME-MATCHED STIMULI, BY CONSTRUCTION (P3's twelfth round, the lead's
@@ -121,8 +122,18 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                construction. TWO LEVELS (A60b): the word's record, place trials of its trained thing, is level 1, "maps"; an
                object noun is "understood", level 2, once the same test is passed also in its new-exemplar block, "exemplar"
                trials each of a new exemplar of its kind never named by her before the probe (Ledger.was_named), a separate
-               registered block, testable once it stands against at least KIND_DISTRACTORS other things' words: a child keyed
-               to one particular thing passes level 1 and fails level 2, a knower of the kind passes both. A probe dropped
+               registered block. AN EXEMPLAR TRIAL'S CONTROL IS A NEVER-TOLD FOIL (the lead's decision after 200e57a, the
+               skeptic's design, docs/audit/first2_word_clause.md): she sets its new exemplar down with KIND_DISTRACTORS = 2
+               things of two other words, the three in a row in an order her stream draws (_exemplar_begin), and says "where is
+               the X? see?" or, by her stream's fair coin, "where is the F? see?", F a foil she never tells (WORD_FOILS, of X's
+               written syllables, its stress on the first, drawn by the same stream; measured on the form's timeline in her
+               voice, trial_lines.json's "foils"), the same carrier phrase and level; the measure is its new exemplar's share
+               of the window's looking at the three, after its word against after a foil. So a child that knows only the other
+               words, turning from what it can name at any word it cannot, looks alike after both and passes no word there by
+               exclusion; a child keyed to one particular thing passes level 1 and fails level 2, a knower of the kind passes
+               both. While the word scaffold labels her lines (A29) a word's token and a foil's letters are never one timeline
+               on the words channel, so its probes are dropped then, as the name's are: level 2 is testable once the scaffold
+               is silenced. A probe dropped
                once its two things were brought into view counts as a presentation of them all the same, and her trial's line
                carries no object (Say.line.refs empty): W2 and the world hear its words and are told nothing more.
                HER ATTENTION LOG (A51; kept for the trials' void rule and for P4's probes, which hold her still the same way:
@@ -211,7 +222,8 @@ ACT_KINDS = {
     "present": "a formal trial's two things set down side by side in the child's view (target 'left_id|right_id', the sides as "
                "the child sees them), at matched distance from its eyes and matched salience as far as the room allows, each "
                "beyond NEAR_DEG of the other and of her face as the child sees them, both hands at once; then her hands back to "
-               "rest on her thighs (4.8, 12). W2 is never told which of the two will be named",
+               "rest on her thighs (4.8, 12); an exemplar trial's three in a row ('left_id|centre_id|right_id', A60b's level "
+               "2), the same way. W2 is never told which will be named, nor whether a foil will be",
 }
 STUB_FOCUS = 60                               # the stub runs a during='focus' act until the conduct cancels it (its word's end)
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
@@ -306,8 +318,9 @@ def directs(act):
     if k == "copy":                                                   # her arm raised or her hand shaken points at a place;
         kind, _, side = (tg or "").partition(":")                     # her hand waved or held open, toward the child
         return [(side if side in HANDS else "hand", "child" if kind in ("wave", "open_hand") else UNNAMED)]
-    if k == "present":                                                # a trial's two things, one in each hand (4.8)
-        left, _, right = (tg or "").partition("|")
+    if k == "present":                                                # a trial's two things, one in each hand (4.8); an
+        parts = (tg or "").split("|")                                 # exemplar trial's three, its left and right ones in
+        left, right = parts[0], parts[-1] if len(parts) > 1 else ""   # each hand (its centre one set down by either first)
         return [("left", left or UNNAMED), ("right", right or UNNAMED)]
     if k == "do":
         if tg in TP.TOY_ACTS:
@@ -910,7 +923,7 @@ class Conduct:
         self.acts_open = []                   # acts not yet reported ended: [motion id, kind, target, thing, tick, status];
                                               # OUTSIDE's kind for one she did not ask for
         self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
-        self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, new, shown)]
+        self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, c, new, shown)]
         self.trial = None                     # the formal trial under way: dict(form, phase "bring" | "settle" | "said", ...)
         self.trial_rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(K.TRIAL_STREAM,))))
         self.face_until = NEVER               # her face moves through this tick (FACE_COURSE after a judgment or a frown: A3)
@@ -1064,19 +1077,29 @@ class Conduct:
         return None
 
     # ------------------------------------------------------------------ her formal trials (4.8, 12; the lead's decision)
-    def probe(self, form, a=None, b=None, new=None, shown=None):
+    def probe(self, form, a=None, b=None, new=None, shown=None, c=None):
         """a formal trial asked for by her day plan (P4: at a probe its stage schedules, never by the child's rates), run when she
         is free (no ask pending, no trial under way); one that cannot run is dropped and logged (fast.refused), never said.
-        form: consts.TRIAL_FORMS. a, b: the two things' ids (none for "name"): for "place" and "exemplar" two things of different
-        words, for "combination" a colour twin and its original (one word, two colours, one of them with the word a held-out
-        pair, A55). new: {id: item} for each thing shown in a never-taught presentation (a place or an angle it has never been
-        seen in, a never-seen exemplar: the world's record, P4's; a combination's item is its pair, taken here). shown: {item:
-        its presentations outside trials} (P4's count, beside the ledger's own of trials: A28's first 3 count)."""
+        form: consts.TRIAL_FORMS. a, b: the two things' ids (none for "name"): for "place" two things of different words, for
+        "combination" a colour twin and its original (one word, two colours, one of them with the word a held-out pair, A55);
+        for "exemplar" (A60b's level 2) a is its new exemplar, whose word is tested, and b and c the KIND_DISTRACTORS = 2 things
+        of two other words it is set down beside. new: {id: item} for each thing shown in a never-taught presentation (a place
+        or an angle it has never been seen in, a never-seen exemplar: the world's record, P4's; a combination's item is its
+        pair, taken here). shown: {item: its presentations outside trials} (P4's count, beside the ledger's own of trials:
+        A28's first 3 count)."""
         if form not in K.TRIAL_FORMS:
             raise ValueError(f"not a trial form: {form!r} ({', '.join(K.TRIAL_FORMS)})")
-        if (form == "name") != (a is None and b is None) or (form != "name" and (a is None or b is None or a == b)):
-            raise ValueError(f"a {form!r} trial takes {'no things' if form == 'name' else 'two things'}: {a!r}, {b!r}")
-        self.probes.append(dict(form=form, a=a, b=b, new=dict(new or {}), shown=dict(shown or {})))
+        want = {"name": 0, "exemplar": 3}.get(form, 2)     # (an exemplar trial's b and c: KIND_DISTRACTORS = 2)
+        things = [x for x in (a, b, c) if x is not None]
+        if [x is not None for x in (a, b, c)] != [True] * want + [False] * (3 - want) or len(set(things)) != want:
+            what = {0: "no things", 2: "two things"}.get(want, "its new exemplar and two things of two other words")
+            raise ValueError(f"a {form!r} trial takes {what}: {a!r}, {b!r}, {c!r}")
+        self.probes.append(dict(form=form, a=a, b=b, c=c, new=dict(new or {}), shown=dict(shown or {})))
+
+    @staticmethod
+    def _things(tr):
+        """a trial's things shown: its target and its distractor, and an exemplar trial's second distractor (third)."""
+        return [x for x in (tr.get("target"), tr.get("distractor"), tr.get("third")) if x is not None]
 
     def _probe_drop(self, t, form, why, tr=None):
         """a probe that cannot run: dropped and logged, never said. Its two things brought into the child's view (the present
@@ -1084,17 +1107,20 @@ class Conduct:
         displayed: fail-closed, for her follow-in naming may label a thing in its new place)."""
         self.fast.refused.append((t, f"trial:{form}", "probe: " + why))
         if tr is not None and tr.get("act") is not None and tr.get("present") != "refused" and form != "combination":
-            self.ledger.displayed(t, form, [tr["new"].get(tr["target"]), tr["new"].get(tr["distractor"])], why)
+            self.ledger.displayed(t, form, [tr["new"].get(x) for x in self._things(tr)], why)
 
     def _trial_begin(self, t, p):
         """the next probe begins: her trial stream draws which of the two is named, the sides and (for the name) its name or a
-        foil and which foil, three draws a trial whatever its form, so a replay is exact; she brings the two things into its
-        view side by side ("present", W2 never told which will be named), or for the name holds still where she is."""
+        foil and which foil (an exemplar trial: its word or a foil, the three things' order and which foil), three draws a
+        trial whatever its form, so a replay is exact; she brings the things into its view side by side ("present", W2 never
+        told which will be named), or for the name holds still where she is."""
         pr = self.probes.pop(0)
         form, a, b = pr["form"], pr["a"], pr["b"]
         u = [float(x) for x in self.trial_rng.random(3)]
         tr = dict(form=form, phase="bring", since=int(t), run=0, act=None, tid=None, onset=None, until=None, line_start=None,
                   line_end=None, sound_end=None, why=None, new=pr["new"], shown=pr["shown"])
+        if form == "exemplar":
+            return self._exemplar_begin(t, p, tr, a, b, pr.get("c"), u)
         if form == "name":
             name = u[0] < 0.5
             foil = K.NAME_FOILS[min(len(K.NAME_FOILS) - 1, int(u[2] * len(K.NAME_FOILS)))]
@@ -1129,37 +1155,79 @@ class Conduct:
         tr["act"] = self._request(Act("present", f"{left}|{right}"), t, p)
         self.trial = tr
 
+    def _exemplar_begin(self, t, p, tr, a, b, c, u):
+        """an exemplar trial begins (A60b's level 2; the lead's decision after 200e57a, the skeptic's design in
+        docs/audit/first2_word_clause.md): its new exemplar a set down with b and c, things of two other words
+        (KIND_DISTRACTORS), the three in a row. Her trial stream draws its word or a NEVER-TOLD FOIL (u[0]: a fair coin), the
+        three things' order (u[1]: each of the 6 as likely, so its new exemplar is on each side and in the centre alike) and
+        which foil of its word's written syllables (u[2]: WORD_FOILS, NOUN_SYLLABLES). The foils are words she never tells: one
+        among her words (vocab, or a new word of hers) drops the probe whichever is drawn, as does anything else that fails,
+        never after the draw."""
+        form = "exemplar"
+        if c is None or K.KIND_DISTRACTORS > 2:
+            return self._probe_drop(t, form, f"an exemplar trial sets its new exemplar beside {K.KIND_DISTRACTORS} things of "
+                                             f"other words (saved before A60b's foil control: fail-closed)")
+        objs = [p.obj(x) for x in (a, b, c)]
+        miss = [x for x, o in zip((a, b, c), objs) if o is None]
+        if miss:
+            return self._probe_drop(t, form, f"she does not see {miss[0]!r}")
+        oe = objs[0]
+        names = [o.name for o in objs]
+        if any(n not in TP.OBJECT_NOUNS for n in names) or len(set(names)) != 3:
+            return self._probe_drop(t, form, f"an exemplar trial needs its new exemplar beside things of "
+                                             f"{K.KIND_DISTRACTORS} other words: {', '.join(o.id for o in objs)}")
+        foils = K.WORD_FOILS.get(K.NOUN_SYLLABLES.get(oe.name))
+        if not foils:
+            return self._probe_drop(t, form, f"no never-told foil of {oe.name!r}'s syllables (consts.WORD_FOILS)")
+        f = self.fast
+        told = [x for x in foils if x in f.vocab or x in f.new_words]
+        if told:
+            return self._probe_drop(t, form, f"the foil {told[0]!r} is a word of hers, not a never-told foil (fail-closed)")
+        orders = ((a, b, c), (a, c, b), (b, a, c), (b, c, a), (c, a, b), (c, b, a))
+        sides = orders[min(len(orders) - 1, int(u[1] * len(orders)))]
+        named = u[0] < 0.5
+        foil = foils[min(len(foils) - 1, int(u[2] * len(foils)))]
+        tr.update(target=a, distractor=b, third=c, named=bool(named), foil=foil, foils=list(foils),
+                  said=oe.name if named else foil, sides=list(sides))
+        why = self._trial_stimuli(tr, oe)                   # before anything is brought: a set not one timeline in her voice
+        if why is not None:                                 # is never presented
+            return self._probe_drop(t, form, why)
+        tr["act"] = self._request(Act("present", "|".join(sides)), t, p)
+        self.trial = tr
+
     def _key(self, tr, o):
         """the word a trial's thing stands for in the ledger: its word, or for a combination its colour and word ('blue ball')."""
         return f"{o.colour} {o.name}" if tr["form"] == "combination" else o.name
 
     def _display(self, tr, p):
-        """why its sentence cannot be said now, or None: the two things in the child's view, in no hand, each beyond NEAR_DEG of
-        the other and of her face as the child sees them (the world's Seen.near and Percept.face_near; not given: fail-closed),
-        so a look at either can be read as one of them; the child attending neither; for the name, the child able to see her and
-        not already looking at her face."""
+        """why its sentence cannot be said now, or None: the two things (an exemplar trial's three) in the child's view, in no
+        hand, each beyond NEAR_DEG of the others and of her face as the child sees them (the world's Seen.near and
+        Percept.face_near; not given: fail-closed), so a look at any can be read as one of them; the child attending none; for
+        the name, the child able to see her and not already looking at her face."""
         if not (p.present and p.child_in_view):
             return "she is away, or cannot see the child"
         if tr["form"] == "name":
             if not p.seen_by_child:
                 return "the child cannot see her"
             return "it already looks at her face" if p.child_target == PARENT_NAME else None
-        ot, od = p.obj(tr["target"]), p.obj(tr["distractor"])
-        for oid, o in ((tr["target"], ot), (tr["distractor"], od)):
+        ids = self._things(tr)
+        objs = [p.obj(x) for x in ids]
+        for oid, o in zip(ids, objs):
             if o is None:
                 return f"she does not see {oid!r}"
             if not o.child_sees:
                 return f"{oid!r} is not in the child's view"
             if o.on in ("hand", PARENT_NAME) or oid in p.child_holds:
                 return f"{oid!r} is in a hand"
-        if ot.near is None or od.near is None or getattr(p, "face_near", None) is None:
+        if any(o.near is None for o in objs) or getattr(p, "face_near", None) is None:
             return "the world does not say what lies near them (fail-closed)"
-        if od.id in ot.near or ot.id in od.near:
-            return f"the two within {K.NEAR_DEG:g} degrees of each other as the child sees them"
-        if ot.id in p.face_near or od.id in p.face_near:
+        if any(o2.id in o.near or o.id in o2.near for i, o in enumerate(objs) for o2 in objs[i + 1:]):
+            return f"{'the two' if len(objs) == 2 else 'two of them'} within {K.NEAR_DEG:g} degrees of each other as the " \
+                   f"child sees them"
+        if any(o.id in p.face_near for o in objs):
             return f"one of them within {K.NEAR_DEG:g} degrees of her face as the child sees it"
         att = {o.id for o in p.attended()}
-        if ot.id in att or od.id in att:
+        if any(o.id in att for o in objs):
             return "it already attends one of them"
         return None
 
@@ -1183,6 +1251,15 @@ class Conduct:
         lines = {k: _line_l(d) for k, d in tr["lines"].items()}
         if tr["form"] == "name":
             return lines[NAME if tr["name"] else tr["foil"]]
+        if tr["form"] == "exemplar":                        # its word's sentence held to the check whichever is drawn (a
+            ln = lines[tr["target"]]                        # foil's is no sentence of her words: never told, never checked)
+            ok, why = TP.check(ln.text, f.vocab, f.new_words, p, (tr["target"],), tuple(f.held), recent_events=f.recent)
+            if not ok:
+                self.trial = None
+                self._probe_drop(t, tr["form"], f"the sentence {ln.text!r} (whichever is drawn) fails the line check: {why}",
+                                 tr)
+                return None
+            return lines[tr["target"]] if tr["named"] else lines[tr["foil"]]
         for oid in (tr["target"], tr["distractor"]):        # both sentences held to the check, whichever is named, so a
             ln = lines[oid]                                 # probe is never dropped by which of the two her stream drew
             twin = p.obj(tr.get("twin")) if tr.get("twin") else None
@@ -1241,9 +1318,10 @@ class Conduct:
     def _trial_stimuli(self, tr, oa=None, ob=None):
         """a trial's stimuli, made before anything is brought (P3's twelfth round, the lead's decision on C67: time-matched
         by construction, as infant labs match theirs) -> why they cannot be used, or None. Every sentence its draw could give
-        (the two things' "where is the X? see?" or a combination's "where is the C X? see?", or "hi. pip. hi." and each foil's)
-        is made with its test word's shape from the table (stimuli.shape: the engine's own per-word rate and a matched pitch
-        contour, measured before birth; with no voice none is needed), built on its form's one carrier phrase (stimuli.parts,
+        (the two things' "where is the X? see?" or a combination's "where is the C X? see?", or "hi. pip. hi." and each foil's,
+        or an exemplar trial's "where is the X? see?" and each of its foils' "where is the F? see?") is made with its test
+        word's shape from the table (stimuli.shape: the engine's own per-word rate and a matched pitch contour, measured
+        before birth; with no voice none is needed), built on its form's one carrier phrase (stimuli.parts,
         splice, P3's fourteenth round: one recording before its test word, its word at the form's one level, one tag after it)
         and timed on its rendered clip, made ahead and never kept as heard (_timeline); they must be one timeline (stimuli.
         same: the clip's ticks, each word's first and last tick, every sample before the test word's onset tick and from the
@@ -1267,6 +1345,14 @@ class Conduct:
                                     fr), NAME)] + \
                 [(x, TP.Line(TP.foil_line(x), "trial_name", "calling", None, x, (), "fast", fr.replace("{n}", "{f}")), x)
                  for x in K.NAME_FOILS]
+        elif form == "exemplar":                            # its word's sentence and each foil's of its syllables (A60b)
+            key = ST.form_key(form)
+            fr = TP.FRAMES["trial_where"][0]
+            text, focus, _refs = TP.fill(fr, o=oa)
+            cands = [(oa.id, TP.Line(text, "trial_where", register_for("trial_where", text), focus, focus, (), "fast", fr[0]),
+                      oa.name)] + \
+                [(x, TP.Line(TP.foil_line(x), "trial_where", register_for("trial_where", TP.foil_line(x)), x, x, (), "fast",
+                             fr[0].replace("{o}", "{f}")), x) for x in tr["foils"]]
         else:
             intent = "trial_combo" if form == "combination" else "trial_where"
             key = ST.form_key(form, oa.name)
@@ -1309,11 +1395,25 @@ class Conduct:
         fresh never-taught item, A28; the distractor's yoked trial when its thing is; for the name, its name or a foil) and
         the items it presents: both things displayed, whichever is named (a combination's pair on every trial of it, its
         twin shown beside its original, P3's eleventh round: counted only when said, its fresh trials had depended on her
-        coins), so which trials are fresh never depends on which was named."""
+        coins), so which trials are fresh never depends on which was named. An exemplar trial (A60b's level 2) scores its new
+        exemplar's word alone, its word said or a never-told foil, when its exemplar is fresh and never named before the probe
+        (its three things displayed, whichever is said)."""
         tr = self.trial
+        others = None
         if tr["form"] == "name":
             word_at, score = tr["said"], [[NAME, "trials" if tr["name"] else "yoked", 1, 0]]
             target, distractor, items, sides = dict(id=None, word=tr["said"]), None, [], None
+        elif tr["form"] == "exemplar":                      # A60b's level 2: its new exemplar's share after its word against
+            oe, o1, o2 = (p.obj(x) for x in self._things(tr))   # after a never-told foil, beside two things of other words
+            word_at = tr["said"]
+            it_e = tr["new"].get(tr["target"])
+            items = [x for x in (tr["new"].get(i) for i in self._things(tr)) if x]   # each displayed, whichever is said
+            fresh = it_e is not None and self.ledger.presented(it_e) + int(tr["shown"].get(it_e, 0)) < \
+                K.NOVEL_PRESENTATIONS and not self.ledger.was_named(oe.id)          # never named before the probe
+            score = [[oe.name, "trials" if tr["named"] else "yoked", 1, 0, 2]] if fresh else []
+            target, distractor, others = dict(id=oe.id, word=oe.name), dict(id=o1.id, word=o1.name), \
+                [dict(id=o2.id, word=o2.name)]
+            sides = tuple(tr["sides"])
         else:
             ot, od = p.obj(tr["target"]), p.obj(tr["distractor"])
             word_at = ot.colour if tr["form"] == "combination" else ot.name
@@ -1342,7 +1442,8 @@ class Conduct:
                     shapes=sorted([list(d["shape"]) for d in tr["lines"].values() if d.get("shape")]),
                     channel=bool(self.scaffold and self.voice is not None))
         tr["tid"] = self.ledger.trial(t, tr["form"], target, distractor, onset, (first, last), tr["said"] if tr["form"] ==
-                                      "name" else word_at, sides=sides, score=score, items=items, stimulus=stim)
+                                      "name" else word_at, sides=sides, score=score, items=items, stimulus=stim,
+                                      **({} if others is None else dict(others=others)))
         self._prompt(t, t, last)
         if tr.get("stray"):                                  # her sentence as said is not its stimulus's timeline (a voice
             return self._trial_end(t, "void", "her sentence as said is not the timeline its stimuli were made on "   # changed)
@@ -1350,8 +1451,8 @@ class Conduct:
 
     def _trial_look(self, tr, t, p):
         """a tick of its window (A60b): her reading of its head line (A40: Percept.child_target, held TARGET_TICKS, as every
-        rule of hers reads it) on the target (on) or the distractor (off); for the name, on her face (on) or not (off). Only how
-        many: never when, nor in what order."""
+        rule of hers reads it) on the target (on) or the distractor (off; an exemplar trial: on its new exemplar, or on either
+        thing beside it); for the name, on her face (on) or not (off). Only how many: never when, nor in what order."""
         if not tr["look_from"] <= t <= tr["until"]:
             return
         if tr["form"] == "name":
@@ -1359,8 +1460,9 @@ class Conduct:
             tr["on"] += int(face)
             tr["off"] += int(not face)
         else:
-            tr["on"] += int(p.child_target == tr["target"])
-            tr["off"] += int(p.child_target == tr["distractor"])
+            tg = p.child_target
+            tr["on"] += int(tg is not None and tg == tr["target"])
+            tr["off"] += int(tg is not None and tg in (tr["distractor"], tr.get("third")))
 
     def _trial_tick(self, t, p, out):
         """her trial under way, each tick: the present act until her motion reports it done (refused or cancelled: dropped);
@@ -1380,6 +1482,9 @@ class Conduct:
         if tr["phase"] == "said" and "look_from" not in tr:                                     # a save mid-window from before
             return self._trial_end(t, "void", "saved before its window was scored by the proportion of looking (A60b; "   # A60b
                                               "fail-closed)", out, p)
+        if tr["form"] == "exemplar" and "foil" not in tr:                                       # a save mid-trial from before
+            return self._trial_end(t, "void" if tr["phase"] == "said" else "dropped",            # its foil control
+                                   "saved before an exemplar trial's control was a never-told foil (A60b; fail-closed)", out, p)
         ev = {k for k, _o in p.events}
         if ev & {"pain", "distress", "hit_her"}:
             return self._trial_end(t, "void", "she answered its pain, distress or hit (4.10's priority)", out, p)
@@ -1412,7 +1517,8 @@ class Conduct:
                 return self._trial_end(t, "void", f"her attention log: {why} (only her mouth may move)", out, p)
             if t >= tr["until"]:                            # its window's last tick: scored by its looks
                 if tr["form"] != "name" and tr["on"] + tr["off"] < K.TRIAL_LOOK_MIN:
-                    return self._trial_end(t, "void", f"{tr['on'] + tr['off']} of its window's ticks on either thing, fewer "
+                    return self._trial_end(t, "void", f"{tr['on'] + tr['off']} of its window's ticks on "
+                                                      f"{'any of its things' if tr.get('third') else 'either thing'}, fewer "
                                                       f"than {K.TRIAL_LOOK_MIN} (A60b: not scored)", out, p)
                 return self._trial_end(t, "scored", "its window's looks", out, p)
 

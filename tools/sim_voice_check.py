@@ -35,7 +35,7 @@ RMS behind SYNTH_RMS, is a level, written into body/sim/voice/synth.py by hand a
              the conduct reads (body/sim/lang/trial_lines.json)
 
 Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N] [--growth] [--peak [--write]] [--trial
-     [--write]]
+     [--write]] [--trial-foils [--write]]
   --lines  one line a line (default: 16 lines written here; the commits used the all-out study's 331 birth template lines,
            $S/allout/lang/all_lines.txt: 275 end in ".", 37 in "?", 19 in "!"; 314 distinct)
   --cache  the voice cache to use (default: a temporary folder, removed after)
@@ -43,6 +43,8 @@ Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [-
            in the new-word register, pooled (C25)
   --peak   only the new word's pitch peak by frame (A34); --write writes the table into body/sim/lang/peak_lines.json
   --trial  only the formal trials' stimuli; --write writes the table into body/sim/lang/trial_lines.json
+  --trial-foils  only the "where" form's never-told foil words for level 2's control (A60b), measured on the form as the table
+           holds it; --write adds them to the table ("foils"), the rest of it byte for byte as it was
 """
 import argparse
 import json
@@ -768,6 +770,127 @@ def trial_table(cache, write=False):
     return out
 
 
+FOIL_CANDIDATES = {1: ("dax", "zeb", "fep", "gub", "nef", "gaf", "tam", "koob", "dap", "fam", "kem", "tuv", "dek", "zav"),
+                   2: ("tuma", "modi", "zibo", "pilo", "kazo", "gabo", "fipo", "toma", "dobi", "neppo", "zava", "kipa", "lomi",
+                       "tepa", "gobi", "fema")}
+# never-told foil words for the "where" form's level-2 control (the lead's decision A60b, the skeptic's design in
+# docs/audit/first2_word_clause.md): one and two written syllables (the tested nouns': ball, bear, block, car, cup, drum, ring;
+# bottle, rattle, tower), each beyond edit distance 1 of every one of her 128 words, the name and its foils (ours)
+
+
+def trial_foils(cache, write=False, per=3):
+    """A60b's second level (the lead's decision after 200e57a): its control is a never-told foil word F in the same carrier
+    phrase ("where is the F? see?"), matched in syllables and stress to the noun it stands against, in the same voice and
+    register, drawn by her trial stream. Each candidate (FOIL_CANDIDATES, by syllables) is said at every step of the engine's
+    per-word rate within TRIAL_RATE_SPAN of the natural one on the "where" form as the table holds it (its timeline, its
+    contour, its carrier phrase and its one loudest 10 ms: nothing of the table's words changes); on the form's timeline, at the
+    step nearest its natural rate and the pitch matching its contour to the form's (TRIAL_F0: the stress's pitch), spliced onto
+    the form's carrier phrase at the form's level (its gain), one timeline with the form's words (stimuli.same), under the level
+    ceiling at the clip (TRIAL_CEILING_DB) and at the child's ears (TRIAL_CEILING_EAR_DB, EAR_GEOS): a foil; the first `per` of
+    each syllable count kept (their order in FOIL_CANDIDATES). Writes them into the table's "where" form, "foils" (and
+    "foils_unmatched", with why), the rest of the table byte for byte as it was."""
+    from body.sim.lang import consts as K                                   # noqa: PLC0415
+    from body.sim.lang import stimuli as ST                                 # noqa: PLC0415
+    t0 = time.perf_counter()
+    f = ST.STIMULI["where"]
+    steps = rate_steps(cache)
+    line_rate = V.REGISTERS["question"][1] / V.ENGINE_RATE * 100
+    nat_r, nat_p = V.EMPHASIS[1] * line_rate, 30.0
+    reps = sorted({nat_r if a <= nat_r < b else a for a, b in zip(steps, steps[1:] + [10 ** 6])})
+    reps = [r for r in reps if abs(math.log(r / nat_r)) <= math.log(K.TRIAL_RATE_SPAN) + 1e-9]
+    slot, tl_ref, ref, target = f["slot"], f["own_timeline"], f["f0"], f["target"]
+    text, reg = f["text"], f["register"]
+
+    def render(w, r, p):
+        return cache.clip(text.replace("{w}", w), reg, emphasis=w, heard=False, shape=(w, r, p))
+    car = f["pre"]["shape"]
+    pre_clip = render(car[0], car[1], car[2])
+    tag_clip = cache.clip(f["tag"]["text"], f["tag"]["register"], heard=False)
+    at, own_from, n_s = int(f["pre"]["at"]) * TICK, int(f["own"]["from"]) * TICK, int(f["own"]["ticks"]) * TICK
+    noun = sorted(f["words"])[0]
+    nv = f["words"][noun]
+    comp_n = ST.splice(pre_clip, render(noun, nv["rate"], nv["pitch"]), tag_clip, at, own_from, n_s, nv["gain"])
+    tl_n = ST.timeline(comp_n.words, len(comp_n.pcm), comp_n.pcm, slot=slot, tag_at=at + n_s)
+    rms_n = np.median([float(np.sqrt(np.mean(render(w, v["rate"], v["pitch"]).pcm[
+        slice(*render(w, v["rate"], v["pitch"]).words[slot][1:])].astype(np.float64) ** 2))) for w, v in f["words"].items()])
+    rec, unmatched = {}, {}
+    for syl, cands in sorted(FOIL_CANDIDATES.items()):
+        kept = 0
+        for w in cands:
+            if kept >= per:
+                break
+            on = [r for r in reps if json.loads(json.dumps(ST.timeline((c := render(w, r, nat_p)).words, len(c.pcm), c.pcm,
+                                                                                slot=slot, pre=False), sort_keys=True))
+                  == tl_ref]
+            if not on:
+                unmatched[w] = f"no step of the engine's per-word rate within a factor of {K.TRIAL_RATE_SPAN:g} of its natural " \
+                               f"{nat_r:g}% puts it on the form's timeline"
+                continue
+            r = min(on, key=lambda r_: (abs(math.log(r_ / nat_r)), r_))
+            c = render(w, r, nat_p)
+            ct = f0_contour(c.pcm[c.words[slot][1]:c.words[slot][2]])
+            best_p, best_d, best_c = nat_p, _dev(ct, ref) if ct else 9.9, ct
+            if ct:
+                k_ = math.exp(np.mean([math.log(a / b) for a, b in zip(ref, ct)]))
+                p0 = round(((1 + nat_p / 100.0) * k_ - 1) * 100)
+                for p in (p0 - 1, p0, p0 + 1):
+                    c2 = render(w, r, float(p))
+                    tl2 = ST.timeline(c2.words, len(c2.pcm), c2.pcm, slot=slot, pre=False)
+                    ct2 = f0_contour(c2.pcm[c2.words[slot][1]:c2.words[slot][2]])
+                    if json.loads(json.dumps(tl2, sort_keys=True)) == tl_ref and ct2 and _dev(ct2, ref) < best_d:
+                        best_p, best_d, best_c = float(p), _dev(ct2, ref), ct2
+            if best_d > K.TRIAL_F0:
+                unmatched[w] = f"its pitch contour {[round(v) for v in best_c or []]} Hz against the form's " \
+                               f"{[round(v) for v in ref]}: {best_d:.0%} off, beyond {K.TRIAL_F0:.0%}"
+                continue
+            own = render(w, r, best_p)
+            pk = _slot_peak(ST.splice(pre_clip, own, tag_clip, at, own_from, n_s, 0.0).pcm, 160, at, at + n_s)
+            gain = round(target - pk, 3)
+            comp = ST.splice(pre_clip, own, tag_clip, at, own_from, n_s, gain)
+            tl_f = ST.timeline(comp.words, len(comp.pcm), comp.pcm, slot=slot, tag_at=at + n_s)
+            why = ST.same([tl_n, tl_f], [noun, w])
+            clip_h = ST.headroom(comp.pcm, at, at + n_s)
+            if why is not None or clip_h < K.TRIAL_CEILING_DB:
+                unmatched[w] = f"at the form's level ({gain:+.2f} dB) " + (why or f"its ceiling's margin at the clip "
+                                                                                  f"{clip_h:.2f} dB, under {K.TRIAL_CEILING_DB:g}")
+                continue
+            ear_h, worst = _ear_headroom({w: comp}, at, at + n_s)
+            if ear_h < K.TRIAL_CEILING_EAR_DB:
+                unmatched[w] = f"its ceiling's margin at the child's ears {ear_h:.2f} dB (at {worst}), under " \
+                               f"{K.TRIAL_CEILING_EAR_DB:g}"
+                continue
+            x = own.pcm[own.words[slot][1]:own.words[slot][2]].astype(np.float64)
+            rec[w] = dict(rate=r, pitch=best_p, natural=bool(r == nat_r and best_p == nat_p), f0=[round(v, 1) for v in best_c],
+                          f0_dev=round(best_d, 4), rms=round(float(np.sqrt(np.mean(x * x))) / rms_n, 3),
+                          ms=round((own.words[slot][2] - own.words[slot][1]) / 16.0), channel=len(LX.symbols_for(w)),
+                          gain=gain, syllables=syl, foil=True, headroom=dict(clip=round(clip_h, 3), ear=round(ear_h, 3)))
+            kept += 1
+            print(f"  foil {w} ({syl} syllable{'s' if syl > 1 else ''}): rate {r:g}%, pitch {best_p:+g}%, gain {gain:+.2f} dB, "
+                  f"F0 {best_d:.0%} off, {rec[w]['ms']} ms, rms {rec[w]['rms']:.2f}; margins {clip_h:.2f} dB at the clip, "
+                  f"{ear_h:.2f} at its ears", flush=True)
+    for w, why in unmatched.items():
+        print(f"  not a foil: {w}: {why}")
+    print(f"  {len(rec)} foils in {time.perf_counter() - t0:.0f} s")
+    if write:
+        path = os.path.join(ROOT, "body", "sim", "lang", K.TRIAL_FILE)
+        with open(path) as fh:
+            d = json.load(fh)
+        d["forms"]["where"]["foils"] = dict(sorted(rec.items()))
+        d["forms"]["where"]["foils_unmatched"] = dict(sorted(unmatched.items()))
+        d["meta"]["foils"] = ("the \"where\" form's never-told foil words (A60b's second level, its control): each on the form's "
+                              "timeline, at the step of the engine's per-word rate nearest its natural one and the pitch "
+                              "matching its contour to the form's (TRIAL_F0), spliced onto the form's carrier phrase at the "
+                              "form's one loudest 10 ms (its gain), one timeline with the form's words and under the level "
+                              "ceiling at the clip and the child's ears; syllables as written (tools/sim_voice_check.py "
+                              "--trial-foils)")
+        with open(path, "w") as fh:
+            fh.write('{"meta": ' + json.dumps(d["meta"], sort_keys=True) + ',\n "forms": {\n')
+            fh.write(",\n".join(f"  {json.dumps(k)}: {json.dumps(v, sort_keys=True)}" for k, v in sorted(d["forms"].items())))
+            fh.write("\n}}\n")
+        print(f"  written: {path}")
+    return rec, unmatched
+
+
 TRIAL_TAGS = {"where": ("see?", "question"), "combination": ("see?", "question"), "name": ("hi.", "calling")}
 TRIAL_PRE_NAME = "hi."                                                  # the name's carrier before it (its own register)
 EAR_GEOS = tuple((d, a) for d in (0.3, 0.5, 0.7, 1.0, 1.5, 3.0) for a in (0, 30, 60, 90, 120, 150, 180))   # m, degrees
@@ -845,6 +968,8 @@ def main():
     ap.add_argument("--growth", action="store_true", help="only the growth words' introductions (C25)")
     ap.add_argument("--peak", action="store_true", help="only the new word's pitch peak by frame (A34)")
     ap.add_argument("--trial", action="store_true", help="only the formal trials' time-matched stimuli (P3's twelfth round)")
+    ap.add_argument("--trial-foils", action="store_true", help="only the \"where\" form's never-told foil words (A60b's second "
+                                                               "level, its control)")
     ap.add_argument("--write", action="store_true", help="with --peak or --trial: write body/sim/lang/peak_lines.json or "
                                                          "trial_lines.json")
     a = ap.parse_args()
@@ -858,6 +983,9 @@ def main():
             return
         if a.trial:
             trial_table(cache, a.write)
+            return
+        if a.trial_foils:
+            trial_foils(cache, a.write)
             return
         if a.growth:
             growth_sets(cache)

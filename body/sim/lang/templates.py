@@ -682,12 +682,16 @@ def fill(frame, o=None, b=None, w=None, fixtures=()):
 
 
 def foil_line(foil):
-    """the name test's foil (4.8, 12; Mandel, Jusczyk and Pisoni 1995): "hi. <foil>. hi." (the name's frame, trial_name) for a
-    foil in consts.NAME_FOILS, a name she never uses for it or for anything, said in its name's register and stillness. The
-    only line she says that is not of her words (the line check's vocabulary): refused for anything else, and never Claude's."""
-    if foil not in K.NAME_FOILS:
-        raise ValueError(f"not a foil name: {foil!r} (consts.NAME_FOILS)")
-    return FRAMES["trial_name"][0][0].replace("{n}", foil)
+    """a trial's foil (4.8, 12): the name test's, "hi. <foil>. hi." (the name's frame, trial_name; Mandel, Jusczyk and Pisoni
+    1995) for a foil in consts.NAME_FOILS, a name she never uses for it or for anything, said in its name's register and
+    stillness; an exemplar trial's, "where is the <foil>? see?" (trial_where's frame; A60b's level 2, the skeptic's design) for
+    a foil in consts.WORD_FOILS, a word she never tells, said as the form's words are. The only lines she says that are not of
+    her words (the line check's vocabulary): refused for anything else, and never Claude's."""
+    if foil in K.NAME_FOILS:
+        return FRAMES["trial_name"][0][0].replace("{n}", foil)
+    if any(foil in fs for fs in K.WORD_FOILS.values()):
+        return FRAMES["trial_where"][0][0].replace("{o}", foil)
+    raise ValueError(f"not a foil: {foil!r} (consts.NAME_FOILS, consts.WORD_FOILS)")
 
 
 def frames_for(intent):
