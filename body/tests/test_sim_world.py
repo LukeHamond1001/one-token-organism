@@ -97,7 +97,9 @@ def test_the_scene():
         assert hashlib.sha256(f.read()).hexdigest() == G1_FILE_SHA256, "the stock G1 file changed"
     w = G1World(seed=1)
     m = w.m
-    assert (m.nu, m.nmocap, len(W.JOINTS), w.nz) == (43, 0, 43, 45)          # the parent is a body (her joints), not mocap
+    her = [a for a in range(m.nu) if (m.actuator(a).name or "").startswith("parent_")]   # the parent is a body (her joints and her
+    assert (m.nu - len(her), len(her), m.nmocap, len(W.JOINTS), w.nz) == (43, 39, 0, 43, 45)   # 39 muscles, A25b), not mocap
+    assert her == list(range(43, 82)) and w.aid.max() < 43                   # the G1's 43 servos come first, as its file has them
     assert m.opt.cone == mujoco.mjtCone.mjCONE_ELLIPTIC and m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_MULTICCD
     assert m.opt.impratio == 10.0 and m.opt.integrator == mujoco.mjtIntegrator.mjINT_IMPLICITFAST and m.opt.timestep == 0.002
     assert m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET                # A18: a bad state is never silently reset
@@ -111,7 +113,7 @@ def test_the_scene():
     else:
         raise AssertionError("an act out of range was taken")
     pg = m.geom("parent_hand_L").id
-    assert m.geom_contype[pg] == 8 and m.geom_conaffinity[pg] == 3        # the parent's shapes touch the G1 (contype 1) and the floor (2)
+    assert m.geom_contype[pg] == 8 and m.geom_conaffinity[pg] == 18       # the parent's shapes touch the room (16) and the floor (2), never the G1 (A25c)
     g1 = w.scene.g1_set                                                  # C26, A21: the world's geoms and the toys at contact priority 2
     col = [g for g in range(m.ngeom) if m.geom_contype[g] or m.geom_conaffinity[g]]
     worldish = [g for g in col if m.geom_bodyid[g] not in g1 and not (m.body(int(m.geom_bodyid[g])).name or "").startswith("parent")]

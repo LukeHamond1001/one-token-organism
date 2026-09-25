@@ -11,8 +11,9 @@ taken out). The XML is generated: edit the numbers here and re-run, never the XM
               file's kp 500 being Menagerie's placeholder ("needs tuning"). It is born lying on its back (g1scene.birth()).
   THE PARENT  a body (the lead's decision of 2026-09-25): 16 dynamic segments in one tree (parent_kin.py's skeleton, a free
               pelvis, ball joints and hinges: PARENT_JOINTS), each with de Leva's female mass and inertia at her body mass
-              (parent_consts.py), driven by her motion (body/sim/parent_motion.py, body/sim/parent_body.py) with a woman's
-              strength; touches toys, the room, the floor and the child with soft shapes (solref 0.02 at contact priority 2); holds toys
+              (parent_consts.py), driven by her motion (body/sim/parent_motion.py, body/sim/parent_body.py) through one actuator
+              per joint axis whose force range is a woman's strength there (parent_actuators; the lead's structural decision of
+              2026-09-25, A25b: her trunk carried by a capped support, her limbs dynamic within her strength); touches toys, the room, the floor and the child with soft shapes (solref 0.02 at contact priority 2); holds toys
               through welds that start switched off, and the child ONLY through capped springs (no weld on the G1, no contact
               exclusion: her hands and arms collide with it; SIM_DESIGN.md 4.1, 4.2, A25). Her face is
               built to a real face's proportions and photometry (parent_face.py, through parent_kin.py: one smooth head sheet
@@ -38,10 +39,10 @@ and motor housings on housings are all contacts that hold without a slide below 
 there by design, and MuJoCo 3.9's documentation names the remedy (elliptic cones with a large impratio and the Newton solver).
 MuJoCo's auto-reset is off (A18), so a bad state is never silently replaced by the start pose: the world finds it and stops the tick.
 
-Collision bits: world 1 (walls, furniture), the floor and the mat 2 (with conaffinity 1: the G1 rests on them); the G1 keeps
+Collision bits: world 1 | 16 (walls, furniture), the floor and the mat 2 (with conaffinity 1: the G1 rests on them); the G1 keeps
 its own contype 1 / conaffinity 1 (self-collision on, as shipped); toys 4 (conaffinity 1 | 2 | 4 | 8); the parent 8, with
-conaffinity 1 | 2, so she touches the G1, the room, the floor and the toys and never herself; her motion clears her bit 2 while
-her gait is carried (parent_consts.BAL_*). The world's geoms and the toys take contact priority 2
+conaffinity 2 | 16, so she touches the room, the floor and the toys, never the G1 (A25c) and never herself, her feet, knees and shins on the
+floor always (A25b: her trunk is carried, so no gait of hers is ever carried through the floor). The world's geoms and the toys take contact priority 2
 (WORLD_PRIORITY; 5.1, A21, C26), so their friction and softness decide every contact with the G1 (the stock feet's own
 priority 1 and friction 0.6 included) and nothing on the G1 is changed. Their frictions are still the prototype's 1.0: the
 real surfaces' values are C26's, open (the W1 fix's report). Run: python3 body/sim/make_g1room.py  (writes
@@ -59,6 +60,7 @@ sys.path.insert(0, str(HERE))
 G1_DIR = Path("assets/unitree_g1")             # relative to body/sim/, where g1room.xml is written
 G1_XML = G1_DIR / "g1_with_hands.xml"          # included unchanged
 import parent_kin as kin  # noqa: E402
+import parent_consts as PK  # noqa: E402  (her body's masses, strength and joints: her constants file)
 
 # ------------------------------------------------------------------ collision classes
 # The world's geoms (the floor, walls, mat and furniture) and the toys take contact priority 2 (5.1, A21, C26): where one of them
@@ -66,11 +68,13 @@ import parent_kin as kin  # noqa: E402
 # and softness from the world's geom alone, so the world's surfaces decide how the stock robot meets them and the G1's file and
 # geoms stay untouched. Two priority-2 geoms (a toy on the floor) combine as MuJoCo does (the larger friction; mixed softness).
 WORLD_PRIORITY = 2
-WORLD = f'contype="1" conaffinity="0" priority="{WORLD_PRIORITY}"'
+# The world's solids carry bits 1 and 16 (A25c, the lead's decision of 2026-09-25): bit 1 so the G1 (conaffinity 1) and the toys
+# (conaffinity 15) meet them as before; bit 16 so the parent (conaffinity 2 | 16) meets them WITHOUT meeting the G1, whose
+# contype is bit 1 alone.
+WORLD = f'contype="17" conaffinity="0" priority="{WORLD_PRIORITY}"'
 # THE FLOOR AND THE MAT (what she stands, kneels and walks on) carry their own bit, 2 (with conaffinity 1, so the G1 still rests on
-# them): her body touches them through her conaffinity's bit 2, which her motion clears while her gait is carried (walking, turning,
-# kneeling down or getting up, shuffling: parent_consts.BAL_*, a disclosed limit: no walking controller is built) and sets again
-# when she is still, so her feet, knees and shins rest on the floor by contact (the lead's decision of 2026-09-25)
+# them): her body touches them through her conaffinity's bit 2, always, so her feet, knees and shins meet the floor by contact
+# (the lead's decisions of 2026-09-25: she is a body, and her trunk is carried, A25b)
 FLOOR = f'contype="2" conaffinity="1" priority="{WORLD_PRIORITY}"'
 TOY = f'contype="4" conaffinity="15" priority="{WORLD_PRIORITY}"'   # the toys touch the floor's bit 2 as well
 # the parent's collision shapes: MuJoCo's default contact time constant (solref 0.02, the G1's own), at contact priority 2 like the
@@ -78,13 +82,19 @@ TOY = f'contype="4" conaffinity="15" priority="{WORLD_PRIORITY}"'   # the toys t
 # body/sim/parent_consts.SOFT_*). A4's soft parent (0.05) softened a kinematic body's infinite mass; her body now gives by itself: at
 # 0.05 her hand's shapes sank 9 mm into the child landing on it at 26 N, and a babbling foot sank 39 mm into her kneeling thigh at
 # 1.6 kN (10 ms mean) where at 0.02 the worst of the same runs was 0.9 kN (the physical build, 2026-09-25).
-# She is a body: her shapes touch the G1, the room, the floor (bit 2) and the toys, never each other (contype 8 against her own
-# conaffinity 1 | 2)
-PARENT = 'contype="8" conaffinity="3" priority="2" solref=".02 1"'
+# She is a body that passes NO CONTACT TO THE CHILD (A25c, the lead's structural decision of 2026-09-25, after three physical
+# rounds in which her kneeling thigh, her shins and her hands met the babbling G1 at up to 1.6 kN): her shapes touch the room
+# (bit 16), the floor (bit 2) and the toys (their conaffinity has her bit 8), never the G1 (contype 1) and never each other.
+# Every force she puts on the child is one of her capped springs (a hold, a touch, a turn: parent_motion's holds, applied at
+# the held point within its cap) or a toy she holds or sets down; the child's kick passes through her leg (her planner keeps her
+# knees outside its leg sweep, A3), which it does not feel.
+PARENT = f'contype="8" conaffinity="18" priority="2" solref="{PK.SOFT_SOLREF[0]:g} {PK.SOFT_SOLREF[1]:g}"'
 PARENT_LIMB = PARENT
+PARENT_HAND = f'contype="8" conaffinity="18" priority="2" solref="{PK.HAND_SOLREF[0]:g} {PK.HAND_SOLREF[1]:g}"'   # her hand's capsule
 DECOR = 'contype="0" conaffinity="0"'
-HAND_TOUCH = 'contype="0" conaffinity="3" priority="2" solref=".02 1"'   # her palm, fingers and thumb: they touch the G1 (contype 1)
-# and the room and floor, never a toy (a toy's contype is 4), soft as the rest of her; compiled collidable so MuJoCo's
+HAND_TOUCH = f'contype="0" conaffinity="18" priority="2" solref="{PK.HAND_SOLREF[0]:g} {PK.HAND_SOLREF[1]:g}"'   # her palm, fingers and thumb: they touch
+# the room and the floor, never the G1 (A25c: her touch on the child is her capped spring's) and never a toy (a toy's contype is
+# 4), soft as the rest of her; compiled collidable so MuJoCo's
 # midphase keeps them (a geom compiled with no collision bits is never tested, whatever its bits later: the W2 verifier's third
 # finding, her fingers passing through a babbling limb); her motion switches them off with her hand's proxy while she holds
 VIS0 = DECOR + ' density="0"'          # massless and seen only (on dynamic bodies)
@@ -251,7 +261,7 @@ def hair_shapes():
 
 def parent_segment_geoms(seg):
     """The parent's geoms in a segment's own frame. Collision geoms (bit 8) are the solid shapes; her palm, fingers and thumb
-    touch the G1 alone (HAND_TOUCH); faces and trim are seen only."""
+    touch the room and the floor, never the G1 (HAND_TOUCH, A25c); faces and trim are seen only."""
     sd = seg[-1] if seg[-2] == "_" else ""
     sg = 1 if sd == "L" else -1
     m = (lambda p: p) if sd != "R" else mirror_pos
@@ -285,7 +295,7 @@ def parent_segment_geoms(seg):
               f'<geom type="capsule" fromto="0 0 -.19 0 0 -.245" size=".025" material="skin" {DECOR}/>']
     elif seg.startswith("hand"):
         g += [f'<geom name="{P}_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" {HAND_TOUCH}/>',
-              f'<geom name="{P}" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" {PARENT_LIMB}/>']
+              f'<geom name="{P}" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" {PARENT_HAND}/>']
         for i in range(4):
             for j in range(2):
                 g.append(f'<geom name="parent_f{i}{j}_{sd}" type="capsule" size="{kin.FINGER_R - .0006 * i} .02" material="skin" {HAND_TOUCH}/>')
@@ -305,7 +315,6 @@ def parent_segment_geoms(seg):
 
 
 from g1scene import PARENT_BIRTH as PARENT_START  # noqa: E402  (where the scene's birth stands her: one place for both)
-import parent_consts as PK  # noqa: E402  (her body's masses, strength and joints: her constants file)
 
 # HER JOINTS (the lead's decision of 2026-09-25: she is a body): each segment's joints to its parent segment, named for the scene
 # (g1scene.PARENT_JOINTS reads them): a ball, or hinges (axis in the segment's own frame, range in radians). Every segment's frame is
@@ -360,6 +369,30 @@ def parent_joints_xml(seg):
         else:
             lo, hi = kin.LIM_DEG[spec[3]]
             out.append(f'<joint name="{name}" type="hinge" axis="{f(*spec[2])}" range="{math.radians(lo):.6f} {math.radians(hi):.6f}"/>')
+    return out
+
+
+def parent_actuators():
+    """HER MUSCLES (the lead's structural decision of 2026-09-25, A25b): one MuJoCo actuator per axis of each of her joints (a
+    ball's three, in its own frame: gear along x, y, z; a hinge's one), named parent_<joint>_<axis> or parent_<joint>, in her drive's
+    order (parent_body.BALLS then HINGES). Each is a motor with its own damping: force = ctrl - kv x the joint's velocity along its
+    axis (gainprm 1; biasprm 0, 0, -kv, kv set at load from the joint's inertia: parent_body.BodyMap), and its ctrlrange and
+    forcerange are her strength there, per direction (parent_consts.STRENGTH through parent_body._strength), so MuJoCo clamps her
+    whole torque at that joint, her damping included, to a woman's. MuJoCo takes an actuator's damping implicitly under implicitfast
+    while its force is inside its range, and explicitly (none) when the range clamps it (MuJoCo 3.9, measured: a clamped actuator
+    adds no implicit damping)"""
+    import parent_body as PB                                            # her joints' order and strength (one place for both)
+    out = []
+    for n, _seg in PB.BALLS:
+        for k, ax in enumerate("xyz"):
+            lo, hi = PB._strength(n)[k]
+            gear = " ".join("1" if j == k else "0" for j in range(3))
+            out.append(f'<general name="parent_{n}_{ax}" joint="parent_{n}" gear="{gear} 0 0 0" gainprm="1" biastype="affine" '
+                       f'biasprm="0 0 0" ctrllimited="true" ctrlrange="{lo:g} {hi:g}" forcelimited="true" forcerange="{lo:g} {hi:g}"/>')
+    for n, _seg in PB.HINGES:
+        (lo, hi), = PB._strength(n)
+        out.append(f'<general name="parent_{n}" joint="parent_{n}" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" '
+                   f'ctrlrange="{lo:g} {hi:g}" forcelimited="true" forcerange="{lo:g} {hi:g}"/>')
     return out
 
 
@@ -884,6 +917,10 @@ def scene_xml(folder=HERE):
 {toys()}
 {parent()}
   </worldbody>
+  <actuator>
+    <!-- HER MUSCLES: one per axis of each of her joints, their force ranges her strength (parent_consts.STRENGTH; A25b) -->
+    {chr(10).join("    " + a for a in parent_actuators()).strip()}
+  </actuator>
   <equality>
     {chr(10).join("    " + w for w in welds).strip()}
   </equality>

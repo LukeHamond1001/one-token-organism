@@ -147,6 +147,7 @@ class Scene:
         self.g1_bodies = g1_body_ids(m)
         self.g1_set = set(self.g1_bodies)
         self.act = {m.actuator(i).name: i for i in range(m.nu)}
+        self.g1_act = [i for i in range(m.nu) if not (m.actuator(i).name or "").startswith("parent_")]   # the G1's own servos
         self.pose = None
         self._hand_cache = {}
 
@@ -245,12 +246,12 @@ class Scene:
         return {s: (d.xpos[b].copy(), d.xmat[b].reshape(3, 3).copy()) for s, b in self.bmap.seg_body.items()}
 
     def hand_proxy(self, side, on=True, forearm=False):
-        """The parent's hand (and forearm) collision proxy on or off. Both bits: the parent's conaffinity 1 is what lets the
-        G1 (contype 1) touch it, so zeroing contype alone would leave the proxy colliding."""
+        """The parent's hand (and forearm) collision proxy on or off. Both bits: its conaffinity (2 | 16: the floor and the room, never
+        the G1 since A25c) lets what carries those bits touch it, so zeroing contype alone would leave the proxy colliding."""
         for seg in ("hand", "forearm") if forearm else ("hand",):
             g = self.m.geom(f"parent_{seg}_{side}").id
             self.m.geom_contype[g] = 8 if on else 0
-            self.m.geom_conaffinity[g] = 1 if on else 0
+            self.m.geom_conaffinity[g] = 18 if on else 0                 # the room (16) and the floor (2), never the G1 (A25c)
 
     # ---- the G1
     def jq(self, joint):
@@ -276,9 +277,9 @@ class Scene:
             self.hold_ctrl()
 
     def hold_ctrl(self):
-        """Every servo target = the measured angle."""
+        """Every servo target of the G1's = the measured angle (her muscles, the parent's actuators, are her motion's: A25b)"""
         m, d = self.m, self.d
-        for i in range(m.nu):
+        for i in self.g1_act:
             d.ctrl[i] = d.qpos[m.jnt_qposadr[m.actuator_trnid[i, 0]]]
 
     def lowest_g1_point(self):

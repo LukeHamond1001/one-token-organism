@@ -293,19 +293,19 @@
     <body name="room" childclass="room">
     <geom name="floor" type="plane" size="2.6 2.3 .1" material="floor" contype="2" conaffinity="1" priority="2"/>
     <geom name="ceiling" type="box" pos="0 0 2.63" size="2.6 2.3 .03" material="ceiling" contype="0" conaffinity="0"/>
-    <geom name="wall_back" type="box" pos="0 2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall_accent" contype="1" conaffinity="0" priority="2"/>
-    <geom name="wall_front" type="box" pos="0 -2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
-    <geom name="wall_left" type="box" pos="-2.65 0 1.3" size=".05 2.4 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
-    <geom name="wall_right_a" type="box" pos="2.65 0.625 1.3" size=".05 1.675 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
-    <geom name="wall_right_b" type="box" pos="2.65 -2.125 1.3" size=".05 0.175 1.3" material="wall" contype="1" conaffinity="0" priority="2"/>
+    <geom name="wall_back" type="box" pos="0 2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall_accent" contype="17" conaffinity="0" priority="2"/>
+    <geom name="wall_front" type="box" pos="0 -2.3499999999999996 1.3" size="2.7 .05 1.3" material="wall" contype="17" conaffinity="0" priority="2"/>
+    <geom name="wall_left" type="box" pos="-2.65 0 1.3" size=".05 2.4 1.3" material="wall" contype="17" conaffinity="0" priority="2"/>
+    <geom name="wall_right_a" type="box" pos="2.65 0.625 1.3" size=".05 1.675 1.3" material="wall" contype="17" conaffinity="0" priority="2"/>
+    <geom name="wall_right_b" type="box" pos="2.65 -2.125 1.3" size=".05 0.175 1.3" material="wall" contype="17" conaffinity="0" priority="2"/>
     <geom type="box" pos="2.65 -1.5 2.325" size=".05 0.45 0.275" material="wall" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.595 -1.95 1.025" size=".012 .045 1.025" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.595 -1.05 1.025" size=".012 .045 1.025" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.595 -1.5 2.09" size=".012 0.495 .04" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="3.6 -1.5 -.001" size=".95 1.2 .001" material="floor" contype="0" conaffinity="0"/>
-    <geom name="hall_end" type="box" pos="4.55 -1.5 1.3" size=".05 1.2 1.3" material="hall" contype="1" conaffinity="0" priority="2"/>
-    <geom name="hall_side_a" type="box" pos="3.6 -0.3 1.3" size=".95 .05 1.3" material="hall" contype="1" conaffinity="0" priority="2"/>
-    <geom name="hall_side_b" type="box" pos="3.6 -2.7 1.3" size=".95 .05 1.3" material="hall" contype="1" conaffinity="0" priority="2"/>
+    <geom name="hall_end" type="box" pos="4.55 -1.5 1.3" size=".05 1.2 1.3" material="hall" contype="17" conaffinity="0" priority="2"/>
+    <geom name="hall_side_a" type="box" pos="3.6 -0.3 1.3" size=".95 .05 1.3" material="hall" contype="17" conaffinity="0" priority="2"/>
+    <geom name="hall_side_b" type="box" pos="3.6 -2.7 1.3" size=".95 .05 1.3" material="hall" contype="17" conaffinity="0" priority="2"/>
     <geom type="box" pos="0 2.288 0.05" size="2.6 0.012 0.05" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="0 -2.288 0.05" size="2.6 0.012 0.05" material="trim" contype="0" conaffinity="0"/>
     <geom type="box" pos="-2.588 0 0.05" size="0.012 2.3 0.05" material="trim" contype="0" conaffinity="0"/>
@@ -334,10 +334,10 @@
     <geom type="capsule" fromto="-2.465 0.97 .03 -2.465 0.97 2.28" size="0.028" material="curtain" contype="0" conaffinity="0"/>
     <geom type="capsule" fromto="-2.465 1.02 .03 -2.465 1.02 2.28" size="0.034" material="curtain" contype="0" conaffinity="0"/>
     <geom type="capsule" fromto="-2.465 1.07 .03 -2.465 1.07 2.28" size="0.028" material="curtain" contype="0" conaffinity="0"/>
-    <geom name="sofa_base" type="box" pos="0.15 1.8199999999999998 .24" size="1.05 .44 .16" material="sofa_d" contype="1" conaffinity="0" priority="2"/>
-    <geom name="sofa_back" type="box" pos="0.15 2.1599999999999997 .58" size="1.05 .12 .30" material="sofa" contype="1" conaffinity="0" priority="2"/>
-    <geom name="sofa_arm_l" type="box" pos="-0.8099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="1" conaffinity="0" priority="2"/>
-    <geom name="sofa_arm_r" type="box" pos="1.1099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="1" conaffinity="0" priority="2"/>
+    <geom name="sofa_base" type="box" pos="0.15 1.8199999999999998 .24" size="1.05 .44 .16" material="sofa_d" contype="17" conaffinity="0" priority="2"/>
+    <geom name="sofa_back" type="box" pos="0.15 2.1599999999999997 .58" size="1.05 .12 .30" material="sofa" contype="17" conaffinity="0" priority="2"/>
+    <geom name="sofa_arm_l" type="box" pos="-0.8099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="17" conaffinity="0" priority="2"/>
+    <geom name="sofa_arm_r" type="box" pos="1.1099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="17" conaffinity="0" priority="2"/>
     <geom type="mesh" mesh="cushion" pos="-0.42 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
     <geom type="mesh" mesh="back_cushion" pos="-0.42 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
     <geom type="mesh" mesh="cushion" pos="0.15 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
@@ -350,16 +350,16 @@
     <geom type="cylinder" pos="-0.83 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="1.13 1.46 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="1.13 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
-    <geom name="table_top" type="mesh" mesh="table_top" pos="0.15 0.95 .40" material="wood" contype="1" conaffinity="0" priority="2"/>
+    <geom name="table_top" type="mesh" mesh="table_top" pos="0.15 0.95 .40" material="wood" contype="17" conaffinity="0" priority="2"/>
     <geom type="box" pos="0.15 0.95 .18" size=".48 .22 .012" material="wood" contype="0" conaffinity="0"/>
-    <geom name="table_leg_lf" type="cylinder" pos="-0.31 0.75 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
-    <geom name="table_leg_lb" type="cylinder" pos="-0.31 1.15 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
-    <geom name="table_leg_rf" type="cylinder" pos="0.61 0.75 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
-    <geom name="table_leg_rb" type="cylinder" pos="0.61 1.15 .19" size=".025 .19" material="wood" contype="1" conaffinity="0" priority="2"/>
+    <geom name="table_leg_lf" type="cylinder" pos="-0.31 0.75 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_lb" type="cylinder" pos="-0.31 1.15 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rf" type="cylinder" pos="0.61 0.75 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rb" type="cylinder" pos="0.61 1.15 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
     <geom type="cylinder" pos="0.4 1 .43" size=".055 .012" material="pot" contype="0" conaffinity="0"/>
     <geom type="box" pos="-0.07 0.93 .423" euler="0 0 0.20944" size=".11 .08 .012" material="book2" contype="0" conaffinity="0"/>
     <geom type="box" pos="-0.07 0.93 .443" euler="0 0 0.0698132" size=".1 .075 .009" material="book1" contype="0" conaffinity="0"/>
-    <geom name="shelf" type="box" pos="2.39 0.55 0.42" size="0.195 0.78 0.42" material="shelf" contype="1" conaffinity="0" priority="2" rgba="0 0 0 0"/>
+    <geom name="shelf" type="box" pos="2.39 0.55 0.42" size="0.195 0.78 0.42" material="shelf" contype="17" conaffinity="0" priority="2" rgba="0 0 0 0"/>
     <geom type="box" pos="2.39 -0.23 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.39 0.16 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.39 0.55 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
@@ -562,16 +562,16 @@
     <body name="parent_pelvis" childclass="room" pos="1.9 -1.5 0.89" quat="0.25882 0 0 0.96593">
       <freejoint name="parent_root"/>
       <inertial pos="-0.015 0 0.035" mass="7.7314" diaginertia="0.062547 0.0391595 0.0608075"/>
-      <geom name="parent_pelvis" type="ellipsoid" pos="-.015 0 .035" size=".11 .165 .115" material="denim" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+      <geom name="parent_pelvis" type="ellipsoid" pos="-.015 0 .035" size=".11 .165 .115" material="denim" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
       <geom type="ellipsoid" pos="-.005 0 .105" size=".113 .158 .03" material="belt" contype="0" conaffinity="0"/>
       <body name="parent_abdomen" pos="0 0 0.1">
         <joint name="parent_lumbar" type="ball"/>
         <inertial pos="-0.005 0 0.075" mass="9.0830" diaginertia="0.0643531 0.0436057 0.0556406"/>
-        <geom name="parent_abdomen" type="ellipsoid" pos="-.005 0 .075" size=".098 .145 .12" material="sweater" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+        <geom name="parent_abdomen" type="ellipsoid" pos="-.005 0 .075" size=".098 .145 .12" material="sweater" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
         <body name="parent_chest" pos="0 0 0.16">
           <joint name="parent_thorax" type="ball"/>
           <inertial pos="0.005 0 0.11" mass="9.5790" diaginertia="0.0863068 0.0594377 0.0651851"/>
-          <geom name="parent_chest" type="ellipsoid" pos=".005 0 .11" size=".1 .155 .145" material="sweater" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+          <geom name="parent_chest" type="ellipsoid" pos=".005 0 .11" size=".1 .155 .145" material="sweater" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
           <geom type="sphere" pos="0 .15 .2" size=".045" material="sweater" contype="0" conaffinity="0"/>
           <geom type="sphere" pos="0 -.15 .2" size=".045" material="sweater" contype="0" conaffinity="0"/>
           <geom type="cylinder" pos=".01 0 .243" size=".056 .014" material="sweater_d" contype="0" conaffinity="0"/>
@@ -580,7 +580,7 @@
             <inertial pos="0.005 0 0.13723" mass="4.1416" diaginertia="0.0215214 0.0255021 0.0199624"/>
             <camera name="parent_portrait" pos=".62 0 .145" xyaxes="0 1 0 0 0 1" fovy="30"/>
             <geom type="capsule" fromto=".008 0 -.01 .02 0 .08" size=".041" material="skin" contype="0" conaffinity="0"/>
-            <geom name="parent_head" type="ellipsoid" pos="0.005 0 0.18" size="0.078 0.064 0.086" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+            <geom name="parent_head" type="ellipsoid" pos="0.005 0 0.18" size="0.078 0.064 0.086" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
             <geom type="ellipsoid" pos="0.005 0 0.18" size="0.078 0.064 0.086" material="skin" contype="0" conaffinity="0"/>
             <geom name="parent_fringe" type="ellipsoid" pos="0.09 -0.012 0.246" euler="-0.244346 -0.523599 0" size="0.022 0.056 0.013" material="hair" contype="0" conaffinity="0"/>
             <geom name="parent_side_L" type="ellipsoid" pos="-0.01 0.072 0.152" euler="0 -0.174533 0" size="0.048 0.014 0.08" material="hair" contype="0" conaffinity="0"/>
@@ -597,116 +597,116 @@
             <geom name="parent_sclera_R" type="sphere" size="0.012" pos="0.083 -0.03085 0.161" material="sclera" contype="0" conaffinity="0"/>
             <geom name="parent_caruncle_R" type="ellipsoid" size="0.0014 0.0019 0.0016" pos="0.0905 -0.0177 0.159928" material="caruncle" contype="0" conaffinity="0"/>
             <geom name="parent_fornix_R" type="ellipsoid" size="0.01 0.0145 0.0115" pos="0.08 -0.02935 0.161" material="fornix" contype="0" conaffinity="0"/>
-            <geom name="parent_face_c00" type="mesh" mesh="parent_collide_00" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c01" type="mesh" mesh="parent_collide_01" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c02" type="mesh" mesh="parent_collide_02" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c03" type="mesh" mesh="parent_collide_03" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c04" type="mesh" mesh="parent_collide_04" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c05" type="mesh" mesh="parent_collide_05" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c06" type="mesh" mesh="parent_collide_06" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c07" type="mesh" mesh="parent_collide_07" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c08" type="mesh" mesh="parent_collide_08" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c09" type="mesh" mesh="parent_collide_09" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c10" type="mesh" mesh="parent_collide_10" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c11" type="mesh" mesh="parent_collide_11" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c12" type="mesh" mesh="parent_collide_12" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c13" type="mesh" mesh="parent_collide_13" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c14" type="mesh" mesh="parent_collide_14" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c15" type="mesh" mesh="parent_collide_15" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c16" type="mesh" mesh="parent_collide_16" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c17" type="mesh" mesh="parent_collide_17" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c18" type="mesh" mesh="parent_collide_18" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c19" type="mesh" mesh="parent_collide_19" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c20" type="mesh" mesh="parent_collide_20" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c21" type="mesh" mesh="parent_collide_21" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c22" type="mesh" mesh="parent_collide_22" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c23" type="mesh" mesh="parent_collide_23" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c24" type="mesh" mesh="parent_collide_24" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c25" type="mesh" mesh="parent_collide_25" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c26" type="mesh" mesh="parent_collide_26" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c27" type="mesh" mesh="parent_collide_27" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c28" type="mesh" mesh="parent_collide_28" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c29" type="mesh" mesh="parent_collide_29" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c30" type="mesh" mesh="parent_collide_30" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c31" type="mesh" mesh="parent_collide_31" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c32" type="mesh" mesh="parent_collide_32" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c33" type="mesh" mesh="parent_collide_33" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c34" type="mesh" mesh="parent_collide_34" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c35" type="mesh" mesh="parent_collide_35" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c36" type="mesh" mesh="parent_collide_36" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c37" type="mesh" mesh="parent_collide_37" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c38" type="mesh" mesh="parent_collide_38" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c39" type="mesh" mesh="parent_collide_39" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c40" type="mesh" mesh="parent_collide_40" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c41" type="mesh" mesh="parent_collide_41" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c42" type="mesh" mesh="parent_collide_42" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c43" type="mesh" mesh="parent_collide_43" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c44" type="mesh" mesh="parent_collide_44" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c45" type="mesh" mesh="parent_collide_45" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c46" type="mesh" mesh="parent_collide_46" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c47" type="mesh" mesh="parent_collide_47" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c48" type="mesh" mesh="parent_collide_48" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c49" type="mesh" mesh="parent_collide_49" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c50" type="mesh" mesh="parent_collide_50" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c51" type="mesh" mesh="parent_collide_51" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c52" type="mesh" mesh="parent_collide_52" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c53" type="mesh" mesh="parent_collide_53" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c54" type="mesh" mesh="parent_collide_54" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c55" type="mesh" mesh="parent_collide_55" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c56" type="mesh" mesh="parent_collide_56" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c57" type="mesh" mesh="parent_collide_57" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c58" type="mesh" mesh="parent_collide_58" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c59" type="mesh" mesh="parent_collide_59" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c60" type="mesh" mesh="parent_collide_60" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c61" type="mesh" mesh="parent_collide_61" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c62" type="mesh" mesh="parent_collide_62" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c63" type="mesh" mesh="parent_collide_63" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c64" type="mesh" mesh="parent_collide_64" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c65" type="mesh" mesh="parent_collide_65" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c66" type="mesh" mesh="parent_collide_66" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c67" type="mesh" mesh="parent_collide_67" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c68" type="mesh" mesh="parent_collide_68" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c69" type="mesh" mesh="parent_collide_69" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c70" type="mesh" mesh="parent_collide_70" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c71" type="mesh" mesh="parent_collide_71" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c72" type="mesh" mesh="parent_collide_72" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c73" type="mesh" mesh="parent_collide_73" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c74" type="mesh" mesh="parent_collide_74" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c75" type="mesh" mesh="parent_collide_75" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c76" type="mesh" mesh="parent_collide_76" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c77" type="mesh" mesh="parent_collide_77" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c78" type="mesh" mesh="parent_collide_78" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c79" type="mesh" mesh="parent_collide_79" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c80" type="mesh" mesh="parent_collide_80" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c81" type="mesh" mesh="parent_collide_81" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c82" type="mesh" mesh="parent_collide_82" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c83" type="mesh" mesh="parent_collide_83" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c84" type="mesh" mesh="parent_collide_84" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c85" type="mesh" mesh="parent_collide_85" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c86" type="mesh" mesh="parent_collide_86" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c87" type="mesh" mesh="parent_collide_87" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c88" type="mesh" mesh="parent_collide_88" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c89" type="mesh" mesh="parent_collide_89" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c90" type="mesh" mesh="parent_collide_90" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c91" type="mesh" mesh="parent_collide_91" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c92" type="mesh" mesh="parent_collide_92" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c93" type="mesh" mesh="parent_collide_93" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c94" type="mesh" mesh="parent_collide_94" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c95" type="mesh" mesh="parent_collide_95" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c96" type="mesh" mesh="parent_collide_96" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c97" type="mesh" mesh="parent_collide_97" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c98" type="mesh" mesh="parent_collide_98" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c99" type="mesh" mesh="parent_collide_99" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c100" type="mesh" mesh="parent_collide_100" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c101" type="mesh" mesh="parent_collide_101" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c102" type="mesh" mesh="parent_collide_102" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c103" type="mesh" mesh="parent_collide_103" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c104" type="mesh" mesh="parent_collide_104" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c105" type="mesh" mesh="parent_collide_105" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c106" type="mesh" mesh="parent_collide_106" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_face_c107" type="mesh" mesh="parent_collide_107" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_eye_cL" type="sphere" size="0.0146" pos="0.083 0.03085 0.161" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-            <geom name="parent_eye_cR" type="sphere" size="0.0146" pos="0.083 -0.03085 0.161" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+            <geom name="parent_face_c00" type="mesh" mesh="parent_collide_00" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c01" type="mesh" mesh="parent_collide_01" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c02" type="mesh" mesh="parent_collide_02" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c03" type="mesh" mesh="parent_collide_03" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c04" type="mesh" mesh="parent_collide_04" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c05" type="mesh" mesh="parent_collide_05" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c06" type="mesh" mesh="parent_collide_06" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c07" type="mesh" mesh="parent_collide_07" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c08" type="mesh" mesh="parent_collide_08" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c09" type="mesh" mesh="parent_collide_09" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c10" type="mesh" mesh="parent_collide_10" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c11" type="mesh" mesh="parent_collide_11" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c12" type="mesh" mesh="parent_collide_12" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c13" type="mesh" mesh="parent_collide_13" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c14" type="mesh" mesh="parent_collide_14" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c15" type="mesh" mesh="parent_collide_15" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c16" type="mesh" mesh="parent_collide_16" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c17" type="mesh" mesh="parent_collide_17" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c18" type="mesh" mesh="parent_collide_18" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c19" type="mesh" mesh="parent_collide_19" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c20" type="mesh" mesh="parent_collide_20" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c21" type="mesh" mesh="parent_collide_21" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c22" type="mesh" mesh="parent_collide_22" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c23" type="mesh" mesh="parent_collide_23" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c24" type="mesh" mesh="parent_collide_24" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c25" type="mesh" mesh="parent_collide_25" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c26" type="mesh" mesh="parent_collide_26" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c27" type="mesh" mesh="parent_collide_27" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c28" type="mesh" mesh="parent_collide_28" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c29" type="mesh" mesh="parent_collide_29" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c30" type="mesh" mesh="parent_collide_30" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c31" type="mesh" mesh="parent_collide_31" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c32" type="mesh" mesh="parent_collide_32" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c33" type="mesh" mesh="parent_collide_33" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c34" type="mesh" mesh="parent_collide_34" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c35" type="mesh" mesh="parent_collide_35" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c36" type="mesh" mesh="parent_collide_36" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c37" type="mesh" mesh="parent_collide_37" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c38" type="mesh" mesh="parent_collide_38" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c39" type="mesh" mesh="parent_collide_39" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c40" type="mesh" mesh="parent_collide_40" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c41" type="mesh" mesh="parent_collide_41" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c42" type="mesh" mesh="parent_collide_42" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c43" type="mesh" mesh="parent_collide_43" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c44" type="mesh" mesh="parent_collide_44" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c45" type="mesh" mesh="parent_collide_45" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c46" type="mesh" mesh="parent_collide_46" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c47" type="mesh" mesh="parent_collide_47" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c48" type="mesh" mesh="parent_collide_48" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c49" type="mesh" mesh="parent_collide_49" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c50" type="mesh" mesh="parent_collide_50" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c51" type="mesh" mesh="parent_collide_51" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c52" type="mesh" mesh="parent_collide_52" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c53" type="mesh" mesh="parent_collide_53" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c54" type="mesh" mesh="parent_collide_54" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c55" type="mesh" mesh="parent_collide_55" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c56" type="mesh" mesh="parent_collide_56" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c57" type="mesh" mesh="parent_collide_57" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c58" type="mesh" mesh="parent_collide_58" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c59" type="mesh" mesh="parent_collide_59" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c60" type="mesh" mesh="parent_collide_60" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c61" type="mesh" mesh="parent_collide_61" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c62" type="mesh" mesh="parent_collide_62" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c63" type="mesh" mesh="parent_collide_63" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c64" type="mesh" mesh="parent_collide_64" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c65" type="mesh" mesh="parent_collide_65" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c66" type="mesh" mesh="parent_collide_66" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c67" type="mesh" mesh="parent_collide_67" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c68" type="mesh" mesh="parent_collide_68" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c69" type="mesh" mesh="parent_collide_69" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c70" type="mesh" mesh="parent_collide_70" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c71" type="mesh" mesh="parent_collide_71" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c72" type="mesh" mesh="parent_collide_72" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c73" type="mesh" mesh="parent_collide_73" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c74" type="mesh" mesh="parent_collide_74" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c75" type="mesh" mesh="parent_collide_75" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c76" type="mesh" mesh="parent_collide_76" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c77" type="mesh" mesh="parent_collide_77" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c78" type="mesh" mesh="parent_collide_78" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c79" type="mesh" mesh="parent_collide_79" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c80" type="mesh" mesh="parent_collide_80" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c81" type="mesh" mesh="parent_collide_81" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c82" type="mesh" mesh="parent_collide_82" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c83" type="mesh" mesh="parent_collide_83" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c84" type="mesh" mesh="parent_collide_84" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c85" type="mesh" mesh="parent_collide_85" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c86" type="mesh" mesh="parent_collide_86" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c87" type="mesh" mesh="parent_collide_87" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c88" type="mesh" mesh="parent_collide_88" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c89" type="mesh" mesh="parent_collide_89" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c90" type="mesh" mesh="parent_collide_90" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c91" type="mesh" mesh="parent_collide_91" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c92" type="mesh" mesh="parent_collide_92" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c93" type="mesh" mesh="parent_collide_93" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c94" type="mesh" mesh="parent_collide_94" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c95" type="mesh" mesh="parent_collide_95" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c96" type="mesh" mesh="parent_collide_96" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c97" type="mesh" mesh="parent_collide_97" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c98" type="mesh" mesh="parent_collide_98" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c99" type="mesh" mesh="parent_collide_99" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c100" type="mesh" mesh="parent_collide_100" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c101" type="mesh" mesh="parent_collide_101" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c102" type="mesh" mesh="parent_collide_102" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c103" type="mesh" mesh="parent_collide_103" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c104" type="mesh" mesh="parent_collide_104" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c105" type="mesh" mesh="parent_collide_105" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c106" type="mesh" mesh="parent_collide_106" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_face_c107" type="mesh" mesh="parent_collide_107" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_eye_cL" type="sphere" size="0.0146" pos="0.083 0.03085 0.161" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
+            <geom name="parent_eye_cR" type="sphere" size="0.0146" pos="0.083 -0.03085 0.161" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
             <geom name="parent_mouth0" type="capsule" pos="0.0968862 -0.0206122 0.106027" quat="0.238482 0.246644 0.675268 0.652921" size="0.006 0.00146342" material="lips" contype="0" conaffinity="0"/>
             <geom name="parent_mouth1" type="capsule" pos="0.0987407 -0.0183629 0.105968" quat="0.234538 0.236086 0.668994 0.664607" size="0.006 0.00145279" material="lips" contype="0" conaffinity="0"/>
             <geom name="parent_mouth2" type="capsule" pos="0.100522 -0.016095 0.105951" quat="0.226047 0.227269 0.671597 0.667989" size="0.006 0.00143103" material="lips" contype="0" conaffinity="0"/>
@@ -785,29 +785,29 @@
           <body name="parent_upper_arm_L" pos="0 0.178 0.215">
             <joint name="parent_shoulder_L" type="ball"/>
             <inertial pos="0 0 -0.17262" mass="1.5810" diaginertia="0.0109967 0.0096188 0.00311672"/>
-            <geom name="parent_upper_arm_L" type="capsule" fromto="0 0 -.01 0 0 -.285" size=".041" material="sweater" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+            <geom name="parent_upper_arm_L" type="capsule" fromto="0 0 -.01 0 0 -.285" size=".041" material="sweater" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
             <body name="parent_forearm_L" pos="0 0 -0.3">
               <joint name="parent_elbow_L" type="hinge" axis="0 -1 0" range="0.000000 2.617994"/>
               <joint name="parent_pron_L" type="hinge" axis="0 0 1" range="-1.570796 1.570796"/>
               <inertial pos="0 0 -0.11398" mass="0.8556" diaginertia="0.00364277 0.00353197 0.000472505"/>
-              <geom name="parent_forearm_L" type="capsule" fromto="0 0 0 0 0 -.185" size=".0385" material="sweater" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+              <geom name="parent_forearm_L" type="capsule" fromto="0 0 0 0 0 -.185" size=".0385" material="sweater" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
               <geom type="cylinder" pos="0 0 -.19" size=".037 .012" material="sweater_d" contype="0" conaffinity="0"/>
               <geom type="capsule" fromto="0 0 -.19 0 0 -.245" size=".025" material="skin" contype="0" conaffinity="0"/>
               <body name="parent_hand_L" pos="0 0 -0.25">
                 <joint name="parent_wrist_L" type="ball"/>
                 <inertial pos="0 0 -0.070256" mass="0.3472" diaginertia="0.0012215 0.000632335 0.000589167"/>
-                <geom name="parent_hand_L_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_hand_L" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f00_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f01_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f10_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f11_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f20_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f21_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f30_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f31_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_t0_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_t1_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
+                <geom name="parent_hand_L_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_hand_L" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f00_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f01_L" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f10_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f11_L" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f20_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f21_L" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f30_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f31_L" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_t0_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_t1_L" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
                 <site name="parent_hand_L_grip" pos="0 -0.045 -0.1" size=".008" group="4"/>
               </body>
             </body>
@@ -815,29 +815,29 @@
           <body name="parent_upper_arm_R" pos="0 -0.178 0.215">
             <joint name="parent_shoulder_R" type="ball"/>
             <inertial pos="0 0 -0.17262" mass="1.5810" diaginertia="0.0109967 0.0096188 0.00311672"/>
-            <geom name="parent_upper_arm_R" type="capsule" fromto="0 0 -.01 0 0 -.285" size=".041" material="sweater" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+            <geom name="parent_upper_arm_R" type="capsule" fromto="0 0 -.01 0 0 -.285" size=".041" material="sweater" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
             <body name="parent_forearm_R" pos="0 0 -0.3">
               <joint name="parent_elbow_R" type="hinge" axis="0 -1 0" range="0.000000 2.617994"/>
               <joint name="parent_pron_R" type="hinge" axis="0 0 1" range="-1.570796 1.570796"/>
               <inertial pos="0 0 -0.11398" mass="0.8556" diaginertia="0.00364277 0.00353197 0.000472505"/>
-              <geom name="parent_forearm_R" type="capsule" fromto="0 0 0 0 0 -.185" size=".0385" material="sweater" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+              <geom name="parent_forearm_R" type="capsule" fromto="0 0 0 0 0 -.185" size=".0385" material="sweater" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
               <geom type="cylinder" pos="0 0 -.19" size=".037 .012" material="sweater_d" contype="0" conaffinity="0"/>
               <geom type="capsule" fromto="0 0 -.19 0 0 -.245" size=".025" material="skin" contype="0" conaffinity="0"/>
               <body name="parent_hand_R" pos="0 0 -0.25">
                 <joint name="parent_wrist_R" type="ball"/>
                 <inertial pos="0 0 -0.070256" mass="0.3472" diaginertia="0.0012215 0.000632335 0.000589167"/>
-                <geom name="parent_hand_R_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_hand_R" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f00_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f01_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f10_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f11_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f20_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f21_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f30_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_f31_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_t0_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
-                <geom name="parent_t1_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="3" priority="2" solref=".02 1"/>
+                <geom name="parent_hand_R_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_hand_R" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" contype="8" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f00_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f01_R" type="capsule" size="0.0085 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f10_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f11_R" type="capsule" size="0.0079 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f20_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f21_R" type="capsule" size="0.007300000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f30_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_f31_R" type="capsule" size="0.006700000000000001 .02" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_t0_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
+                <geom name="parent_t1_R" type="capsule" size=".0098 .016" material="skin" contype="0" conaffinity="18" priority="2" solref="0.006 1"/>
                 <site name="parent_hand_R_grip" pos="0 0.045 -0.1" size=".008" group="4"/>
               </body>
             </body>
@@ -847,16 +847,16 @@
       <body name="parent_thigh_L" pos="0 0.09 0">
         <joint name="parent_hip_L" type="ball"/>
         <inertial pos="0 0 -0.14809" mass="9.1636" diaginertia="0.209743 0.204097 0.0404263"/>
-        <geom name="parent_thigh_L" type="capsule" fromto="0 0 -.02 0 0 -.39" size=".07" material="denim" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+        <geom name="parent_thigh_L" type="capsule" fromto="0 0 -.02 0 0 -.39" size=".07" material="denim" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
         <body name="parent_shin_L" pos="0 0 -0.41">
           <joint name="parent_knee_L" type="hinge" axis="0 1 0" range="0.000000 2.792527"/>
           <inertial pos="0 0 -0.17843" mass="2.9822" diaginertia="0.0357377 0.034675 0.00424307"/>
-          <geom name="parent_shin_L" type="capsule" fromto="0 0 0 0 0 -.35" size=".053" material="denim" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+          <geom name="parent_shin_L" type="capsule" fromto="0 0 0 0 0 -.35" size=".053" material="denim" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
           <geom type="cylinder" pos="0 0 -.385" size=".038 .022" material="shoe" contype="0" conaffinity="0"/>
           <body name="parent_foot_L" pos="0 0 -0.41">
             <joint name="parent_ankle_L" type="ball"/>
             <inertial pos="0.033956 0 -0.036" mass="0.7998" diaginertia="0.000996962 0.00401659 0.00461308"/>
-            <geom name="parent_foot_L" type="ellipsoid" pos=".058 0 -.036" size=".128 .047 .036" material="shoe" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+            <geom name="parent_foot_L" type="ellipsoid" pos=".058 0 -.036" size=".128 .047 .036" material="shoe" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
             <geom type="box" pos=".058 0 -.064" size=".124 .044 .006" material="sole" contype="0" conaffinity="0"/>
             <geom type="ellipsoid" pos=".13 0 -.02" size=".05 .03 .012" material="sole" contype="0" conaffinity="0"/>
           </body>
@@ -865,16 +865,16 @@
       <body name="parent_thigh_R" pos="0 -0.09 0">
         <joint name="parent_hip_R" type="ball"/>
         <inertial pos="0 0 -0.14809" mass="9.1636" diaginertia="0.209743 0.204097 0.0404263"/>
-        <geom name="parent_thigh_R" type="capsule" fromto="0 0 -.02 0 0 -.39" size=".07" material="denim" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+        <geom name="parent_thigh_R" type="capsule" fromto="0 0 -.02 0 0 -.39" size=".07" material="denim" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
         <body name="parent_shin_R" pos="0 0 -0.41">
           <joint name="parent_knee_R" type="hinge" axis="0 1 0" range="0.000000 2.792527"/>
           <inertial pos="0 0 -0.17843" mass="2.9822" diaginertia="0.0357377 0.034675 0.00424307"/>
-          <geom name="parent_shin_R" type="capsule" fromto="0 0 0 0 0 -.35" size=".053" material="denim" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+          <geom name="parent_shin_R" type="capsule" fromto="0 0 0 0 0 -.35" size=".053" material="denim" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
           <geom type="cylinder" pos="0 0 -.385" size=".038 .022" material="shoe" contype="0" conaffinity="0"/>
           <body name="parent_foot_R" pos="0 0 -0.41">
             <joint name="parent_ankle_R" type="ball"/>
             <inertial pos="0.033956 0 -0.036" mass="0.7998" diaginertia="0.000996962 0.00401659 0.00461308"/>
-            <geom name="parent_foot_R" type="ellipsoid" pos=".058 0 -.036" size=".128 .047 .036" material="shoe" contype="8" conaffinity="3" priority="2" solref=".02 1"/>
+            <geom name="parent_foot_R" type="ellipsoid" pos=".058 0 -.036" size=".128 .047 .036" material="shoe" contype="8" conaffinity="18" priority="2" solref="0.02 1"/>
             <geom type="box" pos=".058 0 -.064" size=".124 .044 .006" material="sole" contype="0" conaffinity="0"/>
             <geom type="ellipsoid" pos=".13 0 -.02" size=".05 .03 .012" material="sole" contype="0" conaffinity="0"/>
           </body>
@@ -882,6 +882,48 @@
       </body>
     </body>
   </worldbody>
+  <actuator>
+    <!-- HER MUSCLES: one per axis of each of her joints, their force ranges her strength (parent_consts.STRENGTH; A25b) -->
+    <general name="parent_lumbar_x" joint="parent_lumbar" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-64 64" forcelimited="true" forcerange="-64 64"/>
+    <general name="parent_lumbar_y" joint="parent_lumbar" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-103 64" forcelimited="true" forcerange="-103 64"/>
+    <general name="parent_lumbar_z" joint="parent_lumbar" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-32 32" forcelimited="true" forcerange="-32 32"/>
+    <general name="parent_thorax_x" joint="parent_thorax" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-64 64" forcelimited="true" forcerange="-64 64"/>
+    <general name="parent_thorax_y" joint="parent_thorax" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-103 64" forcelimited="true" forcerange="-103 64"/>
+    <general name="parent_thorax_z" joint="parent_thorax" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-32 32" forcelimited="true" forcerange="-32 32"/>
+    <general name="parent_neck_x" joint="parent_neck" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-16.6 16.6" forcelimited="true" forcerange="-16.6 16.6"/>
+    <general name="parent_neck_y" joint="parent_neck" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-26.5 16.6" forcelimited="true" forcerange="-26.5 16.6"/>
+    <general name="parent_neck_z" joint="parent_neck" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-16.6 16.6" forcelimited="true" forcerange="-16.6 16.6"/>
+    <general name="parent_shoulder_L_x" joint="parent_shoulder_L" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-45.7 38" forcelimited="true" forcerange="-45.7 38"/>
+    <general name="parent_shoulder_L_y" joint="parent_shoulder_L" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-38 45.7" forcelimited="true" forcerange="-38 45.7"/>
+    <general name="parent_shoulder_L_z" joint="parent_shoulder_L" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-19 19" forcelimited="true" forcerange="-19 19"/>
+    <general name="parent_wrist_L_x" joint="parent_wrist_L" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-14.4 6.01" forcelimited="true" forcerange="-14.4 6.01"/>
+    <general name="parent_wrist_L_y" joint="parent_wrist_L" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-6 6" forcelimited="true" forcerange="-6 6"/>
+    <general name="parent_wrist_L_z" joint="parent_wrist_L" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-3 3" forcelimited="true" forcerange="-3 3"/>
+    <general name="parent_shoulder_R_x" joint="parent_shoulder_R" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-38 45.7" forcelimited="true" forcerange="-38 45.7"/>
+    <general name="parent_shoulder_R_y" joint="parent_shoulder_R" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-38 45.7" forcelimited="true" forcerange="-38 45.7"/>
+    <general name="parent_shoulder_R_z" joint="parent_shoulder_R" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-19 19" forcelimited="true" forcerange="-19 19"/>
+    <general name="parent_wrist_R_x" joint="parent_wrist_R" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-6.01 14.4" forcelimited="true" forcerange="-6.01 14.4"/>
+    <general name="parent_wrist_R_y" joint="parent_wrist_R" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-6 6" forcelimited="true" forcerange="-6 6"/>
+    <general name="parent_wrist_R_z" joint="parent_wrist_R" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-3 3" forcelimited="true" forcerange="-3 3"/>
+    <general name="parent_hip_L_x" joint="parent_hip_L" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-80 80" forcelimited="true" forcerange="-80 80"/>
+    <general name="parent_hip_L_y" joint="parent_hip_L" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-104.4 128.7" forcelimited="true" forcerange="-104.4 128.7"/>
+    <general name="parent_hip_L_z" joint="parent_hip_L" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-30 30" forcelimited="true" forcerange="-30 30"/>
+    <general name="parent_ankle_L_x" joint="parent_ankle_L" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-20 20" forcelimited="true" forcerange="-20 20"/>
+    <general name="parent_ankle_L_y" joint="parent_ankle_L" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-27.5 76.4" forcelimited="true" forcerange="-27.5 76.4"/>
+    <general name="parent_ankle_L_z" joint="parent_ankle_L" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-10 10"/>
+    <general name="parent_hip_R_x" joint="parent_hip_R" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-80 80" forcelimited="true" forcerange="-80 80"/>
+    <general name="parent_hip_R_y" joint="parent_hip_R" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-104.4 128.7" forcelimited="true" forcerange="-104.4 128.7"/>
+    <general name="parent_hip_R_z" joint="parent_hip_R" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-30 30" forcelimited="true" forcerange="-30 30"/>
+    <general name="parent_ankle_R_x" joint="parent_ankle_R" gear="1 0 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-20 20" forcelimited="true" forcerange="-20 20"/>
+    <general name="parent_ankle_R_y" joint="parent_ankle_R" gear="0 1 0 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-27.5 76.4" forcelimited="true" forcerange="-27.5 76.4"/>
+    <general name="parent_ankle_R_z" joint="parent_ankle_R" gear="0 0 1 0 0 0" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-10 10" forcelimited="true" forcerange="-10 10"/>
+    <general name="parent_elbow_L" joint="parent_elbow_L" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-27.2 26.5" forcelimited="true" forcerange="-27.2 26.5"/>
+    <general name="parent_pron_L" joint="parent_pron_L" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-6 6" forcelimited="true" forcerange="-6 6"/>
+    <general name="parent_elbow_R" joint="parent_elbow_R" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-27.2 26.5" forcelimited="true" forcerange="-27.2 26.5"/>
+    <general name="parent_pron_R" joint="parent_pron_R" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-6 6" forcelimited="true" forcerange="-6 6"/>
+    <general name="parent_knee_L" joint="parent_knee_L" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-166.6 59.3" forcelimited="true" forcerange="-166.6 59.3"/>
+    <general name="parent_knee_R" joint="parent_knee_R" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" ctrlrange="-166.6 59.3" forcelimited="true" forcerange="-166.6 59.3"/>
+  </actuator>
   <equality>
     <weld name="hold_L_ball" body1="parent_hand_L" body2="toy_ball" active="false" solref=".006 1"/>
     <weld name="hold_L_block" body1="parent_hand_L" body2="toy_block" active="false" solref=".006 1"/>
