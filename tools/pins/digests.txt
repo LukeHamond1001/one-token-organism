@@ -40,10 +40,12 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # --profile sim runs tools/sim_profile.py, a tiny G1 (SimAnatomy under SIM_CFG, d 32) in a stub of its world, a day of 225 ticks and R8's whole
 # night (the episodes, the frames' dreams, REM on frames, a live night of 120 ticks with its twitches), 300 ticks in all; its digest is over the
 # whole state's sections, each on the full line (organs with their gradients, store, optimizers, random streams, working attributes, constants).
-# Run as the language digests are (from the main tree's directory, importing the tree under test). Pinned at R8d (2026-09-25), before A71's
-# config; the same under PYTHONHASHSEED 1 and 4242. A commit that changes the sim's life (SIM_CFG, the core under the sim's switches) re-pins
-# it and says so; a commit that must not change it keeps it.
-digest  sim                   threaded 7e76fe0c4b6f975c59ca1f3b consts 2ad019e8abba | --profile sim
-digest  sim                   pinned   44d7f62b27584bf596241f19 consts 2ad019e8abba | --profile sim
-full    sim                   threaded organs 8425a427f47c store bb0d2761ec69 optim 71bb1e133367 rng 1894c5a7ccdb work c50c3fc1326d cfg b3fe73a37b02
-full    sim                   pinned   organs 8e6c95fabf8a store 727f838c53db optim 9515955c46ed rng 1894c5a7ccdb work 7b7cadd8b91f cfg b3fe73a37b02
+# Run as the language digests are (from the main tree's directory, importing the tree under test). A commit that changes the sim's life
+# (SIM_CFG, the core under the sim's switches) re-pins it and says so; a commit that must not change it keeps it. Each pin the same under
+# PYTHONHASHSEED 1 and 4242.
+# Pinned at R8d (2026-09-25, fc152f9): threaded 7e76fe0c4b6f975c59ca1f3b, one-thread 44d7f62b27584bf596241f19 (consts 2ad019e8abba).
+# Re-pinned at A71 (2026-09-25: SIM_CFG born at the served values, amyg_pav's weight earned; the lead's decision on the PFC-maturation study):
+digest  sim                   threaded 9f0e343e471530a65a008b17 consts c61b44d6eef1 | --profile sim
+digest  sim                   pinned   32163810db656e3d0f76e529 consts c61b44d6eef1 | --profile sim
+full    sim                   threaded organs 594050323810 store 411f4fd43396 optim b9eb24ae7899 rng 9d68eaba8173 work 595265190f25 cfg b7dfa94c584a
+full    sim                   pinned   organs 7ffd5421c8f4 store 87aff9eed34a optim 8ff405f45da8 rng 9d68eaba8173 work 18c74976e258 cfg b7dfa94c584a

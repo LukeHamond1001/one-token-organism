@@ -87,7 +87,7 @@ PHYSIOLOGY = dict(
     night_starts=48,
     night_starts_max=192,
     night_load=0.0,
-    night_keep_bands=0,   # the slow bands are not zeroed at night
+    night_keep_bands=0,   # the slow bands are not zeroed at night. The sim: 1, the served value; A71 (the PFC study): matured by use, born at full strength
     night_ticks=0,
     utt_cap=4096,   # the utterance memory replayed at night, whole utterances
     utt_entry="flat",   # THE TAG AT ENTRY (2026-09-22, item 50): "flat" = every utterance enters the night's draw at 1.0; "felt" = at the mean of its symbols' write strengths (surprise x (1 + |dopamine|), the store's own law) over their running mean, so the novel and the rewarded are replayed more (tagging at encoding)
@@ -187,36 +187,36 @@ PHYSIOLOGY = dict(
     explore_tau=64,
     explore_choice=0.0,   # novelty widens the planner's choice among its candidates
     # --- the striatum, working memory and the fast critic ---
-    fast_input="band",   # the fast critic's input: "striatum" = a delay line of the stream's last events through a born expansion; "band" = the dopamine band's state
-    stri_k=8,
-    stri_m=1024,
-    stri_quiet=0,
-    fast_rls=0,
+    fast_input="band",   # the fast critic's input: "striatum" = a delay line of the stream's last events through a born expansion; "band" = the dopamine band's state. The sim: "striatum", the served value; A71 (the PFC study): matured by use, born at full strength
+    stri_k=8,   # the sim: 8, the served value; A71 (the PFC study): matured by use, born at full strength
+    stri_m=1024,   # the sim: 2048, the served value; A71 (the PFC study): matured by use, born at full strength
+    stri_quiet=0,   # the sim: 1, the served value; A71 (the PFC study): matured by use, born at full strength
+    fast_rls=0,   # the sim: 1, the served value; A71 (the PFC study): matured by use, born at full strength
     fast_rls_forget=36000,
-    fast_rls_prior=3.0,
-    fast_rls_every=64,
-    wm=0,   # working memory: latches the line's expansion at a dopamine burst, clears at a reward or after wm_max ticks
-    wm_burst=0.5,
-    wm_max=512,
+    fast_rls_prior=3.0,   # the sim: 0.3, the served value; A71 (the PFC study): matured by use, born at full strength
+    fast_rls_every=64,   # the sim: 256 (SIM_DESIGN.md 7.2, 10: the critics' solves every 256 ticks, a sim constant; the served 64)
+    wm=0,   # working memory: latches the line's expansion at a dopamine burst, clears at a reward or after wm_max ticks. The sim: 1, the served value; A71 (the PFC study): matured by use, born at full strength
+    wm_burst=0.5,   # the sim: 0.5, the served value; A71 (the PFC study): matured by use, born at full strength
+    wm_max=512,   # the sim: 512, the served value (ours, unsourced: 77 s, likely rarely binding, since each event end overwrites the slot); A71 (the PFC study): matured by use, born at full strength
     # --- the ventral critic (the slow prospect) ---
     vcrit_w=0.0,
     vcrit_gamma=1.0 - 1.0 / 1024,
-    vcrit_ceiling="fixed",   # "fixed" = vcrit_w x reliability; "earned" = the reliability itself
-    vcrit_lambda=0.0,
+    vcrit_ceiling="fixed",   # "fixed" = vcrit_w x reliability; "earned" = the reliability itself. The sim: "earned", the served value; A71 (the PFC study): matured by use, born at full strength
+    vcrit_lambda=0.0,   # the sim: 1.0, the served value; A71 (the PFC study): matured by use, born at full strength
     vcrit_lr=0.0,
     vcrit_tau=0.0,
     vcrit_diff=0,
-    vcrit_bands="5,6,7",   # the ventral critic reads these bands ("-" = none)
-    vcrit_traces=0,
-    vcrit_clock=0,   # sleep pressure over the wake threshold as a critic input
-    vcrit_center=1,
-    vcrit_auto=0,
-    vcrit_forget=0,
-    vcrit_rls=0,   # the ventral head learns by recursive least-squares TD(lambda) from accumulated evidence
+    vcrit_bands="5,6,7",   # the ventral critic reads these bands ("-" = none). The sim: "0,1,2" (SIM_DESIGN.md 7.2: the continuous scene through the fast ladder bands, a sim constant; the served "-"); A71
+    vcrit_traces=0,   # the sim: 1, the served value; A71 (the PFC study): matured by use, born at full strength
+    vcrit_clock=0,   # sleep pressure over the wake threshold as a critic input. The sim: 1, the served value; A71 (the PFC study): matured by use, born at full strength
+    vcrit_center=1,   # the sim: 0, the served value; A71 (the PFC study): matured by use, born at full strength
+    vcrit_auto=0,   # the sim: 1, the served value (the voice exactly as loud as it has proved right); A71 (the PFC study): matured by use, born at full strength
+    vcrit_forget=0,   # the sim: 36000, the served value; A71 (the PFC study): matured by use, born at full strength
+    vcrit_rls=0,   # the ventral head learns by recursive least-squares TD(lambda) from accumulated evidence. The sim: 1, the served value; A71 (the PFC study): matured by use, born at full strength
     vcrit_rls_delta=100.0,
-    vcrit_rls_every=64,
-    vcrit_norm_tau=0,
-    vcrit_rls_prior=0.0,
+    vcrit_rls_every=64,   # the sim: 256 (SIM_DESIGN.md 7.2, 10: the critics' solves every 256 ticks, a sim constant; the served 64)
+    vcrit_norm_tau=0,   # the sim: 36000, the served value; A71 (the PFC study): matured by use, born at full strength
+    vcrit_rls_prior=0.0,   # the sim: 3.0, the served value; A71 (the PFC study): matured by use, born at full strength
     vcrit_norm_wake=0,
     # --- the actor and the planner: what to say at a word's start ---
     actor=0,
@@ -528,6 +528,14 @@ AMYG = dict(
     amyg_pav=0,
     amyg_pav_beta=1.0,
     amyg_pav_clip=2.0,
+    # ITS WEIGHT'S FORM (A71, the lead's decision of 2026-09-25 on the PFC-maturation study, docs/audit/pfc_maturation.md: "amyg_pav switched
+    # on after birth (7.4) is a change of body under A20"): "fixed" = R7e's law, the weight amyg_pav_beta; "earned" = BORN ON, ITS WEIGHT
+    # amyg_pav_beta x THE LARGEST RELIABILITY OF THE AMYGDALA'S AVERSIVE HEADS (the heads of negative sign: the G1's face -, pain -, charge
+    # -), which is 0 at birth and grows by use, as the long critic's voice is earned (Daw et al. 2005; the study's (b)): so the bias is born
+    # whole and silent and has its say as far as the organ has proved it can foresee the bad, with no switch after birth. THE BUILDER'S
+    # READING, for the lead: "the aversive head's reliability" read as the largest among the aversive heads (7.4's trial condition was
+    # "an aversive head's rho reaches 0.2"). The sim: "earned" with amyg_pav 1 (body/sim/anatomy.py SIM_CFG)
+    amyg_pav_form="fixed",
 )
 
 # THE NIGHT OVER FRAMES AND THE LIVE, DARK NIGHT (the core refactor's step R8, docs/SIM_DESIGN.md 3.6, 3.7, 5.4, 7.3, 7.4 item 2, 8's R8

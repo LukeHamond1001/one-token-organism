@@ -488,14 +488,24 @@ def test_amyg_orienting_gain():
 
 
 def test_amyg_pav():
-    """amyg 10 (7.4 item 10; step R7e): AMYG_PAV, built and off at birth: off, the motor gate's logit is unchanged whatever N (its p_act the
-    same at N forced to 0.6 as at 0); on, z gains amyg_pav_beta x clip(N, -2, 2): p_act = floor + (1 - floor) sigmoid(z + beta clip(N)), z
-    the gate's own logit on its recorded input, N forced to 0.6, 3 (clipped to 2) and -1"""
+    """amyg 10 (7.4 item 10; step R7e; A71): AMYG_PAV, built and off by default: off, the motor gate's logit is unchanged whatever N (its
+    p_act the same at N forced to 0.6 as at 0); on (the "fixed" form, R7e's), z gains amyg_pav_beta x clip(N, -2, 2): p_act = floor +
+    (1 - floor) sigmoid(z + beta clip(N)), z the gate's own logit on its recorded input, N forced to 0.6, 3 (clipped to 2) and -1. THE
+    EARNED FORM (A71, the lead's decision: born on, its weight the aversive heads' largest reliability): at birth (every reliability 0)
+    the logit is unchanged whatever N; with the aversive heads' reliability held at 0.5 (a face - at 0.5 and a pain - at 0.3: the
+    largest taken) z gains beta x 0.5 x clip(N); the sim is born with it (SIM_CFG's amyg_pav 1, "earned")"""
     from body.core.physiology import AMYG
-    assert AMYG["amyg_pav"] == 0
-    def run_with(pav, forced):
-        c = dict(_CFG, orient=0, amyg_pav=pav)
+    from body.sim.anatomy import SIM_CFG
+    assert AMYG["amyg_pav"] == 0 and AMYG["amyg_pav_form"] == "fixed" and (SIM_CFG["amyg_pav"], SIM_CFG["amyg_pav_form"]) == (1, "earned")
+    def run_with(pav, forced, form="fixed", rho=None):
+        c = dict(_CFG, orient=0, amyg_pav=pav, amyg_pav_form=form, amyg_rel_tau=1e15)
         Lx = _tiny(c, _script_world(lambda t: {})); ra = Lx._amygdala
+        if rho is not None:                                                # the heads' reliabilities held (a perfectly weighted sample)
+            org = Lx.m.amyg; N0 = 1e9
+            for h, (_, sg) in enumerate(org.heads):
+                r_ = float(rho.get(h, 0.0))
+                org.rel[h] = torch.tensor([N0, 0.0, 0.0, N0, N0, r_ * N0], dtype=torch.float64)
+            org.pairs.fill_(10 ** 6)
 
         def spy(C1, frame, ra=ra, Lx=Lx):
             ra(C1, frame); Lx._amyg_now["N"] = forced
@@ -515,7 +525,22 @@ def test_amyg_pav():
         for p_act, z0 in on:
             want = fl + (1.0 - fl) * float(torch.sigmoid(torch.tensor(z0) + max(-2.0, min(2.0, forced))))
             assert abs(p_act - want) < 1e-6, (forced, p_act, want); n_checked += 1
-    print(f"amyg 10: amyg_pav off at birth: the gate's p_act unchanged by N; on, z + clip(N, -2, 2) on {n_checked} ticks (N 0.6, 3 -> 2, -1)")
+    # the earned form: silent at birth, its weight the aversive heads' largest reliability
+    born, _ = run_with(1, 0.6, form="earned")
+    base_e, _ = run_with(0, 0.6, form="earned")
+    assert [a[0] for a in born] == [a[0] for a in base_e]
+    heads = [sg for _, sg in _tiny(dict(_CFG), _script_world(lambda t: {})).m.amyg.heads]
+    rho = {h: (0.5 if k == 0 else 0.3) for k, h in enumerate(i for i, sg in enumerate(heads) if sg < 0)}
+    rho.update({h: 0.9 for h, sg in enumerate(heads) if sg > 0})       # a good head's reliability is not the weight
+    n_earned = 0
+    for forced in (0.6, 3.0, -1.0):
+        on, _ = run_with(1, forced, form="earned", rho=rho)
+        for p_act, z0 in on:
+            want = fl + (1.0 - fl) * float(torch.sigmoid(torch.tensor(z0) + 0.5 * max(-2.0, min(2.0, forced))))
+            assert abs(p_act - want) < 1e-6, (forced, p_act, want); n_earned += 1
+    print(f"amyg 10: amyg_pav off by default: the gate's p_act unchanged by N; on (fixed), z + clip(N, -2, 2) on {n_checked} ticks (N 0.6, 3",
+          f"-> 2, -1); earned (A71, the sim's): at birth unchanged by N, with the aversive heads' reliabilities 0.5 and 0.3 (the good head's",
+          f"0.9 no weight) z + 0.5 x clip(N) on {n_earned} ticks")
 
 
 # ---------------- amyg 11: the save round trip ----------------

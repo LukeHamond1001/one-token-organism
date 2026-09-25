@@ -230,7 +230,8 @@ class AmygdalaMixin:
         tag = min(float(cap), tag) if cap is not None else tag
         prev = getattr(self, "_amyg_now", None)
         self._amyg_prev = (float(prev["Ap"]) + float(prev["Am"])) if prev is not None else 0.0
-        self._amyg_now = {"Ap": Ap, "Am": Am, "N": Ap - Am, "tag": tag, "R": R}
+        rho_bad = max([float(v) for v, (_, sg) in zip(rho, org.heads) if sg < 0.0] or [0.0])   # the aversive heads' largest reliability (A71)
+        self._amyg_now = {"Ap": Ap, "Am": Am, "N": Ap - Am, "tag": tag, "R": R, "rho_bad": rho_bad}
 
     def _amyg_nightfall(self):
         """the night (called as it begins): the pending forecasts finalized and let go, the trace afresh; the tick's own let go"""

@@ -567,8 +567,56 @@ def test_the_heading_drift():
           f"the same life with and without the truth in the frames; none for the language body")
 
 
+# ---------------- night 7: A71, the born config at the served values ----------------
+
+def test_the_born_config():
+    """night 7 (A71, the lead's decision of 2026-09-25 on the PFC-maturation study): THE SIM IS BORN AT THE SERVED VALUES. SIM_CFG's slow
+    bands kept across the night, striatal fast critic, working memory's slot and long critic with its earned voice each at the served
+    language body's value (tools/pins/served_cfg.pkl), but the three the design sets for the sim (the critics' solves every 256 ticks,
+    SIM_DESIGN.md 10; the long critic on the fast bands 0-2, 7.2); amyg_pav born on with its earned weight. A G1 born under it has the
+    striatal expansion (the language block, every motor effector's per-joint rows and R7a's event lines' block), the working-memory slot
+    beside it (the fast critic's evidence 2 x 2,048 wide and its level), the long critic's evidence over bands 0-2 with the tonic traces and the clock
+    (3 d + 8 + 1, and its level), its voice 0 at birth; working memory latches at the frames' event ends; and after a night its bands are
+    the evening's, not zeroed"""
+    import pickle
+    from body.sim.anatomy import SIM_CFG
+    with open(os.path.join(ROOT, "tools", "pins", "served_cfg.pkl"), "rb") as f:
+        served = pickle.load(f)
+    taken = ("night_keep_bands", "fast_input", "fast_rls", "stri_k", "stri_m", "stri_quiet", "fast_rls_prior", "wm", "wm_burst", "wm_max",
+             "vcrit_rls", "vcrit_auto", "vcrit_ceiling", "vcrit_forget", "vcrit_traces", "vcrit_clock", "vcrit_norm_tau", "vcrit_rls_prior",
+             "vcrit_lambda", "vcrit_center")
+    assert all(SIM_CFG[k] == served[k] for k in taken), [(k, SIM_CFG[k], served[k]) for k in taken if SIM_CFG[k] != served[k]]
+    assert (SIM_CFG["fast_rls_every"], SIM_CFG["vcrit_rls_every"], SIM_CFG["vcrit_bands"]) == (256, 256, "0,1,2")
+    assert (served["fast_rls_every"], served["vcrit_rls_every"], served["vcrit_bands"]) == (64, 64, "-")
+    L = _g1(_cfg(wake_ticks=120, night_ticks=20, night_starts=4, night_starts_max=4, night_rounds=1, night_batch=4), _events_world())
+    m = L.m; d = int(m.d); k = int(L.cfg["stri_k"])
+    rows = k * (2 * m.vocab + 3) + sum(k * sum(int(f_) for f_ in e.factors) for e in L.anatomy.motors) + k * 13
+    assert tuple(m.stri_W.shape) == (rows, 2048) and m.stri_wm == 1 and m.vf_A.shape == (2 * 2048 + 1, 2 * 2048 + 1)
+    assert L._vc_idx.numel() == 3 * d + 8 + 1 and m.vc_A.shape == (3 * d + 8 + 1 + 1, 3 * d + 8 + 1 + 1)
+    assert L._vrel_gain == 0.0 and L.cfg["amyg_pav"] == 1
+    latched = []; wl = m.wm_latch
+    m.wm_latch = lambda z, wl=wl, L=L: (latched.append(L.ticks), wl(z))[1]
+    run = WorldLoop(L)
+    for _ in range(119):
+        run.step()
+    del m.wm_latch
+    ends = list(L._rec_ends)
+    seen = {}; nf = L.night
+    L.night = lambda nf=nf, L=L, seen=seen: (seen.__setitem__("evening", L.bands.clone()), nf())[1]
+    run.step()                                                           # the 120th tick: its night at the tick's end
+    del L.night
+    assert L.nights == 1 and not L.last_night.get("error")
+    evening = seen["evening"]
+    assert torch.equal(L.bands, evening) and float(L.bands.abs().sum()) > 0.0   # the evening's bands, kept (night_keep_bands 1)
+    assert ends and set(ends) <= set(latched), (ends[:5], latched[:5])
+    print(f"night 7: A71's born config: {len(taken)} values the served body's, the solves every 256 ticks and the long critic on bands 0-2",
+          f"the sim's; born: the striatal expansion {rows} x 2048 (the event lines' block in it), the slot beside it (the fast critic's",
+          f"evidence {2 * 2048 + 1} wide with its level), the long critic's {3 * d + 10}, its voice 0; working memory latched at all {len(ends)} frame event ends",
+          f"(and {len(latched) - len(ends)} bursts); after the night the evening's bands kept")
+
+
 NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames, test_the_live_dark_night,
-               test_the_heading_drift]
+               test_the_heading_drift, test_the_born_config]
 
 
 if __name__ == "__main__":

@@ -447,7 +447,8 @@ class SleepMixin:
         """A NIGHT'S BATCH OF WINDOWS (step R8b; "per-channel batches from stored codes"): each channel's observations [B, T, ..] from the
         reels (a vector channel's fp16 numbers as float32), the voice's symbol and every motor effector's act [B, T], right-padded
         (a symbol channel's rest, a vector channel's zeros, every effector's rest: a causal cortex never sees the padding after a
-        position); the ladder's bands run along each window from fresh (no gradient), as the words' lockstep dreams run them; the end
+        position); the ladder's bands run along each window (no gradient) from the day's band states at its first tick (the episode's
+        bands0: the lead's item 1), as the words' lockstep dreams run theirs from zero; the end
         marks, each row's credit and the mask of the real positions [B, T]; each window's length"""
         m = self.m; dev = self.dev
         sym, vec, mot = self._tape_layout()

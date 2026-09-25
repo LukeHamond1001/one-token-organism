@@ -435,4 +435,27 @@ SIM_CFG = dict(
     # stepped dark through the night (its `live_night`), the waist's, the arms', the hands' and the legs' joints twitching one at a time in
     # active sleep, each twitch's pair teaching act_inv and the forward half, the cerebellum learning wherever the world runs
     twitch=1,
+    # A71, THE BORN CONFIG AT THE SERVED VALUES (the lead's decision of 2026-09-25 on the PFC-maturation study, docs/audit/pfc_maturation.md:
+    # the prefrontal parts mature by use, not by calendar; born whole at full strength, their say grown through readouts born small and
+    # reliability-weighted voices). Each value is the served language body's (tools/pins/served_cfg.pkl, its save's constants), where the
+    # tests had added them by hand, unless said:
+    # - THE SLOW BANDS KEPT ACROSS THE NIGHT (night_keep_bands 1): zeroed nightly, band 7 reached only about 72% of its settled level by the
+    #   day's end and bands 6-7 became a clock of time since waking (the study, section 3);
+    # - THE STRIATAL FAST CRITIC (fast_input "striatum", fast_rls 1, stri_k 8, stri_m 2,048, stri_quiet 1, fast_rls_prior 0.3): dopamine from
+    #   the striatal expansion's least squares (R7a's event lines' rows then live), its solve every 256 ticks (SIM_DESIGN.md 7.2, 10: the
+    #   sim's constant, the served body's 64);
+    # - WORKING MEMORY'S SLOT (wm 1, wm_burst 0.5, wm_max 512: the served values, wm_max ours and unsourced): latched at the frames' event
+    #   ends (wm_frames, R7f) and at dopamine's bursts;
+    # - THE LONG CRITIC WITH ITS EARNED VOICE (vcrit_rls 1, vcrit_auto 1, vcrit_ceiling "earned", vcrit_forget 36,000, vcrit_traces 1,
+    #   vcrit_clock 1, and its law's own served prior and horizons: vcrit_norm_tau 36,000, vcrit_rls_prior 3.0, vcrit_lambda 1.0,
+    #   vcrit_center 0, without which its least squares would run in a form the served body never ran), reading the fast ladder bands 0-2
+    #   (SIM_DESIGN.md 7.2's sim constant; the served "-") and solved every 256 ticks (10);
+    # - AMYG_PAV BORN ON, ITS WEIGHT EARNED (amyg_pav 1, amyg_pav_form "earned": its weight the aversive heads' largest reliability, 0 at birth
+    #   and grown by use), in place of a switch after birth (A20: a change of body)
+    night_keep_bands=1,
+    fast_input="striatum", fast_rls=1, stri_k=8, stri_m=2048, stri_quiet=1, fast_rls_prior=0.3, fast_rls_every=256,
+    wm=1, wm_burst=0.5, wm_max=512,
+    vcrit_rls=1, vcrit_auto=1, vcrit_ceiling="earned", vcrit_forget=36000, vcrit_traces=1, vcrit_clock=1, vcrit_norm_tau=36000,
+    vcrit_rls_prior=3.0, vcrit_lambda=1.0, vcrit_center=0, vcrit_bands="0,1,2", vcrit_rls_every=256,
+    amyg_pav=1, amyg_pav_form="earned",
 )
