@@ -575,11 +575,14 @@ def test_the_spinal_pattern_generator():
     here (_spg_law, _spg_starts, _spg_place): its rhythm's cycles drawn from the organs' spg_seed (the generator seeded spg_seed + 3n + r
     for cycle n of the rhythm led by motor effector r), each a log-normal of mean 3.56 s and SD 1.93 s held to 1.0-8.5 s, in ticks of
     0.15 s; the limb's movement begins at the first tick at or after its cycle's start plus its lag; flexion its first 2 ticks,
-    extension its next 3, then the pause. The step the world receives on each declared flexion joint is +(its gate's p_act x 0.09 rad)
-    in its flexion sense in the flexion, - in the extension, nothing in the pause, 0 where the own act steps that joint against it, 0 on
-    every other joint: a function of the tick, the rhythm, p_act and the own act alone (no posture, balance or gravity term: it reads
-    no sense). THE LEGS keep one rhythm (the left leading): in every cycle the right leg's movement begins half the cycle after the
-    left's and before the left's next; THE ARM keeps its own, its phase drawn at birth from the body's seed. THE LAW OF THE DRAWS over
+    extension its next 3, then the pause. The step the world receives on each declared flexion joint is +A (its gate's p_act x 0.09 rad)
+    in its flexion sense in the flexion, -2A/3 in the extension, nothing in the pause, 0 where the own act steps that joint against it,
+    0 on every other joint: a function of the tick, the rhythm, p_act and the own act alone (no posture, balance or gravity term: it
+    reads no sense). THE CYCLE RETURNS WHERE IT BEGAN (the lead's decision of 2026-09-25: a kick is a flexion and a return): on every
+    joint of every complete movement no own act cancelled, the steps the world received sum to 0 (2A out, 2A back; the equal steps of
+    R6h and C54 left -A, a drift toward extension every cycle). THE LEGS keep one rhythm (the left leading): in every cycle the right
+    leg's movement begins half the cycle after the left's and before the left's next; THE ARM keeps its own, its phase drawn at birth
+    from the body's seed. THE LAW OF THE DRAWS over
     20,000 cycles of one rhythm: every cycle inside 6.67-56.67 ticks, the held draws' mean and SD the clipped law's (23.425 and 11.613
     ticks: 3.514 and 1.742 s), the unheld the log-normal's own (3.56 and 1.93 s), about 1.2% and 2.5% held at the bounds. The rhythm is
     the tick's: a body saved and loaded stands where the one that lived on stands, tick for tick (its acts drawn afresh). The gate draws
@@ -592,7 +595,7 @@ def test_the_spinal_pattern_generator():
     T = 400
     rhythm = {"leg_l": (0, 0.0, 0.0), "leg_r": (0, 0.0, 0.5), "arm": (2, ph[2], 0.0)}    # (its leader's place, the leader's phase, its lag)
     ref = {n_: _spg_starts(seed, 3, *rhythm[n_], T) for n_ in rhythm}
-    n_cancel = n_sum = 0; places = collections.Counter()
+    n_cancel = n_sum = 0; places = collections.Counter(); steps = collections.defaultdict(list)
     for t in range(T):
         run.step()
         for e_, st_ in zip(L.anatomy.motors, L.motor):
@@ -603,13 +606,28 @@ def test_the_spinal_pattern_generator():
             for j_, sg_ in e_.spg.items():
                 if not want_place:
                     continue
-                own = (now["digits"][j_] > 2) - (now["digits"][j_] < 2); step = want_place * sg_ * A
+                own = (now["digits"][j_] > 2) - (now["digits"][j_] < 2); step = sg_ * (A if want_place > 0 else -A * 2.0 / 3.0)
                 if own != 0 and (own > 0) != (step > 0):
                     n_cancel += 1; continue
                 want[j_] = step; n_sum += int(own != 0)
             got = w.cords[-1].get(e_.name)
             assert (got is None and not any(want)) or (got is not None and all(abs(a_ - b_) < 1e-12 for a_, b_ in zip(got, want))), (t, e_.name, got, want)
             assert st_["buf"][-1][1] == now["acted"] and st_["buf"][-1][9] is False
+            steps[e_.name].append((want_place, float(now["p_act"]), list(got) if got is not None else [0.0] * len(e_.factors)))
+    # the cycle returns where it began: each complete movement (its 2 + 3 ticks inside the run), each joint no own act cancelled on any
+    # of them: the steps the world received sum to 0 (the born gate's p_act is the same on every tick here, every rate 0)
+    n_ret = 0; worst = 0.0
+    for e_ in L.anatomy.motors:
+        rec = steps[e_.name]
+        for m_ in [x_ for x_ in ref[e_.name][0] if 0 <= x_ and x_ + 5 <= T]:
+            mv = rec[m_:m_ + 5]
+            assert [p_ for p_, _, _ in mv] == [1, 1, -1, -1, -1], (e_.name, m_, mv)
+            assert len({pa_ for _, pa_, _ in mv}) == 1, (e_.name, m_, [pa_ for _, pa_, _ in mv])
+            for j_, sg_ in e_.spg.items():
+                if all(g_[j_] != 0.0 for _, _, g_ in mv):
+                    ex = sum(g_[j_] for _, _, g_ in mv); worst = max(worst, abs(ex)); n_ret += 1
+                    assert abs(ex) < 1e-12 and abs(mv[0][2][j_] + mv[1][2][j_] - 2.0 * sg_ * mv[0][1] * 0.09) < 1e-12, (e_.name, m_, j_, ex)
+    assert n_ret >= 30, n_ret
     # the legs: one rhythm, the right leg half of each cycle behind the left and before its next movement
     (sl, cyc), (sr, _) = ref["leg_l"], ref["leg_r"]
     n_alt = 0
@@ -663,9 +681,10 @@ def test_the_spinal_pattern_generator():
         r_.step()
     assert all(c_ == {} for c_ in w0.cords) and all(not st_["cord_n"] for st_ in E.motor) and all(st_["spg_cyc"] is None for st_ in E.motor)
     fr = {n_: [places[(n_, p_)] / T for p_ in (1, -1, 0)] for n_ in rhythm}
-    print(f"motor 6: the pattern generator on {T} ticks: each limb's place and step the rule's (a movement of 2 ticks' flexion and 3",
-          f"ticks' extension at +-p_act x 0.09 rad, then the drawn pause; {n_cancel} joint-ticks cancelled by an own act against it, {n_sum}",
-          f"summed with one); flexion, extension, pause {', '.join(f'{n_} ' + '/'.join(f'{x_:.3f}' for x_ in v_) for n_, v_ in fr.items())};",
+    print(f"motor 6: the pattern generator on {T} ticks: each limb's place and step the rule's (a movement of 2 ticks' flexion at +p_act x",
+          f"0.09 rad and 3 ticks' extension at 2/3 of it back, then the drawn pause; {n_cancel} joint-ticks cancelled by an own act against it,",
+          f"{n_sum} summed with one); the cycle returns where it began: {n_ret} complete joint-movements uncancelled, each summing to 0",
+          f"(largest {worst:.1e} rad); flexion, extension, pause {', '.join(f'{n_} ' + '/'.join(f'{x_:.3f}' for x_ in v_) for n_, v_ in fr.items())};",
           f"the legs one rhythm, the right half a cycle behind in all {n_alt} cycles; the arm its own (phase {ph[2]:.3f}, the seed's); 20,000",
           f"draws held {0.15 * mh:.3f} +- {0.15 * sh:.3f} s (the clipped law's 3.514 +- 1.742), unheld {0.15 * mf:.3f} +- {0.15 * sf:.3f} s",
           f"(3.56 +- 1.93), {100 * lo_:.1f}% and {100 * hi_:.1f}% at the bounds; a load stands where the life stands; a stray rhythm refused;",

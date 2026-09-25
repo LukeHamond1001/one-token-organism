@@ -341,8 +341,8 @@ SIM_CFG = dict(
     # R6h's motor effectors (MOTOR): movement units, act_inv batched every 8 ticks with the kappa correction, fatigue per effector
     unit_margin=math.log(4.0), act_inv_every=8, act_inv_chance=1, own_fatigue=1,
     # the born patterns and biases (REFLEX): the spinal pattern generators (their shape and cycles REFLEX's, C54: a movement of 2 ticks'
-    # flexion and 3 ticks' extension, then a pause, each cycle drawn from the seed, 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry,
-    # orienting, the VOR
+    # flexion and 3 ticks' extension, the extension returning the flexion's excursion, then a pause, each cycle drawn from the seed,
+    # 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry, orienting, the VOR
     spg=1, cry=1, orient=1, vor=1,
     # THE CEREBELLUM ON AT BIRTH (7.5, A44; SimAnatomy.cerebellar, the lead's mossy list): its constants CEREB's, as R6c and its fix
     # settled them and none given here (the rate 0.01 a sub-step; the leak rate / 3, after Smith, Ghazizadeh and Shadmehr 2006; the bound

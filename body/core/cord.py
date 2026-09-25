@@ -15,8 +15,11 @@ THE SPINAL PATTERN GENERATOR (`_spg_step`; A48; C54 closed on the measured newbo
 1911) whose cycle is A SHORT MOVEMENT FOLLOWED BY A PAUSE: flexion for spg_flex ticks (2: 0.30 s; Thelen and Fisher 1982, 1983),
 then extension for spg_ext ticks (3: 0.45 s; Thelen and Fisher 1982), then the pause until the cycle's end. In the flexion a step of
 +A along each of the limb's declared flexion joints in its flexion sense (the withdrawal's joints: a leg's hip pitch, knee and ankle
-pitch; an arm's shoulder pitch and elbow), in the extension the opposite, in the pause none; A = the limb's gate's p_act this tick x
-spg_amp (the gate's tonic readiness drives it), so a movement moves the targets 2A toward flexion and 3A back. EACH CYCLE'S LENGTH IS
+pitch; an arm's shoulder pitch and elbow), in the extension a step of -A x spg_flex / spg_ext (2A/3), in the pause none; A = the limb's
+gate's p_act this tick x spg_amp (the gate's tonic readiness drives it). So a movement moves the targets 2A toward flexion and 2A back,
+and a cycle returns where it began: THE LEAD'S DECISION (2026-09-25). A kick is a flexion and a return; the sources give the phases'
+durations, not their excursions. Until then the extension stepped A as the flexion did (R6h, C54), and each cycle drifted the targets
+A toward extension. The durations are the sources' and unchanged; only the extension's step is scaled. EACH CYCLE'S LENGTH IS
 DRAWN FROM THE BODY'S SEED (`_spg_cycle`): a log-normal of mean spg_cycle and SD spg_cycle_sd (3.56 and 1.93 s: newborns' kicking at
 birth, Hinnekens et al. 2023; physiology.py REFLEX gives every source), clipped to spg_cycle_min..spg_cycle_max (1.0-8.5 s); the
 movement's 5 ticks are fixed and only the pause stretches (the pause is what varies: Thelen 1981). A cycle's length is real (in
@@ -152,11 +155,14 @@ class CordMixin:
         return 1 if 0 <= d < F else (-1 if F <= d < F + E else 0)
 
     def _spg_step(self, e, where, p_act, dig):
-        """the generator's step this tick (the module's doc): +-A along each declared flexion joint in the movement's flexion (+1) or
-        extension (-1), cancelled where the own act steps that joint against it; None in the pause or when every step is 0"""
+        """the generator's step this tick (the module's doc): along each declared flexion joint +A in the movement's flexion (+1),
+        -A x spg_flex / spg_ext in its extension (-1: the extension returns what the flexion moved, the lead's decision), cancelled
+        where the own act steps that joint against it; None in the pause or when every step is 0"""
         if not where:
             return None
         A = float(p_act) * float(self._reflex_const("spg_amp"))
+        if where < 0:
+            A = A * float(self._reflex_const("spg_flex")) / float(self._reflex_const("spg_ext"))   # 2A/3: the cycle's net excursion 0
         out = [0.0] * len(e.factors); moved = False
         for j, sg in e.spg.items():
             step = float(where) * float(sg) * A

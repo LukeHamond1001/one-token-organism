@@ -385,9 +385,12 @@ REFLEX = dict(
     spg_cycle_sd=1.93 / 0.15,
     spg_cycle_min=1.0 / 0.15,
     spg_cycle_max=8.5 / 0.15,
-    # its amplitude: the limb's gate's p_act x this, rad a tick, + along the flexion joints' senses in the flexion, - in the extension
-    # (3.7: the gate's tonic readiness drives it, as the brainstem's drive enables the cord's generator; at the born p_act 0.2875, 0.026
-    # rad a tick, about a small step's third); ours (the design's), kept from R6h
+    # its amplitude A: the limb's gate's p_act x this, rad a tick, + along the flexion joints' senses in the flexion (3.7: the gate's
+    # tonic readiness drives it, as the brainstem's drive enables the cord's generator; at the born p_act 0.2875, 0.026 rad a tick, about
+    # a small step's third); ours (the design's), kept from R6h. IN THE EXTENSION THE STEP IS -A x spg_flex / spg_ext (2A/3), THE LEAD'S
+    # DECISION (2026-09-25): a kick is a flexion and a return, and the sources give the phases' durations (above), not their excursions,
+    # so the extension's 3 ticks return the 2A the flexion's 2 moved and a cycle's net excursion is zero. R6h and C54 stepped A in both
+    # phases, which moved the targets A toward extension every cycle. The durations are unchanged; no posture term is added
     spg_amp=0.09,
     # THE BORN CRY (A47; 3.7; Jurgens 2002: the cry is innate and patterned by the periaqueductal grey): on a pain tick, or while the
     # charge is below cry_charge, the tract's cry posture is added to its targets in breath groups, its own act overriding it
