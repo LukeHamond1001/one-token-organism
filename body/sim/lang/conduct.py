@@ -13,9 +13,11 @@ in which register, and the acts her talk accompanies.
                from what she perceives, held to the line check, picked by her own random stream (the body's seed, spawn key
                STREAM = 3; the world's is 1, the tract's 2), and said only when her voice is free and the rules allow it: the
                pauses (6 ticks between related lines, 20 after a question, an ask or a call), the call at most once per 240
-               ticks, the same line not within 60, the same object named at most once per 20 (a variation set counts as one
-               naming), at most one set per object per 120, idle at most one line per 40. Variation sets: 2-3 lines sharing the
-               focus word, frames differing by at least a word, 6 ticks apart (Kuntay and Slobin; Onnis et al. 2008). A new
+               ticks, the same line (the same words, its punctuation aside: templates.key) not within 60, the same object named
+               at most once per 20 (a variation set counts as one naming), at most one set per object per 120, idle at most one
+               line per 40. Variation sets: 2-3 lines sharing the focus word, frames differing by at least a word (two lines of
+               the same words, "a rattle." / "a rattle!", never in one set), 6 ticks apart (Kuntay and Slobin; Onnis et al.
+               2008). A new
                word's set: 3 lines in the new-word register, the word last and emphasized, its referent shown (4.4, 4.8, A15);
                only a word the world can show (templates.showable, against the world's inventory) that she can show now
                (templates.show_now), in lines measured to put it on the line's pitch peak (A34, the line check); up
@@ -35,8 +37,9 @@ in which register, and the acts her talk accompanies.
                (Say.frown: a turn that talked over her, being hit) for Feelings.talk_over / harm; she never makes a feeling
                here. The motor judgments (a roll, a reach) and the face are the world's.
                WHAT SHE READS OF THE CHILD (A40): its head's line (the G1's trunk) and its hands, as a person sees a robot that
-               shows no eyes, never its fovea's window: the Percept's child_target, child_holds and child_reaches, filled by
-               the world through her Reader (percept.py, her error drawn from her own stream). Every rule below reads them.
+               shows no eyes, never its fovea's window: the Percept's child_target (held 3 ticks running, 4.10), child_holds
+               and child_reaches, filled by the world through her Reader (percept.py, her error drawn from her own stream).
+               Every rule below reads them.
                A right name is an exact word whose referent is where she reads the child looking, in its hand or reached
                toward (her face for "mama" when she reads it looking at her), or the answer to her name ask ("what is this?")
                begun once the question was heard (its word made before it is no answer, and voids the ask, 4.8); an
@@ -52,8 +55,14 @@ in which register, and the acts her talk accompanies.
                cannot see her then; a call from the hall is not judged (no look can answer it there).
                HER EYES IN AN ASK (A51; Golinkoff et al. 1987): while a gaze, act or call ask is pending, every line she says
                keeps its acts on the child's eyes (blind(): no look at a thing, no point, no show, her open hand held out to the
-               child, never toward the toy), the meal's first line waits, her copies wait, and L1 keeps her eyes on the child
-               (eyes_on_child).
+               child, never toward the toy), the meal's first line waits, a copy of its movement due then is not made (a late
+               copy is no copy), and L1 keeps her eyes on the child (eyes_on_child). And before one (her method, P3's fourth
+               round): she asks about an X (a gaze or act ask) only CUE_CLEAR = 44 ticks (6.6 s) or more after her last cue at an
+               X ended (a look, point, show, hand-over or offer at it, in her lines' acts or L1's, cued()), since a look within
+               that time may follow her cue, not the word (Brooks and Meltzoff 2005 scored infants' following looks over 6.5 s
+               from an adult's head turn); never a gaze or act ask about an X in her own hands (a look at her would meet it);
+               and "give me the X" only with an X within the child's reach as she sees it (Seen.child_can_reach), so no ask is
+               one no act of its could answer.
                HER IMPERFECTION (A52; consts, from human dyads, her own stream): her reply's latency jittered (Gratier et al.
                2015's switching pauses, 3.16 ticks after the turn's end on average), a turn she makes no judgment of missed 30%
                of the time (Gros-Louis et al. 2006: mothers answered over 70% of vocalizations within 2 s), and her mirrored
@@ -66,8 +75,9 @@ in which register, and the acts her talk accompanies.
                2 for each redirect (Tomasello and Farrar 1986).
 
 Built here from 4.10: the talk and its timing, her reading of the child (A40), her imperfection and copying (A52). Left to W2 and
-P4: L1's gaze and face each tick (W2 reads eyes_on_child), the scaffolding ladders' acts, the routines' order, her spells of
-distraction (P4's own-tasks episode), and the motor judgments; the acts are requested here and carried out there.
+P4: L1's gaze and face each tick (W2 reads eyes_on_child, and reports L1's gaze at a thing through cued()), the scaffolding
+ladders' acts, the routines' order, her spells of distraction (P4's own-tasks episode), the base-rate trials' moments (drawn
+where cue_clear() holds, as her asks are), and the motor judgments; the acts are requested here and carried out there.
 
 Nothing here draws a random number but her own streams of the body's seed (her lines' STREAM = 3, her reading's READ_STREAM = 4,
 her imperfection's IMPERFECT_STREAM = 5); state() and load_state() carry everything, so a replay is exact (a saved Conduct
@@ -80,7 +90,7 @@ import numpy as np
 
 from . import consts as K
 from . import templates as TP
-from .lexicon import BIRTH_WORDS, NAME
+from .lexicon import BIRTH_WORDS, NAME, PARENT_NAME
 from .percept import Reader
 from ..voice.playback import CUT_MAX, TICK
 from ..voice.synth import SR
@@ -252,6 +262,8 @@ def acts_for(intent, refs=(), b=None, w=None, word_class=None):
 
 
 BLIND_ASKS = ("gaze", "act", "call")           # asks the child could pass by following her eyes or hands (A51)
+CUE_KINDS = ("look", "point", "show", "hand_over", "offer_bottle", "open_hand")   # her acts that direct its eyes to a thing
+NOT_A_THING = (None, "child", "child_eyes", "child_periphery")
 ON_CHILD = ("lean_in", "attend", "touch", "withdraw", "guide", "pull_to_sit", "wave")   # acts on the child, never at a thing
 
 
@@ -300,7 +312,7 @@ class FastLayer:
         self.new_words = ()
         self.held = tuple(tuple(h) for h in K.HELD_PAIRS)
         self.stage = stage
-        self.last_said = {}                   # text -> tick
+        self.last_said = {}                   # a line's words (templates.key) -> the tick she last said it
         self.last_named = {}                  # object id -> tick of its last naming (a set counts once)
         self.last_set = {}                    # object id -> tick of its last variation set
         self.last_call = NEVER
@@ -353,8 +365,9 @@ class FastLayer:
 
     # ------------------------------------------------------------------ composing
     def compose(self, intent, t, p, o=None, b=None, w=None, frames=None, skip=()):
-        """-> a Line for the intent (its frames filled from the percept and held to the line check; the same line not within
-        SAME_LINE ticks), picked by her stream, or None. The stream is drawn only when there is a choice to make."""
+        """-> a Line for the intent (its frames filled from the percept and held to the line check; the same line, the same
+        words, not within SAME_LINE ticks; none whose words are in skip, a set's lines so far), picked by her stream, or None.
+        The stream is drawn only when there is a choice to make."""
         cands = []
         for fr in (frames if frames is not None else TP.FRAMES[intent]):
             got = TP.fill(fr, o=o, b=b, w=w, fixtures=p.fixtures)
@@ -362,7 +375,7 @@ class FastLayer:
                 continue
             text, focus, refs = got
             refs = refs or ((o.id,) if o is not None else ())      # the object the line is about, slot or not ("what is this?")
-            if text in skip or self.last_said.get(text, NEVER) > t - K.SAME_LINE:
+            if TP.key(text) in skip or self.last_said.get(TP.key(text), NEVER) > t - K.SAME_LINE:
                 continue
             reg = "new_word" if (intent == "new_word" or (focus is not None and focus in self.new_words)) else \
                 register_for(intent, text)
@@ -376,7 +389,9 @@ class FastLayer:
         return cands[int(self.rng.integers(len(cands)))] if len(cands) > 1 else cands[0]
 
     def variation_set(self, intent, t, p, o=None, b=None, w=None, n=None, frames=None):
-        """a variation set: n lines (2-3, drawn when not given) sharing the focus word, each from a different frame -> [Line]."""
+        """a variation set: n lines (2-3, drawn when not given) sharing the focus word, each from a frame differing by at least
+        one word (4.5: two lines of the same words, their punctuation aside, are one frame: "a rattle." and "a rattle!") ->
+        [Line]."""
         n = n or int(self.rng.integers(K.SET_LINES[0], K.SET_LINES[1] + 1))
         out, skip = [], set()
         for _ in range(n):
@@ -384,7 +399,7 @@ class FastLayer:
             if ln is None:
                 break
             out.append(ln)
-            skip.add(ln.text)
+            skip.add(TP.key(ln.text))
         return out
 
     # ------------------------------------------------------------------ the rules
@@ -398,7 +413,7 @@ class FastLayer:
             return False, "the expectant pause"
         if line.intent in ("call", "hall_call") and t < self.last_call + K.CALL_EVERY:
             return False, "the call at most once per 240 ticks"
-        if self.last_said.get(line.text, NEVER) > t - K.SAME_LINE:
+        if self.last_said.get(TP.key(line.text), NEVER) > t - K.SAME_LINE:
             return False, "the same line within 60 ticks"
         if line.refs and line.focus is not None and line.intent in NAMING and \
                 self.last_named.get(line.refs[0], NEVER) > t - K.SAME_OBJECT:
@@ -408,7 +423,7 @@ class FastLayer:
     def commit(self, line, t, n_ticks, spans, in_set=False):
         """she starts the line at t, sounding n_ticks; spans: [(word, first sample, end sample)] from the line's start. Her
         words count as said only as their sound ends (voiced()), so a word the talk-over stops is never said."""
-        self.last_said[line.text] = t
+        self.last_said[TP.key(line.text)] = t
         self.busy_until = t + max(1, int(n_ticks))
         self.current = line
         self.spans = dict(start=int(t), words=[[w, int(a), int(e)] for w, a, e in spans])
@@ -488,7 +503,7 @@ class FastLayer:
         for s in self.steer:
             if s["uses"] >= K.STEER_USES or not (s["tick_from"] <= t < s["tick_from"] + s["ttl"]):
                 continue
-            if not self.situation(s["situation"], p) or self.last_said.get(s["text"], NEVER) > t - K.SAME_LINE:
+            if not self.situation(s["situation"], p) or self.last_said.get(TP.key(s["text"]), NEVER) > t - K.SAME_LINE:
                 continue
             ok, why = TP.check(s["text"], self.vocab, self.new_words, p, (), self.held, source="claude",
                                recent_events=self.recent)
@@ -591,8 +606,8 @@ class Conduct:
         self.routine = None                   # the routine under way (L3 sets it: "feed", "greet", "leave", "peekaboo", ...)
         self.pending = None                   # the ask she is judging: dict(kind, word, obj, tick, open, until, trial)
         self.reply_due = None                 # the reply owed to the child's turn: dict(tick, kind, word, obj)
-        self.target_run = [None, 0]           # where she reads it looking, and how many ticks running
         self.no_target_since = 0              # the tick since which it has attended nothing, as she reads it (the redirect)
+        self.cue_until = {}                   # an object's word -> the tick her last cue at a thing of that name ended (A51)
         self.last_vocal_smile = NEVER
         self.turn = None                      # the child's turn under way: dict(start, in_pause, looked, over)
         self.sound_hist = []                  # the last NONSTOP[1] ticks: was the child sounding
@@ -620,6 +635,19 @@ class Conduct:
                           fixtures=sorted(w.get("fixtures", ())), events=sorted(w.get("events", ())),
                           face=sorted(w.get("face", ())), acts=sorted(getattr(self.motion, "DOES", ())))
 
+    def cued(self, t, target, p=None):
+        """a cue of hers at a thing that her lines' acts do not carry (L1's gaze to its target or to a sudden event, W2): the
+        world reports it as it ends, so no gaze or act ask about a thing of that name is made within CUE_CLEAR ticks (A51)."""
+        o = p.obj(target) if p is not None else None
+        name = o.name if o is not None else target
+        if name in TP.NAMEABLE:
+            self.cue_until[name] = max(int(t), self.cue_until.get(name, NEVER))
+
+    def cue_clear(self, name, t):
+        """no cue of hers at a thing of that name has ended within CUE_CLEAR ticks (A51): a gaze or act ask about it may be made;
+        P4's base-rate trials are drawn under the same rule, so the base rate is measured as the asks are."""
+        return t >= self.cue_until.get(name, NEVER) + K.CUE_CLEAR
+
     def request(self, intent, **kw):
         """an episode's or Claude's intent (L3, P4; P5), said when the priorities allow (a request that cannot be said is
         dropped and logged in fast.refused)."""
@@ -640,17 +668,20 @@ class Conduct:
     # ------------------------------------------------------------------ her imperfection (A52)
     def _latency(self):
         """her reply's latency after the child's turn ends, in ticks: her switching pause drawn from REPLY_PAUSE_MS (Gratier et
-        al. 2015), less the turn's 2 quiet ticks, at least 1."""
+        al. 2015), less the turn's 2 quiet ticks; at the soonest the tick she knows the turn ended (0: its 2 quiet ticks, a
+        pause of 300 ms, are the floor; P3's fourth round, where a floor of 1 more tick put 43% of her replies on it and her
+        realized pause at 774 ms)."""
         if not self.imperfect:
             return K.REPLY_AFTER
         m, sd, lo, hi = K.REPLY_PAUSE_MS
         s2 = math.log(1.0 + (sd / m) ** 2)
         pause = min(hi, max(lo, math.exp(self.imp.normal(math.log(m) - s2 / 2, math.sqrt(s2)))))
-        return max(1, int(round(pause / (1000.0 * TICK / SR))) - K.TURN_END_REST)
+        return max(0, int(round(pause / (1000.0 * TICK / SR))) - K.TURN_END_REST)
 
     def _copying(self, t, p, out):
         """her copies of its visible arm and hand movements (A52; Ray and Heyes 2011): one seen while she attends it, when her
-        copying's gap allows, is copied mirrored within 1-2 s; never while an ask is pending (her hands stay still, A51)."""
+        copying's gap allows, is copied mirrored within 1-2 s; never while an ask is pending (her hands stay still, A51): a
+        copy due then is dropped, not made late (a copy after the ask would come 1-2 s past the movement, no copy of it)."""
         if self.imperfect and p.present and p.child_in_view:
             for kind, side in p.events:
                 if kind in K.COPY_KINDS and t >= self.copy_next:
@@ -683,7 +714,6 @@ class Conduct:
         out = Say()
         if self.stage >= 2 and any(k == "hit_her" for k, _o in p.events):
             out.frown = "hit"                               # stage 2: the frown (-1) for its own act that hit her (4.10)
-        self.target_run = [p.child_target, self.target_run[1] + 1 if p.child_target == self.target_run[0] else 1]
         if p.child_target is not None or p.child_holds or p.child_reaches:
             self.no_target_since = t + 1
         # her ears (the transcriber): the child's turn, its words at the turn's end
@@ -806,10 +836,10 @@ class Conduct:
         self.reply_due = dict(tick=t + after, kind=kind, word=w, obj=None if obj is None else obj.id)
 
     def _target(self, p):
-        """the child's target for her follow-in naming, as she reads it (4.10, A40): where its head's line has rested
-        TARGET_TICKS running, else what a hand reaches toward, else what it holds -> a Seen, or None."""
+        """the child's target for her follow-in naming, as she reads it (4.10, A40): where its head's line is (her reading, held
+        TARGET_TICKS running: percept.Reader.look), else what a hand reaches toward, else what it holds -> a Seen, or None."""
         o = p.target_obj()
-        if o is not None and self.target_run[1] >= K.TARGET_TICKS:
+        if o is not None:
             return o
         for oid in tuple(p.child_reaches) + tuple(p.child_holds):
             if p.obj(oid) is not None:
@@ -925,6 +955,18 @@ class Conduct:
             if it.ask == "gaze" and o.name in p.attended_names():
                 return self._drop(t, intent, f"a {o.name} already where she reads the child looking, in its hand or reached "
                                              f"toward: the ask would be met unasked (4.8, A40)")
+            if any(s.name == o.name and s.on == PARENT_NAME for s in p.seen):
+                return self._drop(t, intent, f"a {o.name} in her own hands: a look at her, or at her hand, would meet it "
+                                             f"(A51; P3's fourth round)")
+            if it.ask == "act" and not any(s.name == o.name and s.child_can_reach for s in p.seen):
+                return self._drop(t, intent, f"no {o.name} within the child's reach as she sees it: no act of its could "
+                                             f"answer it (4.8; P3's fourth round)")
+            last = self.cue_until.get(o.name, NEVER)
+            if not self.cue_clear(o.name, t):
+                when = f"ended {t - last} ticks ago" if t >= last else f"ends in {last - t} ticks"
+                return self._drop(t, intent, f"her own cue at a {o.name} {when}: a look or a reach within {K.CUE_CLEAR} ticks "
+                                             f"of it may follow her cue, not the word (A51; her method: Brooks and Meltzoff "
+                                             f"2005's 6.5 s)")
         if it.ask == "call" and p.child_target == "mama":
             return self._drop(t, intent, "she reads the child already looking at her face: nothing to call it to")
         if it.ask is not None and self.pending is not None:
@@ -970,10 +1012,15 @@ class Conduct:
             lines = f.variation_set("new_word", t, p, o=o, w=word, n=3, frames=TP.intro_frames(word))
             if len(lines) == 3:
                 break
-        if len(lines) < 3 or not f.allowed(lines[0], t)[0]:
+        if len(lines) < 3:
             f.new_words = prev
-            return self._drop(t, "new_word", f"{word!r}: {len(lines)} of its 3 lines pass (the check: its frames, what she "
-                                             f"sees, the held-out pairs, the pitch peak, A34)")
+            return self._drop(t, "new_word", f"{word!r}: {len(lines)} lines of distinct words pass, of the 3 its set needs (the "
+                                             f"check: its frames, what she sees, the held-out pairs, the pitch peak, A34; "
+                                             f"4.5: frames differing by at least one word)")
+        ok, why = f.allowed(lines[0], t)
+        if not ok:
+            f.new_words = prev
+            return self._drop(t, "new_word", f"{word!r}: its set's lines pass, but not now: {why}")
         f.queue = lines[1:]
         f.last_new = t
         return lines[0]
@@ -1018,6 +1065,8 @@ class Conduct:
             acts = blind(acts)
         for a in acts:
             self.motion.request(a, t)
+            if a.kind in CUE_KINDS and a.target not in NOT_A_THING:
+                self.cued(t + n, a.target, p)               # a cue at a thing, ending with the line (A51's gap)
         out.line, out.clip, out.acts = line, clip, acts
 
     def _open_ask(self, line, it, t, n, word_ends, p):
@@ -1044,7 +1093,7 @@ class Conduct:
     # ------------------------------------------------------------------ save
     def state(self):
         return dict(fast=self.fast.state(), routine=self.routine, pending=self.pending, reply_due=self.reply_due,
-                    target_run=list(self.target_run), no_target_since=self.no_target_since,
+                    no_target_since=self.no_target_since, cue_until=dict(self.cue_until),
                     last_vocal_smile=self.last_vocal_smile, turn=self.turn,
                     sound_hist=list(self.sound_hist), nonstop_since=self.nonstop_since,
                     requests=[[i, dict(k)] for i, k in self.requests], cuts=self.cuts, world=dict(self.world),
@@ -1056,7 +1105,7 @@ class Conduct:
     def load_state(self, s):
         self.fast.load_state(s["fast"])
         self.routine, self.pending, self.reply_due = s["routine"], s["pending"], s["reply_due"]
-        self.target_run, self.no_target_since = list(s["target_run"]), s["no_target_since"]
+        self.no_target_since, self.cue_until = s["no_target_since"], dict(s["cue_until"])
         self.last_vocal_smile, self.turn = s["last_vocal_smile"], s["turn"]
         self.sound_hist, self.nonstop_since = list(s["sound_hist"]), s["nonstop_since"]
         self.requests, self.cuts = [(i, dict(k)) for i, k in s["requests"]], s["cuts"]

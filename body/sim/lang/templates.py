@@ -182,12 +182,18 @@ FRAMES = {
     "night": [F("night night {n}.", "{n}"), F("night night.", "night")],
 }
 
-# a new word's introduction (4.8: a variation set of 3 lines, the word last, frames differing by at least one word): each class's
-# frames, of which she says only those measured to put the word on the line's pitch peak (A34: the line check's peak rule), 3
-# drawn among them; a word with fewer than 3 such lines waits. The P3 verifier's third round measured 17 of the first 210 lines
-# (3 a word) off the peak; each class's list was then widened by frames of the same kind, and every one measured
-# (tools/sim_voice_check.py --peak; "look at the X" dropped from the face's frames: it is the gaze ask's form, A51). Every set of
-# 3 of a word's lines on its peak runs at most 3 words a second (C25; the table's spans, body/tests/test_sim_lang.py test 32).
+# a new word's introduction (4.8: a variation set of 3 lines, the word last, frames differing by at least one word, 4.5): each
+# class's frames, of which she says only those measured to put the word on the line's pitch peak (A34: the line check's peak
+# rule), 3 of distinct words drawn among them (FastLayer.variation_set: two lines of the same words, "a rattle." and "a rattle!",
+# are one frame to the set, key()); a word with fewer than 3 such lines of distinct words waits. The P3 verifier's third round
+# measured 17 of the first 210 lines (3 a word) off the peak; each class's list was then widened by frames of the same kind, and
+# every one measured (tools/sim_voice_check.py --peak; "look at the X" dropped from the face's frames: it is the gaze ask's
+# form, A51). Its fourth round found the widening had added punctuation-only twins, which left "red" on the red ball and
+# "yellow" on the duck (A55's colour words, where A55 puts them) with 2 lines of distinct words on the peak: the colours took
+# "{w}. {w}!", "look. {w}." / "look. {w}!", "oh! {w}!" and "the {o}. {w}!", each measured, so each colour on each of its toys
+# keeps at least 3 (red on the ball 5, yellow on the duck 5). The twins stay in the lists (a line's other ending is a different
+# clip, and may be the one on its peak), never two in one set. Every set of 3 of a word's lines on its peak, of distinct words,
+# runs at most 3 words a second (C25; the table's spans, body/tests/test_sim_lang.py test 32).
 INTRO = {
     "toy": [F("a {w}.", "{w}"), F("the {w}!", "{w}"), F("you see the {w}?", "{w}"),     # the design's set (4.5)
             F("look. a {w}.", "{w}"), F("see? a {w}.", "{w}"), F("a {w}!", "{w}")],
@@ -198,7 +204,8 @@ INTRO = {
     "face": [F("look. {w}.", "{w}"), F("see? {w}!", "{w}"), F("the {w}.", "{w}"), F("the {w}!", "{w}"),
              F("see the {w}?", "{w}"), F("you see the {w}?", "{w}")],
     "colour": [F("it is {w}.", "{w}"), F("the {o} is {w}!", "{w}"), F("see? {w}.", "{w}"), F("{w}!", "{w}"),
-               F("it is {w}!", "{w}"), F("see? {w}!", "{w}"), F("the {o} is {w}.", "{w}")],
+               F("it is {w}!", "{w}"), F("see? {w}!", "{w}"), F("the {o} is {w}.", "{w}"), F("{w}. {w}!", "{w}"),
+               F("look. {w}!", "{w}"), F("oh! {w}!", "{w}"), F("the {o}. {w}!", "{w}"), F("look. {w}.", "{w}")],
     "adj": [F("it is {w}.", "{w}"), F("{w}!", "{w}"), F("see? {w}.", "{w}"), F("it is {w}!", "{w}"), F("look. {w}.", "{w}"),
             F("see? {w}!", "{w}")],
     "verb": [F("{w}!", "{w}"), F("look. {w}.", "{w}"), F("you {w}?", "{w}"), F("see? {w}.", "{w}"), F("{w}. {w}!", "{w}"),
@@ -213,7 +220,8 @@ INTRO_WORD = {                                                             # wor
              F("oh. it {w}.", "{w}")],
     "done": [F("all {w}.", "{w}"), F("{w}!", "{w}"), F("oh. {w}.", "{w}"), F("all {w}!", "{w}"), F("{w}.", "{w}")],
     "that": [F("look at {w}.", "{w}"), F("what is {w}?", "{w}"), F("see {w}?", "{w}")],
-    "can": [F("you {w}!", "{w}"), F("{n} {w}.", "{w}"), F("you {w}?", "{w}")],
+    "can": [F("you {w}!", "{w}"), F("{n} {w}.", "{w}"), F("you {w}?", "{w}"), F("mama {w}.", "{w}"),   # "you can!" and "you
+            F("you {w}. you {w}!", "{w}")],                                                            # can?" are one frame
     "too": [F("you {w}.", "{w}"), F("mama {w}!", "{w}"), F("{n} {w}?", "{w}")],
     "now": [F("look {w}.", "{w}"), F("up {w}!", "{w}"), F("sit {w}?", "{w}")],
     "again": [F("{w}!", "{w}"), F("roll {w}.", "{w}"), F("look {w}?", "{w}")],
@@ -238,6 +246,12 @@ def words(text):
     return _WORD.findall(text)
 
 
+def key(text):
+    """a line's words, its punctuation dropped: what makes two lines the same line (4.6: "the same line not within 60 ticks")
+    and two lines of a variation set one frame (4.5: frames differing by at least one word)."""
+    return " ".join(_WORD.findall(text))
+
+
 for _k, _fs in list(FRAMES.items()) + list(INTRO.items()) + list(INTRO_WORD.items()):
     for _t, _f in _fs:
         assert _f is None or words(_t.replace("{", "").replace("}", ""))[-1] == _f.strip("{}"), (_k, _t, _f)
@@ -259,7 +273,8 @@ class Line:
 # PEAK: every line she can say with a growth word as the new word, measured by tools/sim_voice_check.py --peak (the line in the
 # new-word register, its last word emphasized, 4.4): text -> [the new word, its peak F0 (Hz), the highest other word's peak F0,
 # that word, the line's words, its spoken span in seconds] (a peak None where no frame of the word is voiced). On its peak: the
-# new word's peak at least every other word's. The spans give C25's words a second for a set (set_rate).
+# new word's peak above every other word's (a tie at the tracker's resolution is no peak: P3's fourth round, where ties had
+# counted). The spans give C25's words a second for a set (set_rate).
 PEAK, PEAK_META = {}, {}
 _PEAK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), K.PEAK_FILE)
 if os.path.exists(_PEAK_PATH):
@@ -277,8 +292,9 @@ def on_peak(text):
     w, pk, other, ow = r[:4]
     if pk is None:
         return False, f"measured with no voiced frame in {w!r} (A34)"
-    if other is not None and other > pk:
-        return False, f"measured off the line's pitch peak: {ow!r} peaks at {other:.0f} Hz over {w!r} at {pk:.0f} Hz (A34)"
+    if other is not None and other >= pk:
+        return False, (f"measured off the line's pitch peak: {ow!r} peaks at {other:.1f} Hz, "
+                       f"{'level with' if other == pk else 'over'} {w!r} at {pk:.1f} Hz (A34)")
     return True, ""
 
 
@@ -289,7 +305,7 @@ def set_rate(lines):
 
 def intro_on_peak(word, o=None):
     """a growth word's introduction lines measured to put it on the line's pitch peak (A34), its frames filled with o (a Seen, for
-    a frame with an object slot) -> [text]: its set is 3 of them, so a word with fewer waits."""
+    a frame with an object slot) -> [text]: its set is 3 of them of distinct words (key()), so a word with fewer waits."""
     out = []
     for fr in intro_frames(word):
         got = fill(fr, o=o, w=word)

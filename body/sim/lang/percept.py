@@ -6,17 +6,23 @@ The world (W2-W3) fills one each tick from her senses, never from anything a per
   present         she is with the child (not away in the hall)
   child_in_view   she can see the child (its body, for "your foot")
   seen_by_child   she is where the child's eyes can reach her (a person knows when a baby cannot see her: behind its head)
-  child_target    where she reads the child looking (A40): the nameable object nearest the line its head's camera faces,
-                  within the fovea's reach of that line (+-38 x +-20 degrees), the line read with a person's error (Reader.look);
-                  "mama" when that is her own face; or None. A real G1 shows no eyes, so she reads its head (on the G1, its
-                  trunk: no neck, A22), never its software fovea's window, which stays the child's own and the instruments'
+  child_target    where she reads the child looking (A40, 4.10): the nameable object nearest the line its head's camera
+                  faces, within the fovea's reach of that line (+-38 x +-20 degrees), the line read with a person's error, and
+                  that reading held TARGET_TICKS = 3 ticks running (Reader.look: her reading moves to a thing, or to nothing,
+                  only once it has held 3 ticks, so a one-tick flicker of her error never moves it); "mama" when that is her
+                  own face; or None. A real G1 shows no eyes, so she reads its head (on the G1, its trunk: no neck, A22), never
+                  its software fovea's window, which stays the child's own and the instruments'. Every rule reads this held
+                  reading (her right names, "says", her expected words, follow-in naming, the redirect's split, her asks,
+                  Claude's situations)
   child_holds     the object ids in its hands, as she sees them
   child_reaches   the object ids its hands reach toward, as she sees them (Reader.reaches: a hand's path over the last 3 ticks
                   closing on the object), none it already holds
   seen            the objects she can see now (the world's ray test from her eyes), each with its word, its colour and where it
-                  rests as she sees it; child_sees marks those in the child's view as she reads it: before its head's camera about
-                  the line she reads (Reader.look), never the render (the ledger's "heard"; a person can tell whether a toy is
-                  before a baby's face)
+                  rests as she sees it ("mama": in her own hands); child_sees marks those in the child's view as she reads it:
+                  before its head's camera about the line she reads (Reader.look), never the render (the ledger's "heard"; a
+                  person can tell whether a toy is before a baby's face); child_can_reach those it can get as she sees them: in
+                  its hand, or where its hands can get to from where its body is (the world's reach from its posture, 3.8, as a
+                  person judges a baby's reach; never on her), so "give me the X" is asked only of a toy some act can give
   fixtures        the room's words she can see ("mat", "sofa", "window", and the growth queue's "table", "shelf", ...)
   events          what she saw or heard happen this tick: (kind, object id or None), kind one of EVENT_KINDS
   child_sounding  she hears the child's voice this tick (the transcriber's own reading of it)
@@ -62,6 +68,7 @@ class Seen:
     colour: str = ""              # as she sees it ("red")
     on: str = ""                  # what it rests on as she sees it: a fixture word, "hand" (the child's) or "mama" (hers)
     child_sees: bool = False      # in the child's view as she reads it (before its head's camera, A40)
+    child_can_reach: bool = False  # within its reach as she sees it: in its hand, or where its hands can get to (never on her)
 
 
 @dataclass(frozen=True)
@@ -70,7 +77,7 @@ class Percept:
     present: bool = True
     child_in_view: bool = True
     seen_by_child: bool = True
-    child_target: str = None      # where she reads it looking (A40): an object id, "mama", or None
+    child_target: str = None      # where she reads it looking (A40), held 3 ticks running (Reader.look): an id, "mama" or None
     child_holds: tuple = ()
     seen: tuple = ()              # Seen, one per object she sees
     fixtures: frozenset = frozenset()
@@ -127,11 +134,16 @@ def _angles(v, axes):
 class Reader:
     """her reading of where the child looks and what its hands do, as a person reads a robot that shows no eyes (A40).
 
-    look(head_pos, head_axes, things) -> (target, before): head_pos, the head camera's place; head_axes, its forward, left and up
-      unit vectors (a 3 x 3 array, rows), as a person sees the head's pose; things: [(id, position)] of what she can see, her face
-      as "mama" among them. The line she reads is the camera's forward line turned by her error (yaw and pitch, each normal with
-      sd READ_ERR_DEG, two draws every reading). target: the thing nearest that line (the least angle) within FOVEA_REACH_DEG of
-      it, or None; before: the ids before the camera's field (CAMERA_FIELD_DEG) about that line, the Seen's child_sees.
+    read(head_pos, head_axes, things) -> (line, before): one reading. head_pos, the head camera's place; head_axes, its forward,
+      left and up unit vectors (a 3 x 3 array, rows), as a person sees the head's pose; things: [(id, position)] of what she can
+      see, her face as "mama" among them. The line she reads is the camera's forward line turned by her error (yaw and pitch,
+      each normal with sd READ_ERR_DEG, two draws every reading). line: the thing nearest that line (the least angle) within
+      FOVEA_REACH_DEG of it, or None; before: the ids before the camera's field (CAMERA_FIELD_DEG) about that line, the Seen's
+      child_sees.
+    look(head_pos, head_axes, things) -> (target, before): the reading the world puts in the Percept, once a tick: read(), and
+      the target held (4.10: "held 3 ticks running"): her reading of where it looks moves to a thing, or to nothing, only once
+      read() has given it TARGET_TICKS ticks running, so a flicker of her error onto a near toy for a tick or two never moves
+      it (P3's fourth round: a one-tick flicker had earned a right name).
     reaches(hands, things, holds=()) -> the ids its hands reach toward: hands, {hand: its position}; a thing is reached toward
       when the hand's distance to it fell on each of the last REACH_TICKS ticks, by at least REACH_CLOSE_M in all; per hand the
       one it closed on most; never one it holds.
@@ -142,8 +154,17 @@ class Reader:
         self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(K.READ_STREAM,))))
         self.paths = {}                               # hand -> its last REACH_TICKS + 1 positions
         self.n = 0
+        self.run = [None, 0]                          # read()'s last line and how many readings running
+        self.held = None                              # her reading of where it looks, held TARGET_TICKS running
 
     def look(self, head_pos, head_axes, things):
+        line, before = self.read(head_pos, head_axes, things)
+        self.run = [line, self.run[1] + 1] if line == self.run[0] else [line, 1]
+        if self.run[1] >= K.TARGET_TICKS:
+            self.held = line
+        return self.held, before
+
+    def read(self, head_pos, head_axes, things):
         ea, ee = (float(e) for e in self.rng.normal(0.0, K.READ_ERR_DEG, 2))
         self.n += 1
         axes = np.asarray(head_axes, np.float64)
@@ -187,9 +208,11 @@ class Reader:
         return tuple(out)
 
     def state(self):
-        return dict(rng=self.rng.bit_generator.state, paths={h: [list(q) for q in v] for h, v in self.paths.items()}, n=self.n)
+        return dict(rng=self.rng.bit_generator.state, paths={h: [list(q) for q in v] for h, v in self.paths.items()}, n=self.n,
+                    run=list(self.run), held=self.held)
 
     def load_state(self, s):
         self.rng.bit_generator.state = s["rng"]
         self.paths = {h: [list(q) for q in v] for h, v in s["paths"].items()}
         self.n = s["n"]
+        self.run, self.held = list(s["run"]), s["held"]

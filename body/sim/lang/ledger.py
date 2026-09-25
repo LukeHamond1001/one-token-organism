@@ -18,17 +18,19 @@ THE RECORD. One JSON line per event, keys sorted, in the life's folder (ledger.j
               the day plan, P4)
   outcome     an ask's or a trial's result: met, missed, or void (a gaze trial whose X she already reads the child attending,
               its head's line on it, in its hand or reached toward; a call while she reads it looking at her face; a gaze trial
-              whose X is out of its view, or a call while the child cannot see her (she is away, or where its eyes cannot reach
-              her), when it is judged from: 4.8's "X visible but not where she reads it looking", A40; an act trial whose act
-              was done before its word was heard; an ask cut before its word; a name ask answered only by an echo of her own
-              word, or by a word begun before its question was heard; a base trial in whose window she said its word)
+              whose X is out of its view, or an X in her own hands, or a call while the child cannot see her (she is away, or
+              where its eyes cannot reach her), when it is judged from: 4.8's "X visible but not where she reads it looking",
+              A40; an act trial with no X within its reach then, as she sees it, or whose act was done before its word was
+              heard; an ask cut before its word; a name ask answered only by an echo of her own word, or by a word begun before
+              its question was heard; a base trial in whose window she said its word)
 
 EACH WORD'S STANDING (4.8), from those events alone:
   heard       said by her with its referent in the child's view (an object word: an object of that name the child sees; a body
               word: the child in her view; any other word: said)
-  understood  after "where is the X?" or "look at the X" (X in the child's view, and none she reads it attending, when the word
-              has been heard), its trunk turns to an X or its hand reaches toward one (or takes it) within 20 ticks and that
-              holds 2 ticks, as she reads them (A40: its head's line and its hands, never its fovea's window); an act word: its
+  understood  after "where is the X?" or "look at the X" (X in the child's view, and none she reads it attending nor in her own
+              hands, when the word has been heard), its trunk turns to an X or its hand reaches toward one (or takes it) within
+              20 ticks and that holds 2 ticks, as she reads them (A40: its head's line, her reading held 3 ticks running, and
+              its hands, never its fovea's window); an act word: its
               act within 40: met on at least 5 of the last 10 asks, and above the child's own base rate (the same test at random
               moments) by a one-sided binomial p < 0.05, once the base rate has at least BASE_MIN = 10 trials (ours: the design
               names no minimum). Only looks, reaches and acts meet these asks: a word never does, so an echo never counts toward
@@ -261,6 +263,11 @@ class Ledger:
                                      f"when the word was heard"
                     elif not any(s.name == tr["word"] and s.child_sees for s in p.seen):
                         tr["void"] = f"no {tr['word']} in its view when the word was heard"
+                    elif any(s.name == tr["word"] and s.on == PARENT_NAME for s in p.seen):
+                        tr["void"] = f"a {tr['word']} in her own hands when the word was heard: a look at her would meet it"
+                elif tr["kind"] == "act" and tr["word"] in TP.OBJECT_NOUNS and \
+                        not any(s.name == tr["word"] and s.child_can_reach for s in p.seen):
+                    tr["void"] = f"no {tr['word']} within its reach when the word was heard: no act could answer it"
                 elif tr["kind"] == "call" and p.child_target == "mama":
                     tr["void"] = "she read it already looking at her face when its name was heard"
                 elif tr["kind"] == "call" and not (p.present and p.seen_by_child):

@@ -18,9 +18,11 @@ RMS behind SYNTH_RMS, is a level, written into body/sim/voice/synth.py by hand a
 
   peak       (--peak) the new word on the line's pitch peak, by frame (A34): every line she can say with a growth word as the
              new word (templates.new_word_lines(): its introduction frames and her intents' frames the word can fill), in the
-             new-word register with the word emphasized, each word's peak F0 by f0_word; on its peak when no other word of the
-             line peaks higher. Writes the table the line check reads (body/sim/lang/peak_lines.json), and reports the lines off
-             their peak and, per growth word, how many of its introduction lines are on it (a word needs 3 for its set)
+             new-word register with the word emphasized, each word's peak F0 by f0_word; on its peak when it peaks above every
+             other word of the line (a tie at the tracker's resolution is no peak). Writes the table the line check reads
+             (body/sim/lang/peak_lines.json), and reports the lines off their peak and, per growth word (and object, for a frame
+             with an object slot), how many of its introduction lines of distinct words are on it (a set needs 3: 4.5's frames
+             differing by at least one word)
 
 Run: nice -n 19 python3 tools/sim_voice_check.py [--lines FILE] [--cache DIR] [--n N] [--growth] [--peak [--write]]
   --lines  one line a line (default: 16 lines written here; the commits used the all-out study's 331 birth template lines,
@@ -388,9 +390,10 @@ def intro_lines(TP, w):
 def growth_sets(cache):
     """C25 over every growth word's introduction (P3: body/sim/lang/templates.py INTRO, INTRO_WORD): its lines on the pitch peak
     (A34, the table --peak writes), in the new-word register, the word emphasized; for a word whose frames have an object slot,
-    once for each object word it may be shown on. The words a second pooled over them, and the most over any 3 of them (a set
-    she may draw)."""
+    once for each object word it may be shown on (a colour: the room's toys of it, never its held-out twin, A55). The words a
+    second pooled over them, and the most over any 3 of them of distinct words (a set she may draw, 4.5)."""
     import itertools                                                         # noqa: PLC0415
+    from body.sim.lang import consts as K                                   # noqa: PLC0415
     from body.sim.lang import templates as TP                               # noqa: PLC0415
     rows = []
     for w in TP.GROWTH_WORDS:
@@ -398,12 +401,15 @@ def growth_sets(cache):
         if not got:
             continue
         objs = sorted({ln.split()[1] for fr, ln in got if "{o}" in fr}) or [None]
+        if TP.GROWTH_CLASS[w] == "colour":
+            objs = [n for n in objs if w in TP.ROOM_AT_BIRTH["objects"].get(n, ()) and (w, n) not in K.HELD_PAIRS]
         for o in objs:
             lines = [ln for fr, ln in got if "{o}" not in fr or ln.split()[1] == o]
             cs = [cache.clip(ln, "new_word", emphasis=w) for ln in lines]
             per = [(len(c.words), (c.words[-1][2] - c.words[0][1]) / V.SR) for c in cs]
+            sets = [k for k in itertools.combinations(range(len(per)), 3) if len({TP.key(lines[i]) for i in k}) == 3]
             worst = max(((sum(per[i][0] for i in k) / sum(per[i][1] for i in k)), tuple(lines[i] for i in k))
-                        for k in itertools.combinations(range(len(per)), 3)) if len(per) >= 3 else (float("nan"), ())
+                        for k in sets) if sets else (float("nan"), ())
             rows.append((w if o is None else f"{w} ({o})", sum(a for a, _ in per) / sum(b for _, b in per), worst, lines))
     r = np.array([x[1] for x in rows])
     wr = np.array([x[2][0] for x in rows if np.isfinite(x[2][0])])
@@ -419,8 +425,9 @@ def growth_sets(cache):
 
 def peak_table(cache, write=False):
     """A34: every line she can say with a growth word as the new word, its word emphasized in the new-word register; each word's
-    peak F0 (f0_word); the new word on the line's pitch peak when no other word peaks higher. Reports the lines off their peak,
-    the introduction lines among them, and each growth word's count of introduction lines on it; writes the table."""
+    peak F0 (f0_word); the new word on the line's pitch peak when it peaks above every other word (a tie is no peak). Reports
+    the lines off their peak, the introduction lines among them, and each growth word's count of introduction lines of
+    distinct words on it (per object, for a frame with an object slot); writes the table."""
     from body.sim.lang import consts as K                                   # noqa: PLC0415
     from body.sim.lang import templates as TP                               # noqa: PLC0415
     lines = TP.new_word_lines()
@@ -437,7 +444,7 @@ def peak_table(cache, write=False):
         top = max(others) if others else (None, None)
         table[text] = [w, pk[-1][1], top[0], top[1], len(c.words), round((c.words[-1][2] - c.words[0][1]) / V.SR, 4)]
     wall = time.perf_counter() - t0
-    off = {t: r for t, r in table.items() if r[1] is None or (r[2] is not None and r[2] > r[1])}
+    off = {t: r for t, r in table.items() if r[1] is None or (r[2] is not None and r[2] >= r[1])}
     n_off_measured = len(off)
     intro = {}
     for w in TP.GROWTH_WORDS:
@@ -458,11 +465,15 @@ def peak_table(cache, write=False):
             print(f"  {cls:8s} {fr!r}: {sum(oks)} of {len(oks)} on the peak")
     short = {}
     for w, v in intro.items():
-        frames_on = {fr for fr, ln in v if ln not in off}
-        if len(frames_on) < 3:
-            short[w] = sorted(frames_on)
-    print(f"  growth words with fewer than 3 introduction frames on the peak (they wait, A34): {len(short)}: "
-          + ", ".join(f"{w} ({len(f)})" for w, f in sorted(short.items())))
+        objs = sorted({ln.split()[1] for fr, ln in v if "{o}" in fr}) or [None]
+        if TP.GROWTH_CLASS[w] == "colour":                              # a colour on the room's toys of it, never its twin (A55)
+            objs = [n for n in objs if w in TP.ROOM_AT_BIRTH["objects"].get(n, ()) and (w, n) not in K.HELD_PAIRS]
+        for o in objs:                                                  # a set is said of one object: count per object
+            keys = {TP.key(ln) for fr, ln in v if ln not in off and ("{o}" not in fr or ln.split()[1] == o)}
+            if len(keys) < 3:
+                short[w if o is None else f"{w} ({o})"] = sorted(keys)
+    print(f"  growth words (and objects) with fewer than 3 introduction lines of distinct words on the peak (they wait there, "
+          f"A34, 4.5): {len(short)}: " + ", ".join(f"{w} ({len(f)})" for w, f in sorted(short.items())))
     print(f"  introduction lines no line check passes (never said, not measured): {sorted(unmeasured)}")
     print("  the lines off the peak: " + "; ".join(f"{t!r} ({r[3]} {r[2]} over {r[0]} {r[1]})" for t, r in sorted(off.items())
                                                   if t in table))
@@ -470,8 +481,9 @@ def peak_table(cache, write=False):
         info = cache._server().info()
         meta = dict(tool="tools/sim_voice_check.py --peak", measure="f0_word's peak: the largest of the word's voiced 40 ms "
                     "frames (hop 10 ms, autocorrelation over 0.5), octave errors dropped (1.6 x its median), median-filtered "
-                    "over 3", register="new_word", emphasis=list(V.EMPHASIS), rule="on the peak: no other word's peak above "
-                    "the new word's", engine=f"{info['name']} ({info['identifier']}), {info['os']}", lines=len(table),
+                    "over 3", register="new_word", emphasis=list(V.EMPHASIS), rule="on the peak: the new word's peak above "
+                    "every other word's (a tie is no peak)", engine=f"{info['name']} ({info['identifier']}), {info['os']}",
+                    lines=len(table),
                     fields="the new word; its peak F0, Hz; the highest other word's peak F0, Hz; that word; the line's words; "
                     "its spoken span, s (the first word's onset to the last word's end: C25's words a second)",
                     off=n_off_measured, date=time.strftime("%Y-%m-%d"))

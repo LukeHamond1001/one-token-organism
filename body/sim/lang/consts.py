@@ -16,10 +16,11 @@ PAUSE_EXPECT = 20                     # ticks of expectant pause after a questio
 JUDGE_GAZE = 20                       # a gaze ask ("where is the X?", "look at the X") is judged over 20 ticks (4.6, 4.8)
 JUDGE_ACT = 40                        # an act ask ("give me the X", an action word) over 40 ticks (4.6, 4.8)
 HOLD = 2                              # a gaze ask is met when its trunk turns to X or its hand reaches toward X (or takes it), as
-                                      # she reads them, and that holds 2 ticks (4.8, A40)
+                                      # she reads them, and that holds 2 ticks (4.8, A40): her reading of its trunk is the one
+                                      # held TARGET_TICKS running (percept.Reader.look), so a turn meets it after 3 + 1 ticks
 TURN_END_REST = 2                     # the child's turn ends when its voice has rested 2 ticks after sounding (4.6)
 REPLY_AFTER = 3                       # she replies 3 ticks after the child's turn ends on average (4.6; Goldstein et al.
-                                      # 2003): the mean of REPLY_PAUSE's draws (3.16), and her latency made perfect for a test
+                                      # 2003): the mean of REPLY_PAUSE's draws (2.91), and her latency made perfect for a test
 CALL_EVERY = 240                      # the call at most once per 240 ticks (4.6, A13)
 SAME_LINE = 60                        # the same line not within 60 ticks (4.6)
 SAME_OBJECT = 20                      # the same object named at most once per 20 ticks; a variation set counts as one naming (4.6)
@@ -34,7 +35,15 @@ FOLLOW_PER_REDIRECT = 2               # and only while her follow-in namings num
                                       # toy the child does not attend (as she reads it) is a redirect, one naming what it attends
                                       # a follow-in naming
 TARGET_TICKS = 3                      # the child's target as she reads it (4.10, A40): the object nearest its head camera's line,
-                                      # 3 ticks running (percept.Reader.look); or what its hand holds or reaches toward
+                                      # held 3 ticks running (percept.Reader.look: her reading moves to a thing, or to nothing,
+                                      # only once read() has given it 3 ticks running; every rule reads this held reading); or
+                                      # what its hand holds or reaches toward
+CUE_CLEAR = 44                        # she asks about an X (a gaze or act ask) only 44 ticks (6.6 s) or more after her last cue
+                                      # at an X ended (a look, point, show, hand-over or offer at it, hers or L1's): a look within
+                                      # that time may follow her cue, not the word (A51; her method, ours). 6.5 s is the response
+                                      # period over which infants' looks after an adult's head turn were scored as following
+                                      # it (Brooks and Meltzoff 2005, Dev Sci 8:535-543: "each 6.5-s trial began with the onset
+                                      # of the adult head movement"), in whole ticks from the cue's end
 ECHO_WINDOW = 10                      # anything the child says within 10 ticks of her saying it is an echo (4.8, A27)
 VOCAL_TURN_EVERY = 60                 # stage 1: a vocal turn in a pause while looking earns a smile at most once per 60 ticks (4.6)
 NONSTOP = (0.7, 40, 20)               # babble that never stops: sounding on over 70% of 40 ticks; she waits 20, then speaks (A13)
@@ -67,7 +76,12 @@ REPLY_PAUSE_MS = (730.0, 543.6, 50.0, 2974.0)   # her switching pause after the 
                                       # and infants at 2-5 months, mean 730 ms, sd 543.6, range 50-2974 (Gratier et al. 2015,
                                       # Front Psychol 6:1167); drawn lognormal with that mean and sd (the shape ours), clipped to
                                       # that range; her reply comes round(pause / 150 ms) - TURN_END_REST ticks after the turn's
-                                      # end, at least 1 (the turn's end is known only after its 2 quiet ticks): 3.16 on average
+                                      # end, at the soonest on the tick she knows it ended (after its 2 quiet ticks: a pause of
+                                      # 300 ms at least): 2.91 ticks on average, a realized pause of 736 ms (sd 500; the draws'
+                                      # 725, sd 509, clipped). Gratier's mean pools both directions; the mothers' own pauses
+                                      # (infant then mother) were 135.4 ms shorter than the infants' (their regression), a
+                                      # split the paper gives no mean for, so she keeps the pooled figure (her replies, if
+                                      # anything, a little slow)
 COPY_GAP_S = 10.0                     # she copies its visible arm and hand movements (a raise, a wave, a shake, an open hand),
                                       # mirrored, at most as often as mothers match their infants' acts, about 6 times a minute
                                       # (Pawlby 1977, as cited by Ray and Heyes 2011 and de Klerk et al. 2019): after each copy
@@ -101,7 +115,8 @@ HELD_PAIRS = (("blue", "ball"), ("red", "block"), ("yellow", "cup"), ("green", "
 
 # The new word on its pitch peak (A34): she says the day's new word only in a line measured to put it on the line's pitch peak,
 # the new word emphasized in the new-word register (4.4): its peak F0 (tools/sim_voice_check.py's f0_word: the largest of its
-# voiced frames median-filtered over 3, octave errors dropped) at least every other word's in the line. The measure is
+# voiced frames median-filtered over 3, octave errors dropped) above every other word's in the line: a tie at the tracker's
+# resolution (one lag of its autocorrelation, about 4 Hz near 255 Hz) is no peak (P3's fourth round). The measure is
 # tools/sim_voice_check.py --peak, over every line she can say with a growth word as the new word (templates.new_word_lines),
 # written to PEAK_FILE; a line not measured, or measured off its peak, fails the line check.
 PEAK_FILE = "peak_lines.json"         # beside this file
@@ -164,9 +179,10 @@ EXPECT_ROUTINES = {                   # the words of the routine under way (A27)
     "leave": ("bye",),
     "peekaboo": ("peekaboo",),
 }
-EXPECT_AWAY = (PARENT_NAME,)          # "mama" while she is away or out of its view (A27)
-# (the names of what is in the child's fovea or hand, the word of a pending ask, and the focus word of her last line are read
-# from the moment: body/sim/lang/transcriber.expected_words)
+EXPECT_AWAY = (PARENT_NAME,)          # "mama" while she is away or where its eyes cannot reach her (A27)
+# (the names of what she reads the child attending, where its head's line is, in its hand or reached toward (A40, never its
+# fovea's window), the word of a pending ask, and the focus word of her last line are read from the moment:
+# body/sim/lang/transcriber.expected_words)
 
 # ------------------------------------------------------------------------------------- the token output's reading (4.9)
 EDIT_MAX = 1                          # letters within edit distance 1 of a word (2 for words of 6 letters or more) (4.9)
@@ -178,8 +194,9 @@ PREFIX_MIN = 2                        # or a prefix of at least 2 letters of wha
 WORTH_RIGHT_NAME = 2                  # a met ask; a right name (exact); the call answered, until the name is understood
 WORTH_MET_ASK = 2
 WORTH_APPROX = 1                      # stage 2: an approximation of a word, until the exact word has been said 3 times, and only
-                                      # where the exact word would be a right name (its referent in the child's fovea or hand,
-                                      # her face for "mama", or the answer to her name ask): never looser than the exact word
+                                      # where the exact word would be a right name (its referent where she reads it looking, in
+                                      # its hand or reached toward, A40; her face for "mama"; or the answer to her name ask):
+                                      # never looser than the exact word
 WORTH_VOCAL_TURN = 1                  # stage 1: a vocal turn in a pause while looking, at most once per 60 ticks
 
 assert all(w in BIRTH_WORDS for ws in EXPECT_ROUTINES.values() for w in ws)
