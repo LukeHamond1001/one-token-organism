@@ -17,7 +17,14 @@ guide (the near arm raised; the far arm across), the knee over, the pull-to-sit 
 by the instrument within reach of both forearms, the G1's arms as born), the prop (the G1 placed in the leaning sit, her placed
 kneeling beside it: the catch and the easing), the brief turn (the G1 placed face down), the feed (a bottle added by the
 instrument as a rig: the charge while it is held in the palm), guide_pace (the guide's peak force against the arm's own push at
-each candidate pace: parent_consts.GUIDE_SPEED is the fastest within it) and idle and steady costs.
+each candidate pace, on the limp arm A25 names and under the resting law: parent_consts.GUIDE_SPEED is the fastest within it on the
+limp arm) and idle and steady costs. Every run also carries the per-step probe (Probe): her body's contact force on the G1 with its
+friction, her holds and body together against her caps, the runs of steps she pressed it over a resting hand's weight, her 10 ms
+mean force on each of its links (C8), and in `hands` her hands' least distance to its convex hulls.
+The W2 verifier's cases: babble_attend (seeds 2, 3, 4, 7 at p_rest 0.6 and 0.3, attend asked over and over for 600 ticks),
+babble_acts (attend, show, lean_in, touch in turn), still_door / still_sofa / still_lean_bring (a still child: getting up from
+beside it and going on), still_<place> (the child placed rotated, in a corner, by a wall, in the hall, by the sofa, by the table:
+attend, lean_in, show), hands, catch (C6) and copy_do.
 Run: nice -n 19 python3 tools/sim_parent_motion.py [scenario ...] [--out=FILE]   (JSON on stdout; FILE if given)"""
 import json
 import math
@@ -82,11 +89,101 @@ def bottle_rig(spec):
                           objtype=mujoco.mjtObj.mjOBJ_BODY, active=False, solref=[0.006, 1])
 
 
+# ---------------------------------------------------------------------------------------------------- the per-step probe
+class Probe:
+    """an instrument on every physics step (never her motion's own reading): her body's contact force on the G1 (each contact's
+    normal and friction together, MuJoCo's mj_contactForce), her holds' and her body's force together (against her caps), the
+    runs of steps her body pressed the child over a resting hand's weight, the 10 ms mean (5 steps, A12's pain measure) of her
+    normal force on each of the child's links (C8: under F_pain always), and with hands=True the least signed distance of each
+    of her hands on the child (its palm, capsule, fingers, thumb) to the G1's convex hulls, at four steps a tick"""
+    HAND_STEPS = (0, 25, 50, PM.STEPS - 1)
+
+    def __init__(self, w, hands=False):
+        self.w = w; pm = w.parent; m = w.m
+        self.hands = hands
+        self.f6 = np.zeros(6); self.ft = np.zeros(6)
+        self.win = {}
+        self.body_peak = 0.0; self.total_peak = 0.0; self.total_over_brief = 0; self.total_over_two_steps = 0
+        self.run = 0; self.runs = []
+        self.link10 = 0.0; self.link10_ticks = []; self._tick10 = 0.0
+        self.hand_min = None; self.hand_worst = None
+        self.hand_geoms = {sd: [g for g in range(m.ngeom) if int(m.geom_bodyid[g]) == m.body(f"parent_hand_{sd}").id
+                                and m.geom_type[g] != mujoco.mjtGeom.mjGEOM_MESH] for sd in "LR"}
+        self.g1 = [g for g in range(m.ngeom) if m.geom_bodyid[g] in w.scene.g1_set and m.geom_contype[g]]
+        self._orig = pm.after_step
+        pm.after_step = self.after
+
+    def after(self, s):
+        self._orig(s)
+        w = self.w; m, d = w.m, w.d; pm = w.parent
+        body = 0.0; per = {}
+        for i in range(d.ncon):
+            c = d.contact[i]
+            g0, g1 = int(c.geom[0]), int(c.geom[1])
+            if pm.geom_seg[g0] >= 0 and pm.g1_geom[g1]:
+                ch = g1
+            elif pm.geom_seg[g1] >= 0 and pm.g1_geom[g0]:
+                ch = g0
+            else:
+                continue
+            if c.efc_address < 0:
+                continue
+            mujoco.mj_contactForce(m, d, i, self.f6)
+            body += float(np.linalg.norm(self.f6[:3]))
+            lk = int(m.geom_bodyid[ch]); per[lk] = per.get(lk, 0.0) + float(self.f6[0])
+        for lk in set(self.win) | set(per):
+            q = self.win.setdefault(lk, [])
+            q.append(per.get(lk, 0.0)); del q[:-5]
+        mean10 = max((sum(q) / 5.0 for q in self.win.values()), default=0.0)
+        self.link10 = max(self.link10, mean10); self._tick10 = max(self._tick10, mean10)
+        hold = sum(float(np.linalg.norm(h.force)) for h in pm.holds)
+        tot = hold + body
+        self.body_peak = max(self.body_peak, body); self.total_peak = max(self.total_peak, tot)
+        self.total_over_brief += int(tot > K.CAP_TWO_BRIEF + 1e-6); self.total_over_two_steps += int(tot > K.CAP_TWO + 1e-6)
+        if body > K.TOUCH_N:
+            self.run += 1
+        elif self.run:
+            self.runs.append(self.run); self.run = 0
+        if s == PM.STEPS - 1:
+            self.link10_ticks.append(self._tick10); self._tick10 = 0.0
+        if self.hands and s in self.HAND_STEPS:
+            for sd in "LR":
+                if not (any(h.side == sd for h in pm.holds) or not m.geom_contype[pm.hand_geom[sd]]):
+                    continue                                            # a hand on the child: holding it, or its proxy off
+                for g in self.hand_geoms[sd]:
+                    for h in self.g1:
+                        if np.linalg.norm(d.geom_xpos[h] - d.geom_xpos[g]) - m.geom_rbound[h] - m.geom_rbound[g] > 0.05:
+                            continue
+                        dist = float(mujoco.mj_geomDistance(m, d, g, h, 0.05, self.ft))
+                        if self.hand_min is None or dist < self.hand_min:
+                            self.hand_min = dist
+                            self.hand_worst = (w.tick, s, m.geom(g).name, m.body(int(m.geom_bodyid[h])).name)
+
+    def result(self):
+        runs = self.runs + ([self.run] if self.run else [])
+        f_pain = self.w.f_pain
+        t10 = self.link10_ticks
+        out = dict(body_peak_N=round(self.body_peak, 1), total_peak_N=round(self.total_peak, 1),
+                   total_steps_over_brief_cap=self.total_over_brief, total_steps_over_sustained_cap=self.total_over_two_steps,
+                   press_runs_steps=dict(n=len(runs), max=max(runs, default=0), median=float(statistics.median(runs)) if runs else 0.0),
+                   her_10ms_on_child_N=round(self.link10, 1), ticks_over_her_150N=int(sum(1 for x in t10 if x > K.HER_PAIN_N)),
+                   ticks_over_f_pain=int(sum(1 for x in t10 if x > f_pain)), ticks=len(t10))
+        if self.hands:
+            out["hand_to_hull_mm"] = None if self.hand_min is None else round(self.hand_min * 1e3, 1)
+            out["hand_worst"] = self.hand_worst
+        return out
+
+
 # ---------------------------------------------------------------------------------------------------- the runner
-def run(w, seq, N=600, after=0, on_tick=None):
-    """ask for the acts in `seq` [(kind, target)], live until they end (and `after` ticks more), measuring"""
+HANDS = False                   # every run measures her hands against the G1 (the 'hands' scenario sets it)
+
+
+def run(w, seq, N=600, after=0, on_tick=None, hands=None, babble=None):
+    """ask for the acts in `seq` [(kind, target)], live until they end (and `after` ticks more), measuring (babble: a babbler whose
+    acts the G1 makes every tick)"""
     pm = w.parent
     m, d = w.m, w.d
+    probe = Probe(w, HANDS if hands is None else hands)
     ids = [pm.request(Act(k, t)) for k, t in seq]
     pel = m.body("pelvis").id
     com0 = d.subtree_com[pel].copy(); xy0 = d.qpos[:2].copy(); th0 = trunk_deg(w)
@@ -100,7 +197,7 @@ def run(w, seq, N=600, after=0, on_tick=None):
     load = os.getloadavg()[0]
     for k in range(N):
         tp = w.timing["parent_s"]
-        w.apply({})
+        w.apply(babble.acts() if babble is not None else {})
         costs.append((w.timing["parent_s"] - tp) * 1e3)
         rise = max(rise, float(d.subtree_com[pel][2] - com0[2]))
         slide = max(slide, float(np.linalg.norm(d.qpos[:2] - xy0)))
@@ -131,7 +228,7 @@ def run(w, seq, N=600, after=0, on_tick=None):
         a = pm.info(i)
         inf = a.get("info", {})
         acts.append(dict(kind=kind, target=tgt, status=pm.status(i), why=pm.why(i), ticks=t_end.get(i), reach_err_m=round(inf.get("err", 0.0), 3),
-                         paused=inf.get("paused", 0), solve_ms=round(inf.get("solve_ms", 0.0)),
+                         paused=inf.get("paused", 0), solve_ms=round(getattr(pm, "solve_ms", {}).get(i, 0.0)),
                          **{k2: (round(v, 3) if isinstance(v, float) else v) for k2, v in inf.items()
                             if k2 in ("limb_push", "guide_cap", "palm_N", "closure_deg", "cleared", "shuffle_short_m", "replans")}))
     return dict(acts=acts, ticks=k + 1,
@@ -139,7 +236,7 @@ def run(w, seq, N=600, after=0, on_tick=None):
                 effort_peak_N=round(pm.effort_peak, 1), over_sustained_s=round(over_s, 2),
                 contact_peak_N={c: round(v, 1) for c, v in pm.stats["contact_peak"].items()}, pen_max_mm=round(pm.stats["pen_max"] * 1e3, 1),
                 yield_ticks=pm.stats["yield_ticks"], jumps_refused=pm.stats.get("jumps_refused", 0), slips=pm.stats.get("slips", 0),
-                her_hits=len(pm.hits),
+                her_hits=len(pm.hits), probe=probe.result(),
                 g1=dict(com_rise_cm=round(rise * 100, 2), pelvis_travel_cm=round(slide * 100, 2), trunk_start_deg=round(th0, 1),
                         trunk_min_deg=round(th_min, 1), trunk_max_deg=round(th_max, 1),
                         held=None if hold0 is None else dict(com_rise_cm=round(hold_rise * 100, 2), pelvis_travel_cm=round(hold_slide * 100, 2),
@@ -220,51 +317,53 @@ def sc_guide(which=None):
 
 
 def sc_pull_placed():
-    """the pull's physics with her placed (instrument) kneeling tall beside its hips at the nearest spot 3 cm clear of it from which
-    both forearms are within her reach (none is, among the spots her own planning may use: C7), the G1 as born"""
-    w = W.G1World(seed=1)
-    pm = w.parent
-    ch = pm.child
-    m, d = w.m, w.d
-    mid = (ch.torso[:2] + ch.pelvis[:2]) / 2
-    lat = ch.lat[:2]
-    yaw = math.atan2(-lat[1], -lat[0])
-    fore = [d.xpos[m.body(f"{s}_elbow_link").id] + d.xmat[m.body(f"{s}_elbow_link").id].reshape(3, 3) @ np.array([0.07, 0, -0.042])
-            for s in ("left", "right")]                                         # her grip point on each forearm (her palm on its top)
-    found = None
+    """the pull's physics with her placed (instrument) kneeling tall beside its hips, 3 cm clear of it, where both forearms are
+    within her reach (none is, among the spots her own planning may use: C7), the G1 as born: the spots in order (along its body,
+    then out from it), each checked with her own hold targets and one trunk for both hands, then the act run there; a spot her
+    hands do not reach after all (the child's arms sink while she reaches) gives way to the next"""
     tried = []
     for along in (0.20, 0.30, 0.10):
         for off in np.arange(0.40, 0.91, 0.05):
+            w = W.G1World(seed=1)
+            pm = w.parent
+            ch = pm.child
+            m, d = w.m, w.d
+            mid = (ch.torso[:2] + ch.pelvis[:2]) / 2
+            lat = ch.lat[:2]
+            yaw = math.atan2(-lat[1], -lat[0])
+            bodies = [m.body(f"{s_}_elbow_link").id for s_ in ("left", "right")]
             at = mid + ch.len_axis[:2] * along + lat * off
-            cl = pm._clearance(PM.frame_segs("kneel", "tall", at, yaw))
-            if cl < K.CLEAR_M:
+            if pm._clearance(PM.frame_segs("kneel", "tall", at, yaw)) < K.CLEAR_M:
                 continue
-            up = [d.xmat[m.body(f"{s}_elbow_link").id].reshape(3, 3)[:, 2] for s in ("left", "right")]
             both = []
-            for pair in ((("L", 0), ("R", 1)), (("R", 0), ("L", 1))):          # both hands at once, one trunk (as she would hold them)
+            for pair in ((("L", 0), ("R", 1)), (("R", 0), ("L", 1))):          # both hands at once, one trunk (her own hold targets)
                 pm.base = dict(mode="tall", at=list(at), yaw=yaw, lean=0.0, spine=0.0, twist=0.0)
-                tg = {sd: (fore[i], PM.NatR(-up[i]), dict(curl=.9, thumb=.8, index=None)) for sd, i in pair}
+                tg = {}
+                for sd, i in pair:
+                    to, _, _, shape = pm._hold_target(sd, bodies[i], PM.FOREARM_TOP, PM.UP_LOCAL)
+                    tg[sd] = (*pm._resolve_hand(to, sd), shape)
                 both.append(pm._solve_trunk(tg, None)[3])
-            tried.append((round(float(along), 2), round(float(off), 2), both))
-            if any(both):
-                found = at
-                break
-        if found is not None:
-            break
-    if found is None:
-        return dict(acts=[dict(kind="pull_to_sit (placed)", status="no placement", why="no tall kneel 3 cm clear of the child reaches both forearms")],
-                    tried=tried)
-    pm.place("tall", found, yaw)
-    a = pm.request(Act("pull_to_sit"))
-    pm.queue["body"].remove(a)
-    act = pm._act(a)
-    act["status"] = "running"; act["start"] = w.tick; pm.cur["body"] = a
-    act["info"] = dict(ticks=0, paused=0, err=0.0, viol=0, hold_peak=0.0, hold_cap=0.0, solve_ms=0.0)
-    pm.phases = pm._plan_pull(act)
-    out = run(w, [], 400)
-    out["acts"] = [dict(kind="pull_to_sit (placed)", status=pm.status(a), why=pm.why(a), reach_err_m=round(pm.info(a)["info"].get("err", 0.0), 3),
-                        placed_off_m=round(float((found - mid) @ lat), 2))]
-    return out
+            if not any(both):
+                tried.append((round(float(along), 2), round(float(off), 2), "out of reach"))
+                continue
+            pm.place("tall", at, yaw)
+            a = pm.request(Act("pull_to_sit"))
+            pm.queue["body"].remove(a)
+            act = pm._act(a)
+            act["status"] = "running"; act["start"] = w.tick; pm.cur["body"] = a
+            act["info"] = dict(ticks=0, paused=0, paused_run=0, err=0.0, viol=0, hold_peak=0.0, hold_cap=0.0)
+            pm.phases = pm._plan_pull(act)
+            out = run(w, [], 400)
+            out["acts"] = [dict(kind="pull_to_sit (placed)", status=pm.status(a), why=pm.why(a),
+                                reach_err_m=round(pm.info(a)["info"].get("err", 0.0), 3), placed_off_m=round(float(off), 2),
+                                placed_along_m=round(float(along), 2))]
+            if "cannot reach" in pm.why(a):
+                tried.append((round(float(along), 2), round(float(off), 2), pm.why(a)[:60]))
+                continue
+            out["tried"] = tried
+            return out
+    return dict(acts=[dict(kind="pull_to_sit (placed)", status="no placement", why="no tall kneel 3 cm clear of the child reaches both forearms")],
+                tried=tried)
 
 
 def sc_prop():
@@ -309,19 +408,37 @@ def sc_feed():
     return out
 
 
+def limp_arm(w, limb):
+    """an instrument's switch: the G1's arm (its effector, e.g. 'arm_l') made limp, its actuators' gains and biases zeroed (A25's
+    limp arm: the servos push nothing; its joints keep their passive damping and its weight)"""
+    for j in range(w.eff_slices[limb].start, w.eff_slices[limb].stop):
+        a = w.aid[j]
+        w.m.actuator_gainprm[a, :] = 0.0; w.m.actuator_biasprm[a, :] = 0.0
+
+
 def sc_guide_pace():
-    """the guide's pace (A25): the near forearm raised 12 cm at each candidate pace, the G1 resting under its servo law; the peak
-    spring force against the arm's own push at that pose. GUIDE_SPEED is the fastest pace within the push."""
+    """the guide's pace (A25: set on the limp arm, so a guide needs at most the arm's own push): the near forearm raised
+    GUIDE_RAISE_M at each candidate pace, its arm limp (the instrument's switch), and again under its resting servo law; the peak
+    spring force against the arm's own push at that pose. GUIDE_SPEED is the fastest pace within the push on the limp arm"""
+    keep = K.GUIDE_SPEED
     rows = []
-    for v in (0.30, 0.25, 0.20, 0.15, 0.12, 0.10, 0.08):
-        K.GUIDE_SPEED = v
-        w = W.G1World(seed=1)
-        out = run(w, [("guide", None)], 700)
-        a = out["acts"][0]
-        pk = max((h["peak_N"] for n, h in out["holds"].items() if "guide" in n), default=0.0)
-        rows.append(dict(speed=v, status=a["status"], peak_N=pk, push_N=a.get("limb_push"), cap_N=a.get("guide_cap"),
-                         within_push=bool(a.get("limb_push") and pk <= a["limb_push"])))
-    return dict(rows=rows, fastest_within_push=max((r["speed"] for r in rows if r["within_push"] and r["status"] == "done"), default=None))
+    try:
+        for law in ("limp", "resting"):
+            for v in (0.30, 0.25, 0.20, 0.15, 0.12, 0.10, 0.08):
+                K.GUIDE_SPEED = v
+                w = W.G1World(seed=1)
+                if law == "limp":
+                    ch = w.parent.child                                         # the near arm: on the side she kneels (its face side)
+                    limp_arm(w, "arm_l" if ch.face_side() == "L" else "arm_r")
+                out = run(w, [("guide", None)], 700)
+                a = out["acts"][0]
+                pk = max((h["peak_N"] for n, h in out["holds"].items() if "guide" in n), default=0.0)
+                rows.append(dict(law=law, speed=v, status=a["status"], why=a["why"][:60], peak_N=pk, push_N=a.get("limb_push"),
+                                 cap_N=a.get("guide_cap"), within_push=bool(a.get("limb_push") and pk <= a["limb_push"])))
+    finally:
+        K.GUIDE_SPEED = keep
+    lim = [r for r in rows if r["law"] == "limp" and r["within_push"] and r["status"] == "done"]
+    return dict(rows=rows, fastest_within_push_limp=max((r["speed"] for r in lim), default=None))
 
 
 def sc_costs():
@@ -346,6 +463,174 @@ def sc_costs():
     return out
 
 
+# ---------------------------------------------------------------------------------------------------- the W2 verifier's cases
+PLACES = {"rot90": (G.BIRTH_XY, 90.0), "corner": ((-2.05, -1.75), 45.0), "wall": ((-2.2, -0.3), 90.0), "hall": ((3.9, -1.45), 90.0),
+          "by_sofa": ((0.3, 1.15), 0.0), "by_table": ((0.25, 0.25), 0.0)}
+
+
+def place_child(w, where):
+    """the G1 as born (its birth joints) placed elsewhere on the floor (an instrument's placement, as place_g1): PLACES[where] =
+    (its pelvis's floor point, its turn about the vertical from its birth heading)"""
+    xy, yaw = PLACES[where]
+    w.scene.place_on_mat(G.BIRTH, kin.rz(math.radians(yaw)) @ kin.ry(-math.pi / 2), xy)
+    w.scene.set_parent(G.born_parent())
+    w.d.qvel[:] = 0
+    mujoco.mj_forward(w.m, w.d)
+    w._sense_birth()
+    w.parent = PM.ParentMotion(w)
+
+
+def babbler(seed, p_rest):
+    from sim_babble import Babbler
+    return Babbler(seed=seed, p_rest=p_rest)
+
+
+def ask_repeatedly(w, kinds, N, babble=None):
+    """her acts asked over and over (the next when the last has ended), the G1 babbling, N ticks: each act's outcome, and the
+    probe's measures"""
+    pm = w.parent
+    probe = Probe(w)
+    asked = []
+    for k in range(N):
+        if not asked or (pm.status(asked[-1]) in PM.DONE_STATES and not pm.phases):
+            asked.append(pm.request(Act(*kinds[len(asked) % len(kinds)])))
+        w.apply(babble.acts() if babble is not None else {})
+    outcome = {}
+    for i in asked:
+        st = pm.status(i)
+        key = st if st != "refused" else "refused: " + pm.why(i).split(" (")[0][:70]
+        outcome[key] = outcome.get(key, 0) + 1
+    given_up = sum(v for k2, v in outcome.items() if k2.startswith("refused: given up"))
+    return dict(asked=len(asked), outcome=outcome, given_up=given_up, jumps_refused=pm.stats.get("jumps_refused", 0), probe=probe.result())
+
+
+def sc_babble(kinds=(("attend",),), seeds=(2, 3, 4, 7), N=600, p_rests=(0.6, 0.3)):
+    """the babbling G1 (tools/sim_babble.py, p_rest 0.6 the design's sparse babble and 0.3 a busy one), her acts asked over and over:
+    how many she gives up, and her force on the child (C8: under her own 150 N on most ticks, under F_pain always)"""
+    def f():
+        rows = []
+        for pr in p_rests:
+            for sd in seeds:
+                w = W.G1World(seed=1)
+                r = ask_repeatedly(w, [tuple(k) for k in kinds], N, babbler(sd, pr))
+                rows.append(dict(seed=sd, p_rest=pr, **r))
+        return dict(rows=rows)
+    return f
+
+
+def sc_still(where=None, seq=(("attend", None), ("walk", "door")), N=900):
+    """a still child (as born, placed elsewhere, or placed sitting: 'sit'), acts in turn: each one's outcome and ticks, her force
+    on it"""
+    def f():
+        w = W.G1World(seed=1)
+        if where == "sit":
+            place_g1(w, "sit")
+        elif where is not None:
+            place_child(w, where)
+        out = run(w, list(seq), N * len(seq))
+        out["posture_after"] = w.parent.child.posture
+        return out
+    return f
+
+
+def sc_catch(seeds=(1, 2, 3, 4, 5, 6, 7, 8), N=600, p_rest=0.6):
+    """C6: the G1 placed in the leaning sit, her prop engaged beside it and eased to hovering (the instrument sets the easing's last
+    step at once, and again whenever she holds the trunk back within 30 deg after a catch), then the G1 babbling. Every fall
+    start is counted from the trunk itself (past 35 deg from vertical after sitting within 30): stopped when the trunk comes back
+    within 30 deg, or is held short of CATCH_STOP_DEG until she lays it back; not stopped when it passes CATCH_STOP_DEG first or
+    slips from her hands; and whether its trunk, head or
+    pelvis felt pain while it fell (the strike a catch prevents; its hands' and feet's own blows under babble are C5's). Her
+    controller's mode when it started (hovering, holding) and how she ended it are written beside each"""
+    falls = []
+    ends = []
+    for sd in seeds:
+        w = W.G1World(seed=1)
+        place_g1(w, "sit")
+        pm = w.parent
+        ch = pm.child
+        fr = PM.unit(ch.torso_R[:, 0] * [1, 1, 0])[:2]
+        lat = np.array([-fr[1], fr[0]])
+        pm.place("heels", ch.pelvis[:2] + lat * 0.75 - fr * 0.10, math.atan2(-lat[1], -lat[0]))
+        i = pm.request(Act("prop"))
+        for _ in range(80):
+            w.apply({})
+            hs = [h for h in pm.holds if h.kind == "prop"]
+            if len(hs) == 2 and all(h.ctl.get("go") for h in hs):
+                break
+        if len([h for h in pm.holds if h.kind == "prop"]) != 2:
+            ends.append(dict(seed=sd, error=f"the prop did not engage: {pm.status(i)} {pm.why(i)}"))
+            continue
+        trunk = [w.zones.index(z) for z in ("torso", "head", "pelvis")]
+        b = babbler(sd, p_rest)
+        cur = None; ready = True
+        for k in range(N):
+            live = [h for h in pm.holds if h.kind == "prop"]
+            if cur is None and len(live) == 2 and all(h.ctl.get("mode") == "hold" for h in live) and \
+                    pm.child.trunk_deg <= K.PROP_MAX_DEG:
+                for h in live:
+                    h.ctl.update(mode="hover", hover=K.HOVER_M); h.cap = 0.0
+            w.apply(b.acts())
+            th = pm.child.trunk_deg
+            hurt = float(w.frame().truth["pain_N"][trunk].max())
+            if cur is None:
+                if th <= K.PROP_MAX_DEG:
+                    ready = True
+                elif ready and th > K.CATCH_DEG:
+                    modes = [h.ctl.get("mode") for h in pm.holds if h.kind == "prop"]
+                    cur = dict(seed=sd, t=w.tick, start_deg=round(th, 1), peak_deg=round(th, 1), her_mode=modes, trunk_pain_N=hurt)
+                    ready = False
+                continue
+            cur["peak_deg"] = round(max(cur["peak_deg"], th), 1); cur["trunk_pain_N"] = round(max(cur["trunk_pain_N"], hurt), 1)
+            modes = [h.ctl.get("mode") for h in pm.holds if h.kind == "prop"]
+            laying = bool(modes) and all(m_ == "lay" for m_ in modes) and "lay" not in cur["her_mode"]   # held, now laid back by her
+            if th <= K.PROP_MAX_DEG or th > K.CATCH_STOP_DEG or laying or not modes or k == N - 1:
+                cur.update(end=w.tick, stopped=bool(th <= K.CATCH_STOP_DEG and modes), back_within_30=bool(th <= K.PROP_MAX_DEG),
+                           laid_back=laying, her_end=(pm.stats.get("falls") or [{}])[-1].get("how"), prop=pm.status(i))
+                cur["caught"] = bool(cur["stopped"] and cur["trunk_pain_N"] < w.f_pain)
+                falls.append(cur); cur = None
+            if pm.status(i) in PM.DONE_STATES and cur is None:
+                ends.append(dict(seed=sd, prop_ended=pm.why(i)[:80] or "her holds on it gone", at_tick=w.tick))
+                break
+    return dict(falls=falls, n=len(falls), caught=sum(1 for f_ in falls if f_["caught"]),
+                share=round(sum(1 for f_ in falls if f_["caught"]) / len(falls), 3) if falls else None, ends=ends,
+                brief_caps_note=f"her brief caps return only after {K.BRIEF_REST_S:g} s under her sustained ones: a second catch "
+                                "within that pushes at her sustained caps")
+
+
+def sc_hands():
+    """her hands against the G1 in every act that puts a hand on it (C21's holds; the W2 verifier's fourth finding)"""
+    global HANDS
+    HANDS = True
+    try:
+        out = {}
+        for n in ("attend", "guide", "guide_far", "knee_over", "prop", "feed", "pull_placed", "turn", "hand_over_placed"):
+            r = SCENARIOS[n]()
+            out[n] = dict(acts=[(a["kind"], a["status"], a["why"][:60]) for a in r["acts"]],
+                          hand_to_hull_mm=r.get("probe", {}).get("hand_to_hull_mm"), hand_worst=r.get("probe", {}).get("hand_worst"))
+        return out
+    finally:
+        HANDS = False
+
+
+def sc_copy_do():
+    """P3's interface: every kind in DOES asked through 'do', and every movement 'copy' carries, from the door and kneeling beside
+    the child"""
+    rows = []
+    for where in ("door", "kneeling"):
+        for kind, tgt in [("do", k) for k in PM.DOES] + [("copy", f"{k}:{s_}") for k in ("arm_raise", "wave", "shake", "open_hand")
+                                                            for s_ in ("left", "right")]:
+            w = W.G1World(seed=1)
+            if where == "kneeling":
+                ch = w.parent.child
+                mid = (ch.torso[:2] + ch.pelvis[:2]) / 2
+                w.parent.place("heels", mid + ch.lat[:2] * 0.84 + ch.len_axis[:2] * 0.10, math.atan2(-ch.lat[1], -ch.lat[0]))
+            r = run(w, [(kind, tgt)], 700)
+            a = r["acts"][0]
+            rows.append(dict(where=where, kind=kind, target=tgt, status=a["status"], why=a["why"][:60], ticks=a["ticks"],
+                             body_peak_N=r["probe"]["body_peak_N"]))
+    return dict(DOES=list(PM.DOES), rows=rows)
+
+
 SCENARIOS = {
     "approach": sc_simple([("approach", None)]),
     "attend": sc_simple([("attend", None)]),
@@ -368,11 +653,26 @@ SCENARIOS = {
     "feed": sc_feed,
     "guide_pace": sc_guide_pace,
     "costs": sc_costs,
+    "babble_attend": sc_babble(),
+    "babble_acts": sc_babble(kinds=(("attend",), ("show", "block"), ("lean_in",), ("touch", "tummy")), seeds=(4, 7)),
+    "still_door": sc_still(None, (("attend", None), ("walk", "door"))),
+    "still_sofa": sc_still(None, (("attend", None), ("walk", "sofa"))),
+    "still_lean_bring": sc_still(None, (("lean_in", None), ("bring_back", "car"))),
+    **{f"still_{p_}": sc_still(p_, (("attend", None), ("lean_in", None), ("show", "block")))
+       for p_ in ("rot90", "corner", "wall", "hall", "by_sofa", "by_table")},
+    "still_sit_lean": sc_still("sit", (("lean_in", None),)),
+    "catch": sc_catch,
+    "catch_rest": lambda: sc_catch(seeds=(1,), N=600, p_rest=1.0),
+    "hands": sc_hands,
+    "copy_do": sc_copy_do,
 }
 
 
+LONG = ("guide_pace", "babble_attend", "babble_acts", "catch", "catch_rest", "hands", "copy_do")   # run only when named (each takes minutes)
+
+
 def main():
-    names = [a for a in sys.argv[1:] if not a.startswith("--")] or [k for k in SCENARIOS if k != "guide_pace"]
+    names = [a for a in sys.argv[1:] if not a.startswith("--")] or [k for k in SCENARIOS if k not in LONG]
     out_path = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--out=")), None)
     res = {}
     for n in names:

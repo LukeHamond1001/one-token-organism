@@ -44,8 +44,12 @@ her moving lids against her skin and her eye in nine lid states: 4.1), `sim_pain
 newborn's flexion) against resting and the babble from the same state, either tick counted and each apart, and phantom pain by the
 filter, on still ticks and at rest: C5, C18, C22), `sim_parent_motion.py` (W2: the parent's acts one by one from fresh worlds: each
 act's status, reason and ticks, her reach error, every hold's peak force against its cap, her effort against her caps, her body's
-contacts with the child and her yields, what her acts did to the G1 (a lift, a slide, a sit-up), her cost a tick; `guide_pace`, the
-guide's peak force against the arm's own push at each candidate pace: 4.2, A4-A10, A22, A25, C6, C7, C34). `sim_look.py` renders the one-arm high chair's
+contacts with the child and her yields, what her acts did to the G1 (a lift, a slide, a sit-up), her cost a tick, and per physics
+step her holds and body together against her caps, her 10 ms force on each link of the child, her runs of pressing it; the W2
+verifier's cases: `babble_attend` and `babble_acts` (her acts asked over and over while the G1 babbles: how many she gives up, C8),
+`still_*` (a still child, as born or placed elsewhere: getting up and going on), `hands` (her hands against the G1's hulls), `catch`
+(C6: falls from hovering under babble, caught or not), `copy_do` (P3's DOES and copy); `guide_pace`, the guide's peak force
+against the arm's own push at each candidate pace on the limp arm and under the resting law: 4.2, A4-A10, A22, A25, C6, C7, C8, C34). `sim_look.py` renders the one-arm high chair's
 stills; `sim_look_g1.py` the G1 room's (main's prototype stills).
 
 `archive/` (moved 2026-09-23) holds the retired tools, kept as the ledger's record and not run: the earlier lineage's watchers and stalkers (a body under the fast parent, every tick logged: `watch_life.py`, `stalk_day.py`, `record_day.py`, `fit_return.py`, `gate_context.py`, `vf_profile.py`, `ceiling_smile.py`, `ceiling_line.py`, `play_by_play.py`, `watch_trend.py`, `compare_credit.py`), the body2-era readers and probes (`diary_check.py`, `probe.py`, `sequence_probe.py`, `boundary_restart.sh`, `run_days.sh`, `teach_days.sh`), the settled night and gate questions (`night_lab.py`, `dream_lived.py`, `norm_probe.py`), the pod pretraining (`pretrain_cortex.py`, item 44) and `baseline_train.py` (never run, by the house rule against ordinary-training comparisons). Those that find the repo by `dirname(dirname(__file__))` (`watch_life.py`, `stalk_day.py`, `record_day.py`, `pretrain_cortex.py`) would now look inside tools/ and need that path changed before they could run again.

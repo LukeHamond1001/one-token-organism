@@ -28,7 +28,10 @@ Snook and Ciriello push and pull tables; W2 checks them against the sources". Ch
     STRENGTHS (Garg and Beller 1990, men: a mean 180-360 N at 1.1-0.7 m/s; women 65% of men: Garg et al. 1988, Fothergill et al.
     1991), so a woman's one-handed dynamic pull averages about 117-234 N. The one-hand caps (100 N sustained, 150 N for 2 s) are
     under that: kept as ours, flagged (no acceptable-force source).
-The caps bound HER effort (the sum of her hands' force magnitudes), whatever the direction: a squeeze counts as a push."""
+The caps bound HER effort, whatever the direction (a squeeze counts as a push): the sum of her holds' force magnitudes and of her
+body's contact forces on the G1 (each contact's normal and friction force together), so her holds give way to what her body
+already presses (the W2 verifier's finding: holds alone were counted, and friction never).
+Every constant that shapes her behaviour is here; parent_motion.py names only its own guards (a planning fault, a cache)."""
 
 # ------------------------------------------------------------------------------------------------------ her caps (A25; ours, checked)
 CAP_ONE = 100.0                 # N, one hand, sustained (ours; under a woman's one-handed dynamic pulling strength, see above)
@@ -37,7 +40,9 @@ CAP_TWO = 156.0                 # N, both hands together, sustained: NIOSH's 35 
                                 # design's 160 tightened to its own source
 CAP_TWO_BRIEF = 200.0           # N, both hands, for at most BRIEF_S: within Snook and Ciriello's initial push for 75% of women
 BRIEF_S = 2.0                   # s: the brief caps' longest use (A25); after it, the sustained cap until she has rested
-BRIEF_REST_S = 2.0              # s under the sustained cap before the brief cap is hers again (ours: the burst's own length)
+BRIEF_REST_S = 300.0            # s under the sustained caps before a brief cap is hers again: Snook and Ciriello's initial forces
+                                # (the source of CAP_TWO_BRIEF) are for one exertion every 5 min at most, their lowest tabulated
+                                # frequency (the W2 verifier's finding: 2 s, the burst's own length, was looser than the source)
 
 # ------------------------------------------------------------------------------------------------------------- the capped spring
 HOLD_K = 2000.0                 # N/m: her hand's stiffness on a held point (ours: the order of a human arm's endpoint stiffness
@@ -54,21 +59,41 @@ HOLD_SLIP_M = 0.12              # m: a held point this far from her hand's reach
 TOUCH_N = 5.0                   # N: a hand resting on the child (attend, "touch"): the relaxed hand's weight, 0.6% of a 60 kg
                                 # woman's body weight (Winter's segment table: the hand 0.006 M), with some of the forearm's
                                 # (ours)
+ATTEND_PARTS = "tummy|leg|foot" # attend's resting hand: on its trunk (4.2), or, where only its feet leave her room to kneel (A6:
+                                # a child in a corner), on its leg or its foot, the first her hand reaches (ours)
 TOUCH_DEPTH_M = 0.02            # m: a resting hand's target lies this far inside the surface along its normal (the cap decides
                                 # the force; ours)
 GUIDE_CAP_FACTOR = 1.5          # the guide's cap: min(1.5 x the limb's own push at that pose, CAP_ONE) (A10; ours)
 GUIDE_MAX_TICKS = 8             # a guide's path lasts at most one movement unit (A10)
 GUIDE_MAX_SPEED = 0.30          # m/s, the guide's fastest pace (A10); its pace is set on the yielding arm (A25): GUIDE_SPEED
-GUIDE_SPEED = 0.15              # m/s: the guide's pace, set in W2 on the G1's arm resting under its servo law (the child
-                                # neither helping nor resisting), the fastest of 0.30 / 0.25 / 0.20 / 0.15 / 0.12 / 0.10 / 0.08 m/s
-                                # whose peak force stayed within the arm's own push (tools/sim_parent_motion.py guide_pace: the
-                                # near forearm raised 12 cm, push 94.0 N; peaks 95.4 / 95.3 / 95.3 / 89.7 / 86.6 / 85.1 / 74.4 N);
-                                # never tuned to the child's learning (A25)
+GUIDE_SPEED = 0.30              # m/s: the guide's pace, set in W2 on the limp arm A25 names (tools/sim_parent_motion.py guide_pace:
+                                # the arm's actuators zeroed, the near forearm raised GUIDE_RAISE_M), the fastest of 0.30 / 0.25 /
+                                # 0.20 / 0.15 / 0.12 / 0.10 / 0.08 m/s whose peak stayed within the arm's own push (93.9 N there):
+                                # peaks 53.5 / 50.3 / 50.3 / 47.2 / 47.1 / 47.0 / 36.1 N, all within it and within the design's
+                                # 65 N, so A10's fastest. Under the resting servo law the same guides peak 99.0 / 98.5 / 98.5 /
+                                # 93.4 / 90.1 / 88.7 / 76.9 N against its 94.2 N push: an arm that holds meets her cap and stops
+                                # her (A10, A25). The W2 verifier's finding: 0.15 m/s had been set on the resting arm, with a
+                                # 1.3 N margin. Never tuned to the child's learning (A25)
 ROLL_ARM_N = 65.0               # N: the far arm guided across the chest (A8)
 ROLL_KNEE_N = 76.0              # N: the far knee bent over, one hand (A8; section 4.2's "bend a leg: 60-76 N")
 CAP_RAMP_NPS = 100.0            # N/s: a pull or a turn grows its force at this rate, so it reaches CAP_TWO_BRIEF at BRIEF_S
                                 # (ours: "a slowly growing force", A7, A9)
 TURN_MAX_S = 2.0                # s: the brief turn from its front lasts at most this (A7)
+GUIDE_RAISE_M = 0.12            # m: a guide raises the near forearm this far (ours: within one movement unit at GUIDE_SPEED,
+                                # 8 ticks x 0.30 m/s = 0.36 m, and inside the arm's reach off the mat)
+FOREARM_HOLD = (0.07, 0.0, 0.0) # where she takes a G1 forearm (its elbow link's frame): 7 cm down it from the elbow, ...
+FOREARM_HOLD_N = (0.0, 0.0, 1.0)    # ... her palm on its surface along this normal (the link's +z: its top as it lies; ours)
+ROLL_ARM_M = 0.15               # m: the far arm drawn this far toward her and up across its chest (A8; ours)
+KNEE_OVER_M = 0.15              # m: the far knee drawn this far toward her and up (A8; ours)
+PULL_LEAD_M = 0.30              # m: the pull's spring target lies this far ahead of the held forearm, so its force is set by the
+                                # ramp and her caps, never by how far the spring stretches (HOLD_K x 0.30 = 600 N, over every cap;
+                                # ours)
+TURN_LIFT_M = 0.12              # m: the turn's spring target lies this far along its push (ours: as PULL_LEAD_M, HOLD_K x
+                                # 0.12 = 240 N, over the one-hand brief cap it is given) ...
+TURN_OVER_UP = 0.4              # ... its push straight up while the chest faces down, then this much up with the rest toward
+                                # its back, away from her (ours) ...
+TURN_SIDE_Z = 0.3               # ... switched when its chest's normal rises past this (a unit vector's z: face down -1, on its
+                                # side 0; ours). It has turned when it lies on its back, or on its side with its chest past this
 
 # ------------------------------------------------------------------------------------------------------ the prop and the catch (A9)
 PROP_MAX_DEG = 30.0             # the prop engages only with the trunk within this of vertical (A9)
@@ -80,6 +105,13 @@ CATCH_DEG = 35.0                # the catch: the trunk past this from vertical .
 CATCH_HEAD_MPS = 0.5            # ... or the head dropping faster than this (m/s) (A9)
 REACTION_TICKS = 2              # her reaction: 300 ms, a person's; never changes (A9, C6)
 LAY_BACK_S = 2.0                # s: laying the child back gently eases her hold to nothing over this (ours)
+# The catch's springs pull at once, up to her brief caps while she has them (else her sustained ones), toward where the trunk sat
+# most upright while she propped it (a person catching pushes back; she does not merely stop where her hands met it); they pull
+# at most BRIEF_S, and a trunk not back within PROP_MAX_DEG by then is laid back gently. C6 counts a fall as caught when it is
+# stopped short of CATCH_STOP_DEG (back within PROP_MAX_DEG, or held until she lays it back) and neither its trunk, head nor
+# pelvis feels pain (A12's filter) while it falls (tools/sim_parent_motion.py catch)
+CATCH_STOP_DEG = 60.0           # a fall stopped short of this is caught (ours: past 60 deg its upper body lies closer to the mat
+                                # than to upright, and its head is within about 0.2 m of the mat)
 
 # ---------------------------------------------------------------------------------------------- her contacts with the child (A4)
 SOFT_SOLREF = (0.05, 1.0)       # her collision shapes' contact: soft, like flesh and cloth (A4), taken by every contact with the
@@ -87,10 +119,42 @@ SOFT_SOLREF = (0.05, 1.0)       # her collision shapes' contact: soft, like fles
 SOFT_PRIORITY = 2
 YIELD_STEPS = 2                 # a contact over the act's cap for 2 physics steps ... (A4)
 YIELD_M_PER_TICK = 0.02         # ... stops that segment and backs it off 2 cm a tick along the contact (A4)
-YIELD_MAX_M = 0.12              # m: backed off this far and still pressed on, she gives the act up (ours: a hand's length)
+YIELD_MAX_M = 0.12              # m: backed off this far in one push and still pressed on, she gives the act up (ours: a hand's
+                                # length) and gets out of its way at her own pace (WALK_MPS standing, SHUFFLE_MPS kneeling,
+                                # REACH_MPS a hand), still along the contact and never into furniture (along it), until the push
+                                # ends; at rest, where it pushed her is where she stays
+YIELD_FLAT_SHARE = 0.3          # her body backs off on the floor plan only: a push on it mostly up or down (its floor-plan share
+                                # under this) is backed off from along the line from the child's middle out through her pelvis (ours)
+YIELD_BACK_M_PER_TICK = 0.01    # m a tick: a chain backed off comes back at half the yield's rate once the child has left it
+                                # alone for her reaction time (REACTION_TICKS), and only where it stays CLEAR_M from the child
+                                # (A4: "the act resumes when the force is gone"; ours)
+BLOW_GIVE_M_PER_STEP = 0.01     # m a physics step (5 m/s): a blow on her (a contact over her own pain, HER_PAIN_N: the child's
+                                # kick) knocks the chain it strikes back along the contact by as deep as it went in, each step from
+                                # the first (no 2-step wait), up to this: her body gives as a person's does, never a wall (a kick into her kinematic head reached
+                                # 8.3 kN on its knee as a 10 ms mean, W2; a 5 kg head struck at 2 m/s moves at about that speed;
+                                # ours)
+PATIENCE_TICKS = 40             # ticks: an act held up this long in a row by the child pressing against her is given up (6 s; ours)
+HAND_CLEAR_M = 0.003            # m: her hand (its palm, fingers and thumb) kept this far outside the G1's collision surface (its
+                                # convex hulls, which enclose its drawn meshes) while it holds or rests on it: the spring is her
+                                # grip, so her hand's shapes never pass through the child (A4; ours)
+HAND_FREE_M = 0.01              # m: ... and this far from every other link of the child (they move on their own: a dangling wrist
+                                # swung 1.6 cm nearer her thumb in a tick than its velocity carried it, W2). Both measured as her
+                                # hand is drawn at the tick's end (the child now and a tick ahead) and again every 20 ms within the
+                                # tick, the hand moved out along the held surface's normal by what it lacks (ours)
+HOLD_SHAPE = (0.10, 0.0)        # her hand's (curl, thumb) on the child: open and flat, the fingers along its surface (a curled
+                                # grip's fingers passed 3.6 cm into its torso: the W2 verifier's finding; ours)
 HER_PAIN_N = 150.0              # N: her own pain, on any segment, as a 10 ms mean (4.10; a person's, ours)
 HER_PAIN_STEPS = 5              # the 10 ms mean: 5 physics steps (the child's pain filter's length, A12)
 WITHDRAW_M = 0.12               # m: a hand withdrawn when hit draws back this far (ours)
+SUPPORT_BEND_DEG = 45.0         # leaning (lean + spine) this far, her free hand rests on her own thigh (a hand hanging from a
+                                # far lean reached down onto the child; the floor beside her knee was where its arm lay: W2; ours)
+SUPPORT_OFF_DEG = 35.0          # ... and lets it hang again once she straightens past this (ours: 10 deg under, so it does not
+                                # flicker at the edge)
+GESTURE_HOLD_TICKS = 4          # ticks: a hand held out (an open hand, a raised arm, a fist) stays this long before it rests
+                                # (ours: 0.6 s, long enough to be seen at the child's 150 ms tick)
+DO_WALK_M = 1.0                 # m: 'do walk' (a verb's showing): a few steps, about three strides, away and turned back to the
+                                # child (ours)
+IDLE_RELAX_TICKS = 10           # a hand left out by a finished act relaxes after this long unless it holds something (ours)
 CLEAR_M = 0.03                  # m: her legs, trunk and head kept this far from the child in every planned frame (A4)
 
 # ------------------------------------------------------------------------------------------------------------- her paths (A6)
@@ -118,6 +182,9 @@ PULL_OFF_TRY = (0.66, 0.70, 0.75, 0.62)   # m from its centre line, beside its h
 KNEEL_CLEAR_FRONT_M = 0.6       # m: kneeling down needs this clear in front, so she kneels a step back and shuffles in (4.1)
 KNEEL_FOOTPRINT_R = 0.35        # m: toys within this of her knees' line where she kneels are cleared first (ours)
 TOY_ASIDE_M = 0.35              # m: a cleared toy is set down this far beyond her footprint, away from the child (ours)
+TRUNK_DEG_PER_S = 30.0          # deg/s: her trunk's unhurried lean, down or up (ours; the lean phase's pace, and her return to
+                                # upright when her hands come back to rest: at the old fixed 4 ticks a 67 deg lean came back at
+                                # 110 deg/s and her arm swung 0.6 m in a tick, W2)
 REACH_MPS = 0.5                 # m/s: her hand's unhurried reach (ours)
 REACH_MIN_S = 0.45              # s: the shortest hand move (ours: 3 ticks)
 APPROACH_M = 0.10               # m: a hand comes onto the child, or a toy, along the surface's normal from this far out (ours)
@@ -126,7 +193,13 @@ APPROACH_M = 0.10               # m: a hand comes onto the child, or a toy, alon
 FACE_MIN_M = 0.25               # her face never closer than this to the child's eyes (A3)
 FACE_OFF_LINE_DEG = 15.0        # when she leans in or calls, her face arrives at least this far off the fovea's line (A3)
 LEAN_DIST_M = (0.30, 0.60)      # m: where she puts her face when she leans in: from the child's eyes (ours: the lean-in
-                                # distance, where the grades are visible in its fovea, section 4.3)
+                                # distance, where the grades are visible in its fovea, section 4.3). She kneels where a pose inside
+                                # human ranges puts it there (beside its chest or its shoulders), the least bend first; never
+                                # widened after measuring
+LEAN_MAX_DEG = 70               # her kneeling lean's range in her searches (hip flexion kneeling tall; ours: parent_kin's range)
+LEAN_ALONG_M = (-0.10, 0.0, 0.10, -0.20)   # m toward its feet from its trunk's middle: the spots she leans in from, beside its chest
+                                # and shoulders first (her face within LEAN_DIST_M at the least bend there, W2: a lean of 50 deg
+                                # beside its shoulders, 60 beside its chest; ours)
 
 # ------------------------------------------------------------------------------------------------------ her plans (4.1: "W2")
 REPLAN_TICKS = 7                # an act's plan is solved when it starts and again about once a second (7 ticks, 1.05 s) while

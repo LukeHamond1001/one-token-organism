@@ -69,8 +69,8 @@ palm's tick-mean force from its own hand's links) lets W4 count those fists (the
 THE PARENT'S MOTION (W2; body/sim/parent_motion.py) runs inside the tick: `parent.tick_begin()` before the physics (her acts
 advance and her pose at the tick's end is found), `before_step(s)` and `after_step(s)` around each of the 75 steps (her segments
 drawn between the tick's start and end, her holds' capped springs applied as outside forces, her contacts with the child read for
-her yield and her pain), `tick_end()` after. No weld may hold the G1 (a world with one refuses to be born: every hold on it is a
-capped spring, 4.1). Her motion's state is saved and restored with the world's, and rolled back with it when a tick faults.
+her yield and her pain), `tick_end()` after. No equality constraint may tie the G1 to anything outside it, a weld or a connect by
+body or by site, or a joint of it held (a world with one refuses to be born: every hold on it is a capped spring, 4.1). Her motion's state is saved and restored with the world's, and rolled back with it when a tick faults.
 `parent=False` builds the world without her motion (an instrument's switch); the truth's `parent` is her motion as her conduct and
 the instruments see it.
 
@@ -376,6 +376,21 @@ MUTABLE_MODEL_FIELDS = ("jnt_actfrcrange", "eq_data", "geom_pos", "geom_quat", "
 STATE_SPEC = mujoco.mjtState.mjSTATE_INTEGRATION
 
 
+def _eq_owner(m, e, oid):
+    """the body an equality constraint's end belongs to: a body's own id, a site's body, a joint's body; the world (0) for an end
+    left open (a weld or connect to the world, a joint held at a value); None for a tendon's or a flex's (none in the scene)"""
+    if oid < 0:
+        return 0
+    t = int(m.eq_objtype[e])
+    if t == int(mujoco.mjtObj.mjOBJ_SITE):
+        return int(m.site_bodyid[oid])
+    if t == int(mujoco.mjtObj.mjOBJ_BODY):
+        return int(oid)
+    if int(m.eq_type[e]) == int(mujoco.mjtEq.mjEQ_JOINT):
+        return int(m.jnt_bodyid[oid])
+    return None
+
+
 class G1World(SimWorld):
     """THE G1 IN THE LIVING ROOM, lockstep (see the module's doc). `seed` is the body's one seed (the world's own stream is derived
     from it); `extra(spec)` adds an instrument's rig to the scene before it compiles (tests only). Born at construction: the G1 on
@@ -430,9 +445,11 @@ class G1World(SimWorld):
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
             raise ValueError("the scene leaves MuJoCo's auto-reset on (A18: <flag autoreset=\"disable\"/>)")
         self.chargers = np.array([g for g in range(m.ngeom) if (m.geom(g).name or "").startswith(CHARGER_PREFIX)], dtype=np.int64)
-        if any(m.eq_type[e] == mujoco.mjtEq.mjEQ_WELD and (int(m.eq_obj1id[e]) in self.scene.g1_set or int(m.eq_obj2id[e]) in self.scene.g1_set)
-               for e in range(m.neq)):
-            raise ValueError("a weld on the G1: every hold on it is a capped spring (SIM_DESIGN.md 4.1, 4.2, A25)")
+        for e in range(m.neq):                                          # no equality ties the G1 to anything outside it: a weld, a
+            ends = [_eq_owner(m, e, int(m.eq_obj1id[e])), _eq_owner(m, e, int(m.eq_obj2id[e]))]   # connect (by body or by
+            if None not in ends and (ends[0] in self.scene.g1_set) != (ends[1] in self.scene.g1_set):   # site), a joint held
+                raise ValueError("an equality constraint on the G1 (a weld, a connect or a joint held): every hold on it is a "
+                                 "capped spring (SIM_DESIGN.md 4.1, 4.2, A25)")
         # the IMUs: the model's four sensors (gyro and accelerometer on each site), their declared noise and ranges
         names = [m.sensor(i).name for i in range(m.nsensor)]
         self.imu_order = [names.index(n) for n in ("imu-torso-linear-acceleration", "imu-torso-angular-velocity",
