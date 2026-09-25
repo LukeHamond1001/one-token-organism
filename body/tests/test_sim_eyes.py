@@ -183,10 +183,8 @@ def _face_rig(w, dist=0.6, turn_deg=0.0):
     z = u - x * float(x @ u); z /= np.linalg.norm(z)
     x = _rot(z, math.radians(turn_deg)) @ x
     Rh = np.column_stack([x, np.cross(z, x), z])
-    hid = m.body_mocapid[m.body("parent_head").id]
     local = np.array([kin.head_surface_x(0, kin.MOUTH_Z) + .0015, 0.0, kin.MOUTH_Z])
-    d.mocap_pos[hid] = p - Rh @ local
-    d.mocap_quat[hid] = kin.mjquat(Rh)
+    w.scene.place_head(p - Rh @ local, Rh)                              # her head there, her body straight under it (a still)
     mujoco.mj_forward(m, d)
     mouth = E.mouth_point(m, d)[0]
     w.gaze = W.clamp_gaze(E.gaze_at(m, d, mouth))

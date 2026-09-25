@@ -97,7 +97,7 @@ def test_the_scene():
         assert hashlib.sha256(f.read()).hexdigest() == G1_FILE_SHA256, "the stock G1 file changed"
     w = G1World(seed=1)
     m = w.m
-    assert (m.nu, m.nmocap, len(W.JOINTS), w.nz) == (43, 16, 43, 45)
+    assert (m.nu, m.nmocap, len(W.JOINTS), w.nz) == (43, 0, 43, 45)          # the parent is a body (her joints), not mocap
     assert m.opt.cone == mujoco.mjtCone.mjCONE_ELLIPTIC and m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_MULTICCD
     assert m.opt.impratio == 10.0 and m.opt.integrator == mujoco.mjtIntegrator.mjINT_IMPLICITFAST and m.opt.timestep == 0.002
     assert m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET                # A18: a bad state is never silently reset
@@ -111,7 +111,7 @@ def test_the_scene():
     else:
         raise AssertionError("an act out of range was taken")
     pg = m.geom("parent_hand_L").id
-    assert m.geom_contype[pg] == 8 and m.geom_conaffinity[pg] == 1        # the parent's shapes touch the G1 (contype 1)
+    assert m.geom_contype[pg] == 8 and m.geom_conaffinity[pg] == 3        # the parent's shapes touch the G1 (contype 1) and the floor (2)
     g1 = w.scene.g1_set                                                  # C26, A21: the world's geoms and the toys at contact priority 2
     col = [g for g in range(m.ngeom) if m.geom_contype[g] or m.geom_conaffinity[g]]
     worldish = [g for g in col if m.geom_bodyid[g] not in g1 and not (m.body(int(m.geom_bodyid[g])).name or "").startswith("parent")]
@@ -164,8 +164,10 @@ def test_torque_limits_are_the_models():
 # ---------------------------------------------------------------- the servo law
 def _replica_tick(w, acts, h):
     """the servo law written out by hand on a world: weakness at the charge h, the acts' re-anchored targets, the rest's
-    relaxation, 75 steps"""
+    relaxation, 75 steps (the parent's motion run around each as the world runs it: she is a body in the same physics)"""
     m, d = w.m, w.d
+    par = w.parent
+    par.tick_begin()
     lim = w.tau_max * (W.WEAK_FLOOR + (1 - W.WEAK_FLOOR) * h)
     m.jnt_actfrcrange[w.jid, 0] = -lim; m.jnt_actfrcrange[w.jid, 1] = lim
     rest = []
@@ -178,11 +180,15 @@ def _replica_tick(w, acts, h):
         for i, k in zip(range(sl.start, sl.stop), W.act_digits(a, len(js))):
             d.ctrl[w.aid[i]] = min(w.hi[i], max(w.lo[i], q[i] + W.SETTINGS[k]))
     alpha = 1 - math.exp(-0.002 / (3 * 0.150))
-    for _ in range(75):
+    for s in range(75):
         for i in rest:
             d.ctrl[w.aid[i]] += alpha * (d.qpos[w.qadr[i]] - d.ctrl[w.aid[i]])
+        par.before_step(s)
         mujoco.mj_step(m, d)
+        par.after_step(s)
     mujoco.mj_forward(m, d)
+    par.tick_end()
+    w.tick += 1
 
 
 def test_the_servo_law():
@@ -257,9 +263,8 @@ def test_birth_and_touch():
         assert np.allclose(m.geom_pos[g], pp) and np.allclose(m.geom_quat[g], q), n
     for n in ("mouth0", "brow1_L", "lip_lo0"):                         # on the face's front, not at the head's origin
         assert m.geom_pos[w.scene.face_ids[n]][0] > 0.09, n
-    hid = m.body_mocapid[m.body("parent_head").id]
-    want = kin.fk(G.born_parent())["head"][0]
-    assert np.allclose(d.mocap_pos[hid], want) and w.scene.pose is not None and kin.face_reading(kin.scalar_to_params(0.0)) == 0.0
+    want = kin.fk(G.born_parent())["head"][0]                         # her body standing where the maker stands her
+    assert np.allclose(d.xpos[m.body("parent_head").id], want) and w.scene.pose is not None and kin.face_reading(kin.scalar_to_params(0.0)) == 0.0
     for _ in range(20):
         w.apply({})
     s20 = float(w.frame().truth["touch_N"].sum())
@@ -692,7 +697,7 @@ def test_exact_replay():
 def test_the_parents_pose_is_saved():
     """world 18: Scene.pose is saved with the world (the W1 verifier's third round): the parent drawn in a new pose (kneeling
     place, a smile, her eyes on the child's), saved; drawn again elsewhere; restored in the same world and in a new one: the scene's
-    pose is the saved one (its place, turn, joints, hands, expression and gaze) and her face's and body's geoms and mocap with it"""
+    pose is the saved one (its place, turn, joints, hands, expression and gaze) and her face's geoms and her body with it"""
     kin = G.kin
     w = G1World(seed=1)
     m, d = w.m, w.d
@@ -717,7 +722,7 @@ def test_the_parents_pose_is_saved():
         after.append(w2.save_state())
     assert after[0] == after[1]
     print("world 18: the parent's pose (her place, turn, spine, hands, expression and gaze) is saved with the world and restored",
-          "with it, in the same world and in a new one, her face's geoms and mocap with it; a tick after, the two worlds bit for bit")
+          "with it, in the same world and in a new one, her face's geoms and her body with it; a tick after, the two worlds bit for bit")
 
 
 def test_the_night():

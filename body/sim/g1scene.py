@@ -109,7 +109,7 @@ BIRTH = dict(shoulder_pitch=0.0, shoulder_roll=0.35, shoulder_yaw=0.0, elbow=1.1
              hip_pitch=-0.35, hip_roll=0.12, hip_yaw=0.15, knee=0.55, ankle_pitch=-0.05)
 BIRTH_XY = (-0.05, -0.62)       # the pelvis on the mat; the head toward -x, its left toward +y
 BIRTH_SETTLE_S = 1.5            # settled under its servos holding the birth pose
-# THE PARENT AT BIRTH: standing by the door where the maker stands her (make_g1room.py writes her 16 segments from this pose),
+# THE PARENT AT BIRTH: standing by the door where the maker stands her (make_g1room.py builds her body there at rest),
 # her face drawn at its neutral expression, looking straight ahead, her hands at the Pose's default shape. The face's and the
 # hands' geoms have no place of their own in the file (the file's are placeholders inside the head and the hands): only
 # set_parent puts them where a face and hands are, so birth draws her (the W1 verifier's first finding: never drawn, her face had
@@ -123,14 +123,15 @@ def born_parent():
 
 
 class Scene:
-    """The loaded scene: the model (with the G1's senses), its data, and the kinematic parts' drivers (the parent's mocap
-    segments, face and hands; the welds; the G1's pose setters). The world's side only."""
+    """The loaded scene: the model (with the G1's senses), its data, and the drivers of what is posed from outside the physics
+    (the parent's placement, face and hands; the welds; the G1's pose setters). The world's side only."""
 
     def __init__(self, xml=XML, extra=None):
         self.m = load_model(xml, extra)
         self.d = mujoco.MjData(self.m)
         m = self.m
-        self.mocap = {s: m.body_mocapid[m.body(f"parent_{s}").id] for s in kin.SEGS}
+        import parent_body as PB                       # her body: its joints, and the pose her planner makes written into them
+        self.bmap = PB.BodyMap(m)
         self.gid = lambda n: m.geom(n).id
         self.face_ids = {n: self.gid(f"parent_{n}") for n in kin.FACE_GEOMS}     # her face's moving geoms (all of them: the room has them)
         # her moving meshes (the lids, the irises): MuJoCo stores a mesh about its own centre and axes and puts that offset in the
@@ -150,17 +151,18 @@ class Scene:
         self._hand_cache = {}
 
     # ---- the parent
-    def set_parent(self, pose, mocap=True, face=True):
-        """Draw the parent in `pose`: her 16 mocap segments (unless mocap=False: the parent's motion, body/sim/parent_motion.py,
-        moves them itself through the tick's physics steps), her face's moving geoms from its expression and gaze (unless face=False:
-        drawn as they last were, when neither changed; a face costs about 24 ms to draw) and her hands' shapes."""
+    def set_parent(self, pose, body=True, face=True):
+        """Draw the parent in `pose`: her body placed there at rest (her joints set to the pose, her velocities zero: a still, or
+        an instrument's placement; unless body=False: her motion, body/sim/parent_motion.py, drives her body through the tick's
+        physics steps and only her face and hands' shapes are drawn here), her face's moving geoms from its expression and gaze
+        (unless face=False: drawn as they last were, when neither changed; a face costs about 24 ms to draw) and her hands'
+        shapes."""
         m, d = self.m, self.d
         segs = kin.fk(pose)
-        if mocap:
-            for s, (p, R) in segs.items():
-                i = self.mocap[s]
-                d.mocap_pos[i] = p
-                d.mocap_quat[i] = kin.mjquat(R)
+        if body:
+            b = self.bmap
+            b.write_qpos(d.qpos, b.targets(segs))
+            d.qvel[b.vadr] = 0.0
         hp, hR = segs["head"]
         gaze = None
         if pose.gaze is not None:
@@ -223,6 +225,25 @@ class Scene:
             return np.zeros(3)
         return d.efc_force[rows[:3]].copy()
 
+    def place_head(self, pos, R):
+        """AN INSTRUMENT'S STILL (the eye and face instruments): her head put at (pos, R) in the world, her body held straight
+        under it in its rest pose (her joints at zero, her velocities zero), for a render or a ray, never lived (she is a body: her
+        head cannot be put anywhere alone)"""
+        m, d = self.m, self.d
+        b = self.bmap
+        up = sum((kin.OFFSET[s] for s in ("abdomen", "chest", "head")), np.zeros(3))   # pelvis to head at rest (her joints at zero)
+        R = np.asarray(R, float)
+        d.qpos[b.root_q:b.root_q + 3] = np.asarray(pos, float) - R @ up
+        d.qpos[b.root_q + 3:b.root_q + 7] = kin.mjquat(R)
+        d.qpos[b.ball_q] = np.array([1.0, 0.0, 0.0, 0.0])
+        d.qpos[b.hinge_q] = 0.0
+        d.qvel[b.vadr] = 0.0
+
+    def parent_pose_now(self):
+        """her segments as the physics has them now: {seg: (pos, R)} (world)"""
+        m, d = self.m, self.d
+        return {s: (d.xpos[b].copy(), d.xmat[b].reshape(3, 3).copy()) for s, b in self.bmap.seg_body.items()}
+
     def hand_proxy(self, side, on=True, forearm=False):
         """The parent's hand (and forearm) collision proxy on or off. Both bits: the parent's conaffinity 1 is what lets the
         G1 (contype 1) touch it, so zeroing contype alone would leave the proxy colliding."""
@@ -284,10 +305,14 @@ class Scene:
         d.qpos[2] -= self.lowest_g1_point() - (.012 + clearance)
         d.qvel[:] = 0
         mujoco.mj_forward(m, d)
+        b = self.bmap                                                  # the parent is kept where she stands while the G1 settles
+        her_q = d.qpos[b.qadr].copy()                                  # (no motion drives her yet: her body would fall)
         for _ in range(int(round(settle_s / m.opt.timestep))):
             if not hold:
                 self.hold_ctrl()
             mujoco.mj_step(m, d)
+            d.qpos[b.qadr] = her_q
+            d.qvel[b.vadr] = 0.0
         return d
 
     def birth(self):

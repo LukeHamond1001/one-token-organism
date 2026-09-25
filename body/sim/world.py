@@ -67,9 +67,10 @@ on nothing keeps itself closed until the hand's own act opens it, as newborns' h
 palm's tick-mean force from its own hand's links) lets W4 count those fists (the W1 verifier's eighth finding).
 
 THE PARENT'S MOTION (W2; body/sim/parent_motion.py) runs inside the tick: `parent.tick_begin()` before the physics (her acts
-advance and her pose at the tick's end is found), `before_step(s)` and `after_step(s)` around each of the 75 steps (her segments
-drawn between the tick's start and end, her holds' capped springs applied as outside forces, her contacts with the child read for
-her yield and her pain), `tick_end()` after. No equality constraint may tie the G1 to anything outside it, a weld or a connect by
+advance and her pose at the tick's end is found), `before_step(s)` and `after_step(s)` around each of the 75 steps (her body's joints
+driven toward her plan with a woman's strength, her holds' capped springs applied as outside forces and their reaction on her
+hands, her contacts with the child read for her stop and her pain), `tick_end()` after. She is a body in the same physics
+(the lead's decision of 2026-09-25; body/sim/parent_body.py). No equality constraint may tie the G1 to anything outside it, a weld or a connect by
 body or by site, or a joint of it held (a world with one refuses to be born: every hold on it is a capped spring, 4.1). Her motion's state is saved and restored with the world's, and rolled back with it when a tick faults.
 `parent=False` builds the world without her motion (an instrument's switch); the truth's `parent` is her motion as her conduct and
 the instruments see it.
@@ -329,7 +330,7 @@ def _catch_mujoco_warnings():
 
 
 def _pose_state(pose):
-    """the parent's kinematic pose (parent_kin.Pose) as the scene holds it, in a canonical plain form for the save (None: none
+    """the parent's planned pose (parent_kin.Pose) as the scene holds it, in a canonical plain form for the save (None: none
     drawn): arrays rebuilt from their numbers, floats, every name interned and every mapping sorted, so equal poses always
     pickle to equal bytes (a pickled array keeps its dtype object, and an unpickled one's is not numpy's own: rebuilding them
     keeps a save made after a restore the same bytes as one made without it)"""
@@ -822,7 +823,7 @@ class G1World(SimWorld):
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()
         if "scene_pose" in st:                                          # the parent's pose as the scene last drew it (W2 goes on
-            self.scene.pose = _pose_from_state(st["scene_pose"])        # from it); her mocap and face geoms are in the physics and
+            self.scene.pose = _pose_from_state(st["scene_pose"])        # from it); her body and face geoms are in the physics and
         if self.parent is not None and st.get("parent") is not None:    # the model fields above; her motion's own state
             self.parent.load_state(st["parent"])
         mujoco.mj_forward(m, d)

@@ -1,9 +1,10 @@
 """Shared numbers and kinematics for the living room (docs/SIM_DESIGN.md; from the 2026-09-24 prototype; the world's side, never the body).
 
-The parent is kinematic: a skeleton of 16 segments posed here in Python (forward kinematics, two-bone inverse
-kinematics for the arms and legs, look-at for the head and eyes) and written into 16 MuJoCo mocap bodies each
-physics step. Its fingers, eyes, brows, lids and mouth are geoms whose local poses this file sets (hand shapes,
-gaze, expression). Nothing here is the child's body or its control: the child is a physical humanoid in the XML.
+The parent's skeleton: 16 segments posed here in Python (forward kinematics, two-bone inverse kinematics for the arms and
+legs, look-at for the head and eyes). Her planner makes the pose she means with it; her body is 16 dynamic MuJoCo bodies with
+this skeleton's joints, driven toward that pose with a woman's strength (parent_body.py, make_g1room.py: the lead's decision of
+2026-09-25). Its fingers, eyes, brows, lids and mouth are geoms whose local poses this file sets (hand shapes, gaze,
+expression). Nothing here is the child's body or its control: the child is a physical humanoid in the XML.
 
 Frames: every segment's frame is aligned with the parent's root in the rest pose (standing, arms down, palms to the
 thighs): x forward, y to its left, z up. Limbs hang along -z from their proximal joint. A right-side segment is the

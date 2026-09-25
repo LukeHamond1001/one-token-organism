@@ -49,7 +49,11 @@ step her holds and body together against her caps, her 10 ms force on each link 
 verifier's cases: `babble_attend` and `babble_acts` (her acts asked over and over while the G1 babbles: how many she gives up, C8),
 `still_*` (a still child, as born or placed elsewhere: getting up and going on), `hands` (her hands against the G1's hulls), `catch`
 (C6: falls from hovering under babble, caught or not), `copy_do` (P3's DOES and copy); `guide_pace`, the guide's peak force
-against the arm's own push at each candidate pace on the limp arm and under the resting law: 4.2, A4-A10, A22, A25, C6, C7, C8, C34). `sim_look.py` renders the one-arm high chair's
+against the arm's own push at each candidate pace on the limp arm and under the resting law; since she is a body (2026-09-25),
+`c8` (C8 over 12 babbler seeds at p_rest 0.3 and 0.6, attend alone and the mix: her 10 ms force on the child with her holds, each
+tick over F_pain told as hers or the child's by who did work on that link in those 10 ms, her hands', forearms' and body's
+contacts' depth, her body's work on it in a tick and over each contact, her acts done and refused) and `--replay=save|load|birth:PATH`
+(the exact replay across three processes): 4.2, A4-A10, A22, A25, C6, C7, C8, C34). `sim_look.py` renders the one-arm high chair's
 stills; `sim_look_g1.py` the G1 room's (main's prototype stills).
 
 `archive/` (moved 2026-09-23) holds the retired tools, kept as the ledger's record and not run: the earlier lineage's watchers and stalkers (a body under the fast parent, every tick logged: `watch_life.py`, `stalk_day.py`, `record_day.py`, `fit_return.py`, `gate_context.py`, `vf_profile.py`, `ceiling_smile.py`, `ceiling_line.py`, `play_by_play.py`, `watch_trend.py`, `compare_credit.py`), the body2-era readers and probes (`diary_check.py`, `probe.py`, `sequence_probe.py`, `boundary_restart.sh`, `run_days.sh`, `teach_days.sh`), the settled night and gate questions (`night_lab.py`, `dream_lived.py`, `norm_probe.py`), the pod pretraining (`pretrain_cortex.py`, item 44) and `baseline_train.py` (never run, by the house rule against ordinary-training comparisons). Those that find the repo by `dirname(dirname(__file__))` (`watch_life.py`, `stalk_day.py`, `record_day.py`, `pretrain_cortex.py`) would now look inside tools/ and need that path changed before they could run again.

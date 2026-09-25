@@ -24,6 +24,8 @@ The W2 verifier's cases: babble_attend (seeds 2, 3, 4, 7 at p_rest 0.6 and 0.3, 
 babble_acts (attend, show, lean_in, touch in turn), still_door / still_sofa / still_lean_bring (a still child: getting up from
 beside it and going on), still_<place> (the child placed rotated, in a corner, by a wall, in the hall, by the sofa, by the table:
 attend, lean_in, show), hands, catch (C6) and copy_do.
+c8 (the lead's decision of 2026-09-25, she is a body): C8 over many seeds at p_rest 0.3 and 0.6, attend alone and the mix. The exact
+replay across processes: --replay=save:PATH, then --replay=load:PATH and --replay=birth:PATH in new processes (replay_proc).
 Run: nice -n 19 python3 tools/sim_parent_motion.py [scenario ...] [--out=FILE]   (JSON on stdout; FILE if given)"""
 import json
 import math
@@ -81,7 +83,7 @@ def bottle_rig(spec):
     charger through a palm), free, on the mat by the child's left side, with a weld from each of her hands"""
     b = spec.worldbody.add_body(name="toy_bottle", pos=[-0.40, 0.00, 0.012 + 0.07])
     b.add_freejoint(name="toy_bottle")
-    b.add_geom(name="bottle", type=mujoco.mjtGeom.mjGEOM_CYLINDER, size=[0.03, 0.07, 0], mass=0.15, contype=4, conaffinity=13,
+    b.add_geom(name="bottle", type=mujoco.mjtGeom.mjGEOM_CYLINDER, size=[0.03, 0.07, 0], mass=0.15, contype=4, conaffinity=15,
                priority=2, rgba=[0.95, 0.95, 0.9, 1])
     for sd in "LR":
         spec.add_equality(type=mujoco.mjtEq.mjEQ_WELD, name=f"hold_{sd}_bottle", name1=f"parent_hand_{sd}", name2="toy_bottle",
@@ -95,9 +97,13 @@ class Probe:
     runs of steps her body pressed the child over a resting hand's weight, her whole force on it as a vector (her holds and her
     body's contacts: its upward and its horizontal part, as a 10 ms mean and a tick's mean, against its weight and the force that
     slides it on the mat), the work her body's contacts do on it each tick (her force at each contact against the velocity of the
-    child's point there: positive only where she pushes it along its own motion, never where she only resists it), the 10 ms mean
+    child's point there: positive only where she pushes it along its own motion, never where she only resists it) and its net over
+    each contact between them (from the step they touch to 10 ms after they part: the energy her body put into the child, what
+    it gave back of the child's own blow netted out), the 10 ms mean
     (5 steps, A12's pain measure) of her
-    normal force on each of the child's links (C8: under F_pain always), and with hands=True the least signed distance of each
+    normal force on each of the child's links (C8: under F_pain always; each tick over it told as hers, where her contacts did
+    positive work on that link in those 10 ms, or the child's, where it did: its blow or its press, as on the floor), and with
+    hands=True the least signed distance of each
     of her hands (its palm, capsule, fingers, thumb; holding the child or not) to the G1's convex hulls, at four steps a tick"""
     HAND_STEPS = (0, 25, 50, PM.STEPS - 1)
 
@@ -111,12 +117,25 @@ class Probe:
         self.run = 0; self.runs = []
         self.link10 = 0.0; self.link10_ticks = []; self._tick10 = 0.0
         self.hand_min = None; self.hand_worst = None
+        self.depth = {"hand": 0.0, "forearm": 0.0, "body": 0.0}; self.depth_worst = {}   # her shapes' deepest contact into the G1 (m)
         self.net_tick = np.zeros(3); self.net_win = []                  # her whole force on the G1 as a vector (holds and body)
         self.up10 = self.side10 = self.upT = self.sideT = 0.0
         self.work_tick = 0.0; self.work_max = 0.0; self.work_pos = 0.0  # her body's work on the G1 (J): positive only if she pushes it
+        self.ep = 0.0; self.ep_gap = 0; self.ep_max = 0.0; self.ep_pos = 0.0   # ... and its net over each contact between them (the
+                                                                        # energy that flowed from her into it while they touched)
         self.jac = np.zeros((3, m.nv))                                  # along its own motion, never while she only resists it
+        self.wwin = {}                                                  # per link, her contacts' work on it over the last 5 steps: a
+        self.fp_by = {"hers": 0, "child": 0}; self._tick_fp = None     # 10 ms over F_pain is hers when she did positive work on that
+        self.fp_events = []                                             # link in those 10 ms (she pushed it), the child's when it did
+                                                                        # (it struck or pressed her: its own blow, as on the floor, C5)
         self.hand_geoms = {sd: [g for g in range(m.ngeom) if int(m.geom_bodyid[g]) == m.body(f"parent_hand_{sd}").id
-                                and m.geom_type[g] != mujoco.mjtGeom.mjGEOM_MESH] for sd in "LR"}
+                                and m.geom_type[g] != mujoco.mjtGeom.mjGEOM_MESH] + [m.geom(f"parent_forearm_{sd}").id] for sd in "LR"}
+        self.seg_kind = {}                                              # her collision shapes' kind: hand, forearm or body
+        for g in range(m.ngeom):
+            sg = int(pm.geom_seg[g])
+            if sg >= 0:
+                nm = PM.kin.SEGS[sg]
+                self.seg_kind[g] = "hand" if nm.startswith("hand") else "forearm" if nm.startswith("forearm") else "body"
         self.g1 = [g for g in range(m.ngeom) if m.geom_bodyid[g] in w.scene.g1_set and m.geom_contype[g]]
         self._orig = pm.after_step
         pm.after_step = self.after
@@ -124,7 +143,7 @@ class Probe:
     def after(self, s):
         self._orig(s)
         w = self.w; m, d = w.m, w.d; pm = w.parent
-        body = 0.0; per = {}; net = np.zeros(3)
+        body = 0.0; per = {}; net = np.zeros(3); touched = False; wk = {}
         for i in range(d.ncon):
             c = d.contact[i]
             g0, g1 = int(c.geom[0]), int(c.geom[1])
@@ -136,6 +155,11 @@ class Probe:
                 continue
             if c.efc_address < 0:
                 continue
+            mine = g0 if ch == g1 else g1
+            kd = self.seg_kind.get(mine, "body")
+            if -float(c.dist) > self.depth[kd]:
+                self.depth[kd] = -float(c.dist)
+                self.depth_worst[kd] = (w.tick, s, m.geom(mine).name, m.body(int(m.geom_bodyid[ch])).name)
             mujoco.mj_contactForce(m, d, i, self.f6)
             body += float(np.linalg.norm(self.f6[:3]))
             lk = int(m.geom_bodyid[ch]); per[lk] = per.get(lk, 0.0) + float(self.f6[0])
@@ -143,11 +167,32 @@ class Probe:
             fc = fw if ch == g1 else -fw
             net += fc
             mujoco.mj_jac(m, d, self.jac, None, np.asarray(c.pos), lk)   # the child's point there, moving
-            self.work_tick += float(fc @ (self.jac @ d.qvel)) * m.opt.timestep
+            dw = float(fc @ (self.jac @ d.qvel)) * m.opt.timestep
+            self.work_tick += dw; self.ep += dw; touched = True
+            wk[lk] = wk.get(lk, 0.0) + dw
+        if touched:
+            self.ep_gap = 0
+        elif self.ep != 0.0:                                            # a contact ends after 5 steps (10 ms) with none
+            self.ep_gap += 1
+            if self.ep_gap >= 5:
+                self.ep_max = max(self.ep_max, self.ep); self.ep_pos += max(0.0, self.ep); self.ep = 0.0; self.ep_gap = 0
+        for h in pm.holds:                                              # her holds' force on the link each holds (C8: her force on
+            per[h.body] = per.get(h.body, 0.0) + float(np.linalg.norm(h.force))   # the child, holds and body together)
         for lk in set(self.win) | set(per):
             q = self.win.setdefault(lk, [])
             q.append(per.get(lk, 0.0)); del q[:-5]
         mean10 = max((sum(q) / 5.0 for q in self.win.values()), default=0.0)
+        for lk in set(self.wwin) | set(wk):
+            q = self.wwin.setdefault(lk, [])
+            q.append(wk.get(lk, 0.0)); del q[:-5]
+        f_pain = w.f_pain
+        for lk, q in self.win.items():
+            if sum(q) / 5.0 > f_pain:
+                who = "hers" if sum(self.wwin.get(lk, [0.0])) > 0.0 else "child"
+                if self._tick_fp != "hers":
+                    self._tick_fp = who
+                if len(self.fp_events) < 12 and (not self.fp_events or self.fp_events[-1][0] != w.tick or self.fp_events[-1][2] != who):
+                    self.fp_events.append((w.tick, m.body(lk).name, who, round(sum(q) / 5.0), round(sum(self.wwin.get(lk, [0.0])), 3)))
         self.link10 = max(self.link10, mean10); self._tick10 = max(self._tick10, mean10)
         hold = sum(float(np.linalg.norm(h.force)) for h in pm.holds)
         for h in pm.holds:
@@ -173,6 +218,8 @@ class Probe:
             self.runs.append(self.run); self.run = 0
         if s == PM.STEPS - 1:
             self.link10_ticks.append(self._tick10); self._tick10 = 0.0
+            if self._tick_fp is not None:
+                self.fp_by[self._tick_fp] += 1; self._tick_fp = None
         if self.hands and s in self.HAND_STEPS:
             for sd in "LR":                                             # every hand, whatever it does (holding the child, reaching,
                 for g in self.hand_geoms[sd]:                           # letting go, at rest: the W2 verifier's third finding)
@@ -194,10 +241,14 @@ class Probe:
                    total_steps_over_sustained_cap=self.total_over_two_steps,
                    press_runs_steps=dict(n=len(runs), max=max(runs, default=0), median=float(statistics.median(runs)) if runs else 0.0),
                    her_10ms_on_child_N=round(self.link10, 1), ticks_over_her_150N=int(sum(1 for x in t10 if x > K.HER_PAIN_N)),
-                   ticks_over_f_pain=int(sum(1 for x in t10 if x > f_pain)), ticks=len(t10),
+                   ticks_over_f_pain=int(sum(1 for x in t10 if x > f_pain)), ticks_over_f_pain_by=dict(self.fp_by),
+                   f_pain_events=list(self.fp_events), ticks=len(t10),
                    net_up_N=dict(ms10=round(self.up10, 1), tick=round(self.upT, 1)),
                    net_side_N=dict(ms10=round(self.side10, 1), tick=round(self.sideT, 1)),
-                   body_work_J=dict(tick_max=round(self.work_max, 3), positive_sum=round(self.work_pos, 3)))
+                   body_work_J=dict(tick_max=round(self.work_max, 3), positive_sum=round(self.work_pos, 3),
+                                    contact_max=round(max(self.ep_max, self.ep), 3), contact_positive_sum=round(self.ep_pos + max(0.0, self.ep), 3)))
+        out["contact_depth_mm"] = {k: round(v * 1e3, 1) for k, v in self.depth.items()}
+        out["contact_depth_worst"] = self.depth_worst
         if self.hands:
             out["hand_to_hull_mm"] = None if self.hand_min is None else round(self.hand_min * 1e3, 1)
             out["hand_worst"] = self.hand_worst
@@ -338,7 +389,9 @@ def sc_guide(which=None):
             for h in w_.parent.holds:
                 if h.kind == "guide":
                     p = h.point(d)
-                    rec.setdefault("p0", p.copy()); rec["p"] = p.copy()
+                    rec.setdefault("p0", p.copy())
+                    if "p" not in rec or p[2] > rec["p"][2]:
+                        rec["p"] = p.copy()                             # the held point at its highest while she guided it
         out = run(w, [("guide", which)], 700, on_tick=tick)
         if "p0" in rec:
             out["held_point_moved_cm"] = [round(x * 100, 1) for x in (rec["p"] - rec["p0"])]
@@ -656,6 +709,72 @@ def sc_copy_do():
 BABBLE_ACTS = (("attend",), ("show", "block"), ("lean_in",), ("touch", "tummy"))   # the W2 verifier's mix
 
 
+def sc_c8(seeds=tuple(range(1, 13)), N=600, p_rests=(0.3, 0.6), mixes=("attend", "acts")):
+    """C8 over many seeds (the lead's decision of 2026-09-25: she is a body): the babbling G1 at p_rest 0.3 and 0.6, attend alone
+    asked over and over and the verifier's mix: per run her 10 ms force on any link (her holds and her body together) against
+    F_pain (each tick over it told as hers or the child's: Probe), the ticks over her own 150 N, her hands', forearms' and body's deepest contact into it, her body's work on it, her
+    whole force on it upward and along the floor, and how many acts she did and refused"""
+    def f():
+        rows = []
+        for mix in mixes:
+            kinds = [("attend",)] if mix == "attend" else list(BABBLE_ACTS)
+            for pr in p_rests:
+                for sd in seeds:
+                    w = W.G1World(seed=1)
+                    t0 = time.time()
+                    r = ask_repeatedly(w, kinds, N, babbler(sd, pr))
+                    p_ = r["probe"]
+                    done = sum(v for k2, v in r["outcome"].items() if k2 == "done")
+                    rows.append(dict(mix=mix, seed=sd, p_rest=pr, her_10ms_N=p_["her_10ms_on_child_N"], ticks_over_f_pain=p_["ticks_over_f_pain"],
+                                     ticks_over_f_pain_by=p_["ticks_over_f_pain_by"], f_pain_events=p_["f_pain_events"],
+                                     ticks_over_her_150N=p_["ticks_over_her_150N"], depth_mm=p_["contact_depth_mm"], depth_worst=p_["contact_depth_worst"],
+                                     work_J=p_["body_work_J"], net_up_N=p_["net_up_N"], net_side_N=p_["net_side_N"], asked=r["asked"], done=done,
+                                     outcome=r["outcome"], jumps_refused=r["jumps_refused"], tick_ms=round((time.time() - t0) / N * 1e3, 1)))
+                    print(json.dumps(rows[-1]), flush=True)
+        return dict(rows=rows, f_pain=round(W.G1World(seed=1).f_pain, 1))
+    return f
+
+
+def replay_proc(mode, path, seed=3, p_rest=0.3, t0=150, n=60):
+    """EXACT REPLAY ACROSS PROCESSES (an instrument): mode 'save' lives from birth to tick t0 under babble with her act mix asked
+    in turn and her report read every tick, writes the world's save and the babbler's and the asks' state to path + '.blob', then
+    lives n ticks more; 'load' restores that save in a new process and lives the same n ticks; 'birth' lives from birth to t0 + n.
+    Each writes, for each of the last n ticks, a digest of the frame's channels, her report, her motion's state, the physics'
+    qpos, qvel, qfrc_applied and xfrc_applied, and the final save's, to path + '.' + mode"""
+    import hashlib
+    import pickle
+    w = W.G1World(seed=1)
+    pm = w.parent
+    b = babbler(seed, p_rest)
+    asked = []
+    if mode == "load":
+        st = pickle.loads(open(path + ".blob", "rb").read())
+        w.load_state(st["world"]); b.load(st["babbler"]); asked = list(st["asked"])
+        start = w.tick
+    else:
+        start = 0
+    rows = []
+
+    def h(x):
+        return hashlib.sha256(x).hexdigest()[:16]
+    while w.tick < t0 + n:
+        if mode == "save" and w.tick == t0:
+            open(path + ".blob", "wb").write(pickle.dumps(dict(world=w.save_state(), babbler=b.state(), asked=list(asked))))
+        if not asked or (pm.status(asked[-1]) in PM.DONE_STATES and not pm.phases):
+            asked.append(pm.request(Act(*BABBLE_ACTS[len(asked) % len(BABBLE_ACTS)])))
+        w.apply(b.acts())
+        f = w.frame()
+        rep = pm.report(w.tick)
+        if w.tick > t0:
+            d = w.d
+            rows.append([w.tick, h(b"".join(np.ascontiguousarray(f.obs[k]).tobytes() for k in sorted(f.obs))),
+                         h(repr(sorted((k, str(v)) for k, v in rep.items())).encode()), h(pickle.dumps(pm.state())),
+                         h(d.qpos.tobytes()), h(d.qvel.tobytes()), h(d.qfrc_applied.tobytes()), h(d.xfrc_applied.tobytes())])
+    rows.append(["save", h(w.save_state())])
+    open(path + "." + mode, "w").write(json.dumps(dict(start=start, rows=rows, stops=pm.stats.get("over_run", 0),
+                                                        yield_ticks=pm.stats.get("yield_ticks", 0))))
+
+
 SCENARIOS = {
     "approach": sc_simple([("approach", None)]),
     "attend": sc_simple([("attend", None)]),
@@ -690,13 +809,20 @@ SCENARIOS = {
     "catch_rest": lambda: sc_catch(seeds=(1,), N=600, p_rest=1.0),
     "hands": sc_hands,
     "copy_do": sc_copy_do,
+    "c8": sc_c8(),
 }
 
 
-LONG = ("guide_pace", "babble_attend", "babble_acts", "babble_hands", "catch", "catch_rest", "hands", "copy_do")   # run only when named (each takes minutes)
+LONG = ("guide_pace", "babble_attend", "babble_acts", "babble_hands", "catch", "catch_rest", "hands", "copy_do", "c8")   # run only when named (each takes minutes)
 
 
 def main():
+    rp = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--replay=")), None)
+    if rp is not None:                                                  # --replay=MODE:PATH[:seed:p_rest:t0:n] (replay_proc)
+        parts = rp.split(":")
+        extra = [int(parts[2]), float(parts[3]), int(parts[4]), int(parts[5])] if len(parts) > 2 else []
+        replay_proc(parts[0], parts[1], *extra)
+        return
     names = [a for a in sys.argv[1:] if not a.startswith("--")] or [k for k in SCENARIOS if k not in LONG]
     out_path = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--out=")), None)
     res = {}

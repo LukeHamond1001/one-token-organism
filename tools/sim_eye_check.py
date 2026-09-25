@@ -131,7 +131,6 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
     cls_of_body = {b: i for i, b in enumerate(toy_body.values())}
     cls_of_body[head] = len(TOYS)
     base = w.save_state()
-    hid = m.body_mocapid[head]
     # the views
     plan = []
     camL = m.camera("eye_L").id
@@ -156,8 +155,7 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
             z = z - x * float(x @ z); z /= np.linalg.norm(z)
             Rh = np.column_stack([x, np.cross(z, x), z])
             centre = np.array([kin.head_surface_x(0, 0.15), 0.0, 0.15])
-            d.mocap_pos[hid] = p - Rh @ centre
-            d.mocap_quat[hid] = kin.mjquat(Rh)
+            w.scene.place_head(p - Rh @ centre, Rh)                     # her head there, her body straight under it (a still)
             if block is not None:                                       # a toy on the line between the eye and the mouth
                 mujoco.mj_forward(m, d)
                 mouth = E.mouth_point(m, d)[0]
@@ -311,7 +309,6 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
     sun = [i for i in range(m.nlight) if m.light(i).name == "sun"][0]
     sun0 = (m.light_dir[sun].copy(), m.light_diffuse[sun].copy())
     head = m.body("parent_head").id
-    hid = m.body_mocapid[head]
     toys = [m.body(f"toy_{t}").id for t in TOYS]
     mouth_geoms = {g for g in range(m.ngeom) if (m.geom(g).name or "").startswith(("parent_mouth", "parent_lip_lo", "parent_teeth"))}
     camL = m.camera("eye_L").id
@@ -338,7 +335,7 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
         block = rng.random() < 1 / 3
         aim = rng.normal(0, math.radians(3.0), 2)
         if noface:
-            d.mocap_pos[hid] = [0.0, 0.0, -5.0]                         # under the floor: no face in the room
+            w.scene.place_head([0.0, 0.0, -5.0], np.eye(3))             # under the floor: no face (nor body) in the room
         else:
             x = d.cam_xpos[camL] - p; x /= np.linalg.norm(x)
             z = R @ np.array([0.0, 1.0, 0.0]); z = z - x * float(x @ z); z /= np.linalg.norm(z)   # upright in the eye's image
@@ -347,8 +344,7 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
             z = z - x * float(x @ z); z /= np.linalg.norm(z)
             Rh = np.column_stack([x, np.cross(z, x), z])
             local = np.array([kin.head_surface_x(0, kin.MOUTH_Z) + .0015, 0.0, kin.MOUTH_Z])
-            d.mocap_pos[hid] = p - Rh @ local
-            d.mocap_quat[hid] = kin.mjquat(Rh)
+            w.scene.place_head(p - Rh @ local, Rh)                      # her head there, her body straight under it (a still)
         mujoco.mj_forward(m, d)
         if block and not noface:
             mouth = E.mouth_point(m, d)[0]

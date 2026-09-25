@@ -3,7 +3,7 @@ made for him in the W1 verifier's third round: fix the world, not the detector; 
 fovea and the periphery at 0.3-2 m under the room's lights, and report it plainly). An instrument, never the body; it changes
 neither the template nor her face.
 
-The G1 lies as born. Her head (its mocap segment; the rest of her stands where birth put her) is put at a distance D from the left
+The G1 lies as born. Her head (her body straight under it: g1scene.Scene.place_head) is put at a distance D from the left
 eye along a direction in that eye's image, facing the eye and upright in its eyes (her crown toward the child's head, as when she
 leans over it from its feet's side: the eye check's placement, tools/sim_eye_check.py), her face at its neutral expression, lit by
 the room's own lights (no lamp at the eye), with the sun's shadow (the body's eyes). D runs 0.3-2.0 m; the direction is the window's
@@ -113,8 +113,6 @@ def detection(best, fp, x0=0.0, y0=0.0, pool=1.0):
 def place_head(w, dist, yaw, pitch, expr):
     m, d = w.m, w.d
     camL = m.camera("eye_L").id
-    head = m.body("parent_head").id
-    hid = m.body_mocapid[head]
     R = d.cam_xmat[camL].reshape(3, 3)
     dirc = np.array([math.tan(yaw), math.tan(pitch), -1.0]); dirc /= np.linalg.norm(dirc)
     p = d.cam_xpos[camL] + R @ dirc * dist
@@ -122,9 +120,8 @@ def place_head(w, dist, yaw, pitch, expr):
     z = np.array([-1.0, 0, 0]) - x * -x[0]; z /= np.linalg.norm(z)
     Rh = np.column_stack([x, np.cross(z, x), z])
     pose = G.born_parent(); pose.expr = expr
-    w.scene.set_parent(pose)                                            # her face drawn (the expression), her body where birth put her
-    d.mocap_pos[hid] = p - Rh @ face_centre_local()
-    d.mocap_quat[hid] = kin.mjquat(Rh)
+    w.scene.set_parent(pose)                                            # her face drawn (the expression)
+    w.scene.place_head(p - Rh @ face_centre_local(), Rh)                # her head there, her body straight under it (a still)
     mujoco.mj_forward(m, d)
     return p
 

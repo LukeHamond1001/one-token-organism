@@ -1,19 +1,25 @@
 """THE PARENT'S MOTION (docs/SIM_DESIGN.md 4.1, 4.2, 4.10's L0 and the motor side of L1-L2, A3, A4, A6-A10, A22, A25; the build
-plan's W2). How her body carries out what her conduct asks, on the world's side: the parent is kinematic (16 mocap segments posed by
-parent_kin's forward and two-bone inverse kinematics and look-at, inside human joint ranges), a person's strength, and she comes to
-the child: she can never lift, slide or sit up the 34 kg G1 (the owner's B16); it must rise by itself.
+plan's W2). How her body carries out what her conduct asks, on the world's side. SHE IS A BODY (the lead's decision of 2026-09-25):
+her 16 segments are dynamic MuJoCo bodies with a woman's masses (body/sim/parent_body.py, make_g1room.py), her planner here makes
+the pose she means at each tick's end (parent_kin's forward and two-bone inverse kinematics and look-at, inside human joint ranges),
+and her joints are driven toward it with a woman's strength; every contact with the child is the physics'. A person's strength:
+she comes to the child; she can never lift, slide or sit up the 34 kg G1 (the owner's B16); it must rise by itself.
 
-THE INTERFACE her conduct calls: P3's contract as StubMotion writes it (body/sim/lang/conduct.py on sim-parent, 883ec52 and
-b301745). An act is anything with `kind`, `target`, `during` and `thing` (conduct.Act). request(act, tick) -> id; status(id, tick)
--> exactly 'running' (under way, or waiting its turn), 'done', 'refused' or 'cancelled'; cancel(id, tick) (from that tick: at once
-for the world's next tick, later for a later one); report(tick) -> dict(eyes, head, left, right, acts), her attention log's fields
-(A51) for the tick just lived: where her eyes, head and each hand physically point (a toy's id, a place, 'child_eyes' / 'child' /
-'child_periphery', the part of the child a hand touches by its word, 'mama' for her own face, '?' at nothing she can name, None at
-rest) and {id: status} for every act asked of her until it has been reported ended; bind_conduct(conduct) (she reads its
-eyes_on_child every tick: while an ask is pending her eyes and head stay on the child's eyes, L1 glances at nothing, and no act
-starts but PENDING_OK's, the others waiting their turn) or set_eyes_on_child(flag); glance(target, tick) (L1's gaze to a sudden
-event); state() / load_state(s); why(id), the reason an act was refused or how it ended. An act stays under way while it directs
-the child's eyes (a toy shown, a hand held out, a point) and ends as her body comes back. Acts run on two channels: her gaze
+THE INTERFACE her conduct calls: P3's contract as StubMotion writes it (body/sim/lang/conduct.py on sim-parent, 1387a44). An act is
+anything with `kind`, `target`, `during` and `thing` (conduct.Act). request(act, tick) -> id; status(id, tick) -> exactly
+'running' (under way, or waiting its turn), 'done', 'refused' or 'cancelled'; cancel(id, tick) (from that tick: at once for the
+world's next tick, later for a later one); report(tick) -> dict(eyes, head, left, right, trunk, face, acts), her attention log's
+fields (A51) for the tick just lived: where her eyes, head and each hand physically point (a toy's id, a place,
+'child_eyes' / 'child' / 'child_periphery', the part of the child a hand touches by its word, 'mama' for her own face, '?' at
+nothing she can name, None at rest, her hands resting on her thighs or hanging), her trunk ('child' while it faces the child and
+holds still, the place she walks to, '?' while it leans, turns, shifts or is pushed), her face ('mama' on a tick her expression is
+not its neutral set or moves, her jaw with her speech and her blinks apart; None while still), and {id: status} for every act asked
+of her until it has been reported ended; bind_conduct(conduct) (she reads its eyes_on_child and its still every tick: while an ask
+is pending her eyes and head stay on the child's eyes, L1 glances at nothing, and no act starts but PENDING_OK's, the others waiting
+their turn; while still, a formal trial's settle and window, no act starts at all, her hands go to rest on her thighs and stay, and
+her face is drawn in its neutral set but her jaw) or set_eyes_on_child(flag) / set_still(flag); glance(target, tick) (L1's gaze to a
+sudden event); state() / load_state(s); why(id), the reason an act was refused or how it ended. An act stays under way while it
+directs the child's eyes (a toy shown, a hand held out, a point) and ends as her body comes back. Acts run on two channels: her gaze
 ("look") and her body (every other kind), each in the order asked; an act that cannot be done is refused with its reason, never
 faked. KINDS lists every kind with what it does; the task's motor intents map onto them (approach, kneel = "attend", lean in =
 "lean_in", hold up a toy = "show", hand over = "hand_over", guide a forearm = "guide", prop = "prop", the brief capped turn =
@@ -23,34 +29,41 @@ carries out ('show' and 'pick_up' on the toy the Act's thing names); 'copy' make
 'kind:side').
 
 L0, EVERY PHYSICS STEP (the world's apply calls before_step and after_step around each of its 75 mj_steps):
-  - her 16 segments are drawn between the tick's start pose (as drawn) and its end pose (L1's), positions linear and rotations by
-    normalized linear interpolation, plus any yield made within the tick;
-  - EVERY HOLD ON THE G1 IS A CAPPED SPRING (4.1, 4.2, A25), never a weld: a force at the held point, K (her hand's target - the
-    point) + C (its velocity - the point's), clipped at the hold's own cap (a resting hand's weight, the guide's, the prop's step),
-    then all her holds together within what HER caps leave after her body's own contacts (one hand 100 N sustained, 150 N for up
-    to 2 s; both hands 156 N, 200 N for up to 2 s: body/sim/parent_consts.py, checked against their sources), applied as an outside
-    force on that link (xfrc_applied at its centre of mass with the moment of the held point). The holding hand is drawn on the held
-    point, open and flat on its surface, and its collision proxy is off: the spring is its grip, so no kinematic hand ever drives
-    the body; her palm, fingers and thumb are kept HAND_CLEAR_M outside the held link's convex hull and HAND_FREE_M outside every
-    other link's, measured as drawn at the tick's end against the child now and a tick ahead, so her hand never passes through it.
-    Each hold's force is added to the held link's touch (4.2: being held is felt), under the same pain law as any force (every cap
-    is far under F_pain);
-  - THE YIELD (A4): her collision shapes (her palm, fingers and thumb among them, and a toy she holds) touching the G1: per chain
-    (each arm, and the rest of her), a contact force (normal and friction) over a resting hand's weight for 2 physics steps stops
-    that chain where it is and backs it off 2 cm a tick, her arms along their contacts, her body on the floor plan away from the
-    child's centre of mass, turned toward the contacts' own way out as far as they agree (never into furniture: along it); the
-    act resumes when the force is gone, the chain coming back only where it stays 3 cm clear of the child. A BLOW (a contact over
-    her own pain, 150 N) moves the struck chain out at once by as far as it went in (an arm a hand's length in a tick at most),
-    along the contacts' own way out as far as they agree, the rest away from the child's centre of mass through where she is struck
-    (her body up too, coming down again only clear of the child); an arm pushed back farther than a hand's length gives the rest to
-    her whole body at her pace. Her hands' shapes that went into it are moved out by as far
-    as they went in, every step (for that tick: her next plan puts them on its surface as it lies). Backed off 12 cm
-    in one push and still pressed on, the act under way is given up and she gets out of its way at her own pace; at rest, where it
-    pushed her is where she stays. A plan never runs ahead of her drawing: after a yield stopped it short, she reaches the planned
-    pose again before the plan goes on. Walking, she watches her way: where the child has moved within A6's clearance of it she
-    finishes the step under way and plans the trip again. Her body never pushes the child: only her holds do, each within its
-    cap. Her collision shapes are soft (solref 0.05, at contact priority 2 so her softness is the contact's, the G1 untouched:
-    A21's mechanism);
+  - HER JOINTS are driven toward the tick's targets, from her plan at the last tick's end to her plan at this one's, by torques
+    no larger than her strength (parent_body.Drive: each joint's stiffness its strength over 20 deg, critical damping, her own
+    limbs' weight carried, her holds' effort; parent_consts.STRENGTH, a woman's, per joint and direction). Her balance: a capped
+    spring on her pelvis toward her plan, never lifting her while she is still (her feet, knees and shins rest on the floor by
+    contact), and her gait (walking, turning, kneeling down or getting up, shuffling on her knees, sitting down) carried by it
+    with her floor contact off, a disclosed limit (parent_consts.BAL_*: no walking controller is built);
+  - EVERY HOLD ON THE G1 IS A CAPPED SPRING (4.1, 4.2, A25), never a weld: a force at the held point, K (where she means the
+    point to be - the point) + C (its velocity - the point's), clipped at the hold's own cap (a resting hand's weight, the guide's, the prop's step), then all her holds together within what
+    HER caps leave after her body's own contacts (one hand 100 N sustained, 150 N for up to 2 s; both hands 156 N, 200 N for up to
+    2 s: body/sim/parent_consts.py, checked against their sources), applied as an outside force on that link at the held point,
+    and its reaction on her own hand at her grip, her arm and trunk exerting it within her strength (Newton: she feels what she
+    pulls). Her hand is planned on the held point, open and flat on its surface; her palm, fingers and thumb touch the child as
+    the rest of her does, so they never pass into it. Each hold's force is added to the held link's touch (4.2: being held is
+    felt), under the same pain law as any force (every cap is far under F_pain). A hold whose held point has left her hand by a
+    hand's length (HOLD_SLIP_M) has slipped;
+  - HER CONTACTS WITH THE CHILD are the physics' (her shapes at MuJoCo's default contact, solref 0.02, at contact priority 2 so
+    hers is the contact's, the G1 untouched: A21's mechanism): the child pushes her body, and her body gives as far as her
+    strength, mass and footing let it; no rule moves her. A4, her care, on her plan: per chain (each arm, and the rest of her), a
+    contact force (normal and friction) over the act's cap (a resting hand's weight for her body; an arm reaching onto or holding
+    the child, its hold's cap, and its hand on the held link past that cap) for 2 physics steps STOPS that chain where it is (its
+    joints' targets become their positions and its tone lets go, so she presses no further; her legs keep the tone that carries
+    her own weight), and an arm stopped so stops her trunk too while her plan moves it (a lean, her base),
+    which holds there while the arm is pressed. While it still presses: a chain she moves (her gait, a lean, a reaching arm) backs
+    off 2 cm a tick along the contact (her body on the floor plan away from the child's centre of mass, turned toward the
+    contacts' own way out as far as they agree, never into furniture, and her trunk, bent over the child, straightens 10 deg a
+    tick; an arm pressed on its upper arm or forearm, or with its way out barred, draws its hand in toward her shoulder), up to a
+    hand's length (backed off that far, her body gives the act up); a chain she holds still stays: her body holds the pose it had
+    as the push began and her plan is where the push put her, an arm goes where the push has put it, so she never springs back
+    into the child; a chain resting some of her weight on the child moves off it. The act waits while a chain it moves is
+    pressed, and is given up after PATIENCE_TICKS; it resumes when
+    the force is gone, the chain coming back only where it stays 3 cm clear of the child. A plan never runs ahead of her body:
+    after a stop, she reaches the planned pose again before the plan goes on. Walking, she watches her way (where the child has
+    moved within A6's clearance of it she finishes the step under way and plans the trip again) and beside it walks at half her
+    pace. Her body never pushes the child: only her holds do, each within its cap. She sees where her hand is: a hand held at a
+    place is aimed where her real hand arrives there (_aim_fix), and waits a moment to arrive before a grasp or a hold;
   - HER PAIN: a segment's 10 ms mean contact force from the G1 over 150 N is a hit (4.10), logged with its tick for her conduct.
 L1, EVERY TICK (tick_begin): her acts advance, each a list of phases (walk, turn, kneel down, stand up, shuffle on the knees, lean,
 hand moves, grasps and releases of toys, holds), from which her pose at the tick's end is computed: her base (standing, walking,
@@ -60,7 +73,8 @@ when an act starts and re-solved about once a second (REPLAN_TICKS) while its ta
 (the search begins at the last lean and spine and widens), the trunk interpolated from the old solution to the new.
 
 HER PATHS (A6): A* on a 5 cm floor grid, keeping 0.15 m from furniture and walls, 0.25 m from the child's body, 0.08 m from toys
-(beyond her own half-width); a toy across her only way is picked up and set aside; walking at 0.8 m/s, shuffling on her knees at
+(beyond her own half-width); where the babbling child's limbs close every way at 0.25 m, 0.10 m (CLEAR_CHILD_TIGHT_M), and within
+APPROACH_CHILD_M of her spot beside it no nearer the child than the spot itself; a toy across her only way is picked up and set aside; walking at 0.8 m/s, shuffling on her knees at
 0.25 m/s, kneeling down paced by its fastest segment (KNEEL_SEG_MPS). She kneels beside the child's chest on the side it faces
 (0.72-0.78 m from its torso's centre line, then 0.84 and 0.90 m where its arm lies in the way), then its other side, its head and
 its feet; she kneels down a step back where the child is nearer than her step ahead and shuffles in, or, with no room behind her,
@@ -85,8 +99,8 @@ on the mat), and tools/sim_parent_motion.py measures each act's peak force again
 reach and her timing.
 
 EXACT DETERMINISM. Nothing here draws a random number; every choice is a deterministic search. state() carries every act, phase,
-hold, yield, timer and warm start as plain numbers (her pose itself is the scene's, saved with the world), so a world saved while
-she acts and restored anywhere continues bit for bit (body/tests/test_sim_parent.py)."""
+hold, stop, timer, warm start and her joints' targets as plain numbers (her body itself is the physics', saved with the world), so
+a world saved while she acts and restored anywhere continues bit for bit (body/tests/test_sim_parent.py)."""
 import heapq
 import math
 import sys
@@ -100,6 +114,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 import g1scene as G  # noqa: E402
 import parent_consts as K  # noqa: E402
+import parent_body as PB  # noqa: E402
 import parent_kin as kin  # noqa: E402
 import parent_poses as P  # noqa: E402
 from parent_kin import unit  # noqa: E402
@@ -110,13 +125,13 @@ SEG_CHAIN = {s: ("arm_L" if s.endswith("_L") and s.split("_")[0] in ("upper", "f
                  "arm_R" if s.endswith("_R") and s.split("_")[0] in ("upper", "forearm", "hand") else "core") for s in kin.SEGS}
 GRIP_LOCAL = {sd: np.array([0, -kin.side_sign(sd) * .045, -.10]) for sd in "LR"}   # her grip point in her hand's frame (P.reach)
 HAND_SEGS = {"L": 0, "R": 1}
-HAND_TOUCH_AFFINITY = 1                     # her palm, fingers and thumb touch what has contype 1: the G1 alone (g1room.xml: the G1's
-                                            # contype 1, the toys' 4; the room's 1 too, but static bodies never meet each other;
-                                            # make_g1room.HAND_TOUCH)
+HAND_TOUCH_AFFINITY = 3                     # her palm, fingers and thumb touch what has contype 1 or 2: the G1, the room and the
+                                            # floor, never a toy (whose contype is 4; make_g1room.HAND_TOUCH)
+BODY_AFFINITY, GAIT_AFFINITY = 3, 1         # her body's shapes touch the floor's bit 2 while she is still, and not while her gait is
+                                            # carried (make_g1room.FLOOR; parent_consts.BAL_*)
+MOVING = ("walk", "turn", "kneel_down", "shuffle", "sofa")   # her base modes whose gait her balance carries (parent_consts.BAL_*)
 HAND_BOX = (0.0, 0.0, -0.08, 0.12, 0.12, 0.15)   # her hand's frame: a box holding her hand in any shape (centre, half-sizes; its
                                             # fingers reach about 0.2 m from her wrist); MuJoCo's midphase tests her hand's shapes in it
-HAND_CHECK_EVERY = 10                       # physics steps: a holding hand is measured against the held link every 20 ms within the
-                                            # tick, against every other link every step (a guard)
 FOREARM_TOP, UP_LOCAL = K.FOREARM_HOLD, K.FOREARM_HOLD_N
 THIGH_REST = np.array([0.06, 0.0, -0.22])   # her grip on her own thigh (its frame: +x its front, -z toward the knee): the palm on
                                             # its surface (the thigh's 7 cm radius, the grip 4.5 cm off the palm), mid-thigh
@@ -512,20 +527,29 @@ class FloorPlan:
     def point(self, c):
         return np.array([self.X0 + K.GRID_M * c[0], self.Y0 + K.GRID_M * c[1]])
 
-    def free(self, clear, child=None, toys=(), goal=None, goal_r=0.0, goal_clear=None):
-        """a boolean grid of the cells her centre may cross: furniture and walls at `clear`, the child's shapes at CLEAR_CHILD_M +
-        her half-width (except within goal_r of the goal), toys at CLEAR_TOY_M + her feet's half-span"""
+    def free(self, clear, child=None, toys=(), goal=None, goal_r=0.0, goal_clear=None, child_m=K.CLEAR_CHILD_M):
+        """a boolean grid of the cells her centre may cross: furniture and walls at `clear`, the child's shapes at child_m (A6's
+        CLEAR_CHILD_M) + her half-width (except within goal_r of the goal), toys at CLEAR_TOY_M + her feet's half-span"""
         X, Y = np.meshgrid(self.xs, self.ys, indexing="ij")
         ok = self.dist >= clear
+        cd = None
         if child is not None:
-            r = K.CLEAR_CHILD_M + K.BODY_R_M
+            r = child_m + K.BODY_R_M
+            cd = np.full(ok.shape, 9.0)
             for x, y, z, rad in child.foot_pts:
-                ok &= np.hypot(X - x, Y - y) - rad >= r
+                cd = np.minimum(cd, np.hypot(X - x, Y - y) - rad)
+            ok &= cd >= r
+        tok = np.ones(ok.shape, dtype=bool)
         for (x, y) in toys:
-            ok &= np.hypot(X - x, Y - y) >= K.CLEAR_TOY_M + 0.15
+            tok &= np.hypot(X - x, Y - y) >= K.CLEAR_TOY_M + 0.15
+        ok &= tok
         if goal is not None and goal_r > 0:                                  # the last steps to her spot come as near furniture as
             near = np.hypot(X - goal[0], Y - goal[1]) <= goal_r                 # her own width and 5 cm (a spot by the table, the sofa)
             ok |= near & (self.dist >= (K.BODY_R_M + 0.05 if goal_clear is None else goal_clear))
+        if goal is not None and cd is not None:                             # and, within APPROACH_CHILD_M of her spot, no nearer the
+            gd = float(cd[self.cell(goal)])                                 # child than her spot itself (her spot lies within A6's
+            near = np.hypot(X - goal[0], Y - goal[1]) <= K.APPROACH_CHILD_M    # walking clearance: she kneels beside it)
+            ok |= near & tok & (cd >= min(r, gd - K.GRID_M)) & (self.dist >= K.BODY_R_M + 0.05)
         return ok
 
     def path(self, a, b, ok):
@@ -651,13 +675,14 @@ class ParentMotion:
         self.conduct = None                                                 # her conduct, bound by bind_conduct (never her state)
         m, d = self.m, self.d = world.m, world.d
         sc = self.scene = world.scene
-        self.mocap_ids = np.array([sc.mocap[s] for s in kin.SEGS])
+        self.bm = sc.bmap                                                   # her body's joints (parent_body.BodyMap) ...
+        self.drive = PB.Drive(m, d, self.bm)                                # ... driven every physics step (L0)
         self.seg_chain = np.array([CHAINS.index(SEG_CHAIN[s]) for s in kin.SEGS])
         her_body = {m.body(f"parent_{s}").id: i for i, s in enumerate(kin.SEGS)}
         # HER WHOLE HAND TOUCHES THE CHILD (A4; the W2 verifier's third finding: her fingers had no collision shapes, so a babbling
         # limb passed through them): her palm, fingers and thumb as drawn (the scene's hand shapes, posed with her hand shape) touch
-        # the G1 and nothing else (make_g1room.HAND_TOUCH: contype 0, conaffinity 1, soft at priority 2, compiled collidable so
-        # MuJoCo's midphase keeps them); switched with her hand's proxy (_proxy)
+        # the G1, the room and the floor and never a toy (make_g1room.HAND_TOUCH: contype 0, conaffinity 1 | 2, soft at priority 2,
+        # compiled collidable so MuJoCo's midphase keeps them), always: she is a body
         self.finger_geoms = {}
         for sd in "LR":
             hb = m.body(f"parent_hand_{sd}").id; px = m.geom(f"parent_hand_{sd}").id
@@ -693,14 +718,19 @@ class ParentMotion:
                 self.toy_weld[(sd, toy)] = e
         self.hand_geom = {sd: m.geom(f"parent_hand_{sd}").id for sd in "LR"}
         self.proxy_on = {g: (int(m.geom_contype[g]), int(m.geom_conaffinity[g])) for g in self.hand_geom.values()}
+        self.body_geoms = np.array([g for g in range(m.ngeom) if self.geom_seg[g] >= 0 and int(m.geom_contype[g]) == 8
+                                    and g not in self.hand_geom.values()], dtype=np.int64)   # her body's shapes on the floor's bit
         self.plan = FloorPlan(m, d)
         self.scratch = mujoco.MjData(m)
-        self._qpos_ahead = None
+        self.knee_j = (m.joint("parent_knee_L").id, m.joint("parent_knee_R").id)   # her knees, and her body above them (a tall kneel
+        self.above_knees = [int(b) for b in self.bm.bodies if not m.body(int(b)).name.startswith(("parent_shin", "parent_foot"))]
+        ki = self.bm.nb * 3 + [n for n, _ in PB.HINGES].index("knee_L")      # pivots on them): her knee's strength either way
+        self.knee_lim = (float(self.bm.lo[ki]), float(self.bm.hi[ki]))
         self.hand_idx = np.array([kin.SEGS.index("hand_L"), kin.SEGS.index("hand_R")])
         self.hand_idx_set = {int(x) for x in self.hand_idx}
         self.child_root = m.body("pelvis").id                               # the G1's root: its subtree's centre of mass is the child's
-        self.hand_fix = np.zeros((2, 3)); self.any_fix = False             # her hands moved out within this tick (not state: every
-                                                                            # tick_begin clears them, her grips carrying them on)
+        self.grip_site = {sd: m.site(f"parent_hand_{sd}_grip").id for sd in "LR"}   # her grip point on each hand (GRIP_LOCAL)
+        self._jac = np.zeros((3, m.nv))
         self._f6 = np.zeros(6)
         self._ft = np.zeros(6)
         self._hand_local = {}                                               # her hand's shapes per hand shape (a cache)
@@ -731,7 +761,9 @@ class ParentMotion:
         self.glances = []                                                   # L1's glances: [target, from tick, until tick]
         self.rep = None                                                     # (tick, report): the last report, given again if asked
         self.eoc_set = False                                                # eyes_on_child as the glue set it (no conduct bound)
+        self.still_set = False                                              # still as the glue set it (no conduct bound)
         self.eoc = False                                                    # eyes_on_child as read this tick
+        self.still = False                                                  # a formal trial holding her still, as read this tick
         self.aim = None; self.aim_f = {"L": 0.0, "R": 0.0}                  # the links her hands reach onto for a hold, and their touch
         self.arrived = {"L": False, "R": False}                            # her hands that met their link this tick ...
         self.arrived_now = {"L": False, "R": False}                        # ... and last tick (read by the reach)
@@ -740,7 +772,7 @@ class ParentMotion:
         self.queue = {"body": [], "gaze": []}
         self.cur = {"body": None, "gaze": None}
         self.phases = []
-        self.base = dict(mode="held", at=_lst(pose.pos[:2]), yaw=yaw, lean=0.0, spine=0.0, twist=0.0)   # the scene's pose, as drawn
+        self.base = dict(mode="held", at=_lst(pose.pos[:2]), yaw=yaw, lean=0.0, spine=0.0, twist=0.0)   # the scene's pose, as placed
         self.arms = {sd: dict(mode="relaxed") for sd in "LR"}
         self.look = dict(target="ahead", until=0)
         self.face = dict(kin.FACE_NEUTRAL)
@@ -748,22 +780,16 @@ class ParentMotion:
         self.carry = {"L": None, "R": None}                                 # a toy in her hand: its centre in her hand's frame
         self.lift = {"L": None, "R": None}                                  # where a hand lifts to when it lets go of the child
         self.holds = []
-        self.offset = {c: np.zeros(3) for c in CHAINS}
-        self.doff = {c: np.zeros(3) for c in CHAINS}                        # the yield made within this tick
-        self.hdoff = {c: np.zeros(3) for c in CHAINS}                       # her hands moved out of the child within this tick
+        self.offset = {c: np.zeros(3) for c in CHAINS}                      # her plan moved where the child pushed her (A4), per chain
         self._offset_at_start = {c: np.zeros(3) for c in CHAINS}            # her offsets as this tick began (not state: set each tick)
-        self.arm_give = {c: 0.0 for c in CHAINS}                            # last tick's (a drawing's own give, not a plan: the jump
-                                                                            # guard allows an arm that far more)
         self.over = {c: 0 for c in CHAINS}
         self.yielding = {c: False for c in CHAINS}
-        self.frozen = {c: None for c in CHAINS}                             # where a yielding chain stopped in this tick (a fraction)
-        self.swivel = {"L": 0, "R": 0}                                      # each elbow's swing from her natural pole, as drawn
+        self.stopped = {c: False for c in CHAINS}                           # a chain stopped in the last tick (A4): this tick starts
+                                                                            # from where her body is, not from last tick's plan
+        self.swivel = {"L": 0, "R": 0}                                      # each elbow's swing from her natural pole, as planned
         self.serial = 0; self.cur_serial = 0                                # her phases' numbers
         self.off_serial = {c: -1 for c in CHAINS}                           # the phase each chain's yield offset was made in
-        self.any_doff = False
-        self.doff_seg = np.zeros((len(kin.SEGS), 3))
-        self.lag = False                                                    # her drawing stopped short of last tick's plan (a yield)
-        self.prev = None                                                    # her base and arms as last drawn
+        self.prev = None                                                    # her base and arms as last planned
         self.blocked = None                                                 # the act given up by a push she backed off 12 cm from
         self.ymoved = {c: 0.0 for c in CHAINS}                              # how far each chain has backed off in this push
         self.quiet = {c: 0 for c in CHAINS}                                 # ticks since the child last pressed on each chain
@@ -778,9 +804,28 @@ class ParentMotion:
         self.brief_s = 0.0
         self.rest_s = K.BRIEF_REST_S
         self.drawn_face = None
-        self.written = (self.d.mocap_pos[self.mocap_ids].copy(), self.d.mocap_quat[self.mocap_ids].copy())   # her mocap as drawn
+        self.face_shown = None                                              # her face as drawn in the last tick (the report's face) ...
+        self.face_prev = None                                               # ... and in the tick before it
+        self.trunk_at = None                                                # her chest as the last tick ended (the report's trunk field)
+        self.trunk_moved = False                                            # ... and whether it moved in that tick
+        self.planned_trunk_moved = False                                    # her plan moved her trunk this tick (a lean, a turn)
+        self.hold_touch = {"L": 0.0, "R": 0.0}                              # a holding hand's contact with its held link, last step
+        self.toy_touch = {"L": False, "R": False}                           # a toy in her hand touching the child, last step
+        self.lag = False
+        self.push_on = {c: False for c in CHAINS}
+        self.held_at = {c: None for c in CHAINS}                            # a still chain's pose as a push on it began (plain)
+        self.on_child = {c: False for c in CHAINS}                          # a chain of hers resting its weight on the child
+        self.arm_in = {c: False for c in CHAINS}                            # an arm pressed on its upper arm or forearm (it draws in)
+        self.core_hold = None                                               # her trunk's pose where it stopped with a pressed arm (plain)
+        segs = kin.fk(pose)
+        self.written = (np.array([segs[s][0] for s in kin.SEGS]), np.array([_mat_to_quat(segs[s][1]) for s in kin.SEGS]))
+                                                                            # her plan's segments at the last tick's end (her body's own
+                                                                            # are the physics')
+        tg = self.bm.targets(segs)
+        self.drive.set_tick(tg, tg, 0.0)
+        self.support = 0.0                                                  # her balance's share of her gait (0 still, 1 moving)
         self.placed = False                                                 # an instrument placed her (tests): idle until an act
-        self.xfrc_bodies = []                                               # the links her holds pushed on the last step
+        self.xfrc_bodies = []                                               # the bodies her holds pushed on the last step
         self.start = self.end = None
         self.moving = False
         self.warm = {}
@@ -801,23 +846,30 @@ class ParentMotion:
     def _state(self):
         return dict(live=list(self.live), cancels=[list(c) for c in self.cancels], glances=_plain(self.glances),
                     rep=None if self.rep is None else [self.rep[0], _plain(dict(self.rep[1], acts=[[int(k), v] for k, v in self.rep[1]["acts"].items()]))],
-                    eoc_set=self.eoc_set, eoc=self.eoc, aim=None if self.aim is None else {k: list(v) for k, v in self.aim.items()},
+                    eoc_set=self.eoc_set, still_set=self.still_set, eoc=self.eoc, still=self.still,
+                    aim=None if self.aim is None else {k: list(v) for k, v in self.aim.items()},
                     arrived=dict(self.arrived), arrived_now=dict(self.arrived_now),
                     acts=_plain(self.acts), first_id=self.first_id, old=[[int(k), v] for k, v in self.old.items()], queue={k: list(v) for k, v in self.queue.items()}, cur=dict(self.cur),
                     phases=[_plain(p) for p in self.phases], base=_plain(self.base), arms=_plain(self.arms), look=_plain(self.look),
                     face=dict(self.face), holding=dict(self.holding), carry=_plain(self.carry), lift=_plain(self.lift), holds=[h.state() for h in self.holds],
-                    offset={c: _lst(v) for c, v in self.offset.items()}, doff={c: _lst(v) for c, v in self.doff.items()},
-                    hdoff={c: _lst(v) for c, v in self.hdoff.items()},
-                    arm_give=dict(self.arm_give), over=dict(self.over), yielding=dict(self.yielding), frozen=dict(self.frozen), swivel=dict(self.swivel), serial=self.serial, cur_serial=self.cur_serial, blocked=self.blocked,
+                    offset={c: _lst(v) for c, v in self.offset.items()},
+                    over=dict(self.over), yielding=dict(self.yielding), stopped=dict(self.stopped), swivel=dict(self.swivel), serial=self.serial, cur_serial=self.cur_serial, blocked=self.blocked,
                     off_serial=dict(self.off_serial), ymoved=dict(self.ymoved), quiet=dict(self.quiet), body_f=_lst(self.body_f), body_hist=self.body_hist.tolist(),
- prev=self.prev,
+                    prev=self.prev,
                     ydir={c: _lst(v) for c, v in self.ydir.items()}, touching=dict(self.touching), last_touch=dict(self.last_touch), pain_win=self.pain_win.tolist(),
                     hits=[list(h) for h in self.hits], brief_s=self.brief_s, rest_s=self.rest_s,
                     drawn_face=None if self.drawn_face is None else [list(self.drawn_face[0]), _lst(self.drawn_face[1])],
+                    face_shown=None if self.face_shown is None else list(self.face_shown),
+                    face_prev=None if self.face_prev is None else list(self.face_prev),
+                    trunk_at=None if self.trunk_at is None else [_lst(self.trunk_at[0]), _lst(self.trunk_at[1])], trunk_moved=self.trunk_moved,
+                    planned_trunk_moved=self.planned_trunk_moved, hold_touch=dict(self.hold_touch), toy_touch=dict(self.toy_touch), push_on=dict(self.push_on),
+                    held_at={c: v for c, v in self.held_at.items()}, on_child=dict(self.on_child),
+                    arm_in=dict(self.arm_in), core_hold=self.core_hold,
                     written=None if self.written is None else [self.written[0].tolist(), self.written[1].tolist()],
+                    drive=self.drive.state(), support=self.support,
                     moving=self.moving, placed=self.placed, xfrc_bodies=list(self.xfrc_bodies), warm=_plain(self.warm), tick=self.tick, stats=_plain(self.stats), effort_peak=self.effort_peak,
                     proxies={int(g): [int(self.m.geom_contype[g]), int(self.m.geom_conaffinity[g])]
-                             for g in list(self.hand_geom.values()) + self.finger_geoms["L"] + self.finger_geoms["R"]})
+                             for g in list(self.hand_geom.values()) + self.finger_geoms["L"] + self.finger_geoms["R"] + [int(x) for x in self.body_geoms]})
 
     def load_state(self, s):
         self.live = [int(i) for i in s.get("live", ())]
@@ -826,6 +878,7 @@ class ParentMotion:
         r = s.get("rep")
         self.rep = None if r is None else (int(r[0]), dict(_unplain(r[1]), acts={int(k): v for k, v in r[1]["acts"]}))
         self.eoc_set = bool(s.get("eoc_set", False)); self.eoc = bool(s.get("eoc", False))
+        self.still_set = bool(s.get("still_set", False)); self.still = bool(s.get("still", False))
         am = s.get("aim")
         self.aim = None if am is None else {k: (int(v[0]), float(v[1])) for k, v in am.items()}
         self.aim_f = {"L": 0.0, "R": 0.0}
@@ -837,25 +890,39 @@ class ParentMotion:
         self.base = _unplain(s["base"]); self.arms = _unplain(s["arms"]); self.look = _unplain(s["look"])
         self.face = dict(s["face"]); self.holding = dict(s["holding"]); self.carry = _unplain(s["carry"]); self.lift = _unplain(s["lift"])
         self.holds = [Hold.from_state(h) for h in s["holds"]]
-        self.offset = {c: np.array(v) for c, v in s["offset"].items()}
-        self.doff = {c: np.array(v, dtype=np.float64) for c, v in s["doff"].items()} if "doff" in s else {c: np.zeros(3) for c in CHAINS}
-        self.arm_give = {c: float(v) for c, v in s.get("arm_give", {c: 0.0 for c in CHAINS}).items()}
-        self.hdoff = {c: np.array(v, dtype=np.float64) for c, v in s["hdoff"].items()} if "hdoff" in s else {c: np.zeros(3) for c in CHAINS}
-        self.over = dict(s["over"]); self.yielding = dict(s["yielding"]); self.frozen = dict(s["frozen"]); self.swivel = dict(s["swivel"])
+        self.offset = {c: np.array(v, dtype=np.float64) for c, v in s["offset"].items()}
+        self.over = dict(s["over"]); self.yielding = dict(s["yielding"]); self.swivel = dict(s["swivel"])
+        self.stopped = dict(s.get("stopped", {c: False for c in CHAINS}))
         self.serial, self.cur_serial, self.off_serial = int(s["serial"]), int(s["cur_serial"]), dict(s["off_serial"])
         self.blocked = None if s["blocked"] is None else int(s["blocked"])
         self.ymoved = dict(s["ymoved"]); self.quiet = dict(s["quiet"]); self.body_f = np.array(s["body_f"], dtype=np.float64)
         self.body_hist = np.array(s.get("body_hist", np.zeros((K.HER_PAIN_STEPS, 3))), dtype=np.float64).reshape(K.HER_PAIN_STEPS, 3)
         self.prev = s["prev"]
-        self.any_doff = False; self.doff_seg = np.zeros((len(kin.SEGS), 3))
-        self.ydir = {c: np.array(v) for c, v in s["ydir"].items()}
+        self.ydir = {c: np.array(v, dtype=np.float64) for c, v in s["ydir"].items()}
         self.touching = dict(s["touching"]); self.last_touch = dict(s["last_touch"])
         self.pain_win = np.array(s["pain_win"], dtype=np.float64).reshape(len(kin.SEGS), K.HER_PAIN_STEPS)
         self.pain_any = bool(self.pain_win.any())
         self.hits = [tuple(h) for h in s["hits"]]
         self.brief_s, self.rest_s = float(s["brief_s"]), float(s["rest_s"])
         self.drawn_face = None if s["drawn_face"] is None else (tuple(tuple(x) for x in s["drawn_face"][0]), np.array(s["drawn_face"][1]))
-        self.written = None if s["written"] is None else (np.array(s["written"][0]), np.array(s["written"][1]))
+        fs = s.get("face_shown")
+        self.face_shown = None if fs is None else tuple(tuple(x) for x in fs)
+        fs = s.get("face_prev")
+        self.face_prev = None if fs is None else tuple(tuple(x) for x in fs)
+        ta = s.get("trunk_at")
+        self.trunk_at = None if ta is None else (np.array(ta[0], dtype=np.float64), np.array(ta[1], dtype=np.float64))
+        self.trunk_moved = bool(s.get("trunk_moved", False))
+        self.planned_trunk_moved = bool(s.get("planned_trunk_moved", False))
+        self.hold_touch = {k: float(v) for k, v in s.get("hold_touch", {"L": 0.0, "R": 0.0}).items()}
+        self.toy_touch = {k: bool(v) for k, v in s.get("toy_touch", {"L": False, "R": False}).items()}
+        self.push_on = {k: bool(v) for k, v in s.get("push_on", {c: False for c in CHAINS}).items()}
+        self.held_at = {k: (None if v is None else [list(x) for x in v]) for k, v in s.get("held_at", {c: None for c in CHAINS}).items()}
+        self.on_child = {k: bool(v) for k, v in s.get("on_child", {c: False for c in CHAINS}).items()}
+        self.arm_in = {k: bool(v) for k, v in s.get("arm_in", {c: False for c in CHAINS}).items()}
+        ch = s.get("core_hold")
+        self.core_hold = None if ch is None else [list(x) for x in ch]
+        self.written = None if s["written"] is None else (np.array(s["written"][0], dtype=np.float64), np.array(s["written"][1], dtype=np.float64))
+        self.drive.load_state(s["drive"]); self.support = float(s.get("support", 0.0))
         self.start = self.end = None
         self.moving = bool(s["moving"]); self.placed = bool(s["placed"]); self.xfrc_bodies = [int(b) for b in s["xfrc_bodies"]]
         self.warm = _unplain(s["warm"]); self.tick = int(s["tick"])
@@ -945,6 +1012,16 @@ class ParentMotion:
         """the same, set by the world's glue each tick where no conduct is bound (saved: it rules the tick it is set for)"""
         self.eoc_set = bool(flag)
 
+    def set_still(self, flag):
+        """P3's Conduct.still, set by the world's glue where no conduct is bound: a formal trial's settle, sentence and window, when
+        she starts no act, rests her hands on her thighs and shows her face's neutral set (saved)"""
+        self.still_set = bool(flag)
+
+    def _still(self):
+        if self.conduct is not None:
+            return bool(getattr(self.conduct, "still", False))
+        return bool(self.still_set)
+
     def _eyes_on_child(self):
         if self.conduct is not None:
             return bool(getattr(self.conduct, "eyes_on_child", False))
@@ -1000,18 +1077,58 @@ class ParentMotion:
         return LINK_WORD.get(self.m.body(int(body)).name, "?")
 
     def _fields(self):
-        """where her eyes, head and hands point now (report)"""
+        """where her eyes, head, hands and trunk point now, and whether her face moves (report)"""
         t = self.look.get("target")
         g = self._glance_now() if not self.eoc and self.cur["gaze"] is None else None
         if g is not None and self._resolve_point(g) is not None:
             t = g                                                           # L1's glance: her eyes on it for its ticks
-        moving = self.base["mode"] in ("walk", "turn", "shuffle", "kneel_down", "sofa")
+        moving = self.base["mode"] in MOVING
         eyes = ("?" if moving else None) if t in (None, "ahead") else self._word(t)
         out = dict(eyes=eyes, head=eyes)
         cur = self._act(self.cur["body"]) if self.cur["body"] is not None else None
         for sd, fld in (("L", "left"), ("R", "right")):
             out[fld] = self._hand_word(sd, cur)
+        out["trunk"] = self._trunk_word(cur)
+        out["face"] = self._face_word()
         return out
+
+    def _trunk_word(self, cur):
+        """her trunk (P3's tenth round): 'child' while it faces the child and holds still (her body as the physics has it: her chest
+        moved less than TRUNK_STILL_M and turned less than TRUNK_STILL_DEG over the tick, and her plan did not move it), the place
+        she walks to while she walks to a named one, '?' while it leans, turns, shifts or is pushed, or faces elsewhere"""
+        b = self.base
+        if b["mode"] in MOVING:
+            if cur is not None and cur["kind"] == "walk" and cur.get("target") is not None:
+                return self._word(cur["target"])
+            return "?"
+        if self.trunk_moved or self.planned_trunk_moved:
+            return "?"
+        cp = self.d.xpos[self.bm.seg_body["chest"]]; cR = self.d.xmat[self.bm.seg_body["chest"]].reshape(3, 3)
+        to = self.child.torso - cp
+        fw, tw = cR[:2, 0], to[:2]
+        nf, nt = float(np.linalg.norm(fw)), float(np.linalg.norm(tw))
+        if nf < 1e-6 or nt < 1e-6:
+            return "?"
+        return "child" if float(fw @ tw) / (nf * nt) >= math.cos(math.radians(K.FACE_CHILD_DEG)) else "?"
+
+    def _face_word(self):
+        """her face (P3's contract): 'mama' on a tick her expression is not its neutral set, or moved since the last tick; her jaw
+        (her mouth, with her speech) and her blinks apart; None while it is still"""
+        key = self.face_shown
+        if key is None:
+            f = self._face_drawn()
+            key = tuple(sorted((k, float(v)) for k, v in f.items() if k not in ("jaw", "blink")))
+        neutral = tuple(sorted((k, float(v)) for k, v in kin.FACE_NEUTRAL.items() if k not in ("jaw", "blink")))
+        moved = self.face_prev is not None and tuple(self.face_prev) != tuple(key)
+        return "mama" if tuple(key) != neutral or moved else None
+
+    def _face_drawn(self):
+        """her face as it is drawn this tick: her feelings' graded face, or, while a formal trial holds her still, its neutral set but
+        her jaw (her mouth moves with her speech; P3's Conduct.still)"""
+        if self.still:
+            f = dict(kin.FACE_NEUTRAL); f["jaw"] = float(self.face.get("jaw", 0.0))
+            return f
+        return dict(self.face)
 
     def _hand_word(self, sd, cur):
         toy = self.holding[sd]
@@ -1061,7 +1178,8 @@ class ParentMotion:
 
     def truth(self):
         """her motion as the instruments and her conduct see it (world truth, never the body's): her holds and their forces, her
-        effort against her caps, her contacts with the child and whether she yields, the hits she felt, her acts under way"""
+        effort against her caps, her contacts with the child and whether she yields, the hits she felt, her acts under way, her
+        balance (its support, its force on her pelvis) and her joints at her strength"""
         cur = self._act(self.cur["body"]) if self.cur["body"] is not None else None
         return dict(holds=[dict(name=h.name, kind=h.kind, side=h.side, body=self.m.body(h.body).name, N=float(np.linalg.norm(h.force)),
                                 cap=h.cap, peak=h.peak, state=h.ctl.get("state"), mode=h.ctl.get("mode")) for h in self.holds],
@@ -1070,35 +1188,44 @@ class ParentMotion:
                     hits=[tuple(h) for h in self.hits if h[0] >= self.tick - 1], holding=dict(self.holding),
                     act=None if cur is None else dict(id=cur["id"], kind=cur["kind"], target=cur["target"],
                                                      phase=self.phases[0]["type"] if self.phases else None),
-                    base=self.base["mode"], at=list(self.base["at"]), yaw=float(self.base["yaw"]))
+                    base=self.base["mode"], at=list(self.base["at"]), yaw=float(self.base["yaw"]), support=self.support,
+                    balance=self.drive.bal.tolist(), pelvis=self.d.xpos[self.bm.pelvis].tolist())
 
     def place(self, mode, at, yaw, lean=0.0, spine=0.0, twist=0.0):
-        """AN INSTRUMENT'S PLACEMENT (tests and tools only, never her conduct): she is drawn at once in a base posture ('stand',
-        'heels', 'tall'), with no act under way, as if she had come there"""
+        """AN INSTRUMENT'S PLACEMENT (tests and tools only, never her conduct): her body put at once in a base posture ('stand',
+        'heels', 'tall') at rest, with no act under way, as if she had come there"""
         self.base = dict(mode=mode, at=_lst(at), yaw=float(yaw), lean=float(lean), spine=float(spine), twist=float(twist))
         self.arms = {sd: dict(mode="relaxed") for sd in "LR"}
         self.phases = []
         self.child = Child(self.m, self.d, self.scene.g1_set)
-        pose = self._pose()
+        self._put(self._pose())
+
+    def _put(self, pose):
+        """her body put in `pose` at rest (an instrument's placement), her plan and her joints' targets with it"""
         self.scene.set_parent(pose)
         mujoco.mj_forward(self.m, self.d)
-        self.written = (self.d.mocap_pos[self.mocap_ids].copy(), self.d.mocap_quat[self.mocap_ids].copy())
-        self.drawn_face = (self._face_key(), self._gaze_head(pose, kin.fk(pose)))
+        segs = kin.fk(pose)
+        self.written = (np.array([segs[s][0] for s in kin.SEGS]), np.array([_mat_to_quat(segs[s][1]) for s in kin.SEGS]))
+        tg = self.bm.targets(segs)
+        self.support = 1.0 if self.base["mode"] in MOVING else 0.0
+        self.drive.set_tick(tg, tg, self.support)
+        self._floor_contact()
+        self.drawn_face = (self._face_key(), self._gaze_head(pose, segs))
+        self.trunk_at = None
         self.placed = False
 
     def give_toy(self, side, toy):
         """AN INSTRUMENT'S PLACEMENT (tests and tools only): a toy put in her hand at once, carried before her"""
-        g, R = self._resolve_hand(CARRY, side)
-        g, R = self._realize(self._pose(arms=False, look=False), side, g, R)
+        self.arms[side] = dict(mode="at", to=CARRY, shape1=dict(curl=.9, thumb=.8, index=None), stay=True)
+        pose = self._pose()
+        self._put(pose)
+        hb = self.bm.seg_body[f"hand_{side}"]
+        g = self.d.site_xpos[self.grip_site[side]].copy()
         b = self.toys[toy]
         adr = self.m.jnt_qposadr[self.m.body_jntadr[b]]
         self.d.qpos[adr:adr + 3] = g + np.array([0, 0, -0.01])
         self.d.qvel[self.m.jnt_dofadr[self.m.body_jntadr[b]]:self.m.jnt_dofadr[self.m.body_jntadr[b]] + 6] = 0
-        self.arms[side] = dict(mode="at", to=CARRY, shape1=dict(curl=.9, thumb=.8, index=None), stay=True)
-        pose = self._pose()
-        self.scene.set_parent(pose)
         mujoco.mj_forward(self.m, self.d)
-        self.written = (self.d.mocap_pos[self.mocap_ids].copy(), self.d.mocap_quat[self.mocap_ids].copy())
         self.phases = [dict(type="grasp", side=side, toy=toy)]
         self._ph_grasp(None, self.phases[0])
         self.phases = []
@@ -1130,102 +1257,197 @@ class ParentMotion:
             for i, _t in due:
                 self.cancel(i)
         self.eoc = self._eyes_on_child()                                    # an ask pending in her conduct (A51)
+        self.still = self._still()                                          # a formal trial holding her still (4.8)
         self.arrived_now = dict(self.arrived); self.arrived = {"L": False, "R": False}   # her hands that met their link last tick
-        pos0 = d.mocap_pos[self.mocap_ids].copy(); quat0 = d.mocap_quat[self.mocap_ids].copy()
-        if not self.placed and not (np.array_equal(pos0, self.written[0]) and np.array_equal(quat0, self.written[1])):
-            self.placed = True                                              # an instrument placed her (a test's rig)
-        self.lag = any(self.frozen[c] is not None for c in CHAINS)        # her drawing stopped short of last tick's plan (a yield)
-        self.arm_give = {c: float(np.linalg.norm(self.doff[c]) + np.linalg.norm(self.hdoff[c])) for c in CHAINS}   # last tick's
-        self.hdoff = {c: np.zeros(3) for c in CHAINS}                       # give within the tick (drawn rigidly); her hands' give drops
-        for c in CHAINS:                                                    # her body risen under a push from below stays risen until
-            self.offset[c] = self.offset[c] + self.doff[c]; self.doff[c] = np.zeros(3)   # it comes down clear of the child
-                                                                            # (_decay_offsets: coming straight back down onto a child
-                                                                            # pinned under her face had pressed it at 1.6 kN, W2 fix)
-            self.frozen[c] = 0.0 if self.yielding[c] else None              # a chain still yielding stays where it stopped
-        for sd in "LR":                                                     # an arm pushed back farther than a hand's length: she steps
-            c = f"arm_{sd}"                                                 # back with her body for the rest (a person whose arm is
-            n = float(np.linalg.norm(self.offset[c]))                       # pushed far gives with her whole body; an arm left 0.5 m
-            if n > K.YIELD_MAX_M:                                           # off its reach flipped its elbow, the W2 fix's babble
-                ex = self.offset[c] * (1.0 - K.YIELD_MAX_M / n)             # seed 6 at p_rest 0.6), at her own pace a tick at most
-                self.offset[c] = self.offset[c] - ex
-                pace = (K.SHUFFLE_MPS if self.base["mode"] in ("heels", "tall", "shuffle", "kneel_down") else K.WALK_MPS) * TICK_S
-                st = np.array([ex[0], ex[1], 0.0])
-                ns = float(np.linalg.norm(st))
-                if ns > pace:
-                    st = st * (pace / ns)
-                if not self._core_room(st):
-                    st = np.r_[self._core_slide(st)[:2], 0.0]
-                self.offset["core"] = self.offset["core"] + st
-        self._offset_at_start = {c: self.offset[c].copy() for c in CHAINS}
-        self.any_doff = False
-        self._qpos_ahead = None                                             # the G1 a tick ahead (made when a hold needs it)
-        self.hand_fix[:] = 0.0; self.any_fix = False                        # each tick's plan carries last tick's moves in the grips
         self.child = Child(m, d, self.scene.g1_set)
+        self._anchor_pressed()                                              # A4: pressed, she is where the child pushed her
+        self.push_on = dict(self.yielding)                                  # the chains yielding as this tick begins
+        self.lag = any(self.stopped.values())                               # a chain stopped last tick: her plan waits a tick for her
+        self._offset_at_start = {c: self.offset[c].copy() for c in CHAINS}
+        planned0 = self.written
         if self.placed:
             if not (self.queue["body"] or self.queue["gaze"] or self.cur["body"] is not None or self.cur["gaze"] is not None):
                 self.moving = False
                 self._set_hold_targets()
+                self._drive_tick(None)
                 return
-            self.placed = False                                             # her next act: she is drawn from her own pose again
-            self.written = (pos0, quat0)
+            self.placed = False
         self._gaze_tick()
         self._body_tick()
         if self.cur["body"] is None and not self.phases and not any(self.yielding.values()):
             self._fold_core()                                               # at rest, where the child pushed her is where she is
         self._hold_tick()
+        self._still_tick()
         self._support_tick()
         self._decay_offsets()
         active = (self.cur["body"] is not None or self.cur["gaze"] is not None or bool(self.holds) or bool(self.glances)
                   or self.look.get("target") not in (None, "ahead") or any(a["mode"] != "relaxed" for a in self.arms.values())
                   or self.base["mode"] not in ("held", "stand", "heels", "tall", "sofa") or any(np.any(self.offset[c]) for c in CHAINS)
                   or self.base.get("dirty", False) or (self.drawn_face is not None and self._face_key() != self.drawn_face[0])
-                  or (self.drawn_face is None and self._face_key() != self._face_key_of(kin.FACE_NEUTRAL)))
+                  or (self.drawn_face is None and self._face_key() != self._face_key_of(kin.FACE_NEUTRAL))
+                  or any(self.stopped.values()) or any(self.yielding.values()))
         self.base["dirty"] = False
         if not active:
             self.moving = False
+            self.planned_trunk_moved = False
             self._set_hold_targets()
+            self._drive_tick(None)
             return
         pose = self._pose()
         segs = kin.fk(pose)
         pos1 = np.array([segs[s][0] for s in kin.SEGS])
-        mv = np.linalg.norm(pos1 - pos0, axis=1)
+        mv = np.linalg.norm(pos1 - planned0[0], axis=1)
         jump = float(mv[0])
-        give = np.array([self.arm_give[CHAINS[c]] if CHAINS[c] != "core" else 0.0 for c in self.seg_chain])
-        if (jump > MAX_JUMP_M or float((mv - give).max()) > MAX_LIMB_JUMP_M) and self.written is not None and not self.placed:
+        if (jump > MAX_JUMP_M or float(mv.max()) > MAX_LIMB_JUMP_M) and not self.lag:
             self.stats["jumps_refused"] = self.stats.get("jumps_refused", 0) + 1   # never a teleport: a plan that would move
             cur = self._act(self.cur["body"]) if self.cur["body"] is not None else None   # her body faster than a person is a
             if cur is not None:                                                  # bug; the act stops and she stays as she is
                 self._end(cur, "refused", f"her body would have jumped {float(mv.max()):.2f} m in a tick (a planning fault: "
                                           f"{kin.SEGS[int(np.argmax(mv))]}, phase {self.phases[0]['type'] if self.phases else None})")
             self.phases = []
-            if self.prev is not None:                                       # she stays as she is drawn: her base and arms as they
-                self.base = _unplain(self.prev["base"]); self.base["dirty"] = True   # were when last drawn
+            if self.prev is not None:                                       # she stays as she was planned: her base and arms as they
+                self.base = _unplain(self.prev["base"]); self.base["dirty"] = True   # were when last planned
                 self.arms = _unplain(self.prev["arms"])
-                for c in CHAINS:                                            # and her offsets as this tick began (a fold into her base
-                    self.offset[c] = self._offset_at_start[c].copy()        # undone with it: her pelvis had jumped back 0.26 m)
-            else:
-                self.base = dict(mode="held", at=_lst(self.scene.pose.pos[:2]), yaw=float(self.base["yaw"]), lean=0.0, spine=0.0,
-                                 twist=0.0)
+                for c in CHAINS:
+                    self.offset[c] = self._offset_at_start[c].copy()
             self.moving = False
+            self.planned_trunk_moved = False
             self._set_hold_targets()
+            self._drive_tick(None)
             return
-        self.prev = dict(base=_plain(self.base), arms=_plain(self.arms))   # what this drawing comes from (the guard's way back)
+        self.prev = dict(base=_plain(self.base), arms=_plain(self.arms))   # what this plan comes from (the guard's way back)
         quat1 = np.array([_mat_to_quat(segs[s][1]) for s in kin.SEGS])
-        for i in range(len(kin.SEGS)):
-            if float(quat1[i] @ quat0[i]) < 0:
-                quat1[i] = -quat1[i]
-        self.start, self.end = (pos0, quat0), (pos1, quat1)
-        self.moving = not (np.array_equal(pos0, pos1) and np.array_equal(quat0, quat1)) or self.written is None
+        ci = kin.SEGS.index("chest")
+        self.planned_trunk_moved = bool(float(np.linalg.norm(pos1[ci] - planned0[0][ci])) > K.TRUNK_STILL_M
+                                        or abs(float(quat1[ci] @ planned0[1][ci])) < math.cos(math.radians(K.TRUNK_STILL_DEG) / 2))
+        self.moving = not (np.array_equal(pos1, planned0[0]) and np.array_equal(quat1, planned0[1]))
+        self.written = (pos1, quat1)
         fk_ = self._face_key()
         gh = self._gaze_head(pose, segs)
         dg = self.drawn_face[1] if self.drawn_face is not None else None
         turned = dg is None or (np.linalg.norm(gh) > 1e-9) != (np.linalg.norm(dg) > 1e-9) or \
             (np.linalg.norm(gh) > 1e-9 and float(unit(gh) @ unit(dg)) < math.cos(math.radians(FACE_REDRAW_DEG)))
         draw_face = self.drawn_face is None or fk_ != self.drawn_face[0] or turned
-        self.scene.set_parent(pose, mocap=False, face=draw_face)
+        self.scene.set_parent(pose, body=False, face=draw_face)
         if draw_face:
             self.drawn_face = (fk_, gh)
         self._set_hold_targets()
+        self._drive_tick(self.bm.targets(segs))
+
+    def _drive_tick(self, t1):
+        """her joints' targets for this tick (parent_body.Drive): from her plan at the last tick's end (or, for a chain stopped
+        then, from where her body is) to t1 (None: her plan unchanged), and her balance's support (her gait carried while her base
+        moves, eased over BAL_EASE_TICKS; her floor contact off while it is carried)"""
+        dr = self.drive
+        t0 = dr.t1
+        if t1 is None:
+            t1 = t0
+        for k, c in enumerate(CHAINS):                                      # a chain the child presses lets its tone go (her legs' kept)
+            if self.yielding[c]:
+                dr.relax(k)
+        if any(self.stopped.values()):
+            now = self.bm.read(self.d)
+            t0 = [x.copy() for x in t0]
+            for k, c in enumerate(CHAINS):
+                if not self.stopped[c]:
+                    continue
+                sel = self.bm.ball_chain == k; t0[2][sel] = now[2][sel]
+                selh = self.bm.hinge_chain == k; t0[3][selh] = now[3][selh]
+                if c == "core":
+                    t0[0], t0[1] = now[0], now[1]
+            t0 = tuple(t0)
+            self.stopped = {c: False for c in CHAINS}
+        if self.core_hold is not None and (self.yielding["core"] or not (self.yielding["arm_L"] or self.yielding["arm_R"])):
+            self.core_hold = None                                           # the arm it stopped with is free (or the child presses her
+                                                                            # trunk itself: its own yield leads)
+        held = {k: (PB.tg_unplain(self.held_at[c]) if c == "core" else None) for k, c in enumerate(CHAINS)
+                if self.yielding[c] and not self._moving_chain(c) and self.held_at[c] is not None}
+        if self.core_hold is not None:                                      # her trunk, stopped with a pressed arm it carries, holds
+            held[2] = PB.tg_unplain(self.core_hold)                         # there while that arm yields (_carry_stop)
+        if held:                                                            # a still chain the child presses: her body holds the pose it
+            t1 = [x.copy() for x in t1]                                     # had as the push began (never back into it; never sagging
+            now = self.bm.read(self.d)                                      # with it), an arm goes where the push has put it (its own
+            for k, ha in held.items():                                      # weight carried: it never springs back into the child)
+                ha = now if ha is None else ha
+                sel = self.bm.ball_chain == k; t1[2][sel] = ha[2][sel]
+                selh = self.bm.hinge_chain == k; t1[3][selh] = ha[3][selh]
+                if k == 2:
+                    t1[0], t1[1] = ha[0], ha[1]
+            t1 = tuple(t1)
+        for c in CHAINS:
+            if not self.yielding[c]:
+                self.held_at[c] = None
+        want = 1.0 if self.base["mode"] in MOVING else 0.0
+        step = 1.0 / K.BAL_EASE_TICKS
+        self.support = float(min(want, self.support + step) if want > self.support else max(want, self.support - step))
+        dr.set_tick(t0, t1, self.support, 0.0 if self.base["mode"] in ("stand", "held", "turn", "walk") else 1.0)
+        self._floor_contact()
+
+    def _floor_contact(self):
+        """her body's shapes touch the floor while she is still, not while her gait is carried (make_g1room.FLOOR)"""
+        aff = GAIT_AFFINITY if self.support >= 0.5 else BODY_AFFINITY
+        if int(self.m.geom_conaffinity[self.body_geoms[0]]) != aff:
+            self.m.geom_conaffinity[self.body_geoms] = aff
+
+    def _moving_chain(self, c):
+        """whether her plan moves chain c now: her body while her base moves or her trunk leans (a phase under way on them), an arm
+        while it reaches or moves (A4 stops and backs off a chain she moves into the child; a still one the child presses gives as a
+        body does)"""
+        if self.on_child.get(c) or self.arm_in.get(c):                      # resting on the child is moving off it, and an arm pressed
+            return True                                                     # on itself draws in
+        if c == "core":
+            ph = self.phases[0]["type"] if self.phases else None
+            return self.base["mode"] in MOVING or ph in ("lean", "walk", "turn", "kneel_down", "shuffle", "knee_turn", "sit") or \
+                (ph == "reach" and "lean_to" in self.phases[0])
+        a = self.arms[c[-1]]
+        return a.get("mode") in ("move", "point") or (a.get("mode") == "at" and a.get("shake"))
+
+    def _anchor_pressed(self):
+        """A4 on her body: each chain the child pressed past its cap in the last tick (yielding) is, in her plan, where the child
+        pushed it (her pelvis on the floor plan for the rest of her, her hand's grip for an arm: her plan's offset takes up the
+        difference), and backs off YIELD_M_PER_TICK along its way out while it still presses; backed off YIELD_MAX_M in one push and
+        still pressed on, the act under way is given up"""
+        for c in CHAINS:
+            if not self.yielding[c]:
+                continue
+            if c == "core":
+                act = self.d.xpos[self.bm.pelvis]; plan = self.written[0][0]
+                dv = np.array([act[0] - plan[0], act[1] - plan[1], 0.0])
+            else:                                                           # an arm: where the child pushed her hand, as the push
+                sd = c[-1]                                                  # begins (after, her plan backs off from there: a hand
+                dv = np.zeros(3)                                            # short of a plan the floor clamps is no push)
+                if not self.push_on[c]:
+                    dv = self.d.site_xpos[self.grip_site[sd]] - self._grip_now(sd)[0]
+                    n = float(np.linalg.norm(dv))
+                    if n > K.YIELD_MAX_M:
+                        dv = dv * (K.YIELD_MAX_M / n)
+            step = self.ydir[c] * K.YIELD_M_PER_TICK if self._moving_chain(c) and self.ymoved[c] < K.YIELD_MAX_M else np.zeros(3)
+            if c != "core" and self.arm_in.get(c):                          # pressed on her arm itself: she draws her hand in toward her
+                step = self._draw_in(c[-1])                                 # shoulder (moving her hand along the contact would swing her
+                                                                            # elbow into it)
+            if c == "core":                                                 # (still, she stays where it pushed her: A4's back-off is
+                                                                            # for a chain she moves, a hand's length at most)
+                step = np.array([step[0], step[1], 0.0])
+                if not self._core_room(step + dv):
+                    step = np.r_[self._core_slide(step)[:2], 0.0]
+            elif step[2] < 0 and self._chain_low(c) < 0.20:
+                step = step * [1.0, 1.0, 0.0]                               # never backed off into the floor
+            if c != "core" and self._moving_chain(c) and float(np.linalg.norm(step)) < 0.25 * K.YIELD_M_PER_TICK \
+                    and not any(h.side == c[-1] for h in self.holds):
+                step = self._draw_in(c[-1])                                 # its way out barred (the child's arm lying on her hand by
+                                                                            # the floor, or backed off as far as it goes and still
+                                                                            # pressed): she draws her hand in from under it
+            self.offset[c] = self.offset[c] + dv + step
+            self.ymoved[c] += float(np.linalg.norm(step))
+            b = self.base
+            if c == "core" and b["mode"] in ("heels", "tall") and (b.get("lean") or b.get("spine")):   # pressed on as she leans
+                d_ = K.YIELD_LEAN_DEG_PER_TICK                               # over it, she straightens up away from it (her knees on
+                b["lean"] = max(0.0, float(b.get("lean", 0.0)) - d_)         # the floor do not back her off: her trunk does)
+                b["spine"] = max(0.0, float(b.get("spine", 0.0)) - d_)
+                b["dirty"] = True
+            if c == "core" and self.ymoved[c] >= K.YIELD_MAX_M and self.blocked is None and self.cur["body"] is not None:
+                self.blocked = int(self.cur["body"])                        # backed off as far as she will: that act is given up (an
+                                                                            # arm pressed on waits, and gives up after PATIENCE_TICKS)
 
     def _set_aim(self):
         """the link each hand is reaching onto for a hold, and that hold's cap (from the hold phase ahead of it): {side: (body,
@@ -1235,8 +1457,9 @@ class ParentMotion:
             a = self.arms[sd]
             to = a.get("to") or {}
             if a.get("mode") in ("move", "at") and to.get("k") == "link":
-                cap = next((float(ph["cap"]) for ph in self.phases if ph.get("type") == "hold" and ph.get("side") == sd), None)
-                if cap is not None:
+                ph = next((ph for ph in self.phases if ph.get("type") == "hold" and ph.get("side") == sd), None)
+                if ph is not None:                                          # a brief hold (the pull, the turn) grows to her brief cap
+                    cap = K.CAP_TWO_BRIEF / 2 if ph.get("brief") else float(ph["cap"])   # a hand
                     aim[sd] = (int(to["body"]), max(cap, K.TOUCH_N))
         self.aim = aim or None
 
@@ -1255,47 +1478,25 @@ class ParentMotion:
         return hR.T @ (np.asarray(pose.gaze) - hp)
 
     def before_step(self, s):
-        """L0 before physics step s of the tick: her segments drawn, her holds' forces applied. A chain that yields stops where it
-        was (A4: "that segment stops") and backs off along the contact"""
-        d = self.d
-        if self.moving:
-            a = (s + 1) / STEPS
-            p0, q0 = self.start; p1, q1 = self.end
-            fr = self.frozen
-            if fr["core"] is not None:                                      # her body stopped: her arms stop with it, an arm stopped
-                u = np.array([fr["core"] if fr[CHAINS[c]] is None else min(fr[CHAINS[c]], fr["core"])   # earlier stays where it
-                              for c in self.seg_chain])                     # stopped (the W2 fix: it had jumped to her body's
-            elif fr["arm_L"] is None and fr["arm_R"] is None:               # later fraction, 5 cm into the child in a step)
-                u = None
-            else:
-                u = np.array([a if fr[CHAINS[c]] is None else fr[CHAINS[c]] for c in self.seg_chain])
-            if u is None:
-                pos = p0 + a * (p1 - p0); q = q0 + a * (q1 - q0)
-            else:
-                pos = p0 + u[:, None] * (p1 - p0); q = q0 + u[:, None] * (q1 - q0)
-            q /= np.linalg.norm(q, axis=1)[:, None]
-            if self.any_doff:
-                pos += self.doff_seg
-            if self.any_fix:
-                pos[self.hand_idx] += self.hand_fix
-            d.mocap_pos[self.mocap_ids] = pos
-            d.mocap_quat[self.mocap_ids] = q
-            self.written = (pos, q)
+        """L0 before physics step s of the tick: her holds' forces (on the child, their reaction on her hands, her arms' effort),
+        then her joints' torques and her balance (parent_body.Drive)"""
         if self.holds or self.xfrc_bodies:
             self._apply_holds(s)
         else:
             self._effort(0.0, 0.0, float(self.body_f.sum()))                 # her brief caps' clock runs at rest too
+        self.drive.step(s)
 
     def after_step(self, s):
-        """L0 after physics step s: her contacts with the child (the yield, her pain) read from the step's contacts. Each contact's
-        whole force (its normal and its friction, MuJoCo's mj_contactForce) counts toward her yield and her effort; its normal
-        force toward her pain (the child's own pain law's measure, A12)"""
+        """L0 after physics step s: her contacts with the child read from the step's contacts (the stop, A4; her pain). Each
+        contact's whole force (its normal and its friction, MuJoCo's mj_contactForce) counts toward her stop and her effort; its
+        normal force toward her pain (the child's own pain law's measure, A12). A holding hand's contact with the link it holds is
+        that hold's (her caps count it), never a push to stop for"""
         m, d = self.m, self.d
-        if self.holds or any(a.get("to", {}).get("k") == "palm" and a.get("mode") in ("at", "move") for a in self.arms.values()):
-            self._hands_out_now(held_too=s % HAND_CHECK_EVERY == HAND_CHECK_EVERY - 1)
         nc = d.ncon
         mine0 = mine1 = None
         held = None
+        self.hold_touch = {"L": 0.0, "R": 0.0}
+        self.toy_touch = {"L": False, "R": False}
         if nc:
             geom = d.contact.geom
             gs = self.geom_seg[geom]
@@ -1312,20 +1513,20 @@ class ParentMotion:
         if mine0 is None or not (mine0.any() or mine1.any()):             # the common step: nothing of hers touches the child
             for c in CHAINS:
                 self.over[c] = 0
+                self.on_child[c] = False
+                self.arm_in[c] = False
             self.body_f[:] = 0.0
             if self.body_hist.any():
                 self.body_hist = np.roll(self.body_hist, -1, axis=0); self.body_hist[-1] = 0.0
-            if any(self.yielding.values()):
-                self._yield_steps(s, np.zeros(3), np.zeros((3, 3)), K.TOUCH_N)
             if self.pain_any:
                 self._pain_step(np.zeros(len(kin.SEGS)))
             return
-        force = np.zeros(3); away = np.zeros((3, 3)); seg_f = np.zeros(len(kin.SEGS)); depth = np.zeros(3); fsum = np.zeros(3)
-        where = np.zeros((3, 3))                                            # where each chain is pressed (the contacts' mean point)
+        force = np.zeros(3); away = np.zeros((3, 3)); seg_f = np.zeros(len(kin.SEGS)); fsum = np.zeros(3); up = np.zeros(3)
+        armbody = np.zeros(2)
         self.aim_f = {"L": 0.0, "R": 0.0}
+        hold_on = {h.side: h.body for h in self.holds}
         f6 = self._f6
         con = d.contact
-        hand_out = None
         for i in np.nonzero(mine0 | mine1)[0]:
             c = con[i]
             if c.efc_address < 0:
@@ -1336,196 +1537,94 @@ class ParentMotion:
             n = np.array(c.frame[:3])
             side0 = bool(mine0[i])
             seg = int(gs[i, 0] if side0 else gs[i, 1])
+            other = int(m.geom_bodyid[int(geom[i, 1] if side0 else geom[i, 0])])
             if seg >= 0:
                 ch = CHAINS.index(SEG_CHAIN[kin.SEGS[seg]]); seg_f[seg] += fn
             else:
                 ch = CHAINS.index(held[int(ty0[i] if side0 else ty1[i])])
-            if seg in self.hand_idx_set and self.aim is not None:          # her hand arriving on the link it reaches for (the hold it
-                sd_ = kin.SEGS[seg][-1]                                     # starts): its touch is her grip beginning, up to that hold's
-                tgt = self.aim.get(sd_)                                     # cap, never a push she backs off from (A4: "over the act's
-                if tgt is not None and int(m.geom_bodyid[int(geom[i, 1] if side0 else geom[i, 0])]) == tgt[0] and \
-                        self.aim_f[sd_] + fw <= tgt[1]:                     # cap"); the reach ends there (_ph_reach)
-                    self.aim_f[sd_] += fw; self.arrived[sd_] = True
-                    fw = 0.0
+                self.toy_touch[CHAINS[ch][-1]] = True                       # a toy in her hand touching the child (her aim holds)
+            if c.dist < 0 and seg >= 0:
+                self.stats["pen_max"] = max(self.stats["pen_max"], float(-c.dist))
+            if seg in self.hand_idx_set:                                    # her hand on the link it holds, or arriving on the link it
+                sd_ = kin.SEGS[seg][-1]                                     # reaches for (the hold it starts): that touch is her act's,
+                aim = self.aim.get(sd_) if self.aim is not None else None   # counted in her effort against her caps (one hand's brief
+                if hold_on.get(sd_) == other or (aim is not None and other == aim[0]):   # cap), never a push to stop for until it
+                    self.hold_touch[sd_] += fw                              # passes that hold's own cap (below); the reach ends where
+                    if aim is not None and other == aim[0]:                 # it arrives (_ph_reach)
+                        self.aim_f[sd_] += fw; self.arrived[sd_] = True
+                    continue
             force[ch] += fw
+            if seg >= 0 and ch < 2 and not kin.SEGS[seg].startswith("hand"):
+                armbody[ch] += fw                                           # pressed on her upper arm or forearm, not her hand
             nout = -n if side0 else n                                       # the way out of the child, at her side of the contact
             away[ch] += nout * fn
             fsum[ch] += max(fn, 0.0)
-            where[ch] += np.asarray(c.pos) * max(fn, 0.0)
-            if c.dist < 0 and seg >= 0:                                     # her own shapes' depth (a toy in her hand is a body of its
-                self.stats["pen_max"] = max(self.stats["pen_max"], float(-c.dist))   # own on a soft weld: moving her arm by its depth
-                depth[ch] = max(depth[ch], float(-c.dist))                  # never frees it; the W2 fix's seed 3 threw her arm 0.95 m)
-                if seg in self.hand_idx_set:                                # her hand's own shapes never pass through it: moved out
-                    k = HAND_SEGS[kin.SEGS[seg][-1]]                        # by what went in, along the contact, this very step
-                    v = (-n if side0 else n) * float(-c.dist)
-                    if hand_out is None:
-                        hand_out = np.zeros((2, 3))
-                    if float(v @ v) > float(hand_out[k] @ hand_out[k]):
-                        hand_out[k] = v
+            up[ch] += max(0.0, float(nout[2])) * fn                         # the child bearing her up: she rests on it
         self.body_f = force.copy()
         self.body_hist = np.roll(self.body_hist, -1, axis=0); self.body_hist[-1] = force
-        if hand_out is not None:
-            self._hand_give(hand_out)
-        self._yield_steps(s, force, away, self._contact_cap(), depth, fsum, where)
+        for k, c in enumerate(CHAINS):                                      # she rests some of her weight on the child: she moves off
+            self.on_child[c] = bool(up[k] > self._chain_cap(c))            # it, still or not (A4's back-off; never held there)
+        for k in (0, 1):                                                    # an arm pressed on its upper arm or forearm draws itself in
+            self.arm_in[CHAINS[k]] = bool(armbody[k] > self._contact_cap())
+        for k, sd in ((0, "L"), (1, "R")):                                  # an arm touching the child builds no tone against it
+            if force[k] > 0.0 or self.hold_touch[sd] > 0.0:
+                self.drive.relax(k)
+            over = self.hold_touch[sd] - self._touch_cap(sd)               # her hand pressing the link it holds or reaches for past
+            if over > 0.0:                                                  # that hold's own cap presses the child (A4)
+                force[k] += over
+        if force[2] > 0.0:
+            self.drive.relax(2)
+        self._stop_steps(force, away, fsum)
         self._pain_step(seg_f)
 
-    def _hands_out_now(self, held_too=True):
-        """her hands holding the child (their shapes' contacts off: the spring is the grip), measured as they are drawn this step
-        (the child's links as the physics has them: a limb swinging on its own, a body turning, moves faster than a tick's plan
-        foresees), against its convex hulls: a hand short of HAND_CLEAR_M from the held link (held_too: every HAND_CHECK_EVERY
-        steps) or HAND_FREE_M from any other (every step: the W2 verifier's finding, a babbling limb passed into her fingers) is
-        moved out along the held surface's normal at once, for the rest of the tick, and its grip on the link moved with it (a
-        hand pushed off a hand's length has slipped: _hold_tick)"""
-        m, d = self.m, self.d
-        for sd in "LR":
-            a = self.arms[sd]
-            if a.get("mode") in ("at", "move") and a.get("to", {}).get("k") == "palm":
-                if held_too:
-                    self._palm_hand_out(sd, a)                              # a toy (the bottle) held in the child's palm
-                continue
-            if a.get("mode") != "hold":
-                continue
-            h = self._hold(a["hold"])
-            if h is None or h.n_dir is None:
-                continue
-            g1 = self.g1_arr; gp = d.geom_xpos; rb = m.geom_rbound
-            hg = self.hand_arr[sd]
-            other = m.geom_bodyid[g1] != h.body
-            dc = np.linalg.norm(gp[g1][None, :, :] - gp[hg][:, None, :], axis=2) - rb[g1][None, :] - rb[hg][:, None]
-            cut = np.where(other, K.HAND_FREE_M, K.HAND_CLEAR_M if held_too else -1.0)[None, :]
-            best = [K.HAND_CLEAR_M, K.HAND_FREE_M]
-            for i, j in zip(*np.nonzero(dc < cut)):
-                k = int(other[j])
-                best[k] = min(best[k], float(mujoco.mj_geomDistance(m, d, int(hg[i]), int(g1[j]), best[k], self._ft)))
-            lack = max(K.HAND_CLEAR_M - best[0], K.HAND_FREE_M - best[1])
-            if lack <= 0:
-                continue
-            nl = unit(np.asarray(h.n_dir, float))
-            nw = d.xmat[h.body].reshape(3, 3) @ nl
-            a["goff"] = _lst(np.asarray(a["goff"], float) + nl * (lack + 0.001))
-            k = HAND_SEGS[sd]
-            self.hand_fix[k] = self.hand_fix[k] + nw * (lack + 0.001)
-            self.any_fix = True
-            d.mocap_pos[self.mocap_ids[self.hand_idx[k]]] += nw * (lack + 0.001)
-            self.written = (d.mocap_pos[self.mocap_ids].copy(), d.mocap_quat[self.mocap_ids].copy())
-            self.stats["hand_out_mm"] = max(self.stats.get("hand_out_mm", 0.0), 1e3 * lack)
-
-    def _palm_hand_out(self, sd, a):
-        """her hand giving a toy into the child's palm (the hand-over, the bottle) kept HAND_CLEAR_M outside every link of the child
-        (its fingers close round the toy, not round her hand; its hip lies beyond the palm): measured as drawn this step, moved up at
-        once (her hand is above the toy), the toy held that much higher from then on"""
-        m, d = self.m, self.d
-        best = 0.1
-        g1 = self.g1_arr; gp = d.geom_xpos; rb = m.geom_rbound
-        for g in self.hand_all[sd]:
-            dc = np.linalg.norm(gp[g1] - gp[g], axis=1) - rb[g1] - rb[g]
-            for j in np.nonzero(dc < best)[0]:
-                best = min(best, float(mujoco.mj_geomDistance(m, d, int(g), int(g1[j]), best, self._ft)))
-        lack = K.HAND_CLEAR_M - best
-        if lack <= 0:
-            return
-        nw = np.array([0.0, 0.0, 1.0])                                     # up: her hand is above the toy (a grasp from above; its
-        a["to"] = dict(a["to"], lift=float(a["to"].get("lift", 0.0)) + lack + 0.001)   # palm faces its side, its hip beyond)
-        k = HAND_SEGS[sd]
-        self.hand_fix[k] = self.hand_fix[k] + nw * (lack + 0.001)
-        self.any_fix = True
-        d.mocap_pos[self.mocap_ids[self.hand_idx[k]]] += nw * (lack + 0.001)
-        self.written = (d.mocap_pos[self.mocap_ids].copy(), d.mocap_quat[self.mocap_ids].copy())
-        self.stats["hand_out_mm"] = max(self.stats.get("hand_out_mm", 0.0), 1e3 * lack)
-
-    def _yield_steps(self, s, force, away, cap, depth=None, fsum=None, where=None):
-        """A4's yield, per chain: a contact over the cap for YIELD_STEPS steps stops the chain where it is and backs it off 2 cm a
-        tick along the contact, away from the child (her body on the floor plan, never into furniture; a hand never into the
-        floor); backed off YIELD_MAX_M in one push and still pressed on, the act under way is given up"""
+    def _stop_steps(self, force, away, fsum):
+        """A4, per chain: a contact over a resting hand's weight (her body's cap: no act of hers pushes the child with her body) for
+        YIELD_STEPS steps stops the chain where it is (its joints' targets become their positions: parent_body.Drive.hold_chain);
+        it yields (its plan follows where the child pushes it, backing off, _anchor_pressed) until the force is gone"""
         for k, c in enumerate(CHAINS):
+            cap = self._chain_cap(c)
             fk = float(force[k])
             self.stats["contact_peak"][c] = max(self.stats["contact_peak"][c], fk)
             self.touching[c] = max(self.touching[c], fk)
             if fk > cap:
                 self.over[c] += 1
                 self.stats["over_run"] = max(self.stats.get("over_run", 0), self.over[c])
-                if self.over[c] >= K.YIELD_STEPS or fk > K.HER_PAIN_N:        # a blow gives at once (her body's own give,
-                    self.yielding[c] = True                                  # not a choice)
-                    y = self._yield_dir(c, away[k], 0.0 if fsum is None else float(fsum[k]))
+                if self.over[c] >= K.YIELD_STEPS:
+                    if not self.push_on[c]:                                 # a push begun in this tick stops the chain (a chain
+                        self.drive.hold_chain(k)                            # already yielding at the tick's start is backing off
+                        self.stopped[c] = True                              # along its plan: _anchor_pressed)
+                        if self.held_at[c] is None:
+                            self.held_at[c] = PB.tg_plain(self.drive.stop[k])   # the pose it holds while still and pressed
+                        if c != "core":
+                            self._carry_stop()
+                    self.yielding[c] = True
+                    y = self._yield_dir(c, away[k], float(fsum[k]))
                     if y is not None:
                         self.ydir[c] = y
             else:
                 self.over[c] = 0
-            if self.yielding[c]:
-                if self.ymoved[c] >= K.YIELD_MAX_M and fk > cap and self.blocked is None and self.cur["body"] is not None:
-                    self.blocked = int(self.cur["body"])                    # backed off as far as she will: that act is given up
-                if self.frozen[c] is None:
-                    self.frozen[c] = (s + 1) / STEPS                        # it stops where it is
-                    self.moving = True
-                rate = self._yield_rate(c) / STEPS
-                step = self.ydir[c] * rate
-                if depth is not None and fk > K.HER_PAIN_N:                 # A BLOW (over her own pain, 4.10): her body gives with it
-                    dk = float(depth[k])                                     # as a person's does, never a wall: moved out at once by as
-                    way = self.ydir[c]                                       # far as its own shapes went in, along its way out; her
-                    fs = 0.0 if fsum is None else float(fsum[k])             # body struck (her head, her trunk) along the contacts' own
-                    if c == "core" and fs > 0:                               # way out in space as far as they agree, the rest away
-                        h = away[k] / fs                                     # from the child's centre of mass through where she is
-                        if h[2] < 0:                                         # struck (up and back for a head leaning over it and
-                            h = h * [1.0, 1.0, 0.0]                          # caught between its knee and its arm, W2 fix: 2.4 kN);
-                        agree = min(1.0, float(np.linalg.norm(h)))           # risen, she comes down again only clear of the child;
-                        o3 = where[k] / fs - self.d.subtree_com[self.child_root] if where is not None else way   # never down
-                        o3 = np.array([o3[0], o3[1], max(0.0, float(o3[2]))])
-                        no = float(np.linalg.norm(o3))
-                        o3 = o3 / no if no > 1e-9 else way
-                        way = h + (1.0 - agree) * o3
-                        way = way / max(float(np.linalg.norm(way)), 1e-9)
-                    step = way * max(rate, dk)
-                    if c != "core":                                          # an arm is given a hand's length in a tick at most (a
-                        room = K.YIELD_MAX_M - float(np.linalg.norm(self.doff[c]))   # forearm pinned under the child, given its
-                        ns = float(np.linalg.norm(step))                     # depth every step, ran 1.6 m in a tick: the W2 fix's
-                        if ns > max(room, 0.0):                              # seed 8 at p_rest 0.6); beyond, the arm is held there
-                            step = step * (max(room, 0.0) / ns) if ns > 0 else step
-                    self.stats["blows"] = self.stats.get("blows", 0) + 1
-                if step[2] < 0 and (c == "core" or self._chain_low(c) < 0.20):
-                    step = step * [1, 1, 0]                                 # never backed off into the floor
-                if c == "core" and not self._core_room(step):
-                    step = np.r_[self._core_slide(step)[:2], step[2]]       # never into furniture: along it, or she stays (the
-                if step.any():                                              # child pushes her as it would the sofa)
-                    self.doff[c] = self.doff[c] + step
-                    self.ymoved[c] += float(np.linalg.norm(step))
-                    self.any_doff = True
-        if self.any_doff:
-            dc = self.doff["core"]
-            self.doff_seg = np.array([dc + (self.doff[CHAINS[c]] + self.hdoff[CHAINS[c]] if CHAINS[c] != "core" else 0.0)
-                                      for c in self.seg_chain])
 
-    def _hand_give(self, out):
-        """HER HANDS NEVER PASS THROUGH THE CHILD (A4; the W2 verifier's third finding): a hand whose shapes (its palm, fingers,
-        thumb or its proxy) went into the G1 on this step is moved out at once by as far as it went in, along the contact, and a
-        millimetre more (never into the floor), with its arm, for the rest of the tick (her next plan puts it on the child's
-        surface as it lies then). Her arm's yield (A4) still stops it and backs it off when the contact presses"""
-        for k, sd in enumerate("LR"):
-            v = out[k]
-            nv = float(np.linalg.norm(v))
-            if nv <= 0.0:
-                continue
-            c = f"arm_{sd}"
-            step = v * ((nv + 0.001) / nv)
-            if step[2] < 0 and self._chain_low(c) < 0.20:
-                step = step * [1, 1, 0]
-            self.hdoff[c] = self.hdoff[c] + step                             # for this tick only: her next plan puts her hand on the
-            self.any_doff = True                                            # child's surface as it lies then (her arm's own yield,
-            self.stats["hand_give_mm"] = max(self.stats.get("hand_give_mm", 0.0), 1e3 * nv)   # A4, is what backs it off for good)
-        dc = self.doff["core"]
-        self.doff_seg = np.array([dc + (self.doff[CHAINS[c]] + self.hdoff[CHAINS[c]] if CHAINS[c] != "core" else 0.0)
-                                  for c in self.seg_chain])
+    def _draw_in(self, sd):
+        """a pressed hand's way out toward her shoulder, at twice the back-off's pace, never nearer the shoulder than 25 cm and
+        never more than DRAW_IN_MAX_M in one push (a hand the child holds where it is stays: its plan drawn on without it had run
+        46 cm off it and tripped the jump guard)"""
+        if self.ymoved[f"arm_{sd}"] >= K.DRAW_IN_MAX_M:
+            return np.zeros(3)
+        g = self._grip_now(sd)[0]
+        v = self._shoulder(sd, self.scene.pose) - g
+        nv = float(np.linalg.norm(v))
+        return v / nv * min(2 * K.YIELD_M_PER_TICK, max(0.0, nv - 0.25)) if nv > 1e-6 else np.zeros(3)
 
-    def _yield_rate(self, c):
-        """how fast a chain backs off (m a tick): A4's 2 cm a tick; pushed on past YIELD_MAX_M in one push (the act under way given
-        up), she gets out of its way at her own pace: her body at her walking pace standing, her shuffle's kneeling, a hand at its
-        reach's pace"""
-        if self.ymoved[c] < K.YIELD_MAX_M:
-            return K.YIELD_M_PER_TICK
-        if c != "core":
-            return max(K.YIELD_M_PER_TICK, K.REACH_MPS * TICK_S)
-        mode = self.base["mode"]
-        pace = K.SHUFFLE_MPS if mode in ("heels", "tall", "shuffle", "kneel_down") else K.WALK_MPS
-        return max(K.YIELD_M_PER_TICK, pace * TICK_S)
+    def _carry_stop(self):
+        """A4 up her body: an arm the child presses stops where it is, and so does her trunk, which carries it, when her plan is
+        moving her trunk (a lean, her base): it holds there while the arm yields (_drive_tick), never carrying the stopped arm on
+        into the child (the physical build's finding: her lean went on and pressed her stopped forearm down on the child's wrist at
+        100 N for a tick, 10 J of work)"""
+        kc = CHAINS.index("core")
+        if self.core_hold is None and not self.yielding["core"] and self._moving_chain("core"):
+            self.drive.hold_chain(kc)
+            self.stopped["core"] = True
+            self.core_hold = PB.tg_plain(self.drive.stop[kc])
 
     def _yield_dir(self, c, away, fsum=0.0):
         """the way a chain backs off: along its contacts (their normals weighted by their forces) as far as they agree (their
@@ -1536,7 +1635,7 @@ class ParentMotion:
         the floor)"""
         com = self.d.subtree_com[self.child_root][:2]
         if c == "core":
-            her = self.d.mocap_pos[self.mocap_ids[0]][:2]
+            her = self.d.xpos[self.bm.pelvis][:2]
             h = away[:2] / fsum if fsum > 0 else np.zeros(2)
         else:
             her = self._grip_now(c[-1])[0][:2]
@@ -1572,7 +1671,7 @@ class ParentMotion:
     def _core_room(self, step):
         """whether her body can back off by `step` on the floor plan: not into furniture or a wall (her half-width clear, or no
         nearer to it than she is)"""
-        at0 = np.asarray(self.base["at"], float) + (self.offset["core"] + self.doff["core"])[:2]
+        at0 = np.asarray(self.base["at"], float) + self.offset["core"][:2]
         at1 = at0 + step[:2]
         if not self._in_plan(at1):
             return False
@@ -1596,13 +1695,14 @@ class ParentMotion:
         return float(self._grip_now(c[-1])[0][2])
 
     def tick_end(self):
-        """after the tick's physics: the holds' tick counters, the yield's release"""
+        """after the tick's physics: the holds' tick counters, the stop's release, her trunk's motion over the tick (the report's
+        trunk field)"""
         for h in self.holds:
             h.at_cap_ticks = h.at_cap_ticks + 1 if h.at_cap_steps >= STEPS else 0
             h.at_cap_steps = 0
-        cap = self._contact_cap()
         self.last_touch = dict(self.touching)
         for c in CHAINS:
+            cap = self._chain_cap(c)
             if self.yielding[c] and self.touching[c] <= cap:
                 self.yielding[c] = False                                    # the force is gone: the act resumes (A4)
             if not self.yielding[c]:
@@ -1611,6 +1711,44 @@ class ParentMotion:
             self.touching[c] = 0.0
         if any(self.yielding.values()):
             self.stats["yield_ticks"] += 1
+        cb = self.bm.seg_body["chest"]
+        now = (self.d.xpos[cb].copy(), _mat_to_quat(self.d.xmat[cb].reshape(3, 3)))
+        if self.trunk_at is None:
+            self.trunk_moved = False
+        else:
+            self.trunk_moved = bool(float(np.linalg.norm(now[0] - self.trunk_at[0])) > K.TRUNK_STILL_M
+                                    or abs(float(now[1] @ self.trunk_at[1])) < math.cos(math.radians(K.TRUNK_STILL_DEG) / 2))
+        self.trunk_at = now
+        f = self._face_drawn()
+        self.face_prev = self.face_shown
+        self.face_shown = tuple(sorted((k, float(v)) for k, v in f.items() if k not in ("jaw", "blink")))
+
+    def _chain_cap(self, c):
+        """A4's "the act's cap" for a chain's contacts with the child: her body's is a resting hand's weight (no act of hers pushes
+        the child with her body); an arm reaching onto the child for a hold, or holding it, may touch its other links on the way up
+        to that hold's own cap (her hand on the link it holds or reaches for is the hold's own touch, counted against her caps); a
+        resting hand's weight otherwise"""
+        if c == "core":
+            return self._contact_cap()
+        sd = c[-1]
+        cap = K.TOUCH_N
+        if self.aim is not None and sd in self.aim:
+            cap = max(cap, float(self.aim[sd][1]))
+        for h in self.holds:
+            if h.side == sd:
+                cap = max(cap, K.CAP_TWO_BRIEF / 2 if h.brief else float(h.cap))
+        return min(cap, K.CAP_ONE)
+
+    def _touch_cap(self, sd):
+        """what her hand may press the link it holds or reaches for with: that hold's own cap (a brief one's, her brief cap a hand),
+        a resting hand's weight at least"""
+        cap = K.TOUCH_N
+        if self.aim is not None and sd in self.aim:
+            cap = max(cap, float(self.aim[sd][1]))
+        for h in self.holds:
+            if h.side == sd:
+                cap = max(cap, K.CAP_TWO_BRIEF / 2 if h.brief else float(h.cap))
+        return min(cap, K.CAP_ONE_BRIEF)
 
     def _contact_cap(self):
         """her body's contact cap: no act of hers pushes the child with her body (only her holds push, each within its cap), so any
@@ -1655,49 +1793,61 @@ class ParentMotion:
             h.next = None
 
     def _apply_holds(self, s):
+        """her holds on the child this step (4.1, 4.2, A25): each a capped spring toward where she means the held point to be; within
+        the hold's own cap,
+        then her holds together within what her caps leave after her body's contacts and her holding hands' own touch; applied on
+        the held link at the held point, its reaction on her hand at her grip, and her arm and trunk exerting it (J^T F on her
+        joints, within her strength: parent_body.Drive)"""
         m, d = self.m, self.d
         for b in self.xfrc_bodies:
             d.xfrc_applied[b] = 0.0
         self.xfrc_bodies = []
         self.hold_zone[:] = 0.0
+        self.drive.effort[:] = 0.0
         if not self.holds:
             self._effort(0.0, 0.0, float(self.body_f.sum()))
             return
         a = (s + 0.5) / STEPS
-        jacp = np.zeros((3, m.nv))
-        raw, pts = [], []
+        jacp = self._jac
+        raw, pts, grips = [], [], []
         for h in self.holds:
             p = h.point(d)
             mujoco.mj_jac(m, d, jacp, None, p, h.body)
             v = jacp @ d.qvel
             tgt = h.t0 + a * (h.t1 - h.t0)
             vt = (h.t1 - h.t0) / TICK_S
+            g = d.site_xpos[self.grip_site[h.side]]
             f = K.HOLD_K * (tgt - p) + K.HOLD_C * (vt - v)
             n = float(np.linalg.norm(f))
-            lim = h.cap
-            if n > lim:
-                f = f * (lim / n); n = lim
-            raw.append(f); pts.append(p)
+            if n > h.cap:
+                f = f * (h.cap / n)
+            arm = self.arms.get(h.side, {})
+            if arm.get("mode") == "hold" and arm.get("hold") == h.name:     # HER GRIP IS HER HAND: where the physics has put her hand
+                Rl = d.xmat[h.body].reshape(3, 3)                           # off its grip on the held point (her arm could not carry
+                e = float(np.linalg.norm(g - (p + Rl @ np.asarray(arm["goff"], float))))   # the load, or the child pulled away), the
+                if e > K.GRIP_TOL_M:                                        # grip holds less, and nothing past a hand's length
+                    f = f * max(0.0, 1.0 - (e - K.GRIP_TOL_M) / (K.HOLD_SLIP_M - K.GRIP_TOL_M))
+            raw.append(f); pts.append(p); grips.append(g.copy())
         brief = any(h.brief for h in self.holds) and self.brief_s < K.BRIEF_S
         one = K.CAP_ONE_BRIEF if brief else K.CAP_ONE
         two = K.CAP_TWO_BRIEF if brief else K.CAP_TWO
         body = self.body_hist.max(axis=0)                                   # what her body already presses on the G1 (the most of the
-        scale = np.ones(len(raw))                                           # last 5 steps, per chain: her contacts are read after a
-                                                                            # step, so her holds get what is left of her caps with a
-                                                                            # 10 ms margin; the W2 fix's turn passed 200 N on 4 steps)
+        touch = self.hold_touch                                             # last 5 steps, per chain) and her holding hands' own touch
+        scale = np.ones(len(raw))
         for sd in "LR":
             idx = [i for i, h in enumerate(self.holds) if h.side == sd]
             tot = sum(float(np.linalg.norm(raw[i])) for i in idx)
-            lim = max(0.0, one - float(body[CHAINS.index(f"arm_{sd}")]))
+            lim = max(0.0, one - float(body[CHAINS.index(f"arm_{sd}")]) - float(touch.get(sd, 0.0)))
             if tot > lim:
                 for i in idx:
                     scale[i] = lim / tot
         tot = sum(float(np.linalg.norm(raw[i])) * scale[i] for i in range(len(raw)))
-        lim = max(0.0, two - float(body.sum()))
+        lim = max(0.0, two - float(body.sum()) - float(sum(touch.values())))
         if tot > lim:
             scale *= lim / tot
         effort = 0.0
         per_side = {"L": 0.0, "R": 0.0}
+        dofs = self.bm.dofs
         for i, h in enumerate(self.holds):
             f = raw[i] * scale[i]
             n = float(np.linalg.norm(f))
@@ -1707,15 +1857,21 @@ class ParentMotion:
             elif scale[i] < 0.999 and n > 0:
                 h.at_cap_steps += 1                                          # held back by her own caps: at her cap
             b = h.body
-            d.xfrc_applied[b, :3] += f
+            d.xfrc_applied[b, :3] += f                                      # on the child, at the held point
             d.xfrc_applied[b, 3:] += np.cross(pts[i] - d.xipos[b], f)
-            self.xfrc_bodies.append(b)
+            hb = self.bm.hand_body[h.side]                                  # its reaction on her hand, at her grip (Newton)
+            d.xfrc_applied[hb, :3] -= f
+            d.xfrc_applied[hb, 3:] -= np.cross(grips[i] - d.xipos[hb], f)
+            mujoco.mj_jac(m, d, jacp, None, grips[i], hb)                   # her arm and trunk exert it (within her strength)
+            self.drive.effort += jacp[:, dofs].T @ f
+            self.xfrc_bodies += [b, hb]
             z = int(self.w.body_zone[b])
             if z >= 0:
                 self.hold_zone[z] += n
             effort += n; per_side[h.side] += n
         self.stats["hold_peak"] = max(self.stats["hold_peak"], max((float(np.linalg.norm(h.force)) for h in self.holds), default=0.0))
-        self._effort(effort, max(per_side.values()), effort + float(self.body_f.sum()))
+        tt = float(sum(self.hold_touch.values()))
+        self._effort(effort + tt, max(per_side[sd] + self.hold_touch.get(sd, 0.0) for sd in "LR"), effort + tt + float(self.body_f.sum()))
 
     def _effort(self, two, one, total):
         """her brief caps' clock: time her holds spend over a sustained cap counts toward BRIEF_S; BRIEF_REST_S under both gives it
@@ -1768,8 +1924,6 @@ class ParentMotion:
             self._pose_cache = (key, q)
         if p is not None and self._pose_cache is not None:
             p.report = {k: (dict(v) if isinstance(v, dict) else v) for k, v in p.report.items()}
-        if mode != "held" and oc[2] != 0.0:                                 # risen under a push from below (A4's give): all of her
-            p.pos = np.asarray(p.pos, float) + np.array([0.0, 0.0, float(oc[2])])
         if arms:
             for sd in "LR":
                 self._arm(p, sd, trial)
@@ -1777,7 +1931,7 @@ class ParentMotion:
             tgt = self._look_point()
             if tgt is not None:
                 kin.look(p, tgt)
-        p.expr = dict(self.face)
+        p.expr = self._face_drawn()
         return p
 
     def _look_point(self):
@@ -1807,14 +1961,14 @@ class ParentMotion:
         return None
 
     def _arm(self, p, sd, trial=False):
-        """her arm for the tick's end. Her yield's offsets (A4): her body's (core) moves with her whole pose and with any hand
-        target fixed in the room or on the child; her arm's own moves that hand. A hand holding the child is drawn on its held point
-        (the spring is its grip), kept HAND_CLEAR_M outside the child's collision surface"""
+        """her arm for the tick's end. Her plan's offsets (A4: where the child pushed her): her body's (core) moves with her whole
+        pose and with any hand target fixed in the room or on the child; her arm's own moves that hand. A hand holding the child is
+        planned on its held point, open and flat on its surface (its touch keeps it outside, as the rest of her)"""
         a = self.arms[sd]
         mode = a["mode"]
         oa = self.offset[f"arm_{sd}"]; oc = self.offset["core"]
         if mode == "relaxed":
-            if np.any(oa):                                                  # a resting arm backed off stays backed off
+            if np.any(oa):                                                  # a resting arm pushed away stays there
                 hp, hR = kin.fk(p)[f"hand_{sd}"]
                 a["err"] = float(self._place(p, sd, hp + hR @ GRIP_LOCAL[sd] + oa, hR, dict(p.hand[sd]), cont=True))
             return
@@ -1823,34 +1977,40 @@ class ParentMotion:
             if tgt is not None:
                 a["err"] = float(P.point_at(p, sd, tgt))
             return
-        if mode == "hold":                                                  # her hand on its held point (backed off with her arm when
-            for _ in range(3):                                              # the child presses her forearm), then measured as drawn
-                grip, R, shape = self._hand_now(p, sd, a)
-                a["err"] = float(self._place(p, sd, grip + oa + oc, R, shape, cont=True))
-                if trial or not self._keep_hand_out(sd, a, p):
-                    break
-            return
-        palm = a["to"].get("k") == "palm" and not trial
-        for _ in range(3 if palm else 1):
+        if mode == "hold":
             grip, R, shape = self._hand_now(p, sd, a)
-            if self._world_target(a["to"]):
-                off = oa + oc
-            elif mode == "move":                                            # from a point in the room to one on her own body
-                off = oa + oc * (1.0 - _smooth(a["t"] / max(a["n"], 1)))
-            else:
-                off = oa
-            a["err"] = float(self._place(p, sd, grip + off, R, shape, cont=True))
-            if not palm:
-                break
-            hp, hR = kin.fk(p)[f"hand_{sd}"]                                # a hand giving into its palm, measured as drawn at the
-            if self._qpos_ahead is None:                                    # tick's end against the child now and a tick ahead (its
-                self._qpos_ahead = self.d.qpos.copy()                       # fingers closing): lifted by what it lacks
-                mujoco.mj_integratePos(self.m, self._qpos_ahead, self.d.qvel, TICK_S)
-            lack = K.HAND_CLEAR_M - min(self._hand_clearance_at(sd, hp, hR, dict(p.hand[sd])),
-                                        self._hand_clearance_at(sd, hp, hR, dict(p.hand[sd]), qpos=self._qpos_ahead))
-            if lack <= 0:
-                break
-            a["to"] = dict(a["to"], lift=float(a["to"].get("lift", 0.0)) + lack + 0.001)
+            a["err"] = float(self._place(p, sd, grip + oa + oc, R, shape, cont=True))
+            return
+        grip, R, shape = self._hand_now(p, sd, a)
+        if self._world_target(a["to"]):
+            off = oa + oc
+        elif mode == "move":                                                # from a point in the room to one on her own body
+            off = oa + oc * (1.0 - _smooth(a["t"] / max(a["n"], 1)))
+        else:
+            off = oa
+        want = grip + off
+        if mode in ("at", "move") and self._world_target(a["to"]) and a["to"]["k"] != "link" and \
+                (mode == "at" or a.get("t", 0) >= a.get("n", 1) - 1):
+            want = self._aim_fix(sd, a, want, trial)                        # (never aimed on while it touches the child)
+        a["err"] = float(self._place(p, sd, want, R, shape, cont=True))
+
+    def _aim_fix(self, sd, a, want, trial):
+        """SHE SEES WHERE HER HAND IS: a hand held at a place (or on the child) is planned where it must be for her real hand to
+        arrive there, her plan's aim moved each tick by AIM_GAIN of what her hand as the physics has it still misses (her body
+        rests and her arm hangs some centimetres off their plan), at most AIM_MAX_M; never while the hand touches the child (it
+        would press on); the aim kept with the arm's plan"""
+        fix = np.asarray(a.get("fix", (0.0, 0.0, 0.0)), float)
+        if not trial:
+            k = self.hand_idx[HAND_SEGS[sd]]
+            if not self.pain_win[k, -1] > 0.0 and not self.toy_touch.get(sd, False):
+                miss = want - self._grip_now(sd, actual=True)[0]
+                a["miss"] = float(np.linalg.norm(miss))
+                fix = fix + K.AIM_GAIN * miss
+                n = float(np.linalg.norm(fix))
+                if n > K.AIM_MAX_M:
+                    fix = fix * (K.AIM_MAX_M / n)
+                a["fix"] = _lst(fix)
+        return want + fix
 
     def _hand_now(self, p, sd, a):
         """the grip point, hand rotation and hand shape an arm spec asks for at the tick's end"""
@@ -1888,30 +2048,6 @@ class ParentMotion:
         mujoco.mj_jac(self.m, self.d, jacp, None, h.point(self.d), h.body)
         return jacp @ self.d.qvel
 
-    def _keep_hand_out(self, sd, a, p):
-        """her hand on the child kept HAND_CLEAR_M outside its collision surface: her hand as drawn at the tick's end (pose p, after
-        her arm's reach) measured against the child now and a tick ahead (its links carried on at their velocities now: MuJoCo's
-        mj_integratePos), against its convex hulls (her palm, fingers and thumb; MuJoCo's own geometry); what it lacks moves the
-        grip out along the held surface's normal (kept on the link from then on). True when it moved"""
-        h = self._hold(a["hold"])
-        if h is None or h.n_dir is None:
-            return False
-        qn = self._qpos_ahead
-        if qn is None:
-            qn = self._qpos_ahead = self.d.qpos.copy()
-            mujoco.mj_integratePos(self.m, qn, self.d.qvel, TICK_S)
-        hp, hR = kin.fk(p)[f"hand_{sd}"]
-        shape = dict(p.hand[sd])
-        c0 = self._hand_clearance_at(sd, hp, hR, shape, qpos=self.d.qpos, held=h.body)
-        c1 = self._hand_clearance_at(sd, hp, hR, shape, qpos=qn, held=h.body)
-        lack = max(K.HAND_CLEAR_M - min(c0[0], c1[0]), K.HAND_FREE_M - min(c0[1], c1[1]))
-        if lack <= 0:
-            return False
-        n = unit(np.asarray(h.n_dir, float))
-        a["goff"] = _lst(np.asarray(a["goff"], float) + n * (lack + 0.001))
-        self.stats["hand_out_mm"] = max(self.stats.get("hand_out_mm", 0.0), 1e3 * lack)
-        return True
-
     def _hand_geoms_local(self, sd, shape):
         """her hand's shapes in its own frame for a hand shape: [(geom, pos, quat, half-length or None)] (the scene's hand drawing,
         parent_kin.hand_geoms, for the fingers and thumb; the palm and the collision capsule as built)"""
@@ -1925,30 +2061,27 @@ class ParentMotion:
     def _hand_clearance_at(self, sd, pos, R, shape, qpos=None, held=None):
         """the least signed distance (m, up to 0.1) from her hand segment posed at (pos, R) in `shape` (its palm, its collision
         capsule, its fingers and thumb) to the G1's collision shapes, the G1 at qpos (the world's now when None), on a scratch copy
-        of the state (MuJoCo's mj_geomDistance: the G1's meshes by their convex hulls, which enclose them). The model's finger
-        shapes are put back after. held: a G1 link she holds; then (to it, to every other link of the G1)"""
+        of the state (MuJoCo's mj_geomDistance: the G1's meshes by their convex hulls, which enclose them): her hand's shapes put
+        where that pose and shape put them. held: a G1 link she holds; then (to it, to every other link of the G1)"""
         m, sc = self.m, self.scratch
         sc.qpos[:] = self.d.qpos if qpos is None else qpos
-        sc.mocap_pos[:] = self.d.mocap_pos; sc.mocap_quat[:] = self.d.mocap_quat
-        hid = self.scene.mocap[f"hand_{sd}"]
-        sc.mocap_pos[hid] = pos; sc.mocap_quat[hid] = _mat_to_quat(R)
-        loc = self._hand_geoms_local(sd, shape)
-        gids = [g for g, _, _, _ in loc]
-        keep = (m.geom_pos[gids].copy(), m.geom_quat[gids].copy(), m.geom_size[gids].copy())
+        mujoco.mj_kinematics(m, sc)
+        R = np.asarray(R, float); pos = np.asarray(pos, float)
+        for g, p_, q_, hl in self._hand_geoms_local(sd, shape):            # her fingers and thumb in this shape
+            sc.geom_xpos[g] = pos + R @ p_
+            sc.geom_xmat[g] = (R @ _quat_to_mat(q_)).ravel()
+            m.geom_size[g, 1] = hl
+        for g in (self.hand_geom[sd], m.geom(f"parent_hand_{sd}_palm").id):   # her palm and her hand's capsule as built
+            sc.geom_xpos[g] = pos + R @ m.geom_pos[g]
+            sc.geom_xmat[g] = (R @ _quat_to_mat(m.geom_quat[g])).ravel()
         best = [0.1, 0.1]
-        try:
-            for g, p_, q_, hl in loc:
-                m.geom_pos[g] = p_; m.geom_quat[g] = q_; m.geom_size[g, 1] = hl
-            mujoco.mj_kinematics(m, sc)
-            gp = sc.geom_xpos; g1 = self.g1_arr; rb = m.geom_rbound
-            other = m.geom_bodyid[g1] != (-1 if held is None else held)
-            for g in self.hand_all[sd]:
-                dc = np.linalg.norm(gp[g1] - gp[g], axis=1) - rb[g1] - rb[g]
-                for j in np.nonzero(dc < max(best))[0]:
-                    k = int(other[j])
-                    best[k] = min(best[k], float(mujoco.mj_geomDistance(m, sc, int(g), int(g1[j]), best[k], self._ft)))
-        finally:
-            m.geom_pos[gids] = keep[0]; m.geom_quat[gids] = keep[1]; m.geom_size[gids] = keep[2]
+        gp = sc.geom_xpos; g1 = self.g1_arr; rb = m.geom_rbound
+        other = m.geom_bodyid[g1] != (-1 if held is None else held)
+        for g in self.hand_all[sd]:
+            dc = np.linalg.norm(gp[g1] - gp[g], axis=1) - rb[g1] - rb[g]
+            for j in np.nonzero(dc < max(best))[0]:
+                k = int(other[j])
+                best[k] = min(best[k], float(mujoco.mj_geomDistance(m, sc, int(g), int(g1[j]), best[k], self._ft)))
         return min(best) if held is None else (best[0], best[1])
 
     def _realize(self, p, sd, grip, R):
@@ -1993,13 +2126,13 @@ class ParentMotion:
             fz = max(fz, floor_z(grip[:2]) + self.toy_rest.get(cur["toy"], 0.03) - 0.004 - dz)
         if grip[2] < fz:                                                    # her hand never goes into the floor
             grip = np.array([grip[0], grip[1], fz])
-        wrist = grip - R @ GRIP_LOCAL[sd]
         segs = kin.fk(p)
         cp, cR = segs["chest"]
+        wrist = grip - R @ GRIP_LOCAL[sd]
         pole = cR @ np.array([-.5, kin.side_sign(sd) * 1.0, -1.0])
         err = kin.arm_ik(p, sd, wrist, pole, R, segs=segs)
         ex0 = P._excess(p.report[f"arm_{sd}"])
-        elbow0 = self.d.mocap_pos[self.scene.mocap[f"forearm_{sd}"]] if cont else None
+        elbow0 = self.written[0][kin.SEGS.index(f"forearm_{sd}")] if cont else None
         far0 = False
         if cont:                                                            # her natural pole's elbow far from where it is drawn (a
             sh0 = cp + cR @ kin.OFFSET[f"upper_arm_{sd}"]                   # target moved round her arm): the swing searched too
@@ -2030,12 +2163,16 @@ class ParentMotion:
         p.hand[sd] = dict(curl=shape.get("curl", .4), thumb=shape.get("thumb", .35), index=shape.get("index"))
         return err
 
-    def _grip_now(self, sd, plan=False):
-        """her hand's grip point and rotation as drawn now; plan: as a point in the room for a new target, her yield's offsets
-        taken off (they are added back to every target in the room, _arm), so the hand does not jump"""
-        hid = self.scene.mocap[f"hand_{sd}"]
-        R = _quat_to_mat(self.d.mocap_quat[hid])
-        g = self.d.mocap_pos[hid] + R @ GRIP_LOCAL[sd]
+    def _grip_now(self, sd, plan=False, actual=False):
+        """her hand's grip point and rotation as her plan has it at the last tick's end (actual: as the physics has it now); plan:
+        as a point in the room for a new target, her plan's offsets taken off (they are added back to every target in the room,
+        _arm), so the hand does not jump"""
+        if actual:
+            hb = self.bm.hand_body[sd]
+            return self.d.site_xpos[self.grip_site[sd]].copy(), self.d.xmat[hb].reshape(3, 3).copy()
+        i = kin.SEGS.index(f"hand_{sd}")
+        R = _quat_to_mat(self.written[1][i])
+        g = self.written[0][i] + R @ GRIP_LOCAL[sd]
         if plan:
             g = g - self.offset[f"arm_{sd}"] - self.offset["core"]
         return g, R
@@ -2135,13 +2272,14 @@ class ParentMotion:
 
     def _over_child(self, g0, g1):
         """a hand's way from g0 toward g1 kept over the child: where the straight line passes within 0.25 m (on the floor plan) of
-        its shapes, lifted to 8 cm above their tops before crossing (her hands never pass through it, A4); the waypoints from g0"""
+        its shapes, lifted OVER_CHILD_M above their tops before crossing (her hands and forearms never pass through it, A4); the
+        waypoints from g0"""
         g0 = np.asarray(g0, float); g1 = np.asarray(g1, float)
         top = -1.0
         for x, y, z, r in self.child.foot_pts:
             if _seg_dist((x, y), g0, g1) < 0.25 + r:
                 top = max(top, z + r)
-        h = top + 0.08
+        h = top + K.OVER_CHILD_M
         if top < 0 or min(g0[2], g1[2]) >= h:
             return [g0]
         return [g0, np.array([g0[0], g0[1], max(g0[2], h)]), np.array([g1[0], g1[1], max(g1[2], h)])]
@@ -2186,8 +2324,8 @@ class ParentMotion:
         return c, n
 
     def _head_now(self):
-        hid = self.scene.mocap["head"]
-        return self.d.mocap_pos[hid] + _quat_to_mat(self.d.mocap_quat[hid]) @ np.array([0, 0, 0.15])
+        i = kin.SEGS.index("head")
+        return self.written[0][i] + _quat_to_mat(self.written[1][i]) @ np.array([0, 0, 0.15])
 
     def _hold(self, name):
         for h in self.holds:
@@ -2234,11 +2372,35 @@ class ParentMotion:
     # ------------------------------------------------------------------ her body's acts (L1-L2)
     def _next_body(self):
         """the next act her body starts: the first asked; while an ask is pending (eyes_on_child), the first an ask allows
-        (PENDING_OK), the others waiting their turn (A51)"""
+        (PENDING_OK), the others waiting their turn (A51); none while a formal trial holds her still (P3's Conduct.still)"""
+        if self.still:
+            return None
         if not self.eoc:
             return 0 if self.queue["body"] else None
         ok = self._pending_ok()
         return next((k for k, i in enumerate(self.queue["body"]) if (self._act(i)["kind"], self._act(i)["target"]) in ok), None)
+
+    def _still_tick(self):
+        """while a formal trial holds her still (P3's Conduct.still: its settle, sentence and window) and no act of hers is under
+        way: her holds on the child let go and her hands brought to rest (on her thighs when she kneels, hanging when she stands),
+        at her own reaching pace; her face is drawn in its neutral set (_face_drawn)"""
+        if not self.still or self.cur["body"] is not None or self.phases:
+            return
+        if self.holds:
+            self.phases = self._let_go_phases()
+            return
+        kneel = self.base["mode"] in ("heels", "tall")
+        n = int(math.ceil(K.REACH_MIN_S / TICK_S)) + 1
+        for sd in "LR":
+            arm = self.arms[sd]
+            if arm.get("auto") or arm.get("support") or self.holding[sd] is not None:
+                continue
+            if kneel and arm["mode"] != "relaxed" or (kneel and arm["mode"] == "relaxed"):
+                g0, R0 = self._grip_now(sd, plan=True)
+                self.arms[sd] = dict(mode="move", to=dict(k="thigh"), g0=_lst(g0), path=[_lst(g0)], q0=_lst(_mat_to_quat(R0)), t=0,
+                                     n=n, shape0=self._shape_now(sd), shape1=dict(curl=.2, thumb=.3, index=None), via=None, auto=True)
+            elif arm["mode"] != "relaxed":
+                self.phases.append(dict(type="relax", sides=sd))
 
     def _body_tick(self):
         nxt = self._next_body() if self.cur["body"] is None and not self.phases else None
@@ -2266,9 +2428,9 @@ class ParentMotion:
             self.blocked = None
             self._fail(a, "given up: the child is in her way (she backed off 12 cm and it still pressed on her)")
             return
-        if any(self.yielding.values()):
-            if a is not None:
-                a["info"]["paused"] += 1; a["info"]["paused_run"] += 1
+        if any(self.yielding[c] and self._moving_chain(c) for c in CHAINS):   # a chain of hers moving into the child: the act waits
+            if a is not None:                                               # (a still body the child presses on goes on: she is a
+                a["info"]["paused"] += 1; a["info"]["paused_run"] += 1       # body, and it gives)
                 if a["info"]["paused_run"] > K.PATIENCE_TICKS:
                     self._fail(a, "given up: the child pressed against her for 6 s")
             return
@@ -2325,15 +2487,14 @@ class ParentMotion:
         self._abort_body()
 
     def _fold_core(self):
-        """her body's backing off made her place (at an act's start, her base at rest): the offset goes into where she kneels or
-        stands, and a hand held at a point in the room keeps it as its own offset, so nothing she draws moves"""
+        """where the child pushed her made her place (at an act's start, her base at rest): the offset goes into where she kneels or
+        stands, and a hand held at a point in the room keeps it as its own offset, so nothing she plans moves"""
         oc = self.offset["core"]
         if not np.any(oc) or self.base["mode"] not in ("heels", "tall", "stand", "turn"):
             return
-        oc = oc.copy()
+        oc = np.array([oc[0], oc[1], 0.0])
         self.base["at"] = _lst(np.asarray(self.base["at"], float) + oc[:2])
-        self.offset["core"] = np.array([0.0, 0.0, float(oc[2])])            # a rise stays her offset (it comes down only clear of it)
-        oc[2] = 0.0
+        self.offset["core"] = np.zeros(3)
         for sd in "LR":
             arm = self.arms[sd]
             if arm["mode"] == "hold" or (arm["mode"] in ("at", "move") and self._world_target(arm["to"])):
@@ -2377,15 +2538,12 @@ class ParentMotion:
         return self._let_go_phases(names)
 
     def _let_go_phases(self, names=None):
-        """her holds end: the springs let go and her hands touch again at once (their shapes kept HAND_CLEAR_M outside the child
-        while they held, so nothing presses as they come back on; the W2 verifier's finding: a hand lifted off with its shapes
-        off went 66 mm into a torso that moved), each lifted off along the surface it held, then relaxed"""
+        """her holds end: the springs let go, each hand lifted off along the surface it held, then relaxed"""
         hs = [h for h in self.holds if names is None or h.name in names]
         if not hs:
             return []
         out = [dict(type="let_go", names=[h.name for h in hs])]
         sides = sorted({h.side for h in hs})
-        out += [dict(type="proxy", side=sd, on=True) for sd in sides]
         out.append(dict(type="reach", hands={sd: dict(k="off_surface", side=sd) for sd in sides},
                         shape={sd: dict(curl=.3, thumb=.3, index=None) for sd in sides}, n=3, solve=False))
         out.append(dict(type="relax", sides="".join(sides)))
@@ -2446,8 +2604,9 @@ class ParentMotion:
         if not ph.get("resume") and ph.get("child", True) and self._way_blocked(ph, b, p0, p1, D):
             self._stop_walk(a, ph, b, p0, p1, D)                           # the child moved into her way: she finishes the step
             p1 = np.asarray(ph["p1"], float); D = float(np.linalg.norm(p1 - p0))   # under way and plans the trip again
-        b["s"] = min(D, b["s"] + K.WALK_MPS * TICK_S)
-        b["at"] = _lst(p0 + (p1 - p0) * (b["s"] / D if D > 0 else 1))
+        near = self.child.clearance_xy(b["at"]) < K.SLOW_NEAR_CHILD_M       # beside the child she walks at half her pace (a swinging
+        b["s"] = min(D, b["s"] + K.WALK_MPS * TICK_S * (0.5 if near else 1.0))   # foot carries a quarter of the energy into a limb
+        b["at"] = _lst(p0 + (p1 - p0) * (b["s"] / D if D > 0 else 1))              # that moves into her way)
         if b["s"] >= D - 1e-9:
             self._stable("stand", p1, head)
             return "done"
@@ -2742,8 +2901,11 @@ class ParentMotion:
                 best = (score, lean, spine, tw)
             if max(errs) < 0.005 and not bad:
                 full = P.kneel(at, b["yaw"], b["mode"], lean=lean, spine_flex=spine, twist=tw)
-                if not any(r.get("violations") for k, r in full.report.items() if k.startswith("leg") and isinstance(r, dict)):
-                    return float(lean), float(spine), float(tw), True
+                if not any(r.get("violations") for k, r in full.report.items() if k.startswith("leg") and isinstance(r, dict)) \
+                        and self._clearance(full, segs=("core",)) >= K.LEAN_CLEAR_M \
+                        and (b["mode"] != "tall" or self._knees_hold(full, p)):     # her head and trunk clear of the child as she
+                    return float(lean), float(spine), float(tw), True                  # leans (she is a body, and would lie on it),
+                                                                                       # and a tall kneel one her knees hold
         if warm is not None and not cold:                                   # nothing near the last answer: the whole search
             return self._solve_trunk(targets, None, max_lean, max_spine, step, cold=True)
         return float(best[1]), float(best[2]), float(best[3]), False
@@ -2791,17 +2953,20 @@ class ParentMotion:
         return "run"
 
     def _ph_grasp(self, a, ph):
-        """her hand closes on a toy: the toy's weld switched on where it is (no yank), her hand's collision proxy off (4.1)"""
+        """her hand closes on a toy: the toy's weld switched on where it is (no yank), her hand's collision proxy off the toys (4.1)"""
         sd, toy = ph["side"], ph["toy"]
-        g, _ = self._grip_now(sd)
+        g, _ = self._grip_now(sd, actual=True)
         c = self.d.xpos[self.toys[toy]]
         if float(np.linalg.norm(c - g)) > 0.08:
+            if ph.get("waited", 0) < K.ARRIVE_WAIT_TICKS:                   # her hand is a body: it may still be on its way (her aim
+                ph["waited"] = ph.get("waited", 0) + 1                      # by sight brings it: _aim_fix)
+                return "run"
             return f"the {toy} was not under her hand ({100 * float(np.linalg.norm(c - g)):.0f} cm off)"
         self._proxy(sd, "carry")
         self.scene.weld(f"hold_{sd}_{toy}", True)
-        hid = self.scene.mocap[f"hand_{sd}"]
-        Rh = _quat_to_mat(self.d.mocap_quat[hid])
-        self.carry[sd] = dict(toy=toy, off=_lst(Rh.T @ (c - self.d.mocap_pos[hid])))
+        hb = self.bm.hand_body[sd]
+        Rh = self.d.xmat[hb].reshape(3, 3)
+        self.carry[sd] = dict(toy=toy, off=_lst(Rh.T @ (c - self.d.xpos[hb])))
         self.holding[sd] = toy
         return "next"
 
@@ -2819,10 +2984,9 @@ class ParentMotion:
         return "next"
 
     def _proxy(self, sd, on):
-        """her hand's collision proxy (4.1, A4): on (it touches the room's and the child's shapes and the toys); 'carry' (a toy held
-        by its weld: it touches the G1 alone, so her hand yields from the child like the rest of her, never pushing through it, and
-        never fights the toy it holds: contype 0, its conaffinity kept, which the G1's contype meets and a toy's does not); off
-        (both bits cleared: her hand holding the child, the spring its grip)"""
+        """her hand's collision proxy (4.1): on (it touches the room, the floor, the child and the toys); 'carry' (a toy held by
+        its weld: it touches the room, the floor and the child, never the toy it holds: contype 0, its conaffinity kept); off (both
+        bits cleared). Her palm, fingers and thumb always touch the child: she is a body"""
         g = self.hand_geom[sd]
         ct, ca = self.proxy_on[g]
         if on == "carry":
@@ -2831,8 +2995,6 @@ class ParentMotion:
             ct, ca = 0, 0
         self.m.geom_contype[g] = ct
         self.m.geom_conaffinity[g] = ca
-        for f in self.finger_geoms[sd]:                                     # her palm, fingers and thumb with it (they touch the G1
-            self.m.geom_conaffinity[f] = HAND_TOUCH_AFFINITY if on else 0   # alone, never a toy)
 
     def _ph_let_go(self, a, ph):
         """her holds on the child end: the hands stay where they were, then relax (a load she carries is eased off first by the act)"""
@@ -2847,16 +3009,33 @@ class ParentMotion:
         return "next"
 
     # ------------------------------------------------------------------ planning: her clearance from the child (A4)
+    def _knees_hold(self, full, arms):
+        """whether her knees hold a tall kneel (her shins on the floor, her body above them pivoting on the knees): the moment of
+        her weight above the knees about their line, her arms as `arms` places them, shared by both knees, within KNEE_HOLD_SHARE
+        of her knee's strength either way (parent_consts.STRENGTH: a woman's knee flexors, 59.3 N m, hold her leaning forward; the
+        physical build's finding, 2026-09-25: tall and leaning 60-70 deg over the child, her knees gave and she sank onto it)"""
+        m, sd = self.m, self.scratch
+        segs = dict(kin.fk(full))
+        fa = kin.fk(arms)
+        for s_ in ("upper_arm_L", "forearm_L", "hand_L", "upper_arm_R", "forearm_R", "hand_R"):
+            segs[s_] = fa[s_]
+        sd.qpos[:] = self.d.qpos
+        self.bm.write_qpos(sd.qpos, self.bm.targets(segs))
+        mujoco.mj_kinematics(m, sd)
+        jl, jr = self.knee_j
+        a = 0.5 * (sd.xanchor[jl] + sd.xanchor[jr])
+        ax = unit(sd.xaxis[jl] + sd.xaxis[jr])
+        g = m.opt.gravity
+        tau = 0.5 * sum(float(m.body_mass[b] * (np.cross(sd.xipos[b] - a, g) @ ax)) for b in self.above_knees)
+        return self.knee_lim[0] * K.KNEE_HOLD_SHARE <= tau <= self.knee_lim[1] * K.KNEE_HOLD_SHARE
+
     def _clearance(self, pose, segs=("core",), skip_off=False):
         """the least distance (m, up to 0.2) from her collision shapes of the named chains, posed as `pose`, to the G1's, by
         MuJoCo's own geometry on a scratch copy of the state (skip_off: a shape whose collision is switched off now is left out)"""
         m, sd = self.m, self.scratch
         sd.qpos[:] = self.d.qpos
-        sd.mocap_pos[:] = self.d.mocap_pos; sd.mocap_quat[:] = self.d.mocap_quat
         fk = pose if isinstance(pose, dict) else kin.fk(pose)
-        for i, s in enumerate(kin.SEGS):
-            sd.mocap_pos[self.mocap_ids[i]] = fk[s][0]
-            sd.mocap_quat[self.mocap_ids[i]] = _mat_to_quat(fk[s][1])
+        self.bm.write_qpos(sd.qpos, self.bm.targets(fk))
         mujoco.mj_kinematics(m, sd)
         chains = set(segs)
         mine = [g for g in np.nonzero(self.geom_seg >= 0)[0] if SEG_CHAIN[kin.SEGS[self.geom_seg[g]]] in chains
@@ -3186,12 +3365,16 @@ class ParentMotion:
     def _walk_phases0(self, start, goal, yaw_end, goal_r=0.3, child=True, goal_clear=None, toys=True, depth=0, skip=()):
         start = np.asarray(start, float); goal = np.asarray(goal, float)
         txy = self._toys_xy(exclude=skip) if toys else {}
-        ok = self.plan.free(K.BODY_R_M + K.CLEAR_FURNITURE_M, self.child if child else None, list(txy.values()), goal=goal,
-                            goal_r=goal_r, goal_clear=goal_clear)
-        if not ok[self.plan.cell(start)]:                                  # she stands where the clearances do not hold (by the child,
-            near = self.plan.free(K.BODY_R_M + 0.02, None, [], None)        # after kneeling): the path starts from where she is
-            ok = ok | (near & (np.hypot(*np.meshgrid(self.plan.xs - start[0], self.plan.ys - start[1], indexing="ij")) <= 0.6))
-        path = self.plan.path(start, goal, ok)
+        path = None
+        for child_m in (K.CLEAR_CHILD_M, K.CLEAR_CHILD_TIGHT_M):           # A6's clearance first; where the child's limbs close every
+            ok = self.plan.free(K.BODY_R_M + K.CLEAR_FURNITURE_M, self.child if child else None, list(txy.values()), goal=goal,
+                                goal_r=goal_r, goal_clear=goal_clear, child_m=child_m)   # way, she threads past them nearer
+            if not ok[self.plan.cell(start)]:                              # she stands where the clearances do not hold (by the child,
+                near = self.plan.free(K.BODY_R_M + 0.02, None, [], None)    # after kneeling): the path starts from where she is
+                ok = ok | (near & (np.hypot(*np.meshgrid(self.plan.xs - start[0], self.plan.ys - start[1], indexing="ij")) <= 0.6))
+            path = self.plan.path(start, goal, ok)
+            if path is not None or not child or not toys:
+                break
         if path is None and toys and depth < 3:
             bare = self._walk_phases0(start, goal, yaw_end, goal_r, child, goal_clear, toys=False, depth=depth + 1, skip=skip)
             way = [np.asarray(ph["p0"], float) for ph in bare if ph["type"] == "walk"] + [goal]
@@ -3246,9 +3429,11 @@ class ParentMotion:
         T = np.asarray(b["at"], float) + (fwd * HEELS_BACK if b["mode"] == "heels" else 0)
         out = []
         if b["mode"] == "heels":                                            # rising onto her knees (her knees stay where they are):
-            now = self._clearance(frame_segs("kneel", "heels", np.asarray(b["at"], float), yaw))   # never nearer to it than she is
-            if self._clearance(frame_segs("kneel_down", 2.5, T, yaw)) < min(K.CLEAR_M, now - 0.005):
-                raise Refuse("she cannot rise onto her knees: the child lies against them (A4)")
+            now = self._clearance(frame_segs("kneel", "heels", np.asarray(b["at"], float), yaw))   # never nearer to it than she is,
+            if self._clearance(frame_segs("kneel_down", 2.5, T, yaw)) < min(K.CLEAR_M, now - 0.005, 0.0):   # and never into it:
+                raise Refuse("she cannot rise onto her knees: the child lies against them (A4)")          # a limb babbling against
+                                                                            # her knees she rises from as a body does (A4 stops her
+                                                                            # if it presses)
             out.append(dict(type="kneel_down", at=_lst(T), yaw=yaw, u0=3.0, u1=2.0))
         toys = self._toys_xy()
         why = []
@@ -3380,7 +3565,7 @@ class ParentMotion:
     def _toy_clearance(self, toy, shift):
         """the least distance from a toy's shapes, moved by `shift`, to the child's (MuJoCo's own geometry, a scratch state)"""
         m, sd = self.m, self.scratch
-        sd.qpos[:] = self.d.qpos; sd.mocap_pos[:] = self.d.mocap_pos; sd.mocap_quat[:] = self.d.mocap_quat
+        sd.qpos[:] = self.d.qpos
         b = self.toys[toy]
         adr = m.jnt_qposadr[m.body_jntadr[b]]
         sd.qpos[adr:adr + 3] += shift
@@ -3647,27 +3832,30 @@ class ParentMotion:
     def _ph_hold(self, a, ph):
         """a capped spring engaged at a held point (the hand is drawn there, its proxy off: the spring is its grip), then run by its
         kind's controller until it ends ('done'), stops at its cap ('stopped') or keeps holding after the act ('keep')"""
-        t = ph.get("t", 0)
-        if t == 0:
+        if not ph.get("engaged"):
             e = self.arms[ph["side"]].get("err") or 0.0
-            if e > 0.03:                                                    # a spring from a hand that is not there would be a force
+            if e > K.HOLD_SLIP_M:                                           # a spring from a hand that is not there would be a force
                 return f"her {'left' if ph['side'] == 'L' else 'right'} hand cannot reach it from here ({100 * e:.0f} cm short)"
             Rb = self.d.xmat[int(ph["body"])].reshape(3, 3)                 # her grip where it arrived, against where the hold wants
-            g, _ = self._grip_now(ph["side"])                                 # it on the link now (the child moves while she reaches:
+            g, _ = self._grip_now(ph["side"], actual=True)                    # it on the link now (the child moves while she reaches:
             want = self.d.xpos[int(ph["body"])] + Rb @ (np.asarray(ph["local"], float) + np.asarray(ph["goff"], float))   # a spring
             miss = float(np.linalg.norm(g - want))                          # from a hand that is not there would be a force from
             if miss > 0.03:                                                 # nothing: the W2 fix's babble seed 3, a hand 25 cm off);
-                hid = self.scene.mocap[f"hand_{ph['side']}"]                # a hand that met the link on its way (it moved to meet
-                on = self._hand_clearance_at(ph["side"], self.d.mocap_pos[hid], _quat_to_mat(self.d.mocap_quat[hid]),   # her hand)
+                hb = self.bm.hand_body[ph["side"]]                          # a hand that met the link on its way (it moved to meet
+                on = self._hand_clearance_at(ph["side"], self.d.xpos[hb], self.d.xmat[hb].reshape(3, 3),   # her hand)
                                              self._shape_now(ph["side"]), held=int(ph["body"]))[0] <= K.HAND_FREE_M
-                if not (on and miss <= K.HOLD_SLIP_M):                      # is on it, within a hand's length of where she aimed
-                    return f"her {'left' if ph['side'] == 'L' else 'right'} hand did not arrive on it ({100 * miss:.0f} cm off: it moved)"
+                if not (on and miss <= K.HOLD_SLIP_M):                      # is on it, within a hand's length of where she aimed;
+                    if ph.get("waited", 0) < K.ARRIVE_WAIT_TICKS:            # her hand is a body: it may still be on its way (she
+                        ph["waited"] = ph.get("waited", 0) + 1              # waits for it a moment), and takes it where it is,
+                        return "run"                                        # within a hand's length (her grip holds the less the
+                    if miss > K.HOLD_SLIP_M:                                # farther: GRIP_TOL_M)
+                        return f"her {'left' if ph['side'] == 'L' else 'right'} hand did not arrive on it ({100 * miss:.0f} cm off: it moved)"
+            ph["engaged"] = True
             h = Hold(ph["name"], ph["body"], ph["local"], ph["side"], ph["cap"], ph["brief"], ph["kind"], ph["normal"])
             h.ctl = dict(ph["ctl"]); h.ctl["t"] = 0
             self.holds = [x for x in self.holds if x.name != h.name] + [h]
-            self._proxy(ph["side"], False)
             Rb = self.d.xmat[h.body].reshape(3, 3)                          # her grip as her hand arrived: fixed on the link from now
-            g, Rh = self._grip_now(ph["side"])
+            g, Rh = self._grip_now(ph["side"], actual=True)
             goff = _lst(Rb.T @ (g - h.point(self.d)))
             self.arms[ph["side"]] = dict(mode="hold", hold=h.name, goff=goff, goff0=list(goff), Rl=_lst(Rb.T @ Rh), shape1=ph["shape"])
             self._start_ctl(a, h)
@@ -3702,11 +3890,11 @@ class ParentMotion:
             c["t"] = int(c.get("t", 0)) + 1
             arm = self.arms[h.side]
             e = arm.get("err") if arm.get("mode") == "hold" else None
-            if arm.get("mode") == "hold" and arm.get("goff0") is not None:  # her hand pushed off the held surface a hand's length by
-                pushed = float(np.linalg.norm(np.asarray(arm["goff"], float) - np.asarray(arm["goff0"], float)))   # the child's
-                if pushed > K.HOLD_SLIP_M:                                  # other links (its guard, HAND_FREE_M): off it, the grip is
-                    e = pushed                                              # gone (W2 fix, babble seed 3: a resting hand kept its
-                                                                            # 5 N spring 24 cm off the trunk)
+            if arm.get("mode") == "hold" and arm.get("hold") == h.name:   # her hand as the physics has it, off its grip on the held
+                Rl = self.d.xmat[h.body].reshape(3, 3)                      # point by a hand's length (the child's own links pushed it
+                off = float(np.linalg.norm(self._grip_now(h.side, actual=True)[0]   # off, or it could not keep up): the grip is gone
+                                           - (h.point(self.d) + Rl @ np.asarray(arm["goff"], float))))
+                e = max(e or 0.0, off)
             if e is not None and e > K.HOLD_SLIP_M:                         # the held point left her reach: it slipped from her grip
                 if h.kind == "prop" and c.get("fall"):
                     self._fall_done(c, "out of her reach: it slipped from her hands")
@@ -3883,13 +4071,18 @@ class ParentMotion:
                 c["state"] = "done"; c["sat"] = True
             elif c["top"] >= K.AT_CAP_TICKS * 1:
                 c["mode"] = "lay"; c["lay_t"] = 0; c["lay_cap"] = h.cap; c["ref"] = _lst(p)
+            elif c["go_t"] * TICK_S >= K.PULL_MAX_S:                        # her grip or her arms gave out short of her cap (she is a
+                c["mode"] = "lay"; c["lay_t"] = 0; c["lay_cap"] = h.cap; c["ref"] = _lst(p)   # body: GRIP_TOL_M)
+                c["gave_out"] = True
         else:
             c["lay_t"] += 1
             n = K.LAY_BACK_S / TICK_S
             h.cap = c["lay_cap"] * max(0.0, 1 - c["lay_t"] / n)
             h.next = np.asarray(c["ref"], float)
             if c["lay_t"] >= n:
-                c["state"] = "stopped: the pull sat at her cap for 2 ticks; it rises only with its own flexion (A9), laid back gently"
+                c["state"] = ("stopped: her arms could not carry the pull to her cap (her strength, her grip); laid back gently (A9)"
+                              if c.get("gave_out") else
+                              "stopped: the pull sat at her cap for 2 ticks; it rises only with its own flexion (A9), laid back gently")
 
     def _ctl_turn(self, h, c):
         """the brief turn from its front (A7): its near shoulder and hip lifted straight up (the body rolls about its far edge by
@@ -4067,12 +4260,23 @@ class ParentMotion:
                                                  self.base["mode"] if self.base["mode"] in ("heels", "tall") else "heels",
                                                  palm=-self.child.palm_n[cs], bend=False):
             raise Refuse("its free hand is beyond her reach from where she kneels")
-        return swap + [dict(type="reach", hands={sd: dict(k="palm", side=cs)}, via=True, shape={sd: dict(curl=.9, thumb=.8, index=None)}),
-                dict(type="handover", side=sd, child=cs, keep=bool(keep)),
+        return swap + [dict(type="reach", hands={sd: dict(k="palm", side=cs, lift=K.SETTLE_ABOVE_M)}, via=True,
+                            shape={sd: dict(curl=.9, thumb=.8, index=None)}),   # the toy held a little above its palm until her real
+                dict(type="settle", side=sd),                                   # hand is there (she sees it: _aim_fix), then lowered
+                dict(type="reach", hands={sd: dict(k="palm", side=cs)}, shape={sd: dict(curl=.9, thumb=.8, index=None)},
+                     n=K.SETTLE_LOWER_TICKS),                                   # slowly into it (a physical arm's hand arriving at speed
+                dict(type="handover", side=sd, child=cs, keep=bool(keep)),       # met its fingers first, and the grasp closed on nothing)
                 dict(type="release", side=sd),
                 dict(type="reach", hands={sd: dict(k="up_from", side=sd)}, shape={sd: dict(curl=.3, thumb=.3, index=None)}, n=3),
                 dict(type="proxy", side=sd, on=True),
                 dict(type="relax", sides=sd)]
+
+    def _ph_settle(self, a, ph):
+        """her hand held where it is planned until her real hand is there (within SETTLE_TOL_M: she sees it, _aim_fix), at most
+        SETTLE_TICKS"""
+        miss = self.arms[ph["side"]].get("miss")
+        t = ph.get("t", 0) + 1
+        return "done" if (miss is not None and miss <= K.SETTLE_TOL_M) or t >= K.SETTLE_TICKS else "run"
 
     def _ph_handover(self, a, ph):
         """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks; the
@@ -4310,8 +4514,8 @@ class ParentMotion:
 
     def _ph_holds_wait(self, a, ph):
         hs = [h for h in self.holds if h.kind == ph["kind"]]
-        if not hs:
-            return "done"
+        if not hs:                                                          # her grip slipped before the act began (she is a body:
+            return "her hands lost their hold on it before she began (it slipped from her grip)"   # GRIP_TOL_M, HOLD_SLIP_M)
         for h in hs:
             h.ctl["go"] = True                                              # every hand of the act is on: it begins
         for h in hs:
