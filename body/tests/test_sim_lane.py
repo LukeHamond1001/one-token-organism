@@ -81,7 +81,7 @@ def test_a_line_heard():
     want = [(5 + 2 * i + 2, x) for i, x in enumerate(ws)] + [(5 + 2 * len(ws) + 1, "<end>")]
     assert syms == want, (syms, want)
     ears = [float(np.abs(e).sum()) for _t, _s, _f, e, _ln in got]
-    assert all(e == 0.0 for e in ears[:6]) and all(e > 0 for e in ears[6:6 + 2 * len(ws)]), ears
+    assert min(ears[6:6 + 2 * len(ws)]) > max(ears[:5]), ears            # her voice over the room's own sounds (W5) before it
     p = lane._p
     assert p.present and p.child_in_view and {"mat", "sofa", "floor"} <= set(p.fixtures), p
     assert lane.conduct.world["objects"].keys() == set(lane.toys), lane.conduct.world["objects"]

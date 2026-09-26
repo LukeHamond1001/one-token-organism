@@ -997,10 +997,46 @@ def test_the_world_in_the_core():
           f"others summed with the grasp")
 
 
+def test_the_rooms_sounds():
+    """world 19 (W5; body/sim/sounds.py): the room's sounds come from its physics: the ball dropped 0.4 m onto the mat makes its own
+    sound at its landing, its speed there the fall's (sqrt(2 g h), within 15%), and the child's ears hear that tick louder than the
+    still room; a toy laid down still makes none; the G1 lying still makes none; the sounds' state is saved with the world (the same
+    ears after a restore)"""
+    w = G1World(seed=1)
+    m, d = w.m, w.d
+    for _ in range(3):
+        w.apply({})
+    quiet = [float(np.abs(w.frame().obs["ears"]).sum())]
+    assert not w.frame().truth["sound_events"], w.frame().truth["sound_events"]      # the G1 at rest: silent
+    a = m.jnt_qposadr[m.body("toy_ball").jntadr[0]]
+    d.qpos[a + 2] += 0.4; d.qvel[m.jnt_dofadr[m.body("toy_ball").jntadr[0]]:][:6] = 0.0
+    mujoco.mj_forward(m, d)
+    hit, loud = None, []
+    for k in range(6):
+        w.apply({})
+        f = w.frame()
+        loud.append(float(np.abs(f.obs["ears"]).sum()))
+        ev = [e for e in f.truth["sound_events"] if e[1] == "toy_ball" and e[2] == "ball"]
+        if ev and hit is None:
+            hit = (k, ev[0][3])
+    assert hit is not None, loud
+    v = math.sqrt(2 * 9.81 * 0.4)
+    assert abs(hit[1] - v) < 0.15 * v, (hit, v)
+    assert loud[hit[0]] > 3 * max(quiet[0], 1.0), (loud, quiet)
+    blob = w.save_state()
+    x1 = [(w.apply({}), w.frame().obs["ears"].copy())[1] for _ in range(3)]
+    w2 = G1World(seed=1); w2.load_state(blob)
+    x2 = [(w2.apply({}), w2.frame().obs["ears"].copy())[1] for _ in range(3)]
+    assert all(np.array_equal(p_, q_) for p_, q_ in zip(x1, x2))
+    print(f"world 19: the room's sounds from its physics: the ball dropped 0.4 m sounded at its landing (tick {hit[0]}, {hit[1]:.2f} m/s,",
+          f"the fall's {v:.2f}), the ears' energy {loud[hit[0]]:.0f} against the still room's {quiet[0]:.0f}; the G1 at rest silent; the",
+          f"sounds saved with the world (the same ears after a restore)")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_the_charge, test_the_reflexes, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

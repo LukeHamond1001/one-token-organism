@@ -16,7 +16,8 @@ render has no near-infrared light, which the real imagers also see (a disclosed 
              red-green and blue-yellow ON and OFF (256); what lies outside that camera's field reads nothing: eye_f, 1,536 numbers.
   No depth channel and no stereo algorithm: the body gets both eyes and learns what they share (the owner's decision 4).
   face_fovea and face_periph read nothing: at birth there is no born face detector (C39, option a); the born template below is an
-  instrument. onset_periph reads nothing until A43's constants are read from their sources (C49). The camera model (A38: exposure,
+  instrument. onset_periph is THE BORN VISUAL ONSET CUE (A43; `_onset`): the grey peripheries' sudden local change, habituating per
+  place, suppressed while the trunk turns fast; its constants ours or recalled until C49 reads them from their sources. The camera model (A38: exposure,
   Poisson-Gaussian noise, the head's motion blur, the colour camera's rolling rows, gamma) waits for its constants (C45).
 The images themselves go to the frame's truth (the page, the stills, the eye check), never to the body.
 
@@ -76,6 +77,15 @@ GABOR_PERIODS = (3.0, 6.0)      # the oriented cells' periods in px: 1.0 and 0.5
 GABOR_ORIENTS = 4               # 0, 45, 90, 135 deg
 GABOR_SIGMA = 0.56              # each Gabor's envelope sd in periods: a one-octave bandwidth (ours)
 BANK_MAPS = 2 + 2 * GABOR_ORIENTS          # per pixel: CS ON, CS OFF, and the oriented energy at 4 orientations x 2 scales
+ONSET_WEBER = 0.2               # THE VISUAL ONSET CUE (A43; C49): a periphery pixel's change this tick over the scene's mean luminance
+                                # (the level the retina adapts to), beyond
+                                # the image's median change, past a newborn's contrast threshold at its best (10-20%: Banks and
+                                # Salapatek 1978, recalled; its top: a change seen in the periphery)
+ONSET_EPS = 0.02                # the adaptation level's floor (a black scene's change is not infinite: ours)
+TURN_SUPPRESS = 0.5             # rad/s: no onset while the trunk turns faster (the head's own motion changes everything: ours)
+ONSET_NEAR = 2                  # a change is an onset only where no change passed ONSET_WEBER within 2 periphery px (about 4 deg) the
+                                # tick before: an appearance, not a motion under way (ours)
+HAB_STEP, HAB_TAU = 0.5, 10.0   # habituation per place: each onset there halves the next (Sokolov 1963), recovering over 10 s (ours)
 EYE_SAMPLES = 0                 # the eyes' multisampling: off, so a render is a function of the state alone (the lead's decision:
                                 # determinism before smoothness; the camera model's noise dwarfs the aliasing)
 FACE_TURN_DEG = 75.0            # the face test (A1; innate, ours)
@@ -268,6 +278,20 @@ def template_match(best):
     return bool(best[0] >= TEMPLATE_R and best[1] >= TEMPLATE_CONTRAST)
 
 
+def _dilate(mask, r):
+    """a boolean map grown by r px in each direction (a square neighbourhood)"""
+    out = mask.copy()
+    for dy in range(-r, r + 1):
+        for dx in range(-r, r + 1):
+            sh = np.roll(np.roll(mask, dy, axis=0), dx, axis=1)
+            if dy > 0: sh[:dy] = False
+            elif dy < 0: sh[dy:] = False
+            if dx > 0: sh[:, :dx] = False
+            elif dx < 0: sh[:, dx:] = False
+            out |= sh
+    return out
+
+
 def periphery(L):
     """a grey eye's periphery: its native image averaged POOL x POOL (56 x 32)"""
     h, w = L.shape[0] // POOL * POOL, L.shape[1] // POOL * POOL
@@ -387,7 +411,7 @@ class Eyes:
     buffer with one read-back, `see()` this tick's codes (rendered again only when something they would see has moved: the state, the
     gaze, the scene's run-time fields), `close()` the GL context. Attaching sets the world's `eyes`, so its frames carry eye_p (172)
     and eye_f (1,536) at the anatomy's sizes, face_fovea and face_periph (zeros: no born face detector at birth, C39 option a),
-    onset_periph (zeros until A43's constants are read, C49), and A1's face test in the truth."""
+    onset_periph (the born visual onset cue, A43), and A1's face test in the truth."""
 
     def __init__(self, world, shadows="sun", samples=EYE_SAMPLES):
         from mujoco import gl_context
@@ -418,6 +442,10 @@ class Eyes:
         self.set_shadows(shadows)
         self._cache = None
         self.timing = {"renders": 0, "render_s": 0.0, "code_s": 0.0}
+        self.prev_per = None                                            # the onset cue's memory: last tick's peripheries,
+        self.prev_ex = None                                             # last tick's changes past the threshold,
+        self.hab = {sd: np.zeros((G.EYE_H // POOL, G.EYE_W // POOL)) for sd in "LR"}   # its habituation per place,
+        self.onset = (None, np.zeros(3))                                # and this tick's reading (world tick, [fired, yaw, pitch])
         world.eyes = self
 
     def set_shadows(self, shadows):
@@ -479,7 +507,58 @@ class Eyes:
             self._cache = (key, eye_p, eye_f, truth)
         _, eye_p, eye_f, truth = self._cache
         return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": np.zeros(3),
-                "onset_periph": np.zeros(3), "truth": truth}
+                "onset_periph": self._onset(truth["periphery"]).copy(), "truth": truth}
+
+    def _onset(self, per):
+        """THE VISUAL ONSET CUE (A43), once a world tick: the grey peripheries' change since the last tick, each pixel's over the scene's
+        mean luminance (the level the retina is adapted to), less the median change over both eyes (the whole image moving with the head), times one less the place's
+        habituation; the strongest place past ONSET_WEBER fires, unless the trunk turns faster than TURN_SUPPRESS (the torso unit's
+        gyro, as sensed). -> [fired, yaw, pitch]: its direction from the fovea window's centre (rad, + right, + up)"""
+        w = self.world
+        if self.onset[0] == w.tick:
+            return self.onset[1]
+        out = np.zeros(3)
+        decay = math.exp(-W.TICK_S / HAB_TAU)
+        for sd in "LR":
+            self.hab[sd] *= decay
+        if self.prev_per is not None:
+            adapt = 0.5 * (np.mean([per[sd].mean() for sd in "LR"]) + np.mean([self.prev_per[sd].mean() for sd in "LR"])) + ONSET_EPS
+            ch = {sd: np.abs(per[sd] - self.prev_per[sd]) / adapt for sd in "LR"}   # over the scene's mean luminance (the retina adapts)
+            med = float(np.median(np.concatenate([ch["L"].ravel(), ch["R"].ravel()])))
+            turn = float(np.linalg.norm(w._sensed["imu_torso"][3:6]))
+            best = None
+            ex = {sd: (ch[sd] - med) > ONSET_WEBER for sd in "LR"}
+            for sd in "LR":
+                drive = (ch[sd] - med) * (1.0 - self.hab[sd])
+                if self.prev_ex is not None:                            # an appearance: nothing near it was changing last tick
+                    near = _dilate(self.prev_ex[sd], ONSET_NEAR)
+                    drive = np.where(near, 0.0, drive)
+                k = int(np.argmax(drive))
+                if best is None or drive.flat[k] > best[0]:
+                    best = (float(drive.flat[k]), sd, divmod(k, drive.shape[1]))
+            if best[0] > ONSET_WEBER and turn < TURN_SUPPRESS:
+                _v, sd, (r, c) = best
+                x, y = c * POOL + POOL / 2, r * POOL + POOL / 2
+                yaw_w = w.gaze[0] + (w.gaze[2] / 2 if sd == "L" else -w.gaze[2] / 2)
+                out = np.array([1.0, math.atan((x - G.EYE_W / 2) / W.EYE_F_PX) - yaw_w, math.atan((G.EYE_H / 2 - y) / W.EYE_F_PX) - w.gaze[1]])
+                h = self.hab[sd]
+                h[max(0, r - 1):r + 2, max(0, c - 1):c + 2] += HAB_STEP * (1.0 - h[max(0, r - 1):r + 2, max(0, c - 1):c + 2])
+        self.prev_per = {sd: per[sd].copy() for sd in "LR"}
+        self.prev_ex = None if self.prev_per is None or "ex" not in locals() else ex
+        self.onset = (w.tick, out)
+        return out
+
+    def state(self):
+        return dict(prev_ex=None if self.prev_ex is None else {sd: self.prev_ex[sd].copy() for sd in "LR"},
+                    prev_per=None if self.prev_per is None else {sd: self.prev_per[sd].copy() for sd in "LR"},
+                    hab={sd: self.hab[sd].copy() for sd in "LR"}, onset=[self.onset[0], self.onset[1].copy()])
+
+    def load_state(self, s):
+        self.prev_per = None if s["prev_per"] is None else {sd: np.array(s["prev_per"][sd], dtype=np.float64) for sd in "LR"}
+        self.hab = {sd: np.array(s["hab"][sd], dtype=np.float64) for sd in "LR"}
+        self.prev_ex = None if s.get("prev_ex") is None else {sd: np.array(s["prev_ex"][sd], dtype=bool) for sd in "LR"}
+        self.onset = (s["onset"][0], np.array(s["onset"][1], dtype=np.float64))
+        self._cache = None
 
     def close(self):
         if self.world.eyes is self:

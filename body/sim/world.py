@@ -106,6 +106,7 @@ from body.sim.tract import Tract  # noqa: E402  (the voice effector's physics, 4
 from body.sim.voice.synth import PA_PER_UNIT  # noqa: E402  (the tract's engine units -> pascals at 1 m)
 from body.sim import ears as EA  # noqa: E402  (the ears, P2)
 from body.sim import observer as OBS  # noqa: E402  (the born momentum observer: contact from the robot's own sensors, A37)
+from body.sim import sounds as SND  # noqa: E402  (the room's sounds from its physics, W5)
 
 R = None                        # body/sim/reflexes.py, the body's spinal cord: bound at the first world's birth (it imports this module)
 
@@ -630,6 +631,7 @@ class G1World(SimWorld):
         self.weight = self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.armature = m.dof_armature[self.dof].copy()                     # each joint's rotor inertia through its gear (the model's)
         self.observer = OBS.Observer(m, self.d, self.dof, self.base_dof, self.pelvis_id, "imu_in_pelvis", self.armature)
+        self.sounds = SND.Sounds(self)                                      # the room's sounds from its physics (W5)
         self.heat = np.zeros(len(JOINTS))                                   # each motor's temperature above the room's (degC)
         self.tract = Tract(seed=self.seed)                                   # the voice effector's physics (4.9)
         self.ears = EA.Ears()                                                # two cochleas at the head's ear sites (P2)
@@ -705,8 +707,8 @@ class G1World(SimWorld):
           face 2          [2 x (smile - frown) as the child can see it, its change] (A1, A49: the lane's)
           ears 1,725      both cochleas and the delay lines (body/sim/ears.py) of the tick's sounds; sound_side [an onset heard,
                           the born lateral read's angle, + left]
-          eye_p 172, eye_f 1,536, onset_periph 3   the eyes (body/sim/eyes.py when attached: the D435's three views, A78; zeros
-                          without them, and onset_periph zeros until A43's constants are read)
+          eye_p 172, eye_f 1,536, onset_periph 3   the eyes (body/sim/eyes.py when attached: the D435's three views, A78, and
+                          the born visual onset cue, A43; zeros without them)
           face_periph 3, face_fovea 1   zeros: no born face detector at birth (C39, the lead's decision of 2026-09-25, option a: the
                           born route to faces is orienting to her voice and her face brought into view)"""
         if self.paused:
@@ -877,6 +879,7 @@ class G1World(SimWorld):
                 t0 = time.perf_counter()
                 mujoco.mj_step(m, d)
                 t_phys += time.perf_counter() - t0
+                self.sounds.step(self, s)                               # the step's impacts (W5: body/sim/sounds.py)
                 BD[s] = obsv.gear_load(d.qfrc_actuator[self.dof], d.qvel[self.dof])   # THE GEAR'S LOAD from the sensed torque and the
                                                                                        # encoder's velocity change (A37, A73)
                 if par is not None:
@@ -921,10 +924,12 @@ class G1World(SimWorld):
         self.tract_pa = self.tract_raw * PA_PER_UNIT
         self.words_out = None if wo is None or int(wo) == 0 else int(wo)
         heard = None
+        room = self.sounds.tick_end(self)                               # the room's sounds this tick (W5), made day and night
         if not self.night:
             tp = d.xpos[m.body("torso_link").id]; tR = d.xmat[m.body("torso_link").id].reshape(3, 3)
             ear_l, ear_r, mouth = EA.head_from_torso(tp, tR)
             sources = {"tract": (self.tract_pa, mouth)}
+            sources.update(room)
             if self.lane is not None:
                 sources.update(self.lane.tick(self))                    # her tick: her conduct on this tick, her voice from her
                                                                             # mouth (body/sim/lane.py)
@@ -1144,6 +1149,7 @@ class G1World(SimWorld):
                 "outside_true_Nm": s["true_j"].copy(), "outside_true_peak_Nm": s["true_peak"].copy(),
                 "base_true_peak_N": float(s["true_base_peak"]), "base_true_wrench": s["true_b"].copy(),
                 "night": self.night, "below_n": self._below_n, "crying": bool(self.crying),
+                "sound_events": list(getattr(self.sounds, "last_events", [])),
                 "f_pain": self.f_pain, "drain": self._drain, "fed": self._fed, "ncon": int(d.ncon), "acts": dict(self._last_acts),
                 "gaze": self.gaze.copy(), "spinal": dict(self._spinal), "vor_quick": self._vor_quick,
                 "palm_own_N": {"hand_l": float(s["palm_own"][0]), "hand_r": float(s["palm_own"][1])},
@@ -1162,7 +1168,8 @@ class G1World(SimWorld):
                 "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "scene_pose": _pose_state(self.scene.pose),
                 "parent": None if self.parent is None else self.parent.state(),
                 "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
-                              "observer": self.observer.state(),
+                              "observer": self.observer.state(), "sounds": self.sounds.state(),
+                              "eyes": None if self.eyes is None else self.eyes.state(),
                               "words_out": self.words_out, "tract_pa": self.tract_pa, "tract_raw": self.tract_raw, "crying": self.crying, "night": self.night, "dawn_left": int(self.dawn_left),
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
@@ -1192,6 +1199,9 @@ class G1World(SimWorld):
         self.heat = np.asarray(s5["heat"], float).copy()
         self.tract.load_state(s5["tract"])
         self.observer.load_state(s5["observer"])
+        self.sounds.load_state(s5["sounds"])
+        if self.eyes is not None and s5.get("eyes") is not None:
+            self.eyes.load_state(s5["eyes"])
         self.ears.load_state(s5["ears"])
         self.vor_corr = np.asarray(s5["vor_corr"], float).copy()
         self.words_out = s5["words_out"]; self.tract_pa = np.asarray(s5["tract_pa"], float).copy()

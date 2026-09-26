@@ -702,7 +702,44 @@ def test_her_look():
           "); her head's solid inside her sheet everywhere; nothing white but her teeth")
 
 
-EYE_TESTS = [test_the_gaze, test_the_vor_exact, test_the_vor_in_the_world, test_the_eyes_render, test_the_face_test,
+def test_the_visual_onset_cue():
+    """eyes 17 (A43; C49): the born visual onset cue: a ball appearing 0.6 m out, to the right of the left eye's axis and above it,
+    fires on its tick toward it (within the ball's own angular radius and two periphery px of its direction from the fovea's centre:
+    the strongest change is at its outline); the room's own
+    rate before it is written down, no bar (nothing in it is ever quite still: the legs sinking at rest under Unitree's gains, the
+    duck rocking on its round bottom, the parent; C49); the cue's memory is saved with the world"""
+    w = W.G1World(seed=1, spinal=False)
+    ey = E.Eyes(w)
+    m, d = w.m, w.d
+    got = []
+    for t in range(20):
+        f = w.frame(); w.apply({})
+        got.append(int(f.obs["onset_periph"][0]))
+    c = m.camera("eye_L").id
+    P = d.cam_xpos[c] + d.cam_xmat[c].reshape(3, 3) @ np.array([0.35, 0.1, -1.0]) * 0.6
+    a = m.jnt_qposadr[m.body_jntadr[m.body("toy_ball").id]]
+    d.qpos[a:a + 3] = P; d.qvel[m.jnt_dofadr[m.body_jntadr[m.body("toy_ball").id]]:][:6] = 0.0; mujoco.mj_forward(m, d)
+    f = w.frame()
+    on = f.obs["onset_periph"].copy()
+    want = (math.atan(0.35) - w.gaze[0] - w.gaze[2] / 2, math.atan(0.1) - w.gaze[1])
+    tol = math.asin(0.06 / (0.6 * math.sqrt(1 + 0.35 ** 2 + 0.1 ** 2))) + 2 * E.POOL / W.EYE_F_PX   # the ball's angular radius and two
+    assert on[0] == 1.0 and abs(on[1] - want[0]) < tol and abs(on[2] - want[1]) < tol, (on, want, tol)   # periphery px: its edge fires
+    blob = w.save_state()
+    after = []
+    for t in range(4):
+        w.apply({}); after.append(w.frame().obs["onset_periph"].copy())
+    w2 = W.G1World(seed=1, spinal=False); ey2 = E.Eyes(w2); w2.load_state(blob)
+    after2 = []
+    for t in range(4):
+        w2.apply({}); after2.append(w2.frame().obs["onset_periph"].copy())
+    assert all(np.array_equal(x, y) for x, y in zip(after, after2))
+    ey.close(); ey2.close()
+    print(f"eyes 17: the born visual onset cue: a ball appearing fired toward it (yaw {on[1]:.2f}, pitch {on[2]:.2f} rad from the fovea's",
+          f"centre; its own direction {want[0]:.2f}, {want[1]:.2f}); the room's own rate before it {sum(got)} of 20 ticks (C49); its memory",
+          f"saved with the world")
+
+
+EYE_TESTS = [test_the_visual_onset_cue, test_the_gaze, test_the_vor_exact, test_the_vor_in_the_world, test_the_eyes_render, test_the_face_test,
              test_the_vor_quick_phase, test_the_face_template, test_exact_replay_with_the_eyes, test_no_lamp_at_the_eyes,
              test_the_parents_face_as_drawn, test_her_face_of_human_proportions, test_her_face_photometry, test_her_expressions,
              test_the_template_on_her_face, test_her_collision, test_her_look]
