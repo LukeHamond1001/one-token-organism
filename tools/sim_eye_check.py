@@ -124,14 +124,14 @@ def balanced(pred, y):
     return float(np.mean([np.mean(pred[y == c] == c) for c in cs]))
 
 
-def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
+def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False, dump=None):
     rng = np.random.default_rng(seed)
     w = W.G1World(seed=seed)
     m, d = w.m, w.d
     ey = E.Eyes(w, shadows="sun")
     seg = mujoco.Renderer(m, G.EYE_H, G.EYE_W)
     seg.enable_segmentation_rendering()
-    UP = 8
+    UP = 4                                                             # 4 x the 336 px eye: the first build's 8 x its 168 (8 x would pass the 1,920 px framebuffer)
     seg8 = mujoco.Renderer(m, G.EYE_H * UP, G.EYE_W * UP)
     seg8.enable_segmentation_rendering()
     opt = G.eye_option()
@@ -183,6 +183,7 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
     lights = {L: LIGHTS[L] for L in lights}
     labels, feats, facecmp = [], {k: [] for k in [(L, s) for L in lights for s in ("sun", "none")]}, []
     alt = {"raw grey pixels": [], "the bank's maps unpooled 4 x 4": []}
+    raw_views = []
     t0 = time.perf_counter()
     for c, dist, yaw, pitch, turn, q, aim, block in plan:
         p = place(c, dist, yaw, pitch, turn, q, block)
@@ -222,6 +223,9 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
                 ey.set_shadows(sh)
                 seen = ey.see()
                 feats[(L, sh)].append(seen["eye_f"])
+                if dump and sh == "sun" and L == next(iter(lights)):     # the raw foveae and colour window, for an offline look
+                    raw_views.append(np.concatenate([seen["truth"]["fovea"][x].reshape(-1) for x in "LR"]
+                                                    + [seen["truth"]["colour_window"].reshape(-1) / 255.0]))
                 if codes and sh == "none" and L == next(iter(lights)):
                     fv = seen["truth"]["fovea"]
                     alt["raw grey pixels"].append(np.concatenate([fv[x].reshape(-1) for x in "LR"]))   # the grey foveae, 0-1
@@ -229,6 +233,8 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
         m.light_dir[sun], m.light_diffuse[sun] = sun0
     secs = time.perf_counter() - t0
     y = np.array(labels)
+    if dump:                                                            # the views' codes and labels, for an offline look
+        np.savez_compressed(dump, y=y, raw=np.array(raw_views, dtype=np.float32), **{f"{L_}|{sh_}": np.array(v) for (L_, sh_), v in feats.items()})
     keep = y >= 0
     n = int(keep.sum())
     idx = np.where(keep)[0]
@@ -314,7 +320,7 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
     w = W.G1World(seed=seed)
     m, d = w.m, w.d
     ey = E.Eyes(w, shadows="sun")
-    UP = 8
+    UP = 4                                                             # 4 x the 336 px eye: the first build's 8 x its 168 (8 x would pass the 1,920 px framebuffer)
     seg = mujoco.Renderer(m, G.EYE_H, G.EYE_W); seg.enable_segmentation_rendering()
     seg8 = mujoco.Renderer(m, G.EYE_H * UP, G.EYE_W * UP); seg8.enable_segmentation_rendering()
     opt = G.eye_option()
@@ -458,9 +464,10 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--lights", default=",".join(LIGHTS))
     ap.add_argument("--codes", action="store_true")
+    ap.add_argument("--dump", default=None, help="write the views' codes and labels to this .npz")
     ap.add_argument("--c2", type=int, default=0, help="C2 and C3 on this many babbled frames instead of the identity check")
     a = ap.parse_args()
     if a.c2:
         print(json.dumps(c2c3(a.c2, a.seed, tuple(a.lights.split(","))), indent=1))
     else:
-        print(json.dumps(main(a.views, a.seed, tuple(a.lights.split(",")), a.codes), indent=1))
+        print(json.dumps(main(a.views, a.seed, tuple(a.lights.split(",")), a.codes, a.dump), indent=1))
