@@ -12,7 +12,7 @@ its night at the tick's end), night_ticks 120, 64 dreams (night_starts and night
 night on the CPU.
 THE WORLD (a stub of the G1's world, never the sim's; a function of its tick and its two seeded streams, as body/tests/test_motor.py's
 motor 12's): every channel's numbers uniform in -1..1 from its first stream (the frame's keys at body/sim/anatomy.py's sizes), loud (x 3)
-6 ticks in every 40 and soft (x 0.3) between, so the frames' events end; the charge falling from 0.9; the breath left drawn; a smile every
+6 ticks in every 40 and soft (x 0.3) between, so the frames' events end; the breath left drawn; a smile every
 40 ticks; pain on two ticks; a face in the periphery, a sound's onset and a sudden change now and then; a word every 17 ticks; a face in
 the fovea every 23; the torso's unit turning and a little tilted; its truth the torso's true yaw (C51's instrument). Each apply calls the
 cerebellum's hook 15 times (the mossy numbers from the tick's acts and its second stream, a teacher and a limit of 25 N m at each readout's
@@ -70,8 +70,8 @@ class Script(SimWorld):
 
     def frame(self):
         t = self.t; R = self.rng; a_ = 3.0 if t % 40 < 6 else 0.3
-        obs = {n: [a_ * R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
-        obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [max(0.05, 0.9 - 0.002 * t), -0.002]
+        obs = {n: [a_ * R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n != "face"}
+        obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]
         obs["body"][241] = R.uniform(0.2, 1.0)
         obs["pain"] = [1.0 if (t in (60, 147) and k == 5) else 0.0 for k in range(44)]
         if t % 30 == 3:

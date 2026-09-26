@@ -28,7 +28,7 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                A word counts as said when its sound has ended: the talk-over's cut withdraws the words it stopped (4.6), from her
                echo window, her last focus word and the ledger alike.
   Conduct      the speech side of L2 (4.10), by its priority: the child's pain or distress (comfort), being hit ("oh!", stage 2
-               "no."), a low charge (the meal's line), the child's vocal turn (a reply after her latency: a confirmation, a
+               "no."), the child's vocal turn (a reply after her latency: a confirmation, a
                recast, an echo or an answer, by what her ear accepted), finishing her word (the talk-over stop: she stops and
                listens), a formal trial under way (she says only its sentence), a pending ask (judged over its window), joint
                attention (a follow-in variation set naming its target as she reads it), and idle. Episodes (L3: the day plan,
@@ -49,8 +49,7 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                the routine's words) lets her hear and echo a word, not smile at it. An ECHO (a word said within 10 ticks of
                her saying it) is answered as imitation, as a parent answers it (Goldstein and Schwade 2008; her method): judged
                as the word said then would be, so it may earn her smile, but it counts toward nothing in the ledger, neither
-               "says", "understood" nor a met ask (a name ask answered by an echo is void). "more?" at the meal is the feed's
-               line, never an ask. An ask ("where is the X?", "give me the X", the call) is judged from the moment its word has
+               "says", "understood" nor a met ask (a name ask answered by an echo is void). An ask ("where is the X?", "give me the X", the call) is judged from the moment its word has
                been heard: X in the child's view and none she reads it attending then (else void), its trunk turning to an X
                or a hand reaching toward one within the window and holding 2 ticks (4.8); a give done before its word was heard
                is void, not missed; the call is a gaze ask at her face, 20 ticks from the end of its name, void when the child
@@ -215,7 +214,6 @@ ACT_KINDS = {
     "hand_over": "the toy put into the child's near or far hand (parent_acts.hand_over)",
     "touch": "a hand resting on the named part of the child, within one hand's cap (4.2)",
     "withdraw": "her hand drawn back from where she was hit (4.10)",
-    "offer_bottle": "the bottle into the child's palm, her face in view (the meal's stage 1, 4.7)",
     "guide": "guide the named limb within the guide's cap (g1acts.guide, A10)",
     "pull_to_sit": "the pull-to-sit by the forearms, rising only with its own flexion (A9)",
     "wave": "a wave",
@@ -236,7 +234,7 @@ ACT_KINDS = {
 }
 STUB_FOCUS = 60                               # the stub runs a during='focus' act until the conduct cancels it (its word's end)
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
-              "withdraw": 2, "offer_bottle": 12, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
+              "withdraw": 2, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
               "reveal_face": 2, "do": 7, "copy": 7, "present": 12}   # the stub's nominal times, ours; W2 measures its own
 
 
@@ -312,7 +310,7 @@ def directs(act):
         return [("head", "child"), ("trunk", UNNAMED)]                # her trunk leans in (A3)
     if k == "attend":
         return [("head", "child"), ("hand", "trunk"), ("trunk", UNNAMED)]   # she kneels beside it, a hand on its trunk
-    if k in ("show", "point", "open_hand", "hand_over", "offer_bottle"):
+    if k in ("show", "point", "open_hand", "hand_over"):
         return [("hand", tg)]
     if k in ("touch", "guide"):
         return [("hand", tg)]                                         # the part she touches, the limb she guides
@@ -503,9 +501,6 @@ INTENTS = {
     "body": Intent("plain", False, None, (Act("touch", "{b}"),)),
     "motor_sit": Intent("plain", False, None, (Act("pull_to_sit", "child"),)),
     "motor_roll": Intent("plain", False, None, (Act("guide", "far_arm"),)),
-    "feed": Intent("comfort", False, None, (Act("offer_bottle", "bottle"), EYES)),
-    "feed_more": Intent("comfort", True, None, (EYES,)),        # "more?": the feed's own line, a question, never an ask
-    "feed_done": Intent("comfort"),
     "leave": Intent("plain", False, None, (Act("wave", "child"), Act("walk", "door"))),
     "peekaboo_hide": Intent("plain", True, None, (Act("cover_face", "child"),)),
     "peekaboo": Intent("plain", False, None, (Act("reveal_face", "child"),)),
@@ -931,7 +926,7 @@ class Conduct:
         self.last_chatter = NEVER                   # her idle slot's last line, a foil line or P4's (FOIL_CHATTER_GAP, note_idle)
         self.world = None
         self.set_world(world if world is not None else TP.ROOM_AT_BIRTH)
-        self.routine = None                   # the routine under way (L3 sets it: "feed", "greet", "leave", "peekaboo", ...)
+        self.routine = None                   # the routine under way (L3 sets it: "greet", "leave", "peekaboo", ...)
         self.pending = None                   # the ask she is judging: dict(kind, word, obj, tick, open, until, trial)
         self.reply_due = None                 # the reply owed to the child's turn: dict(tick, kind, word, obj)
         self.no_target_since = 0              # the tick since which it has attended nothing, as she reads it (the redirect)
@@ -1866,17 +1861,12 @@ class Conduct:
             return None
         if self.reply_due is not None and t < self.reply_due["tick"]:
             return None
-        # her formal trial under way (4.8): she says nothing but its test sentence, once settled; the reply she owes, the meal's
-        # first line and everything below wait for its end (its pain, distress or hit, above, end it first)
+        # her formal trial under way (4.8): she says nothing but its test sentence, once settled; the reply she owes and
+        # everything below wait for its end (its pain, distress or hit, above, end it first)
         if self.trial is not None:
             ln = self._trial_line(t, p)
             return (ln, False, None) if ln is not None else None
-        # 3. a low charge: the meal's first line (L3 runs the routine); it waits while a gaze, act or call ask is judged, whose
-        #    window is shorter than her 200 ticks to check (4.7), since its bottle in hand would cue the child (A51)
-        if "charge_low" in ev and p.present and self.routine != "feed" and not self.eyes_on_child:
-            ln = f.compose("feed", t, p)
-            if ln is not None and f.allowed(ln, t)[0]:
-                return ln, False, None
+        # 3. (the meal's line is gone with the charge: A88)
         # 4. the reply owed to the child's turn, after her latency
         if self.reply_due is not None and t >= self.reply_due["tick"]:
             r, self.reply_due = self.reply_due, None

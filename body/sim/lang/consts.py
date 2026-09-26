@@ -118,7 +118,7 @@ PUNCT = ".?!"                         # the only punctuation (4.5; the form's pa
 PRAISE = ("yes", "good")              # Claude may not write praise: "yes", "good", the approval register (A14)
 REPRIMAND = ("no",)                   # nor stage 2's "no." (4.10: the frown's line): a judgment too, the fast layer's (A14)
 ASK_WORDS = ("where", "what", "give", "more")   # nor an ask (A14), anywhere in the line: "where is ...", "what is ...", "give
-                                      # me ...", nor the meal's "more?" (the feed routine's own line); nor "look" with a word
+                                      # me ..."; nor "look" with a word
                                       # after it in its sentence ("look at ...", "look here"), nor the child's name (the call:
                                       # an ask, judged, at most once per 240 ticks, A13); templates.claude_claims
 STEER_USES = 3                        # each of Claude's lines is used at most 3 times (4.5)
@@ -368,7 +368,6 @@ EXPECT_ROUTINES = {                   # the words of the routine under way (A27)
     "greet": ("hi", PARENT_NAME),
     "wake": ("hi", PARENT_NAME),
     "return": ("hi", PARENT_NAME),
-    "feed": ("more", "bottle"),
     "leave": ("bye",),
     "peekaboo": ("peekaboo",),
 }

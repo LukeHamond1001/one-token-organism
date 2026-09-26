@@ -4,7 +4,7 @@ module's server hands the latest snapshot out from another; the page never touch
 nothing it does changes a life (the room camera renders from a copy of the tick's state in its own context).
 
 What it shows: the room from a corner camera; the child's three views (its two grey eyes with their fovea windows, its colour
-camera), as the renders come, not as its code reads them; her face line and the child's charge, its pain and cry, the born reading
+camera), as the renders come, not as its code reads them; her face line and the child's stress, its pain and cry, the born reading
 of her face; the ten gates (each effector's probability of acting this tick); a two-voice transcript (her lines, and what the
 child's token output said and what her ear heard); her episode; the tick, the day, day or night; the room's sounds and the visual
 onsets. An instrument: the experimenter's view, never the body's.
@@ -49,7 +49,7 @@ img{width:100%;display:block;border-radius:6px;background:#111}
 </section>
 <section style="display:grid;gap:16px;align-content:start">
  <div class="card"><h2>Its body</h2><div class="meters">
-  <div class="m"><b id="h">–</b><span>charge</span></div><div class="m"><b id="face">–</b><span>her face, as it reads it</span></div>
+  <div class="m"><b id="h">–</b><span>stress · mood</span></div><div class="m"><b id="face">–</b><span>her face, as it reads it</span></div>
   <div class="m"><b id="pain">–</b><span>pain · cry</span></div><div class="m"><b id="onset">–</b><span>onsets · sounds</span></div></div></div>
  <div class="card"><h2>The ten gates</h2><div class="gates" id="gates"></div></div>
  <div class="card"><h2>Two voices</h2><div id="tx" class="tx"></div></div>
@@ -58,7 +58,7 @@ img{width:100%;display:block;border-radius:6px;background:#111}
 const $=id=>document.getElementById(id);let n=0;
 async function tick(){try{const s=await (await fetch('state.json?'+Date.now())).json();
 $('clock').textContent=`tick ${s.tick} · day ${s.day} · ${s.night?'night':'day'}`;$('ep').textContent=s.episode?('her episode: '+s.episode):'';
-$('h').textContent=s.h.toFixed(2);$('face').textContent=s.reading.toFixed(2);$('pain').textContent=`${s.pain?'●':'○'} · ${s.cry?'crying':'quiet'}`;
+$('h').textContent=`${s.stress.toFixed(2)} · ${s.mood.toFixed(2)}`;$('face').textContent=s.reading.toFixed(2);$('pain').textContent=`${s.pain?'●':'○'} · ${s.cry?'crying':'quiet'}`;
 $('onset').textContent=`${s.onset?'●':'○'} · ${s.sounds}`;
 $('gates').innerHTML=s.gates.map(g=>`<div class="g"><i style="height:${Math.round(100*g[1])}%"></i><small>${g[0]}</small></div>`).join('');
 $('tx').innerHTML=s.transcript.map(x=>`<div class="${x[1]}">${x[0]} · ${x[2]}</div>`).join('');$('tx').scrollTop=1e9;
@@ -100,7 +100,7 @@ class Snapshot:
         gates.append(("words", float(getattr(L, "_last_choice", {}).get("p_act", 0.0))))
         f = getattr(w, "now", None)
         pain = f is not None and bool(np.any(f.obs.get("pain", 0)))
-        st = dict(tick=t, day=int(lane.day), night=bool(w.night), h=float(w.h), reading=float(lane.reading), pain=pain,
+        st = dict(tick=t, day=int(lane.day), night=bool(w.night), stress=float(L.stress), mood=float(L.mood), reading=float(lane.reading), pain=pain,
                   cry=bool(w.crying), onset=bool(f is not None and f.obs.get("onset_periph", [0])[0]),
                   sounds=len(getattr(w.sounds, "last_events", [])), episode=None if lane.plan is None else lane.plan.kind,
                   gates=gates[:10], transcript=[list(x) for x in self.transcript])

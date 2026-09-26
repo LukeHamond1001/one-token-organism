@@ -84,7 +84,7 @@ def read_letters(s, vocab, near=()):
     """a run of letters -> (word or None, exact, how: the edit distance or 'prefix'), by 4.9's rule: the word it spells exactly;
     else a word within edit distance 1 (2 for words of 6 letters or more), or a word it begins (at least 2 letters) among the
     names of what the child sees or holds (near). Among several, what it sees or holds first (the order of 4.9's rule does not
-    say; a run the child writes while holding the bottle, "bo", is the bottle's before it is "no"'s), then the fewest letters
+    say; a run the child writes while holding the ball, "ba", is the ball's before any other's), then the fewest letters
     wrong or missing, then her words' order."""
     if not s:
         return None, False, None

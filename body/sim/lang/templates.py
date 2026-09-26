@@ -28,8 +28,8 @@ THE LINE CHECK (check()) holds every line, the templates' and Claude's alike, to
               the Y." an X resting on the Y ("in the Y": containment she cannot see, refused); "the X is down." / "it is down." an
               X she saw fall in the last RECENT ticks; "you see the X." an X in the child's view
   Claude's    (A14, claude_claims) no praise ("yes", "good"), no reprimand ("no": stage 2's frown line) and no approval
-              register: a judgment is the fast layer's; no ask anywhere in the line ("where", "what", "give", the meal's
-              "more", "look" with a word after it in its sentence, or the child's name, which is the call): an ask is judged
+              register: a judgment is the fast layer's; no ask anywhere in the line ("where", "what", "give", "more",
+              "look" with a word after it in its sentence, or the child's name, which is the call): an ask is judged
               (4.8's test, the worth table's met ask), so Claude asks for one through the conduct's request(), never by a
               line; and each sentence one of the forms whose claim the check can hold true as she sees it (CLAUDE_FORMS: a
               name; "oh", "uh", "look", "see" alone; "see the X" / "you see the X", an X in the child's view; "it / this /
@@ -64,7 +64,7 @@ from .lexicon import BIRTH_WORDS, GROUPS, NAME, PARENT_NAME
 from .percept import EVENT_KINDS
 
 # ------------------------------------------------------------------------------------------------ the words by kind
-TOYS = dict(GROUPS)["toys"]                                           # ball duck block cup bear car drum bottle
+TOYS = dict(GROUPS)["toys"]                                           # ball duck block cup bear car drum bottle (no bottle in the room: A88)
 BODY = dict(GROUPS)["body"]                                           # hand foot head tummy
 ROOM = dict(GROUPS)["room"]                                           # mat sofa window
 
@@ -134,7 +134,7 @@ assert all(w in NEEDS for w, c in GROWTH if c != "frame"), [w for w, c in GROWTH
 # The world (W2-W3) passes its own from its scene; the acts are her motion's (StubMotion.DOES until W2).
 ROOM_AT_BIRTH = dict(
     objects={"ball": ["red"], "block": ["blue"], "duck": ["yellow"], "cup": ["green"], "rattle": ["purple"], "car": ["orange"],
-             "bear": ["brown"], "stacker": ["white"], "drum": ["cyan"], "ring": ["pink"], "bottle": []},
+             "bear": ["brown"], "stacker": ["white"], "drum": ["cyan"], "ring": ["pink"]},
     fixtures=["mat", "sofa", "window", "table", "shelf", "door", "light", "floor"],
     events=list(EVENT_KINDS), face=["any"], acts=[])
 
@@ -172,9 +172,6 @@ FRAMES = {
     "body": [F("your {b}.", "{b}"), F("here is your {b}.", "{b}"), F("your {b}! your {b}.", "{b}"), F("this is your {b}.", "{b}")],
     "motor_sit": [F("sit. you sit.", "sit"), F("up! sit up.", "up"), F("up. up. up!", "up")],
     "motor_roll": [F("roll. roll.", "roll"), F("roll. you roll.", "roll")],
-    "feed": [F("here is your bottle.", "bottle"), F("bottle. your bottle.", "bottle"), F("bottle?", "bottle")],
-    "feed_more": [F("more?", "more"), F("more bottle?", "bottle")],
-    "feed_done": [F("all done.", "done")],
     "leave": [F("bye bye {n}.", "{n}"), F("bye {n}. bye bye.", "bye")],
     "peekaboo_hide": [F("where is mama?", "mama")],
     "peekaboo": [F("peekaboo!", "peekaboo"), F("peekaboo {n}!", "{n}")],

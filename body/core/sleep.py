@@ -4,8 +4,8 @@ diary's cfg does not hold, so none of it runs for the language body.
 
 STEP R8a, THE DAY'S TAPE AND THE EPISODES (7.4 item 2, 9's tape; the switch `night_frames`, which needs `frames`):
 - THE TAPE (`_tape_tick`, at each awake tick's end, after R7b's record): the tick's window position as the cortex received it, the
-  frame's "stored codes": every vector channel's numbers at fp16 (the G1's 3,833: the face, both cochleas, the periphery, the fovea, the
-  body, touch, the inertial units, the charge), every symbol channel's symbol (the words'), whether the offset ended an utterance there
+  frame's "stored codes": every vector channel's numbers at fp16 (the G1's 3,831 since A88, 3,833 with the charge: the face, both cochleas, the periphery, the fovea, the
+  body, touch, the inertial units), every symbol channel's symbol (the words'), whether the offset ended an utterance there
   (the waking lesson's end target; marked when the offset falls, `_tape_mark_end`), the voice's symbol (its own sound, "xo") and every
   motor effector's act (the efference copies the cortex heard: a rest where it did not act), and the ladder's bands as the cortex
   received them there (the position's bundle, fp16: THE LEAD'S DECISION of 2026-09-25, item 1 of the PFC-maturation study, below), in

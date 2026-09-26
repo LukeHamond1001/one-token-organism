@@ -42,8 +42,8 @@ def _g1_events_world(seed=0, burst=False):
         def frame(self):
             t = self.t; R = self.rng
             a_ = (3.0 if t % 40 < 6 else 0.3) if burst else 1.0
-            obs = {n: [a_ * R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
-            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [0.9, -0.0001]
+            obs = {n: [a_ * R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n != "face"}
+            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]
             tch = obs["touch"]
             for i in range(1, len(tch), 2):
                 tch[i] = 0.0                                                # every onset quiet unless a contact is scripted
@@ -530,7 +530,7 @@ def test_error_scales_and_the_partners_pace():
             out = L._wake_lesson()
         finally:
             torch.nn.utils.clip_grad_norm_ = clip
-        assert out and "skipped" not in out and len(got) == 8, out
+        assert out and "skipped" not in out and len(got) == 7, out          # the 7 forecast channels after the words (A88: no charge)
         grads[es] = got
     for es in (2.0, 4.0):
         for n, g0 in grads[None].items():

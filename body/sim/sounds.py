@@ -9,8 +9,8 @@ EVENTS, read from the physics after every step (never from anything the body kno
              more than V_MIN: a toy against anything, the G1's own link against the room or a toy, her foot against the floor. Its
              speed is read from the bodies' spatial velocities at the contact point in the step's own state (MuJoCo's cvel, the
              state the contact was found in), its place is the contact's, its loudness grows with the speed (below).
-  motion     the toys whose sound is their motion (the rattle's beads, the car's wheels, the bear's bell, the ring's crinkle, the
-             bottle's slosh), each tick from its travel over the tick: a sound for the tick at its speed, while it moves faster than
+  motion     the toys whose sound is their motion (the rattle's beads, the car's wheels, the bear's bell, the ring's crinkle),
+             each tick from its travel over the tick: a sound for the tick at its speed, while it moves faster than
              V_MOVE.
 Each toy's sound is made once, deterministically, from 5.2's description of it, as a few damped modes and noise (modal synthesis:
 a struck body rings at its modes and decays; van den Doel, Kry and Pai 2001), its frequencies and decays chosen to match the
@@ -52,13 +52,12 @@ KINDS = {
     "stacker": dict(modes=[(1800, 0.03, 1.0), (3200, 0.02, 0.5)], click=(0.002, 0.3), loud=0.9),             # the rings' clack
     "drum": dict(modes=[(110, 0.25, 1.0), (240, 0.12, 0.5), (420, 0.06, 0.2)], click=(0.003, 0.2), loud=1.2),        # a boom
     "ring": dict(modes=[(3000, 0.01, 0.3)], click=(0.004, 1.0), loud=0.5, motion="crinkle"),                 # a crinkle handled
-    "bottle": dict(modes=[(700, 0.03, 0.6)], click=(0.002, 0.3), loud=0.7, motion="slosh"),                  # a soft slosh
     "g1": dict(modes=[(95, 0.04, 1.0), (310, 0.02, 0.5)], click=(0.002, 0.4), loud=1.0),                     # its housing on foam
     "step": dict(modes=[(80, 0.05, 1.0), (260, 0.03, 0.4)], click=(0.003, 0.5), loud=0.5),                   # her heel on the floor
 }
 MOTION = {"beads": dict(rate=40.0, grain=(2600, 0.008)), "wheels": dict(rate=25.0, grain=(1500, 0.006)),
           "bell": dict(partials=[(1250, 0.4, 1.0), (3100, 0.25, 0.5), (4600, 0.15, 0.3)]),
-          "crinkle": dict(rate=60.0, grain=(4200, 0.004)), "slosh": dict(band=(150, 600))}
+          "crinkle": dict(rate=60.0, grain=(4200, 0.004))}
 
 
 def _clip(kind):
@@ -93,7 +92,7 @@ CLIPS = {k: _clip(k) for k in KINDS}
 
 def _motion_tick(kind, speed, seed):
     """a moving toy's sound over one tick at its speed (unit peak at REF_SPEED): grains at a rate that grows with speed (beads,
-    wheels, crinkle), a bell's partials, or a band of noise (a slosh); `seed` the tick's own (the world's tick and the toy)"""
+    wheels, crinkle), or a bell's partials; `seed` the tick's own (the world's tick and the toy)"""
     mo = MOTION[KINDS[kind]["motion"]]
     rng = np.random.default_rng(seed)
     t = np.arange(TICK) / SR

@@ -8,7 +8,7 @@ THE SAVE: the life saves itself after each night, between ticks (C74); this runn
 resume continues exactly. `--resume DIR` loads the pair and lives on.
 
 THE LOG (DIR/ticks.jsonl, one line a tick): the tick, the day, day or night, the wall time (the tick, the world's apply, the eyes'
-render, the lane), the charge and whether it fed, pain (joints, base), the cry, her line and her episode, the words channel, the
+render, the lane), its stress and mood, pain (joints, base), the cry, her line and her episode, the words channel, the
 child's token and what her ear heard, the visual onset, the room's sound events, the face reading. DIR/report.json at each night and
 at the end: rates, means and the night's report. Nothing here is read by the body; it is the experimenter's.
 
@@ -132,7 +132,7 @@ def main():
         rec = dict(t=int(world.tick), day=int(lane.day), night=night, ms=round(1000 * wall, 1),
                    apply_ms=round(1000 * (world.timing["apply_s"] - tm.get("apply_s", 0.0)), 1),
                    render_ms=round(1000 * ((0.0 if eyes is None else eyes.timing["render_s"]) - rs), 1),
-                   h=round(float(world.h), 4), fed=bool(world._fed), cry=bool(world.crying),
+                   stress=round(float(L.stress), 3), mood=round(float(L.mood), 3), cry=bool(world.crying),
                    pain=None if pain is None else [int(i) for i in np.nonzero(pain)[0]])
         if not night:
             ls = lane.last
@@ -142,14 +142,14 @@ def main():
                        onset=None if f is None else int(f.obs.get("onset_periph", [0])[0]),
                        sounds=len(getattr(world.sounds, "last_events", [])))
         log.write(json.dumps(rec) + "\n")
-        agg["ticks"] += 1; agg["night"] += night; agg["fed"] += rec["fed"]; agg["cry"] += rec["cry"]
+        agg["ticks"] += 1; agg["night"] += night; agg["cry"] += rec["cry"]
         agg["pain"] += bool(rec["pain"]); agg["lines"] += bool(rec.get("line")); agg["onset"] += bool(rec.get("onset"))
         walls["night" if night else "day"].append(wall)
         if k % 500 == 0 or k == total - 1:
             d_ = np.mean(walls["day"][-500:]) if walls["day"] else 0.0
             n_ = np.mean(walls["night"][-500:]) if walls["night"] else 0.0
             print(f"tick {world.tick} day {lane.day} {'night' if night else 'day'}: {1000 * d_:.0f} ms a day tick, {1000 * n_:.0f} a night"
-                  f" tick; h {world.h:.2f}; {dict(agg)}", flush=True)
+                  f" tick; stress {L.stress:.2f} mood {L.mood:.2f}; {dict(agg)}", flush=True)
             log.flush()
             rep = dict(ticks=agg["ticks"], wall_s=round(time.time() - t0, 1), counts=dict(agg),
                        day_tick_ms=round(1000 * float(np.mean(walls["day"])), 1) if walls["day"] else None,

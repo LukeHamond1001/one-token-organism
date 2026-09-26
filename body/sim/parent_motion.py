@@ -23,7 +23,7 @@ directs the child's eyes (a toy shown, a hand held out, a point) and ends as her
 ("look") and her body (every other kind), each in the order asked; an act that cannot be done is refused with its reason, never
 faked. KINDS lists every kind with what it does; the task's motor intents map onto them (approach, kneel = "attend", lean in =
 "lean_in", hold up a toy = "show", hand over = "hand_over", guide a forearm = "guide", prop = "prop", the brief capped turn =
-"turn", bring back what rolled away = "bring_back", feed = "offer_bottle", point = "point", leave = "walk" to "door", return =
+"turn", bring back what rolled away = "bring_back", point = "point", leave = "walk" to "door", return =
 "walk" to "child", sofa = "walk" to "sofa"). DOES (a class attribute, read by P3's conduct and templates.showable) lists what 'do'
 carries out ('show' and 'pick_up' on the toy the Act's thing names); 'copy' makes the movement P3's conduct copies (A52:
 'kind:side').
@@ -153,7 +153,6 @@ KINDS = {
                  "fingers closed for 2 ticks, or after 40 ticks)",
     "touch": "a hand resting on the named part of the child (a hold at TOUCH_N)",
     "withdraw": "the hand she was hit on drawn back WITHDRAW_M at once (4.10)",
-    "offer_bottle": "the bottle into the child's palm and held there, her face in view, until the charge is full (4.7 stage 1)",
     "guide": "guide the named forearm along a path of at most 8 ticks within the guide's cap (A10); 'far_arm' across its chest "
              "within 65 N (A8)",
     "knee_over": "the far knee bent over within 76 N, then let go (A8)",
@@ -178,7 +177,7 @@ KINDS = {
 # reason, and logged. Why: (1) a guide is a demonstration and a pull-to-sit a posture given, so First 1's claim ("from her smiles, no
 # demonstrations": SIM_DESIGN A63 and the skeptic's review) holds only without them; (2) a person cannot sit up or lift a 34 kg body
 # (risk 4), so the pull and the prop were the child's share alone. Her care stays: attend (a hand resting on its trunk), touch, the brief
-# turn from its front, show, hand over, the bottle, bring back, point, peekaboo, copying. Kept in KINDS (their controllers stay built) so a
+# turn from its front, show, hand over, bring back, point, peekaboo, copying. Kept in KINDS (their controllers stay built) so a
 # later decision can open them at a boundary, never silently.
 NOT_AT_BIRTH = ("guide", "knee_over", "pull_to_sit", "prop")
 _OPENED = [False]                           # the controllers' own tests open them (opened()); a life never does
@@ -4500,12 +4499,7 @@ class ParentMotion:
     def _act_hand_over(self, a, t):
         toy = self._toy(t)
         return self._fetch(a, toy) + [dict(type="plan", what="near_free_hand", args={}),
-                                      dict(type="plan", what="hand_over", args=dict(toy=toy, keep=False))]
-
-    def _act_offer_bottle(self, a, t):
-        toy = self._toy(t or "bottle")
-        return self._fetch(a, toy) + [dict(type="plan", what="near_free_hand", args={}),
-                                      dict(type="plan", what="hand_over", args=dict(toy=toy, keep=True))]
+                                      dict(type="plan", what="hand_over", args=dict(toy=toy))]
 
     def _plan_near_free_hand(self, a):
         """she comes to the side of the child's free hand (a hand holding a toy is not given another)"""
@@ -4520,9 +4514,9 @@ class ParentMotion:
         side = free[0] if len(free) == 1 else self.child.face_side()
         return self._plan_approach(a, where=side)
 
-    def _plan_hand_over(self, a, toy, keep=False):
+    def _plan_hand_over(self, a, toy):
         """the toy brought into the child's near palm along its normal; released by A4's rule (the palm pressed at least 0.3 N and
-        the fingers closed at least 30 deg for 2 ticks, or after 40 ticks); the bottle (keep) held there until the charge is full"""
+        the fingers closed at least 30 deg for 2 ticks, or after 40 ticks)"""
         her = np.asarray(self.base["at"], float)
         free = [x for x in "LR" if not self._hand_full(x)]
         if not free:
@@ -4538,7 +4532,7 @@ class ParentMotion:
                 dict(type="settle", side=sd),                                   # hand is there (she sees it: _aim_fix), then lowered
                 dict(type="reach", hands={sd: dict(k="palm", side=cs)}, shape={sd: dict(curl=.9, thumb=.8, index=None)},
                      n=K.SETTLE_LOWER_TICKS),                                   # slowly into it (a physical arm's hand arriving at speed
-                dict(type="handover", side=sd, child=cs, keep=bool(keep)),       # met its fingers first, and the grasp closed on nothing)
+                dict(type="handover", side=sd, child=cs),                        # met its fingers first, and the grasp closed on nothing)
                 dict(type="release", side=sd),
                 dict(type="reach", hands={sd: dict(k="up_from", side=sd)}, shape={sd: dict(curl=.3, thumb=.3, index=None)}, n=3),
                 dict(type="proxy", side=sd, on=True),
@@ -4552,8 +4546,7 @@ class ParentMotion:
         return "done" if (miss is not None and miss <= K.SETTLE_TOL_M) or t >= K.SETTLE_TICKS else "run"
 
     def _ph_handover(self, a, ph):
-        """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks; the
-        bottle (keep) stays in the palm until the charge is FEED_FULL"""
+        """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks"""
         cs = ph["child"]
         w = self.w
         toy = self.holding[ph["side"]]
@@ -4565,15 +4558,6 @@ class ParentMotion:
         t = ph.get("t", 0) + 1
         if a is not None:
             a["info"]["palm_N"] = ph["palm"]; a["info"]["closure_deg"] = math.degrees(closed)
-        if ph["keep"]:
-            if w.h >= K.FEED_FULL:
-                return "done"
-            ph["best_h"] = max(ph.get("best_h", 0.0), w.h)
-            ph["since"] = 0 if w.h >= ph["best_h"] and w._fed else ph.get("since", 0) + 1
-            if ph["since"] >= 20:                                           # 3 s without charging: the bottle is not on its palm
-                return (f"the bottle did not reach its palm (no charge for 20 ticks; its fingers closed {math.degrees(closed):.0f} deg "
-                        f"from open, its palm on the bottle {ph['palm']:.1f} N: a closed hand has no palm to give to, C41)")
-            return "run"
         if ph["ok"] >= K.HANDOVER_HOLD_TICKS:
             a["why"] = "the child's hand closed on it"
             return "done"

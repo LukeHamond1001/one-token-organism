@@ -325,7 +325,7 @@ def test_the_face_template():
     for dist in (0.45, 0.8, 1.5):
         _face_rig(w, dist)
         f = w.frame()
-        assert set(f.obs) == {"body", "touch", "vestibular", "charge", "pain", "eye_p", "eye_f", "face_fovea", "face_periph", "imu_torso",
+        assert set(f.obs) == {"body", "touch", "vestibular", "pain", "eye_p", "eye_f", "face_fovea", "face_periph", "imu_torso",
                               "words", "face", "ears", "sound_side", "onset_periph"}, sorted(f.obs)
         t = f.truth["eyes"]
         assert t["face_test"]["L"][0] and t["face_test"]["R"][0]
@@ -418,7 +418,7 @@ def test_no_lamp_at_the_eyes():
     assert dark.max() == 0 and glow.mean() < img0.mean() and unlit.mean() > img0.mean(), (dark.max(), glow.mean(), unlit.mean(), img0.mean())
     print(f"eyes 10: no headlight, and the eyes refuse one; a change of any light's ambient, specular, place or direction renders",
           f"them again; with every light's terms at zero the eyes see only the emissive surfaces (mean {glow.mean():.1f} of 255 against",
-          f"{img0.mean():.1f} lit: the ceiling's, the window's, the lamp's and the dock's, W5's night), with those too",
+          f"{img0.mean():.1f} lit: the ceiling's, the window's, the lamp's, W5's night), with those too",
           f"at zero, black; every light switched off instead, MuJoCo draws the room unlit (mean {unlit.mean():.1f}): the night must",
           f"darken the lights, never switch them all off (for W5)")
 

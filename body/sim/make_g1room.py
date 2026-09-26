@@ -195,8 +195,6 @@ MAT = dict(
     art_a=dict(rgba=".93 .74 .58 1", specular="0"), art_b=dict(rgba=".66 .74 .84 1", specular="0"),
     art_c=dict(rgba=".97 .94 .88 1", specular="0"), art_d=dict(rgba=".78 .82 .70 1", specular="0"),
     hall=dict(rgba=".80 .78 .74 1", specular="0"),
-    pad=dict(rgba=".97 .97 .95 1", emission=".35", specular=".2", shininess=".5"),
-    pad_ring=dict(rgba=".75 .95 .90 1", emission=".9", specular="0"),
     # the toys: saturated, one dominant hue each
     t_red=dict(rgba=".92 .12 .10 1", specular=".5", shininess=".7"),
     t_orange=dict(rgba=".99 .45 .05 1", specular=".5", shininess=".7"),
@@ -211,9 +209,6 @@ MAT = dict(
     t_brown_l=dict(rgba=".88 .70 .50 1", specular=".1", shininess=".2"),
     t_white=dict(rgba=".97 .97 .96 1", specular=".3", shininess=".5"),
     t_black=dict(rgba=".05 .05 .06 1", specular=".6", shininess=".9"),
-    t_milk=dict(rgba=".95 .94 .90 1", specular=".5", shininess=".7"),
-    t_collar=dict(rgba=".72 .78 .86 1", specular=".4", shininess=".6"),
-    t_teat=dict(rgba=".93 .76 .52 1", specular=".2", shininess=".3"),
     t_beak=dict(rgba="1 .52 .08 1", specular=".3", shininess=".5"),
 )
 
@@ -445,18 +440,10 @@ TOYS = dict(
     stacker=((-.98, -1.28, 0), "the rings' plastic clack"),
     drum=((1.62, .32, 0), "a boom when hit on top"),
     ring=((.98, -1.34, 0), "a crinkle when handled"),
-    bottle=((-.10, -.97, 0), "a soft slosh when shaken"),
 )
-# THE BOTTLE AND ITS DOCK (5.3, A17; built at S5a): the child's charger, a toy-sized baby bottle standing on its dock beside the
-# lying G1's right hand, within its reach (the dock moves to the mat's corner only when the bottle's stage 3 begins, 4.7). Its
-# three shapes are named bottle*, so each charges the child while it touches a palm (world.CHARGER_PREFIX), whoever holds it.
-# Its size a small 4-ounce bottle's (about 56 mm across and 12 cm tall with its teat; ours, from memory) and its mass with milk
-# 0.12 kg (ours); its collar and teat as a bottle's. DOCK is the pad's place: the nearest place beside the right hand (the side
-# she does not kneel on when it lies flat, face_side "L", so her hands never work across it) that the lying arm reaches with
-# 5 cm to spare, at least 15 cm from every other toy, where she can kneel to it (her planner's own spot, 0.45 m from it, clear of
-# the child and the toys), searched at birth's pose in 2 cm and 10 degree steps (S5a: 0.26 m from the hand, 0.35 m from the
-# shoulder, its reach 0.55; beside the left hand it stood where she kneels to attend it, and blocked her hands).
-DOCK = (-.10, -.97)
+# NO BOTTLE, NO DOCK (A88, the owner's decision 2026-09-26: "no bottle no charger. objects are for teaching"). The bottle and its
+# charging dock beside the lying G1's right hand (S5a's build) are gone with the charge: every object in the room is hers to teach
+# with or a registered test's, and none meets a need.
 
 
 # Each toy's size relative to the all-out maker's (made for the 12-month-old's mitten): every toy at its own size. The G1 study
@@ -471,7 +458,7 @@ DOCK = (-.10, -.97)
 # size is the owner's call (SIM_DESIGN.md B1), and the design uses B1's default until the owner says otherwise. B1'S PREMISE
 # FOLLOWS FROM THE PHYSICS: the hand holds the cup at its own size, so the shrink no longer has the reason it was made for (a
 # world fitted to the body with no need), and of the four toys B1 names only the bear and the drum are not held.
-TOY_SCALE = dict(ball=1.0, block=1.0, duck=1.0, cup=0.8, rattle=1.0, car=1.0, bear=1.0, stacker=1.0, drum=1.0, ring=1.0, bottle=1.0)
+TOY_SCALE = dict(ball=1.0, block=1.0, duck=1.0, cup=0.8, rattle=1.0, car=1.0, bear=1.0, stacker=1.0, drum=1.0, ring=1.0)
 TOY_MESHES = dict(cup=("cup_rim", "cup_handle"), drum=("drum_rim",), ring=("teether",),
                   stacker=("ring0", "ring1", "ring2", "ring3", "ring4"))
 ARGS = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
@@ -569,10 +556,6 @@ def _toy_geoms(k):
                       f'<geom type="mesh" mesh="drum_rim" pos="0 0 -.052" material="t_yellow" {VIS0}/>']
     if k == "ring":     # a teething ring: a torus (its hull is touched)
         return .016, [f'<geom name="ring" type="mesh" mesh="teether" mass=".04" material="t_pink" {fr} {TOY}/>']
-    if k == "bottle":   # the charger (5.3): a standing bottle, its collar and its teat, every shape named bottle*
-        return .045, [f'<geom name="bottle" type="cylinder" size=".028 .045" mass=".11" material="t_milk" condim="6" friction="1 .01 .002" {TOY}/>',
-                      f'<geom name="bottle_collar" type="cylinder" pos="0 0 .051" size=".030 .008" mass=".006" material="t_collar" {fr} {TOY}/>',
-                      f'<geom name="bottle_teat" type="capsule" fromto="0 0 .06 0 0 .072" size=".011" mass=".004" material="t_teat" {fr} {TOY}/>']
     raise KeyError(k)
 
 
@@ -744,10 +727,6 @@ def play_mat():
             y = cy - MAT_HY + (j + .5) * tw
             g.append(f'<geom type="box" pos="{x:.4g} {y:.4g} {MAT_T / 2 + .0004:.4g}" size="{tw / 2 - .002:.4g} {tw / 2 - .002:.4g} {MAT_T / 2:.4g}" '
                      f'material="{"tile_a" if (i + j) % 2 == 0 else "tile_b"}" {DECOR}/>')
-    # the charge pad, the bottle's dock (a low white disc with a soft mint glow; A17: beside the lying G1's right hand)
-    px, py = DOCK                                                     # beside the lying G1's left hand (A17)
-    g.append(f'<geom name="pad" type="cylinder" pos="{px:.4g} {py:.4g} {MAT_T + .004:.4g}" size=".13 .004" material="pad" {DECOR}/>')
-    g.append(f'<geom name="pad_ring" type="mesh" mesh="pad_ring" pos="{px:.4g} {py:.4g} {MAT_T + .006:.4g}" material="pad_ring" {DECOR}/>')   # named: the pad (her floor plan steps over it)
     return "\n    ".join(g)
 
 
@@ -908,7 +887,6 @@ def scene_xml(folder=HERE):
     <mesh name="cup_handle" builtin="supertorus" params="30 .24 1 1" scale="{mesh_scale("cup_handle", [0.02, 0.02, 0.02])}"/>
     <mesh name="drum_rim" builtin="supertorus" params="48 .06 1 1" scale="{mesh_scale("drum_rim", [0.076, 0.076, 0.076])}"/>
     <mesh name="teether" builtin="supertorus" params="40 .30 1 1" scale="{mesh_scale("teether", [0.05, 0.05, 0.05])}"/>
-    <mesh name="pad_ring" builtin="supertorus" params="48 .05 1 1" scale=".13 .13 .13"/>
     <mesh name="ring0" builtin="supertorus" params="40 .40 1 1" scale="{mesh_scale("ring0", [0.05, 0.05, 0.05])}"/>
     <mesh name="ring1" builtin="supertorus" params="40 .40 1 1" scale="{mesh_scale("ring1", [0.044, 0.044, 0.044])}"/>
     <mesh name="ring2" builtin="supertorus" params="40 .40 1 1" scale="{mesh_scale("ring2", [0.038, 0.038, 0.038])}"/>

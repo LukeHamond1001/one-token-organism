@@ -221,35 +221,28 @@ def test_a_short_day():
           "and restored in a new world, the rest of the day the same")
 
 
-def test_the_meal():
-    """lane 9: the charge light low: her feed line on the next free tick with the bottle offered (her motion's offer_bottle, running),
-    the routine "feed"; offered again after a refusal no sooner than FEED_RETRY; "all done." once the charge is full, the routine
-    over"""
+def test_no_meal():
+    """lane 9 (A88, the owner's decision 2026-09-26): there is no meal. Through the wake and the first play block her plan asks no
+    feed, no bottle is offered, her routine is never "feed", no event of hers is a low charge, and nothing she says names a bottle
+    (the word stays among her 50, with nothing in the room to show it)"""
     w, lane = _world(plan=True, day_ticks=24000)
-    _run(w, 350)
-    w.h = 0.30
-    offered, said = [], []
-    for k in range(200):
+    said, kinds = [], set()
+    for k in range(500):
         w.frame(); w.apply({})
         if lane.last.get("line"):
             said.append(lane.last["line"])
-        for a in lane.conduct.acts_open:
-            if a[1] == "offer_bottle" and a[0] not in [o[0] for o in offered]:
-                offered.append((a[0], w.tick))
-    assert lane.plan.feeding and lane.conduct.routine == "feed" and offered, (said, offered)
-    assert all(b[1] - a[1] >= DP.FEED_RETRY for a, b in zip(offered, offered[1:])), offered
-    w.h = 0.99
-    for k in range(30):
-        w.frame(); w.apply({})
-        if lane.last.get("line"):
-            said.append(lane.last["line"])
-    assert not lane.plan.feeding and lane.conduct.routine != "feed", lane.plan.log[-3:]
-    print(f"lane 9: the charge low: '{said[0]}', the bottle offered {len(offered)} times ({[t for _i, t in offered]}); full:",
-          f"'{said[-1]}' and the routine over")
+        kinds |= {a[1] for a in lane.conduct.acts_open}
+        assert lane.conduct.routine != "feed" and not [e for e in lane.last.get("events", []) if e[0] == "charge_low"]
+    assert "offer_bottle" not in kinds and not [s for s in said if "bottle" in s], (kinds, said)
+    assert not hasattr(lane.plan, "feeding") and not hasattr(DP, "CHARGE_LOW") and not hasattr(w, "h")
+    assert "bottle" not in DP.BIRTH_TOYS and "bottle" in LX.BIRTH_WORDS and "bottle" not in lane.toys   # the word stays; no bottle in the room
+    assert [x for x in lane.plan.log if x[1] in ("feed begins", "bottle offered", "feed done")] == []
+    print(f"lane 9: no meal (A88): {len(said)} lines in 500 ticks, none a bottle's; her acts {sorted(kinds)}; no feed routine, no low",
+          "charge; no bottle in the room")
 
 
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
-              test_the_days_layout, test_a_short_day, test_the_meal]
+              test_the_days_layout, test_a_short_day, test_no_meal]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

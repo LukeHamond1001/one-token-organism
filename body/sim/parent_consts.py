@@ -417,4 +417,3 @@ HANDOVER_HOLD_TICKS = 2         # ... for 2 ticks, ...
 HANDOVER_MAX_TICKS = 40         # ... or after 40 ticks (A4)
 TAKE_BACK_N = 0.3               # taking a toy back: she closes only after the child's palm force stayed under 0.3 N ... (A4)
 TAKE_BACK_TICKS = 2             # ... for 2 ticks
-FEED_FULL = 0.98                # she holds the bottle in the palm until the charge reaches this, or she is asked to stop (ours)

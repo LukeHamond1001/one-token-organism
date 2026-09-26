@@ -230,7 +230,7 @@ and logged, so a life replays exactly. A language model may later write her talk
 
 | the lesson | where it came from | on the G1 |
 |---|---|---|
-| prediction does most of the learning; reward steers | the diary learned language by forecasting it; her face chose what it said | the forecast of all 9 channels stays the main learner; her face steers the acts |
+| prediction does most of the learning; reward steers | the diary learned language by forecasting it; her face chose what it said | the forecast of all 8 channels stays the main learner; her face steers the acts |
 | one telling and a night | the kiwi sentence, kept through a night | T-A, the motor kiwi |
 | a contingent teacher beats drills | "conversations, not drills" (09-12); "a human teacher" (09-17) | her judgments within the tick, answering what the child just did |
 | a reward that over-pays gets farmed | the graded onset over-paid by 49%, fixed by the increment rule; the self-press body collapsed into "I love me" (08-29) | habituation to zero; no self-reward; her smile only for completed, visible acts |

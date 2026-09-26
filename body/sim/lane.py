@@ -36,7 +36,7 @@ never its fovea's window):
                   (it came to sit), pain (what a person perceives of its pain: its born cry sounding, which she hears, or
                   a blow to its body past the base's pain force, F_pain, while she sees it; never its joints' own pain flags,
                   which are its inside), distress (lying
-                  face down DISTRESS_TICKS running, A13's first sign), charge_low (its charge under CHARGE_LOW). Not made
+                  face down DISTRESS_TICKS running, A13's first sign). Not made
                   here: hit_her and reflex_hit (A25c: her body passes no contact to it), and the arm and hand movements her
                   copying reads (arm_raise, wave, shake, open_hand: A52's copying waits for their readers)
   child_sounding  its tract sounded this tick (the transcriber's own reading replaces it)
@@ -81,7 +81,6 @@ REST_MPS = 0.05                        # a toy slower than this has come to rest
 HANDOVER_TICKS = 40                    # a toy she let go of within 40 ticks is her hand-over, never its own "got" (A2's 40 ticks)
 GAVE_TICKS = 3                         # a toy come into her hand from its within 3 ticks: "gave" (ours)
 DISTRESS_TICKS = 100                   # face down this many ticks running: distress (A13's "face down over 100 ticks")
-CHARGE_LOW = 0.35                      # the charge light low (4.7's meal: h < 0.35)
 READING_HOLD = PF.FEEL["reading_hold"]  # the born reading holds its last value 30 ticks out of view (A2)
 FIXTURE_WORDS = ("mat", "sofa", "window", "table", "shelf", "floor")   # her fixture words that name shapes in the room
 SPEECH_DB = 20.0 * math.log10(V.SPEECH_PA / 20e-6)                   # her plain speech at 1 m (62 dB SPL)
@@ -333,8 +332,6 @@ class ParentLane:
             ev.append(("distress", None))
         if world.crying or (in_view and float(world._sensed["true_base_peak"]) > world.f_pain):
             ev.append(("pain", None))                                   # its cry heard, or a blow to its body she sees
-        if world.h < CHARGE_LOW:
-            ev.append(("charge_low", None))
         return ev
 
     # ------------------------------------------------------------------ one tick of hers (by day)

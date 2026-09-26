@@ -26,7 +26,8 @@ NAME, PARENT_NAME = "pip", "mama"          # the owner's defaults (section 14, i
 GROUPS = (
     ("names", (NAME, PARENT_NAME)),
     ("social", ("hi", "bye", "yes", "no", "good", "uh", "oh", "night", "peekaboo")),
-    ("toys", ("ball", "duck", "block", "cup", "bear", "car", "drum", "bottle")),
+    ("toys", ("ball", "duck", "block", "cup", "bear", "car", "drum", "bottle")),   # "bottle" stays a first word (A88 took the bottle
+                                                                                  # from the room, not the word: she never shows it)
     ("body", ("hand", "foot", "head", "tummy")),
     ("room", ("mat", "sofa", "window")),
     ("actions", ("look", "give", "roll", "sit", "up", "down", "crawl", "more")),

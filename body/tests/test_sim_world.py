@@ -16,8 +16,7 @@ at 3 ticks, bit for bit a hand-written replica of the law. BIRTH: on its back on
 self-contact at rest, deterministic; the parent drawn (her face at its neutral expression, her hands shaped: the W1 verifier's first
 finding). THE SENSES: joint sense, touch per zone, pain's 10 ms filter and its threshold from the body's declared mass (pain alone,
 no place on the link), A12's blind spots exactly as written (the pairs pressing at rest: none as born; the motor housings struck
-together felt on both zones: the W1 verifier's second finding), the IMUs with the model's declared noise, the charge's drain and a
-charger in the palm. THE REFLEXES: the newborn's withdrawal as 3.7 and section 10 approve it (the W1 verifier's third round): a
+together felt on both zones: the W1 verifier's second finding), the IMUs with the model's declared noise, no charge and no charger (A88). THE REFLEXES: the newborn's withdrawal as 3.7 and section 10 approve it (the W1 verifier's third round): a
 generalized flexion step of the hurt limb's flexion joints (the hip, the knee, the ankle's dorsiflexion; the shoulder, the elbow;
 each sign measured on the G1), the same act wherever on the limb it hurts, read from the frame's pain alone, for 2 ticks, none for
 the trunk; the grasp summed at the spinal cord into the hand's own act of the same tick, and a fist closed on nothing counted in
@@ -52,6 +51,8 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 from body.sim import world as W  # noqa: E402
 from body.sim import reflexes as R  # noqa: E402
 from body.sim.world import G1World, WorldFault  # noqa: E402
+from body.sim import anatomy as AN  # noqa: E402
+from body.sim.lang import lexicon as LX  # noqa: E402
 
 G = W.G
 SIM = os.path.join(ROOT, "body", "sim")
@@ -103,7 +104,7 @@ def _same_frame(a, b):
         return False
     if not all(np.array_equal(a.obs[k], b.obs[k]) for k in a.obs):
         return False
-    for k in ("time", "pelvis", "torso", "touch_N", "outside_peak_Nm", "base_peak_N", "peak_N", "drain", "fed", "ncon", "acts", "spinal",
+    for k in ("time", "pelvis", "torso", "touch_N", "outside_peak_Nm", "base_peak_N", "peak_N", "ncon", "acts", "spinal",
               "vor_quick", "gaze", "palm_own_N", "heat_C", "night"):
         x, y = a.truth[k], b.truth[k]
         if not (np.array_equal(x, y) if isinstance(x, np.ndarray) else x == y):
@@ -193,13 +194,14 @@ def test_torque_limits_are_the_models():
 
 
 # ---------------------------------------------------------------- the servo law
-def _replica_tick(w, acts, h):
-    """the servo law written out by hand on a world: weakness at the charge h, the acts' re-anchored targets, the rest's
-    relaxation, 75 steps (the parent's motion run around each as the world runs it: she is a body in the same physics)"""
+def _replica_tick(w, acts):
+    """the servo law written out by hand on a world: the declared limits (no weakness since A88: no charge), the acts' re-anchored
+    targets, the rest's relaxation, 75 steps (the parent's motion run around each as the world runs it: she is a body in the same
+    physics)"""
     m, d = w.m, w.d
     par = w.parent
     par.tick_begin()
-    lim = w.tau_max * (W.WEAK_FLOOR + (1 - W.WEAK_FLOOR) * h)
+    lim = w.tau_max.copy()
     m.jnt_actfrcrange[w.jid, 0] = -lim; m.jnt_actfrcrange[w.jid, 1] = lim
     rest = []
     q = d.qpos[w.qadr].copy()
@@ -223,8 +225,8 @@ def _replica_tick(w, acts, h):
 
 
 def test_the_servo_law():
-    """world 3: the gains from the limits; weakness; an act re-anchors, a rest relaxes, bit for bit the law written out by hand (the
-    spinal cord off: the servo law alone)"""
+    """world 3: the gains from the limits; the limits the declared ones (A88); an act re-anchors, a rest relaxes, bit for bit the law
+    written out by hand (the spinal cord off: the servo law alone)"""
     w = G1World(seed=1, spinal=False)
     m = w.m
     kps, kds = W.servo_gains()
@@ -232,17 +234,14 @@ def test_the_servo_law():
         kp = w.tau_max[k] / W.STEP_BIG if "_hand_" in W.JOINTS[k] else W.UNITREE_KP[W.JOINTS[k][:-6].replace("left_", "").replace("right_", "")]
         kd = kds[k]                                                      # per big step, so a closing step spends its full torque
         assert abs(m.actuator_gainprm[a, 0] - kp) < 1e-12 and abs(m.actuator_biasprm[a, 1] + kp) < 1e-12 and m.actuator_biasprm[a, 2] == -kd
-    for h, share in ((1.0, 1.0), (0.5, 0.65), (0.0, 0.3)):
-        w.h = h
-        assert np.allclose(w.limits_now(), w.tau_max * share)
-    w.h = 1.0
+    assert np.array_equal(w.limits_now(), w.tau_max) and np.array_equal(-m.jnt_actfrcrange[w.jid, 0], w.tau_max)   # A88: no weakness
     b = _babbler(3)
     acts = [b.acts() for _ in range(12)] + [{}] * 4 + [{"arm_l": W.act_flat([2, 2, 2, 0, 2, 2, 2])}] + [{}] * 3
     twin = G1World(seed=1, spinal=False)
     for i, a in enumerate(acts):
-        q0 = w.d.qpos[w.qadr].copy(); h = w.h
+        q0 = w.d.qpos[w.qadr].copy()
         w.apply(a)
-        _replica_tick(twin, a, h)
+        _replica_tick(twin, a)
         assert np.array_equal(w.d.qpos, twin.d.qpos) and np.array_equal(w.d.ctrl, twin.d.ctrl) and np.array_equal(w.d.qvel, twin.d.qvel), i
         for name, js in G.EFFECTORS:                                   # an acting effector's targets: the measured angle + its steps
             sl = w.eff_slices[name]
@@ -397,37 +396,31 @@ def test_pain():
     first = next(k for k, h in enumerate(hurt) if h)
     assert "left_wrist_pitch_joint" in hurt[first] and all(x.startswith("left_") for x in hurt[first]), hurt   # the yank's own gears
     assert wd[:2] == [(first, "arm_l"), (first + 1, "arm_l")] and all(l_ == "arm_l" for _, l_ in wd), wd
-    assert set(frames[0].obs) >= {"body", "touch", "pain", "vestibular", "imu_torso", "charge"} and frames[0].obs["pain"].shape == (44,)
+    assert set(frames[0].obs) >= {"body", "touch", "pain", "vestibular", "imu_torso"} and frames[0].obs["pain"].shape == (44,)
     print(f"world 6: pain from the joints (A37): F_pain {w.f_pain:.1f} N for the base; a joint's gear load past its limit as a 10 ms",
           f"mean (a 2 ms spike at 3 x is 0.6 x, no pain; 10 ms at 1.1 x hurts; across the tick's start counts); the born G1 on the mat,",
           f"{base['obs_peak'][wp]:.1f} N m of outside torque at its waist (the observer's), in no pain (support loads no gear); a",
           f"{YANK_N:.0f} N yank on the left hand hurt {hurt[first]} at tick {first} and took the left arm for {len(wd)} ticks, no other limb")
 
 
-def test_the_charge():
-    """world 7: the drain law; weakness follows the charge; the room's charger is the bottle's three shapes on its dock (5.3, A17); a
-    charger in the palm feeds 0.01 a tick"""
+def test_no_charge():
+    """world 7 (A88, the owner's decision 2026-09-26): no charge, no charger, no weakness. The frame carries no charge channel and the
+    anatomy declares none; the joints' limits are the declared ones at every tick; the truth has no drain and no feed; the room holds
+    no bottle and no dock; the anatomy's rewards are her face, the one that pays, and pain as cortisol (dopamine off)"""
     w = G1World(seed=1)
     for _ in range(3):
-        h0 = w.h
         w.apply(_babbler(4, 0.0).acts())
         f = w.frame()
-        assert f.truth["drain"] > W.DRAIN_BASE and abs((h0 - w.h) - f.truth["drain"]) < 1e-15 and f.obs["charge"][1] == w.h - h0
-    assert sorted(w.m.geom(g).name for g in w.chargers) == ["bottle", "bottle_collar", "bottle_teat"]   # the bottle on its dock (5.3, A17)
-    w.h = 0.0; w.apply({})
-    assert np.allclose(-w.m.jnt_actfrcrange[w.jid, 0], 0.3 * w.tau_max)
-    palm = G1World(seed=1)
-    pg = [g for g in range(palm.m.ngeom) if palm.zone_of_geom[g] == palm.zones.index("left_hand_palm")][0]
-    pp = palm.d.geom_xpos[pg].copy()
-
-    def rig(spec):
-        b = spec.worldbody.add_body(name="rig_bottle", mocap=True, pos=pp.tolist())
-        b.add_geom(name="bottle_rig", type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[.02, 0, 0], contype=1, conaffinity=1)
-    w = G1World(seed=1, extra=rig)
-    w.h = 0.5; w.apply({}); f = w.frame()
-    assert w.chargers.size == 4 and f.truth["fed"] and abs(w.h - (0.5 + W.FEED_RATE - f.truth["drain"])) < 1e-12
-    print(f"world 7: the drain 4e-5 + 2e-3 x mean sum(tau^2)/sum(tau_max^2) a tick, exactly; at h 0 the limits are 0.3 of the",
-          f"declared; a charger touching the palm fed +0.01 a tick")
+        assert "charge" not in f.obs and "drain" not in f.truth and "fed" not in f.truth
+        assert np.array_equal(w.limits_now(), w.tau_max) and np.array_equal(-w.m.jnt_actfrcrange[w.jid, 0], w.tau_max)
+    assert not hasattr(w, "h") and not hasattr(w, "chargers") and "charge" not in AN.SIZES
+    names = [w.m.geom(g).name for g in range(w.m.ngeom)]
+    assert not [n for n in names if n.startswith("bottle") or n.startswith("pad")], [n for n in names if "bottle" in n or "pad" in n]
+    a = AN.SimAnatomy(AN.born_table(LX.BIRTH_WORDS), AN.SIM_CFG, limits=[float(x) for x in w.tau_max])
+    assert [r.name for r in a.rewards] == ["face", "pain"] and a.rewards[0].dopamine and not a.rewards[1].dopamine and a.rewards[1].amyg
+    assert "charge" not in [c.name for c in a.channels] and a.effectors[0].cry.get("charge") is None
+    print("world 7: no charge (A88): no charge channel, drain, feed, charger, bottle or dock; the limits the declared ones every tick;",
+          "the rewards her face (pays) and pain (cortisol: dopamine off, reaching the amygdala)")
 
 
 def test_the_reflexes():
@@ -805,11 +798,9 @@ def test_the_night():
     w.dusk()
     assert w.night and np.allclose(w.m.light_diffuse, day_light * W.NIGHT_LIGHT) and w.parent.asleep
     f = w.frame()
-    assert set(f.obs) == {"body", "touch", "pain", "vestibular", "imu_torso", "charge"}, set(f.obs)   # the body's own senses alone
+    assert set(f.obs) == {"body", "touch", "pain", "vestibular", "imu_torso"}, set(f.obs)   # the body's own senses alone
     blob = w.save_state()
-    h0 = w.h
     w.apply({})
-    assert 0.0 <= h0 - w.h < W.DRAIN_BASE                                        # no basal drain at night (only the effort's)
     night_acts = [b1.acts() for _ in range(4)]
     for a in night_acts:
         w.apply(a)
@@ -826,7 +817,7 @@ def test_the_night():
     assert np.allclose(w.m.light_diffuse, day_light) and {"ears", "words", "face", "eye_p"} <= set(w.frame().obs)
     print("world 12: the night: a frozen one (a frame or a move refused, the state unchanged, the morning bit for bit the day never",
           "paused); the live, dark night: the lights at", W.NIGHT_LIGHT, "of the day's, the parent asleep on the sofa, only the body's own",
-          "senses in the frame, no basal drain, the world stepped tick by tick; the morning's light back over", W.DAWN_TICKS, "ticks,",
+          "senses in the frame, the world stepped tick by tick; the morning's light back over", W.DAWN_TICKS, "ticks,",
           "the eyes and ears on")
 
 
@@ -1034,7 +1025,7 @@ def test_the_rooms_sounds():
 
 
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
-               test_pain, test_the_charge, test_the_reflexes, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
+               test_pain, test_no_charge, test_the_reflexes, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
                test_the_parents_pose_is_saved, test_the_rooms_sounds]
 

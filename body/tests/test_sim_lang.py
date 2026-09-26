@@ -857,12 +857,12 @@ def test_transcriber():
     words = [(cw.tick, cw.word, cw.exact) for cw in got]
     assert words == [(4, "ball", True), (15, "duck", True), (24, "cup", True)], words
     p = P(0, child_target="duck", child_holds=("cup",))
-    exp = expected_words(p, dict(word="ball"), "mama", "feed", VOCAB)
-    assert exp == ("mama", "ball", "duck", "cup", "bottle", "more"), exp
+    exp = expected_words(p, dict(word="ball"), "mama", "peekaboo", VOCAB)
+    assert exp == ("mama", "peekaboo", "ball", "duck", "cup"), exp          # the routine's words before the ask's and the things
     assert expected_words(P(0, present=False, seen=()), None, None, None, VOCAB) == ("mama",)
     assert "rattle" not in expected_words(P(0, child_holds=("r",), seen=(Seen("r", "rattle"),)), None, None, None, VOCAB)
     print("9 the token output read as a transcript: a token exactly, letters exactly, within edit distance 1 (2 at 6 letters), "
-          "a 2-letter prefix only of what it sees or holds, and what it sees or holds first ('bo' holding the bottle is "
+          "a 2-letter prefix only of what it sees or holds, and what it sees or holds first ('bo' holding a bottle is "
           "'bottle', else 'no'), a queue word not before it entered; a token made during her line "
           "read when it ends; her expected set is A27's (names where she reads it looking and in its hand, the ask, her "
           "last focus, the routine; 'mama' when away), kept to her words")
@@ -1841,7 +1841,7 @@ def test_gaze_leak_closed():
     ball? where is the ball?"), the child's "ball" token made during it while its head is on the duck; her echo "ball! the
     ball!" came with look -> ball while the ask was pending, and a child that follows her gaze met the ask (worth 2, counted).
     The same with "give mama the cup.", whose open hand also targeted the toy."""
-    twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True), ("bottle", "bottle", "", "mat", True))
+    twins = TOYS + seen(("ball_blue", "ball", "blue", "mat", True))
 
     def probe(intent, o, word, tok_at=(6,), n=90, extra=None):
         """a child that follows her eyes and hands: from the tick after she looks, points or shows at a thing, it looks there."""
@@ -1883,11 +1883,6 @@ def test_gaze_leak_closed():
     assert [x for _t, x, _a in during if "cup" in x and not x.startswith("give")] and \
         not [a for _t, _x, acts in during for a in acts if a.target == "cup"], during
     assert not [j for j in judg if j[1] == "met_ask"], judg
-    # the meal's first line waits while the ask is judged (its bottle in her hand would cue), and is said once it is judged
-    con, rows, judg = probe("ask_where", "ball", "ball", tok_at=(),
-                            extra=lambda t, c: (("charge_low", None),) if t >= 12 else ())
-    feeds = [(t, pend) for t, ln, acts, pend in rows if ln.intent == "feed"]
-    assert feeds and not [f for f in feeds if f[1]], feeds
     con = _perfect(seed=4, transcriber=Transcriber(None))
     _no_sets(con)
     con.request("ask_where", o="ball")
@@ -2113,37 +2108,27 @@ def test_held_pairs_a55():
 
 
 def test_echoes():
-    """finding 5: an echo of her word earned a smile, and "more?" at the feed was a name ask, so echoing "bottle" one tick after
-    "more bottle?" was a met ask worth 2. Now "more?" is the feed's line, never an ask; an echo may earn her smile (a parent
-    answers imitation, Goldstein and Schwade 2008: her method, disclosed), but counts toward nothing in the ledger."""
-    assert C.INTENTS["feed_more"].ask is None and C.INTENTS["feed_more"].expect, "'more?' is an ask"
-    bottle_seen = TOYS + seen(("bottle", "bottle", "", "mat", True))
-    frames = set()
-    for seed in range(12):                                                    # every frame of "more?" ("more?", "more bottle?")
-        c2 = C.Conduct(seed=seed, imperfect=False)
-        c2.routine = "feed"
-        c2.request("feed_more")
-        s = c2.tick(0, P(0, seen=bottle_seen))
-        frames.add(s.line.text)
-        assert c2.pending is None and not c2.ledger.trials, (s.line.text, c2.pending)
-    assert frames == {"more?", "more bottle?"}, frames
+    """finding 5: an echo of her word earned a smile as a met ask ("more?" at the meal was a name ask). An echo may earn her smile
+    (a parent answers imitation, Goldstein and Schwade 2008: her method, disclosed), but counts toward nothing in the ledger. The
+    meal and its "more bottle?" line are gone (A88); the probe stands on her label "a bottle." of a bottle in this test's own scene
+    ("bottle" is still a first word; the room holds none)."""
+    assert "feed_more" not in C.INTENTS and "feed" not in C.INTENTS, "the meal's intents are gone (A88)"
 
-    def feed(holds):
-        """the verifier's probe: "more bottle?" (ending at tick 5), the child's "bottle" 2 ticks after it."""
+    def bottle(holds):
+        """the verifier's probe: "a bottle." (ending at tick 5), the child's "bottle" 2 ticks after it."""
         con = C.Conduct(seed=3, transcriber=Transcriber(None), imperfect=False)
         _no_sets(con, ("duck", "ball", "cup", "block", "block_red", "bottle"))
-        con.routine = "feed"
         things = TOYS + seen(("bottle", "bottle", "", "hand" if holds else "mat", True))
         pp = lambda t: P(t, seen=things, child_holds=("bottle",) if holds else ())      # noqa: E731
-        con._say(TP.Line("more bottle?", "feed_more", "comfort", "bottle", "bottle", ()), 0, pp(0), C.Say())
+        con._say(TP.Line("a bottle.", "label", "plain", "bottle", "bottle", ()), 0, pp(0), C.Say())
         judg = []
         for t in range(1, 40):
             s = con.tick(t, pp(t), token=LX.WORD_ID["bottle"] if t == 7 else None)
             judg += s.judgments
         return con, judg
-    con, judg = feed(False)
+    con, judg = bottle(False)
     assert judg == [] and not con.ledger.trials and con.ledger.standing("bottle")["asks"] == [], judg
-    con, judg = feed(True)                                                    # in its hand: an echo of a right name
+    con, judg = bottle(True)                                                  # in its hand: an echo of a right name
     assert judg == [(2, "echo", "bottle")] and con.ledger.words["bottle"]["says"]["token"] == [], judg
     # the verifier's probe: "a duck." ending at tick 5, the child's "duck" at tick 9 while its head is on the duck: an echo
     con = C.Conduct(seed=3, transcriber=Transcriber(None), imperfect=False)

@@ -864,7 +864,7 @@ def test_the_born_codes():
     from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table
     g = SimAnatomy(born_table(), SIM_CFG).check()
     o = Organs(g.vocab, d=32, layers=1, heads=2, window=8, channels=g.channels, effectors=g.effectors)
-    assert {k_: v_.size for k_, v_ in o.encs.items()} == dict(face=2, ears=1725, eye_p=172, eye_f=1536, body=242, touch=130, vestibular=24, charge=2)
+    assert {k_: v_.size for k_, v_ in o.encs.items()} == dict(face=2, ears=1725, eye_p=172, eye_f=1536, body=242, touch=130, vestibular=24)   # A88
     a = _Seer(TOK, cfg); a.channels[2].organ = "encs.ears"
     try:
         a.check()
@@ -992,8 +992,8 @@ def _g1_world(seed=0):
 
         def frame(self):
             t = self.t; R = self.rng
-            obs = {n: [R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
-            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [max(0.0, 0.6 - 0.003 * t), -0.003]
+            obs = {n: [R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n != "face"}
+            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]
             obs["body"][241] = R.uniform(0, 1)
             obs["pain"] = [1.0 if (t % 97 == 50 and k == 5) else 0.0 for k in range(44)]
             if t % 30 == 3:
@@ -1042,7 +1042,7 @@ def test_the_g1_anatomy():
     of five settings, its consequence sense the ears, act_inv over them, the performance error, the born cry), effector 1 the words'
     silent output (the voice of the code: the 79 rows, mouth_gate, no intrinsic term), 2 the gaze (orienting, the VOR), 3 the waist
     (orienting), 4-5 the arms and 8-9 the legs (the pattern generators: the legs one rhythm, half a cycle apart; each arm its own), 6-7
-    the Dex3 hands: 56 joint readouts of five; its reward face, pain, charge. SIM_CFG sets the gates' drives as disclosed (0.25 + 4.656 x
+    the Dex3 hands: 56 joint readouts of five; its rewards her face (pays) and pain (cortisol, A88). SIM_CFG sets the gates' drives as disclosed (0.25 + 4.656 x
     the reward's mean at the 256-tick clock, the error at 0.5, gate_vigor 0). Born at a small width under SIM_CFG in a stub of its world, it lives 120 ticks: every effector
     acts, each tick's acts in the design's order; THE PERFORMANCE ERROR LANDS ON THE TRACT'S GATE: its rows carry it on the ticks it acted
     and every other gate's rows (the words', the voice of the code, included) carry 0 on every tick; the legs' and arms' patterns and the
@@ -1065,8 +1065,8 @@ def test_the_g1_anatomy():
     from body.model import Organs
     from body.sim.anatomy import BODY_JOINTS, CEREB_JOINTS, LIMBS, MOSSY_G, MOSSY_SPEED, RANGES, SIM_CFG, SimAnatomy, born_table, TRACT, ZONES
     a = SimAnatomy(born_table(), SIM_CFG).check()
-    assert [c.name for c in a.channels] == ["words", "face", "ears", "eye_p", "eye_f", "body", "touch", "vestibular", "charge"]
-    assert [c.size for c in a.channels] == [79, 2, 1725, 172, 1536, 242, 130, 24, 2] and sum(c.size for c in a.channels[1:]) == 3833
+    assert [c.name for c in a.channels] == ["words", "face", "ears", "eye_p", "eye_f", "body", "touch", "vestibular"]   # A88: no charge
+    assert [c.size for c in a.channels] == [79, 2, 1725, 172, 1536, 242, 130, 24] and sum(c.size for c in a.channels[1:]) == 3831   # A88
     assert all(c.forecast for c in a.channels) and all(c.organ == f"encs.{c.name}" for c in a.channels[1:])
     names = [e.name for e in a.effectors]
     assert names == ["voice", "words", "gaze", "waist", "arm_l", "arm_r", "hand_l", "hand_r", "leg_l", "leg_r"], names
@@ -1077,7 +1077,7 @@ def test_the_g1_anatomy():
     assert [e.name for e in a.motors if e.intrinsic] == ["voice"] and [e.name for e in a.motors if e.spg] == ["arm_l", "arm_r", "leg_l", "leg_r"]
     assert (a.effector("leg_l").spg_phase, a.effector("leg_r").spg_phase) == (0.0, 0.5) and a.effector("gaze").vor == [0, 1]
     assert [(e.name, e.spg_rhythm) for e in a.motors if e.spg] == [("arm_l", None), ("arm_r", None), ("leg_l", "legs"), ("leg_r", "legs")]
-    assert [e.name for e in a.motors if e.orient] == ["gaze", "waist"] and [r.name for r in a.rewards] == ["face", "pain", "charge"]
+    assert [e.name for e in a.motors if e.orient] == ["gaze", "waist"] and [r.name for r in a.rewards] == ["face", "pain"]
     assert abs(SIM_CFG["gate_tonic_rate"] - 4.656402) < 1e-6 and (SIM_CFG["gate_tonic"], SIM_CFG["gate_tonic_clock"], SIM_CFG["gate_int"],
                                                                   SIM_CFG["gate_int_form"], SIM_CFG["gate_vigor"]) == (0.25, 4, 0.5, "error", 0.0)
     cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3)
@@ -1194,10 +1194,11 @@ def _g1_replay_world(seed=0):
 
         def frame(self):
             t = self.t; R = self.rng
-            obs = {n: [R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
-            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [max(0.0, 0.6 - 0.003 * t), -0.003]
+            obs = {n: [R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n != "face"}
+            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]
             obs["body"][241] = 0.0 if t in (170, 260) else R.uniform(0.2, 1.0)
-            obs["pain"] = [1.0 if (t in (60, 147) and k == 5) else 0.0 for k in range(44)]
+            obs["pain"] = [1.0 if ((t == 60 or 147 <= t <= 150) and k == 5) else 0.0 for k in range(44)]   # pain through the save at 150,
+            # so the born cry is under way there (its breath clock 4: A88 took the charge, which had kept it crying from tick 134)
             if 140 <= t < 160 or t % 30 == 3:
                 obs["face_periph"] = [1.0, 0.4, -0.2]
             if t % 45 == 7:

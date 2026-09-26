@@ -46,7 +46,7 @@ subclass of the diary's `LanguageAnatomy` (`body/sim/anatomy.py:333`). What the 
 
 | | the diary body | the G1 |
 |---|---|---|
-| inputs | one symbol stream (plus her face) | 9 channels: words, face, ears 1725, eye_p 172, eye_f 1536, body, touch, vestibular 24, charge 2 |
+| inputs | one symbol stream (plus her face) | 8 channels: words, face, ears 1725, eye_p 172, eye_f 1536, body, touch, vestibular 24 (the charge channel went with the charge, A88) |
 | outputs | the mouth | 10 effectors: the vocal tract, the words (silent), gaze, waist, two arms, two Dex3 hands, two legs |
 | rewards | her face | 3 grounded sources: her face (±), joint pain (−), charge relief (±) (`anatomy.py:374`) |
 | organs added | | the amygdala, the cerebellum, the cord's reflexes, the motor timing parts, the event lines |

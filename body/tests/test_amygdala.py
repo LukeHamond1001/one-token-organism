@@ -589,9 +589,9 @@ def test_amyg_the_sim_twice():
         for _ in range(300):
             run.step()
         hs.append(_whole(L))
-        assert L.m.amyg.heads == (("face", 1.0), ("face", -1.0), ("pain", -1.0), ("charge", 1.0), ("charge", -1.0)) and L.m.amyg.n_in == 32 + 13 + 1
+        assert L.m.amyg.heads == (("face", 1.0), ("face", -1.0), ("pain", -1.0)) and L.m.amyg.n_in == 32 + 13 + 1   # A88: no charge heads
     assert hs[0] == hs[1], [k for k in hs[0] if hs[0][k] != hs[1][k]]
-    print(f"amyg 12: the G1 with the amygdala on (5 heads, 46 inputs at d 32), 300 ticks twice from birth: the same life ({' '.join(f'{k} {v[:12]}' for k, v in hs[0].items())})")
+    print(f"amyg 12: the G1 with the amygdala on (3 heads, 46 inputs at d 32), 300 ticks twice from birth: the same life ({' '.join(f'{k} {v[:12]}' for k, v in hs[0].items())})")
 
 
 # ---------------- amyg 13: its cost ----------------

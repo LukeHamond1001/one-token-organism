@@ -98,7 +98,7 @@ def test_the_tape():
     assert n == 300 == int(L._rec_n) and len(L._tape) == math.ceil(300 / TAPE_BLOCK)
     sym = [c for c in L.anatomy.channels if c.kind == "symbol"]; vec = [c for c in L.anatomy.channels if c.kind == "vector"]
     V = sum(int(c.size) for c in vec)
-    assert [c.name for c in sym] == ["words"] and V == sum(SIZES.values()) == 3833
+    assert [c.name for c in sym] == ["words"] and V == sum(SIZES.values()) == 3831        # A88: no charge (3833 with it)
     rows = L._tape_rows(n); ends = 0; words = 0
     for t, w in enumerate(seen):
         assert w["tape"] == t
@@ -386,8 +386,8 @@ def _live_world(seed=0):
 
         def frame(self):
             t = self.t; R = self.rng; a_ = 3.0 if t % 40 < 6 else 0.3
-            obs = {n: [a_ * R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n not in ("face", "charge")}
-            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]; obs["charge"] = [max(0.3, 0.9 - 0.001 * t), -0.001]
+            obs = {n: [a_ * R.uniform(-1, 1) for _ in range(k)] for n, k in SIZES.items() if n != "face"}
+            obs["face"] = [2.0 if t % 40 == 20 else 0.0, 0.0]
             obs["body"][241] = R.uniform(0.2, 1.0)
             obs["pain"] = [1.0 if (t % 97 == 50 and k == 5) else 0.0 for k in range(44)]
             if t % 17 == 0:

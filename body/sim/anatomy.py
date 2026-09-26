@@ -1,7 +1,7 @@
 """THE G1'S ANATOMY AS THE CORE MEETS IT (docs/SIM_DESIGN.md 3.4, 3.5, 3.6, 3.7, 6 and 10; the core refactor's step R6h, C61): the stock
-Unitree G1's nine channels at 3.4's sizes, its ten effectors numbered as 3.5 numbers them (the vocal tract effector 0, the words'
-silent output effector 1, the gaze 2, the waist 3, the arms 4-5, the Dex3 hands 6-7, the legs 8-9), and its three reward sources in
-section 6's order (face, pain, charge); its cerebellar interface (7.5, A44: the mossy input the world hands the cerebellum below the
+Unitree G1's eight channels at 3.4's sizes, its ten effectors numbered as 3.5 numbers them (the vocal tract effector 0, the words'
+silent output effector 1, the gaze 2, the waist 3, the arms 4-5, the Dex3 hands 6-7, the legs 8-9), and its two reward sources in
+section 6's order (the face, the one that pays; pain, cortisol: A88); its cerebellar interface (7.5, A44: the mossy input the world hands the cerebellum below the
 tick, its readouts, the flocculus's axes); and SIM_CFG, the core's constants the sim is born with that R6h decides (the gates' drives,
 the switches of the motor effectors, the cord's patterns and the born biases) and the cerebellum's switch. A declaration: it builds no
 module, draws no random number and keeps no state (the core's law for an anatomy, body/core/anatomy.py). S5a builds the world against
@@ -27,7 +27,7 @@ THE FRAME THE WORLD HANDS THE BODY (S5a's contract; every observation the body's
                order [the observer's outside torque over the joint's limit, its onset] (86), then the base's outside wrench, each of its
                6 numbers [its value over the body's weight, its onset] (12)
   vestibular   24: both inertial units' accelerometer and gyro, each the tick's mean and peak
-  charge       [h, the change of h this tick]
+(the charge channel is gone with the charge: A88)
 and beside the channels, read by the reward, the born reflexes and the gates' own inputs (never a channel):
   pain         44: per joint in BODY_JOINTS' order 1 where the observer's outside torque (its tick's largest 10 ms mean) passed the
                joint's own limit, then the base's (its outside force past 3 x the body's weight) (A37)
@@ -112,7 +112,7 @@ TRACT_AT = GAZE_AT + 6                                                    # 221:
 BREATH_AT = TRACT_AT + 20                                                 # 241
 BODY_SIZE = TRACT_AT + 21                                                 # 242
 TOUCH_SIZE = 2 * len(ZONES) + 2 * len(BODY_JOINTS) + 2 * 6                # 130
-SIZES = dict(face=2, ears=1725, eye_p=172, eye_f=1536, body=BODY_SIZE, touch=TOUCH_SIZE, vestibular=24, charge=2)
+SIZES = dict(face=2, ears=1725, eye_p=172, eye_f=1536, body=BODY_SIZE, touch=TOUCH_SIZE, vestibular=24)
 # each limb's flexion joints and their flexion senses, measured on the G1 (the withdrawal's: sim-world's body/tests/test_sim_world.py,
 # world 8; 3.7): a leg's hip pitch -1, knee +1, ankle pitch -1; an arm's shoulder pitch -1 and elbow -1. The spinal pattern generator
 # moves these (A48)
@@ -195,24 +195,15 @@ class FaceIncrement(RewardSource):
 
 
 class JointPain(RewardSource):
-    """PAIN (6.2, A37): -1 on a tick any of the frame's `pain` flags is set (a joint's outside torque past its limit, or the base's force
-    past 3 x the body's weight, as the observer estimates them from the robot's own sensors); silent otherwise"""
+    """PAIN (6.2, A37, A88): -1 on a tick any of the frame's `pain` flags is set (a joint's outside torque past its limit, or the base's
+    force past 3 x the body's weight, as the observer estimates them from the robot's own sensors); silent otherwise. Since A88 (the
+    owner's decision 2026-09-26) it is CORTISOL, not dopamine: declared with `dopamine=False`, its term never enters the reward; it
+    raises the body's stress (plasticity up, the choice flattened for about half a minute: body/core/senses.py), reaches the amygdala
+    (its pain- head, the tag: the moment written more strongly and dreamt first) and sets off the born cry. Only her face pays."""
 
     def felt(self, frame, life):
         p_ = frame.obs.get("pain")
         return -1.0 if p_ is not None and any(float(x) > 0.0 for x in p_) else None
-
-
-class ChargeRelief(RewardSource):
-    """THE CHARGE (6.3): 4 x [D(h_t-1) - D(h_t)], D(h) = (1 - h)^2 (drive reduction: Keramati and Gutkin 2014), from the charge channel's
-    [h, its change this tick]; a full charge earns nothing"""
-
-    def felt(self, frame, life):
-        o_ = frame.obs.get("charge")
-        if o_ is None:
-            return None
-        h, dh = float(o_[0]), float(o_[1])
-        return 4.0 * ((1.0 - (h - dh)) ** 2 - (1.0 - h) ** 2)
 
 
 def _joint_index(name):
@@ -340,14 +331,13 @@ class SimAnatomy(LanguageAnatomy):
         words = EarChannel("words", "symbol", self.vocab, organ="E", field="x", forecast=True, rest_id=self.sil, end_id=self.end_id,
                            reserved=self.reserved, partner=True)
         chans = [words] + [Channel(n, "vector", SIZES[n], organ=f"encs.{n}", forecast=True)
-                           for n in ("face", "ears", "eye_p", "eye_f", "body", "touch", "vestibular", "charge")]
+                           for n in ("face", "ears", "eye_p", "eye_f", "body", "touch", "vestibular")]
         lim = list(limits) if limits is not None else None
 
         def idx(js):
             return [PER_JOINT * _joint_index(j) + k for j in js for k in range(PER_JOINT)]
         tract = Tract("voice", [5] * len(TRACT), rest_id=(5 ** len(TRACT) - 1) // 2, sense="ears", inverse=True, fwd_gate=True, n_in=3,
-                      intrinsic=True, cry={"posture": dict(CRY_POSTURE), "lungs": 0, "breath": ("body", BREATH_AT), "charge": ("charge", 0),
-                                           "pain": "pain"})
+                      intrinsic=True, cry={"posture": dict(CRY_POSTURE), "lungs": 0, "breath": ("body", BREATH_AT), "pain": "pain"})
         voice = VoiceEffector("words", [self.vocab], rest_id=self.sil, end_id=self.space_id, reserved=self.bans, intrinsic=False)
         gaze = Gaze("gaze", [5, 5, 5], rest_id=62, sense="body", sense_idx=list(range(GAZE_AT, GAZE_AT + 6)), fwd_gate=True,
                     orient={0: ("yaw", 1), 1: ("pitch", 1)}, orient_gate=True, vor=[0, 1], n_in=3)
@@ -371,7 +361,8 @@ class SimAnatomy(LanguageAnatomy):
             n_in = 2 + (1 if name == "waist" else 0) + 2
             limbs.append(Limb(name, [5] * J, rest_id=(5 ** J - 1) // 2, sense="body", sense_idx=idx(js), inverse=True, fwd_gate=True,
                               n_in=n_in, twitch=True, **kw))                        # R8c: its joints twitch in active sleep (3.7, A46)
-        rewards = [FaceIncrement("face", clip=2), JointPain("pain", signs=(-1.0,)), ChargeRelief("charge")]   # R7d: the heads face +/-, pain -, charge +/-
+        rewards = [FaceIncrement("face", clip=2), JointPain("pain", signs=(-1.0,), dopamine=False)]   # A88: her face pays; pain is cortisol
+                                                                                                        # (R7d: the heads face +/-, pain -)
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
@@ -439,7 +430,7 @@ SIM_CFG = dict(
     # scaled by its own running mean in the waking lesson (FRAMES' err_scale; 10's "forecast heads"); tag_trace (defect 6) stays off,
     # the language body's utterance entry (the sim's tags reach its store and its night through the amygdala, R7d and R8)
     tire_recover=1, err_scale=1,
-    # STEP R7d: THE AMYGDALA ON AT BIRTH (7.4, 10, A16; body/core/amygdala.py): its 5 heads (face +/-, pain -, charge +/-) over the
+    # STEP R7d: THE AMYGDALA ON AT BIRTH (7.4, 10, A16; body/core/amygdala.py): its 3 heads (face +/-, pain -; A88) over the
     # stream, the 13 event lines and the level; its constants AMYG's (none given here: tau_a band 6's clock, 4,096 ticks; the critics'
     # prior 0.3; the solve every 8 ticks; the reliability over 36,000 ticks, earned after 64 pairs)
     amyg=1,
