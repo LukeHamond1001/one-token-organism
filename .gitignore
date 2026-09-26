@@ -18,5 +18,11 @@ rescue_volume/
 # caches and the editor's worktrees
 .pytest_cache/
 .claude/worktrees/
-video/
+video/*
+!video/film5_design/
+video/film5_design/*
+!video/film5_design/*.md
+!video/film5_design/*.py
+!video/film5_design/*.json
+!video/film5_design/archive/
 MUJOCO_LOG.TXT

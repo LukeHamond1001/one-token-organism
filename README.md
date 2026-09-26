@@ -180,6 +180,11 @@ Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a
   - Documents: `RESTART.md`, `teaching_method.md`, `parent_brief_human.txt` and `review_2026-09-22.md`.
   - `archive/flags/` keeps every flag set the ledger names.
   - `archive/` holds the retired scripts: the night waiter, the pod scripts and the guard's old command line (`guard_args.txt`), moved 2026-09-23. Still in `ops/` but retired: the guard itself (`guard_tag_at_night.sh`) and `parent_brief_template.txt`.
+  - The film (the one video for X; its design and script are in `video/film5_design/`, see its README): `demo_film.py` filmed the two
+    takes; `demo_replay.py` and `demo_video.py` re-render the talk page from the logs and cut the demo (`film5_v3` is the current
+    beginning); `demo_anim.py` renders an animation page frame by frame; `anim/story_v1.html` with `anim/story/` is the current
+    animation (`anim/v4/` and `architecture_v4.html` are the retired 3D engine); `anim_chunks.sh` renders it in retried chunks;
+    `film_assemble.py` puts the film together with the music and the voice; `film_sound.py` is the sound and the mix.
 - `data/` (not in git): what the served body needs.
   - `watch2.pt`, the save, which every night overwrites.
   - `tok_char.json`, the tokenizer.
@@ -189,6 +194,10 @@ Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a
   - `stories_valid.txt`, the stories the parent reads aloud by day.
   - `backups/watch2/`, the reload copies, kept two deep.
   - Everything else is earlier bodies and the first lineage, kept as history. `data/README.md` lists every file there and which ones the served body needs.
+- `docs/`: `SIM_DESIGN.md` and `audit/` (the humanoid: the robot sim project), `ALIGNMENT.md` (both projects), `film/` (earlier demo and
+  video scripts: `DEMO_TRANSCRIPT.md`, `DEMO_VIDEO.md`, `VIDEO_10MIN.md`).
+- `video/` (not in git, except the film's design text in `video/film5_design/`): the takes, the renders, the music and its licences.
+  `video/README.md` says what is where; the current film is `video/film5/preview_v7.mp4`.
 - `logs/`: the server's log (not in git). `docs-private/`: not in git.
 - `legacy/`: the first lineage (the 297M one-token organism, its gestation, its raising and its pod scripts), archived as it was (`legacy/README.md`).
 
@@ -199,7 +208,7 @@ The documents:
 - `DIARY_BODY.md`: the diary of the raising, dated and in order.
 - `DEMO_SCRIPT.md`: the demo as it will be recorded (rewritten 2026-09-23).
 - `ops/teaching_method.md` and `ops/parent_brief_human.txt`: how it is taught now. `CURRICULUM.md` is the earlier staged curriculum, which these two replace.
-- `VIDEO_10MIN.md`: the ten-minute video's script. Its numbers date from night 240, before `pace_sense`.
+- `docs/film/VIDEO_10MIN.md`: the ten-minute video's script. Its numbers date from night 240, before `pace_sense`.
 - `ops/review_2026-09-22.md`: the full review, with the confirmed defects, what stands between this body and a robot, and the refactor plan.
 
 ## The laws the project runs under
