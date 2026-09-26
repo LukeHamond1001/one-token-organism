@@ -65,6 +65,7 @@ from body.sim import eyes as EY
 from body.sim import parent_feel as PF
 from body.sim import parent_kin as kin
 from body.sim.lang import conduct as C
+from body.sim.lang import dayplan as DP
 from body.sim.lang import consts as K
 from body.sim.lang import lexicon as LX
 from body.sim.lang import percept as PC
@@ -74,6 +75,7 @@ from body.sim.voice import synth as V
 from body.sim.voice.playback import TICK, Utterance
 
 SOURCE = "parent"                      # her voice's name among the ears' sources
+ROOM_EDGE_X = 2.6                      # the room's wall with the door to the hall (make_g1room: ROOM_X)
 FALL_MPS = 0.5                         # a toy falling faster than this, not in a hand: "fell" (once a drop; ours)
 REST_MPS = 0.05                        # a toy slower than this has come to rest: its next drop is a new one (ours)
 HANDOVER_TICKS = 40                    # a toy she let go of within 40 ticks is her hand-over, never its own "got" (A2's 40 ticks)
@@ -126,7 +128,7 @@ class ParentLane:
     lines are timed at 3 ticks a word and make no sound and no symbol (the conduct's instrument timing). ear: her ear
     (body/sim/parent_ear.ParentEar) or None (the child's turns are heard with no word). level2: her registered nouns (A60b)."""
 
-    def __init__(self, world, seed=1, voice=None, ear=None, level2=(), stage=1, imperfect=True):
+    def __init__(self, world, seed=1, voice=None, ear=None, level2=(), stage=1, imperfect=True, plan=True, day_ticks=DP.DAY_TICKS):
         m = world.m
         self.voice = voice
         self.conduct = C.Conduct(seed=seed, voice=voice, transcriber=Transcriber(ear), motion=world.parent, stage=stage,
@@ -152,6 +154,8 @@ class ParentLane:
         self.face_down = 0                                # ticks lying face down running
         self.last = {}                                    # instruments: the tick's percept summary and her output
         self.n_lines = 0
+        self.plan = DP.DayPlan(seed, day_ticks) if plan else None      # her day (L3, P4)
+        self.day, self.day_start = 0, int(world.tick)
         self._geom(world)
         world.lane = self
 
@@ -244,7 +248,7 @@ class ParentLane:
         m, d = world.m, world.d
         pm = world.parent
         mouth, fwd, face = EY.mouth_point(m, d)
-        present = not pm.asleep
+        present = not pm.asleep and float(pm.base["at"][0]) < ROOM_EDGE_X     # awake and in the room (the hall is away)
         head, axes = self._head(d)
         pos = {tt: d.xpos[b].copy() for tt, b in self.toy_body.items()}
         in_view = self._ray_first(m, d, face, d.xpos[m.body("torso_link").id]) == self.g1_root
@@ -339,6 +343,8 @@ class ParentLane:
         m, d = world.m, world.d
         p, mouth, face = self._percept(world, t)
         self._p = p
+        if self.plan is not None:
+            self.plan.tick(t, t - self.day_start, self, world)        # her day's episode (L3), before her conduct's tick
         raw = world.tract_raw
         tract = None if raw is None or not np.any(raw) else np.asarray(raw, float)
         tp = d.xpos[m.body("torso_link").id]
@@ -435,6 +441,8 @@ class ParentLane:
 
     def dawn(self, world):
         self.feel.set_engagement(1.0)
+        self.day += 1
+        self.day_start = int(world.tick)
 
     # ------------------------------------------------------------------ the save
     def state(self):
@@ -457,7 +465,8 @@ class ParentLane:
                     reading=self.reading, reading_t=self.reading_t, test_prev=self.test_prev, fp=_pl(self.fp),
                     toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had),
                     child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released),
-                    posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines)
+                    posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines,
+                    plan=None if self.plan is None else self.plan.state(), day=self.day, day_start=self.day_start)
 
     def load_state(self, s):
         self.conduct.load_state(s["conduct"])
@@ -498,6 +507,9 @@ class ParentLane:
         self.posture, self.face_down = s["posture"], int(s["face_down"])
         self.last = dict(posture=s["last_posture"])
         self.n_lines = int(s["n_lines"])
+        if self.plan is not None and s.get("plan") is not None:
+            self.plan.load_state(s["plan"])
+        self.day, self.day_start = int(s.get("day", 0)), int(s.get("day_start", 0))
 
 
 def PM_child(world):

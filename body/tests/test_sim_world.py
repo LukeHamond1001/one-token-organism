@@ -398,14 +398,15 @@ def test_pain():
 
 
 def test_the_charge():
-    """world 7: the drain law; weakness follows the charge; a charger in the palm feeds 0.01 a tick"""
+    """world 7: the drain law; weakness follows the charge; the room's charger is the bottle's three shapes on its dock (5.3, A17); a
+    charger in the palm feeds 0.01 a tick"""
     w = G1World(seed=1)
     for _ in range(3):
         h0 = w.h
         w.apply(_babbler(4, 0.0).acts())
         f = w.frame()
         assert f.truth["drain"] > W.DRAIN_BASE and abs((h0 - w.h) - f.truth["drain"]) < 1e-15 and f.obs["charge"][1] == w.h - h0
-    assert w.chargers.size == 0                                        # no bottle in the room yet (W3)
+    assert sorted(w.m.geom(g).name for g in w.chargers) == ["bottle", "bottle_collar", "bottle_teat"]   # the bottle on its dock (5.3, A17)
     w.h = 0.0; w.apply({})
     assert np.allclose(-w.m.jnt_actfrcrange[w.jid, 0], 0.3 * w.tau_max)
     palm = G1World(seed=1)
@@ -417,7 +418,7 @@ def test_the_charge():
         b.add_geom(name="bottle_rig", type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[.02, 0, 0], contype=1, conaffinity=1)
     w = G1World(seed=1, extra=rig)
     w.h = 0.5; w.apply({}); f = w.frame()
-    assert w.chargers.size == 1 and f.truth["fed"] and abs(w.h - (0.5 + W.FEED_RATE - f.truth["drain"])) < 1e-12
+    assert w.chargers.size == 4 and f.truth["fed"] and abs(w.h - (0.5 + W.FEED_RATE - f.truth["drain"])) < 1e-12
     print(f"world 7: the drain 4e-5 + 2e-3 x mean sum(tau^2)/sum(tau_max^2) a tick, exactly; at h 0 the limits are 0.3 of the",
           f"declared; a charger touching the palm fed +0.01 a tick")
 

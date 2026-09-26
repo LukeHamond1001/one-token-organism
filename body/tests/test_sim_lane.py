@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from body.sim import anatomy as AN  # noqa: E402
 from body.sim import lane as L  # noqa: E402
 from body.sim import world as W  # noqa: E402
+from body.sim.lang import dayplan as DP  # noqa: E402
 from body.sim.lang import lexicon as LX  # noqa: E402
 from body.sim.voice import synth as V  # noqa: E402
 
@@ -32,9 +33,9 @@ class FakeVoice:
         return V.Clip(key, text, register, pcm, words, key)
 
 
-def _world(seed=1):
+def _world(seed=1, plan=False, day_ticks=24000):
     w = W.G1World(seed=seed)
-    return w, L.ParentLane(w, seed=seed, voice=FakeVoice())
+    return w, L.ParentLane(w, seed=seed, voice=FakeVoice(), plan=plan, day_ticks=day_ticks)
 
 
 def _run(w, n, greet_at=None, acts=None):
@@ -171,7 +172,84 @@ def test_a_toy_falls():
     print(f"lane 6: a ball dropped from 0.4 m: {fell} once; all events {evs}")
 
 
-LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls]
+def test_the_days_layout():
+    """lane 7: her day (4.7) over 200 seeds: floor play opens it, the absences are never first, last or two running, every block of
+    4.7's table is there in its count (3 floor, 2 motor, 1 show, 2-4 away, 1 tasks), and the blocks fill the time from the wake to
+    the winding down exactly; a short day scales every length"""
+    counts = set()
+    for seed in range(1, 201):
+        d = DP.DayPlan(seed); d.lay_out(0)
+        ks = [k for _s, _e, k, _i in d.blocks]
+        assert ks[0] == "floor" and ks[-1] != "away" and not any(a == b == "away" for a, b in zip(ks, ks[1:])), ks
+        assert d.blocks[0][0] == DP.WAKE and d.blocks[-1][1] == DP.DAY_TICKS - DP.WIND
+        assert all(a[1] == b[0] for a, b in zip(d.blocks, d.blocks[1:]))
+        n = {k: ks.count(k) for k in set(ks)}
+        assert n["floor"] == 3 and n["motor"] == 2 and n["show"] == 1 and n["tasks"] == 1 and 2 <= n["away"] <= 4, n
+        counts.add(n["away"])
+        assert 2 <= len(d.focus) <= 3 and set(d.focus) <= set(DP.BIRTH_TOYS)
+    d = DP.DayPlan(1, day_ticks=2400); d.lay_out(0)
+    assert d.blocks[0][0] == 30 and d.blocks[-1][1] == 2300 and d.episode(2299) != "wind"
+    assert d.episode(2300) == "wind" and d.episode(2370) == "goodnight" and d.episode(10) == "wake"
+    print(f"lane 7: 200 days laid out as 4.7 says (away {sorted(counts)} times a day, never first, last or running), filling 300 to",
+          "23,000 exactly; a day of 2,400 ticks scales every length")
+
+
+def test_a_short_day():
+    """lane 8: a day of 2,400 ticks with the child lying still: she greets it at the wake, leaves with a goodbye and comes back with
+    a greeting, shows it a toy, and says goodnight; saved in the middle of the day and restored in a new world, the rest of the day
+    is the same, line for line and frame for frame"""
+    w, lane = _world(plan=True, day_ticks=2400)
+    lines = []
+    for k in range(1200):
+        w.frame(); w.apply({})
+        if lane.last.get("line"):
+            lines.append((k, lane.plan.kind, lane.last["line"]))
+    blob = w.save_state()
+    a = _run(w, 1200)
+    w2, lane2 = _world(plan=True, day_ticks=2400)
+    w2.load_state(blob)
+    b = _run(w2, 1200)
+    for x, y in zip(a, b):
+        assert x[0] == y[0] and x[1] == y[1] and np.array_equal(x[3], y[3]) and x[4] == y[4], (x[0], x[4], y[4])
+    lines += [(t, None, ln) for t, _s, _f, _e, ln in a if ln]
+    texts = [ln for _t, _k, ln in lines]
+    assert lines[0][0] == 0 and lines[0][2].startswith("hi"), lines[:2]
+    assert any("bye" in x for x in texts) and any(x.startswith("night night") for x in texts), texts
+    kinds = [k for _t, k, _ln in lines if k]
+    assert "away" in kinds and "floor" in kinds
+    print(f"lane 8: a short day: {len(lines)} lines, from '{texts[0]}' to '{texts[-1]}', a goodbye and a return; saved at tick 1200",
+          "and restored in a new world, the rest of the day the same")
+
+
+def test_the_meal():
+    """lane 9: the charge light low: her feed line on the next free tick with the bottle offered (her motion's offer_bottle, running),
+    the routine "feed"; offered again after a refusal no sooner than FEED_RETRY; "all done." once the charge is full, the routine
+    over"""
+    w, lane = _world(plan=True, day_ticks=24000)
+    _run(w, 350)
+    w.h = 0.30
+    offered, said = [], []
+    for k in range(200):
+        w.frame(); w.apply({})
+        if lane.last.get("line"):
+            said.append(lane.last["line"])
+        for a in lane.conduct.acts_open:
+            if a[1] == "offer_bottle" and a[0] not in [o[0] for o in offered]:
+                offered.append((a[0], w.tick))
+    assert lane.plan.feeding and lane.conduct.routine == "feed" and offered, (said, offered)
+    assert all(b[1] - a[1] >= DP.FEED_RETRY for a, b in zip(offered, offered[1:])), offered
+    w.h = 0.99
+    for k in range(30):
+        w.frame(); w.apply({})
+        if lane.last.get("line"):
+            said.append(lane.last["line"])
+    assert not lane.plan.feeding and lane.conduct.routine != "feed", lane.plan.log[-3:]
+    print(f"lane 9: the charge low: '{said[0]}', the bottle offered {len(offered)} times ({[t for _i, t in offered]}); full:",
+          f"'{said[-1]}' and the routine over")
+
+
+LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
+              test_the_days_layout, test_a_short_day, test_the_meal]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
