@@ -96,7 +96,8 @@ class Snapshot:
                 self.transcript.append((t, "ear", f"(her ear heard) {h}"))
         self.transcript = self.transcript[-KEEP_LINES:]
         names = [e.name for e in L.anatomy.motors]
-        gates = [(n[:6], float(st.get("now", {}).get("p_act", 0.0))) for n, st in zip(names, L.motor)]
+        gates = [(n[:6], float((st.get("now") or {}).get("p_act", 0.0))) for n, st in zip(names, L.motor)]   # "now" is None through the
+                                                                                                      # night (the first life's crash at its first dawn)
         gates.append(("words", float(getattr(L, "_last_choice", {}).get("p_act", 0.0))))
         f = getattr(w, "now", None)
         pain = f is not None and bool(np.any(f.obs.get("pain", 0)))
