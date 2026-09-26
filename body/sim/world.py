@@ -527,7 +527,7 @@ class G1World(SimWorld):
     from it); `extra(spec)` adds an instrument's rig to the scene before it compiles (tests only). Born at construction: the G1 on
     its back on the mat, settled, tick 0."""
 
-    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True):
+    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True, righting=True):
         global R
         from body.sim import reflexes as R                              # the body's spinal cord (it reads this module's constants)
         _catch_mujoco_warnings()
@@ -574,6 +574,7 @@ class G1World(SimWorld):
         for h, grp in enumerate(("hand_l", "hand_r")):
             self.own_hand[h, [z for z in self.groups[grp] if z != self.palm_zones[h]]] = True
         self.spinal = bool(spinal)                                      # the palmar grasp at the spinal cord (off: an instrument's switch)
+        self.righting = bool(righting)                                  # the prone pattern at the cord (A92; off: an instrument's switch)
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
             raise ValueError("the scene leaves MuJoCo's auto-reset on (A18: <flag autoreset=\"disable\"/>)")
         g1 = self.scene.g1_set
@@ -808,6 +809,8 @@ class G1World(SimWorld):
                 if ev is not None:
                     spinal[hand] = ev
                     acts[hand] = a
+            if self.righting:                                           # and the prone pattern: face down, the arms flex under, the
+                spinal.update(R.prone(acts, self._sensed["imu_torso"]))   # trunk yaws toward the side that is up (A92)
         own = self._efference(acts)                                     # the efference copy (the own acts, after the grasp's sum)
         steps = {}                                                      # every act read before anything moves (a bad act moves nothing)
         for name, js in G.EFFECTORS:

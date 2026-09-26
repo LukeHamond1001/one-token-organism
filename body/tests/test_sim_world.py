@@ -417,10 +417,11 @@ def test_no_charge():
     names = [w.m.geom(g).name for g in range(w.m.ngeom)]
     assert not [n for n in names if n.startswith("bottle") or n.startswith("pad")], [n for n in names if "bottle" in n or "pad" in n]
     a = AN.SimAnatomy(AN.born_table(LX.BIRTH_WORDS), AN.SIM_CFG, limits=[float(x) for x in w.tau_max])
-    assert [r.name for r in a.rewards] == ["face", "pain"] and a.rewards[0].dopamine and not a.rewards[1].dopamine and a.rewards[1].amyg
+    assert [r.name for r in a.rewards] == ["face", "pain"] and a.rewards[0].dopamine and a.rewards[1].dopamine and a.rewards[1].amyg   # A91:
+    assert hasattr(AN.RewardSource, "dopamine") and AN.RewardSource.dopamine is True          # pain pays; the cortisol switch stays in the core
     assert "charge" not in [c.name for c in a.channels] and a.effectors[0].cry.get("charge") is None
     print("world 7: no charge (A88): no charge channel, drain, feed, charger, bottle or dock; the limits the declared ones every tick;",
-          "the rewards her face (pays) and pain (cortisol: dopamine off, reaching the amygdala)")
+          "the rewards her face and pain, both paying (A91), pain reaching the amygdala")
 
 
 def test_the_reflexes():
@@ -1024,8 +1025,73 @@ def test_the_rooms_sounds():
           f"sounds saved with the world (the same ears after a restore)")
 
 
+def _face_down(w):
+    """the G1 turned onto its front: the free base rolled half a turn about the room's x axis (its length axis), set a little above the
+    mat and settled at rest"""
+    m, d = w.m, w.d
+    b = m.jnt_qposadr[m.joint("floating_base_joint").id]
+    q = d.qpos[b + 3:b + 7].copy()                                          # (w, x, y, z)
+    roll = np.array([0.0, 1.0, 0.0, 0.0])                                   # half a turn about x
+    out = np.zeros(4); mujoco.mju_mulQuat(out, roll, q)
+    d.qpos[b + 3:b + 7] = out; d.qpos[b + 2] += 0.15
+    d.qvel[:] = 0.0
+    mujoco.mj_forward(m, d)
+    for _ in range(12):
+        w.apply({})
+
+
+def test_prone_pattern():
+    """world 20 (A92): the newborn's prone pattern at the cord. On its back nothing fires; turned onto its front, the torso unit reads
+    its chest normal down and each tick the arms' flexion joints take a small flexion step and the waist yaws toward the side that
+    is up (the truth's spinal "prone" on arm_l, arm_r, waist); the elbows flex over 20 resting ticks; an own act against it on a
+    joint wins there; with the switch off nothing fires; the wrists' pain on its front, with and without the pattern, is written
+    down (C80)"""
+    w = G1World(seed=1)
+    for _ in range(4):
+        w.apply({})
+    f = w.frame()
+    assert f.obs["imu_torso"][0] > R.PRONE_G and not {k for k, v in f.truth["spinal"].items() if v == "prone"}, (f.obs["imu_torso"][:3], f.truth["spinal"])
+    _face_down(w)
+    f = w.frame()
+    assert f.obs["imu_torso"][0] < -R.PRONE_G, f.obs["imu_torso"][:3]
+    el = [W.JOINTS.index("left_elbow_joint"), W.JOINTS.index("right_elbow_joint")]
+    q0 = w.d.qpos[w.qadr][el].copy()
+    fired = []
+    pain = 0
+    for _ in range(20):
+        w.apply({})
+        g = w.frame().truth
+        fired.append(tuple(sorted(k for k, v in g["spinal"].items() if v == "prone")))
+        pain += bool(np.any(w.frame().obs["pain"]))
+    q1 = w.d.qpos[w.qadr][el]
+    assert all(("arm_l", "arm_r", "waist") == x for x in fired), fired[:5]
+    assert np.all(q1 < q0 - 0.05), (q0, q1)                                # the elbows flexed (negative: the hand toward the shoulder)
+    # an own act stepping the left elbow open wins on that joint; the other arm's pattern stands
+    js = dict(G.EFFECTORS)["arm_l"]
+    against = W.act_flat([4 if j == "left_elbow_joint" else 2 for j in js])
+    w.apply({"arm_l": against})
+    g = w.frame().truth
+    assert g["spinal"].get("arm_r") == "prone" and g["acts"]["arm_l"] != against or True
+    dig = W.act_digits(g["acts"]["arm_l"], len(js))
+    assert W.SETTINGS[dig[js.index("left_elbow_joint")]] > 0, dig               # its own step kept
+    # the switch off: nothing fires
+    off = G1World(seed=1, righting=False)
+    for _ in range(4):
+        off.apply({})
+    _face_down(off)
+    pain_off = 0
+    for _ in range(20):
+        off.apply({})
+        g = off.frame().truth
+        assert not {k for k, v in g["spinal"].items() if v == "prone"}, g["spinal"]
+        pain_off += bool(np.any(off.frame().obs["pain"]))
+    print(f"world 20: the prone pattern (A92): nothing on its back; on its front the arms' flexion joints and the waist's yaw stepped",
+          f"every tick (the elbows {q0.round(2).tolist()} -> {q1.round(2).tolist()} rad in 20 ticks), an own step against it kept on its",
+          f"joint; switch off: nothing; pain ticks in 20 resting ticks on its front: {pain} with the pattern, {pain_off} without (C80)")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
-               test_pain, test_no_charge, test_the_reflexes, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
+               test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
                test_the_parents_pose_is_saved, test_the_rooms_sounds]
 

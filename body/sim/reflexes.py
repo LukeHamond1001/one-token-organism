@@ -3,8 +3,9 @@ keeps for the limbs, computed from the frame as the body's own afferents give it
 the withdrawal as the act it forces on its limb this tick (or None), the grasp as its sum with the hand's own act. They are the
 body's, below the gate. The sim's anatomy declares the withdrawal on each limb's effector (the core's `Effector.reflex(frame, life,
 state)`, step R6), whose tick then gives the gate no eligibility and the actor no credit, and whose act reaches the world as any
-act; the grasp is summed at the spinal cord with the hand's own act (`grasp`, run by the world's apply). None of the refused
-reflexes (stepping, righting, the tonic neck and labyrinthine reflexes, Moro, rooting, Galant, Babinski, placing) is here. The VOR
+act; the grasp is summed at the spinal cord with the hand's own act (`grasp`, run by the world's apply). Of the refused
+reflexes (stepping, the tonic neck and labyrinthine reflexes, Moro, rooting, Galant, Babinski, placing) none is here but one, kept
+in part since A92: the newborn's prone pattern (`prone`, below). The VOR
 is the world's (body/sim/world.py, on the software fovea); orienting is a bias on the gaze's and the waist's proposals, the
 core's (R6h).
 
@@ -54,7 +55,21 @@ anything moves: body/sim/world.py). The own act keeps its eligibility, since it 
 gate's (the cortex sees it through touch and joint sense, and through its forward model's error: a closing it did not send).
 The design's "their ticks are logged as reflex and carry no gate eligibility" (3.7) holds for the withdrawal; for the grasp it
 would forbid learning to let go, which A11 asks for (a conflict written in the W1 fix's report). It fires on its own fingers
-too (a fist closed on nothing stays closed until the hand's own act opens it); the world's truth `palm_own_N` counts those (W4)."""
+too (a fist closed on nothing stays closed until the hand's own act opens it); the world's truth `palm_own_N` counts those (W4).
+THE PRONE PATTERN (A92, the owner's word 2026-09-26: "add 1"; a born reflex of the brainstem and cord, kept in part). A newborn laid
+on its front turns its head to one side and holds its arms flexed under its chest, the weight on the forearms and the chest, not
+on extended wrists: the protective head turn is present from birth (Prechtl and Beintema 1964, The Neurological Examination of
+the Full-term Newborn Infant; Prechtl 1977), and the physiological flexor tone of the newborn's limbs holds the arms flexed in
+prone (Bly 1994, Motor Skills Acquisition in the First Year). Rolling over is not a newborn's reflex (it is learned, at 3-6
+months), so no roll is here. The first plumbing day after A88 found why the pattern matters on this body: it rolled onto its
+front under babble and lay with its wrists under its 34 kg, the 5 N m gears back-driven, in pain on 12% of ticks (C79). The
+G1 has no neck (A22), so its head turn is the waist's yaw. As the cord has it, from the body's own afferent: while the torso's
+accelerometer reads its chest normal pointing down (its x component below -PRONE_G, the parent's own reading of "face down":
+parent_motion.Child), each arm's flexion joints (the withdrawal's, FLEXION) take one small flexion step a tick, and the waist
+yaws one small step toward the side that is up (the accelerometer's y component's sign), unless the own act that tick steps a
+joint the other way (the own act wins there, as it opens the grasp); an own step the same way, or a hold, sums with it. Logged as
+reflex (the truth's spinal: "prone" per effector), no gate eligibility. The legs keep their own acts (the newborn's flexed hips in
+prone would drive the thigh housings into the pelvis on this body: C22's artifact), disclosed."""
 import math
 import sys
 from pathlib import Path
@@ -71,6 +86,9 @@ G = W.G
 LIMBS = ("leg_l", "leg_r", "arm_l", "arm_r")                     # the limbs with a withdrawal (the waist and the head have none)
 WITHDRAW_TICKS = 2              # the withdrawal's big flexion step, a tick for 2 ticks (3.7; innate, ours)
 GRASP_N = 0.3                   # palm touch that closes the hand (3.7; the prototype's value; innate, ours)
+PRONE_G = 0.6 * 9.81            # face down: the torso accelerometer's chest-normal component below -0.6 g (Child's fz < -0.6; A92, ours)
+PRONE_LIMBS = ("arm_l", "arm_r")  # the arms flex under the chest; the head turn is the waist's yaw (no neck: A22)
+WAIST_YAW = "waist_yaw_joint"   # its positive step turns the trunk, and the cameras, to the left (body/sim/anatomy.py)
 
 # each limb's flexion: {joint: the sign of its flexion} (measured on the G1: body/tests/test_sim_world.py, world 8)
 FLEXION = {"leg_l": {"left_hip_pitch_joint": -1, "left_knee_joint": +1, "left_ankle_pitch_joint": -1},
@@ -154,6 +172,36 @@ def grasp(hand, own, palm_log):
         if j in CLOSING[hand] and W.SETTINGS[dig[i]] * CLOSING[hand][j] < W.STEP_BIG:
             dig[i] = _BIG[CLOSING[hand][j]]
     return W.act_flat(dig), "grasp"
+
+
+def prone(acts, imu_torso):
+    """THE PRONE PATTERN at the spinal cord (the module's doc, A92): `acts` the tick's acts (a dict, changed in place), `imu_torso` the
+    torso unit's tick means [acc 3, gyro 3] in the torso's frame -> {effector: "prone"} for the effectors it stepped (none when the
+    body is not face down). Each arm's flexion joints one small flexion step where the own act does not step against; the waist's
+    yaw one small step toward the side that is up."""
+    ax, ay = float(imu_torso[0]), float(imu_torso[1])
+    if ax > -PRONE_G:
+        return {}
+    ev = {}
+    plan = {limb: {j: FLEXION[limb][j] for j in FLEXION[limb]} for limb in PRONE_LIMBS}
+    plan["waist"] = {WAIST_YAW: (1 if ay > 0 else -1)}
+    for eff, steps in plan.items():
+        n = len(_JOINTS[eff])
+        own = acts.get(eff)
+        dig = W.act_digits(W.rest_id(n) if own is None else own, n)
+        changed = False
+        for i, j in enumerate(_JOINTS[eff]):
+            s = steps.get(j)
+            if s is None:
+                continue
+            cur = W.SETTINGS[dig[i]] * s
+            if cur < 0:
+                continue                                          # its own act against it: the own act wins on this joint
+            if cur < W.STEP_SMALL:
+                dig[i] = _SMALL[s]; changed = True
+        if changed:
+            acts[eff] = W.act_flat(dig); ev[eff] = "prone"
+    return ev
 
 
 def opens(hand, act):
