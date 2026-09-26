@@ -19,7 +19,7 @@ The numbers below come from the served body (`data/watch2.pt`, on day 400 by the
 - The owl (the sit-down of 2026-09-22, every line typed one-handed): "what color is the owl?" had never been asked. The other voice said "the owl is brown" once. Asked again, it answered "the owl is brown" at 2.7 s, and again at every later ask (2.3, 6.8 and 2.1 s), after other questions and after a minute alone. During that minute it murmured "he the owl is" to itself.
 - The sheep (item 50, a copy): ten facts were told once each during a day. The next morning they were asked among five facts never told. Four came back whole ("the sheep says baa", "the bee says buzz", "the horse says neigh", "the mouse says squeak") and three nearly ("the crow is blach", "the plum is purplum", "the crab is orab"). None of the five never-told facts got a right-sounding answer. This is the best next-day recall of once-told facts so far (item 35 had 1 of 3 live). The copy ran with every timing reflex off and with two fixes that the served flags do not carry (`chunk_gate` and the felt entry of utterances). No matched night was run without them, so their share of the result is not known.
 - The fox (item 48): a pair typed into one day's rows ("what does the fox say?" / "the fox says yip") was answered at the first ask the next day, on a copy that had not been asked it before.
-- In demo rehearsals on copies, a new fact took three to five tellings. `DEMO_SCRIPT.md` plans for two to five.
+- In demo rehearsals on copies, a new fact took three to five tellings.
 
 **It sleeps.** After 24,000 ticks awake (about 67 minutes: the served period is 0.15 s a tick, but a tick takes about 0.17 s in practice) it sleeps for about 25 minutes (24 to 36 minutes for the nights of 2026-09-23). The night replays the utterances it heard (NREM), imagines (REM) and saves. Since night 322 the night no longer reads stories it never heard (item 52), which cut the night from about 41 minutes to about 25.
 
@@ -135,7 +135,7 @@ The body also serves the page at http://localhost:8020/talk, but without the pau
 
 To end, press 5, close the tab and press Ctrl-C in the proxy's terminal. If the typist stays stopped, run `pkill -CONT -f "body.teacher --port 8020"`. Never `kill -9` the proxy.
 
-`DEMO_SCRIPT.md` has the checks to make before recording (time to the night, mood, readout), the take, and what a viewer should see. `tools/teach_live.py` is the supervisor's chair for the same kind of sitting from the terminal.
+`tools/teach_live.py` is the supervisor's chair for the same kind of sitting from the terminal.
 
 ### 6. The tests and the determinism check
 
@@ -179,12 +179,7 @@ Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a
   - The demo page: `talk_proxy.py`. Stopping: `stop_all.sh`.
   - Documents: `RESTART.md`, `teaching_method.md`, `parent_brief_human.txt` and `review_2026-09-22.md`.
   - `archive/flags/` keeps every flag set the ledger names.
-  - `archive/` holds the retired scripts: the night waiter, the pod scripts and the guard's old command line (`guard_args.txt`), moved 2026-09-23. Still in `ops/` but retired: the guard itself (`guard_tag_at_night.sh`) and `parent_brief_template.txt`.
-  - The film (the one video for X; its design and script are in `video/film5_design/`, see its README): `demo_film.py` filmed the two
-    takes; `demo_replay.py` and `demo_video.py` re-render the talk page from the logs and cut the demo (`film5_v3` is the current
-    beginning); `demo_anim.py` renders an animation page frame by frame; `anim/story_v1.html` with `anim/story/` is the current
-    animation (`anim/v4/` and `architecture_v4.html` are the retired 3D engine); `anim_chunks.sh` renders it in retried chunks;
-    `film_assemble.py` puts the film together with the music and the voice; `film_sound.py` is the sound and the mix.
+  - `archive/` holds the retired scripts: the night waiter, the pod scripts and the guard's old command line (`guard_args.txt`), moved 2026-09-23. The retired guard (`guard_tag_at_night.sh`) and the old brief (`parent_brief_template.txt`) are there too.
 - `data/` (not in git): what the served body needs.
   - `watch2.pt`, the save, which every night overwrites.
   - `tok_char.json`, the tokenizer.
@@ -194,10 +189,8 @@ Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a
   - `stories_valid.txt`, the stories the parent reads aloud by day.
   - `backups/watch2/`, the reload copies, kept two deep.
   - Everything else is earlier bodies and the first lineage, kept as history. `data/README.md` lists every file there and which ones the served body needs.
-- `docs/`: `SIM_DESIGN.md` and `audit/` (the humanoid: the robot sim project), `ALIGNMENT.md` (both projects), `film/` (earlier demo and
-  video scripts: `DEMO_TRANSCRIPT.md`, `DEMO_VIDEO.md`, `VIDEO_10MIN.md`).
-- `video/` (not in git, except the film's design text in `video/film5_design/`): the takes, the renders, the music and its licences.
-  `video/README.md` says what is where; the current film is `video/film5/preview_v7.mp4`.
+- `docs/`: `SIM_DESIGN.md` and `audit/` (the humanoid: the robot sim project).
+- The demo film (its tools, design, takes and renders) is kept on this machine only, never in git: see `.gitignore`.
 - `logs/`: the server's log (not in git). `docs-private/`: not in git.
 - `legacy/`: the first lineage (the 297M one-token organism, its gestation, its raising and its pod scripts), archived as it was (`legacy/README.md`).
 
@@ -206,9 +199,7 @@ The documents:
 - `BODY_SPEC.md`: the specification. It covers the world, the organs, the one reward, sleep, the disclosed constants, the mathematics with every defect found and its test (§5b), the environment, the instruments and the tests. It was last changed on 2026-09-17, so items 41 to 52 (`pace_sense` among them) are in the ledger but not yet in the spec.
 - `ITERATIONS.md`: the ledger, items 1 to 52. Every mechanism is recorded there as derived, measured on copies, and then adopted at a night's save or falsified, with its ruler and its falsifier.
 - `DIARY_BODY.md`: the diary of the raising, dated and in order.
-- `DEMO_SCRIPT.md`: the demo as it will be recorded (rewritten 2026-09-23).
 - `ops/teaching_method.md` and `ops/parent_brief_human.txt`: how it is taught now. `CURRICULUM.md` is the earlier staged curriculum, which these two replace.
-- `docs/film/VIDEO_10MIN.md`: the ten-minute video's script. Its numbers date from night 240, before `pace_sense`.
 - `ops/review_2026-09-22.md`: the full review, with the confirmed defects, what stands between this body and a robot, and the refactor plan.
 
 ## The laws the project runs under

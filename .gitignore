@@ -18,11 +18,19 @@ rescue_volume/
 # caches and the editor's worktrees
 .pytest_cache/
 .claude/worktrees/
-video/*
-!video/film5_design/
-video/film5_design/*
-!video/film5_design/*.md
-!video/film5_design/*.py
-!video/film5_design/*.json
-!video/film5_design/archive/
+video/
 MUJOCO_LOG.TXT
+
+# the film (the demo video for X): kept on this machine only, never in git or on GitHub (the owner, 2026-09-26)
+video/
+docs/film/
+DEMO_SCRIPT.md
+ops/anim/
+ops/anim_chunks.sh
+ops/demo_anim.py
+ops/demo_film.py
+ops/demo_replay.py
+ops/demo_video.py
+ops/film_assemble.py
+ops/film_sound.py
+docs/ALIGNMENT.md

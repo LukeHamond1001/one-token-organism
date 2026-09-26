@@ -213,7 +213,7 @@ Start it after the body:
 
     nohup python3 ops/talk_proxy.py --port 8021 --body 8020 > <SCRATCH>/logs/talk_proxy.log 2>&1 &
 
-For the demo, DEMO_SCRIPT.md (2026-09-23) runs it in a terminal with `--pause-after 600`.
+For the demo, the demo script (DEMO_SCRIPT.md, kept locally, not in git) runs it in a terminal with `--pause-after 600`.
 
 THE CHAIR: tools/teach_live.py (`start`, `say`, `listen`, `leave`, `end`) is for sitting with the body from the terminal, which is
 how progress is judged (2026-09-18). It holds the typist with SIGSTOP from `start` to `end`.
@@ -222,7 +222,7 @@ THE PARENT: the cycle feeds the queue by itself. A parent who writes rows by han
 teacher, the user's word of 2026-09-17) and ops/teaching_method.md. It reads the queue's depth only with ops/queue_depth.py, never
 from the .pos file. The method keeps lines to 38 characters or fewer. The typist silently drops any line over 40 characters, or
 with any character other than letters, spaces and `. ? !` (so no comma, no apostrophe, no digit).
-ops/parent_brief_template.txt is the old brief (see the last section).
+ops/archive/parent_brief_template.txt is the old brief (see the last section).
 
 ## After any reload or restart
 
@@ -241,7 +241,7 @@ opening the served file.
 THE GUARD ON THE LONG TAG IS RETIRED (2026-09-19 17:15). The tag had been closed for days (gate_slow_lr 0). The guard's trip
 (the gate's duty under 0.2 after the parent's lines) fired on the ear's trace at night 286's row. It restarted the served body a
 minute after the reload, with the flags captured when it was armed, so the reading share it carried was stale. Do not arm it
-(ops/guard_tag_at_night.sh; ops/archive/guard_args.txt holds its old command line, with a scratch path that no longer exists). The reload
+(ops/archive/guard_tag_at_night.sh; ops/archive/guard_args.txt holds its old command line, with a scratch path that no longer exists). The reload
 scripts (reload_after_save.sh, reload_now.sh, rekey_after_save.sh) are the only restarts.
 
 THE NIGHT WAITER IS RETIRED (2026-09-20). ops/night_waiter.sh (now ops/archive/night_waiter.sh) ran one per night. It re-armed the dusk probe (and the guard, until
@@ -253,7 +253,7 @@ comes within 700 ticks of the night, it asks the body to save. That overwrites t
 data/watch2.pt taken after it is no longer the morning's. Arm it only by hand, for a dusk reading, and not when the night is
 already near: `nohup nice -n 5 zsh ops/probe_at_dusk.sh <SCRATCH> probe_dusk_<label>.log &`.
 
-THE OLD PARENT STEP IS REPLACED. The old step 7 ("the Agent brief in ops/parent_brief_template.txt, with the night count, the day
+THE OLD PARENT STEP IS REPLACED. The old step 7 ("the Agent brief in ops/archive/parent_brief_template.txt, with the night count, the day
 label, the facts schedule (ten a day, rotating)") gave way on 2026-09-17 to the human teacher (ops/parent_brief_human.txt) and to
 the cycle's feeding.
 
