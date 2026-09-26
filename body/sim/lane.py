@@ -331,7 +331,7 @@ class ParentLane:
         self.face_down = self.face_down + 1 if post == "front" else 0
         if self.face_down == DISTRESS_TICKS:
             ev.append(("distress", None))
-        if world.crying or (in_view and float(world._sensed["base_peak"]) > world.f_pain):
+        if world.crying or (in_view and float(world._sensed["true_base_peak"]) > world.f_pain):
             ev.append(("pain", None))                                   # its cry heard, or a blow to its body she sees
         if world.h < CHARGE_LOW:
             ev.append(("charge_low", None))

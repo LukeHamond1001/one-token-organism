@@ -39,7 +39,9 @@ Each limb's flexion joints and their flexion signs, measured on the G1's own geo
           thumb's rotation has no closing sense in the grasp.
 
 THE PALMAR GRASP (spinal, present at birth). A palm touch above GRASP_N (the palm zone's tick-mean force) closes the hand's
-flexing joints one small step a tick (the thumb's two flexing joints and both fingers' two joints each; the thumb's rotation,
+flexing joints one big step a tick (A82: under the Dex3's real motors, A80, a small step's servo torque, 0.25 N m, is under the
+finger gear's friction, 0.27 N m, and could never close the hand; the newborn's grasp is strong, bearing its weight for moments in
+the traction response: recalled, Twitchell 1965) (the thumb's two flexing joints and both fingers' two joints each; the thumb's rotation,
 hand_thumb_0, turns the thumb about the palm and has no closing sense, so it takes the hand's own setting), unless the hand's own
 act THAT TICK opens it (any closing joint stepped toward open: the cortex overrides). It never opens by itself: letting go is the
 child's own act, learned (A11). It is not a core hook that takes the hand's tick: a hook is decided before the tick's own act is
@@ -95,8 +97,8 @@ def flexion_act(limb):
 
 
 def closing_act(hand):
-    """the hand's grasp act: a small closing step on its closing joints, the thumb's rotation held"""
-    return W.act_flat([_SMALL[CLOSING[hand][j]] if j in CLOSING[hand] else _MID for j in _JOINTS[hand]])
+    """the hand's grasp act: a big closing step on its closing joints, the thumb's rotation held (A82)"""
+    return W.act_flat([_BIG[CLOSING[hand][j]] if j in CLOSING[hand] else _MID for j in _JOINTS[hand]])
 
 
 def limb_zones(zones, limb):
@@ -138,7 +140,7 @@ def grasp(hand, own, palm_log):
     """THE PALMAR GRASP at the spinal cord (see the module's doc): the hand's own act this tick (`own`, its flat act; None its rest)
     and its palm's touch (the frame's log force) give (the act its servos take, the event): (own, None) when the palm is not
     touched at GRASP_N; (own, "overridden") when the own act opens the hand; else (own with each closing joint stepped at least one
-    small step closed, "grasp")."""
+    big step closed, "grasp"; A82)."""
     if hand not in CLOSING:
         raise ValueError(f"no palmar grasp on {hand!r}")
     if palm_log < GRASP_LOG:
@@ -149,8 +151,8 @@ def grasp(hand, own, palm_log):
     if own is not None and opens(hand, own):
         return own, "overridden"
     for i, j in enumerate(_JOINTS[hand]):
-        if j in CLOSING[hand] and W.SETTINGS[dig[i]] * CLOSING[hand][j] < W.STEP_SMALL:
-            dig[i] = _SMALL[CLOSING[hand][j]]
+        if j in CLOSING[hand] and W.SETTINGS[dig[i]] * CLOSING[hand][j] < W.STEP_BIG:
+            dig[i] = _BIG[CLOSING[hand][j]]
     return W.act_flat(dig), "grasp"
 
 

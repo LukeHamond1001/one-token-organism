@@ -105,6 +105,7 @@ from body.sim import anatomy as AN  # noqa: E402  (the G1's anatomy: the frame's
 from body.sim.tract import Tract  # noqa: E402  (the voice effector's physics, 4.9)
 from body.sim.voice.synth import PA_PER_UNIT  # noqa: E402  (the tract's engine units -> pascals at 1 m)
 from body.sim import ears as EA  # noqa: E402  (the ears, P2)
+from body.sim import observer as OBS  # noqa: E402  (the born momentum observer: contact from the robot's own sensors, A37)
 
 R = None                        # body/sim/reflexes.py, the body's spinal cord: bound at the first world's birth (it imports this module)
 
@@ -550,6 +551,8 @@ class G1World(SimWorld):
             raise ValueError("an actuator does not drive the joint it is named for")
         self.lo, self.hi = m.jnt_range[self.jid, 0].copy(), m.jnt_range[self.jid, 1].copy()
         self.tau_max = m.jnt_actfrcrange[self.jid, 1].copy()             # the model's own limits (3.2), before weakness scales them
+        self.tau_hold = np.array([G.DEX3[j]["hold"] if j in G.DEX3 else float(t) for j, t in zip(JOINTS, self.tau_max)])   # each joint's
+        # pain line (A37, A73): the gear's load it takes before it back-drives: the Dex3's holding figure (A80), else the declared limit
         if not (np.all(m.jnt_actfrclimited[self.jid]) and np.all(self.tau_max > 0) and np.array_equal(m.jnt_actfrcrange[self.jid, 0], -self.tau_max)):
             raise ValueError("a G1 joint declares no symmetric torque limit")
         self.tau_max_sq = float(np.sum(self.tau_max ** 2))
@@ -626,6 +629,7 @@ class G1World(SimWorld):
         self.cereb_idx = np.array([JOINTS.index(j) for j in AN.CEREB_JOINTS])
         self.weight = self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.armature = m.dof_armature[self.dof].copy()                     # each joint's rotor inertia through its gear (the model's)
+        self.observer = OBS.Observer(m, self.d, self.dof, self.base_dof, self.pelvis_id, "imu_in_pelvis", self.armature)
         self.heat = np.zeros(len(JOINTS))                                   # each motor's temperature above the room's (degC)
         self.tract = Tract(seed=self.seed)                                   # the voice effector's physics (4.9)
         self.ears = EA.Ears()                                                # two cochleas at the head's ear sites (P2)
@@ -688,18 +692,21 @@ class G1World(SimWorld):
           body 242        per joint in BODY_JOINTS' order [sin, cos of the angle scaled over its range to -pi/2..pi/2, velocity, servo
                           effort (the actuator torque over the limit it was clamped at), the motor's heat over HEAT_RISE_C], the
                           gaze's state and velocity (6), the tract's 10 positions, 10 velocities and breath left (21)
-          touch 130       the Dex3's 16 zones [log(1 + F / 1 N), its onset]; per joint [the observer's outside torque (the tick's
-                          mean) over the joint's declared limit, its onset: the rise of its size]; the base's outside wrench, force
-                          then torque in the pelvis's frame, each [its tick's mean over the body's weight, its onset]
-          pain 44         per joint 1 where the outside torque's largest 10 ms mean passed the joint's declared limit, then the base's
-                          (its outside force's largest 10 ms mean past F_pain) (A37)
+          touch 130       the Dex3's 16 zones [log(1 + F / 1 N), its onset]; per joint [the born observer's outside torque (the
+                          tick's mean of its 10 ms samples, from the robot's own encoders, motor torques and pelvis unit: observer.py)
+                          over the joint's declared limit, its onset: the rise of its size]; the base's outside wrench as the observer
+                          estimates it, force then torque in the pelvis's frame, each [its tick's mean over the body's weight, its onset]
+          pain 44         per joint 1 where the gear's load (the sensed torque less the rotor's inertia times the encoder's velocity
+                          change) as a 10 ms mean passed the joint's declared limit (A73), then the base's (the observer's outside force
+                          in a 10 ms sample past F_pain) (A37)
           vestibular 24, imu_torso 6 (the torso unit's accelerometer and gyro, the tick's means of the noisy samples), charge 2
         and by day only (at night the eyes and ears are off and the parent asleep: those channels absent, quiet):
           words           the words channel's symbol this tick (the parent's word token as its sound ends, or letters), 0 the rest
           face 2          [2 x (smile - frown) as the child can see it, its change] (A1, A49: the lane's)
           ears 1,725      both cochleas and the delay lines (body/sim/ears.py) of the tick's sounds; sound_side [an onset heard,
                           the born lateral read's angle, + left]
-          eye_p 172, eye_f 1,536, onset_periph 3   the eyes (W3 reopened: zeros until its three views are built, disclosed)
+          eye_p 172, eye_f 1,536, onset_periph 3   the eyes (body/sim/eyes.py when attached: the D435's three views, A78; zeros
+                          without them, and onset_periph zeros until A43's constants are read)
           face_periph 3, face_fovea 1   zeros: no born face detector at birth (C39, the lead's decision of 2026-09-25, option a: the
                           born route to faces is orienting to her voice and her face brought into view)"""
         if self.paused:
@@ -714,7 +721,7 @@ class G1World(SimWorld):
         touch = np.concatenate([np.stack([s["touch_log"][self.dex], s["touch_onset"][self.dex]], 1).reshape(-1),
                                 np.stack([s["obs_j"], s["obs_j_on"]], 1).reshape(-1),
                                 np.stack([s["obs_b"], s["obs_b_on"]], 1).reshape(-1)])
-        pain = np.concatenate([(s["bd_peak"] > self.tau_max).astype(np.float64), [float(s["base_peak"] > self.f_pain)]])
+        pain = np.concatenate([(s["bd_peak"] > self.tau_hold).astype(np.float64), [float(s["base_peak"] > self.f_pain)]])
         obs = {"body": body, "touch": touch, "pain": pain, "vestibular": s["vestibular"].copy(), "imu_torso": s["imu_torso"].copy(),
                "charge": np.array([self.h, self.dh])}
         face = 0.0
@@ -847,13 +854,16 @@ class G1World(SimWorld):
         rest_a = self.aid[rest_idx] if rest_idx else None
         rest_q = self.qadr[rest_idx] if rest_idx else None
         n, nz, J, W_ = STEPS_PER_TICK, self.nz, len(JOINTS), OBS_WINDOW_STEPS
-        F = np.zeros((n, nz)); imu = np.zeros((n, 12)); eff = np.zeros(n); OB = np.zeros((n, J + 6)); BD = np.zeros((n, J)); fed = False
+        F = np.zeros((n, nz)); imu = np.zeros((n, 12)); eff = np.zeros(n); BD = np.zeros((n, J)); fed = False
+        OW = np.zeros((n // W_, J + 6)); TW = np.zeros((n // W_, J + 6))   # each 10 ms sample: the observer's estimate, and the truth
+        obsv = self.observer                                                # (an instrument's: the world's own contact torques)
         heat_in = np.zeros(J)
         own_p = np.zeros(2)                                            # the palms' own-hand force
         alpha = self.alpha
         below = self.below
         s0 = self._sensed
-        imu_last, F_last, obs_last = s0["imu_last"].copy(), s0["F_last"].copy(), s0["obs_last"].copy()
+        imu_last, F_last, obs_last = s0["imu_last"].copy(), s0["F_last"].copy(), s0["obs_last"].copy()   # (obs_last: the observer's last
+                                                                                                        # sample, the mossy fibres')
         try:
             for s in range(n):
                 if below is not None and s % W_ == 0:
@@ -867,8 +877,8 @@ class G1World(SimWorld):
                 t0 = time.perf_counter()
                 mujoco.mj_step(m, d)
                 t_phys += time.perf_counter() - t0
-                OB[s] = self._outside()                                 # the observer's truth, with this step's holds applied
-                BD[s] = d.qfrc_actuator[self.dof] - self.armature * d.qacc[self.dof]   # THE GEAR'S LOAD (A37; the lead's reading)
+                BD[s] = obsv.gear_load(d.qfrc_actuator[self.dof], d.qvel[self.dof])   # THE GEAR'S LOAD from the sensed torque and the
+                                                                                       # encoder's velocity change (A37, A73)
                 if par is not None:
                     t0 = time.perf_counter()
                     par.after_step(s)                                   # her contacts with the room: her stop (L0)
@@ -880,10 +890,15 @@ class G1World(SimWorld):
                 eff[s] = float(tq @ tq)
                 heat_in += (tq / self.tau_max) ** 2
                 imu_last, F_last = imu[s], F[s]
-                if s >= W_ - 1:
-                    obs_last = OB[s - W_ + 1:s + 1].mean(axis=0)
-                else:
-                    obs_last = np.vstack([s0["obs_carry"][s + 1:], OB[:s + 1]]).mean(axis=0)
+                if (s + 1) % W_ == 0:                                   # THE OBSERVER'S 10 ms SAMPLE, from the sensed signals alone
+                    k_ = s // W_
+                    r_, wb_ = obsv.sample(d.qpos[self.qadr], d.qvel[self.dof], d.qpos[self.base_dof + 3:self.base_dof + 7], imu[s, 6:9],
+                                          imu[s, 9:12])
+                    OW[k_] = np.concatenate([r_, wb_])
+                    obs_last = OW[k_].copy()
+                    tr_ = self._outside()                               # the truth at the sample (the instruments' and the parent's
+                    Rp_ = d.xmat[self.pelvis_id].reshape(3, 3)          # eyes', never the body's)
+                    TW[k_] = np.concatenate([tr_[:J], Rp_.T @ tr_[J:J + 3], tr_[J + 3:]])
                 if self.chargers.size and not fed:
                     fed = self._palm_on_charger()
             mujoco.mj_forward(m, d)                                     # the tick's end: its accelerations, contacts and sensors
@@ -915,7 +930,7 @@ class G1World(SimWorld):
                                                                             # mouth (body/sim/lane.py)
             heard = self.ears.tick(ear_l, ear_r, sources)
         # the tick's senses
-        self._sense_tick(F, imu, own_p / n, OB, heard, BD)
+        self._sense_tick(F, imu, own_p / n, OW, heard, BD, TW)
         vg = vora.get(GAZE_NAME)
         if vg is not None:                                              # THE BODY'S VOR (the core's Acts.vor) with the flocculus's
             gain = (float(vg["gain"]) + self.vor_corr[0], float(vg["gain"]) + self.vor_corr[1])   # correction and offset
@@ -1044,36 +1059,36 @@ class G1World(SimWorld):
                 return True
         return False
 
-    def _sense_tick(self, F, imu, palm_own=None, OB=None, heard=None, BD=None):
+    def _sense_tick(self, F, imu, palm_own=None, OW=None, heard=None, BD=None, TW=None):
         """the tick's aggregates: touch (the mean force's log per zone, its onset), the IMUs (their noisy samples), the palms' own-hand
-        force; the observer's (OB: each step's outside torques on the 43 joints and wrench on the base): the tick's mean over each
-        joint's declared limit and over the body's weight (the base's force turned into the pelvis's frame at the tick's end), their
-        onsets (the rise of their sizes), and the largest 10 ms mean of each joint's size and of the base's force for pain (A37); the
-        ears' code and the sound's side (by day); the carries the next tick's first windows and sub-steps read"""
+        force; THE OBSERVER'S (OW: its 15 samples of 10 ms, each the 43 joints' outside torques and the base's outside force, in the
+        pelvis's frame, and torque, from the robot's own sensors: body/sim/observer.py): the tick's mean over each joint's declared
+        limit and over the body's weight, their onsets (the rise of their sizes), each joint's largest sample (an instrument) and
+        the base's largest force for its pain (A37); THE GEAR'S LOAD (BD, each step's, sensed): each joint's largest 10 ms mean for its
+        pain (A73); the ears' code and the sound's side (by day). TW: the world's own contact torques at the same samples, for the
+        instruments and the parent's eyes alone (C43's observer error)"""
         s = self._sensed
         J, W_ = len(JOINTS), OBS_WINDOW_STEPS
         lf = np.log1p(F.mean(axis=0) / TOUCH_UNIT_N)
         onset = np.maximum(0.0, lf - s["touch_log"])
-        OB = np.zeros((len(F), J + 6)) if OB is None else OB
-        P = np.vstack([s["obs_carry"], OB])
-        c = np.vstack([np.zeros((1, J + 6)), np.cumsum(P, axis=0)])
-        win = ((c[W_:] - c[:-W_]) / W_)[-len(OB):]
-        BD = np.zeros((len(OB), J)) if BD is None else BD               # PAIN (A37): the torque each joint's gear carries, 10 ms
+        OW = np.zeros((len(F) // W_, J + 6)) if OW is None else OW
+        TW = np.zeros_like(OW) if TW is None else TW
+        BD = np.zeros((len(F), J)) if BD is None else BD               # PAIN (A37, A73): the torque each joint's gear carries, 10 ms
         Pb = np.vstack([s["bd_carry"], BD])                             # means (the module's PAIN note)
         cb = np.vstack([np.zeros((1, J)), np.cumsum(Pb, axis=0)])
-        winb = ((cb[W_:] - cb[:-W_]) / W_)[-len(OB):]
-        Rp = self.d.xmat[self.pelvis_id].reshape(3, 3)
-        obs_j = OB[:, :J].mean(axis=0) / self.tau_max
-        fb = Rp.T @ OB[:, J:J + 3].mean(axis=0)
-        obs_b = np.concatenate([fb, OB[:, J + 3:].mean(axis=0)]) / self.weight
+        winb = ((cb[W_:] - cb[:-W_]) / W_)[-len(BD):]
+        obs_j = OW[:, :J].mean(axis=0) / self.tau_max
+        obs_b = OW[:, J:].mean(axis=0) / self.weight
         vest = self._vestibular(imu)
         self._sensed = {"touch_log": lf, "touch_onset": onset, "touch_force": F.mean(axis=0), "vestibular": vest,
                         "peak_force": F.max(axis=0), "palm_own": np.zeros(2) if palm_own is None else np.asarray(palm_own, float).copy(),
                         "obs_j": obs_j, "obs_j_on": np.maximum(0.0, np.abs(obs_j) - np.abs(s["obs_j"])),
                         "obs_b": obs_b, "obs_b_on": np.maximum(0.0, np.abs(obs_b) - np.abs(s["obs_b"])),
-                        "obs_peak": np.abs(win[:, :J]).max(axis=0), "base_peak": float(np.linalg.norm(win[:, J:J + 3], axis=1).max()),
+                        "obs_peak": np.abs(OW[:, :J]).max(axis=0), "base_peak": float(np.linalg.norm(OW[:, J:J + 3], axis=1).max()),
+                        "true_peak": np.abs(TW[:, :J]).max(axis=0), "true_base_peak": float(np.linalg.norm(TW[:, J:J + 3], axis=1).max()),
+                        "true_j": TW[:, :J].mean(axis=0), "true_b": TW[:, J:].mean(axis=0),
                         "bd_peak": np.abs(winb).max(axis=0), "bd_carry": BD[-(W_ - 1):].copy(),
-                        "obs_carry": OB[-(W_ - 1):].copy(), "obs_last": win[-1].copy(), "imu_last": imu[-1].copy(),
+                        "obs_last": OW[-1].copy(), "imu_last": imu[-1].copy(),
                         "F_last": F[-1].copy(), "imu_torso": np.concatenate([imu[:, 0:3].mean(axis=0), imu[:, 3:6].mean(axis=0)]),
                         "ears": s["ears"] if heard is None else heard.code().astype(np.float64),
                         "sound_side": s["sound_side"] if heard is None else np.array([float(heard.onset_heard), float(heard.lateral)])}
@@ -1093,21 +1108,27 @@ class G1World(SimWorld):
         return np.concatenate([out[0][0], out[0][1], out[1][0], out[1][1], out[2][0], out[2][1], out[3][0], out[3][1]])
 
     def _sense_birth(self):
-        """the senses at birth, before any tick: one sample of the born state stands for the tick (its mean and its peak)"""
+        """the senses at birth, before any tick: one sample of the born state stands for the tick (its mean and its peak); the
+        observer takes its first sample, the static estimate of the born state at rest"""
         mujoco.mj_forward(self.m, self.d)
         F = self._zone_forces()[None, :]
         imu = self._imu_noisy(self.d.sensordata[self.imu_adr])[None, :]
         J = len(JOINTS)
-        ob = self._outside()
+        d = self.d
+        r0, w0 = self.observer.sample(d.qpos[self.qadr], d.qvel[self.dof], d.qpos[self.base_dof + 3:self.base_dof + 7], imu[0, 6:9],
+                                      imu[0, 9:12], tau=d.qfrc_actuator[self.dof].copy())
+        ob = np.concatenate([r0, w0])
+        tr = self._outside()
+        Rp = d.xmat[self.pelvis_id].reshape(3, 3)
+        tw = np.concatenate([tr[:J], Rp.T @ tr[J:J + 3], tr[J + 3:]])
         lf = np.log1p(F[0] / TOUCH_UNIT_N)
-        Rp = self.d.xmat[self.pelvis_id].reshape(3, 3)
-        obs_j = ob[:J] / self.tau_max
-        obs_b = np.concatenate([Rp.T @ ob[J:J + 3], ob[J + 3:]]) / self.weight
         self._sensed = {"touch_log": lf, "touch_onset": np.zeros(self.nz), "touch_force": F[0].copy(), "vestibular": self._vestibular(imu),
-                        "peak_force": F[0].copy(), "palm_own": self._palm_own.copy(), "obs_j": obs_j, "obs_j_on": np.zeros(J),
-                        "obs_b": obs_b, "obs_b_on": np.zeros(6), "obs_peak": np.abs(ob[:J]), "base_peak": float(np.linalg.norm(ob[J:J + 3])),
+                        "peak_force": F[0].copy(), "palm_own": self._palm_own.copy(), "obs_j": ob[:J] / self.tau_max, "obs_j_on": np.zeros(J),
+                        "obs_b": ob[J:] / self.weight, "obs_b_on": np.zeros(6), "obs_peak": np.abs(ob[:J]),
+                        "base_peak": float(np.linalg.norm(ob[J:J + 3])), "true_peak": np.abs(tw[:J]),
+                        "true_base_peak": float(np.linalg.norm(tw[J:J + 3])), "true_j": tw[:J].copy(), "true_b": tw[J:].copy(),
                         "bd_peak": np.zeros(J), "bd_carry": np.zeros((OBS_WINDOW_STEPS - 1, J)),
-                        "obs_carry": np.repeat(ob[None, :], OBS_WINDOW_STEPS - 1, axis=0), "obs_last": ob.copy(), "imu_last": imu[0].copy(),
+                        "obs_last": ob.copy(), "imu_last": imu[0].copy(),
                         "F_last": F[0].copy(), "imu_torso": np.concatenate([imu[0, 0:3], imu[0, 3:6]]),
                         "ears": np.zeros(AN.SIZES["ears"]), "sound_side": np.zeros(2)}
         self._drain = 0.0; self._fed = False
@@ -1120,6 +1141,8 @@ class G1World(SimWorld):
         return {"time": float(d.time), "pelvis": d.qpos[0:7].copy(), "torso": d.xpos[m.body("torso_link").id].copy(),
                 "toys": toys, "touch_N": s["touch_force"].copy(), "peak_N": s["peak_force"].copy(),
                 "outside_peak_Nm": s["obs_peak"].copy(), "base_peak_N": float(s["base_peak"]), "heat_C": self.heat.copy(),
+                "outside_true_Nm": s["true_j"].copy(), "outside_true_peak_Nm": s["true_peak"].copy(),
+                "base_true_peak_N": float(s["true_base_peak"]), "base_true_wrench": s["true_b"].copy(),
                 "night": self.night, "below_n": self._below_n, "crying": bool(self.crying),
                 "f_pain": self.f_pain, "drain": self._drain, "fed": self._fed, "ncon": int(d.ncon), "acts": dict(self._last_acts),
                 "gaze": self.gaze.copy(), "spinal": dict(self._spinal), "vor_quick": self._vor_quick,
@@ -1139,6 +1162,7 @@ class G1World(SimWorld):
                 "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "scene_pose": _pose_state(self.scene.pose),
                 "parent": None if self.parent is None else self.parent.state(),
                 "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
+                              "observer": self.observer.state(),
                               "words_out": self.words_out, "tract_pa": self.tract_pa, "tract_raw": self.tract_raw, "crying": self.crying, "night": self.night, "dawn_left": int(self.dawn_left),
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
@@ -1167,6 +1191,7 @@ class G1World(SimWorld):
         s5 = _uncanon(st["s5"])
         self.heat = np.asarray(s5["heat"], float).copy()
         self.tract.load_state(s5["tract"])
+        self.observer.load_state(s5["observer"])
         self.ears.load_state(s5["ears"])
         self.vor_corr = np.asarray(s5["vor_corr"], float).copy()
         self.words_out = s5["words_out"]; self.tract_pa = np.asarray(s5["tract_pa"], float).copy()

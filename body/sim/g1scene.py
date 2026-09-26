@@ -84,6 +84,42 @@ def eye_frames():
     return out
 
 
+# THE MOTORS AS THE REAL ONES (A79, the lead's decision at S5a; A39, C46): each body joint's reflected rotor inertia (armature) and its
+# friction loss, from Menagerie's MJX G1 (body/sim/assets/unitree_g1/g1_mjx.xml, the variant MuJoCo Playground transferred to the real
+# robot: Zakka et al. 2025), in place of the file's one default for every joint (armature 0.01, friction loss 0.3: Menagerie's generic
+# <default> in g1_with_hands.xml). Set on the compiled model, so the stock file stays byte for byte its commit. The Dex3's 14 finger
+# joints keep the file's values: no source gives theirs yet (C46).
+_A = dict(hip_big=0.025101925, hip=0.01017752004, ankle=0.00721945, arm=0.003609725, wrist=0.00425)
+MOTORS = {}
+for _sd in ("left", "right"):
+    MOTORS.update({f"{_sd}_hip_pitch_joint": (_A["hip"], 0.1), f"{_sd}_hip_roll_joint": (_A["hip_big"], 0.1),
+                   f"{_sd}_hip_yaw_joint": (_A["hip"], 0.1), f"{_sd}_knee_joint": (_A["hip_big"], 0.1),
+                   f"{_sd}_ankle_pitch_joint": (_A["ankle"], 0.1), f"{_sd}_ankle_roll_joint": (_A["ankle"], 0.1),
+                   f"{_sd}_shoulder_pitch_joint": (_A["arm"], 0.1), f"{_sd}_shoulder_roll_joint": (_A["arm"], 0.1),
+                   f"{_sd}_shoulder_yaw_joint": (_A["arm"], 0.1), f"{_sd}_elbow_joint": (_A["arm"], 0.1),
+                   f"{_sd}_wrist_roll_joint": (_A["arm"], 0.1), f"{_sd}_wrist_pitch_joint": (_A["wrist"], 0.1),
+                   f"{_sd}_wrist_yaw_joint": (_A["wrist"], 0.1)})
+MOTORS.update({"waist_yaw_joint": (_A["hip"], 0.1), "waist_roll_joint": (_A["ankle"], 0.1), "waist_pitch_joint": (_A["ankle"], 0.1)})
+
+# THE DEX3-1 AS UNITREE SPECIFIES IT (A80, the lead's decision at S5a; Unitree's Dex3-1 page, read 2026-09-25): seven joints a hand,
+# six driven by the F-1515-108 micro brushless joint (1:108; ideal 0.76 N m; 0.49 N m turning its own way; 1.37 N m held against a
+# load turning it back; 23 rad/s) and the thumb's rotation (thumb_0, the one the file gives its larger limit) by the geared F-1515-214
+# (1:214; 1.498; 0.86; 3.1; 11 rad/s). The file gave the six 1.4 N m, their holding figure, as their driving strength (about three
+# times the real), and every joint armature 0.01. Here: the motor's ideal torque is its force range; its gear's friction, the
+# ideal less the driving figure (0.27 and 0.638 N m), is the joint's friction loss, so a finger drives with 0.49 (0.86) as Unitree
+# measured; the holding figure is the gear's load the joint takes before it back-drives: its pain line (A37, A73). The rotor's
+# inertia is not published: ours, from the motor's size (a 1515 inner rotor about 7 mm across and 12 mm long, steel and magnet at
+# 7.5 g/cm3: 2.1e-8 kg m2), reflected through its reduction and half again for the gearbox's first stage: 3.7e-4 and 1.4e-3 kg m2,
+# until the datasheet gives it (C46). Its speed limits are the torque-speed envelope's, not yet modelled (A39).
+DEX3_108 = dict(ideal=0.76, drive=0.49, hold=1.37, speed=23.0, ratio=108)
+DEX3_214 = dict(ideal=1.498, drive=0.86, hold=3.1, speed=11.0, ratio=214)
+DEX3_ROTOR = 2.1e-8 * 1.5                                              # kg m2 at the motor, the gearbox's first stage included (ours)
+DEX3 = {}
+for _sd in ("left", "right"):
+    for _j in ("thumb_0", "thumb_1", "thumb_2", "index_0", "index_1", "middle_0", "middle_1"):
+        DEX3[f"{_sd}_hand_{_j}_joint"] = DEX3_214 if _j == "thumb_0" else DEX3_108
+
+
 def load_model(xml=XML, extra=None):
     """The world with the G1's senses added; extra(spec), if given, adds a test rig before compiling (instruments only,
     never the body)."""
@@ -96,6 +132,16 @@ def load_model(xml=XML, extra=None):
     if extra is not None:
         extra(spec)
     m = spec.compile()
+    for j, (arm, fl) in MOTORS.items():                  # the motors as the real ones (A79): rotor inertia and friction per joint
+        dof = m.jnt_dofadr[m.joint(j).id]
+        m.dof_armature[dof] = arm
+        m.dof_frictionloss[dof] = fl
+    for j, mt in DEX3.items():                           # the Dex3's as Unitree specifies them (A80)
+        jid = m.joint(j).id
+        dof = m.jnt_dofadr[jid]
+        m.jnt_actfrcrange[jid] = [-mt["ideal"], mt["ideal"]]
+        m.dof_frictionloss[dof] = mt["ideal"] - mt["drive"]
+        m.dof_armature[dof] = DEX3_ROTOR * mt["ratio"] ** 2
     for i in range(m.nlight):
         if m.light(i).name == "":                      # the Menagerie file's own scene light
             m.light_active[i] = 0

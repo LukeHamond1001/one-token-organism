@@ -161,14 +161,14 @@ def test_the_scene():
     assert M.TOY_SCALE["cup"] == 0.8 and abs(m.geom_size[m.geom("cup").id][0] - 0.8 * 0.042) < 1e-9
     print("world 1: g1room.xml is the maker's output (paths relative), the stock G1 file unchanged (sha256 pinned), 43 servos, 45 touch",
           "zones, the elliptic cone with multi-point CCD off and impratio 10, MuJoCo's auto-reset off, the world's geoms and the toys at",
-          "contact priority 2 (a foot on the mat takes the mat's friction, not the foot's 0.6), the parent's shapes touching the G1, the mat's collision box",
+          "contact priority 2 (a foot on the mat takes the mat's friction, not the foot's 0.6), the parent's shapes never touching the G1 (A25c), the mat's collision box",
           "10 cm deep under its top, the eyes and ears added; an act out of range refused before anything moves; no headlight (no lamp at",
           "the child's eyes), each room light's ambient a third of its diffuse; the cup at 0.8 (B1's default)")
 
 
 def test_torque_limits_are_the_models():
-    """world 2: each joint's limit is the model's own (its actuatorfrcrange), equal to 3.2's table; nothing but weakness changes
-    it at load"""
+    """world 2: each body joint's limit is the model's own (its actuatorfrcrange), equal to 3.2's table; the Dex3's are Unitree's
+    (A80: the motor's ideal torque, its holding figure the pain line); nothing but weakness changes them at load"""
     w = G1World(seed=1)
     m = w.m
     stock = {}
@@ -180,8 +180,10 @@ def test_torque_limits_are_the_models():
             stock[j.get("name")] = hi
     for k, jn in enumerate(W.JOINTS):
         base = jn[:-6].replace("left_", "").replace("right_", "")
-        assert w.tau_max[k] == stock[jn] == DESIGN_LIMITS[base], jn
-        assert tuple(m.jnt_actfrcrange[w.jid[k]]) == (-stock[jn], stock[jn]), jn          # born full: h = 1
+        assert stock[jn] == DESIGN_LIMITS[base], jn
+        want = G.DEX3[jn]["ideal"] if jn in G.DEX3 else stock[jn]           # the Dex3's as Unitree specifies them (A80)
+        assert w.tau_max[k] == want and tuple(m.jnt_actfrcrange[w.jid[k]]) == (-want, want), jn          # born full: h = 1
+        assert w.tau_hold[k] == (G.DEX3[jn]["hold"] if jn in G.DEX3 else stock[jn]), jn                  # the pain line (A37, A80)
     kp_ankle = w.kp[W.JOINTS.index("left_ankle_pitch_joint")]
     assert kp_ankle == 40.0                                              # A39: Unitree's own ankle gain (unitree_sdk2's example)
     assert all(DESIGN_LIMITS[k] != v for k, v in {**URDF_DIFFERS, **MJCF_DIFFERS}.items()) and DESIGN_LIMITS["knee"] not in PAGE_KNEE
@@ -301,10 +303,13 @@ def test_birth_and_touch():
     assert np.allclose(d.xpos[m.body("parent_head").id], want) and w.scene.pose is not None and kin.face_reading(kin.scalar_to_params(0.0)) == 0.0
     for _ in range(20):
         w.apply({})
-    s20 = float(w.frame().truth["touch_N"].sum())
-    assert abs(s20 - weight) < 0.05 * weight, (s20, weight)
+    t20 = w.frame().truth
+    own = 2.0 * sum(t20["palm_own_N"].values())                        # a fist the grasp closed pressing its own palm (A82, C41): on the
+    s20 = float(t20["touch_N"].sum()) - own                             # palm's zone and, reacting, its fingers' (not the body's weight)
+    assert abs(s20 - weight) < 0.05 * weight, (s20, weight, own)
     print(f"world 4: born supine on the mat (head toward -x), no self-contact at rest, the touch zones carrying {s:.1f} N of its",
-          f"{weight:.1f} N at birth and {s20:.1f} N after 3 s at rest ({len(touched)} zones touched: {', '.join(touched[:6])}...);",
+          f"{weight:.1f} N at birth and {s20:.1f} N after 3 s at rest, its fists' own pressing ({own:.1f} N) aside ({len(touched)} zones",
+          f"touched: {', '.join(touched[:6])}...);",
           f"birth the same every time; the parent drawn at birth ({len(face)} face geoms at her neutral face, her head where the maker stands her)")
 
 
@@ -338,6 +343,17 @@ def test_joint_sense_and_vestibule():
           f"model declares (1e-2, 5e-4) drawn from the world's stream")
 
 
+YANK_N = 150.0                  # a hard yank on the left hand, upward (about a 15 kg pull): the load the tests hurt a gear with. Under
+                                # the real motors (A79, A80) a weight dropped on the hand lying on the mat hurts no gear (the mat takes
+                                # it and the wrist gives way); a pull the arm must hold does
+
+
+def _yank(w, on=True):
+    """the test's yank: YANK_N upward on the left hand's wrist link, set before a tick (an instrument's force, never the parent's)"""
+    b = w.m.body("left_wrist_yaw_link").id
+    w.d.xfrc_applied[b, :3] = [0.0, 0.0, YANK_N if on else 0.0]
+
+
 def test_pain():
     """world 6 (A37, S5a): PAIN FROM THE JOINTS. A joint is in pain on a tick when the torque its gear carries (the motor's torque less
     what the rotor's inertia takes of the joint's acceleration: the model's armature) passes the joint's declared limit as a 10 ms
@@ -368,33 +384,24 @@ def test_pain():
     f = w.frame()
     wp = W.JOINTS.index("waist_pitch_joint")
     assert w._sensed["obs_peak"][wp] > 5.0 and not f.obs["pain"].any(), w._sensed["obs_peak"][wp]   # support: no gear loaded
-    # a real blow on the palm
-
-    def rig(spec):
-        b = spec.worldbody.add_body(name="rig_weight", pos=[2.0, 1.5, 0.3])
-        b.add_freejoint()
-        b.add_geom(name="rig_weight", type=mujoco.mjtGeom.mjGEOM_BOX, size=[.05, .05, .05], mass=4.0, contype=1, conaffinity=1)
-    w = G1World(seed=1, extra=rig)
-    m, d = w.m, w.d
-    palm = d.geom_xpos[[g for g in range(m.ngeom) if w.zone_of_geom[g] == w.zones.index("left_hand_palm")][0]].copy()
-    qa = m.jnt_qposadr[m.body_jntadr[m.body("rig_weight").id]]
-    d.qpos[qa:qa + 3] = [palm[0], palm[1], palm[2] + 0.5]; d.qpos[qa + 3:qa + 7] = [1, 0, 0, 0]
-    mujoco.mj_forward(m, d)
+    # a real overload: a hard yank on the left hand for two ticks
+    w = G1World(seed=1)
     st, hurt, wd, frames = {}, [], [], []
     for k in range(6):
         f = w.frame(); frames.append(f)
         acts = _withdraw(f, st)
         wd += [(k, limb) for limb in acts]
         hurt.append([W.JOINTS[i] for i in np.nonzero(f.obs["pain"][:J])[0]])
+        _yank(w, k < 2)
         w.apply(acts)
     first = next(k for k, h in enumerate(hurt) if h)
-    assert "left_wrist_pitch_joint" in hurt[first] and all(x.startswith("left_") for x in hurt[first]), hurt
+    assert "left_wrist_pitch_joint" in hurt[first] and all(x.startswith("left_") for x in hurt[first]), hurt   # the yank's own gears
     assert wd[:2] == [(first, "arm_l"), (first + 1, "arm_l")] and all(l_ == "arm_l" for _, l_ in wd), wd
     assert set(frames[0].obs) >= {"body", "touch", "pain", "vestibular", "imu_torso", "charge"} and frames[0].obs["pain"].shape == (44,)
     print(f"world 6: pain from the joints (A37): F_pain {w.f_pain:.1f} N for the base; a joint's gear load past its limit as a 10 ms",
           f"mean (a 2 ms spike at 3 x is 0.6 x, no pain; 10 ms at 1.1 x hurts; across the tick's start counts); the born G1 on the mat,",
-          f"{base['obs_peak'][wp]:.1f} N m of outside torque at its waist, in no pain (support loads no gear); 4 kg dropped 0.5 m on the",
-          f"palm hurt {hurt[first]} at tick {first} and took the left arm for {len(wd)} ticks, no other limb")
+          f"{base['obs_peak'][wp]:.1f} N m of outside torque at its waist (the observer's), in no pain (support loads no gear); a",
+          f"{YANK_N:.0f} N yank on the left hand hurt {hurt[first]} at tick {first} and took the left arm for {len(wd)} ticks, no other limb")
 
 
 def test_the_charge():
@@ -562,7 +569,8 @@ def test_letting_go():
         g = fist.frame().truth
         if t >= 6:
             own.append((g["spinal"].get("hand_l"), g["touch_N"][z], g["palm_own_N"]["hand_l"]))
-    assert all(ev == "grasp" and n_own >= R.GRASP_N for ev, n_all, n_own in own), own   # its own fingers alone would hold it shut
+    assert all(ev == "grasp" for ev, _a, _o in own) and own[-1][2] >= R.GRASP_N, own   # the grasp holds it every resting tick, and its
+    # own fingers come to press the palm (the first resting ticks the mat under the hand still touches it: A82's stronger grasp)
     alone = sum(abs(n_all - n_own) < 1e-9 for _, n_all, n_own in own)  # ticks on which all of the palm's force was its own (under
                                                                          # Unitree's arm gain the hand rests on the mat: counted, no bar)
     print(f"world 9: a ball kept in the left palm: at rest the grasp closed the hand {a1 - a0:.2f} rad in 8 ticks; its own opening act",
@@ -617,31 +625,23 @@ def test_blind_spots_are_a12s():
 
 
 def test_withdrawal_c22():
-    """world 16: C22 WRITTEN DOWN AS THE NEWBORN'S (under A37's joints, S5a): a blow that hurts (4 kg dropped 0.5 m onto the left palm:
-    the left wrist's gear past its limit), and from the saved state of that first painful tick, two ticks three ways: the withdrawal
+    """world 16: C22 WRITTEN DOWN AS THE NEWBORN'S (under A37's joints, S5a): a load that hurts (a YANK_N yank upward on the left hand:
+    the left wrist's gear past its limit, the yank going on), and from the saved state of that first painful tick, two ticks three ways: the withdrawal
     (the anatomy's: the arm's flexion both ticks), rest (tone) and pushing on (the arm's own big extension); the wrist's gear load
     each tick written down, none a bar, and the same state gives the same numbers again. The instrument's count (tools/sim_pain.py
     c22_counts) takes C22's question as the W1 verifier counted it: a withdrawal raises the pain it answers when EITHER of its ticks
     presses harder than the onset"""
     from sim_pain import c22_counts
 
-    def rig(spec):
-        b = spec.worldbody.add_body(name="rig_weight", pos=[2.0, 1.5, 0.3])
-        b.add_freejoint()
-        b.add_geom(name="rig_weight", type=mujoco.mjtGeom.mjGEOM_BOX, size=[.05, .05, .05], mass=4.0, contype=1, conaffinity=1)
-    w = G1World(seed=1, extra=rig)
-    m, d = w.m, w.d
-    palm = d.geom_xpos[[g for g in range(m.ngeom) if w.zone_of_geom[g] == w.zones.index("left_hand_palm")][0]].copy()
-    qa = m.jnt_qposadr[m.body_jntadr[m.body("rig_weight").id]]
-    d.qpos[qa:qa + 3] = [palm[0], palm[1], palm[2] + 0.5]; d.qpos[qa + 3:qa + 7] = [1, 0, 0, 0]
-    mujoco.mj_forward(m, d)
+    w = G1World(seed=1)
     j = W.JOINTS.index("left_wrist_pitch_joint")
     for _ in range(8):
         f = w.frame()
         if f.obs["pain"][j]:
             break
+        _yank(w)
         w.apply({})
-    assert f.obs["pain"][j], "the blow did not hurt the wrist"
+    assert f.obs["pain"][j], "the yank did not hurt the wrist"
     blob, at = w.save_state(), float(w._sensed["bd_peak"][j])
     push = W.act_flat([4, 2, 2, 4, 2, 2, 2])                           # the arm's own extension, big (shoulder and elbow)
 
@@ -651,12 +651,13 @@ def test_withdrawal_c22():
         for _ in range(2):
             g = w.frame()
             a = _withdraw(g, st).get("arm_l") if form == "withdraw" else W.EFFECTOR_REST["arm_l"] if form == "rest" else push
+            _yank(w)                                                    # the yank goes on (the same load, three answers to it)
             acts.append(a); w.apply({"arm_l": a}); out.append(float(w._sensed["bd_peak"][j]))
         return out, acts
     (wd, wacts), (rs, _), (pu, _) = two("withdraw"), two("rest"), two("push")
     assert wacts[0] == R.flexion_act("arm_l") and two("withdraw")[0] == wd and two("rest")[0] == rs
     assert all(np.isfinite(x) for x in wd + rs + pu)
-    F = float(w.tau_max[j])
+    F = float(w.tau_hold[j])
     syn = [{"at": 1000.0, "withdraw": [1200.0, 500.0], "rest": [900.0, 1100.0], "babble": [800.0, 700.0]},
            {"at": 1000.0, "withdraw": [900.0, 1050.0], "rest": [950.0, 990.0], "babble": [1300.0, 1400.0]},
            {"at": 1000.0, "withdraw": [800.0, 700.0], "rest": [1000.0, 1000.0], "babble": [200.0, 100.0]}]
@@ -664,8 +665,8 @@ def test_withdrawal_c22():
     key = "raises_the_pain_it_answers (either tick above the onset)"
     assert (c["withdraw"][key], c["rest"][key], c["babble"][key]) == (2, 1, 1)
     here = c22_counts([{"at": at, "withdraw": wd, "rest": rs, "babble": pu}], F)
-    print(f"world 16: C22 written down under the joints' pain, the left wrist's gear at {at:.1f} N m (its limit {F:.0f}) after a blow on",
-          f"the palm: the newborn's flexion {wd[0]:.1f} then {wd[1]:.1f} N m (raises the pain it answers: {bool(here['withdraw'][key])}),",
+    print(f"world 16: C22 written down under the joints' pain, the left wrist's gear at {at:.1f} N m (its limit {F:.0f}) under a yank",
+          f"on the hand: the newborn's flexion {wd[0]:.1f} then {wd[1]:.1f} N m (raises the pain it answers: {bool(here['withdraw'][key])}),",
           f"rest {rs[0]:.1f} then {rs[1]:.1f}, pushing on {pu[0]:.1f} then {pu[1]:.1f}; the same again from the same state")
 
 
