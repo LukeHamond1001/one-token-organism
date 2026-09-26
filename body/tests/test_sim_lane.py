@@ -241,8 +241,74 @@ def test_no_meal():
           "charge; no bottle in the room")
 
 
+def test_her_eyes():
+    """lane 10 (A89, the teacher's build 2a): her eyes on its acts. A ball set against its still left palm is not "got" (its own
+    reach and hold needs that hand to have moved, or reached toward it, within MOVED_TICKS); after its left arm moves for two
+    ticks the ball set into that palm is "got ball", judged worth 2 within the tick, and she says "yes!" on the next free tick;
+    never at the first tick, never a toy that lay against its hand at birth; her notebook and her eyes' state survive a save; a
+    fall is still "fell", never "threw" """
+    w, lane = _world()
+    _run(w, 4)
+    assert not [j for j in (lane.last.get("judged") or ()) if j[1] in ("got", "reach_nearer")], lane.last.get("judged")
+    assert not [e for e in lane.last["events"] if e[0] == "got"], lane.last["events"]        # what lay against its hand it did not get
+    import mujoco
+    m, d = w.m, w.d
+    j = m.body("toy_ball").jntadr[0]
+    a = m.jnt_qposadr[j]
+    evs, judged, said = [], [], []
+
+    def place(gap):
+        ch = L.PM_child(w)
+        d.qpos[a:a + 3] = ch.grasp["L"] + ch.palm_n["L"] * (0.03 + gap)
+        d.qvel[m.jnt_dofadr[j]:m.jnt_dofadr[j] + 6] = 0.0
+        mujoco.mj_forward(m, d)
+    still = []
+    for _ in range(3):                                                              # against a still palm: not its own reach
+        place(0.0); w.frame(); w.apply({})
+        still += [tuple(e) for e in lane.last["events"]]
+    assert not [e for e in still if e[0] == "got"], still
+    d.qpos[a:a + 3] = [0.9, -1.2, 0.2]; mujoco.mj_forward(m, d)                      # the ball away again
+    for _ in range(4):
+        w.frame(); w.apply({})
+    for _ in range(2):                                                              # its left arm moves (the elbow's big step)
+        w.frame(); w.apply({"arm_l": W.act_flat([2, 2, 2, 0, 2, 2, 2])})
+    for gap in (0.0, 0.0):                                                          # the ball into that palm within MOVED_TICKS
+        place(gap); w.frame(); w.apply({})
+        evs += [tuple(e) for e in lane.last["events"]]
+        judged += [tuple(x) for x in (lane.last.get("judged") or ())]
+        if lane.last.get("line"):
+            said.append((w.tick, lane.last["line"]))
+    for _ in range(6):
+        w.frame(); w.apply({})
+        evs += [tuple(e) for e in lane.last["events"]]
+        judged += [tuple(x) for x in (lane.last.get("judged") or ())]
+        if lane.last.get("line"):
+            said.append((w.tick, lane.last["line"]))
+    got = [e for e in evs if e[0] == "got"]
+    assert got == [("got", "ball")], evs
+    assert [j for j in judged if j[1] == "got"] == [(2, "got", "ball")], judged
+    assert said and said[0][1].startswith(("yes", "good")), said                     # her "yes!" marks the smile
+    assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted"}, lane.conduct.book   # in a raised
+    st = lane.state()                                                                # hand: "lifted" too, as a person would see it
+    assert st["eyes"]["hand_prev"]["left"] and st["conduct"]["book"]["got"] == {"ball": 1}
+    w2, lane2 = _world()
+    w2.load_state(w.save_state())
+    assert lane2.conduct.book == lane.conduct.book and lane2.toy_rest_z == lane.toy_rest_z and lane2.hand_moved_t == lane.hand_moved_t
+    # a fall is a fall, not a throw (the duck dropped from 0.4 m)
+    j2 = m.body("toy_duck").jntadr[0]
+    d.qpos[m.jnt_qposadr[j2] + 2] += 0.4
+    mujoco.mj_forward(m, d)
+    evs2 = []
+    for _ in range(10):
+        w.frame(); w.apply({})
+        evs2 += [tuple(e) for e in lane.last["events"]]
+    assert ("fell", "duck") in evs2 and not [e for e in evs2 if e[0] == "threw"], evs2
+    print(f"lane 10: the ball brought into its left palm: events {[e for e in evs if e[0] in ('got', 'reach_nearer', 'lifted')]},",
+          f"judged {judged}, her line {said[0]}; her book {lane.conduct.book}; saved and restored; a dropped duck fell, not thrown")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
-              test_the_days_layout, test_a_short_day, test_no_meal]
+              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -394,4 +394,20 @@ WORTH_SCAFFOLD_GIVE = 1               # a give after the give ask's scaffolding 
                                       # has closed unmet), for its release; counted toward nothing in the ledger (4.10; P4 builds
                                       # the ladders)
 
+# ------------------------------------------------------------------------- the motor worth rows (4.3; A89, the teacher's build 2b)
+MOTOR_WORTH = {                       # event kind -> (its worth, the full act it approximates or None); judged only outside a trial
+    "got": (2, None),                 # its own reach and hold: a toy come into its hand after that hand moved or reached toward it,
+                                      # never her hand-over (percept "got")
+    "rolled": (2, None), "sat": (2, None),                       # a whole roll; sitting (the design's first motor acts)
+    "lifted": (1, None), "shook": (1, None), "hit": (1, None),   # a lift; a shake; a hit that sounds (the object's own sound)
+    "head_up": (1, None), "peekaboo_act": (1, None),             # its head up on its front; peekaboo answered by an act (A2)
+    "reach_nearer": (1, "got"),       # shaping (MacGlashan et al. 2017): a reach that ended nearer the toy than its best of the last
+                                      # BOOK_LAST, worth 1 until "got" is mastered on that toy
+    "half_roll": (1, "rolled"),       # onto its side, worth 1 until the whole roll is mastered
+}
+HABIT_TAU = 10.0                      # the n-th smile for the same act and object is worth w e^(-n/10): A2's fall with mastery, its floor
+                                      # of 1 removed (the positive circuits of Knox and Stone 2015: a smile that never ends is farmed)
+HABIT_FLOOR = 0.05                    # under it, no smile (logged)
+MASTERED_N = 3                        # an approximation earns her smile until the full act has been smiled at 3 times (P3's word rule, EXACT_UNTIL)
+
 assert all(w in BIRTH_WORDS for ws in EXPECT_ROUTINES.values() for w in ws)

@@ -173,7 +173,7 @@ not a coach: her judgments are of words, and her motor time is "show a toy near 
 each on the world's side, each reading only what a person could see, never the body's inside (the reading-mode rule: the child's
 outward acts are a person's to read; its store and its rates are not).
 
-**2a. Her eyes and her notebook.** Her percept already reads got, rolled, sat, gave, fell, lost_toy, its reaches, its head's line,
+**2a. Her eyes and her notebook** (built 2026-09-26, A89: `lifted`, `shook`, `hit`, `threw`, `reach_nearer`, `half_roll`, `head_up`, `peekaboo_act`; `got` as its own reach; the notebook of its reaches; `hit_her` and the copying readers still unbuilt). Her percept already reads got, rolled, sat, gave, fell, lost_toy, its reaches, its head's line,
 pain and distress (`lane.py:293–337`). To add:
 - the end of each movement: each hand's distance to each toy, and the head's line to the target (the reach's and the turn's progress);
 - a lift (a held toy above its surface), a shake (a held toy's speed) and a hit (a toy's contact that sounds: the drum, the block);
@@ -182,7 +182,7 @@ pain and distress (`lane.py:293–337`). To add:
 - **her notebook:** per skill and object, the child's best so far and its last 10 tries. A teacher's record of the student, on the
   world's side, saved with her state.
 
-**2b. Her judgment (the reward).** Scripted, deterministic, within the tick, every judgment logged with its reason.
+**2b. Her judgment (the reward)** (built 2026-09-26, A89: the motor worth rows, shaping until mastered, habituation to zero, "yes!" at once, the frown at a thrown toy). Scripted, deterministic, within the tick, every judgment logged with its reason.
 - The worth table's motor rows, built at last: a whole roll 2; a reach that gets a toy 2; a lift 1; a shake or a hit that sounds 1;
   sitting alone a moment 2; a give after her ask 1; peekaboo answered by an act 1; a guided act repeated itself within 40 ticks,
   that act's worth.

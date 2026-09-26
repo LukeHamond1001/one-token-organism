@@ -1821,6 +1821,56 @@ def test_ear_deliberate_writes():
 
 
 # ------------------------------------------------------------- the P3 verifier's third findings (7447f73), each tested both ways
+def test_motor_judgments():
+    """A89 (the teacher's build 2b): her smiles for its acts. "got ball" earns 2 and her "yes!" at once; the n-th smile for the same
+    act and object falls as 2 e^(-n/10) and stops under 0.05 (no floor: nothing is farmed); another toy starts afresh; a reach
+    that ends nearer earns 1 only until "got" on that toy has been smiled at 3 times; a half roll until the whole roll has; a lift,
+    a shake, a hit and its head up earn 1; nothing is judged while she is away; stage 2 frowns at a thrown toy ("no."), stage 1
+    does not; the book and its log survive a save."""
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con)
+    s = con.tick(0, P(0, seen=TOYS, events=(("got", "ball"),)))
+    assert s.judgments == [(2, "got", "ball")], s.judgments
+    assert s.line is not None and s.line.intent in ("confirm", "confirm_act") and s.line.text.startswith(("yes", "good")), s.line
+    yes = s.line.text
+    ws = [2.0]
+    for t in range(1, 80):
+        s = con.tick(t, P(t, seen=TOYS, events=(("got", "ball"),)))
+        ws += [j[0] for j in s.judgments if j[1] == "got"]
+    assert abs(ws[1] - 2 * math.exp(-0.1)) < 1e-3 and all(b < a for a, b in zip(ws, ws[1:])) and 30 < len(ws) < 45, (len(ws), ws[:4])
+    assert con.book["got"]["ball"] == len(ws) and ws[-1] >= K.HABIT_FLOOR
+    assert [x for x in con.book_log if x[3] == "habituated"], con.book_log[-3:]
+    s = con.tick(80, P(80, seen=TOYS, events=(("got", "duck"),)))
+    assert s.judgments == [(2, "got", "duck")], s.judgments                      # another toy: afresh
+    # shaping: a reach nearer the cup earns 1 until "got cup" is mastered (3 smiles)
+    s = con.tick(81, P(81, seen=TOYS, events=(("reach_nearer", "cup"),)))
+    assert s.judgments == [(1, "reach_nearer", "cup")], s.judgments
+    for t in range(82, 85):
+        con.tick(t, P(t, seen=TOYS, events=(("got", "cup"),)))
+    s = con.tick(85, P(85, seen=TOYS, events=(("reach_nearer", "cup"),)))
+    assert s.judgments == [] and con.book_log[-1][3] == "past mastery", (s.judgments, con.book_log[-1])
+    s = con.tick(86, P(86, seen=TOYS, events=(("half_roll", None),)))
+    assert s.judgments == [(1, "half_roll", None)], s.judgments
+    s = con.tick(87, P(87, seen=TOYS, events=(("lifted", "duck"), ("shook", "duck"), ("hit", "duck"), ("head_up", None))))
+    assert [(w, k) for w, k, _o in s.judgments] == [(1, "lifted"), (1, "shook"), (1, "hit"), (1, "head_up")], s.judgments
+    s = con.tick(88, P(88, seen=TOYS, present=False, events=(("got", "block"),)))
+    assert s.judgments == [] and "got" in con.book and "block" not in con.book["got"], s.judgments   # away: nothing judged
+    s = con.tick(89, P(89, seen=TOYS, events=(("threw", "ball"),)))
+    assert s.frown is None and s.judgments == [], (s.frown, s.judgments)                # stage 1: no frown
+    con2 = C.Conduct(seed=4, transcriber=Transcriber(None), imperfect=False, stage=2)
+    _no_sets(con2)
+    s = con2.tick(0, P(0, seen=TOYS, events=(("threw", "ball"),)))
+    assert s.frown == "threw" and s.line is not None and s.line.text == "no.", (s.frown, s.line)
+    con3 = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con3)
+    con3.load_state(con.state())
+    assert con3.book == con.book and con3.book_log == con.book_log
+    print(f"A89 motor judgments: 'got ball' 2 and her line '{yes}' at once; the same act {len(ws)} smiles falling",
+          f"2 -> {ws[-1]:.3f} then none; another toy afresh; a reach nearer 1 until 'got' is mastered, then 'past mastery'; a half",
+          "roll 1; a lift, a shake, a hit, its head up 1 each; away: nothing; stage 2 frowns 'no.' at a thrown toy, stage 1 not;",
+          "the book saved")
+
+
 def _perfect(**kw):
     """a conduct with her imperfection off (A52; test 37 holds it), so a test isolates another rule. (Before A52 was built, as on
     7447f73, she was always so: the new tests then fail at their own assertions, not at this call.)"""
@@ -6635,7 +6685,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments]
 
 if __name__ == "__main__":
     t0 = time.time()

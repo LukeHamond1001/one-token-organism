@@ -116,7 +116,7 @@ def main():
     day_ticks = int(SIM_CFG.get("wake_ticks", 24000)) + int(SIM_CFG.get("night_ticks", 24000))
     total = args.ticks or int(args.days * day_ticks)
     log = open(os.path.join(args.out, "ticks.jsonl"), "a")
-    agg = collections.Counter(); walls = collections.defaultdict(list)
+    agg = collections.Counter(); walls = collections.defaultdict(list); prev_reading = 0.0
     print(f"built in {time.time() - t_build:.1f} s; living {total} ticks", flush=True)
     t0 = time.time()
     for k in range(total):
@@ -137,13 +137,19 @@ def main():
         if not night:
             ls = lane.last
             rec.update(line=ls.get("line"), ep=None if lane.plan is None else lane.plan.kind, word=INV.get(int(ls.get("word", 0))),
-                       heard=ls.get("heard"), reading=round(float(lane.reading), 2),
+                       heard=ls.get("heard"), reading=round(float(lane.reading), 2), judged=ls.get("judged"),
+                       events=[e[0] for e in ls.get("events", ())],
                        token=None if world.words_out is None else INV.get(int(world.words_out)),
                        onset=None if f is None else int(f.obs.get("onset_periph", [0])[0]),
                        sounds=len(getattr(world.sounds, "last_events", [])))
         log.write(json.dumps(rec) + "\n")
         agg["ticks"] += 1; agg["night"] += night; agg["cry"] += rec["cry"]
         agg["pain"] += bool(rec["pain"]); agg["lines"] += bool(rec.get("line")); agg["onset"] += bool(rec.get("onset"))
+        for w_, kind_, _o in (rec.get("judged") or ()):                    # her judgments by kind (A89: her rulers), and her smiles
+            agg[f"j_{kind_}"] += 1                                          # the child saw (its reading rising above 0)
+        if rec.get("reading", 0.0) > 0.0 and prev_reading <= 0.0:
+            agg["smiles_seen"] += 1
+        prev_reading = float(rec.get("reading", 0.0))
         walls["night" if night else "day"].append(wall)
         if k % 500 == 0 or k == total - 1:
             d_ = np.mean(walls["day"][-500:]) if walls["day"] else 0.0

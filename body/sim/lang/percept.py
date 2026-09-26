@@ -64,6 +64,16 @@ EVENT_KINDS = (
     "wave",          # its hand waved (the side)
     "shake",         # its hand shook (the side; a toy in it or not)
     "open_hand",     # its hand opened (the side)
+    # HER EYES ON ITS ACTS (A89, the teacher's build 2a, 2026-09-26; teacher_of_reality.md 2c): what a person watching a baby sees,
+    # read from the toys' and its hands' places and the room's sounds, never its inside
+    "lifted",        # a toy in its hand raised LIFT_M above where it lay (the object), once a hold
+    "shook",         # a toy in its hand moving faster than SHAKE_MPS on two ticks running (the object), once in SHAKE_GAP
+    "hit",           # a toy it held or touched already struck something and sounded (the object), once in HIT_GAP
+    "threw",         # a toy left its hand faster than THROW_MPS (the object): stage 2's frown
+    "reach_nearer",  # a hand's movement ended nearer a toy than its best of the last BOOK_LAST reaches (the object): shaping
+    "half_roll",     # its lying posture turned from its back or front onto its side
+    "head_up",       # on its front with its head raised HEAD_UP_M above its pelvis, once a spell
+    "peekaboo_act",  # an act begun within PEEKABOO_ACT ticks of her reveal by a hand that had rested (A2)
 )
 
 

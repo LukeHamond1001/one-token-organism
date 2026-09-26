@@ -938,6 +938,11 @@ class Conduct:
                                               # OUTSIDE's kind for one she did not ask for
         self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
         self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, noun, new, shown)]
+        self.book = {}                        # A89: the smiles she has given for each motor act and object, {kind: {object: n}}: the
+                                              # n-th is worth w e^(-n/HABIT_TAU) (consts.MOTOR_WORTH, _motor_judgments)
+        self.book_log = []                    # (tick, kind, object, the worth given or why not, n): an instrument, the last 200
+        self.confirm_act_due = NEVER          # the tick a motor act was judged: "yes!" at once (_choose)
+        self.confirm_obj = None
         self.trial = None                     # the formal trial under way: dict(form, phase "bring" | "settle" | "said", ...)
         self.trial_rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(K.TRIAL_STREAM,))))
         self.face_until = NEVER               # her face moves through this tick (FACE_COURSE after a judgment or a frown: A3)
@@ -1743,6 +1748,9 @@ class Conduct:
         for cw in heard:                                    # the child's turn ended (or its tokens were read): judge, reply
             if cw.channel == "tract" or cw.word is not None:
                 self._owe_reply(t, cw, p, out)
+        self._motor_judgments(t, p, out)                    # its acts she saw this tick, judged (A89)
+        if self.stage >= 2 and any(k == "threw" for k, _o in p.events):
+            out.frown = "threw"                             # stage 2: the frown for a toy it threw (A89; never for a fall)
         self._face(t, out, p)                               # her face will move (a smile, a frown): in her log from now
         self._trial_tick(t, p, out)                         # her formal trial: judged by the percept, then held to her log
         self._face(t, out, p)                               # (a trial's own smile, once it is decided)
@@ -1758,6 +1766,34 @@ class Conduct:
                 f.redirects += 1
         self._focus_step(t, start=False, p=p)               # her looks on a naming word ending now: cancelled from t + 1
         return out
+
+    def _motor_judgments(self, t, p, out):
+        """HER JUDGMENTS OF ITS ACTS (4.3's motor rows, built at A89; teacher_of_reality.md 2b): each event of the tick that
+        consts.MOTOR_WORTH names earns her smile, within the tick, unless a formal trial is under way (A60b: no feedback) or she is
+        away. Shaping: an approximation (a reach nearer than its best, a half roll) earns its worth until the full act has been
+        smiled at MASTERED_N times on that object. Habituation to zero: the n-th smile for the same act and object is worth
+        w e^(-n/HABIT_TAU), none under HABIT_FLOOR (A2's fall with mastery without its floor: Knox and Stone 2015's positive
+        circuits). A new object starts n again. Every judgment, given or withheld, goes to book_log."""
+        if self.trial is not None or not p.present:
+            return
+        for k, o in p.events:
+            row = K.MOTOR_WORTH.get(k)
+            if row is None:
+                continue
+            w, full = row
+            key = o or ""
+            if full is not None and self.book.get(full, {}).get(key, 0) >= K.MASTERED_N:
+                self.book_log.append((t, k, o, "past mastery", self.book[full][key])); del self.book_log[:-200]
+                continue
+            n = self.book.get(k, {}).get(key, 0)
+            w2 = w * math.exp(-n / K.HABIT_TAU)
+            if w2 < K.HABIT_FLOOR:
+                self.book_log.append((t, k, o, "habituated", n)); del self.book_log[:-200]
+                continue
+            self.book.setdefault(k, {})[key] = n + 1
+            out.judgments.append((round(w2, 4), k, o))
+            self.confirm_act_due, self.confirm_obj = t, o
+            self.book_log.append((t, k, o, round(w2, 3), n)); del self.book_log[:-200]
 
     def _right(self, w, start, p):
         """is w the right word here (4.3's right name)? -> (right, asked): its referent where she reads the child looking, in
@@ -1849,11 +1885,26 @@ class Conduct:
             if ln is not None and f.allowed(ln, t, reply=True)[0]:
                 f.queue = []
                 return ln, False, None
-        # 2. being hit by the child's own act: stage 1 "oh!", stage 2 "no." (a reflex she triggered is her defect: no line)
-        if "hit_her" in ev:
+        # 2. being hit by the child's own act: stage 1 "oh!", stage 2 "no." (a reflex she triggered is her defect: no line); a toy
+        #    it threw, stage 2: "no." (A89)
+        if "hit_her" in ev or ("threw" in ev and self.stage >= 2):
             ln = f.compose("hit" if self.stage == 1 else "no", t, p)
             if ln is not None:
                 return ln, False, None
+        # 2b. an act of its she judged this tick: "yes!" at once (A89): her voice marks the smile, a sound onset the born orienting
+        #     turns toward (A43), so its eyes come to her face and the smile is seen before social referencing is learned. Not
+        #     while a set of hers is under way (its lines are said in full, 4.5), nor while she judges an ask (its X unnamed, A51):
+        #     the smile stands, the word is dropped (fast.refused)
+        if self.confirm_act_due == t and p.present:
+            if f.queue or self.pending is not None:
+                f.refused.append((t, "confirm_act", "her set under way or an ask pending: the smile alone"))
+            else:
+                o = p.obj(self.confirm_obj) if self.confirm_obj else None
+                ln = f.compose("confirm", t, p, o=o) if o is not None else None
+                if ln is None:
+                    ln = f.compose("confirm_act", t, p)
+                if ln is not None and f.allowed(ln, t, reply=True)[0]:
+                    return ln, False, None
         # the child's turn: she listens (both starting on one tick: the child has it), unless its babble never stops (A13);
         # and she holds her voice for the reply she owes it, after her latency
         if (sounding or self.turn is not None) and not (self.nonstop_since is not None and
@@ -2160,7 +2211,9 @@ class Conduct:
                     level2=list(self.level2), last_chatter=self.last_chatter,
                     imp=self.imp.bit_generator.state, turns=list(self.turns), copy_next=self.copy_next,
                     copies=[list(c) for c in self.copies],
-                    ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state())
+                    ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state(),
+                    book={k: dict(v) for k, v in self.book.items()}, book_log=[list(x) for x in self.book_log[-200:]],
+                    confirm_act_due=self.confirm_act_due, confirm_obj=self.confirm_obj)
 
     def load_state(self, s):
         self.fast.load_state(s["fast"])
@@ -2183,6 +2236,9 @@ class Conduct:
         self.motion.load_state(s["motion"])
         self.reader.load_state(s["reader"])
         self.imperfect = s["imperfect"]
+        self.book = {k: dict(v) for k, v in s.get("book", {}).items()}
+        self.book_log = [tuple(x) for x in s.get("book_log", ())]
+        self.confirm_act_due, self.confirm_obj = s.get("confirm_act_due", NEVER), s.get("confirm_obj")
         self.scaffold = s.get("scaffold", True)             # (a save before P3's twelfth round: the scaffold on, as at birth)
         self.level2 = self._registered(s.get("level2", self.level2))   # (a save before A60b 13: its registered nouns as
                                                                      # constructed; one registering more than LEVEL2_MAX refused)

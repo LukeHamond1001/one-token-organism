@@ -81,6 +81,21 @@ REST_MPS = 0.05                        # a toy slower than this has come to rest
 HANDOVER_TICKS = 40                    # a toy she let go of within 40 ticks is her hand-over, never its own "got" (A2's 40 ticks)
 GAVE_TICKS = 3                         # a toy come into her hand from its within 3 ticks: "gave" (ours)
 DISTRESS_TICKS = 100                   # face down this many ticks running: distress (A13's "face down over 100 ticks")
+# HER EYES ON ITS ACTS (A89, the teacher's build 2a; percept.EVENT_KINDS): every threshold ours, disclosed
+TICK_S = TICK / V.SR                   # a tick, 0.15 s
+LIFT_M = 0.05                          # a held toy 5 cm above where it lay: "lifted"
+SHAKE_MPS = 0.3                        # a held toy faster than this on two ticks running: "shook"
+SHAKE_GAP = 20                         # a shake counted once in 20 ticks (3 s) a toy
+HIT_GAP = 10                           # a hit counted once in 10 ticks a toy
+THROW_MPS = 1.0                        # a toy leaving its hand faster than this: "threw" (stage 2's frown)
+HAND_REST_MPS = 0.05                   # a hand slower than this has come to rest
+HAND_MOVE_MPS = 0.15                   # a hand faster than this is moving
+MOVED_TICKS = 5                        # "got" needs that hand moved, or a reach toward the toy, within the last 5 ticks (its own reach and hold)
+REACH_BOOK_M = 0.6                     # a movement's end within this of a toy is a reach at it (about the arm's length)
+BOOK_LAST = 10                         # her notebook keeps the child's last 10 reaches a toy
+NEARER_M = 0.01                        # a reach ends nearer when it beats the best of those by 1 cm
+HEAD_UP_M = 0.08                       # on its front with the head 8 cm above the pelvis: "head_up"
+PEEKABOO_ACT = (10, 5)                 # an act begun within 10 ticks of her reveal by a hand that rested the 5 ticks before (A2)
 READING_HOLD = PF.FEEL["reading_hold"]  # the born reading holds its last value 30 ticks out of view (A2)
 FIXTURE_WORDS = ("mat", "sofa", "window", "table", "shelf", "floor")   # her fixture words that name shapes in the room
 SPEECH_DB = 20.0 * math.log10(V.SPEECH_PA / 20e-6)                   # her plain speech at 1 m (62 dB SPL)
@@ -151,6 +166,23 @@ class ParentLane:
         self.released = {}                                # toy -> the tick her hand let it go
         self.posture = None                               # its lying posture, back or front, last seen stable
         self.face_down = 0                                # ticks lying face down running
+        # her eyes on its acts (A89, 2a) and her notebook of its reaches
+        self.first = True                                 # the first tick: what is already in its hands is nothing it got
+        self.hand_prev = {}                               # side -> its grasp point last tick
+        self.hand_speed = {"left": [], "right": []}       # side -> its last 6 ticks' speeds (m/s)
+        self.hand_moved_t = {"left": -10 ** 9, "right": -10 ** 9}   # side -> the last tick it moved
+        self.toy_prev = {}                                # toy -> its place last tick
+        self.toy_speed = {}                               # toy -> its speed this tick
+        self.toy_rest_z = {}                              # toy -> its height when it last lay still, in no hand
+        self.lifted = set()                               # toys lifted in this hold
+        self.last_shook = {}                              # toy -> the last tick a shake was counted
+        self.last_hit = {}                                # toy -> the last tick a hit was counted
+        self.reach_t = {}                                 # toy -> the last tick a hand reached toward it
+        self.book = {}                                    # her notebook: toy -> the hand's distance at the end of its last BOOK_LAST reaches
+        self.side_from = None                             # the lying posture it turned onto its side from (a half roll, once)
+        self.head_up = False                              # its head up on its front, this spell
+        self.reveal_t = -10 ** 9                          # the tick of her last peekaboo reveal
+        self.peekaboo_done = -10 ** 9                     # the reveal an act has answered
         self.last = {}                                    # instruments: the tick's percept summary and her output
         self.n_lines = 0
         self.plan = DP.DayPlan(seed, day_ticks) if plan else None      # her day (L3, P4)
@@ -221,7 +253,7 @@ class ParentLane:
 
     def _contacts(self, m, d):
         """per toy: the child's hand sides touching it, her own touching it, and the fixture words under it"""
-        touch = {t: dict(child=set(), fixture=set()) for t in self.toys}
+        touch = {t: dict(child=set(), fixture=set(), toys=set()) for t in self.toys}
         for i in range(d.ncon):
             c = d.contact[i]
             for g, o in ((c.geom1, c.geom2), (c.geom2, c.geom1)):
@@ -235,6 +267,9 @@ class ParentLane:
                 f = self.fixture_geom.get(int(o))
                 if f is not None:
                     touch[t]["fixture"].add(f)
+                t2 = self.toy_of_root.get(int(m.body_rootid[ob]))
+                if t2 is not None and t2 != t:
+                    touch[t]["toys"].add(t2)                          # a toy against a toy (a hit with what it holds, A89)
         return touch
 
     def _head(self, d):
@@ -281,7 +316,7 @@ class ParentLane:
         cols = self.conduct.world["objects"]
         seen_t = tuple(PC.Seen(id=tt, name=tt, colour=(cols.get(tt) or [""])[0], on=on, child_sees=tt in before,
                                child_can_reach=bool(reach) and tt not in her, near=near.get(tt)) for tt, on, reach in seen)
-        events = self._events(world, t, pos, holds, her, ch, in_view)
+        events = self._events(world, t, pos, holds, her, ch, in_view, grasp, touch, reaches)
         raw = world.tract_raw
         sounding = raw is not None and bool(np.any(raw))
         p = PC.Percept(tick=t, present=present, child_in_view=bool(in_view), seen_by_child=bool(seen_by_child),
@@ -289,8 +324,23 @@ class ParentLane:
                        events=tuple(events), child_sounding=sounding, child_reaches=tuple(reaches), face_near=near.get("mama"))
         return PC.check_events(p), mouth, face
 
-    def _events(self, world, t, pos, holds, her, ch, in_view):
+    def _events(self, world, t, pos, holds, her, ch, in_view, grasp=None, touch=None, reaches=()):
         ev = []
+        grasp = grasp or {"left": ch.grasp["L"], "right": ch.grasp["R"]}
+        touch = touch or {tt: dict(child=set(), fixture=set(), toys=set()) for tt in self.toys}
+        if self.first:                                                  # the first tick: what already lies against its hands it did
+            self.first = False                                          # not get, and nothing has moved yet
+            self.child_had = tuple(holds); self.her_had = {tt: t for tt in her}
+            for tt in self.toys:
+                self.toy_z[tt] = float(pos[tt][2]); self.toy_prev[tt] = pos[tt].copy(); self.toy_rest_z[tt] = float(pos[tt][2])
+            for side in ("left", "right"):
+                self.hand_prev[side] = np.asarray(grasp[side], float).copy()
+            self.posture = ch.posture if ch.posture in ("back", "front") else None
+            self.last["posture"] = ch.posture
+            return ev
+        for tt in reaches:
+            self.reach_t[tt] = t
+        self._hands(t, pos, holds, grasp, ev)
         for tt in self.toys:                                            # a toy's fall, once a drop
             z0 = self.toy_z.get(tt)
             z = float(pos[tt][2])
@@ -307,11 +357,20 @@ class ParentLane:
             if tt not in her:
                 self.released[tt] = t
         for tt in holds:
-            if tt not in self.child_had and t - self.released.get(tt, -10 ** 9) > HANDOVER_TICKS:
-                ev.append(("got", tt))
+            if tt not in self.child_had and t - self.released.get(tt, -10 ** 9) > HANDOVER_TICKS and \
+                    (any(t - self.hand_moved_t[s] <= MOVED_TICKS for s in touch[tt]["child"]) or t - self.reach_t.get(tt, -10 ** 9) <= MOVED_TICKS):
+                ev.append(("got", tt))                                  # its own reach and hold (A89): the hand moved, or reached for it
         for tt in self.child_had:
             if tt not in holds:
                 ev.append(("lost_toy", tt))
+                if self.toy_speed.get(tt, 0.0) > THROW_MPS:
+                    ev.append(("threw", tt))                            # it left its hand fast (stage 2's frown, A89)
+        self._toys(t, pos, holds, her, touch, ev)
+        impacts = {str(e[1])[4:] for e in getattr(world.sounds, "last_events", ()) if e[2] != "motion" and str(e[1]).startswith("toy_")}
+        for tt in sorted(impacts):                                      # a toy it held or touched already struck something and sounded
+            if tt in self.child_had and t - self.last_hit.get(tt, -10 ** 9) >= HIT_GAP and \
+                    (touch[tt]["child"] or tt in holds or any(o in holds for o in touch[tt]["toys"])):
+                ev.append(("hit", tt)); self.last_hit[tt] = t
         for tt in sorted(her):
             if tt not in self.her_had and t - self.child_held_at.get(tt, -10 ** 9) <= GAVE_TICKS:
                 ev.append(("gave", tt))
@@ -324,8 +383,21 @@ class ParentLane:
             if self.posture is not None and post != self.posture:
                 ev.append(("rolled", None))
             self.posture = post
+            self.side_from = None
+        elif post == "side" and self.posture is not None and self.side_from != self.posture:
+            ev.append(("half_roll", None)); self.side_from = self.posture         # onto its side from its back or front, once
         if post == "sitting" and self.last.get("posture") != "sitting":
             ev.append(("sat", None))
+        up = post == "front" and float(ch.head[2] - ch.pelvis[2]) > HEAD_UP_M
+        if up and not self.head_up:
+            ev.append(("head_up", None))
+        self.head_up = up
+        if self.reveal_t <= t <= self.reveal_t + PEEKABOO_ACT[0] and self.peekaboo_done < self.reveal_t:
+            for side in ("left", "right"):                              # peekaboo answered by an act (A2): a hand that rested, moving
+                h = self.hand_speed[side]
+                if len(h) > PEEKABOO_ACT[1] and h[-1] > HAND_MOVE_MPS and all(x < HAND_REST_MPS for x in h[-PEEKABOO_ACT[1] - 1:-1]):
+                    ev.append(("peekaboo_act", None)); self.peekaboo_done = t
+                    break
         self.last["posture"] = post
         self.face_down = self.face_down + 1 if post == "front" else 0
         if self.face_down == DISTRESS_TICKS:
@@ -333,6 +405,53 @@ class ParentLane:
         if world.crying or (in_view and float(world._sensed["true_base_peak"]) > world.f_pain):
             ev.append(("pain", None))                                   # its cry heard, or a blow to its body she sees
         return ev
+
+    def _hands(self, t, pos, holds, grasp, ev):
+        """its hands as she sees them (A89): each hand's speed, the tick it last moved, and the end of a movement, where her
+        notebook takes the hand's distance to the nearest toy it does not hold (a reach at it); nearer than its best of the last
+        BOOK_LAST by NEARER_M: "reach_nearer" """
+        for side in ("left", "right"):
+            g = np.asarray(grasp[side], float)
+            prev = self.hand_prev.get(side)
+            sp = 0.0 if prev is None else float(np.linalg.norm(g - prev)) / TICK_S
+            self.hand_prev[side] = g.copy()
+            h = self.hand_speed[side]
+            h.append(sp); del h[:-6]
+            if sp > HAND_MOVE_MPS:
+                self.hand_moved_t[side] = t
+            ended = len(h) >= 3 and sp < HAND_REST_MPS and h[-2] >= HAND_REST_MPS and any(x > HAND_MOVE_MPS for x in h[-4:-1])
+            if not ended:
+                continue
+            near = [(float(np.linalg.norm(g - pos[tt])), tt) for tt in self.toys if tt not in holds]
+            if not near:
+                continue
+            d, tt = min(near)
+            if d > REACH_BOOK_M:
+                continue
+            last = self.book.setdefault(tt, [])
+            if last and d < min(last) - NEARER_M:
+                ev.append(("reach_nearer", tt))
+            last.append(round(d, 4)); del last[:-BOOK_LAST]
+
+    def _toys(self, t, pos, holds, her, touch, ev):
+        """the toys as she sees them (A89): each one's speed; where it lay still in no hand; a lift and a shake of one in its hand"""
+        for tt in self.toys:
+            p_ = pos[tt]
+            prev = self.toy_prev.get(tt)
+            sp = 0.0 if prev is None else float(np.linalg.norm(p_ - prev)) / TICK_S
+            self.toy_prev[tt] = p_.copy()
+            last_sp = self.toy_speed.get(tt, 0.0)
+            self.toy_speed[tt] = sp
+            if tt in holds:
+                z0 = self.toy_rest_z.get(tt)
+                if z0 is not None and float(p_[2]) > z0 + LIFT_M and tt not in self.lifted:
+                    ev.append(("lifted", tt)); self.lifted.add(tt)
+                if sp > SHAKE_MPS and last_sp > SHAKE_MPS and t - self.last_shook.get(tt, -10 ** 9) >= SHAKE_GAP:
+                    ev.append(("shook", tt)); self.last_shook[tt] = t
+            else:
+                self.lifted.discard(tt)
+                if tt not in her and sp < REST_MPS:
+                    self.toy_rest_z[tt] = float(p_[2])
 
     # ------------------------------------------------------------------ one tick of hers (by day)
     def tick(self, world):
@@ -376,10 +495,12 @@ class ParentLane:
         # her feelings and her face (4.3): her judgments, frowns and concern; the face test's two ticks (A1)
         for w, kind, _word in out.judgments:
             self.feel.judge(w, kind)
-        if out.frown == "hit":
-            self.feel.harm()
+        if out.frown in ("hit", "threw"):
+            self.feel.harm()                                # stage 2: its own act hit her, or it threw a toy (A89)
         elif out.frown == "talk_over":
             self.feel.talk_over()
+        if out.line is not None and out.line.intent == "peekaboo":
+            self.reveal_t = t                               # her reveal: an act within PEEKABOO_ACT ticks answers it (A2)
         for k, _o in p.events:
             if k == "pain":
                 self.feel.child_pain()
@@ -463,7 +584,13 @@ class ParentLane:
                     toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had),
                     child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released),
                     posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines,
-                    plan=None if self.plan is None else self.plan.state(), day=self.day, day_start=self.day_start)
+                    plan=None if self.plan is None else self.plan.state(), day=self.day, day_start=self.day_start,
+                    eyes=dict(first=self.first, hand_prev={k: v.tolist() for k, v in self.hand_prev.items()},
+                              hand_speed={k: list(v) for k, v in self.hand_speed.items()}, hand_moved_t=dict(self.hand_moved_t),
+                              toy_prev={k: v.tolist() for k, v in self.toy_prev.items()}, toy_speed=dict(self.toy_speed),
+                              toy_rest_z=dict(self.toy_rest_z), lifted=sorted(self.lifted), last_shook=dict(self.last_shook),
+                              last_hit=dict(self.last_hit), reach_t=dict(self.reach_t), book={k: list(v) for k, v in self.book.items()},
+                              side_from=self.side_from, head_up=self.head_up, reveal_t=self.reveal_t, peekaboo_done=self.peekaboo_done))
 
     def load_state(self, s):
         self.conduct.load_state(s["conduct"])
@@ -503,6 +630,20 @@ class ParentLane:
         self.child_held_at = dict(s["child_held_at"]); self.her_had = dict(s["her_had"]); self.released = dict(s["released"])
         self.posture, self.face_down = s["posture"], int(s["face_down"])
         self.last = dict(posture=s["last_posture"])
+        e = s.get("eyes")
+        if e is not None:
+            self.first = bool(e["first"])
+            self.hand_prev = {k: np.asarray(v, float) for k, v in e["hand_prev"].items()}
+            self.hand_speed = {k: [float(x) for x in v] for k, v in e["hand_speed"].items()}
+            self.hand_moved_t = {k: int(v) for k, v in e["hand_moved_t"].items()}
+            self.toy_prev = {k: np.asarray(v, float) for k, v in e["toy_prev"].items()}
+            self.toy_speed = {k: float(v) for k, v in e["toy_speed"].items()}
+            self.toy_rest_z = {k: float(v) for k, v in e["toy_rest_z"].items()}
+            self.lifted = set(e["lifted"]); self.last_shook = {k: int(v) for k, v in e["last_shook"].items()}
+            self.last_hit = {k: int(v) for k, v in e["last_hit"].items()}; self.reach_t = {k: int(v) for k, v in e["reach_t"].items()}
+            self.book = {k: [float(x) for x in v] for k, v in e["book"].items()}
+            self.side_from, self.head_up = e["side_from"], bool(e["head_up"])
+            self.reveal_t, self.peekaboo_done = int(e["reveal_t"]), int(e["peekaboo_done"])
         self.n_lines = int(s["n_lines"])
         if self.plan is not None and s.get("plan") is not None:
             self.plan.load_state(s["plan"])
