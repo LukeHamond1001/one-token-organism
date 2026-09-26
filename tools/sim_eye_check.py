@@ -1,5 +1,6 @@
 """THE EYE CHECK (docs/SIM_DESIGN.md 3.4, 13 risk 9, C2 and C3; the build plan's W3): does the software fovea tell the ten toys and
-the parent's face apart at 1.5 px a degree in the furnished room, under morning, midday and dusk light, with and without the sun's
+the parent's face apart at 3 px a degree (W3r: the grey foveae through the born bank and the colour window, eye_f 1,536; A42, A78)
+in the furnished room, under morning, midday and dusk light, with and without the sun's
 shadow; and does the face test's ray agree with a segmentation render? An instrument, never the body: no weight of any body learns
 here, and the readouts are the instrument's own.
 
@@ -7,8 +8,8 @@ The G1 lies as born. Each view puts one thing (a toy, or the parent's head facin
 m in front of the eyes, within the fovea's reach, turned at random; the gaze is aimed at it with a 1.5 deg error (gaze_at, the
 instrument's aim), and the two eyes render. The label is what fills the left fovea window in a segmentation render at the same eye
 (the most pixels of one thing, at least 20 of 1024; else none): so an occluded or clipped thing is labelled as what is seen. The
-same views are rendered under each light and shadow setting (paired). The code read is the retina's fovea code of both eyes (2 x
-384, body/sim/eyes.py), standardized on the training views; readouts: the nearest class mean and a ridge one-hot, trained on 2/3
+same views are rendered under each light and shadow setting (paired). The code read is the eyes' fovea code as the body gets it
+(eye_f: 2 x 640 of the born bank and the colour window's 256, body/sim/eyes.py), standardized on the training views; readouts: the nearest class mean and a ridge one-hot, trained on 2/3
 of the views and tested on the rest, balanced over the classes present; and a small nonlinear readout (one hidden layer of 256), as
 test 11 read born codes, since the body's reader is a cortex, not a linear map. The design's bar is 0.75 (C3). WHICH READOUT DECIDES
 (the W1 verifier's third round): the nonlinear one. The core reads the eye channel as it reads every vector channel: the retina's
@@ -75,6 +76,16 @@ def rot(axis, a):
     return np.eye(3) + math.sin(a) * K + (1 - math.cos(a)) * K @ K
 
 
+def _bank_fine(Lg):
+    """the born bank's maps pooled over 4 x 4 px cells instead of 8 x 8 (what the pooling keeps of the pixels' identity)"""
+    keep = E.CELL_F
+    try:
+        E.CELL_F = 4
+        return E.bank(Lg)
+    finally:
+        E.CELL_F = keep
+
+
 def ridge_acc(Xtr, ytr, Xte, yte, k, lam=1.0):
     Y = np.eye(k)[ytr]
     A = np.c_[Xtr, np.ones(len(Xtr))]
@@ -96,7 +107,8 @@ def mlp_acc(Xtr, ytr, Xte, k, seed=0, hidden=256, epochs=300):
 
 
 CURVE_SHARES = (1 / 3, 2 / 3, 1.0)
-PROJ_D, PROJ_SEED = 256, 0
+PROJ_D, PROJ_SEED = 512, 0      # the core's d at birth (7.1: 512)
+MIN_PX = 20 * (W.FOVEA_PX / 32) ** 2   # a thing labels the window with at least 20 px of the first build's 32 x 32: 80 of the 64 x 64
 
 
 def proj_ln(X, d=PROJ_D, seed=PROJ_SEED):
@@ -170,7 +182,7 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
 
     lights = {L: LIGHTS[L] for L in lights}
     labels, feats, facecmp = [], {k: [] for k in [(L, s) for L in lights for s in ("sun", "none")]}, []
-    alt = {"raw pixels": [], "retina 2 px cells": []}
+    alt = {"raw grey pixels": [], "the bank's maps unpooled 4 x 4": []}
     t0 = time.perf_counter()
     for c, dist, yaw, pitch, turn, q, aim, block in plan:
         p = place(c, dist, yaw, pitch, turn, q, block)
@@ -186,7 +198,7 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
                 if b in cls_of_body:
                     counts[cls_of_body[b]] += 1
                 mouth_px += int(gid in mouth_geoms)
-        lab = int(counts.argmax()) if counts.max() >= 20 else -1
+        lab = int(counts.argmax()) if counts.max() >= MIN_PX else -1
         labels.append(lab)
         if CLASSES[c] == "face":
             ft = E.face_test(m, d, w.gaze)["L"]
@@ -199,7 +211,7 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
             visible = bool(typ8 == int(mujoco.mjtObj.mjOBJ_GEOM) and gid8 >= 0 and m.geom_bodyid[gid8] == head)
             in_win = x0 <= pr[0] < x0 + W.FOVEA_PX and y0 <= pr[1] < y0 + W.FOVEA_PX
             geo_ok = ft[1] not in ("not in the fovea", "turned away", "too small", "behind the eye")
-            seg_verdict = bool(in_win and visible and counts[len(TOYS)] >= 20 and ft[1] not in ("turned away",))
+            seg_verdict = bool(in_win and visible and counts[len(TOYS)] >= MIN_PX and ft[1] not in ("turned away",))
             facecmp.append((bool(ft[0]), seg_verdict, ft[1] != "blocked", visible, block is not None, geo_ok))
         for L, spec in lights.items():
             if spec is None:
@@ -212,8 +224,8 @@ def main(views=60, seed=1, lights=tuple(LIGHTS), codes=False):
                 feats[(L, sh)].append(seen["eye_f"])
                 if codes and sh == "none" and L == next(iter(lights)):
                     fv = seen["truth"]["fovea"]
-                    alt["raw pixels"].append(np.concatenate([fv[x].reshape(-1) / 255.0 for x in "LR"]))
-                    alt["retina 2 px cells"].append(np.concatenate([E.retina(fv[x], 2).reshape(-1) for x in "LR"]))
+                    alt["raw grey pixels"].append(np.concatenate([fv[x].reshape(-1) for x in "LR"]))   # the grey foveae, 0-1
+                    alt["the bank's maps unpooled 4 x 4"].append(np.concatenate([_bank_fine(fv[x]).reshape(-1) for x in "LR"]))
         m.light_dir[sun], m.light_diffuse[sun] = sun0
     secs = time.perf_counter() - t0
     y = np.array(labels)
@@ -376,7 +388,7 @@ def c2c3(frames=2000, seed=1, lights=tuple(LIGHTS)):
             else:
                 m.light_dir[sun] = np.asarray(spec["dir"]) / np.linalg.norm(spec["dir"]); m.light_diffuse[sun] = spec["diffuse"]
             seen = ey.see()
-            tf = seen["truth"]["template_fovea"]
+            tf = {x: E.face_template(seen["truth"]["fovea"][x]) for x in "LR"}          # the template, an instrument (C39 a)
             tmpl[L] = int(seen["face_fovea"][0]), int(E.template_match(tf["L"])), max(tf["L"][0], tf["R"][0])
         m.light_dir[sun], m.light_diffuse[sun] = sun0
         rows.append(dict(dist=dist, noface=noface, block=block, test=bool(ft[0]) and not noface, why=ft[1], by=blocked_by, seg=seg_ok, in_win=in_win,

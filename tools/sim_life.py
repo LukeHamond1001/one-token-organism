@@ -24,6 +24,7 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "tools"))
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
@@ -99,12 +100,19 @@ def main():
     ap.add_argument("--no-eyes", action="store_true")
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     torch.set_num_threads(args.threads)
     t_build = time.time()
     world, eyes, lane, L = build(args)
     run = WorldLoop(L)
+    snap = None
+    if args.page:
+        import sim_page
+        snap = sim_page.Snapshot(world, lane, L, eyes)
+        sim_page.serve(snap)
+        print(f"the page: http://127.0.0.1:{sim_page.PORT}/", flush=True)
     day_ticks = int(SIM_CFG.get("wake_ticks", 24000)) + int(SIM_CFG.get("night_ticks", 24000))
     total = args.ticks or int(args.days * day_ticks)
     log = open(os.path.join(args.out, "ticks.jsonl"), "a")
@@ -116,6 +124,8 @@ def main():
         a = time.perf_counter()
         run.step()
         wall = time.perf_counter() - a
+        if snap is not None:
+            snap.take(INV)
         night = bool(world.night)
         f = world.now if getattr(world, "now", None) is not None else None
         pain = f.obs.get("pain") if f is not None else None
