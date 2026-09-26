@@ -138,7 +138,14 @@ def main():
             ls = lane.last
             rec.update(line=ls.get("line"), ep=None if lane.plan is None else lane.plan.kind, word=INV.get(int(ls.get("word", 0))),
                        heard=ls.get("heard"), reading=round(float(lane.reading), 2), judged=ls.get("judged"),
-                       events=[e[0] for e in ls.get("events", ())],
+                       events=[e[0] for e in ls.get("events", ())], face_test=bool(ls.get("face_test")),
+                       seen_by_child=bool(ls.get("seen_by_child")),
+                       gates=[round(float((st.get("now") or {}).get("p_act", 0.0)), 3) for st in L.motor],   # each effector's p_act (her rulers'
+                                                                                                             # partner: how much it acts)
+                       her_at=[round(float(x), 2) for x in world.parent.base["at"]] + [str(world.parent.base.get("mode"))],   # where she is
+                       acts_open=[[a_[1], a_[2], a_[5]] for a_ in lane.conduct.acts_open][:6],               # her acts under way (kind, target, status)
+                       refused=(list(lane.conduct.fast.refused[-1]) if lane.conduct.fast.refused and lane.conduct.fast.refused[-1][0] >= world.tick - 1 else None),
+                       present=bool(ls.get("present")), holds=list(ls.get("holds") or ()),
                        token=None if world.words_out is None else INV.get(int(world.words_out)),
                        onset=None if f is None else int(f.obs.get("onset_periph", [0])[0]),
                        sounds=len(getattr(world.sounds, "last_events", [])))
@@ -162,6 +169,9 @@ def main():
                        night_tick_ms=round(1000 * float(np.mean(walls["night"])), 1) if walls["night"] else None,
                        nights=int(getattr(L, "nights", 0)), last_night={k_: v_ for k_, v_ in (getattr(L, "last_night", None) or {}).items()
                                                                          if isinstance(v_, (int, float, str, bool))},
+                       last_night_sweep=(getattr(L, "last_night", None) or {}).get("sweep"),          # A93's reverse sweep: chunks, ticks, windows
+                       last_night_live={k_: v_ for k_, v_ in ((getattr(L, "last_night", None) or {}).get("live") or {}).items()
+                                        if isinstance(v_, (int, float, str, bool))},
                        plan=[list(x)[:4] for x in (lane.plan.log[-20:] if lane.plan else [])])
             with open(os.path.join(args.out, "report.json"), "w") as fr:
                 json.dump(rep, fr, indent=1, default=str)

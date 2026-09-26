@@ -540,7 +540,8 @@ class ParentLane:
         test = any(v[0] for v in EY.face_test(m, d, world.gaze).values())
         seen = test and self.test_prev
         self.test_prev = test
-        fp = self.feel.step(seen)
+        bringing = any(a_[1] == "lean_in" and a_[2] == "child_line" and a_[5] not in C.ENDED for a_ in self.conduct.acts_open)
+        fp = self.feel.step(seen, bringing)                 # A96: a smile she brings to its line of sight is held while she does
         self.fp = dict(kin.FACE_NEUTRAL) if self.conduct.still else fp       # a trial's face: its neutral set (4.8)
         world.parent.set_face(self.fp)
         self._read_face(t, seen)
@@ -592,7 +593,8 @@ class ParentLane:
     # ------------------------------------------------------------------ the save
     def state(self):
         f = self.feel
-        pulse = lambda q: None if q is None else dict(n=q.n, t0=q.t0, a=q.a, kind=q.kind, seen_at=q.seen_at, started=q.started)
+        pulse = lambda q: None if q is None else dict(n=q.n, t0=q.t0, a=q.a, kind=q.kind, seen_at=q.seen_at, started=q.started,
+                                                       bringing=q.bringing, arrived=q.arrived)
         feel = dict(rng=f.rng.bit_generator.state, t=f.t, pulse=pulse(f.pulse), queued=pulse(f.queued), frown_t0=f.frown_t0,
                     frown_amp=f.frown_amp, U=f.U, Cn=f.Cn, A=f.A, M=f.M, A_target=f.A_target, q=f.q, loud=f.loud, wind=f.wind,
                     sudden_log=[list(x) for x in f.sudden_log], flash_t0=f.flash_t0, last_seen=f.last_seen, was_seen=f.was_seen,
@@ -632,6 +634,7 @@ class ParentLane:
                 return None
             p = PF.Pulse.__new__(PF.Pulse)
             p.n, p.t0, p.a, p.kind, p.seen_at, p.started = q["n"], q["t0"], q["a"], q["kind"], q["seen_at"], q["started"]
+            p.bringing, p.arrived = bool(q.get("bringing", False)), q.get("arrived")   # A96 (a save from before it: never brought)
             return p
         f.t, f.pulse, f.queued = fs["t"], pulse(fs["pulse"]), pulse(fs["queued"])
         for k in ("frown_t0", "frown_amp", "U", "Cn", "A", "M", "A_target", "q", "loud", "wind", "flash_t0", "last_seen", "was_seen",

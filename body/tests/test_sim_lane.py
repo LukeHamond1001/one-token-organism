@@ -301,6 +301,14 @@ def test_her_eyes():
     assert [j for j in judged if j[1] == "got"] == [(2, "got", "ball")], judged
     assert said and any(ln.startswith(("yes", "good")) for _t, ln in said), said     # her "yes!" marks the smile (after her label of
                                                                                      # the ball coming into its hand, if that came first)
+    seen_at = []                                                                     # A94: she smiles en face: her mouth in its fovea
+    for k in range(40):                                                              # (the face test) within the smile's hold, and
+        w.frame(); w.apply({})                                                       # the born reading rises: the smile is felt
+        if lane.last.get("face_test"):
+            seen_at.append(w.tick)
+        if lane.reading > 0:
+            break
+    assert seen_at and lane.reading > 0, (seen_at, lane.reading, lane.feel.log[-6:])
     assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted", "hit"}, lane.conduct.book   # in a
     st = lane.state()                                                                # raised hand: "lifted" too, as a person would see it
     assert st["eyes"]["hand_prev"]["left"] and st["conduct"]["book"]["got"] == {"ball": 1}
@@ -316,7 +324,8 @@ def test_her_eyes():
         w.frame(); w.apply({})
         evs2 += [tuple(e) for e in lane.last["events"]]
     assert ("fell", "duck") in evs2 and not [e for e in evs2 if e[0] == "threw"], evs2
-    print(f"lane 10: a ball against a still palm: no 'got'; after its arm moved, the ball kept in its palm: events",
+    print(f"lane 10: her face in its fovea at ticks {seen_at[:3]} after the judgment, its reading {lane.reading:.1f} (A94);",
+          "a ball against a still palm: no 'got'; after its arm moved, the ball kept in its palm: events",
           f"{[e for e in evs if e[0] in ('got', 'reach_nearer', 'lifted', 'hit')]}, judged {judged}, her line {said[0]}; her book",
           f"{lane.conduct.book}; saved and restored; a dropped duck fell, not thrown")
 
@@ -362,8 +371,38 @@ def test_her_lessons():
           f"on it at level 1 (0.15 m); the plan's levels saved and restored")
 
 
+
+def test_smile_brought():
+    """lane 12 (A96): a judged smile she is bringing to the child's line of sight (her lean_in child_line under way) is held until
+    she is there and 20 ticks more, never past queue_expiry (40) ticks from its start; one not brought eases after 20 as before;
+    one seen while brought is held 10 ticks after the look, as every seen smile is"""
+    from body.sim import parent_feel as PF
+    C = PF.FEEL
+
+    def joy(bringing_ticks, seen_at=None):
+        F = PF.Feelings(1)
+        F.step(False)
+        F.judge(2.0, "got")
+        out = []
+        for k in range(60):
+            fp = F.step(seen_at is not None and k >= seen_at, bringing=k < bringing_ticks)
+            out.append(round(float(F.state["joy"]), 3))
+        return out
+    plain = joy(0)
+    assert plain[0] > 0 and plain[C["smile_wait"]] > 0 and plain[C["smile_wait"] + C["offset"] + 1] == 0, plain[:30]
+    brought = joy(30)                                                                # under way 30 ticks: held through, then 10 more
+    assert brought[30] > 0 and brought[min(30 + C["smile_wait"], C["queue_expiry"])] > 0, brought[:45]
+    assert brought[C["queue_expiry"] + C["offset"] + 1] == 0, brought[35:50]         # never past the cap
+    forever = joy(60)                                                                # never there: the cap ends it
+    assert forever[C["queue_expiry"]] > 0 and forever[C["queue_expiry"] + C["offset"] + 1] == 0, forever[35:50]
+    seen = joy(30, seen_at=12)                                                       # seen on the way: 10 ticks after the look
+    assert seen[13 + C["smile_after_seen"]] > 0 and seen[13 + C["smile_after_seen"] + C["offset"] + 1] == 0, seen[:35]
+    print("12 a smile brought to its line of sight is held while she brings it (at most 40 ticks), 20 more once there, 10 after a look;",
+          "one not brought eases after 20 as before")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
-              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons]
+              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

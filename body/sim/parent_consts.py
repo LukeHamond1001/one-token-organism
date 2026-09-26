@@ -391,6 +391,8 @@ APPROACH_M = 0.10               # m: a hand comes onto the child, or a toy, alon
 
 # ------------------------------------------------------------------------------------------------------------ her face (A3, A22)
 FACE_MIN_M = 0.25               # her face never closer than this to the child's eyes (A3)
+FACE_ON_LINE_DEG = 8.0          # A94: when she smiles at an act her mouth goes ONTO its fovea's line, within 8 deg (inside the 64 px window
+                                # at 3 px a degree: about 10 deg to its edge), the en-face position parents take (Stern 1974)
 FACE_OFF_LINE_DEG = 15.0        # when she leans in or calls, her face arrives at least this far off the fovea's line (A3)
 LEAN_DIST_M = (0.30, 0.60)      # m: where she puts her face when she leans in: from the child's eyes (ours: the lean-in
                                 # distance, where the grades are visible in its fovea, section 4.3). She kneels where a pose inside

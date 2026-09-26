@@ -206,7 +206,8 @@ ACT_KINDS = {
     "look": "her eyes (and head) to the target within 2 ticks (L1, 4.10); during='focus' only through the line's focus word, then "
             "back to the child's eyes (the joint-attention cue, 4.3): the conduct requests it as that word begins and cancels "
             "it as it ends",
-    "lean_in": "her face into the child's periphery, at least 15 degrees off its fovea's line, never closer than 25 cm (A3)",
+    "lean_in": "her face into the child's periphery, at least 15 degrees off its fovea's line, never closer than 25 cm (A3); target "
+               "'child_line' (A94): onto its fovea's line within 8 degrees, the en-face position she smiles from",
     "attend": "kneel beside it and attend, one hand resting on its trunk (g1acts.attend)",
     "show": "the toy held beside her face about 40 cm before the G1's eyes, shaken for its sound (g1acts.show)",
     "point": "a point at the target, either hand (parent_acts.point)",
@@ -263,7 +264,7 @@ HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
 HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
 UNNAMED = "?"                                 # a field her motion left out or gave as no word: it points anywhere (fail-closed)
-AT_CHILD = ("child", "child_eyes", "child_periphery")   # the child itself: her eyes or face on its face, her hand held open or
+AT_CHILD = ("child", "child_eyes", "child_periphery", "child_line")   # the child itself: her eyes or face on its face, her hand held open or
                                                          # waved toward it, touching nothing (a part she touches is a place)
 OUTSIDE = "?act"                              # the kind of an act in her motion's report she did not ask for (P4's, W2's own)
 PENDING_OK = (("look", "child_eyes"), ("open_hand", "child"), ("lean_in", "child_periphery"), ("withdraw", "child"))
@@ -496,9 +497,9 @@ INTENTS = {
     "ask_what": Intent("plain", True, "name", (EYES,)),     # of what the child attends: no show while an ask is pending (A51)
     "ask_give": Intent("plain", True, "act", (Act("open_hand", "child"), EYES)),    # her hand held out to the child, never
                                                                                      # toward the toy (A51)
-    "confirm": Intent("approval", False, None, (Act("lean_in", "child_periphery"), EYES)),      # her face into its periphery as she
-    "confirm_act": Intent("approval", False, None, (Act("lean_in", "child_periphery"), EYES)),  # smiles, so the smile is seen (A90: 2 of
-                                                                                                 # 60 smiles seen on the plumbing day)
+    "confirm": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),      # her face ONTO its line of sight as she
+    "confirm_act": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),  # smiles, the en-face position (A94: day 1
+                                                                                            # saw 3 of 160 smiles from its periphery)
     "recast": Intent("approval", False, None, (LOOK_O, EYES)),
     "recast_word": Intent("approval", False, None, (EYES,)),
     "echo": Intent("plain", False, None, (LOOK_O, EYES)),

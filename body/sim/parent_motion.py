@@ -226,6 +226,10 @@ MAX_LIMB_JUMP_M = 0.60                      # about 0.1 m), nor any segment more
                                             # more is a planning fault, refused (ours)
 FACE_REDRAW_DEG = 1.5                       # her eyes are drawn again when her gaze has turned this far in her head (ours: a face
                                             # costs about 24 ms to draw; her irises move 0.3 mm for 1.5 deg)
+KNEE_ROUTE_M = 0.9                          # A96: a new kneeling spot this near (m) and within KNEE_ROUTE_DEG of her facing is reached on
+KNEE_ROUTE_DEG = 100                        # her knees (up onto the tall kneel, a turn on them, the shuffle) rather than by standing up
+                                            # and walking (0.6 m and 25 deg before: the way round a lying child, its side to its head,
+                                            # is about 0.8 m and a quarter turn, and a walk there took 70 s of re-planned trips)
 MAX_NEED_TRIES = 6                          # the spots on which an act's need (a trunk solve, a face search) is tried before she
                                             # gives up choosing (a guard on a planning tick's cost, ours)
 MAX_PLANS = 40                              # an act whose plans do not settle in this many is given up (a guard, ours)
@@ -1096,11 +1100,14 @@ class ParentMotion:
             self._gaze_back(a)
 
     def sleep(self):
-        """THE NIGHT (5.4, A46, A17; the world's dusk): every act of hers stops where it is, her holds let go, and she walks to the
-        sofa and sits there, touching nothing, until the morning (wake)"""
+        """THE NIGHT (5.4, A46, A17; the world's dusk): every act of hers stops where it is, her holds let go, what she holds she
+        sets aside (A95: life 1 slept holding two toys and woke with both hands full), and she walks to the sofa and sits there,
+        touching nothing, until the morning (wake)"""
         for i in list(self.live):
             self.cancel(i)
         self.asleep = True
+        for toy in [v for v in self.holding.values() if v is not None]:
+            self.request(_Plain("clear", toy))                           # set down beside her, before she goes
         self.request(_Plain("walk", "sofa"))
 
     def wake(self):
@@ -1175,7 +1182,7 @@ class ParentMotion:
         if isinstance(t, (list, tuple, np.ndarray)):
             return "?"
         t = str(t)
-        if t in ("child", "child_eyes", "child_periphery", "mama") or t in self.toys or t in FIXTURES:
+        if t in ("child", "child_eyes", "child_periphery", "child_line", "mama") or t in self.toys or t in FIXTURES:
             return t
         return PART_WORD.get(t, "?")
 
@@ -2052,7 +2059,7 @@ class ParentMotion:
         ch = self.child
         if isinstance(t, (list, tuple, np.ndarray)):
             return np.asarray(t, float)
-        if t in ("child_eyes", "child_periphery", "mama"):
+        if t in ("child_eyes", "child_periphery", "child_line", "mama"):
             return ch.eyes.copy()
         if t == "child":
             return ch.torso.copy()
@@ -3455,6 +3462,8 @@ class ParentMotion:
         fwd = np.array([math.cos(yaw), math.sin(yaw)])
         if need == "lean":
             return self.face_reach(at=H, yaw=yaw, base_mode="heels") is not None
+        if need == "lean_line":                                             # A96: a pose there puts her mouth on its fovea's line
+            return self.face_reach(at=H, yaw=yaw, base_mode="heels", on_line=True) is not None
         if need == "pull":                                                  # one trunk reaches both its forearms from her tall kneel
             saved = self.base
             self.base = dict(mode="tall", at=_lst(np.asarray(H, float) + fwd * HEELS_BACK), yaw=float(yaw), lean=0.0, spine=0.0,
@@ -3506,6 +3515,10 @@ class ParentMotion:
             return []                                                       # she already kneels beside it, clear of it: she stays
         self.trunk_kneel = False
         kp = self._kneel_plan(where, offs, alongs, need)
+        if kp is None and need == "lean_line":                              # A96: no spot puts her face on its line (it looks at the
+            a["info"]["line_spot"] = False                                  # floor, a toy): its periphery, as before A94
+            need = "lean"
+            kp = self._kneel_plan(where, offs, alongs, need)
         if kp is None:
             if need == "lean" and any("cannot be done" in str(r[-1]) for r in self.kneel_reasons):
                 raise Refuse("no pose inside human ranges puts her face where its eyes can reach, from any spot she can kneel at "
@@ -3522,10 +3535,11 @@ class ParentMotion:
             curT = np.asarray(b["at"], float) + (fwd0 * HEELS_BACK if b["mode"] == "heels" else 0)
             if float(np.linalg.norm(curT - T)) < 0.02 and abs(_ang(b["yaw"] - yaw)) < math.radians(3) and b["mode"] == "heels":
                 return []
-            if float(np.linalg.norm(curT - T)) < 0.6 and abs(_ang(b["yaw"] - yaw)) < math.radians(25) and not kp["clear"] and \
+            if float(np.linalg.norm(curT - T)) < KNEE_ROUTE_M and abs(_ang(b["yaw"] - yaw)) < math.radians(KNEE_ROUTE_DEG) and \
+                    not kp["clear"] and \
                     (b["mode"] == "tall" or self._clearance(frame_segs("kneel_down", 2.5, curT, b["yaw"])) >= K.CLEAR_M) and \
                     all(self._clearance(frame_segs("kneel", "tall", curT, b["yaw"] + _ang(yaw - b["yaw"]) * v)) >= K.CLEAR_M
-                        for v in (0.5, 1.0)):
+                        for v in (0.25, 0.5, 0.75, 1.0)):
                 if b["mode"] == "heels":
                     out.append(dict(type="kneel_down", at=_lst(curT), yaw=b["yaw"], u0=3.0, u1=2.0))
                 if abs(_ang(b["yaw"] - yaw)) > math.radians(3):                # turned on her knees to the new spot's facing first
@@ -3636,10 +3650,19 @@ class ParentMotion:
         for child_m in (K.CLEAR_CHILD_M, K.CLEAR_CHILD_TIGHT_M):           # A6's clearance first; where the child's limbs close every
             ok = self.plan.free(K.BODY_R_M + K.CLEAR_FURNITURE_M, self.child if child else None, list(txy.values()), goal=goal,
                                 goal_r=goal_r, goal_clear=goal_clear, child_m=child_m)   # way, she threads past them nearer
+            first = None
             if not ok[self.plan.cell(start)]:                              # she stands where the clearances do not hold (by the child,
                 near = self.plan.free(K.BODY_R_M + 0.02, None, [], None)    # after kneeling): the path starts from where she is
-                ok = ok | (near & (np.hypot(*np.meshgrid(self.plan.xs - start[0], self.plan.ys - start[1], indexing="ij")) <= 0.6))
-            path = self.plan.path(start, goal, ok)
+                dxy = np.hypot(*np.meshgrid(self.plan.xs - start[0], self.plan.ys - start[1], indexing="ij"))
+                ok = ok | (near & (dxy <= 0.6))
+                if not ok[self.plan.cell(start)]:                          # wedged (A95: standing up from the sofa's corner, 12 cm from
+                    cand = np.argwhere(ok & (dxy <= 0.6))                  # its arm): one step to the nearest free cell first, then
+                    if len(cand):                                          # the path from there
+                        k_ = cand[np.argmin(dxy[cand[:, 0], cand[:, 1]])]
+                        first = np.array([float(self.plan.xs[k_[0]]), float(self.plan.ys[k_[1]])])
+            path = self.plan.path(start if first is None else first, goal, ok)
+            if path is not None and first is not None:
+                path = [np.asarray(start, float)] + [np.asarray(p_, float) for p_ in path]
             if path is not None or not child or not toys:
                 break
         if path is None and toys and depth < 3:
@@ -3759,8 +3782,12 @@ class ParentMotion:
             sd = "L" if lat > 0 else "R"
             if self.holding[sd] is not None:                                # a hand holding a toy (to show, to give) keeps it: the
                 sd = "R" if sd == "L" else "L"                              # other clears the way
-                if self.holding[sd] is not None:
-                    raise Refuse(f"both her hands are full: she cannot clear the {k} where she would kneel")
+                if self.holding[sd] is not None:                            # both full (A95): one set aside, then the approach planned anew
+                    me = self.phases[0].get("grp") if self.phases else None
+                    if me is not None:                                        # the rest of this approach (its shuffle in) goes with it
+                        self.phases = [self.phases[0]] + [q for q in self.phases[1:] if q.get("grp") != me]
+                    return [dict(type="plan", what="set_aside", args=dict(toy=self.holding[sd])),
+                            dict(type="plan", what="approach", args={})]
             aside = None
             for sg in ((1, -1) if lat > 0 else (-1, 1)):
                 hand = sd
@@ -4400,6 +4427,10 @@ class ParentMotion:
     def _plan_fetch(self, a, toy):
         if toy in self.holding.values():
             return []
+        if all(v is not None for v in self.holding.values()):          # both hands full (A95): the toy she needs least set aside first
+            other = self.holding[self._near_hand(self.d.xpos[self.toys[toy]])]
+            other = other if other is not None else next(v for v in self.holding.values() if v is not None)
+            return [dict(type="plan", what="set_aside", args=dict(toy=other)), dict(type="plan", what="fetch", args=dict(toy=toy))]
         if self._toy_clearance(toy, np.zeros(3)) < 0.01:
             raise Refuse(f"the child has the {toy}: she never takes a toy from it (A4)")
         c = self.d.xpos[self.toys[toy]].copy()
@@ -4844,10 +4875,14 @@ class ParentMotion:
 
     # ---- her face where its eyes can reach (A3, A22, C34)
     def _act_lean_in(self, a, t):
-        return self._near(a, alongs=K.LEAN_ALONG_M, need="lean") + [dict(type="plan", what="lean_in", args={})]
+        on_line = t == "child_line"                                       # A94: her face onto its line of sight (the smile she gives)
+        need = "lean_line" if on_line else "lean"                          # A96: from a spot where a pose puts it ON the line (else, the
+        return self._near(a, alongs=K.LEAN_ALONG_M, need=need) + [dict(type="plan", what="lean_in", args=dict(on_line=on_line))]   # periphery)
 
-    def _plan_lean_in(self, a):
-        sol = self.face_reach()
+    def _plan_lean_in(self, a, on_line=False):
+        sol = self.face_reach(on_line=on_line)
+        if sol is None and on_line:
+            sol = self.face_reach()                                       # no pose on its line from here: its periphery, as before
         a["info"]["face"] = sol
         if sol is None:
             raise Refuse("no pose inside human ranges puts her face where its eyes can reach from here (A22, C34)")
@@ -4895,12 +4930,13 @@ class ParentMotion:
             out[sd] = (bool(inside and dist >= K.FACE_MIN_M and turn <= E_FACE_TURN_DEG()), off, dist, turn)
         return out
 
-    def face_reach(self, at=None, yaw=None, modes=("heels", "tall"), base_mode=None):
+    def face_reach(self, at=None, yaw=None, modes=("heels", "tall"), base_mode=None, on_line=False):
         """the kneeling trunk (mode, lean, spine, twist) at her spot that puts her mouth where the child's eyes can reach it with
         their foveae (A22): LEAN_DIST_M from its eyes (never nearer than FACE_MIN_M, A3), 15 deg or more off its fovea's current line
         (A3), her face turned within A1's 75 deg of the eye, her legs, trunk and head 3 cm clear of it (A4), her free hands too as
         she will hold them; the least bend first (A1: either eye counts; both eyes preferred at the same bend). None when none does
-        (C34). base_mode: the mode `at` is given in (her base's own when omitted)"""
+        (C34). base_mode: the mode `at` is given in (her base's own when omitted). on_line (A94): her mouth ON its fovea's current
+        line instead, within FACE_ON_LINE_DEG, the en-face position a parent takes to smile (Stern 1974; Papousek and Papousek 1987)"""
         b = self.base
         at = np.asarray(b["at"] if at is None else at, float); yaw = b["yaw"] if yaw is None else yaw
         bm = b["mode"] if base_mode is None else base_mode
@@ -4921,7 +4957,8 @@ class ParentMotion:
             kin.look(p, self.child.eyes)
             mouth, ffwd, centre = self.mouth_of(p)
             fv = self.face_in_view(mouth, ffwd, centre)
-            ok = {s_: fv[s_][0] and fv[s_][1] >= K.FACE_OFF_LINE_DEG and lo <= fv[s_][2] <= hi for s_ in "LR"}
+            ok = {s_: fv[s_][0] and (fv[s_][1] <= K.FACE_ON_LINE_DEG if on_line else fv[s_][1] >= K.FACE_OFF_LINE_DEG)
+                  and lo <= fv[s_][2] <= hi for s_ in "LR"}
             if not any(ok.values()) or (either is not None and not all(ok.values())):
                 continue
             if any(r.get("violations") for r in p.report.values() if isinstance(r, dict)):
