@@ -126,6 +126,10 @@ Every change of her face is felt only when the child sees it. The born reading u
 - **T-D, pain as cortisol:** after a pain she did not see, the forecast of pain rises before the act that caused it, and the moment is
   replayed that night. The act is **not** made less often, because pain moves no dopamine. This is a registered prediction, reported
   either way. If painful acts persist, the fix is her frown at blows she sees, never a pain reward.
+- **T-E, transfer (generalization, the owner's word 2026-09-26):** a skill learned on one toy is shown on a toy it never had (the
+  reach and grasp learned on the rattle, tried on the bear), in a place on the mat it never lay, after a night; and a new exemplar of
+  a known kind is treated as that kind (the word clause's test, A60b). Scored against its born state and its first tries on the
+  trained toy: fewer tries to the first success than the first time, by A19's rule. Reported at every rung.
 
 **Phase 6: reality.**
 - A49's removal test: her smile read from its own pixels (Level 2).
