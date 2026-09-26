@@ -172,14 +172,15 @@ KINDS = {
             "hers: arm_raise, wave, shake, open_hand; A52), asking nothing and earning nothing",
     "stand": "stand up where she is",
 }
-# NOT AT BIRTH (A25c, the lead's decision of 2026-09-25): the acts that move the child's body through a movement or a posture it did not
-# make: the guides of its limbs (A8, A10), the knee over, the pull-to-sit and the prop with its catch (A9). Refused when asked, with this
-# reason, and logged. Why: (1) a guide is a demonstration and a pull-to-sit a posture given, so First 1's claim ("from her smiles, no
-# demonstrations": SIM_DESIGN A63 and the skeptic's review) holds only without them; (2) a person cannot sit up or lift a 34 kg body
-# (risk 4), so the pull and the prop were the child's share alone. Her care stays: attend (a hand resting on its trunk), touch, the brief
-# turn from its front, show, hand over, bring back, point, peekaboo, copying. Kept in KINDS (their controllers stay built) so a
-# later decision can open them at a boundary, never silently.
-NOT_AT_BIRTH = ("guide", "knee_over", "pull_to_sit", "prop")
+# NOT AT BIRTH (A25c, the lead's decision of 2026-09-25; amended by A90, 2026-09-26): the acts that move the child's body through a
+# movement or a posture it did not make. At A25c all four were closed: the guides of its limbs (A8, A10), the knee over, the pull-to-sit
+# and the prop with its catch (A9), because a guide is a demonstration and First 1's claim was "no demonstrations", and because a
+# person cannot sit up or lift a 34 kg body (risk 4). A90 (the teacher's build 2d; docs/audit/teacher_of_reality.md 2d) reopens the
+# guide and the knee over: a coach guides a hand, within the force a person can use (65 N, 76 N), and the smile goes to the child's own
+# repeat, never to the guided act (the conduct judges nothing while her hands move it: HANDS_ON), every guide counted beside First 1
+# (A63). The pull-to-sit and the prop stay closed: 34 kg. Refused when asked, with this reason, and logged. Kept in KINDS (their
+# controllers stay built) so a later decision can open them at a boundary, never silently.
+NOT_AT_BIRTH = ("pull_to_sit", "prop")
 _OPENED = [False]                           # the controllers' own tests open them (opened()); a life never does
 
 
@@ -876,6 +877,7 @@ class ParentMotion:
         self.pain_win = np.zeros((len(kin.SEGS), K.HER_PAIN_STEPS))
         self.pain_any = False
         self.hits = []
+        self.lesson_dist = 0.10                 # her lesson's distance for bring_back (A90): the toy set this far out from its near hand
         self.brief_s = 0.0
         self.rest_s = K.BRIEF_REST_S
         self.drawn_face = None
@@ -937,7 +939,7 @@ class ParentMotion:
                     off_serial=dict(self.off_serial), ymoved=dict(self.ymoved), quiet=dict(self.quiet), body_f=_lst(self.body_f), body_hist=self.body_hist.tolist(),
                     prev=self.prev,
                     ydir={c: _lst(v) for c, v in self.ydir.items()}, touching=dict(self.touching), last_touch=dict(self.last_touch), pain_win=self.pain_win.tolist(),
-                    hits=[list(h) for h in self.hits], brief_s=self.brief_s, rest_s=self.rest_s,
+                    hits=[list(h) for h in self.hits], brief_s=self.brief_s, rest_s=self.rest_s, lesson_dist=float(self.lesson_dist),
                     drawn_face=None if self.drawn_face is None else [list(self.drawn_face[0]), _lst(self.drawn_face[1])],
                     face_shown=None if self.face_shown is None else list(self.face_shown),
                     face_prev=None if self.face_prev is None else list(self.face_prev),
@@ -985,6 +987,7 @@ class ParentMotion:
         self.pain_win = np.array(s["pain_win"], dtype=np.float64).reshape(len(kin.SEGS), K.HER_PAIN_STEPS)
         self.pain_any = bool(self.pain_win.any())
         self.hits = [tuple(h) for h in s["hits"]]
+        self.lesson_dist = float(s.get("lesson_dist", 0.10))
         self.brief_s, self.rest_s = float(s["brief_s"]), float(s["rest_s"])
         self.drawn_face = None if s["drawn_face"] is None else (tuple(tuple(x) for x in s["drawn_face"][0]), np.array(s["drawn_face"][1]))
         fs = s.get("face_shown")
@@ -4633,13 +4636,13 @@ class ParentMotion:
         return self._fetch(a, toy) + self._near(a) + [dict(type="plan", what="put_near", args=dict(toy=toy))]
 
     def _plan_put_near(self, a, toy):
-        """the toy set down within the child's reach: on the floor beside its near hand, a little out from its body (4.10's reach
-        ladder, level 1: at about 80% of its reach)"""
+        """the toy set down within the child's reach: on the floor beside its near hand, out from its body by her lesson's distance
+        (lesson_dist: 0.10 at birth, 4.10's reach ladder level 1; her day plan raises it 0.05 a mastered level, A90)"""
         ch = self.child
         her = np.asarray(self.base["at"], float)
         cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
         out = unit((ch.grasp[cs] - ch.torso)[:2] * 1.0)
-        xy = ch.grasp[cs][:2] + out * 0.10
+        xy = ch.grasp[cs][:2] + out * float(self.lesson_dist)
         sd, swap = self._giving(toy, np.r_[xy, 0.0])
         return swap + self._put_phases(sd, xy)
 

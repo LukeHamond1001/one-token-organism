@@ -243,38 +243,50 @@ def test_no_meal():
 
 def test_her_eyes():
     """lane 10 (A89, the teacher's build 2a): her eyes on its acts. A ball set against its still left palm is not "got" (its own
-    reach and hold needs that hand to have moved, or reached toward it, within MOVED_TICKS); after its left arm moves for two
-    ticks the ball set into that palm is "got ball", judged worth 2 within the tick, and she says "yes!" on the next free tick;
-    never at the first tick, never a toy that lay against its hand at birth; her notebook and her eyes' state survive a save; a
-    fall is still "fell", never "threw" """
+    reach and hold needs that hand to have moved, or reached toward it, as the touch began); in another world, after its left arm
+    moves for two ticks, the ball set into that palm and kept there GOT_HOLD ticks is "got ball", judged worth 2 within the tick,
+    and she says "yes!" on the next free tick; never at the first tick, never a toy that lay against its hand at birth; her
+    notebook and her eyes' state survive a save; a fall is still "fell", never "threw" """
+    import mujoco
+
+    def placer(w):
+        m, d = w.m, w.d
+        j = m.body("toy_ball").jntadr[0]
+        a = m.jnt_qposadr[j]
+
+        def place(gap):
+            ch = L.PM_child(w)
+            d.qpos[a:a + 3] = ch.grasp["L"] + ch.palm_n["L"] * (0.03 + gap)
+            d.qvel[m.jnt_dofadr[j]:m.jnt_dofadr[j] + 6] = 0.0
+            mujoco.mj_forward(m, d)
+        return place
+    # a still palm: the ball set against it is not its own reach
+    w0, lane0 = _world()
+    _run(w0, 4)
+    assert not [e for e in lane0.last["events"] if e[0] == "got"], lane0.last["events"]      # what lay against its hand at birth
+    place0 = placer(w0)
+    still = []
+    for _ in range(5):
+        place0(0.0); w0.frame(); w0.apply({})
+        still += [tuple(e) for e in lane0.last["events"]]
+    assert not [e for e in still if e[0] == "got"], still
+    # its own reach: the arm moves, then the ball comes into the palm and stays
     w, lane = _world()
     _run(w, 4)
-    assert not [j for j in (lane.last.get("judged") or ()) if j[1] in ("got", "reach_nearer")], lane.last.get("judged")
-    assert not [e for e in lane.last["events"] if e[0] == "got"], lane.last["events"]        # what lay against its hand it did not get
-    import mujoco
     m, d = w.m, w.d
-    j = m.body("toy_ball").jntadr[0]
-    a = m.jnt_qposadr[j]
+    place = placer(w)
     evs, judged, said = [], [], []
-
-    def place(gap):
-        ch = L.PM_child(w)
-        d.qpos[a:a + 3] = ch.grasp["L"] + ch.palm_n["L"] * (0.03 + gap)
-        d.qvel[m.jnt_dofadr[j]:m.jnt_dofadr[j] + 6] = 0.0
-        mujoco.mj_forward(m, d)
-    still = []
-    for _ in range(3):                                                              # against a still palm: not its own reach
-        place(0.0); w.frame(); w.apply({})
-        still += [tuple(e) for e in lane.last["events"]]
-    assert not [e for e in still if e[0] == "got"], still
-    d.qpos[a:a + 3] = [0.9, -1.2, 0.2]; mujoco.mj_forward(m, d)                      # the ball away again
-    for _ in range(4):
-        w.frame(); w.apply({})
+    from body.sim import reflexes as R
+    from body.sim import g1scene as G
+    cl = R.CLOSING["hand_l"]
+    opening = W.act_flat([2 if j not in cl else (0 if cl[j] > 0 else 4) for j in dict(G.EFFECTORS)["hand_l"]])
+    for _ in range(6):                                                              # its fist (the grasp on the mat) opened by its own act
+        w.frame(); w.apply({"hand_l": opening})
     for _ in range(2):                                                              # its left arm moves (the elbow's big step)
-        w.frame(); w.apply({"arm_l": W.act_flat([2, 2, 2, 0, 2, 2, 2])})
-    for gap in (0.0, 0.0):                                                          # the ball into that palm within MOVED_TICKS
-        place(gap); w.frame(); w.apply({})
-        evs += [tuple(e) for e in lane.last["events"]]
+        w.frame(); w.apply({"arm_l": W.act_flat([2, 2, 2, 0, 2, 2, 2]), "hand_l": opening})
+    for k in range(5):                                                              # the ball into that open palm within MOVED_TICKS, kept
+        place(0.02); w.frame(); w.apply({"hand_l": opening} if k < 2 else {})       # there GOT_HOLD ticks (a hold, not a graze); then
+        evs += [tuple(e) for e in lane.last["events"]]                             # the grasp closes on it
         judged += [tuple(x) for x in (lane.last.get("judged") or ())]
         if lane.last.get("line"):
             said.append((w.tick, lane.last["line"]))
@@ -287,9 +299,10 @@ def test_her_eyes():
     got = [e for e in evs if e[0] == "got"]
     assert got == [("got", "ball")], evs
     assert [j for j in judged if j[1] == "got"] == [(2, "got", "ball")], judged
-    assert said and said[0][1].startswith(("yes", "good")), said                     # her "yes!" marks the smile
-    assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted"}, lane.conduct.book   # in a raised
-    st = lane.state()                                                                # hand: "lifted" too, as a person would see it
+    assert said and any(ln.startswith(("yes", "good")) for _t, ln in said), said     # her "yes!" marks the smile (after her label of
+                                                                                     # the ball coming into its hand, if that came first)
+    assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted", "hit"}, lane.conduct.book   # in a
+    st = lane.state()                                                                # raised hand: "lifted" too, as a person would see it
     assert st["eyes"]["hand_prev"]["left"] and st["conduct"]["book"]["got"] == {"ball": 1}
     w2, lane2 = _world()
     w2.load_state(w.save_state())
@@ -303,12 +316,54 @@ def test_her_eyes():
         w.frame(); w.apply({})
         evs2 += [tuple(e) for e in lane.last["events"]]
     assert ("fell", "duck") in evs2 and not [e for e in evs2 if e[0] == "threw"], evs2
-    print(f"lane 10: the ball brought into its left palm: events {[e for e in evs if e[0] in ('got', 'reach_nearer', 'lifted')]},",
-          f"judged {judged}, her line {said[0]}; her book {lane.conduct.book}; saved and restored; a dropped duck fell, not thrown")
+    print(f"lane 10: a ball against a still palm: no 'got'; after its arm moved, the ball kept in its palm: events",
+          f"{[e for e in evs if e[0] in ('got', 'reach_nearer', 'lifted', 'hit')]}, judged {judged}, her line {said[0]}; her book",
+          f"{lane.conduct.book}; saved and restored; a dropped duck fell, not thrown")
+
+
+def test_her_lessons():
+    """lane 11 (A90, the teacher's build 2c): her lessons in a short day with a still child. In motor time her plan sets a focus toy
+    within its reach ("set_near": her line "here. the X." and her motion's bring_back at lesson_dist 0.10, level 0); the toy comes
+    to rest within reach of a hand as she sees it; a "got" smile on that toy (written into her book here) raises the next lesson
+    on it a level (0.15); her plan's levels survive a save; floor play gives lessons among its offers"""
+    w, lane = _world(plan=True, day_ticks=2400)
+    lessons, lines = [], []
+    for k in range(1300):
+        w.frame(); w.apply({})
+        if lane.last.get("line"):
+            lines.append((k, lane.plan.kind, lane.last["line"]))
+        for x in lane.plan.log:
+            if x[1] == "lesson" and x not in lessons:
+                lessons.append(x)
+    reach = [x for x in lessons if x[2] == "reach"]
+    assert reach and all(x[4] == 0 and x[5] == 0.1 for x in reach), reach[:4]
+    toy = reach[0][3]
+    assert [ln for _k, _kind, ln in lines if ln.startswith(("here.", "look. here.")) and toy in ln], lines[:20]
+    p = lane._p
+    seen = {s.id: s for s in p.seen}
+    assert toy in seen and (seen[toy].child_can_reach or seen[toy].on in ("hand", "mama")), (toy, seen.get(toy))
+    lane.conduct.book.setdefault("got", {})[toy] = 1                                # it got the toy once (its own reach): a level up
+    lane.plan.focus = [toy]
+    lane.plan._lesson(w.tick, lane)
+    later = [x for x in lane.plan.log if x[1] == "lesson" and x[2] == "reach" and x[3] == toy and x[0] == w.tick]
+    assert later and later[0][4] == 1 and later[0][5] == 0.15, later[:2]
+    assert abs(lane.conduct.motion.lesson_dist - 0.15) < 1e-9
+    st = lane.plan.state()
+    assert st["level"] == {toy: 1} and toy in st["got_seen"]
+    w2, lane2 = _world(plan=True, day_ticks=2400)
+    w2.load_state(w.save_state())
+    assert lane2.plan.level == lane.plan.level and lane2.conduct.motion.lesson_dist == lane.conduct.motion.lesson_dist
+    lane.plan.level_t[toy] = w.tick - DP.NO_PROGRESS - 1                            # a block with no new "got": a level back
+    lane.plan._lesson(w.tick + 1, lane)
+    back = [x for x in lane.plan.log if x[1] == "lesson" and x[2] == "reach" and x[3] == toy and x[0] == w.tick + 1]
+    assert back and back[0][4] == 0 and back[0][5] == 0.1, back
+    print(f"lane 11: her lessons: {len(reach)} reach lessons at level 0 (0.10 m) on {sorted({x[3] for x in reach})}, her line",
+          f"'{[ln for _k, _kind, ln in lines if toy in ln][0]}'; the {toy} within reach as she sees it; after one 'got' the next lesson",
+          f"on it at level 1 (0.15 m); the plan's levels saved and restored")
 
 
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
-              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes]
+              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -5,8 +5,11 @@ it gets it when ot frowns it gets cortisol. we need parent to become the teacher
 to solve robtics. I want to solve grounded reward live enironment rl robotics."
 And after the first draft: "also add pain is cortisol tp plan. no bottle no charger. objects are for teaching".
 
-**The rule, in one line.** Dopamine, up or down, comes only from her face. Cortisol comes from her frown and from its own pain.
-Every object in the room is there for her to teach with; nothing in it meets a need.
+**The rule, in one line** (as amended by the owner the same evening, A91): dopamine comes from her face, up or down, and from
+its own pain, down: biology pays for pain, and the first plumbing day showed why (C79: with nothing paying for pain, no value learned
+to avoid it, and the body rolled onto its front and stayed hurting). Cortisol rides the dips, as it always did in the core. Every
+object in the room is there for her to teach with; nothing in it meets a need. (The first draft below made pain cortisol alone;
+A88 built it so; A91 reversed it. The text is kept as the record.)
 
 Read against `sim` at 0a42821 (`body/sim/anatomy.py`, `body/sim/lane.py`, `body/sim/parent_feel.py`, `body/sim/lang/conduct.py`,
 `body/core/`). Sources were checked through Europe PMC, arXiv and the publishers' pages. Nothing here is built yet.
@@ -123,7 +126,7 @@ Every change of her face is felt only when the child sees it. The born reading u
 - **T-B, social referencing grown by use:** after its own act, it looks to her face within 20 ticks more often than at birth (Sorce
   et al. 1985; First 2 already holds Walden & Ogan 1988).
 - **T-C, a frown felt:** an act frowned at once is made less often that day and after the night.
-- **T-D, pain as cortisol:** after a pain she did not see, the forecast of pain rises before the act that caused it, and the moment is
+- **T-D (retired by A91: pain pays again, so the act is expected to grow rarer; the test's first half, the forecast of pain and the night's replay of the moment, still holds):** pain as cortisol: after a pain she did not see, the forecast of pain rises before the act that caused it, and the moment is
   replayed that night. The act is **not** made less often, because pain moves no dopamine. This is a registered prediction, reported
   either way. If painful acts persist, the fix is her frown at blows she sees, never a pain reward.
 - **T-E, transfer (generalization, the owner's word 2026-09-26):** a skill learned on one toy is shown on a toy it never had (the
@@ -197,7 +200,7 @@ pain and distress (`lane.py:293–337`). To add:
 - **Frowns from stage 2:** hitting her, a toy thrown or knocked off a surface, a blow past F_pain. Never failure, pain or distress.
 - **Formal trials:** no judgment, no face (A60b), unchanged.
 
-**2c. Her lessons (the curriculum, L3).** A ladder in the order infants climb it. Each rung has the setup that makes the act
+**2c. Her lessons (the curriculum, L3)** (first build 2026-09-26, A90: the reach rung by `set_near` at rising distance, the handle rung by `hand_over`, the give rung by `ask_give`, all read from her book; the roll, head-up and sit setups still to build). A ladder in the order infants climb it. Each rung has the setup that makes the act
 likely, the reading that scores it, and the step up. She picks the rung where the child is nearly there by her notebook (its best
 within one step of the bar), stays while it improves, steps up when her smile for it has habituated under 0.5, and steps down after
 a block with no progress. Floor play and motor time run the rungs; show time and the words stay as they are.
@@ -213,7 +216,7 @@ a block with no progress. Floor play and motor time run the rungs; show time and
 | head up on its front | a toy at its eye level while prone | head up | longer |
 | sit | a toy above its chest at arm's length (the pull and the prop stay closed: 34 kg) | sat | longer |
 
-**2d. Her hands (the scaffolds; A25c reopened in part, at a boundary: A90).** `guide` (a forearm along a path, within 65 N: A8, A10)
+**2d. Her hands (the scaffolds; A25c reopened in part, at a boundary: A90)** (built 2026-09-26: guide and knee_over open, pull_to_sit and prop closed; nothing judged while her hands move it; her plan does not yet ask for a guide). `guide` (a forearm along a path, within 65 N: A8, A10)
 and `knee_over` (within 76 N) reopen: their controllers are built and tested (`OPENED_LATER`), and a person can do both. `pull_to_sit`
 and `prop` stay closed: a person cannot lift 34 kg. A guide is used only after a block with no progress at a rung, and the smile
 goes to the child's own repeat within 40 ticks, never to the guide. Every guide is counted in the intervention log printed beside

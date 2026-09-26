@@ -1871,6 +1871,47 @@ def test_motor_judgments():
           "the book saved")
 
 
+def test_her_lessons_and_hands():
+    """A90 (the teacher's build 2c, 2d): her lesson's setup intents compose as one line with their acts: "set_near" on the ball says
+    "here. the ball." (or "look. here. the ball.") with the bring_back of the ball, her look at it and back to its eyes; "hand_over"
+    with the hand-over; her book's smiles count as before while a set is queued; and while her hands move its body (a guide, a
+    turn, a pull running) nothing it does is judged, and the log says so; the guide and the knee over are no longer closed at
+    birth, the pull-to-sit and the prop are"""
+    from body.sim import parent_motion as PM
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con)
+    con.request("set_near", o="ball")
+    s = con.tick(0, P(0, seen=TOYS))
+    assert s.line is not None and s.line.intent == "set_near" and s.line.text in ("here. the ball.", "look. here. the ball."), s.line
+    assert C.Act("bring_back", "ball") in s.acts and C.Act("look", "child_eyes") in s.acts, s.acts
+    con.request("hand_over", o="duck")
+    s2 = None
+    for t in range(1, 40):
+        s2 = con.tick(t, P(t, seen=TOYS))
+        if s2.line is not None and s2.line.intent == "hand_over":
+            break
+    assert s2.line is not None and s2.line.intent == "hand_over" and C.Act("hand_over", "duck") in s2.acts, (s2.line, s2.acts)
+    mid = con.motion.request(C.Act("guide", "far_arm"), 40)                      # her guide of its far arm, running (the stub)
+    con.acts_open.append([mid, "guide", "far_arm", None, 40, "unreported"])
+    s3 = con.tick(40, P(40, seen=TOYS, events=(("rolled", None), ("got", "cup"))))
+    assert s3.judgments == [] and "her hands on it" in con.book_log[-1][3], (s3.judgments, con.book_log[-1])
+    t_end = 40 + C.STUB_TICKS["guide"] + 1
+    for t in range(41, t_end):
+        con.tick(t, P(t, seen=TOYS))
+    s4 = con.tick(t_end, P(t_end, seen=TOYS, events=(("rolled", None),)))
+    assert s4.judgments == [(2, "rolled", None)], s4.judgments                      # its own repeat after the guide: the worth
+    assert PM.NOT_AT_BIRTH == ("pull_to_sit", "prop") and "guide" in C.HANDS_ON and "turn" in C.HANDS_ON
+    con5 = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con5)
+    s5 = con5.tick(0, P(0, seen=TOYS, events=(("distress", None),)))                # face down in distress: she turns it over first
+    assert s5.line is not None and s5.line.intent == "turn_over" and C.Act("turn", "child") in s5.acts, (s5.line, s5.acts)
+    s6 = con5.tick(1, P(1, seen=TOYS, events=(("pain", None),)))
+    assert s6.line is None or s6.line.intent == "comfort", s6.line                  # its pain alone: comfort as before
+    print(f"A90 her lessons and hands: 'set_near' -> '{s.line.text}' with {[a.kind for a in s.acts]}; 'hand_over' -> '{s2.line.text}';",
+          "nothing judged while a guide runs (the log says so), the roll after it worth 2; guide and knee_over open at birth, the",
+          "pull-to-sit and the prop closed")
+
+
 def _perfect(**kw):
     """a conduct with her imperfection off (A52; test 37 holds it), so a test isolates another rule. (Before A52 was built, as on
     7447f73, she was always so: the new tests then fail at their own assertions, not at this call.)"""
@@ -6685,7 +6726,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands]
 
 if __name__ == "__main__":
     t0 = time.time()

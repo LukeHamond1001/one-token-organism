@@ -151,6 +151,8 @@ FRAMES = {
               F("look. the {o}.", "{o}"), F("this is a {o}.", "{o}"), F("here is the {o}.", "{o}"), F("a {o}. a {o}.", "{o}")],
     "label_held": [F("your {o}.", "{o}"), F("it is your {o}.", "{o}"), F("you see your {o}.", "{o}")],
     "label_colour": [F("the {c} {o}.", "{o}"), F("a {c} {o}.", "{o}"), F("it is {c}.", "{c}"), F("the {o} is {c}.", "{c}")],
+    "set_near": [F("here. the {o}.", "{o}"), F("look. here. the {o}.", "{o}")],   # her lesson's setup: the toy set within reach (A90)
+    "hand_over": [F("here. a {o}.", "{o}"), F("look. here. a {o}.", "{o}")],      # the toy into its hand (the handle rung, A90)
     "show": [F("look at the {o}.", "{o}"), F("look. a {o}.", "{o}"), F("see the {o}?", "{o}"), F("see? a {o}.", "{o}"),
              F("here is a {o}.", "{o}")],
     "redirect": [F("look! the {o}.", "{o}"), F("look at the {o}!", "{o}"), F("see? the {o}.", "{o}")],
@@ -176,6 +178,7 @@ FRAMES = {
     "peekaboo_hide": [F("where is mama?", "mama")],
     "peekaboo": [F("peekaboo!", "peekaboo"), F("peekaboo {n}!", "{n}")],
     "comfort": [F("oh. oh {n}.", "{n}"), F("uh oh. mama is here."), F("mama is here.")],
+    "turn_over": [F("oh. up.", "up"), F("up. up. up!", "up")],                   # face down in distress: she turns it over (A90)
     "hit": [F("oh!")],
     "no": [F("no.")],
     "no_talkover": [F("no.")],

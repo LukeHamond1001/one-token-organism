@@ -212,6 +212,10 @@ ACT_KINDS = {
     "point": "a point at the target, either hand (parent_acts.point)",
     "open_hand": "an open hand held out for the toy (the give ask's help level 0, 4.10)",
     "hand_over": "the toy put into the child's near or far hand (parent_acts.hand_over)",
+    "bring_back": "the toy fetched and set down within the child's reach beside its near hand, at her lesson's distance "
+                  "(parent_motion.bring_back, lesson_dist; the reach rung's setup, A90)",
+    "turn": "the brief capped turn of the child from its front toward its back (parent_motion.turn, A7): her care at its distress, "
+            "face down (A90); refused unless it lies on its front",
     "touch": "a hand resting on the named part of the child, within one hand's cap (4.2)",
     "withdraw": "her hand drawn back from where she was hit (4.10)",
     "guide": "guide the named limb within the guide's cap (g1acts.guide, A10)",
@@ -234,7 +238,7 @@ ACT_KINDS = {
 }
 STUB_FOCUS = 60                               # the stub runs a during='focus' act until the conduct cancels it (its word's end)
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
-              "withdraw": 2, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
+              "withdraw": 2, "bring_back": 20, "turn": 14, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
               "reveal_face": 2, "do": 7, "copy": 7, "present": 12}   # the stub's nominal times, ours; W2 measures its own
 
 
@@ -257,6 +261,7 @@ POINTING = ("eyes", "head", "left", "right", "trunk")   # her motion's report ev
 FIELDS = POINTING + ("face",)                 # and her face ("mama" on a tick its expression moves)
 HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
+HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
 UNNAMED = "?"                                 # a field her motion left out or gave as no word: it points anywhere (fail-closed)
 AT_CHILD = ("child", "child_eyes", "child_periphery")   # the child itself: her eyes or face on its face, her hand held open or
                                                          # waved toward it, touching nothing (a part she touches is a place)
@@ -310,7 +315,7 @@ def directs(act):
         return [("head", "child"), ("trunk", UNNAMED)]                # her trunk leans in (A3)
     if k == "attend":
         return [("head", "child"), ("hand", "trunk"), ("trunk", UNNAMED)]   # she kneels beside it, a hand on its trunk
-    if k in ("show", "point", "open_hand", "hand_over"):
+    if k in ("show", "point", "open_hand", "hand_over", "bring_back"):
         return [("hand", tg)]
     if k in ("touch", "guide"):
         return [("hand", tg)]                                         # the part she touches, the limb she guides
@@ -318,6 +323,8 @@ def directs(act):
         return [("hand", "child")]
     if k == "pull_to_sit":
         return [("both", "arm"), ("trunk", UNNAMED)]                  # by the forearms (A9), her trunk leaning back
+    if k == "turn":
+        return [("both", "trunk"), ("trunk", UNNAMED)]                # her hands on its pelvis and shoulder (A7), her trunk working
     if k == "withdraw":
         return [("hand", None)]
     if k in ("cover_face", "reveal_face"):
@@ -481,13 +488,17 @@ INTENTS = {
     "label_held": Intent("plain", False, None, (LOOK_O, EYES)),
     "label_colour": Intent("plain", False, None, (LOOK_O, EYES)),
     "show": Intent("plain", False, None, (Act("show", "{o}"), EYES)),
+    "set_near": Intent("plain", False, None, (Act("bring_back", "{o}"), LOOK_O, EYES)),   # her lesson's setup (A90): the toy set within
+                                                                                          # its reach, farther as it succeeds
+    "hand_over": Intent("plain", False, None, (Act("hand_over", "{o}"), EYES)),          # the toy into its hand (the handle rung)
     "redirect": Intent("plain", False, None, (Act("point", "{o}"), LOOK_O)),
     "ask_where": Intent("plain", True, "gaze", (EYES,)),                 # never a point or a look to it: the ask tests the word
     "ask_what": Intent("plain", True, "name", (EYES,)),     # of what the child attends: no show while an ask is pending (A51)
     "ask_give": Intent("plain", True, "act", (Act("open_hand", "child"), EYES)),    # her hand held out to the child, never
                                                                                      # toward the toy (A51)
-    "confirm": Intent("approval", False, None, (EYES,)),
-    "confirm_act": Intent("approval", False, None, (EYES,)),
+    "confirm": Intent("approval", False, None, (Act("lean_in", "child_periphery"), EYES)),      # her face into its periphery as she
+    "confirm_act": Intent("approval", False, None, (Act("lean_in", "child_periphery"), EYES)),  # smiles, so the smile is seen (A90: 2 of
+                                                                                                 # 60 smiles seen on the plumbing day)
     "recast": Intent("approval", False, None, (LOOK_O, EYES)),
     "recast_word": Intent("approval", False, None, (EYES,)),
     "echo": Intent("plain", False, None, (LOOK_O, EYES)),
@@ -505,6 +516,7 @@ INTENTS = {
     "peekaboo_hide": Intent("plain", True, None, (Act("cover_face", "child"),)),
     "peekaboo": Intent("plain", False, None, (Act("reveal_face", "child"),)),
     "comfort": Intent("comfort", False, None, (Act("lean_in", "child_periphery"), Act("attend", "child"))),
+    "turn_over": Intent("comfort", False, None, (Act("turn", "child"), EYES)),    # its distress face down: she turns it over (A90)
     "hit": Intent("plain", False, None, (Act("withdraw", "child"),)),
     "no": Intent("no", False, None, (Act("withdraw", "child"),)),
     "no_talkover": Intent("no", False, None, (EYES,)),              # stage 2's "no." to a turn that talked over her (4.4, 4.6)
@@ -1776,6 +1788,9 @@ class Conduct:
         circuits). A new object starts n again. Every judgment, given or withheld, goes to book_log."""
         if self.trial is not None or not p.present:
             return
+        if any(a[1] in HANDS_ON and a[5] not in ENDED for a in self.acts_open):
+            self.book_log.append((t, None, None, "her hands on it: a guided act itself earns nothing (4.3)", 0)); del self.book_log[:-200]
+            return                                          # A90: while she guides, turns or pulls it, nothing it does is its own
         for k, o in p.events:
             row = K.MOTOR_WORTH.get(k)
             if row is None:
@@ -1879,7 +1894,13 @@ class Conduct:
         if not f.voice_free(t):
             return None
         ev = {k for k, _ in p.events}
-        # 1. the child's pain or distress: comfort (never a smile)
+        # 1. the child's pain or distress: comfort (never a smile); face down in distress, she turns it over first (A90: a
+        #    parent turns a baby stuck on its tummy; the plumbing day of 2026-09-26 found the wrists hurting under its weight there)
+        if "distress" in ev and p.present:
+            ln = f.compose("turn_over", t, p)
+            if ln is not None and f.allowed(ln, t, reply=True)[0]:
+                f.queue = []
+                return ln, False, None
         if ev & {"pain", "distress"} and p.present:
             ln = f.compose("comfort", t, p)
             if ln is not None and f.allowed(ln, t, reply=True)[0]:
@@ -1893,12 +1914,13 @@ class Conduct:
                 return ln, False, None
         # 2b. an act of its she judged this tick: "yes!" at once (A89): her voice marks the smile, a sound onset the born orienting
         #     turns toward (A43), so its eyes come to her face and the smile is seen before social referencing is learned. Not
-        #     while a set of hers is under way (its lines are said in full, 4.5), nor while she judges an ask (its X unnamed, A51):
-        #     the smile stands, the word is dropped (fast.refused)
+        #     while a new word's set is under way (its lines are said in full, 4.5, 4.8), nor while she judges an ask (its X
+        #     unnamed, A51): the smile stands, the word is dropped (fast.refused); her own label set gives way to it
         if self.confirm_act_due == t and p.present:
-            if f.queue or self.pending is not None:
-                f.refused.append((t, "confirm_act", "her set under way or an ask pending: the smile alone"))
+            if any(ln_.intent == "new_word" for ln_ in f.queue) or self.pending is not None:
+                f.refused.append((t, "confirm_act", "a new word's set under way or an ask pending: the smile alone"))
             else:
+                f.queue = []                                # her own label set gives way to the "yes!" (its lines were about the act)
                 o = p.obj(self.confirm_obj) if self.confirm_obj else None
                 ln = f.compose("confirm", t, p, o=o) if o is not None else None
                 if ln is None:
