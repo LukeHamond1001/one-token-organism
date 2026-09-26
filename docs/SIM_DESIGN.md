@@ -3361,6 +3361,8 @@ A67–A70 were decided by the lead later on 2026-09-25, on the core's builds: A6
   | her lines | 122 | 123 |
   | stress at the end | 2.36 | 2.71 |
 
+  **The live day on A96** (life day 2, from the dawn-3 pair, its first 1,600 ticks): 29 judgments (24 echo, 4 right_name, 1 reach_nearer), 0 smiles seen, her face on its line 50 ticks: on this day's child her line is rarely reachable, and the child never turns its eyes (C82: the gaze's own act was the hold on 600 of 600 probe ticks; only the VOR moves its windows). The teacher's side alone cannot make the smile seen; the gaze is the other half (A98).
+
   The same first smile (tick 48,184, from her tall kneel at its side) and the same walk round it (the spot on its line lay beyond the knee route: 479 ticks, three `lean_in` acts stacked, two judgments given on the way and lost). From tick 48,743 she kneels tall on its line at (−0.37, −1.26) and stays there: 28 face-test runs, 41% of the ticks, where the life's run had 2%. No judgment fell in that stretch (6 in all, the last at 48,651, before she was there), so the smiles seen are 1 and 1; the yield of the position is what changed, and the day will show whether the smiles follow. Not fitted to it: nothing of the child's was touched.
 - **Tests:** lane 12 `test_smile_brought` (held while brought, at most 40; 20 when not; 10 after a look); lane 10 `test_her_eyes` unchanged (en-face within the hold, the reading rises).
 
@@ -3396,6 +3398,35 @@ A67–A70 were decided by the lead later on 2026-09-25, on the core's builds: A6
   The body that moves gets hurt: 166 pain ticks (11%), the fixed act still pushing joints into their limits with the pattern summed on top (day 0 had 4 pain ticks in 24,000; the collapsed day none), and she spent 856 ticks comforting it (attend) instead of leaning in, so her face passed the test less. Pain pays −1 (A91) and is the body's to learn away from; the day's stress and cries are watched (C83). Not fitted: the child's reward, senses and rulers are untouched; only what proposes and what sums changed.
 - **Boundary:** a body change, so not on A96's day (the teacher's, dawn 3): applied at dawn 4 from the dawn-4 pair.
 - **Tests:** motor 6 rewritten to the summing law (the cycle returns where it began on every declared joint); motor 12 `test_earned_decisiveness`.
+
+**A98. The gaze's inverse model; a load with an organ born fresh** (the lead, 2026-09-26, from C82 and the live day on A96)
+- **Found:** on the dawn-3 save the gaze's own act was the hold on 600 of 600 ticks (its top probability 1.000; the same self-forecast fixed point as the limbs', A97), so only the VOR moves its windows and the born orienting bias (±log 4 on logits of ±25) cannot turn them to her voice or face. The live day on A96 alone: 29 judgments in 1,600 ticks and 0 smiles seen.
+- **As built:** `body/sim/anatomy.py`: the gaze declares an inverse model (`Gaze(..., inverse=True)`: act_inv of its own windows' motion, its sense the gaze state already in the body channel), so A97's earned decisiveness reaches it: born soft, the orienting bias weighs (a face in the periphery, a sound's onset, a sudden change turn the fovea), decisive as its inverse model earns kappa; kappa needs variety, so the hold cannot hold. The oculomotor system does learn its own saccades' consequences (the cerebellum's gain adaptation), and a newborn's looking is orienting-driven. `body/core/persistence.py _moments_aligned`: at a load whose recipe has parameters the saved life had not (the loader births them fresh, `strict=False`), each optimizer's saved moments are placed, in order, on the next parameter of their shape: a parameter born fresh in the middle takes no moments and shifts none onto a wrong shape (the first load crashed on that: Adam's moments of 30 numbers against 12). The identity on the same recipe. No new constant.
+- **Measured on the dawn-3 copy** (600 ticks from the save, A97 alone against A97+A98; the same child, one seed):
+
+  | the gaze | A97 | +A98 |
+  |---|---|---|
+  | distinct own acts in 600 ticks | 1 (the hold, 600 of 600) | 90 |
+  | mean top probability per joint | 1.000 | 0.348 |
+  | face test within 20 ticks after her "yes!"/"good" (5–6 lines) | 2 ticks | 0 ticks (8 in a first run whose loader had misplaced moments) |
+  | its gate's p_act | 0.257 | 0.411 |
+
+  The fixed point is broken (its eyes move by its own acts, the orienting bias weighs), but 600 ticks and six "yes!" lines do not show its fovea landing on her face after one. Over 1,500 ticks from the same save, A97+A98 together against the live day on A96 alone (its first 1,600 ticks, the same dawn-3 child):
+
+  | | the live day, A96 alone | the copy, A96+A97+A98 |
+  |---|---|---|
+  | its motor events | reach_nearer 1 | reach_nearer 11, half_roll 9, rolled 4, head_up 3, got 1, hit 1, lifted 1 |
+  | her judgments (motor / vocal) | 29 (1 / 28) | 27 (11 / 16) |
+  | smiles the child saw | 0 | 1 |
+  | ticks her face passed the face test | 50 | 54 |
+  | face-test ticks within 20 of her "yes!"/"good" | — | 0 (9 lines) |
+  | its hands' median speed, m/s (left / right) | still (A97's finding) | 0.199 / 0.122 |
+  | its posture back / side / front, ticks | — | 1036 / 106 / 358 |
+  | pain ticks | 0 | 116 |
+  | her acts (ticks) | — | attend 1000, lean_in 249, walk 171 |
+
+  The body moves, rolls (onto its front for 358 ticks, two distress spells) and is judged for it; the smile is not yet seen after her "yes!" (its eyes move, they do not yet find her: that is the learning to come, or C82's next question), and she comforts more than she teaches (C83). Applied at dawn 4 with A97 on the strength of the movement and the judgments; the smiles are day 3's question. The load births the gaze's inverse model fresh and every other optimizer's moments stay on their parameters (opt_inv: 32 kept, 4 born fresh; the identity everywhere else).
+- **Boundary:** a body change, with A97 at dawn 4 (both the body's; the teacher's day was dawn 3). Tests: motor 13 `test_moments_aligned`; motor 12 covers the law.
 
 ### (B) The owner's calls, with recommended defaults
 

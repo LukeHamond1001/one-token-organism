@@ -358,6 +358,30 @@ class PersistenceMixin:
                       "saves", flush=True)
         return life
 
+    @staticmethod
+    def _moments_aligned(name, opt, saved):
+        """A98 (2026-09-26): an optimizer's saved moments given back to the parameters they belong to when this load's recipe has
+        parameters the saved life had not (an organ born fresh at the load, `load_state_dict(strict=False)` above: the gaze's inverse
+        model): the saved states are indexed by the parameters' order, so a parameter born fresh in the middle would take the moments of
+        the one after it and every later one a wrong shape. Each saved state is placed, in order, on the next parameter of its shape;
+        a parameter no saved state fits starts with none (as at birth), and a saved state no parameter fits is dropped. Same shapes in
+        the same order (the common case): the identity. Says what it dropped and what it left fresh."""
+        params = [p_ for g_ in opt.param_groups for p_ in g_["params"]]
+        out = {}; j = 0; dropped = 0; shifted = 0
+        for i_ in sorted(saved, key=lambda x_: int(x_)):
+            st_ = saved[i_]
+            shape = next((tuple(v_.shape) for v_ in st_.values() if torch.is_tensor(v_) and v_.dim() > 0), None)
+            k_ = max(j, int(i_))                                            # never before its own index (a fresh parameter only shifts
+            while k_ < len(params) and (shape is not None and tuple(params[k_].shape) != shape):   # later ones up): Adam's lazy state
+                k_ += 1                                                     # leaves gaps, and a same-shaped earlier parameter must not
+                                                                            # take a moment across one
+            if k_ >= len(params):
+                dropped += 1; continue
+            out[k_] = st_; j = k_ + 1; shifted += int(k_ != int(i_))
+        if dropped or shifted:                                              # (a parameter with no moments in the save is Adam's own
+            print(f"load: optimizer {name}: {len(out)} moments kept, {shifted} moved past parameter(s) born fresh, {dropped} dropped")   # lazy state: it never stepped)
+        return out
+
     def _day_back(self, day, born=()):
         """THE DAY GIVEN BACK (A70; the module's doc): the random stream's state, each optimizer's moments under this load's settings, the
         working attributes (a buffer kept at this life's length), and each motor effector's working state beyond life["motor"]. A working
@@ -367,7 +391,7 @@ class PersistenceMixin:
         for k_, st_ in (day.get("optim") or {}).items():
             o_ = getattr(self, k_, None)
             if isinstance(o_, torch.optim.Optimizer):
-                sd_ = o_.state_dict(); sd_["state"] = st_; o_.load_state_dict(sd_)
+                sd_ = o_.state_dict(); sd_["state"] = self._moments_aligned(k_, o_, st_); o_.load_state_dict(sd_)
         life_ = day.get("life") or {}
         for k_, v_ in life_.items():
             cur_ = getattr(self, k_, None)

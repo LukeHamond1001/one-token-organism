@@ -58,7 +58,12 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # was: threaded 83a37937b6d942637a59507f, one-thread 55377f8c9f9352381860a49c.)
 # Re-pinned at A93 (2026-09-26: the reverse value sweep in the frames' night, SIM_CFG night_reverse 1; the constants digest moves with the
 # new key; was: threaded 984531dd4e3739df21ff06cc, one-thread 888e88651232bdad4ebb6775, consts c61b44d6eef1.)
-digest  sim                   threaded 0cd508ec66bc43b3837c9d6a consts 498920b1a073 | --profile sim
-digest  sim                   pinned   4251a12065013840a34be2f0 consts 498920b1a073 | --profile sim
-full    sim                   threaded organs 69e7ee59df65 store 0966bfa1a107 optim 06c31bae514d rng 7299a99efd46 work 7d0818088f75 cfg a3a21ede3e8d
-full    sim                   pinned   organs 83226390fdf8 store 85f34e4deeb3 optim a0d00f25e28d rng 7299a99efd46 work de312fa8ac86 cfg a3a21ede3e8d
+# Re-pinned at A97+A98 (2026-09-26: a limb's decisiveness earned by its inverse model's kappa, the cord's pattern summed and never
+# cancelled, the gaze's inverse model; the constants digest unchanged: SIM_CFG did not move. The language default digest reproduced
+# exactly at this build (7c54199e3c72cf77d45a8e94), and served_full_roundtrip threaded (c4730b232091fe229ee286dc, every section, the
+# known lost store.S and store.sat) after A98's loader (persistence._moments_aligned: the identity on the same recipe). Was: threaded
+# 0cd508ec66bc43b3837c9d6a, one-thread 4251a12065013840a34be2f0.)
+digest  sim                   threaded 34e2ff847d45ef29dafddca9 consts 498920b1a073 | --profile sim
+digest  sim                   pinned   70a89ce8093f0a8bc63ecc49 consts 498920b1a073 | --profile sim
+full    sim                   threaded organs 77920c5be053 store 69f2646c5fc3 optim b6126f44d845 rng aa0e44fb00ce work 18bc9e6bd8b1 cfg a3a21ede3e8d
+full    sim                   pinned   organs 237f0cb99452 store e8edd6743dca optim 1e29feb76988 rng aa0e44fb00ce work 321249a09bba cfg a3a21ede3e8d

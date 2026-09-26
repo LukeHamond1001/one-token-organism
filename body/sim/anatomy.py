@@ -341,7 +341,10 @@ class SimAnatomy(LanguageAnatomy):
                       intrinsic=True, cry={"posture": dict(CRY_POSTURE), "lungs": 0, "breath": ("body", BREATH_AT), "pain": "pain"})
         voice = VoiceEffector("words", [self.vocab], rest_id=self.sil, end_id=self.space_id, reserved=self.bans, intrinsic=False)
         gaze = Gaze("gaze", [5, 5, 5], rest_id=62, sense="body", sense_idx=list(range(GAZE_AT, GAZE_AT + 6)), fwd_gate=True,
-                    orient={0: ("yaw", 1), 1: ("pitch", 1)}, orient_gate=True, vor=[0, 1], n_in=3)
+                    orient={0: ("yaw", 1), 1: ("pitch", 1)}, orient_gate=True, vor=[0, 1], n_in=3,
+                    inverse=True)                                       # A98 (C82): an inverse model of its own windows' motion, so its
+                                                                        # decisiveness is earned as the limbs' (A97) and the born
+                                                                        # orienting weighs while it is soft (born fresh at a load)
         limbs = []
         for name, js in LIMBS:
             J = len(js); ji = tuple(_joint_index(j) for j in js)

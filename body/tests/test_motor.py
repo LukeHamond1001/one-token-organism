@@ -1403,9 +1403,36 @@ def test_earned_decisiveness():
           f"sharpness {S:.0f}), at {1.0 + (S - 1.0) * 0.5:.1f} once its reliability is 0.5 and at the mouth's at 1; the grip (no inverse",
           f"model) at the mouth's {S:.0f} throughout (A97)")
 
+
+def test_moments_aligned():
+    """motor 13 (A98, 2026-09-26): an optimizer's saved moments given back at a load whose recipe has a parameter the saved life had not
+    (an organ born fresh): each saved state placed, in order, on the next parameter of its shape; the same shapes in the same order the
+    identity; a parameter born fresh in the middle takes no moments and shifts none onto a wrong shape; a state that fits nothing is
+    dropped"""
+    from body.core.persistence import PersistenceMixin as P
+    a, b, c = torch.zeros(3), torch.zeros(4, 2), torch.zeros(5)
+    st = lambda shape: {"step": torch.tensor(1.0), "exp_avg": torch.ones(*shape), "exp_avg_sq": torch.ones(*shape)}
+    opt = torch.optim.Adam([a, b, c])
+    saved = {0: st((3,)), 1: st((4, 2)), 2: st((5,))}
+    out = P._moments_aligned("t", opt, saved)
+    assert sorted(out) == [0, 1, 2] and all(out[k] is saved[k] for k in out), out.keys()          # the identity
+    saved2 = {0: st((3,)), 1: st((5,))}                                                            # b born fresh in the middle
+    out = P._moments_aligned("t", opt, saved2)
+    assert sorted(out) == [0, 2] and out[0] is saved2[0] and out[2] is saved2[1], out.keys()
+    saved3 = {0: st((3,)), 1: st((7,)), 2: st((5,))}                                               # a state that fits nothing: dropped
+    out = P._moments_aligned("t", opt, saved3)
+    assert sorted(out) == [0, 2] and out[2] is saved3[2], out.keys()
+    d, e_ = torch.zeros(3), torch.zeros(3)                                                        # Adam's lazy gaps on the same recipe:
+    opt2 = torch.optim.Adam([a, d, e_])                                                            # a state keeps its own index, never an
+    saved4 = {0: st((3,)), 2: st((3,))}                                                            # earlier same-shaped parameter's
+    out = P._moments_aligned("t", opt2, saved4)
+    assert sorted(out) == [0, 2] and out[2] is saved4[2] and out[0] is saved4[0], out.keys()
+    print("motor 13: an optimizer's saved moments follow their parameters' shapes at a load with a parameter born fresh (A98): the",
+          "identity on the same recipe, no moment on the fresh parameter, a state fitting nothing dropped")
+
 MOTOR_TESTS = [test_the_voice_at_any_place, test_movement_units, test_the_kappa_correction, test_act_inv_batched,
                test_fatigue_per_effector_and_the_forward_error, test_the_spinal_pattern_generator, test_the_born_cry,
-               test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy, test_the_day_saved, test_earned_decisiveness]
+               test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy, test_the_day_saved, test_earned_decisiveness, test_moments_aligned]
 
 
 if __name__ == "__main__":
