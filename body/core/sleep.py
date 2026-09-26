@@ -229,6 +229,62 @@ class SleepMixin:
         b, r = divmod(int(row), TAPE_BLOCK)
         return self._tape[b]["bands"][r].clone()
 
+    def _value_sweep(self, rep):
+        """THE REVERSE VALUE SWEEP (A93; physiology.SLEEP night_reverse): the day's transitions (the bands the cortex received at tick t, the
+        net reward received at t, the bands at t + 1: the tape's bands and the record's fourth column) swept backwards in time in chunks of
+        night_reverse_chunk, each band's critic (the solved fast head apart) taking one TD(0) step a chunk with its head as the later chunk
+        left it, so the value of a reward flows back along the day's path in one pass; the day's tagged episodes' windows first (the
+        gain), highest tag first, then the whole day. Runs before the episodes are compacted (the windows are rows of the day's tape).
+        Writes rep["sweep"]: the chunks stepped and the ticks swept."""
+        m = self.m; gam = m.gammas()
+        n = int(getattr(self, "_rec_n", 0)); rec = getattr(self, "_rec", None)
+        tape = getattr(self, "_tape", None)
+        if rec is None or not tape or n < 3:
+            rep["sweep"] = None
+            return
+        n = min(n, sum(int(blk["bands"].shape[0]) for blk in tape))
+        R = rec[:n, 3].to(torch.float32)                                                 # the net reward received at each tick
+
+        def rows(lo, hi):
+            """the bands received at ticks lo..hi-1, [hi - lo, nb, d] float32 (from the tape's blocks)"""
+            out = []
+            for r_ in range(lo, hi):
+                b_, k_ = divmod(int(r_), TAPE_BLOCK)
+                out.append(tape[b_]["bands"][k_])
+            return torch.stack(out).to(torch.float32)
+        chunk = max(2, int(self.cfg.get("night_reverse_chunk", 64)))
+        spans = []
+        reel = len(getattr(self, "_reels", None) or ()) - 1                            # the day's reel: the last one, cut at nightfall
+        alle = [e for e in (getattr(self, "_episodes", None) or []) if int(e.get("reel", -2)) == reel]
+        eps = sorted([e for e in alle if float(e.get("T_e", 0.0)) >= 1.0], key=lambda e: -float(e.get("T_e", 0.0)))
+        for e in eps:                                                                    # the tagged windows first (the gain)
+            a_, b_ = int(e.get("w0", 0)), int(e.get("w1", 0)) + 1
+            if 0 <= a_ < b_ <= n:
+                spans.append((a_, b_))
+        spans.append((0, n))                                                             # then the whole day
+        bands_ = [b for b in range(len(gam)) if not (int(self.cfg.get("fast_rls", 0)) and b == int(self.cfg["dopamine_band"]))]
+        steps = 0; ticks = 0
+        for a_, b_ in spans:
+            hi = b_ - 1                                                                  # transitions (t, t + 1) with t + 1 <= b_ - 1
+            while hi > a_:
+                lo = max(a_, hi - chunk)
+                hb = rows(lo, hi + 1)                                                    # ticks lo..hi
+                hp, hn, r = hb[:-1], hb[1:], R[lo:hi]
+                terms = []
+                for b in bands_:
+                    with torch.no_grad():
+                        vn = m.value_of(b, hn[:, b].to(self.dev))
+                    vp = m.value_of(b, hp[:, b].to(self.dev))
+                    r_ = r.to(self.dev)
+                    tgt = (r_ - float(self.rbar) + vn) if self._differential[b] else (r_ + gam[b] * vn)
+                    terms.append(((tgt - vp) ** 2).mean())
+                if terms:
+                    self.opt_value.zero_grad(set_to_none=True)
+                    torch.stack(terms).mean().backward(); self.opt_value.step(); steps += 1
+                ticks += int(hi - lo)
+                hi = lo
+        rep["sweep"] = {"chunks": steps, "ticks": ticks, "windows": len(spans) - 1, "bands": len(bands_)}
+
     def _tape_rows(self, n):
         """the day's first n rows of tape as one reel's tensors (a copy; the bands apart: each episode keeps its window's first)"""
         tape = self._tape or []
@@ -425,6 +481,8 @@ class SleepMixin:
                 rem_steps += 1; rem_cos.append(sum(rc) / len(rc))
             opt.zero_grad(set_to_none=True)
         self._night_home()                                        # home before the value replay, the gauge after, the fade and the save
+        if int(self.cfg.get("night_reverse", 0)):
+            self._value_sweep(rep)                                # A93: the reverse value sweep over the day, the tagged windows first
         self._value_replay()
         m.eval()
         finite = all(bool(torch.isfinite(p_).all()) for p_ in m.parameters())

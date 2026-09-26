@@ -435,6 +435,9 @@ SIM_CFG = dict(
     # stream, the 13 event lines and the level; its constants AMYG's (none given here: tau_a band 6's clock, 4,096 ticks; the critics'
     # prior 0.3; the solve every 8 ticks; the reliability over 36,000 ticks, earned after 64 pairs)
     amyg=1,
+    # A93: THE REVERSE VALUE SWEEP in the frames' night (physiology.SLEEP night_reverse): the day's transitions swept backwards from its
+    # rewards, the tagged windows first, so a smile's value reaches the acts before it in one night (risk 1)
+    night_reverse=1,
     # STEP R7f: RECALL INTO ACTION (7.6, A45; FRAMES' recall): a frame's key the stream plus the heading from the torso gyro, its value
     # its codes and every effector's efference copy, each motor effector's map from the recalled act born at zero; and working memory
     # latching at the frames' event ends in place of the utterances' (wm_frames)

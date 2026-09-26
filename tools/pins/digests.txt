@@ -54,7 +54,11 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # 5 -> 3, the cry's charge line gone; the profile's scripted frames carry no charge). The constants digest is unchanged (c61b44d6eef1):
 # SIM_CFG did not move. The language pins (above) reproduced exactly at this build. (was: threaded b171489467d8bc321e3ef168,
 # one-thread 1950c5d205b90fd521dc8d2d.)
-digest  sim                   threaded 83a37937b6d942637a59507f consts c61b44d6eef1 | --profile sim
-digest  sim                   pinned   55377f8c9f9352381860a49c consts c61b44d6eef1 | --profile sim
-full    sim                   threaded organs 347032cf6368 store 53cb9a24c387 optim 496e68c379f3 rng d8b4becafbcd work 9c5277de274c cfg b7dfa94c584a
-full    sim                   pinned   organs eb9706b0c0f0 store 0df9787a7a2a optim 01e64f715905 rng d8b4becafbcd work cfb1d4cfc6e7 cfg b7dfa94c584a
+# Re-pinned at A91 (2026-09-26: pain pays -1 again, the owner's reversal of A88's cortisol-only pain; the constants digest unchanged;
+# was: threaded 83a37937b6d942637a59507f, one-thread 55377f8c9f9352381860a49c.)
+# Re-pinned at A93 (2026-09-26: the reverse value sweep in the frames' night, SIM_CFG night_reverse 1; the constants digest moves with the
+# new key; was: threaded 984531dd4e3739df21ff06cc, one-thread 888e88651232bdad4ebb6775, consts c61b44d6eef1.)
+digest  sim                   threaded 0cd508ec66bc43b3837c9d6a consts 498920b1a073 | --profile sim
+digest  sim                   pinned   4251a12065013840a34be2f0 consts 498920b1a073 | --profile sim
+full    sim                   threaded organs 69e7ee59df65 store 0966bfa1a107 optim 06c31bae514d rng 7299a99efd46 work 7d0818088f75 cfg a3a21ede3e8d
+full    sim                   pinned   organs 83226390fdf8 store 85f34e4deeb3 optim a0d00f25e28d rng 7299a99efd46 work de312fa8ac86 cfg a3a21ede3e8d

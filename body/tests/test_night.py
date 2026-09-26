@@ -430,6 +430,33 @@ def _live_world(seed=0):
     return LiveG1()
 
 
+def test_value_sweep():
+    """night 8 (A93): the reverse value sweep. Two G1s (d 32) born alike live the same 150 ticks in the stub world (its smiles at ticks
+    20, 60, 100 and 140), one sleeping with night_reverse on, one off. After the night the critic's value of the states in the 8 ticks
+    before each smile (band 3, the 64-tick clock) rose more with the sweep than without it, and the night's report counted its chunks
+    and ticks; the sweep runs only under night_frames (the language body has none)"""
+    vals = {}
+    for rev in (0, 1):
+        cfg = _cfg(wake_ticks=150, night_ticks=600, sleep_cycle=400.0, twitch_rate=0.1, night_starts=8, night_starts_max=8, night_rounds=1,
+                   night_batch=4, night_reverse=rev)
+        L = _g1(cfg, _live_world()); run = WorldLoop(L)
+        states, rewards = [], []
+        for t in range(150):
+            states.append(L.bands.detach().clone()); run.step()
+            rewards.append(float(L._rec[L._rec_n - 1, 3]) if t < 149 else 0.0)
+        assert L.nights == 1 and not L.last_night.get("error"), L.last_night.get("error")
+        smiles = [t for t, r in enumerate(rewards) if r >= 1.5]
+        assert smiles, rewards[:60]
+        pre = [t_ for s in smiles for t_ in range(max(0, s - 8), s)]
+        with torch.no_grad():
+            v_after = float(torch.stack([L.m.value_of(3, states[t_][3]) for t_ in pre]).mean())
+        vals[rev] = dict(v=v_after, sweep=L.last_night.get("sweep"), smiles=smiles)
+    assert vals[0]["sweep"] is None and vals[1]["sweep"] and vals[1]["sweep"]["chunks"] >= 3 and vals[1]["sweep"]["ticks"] >= 140, vals
+    assert vals[1]["v"] > vals[0]["v"], vals
+    print(f"night 8: the reverse value sweep (A93): the smiles at {vals[1]['smiles']}; the value of the states 8 ticks before them on band",
+          f"3 after the night {vals[0]['v']:.4f} without the sweep, {vals[1]['v']:.4f} with it (its report {vals[1]['sweep']})")
+
+
 def test_the_live_dark_night():
     """night 5 (step R8c; SIM_DESIGN.md 3.6, 3.7, 5.4, A46, C74): THE LIVE, DARK NIGHT. The G1 (d 32) lives 150 ticks in a stub of its world
     that runs through the night (a sleep cycle shortened to 400 ticks and a twitch rate of 0.1 a tick of active sleep, the test's, so the
@@ -616,7 +643,7 @@ def test_the_born_config():
 
 
 NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames, test_the_live_dark_night,
-               test_the_heading_drift, test_the_born_config]
+               test_the_heading_drift, test_the_born_config, test_value_sweep]
 
 
 if __name__ == "__main__":

@@ -556,6 +556,15 @@ SLEEP = dict(
     # 1) by the replayed dopamine's credit and stepped by its own plain step, never the night's Adam); REM on frames; the episodes kept
     # across nights, fading as the store does, the weakest giving way past episode_cap. Needs `frames`. 0 = off
     night_frames=0,
+    # THE REVERSE VALUE SWEEP (A93, the lead's build 2026-09-26 on the owner's word "get this thing learning"; biology: after reward the
+    # hippocampus replays the path backwards, more so the larger the reward, Foster and Wilson 2006, Ambrose, Pfeiffer and Foster 2016;
+    # replay prioritized by gain, Mattar and Daw 2018): 1 = in the frames' night, before the value replay, each band's critic (the solved
+    # fast head apart) takes the day's transitions from the tape's bands and the record's net reward and sweeps them BACKWARDS in time in
+    # chunks of night_reverse_chunk ticks, one TD(0) step a chunk with the head as the earlier chunk left it, so a reward's value reaches
+    # the acts before it in one night (risk 1, credit across the delay); the day's tagged episodes' windows are swept first (the gain),
+    # then the whole day. Needs night_frames. 0 = off (the language body: its pins hold)
+    night_reverse=0,
+    night_reverse_chunk=64,
     # THE EPISODES' CAP, in ticks of tape (section 10's "episode cap"; 9's tape "inside the episodes (cap 24,000 ticks)"): the kept
     # episodes' windows hold at most this many distinct ticks of tape (about 184 MB at the G1's 3,834 numbers a tick in fp16); past it
     # the weakest episode (the lowest entry; of equals the oldest) gives way, as the store's weakest slot does. A life day's ticks; ours
