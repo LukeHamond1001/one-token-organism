@@ -273,7 +273,7 @@ def test_movement_units():
         if i == 1 and now["cont"] and now["drew"]:
             with torch.no_grad():
                 lg = L.m.acts["limb"].logits(L.m.timing["limb"].pred(C1) + (L.m.timing["limb"].cor(st_["err"]) if st_["err"] is not None else 0.0),
-                                             float(L.m.read_sharp))
+                                             float(st_["now"]["sharp"]))          # A97: read at the limb's earned sharpness that tick
             rec.append((held, [x_.clone() for x_ in lg], list(now["digits"])))
         return out
     L._choose_effector = spy
@@ -577,11 +577,12 @@ def test_the_spinal_pattern_generator():
     for cycle n of the rhythm led by motor effector r), each a log-normal of mean 3.56 s and SD 1.93 s held to 1.0-8.5 s, in ticks of
     0.15 s; the limb's movement begins at the first tick at or after its cycle's start plus its lag; flexion its first 2 ticks,
     extension its next 3, then the pause. The step the world receives on each declared flexion joint is +A (its gate's p_act x 0.09 rad)
-    in its flexion sense in the flexion, -2A/3 in the extension, nothing in the pause, 0 where the own act steps that joint against it,
-    0 on every other joint: a function of the tick, the rhythm, p_act and the own act alone (no posture, balance or gravity term: it
+    in its flexion sense in the flexion, -2A/3 in the extension, nothing in the pause, summed with the own act whatever its sense (A97,
+    2026-09-26: until A97 an own act against it cancelled it there, which let a constant act cancel every return and ratchet the joint
+    to its limit), 0 on every other joint: a function of the tick, the rhythm and p_act alone (no posture, balance or gravity term: it
     reads no sense). THE CYCLE RETURNS WHERE IT BEGAN (the lead's decision of 2026-09-25: a kick is a flexion and a return): on every
-    joint of every complete movement no own act cancelled, the steps the world received sum to 0 (2A out, 2A back; the equal steps of
-    R6h and C54 left -A, a drift toward extension every cycle). THE LEGS keep one rhythm (the left leading): in every cycle the right
+    joint of every complete movement, the steps the world received sum to 0 (2A out, 2A back; the equal steps of R6h and C54 left -A, a
+    drift toward extension every cycle). THE LEGS keep one rhythm (the left leading): in every cycle the right
     leg's movement begins half the cycle after the left's and before the left's next; THE ARM keeps its own, its phase drawn at birth
     from the body's seed. THE LAW OF THE DRAWS over
     20,000 cycles of one rhythm: every cycle inside 6.67-56.67 ticks, the held draws' mean and SD the clipped law's (23.425 and 11.613
@@ -609,14 +610,14 @@ def test_the_spinal_pattern_generator():
                     continue
                 own = (now["digits"][j_] > 2) - (now["digits"][j_] < 2); step = sg_ * (A if want_place > 0 else -A * 2.0 / 3.0)
                 if own != 0 and (own > 0) != (step > 0):
-                    n_cancel += 1; continue
+                    n_cancel += 1                                       # A97: an own act against it no longer cancels it: it sums
                 want[j_] = step; n_sum += int(own != 0)
             got = w.cords[-1].get(e_.name)
             assert (got is None and not any(want)) or (got is not None and all(abs(a_ - b_) < 1e-12 for a_, b_ in zip(got, want))), (t, e_.name, got, want)
             assert st_["buf"][-1][1] == now["acted"] and st_["buf"][-1][9] is False
             steps[e_.name].append((want_place, float(now["p_act"]), list(got) if got is not None else [0.0] * len(e_.factors)))
-    # the cycle returns where it began: each complete movement (its 2 + 3 ticks inside the run), each joint no own act cancelled on any
-    # of them: the steps the world received sum to 0 (the born gate's p_act is the same on every tick here, every rate 0)
+    # the cycle returns where it began: each complete movement (its 2 + 3 ticks inside the run), each declared joint (A97: whatever
+    # the own acts did): the steps the world received sum to 0 (the born gate's p_act is the same on every tick here, every rate 0)
     n_ret = 0; worst = 0.0
     for e_ in L.anatomy.motors:
         rec = steps[e_.name]
@@ -683,8 +684,8 @@ def test_the_spinal_pattern_generator():
     assert all(c_ == {} for c_ in w0.cords) and all(not st_["cord_n"] for st_ in E.motor) and all(st_["spg_cyc"] is None for st_ in E.motor)
     fr = {n_: [places[(n_, p_)] / T for p_ in (1, -1, 0)] for n_ in rhythm}
     print(f"motor 6: the pattern generator on {T} ticks: each limb's place and step the rule's (a movement of 2 ticks' flexion at +p_act x",
-          f"0.09 rad and 3 ticks' extension at 2/3 of it back, then the drawn pause; {n_cancel} joint-ticks cancelled by an own act against it,",
-          f"{n_sum} summed with one); the cycle returns where it began: {n_ret} complete joint-movements uncancelled, each summing to 0",
+          f"0.09 rad and 3 ticks' extension at 2/3 of it back, then the drawn pause; {n_cancel} joint-ticks summed against an own act (A97),",
+          f"{n_sum} summed with any own act); the cycle returns where it began: {n_ret} complete joint-movements, each summing to 0",
           f"(largest {worst:.1e} rad); flexion, extension, pause {', '.join(f'{n_} ' + '/'.join(f'{x_:.3f}' for x_ in v_) for n_, v_ in fr.items())};",
           f"the legs one rhythm, the right half a cycle behind in all {n_alt} cycles; the arm its own (phase {ph[2]:.3f}, the seed's); 20,000",
           f"draws held {0.15 * mh:.3f} +- {0.15 * sh:.3f} s (the clipped law's 3.514 +- 1.742), unheld {0.15 * mf:.3f} +- {0.15 * sf:.3f} s",
@@ -1373,9 +1374,38 @@ def test_the_day_saved():
           f"(ii) and (iii) {' '.join(f'{k_} {v_[:12]}' for k_, v_ in h2.items())}; the older save's (i) {' '.join(f'{k_} {v_[:12]}' for k_, v_ in h4.items())}")
 
 
+
+def test_earned_decisiveness():
+    """motor 12 (A97, 2026-09-26): A LATER EFFECTOR'S DECISIVENESS IS EARNED. An effector with an inverse model reads its proposal at
+    1 + (the mouth's sharpness - 1) x its inverse model's reliability (inv_gain), so at birth (inv_gain 0 until 64 acts) it reads at 1;
+    with the reliability set by hand to 0.5 it reads half-way to the mouth's; an effector without an inverse model (the grip) reads at
+    the mouth's sharpness as before. Born soft, the limb's joints' top probabilities stay well below 1 (the fixed point of life 1's
+    second day, every joint's at 1.000, cannot form at sharpness 1)"""
+    base = dict(_LR0, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, fast_rls=0, gate_floor=0.8)
+    L = _born_limbs(base, _limb_world()); run = WorldLoop(L)
+    names = [e_.name for e_ in L.anatomy.motors]
+    li, gi = names.index("limb"), names.index("grip")
+    for _ in range(12):
+        run.step()
+    S = float(L.m.read_sharp)
+    now_l, now_g = L.motor[li]["now"], L.motor[gi]["now"]
+    assert L.motor[li]["inv_gain"] == 0.0 and abs(now_l["sharp"] - 1.0) < 1e-9, (L.motor[li]["inv_gain"], now_l["sharp"])
+    assert abs(now_g["sharp"] - S) < 1e-9, (now_g["sharp"], S)
+    top0 = max(float(p_.max()) for p_ in now_l["probs"])
+    e_l, e_g = L.anatomy.motors[li], L.anatomy.motors[gi]                  # the law itself, at reliabilities set by hand (a living
+    st_l = dict(L.motor[li])                                               # body's own kappa is recomputed at every act, so a step
+    for rel, want in ((0.0, 1.0), (0.5, 1.0 + (S - 1.0) * 0.5), (1.0, S), (1.5, S), (-0.3, 1.0)):   # would reset it)
+        st_l["inv_gain"] = rel
+        assert abs(L._motor_sharp(e_l, st_l) - want) < 1e-9, (rel, L._motor_sharp(e_l, st_l), want)
+        assert abs(L._motor_sharp(e_g, dict(L.motor[gi], inv_gain=rel)) - S) < 1e-9
+    assert top0 < 0.9, top0
+    print(f"motor 12: a limb with an inverse model reads its proposal at sharpness 1 at birth (its top probability {top0:.2f}, the mouth's",
+          f"sharpness {S:.0f}), at {1.0 + (S - 1.0) * 0.5:.1f} once its reliability is 0.5 and at the mouth's at 1; the grip (no inverse",
+          f"model) at the mouth's {S:.0f} throughout (A97)")
+
 MOTOR_TESTS = [test_the_voice_at_any_place, test_movement_units, test_the_kappa_correction, test_act_inv_batched,
                test_fatigue_per_effector_and_the_forward_error, test_the_spinal_pattern_generator, test_the_born_cry,
-               test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy, test_the_day_saved]
+               test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy, test_the_day_saved, test_earned_decisiveness]
 
 
 if __name__ == "__main__":

@@ -142,6 +142,10 @@ def main():
                        seen_by_child=bool(ls.get("seen_by_child")),
                        gates=[round(float((st.get("now") or {}).get("p_act", 0.0)), 3) for st in L.motor],   # each effector's p_act (her rulers'
                                                                                                              # partner: how much it acts)
+                       pmax=[round(float(np.mean([float(p_.max()) for p_ in ((st.get("now") or {}).get("probs") or [])] or [0.0])), 3)
+                             for st in L.motor],                                                             # A97: each effector's decisiveness
+                       sharp=[round(float((st.get("now") or {}).get("sharp", 0.0)), 2) for st in L.motor],  # (its joints' mean top probability)
+                       kappa=[round(float(st.get("inv_gain", 0.0) or 0.0), 3) for st in L.motor],           # and its inverse model's reliability
                        her_at=[round(float(x), 2) for x in world.parent.base["at"]] + [str(world.parent.base.get("mode"))],   # where she is
                        acts_open=[[a_[1], a_[2], a_[5]] for a_ in lane.conduct.acts_open][:6],               # her acts under way (kind, target, status)
                        refused=(list(lane.conduct.fast.refused[-1]) if lane.conduct.fast.refused and lane.conduct.fast.refused[-1][0] >= world.tick - 1 else None),

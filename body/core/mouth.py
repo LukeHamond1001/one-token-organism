@@ -642,7 +642,8 @@ class MouthMixin:
             cont = going and not ended and rfx is None and int(st["chunk"]) < int(self.cfg.get("chunk_max", 12))
             stop = None
             drew = bool(torch.rand(1, generator=self.gen).item() < p_act) if rfx is None else False   # no draw on a reflex's tick
-            logits = tab.logits(pred, float(m.read_sharp))
+            sharp_e = self._motor_sharp(e, st)                            # A97: its decisiveness earned by its inverse model
+            logits = tab.logits(pred, sharp_e)
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
             if act_on:                                                    # the striatum disposes: its bias on each joint's proposal
                 a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.get_submodule(e.actor)(self._z_now))
@@ -699,7 +700,7 @@ class MouthMixin:
             if stop is not None:
                 st["stops"][stop] = int(st["stops"].get(stop, 0)) + 1
         st["now"] = {"act": int(act), "acted": bool(acted), "drew": bool(drew), "p_act": float(p_act), "p_choice": float(p_choice),
-                     "digits": dig, "probs": probs, "feat": feat.cpu(), "act_on": act_on, "cost": 0.0,
+                     "digits": dig, "probs": probs, "feat": feat.cpu(), "act_on": act_on, "cost": 0.0, "sharp": float(sharp_e),
                      "cont": bool(cont), "stop": stop, "reflex": rfx is not None, "world": int(rfx) if rfx is not None else int(act), "int": 0.0}
         # STEP R6h: THE CORD'S PATTERNS (body/core/cord.py): its spinal pattern generator and its born cry, added below the gate to the act
         # this tick (the world adds them to the targets it re-anchors: acts.cord); the gate's draw and the act's eligibility are the gate's
@@ -776,6 +777,25 @@ class MouthMixin:
                 a_tag = float(drew) if (drew is not None and int(self.cfg.get("gate_own_draw", 0))) else float(acted)   # the gate's own draw (defect 4)
                 self._gate_tag = ((g_ * prev) if prev is not None else torch.zeros_like(tag_in)) + (a_tag - p_act) * tag_in
         return int_t
+
+    def _motor_sharp(self, e, st):
+        """A97 (the lead, 2026-09-26): A LATER EFFECTOR'S DECISIVENESS IS EARNED. Its proposal (act_pred's forecast of its own next act)
+        is read at 1 + (the mouth's sharpness - 1) x its inverse model's reliability (st["inv_gain"]: the joints' mean kappa, 0 until 64
+        acts and 0 whenever its acts have stopped varying, body/core/timing.py), so a limb whose cortex has not yet shown that it knows
+        what its acts do proposes softly (sharpness 1: the forecast's own spread, the cord's patterns and the born biases weigh against
+        it) and one that has proposes as the mouth does. Why: on life 1's second day every limb had fallen into a fixed point, the forecast
+        of its own next act read at the mouth's 25 (the act it took, predicted, taken again: the same seven settings on 89% of its acts,
+        every joint at its range limit, the cord's kick cancelled), because forecasting one's own act is trivially certain and says
+        nothing of the world. The corticospinal system's say over movement grows with development and with use (Martin 2005; Eyre 2007),
+        and the design's own law for a later readout is to be born small and weighted by earned reliability (docs/audit/pfc_maturation.md;
+        act_pred's lesson weighs a label by act_inv's kappa). Kappa needs variety (a joint whose acts never vary has shown nothing), so
+        a fixed point cannot hold: it softens the readout that made it. An effector without an inverse model (the gaze) reads as before
+        (C82). No new constant: 1 is the readout's own scale."""
+        s = float(self.m.read_sharp)
+        if not getattr(e, "inverse", False):
+            return s
+        rel = max(0.0, min(1.0, float(st.get("inv_gain", 0.0) or 0.0)))
+        return 1.0 + (s - 1.0) * rel
 
     def _act_effectors(self, u, stri, gam, tick_tr):
         """THE LATER EFFECTORS' ACTS (step R5), each after the voice's, in the anatomy's order: its actor's eligibility (per act, or

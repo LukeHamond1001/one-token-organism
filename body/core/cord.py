@@ -35,8 +35,9 @@ a rhythm of its own (the arms: uncoupled from the legs and from each other, as t
 through the body: Kuniyoshi and Sangawa 2006). Cycle n of the rhythm led by motor effector r is drawn from a generator of its own
 seeded spg_seed + (the motor effectors' count) x n + r (the organs' buffer, drawn at birth from the body's seed), so the rhythm is a
 function of the tick alone: it draws nothing from the life's streams, it goes on through the night, and after a load it is found again
-from birth, where the save left it. An own act against the step on a joint cancels it there (its setting's step of the opposite sign);
-an own act with it, or holding, sums with it. No posture, balance or gravity term: it reads the tick, its rhythm, the gate's p_act and
+from birth, where the save left it. The step SUMS with the own act on every joint, with it or against it (A97, 2026-09-26; A48's law: the pattern
+and the descending command meet at the same motoneurons and add); until A97 an own act against the step cancelled it there, which let a
+constant act cancel every return and ratchet the joint to its limit (life 1's second day). No posture, balance or gravity term: it reads the tick, its rhythm, the gate's p_act and
 the own act, never a sense.
 
 THE BORN CRY (`_cry_step`; A47; Jurgens 2002): while the body felt pain this tick (the named reward source's term below 0, paid or not:
@@ -161,8 +162,8 @@ class CordMixin:
 
     def _spg_step(self, e, where, p_act, dig):
         """the generator's step this tick (the module's doc): along each declared flexion joint +A in the movement's flexion (+1),
-        -A x spg_flex / spg_ext in its extension (-1: the extension returns what the flexion moved, the lead's decision), cancelled
-        where the own act steps that joint against it; None in the pause or when every step is 0"""
+        -A x spg_flex / spg_ext in its extension (-1: the extension returns what the flexion moved, the lead's decision), summed with
+        the own act whatever its sense (A97); None in the pause or when every step is 0"""
         if not where:
             return None
         A = float(p_act) * float(self._reflex_const("spg_amp"))
@@ -170,12 +171,11 @@ class CordMixin:
             A = A * float(self._reflex_const("spg_flex")) / float(self._reflex_const("spg_ext"))   # 2A/3: the cycle's net excursion 0
         out = [0.0] * len(e.factors); moved = False
         for j, sg in e.spg.items():
-            step = float(where) * float(sg) * A
-            own = self._setting_sign(dig[int(j)], e.factors[int(j)])
-            if own != 0 and (own > 0) != (step > 0):
-                continue                                               # an own act against the step cancels it
-            out[int(j)] = step; moved = moved or step != 0.0
-        return out if moved else None
+            step = float(where) * float(sg) * A                        # A97: summed with the own act whatever its sense (A48's law: the
+            out[int(j)] = step; moved = moved or step != 0.0           # pattern and the descending command meet at the motoneurons and
+        return out if moved else None                                  # add; until A97 an own act against the step cancelled it, so a
+                                                                       # constant act cancelled every return and ratcheted the joint to
+                                                                       # its limit: life 1's second day)
 
     def _cry_step(self, e, st, frame, dig):
         """the born cry's step this tick (the module's doc), or None when it does not cry: its breath groups kept in st["cry_t"] (the
