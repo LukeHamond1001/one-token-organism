@@ -288,7 +288,10 @@ class Drive:
     def state(self):
         return dict(t0=tg_plain(self.t0), t1=tg_plain(self.t1), stop=[tg_plain(x) for x in self.stop], tone=self.tone.tolist(),
                     legs_rest=bool(self.legs_rest), vr0=None if self.vr_start is None else self.vr_start.tolist(),
-                    wr0=None if self.wr_start is None else self.wr_start.tolist(), push=self.push.tolist())
+                    wr0=None if self.wr_start is None else self.wr_start.tolist(), push=self.push.tolist(),
+                    vr=None if self.vr is None else np.asarray(self.vr, float).tolist(),
+                    wr=None if self.wr is None else np.asarray(self.wr, float).tolist())   # the next tick's ramp starts from these, which
+                                                                    # a chain held mid-tick zeroes (S5a: a replay saved then diverged)
 
     def load_state(self, s):
         t0, t1 = tg_unplain(s.get("t0")), tg_unplain(s.get("t1"))
@@ -299,6 +302,10 @@ class Drive:
         self.stop = [tg_unplain(x) for x in s.get("stop", [None, None, None])]
         self.tone = np.array(s.get("tone", np.zeros(len(self.b.dofs))), dtype=np.float64)
         self.push = np.array(s.get("push", np.zeros(3)), dtype=np.float64)
+        if s.get("vr") is not None:
+            self.vr = np.array(s["vr"], dtype=np.float64)
+        if s.get("wr") is not None:
+            self.wr = np.array(s["wr"], dtype=np.float64)
 
     def set_tick(self, t0, t1, legs_rest=False, v0=None, w0=None):
         """the tick's start and end targets (her plan at the last tick's end, and at this one's): her joints' and her pelvis's.

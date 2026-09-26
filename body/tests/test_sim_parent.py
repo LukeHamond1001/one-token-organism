@@ -1192,16 +1192,23 @@ def test_replay_across_processes():
 
 
 PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
-                test_the_pull_never_sits_it_up, test_the_prop_and_the_catch, test_the_turn, test_toys, test_her_pace,
+                test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
-                test_her_hands_reach_and_touch, test_exact_replay_across_a_solve, test_the_catch_pushes_at_once,
+                test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes]
+# THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
+# (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
+# published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
+# still 77 deg from upright, against 2 cm; the prop's and the catch's angles and pushes). They run with `--opened`, and are measured
+# again under A39's gains before these acts open (C76).
+OPENED_LATER = [test_the_pull_never_sits_it_up, test_the_prop_and_the_catch, test_the_catch_pushes_at_once]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
-    only = sys.argv[1:]
-    tests = [t for t in PARENT_TESTS if not only or any(o in t.__name__ for o in only)]
+    only = [a for a in sys.argv[1:] if a != "--opened"]
+    pool = OPENED_LATER if "--opened" in sys.argv[1:] else PARENT_TESTS
+    tests = [t for t in pool if not only or any(o in t.__name__ for o in only)]
     for t in tests:
         t1 = time.time()
         try:

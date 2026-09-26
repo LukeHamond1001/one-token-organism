@@ -1565,6 +1565,9 @@ class ParentMotion:
         if self.holds or self.xfrc_bodies:
             self._apply_holds(s)
         else:
+            self.drive.effort[:] = 0.0                                      # no hold: no hold's effort in her joints (S5a: a finished
+                                                                            # hold's effort had stayed in her command, and a replay
+                                                                            # restored after a hold inherited it)
             self._effort(0.0, 0.0, float(self.body_f.sum()))                 # her brief caps' clock runs at rest too
         self.drive.step(s)
 
