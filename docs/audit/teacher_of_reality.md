@@ -103,33 +103,8 @@ Every change of her face is felt only when the child sees it. The born reading u
   - SIM_DESIGN §6 (one term), §5.3 (the charger gone), §4.3, First 1's claim and risks;
   - the decision log (A88, the owner's decision; A89 for the teacher's rules below).
 
-**Phase 2: the teacher of reality (her judgments of the body's acts)**
-- **Her smiles for acts** are judged on the events her percept already reads:
-  - `got`: its own reach and hold, not a hand-over of hers;
-  - `rolled`;
-  - `sat`;
-  - `gave`, after her ask;
-  - peekaboo answered by an act;
-  - a guided act it repeats itself within 40 ticks.
-
-  Readers still to be built: `hit_her` (A25c) and the copying readers (A52).
-- **Her rules, each with its source:**
-  - **Contingent:** judged within the tick, the smile begun at once. Infants learn a contingency when it is immediate, not at a 3 s
-    delay (Millar & Watson 1979).
-  - **Marked:** her eyes go to the thing and back, around an act she teaches, as they already do for words (natural pedagogy:
-    Csibra & Gergely 2011).
-  - **Shaped:** an approximation earns 1 until the full act has been done 3 times. This is her word rule (P3) carried to acts; a
-    reach toward a toy counts as an approximation, from `child_reaches`.
-  - **Habituating to zero:** the n-th smile for the same kind of act is worth 2·e^(−n/10), with no floor. A new toy, a new place or a
-    faster act counts as a new kind. This replaces the floor of 1, closing the positive circuit (Knox & Stone 2015). She praises
-    improvement against its current level (MacGlashan et al. 2017).
-  - **Frowns, from stage 2:** hitting her; a toy it knocks or throws off a surface; a blow its own act makes past F_pain; and talking
-    over her, as now. Never a failure, never its pain, never its distress: those draw concern, which reads 0. A frown is held 10
-    ticks, never waits for a look, and is felt only if seen.
-  - **Guidance:** her guided acts (the roll's guided arm), each counted in the intervention log. People who can guide a learner
-    teach it faster (Thomaz & Breazeal 2008).
-- **Her ledger beside the life:** smiles and frowns an hour, their latency after the act, the share the child saw, and her guides.
-  The teacher is judged by her own rulers (the human-teacher rule).
+**Phase 2: the teacher (§2c).** Built in four parts, in order: her eyes and her notebook (2a), her judgment (2b), her lessons
+(2c), her hands (2d, the boundary decision A90). Her rulers are reported from the first plumbing day.
 
 **Phase 3: S5b plumbing (all learning rates 0, one day and a night).** Every path must fire:
 - a smile gives δ > 0;
@@ -183,6 +158,69 @@ The planned richer room (W5b, A53) is all for teaching too:
 
 Her smiles for acts (Phase 2) are given with these objects. She marks the object with her eyes, the child acts on it, and she smiles
 at the completed act.
+
+## 2c. The teacher: what "very good" means, and her build
+
+The owner's word (2026-09-26): "what im trying to build is our llm archecture to use to solve robotics rl. thats main goal. so sim
+teachers going to have to be very good."
+
+She is the whole reward. The body can learn from reward only what she can **see**, **judge** and **set up**. Today she is a talker,
+not a coach: her judgments are of words, and her motor time is "show a toy near it and call". A very good teacher has four parts,
+each on the world's side, each reading only what a person could see, never the body's inside (the reading-mode rule: the child's
+outward acts are a person's to read; its store and its rates are not).
+
+**2a. Her eyes and her notebook.** Her percept already reads got, rolled, sat, gave, fell, lost_toy, its reaches, its head's line,
+pain and distress (`lane.py:293–337`). To add:
+- the end of each movement: each hand's distance to each toy, and the head's line to the target (the reach's and the turn's progress);
+- a lift (a held toy above its surface), a shake (a held toy's speed) and a hit (a toy's contact that sounds: the drum, the block);
+- posture in more grades: back, side, front, head up on its front, sitting;
+- `hit_her` (A25c) and the copying readers (A52), the two readers still unbuilt;
+- **her notebook:** per skill and object, the child's best so far and its last 10 tries. A teacher's record of the student, on the
+  world's side, saved with her state.
+
+**2b. Her judgment (the reward).** Scripted, deterministic, within the tick, every judgment logged with its reason.
+- The worth table's motor rows, built at last: a whole roll 2; a reach that gets a toy 2; a lift 1; a shake or a hit that sounds 1;
+  sitting alone a moment 2; a give after her ask 1; peekaboo answered by an act 1; a guided act repeated itself within 40 ticks,
+  that act's worth.
+- **Shaping by improvement:** an approximation earns 1 while the full act is unmastered: a reach that ends nearer the toy than its
+  best of the last 10 tries, a turn that ends nearer the target. The bar rises with the child (policy-dependent feedback,
+  MacGlashan et al. 2017).
+- **Habituation to zero** per (act, object): the n-th smile is worth 2·e^(−n/10), no floor; a new object or a new place starts n
+  again. This is A2's "falling with mastery" with its floor of 1 removed (the positive circuits, Knox & Stone 2015).
+- **Marked and seen:** her eyes go to the object and back around the act, as for words. At the judgment she says "yes! you got it."
+  at once from where her face already is: a sound onset that the born orienting turns toward (A43), so its eyes come to her face
+  and the smile is seen, before social referencing is learned. The pulse waits for the look as now (20 ticks).
+- **Frowns from stage 2:** hitting her, a toy thrown or knocked off a surface, a blow past F_pain. Never failure, pain or distress.
+- **Formal trials:** no judgment, no face (A60b), unchanged.
+
+**2c. Her lessons (the curriculum, L3).** A ladder in the order infants climb it. Each rung has the setup that makes the act
+likely, the reading that scores it, and the step up. She picks the rung where the child is nearly there by her notebook (its best
+within one step of the bar), stays while it improves, steps up when her smile for it has habituated under 0.5, and steps down after
+a block with no progress. Floor play and motor time run the rungs; show time and the words stay as they are.
+
+| rung | her setup (acts she has) | scored by | its step |
+|---|---|---|---|
+| orient | the call from its periphery; a toy shaken 15° off the fovea (A3) | its head's line on the target | farther off the line |
+| reach and touch | the rattle set beside the hand on its own side (`put_near`), then 5 cm farther each mastered level, then across the midline | the hand's distance at the movement's end; a touch | the distance |
+| grasp and hold | the toy into the palm's path; the ring first (6 of 6 hand-overs in the grasp study) | got; held 10 ticks | harder toys |
+| lift, shake, hit | the rattle in its hand; the drum under its hand | a lift; the toy's own sound | louder, longer |
+| give and take | her open hand; "give me the X" | gave | farther |
+| roll | the toy shown beside its head on the far side; her brief turn from its front (kept) | a half roll (side), then rolled | unassisted |
+| head up on its front | a toy at its eye level while prone | head up | longer |
+| sit | a toy above its chest at arm's length (the pull and the prop stay closed: 34 kg) | sat | longer |
+
+**2d. Her hands (the scaffolds; A25c reopened in part, at a boundary: A90).** `guide` (a forearm along a path, within 65 N: A8, A10)
+and `knee_over` (within 76 N) reopen: their controllers are built and tested (`OPENED_LATER`), and a person can do both. `pull_to_sit`
+and `prop` stay closed: a person cannot lift 34 kg. A guide is used only after a block with no progress at a rung, and the smile
+goes to the child's own repeat within 40 ticks, never to the guide. Every guide is counted in the intervention log printed beside
+First 1 (A63), whose claim adds "with her guidance, counted". Guidance speeds a learner's teaching (Thomaz & Breazeal 2008).
+
+**Her rulers, reported each day beside the child's:** judgments an hour by kind; the share the child saw; the latency from the act;
+each rung's bar and the child's best; farming (the same act repeated past habituation); guides an hour; her cost in ms a tick (the
+tick's budget is 150 ms). The teacher is judged by her rulers as the diary's was (the human-teacher rule).
+
+**What she is not.** No language model in her judgment or her face. Her curriculum is chosen from her notebook by the rules above
+and logged, so a life replays exactly. A language model may later write her talk, as the diary's did, logged and replayed.
 
 ## 3. What the language model taught us, carried to the robot
 
