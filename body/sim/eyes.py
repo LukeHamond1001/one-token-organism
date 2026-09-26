@@ -1,19 +1,24 @@
-"""THE G1'S TWO EYES (docs/SIM_DESIGN.md 3.4, 3.7 and the decision log A1; the build plan's W3; the owner's decisions 4 and 9): a
-colour stereo pair where the head's RealSense D435 imagers are (body/sim/g1scene.py adds the two cameras at load), each rendered
-at its native 168 x 96 px once a tick, both into one offscreen buffer with one read-back, then split in software:
-  PERIPHERY  the whole field (88 x 58 deg) averaged 3 x 3: 56 x 32 px (0.64 px a degree);
-  FOVEA      a 32 x 32 px window of the native image (about 21 deg, 1.5 px a degree), placed by the world's gaze state (the gaze
-             effector's conjugate yaw and pitch, the vergence setting the two windows apart; the VOR counter-turning it:
-             body/sim/world.py). Nothing on the robot moves: the real G1 can run the same window on its own images.
-No depth channel and no stereo algorithm: the body gets both eyes and learns what they share (the owner's decision 4).
-
-THE RETINA'S CODE (the channels eye_p and eye_f, 3.4's table): each image is pooled into cells, 8 px cells of the periphery (7 x 4
-per eye, each about 12.5 x 14.5 deg) and 4 px cells of the fovea (8 x 8 per eye), and each cell's mean colour is read by 6 fixed
-channels: the retina's three opponent axes (luminance, red-green, blue-yellow; Hering; De Valois), each split into an ON and an
-OFF half-wave (Kuffler; Schiller), against a fixed mid-grey: [L+, L-, RG+, RG-, BY+, BY-], L = mean(R, G, B) - 0.5, RG = R - G,
-BY = B - (R + G) / 2, colours in 0-1. Fixed, not learned and not random: 2 x 168 numbers for the periphery, 2 x 384 for the
-fovea, which the core's born code projects to d. The images themselves go to the frame's truth (the page, the stills, the eye
-check), never to the body.
+"""THE G1'S EYES: THE D435'S THREE VIEWS (docs/SIM_DESIGN.md 3.4, 3.7, A1, A38, A42; W3, reopened at S5a as W3r): the head's
+RealSense D435 as the robot carries it (body/sim/g1scene.py adds the cameras at load): its two monochrome imagers 50 mm apart, each
+rendered at 336 x 192 px (88.3 x 58 deg, 3 px a degree at the centre), and its colour camera 15 mm beside the left one at 238 x 134
+px (69.4 x 42.5 deg), all three into one offscreen buffer with one read-back, multisampling off (a render is a function of the state).
+Each grey image is the imager's visible response to the render (LUMA: Rec. 601's weights until the OV9282's own are read, C45); the
+render has no near-infrared light, which the real imagers also see (a disclosed gap). Then, in software, as the real G1 could:
+  PERIPHERY  each grey eye's whole field averaged 6 x 6: 56 x 32 px, coded as 7 x 4 cells of 8 px x luminance ON and OFF against
+             mid-grey (56 an eye); the colour camera's whole image as 5 x 3 cells x red-green and blue-yellow, ON and OFF (60):
+             eye_p, 172 numbers.
+  FOVEA      a 64 x 64 px window of each grey eye's native image (about 21 deg, a newborn's acuity: A42), placed by the world's gaze
+             state (the gaze effector's conjugate yaw and pitch, the vergence setting the two windows apart; the VOR counter-turning
+             it), read by THE BORN BANK (A42; Hubel and Wiesel 1963): centre-surround ON and OFF (a difference of Gaussians, centre
+             sd 1 px, surround 3 px) and oriented energy (an even and an odd Gabor as a complex cell) at 4 orientations and periods
+             of 3 and 6 px (1.0 and 0.5 cycles a degree), each pooled over 8 x 8 px cells: 8 x 8 cells x 10 maps, 640 an eye. THE
+             COLOUR WINDOW: the same 21 deg at the left eye's gaze direction in the colour camera's image (64 px), 8 x 8 cells x
+             red-green and blue-yellow ON and OFF (256); what lies outside that camera's field reads nothing: eye_f, 1,536 numbers.
+  No depth channel and no stereo algorithm: the body gets both eyes and learns what they share (the owner's decision 4).
+  face_fovea and face_periph read nothing: at birth there is no born face detector (C39, option a); the born template below is an
+  instrument. onset_periph reads nothing until A43's constants are read from their sources (C49). The camera model (A38: exposure,
+  Poisson-Gaussian noise, the head's motion blur, the colour camera's rolling rows, gamma) waits for its constants (C45).
+The images themselves go to the frame's truth (the page, the stills, the eye check), never to the body.
 
 THE FACE TEST (A1; the reward carrier's gate, world truth, never a channel of the body): an eye sees the parent's face this tick
 when all four hold: the parent's mouth point lies inside that eye's fovea window; a ray from the eye to it over the geoms the eyes
@@ -22,11 +27,10 @@ block it; her lips are her mouth, met first when her face is turned); the face i
 the eye; and its front (an ellipse 0.17 x 0.21 m) covers at least 20 fovea px x the cosine of the turn. Either eye counts. It goes
 to the frame's truth (`face_test`), where the face channel's gate (the born reading's 2 consecutive ticks and its 30-tick hold,
 P3/S5a) and the parent read it.
-THE BORN FACE TEMPLATE (3.4, A1, section 10's "the event line 'a face in the fovea'"): CONSPEC's three dark blobs on each eye's own
-pixels (`face_template`; its constants below). On the fovea it is the event line the critics and the amygdala read ("a face in the
-fovea": obs face_fovea, either eye); on the periphery it is orienting's cue (obs face_periph: the best match and where it lies from
-the window). So the body's value never reads world truth beyond the reward's carrier: given A1's test instead, it would read a
-perfect face detector (A1).
+THE BORN FACE TEMPLATE (3.4, A1; an instrument since C39's option (a)): CONSPEC's three dark blobs (`face_template`; its constants
+below), read on a grey fovea or a colour render by the tools and the eye tests. Measured on her face of human proportions it rarely
+detected her face (C39), so at birth no born face detector reaches the body: face_fovea and face_periph read nothing, and the born
+route to faces is orienting to sudden change and sound, with the world-truth smile as A49's scaffold.
 
 NO LAMP AT THE EYES (the W1 verifier's fifth finding). The G1 carries no lamp, so the eyes see by the room's lights alone: the room
 has no headlight (MuJoCo's lamp at the viewing camera), and `Eyes` refuses to render with one on. The room's own indirect light,
@@ -59,12 +63,25 @@ from body.sim import world as W  # noqa: E402
 
 G = W.G
 kin = G.kin
-POOL = 3                        # the periphery: the native image averaged 3 x 3 (3.4; anatomy, ours)
-CELL_P, CELL_F = 8, 4           # the retina's cells: 8 px of the periphery, 4 px of the fovea (3.4; anatomy, ours)
-OPPONENT = 6                    # ON and OFF halves of luminance, red-green and blue-yellow (anatomy, ours)
+POOL = 6                        # the periphery: each grey eye's native image averaged 6 x 6, 56 x 32 px (3.4; anatomy, ours)
+CELL_P, CELL_F = 8, 8           # the retina's cells: 8 px of the periphery (7 x 4 per eye, about 12.5 x 14.5 deg) and 8 px of the fovea
+                                # (8 x 8 per eye, 2.6 deg) (3.4; anatomy, ours)
+COL_CELLS = (3, 5)              # the colour camera's periphery: 5 x 3 cells across its image, about 14 deg each (3.4; anatomy, ours)
+LUMA = np.array([0.299, 0.587, 0.114])   # the grey imagers' visible response over the render's red, green and blue: Rec. 601's luma
+                                # weights, ours until the OV9282's own response is read (C45)
+CS_SIGMA = (1.0, 3.0)           # THE BORN BANK (A42; section 10): the centre-surround cells' centre and surround, Gaussian sd in px
+                                # (the centre 1 px, 0.33 deg; the surround 3 x: ours)
+GABOR_PERIODS = (3.0, 6.0)      # the oriented cells' periods in px: 1.0 and 0.5 cycles a degree at 3 px a degree (a newborn's
+                                # limit and half of it: Dobson and Teller 1978)
+GABOR_ORIENTS = 4               # 0, 45, 90, 135 deg
+GABOR_SIGMA = 0.56              # each Gabor's envelope sd in periods: a one-octave bandwidth (ours)
+BANK_MAPS = 2 + 2 * GABOR_ORIENTS          # per pixel: CS ON, CS OFF, and the oriented energy at 4 orientations x 2 scales
+EYE_SAMPLES = 0                 # the eyes' multisampling: off, so a render is a function of the state alone (the lead's decision:
+                                # determinism before smoothness; the camera model's noise dwarfs the aliasing)
 FACE_TURN_DEG = 75.0            # the face test (A1; innate, ours)
 FACE_FRONT_M = (0.17, 0.21)
-FACE_MIN_PX = 20.0
+FACE_MIN_PX = 20.0 * (W.EYE_F_PX / (48.0 / math.tan(math.radians(29.0)))) ** 2   # A1's 20 px at the first build's 1.5 px a degree,
+                                # the same solid angle at the fovea's 3 px a degree (80 px): the test's reach unchanged (A1, A42)
 RAY_SLACK_M = 0.02              # a ray's first hit within 2 cm of the mouth point is the face itself
 MOUTH_PARTS = ("parent_mouth", "parent_lip_lo", "parent_teeth")   # her drawn mouth's geoms: a ray's first hit on them is her mouth
 _MOUTH_GEOMS = {}
@@ -91,20 +108,95 @@ TEMPLATE_MOUTH = ((0.0, -0.25), (0.36, 0.10))   # the mouth's centre (x / W, y /
 TEMPLATE_WIDTHS = (8, 11, 16, 23)               # px
 TEMPLATE_R = 0.5
 TEMPLATE_CONTRAST = 0.10
-EYE_P_SIZE = 2 * (G.EYE_W // POOL // CELL_P) * (G.EYE_H // POOL // CELL_P) * OPPONENT      # 336
-EYE_F_SIZE = 2 * (W.FOVEA_PX // CELL_F) ** 2 * OPPONENT                                    # 768
+EYE_P_SIZE = 2 * (G.EYE_W // POOL // CELL_P) * (G.EYE_H // POOL // CELL_P) * 2 + COL_CELLS[0] * COL_CELLS[1] * 4   # 172
+EYE_F_SIZE = 2 * (W.FOVEA_PX // CELL_F) ** 2 * BANK_MAPS + (W.FOVEA_PX // CELL_F) ** 2 * 4                      # 1,536
+COL_F_PX = (G.COL_H / 2) / math.tan(math.radians(G.COL_FOVY) / 2)                          # the colour camera's focal length, px
+COL_WIN = int(round(W.FOVEA_PX * COL_F_PX / W.EYE_F_PX))                                   # the colour window: the fovea's 21 deg
 
 
-def retina(img, cell):
-    """the retina's code of an image (rows x cols x 3, uint8): cells of `cell` px, each cell's mean colour read by the 6 opponent
-    ON/OFF channels; returns (rows / cell, cols / cell, 6) floats, flattened row by row by the caller"""
-    h, w = img.shape[0] // cell * cell, img.shape[1] // cell * cell
-    c = img[:h, :w].reshape(h // cell, cell, w // cell, cell, 3).mean(axis=(1, 3)) / 255.0
-    lum = c.mean(axis=-1) - 0.5
+def grey(img):
+    """an imager's grey image (rows x cols, 0-1) from the render's colour (uint8): its visible response (LUMA, C45)"""
+    return (img.astype(np.float64) @ LUMA) / 255.0
+
+
+def on_off(x):
+    return np.maximum(x, 0.0), np.maximum(-x, 0.0)
+
+
+def cells(a, rows, cols):
+    """the means of a map (rows_px x cols_px [x k]) over a rows x cols grid of cells (np.array_split's edges)"""
+    out = []
+    for rb in np.array_split(np.arange(a.shape[0]), rows):
+        out.append([a[rb[0]:rb[-1] + 1, cb[0]:cb[-1] + 1].mean(axis=(0, 1)) for cb in np.array_split(np.arange(a.shape[1]), cols)])
+    return np.array(out)
+
+
+def retina_grey(L, cell):
+    """a grey image's retinotopic code: cells of `cell` px, each cell's mean luminance against mid-grey, ON and OFF (Kuffler;
+    Schiller) -> (rows / cell, cols / cell, 2)"""
+    h, w = L.shape[0] // cell * cell, L.shape[1] // cell * cell
+    c = L[:h, :w].reshape(h // cell, cell, w // cell, cell).mean(axis=(1, 3)) - 0.5
+    return np.stack(on_off(c), axis=-1)
+
+
+def retina_colour(img, rows, cols):
+    """a colour image's opponent code over a grid of cells: red-green and blue-yellow (Hering; De Valois), ON and OFF -> (rows,
+    cols, 4)"""
+    c = img.astype(np.float64) / 255.0
     rg = c[..., 0] - c[..., 1]
     by = c[..., 2] - (c[..., 0] + c[..., 1]) / 2
-    return np.stack([np.maximum(lum, 0), np.maximum(-lum, 0), np.maximum(rg, 0), np.maximum(-rg, 0),
-                     np.maximum(by, 0), np.maximum(-by, 0)], axis=-1)
+    m = cells(np.stack([rg, by], axis=-1), rows, cols)
+    rgp, rgn = on_off(m[..., 0]); byp, byn = on_off(m[..., 1])
+    return np.stack([rgp, rgn, byp, byn], axis=-1)
+
+
+def _gauss(sd, r):
+    x = np.arange(-r, r + 1, dtype=np.float64)
+    g = np.exp(-x ** 2 / (2 * sd * sd)); g /= g.sum()
+    return np.outer(g, g)
+
+
+def _bank_kernels():
+    """THE BORN BANK's kernels (A42): the difference of Gaussians, and even and odd Gabors at GABOR_ORIENTS orientations and the
+    two periods, each even one zero-mean"""
+    r = int(math.ceil(3 * CS_SIGMA[1]))
+    dog = _gauss(CS_SIGMA[0], r) - _gauss(CS_SIGMA[1], r)
+    gab = []
+    for lam in GABOR_PERIODS:
+        sd = GABOR_SIGMA * lam
+        rr = int(math.ceil(3 * sd))
+        y, x = np.mgrid[-rr:rr + 1, -rr:rr + 1].astype(np.float64)
+        env = np.exp(-(x * x + y * y) / (2 * sd * sd))
+        for k in range(GABOR_ORIENTS):
+            th = math.pi * k / GABOR_ORIENTS
+            u = x * math.cos(th) + y * math.sin(th)
+            ev = env * np.cos(2 * math.pi * u / lam); ev -= env * (ev.sum() / env.sum())
+            od = env * np.sin(2 * math.pi * u / lam)
+            n = math.sqrt((ev * ev).sum())
+            gab.append((ev / n, od / n))
+    return dog, gab
+
+
+BANK = _bank_kernels()
+
+
+def bank(L):
+    """THE BORN BANK on a grey fovea (64 x 64, 0-1; A42): per pixel the centre-surround ON and OFF responses and the oriented energy
+    (an even and an odd Gabor's, as a complex cell) at 4 orientations x 2 scales, the window's edge continued by its nearest pixel;
+    pooled over CELL_F x CELL_F px cells -> (8, 8, 10)"""
+    from scipy.signal import fftconvolve
+    dog, gab = BANK
+    r = max(dog.shape[0], max(e.shape[0] for e, _o in gab)) // 2
+    P = np.pad(L, r, mode="edge")
+    crop = lambda a: a[r:r + L.shape[0], r:r + L.shape[1]]
+    cs = crop(fftconvolve(P, dog, mode="same"))
+    maps = list(on_off(cs))
+    for ev, od in gab:
+        e, o = crop(fftconvolve(P, ev, mode="same")), crop(fftconvolve(P, od, mode="same"))
+        maps.append(np.sqrt(e * e + o * o))
+    M = np.stack(maps, axis=-1)
+    n = L.shape[0] // CELL_F
+    return M[:n * CELL_F, :n * CELL_F].reshape(n, CELL_F, n, CELL_F, BANK_MAPS).mean(axis=(1, 3))
 
 
 def _template(width):
@@ -144,11 +236,12 @@ TEMPLATES = {w_: _kernels(w_) for w_ in TEMPLATE_WIDTHS}
 
 
 def face_template(img):
-    """THE BORN FACE TEMPLATE on an image's pixels (rows x cols x 3, uint8): its best match over places and sizes, (r, contrast,
+    """THE BORN FACE TEMPLATE on an image's pixels (rows x cols x 3 uint8, or a grey eye's rows x cols in 0-1): an instrument since
+    C39's option (a) (no born face detector at birth; never in the frame): its best match over places and sizes, (r, contrast,
     width, column, row), the match's centre in the image's px (r -inf when no place has the contrast); a match is r >= TEMPLATE_R
     with contrast >= TEMPLATE_CONTRAST (`template_match`). Only the pixels are read."""
     from numpy.lib.stride_tricks import sliding_window_view
-    L = img.astype(float).mean(axis=-1) / 255.0
+    L = img.astype(float).mean(axis=-1) / 255.0 if img.ndim == 3 else np.asarray(img, float)   # a colour render, or a grey eye's (0-1)
     best = (-np.inf, 0.0, 0, 0.0, 0.0)
     for w_, (h, n, K) in TEMPLATES.items():
         if h > L.shape[0] or w_ > L.shape[1]:
@@ -175,10 +268,30 @@ def template_match(best):
     return bool(best[0] >= TEMPLATE_R and best[1] >= TEMPLATE_CONTRAST)
 
 
-def periphery(img):
-    """the periphery: the native image averaged POOL x POOL (uint8)"""
-    h, w = img.shape[0] // POOL * POOL, img.shape[1] // POOL * POOL
-    return img[:h, :w].reshape(h // POOL, POOL, w // POOL, POOL, 3).mean(axis=(1, 3)).round().astype(np.uint8)
+def periphery(L):
+    """a grey eye's periphery: its native image averaged POOL x POOL (56 x 32)"""
+    h, w = L.shape[0] // POOL * POOL, L.shape[1] // POOL * POOL
+    return L[:h, :w].reshape(h // POOL, POOL, w // POOL, POOL).mean(axis=(1, 3))
+
+
+def colour_window(img, gaze, m, d):
+    """THE COLOUR WINDOW (3.4): the fovea's 21 deg at the left eye's gaze direction in the colour camera's image (COL_WIN px square),
+    what lies outside its field reading nothing (mid-grey: no opponent signal) -> (COL_WIN, COL_WIN, 3) uint8"""
+    cx, cy = window_centre("L", gaze)
+    cl, cc = m.camera("eye_L").id, m.camera("eye_C").id
+    v_cam = np.array([(cx - G.EYE_W / 2) / W.EYE_F_PX, -(cy - G.EYE_H / 2) / W.EYE_F_PX, -1.0])     # the ray, left camera's frame
+    v = d.cam_xmat[cl].reshape(3, 3) @ v_cam                                                        # in the world
+    u = d.cam_xmat[cc].reshape(3, 3).T @ v                                                          # in the colour camera's frame
+    half = COL_WIN / 2
+    out = np.full((COL_WIN, COL_WIN, 3), 128, np.uint8)
+    if u[2] >= 0:
+        return out
+    px, py = G.COL_W / 2 + COL_F_PX * u[0] / -u[2], G.COL_H / 2 - COL_F_PX * u[1] / -u[2]
+    x0, y0 = int(round(px - half)), int(round(py - half))
+    xa, ya, xb, yb = max(0, x0), max(0, y0), min(G.COL_W, x0 + COL_WIN), min(G.COL_H, y0 + COL_WIN)
+    if xb > xa and yb > ya:
+        out[ya - y0:yb - y0, xa - x0:xb - x0] = img[ya:yb, xa:xb]
+    return out
 
 
 def window_centre(side, gaze):
@@ -270,16 +383,20 @@ def face_test(m, d, gaze):
 
 
 class Eyes:
-    """both eyes over a G1World: `render()` the two native images, `see()` this tick's retina codes and face test (rendered again
-    only when something they would see has moved: the state, the gaze, the scene's run-time fields), `close()` the GL context.
-    Attaching sets the world's `eyes`, so its frames carry eye_p, eye_f, face_fovea and face_periph (and A1's test in the truth)."""
+    """the G1's three views over a G1World (A38, A42): `render()` the two grey imagers' and the colour camera's native images into one
+    buffer with one read-back, `see()` this tick's codes (rendered again only when something they would see has moved: the state, the
+    gaze, the scene's run-time fields), `close()` the GL context. Attaching sets the world's `eyes`, so its frames carry eye_p (172)
+    and eye_f (1,536) at the anatomy's sizes, face_fovea and face_periph (zeros: no born face detector at birth, C39 option a),
+    onset_periph (zeros until A43's constants are read, C49), and A1's face test in the truth."""
 
-    def __init__(self, world, shadows="sun", samples=4):
+    def __init__(self, world, shadows="sun", samples=EYE_SAMPLES):
         from mujoco import gl_context
         self.world = world
         m = self.m = world.m
         self.w, self.h = G.EYE_W, G.EYE_H
-        self.ctx = gl_context.GLContext(max(2 * self.w, 64), max(self.h, 64))
+        self.cw, self.ch = G.COL_W, G.COL_H
+        self.W = 2 * self.w + self.cw
+        self.ctx = gl_context.GLContext(max(self.W, 64), max(self.h, 64))
         self.ctx.make_current()
         room_samples = int(m.vis.quality.offsamples)
         m.vis.quality.offsamples = int(samples)                        # the eyes' multisampling, fixed in their own context
@@ -294,13 +411,13 @@ class Eyes:
         self.opt = G.eye_option()
         self.pert = mujoco.MjvPerturb()
         self.cams = {}
-        for side in "LR":
+        for side in "LRC":
             c = mujoco.MjvCamera(); c.type = mujoco.mjtCamera.mjCAMERA_FIXED; c.fixedcamid = m.camera(f"eye_{side}").id
             self.cams[side] = c
-        self.buf = np.zeros((self.h, 2 * self.w, 3), np.uint8)
+        self.buf = np.zeros((self.h, self.W, 3), np.uint8)
         self.set_shadows(shadows)
         self._cache = None
-        self.timing = {"renders": 0, "render_s": 0.0}
+        self.timing = {"renders": 0, "render_s": 0.0, "code_s": 0.0}
         world.eyes = self
 
     def set_shadows(self, shadows):
@@ -311,7 +428,7 @@ class Eyes:
         self._cache = None
 
     def render(self):
-        """both eyes' native images {side: rows x cols x 3 uint8, row 0 at the top}, one read-back"""
+        """the three views' native images {"L", "R": 192 x 336 x 3, "C": 134 x 238 x 3; uint8, row 0 at the top}, one read-back"""
         t0 = time.perf_counter()
         m, d = self.m, self.world.d
         if m.vis.headlight.active:
@@ -322,22 +439,22 @@ class Eyes:
             for i in range(m.nlight):
                 m.light_castshadow[i] = cast[i] if m.light(i).name == "sun" else 0
         try:
-            for i, side in enumerate("LR"):
+            for x, side, w_, h_ in ((0, "L", self.w, self.h), (self.w, "R", self.w, self.h), (2 * self.w, "C", self.cw, self.ch)):
                 mujoco.mjv_updateScene(m, d, self.opt, self.pert, self.cams[side], mujoco.mjtCatBit.mjCAT_ALL, self.scn)
-                mujoco.mjr_render(mujoco.MjrRect(self.w * i, 0, self.w, self.h), self.scn, self.con)
-            mujoco.mjr_readPixels(self.buf, None, mujoco.MjrRect(0, 0, 2 * self.w, self.h), self.con)
+                mujoco.mjr_render(mujoco.MjrRect(x, 0, w_, h_), self.scn, self.con)
+            mujoco.mjr_readPixels(self.buf, None, mujoco.MjrRect(0, 0, self.W, self.h), self.con)
         finally:
             m.light_castshadow[:] = cast
         img = np.flipud(self.buf)
         self.timing["renders"] += 1; self.timing["render_s"] += time.perf_counter() - t0
-        return {"L": img[:, :self.w].copy(), "R": img[:, self.w:].copy()}
+        return {"L": img[:, :self.w].copy(), "R": img[:, self.w:2 * self.w].copy(), "C": img[self.h - self.ch:, 2 * self.w:].copy()}
 
     def see(self):
-        """this tick's eyes: {"eye_p": 2 x 168, "eye_f": 2 x 384, "face_fovea": [1 or 0], "face_periph": [1 or 0, d_yaw, d_pitch],
-        "truth": the images, A1's face test and the template's readings}. face_fovea is the event line "a face in the fovea": the
-        born template matched on either eye's fovea pixels. face_periph is orienting's cue: the born template's best match on either
-        eye's periphery pixels, and where it lies from that eye's window centre (tangent angles, rad; 0 when none matched). Both
-        are the pixels' own; A1's face test (world truth: the reward's gate) stays in the truth."""
+        """this tick's eyes: {"eye_p": 172, "eye_f": 1,536, "face_fovea": [0], "face_periph": [0, 0, 0], "onset_periph": [0, 0, 0],
+        "truth": the images, the grey foveae, the colour window and A1's face test}. eye_p: per grey eye its periphery's 7 x 4 cells
+        x luminance ON and OFF (56), then the colour camera's 5 x 3 cells x red-green and blue-yellow ON and OFF (60). eye_f: per grey
+        eye its fovea's 8 x 8 cells x the born bank's 10 maps (640), then the colour window's 8 x 8 cells x the two opponent axes ON
+        and OFF (256). Each flattened row by row, channels last."""
         w = self.world
         m, d = self.m, w.d
         hl = m.vis.headlight
@@ -345,30 +462,24 @@ class Eyes:
             d.qpos, d.mocap_pos, d.mocap_quat, w.gaze, m.geom_pos, m.geom_quat, m.geom_size, m.geom_rgba, m.light_active,
             m.light_diffuse, m.light_ambient, m.light_specular, m.light_dir, m.light_pos, m.light_castshadow, m.mat_rgba,
             m.mat_emission, np.array([hl.active], float), hl.ambient, hl.diffuse, hl.specular))).digest()
-        # what the eyes would see (the state, the gaze, the scene's run-time fields, every light's terms): rendered again only if it moved
         if self._cache is None or self._cache[0] != key:
             imgs = self.render()
-            per = {s: periphery(imgs[s]) for s in "LR"}
-            fov = {s: fovea(imgs[s], s, w.gaze) for s in "LR"}
-            eye_p = np.concatenate([retina(per[s], CELL_P).reshape(-1) for s in "LR"])
-            eye_f = np.concatenate([retina(fov[s], CELL_F).reshape(-1) for s in "LR"])
-            tf = {s: face_template(fov[s]) for s in "LR"}
-            tp = {s: face_template(per[s]) for s in "LR"}
-            face_fovea = np.array([float(template_match(tf["L"]) or template_match(tf["R"]))])
-            face_periph = np.zeros(3)
-            hits = [s for s in "LR" if template_match(tp[s])]
-            if hits:
-                s = max(hits, key=lambda x: tp[x][0])
-                yaw = math.atan((tp[s][3] * POOL - G.EYE_W / 2) / W.EYE_F_PX)
-                pitch = math.atan((G.EYE_H / 2 - tp[s][4] * POOL) / W.EYE_F_PX)
-                wy = w.gaze[0] + (w.gaze[2] / 2 if s == "L" else -w.gaze[2] / 2)
-                face_periph = np.array([1.0, yaw - wy, pitch - w.gaze[1]])
-            truth = {"images": imgs, "periphery": per, "fovea": fov, "face_test": face_test(self.m, w.d, w.gaze),
-                     "template_fovea": tf, "template_periphery": tp, "windows": {s: window_corner(s, w.gaze) for s in "LR"}}
-            self._cache = (key, eye_p, eye_f, face_fovea, face_periph, truth)
-        _, eye_p, eye_f, face_fovea, face_periph, truth = self._cache
-        return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": face_fovea.copy(), "face_periph": face_periph.copy(),
-                "truth": truth}
+            t0 = time.perf_counter()
+            Lg = {s: grey(imgs[s]) for s in "LR"}
+            per = {s: periphery(Lg[s]) for s in "LR"}
+            fov = {s: fovea(Lg[s], s, w.gaze) for s in "LR"}
+            cwin = colour_window(imgs["C"], w.gaze, m, d)
+            n = W.FOVEA_PX // CELL_F
+            eye_p = np.concatenate([retina_grey(per[s], CELL_P).reshape(-1) for s in "LR"]
+                                   + [retina_colour(imgs["C"], *COL_CELLS).reshape(-1)])
+            eye_f = np.concatenate([bank(fov[s]).reshape(-1) for s in "LR"] + [retina_colour(cwin, n, n).reshape(-1)])
+            self.timing["code_s"] += time.perf_counter() - t0
+            truth = {"images": imgs, "periphery": per, "fovea": fov, "colour_window": cwin, "face_test": face_test(self.m, w.d, w.gaze),
+                     "windows": {s: window_corner(s, w.gaze) for s in "LR"}}
+            self._cache = (key, eye_p, eye_f, truth)
+        _, eye_p, eye_f, truth = self._cache
+        return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": np.zeros(3),
+                "onset_periph": np.zeros(3), "truth": truth}
 
     def close(self):
         if self.world.eyes is self:

@@ -82,7 +82,7 @@ def test_the_gaze():
     for side in "LR":                                                   # both windows inside their images at the reach
         x0, y0 = E.window_corner(side, w.gaze)
         cx, cy = E.window_centre(side, w.gaze)
-        assert abs(cx - (x0 + 16)) <= 0.5 and abs(cy - (y0 + 16)) <= 0.5, (side, cx, cy, x0, y0)
+        assert abs(cx - (x0 + W.FOVEA_PX / 2)) <= 0.5 and abs(cy - (y0 + W.FOVEA_PX / 2)) <= 0.5, (side, cx, cy, x0, y0)
     try:
         w.apply({"gaze": 125})
     except ValueError:
@@ -139,39 +139,68 @@ def test_the_vor_in_the_world():
 
 
 def test_the_eyes_render():
-    """eyes 4: two native renders; the periphery; the fovea where the gaze puts it; the retina's code by hand"""
+    """eyes 4 (W3r: A38, A42): three native renders (the grey imagers 336 x 192, the colour camera 238 x 134), their codes at the
+    anatomy's sizes (eye_p 172, eye_f 1,536) equal to their definitions computed by hand: a grey periphery cell, the colour camera's
+    cell, the born bank on a fovea (its centre-surround and one oriented map, each pooled over an 8 x 8 cell), the colour window's
+    cell; a ball held 0.5 m out, aimed at, fills both grey windows' centres and the colour window with red, and leaves them when the
+    gaze turns away; the render a function of the state (two renders byte for byte, multisampling off)"""
+    from scipy.signal import fftconvolve
     w, ey = _world()
     m, d = w.m, w.d
     f = w.frame()
     t = f.truth["eyes"]
-    assert f.obs["eye_p"].shape == (E.EYE_P_SIZE,) == (336,) and f.obs["eye_f"].shape == (E.EYE_F_SIZE,) == (768,)
+    assert f.obs["eye_p"].shape == (E.EYE_P_SIZE,) == (172,) and f.obs["eye_f"].shape == (E.EYE_F_SIZE,) == (1536,)
     for s in "LR":
         img = t["images"][s]
-        assert img.shape == (96, 168, 3) and img.dtype == np.uint8 and img.std() > 5
-        assert np.array_equal(t["periphery"][s], img.reshape(32, 3, 56, 3, 3).mean(axis=(1, 3)).round().astype(np.uint8))
-    # the retina's code by hand, one cell
-    per = t["periphery"]["L"].astype(float) / 255
-    cell = per[8:16, 16:24].reshape(-1, 3).mean(0)
-    L_, RG, BY = cell.mean() - 0.5, cell[0] - cell[1], cell[2] - (cell[0] + cell[1]) / 2
-    want = [max(L_, 0), max(-L_, 0), max(RG, 0), max(-RG, 0), max(BY, 0), max(-BY, 0)]
-    k = (1 * 7 + 2) * 6                                                  # row 1, column 2 of the left periphery's 4 x 7 cells
-    assert np.allclose(f.obs["eye_p"][k:k + 6], want), (f.obs["eye_p"][k:k + 6], want)
-    # the ball held 0.5 m out: aimed at, it fills the window's centre; the gaze turned away, it leaves
-    c = m.camera("eye_L").id
-    P = d.cam_xpos[c] + d.cam_xmat[c].reshape(3, 3) @ np.array([0.25, -0.1, -1.0]) * 0.5
+        assert img.shape == (192, 336, 3) and img.dtype == np.uint8 and img.std() > 5
+        Lg = E.grey(img)
+        assert np.allclose(t["periphery"][s], Lg.reshape(32, 6, 56, 6).mean(axis=(1, 3)))
+    assert t["images"]["C"].shape == (134, 238, 3)
+    # a grey periphery cell by hand: the left eye's row 1, column 2 of its 4 x 7 cells, ON and OFF about mid-grey
+    c = t["periphery"]["L"][8:16, 16:24].mean() - 0.5
+    k = (1 * 7 + 2) * 2
+    assert np.allclose(f.obs["eye_p"][k:k + 2], [max(c, 0), max(-c, 0)])
+    # the colour camera's cell by hand: row 2, column 4 of its 3 x 5 cells
+    C = t["images"]["C"].astype(float) / 255
+    rb, cb = np.array_split(np.arange(134), 3)[2], np.array_split(np.arange(238), 5)[4]
+    cc = C[rb[0]:rb[-1] + 1, cb[0]:cb[-1] + 1]
+    rg, by = (cc[..., 0] - cc[..., 1]).mean(), (cc[..., 2] - (cc[..., 0] + cc[..., 1]) / 2).mean()
+    k = 112 + (2 * 5 + 4) * 4
+    assert np.allclose(f.obs["eye_p"][k:k + 4], [max(rg, 0), max(-rg, 0), max(by, 0), max(-by, 0)])
+    # the born bank by hand on the right eye's fovea: the centre-surround ON cell and the 0-degree, 3-px oriented energy of cell (3, 5)
+    Fv = t["fovea"]["R"]
+    assert Fv.shape == (64, 64)
+    dog, gab = E.BANK
+    r = max(dog.shape[0], max(e_.shape[0] for e_, _o in gab)) // 2
+    P = np.pad(Fv, r, mode="edge")
+    cs = fftconvolve(P, dog, mode="same")[r:r + 64, r:r + 64]
+    ev, od = gab[0]
+    en = np.sqrt(fftconvolve(P, ev, mode="same") ** 2 + fftconvolve(P, od, mode="same") ** 2)[r:r + 64, r:r + 64]
+    cell = (slice(24, 32), slice(40, 48))
+    k = 640 + (3 * 8 + 5) * 10
+    assert np.allclose(f.obs["eye_f"][k], np.maximum(cs, 0)[cell].mean()) and np.allclose(f.obs["eye_f"][k + 2], en[cell].mean())
+    # the ball held 0.5 m out: aimed at, it fills the windows' centres (the colour window red); the gaze turned away, it leaves
+    cL = m.camera("eye_L").id
+    Pb = d.cam_xpos[cL] + d.cam_xmat[cL].reshape(3, 3) @ np.array([0.1, -0.05, -1.0]) * 0.5
     a = m.jnt_qposadr[m.body_jntadr[m.body("toy_ball").id]]
-    d.qpos[a:a + 3] = P; mujoco.mj_forward(m, d)
-    w.gaze = W.clamp_gaze(E.gaze_at(m, d, P))
-    fov = w.frame().truth["eyes"]["fovea"]
-    red = lambda im: float(np.mean((im[..., 0] > 20) & (im[..., 0].astype(float) > 0.6 * im.astype(float).sum(-1))))   # red-dominant (the room's own light)
-    assert red(fov["L"][12:20, 12:20]) > 0.9 and red(fov["R"][12:20, 12:20]) > 0.9, (red(fov["L"][12:20, 12:20]), red(fov["R"][12:20, 12:20]))
+    d.qpos[a:a + 3] = Pb; mujoco.mj_forward(m, d)
+    w.gaze = W.clamp_gaze(E.gaze_at(m, d, Pb))
+    t2 = w.frame().truth["eyes"]
+    red = lambda im: float(np.mean((im[..., 0] > 20) & (im[..., 0].astype(float) > 0.6 * im.astype(float).sum(-1))))
+    ball = lambda s: t2["images"][s][t2["windows"][s][1] + 24:t2["windows"][s][1] + 40, t2["windows"][s][0] + 24:t2["windows"][s][0] + 40]
+    assert red(ball("L")) > 0.9 and red(ball("R")) > 0.9 and red(t2["colour_window"][24:40, 24:40]) > 0.9, \
+        (red(ball("L")), red(ball("R")), red(t2["colour_window"][24:40, 24:40]))
     w.gaze = W.clamp_gaze(w.gaze + [-0.5, 0.2, 0])
-    fov2 = w.frame().truth["eyes"]["fovea"]
-    assert red(fov2["L"]) < 0.05, red(fov2["L"])
+    t3 = w.frame().truth["eyes"]
+    assert red(t3["colour_window"]) < 0.05
+    a1 = ey.render(); a2 = ey.render()
+    assert all(np.array_equal(a1[k_], a2[k_]) for k_ in a1)
+    ms = 1e3 * ey.timing["render_s"] / ey.timing["renders"]
     ey.close()
-    print(f"eyes 4: two 168 x 96 renders, the periphery 56 x 32, the retina's code (2 x 168 + 2 x 384) equal to its hand computation;",
-          f"a ball 0.5 m out aimed at fills both windows' centres ({100 * red(fov['L'][12:20, 12:20]):.0f}% red), and leaves when the gaze",
-          f"turns away; render {1e3 * ey.timing['render_s'] / ey.timing['renders']:.0f} ms a tick for both eyes (the sun's shadow)")
+    print(f"eyes 4: three renders (2 x 336 x 192 grey imagers, 238 x 134 colour), the codes eye_p 172 and eye_f 1,536 equal to their",
+          f"hand computations (a periphery cell, a colour cell, the born bank's centre-surround and oriented energy, the colour window);",
+          f"a ball 0.5 m out aimed at fills both windows and the colour window, and leaves; two renders byte for byte; {ms:.0f} ms a",
+          f"tick for the three views (the sun's shadow)")
 
 
 def _face_rig(w, dist=0.6, turn_deg=0.0):
@@ -280,8 +309,9 @@ def _drawn_face(size, cx, cy, polarity=1, bg=0.45, skin=0.75, dark=0.30, H=32, W
 def test_the_face_template():
     """eyes 8: the born face template (CONSPEC; the W1 verifier's second finding): it fires on a drawn face at each size of its bank
     and at places across the fovea, not on the same face with light blobs (Farroni's polarity) nor on noise; in the world the
-    frame's face_fovea and face_periph are the template on the frame's own pixels, and the body's channels are the sensors' alone
-    (A1's face test only in the truth). Its reading of the parent's face as she is drawn is printed (C3 measures it)"""
+    frame's face_fovea and face_periph read nothing (C39 option a: no born face detector at birth, the template an instrument), and
+    the body's channels are the sensors' alone (A1's face test only in the truth). Its reading of the parent's face as she is drawn
+    is printed (C3 measures it)"""
     for size in (8, 12, 16, 22, 28):
         for cx, cy in ((15, 16),) + (((11, 13), (20, 19)) if size <= 16 else ()):   # (the larger faces fill the fovea)
             b = E.face_template(_drawn_face(size, cx, cy))
@@ -299,13 +329,9 @@ def test_the_face_template():
                               "words", "face", "ears", "sound_side", "onset_periph"}, sorted(f.obs)
         t = f.truth["eyes"]
         assert t["face_test"]["L"][0] and t["face_test"]["R"][0]
-        for side in "LR":
-            assert E.face_template(t["fovea"][side]) == t["template_fovea"][side]
-            assert E.face_template(t["periphery"][side]) == t["template_periphery"][side]
-        assert f.obs["face_fovea"][0] == float(E.template_match(t["template_fovea"]["L"]) or E.template_match(t["template_fovea"]["R"]))
-        hits = [s_ for s_ in "LR" if E.template_match(t["template_periphery"][s_])]
-        assert (f.obs["face_periph"][0] == 1.0) == bool(hits) and (hits or not f.obs["face_periph"].any())
-        reads[dist] = (int(f.obs["face_fovea"][0]), round(float(t["template_fovea"]["L"][0]), 2), round(float(t["template_fovea"]["L"][1]), 2))
+        assert f.obs["face_fovea"][0] == 0.0 and not f.obs["face_periph"].any()       # no born face detector at birth (C39 option a)
+        tf = E.face_template(t["fovea"]["L"])
+        reads[dist] = (int(E.template_match(tf)), round(float(tf[0]), 2), round(float(tf[1]), 2))
     t0 = time.perf_counter()
     for _ in range(10):
         for side in "LR":
@@ -313,9 +339,9 @@ def test_the_face_template():
     ms = (time.perf_counter() - t0) / 10 * 1e3
     ey.close()
     print(f"eyes 8: the born template fires on a drawn face at 8-28 px anywhere in the fovea, not with light blobs nor on noise; the",
-          f"frame's face_fovea and face_periph are the template on its own pixels, the channels the sensors' alone; {ms:.1f} ms a tick",
+          f"frame's face_fovea and face_periph read nothing at birth (C39 a), the channels the sensors' alone; {ms:.1f} ms a tick",
           f"for both eyes' fovea and periphery. On the parent's face as drawn, facing at 0.45 / 0.8 / 1.5 m (A1 passing):",
-          f"face_fovea {[reads[k][0] for k in (0.45, 0.8, 1.5)]} (best r {[reads[k][1] for k in (0.45, 0.8, 1.5)]}): C3 measures it")
+          f"the template's match {[reads[k][0] for k in (0.45, 0.8, 1.5)]} (best r {[reads[k][1] for k in (0.45, 0.8, 1.5)]}): C3 measures it")
 
 
 def test_exact_replay_with_the_eyes():
@@ -424,7 +450,8 @@ def test_the_parents_face_as_drawn():
                 lum[k] = img[ri, ci] if not k.startswith("eye") else img[ri - 1:ri + 2, ci - 1:ci + 2].min()   # an eye: its iris
             cheek = min(lum["cheek_L"], lum["cheek_R"])
             assert t["face_test"][side] == (True, "") and lum["eye_L"] < 0.7 * cheek and lum["eye_R"] < 0.7 * cheek, (dist, side, lum)
-        reads[dist] = (int(f.obs["face_fovea"][0]), round(max(t["template_fovea"]["L"][0], t["template_fovea"]["R"][0]), 2))
+        tb = [E.face_template(t["fovea"][s_]) for s_ in "LR"]
+        reads[dist] = (int(any(E.template_match(b_) for b_ in tb)), round(max(b_[0] for b_ in tb), 2))
     ey.close()
     print(f"eyes 11: the parent's face drawn at birth: at 0.45 / 0.6 / 0.8 m her mouth where the face test finds it and her eyes dark;",
           f"the born template on her face: face_fovea {[reads[k][0] for k in (0.45, 0.6, 0.8)]}, best r",

@@ -158,7 +158,7 @@ DAWN_TICKS = 30
 VOICE_NAME, WORDS_NAME = "voice", "words"                          # the anatomy's tract (effector 0) and its words' output (1)
 VOICE_REST = (SETTINGS_PER_JOINT ** len(AN.TRACT) - 1) // 2      # the tract at rest: every articulator at setting 2
 
-# THE GAZE: the software fovea's effector (3.4, 3.5; W3). The G1 has no eyes that turn: a 32 x 32 px window inside each camera's
+# THE GAZE: the software fovea's effector (3.4, 3.5; W3). The G1 has no eyes that turn: a 64 x 64 px window inside each camera's
 # native image is its fovea, placed by a gaze state (yaw, pitch: tangent angles in the image, right and up positive; vergence: the
 # two windows' yaw apart, positive converging), moved by the gaze's acts (Hering's law: 3 commands move both windows) and counter-
 # turned by the VOR. The window stays inside its image: yaw within +-38.1 deg and pitch +-20.3 deg of the axis.
@@ -170,7 +170,7 @@ NEAR_POINT_M = 0.25             # the nearest thing both windows can fixate: ver
                                 # nearest her face comes (A3); anything nearer is seen double, as inside an infant's near point
                                 # (A23; anatomy, ours)
 VOR_GAIN = 1.0                  # the window counter-turns by the torso gyro's rotation, gain 1 (3.7; innate, ours)
-FOVEA_PX = 32                   # the fovea window, px of the native image (about 21 deg; 3.4; anatomy, ours)
+FOVEA_PX = 64                   # the fovea window, px of the native image (about 21 deg at 3 px a degree: A42; 3.4; anatomy, ours)
 
 # THE SERVO GAINS (A39; 3.3): Unitree's published position gains for the G1 and the Dex3, read 2026-09-25:
 #   - the body (legs, waist, arms): unitree_sdk2's whole-body low-level example (example/g1/low_level/g1_ankle_swing_example.cpp: Kp
@@ -622,6 +622,7 @@ class G1World(SimWorld):
         self.dex = np.array([self.zones.index(z) for z in AN.ZONES])        # the Dex3's 16 zones among the world's per-link zones
         self.base_dof = int(m.jnt_dofadr[m.joint("floating_base_joint").id])
         self.pelvis_id = m.body("pelvis").id
+        self.g1_bodies = np.array([b for b in range(m.nbody) if int(m.body_rootid[b]) == int(m.body_rootid[m.body('pelvis').id])], dtype=np.int64)
         self.cereb_idx = np.array([JOINTS.index(j) for j in AN.CEREB_JOINTS])
         self.weight = self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.armature = m.dof_armature[self.dof].copy()                     # each joint's rotor inertia through its gear (the model's)
@@ -726,9 +727,9 @@ class G1World(SimWorld):
                        eye_p=np.zeros(AN.SIZES["eye_p"]), eye_f=np.zeros(AN.SIZES["eye_f"]), onset_periph=np.zeros(3),
                        face_periph=np.zeros(3), face_fovea=np.zeros(1))
         truth = self._truth()
-        if self.eyes is not None and not self.night:                    # W3's two-render eyes, until W3 reopened builds the three
-            seen = self.eyes.see()                                      # views at the anatomy's sizes: their codes as W3 built them
-            for k in ("eye_p", "eye_f", "face_fovea", "face_periph"):   # (tests and instruments; a life at birth takes W3r's)
+        if self.eyes is not None and not self.night:                    # the eyes (W3r: the D435's three views at the anatomy's sizes,
+            seen = self.eyes.see()                                      # body/sim/eyes.py; A38, A42)
+            for k in ("eye_p", "eye_f", "face_fovea", "face_periph", "onset_periph"):
                 obs[k] = seen[k]
             truth["eyes"] = seen["truth"]
         return Frame(self.tick, obs, face, truth)
@@ -753,9 +754,12 @@ class G1World(SimWorld):
                 | (ty == int(mujoco.mjtConstraint.mjCNSTR_CONTACT_ELLIPTIC))
             if cm.any():
                 mujoco.mj_mulJacTVec(m, d, qf, np.where(cm, d.efc_force, 0.0))
-        if self.parent is not None and self.parent.holds:
-            qh = np.zeros(m.nv)
-            mujoco.mj_xfrcAccumulate(m, d, qh)
+        if self.parent is not None and self.parent.holds:               # her holds: the outside forces on the G1's links, as MuJoCo
+            qh = np.zeros(m.nv)                                         # applies xfrc_applied (at each body's centre of mass)
+            for bb in self.g1_bodies:
+                fr = d.xfrc_applied[bb]
+                if fr.any():
+                    mujoco.mj_applyFT(m, d, fr[:3].copy(), fr[3:].copy(), d.xipos[bb].copy(), int(bb), qh)
             qf += qh
         b = self.base_dof
         return np.concatenate([qf[self.dof], qf[b:b + 6]])

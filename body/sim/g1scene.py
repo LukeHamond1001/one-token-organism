@@ -55,7 +55,13 @@ D435_PITCH = 0.8307767239493009
 STEREO_BASELINE = 0.050
 EYE_PUSH = 0.003            # the D435 origin lies on the head shell (ray test: within 0.1 mm); each pinhole 3 mm in front of it
 EYE_FOVY = 58.0             # degrees, vertical
-EYE_W, EYE_H = 168, 96      # the native render per eye: horizontal field 2 atan(168/96 tan 29 deg) = 88.2 deg
+EYE_W, EYE_H = 336, 192     # the native render per grey eye (A42): 3 px a degree at the centre; horizontal field 2 atan(336/192 tan 29
+                            # deg) = 88.3 deg, as the D435's imagers' depth field (A38)
+COL_W, COL_H = 238, 134     # the colour camera's render (A38; 3.4): 69.4 x 42.5 deg at about 3.4 px a degree
+COL_FOVY = 42.5             # degrees, vertical (the D435's colour camera, OV2740: 69.4 x 42.5 deg)
+COL_OFFSET = 0.015          # the colour camera 15 mm beside the left imager, on its outer side (RealSense's documentation gives 15 mm
+                            # between the two centre-lines; which side and its exact axis are read from the datasheet before birth,
+                            # C45; ours until then)
 EAR_Y = 0.079               # the ear sites on the head's sides (its widest point is 0.078 m from the midline)
 EAR_XZ = (0.005, 0.395)
 
@@ -66,12 +72,13 @@ def _ry(a):
 
 
 def eye_frames():
-    """Each eye's (pos, R) in torso_link's frame; R's columns are the MuJoCo camera's x (right), y (up), z (backward)."""
+    """Each eye's (pos, R) in torso_link's frame, the two grey imagers L and R and the colour camera C; R's columns are the MuJoCo
+    camera's x (right), y (up), z (backward)."""
     Rd = _ry(D435_PITCH)                               # the d435 frame: x forward (optical axis), y left, z up
     Rcam = Rd @ np.column_stack([[0, -1, 0], [0, 0, 1], [-1, 0, 0]])
     fwd = Rd[:, 0]
     out = {}
-    for sd, dy in (("L", 0.0), ("R", -STEREO_BASELINE)):
+    for sd, dy in (("L", 0.0), ("R", -STEREO_BASELINE), ("C", COL_OFFSET)):
         p = D435_POS + Rd @ np.array([0, dy, 0]) + fwd * EYE_PUSH
         out[sd] = (p, Rcam)
     return out
@@ -83,7 +90,7 @@ def load_model(xml=XML, extra=None):
     spec = mujoco.MjSpec.from_file(str(xml))
     torso = spec.body("torso_link")
     for sd, (p, R) in eye_frames().items():
-        torso.add_camera(name=f"eye_{sd}", pos=p.tolist(), quat=kin.mjquat(R).tolist(), fovy=EYE_FOVY)
+        torso.add_camera(name=f"eye_{sd}", pos=p.tolist(), quat=kin.mjquat(R).tolist(), fovy=COL_FOVY if sd == "C" else EYE_FOVY)
     for sd, sg in (("L", 1), ("R", -1)):
         torso.add_site(name=f"ear_{sd}", pos=[EAR_XZ[0], sg * EAR_Y, EAR_XZ[1]], size=[.006, 0, 0], group=5)
     if extra is not None:

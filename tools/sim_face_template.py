@@ -50,7 +50,7 @@ def template_maps(img):
     """the born template's r and contrast at every place and size of an image (as eyes.face_template computes them):
     [(width, height, r map, contrast map)]"""
     from numpy.lib.stride_tricks import sliding_window_view
-    L = img.astype(float).mean(axis=-1) / 255.0
+    L = img.astype(float).mean(axis=-1) / 255.0 if img.ndim == 3 else np.asarray(img, float)   # a colour render or a grey eye's
     out = []
     for w_, (h, n, K) in E.TEMPLATES.items():
         if h > L.shape[0] or w_ > L.shape[1]:
@@ -148,7 +148,7 @@ def read_view(w, ey, centre, fovea_aim=True):
         fp = face_px(w, s, centre)
         rec = {}
         if fovea_aim:
-            b = tr["template_fovea"][s]
+            b = E.face_template(tr["fovea"][s])
             x0, y0 = E.window_corner(s, w.gaze)
             flipped = E.face_template(tr["fovea"][s][::-1].copy())          # the control: the same pixels upside down (no face's layout)
             rec["fovea_best"] = {"r": round(b[0], 3) if np.isfinite(b[0]) else None, "contrast": round(b[1], 3), "width_px": b[2],
@@ -157,7 +157,7 @@ def read_view(w, ey, centre, fovea_aim=True):
             if fp is not None:
                 nb = best_near(tr["fovea"][s], fp[0] - x0, fp[1] - y0, fp[2] / 3)
                 rec["fovea_on_her_face"] = None if nb is None else {"r": round(nb[0], 3), "contrast": round(nb[1], 3), "width_px": nb[2]}
-        b = tr["template_periphery"][s]
+        b = E.face_template(tr["periphery"][s])
         rec["periphery_best"] = {"r": round(b[0], 3) if np.isfinite(b[0]) else None, "contrast": round(b[1], 3), "width_px": b[2],
                                  "match": E.template_match(b)}
         if fp is not None:
