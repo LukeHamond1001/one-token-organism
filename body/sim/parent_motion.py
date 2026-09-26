@@ -244,6 +244,13 @@ class _Plain:
         self.kind, self.target, self.during, self.thing = kind, target, during, thing
 
 
+def _body_or_none(m, name):
+    try:
+        return m.body(name).id
+    except KeyError:
+        return None
+
+
 class Refuse(Exception):
     """an act she cannot do, with the reason (it is refused, never faked)"""
 
@@ -799,6 +806,9 @@ class ParentMotion:
                          and not (m.geom(g).name or "").startswith(("parent_face", "parent_hair", "parent_eye"))]
         self.g1_geoms = [int(g) for g in np.nonzero(self.g1_geom)[0]]
         self.g1_arr = np.array(self.g1_geoms, dtype=np.int64)
+        trunk = {m.body(n).id for n in ("pelvis", "waist_yaw_link", "waist_roll_link", "torso_link") if _body_or_none(m, n) is not None}
+        self.g1_trunk = np.array([g for g in self.g1_geoms if int(m.geom_bodyid[g]) in trunk], dtype=np.int64)   # A86: the child's
+        # trunk, which her kneeling keeps CLEAR_M from; its limbs pass through her without force since A25c
         trunk = {m.body(n).id for n in CHILD_BODY}                          # the child's body: its trunk's links (its head is its torso's)
         self.g1_body_arr = np.array([g for g in self.g1_geoms if int(m.geom_bodyid[g]) in trunk], dtype=np.int64)
         kick = trunk | {m.body(f"{sd_}_{n}").id for sd_ in ("left", "right") for n in ("hip_pitch_link", "hip_roll_link", "hip_yaw_link",
@@ -885,6 +895,7 @@ class ParentMotion:
         self.core_hold = None                                               # her trunk's pose where it stopped with a pressed arm (plain)
         self.child_prev = None                                              # the child's shapes' centres as the last tick began, and as
         self.child_pts = None                                               # this one did (her state: the calm step, _restless_near)
+        self.trunk_kneel = False                                            # she kneels where only its trunk was clear (A86)
         self.standoff = np.zeros(2)                                         # her base moved back off the child's body (her standoff,
                                                                             # A25b: _standoff), on the floor plan
         self.clear_now = 0.2                                                # her planned trunk's clearance from the child's body (m)
@@ -934,7 +945,7 @@ class ParentMotion:
                     trunk_at=None if self.trunk_at is None else [_lst(self.trunk_at[0]), _lst(self.trunk_at[1])], trunk_moved=self.trunk_moved,
                     planned_trunk_moved=self.planned_trunk_moved, hold_touch=dict(self.hold_touch), toy_touch=dict(self.toy_touch), push_on=dict(self.push_on),
                     held_at={c: v for c, v in self.held_at.items()}, on_child=dict(self.on_child),
-                    arm_in=dict(self.arm_in), core_hold=self.core_hold, standoff=_lst(self.standoff), clear_now=self.clear_now,
+                    arm_in=dict(self.arm_in), core_hold=self.core_hold, standoff=_lst(self.standoff), clear_now=self.clear_now, trunk_kneel=bool(getattr(self, "trunk_kneel", False)),
                     child_pts=None if self.child_pts is None else [list(x) for x in self.child_pts],
                     written=None if self.written is None else [self.written[0].tolist(), self.written[1].tolist()],
                     drive=self.drive.state(),
@@ -994,6 +1005,7 @@ class ParentMotion:
         ch = s.get("core_hold")
         self.core_hold = None if ch is None else [list(x) for x in ch]
         self.standoff = np.array(s.get("standoff", (0.0, 0.0)), dtype=np.float64)
+        self.trunk_kneel = bool(s.get("trunk_kneel", False))
         cp = s.get("child_pts")
         self.child_pts = None if cp is None else np.array(cp, dtype=np.float64)
         self.child_prev = None
@@ -3113,7 +3125,10 @@ class ParentMotion:
     # ------------------------------------------------------------------ planning: her clearance from the child (A4)
     def _standoff_clear(self, pose, segs):
         """her standoff's measure: her legs, trunk, head and free arms from the child's body and legs, and her legs from its arms and
-        hands too (its arm lying between her kneeling legs was squeezed by them: A25b's build)"""
+        hands too (its arm lying between her kneeling legs was squeezed by them: A25b's build); while she kneels where only its trunk
+        was clear (A86: beside a babbling child), from its trunk only, as that kneeling was planned"""
+        if getattr(self, "trunk_kneel", False):
+            return self._clearance(pose, segs=segs, child=self.g1_trunk)
         c1 = self._clearance(pose, segs=segs, child=self.g1_standoff_arr)
         if c1 < K.CLEAR_M:
             return c1
@@ -3242,6 +3257,31 @@ class ParentMotion:
             self._lift_cache[key] = self._floor_lift(P.kneel(np.asarray(at, float), yaw, mode))
         return self._lift_cache[key]
 
+    def _clear_trunk(self, pose):
+        """her kneeling's clearance from the child (A86): all of its shapes, as A4 plans it; on the second pass of a plan that found
+        no way clear of all of them (`_trunk_only`), its trunk only (its pelvis, waist and torso): its limbs, which a babbling child
+        sweeps through every spot beside it, pass through her body without force since A25c, as a thrashing baby's arm bumps a
+        kneeling parent's knee and she stays"""
+        return self._clearance(pose, child=self.g1_trunk) if getattr(self, "_trunk_only", False) else self._clearance(pose)
+
+    def _two_pass(self, fn, *args, **kw):
+        """A86: a plan tried clear of all of the child first; only if none is, clear of its trunk"""
+        self._trunk_only = False
+        try:
+            out = fn(*args, **kw)
+            if out is not None:
+                return out
+        except Refuse:
+            pass
+        self._trunk_only = True
+        try:
+            out = fn(*args, **kw)
+            if out is not None:
+                self.trunk_kneel = True                                     # her kneeling now clear of its trunk only: her standoff
+            return out                                                      # measures that too (A86)
+        finally:
+            self._trunk_only = False
+
     def _clearance(self, pose, segs=("core",), skip_off=False, child=None, only=None):
         """the least distance (m, up to 0.2) from her collision shapes of the named chains, posed as `pose`, to the G1's (or to the
         G1 shapes `child` names), by MuJoCo's own geometry on a scratch copy of the state (skip_off: a shape whose collision is
@@ -3314,6 +3354,9 @@ class ParentMotion:
         return {k: self.d.xpos[b][:2].copy() for k, b in self.toys.items() if k not in ex}
 
     def _kneel_plan(self, where=None, offs=None, alongs=None, need=None):
+        return self._two_pass(self._kneel_plan_once, where, offs, alongs, need)
+
+    def _kneel_plan_once(self, where=None, offs=None, alongs=None, need=None):
         """the first spot she can kneel at: the final kneel 3 cm clear of the child (A4), from where the act can be done (`need`:
         _need_ok); kneeling down a step back where the child is too near ahead (her step, her knees and her standing spot clear of
         it, of toys and of furniture), the shuffle in clear; the toys where she will kneel cleared first, each free of the child (a
@@ -3331,11 +3374,11 @@ class ParentMotion:
             fwd = np.array([math.cos(yaw), math.sin(yaw)]); left = np.array([-fwd[1], fwd[0]])
             if not self._in_plan(H) or self.plan.dist[self.plan.cell(H)] < K.BODY_R_M + 0.05:
                 reasons.append((tag, "furniture")); continue
-            if self._clearance(frame_segs("kneel", "heels", H, yaw)) < K.CLEAR_M:
+            if self._clear_trunk(frame_segs("kneel", "heels", H, yaw)) < K.CLEAR_M:
                 reasons.append((tag, "the final kneel touches the child")); continue
             need_ok = None                                                  # asked only of a spot that passes every other check (it is
             T = H + fwd * HEELS_BACK                                        # the costly one: a trunk solve or a face search)
-            if self._clearance(frame_segs("kneel_down", 2.5, T, yaw)) < K.CLEAR_M:
+            if self._clear_trunk(frame_segs("kneel_down", 2.5, T, yaw)) < K.CLEAR_M:
                 reasons.append((tag, "sitting back touches the child")); continue
             for back in (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6):
                 T2 = T - fwd * back
@@ -3346,8 +3389,8 @@ class ParentMotion:
                 spots = [T2, T2 + fwd * 0.40 + left * 0.12, T2 + fwd * 0.03 + left * 0.115, T2 + fwd * 0.03 - left * 0.115, stand]
                 if any(np.linalg.norm(xy - q) < 0.15 for xy in toys.values() for q in spots):
                     reasons.append((tag, back, "a toy where she kneels down")); continue
-                if not (all(self._clearance(frame_segs("kneel_down", u, T2, yaw)) >= K.CLEAR_M for u in KNEEL_CHECK_U) and
-                        all(self._clearance(frame_segs("kneel", "tall", T2 + (T - T2) * u, yaw)) >= K.CLEAR_M for u in (0.5, 1.0) if back > 0)):
+                if not (all(self._clear_trunk(frame_segs("kneel_down", u, T2, yaw)) >= K.CLEAR_M for u in KNEEL_CHECK_U) and
+                        all(self._clear_trunk(frame_segs("kneel", "tall", T2 + (T - T2) * u, yaw)) >= K.CLEAR_M for u in (0.5, 1.0) if back > 0)):
                     reasons.append((tag, back, "kneeling down or shuffling in touches the child")); continue
                 clear, why = [], None
                 for k, xy in toys.items():
@@ -3389,8 +3432,8 @@ class ParentMotion:
                 spots = [T, T + f2 * 0.40 + l2 * 0.12, T + f2 * 0.03 + l2 * 0.115, T + f2 * 0.03 - l2 * 0.115, stand]
                 if any(np.linalg.norm(xy - q) < 0.15 for xy in toys.values() for q in spots):
                     reasons.append((tag, "turn", "a toy where she kneels down")); continue
-                if not (all(self._clearance(frame_segs("kneel_down", u, T, y2)) >= K.CLEAR_M for u in KNEEL_CHECK_U) and
-                        all(self._clearance(frame_segs("kneel", "tall", T, yaw + side_turn * a_)) >= K.CLEAR_M for a_ in (math.pi / 4,))):
+                if not (all(self._clear_trunk(frame_segs("kneel_down", u, T, y2)) >= K.CLEAR_M for u in KNEEL_CHECK_U) and
+                        all(self._clear_trunk(frame_segs("kneel", "tall", T, yaw + side_turn * a_)) >= K.CLEAR_M for a_ in (math.pi / 4,))):
                     reasons.append((tag, "turn", "kneeling down along it or turning touches the child")); continue
                 if need_ok is None:
                     need_ok = self._need_ok(need, H, yaw); tries += need is not None
@@ -3459,6 +3502,7 @@ class ParentMotion:
         if where is None and offs is None and b["mode"] == "heels" and self._beside_now() and \
                 self._need_ok(need, np.asarray(b["at"], float), float(b["yaw"])):
             return []                                                       # she already kneels beside it, clear of it: she stays
+        self.trunk_kneel = False
         kp = self._kneel_plan(where, offs, alongs, need)
         if kp is None:
             if need == "lean" and any("cannot be done" in str(r[-1]) for r in self.kneel_reasons):
@@ -3522,6 +3566,9 @@ class ParentMotion:
         T2 = np.asarray(T2, float)
         if all(self._clearance(frame_segs("kneel_down", u, T2, yaw)) >= K.CLEAR_M for u in KNEEL_CHECK_U):
             return [dict(type="kneel_down", at=_lst(T2), yaw=float(yaw), u0=0.0, u1=2.0)]
+        if all(self._clearance(frame_segs("kneel_down", u, T2, yaw), child=self.g1_trunk) >= K.CLEAR_M for u in KNEEL_CHECK_U):
+            self.trunk_kneel = True                                         # clear of its trunk only (A86)
+            return [dict(type="kneel_down", at=_lst(T2), yaw=float(yaw), u0=0.0, u1=2.0)]
         a["info"]["replans"] = a["info"].get("replans", 0) + 1
         if a["info"]["replans"] > 3:
             raise Refuse("the child keeps moving where she would kneel (A4: 3 cm clear)")
@@ -3531,14 +3578,17 @@ class ParentMotion:
         return [dict(type="plan", what="approach", args=dict(again))]
 
     def _plan_shuffle_in(self, a, T2, T, yaw):
+        return self._two_pass(self._plan_shuffle_in_once, a, T2, T, yaw)
+
+    def _plan_shuffle_in_once(self, a, T2, T, yaw):
         """the shuffle in from where she knelt down to her spot, checked again against the child as it lies now (its limbs move and
         sink): she stops short where her knees would come within 3 cm of it (A4)"""
         T2 = np.asarray(T2, float); T = np.asarray(T, float)
         for u in (1.0, 0.8, 0.6, 0.4, 0.2, 0.0):
             Tu = T2 + (T - T2) * u
-            if all(self._clearance(frame_segs("kneel", "tall", T2 + (Tu - T2) * v, yaw)) >= K.CLEAR_M for v in (0.5, 1.0)) and \
-                    self._clearance(frame_segs("kneel_down", 2.5, Tu, yaw)) >= K.CLEAR_M and \
-                    self._clearance(frame_segs("kneel_down", 3.0, Tu, yaw)) >= K.CLEAR_M:
+            if all(self._clear_trunk(frame_segs("kneel", "tall", T2 + (Tu - T2) * v, yaw)) >= K.CLEAR_M for v in (0.5, 1.0)) and \
+                    self._clear_trunk(frame_segs("kneel_down", 2.5, Tu, yaw)) >= K.CLEAR_M and \
+                    self._clear_trunk(frame_segs("kneel_down", 3.0, Tu, yaw)) >= K.CLEAR_M:
                 a["info"]["shuffle_short_m"] = round(float(np.linalg.norm(T - Tu)), 3)
                 return [dict(type="shuffle", p0=_lst(T2), p1=_lst(Tu), yaw=yaw), dict(type="kneel_down", at=_lst(Tu), yaw=yaw, u0=2.0, u1=3.0)]
         raise Refuse("the child now lies where she would kneel (A4: 3 cm clear)")
@@ -3631,6 +3681,9 @@ class ParentMotion:
             [dict(type="plan", what="stand_up", args={})]
 
     def _plan_stand_up(self, a):
+        return self._two_pass(self._plan_stand_up_once, a)
+
+    def _plan_stand_up_once(self, a):
         """her way up from where she kneels (or sits), planned against the child as it lies now (A4: her legs, trunk and head 3 cm
         clear of it in every planned frame): up onto her knees, then, where getting up there would touch it, a shuffle back on her
         knees, or a turn on her knees and a shuffle away, first; then up onto her feet. Refused when every way touches it (she
@@ -3644,19 +3697,19 @@ class ParentMotion:
         T = np.asarray(b["at"], float) + (fwd * HEELS_BACK if b["mode"] == "heels" else 0)
         out = []
         if b["mode"] == "heels":                                            # rising onto her knees (her knees stay where they are):
-            now = self._clearance(frame_segs("kneel", "heels", np.asarray(b["at"], float), yaw))   # never nearer to it than she is,
-            if self._clearance(frame_segs("kneel_down", 2.5, T, yaw)) < min(K.CLEAR_M, now - 0.005, 0.0):   # and never into it:
+            now = self._clear_trunk(frame_segs("kneel", "heels", np.asarray(b["at"], float), yaw))   # never nearer to it than she is,
+            if self._clear_trunk(frame_segs("kneel_down", 2.5, T, yaw)) < min(K.CLEAR_M, now - 0.005, 0.0):   # and never into it:
                 raise Refuse("she cannot rise onto her knees: the child lies against them (A4)")          # a limb babbling against
                                                                             # her knees she rises from as a body does (A4 stops her
                                                                             # if it presses)
             out.append(dict(type="kneel_down", at=_lst(T), yaw=yaw, u0=3.0, u1=2.0))
         toys = self._toys_xy()
         why = []
-        near = min(K.CLEAR_M, self._clearance(frame_segs("kneel", "tall", T, yaw)) - 0.005)   # turning or shuffling away on her
+        near = min(K.CLEAR_M, self._clear_trunk(frame_segs("kneel", "tall", T, yaw)) - 0.005)   # turning or shuffling away on her
         for turn in (0.0, math.pi / 2, -math.pi / 2, math.pi):                               # knees: never nearer than she is
             y2 = yaw + turn
             f2 = np.array([math.cos(y2), math.sin(y2)]); l2 = np.array([-f2[1], f2[0]])
-            if turn and not all(self._clearance(frame_segs("kneel", "tall", T, yaw + turn * v)) >= near for v in (0.5, 1.0)):
+            if turn and not all(self._clear_trunk(frame_segs("kneel", "tall", T, yaw + turn * v)) >= near for v in (0.5, 1.0)):
                 why.append((round(math.degrees(turn)), "turning on her knees touches it")); continue
             for back in (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0):
                 T2 = T - f2 * back
@@ -3667,10 +3720,10 @@ class ParentMotion:
                 spots = [T2 + f2 * 0.40 + l2 * 0.12, T2 + f2 * 0.03 + l2 * 0.115, T2 + f2 * 0.03 - l2 * 0.115, stand]
                 if any(np.linalg.norm(xy - q) < 0.15 for xy in toys.values() for q in spots):
                     why.append((round(math.degrees(turn)), back, "a toy where she steps")); continue
-                if back > 0 and not all(self._clearance(frame_segs("kneel", "tall", T + (T2 - T) * v, y2)) >= (near if v < 1 else K.CLEAR_M)
+                if back > 0 and not all(self._clear_trunk(frame_segs("kneel", "tall", T + (T2 - T) * v, y2)) >= (near if v < 1 else K.CLEAR_M)
                                         for v in (0.5, 1.0)):
                     why.append((round(math.degrees(turn)), back, "shuffling back touches it")); continue
-                if not all(self._clearance(frame_segs("kneel_down", u, T2, y2)) >= K.CLEAR_M for u in KNEEL_CHECK_U[::-1]):
+                if not all(self._clear_trunk(frame_segs("kneel_down", u, T2, y2)) >= K.CLEAR_M for u in KNEEL_CHECK_U[::-1]):
                     why.append((round(math.degrees(turn)), back, "getting up touches it")); continue
                 if turn:
                     out.append(dict(type="knee_turn", at=_lst(T), yaw0=yaw, yaw1=y2))
