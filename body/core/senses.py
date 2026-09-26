@@ -143,9 +143,12 @@ class SensesMixin:
         for s_ in others:                                   # the reward's other terms, in their order; a silent source adds nothing
             v_ = s_.felt(frame, self)
             if v_ is not None:
-                r += s_.term(v_)
-                if terms_ is not None:
-                    terms_[s_.name] = s_.term(v_)
+                if s_.dopamine:
+                    r += s_.term(v_)
+                else:                                       # A88: a CORTISOL source (the G1's pain): never the reward; its size raises the
+                    self.stress = min(30.0, self.stress + float(self.cfg["stress_gain"]) * abs(float(s_.term(v_))))   # stress as a dip does
+                if terms_ is not None:                      # (body/core/mouth.py); its term stays in the tick's terms for the amygdala's
+                    terms_[s_.name] = s_.term(v_)           # heads and tag (R7c-d) and the cord's cry
         if terms_ is not None:
             self._terms_now = terms_
             if self._tags_on():

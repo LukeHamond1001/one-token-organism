@@ -219,7 +219,8 @@ class Effector:
     spg_phase: Optional[float] = None     # its born phase, a fraction of the cycle; None: drawn at birth from the body's seed
     spg_rhythm: Optional[str] = None      # C54: the rhythm it keeps, shared with the limbs that name it (the first leads); None: its own
     cry: Optional[dict] = None            # step R6h: its born cry (A47): {"posture": {joint: step}, "lungs": joint, "breath": (channel,
-                                          # number), "charge": (channel, number), "pain": the reward source whose felt pain sets it off}
+                                          # number), "charge": (channel, number) or absent (A88), "pain": the reward source whose felt pain
+                                          # sets it off}
     orient: Optional[dict] = None         # step R6h: its joints the born orienting bias acts on, {joint: ("yaw" or "pitch", the sense its
                                           # positive step turns: +1 toward + right / + up, -1 the other way)} (3.7, A43)
     orient_gate: bool = False             # step R6h: the born gate input "a face, a sound onset or a sudden change appeared" (in n_in)
@@ -431,6 +432,11 @@ class RewardSource:
     clip: Optional[float] = None
     signs: tuple = (1.0, -1.0)
     amyg: bool = True
+    dopamine: bool = True                 # A88 (the owner's decision 2026-09-26): whether its term enters the reward (dopamine). Off, the
+                                          # source is CORTISOL: its term never reaches the reward, the critics or the actor; |term| raises
+                                          # the body's stress at stress_gain (as a dip of dopamine does, body/core/mouth.py) and it still
+                                          # reaches the amygdala (its heads, the tag) and the cord's cry when `amyg` and the cry name it.
+                                          # Source 0 always pays. The G1's pain (body/sim/anatomy.py JointPain); the diary's sources all pay
 
     def felt(self, frame, life):
         """this tick's feeling on the world's `frame` (body/core/world.py) and the `life`'s state, or None (silent: nothing is added)"""
@@ -657,15 +663,17 @@ class Anatomy:
                 raise ValueError(f"anatomy: effector {e.name!r}'s rhythm {e.spg_rhythm!r}: a name (an identifier), on a limb with a pattern generator")
             if e.cry is not None:
                 cy_ = e.cry
-                ok_ = isinstance(cy_, dict) and {"posture", "lungs", "breath", "charge"} <= set(cy_) and cy_["posture"] and \
+                ok_ = isinstance(cy_, dict) and {"posture", "lungs", "breath"} <= set(cy_) and cy_["posture"] and \
                     all(0 <= int(j_) < J_ for j_ in cy_["posture"]) and int(cy_["lungs"]) in {int(j_) for j_ in cy_["posture"]}
-                for key_ in ("breath", "charge"):
+                for key_ in ("breath", "charge"):                    # "charge" optional since A88 (the G1 has no charge)
+                    if key_ == "charge" and cy_.get("charge") is None:
+                        continue
                     c_ = next((c for c in self.channels if ok_ and c.name == cy_[key_][0]), None)
                     ok_ = ok_ and c_ is not None and c_.kind == "vector" and 0 <= int(cy_[key_][1]) < int(c_.size)
                 ok_ = ok_ and (cy_.get("pain") is None or cy_["pain"] in {r_.name for r_ in self.rewards})
                 if not ok_:
                     raise ValueError(f"anatomy: effector {e.name!r}'s cry {cy_}: its posture's joints among its {J_}, its lungs among them, its breath "
-                                     f"and charge a vector channel's numbers, its pain one of the reward sources")
+                                     f"(and its charge, if any) a vector channel's numbers, its pain one of the reward sources")
             if int(e.inv_hidden) < 1:
                 raise ValueError(f"anatomy: effector {e.name!r}'s inverse model of {e.inv_hidden} units")
             if e.twitch and any(int(k_) < 3 or int(k_) % 2 == 0 for k_ in e.factors):
@@ -716,6 +724,8 @@ class Anatomy:
             sg_ = tuple(float(x_) for x_ in (s.signs or ()))
             if not sg_ or len(set(sg_)) != len(sg_) or any(x_ not in (1.0, -1.0) for x_ in sg_):
                 raise ValueError(f"anatomy: reward source {s.name!r}'s signs {s.signs}: distinct senses, each +1 or -1 (step R7c)")
+        if not self.rewards[0].dopamine:
+            raise ValueError(f"anatomy: reward source 0 ({self.rewards[0].name!r}) is the world's judgment and always pays (dopamine)")
         return self
 
 

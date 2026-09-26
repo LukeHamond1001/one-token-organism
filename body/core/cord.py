@@ -39,9 +39,10 @@ from birth, where the save left it. An own act against the step on a joint cance
 an own act with it, or holding, sums with it. No posture, balance or gravity term: it reads the tick, its rhythm, the gate's p_act and
 the own act, never a sense.
 
-THE BORN CRY (`_cry_step`; A47; Jurgens 2002): while the body felt pain this tick (the named reward source's term below 0) or its charge
-is below cry_charge, the tract's declared cry posture is added to its targets in breath groups: cry_expire ticks of the posture (the
-lungs pushing, the glottis pressed, the pitch raised, the jaw open), then cry_inspire ticks of the lungs drawn back (breathing in: the
+THE BORN CRY (`_cry_step`; A47; Jurgens 2002): while the body felt pain this tick (the named reward source's term below 0, paid or not:
+a cortisol source's term is kept in the tick's terms, A88) or, on a body with a charge, its charge is below cry_charge, the tract's
+declared cry posture is added to its targets in breath groups: cry_expire ticks of the posture (the lungs pushing, the glottis pressed,
+the pitch raised, the jaw open), then cry_inspire ticks of the lungs drawn back (breathing in: the
 reservoir refills at rest), the expiration ending early when the reservoir is empty (breath left at 0, the tract's own physics). The
 tract's own act overrides it articulator by articulator: where the own act steps an articulator (any setting but the hold) the cry's
 step there is dropped, so the cortex can hush it. Its ticks are logged as reflex (st["cord_n"]["cry"], the tick's record); a cry is
@@ -182,9 +183,11 @@ class CordMixin:
         cy = e.cry
         terms = getattr(self, "_terms_now", None) or {}
         pain = float(terms.get(cy["pain"], 0.0)) < 0.0 if cy.get("pain") else False
-        ch_, ci_ = cy["charge"]
-        o_ = frame.obs.get(ch_)
-        low = o_ is not None and float(o_[int(ci_)]) < float(self._reflex_const("cry_charge"))
+        low = False
+        if cy.get("charge") is not None:                                 # a body with a charge (none since A88: the G1 has no charge)
+            ch_, ci_ = cy["charge"]
+            o_ = frame.obs.get(ch_)
+            low = o_ is not None and float(o_[int(ci_)]) < float(self._reflex_const("cry_charge"))
         if not (pain or low):
             st["cry_t"] = 0
             return None
