@@ -261,6 +261,37 @@ and logged, so a life replays exactly. A language model may later write her talk
 
 The consciousness instrument (T1 of `consciousness_math.md`) waits until Phase 3 passes. The owner turned the work to this plan.
 
+## 6. The road to the robot (the owner's question 2026-09-26: "do we have a shot ... putting it on robot? whats plan?")
+
+Every stage has a gate. Nothing moves to the next stage until its gate passes, and every gate's result is reported whether it
+passes or fails. No purchase without the owner's word.
+
+| stage | what | the gate to pass it | my odds |
+|---|---|---|---|
+| 0 | the plumbing day (Phases 1–3 above): one paying reward, the teacher's four parts, learning off | every path fires; the teacher's rulers read; tick ≤ 250 ms | near certain, weeks of building |
+| 1 | birth in the room: the first rungs (orient, reach, grasp) | reaches improve day over day in her notebook; T-A (an act smiled at once, more often the next morning) | above even |
+| 2 | the middle rungs (lift, shake, give, roll) and the frowns | rolled by A19's rule; T-C (a frown felt) | below even |
+| 3 | transfer inside the room: new toys, new places, new exemplars every 3 days (A53) | T-E passes at each rung; First 2's never-taught tests, 3 of 4 | a fair shot |
+| 4 | the house (SIM_DESIGN 16): the hall, a kitchen, a bedroom, stairs, more objects, a second voice | the rungs hold in the new rooms with no reset; the long-run clause at 200 life hours (savings, plasticity, no loss) | open |
+| 5 | her face from its own pixels (A49's removal test): the world's face value falls silent, the born mouth-corner reader carries the reward | M2 and M3 hold 10 life days after the removal | a fair shot; the reader is the one piece that must work on a person |
+| 6 | the same code timed on a robot's computer: the core's tick within 150 ms, the critics' solves off the tick, the cerebellum at 100 Hz and the servo loop at 500 Hz where the robot runs them | a sim day at real time with no dropped ticks | engineering, likely |
+| 7 | the real G1, on a mat, eyes first, a person as the parent (First 1's Level 2; F9): its own sensors (the D435's colour camera, joints, IMU, the Dex3 arrays, its microphones), Unitree's gains, the observer's pain law, a person always present and an e-stop | the same rungs, from the same born set, with the person's face as the only dopamine; the intervention log printed beside every result | the real unknown |
+
+**What "putting it on the robot" means.** The body is already the real G1's, sensor for sensor (A36): the observer, the eye's bank,
+the cerebellum and the tract are software the robot can run. The world changes; the core does not. Two ways to begin on the
+hardware, both kept open: seed 1 born again on the robot from the same born set (the clean claim), or the sim life carried on as a
+change of world (SIM_DESIGN 16's wording). The clean claim is the default; the carried life is an experiment reported beside it.
+
+**What generalization needs, honestly.** Breadth. LLMs generalize because they predicted the whole internet; a robot gets one life.
+Stages 3 and 4 are the breadth we have planned, and the real house (stage 7 onward) is the breadth that counts. Its input is also
+narrow: about 3,800 numbers a tick at 6.7 Hz against an infant's million fibres an eye. Wider eyes (a finer bank, a wider window)
+are a later change of body, judged like every other by whether it speeds learning.
+
+**What the sim can and cannot prove.** The sim can prove the mechanism: many skills from one social reward in one life, kept over
+nights, transferring inside a room and a house. It cannot prove the robot: a person's face in real light, real contacts, real
+latency. That is why stage 5 (the pixels) and stage 6 (the timing) come before any hardware, and why nothing is claimed for
+robotics until stage 7 runs.
+
 ## Sources
 
 - Csibra G, Gergely G. Natural pedagogy as evolutionary adaptation. Philos Trans R Soc B 2011. PMID 21357237.
