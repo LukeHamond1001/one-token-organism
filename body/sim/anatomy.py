@@ -1,7 +1,7 @@
 """THE G1'S ANATOMY AS THE CORE MEETS IT (docs/SIM_DESIGN.md 3.4, 3.5, 3.6, 3.7, 6 and 10; the core refactor's step R6h, C61): the stock
 Unitree G1's eight channels at 3.4's sizes, its ten effectors numbered as 3.5 numbers them (the vocal tract effector 0, the words'
 silent output effector 1, the gaze 2, the waist 3, the arms 4-5, the Dex3 hands 6-7, the legs 8-9), and its two reward sources in
-section 6's order (the face, the one that pays; pain, cortisol: A88); its cerebellar interface (7.5, A44: the mossy input the world hands the cerebellum below the
+section 6's order (the face, pain; no charge: A88; pain pays again: A91); its cerebellar interface (7.5, A44: the mossy input the world hands the cerebellum below the
 tick, its readouts, the flocculus's axes); and SIM_CFG, the core's constants the sim is born with that R6h decides (the gates' drives,
 the switches of the motor effectors, the cord's patterns and the born biases) and the cerebellum's switch. A declaration: it builds no
 module, draws no random number and keeps no state (the core's law for an anatomy, body/core/anatomy.py). S5a builds the world against
@@ -195,11 +195,12 @@ class FaceIncrement(RewardSource):
 
 
 class JointPain(RewardSource):
-    """PAIN (6.2, A37, A88): -1 on a tick any of the frame's `pain` flags is set (a joint's outside torque past its limit, or the base's
-    force past 3 x the body's weight, as the observer estimates them from the robot's own sensors); silent otherwise. Since A88 (the
-    owner's decision 2026-09-26) it is CORTISOL, not dopamine: declared with `dopamine=False`, its term never enters the reward; it
-    raises the body's stress (plasticity up, the choice flattened for about half a minute: body/core/senses.py), reaches the amygdala
-    (its pain- head, the tag: the moment written more strongly and dreamt first) and sets off the born cry. Only her face pays."""
+    """PAIN (6.2, A37; A91): -1 on a tick any of the frame's `pain` flags is set (a joint's outside torque past its limit, or the base's
+    force past 3 x the body's weight, as the observer estimates them from the robot's own sensors); silent otherwise. It PAYS: a
+    negative reward, the dopamine dip (the lateral habenula's road, Matsumoto and Hikosaka 2007), which also raises the body's stress
+    as every dip does (body/core/mouth.py: cortisol with the dip), reaches the amygdala (its pain- head, the tag) and sets off the born
+    cry. A88 had made it cortisol alone (dopamine off); the owner reversed that on 2026-09-26 (A91) after the first plumbing day
+    showed the cortisol loop (C79): with nothing paying for pain, no value could learn to avoid it. Biology pays for pain."""
 
     def felt(self, frame, life):
         p_ = frame.obs.get("pain")
@@ -361,8 +362,8 @@ class SimAnatomy(LanguageAnatomy):
             n_in = 2 + (1 if name == "waist" else 0) + 2
             limbs.append(Limb(name, [5] * J, rest_id=(5 ** J - 1) // 2, sense="body", sense_idx=idx(js), inverse=True, fwd_gate=True,
                               n_in=n_in, twitch=True, **kw))                        # R8c: its joints twitch in active sleep (3.7, A46)
-        rewards = [FaceIncrement("face", clip=2), JointPain("pain", signs=(-1.0,), dopamine=False)]   # A88: her face pays; pain is cortisol
-                                                                                                        # (R7d: the heads face +/-, pain -)
+        rewards = [FaceIncrement("face", clip=2), JointPain("pain", signs=(-1.0,))]   # her face pays (+/-), pain pays (-): A91 (R7d: the
+                                                                                     # heads face +/-, pain -); no charge (A88)
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
