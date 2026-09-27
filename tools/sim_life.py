@@ -70,6 +70,8 @@ def build(args):
     if args.resume:
         with open(os.path.join(args.out, "world.pt"), "rb") as f:
             world.load_state(pickle.load(f))
+        if world.dawn_left == W.DAWN_TICKS and world.carry_to_mat():       # A110: a pair saved at a dawn before A110 (the child asleep
+            print(f"the child carried to the mat at this dawn (A110): {world.carried[-1]}", flush=True)   # off the mat): carried now
         L = Life.load(life_path, anat, cfg=cfg, save_path=life_path, world=world)   # A101: a resumed life lives under the TREE's constants
                                                                                     # (SIM_CFG, and --lr0): until A101 the save's cfg ruled
                                                                                     # and no switch turned after birth could reach a life

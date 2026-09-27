@@ -636,6 +636,7 @@ class G1World(SimWorld):
         self.vor_corr = np.zeros(4)      # the flocculus's gain correction (yaw, pitch) and offset (yaw, pitch), held through a tick
         self.night = False
         self.dawn_left = 0
+        self.carried = []                                               # A110: the child carried to the mat at a dawn (tick, from, to)
         self.light_day = {f: getattr(m, f).copy() for f in ("light_diffuse", "light_ambient", "light_specular")}
         self._below_n = 0                                                    # sub-steps called this life (an instrument)
         # birth
@@ -984,9 +985,33 @@ class G1World(SimWorld):
         if self.lane is not None:
             self.lane.dusk(self)
 
+    def carry_to_mat(self):
+        """A110 (2026-09-27, C92): a child that has rolled off the mat is carried back onto it in its sleep, as a person carries a
+        sleeping baby to its bed: at dawn, before the light, its body is set down at the mat's centre lying as it lay (its joints,
+        its facing and its posture kept; only its place on the floor changes, its velocities zero), and the toys stay where they
+        are. Why: life day 6 the child rolled off the mat (dawn 8: its pelvis at (1.57, 0.22), the mat's edge at 1.4), day 7
+        through the door into the hall (dawn 9: (3.41, -1.56); the room's edge 2.65), where no toy lay within two metres, her
+        planner found no spot to kneel ("no path on the floor") and she counted as away (lane.ROOM_EDGE_X): no reach, no lesson,
+        no judgment of its acts for two days. Nothing here reaches the body but the morning's new view. Logged in `carried`
+        (the tick, from, to). -> whether it was carried"""
+        m, d = self.m, self.d
+        g = m.geom("mat").id
+        c, h = m.geom_pos[g][:2].copy(), m.geom_size[g][:2]
+        xy = d.qpos[:2].copy()                                          # its pelvis (the floating base) on the floor plan
+        if abs(xy[0] - c[0]) <= h[0] and abs(xy[1] - c[1]) <= h[1]:
+            return False                                                # over the mat: left where it lies
+        d.qpos[0:2] = c
+        mujoco.mj_forward(m, d)
+        d.qpos[2] += (.012 + .004) - self.scene.lowest_g1_point()      # set down on the mat as at birth (g1scene.place_on_mat)
+        d.qvel[:] = 0.0
+        mujoco.mj_forward(m, d)
+        self.carried.append((int(self.tick), [float(xy[0]), float(xy[1])], [float(c[0]), float(c[1])]))
+        return True
+
     def dawn(self):
         """THE MORNING (5.4, A46): the light returns over the wake's first DAWN_TICKS ticks, the eyes and ears on, the parent awake;
-        the world goes on from wherever the night left it"""
+        the world goes on from wherever the night left it, the child carried back onto the mat if it rolled off (A110)"""
+        self.carry_to_mat()
         self.night = False
         self.dawn_left = DAWN_TICKS
         if self.parent is not None:
@@ -1143,6 +1168,7 @@ class G1World(SimWorld):
                               "observer": self.observer.state(), "sounds": self.sounds.state(),
                               "eyes": None if self.eyes is None else self.eyes.state(),
                               "words_out": self.words_out, "tract_pa": self.tract_pa, "tract_raw": self.tract_raw, "crying": self.crying, "night": self.night, "dawn_left": int(self.dawn_left),
+                              "carried": [[int(t), list(a), list(b)] for t, a, b in self.carried],
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
 
@@ -1178,6 +1204,7 @@ class G1World(SimWorld):
         self.words_out = s5["words_out"]; self.tract_pa = np.asarray(s5["tract_pa"], float).copy()
         self.tract_raw = np.asarray(s5["tract_raw"], float).copy(); self.crying = bool(s5["crying"])
         self.night, self.dawn_left = bool(s5["night"]), int(s5["dawn_left"])
+        self.carried = [(int(t), [float(x) for x in a], [float(x) for x in b]) for t, a, b in s5.get("carried", [])]   # (A110; older saves: none)
         if self.lane is not None and s5.get("lane") is not None:
             self.lane.load_state(s5["lane"])
         mujoco.mj_forward(m, d)

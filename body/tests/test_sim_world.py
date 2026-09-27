@@ -1090,10 +1090,42 @@ def test_prone_pattern():
           f"joint; switch off: nothing; pain ticks in 20 resting ticks on its front: {pain} with the pattern, {pain_off} without (C80)")
 
 
+def test_carried_to_the_mat():
+    """world 21 (A110, C92): a child that rolled off the mat is carried back onto it at dawn in its sleep: set down at the mat's centre
+    lying as it lay (its facing and every joint kept, its velocities zero, its lowest point just above the mat), the carry logged and
+    saved; a child on the mat is left where it lies. Life dawn 9 found it in the hall at (3.41, -1.56) with no toy within two metres"""
+    w = G1World(seed=1)
+    for _ in range(10):
+        w.apply({})
+    q0 = w.d.qpos.copy()
+    assert not w.carry_to_mat() and np.array_equal(w.d.qpos, q0) and w.carried == []
+    g = w.m.geom("mat").id
+    c = w.m.geom_pos[g][:2].copy()
+    w.d.qpos[0:2] = [3.41, -1.56]; w.d.qvel[:] = 0.3
+    mujoco.mj_forward(w.m, w.d)
+    quat0, joints0 = w.d.qpos[3:7].copy(), w.d.qpos[7:].copy()
+    t = w.tick
+    w.dawn()
+    assert np.allclose(w.d.qpos[0:2], c) and np.array_equal(w.d.qpos[3:7], quat0) and np.array_equal(w.d.qpos[7:], joints0), w.d.qpos[:7]
+    assert not np.any(w.d.qvel)
+    low = w.scene.lowest_g1_point()
+    assert 0.012 < low < 0.030, low                                    # on the mat's top (0.01), the birth's clearance
+    assert w.carried == [(t, [3.41, -1.56], [float(c[0]), float(c[1])])], w.carried
+    w2 = G1World(seed=1)
+    w2.load_state(w.save_state())
+    assert w2.carried == w.carried and np.allclose(w2.d.qpos, w.d.qpos)
+    for _ in range(20):
+        w.apply({})
+    assert abs(w.d.qpos[0] - c[0]) < 0.1 and abs(w.d.qpos[1] - c[1]) < 0.1
+    print(f"world 21: the child at (3.41, -1.56) in the hall carried to the mat's centre {np.round(c, 2).tolist()} at dawn, lying as it",
+          f"lay (its facing and {joints0.size} joint values kept, still), its lowest point {low * 100:.1f} cm; the carry saved and",
+          f"restored; one on the mat left where it lies; the world lives on from there")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
