@@ -4863,19 +4863,15 @@ class ParentMotion:
             raise Refuse("the brief turn is for the child face down (A7)")
         return self._near(a) + [dict(type="plan", what="turn", args={})]
 
-    def _plan_turn(self, a):
-        """A101 (2026-09-26, C81): the turn from its front by its FAR shoulder and FAR hip, her hands reaching over its back onto their
-        far surfaces (the palms toward her), both placed from ONE trunk pose, then pulled up and toward her together so the body rolls
-        about its near edge onto its side and its back, as a person rolls a heavy child. Until A101 the near shoulder and hip were
-        "lifted" from above, each hand placed by its own lean (the second lean pulled the first hand off its hold: `slips`), and a hand
-        on top of a link cannot lift it: the spring moved nothing (0 N through every hold of `test_sim_parent` 16's turn), the act
-        stopped at A7's 2 s and the child lay prone, on life day 3 for half a day (its eyes on the mat, no smile possible)"""
+    def _turn_targets(self):
+        """A101: the turn's two grips on the child's FAR shoulder and hip roll links (their far surfaces, her palms toward her):
+        {hand: (target spec, held point and normal in the link's frame, hand shape, link)}"""
         ch = self.child
         her = np.r_[np.asarray(self.base["at"], float), 0.0]
         toward = unit((her - ch.torso) * [1, 1, 0])
         near = "left" if float(ch.lat[:2] @ toward[:2]) > 0 else "right"
         far = "right" if near == "left" else "left"
-        above, onto, shapes, holds = {}, {}, {}, []
+        out = {}
         for name, body in (("shoulder", f"{far}_shoulder_roll_link"), ("hip", f"{far}_hip_roll_link")):
             b = self.m.body(body).id
             sd = "R" if name == "shoulder" else "L"
@@ -4884,6 +4880,18 @@ class ParentMotion:
             Rl = self.d.xmat[b].reshape(3, 3)                               # pointing away from her; her palm on it faces her
             local = Rl.T @ (pt - self.d.xpos[b]); normal = Rl.T @ unit(n)
             to, loc, nl, shape = self._hold_target(sd, b, _lst(local), _lst(normal))
+            out[sd] = (to, loc, nl, shape, b, toward)
+        return out
+
+    def _plan_turn(self, a):
+        """A101 (2026-09-26, C81): the turn from its front by its FAR shoulder and FAR hip, her hands reaching over its back onto their
+        far surfaces (the palms toward her), both placed from ONE trunk pose, then pulled up and toward her together so the body rolls
+        about its near edge onto its side and its back, as a person rolls a heavy child. Until A101 the near shoulder and hip were
+        "lifted" from above, each hand placed by its own lean (the second lean pulled the first hand off its hold: `slips`), and a hand
+        on top of a link cannot lift it: the spring moved nothing (0 N through every hold of `test_sim_parent` 16's turn), the act
+        stopped at A7's 2 s and the child lay prone, on life day 3 for half a day (its eyes on the mat, no smile possible)"""
+        above, onto, shapes, holds = {}, {}, {}, []
+        for sd, (to, loc, nl, shape, b, toward) in self._turn_targets().items():
             goff = np.asarray(to["goff"], float)
             above[sd] = dict(to, goff=_lst(goff + nl * K.APPROACH_M)); onto[sd] = to; shapes[sd] = shape
             holds.append(dict(type="hold", name=f"turn_{sd}", side=sd, body=int(b), local=_lst(loc), normal=_lst(nl), goff=_lst(goff),

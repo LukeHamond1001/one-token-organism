@@ -334,7 +334,8 @@ class ParentLane:
         sounding = raw is not None and bool(np.any(raw))
         p = PC.Percept(tick=t, present=present, child_in_view=bool(in_view), seen_by_child=bool(seen_by_child),
                        child_target=target, child_holds=holds, seen=seen_t, fixtures=frozenset(self.fixtures) if present else frozenset(),
-                       events=tuple(events), child_sounding=sounding, child_reaches=tuple(reaches), face_near=near.get("mama"))
+                       events=tuple(events), child_sounding=sounding, child_reaches=tuple(reaches), face_near=near.get("mama"),
+                       face_down=self.last.get("posture") == "front")     # A102: face down this tick (her turn's standing reason)
         return PC.check_events(p), mouth, face
 
     def _events(self, world, t, pos, holds, her, ch, in_view, grasp=None, touch=None, reaches=()):

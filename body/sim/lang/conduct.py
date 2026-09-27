@@ -952,6 +952,7 @@ class Conduct:
         self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
         self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, noun, new, shown)]
         self.vocal_book = {}                  # C85: the smiles she has given for each word said right or echoed, {word: n}
+        self.distress_due = None              # A102: the tick of a distress event whose turn she owes while it lies face down (None: none)
         self.book = {}                        # A89: the smiles she has given for each motor act and object, {kind: {object: n}}: the
                                               # n-th is worth w e^(-n/HABIT_TAU) (consts.MOTOR_WORTH, _motor_judgments)
         self.book_log = []                    # (tick, kind, object, the worth given or why not, n): an instrument, the last 200
@@ -1771,6 +1772,10 @@ class Conduct:
         if (self.transcriber is not None and self.transcriber.turn_end == t) or (self.transcriber is None and not sounding):
             self.turn = None                                # (with no transcriber, the world's own sounding flag ends the turn)
         self._copying(t, p, out)
+        if any(k == "distress" for k, _o in p.events) and p.present:
+            self.distress_due = t                           # A102: the turn owed (cleared when asked, or when it is no longer face down)
+        elif self.distress_due is not None and not getattr(p, "face_down", False):
+            self.distress_due = None                        # it is no longer face down (its own roll, or her turn): nothing owed
         got = self._choose(t, p, sounding)
         if got is not None:
             self._say(got[0], t, p, out, in_set=got[1])
@@ -1910,11 +1915,13 @@ class Conduct:
         ev = {k for k, _ in p.events}
         # 1. the child's pain or distress: comfort (never a smile); face down in distress, she turns it over first (A90: a
         #    parent turns a baby stuck on its tummy; the plumbing day of 2026-09-26 found the wrists hurting under its weight there)
-        if "distress" in ev and p.present:
-            ln = f.compose("turn_over", t, p)
-            if ln is not None and f.allowed(ln, t, reply=True)[0]:
-                f.queue = []
-                return ln, False, None
+        turning = any(a[1] == "turn" and a[5] not in ENDED for a in self.acts_open)
+        if ("distress" in ev or self.distress_due is not None) and p.present and not turning:
+            ln = f.compose("turn_over", t, p)               # A102: the turn owed from the distress event while it lies face down (life
+            if ln is not None and f.allowed(ln, t, reply=True)[0]:   # day 4: the event came while she spoke, so it was lost and she
+                f.queue = []                                # comforted a prone child for 2,000 ticks; her first turn of the day ran
+                return ln, False, None                      # and left it prone, and was never asked again): asked at her first free
+                                                            # tick, and again when a turn has ended with it still face down
         if ev & {"pain", "distress"} and p.present:
             ln = f.compose("comfort", t, p)
             if ln is not None and f.allowed(ln, t, reply=True)[0]:
@@ -2249,7 +2256,7 @@ class Conduct:
                     copies=[list(c) for c in self.copies],
                     ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state(),
                     book={k: dict(v) for k, v in self.book.items()}, book_log=[list(x) for x in self.book_log[-200:]],
-                    vocal_book=dict(self.vocal_book),
+                    vocal_book=dict(self.vocal_book), distress_due=self.distress_due,
                     confirm_act_due=self.confirm_act_due, confirm_obj=self.confirm_obj)
 
     def load_state(self, s):
@@ -2275,6 +2282,7 @@ class Conduct:
         self.imperfect = s["imperfect"]
         self.book = {k: dict(v) for k, v in s.get("book", {}).items()}
         self.vocal_book = {str(k): int(v) for k, v in (s.get("vocal_book") or {}).items()}   # C85 (a save from before it: none given)
+        self.distress_due = s.get("distress_due")                                            # A102 (a save from before it: none owed)
         self.book_log = [tuple(x) for x in s.get("book_log", ())]
         self.confirm_act_due, self.confirm_obj = s.get("confirm_act_due", NEVER), s.get("confirm_obj")
         self.scaffold = s.get("scaffold", True)             # (a save before P3's twelfth round: the scaffold on, as at birth)

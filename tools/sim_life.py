@@ -90,6 +90,22 @@ def build(args):
     return world, eyes, lane, L
 
 
+def _ended(lane, world, open_seen):
+    """A102: the acts that ended this tick, [kind, target, status, why]; open_seen keeps each act's kind and target by its motion id
+    while it is open (the conduct drops an ended act from acts_open the tick it ends)"""
+    for a_ in lane.conduct.acts_open:
+        open_seen[a_[0]] = (a_[1], a_[2])
+    out = []
+    for mid, st in (getattr(lane.conduct, "ended", None) or {}).items():
+        kind, target = open_seen.pop(mid, ("?", None))
+        try:
+            why = str(world.parent.why(mid) or "")[:120]
+        except Exception:
+            why = ""
+        out.append([kind, target, str(st), why])
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -119,6 +135,7 @@ def main():
     total = args.ticks or int(args.days * day_ticks)
     log = open(os.path.join(args.out, "ticks.jsonl"), "a")
     agg = collections.Counter(); walls = collections.defaultdict(list); prev_reading = 0.0
+    open_seen = {}                                                        # A102: each act's kind and target by its motion id, for its end
     print(f"built in {time.time() - t_build:.1f} s; living {total} ticks", flush=True)
     t0 = time.time()
     for k in range(total):
@@ -150,6 +167,7 @@ def main():
                        kappa=[round(float(st.get("inv_gain", 0.0) or 0.0), 3) for st in L.motor],           # and its inverse model's reliability
                        her_at=[round(float(x), 2) for x in world.parent.base["at"]] + [str(world.parent.base.get("mode"))],   # where she is
                        acts_open=[[a_[1], a_[2], a_[5]] for a_ in lane.conduct.acts_open][:6],               # her acts under way (kind, target, status)
+                       acts_ended=_ended(lane, world, open_seen),                                              # and those that ended this tick, with why
                        refused=(list(lane.conduct.fast.refused[-1]) if lane.conduct.fast.refused and lane.conduct.fast.refused[-1][0] >= world.tick - 1 else None),
                        present=bool(ls.get("present")), holds=list(ls.get("holds") or ()),
                        token=None if world.words_out is None else INV.get(int(world.words_out)),

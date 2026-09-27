@@ -6748,6 +6748,49 @@ def test_vocal_habituation():
     print(f"60 the n-th right name or echo of the same word is worth 2 e^(-n/{K.HABIT_TAU:.0f}) (C85): {len(want)} smiles for 'duck' of",
           f"{N} right names, the last {worths[-1]:.3f}, then answered as an echo with no smile; a new word pays 2; the count saved")
 
+
+def test_distress_owed():
+    """lang 61 (A102, 2026-09-27): a distress event that comes while her voice is busy is not lost: the turn is owed and asked at her
+    first free tick while the child is still face down; owed no longer once it is not face down; the debt survives a save"""
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    _no_sets(con)
+    s0 = con.tick(0, P(0, child_target="duck"), token=LX.WORD_ID["duck"])     # a right name: she answers, her voice busy for a while
+    for t in range(1, 6):
+        s = con.tick(t, P(t))
+        if s.line is not None:
+            break
+    assert not con.fast.voice_free(t + 1), "her voice should be busy"
+    s = con.tick(t + 1, P(t + 1, events=(("distress", None),), face_down=True))   # the distress while she speaks
+    assert s.line is None and con.distress_due == t + 1, (s.line, con.distress_due)
+    st = con.state(); con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False); con2.load_state(st)
+    assert con2.distress_due == t + 1
+    got = None
+    for u in range(t + 2, t + 60):
+        s = con.tick(u, P(u, face_down=True))
+        if s.line is not None and s.line.intent == "turn_over":
+            got = u; break
+    assert got is not None and C.Act("turn", "child") in s.acts and con.distress_due == t + 1, (got, con.distress_due)   # owed still
+    again = None                                                                    # (its turn may fail): asked again once no turn
+    for u in range(got + 1, got + 200):                                             # act runs and it still lies face down, at the
+        s = con.tick(u, P(u, face_down=True))                                       # lines' own spacing
+        if s.line is not None and s.line.intent == "turn_over":
+            again = u; break
+    assert again is not None and again - got >= 10, (got, again)
+    s = con.tick(again + 1, P(again + 1, face_down=False))                          # turned (by her or itself): nothing owed
+    assert con.distress_due is None
+    con3 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    _no_sets(con3)
+    con3.tick(0, P(0, child_target="duck"), token=LX.WORD_ID["duck"])
+    for t3 in range(1, 6):
+        if con3.tick(t3, P(t3)).line is not None:
+            break
+    con3.tick(t3 + 1, P(t3 + 1, events=(("distress", None),), face_down=True))
+    assert con3.distress_due is not None
+    s = con3.tick(t3 + 2, P(t3 + 2, face_down=False))                          # it rolled by itself: nothing owed
+    assert con3.distress_due is None and (s.line is None or s.line.intent != "turn_over")
+    print(f"61 a distress event during her line is owed: the turn asked at her first free tick ({got - (t + 1)} ticks later), again",
+          f"{again - got} ticks after while it still lies face down, dropped once it does not; the debt saved (A102)")
+
 TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
@@ -6761,7 +6804,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed]
 
 if __name__ == "__main__":
     t0 = time.time()
