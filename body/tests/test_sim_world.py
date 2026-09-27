@@ -1144,10 +1144,50 @@ def test_carried_to_the_mat():
           f"the mat left where it lies; the world lives on from there")
 
 
+def test_a_world_migrates_to_the_book():
+    """world 22 (A115, C99): a world saved in the room is carried into the room with the book (body/sim/extras.py, through
+    load_model's extra hook): the old model is a prefix of the new, so every joint's position and velocity, the actuators, the time
+    and the model's mutable fields are copied by position (tools/sim_migrate_world.py), the book takes its compiled place, the lane
+    finds it by name and her inventory names it red, and the world lives on from the same moment"""
+    import pickle
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+    import sim_migrate_world as MG
+    from body.sim import extras as X
+    from body.sim import lane as L
+    from sim_life import FakeVoice
+    w = G1World(seed=1)
+    for _ in range(30):
+        w.apply({})
+    blob = w.save_state()
+    q0, v0, t0 = w.d.qpos.copy(), w.d.qvel.copy(), w.tick
+    w_old = G1World(seed=1)
+    w_new = G1World(seed=1, extra=X.add_book(xy=(0.3, -0.4)))
+    assert w_new.m.nq == w_old.m.nq + 7 and w_new.m.nu == w_old.m.nu
+    st2 = MG.migrate_state(pickle.loads(bytes(blob)), w_old, w_new)
+    w_new._restore(st2)
+    assert w_new.tick == t0 and np.allclose(w_new.d.qpos[:q0.size], q0) and np.allclose(w_new.d.qvel[:v0.size], v0)
+    b = w_new.m.body("toy_book").id
+    assert np.allclose(w_new.d.xpos[b][:2], (0.3, -0.4), atol=0.02), w_new.d.xpos[b]
+    ln = L.ParentLane(w_new, seed=1, voice=FakeVoice(), day_ticks=24000)
+    assert "book" in ln.toys and ln.conduct.world["objects"].get("book") == ["red"], (ln.toys, ln.conduct.world["objects"])
+    pel = w_new.d.qpos[:3].copy()
+    for _ in range(20):
+        w_new.frame(); w_new.apply({})
+    assert np.linalg.norm(w_new.d.qpos[:2] - pel[:2]) < 0.05 and 0.005 < w_new.d.xpos[b][2] < 0.06, (w_new.d.qpos[:3], w_new.d.xpos[b])
+    blob2, w3 = MG.migrate_blob(blob, "book", xy=(0.3, -0.4), yaw=0.0, seed=1, voice="fake")   # the tool's own path, lane and eyes built
+    assert np.allclose(w3.d.qpos[:q0.size], q0) and w3.lane is not None and "book" in w3.lane.conduct.world["objects"]
+    w4 = G1World(seed=1, extra=X.add_book(xy=(0.3, -0.4)))
+    w4.load_state(blob2)                                                # the migrated save loads in the new room as any save does
+    assert w4.tick == t0 and np.allclose(w4.d.qpos[:q0.size], q0)
+    print(f"world 22: a world of {t0} ticks carried into the room with the book: {q0.size} joint values and the velocities equal, the",
+          f"book at {np.round(w_new.d.xpos[b], 2).tolist()}, found by the lane as 'book' (red) among {len(ln.toys)} toys; it lives on 20",
+          f"ticks with the child where it was; the tool's path and a plain load of the migrated save agree")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

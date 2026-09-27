@@ -1004,13 +1004,22 @@ class G1World(SimWorld):
         if on_mat and supine:
             return False                                                # on the mat, on its back: left where it lies
         to = c if not on_mat else xy                                    # (A110 amended 2026-09-27 16:10: a child asleep on its side or
-        self.scene.set_g1(G.BIRTH, root=np.r_[to[0], to[1], 1.0, G.kin.mjquat(G.kin.ry(-math.pi / 2))])   # front ON the mat is laid on its
+        joints = dict(G.BIRTH, waist_yaw=0.0, waist_roll=0.0, waist_pitch=0.0)   # laid STRAIGHT: the birth's limbs and the waist at
+        self.scene.set_g1(joints, root=np.r_[to[0], to[1], 1.0, G.kin.mjquat(G.kin.ry(-math.pi / 2))])   # rest (2026-09-27 17:50: the
+                                                                        # dawn-13 pair's waist yaw was 2.59 rad, the torso twisted almost
+                                                                        # backwards on a supine pelvis, so the laid child read "front";
+                                                                        # a person lays a baby straight). Front ON the mat is laid on its
         mujoco.mj_forward(m, d)                                         # pose (A110 amended 2026-09-27: a sleeping baby is laid on its
         d.qpos[2] += (.012 + .004) - self.scene.lowest_g1_point()      # back, never on its side or front; life dawn 11 laid it as it
         d.qvel[:] = 0.0                                                 # lay, on its side, and it woke looking at the floor, C94, with
         mujoco.mj_forward(m, d)                                         # no reward possible all morning), set down on the mat as at
         b = self.scene.bmap                                             # birth (g1scene.place_on_mat) and settled under its servos
         her_q = d.qpos[b.qadr].copy()                                   # holding the pose, the parent held where she sleeps, the toys
+        m.actuator_biasprm[:, 0] = 0.0                                  # (2026-09-27 17:45: the servos' constant bias carries the
+        d.qacc_warmstart[:] = 0.0                                       # cerebellum's last torque of the dusk, MUTABLE_MODEL_FIELDS; under
+                                                                        # it the settle writhed and rolled the laid child back onto its
+                                                                        # front on the life's dawn-13 pair; the cerebellum writes it anew
+                                                                        # each waking tick)
         for _ in range(int(round(G.BIRTH_SETTLE_S / m.opt.timestep))):  # where they are (no reset of the world)
             mujoco.mj_step(m, d)
             d.qpos[b.qadr] = her_q
