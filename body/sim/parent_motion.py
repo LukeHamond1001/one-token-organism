@@ -4194,8 +4194,15 @@ class ParentMotion:
             e = arm.get("err") if arm.get("mode") == "hold" else None
             if arm.get("mode") == "hold" and arm.get("hold") == h.name:   # her hand as the physics has it, off its grip on the held
                 Rl = self.d.xmat[h.body].reshape(3, 3)                      # point by a hand's length (the child's own links pushed it
-                off = float(np.linalg.norm(self._grip_now(h.side, actual=True)[0]   # off, or it could not keep up): the grip is gone
-                                           - (h.point(self.d) + Rl @ np.asarray(arm["goff"], float))))
+                g_act = self._grip_now(h.side, actual=True)[0]              # off, or it could not keep up): the grip is gone
+                off = float(np.linalg.norm(g_act - (h.point(self.d) + Rl @ np.asarray(arm["goff"], float))))
+                if h.kind == "turn" and off > K.GRIP_TOL_M:                 # C88 (A103): the turn's hand GRASPS the limb's root: while it
+                    hb = self.bm.hand_body[h.side]                          # still touches the held link it keeps its hold where the
+                    on = self._hand_clearance_at(h.side, self.d.xpos[hb], self.d.xmat[hb].reshape(3, 3), self._shape_now(h.side),
+                                                 held=int(h.body))[0] <= K.HAND_FREE_M
+                    if on:                                                  # link has carried it (the grip re-anchored on the link),
+                        arm["goff"] = _lst(Rl.T @ (g_act - h.point(self.d)))   # and slips only once it has left the link
+                        off = 0.0
                 e = max(e or 0.0, off)
             if e is not None and e > K.HOLD_SLIP_M:                         # the held point left her reach: it slipped from her grip
                 if h.kind == "prop" and c.get("fall"):
@@ -4392,9 +4399,9 @@ class ParentMotion:
         within her brief caps, at most TURN_MAX_S"""
         ch = self.child
         p = h.point(self.d)
-        if not c.get("go"):                                                 # both hands on before the push begins
-            h.cap = 0.0; h.next = p
-            return
+        if not c.get("go"):                                                 # both hands on before the push begins: the hand that is
+            h.cap = K.TOUCH_N; h.next = p                                   # on rests on its link with a resting hand's force and rides
+            return                                                          # it as the child moves (A103; at 0 N it did not follow)
         c["go_t"] = c.get("go_t", 0) + 1
         up = np.array([0, 0, 1.0])
         toward = np.asarray(c["toward"], float) if "toward" in c else -np.asarray(c["away"], float)
@@ -4861,7 +4868,9 @@ class ParentMotion:
     def _act_turn(self, a, t):
         if self.child.posture != "front":
             raise Refuse("the brief turn is for the child face down (A7)")
-        return self._near(a) + [dict(type="plan", what="turn", args={})]
+        return self._near(a) + [dict(type="plan", what="turn", args={})]  # (A103 tried a spot need for both far grips: the trunk solve
+                                                                            # refused the usual spot the turn works from and chose worse
+                                                                            # ones (its side, not its back; a 3.4 cm engagement): dropped)
 
     def _turn_targets(self):
         """A101: the turn's two grips on the child's FAR shoulder and hip roll links (their far surfaces, her palms toward her):
