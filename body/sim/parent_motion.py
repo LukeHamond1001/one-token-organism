@@ -4519,8 +4519,12 @@ class ParentMotion:
         ch = self.child
         shake = unit(np.cross(ch.axis, [0, 0, 1.0]) if abs(ch.axis[2]) < 0.95 else ch.cam_R["L"][:, 0])
         return [dict(type="reach", hands={sd: dict(k="show")}, shape={sd: dict(curl=.9, thumb=.8, index=None)}, stay=True, shake=_lst(shake)),
-                dict(type="shake", side=sd, n=4), dict(type="relax", sides=sd)]   # then back before her: the act ends as her hand
-                                                                                  # stops showing it (P3's contract)
+                dict(type="shake", side=sd, n=4), dict(type="relax", sides=sd),  # back before her (P3's contract as it was), then
+                dict(type="plan", what="put_near", args=dict(toy=toy))]          # A100 (C84): set down within its reach ("here"),
+                                                                                  # beside its near hand at her lesson's distance, as the
+                                                                                  # reach lesson does; until A100 the shown toy stayed in
+                                                                                  # her hand (the rattle all of day 1: a hand lost to her,
+                                                                                  # the toy to the child). The act ends as the toy is down
 
     def _ph_shake(self, a, ph):
         """the shown toy shaken for its sound (4.10) for n ticks; she keeps shaking gently while it is shown"""

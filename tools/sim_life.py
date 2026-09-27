@@ -70,7 +70,9 @@ def build(args):
     if args.resume:
         with open(os.path.join(args.out, "world.pt"), "rb") as f:
             world.load_state(pickle.load(f))
-        L = Life.load(life_path, anat, save_path=life_path, world=world)
+        L = Life.load(life_path, anat, cfg=cfg, save_path=life_path, world=world)   # A101: a resumed life lives under the TREE's constants
+                                                                                    # (SIM_CFG, and --lr0): until A101 the save's cfg ruled
+                                                                                    # and no switch turned after birth could reach a life
     else:
         big = args.d >= 256
         L = Life.birth(anat, device="cpu", d=args.d, layers=6 if big else 2, heads=8 if big else 2, window=64 if big else 16, cfg=cfg,

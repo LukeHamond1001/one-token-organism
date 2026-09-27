@@ -951,6 +951,7 @@ class Conduct:
                                               # OUTSIDE's kind for one she did not ask for
         self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
         self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, noun, new, shown)]
+        self.vocal_book = {}                  # C85: the smiles she has given for each word said right or echoed, {word: n}
         self.book = {}                        # A89: the smiles she has given for each motor act and object, {kind: {object: n}}: the
                                               # n-th is worth w e^(-n/HABIT_TAU) (consts.MOTOR_WORTH, _motor_judgments)
         self.book_log = []                    # (tick, kind, object, the worth given or why not, n): an instrument, the last 200
@@ -1850,8 +1851,20 @@ class Conduct:
                 next((s for s in p.seen if s.name == w), None)
             if cw.exact and right and not hold:
                 label = "echo" if cw.echo else ("met_ask" if asked else "right_name")
-                out.judgments.append((K.WORTH_RIGHT_NAME, label, w))
-                kind = "confirm"
+                worth = K.WORTH_RIGHT_NAME
+                if label in ("echo", "right_name"):                    # C85 (2026-09-26): her smile at a word said again habituates as
+                    n = self.vocal_book.get(w, 0)                      # at a motor act (A2's fall with mastery, HABIT_TAU, HABIT_FLOOR):
+                    worth = K.WORTH_RIGHT_NAME * math.exp(-n / K.HABIT_TAU)   # the n-th right name or echo of the same word is worth
+                    if worth < K.HABIT_FLOOR:                          # 2 e^(-n/10), none under 0.05 (life day 2: 205 echoes of "oh"
+                        worth = None                                   # paid 2 each, the body's 8 acts beside them); a met ask pays
+                    else:                                              # in full (her test, spaced by her plan); a new word starts at 0
+                        self.vocal_book[w] = n + 1
+                    self.book_log.append((t, label, w, "habituated" if worth is None else round(worth, 3), n)); del self.book_log[:-200]
+                if worth is not None:
+                    out.judgments.append((worth, label, w))
+                    kind = "confirm"
+                else:
+                    kind = "echo"                                      # heard, answered, no smile (as a word she only expected)
                 if asked:
                     if cw.echo:                                # imitation: smiled at, never a met ask (the ledger)
                         self.ledger.withdraw(t, self.pending["trial"], f"answered by an echo of her own {w!r}")
@@ -2236,6 +2249,7 @@ class Conduct:
                     copies=[list(c) for c in self.copies],
                     ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state(),
                     book={k: dict(v) for k, v in self.book.items()}, book_log=[list(x) for x in self.book_log[-200:]],
+                    vocal_book=dict(self.vocal_book),
                     confirm_act_due=self.confirm_act_due, confirm_obj=self.confirm_obj)
 
     def load_state(self, s):
@@ -2260,6 +2274,7 @@ class Conduct:
         self.reader.load_state(s["reader"])
         self.imperfect = s["imperfect"]
         self.book = {k: dict(v) for k, v in s.get("book", {}).items()}
+        self.vocal_book = {str(k): int(v) for k, v in (s.get("vocal_book") or {}).items()}   # C85 (a save from before it: none given)
         self.book_log = [tuple(x) for x in s.get("book_log", ())]
         self.confirm_act_due, self.confirm_obj = s.get("confirm_act_due", NEVER), s.get("confirm_obj")
         self.scaffold = s.get("scaffold", True)             # (a save before P3's twelfth round: the scaffold on, as at birth)

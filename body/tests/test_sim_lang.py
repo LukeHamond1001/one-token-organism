@@ -2367,14 +2367,18 @@ def test_imperfect_parent_and_talk_over():
     assert con.turns == [replies, n - replies] and abs((n - replies) / n - K.MISS_TURN) < 0.1, (con.turns, replies)
     con = C.Conduct(seed=11, transcriber=Transcriber(None))
     _no_sets(con)
+    import math as _m
+    n_pay = sum(1 for n in range(60) if K.WORTH_RIGHT_NAME * _m.exp(-n / K.HABIT_TAU) >= K.HABIT_FLOOR)   # A99: 37 of 60
     for i in range(60):
         t0 = 100 * i
         s = con.tick(t0, P(t0, child_target="mama"), token=LX.WORD_ID["mama"])        # a right name each time
-        assert s.judgments and (con.reply_due is not None or s.line is not None), (i, s.judgments)   # answered (at t0 itself
-                                                                                                      # at a latency of 0)
+        if i < n_pay:                                                                   # judged while her smile at the word lasts
+            assert s.judgments and (con.reply_due is not None or s.line is not None), (i, s.judgments)   # answered (at t0 itself
+        else:                                                                           # at a latency of 0); then (A99) habituated:
+            assert not s.judgments, (i, s.judgments)                                    # unjudged, answered or missed as any such turn
         for t in range(t0 + 1, t0 + 30):
             con.tick(t, P(t, child_target="mama"))
-    assert con.turns == [0, 0]
+    assert sum(con.turns) == 60 - n_pay and con.turns[0] > 0, (con.turns, n_pay)      # no judged turn ever counted as unjudged
     # a miss never touches a judgment: the reply owed to a met ask this tick stands when the child's turn is missed
     for seed in range(40):
         con = C.Conduct(seed=seed)
@@ -6713,6 +6717,37 @@ def test_ear_templates_exact():
           f"digest, every clip in its ledger; her own voice's templates find the old child pitch's words {hits} of {len(words)}")
 
 
+
+def test_vocal_habituation():
+    """lang 60 (C85, 2026-09-26): her smile at a word said right again habituates as at a motor act: the n-th right name or echo of
+    the same word is worth 2 e^(-n/HABIT_TAU), none under HABIT_FLOOR (then the turn is answered as an echo: heard, no smile); a new
+    word starts at 0 and pays 2; a met ask pays in full; the count survives a save"""
+    import math as _m
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    con.fast.last_set["duck"] = 0; con.fast.last_named["duck"] = 0
+    duck, ball = LX.WORD_ID["duck"], LX.WORD_ID["ball"]
+    N = 45
+    toks = {40 + 20 * i: duck for i in range(N)}
+    stream = [P(t, child_target="duck" if t >= 30 else None) for t in range(40 + 20 * N + 10)]
+    con.fast.last_set["ball"] = 0; con.fast.last_named["ball"] = 0
+    said, judg = run(con, stream, tokens=toks)
+    worths = [j[1] for j in judg if j[2] in ("right_name", "echo")]
+    want = [K.WORTH_RIGHT_NAME * _m.exp(-n / K.HABIT_TAU) for n in range(N)]
+    want = [w for w in want if w >= K.HABIT_FLOOR]
+    assert len(worths) == len(want) and all(abs(a - b) < 1e-9 for a, b in zip(worths, want)), (len(worths), len(want), worths[:5], worths[-3:])
+    assert len(want) < N and con.vocal_book["duck"] == len(want), (len(want), con.vocal_book)
+    late = [x for x in said if x[0] >= 40 + 20 * (N - 1)]
+    assert late and late[0][1].intent != "confirm" and late[0][1].register != "approval", late[:2]   # answered (an echo, a reply, a
+    assert not [j for j in judg if j[0] >= 40 + 20 * len(want)], judg[-2:]                       # label), never a "yes!": no smile
+    st = con.state(); con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False); con2.load_state(st)
+    assert con2.vocal_book == con.vocal_book
+    con3 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    con3.fast.last_set["ball"] = 0; con3.fast.last_named["ball"] = 0
+    _s, judg3 = run(con3, [P(t, child_target="ball" if t >= 30 else None) for t in range(90)], tokens={40: ball})
+    assert [j[1:] for j in judg3] == [(2, "right_name", "ball")], judg3
+    print(f"60 the n-th right name or echo of the same word is worth 2 e^(-n/{K.HABIT_TAU:.0f}) (C85): {len(want)} smiles for 'duck' of",
+          f"{N} right names, the last {worths[-1]:.3f}, then answered as an echo with no smile; a new word pays 2; the count saved")
+
 TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
@@ -6726,7 +6761,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation]
 
 if __name__ == "__main__":
     t0 = time.time()
