@@ -223,6 +223,8 @@ PALM_GRASP_OUT = 0.016                      # the Dex3's grasp point (g1acts.GRA
 CARRY = {"k": "carry"}                      # a toy carried before her, at her waist
 MAX_JUMP_M = 0.25                           # her pelvis never moves more than this in a tick (walking: 0.12 m; kneeling down:
 MAX_LIMB_JUMP_M = 0.60                      # about 0.1 m), nor any segment more than this (a walking foot's swing: up to 0.4 m);
+REBASE_TOL_M = 0.02                         # A108: her restored plan drawing her pelvis farther than this from where her body was
+                                            # last drawn is rebased onto the drawn pose (2 cm: under it her drive absorbs the difference)
                                             # more is a planning fault, refused (ours)
 FACE_REDRAW_DEG = 1.5                       # her eyes are drawn again when her gaze has turned this far in her head (ours: a face
                                             # costs about 24 ms to draw; her irises move 0.3 mm for 1.5 deg)
@@ -862,6 +864,7 @@ class ParentMotion:
         self.asleep = False                                                 # the night's (sleep, wake)
         self.offset = {c: np.zeros(3) for c in CHAINS}                      # her plan moved where the child pushed her (A4), per chain
         self._offset_at_start = {c: np.zeros(3) for c in CHAINS}            # her offsets as this tick began (not state: set each tick)
+        self._standoff_at_start = np.zeros(2)                               # (A108: her standoff likewise)
         self.over = {c: 0 for c in CHAINS}
         self.yielding = {c: False for c in CHAINS}
         self.stopped = {c: False for c in CHAINS}                           # a chain stopped in the last tick (A4): this tick starts
@@ -1377,6 +1380,7 @@ class ParentMotion:
         self.push_on = dict(self.yielding)                                  # the chains yielding as this tick begins
         self.lag = any(self.stopped.values())                               # a chain stopped last tick: her plan waits a tick for her
         self._offset_at_start = {c: self.offset[c].copy() for c in CHAINS}
+        self._standoff_at_start = self.standoff.copy()                     # A108: and her standoff (the guard's way back)
         planned0 = self.written
         if self.placed:
             if not (self.queue["body"] or self.queue["gaze"] or self.cur["body"] is not None or self.cur["gaze"] is not None):
@@ -1418,19 +1422,24 @@ class ParentMotion:
                 self._end(cur, "refused", f"her body would have jumped {float(mv.max()):.2f} m in a tick (a planning fault: "
                                           f"{kin.SEGS[int(np.argmax(mv))]}, phase {self.phases[0]['type'] if self.phases else None})")
             self.phases = []
-            self._settle_phases()                                           # A105: never left mid-transition (the next act would plan
-                                                                            # from it and meet this guard again: life day 5's 85 turns)
             if self.prev is not None:                                       # she stays as she was planned: her base and arms as they
                 self.base = _unplain(self.prev["base"]); self.base["dirty"] = True   # were when last planned
                 self.arms = _unplain(self.prev["arms"])
                 for c in CHAINS:
                     self.offset[c] = self._offset_at_start[c].copy()
+                so = self.prev.get("standoff")                              # A108: and her standoff as it was when that pose was drawn
+                self.standoff = np.array(so if so is not None else self._standoff_at_start, dtype=np.float64)
+                self._rebase_on_drawn(planned0[0][0])                       # A108: her plan agrees with the pose her body was drawn at
+            self.phases = [ph for ph in self._settle_phases() if ph["type"] != "plan"]   # A105/A108: never left mid-transition (a
+                                                                            # half kneel finishes; until A108 the phases asked for were
+                                                                            # dropped, and she stood half knelt for the rest of the day)
             self.moving = False
             self.planned_trunk_moved = False
             self._set_hold_targets()
             self._drive_tick(None)
             return
-        self.prev = dict(base=_plain(self.base), arms=_plain(self.arms))   # what this plan comes from (the guard's way back)
+        self.prev = dict(base=_plain(self.base), arms=_plain(self.arms), standoff=_lst(self.standoff))   # what this plan comes
+                                                                            # from (the guard's way back; A108: with her standoff)
         quat1 = np.array([_mat_to_quat(segs[s][1]) for s in kin.SEGS])
         ci = kin.SEGS.index("chest")
         self.planned_trunk_moved = bool(float(np.linalg.norm(pos1[ci] - planned0[0][ci])) > K.TRUNK_STILL_M
@@ -3188,8 +3197,10 @@ class ParentMotion:
         com = self.child.com
         if float(np.linalg.norm(np.asarray(pose.pos[:2]) - com[:2])) > 1.6:          # (far from it: nothing to keep clear of)
             self.clear_now = 0.2
-            if np.any(self.standoff):
-                self.standoff = np.zeros(2); b["dirty"] = True
+            if np.any(self.standoff):                                       # A108: her standoff comes back at the pace it went out
+                n = float(np.linalg.norm(self.standoff)); step = K.STANDOFF_M_PER_TICK   # (a knee shuffle's), never all at once: a
+                self.standoff = np.zeros(2) if n <= step else self.standoff * (1.0 - step / n)   # 0.4 m return in a tick met the
+                b["dirty"] = True                                           # jump guard, which put her base back but not her standoff
                 pose = self._pose()
             return pose
         segs = self._standoff_chains()
@@ -3895,6 +3906,30 @@ class ParentMotion:
     def _plan_act(self, a):
         """the act's own plan, made once a transition her base was left in has finished (_settle_phases)"""
         return self._plan(a)
+
+    def _rebase_on_drawn(self, drawn_pelvis):
+        """A108 (2026-09-27, C90): her plan's state made to agree with the pose her body was last drawn at. The jump guard's way back
+        restores what the last accepted plan came from; when that state no longer draws the pose it drew (her standoff zeroed at
+        once by the far branch, a push under lag, a save from before A108), every later plan begins from a pose she is not in and
+        is refused as a jump, forever: life day 6's stand-up froze at u 0.17 with her body drawn 0.40 m behind her base, and 260
+        acts that day and 40 more the next morning were refused before a turn happened to be planned from the other end. The
+        pelvis's gap on the floor plan between the drawn pose and the restored plan moves her base's floor points (at, and a walk's or
+        shuffle's p0, p1) by that gap; nothing is drawn differently. Counted (stats['rebased'], the largest gap in 'rebased_m'):
+        a rebase is the record of a fault upstream, never the plan"""
+        b = self.base
+        if b["mode"] in ("held", "sofa"):
+            return
+        gap = np.asarray(drawn_pelvis[:2], float) - np.asarray(self._pose().pos[:2], float)
+        n = float(np.linalg.norm(gap))
+        if n <= REBASE_TOL_M:
+            return
+        b["at"] = _lst(np.asarray(b["at"], float) + gap)
+        for k in ("p0", "p1"):
+            if b.get(k) is not None:
+                b[k] = _lst(np.asarray(b[k], float) + gap)
+        b["dirty"] = True
+        self.stats["rebased"] = self.stats.get("rebased", 0) + 1
+        self.stats["rebased_m"] = max(float(self.stats.get("rebased_m", 0.0)), n)
 
     def _settle_phases(self):
         """A105 (2026-09-27): a base left in a transition when an act starts (a shuffle, a turn on her knees, a walk or a turn on her

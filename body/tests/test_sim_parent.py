@@ -1234,6 +1234,57 @@ def test_a_stale_base_settles():
           f"planned, one at 0.6 back to standing; {n_settled} settles counted; the next act done with no jump")
 
 
+def test_the_way_back_agrees_with_the_drawn_pose():
+    """parent 23 (A108, 2026-09-27): the jump guard's way back leaves a plan that draws the pose her body was drawn at. Built here as
+    life days 6-7 left her (from a save before A108: `prev` without a standoff): her base 'kneel_down' at u 0.17 (a stand-up 18 of 24
+    ticks done) with her body drawn 0.40 m behind it, the standoff that put it there undone. The first plan is refused as a jump (the
+    fault's record, once), her plan is rebased onto the drawn pose (one rebase, 0.40 m, counted), the settle's stand-up finishes and
+    the next act runs to its end with no further jump. Before A108 every act was refused from that base for the rest of the day (300
+    acts). And the far branch returns a standoff at a knee shuffle's pace (STANDOFF_M_PER_TICK a tick), never all at once"""
+    w = W.G1World(seed=1)
+    pm = w.parent
+    T.run(w, [("attend", None)], 400)                                      # she kneels beside it (heels)
+    b0 = dict(pm.base)
+    at0 = np.asarray(b0["at"], float); yaw = float(b0["yaw"]); fw = np.array([math.cos(yaw), math.sin(yaw)])
+    tall = at0 + fw * PM.HEELS_BACK if b0["mode"] == "heels" else at0
+    u = 0.1745
+    pm.base = dict(mode="kneel_down", at=_l(tall), yaw=yaw, u=u, lean=0.0, spine=0.0, twist=0.0, dirty=True)
+    pm.arms = {sd: dict(mode="relaxed") for sd in "LR"}
+    pm.holds = []; pm.phases = []; pm.cur = {"body": None, "gaze": None}; pm.queue["body"] = []
+    pm.standoff = np.zeros(2)
+    for c in PM.CHAINS:
+        pm.offset[c] = np.zeros(3)
+    drawn = PM.P.kneel_down(tall - fw * 0.40, yaw, u)                      # the pose her body was drawn at: the base's, 0.40 m behind
+    segs = PM.kin.fk(drawn)
+    pm.written = (np.array([segs[s_][0] for s_ in PM.kin.SEGS]), np.array([PM._mat_to_quat(segs[s_][1]) for s_ in PM.kin.SEGS]))
+    pm.scene.set_parent(drawn, body=True, face=True)
+    pm.prev = dict(base=PM._plain(pm.base), arms=PM._plain(pm.arms))       # (a save from before A108: no standoff in it)
+    gap0 = float(np.linalg.norm(pm._pose().pos[:2] - drawn.pos[:2]))
+    assert gap0 > 0.35, gap0                                               # her plan and her drawn body disagree by 0.40 m
+    j0 = pm.stats.get("jumps_refused", 0); r0 = pm.stats.get("rebased", 0)
+    out = T.run(w, [("attend", None), ("attend", None)], 600)
+    a1, a2 = out["acts"]
+    assert a1["status"] == "refused" and "jumped" in a1["why"], a1        # the fault's record, once
+    assert pm.stats.get("jumps_refused", 0) == j0 + 1, (pm.stats.get("jumps_refused"), j0)
+    assert pm.stats.get("rebased", 0) == r0 + 1 and 0.35 < pm.stats["rebased_m"] < 0.45, (pm.stats.get("rebased"), pm.stats.get("rebased_m"))
+    assert a2["status"] == "done", a2                                      # and the next act from where she is: done
+    gap1 = float(np.linalg.norm(pm._pose().pos[:2] - pm.written[0][0][:2]))
+    assert gap1 < 0.02, gap1
+    # the far branch: a standoff comes back at a shuffle's pace, never at once
+    pm.base = dict(mode="tall", at=_l(pm.base["at"]) if pm.base["mode"] in ("tall", "heels") else _l(tall), yaw=yaw, lean=0.0, spine=0.0, twist=0.0, dirty=True)
+    pm.standoff = np.array([0.30, 0.0])
+    pm.child.com = np.asarray(pm._pose().pos, float) + np.array([2.5, 0.0, -0.8])   # the child's centre far past 1.6 m
+    steps = []
+    for _ in range(12):
+        pm._standoff(pm._pose())
+        steps.append(float(np.linalg.norm(pm.standoff)))
+    assert abs(steps[0] - (0.30 - PM.K.STANDOFF_M_PER_TICK)) < 1e-9 and steps[-1] == 0.0 and all(a >= b for a, b in zip(steps, steps[1:])), steps
+    print(f"parent 23: her plan left 0.40 m from her drawn body (a save before A108) is refused once as a jump ({a1['why'][:60]}...),",
+          f"rebased {pm.stats['rebased_m']:.3f} m onto the drawn pose, the stand-up finished and the next attend done in {a2['ticks']}",
+          f"ticks with no further jump ({pm.stats.get('jumps_refused', 0) - j0} in all); a far standoff of 0.30 m came back in",
+          f"{sum(1 for x in steps if x > 0) + 1} ticks at {PM.K.STANDOFF_M_PER_TICK} m a tick")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1242,7 +1293,7 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
-                test_babble, test_replay_across_processes, test_a_stale_base_settles]
+                test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
