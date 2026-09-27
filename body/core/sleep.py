@@ -839,9 +839,26 @@ class SleepMixin:
                 pairs.append(pending + (w.frame(),))
         finally:
             w.dawn()
+        slow = self._night_slow_states(N)                                   # A106: the night's ticks pass for the slow states
         les = self._twitch_lessons(pairs, opt, params)
         rep["live"] = {"ticks": N, "active": active, "twitches": len(pairs), "by": by, "events": {k_: v_ for k_, v_ in counts.items() if v_},
-                       "cereb_sub": (int(m.cereb.n_sub) - cb0 if cb0 is not None else None), **les}
+                       "cereb_sub": (int(m.cereb.n_sub) - cb0 if cb0 is not None else None), "slow_states": slow, **les}
+
+    def _night_slow_states(self, N):
+        """A106 (the lead, 2026-09-27): THE NIGHT'S TICKS PASS FOR THE BODY'S SLOW STATES as the day's do: stress, mood and fatigue (the
+        body's and each motor effector's) fall over the night's N ticks by their own half-lives (body/core/senses.py: the day's per-tick
+        law, here in closed form), so a body that went to sleep at its stress ceiling wakes rested. Why: life 1 slept at stress 29.7
+        (day 5's last quarter on a trapped elbow) and woke at 27.8: the live night stepped the world but left the slow states where the
+        day had put them, and day 6 began under a gate law divided by 3.8 (mouth.py: a gate's logit over 1 + stress/10) for nothing
+        that had happened that day. Cortisol falls through sleep to its nadir and the tonic states reset (the HPA axis's rhythm);
+        nothing sensed at night reaches a reward or a gate (5.4), so nothing at night raises them. -> the states before and after"""
+        before = dict(stress=round(float(self.stress), 3), mood=round(float(self.mood), 3), fatigue=round(float(self.fatigue), 3))
+        self.stress = float(self.stress) * 0.5 ** (N / float(self.cfg["stress_half_life"]))
+        self.mood = float(self.mood) * 0.5 ** (N / float(self.cfg["mood_half_life"]))
+        self.fatigue = float(self.fatigue) * 0.5 ** (N / float(self.cfg["fatigue_half_life"]))
+        for st_ in getattr(self, "motor", ()):
+            st_["fatigue"] = float(st_["fatigue"]) * 0.5 ** (N / float(self.cfg["fatigue_half_life"]))
+        return dict(before=before, after=dict(stress=round(float(self.stress), 3), mood=round(float(self.mood), 3), fatigue=round(float(self.fatigue), 3)))
 
     def _twitch_lessons(self, pairs, opt, params):
         """THE TWITCHES TEACH (step R8c; SIM_DESIGN.md 3.6, A46: "each twitch and its reafference is a clean single-joint pair for act_inv

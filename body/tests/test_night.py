@@ -642,8 +642,38 @@ def test_the_born_config():
           f"(and {len(latched) - len(ends)} bursts); after the night the evening's bands kept")
 
 
+
+def test_the_night_rests_the_slow_states():
+    """night 9 (A106, 2026-09-27): the live night's ticks pass for the body's slow states as the day's do: stress, mood and fatigue (the
+    body's and each motor effector's) fall over the night by their half-lives, in closed form; a body that slept at its stress ceiling
+    wakes rested; the report says the states before and after"""
+    cfg = _cfg(wake_ticks=150, night_ticks=600, sleep_cycle=400.0, twitch_rate=0.1, night_starts=8, night_starts_max=8, night_rounds=1)
+    L = _g1(cfg, _live_world()); run = WorldLoop(L)
+    for _ in range(148):
+        run.step()
+    L.stress, L.mood, L.fatigue = 20.0, -4.0, 5.0
+    for st_ in L.motor:
+        st_["fatigue"] = 3.0
+    hl = {k: float(L.cfg[k]) for k in ("stress_half_life", "mood_half_life", "fatigue_half_life")}
+    for _ in range(4):
+        run.step()
+        if L.nights >= 1:
+            break
+    assert L.nights == 1 and not L.last_night.get("error"), L.last_night.get("error")
+    N = 600
+    slow = (L.last_night.get("live") or {}).get("slow_states")
+    assert slow is not None and slow["before"]["stress"] > 15.0, slow
+    want = dict(stress=slow["before"]["stress"] * 0.5 ** (N / hl["stress_half_life"]), mood=slow["before"]["mood"] * 0.5 ** (N / hl["mood_half_life"]),
+                fatigue=slow["before"]["fatigue"] * 0.5 ** (N / hl["fatigue_half_life"]))
+    for k in want:
+        assert abs(slow["after"][k] - want[k]) < 1e-3 + abs(want[k]) * 1e-3, (k, slow["after"][k], want[k])
+    assert all(float(st_["fatigue"]) < 3.0 * 0.5 ** (N / hl["fatigue_half_life"]) + 1.0 for st_ in L.motor)
+    print(f"night 9: over a night of {N} ticks the report's slow states: stress {slow['before']['stress']} -> {slow['after']['stress']}",
+          f"(the law {want['stress']:.3f}), mood {slow['before']['mood']} -> {slow['after']['mood']} ({want['mood']:.3f}), fatigue",
+          f"{slow['before']['fatigue']} -> {slow['after']['fatigue']} ({want['fatigue']:.3f}); each motor effector's fatigue likewise (A106)")
+
 NIGHT_TESTS = [test_night_inert_for_language, test_the_tape, test_the_episodes, test_the_night_over_frames, test_the_live_dark_night,
-               test_the_heading_drift, test_the_born_config, test_value_sweep]
+               test_the_heading_drift, test_the_born_config, test_value_sweep, test_the_night_rests_the_slow_states]
 
 
 if __name__ == "__main__":
