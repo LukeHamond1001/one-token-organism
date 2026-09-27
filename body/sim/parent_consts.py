@@ -371,6 +371,8 @@ KNEEL_SEG_MPS = 0.8             # m/s: no segment of hers moves faster than this
                                 # and her knee coming down set the pace; with parent_poses.kneel_down's own path, 3.1 s all the way)
 KNEEL_OFF_M = (0.72, 0.78)      # m: her kneeling spot from the G1's torso centre line, beside its chest (A6)
 KNEEL_OFF_TRY = (0.75, 0.72, 0.78, 0.84, 0.90)   # the offsets she tries in turn: A6's range first, then a little further out when the
+STAY_SIDE_M = 1.1               # m: kneeling within this of a supine child's middle, she keeps her side of it for the next approach
+                                # (A112, C96: _beside_now's own distance; a person does not walk round a baby that rolled a little)
                                 # child's arm lies where her knees would go (W2: its arms sink and move out from the birth pose)
 KNEEL_ALONG_M = 0.10            # m: ... toward its feet from its trunk's middle (section 4.2's measured spot)
 HIPS_ALONG_M = (0.30, 0.40, 0.20)   # m toward its feet from its trunk's middle, tried in turn: beside its hips, where she kneels

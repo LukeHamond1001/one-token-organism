@@ -1285,6 +1285,40 @@ def test_the_way_back_agrees_with_the_drawn_pose():
           f"{sum(1 for x in steps if x > 0) + 1} ticks at {PM.K.STANDOFF_M_PER_TICK} m a tick")
 
 
+def test_she_keeps_her_side():
+    """parent 24 (A112, C96): a child on its back sees her from either side, so when its torso rolls a little (face_side flips) she
+    does not walk round it for the next act: kneeling within STAY_SIDE_M of its middle, the side she is on is tried first. Life day 6:
+    465 kneels and 221 walks in a day beside a child rolling about a hundred times"""
+    kin = PM.kin
+    w = W.G1World(seed=1)
+    pm = w.parent
+    out = T.run(w, [("attend", None)], 400)
+    assert out["acts"][0]["status"] == "done" and pm.base["mode"] == "heels", out["acts"][0]
+    ch = PM.Child(w.m, w.d, w.scene.g1_set)
+    mid = (ch.torso[:2] + ch.pelvis[:2]) / 2
+    her_side = lambda ch_: "L" if float((np.asarray(pm.base["at"], float) - (ch_.torso[:2] + ch_.pelvis[:2]) / 2) @ ch_.lat[:2]) > 0 else "R"
+    side0 = her_side(ch)
+    assert side0 == ch.face_side(), (side0, ch.face_side())          # she knelt on its face side (A6)
+    q0 = w.d.qpos[:7].copy()
+    for ang in (0.5, -0.5):                                            # its torso rolled a little toward its other side (its own roll,
+        w.d.qpos[:7] = q0                                              # as the plan sees it at the act's start; the physics settles it
+        R0 = np.zeros(9); mujoco.mju_quat2Mat(R0, q0[3:7]); R0 = R0.reshape(3, 3)   # back within a few ticks, as a real roll passes)
+        Rn = kin.axang(ch.len_axis, ang) @ R0
+        w.d.qpos[3:7] = kin.mjquat(Rn); w.d.qvel[:] = 0
+        mujoco.mj_forward(w.m, w.d)
+        ch2 = PM.Child(w.m, w.d, w.scene.g1_set)
+        if ch2.posture == "back" and ch2.face_side() != side0:
+            break
+    assert ch2.posture == "back" and ch2.face_side() != side0, (ch2.posture, ch2.rolled, ch2.face_side(), side0)
+    modes = []
+    out2 = T.run(w, [("attend", None)], 400, on_tick=lambda w_, k: modes.append(w_.parent.base["mode"]))
+    ch3 = PM.Child(w.m, w.d, w.scene.g1_set)
+    assert out2["acts"][0]["status"] == "done", out2["acts"][0]
+    assert her_side(ch3) == side0 and "walk" not in modes and "stand" not in modes, (her_side(ch3), side0, sorted(set(modes)))
+    print(f"parent 24: she knelt on its {side0} side; its torso rolled {abs(ang):.2f} rad ({ch2.rolled:+.2f}: face_side now {ch2.face_side()})",
+          f"and the next attend kept her on its {her_side(ch3)} side, done in {out2['ticks']} ticks through {sorted(set(modes))}, no walk round")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1293,7 +1327,8 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
-                test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose]
+                test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
+                test_she_keeps_her_side]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

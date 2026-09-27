@@ -3361,6 +3361,10 @@ class ParentMotion:
         mid = (ch.torso[:2] + ch.pelvis[:2]) / 2
         axis = ch.len_axis[:2]
         first = ch.face_side()
+        if ch.posture == "back" and self.base["mode"] in ("heels", "tall"):   # A112 (C96): a child on its back sees her from either
+            d = np.asarray(self.base["at"], float) - mid                        # side, so the side she already kneels on comes first (a
+            if float(np.linalg.norm(d)) <= K.STAY_SIDE_M:                       # slight roll of its torso flipped face_side and sent her
+                first = "L" if float(d @ ch.lat[:2]) > 0 else "R"               # round it: life day 6's 465 kneels and 221 walks)
         sides = [first, "R" if first == "L" else "L"]
         if where in ("L", "R"):
             sides = [where]
