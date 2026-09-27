@@ -3,6 +3,38 @@
 iga is a small brain-inspired architecture that lives one symbol per tick, learns while it runs from what it hears and from a person's face, and sleeps and remembers: a transformer cortex predicts the next symbol, a hippocampal store keeps what surprised it, nights replay and imagine what it heard, a learned gate decides when the mouth speaks, and critics, an actor and feelings turn its reward (the caregiver's smiles and frowns, and a small fixed reward for each symbol typed to it) into value and dopamine. Its test bed is a language body, a 179M-parameter character-level organism started from random weights on 2026-09-06, that shares one page with the people who talk to it. What it says it learned from what was typed to it in time (conversations written by Claude and children's stories, typed by a scripted parent, and visitors' lines), and for 37 of its nights (2026-09-19 to 09-22) from story sentences read into its sleep; there is no prompt and no pretraining. The goal is the same architecture in a humanoid robot, so every mechanism is judged by whether it would survive a change of body.
 
 
+
+## Run it yourself
+
+The language body runs on a laptop's CPU. Python 3.11 or newer, then:
+
+```bash
+git clone https://github.com/LukeHamond1001/one-token-organism.git
+cd one-token-organism
+pip install -r requirements.txt
+python3 -m body.serve --birth data/body.pt --tok assets/tok_char.json --port 8018 --period 0.5
+```
+
+Open `http://localhost:8018/talk`. That is a newborn: 6.5M parameters at the defaults (`--d 256`), knowing nothing, living one
+letter a tick at two ticks a second, learning from what you type and from your face. Type to it in short lines (`hi. hi baby.`).
+Its face is the only reward it has: the up arrow smiles at what it just did, the down arrow frowns, half a step at a time, and a
+smile given a second or two after the act is what teaches it. After 24,000 waking ticks it sleeps, dreams and saves itself to
+the `--birth` path; start it again with `--load data/body.pt` and it goes on. The served body was born the same way with
+`--d 1024 --layers 12 --seed 1` (179M parameters) and raised for weeks by a typist and a person; its constants are in
+`ops/BASE_FLAGS.txt`, and `ARCHITECTURE.md` says what the organs are.
+
+To run the raised body rather than a newborn, download its save from this repository's Releases page (`watch2.pt`, 1.3 GB, once
+it is published) and serve it with the constants it was raised under:
+
+```bash
+python3 -m body.serve --load watch2.pt --tok assets/tok_char.json --port 8020 $(cat ops/BASE_FLAGS.txt)
+```
+
+(`ops/BASE_FLAGS.txt` names `data/stories_valid.txt` for the night's story corpus; with `--dream-corpus-n 0`, as served, the
+file is not read.) The robot sim needs `pip install -r requirements-sim.txt` (MuJoCo) as well, and its parent's voice is
+synthesised by a small Swift server that runs on macOS only (`--voice fake` runs without it); its run command is in the section
+below.
+
 ## The robot sim: where the project is (2026-09-27)
 
 Since 2026-09-24 the same architecture lives in a simulated body: a Unitree G1 humanoid with hands (MuJoCo, 150 ms ticks, its own eyes,
