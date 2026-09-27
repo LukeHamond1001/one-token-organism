@@ -2,16 +2,17 @@
 `extra` hook, never to the room file, so a life born in the room can meet them later (tools/sim_migrate_world.py carries a saved
 world across). Each is a function of the MjSpec that adds bodies before the compile.
 
-THE BOOK (the first transfer test): a small board book, a red box 16 x 12 x 2.4 cm of 150 g, lying flat, with a white page edge. A
-toy of a kind the child has never seen (its word "book" is in her growth queue, templates.GROWTH; a red one gives "red" its second
-kind, B2). Its contact attributes are the toys' (make_g1room.TOY), its friction the block's, its sound a soft slap (sounds.KINDS
+THE BOOK (the first transfer test): a small board book, a black box 16 x 12 x 2.4 cm of 150 g, lying flat, with a white page edge.
+A toy of a kind the child has never seen (its word "book" is in her growth queue, templates.GROWTH; black is no colour word of hers,
+so no colour comes in with it: the test is the reach, not a word). Its contact attributes are the toys' (make_g1room.TOY), its friction the block's, its sound a soft slap (sounds.KINDS
 "book"). Named `toy_book` with a free joint `toy_book`, as every toy is, so the lane, the parent and the sounds find it by name."""
 import mujoco
 import numpy as np
 
 BOOK_HALF = (0.080, 0.060, 0.012)             # m: half-sizes of a board book, 16 x 12 x 2.4 cm (ours: a first board book)
 BOOK_MASS = 0.15                              # kg (a board book of that size)
-BOOK_RGBA = (0.92, 0.12, 0.10, 1.0)           # make_g1room's t_red
+BOOK_RGBA = (0.05, 0.05, 0.06, 1.0)           # make_g1room's t_black (2026-09-27 17:45: a red book made "red" a colour word with two kinds,
+                                              # B2's condition, and the colour line's stress fault C101 showed; the motor test wants no new word)
 BOOK_EDGE_RGBA = (0.97, 0.97, 0.96, 1.0)      # the pages' edge, make_g1room's t_white
 WORLD_PRIORITY = 2                            # make_g1room.WORLD_PRIORITY: the toys' contact priority
 

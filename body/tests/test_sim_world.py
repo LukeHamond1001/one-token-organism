@@ -1169,7 +1169,7 @@ def test_a_world_migrates_to_the_book():
     b = w_new.m.body("toy_book").id
     assert np.allclose(w_new.d.xpos[b][:2], (0.3, -0.4), atol=0.02), w_new.d.xpos[b]
     ln = L.ParentLane(w_new, seed=1, voice=FakeVoice(), day_ticks=24000)
-    assert "book" in ln.toys and ln.conduct.world["objects"].get("book") == ["red"], (ln.toys, ln.conduct.world["objects"])
+    assert "book" in ln.toys and ln.conduct.world["objects"].get("book") == ["black"], (ln.toys, ln.conduct.world["objects"])
     pel = w_new.d.qpos[:3].copy()
     for _ in range(20):
         w_new.frame(); w_new.apply({})
@@ -1180,7 +1180,7 @@ def test_a_world_migrates_to_the_book():
     w4.load_state(blob2)                                                # the migrated save loads in the new room as any save does
     assert w4.tick == t0 and np.allclose(w4.d.qpos[:q0.size], q0)
     print(f"world 22: a world of {t0} ticks carried into the room with the book: {q0.size} joint values and the velocities equal, the",
-          f"book at {np.round(w_new.d.xpos[b], 2).tolist()}, found by the lane as 'book' (red) among {len(ln.toys)} toys; it lives on 20",
+          f"book at {np.round(w_new.d.xpos[b], 2).tolist()}, found by the lane as 'book' (black) among {len(ln.toys)} toys; it lives on 20",
           f"ticks with the child where it was; the tool's path and a plain load of the migrated save agree")
 
 
