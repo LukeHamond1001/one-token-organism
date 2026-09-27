@@ -56,7 +56,11 @@ class FakeVoice:
 
 
 def build(args):
-    world = W.G1World(seed=args.seed)
+    extra = None
+    if args.extra:                                                          # A115: things added to the room (body/sim/extras.py); a pair
+        from body.sim import extras as X                                    # saved before them is carried across by tools/sim_migrate_world.py
+        extra = X.EXTRAS[args.extra]()
+    world = W.G1World(seed=args.seed, extra=extra)
     eyes = E.Eyes(world) if not args.no_eyes else None
     if args.voice == "real":
         from body.sim.voice import synth as V
@@ -126,6 +130,7 @@ def main():
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
+    ap.add_argument("--extra", default=None, help="a thing added to the room (body/sim/extras.py: book); the pair must have been migrated to it")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                     help="a cfg key set for this run (a measurement on a copy: e.g. --set actor=1); typed as the tree's own value")
     args = ap.parse_args()

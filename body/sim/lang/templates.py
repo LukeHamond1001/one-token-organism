@@ -134,7 +134,8 @@ assert all(w in NEEDS for w, c in GROWTH if c != "frame"), [w for w, c in GROWTH
 # The world (W2-W3) passes its own from its scene; the acts are her motion's (StubMotion.DOES until W2).
 ROOM_AT_BIRTH = dict(
     objects={"ball": ["red"], "block": ["blue"], "duck": ["yellow"], "cup": ["green"], "rattle": ["purple"], "car": ["orange"],
-             "bear": ["brown"], "stacker": ["white"], "drum": ["cyan"], "ring": ["pink"]},
+             "bear": ["brown"], "stacker": ["white"], "drum": ["cyan"], "ring": ["pink"],
+             "book": ["red"]},                 # A115: the first novel toy (in the room only when the world adds it: extras.add_book)
     fixtures=["mat", "sofa", "window", "table", "shelf", "door", "light", "floor"],
     events=list(EVENT_KINDS), face=["any"], acts=[])
 
