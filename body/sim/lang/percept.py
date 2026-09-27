@@ -101,6 +101,7 @@ class Percept:
     fixtures: frozenset = frozenset()
     events: tuple = ()            # (kind, object id or None)
     face_down: bool = False       # A102: the child lies face down this tick (the lane's posture "front"): her turn's standing reason
+    her_hold: bool = False        # a hold of hers engaged on the child's body: her hands on it (A111, C95)
     child_sounding: bool = False
     extra: dict = field(default_factory=dict)   # instruments only; the fast layer never reads it
     child_reaches: tuple = ()     # the object ids its hands reach toward, as she sees them (A40)

@@ -952,6 +952,8 @@ class Conduct:
                                               # while it moves, acts [id, kind, target, status] of every act not yet reported
                                               # ended (hers, and OUTSIDE's she did not ask for); the last ATTN_KEEP ticks
         self.acts_open = []                   # acts not yet reported ended: [motion id, kind, target, thing, tick, status];
+        self.touched = set()                  # A111: the open hands-on acts (ids) in which her hold has engaged: from then to
+                                              # their end nothing the child does is its own (before it, her approach, it is)
                                               # OUTSIDE's kind for one she did not ask for
         self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
         self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, noun, new, shown)]
@@ -1799,9 +1801,15 @@ class Conduct:
         circuits). A new object starts n again. Every judgment, given or withheld, goes to book_log."""
         if self.trial is not None or not p.present:
             return
-        if any(a[1] in HANDS_ON and a[5] not in ENDED for a in self.acts_open):
+        hands_on = [a[0] for a in self.acts_open if a[1] in HANDS_ON and a[5] not in ENDED]
+        if getattr(p, "her_hold", False):
+            self.touched.update(hands_on)                   # A111: her hold engaged in a hands-on act: from now to its end
+        self.touched &= set(hands_on)                       # (an act ended: its span is over)
+        if self.touched:
             self.book_log.append((t, None, None, "her hands on it: a guided act itself earns nothing (4.3)", 0)); del self.book_log[:-200]
-            return                                          # A90: while she guides, turns or pulls it, nothing it does is its own
+            return                                          # A90: while she guides, turns or pulls it, nothing it does is its own;
+                                                            # A111 (C95): her approach to it is not that: day 8's turn approaches ran
+                                                            # 890 and 346 ticks and 29 of 105 acts of the child's fell in them unjudged
         for k, o in p.events:
             row = K.MOTOR_WORTH.get(k)
             if row is None:
@@ -2249,6 +2257,7 @@ class Conduct:
         return dict(fast=self.fast.state(), routine=self.routine, pending=self.pending, reply_due=self.reply_due,
                     no_target_since=self.no_target_since, attn=[dict(e, acts=[list(a) for a in e["acts"]]) for e in self.attn],
                     acts_open=[list(a) for a in self.acts_open], focus_acts=[list(a) for a in self.focus_acts],
+                    touched=sorted(int(x) for x in self.touched),
                     face_until=self.face_until, probes=[dict(x) for x in self.probes], prompts=[list(x) for x in self.prompts],
                     trial=None if self.trial is None else dict(self.trial), trial_rng=self.trial_rng.bit_generator.state,
                     last_vocal_smile=self.last_vocal_smile, turn=self.turn,
@@ -2269,6 +2278,7 @@ class Conduct:
         self.no_target_since = s["no_target_since"]
         self.attn = [_old_entry(e) for e in s["attn"]]     # (an older save's log: fail-closed, _old_entry)
         self.acts_open = [list(a)[:6] for a in s["acts_open"]]
+        self.touched = set(int(x) for x in s.get("touched", []))
         self.ended = {}
         self.face_until = s.get("face_until", NEVER)
         self.probes = [dict(x) for x in s.get("probes", ())]

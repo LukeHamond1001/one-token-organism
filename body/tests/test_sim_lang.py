@@ -1893,8 +1893,12 @@ def test_her_lessons_and_hands():
     assert s2.line is not None and s2.line.intent == "hand_over" and C.Act("hand_over", "duck") in s2.acts, (s2.line, s2.acts)
     mid = con.motion.request(C.Act("guide", "far_arm"), 40)                      # her guide of its far arm, running (the stub)
     con.acts_open.append([mid, "guide", "far_arm", None, 40, "unreported"])
-    s3 = con.tick(40, P(40, seen=TOYS, events=(("rolled", None), ("got", "cup"))))
+    s3a = con.tick(40, P(40, seen=TOYS, events=(("head_up", None),)))                   # her approach (no hold yet): its own (A111)
+    assert s3a.judgments == [(1, "head_up", None)], s3a.judgments
+    s3 = con.tick(41, P(41, seen=TOYS, events=(("rolled", None), ("got", "cup")), her_hold=True))   # her hold engaged: hers
     assert s3.judgments == [] and "her hands on it" in con.book_log[-1][3], (s3.judgments, con.book_log[-1])
+    s3b = con.tick(42, P(42, seen=TOYS, events=(("rolled", None),)))                    # and to the act's end, hold or not
+    assert s3b.judgments == [] and "her hands on it" in con.book_log[-1][3], s3b.judgments
     t_end = 40 + C.STUB_TICKS["guide"] + 1
     for t in range(41, t_end):
         con.tick(t, P(t, seen=TOYS))
