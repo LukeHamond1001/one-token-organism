@@ -2,6 +2,51 @@
 
 iga is a small brain-inspired architecture that lives one symbol per tick, learns while it runs from what it hears and from a person's face, and sleeps and remembers: a transformer cortex predicts the next symbol, a hippocampal store keeps what surprised it, nights replay and imagine what it heard, a learned gate decides when the mouth speaks, and critics, an actor and feelings turn its reward (the caregiver's smiles and frowns, and a small fixed reward for each symbol typed to it) into value and dopamine. Its test bed is a language body, a 179M-parameter character-level organism started from random weights on 2026-09-06, that shares one page with the people who talk to it. What it says it learned from what was typed to it in time (conversations written by Claude and children's stories, typed by a scripted parent, and visitors' lines), and for 37 of its nights (2026-09-19 to 09-22) from story sentences read into its sleep; there is no prompt and no pretraining. The goal is the same architecture in a humanoid robot, so every mechanism is judged by whether it would survive a change of body.
 
+
+## The robot sim: where the project is (2026-09-27)
+
+Since 2026-09-24 the same architecture lives in a simulated body: a Unitree G1 humanoid with hands (MuJoCo, 150 ms ticks, its own eyes,
+ears, touch, joint sense and a vocal tract) on a play mat in a room, with a simulated human-proportioned parent who kneels beside it,
+talks, shows toys, turns it over and smiles or frowns at what it does. Its reward is her face (±2 on her born reading's rise) and its own
+pain (−1 on a gear loaded past its motor); there is no charge, no bottle and no other reward (A88, A91). One seed lives on this Mac,
+`data/g1_seed1` (born 2026-09-26; not in git), a day of 24,000 waking ticks and a live dark night of 24,000 more, its pair (`life.pt`
+and `world.pt`) saved at every dawn. Every change to the body or the teacher is built on a worktree, gated by the suites, measured on
+a copy of a dawn pair when its effect is in doubt, and put in at a dawn, one change a boundary, so each day's ledger has one cause.
+
+Where it stands, day 11 of that life:
+- Days 1 to 9 were mostly the parent's faults found and fixed at one dawn each (A95 to A112 in `docs/SIM_DESIGN.md`): her plan frozen
+  half-knelt for a day (A108), the child rolled out of the room into the hall (A110: carried back to the mat in its sleep), her turn's
+  approach silencing judgment of the child's own acts (A111), her chasing a rolling child round the mat (A112).
+- On 2026-09-27 the dawn-10 pair was lived twice on the same tree, the copy with one switch, the striatal actor on (A113, C87). Over
+  the day the copy judged 162 acts against the life's 79 (59 motor against 10: reaches, lifts, hits, gets, shakes), hurt itself 65
+  ticks against 615, saw her smile 48 times against 6, and ended the day in a positive mood against a negative one. Until then the act
+  was the forecaster's own prediction and dopamine could only quieten a gate; nine days of value learning had reached no policy.
+- The actor went in at dawn 11. Day 11 (with a supine wake and her side kept): 47 judgments by midday, 26 of them motor, two pain
+  ticks in 12,000, no rolling, every lean-in landing, the arms' inverse models risen from 0.11 to 0.31 and 0.40 in three days.
+- Open: the turn of a prone child works from a narrow band of kneeling distance (C98); a side-lying G1 looks at the floor and cannot
+  see her, which is the cameras' own pitch and not a build (C94); the first transfer test, a toy the child has never seen, is the next
+  build (A28's novel toys, B2's colour twins). The C rows of `docs/SIM_DESIGN.md` hold every open question with its evidence.
+
+How it runs:
+- The life: `python3 tools/sim_life.py --out data/g1_seed1 --resume --days 6 --d 512 --seed 1 --voice real --threads 4 --page`
+  (the `/sim` page on `http://127.0.0.1:8030/`; `--resume` continues from the pair in `--out`). A measurement on a copy: copy the pair
+  to another folder and add `--set KEY=VALUE` (the actor's day copy was `--set actor=1 --ticks 24000`, no page).
+- The records: `data/g1_seed1/ticks.jsonl` (one row a tick), `report.json` at each night, `run.log` (a line every 500 ticks); the days'
+  logs are kept as `run_dayN.log`.
+- The suites: `body/tests/test_sim_world.py`, `test_sim_lane.py`, `test_sim_parent.py`, `test_sim_lang.py`, `test_sim_voice.py`,
+  `test_sim_ears.py` and `test_motor.py`, each run as a script (`python3 body/tests/test_sim_parent.py`, one at a time beside the
+  life). The pins: `tools/determinism_check.py --profile sim` must reproduce `tools/pins/digests.txt`, and the language default
+  `7c54199e3c72cf77d45a8e94` at every commit.
+- The branches: `main` holds everything (this merge, 2026-09-27); `sim` is the tree the life runs, checked out at
+  `../project-worktrees/wt_int` and moved only at a dawn; `a112` is the next dawn's tree, `a114` a parked attempt at C98; `sim-face`
+  older face work not yet merged. The earlier `sim-*` branches are merged.
+
+Where to read: `docs/SIM_DESIGN.md` is the design and the ledger in one: the sections, the amendments A1 to A113 (each with what was
+found, what was built, what was measured and its boundary), the C rows (open questions and their evidence), the B questions (the
+owner's calls on the room's shape) and the plan. `docs/audit/` holds the studies behind the larger decisions. The parent's code is
+`body/sim/parent_*.py` and `body/sim/lang/` (her conduct, day plan, templates and percept), the world `body/sim/world.py` and
+`g1scene.py`, the room `make_g1room.py`, the lane between them `lane.py`.
+
 ## What it does today
 
 The numbers below come from the served body (`data/watch2.pt`, on day 400 by the page log's count after the night that ended at 12:27 on 2026-09-23) and from copies of it. Each is taken from `ITERATIONS.md` items 48 to 52 and the latest entries of `DIARY_BODY.md`, where the full runs are written up.
@@ -189,6 +234,10 @@ Run it before and after any edit of `body/`. A tiny body at a fixed seed lives a
   - `stories_valid.txt`, the stories the parent reads aloud by day.
   - `backups/watch2/`, the reload copies, kept two deep.
   - Everything else is earlier bodies and the first lineage, kept as history. `data/README.md` lists every file there and which ones the served body needs.
+- `body/sim/`: the robot sim (the G1 world, its scene and room, the parent's body, poses, motion, face, feelings and voice, the lane,
+  the lang/ conduct); `body/tests/test_sim_*.py` and `test_motor.py` its suites; `tools/sim_life.py` the life's runner,
+  `tools/sim_parent_motion.py` the parent's harness, `tools/sim_profile.py` the pinned sim profile; `tools/pins/` the digests.
+- `data/g1_seed1/` (not in git): the life, its pair saved at each dawn, its records and its voice cache.
 - `docs/`: `SIM_DESIGN.md` and `audit/` (the humanoid: the robot sim project).
 - The demo film (its tools, design, takes and renders) is kept on this machine only, never in git: see `.gitignore`.
 - `logs/`: the server's log (not in git). `docs-private/`: not in git.
@@ -218,6 +267,16 @@ These are the user's standing rulings, dated in the ledger and the diary. A mech
 10. **Judge progress by sitting with it.** Progress is judged by talking with it live and reporting the conversation; the rulers come second.
 11. **The parent is a human teacher.** The teacher listens every minute and answers what the child said, in two voices (the `b:` lines are the other voice), in conversations about the two of them rather than drills.
 12. **Every finding is written down.** Every defect found goes into `BODY_SPEC.md` with its date and its test. Every mechanism goes into `ITERATIONS.md` with its ruler and its falsifier.
+
+The robot sim's rulings, 2026-09-25 to 27 (dated in `docs/SIM_DESIGN.md`):
+
+13. **The G1's reward is her face and its own pain.** No charge, no bottle, no charger; the objects in the room are for her teaching.
+14. **The parent's method is the lead's to change; the room's shape is the owner's call.** A door that would keep a rolling child in the
+    room is his; carrying a sleeping child back to its mat is hers.
+15. **One change a boundary, on a copy first when in doubt.** A body change and a teacher change never on the same day; a change goes in
+    at a dawn from the dawn's pair; every tree is gated by its suites and the pins before it lives.
+16. **The lead builds the G1 directly**, and reports each day's ledger.
+17. **The demo film is never in git.** Its tools, design, takes and renders stay on this machine.
 
 ## License
 
