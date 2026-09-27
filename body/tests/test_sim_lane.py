@@ -401,8 +401,20 @@ def test_smile_brought():
           "one not brought eases after 20 as before")
 
 
+
+def test_a_face_down_morning():
+    """lane 13 (A107, C89): a child that slept face down wakes to a new spell: the lane's `distressed` flag (one distress event a
+    spell) and its face-down count start again at dawn, so the distress fires again after DISTRESS_TICKS face down and her turn is
+    owed (life day 6 opened prone with no turn asked: the flag had been saved True across the night)"""
+    w, lane = _world()
+    _run(w, 3)
+    lane.distressed = True; lane.face_down = 500; lane.cry_down = 3        # as day 5's dusk left it
+    lane.dusk(w); lane.dawn(w)
+    assert lane.distressed is False and lane.face_down == 0 and lane.cry_down == 0, (lane.distressed, lane.face_down, lane.cry_down)
+    print("13 a face-down spell starts anew at dawn: the distress flag and the face-down count reset with the day (A107)")
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
-              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought]
+              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
