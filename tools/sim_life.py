@@ -65,6 +65,11 @@ def build(args):
         voice = FakeVoice()
     lane = LN.ParentLane(world, seed=args.seed, voice=voice, day_ticks=int(SIM_CFG.get("wake_ticks", 24000)))
     cfg = dict(SIM_CFG, **(LR0 if args.lr0 else {}))
+    for kv in args.set:                                                      # a copy's switch (never the life's: its cfg is the tree's)
+        k, v = kv.split("=", 1)
+        cur = cfg.get(k, 0)
+        cfg[k] = type(cur)(float(v)) if isinstance(cur, (int, float)) and not isinstance(cur, bool) else v
+        print(f"cfg {k} = {cfg[k]!r} (--set)", flush=True)
     anat = SimAnatomy(born_table(LX.BIRTH_WORDS), cfg, limits=[float(x) for x in world.tau_max])
     life_path = os.path.join(args.out, "life.pt")
     if args.resume:
@@ -121,6 +126,8 @@ def main():
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                    help="a cfg key set for this run (a measurement on a copy: e.g. --set actor=1); typed as the tree's own value")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     torch.set_num_threads(args.threads)
