@@ -1091,9 +1091,9 @@ def test_prone_pattern():
 
 
 def test_carried_to_the_mat():
-    """world 21 (A110, C92): a child that rolled off the mat is carried back onto it at dawn in its sleep: set down at the mat's centre
-    lying as it lay (its facing and every joint kept, its velocities zero, its lowest point just above the mat), the carry logged and
-    saved; a child on the mat is left where it lies. Life dawn 9 found it in the hall at (3.41, -1.56) with no toy within two metres"""
+    """world 21 (A110, C92; amended 2026-09-27): a child that rolled off the mat is carried back onto it at dawn in its sleep: set down at
+    the mat's centre on its back in the birth pose (a sleeping baby is laid on its back), settled, its velocities zero, its lowest point
+    just above the mat, the carry logged and saved; a child on the mat is left where it lies. Life dawn 9 found it in the hall at (3.41, -1.56) with no toy within two metres"""
     w = G1World(seed=1)
     for _ in range(10):
         w.apply({})
@@ -1106,10 +1106,14 @@ def test_carried_to_the_mat():
     quat0, joints0 = w.d.qpos[3:7].copy(), w.d.qpos[7:].copy()
     t = w.tick
     w.dawn()
-    assert np.allclose(w.d.qpos[0:2], c) and np.array_equal(w.d.qpos[3:7], quat0) and np.array_equal(w.d.qpos[7:], joints0), w.d.qpos[:7]
+    assert np.allclose(w.d.qpos[0:2], c, atol=0.03), w.d.qpos[:3]        # at the mat's centre (settled)
+    assert not np.allclose(w.d.qpos[3:7], quat0)                        # its facing is no longer the hall's: the birth's, on its back
+    from body.sim import parent_motion as PM
+    ch = PM.Child(w.m, w.d, w.scene.g1_set)
+    assert ch.posture == "back", (ch.posture, ch.rolled)                # laid on its BACK (amended: never as it lay)
     assert not np.any(w.d.qvel)
     low = w.scene.lowest_g1_point()
-    assert 0.012 < low < 0.030, low                                    # on the mat's top (0.01), the birth's clearance
+    assert 0.005 < low < 0.040, low                                    # on the mat's top (0.01), settled under its servos
     assert w.carried == [(t, [3.41, -1.56], [float(c[0]), float(c[1])])], w.carried
     w2 = G1World(seed=1)
     w2.load_state(w.save_state())
@@ -1117,9 +1121,9 @@ def test_carried_to_the_mat():
     for _ in range(20):
         w.apply({})
     assert abs(w.d.qpos[0] - c[0]) < 0.1 and abs(w.d.qpos[1] - c[1]) < 0.1
-    print(f"world 21: the child at (3.41, -1.56) in the hall carried to the mat's centre {np.round(c, 2).tolist()} at dawn, lying as it",
-          f"lay (its facing and {joints0.size} joint values kept, still), its lowest point {low * 100:.1f} cm; the carry saved and",
-          f"restored; one on the mat left where it lies; the world lives on from there")
+    print(f"world 21: the child at (3.41, -1.56) in the hall carried to the mat's centre {np.round(c, 2).tolist()} at dawn and laid on",
+          f"its back in the birth pose (posture {ch.posture}, rolled {ch.rolled:+.2f}), settled, still, its lowest point {low * 100:.1f} cm;",
+          f"the carry saved and restored; one on the mat left where it lies; the world lives on from there")
 
 
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,

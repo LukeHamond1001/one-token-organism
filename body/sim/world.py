@@ -987,9 +987,9 @@ class G1World(SimWorld):
 
     def carry_to_mat(self):
         """A110 (2026-09-27, C92): a child that has rolled off the mat is carried back onto it in its sleep, as a person carries a
-        sleeping baby to its bed: at dawn, before the light, its body is set down at the mat's centre lying as it lay (its joints,
-        its facing and its posture kept; only its place on the floor changes, its velocities zero), and the toys stay where they
-        are. Why: life day 6 the child rolled off the mat (dawn 8: its pelvis at (1.57, 0.22), the mat's edge at 1.4), day 7
+        sleeping baby to its bed: at dawn, before the light, its body is set down at the mat's centre on its back in the birth pose
+        (amended 2026-09-27: laid as it lay, on its side, it woke looking at the floor), settled under its servos, its velocities
+        zero, and the toys stay where they are. Why: life day 6 the child rolled off the mat (dawn 8: its pelvis at (1.57, 0.22), the mat's edge at 1.4), day 7
         through the door into the hall (dawn 9: (3.41, -1.56); the room's edge 2.65), where no toy lay within two metres, her
         planner found no spot to kneel ("no path on the floor") and she counted as away (lane.ROOM_EDGE_X): no reach, no lesson,
         no judgment of its acts for two days. Nothing here reaches the body but the morning's new view. Logged in `carried`
@@ -1000,9 +1000,17 @@ class G1World(SimWorld):
         xy = d.qpos[:2].copy()                                          # its pelvis (the floating base) on the floor plan
         if abs(xy[0] - c[0]) <= h[0] and abs(xy[1] - c[1]) <= h[1]:
             return False                                                # over the mat: left where it lies
-        d.qpos[0:2] = c
-        mujoco.mj_forward(m, d)
-        d.qpos[2] += (.012 + .004) - self.scene.lowest_g1_point()      # set down on the mat as at birth (g1scene.place_on_mat)
+        self.scene.set_g1(G.BIRTH, root=np.r_[c[0], c[1], 1.0, G.kin.mjquat(G.kin.ry(-math.pi / 2))])   # laid on its BACK in the birth
+        mujoco.mj_forward(m, d)                                         # pose (A110 amended 2026-09-27: a sleeping baby is laid on its
+        d.qpos[2] += (.012 + .004) - self.scene.lowest_g1_point()      # back, never on its side or front; life dawn 11 laid it as it
+        d.qvel[:] = 0.0                                                 # lay, on its side, and it woke looking at the floor, C94, with
+        mujoco.mj_forward(m, d)                                         # no reward possible all morning), set down on the mat as at
+        b = self.scene.bmap                                             # birth (g1scene.place_on_mat) and settled under its servos
+        her_q = d.qpos[b.qadr].copy()                                   # holding the pose, the parent held where she sleeps, the toys
+        for _ in range(int(round(G.BIRTH_SETTLE_S / m.opt.timestep))):  # where they are (no reset of the world)
+            mujoco.mj_step(m, d)
+            d.qpos[b.qadr] = her_q
+            d.qvel[b.vadr] = 0.0
         d.qvel[:] = 0.0
         mujoco.mj_forward(m, d)
         self.carried.append((int(self.tick), [float(xy[0]), float(xy[1])], [float(c[0]), float(c[1])]))
