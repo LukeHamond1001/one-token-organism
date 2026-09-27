@@ -1418,6 +1418,8 @@ class ParentMotion:
                 self._end(cur, "refused", f"her body would have jumped {float(mv.max()):.2f} m in a tick (a planning fault: "
                                           f"{kin.SEGS[int(np.argmax(mv))]}, phase {self.phases[0]['type'] if self.phases else None})")
             self.phases = []
+            self._settle_phases()                                           # A105: never left mid-transition (the next act would plan
+                                                                            # from it and meet this guard again: life day 5's 85 turns)
             if self.prev is not None:                                       # she stays as she was planned: her base and arms as they
                 self.base = _unplain(self.prev["base"]); self.base["dirty"] = True   # were when last planned
                 self.arms = _unplain(self.prev["arms"])
@@ -2527,7 +2529,7 @@ class ParentMotion:
                 self.base = dict(mode="stand", at=_lst(pose.pos[:2]), yaw=math.atan2(pose.R[1, 0], pose.R[0, 0]), lean=0.0, spine=0.0,
                                  twist=0.0)
             try:
-                self.phases = self._release_phases(a) + self._plan(a)
+                self.phases = self._release_phases(a) + self._settle_phases() + self._plan(a)
             except Refuse as e:
                 self._end(a, "refused", str(e)); self.phases = []
                 return
@@ -3889,6 +3891,36 @@ class ParentMotion:
     # ------------------------------------------------------------------ the acts: what each asks of her body
     def _plan(self, a):
         return getattr(self, "_act_" + a["kind"])(a, a["target"])
+
+    def _plan_act(self, a):
+        """the act's own plan, made once a transition her base was left in has finished (_settle_phases)"""
+        return self._plan(a)
+
+    def _settle_phases(self):
+        """A105 (2026-09-27): a base left in a transition when an act starts (a shuffle, a turn on her knees, a walk or a turn on her
+        feet stopped where it was; a kneel half done) is settled first, so the plan begins from a pose she is in. A shuffle or a knee
+        turn stopped is her tall kneel where her pelvis is (the same height: no jump); a walk or a turn on her feet stopped is her
+        standing there; a kneel half done finishes to its nearer end by its own phase, and the act is planned after it (a `plan act`
+        phase). Why: on life day 5 her turn was refused 85 times in a morning, "her body would have jumped 0.45 m in a tick (a
+        planning fault: foot_R, phase turn)": her base had been left in 'shuffle' by a stopped act, the approach planned from it as
+        from standing, and every retry (A102) met the same guard"""
+        b = self.base
+        mode = b.get("mode")
+        if mode in ("shuffle", "knee_turn"):
+            self._stable("tall", b["at"], b["yaw"])
+        elif mode in ("walk", "turn"):
+            self._stable("stand", b["at"], b["yaw"])
+        elif mode == "kneel_down":
+            u = float(b.get("u", 2.0))
+            if abs(u - round(u)) > 1e-6 or round(u) not in (0, 2, 3):
+                u1 = 2.0 if 1.0 <= u < 2.5 else (0.0 if u < 1.0 else 3.0)
+                self.stats["settled"] = self.stats.get("settled", 0) + 1
+                return [dict(type="kneel_down", at=_lst(b["at"]), yaw=float(b["yaw"]), u0=u, u1=u1), dict(type="plan", what="act", args={})]
+            self._stable({0: "stand", 2: "tall", 3: "heels"}[int(round(u))], b["at"], b["yaw"])
+        else:
+            return []
+        self.stats["settled"] = self.stats.get("settled", 0) + 1
+        return []
 
     def _near(self, a, where=None, offs=None, alongs=None, need=None):
         return [dict(type="plan", what="approach", args=dict(where=where, offs=offs, alongs=alongs, need=need))]

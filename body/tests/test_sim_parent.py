@@ -1194,12 +1194,55 @@ def test_replay_across_processes():
           f"{got['save']['stops']} steps running at most)")
 
 
+
+def test_a_stale_base_settles():
+    """parent 22 (A105, 2026-09-27): a base left in a transition settles before the next act's plan (_settle_phases): a shuffle or a
+    turn on her knees stopped where it was becomes her tall kneel where her pelvis is (the same spot: no jump); a walk or a turn on her
+    feet stopped becomes her standing there; a kneel half done returns its own finishing phase and a `plan act` phase that plans the
+    act after it; a settled base returns nothing and stays. The next act then runs to its end with no jump refused (life day 5: 85
+    turns refused in a morning from a base left in 'shuffle' by a refused jump, each retry planning a standing turn from it)"""
+    w = W.G1World(seed=1)
+    pm = w.parent
+    T.run(w, [("attend", None)], 400)                                      # she kneels beside it (heels)
+    b0 = dict(pm.base)
+    at = np.asarray(b0["at"], float); yaw = float(b0["yaw"]); fw = np.array([math.cos(yaw), math.sin(yaw)])
+    tall = at + fw * PM.HEELS_BACK
+    outs = {}
+    pm.base = dict(mode="shuffle", p0=_l(tall), p1=_l(tall + fw * 0.1), yaw=yaw, u=0.4, at=_l(tall + fw * 0.04), lean=0.0, spine=0.0, twist=0.0)
+    ph = pm._settle_phases()
+    outs["shuffle"] = (ph, pm.base["mode"], [round(x, 3) for x in pm.base["at"]])
+    assert ph == [] and pm.base["mode"] == "tall" and np.allclose(pm.base["at"], tall + fw * 0.04), outs["shuffle"]
+    pm.base = dict(mode="knee_turn", at=_l(tall), yaw=yaw, lean=0.0, spine=0.0, twist=0.0)
+    assert pm._settle_phases() == [] and pm.base["mode"] == "tall"
+    pm.base = dict(mode="walk", p0=_l(at), p1=_l(at + fw), s=0.2, yaw=yaw, at=_l(at + fw * 0.2), lean=0.0, spine=0.0, twist=0.0)
+    assert pm._settle_phases() == [] and pm.base["mode"] == "stand" and np.allclose(pm.base["at"], at + fw * 0.2)
+    pm.base = dict(mode="kneel_down", at=_l(tall), yaw=yaw, u=1.4, lean=0.0, spine=0.0, twist=0.0)
+    ph = pm._settle_phases()
+    outs["kneel_down"] = ph
+    assert len(ph) == 2 and ph[0]["type"] == "kneel_down" and abs(ph[0]["u0"] - 1.4) < 1e-9 and ph[0]["u1"] == 2.0 and \
+        ph[1] == dict(type="plan", what="act", args={}) and pm.base["mode"] == "kneel_down", ph
+    pm.base = dict(mode="kneel_down", at=_l(tall), yaw=yaw, u=0.6, lean=0.0, spine=0.0, twist=0.0)
+    assert pm._settle_phases()[0]["u1"] == 0.0                              # nearer its standing end
+    pm.base = dict(b0)                                                     # settled already: nothing, and it stays
+    assert pm._settle_phases() == [] and pm.base["mode"] == b0["mode"]
+    n_settled = pm.stats.get("settled", 0)
+    jumps0 = pm.stats.get("jumps_refused", 0)
+    out = T.run(w, [("attend", None)], 400)                                # and the next act from where she is: done, no jump
+    assert out["acts"][0]["status"] == "done" and pm.stats.get("jumps_refused", 0) == jumps0, out["acts"][0]
+    print(f"parent 22: a base left in a transition settles before the next act's plan (A105): a shuffle to her tall kneel where her",
+          f"pelvis is, a knee turn likewise, a walk to standing, a kneel half done (u 1.4) finished to 2 by its own phase then the act",
+          f"planned, one at 0.6 back to standing; {n_settled} settles counted; the next act done with no jump")
+
+
+def _l(x):
+    return [float(v) for v in np.asarray(x, float)]
+
 PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
-                test_babble, test_replay_across_processes]
+                test_babble, test_replay_across_processes, test_a_stale_base_settles]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
