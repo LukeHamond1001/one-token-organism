@@ -18,13 +18,22 @@ class MemoryMixin:
         if learn:
             self._c_n += 1; a = max(1.0 / self._c_n, 1.0 - 0.9995)
             self._c_mu = self._c_mu + a * (c - self._c_mu)
+        if int(self.cfg.get("recall", 0)):
+            # STEP R7f (recall into action; body/core/frames.py): the key is the stream plus the heading, their unit directions at equal
+            # weight, at the key's scale
+            return F.normalize(F.normalize(c - self._c_mu, dim=0) + self._heading_code().to(c.dtype), dim=0) * float(self.cfg.get("key_scale", 2.5))
         return F.normalize(c - self._c_mu, dim=0) * float(self.cfg.get("key_scale", 2.5))
 
     def _tire(self, win_, rt_):
         if rt_ > 0.0 and self.store.A.numel() == self.store.n():
             if win_ >= 0:
                 self.store.A[win_] *= (1.0 - rt_)                            # the winner tires
-            self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
+            if int(self.cfg.get("tire_recover", 0)):
+                # DEFECT 1 FIXED (tire_recover, step R7c): the recovery written in place, as the tiring is, so the store's own buffer keeps
+                # it through the next write of a new slot (physiology.py SWITCHES)
+                self.store.A.copy_(1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A))
+            else:
+                self.store.A = 1.0 - float(self.cfg.get("read_recover", 0.97)) * (1.0 - self.store.A)   # all recover toward rest
 
     def _recall(self, bag, end_vec=None, tire=None):
         """the waking read, carrying the episode it is in when read_follow is on (the gain, > 1): after a read whose winner continues
@@ -175,6 +184,8 @@ class MemoryMixin:
                     continue
                 ex = m.E.weight[i]
                 if bag.norm() > 1e-6 and self.store.write(bag, ex, float(strength), 1):
+                    if getattr(self, "_fboosts", None):
+                        self._boosts_remap(self.store.last_remap)     # step R7d: the frames' pending boosts follow the slots (body/core/frames.py)
                     j = self.store.last_idx; n += 1
                     if n == 2:
                         self.store.mark_start(bag, ex)         # the start mark on the second symbol's slot, as the world's onsets are marked

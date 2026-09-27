@@ -10,17 +10,29 @@ Profiles (--profile):
             leave to the save), then the flags, then the tiny night; the tiny day ends at the tick's own sleep switch
             (wake_ticks = --ticks), so the served dopamine, ventral critic, actor, word-level mouth, ear and switch all run
   switches  served, plus the switches not yet served: chunk_gate 1, utt_entry felt, pace_fore_q 0.99
+  sim       THE SIM PROFILE (the core refactor's step R8d; SIM_DESIGN.md 8: "a sim profile joins the check"): a tiny G1 (body/sim/anatomy.py
+            SimAnatomy under SIM_CFG, d 32, 1 block, 2 heads, window 8, seed 0) in a stub of its world (every channel's numbers from the
+            world's own seeded stream, loud 6 ticks in every 40, a word every 17 ticks, a smile every 40, pain and the born cues now and
+            then, the torso's unit turning, the cerebellum's hook called 15 times a tick, and a night it runs through, dark), 300 ticks
+            with its sleep switch at tick 225 (R8's whole night at the tick's end: the episodes, the frames' dreams, REM on frames, a live
+            night of 120 ticks with its twitches); SIM_CFG's constants but the day's and the night's sizes (wake_ticks 225, night_ticks
+            120, 64 dreams in 2 rounds of batches of 8, REM's 4 dreams of 4 steps) and the waking lessons every 8 ticks; the whole state
+            hashed section by section (the organs with their gradients, the store, the optimizers, the random streams, every working
+            attribute, the constants), the digest over the sections. It ignores --flags, --cfg, --ticks, --full and --roundtrip
 Options:
   --full       the digest also takes every optimizer's state, the random streams, the organs' every buffer, gradient and plain
                attribute, the store's every field, the whole saved blob (every counter in the saved life dict, the critics' float64
                matrices, the striatum, the pace trackers, the utterance memory, the feelings) and every working attribute of the
-               life; a digest per section is printed beside it, so a change can be placed
+               life, less the interface declarations (anatomy, effectors, world: their content is body/tests/test_anatomy.py's);
+               a digest per section is printed beside it, so a change can be placed
   --roundtrip  halfway through the day the life is saved to a temporary file, loaded as a reload loads it (the save's own
                constants) and lives on; the night then saves there too
   --save PATH  the served save whose constants the profile takes (default: the --load of ops/serve_command.txt, else data/watch2.pt)
+  --cfg PATH   instead of a save, a frozen pickle of a save's cfg (a plain dict), so a change of the serve's flags cannot move the
+               digest (SIM_DESIGN.md 8.3: the pins take tools/pins/served_cfg.pkl); a relative PATH is read from the check's own tree
   --tmp DIR    where the round trip's and --full's temporary saves go (default: the system's temporary directory); removed after
 usage: python3 tools/determinism_check.py [--flags ops/BASE_FLAGS.txt] [--ticks 400] [--profile default|served|switches] [--full]
-       [--roundtrip] [--save data/watch2.pt] [--tmp DIR]"""
+       [--roundtrip] [--save data/watch2.pt | --cfg tools/pins/served_cfg.pkl] [--tmp DIR]"""
 import sys, os, io, hashlib, pickle, zipfile, tempfile, shutil, collections
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); sys.path.insert(0, HERE)
 import torch
@@ -73,17 +85,29 @@ _i = 1                                           # an argument not known stops t
 while _i < len(sys.argv):
     _a = sys.argv[_i]
     if _a in ("--full", "--roundtrip"): _i += 1
-    elif _a in ("--flags", "--ticks", "--profile", "--save", "--tmp", "--night_dev") and _i + 1 < len(sys.argv): _i += 2
+    elif _a in ("--flags", "--ticks", "--profile", "--save", "--cfg", "--tmp", "--night_dev") and _i + 1 < len(sys.argv): _i += 2
     else: sys.exit(f"determinism_check: unknown argument {_a!r}\n" + __doc__.split("usage: ")[1])
 profile = arg("profile", "default"); FULL = has("full"); ROUNDTRIP = has("roundtrip")
-assert profile in ("default", "served", "switches"), f"unknown profile {profile!r}"
+assert profile in ("default", "served", "switches", "sim"), f"unknown profile {profile!r}"
+if profile == "sim":
+    import sim_profile                                              # the sim profile lives beside this check (tools/sim_profile.py)
+    sim_profile.main()
+    sys.exit(0)
 flags = arg("flags", os.path.join(HERE, "ops", "BASE_FLAGS.txt")); ticks = arg("ticks", 400)
 save_only = None
+cfg_pin = arg("cfg", "")
+if cfg_pin and (profile == "default" or arg("save", "")):
+    sys.exit("determinism_check: --cfg gives the served and switches profiles their constants in place of a save (not with --save, not the default profile)")
 if profile == "default":
     cfg = parse_flags(flags) if os.path.exists(flags) else {}
 else:
-    src = arg("save", "") or served_save()
-    sc = save_cfg(src)
+    if cfg_pin:                                                     # the save's cfg frozen (SIM_DESIGN.md 8.3), read as the save's would be
+        src = cfg_pin if os.path.isabs(cfg_pin) else os.path.join(HERE, cfg_pin)
+        with open(src, "rb") as f_:
+            sc = dict(pickle.load(f_))
+    else:
+        src = arg("save", "") or served_save()
+        sc = save_cfg(src)
     # the save's keys the physiology no longer knows are read by nothing (Life.load passes them and prints them): left out
     cfg = {k: v for k, v in sc.items() if k in PHYSIOLOGY}
     cfg.setdefault("gate_int_form", "value")                       # as Life.load: an older save keeps the value form
@@ -201,6 +225,7 @@ try:
         section("optim", [(k, getattr(life, k).state_dict()) for k in OPTS])
         section("rng", [("life.gen", life.gen.get_state()), ("torch", torch.get_rng_state())])
         SKIP = {"m", "store", "tok", "gen", "cfg", "save_path", "_t_feel"} | set(OPTS)   # hashed above, or the wall clock and the file's name
+        SKIP |= {"anatomy", "effectors", "world"}   # the interface declarations (SIM_DESIGN.md 8.3): their content is test_anatomy's
         section("work", [(k, v) for k, v in sorted(vars(life).items()) if k not in SKIP] + [("cfg", life.cfg)])
 finally:
     if tmpd: shutil.rmtree(tmpd, ignore_errors=True)

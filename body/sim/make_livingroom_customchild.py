@@ -23,6 +23,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import parent_kin as kin  # noqa: E402
+import parent_face_customchild as face_cc  # noqa: E402  (the custom child's parent keeps the prototype's face)
 
 # ------------------------------------------------------------------ collision classes
 WORLD = 'contype="1" conaffinity="0"'
@@ -412,7 +413,7 @@ def parent_segment_geoms(seg):
               f'<geom type="ellipsoid" pos=".093 .052 .132" euler="0 0 32" size=".0015 .011 .007" material="blush" {DECOR}/>',
               f'<geom type="ellipsoid" pos=".093 -.052 .132" euler="0 0 -32" size=".0015 .011 .007" material="blush" {DECOR}/>']
         for s2 in ("L", "R"):
-            c = kin.EYE_C[s2]
+            c = face_cc.EYE_C[s2]
             g += [f'<geom name="parent_sclera_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0085 .0175 .0135" material="sclera" {DECOR}/>',
                   f'<geom name="parent_iris_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0022 .0098 .0098" material="iris" {DECOR}/>',
                   f'<geom name="parent_pupil_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0016 .0052 .0052" material="pupil" {DECOR}/>',
@@ -420,7 +421,7 @@ def parent_segment_geoms(seg):
                   f'<geom name="parent_lid_lo_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0082 .0195 .0065" material="skin" {DECOR}/>',
                   f'<geom name="parent_lid_up_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0085 .0195 .005" material="skin" {DECOR}/>',
                   f'<geom name="parent_brow_{s2}" type="capsule" size=".0034 .015" material="brow" {DECOR}/>']
-        for i in range(kin.FACE_MOUTH_N - 1):
+        for i in range(face_cc.FACE_MOUTH_N - 1):
             g.append(f'<geom name="parent_mouth{i}" type="capsule" size=".0048 .006" material="lips" {DECOR}/>')
         g += [f'<geom name="parent_mouth_open" type="ellipsoid" size=".004 .02 .006" material="mouth_in" {DECOR}/>',
               f'<geom name="parent_teeth" type="ellipsoid" size=".003 .015 .002" material="teeth" {DECOR}/>']

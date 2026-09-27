@@ -2,7 +2,14 @@
 under the key, the contexts move, the waking read, the stream and the forecast), the window as tensors and the stream now, the
 waking lesson (`_wake_lesson`), and the readout's calibrated sharpness (`_sharp_calibrate`).
 
-Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
+Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2). Since the core refactor's step R4 (docs/SIM_DESIGN.md 8.4) a
+window position holds each of the anatomy's channels under its field, the window's tensors are per channel, the stream's input is
+their codes summed in the anatomy's order (`Organs.inputs`), and the waking lesson teaches a later channel's own forecast head. Since step
+R6 it also teaches each later effector's motor timing part (act_pred and the forward half, body/core/timing.py `_timing_loss`), and a body
+with later effectors has its lesson whether or not the world spoke in the window (their acts are targets on every position); act_pred and
+the correction step with an optimizer of their own, plain steps on the lesson's gradient with its labels at their reliability
+(`GatedDescent`, R6 fix 7), the labels act_inv reads reach them and never the stream, and each optimizer's gradient has its own bound
+(the language body's is as it was)."""
 import torch
 import torch.nn.functional as F
 
@@ -52,6 +59,8 @@ class CortexMixin:
                 if self.store.write(key_, ex, surp * (1.0 + abs(dopamine)), who):   # the world's quiet is not a memory
                     self._writes_today = int(getattr(self, "_writes_today", 0)) + 1   # the day's kept writes (the night's count; the store's growth stops at the capacity)
                 rm_ = getattr(self.store, "last_remap", None)
+                if rm_ is not None and getattr(self, "_fboosts", None):
+                    self._boosts_remap(rm_)                          # step R7d: the frames' pending boosts follow the slots too (body/core/frames.py)
                 if rm_ is not None:
                     # THE THIRTY-SECOND DEFECT (2026-09-18, read at the rekey; confirmed on a tiny body: at the capacity 25 of 52 links joined
                     # the wrong slots, under it 138 of 138): a write beyond the capacity evicts the weakest slot and re-sorts the store by
@@ -105,24 +114,38 @@ class CortexMixin:
                 read, conf, win_ = (self._recall(self.bag, end_vec=end_vec, tire=tire_) if not self.cfg.get("store_off") else (torch.zeros(m.d, device=self.dev), 0.0, -1))
                 self._tire(win_, rt_)
                 self._read = read                              # the latest recall (an instrument's hook)
-            face = torch.tensor([self.face_now / 6.0, (self.face_now - self.face_prev) / 6.0], device=self.dev)
+            # THE POSITION'S CHANNELS (the core refactor's step R4, docs/SIM_DESIGN.md 8.4): each of the anatomy's channels observed at the
+            # position this step opens, under the channel's window field (the diary's: the ear "x", the world's symbol, its rest at a position
+            # its own sound opens; the face "face", [face/6, its change/6])
+            obs_ = {c_.field: c_.observe(self, x, who) for c_ in self.anatomy.channels}
             # THE TICK'S POSITION. The world's symbol opens it. The world's quiet opens nothing yet: the
             # forecast the mouth reads is then the one made at the last filled position, the one
             # holding its own last symbol, which is trained to foresee what follows that symbol. (Read
             # at a freshly appended rest, the forecast was of what follows a pause, and alone the mouth
             # looped on the cue's last word: runs 20 to 22.) Its own half then fills the open position
             # or, the world quiet, opens one of its own; a tick with nothing sounded leaves a rest.
-            entry = {"face": face, "bundle": self.bands.clone(), "read": read.clone(), "r": float(r)}
+            entry = {"bundle": self.bands.clone(), "read": read.clone(), "r": float(r)}
+            # THE LATER EFFECTORS' ACTS (step R5): each effector after the voice holds its act under its window field, the efference copy
+            # the cortex hears beside its own sound: its act this tick at the tick's own step (its rest where it did not act), its rest
+            # at a position the world opens. The diary declares none: its positions are as before.
+            acts_ = ({e_.field: (int(st_["now"]["act"]) if who == 1 else int(e_.rest_id)) for e_, st_ in zip(self.anatomy.motors, self.motor)}
+                     if len(self.anatomy.effectors) > 1 else None)
             if who == 0:
                 if x != self.sil or not self.win:
-                    self.win.append({"x": int(x), "xo": self.sil, **entry}); self._pos_open = True
+                    self.win.append({**obs_, "xo": self.sil, **entry}); self._pos_open = True
+                    if acts_:
+                        self.win[-1].update(acts_)
                 else:
                     self._pos_open = False
             else:
                 if getattr(self, "_pos_open", False):
                     self.win[-1]["xo"] = int(x)                # its own sound joins the world's time step
                 else:
-                    self.win.append({"x": self.sil, "xo": int(x), **entry})
+                    self.win.append({**obs_, "xo": int(x), **entry})
+                if acts_:
+                    self.win[-1].update(acts_)                 # the later effectors' acts join it too
+                    if self._recall_on():
+                        self.win[-1]["frec"] = self._frec_now  # step R7f: the recall the tick's proposals read (body/core/frames.py)
                 self._pos_open = False
             if who == 0 and not self._pos_open and getattr(self, "_C_last", None) is not None:
                 C = self._C_last                               # the last filled position's stream, and its forecast
@@ -142,17 +165,25 @@ class CortexMixin:
         return C, pred, surp, conf
 
     def _window_tensors(self, win=None):
+        """THE WINDOW AS TENSORS, PER CHANNEL (step R4): obs, each of the anatomy's channels by name, its field at every position ([T]
+        symbols of a symbol channel, [T, size] of a vector channel: the diary's ear [T] and face [T, 2]), and each later effector's acts
+        by its name ([T], step R5); whos [T] its own symbol at each position; bundles [T, nb, d]; reads [T, d]"""
         win = list(self.win if win is None else win)
-        xs = torch.tensor([w["x"] for w in win], device=self.dev)
+        obs = {c_.name: (torch.tensor([w[c_.field] for w in win], device=self.dev) if c_.kind == "symbol" else torch.stack([w[c_.field] for w in win]))
+               for c_ in self.anatomy.channels}
+        for e_ in self.anatomy.motors:                          # each later effector's acts, by its name (step R5)
+            obs[e_.name] = torch.tensor([w[e_.field] for w in win], device=self.dev)
+        if self.anatomy.motors and self._recall_on():           # step R7f: each position's recall into action (none: an imagined position's, zeros)
+            z_ = torch.zeros(self.m.d, device=self.dev)
+            obs["@frec"] = torch.stack([w.get("frec", z_) for w in win])
         whos = torch.tensor([w["xo"] for w in win], device=self.dev)   # its own symbols, one per tick
-        faces = torch.stack([w["face"] for w in win])
         bundles = torch.stack([w["bundle"] for w in win])
         reads = torch.stack([w["read"] for w in win])
-        return xs, whos, faces, bundles, reads
+        return obs, whos, bundles, reads
 
     def _stream_now(self):
-        xs, whos, faces, bundles, reads = self._window_tensors()
-        u = self.m.inputs(xs, whos, faces, bundles, reads)
+        obs, whos, bundles, reads = self._window_tensors()
+        u = self.m.inputs(self.anatomy, obs, whos, bundles)
         return self.m.stream(u)[-1]
 
     # ---------------- the waking cortex ----------------
@@ -160,7 +191,8 @@ class CortexMixin:
         win = list(self.win)[-int(self.cfg["wake_window"]):]
         if len(win) < 8:
             return None
-        xs, whos, faces, bundles, reads = self._window_tensors(win)
+        obs, whos, bundles, reads = self._window_tensors(win)
+        xs = obs[self.anatomy.words.name]                          # the words (channel 0): the world's symbols, the lesson's targets
         T = xs.shape[0]
         # THE TARGET IS THE WORLD'S NEXT SYMBOL at every position: its own symbols and rests are inputs
         # only (one predicts the environment; one's own actions are not the environment). With the
@@ -197,12 +229,15 @@ class CortexMixin:
                     else:
                         w[t] = 0.0                                 # unsure: nothing owed
             self._wake_recall_targets = getattr(self, "_wake_recall_targets", 0) + n_rec
-        if float(w.sum()) < 1:
+        motor_ = len(self.anatomy.effectors) > 1                   # step R6: a later effector's acts are targets whether or not the world spoke
+        if float(w.sum()) < 1 and not motor_:
             return None
         m = self.m; m.train()
         try:
             self.opt_day.zero_grad(set_to_none=True)
-            u = m.inputs(xs, whos, faces, bundles, reads)     # the window as lived: its own sound in it, attenuated
+            if motor_:
+                self.opt_pred.zero_grad(set_to_none=True)          # act_pred's and the corrections' (step R6)
+            u = m.inputs(self.anatomy, obs, whos, bundles)     # the window as lived: its own sound in it, attenuated
             C = m.stream(u)
             # the cortex is trained on ITS OWN forecast, day and night alike (predictive coding: each
             # area learns from its own error); recall is a parallel contribution the mouth reads, never
@@ -210,6 +245,30 @@ class CortexMixin:
             # the store missed and undid the night: run 13, day 4)
             pred = m.latent_pred(C)
             ll, lc = m.latent_loss(pred, y, w=w)
+            # THE LATER CHANNELS' FORECASTS (step R4): each later channel that declares a forecast is foreseen by its own head, the
+            # channel's code at the next position as the target (held still: the head learns to foresee the code, not the code to
+            # meet the head), by the squared error latent_loss uses; the diary's face declares none, so its lesson is as before
+            es_ = self._err_scales()                                    # step R7c: each channel's error over its own running mean (err_scale)
+            for i_, c_ in enumerate(self.anatomy.channels):
+                if i_ and c_.forecast:
+                    with torch.no_grad():
+                        tgt_ = c_.encode(m, obs[c_.name][1:])
+                    lc_ = 0.5 * ((m.head(self.anatomy, i_)(C[:-1]).float() - tgt_.float()) ** 2).sum(-1).mean()
+                    if es_ and c_.name in es_:
+                        lc_ = lc_ / es_[c_.name]
+                    ll = ll + lc_
+            # THE LATER EFFECTORS' TIMING PARTS (step R6): act_pred taught the act at each position from the stream before it (its own
+            # act, or where it rested what act_inv reads moved it, weighted by act_inv's reliability), the forward half its next body sense;
+            # the whole lesson the own acts' errors plus act_inv's labels' at their reliability; act_pred and the correction step with
+            # opt_pred (body/core/timing.py GatedDescent: one plain step a lesson on this gradient, each element bounded, R6 fix 7), the
+            # rest here; act_inv's labels reach act_pred and the correction alone, never the stream (`_timing_loss`)
+            mrep = {}
+            for i_ in range(1, len(self.anatomy.motors) + 1):
+                lt_, rt_, lb_ = self._timing_loss(i_, C, obs)
+                if lt_ is not None:
+                    ll = ll + lt_; mrep[self.anatomy.motors[i_ - 1].name] = rt_
+                    if lb_ is not None and rt_["rel"] > 0.0:
+                        ll = ll + rt_["rel"] * lb_                      # act_inv's labels at their reliability (they reach act_pred alone)
             if str(self.cfg.get("rem_form", "forecast")) == "imagine":
                 fl, fc = torch.zeros((), device=self.dev), 1.0            # the forecast heads retired (§5c: their target was the stream's own dynamics)
             else:
@@ -218,15 +277,32 @@ class CortexMixin:
             # tick's share, raised by the dopamine of the moment and by the running surprise (the rewarded and the novel are written,
             # the rest weakly); at the defaults (1, 0, 0) the lesson is as before
             gate_ = float(self.cfg.get("wake_base", 1.0)) + float(self.cfg.get("wake_dopa", 0.0)) * abs(float(getattr(self, "_dopa", 0.0))) + float(self.cfg.get("wake_novel", 0.0)) * float(getattr(self, "_surp_run", 0.0))
-            loss = (ll + fl) * (1.0 + self.stress / 10.0) * gate_      # stress raises plasticity
+            loss = (ll + fl) * (1.0 + self.stress / 10.0) * gate_      # stress raises plasticity (the day's; act_pred's plain step divides it out)
             if not bool(torch.isfinite(loss.detach())):
                 return {"skipped": "non-finite"}
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+            if motor_:
+                # EACH OPTIMIZER'S GRADIENT BOUNDED APART (the R6 verifier's fourth look): the day's parameters by their norm here,
+                # act_pred's and the corrections' element by element in their plain step (_timing_step), so their labels' reliability
+                # never sets the stream's step
+                torch.nn.utils.clip_grad_norm_([p_ for g_ in self.opt_day.param_groups for p_ in g_["params"]], 1.0)
+            else:
+                torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
             self.opt_day.step()
+            if motor_:
+                # act_pred and the corrections: one plain step on the lesson's own gradient, the plasticity scale above divided out
+                # (R6 fix 8, the R6 verifier's eighth look: kept, it made act_pred the one waking parameter stress reached, four times at
+                # the ceiling, and at a hundred times the served rate its bound held every element and the arm diverged), each element bounded
+                self._timing_step((1.0 + self.stress / 10.0) * gate_)
             out = {"latent_cos": round(lc, 3), "forecast_cos": round(fc, 3), "n_world": int(w.sum()), "tick": self.ticks}
+            if motor_:
+                out["motor"] = {k_: dict(v_, w=round(v_["w"], 4), w_own=round(v_["w_own"], 4), w_lab=round(v_["w_lab"], 4),
+                                         s_lab=round(v_["s_lab"], 4), rel=round(v_["rel"], 4)) for k_, v_ in mrep.items()}           # the timing parts' lesson (step R6)
         finally:
-            self.opt_day.zero_grad(set_to_none=True); m.eval()
+            self.opt_day.zero_grad(set_to_none=True)
+            if motor_:
+                self.opt_pred.zero_grad(set_to_none=True)
+            m.eval()
         self._wake_last = out
         return out
 

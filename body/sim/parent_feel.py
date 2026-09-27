@@ -27,7 +27,9 @@ import parent_kin as kin
 # the parent's feeling constants (teacher method, ours; disclosed; set before birth and never tuned to a rate)
 FEEL = dict(
     smile_onset=2,            # ticks for a smile to reach its apex (a spontaneous smile's onset, about 0.3 s)
-    smile_wait=20,            # an unseen smile is held at most 20 ticks, then eases off (A3)
+    smile_wait=20,            # an unseen smile is held at most 20 ticks, then eases off (A3); A96: one she is bringing to the child's
+                              # line of sight (her lean_in child_line under way) is held until she is there, then 20 more, at most
+                              # queue_expiry ticks in all
     smile_after_seen=10,      # once seen, held 10 ticks more (A3)
     offset=5,                 # every smile and frown eases back to neutral over 5 ticks (A3)
     queue_expiry=40,          # a smile that must wait (another on the face, or one still held in the child's reading)
@@ -64,19 +66,31 @@ class Pulse:
         self.t0, self.a, self.kind = t, float(np.clip(w, 0, 2)) / 2, kind
         self.seen_at = None
         self.started = None       # the tick its display began (it may have waited in the queue)
+        self.bringing = False     # A96: she is bringing it to the child's line of sight (her lean_in child_line under way)
+        self.arrived = None       # the tick that bringing ended (there, or the act refused); None while under way or never brought
+
+    def end_hold(self, C=FEEL):
+        """the last tick it is held at its apex: 10 after it was seen; unseen, 20 after its start, or, brought to the child's line
+        of sight, 20 after she is there (A96), never past queue_expiry ticks from its start"""
+        if self.seen_at is not None:
+            return self.seen_at + C["smile_after_seen"]
+        cap = self.started + C["queue_expiry"]
+        if self.bringing and self.arrived is None:
+            return cap
+        base = self.started if self.arrived is None else self.arrived
+        return min(base + C["smile_wait"], cap)
 
     def value(self, t, C=FEEL):
         s = self.started
         rise = min(1.0, (t - s + 1) / C["smile_onset"])
-        end_hold = (self.seen_at + C["smile_after_seen"]) if self.seen_at is not None else (s + C["smile_wait"])
+        end_hold = self.end_hold(C)
         if t <= end_hold:
             return self.a * rise
         k = (t - end_hold) / C["offset"]
         return self.a * rise * max(0.0, 1 - k)
 
     def done(self, t, C=FEEL):
-        end_hold = (self.seen_at + C["smile_after_seen"]) if self.seen_at is not None else (self.started + C["smile_wait"])
-        return t >= end_hold + C["offset"]
+        return t >= self.end_hold(C) + C["offset"]
 
 
 class Feelings:
@@ -153,9 +167,10 @@ class Feelings:
         return self.frown_t0 is not None and self.t < self.frown_t0 + self.C["frown_hold"] + self.C["offset"]
 
     # ---- one tick
-    def step(self, seen):
+    def step(self, seen, bringing=False):
         """Advance one tick. seen: the child's face test passed on this tick and the last (A1), as the world computes
-        it. Returns the graded face parameters for this tick."""
+        it. bringing (A96): her act that brings her face onto the child's line of sight is under way this tick (an unseen
+        smile is held through it, Pulse.end_hold). Returns the graded face parameters for this tick."""
         C = self.C
         self.t += 1
         t = self.t
@@ -172,6 +187,11 @@ class Feelings:
         if self.pulse is not None:
             if seen and self.pulse.seen_at is None:
                 self.pulse.seen_at = t
+            if self.pulse.seen_at is None:                                  # A96: brought to its line of sight, held until there
+                if bringing:
+                    self.pulse.bringing = True
+                elif self.pulse.bringing and self.pulse.arrived is None:
+                    self.pulse.arrived = t
             if self.pulse.done(t):
                 self.pulse = None
                 self.neutral_run = 0

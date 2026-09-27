@@ -42,8 +42,8 @@ for prompt in prompts:
             life.rest_tick()
         mouth, cortex = [], []; own_win = 0; n_win = 0
         for step in range(n):
-            xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-            C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+            obs, whos, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+            C = m.stream(m.inputs(life.anatomy, obs, whos, bundles))[-1]
             rd, conf, win_ = life._recall(life.bag)
             if win_ >= 0:
                 n_win += 1; own_win += int(life.store.W[win_] == 1)     # the recall's winner: its own song, or the world's
@@ -95,8 +95,8 @@ if "--lmloss" in sys.argv:
                     i = TOK.token_to_id(ch); life.win.append({"x": i, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
                     life.rest_tick(world=True); life.take_world(i)
                 for _ in range(12):
-                    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-                    C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+                    obs, whos, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+                    C = m.stream(m.inputs(life.anatomy, obs, whos, bundles))[-1]
                     rd, conf, _w = life._recall(life.bag)
                     lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
                     sym = int(lm.argmax()); got.append(TOK.decode([sym]))
@@ -136,8 +136,8 @@ if "--qa" in sys.argv:
                         life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
                         life.rest_tick()
                     for _ in range(20):                                   # twenty symbols (13:40: twelve cut 'bees make ho' before its word)
-                        xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-                        C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+                        obs, whos, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+                        C = m.stream(m.inputs(life.anatomy, obs, whos, bundles))[-1]
                         rd, conf, _w = life._recall(life.bag)
                         lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
                         sym = int(lm.argmax()); got.append(TOK.decode([sym]))

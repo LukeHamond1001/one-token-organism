@@ -72,8 +72,8 @@ def run(q, k, use_recall):
             life.rest_tick()
             if use_recall: life._recall(life.bag)
         for _ in range(20):
-            xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-            C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+            obs, whos, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+            C = m.stream(m.inputs(life.anatomy, obs, whos, bundles))[-1]
             rd = life._recall(life.bag)[0] if use_recall else zero
             lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")
             sym = int(lm.argmax()); got.append(TOK.decode([sym]))

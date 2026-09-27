@@ -1027,8 +1027,8 @@ def test_own_speech_target():
         rd, conf, _ = life.store.read(life.bag_w)
         life.win.append({"x": life.sil, "xo": i, "face": torch.zeros(2), "bundle": life.bands, "read": rd, "r": 0.0})
     # the lesson's own targets: the recall after "give " says "m"
-    xs, whos, faces, bundles, reads = life._window_tensors(list(life.win))
-    T = xs.shape[0]; own = [t for t in range(T) if int(whos[t]) != life.sil]
+    obs, whos, bundles, reads = life._window_tensors(list(life.win))
+    T = obs["ear"].shape[0]; own = [t for t in range(T) if int(whos[t]) != life.sil]
     e_pos = own[-2]                                            # its own 'e' of "give ": the target there is the recall after "give "
     conf_last = float(reads[e_pos + 1].norm()); tgt = TOK.decode([int(life.m.nearest(reads[e_pos + 1]))])
     life._wake_recall_targets = 0
@@ -1095,15 +1095,16 @@ def test_dreams_in_lockstep_equal_one_at_a_time():
         say(life, t)
     dreams = life.dreams(6)
     assert len(dreams) >= 2
-    xs, xos, faces, bundles, reads, y, w = life._dream_batch(dreams)
+    obs, xos, bundles, reads, y, w = life._dream_batch(dreams)
+    xs = obs["ear"]
     with torch.no_grad():
-        Cb = life.m.stream(life.m.inputs(xs, xos, faces, bundles, reads))
+        Cb = life.m.stream(life.m.inputs(life.anatomy, obs, xos, bundles))
         for i, ids in enumerate(dreams):
-            xs1, xos1, faces1, bundles1, reads1, y1 = life._dream_inputs(ids, mem_on=False)
+            obs1, xos1, bundles1, reads1, y1 = life._dream_inputs(ids, mem_on=False)
             L = len(ids)
-            assert torch.equal(xs[i, :L], xs1) and torch.equal(y[i, :L], y1) and float(w[i].sum()) == L
+            assert torch.equal(xs[i, :L], obs1["ear"]) and torch.equal(y[i, :L], y1) and float(w[i].sum()) == L
             assert torch.allclose(bundles[i, :L], bundles1, atol=1e-5)
-            C1 = life.m.stream(life.m.inputs(xs1, xos1, faces1, bundles1, reads1))
+            C1 = life.m.stream(life.m.inputs(life.anatomy, obs1, xos1, bundles1))
             assert torch.allclose(Cb[i, :L], C1, atol=1e-4)
         g_b = life._gauge_batched(dreams); cos_b = life._gauge_cos
         life.cfg["night_batch"] = 0
@@ -1138,7 +1139,8 @@ def test_dreams_know_who_spoke():
     assert len(dreams) == len(owns) and all(len(d) == len(o) for d, o in zip(dreams, owns))
     assert all(not o[0] for o in owns), "a dream starts where the world spoke"
     assert any(any(o) for o in owns), "a world chain runs into its own reply"
-    xs, xos, faces, bundles, reads, y, w = life._dream_batch(dreams, owns)
+    obs, xos, bundles, reads, y, w = life._dream_batch(dreams, owns)
+    xs = obs["ear"]
     for i, (d, o) in enumerate(zip(dreams, owns)):
         for t in range(1, len(d)):
             if o[t - 1]:
@@ -2339,6 +2341,18 @@ if __name__ == "__main__":
     tests += [test_the_ears_trace, test_night_ends_every_utterance, test_fresh_store_unfaded, test_the_yield, test_the_turns_readiness, test_the_quiet_foreseen, test_the_replys_readiness, test_the_turns_floor, test_the_continuation_gated, test_the_tag_at_entry, test_the_night_on_the_gpu]
     tests += [test_pace_trackers_learn_the_partner, test_pace_what_is_not_a_pause, test_pace_pause_outlasted, test_pace_reply_ready, test_pace_turn_wait_alone,
               test_pace_scales_with_the_partner, test_pace_shadow_changes_nothing, test_pace_false_ends_and_settling, test_pace_edges, test_pace_end_by_its_own_measure]
+    from body.tests.test_anatomy import ANATOMY_TESTS    # the anatomy declared (docs/SIM_DESIGN.md 8.2; the core refactor, step R1)
+    tests += ANATOMY_TESTS
+    from body.tests.test_cerebellum import CEREB_TESTS   # the cerebellum below the tick (docs/SIM_DESIGN.md 7.5; the core refactor, step R6c)
+    tests += CEREB_TESTS
+    from body.tests.test_motor import MOTOR_TESTS         # the motor effectors of the G1's design (docs/SIM_DESIGN.md 3.5-3.7; the core refactor, step R6h)
+    tests += MOTOR_TESTS
+    from body.tests.test_frames import FRAME_TESTS        # the body in frames (docs/SIM_DESIGN.md 7.2, 7.4, 7.6; the core refactor, step R7)
+    tests += FRAME_TESTS
+    from body.tests.test_amygdala import AMYG_TESTS       # the amygdala (docs/SIM_DESIGN.md 7.4; the core refactor, step R7d)
+    tests += AMYG_TESTS
+    from body.tests.test_night import NIGHT_TESTS         # the night over frames and the live, dark night (docs/SIM_DESIGN.md 7.4, 5.4; step R8)
+    tests += NIGHT_TESTS
     failed = 0
     for t in tests:
         try:

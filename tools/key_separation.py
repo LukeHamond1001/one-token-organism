@@ -143,8 +143,8 @@ if any(f.split(":")[0] == "cortex" for f in forms):
     with torch.no_grad():
         for i in range(0, len(texts), 32):
             chunk = texts[i:i + 32]; seqs = [ids_of(t) + [sil] for t in chunk]
-            xs, xos, faces, bundles, reads, y, w = life._dream_batch(seqs)
-            C = m.stream(m.inputs(xs, xos, faces, bundles, reads))
+            obs, xos, bundles, reads, y, w = life._dream_batch(seqs)
+            C = m.stream(m.inputs(life.anatomy, obs, xos, bundles))
             for j, t in enumerate(chunk):
                 c = C[j, len(seqs[j]) - 1].float()
                 CODE[t] = F.normalize(c - mu, dim=0)

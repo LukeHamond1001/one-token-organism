@@ -66,8 +66,8 @@ def mouth(prompt, n=24):
             life.win.append({"x": life.sil, "xo": life.sil, "face": torch.zeros(2), "bundle": life.bands, "read": zero, "r": 0.0})
             life.bag_w = life.cfg["bag_decay"] * life.bag_w
         for _ in range(n):
-            xs, whos, faces, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
-            C = m.stream(m.inputs(xs, whos, faces, bundles, reads))[-1]
+            obs, whos, bundles, reads = life._window_tensors(list(life.win)[-m.window:])
+            C = m.stream(m.inputs(life.anatomy, obs, whos, bundles))[-1]
             rd, conf, _ = life.store.read(life.bag)
             lc = m.readout(m.forecast(C, zero)); lc[life.bans] = float("-inf"); lc[life.sil] = float("-inf")
             lm = m.readout(m.forecast(C, rd)); lm[life.bans] = float("-inf"); lm[life.sil] = float("-inf")

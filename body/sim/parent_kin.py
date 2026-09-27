@@ -1,9 +1,10 @@
 """Shared numbers and kinematics for the living room (docs/SIM_DESIGN.md; from the 2026-09-24 prototype; the world's side, never the body).
 
-The parent is kinematic: a skeleton of 16 segments posed here in Python (forward kinematics, two-bone inverse
-kinematics for the arms and legs, look-at for the head and eyes) and written into 16 MuJoCo mocap bodies each
-physics step. Its fingers, eyes, brows, lids and mouth are geoms whose local poses this file sets (hand shapes,
-gaze, expression). Nothing here is the child's body or its control: the child is a physical humanoid in the XML.
+The parent's skeleton: 16 segments posed here in Python (forward kinematics, two-bone inverse kinematics for the arms and
+legs, look-at for the head and eyes). Her planner makes the pose she means with it; her body is 16 dynamic MuJoCo bodies with
+this skeleton's joints, driven toward that pose with a woman's strength (parent_body.py, make_g1room.py: the lead's decision of
+2026-09-25). Its fingers, eyes, brows, lids and mouth are geoms whose local poses this file sets (hand shapes, gaze,
+expression). Nothing here is the child's body or its control: the child is a physical humanoid in the XML.
 
 Frames: every segment's frame is aligned with the parent's root in the rest pose (standing, arms down, palms to the
 thighs): x forward, y to its left, z up. Limbs hang along -z from their proximal joint. A right-side segment is the
@@ -79,8 +80,6 @@ for k, v in _OFF.items():
     OFFSET[k] = np.array(v, float)
     if k.endswith("_L"):
         OFFSET[k[:-1] + "R"] = np.array([v[0], -v[1], v[2]], float)
-EYE_C = {"L": np.array([.098, .036, .172]), "R": np.array([.098, -.036, .172])}   # eyeball centres in the head frame
-EYE_MID = np.array([.10, 0, .172])
 
 # human joint ranges (degrees; typical adult active ranges, AAOS-style, rounded; the knee's 160 is its passive range,
 # which kneeling on the heels uses). Signs: flexion positive; abduction/external rotation positive on both sides.
@@ -254,7 +253,7 @@ def look(pose, target, segs=None):
     segs = segs or fk(pose)
     cp, cR = segs["chest"]
     neck = cp + cR @ OFFSET["head"]
-    v = cR.T @ (np.asarray(target, float) - (neck + cR @ np.array([0, 0, .172])))
+    v = cR.T @ (np.asarray(target, float) - (neck + cR @ np.array([0, 0, PUPIL_Z])))
     yaw = math.degrees(math.atan2(v[1], v[0]))
     pitch = math.degrees(-math.atan2(v[2], math.hypot(v[0], v[1])))       # flexion (look down) positive
     lo, hi = LIM_DEG["neck_rot"]; yaw_c = float(np.clip(yaw, lo + 5, hi - 5))
@@ -265,67 +264,25 @@ def look(pose, target, segs=None):
     pose.gaze = np.asarray(target, float)
 
 
-# ---------------------------------------------------------------- the parent's face and hands (geom poses)
-FACE_MOUTH_N = 7                # the mouth: 6 capsules through 7 points
-MOUTH_HALF_W, MOUTH_Z, MOUTH_CURVE = .026, .118, .0075
+# ---------------------------------------------------------------- the parent's face (body/sim/parent_face.py)
+# HER FACE is built in parent_face.py from cited adult female norms (the W1 verifier's third and fourth rounds; the owner's decision
+# of 2026-09-24, made for him: fix the world, not the detector): one smooth head sheet with the eye fissures cut between the canthi
+# the norms place, the lids that turn about the canthal line, the brows and lips lying on her skin, her collision the hulls of her
+# own sheet's pieces. The names the rest of the world reads are re-exported here.
+import parent_face as face  # noqa: E402
+from parent_face import (IPD, EYE_C, EYE_MID, EYE_R, PUPIL_Z, X_CORNEA, MOUTH_Z, MOUTH_HALF_W, MOUTH_CURVE, IRIS_D,  # noqa: E402,F401
+                         PUPIL_D, EN, EX, MRD1, MRD2, head_surface_x, FACE_GEOM_NAMES)
 
-
-def head_surface_x(y, z):
-    """The front surface of the parent's head ellipsoid (centre (.015, 0, .16), semi-axes .098 .082 .106)."""
-    q = 1 - (y / .084) ** 2 - ((z - .16) / .106) ** 2
-    return .015 + .098 * math.sqrt(max(q, 0))
+FACE_GEOMS = list(FACE_GEOM_NAMES)
 
 
 def face_geoms(expr, gaze_head=None, blink=0.0):
-    """Local (pos, quat, size or None) of the parent's face geoms for an expression in [-1, 1] and a gaze direction
-    given in the head frame (None: straight ahead). Names match the XML (parent_<name>).
-    expr may instead be a dict of graded face parameters (FACE_NEUTRAL's keys): see face_geoms_graded. The scalar
-    path below is unchanged."""
-    if isinstance(expr, dict):
-        return face_geoms_graded(expr, gaze_head, blink)
-    out = {}
-    e = float(np.clip(expr, -1, 1))
-    # mouth: a parabola whose corners rise for a smile and fall for a frown; the centre dips a little for a smile
-    ys = np.linspace(-MOUTH_HALF_W * (1 + .12 * max(e, 0)), MOUTH_HALF_W * (1 + .12 * max(e, 0)), FACE_MOUTH_N)
-    pts = []
-    for y in ys:
-        u = (y / MOUTH_HALF_W) ** 2
-        z = MOUTH_Z + e * MOUTH_CURVE * u - (.004 * e if e > 0 else .002 * e) * (1 - u)
-        pts.append(np.array([head_surface_x(y, z) + .0015, y, z]))
-    for i in range(FACE_MOUTH_N - 1):
-        a, b = pts[i], pts[i + 1]
-        c = (a + b) / 2
-        out[f"mouth{i}"] = (c, mjquat(frame([1, 0, 0], b - a)), (.0038, np.linalg.norm(b - a) / 2, 0))
-    # open smile: a dark mouth opening and teeth that grow with the smile
-    op = max(0.0, e - .25) / .75
-    oc = np.array([head_surface_x(0, MOUTH_Z + .001) - .0012, 0, MOUTH_Z + .0012 + .0025 * op])
-    out["mouth_open"] = (oc, mjquat(np.eye(3)), (.004, .001 + .022 * op, .001 + .0068 * op))
-    out["teeth"] = (oc + [.001, 0, .0034 * op], mjquat(np.eye(3)), (.003, .001 + .016 * op, .001 + .0024 * op))
-    # brows: raised and arched for a smile, lowered and drawn in (inner ends down) for a frown
-    for sd, sg in (("L", 1), ("R", -1)):
-        yb, zb = sg * .037, .199 + .004 * max(e, 0) - .004 * max(-e, 0)
-        tilt = math.radians(8 * max(e, 0) - 16 * max(-e, 0))     # + lifts the inner end (a warm, open look); - draws it down
-        a = np.array([0, yb - sg * .014, zb + math.sin(tilt) * .014])     # inner end
-        b = np.array([0, yb + sg * .014, zb - math.sin(tilt) * .014 - .002])  # outer end, a slight arch
-        a[0], b[0] = head_surface_x(a[1], a[2]) + .002, head_surface_x(b[1], b[2]) + .002
-        c = (a + b) / 2
-        out[f"brow_{sd}"] = (c, mjquat(frame([1, 0, 0], b - a)), (.0034, np.linalg.norm(b - a) / 2, 0))
-        # the eye: iris and pupil slide over the white toward the gaze; lower lid rises with a smile
-        ec = EYE_C[sd]
-        g = np.array([1.0, 0, 0]) if gaze_head is None else unit(gaze_head[sd] if isinstance(gaze_head, dict) else gaze_head)
-        oy = float(np.clip(g[1] / max(g[0], .2) * .016, -.0075, .0075))
-        oz = float(np.clip(g[2] / max(g[0], .2) * .016, -.0065, .0055))
-        out[f"iris_{sd}"] = (np.array([ec[0] + .0078, ec[1] + oy, ec[2] + oz]), mjquat(np.eye(3)), None)
-        out[f"pupil_{sd}"] = (np.array([ec[0] + .0092, ec[1] + oy, ec[2] + oz]), mjquat(np.eye(3)), None)
-        out[f"glint_{sd}"] = (np.array([ec[0] + .0104, ec[1] + oy + .003, ec[2] + oz + .0035]), mjquat(np.eye(3)), None)
-        # lids: hidden inside the face at rest; the lower lid rises over the white in a smile (a warm squint), the
-        # upper lid lowers a little in a frown and fully in a blink
-        sm, fr = max(e, 0), max(-e, 0)
-        lx = ec[0] + (.0004 if sm > .05 else -.014)
-        out[f"lid_lo_{sd}"] = (np.array([lx, ec[1], ec[2] - .0185 + .0085 * sm]), mjquat(np.eye(3)), None)
-        ux = ec[0] + (.0004 if (fr > .05 or blink > 0) else -.014)
-        out[f"lid_up_{sd}"] = (np.array([ux, ec[1], ec[2] + .0175 - .005 * fr - .018 * blink]), mjquat(np.eye(3)), None)
-    return out
+    """Local (pos, quat, size or None) of her face's moving parts for an expression: a dict of graded face parameters
+    (FACE_NEUTRAL's keys), or the old one-number expression (-1 frown .. +1 smile, through scalar_to_params); the gaze in the head
+    frame (None: straight ahead). Size None marks a mesh (the scene composes its compiled offset)"""
+    if not isinstance(expr, dict):
+        expr = scalar_to_params(expr)
+    return face_geoms_graded(expr, gaze_head, blink)
 
 
 # ---------------------------------------------------------------- the graded face (the parent's feelings, shown)
@@ -345,7 +302,6 @@ FACE_NEUTRAL = dict(smile=0.0,      # AU12 lip-corner puller (+ AU25 lips part a
                     press=0.0,      # AU24 lip presser (concern, a flat held mouth)
                     blink=0.0,
                     tilt=0.0)       # the head's tilt toward its shoulder, degrees (the question face)
-FACE_EXTRA = [f"lip_lo{i}" for i in range(4)] + ["sclera_L", "sclera_R", "cheek_L", "cheek_R"]
 FACE_READING_GAIN = 2.0     # the born reading: 2 x (corner pull), so a full smile reads +2 and a full frown -2
 
 
@@ -372,96 +328,12 @@ def face_reading(fp):
     return float(np.clip(FACE_READING_GAIN * (fp.get("smile", 0.0) - fp.get("frown", 0.0)), -2, 2))
 
 
-def _mouth_upper(y, W, net, smile, frown, lift):
-    u = min((y / W) ** 2, 1.0)
-    return MOUTH_Z + net * MOUTH_CURVE * u - (.004 * smile - .002 * frown) * (1 - u) + lift * (1 - u)
-
-
 def face_geoms_graded(fp, gaze_head=None, blink=None):
-    """Local (pos, quat, size or None) of the parent's face geoms for graded face parameters (FACE_NEUTRAL's keys).
-    Returns the scalar path's names plus FACE_EXTRA (a lower lip, the scleras' size, the cheeks), which a World sets
-    only if its model has them (the maker adds them with face_extra_geoms_xml)."""
+    """Local (pos, quat, size or None) of her face's moving parts for graded face parameters (FACE_NEUTRAL's keys): the lips (upper
+    and lower vermilion), the mouth's opening and teeth, the brows, the irises and pupils (turned to the gaze), the lids (upper and
+    lower, turned about the lids' hinge), the upper lash lines (parent_face.face_geoms)"""
     f = dict(FACE_NEUTRAL); f.update(fp)
-    c01 = lambda k: float(np.clip(f[k], 0, 1))
-    sm, fr, ck = c01("smile"), c01("frown"), c01("cheek")
-    bi, bo, bl = c01("brow_in"), c01("brow_out"), c01("brow_low")
-    lu, lt = float(np.clip(f["lid_up"], -1, 1)), c01("lid_tight")
-    jw, rd, pr = c01("jaw"), c01("round"), c01("press")
-    bk = c01("blink") if blink is None else float(np.clip(max(blink, f["blink"]), 0, 1))
-    net = sm - fr
-    out = {}
-    # the mouth. Upper lip: 7 points, corners up for a smile and down for a frown (the only part the born reading
-    # reads); its centre lifts as the mouth opens. Width: wider in a smile, narrower in an "oh".
-    W = MOUTH_HALF_W * (1 + .12 * sm + .05 * pr - .30 * rd)
-    sm_open = max(0.0, sm - .25) / .75
-    lift = .0025 * jw + .004 * rd + .0012 * sm_open
-    ys = np.linspace(-W, W, FACE_MOUTH_N)
-    up = [np.array([head_surface_x(y, _mouth_upper(y, W, net, sm, fr, lift)) + .0015, y, _mouth_upper(y, W, net, sm, fr, lift)]) for y in ys]
-    r_lip = .0048 * (1 - .4 * pr)
-    for i in range(FACE_MOUTH_N - 1):
-        a, b = up[i], up[i + 1]
-        out[f"mouth{i}"] = ((a + b) / 2, mjquat(frame([1, 0, 0], b - a)), (r_lip, np.linalg.norm(b - a) / 2, 0))
-    # the opening between the lips: the open smile shows the upper teeth; the jaw and the "oh" open it further
-    h = .0105 * sm_open + .017 * jw + .016 * rd
-    # lower lip: 5 points from corner to corner, just under the upper lip when closed, dropping by the opening
-    ylo = np.linspace(-W * .96, W * .96, 5)
-    lo = []
-    for y in ylo:
-        u = min((y / W) ** 2, 1.0)
-        z = _mouth_upper(y, W, net, sm, fr, lift) - .0022 - h * (1 - u) ** (.75 if rd > .2 else 1.0)
-        lo.append(np.array([head_surface_x(y, z) + .0010, y, z]))
-    for i in range(4):
-        a, b = lo[i], lo[i + 1]
-        out[f"lip_lo{i}"] = ((a + b) / 2, mjquat(frame([1, 0, 0], b - a)), (r_lip * .92, np.linalg.norm(b - a) / 2, 0))
-    zu0 = _mouth_upper(0, W, net, sm, fr, lift)
-    zl0 = zu0 - .0022 - h
-    oc = np.array([head_surface_x(0, (zu0 + zl0) / 2) - .0012, 0, (zu0 + zl0) / 2])
-    shown = h > .0008
-    out["mouth_open"] = (oc if shown else oc - [.02, 0, 0], mjquat(np.eye(3)),
-                         (.004, max(.001, W * (.80 + .15 * rd)), max(.001, h / 2 + .0012)))
-    teeth_k = sm_open * (1 - rd) + .5 * max(0.0, jw - .35) * (1 - rd)
-    out["teeth"] = (np.array([oc[0] + .001, 0, zu0 - .0028 - .0012 * teeth_k]) if teeth_k > .02 else oc - [.02, 0, 0],
-                    mjquat(np.eye(3)), (.003, .001 + .016 * min(teeth_k, 1) * W / MOUTH_HALF_W, .001 + .0024 * min(teeth_k, 1)))
-    for sd, sg in (("L", 1), ("R", -1)):
-        # brows: the inner end (toward the midline) rises with AU1 and falls and draws in with AU4; the outer end
-        # rises with AU2. AU1 with AU4 gives concern's oblique brows; AU1 with AU2, surprise's raised brows.
-        yin, yout = sg * (.037 - .014 + .004 * bl), sg * (.037 + .014)
-        zin = .199 + .011 * bi - .0065 * bl + .002 * sm
-        zout = .197 + .009 * bo - .002 * bl + .001 * sm
-        a = np.array([0, yin, zin]); b = np.array([0, yout, zout])
-        a[0], b[0] = head_surface_x(a[1], a[2]) + .002, head_surface_x(b[1], b[2]) + .002
-        out[f"brow_{sd}"] = ((a + b) / 2, mjquat(frame([1, 0, 0], b - a)), (.0034, np.linalg.norm(b - a) / 2, 0))
-        ec = EYE_C[sd]
-        # the eye white grows a little when the eyes widen (AU5)
-        out[f"sclera_{sd}"] = (ec.copy(), mjquat(np.eye(3)), (.0085, .0175, .0135 * (1 + .22 * max(lu, 0))))
-        g = np.array([1.0, 0, 0]) if gaze_head is None else unit(gaze_head[sd] if isinstance(gaze_head, dict) else gaze_head)
-        oy = float(np.clip(g[1] / max(g[0], .2) * .016, -.0075, .0075))
-        oz = float(np.clip(g[2] / max(g[0], .2) * .016, -.0065, .0055))
-        out[f"iris_{sd}"] = (np.array([ec[0] + .0078, ec[1] + oy, ec[2] + oz]), mjquat(np.eye(3)), None)
-        out[f"pupil_{sd}"] = (np.array([ec[0] + .0092, ec[1] + oy, ec[2] + oz]), mjquat(np.eye(3)), None)
-        out[f"glint_{sd}"] = (np.array([ec[0] + .0104, ec[1] + oy + .003, ec[2] + oz + .0035]), mjquat(np.eye(3)), None)
-        # lower lid: rises over the white with the cheeks (AU6) and a little with AU7; upper lid: lowers with AU7,
-        # with drowsiness (lid_up < 0) and fully in a blink; both hide inside the face when not in use
-        lo_raise = .0085 * ck + .003 * lt
-        lx = ec[0] + (.0004 if lo_raise > .0004 else -.014)
-        out[f"lid_lo_{sd}"] = (np.array([lx, ec[1], ec[2] - .0185 + lo_raise]), mjquat(np.eye(3)), None)
-        up_drop = .005 * lt + .007 * max(-lu, 0) + .018 * bk
-        ux = ec[0] + (.0004 if up_drop > .0004 else -.014)
-        out[f"lid_up_{sd}"] = (np.array([ux, ec[1], ec[2] + .0175 + .002 * max(lu, 0) - up_drop]), mjquat(np.eye(3)), None)
-        # the cheeks (the blush) rise and round with AU6
-        out[f"cheek_{sd}"] = (np.array([.093 + .002 * ck, sg * (.052 + .002 * ck), .132 + .006 * ck]),
-                              mjquat(rz(math.radians(sg * 32))), (.0015, .011 * (1 + .1 * ck), .007 * (1 + .15 * ck)))
-    return out
-
-
-def face_extra_geoms_xml(decor_attrs):
-    """The graded face's extra geoms for the maker's head segment (a lower lip; names for the scleras are already in
-    the maker; the cheeks are the blush geoms, named here). decor_attrs: the maker's DECOR attribute string."""
-    g = [f'<geom name="parent_lip_lo{i}" type="capsule" size=".0044 .006" material="lips" {decor_attrs}/>' for i in range(4)]
-    for sd, sg in (("L", 1), ("R", -1)):
-        g.append(f'<geom name="parent_cheek_{sd}" type="ellipsoid" pos=".093 {sg * .052} .132" euler="0 0 {sg * 32}" '
-                 f'size=".0015 .011 .007" material="blush" {decor_attrs}/>')
-    return g
+    return face.face_geoms(f, gaze_head, blink)
 
 
 # the hand's fingers (left hand frame; palm faces -y, thumb on +x): knuckle x positions, lengths, radii

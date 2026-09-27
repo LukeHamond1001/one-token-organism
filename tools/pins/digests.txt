@@ -1,0 +1,76 @@
+# THE LANGUAGE BODY'S PINNED DIGESTS (docs/SIM_DESIGN.md 8.3; taken in the core refactor's step R1, 2026-09-23 20:35-21:00 CDT)
+# Recorded on main's unchanged body/ (commit c39836d); every refactor commit must reproduce every line exactly. Never re-pinned, except
+# when a language core fix is rebased in from main (8.3 item 5), with the pins re-taken at that commit.
+#
+# How each is run: from the MAIN tree's directory (the flags name data/stories_valid.txt relatively), the check of the tree under test
+# (it imports that tree's body; with no --flags it reads that tree's own ops/BASE_FLAGS.txt, and a relative --cfg is read from that
+# tree too), at nice -n 19. Pass no --flags: main's flags may change during the refactor, the branch's copy stays as at c39836d (a flags
+# change brought in by a rebase from main moves these pins as a core fix does, and they are re-taken at that commit):
+#   cd /Users/lukehamond/Projects/project && nice -n 19 python3 <tree>/tools/determinism_check.py <args>                                  (threaded)
+#   cd /Users/lukehamond/Projects/project && OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 nice -n 19 python3 <tree>/tools/determinism_check.py <args>  (pinned)
+# threaded = torch's default (4 threads on this Mac, as the served body runs); the digest depends on the thread count.
+# Lines of the check that begin 'load: ' are the loader's notes and are not part of the result.
+#
+# served_cfg.pkl: the cfg dict of the served save data/watch2.pt (written 2026-09-23 18:39), read as the check reads a save (no tensor
+# read), 217 keys, pickle protocol 4,
+# sha256 637a19959cca9d59d266adfc8b4093a1b81394be32acb0d237a27bf281c05fcb.
+# With the tree's ops/BASE_FLAGS.txt it gives the constants 458595067029 (served) and 81de6471d00b (switches), as the live save did;
+# the default profile reads the flags alone (constants 92e828037353).
+# Taken with python 3.14.3, torch 2.12.0, tokenizers 0.22.2 (macOS, arm64).
+#
+# digest  <profile> <threads> <digest> consts <consts> | <args>
+digest  default               threaded 7c54199e3c72cf77d45a8e94 consts 92e828037353 | (none)
+digest  served                threaded fc81c03dec606afb62c3fc35 consts 458595067029 | --profile served --cfg tools/pins/served_cfg.pkl
+digest  switches              threaded ab1ab46751b11b314dfc78c2 consts 81de6471d00b | --profile switches --cfg tools/pins/served_cfg.pkl
+digest  served_full_roundtrip threaded c4730b232091fe229ee286dc consts 458595067029 | --profile served --full --roundtrip --cfg tools/pins/served_cfg.pkl
+digest  default               pinned   fbe9e6b330f44e7424f113f3 consts 92e828037353 | (none)
+digest  served                pinned   f507fb9c6c55649ddd39f917 consts 458595067029 | --profile served --cfg tools/pins/served_cfg.pkl
+digest  switches              pinned   14de2b131ce4b2874ca0ad95 consts 81de6471d00b | --profile switches --cfg tools/pins/served_cfg.pkl
+digest  served_full_roundtrip pinned   823431e80a08f197ee086884 consts 458595067029 | --profile served --full --roundtrip --cfg tools/pins/served_cfg.pkl
+#
+# the --full section digests of served --full --roundtrip (a moved digest is placed by the section that moved)
+full    served_full_roundtrip threaded organs 8414b8e3ed5c store 7289e42bf9eb saved d944f2d765ca optim e2950bfff042 rng fe1a46550557 work 04b573d4d5a1
+full    served_full_roundtrip pinned   organs 95ec3c662b36 store 4170ab1c13bc saved 10ca0e063529 optim ded9b1951a94 rng fe1a46550557 work f94f538e4a21
+#
+# the round trip's fixed point (known: a newborn store under store_sat 1 is never marked converted, so its first reload compresses it once)
+lost    served_full_roundtrip threaded store.S, store.sat
+lost    served_full_roundtrip pinned   store.S, store.sat
+#
+# THE SIM PROFILE (the core refactor's step R8d; SIM_DESIGN.md 8: "after the plumbing run, a sim profile joins the check"): tools/determinism_check.py
+# --profile sim runs tools/sim_profile.py, a tiny G1 (SimAnatomy under SIM_CFG, d 32) in a stub of its world, a day of 225 ticks and R8's whole
+# night (the episodes, the frames' dreams, REM on frames, a live night of 120 ticks with its twitches), 300 ticks in all; its digest is over the
+# whole state's sections, each on the full line (organs with their gradients, store, optimizers, random streams, working attributes, constants).
+# Run as the language digests are (from the main tree's directory, importing the tree under test). A commit that changes the sim's life
+# (SIM_CFG, the core under the sim's switches) re-pins it and says so; a commit that must not change it keeps it. Each pin the same under
+# PYTHONHASHSEED 1 and 4242.
+# Pinned at R8d (2026-09-25, fc152f9): threaded 7e76fe0c4b6f975c59ca1f3b, one-thread 44d7f62b27584bf596241f19 (consts 2ad019e8abba).
+# Re-pinned at A71 (2026-09-25: SIM_CFG born at the served values, amyg_pav's weight earned; the lead's decision on the PFC-maturation study):
+# (was: threaded 9f0e343e471530a65a008b17, one-thread 32163810db656e3d0f76e529.)
+# Re-pinned at S5a (2026-09-25, on branch sim: the flexor withdrawal moved from the world's zones into the anatomy's Limb.reflex on
+# the joints' pain, 3.7 and A37; the stub's two pain ticks now withdraw a limb for 2 ticks). The committed tree before it reproduced
+# the A71 pins exactly; the anatomy's reflex alone moves them. Each the same under PYTHONHASHSEED 1 and 4242:
+# Re-pinned at A88 (2026-09-26, on branch sim: the owner's decision, one reward: the charge channel gone from SimAnatomy (8 channels),
+# ChargeRelief gone, JointPain a cortisol source (dopamine off: its term never in the reward, |term| to stress), the amygdala's heads
+# 5 -> 3, the cry's charge line gone; the profile's scripted frames carry no charge). The constants digest is unchanged (c61b44d6eef1):
+# SIM_CFG did not move. The language pins (above) reproduced exactly at this build. (was: threaded b171489467d8bc321e3ef168,
+# one-thread 1950c5d205b90fd521dc8d2d.)
+# Re-pinned at A91 (2026-09-26: pain pays -1 again, the owner's reversal of A88's cortisol-only pain; the constants digest unchanged;
+# was: threaded 83a37937b6d942637a59507f, one-thread 55377f8c9f9352381860a49c.)
+# Re-pinned at A93 (2026-09-26: the reverse value sweep in the frames' night, SIM_CFG night_reverse 1; the constants digest moves with the
+# new key; was: threaded 984531dd4e3739df21ff06cc, one-thread 888e88651232bdad4ebb6775, consts c61b44d6eef1.)
+# Re-pinned at A97+A98 (2026-09-26: a limb's decisiveness earned by its inverse model's kappa, the cord's pattern summed and never
+# cancelled, the gaze's inverse model; the constants digest unchanged: SIM_CFG did not move. The language default digest reproduced
+# exactly at this build (7c54199e3c72cf77d45a8e94), and served_full_roundtrip threaded (c4730b232091fe229ee286dc, every section, the
+# known lost store.S and store.sat) after A98's loader (persistence._moments_aligned: the identity on the same recipe). Was: threaded
+# 0cd508ec66bc43b3837c9d6a, one-thread 4251a12065013840a34be2f0.)
+# Re-pinned at A104 (2026-09-27: a limb's decisiveness on kappa's own scale, s^rel with rel between "fair" 0.2 and "almost perfect"
+# 0.8; the constants digest unchanged; the language default digest reproduced exactly (7c54199e3c72cf77d45a8e94). Was: threaded
+# 34e2ff847d45ef29dafddca9, one-thread 70a89ce8093f0a8bc63ecc49.)
+# Re-pinned at A106 (2026-09-27: the night's ticks pass for the body's slow states (stress, mood, fatigue fall by their half-lives over
+# the live night); the constants digest unchanged; the language default digest reproduced exactly (7c54199e3c72cf77d45a8e94). Was:
+# threaded 0fd8682c4e0352b6ef20611b, one-thread 82c58538f82f4d331bea8c3e.)
+# Re-pinned at A113 (2026-09-27 13:25, branch actor on a109): SIM_CFG actor=1 (the striatal actor on; C87's day copy); the language default reproduced 7c54199e3c72cf77d45a8e94.
+digest  sim                   threaded 18c33a72cbe083532a9aeb73 consts 44ef6a276ad3 | --profile sim
+digest  sim                   pinned   39bd93b65937c9293ec6a667 consts 44ef6a276ad3 | --profile sim
+full    sim                   threaded organs fc7be0bd7c7c store d364be30c88f optim 0757502a5393 rng 3f129c0969d1 work 706d7d717ca9 cfg cc35d8f4e186
+full    sim                   pinned   organs 4fa1a3503829 store 0b7fce84adf8 optim 8bce1f21c794 rng 3f129c0969d1 work ea476f87751c cfg cc35d8f4e186

@@ -13,8 +13,8 @@ class InstrumentsMixin:
         m = self.m
         # --- bookkeeping ---
         self.stream.append((int(u), 0)); self.stream.append((int(nxt), 1))
-        self.page.append(((self.tok.decode([int(u)]) if u != self.sil else ""), 0, round(self.face_now, 2), round(its_face, 2), who))
-        self.page.append(((self.tok.decode([int(nxt)]) if nxt != self.sil else ""), 1, round(self.face_now, 2), round(its_face, 2), False))
+        self.page.append(((self.anatomy.decode([int(u)]) if u != self.sil else ""), 0, round(self.face_now, 2), round(its_face, 2), who))
+        self.page.append(((self.anatomy.decode([int(nxt)]) if nxt != self.sil else ""), 1, round(self.face_now, 2), round(its_face, 2), False))
         if len(self.page) > 40000:
             del self.page[:20000]; self.page_base += 20000
         self.face_prev = self.face_now
@@ -22,12 +22,17 @@ class InstrumentsMixin:
         self.last = {"tick": self.ticks, "you": round(self.face_now, 2), "face": round(its_face, 2), "vrel": round(self._vrel_corr, 3),
                      "mood": round(self.mood, 2), "cort": round(self.fatigue, 2), "fatigue": round(self.fatigue, 2),
                      "stress": round(self.stress, 2), "ent": round(ent, 2), "felt": felt,
-                     "said": (self.tok.decode([int(nxt)]) if nxt != self.sil else ""),
+                     "said": (self.anatomy.decode([int(nxt)]) if nxt != self.sil else ""),
                      "gate": round(p_act, 3), "dopamine": round(delta, 3), "doses": self.n_bursts, "level": round(level, 3), "r": round(float(r), 3),
                      "vlong": round(vlong, 3), "dlong": round(delta_long, 3),
                      "store": self.store.n(), "store_conf": round(conf1, 3), "surprise": round(surp1, 3),
-                     "own": [self.tok.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
+                     "own": [self.anatomy.decode([int(probs.argmax())]), round(float(probs.max()), 3)],
                      "gate_lesson": self._gate_last, "wake": self._wake_last}
+        if len(self.anatomy.effectors) > 1:                        # the later effectors' acts this tick and their gates (step R5)
+            self.last["acts"] = {e_.name: {"act": st_["now"]["act"], "acted": st_["now"]["acted"], "gate": round(st_["now"]["p_act"], 3),
+                                           "world": st_["now"]["world"], "cont": st_["now"]["cont"], "stop": st_["now"]["stop"],   # step R6: the act to the world, a chunk's continuation, its stop
+                                           "cord": st_["now"].get("cord")}                                                         # step R6h: the cord's patterns (logged as reflex)
+                                 for e_, st_ in zip(self.anatomy.motors, self.motor)}
         if self.sleep_pressure >= int(self.cfg["wake_ticks"]) and len(self.win) >= 8:
             self._sleep_now()
 
@@ -37,8 +42,8 @@ class InstrumentsMixin:
         bans = [b for b in self.bans if b != self.eot]
         with torch.no_grad():
             for i in range(0, len(dreams), bs):
-                xs, xos, faces, bundles, reads, y, w = self._dream_batch(dreams[i:i + bs], owns[i:i + bs] if owns is not None else None)
-                pred = self.m.latent_pred(self.m.stream(self.m.inputs(xs, xos, faces, bundles, reads)))
+                obs, xos, bundles, reads, y, w = self._dream_batch(dreams[i:i + bs], owns[i:i + bs] if owns is not None else None)
+                pred = self.m.latent_pred(self.m.stream(self.m.inputs(self.anatomy, obs, xos, bundles)))
                 lg = self.m.readout(pred); lg[..., bans] = float("-inf")
                 if self.end_id != self.sil:
                     lg[..., self.sil] = float("-inf")
@@ -56,8 +61,8 @@ class InstrumentsMixin:
         hits = n = 0; cos_sum = 0.0
         with torch.no_grad():
             for ids in dreams:
-                xs, whos, faces, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
-                C = self.m.stream(self.m.inputs(xs, whos, faces, bundles, reads))
+                obs, whos, bundles, reads, y = self._dream_inputs(ids, mem_on=False)
+                C = self.m.stream(self.m.inputs(self.anatomy, obs, whos, bundles))
                 pred = self.m.latent_pred(C)
                 lg = self.m.readout(pred); lg[:, [b for b in self.bans if b != self.eot]] = float("-inf")
                 if self.end_id != self.sil:
@@ -102,4 +107,9 @@ class InstrumentsMixin:
                 "ent_mean": (round(sum(self._ring_ent) / len(self._ring_ent), 3) if self._ring_ent else None)}
         if int(self.cfg.get("pace_sense", 0)):
             d["pace"] = self._pace_report()                         # the sensed pace's instruments, the day so far
+        if self._recall_on():
+            d["heading"] = self.heading_drift()                       # C51's instrument (step R8d): the heading against the world's true yaw
+        if len(self.anatomy.effectors) > 1:                        # the later effectors (step R5): the act last tick, the gate's last lesson
+            d["effectors"] = {e_.name: {"acted_last": st_["acted_last"], "gate_lesson": st_["last"], "timing": self._timing_report(i_)}   # step R6: its timing part
+                              for i_, (e_, st_) in enumerate(zip(self.anatomy.motors, self.motor), 1)}
         return d

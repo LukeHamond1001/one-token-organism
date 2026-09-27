@@ -1,30 +1,54 @@
-"""Writes body/sim/g1room.xml: the living room with the STOCK UNITREE G1 as the child (docs/SIM_DESIGN.md; from the
-2026-09-24 prototype: a copy of make_livingroom_customchild.py with the custom child taken out, the parent's graded face added).
+"""Writes body/sim/g1room.xml: the living room with the STOCK UNITREE G1 as the child (docs/SIM_DESIGN.md sections 3, 5 and
+15; the G1 amendment of 2026-09-24; from the G1 prototype of the same day, a copy of make_livingroom_customchild.py with the custom child
+taken out). The XML is generated: edit the numbers here and re-run, never the XML.
 
   THE CHILD   the stock Unitree G1 with the Dex3 hands (MuJoCo Menagerie unitree_g1/g1_with_hands.xml), INCLUDED
               UNCHANGED from body/sim/assets/unitree_g1/ (the owner's word: "keep it stock"): 43 position actuators, 34.4 kg,
               1.32 m, no neck (the head is part of torso_link), no camera, IMU sites imu_in_torso and imu_in_pelvis. Its
               senses (a stereo camera pair where the real head's RealSense D435 sits, two ear sites) are added at load time
               as cameras and sites only (g1scene.py: no geom, mass or joint), because a body in an included file cannot
-              take new children in XML. It is born lying on its back (g1scene.birth()).
-  THE PARENT  kinematic: 16 mocap segments (see parent_kin.py) posed by scripted IK each step; touches toys and the child as
-              an immovable body; holds toys, the child's wrist or its torso through welds that start switched off.
+              take new children in XML. Its servo gains are set at load by the body's servo law (body/sim/world.py), the
+              file's kp 500 being Menagerie's placeholder ("needs tuning"). It is born lying on its back (g1scene.birth()).
+  THE PARENT  a body (the lead's decision of 2026-09-25): 16 dynamic segments in one tree (parent_kin.py's skeleton, a free
+              pelvis, ball joints and hinges: PARENT_JOINTS), each with de Leva's female mass and inertia at her body mass
+              (parent_consts.py), driven by her motion (body/sim/parent_motion.py, body/sim/parent_body.py) through one actuator
+              per joint axis whose force range is a woman's strength there (parent_actuators; the lead's structural decision of
+              2026-09-25, A25b: her trunk carried by a capped support, her limbs dynamic within her strength); touches toys, the room, the floor and the child with soft shapes (solref 0.02 at contact priority 2); holds toys
+              through welds that start switched off, and the child ONLY through capped springs (no weld on the G1, no contact
+              exclusion: her hands and arms collide with it; SIM_DESIGN.md 4.1, 4.2, A25). Her face is
+              built to a real face's proportions and photometry (parent_face.py, through parent_kin.py: one smooth head sheet
+              with its eye openings, the moving lids, irises, lashes, brows and lips, which g1scene.Scene poses from the
+              parent's feelings, the parent lane's parent_feel.py; its meshes, texture and rig written by build_assets at
+              each build; the W1 verifier's third and fourth rounds).
   THE ROOM    as in make_livingroom_customchild.py, with the play mat enlarged for a 1.32 m body (2.8 x 2.0 m) and the toys placed
               around the G1.
 
 Units: RADIANS in this file (the G1's compiler says angle="radian", and MuJoCo applies the last compiler element to
 the whole model), so every euler below is converted from degrees when the XML is written. The G1 comes first in the
 world so its "stand" keyframe addresses its own qpos. The room's geoms take their contact defaults from the class
-"room", so the G1's own defaults are untouched.
+"room", so the G1's own defaults are untouched. Every path in the XML is relative to body/sim/ (the G1's file and its
+mesh folder, the textures), so the scene loads from any checkout.
 
-Collision bits: world 1 (floor, walls, mat, furniture); the G1 keeps its own contype 1 / conaffinity 1 (self-collision
-on, as shipped); toys 4; parent 8, with conaffinity 1 so it touches the G1 (a mocap body and the static world are
-both welded to the world, so they never collide with each other). The G1's model is referenced by relative paths from
-this folder (the include and its mesh folder), so the generated XML is portable. The parent's face carries the graded
-face's extra geoms (parent_kin.face_extra_geoms_xml: a lower lip, the named cheeks), which g1scene.World draws from the
-parent's feelings (parent_feel.py). Run: python3 body/sim/make_g1room.py  (writes g1room.xml and textures/room_*.png;
-the XML is generated: edit the numbers here and re-run, never the XML)"""
+THE SOLVER (the G1 study, 2026-09-24): the elliptic friction cone, multi-point CCD off, and impratio 10. With the pyramidal cone a block
+squeezed in a Dex3 hand stopped MuJoCo 3.9 ("FactorizeHessian: rank-deficient sparse Hessian"); with multi-point CCD on,
+8 of 360 grasp trials blew up to NaN about 0.1 s into the fingers' closing and MuJoCo silently reset them; elliptic with
+multi-point CCD off gave 0 of 360 and a clean babble. IMPRATIO 10 IS CHOSEN BY THE PHYSICS OF THESE CONTACTS AND MUJOCO'S GUIDANCE
+(the owner's decision of 2026-09-24, made for him in the W1 verifier's third round; never by pain rates or by which toys can be
+held; tools/sim_friction.py, see the option's comment): rubber-soled fingertips on plastic toys, toys and the body on a foam mat,
+and motor housings on housings are all contacts that hold without a slide below their sliding force; MuJoCo's soft contacts creep
+there by design, and MuJoCo 3.9's documentation names the remedy (elliptic cones with a large impratio and the Newton solver).
+MuJoCo's auto-reset is off (A18), so a bad state is never silently replaced by the start pose: the world finds it and stops the tick.
+
+Collision bits: world 1 | 16 (walls, furniture), the floor and the mat 2 (with conaffinity 1: the G1 rests on them); the G1 keeps
+its own contype 1 / conaffinity 1 (self-collision on, as shipped); toys 4 (conaffinity 1 | 2 | 4 | 8); the parent 8, with
+conaffinity 2 | 16, so she touches the room, the floor and the toys, never the G1 (A25c) and never herself, her feet, knees and shins on the
+floor always (A25b: her trunk is carried, so no gait of hers is ever carried through the floor). The world's geoms and the toys take contact priority 2
+(WORLD_PRIORITY; 5.1, A21, C26), so their friction and softness decide every contact with the G1 (the stock feet's own
+priority 1 and friction 0.6 included) and nothing on the G1 is changed. Their frictions are still the prototype's 1.0: the
+real surfaces' values are C26's, open (the W1 fix's report). Run: python3 body/sim/make_g1room.py  (writes
+g1room.xml and textures/room_*.png, the living room's own two textures, byte for byte the same)."""
 import math
+import os
 import re
 import sys
 from pathlib import Path
@@ -33,16 +57,46 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-G1_REL = "assets/unitree_g1"                  # relative to this folder (and to the generated XML beside it)
-G1_DIR = HERE / G1_REL
+G1_DIR = Path("assets/unitree_g1")             # relative to body/sim/, where g1room.xml is written
 G1_XML = G1_DIR / "g1_with_hands.xml"          # included unchanged
 import parent_kin as kin  # noqa: E402
+import parent_consts as PK  # noqa: E402  (her body's masses, strength and joints: her constants file)
 
 # ------------------------------------------------------------------ collision classes
-WORLD = 'contype="1" conaffinity="0"'
-TOY = 'contype="4" conaffinity="13"'
-PARENT = 'contype="8" conaffinity="1"'
+# The world's geoms (the floor, walls, mat and furniture) and the toys take contact priority 2 (5.1, A21, C26): where one of them
+# touches the G1 (whose feet carry priority 1 in the stock file, its other shapes 0), MuJoCo takes the contact's friction, condim
+# and softness from the world's geom alone, so the world's surfaces decide how the stock robot meets them and the G1's file and
+# geoms stay untouched. Two priority-2 geoms (a toy on the floor) combine as MuJoCo does (the larger friction; mixed softness).
+WORLD_PRIORITY = 2
+# The world's solids carry bits 1 and 16 (A25c, the lead's decision of 2026-09-25): bit 1 so the G1 (conaffinity 1) and the toys
+# (conaffinity 15) meet them as before; bit 16 so the parent (conaffinity 2 | 16) meets them WITHOUT meeting the G1, whose
+# contype is bit 1 alone.
+WORLD = f'contype="17" conaffinity="0" priority="{WORLD_PRIORITY}"'
+# THE FLOOR AND THE MAT (what she stands, kneels and walks on) carry their own bit, 2 (with conaffinity 1, so the G1 still rests on
+# them): her body touches them through her conaffinity's bit 2, always, so her feet, knees and shins meet the floor by contact
+# (the lead's decisions of 2026-09-25: she is a body, and her trunk is carried, A25b)
+FLOOR = f'contype="2" conaffinity="1" priority="{WORLD_PRIORITY}"'
+TOY = f'contype="4" conaffinity="15" priority="{WORLD_PRIORITY}"'   # the toys touch the floor's bit 2 as well
+# the parent's collision shapes: MuJoCo's default contact time constant (solref 0.02, the G1's own), at contact priority 2 like the
+# world's, so hers is every contact's with the G1 (priority 0, its feet 1) and nothing on the G1 changes (A21's mechanism;
+# body/sim/parent_consts.SOFT_*). A4's soft parent (0.05) softened a kinematic body's infinite mass; her body now gives by itself: at
+# 0.05 her hand's shapes sank 9 mm into the child landing on it at 26 N, and a babbling foot sank 39 mm into her kneeling thigh at
+# 1.6 kN (10 ms mean) where at 0.02 the worst of the same runs was 0.9 kN (the physical build, 2026-09-25).
+# She is a body that passes NO CONTACT TO THE CHILD (A25c, the lead's structural decision of 2026-09-25, after three physical
+# rounds in which her kneeling thigh, her shins and her hands met the babbling G1 at up to 1.6 kN): her shapes touch the room
+# (bit 16), the floor (bit 2) and the toys (their conaffinity has her bit 8), never the G1 (contype 1) and never each other.
+# Every force she puts on the child is one of her capped springs (a hold, a touch, a turn: parent_motion's holds, applied at
+# the held point within its cap) or a toy she holds or sets down; the child's kick passes through her leg (her planner keeps her
+# knees outside its leg sweep, A3), which it does not feel.
+PARENT = f'contype="8" conaffinity="18" priority="2" solref="{PK.SOFT_SOLREF[0]:g} {PK.SOFT_SOLREF[1]:g}"'
+PARENT_LIMB = PARENT
+PARENT_HAND = f'contype="8" conaffinity="18" priority="2" solref="{PK.HAND_SOLREF[0]:g} {PK.HAND_SOLREF[1]:g}"'   # her hand's capsule
 DECOR = 'contype="0" conaffinity="0"'
+HAND_TOUCH = f'contype="0" conaffinity="18" priority="2" solref="{PK.HAND_SOLREF[0]:g} {PK.HAND_SOLREF[1]:g}"'   # her palm, fingers and thumb: they touch
+# the room and the floor, never the G1 (A25c: her touch on the child is her capped spring's) and never a toy (a toy's contype is
+# 4), soft as the rest of her; compiled collidable so MuJoCo's
+# midphase keeps them (a geom compiled with no collision bits is never tested, whatever its bits later: the W2 verifier's third
+# finding, her fingers passing through a babbling limb); her motion switches them off with her hand's proxy while she holds
 VIS0 = DECOR + ' density="0"'          # massless and seen only (on dynamic bodies)
 
 MAT_CENTER = np.array([0.0, -0.60])
@@ -50,6 +104,36 @@ MAT_HX, MAT_HY, MAT_T = 1.40, 1.00, .012   # a 2.8 x 2.0 m foam mat (7 x 5 tiles
                                            # lengths, as the 1.6 m mat was for the 0.75 m child
 ROOM_X, ROOM_Y, ROOM_H = 2.6, 2.3, 2.6
 
+# ------------------------------------------------------------------ the light (5.1, 5.4; the W1 verifier's fifth finding)
+# THE ROOM'S LIGHTS are its only light: a sun through the window, a key spot and a fill (LIGHTS). There is NO HEADLIGHT: MuJoCo's
+# headlight is a lamp at the viewing camera, which for the child's eyes would be a lamp shining from its own head, one the G1
+# does not have, so its room would never be dark at night (the owner's decision 3). What a lamp at the eye stood in for is the
+# room's own indirect light: the light the walls, floor and ceiling give back, which reaches a face bent over a child from
+# below and every side. MuJoCo's renderer computes no bounced light, so each light carries it as its ambient term, ROOM_INDIRECT
+# of its own diffuse (about the prototype's headlight ambient, 0.32 over the three lights' 0.94, carried onto the lights that
+# make it: world, ours). It goes where its light goes: a light darkened takes its indirect light with it, and the day's light (W5)
+# scales it with the diffuse (W5: darken the lights' terms, never switch every light off, which makes MuJoCo draw the scene
+# unlit; the emissive surfaces still glow). The room's cameras for people (room, mat, top) see the same light.
+ROOM_INDIRECT = 1 / 3
+LIGHTS = (('sun', 'type="directional" pos="-2 -.1 3" dir=".62 .18 -.76" castshadow="true"', (.30, .285, .25), (.08, .08, .08)),
+          ('key', 'type="spot" pos="1.6 -2.0 2.3" dir="-.5 .45 -.62" cutoff="45" exponent="2" castshadow="true" bulbradius=".2"',
+           (.42, .41, .40), (.12, .12, .12)),
+          ('fill', 'type="directional" pos="0 0 2.5" dir="-.2 .5 -.84" castshadow="false"', (.22, .22, .23), (0, 0, 0)))
+
+
+def lights_xml():
+    return "\n    ".join(f'<light name="{n}" {a} diffuse="{f(*dif)}" ambient="{f(*(ROOM_INDIRECT * np.array(dif)))}" specular="{f(*spe)}"/>'
+                          for n, a, dif, spe in LIGHTS)
+
+# her face's calibrated albedos (tools/sim_face_photometry.py --calibrate; Russell, Kramer and Jones 2017, under a studio's frontal
+# light with her own shading in): the eyes by the iris's lightness (the prototype's brown, its hue kept), the brows and lips as her
+# hair's and the prototype's lip colour over her skin at the found share (the hue kept, the strength found). Not calibrated, ours:
+# the sclera's off-white and the lash line at half her hair's colour over her skin (sparse lashes)
+SCLERA_RGB = ".88 .86 .82 1"      # a sclera's off-white (ours; not calibrated: the eyes' strength is the iris's)
+LASH_RGB = ".55 .405 .32 1"        # the lash line: her hair's colour over her skin at half (sparse lashes; ours)
+BROW_RGB = ".6316 .4721 .3779 1"
+LIPS_RGB = ".7642 .5258 .4506 1"
+IRIS_RGB = ".3137 .1881 .1045 1"   # a medium brown iris: the prototype's brown, its lightness found
 MAT = dict(
     # the parent: skin, a teal sweater, denim trousers, white shoes, dark brown hair; face features
     skin=dict(rgba=".86 .66 .54 1", specular=".12", shininess=".25"),
@@ -60,15 +144,28 @@ MAT = dict(
     denim=dict(rgba=".22 .27 .38 1", specular=".1", shininess=".2"),
     shoe=dict(rgba=".95 .95 .94 1", specular=".2", shininess=".4"),
     sole=dict(rgba=".62 .60 .58 1", specular=".1", shininess=".2"),
-    sclera=dict(rgba=".98 .98 .97 1", specular=".5", shininess=".8"),
-    iris=dict(rgba=".30 .18 .10 1", specular=".6", shininess=".9"),
-    pupil=dict(rgba=".03 .03 .03 1", specular=".8", shininess=".9"),
-    glint=dict(rgba="1 1 1 1", emission=".8", specular="0"),
-    lips=dict(rgba=".56 .24 .26 1", specular=".25", shininess=".5"),
+    # HER FACE (body/sim/parent_face.py; the W1 verifier's fourth round). The sheet's skin carries her shade of the room's indirect
+    # light as a texture (computed from her geometry: parent_face.ao_texture); the eye's parts, the lids and the caruncle carry
+    # theirs in their albedo, baked when written (face_shaded below). The sclera, the brows and the lips are each at the albedo
+    # whose CIE L* contrast against the skin around it is a young woman's under a studio's frontal light, her own shading in
+    # (Russell, Kramer and Jones 2017, table 2, no cosmetics: the eyes 0.152, the brows 0.126, the lips 0.092), found by
+    # tools/sim_face_photometry.py --calibrate (the sclera's grey; the brows as her hair's colour over her skin; the lips as the
+    # prototype's lip colour over her skin: each keeps its hue, only its strength is found) and checked by body/tests/
+    # test_sim_eyes.py eyes 13. No drawn highlight on the eyes (the W1 verifier's specks): the corneas' own specular gives the
+    # room's lamps' reflections, dark at night.
+    skin_face=dict(rgba=".86 .66 .54 1", texture="parent_face_ao", specular=".08", shininess=".2"),
+    sclera=dict(rgba=SCLERA_RGB, specular=".3", shininess=".7"),
+    iris=dict(rgba=IRIS_RGB, specular=".35", shininess=".85"),
+    pupil=dict(rgba=".03 .03 .03 1", specular=".35", shininess=".85"),
+    lash=dict(rgba=LASH_RGB, specular=".1", shininess=".3"),
+    lid=dict(rgba=".86 .66 .54 1", specular=".08", shininess=".2"),         # her skin (the lids' shade is baked in when written)
+    caruncle=dict(rgba=".78 .50 .47 1", specular=".25", shininess=".6"),
+    fornix=dict(rgba=".52 .30 .29 1", specular=".1", shininess=".3"),
+    lips=dict(rgba=LIPS_RGB, specular=".15", shininess=".4"),
     mouth_in=dict(rgba=".30 .06 .08 1", specular=".1", shininess=".2"),
-    teeth=dict(rgba=".97 .96 .93 1", specular=".3", shininess=".5"),
-    brow=dict(rgba=".30 .20 .13 1", specular=".1", shininess=".2"),
-    blush=dict(rgba=".88 .60 .54 1", specular="0"),
+    teeth=dict(rgba=".97 .96 .93 1", specular=".2", shininess=".4"),
+    brow=dict(rgba=BROW_RGB, specular=".05", shininess=".2"),
+    belt=dict(rgba=".30 .20 .13 1", specular=".1", shininess=".2"),
     # the room
     floor=dict(texture="floor_oak", texrepeat="4 2.2", specular=".12", shininess=".35", reflectance=".015"),
     wall=dict(rgba=".93 .91 .87 1", specular="0", shininess="0"),
@@ -98,8 +195,6 @@ MAT = dict(
     art_a=dict(rgba=".93 .74 .58 1", specular="0"), art_b=dict(rgba=".66 .74 .84 1", specular="0"),
     art_c=dict(rgba=".97 .94 .88 1", specular="0"), art_d=dict(rgba=".78 .82 .70 1", specular="0"),
     hall=dict(rgba=".80 .78 .74 1", specular="0"),
-    pad=dict(rgba=".97 .97 .95 1", emission=".35", specular=".2", shininess=".5"),
-    pad_ring=dict(rgba=".75 .95 .90 1", emission=".9", specular="0"),
     # the toys: saturated, one dominant hue each
     t_red=dict(rgba=".92 .12 .10 1", specular=".5", shininess=".7"),
     t_orange=dict(rgba=".99 .45 .05 1", specular=".5", shininess=".7"),
@@ -137,10 +232,34 @@ def mirror_pos(p):
     return (p[0], -p[1], p[2])
 
 
-# ================================================================== THE PARENT (mocap segments)
+# ================================================================== THE PARENT (a body: 16 dynamic segments)
+# HER HAIR (a dark brown bob with a bun, the film's) fitted to her head of [P]'s breadth and length: the cap over her head from the
+# hairline (parent_face.hair_mesh), a side-swept fringe, the bob's sides over the ears to the jaw (behind her cheeks), the nape, the
+# bun (ours: the style). Her ears ([F]: 59.6 mm long, inclined 17.5 deg back) under the sides (ours: where).
+# (name, type, centre, euler deg, size, material), m
+HAIR = [("fringe", "ellipsoid", (.090, -.012, .246), (-14, -30, 0), (.022, .056, .013), "hair"),
+        ("side_L", "ellipsoid", (-.010, .072, .152), (0, -10, 0), (.048, .014, .080), "hair"),
+        ("side_R", "ellipsoid", (-.010, -.072, .152), (0, -10, 0), (.048, .014, .080), "hair"),
+        ("bun", "sphere", (-.108, 0, .214), (0, 0, 0), (.040, .040, .040), "hair"),
+        ("nape", "ellipsoid", (-.046, 0, .128), (0, 0, 0), (.054, .066, .052), "hair")]
+HEAD_SOLID = ((.005, 0, .180), (.078, .064, .086))     # inside her sheet at every point (ours; checked by body/tests/test_sim_eyes.py)
+EARS = [("ear_L", "ellipsoid", (.000, .0705, .150), (0, -17.5, 0), (.015, .006, .0298), "skin_d"),
+        ("ear_R", "ellipsoid", (.000, -.0705, .150), (0, -17.5, 0), (.015, .006, .0298), "skin_d")]
+
+
+def hair_shapes():
+    """her hair as (centre, semi-axes, rotation) for her shade's occupancy (parent_face.Occupancy)"""
+    from scipy.spatial.transform import Rotation as Rot
+    out = []
+    for n, t, c, e, sz, mt in HAIR:
+        out.append((np.array(c), np.array(sz), Rot.from_euler("XYZ", e, degrees=True).as_matrix()))
+    out.append((np.array(HEAD_SOLID[0]), np.array(HEAD_SOLID[1]), np.eye(3)))
+    return out
+
+
 def parent_segment_geoms(seg):
-    """The parent's geoms in a segment's own frame. Collision geoms (bit 8) are the solid shapes; faces, fingers and
-    trim are seen only."""
+    """The parent's geoms in a segment's own frame. Collision geoms (bit 8) are the solid shapes; her palm, fingers and thumb
+    touch the room and the floor, never the G1 (HAND_TOUCH, A25c); faces and trim are seen only."""
     sd = seg[-1] if seg[-2] == "_" else ""
     sg = 1 if sd == "L" else -1
     m = (lambda p: p) if sd != "R" else mirror_pos
@@ -148,7 +267,7 @@ def parent_segment_geoms(seg):
     g = []
     if seg == "pelvis":
         g += [f'<geom name="{P}" type="ellipsoid" pos="-.015 0 .035" size=".11 .165 .115" material="denim" {PARENT}/>',
-              f'<geom type="ellipsoid" pos="-.005 0 .105" size=".113 .158 .03" material="brow" {DECOR}/>']
+              f'<geom type="ellipsoid" pos="-.005 0 .105" size=".113 .158 .03" material="belt" {DECOR}/>']
     elif seg == "abdomen":
         g += [f'<geom name="{P}" type="ellipsoid" pos="-.005 0 .075" size=".098 .145 .12" material="sweater" {PARENT}/>']
     elif seg == "chest":
@@ -159,44 +278,27 @@ def parent_segment_geoms(seg):
     elif seg == "head":
         g += ['<camera name="parent_portrait" pos=".62 0 .145" xyaxes="0 1 0 0 0 1" fovy="30"/>',
               f'<geom type="capsule" fromto=".008 0 -.01 .02 0 .08" size=".041" material="skin" {DECOR}/>',
-              f'<geom name="{P}" type="ellipsoid" pos=".015 0 .16" size=".098 .084 .106" material="skin" {PARENT}/>',
-              f'<geom name="parent_hair" type="ellipsoid" pos="-.022 0 .172" size=".108 .094 .112" material="hair" {DECOR}/>',
-              f'<geom name="parent_fringe" type="ellipsoid" pos=".072 -.012 .226" euler="-18 -40 0" size=".034 .07 .02" material="hair" {DECOR}/>',
-              f'<geom name="parent_side_L" type="ellipsoid" pos=".012 .078 .158" euler="0 -12 0" size=".058 .022 .09" material="hair" {DECOR}/>',
-              f'<geom name="parent_side_R" type="ellipsoid" pos=".012 -.078 .158" euler="0 -12 0" size=".058 .022 .09" material="hair" {DECOR}/>',
-              f'<geom name="parent_bun" type="sphere" pos="-.095 0 .215" size=".047" material="hair" {DECOR}/>',
-              f'<geom name="parent_nape" type="ellipsoid" pos="-.045 0 .12" size=".06 .078 .06" material="hair" {DECOR}/>',
-              f'<geom type="ellipsoid" pos="-.002 .083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
-              f'<geom type="ellipsoid" pos="-.002 -.083 .152" size=".018 .011 .027" material="skin_d" {DECOR}/>',
-              f'<geom name="parent_nose" type="ellipsoid" pos=".107 0 .147" size=".011 .0095 .016" material="skin_d" {DECOR}/>',
-              ] + kin.face_extra_geoms_xml(DECOR)      # the named cheeks (the blush) and a lower lip: the graded face
-        for s2 in ("L", "R"):
-            c = kin.EYE_C[s2]
-            g += [f'<geom name="parent_sclera_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0085 .0175 .0135" material="sclera" {DECOR}/>',
-                  f'<geom name="parent_iris_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0022 .0098 .0098" material="iris" {DECOR}/>',
-                  f'<geom name="parent_pupil_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0016 .0052 .0052" material="pupil" {DECOR}/>',
-                  f'<geom name="parent_glint_{s2}" type="sphere" pos="{f(*c)}" size=".0021" material="glint" {DECOR}/>',
-                  f'<geom name="parent_lid_lo_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0082 .0195 .0065" material="skin" {DECOR}/>',
-                  f'<geom name="parent_lid_up_{s2}" type="ellipsoid" pos="{f(*c)}" size=".0085 .0195 .005" material="skin" {DECOR}/>',
-                  f'<geom name="parent_brow_{s2}" type="capsule" size=".0034 .015" material="brow" {DECOR}/>']
-        for i in range(kin.FACE_MOUTH_N - 1):
-            g.append(f'<geom name="parent_mouth{i}" type="capsule" size=".0048 .006" material="lips" {DECOR}/>')
-        g += [f'<geom name="parent_mouth_open" type="ellipsoid" size=".004 .02 .006" material="mouth_in" {DECOR}/>',
-              f'<geom name="parent_teeth" type="ellipsoid" size=".003 .015 .002" material="teeth" {DECOR}/>']
+              f'<geom name="{P}" type="ellipsoid" pos="{f(*HEAD_SOLID[0])}" size="{f(*HEAD_SOLID[1])}" rgba="0 0 0 0" group="3" {PARENT}/>',
+              # her head's core (collision): inside her sheet everywhere; her face's and her hair's pieces are its surface
+              f'<geom type="ellipsoid" pos="{f(*HEAD_SOLID[0])}" size="{f(*HEAD_SOLID[1])}" material="skin" {DECOR}/>',   # her head's solid
+              # inside the sheet: it casts her head's shadow and fills behind the sheet where it is clipped under her hair
+              ] + [f'<geom name="parent_{n}" type="{t}" pos="{f(*c)}" euler="{f(*e)}" size="{f(*sz)}" material="{mt}" {DECOR}/>'
+                   for n, t, c, e, sz, mt in HAIR + EARS] \
+            + kin.face.static_xml(DECOR, PARENT) + kin.face.moving_xml(DECOR, kin.FACE_NEUTRAL)   # her face (parent_face.py)
     elif seg.startswith("upper_arm"):
         g += [f'<geom name="{P}" type="capsule" fromto="0 0 -.01 0 0 -.285" size=".041" material="sweater" {PARENT}/>']
     elif seg.startswith("forearm"):
-        g += [f'<geom name="{P}" type="capsule" fromto="0 0 0 0 0 -.185" size=".0385" material="sweater" {PARENT}/>',
+        g += [f'<geom name="{P}" type="capsule" fromto="0 0 0 0 0 -.185" size=".0385" material="sweater" {PARENT_LIMB}/>',
               f'<geom type="cylinder" pos="0 0 -.19" size=".037 .012" material="sweater_d" {DECOR}/>',
               f'<geom type="capsule" fromto="0 0 -.19 0 0 -.245" size=".025" material="skin" {DECOR}/>']
     elif seg.startswith("hand"):
-        g += [f'<geom name="{P}_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" {DECOR}/>',
-              f'<geom name="{P}" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" {PARENT}/>']
+        g += [f'<geom name="{P}_palm" type="ellipsoid" pos="0 0 -.052" size=".043 .0165 .05" material="skin" {HAND_TOUCH}/>',
+              f'<geom name="{P}" type="capsule" fromto="0 0 -.035 0 0 -.115" size=".022" rgba="0 0 0 0" group="3" {PARENT_HAND}/>']
         for i in range(4):
             for j in range(2):
-                g.append(f'<geom name="parent_f{i}{j}_{sd}" type="capsule" size="{kin.FINGER_R - .0006 * i} .02" material="skin" {DECOR}/>')
+                g.append(f'<geom name="parent_f{i}{j}_{sd}" type="capsule" size="{kin.FINGER_R - .0006 * i} .02" material="skin" {HAND_TOUCH}/>')
         for j in range(2):
-            g.append(f'<geom name="parent_t{j}_{sd}" type="capsule" size=".0098 .016" material="skin" {DECOR}/>')
+            g.append(f'<geom name="parent_t{j}_{sd}" type="capsule" size=".0098 .016" material="skin" {HAND_TOUCH}/>')
         g.append(f'<site name="{P}_grip" pos="{f(*m((0, -.045, -.10)))}" size=".008" group="4"/>')
     elif seg.startswith("thigh"):
         g += [f'<geom name="{P}" type="capsule" fromto="0 0 -.02 0 0 -.39" size=".07" material="denim" {PARENT}/>']
@@ -210,17 +312,115 @@ def parent_segment_geoms(seg):
     return "\n      ".join(g)
 
 
-PARENT_START = dict(pos=(1.9, -1.5, kin.HIP_Z), yaw=math.radians(150))
+from g1scene import PARENT_BIRTH as PARENT_START  # noqa: E402  (where the scene's birth stands her: one place for both)
+
+# HER JOINTS (the lead's decision of 2026-09-25: she is a body): each segment's joints to its parent segment, named for the scene
+# (g1scene.PARENT_JOINTS reads them): a ball, or hinges (axis in the segment's own frame, range in radians). Every segment's frame is
+# parent_kin's (aligned with her root in the rest pose, a limb hanging along -z from its proximal joint), so a ball's quaternion is
+# parent_kin's local rotation of that segment and the elbow's two hinges compose as parent_kin.arm_ik composes them (the flexion
+# about -y, then the forearm's own turn about its axis), the knee's as leg_ik's (about +y). The hinges' ranges are parent_kin's human
+# ranges (LIM_DEG: the elbow 0-150, pronation +-90, the knee 0-160 deg), so the child can never bend them past a person's.
+PARENT_JOINTS = {"abdomen": [("lumbar", "ball")], "chest": [("thorax", "ball")], "head": [("neck", "ball")],
+                 "upper_arm": [("shoulder", "ball")],
+                 "forearm": [("elbow", "hinge", (0, -1, 0), "elbow"), ("pron", "hinge", (0, 0, 1), "pronation")],
+                 "hand": [("wrist", "ball")], "thigh": [("hip", "ball")], "shin": [("knee", "hinge", (0, 1, 0), "knee")],
+                 "foot": [("ankle", "ball")]}
+
+
+def _ellipsoid_inertia(m, a, b, c):
+    return (m / 5 * (b * b + c * c), m / 5 * (a * a + c * c), m / 5 * (a * a + b * b))
+
+
+TRUNK_SHAPE = {"pelvis": ((-.015, 0, .035), (.11, .165, .115)), "abdomen": ((-.005, 0, .075), (.098, .145, .12)),
+               "chest": ((.005, 0, .11), (.1, .155, .145))}   # her trunk's collision ellipsoids (parent_segment_geoms)
+
+
+def parent_inertial(seg):
+    """her segment's mass, centre of mass and principal inertias (parent_consts: de Leva 1996's female segments at her body mass;
+    her trunk's parts as solid ellipsoids of their shapes, ours)"""
+    kind = seg[:-2] if seg[-2] == "_" else seg
+    mass = PK.SEG_MASS_FRAC[kind] * PK.BODY_MASS_KG
+    if kind in TRUNK_SHAPE:
+        c, (a, b, cc) = TRUNK_SHAPE[kind]
+        return mass, c, _ellipsoid_inertia(mass, a, b, cc)
+    L = PK.SEG_LEN[kind]; fr = PK.SEG_COM_FRAC[kind]; rs, rt, rl = PK.SEG_GYR[kind]
+    if kind == "head":                                                  # from the vertex (the top of her head's solid) down
+        c = (.005, 0.0, L * (1 - fr)); I = (mass * (rs * L) ** 2, mass * (rt * L) ** 2, mass * (rl * L) ** 2)
+    elif kind == "foot":                                                # from the heel along the foot (its long axis: x)
+        c = (-.068 + fr * L, 0.0, -.036); I = (mass * (rl * L) ** 2, mass * (rt * L) ** 2, mass * (rs * L) ** 2)
+    else:                                                               # a limb segment hanging along -z from its joint
+        c = (0.0, 0.0, -fr * L); I = (mass * (rs * L) ** 2, mass * (rt * L) ** 2, mass * (rl * L) ** 2)
+    a, b, cc = I                                                        # de Leva's hand radii (0.631, 0.454, 0.335 of its length)
+    if b + cc < a:                                                      # break a rigid body's triangle inequality (their axes are
+        I = (a, b, a - b)                                               # not a flat hand's): its long-axis inertia raised to the
+    return mass, c, I                                                   # least a body allows (ours)
+
+
+def parent_joints_xml(seg):
+    kind = seg[:-2] if seg[-2] == "_" else seg
+    sd = seg[-1] if seg[-2] == "_" else ""
+    out = []
+    for spec in PARENT_JOINTS.get(kind, ()):
+        name = f"parent_{spec[0]}" + (f"_{sd}" if sd else "")
+        if spec[1] == "ball":
+            out.append(f'<joint name="{name}" type="ball"/>')
+        else:
+            lo, hi = kin.LIM_DEG[spec[3]]
+            out.append(f'<joint name="{name}" type="hinge" axis="{f(*spec[2])}" range="{math.radians(lo):.6f} {math.radians(hi):.6f}"/>')
+    return out
+
+
+def parent_actuators():
+    """HER MUSCLES (the lead's structural decision of 2026-09-25, A25b): one MuJoCo actuator per axis of each of her joints (a
+    ball's three, in its own frame: gear along x, y, z; a hinge's one), named parent_<joint>_<axis> or parent_<joint>, in her drive's
+    order (parent_body.BALLS then HINGES). Each is a motor with its own damping: force = ctrl - kv x the joint's velocity along its
+    axis (gainprm 1; biasprm 0, 0, -kv, kv set at load from the joint's inertia: parent_body.BodyMap), and its ctrlrange and
+    forcerange are her strength there, per direction (parent_consts.STRENGTH through parent_body._strength), so MuJoCo clamps her
+    whole torque at that joint, her damping included, to a woman's. MuJoCo takes an actuator's damping implicitly under implicitfast
+    while its force is inside its range, and explicitly (none) when the range clamps it (MuJoCo 3.9, measured: a clamped actuator
+    adds no implicit damping)"""
+    import parent_body as PB                                            # her joints' order and strength (one place for both)
+    out = []
+    for n, _seg in PB.BALLS:
+        for k, ax in enumerate("xyz"):
+            lo, hi = PB._strength(n)[k]
+            gear = " ".join("1" if j == k else "0" for j in range(3))
+            out.append(f'<general name="parent_{n}_{ax}" joint="parent_{n}" gear="{gear} 0 0 0" gainprm="1" biastype="affine" '
+                       f'biasprm="0 0 0" ctrllimited="true" ctrlrange="{lo:g} {hi:g}" forcelimited="true" forcerange="{lo:g} {hi:g}"/>')
+    for n, _seg in PB.HINGES:
+        (lo, hi), = PB._strength(n)
+        out.append(f'<general name="parent_{n}" joint="parent_{n}" gainprm="1" biastype="affine" biasprm="0 0 0" ctrllimited="true" '
+                   f'ctrlrange="{lo:g} {hi:g}" forcelimited="true" forcerange="{lo:g} {hi:g}"/>')
+    return out
 
 
 def parent():
+    """HER BODY (the lead's decision of 2026-09-25): her 16 segments as one tree of dynamic bodies, a free pelvis, standing where
+    the scene's birth stands her in parent_kin's rest pose (every joint at zero); each with de Leva's female mass and inertia at
+    her body mass (parent_inertial)"""
     pose = kin.Pose(PARENT_START["pos"], kin.rz(PARENT_START["yaw"]))
     segs = kin.fk(pose)
-    out = ['\n    <!-- ======================= THE PARENT: kinematic, 16 mocap segments posed by kin.py ======================= -->']
-    for s in kin.SEGS:
-        p, R = segs[s]
-        out.append(f'    <body name="parent_{s}" childclass="room" mocap="true" pos="{f(*p)}" quat="{f(*kin.mjquat(R))}">\n      {parent_segment_geoms(s)}\n    </body>')
-    return "\n".join(out)
+    kids = {s: [c for c in kin.SEGS if kin.SEG_PARENT[c] == s] for s in kin.SEGS}
+
+    def body(s, ind):
+        pad = " " * ind
+        if kin.SEG_PARENT[s] is None:
+            p, R = segs[s]
+            head = f'{pad}<body name="parent_{s}" childclass="room" pos="{f(*p)}" quat="{f(*kin.mjquat(R))}">'
+            joints = [f'<freejoint name="parent_root"/>']
+        else:
+            head = f'{pad}<body name="parent_{s}" pos="{f(*kin.OFFSET[s])}">'
+            joints = parent_joints_xml(s)
+        mass, c, I = parent_inertial(s)
+        lines = [head] + [f"{pad}  {j}" for j in joints]
+        lines.append(f'{pad}  <inertial pos="{f(*c)}" mass="{mass:.4f}" diaginertia="{I[0]:.6g} {I[1]:.6g} {I[2]:.6g}"/>')
+        lines.append(f"{pad}  " + parent_segment_geoms(s).replace("\n      ", f"\n{pad}  "))
+        for k in kids[s]:
+            lines.append(body(k, ind + 2))
+        lines.append(f"{pad}</body>")
+        return "\n".join(lines)
+    return ('\n    <!-- ======================= THE PARENT: a body, 16 dynamic segments in one tree (parent_motion.py drives her) '
+            '======================= -->\n' + body("pelvis", 4))
 
 
 # ================================================================== THE TOYS
@@ -241,14 +441,23 @@ TOYS = dict(
     drum=((1.62, .32, 0), "a boom when hit on top"),
     ring=((.98, -1.34, 0), "a crinkle when handled"),
 )
+# NO BOTTLE, NO DOCK (A88, the owner's decision 2026-09-26: "no bottle no charger. objects are for teaching"). The bottle and its
+# charging dock beside the lying G1's right hand (S5a's build) are gone with the charge: every object in the room is hers to teach
+# with or a registered test's, and none meets a need.
 
 
-# Each toy's size relative to the all-out maker's (made for the 12-month-old's mitten). m_grasp_g1.py tried every toy
-# at 1.0, 0.8, 0.7 and 0.6 in a stock Dex3 hand (a hand-over into the palm, 6 tries; a top grasp from a surface, 3):
-# the block, rattle, car, stacker and ring hold at 1.0; the cup holds only smaller (top grasp 3/3 at 0.8), so it is
-# 0.8 (6.7 cm across); the ball, duck, bear and drum held in at most 1 of 9 tries at ANY scale tried (a sphere or a
-# rounded body slips out of three fingers 5.7 cm apart), so they stay 1.0: things to look at, push, roll, hit and
-# name; making them holdable needs a shape (a handle, ears) or a softer contact, a toy decision for the owner.
+# Each toy's size relative to the all-out maker's (made for the 12-month-old's mitten): every toy at its own size. The G1 study
+# (m_grasp_g1.py, now tools/sim_grasp.py: a stock Dex3 hand at its stock gains, a hand-over into the palm 6 tries and a top grasp
+# from a surface 3, per toy) found at impratio 1 the ball, duck, bear and drum held at no scale from 0.6 to 1.0 and the cup only at
+# 0.8, so the cup was made 0.8. That was the soft contacts' creep. With impratio chosen by physics (10, the option's comment;
+# tools/sim_grasp.py on the built room, 2026-09-24, none unstable): at 1 the ball 0 of 9, the block 9, the duck 0, the cup at 0.8
+# 5 and at its own size 0, the rattle 5, the car 5, the bear 0, the stacker 3, the drum 0, the ring 6 of 6 hand-overs; at 10 the
+# ball 9, the block 9, the duck 7, the cup at 0.8 9 and at its own size 9, the rattle 6 of 6 hand-overs (0 of 3 top grasps), the
+# car 8, the bear 2, the stacker 9, the drum 0, the ring 6 of 6 hand-overs. (Stock gains closing to the range's end; the grasp
+# reflex's small steps under the body's servo law press less, W4.) THE CUP STAYS AT 0.8 (the W1 verifier's fourth finding): its
+# size is the owner's call (SIM_DESIGN.md B1), and the design uses B1's default until the owner says otherwise. B1'S PREMISE
+# FOLLOWS FROM THE PHYSICS: the hand holds the cup at its own size, so the shrink no longer has the reason it was made for (a
+# world fitted to the body with no need), and of the four toys B1 names only the bear and the drum are not held.
 TOY_SCALE = dict(ball=1.0, block=1.0, duck=1.0, cup=0.8, rattle=1.0, car=1.0, bear=1.0, stacker=1.0, drum=1.0, ring=1.0)
 TOY_MESHES = dict(cup=("cup_rim", "cup_handle"), drum=("drum_rim",), ring=("teether",),
                   stacker=("ring0", "ring1", "ring2", "ring3", "ring4"))
@@ -365,7 +574,7 @@ def toys():
 def room():
     W, D, Hh = ROOM_X, ROOM_Y, ROOM_H
     g = []
-    g.append(f'<geom name="floor" type="plane" size="{W} {D} .1" material="floor" {WORLD}/>')
+    g.append(f'<geom name="floor" type="plane" size="{W} {D} .1" material="floor" {FLOOR}/>')
     g.append(f'<geom name="ceiling" type="box" pos="0 0 {Hh + .03}" size="{W} {D} .03" material="ceiling" {DECOR}/>')
     # walls: the back wall (sofa) in a soft sage; the others warm white. The right wall has a doorway to a hall.
     g.append(f'<geom name="wall_back" type="box" pos="0 {D + .05} {Hh / 2}" size="{W + .1} .05 {Hh / 2}" material="wall_accent" {WORLD}/>')
@@ -498,10 +707,18 @@ def room():
     return "\n    ".join(g)
 
 
+MAT_SOLID = .10     # the mat's collision box reaches this far below its top (its top at MAT_T, the rest sunk under the floor)
+
+
 def play_mat():
+    """The foam mat: its collision box's top face at the mat's height, the box sunk MAT_SOLID below it into the floor, where no
+    one sees it. As a box only MAT_T (1.2 cm) thick, one of the G1's foot spheres (5 mm, the Menagerie file's four point feet)
+    pressed into the soft foam passed the box's mid-plane, so the box's nearest face became its bottom and pushed the foot down
+    into the floor, which pushed it up: a foot trapped between the two at 1,900 N, felt as pain on 151 of 400 babbled ticks (the
+    world's measurement, 2026-09-24). A thick box's nearest face is always its top."""
     cx, cy = MAT_CENTER
-    g = [f'<geom name="mat" type="box" pos="{cx} {cy} {MAT_T / 2}" size="{MAT_HX} {MAT_HY} {MAT_T / 2}" material="mat_edge" '
-         f'friction="1 .01 .001" solref=".03 1" solimp=".85 .95 .004" {WORLD}/>']
+    g = [f'<geom name="mat" type="box" pos="{cx} {cy} {MAT_T - MAT_SOLID / 2:.4g}" size="{MAT_HX} {MAT_HY} {MAT_SOLID / 2}" material="mat_edge" '
+         f'friction="1 .01 .001" solref=".03 1" solimp=".85 .95 .004" {FLOOR}/>']
     tw = .4
     nx, ny = int(round(2 * MAT_HX / tw)), int(round(2 * MAT_HY / tw))
     for i in range(nx):
@@ -510,10 +727,6 @@ def play_mat():
             y = cy - MAT_HY + (j + .5) * tw
             g.append(f'<geom type="box" pos="{x:.4g} {y:.4g} {MAT_T / 2 + .0004:.4g}" size="{tw / 2 - .002:.4g} {tw / 2 - .002:.4g} {MAT_T / 2:.4g}" '
                      f'material="{"tile_a" if (i + j) % 2 == 0 else "tile_b"}" {DECOR}/>')
-    # the charge pad (a default: a low white disc with a soft mint glow at the mat's corner; its law is not built here)
-    px, py = cx + MAT_HX - .2, cy + MAT_HY - .2
-    g.append(f'<geom name="pad" type="cylinder" pos="{px:.4g} {py:.4g} {MAT_T + .004:.4g}" size=".13 .004" material="pad" {DECOR}/>')
-    g.append(f'<geom type="mesh" mesh="pad_ring" pos="{px:.4g} {py:.4g} {MAT_T + .006:.4g}" material="pad_ring" {DECOR}/>')
     return "\n    ".join(g)
 
 
@@ -571,10 +784,39 @@ def deg_to_rad_eulers(xml):
 
 
 def build():
+    """write the textures and the scene (to --out=<path> if given, else body/sim/g1room.xml)"""
+    out = Path(ARGS["out"]).resolve() if "out" in ARGS else HERE / "g1room.xml"
     (HERE / "textures").mkdir(exist_ok=True)
-    floor_texture(HERE / "textures" / "room_floor_oak.png")      # the same textures as the custom child's room
+    floor_texture(HERE / "textures" / "room_floor_oak.png")
     sky_texture(HERE / "textures" / "room_window_sky.png")
-    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in MAT.items())
+    if "skip-face" not in ARGS:                                        # her face's meshes, texture and rig (parent_face.build_assets)
+        info = kin.face.build_assets(HERE / "textures", hair=hair_shapes(), room_indirect=ROOM_INDIRECT)
+        print("her face:", info)
+    out.write_text(scene_xml(out.parent))
+    return out
+
+
+def face_shaded(mat):
+    """the materials with the eye's parts' shade of the room's indirect light baked into their albedo (parent_face: computed from
+    her geometry by the build, stored in assets/parent/rig.npz; never set): albedo x (1 - share x (1 - AO)), the share
+    ROOM_INDIRECT / (ROOM_INDIRECT + 0.5) (parent_face.ao_share)"""
+    rig = kin.face.rig()
+    share = kin.face.ao_share(ROOM_INDIRECT)
+    ao = {"eye": float(rig["ao_eye"]), "lid": float(rig["ao_lid"]), "caruncle": float(rig["ao_caruncle"])}
+    parts = {"sclera": "eye", "iris": "eye", "pupil": "eye", "fornix": "eye", "lid": "lid", "caruncle": "caruncle"}   # the lash line's
+    # colour is calibrated as seen (tools/sim_face_photometry.py), its shade in
+    out = {k: dict(v) for k, v in mat.items()}
+    for n, part in parts.items():
+        rgba = [float(x) for x in out[n]["rgba"].split()]
+        k = 1 - share * (1 - ao[part])
+        out[n]["rgba"] = " ".join(f"{x * k:.4g}" for x in rgba[:3]) + f" {rgba[3]:g}"
+    return out
+
+
+def scene_xml(folder=HERE):
+    """the scene's XML text, its paths relative to `folder` (where it is to be written)"""
+    rel = lambda p: os.path.relpath(HERE / p, Path(folder).resolve())     # every path in the XML relative to the XML's own folder
+    mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in face_shaded(MAT).items())
     cams = dict(room=((2.45, -2.2, 1.7), (-.2, -.2, .35), 52), mat=((1.6, -2.0, 1.15), (-.1, -.55, .2), 42),
                 top=((0, -.6, 3.2), (0, -.599, 0), 50))
     cam_xml = "\n    ".join(f'<camera name="{k}" pos="{f(*p)}" xyaxes="{lookat_xyaxes(p, t)}" fovy="{fv}"/>' for k, (p, t, fv) in cams.items())
@@ -582,35 +824,53 @@ def build():
     for hs in ("L", "R"):
         for k in TOYS:
             welds.append(f'<weld name="hold_{hs}_{k}" body1="parent_hand_{hs}" body2="toy_{k}" active="false" solref=".006 1"/>')
-        # the parent's holds on the G1: its torso (prop), its pelvis (roll, slide), a forearm (guide); anchors are set
-        # when a hold switches on (g1scene.World.weld); torquescale 0: only the held point is held
-        welds.append(f'<weld name="prop_{hs}" body1="parent_hand_{hs}" body2="torso_link" torquescale="0" active="false" solref=".04 1" solimp=".9 .95 .001"/>')
-        welds.append(f'<weld name="hip_{hs}" body1="parent_hand_{hs}" body2="pelvis" torquescale="0" active="false" solref=".04 1" solimp=".9 .95 .001"/>')
-        for cs, cn in (("L", "left"), ("R", "right")):
-            welds.append(f'<weld name="guide_{hs}_{cs}" body1="parent_hand_{hs}" body2="{cn}_elbow_link" torquescale="0" active="false" solref=".02 1"/>')
+        # no weld on the G1 (W2): the prototype's welds on its torso, pelvis and elbows had no cap, and a weld on the G1 would break a
+        # person's caps; every hold on it is a capped spring (body/sim/parent_motion.py)
     sounds = "\n    ".join(f'<text name="sound_{k}" data="{snd}"/>' for k, (_, snd) in TOYS.items())
-    xml = f"""<!-- GENERATED by body/sim/make_g1room.py (from the 2026-09-24 prototype): the stock Unitree G1 (included unchanged), the
+    xml = f"""<!-- GENERATED by body/sim/make_g1room.py (docs/SIM_DESIGN.md): the stock Unitree G1 (included unchanged), the
      parent and the living room. Do not hand-edit. Units m, kg, s, RADIANS. Floor z = 0; the room spans x +-{ROOM_X},
-     y +-{ROOM_Y}, {ROOM_H} m high. Load it through g1scene.py, which adds the G1's senses (cameras and sites only). -->
+     y +-{ROOM_Y}, {ROOM_H} m high. Load it through body/sim/g1scene.py, which adds the G1's senses (cameras and sites only). -->
 <mujoco model="g1room">
-  <include file="{G1_REL}/g1_with_hands.xml"/>
+  <include file="{rel(G1_XML)}"/>
   <!-- this compiler element comes after the G1's, so it is the one MuJoCo applies to the whole model: the same
-       angle unit as the G1's (radian); the G1's own mesh folder given from this file's folder (the included
-       file's own meshdir="assets" would resolve from here, not from its folder) -->
-  <compiler angle="radian" meshdir="{G1_REL}/assets" texturedir="textures" autolimits="true"/>
+       angle unit as the G1's (radian); the G1's own mesh folder given from this file's folder (the included file's
+       own meshdir "assets" would resolve from here, not from its folder) -->
+  <compiler angle="radian" meshdir="{rel(G1_DIR / 'assets')}" texturedir="{rel('textures')}" autolimits="true"/>
   <!-- the elliptic friction cone: with the pyramidal cone a block squeezed in a Dex3 hand stopped MuJoCo 3.9 (Newton:
        "FactorizeHessian: rank-deficient sparse Hessian"; CG or a dense Jacobian: NaN accelerations and a reset) -->
   <!-- multi-point CCD off: with it on (MuJoCo 3.9's default) 2-4 of 12 hand-overs of the block or the car into a Dex3
        hand blew up about 0.1 s into the fingers' closing (NaN accelerations, an automatic reset); off, none did -->
-  <option timestep="0.002" integrator="implicitfast" cone="elliptic">
-    <flag multiccd="disable"/>
+  <!-- impratio 10: friction's impedance ten times the normal's. CHOSEN BY THE PHYSICS OF THESE CONTACTS (the owner's decision
+       of 2026-09-24, made for him; tools/sim_friction.py, measured 2026-09-24 at 1 and 10, never by pain rates or grasp counts):
+       real rubber, plastic, foam and housings hold without a slide below mu N; MuJoCo's soft contacts creep there "by design"
+       (MuJoCo 3.9 docs, Overview, "Softness and slip"), and the docs name the remedy: "using the Newton solver with elliptic
+       friction cones and large value of impratio is the recommended way of reducing slip" (ibid.; Modeling, "Solver
+       settings": "When contact slip is a problem, the best way to suppress it is to use elliptic cones, large impratio, and the
+       Newton algorithm with very small tolerance"; both on the stable docs, read 2026-09-24); MuJoCo Menagerie's hand and gripper models (the Shadow hand, the
+       Allegro hand, the Robotiq 2F-85, ALOHA) ship cone="elliptic" impratio="10". Measured: a 10 kg box on the mat's contact
+       pushed at 0.3-0.97 mu M g slid 3.6-21 mm in 2 s at 1 and 0.4-1.8 mm at 10 (real: none); the resting G1 pushed at 100 /
+       150 / 200 N at the pelvis slid 1.9 / 3.1 / 4.4 cm at 1 and 0.4 / 0.7 / 1.9 cm at 10; above mu M g both slide as Coulomb's
+       law says (0.99-1.00 of its distance). THE COST, disclosed (C5, C22): the convex contact model couples a slip to the normal
+       direction ("the only way to initiate slip is to generate some motion in the normal direction", Computation, "Physical realism
+       and soft contacts"), so a
+       pressed box that starts to slide is pressed 22-24% harder than its load for about 10 ms at either setting, steady 0.5-5%
+       after; and in the G1's hip housings pressed together and slid apart by the newborn's flexion, friction raises the normal
+       force at 10 (1,795 N against 1,553 N with the pair frictionless) where at 1 it lowers it (1,333 against 1,646): a
+       pressed housing that slides reads harder at 10. The noslip solver (the docs' next step, "If that is not sufficient, enable
+       the Noslip solver") would stop the slip, but its cascade "is no longer solving a well-defined optimization problem (or any
+       other problem); instead it is just an adhoc mechanism" (Modeling, "Solver settings"), and it nearly doubled the tick. -->
+  <!-- auto-reset off (A18): MuJoCo would otherwise put a state with a bad position, velocity or acceleration back to the
+       start pose by itself and go on; off, the bad state stays as it is, and the world (body/sim/world.py) finds it on the
+       tick it happens, before that tick's frame reaches the body -->
+  <option timestep="0.002" integrator="implicitfast" cone="elliptic" impratio="10">
+    <flag multiccd="disable" autoreset="disable"/>
   </option>
   <size memory="128M"/>
   <statistic center="0 -.5 .3" extent="2.5"/>
   <visual>
     <global offwidth="1920" offheight="1080" fovy="45"/>
     <quality shadowsize="4096" offsamples="8"/>
-    <headlight ambient=".32 .32 .33" diffuse=".18 .18 .18" specular=".02 .02 .02"/>
+    <headlight active="0" ambient="0 0 0" diffuse="0 0 0" specular="0 0 0"/>
     <map znear=".001" zfar="30" shadowclip="2.6" shadowscale=".6"/>
   </visual>
   <default>
@@ -627,7 +887,6 @@ def build():
     <mesh name="cup_handle" builtin="supertorus" params="30 .24 1 1" scale="{mesh_scale("cup_handle", [0.02, 0.02, 0.02])}"/>
     <mesh name="drum_rim" builtin="supertorus" params="48 .06 1 1" scale="{mesh_scale("drum_rim", [0.076, 0.076, 0.076])}"/>
     <mesh name="teether" builtin="supertorus" params="40 .30 1 1" scale="{mesh_scale("teether", [0.05, 0.05, 0.05])}"/>
-    <mesh name="pad_ring" builtin="supertorus" params="48 .05 1 1" scale=".13 .13 .13"/>
     <mesh name="ring0" builtin="supertorus" params="40 .40 1 1" scale="{mesh_scale("ring0", [0.05, 0.05, 0.05])}"/>
     <mesh name="ring1" builtin="supertorus" params="40 .40 1 1" scale="{mesh_scale("ring1", [0.044, 0.044, 0.044])}"/>
     <mesh name="ring2" builtin="supertorus" params="40 .40 1 1" scale="{mesh_scale("ring2", [0.038, 0.038, 0.038])}"/>
@@ -638,14 +897,14 @@ def build():
     <mesh name="pillow" builtin="supersphere" params="24 .45 .5" scale=".20 .07 .19"/>
     <mesh name="table_top" builtin="supersphere" params="32 .25 .2" scale=".58 .30 .035"/>
     <mesh name="basket" builtin="supersphere" params="24 .2 .15" scale=".17 .17 .14"/>
+    {chr(10).join('    ' + x for x in kin.face.asset_xml(lambda q: os.path.relpath(q, HERE / G1_DIR / 'assets'))).strip()}
   </asset>
   <custom>
     {sounds}
   </custom>
   <worldbody>
-    <light name="sun" type="directional" pos="-2 -.1 3" dir=".62 .18 -.76" castshadow="true" diffuse=".30 .285 .25" specular=".08 .08 .08"/>
-    <light name="key" type="spot" pos="1.6 -2.0 2.3" dir="-.5 .45 -.62" cutoff="45" exponent="2" castshadow="true" bulbradius=".2" diffuse=".42 .41 .40" specular=".12 .12 .12"/>
-    <light name="fill" type="directional" pos="0 0 2.5" dir="-.2 .5 -.84" castshadow="false" diffuse=".22 .22 .23" specular="0 0 0"/>
+    <!-- the room's lights, each carrying the room's indirect light as its ambient (ROOM_INDIRECT of its diffuse); no headlight -->
+    {lights_xml()}
     {cam_xml}
     <body name="room" childclass="room">
     {room()}
@@ -654,23 +913,16 @@ def build():
 {toys()}
 {parent()}
   </worldbody>
-  <contact>
-    <!-- the parent's hand proxies never push on the G1's torso or pelvis: when a hand holds them, the weld is the grip
-         (a capsule cannot wrap around a body the way fingers do) -->
-    <exclude body1="parent_hand_L" body2="torso_link"/>
-    <exclude body1="parent_hand_R" body2="torso_link"/>
-    <exclude body1="parent_hand_L" body2="pelvis"/>
-    <exclude body1="parent_hand_R" body2="pelvis"/>
-  </contact>
+  <actuator>
+    <!-- HER MUSCLES: one per axis of each of her joints, their force ranges her strength (parent_consts.STRENGTH; A25b) -->
+    {chr(10).join("    " + a for a in parent_actuators()).strip()}
+  </actuator>
   <equality>
     {chr(10).join("    " + w for w in welds).strip()}
   </equality>
 </mujoco>
 """
-    xml = deg_to_rad_eulers(xml)
-    out = Path(ARGS["out"]) if "out" in ARGS else HERE / "g1room.xml"
-    out.write_text(xml)
-    return out
+    return deg_to_rad_eulers(xml)
 
 
 if __name__ == "__main__":

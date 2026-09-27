@@ -1,16 +1,64 @@
 """the organism's roles, as mixins of `Life` (body/life.py): the split of 2026-09-23 (review 2026-09-22 section 4, step 2).
 
 physiology.py   PHYSIOLOGY, every constant grouped by organ (re-exported by body/life.py)
-senses.py       the feelings' recovery, _sense, _hear, the offset, the world's hands (type_text, set_face)
+senses.py       the feelings' recovery, _sense (the world's frame), _hear, the offset, the world's hands (type_text, set_face)
 memory.py       the recall's query and read, the bags and the slow context (the keys), its own utterance as an episode
 cortex.py       _step, the window, the stream, the waking lesson, the calibrated readout
 mouth.py        the sensed pace (M1-M5), imagination for choice, _choose, _act, _feel_and_learn, the gate's lesson
 critics.py      the fast value, _learn_values (dopamine, the least-squares critics), the reliability gain, the face organ
 actor.py        the chooser's eligibility and lesson, the actor's reliability
-night.py        dreams, night (NREM, REM, the value replay, the fade), the night's device, the sleep switch's call
+night.py        dreams, night (NREM, REM, the value replay, the fade), the night's device, the sleep switch's call (the world paused)
 persistence.py  save, load, birth
 instruments.py  _bookkeep (the page, the record, the sleep switch), gauge, state, anticipation, insides
+timing.py       step R6 of the core refactor: each later effector's motor timing part (act_pred its proposal, the forward half and its
+                correction, act_inv learning online with its reliability; the waking lesson's share); the diary has no later effector
+cerebellum.py   step R6c: the cerebellum below the tick, an organ (Cerebellum, m.cereb: the born granule expansion, the Purkinje readouts
+                taught by the servo's corrective torque, the flocculus taught by retinal slip) and a mixin (the world's sub-tick hook,
+                `Below`); built only under the switch `cereb` (physiology.py's CEREB), which the diary's cfg does not hold
+cord.py         step R6h: the born patterns summed at the cord below the gate (the spinal pattern generator per limb, the born cry of the
+                tract) and the born biases (orienting toward the anatomy's cues, the VOR's constants for the world), under physiology.py's
+                REFLEX switches, which the diary's cfg does not hold; the effectors declare where each acts
+frames.py       step R7: the body in the world's frames: the anatomy's born event lines read from each frame (R7a) into the striatal
+                expansion and the amygdala; the frame's surprise, the event's end for frames, the surprise-gated writes of frames into the
+                store, the tick's record (R7b, under physiology.py's FRAMES switch `frames`); each channel's error scaled by its running
+                mean in the waking lesson (R7c, `err_scale`); the received tag and its reach back onto an utterance's entry (R7c,
+                physiology.py's SWITCHES `tag_trace`, defect 6; defect 1's `tire_recover` is memory.py's); recall into action (R7f, the
+                switch `recall`: the heading integrated from the torso gyro in the frame's key, the efference copies in its value, the
+                store's recall at the choice through a map per motor effector into its proposal; `wm_frames`, working memory's latch at
+                the frames' event ends); the diary declares none of it and holds no such switch, so none of it runs for it
+amygdala.py     step R7d: the amygdala, the valence tagger, an organ (Amygdala, m.amyg: its least-squares Rescorla-Wagner law over the
+                stream, the event lines and the level, one head per reward source and sign, its reliability, the tag) and a mixin (its tick
+                after the critics and the face organ, before the choice); built only under the switch `amyg` (physiology.py's AMYG), which
+                the diary's cfg does not hold; the night's side of it (tag*, the entries, the tagged first, act_pred's night weight) is R8's
+                to wire
+sleep.py        step R8: the night over frames (the switch `night_frames`, physiology.py's SLEEP, which the diary's cfg does not hold): each
+                awake tick's frame taped as the cortex received it beside its record; at nightfall the day cut into episodes at the
+                frames' event ends, their entries, T_e and windows at the peak tag from the tag reaching back over the day's record; the
+                episodes kept across nights, fading as the store does, the weakest giving way past the episodes' cap; the night over
+                frames (R8b): the day's tagged dreamt first, then by entry, each episode's window replayed in per-channel batches (every
+                channel's forecast, the forward half and act_inv at weight 1; every effector's acts as efference copies and act_pred's
+                targets weighted by the replayed dopamine's credit and stepped by its own plain step), REM on frames; the live, dark
+                night (R8c, the switch `twitch`): the night at the tick's end (`tick_end`, C74), a world that runs through the night
+                stepped dark with every effector at rest but the born twitch generator's twitches in active sleep, each twitch's pair
+                teaching act_inv and the forward half, the cerebellum learning below the tick wherever the world runs
+anatomy.py      not a mixin: the body's anatomy declared (Channel, Effector, RewardSource, Anatomy, LanguageAnatomy; docs/SIM_DESIGN.md
+                8.2), step R1 of the core refactor; since step R2 `Life` is built with one (`life.anatomy`, from the tokenizer by
+                `anatomy_for`) and reads its symbols and its text (the tokenizer) there; since step R3 the tick's reward is its reward
+                sources (FaceReward, WorldWordsReward, EffortReward), felt in their order and summed in it (`_sense`); since step R4
+                its channels (EarChannel, FaceChannel) are the window's fields, the cortex's input (their codes summed in their order,
+                `Organs.inputs`) and, for a later channel that declares one, a forecast head of its own (`Organs.head`); since step
+                R5 its effectors: the voice is effector 0 (VoiceEffector: the lexicon E, mouth_gate, actor and "xo", its choice, act
+                and lesson today's), and each later effector (Effector) names the organs the organs build for it (acts.<name>,
+                gates.<name>, actors.<name>) and is chosen, acts and learns after the voice (`_choose_effector`, `_act_effectors`,
+                `_gate_lesson(i)`); physiology.py's SWITCHES hold the defect fixes 4, 5 and 8, off by their absence; since step R6 a later
+                effector declares its body sense, its inverse model and its reflex (timing.py), and MOTOR holds their constants
+world.py        not a mixin: `Frame`, the world at one tick as the body meets it (docs/SIM_DESIGN.md 8.2; step R3: the reward sources
+                read it); since step R9 the world loop: `World` (frame, apply, pause, resume, save_state, load_state), the diary's
+                `DiaryWorld` (today's queue and face; `life.world` unless another is given; body/serve.py wraps it), the `SimWorld`
+                interface the sim implements, `WorldLoop` (lockstep; the deadline switch off) and the `PaceLog`; since step R6c the
+                loop below the tick (`World.below`, `sub_tick`, `SubFrame`, `SubActs`), which only a simulated world calls
 
-Every method was moved verbatim; `Life` keeps `__init__` (the organs and the state, in their order) and `tick`. The mixins hold no
-state and no class attributes, and no method name is defined twice, so the order of the bases decides nothing.
+Every method was moved verbatim; `Life` keeps `__init__` (the organs and the state, in their order), `tick` and (step R2) the
+read-only `tok`, its anatomy's tokenizer. The mixins hold no state and no class attributes, and no method name is defined twice, so
+the order of the bases decides nothing.
 """

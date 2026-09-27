@@ -17,8 +17,8 @@ def by_position(path):
     hits = {b: [0, 0] for b in BANDS}
     with torch.no_grad():
         for i in range(0, len(held), 32):
-            xs, xos, faces, bundles, reads, y, w = life._dream_batch(held[i:i + 32])
-            lg = m.readout(m.latent_pred(m.stream(m.inputs(xs, xos, faces, bundles, reads))))
+            obs, xos, bundles, reads, y, w = life._dream_batch(held[i:i + 32])
+            lg = m.readout(m.latent_pred(m.stream(m.inputs(life.anatomy, obs, xos, bundles))))
             lg[..., [b for b in life.bans if b != life.eot]] = float("-inf")
             if life.end_id != life.sil: lg[..., life.sil] = float("-inf")
             ok = (lg.argmax(-1) == y).float() * w
