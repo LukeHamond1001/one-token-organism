@@ -63,7 +63,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # exactly at this build (7c54199e3c72cf77d45a8e94), and served_full_roundtrip threaded (c4730b232091fe229ee286dc, every section, the
 # known lost store.S and store.sat) after A98's loader (persistence._moments_aligned: the identity on the same recipe). Was: threaded
 # 0cd508ec66bc43b3837c9d6a, one-thread 4251a12065013840a34be2f0.)
-digest  sim                   threaded 34e2ff847d45ef29dafddca9 consts 498920b1a073 | --profile sim
-digest  sim                   pinned   70a89ce8093f0a8bc63ecc49 consts 498920b1a073 | --profile sim
-full    sim                   threaded organs 77920c5be053 store 69f2646c5fc3 optim b6126f44d845 rng aa0e44fb00ce work 18bc9e6bd8b1 cfg a3a21ede3e8d
-full    sim                   pinned   organs 237f0cb99452 store e8edd6743dca optim 1e29feb76988 rng aa0e44fb00ce work 321249a09bba cfg a3a21ede3e8d
+# Re-pinned at A104 (2026-09-27: a limb's decisiveness on kappa's own scale, s^rel with rel between "fair" 0.2 and "almost perfect"
+# 0.8; the constants digest unchanged; the language default digest reproduced exactly (7c54199e3c72cf77d45a8e94). Was: threaded
+# 34e2ff847d45ef29dafddca9, one-thread 70a89ce8093f0a8bc63ecc49.)
+digest  sim                   threaded 0fd8682c4e0352b6ef20611b consts 498920b1a073 | --profile sim
+digest  sim                   pinned   82c58538f82f4d331bea8c3e consts 498920b1a073 | --profile sim
+full    sim                   threaded organs 598b9729fd06 store 8823de364ef5 optim 1de53885f5a4 rng aa0e44fb00ce work 03d31fd3e0f0 cfg a3a21ede3e8d
+full    sim                   pinned   organs ab19250b0555 store cea72c9f681a optim 33cd6c120cb1 rng aa0e44fb00ce work 7e9bbe3af0f7 cfg a3a21ede3e8d

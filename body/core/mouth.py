@@ -22,6 +22,12 @@ import torch
 import torch.nn.functional as F
 
 
+# A104: kappa's established scale (Landis and Koch 1977, Biometrics 33:159): below 0.2 "slight", 0.2-0.4 "fair", 0.4-0.6 "moderate",
+# 0.6-0.8 "substantial", above 0.8 "almost perfect". A later effector's decisiveness is earned from "fair" agreement and complete at
+# "almost perfect" (_motor_sharp)
+KAPPA_FAIR = 0.2
+KAPPA_ALMOST_PERFECT = 0.8
+
 class MouthMixin:
     def _imagine_value(self, first, h):
         """IMAGINATION FOR CHOICE: say `first`, then h-1 more symbols as the cortex would (greedy), on a copy of the window; the
@@ -794,8 +800,14 @@ class MouthMixin:
         s = float(self.m.read_sharp)
         if not getattr(e, "inverse", False):
             return s
-        rel = max(0.0, min(1.0, float(st.get("inv_gain", 0.0) or 0.0)))
-        return 1.0 + (s - 1.0) * rel
+        kappa = float(st.get("inv_gain", 0.0) or 0.0)
+        rel = max(0.0, min(1.0, (kappa - KAPPA_FAIR) / (KAPPA_ALMOST_PERFECT - KAPPA_FAIR)))
+        return s ** rel                                                     # A104: the temperature's own (geometric) scale, on kappa's
+                                                                            # established one: nothing below "fair" agreement, the
+                                                                            # mouth's at "almost perfect" (Landis and Koch 1977). A97's
+                                                                            # 1 + (s - 1) kappa gave sharpness 3-5 at kappa 0.1 ("slight"),
+                                                                            # and every limb's top probability was back above 0.9 within
+                                                                            # half of life day 3, the day's earning gone with the variety
 
     def _act_effectors(self, u, stri, gam, tick_tr):
         """THE LATER EFFECTORS' ACTS (step R5), each after the voice's, in the anatomy's order: its actor's eligibility (per act, or
