@@ -69,7 +69,8 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A106 (2026-09-27: the night's ticks pass for the body's slow states (stress, mood, fatigue fall by their half-lives over
 # the live night); the constants digest unchanged; the language default digest reproduced exactly (7c54199e3c72cf77d45a8e94). Was:
 # threaded 0fd8682c4e0352b6ef20611b, one-thread 82c58538f82f4d331bea8c3e.)
-digest  sim                   threaded e0c434cb5b20df7f02000828 consts 498920b1a073 | --profile sim
-digest  sim                   pinned   a45ebcc6b4016bbe4be0f460 consts 498920b1a073 | --profile sim
-full    sim                   threaded organs 8181e134bd87 store a0f474f2a8fe optim a976c776c047 rng 07bdaa298769 work c8cfc02b9737 cfg a3a21ede3e8d
-full    sim                   pinned   organs e668f4a0157d store c7955af7beae optim b1e5bdb706ed rng 07bdaa298769 work c09e51355889 cfg a3a21ede3e8d
+# Re-pinned at A113 (2026-09-27 13:25, branch actor on a109): SIM_CFG actor=1 (the striatal actor on; C87's day copy); the language default reproduced 7c54199e3c72cf77d45a8e94.
+digest  sim                   threaded 18c33a72cbe083532a9aeb73 consts 44ef6a276ad3 | --profile sim
+digest  sim                   pinned   39bd93b65937c9293ec6a667 consts 44ef6a276ad3 | --profile sim
+full    sim                   threaded organs fc7be0bd7c7c store d364be30c88f optim 0757502a5393 rng 3f129c0969d1 work 706d7d717ca9 cfg cc35d8f4e186
+full    sim                   pinned   organs 4fa1a3503829 store 0b7fce84adf8 optim 8bce1f21c794 rng 3f129c0969d1 work ea476f87751c cfg cc35d8f4e186

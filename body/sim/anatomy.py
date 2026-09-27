@@ -411,6 +411,10 @@ SIM_CFG = dict(
     rest_token="<rest>", end_token="<end>", end_symbol="eot",          # the born table's rest and end (4.9)
     # the switches at birth (10): fixes #4, #5 and #8; chunk_gate 1 for every effector; chunk_max 8, a ceiling only (3.6)
     gate_own_draw=1, actor_trace_tick=1, elig_from=1, chunk_gate=1, chunk_max=8,
+    # THE STRIATAL ACTOR ON (A113, 2026-09-27; C87): dopamine's lesson reaches a policy, so value becomes behaviour (the day copy of dawn 10:
+    # pain 0.25% against 3.65%, 11 motor acts judged against 0 in the first 2,000 ticks). Its form, rate and forgetting are the core's
+    # (physiology: actor_form 'add', actor_lr 0.02, actor_forget 36000)
+    actor=1,
     # THE GATES' DRIVES, DISCLOSED (3.5, A41): the tonic drive following the reward rate in every gate, 0.25 + (sum over k < 12 of 0.8^k,
     # the gate's own eligibility window: 4.656) x the felt reward's running mean at the ladder's 256-tick clock (band 4); the performance
     # error at 0.5 on the gates that declare it (the tract's alone); gate_vigor 0, so the reward rate is not counted twice
