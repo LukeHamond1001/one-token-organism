@@ -3471,6 +3471,8 @@ A67–A70 were decided by the lead later on 2026-09-25, on the core's builds: A6
   | the commonest act other than the hold | — | 8 of 300 ticks at most |
 
   The variety is back, and the gates, with acts that vary, settle lower (p_act 0.34–0.65 from 0.9+).
+
+  **Live, day 5's first 2,000 ticks:** every limb at sharpness 1.0 (kappa 0.09–0.14, below "fair"), top probabilities 0.24–0.25, gates 0.18–0.79; 30 judgments of which 20 the body's (reach_nearer 11, rolled 6, got 1, hit 1, head_up 1), against 4 of 201 in all of day 4; 1 smile seen; and the moving body's cost again, 140 pain ticks (7%), cry 134, stress 20 (C83).
 - **Boundary:** a body change, at dawn 6 from the dawn-6 pair, on a tree without the day's teacher changes (A103 waits for dawn 7). Tests: motor 12 rewritten to the scale, motor 2; motor 3's sanity floor on a living limb's kappa after 400 ticks lowered from 0.2 to 0.1 (it read 0.198 under the softer readout; the floor is not a claim about the learning rate); motor 13/13, sim_world 20/20; the sim profile re-pinned, the language digest reproduced.
 
 ### (B) The owner's calls, with recommended defaults
