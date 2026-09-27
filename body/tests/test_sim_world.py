@@ -1118,12 +1118,30 @@ def test_carried_to_the_mat():
     w2 = G1World(seed=1)
     w2.load_state(w.save_state())
     assert w2.carried == w.carried and np.allclose(w2.d.qpos, w.d.qpos)
+    # asleep on its side ON the mat: laid on its back where it lies (amended 16:10: a sleeping baby is put down on its back wherever)
+    from body.sim import g1scene as G_
+    kin_ = G_.kin
+    R0 = np.zeros(9); mujoco.mju_quat2Mat(R0, w.d.qpos[3:7]); R0 = R0.reshape(3, 3)
+    side_xy = c + np.array([0.5, 0.3])
+    w.d.qpos[0:2] = side_xy; w.d.qpos[3:7] = kin_.mjquat(kin_.axang(np.array([1.0, 0.0, 0.0]), math.pi / 2) @ R0)
+    mujoco.mj_forward(w.m, w.d)
+    ch0 = PM.Child(w.m, w.d, w.scene.g1_set)
+    assert ch0.posture in ("side", "front"), ch0.posture
+    n0 = len(w.carried)
+    w.dawn()
+    ch1 = PM.Child(w.m, w.d, w.scene.g1_set)
+    assert ch1.posture == "back" and np.allclose(w.d.qpos[0:2], side_xy, atol=0.05) and len(w.carried) == n0 + 1, (ch1.posture, w.d.qpos[:2], w.carried[-1:])
+    # on its back on the mat: left where it lies
+    n1 = len(w.carried); q1 = w.d.qpos.copy()
+    w.dawn()
+    assert len(w.carried) == n1 and np.array_equal(w.d.qpos, q1)
     for _ in range(20):
         w.apply({})
-    assert abs(w.d.qpos[0] - c[0]) < 0.1 and abs(w.d.qpos[1] - c[1]) < 0.1
+    assert abs(w.d.qpos[0] - side_xy[0]) < 0.1 and abs(w.d.qpos[1] - side_xy[1]) < 0.1   # (it lives on where it was laid)
     print(f"world 21: the child at (3.41, -1.56) in the hall carried to the mat's centre {np.round(c, 2).tolist()} at dawn and laid on",
           f"its back in the birth pose (posture {ch.posture}, rolled {ch.rolled:+.2f}), settled, still, its lowest point {low * 100:.1f} cm;",
-          f"the carry saved and restored; one on the mat left where it lies; the world lives on from there")
+          f"the carry saved and restored; one asleep on its {ch0.posture} on the mat laid on its back where it lies; one on its back on",
+          f"the mat left where it lies; the world lives on from there")
 
 
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,

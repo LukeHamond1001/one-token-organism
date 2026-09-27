@@ -998,9 +998,13 @@ class G1World(SimWorld):
         g = m.geom("mat").id
         c, h = m.geom_pos[g][:2].copy(), m.geom_size[g][:2]
         xy = d.qpos[:2].copy()                                          # its pelvis (the floating base) on the floor plan
-        if abs(xy[0] - c[0]) <= h[0] and abs(xy[1] - c[1]) <= h[1]:
-            return False                                                # over the mat: left where it lies
-        self.scene.set_g1(G.BIRTH, root=np.r_[c[0], c[1], 1.0, G.kin.mjquat(G.kin.ry(-math.pi / 2))])   # laid on its BACK in the birth
+        on_mat = abs(xy[0] - c[0]) <= h[0] and abs(xy[1] - c[1]) <= h[1]
+        supine = float(d.xmat[m.body("torso_link").id].reshape(3, 3)[2, 0]) > 0.6   # its chest's normal up: on its back (the posture
+                                                                        # law of parent_motion.Child: fz > 0.6)
+        if on_mat and supine:
+            return False                                                # on the mat, on its back: left where it lies
+        to = c if not on_mat else xy                                    # (A110 amended 2026-09-27 16:10: a child asleep on its side or
+        self.scene.set_g1(G.BIRTH, root=np.r_[to[0], to[1], 1.0, G.kin.mjquat(G.kin.ry(-math.pi / 2))])   # front ON the mat is laid on its
         mujoco.mj_forward(m, d)                                         # pose (A110 amended 2026-09-27: a sleeping baby is laid on its
         d.qpos[2] += (.012 + .004) - self.scene.lowest_g1_point()      # back, never on its side or front; life dawn 11 laid it as it
         d.qvel[:] = 0.0                                                 # lay, on its side, and it woke looking at the floor, C94, with
@@ -1013,7 +1017,7 @@ class G1World(SimWorld):
             d.qvel[b.vadr] = 0.0
         d.qvel[:] = 0.0
         mujoco.mj_forward(m, d)
-        self.carried.append((int(self.tick), [float(xy[0]), float(xy[1])], [float(c[0]), float(c[1])]))
+        self.carried.append((int(self.tick), [float(xy[0]), float(xy[1])], [float(to[0]), float(to[1])]))   # back where it lies, too)
         return True
 
     def dawn(self):
