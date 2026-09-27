@@ -194,7 +194,12 @@ CAP_RAMP_NPS = 100.0            # N/s: a pull or a turn grows its force at this 
                                 # (ours: "a slowly growing force", A7, A9)
 PULL_MAX_S = 4.0                # s: a pull that has not reached her cap in this long (the ramp's 2 s and as long again) is laid back
                                 # (ours: her grip or her arms gave out; she is a body)
-TURN_MAX_S = 2.0                # s: the brief turn from its front lasts at most this (A7)
+TURN_MAX_S = 4.0                # s: the turn from its front lasts at most this (A7 gave it 2 s; A101: a person's roll of a heavy child
+                                # takes 3-4 s: the brief caps carry its first 2 s (BRIEF_S), the sustained caps the rest, by her caps'
+                                # own law; ours, disclosed)
+TURN_RAMP_NPS = 400.0           # N/s: the turn's force builds to the brief caps within half a second (A101; ours: the initial push of
+                                # Snook and Ciriello's tables is exerted from the first moment, and CAP_RAMP_NPS spent the whole 2 s
+                                # climbing to it, so the roll never had its force)
 GUIDE_RAISE_M = 0.12            # m: a guide raises the near forearm this far (ours: within one movement unit at GUIDE_SPEED,
                                 # 8 ticks x 0.30 m/s = 0.36 m, and inside the arm's reach off the mat)
 FOREARM_HOLD = (0.07, 0.0, 0.0) # where she takes a G1 forearm (its elbow link's frame): 7 cm down it from the elbow, ...
