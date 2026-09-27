@@ -161,6 +161,8 @@ KINDS = {
     "turn": "the brief turn from its front toward its back: springs on its pelvis and a shoulder, growing within the caps, at most "
             "2 s (A7)",
     "bring_back": "fetch a toy that rolled away and set it down within the child's reach (4.10's reach ladder, level 1)",
+    "bring_far": "fetch a toy and set it down beside the child's far shoulder, level with its head, ROLL_BEYOND_M past the reach of the "
+                 "arm on that side, from a kneel on its far side (the roll rung's setup, A109)",
     "clear": "a toy moved out of where she will kneel (A6)",
     "wave": "a wave of her hand",
     "walk": "walk to the target: 'door' (the hall, leaving), 'sofa' (she sits on it), 'child' (return: she comes to it), a point",
@@ -223,6 +225,10 @@ PALM_GRASP_OUT = 0.016                      # the Dex3's grasp point (g1acts.GRA
 CARRY = {"k": "carry"}                      # a toy carried before her, at her waist
 MAX_JUMP_M = 0.25                           # her pelvis never moves more than this in a tick (walking: 0.12 m; kneeling down:
 MAX_LIMB_JUMP_M = 0.60                      # about 0.1 m), nor any segment more than this (a walking foot's swing: up to 0.4 m);
+ROLL_BEYOND_M = 0.10                        # A109 (C91): the roll rung's toy set this far past the reach of the arm on its far side: two
+                                            # steps of the reach ladder (dayplan.LESSON_STEP), a full roll carries its body about that far
+PUT_AHEAD_M = 0.35                          # A109: the roll rung's toy set down this far before her pelvis (where set_near's toy lies
+                                            # from her kneel beside the child: her knees at HEELS_BACK, the toy a hand beyond them)
 REBASE_TOL_M = 0.02                         # A108: her restored plan drawing her pelvis farther than this from where her body was
                                             # last drawn is rebased onto the drawn pose (2 cm: under it her drive absorbs the difference)
                                             # more is a planning fault, refused (ours)
@@ -885,6 +891,10 @@ class ParentMotion:
         self.pain_any = False
         self.hits = []
         self.lesson_dist = 0.10                 # her lesson's distance for bring_back (A90): the toy set this far out from its near hand
+        chain = ("shoulder_roll_link", "shoulder_yaw_link", "elbow_link", "wrist_roll_link", "wrist_pitch_link", "wrist_yaw_link")
+        self.arm_m = float(sum(np.linalg.norm(self.m.body_pos[self.m.body(f"left_{c}").id]) for c in chain)
+                           + np.linalg.norm([0.13, 0.06, 0.0]))          # A109: its arm's reach from the shoulder, as the lane measures
+                                                                            # child_can_reach (lane.arm_reach: the chain to the grasp point)
         self.brief_s = 0.0
         self.rest_s = K.BRIEF_REST_S
         self.drawn_face = None
@@ -4744,6 +4754,44 @@ class ParentMotion:
     def _act_bring_back(self, a, t):
         toy = self._toy(t)
         return self._fetch(a, toy) + self._near(a) + [dict(type="plan", what="put_near", args=dict(toy=toy))]
+
+    def _far_side(self):
+        """A109: the child's side away from the side she kneels on (Child.face_side), and the lateral direction toward it on the
+        floor plan"""
+        ch = self.child
+        far = "R" if ch.face_side() == "L" else "L"
+        return far, ch.lat[:2] * (1 if far == "L" else -1)
+
+    def _far_xy(self):
+        """A109: where the roll rung's toy goes: beside the child's far shoulder, level with its head, ROLL_BEYOND_M past the reach of
+        the arm on that side -> (the far side, the lateral direction toward it, the spot, the far shoulder's floor point)"""
+        ch = self.child
+        far, lat = self._far_side()
+        sh = ch.body[f"{'left' if far == 'L' else 'right'}_shoulder_roll_link"][0][:2]
+        return far, lat, sh + lat * (self.arm_m + ROLL_BEYOND_M), sh
+
+    def _act_bring_far(self, a, t):
+        """A109 (C91): the roll rung's setup: the toy fetched, then from a kneel on the child's far side, the toy between her and the
+        child, set down beside its far shoulder, level with its head, ROLL_BEYOND_M past the reach of the arm on that side, so a roll
+        toward it brings it within reach and the toy is the reward (its own "got"); a person gives a rolling baby a reason to roll"""
+        toy = self._toy(t)
+        ch = self.child
+        far, lat, xy, sh = self._far_xy()
+        mid = (ch.torso[:2] + ch.pelvis[:2]) / 2
+        d = float((xy - mid) @ lat)                                          # the spot's distance out from the child's middle
+        a0 = float((sh - mid) @ ch.len_axis[:2])                             # and its place along the body (its shoulder's)
+        offs = (d + PUT_AHEAD_M, d + PUT_AHEAD_M + 0.10, d + PUT_AHEAD_M - 0.10)   # she kneels beyond it: the toy PUT_AHEAD_M before
+        alongs = (a0, a0 + 0.10, a0 - 0.10)                                  # her pelvis, as set_near's toy lies (A90)
+        return self._fetch(a, toy) + self._near(a, where=far, offs=offs, alongs=alongs) + \
+            [dict(type="plan", what="put_far", args=dict(toy=toy))]
+
+    def _plan_put_far(self, a, toy):
+        ch = self.child
+        far, lat, xy, sh = self._far_xy()
+        if not self._in_plan(xy) or self.plan.dist[self.plan.cell(xy)] < 0.10 or ch.clearance_xy(xy) < 0.05:
+            raise Refuse(f"no room for the {toy} beside its far shoulder (A109: the mat's edge or the furniture)")
+        sd, swap = self._giving(toy, np.r_[xy, 0.0])
+        return swap + self._put_phases(sd, xy)
 
     def _plan_put_near(self, a, toy):
         """the toy set down within the child's reach: on the floor beside its near hand, out from its body by her lesson's distance

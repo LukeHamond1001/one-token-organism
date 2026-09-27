@@ -215,6 +215,8 @@ ACT_KINDS = {
     "hand_over": "the toy put into the child's near or far hand (parent_acts.hand_over)",
     "bring_back": "the toy fetched and set down within the child's reach beside its near hand, at her lesson's distance "
                   "(parent_motion.bring_back, lesson_dist; the reach rung's setup, A90)",
+    "bring_far": "the toy fetched and set down beside the child's far shoulder, level with its head, ROLL_BEYOND_M past the reach "
+                 "of the arm on that side, from a kneel on its far side (parent_motion.bring_far; the roll rung's setup, A109)",
     "turn": "the brief capped turn of the child from its front toward its back (parent_motion.turn, A7): her care at its distress, "
             "face down (A90); refused unless it lies on its front",
     "touch": "a hand resting on the named part of the child, within one hand's cap (4.2)",
@@ -239,7 +241,7 @@ ACT_KINDS = {
 }
 STUB_FOCUS = 60                               # the stub runs a during='focus' act until the conduct cancels it (its word's end)
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
-              "withdraw": 2, "bring_back": 20, "turn": 14, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
+              "withdraw": 2, "bring_back": 20, "bring_far": 24, "turn": 14, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
               "reveal_face": 2, "do": 7, "copy": 7, "present": 12}   # the stub's nominal times, ours; W2 measures its own
 
 
@@ -316,7 +318,7 @@ def directs(act):
         return [("head", "child"), ("trunk", UNNAMED)]                # her trunk leans in (A3)
     if k == "attend":
         return [("head", "child"), ("hand", "trunk"), ("trunk", UNNAMED)]   # she kneels beside it, a hand on its trunk
-    if k in ("show", "point", "open_hand", "hand_over", "bring_back"):
+    if k in ("show", "point", "open_hand", "hand_over", "bring_back", "bring_far"):
         return [("hand", tg)]
     if k in ("touch", "guide"):
         return [("hand", tg)]                                         # the part she touches, the limb she guides
@@ -491,6 +493,8 @@ INTENTS = {
     "show": Intent("plain", False, None, (Act("show", "{o}"), EYES)),
     "set_near": Intent("plain", False, None, (Act("bring_back", "{o}"), LOOK_O, EYES)),   # her lesson's setup (A90): the toy set within
                                                                                           # its reach, farther as it succeeds
+    "set_far": Intent("plain", False, None, (Act("bring_far", "{o}"), LOOK_O, EYES)),    # the roll rung's setup (A109): the toy beside
+                                                                                          # its far shoulder, past its reach
     "hand_over": Intent("plain", False, None, (Act("hand_over", "{o}"), EYES)),          # the toy into its hand (the handle rung)
     "redirect": Intent("plain", False, None, (Act("point", "{o}"), LOOK_O)),
     "ask_where": Intent("plain", True, "gaze", (EYES,)),                 # never a point or a look to it: the ask tests the word

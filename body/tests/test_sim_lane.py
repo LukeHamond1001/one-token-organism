@@ -413,8 +413,73 @@ def test_a_face_down_morning():
     assert lane.distressed is False and lane.face_down == 0 and lane.cry_down == 0, (lane.distressed, lane.face_down, lane.cry_down)
     print("13 a face-down spell starts anew at dawn: the distress flag and the face-down count reset with the day (A107)")
 
+def test_the_roll_rung():
+    """lane 14 (A109, C91): once the child rolls (her book's 'rolled' at MASTERED_N) and lies on its back or front, every other
+    reach-rung lesson is the roll rung: "set_far" (her line "look. the X." or "look. here. the X.") with her motion's bring_far, the
+    toy fetched and, from a kneel on the child's far side, set down beside its far shoulder ROLL_BEYOND_M past the reach of the arm
+    on that side: out of its reach as she sees it (child_can_reach False), on the side away from where she knelt. The next lesson is
+    a reach lesson again (they alternate), and the turn is saved. Life day 7: 89 rolls, 0 reaches, and no motor act judged"""
+    from body.sim import parent_motion as PM
+    w, lane = _world(plan=True, day_ticks=2400)
+    for _k in range(200):
+        w.frame(); w.apply({})
+    p = lane._p
+    seen = {s_.id: s_ for s_ in p.seen}
+    free = [o for o in sorted(seen) if seen[o].on != "hand" and w.parent._toy_clearance(o, np.zeros(3)) >= 0.02]
+    free = [o for o in free if o not in ("ball", "ring", "car")] or free   # (one that stays where she sets it: a ball rolls off the mat)
+    toy = ([o for o in lane.plan.focus if o in free] or free)[0]      # a toy the child does not hold (her fetch never takes one from it)
+    lane.plan.focus = [toy]
+    lane.conduct.book.setdefault("rolled", {})[""] = DP.K.MASTERED_N
+    lane.plan.roll_turn = True
+    assert lane.posture == "back", lane.posture
+    n0 = len(w.parent.acts)
+    lane.plan._lesson(w.tick, lane)
+    roll = [x for x in lane.plan.log if x[1] == "lesson" and x[2] == "roll"]
+    assert roll and roll[-1][3] == toy and roll[-1][4] == DP.K.MASTERED_N, lane.plan.log[-3:]
+    lines, act = [], None
+    for _k in range(1500):
+        w.frame(); w.apply({})
+        if lane.last.get("line"):
+            lines.append(lane.last["line"])
+        fars = [a for a in w.parent.acts if a["kind"] == "bring_far"]
+        if fars and fars[-1]["status"] in PM.DONE_STATES:
+            act = fars[-1]
+            for _j in range(40):                                        # the toy comes to rest, she looks back to its eyes
+                w.frame(); w.apply({})
+            break
+    assert act is not None and act["status"] == "done", (act, lines[-5:])
+    said = [ln for ln in lines if toy in ln and ln.startswith("look.")]
+    assert said, lines[-12:]
+    pm = w.parent
+    ch = PM.Child(w.m, w.d, w.scene.g1_set)
+    far = "R" if ch.face_side() == "L" else "L"
+    pos = w.d.xpos[lane.toy_body[toy]]
+    d_sh = {s_: float(np.linalg.norm(pos - w.d.xpos[lane.shoulder[s_]])) for s_ in lane.shoulder}
+    far_name = "left" if far == "L" else "right"
+    assert all(d_sh[s_] > lane.arm_reach[s_] for s_ in d_sh), (d_sh, lane.arm_reach)         # out of its reach from either shoulder
+    assert d_sh[far_name] < lane.arm_reach[far_name] + 0.30, (d_sh, lane.arm_reach)         # and not far past it
+    side = float((pos[:2] - ch.torso[:2]) @ (ch.lat[:2] * (1 if far == "L" else -1)))
+    assert side > 0.20, (side, far)                                                          # on its far side
+    p = lane._p
+    seen = {s_.id: s_ for s_ in p.seen}
+    assert toy in seen and not seen[toy].child_can_reach and seen[toy].on != "mama", seen.get(toy)
+    lane.plan._lesson(w.tick, lane)                                    # the next lesson: the reach rung again (they alternate)
+    last = [x for x in lane.plan.log if x[1] == "lesson"][-1]
+    assert last[2] == "reach" and lane.plan.roll_turn is True, last
+    st = lane.plan.state()
+    assert st["roll_turn"] is True
+    lane.plan.roll_turn = False
+    st2 = lane.plan.state(); lane.plan.load_state(st2)
+    assert lane.plan.roll_turn is False
+    print(f"lane 14: the roll rung (A109): once it rolls, her lesson set the {toy} beside its far ({far_name}) shoulder, out of reach",
+          f"from either shoulder ({', '.join(f'{k} {v:.2f} m of {lane.arm_reach[k]:.2f}' for k, v in d_sh.items())}) and {side:.2f} m to",
+          f"its far side, her line '{said[0]}', the act done in {act['end'] - act['start']} ticks; the next lesson a reach lesson again;",
+          f"the turn saved")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
-              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning]
+              test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
+              test_the_roll_rung]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -152,6 +152,7 @@ FRAMES = {
     "label_held": [F("your {o}.", "{o}"), F("it is your {o}.", "{o}"), F("you see your {o}.", "{o}")],
     "label_colour": [F("the {c} {o}.", "{o}"), F("a {c} {o}.", "{o}"), F("it is {c}.", "{c}"), F("the {o} is {c}.", "{c}")],
     "set_near": [F("here. the {o}.", "{o}"), F("look. here. the {o}.", "{o}")],   # her lesson's setup: the toy set within reach (A90)
+    "set_far": [F("look. the {o}.", "{o}"), F("look. here. the {o}.", "{o}")],     # the roll rung's setup: the toy past its reach (A109)
     "hand_over": [F("here. a {o}.", "{o}"), F("look. here. a {o}.", "{o}")],      # the toy into its hand (the handle rung, A90)
     "show": [F("look at the {o}.", "{o}"), F("look. a {o}.", "{o}"), F("see the {o}?", "{o}"), F("see? a {o}.", "{o}"),
              F("here is a {o}.", "{o}")],

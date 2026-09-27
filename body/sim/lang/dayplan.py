@@ -22,7 +22,8 @@ THE DAY (4.7's table; a life day is DAY_TICKS = 24,000 ticks; a shorter day scal
               been smiled at since, at most LESSON_LEVELS, back a level after NO_PROGRESS ticks with none); once "got" on it is
               mastered (2 x MASTERED_N smiles) the handle rung puts it into its hand ("hand_over") for lifts, shakes and hits;
               once those are, the give rung asks for it ("ask_give"). Floor play gives a lesson on LESSON_SHARE of its offers.
-              The roll, head-up and sit rungs have no setup act yet (the toy shown beside its head on the far side: to build).
+              The roll rung (A109): once it rolls, every other reach-rung lesson sets the toy beside its far shoulder past its
+              reach ("set_far"), so a roll brings it within reach. The head-up and sit rungs have no setup act yet.
   show time   her growth words (templates.GROWTH, in order) that the room can show and she can show now, at most the
               conduct's NEW_PER_DAY and NEW_EVERY, and "what is this?" of what it attends.
   away        "bye bye pip." and a wave, the walk to the door; calls from the hall every AWAY_CALL ticks (never judged);
@@ -80,6 +81,7 @@ class DayPlan:
         self.level = {}                    # her lessons (A90): toy -> the reach rung's level
         self.level_t = {}                  # toy -> the tick its level was set
         self.got_seen = {}                 # toy -> the "got" smiles counted at its last lesson
+        self.roll_turn = True              # A109: the next reach-rung lesson is the roll rung (once it rolls); they alternate
         self.last_pain = -10 ** 9
         self.bids = []                     # its vocal turns heard while she is away (ticks)
         self.night_said = False
@@ -209,6 +211,8 @@ class DayPlan:
         c, p = lane.conduct, lane._p
         seen = {s.id: s for s in p.seen}
         focus = [o for o in self.focus if o in seen]
+        free = [o for o in focus if seen[o].on != "hand"]                # A109: a toy in its hand is not the one to set out for it
+        focus = free or focus                                           # (her fetch never takes a toy from it, A4)
         if not focus:
             c.request("call")
         else:
@@ -216,7 +220,13 @@ class DayPlan:
             book = c.book
             got = int(book.get("got", {}).get(o, 0))
             handled = sum(int(book.get(k, {}).get(o, 0)) for k in ("lifted", "shook", "hit"))
-            if got < 2 * K.MASTERED_N:                                  # the reach and grasp rung
+            rolled = int(book.get("rolled", {}).get("", 0))
+            if got < 2 * K.MASTERED_N and rolled >= K.MASTERED_N and lane.posture in ("back", "front") and self.roll_turn:
+                self.roll_turn = False                                  # A109 (C91): the roll rung, every other lesson once it rolls (the
+                c.request("set_far", o=o)                               # roll smiled at MASTERED_N times): the toy set beside its far
+                self.log.append((t, "lesson", "roll", o, rolled))       # shoulder past its reach, so a roll brings it within reach and
+            elif got < 2 * K.MASTERED_N:                                # the toy is the reward (its own "got", worth 2 on that toy)
+                self.roll_turn = True                                   # the reach and grasp rung
                 lvl = int(self.level.get(o, 0))
                 if got > int(self.got_seen.get(o, 0)):                  # it got the toy since: a level farther
                     lvl = min(LESSON_LEVELS - 1, lvl + 1); self.level_t[o] = t
@@ -283,7 +293,7 @@ class DayPlan:
                     greeted=self.greeted, called=self.called,
                     focus=list(self.focus), next_play=self.next_play, next_call=self.next_call, last_pain=self.last_pain,
                     bids=list(self.bids), night_said=self.night_said, log=[list(x) for x in self.log[-200:]],
-                    level=dict(self.level), level_t=dict(self.level_t), got_seen=dict(self.got_seen))
+                    level=dict(self.level), level_t=dict(self.level_t), got_seen=dict(self.got_seen), roll_turn=bool(self.roll_turn))
 
     def load_state(self, s):
         self.rng.bit_generator.state = s["rng"]
@@ -297,6 +307,7 @@ class DayPlan:
         self.level = {k: int(v) for k, v in s.get("level", {}).items()}
         self.level_t = {k: int(v) for k, v in s.get("level_t", {}).items()}
         self.got_seen = {k: int(v) for k, v in s.get("got_seen", {}).items()}
+        self.roll_turn = bool(s.get("roll_turn", True))
 
 
 class _Plain:
