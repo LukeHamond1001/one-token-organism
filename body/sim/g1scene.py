@@ -36,6 +36,16 @@ import parent_kin as kin  # noqa: E402
 XML = HERE / "g1room.xml"
 XML_B = HERE / "g1room_b.xml"                 # A133: the changed room (make_g1room.py --layout=b): the furniture moved, the mat and toys kept
 ROOMS = {"a": XML, "b": XML_B}                # the runner's --room names
+XML_BODY_B = HERE / "g1room_body_b.xml"       # A134: the room of birth with the changed body (make_g1room.py --body=b)
+SCENES = {("a", "a"): XML, ("b", "a"): XML_B, ("a", "b"): XML_BODY_B}   # (room, body) -> the scene; the runner's --room and --body
+
+
+def scene_path(room="a", body="a"):
+    """the scene for a room layout (A133) and a body (A134); the two changes are not combined (no such scene is written)"""
+    try:
+        return SCENES[(room, body)]
+    except KeyError:
+        raise ValueError(f"no scene for room {room!r} with body {body!r}: the room and the body change one at a time")
 G1_FILE = HERE / "assets" / "unitree_g1" / "g1_with_hands.xml"
 
 # ---------------------------------------------------------------- the G1's parts

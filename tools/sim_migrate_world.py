@@ -30,11 +30,11 @@ from body.sim import extras as X  # noqa: E402
 from body.sim import g1scene as G  # noqa: E402
 
 
-def build(seed, extra, voice, lane=True, eyes=True, room="a"):
+def build(seed, extra, voice, lane=True, eyes=True, room="a", body="a"):
     """the world with its eyes and lane as tools/sim_life.py builds them (so the lane's and the eyes' states carry)"""
     from body.sim import lane as L
     from body.sim import eyes as E
-    w = W.G1World(seed=seed, extra=extra, xml=G.ROOMS[room])                 # A133: the room's layout
+    w = W.G1World(seed=seed, extra=extra, xml=G.scene_path(room, body))      # A133/A134: the room's layout and the body
     ey = E.Eyes(w) if eyes else None
     ln = None
     if lane:

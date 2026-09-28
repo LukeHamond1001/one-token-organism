@@ -1359,6 +1359,66 @@ def test_the_changed_room():
           f"loads and lives on; the lane's fixtures {sorted(lb.fixtures)}; the cup under the moved table tidied {np.linalg.norm(under - back):.2f} m back")
 
 
+def test_the_changed_body():
+    """world 32 (A134): the changed body, the pre-robot rehearsal. Body b (make_g1room.body_variant, g1room_body_b.xml) has the stock
+    G1's joints, actuators and bodies, its forearms a fifth longer (the wrist roll link 0.12 m from the elbow), its shanks a tenth longer
+    (the ankle 0.33 m below the knee), its elbow and knee links three tenths heavier and 1.5 kg more in all; the parent's reading of the
+    child's arm and the lane's reach follow the model (longer on body b); a room-a world of 30 ticks loads onto body b (every joint value
+    kept, the world living on, the hands farther from the shoulders in the same pose); a life born on body b lives 40 ticks; the room
+    and the body change one at a time (no scene for both)"""
+    from body.sim import g1scene as G
+    from body.sim import lane as L
+    from body.sim import parent_motion as PM
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+    from sim_life import FakeVoice
+    wa, wb = G1World(seed=1), G1World(seed=1, xml=G.XML_BODY_B)
+    ma, mb = wa.m, wb.m
+    assert (mb.nq, mb.nu, mb.nbody, mb.ngeom, mb.njnt) == (ma.nq, ma.nu, ma.nbody, ma.ngeom, ma.njnt)
+    assert np.allclose(mb.jnt_range, ma.jnt_range) and np.allclose(mb.actuator_ctrlrange, ma.actuator_ctrlrange)
+    for side in ("left", "right"):
+        assert abs(float(mb.body_pos[mb.body(f"{side}_wrist_roll_link").id][0]) - 0.12) < 1e-6 and abs(float(ma.body_pos[ma.body(f"{side}_wrist_roll_link").id][0]) - 0.10) < 1e-6
+        assert abs(float(mb.body_pos[mb.body(f"{side}_ankle_pitch_link").id][2]) + 0.33) < 1e-4 and abs(float(ma.body_pos[ma.body(f"{side}_ankle_pitch_link").id][2]) + 0.30) < 1e-4
+        assert abs(float(mb.body_mass[mb.body(f"{side}_elbow_link").id]) - 0.78) < 1e-3 and abs(float(mb.body_mass[mb.body(f"{side}_knee_link").id]) - 2.512) < 1e-3
+    mass_a, mass_b = float(ma.body_subtreemass[ma.body("pelvis").id]), float(mb.body_subtreemass[mb.body("pelvis").id])
+    assert 1.3 < mass_b - mass_a < 1.7, (mass_a, mass_b)
+    assert wb.parent.arm_m > wa.parent.arm_m + 0.015, (wa.parent.arm_m, wb.parent.arm_m)
+    la = L.ParentLane(G1World(seed=1), seed=1, voice=FakeVoice(), day_ticks=24000)
+    lb = L.ParentLane(G1World(seed=1, xml=G.XML_BODY_B), seed=1, voice=FakeVoice(), day_ticks=24000)
+    assert all(lb.arm_reach[s_] > la.arm_reach[s_] + 0.015 for s_ in la.arm_reach), (la.arm_reach, lb.arm_reach)
+    for _ in range(30):
+        wa.apply({})
+    blob = wa.save_state(); q0, t0 = wa.d.qpos.copy(), wa.tick
+    wb.load_state(blob)
+    assert wb.tick == t0 and np.allclose(wb.d.qpos, q0)
+    da, db = wa.d, wb.d
+    ra = np.linalg.norm(da.xpos[ma.body("left_wrist_yaw_link").id] - da.xpos[ma.body("left_shoulder_pitch_link").id])
+    rb = np.linalg.norm(db.xpos[mb.body("left_wrist_yaw_link").id] - db.xpos[mb.body("left_shoulder_pitch_link").id])
+    assert rb > ra + 0.01, (ra, rb)                                        # the same pose, the hand farther from the shoulder
+    for _ in range(20):
+        wb.frame(); wb.apply({})
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    w2 = G1World(seed=1, xml=G.XML_BODY_B)
+    cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9)
+    torch.manual_seed(0)
+    anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w2.tau_max])
+    Lf = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w2)
+    run = WorldLoop(Lf)
+    for _ in range(40):
+        run.step()
+    assert int(Lf.ticks) == 40
+    try:
+        G.scene_path("b", "b"); raise AssertionError("a scene for both changes")
+    except ValueError:
+        pass
+    print(f"world 32: body b: forearms 0.12 m (0.10), ankles 0.33 m below the knee (0.30), elbows 0.78 kg, knees 2.512 kg, {mass_b - mass_a:.2f} kg more;",
+          f"her reading of its arm {wa.parent.arm_m:.3f} -> {wb.parent.arm_m:.3f} m, the lane's reach {la.arm_reach['left']:.3f} -> {lb.arm_reach['left']:.3f};",
+          f"a room-a world of {t0} ticks loads (the hand {ra:.3f} -> {rb:.3f} m from the shoulder in the same pose) and lives on; a life born on it lives 40 ticks")
+
+
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)

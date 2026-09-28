@@ -61,7 +61,7 @@ def build(args):
     if args.extra:                                                          # A115: things added to the room (body/sim/extras.py); a pair
         from body.sim import extras as X                                    # saved before them is carried across by tools/sim_migrate_world.py
         extra = X.EXTRAS[args.extra]()
-    world = W.G1World(seed=args.seed, extra=extra, xml=G.ROOMS[args.room])   # A133: the room's layout (a: birth; b: the furniture moved)
+    world = W.G1World(seed=args.seed, extra=extra, xml=G.scene_path(args.room, args.body))   # A133/A134: the room's layout and the body
     eyes = E.Eyes(world) if not args.no_eyes else None
     if args.voice == "real":
         from body.sim.voice import synth as V
@@ -135,6 +135,7 @@ def main():
     ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
     ap.add_argument("--extra", default=None, help="a thing added to the room (body/sim/extras.py: book); the pair must have been migrated to it")
     ap.add_argument("--room", default="a", choices=("a", "b"), help="the room's layout (A133): a, the room of birth; b, its furniture moved")
+    ap.add_argument("--body", default="a", choices=("a", "b"), help="the body (A134): a, the stock G1; b, longer forearms and shanks, heavier limbs")
     ap.add_argument("--film", default=None, metavar="DIR", help="A123: the room's view saved as JPEG frames in DIR, one every --film-every ticks (the page's render; the captions come from ticks.jsonl by tick)")
     ap.add_argument("--film-every", type=int, default=3, help="ticks between frames (a multiple of the page's 3)")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
