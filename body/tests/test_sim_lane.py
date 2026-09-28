@@ -477,9 +477,64 @@ def test_the_roll_rung():
           f"the turn saved")
 
 
+
+def test_a_toy_she_could_not_get_to():
+    """lane 15 (A117, C102): a show of the cup in the room's corner behind the plant is refused by her motion ("nowhere to kneel by
+    the cup"), and her conduct, reading the refusal, leaves the cup where it lies (`conduct.left`): her lessons pass it over (the
+    lesson's toy is another), until it has moved LEFT_MOVED_M or the dawn (lane.dawn clears it). Saved with her conduct. Life days
+    13-14: the cup under the table asked for 17 times, refused each"""
+    import mujoco
+    from types import SimpleNamespace
+    from body.sim import parent_motion as PM
+    w, lane = _world(plan=True, day_ticks=2400)
+    m, d = w.m, w.d
+    b = m.body("toy_cup").id; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
+    d.qpos[adr:adr + 2] = (-2.5, -2.2); d.qvel[dof:dof + 6] = 0        # the room's corner behind the plant (the stacker's place on
+    for _k in range(60):                                                 # life days 13-14): no spot to kneel at
+        w.frame(); w.apply({})
+    assert w.parent._toy_spot(d.xpos[b][:2]) is None
+    c = lane.conduct
+    assert c.left == {}, c.left
+    i = w.parent.request(SimpleNamespace(kind="show", target="cup", during=None, thing=None))   # the act as her conduct's line
+    c.acts_open.append([i, "show", "cup", None, int(w.tick), "running"])                       # would ask it, opened in its book
+    for _k in range(900):
+        w.frame(); w.apply({})
+        if w.parent.status(i) in PM.DONE_STATES:
+            for _j in range(3):
+                w.frame(); w.apply({})
+            break
+    why = w.parent.why(i)
+    assert w.parent.status(i) == "refused" and "nowhere to kneel" in why, (w.parent.status(i), why)
+    assert "cup" in c.left, (why, c.left)
+    at = list(c.left["cup"])
+    assert c.left_where_it_lies("cup")
+    p = lane._p
+    seen = {s_.id: s_ for s_ in p.seen}
+    other = [o for o in ("duck", "block", "car", "bear", "ball") if o in seen and seen[o].on != "hand"]
+    lane.plan.focus = ["cup"] + other[:1]
+    lane.plan.roll_turn = False
+    n0 = len(lane.plan.log)
+    for _k in range(6):
+        lane.plan._lesson(w.tick, lane)
+    lessons = [x for x in lane.plan.log[n0:] if x[1] == "lesson"]
+    assert all(x[3] != "cup" for x in lessons), lessons             # never the cup she left
+    assert (lessons and all(x[3] == other[0] for x in lessons)) or not other, (lessons, other)
+    blob = c.state()
+    assert blob["left"] == {"cup": at}, blob["left"]
+    d.qpos[adr:adr + 2] = (-2.5 + 0.2, -2.2)                             # the cup moved (the child, or she): a toy again
+    mujoco.mj_forward(m, d)
+    assert not c.left_where_it_lies("cup") and "cup" not in c.left
+    c.left["duck"] = [0.0, 0.0]
+    lane.dawn(w)
+    assert c.left == {}, "the dawn clears what she left"
+    print(f"lane 15: the show of the cup behind the plant refused ({why[:40]}), the cup left where it lay {np.round(at, 2).tolist()};",
+          f"{len(lessons)} lessons since went to {sorted(set(x[3] for x in lessons))} (the cup passed over); moved 0.2 m it is a toy again;",
+          "the dawn clears the rest")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
-              test_the_roll_rung]
+              test_the_roll_rung, test_a_toy_she_could_not_get_to]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -637,6 +637,7 @@ class G1World(SimWorld):
         self.night = False
         self.dawn_left = 0
         self.carried = []                                               # A110: the child carried to the mat at a dawn (tick, from, to)
+        self.tidied = []                                                # A117 (B8): the lost toys put back at a dawn (tick, toy, from, to)
         self.light_day = {f: getattr(m, f).copy() for f in ("light_diffuse", "light_ambient", "light_specular")}
         self._below_n = 0                                                    # sub-steps called this life (an instrument)
         # birth
@@ -1033,12 +1034,68 @@ class G1World(SimWorld):
         """THE MORNING (5.4, A46): the light returns over the wake's first DAWN_TICKS ticks, the eyes and ears on, the parent awake;
         the world goes on from wherever the night left it, the child carried back onto the mat if it rolled off (A110)"""
         self.carry_to_mat()
+        self.tidy_toys()
         self.night = False
         self.dawn_left = DAWN_TICKS
         if self.parent is not None:
             self.parent.wake()
         if self.lane is not None:
             self.lane.dawn(self)
+
+    def tidy_toys(self):
+        """THE MORNING TIDY (B8, A117, C102): at a dawn, a toy the parent cannot get to (under solid furniture: a ray cast up from the
+        floor beside it meets the room; or with no spot she can kneel at to pick it up, parent_motion._toy_spot) and out of the child's
+        reach (0.5 m clear of it) is put back where it stood at birth (the model's qpos0), or on the first free point of a ring 0.3 m
+        round that place, as someone tidies a room overnight; a toy the child can reach is never moved. The cup lay under the low table
+        from life day 12 and the ball and the stacker in the room's corner behind the plant: her reach lessons asked for the cup 17 times
+        in two days and were refused each time. Returns the toys moved; each is logged in `tidied` and saved"""
+        from body.sim import parent_motion as PM
+        m, d = self.m, self.d
+        par = self.parent
+        if par is None:
+            return []
+        par.child = PM.Child(m, d, self.scene.g1_set)
+        gid = np.zeros(1, dtype=np.int32)
+
+        def covered(xy):
+            z = 0.02
+            for _ in range(8):
+                h = mujoco.mj_ray(m, d, np.array([xy[0], xy[1], z]), np.array([0.0, 0.0, 1.0]), None, 1, -1, gid)
+                if h < 0 or z + h > 1.5:
+                    return False
+                g = int(gid[0]); b = int(m.geom_bodyid[g])
+                if m.body_dofnum[b] == 0 and m.body_mocapid[b] < 0 and (m.geom_contype[g] or m.geom_conaffinity[g]):
+                    return True
+                z = z + h + 0.005
+            return False
+        moved = []
+        for k, b in sorted(par.toys.items()):
+            xy = d.xpos[b][:2].copy()
+            if par.child.clearance_xy(xy) < 0.5 or k in par.holding.values():
+                continue
+            if not covered(xy) and par._toy_spot(xy) is not None:
+                continue
+            j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
+            home = m.qpos0[adr:adr + 7].copy()
+            others = [d.xpos[b2][:2] for k2, b2 in par.toys.items() if k2 != k]
+            place = None
+            for ring, n in ((0.0, 1), (0.3, 8)):
+                for i in range(n):
+                    q = home[:2] + ring * np.array([math.cos(2 * math.pi * i / n), math.sin(2 * math.pi * i / n)])
+                    if par.child.clearance_xy(q) >= 0.45 and all(np.linalg.norm(q - o) >= 0.15 for o in others) and par._in_plan(q) \
+                            and par.plan.dist[par.plan.cell(q)] >= 0.10:
+                        place = q; break
+                if place is not None:
+                    break
+            if place is None:
+                continue
+            d.qpos[adr:adr + 2] = place; d.qpos[adr + 2] = home[2]; d.qpos[adr + 3:adr + 7] = home[3:7]
+            d.qvel[dof:dof + 6] = 0.0
+            self.tidied.append((int(self.tick), k, [float(xy[0]), float(xy[1])], [float(place[0]), float(place[1])]))
+            moved.append(k)
+        if moved:
+            mujoco.mj_forward(m, d)
+        return moved
 
     def save_state(self):
         """the whole world as bytes: the physics, the model's run-time fields, the senses' carry, the world's random
@@ -1190,6 +1247,7 @@ class G1World(SimWorld):
                               "eyes": None if self.eyes is None else self.eyes.state(),
                               "words_out": self.words_out, "tract_pa": self.tract_pa, "tract_raw": self.tract_raw, "crying": self.crying, "night": self.night, "dawn_left": int(self.dawn_left),
                               "carried": [[int(t), list(a), list(b)] for t, a, b in self.carried],
+                              "tidied": [[int(t), k, list(a), list(b)] for t, k, a, b in self.tidied],
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
 
@@ -1226,6 +1284,7 @@ class G1World(SimWorld):
         self.tract_raw = np.asarray(s5["tract_raw"], float).copy(); self.crying = bool(s5["crying"])
         self.night, self.dawn_left = bool(s5["night"]), int(s5["dawn_left"])
         self.carried = [(int(t), [float(x) for x in a], [float(x) for x in b]) for t, a, b in s5.get("carried", [])]   # (A110; older saves: none)
+        self.tidied = [(int(t), str(k), [float(x) for x in a], [float(x) for x in b]) for t, k, a, b in s5.get("tidied", [])]   # (A117; older saves: none)
         if self.lane is not None and s5.get("lane") is not None:
             self.lane.load_state(s5["lane"])
         mujoco.mj_forward(m, d)

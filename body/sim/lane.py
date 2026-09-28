@@ -592,6 +592,7 @@ class ParentLane:
         self.day += 1
         self.day_start = int(world.tick)
         self.distressed = False; self.face_down = 0; self.cry_down = 0   # A107 (C89): a face-down spell starts anew at waking: a child
+        self.conduct.left = {}                                           # A117: the toys she left where they lay: the room tidied (B8)
                                                                          # that slept prone and wakes prone is found so, and its distress
                                                                          # (after DISTRESS_TICKS) owes her turn again; the flag saved True
                                                                          # across a night gave day 6 no turn at all

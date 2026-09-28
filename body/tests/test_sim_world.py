@@ -1184,10 +1184,50 @@ def test_a_world_migrates_to_the_book():
           f"ticks with the child where it was; the tool's path and a plain load of the migrated save agree")
 
 
+
+def test_the_morning_tidy():
+    """world 24 (B8, A117, C102): at a dawn the lost toys are put back where they stood at birth: the cup under the low table (its 0.45 m
+    kneeling ring is the table; her hand's way in strikes the top), the stacker in the room's corner behind the plant (no spot to kneel);
+    a toy on the open floor and a toy within the child's reach stay where they lie; the tidy is logged and saved. Life days 12 to 14: the
+    cup under the table, her reach lessons refused with it 17 times"""
+    w = G1World(seed=1)
+    for _ in range(10):
+        w.apply({})
+    m, d = w.m, w.d
+
+    def put(toy, xy):
+        b = m.body(f"toy_{toy}").id; j = m.body_jntadr[b]
+        adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
+        d.qpos[adr:adr + 2] = xy; d.qvel[dof:dof + 6] = 0
+    put("cup", (0.38, 1.04)); put("stacker", (-2.53, -2.22)); put("ball", (1.6, -1.8))
+    mujoco.mj_forward(m, d)
+    for _ in range(10):
+        w.apply({})
+    before = {k: d.xpos[m.body(f"toy_{k}").id][:2].copy() for k in ("cup", "stacker", "ball", "duck", "block")}
+    ch = w.parent.child
+    near = [k for k in ("duck", "block") if ch.clearance_xy(before[k]) < 0.5]
+    assert w.parent._toy_spot(before["stacker"]) is None and w.parent._toy_spot(before["ball"]) is not None, "the corner's stacker lost, the ball not"
+    moved = w.tidy_toys()
+    after = {k: d.xpos[m.body(f"toy_{k}").id][:2].copy() for k in before}
+    home = {k: m.qpos0[m.jnt_qposadr[m.body_jntadr[m.body(f"toy_{k}").id]]:][:2].copy() for k in before}
+    assert set(moved) >= {"cup", "stacker"}, moved
+    assert all(np.linalg.norm(after[k] - home[k]) <= 0.31 for k in ("cup", "stacker")), {k: (after[k].round(2).tolist(), home[k].round(2).tolist()) for k in ("cup", "stacker")}
+    assert "ball" not in moved and np.linalg.norm(after["ball"] - before["ball"]) < 0.01, "the ball on the open floor stays"
+    assert all(k not in moved for k in near), (near, moved)
+    assert len(w.tidied) == len(moved) and all(t[1] in moved for t in w.tidied)
+    blob = w.save_state()
+    w2 = G1World(seed=1); w2.load_state(blob)
+    assert [t[1] for t in w2.tidied] == [t[1] for t in w.tidied]
+    for _ in range(20):
+        w.apply({})
+    assert all(d.qpos[m.jnt_qposadr[m.body_jntadr[m.body(f"toy_{k}").id]] + 2] > -0.01 for k in ("cup", "stacker")), "the put-back toys rest on the floor"
+    print(f"world 24: tidied {moved}: the cup {before['cup'].round(2).tolist()} -> {after['cup'].round(2).tolist()} (home {home['cup'].round(2).tolist()}),",
+          f"the stacker {before['stacker'].round(2).tolist()} -> {after['stacker'].round(2).tolist()}; the ball at {before['ball'].round(2).tolist()} and {near} by the child left; saved and loaded")
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

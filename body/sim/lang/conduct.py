@@ -264,6 +264,9 @@ POINTING = ("eyes", "head", "left", "right", "trunk")   # her motion's report ev
 FIELDS = POINTING + ("face",)                 # and her face ("mama" on a tick its expression moves)
 HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
+FETCH_KINDS = ("show", "bring_back", "bring_far", "hand_over")   # A117: her acts that begin by fetching a toy (parent_motion._fetch)
+LEFT_WHY = ("nowhere to kneel", "out of her reach", "beyond her reach", "cannot reach")   # ... and the motion's words for a toy she cannot get to
+LEFT_MOVED_M = 0.10                           # a left toy that has moved this far is a toy again (something changed: the child, or she, moved it)
 HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
 UNNAMED = "?"                                 # a field her motion left out or gave as no word: it points anywhere (fail-closed)
 AT_CHILD = ("child", "child_eyes", "child_periphery", "child_line")   # the child itself: her eyes or face on its face, her hand held open or
@@ -953,6 +956,11 @@ class Conduct:
                                               # ended (hers, and OUTSIDE's she did not ask for); the last ATTN_KEEP ticks
         self.acts_open = []                   # acts not yet reported ended: [motion id, kind, target, thing, tick, status];
         self.touched = set()                  # A111: the open hands-on acts (ids) in which her hold has engaged: from then to
+        self.left = {}                        # A117 (C102): the toys she left where they lie, {toy: [x, y] at her refusal}: an
+                                              # act of hers refused because she could not get to the toy (nowhere to kneel
+                                              # by it, beyond her reach); her lessons and shows pass it over until it has
+                                              # moved (0.10 m) or the next dawn (a person does not keep trying the toy
+                                              # under the table; life days 13-14: the cup asked for 17 times, refused each)
                                               # their end nothing the child does is its own (before it, her approach, it is)
                                               # OUTSIDE's kind for one she did not ask for
         self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
@@ -1068,6 +1076,10 @@ class Conduct:
             st = got[a[0]] if a[0] in got else self._status(a, t)
             if st in ENDED:
                 self.ended[a[0]] = st
+                if st == "refused" and a[1] in FETCH_KINDS and a[2] in getattr(self.motion, "toys", {}):
+                    why = str(self.motion.why(a[0]) or "")                  # A117: she could not get to the toy: left where it lies
+                    if any(k in why for k in LEFT_WHY):
+                        self.left[a[2]] = [float(v) for v in self.motion.d.xpos[self.motion.toys[a[2]]][:2]]
                 continue
             a[5] = st if isinstance(st, str) else "unreported"
             keep.append(a)
@@ -2253,11 +2265,24 @@ class Conduct:
                             until=win_end, trial=tid)
 
     # ------------------------------------------------------------------ save
+    def left_where_it_lies(self, toy):
+        """A117 (C102): whether a toy is one she left where it lies (a fetch of it refused) and it has not moved LEFT_MOVED_M since;
+        her lessons and shows pass such a toy over. Cleared at dawn (the room tidied, B8: lane.dawn)"""
+        at = self.left.get(toy)
+        if at is None or toy not in getattr(self.motion, "toys", {}):
+            return False
+        now = self.motion.d.xpos[self.motion.toys[toy]][:2]
+        if float(np.hypot(now[0] - at[0], now[1] - at[1])) >= LEFT_MOVED_M:
+            del self.left[toy]
+            return False
+        return True
+
     def state(self):
         return dict(fast=self.fast.state(), routine=self.routine, pending=self.pending, reply_due=self.reply_due,
                     no_target_since=self.no_target_since, attn=[dict(e, acts=[list(a) for a in e["acts"]]) for e in self.attn],
                     acts_open=[list(a) for a in self.acts_open], focus_acts=[list(a) for a in self.focus_acts],
                     touched=sorted(int(x) for x in self.touched),
+                    left={k: [float(x) for x in v] for k, v in self.left.items()},
                     face_until=self.face_until, probes=[dict(x) for x in self.probes], prompts=[list(x) for x in self.prompts],
                     trial=None if self.trial is None else dict(self.trial), trial_rng=self.trial_rng.bit_generator.state,
                     last_vocal_smile=self.last_vocal_smile, turn=self.turn,
@@ -2279,6 +2304,7 @@ class Conduct:
         self.attn = [_old_entry(e) for e in s["attn"]]     # (an older save's log: fail-closed, _old_entry)
         self.acts_open = [list(a)[:6] for a in s["acts_open"]]
         self.touched = set(int(x) for x in s.get("touched", []))
+        self.left = {k: [float(x) for x in v] for k, v in s.get("left", {}).items()}   # (A117; older saves: none)
         self.ended = {}
         self.face_until = s.get("face_until", NEVER)
         self.probes = [dict(x) for x in s.get("probes", ())]

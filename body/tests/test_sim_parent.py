@@ -1319,6 +1319,39 @@ def test_she_keeps_her_side():
           f"and the next attend kept her on its {her_side(ch3)} side, done in {out2['ticks']} ticks through {sorted(set(modes))}, no walk round")
 
 
+def test_a_toy_where_she_cannot_kneel():
+    """parent 25 (A117, C102): a toy whose 0.45 m kneeling ring is furniture or a wall is fetched from the nearest farther ring her
+    hand reaches it from: the cup under the low table (life days 13 and 14: 'nowhere to kneel by the cup' 12 times in a day, her
+    reach lessons refused with it), the ball in the room's corner; the stacker behind the corner's plant stays beyond her (refused,
+    as before). The show of the corner's ball runs whole: the walk, the kneel at the corner's mouth, the pick, the way back. (The cup
+    0.35 m under the table's top gets its spot, but her hand's body strikes the top on the way in: her arm from a kneel cannot go
+    under a 0.36 m table as a person's does lying down; the morning tidy, B8, brings such a toy back)"""
+    w = W.G1World(seed=1)
+    pm = w.parent
+
+    def put(toy, xy):
+        b = w.m.body(f"toy_{toy}").id; j = w.m.body_jntadr[b]
+        adr = w.m.jnt_qposadr[j]; dof = w.m.jnt_dofadr[j]
+        w.d.qpos[adr:adr + 2] = xy; w.d.qvel[dof:dof + 6] = 0
+    put("cup", (0.38, 1.04)); put("ball", (-2.23, -2.18)); put("stacker", (-2.53, -2.22))
+    mujoco.mj_forward(w.m, w.d)
+    _live(w, 20)
+    xy = {k: w.d.xpos[w.m.body(f"toy_{k}").id][:2].copy() for k in ("cup", "ball", "stacker")}
+    assert pm.plan.dist[pm.plan.cell(xy["cup"])] < 0.05 and pm.plan.dist[pm.plan.cell(xy["ball"])] < 0.05, (xy, "the toys lie where she cannot kneel")
+    sp = {k: pm._toy_spot(v) for k, v in xy.items()}
+    assert sp["cup"] is not None and sp["ball"] is not None and sp["stacker"] is None, sp
+    dist = {k: float(np.linalg.norm(sp[k][0] - xy[k])) for k in ("cup", "ball")}
+    assert 0.5 <= dist["cup"] <= 1.0 and 0.7 <= dist["ball"] <= 1.0, dist
+    assert all(pm.plan.dist[pm.plan.cell(sp[k][0])] >= K.BODY_R_M for k in ("cup", "ball")), "her spot on free floor"
+    held = []
+    out = T.run(w, [("show", "ball")], 1500, on_tick=lambda w_, k: held.append(dict(w_.parent.holding)))
+    a = out["acts"][0]
+    assert a["status"] == "done", a
+    assert any(v == "ball" for h in held for v in h.values()), "she held the ball"
+    print(f"parent 25: the corner's ball fetched from {dist['ball']:.2f} m (the show done in {out['ticks']} ticks: {a['why'][:50]}); a spot for the cup",
+          f"under the table at {dist['cup']:.2f} m; the stacker behind the plant refused")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1328,7 +1361,7 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
-                test_she_keeps_her_side]
+                test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

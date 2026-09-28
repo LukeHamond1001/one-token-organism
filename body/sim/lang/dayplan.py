@@ -165,8 +165,11 @@ class DayPlan:
             self._play(t, lane, kind)
         elif kind == "show" and t >= self.next_play and not busy:
             self._show(t, lane)
-        elif kind == "goodnight" and not self.night_said and not busy:
-            c.request("night"); self.night_said = True; self.log.append((t, "night"))
+        elif kind == "goodnight" and not self.night_said and not (c.pending is not None or c.trial is not None or not c.fast.voice_free(t)):
+            c.request("night"); self.night_said = True; self.log.append((t, "night"))   # A117: said over an act of hers still running (a person
+                                                                                       # says goodnight while she puts a toy away): with the
+                                                                                       # fetch's farther rings a fetch may run into the last
+                                                                                       # GOODNIGHT ticks (lane 8's 2,400-tick day: 30 of them)
         elif kind == "tasks" and t_day == self._block_end(t_day) - 1:
             c.request("return")
 
@@ -210,7 +213,7 @@ class DayPlan:
         """her lesson (A90; the module's doc): the rung the child is nearly at on a focus toy she sees, read from her conduct's book"""
         c, p = lane.conduct, lane._p
         seen = {s.id: s for s in p.seen}
-        focus = [o for o in self.focus if o in seen]
+        focus = [o for o in self.focus if o in seen and not c.left_where_it_lies(o)]   # A117: not a toy she could not get to
         free = [o for o in focus if seen[o].on != "hand"]                # A109: a toy in its hand is not the one to set out for it
         focus = free or focus                                           # (her fetch never takes a toy from it, A4)
         if not focus:
@@ -247,14 +250,15 @@ class DayPlan:
     def _play(self, t, lane, kind):
         c, p = lane.conduct, lane._p
         seen = {s.id: s for s in p.seen}
-        focus = [o for o in self.focus if o in seen]
+        focus = [o for o in self.focus if o in seen and not c.left_where_it_lies(o)]   # A117: not a toy she could not get to
         roll = float(self.rng.random())
         if focus and roll < LESSON_SHARE:                               # a lesson among her play (A90)
             self._lesson(t, lane)
             return
         roll = (roll - LESSON_SHARE) / (1.0 - LESSON_SHARE) if focus else roll
         if focus and roll < 0.5:
-            o = focus[int(self.rng.integers(len(focus)))]
+            free = [o for o in focus if seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
+            o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)
             c.request("show", o=o)
         elif kind == "floor" and roll < 0.65:
             c.request("peekaboo_hide"); c.routine = "peekaboo"

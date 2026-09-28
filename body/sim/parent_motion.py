@@ -225,6 +225,11 @@ PALM_GRASP_OUT = 0.016                      # the Dex3's grasp point (g1acts.GRA
 CARRY = {"k": "carry"}                      # a toy carried before her, at her waist
 MAX_JUMP_M = 0.25                           # her pelvis never moves more than this in a tick (walking: 0.12 m; kneeling down:
 MAX_LIMB_JUMP_M = 0.60                      # about 0.1 m), nor any segment more than this (a walking foot's swing: up to 0.4 m);
+FETCH_OFF_TRY = (0.45, 0.55, 0.65, 0.75, 0.85, 0.95)   # A117 (C102): her kneeling spot's distance from a toy she fetches, tried in
+                                            # turn: 0.45 m first (the pick from above at her knees, A5), then farther out where
+                                            # furniture or a wall stands on the ring (the cup under the low table: free spots from 0.55 m;
+                                            # the ball in the corner: from 0.75 m; measured on the dawn-15 pair), as far as a tall
+                                            # kneel's reach carries (_reachable_at's 1.0 m: arm 0.65, trunk 0.35). Ours
 ROLL_BEYOND_M = 0.10                        # A109 (C91): the roll rung's toy set this far past the reach of the arm on its far side: two
                                             # steps of the reach ladder (dayplan.LESSON_STEP), a full roll carries its body about that far
 PUT_AHEAD_M = 0.35                          # A109: the roll rung's toy set down this far before her pelvis (where set_near's toy lies
@@ -4566,35 +4571,43 @@ class ParentMotion:
         return ok
 
     def _toy_spot(self, xy):
-        """where she kneels (tall) to pick a toy up: 0.45 m from it, facing it, the spot farthest from the child among those whose
-        kneeling frames are clear of it (A4) and of other toys"""
+        """where she kneels (tall) to pick a toy up: facing it, at FETCH_OFF_TRY's first distance the floor leaves her (0.45 m, the
+        pick from above at her knees; farther out where furniture or a wall stands on that ring: A117, C102, the cup under the low
+        table and the ball in the room's corner, reached from the table's edge or the corner's mouth as a person kneels there and
+        reaches in), the spot farthest from the child among those at that distance whose kneeling frames are clear of it (A4) and
+        of other toys, and, beyond the first ring, from which her hand reaches the toy from a tall kneel (_reachable_at)"""
         toys = self._toys_xy()
-        best = None
-        for deg in range(0, 360, 20):
-            ang = math.radians(deg)
-            T2 = np.asarray(xy) - np.array([math.cos(ang), math.sin(ang)]) * 0.45
-            yaw = ang
-            fwd = np.array([math.cos(yaw), math.sin(yaw)]); left = np.array([-fwd[1], fwd[0]])
-            stand = T2 - fwd * STAND_BACK
-            if not (self._in_plan(T2) and self._in_plan(stand)) or self.plan.dist[self.plan.cell(stand)] < K.BODY_R_M + 0.05 \
-                    or self.plan.dist[self.plan.cell(T2)] < K.BODY_R_M:
-                continue
-            feet = [T2 + fwd * 0.40 + left * 0.12, T2 + fwd * 0.03 + left * 0.115, T2 + fwd * 0.03 - left * 0.115, stand]
-            if any(np.linalg.norm(q - v) < 0.14 for k, v in toys.items() if np.linalg.norm(v - xy) > 1e-6 for q in feet):
-                continue
-            if np.linalg.norm(feet[0] - xy) < 0.12:
-                continue
-            cl = self.child.clearance_xy(T2)
-            if cl < 0.45:
-                continue
-            if best is None or cl > best[0]:
-                best = (cl, T2, yaw)
-        if best is None:
-            return None
-        T2, yaw = best[1], best[2]
-        if self._clearance(frame_segs("kneel", "tall", T2, yaw)) < K.CLEAR_M:
-            return None
-        return T2, yaw
+        xy = np.asarray(xy, float)
+        for dist in FETCH_OFF_TRY:
+            best = None
+            for deg in range(0, 360, 20):
+                ang = math.radians(deg)
+                T2 = xy - np.array([math.cos(ang), math.sin(ang)]) * dist
+                yaw = ang
+                fwd = np.array([math.cos(yaw), math.sin(yaw)]); left = np.array([-fwd[1], fwd[0]])
+                stand = T2 - fwd * STAND_BACK
+                if not (self._in_plan(T2) and self._in_plan(stand)) or self.plan.dist[self.plan.cell(stand)] < K.BODY_R_M + 0.05 \
+                        or self.plan.dist[self.plan.cell(T2)] < K.BODY_R_M:
+                    continue
+                feet = [T2 + fwd * 0.40 + left * 0.12, T2 + fwd * 0.03 + left * 0.115, T2 + fwd * 0.03 - left * 0.115, stand]
+                if any(np.linalg.norm(q - v) < 0.14 for k, v in toys.items() if np.linalg.norm(v - xy) > 1e-6 for q in feet):
+                    continue
+                if np.linalg.norm(feet[0] - xy) < 0.12:
+                    continue
+                cl = self.child.clearance_xy(T2)
+                if cl < 0.45:
+                    continue
+                if dist > FETCH_OFF_TRY[0]:                                 # beyond her knees: her hand must reach it from there
+                    sd = "L" if float((xy - T2) @ left) > 0 else "R"
+                    if not self._reachable_at(sd, np.r_[xy, floor_z(xy) + 0.05], T2, yaw, "tall"):
+                        continue
+                if best is None or cl > best[0]:
+                    best = (cl, T2, yaw)
+            if best is not None:
+                T2, yaw = best[1], best[2]
+                if self._clearance(frame_segs("kneel", "tall", T2, yaw)) >= K.CLEAR_M:
+                    return T2, yaw
+        return None
 
     def _act_show(self, a, t):
         toy = self._toy(t)
