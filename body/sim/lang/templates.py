@@ -77,7 +77,7 @@ GROWTH = (
     ("sleep", "verb"), ("go", "verb"), ("get", "verb"), ("hold", "verb"), ("want", "verb"), ("all", "social"),
     ("done", "social"), ("and", "frame"), ("my", "frame"), ("i", "frame"), ("that", "social"), ("to", "frame"),
     ("can", "social"), ("not", "frame"), ("table", "fixture"), ("shelf", "fixture"), ("door", "fixture"), ("light", "fixture"),
-    ("box", "toy"), ("soft", "adj"), ("loud", "adj"), ("wow", "social"), ("thanks", "social"), ("please", "social"),
+    ("box", "toy"), ("tub", "toy"), ("soft", "adj"), ("loud", "adj"), ("wow", "social"), ("thanks", "social"), ("please", "social"),
     ("sat", "past"), ("rolled", "past"), ("fell", "past"), ("got", "past"), ("now", "social"), ("again", "social"),
     ("too", "social"), ("out", "social"), ("off", "social"), ("with", "frame"), ("has", "frame"), ("do", "frame"),
     ("did", "past"), ("walk", "verb"), ("hug", "verb"), ("toes", "body"), ("arm", "body"), ("leg", "body"), ("one", "social"),
@@ -102,7 +102,7 @@ PAST_EVENTS = {"sat": ("sat",), "rolled": ("rolled",), "fell": ("fell",), "got":
 # ("face", kind) her own face; ("child",) the child's body; ("never", why)
 NEEDS = {
     "rattle": ("obj", "rattle"), "ring": ("obj", "ring"), "stacker": ("obj", "stacker"), "book": ("obj", "book"),
-    "box": ("obj", "box"), "tower": ("obj", "tower"),
+    "box": ("obj", "box"), "tub": ("obj", "tub"), "tower": ("obj", "tower"),
     "red": ("twins", "red"), "blue": ("twins", "blue"), "yellow": ("twins", "yellow"), "green": ("twins", "green"),
     "big": ("never", "no two toys of one kind in two sizes"), "little": ("never", "no two toys of one kind in two sizes"),
     "soft": ("obj", "bear"), "loud": ("event", "drum_hit"), "hot": ("never", "nothing hot in the room"),
@@ -137,7 +137,8 @@ ROOM_AT_BIRTH = dict(
              "bear": ["brown"], "stacker": ["white"], "drum": ["cyan"], "ring": ["pink"],
              "book": ["black"],                # A115: the first novel toy (in the room only when the world adds it: extras.add_book);
                                                # black: no colour word of hers comes in with it
-             "box": ["grey"]},                 # A121: the second (extras.add_box); grey: no colour word of hers, no other kind of it
+             "box": ["grey"],                  # A121: the second (extras.add_box); grey: no colour word of hers, no other kind of it
+             "tub": ["olive"]},                # A126: the third, hollow (extras.add_tub); olive: no colour word of hers, no other kind of it
     fixtures=["mat", "sofa", "window", "table", "shelf", "door", "light", "floor"],
     events=list(EVENT_KINDS), face=["any"], acts=[])
 

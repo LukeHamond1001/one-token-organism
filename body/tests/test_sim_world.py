@@ -1258,6 +1258,52 @@ def test_a_world_with_the_book_migrates_to_the_box():
           f"in the model), both found by the lane among {len(ln.toys)} toys; the tool's path with old_extra agrees")
 
 
+def test_the_tub():
+    """world 30 (A126): the third novel object, the first hollow one. The tub (extras.add_tub: an open-top box, 18 cm inside, 12 cm high,
+    olive: a bucket) stands on the mat; the duck let go 5 cm above its rim falls in and is still inside 200 steps later (its centre within the
+    walls, above the tub's floor, below the rim); the duck let go beside the tub lies on the mat; the tub has its two hold welds and its
+    sound; the lane finds it among the toys ("tub", olive: no colour word of hers); a world of the book and the box migrates to the room
+    with the tub (the old model a prefix of the new, the joint values kept, the tub at its place)"""
+    import pickle
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+    import sim_migrate_world as MG
+    from body.sim import extras as X
+    from body.sim import lane as L
+    from sim_life import FakeVoice
+    w = G1World(seed=1, extra=X.add_tub(xy=(-0.3, -0.45)))
+    m, d = w.m, w.d
+    tub = m.body("toy_tub").id; duck = m.body("toy_duck").id
+    jd = m.joint("toy_duck").id; adr = m.jnt_qposadr[jd]; vadr = m.jnt_dofadr[jd]
+    for _ in range(40):
+        w.apply({})
+    c = d.xpos[tub].copy()
+    d.qpos[adr:adr + 3] = c + np.array([0.0, 0.0, X.TUB_H + 0.05]); d.qpos[adr + 3:adr + 7] = [1, 0, 0, 0]; d.qvel[vadr:vadr + 6] = 0.0
+    mujoco.mj_forward(m, d)
+    for _ in range(200):
+        w.apply({})
+    rel = d.xpos[duck] - d.xpos[tub]
+    assert abs(rel[0]) < X.TUB_IN and abs(rel[1]) < X.TUB_IN and X.TUB_WALL < rel[2] < X.TUB_WALL + X.TUB_H, rel
+    inside = np.round(rel, 3).tolist()
+    d.qpos[adr:adr + 3] = c + np.array([0.30, 0.0, 0.08]); d.qvel[vadr:vadr + 6] = 0.0
+    mujoco.mj_forward(m, d)
+    for _ in range(200):
+        w.apply({})
+    assert 0.02 < d.xpos[duck][2] < 0.06 and abs(d.xpos[duck][0] - c[0]) > X.TUB_IN + 0.05, d.xpos[duck]   # beside it: on the mat
+    assert m.equality("hold_R_tub").id >= 0 and mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_TEXT, "sound_tub") >= 0
+    ln = L.ParentLane(w, seed=1, voice=FakeVoice(), day_ticks=24000)
+    assert "tub" in ln.toys and ln.conduct.world["objects"].get("tub") == ["olive"], (ln.toys, ln.conduct.world["objects"])
+    w2 = G1World(seed=1, extra=X.add_book_box(xy=(0.3, -0.4)))
+    for _ in range(30):
+        w2.apply({})
+    blob = w2.save_state(); q0, t0 = w2.d.qpos.copy(), w2.tick
+    blob2, w3 = MG.migrate_blob(blob, "book_box_tub", xy=(-0.3, -0.45), yaw=0.0, seed=1, voice="fake", old_extra="book_box")
+    assert w3.tick == t0 and np.allclose(w3.d.qpos[:q0.size], q0) and w3.m.nq == w2.m.nq + 7
+    assert np.allclose(w3.d.xpos[w3.m.body("toy_tub").id][:2], (-0.3, -0.45), atol=0.03), w3.d.xpos[w3.m.body("toy_tub").id]
+    print(f"world 30: the tub: the duck let go over it lies inside at {inside} (m from the tub's origin) after 200 steps, beside it on the",
+          f"mat; its welds and sound in the model; the lane finds it (olive) among {len(ln.toys)} toys; a world of the book and the box",
+          f"carried to the room with the tub keeps its {q0.size} joint values, the tub at its place")
+
+
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)
