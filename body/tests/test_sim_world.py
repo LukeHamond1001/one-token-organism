@@ -1412,6 +1412,55 @@ def test_the_held_context():
           f"{on['rB'][1]:.2f} once settled (CTX_TAU {CTX_TAU}, CTX_SCALE {CTX_SCALE}); the night lets the context go")
 
 
+def test_a_reward_source_joins_a_living_body():
+    """world 29 (A127 on a living body): a life born with the two sources of birth (face, pain: three amygdala heads) lives 30 ticks and is
+    saved; loaded under SIM_CFG novelty 1 it has the third source and a fourth head, born at zero, beside the three saved heads whose
+    evidence (b, W, rel, pairs, the rings) is kept exactly; it lives 30 more ticks and pays for the new (positive reward on some tick);
+    loaded under novelty 0 nothing is widened"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    w = G1World(seed=1)
+    cfg0 = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, novelty=0)
+    torch.manual_seed(0)
+    anat0 = SimAnatomy(born_table(), cfg0, limits=[float(x) for x in w.tau_max])
+    L = Life.birth(anat0, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg0, seed=0, world=w)
+    run = WorldLoop(L)
+    for _ in range(30):
+        run.step()
+    H0 = len(L.m.amyg.heads); assert H0 == 3, L.m.amyg.heads
+    with torch.no_grad():
+        L.m.amyg.b += 1.0; L.m.amyg.W += 0.5; L.m.amyg.rel += 2.0; L.m.amyg.pairs += 3; L.m.amyg.ring_f += 0.25; L.m.amyg.ring_y += 0.125
+    saved = {k: getattr(L.m.amyg, k).clone() for k in ("b", "W", "rel", "pairs", "ring_f", "ring_y")}
+    with tempfile.TemporaryDirectory() as td:
+        path = os.path.join(td, "life.pt"); L.save(path)
+        got = {}
+        for nov in (1, 0):
+            cfg1 = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, novelty=nov)
+            w1 = G1World(seed=1)
+            anat1 = SimAnatomy(born_table(), cfg1, limits=[float(x) for x in w1.tau_max])
+            L1 = Life.load(path, anat1, cfg=cfg1, world=w1)
+            am = L1.m.amyg
+            assert len(am.heads) == H0 + nov and [h[0] for h in am.heads][:3] == ["face", "face", "pain"], am.heads
+            for k, dim in (("b", 1), ("W", 1), ("rel", 0), ("pairs", 0), ("ring_f", 1), ("ring_y", 1)):
+                t = getattr(am, k)
+                assert torch.equal(t.narrow(dim, 0, H0), saved[k]), k                         # the saved heads kept exactly
+                if nov:
+                    assert float(t.narrow(dim, H0, 1).abs().sum()) == 0.0, k                  # the new head born at zero
+            run1 = WorldLoop(L1); pos = 0
+            for _ in range(30):
+                run1.step()
+                r = L1._rec[int(L1.ticks) - 1] if getattr(L1, "_rec", None) is not None and int(L1.ticks) >= 1 else None
+                if r is not None and float(r[3]) > 0:
+                    pos += 1
+            got[nov] = dict(heads=[h[0] for h in am.heads], pos=pos, writes=int(getattr(L1, "_fwrites", 0)))
+    assert got[1]["heads"][-1] == "novelty" and got[1]["pos"] > 0, got
+    print(f"world 29: a life saved with heads {got[0]['heads']} loads under the novelty drive with {got[1]['heads']} (the fourth born at zero,",
+          f"the three kept exactly) and lives on: {got[1]['pos']} positive ticks of 30 with the drive, {got[0]['pos']} without")
+
+
 def test_the_morning_tidy():
     """world 24 (B8, A117, C102): at a dawn the lost toys are put back where they stood at birth: the cup under the low table (its 0.45 m
     kneeling ring is the table; her hand's way in strikes the top), the stacker in the room's corner behind the plant (no spot to kneel);

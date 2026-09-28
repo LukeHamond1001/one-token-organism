@@ -164,6 +164,20 @@ class PersistenceMixin:
         vw = blob["organs"].get("vcrit.weight")
         if vw is not None and vw.shape[1] < organs.vcrit.weight.shape[1]:   # an older critic without the trace inputs: those weights born at zero
             blob["organs"]["vcrit.weight"] = torch.cat([vw, torch.zeros(vw.shape[0], organs.vcrit.weight.shape[1] - vw.shape[1])], 1)
+        am_ = getattr(organs, "amyg", None)
+        if am_ is not None:
+            # A127 (the novelty drive on a living body): a reward source that joined the anatomy after the save has no head in the
+            # amygdala's evidence (a head per source sign, the sources' order the anatomy's, the new one last); its head is born at zero
+            # beside the saved ones, as an older gate's inputs are above, and the saved heads keep their evidence
+            widened_ = []
+            for k_, dim_ in (("amyg.b", 1), ("amyg.W", 1), ("amyg.rel", 0), ("amyg.pairs", 0), ("amyg.ring_f", 1), ("amyg.ring_y", 1)):
+                t_ = blob["organs"].get(k_); ref_ = getattr(am_, k_.split(".")[1], None)
+                if t_ is not None and ref_ is not None and t_.dim() == ref_.dim() and t_.shape[dim_] < ref_.shape[dim_]:
+                    pad_ = list(t_.shape); pad_[dim_] = int(ref_.shape[dim_] - t_.shape[dim_])
+                    blob["organs"][k_] = torch.cat([t_, torch.zeros(pad_, dtype=t_.dtype, device=t_.device)], dim_)
+                    widened_.append(k_)
+            if widened_:
+                print(f"load: the amygdala's heads widened to {len(am_.heads)} for a reward source that joined after the save (born at zero):", widened_, flush=True)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
         st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias", "wm_slot", "wm_on", "wm_age") if k_ in blob["organs"]}   # the striatal input, sized by the life below
         st_saved.update({k_: blob["organs"].pop(k_) for k_ in [k_ for k_ in blob["organs"] if k_ in ("stri_mline", "stri_eline") or k_.startswith("actors.")]})   # the later effectors' (step R5), the event lines' (R7a)
