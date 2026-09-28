@@ -78,6 +78,9 @@ How it runs:
   to another folder and add `--set KEY=VALUE` (the actor's day copy was `--set actor=1 --ticks 24000`, no page).
 - The records: `data/g1_seed1/ticks.jsonl` (one row a tick), `report.json` at each night, `run.log` (a line every 500 ticks); the days'
   logs are kept as `run_dayN.log`.
+- The film: `--film data/g1_seed1/film --film-every 3` saves the room's view as a JPEG frame every 3 ticks (A123); `tools/sim_film_cut.py
+  --frames ... --ticks data/g1_seed1/ticks.jsonl --from T0 --to T1 --fps 8 --out clip.mp4` joins them with captions from the records.
+  The frames and any cut stay out of git.
 - The suites: `body/tests/test_sim_world.py`, `test_sim_lane.py`, `test_sim_parent.py`, `test_sim_lang.py`, `test_sim_voice.py`,
   `test_sim_ears.py` and `test_motor.py`, each run as a script (`python3 body/tests/test_sim_parent.py`, one at a time beside the
   life). The pins: `tools/determinism_check.py --profile sim` must reproduce `tools/pins/digests.txt`, and the language default
