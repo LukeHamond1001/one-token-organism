@@ -86,10 +86,11 @@ def migrate_state(st, w_old, w_new):
     return out
 
 
-def migrate_blob(blob, extra_name, xy=(0.0, -0.6), yaw=0.0, seed=1, voice="fake"):
-    """the saved world's bytes (world.pt) -> the bytes of the same world with the extra added"""
+def migrate_blob(blob, extra_name, xy=(0.0, -0.6), yaw=0.0, seed=1, voice="fake", old_extra=None):
+    """the saved world's bytes (world.pt) -> the bytes of the same world with the extra added (old_extra: the extra the saved world
+    already lives with, so its model is built as the save was made: A121, a world with the book carried to the book and the box)"""
     extra = X.EXTRAS[extra_name](xy=xy, yaw_deg=yaw)
-    w_old, _, _ = build(seed, None, voice, lane=False, eyes=False)
+    w_old, _, _ = build(seed, X.EXTRAS[old_extra]() if old_extra else None, voice, lane=False, eyes=False)
     w_new, ey, ln = build(seed, extra, voice)
     st = pickle.loads(bytes(blob))
     st2 = migrate_state(st, w_old, w_new)
@@ -107,19 +108,20 @@ def main():
     ap.add_argument("--yaw", type=float, default=0.0)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--voice", choices=("real", "fake"), default="fake")
+    ap.add_argument("--old-extra", default=None, choices=sorted(X.EXTRAS), help="the extra the saved world already lives with (A121)")
     a = ap.parse_args()
     src = os.path.join(a.pair, "world.pt")
     with open(src, "rb") as f:
         blob = pickle.load(f)
-    blob2, w = migrate_blob(blob, a.extra, tuple(a.xy), a.yaw, a.seed, a.voice)
+    blob2, w = migrate_blob(blob, a.extra, tuple(a.xy), a.yaw, a.seed, a.voice, old_extra=a.old_extra)
     bak = os.path.join(a.pair, f"world_before_{a.extra}.pt")
     shutil.copy2(src, bak)
     tmp = src + ".tmp"
     with open(tmp, "wb") as f:
         pickle.dump(blob2, f, protocol=4)
     os.replace(tmp, src)
-    b = w.m.body(f"toy_{a.extra}").id
-    print(f"migrated {src} to the room with the {a.extra} at {np.round(w.d.xpos[b], 3).tolist()} (tick {w.tick}); the old world kept as {bak}", flush=True)
+    b = w.m.body(f"toy_{X.NEW_TOY[a.extra]}").id
+    print(f"migrated {src} to the room with the {X.NEW_TOY[a.extra]} at {np.round(w.d.xpos[b], 3).tolist()} (tick {w.tick}); the old world kept as {bak}", flush=True)
 
 
 if __name__ == "__main__":

@@ -135,8 +135,9 @@ assert all(w in NEEDS for w, c in GROWTH if c != "frame"), [w for w, c in GROWTH
 ROOM_AT_BIRTH = dict(
     objects={"ball": ["red"], "block": ["blue"], "duck": ["yellow"], "cup": ["green"], "rattle": ["purple"], "car": ["orange"],
              "bear": ["brown"], "stacker": ["white"], "drum": ["cyan"], "ring": ["pink"],
-             "book": ["black"]},               # A115: the first novel toy (in the room only when the world adds it: extras.add_book);
+             "book": ["black"],                # A115: the first novel toy (in the room only when the world adds it: extras.add_book);
                                                # black: no colour word of hers comes in with it
+             "box": ["grey"]},                 # A121: the second (extras.add_box); grey: no colour word of hers, no other kind of it
     fixtures=["mat", "sofa", "window", "table", "shelf", "door", "light", "floor"],
     events=list(EVENT_KINDS), face=["any"], acts=[])
 

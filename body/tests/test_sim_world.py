@@ -1215,6 +1215,48 @@ def test_a_world_migrates_to_the_book():
 
 
 
+def test_a_world_with_the_book_migrates_to_the_box():
+    """world 25 (A121): a world that already lives with the book (A115) is carried into the room with the book and the box
+    (extras.add_book_box; the saved model built with `old_extra`): the old model a prefix of the new, every joint value equal, the
+    book where the save had it and the box at its place, the lane finding both ("box", grey: no colour word of hers), the world
+    living on; the tool's own path agrees. The second transfer test's door"""
+    import pickle
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+    import sim_migrate_world as MG
+    from body.sim import extras as X
+    from body.sim import lane as L
+    from sim_life import FakeVoice
+    w = G1World(seed=1, extra=X.add_book(xy=(0.3, -0.4)))
+    for _ in range(30):
+        w.apply({})
+    blob = w.save_state()
+    q0, v0, t0 = w.d.qpos.copy(), w.d.qvel.copy(), w.tick
+    bk0 = w.d.xpos[w.m.body("toy_book").id].copy()
+    w_old = G1World(seed=1, extra=X.add_book())
+    w_new = G1World(seed=1, extra=X.add_book_box(xy=(-0.4, -0.3)))
+    assert w_new.m.nq == w_old.m.nq + 7 and w_new.m.nu == w_old.m.nu and w_new.m.neq == w_old.m.neq + 2
+    st2 = MG.migrate_state(pickle.loads(bytes(blob)), w_old, w_new)
+    w_new._restore(st2)
+    assert w_new.tick == t0 and np.allclose(w_new.d.qpos[:q0.size], q0) and np.allclose(w_new.d.qvel[:v0.size], v0)
+    assert np.allclose(w_new.d.xpos[w_new.m.body("toy_book").id], bk0, atol=0.01)      # the book where the save had it
+    b = w_new.m.body("toy_box").id
+    assert np.allclose(w_new.d.xpos[b][:2], (-0.4, -0.3), atol=0.02), w_new.d.xpos[b]
+    ln = L.ParentLane(w_new, seed=1, voice=FakeVoice(), day_ticks=24000)
+    assert "book" in ln.toys and "box" in ln.toys and ln.conduct.world["objects"].get("box") == ["grey"], (ln.toys, ln.conduct.world["objects"])
+    assert mujoco.mj_name2id(w_new.m, mujoco.mjtObj.mjOBJ_TEXT, "sound_box") >= 0 and w_new.m.equality("hold_R_box").id >= 0
+    for _ in range(20):
+        w_new.frame(); w_new.apply({})
+    assert 0.03 < w_new.d.xpos[b][2] < 0.08, w_new.d.xpos[b]                          # the box rests on the mat
+    blob2, w3 = MG.migrate_blob(blob, "book_box", xy=(-0.4, -0.3), yaw=0.0, seed=1, voice="fake", old_extra="book")
+    assert np.allclose(w3.d.qpos[:q0.size], q0) and "box" in w3.lane.conduct.world["objects"] and "book" in w3.lane.conduct.world["objects"]
+    w4 = G1World(seed=1, extra=X.add_book_box(xy=(-0.4, -0.3)))
+    w4.load_state(blob2)
+    assert w4.tick == t0 and np.allclose(w4.d.qpos[:q0.size], q0)
+    print(f"world 25: a world of {t0} ticks with the book carried into the room with the book and the box: {q0.size} joint values equal,",
+          f"the book kept at {np.round(bk0[:2], 2).tolist()}, the box at {np.round(w_new.d.xpos[b][:2], 2).tolist()} (grey, its welds and sound",
+          f"in the model), both found by the lane among {len(ln.toys)} toys; the tool's path with old_extra agrees")
+
+
 def test_the_morning_tidy():
     """world 24 (B8, A117, C102): at a dawn the lost toys are put back where they stood at birth: the cup under the low table (its 0.45 m
     kneeling ring is the table; her hand's way in strikes the top), the stacker in the room's corner behind the plant (no spot to kneel);
@@ -1257,7 +1299,7 @@ def test_the_morning_tidy():
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -53,6 +53,7 @@ KINDS = {
     "drum": dict(modes=[(110, 0.25, 1.0), (240, 0.12, 0.5), (420, 0.06, 0.2)], click=(0.003, 0.2), loud=1.2),        # a boom
     "ring": dict(modes=[(3000, 0.01, 0.3)], click=(0.004, 1.0), loud=0.5, motion="crinkle"),                 # a crinkle handled
     "book": dict(modes=[(320, 0.03, 1.0), (900, 0.015, 0.3)], click=(0.003, 0.6), loud=0.7),                   # a board book's slap (A115)
+    "box": dict(modes=[(180, 0.05, 1.0), (430, 0.03, 0.4)], click=(0.004, 0.5), loud=0.6),                    # a hollow cardboard knock (A121)
     "g1": dict(modes=[(95, 0.04, 1.0), (310, 0.02, 0.5)], click=(0.002, 0.4), loud=1.0),                     # its housing on foam
     "step": dict(modes=[(80, 0.05, 1.0), (260, 0.03, 0.4)], click=(0.003, 0.5), loud=0.5),                   # her heel on the floor
 }

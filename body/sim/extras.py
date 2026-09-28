@@ -40,4 +40,42 @@ def add_book(xy=(0.0, -0.60), yaw_deg=0.0):
     return extra
 
 
-EXTRAS = {"book": add_book}                   # the runner's --extra names
+BOX_HALF = 0.045                              # m: a small cardboard box, a 9 cm cube (ours: a second novel toy, a shape unlike the book's slab)
+BOX_MASS = 0.12                               # kg (a small filled cardboard box)
+BOX_RGBA = (0.62, 0.58, 0.52, 1.0)            # cardboard grey-brown; "grey" in her inventory: no colour word of hers (templates.COLOURS
+                                              # are blue, green, red, yellow), and no other kind of that colour (C101)
+
+
+def add_box(xy=(0.3, -0.4), yaw_deg=0.0):
+    """-> extra(spec): the box set at xy on the mat (A121, the second novel toy: its time to the child's first grasp against the
+    book's 592 ticks), with the toys' contacts, its two hold welds and its sound text, as the book has"""
+    def extra(spec):
+        b = spec.worldbody.add_body(name="toy_box", pos=[float(xy[0]), float(xy[1]), 0.012 + BOX_HALF + 0.001])
+        q = np.zeros(4); mujoco.mju_axisAngle2Quat(q, np.array([0.0, 0.0, 1.0]), np.radians(float(yaw_deg)))
+        b.quat = q.tolist()
+        b.add_freejoint(name="toy_box")
+        g = b.add_geom(name="box", type=mujoco.mjtGeom.mjGEOM_BOX, size=[BOX_HALF] * 3, mass=BOX_MASS, rgba=list(BOX_RGBA))
+        g.contype = 4; g.conaffinity = 15; g.priority = WORLD_PRIORITY          # make_g1room.TOY
+        g.friction = [1.0, 0.01, 0.001]                                          # the block's
+        g.solref = [0.015, 1.0]; g.solimp = [0.9, 0.95, 0.001, 0.5, 2.0]
+        for hs in ("L", "R"):
+            w = spec.add_equality()
+            w.type = mujoco.mjtEq.mjEQ_WELD; w.objtype = mujoco.mjtObj.mjOBJ_BODY; w.name = f"hold_{hs}_box"
+            w.name1 = f"parent_hand_{hs}"; w.name2 = "toy_box"
+            w.active = False; w.solref = [0.006, 1.0]
+        spec.add_text(name="sound_box", data="a hollow cardboard knock when it lands or is struck")
+    return extra
+
+
+def add_book_box(xy=(0.3, -0.4), yaw_deg=0.0):
+    """-> extra(spec): the room with the book (where the model compiles it; a carried world puts it where its save has it) and the
+    box at xy: the runner's --extra for a life that has met both (A121)"""
+    book, box = add_book(), add_box(xy=xy, yaw_deg=yaw_deg)
+
+    def extra(spec):
+        book(spec); box(spec)
+    return extra
+
+
+EXTRAS = {"book": add_book, "box": add_box, "book_box": add_book_box}   # the runner's --extra names
+NEW_TOY = {"book": "book", "box": "box", "book_box": "box"}             # the toy each extra brings in (the migration tool's report)
