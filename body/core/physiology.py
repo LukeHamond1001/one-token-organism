@@ -490,6 +490,8 @@ FRAMES = dict(
     ctx_key=0,                    # A128 (the sim's brain sprint): the held context as a recall key, body/core/memory.py query_from (CTX_TAU,
                                   # CTX_SCALE): the stream's direction integrated over CTX_TAU ticks joins the frames' key
     inner_speech=0,               # A137 (the sim's brain sprint): the inner word: the voice's sure, unsounded choice held as the goal word too
+    imagine_key=0,                # A138 (the sim's brain sprint): waking imagination at an event's end (sleep.py _imagine): the imagined
+    imagine_pav=0,                # frames' direction in the recall key; the amygdala's forecast on them in the gates' approach-and-avoid bias
                                   # new pays NOVELTY_GAIN; a switch of the body, off at birth, measured on a day copy
     # STEP R7f, THE WORKING-MEMORY LATCH ON THE FRAMES' EVENT ENDS (7.6, 10's "event end"): 1 = working memory (wm) latches the striatal
     # expansion at the frames' event ends (R7b) in place of the utterances' ends; 0 = at the utterances' ends (the language body's).

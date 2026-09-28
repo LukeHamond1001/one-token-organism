@@ -641,6 +641,13 @@ class MouthMixin:
                     z = z + float(self._amyg_const("amyg_pav_beta")) * float(self._amyg_now.get("rho_bad", 0.0)) * max(-c_, min(c_, float(self._amyg_now["N"])))
                 else:
                     z = z + float(self._amyg_const("amyg_pav_beta")) * max(-c_, min(c_, float(self._amyg_now["N"])))
+            if int(self.cfg.get("imagine_pav", 0)) and getattr(self, "_imag_N", None) is not None and self._amyg_on() \
+                    and getattr(self, "_amyg_now", None) is not None:
+                # A138 (imagine_pav): the amygdala's forecast on the future the body has just imagined (sleep.py _imagine, fading) joins
+                # the gate's logit as the felt one does under amyg_pav's earned form: beta x the aversive heads' earned reliability x
+                # clip(the imagined net valence): a go toward an imagined good, a freeze before an imagined bad
+                c_ = float(self._amyg_const("amyg_pav_clip"))
+                z = z + float(self._amyg_const("amyg_pav_beta")) * float(self._amyg_now.get("rho_bad", 0.0)) * max(-c_, min(c_, float(self._imag_N)))
             fl = float(self.cfg["gate_floor"])
             p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))
             rfx = e.reflex(frame, self, st)                               # its spinal reflex this tick (step R6), or None

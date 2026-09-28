@@ -214,6 +214,7 @@ class FramesMixin:
         if int(self._frame_const("wm_frames")) and int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
             with torch.no_grad():                                      # R7f: working memory latches at the frames' event end (wm_frames)
                 self.m.wm_latch(self.m.striatum_read())
+        self._imagine()                                                # A138: an event's end is the pause the body thinks ahead in
         ends = getattr(self, "_rec_ends", None)
         if ends is None:
             ends = []; self._rec_ends = ends
@@ -372,6 +373,7 @@ class FramesMixin:
                 self._frame_write(key, total, base * (1.0 + float(tag_w)), base=base, tag_w=tag_w)
         self._record_tick(s if s is not None else 0.0, delta, tag, r)
         self._goal_trace(nxt)                                         # A130: the word it said this tick held for the next keys
+        self._imagine_fade()                                          # A138: the imagined future fades
         self._frame_foresee()
         if self._night_frames_on():
             self._tape_tick()                                         # step R8: the tick taped beside its record (body/core/sleep.py)
@@ -425,7 +427,7 @@ class FramesMixin:
         carried over, the next frame written the morning's start; the day's record and its ends let go (R8 cuts them into episodes
         first); the running means, the settle law's averages and the write gate's quantile kept"""
         self._ffc = None; self._fkey_prev = None; self._fw_err = None; self._flast_write = None; self._fstart_armed = True
-        self._rec = None; self._rec_n = 0; self._rec_ends = []; self._goal = None; self._ctx = None   # A130/A128: the held word and the held
+        self._rec = None; self._rec_n = 0; self._rec_ends = []; self._goal = None; self._ctx = None; self._imag = None; self._imag_N = None   # A130/A128/A138: the held word, the held
                                                                                                         # context let go with the day
         if getattr(self, "_fboosts", None) is not None:
             self._fboosts = []                                        # R7d: the later boosts end at the night (its fade remaps the slots)

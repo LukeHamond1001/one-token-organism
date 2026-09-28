@@ -103,10 +103,13 @@ STEP R8c, THE LIVE, DARK NIGHT (SIM_DESIGN.md 3.6, 3.7, 5.4, A46, C74; the switc
 import math
 
 import torch
+import torch.nn.functional as F
+from .memory import GOAL_TAU                                        # A138: the imagined future fades as the held word does
 
 from .amygdala import episode_entries, night_draw  # noqa: F401  (night_draw: R8b's)
 from .physiology import FRAMES, SLEEP
 
+IMAG_SEED = 3                                # A138: the tape's rows the waking imagination starts from (REM's k: the window's first 3)
 TAPE_BLOCK = 512                                                         # rows a block of the day's tape holds (a save keeps its last block
                                                                          # whole: at most 511 rows unused, about 4 MB at the G1's sizes)
 
@@ -695,19 +698,13 @@ class SleepMixin:
                 dig = [int(lg.argmax()) for lg in logits]
             return int(tab.flat(dig))
 
-    def _rem_frames(self, ep, k=3):
-        """REM ON FRAMES (step R8b; REM stays on: the owner's ruling; the first design's "REM samples discrete channels, takes the mean
-        forecast for vectors"): from the window's first k positions as the day received them, the cortex runs free for rem_steps
-        positions: the words drawn from its readout at the REM temperature (the rest among them: on frames a position is a tick, and the
-        words' rest is their usual state; THE BUILDER'S READING, for the lead: the words' dreams draw a symbol at every position, as a
-        dream of words has no quiet), every later vector channel's code its head's forecast (the mean forecast), every effector at rest
-        and no sound of its own (the body is still in REM; its twitches are the world's, R8c). The prefrontal heads learn along the free
-        run, the stream held (as the words' REM: `_rem_rollout`). Returns (loss, cos) or (None, None)"""
-        m = self.m; dev = self.dev; L = int(self.cfg["rem_steps"])
-        r_ = self._episode_rows(ep)
-        T0 = min(int(k), int(r_["v"].shape[0]))
-        if T0 < 1:
-            return None, None
+    def _rollout(self, r_, bands0, T0, L, rt, limbs):
+        """THE STREAM RUN FREE (REM's, A132's and A138's one machinery): from T0 seed positions as the day received them (`r_`: the tape's
+        or a reel's rows s, v, a) the cortex runs L positions on its own: the words drawn from its readout at temperature `rt` (0: its
+        best), every later vector channel's code its head's forecast, every motor effector's act its imagined one under `limbs` (else
+        its rest), the bands from `bands0` at the window's start. Returns the states, the bands, the symbols, the codes, the acts and
+        the layout, under no gradient (REM's loss is taken from the states after)"""
+        m = self.m; dev = self.dev
         sym, vec, mot = self._tape_layout()
         words = self.anatomy.words
         idx = {c_.name: i_ for i_, c_ in enumerate(self.anatomy.channels)}
@@ -717,18 +714,13 @@ class SleepMixin:
             for c_ in vec:
                 codes[c_.name] = [c_.encode(m, r_["v"][t, off:off + int(c_.size)].float().to(dev)) for t in range(T0)]
                 off += int(c_.size)
-        bands = ep["bands0"].float().to(dev); bundles, Cs, bnext = [], [], []   # from the day's bands at the window's start (the lead's item 1)
+        bands = bands0.float().to(dev); bundles, Cs, bnext = [], [], []
         bans = list(self.bans)
-        limbs = int(self.cfg.get("rem_limbs", 0))
-        # A132 (rem_limbs): the limbs dream too. The seed positions carry the day's own acts (the tape's `a`), and along the free run each
-        # motor effector's act is its imagined one (`_rem_limb_act`), an efference copy in the dream's inputs, so the forecast heads learn
-        # what follows an act it only imagined (mental practice: the forward model rehearsed in sleep). Off: every effector at rest
         macts = {e.name: [int(r_["a"][t, j]) for t in range(T0)] for j, e in enumerate(mot)} if limbs else {}
         with torch.no_grad():
             for step in range(T0 + L):
                 if step >= T0:
                     lg = m.readout(m.latent_pred(Cs[-1])).clone(); lg[bans] = float("-inf")
-                    rt = self._rem_temperature()
                     syms[words.name].append(int(torch.multinomial(torch.softmax(lg / rt, 0).cpu(), 1, generator=self.gen)) if rt > 0 else int(lg.argmax()))
                     for c_ in sym:
                         if c_.name != words.name:
@@ -752,10 +744,98 @@ class SleepMixin:
                 C = m.stream(u)[-1]; Cs.append(C)
                 bands = m.band_update(bands, C)
                 bnext.append(bands.clone())
-        C_free = torch.stack(Cs[T0 - 1:-1]); B_next = torch.stack(bnext[T0 - 1:-1])
+        return dict(Cs=Cs, bnext=bnext, syms=syms, codes=codes, macts=macts, sym=sym, vec=vec, mot=mot)
+
+    def _rem_frames(self, ep, k=3):
+        """REM ON FRAMES (step R8b; REM stays on: the owner's ruling; the first design's "REM samples discrete channels, takes the mean
+        forecast for vectors"): from the window's first k positions as the day received them, the cortex runs free for rem_steps
+        positions (`_rollout`: the words drawn from its readout at the REM temperature, every later vector channel's code its head's
+        forecast, every effector at rest, or under rem_limbs its imagined act, A132). The prefrontal heads learn along the free run,
+        the stream held (as the words' REM: `_rem_rollout`). Returns (loss, cos) or (None, None)"""
+        m = self.m; L = int(self.cfg["rem_steps"])
+        r_ = self._episode_rows(ep)
+        T0 = min(int(k), int(r_["v"].shape[0]))
+        if T0 < 1:
+            return None, None
+        ro = self._rollout(r_, ep["bands0"], T0, L, self._rem_temperature(), int(self.cfg.get("rem_limbs", 0)))
+        C_free = torch.stack(ro["Cs"][T0 - 1:-1]); B_next = torch.stack(ro["bnext"][T0 - 1:-1])
         if C_free.shape[0] < 2:
             return None, None
         return m.forecast_loss(C_free, B_next, sig=0.0)
+
+    def _tape_tail(self, k):
+        """the tape's last k rows (s, v, a stacked) and the bands at the first of them, or None with fewer rows (A138's seed)"""
+        tape = getattr(self, "_tape", None); n = int(getattr(self, "_tape_n", 0))
+        if not tape or n < k:
+            return None, None
+        rows = {"s": [], "v": [], "a": []}
+        for i in range(n - k, n):
+            b, r = divmod(i, TAPE_BLOCK)
+            for key in rows:
+                rows[key].append(tape[b][key][r])
+        b0, r0 = divmod(n - k, TAPE_BLOCK)
+        return {key: torch.stack(v) for key, v in rows.items()}, tape[b0]["bands"][r0]
+
+    def _imagine(self):
+        """A138 (imagine_key, imagine_pav): WAKING IMAGINATION at an event's end (the frames' `_frame_end`, a natural pause): the stream
+        run free from the tape's last IMAG_SEED rows for rem_steps positions with its imagined words, codes and (under rem_limbs) acts,
+        the one machinery REM runs asleep (`_rollout`), and two things kept of it, both fading with GOAL_TAU as the held word does:
+        `_imag`, the unit direction of the imagined frames' mean value (their codes and efference copies), which joins the recall key at
+        IMAG_SCALE (imagine_key: what it recalls into its acts is conditioned on where it is about to be, the hippocampal forward sweep,
+        Johnson and Redish 2007), and `_imag_N`, the amygdala's forecast on the imagined states (its reliable heads' anticipated good
+        less bad; no learning), which joins the gates' approach-and-avoid bias (imagine_pav: a freeze before an imagined bad, a go toward
+        an imagined good, Guitart-Masip et al. 2012's bias on a future the body has only imagined). Nothing at night; nothing until the
+        tape has its seed rows"""
+        want_key = int(self.cfg.get("imagine_key", 0)); want_pav = int(self.cfg.get("imagine_pav", 0))
+        if not (self._recall_on() and (want_key or want_pav)) or not self._night_frames_on():
+            return
+        rows, bands0 = self._tape_tail(IMAG_SEED)
+        if rows is None:
+            return
+        m = self.m; dev = self.dev; L = int(self.cfg.get("rem_steps", 8)); T0 = IMAG_SEED
+        ro = self._rollout(rows, bands0, T0, L, self._rem_temperature(), int(self.cfg.get("rem_limbs", 0)))
+        words = self.anatomy.words
+        with torch.no_grad():
+            if want_key:
+                vals = []
+                for j in range(T0, T0 + L):
+                    v = torch.zeros(m.d, device=dev)
+                    for c_ in ro["vec"]:
+                        v = v + ro["codes"][c_.name][j]
+                    s_ = int(ro["syms"][words.name][j])
+                    if s_ != int(self.sil):
+                        v = v + m.E.weight[s_]
+                    for e in ro["mot"]:
+                        a_ = int(ro["macts"][e.name][j]) if ro["macts"] else int(e.rest_id)
+                        if a_ != int(e.rest_id):
+                            v = v + m.acts[e.name](torch.tensor(a_, device=dev))
+                    vals.append(v)
+                V = torch.stack(vals).mean(0)
+                if float(V.norm()) > 0.0:
+                    self._imag = F.normalize(V.float(), dim=0)
+            if want_pav and self._amyg_on():
+                org = self.m.amyg; rho = org.reliability(int(self._amyg_const("amyg_pairs")))
+                Ns = []
+                for j in range(T0, T0 + L):
+                    x = self._amyg_input(ro["Cs"][j], None)
+                    rf = rho * (x @ org.W).clamp_min(0.0)
+                    Ns.append(float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg > 0.0))
+                              - float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg < 0.0)))
+                self._imag_N = float(sum(Ns) / len(Ns)) if Ns else 0.0
+        self._imag_n = int(getattr(self, "_imag_n", 0)) + 1
+
+    def _imagine_fade(self):
+        """the imagined future fades with the held word's time constant (called once a tick after the frame's write)"""
+        im = getattr(self, "_imag", None)
+        if im is not None:
+            with torch.no_grad():
+                im.mul_(1.0 - 1.0 / float(GOAL_TAU))
+            if float(im.norm()) < 1e-3:
+                self._imag = None
+        if getattr(self, "_imag_N", None) is not None:
+            self._imag_N = float(self._imag_N) * (1.0 - 1.0 / float(GOAL_TAU))
+            if abs(self._imag_N) < 1e-4:
+                self._imag_N = None
 
     # ---------------- step R8c: the live, dark night ----------------
     def _twitch_on(self):

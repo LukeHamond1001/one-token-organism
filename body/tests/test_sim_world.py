@@ -1475,6 +1475,55 @@ def test_the_inner_word():
           f"inner words held (INNER_P {INNER_P})")
 
 
+def test_waking_imagination():
+    """world 34 (A138, imagine_key and imagine_pav): at a frame-event's end the body runs its stream free from the tape's last rows
+    (REM's rollout, awake, `_imagine`), keeps the imagined frames' direction (`_imag`, a unit vector) in its recall key and the
+    amygdala's forecast on the imagined states (`_imag_N`) in its gates' bias; both fade with GOAL_TAU. A life of 60 ticks with both
+    on, an event's end forced, imagines once, its key with the imagined future held lies apart from the same key without it, and the imagined
+    valence is a number; with both off nothing is imagined and the attributes stay unset; the night lets them go"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    from body.core.memory import IMAG_SCALE
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    cos = lambda a, b: float(F.cosine_similarity(a.float(), b.float(), dim=0))
+    out = {}
+    for on in (1, 0):
+        w = G1World(seed=1)
+        cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, imagine_key=on, imagine_pav=on)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        for _ in range(60):
+            run.step()
+        L._frame_end()                                                     # an event's end, forced (a test life's surprise settles late)
+        n = int(getattr(L, "_imag_n", 0))
+        im = getattr(L, "_imag", None); N = getattr(L, "_imag_N", None)
+        C = L._C_last.detach().clone()
+        k_with = L.query_from(C, learn=False).clone()
+        saved = im
+        L._imag = None
+        k_without = L.query_from(C, learn=False).clone()
+        L._imag = saved
+        out[on] = dict(n=n, unit=(im is not None and abs(float(im.norm()) - 1.0) < 0.5), N=N, moved=cos(k_with, k_without),
+                       ends=len(getattr(L, "_rec_ends", []) or []))
+        if on:
+            assert n == 1 and out[on]["ends"] >= 1, out[on]
+            assert im is None or im.shape == (L.m.d,), im
+            assert N is None or isinstance(N, float), N
+            if im is not None:
+                assert out[on]["moved"] < 0.999, out[on]                # the imagined future in the key moves it
+        else:
+            assert n == 0 and im is None and N is None and out[on]["moved"] > 0.9999, out[on]
+        L._frames_night()
+        assert getattr(L, "_imag", None) is None and getattr(L, "_imag_N", None) is None
+    print(f"world 34: waking imagination: {out[1]['n']} imagining at an event's end after 60 ticks (a unit future held: {out[1]['unit']},",
+          f"the key with it at cosine {out[1]['moved']:.3f} to the key without; the imagined valence {out[1]['N']}); the switches off: none",
+          f"({out[0]['n']} imaginings, the key unmoved {out[0]['moved']:.4f}); IMAG_SCALE {IMAG_SCALE}; the night lets the future go")
+
+
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)

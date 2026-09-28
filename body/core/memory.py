@@ -26,6 +26,9 @@ CTX_SCALE = 1.0
 # speech gone covert (Vygotsky: inner speech grows out of speech to oneself, the articulators stilled), the same key. INNER_P 0.5: the
 # word likelier than every other together (ours).
 INNER_P = 0.5
+# A138 (imagine_key): IMAG_SCALE, the imagined future's weight in the key beside the stream's direction, the heading's, the held word's
+# and the held context's: 1.0, equal weight (R7f's convention; ours).
+IMAG_SCALE = 1.0
 
 
 class MemoryMixin:
@@ -59,6 +62,9 @@ class MemoryMixin:
                 # and the frames recalled into the effectors' proposals are conditioned on what it said (Vygotsky's private speech; the
                 # prefrontal trace biasing hippocampal retrieval, Miller and Cohen 2001)
                 k = k + GOAL_SCALE * g.to(c.dtype)
+            im = getattr(self, "_imag", None)
+            if im is not None and int(self.cfg.get("imagine_key", 0)):
+                k = k + IMAG_SCALE * im.to(c.dtype)                  # A138: the imagined future (sleep.py _imagine) joins the key
             return F.normalize(k, dim=0) * float(self.cfg.get("key_scale", 2.5))
         return F.normalize(c - self._c_mu, dim=0) * float(self.cfg.get("key_scale", 2.5))
 
