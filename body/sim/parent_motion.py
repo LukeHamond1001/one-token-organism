@@ -251,6 +251,8 @@ ROLL_BEYOND_M = 0.10                        # A109 (C91): the roll rung's toy se
 PUT_AHEAD_M = 0.35                          # A109: the roll rung's toy set down this far before her pelvis (where set_near's toy lies
                                             # from her kneel beside the child: her knees at HEELS_BACK, the toy a hand beyond them)
 REBASE_TOL_M = 0.02                         # A108: her restored plan drawing her pelvis farther than this from where her body was
+TURN_HEAD_OFFS = (0.55, 0.65, 0.75)          # A136: her kneel at a prone child's head for the roll by its far shoulder, this far from its eyes
+                                            # (ours: the far shoulder's grip in her tall reach from 0.55 to 0.65 m in the rig)
                                             # last drawn is rebased onto the drawn pose (2 cm: under it her drive absorbs the difference)
                                             # more is a planning fault, refused (ours)
 FACE_REDRAW_DEG = 1.5                       # her eyes are drawn again when her gaze has turned this far in her head (ours: a face
@@ -3620,6 +3622,23 @@ class ParentMotion:
         if need.startswith("reach:"):                                      # A133: her hand reaches a floor point from there (a put's place),
             xy = np.array([float(v) for v in need.split(":", 1)[1].split(",")])   # from her heels, as a put reaches (an approach ends there)
             return any(self._reachable_at(sd, np.r_[xy, floor_z(xy) + 0.05], np.asarray(H, float), yaw, "heels") for sd in "LR")
+        if need in ("turn_both", "turn_shoulder"):
+            # A136 (C98, C109): the turn's far grips in her reach from there: both (A101's turn, beside its chest) or the far shoulder
+            # alone (the roll by the shoulder from its head): each grip's point and palm from _turn_targets with her base set there
+            T2 = np.asarray(H, float) + fwd * HEELS_BACK
+            saved = self.base
+            self.base = dict(saved, at=_lst(H), yaw=float(yaw), mode="heels", lean=0.0, spine=0.0, twist=0.0)
+            try:
+                tg = self._turn_targets(("shoulder", "hip") if need == "turn_both" else ("shoulder", "torso"))
+                for sd in ("R", "L"):
+                    to, loc, nl, shape, b, toward = tg[sd]
+                    g, _R = self._resolve_hand(to, sd)
+                    n_world = self.d.xmat[b].reshape(3, 3) @ np.asarray(nl, float)
+                    if not self._reachable_at(sd, g, T2, yaw, "tall", palm=_lst(-unit(n_world)), bend=True):
+                        return False
+                return True
+            finally:
+                self.base = saved
         if need == "pull":                                                  # one trunk reaches both its forearms from her tall kneel
             saved = self.base
             self.base = dict(mode="tall", at=_lst(np.asarray(H, float) + fwd * HEELS_BACK), yaw=float(yaw), lean=0.0, spine=0.0,
@@ -4634,8 +4653,11 @@ class ParentMotion:
             c["state"] = "done"; c["turned"] = True                          # let go past its side, it lay balanced on it)
         elif c["go_t"] * TICK_S >= K.TURN_MAX_S:
             deg = math.degrees(math.acos(float(np.clip(-chest_z, -1.0, 1.0))))
-            c["state"] = (f"stopped: not turned within her caps in {K.TURN_MAX_S:.0f} s (A7, A101; its chest turned {deg:.0f} deg from face down, "
-                          "a side is 90): she narrates and helps by the roll's ladder instead")
+            if deg >= 90.0:                                                 # A136: past its side at her cap's end is the turn done (A101's
+                c["state"] = "done"; c["turned"] = True                      # own word when her hands slip there: it lies balanced on its
+            else:                                                           # side and falls back or is helped over); the head route's two
+                c["state"] = (f"stopped: not turned within her caps in {K.TURN_MAX_S:.0f} s (A7, A101; its chest turned {deg:.0f} deg from face down, "
+                              "a side is 90): she narrates and helps by the roll's ladder instead")   # hands turn it 106 deg in the 4 s
 
     # ---- toys: fetching, showing, handing over, bringing back, clearing (4.10, A4, A5, A6)
     def _toy(self, t):
@@ -5205,20 +5227,43 @@ class ParentMotion:
     def _act_turn(self, a, t):
         if self.child.posture != "front":
             raise Refuse("the brief turn is for the child face down (A7)")
-        return self._near(a) + [dict(type="plan", what="turn", args={})]  # (A103 tried a spot need for both far grips: the trunk solve
-                                                                            # refused the usual spot the turn works from and chose worse
-                                                                            # ones (its side, not its back; a 3.4 cm engagement): dropped)
+        return [dict(type="plan", what="turn_approach", args={})]
 
-    def _turn_targets(self):
+    def _plan_turn_approach(self, a):
+        """A136 (C98, C109): the turn's spot. Beside its chest with BOTH far grips in her reach (A101's turn), else at its HEAD with the
+        far shoulder in reach (the roll by the shoulder: from a kneel beside a prone G1 the far shoulder and hip lay 0.93 to 0.98 m off,
+        beyond her arm and trunk together, at every offset down to her knees on it; from its head the far shoulder lies within reach
+        and the hip does not), else refused. (A103 had tried a need for both grips from the chest side alone and dropped it: the trunk
+        solve refused the usual spot and chose worse ones; here the need is what the turn needs and the head end is the way out)"""
+        why = []
+        for where, offs, need, mode in ((None, None, "turn_both", "side"), ("head", TURN_HEAD_OFFS, "turn_shoulder", "head")):
+            try:
+                out = self._plan_approach(a, where=where, offs=offs, need=need)
+            except Refuse as e:
+                why.append(f"{need}: {str(e)[:70]}"); continue
+            a["info"]["turn_mode"] = mode
+            return out + [dict(type="plan", what="turn", args=dict(mode=mode))]
+        raise Refuse("no spot she can kneel at puts a far grip of the turn in her reach (A136: beside its chest for both, at its head "
+                     "for the shoulder): " + "; ".join(why))
+
+    def _turn_targets(self, kinds=("shoulder", "hip")):
         """A101: the turn's two grips on the child's FAR shoulder and hip roll links (their far surfaces, her palms toward her):
-        {hand: (target spec, held point and normal in the link's frame, hand shape, link)}"""
+        {hand: (target spec, held point and normal in the link's frame, hand shape, link)}. A136: from its head the far side of its
+        torso stands in for the hip (kinds ("shoulder", "torso")): both hands within reach there, both pulling across it"""
         ch = self.child
         her = np.r_[np.asarray(self.base["at"], float), 0.0]
         toward = unit((her - ch.torso) * [1, 1, 0])
         near = "left" if float(ch.lat[:2] @ toward[:2]) > 0 else "right"
         far = "right" if near == "left" else "left"
+        if "torso" in kinds:                                                 # A136: from its head "toward her" runs along it; the far
+            toward = unit(-ch.lat * (1 if far == "left" else -1) * [1, 1, 0])   # side is the one her first hand reaches (face_side's other)
+            far = "right" if ch.face_side() == "L" else "left"
+            toward = unit((self.d.xipos[self.m.body(f"{'left' if far == 'right' else 'right'}_shoulder_roll_link").id]
+                           - self.d.xipos[self.m.body(f"{far}_shoulder_roll_link").id]) * [1, 1, 0])
         out = {}
-        for name, body in (("shoulder", f"{far}_shoulder_roll_link"), ("hip", f"{far}_hip_roll_link")):
+        bodies = {"shoulder": f"{far}_shoulder_roll_link", "hip": f"{far}_hip_roll_link", "torso": "torso_link"}
+        for name in kinds:
+            body = bodies[name]
             b = self.m.body(body).id
             sd = "R" if name == "shoulder" else "L"
             beyond = self.d.xipos[b] - toward * 0.60                        # a point beyond the child on its far side: the anchor's
@@ -5229,7 +5274,7 @@ class ParentMotion:
             out[sd] = (to, loc, nl, shape, b, toward)
         return out
 
-    def _plan_turn(self, a):
+    def _plan_turn(self, a, mode="side"):
         """A101 (2026-09-26, C81): the turn from its front by its FAR shoulder and FAR hip, her hands reaching over its back onto their
         far surfaces (the palms toward her), both placed from ONE trunk pose, then pulled up and toward her together so the body rolls
         about its near edge onto its side and its back, as a person rolls a heavy child. Until A101 the near shoulder and hip were
@@ -5237,12 +5282,19 @@ class ParentMotion:
         on top of a link cannot lift it: the spring moved nothing (0 N through every hold of `test_sim_parent` 16's turn), the act
         stopped at A7's 2 s and the child lay prone, on life day 3 for half a day (its eyes on the mat, no smile possible)"""
         above, onto, shapes, holds = {}, {}, {}, []
-        for sd, (to, loc, nl, shape, b, toward) in self._turn_targets().items():
+        kinds = ("shoulder", "hip") if mode == "side" else ("shoulder", "torso")   # A136: from its head, the far shoulder and the far
+        for sd, (to, loc, nl, shape, b, toward) in self._turn_targets(kinds).items():   # side of its torso, both pulled ACROSS it
             goff = np.asarray(to["goff"], float)
             above[sd] = dict(to, goff=_lst(goff + nl * K.APPROACH_M)); onto[sd] = to; shapes[sd] = shape
             holds.append(dict(type="hold", name=f"turn_{sd}", side=sd, body=int(b), local=_lst(loc), normal=_lst(nl), goff=_lst(goff),
                               kind="turn", cap=0.0, brief=True, ctl=dict(toward=_lst(toward)), shape=shape, wait=False))
         out = []
+        if not a["info"].get("turn_retry") and any(not self._reachable(sd, onto[sd]) for sd in onto):
+            # A136 (C98): the child moved while she came (a rocking child crawls a hand's breadth a second): the grips she planned from
+            # the spot are out of her reach from where she now kneels (the rig's misses: 30 to 74 cm short). Once, she approaches again
+            # from where it lies now
+            a["info"]["turn_retry"] = True
+            return [dict(type="plan", what="turn_approach", args={})]
         if self.base["mode"] == "heels":                                    # up onto the tall kneel: the reach over its back needs it
             b_ = self.base; fw = np.array([math.cos(b_["yaw"]), math.sin(b_["yaw"])])
             out.append(dict(type="kneel_down", at=_lst(np.asarray(b_["at"], float) + fw * HEELS_BACK), yaw=b_["yaw"], u0=3.0, u1=2.0))

@@ -1483,6 +1483,50 @@ def test_her_way_in_the_changed_room():
           f"in the room of birth her seat at {seats['a'][0]} (its spot {seats['a'][1]})")
 
 
+def test_the_turn_from_its_head():
+    """parent 30 (A136, C98/C109): the turn's spot is where its grips are in reach. On life day 24 A101's turn was refused 63 cm short
+    from the spot she happened to kneel at while the child lay on its elbow at its limit for 3,900 ticks. Now the approach asks for a
+    spot with both far grips in reach (the need turn_both, the palms toward her), and failing that a spot at its head with the far
+    shoulder in reach (turn_shoulder), the roll then by that shoulder alone. A prone still child at the mat's middle: both grips in
+    reach from beside its chest, turned past its side in under 300 ticks. The same child with no chest-side spot that reaches both (the
+    need refused, as a wall or the furniture refuses it): turned from its head by the far shoulder and the torso's far side, past its side, in under 400
+    ticks. A child not on its front: refused"""
+    got = {}
+    for route in ("both", "head"):
+        w = W.G1World(seed=1)
+        T.place_g1(w, "front")
+        for _ in range(20):
+            w.frame(); w.apply({})
+        pm = w.parent
+        used = {}
+        orig_plan, orig_need = pm._plan_turn, pm._need_ok
+
+        def spy(a, mode="side", orig=orig_plan, used=used, pm=pm):
+            used["mode"] = mode; used["spot"] = [round(float(v), 2) for v in a["info"]["spot"]["H"]]
+            used["eyes"] = [round(float(v), 2) for v in pm.child.eyes[:2]]
+            return orig(a, mode=mode)
+
+        def need(n, H, yaw, orig=orig_need, route=route):
+            if route == "head" and n == "turn_both":
+                return False                                                # no chest-side spot reaches both (a wall, the furniture)
+            return orig(n, H, yaw)
+        pm._plan_turn = spy; pm._need_ok = need
+        out = T.run(w, [("turn", "child")], 900)
+        a = out["acts"][0]
+        ch = PM.Child(w.m, w.d, w.scene.g1_set)
+        assert a["status"] == "done" and a["ticks"] < (300 if route == "both" else 400), (route, a)
+        assert ch.posture in ("side", "back") and float(ch.torso_R[2, 0]) > -0.3, (route, ch.posture, float(ch.torso_R[2, 0]))
+        assert used.get("mode") == ("side" if route == "both" else "head"), (route, used)
+        if route == "head":
+            assert abs(used["spot"][0] - used["eyes"][0]) > 0.4, used          # her kneel beyond its head, not beside its chest
+        got[route] = (a["ticks"], used["spot"], ch.posture, round(float(ch.torso_R[2, 0]), 2))
+    out2 = T.run(w, [("turn", "child")], 60)
+    assert out2["acts"][0]["status"] == "refused" and "face down" in out2["acts"][0]["why"], out2["acts"][0]
+    print(f"parent 30: a prone child turned with both far grips from beside its chest in {got['both'][0]} ticks (her kneel {got['both'][1]}, on its",
+          f"{got['both'][2]}, chest {got['both'][3]}); with no chest-side spot for both, from its head by the far shoulder and the torso's far side in {got['head'][0]}",
+          f"ticks (her kneel {got['head'][1]}, on its {got['head'][2]}, chest {got['head'][3]}); a child not on its front: refused")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1493,7 +1537,7 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
                 test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
-                test_the_hide, test_her_way_in_the_changed_room]
+                test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
