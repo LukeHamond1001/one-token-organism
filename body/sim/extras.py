@@ -31,6 +31,12 @@ def add_book(xy=(0.0, -0.60), yaw_deg=0.0):
         e = b.add_geom(type=mujoco.mjtGeom.mjGEOM_BOX, pos=[BOOK_HALF[0] - 0.004, 0.0, 0.0], size=[0.0035, BOOK_HALF[1] - 0.006, BOOK_HALF[2] - 0.002],
                        rgba=list(BOOK_EDGE_RGBA))
         e.contype = 0; e.conaffinity = 0; e.density = 0.0                        # seen only (make_g1room.VIS0)
+        for hs in ("L", "R"):                                                    # her hold of it: the weld each toy has (make_g1room's
+            w = spec.add_equality()                                              # hold_{hand}_{toy}, inactive until her grasp closes;
+            w.type = mujoco.mjtEq.mjEQ_WELD; w.objtype = mujoco.mjtObj.mjOBJ_BODY; w.name = f"hold_{hs}_book"          # parent_motion's scene.weld); life dawn 15's first
+            w.name1 = f"parent_hand_{hs}"; w.name2 = "toy_book"                  # attempt crashed at tick 1 without them
+            w.active = False; w.solref = [0.006, 1.0]
+        spec.add_text(name="sound_book", data="a soft slap when it lands or is struck")   # the toy's sound described (make_g1room's texts)
     return extra
 
 
