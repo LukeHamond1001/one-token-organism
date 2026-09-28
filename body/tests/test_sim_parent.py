@@ -1453,11 +1453,12 @@ def test_the_hide():
 
 
 def test_her_way_in_the_changed_room():
-    """parent 29 (A133): in room b (the furniture moved) her show of the duck to a seated child is done as in the room of birth (the
+    """parent 29 (A133, C108): in room b (the furniture moved) her bring-back of the duck to a seated child is done (the
     fetch's kneel spots, her walk plan and her looks read the room from the model), and asked to walk to the sofa she sits at her seat
     on the moved sofa (SOFA_SPOT_OFF from its centre: about (-0.29, 1.64)), where in room a she sits at (0.86, 1.64): what she looks at,
-    walks to and sits on follows the furniture. (The bring-back in room b is C108's: the child topples onto its front during her fetch,
-    the put's place moves before its face, and her re-kneel at its head ends in the jump guard.)"""
+    walks to and sits on follows the furniture. The bring-back was C108: the child topples onto its front during her fetch, the put's
+    place moves before its face, she re-kneels at its head and clears the ring, and the relax's elbow leapt 180 degrees (the jump
+    guard); fixed in `_place` (the elbow's jump measured like with like), it is done"""
     from body.sim import g1scene as G
     seats = {}
     for room, xml in (("b", G.XML_B), ("a", G.XML)):
@@ -1466,8 +1467,8 @@ def test_her_way_in_the_changed_room():
         for _ in range(20):
             w.frame(); w.apply({})
         if room == "b":
-            out = T.run(w, [("show", "duck")], 900)
-            a = out["acts"][0]
+            out = T.run(w, [("bring_back", "duck")], 1500)              # C108 fixed: the child topples mid-fetch, she re-kneels at its
+            a = out["acts"][0]                                            # head, clears the ring, and the relax keeps her elbow's side
             assert a["status"] == "done", a
             shown = a["ticks"]
         out = T.run(w, [("walk", "sofa")], 1500)
@@ -1478,7 +1479,7 @@ def test_her_way_in_the_changed_room():
         seats[room] = (tuple(round(float(v), 2) for v in pm.base["at"][:2]), tuple(round(float(v), 2) for v in pm.sofa_spot))
         assert np.linalg.norm(np.asarray(pm.base["at"][:2]) - np.asarray(pm.sofa_spot)) < 0.15, seats[room]
     assert seats["a"][1] == (0.86, 1.64) and abs(seats["b"][1][0] + 0.29) < 0.02, seats
-    print(f"parent 29: in room b the duck shown in {shown} ticks and her seat on the moved sofa at {seats['b'][0]} (its spot {seats['b'][1]});",
+    print(f"parent 29: in room b the duck brought back in {shown} ticks and her seat on the moved sofa at {seats['b'][0]} (its spot {seats['b'][1]});",
           f"in the room of birth her seat at {seats['a'][0]} (its spot {seats['a'][1]})")
 
 

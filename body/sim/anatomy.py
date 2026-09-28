@@ -212,7 +212,10 @@ class Novelty(RewardSource):
     Grace 2005; Schultz's novelty responses): on a tick after the store kept a FRAME as new (body/core/frames.py _frame_write: its
     surprise past the write gate and no slot it merged into), NOVELTY_GAIN is felt, once per new frame; a frame that merges into a memory
     it has (the same thing seen again) pays nothing, so the drive habituates by the store's own law. Silent otherwise. Signs: positive
-    only. Off at birth (SIM_CFG novelty 0): measured on a day copy first (A113's road), a switch of the body"""
+    only. On since dawn 24, a switch of the body. A127b (2026-09-28 16:25): PAID BY THE MISMATCH, NOVELTY_GAIN x (1 - the new frame's nearest
+    stored key's cosine): the write gate is a quantile and passed a tenth of every day's frames forever (day 24's record: 296 payments in
+    3,000 ticks, 1,200 a day against her smiles' 50), so a drive that paid the gain for each could never habituate; the comparator's own
+    mismatch (Lisman and Grace 2005's CA1 signal) is small for a frame like the day's others and full for a new thing"""
     signs = (1.0,)
 
     def felt(self, frame, life):
@@ -221,7 +224,8 @@ class Novelty(RewardSource):
             return None
         life._frame_novel = 0.0
         self.n_paid = int(getattr(self, "n_paid", 0)) + 1                  # the payments counted (the runner's record: `nov`; attribution)
-        return NOVELTY_GAIN
+        self.paid = float(getattr(self, "paid", 0.0)) + NOVELTY_GAIN * new
+        return NOVELTY_GAIN * new                                          # A127b: graded by the mismatch (0 to 1): the gain is its ceiling
 
 
 NOVELTY_GAIN = 0.5                     # a new frame's dopamine: a quarter of her smile's rise (+2), half of pain's -1 (ours, disclosed; the

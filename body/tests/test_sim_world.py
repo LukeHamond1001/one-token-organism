@@ -1450,8 +1450,26 @@ def test_the_novelty_drive():
     assert got[0]["pos"] == 0, got                                     # no face here: nothing pays positive without the drive
     assert got[1]["pos"] > 0 and got[1]["writes"] > 0, got             # with it, the new frames pay
     assert Novelty("n", clip=NOVELTY_GAIN, signs=(1.0,)).term(5.0) == NOVELTY_GAIN
+    # A127b: paid by the mismatch. A source on a life whose store holds one frame: a frame far from it pays near the gain, the same
+    # frame again (its nearest key's cosine 1) pays nothing, one half-way pays between; never more than the gain
+    from body.model import Store, FastStore
+    src = Novelty("n", clip=NOVELTY_GAIN, signs=(1.0,))
+    assert isinstance(L.store, FastStore) and hasattr(L.store, "last_sim") and 0.0 <= float(L.store.last_sim) <= 1.0, type(L.store)   # the life's own store records it
+    class _L:                                                          # the least of a life the source reads
+        pass
+    life = _L(); st = Store(8, cap=64, temp=0.02, device="cpu")
+    k0 = torch.zeros(8); k0[0] = 1.0; k1 = torch.zeros(8); k1[1] = 1.0; kh = torch.tensor([1.0, 1.0, 0, 0, 0, 0, 0, 0])
+    paid = []
+    for k in (k0, k1, k0, kh):
+        st.write(k, torch.ones(8), 1.0, 2)
+        life._frame_novel = max(0.0, 1.0 - float(getattr(st, "last_sim", 0.0)))
+        paid.append(src.felt(None, life))
+    assert paid[0] == NOVELTY_GAIN and abs(paid[1] - NOVELTY_GAIN) < 1e-6, paid    # the first two orthogonal to what was there
+    assert paid[2] is None or paid[2] == 0.0 or paid[2] < 1e-6, paid              # the same key again: no mismatch, nothing paid
+    assert 0.0 < paid[3] < NOVELTY_GAIN and abs(paid[3] - NOVELTY_GAIN * (1.0 - 2 ** -0.5)) < 1e-4, paid   # half-way: cos 0.707
     print(f"world 26: the novelty drive: without it {got[0]['pos']} positive ticks of 60 (sources {got[0]['src']}); with it {got[1]['pos']} positive",
-          f"ticks, {got[1]['writes']} frames kept as new, each paying {NOVELTY_GAIN} (sources {got[1]['src']})")
+          f"ticks, {got[1]['writes']} frames kept as new, each paying up to {NOVELTY_GAIN} by its mismatch (sources {got[1]['src']}); a store of",
+          f"one frame pays {paid[0]:.2f} for a frame orthogonal to it, {paid[2] or 0.0:.2f} for the same frame again, {paid[3]:.3f} for one half-way")
 
 
 def test_the_held_word():

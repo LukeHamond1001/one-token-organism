@@ -131,8 +131,10 @@ class Store:
         if strength <= 1e-4:
             return False
         k = F.normalize(k.to(self.dev).float(), dim=0); v = F.normalize(v.to(self.dev).float(), dim=0)
+        self.last_sim = 0.0                                      # A127b: the best match's cosine at this write (the comparator's mismatch is 1 - it)
         if self.n() > 0:
             sims = self.K @ k
+            self.last_sim = float(sims.max())
             # the same memory, stronger: the best-matching slot AMONG THOSE THAT SAY THE SAME (judged by
             # the single best key, a slot with the same key and another value blocked the merge, and each
             # hearing of "ball on" added a voter: six identical slots outvoted an exact match, run 17)
@@ -1232,8 +1234,10 @@ class FastStore(Store):
         self.last_remap = None
         k = F.normalize(k.to(self.dev).float(), dim=0); v = F.normalize(v.to(self.dev).float(), dim=0)
         n = self.n()
+        self.last_sim = 0.0                                      # A127b: the best match's cosine at this write (the body's store: the frames')
         if n > 0:
             sims = self.K @ k
+            self.last_sim = float(sims.max())
             same = (sims > merge_cos) & ((self.V @ v) > merge_cos)
             if bool(same.any()):
                 j = int(torch.where(same, sims, torch.full_like(sims, -2.0)).argmax())

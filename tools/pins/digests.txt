@@ -91,7 +91,11 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A132 (2026-09-28 14:20, branch a128: the limbs dream in REM, SIM_CFG rem_limbs 1 at birth; the born night's REM draws
 # the effectors' imagined acts, so the organs, store, optimizers and random streams moved). Was: threaded 36753538ad620bd3f35f515c,
 # one-thread 5621285819cb4cae3cdf2235, consts c12b7431a436.
-digest  sim                   threaded e23bca657e29fd11ce513dc6 consts eb16f49013ae | --profile sim
-digest  sim                   pinned   4a109a9bd17c271ffe1bcf71 consts eb16f49013ae | --profile sim
-full    sim                   threaded organs 5d3696eb84c6 store a2a4044b061e optim 3ac1565b9380 rng 8d380f767fdc work 6b844b49d07b cfg e7ebd60aa627
-full    sim                   pinned   organs 1d67adf205ce store 65f9acacdc76 optim b1746cdadbcd rng 8d380f767fdc work bce5159dad2b cfg e7ebd60aa627
+# Re-pinned at A127b (2026-09-28 16:26, branch a133: the novelty drive paid by the frame's mismatch, 1 - its nearest stored key's
+# cosine, in place of the gain for every kept frame; no constant changed, consts unmoved). The born body's payments differ from the
+# first tick a frame resembles another, so the organs, store, optimizers and random streams moved. Was: threaded
+# e23bca657e29fd11ce513dc6, one-thread 4a109a9bd17c271ffe1bcf71.
+digest  sim                   threaded 38831933eaca0ba388b1bac2 consts eb16f49013ae | --profile sim
+digest  sim                   pinned   41bf37d9c5cdb8f02b194180 consts eb16f49013ae | --profile sim
+full    sim                   threaded organs 8518fbd10198 store 0fb09e51cf02 optim dad3c5cabe8f rng c222570d9ed8 work c7e0824d4542 cfg e7ebd60aa627
+full    sim                   pinned   organs 1c12525a0f02 store 5edad7a3afc7 optim 05c3ccd2c563 rng c222570d9ed8 work 5974eaee95ef cfg e7ebd60aa627

@@ -246,8 +246,10 @@ class FramesMixin:
         st = self.store
         if not st.write(key, value, float(strength), 2):
             return False                                                # merged into a slot it already had: nothing new
-        self._frame_novel = float(strength)                             # A127: a frame the store kept as NEW (the hippocampal mismatch,
-        self._boosts_remap(st.last_remap)                             # Lisman and Grace 2005): the novelty source reads it next tick
+        self._frame_novel = max(0.0, 1.0 - float(getattr(st, "last_sim", 0.0)))   # A127b: the MISMATCH of a frame the store kept as new,
+        self._boosts_remap(st.last_remap)                             # 1 - its nearest stored key's cosine (Lisman and Grace 2005's
+                                                                      # comparator): the novelty source pays by it next tick, so a frame
+                                                                      # like the day's others pays little and the drive habituates
         self._flast_write = (key.clone(), value.clone())
         if getattr(self, "_fstart_armed", False):
             st.mark_start(key, value); self._fstart_armed = False

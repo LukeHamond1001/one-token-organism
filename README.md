@@ -84,8 +84,8 @@ Where it stands, day 23 of that life:
   moved (A133, `--room b`) and the changed body, forearms and shanks longer and heavier (A134, `--body b`), the environment and body
   generalization rulers. A real face reader was not built (the owner's word).
 - Open: the turn of a moving prone child (C98); the wake's ankle, pinned by the child's own first acts each dawn (C104); a side-lying
-  G1 looks at the floor (C94); the actor's pinning of joints at their stops (C100); reaching under a table from a kneel; her bring-back
-  in the changed room to a child that topples mid-fetch (C108). The C rows of `docs/SIM_DESIGN.md` hold every open question with its
+  G1 looks at the floor (C94); the actor's pinning of joints at their stops (C100); reaching under a table from a kneel. Her bring-back
+  in the changed room to a child that topples mid-fetch (C108) was an elbow flip in her arm's solve, fixed the same afternoon. The C rows of `docs/SIM_DESIGN.md` hold every open question with its
   evidence.
 
 How it runs:

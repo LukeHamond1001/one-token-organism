@@ -2357,6 +2357,16 @@ class ParentMotion:
             sws = (0, -30, 30, -60, 60, -90, 90, -120, 120)
             if cont and not far0:                                           # tick to tick her elbow swings at most 30 deg (never flips)
                 sws = tuple(sorted({max(-120, min(120, self.swivel[sd] + dd)) for dd in (-30, -15, 0, 15, 30)}, key=abs))
+            elbow_s = None
+            if cont and far0:
+                # C108 (A133): the drawn elbow lies where the LAST tick's wrist and shoulder put it; once the wrist has moved (a relax's
+                # step) every swing of this tick's arm can look like a jump against it, and the range excess alone chose the swing: her
+                # elbow leapt from +120 to -60 degrees in a tick (0.62 m, the jump guard). A second measure of continuity, like with
+                # like: the elbow her LAST swing gives at THIS tick's wrist and shoulder. A swing continuous with EITHER counts as
+                # continuous (the drawn elbow's continuity keeps its say, parent 12 and 13's turns; the last swing's saves the relax)
+                pl0 = kin.axang(axis, math.radians(float(self.swivel[sd]))) @ pole
+                kin.arm_ik(p, sd, wrist, pl0, R, segs=segs)
+                elbow_s = sh + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
             for sw in sws:
                 pl = kin.axang(axis, math.radians(sw)) @ pole
                 e2 = kin.arm_ik(p, sd, wrist, pl, R, segs=segs)
@@ -2365,6 +2375,8 @@ class ParentMotion:
                 if cont:
                     el = sh + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
                     jump = round(float(np.linalg.norm(el - elbow0)), 2)
+                    if elbow_s is not None:
+                        jump = min(jump, round(float(np.linalg.norm(el - elbow_s)), 2))
                 key = (int(jump > MAX_JUMP_M), ex, jump, abs(sw))            # her elbow never flips across in a tick (more than her
                 if best is None or key < best[0]:                             # pelvis may move) to ease a range: the W2 fix's babble
                     best = (key, pl, sw)                                      # seed 10 at p_rest 0.6 swung it 0.6 m
