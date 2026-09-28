@@ -35,7 +35,7 @@ file is not read.) The robot sim needs `pip install -r requirements-sim.txt` (Mu
 synthesised by a small Swift server that runs on macOS only (`--voice fake` runs without it); its run command is in the section
 below.
 
-## The robot sim: where the project is (2026-09-28, 00:10)
+## The robot sim: where the project is (2026-09-28, 06:35)
 
 Since 2026-09-24 the same architecture lives in a simulated body: a Unitree G1 humanoid with hands (MuJoCo, 150 ms ticks, its own eyes,
 ears, touch, joint sense and a vocal tract) on a play mat in a room, with a simulated human-proportioned parent who kneels beside it,
@@ -45,7 +45,7 @@ pain (−1 on a gear loaded past its motor); there is no charge, no bottle and n
 and `world.pt`) saved at every dawn. Every change to the body or the teacher is built on a worktree, gated by the suites, measured on
 a copy of a dawn pair when its effect is in doubt, and put in at a dawn, one change a boundary, so each day's ledger has one cause.
 
-Where it stands, day 15 of that life:
+Where it stands, day 19 of that life:
 - Days 1 to 9 were mostly the parent's faults found and fixed at one dawn each (A95 to A112 in `docs/SIM_DESIGN.md`): her plan frozen
   half-knelt for a day (A108), the child rolled out of the room into the hall (A110: carried back to the mat in its sleep), her turn's
   approach silencing judgment of the child's own acts (A111), her chasing a rolling child round the mat (A112).
@@ -53,25 +53,28 @@ Where it stands, day 15 of that life:
   the day the copy judged 162 acts against the life's 79 (59 motor against 10: reaches, lifts, hits, gets, shakes), hurt itself 65
   ticks against 615, saw her smile 48 times against 6, and ended the day in a positive mood against a negative one. Until then the act
   was the forecaster's own prediction and dopamine could only quieten a gate; nine days of value learning had reached no policy.
-- The actor went in at dawn 11. Day 11: 57 judgments, 31 of them motor, two pain ticks in 24,000. Days 12 to 14 found the body's
-  next questions: the actor pins the waist and a hip at their stops, so the child sleeps twisted and wakes reading "front" or in pain
-  (C100, C103: the carry lays it straight, A110 amended); a child's waist range was measured on a day copy and not adopted (A116); the
-  cup rolled under the low table and the ball into a corner, and her one kneeling ring by a toy was furniture at every angle, so her
-  reach lessons were refused for two days and she stood a third of the day (C102).
-- Dawn 16 (2026-09-27 23:30) brought the first transfer test and the fetch's fix together, disclosed as two changes on one day: a black
-  book the child had never seen, carried into its saved world through the migration tool (A115) and laid 10 cm beyond its hand; her fetch
-  reaching farther rings, her lessons passing over a toy she cannot get to, and the morning tidy putting a lost toy back (A117, B8).
-  By midday the child had hit the book 6 times, reached for it 10, picked it up and lifted it; she named it 13 times ("look. a book.",
-  "your book."); the half-day's ledger was the life's best, 118 judgments, 99 of them motor; she never stood. Its pain that day was its
-  own vigour (the left shoulder, striking the book) and the twisted wake.
-- Open: reaching under a table from a kneel (her hand's body strikes the top; a person lies down); the turn of a prone child works from a
-  narrow band of kneeling distance (C98); a side-lying G1 looks at the floor and cannot see her, which is the cameras' own pitch (C94);
-  the actor's pinning of joints at their stops by day (C100); whether day 14's three "sat" reads were sit-ups (C103). The C rows of
-  `docs/SIM_DESIGN.md` hold every open question with its evidence.
+- The actor went in at dawn 11. Days 12 to 14 found the next faults: the actor pins the waist and a hip at their stops, so the child
+  sleeps twisted (C100, C103: the carry lays it straight, A110 amended); the cup rolled under the low table and the ball into a corner,
+  her one kneeling ring by a toy was furniture at every angle, her reach lessons were refused for two days and she stood a third of the
+  day (C102, A117: farther rings with a reach test, the toys she cannot get to left alone, the morning tidy of B8).
+- Dawn 16 brought the first transfer test: a black book the child had never seen, carried into its saved world through the migration
+  tool (A115) and laid 10 cm beyond its hand. The child hit it at tick 4 of the day, picked it up at tick 592 and lifted it; she named
+  it 17 times. Days 15 to 17 were the life's best (144, 110 and 162 judgments; 108, 69 and 62 of them motor; pain under 2% of ticks),
+  and once the newest toy she has named joined her daily focus (A119, dawn 18) the book was the most handled toy of the day (hit 22,
+  got 13). The arms' inverse models rose from 0.11 on day 8 to about 0.5 by day 18.
+- Day 18 was lost the way day 12 was: the child rolled onto its front at tick 1,000 and stayed, rocking, and her turn was refused
+  about 130 times (C98). A rig that rocks a prone child with a babbler reproduces it (0 turns of 16); the far-grip turn of A101 is a
+  still child's turn. Three variants tried the same night (the grips from the child's own links, a spot from which one trunk reaches
+  both, a hand's retry on a point that moved) changed nothing on a moving child; they are parked on branch `a122`.
+- Dawn 20 (06:27) brought the second novel toy, a grey cardboard box (A121), laid 10 cm beyond the child's hand as the book was; its
+  time to the child's first grasp against the book's 592 ticks is the ruler that says whether the reach generalizes.
+- Open: the turn of a moving prone child (C98); the wake's ankle, pinned by the child's own first acts each dawn (C104); a side-lying
+  G1 looks at the floor (C94); the actor's pinning of joints at their stops (C100); reaching under a table from a kneel. The C rows
+  of `docs/SIM_DESIGN.md` hold every open question with its evidence.
 
 How it runs:
 - The life: `python3 tools/sim_life.py --out data/g1_seed1 --resume --days 6 --d 512 --seed 1 --voice real --threads 4 --page`
-  (the `/sim` page on `http://127.0.0.1:8030/`; `--resume` continues from the pair in `--out`; `--extra book` since dawn 16, the room with the book). A measurement on a copy: copy the pair
+  (the `/sim` page on `http://127.0.0.1:8030/`; `--resume` continues from the pair in `--out`; `--extra book_box` since dawn 20, the room with the book and the box). A measurement on a copy: copy the pair
   to another folder and add `--set KEY=VALUE` (the actor's day copy was `--set actor=1 --ticks 24000`, no page).
 - The records: `data/g1_seed1/ticks.jsonl` (one row a tick), `report.json` at each night, `run.log` (a line every 500 ticks); the days'
   logs are kept as `run_dayN.log`.
@@ -80,10 +83,9 @@ How it runs:
   life). The pins: `tools/determinism_check.py --profile sim` must reproduce `tools/pins/digests.txt`, and the language default
   `7c54199e3c72cf77d45a8e94` at every commit.
 - The branches: `main` holds everything; `sim` is the tree the life runs, checked out at `../project-worktrees/wt_int` and moved
-  only at a dawn; `a118` is the next dawn's tree (the carry's fourth amendment), `a114` a parked attempt at C98, `a116` the waist range
-  measured and not adopted; `sim-face` older face work not yet merged. The earlier `sim-*` and `a1xx` branches are merged.
+  only at a dawn; `a122` holds the parked turn attempts (C98), `a114` an older one, `a116` the waist range measured and not adopted; `sim-face` older face work not yet merged. The earlier `sim-*` and `a1xx` branches are merged.
 
-Where to read: `docs/SIM_DESIGN.md` is the design and the ledger in one: the sections, the amendments A1 to A117 (each with what was
+Where to read: `docs/SIM_DESIGN.md` is the design and the ledger in one: the sections, the amendments A1 to A121 (each with what was
 found, what was built, what was measured and its boundary), the C rows (open questions and their evidence), the B questions (the
 owner's calls on the room's shape) and the plan. `docs/audit/` holds the studies behind the larger decisions. The parent's code is
 `body/sim/parent_*.py` and `body/sim/lang/` (her conduct, day plan, templates and percept), the world `body/sim/world.py` and
