@@ -110,6 +110,7 @@ from pathlib import Path
 
 import mujoco
 import numpy as np
+from . import extras as X                      # A129: the tub's sizes (TUB_H) for the hide game
 
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
@@ -161,6 +162,8 @@ KINDS = {
     "turn": "the brief turn from its front toward its back: springs on its pelvis and a shoulder, growing within the caps, at most "
             "2 s (A7)",
     "bring_back": "fetch a toy that rolled away and set it down within the child's reach (4.10's reach ladder, level 1)",
+    "hide": "fetch a toy and let it go into the tub in the child's view (A129, the hide game on the tub A126: the object permanence "
+            "test proper; the child's hand into the tub after it is the find)",
     "bring_far": "fetch a toy and set it down beside the child's far shoulder, level with its head, ROLL_BEYOND_M past the reach of the "
                  "arm on that side, from a kneel on its far side (the roll rung's setup, A109)",
     "clear": "a toy moved out of where she will kneel (A6)",
@@ -4872,6 +4875,55 @@ class ParentMotion:
         else:
             near = self._near(a)
         return self._fetch(a, toy) + near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
+
+    def _act_hide(self, a, t):
+        """A129 (the hide game, on the tub A126): the toy fetched and let go INTO THE TUB in the child's view: she brings it over the
+        rim and opens her hand, so it is gone from the child's eyes and still there (Piaget's stage 4, the object permanence test
+        proper; the ruler is the child's hand into the tub after it)"""
+        toy = self._toy(t)
+        if "tub" not in self.toys:
+            raise Refuse("no tub in the room to hide it in")
+        if toy == "tub":
+            raise Refuse("the tub is what hides, not what is hidden")
+        return self._fetch(a, toy) + [dict(type="plan", what="drop_in", args=dict(toy=toy))]
+
+    def _plan_drop_in(self, a, toy):
+        """the toy in her hand carried over the tub and let go (A129): from where she kneels if her hand reaches over the rim with it,
+        else from a kneel beside the tub (a fetch's spot, the side away from the child); the release checks her hand was over the tub
+        (PUT_TOL_M, as a put's landing)"""
+        sds = [s_ for s_, v in self.holding.items() if v == toy]
+        if not sds:
+            raise Refuse(f"the {toy} is not in her hand")
+        sd = sds[0]
+        c = self.d.xpos[self.toys["tub"]].copy()
+        h = X.TUB_H + 2.0 * float(self.toy_rest.get(toy, 0.05)) + 0.02      # her grip over the rim by the toy's height and 2 cm: the
+        to = dict(k="above_toy", toy="tub", h=h)                            # toy hangs under her hand and clears the rim as it falls
+        if self.base["mode"] in ("heels", "tall") and self._reachable(sd, to):
+            return self._drop_phases(sd, to, c[:2])
+        if self.base["mode"] in ("heels", "tall", "sofa", "lying"):
+            return self._up_phases() + [dict(type="plan", what="drop_in", args=dict(toy=toy))]
+        spot = self._toy_spot(c[:2])
+        if spot is None:
+            raise Refuse("nowhere to kneel by the tub")
+        T2, yaw = spot
+        stand = T2 - np.array([math.cos(yaw), math.sin(yaw)]) * STAND_BACK
+        out = self._walk_phases(self._standing_at(), stand, yaw, goal_r=0.3, skip=(toy,),
+                                again=dict(what="drop_in", args=dict(toy=toy), grp=True))
+        out.append(dict(type="kneel_down", at=_lst(T2), yaw=yaw, u0=0.0, u1=2.0))
+        out.append(dict(type="plan", what="drop_in", args=dict(toy=toy)))
+        self.serial += 1
+        for ph in out:
+            ph["grp"] = f"hide{self.serial}"
+        return out
+
+    def _drop_phases(self, sd, to, xy):
+        """a toy in her hand brought over the tub and let go, and her hand drawn up and back (A129)"""
+        sh_hold = dict(curl=.95, thumb=.85, index=None)
+        return [dict(type="reach", hands={sd: to}, via=True, shape={sd: sh_hold}),
+                dict(type="release", side=sd, at=_lst(xy)),
+                dict(type="reach", hands={sd: dict(k="up_from", side=sd)}, shape={sd: dict(curl=.3, thumb=.3, index=None)}, n=3),
+                dict(type="proxy", side=sd, on=True),
+                dict(type="relax", sides=sd)]
 
     def _far_side(self):
         """A109: the child's side away from the side she kneels on (Child.face_side), and the lateral direction toward it on the

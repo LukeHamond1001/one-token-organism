@@ -744,6 +744,24 @@ def test_acts_carry_the_object():
           "answer")
 
 
+def test_the_hide_line():
+    """lang 62 (A129, the hide game): "the duck is in the tub." passes the check when the duck is seen lying in the tub (the percept's
+    `on` "tub": the tub is open, templates.OPEN_CONTAINERS, she sees into it), is "not true" of a duck on the mat, and "in the box"
+    stays containment she cannot see; the hide intent's two frames end on their focus and carry the toy's word"""
+    V2 = set(VOCAB) | {"tub", "box"}                                     # the tub's and the box's words in (the growth queue admits them)
+    tub = ("tub", "tub", "olive", "mat", True); box = ("box", "box", "grey", "mat", True)
+    ok, reason = TP.check("the duck is in the tub.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "tub", True), tub)), (), source="fast")
+    assert ok, reason
+    ok, reason = TP.check("the duck is in the tub.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "mat", True), tub)), (), source="fast")
+    assert not ok and "not true" in reason, reason
+    ok, reason = TP.check("the duck is in the box.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "box", True), box)), (), source="fast")
+    assert not ok and "containment" in reason, reason
+    fr = TP.FRAMES["hide"]
+    assert [f[0] for f in fr] == ["the {o} is in the tub.", "look. in the tub. the {o}."] and "tub" in TP.OPEN_CONTAINERS, fr
+    print("lang 62: 'the duck is in the tub.' passes of a duck seen in the tub, 'not true' of one on the mat; 'in the box' stays containment",
+          "she cannot see; the hide's two frames end on their focus")
+
+
 def test_line_check_truth():
     """finding 8: the line check tested only that things exist ("it is a duck." while the child holds the ball passed)."""
     held_ball = P(0, child_holds=("ball",))

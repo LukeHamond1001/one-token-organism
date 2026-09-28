@@ -92,6 +92,7 @@ FIXTURE_NOUNS = frozenset(ROOM) | {w for w, c in GROWTH if c == "fixture"}
 CHILD_BODY = frozenset(BODY) | {w for w, c in GROWTH if c == "body"}
 HER_FACE = frozenset(w for w, c in GROWTH if c == "face")
 COLOURS = frozenset(w for w, c in GROWTH if c == "colour")
+OPEN_CONTAINERS = frozenset({"tub"})   # A129: what she can see into; a toy lying in it is seen "in the tub" (the percept's `on` is "tub")
 NOUNS = OBJECT_NOUNS | FIXTURE_NOUNS | CHILD_BODY          # a recast or an echo says "the X" of these ("ball! the ball!")
 FUNCTION = frozenset(dict(GROUPS)["function"])             # never a focus word: her ear never expects them
 PAST_EVENTS = {"sat": ("sat",), "rolled": ("rolled",), "fell": ("fell",), "got": ("got",),
@@ -157,6 +158,8 @@ FRAMES = {
     "label_colour": [F("the {c} {o}.", "{o}"), F("a {c} {o}.", "{o}"), F("it is {c}.", "{c}"), F("the {o} is {c}.", "{c}")],
     "set_near": [F("here. the {o}.", "{o}"), F("look. here. the {o}.", "{o}")],   # her lesson's setup: the toy set within reach (A90)
     "set_far": [F("look. the {o}.", "{o}"), F("look. here. the {o}.", "{o}")],     # the roll rung's setup: the toy past its reach (A109)
+    "hide": [F("the {o} is in the tub.", "tub"), F("look. in the tub. the {o}.", "{o}")],   # the hide game (A129): what she did, said true
+                                                                                          # (the focus last: "tub", the room's newest word)
     "hand_over": [F("here. a {o}.", "{o}"), F("look. here. a {o}.", "{o}")],      # the toy into its hand (the handle rung, A90)
     "show": [F("look at the {o}.", "{o}"), F("look. a {o}.", "{o}"), F("see the {o}?", "{o}"), F("see? a {o}.", "{o}"),
              F("here is a {o}.", "{o}")],
@@ -467,6 +470,9 @@ def claude_claims(text):
             if pred[0] == "is" and len(pred) >= 2:
                 p2 = pred[1:]
                 if p2[0] == "in":
+                    if len(p2) == 3 and p2[1] == "the" and p2[2] in OPEN_CONTAINERS:   # A129: an open tub she sees into
+                        claims.append(("on", n, p2[2]))
+                        continue
                     return None, f"not seen: a thing in the {p2[-1]} (containment she cannot see)"
                 if len(p2) == 3 and p2[:2] == ["on", "the"] and p2[2] in FIXTURE_NOUNS:
                     claims.append(("on", n, p2[2]))
@@ -634,7 +640,7 @@ def _true(text, percept, seen, refs, recent_events):
             else:
                 continue
             if rest[0] in ("on", "in") and len(rest) >= 3 and rest[1] == "the":
-                if rest[0] == "in":
+                if rest[0] == "in" and rest[2] not in OPEN_CONTAINERS:     # A129: the tub is open, she sees what lies in it (its `on`)
                     return False, f"not seen: a thing in the {rest[2]} (containment she cannot see)"
                 if not any(o.on == rest[2] for o in subj_objs):
                     return False, f"not true: no {subj if subj not in _DEIXIS else 'such thing'} on the {rest[2]} as she sees it"

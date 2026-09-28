@@ -84,7 +84,11 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # physiology's key; the context a working attribute let go at the night). The organs, store, optimizers and random streams reproduced
 # the A127 pins exactly in both runs; only the constants (the new key) and the working attributes moved. Was: threaded
 # 3dd49d79c5697f9f85c97585, one-thread 069305dec3c4b3d97838a87b, consts b77b4d429900.
-digest  sim                   threaded 6afa1ffacca665b76fc79eac consts c5b0ecd43f56 | --profile sim
-digest  sim                   pinned   4e9bc0b0b23d07030c44ffd7 consts c5b0ecd43f56 | --profile sim
-full    sim                   threaded organs fc7be0bd7c7c store d364be30c88f optim 0757502a5393 rng 3f129c0969d1 work 0d4b5dd4f724 cfg 79ff01e006be
-full    sim                   pinned   organs 4fa1a3503829 store 0b7fce84adf8 optim 8bce1f21c794 rng 3f129c0969d1 work 98b68cf1f9bc cfg 79ff01e006be
+# Re-pinned at dawn 24 (2026-09-28 13:58, branch a128: SIM_CFG novelty, goal_key and ctx_key 1 at birth, the owner's all-in word;
+# the life restarted with the three --set flags at 13:56, these defaults make the flags the tree's own). A born body now pays for
+# the new and keys its frames on the held word and the held context, so every section moved (organs, store, optimizers, the random
+# streams: the novelty source draws). Was: threaded 6afa1ffacca665b76fc79eac, one-thread 4e9bc0b0b23d07030c44ffd7, consts c5b0ecd43f56.
+digest  sim                   threaded 36753538ad620bd3f35f515c consts c12b7431a436 | --profile sim
+digest  sim                   pinned   5621285819cb4cae3cdf2235 consts c12b7431a436 | --profile sim
+full    sim                   threaded organs 6e0c7bfb9220 store 67eaa0728ba2 optim 5086da144247 rng bc27f6851466 work 7a21e021b519 cfg f486439e01ad
+full    sim                   pinned   organs 5e98f5b64f3b store e90f0505ec57 optim 63a090678ebc rng bc27f6851466 work 7d49b8eac0b8 cfg f486439e01ad

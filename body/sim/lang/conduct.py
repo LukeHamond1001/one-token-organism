@@ -215,6 +215,8 @@ ACT_KINDS = {
     "hand_over": "the toy put into the child's near or far hand (parent_acts.hand_over)",
     "bring_back": "the toy fetched and set down within the child's reach beside its near hand, at her lesson's distance "
                   "(parent_motion.bring_back, lesson_dist; the reach rung's setup, A90)",
+    "hide": "the toy fetched and let go into the tub in the child's view (parent_motion.hide: the hide game, A129, on the tub A126; "
+            "the object permanence test proper, Piaget's stage 4: the child's hand into the tub after it is the find)",
     "bring_far": "the toy fetched and set down beside the child's far shoulder, level with its head, ROLL_BEYOND_M past the reach "
                  "of the arm on that side, from a kneel on its far side (parent_motion.bring_far; the roll rung's setup, A109)",
     "turn": "the brief capped turn of the child from its front toward its back (parent_motion.turn, A7): her care at its distress, "
@@ -241,7 +243,7 @@ ACT_KINDS = {
 }
 STUB_FOCUS = 60                               # the stub runs a during='focus' act until the conduct cancels it (its word's end)
 STUB_TICKS = {"look": 2, "lean_in": 7, "attend": 20, "show": 7, "point": 5, "open_hand": 5, "hand_over": 12, "touch": 7,
-              "withdraw": 2, "bring_back": 20, "bring_far": 24, "turn": 14, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
+              "withdraw": 2, "bring_back": 20, "bring_far": 24, "hide": 24, "turn": 14, "guide": 8, "pull_to_sit": 20, "wave": 5, "walk": 30, "cover_face": 3,
               "reveal_face": 2, "do": 7, "copy": 7, "present": 12}   # the stub's nominal times, ours; W2 measures its own
 
 
@@ -264,7 +266,7 @@ POINTING = ("eyes", "head", "left", "right", "trunk")   # her motion's report ev
 FIELDS = POINTING + ("face",)                 # and her face ("mama" on a tick its expression moves)
 HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
-FETCH_KINDS = ("show", "bring_back", "bring_far", "hand_over")   # A117: her acts that begin by fetching a toy (parent_motion._fetch)
+FETCH_KINDS = ("show", "bring_back", "bring_far", "hand_over", "hide")   # A117: her acts that begin by fetching a toy (parent_motion._fetch)
 LEFT_WHY = ("nowhere to kneel", "out of her reach", "beyond her reach", "cannot reach")   # ... and the motion's words for a toy she cannot get to
 LEFT_MOVED_M = 0.10                           # a left toy that has moved this far is a toy again (something changed: the child, or she, moved it)
 HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
@@ -321,7 +323,7 @@ def directs(act):
         return [("head", "child"), ("trunk", UNNAMED)]                # her trunk leans in (A3)
     if k == "attend":
         return [("head", "child"), ("hand", "trunk"), ("trunk", UNNAMED)]   # she kneels beside it, a hand on its trunk
-    if k in ("show", "point", "open_hand", "hand_over", "bring_back", "bring_far"):
+    if k in ("show", "point", "open_hand", "hand_over", "bring_back", "bring_far", "hide"):
         return [("hand", tg)]
     if k in ("touch", "guide"):
         return [("hand", tg)]                                         # the part she touches, the limb she guides
@@ -499,6 +501,8 @@ INTENTS = {
     "set_far": Intent("plain", False, None, (Act("bring_far", "{o}"), LOOK_O, EYES)),    # the roll rung's setup (A109): the toy beside
                                                                                           # its far shoulder, past its reach
     "hand_over": Intent("plain", False, None, (Act("hand_over", "{o}"), EYES)),          # the toy into its hand (the handle rung)
+    "hide": Intent("plain", False, None, (Act("hide", "{o}"), LOOK_O, EYES)),            # the hide game (A129): the toy let go into the
+                                                                                          # tub in its view, her look to the tub, then to it
     "redirect": Intent("plain", False, None, (Act("point", "{o}"), LOOK_O)),
     "ask_where": Intent("plain", True, "gaze", (EYES,)),                 # never a point or a look to it: the ask tests the word
     "ask_what": Intent("plain", True, "name", (EYES,)),     # of what the child attends: no show while an ask is pending (A51)

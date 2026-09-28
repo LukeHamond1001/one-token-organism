@@ -1421,6 +1421,37 @@ def test_the_toy_before_a_prone_face():
         print(f"parent 27: the {toy} brought back to a prone child and set {d_ahead:.2f} m before its eyes, {d_side:.2f} m aside, in {a['ticks']} ticks")
 
 
+def test_the_hide():
+    """parent 28 (A129, the hide game on the tub A126): asked to hide the duck, she fetches it, kneels by the tub if her hand does not
+    reach over its rim from where she is, brings the duck over the tub and opens her hand: the act is done, the duck lies inside the
+    tub (within its walls, over its floor, under its rim) and her hand is out of it again. In a room without a tub the hide is refused,
+    and the tub itself cannot be hidden"""
+    from body.sim import extras as X
+    w = W.G1World(seed=1, extra=X.add_tub(xy=(-0.3, -0.45)))
+    pm = w.parent
+    T.place_g1(w, "sit")
+    for _ in range(20):
+        w.frame(); w.apply({})
+    out = T.run(w, [("hide", "duck")], 1500)
+    a = out["acts"][0]
+    assert a["status"] == "done", a
+    m, d = w.m, w.d
+    tub, duck = m.body("toy_tub").id, m.body("toy_duck").id
+    for _ in range(40):
+        w.frame(); w.apply({})
+    loc = d.xmat[tub].reshape(3, 3).T @ (d.xpos[duck] - d.xpos[tub])
+    assert abs(loc[0]) < X.TUB_IN and abs(loc[1]) < X.TUB_IN and X.TUB_WALL < loc[2] < X.TUB_WALL + X.TUB_H, loc
+    assert all(v is None for v in pm.holding.values()), pm.holding
+    out2 = T.run(w, [("hide", "tub")], 60)
+    assert out2["acts"][0]["status"] == "refused" and "tub" in out2["acts"][0]["why"], out2["acts"][0]
+    w0 = W.G1World(seed=1)
+    T.place_g1(w0, "sit")
+    out3 = T.run(w0, [("hide", "duck")], 60)
+    assert out3["acts"][0]["status"] == "refused" and "no tub" in out3["acts"][0]["why"], out3["acts"][0]
+    print(f"parent 28: the duck hidden in the tub in {a['ticks']} ticks: it lies at {np.round(loc, 3).tolist()} in the tub's frame, her hands",
+          f"empty; the tub cannot be hidden, and without a tub the hide is refused ({out3['acts'][0]['why'][:40]})")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1430,7 +1461,8 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
-                test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face]
+                test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
+                test_the_hide]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
