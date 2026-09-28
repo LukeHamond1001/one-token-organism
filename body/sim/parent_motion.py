@@ -131,7 +131,7 @@ HAND_TOUCH_AFFINITY = 18                    # her palm, fingers and thumb touch 
                                             # floor, never a toy (whose contype is 4; make_g1room.HAND_TOUCH)
 BODY_AFFINITY = 18                          # her body's shapes touch the room (bit 16) and the floor's bit 2, never the G1 (A25c; make_g1room.FLOOR;
                                             # A25b: her trunk is carried, so no gait of hers goes through the floor)
-MOVING = ("walk", "turn", "kneel_down", "shuffle", "sofa")   # her base modes that move her base (her plan moves her pelvis)
+MOVING = ("walk", "turn", "kneel_down", "shuffle", "sofa", "lie")   # her base modes that move her base (her plan moves her pelvis)
 STEPPING = ("walk", "turn", "kneel_down", "shuffle", "knee_turn")   # the phases that move her legs (the calm step: _restless_near)
 HAND_BOX = (0.0, 0.0, -0.08, 0.12, 0.12, 0.15)   # her hand's frame: a box holding her hand in any shape (centre, half-sizes; its
                                             # fingers reach about 0.2 m from her wrist); MuJoCo's midphase tests her hand's shapes in it
@@ -396,6 +396,54 @@ def sit_chair(at, yaw, u=1.0, seat_z=SOFA_SEAT_Z, lean=0.0):
     feet = {sd: np.r_[feet_xy[sd], P.ANKLE_H] for sd in "LR"}
     P.legs_to(p, feet, {sd: np.r_[fwd, 0.4] for sd in "LR"}, foot_R={sd: P.flat_foot_R(yaw) for sd in "LR"})
     P.arms_relaxed(p, bend=25 + 20 * e, abd=10)
+    return p
+
+
+LIE_DOWN_S = 3.0                            # A124 (C107): her way down from the tall kneel onto her front, and up again, in this (ours:
+                                            # a person's unhurried lying down; every segment under KNEEL_SEG_MPS on the way)
+LIE_CHEST_UP = (35.0, 30.0, 25.0)           # the chest's extension lying, tried in turn (parent_poses.lie_prone: 35 keeps the forearms on
+                                            # the floor and the head at 0.29 m)
+LIE_HEAD_UP_M = 0.15                        # m: a prone child's eyes rise about this when it lifts its head (lane.HEAD_UP_M's head-up, the
+                                            # G1's neckless head on its trunk; ours): where her lying face waits to be seen
+LIE_OFFS = (1.35, 1.25, 1.45, 1.15, 1.55)   # m: her heels' spot from a prone child's head along its axis for the tummy-time lean-in: the
+                                            # tall kneel HEELS_BACK nearer, her lying face 0.60 m nearer again, so her mouth lands 0.30 to
+                                            # 0.60 m before its eyes (LEAN_DIST_M); tried nearest the middle first. Ours
+
+
+def lie_pose(at, yaw, u=1.0, chest_up=35.0):
+    """A124: from the tall kneel at `at` facing yaw (u 0) down onto her front (u 1): the pelvis sinks and slides a little back as the
+    trunk pitches forward to the floor, the legs go out straight behind, the arms come down to the floor ahead; at 1 it is
+    parent_poses.lie_prone with its chest raised chest_up"""
+    e = _smooth(float(np.clip(u, 0.0, 1.0)))
+    if e >= 1.0:
+        return P.lie_prone(at, yaw, chest_up=chest_up)
+    fwd = np.array([math.cos(yaw), math.sin(yaw)]); left = np.array([-fwd[1], fwd[0]])
+    hip0 = P.KNEE_FLOOR + kin.L_TH * .995
+    z = hip0 + (0.10 - hip0) * e
+    p = P.base(at, yaw, z)
+    p.R = kin.rz(yaw) @ kin.ry(math.radians(90.0 * e))
+    ext = -abs(chest_up) * e
+    lo_l = kin.LIM_DEG["lumbar_flex"][0] + 2; lo_c = kin.LIM_DEG["chest_flex"][0] + 2
+    kin.spine(p, lumbar=(max(lo_l, ext * .55), 0, 0), chest=(max(lo_c, ext * .45), 0, 0))
+    feet, knees = {}, {}
+    for sd, sg in (("L", 1), ("R", -1)):
+        k0 = np.asarray(at) + fwd * .03 + left * sg * .115                  # the tall kneel's feet: behind the knees on the floor
+        f0 = np.r_[k0 - fwd * kin.L_SH * .95, P.ANKLE_H * .8]
+        f1 = np.r_[np.asarray(at) - fwd * (kin.L_TH + kin.L_SH) * .98 + left * sg * .10, P.ANKLE_H * .8]
+        feet[sd] = f0 + (f1 - f0) * e
+        knees[sd] = np.r_[fwd * (.5 - .35 * e), -1.0]
+    P.legs_to(p, feet, knees)
+    if e < 0.35:
+        P.arms_relaxed(p, bend=25, abd=12)
+    else:
+        segs = kin.fk(p)
+        w = (e - 0.35) / 0.65
+        for sd, sg in (("L", 1), ("R", -1)):
+            cp, cR = segs["chest"]
+            sh = cp + cR @ kin.OFFSET[f"upper_arm_{sd}"]
+            grip = np.r_[sh[:2] + fwd * .26 + left * sg * .10, .035 + (1 - w) * .25]
+            P.reach(p, sd, grip, np.array([0.0, 0.0, -1.0]), pole=np.r_[-fwd * .2 + left * sg * .35, -1.0], curl=.15, thumb=.2)
+    kin.look(p, np.r_[np.asarray(at) + fwd * 1.2, .12])
     return p
 
 
@@ -1414,7 +1462,7 @@ class ParentMotion:
         self._decay_offsets()
         active = (self.cur["body"] is not None or self.cur["gaze"] is not None or bool(self.holds) or bool(self.glances)
                   or self.look.get("target") not in (None, "ahead") or any(a["mode"] != "relaxed" for a in self.arms.values())
-                  or self.base["mode"] not in ("held", "stand", "heels", "tall", "sofa") or any(np.any(self.offset[c]) for c in CHAINS)
+                  or self.base["mode"] not in ("held", "stand", "heels", "tall", "sofa", "lying") or any(np.any(self.offset[c]) for c in CHAINS)
                   or self.base.get("dirty", False) or (self.drawn_face is not None and self._face_key() != self.drawn_face[0])
                   or (self.drawn_face is None and self._face_key() != self._face_key_of(kin.FACE_NEUTRAL))
                   or any(self.stopped.values()) or any(self.yielding.values()))
@@ -2052,16 +2100,18 @@ class ParentMotion:
             p = P.kneel_shuffle(np.asarray(b["p0"], float) + oc[:2], np.asarray(b["p1"], float) + oc[:2], b["yaw"], b["u"], "tall")
         elif mode == "sofa":
             p = sit_chair(at, b["yaw"], b["u"], b.get("seat_z", SOFA_SEAT_Z))
+        elif mode in ("lie", "lying"):                                      # A124: down onto her front, or lying (tummy time)
+            p = lie_pose(at, b["yaw"], b.get("u", 1.0), b.get("lean", LIE_CHEST_UP[0]))
         else:
             raise ValueError(mode)
-        if mode not in ("held", "sofa") and (self._pose_cache is None or self._pose_cache[0] != key):
+        if mode not in ("held", "sofa", "lie", "lying") and (self._pose_cache is None or self._pose_cache[0] != key):
             p.pos = p.pos + np.array([0.0, 0.0, self._floor_lift(p)])        # never planned into the floor (A25b)
         if mode != "held" and (self._pose_cache is None or self._pose_cache[0] != key):
             q = p.copy(); q.report = {k: (dict(v) if isinstance(v, dict) else v) for k, v in p.report.items()}
             self._pose_cache = (key, q)
         if p is not None and self._pose_cache is not None:
             p.report = {k: (dict(v) if isinstance(v, dict) else v) for k, v in p.report.items()}
-        if arms:
+        if arms and mode not in ("lie", "lying"):                          # lying, her hands rest on the floor (the pose's own)
             for sd in "LR":
                 self._arm(p, sd, trial)
         if look:
@@ -2895,6 +2945,26 @@ class ParentMotion:
         self.base = dict(mode="sofa", at=_lst(at), yaw=yaw, u=u, lean=0.0, spine=0.0, twist=0.0)
         return "done" if t >= n else "run"
 
+    def _ph_lie(self, a, ph):
+        """A124: lying down onto her front from the tall kneel at `at` (u 0 to 1) or getting up onto it again (1 to 0), over LIE_DOWN_S"""
+        n = max(2, int(round(LIE_DOWN_S / TICK_S)))
+        t = ph.get("t", 0) + 1
+        u0, u1 = float(ph["u0"]), float(ph["u1"])
+        at = np.asarray(ph["at"], float); yaw = float(ph["yaw"]); cu = float(ph.get("chest_up", LIE_CHEST_UP[0]))
+        if t == 1 and u0 <= 0:
+            b = self.base
+            if b["mode"] != "tall" or float(np.linalg.norm(np.asarray(b["at"], float) - at)) > 0.05 or abs(_ang(b["yaw"] - yaw)) > math.radians(5):
+                return f"lying down not begun from her tall kneel there ({b['mode']} at {np.round(b['at'], 2).tolist()}: a stale plan)"
+        u = u0 + (u1 - u0) * min(1.0, t / n)
+        if t >= n:
+            if u1 >= 1:
+                self._stable("lying", at, yaw, lean=cu)
+            else:
+                self._stable("tall", at, yaw)
+            return "done"
+        self.base = dict(mode="lie", at=_lst(at), yaw=yaw, u=u, lean=cu, spine=0.0, twist=0.0)
+        return "run"
+
     def _ph_wait(self, a, ph):
         return "done" if ph.get("t", 0) + 1 >= int(ph["n"]) else "run"
 
@@ -3206,7 +3276,7 @@ class ParentMotion:
         took comes back at YIELD_BACK_M_PER_TICK where it stays clear. Her support carries her to that plan (parent_body): the
         child moving into her is resolved by the physics and A4"""
         b = self.base
-        if b["mode"] in ("held", "sofa"):
+        if b["mode"] in ("held", "sofa", "lie", "lying"):
             self.clear_now = 0.2
             return pose
         com = self.child.com
@@ -3386,7 +3456,7 @@ class ParentMotion:
                 out.append((feet + axis * off, math.atan2(-axis[1], -axis[0]), "feet"))
         if where in (None, "head"):
             head = ch.torso[:2] - axis * 0.45
-            for off in (0.60, 0.70):
+            for off in (offs if where == "head" and offs else (0.60, 0.70)):
                 out.append((head - axis * off, math.atan2(axis[1], axis[0]), "head"))
         return out
 
@@ -3496,6 +3566,8 @@ class ParentMotion:
             return self.face_reach(at=H, yaw=yaw, base_mode="heels") is not None
         if need == "lean_line":                                             # A96: a pose there puts her mouth on its fovea's line
             return self.face_reach(at=H, yaw=yaw, base_mode="heels", on_line=True) is not None
+        if need == "lie":                                                   # A124 (C107): lying on her front from the tall kneel there,
+            return self._lie_fit(np.asarray(H, float) + fwd * HEELS_BACK, yaw) is not None   # her face lands before a prone child's eyes
         if need == "pull":                                                  # one trunk reaches both its forearms from her tall kneel
             saved = self.base
             self.base = dict(mode="tall", at=_lst(np.asarray(H, float) + fwd * HEELS_BACK), yaw=float(yaw), lean=0.0, spine=0.0,
@@ -3582,7 +3654,10 @@ class ParentMotion:
                     ph["grp"] = f"approach{self.serial}"
                 return out
             return self._up_phases() + [dict(type="plan", what="approach", args=dict(where=where, offs=offs, alongs=alongs, need=need))]
-        elif b["mode"] == "sofa":
+        elif b["mode"] == "lying" and need == "lie" and \
+                self._lie_fit(np.asarray(b["at"], float), float(b["yaw"])) is not None:
+            return []                                                       # A124: she lies before its face already: she stays
+        elif b["mode"] in ("sofa", "lying"):
             return self._up_phases() + [dict(type="plan", what="approach", args=dict(where=where, offs=offs, alongs=alongs, need=need))]
         else:
             start = np.asarray(b["at"], float)
@@ -3748,6 +3823,9 @@ class ParentMotion:
         b = self.base
         if b["mode"] == "sofa":
             return [dict(type="sit", at=b["at"], yaw=b["yaw"], u0=1.0, u1=0.0)]
+        if b["mode"] == "lying":                                            # A124: up onto her tall kneel, then as from a kneel
+            return [dict(type="lie", at=b["at"], yaw=b["yaw"], u0=1.0, u1=0.0, chest_up=b.get("lean", LIE_CHEST_UP[0])),
+                    dict(type="plan", what="stand_up", args={})]
         if b["mode"] not in ("heels", "tall"):
             return []
         yaw = float(b["yaw"]); fwd = np.array([math.cos(yaw), math.sin(yaw)])
@@ -3936,7 +4014,7 @@ class ParentMotion:
         shuffle's p0, p1) by that gap; nothing is drawn differently. Counted (stats['rebased'], the largest gap in 'rebased_m'):
         a rebase is the record of a fault upstream, never the plan"""
         b = self.base
-        if b["mode"] in ("held", "sofa"):
+        if b["mode"] in ("held", "sofa", "lie", "lying"):
             return
         gap = np.asarray(drawn_pelvis[:2], float) - np.asarray(self._pose().pos[:2], float)
         n = float(np.linalg.norm(gap))
@@ -3994,7 +4072,7 @@ class ParentMotion:
 
     def _up_phases(self):
         """getting up, planned when it is reached (_plan_stand_up)"""
-        return [dict(type="plan", what="stand_up", args={})] if self.base["mode"] in ("heels", "tall", "sofa") else []
+        return [dict(type="plan", what="stand_up", args={})] if self.base["mode"] in ("heels", "tall", "sofa", "lying") else []
 
     def _standing_at(self):
         """where she will stand after getting up"""
@@ -4533,7 +4611,7 @@ class ParentMotion:
         sd = self._free_hand(c)
         if self.base["mode"] in ("heels", "tall") and self._reachable(sd, dict(k="above_toy", toy=toy, h=0.0)):
             return self._pick_phases(sd, toy)
-        if self.base["mode"] in ("heels", "tall", "sofa"):
+        if self.base["mode"] in ("heels", "tall", "sofa", "lying"):
             return self._up_phases() + [dict(type="plan", what="fetch", args=dict(toy=toy))]   # up first, then planned from there
         spot = self._toy_spot(c[:2])
         if spot is None:
@@ -5051,9 +5129,53 @@ class ParentMotion:
 
     # ---- her face where its eyes can reach (A3, A22, C34)
     def _act_lean_in(self, a, t):
+        if self.child.posture == "front":                                 # A124 (C107): a prone child sees the floor: tummy time, her
+            return self._near(a, where="head", offs=LIE_OFFS, need="lie") + [dict(type="plan", what="lie_in", args={})]   # face on it
         on_line = t == "child_line"                                       # A94: her face onto its line of sight (the smile she gives)
         need = "lean_line" if on_line else "lean"                          # A96: from a spot where a pose puts it ON the line (else, the
         return self._near(a, alongs=K.LEAN_ALONG_M, need=need) + [dict(type="plan", what="lean_in", args=dict(on_line=on_line))]   # periphery)
+
+    def _lie_fit(self, T, yaw):
+        """A124 (C107): the chest's extension (LIE_CHEST_UP, tried in turn) with which, lying on her front from the tall kneel at T
+        facing yaw, her mouth lands LEAN_DIST_M from where a prone child's eyes will be when it lifts its head (LIE_HEAD_UP_M above
+        them now: face down, its cameras look into the mat, C94, and see her only in a head-up), her face turned toward them within
+        A1's limit, her body 3 cm clear of it (A4) and every joint inside its range; None when none does"""
+        for cu in LIE_CHEST_UP:
+            p = lie_pose(T, yaw, 1.0, cu)
+            p.pos = p.pos + np.array([0.0, 0.0, self._floor_lift(p)])
+            kin.look(p, self.child.eyes)
+            if any(r.get("violations") for r in p.report.values() if isinstance(r, dict)):
+                continue
+            mouth, ffwd, centre = self.mouth_of(p)
+            lifted = np.asarray(self.child.eyes, float) + np.array([0.0, 0.0, LIE_HEAD_UP_M])   # its eyes when it lifts its head
+            lo, hi = K.LEAN_DIST_M                                          # (a prone G1's cameras look into the mat until it does,
+            d = float(np.linalg.norm(mouth - lifted))                       # C94; her face waits where the lifted head will see it)
+            if not (lo <= d <= hi) or float(ffwd @ unit(lifted - mouth)) < math.cos(math.radians(E_FACE_TURN_DEG())):
+                continue
+            if self._clearance(p) < K.CLEAR_M:
+                continue
+            return cu
+        return None
+
+    def _plan_lie_in(self, a):
+        """A124 (C107, tummy time): from the tall kneel before a prone child's head (the approach's spot, need "lie") she lies down on
+        her front, her face on the floor before its face, and looks at its eyes; already lying there, she only looks"""
+        b = self.base
+        if b["mode"] == "lying":
+            return [dict(type="look_at", target="child_eyes")]
+        yaw = float(b["yaw"]); fwd = np.array([math.cos(yaw), math.sin(yaw)])
+        T = np.asarray(b["at"], float) + (fwd * HEELS_BACK if b["mode"] == "heels" else 0.0)
+        cu = self._lie_fit(T, yaw)
+        if cu is None:
+            raise Refuse("no lying pose puts her face where its eyes can reach from here (A124, C107)")
+        out = []
+        if b["mode"] == "heels":
+            out.append(dict(type="kneel_down", at=_lst(T), yaw=yaw, u0=3.0, u1=2.0))
+        elif b["mode"] != "tall":
+            raise Refuse(f"lying down begins from a kneel, not {b['mode']}")
+        out.append(dict(type="lie", at=_lst(T), yaw=yaw, u0=0.0, u1=1.0, chest_up=float(cu)))
+        out.append(dict(type="look_at", target="child_eyes"))
+        return out
 
     def _plan_lean_in(self, a, on_line=False):
         sol = self.face_reach(on_line=on_line)
