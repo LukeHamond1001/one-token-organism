@@ -34,3 +34,5 @@ ops/demo_video.py
 ops/film_assemble.py
 ops/film_sound.py
 docs/ALIGNMENT.md
+DEMO_TRANSCRIPT.md
+DEMO_VIDEO.md
