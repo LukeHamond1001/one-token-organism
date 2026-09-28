@@ -567,9 +567,45 @@ def test_the_new_toy_in_her_focus():
     print(f"lane 16: before 'book' is said the focus is the birth toys'; after, the book is in every day's focus ({focs[:3]} ...); a word",
           "for nothing in the room adds nothing; without the book in the room, nothing")
 
+
+def test_the_crawl():
+    """lane 17 (A125, the crawl rung): on its front, its pelvis carried CRAWL_M along the floor from where the prone spell began (or the
+    last crawl counted) is the event "crawled", once in CRAWL_GAP, worth 2 in her book (consts.MOTOR_WORTH, the design's motor acts);
+    a shorter move, or a move on its back, is none; the mark resets when it leaves its front"""
+    import mujoco
+    from body.sim import parent_motion as PM
+    from body.sim.lang import consts as CK, percept as PC
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+    import sim_parent_motion as T
+    assert CK.MOTOR_WORTH["crawled"][0] == 2 and "crawled" in PC.EVENT_KINDS
+    w, lane = _world(plan=False, day_ticks=2400)
+    m, d = w.m, w.d
+    T.place_g1(w, "front")
+    evs = []
+    for k in range(30):
+        w.frame(); w.apply({}); evs += [e[0] for e in lane.last.get("events", ())]
+    assert lane.posture == "front", lane.posture
+    ax = -PM.Child(m, d, w.scene.g1_set).len_axis[:2]
+    d.qpos[0:2] += ax * 0.12; mujoco.mj_forward(m, d)                        # a short move: no crawl
+    for k in range(10):
+        w.frame(); w.apply({}); evs += [e[0] for e in lane.last.get("events", ())]
+    assert "crawled" not in evs, evs
+    d.qpos[0:2] += ax * 0.12; mujoco.mj_forward(m, d)                        # 0.24 m from the spell's start: a crawl
+    for k in range(10):
+        w.frame(); w.apply({}); evs += [e[0] for e in lane.last.get("events", ())]
+    assert evs.count("crawled") == 1, evs
+    d.qpos[0:2] += ax * 0.30; mujoco.mj_forward(m, d)                        # within CRAWL_GAP: not counted again yet
+    for k in range(5):
+        w.frame(); w.apply({}); evs += [e[0] for e in lane.last.get("events", ())]
+    assert evs.count("crawled") == 1, evs
+    for k in range(L.CRAWL_GAP):
+        w.frame(); w.apply({}); evs += [e[0] for e in lane.last.get("events", ())]
+    n_after_gap = evs.count("crawled")
+    print(f"lane 17: a prone child carried 0.12 m: no crawl; 0.24 m: crawled (worth {CK.MOTOR_WORTH['crawled'][0]}); a third move within the gap not counted; after the gap {n_after_gap} crawls")
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
-              test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus]
+              test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus, test_the_crawl]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

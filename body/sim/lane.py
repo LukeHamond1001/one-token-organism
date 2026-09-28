@@ -101,6 +101,8 @@ NEARER_M = 0.01                        # a reach ends nearer when it beats the b
 HEAD_UP_M = 0.08                       # on its front with the head 8 cm above the pelvis, held HEAD_UP_TICKS: "head_up", once in HEAD_UP_GAP
 HEAD_UP_TICKS, HEAD_UP_GAP = 5, 100    # (the plumbing day of 2026-09-26: a thrashing body on its front crossed 8 cm 14 times in 100 ticks)
 ROLL_GAP = 40                          # a half roll counted once in 40 ticks (rocking on its side is one act, not many)
+CRAWL_M = 0.20                         # A125: on its front, its pelvis carried this far along the floor from where its prone spell began
+CRAWL_GAP = 60                         # (or from the last crawl counted): "crawled", once in this many ticks (ours; a body length is 1.3 m)
 PEEKABOO_ACT = (10, 5)                 # an act begun within 10 ticks of her reveal by a hand that rested the 5 ticks before (A2)
 READING_HOLD = PF.FEEL["reading_hold"]  # the born reading holds its last value 30 ticks out of view (A2)
 FIXTURE_WORDS = ("mat", "sofa", "window", "table", "shelf", "floor")   # her fixture words that name shapes in the room
@@ -191,6 +193,8 @@ class ParentLane:
         self.book = {}                                    # her notebook: toy -> the hand's distance at the end of its last BOOK_LAST reaches
         self.side_from = None                             # the lying posture it turned onto its side from (a half roll, once)
         self.last_half_roll = -10 ** 9                    # the last tick a half roll was counted
+        self.crawl_from = None                            # A125: its pelvis on the floor plan when its prone spell began, or its last crawl
+        self.last_crawl = -10 ** 9                        # the last tick a crawl was counted
         self.head_up = False                              # its head up on its front, this spell
         self.head_up_run = 0                              # ticks running with its head up on its front
         self.last_head_up = -10 ** 9                      # the last tick a head-up was counted
@@ -413,6 +417,14 @@ class ParentLane:
                 ev.append(("half_roll", None)); self.last_half_roll = t
         if post == "sitting" and self.last.get("posture") != "sitting":
             ev.append(("sat", None))
+        if post == "front":                                                 # A125 (the crawl rung): its pelvis carried CRAWL_M along the
+            pxy = np.asarray(ch.pelvis[:2], float)                          # floor while on its front, from where the spell began (or
+            if self.crawl_from is None:                                     # the last crawl counted), once in CRAWL_GAP: "crawled"
+                self.crawl_from = pxy
+            elif float(np.linalg.norm(pxy - self.crawl_from)) >= CRAWL_M and t - self.last_crawl >= CRAWL_GAP:
+                ev.append(("crawled", None)); self.last_crawl = t; self.crawl_from = pxy
+        else:
+            self.crawl_from = None
         up = post == "front" and float(ch.head[2] - ch.pelvis[2]) > HEAD_UP_M
         self.head_up_run = self.head_up_run + 1 if up else 0
         if self.head_up_run == HEAD_UP_TICKS and t - self.last_head_up >= HEAD_UP_GAP:   # held, once in HEAD_UP_GAP

@@ -399,6 +399,12 @@ def sit_chair(at, yaw, u=1.0, seat_z=SOFA_SEAT_Z, lean=0.0):
     return p
 
 
+PUT_HEAD_OFFS = (0.65, 0.75, 0.85)          # A125: her heels' spot from a prone child's head to set a toy before its face (the toy 0.25 m
+                                            # before its eyes: 0.4 to 0.6 m from her, within one trunk's reach). Ours
+PUT_TOL_M = 0.10                            # m: a toy set down farther than this from where she meant it is reached for again (a person
+PUT_RETRIES = 2                             # sets a toy where she means it), this many times, then the act is refused. Ours
+CRAWL_AHEAD_M = 0.15                        # A125 (the crawl rung): a lesson toy set this far before a prone child's eyes, plus her lesson's
+                                            # distance: a stretch of its arm forward, then a crawl's length as the ladder rises (ours)
 LIE_DOWN_S = 3.0                            # A124 (C107): her way down from the tall kneel onto her front, and up again, in this (ours:
                                             # a person's unhurried lying down; every segment under KNEEL_SEG_MPS on the way)
 LIE_CHEST_UP = (35.0, 30.0, 25.0)           # the chest's extension lying, tried in turn (parent_poses.lie_prone: 35 keeps the forearms on
@@ -3194,6 +3200,17 @@ class ParentMotion:
     def _ph_release(self, a, ph):
         sd = ph["side"]
         toy = self.holding[sd]
+        if toy is not None and ph.get("at") is not None:                     # A125: a toy set down where she meant it (the lesson's
+            g, _ = self._grip_now(sd, actual=True)                          # place before a prone child's face landed 33 cm off and the
+            miss = float(np.linalg.norm(g[:2] - np.asarray(ph["at"], float)))   # act was done): her hand not there, she reaches again,
+            if miss > PUT_TOL_M:                                            # PUT_RETRIES times; then the act is refused with the miss
+                if ph.get("retries", 0) < PUT_RETRIES:
+                    ph["retries"] = ph.get("retries", 0) + 1
+                    i = self.phases.index(ph)
+                    self.phases.insert(i, dict(type="reach", hands={sd: dict(k="floor", xy=list(ph["at"]))}, via=True,
+                                               shape={sd: dict(curl=.95, thumb=.85, index=None)}))
+                    return "next"
+                return f"the {toy} could not be set down where she meant it ({100 * miss:.0f} cm off, beyond her reach from here)"
         if toy is not None:
             self.scene.weld(f"hold_{sd}_{toy}", False)
         self.holding[sd] = None
@@ -3993,7 +4010,7 @@ class ParentMotion:
         """a toy in her hand set down on the floor at xy (a centimetre up, then let go) and her hand drawn up and back"""
         sh_hold = dict(curl=.95, thumb=.85, index=None)
         return [dict(type="reach", hands={sd: dict(k="floor", xy=_lst(xy))}, via=True, shape={sd: sh_hold}),
-                dict(type="release", side=sd),
+                dict(type="release", side=sd, at=_lst(xy)),
                 dict(type="reach", hands={sd: dict(k="up_from", side=sd)}, shape={sd: dict(curl=.3, thumb=.3, index=None)}, n=3),
                 dict(type="proxy", side=sd, on=True),
                 dict(type="relax", sides=sd)]
@@ -4850,7 +4867,11 @@ class ParentMotion:
 
     def _act_bring_back(self, a, t):
         toy = self._toy(t)
-        return self._fetch(a, toy) + self._near(a) + [dict(type="plan", what="put_near", args=dict(toy=toy))]
+        if self.child.posture == "front":                                 # A125 (the crawl rung): the toy goes before a prone child's
+            near = self._near(a, where="head", offs=PUT_HEAD_OFFS)         # face, so she kneels at its head, where her hand reaches it
+        else:
+            near = self._near(a)
+        return self._fetch(a, toy) + near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
 
     def _far_side(self):
         """A109: the child's side away from the side she kneels on (Child.face_side), and the lateral direction toward it on the
@@ -4895,9 +4916,13 @@ class ParentMotion:
         (lesson_dist: 0.10 at birth, 4.10's reach ladder level 1; her day plan raises it 0.05 a mastered level, A90)"""
         ch = self.child
         her = np.asarray(self.base["at"], float)
-        cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
-        out = unit((ch.grasp[cs] - ch.torso)[:2] * 1.0)
-        xy = ch.grasp[cs][:2] + out * float(self.lesson_dist)
+        if ch.posture == "front":                                           # A125 (the crawl rung): a prone child's hands lie under and
+            ahead = -unit(np.r_[ch.len_axis[:2], 0.0])[:2]                   # beside it; the toy goes before its face, CRAWL_AHEAD_M past
+            xy = np.asarray(ch.eyes[:2], float) + ahead * (CRAWL_AHEAD_M + float(self.lesson_dist))   # its eyes and the lesson's distance
+        else:                                                               # (tummy time: a person puts the toy just out of reach ahead)
+            cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
+            out = unit((ch.grasp[cs] - ch.torso)[:2] * 1.0)
+            xy = ch.grasp[cs][:2] + out * float(self.lesson_dist)
         sd, swap = self._giving(toy, np.r_[xy, 0.0])
         return swap + self._put_phases(sd, xy)
 

@@ -3623,6 +3623,13 @@ A67–A70 were decided by the lead later on 2026-09-25, on the core's builds: A6
 - **Boundary:** a teacher change, at a dawn (24 if the suites pass in time, else 25). Read: the face tests and her smiles seen on the next prone day against days 18 to 22; her lean-in refusals.
 - **Not built:** a side-lying child (C94) gets the same manner later; the turn (C98) stays parked.
 
+**A125. The crawl rung: a toy before a prone child's face, and the crawl counted** (the lead, 2026-09-28 12:50; a teacher change, for dawn 25)
+- **Why:** the prone spells are now most of the day (days 18 to 22) and tummy time (A124) puts her face there; a person on the floor with a baby on its tummy puts the toy just out of reach ahead of it, and the baby stretches, then crawls. Her reach lesson set the toy "beside its near hand, out from its body", which for a prone child is under it; her book had no crawl.
+- **Built:** `_plan_put_near` on a prone child: the toy CRAWL_AHEAD_M plus her lesson's distance before its eyes (0.25 m at the ladder's foot, rising as the reach is mastered), planned from a kneel at its head (`_act_bring_back`, PUT_HEAD_OFFS); the release checks the toy landed where she meant it (PUT_TOL_M 0.10, reached for again up to PUT_RETRIES 2 times, then refused with the miss: the first probe dropped the duck 33 cm off from a side kneel and called the act done). The lane's event "crawled" (its pelvis carried CRAWL_M 0.20 along the floor while on its front, from the spell's start or the last crawl, once in CRAWL_GAP 60 ticks) and its worth 2 in her book (consts.MOTOR_WORTH, with rolled and sat: the design's first motor acts); the percept's kinds carry it.
+- **Measured:** parent 27 (the duck and the block set 0.17 and 0.23 m before a prone child's eyes, within 0.07 m aside); lane 17 (a prone child carried 0.12 m: no crawl; 0.24 m: crawled once; a third move within the gap not counted). The parent, lane and lang suites on the tree.
+- **Constants (ours):** CRAWL_AHEAD_M 0.15, PUT_HEAD_OFFS, PUT_TOL_M 0.10, PUT_RETRIES 2, CRAWL_M 0.20, CRAWL_GAP 60.
+- **Boundary:** a teacher change, at dawn 25 (dawn 24 is tummy time's). Read: reaches and grasps on prone days, the first crawl.
+
 The nine decisions of the G1 amendment are settled (section 14). These are the environment's remaining shapes, each with the default the design uses until the owner says otherwise. B4, B14 and B18 were answered by the lead for the owner on 2026-09-24 (A37, A38, A40); he may overrule each. On 2026-09-25 B21 was answered by the owner's own word (A61), and B3 by the lead for him (A65).
 
 | # | question | recommended default | what it changes |

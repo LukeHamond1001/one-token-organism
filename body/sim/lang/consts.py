@@ -399,6 +399,7 @@ MOTOR_WORTH = {                       # event kind -> (its worth, the full act i
     "got": (2, None),                 # its own reach and hold: a toy come into its hand after that hand moved or reached toward it,
                                       # never her hand-over (percept "got")
     "rolled": (2, None), "sat": (2, None),                       # a whole roll; sitting (the design's first motor acts)
+    "crawled": (2, None),                                        # its pelvis carried 20 cm along the floor on its front (A125: the crawl rung)
     "lifted": (1, None), "shook": (1, None), "hit": (1, None),   # a lift; a shake; a hit that sounds (the object's own sound)
     "head_up": (1, None), "peekaboo_act": (1, None),             # its head up on its front; peekaboo answered by an act (A2)
     "reach_nearer": (1, "got"),       # shaping (MacGlashan et al. 2017): a reach that ended nearer the toy than its best of the last

@@ -73,6 +73,7 @@ EVENT_KINDS = (
     "reach_nearer",  # a hand's movement ended nearer a toy than its best of the last BOOK_LAST reaches (the object): shaping
     "half_roll",     # its lying posture turned from its back or front onto its side
     "head_up",       # on its front with its head raised HEAD_UP_M above its pelvis, once a spell
+    "crawled",       # on its front, its pelvis carried CRAWL_M along the floor (A125: the crawl rung)
     "peekaboo_act",  # an act begun within PEEKABOO_ACT ticks of her reveal by a hand that had rested (A2)
 )
 

@@ -1398,6 +1398,29 @@ def test_tummy_time():
           f"{100 * cap['lowest']:.1f} cm; the next lean-in kept her lying; an attend got her up ({a3['status']}) through {sorted(set(modes3))}")
 
 
+def test_the_toy_before_a_prone_face():
+    """parent 27 (A125, the crawl rung): a lesson toy brought back to a prone child is set down before its FACE (CRAWL_AHEAD_M plus
+    her lesson's distance past its eyes), from a kneel at its head, and the release checks the toy landed where she meant it
+    (PUT_TOL_M, reached for again up to PUT_RETRIES times): a prone child's hands lie under and beside it, and the toy ahead of its
+    face is the reason to stretch and to crawl. Two toys, each within 0.35 m before its eyes and 0.12 m aside"""
+    for toy in ("duck", "block"):
+        w = W.G1World(seed=1)
+        pm = w.parent
+        T.place_g1(w, "front")
+        for _ in range(20):
+            w.frame(); w.apply({})
+        out = T.run(w, [("bring_back", toy)], 800)
+        a = out["acts"][0]
+        assert a["status"] == "done", a
+        ch = PM.Child(w.m, w.d, w.scene.g1_set)
+        assert ch.posture == "front", ch.posture
+        pos = w.d.xpos[w.m.body(f"toy_{toy}").id][:2]
+        ahead = -ch.len_axis[:2]
+        d_ahead = float((pos - ch.eyes[:2]) @ ahead); d_side = float(np.linalg.norm((pos - ch.eyes[:2]) - ahead * d_ahead))
+        assert 0.10 <= d_ahead <= 0.35 and d_side <= 0.12, (toy, d_ahead, d_side)
+        print(f"parent 27: the {toy} brought back to a prone child and set {d_ahead:.2f} m before its eyes, {d_side:.2f} m aside, in {a['ticks']} ticks")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1407,7 +1430,7 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
-                test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time]
+                test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
