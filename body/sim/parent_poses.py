@@ -451,6 +451,35 @@ def sit_floor(at, yaw, lean=0.0, spine_flex=0.0, twist=0.0, spread=.34, reach=.7
     return p
 
 
+def lie_prone(at, yaw, chest_up=25.0, hands_ahead=.26, hands_apart=.20):
+    """A124 (C107, tummy time): lying on her front, propped on her elbows, facing yaw: the pelvis on the floor at `at`, the trunk
+    horizontal and the chest and lumbar spine extended by chest_up (deg, within their ranges) so the head rises, the legs straight
+    behind her on the floor, the elbows on the floor under her shoulders and the forearms forward, the hands flat on the floor
+    hands_ahead of the shoulders and hands_apart to each side; the head looking forward (kin.look sets it). The posture a person
+    takes to put her face before a baby's on its tummy."""
+    fwd = np.array([math.cos(yaw), math.sin(yaw)])
+    left = np.array([-fwd[1], fwd[0]])
+    p = base(at, yaw, .10)                                                  # the pelvis on the floor (its half-depth)
+    p.R = rz(yaw) @ ry(math.radians(90.0))                                 # the trunk horizontal, ahead
+    lo_l = kin.LIM_DEG["lumbar_flex"][0] + 2; lo_c = kin.LIM_DEG["chest_flex"][0] + 2
+    ext = -abs(chest_up)
+    kin.spine(p, lumbar=(max(lo_l, ext * .55), 0, 0), chest=(max(lo_c, ext * .45), 0, 0))   # extended: the chest and head up
+    feet, knees = {}, {}
+    for sd, sg in (("L", 1), ("R", -1)):
+        feet[sd] = np.r_[np.asarray(at) - fwd * (kin.L_TH + kin.L_SH) * .98 + left * sg * .10, ANKLE_H * .8]
+        knees[sd] = np.r_[fwd * .15, -1.0]                                  # the knees toward the floor: the legs straight behind
+    legs_to(p, feet, knees)
+    segs = kin.fk(p)
+    for sd, sg in (("L", 1), ("R", -1)):
+        cp, cR = segs["chest"]
+        sh = cp + cR @ kin.OFFSET[f"upper_arm_{sd}"]
+        grip = np.r_[sh[:2] + fwd * hands_ahead + left * sg * (hands_apart / 2), .035]
+        reach(p, sd, grip, np.array([0.0, 0.0, -1.0]), fingers=fwd.tolist() + [0.0] if False else None,
+              pole=np.r_[-fwd * .2 + left * sg * .35, -1.0], curl=.15, thumb=.2)   # the elbow back, out and down: on the floor
+    kin.look(p, np.r_[np.asarray(at) + fwd * 1.2, .12])                    # her eyes ahead, a little down: a face on the floor before her
+    return p
+
+
 def kneel_shuffle(at0, at1, yaw, u, mode="tall"):
     """Walking forward on the knees (a knee shuffle) from the kneel spot at0 to at1, u in [0, 1]: three small steps,
     each knee in turn lifted and set down ahead while the hips glide."""
