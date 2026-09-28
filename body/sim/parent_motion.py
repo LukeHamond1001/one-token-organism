@@ -2111,8 +2111,10 @@ class ParentMotion:
             self._pose_cache = (key, q)
         if p is not None and self._pose_cache is not None:
             p.report = {k: (dict(v) if isinstance(v, dict) else v) for k, v in p.report.items()}
-        if arms and mode not in ("lie", "lying"):                          # lying, her hands rest on the floor (the pose's own)
+        if arms:
             for sd in "LR":
+                if mode in ("lie", "lying") and self.arms[sd].get("mode", "relaxed") == "relaxed":
+                    continue                                                # lying, a hand at rest stays on the floor (the pose's own)
                 self._arm(p, sd, trial)
         if look:
             tgt = self._look_point()

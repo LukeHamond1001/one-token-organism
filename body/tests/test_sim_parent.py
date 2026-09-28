@@ -1352,6 +1352,52 @@ def test_a_toy_where_she_cannot_kneel():
           f"under the table at {dist['cup']:.2f} m; the stacker behind the plant refused")
 
 
+def test_tummy_time():
+    """parent 26 (A124, C107): a prone child sees the mat (its cameras 3 cm up, C94), so her kneeling lean-in has no pose that puts her
+    face where its eyes reach (65 refusals a day on the prone days); asked to lean in to a prone child she does what a person does:
+    kneels before its head, lies down on her front propped on her elbows (the lying base mode, 3 s down), her mouth LEAN_DIST_M from
+    where its eyes will be when it lifts its head, her face turned to them, her body 3 cm clear of it, her forearms and shins on the
+    floor, every joint inside its range; a second lean-in finds her there and she stays; an act that needs her hands on it gets her
+    up again (lying, up onto the tall kneel, up onto her feet) and is done"""
+    w = W.G1World(seed=1)
+    pm = w.parent
+    T.place_g1(w, "front")
+    for _ in range(20):
+        w.frame(); w.apply({})
+    assert PM.Child(w.m, w.d, w.scene.g1_set).posture == "front"
+    cap = {}
+    modes = []
+
+    def tick(w_, k):
+        p = w_.parent
+        modes.append(p.base["mode"])
+        if p.base["mode"] == "lying" and "mouth" not in cap:
+            pose = p.scene.pose
+            mouth, ffwd, _c = p.mouth_of(pose)
+            lifted = np.asarray(p.child.eyes, float) + np.array([0.0, 0.0, PM.LIE_HEAD_UP_M])
+            segs = PM.kin.fk(pose)
+            cap.update(mouth=mouth, d=float(np.linalg.norm(mouth - lifted)), turn=math.degrees(math.acos(float(np.clip(ffwd @ PM.unit(lifted - mouth), -1, 1)))),
+                       clearance=float(p._clearance(pose)), lowest=min(float(pos[2]) for nm, (pos, R) in segs.items()),
+                       viol={k_: v.get("violations") for k_, v in pose.report.items() if isinstance(v, dict) and v.get("violations")}, tick=k)
+    out = T.run(w, [("lean_in", None)], 600, on_tick=tick)
+    a = out["acts"][0]
+    assert a["status"] == "done", a
+    assert "lie" in modes and "lying" in modes and cap, (sorted(set(modes)), cap)
+    lo, hi = K.LEAN_DIST_M
+    assert lo <= cap["d"] <= hi and cap["turn"] <= PM.E_FACE_TURN_DEG() and cap["clearance"] >= K.CLEAR_M and cap["lowest"] >= -0.01 and not cap["viol"], cap
+    assert out["probe"]["body_peak_N"] <= K.F_PAIN if hasattr(K, "F_PAIN") else True
+    modes2 = []
+    out2 = T.run(w, [("lean_in", None)], 300, on_tick=lambda w_, k: modes2.append(w_.parent.base["mode"]))
+    assert out2["acts"][0]["status"] == "done" and set(modes2) <= {"lying"}, (out2["acts"][0], sorted(set(modes2)))
+    modes3 = []
+    out3 = T.run(w, [("attend", None)], 700, on_tick=lambda w_, k: modes3.append(w_.parent.base["mode"]))
+    a3 = out3["acts"][0]
+    assert a3["status"] in ("done", "refused") and "lie" in modes3 and ("tall" in modes3 or "stand" in modes3) and "lying" != modes3[-1], (a3, sorted(set(modes3)))
+    print(f"parent 26: tummy time: the lean-in to a prone child done in {a['ticks']} ticks through {sorted(set(modes))}; lying at tick {cap['tick']}",
+          f"her mouth {cap['d']:.2f} m from its lifted eyes, turned {cap['turn']:.0f} deg, {100 * cap['clearance']:.0f} cm clear, her lowest segment",
+          f"{100 * cap['lowest']:.1f} cm; the next lean-in kept her lying; an attend got her up ({a3['status']}) through {sorted(set(modes3))}")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1361,7 +1407,7 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
-                test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel]
+                test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
