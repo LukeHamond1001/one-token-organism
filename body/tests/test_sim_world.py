@@ -1257,6 +1257,41 @@ def test_a_world_with_the_book_migrates_to_the_box():
           f"in the model), both found by the lane among {len(ln.toys)} toys; the tool's path with old_extra agrees")
 
 
+def test_the_novelty_drive():
+    """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
+    which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)
+    and nothing for a frame that merged; a life of 60 ticks on the world with no parent's face and every learning rate 0 receives
+    positive reward on some ticks with the drive and on none without it (pain alone pays, and negative); the switch off, the sources are
+    the two of birth"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table, Novelty, NOVELTY_GAIN
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    got = {}
+    for nov in (0, 1):
+        w = G1World(seed=1)
+        cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, novelty=nov)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        names = [s_.name for s_ in anat.rewards]
+        assert ("novelty" in names) == bool(nov) and names[:2] == ["face", "pain"], names
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        pos = 0; novel_writes = 0
+        for _ in range(60):
+            run.step()
+            r = L._rec[int(L.ticks) - 1] if getattr(L, "_rec", None) is not None and int(L.ticks) >= 1 else None
+            if r is not None and float(r[3]) > 0:
+                pos += 1
+        got[nov] = dict(pos=pos, writes=int(getattr(L, "_fwrites", 0)), src=names)
+    assert got[0]["pos"] == 0, got                                     # no face here: nothing pays positive without the drive
+    assert got[1]["pos"] > 0 and got[1]["writes"] > 0, got             # with it, the new frames pay
+    assert Novelty("n", clip=NOVELTY_GAIN, signs=(1.0,)).term(5.0) == NOVELTY_GAIN
+    print(f"world 26: the novelty drive: without it {got[0]['pos']} positive ticks of 60 (sources {got[0]['src']}); with it {got[1]['pos']} positive",
+          f"ticks, {got[1]['writes']} frames kept as new, each paying {NOVELTY_GAIN} (sources {got[1]['src']})")
+
+
 def test_the_morning_tidy():
     """world 24 (B8, A117, C102): at a dawn the lost toys are put back where they stood at birth: the cup under the low table (its 0.45 m
     kneeling ring is the table; her hand's way in strikes the top), the stacker in the room's corner behind the plant (no spot to kneel);
@@ -1299,7 +1334,7 @@ def test_the_morning_tidy():
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

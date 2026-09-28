@@ -207,6 +207,26 @@ class JointPain(RewardSource):
         return -1.0 if p_ is not None and any(float(x) > 0.0 for x in p_) else None
 
 
+class Novelty(RewardSource):
+    """NOVELTY AS REWARD (A127, the brain sprint; 6.3 to be): dopamine to the new, the hippocampus's mismatch signal to the VTA (Lisman and
+    Grace 2005; Schultz's novelty responses): on a tick after the store kept a FRAME as new (body/core/frames.py _frame_write: its
+    surprise past the write gate and no slot it merged into), NOVELTY_GAIN is felt, once per new frame; a frame that merges into a memory
+    it has (the same thing seen again) pays nothing, so the drive habituates by the store's own law. Silent otherwise. Signs: positive
+    only. Off at birth (SIM_CFG novelty 0): measured on a day copy first (A113's road), a switch of the body"""
+    signs = (1.0,)
+
+    def felt(self, frame, life):
+        new = float(getattr(life, "_frame_novel", 0.0))
+        if new <= 0.0:
+            return None
+        life._frame_novel = 0.0
+        return NOVELTY_GAIN
+
+
+NOVELTY_GAIN = 0.5                     # a new frame's dopamine: a quarter of her smile's rise (+2), half of pain's -1 (ours, disclosed; the
+                                       # magnitude the day copy reads)
+
+
 def _joint_index(name):
     return BODY_JOINTS.index(name)
 
@@ -367,6 +387,8 @@ class SimAnatomy(LanguageAnatomy):
                               n_in=n_in, twitch=True, **kw))                        # R8c: its joints twitch in active sleep (3.7, A46)
         rewards = [FaceIncrement("face", clip=2), JointPain("pain", signs=(-1.0,))]   # her face pays (+/-), pain pays (-): A91 (R7d: the
                                                                                      # heads face +/-, pain -); no charge (A88)
+        if int((cfg or {}).get("novelty", SIM_CFG.get("novelty", 0))):
+            rewards.append(Novelty("novelty", clip=NOVELTY_GAIN, signs=(1.0,)))        # A127: the new pays (+), a switch of the body
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
@@ -449,6 +471,7 @@ SIM_CFG = dict(
     # its codes and every effector's efference copy, each motor effector's map from the recalled act born at zero; and working memory
     # latching at the frames' event ends in place of the utterances' (wm_frames)
     recall=1, wm_frames=1,
+    novelty=0,                     # A127: the novelty drive (Novelty, NOVELTY_GAIN) off at birth; a day copy with --set novelty=1 reads it
     # STEP R8: THE NIGHT OVER FRAMES (SIM_DESIGN.md 7.4 item 2, 8's R8 row, 9's tape; body/core/sleep.py; physiology.py SLEEP): each awake
     # tick taped beside its record, the day cut into episodes at nightfall at the frames' event ends, their entries and windows from the
     # tag reaching back over the day's record, kept across nights up to the episodes' cap

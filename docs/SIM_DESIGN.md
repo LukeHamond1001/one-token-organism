@@ -3630,6 +3630,14 @@ A67–A70 were decided by the lead later on 2026-09-25, on the core's builds: A6
 - **Constants (ours):** CRAWL_AHEAD_M 0.15, PUT_HEAD_OFFS, PUT_TOL_M 0.10, PUT_RETRIES 2, CRAWL_M 0.20, CRAWL_GAP 60.
 - **Boundary:** a teacher change, at dawn 25 (dawn 24 is tummy time's). Read: reaches and grasps on prone days, the first crawl.
 
+**A127. The novelty drive: dopamine to the new** (the lead, 2026-09-28 13:25; the brain sprint's first piece; a switch of the body)
+- **Why:** own goals need something to want; the body wants two things, her face and no pain. Biology's third is the new: the hippocampus's mismatch signal reaches the VTA and dopamine fires to novel stimuli (Lisman and Grace 2005; Schultz's novelty responses), and an infant explores for it. The ledger's lack: toys it drops leave its world (lost_toy 80 to 250 a day) and nothing but her lessons brings it to a new one; the box waited a day and a half.
+- **Built:** `body/core/frames.py` `_frame_write` marks a frame the store KEPT AS NEW (its surprise past the write gate, and no slot it merged into: `_frame_novel`); `body/sim/anatomy.py` `Novelty`, a RewardSource that pays NOVELTY_GAIN 0.5 on the tick after such a frame, once per frame, positive only; a frame that merges into a memory it has (the same thing seen again) pays nothing, so the drive habituates by the store's own law. Appended to the sources after the face and pain when `novelty` is on (SIM_CFG novelty 0 at birth; the physiology's switch); the runner's `--set novelty=1` turns it on for a copy.
+- **Measured:** world 26 `test_the_novelty_drive`: a life of 60 ticks with no face and every learning rate 0 receives positive reward on 0 ticks without the drive and on 12 with it (12 frames kept as new); the sources are the two of birth with the switch off. The sim profile's pins hold (the switch off).
+- **Constants (ours):** NOVELTY_GAIN 0.5 (a quarter of her smile's rise, half of pain's).
+- **The test to run:** the dawn-24 pair lived a day on a copy with `--set novelty=1` beside the life (`copy_novelty.sh`), read against the life's day 23: toys reached without a lesson, toys touched, judged acts, pain, mood, her smiles seen. Adopted at dawn 26 if the day is the better one.
+- **Boundary:** a body change, one switch, at a dawn after its day copy (A113's road).
+
 The nine decisions of the G1 amendment are settled (section 14). These are the environment's remaining shapes, each with the default the design uses until the owner says otherwise. B4, B14 and B18 were answered by the lead for the owner on 2026-09-24 (A37, A38, A40); he may overrule each. On 2026-09-25 B21 was answered by the owner's own word (A61), and B3 by the lead for him (A65).
 
 | # | question | recommended default | what it changes |

@@ -244,8 +244,9 @@ class FramesMixin:
         boosts pending (`base` its strength without the tag, `tag_w` the tag it was written with). True when the store kept it"""
         st = self.store
         if not st.write(key, value, float(strength), 2):
-            return False
-        self._boosts_remap(st.last_remap)                             # a write beyond the capacity moves the slots the boosts follow
+            return False                                                # merged into a slot it already had: nothing new
+        self._frame_novel = float(strength)                             # A127: a frame the store kept as NEW (the hippocampal mismatch,
+        self._boosts_remap(st.last_remap)                             # Lisman and Grace 2005): the novelty source reads it next tick
         self._flast_write = (key.clone(), value.clone())
         if getattr(self, "_fstart_armed", False):
             st.mark_start(key, value); self._fstart_armed = False

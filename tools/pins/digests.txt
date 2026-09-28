@@ -70,7 +70,12 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # the live night); the constants digest unchanged; the language default digest reproduced exactly (7c54199e3c72cf77d45a8e94). Was:
 # threaded 0fd8682c4e0352b6ef20611b, one-thread 82c58538f82f4d331bea8c3e.)
 # Re-pinned at A113 (2026-09-27 13:25, branch actor on a109): SIM_CFG actor=1 (the striatal actor on; C87's day copy); the language default reproduced 7c54199e3c72cf77d45a8e94.
-digest  sim                   threaded 18c33a72cbe083532a9aeb73 consts 44ef6a276ad3 | --profile sim
-digest  sim                   pinned   39bd93b65937c9293ec6a667 consts 44ef6a276ad3 | --profile sim
-full    sim                   threaded organs fc7be0bd7c7c store d364be30c88f optim 0757502a5393 rng 3f129c0969d1 work 706d7d717ca9 cfg cc35d8f4e186
-full    sim                   pinned   organs 4fa1a3503829 store 0b7fce84adf8 optim 8bce1f21c794 rng 3f129c0969d1 work ea476f87751c cfg cc35d8f4e186
+# Re-pinned at A127 (2026-09-28 13:30, branch a127: the novelty drive as a switch of the body, SIM_CFG novelty=0 and the physiology's
+# key; the frames' new-write flag a working attribute). The organs, store, optimizers and random streams reproduced the A113 pins
+# exactly in both runs (fc7be0bd7c7c/d364be30c88f/0757502a5393 threaded, 4fa1a3503829/0b7fce84adf8/8bce1f21c794 one-thread); only
+# the constants (the new key) and the working attributes (the flag) moved. Was: threaded 18c33a72cbe083532a9aeb73, one-thread
+# 39bd93b65937c9293ec6a667, consts 44ef6a276ad3.
+digest  sim                   threaded c1e7164946168252f536e69f consts e0c85c774d91 | --profile sim
+digest  sim                   pinned   0fd09597957c215025ff5d7f consts e0c85c774d91 | --profile sim
+full    sim                   threaded organs fc7be0bd7c7c store d364be30c88f optim 0757502a5393 rng 3f129c0969d1 work 4690a37b9edd cfg 4847d170a9df
+full    sim                   pinned   organs 4fa1a3503829 store 0b7fce84adf8 optim 8bce1f21c794 rng 3f129c0969d1 work ee01ec88f650 cfg 4847d170a9df
