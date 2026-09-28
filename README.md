@@ -35,7 +35,7 @@ file is not read.) The robot sim needs `pip install -r requirements-sim.txt` (Mu
 synthesised by a small Swift server that runs on macOS only (`--voice fake` runs without it); its run command is in the section
 below.
 
-## The robot sim: where the project is (2026-09-28, 06:35)
+## The robot sim: where the project is (2026-09-28, 15:00)
 
 Since 2026-09-24 the same architecture lives in a simulated body: a Unitree G1 humanoid with hands (MuJoCo, 150 ms ticks, its own eyes,
 ears, touch, joint sense and a vocal tract) on a play mat in a room, with a simulated human-proportioned parent who kneels beside it,
@@ -45,7 +45,7 @@ pain (−1 on a gear loaded past its motor); there is no charge, no bottle and n
 and `world.pt`) saved at every dawn. Every change to the body or the teacher is built on a worktree, gated by the suites, measured on
 a copy of a dawn pair when its effect is in doubt, and put in at a dawn, one change a boundary, so each day's ledger has one cause.
 
-Where it stands, day 19 of that life:
+Where it stands, day 23 of that life:
 - Days 1 to 9 were mostly the parent's faults found and fixed at one dawn each (A95 to A112 in `docs/SIM_DESIGN.md`): her plan frozen
   half-knelt for a day (A108), the child rolled out of the room into the hall (A110: carried back to the mat in its sleep), her turn's
   approach silencing judgment of the child's own acts (A111), her chasing a rolling child round the mat (A112).
@@ -68,16 +68,34 @@ Where it stands, day 19 of that life:
   both, a hand's retry on a point that moved) changed nothing on a moving child; they are parked on branch `a122`.
 - Dawn 20 (06:27) brought the second novel toy, a grey cardboard box (A121), laid 10 cm beyond the child's hand as the book was; its
   time to the child's first grasp against the book's 592 ticks is the ruler that says whether the reach generalizes.
+- The box was first grasped after about 54,000 ticks against the book's 592, and on day 21 it was the day's most-taken toy (got 4);
+  the film instrument (A123) has kept a frame every 3 ticks since dawn 23. Dawn 24 (13:56) brought the room's shape and the brain
+  sprint in one restart, on the owner's word ("implement all changes right now"): tummy time, a lying posture for her so a prone child
+  sees a face (A124, C107); the crawl rung, a lesson toy set before a prone child's face (A125); the novelty drive, dopamine to a frame
+  the store kept as new (A127; a fourth amygdala head born at zero on the living body); the held word, its own last said word as a
+  fading part of the frames' recall key (A130, private speech as a key); and the held context, a slow integral of the stream in the
+  key (A128, the temporal context model: object permanence's first substrate). The attribution law was suspended by that word and
+  the day is read whole: by midday the child had hurt itself as often as in all of day 22 (544 pain ticks against 546) and done about
+  three times day 22's acts on things (got 11, hit 12, shook 5, lifted 4 by tick 12,000 against 4, 3, 1, 7 in the whole of day 22),
+  with her smile seen 9 times against 10.
+- Built and tested for the dawns to come, one restart each: the bucket, a third novel object and the first hollow one, and the hide
+  game, a toy let go into it before the child's eyes with the child's hand into it after as the find (A126, A129: Piaget's stage-4
+  test proper); the limbs dreaming, each effector's imagined act along REM's free run (A132); the changed room, the same furniture
+  moved (A133, `--room b`) and the changed body, forearms and shanks longer and heavier (A134, `--body b`), the environment and body
+  generalization rulers. A real face reader was not built (the owner's word).
 - Open: the turn of a moving prone child (C98); the wake's ankle, pinned by the child's own first acts each dawn (C104); a side-lying
-  G1 looks at the floor (C94); the actor's pinning of joints at their stops (C100); reaching under a table from a kneel. The C rows
-  of `docs/SIM_DESIGN.md` hold every open question with its evidence.
+  G1 looks at the floor (C94); the actor's pinning of joints at their stops (C100); reaching under a table from a kneel; her bring-back
+  in the changed room to a child that topples mid-fetch (C108). The C rows of `docs/SIM_DESIGN.md` hold every open question with its
+  evidence.
 
 How it runs:
 - The life: `python3 tools/sim_life.py --out data/g1_seed1 --resume --days 6 --d 512 --seed 1 --voice real --threads 4 --page`
-  (the `/sim` page on `http://127.0.0.1:8030/`; `--resume` continues from the pair in `--out`; `--extra book_box` since dawn 20, the room with the book and the box). A measurement on a copy: copy the pair
+  (the `/sim` page on `http://127.0.0.1:8030/`; `--resume` continues from the pair in `--out`; `--extra book_box` since dawn 20, `--extra book_box_bucket` from dawn 25, the room with the book, the box
+  and the bucket; `--room b` the furniture moved, `--body b` the changed body, one at a time). A measurement on a copy: copy the pair
   to another folder and add `--set KEY=VALUE` (the actor's day copy was `--set actor=1 --ticks 24000`, no page).
-- The records: `data/g1_seed1/ticks.jsonl` (one row a tick), `report.json` at each night, `run.log` (a line every 500 ticks); the days'
-  logs are kept as `run_dayN.log`.
+- The records: `data/g1_seed1/ticks.jsonl` (one row a tick: its judged acts, her line, the child's place and posture, its holds, the
+  toys in the bucket, the tick's net reward and the novelty drive's payments so far), `report.json` at each night, `run.log` (a line
+  every 500 ticks); the days' logs are kept as `run_dayN.log`.
 - The film: `--film data/g1_seed1/film --film-every 3` saves the room's view as a JPEG frame every 3 ticks (A123); `tools/sim_film_cut.py
   --frames ... --ticks data/g1_seed1/ticks.jsonl --from T0 --to T1 --fps 8 --out clip.mp4` joins them with captions from the records.
   The frames and any cut stay out of git.
@@ -88,7 +106,7 @@ How it runs:
 - The branches: `main` holds everything; `sim` is the tree the life runs, checked out at `../project-worktrees/wt_int` and moved
   only at a dawn; `a122` holds the parked turn attempts (C98), `a114` an older one, `a116` the waist range measured and not adopted; `sim-face` older face work not yet merged. The earlier `sim-*` and `a1xx` branches are merged.
 
-Where to read: `docs/SIM_DESIGN.md` is the design and the ledger in one: the sections, the amendments A1 to A121 (each with what was
+Where to read: `docs/SIM_DESIGN.md` is the design and the ledger in one: the sections, the amendments A1 to A134 (each with what was
 found, what was built, what was measured and its boundary), the C rows (open questions and their evidence), the B questions (the
 owner's calls on the room's shape) and the plan. `docs/audit/` holds the studies behind the larger decisions. The parent's code is
 `body/sim/parent_*.py` and `body/sim/lang/` (her conduct, day plan, templates and percept), the world `body/sim/world.py` and
