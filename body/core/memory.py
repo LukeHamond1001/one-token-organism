@@ -8,6 +8,13 @@ Moved verbatim from body/life.py (review 2026-09-22 section 4, step 2)."""
 import torch
 import torch.nn.functional as F
 
+# A130 (goal_key): the held word. GOAL_TAU, the trace's time constant in ticks: 60 ticks, 9 s at the sim's 150 ms tick, so the held word
+# is at e^-2 by 18 s, where Peterson and Peterson (1959) found recall without rehearsal near its floor (a prefrontal delay trace of
+# seconds, Funahashi et al. 1989). GOAL_SCALE, its weight in the key beside the stream's and the heading's unit directions: 1.0, equal
+# weight, R7f's own convention for the heading (ours).
+GOAL_TAU = 60
+GOAL_SCALE = 1.0
+
 
 class MemoryMixin:
     def query_from(self, C, learn=False):
@@ -21,7 +28,15 @@ class MemoryMixin:
         if int(self.cfg.get("recall", 0)):
             # STEP R7f (recall into action; body/core/frames.py): the key is the stream plus the heading, their unit directions at equal
             # weight, at the key's scale
-            return F.normalize(F.normalize(c - self._c_mu, dim=0) + self._heading_code().to(c.dtype), dim=0) * float(self.cfg.get("key_scale", 2.5))
+            k = F.normalize(c - self._c_mu, dim=0) + self._heading_code().to(c.dtype)
+            g = getattr(self, "_goal", None)
+            if g is not None and int(self.cfg.get("goal_key", 0)):
+                # A130 (goal_key, the brain sprint): THE HELD WORD JOINS THE KEY. The body's own last said word, held as a fading unit
+                # direction (body/core/frames.py _goal_trace, time constant GOAL_TAU), at GOAL_SCALE: the frames written while it holds
+                # and the frames recalled into the effectors' proposals are conditioned on what it said (Vygotsky's private speech; the
+                # prefrontal trace biasing hippocampal retrieval, Miller and Cohen 2001)
+                k = k + GOAL_SCALE * g.to(c.dtype)
+            return F.normalize(k, dim=0) * float(self.cfg.get("key_scale", 2.5))
         return F.normalize(c - self._c_mu, dim=0) * float(self.cfg.get("key_scale", 2.5))
 
     def _tire(self, win_, rt_):

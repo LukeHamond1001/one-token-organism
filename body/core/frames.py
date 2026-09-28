@@ -73,6 +73,7 @@ import math
 
 import torch
 import torch.nn.functional as F
+from .memory import GOAL_TAU                                        # A130: the held word's time constant
 
 from .physiology import FRAMES
 
@@ -360,9 +361,29 @@ class FramesMixin:
                 base = float(s) * (1.0 + abs(float(delta)))
                 self._frame_write(key, total, base * (1.0 + float(tag_w)), base=base, tag_w=tag_w)
         self._record_tick(s if s is not None else 0.0, delta, tag, r)
+        self._goal_trace(nxt)                                         # A130: the word it said this tick held for the next keys
         self._frame_foresee()
         if self._night_frames_on():
             self._tape_tick()                                         # step R8: the tick taped beside its record (body/core/sleep.py)
+
+    def _goal_trace(self, nxt):
+        """A130 (goal_key, the brain sprint): THE HELD WORD, private speech as a key. The body's own said word (the voice's symbol this
+        tick, not silence and not the word boundary) is held as a unit direction in the stream's space, its lexicon row, and fades with
+        the time constant GOAL_TAU ticks (body/core/memory.py); while it holds, every key the frames make carries it (`query_from`), so
+        what is written and what is recalled into the effectors' proposals (R7f) is conditioned on the word it last said: the prefrontal
+        trace steering hippocampal retrieval (Vygotsky's private speech; Miller and Cohen 2001). A new word replaces the last; the night
+        lets it go. Off (goal_key 0, the sim at birth) nothing is kept"""
+        if not (int(self.cfg.get("goal_key", 0)) and self._recall_on()):
+            return
+        g = getattr(self, "_goal", None)
+        if nxt is not None and int(nxt) != int(self.sil) and int(nxt) != int(getattr(self, "space_id", -1)):
+            with torch.no_grad():
+                self._goal = F.normalize(self.m.E.weight[int(nxt)].detach().float(), dim=0)
+        elif g is not None:
+            with torch.no_grad():
+                g.mul_(1.0 - 1.0 / float(GOAL_TAU))
+                if float(g.norm()) < 1e-3:
+                    self._goal = None
 
     def _frames_nightfall(self):
         """THE NIGHT ENDS EVERY EVENT (the module's doc; called as the night begins): an event still open ends at nightfall"""
@@ -387,7 +408,7 @@ class FramesMixin:
         carried over, the next frame written the morning's start; the day's record and its ends let go (R8 cuts them into episodes
         first); the running means, the settle law's averages and the write gate's quantile kept"""
         self._ffc = None; self._fkey_prev = None; self._fw_err = None; self._flast_write = None; self._fstart_armed = True
-        self._rec = None; self._rec_n = 0; self._rec_ends = []
+        self._rec = None; self._rec_n = 0; self._rec_ends = []; self._goal = None   # A130: the held word let go with the day
         if getattr(self, "_fboosts", None) is not None:
             self._fboosts = []                                        # R7d: the later boosts end at the night (its fade remaps the slots)
 

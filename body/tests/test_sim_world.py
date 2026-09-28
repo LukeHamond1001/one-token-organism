@@ -44,6 +44,7 @@ import time
 import mujoco
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)   # this tree's body, not a fixed one
@@ -1290,6 +1291,71 @@ def test_the_novelty_drive():
     assert Novelty("n", clip=NOVELTY_GAIN, signs=(1.0,)).term(5.0) == NOVELTY_GAIN
     print(f"world 26: the novelty drive: without it {got[0]['pos']} positive ticks of 60 (sources {got[0]['src']}); with it {got[1]['pos']} positive",
           f"ticks, {got[1]['writes']} frames kept as new, each paying {NOVELTY_GAIN} (sources {got[1]['src']})")
+
+
+def test_the_held_word():
+    """world 27 (A130, the brain sprint): private speech as a key. With SIM_CFG goal_key 1 the body's own said word (not silence, not the
+    word boundary) is held as a fading unit direction (GOAL_TAU ticks) and joins the frames' recall key at GOAL_SCALE beside the stream
+    and the heading: the key made after it said a word lies nearer that word's lexicon row than the key made without it; three time
+    constants of silence later the key is back where it was; a frame written under the held word is read back more faithfully while the
+    word holds than after it fades; with the switch off (the sim at birth) the key never moves for a said word; and a life of 40 ticks
+    with the switch on runs with the trace a unit direction or nothing"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    from body.core.memory import GOAL_TAU, GOAL_SCALE
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    out = {}
+    for gk in (1, 0):
+        w = G1World(seed=1)
+        cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, goal_key=gk)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        for _ in range(20):
+            run.step()
+        C = L._C_last.detach().clone()
+        E = L.m.E.weight.detach()
+        wid = max(i for i in range(E.shape[0]) if i not in (int(L.sil), int(L.space_id)))
+        row = F.normalize(E[wid].float(), dim=0)
+        cos = lambda a, b: float(F.cosine_similarity(a.float(), b.float(), dim=0))
+        L._goal = None                                                    # whatever its own babble held during the 20 ticks
+        k0 = L.query_from(C, learn=False).clone()
+        gen = torch.Generator().manual_seed(3)
+        val0, val1 = torch.randn(L.m.d, generator=gen), torch.randn(L.m.d, generator=gen)
+        L.store.write(k0, val0, 1.0, 2)                                    # a frame of this state with no word held
+        L._goal_trace(wid)
+        k1 = L.query_from(C, learn=False).clone()
+        if gk:
+            assert L._goal is not None and abs(float(L._goal.norm()) - 1.0) < 1e-5, L._goal
+            assert cos(k1, row) > cos(k0, row) + 0.2, (cos(k0, row), cos(k1, row))
+            L.store.write(k1, val1, 1.0, 2)                               # the same state's frame under the held word
+            r_held = L.store.read(L.query_from(C, learn=False))[0].clone()
+            assert cos(r_held, val1) > cos(r_held, val0), (cos(r_held, val1), cos(r_held, val0))
+            for _ in range(3 * GOAL_TAU):
+                L._goal_trace(L.sil)
+            k2 = L.query_from(C, learn=False).clone()
+            assert cos(k2, k0) > 0.995 and float(L._goal.norm()) < 0.06, (cos(k2, k0), float(L._goal.norm()))
+            r_faded = L.store.read(L.query_from(C, learn=False))[0].clone()
+            assert cos(r_faded, val0) > cos(r_faded, val1), (cos(r_faded, val0), cos(r_faded, val1))
+            for _ in range(5 * GOAL_TAU):
+                L._goal_trace(L.sil)
+            assert L._goal is None, L._goal                                # let go once it is nothing (under 1e-3, e^-7 at 7 GOAL_TAU)
+            for _ in range(40):
+                run.step()
+                g = getattr(L, "_goal", None)
+                assert g is None or float(g.norm()) <= 1.0 + 1e-5, g
+            out[gk] = dict(near=cos(k1, row) - cos(k0, row), back=cos(k2, k0), held=(cos(r_held, val1), cos(r_held, val0)),
+                           faded=(cos(r_faded, val0), cos(r_faded, val1)))
+        else:
+            assert getattr(L, "_goal", None) is None and torch.allclose(k0, k1), (getattr(L, "_goal", None), cos(k0, k1))
+            out[gk] = dict(moved=cos(k0, k1))
+    print(f"world 27: the held word: the key {out[1]['near']:.2f} nearer the said word's row, back to {out[1]['back']:.3f} of itself after",
+          f"{3 * GOAL_TAU} ticks of silence; of two frames of one state, the word's read at cosine {out[1]['held'][0]:.2f} against the",
+          f"wordless one's {out[1]['held'][1]:.2f} while held, the wordless one's {out[1]['faded'][0]:.2f} against {out[1]['faded'][1]:.2f}",
+          f"faded (GOAL_SCALE {GOAL_SCALE}); the switch off, the key unmoved ({out[0]['moved']:.4f})")
 
 
 def test_the_morning_tidy():

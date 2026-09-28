@@ -483,6 +483,8 @@ FRAMES = dict(
     # 2007: episodic control). Needs `frames`. 0 = off
     recall=0,
     novelty=0,                    # A127 (the sim's brain sprint): the novelty drive, body/sim/anatomy.Novelty: a frame the store keeps as
+    goal_key=0,                   # A130 (the sim's brain sprint): the held word as a recall key, body/core/frames.py _goal_trace and
+                                  # memory.py query_from (GOAL_TAU, GOAL_SCALE): the body's own last said word joins the frames' key
                                   # new pays NOVELTY_GAIN; a switch of the body, off at birth, measured on a day copy
     # STEP R7f, THE WORKING-MEMORY LATCH ON THE FRAMES' EVENT ENDS (7.6, 10's "event end"): 1 = working memory (wm) latches the striatal
     # expansion at the frames' event ends (R7b) in place of the utterances' ends; 0 = at the utterances' ends (the language body's).

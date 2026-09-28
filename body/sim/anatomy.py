@@ -472,6 +472,8 @@ SIM_CFG = dict(
     # latching at the frames' event ends in place of the utterances' (wm_frames)
     recall=1, wm_frames=1,
     novelty=0,                     # A127: the novelty drive (Novelty, NOVELTY_GAIN) off at birth; a day copy with --set novelty=1 reads it
+    goal_key=0,                    # A130: the held word as a recall key (frames._goal_trace, memory.GOAL_TAU/GOAL_SCALE) off at birth;
+                                   # a day copy with --set goal_key=1 reads it (the private-speech ruler, speech_act_reading.py)
     # STEP R8: THE NIGHT OVER FRAMES (SIM_DESIGN.md 7.4 item 2, 8's R8 row, 9's tape; body/core/sleep.py; physiology.py SLEEP): each awake
     # tick taped beside its record, the day cut into episodes at nightfall at the frames' event ends, their entries and windows from the
     # tag reaching back over the day's record, kept across nights up to the episodes' cap
