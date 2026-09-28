@@ -150,6 +150,8 @@ HEAT_RISE_C = 60.0
 # THE NIGHT'S LIGHT (5.4, A46: dimmed, never switched off): each room light's diffuse, ambient and specular x NIGHT_LIGHT at dusk, back
 # over the wake's first DAWN_TICKS ticks (ours)
 NIGHT_LIGHT = 0.05
+TWIST_MARGIN_RAD = 0.05     # A110 (C103): a joint of the sleeping child's within this of a stop of its range is at its stop (the
+                            # servo's target clipped at the range, the measured angle a few hundredths inside it); ours
 DAWN_TICKS = 30
 VOICE_NAME, WORDS_NAME = "voice", "words"                          # the anatomy's tract (effector 0) and its words' output (1)
 VOICE_REST = (SETTINGS_PER_JOINT ** len(AN.TRACT) - 1) // 2      # the tract at rest: every articulator at setting 2
@@ -1002,8 +1004,12 @@ class G1World(SimWorld):
         on_mat = abs(xy[0] - c[0]) <= h[0] and abs(xy[1] - c[1]) <= h[1]
         supine = float(d.xmat[m.body("torso_link").id].reshape(3, 3)[2, 0]) > 0.6   # its chest's normal up: on its back (the posture
                                                                         # law of parent_motion.Child: fz > 0.6)
-        if on_mat and supine:
-            return False                                                # on the mat, on its back: left where it lies
+        twisted = self._twisted()                                       # A110 amended a fourth time (2026-09-27 23:40, C103): a joint
+        if on_mat and supine and not twisted:                           # at its stop while it sleeps (the dawn-16 pair: the waist yaw
+            return False                                                # 2.62, the left hip pitch 2.88, the right wrist roll -1.98; it
+                                                                        # woke to 176 pain ticks in 500) is laid straight like the rest:
+                                                                        # a carer straightens a baby sleeping twisted. On the mat, on
+                                                                        # its back, its joints off their stops: left where it lies
         to = c if not on_mat else xy                                    # (A110 amended 2026-09-27 16:10: a child asleep on its side or
         joints = dict(G.BIRTH, waist_yaw=0.0, waist_roll=0.0, waist_pitch=0.0)   # laid STRAIGHT: the birth's limbs and the waist at
         self.scene.set_g1(joints, root=np.r_[to[0], to[1], 1.0, G.kin.mjquat(G.kin.ry(-math.pi / 2))])   # rest (2026-09-27 17:50: the
@@ -1029,6 +1035,23 @@ class G1World(SimWorld):
         mujoco.mj_forward(m, d)
         self.carried.append((int(self.tick), [float(xy[0]), float(xy[1])], [float(to[0]), float(to[1])]))   # back where it lies, too)
         return True
+
+    def _twisted(self):
+        """whether a joint of the child's trunk or limbs (not its fingers) rests within TWIST_MARGIN_RAD of a stop of its range
+        (C103): the actor pins a joint at its stop (C100's waist yaw at 2.62 for days); a body asleep against its stops is
+        straightened by the carry"""
+        m, d = self.m, self.d
+        for j in range(m.njnt):
+            if m.jnt_type[j] != mujoco.mjtJoint.mjJNT_HINGE or not m.jnt_limited[j]:
+                continue
+            if int(m.jnt_bodyid[j]) not in self.scene.g1_set:               # the child's own joints (its bodies: g1scene.g1_set)
+                continue
+            if "_hand_" in (mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_JOINT, j) or ""):
+                continue                                                # not its fingers: a fist at rest closes onto its stops (C41)
+            q = float(d.qpos[m.jnt_qposadr[j]]); lo, hi = m.jnt_range[j]
+            if min(q - lo, hi - q) < TWIST_MARGIN_RAD:
+                return True
+        return False
 
     def dawn(self):
         """THE MORNING (5.4, A46): the light returns over the wake's first DAWN_TICKS ticks, the eyes and ears on, the parent awake;

@@ -1091,9 +1091,9 @@ def test_prone_pattern():
 
 
 def test_carried_to_the_mat():
-    """world 21 (A110, C92; amended 2026-09-27): a child that rolled off the mat is carried back onto it at dawn in its sleep: set down at
+    """world 21 (A110, C92; amended 2026-09-27, thrice and a fourth time for C103): a child that rolled off the mat is carried back onto it at dawn in its sleep: set down at
     the mat's centre on its back in the birth pose (a sleeping baby is laid on its back), settled, its velocities zero, its lowest point
-    just above the mat, the carry logged and saved; a child on the mat is left where it lies. Life dawn 9 found it in the hall at (3.41, -1.56) with no toy within two metres"""
+    just above the mat, the carry logged and saved; a child on the mat on its back is left where it lies unless a joint of its rests at its stop (laid straight). Life dawn 9 found it in the hall at (3.41, -1.56) with no toy within two metres"""
     w = G1World(seed=1)
     for _ in range(10):
         w.apply({})
@@ -1135,13 +1135,24 @@ def test_carried_to_the_mat():
     n1 = len(w.carried); q1 = w.d.qpos.copy()
     w.dawn()
     assert len(w.carried) == n1 and np.array_equal(w.d.qpos, q1)
+    # on its back on the mat with a joint at its stop (C103: the dawn-16 pair's waist yaw 2.62, left hip pitch 2.88): laid straight
+    # where it lies (amended a fourth time, 23:40)
+    jw = w.m.joint("waist_yaw_joint").id; aw = w.m.jnt_qposadr[jw]
+    w.d.qpos[aw] = w.m.jnt_range[jw][1] - 0.01
+    mujoco.mj_forward(w.m, w.d)
+    assert w._twisted()
+    n2 = len(w.carried); xy2 = w.d.qpos[0:2].copy()
+    w.dawn()
+    ch2 = PM.Child(w.m, w.d, w.scene.g1_set)
+    assert len(w.carried) == n2 + 1 and abs(float(w.d.qpos[aw])) < 0.05 and not w._twisted() and ch2.posture == "back" \
+        and np.allclose(w.d.qpos[0:2], xy2, atol=0.05), (w.carried[-1:], float(w.d.qpos[aw]), ch2.posture)
     for _ in range(20):
         w.apply({})
     assert abs(w.d.qpos[0] - side_xy[0]) < 0.1 and abs(w.d.qpos[1] - side_xy[1]) < 0.1   # (it lives on where it was laid)
     print(f"world 21: the child at (3.41, -1.56) in the hall carried to the mat's centre {np.round(c, 2).tolist()} at dawn and laid on",
           f"its back in the birth pose (posture {ch.posture}, rolled {ch.rolled:+.2f}), settled, still, its lowest point {low * 100:.1f} cm;",
           f"the carry saved and restored; one asleep on its {ch0.posture} on the mat laid on its back where it lies; one on its back on",
-          f"the mat left where it lies; the world lives on from there")
+          f"the mat left where it lies; one on its back with its waist at its stop laid straight where it lies (C103); the world lives on")
 
 
 def test_a_world_migrates_to_the_book():
