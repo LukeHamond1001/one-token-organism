@@ -1146,13 +1146,32 @@ def test_carried_to_the_mat():
     ch2 = PM.Child(w.m, w.d, w.scene.g1_set)
     assert len(w.carried) == n2 + 1 and abs(float(w.d.qpos[aw])) < 0.05 and not w._twisted() and ch2.posture == "back" \
         and np.allclose(w.d.qpos[0:2], xy2, atol=0.05), (w.carried[-1:], float(w.d.qpos[aw]), ch2.posture)
+    def at_stops(margin=0.05):                                          # every joint of its trunk and limbs (not its fingers)
+        out = []
+        for j in range(w.m.njnt):
+            nm = mujoco.mj_id2name(w.m, mujoco.mjtObj.mjOBJ_JOINT, j) or ""
+            if w.m.jnt_type[j] != mujoco.mjtJoint.mjJNT_HINGE or not w.m.jnt_limited[j] or int(w.m.jnt_bodyid[j]) not in w.scene.g1_set or "_hand_" in nm:
+                continue
+            q = float(w.d.qpos[w.m.jnt_qposadr[j]]); lo, hi = w.m.jnt_range[j]
+            if min(q - lo, hi - q) < margin:
+                out.append(nm)
+        return out
+    assert at_stops() == [], at_stops()                                 # laid straight: no joint at a stop (the birth pose names 10 of
+    # its 13 kinds; the ankle roll, wrist pitch and wrist yaw are laid at rest too, 01:25)
+    ja = w.m.joint("left_ankle_roll_joint").id; aa = w.m.jnt_qposadr[ja]
+    w.d.qpos[aa] = w.m.jnt_range[ja][1] - 0.005                          # an ankle at its stop does not twist the body: left where it lies
+    mujoco.mj_forward(w.m, w.d)
+    assert not w._twisted() and at_stops() == ["left_ankle_roll_joint"]
+    n3 = len(w.carried); q3 = w.d.qpos.copy()
+    w.dawn()
+    assert len(w.carried) == n3 and np.array_equal(w.d.qpos, q3)
     for _ in range(20):
         w.apply({})
     assert abs(w.d.qpos[0] - side_xy[0]) < 0.1 and abs(w.d.qpos[1] - side_xy[1]) < 0.1   # (it lives on where it was laid)
     print(f"world 21: the child at (3.41, -1.56) in the hall carried to the mat's centre {np.round(c, 2).tolist()} at dawn and laid on",
           f"its back in the birth pose (posture {ch.posture}, rolled {ch.rolled:+.2f}), settled, still, its lowest point {low * 100:.1f} cm;",
           f"the carry saved and restored; one asleep on its {ch0.posture} on the mat laid on its back where it lies; one on its back on",
-          f"the mat left where it lies; one on its back with its waist at its stop laid straight where it lies (C103); the world lives on")
+          f"the mat left where it lies; one on its back with its waist at its stop laid straight where it lies, no joint at a stop after (C103); one with an ankle at its stop left as it lies; the world lives on")
 
 
 def test_a_world_migrates_to_the_book():

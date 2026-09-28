@@ -186,6 +186,7 @@ def main():
                        acts_ended=_ended(lane, world, open_seen),                                              # and those that ended this tick, with why
                        refused=(list(lane.conduct.fast.refused[-1]) if lane.conduct.fast.refused and lane.conduct.fast.refused[-1][0] >= world.tick - 1 else None),
                        present=bool(ls.get("present")), holds=list(ls.get("holds") or ()),
+                       child=[round(float(x), 2) for x in world.parent.child.torso[:2]] + [str(lane.posture)],   # A119 (C103): where it lies, its posture as the lane reads it
                        token=None if world.words_out is None else INV.get(int(world.words_out)),
                        onset=None if f is None else int(f.obs.get("onset_periph", [0])[0]),
                        sounds=len(getattr(world.sounds, "last_events", [])))

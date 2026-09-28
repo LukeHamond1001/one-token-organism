@@ -532,9 +532,44 @@ def test_a_toy_she_could_not_get_to():
           "the dawn clears the rest")
 
 
+
+def test_the_new_toy_in_her_focus():
+    """lane 16 (A119): the toys she has named join the day's focus pool, and the newest of them is in every day's focus: in the room
+    with the book, before she has said "book" her focus is drawn from the birth toys; once "book" is among her new words (the day's)
+    or her words (after a night) the book is in the focus of every day laid out, with one or two birth toys beside it; a growth word
+    she has said for a toy that is not in the room adds nothing. Life day 15: the book's acts all fell in the day's first quarter,
+    then it lay out of the child's reach and no lesson brought it back"""
+    from body.sim import extras as X
+    w = W.G1World(seed=1, extra=X.add_book())
+    lane = L.ParentLane(w, seed=1, voice=FakeVoice(), plan=True, day_ticks=2400)
+    assert "book" in lane.toys
+    f = lane.conduct.fast
+    assert "book" not in f.vocab and "book" not in f.new_words
+    for d in range(1, 4):
+        lane.plan.lay_out(d, lane)
+        assert "book" not in lane.plan.focus and set(lane.plan.focus) <= set(DP.BIRTH_TOYS) and 2 <= len(lane.plan.focus) <= 3, lane.plan.focus
+    f.new_words = ("book",)
+    focs = []
+    for d in range(4, 10):
+        lane.plan.lay_out(d, lane)
+        focs.append(list(lane.plan.focus))
+        assert "book" in lane.plan.focus and 2 <= len(lane.plan.focus) <= 3 and all(o in DP.BIRTH_TOYS or o == "book" for o in lane.plan.focus), lane.plan.focus
+    f.vocab = f.vocab + ("book",); f.new_words = ()
+    lane.plan.lay_out(10, lane)
+    assert "book" in lane.plan.focus
+    f.new_words = ("kiwi",)                                              # a word for nothing in the room adds nothing
+    lane.plan.lay_out(11, lane)
+    assert "kiwi" not in lane.plan.focus and "book" in lane.plan.focus
+    w2, lane2 = _world(plan=True, day_ticks=2400)                       # the room without the book: "book" said, no book to focus on
+    lane2.conduct.fast.new_words = ("book",)
+    lane2.plan.lay_out(1, lane2)
+    assert "book" not in lane2.plan.focus and set(lane2.plan.focus) <= set(DP.BIRTH_TOYS)
+    print(f"lane 16: before 'book' is said the focus is the birth toys'; after, the book is in every day's focus ({focs[:3]} ...); a word",
+          "for nothing in the room adds nothing; without the book in the room, nothing")
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
-              test_the_roll_rung, test_a_toy_she_could_not_get_to]
+              test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

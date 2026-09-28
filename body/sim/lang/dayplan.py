@@ -91,7 +91,7 @@ class DayPlan:
     def _scale(self, n):
         return max(1, int(round(n * self.day_ticks / DAY_TICKS)))
 
-    def lay_out(self, day):
+    def lay_out(self, day, lane=None):
         """the day's blocks, drawn at dawn from her stream: 4.7's lengths, scaled together to fill the time between the wake and
         the winding down exactly"""
         self.day = int(day)
@@ -118,7 +118,16 @@ class DayPlan:
             e = b if i == len(order) - 1 else t + max(1, int(round(n * (b - a) / total)))
             self.blocks.append([t, e, kind, {}])
             t = e
-        self.focus = sorted(self.rng.choice(list(BIRTH_TOYS), size=int(self.rng.integers(2, 4)), replace=False).tolist())
+        pool, newest = list(BIRTH_TOYS), None                            # A119 (2026-09-28): the toys she has named join the day's
+        if lane is not None:                                             # pool (the growth queue's toys in the room, once said: the
+            f = lane.conduct.fast                                        # book, the rattle, the ring, the stacker), and the newest of
+            known = [w for w in TP.GROWTH_WORDS if TP.GROWTH_CLASS.get(w) == "toy" and w in lane.toys and (w in f.vocab or w in f.new_words)]
+            pool += [w for w in known if w not in pool]                  # them is in every day's focus until another is named: a person
+            newest = known[-1] if known else None                        # keeps offering the new toy (life day 15: the book's acts all in
+        k = int(self.rng.integers(2, 4))                                 # the day's first quarter, then out of its reach; no lesson
+        rest = [w for w in pool if w != newest]                          # brought it back, her focus drawn from the birth toys alone)
+        draw = self.rng.choice(rest, size=min(k - (1 if newest else 0), len(rest)), replace=False).tolist()
+        self.focus = sorted(draw + ([newest] if newest else []))
         self.greeted, self.called, self.night_said = None, False, False
         self.next_play = self._scale(WAKE)
         self.log.append((day, "laid out", [(s, e, k) for s, e, k, _ in self.blocks], self.focus))
@@ -140,7 +149,7 @@ class DayPlan:
     def tick(self, t, t_day, lane, world):
         c, pm, p = lane.conduct, world.parent, lane._p
         if self.day < 0 or t_day == 0 and self.day != lane.day:
-            self.lay_out(lane.day)
+            self.lay_out(lane.day, lane)
         kind = self.episode(t_day)
         if kind != self.kind:
             self._enter(kind, t, t_day, lane, world)

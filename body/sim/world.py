@@ -151,6 +151,8 @@ HEAT_RISE_C = 60.0
 # over the wake's first DAWN_TICKS ticks (ours)
 NIGHT_LIGHT = 0.05
 TWIST_MARGIN_RAD = 0.05     # A110 (C103): a joint of the sleeping child's within this of a stop of its range is at its stop (the
+TWIST_JOINTS = ("waist", "hip", "shoulder")   # ... the joints whose stop twists the body: the trunk and the limbs' roots (C103's waist yaw and
+                            # hip pitch); not a knee, an ankle, a wrist or a finger (the dawn-17 pair's ankle roll and wrist yaw)
                             # servo's target clipped at the range, the measured angle a few hundredths inside it); ours
 DAWN_TICKS = 30
 VOICE_NAME, WORDS_NAME = "voice", "words"                          # the anatomy's tract (effector 0) and its words' output (1)
@@ -1011,7 +1013,11 @@ class G1World(SimWorld):
                                                                         # a carer straightens a baby sleeping twisted. On the mat, on
                                                                         # its back, its joints off their stops: left where it lies
         to = c if not on_mat else xy                                    # (A110 amended 2026-09-27 16:10: a child asleep on its side or
-        joints = dict(G.BIRTH, waist_yaw=0.0, waist_roll=0.0, waist_pitch=0.0)   # laid STRAIGHT: the birth's limbs and the waist at
+        joints = dict(G.BIRTH, waist_yaw=0.0, waist_roll=0.0, waist_pitch=0.0,   # laid STRAIGHT: the birth's limbs and the waist at
+                      ankle_roll=0.0, wrist_pitch=0.0, wrist_yaw=0.0)           # rest, and the joints the birth pose does not name at
+                                                                        # the model's rest too (2026-09-28 01:25: the dawn-17 pair's
+                                                                        # left ankle roll and wrist yaw stayed at their stops through
+                                                                        # the laying)
         self.scene.set_g1(joints, root=np.r_[to[0], to[1], 1.0, G.kin.mjquat(G.kin.ry(-math.pi / 2))])   # rest (2026-09-27 17:50: the
                                                                         # dawn-13 pair's waist yaw was 2.59 rad, the torso twisted almost
                                                                         # backwards on a supine pelvis, so the laid child read "front";
@@ -1037,17 +1043,20 @@ class G1World(SimWorld):
         return True
 
     def _twisted(self):
-        """whether a joint of the child's trunk or limbs (not its fingers) rests within TWIST_MARGIN_RAD of a stop of its range
-        (C103): the actor pins a joint at its stop (C100's waist yaw at 2.62 for days); a body asleep against its stops is
-        straightened by the carry"""
+        """whether a joint of the child's trunk or of a limb's root (TWIST_JOINTS: the waist, the hips, the shoulders) rests within
+        TWIST_MARGIN_RAD of a stop of its range (C103): the actor pins a joint at its stop (C100's waist yaw at 2.62 for days); a body
+        asleep twisted against those stops is straightened by the carry"""
         m, d = self.m, self.d
         for j in range(m.njnt):
             if m.jnt_type[j] != mujoco.mjtJoint.mjJNT_HINGE or not m.jnt_limited[j]:
                 continue
             if int(m.jnt_bodyid[j]) not in self.scene.g1_set:               # the child's own joints (its bodies: g1scene.g1_set)
                 continue
-            if "_hand_" in (mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_JOINT, j) or ""):
-                continue                                                # not its fingers: a fist at rest closes onto its stops (C41)
+            nm = mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_JOINT, j) or ""
+            if not any(k in nm for k in TWIST_JOINTS):
+                continue                                                # the trunk and the limbs' roots only: a knee, an ankle, a wrist
+                                                                        # or a finger at its stop does not twist the body (the dawn-17
+                                                                        # pair: the left ankle roll and wrist yaw at theirs, laid for it)
             q = float(d.qpos[m.jnt_qposadr[j]]); lo, hi = m.jnt_range[j]
             if min(q - lo, hi - q) < TWIST_MARGIN_RAD:
                 return True
