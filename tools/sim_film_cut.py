@@ -16,7 +16,8 @@ import tempfile
 
 from PIL import Image, ImageDraw, ImageFont
 
-DAY_TICKS = 24000
+DAY_TICKS = 24000                     # waking ticks a day
+NIGHT_TICKS = 24000                   # the night's ticks (the life's tick counts them: day d wakes at d * 48,000)
 TICK_S = 0.15
 
 
@@ -47,7 +48,7 @@ def caption(im, t, rows, last_line, day0):
     d = ImageDraw.Draw(im, "RGBA")
     r = rows.get(t, {})
     day = r.get("day", day0)
-    life_s = (t - day * DAY_TICKS) * TICK_S
+    life_s = max(0.0, (t - day * (DAY_TICKS + NIGHT_TICKS)) * TICK_S)
     clock = f"day {day}  {int(life_s // 60):02d}:{int(life_s % 60):02d}"
     big, small = font(22), font(16)
     d.rectangle([0, H - 64, W, H], fill=(0, 0, 0, 150))
