@@ -1422,12 +1422,12 @@ def test_the_toy_before_a_prone_face():
 
 
 def test_the_hide():
-    """parent 28 (A129, the hide game on the tub A126): asked to hide the duck, she fetches it, kneels by the tub if her hand does not
-    reach over its rim from where she is, brings the duck over the tub and opens her hand: the act is done, the duck lies inside the
-    tub (within its walls, over its floor, under its rim) and her hand is out of it again. In a room without a tub the hide is refused,
-    and the tub itself cannot be hidden"""
+    """parent 28 (A129, the hide game on the bucket A126): asked to hide the duck, she fetches it, kneels by the bucket if her hand does not
+    reach over its rim from where she is, brings the duck over the bucket and opens her hand: the act is done, the duck lies inside the
+    bucket (within its walls, over its floor, under its rim) and her hand is out of it again. In a room without a bucket the hide is refused,
+    and the bucket itself cannot be hidden"""
     from body.sim import extras as X
-    w = W.G1World(seed=1, extra=X.add_tub(xy=(-0.3, -0.45)))
+    w = W.G1World(seed=1, extra=X.add_bucket(xy=(-0.3, -0.45)))
     pm = w.parent
     T.place_g1(w, "sit")
     for _ in range(20):
@@ -1436,20 +1436,20 @@ def test_the_hide():
     a = out["acts"][0]
     assert a["status"] == "done", a
     m, d = w.m, w.d
-    tub, duck = m.body("toy_tub").id, m.body("toy_duck").id
+    bucket, duck = m.body("toy_bucket").id, m.body("toy_duck").id
     for _ in range(40):
         w.frame(); w.apply({})
-    loc = d.xmat[tub].reshape(3, 3).T @ (d.xpos[duck] - d.xpos[tub])
-    assert abs(loc[0]) < X.TUB_IN and abs(loc[1]) < X.TUB_IN and X.TUB_WALL < loc[2] < X.TUB_WALL + X.TUB_H, loc
+    loc = d.xmat[bucket].reshape(3, 3).T @ (d.xpos[duck] - d.xpos[bucket])
+    assert abs(loc[0]) < X.BUCKET_IN and abs(loc[1]) < X.BUCKET_IN and X.BUCKET_WALL < loc[2] < X.BUCKET_WALL + X.BUCKET_H, loc
     assert all(v is None for v in pm.holding.values()), pm.holding
-    out2 = T.run(w, [("hide", "tub")], 60)
-    assert out2["acts"][0]["status"] == "refused" and "tub" in out2["acts"][0]["why"], out2["acts"][0]
+    out2 = T.run(w, [("hide", "bucket")], 60)
+    assert out2["acts"][0]["status"] == "refused" and "bucket" in out2["acts"][0]["why"], out2["acts"][0]
     w0 = W.G1World(seed=1)
     T.place_g1(w0, "sit")
     out3 = T.run(w0, [("hide", "duck")], 60)
-    assert out3["acts"][0]["status"] == "refused" and "no tub" in out3["acts"][0]["why"], out3["acts"][0]
-    print(f"parent 28: the duck hidden in the tub in {a['ticks']} ticks: it lies at {np.round(loc, 3).tolist()} in the tub's frame, her hands",
-          f"empty; the tub cannot be hidden, and without a tub the hide is refused ({out3['acts'][0]['why'][:40]})")
+    assert out3["acts"][0]["status"] == "refused" and "no bucket" in out3["acts"][0]["why"], out3["acts"][0]
+    print(f"parent 28: the duck hidden in the bucket in {a['ticks']} ticks: it lies at {np.round(loc, 3).tolist()} in the bucket's frame, her hands",
+          f"empty; the bucket cannot be hidden, and without a bucket the hide is refused ({out3['acts'][0]['why'][:40]})")
 
 
 def _l(x):

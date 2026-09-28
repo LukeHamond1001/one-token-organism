@@ -82,7 +82,7 @@ class DayPlan:
         self.level_t = {}                  # toy -> the tick its level was set
         self.got_seen = {}                 # toy -> the "got" smiles counted at its last lesson
         self.roll_turn = True              # A109: the next reach-rung lesson is the roll rung (once it rolls); they alternate
-        self.hide_turn = False             # A129: every other lesson on a toy it grasps at will is the hide game (the tub in the room)
+        self.hide_turn = False             # A129: every other lesson on a toy it grasps at will is the hide game (the bucket in the room)
         self.last_pain = -10 ** 9
         self.bids = []                     # its vocal turns heard while she is away (ticks)
         self.night_said = False
@@ -249,16 +249,16 @@ class DayPlan:
                 c.motion.lesson_dist = LESSON_DIST0 + LESSON_STEP * lvl
                 c.request("set_near", o=o)
                 self.log.append((t, "lesson", "reach", o, lvl, round(c.motion.lesson_dist, 2)))
-            elif "tub" in seen and o != "tub" and self.hide_turn:       # A129: the hide game, every other lesson once it grasps the
-                self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the tub in
-                c.request("hide", o=o)                                  # its view; its hand into the tub after is "found" (worth 2)
+            elif "bucket" in seen and o != "bucket" and self.hide_turn:       # A129: the hide game, every other lesson once it grasps the
+                self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the bucket in
+                c.request("hide", o=o)                                  # its view; its hand into the bucket after is "found" (worth 2)
                 self.log.append((t, "lesson", "hide", o, got))
             elif handled < 3 * K.MASTERED_N:                            # the handle rung: the toy into its hand
-                self.hide_turn = "tub" in seen
+                self.hide_turn = "bucket" in seen
                 c.request("hand_over", o=o)
                 self.log.append((t, "lesson", "handle", o, handled))
             else:                                                       # the give rung
-                self.hide_turn = "tub" in seen
+                self.hide_turn = "bucket" in seen
                 c.request("ask_give", o=o)
                 self.log.append((t, "lesson", "give", o))
         self.next_play = t + int(self.rng.integers(*PLAY_GAP))

@@ -53,7 +53,7 @@ EVENT_KINDS = (
     "rolled",        # the child rolled (a whole roll, A8)
     "sat",           # the child came to sit
     "got",           # the child took hold of a toy itself (the object)
-    "found",         # the child took a toy she had hidden in the tub out of it (the object; the hide game, A129)
+    "found",         # the child took a toy she had hidden in the bucket out of it (the object; the hide game, A129)
     "gave",          # the child put a toy in her hand (the object)
     "hit_her",       # the child's act struck her above her own pain threshold (4.10)
     "reflex_hit",    # a reflex she triggered struck her (logged as her defect, never frowned at)

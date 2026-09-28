@@ -62,7 +62,7 @@ import numpy as np
 from body.sim import anatomy as AN
 from body.sim import ears as EA
 from body.sim import eyes as EY
-from body.sim import extras as X                    # A129: the tub's sizes
+from body.sim import extras as X                    # A129: the bucket's sizes
 from body.sim import parent_feel as PF
 from body.sim import parent_kin as kin
 from body.sim.lang import conduct as C
@@ -80,7 +80,7 @@ ROOM_EDGE_X = 2.6                      # the room's wall with the door to the ha
 FALL_MPS = 0.5                         # a toy falling faster than this, not in a hand: "fell" (once a drop; ours)
 REST_MPS = 0.05                        # a toy slower than this has come to rest: its next drop is a new one (ours)
 HANDOVER_TICKS = 40                    # a toy she let go of within 40 ticks is her hand-over, never its own "got" (A2's 40 ticks)
-HIDDEN_OUT_TICKS = 10                  # A129: a hidden toy out of the tub with no hand on it for 10 ticks (1.5 s) is hidden no more (a tip, a
+HIDDEN_OUT_TICKS = 10                  # A129: a hidden toy out of the bucket with no hand on it for 10 ticks (1.5 s) is hidden no more (a tip, a
                                        # fall; the lane's reading of a hold takes GOT_HOLD ticks to settle: ours)
 GAVE_TICKS = 3                         # a toy come into her hand from its within 3 ticks: "gave" (ours)
 DISTRESS_TICKS = 100                   # face down this many ticks running: distress (A13's "face down over 100 ticks")
@@ -175,8 +175,8 @@ class ParentLane:
         self.child_held_at = {}                           # toy -> the last tick it was in its hands
         self.her_had = {}                                 # her hands' toys last tick
         self.released = {}                                # toy -> the tick her hand let it go
-        self.hidden = {}                                  # A129: toy -> the tick it lay hidden in the tub from her hand
-        self.hidden_out = {}                              # A129: a hidden toy out of the tub -> the first tick it was seen out
+        self.hidden = {}                                  # A129: toy -> the tick it lay hidden in the bucket from her hand
+        self.hidden_out = {}                              # A129: a hidden toy out of the bucket -> the first tick it was seen out
         self.posture = None                               # its lying posture, back or front, last seen stable
         self.face_down = 0                                # ticks lying face down running
         self.cry_down = 0                                 # ticks lying face down and crying running
@@ -320,16 +320,16 @@ class ParentLane:
         grasp = {"left": ch.grasp["L"], "right": ch.grasp["R"]}
         reaches = rd.reaches(grasp, [(tt, pos[tt]) for tt in visible], holds)
         her = {tt for tt in (pm.holding or {}).values() if tt is not None}
-        in_tub = set()                                                  # A129: the toys lying inside the tub (A126), by its own frame
-        tub_b = self.toy_body.get("tub")
-        if tub_b is not None:
-            Rt = d.xmat[tub_b].reshape(3, 3); ct = d.xpos[tub_b]
+        in_bucket = set()                                                  # A129: the toys lying inside the bucket (A126), by its own frame
+        bucket_b = self.toy_body.get("bucket")
+        if bucket_b is not None:
+            Rt = d.xmat[bucket_b].reshape(3, 3); ct = d.xpos[bucket_b]
             for tt in self.toys:
-                if tt != "tub":
+                if tt != "bucket":
                     loc = Rt.T @ (pos[tt] - ct)
-                    if abs(loc[0]) < X.TUB_IN and abs(loc[1]) < X.TUB_IN and X.TUB_WALL < loc[2] < X.TUB_WALL + X.TUB_H + 0.02:
-                        in_tub.add(tt)
-        self._in_tub = in_tub
+                    if abs(loc[0]) < X.BUCKET_IN and abs(loc[1]) < X.BUCKET_IN and X.BUCKET_WALL < loc[2] < X.BUCKET_WALL + X.BUCKET_H + 0.02:
+                        in_bucket.add(tt)
+        self._in_bucket = in_bucket
         on_pairs = []
         seen = []
         for tt in visible:
@@ -337,8 +337,8 @@ class ParentLane:
                 on = "mama"
             elif tt in holds:
                 on = "hand"
-            elif tt in in_tub:
-                on = "tub"                                              # A129: seen in the tub (templates.OPEN_CONTAINERS: she sees into it)
+            elif tt in in_bucket:
+                on = "bucket"                                              # A129: seen in the bucket (templates.OPEN_CONTAINERS: she sees into it)
             else:
                 fs = sorted(touch[tt]["fixture"])
                 on = fs[0] if fs else ""
@@ -392,14 +392,14 @@ class ParentLane:
         for tt, tk in list(self.her_had.items()):                      # her hand let a toy go: its hand-over's tick
             if tt not in her:
                 self.released[tt] = t
-        in_tub = set(getattr(self, "_in_tub", ()))                      # A129 (the percept's reading this tick): the toys in the tub
-        for tt in in_tub:                                               # a toy is HIDDEN once it lies in the tub from her hand
+        in_bucket = set(getattr(self, "_in_bucket", ()))                      # A129 (the percept's reading this tick): the toys in the bucket
+        for tt in in_bucket:                                               # a toy is HIDDEN once it lies in the bucket from her hand
             if tt not in self.hidden and (tt in her or t - self.released.get(tt, -10 ** 9) <= HANDOVER_TICKS):
                 self.hidden[tt] = t
         for tt in list(self.hidden):
-            if tt in in_tub or tt in holds:
+            if tt in in_bucket or tt in holds:
                 self.hidden_out.pop(tt, None)
-            elif t - self.hidden_out.setdefault(tt, t) >= HIDDEN_OUT_TICKS:   # out of the tub by other means (a tip, a fall) for
+            elif t - self.hidden_out.setdefault(tt, t) >= HIDDEN_OUT_TICKS:   # out of the bucket by other means (a tip, a fall) for
                 self.hidden.pop(tt); self.hidden_out.pop(tt, None)          # HIDDEN_OUT_TICKS with no hand on it: no longer hidden
         for tt in self.toys:                                            # its own reach and hold (A89): the hand moved, or reached for the
             if tt in holds:                                             # toy, as the touch began, and the toy kept in its touch GOT_HOLD ticks
@@ -411,7 +411,7 @@ class ParentLane:
                 self.touch_run[tt] = run
                 if run == GOT_HOLD and tt in self.hidden:               # A129: its hand on the hidden toy, held GOT_HOLD ticks: FOUND
                     ev.append(("found", tt)); self.hidden.pop(tt)       # (worth 2 in her book; the hand-over window does not apply:
-                if run == GOT_HOLD and self.got_arm.get(tt):            # the toy was in the tub, not in her hand)
+                if run == GOT_HOLD and self.got_arm.get(tt):            # the toy was in the bucket, not in her hand)
                     ev.append(("got", tt))
             else:
                 self.touch_run[tt] = 0; self.got_arm[tt] = False
@@ -592,7 +592,7 @@ class ParentLane:
         audible = LX.audible(SPEECH_DB, [-20.0 * math.log10(max(float(x), 1e-6)) for x in path])
         sym = self.words.tick(t, audible) if scaffold else LX.ID[LX.REST]
         self.word_now = int(LX_TO_AN[int(sym)])
-        self.last = dict(posture=self.last.get("posture"), target=p.child_target, holds=p.child_holds, seen=len(p.seen), in_tub=sorted(getattr(self, "_in_tub", ())),
+        self.last = dict(posture=self.last.get("posture"), target=p.child_target, holds=p.child_holds, seen=len(p.seen), in_bucket=sorted(getattr(self, "_in_bucket", ())),
                          events=[list(e) for e in p.events], line=None if out.line is None else out.line.text,
                          heard=[cw.word for cw in out.heard], judged=[list(j) for j in out.judgments], cut=bool(out.cut),
                          face_test=bool(test), reading=self.reading, word=self.word_now, in_view=p.child_in_view,

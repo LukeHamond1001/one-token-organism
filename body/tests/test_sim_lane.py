@@ -569,10 +569,10 @@ def test_the_new_toy_in_her_focus():
 
 
 def test_the_find():
-    """lane 18 (A129, the hide game on the tub A126): a toy that lies in the tub from HER hand (her hand let it go within HANDOVER_TICKS)
-    is hidden (`hidden`, saved with the lane); a toy seen there is `on` "tub"; its own hand on the hidden toy, held GOT_HOLD ticks, is
-    the event "found", worth 2 in her book (consts.MOTOR_WORTH), and the toy is hidden no more; a toy that came into the tub by no hand
-    of hers is not hidden, and its grasp is no find; a hidden toy out of the tub with no hand on it for HIDDEN_OUT_TICKS is hidden
+    """lane 18 (A129, the hide game on the bucket A126): a toy that lies in the bucket from HER hand (her hand let it go within HANDOVER_TICKS)
+    is hidden (`hidden`, saved with the lane); a toy seen there is `on` "bucket"; its own hand on the hidden toy, held GOT_HOLD ticks, is
+    the event "found", worth 2 in her book (consts.MOTOR_WORTH), and the toy is hidden no more; a toy that came into the bucket by no hand
+    of hers is not hidden, and its grasp is no find; a hidden toy out of the bucket with no hand on it for HIDDEN_OUT_TICKS is hidden
     no more"""
     import mujoco
     from body.sim import extras as X
@@ -580,14 +580,14 @@ def test_the_find():
     from body.sim import g1scene as G
     from body.sim.lang import consts as CK, percept as PC
     assert CK.MOTOR_WORTH["found"][0] == 2 and "found" in PC.EVENT_KINDS
-    w = W.G1World(seed=1, extra=X.add_tub(xy=(-0.3, -0.45)))
+    w = W.G1World(seed=1, extra=X.add_bucket(xy=(-0.3, -0.45)))
     lane = L.ParentLane(w, seed=1, voice=FakeVoice(), plan=False, day_ticks=2400)
     _run(w, 4)
     m, d = w.m, w.d
-    tub = m.body("toy_tub").id; jd = m.body("toy_duck").jntadr[0]; a = m.jnt_qposadr[jd]; va = m.jnt_dofadr[jd]
+    bucket = m.body("toy_bucket").id; jd = m.body("toy_duck").jntadr[0]; a = m.jnt_qposadr[jd]; va = m.jnt_dofadr[jd]
 
-    def into_tub():
-        d.qpos[a:a + 3] = d.xpos[tub] + np.array([0.0, 0.0, X.TUB_WALL + 0.04]); d.qpos[a + 3:a + 7] = [1, 0, 0, 0]
+    def into_bucket():
+        d.qpos[a:a + 3] = d.xpos[bucket] + np.array([0.0, 0.0, X.BUCKET_WALL + 0.04]); d.qpos[a + 3:a + 7] = [1, 0, 0, 0]
         d.qvel[va:va + 6] = 0.0; mujoco.mj_forward(m, d)
 
     def to_hand(gap):
@@ -598,7 +598,7 @@ def test_the_find():
     opening = W.act_flat([2 if j not in cl else (0 if cl[j] > 0 else 4) for j in dict(G.EFFECTORS)["hand_l"]])
 
     def grasp(evs, judged):
-        """its fist opened, its arm moved, the duck into the open palm (lane 10's road): the duck leaves the tub for its hand within
+        """its fist opened, its arm moved, the duck into the open palm (lane 10's road): the duck leaves the bucket for its hand within
         HIDDEN_OUT_TICKS, as a hand reaching in and lifting takes it out"""
         for _ in range(6):
             w.frame(); w.apply({"hand_l": opening})
@@ -614,11 +614,11 @@ def test_the_find():
     w.parent.holding["R"] = "duck"                                          # in her hand, as the lane sees it
     for _ in range(3):
         w.frame(); w.apply({})
-    into_tub(); w.parent.holding["R"] = None                                 # let go into the tub
+    into_bucket(); w.parent.holding["R"] = None                                 # let go into the bucket
     evs, judged = [], []
     for _ in range(8):
         w.frame(); w.apply({}); evs += [tuple(e) for e in lane.last["events"]]
-    assert lane.last["in_tub"] == ["duck"] and "duck" in lane.hidden, (lane.last["in_tub"], lane.hidden)
+    assert lane.last["in_bucket"] == ["duck"] and "duck" in lane.hidden, (lane.last["in_bucket"], lane.hidden)
     assert "hidden" in lane.state() and lane.state()["hidden"] == lane.hidden
     seen_on = {s_.id: s_.on for s_ in lane._p.seen}
     grasp(evs, judged)
@@ -627,15 +627,15 @@ def test_the_find():
     assert "duck" not in lane.hidden, lane.hidden
     for _ in range(L.HANDOVER_TICKS + 2):                                    # her hand-over window from the first release passes
         w.frame(); w.apply({})
-    into_tub()                                                               # by no hand of hers: in the tub, not hidden
+    into_bucket()                                                               # by no hand of hers: in the bucket, not hidden
     for _ in range(L.HIDDEN_OUT_TICKS + 2):
         w.frame(); w.apply({})
-    assert lane.last["in_tub"] == ["duck"] and "duck" not in lane.hidden, (lane.last["in_tub"], lane.hidden)
+    assert lane.last["in_bucket"] == ["duck"] and "duck" not in lane.hidden, (lane.last["in_bucket"], lane.hidden)
     evs2, judged2 = [], []
     grasp(evs2, judged2)
     assert ("found", "duck") not in evs2 and "duck" not in lane.hidden, (evs2, lane.hidden)
-    print(f"lane 18: the duck let go into the tub from her hand is hidden (seen on {seen_on.get('duck')!r}); its own hand on it: 'found', worth",
-          f"{[j for j in judged if j[1] == 'found'][0][0]}, hidden no more; a duck in the tub by no hand of hers is not hidden and its grasp is no find")
+    print(f"lane 18: the duck let go into the bucket from her hand is hidden (seen on {seen_on.get('duck')!r}); its own hand on it: 'found', worth",
+          f"{[j for j in judged if j[1] == 'found'][0][0]}, hidden no more; a duck in the bucket by no hand of hers is not hidden and its grasp is no find")
 
 
 def test_the_crawl():

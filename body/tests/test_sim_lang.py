@@ -745,20 +745,20 @@ def test_acts_carry_the_object():
 
 
 def test_the_hide_line():
-    """lang 62 (A129, the hide game): "the duck is in the tub." passes the check when the duck is seen lying in the tub (the percept's
-    `on` "tub": the tub is open, templates.OPEN_CONTAINERS, she sees into it), is "not true" of a duck on the mat, and "in the box"
+    """lang 62 (A129, the hide game): "the duck is in the bucket." passes the check when the duck is seen lying in the bucket (the percept's
+    `on` "bucket": the bucket is open, templates.OPEN_CONTAINERS, she sees into it), is "not true" of a duck on the mat, and "in the box"
     stays containment she cannot see; the hide intent's two frames end on their focus and carry the toy's word"""
-    V2 = set(VOCAB) | {"tub", "box"}                                     # the tub's and the box's words in (the growth queue admits them)
-    tub = ("tub", "tub", "olive", "mat", True); box = ("box", "box", "grey", "mat", True)
-    ok, reason = TP.check("the duck is in the tub.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "tub", True), tub)), (), source="fast")
+    V2 = set(VOCAB) | {"bucket", "box"}                                     # the bucket's and the box's words in (the growth queue admits them)
+    bucket = ("bucket", "bucket", "olive", "mat", True); box = ("box", "box", "grey", "mat", True)
+    ok, reason = TP.check("the duck is in the bucket.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "bucket", True), bucket)), (), source="fast")
     assert ok, reason
-    ok, reason = TP.check("the duck is in the tub.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "mat", True), tub)), (), source="fast")
+    ok, reason = TP.check("the duck is in the bucket.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "mat", True), bucket)), (), source="fast")
     assert not ok and "not true" in reason, reason
     ok, reason = TP.check("the duck is in the box.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "box", True), box)), (), source="fast")
     assert not ok and "containment" in reason, reason
     fr = TP.FRAMES["hide"]
-    assert [f[0] for f in fr] == ["the {o} is in the tub.", "look. in the tub. the {o}."] and "tub" in TP.OPEN_CONTAINERS, fr
-    print("lang 62: 'the duck is in the tub.' passes of a duck seen in the tub, 'not true' of one on the mat; 'in the box' stays containment",
+    assert [f[0] for f in fr] == ["the {o} is in the bucket.", "look. in the bucket. the {o}."] and "bucket" in TP.OPEN_CONTAINERS, fr
+    print("lang 62: 'the duck is in the bucket.' passes of a duck seen in the bucket, 'not true' of one on the mat; 'in the box' stays containment",
           "she cannot see; the hide's two frames end on their focus")
 
 
@@ -4269,7 +4269,8 @@ def test_name_foils_matched():
                 abs(r["peak"] / ref["peak"] - 1) <= tol["peak"] and abs(r["rise_ms"] - ref["rise_ms"]) <= tol["rise_ms"] and \
                 abs(r["f0"] / ref["f0"] - 1) <= tol["f0"], (w, r, ref)
     words = set(LX.BIRTH_WORDS) | set(TP.GROWTH_WORDS)
-    assert len(words) == 128 and all(min(_edit(f, x) for x in words) >= 2 for f in K.NAME_FOILS), \
+    # 129 words: the 128 of the design and the bucket (A126)
+    assert len(words) == 129 and all(min(_edit(f, x) for x in words) >= 2 for f in K.NAME_FOILS), \
         [(f, min(words, key=lambda x: _edit(f, x))) for f in K.NAME_FOILS]
     assert len(set(K.NAME_FOILS)) == len(K.NAME_FOILS) and LX.NAME not in K.NAME_FOILS
     for f in K.NAME_FOILS:
@@ -6504,7 +6505,8 @@ def test_trial_levels_no_feedback():
     words = set(LX.BIRTH_WORDS) | set(TP.GROWTH_WORDS)
     foils = sorted(K.NOUN_FOILS.values())
     near = words | {LX.NAME} | set(K.NAME_FOILS)
-    assert len(words) == 128 and len(set(foils)) == len(foils) and \
+    # 129 words: the 128 of the design and the bucket (A126)
+    assert len(words) == 129 and len(set(foils)) == len(foils) and \
         all(min(_edit(f_, x) for x in near | (set(foils) - {f_})) >= 2 for f_ in foils), \
         [(f_, min(near, key=lambda x, g=f_: _edit(g, x))) for f_ in foils]
     for f_ in foils:

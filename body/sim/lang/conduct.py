@@ -215,8 +215,8 @@ ACT_KINDS = {
     "hand_over": "the toy put into the child's near or far hand (parent_acts.hand_over)",
     "bring_back": "the toy fetched and set down within the child's reach beside its near hand, at her lesson's distance "
                   "(parent_motion.bring_back, lesson_dist; the reach rung's setup, A90)",
-    "hide": "the toy fetched and let go into the tub in the child's view (parent_motion.hide: the hide game, A129, on the tub A126; "
-            "the object permanence test proper, Piaget's stage 4: the child's hand into the tub after it is the find)",
+    "hide": "the toy fetched and let go into the bucket in the child's view (parent_motion.hide: the hide game, A129, on the bucket A126; "
+            "the object permanence test proper, Piaget's stage 4: the child's hand into the bucket after it is the find)",
     "bring_far": "the toy fetched and set down beside the child's far shoulder, level with its head, ROLL_BEYOND_M past the reach "
                  "of the arm on that side, from a kneel on its far side (parent_motion.bring_far; the roll rung's setup, A109)",
     "turn": "the brief capped turn of the child from its front toward its back (parent_motion.turn, A7): her care at its distress, "
@@ -502,7 +502,7 @@ INTENTS = {
                                                                                           # its far shoulder, past its reach
     "hand_over": Intent("plain", False, None, (Act("hand_over", "{o}"), EYES)),          # the toy into its hand (the handle rung)
     "hide": Intent("plain", False, None, (Act("hide", "{o}"), LOOK_O, EYES)),            # the hide game (A129): the toy let go into the
-                                                                                          # tub in its view, her look to the tub, then to it
+                                                                                          # bucket in its view, her look to the bucket, then to it
     "redirect": Intent("plain", False, None, (Act("point", "{o}"), LOOK_O)),
     "ask_where": Intent("plain", True, "gaze", (EYES,)),                 # never a point or a look to it: the ask tests the word
     "ask_what": Intent("plain", True, "name", (EYES,)),     # of what the child attends: no show while an ask is pending (A51)

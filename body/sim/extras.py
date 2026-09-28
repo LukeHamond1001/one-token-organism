@@ -67,40 +67,40 @@ def add_box(xy=(0.3, -0.4), yaw_deg=0.0):
     return extra
 
 
-TUB_IN = 0.09                                 # m: the tub's inner half-width, an 18 cm square (ours: the duck's 7 cm, a G1 hand and a miss fit; A126)
-TUB_WALL = 0.005                              # m: the wall's thickness (a thin plastic tub)
-TUB_H = 0.12                                  # m: the wall's height, a bucket's: a 7 cm toy inside lies 5 cm under the rim, hidden from a child on the
+BUCKET_IN = 0.09                                 # m: the bucket's inner half-width, an 18 cm square (ours: the duck's 7 cm, a G1 hand and a miss fit; A126)
+BUCKET_WALL = 0.005                              # m: the wall's thickness (a thin plastic bucket)
+BUCKET_H = 0.12                                  # m: the wall's height, a bucket's: a 7 cm toy inside lies 5 cm under the rim, hidden from a child on the
                                               # mat (eyes at 0.1 m prone, 0.35 m sitting, half a metre off: the near wall hides the whole floor)
-TUB_MASS = 0.20                               # kg (a small plastic bucket)
-TUB_RGBA = (0.45, 0.55, 0.20, 1.0)            # olive: no colour word of hers, no other kind of it (the box's road: no colour lesson rides in)
-TUB_YAW_DEG = 0.0
+BUCKET_MASS = 0.20                               # kg (a small plastic bucket)
+BUCKET_RGBA = (0.45, 0.55, 0.20, 1.0)            # olive: no colour word of hers, no other kind of it (the box's road: no colour lesson rides in)
+BUCKET_YAW_DEG = 0.0
 
 
-def add_tub(xy=(-0.3, -0.45), yaw_deg=TUB_YAW_DEG):
-    """-> extra(spec): the tub set at xy on the mat (A126, the third novel object and the first hollow one: a toy can be put INTO it in
+def add_bucket(xy=(-0.3, -0.45), yaw_deg=BUCKET_YAW_DEG):
+    """-> extra(spec): the bucket set at xy on the mat (A126, the third novel object and the first hollow one: a toy can be put INTO it in
     the child's view and be gone from its eyes while it stays, the hide game's vessel, A129), with the toys' contacts, its two hold welds
-    and its sound text, as the box has. An open-top box, a bucket: a floor plate and four walls, TUB_IN inside, TUB_H high"""
+    and its sound text, as the box has. An open-top box, a bucket: a floor plate and four walls, BUCKET_IN inside, BUCKET_H high"""
     def extra(spec):
-        b = spec.worldbody.add_body(name="toy_tub", pos=[float(xy[0]), float(xy[1]), 0.012 + TUB_WALL + 0.001])
+        b = spec.worldbody.add_body(name="toy_bucket", pos=[float(xy[0]), float(xy[1]), 0.012 + BUCKET_WALL + 0.001])
         q = np.zeros(4); mujoco.mju_axisAngle2Quat(q, np.array([0.0, 0.0, 1.0]), np.radians(float(yaw_deg)))
         b.quat = q.tolist()
-        b.add_freejoint(name="toy_tub")
-        out = TUB_IN + TUB_WALL
-        parts = [("tub", [out, out, TUB_WALL], [0.0, 0.0, 0.0])]                                     # the floor plate (the body's origin)
-        for i, (sx, sy, px, py) in enumerate(((TUB_WALL, out, out - TUB_WALL, 0.0), (TUB_WALL, out, -(out - TUB_WALL), 0.0),
-                                              (out, TUB_WALL, 0.0, out - TUB_WALL), (out, TUB_WALL, 0.0, -(out - TUB_WALL)))):
-            parts.append((f"tub_wall{i}", [sx, sy, TUB_H / 2.0], [px, py, TUB_WALL + TUB_H / 2.0]))
+        b.add_freejoint(name="toy_bucket")
+        out = BUCKET_IN + BUCKET_WALL
+        parts = [("bucket", [out, out, BUCKET_WALL], [0.0, 0.0, 0.0])]                                     # the floor plate (the body's origin)
+        for i, (sx, sy, px, py) in enumerate(((BUCKET_WALL, out, out - BUCKET_WALL, 0.0), (BUCKET_WALL, out, -(out - BUCKET_WALL), 0.0),
+                                              (out, BUCKET_WALL, 0.0, out - BUCKET_WALL), (out, BUCKET_WALL, 0.0, -(out - BUCKET_WALL)))):
+            parts.append((f"bucket_wall{i}", [sx, sy, BUCKET_H / 2.0], [px, py, BUCKET_WALL + BUCKET_H / 2.0]))
         for name, size, pos in parts:
-            g = b.add_geom(name=name, type=mujoco.mjtGeom.mjGEOM_BOX, size=size, pos=pos, mass=TUB_MASS / len(parts), rgba=list(TUB_RGBA))
+            g = b.add_geom(name=name, type=mujoco.mjtGeom.mjGEOM_BOX, size=size, pos=pos, mass=BUCKET_MASS / len(parts), rgba=list(BUCKET_RGBA))
             g.contype = 4; g.conaffinity = 15; g.priority = WORLD_PRIORITY                          # make_g1room.TOY
             g.friction = [1.0, 0.01, 0.001]                                                          # the block's
             g.solref = [0.015, 1.0]; g.solimp = [0.9, 0.95, 0.001, 0.5, 2.0]
         for hs in ("L", "R"):
             w = spec.add_equality()
-            w.type = mujoco.mjtEq.mjEQ_WELD; w.objtype = mujoco.mjtObj.mjOBJ_BODY; w.name = f"hold_{hs}_tub"
-            w.name1 = f"parent_hand_{hs}"; w.name2 = "toy_tub"
+            w.type = mujoco.mjtEq.mjEQ_WELD; w.objtype = mujoco.mjtObj.mjOBJ_BODY; w.name = f"hold_{hs}_bucket"
+            w.name1 = f"parent_hand_{hs}"; w.name2 = "toy_bucket"
             w.active = False; w.solref = [0.006, 1.0]
-        spec.add_text(name="sound_tub", data="a hollow plastic knock when it lands or is struck")
+        spec.add_text(name="sound_bucket", data="a hollow plastic knock when it lands or is struck")
     return extra
 
 
@@ -114,15 +114,15 @@ def add_book_box(xy=(0.3, -0.4), yaw_deg=0.0):
     return extra
 
 
-def add_book_box_tub(xy=(-0.3, -0.45), yaw_deg=TUB_YAW_DEG):
+def add_book_box_bucket(xy=(-0.3, -0.45), yaw_deg=BUCKET_YAW_DEG):
     """-> extra(spec): the room with the book and the box where the model compiles them (a carried world puts them where its save has
-    them) and the tub at xy: the runner's --extra for a life that has met all three (A126)"""
-    both, tub = add_book_box(), add_tub(xy=xy, yaw_deg=yaw_deg)
+    them) and the bucket at xy: the runner's --extra for a life that has met all three (A126)"""
+    both, bucket = add_book_box(), add_bucket(xy=xy, yaw_deg=yaw_deg)
 
     def extra(spec):
-        both(spec); tub(spec)
+        both(spec); bucket(spec)
     return extra
 
 
-EXTRAS = {"book": add_book, "box": add_box, "book_box": add_book_box, "tub": add_tub, "book_box_tub": add_book_box_tub}   # the runner's --extra names
-NEW_TOY = {"book": "book", "box": "box", "book_box": "box", "tub": "tub", "book_box_tub": "tub"}   # the toy each extra brings in (the migration tool's report)
+EXTRAS = {"book": add_book, "box": add_box, "book_box": add_book_box, "bucket": add_bucket, "book_box_bucket": add_book_box_bucket}   # the runner's --extra names
+NEW_TOY = {"book": "book", "box": "box", "book_box": "box", "bucket": "bucket", "book_box_bucket": "bucket"}   # the toy each extra brings in (the migration tool's report)

@@ -77,7 +77,7 @@ GROWTH = (
     ("sleep", "verb"), ("go", "verb"), ("get", "verb"), ("hold", "verb"), ("want", "verb"), ("all", "social"),
     ("done", "social"), ("and", "frame"), ("my", "frame"), ("i", "frame"), ("that", "social"), ("to", "frame"),
     ("can", "social"), ("not", "frame"), ("table", "fixture"), ("shelf", "fixture"), ("door", "fixture"), ("light", "fixture"),
-    ("box", "toy"), ("tub", "toy"), ("soft", "adj"), ("loud", "adj"), ("wow", "social"), ("thanks", "social"), ("please", "social"),
+    ("box", "toy"), ("bucket", "toy"), ("soft", "adj"), ("loud", "adj"), ("wow", "social"), ("thanks", "social"), ("please", "social"),
     ("sat", "past"), ("rolled", "past"), ("fell", "past"), ("got", "past"), ("now", "social"), ("again", "social"),
     ("too", "social"), ("out", "social"), ("off", "social"), ("with", "frame"), ("has", "frame"), ("do", "frame"),
     ("did", "past"), ("walk", "verb"), ("hug", "verb"), ("toes", "body"), ("arm", "body"), ("leg", "body"), ("one", "social"),
@@ -92,7 +92,7 @@ FIXTURE_NOUNS = frozenset(ROOM) | {w for w, c in GROWTH if c == "fixture"}
 CHILD_BODY = frozenset(BODY) | {w for w, c in GROWTH if c == "body"}
 HER_FACE = frozenset(w for w, c in GROWTH if c == "face")
 COLOURS = frozenset(w for w, c in GROWTH if c == "colour")
-OPEN_CONTAINERS = frozenset({"tub"})   # A129: what she can see into; a toy lying in it is seen "in the tub" (the percept's `on` is "tub")
+OPEN_CONTAINERS = frozenset({"bucket"})   # A129: what she can see into; a toy lying in it is seen "in the bucket" (the percept's `on` is "bucket")
 NOUNS = OBJECT_NOUNS | FIXTURE_NOUNS | CHILD_BODY          # a recast or an echo says "the X" of these ("ball! the ball!")
 FUNCTION = frozenset(dict(GROUPS)["function"])             # never a focus word: her ear never expects them
 PAST_EVENTS = {"sat": ("sat",), "rolled": ("rolled",), "fell": ("fell",), "got": ("got",),
@@ -103,7 +103,7 @@ PAST_EVENTS = {"sat": ("sat",), "rolled": ("rolled",), "fell": ("fell",), "got":
 # ("face", kind) her own face; ("child",) the child's body; ("never", why)
 NEEDS = {
     "rattle": ("obj", "rattle"), "ring": ("obj", "ring"), "stacker": ("obj", "stacker"), "book": ("obj", "book"),
-    "box": ("obj", "box"), "tub": ("obj", "tub"), "tower": ("obj", "tower"),
+    "box": ("obj", "box"), "bucket": ("obj", "bucket"), "tower": ("obj", "tower"),
     "red": ("twins", "red"), "blue": ("twins", "blue"), "yellow": ("twins", "yellow"), "green": ("twins", "green"),
     "big": ("never", "no two toys of one kind in two sizes"), "little": ("never", "no two toys of one kind in two sizes"),
     "soft": ("obj", "bear"), "loud": ("event", "drum_hit"), "hot": ("never", "nothing hot in the room"),
@@ -139,7 +139,7 @@ ROOM_AT_BIRTH = dict(
              "book": ["black"],                # A115: the first novel toy (in the room only when the world adds it: extras.add_book);
                                                # black: no colour word of hers comes in with it
              "box": ["grey"],                  # A121: the second (extras.add_box); grey: no colour word of hers, no other kind of it
-             "tub": ["olive"]},                # A126: the third, hollow (extras.add_tub); olive: no colour word of hers, no other kind of it
+             "bucket": ["olive"]},                # A126: the third, hollow (extras.add_bucket); olive: no colour word of hers, no other kind of it
     fixtures=["mat", "sofa", "window", "table", "shelf", "door", "light", "floor"],
     events=list(EVENT_KINDS), face=["any"], acts=[])
 
@@ -158,8 +158,8 @@ FRAMES = {
     "label_colour": [F("the {c} {o}.", "{o}"), F("a {c} {o}.", "{o}"), F("it is {c}.", "{c}"), F("the {o} is {c}.", "{c}")],
     "set_near": [F("here. the {o}.", "{o}"), F("look. here. the {o}.", "{o}")],   # her lesson's setup: the toy set within reach (A90)
     "set_far": [F("look. the {o}.", "{o}"), F("look. here. the {o}.", "{o}")],     # the roll rung's setup: the toy past its reach (A109)
-    "hide": [F("the {o} is in the tub.", "tub"), F("look. in the tub. the {o}.", "{o}")],   # the hide game (A129): what she did, said true
-                                                                                          # (the focus last: "tub", the room's newest word)
+    "hide": [F("the {o} is in the bucket.", "bucket"), F("look. in the bucket. the {o}.", "{o}")],   # the hide game (A129): what she did, said true
+                                                                                          # (the focus last: "bucket", the room's newest word)
     "hand_over": [F("here. a {o}.", "{o}"), F("look. here. a {o}.", "{o}")],      # the toy into its hand (the handle rung, A90)
     "show": [F("look at the {o}.", "{o}"), F("look. a {o}.", "{o}"), F("see the {o}?", "{o}"), F("see? a {o}.", "{o}"),
              F("here is a {o}.", "{o}")],
@@ -470,7 +470,7 @@ def claude_claims(text):
             if pred[0] == "is" and len(pred) >= 2:
                 p2 = pred[1:]
                 if p2[0] == "in":
-                    if len(p2) == 3 and p2[1] == "the" and p2[2] in OPEN_CONTAINERS:   # A129: an open tub she sees into
+                    if len(p2) == 3 and p2[1] == "the" and p2[2] in OPEN_CONTAINERS:   # A129: an open bucket she sees into
                         claims.append(("on", n, p2[2]))
                         continue
                     return None, f"not seen: a thing in the {p2[-1]} (containment she cannot see)"
@@ -640,7 +640,7 @@ def _true(text, percept, seen, refs, recent_events):
             else:
                 continue
             if rest[0] in ("on", "in") and len(rest) >= 3 and rest[1] == "the":
-                if rest[0] == "in" and rest[2] not in OPEN_CONTAINERS:     # A129: the tub is open, she sees what lies in it (its `on`)
+                if rest[0] == "in" and rest[2] not in OPEN_CONTAINERS:     # A129: the bucket is open, she sees what lies in it (its `on`)
                     return False, f"not seen: a thing in the {rest[2]} (containment she cannot see)"
                 if not any(o.on == rest[2] for o in subj_objs):
                     return False, f"not true: no {subj if subj not in _DEIXIS else 'such thing'} on the {rest[2]} as she sees it"
