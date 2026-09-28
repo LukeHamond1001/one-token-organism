@@ -113,6 +113,8 @@ PHYSIOLOGY = dict(
     rem_form="forecast",
     rem_weight=1.0,
     rem_world_temp=0,
+    rem_limbs=0,                  # A132 (the sim's brain sprint): the limbs dream: in REM over frames each motor effector's act along the
+                                  # free run is its imagined one (body/core/sleep.py _rem_limb_act), the seed positions the day's own acts
     # --- the event's end (the offset after the world's quiet) and the marks ---
     offset_ticks=8,
     offset_form="settle",   # "settle" = the offset fires when the surprise settles (offset_fast/offset_slow, offset_settle); "count" = after offset_ticks

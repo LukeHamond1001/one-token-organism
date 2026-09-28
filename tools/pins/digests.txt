@@ -88,7 +88,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # the life restarted with the three --set flags at 13:56, these defaults make the flags the tree's own). A born body now pays for
 # the new and keys its frames on the held word and the held context, so every section moved (organs, store, optimizers, the random
 # streams: the novelty source draws). Was: threaded 6afa1ffacca665b76fc79eac, one-thread 4e9bc0b0b23d07030c44ffd7, consts c5b0ecd43f56.
-digest  sim                   threaded 36753538ad620bd3f35f515c consts c12b7431a436 | --profile sim
-digest  sim                   pinned   5621285819cb4cae3cdf2235 consts c12b7431a436 | --profile sim
-full    sim                   threaded organs 6e0c7bfb9220 store 67eaa0728ba2 optim 5086da144247 rng bc27f6851466 work 7a21e021b519 cfg f486439e01ad
-full    sim                   pinned   organs 5e98f5b64f3b store e90f0505ec57 optim 63a090678ebc rng bc27f6851466 work 7d49b8eac0b8 cfg f486439e01ad
+# Re-pinned at A132 (2026-09-28 14:20, branch a128: the limbs dream in REM, SIM_CFG rem_limbs 1 at birth; the born night's REM draws
+# the effectors' imagined acts, so the organs, store, optimizers and random streams moved). Was: threaded 36753538ad620bd3f35f515c,
+# one-thread 5621285819cb4cae3cdf2235, consts c12b7431a436.
+digest  sim                   threaded e23bca657e29fd11ce513dc6 consts eb16f49013ae | --profile sim
+digest  sim                   pinned   4a109a9bd17c271ffe1bcf71 consts eb16f49013ae | --profile sim
+full    sim                   threaded organs 5d3696eb84c6 store a2a4044b061e optim 3ac1565b9380 rng 8d380f767fdc work 6b844b49d07b cfg e7ebd60aa627
+full    sim                   pinned   organs 1d67adf205ce store 65f9acacdc76 optim b1746cdadbcd rng 8d380f767fdc work bce5159dad2b cfg e7ebd60aa627

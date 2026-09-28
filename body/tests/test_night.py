@@ -430,6 +430,38 @@ def _live_world(seed=0):
     return LiveG1()
 
 
+def test_the_limbs_dream():
+    """night 5 (A132, rem_limbs, the brain sprint): THE LIMBS DREAM. On the G1's day of 300 ticks and its night, with rem_limbs on, each
+    motor effector's act along REM's free run is its imagined one (act_pred's proposal read out joint by joint at its earned sharpness,
+    drawn at the REM temperature) and the seed positions carry the day's own acts from the tape: the night reports imagined acts that
+    are not rest (rem_limb_acts > 0), its REM loss finite and its dreams counted as before; with the switch off every effector is at
+    rest in the dream and the report says 0. The dream's inputs carry the imagined acts as efference copies: the forecast heads learn
+    what follows an act only imagined (the motor cortex under REM's atonia, Jouvet 1965)"""
+    got = {}
+    for limbs in (1, 0):
+        L = _g1(_cfg(night_starts=12, night_starts_max=12, night_rounds=1, night_batch=4, rem_dreams=4, rem_steps=4, rem_limbs=limbs), _events_world())
+        run = WorldLoop(L)
+        for _ in range(300):
+            run.step()
+        seen = {"acts": [], "rest": [int(e.rest_id) for e in L.anatomy.motors]}
+        orig = L._rem_limb_act
+
+        def spy(e, C, rt, orig=orig, seen=seen):
+            a = orig(e, C, rt); seen["acts"].append((e.name, int(a))); return a
+        L._rem_limb_act = spy
+        rep = L.night()
+        got[limbs] = dict(n=int(rep.get("rem_limb_acts", -1)), dreams=int(rep["dreams"]), rem_cos=rep.get("rem_cos"), spy=len(seen["acts"]),
+                          not_rest=sum(1 for nm, a in seen["acts"] if a != seen["rest"][[e.name for e in L.anatomy.motors].index(nm)]),
+                          error=rep.get("error"))
+        assert not rep.get("error"), rep.get("error")
+    on, off = got[1], got[0]
+    assert on["spy"] > 0 and on["n"] == on["not_rest"] > 0, (on, off)          # imagined acts, counted as the night reports them
+    assert off["spy"] == 0 and off["n"] == 0, off                               # off: no imagining, every effector at rest
+    assert on["dreams"] == off["dreams"] and on["rem_cos"] is not None, (on, off)
+    print(f"night 5: the limbs dream: {on['n']} imagined acts not at rest of {on['spy']} drawn along REM's free runs ({on['dreams']} dreams,",
+          f"REM cos {on['rem_cos']}); the switch off, none ({off['dreams']} dreams, REM cos {off['rem_cos']})")
+
+
 def test_value_sweep():
     """night 8 (A93): the reverse value sweep. Two G1s (d 32) born alike live the same 150 ticks in the stub world (its smiles at ticks
     20, 60, 100 and 140), one sleeping with night_reverse on, one off. After the night the critic's value of the states in the 8 ticks

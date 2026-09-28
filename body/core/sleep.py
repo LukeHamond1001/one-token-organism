@@ -465,7 +465,7 @@ class SleepMixin:
         mid = self._frames_gauge(g_dreams)
         # --- REM on frames (REM stays on: the owner's ruling): the cortex runs free from each dream's first positions, the words drawn from
         # its readout and every other channel's code its head's forecast, and the prefrontal forecast heads learn along the free run ---
-        rem_cos = []; rem_steps = 0
+        rem_cos = []; rem_steps = 0; self._rem_limb_n = 0                # A132: the imagined acts of the limbs this night, counted
         for _ in range(int(self.cfg["rem_rounds"])):
             opt.zero_grad(set_to_none=True); rc = []; k_n = 0
             use = dreams[:int(self.cfg["rem_dreams"])]
@@ -496,6 +496,7 @@ class SleepMixin:
         rep.update({"nrem_steps": nrem, "nrem_loss": losses[:3] + (["..."] if len(losses) > 6 else []) + losses[-3:],
                     "nrem_curve": [round(float(x), 4) for x in losses], "rem_steps": rem_steps,
                     "rem_cos": (round(rem_cos[-1], 3) if rem_cos else None), "rem_cos_first": (round(rem_cos[0], 3) if rem_cos else None),
+                    "rem_limb_acts": int(getattr(self, "_rem_limb_n", 0)),      # A132: the limbs' imagined acts (not rest) this night
                     "act_pred_weight": {"positions": wstats[0], "below_1": round(wstats[1] / pos, 4), "zero": round(wstats[2] / pos, 4)},
                     "act_inv_pairs": inv_pairs,
                     "gauge": {"before": before, "after_nrem": mid, "after": after}})
@@ -674,6 +675,26 @@ class SleepMixin:
                         errs.append(e_ / es[c_.name] if c_.name in es else e_)
         return {"words": (round(hits / nw, 3) if nw else None), "channels": (round(sum(errs) / len(errs), 4) if errs else None)}
 
+    def _rem_limb_act(self, e, C, rt):
+        """A132 (rem_limbs, the brain sprint): a motor effector's IMAGINED act in REM. Its proposal on the free-running stream (act_pred's,
+        `e.propose`) read out joint by joint at its earned sharpness and drawn at the REM temperature (rt 0: its best guess), as the
+        waking choice draws it but with no gate, no striatal bias and no orienting bias: the motor cortex active under REM's atonia
+        (Jouvet 1965: the commands made, the muscles still; the twitches that leak through are R8c's). Its rest when it proposes nothing"""
+        m = self.m; tab = m.get_submodule(e.organ)
+        j = [e_.name for e_ in self.anatomy.motors].index(e.name)
+        with torch.no_grad():
+            pred = e.propose(self, C)
+            if pred is None:
+                return int(e.rest_id)
+            logits = tab.logits(pred, self._motor_sharp(e, self.motor[j]))
+            if e.reserved:
+                logits[0] = logits[0].clone(); logits[0][list(e.reserved)] = float("-inf")
+            if rt > 0:
+                dig = [int(torch.multinomial(torch.softmax(lg / rt, -1).cpu(), 1, generator=self.gen)) for lg in logits]
+            else:
+                dig = [int(lg.argmax()) for lg in logits]
+            return int(tab.flat(dig))
+
     def _rem_frames(self, ep, k=3):
         """REM ON FRAMES (step R8b; REM stays on: the owner's ruling; the first design's "REM samples discrete channels, takes the mean
         forecast for vectors"): from the window's first k positions as the day received them, the cortex runs free for rem_steps
@@ -698,6 +719,11 @@ class SleepMixin:
                 off += int(c_.size)
         bands = ep["bands0"].float().to(dev); bundles, Cs, bnext = [], [], []   # from the day's bands at the window's start (the lead's item 1)
         bans = list(self.bans)
+        limbs = int(self.cfg.get("rem_limbs", 0))
+        # A132 (rem_limbs): the limbs dream too. The seed positions carry the day's own acts (the tape's `a`), and along the free run each
+        # motor effector's act is its imagined one (`_rem_limb_act`), an efference copy in the dream's inputs, so the forecast heads learn
+        # what follows an act it only imagined (mental practice: the forward model rehearsed in sleep). Off: every effector at rest
+        macts = {e.name: [int(r_["a"][t, j]) for t in range(T0)] for j, e in enumerate(mot)} if limbs else {}
         with torch.no_grad():
             for step in range(T0 + L):
                 if step >= T0:
@@ -709,11 +735,18 @@ class SleepMixin:
                             syms[c_.name].append(int(c_.rest_id))
                     for c_ in vec:
                         codes[c_.name].append(m.head(self.anatomy, idx[c_.name])(Cs[-1]) if c_.forecast else torch.zeros(m.d, device=dev))
+                    if limbs:
+                        for e in mot:
+                            a_ = self._rem_limb_act(e, Cs[-1], rt)
+                            macts[e.name].append(a_)
+                            if a_ != int(e.rest_id):
+                                self._rem_limb_n = int(getattr(self, "_rem_limb_n", 0)) + 1
                 bundles.append(bands.clone())
                 n = step + 1
                 ob = {c_.name: torch.tensor(syms[c_.name][:n], dtype=torch.long, device=dev) for c_ in sym}
                 for e in mot:
-                    ob[e.name] = torch.full((n,), int(e.rest_id), dtype=torch.long, device=dev)
+                    ob[e.name] = (torch.tensor(macts[e.name][:n], dtype=torch.long, device=dev) if limbs
+                                  else torch.full((n,), int(e.rest_id), dtype=torch.long, device=dev))
                 u = m.inputs(self.anatomy, ob, torch.full((n,), int(self.sil), dtype=torch.long, device=dev), torch.stack(bundles),
                              codes={c_.name: torch.stack(codes[c_.name][:n]) for c_ in vec})
                 C = m.stream(u)[-1]; Cs.append(C)

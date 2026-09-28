@@ -488,6 +488,8 @@ SIM_CFG = dict(
     # birth: REM on frames is the forecast form)
     night_batch=16, night_rounds=6, night_starts=1024, night_starts_max=2048, night_load=1.0, night_lr=1e-5, night_warm=8,
     night_beta2=0.99, rem_temp=1.0,
+    rem_limbs=1,                   # A132: the limbs dream in REM (sleep._rem_limb_act: act_pred's proposal drawn at the REM temperature, an
+                                   # efference copy in the dream's inputs; the motor cortex under atonia); on since dawn 25 (the all-in sprint)
     # THE LIFE DAY AND THE NIGHT (10, 5.4, A46, B19): 24,000 waking ticks, then a night as long (the night takes time: the critics
     # discount across it, night_ticks, and the live night steps the world that many ticks, R8c)
     wake_ticks=24000, night_ticks=24000,
