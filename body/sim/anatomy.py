@@ -481,6 +481,8 @@ SIM_CFG = dict(
                                    # (the private-speech ruler, speech_act_reading.py)
     ctx_key=1,                     # A128: the held context as a recall key (memory.query_from, CTX_TAU/CTX_SCALE); on since dawn 24 (the
                                    # re-find and re-grasp rulers)
+    inner_speech=1,                # A137: the inner word (frames._goal_trace: the voice's sure, unsounded top choice held; memory.INNER_P); on from
+                                   # dawn 29 (the private-speech ruler with --covert)
     # STEP R8: THE NIGHT OVER FRAMES (SIM_DESIGN.md 7.4 item 2, 8's R8 row, 9's tape; body/core/sleep.py; physiology.py SLEEP): each awake
     # tick taped beside its record, the day cut into episodes at nightfall at the frames' event ends, their entries and windows from the
     # tag reaching back over the day's record, kept across nights up to the episodes' cap

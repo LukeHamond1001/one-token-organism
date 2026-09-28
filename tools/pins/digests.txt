@@ -95,7 +95,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # cosine, in place of the gain for every kept frame; no constant changed, consts unmoved). The born body's payments differ from the
 # first tick a frame resembles another, so the organs, store, optimizers and random streams moved. Was: threaded
 # e23bca657e29fd11ce513dc6, one-thread 4a109a9bd17c271ffe1bcf71.
-digest  sim                   threaded 38831933eaca0ba388b1bac2 consts eb16f49013ae | --profile sim
-digest  sim                   pinned   41bf37d9c5cdb8f02b194180 consts eb16f49013ae | --profile sim
-full    sim                   threaded organs 8518fbd10198 store 0fb09e51cf02 optim dad3c5cabe8f rng c222570d9ed8 work c7e0824d4542 cfg e7ebd60aa627
-full    sim                   pinned   organs 1c12525a0f02 store 5edad7a3afc7 optim 05c3ccd2c563 rng c222570d9ed8 work 5974eaee95ef cfg e7ebd60aa627
+# Re-pinned at A137 (2026-09-28 18:18, branch a136: the inner word, SIM_CFG inner_speech 1 at birth and the physiology's key; the voice's
+# sure unsounded choice held as the goal word and given the frame's value, so a born body's keys and frames move). Was: threaded
+# 38831933eaca0ba388b1bac2, one-thread 41bf37d9c5cdb8f02b194180, consts eb16f49013ae.
+digest  sim                   threaded 939403f009b6152ad20ee679 consts 58c46b2d8c8b | --profile sim
+digest  sim                   pinned   ec02bfab1b9c968862109499 consts 58c46b2d8c8b | --profile sim
+full    sim                   threaded organs dae9959c775c store d2da9c45852c optim 6e202052d84b rng c222570d9ed8 work 71d7b6ae4fab cfg 393587293891
+full    sim                   pinned   organs f878e532096e store 4e8b14834da4 optim fd1a888a724a rng c222570d9ed8 work 19a9b880c39c cfg 393587293891

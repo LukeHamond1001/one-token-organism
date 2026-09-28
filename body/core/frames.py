@@ -73,7 +73,7 @@ import math
 
 import torch
 import torch.nn.functional as F
-from .memory import GOAL_TAU                                        # A130: the held word's time constant
+from .memory import GOAL_TAU, INNER_P                               # A130: the held word's time constant; A137: the inner word's sureness
 
 from .physiology import FRAMES
 
@@ -351,7 +351,15 @@ class FramesMixin:
         for the next frame"""
         codes, total = self._frame_codes(u)
         if self._recall_on():
-            total = self._frame_value(total, self.sil if nxt is None else nxt)
+            v_nxt = self.sil if nxt is None else nxt
+            if int(v_nxt) == int(self.sil) and int(self.cfg.get("inner_speech", 0)):
+                # A137: the inner word is remembered as a said one is: the frame's value carries the efference copy of the voice's sure,
+                # unsounded top choice (imagined speech: the plan made, the sound withheld; Tian and Poeppel 2010's efference copy)
+                lc = getattr(self, "_last_choice", None) or {}
+                top = int(lc.get("top", self.sil))
+                if not lc.get("acted") and top not in (int(self.sil), int(getattr(self, "space_id", -1))) and float(lc.get("p_top", 0.0)) >= INNER_P:
+                    v_nxt = top
+            total = self._frame_value(total, v_nxt)
         s = self._frame_surprise(codes)
         tag, tag_w = self._tag_now()
         self._frame_boosts(tag)                                       # R7d: the tag of this tick reaching back onto the frames written
@@ -378,6 +386,13 @@ class FramesMixin:
         if not (int(self.cfg.get("goal_key", 0)) and self._recall_on()):
             return
         g = getattr(self, "_goal", None)
+        if (nxt is None or int(nxt) == int(self.sil)) and int(self.cfg.get("inner_speech", 0)):
+            # A137: the inner word: the voice's top choice this tick, unsounded (its gate said no), held when the voice was sure of it
+            lc = getattr(self, "_last_choice", None) or {}
+            top = int(lc.get("top", self.sil))
+            if not lc.get("acted") and top not in (int(self.sil), int(getattr(self, "space_id", -1))) and float(lc.get("p_top", 0.0)) >= INNER_P:
+                nxt = top
+                self._inner_n = int(getattr(self, "_inner_n", 0)) + 1
         if nxt is not None and int(nxt) != int(self.sil) and int(nxt) != int(getattr(self, "space_id", -1)):
             with torch.no_grad():
                 self._goal = F.normalize(self.m.E.weight[int(nxt)].detach().float(), dim=0)

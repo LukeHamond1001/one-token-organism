@@ -203,6 +203,8 @@ def main():
                        present=bool(ls.get("present")), holds=list(ls.get("holds") or ()),
                        child=[round(float(x), 2) for x in world.parent.child.torso[:2]] + [str(lane.posture)],   # A119 (C103): where it lies, its posture as the lane reads it
                        token=None if world.words_out is None else INV.get(int(world.words_out)),
+                       covert=(INV.get(int(L._last_choice["top"])) if (getattr(L, "_last_choice", None) and not L._last_choice.get("acted")
+                               and float(L._last_choice.get("p_top", 0.0)) >= 0.5) else None),   # A137: the inner word (sure, unsounded)
                        onset=None if f is None else int(f.obs.get("onset_periph", [0])[0]),
                        sounds=len(getattr(world.sounds, "last_events", [])))
         log.write(json.dumps(rec) + "\n")

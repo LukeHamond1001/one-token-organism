@@ -1419,6 +1419,62 @@ def test_the_changed_body():
           f"a room-a world of {t0} ticks loads (the hand {ra:.3f} -> {rb:.3f} m from the shoulder in the same pose) and lives on; a life born on it lives 40 ticks")
 
 
+def test_the_inner_word():
+    """world 33 (A137, inner_speech): the inner word. With the switch on, a word the voice chose and did not sound (its gate said no) is
+    held in the goal trace when the voice was sure of it (p_top >= INNER_P), and the key moves toward that word's row as it does for a
+    said word; an unsure choice (p_top under INNER_P) holds nothing and the trace decays; a sounded word still takes the trace; with the
+    switch off an unsounded choice is never held; the inner word enters the frame's value as a said word's efference copy does (imagined
+    speech remembered); a life of 40 ticks with it on runs, counting its inner words"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    from body.core.memory import INNER_P
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    cos = lambda a, b: float(F.cosine_similarity(a.float(), b.float(), dim=0))
+    out = {}
+    for inner in (1, 0):
+        w = G1World(seed=1)
+        cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, goal_key=1, inner_speech=inner)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        for _ in range(20):
+            run.step()
+        E = L.m.E.weight.detach()
+        wid = max(i for i in range(E.shape[0]) if i not in (int(L.sil), int(L.space_id)))
+        row = F.normalize(E[wid].float(), dim=0)
+        L._goal = None; L._inner_n = 0
+        L._last_choice = dict(acted=False, top=wid, p_top=0.9, nxt=int(L.sil))     # a sure word, unsounded
+        L._goal_trace(L.sil)
+        held_sure = L._goal is not None and cos(L._goal, row) > 0.99
+        L._goal = None
+        L._last_choice = dict(acted=False, top=wid, p_top=0.2, nxt=int(L.sil))     # an unsure one
+        L._goal_trace(L.sil)
+        held_unsure = L._goal is not None
+        L._goal = None
+        L._last_choice = dict(acted=True, top=wid, p_top=0.9, nxt=wid)              # a sounded word takes the trace as before
+        L._goal_trace(wid)
+        held_said = L._goal is not None and cos(L._goal, row) > 0.99
+        L._last_choice = dict(acted=False, top=wid, p_top=0.9, nxt=int(L.sil))     # the inner word in the frame's VALUE too (imagined speech)
+        base_v = L._frame_value(torch.zeros(L.m.d), L.sil)
+        L._last_choice = dict(acted=False, top=wid, p_top=0.9, nxt=int(L.sil))
+        # the tick's value path: _frame_tick swaps the voice's rest for the inner word before _frame_value; the same swap here
+        v_in = L._frame_value(torch.zeros(L.m.d), wid if inner else L.sil)
+        valued = cos(v_in - base_v, E[wid]) > 0.99 if inner else bool(torch.allclose(v_in, base_v))
+        n0 = int(getattr(L, "_inner_n", 0))
+        for _ in range(40):
+            run.step()
+        out[inner] = dict(sure=held_sure, unsure=held_unsure, said=held_said, valued=valued, inner_n=int(getattr(L, "_inner_n", 0)) - n0)
+    assert out[1]["sure"] and not out[1]["unsure"] and out[1]["said"] and out[1]["valued"], out[1]
+    assert not out[0]["sure"] and not out[0]["unsure"] and out[0]["said"], out[0]
+    assert out[0]["inner_n"] == 0, out[0]
+    print(f"world 33: the inner word: a sure unsounded choice held ({out[1]['sure']}), an unsure one not ({out[1]['unsure']}), a said word held",
+          f"({out[1]['said']}); the switch off holds no unsounded word ({out[0]['sure']}); in 40 ticks of a life with it on, {out[1]['inner_n']}",
+          f"inner words held (INNER_P {INNER_P})")
+
+
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)

@@ -21,6 +21,11 @@ GOAL_SCALE = 1.0
 # CTX_SCALE 1.0: equal weight with the stream's direction and the heading (R7f's convention; ours).
 CTX_TAU = 60
 CTX_SCALE = 1.0
+# A137 (inner_speech): the INNER word. The voice chooses a word every tick and its gate decides whether to sound it; with inner_speech
+# on, a word chosen and not sounded is held in the same trace when the voice was sure of it (its probability at least INNER_P): private
+# speech gone covert (Vygotsky: inner speech grows out of speech to oneself, the articulators stilled), the same key. INNER_P 0.5: the
+# word likelier than every other together (ours).
+INNER_P = 0.5
 
 
 class MemoryMixin:
