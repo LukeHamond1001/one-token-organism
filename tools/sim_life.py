@@ -133,6 +133,8 @@ def main():
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
     ap.add_argument("--extra", default=None, help="a thing added to the room (body/sim/extras.py: book); the pair must have been migrated to it")
+    ap.add_argument("--film", default=None, metavar="DIR", help="A123: the room's view saved as JPEG frames in DIR, one every --film-every ticks (the page's render; the captions come from ticks.jsonl by tick)")
+    ap.add_argument("--film-every", type=int, default=3, help="ticks between frames (a multiple of the page's 3)")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                     help="a cfg key set for this run (a measurement on a copy: e.g. --set actor=1); typed as the tree's own value")
     args = ap.parse_args()
@@ -142,11 +144,15 @@ def main():
     world, eyes, lane, L = build(args)
     run = WorldLoop(L)
     snap = None
-    if args.page:
+    if args.page or args.film:
         import sim_page
         snap = sim_page.Snapshot(world, lane, L, eyes)
-        sim_page.serve(snap)
-        print(f"the page: http://127.0.0.1:{sim_page.PORT}/", flush=True)
+        if args.page:
+            sim_page.serve(snap)
+            print(f"the page: http://127.0.0.1:{sim_page.PORT}/", flush=True)
+    if args.film:
+        os.makedirs(args.film, exist_ok=True)                                  # A123: the film's frames (never in git: data/)
+        print(f"the film: frames every {args.film_every} ticks in {args.film}", flush=True)
     day_ticks = int(SIM_CFG.get("wake_ticks", 24000)) + int(SIM_CFG.get("night_ticks", 24000))
     total = args.ticks or int(args.days * day_ticks)
     log = open(os.path.join(args.out, "ticks.jsonl"), "a")
@@ -161,6 +167,9 @@ def main():
         wall = time.perf_counter() - a
         if snap is not None:
             snap.take(INV)
+            if args.film and int(world.tick) % args.film_every == 0 and snap.room_jpg:
+                with open(os.path.join(args.film, f"{int(world.tick):08d}.jpg"), "wb") as fj:
+                    fj.write(snap.room_jpg)
         night = bool(world.night)
         f = world.now if getattr(world, "now", None) is not None else None
         pain = f.obs.get("pain") if f is not None else None
