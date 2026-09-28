@@ -1358,6 +1358,60 @@ def test_the_held_word():
           f"faded (GOAL_SCALE {GOAL_SCALE}); the switch off, the key unmoved ({out[0]['moved']:.4f})")
 
 
+def test_the_held_context():
+    """world 28 (A128, the brain sprint): the held context, the temporal context model's key. With SIM_CFG ctx_key 1 the frames' key
+    carries a leaky integral (CTX_TAU ticks) of the stream's pattern-separated direction beside the direction itself and the heading:
+    after 5 CTX_TAU ticks in one state A the key is what the switch off would make of A (the context is A itself); the tick the state
+    turns to B the key still lies nearer A's key than the unheld key of B does, and a frame written under A is what the read returns for
+    B on that tick while the unheld body's read of B returns B's own frame; 5 CTX_TAU ticks in B later the key is B's; the night lets the
+    context go; with the switch off (the sim at birth) the key never lags"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    from body.core.memory import CTX_TAU, CTX_SCALE
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    cos = lambda a, b: float(F.cosine_similarity(a.float(), b.float(), dim=0))
+    out = {}
+    for ck in (1, 0):
+        w = G1World(seed=1)
+        cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, ctx_key=ck)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        for _ in range(20):
+            run.step()
+        L._goal = None; L._ctx = None
+        gen = torch.Generator().manual_seed(5)
+        A = L._C_last.detach().clone(); B = A + 3.0 * torch.randn(A.shape, generator=gen) * float(A.std())
+        mu = L._c_mu.clone()                                                # the running mean held still: the lag measured alone
+        vA, vB = torch.randn(L.m.d, generator=gen), torch.randn(L.m.d, generator=gen)
+        for _ in range(5 * CTX_TAU):
+            L.query_from(A, learn=True); L._c_mu = mu.clone()
+        kA = L.query_from(A, learn=False).clone()
+        L.store.write(kA, vA, 1.0, 2)                                        # A's frame
+        kB1 = L.query_from(B, learn=True).clone(); L._c_mu = mu.clone()     # the first tick in B
+        rB1 = L.store.read(kB1)[0].clone()
+        for _ in range(5 * CTX_TAU):
+            L.query_from(B, learn=True); L._c_mu = mu.clone()
+        kB = L.query_from(B, learn=False).clone()
+        L.store.write(kB, vB, 1.0, 2)                                        # B's own frame, settled
+        rB = L.store.read(kB)[0].clone()
+        L._frames_night()
+        out[ck] = dict(lag=cos(kB1, kA), settled=cos(kB1, kB), rB1=(cos(rB1, vA), cos(rB1, vB)), rB=(cos(rB, vB), cos(rB, vA)),
+                       ctx_after_night=getattr(L, "_ctx", None))
+        assert out[ck]["ctx_after_night"] is None, out[ck]
+    on, off = out[1], out[0]
+    assert on["lag"] > off["lag"] + 0.1 and on["settled"] < off["settled"] - 0.1, (on, off)   # the key lags the senses only when held
+    assert on["rB1"][0] > on["rB1"][1] and off["settled"] > 0.999, (on, off)                  # A's frame comes back on B's first tick
+    assert on["rB"][0] > on["rB"][1], on                                                       # and B's once the context is B
+    print(f"world 28: the held context: on the first tick in a new state the key lies at cosine {on['lag']:.2f} to the old state's key held,",
+          f"{off['lag']:.2f} unheld, and {on['settled']:.2f} to its own settled key ({off['settled']:.3f} unheld); the old state's frame read",
+          f"at {on['rB1'][0]:.2f} against the new one's {on['rB1'][1]:.2f} on that tick, the new state's at {on['rB'][0]:.2f} against",
+          f"{on['rB'][1]:.2f} once settled (CTX_TAU {CTX_TAU}, CTX_SCALE {CTX_SCALE}); the night lets the context go")
+
+
 def test_the_morning_tidy():
     """world 24 (B8, A117, C102): at a dawn the lost toys are put back where they stood at birth: the cup under the low table (its 0.45 m
     kneeling ring is the table; her hand's way in strikes the top), the stacker in the room's corner behind the plant (no spot to kneel);

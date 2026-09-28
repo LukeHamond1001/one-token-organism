@@ -14,6 +14,13 @@ import torch.nn.functional as F
 # weight, R7f's own convention for the heading (ours).
 GOAL_TAU = 60
 GOAL_SCALE = 1.0
+# A128 (ctx_key): the held context, the temporal context model's drifting context (Howard and Kahana 2002): a leaky integral of the
+# stream's pattern-separated direction, so a thing that just left the senses stays in the key for a while and the frames it was in
+# keep coming back into the acts (object permanence's first substrate: the representation outlasts the sight of it). CTX_TAU 60 ticks,
+# 9 s: the A-not-B delay an infant tolerates grows from 2 s at 7.5 months to 10 s at 12 months (Diamond 1985); GOAL_TAU's own span.
+# CTX_SCALE 1.0: equal weight with the stream's direction and the heading (R7f's convention; ours).
+CTX_TAU = 60
+CTX_SCALE = 1.0
 
 
 class MemoryMixin:
@@ -28,7 +35,18 @@ class MemoryMixin:
         if int(self.cfg.get("recall", 0)):
             # STEP R7f (recall into action; body/core/frames.py): the key is the stream plus the heading, their unit directions at equal
             # weight, at the key's scale
-            k = F.normalize(c - self._c_mu, dim=0) + self._heading_code().to(c.dtype)
+            d = F.normalize(c - self._c_mu, dim=0)
+            k = d + self._heading_code().to(c.dtype)
+            if int(self.cfg.get("ctx_key", 0)):
+                # A128 (ctx_key, the brain sprint): THE HELD CONTEXT JOINS THE KEY. The stream's direction integrated with the time constant
+                # CTX_TAU (moved once a tick, with the running mean: learn), at CTX_SCALE: the key lags the senses, so a frame is written
+                # under, and recalled by, the context it came out of (the temporal context model); the night lets it go
+                ctx = getattr(self, "_ctx", None)
+                if learn:
+                    ctx = d.clone() if ctx is None else ctx + (d - ctx) / float(CTX_TAU)
+                    self._ctx = ctx
+                if ctx is not None:
+                    k = k + CTX_SCALE * ctx
             g = getattr(self, "_goal", None)
             if g is not None and int(self.cfg.get("goal_key", 0)):
                 # A130 (goal_key, the brain sprint): THE HELD WORD JOINS THE KEY. The body's own last said word, held as a fading unit

@@ -80,7 +80,11 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # the A127 pins exactly in both runs (fc7be0bd7c7c/d364be30c88f/0757502a5393 threaded, 4fa1a3503829/0b7fce84adf8/8bce1f21c794
 # one-thread); only the constants (the new key) and the working attributes moved. Was: threaded c1e7164946168252f536e69f, one-thread
 # 0fd09597957c215025ff5d7f, consts e0c85c774d91.
-digest  sim                   threaded 3dd49d79c5697f9f85c97585 consts b77b4d429900 | --profile sim
-digest  sim                   pinned   069305dec3c4b3d97838a87b consts b77b4d429900 | --profile sim
-full    sim                   threaded organs fc7be0bd7c7c store d364be30c88f optim 0757502a5393 rng 3f129c0969d1 work 09ad4fcf733c cfg 43ae54cda1b0
-full    sim                   pinned   organs 4fa1a3503829 store 0b7fce84adf8 optim 8bce1f21c794 rng 3f129c0969d1 work cf14e09744b8 cfg 43ae54cda1b0
+# Re-pinned at A128 (2026-09-28 13:45, branch a128: the held context as a recall key, a switch of the body, SIM_CFG ctx_key=0 and the
+# physiology's key; the context a working attribute let go at the night). The organs, store, optimizers and random streams reproduced
+# the A127 pins exactly in both runs; only the constants (the new key) and the working attributes moved. Was: threaded
+# 3dd49d79c5697f9f85c97585, one-thread 069305dec3c4b3d97838a87b, consts b77b4d429900.
+digest  sim                   threaded 6afa1ffacca665b76fc79eac consts c5b0ecd43f56 | --profile sim
+digest  sim                   pinned   4e9bc0b0b23d07030c44ffd7 consts c5b0ecd43f56 | --profile sim
+full    sim                   threaded organs fc7be0bd7c7c store d364be30c88f optim 0757502a5393 rng 3f129c0969d1 work 0d4b5dd4f724 cfg 79ff01e006be
+full    sim                   pinned   organs 4fa1a3503829 store 0b7fce84adf8 optim 8bce1f21c794 rng 3f129c0969d1 work 98b68cf1f9bc cfg 79ff01e006be

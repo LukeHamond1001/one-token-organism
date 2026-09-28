@@ -408,7 +408,8 @@ class FramesMixin:
         carried over, the next frame written the morning's start; the day's record and its ends let go (R8 cuts them into episodes
         first); the running means, the settle law's averages and the write gate's quantile kept"""
         self._ffc = None; self._fkey_prev = None; self._fw_err = None; self._flast_write = None; self._fstart_armed = True
-        self._rec = None; self._rec_n = 0; self._rec_ends = []; self._goal = None   # A130: the held word let go with the day
+        self._rec = None; self._rec_n = 0; self._rec_ends = []; self._goal = None; self._ctx = None   # A130/A128: the held word and the held
+                                                                                                        # context let go with the day
         if getattr(self, "_fboosts", None) is not None:
             self._fboosts = []                                        # R7d: the later boosts end at the night (its fade remaps the slots)
 
