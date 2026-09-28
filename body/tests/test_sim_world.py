@@ -407,7 +407,8 @@ def test_pain():
 def test_no_charge():
     """world 7 (A88, the owner's decision 2026-09-26): no charge, no charger, no weakness. The frame carries no charge channel and the
     anatomy declares none; the joints' limits are the declared ones at every tick; the truth has no drain and no feed; the room holds
-    no bottle and no dock; the anatomy's rewards are her face, the one that pays, and pain as cortisol (dopamine off)"""
+    no bottle and no dock; the anatomy's rewards are her face, the one that pays, and pain as cortisol (dopamine off); since dawn 24 (A127)
+    the novelty drive is the third source when SIM_CFG has it on, and none of them is a charge"""
     w = G1World(seed=1)
     for _ in range(3):
         w.apply(_babbler(4, 0.0).acts())
@@ -418,7 +419,9 @@ def test_no_charge():
     names = [w.m.geom(g).name for g in range(w.m.ngeom)]
     assert not [n for n in names if n.startswith("bottle") or n.startswith("pad")], [n for n in names if "bottle" in n or "pad" in n]
     a = AN.SimAnatomy(AN.born_table(LX.BIRTH_WORDS), AN.SIM_CFG, limits=[float(x) for x in w.tau_max])
-    assert [r.name for r in a.rewards] == ["face", "pain"] and a.rewards[0].dopamine and a.rewards[1].dopamine and a.rewards[1].amyg   # A91:
+    names_ = [r.name for r in a.rewards]                                  # A127 (dawn 24): the novelty drive is a third source when SIM_CFG has it on
+    assert names_ == ["face", "pain"] + (["novelty"] if int(AN.SIM_CFG.get("novelty", 0)) else []), names_
+    assert a.rewards[0].dopamine and a.rewards[1].dopamine and a.rewards[1].amyg   # A91:
     assert hasattr(AN.RewardSource, "dopamine") and AN.RewardSource.dopamine is True          # pain pays; the cortisol switch stays in the core
     assert "charge" not in [c.name for c in a.channels] and a.effectors[0].cry.get("charge") is None
     print("world 7: no charge (A88): no charge channel, drain, feed, charger, bottle or dock; the limits the declared ones every tick;",

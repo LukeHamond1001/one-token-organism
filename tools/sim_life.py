@@ -182,6 +182,8 @@ def main():
             ls = lane.last
             rec.update(line=ls.get("line"), ep=None if lane.plan is None else lane.plan.kind, word=INV.get(int(ls.get("word", 0))),
                        heard=ls.get("heard"), reading=round(float(lane.reading), 2), judged=ls.get("judged"),
+                       reward=(round(float(L._rec[int(L._rec_n) - 1][3]), 3) if getattr(L, "_rec", None) is not None and int(getattr(L, "_rec_n", 0)) > 0 else 0.0),   # the tick's net reward
+                       nov=next((int(getattr(s_, "n_paid", 0)) for s_ in L.anatomy.rewards if s_.name == "novelty"), 0),   # the novelty drive's payments so far (A127)
                        events=[e[0] for e in ls.get("events", ())], face_test=bool(ls.get("face_test")),
                        seen_by_child=bool(ls.get("seen_by_child")),
                        gates=[round(float((st.get("now") or {}).get("p_act", 0.0)), 3) for st in L.motor],   # each effector's p_act (her rulers'

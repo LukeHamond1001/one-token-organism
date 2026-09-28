@@ -220,6 +220,7 @@ class Novelty(RewardSource):
         if new <= 0.0:
             return None
         life._frame_novel = 0.0
+        self.n_paid = int(getattr(self, "n_paid", 0)) + 1                  # the payments counted (the runner's record: `nov`; attribution)
         return NOVELTY_GAIN
 
 
