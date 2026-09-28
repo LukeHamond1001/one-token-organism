@@ -331,31 +331,31 @@
     <geom type="capsule" fromto="-2.465 0.97 .03 -2.465 0.97 2.28" size="0.028" material="curtain" contype="0" conaffinity="0"/>
     <geom type="capsule" fromto="-2.465 1.02 .03 -2.465 1.02 2.28" size="0.034" material="curtain" contype="0" conaffinity="0"/>
     <geom type="capsule" fromto="-2.465 1.07 .03 -2.465 1.07 2.28" size="0.028" material="curtain" contype="0" conaffinity="0"/>
-    <geom name="sofa_base" type="box" pos="0.15 1.8199999999999998 .24" size="1.05 .44 .16" material="sofa_d" contype="17" conaffinity="0" priority="2"/>
-    <geom name="sofa_back" type="box" pos="0.15 2.1599999999999997 .58" size="1.05 .12 .30" material="sofa" contype="17" conaffinity="0" priority="2"/>
-    <geom name="sofa_arm_l" type="box" pos="-0.8099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="17" conaffinity="0" priority="2"/>
-    <geom name="sofa_arm_r" type="box" pos="1.1099999999999999 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="17" conaffinity="0" priority="2"/>
-    <geom type="mesh" mesh="cushion" pos="-0.42 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
-    <geom type="mesh" mesh="back_cushion" pos="-0.42 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
-    <geom type="mesh" mesh="cushion" pos="0.15 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
-    <geom type="mesh" mesh="back_cushion" pos="0.15 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
-    <geom type="mesh" mesh="cushion" pos="0.72 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
-    <geom type="mesh" mesh="back_cushion" pos="0.72 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
-    <geom type="mesh" mesh="pillow" pos="-0.55 1.9 .66" euler="-0.261799 0 0.20944" material="pillow_a" contype="0" conaffinity="0"/>
-    <geom type="mesh" mesh="pillow" pos="0.87 1.9 .66" euler="-0.261799 0 -0.174533" material="pillow_b" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="-0.83 1.46 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="-0.83 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="1.13 1.46 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="1.13 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
-    <geom name="table_top" type="mesh" mesh="table_top" pos="0.15 0.95 .40" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom type="box" pos="0.15 0.95 .18" size=".48 .22 .012" material="wood" contype="0" conaffinity="0"/>
-    <geom name="table_leg_lf" type="cylinder" pos="-0.31 0.75 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom name="table_leg_lb" type="cylinder" pos="-0.31 1.15 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom name="table_leg_rf" type="cylinder" pos="0.61 0.75 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom name="table_leg_rb" type="cylinder" pos="0.61 1.15 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom type="cylinder" pos="0.4 1 .43" size=".055 .012" material="pot" contype="0" conaffinity="0"/>
-    <geom type="box" pos="-0.07 0.93 .423" euler="0 0 0.20944" size=".11 .08 .012" material="book2" contype="0" conaffinity="0"/>
-    <geom type="box" pos="-0.07 0.93 .443" euler="0 0 0.0698132" size=".1 .075 .009" material="book1" contype="0" conaffinity="0"/>
+    <geom name="sofa_base" type="box" pos="-1.0 1.8199999999999998 .24" size="1.05 .44 .16" material="sofa_d" contype="17" conaffinity="0" priority="2"/>
+    <geom name="sofa_back" type="box" pos="-1.0 2.1599999999999997 .58" size="1.05 .12 .30" material="sofa" contype="17" conaffinity="0" priority="2"/>
+    <geom name="sofa_arm_l" type="box" pos="-1.96 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="17" conaffinity="0" priority="2"/>
+    <geom name="sofa_arm_r" type="box" pos="-0.040000000000000036 1.8199999999999998 .47" size=".11 .44 .14" material="sofa" contype="17" conaffinity="0" priority="2"/>
+    <geom type="mesh" mesh="cushion" pos="-1.57 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
+    <geom type="mesh" mesh="back_cushion" pos="-1.57 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
+    <geom type="mesh" mesh="cushion" pos="-1 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
+    <geom type="mesh" mesh="back_cushion" pos="-1 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
+    <geom type="mesh" mesh="cushion" pos="-0.43 1.77 .455" material="sofa" contype="0" conaffinity="0"/>
+    <geom type="mesh" mesh="back_cushion" pos="-0.43 2.02 .70" euler="-0.20944 0 0" material="sofa" contype="0" conaffinity="0"/>
+    <geom type="mesh" mesh="pillow" pos="-1.7 1.9 .66" euler="-0.261799 0 0.20944" material="pillow_a" contype="0" conaffinity="0"/>
+    <geom type="mesh" mesh="pillow" pos="-0.28 1.9 .66" euler="-0.261799 0 -0.174533" material="pillow_b" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="-1.98 1.46 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="-1.98 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="-0.02 1.46 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="-0.02 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
+    <geom name="table_top" type="mesh" mesh="table_top" pos="0.9 0.62 .40" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom type="box" pos="0.9 0.62 .18" size=".48 .22 .012" material="wood" contype="0" conaffinity="0"/>
+    <geom name="table_leg_lf" type="cylinder" pos="0.44 0.42 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_lb" type="cylinder" pos="0.44 0.82 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rf" type="cylinder" pos="1.36 0.42 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rb" type="cylinder" pos="1.36 0.82 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom type="cylinder" pos="1.15 0.67 .43" size=".055 .012" material="pot" contype="0" conaffinity="0"/>
+    <geom type="box" pos="0.68 0.6 .423" euler="0 0 0.20944" size=".11 .08 .012" material="book2" contype="0" conaffinity="0"/>
+    <geom type="box" pos="0.68 0.6 .443" euler="0 0 0.0698132" size=".1 .075 .009" material="book1" contype="0" conaffinity="0"/>
     <geom name="shelf" type="box" pos="2.39 0.55 0.42" size="0.195 0.78 0.42" material="shelf" contype="17" conaffinity="0" priority="2" rgba="0 0 0 0"/>
     <geom type="box" pos="2.39 -0.23 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.39 0.16 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
@@ -412,34 +412,34 @@
     <geom type="ellipsoid" pos="2.431 1.01 1.082" zaxis="0.724 -0.479 0.495" size=".045 .016 0.0842" material="leaf" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.39 0.1 0.97" euler="0 -0.139626 0" size=".012 .11 .14" material="wood_d" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.376 0.1 0.97" euler="0 -0.139626 0" size=".004 .09 .12" material="art_d" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="-1.25 1.9499999999999997 .012" size=".14 .012" material="lamp_metal" contype="0" conaffinity="0"/>
-    <geom type="capsule" fromto="-1.25 1.9499999999999997 .02 -1.25 1.9499999999999997 1.45" size=".012" material="lamp_metal" contype="0" conaffinity="0"/>
-    <geom name="lamp_shade" type="cylinder" pos="-1.25 1.9499999999999997 1.52" size=".19 .13" material="lamp_shade" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="-2.22 -1.8499999999999999 .19" size=".19 .19" material="pot" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.104 -1.832 0.5432" zaxis="0.576 0.0919 0.813" size=".08 .02 0.201" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.006 -1.743 0.6116" zaxis="0.643 0.32 0.696" size=".08 .02 0.333" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.088 -1.745 0.505" zaxis="0.629 0.501 0.595" size=".08 .02 0.21" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.138 -1.683 0.6569" zaxis="0.245 0.501 0.83" size=".08 .02 0.334" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.229 -1.737 0.5169" zaxis="-0.0504 0.637 0.769" size=".08 .02 0.178" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.231 -1.806 0.6314" zaxis="-0.0448 0.171 0.984" size=".08 .02 0.255" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.329 -1.756 0.4901" zaxis="-0.602 0.517 0.608" size=".08 .02 0.181" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.326 -1.822 0.5812" zaxis="-0.462 0.12 0.878" size=".08 .02 0.229" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.379 -1.838 0.5092" zaxis="-0.775 0.0567 0.63" size=".08 .02 0.205" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.294 -1.865 0.6251" zaxis="-0.29 -0.0596 0.955" size=".08 .02 0.257" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.282 -1.896 0.5744" zaxis="-0.298 -0.22 0.929" size=".08 .02 0.209" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.304 -1.982 0.6727" zaxis="-0.253 -0.397 0.882" size=".08 .02 0.332" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.233 -1.916 0.5772" zaxis="-0.0605 -0.316 0.947" size=".08 .02 0.208" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.178 -2.029 0.5124" zaxis="0.185 -0.79 0.585" size=".08 .02 0.226" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.085 -1.962 0.6525" zaxis="0.416 -0.347 0.841" size=".08 .02 0.324" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="ellipsoid" pos="-2.094 -1.92 0.5466" zaxis="0.572 -0.317 0.757" size=".08 .02 0.22" material="leaf" contype="0" conaffinity="0"/>
-    <geom type="box" pos="-0.45 2.288 1.45" size="0.34 .012 0.26" material="wood_d" contype="0" conaffinity="0"/>
-    <geom type="box" pos="-0.45 2.28 1.45" size="0.315 .012 0.235" material="art_c" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="-0.552 2.266 1.489" zaxis="0 1 0" size="0.117 .003" material="art_a" contype="0" conaffinity="0"/>
-    <geom type="box" pos="-0.365 2.264 1.398" size="0.119 .003 0.091" material="art_b" contype="0" conaffinity="0"/>
-    <geom type="box" pos="0.62 2.288 1.45" size="0.26 .012 0.34" material="wood_d" contype="0" conaffinity="0"/>
-    <geom type="box" pos="0.62 2.28 1.45" size="0.235 .012 0.315" material="art_c" contype="0" conaffinity="0"/>
-    <geom type="cylinder" pos="0.542 2.266 1.501" zaxis="0 1 0" size="0.153 .003" material="art_d" contype="0" conaffinity="0"/>
-    <geom type="box" pos="0.685 2.264 1.382" size="0.091 .003 0.119" material="art_a" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="1.6 1.9499999999999997 .012" size=".14 .012" material="lamp_metal" contype="0" conaffinity="0"/>
+    <geom type="capsule" fromto="1.6 1.9499999999999997 .02 1.6 1.9499999999999997 1.45" size=".012" material="lamp_metal" contype="0" conaffinity="0"/>
+    <geom name="lamp_shade" type="cylinder" pos="1.6 1.9499999999999997 1.52" size=".19 .13" material="lamp_shade" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="2.22 1.8499999999999999 .19" size=".19 .19" material="pot" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.336 1.868 0.5432" zaxis="0.576 0.0919 0.813" size=".08 .02 0.201" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.434 1.957 0.6116" zaxis="0.643 0.32 0.696" size=".08 .02 0.333" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.352 1.955 0.505" zaxis="0.629 0.501 0.595" size=".08 .02 0.21" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.302 2.017 0.6569" zaxis="0.245 0.501 0.83" size=".08 .02 0.334" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.211 1.963 0.5169" zaxis="-0.0504 0.637 0.769" size=".08 .02 0.178" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.209 1.894 0.6314" zaxis="-0.0448 0.171 0.984" size=".08 .02 0.255" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.111 1.944 0.4901" zaxis="-0.602 0.517 0.608" size=".08 .02 0.181" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.114 1.878 0.5812" zaxis="-0.462 0.12 0.878" size=".08 .02 0.229" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.061 1.862 0.5092" zaxis="-0.775 0.0567 0.63" size=".08 .02 0.205" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.146 1.835 0.6251" zaxis="-0.29 -0.0596 0.955" size=".08 .02 0.257" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.158 1.804 0.5744" zaxis="-0.298 -0.22 0.929" size=".08 .02 0.209" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.136 1.718 0.6727" zaxis="-0.253 -0.397 0.882" size=".08 .02 0.332" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.207 1.784 0.5772" zaxis="-0.0605 -0.316 0.947" size=".08 .02 0.208" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.262 1.671 0.5124" zaxis="0.185 -0.79 0.585" size=".08 .02 0.226" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.355 1.738 0.6525" zaxis="0.416 -0.347 0.841" size=".08 .02 0.324" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="ellipsoid" pos="2.346 1.78 0.5466" zaxis="0.572 -0.317 0.757" size=".08 .02 0.22" material="leaf" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-1.6 2.288 1.45" size="0.34 .012 0.26" material="wood_d" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-1.6 2.28 1.45" size="0.315 .012 0.235" material="art_c" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="-1.702 2.266 1.489" zaxis="0 1 0" size="0.117 .003" material="art_a" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-1.515 2.264 1.398" size="0.119 .003 0.091" material="art_b" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-0.53 2.288 1.45" size="0.26 .012 0.34" material="wood_d" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-0.53 2.28 1.45" size="0.235 .012 0.315" material="art_c" contype="0" conaffinity="0"/>
+    <geom type="cylinder" pos="-0.608 2.266 1.501" zaxis="0 1 0" size="0.153 .003" material="art_d" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-0.465 2.264 1.382" size="0.091 .003 0.119" material="art_a" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="0 .3 2.58" size=".22 .02" material="lamp_shade" contype="0" conaffinity="0"/>
     <geom name="mat" type="box" pos="0.0 -0.6 -0.038" size="1.4 1.0 0.05" material="mat_edge" friction="1 .01 .001" solref=".03 1" solimp=".85 .95 .004" contype="2" conaffinity="1" priority="2"/>
     <geom type="box" pos="-1.2 -1.4 0.0064" size="0.198 0.198 0.006" material="tile_a" contype="0" conaffinity="0"/>

@@ -571,8 +571,19 @@ def toys():
 
 
 # ================================================================== THE ROOM
-def room():
+# A133 (the changed room, an environment generalization ruler): the furniture's places by layout. "a" is the room of birth; "b" the same
+# room with its furniture moved as a family moves it (the sofa slid along the back wall to the left, the low table to the right and
+# forward, the lamp and the big plant across the room), the mat, the toys, the shelves, the window and the door as they were: what the
+# child knows of things must survive where the furniture stands.
+LAYOUTS = {
+    "a": dict(sofa=(.15, ROOM_Y - .48), table=(.15, .95), lamp=(-1.25, ROOM_Y - .35), plant=(-ROOM_X + .38, -ROOM_Y + .45)),
+    "b": dict(sofa=(-1.0, ROOM_Y - .48), table=(.9, .62), lamp=(1.6, ROOM_Y - .35), plant=(ROOM_X - .38, ROOM_Y - .45)),   # the table just
+}                                                                                                                     # north of the mat, clear of the drum's birth spot (1.62, .32)
+
+
+def room(layout="a"):
     W, D, Hh = ROOM_X, ROOM_Y, ROOM_H
+    lay = LAYOUTS[layout]
     g = []
     g.append(f'<geom name="floor" type="plane" size="{W} {D} .1" material="floor" {FLOOR}/>')
     g.append(f'<geom name="ceiling" type="box" pos="0 0 {Hh + .03}" size="{W} {D} .03" material="ceiling" {DECOR}/>')
@@ -611,7 +622,7 @@ def room():
             yy = yc + (i - 3) * .05
             g.append(f'<geom type="capsule" fromto="{wx + .13:.4g} {yy:.4g} .03 {wx + .13:.4g} {yy:.4g} {wz + wh + .13:.4g}" size="{.028 + .006 * (i % 2):.3g}" material="curtain" {DECOR}/>')
     # the sofa against the back wall
-    sx, sy = .15, D - .48
+    sx, sy = lay["sofa"]
     g += [f'<geom name="sofa_base" type="box" pos="{sx} {sy} .24" size="1.05 .44 .16" material="sofa_d" {WORLD}/>',
           f'<geom name="sofa_back" type="box" pos="{sx} {sy + .34} .58" size="1.05 .12 .30" material="sofa" {WORLD}/>',
           f'<geom name="sofa_arm_l" type="box" pos="{sx - .96} {sy} .47" size=".11 .44 .14" material="sofa" {WORLD}/>',
@@ -626,7 +637,7 @@ def room():
         for yy in (-.36, .36):
             g.append(f'<geom type="cylinder" pos="{sx + xx:.4g} {sy + yy:.4g} .04" size=".025 .04" material="wood_d" {DECOR}/>')
     # the low table (rounded, baby-safe)
-    tx, ty = .15, .95
+    tx, ty = lay["table"]
     g.append(f'<geom name="table_top" type="mesh" mesh="table_top" pos="{tx} {ty} .40" material="wood" {WORLD}/>')
     g.append(f'<geom type="box" pos="{tx} {ty} .18" size=".48 .22 .012" material="wood" {DECOR}/>')
     for xx in (-.46, .46):
@@ -682,12 +693,12 @@ def room():
     g.append(f'<geom type="box" pos="{shx:.4g} {shy - .45:.4g} {ztop + .13:.4g}" euler="0 -8 0" size=".012 .11 .14" material="wood_d" {DECOR}/>')
     g.append(f'<geom type="box" pos="{shx - .014:.4g} {shy - .45:.4g} {ztop + .13:.4g}" euler="0 -8 0" size=".004 .09 .12" material="art_d" {DECOR}/>')
     # the floor lamp at the sofa's left end
-    lx, ly = -1.25, D - .35
+    lx, ly = lay["lamp"]
     g += [f'<geom type="cylinder" pos="{lx} {ly} .012" size=".14 .012" material="lamp_metal" {DECOR}/>',
           f'<geom type="capsule" fromto="{lx} {ly} .02 {lx} {ly} 1.45" size=".012" material="lamp_metal" {DECOR}/>',
-          f'<geom type="cylinder" pos="{lx} {ly} 1.52" size=".19 .13" material="lamp_shade" {DECOR}/>']
+          f'<geom name="lamp_shade" type="cylinder" pos="{lx} {ly} 1.52" size=".19 .13" material="lamp_shade" {DECOR}/>']   # named: her motion reads the lamp's place (A133)
     # a big plant in the front-left corner
-    px, py = -W + .38, -D + .45
+    px, py = lay["plant"]
     g.append(f'<geom type="cylinder" pos="{px} {py} .19" size=".19 .19" material="pot" {DECOR}/>')
     for a in range(16):
         ang = a * 2 * math.pi / 16 + rng.uniform(-.2, .2)
@@ -696,7 +707,7 @@ def room():
         dx, dy, dz = math.cos(ang) * math.cos(math.radians(el)), math.sin(ang) * math.cos(math.radians(el)), math.sin(math.radians(el))
         g.append(f'<geom type="ellipsoid" pos="{px + dx * L * .5:.4g} {py + dy * L * .5:.4g} {.38 + dz * L * .5:.4g}" zaxis="{dx:.3g} {dy:.3g} {dz:.3g}" size=".08 .02 {L / 2:.3g}" material="leaf" {DECOR}/>')
     # wall art above the sofa: two frames of soft shapes
-    for k, (ax, aw, ah, c1, c2) in enumerate(((-.45, .34, .26, "art_a", "art_b"), (.62, .26, .34, "art_d", "art_a"))):
+    for k, (ax, aw, ah, c1, c2) in enumerate(((round(sx - .60, 4), .34, .26, "art_a", "art_b"), (round(sx + .47, 4), .26, .34, "art_d", "art_a"))):
         ay = D - .012
         g.append(f'<geom type="box" pos="{ax} {ay} 1.45" size="{aw} .012 {ah}" material="wood_d" {DECOR}/>')
         g.append(f'<geom type="box" pos="{ax} {ay - .008:.4g} 1.45" size="{aw - .025:.4g} .012 {ah - .025:.4g}" material="art_c" {DECOR}/>')
@@ -786,13 +797,14 @@ def deg_to_rad_eulers(xml):
 def build():
     """write the textures and the scene (to --out=<path> if given, else body/sim/g1room.xml)"""
     out = Path(ARGS["out"]).resolve() if "out" in ARGS else HERE / "g1room.xml"
+    layout = ARGS.get("layout", "a")                                   # A133: --layout=b writes the changed room (g1room_b.xml)
     (HERE / "textures").mkdir(exist_ok=True)
     floor_texture(HERE / "textures" / "room_floor_oak.png")
     sky_texture(HERE / "textures" / "room_window_sky.png")
     if "skip-face" not in ARGS:                                        # her face's meshes, texture and rig (parent_face.build_assets)
         info = kin.face.build_assets(HERE / "textures", hair=hair_shapes(), room_indirect=ROOM_INDIRECT)
         print("her face:", info)
-    out.write_text(scene_xml(out.parent))
+    out.write_text(scene_xml(out.parent, layout))
     return out
 
 
@@ -813,7 +825,7 @@ def face_shaded(mat):
     return out
 
 
-def scene_xml(folder=HERE):
+def scene_xml(folder=HERE, layout="a"):
     """the scene's XML text, its paths relative to `folder` (where it is to be written)"""
     rel = lambda p: os.path.relpath(HERE / p, Path(folder).resolve())     # every path in the XML relative to the XML's own folder
     mats = "\n    ".join(f'<material name="{k}" ' + " ".join(f'{a}="{v}"' for a, v in d.items()) + "/>" for k, d in face_shaded(MAT).items())
@@ -907,7 +919,7 @@ def scene_xml(folder=HERE):
     {lights_xml()}
     {cam_xml}
     <body name="room" childclass="room">
-    {room()}
+    {room(layout)}
     {play_mat()}
     </body>
 {toys()}

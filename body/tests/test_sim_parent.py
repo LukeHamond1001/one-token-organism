@@ -1452,6 +1452,36 @@ def test_the_hide():
           f"empty; the bucket cannot be hidden, and without a bucket the hide is refused ({out3['acts'][0]['why'][:40]})")
 
 
+def test_her_way_in_the_changed_room():
+    """parent 29 (A133): in room b (the furniture moved) her show of the duck to a seated child is done as in the room of birth (the
+    fetch's kneel spots, her walk plan and her looks read the room from the model), and asked to walk to the sofa she sits at her seat
+    on the moved sofa (SOFA_SPOT_OFF from its centre: about (-0.29, 1.64)), where in room a she sits at (0.86, 1.64): what she looks at,
+    walks to and sits on follows the furniture. (The bring-back in room b is C108's: the child topples onto its front during her fetch,
+    the put's place moves before its face, and her re-kneel at its head ends in the jump guard.)"""
+    from body.sim import g1scene as G
+    seats = {}
+    for room, xml in (("b", G.XML_B), ("a", G.XML)):
+        w = W.G1World(seed=1, xml=xml)
+        T.place_g1(w, "sit")
+        for _ in range(20):
+            w.frame(); w.apply({})
+        if room == "b":
+            out = T.run(w, [("show", "duck")], 900)
+            a = out["acts"][0]
+            assert a["status"] == "done", a
+            shown = a["ticks"]
+        out = T.run(w, [("walk", "sofa")], 1500)
+        a = out["acts"][0]
+        assert a["status"] == "done", a
+        pm = w.parent
+        assert pm.base["mode"] == "sofa", pm.base["mode"]
+        seats[room] = (tuple(round(float(v), 2) for v in pm.base["at"][:2]), tuple(round(float(v), 2) for v in pm.sofa_spot))
+        assert np.linalg.norm(np.asarray(pm.base["at"][:2]) - np.asarray(pm.sofa_spot)) < 0.15, seats[room]
+    assert seats["a"][1] == (0.86, 1.64) and abs(seats["b"][1][0] + 0.29) < 0.02, seats
+    print(f"parent 29: in room b the duck shown in {shown} ticks and her seat on the moved sofa at {seats['b'][0]} (its spot {seats['b'][1]});",
+          f"in the room of birth her seat at {seats['a'][0]} (its spot {seats['a'][1]})")
+
+
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
@@ -1462,7 +1492,7 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
                 test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
-                test_the_hide]
+                test_the_hide, test_her_way_in_the_changed_room]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

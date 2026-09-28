@@ -31,6 +31,7 @@ import torch  # noqa: E402
 from body.life import Life  # noqa: E402
 from body.core.world import WorldLoop  # noqa: E402
 from body.sim.anatomy import SIM_CFG, SimAnatomy, born_table  # noqa: E402
+from body.sim import g1scene as G  # noqa: E402
 from body.sim import world as W  # noqa: E402
 from body.sim import eyes as E  # noqa: E402
 from body.sim import lane as LN  # noqa: E402
@@ -60,7 +61,7 @@ def build(args):
     if args.extra:                                                          # A115: things added to the room (body/sim/extras.py); a pair
         from body.sim import extras as X                                    # saved before them is carried across by tools/sim_migrate_world.py
         extra = X.EXTRAS[args.extra]()
-    world = W.G1World(seed=args.seed, extra=extra)
+    world = W.G1World(seed=args.seed, extra=extra, xml=G.ROOMS[args.room])   # A133: the room's layout (a: birth; b: the furniture moved)
     eyes = E.Eyes(world) if not args.no_eyes else None
     if args.voice == "real":
         from body.sim.voice import synth as V
@@ -133,6 +134,7 @@ def main():
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
     ap.add_argument("--extra", default=None, help="a thing added to the room (body/sim/extras.py: book); the pair must have been migrated to it")
+    ap.add_argument("--room", default="a", choices=("a", "b"), help="the room's layout (A133): a, the room of birth; b, its furniture moved")
     ap.add_argument("--film", default=None, metavar="DIR", help="A123: the room's view saved as JPEG frames in DIR, one every --film-every ticks (the page's render; the captions come from ticks.jsonl by tick)")
     ap.add_argument("--film-every", type=int, default=3, help="ticks between frames (a multiple of the page's 3)")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",

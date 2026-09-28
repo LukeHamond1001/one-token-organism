@@ -1307,6 +1307,58 @@ def test_the_tub():
           f"carried to the room with the bucket keeps its {q0.size} joint values, the bucket at its place")
 
 
+def test_the_changed_room():
+    """world 31 (A133): the changed room. Room b (make_g1room LAYOUTS "b", g1room_b.xml) has the same joints, actuators and bodies as the
+    room of birth, its sofa slid to x -1.0 on the back wall, its low table at (.9, .62), the mat and every toy where they were; her
+    motion reads the furniture from the model (fixtures_of: the sofa, the table, the shelf; her seat on the sofa from the sofa's
+    centre), so in room a it reproduces the constants of birth exactly and in room b it follows the move; a room-a world of 30 ticks
+    loads into room b (every joint value kept, the world living on); the lane names the fixtures in both; the morning tidy in room b
+    puts a toy from under the moved table back where it stood at birth"""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "tools"))
+    from body.sim import g1scene as G
+    from body.sim import lane as L
+    from body.sim import parent_motion as PM
+    from sim_life import FakeVoice
+    wa, wb = G1World(seed=1), G1World(seed=1, xml=G.XML_B)
+    assert (wb.m.nq, wb.m.nu, wb.m.nbody, wb.m.ngeom) == (wa.m.nq, wa.m.nu, wa.m.nbody, wa.m.ngeom)
+    fa, fb = wa.parent.fixtures, wb.parent.fixtures
+    for k in ("sofa", "table", "shelf", "lamp"):                        # the room of birth: the constants of birth, from the model
+        assert np.allclose(fa[k], PM.FIXTURES[k], atol=1e-5), (k, fa[k], PM.FIXTURES[k])
+    assert tuple(round(v, 2) for v in wa.parent.sofa_spot) == (0.86, 1.64), wa.parent.sofa_spot
+    assert np.allclose(fb["sofa"][:2], (-1.0, 1.82), atol=1e-5) and np.allclose(fb["table"][:2], (0.9, 0.62), atol=1e-5), fb
+    assert np.allclose(fb["lamp"][:2], (1.6, 1.95), atol=1e-5) and fb["shelf"] == fa["shelf"] and fb["mat"] == fa["mat"] and fb["door"] == fa["door"], (fa, fb)
+    for k in wa.parent.toys:                                             # every toy born where it was (the model's places; a toy that
+        assert np.allclose(wa.m.body_pos[wa.parent.toys[k]], wb.m.body_pos[wb.parent.toys[k]], atol=1e-6), k   # settles against a leg may lie apart)
+    for _ in range(30):
+        wa.apply({})
+    blob = wa.save_state(); q0, t0 = wa.d.qpos.copy(), wa.tick
+    wb.load_state(blob)
+    assert wb.tick == t0 and np.allclose(wb.d.qpos, q0)
+    for _ in range(20):
+        wb.frame(); wb.apply({})
+    la = L.ParentLane(G1World(seed=1), seed=1, voice=FakeVoice(), day_ticks=24000)
+    lb = L.ParentLane(G1World(seed=1, xml=G.XML_B), seed=1, voice=FakeVoice(), day_ticks=24000)
+    assert set(la.fixtures) == set(lb.fixtures) and "sofa" in lb.fixtures and "table" in lb.fixtures, (la.fixtures, lb.fixtures)
+    # the tidy in room b: the cup put under the moved table (its legs at (.9 +- .46, .62 +- .2)) is out of her reach there and comes back
+    w = G1World(seed=1, xml=G.XML_B)
+    for _ in range(10):
+        w.apply({})
+    m, d = w.m, w.d
+    j = m.body("toy_cup").jntadr[0]; a = m.jnt_qposadr[j]
+    home = d.xpos[m.body("toy_cup").id][:2].copy()
+    d.qpos[a:a + 3] = [0.9, 0.62, 0.05]; d.qvel[m.jnt_dofadr[j]:m.jnt_dofadr[j] + 6] = 0.0
+    mujoco.mj_forward(m, d)
+    for _ in range(40):
+        w.apply({})
+    under = d.xpos[m.body("toy_cup").id][:2].copy()
+    moved = w.tidy_toys()
+    back = d.xpos[m.body("toy_cup").id][:2]
+    assert "cup" in moved and np.linalg.norm(back - home) < 0.35, (moved, back, home, under)
+    print(f"world 31: room b: the sofa at x {fb['sofa'][0]:.2f} (birth {fa['sofa'][0]:.2f}), the table at ({fb['table'][0]:.2f}, {fb['table'][1]:.2f}),",
+          f"her seat at {tuple(round(v, 2) for v in wb.parent.sofa_spot)}; {len(wa.parent.toys)} toys where they were; a room-a world of {t0} ticks",
+          f"loads and lives on; the lane's fixtures {sorted(lb.fixtures)}; the cup under the moved table tidied {np.linalg.norm(under - back):.2f} m back")
+
+
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)

@@ -34,6 +34,8 @@ sys.path.insert(0, str(HERE))
 import parent_kin as kin  # noqa: E402
 
 XML = HERE / "g1room.xml"
+XML_B = HERE / "g1room_b.xml"                 # A133: the changed room (make_g1room.py --layout=b): the furniture moved, the mat and toys kept
+ROOMS = {"a": XML, "b": XML_B}                # the runner's --room names
 G1_FILE = HERE / "assets" / "unitree_g1" / "g1_with_hands.xml"
 
 # ---------------------------------------------------------------- the G1's parts

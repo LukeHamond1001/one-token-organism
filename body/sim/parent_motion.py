@@ -219,8 +219,21 @@ DONE_STATES = ("done", "refused", "cancelled")
 FIXTURES = {"door": (2.6, -1.5, 1.0), "hall": (3.3, -1.5, 1.0), "window": (-2.6, -0.1, 1.45), "sofa": (0.15, 1.82, 0.45),
             "table": (0.15, 0.95, 0.40), "shelf": (2.39, 0.55, 0.45), "mat": (0.0, -0.6, 0.012), "light": (0.0, 0.3, 2.58),
             "floor": (1.2, -1.9, 0.0), "lamp": (-1.25, 1.95, 1.5)}
+
+
+def fixtures_of(m):
+    """A133 (the changed room): the fixtures' places from the model: the sofa, the table, the shelf and the lamp where their geoms stand
+    (sofa_base, table_top, shelf, lamp_shade; their heights FIXTURES'), the rest FIXTURES' (the door, the hall, the window and the light
+    are the walls', the mat does not move). What she looks at, points at, walks to and sits on follows the furniture"""
+    out = dict(FIXTURES)
+    for name, geom in (("sofa", "sofa_base"), ("table", "table_top"), ("shelf", "shelf"), ("lamp", "lamp_shade")):
+        gid = mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_GEOM, geom)
+        if gid >= 0:
+            out[name] = (float(m.geom_pos[gid][0]), float(m.geom_pos[gid][1]), float(FIXTURES[name][2]))
+    return out
 HALL_SPOT = (3.35, -1.5)                    # where she stands in the hall when away (the doorway's line, 0.75 m past it)
-SOFA_SPOT = (0.86, 1.64)                    # her seat on the sofa: its right end, where she can stand before it (the low table stands
+SOFA_SPOT_OFF = (0.71, -0.18)               # her seat on the sofa from the sofa's centre (A133: the sofa where the room has it; in the room
+                                            # of birth (0.86, 1.64)): its right end, where she can stand before it (the low table stands
                                             # 0.13 m from the sofa's front along x -0.43..0.73: no one can stand before the middle)
 SOFA_SEAT_Z = 0.52                          # the seat cushion's top (make_g1room: the cushions' tops at about 0.52 m)
 MAT_BOX = (-1.40, 1.40, -1.60, 0.40, 0.012) # the play mat: x and y extents and its top (make_g1room.MAT_CENTER, MAT_HX, MAT_HY, MAT_T)
@@ -834,6 +847,8 @@ class ParentMotion:
             if m.geom_bodyid[g] in sc.g1_set and (m.geom_contype[g] or m.geom_conaffinity[g]):
                 self.g1_geom[g] = True
         self.toys = {m.body(b).name[4:]: b for b in range(m.nbody) if m.body(b).name.startswith("toy_")}
+        self.fixtures = fixtures_of(m)                                      # A133: the furniture where THIS room's model has it
+        self.sofa_spot = tuple(float(v) for v in np.asarray(self.fixtures["sofa"][:2]) + np.asarray(SOFA_SPOT_OFF))
         self.toy_of_geom = np.full(m.ngeom, -1, dtype=np.int64)
         self.toy_names = sorted(self.toys)
         for g in range(m.ngeom):
@@ -1257,7 +1272,7 @@ class ParentMotion:
         if isinstance(t, (list, tuple, np.ndarray)):
             return "?"
         t = str(t)
-        if t in ("child", "child_eyes", "child_periphery", "child_line", "mama") or t in self.toys or t in FIXTURES:
+        if t in ("child", "child_eyes", "child_periphery", "child_line", "mama") or t in self.toys or t in self.fixtures:
             return t
         return PART_WORD.get(t, "?")
 
@@ -2152,8 +2167,8 @@ class ParentMotion:
             return ch.torso.copy()
         if t in self.toys:
             return self.d.xpos[self.toys[t]].copy()
-        if t in FIXTURES:
-            return np.array(FIXTURES[t], float)
+        if t in self.fixtures:
+            return np.array(self.fixtures[t], float)
         if t in BODY_PARTS:
             return self.d.xpos[self.m.body(BODY_PARTS[t][0]).id].copy()
         return None
@@ -3590,6 +3605,9 @@ class ParentMotion:
             return self.face_reach(at=H, yaw=yaw, base_mode="heels", on_line=True) is not None
         if need == "lie":                                                   # A124 (C107): lying on her front from the tall kneel there,
             return self._lie_fit(np.asarray(H, float) + fwd * HEELS_BACK, yaw) is not None   # her face lands before a prone child's eyes
+        if need.startswith("reach:"):                                      # A133: her hand reaches a floor point from there (a put's place),
+            xy = np.array([float(v) for v in need.split(":", 1)[1].split(",")])   # from her heels, as a put reaches (an approach ends there)
+            return any(self._reachable_at(sd, np.r_[xy, floor_z(xy) + 0.05], np.asarray(H, float), yaw, "heels") for sd in "LR")
         if need == "pull":                                                  # one trunk reaches both its forearms from her tall kneel
             saved = self.base
             self.base = dict(mode="tall", at=_lst(np.asarray(H, float) + fwd * HEELS_BACK), yaw=float(yaw), lean=0.0, spine=0.0,
@@ -4009,11 +4027,13 @@ class ParentMotion:
                     best = min(best, float(mujoco.mj_geomDistance(m, sd, g, h, best, ft)))
         return best
 
-    def _put_phases(self, sd, xy):
-        """a toy in her hand set down on the floor at xy (a centimetre up, then let go) and her hand drawn up and back"""
+    def _put_phases(self, sd, xy, check=False):
+        """a toy in her hand set down on the floor at xy (a centimetre up, then let go) and her hand drawn up and back; with `check` the
+        release checks the toy landed where she meant it (A125's landing check, a lesson's place: PUT_TOL_M); a toy set aside or cleared
+        from her way lands where it lands (A133)"""
         sh_hold = dict(curl=.95, thumb=.85, index=None)
         return [dict(type="reach", hands={sd: dict(k="floor", xy=_lst(xy))}, via=True, shape={sd: sh_hold}),
-                dict(type="release", side=sd, at=_lst(xy)),
+                dict(type="release", side=sd, **({"at": _lst(xy)} if check else {})),
                 dict(type="reach", hands={sd: dict(k="up_from", side=sd)}, shape={sd: dict(curl=.3, thumb=.3, index=None)}, n=3),
                 dict(type="proxy", side=sd, on=True),
                 dict(type="relax", sides=sd)]
@@ -4114,10 +4134,10 @@ class ParentMotion:
             return self._up_phases() + [dict(type="plan", what="walk_to", args=dict(xy=list(HALL_SPOT), yaw=0.0, child=True))]
         if t == "sofa":
             fwd = -math.pi / 2                                          # she sits facing the room (-y)
-            stand = np.array(SOFA_SPOT) + np.array([0, -0.42])
+            stand = np.array(self.sofa_spot) + np.array([0, -0.42])
             return self._up_phases() + [dict(type="plan", what="walk_to", args=dict(xy=_lst(stand), yaw=fwd, child=True, goal_r=0.45,
                                                                                 goal_clear=0.11)),
-                                        dict(type="sit", at=list(SOFA_SPOT), yaw=fwd, u0=0.0, u1=1.0)]
+                                        dict(type="sit", at=list(self.sofa_spot), yaw=fwd, u0=0.0, u1=1.0)]
         pt = self._resolve_point(t)
         if pt is None:
             raise Refuse(f"no such place: {t}")
@@ -4868,12 +4888,22 @@ class ParentMotion:
             return sds[0], []
         return want, self._swap_phases(sds[0], want, toy)
 
+    def _put_xy(self):
+        """where a lesson's toy goes for a child not on its front (A90, `_plan_put_near`): on the floor beside its near hand, out from its
+        body by her lesson's distance"""
+        ch = self.child
+        her = np.asarray(self.base["at"], float)
+        cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
+        out = unit((ch.grasp[cs] - ch.torso)[:2] * 1.0)
+        return ch.grasp[cs][:2] + out * float(self.lesson_dist)
+
     def _act_bring_back(self, a, t):
         toy = self._toy(t)
         if self.child.posture == "front":                                 # A125 (the crawl rung): the toy goes before a prone child's
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS)         # face, so she kneels at its head, where her hand reaches it
-        else:
-            near = self._near(a)
+        else:                                                             # A133 (room b's lesson): she kneels where her hand reaches the
+            xy = self._put_xy()                                           # put's place; a spot beside the child that cannot reach it
+            near = self._near(a, need=f"reach:{xy[0]:.3f},{xy[1]:.3f}")   # (the room of birth's table kept her nearer) is passed over
         return self._fetch(a, toy) + near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
 
     def _act_hide(self, a, t):
@@ -4961,7 +4991,7 @@ class ParentMotion:
         if not self._in_plan(xy) or self.plan.dist[self.plan.cell(xy)] < 0.10 or ch.clearance_xy(xy) < 0.05:
             raise Refuse(f"no room for the {toy} beside its far shoulder (A109: the mat's edge or the furniture)")
         sd, swap = self._giving(toy, np.r_[xy, 0.0])
-        return swap + self._put_phases(sd, xy)
+        return swap + self._put_phases(sd, xy, check=True)
 
     def _plan_put_near(self, a, toy):
         """the toy set down within the child's reach: on the floor beside its near hand, out from its body by her lesson's distance
@@ -4972,11 +5002,17 @@ class ParentMotion:
             ahead = -unit(np.r_[ch.len_axis[:2], 0.0])[:2]                   # beside it; the toy goes before its face, CRAWL_AHEAD_M past
             xy = np.asarray(ch.eyes[:2], float) + ahead * (CRAWL_AHEAD_M + float(self.lesson_dist))   # its eyes and the lesson's distance
         else:                                                               # (tummy time: a person puts the toy just out of reach ahead)
-            cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
-            out = unit((ch.grasp[cs] - ch.torso)[:2] * 1.0)
-            xy = ch.grasp[cs][:2] + out * float(self.lesson_dist)
+            xy = self._put_xy()
         sd, swap = self._giving(toy, np.r_[xy, 0.0])
-        return swap + self._put_phases(sd, xy)
+        if not a.get("re_near") and not self._reachable(sd, dict(k="floor", xy=_lst(xy))):
+            # A133 (room b's lesson): the put's place is read from the child's near hand where she kneels NOW, not where she planned
+            # from; when her hand does not reach it from here (a sitting child's far side, 45 to 67 cm off before the release check
+            # refused it) she kneels again where it does (the reach need), once
+            a["re_near"] = True                                             # (a child that lay down on its front since the plan: her
+            need = f"reach:{xy[0]:.3f},{xy[1]:.3f}"                         # kneel at its head, the crawl rung's, A125)
+            near = self._near(a, where="head", offs=PUT_HEAD_OFFS, need=need) if ch.posture == "front" else self._near(a, need=need)
+            return near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
+        return swap + self._put_phases(sd, xy, check=True)
 
     def _act_clear(self, a, t):
         toy = self._toy(t)
