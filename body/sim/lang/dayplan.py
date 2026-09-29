@@ -67,6 +67,12 @@ TASKS_ATTENTION = 0.4                  # her attention at her own tasks (parent_
 BIRTH_TOYS = ("ball", "block", "duck", "cup", "car", "bear", "drum")   # her birth words' toys in the room (lexicon; no bottle: A88)
 
 
+def _may_give(seen, o):
+    """a give may be asked of o (her conduct's own check, 4.8): in the child's view and within its reach as she sees it, not in her hands"""
+    s = seen.get(o)
+    return bool(s is not None and s.child_sees and s.child_can_reach and s.on != TP.PARENT_NAME)
+
+
 class DayPlan:
     def __init__(self, seed=1, day_ticks=DAY_TICKS):
         self.rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence(int(seed), spawn_key=(PLAN_STREAM,))))
@@ -263,34 +269,53 @@ class DayPlan:
                 self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the bucket in
                 c.request("hide", o=o)                                  # its view; its hand into the bucket after is "found" (worth 2)
                 self.log.append((t, "lesson", "hide", o, got))
-            elif handled < 3 * K.MASTERED_N:                            # the handle rung: the toy into its hand
+            elif handled < 3 * K.MASTERED_N or o in held:               # the handle rung: the toy into its hand (C125: and the toy in
+                                                                        # her own hand, which she cannot ask the child to give her)
                 self.hide_turn = "bucket" in seen
                 c.request("hand_over", o=o)
                 self.log.append((t, "lesson", "handle", o, handled))
             else:                                                       # the give rung
                 self.hide_turn = "bucket" in seen
-                c.request("ask_give", o=o)
-                self.log.append((t, "lesson", "give", o))
+                if _may_give(seen, o):
+                    c.request("ask_give", o=o)
+                    self.log.append((t, "lesson", "give", o))
+                else:                                                   # C126: a give is asked of a toy in its view and its reach
+                    c.request("hand_over", o=o)                         # (4.8; life day 29: 36 gives asked of a toy it could not see,
+                    self.log.append((t, "lesson", "handle", o, handled))   # each refused, more than the day's 23 lessons): else the
+                                                                        # toy into its hand first, the give asked at a later lesson
         self.next_play = t + int(self.rng.integers(*PLAY_GAP))
 
     def _play(self, t, lane, kind):
         c, p = lane.conduct, lane._p
         seen = {s.id: s for s in p.seen}
         focus = [o for o in self.focus if o in seen and not c.left_where_it_lies(o)]   # A117: not a toy she could not get to
-        roll = float(self.rng.random())
-        if focus and roll < LESSON_SHARE:                               # a lesson among her play (A90)
+        held = [v for v in getattr(c.motion, "holding", {}).values() if v is not None and v not in TP.OPEN_CONTAINERS]
+        known = set(getattr(lane, "toys", ()) or ())                    # C125: floor play asked a lesson only with a focus toy before
+        can = bool(focus or held or [o for o in self.focus if o in known and not c.left_where_it_lies(o)])   # her eyes, so the lesson's
+        roll = float(self.rng.random())                                 # own fallbacks (C121 the toys she knows the place of, C122 the toy
+        if can and roll < LESSON_SHARE:                                 # in her hand) ran in motor time only; a lesson among her play (A90)
             self._lesson(t, lane)
             return
-        roll = (roll - LESSON_SHARE) / (1.0 - LESSON_SHARE) if focus else roll
+        roll = (roll - LESSON_SHARE) / (1.0 - LESSON_SHARE) if can else roll
         if focus and roll < 0.5:
             free = [o for o in focus if o not in seen or seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
             o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)
             c.request("show", o=o)
+        elif kind == "floor" and roll < 0.65 and held:                  # C125: her peekaboo needs both her hands (refused "her hands
+            self._lesson(t, lane)                                       # are busy" 26 times on day 28, twice on day 29): with a toy in
+            return                                                      # her hand the toy's lesson instead (C122)
         elif kind == "floor" and roll < 0.65:
             c.request("peekaboo_hide"); c.routine = "peekaboo"
         elif kind == "floor" and roll < 0.9 and focus:
             o = focus[int(self.rng.integers(len(focus)))]
-            c.request(["ask_where", "ask_give", "ask_what"][int(self.rng.integers(3))], o=o)
+            ask = ["ask_where", "ask_give", "ask_what"][int(self.rng.integers(3))]
+            can = [x for x in focus if (_may_give(seen, x) if ask == "ask_give" else seen[x].child_sees)]
+            if o not in can and can:                                    # C126: an ask is of a toy in the child's view (4.8), a give of
+                o = can[int(self.rng.integers(len(can)))]               # one in its reach too: the toy of her ask chosen among those
+            if can:
+                c.request(ask, o=o)
+            else:                                                       # none: the toy shown (into its view), the ask another time
+                c.request("show", o=o)
         else:
             c.request("call")
         self.next_play = t + int(self.rng.integers(*PLAY_GAP))
@@ -323,7 +348,8 @@ class DayPlan:
                     greeted=self.greeted, called=self.called,
                     focus=list(self.focus), next_play=self.next_play, next_call=self.next_call, last_pain=self.last_pain,
                     bids=list(self.bids), night_said=self.night_said, log=[list(x) for x in self.log[-200:]],
-                    level=dict(self.level), level_t=dict(self.level_t), got_seen=dict(self.got_seen), roll_turn=bool(self.roll_turn))
+                    level=dict(self.level), level_t=dict(self.level_t), got_seen=dict(self.got_seen), roll_turn=bool(self.roll_turn),
+                    hide_turn=bool(self.hide_turn))
 
     def load_state(self, s):
         self.rng.bit_generator.state = s["rng"]
@@ -338,6 +364,7 @@ class DayPlan:
         self.level_t = {k: int(v) for k, v in s.get("level_t", {}).items()}
         self.got_seen = {k: int(v) for k, v in s.get("got_seen", {}).items()}
         self.roll_turn = bool(s.get("roll_turn", True))
+        self.hide_turn = bool(s.get("hide_turn", False))               # (C125: lost at each resume before; older saves: none)
 
 
 class _Plain:

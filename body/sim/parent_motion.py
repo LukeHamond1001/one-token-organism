@@ -4688,6 +4688,8 @@ class ParentMotion:
     def _plan_fetch(self, a, toy):
         if toy in self.holding.values():
             return []
+        if toy in NEVER_FETCHED:                                        # C125: every road to a fetch ends here (her way cleared, the
+            raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")   # nearest toy, a word's show or pick-up)
         if all(v is not None for v in self.holding.values()):          # both hands full (A95): the toy she needs least set aside first
             other = self.holding[self._near_hand(self.d.xpos[self.toys[toy]])]
             other = other if other is not None else next(v for v in self.holding.values() if v is not None)
@@ -5562,7 +5564,8 @@ class ParentMotion:
         """the nearest toy that is not the child's (a toy it touches is its own: A4) and lies on the floor of the room, fetched"""
         her = np.asarray(self.base["at"], float)
         cands = sorted((float(np.linalg.norm(self.d.xpos[b][:2] - her)), k) for k, b in self.toys.items()
-                       if k not in self.holding.values() and self.d.xpos[b][2] < 1.0 and self._in_plan(self.d.xpos[b][:2]))
+                       if k not in self.holding.values() and k not in NEVER_FETCHED      # (C125: never the bucket)
+                       and self.d.xpos[b][2] < 1.0 and self._in_plan(self.d.xpos[b][:2]))
         for _, k in cands:
             if not self._child_has(k):
                 out = [dict(type="plan", what="fetch", args=dict(toy=k))]

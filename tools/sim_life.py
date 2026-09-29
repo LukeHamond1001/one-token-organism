@@ -120,6 +120,18 @@ def _ended(lane, world, open_seen):
     return out
 
 
+def _last_count(path, key):
+    """the record's last row's running count `key` (the runner's own counters, carried over a resume: C125), 0 when none"""
+    try:
+        size = os.path.getsize(path)
+        with open(path, "rb") as f:
+            f.seek(max(0, size - (1 << 20)))
+            rows = [r for r in f.read().split(b"\n") if r.strip()]
+        return int(json.loads(rows[-1]).get(key, 0)) if rows else 0
+    except Exception:
+        return 0
+
+
 def _cut_record_tail(path, tick):
     """the record (ticks.jsonl) cut back to the rows before `tick`: a resume from a mid-day checkpoint lives the ticks after it again, and
     the rows written the first time would be counted twice by every reader. The file is append-only; the last rows are scanned from
@@ -200,6 +212,7 @@ def main():
     total = args.ticks or int(args.days * day_ticks)
     if args.resume:
         _cut_record_tail(os.path.join(args.out, "ticks.jsonl"), int(world.tick))   # the rows lived past the pair's tick are lived again: dropped
+        world.stats_tendon = _last_count(os.path.join(args.out, "ticks.jsonl"), "tendon_n")   # C125: the tendon reflex's count so far, kept over a resume (an instrument's; the reflex is the world's)
     log = open(os.path.join(args.out, "ticks.jsonl"), "a")
     agg = collections.Counter(); walls = collections.defaultdict(list); prev_reading = 0.0
     open_seen = {}                                                        # A102: each act's kind and target by its motion id, for its end

@@ -736,10 +736,80 @@ def test_the_crawl():
     n_after_gap = evs.count("crawled")
     print(f"lane 17: a prone child carried 0.12 m: no crawl; 0.24 m: crawled (worth {CK.MOTOR_WORTH['crawled'][0]}); a third move within the gap not counted; after the gap {n_after_gap} crawls")
 
+def test_floor_play_reaches_the_lesson():
+    """lane 20 (C125): floor play asks a lesson with no focus toy before her eyes when she knows the place of one (C121's fallback,
+    in motor time only before) or holds a toy (C122); with a toy in her hand she asks no peekaboo (it needs both her hands: refused
+    "her hands are busy" 26 times on life day 28) and never asks the child to give her the toy she holds; her plan's hide turn and
+    her conduct's comfort gap, cry window and look at the bucket are saved with them"""
+    from types import SimpleNamespace
+    from body.sim.lang import templates as TP
+    w, lane = _world(plan=True, day_ticks=2400)
+    for _k in range(5):
+        w.frame(); w.apply({})
+    c, plan = lane.conduct, lane.plan
+    known = [o for o in (lane.toys or ()) if o not in TP.OPEN_CONTAINERS]
+    assert len(known) >= 2, known
+    plan.focus = known[:2]
+    asked = []
+    real_request, real_p, real_holding = c.request, lane._p, c.motion.holding
+    try:
+        c.request = lambda k, **kw: asked.append((k, kw))
+        lane._p = SimpleNamespace(seen=[], events=[])                    # her eyes on the child: no toy before them
+        n0 = len(plan.log)
+        for k in range(200):
+            plan._play(1000 + k, lane, "floor")
+        lessons = [x for x in plan.log[n0:] if x[1] == "lesson"]
+        assert 40 <= len(lessons) <= 120, len(lessons)                   # LESSON_SHARE of her offers (0.4 of 200)
+        assert all(x[3] in plan.focus for x in lessons), lessons[:3]
+        peek = sum(1 for k, _kw in asked if k == "peekaboo_hide")
+        assert peek > 0, "her peekaboo with her hands free, as before"
+        held = plan.focus[0]
+        c.motion.holding = {"L": held, "R": None}
+        c.book.setdefault("got", {})[held] = 2 * DP.K.MASTERED_N         # the toy mastered through every rung: the give rung next
+        for key in ("lifted", "shook", "hit"):
+            c.book.setdefault(key, {})[held] = DP.K.MASTERED_N
+        asked.clear(); n0 = len(plan.log)
+        for k in range(200):
+            plan._play(2000 + k, lane, "floor")
+        lessons2 = [x for x in plan.log[n0:] if x[1] == "lesson"]
+        assert not any(k == "peekaboo_hide" for k, _kw in asked), "no peekaboo with a toy in her hand"
+        assert lessons2 and all(x[3] == held for x in lessons2), lessons2[:3]
+        assert not any(x[2] == "give" for x in lessons2), [x for x in lessons2 if x[2] == "give"][:2]
+        assert not any(k == "ask_give" and kw.get("o") == held for k, kw in asked)
+        c.motion.holding = {"L": None, "R": None}                        # C126: the give asked only of a toy in the child's view and
+        plan.focus = [held]                                              # reach (life day 29: 36 gives refused); else the toy into
+        gives = {}                                                       # its hand (the handle act)
+        for sees, reach in ((False, False), (True, False), (True, True)):
+            lane._p = SimpleNamespace(seen=[SimpleNamespace(id=held, name=held, on="floor", child_sees=sees, child_can_reach=reach)],
+                                      events=[])
+            asked.clear(); n0 = len(plan.log)
+            for k in range(60):
+                plan._play(3000 + k, lane, "floor"); plan._lesson(3000 + k, lane)
+            gives[(sees, reach)] = (sum(1 for k, _kw in asked if k == "ask_give"),
+                                    sum(1 for x in plan.log[n0:] if x[1] == "lesson" and x[2] == "handle"))
+        assert gives[(False, False)][0] == 0 and gives[(True, False)][0] == 0, gives
+        assert gives[(False, False)][1] > 0 and gives[(True, True)][0] > 0 and gives[(True, True)][1] == 0, gives
+    finally:
+        c.request, lane._p, c.motion.holding = real_request, real_p, real_holding
+    plan.hide_turn = True
+    c.told_looked, c.cry_ticks, c.comfort_t, c.comfort_held = True, [5, 9], 7, 3
+    pb, cb = pickle.loads(pickle.dumps(plan.state())), pickle.loads(pickle.dumps(c.state()))
+    plan.hide_turn = False
+    c.told_looked, c.cry_ticks, c.comfort_t, c.comfort_held = False, [], None, 0
+    plan.load_state(pb); c.load_state(cb)
+    assert plan.hide_turn is True
+    assert (c.told_looked, c.cry_ticks, c.comfort_t, c.comfort_held) == (True, [5, 9], 7, 3)
+    print(f"lane 20: floor play with no toy before her eyes: {len(lessons)} lessons of 200 offers on the toys she knows the place of",
+          f"({peek} peekaboos, her hands free); the {held} in her hand: {len(lessons2)} lessons on it, no peekaboo, no give asked of it;",
+          f"a give asked {gives[(True, True)][0]} times of a toy in its view and reach, never of one out of them",
+          f"({gives[(False, False)][1]} handle lessons instead);",
+          "her hide turn, comfort gap, cry window and look at the bucket saved and restored")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
               test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus, test_the_crawl,
-              test_the_find, test_the_find_of_a_rattling_toy]
+              test_the_find, test_the_find_of_a_rattling_toy, test_floor_play_reaches_the_lesson]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

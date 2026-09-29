@@ -2346,6 +2346,10 @@ class Conduct:
                     no_target_since=self.no_target_since, attn=[dict(e, acts=[list(a) for a in e["acts"]]) for e in self.attn],
                     acts_open=[list(a) for a in self.acts_open], focus_acts=[list(a) for a in self.focus_acts],
                     told_due=None if self.told_due is None else [int(self.told_due[0]), self.told_due[1]],
+                    told_looked=bool(getattr(self, "told_looked", False)),   # C125: these four were lost at each resume
+                    cry_ticks=[int(x) for x in (getattr(self, "cry_ticks", None) or [])],
+                    comfort_t=None if getattr(self, "comfort_t", None) is None else int(self.comfort_t),
+                    comfort_held=int(getattr(self, "comfort_held", 0)),
                     touched=sorted(int(x) for x in self.touched),
                     left={k: [float(x) for x in v] for k, v in self.left.items()},
                     face_until=self.face_until, probes=[dict(x) for x in self.probes], prompts=[list(x) for x in self.prompts],
@@ -2369,6 +2373,10 @@ class Conduct:
         self.attn = [_old_entry(e) for e in s["attn"]]     # (an older save's log: fail-closed, _old_entry)
         self.acts_open = [list(a)[:6] for a in s["acts_open"]]
         td = s.get("told_due"); self.told_due = None if td is None else (int(td[0]), td[1])   # (C115; older saves: none)
+        self.told_looked = bool(s.get("told_looked", False))           # (C125; older saves: none)
+        self.cry_ticks = [int(x) for x in s.get("cry_ticks", [])]
+        self.comfort_t = None if s.get("comfort_t") is None else int(s["comfort_t"])
+        self.comfort_held = int(s.get("comfort_held", 0))
         self.touched = set(int(x) for x in s.get("touched", []))
         self.left = {k: [float(x) for x in v] for k, v in s.get("left", {}).items()}   # (A117; older saves: none)
         self.ended = {}
