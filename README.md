@@ -35,7 +35,7 @@ file is not read.) The robot sim needs `pip install -r requirements-sim.txt` (Mu
 synthesised by a small Swift server that runs on macOS only (`--voice fake` runs without it); its run command is in the section
 below.
 
-## The robot sim: where the project is (2026-09-28, 15:00)
+## The robot sim: where the project is (2026-09-28, 19:20)
 
 Since 2026-09-24 the same architecture lives in a simulated body: a Unitree G1 humanoid with hands (MuJoCo, 150 ms ticks, its own eyes,
 ears, touch, joint sense and a vocal tract) on a play mat in a room, with a simulated human-proportioned parent who kneels beside it,
@@ -78,11 +78,20 @@ Where it stands, day 23 of that life:
   the day is read whole: by midday the child had hurt itself as often as in all of day 22 (544 pain ticks against 546) and done about
   three times day 22's acts on things (got 11, hit 12, shook 5, lifted 4 by tick 12,000 against 4, 3, 1, 7 in the whole of day 22),
   with her smile seen 9 times against 10.
-- Built and tested for the dawns to come, one restart each: the bucket, a third novel object and the first hollow one, and the hide
-  game, a toy let go into it before the child's eyes with the child's hand into it after as the find (A126, A129: Piaget's stage-4
-  test proper); the limbs dreaming, each effector's imagined act along REM's free run (A132); the changed room, the same furniture
-  moved (A133, `--room b`) and the changed body, forearms and shanks longer and heavier (A134, `--body b`), the environment and body
-  generalization rulers. A real face reader was not built (the owner's word).
+- Dawn 25 (16:08) brought the bucket, a third novel object and the first hollow one, and the hide game, a toy let go into it
+  before the child's eyes with the child's hand into it after as the find (A126, A129: Piaget's stage-4 test proper), and the limbs
+  dreaming, each effector's imagined act along REM's free run (A132). Day 24: the bucket hit at tick 2 and grasped at tick 3, 29
+  acts on it; the first crawl counted; pain 993 ticks, 483 of them one afternoon on its right elbow with her turn refused three times
+  (C109); the novelty drive was found paying on a tenth of all ticks, about 1,200 reward a day against her face's ten.
+- Dawn 26 (18:31): the novelty drive paid by a frame's mismatch instead of its gain (A127b: it habituates now, 0.06 a payment against
+  0.50); her bring-back kneels where her hand reaches the put's place and the landing check belongs to lessons alone (A133's fixes);
+  the elbow flip that ended a bring-back in the changed room found and fixed (C108); the changed room and the changed body as
+  instruments (A133 `--room b`, A134 `--body b`). Day 25 opened at less than half the pain of the two days before at the same tick.
+- Built, verified and waiting for their dawns: the turn from where its grips are in reach, with a route from the child's head (A136;
+  dawn 29), the inner word, the voice's sure unsounded choice held as a said one is (A137; dawn 29), and waking imagination, the
+  stream run ahead at every surprising moment, its imagined future in the recall key and its imagined outcome in the gates (A138;
+  after body B's reading). Room B runs from dawn 27 for two days, body B from dawn 30. A real face reader was not built (the owner's
+  word).
 - Open: the turn of a moving prone child (C98); the wake's ankle, pinned by the child's own first acts each dawn (C104); a side-lying
   G1 looks at the floor (C94); the actor's pinning of joints at their stops (C100); reaching under a table from a kneel. Her bring-back
   in the changed room to a child that topples mid-fetch (C108) was an elbow flip in her arm's solve, fixed the same afternoon. The C rows of `docs/SIM_DESIGN.md` hold every open question with its
@@ -106,7 +115,7 @@ How it runs:
 - The branches: `main` holds everything; `sim` is the tree the life runs, checked out at `../project-worktrees/wt_int` and moved
   only at a dawn; `a122` holds the parked turn attempts (C98), `a114` an older one, `a116` the waist range measured and not adopted; `sim-face` older face work not yet merged. The earlier `sim-*` and `a1xx` branches are merged.
 
-Where to read: `docs/SIM_DESIGN.md` is the design and the ledger in one: the sections, the amendments A1 to A134 (each with what was
+Where to read: `docs/SIM_DESIGN.md` is the design and the ledger in one: the sections, the amendments A1 to A138 (each with what was
 found, what was built, what was measured and its boundary), the C rows (open questions and their evidence), the B questions (the
 owner's calls on the room's shape) and the plan. `docs/audit/` holds the studies behind the larger decisions. The parent's code is
 `body/sim/parent_*.py` and `body/sim/lang/` (her conduct, day plan, templates and percept), the world `body/sim/world.py` and
