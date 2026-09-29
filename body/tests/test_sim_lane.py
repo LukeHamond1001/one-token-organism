@@ -656,6 +656,51 @@ def test_the_find():
           f"{[j for j in judged if j[1] == 'found'][0][0]}, hidden no more; a duck in the bucket by no hand of hers is not hidden and its grasp is no find")
 
 
+def test_the_find_of_a_rattling_toy():
+    """lane 19 (C116): a toy in the bucket rattles against the hand that reaches in: on life day 29's first hide its hand was on the hidden
+    car at ticks +152, +154 and +156, shaking it, never three ticks running, and no find was judged. The find is its hand on the hidden
+    toy on FOUND_TOUCHES of the last FOUND_WINDOW ticks: a duck hidden by her hand, its hand's touch on alternate ticks: "found", worth
+    2, the duck hidden no more; one touch alone: no find"""
+    import mujoco
+    from body.sim import extras as X
+    w = W.G1World(seed=1, extra=X.add_bucket(xy=(-0.3, -0.45)))
+    lane = L.ParentLane(w, seed=1, voice=FakeVoice(), plan=False, day_ticks=2400)
+    _run(w, 4)
+    m, d = w.m, w.d
+    bucket = m.body("toy_bucket").id; jd = m.body("toy_duck").jntadr[0]; a = m.jnt_qposadr[jd]; va = m.jnt_dofadr[jd]
+    w.parent.holding["R"] = "duck"
+    for _ in range(3):
+        w.frame(); w.apply({})
+    d.qpos[a:a + 3] = d.xpos[bucket] + np.array([0.0, 0.0, X.BUCKET_WALL + 0.04]); d.qpos[a + 3:a + 7] = [1, 0, 0, 0]
+    d.qvel[va:va + 6] = 0.0; mujoco.mj_forward(m, d)
+    w.parent.holding["R"] = None
+    for _ in range(8):
+        w.frame(); w.apply({})
+    assert "duck" in lane.hidden, lane.hidden
+    real = lane._contacts
+    touch_now = {"on": False}
+
+    def contacts(m_, d_):
+        t_ = real(m_, d_)
+        if touch_now["on"]:
+            t_["duck"]["child"].add("left")
+        return t_
+    lane._contacts = contacts
+    evs, judged = [], []
+    touch_now["on"] = True; w.frame(); w.apply({}); evs += [tuple(e) for e in lane.last["events"]]      # one touch alone
+    touch_now["on"] = False
+    for _ in range(L.FOUND_WINDOW + 1):
+        w.frame(); w.apply({}); evs += [tuple(e) for e in lane.last["events"]]
+    assert ("found", "duck") not in evs and "duck" in lane.hidden, evs
+    for k in range(6):                                                                                  # its touch on alternate ticks
+        touch_now["on"] = k % 2 == 0
+        w.frame(); w.apply({})
+        evs += [tuple(e) for e in lane.last["events"]]; judged += [tuple(x) for x in (lane.last.get("judged") or ())]
+    assert ("found", "duck") in evs and "duck" not in lane.hidden, (evs, lane.hidden)
+    assert [j for j in judged if j[1] == "found"] == [(2, "found", "duck")], judged
+    print("lane 19: a hidden duck touched once: no find; touched on alternate ticks (3 of 6): 'found', worth 2, hidden no more")
+
+
 def test_the_crawl():
     """lane 17 (A125, the crawl rung): on its front, its pelvis carried CRAWL_M along the floor from where the prone spell began (or the
     last crawl counted) is the event "crawled", once in CRAWL_GAP, worth 2 in her book (consts.MOTOR_WORTH, the design's motor acts);
@@ -694,7 +739,7 @@ def test_the_crawl():
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
               test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus, test_the_crawl,
-              test_the_find]
+              test_the_find, test_the_find_of_a_rattling_toy]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

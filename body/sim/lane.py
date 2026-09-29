@@ -97,6 +97,7 @@ HAND_REST_MPS = 0.05                   # a hand slower than this has come to res
 HAND_MOVE_MPS = 0.15                   # a hand faster than this is moving
 MOVED_TICKS = 5                        # "got" needs that hand moved, or a reach toward the toy, within the last 5 ticks (its own reach and hold)
 GOT_HOLD = 3                           # and the toy kept in that hand's touch this many ticks running: a hold, not a graze (the plumbing day
+FOUND_WINDOW, FOUND_TOUCHES = 6, 3     # C116: a find: its hand on the hidden toy on 3 of the last 6 ticks (a toy in the bucket rattles; ours)
                                        # of 2026-09-26 counted 15 "got" in 1,500 ticks of babble against the toys beside its hands)
 REACH_BOOK_M = 0.6                     # a movement's end within this of a toy is a reach at it (about the arm's length)
 BOOK_LAST = 10                         # her notebook keeps the child's last 10 reaches a toy
@@ -181,6 +182,7 @@ class ParentLane:
         self.face_down = 0                                # ticks lying face down running
         self.cry_down = 0                                 # ticks lying face down and crying running
         self.distressed = False                           # distress said of this face-down spell
+        self.found_ticks = {}                             # C116: the ticks its hand touched each hidden toy of late
         # her eyes on its acts (A89, 2a) and her notebook of its reaches
         self.first = True                                 # the first tick: what is already in its hands is nothing it got
         self.hand_prev = {}                               # side -> its grasp point last tick
@@ -409,8 +411,13 @@ class ParentLane:
                                         or t - self.reach_t.get(tt, -10 ** 9) <= MOVED_TICKS) and \
                         t - self.released.get(tt, -10 ** 9) > HANDOVER_TICKS
                 self.touch_run[tt] = run
-                if run == GOT_HOLD and tt in self.hidden:               # A129: its hand on the hidden toy, held GOT_HOLD ticks: FOUND
-                    ev.append(("found", tt)); self.hidden.pop(tt)       # (worth 2 in her book; the hand-over window does not apply:
+                if tt in self.hidden:                                   # C116 (2026-09-29): a toy rattling in the bucket touches the hand
+                    ft = [x for x in self.found_ticks.get(tt, []) if t - x < FOUND_WINDOW] + [int(t)]   # on alternate ticks (day 29's
+                    self.found_ticks[tt] = ft                           # first hide: its hand on the hidden car at +152, +154, +156,
+                else:                                                   # shaking it, and no three ticks running): the find is its hand
+                    ft = []                                             # on the hidden toy on FOUND_TOUCHES of the last FOUND_WINDOW ticks
+                if tt in self.hidden and (run == GOT_HOLD or len(ft) >= FOUND_TOUCHES):   # A129: its hand on the hidden toy: FOUND
+                    ev.append(("found", tt)); self.hidden.pop(tt); self.found_ticks.pop(tt, None); self.released[tt] = -10 ** 9   # (her release is spent: a found toy still in the bucket is not hidden again; worth 2 in her book; the hand-over window does not apply:
                 if run == GOT_HOLD and self.got_arm.get(tt):            # the toy was in the bucket, not in her hand)
                     ev.append(("got", tt))
             else:
@@ -665,7 +672,7 @@ class ParentLane:
                     utt=utt, voice_done=self.voice_done, word_now=self.word_now, face_seen=self.face_seen.copy(),
                     reading=self.reading, reading_t=self.reading_t, test_prev=self.test_prev, fp=_pl(self.fp),
                     toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had),
-                    child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released), hidden=dict(self.hidden),
+                    child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released), hidden=dict(self.hidden), found_ticks={k: list(v) for k, v in self.found_ticks.items()},
                     posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines,
                     plan=None if self.plan is None else self.plan.state(), day=self.day, day_start=self.day_start,
                     eyes=dict(first=self.first, hand_prev={k: v.tolist() for k, v in self.hand_prev.items()},
@@ -716,6 +723,7 @@ class ParentLane:
         self.toy_z = dict(s["toy_z"]); self.falling = set(s["falling"]); self.child_had = tuple(s["child_had"])
         self.child_held_at = dict(s["child_held_at"]); self.her_had = dict(s["her_had"]); self.released = dict(s["released"])
         self.hidden = dict(s.get("hidden", {}))                         # A129 (a save from before it: nothing hidden)
+        self.found_ticks = {k: [int(x) for x in v] for k, v in dict(s.get("found_ticks", {})).items()}   # C116 (older saves: none)
         self.posture, self.face_down = s["posture"], int(s["face_down"])
         self.last = dict(posture=s["last_posture"])
         e = s.get("eyes")
