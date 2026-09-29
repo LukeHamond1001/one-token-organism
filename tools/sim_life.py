@@ -125,6 +125,8 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--days", type=float, default=2.0)
     ap.add_argument("--ticks", type=int, default=0, help="stop after this many ticks (0: the days)")
+    ap.add_argument("--probe-joint", type=int, default=None, metavar="J",
+                    help="an instrument (C113): the record row gets pj for BODY_JOINTS[J]: [angle, low stop, high stop, the servo's target, its torque, the gear's sensed 10 ms peak load, the pain line]")
     ap.add_argument("--lr0", action="store_true", help="every learning rate 0 (S5b's plumbing)")
     ap.add_argument("--d", type=int, default=512)
     ap.add_argument("--seed", type=int, default=1)
@@ -181,6 +183,11 @@ def main():
                    render_ms=round(1000 * ((0.0 if eyes is None else eyes.timing["render_s"]) - rs), 1),
                    stress=round(float(L.stress), 3), mood=round(float(L.mood), 3), cry=bool(world.crying),
                    pain=None if pain is None else [int(i) for i in np.nonzero(pain)[0]])
+        if args.probe_joint is not None:                                   # C113's instrument: one joint against its stops and its gear
+            J_ = int(args.probe_joint); d_ = world.d
+            rec["pj"] = [round(float(d_.qpos[world.qadr[J_]]), 3), round(float(world.lo[J_]), 3), round(float(world.hi[J_]), 3),
+                         round(float(d_.ctrl[world.aid[J_]]), 3), round(float(d_.qfrc_actuator[world.dof[J_]]), 2),
+                         round(float(world._sensed["bd_peak"][J_]), 2), round(float(world.tau_hold[J_]), 2)]
         if not night:
             ls = lane.last
             rec.update(line=ls.get("line"), ep=None if lane.plan is None else lane.plan.kind, word=INV.get(int(ls.get("word", 0))),
