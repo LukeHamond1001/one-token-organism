@@ -226,19 +226,17 @@ class DayPlan:
         """her lesson (A90; the module's doc): the rung the child is nearly at on a focus toy she sees, read from her conduct's book"""
         c, p = lane.conduct, lane._p
         seen = {s.id: s for s in p.seen}
-        known = set(seen) | set(getattr(lane, "toys", {}) or {})       # C121: the toys she knows the place of (she put them there),
-        focus = [o for o in self.focus if o in known and not c.left_where_it_lies(o)]   # not only those before her eyes this tick: day
-        free = [o for o in focus if o not in seen or seen[o].on != "hand"]   # 28's afternoon she knelt at its head looking at its eyes,
-                                                                         # no focus toy in view, and asked a call six times instead of a
-                                                                         # lesson (refused: it was looking at her already). A109: a toy in
-                                                                         # its hand is not the one to set out for it; A117: not a toy she
-                                                                         # could not get to
-        focus = free or focus                                           # (her fetch never takes a toy from it, A4)
         held = [v for v in getattr(c.motion, "holding", {}).values() if v is not None and v not in TP.OPEN_CONTAINERS]
-        if held:                                                        # C122: a toy left in her hand is the lesson's toy: set within
-            c.request("set_near", o=held[0])                            # its reach (day 28: the block stayed in her left hand from the
-            self.log.append((t, "lesson", "held", held[0]))             # morning on; her peekaboo refused "her hands are busy" 21 times)
-        elif not focus:
+        if held:                                                        # C122: a toy left in her hand is the lesson's toy (day 28: the
+            focus = [held[0]]                                           # block stayed in her left hand from the morning on; her peekaboo
+        else:                                                           # refused "her hands are busy" 21 times): its rung as any toy's
+            focus = [o for o in self.focus if o in seen and not c.left_where_it_lies(o)]   # A117: not a toy she could not get to
+            if not focus:                                               # C121: none before her eyes (day 28's afternoon: she knelt at its
+                known = set(getattr(lane, "toys", ()) or ())            # head looking at its eyes and asked a call six times instead of
+                focus = [o for o in self.focus if o in known and not c.left_where_it_lies(o)]   # a lesson): the toys she knows the place of
+            free = [o for o in focus if o not in seen or seen[o].on != "hand"]   # A109: a toy in its hand is not the one to set out for it
+            focus = free or focus                                       # (her fetch never takes a toy from it, A4)
+        if not focus:
             c.request("call")
         else:
             o = focus[int(self.rng.integers(len(focus)))]

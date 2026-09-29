@@ -184,7 +184,7 @@ def test_the_days_layout():
         assert d.blocks[0][0] == DP.WAKE and d.blocks[-1][1] == DP.DAY_TICKS - DP.WIND
         assert all(a[1] == b[0] for a, b in zip(d.blocks, d.blocks[1:]))
         n = {k: ks.count(k) for k in set(ks)}
-        assert n["floor"] == 3 and n["motor"] == 2 and n["show"] == 1 and n["tasks"] == 1 and 2 <= n["away"] <= 4, n
+        assert n["floor"] == 3 and n["motor"] == 2 and n["show"] == 1 and n["tasks"] == 1 and n["away"] == 1, n   # (the training day, 2026-09-29: away once)
         counts.add(n["away"])
         assert 2 <= len(d.focus) <= 3 and set(d.focus) <= set(DP.BIRTH_TOYS)
     d = DP.DayPlan(1, day_ticks=2400); d.lay_out(0)
@@ -335,6 +335,15 @@ def test_her_lessons():
     within its reach ("set_near": her line "here. the X." and her motion's bring_back at lesson_dist 0.10, level 0); the toy comes
     to rest within reach of a hand as she sees it; a "got" smile on that toy (written into her book here) raises the next lesson
     on it a level (0.15); her plan's levels survive a save; floor play gives lessons among its offers"""
+    _blocks = DP.BLOCKS                                                  # (these scenarios were drawn under 4.7's own table: the training
+    DP.BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 1500), ("away", (2, 4), 400, 1200), ("tasks", 1, 3000, 3000))   # day (2026-09-29) draws another day; the lesson's law is what is tested)
+    try:
+        return _test_her_lessons_body()
+    finally:
+        DP.BLOCKS = _blocks
+
+
+def _test_her_lessons_body():
     w, lane = _world(plan=True, day_ticks=2400)
     lessons, lines = [], []
     for k in range(1300):
@@ -419,6 +428,15 @@ def test_the_roll_rung():
     toy fetched and, from a kneel on the child's far side, set down beside its far shoulder ROLL_BEYOND_M past the reach of the arm
     on that side: out of its reach as she sees it (child_can_reach False), on the side away from where she knelt. The next lesson is
     a reach lesson again (they alternate), and the turn is saved. Life day 7: 89 rolls, 0 reaches, and no motor act judged"""
+    _blocks = DP.BLOCKS                                                  # (these scenarios were drawn under 4.7's own table: the training
+    DP.BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 1500), ("away", (2, 4), 400, 1200), ("tasks", 1, 3000, 3000))   # day (2026-09-29) draws another day; the lesson's law is what is tested)
+    try:
+        return _test_the_roll_rung_body()
+    finally:
+        DP.BLOCKS = _blocks
+
+
+def _test_the_roll_rung_body():
     from body.sim import parent_motion as PM
     w, lane = _world(plan=True, day_ticks=2400)
     for _k in range(200):
