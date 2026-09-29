@@ -558,6 +558,7 @@ class G1World(SimWorld):
         k = 0
         for n, js in G.EFFECTORS:
             self.eff_slices[n] = slice(k, k + len(js)); k += len(js)
+        self.eff_joint_idx = {n: list(range(sl.start, sl.stop)) for n, sl in self.eff_slices.items()}   # (A139: the tendon reflex's map)
         self._set_servo_law()
         # the touch zones, the pain threshold, the parent's holds on the G1
         self.zones, self.zone_of_geom, self.body_zone = touch_zones(m, self.scene.g1_set)
@@ -652,6 +653,7 @@ class G1World(SimWorld):
         self.blind, self.blind_pairs = rest_blind(m, d, self.scene.g1_set)     # A12: the pairs pressing at rest (none as born)
         self._last_acts = {}
         self._spinal = {}; self._vor_quick = 0
+        self._tendon = np.zeros(len(JOINTS), int)                          # A139: the tendon organ's inhibition, a countdown per joint
         self.parent = None
         self._sense_birth()
         if parent:                                                      # THE PARENT'S MOTION (W2; body/sim/parent_motion.py): her
@@ -826,6 +828,12 @@ class G1World(SimWorld):
                 if c is not None:
                     st_ = st_ + np.asarray(c, float)
                 steps[name] = st_
+        if self.spinal:                                                 # A139: THE TENDON ORGAN: a joint at its load line last tick has
+            loaded = self._sensed["bd_peak"] >= self.tau_hold          # its drive relaxed this tick (the withdrawal's own blocked push
+            ev = R.tendon(steps, loaded, self._tendon, self.eff_joint_idx)   # made day 26's 440-tick elbow storm, C113)
+            for eff, js in ev.items():
+                spinal[eff] = "tendon" if eff not in spinal else spinal[eff] + "+tendon"
+                self.stats_tendon = getattr(self, "stats_tendon", 0) + len(js)
         a = acts.get(GAZE_NAME)
         gaze_step = np.zeros(3) if a is None else np.array([GAZE_SETTINGS[j][k] for j, k in enumerate(act_digits(a, len(GAZE_JOINTS)))])
         va = acts.get(VOICE_NAME)
@@ -1258,7 +1266,7 @@ class G1World(SimWorld):
                 "night": self.night, "below_n": self._below_n, "crying": bool(self.crying),
                 "sound_events": list(getattr(self.sounds, "last_events", [])),
                 "f_pain": self.f_pain, "ncon": int(d.ncon), "acts": dict(self._last_acts),
-                "gaze": self.gaze.copy(), "spinal": dict(self._spinal), "vor_quick": self._vor_quick,
+                "gaze": self.gaze.copy(), "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "tendon": self._tendon.copy(),
                 "palm_own_N": {"hand_l": float(s["palm_own"][0]), "hand_r": float(s["palm_own"][1])},
                 "parent": None if self.parent is None else self.parent.truth()}
 
@@ -1272,7 +1280,7 @@ class G1World(SimWorld):
                 "tick": self.tick, "paused": self.paused, "seed": self.seed,
                 "sensed": {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in self._sensed.items()},
                 "last_acts": dict(self._last_acts), "rng": self.rng.bit_generator.state, "gaze": self.gaze.copy(), "gaze_v": self.gaze_v.copy(),
-                "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "scene_pose": _pose_state(self.scene.pose),
+                "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "tendon": self._tendon.copy(), "scene_pose": _pose_state(self.scene.pose),
                 "parent": None if self.parent is None else self.parent.state(),
                 "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
                               "observer": self.observer.state(), "sounds": self.sounds.state(),
@@ -1296,6 +1304,7 @@ class G1World(SimWorld):
                                                                         # (a carried array, the night's ears, pickles as a fresh one)
         self._last_acts = _canon_acts(st["last_acts"])
         self._spinal = dict(st.get("spinal", {})); self._vor_quick = int(st.get("vor_quick", 0))
+        self._tendon = np.asarray(st.get("tendon", np.zeros(len(JOINTS), int)), int).copy()   # (A139; older saves: none)
         self.rng.bit_generator.state = st["rng"]
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()

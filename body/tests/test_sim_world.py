@@ -1784,10 +1784,41 @@ def test_the_morning_tidy():
     print(f"world 24: tidied {moved}: the cup {before['cup'].round(2).tolist()} -> {after['cup'].round(2).tolist()} (home {home['cup'].round(2).tolist()}),",
           f"the stacker {before['stacker'].round(2).tolist()} -> {after['stacker'].round(2).tolist()}; the ball at {before['ball'].round(2).tolist()} and {near} by the child left; saved and loaded")
 
+def test_the_tendon_organ():
+    """world 35 (A139, C113): THE TENDON ORGAN'S AUTOGENIC INHIBITION at the spinal cord. Day 26's morning: the right elbow's withdrawal
+    fired on the pain its own blocked flexion step made (the servo's target a big step beyond a joint that could not move, the gear
+    saturated at its 25 N m line, the pain flag set, the reflex fired again), 440 ticks. Now a joint whose sensed gear load reached its
+    line last tick has its step zeroed for TENDON_TICKS ticks (its servo target re-anchored to its angle), over the own act and the
+    withdrawal alike; its neighbours still move; the countdown is saved with the world and the truth's spinal says "tendon". After
+    the ticks it is free again. A joint under its line is untouched."""
+    w = G1World(seed=1)
+    j = W.JOINTS.index("right_elbow_joint"); sh = W.JOINTS.index("right_shoulder_pitch_joint")
+    w.frame()
+    w._sensed["bd_peak"][j] = float(w.tau_hold[j])                       # the gear at its line last tick (the pain's own afferent)
+    q0 = float(w.d.qpos[w.qadr[j]]); s0 = float(w.d.qpos[w.qadr[sh]])
+    w.apply({"arm_r": R.flexion_act("arm_r")})                          # the withdrawal's act: big flexion steps on the shoulder and the elbow
+    assert abs(float(w.d.ctrl[w.aid[j]]) - q0) < 1e-9, (w.d.ctrl[w.aid[j]], q0)          # the elbow's drive relaxed: its target its angle
+    assert float(w.d.ctrl[w.aid[sh]]) < s0 - 0.1, (w.d.ctrl[w.aid[sh]], s0)              # the shoulder still steps
+    assert w._spinal.get("arm_r") == "tendon" and int(w._tendon[j]) == R.TENDON_TICKS - 1, (w._spinal, w._tendon[j])
+    st = w.state_dict() if hasattr(w, "state_dict") else None
+    q1 = float(w.d.qpos[w.qadr[j]])
+    w.apply({"arm_r": R.flexion_act("arm_r")})                          # the second tick: still held
+    assert abs(float(w.d.ctrl[w.aid[j]]) - q1) < 1e-9 and w._spinal.get("arm_r") == "tendon"
+    q2 = float(w.d.qpos[w.qadr[j]])
+    w.apply({"arm_r": R.flexion_act("arm_r")})                          # the third: free, the big flexion step passes
+    assert float(w.d.ctrl[w.aid[j]]) < q2 - 0.2 and "arm_r" not in w._spinal, (w.d.ctrl[w.aid[j]], q2, w._spinal)
+    w2 = G1World(seed=1); w2.frame()
+    w2._sensed["bd_peak"][j] = 0.5 * float(w2.tau_hold[j])                # under its line: nothing inhibited
+    q = float(w2.d.qpos[w2.qadr[j]]); w2.apply({"arm_r": R.flexion_act("arm_r")})
+    assert float(w2.d.ctrl[w2.aid[j]]) < q - 0.2 and "arm_r" not in w2._spinal
+    print(f"world 35: the tendon organ: a right elbow whose gear reached its {w.tau_hold[j]:.0f} N m line has its step zeroed for {R.TENDON_TICKS}",
+          "ticks (its target its angle, the shoulder still stepping, the truth's spinal 'tendon'), then the big flexion step passes; under the line, untouched")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

@@ -85,6 +85,7 @@ G = W.G
 
 LIMBS = ("leg_l", "leg_r", "arm_l", "arm_r")                     # the limbs with a withdrawal (the waist and the head have none)
 WITHDRAW_TICKS = 2              # the withdrawal's big flexion step, a tick for 2 ticks (3.7; innate, ours)
+TENDON_TICKS = 2                # A139: the tendon organ's inhibition holds a joint's drive relaxed this long after a tick at its load line (ours)
 GRASP_N = 0.3                   # palm touch that closes the hand (3.7; the prototype's value; innate, ours)
 PRONE_G = 0.6 * 9.81            # face down: the torso accelerometer's chest-normal component below -0.6 g (Child's fz < -0.6; A92, ours)
 PRONE_LIMBS = ("arm_l", "arm_r")  # the arms flex under the chest; the head turn is the waist's yaw (no neck: A22)
@@ -172,6 +173,28 @@ def grasp(hand, own, palm_log):
         if j in CLOSING[hand] and W.SETTINGS[dig[i]] * CLOSING[hand][j] < W.STEP_BIG:
             dig[i] = _BIG[CLOSING[hand][j]]
     return W.act_flat(dig), "grasp"
+
+
+def tendon(steps, loaded, state, joints_of):
+    """THE TENDON ORGAN'S AUTOGENIC INHIBITION at the spinal cord (A139, C113; the Golgi tendon organ's Ib afferent inhibits the motor
+    neurons of the muscle whose tension is excessive: Houk and Henneman 1967; the clasp-knife's road). `loaded`: per joint (JOINTS' order)
+    whether the gear's sensed 10 ms peak load reached its line last tick (the pain flag's own afferent); a joint that did is inhibited
+    for TENDON_TICKS ticks: its step this tick is zeroed (its servo target re-anchored to its angle: the drive relaxed), over the own
+    act, the cord's step and the withdrawal alike. `steps` {effector: per-joint steps} changed in place; `state` the per-joint
+    countdown (the world's, saved with it) changed in place; `joints_of` {effector: [joint index in JOINTS]} -> {effector: [joint
+    names relaxed]} for the truth's spinal (no gate eligibility moves: the own act stays the gate's, as the grasp leaves it; the
+    cortex sees the relaxed joint through its joint sense and its forward error). Day 26's morning (C113): the elbow's withdrawal
+    fired on the pain its own blocked flexion step made, 440 ticks at the motor's limit; this reflex breaks that loop in one tick"""
+    state[loaded] = TENDON_TICKS
+    ev = {}
+    for eff, st_ in steps.items():
+        idx = joints_of[eff]
+        hit = [k for k, j in enumerate(idx) if state[j] > 0 and st_[k] != 0.0]
+        if hit:
+            st_[hit] = 0.0
+            ev[eff] = [_JOINTS[eff][k] for k in hit]
+    state[state > 0] -= 1
+    return ev
 
 
 def prone(acts, imu_torso):

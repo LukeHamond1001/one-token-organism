@@ -105,6 +105,9 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-taken at A138's triggers (2026-09-28 19:18): the imagination also at every frame kept as new and at a pause of the effectors, so
 # the born body imagines far more often (12% of ticks) and every section moved again. Was: threaded a8db487d3bc61bed02e0982c,
 # one-thread 473614e4c173b84dba0a128f (the event-end trigger alone).
+# Checked at A139 (2026-09-28 22:19, branch a139: the tendon organ's inhibition at the cord, a born reflex): the born 300 ticks load no
+# gear to its line, so the digests are unmoved (threaded 58b14a2405b48f72a5870c6d, one-thread ceafc8053f4290bcff977927, the full
+# digests equal); not re-pinned.
 digest  sim                   threaded 58b14a2405b48f72a5870c6d consts ca9064aa1d5d | --profile sim
 digest  sim                   pinned   ceafc8053f4290bcff977927 consts ca9064aa1d5d | --profile sim
 full    sim                   threaded organs abec9b050c99 store 7c0475dc585a optim 49375a022ba5 rng 9d2490356080 work 8ccd54c8e61f cfg ac2db7fa3fd4
