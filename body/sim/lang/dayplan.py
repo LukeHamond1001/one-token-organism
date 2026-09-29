@@ -48,8 +48,10 @@ DAY_TICKS = 24000                      # a life day (4.7)
 WAKE = 300                             # the wake episode (4.7)
 WIND = 1000                            # the winding down (4.7)
 GOODNIGHT = 300                        # goodnight (4.7)
-BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 1500), ("away", (2, 4), 400, 1200),
-          ("tasks", 1, 3000, 3000))    # 4.7's table: kind, how many, shortest, longest
+BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 1500), ("away", 1, 400, 600),
+          ("tasks", 1, 600, 600))      # 4.7's table: kind, how many, shortest, longest. TRAINING MODE (2026-09-29, the owner's word: fix
+                                       # fast; her pace is the lead's): away 2-4 x 400-1,200 and her own tasks 3,000 cut to one short block
+                                       # each, so the play blocks (drawn, then scaled to the day) carry about a quarter more of the day
 PLAY_GAP = (150, 300)                  # ticks between her floor play's offers (ours)
 LESSON_DIST0 = 0.10                    # the reach rung's first distance out from its near hand, m (4.10's ladder, level 1; A90)
 LESSON_STEP = 0.05                     # farther each mastered level (teacher_of_reality.md 2c)
@@ -232,7 +234,11 @@ class DayPlan:
                                                                          # its hand is not the one to set out for it; A117: not a toy she
                                                                          # could not get to
         focus = free or focus                                           # (her fetch never takes a toy from it, A4)
-        if not focus:
+        held = [v for v in getattr(c.motion, "holding", {}).values() if v is not None and v not in TP.OPEN_CONTAINERS]
+        if held:                                                        # C122: a toy left in her hand is the lesson's toy: set within
+            c.request("set_near", o=held[0])                            # its reach (day 28: the block stayed in her left hand from the
+            self.log.append((t, "lesson", "held", held[0]))             # morning on; her peekaboo refused "her hands are busy" 21 times)
+        elif not focus:
             c.request("call")
         else:
             o = focus[int(self.rng.integers(len(focus)))]
