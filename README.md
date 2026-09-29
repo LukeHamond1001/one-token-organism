@@ -35,7 +35,7 @@ file is not read.) The robot sim needs `pip install -r requirements-sim.txt` (Mu
 synthesised by a small Swift server that runs on macOS only (`--voice fake` runs without it); its run command is in the section
 below.
 
-## The robot sim: where the project is (2026-09-28, 21:20)
+## The robot sim: where the project is (2026-09-29, 16:35)
 
 Since 2026-09-24 the same architecture lives in a simulated body: a Unitree G1 humanoid with hands (MuJoCo, 150 ms ticks, its own eyes,
 ears, touch, joint sense and a vocal tract) on a play mat in a room, with a simulated human-proportioned parent who kneels beside it,
@@ -45,7 +45,7 @@ pain (−1 on a gear loaded past its motor); there is no charge, no bottle and n
 and `world.pt`) saved at every dawn. Every change to the body or the teacher is built on a worktree, gated by the suites, measured on
 a copy of a dawn pair when its effect is in doubt, and put in at a dawn; one change a boundary was the law until the owner's word of 2026-09-28 (everything built goes in together and the day is read whole).
 
-Where it stands, day 26 of that life:
+Where it stands, day 29 of that life:
 - Days 1 to 9 were mostly the parent's faults found and fixed at one dawn each (A95 to A112 in `docs/SIM_DESIGN.md`): her plan frozen
   half-knelt for a day (A108), the child rolled out of the room into the hall (A110: carried back to the mat in its sleep), her turn's
   approach silencing judgment of the child's own acts (A111), her chasing a rolling child round the mat (A112).
@@ -98,7 +98,23 @@ Where it stands, day 26 of that life:
   days were cancelled: the instruments stay in the code, unused; generalization is read inside the one room (novel objects, the hide
   game, her asks met) and the environment grows by what she brings in. No scheduled restarts remain; the days run on and the work is
   the teacher's method, read day by day. A real face reader was not built (the owner's word).
-- Open: the wake's ankle, pinned by the child's own first acts each dawn (C104); a side-lying G1 looks at the floor (C94); the actor's
+- Day 26 (everything in): her smile seen 37 times against 3, 214 judged acts, and one morning storm of 516 pain ticks at the right elbow.
+  The storm lived again on a copy and probed: the withdrawal reflex fed on the pain of its own blocked step (the overload of a gear is
+  this body's pain). Dawn 28 brought the tendon organ's inhibition at the cord (A139: a joint at its load line has its drive relaxed
+  for two ticks; the same 1,600 ticks: 22 pain ticks against 505) and the hide game told at its drop (C115).
+- Day 27: pain 21 ticks all day, and the child still: every arm joint sat at a stop while the actor sent steps into it. A97's law
+  (decisiveness earned by the inverse model) read one figure for a limb and stayed sharp on near-constant acts. Dawn 29 brought each
+  joint's own decisiveness, earned by its kappa and its settings' variety (A140: the shoulders unpinned on the copy), her rule for a
+  toy the child has read as its hands and arms (C118), and the checkpoint runner: the pair saved every 4,000 waking ticks, so a fix
+  lands within minutes of its finding (the owner's word of 2026-09-29: fix fast, watch, tweak).
+- Day 28, at checkpoint speed: the bucket never fetched (C119), comfort for a cry that lasts and not every wince (C120), her lessons
+  picked from the toys she knows (C121), a toy left in her hand taken as the next lesson (C122), her day made denser for training.
+  And two losses: the Mac idle-slept twelve hours (now held awake), and C121 crashed her day plan into a loop on waking (C123: the
+  plan's errors no longer stop the life; a change to her day plan runs its lane tests before it lands). Day 28 whole: pain 2.0%, 6
+  grasps, a crawl, 14 smiles for acts on things.
+- Day 29 (from 16:27 on 2026-09-29) is the first day with all of it in from its first tick. A health line with alarms is read at every
+  checkpoint (lessons done, acts on things, its hands on a toy, pain, her repeated refusals).
+- Open: what brings a hand to a toy day after day (C117: the elbows still rest at their stops); the wake's pinned joint at dawn (C104); a side-lying G1 looks at the floor (C94); the actor's
   pinning of joints at their stops (C100); reaching under a table from a kneel; frame events end rarely under a live parent (C110; the
   imagination's write trigger stands in); her prop lets a sitting trunk lean past its 35-degree cap in parent 8 (C112, older than the
   day's branches; the child has not yet sat). The C rows of `docs/SIM_DESIGN.md` hold every open question with its evidence.
