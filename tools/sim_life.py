@@ -184,6 +184,7 @@ def main():
                    stress=round(float(L.stress), 3), mood=round(float(L.mood), 3), cry=bool(world.crying),
                    pain=None if pain is None else [int(i) for i in np.nonzero(pain)[0]])
         rec["acts"] = {k: int(v) for k, v in (getattr(world, "_last_acts", None) or {}).items()}   # C117's instrument: the effectors' flat acts this tick
+        rec["ptop"] = [[round(float(p_.max()), 2) for p_ in ((st.get("now") or {}).get("probs") or [])] for st in L.motor]   # C117: each joint's top probability
         rec["spinal"] = dict(getattr(world, "_spinal", {}) or {})          # A139's instrument (C117): the cord's events this tick (grasp,
         rec["tendon_n"] = int(getattr(world, "stats_tendon", 0))           # prone, tendon per effector) and the tendon reflex's joint count so far
         if args.probe_joint is not None:                                   # C113's instrument: joints against their stops and their gears
