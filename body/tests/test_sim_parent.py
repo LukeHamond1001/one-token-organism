@@ -1485,14 +1485,15 @@ def test_her_way_in_the_changed_room():
 
 def test_the_turn_from_its_head():
     """parent 30 (A136, C98/C109): the turn's spot is where its grips are in reach. On life day 24 A101's turn was refused 63 cm short
-    from the spot she happened to kneel at while the child lay on its elbow at its limit for 3,900 ticks. Now the approach asks for a
-    spot with both far grips in reach (the need turn_both, the palms toward her), and failing that a spot at its head with the far
-    shoulder in reach (turn_shoulder), the roll then by that shoulder alone. A prone still child at the mat's middle: both grips in
-    reach from beside its chest, turned past its side in under 300 ticks. The same child with no chest-side spot that reaches both (the
-    need refused, as a wall or the furniture refuses it): turned from its head by the far shoulder and the torso's far side, past its side, in under 400
-    ticks. A child not on its front: refused"""
+    from the spot she happened to kneel at while the child lay on its elbow at its limit for 3,900 ticks. Now the approach asks first
+    for a spot at its HEAD with the far shoulder in reach (turn_shoulder: the roll by that shoulder and the torso's far side, both
+    pulled across it), and failing that a spot beside its chest with both far grips in reach (turn_both, the palms toward her). C98
+    (2026-09-28) put the head end first: a rocking prone child was turned from its head in 3 of 4 asks and from its side in 0 of 9.
+    A prone still child at the mat's middle: turned from its head, past its side, in under 400 ticks, her kneel beyond its head. The
+    same child with no head spot (the need refused, as a wall or the furniture refuses it): both grips from beside its chest, turned
+    past its side in under 300 ticks. A child not on its front: refused"""
     got = {}
-    for route in ("both", "head"):
+    for route in ("head", "both"):
         w = W.G1World(seed=1)
         T.place_g1(w, "front")
         for _ in range(20):
@@ -1507,8 +1508,8 @@ def test_the_turn_from_its_head():
             return orig(a, mode=mode)
 
         def need(n, H, yaw, orig=orig_need, route=route):
-            if route == "head" and n == "turn_both":
-                return False                                                # no chest-side spot reaches both (a wall, the furniture)
+            if route == "both" and n == "turn_shoulder":
+                return False                                                # no head spot reaches the shoulder (a wall, the furniture)
             return orig(n, H, yaw)
         pm._plan_turn = spy; pm._need_ok = need
         out = T.run(w, [("turn", "child")], 900)
@@ -1522,9 +1523,9 @@ def test_the_turn_from_its_head():
         got[route] = (a["ticks"], used["spot"], ch.posture, round(float(ch.torso_R[2, 0]), 2))
     out2 = T.run(w, [("turn", "child")], 60)
     assert out2["acts"][0]["status"] == "refused" and "face down" in out2["acts"][0]["why"], out2["acts"][0]
-    print(f"parent 30: a prone child turned with both far grips from beside its chest in {got['both'][0]} ticks (her kneel {got['both'][1]}, on its",
-          f"{got['both'][2]}, chest {got['both'][3]}); with no chest-side spot for both, from its head by the far shoulder and the torso's far side in {got['head'][0]}",
-          f"ticks (her kneel {got['head'][1]}, on its {got['head'][2]}, chest {got['head'][3]}); a child not on its front: refused")
+    print(f"parent 30: a prone child turned from its head by the far shoulder and the torso's far side in {got['head'][0]} ticks (her kneel",
+          f"{got['head'][1]}, on its {got['head'][2]}, chest {got['head'][3]}); with no head spot, with both far grips from beside its chest in",
+          f"{got['both'][0]} ticks (her kneel {got['both'][1]}, on its {got['both'][2]}, chest {got['both'][3]}); a child not on its front: refused")
 
 
 def _l(x):

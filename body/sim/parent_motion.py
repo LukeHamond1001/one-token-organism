@@ -5230,21 +5230,27 @@ class ParentMotion:
         return [dict(type="plan", what="turn_approach", args={})]
 
     def _plan_turn_approach(self, a):
-        """A136 (C98, C109): the turn's spot. Beside its chest with BOTH far grips in her reach (A101's turn), else at its HEAD with the
-        far shoulder in reach (the roll by the shoulder: from a kneel beside a prone G1 the far shoulder and hip lay 0.93 to 0.98 m off,
-        beyond her arm and trunk together, at every offset down to her knees on it; from its head the far shoulder lies within reach
-        and the hip does not), else refused. (A103 had tried a need for both grips from the chest side alone and dropped it: the trunk
-        solve refused the usual spot and chose worse ones; here the need is what the turn needs and the head end is the way out)"""
+        """A136 (C98, C109), C98 fixed (2026-09-28): the turn's spot. At its HEAD first, both hands on the far shoulder and the far side
+        of its torso, pulled across it (turn_shoulder); else beside its chest with the far shoulder and hip in reach (turn_both); else
+        refused. The order was the other way round until C98's measurement on a rocking prone child (the babbler at rest 0.6, three
+        seeds, twelve asks): from beside its chest the one-hand check passed and the two-hand reach then hung 30 to 49 cm short over
+        its raised back (the trunk solve for both hands from one lean fails over a child up on its elbows), and where both grips did
+        land, 200 N rolled it to 50 to 70 degrees and dragged it a hand's breadth toward her instead of over: 0 turns of 9 attempts,
+        the same as day 10's 16 refusals. From its head the same child was turned onto its back in 3 of 4 asks (the fourth balanced
+        on its side at 85 degrees and fell back within her 4 s). A still child turns from its head in under 400 ticks (parent 30)
+        as from its side in under 300: the head end is the way that works for both, so it is her first way. (From a kneel beside a
+        prone G1 the far shoulder and hip lay 0.93 to 0.98 m off for the still child of day 24, C109; A103 had tried a need for both
+        grips from the chest side alone and dropped it)"""
         why = []
-        for where, offs, need, mode in ((None, None, "turn_both", "side"), ("head", TURN_HEAD_OFFS, "turn_shoulder", "head")):
+        for where, offs, need, mode in (("head", TURN_HEAD_OFFS, "turn_shoulder", "head"), (None, None, "turn_both", "side")):
             try:
                 out = self._plan_approach(a, where=where, offs=offs, need=need)
             except Refuse as e:
                 why.append(f"{need}: {str(e)[:70]}"); continue
             a["info"]["turn_mode"] = mode
             return out + [dict(type="plan", what="turn", args=dict(mode=mode))]
-        raise Refuse("no spot she can kneel at puts a far grip of the turn in her reach (A136: beside its chest for both, at its head "
-                     "for the shoulder): " + "; ".join(why))
+        raise Refuse("no spot she can kneel at puts a far grip of the turn in her reach (A136, C98: at its head for the shoulder and the "
+                     "torso's far side, beside its chest for both): " + "; ".join(why))
 
     def _turn_targets(self, kinds=("shoulder", "hip")):
         """A101: the turn's two grips on the child's FAR shoulder and hip roll links (their far surfaces, her palms toward her):
