@@ -224,8 +224,13 @@ class DayPlan:
         """her lesson (A90; the module's doc): the rung the child is nearly at on a focus toy she sees, read from her conduct's book"""
         c, p = lane.conduct, lane._p
         seen = {s.id: s for s in p.seen}
-        focus = [o for o in self.focus if o in seen and not c.left_where_it_lies(o)]   # A117: not a toy she could not get to
-        free = [o for o in focus if seen[o].on != "hand"]                # A109: a toy in its hand is not the one to set out for it
+        known = set(seen) | set(getattr(lane, "toys", {}) or {})       # C121: the toys she knows the place of (she put them there),
+        focus = [o for o in self.focus if o in known and not c.left_where_it_lies(o)]   # not only those before her eyes this tick: day
+        free = [o for o in focus if o not in seen or seen[o].on != "hand"]   # 28's afternoon she knelt at its head looking at its eyes,
+                                                                         # no focus toy in view, and asked a call six times instead of a
+                                                                         # lesson (refused: it was looking at her already). A109: a toy in
+                                                                         # its hand is not the one to set out for it; A117: not a toy she
+                                                                         # could not get to
         focus = free or focus                                           # (her fetch never takes a toy from it, A4)
         if not focus:
             c.request("call")
