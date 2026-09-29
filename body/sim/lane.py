@@ -529,7 +529,14 @@ class ParentLane:
         p, mouth, face = self._percept(world, t)
         self._p = p
         if self.plan is not None:
-            self.plan.tick(t, t - self.day_start, self, world)        # her day's episode (L3), before her conduct's tick
+            try:
+                self.plan.tick(t, t - self.day_start, self, world)    # her day's episode (L3), before her conduct's tick
+            except Exception as e:                                    # C123 (2026-09-29): an error in her day plan never stops the life:
+                self.plan_errors = int(getattr(self, "plan_errors", 0)) + 1   # on day 28 a lesson on a toy out of her view raised a KeyError
+                if self.plan_errors <= 3 or self.plan_errors % 1000 == 0:     # (C121's change) and the life died 1,500 ticks after every
+                    import traceback                                          # restart, four times over; the plan skips the tick, the
+                    print(f"PLAN ERROR {self.plan_errors} at tick {t}: {type(e).__name__}: {e}", flush=True)   # error is printed
+                    traceback.print_exc()
         raw = world.tract_raw
         tract = None if raw is None or not np.any(raw) else np.asarray(raw, float)
         tp = d.xpos[m.body("torso_link").id]

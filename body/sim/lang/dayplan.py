@@ -261,7 +261,7 @@ class DayPlan:
                 c.motion.lesson_dist = LESSON_DIST0 + LESSON_STEP * lvl
                 c.request("set_near", o=o)
                 self.log.append((t, "lesson", "reach", o, lvl, round(c.motion.lesson_dist, 2)))
-            elif "bucket" in seen and o != "bucket" and self.hide_turn and seen[o].on != "hand":   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
+            elif "bucket" in seen and o != "bucket" and self.hide_turn and (o not in seen or seen[o].on != "hand"):   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
                 self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the bucket in
                 c.request("hide", o=o)                                  # its view; its hand into the bucket after is "found" (worth 2)
                 self.log.append((t, "lesson", "hide", o, got))
@@ -285,7 +285,7 @@ class DayPlan:
             return
         roll = (roll - LESSON_SHARE) / (1.0 - LESSON_SHARE) if focus else roll
         if focus and roll < 0.5:
-            free = [o for o in focus if seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
+            free = [o for o in focus if o not in seen or seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
             o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)
             c.request("show", o=o)
         elif kind == "floor" and roll < 0.65:
