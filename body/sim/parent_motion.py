@@ -896,6 +896,9 @@ class ParentMotion:
         self.her_main = [int(g) for g in np.nonzero(self.geom_seg >= 0)[0] if (m.geom(g).name or "").startswith("parent_")
                          and not (m.geom(g).name or "").startswith(("parent_face", "parent_hair", "parent_eye"))]
         self.g1_geoms = [int(g) for g in np.nonzero(self.g1_geom)[0]]
+        arm_bodies = {int(m.body(i).id) for i in range(m.nbody) if not m.body(i).name.startswith("parent")
+                      and any(k in m.body(i).name for k in ("shoulder", "elbow", "wrist", "hand"))}   # C118: its arms and hands
+        self.g1_arm_geoms = [g for g in self.g1_geoms if int(m.geom_bodyid[g]) in arm_bodies]
         self.g1_arr = np.array(self.g1_geoms, dtype=np.int64)
         trunk = {m.body(n).id for n in ("pelvis", "waist_yaw_link", "waist_roll_link", "torso_link") if _body_or_none(m, n) is not None}
         self.g1_trunk = np.array([g for g in self.g1_geoms if int(m.geom_bodyid[g]) in trunk], dtype=np.int64)   # A86: the child's
@@ -3561,7 +3564,7 @@ class ParentMotion:
                     if min(float(np.linalg.norm(xy - q)) for q in knees + shins) >= 0.20 and _seg_dist(xy, T2, T) >= 0.20:
                         continue
                     if k not in own:
-                        own[k] = self._toy_clearance(k, np.zeros(3)) < 0.01
+                        own[k] = self._child_has(k)
                     if own[k]:
                         why = f"the {k} there is the child's"; break
                     sd = "L" if float((xy - T2) @ left) > 0 else "R"
@@ -3856,7 +3859,7 @@ class ParentMotion:
                 raise Refuse("no path on the floor to there (A6's clearances)")
             blocking.sort()
             toy = blocking[0][2]
-            if self._toy_clearance(toy, np.zeros(3)) < 0.01:
+            if self._child_has(toy):
                 raise Refuse(f"the only way there is past the {toy}, and the child has it (A4)")
             return [dict(type="plan", what="clear_way", args=dict(toy=toy)),
                     dict(type="plan", what="walk_to", args=dict(xy=_lst(goal), yaw=float(yaw_end), child=child, goal_r=goal_r,
@@ -3949,7 +3952,7 @@ class ParentMotion:
         T = np.asarray(T, float); T2 = np.asarray(T2, float)
         fwd = np.array([math.cos(yaw), math.sin(yaw)]); left = np.array([-fwd[1], fwd[0]])
         placed = []
-        if any(self._toy_clearance(k, np.zeros(3)) < 0.01 for k in toys):     # the child now touches one (its limbs sink under the
+        if any(self._child_has(k) for k in toys):                              # the child now touches one (its limbs sink under the
             a["info"]["replans"] = a["info"].get("replans", 0) + 1            # resting law): it is the child's, so another spot
             if a["info"]["replans"] > 2:
                 raise Refuse("no spot to kneel: the toys where she would kneel are the child's")
@@ -4040,8 +4043,15 @@ class ParentMotion:
         return [dict(type="reach", hands={side: dict(k="fixed", grip=_lst(g + best[1]), R=_lst(R))},
                      shape={side: self._shape_now(side)}, solve=False, n=6)]
 
-    def _toy_clearance(self, toy, shift):
-        """the least distance from a toy's shapes, moved by `shift`, to the child's (MuJoCo's own geometry, a scratch state)"""
+    def _child_has(self, toy):
+        """C118: the child HAS a toy when it lies within a centimetre of its hands or arms (A4: she never takes a toy from it). Until
+        day 27 any contact with its body counted, and a ball lying against the trunk of a still child blocked five lessons in a morning
+        (her hides and shows on it refused "the child has the ball"); the lane's own holds are its hands (lane._contacts)"""
+        return self._toy_clearance(toy, np.zeros(3), geoms=self.g1_arm_geoms) < 0.01
+
+    def _toy_clearance(self, toy, shift, geoms=None):
+        """the least distance from a toy's shapes, moved by `shift`, to the child's (MuJoCo's own geometry, a scratch state); `geoms`:
+        the child's shapes to measure against (all of them by default; C118: its arms' and hands' for "the child has it")"""
         m, sd = self.m, self.scratch
         sd.qpos[:] = self.d.qpos
         b = self.toys[toy]
@@ -4053,7 +4063,7 @@ class ParentMotion:
         for g in range(m.ngeom):
             if m.geom_bodyid[g] != b or not m.geom_contype[g]:
                 continue
-            for h in self.g1_geoms:
+            for h in (self.g1_geoms if geoms is None else geoms):
                 if np.linalg.norm(sd.geom_xpos[h] - sd.geom_xpos[g]) - m.geom_rbound[h] - m.geom_rbound[g] < best:
                     best = min(best, float(mujoco.mj_geomDistance(m, sd, g, h, best, ft)))
         return best
@@ -4679,8 +4689,8 @@ class ParentMotion:
             other = self.holding[self._near_hand(self.d.xpos[self.toys[toy]])]
             other = other if other is not None else next(v for v in self.holding.values() if v is not None)
             return [dict(type="plan", what="set_aside", args=dict(toy=other)), dict(type="plan", what="fetch", args=dict(toy=toy))]
-        if self._toy_clearance(toy, np.zeros(3)) < 0.01:
-            raise Refuse(f"the child has the {toy}: she never takes a toy from it (A4)")
+        if self._child_has(toy):                                        # C118: a toy at its hands or arms is its (A4); one lying
+            raise Refuse(f"the child has the {toy}: she never takes a toy from it (A4)")   # against its trunk or legs is not
         c = self.d.xpos[self.toys[toy]].copy()
         if c[2] > 1.0 or not self._in_plan(c[:2]):
             raise Refuse(f"the {toy} is out of her reach (A5)")
@@ -5551,7 +5561,7 @@ class ParentMotion:
         cands = sorted((float(np.linalg.norm(self.d.xpos[b][:2] - her)), k) for k, b in self.toys.items()
                        if k not in self.holding.values() and self.d.xpos[b][2] < 1.0 and self._in_plan(self.d.xpos[b][:2]))
         for _, k in cands:
-            if self._toy_clearance(k, np.zeros(3)) >= 0.01:
+            if not self._child_has(k):
                 out = [dict(type="plan", what="fetch", args=dict(toy=k))]
                 if then == "shake":
                     out.append(dict(type="plan", what="shake_held", args=dict(toy=k)))
