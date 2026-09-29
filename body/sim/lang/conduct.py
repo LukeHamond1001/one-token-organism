@@ -2235,6 +2235,14 @@ class Conduct:
         if self.pending is not None:                        # an ask she is judging: her eyes on the child, no point or show
             acts = blind(acts)                              # (A51, her method)
         for a in acts:
+            if line.intent == "comfort" and a.kind in ("lean_in", "attend") and \
+                    any(x[1] == a.kind and x[5] not in ENDED for x in self.acts_open):
+                # C111 (A136's dawn): ONE COMFORT AT A TIME. Every pain event composed a comfort whose hands (a lean-in, a hand on its
+                # trunk) queued behind the last comfort's still running, two of each open at every tick of life day 25 and her lessons
+                # cancelled before they began (74 in a morning; a toy in its hands 9 ticks of 12,000). The comfort's words are said;
+                # its hands are not asked again while the last ones are still on the way
+                self.comfort_skipped = int(getattr(self, "comfort_skipped", 0)) + 1
+                continue
             if a.during == "focus":                         # on the naming word only (4.3): requested as it begins
                 fw = [(wa, we) for w, wa, we in spans if w == line.focus] or [(wa, we) for _w, wa, we in spans[-1:]]
                 wa, we = fw[-1]

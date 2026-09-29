@@ -6773,6 +6773,28 @@ def test_vocal_habituation():
           f"{N} right names, the last {worths[-1]:.3f}, then answered as an echo with no smile; a new word pays 2; the count saved")
 
 
+def test_one_comfort_at_a_time():
+    """lang 63 (C111, A136's dawn): a pain event every second tick for 90 ticks: her comfort's words are said again and again, but its
+    hands (a lean-in, a hand on its trunk) are asked once and not again while the last ones are still on the way: at no tick are two
+    lean-ins or two attends open, and the skipped hands are counted. Life day 25 had two of each open at every tick and its lessons
+    cancelled before they began (74 in a morning)"""
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    _no_sets(con)
+    comforts = 0; worst = {"lean_in": 0, "attend": 0}
+    for t in range(0, 90):
+        s = con.tick(t, P(t, events=((("pain", None),) if t % 2 == 0 else ())))
+        if s.line is not None and s.line.intent == "comfort":
+            comforts += 1
+        for k in worst:
+            n = sum(1 for a in con.acts_open if a[1] == k and a[5] not in C.ENDED)
+            worst[k] = max(worst[k], n)
+    assert comforts >= 2, comforts                                                  # the words keep coming
+    assert worst["lean_in"] <= 1 and worst["attend"] <= 1, worst                    # the hands one at a time
+    assert int(getattr(con, "comfort_skipped", 0)) >= 1, getattr(con, "comfort_skipped", None)
+    print(f"lang 63: {comforts} comfort lines in 90 ticks of pain every second tick; at most {worst['lean_in']} lean-in and {worst['attend']} attend open",
+          f"at any tick; {con.comfort_skipped} hands skipped while the last were on the way (one comfort at a time)")
+
+
 def test_distress_owed():
     """lang 61 (A102, 2026-09-27): a distress event that comes while her voice is busy is not lost: the turn is owed and asked at her
     first free tick while the child is still face down; owed no longer once it is not face down; the debt survives a save"""
