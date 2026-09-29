@@ -252,6 +252,7 @@ PUT_AHEAD_M = 0.35                          # A109: the roll rung's toy set down
                                             # from her kneel beside the child: her knees at HEELS_BACK, the toy a hand beyond them)
 REBASE_TOL_M = 0.02                         # A108: her restored plan drawing her pelvis farther than this from where her body was
 TURN_HEAD_OFFS = (0.55, 0.65, 0.75)          # A136: her kneel at a prone child's head for the roll by its far shoulder, this far from its eyes
+NEVER_FETCHED = frozenset({"bucket"})          # C119: what she never carries: the hide game's container (day 27: ten shows of it refused at the put, 45 to 50 cm off)
                                             # (ours: the far shoulder's grip in her tall reach from 0.55 to 0.65 m in the rig)
                                             # last drawn is rebased onto the drawn pose (2 cm: under it her drive absorbs the difference)
                                             # more is a planning fault, refused (ours)
@@ -4680,6 +4681,8 @@ class ParentMotion:
         it (kneeling beside it, the side away from the child) and picks it up"""
         if toy in self.holding.values():
             return []
+        if toy in NEVER_FETCHED:                                            # C119: the bucket stays where it stands (the hide game's container,
+            raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")   # A129; her pick and put of it miss by 17 to 50 cm)
         return [dict(type="plan", what="fetch", args=dict(toy=toy))]
 
     def _plan_fetch(self, a, toy):

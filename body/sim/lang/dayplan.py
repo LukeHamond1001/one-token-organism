@@ -122,13 +122,14 @@ class DayPlan:
         pool, newest = list(BIRTH_TOYS), None                            # A119 (2026-09-28): the toys she has named join the day's
         if lane is not None:                                             # pool (the growth queue's toys in the room, once said: the
             f = lane.conduct.fast                                        # book, the rattle, the ring, the stacker), and the newest of
-            known = [w for w in TP.GROWTH_WORDS if TP.GROWTH_CLASS.get(w) == "toy" and w in lane.toys and (w in f.vocab or w in f.new_words)]
+            known = [w for w in TP.GROWTH_WORDS if TP.GROWTH_CLASS.get(w) == "toy" and w in lane.toys and (w in f.vocab or w in f.new_words)
+                     and w not in TP.OPEN_CONTAINERS]                    # (C119: the bucket is never a focus toy, nor the newest)
             pool += [w for w in known if w not in pool]                  # them is in every day's focus until another is named: a person
             newest = known[-1] if known else None                        # keeps offering the new toy (life day 15: the book's acts all in
         k = int(self.rng.integers(2, 4))                                 # the day's first quarter, then out of its reach; no lesson
         rest = [w for w in pool if w != newest]                          # brought it back, her focus drawn from the birth toys alone)
         draw = self.rng.choice(rest, size=min(k - (1 if newest else 0), len(rest)), replace=False).tolist()
-        self.focus = sorted(draw + ([newest] if newest else []))
+        self.focus = sorted(o for o in draw + ([newest] if newest else []) if o not in TP.OPEN_CONTAINERS)   # C119: the bucket stays where it stands (her grasp and put miss it by 17 to 50 cm): the hide game's container, never a toy of the day
         self.greeted, self.called, self.night_said = None, False, False
         self.next_play = self._scale(WAKE)
         self.log.append((day, "laid out", [(s, e, k) for s, e, k, _ in self.blocks], self.focus))
