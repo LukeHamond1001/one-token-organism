@@ -35,7 +35,7 @@ file is not read.) The robot sim needs `pip install -r requirements-sim.txt` (Mu
 synthesised by a small Swift server that runs on macOS only (`--voice fake` runs without it); its run command is in the section
 below.
 
-## The robot sim: where the project is (2026-09-28, 19:20)
+## The robot sim: where the project is (2026-09-28, 21:20)
 
 Since 2026-09-24 the same architecture lives in a simulated body: a Unitree G1 humanoid with hands (MuJoCo, 150 ms ticks, its own eyes,
 ears, touch, joint sense and a vocal tract) on a play mat in a room, with a simulated human-proportioned parent who kneels beside it,
@@ -43,9 +43,9 @@ talks, shows toys, turns it over and smiles or frowns at what it does. Its rewar
 pain (−1 on a gear loaded past its motor); there is no charge, no bottle and no other reward (A88, A91). One seed lives on this Mac,
 `data/g1_seed1` (born 2026-09-26; not in git), a day of 24,000 waking ticks and a live dark night of 24,000 more, its pair (`life.pt`
 and `world.pt`) saved at every dawn. Every change to the body or the teacher is built on a worktree, gated by the suites, measured on
-a copy of a dawn pair when its effect is in doubt, and put in at a dawn, one change a boundary, so each day's ledger has one cause.
+a copy of a dawn pair when its effect is in doubt, and put in at a dawn; one change a boundary was the law until the owner's word of 2026-09-28 (everything built goes in together and the day is read whole).
 
-Where it stands, day 23 of that life:
+Where it stands, day 26 of that life:
 - Days 1 to 9 were mostly the parent's faults found and fixed at one dawn each (A95 to A112 in `docs/SIM_DESIGN.md`): her plan frozen
   half-knelt for a day (A108), the child rolled out of the room into the hall (A110: carried back to the mat in its sleep), her turn's
   approach silencing judgment of the child's own acts (A111), her chasing a rolling child round the mat (A112).
@@ -87,20 +87,26 @@ Where it stands, day 23 of that life:
   0.50); her bring-back kneels where her hand reaches the put's place and the landing check belongs to lessons alone (A133's fixes);
   the elbow flip that ended a bring-back in the changed room found and fixed (C108); the changed room and the changed body as
   instruments (A133 `--room b`, A134 `--body b`). Day 25 opened at less than half the pain of the two days before at the same tick.
-- Built, verified and waiting for their dawns: the turn from where its grips are in reach, with a route from the child's head (A136;
-  dawn 29), the inner word, the voice's sure unsounded choice held as a said one is (A137; dawn 29), and waking imagination, the
-  stream run ahead at every surprising moment, its imagined future in the recall key and its imagined outcome in the gates (A138;
-  after body B's reading). Room B runs from dawn 27 for two days, body B from dawn 30. A real face reader was not built (the owner's
-  word).
-- Open: the turn of a moving prone child (C98); the wake's ankle, pinned by the child's own first acts each dawn (C104); a side-lying
-  G1 looks at the floor (C94); the actor's pinning of joints at their stops (C100); reaching under a table from a kneel. Her bring-back
-  in the changed room to a child that topples mid-fetch (C108) was an elbow flip in her arm's solve, fixed the same afternoon. The C rows of `docs/SIM_DESIGN.md` hold every open question with its
-  evidence.
+- Day 25 (the graded drive's day): the least pain of the three days (498 ticks, 2.1%) and the least play: every pain event composed a
+  new comfort whose hands queued behind the last, so 74 of her lessons were cancelled before they began (C111). The bucket was grasped
+  late in the day and the first hide game was played (not yet found).
+- Dawn 27 (21:12), on the owner's word ("implement everything right now", "one model, one environment, one teacher"): everything built
+  went in together: one comfort at a time (C111); the turn from where its grips are in reach, from the child's head first, since a
+  tick-by-tick rig showed the chest-side turn fails on a rocking child (0 of 9) and the head route turns it (3 of 4; A136, C98 fixed);
+  the inner word, the voice's sure unsounded choice held as a said one is (A137); and waking imagination, the stream run ahead at every
+  frame kept as new, its imagined future in the recall key and its imagined outcome in the arms' gates (A138). The room-B and body-B
+  days were cancelled: the instruments stay in the code, unused; generalization is read inside the one room (novel objects, the hide
+  game, her asks met) and the environment grows by what she brings in. No scheduled restarts remain; the days run on and the work is
+  the teacher's method, read day by day. A real face reader was not built (the owner's word).
+- Open: the wake's ankle, pinned by the child's own first acts each dawn (C104); a side-lying G1 looks at the floor (C94); the actor's
+  pinning of joints at their stops (C100); reaching under a table from a kneel; frame events end rarely under a live parent (C110; the
+  imagination's write trigger stands in); her prop lets a sitting trunk lean past its 35-degree cap in parent 8 (C112, older than the
+  day's branches; the child has not yet sat). The C rows of `docs/SIM_DESIGN.md` hold every open question with its evidence.
 
 How it runs:
 - The life: `python3 tools/sim_life.py --out data/g1_seed1 --resume --days 6 --d 512 --seed 1 --voice real --threads 4 --page`
   (the `/sim` page on `http://127.0.0.1:8030/`; `--resume` continues from the pair in `--out`; `--extra book_box` since dawn 20, `--extra book_box_bucket` from dawn 25, the room with the book, the box
-  and the bucket; `--room b` the furniture moved, `--body b` the changed body, one at a time). A measurement on a copy: copy the pair
+  and the bucket; `--room b` and `--body b` exist as instruments and are not used: one room, one body). A measurement on a copy: copy the pair
   to another folder and add `--set KEY=VALUE` (the actor's day copy was `--set actor=1 --ticks 24000`, no page).
 - The records: `data/g1_seed1/ticks.jsonl` (one row a tick: its judged acts, her line, the child's place and posture, its holds, the
   toys in the bucket, the tick's net reward and the novelty drive's payments so far), `report.json` at each night, `run.log` (a line
