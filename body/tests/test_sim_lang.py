@@ -6801,7 +6801,8 @@ def test_the_hide_told():
     child streamed her own words back and every one was answered (896 lines by midday, four in five replies), the hide's bucket lines
     composed before the drop were untrue and refused, and every reply emptied the queue, so the one hide done was never told. Here a
     conduct owes a reply (reply_due now) and has a hide just done on the duck, the duck seen in the bucket: her next line is the
-    drop's ("the duck is in the bucket."), its second line queued; a queued show line survives the reply, a queued label line does not"""
+    drop's ("the duck is in the bucket."), its second line queued; a queued show line survives the reply, a queued label line does not.
+    C124: with the bucket out of her view at the drop the telling waits (up to TOLD_WAIT ticks) and she looks at the bucket"""
     V2 = set(VOCAB) | {"bucket"}
     con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
     _no_sets(con)
@@ -6810,9 +6811,13 @@ def test_the_hide_told():
     bucket = ("bucket", "bucket", "olive", "mat", True)
     p = P(0, seen=seen(("duck", "duck", "yellow", "bucket", True), bucket))
     con.tick(0, p)
+    blind = P(1, seen=seen(("duck", "duck", "yellow", "bucket", True)))                  # C124: the bucket out of her view at the drop
     con.told_due = (1, "duck")
-    con.reply_due = dict(tick=1, kind="echo", word="oh", obj=None)
-    s1 = con.tick(1, p)
+    s0 = con.tick(1, blind)
+    assert (s0.line is None or s0.line.intent != "hide_told") and con.told_due is not None, (s0.line and s0.line.text, con.told_due)
+    assert any(a[1] == "look" and a[2] == "bucket" for a in con.acts_open), con.acts_open   # she looks at the bucket first
+    con.reply_due = dict(tick=2, kind="echo", word="oh", obj=None)
+    s1 = con.tick(2, P(2, seen=seen(("duck", "duck", "yellow", "bucket", True), bucket)))   # the bucket seen: told
     assert s1.line is not None and s1.line.intent == "hide_told" and "bucket" in s1.line.text, (s1.line and (s1.line.intent, s1.line.text))
     assert any(ln.intent == "hide_told" for ln in con.fast.queue), [ln.intent for ln in con.fast.queue]   # the second line waits
     # a lesson's set across a reply

@@ -271,6 +271,7 @@ LESSON_SETS = frozenset({"hide_told", "show", "set_near", "set_far", "hand_over"
 CRY_WINDOW, CRY_LASTS = 10, 5    # C120: a cry heard on 5 of the last 10 ticks (0.75 s of 1.5) before a comfort is composed (a wince passes; ours)
 CRY_LONG_WINDOW, CRY_LONG = 60, 30   # C120: a cry heard on 30 of the last 60 ticks (4.5 s of 9) is comforted again whatever the gap (ours)
 COMFORT_GAP = 200                # C120: ticks after a comfort before the next for a shorter cry (30 s; ours: Bell and Ainsworth 1972's tens of seconds)
+TOLD_WAIT = 40                   # C124: ticks the drop's telling waits for her eyes to reach the bucket (6 s; ours)
 LEFT_WHY = ("nowhere to kneel", "out of her reach", "beyond her reach", "cannot reach")   # ... and the motion's words for a toy she cannot get to
 LEFT_MOVED_M = 0.10                           # a left toy that has moved this far is a toy again (something changed: the child, or she, moved it)
 HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
@@ -2005,12 +2006,20 @@ class Conduct:
         #     896 lines by midday, 4 in 5 replies), the hide's lines composed before the drop were untrue and refused, and no reply
         #     ever let a lesson's set resume (4's `queue = []`): the game was played once and never told
         if self.told_due is not None:
-            td, self.told_due = self.told_due, None
-            o = p.obj(td[1])
-            lines = f.variation_set("hide_told", t, p, o=o) if o is not None else None
-            if lines and f.allowed(lines[0], t, reply=True)[0]:
-                f.queue = lines[1:] + [ln_ for ln_ in f.queue if ln_.intent in LESSON_SETS]
-                return lines[0], False, None
+            td = self.told_due
+            if not any(s_.id in TP.OPEN_CONTAINERS for s_ in p.seen) and t - int(td[0]) < TOLD_WAIT:
+                # C124 (day 29): at the drop her eyes are on the child, the bucket out of her view, and the drop's lines were refused
+                # "unseen: 'bucket'" at both of the morning's hides: she looks at the bucket first (once), and tells it when she sees it
+                if not getattr(self, "told_looked", False):
+                    self.told_looked = True
+                    self._request(Act("look", sorted(TP.OPEN_CONTAINERS)[0]), t, p)
+            else:
+                self.told_due = None; self.told_looked = False
+                o = p.obj(td[1])
+                lines = f.variation_set("hide_told", t, p, o=o) if o is not None else None
+                if lines and f.allowed(lines[0], t, reply=True)[0]:
+                    f.queue = lines[1:] + [ln_ for ln_ in f.queue if ln_.intent in LESSON_SETS]
+                    return lines[0], False, None
         # 4. the reply owed to the child's turn, after her latency
         if self.reply_due is not None and t >= self.reply_due["tick"]:
             r, self.reply_due = self.reply_due, None
