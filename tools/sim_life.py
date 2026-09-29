@@ -120,6 +120,42 @@ def _ended(lane, world, open_seen):
     return out
 
 
+def _cut_record_tail(path, tick):
+    """the record (ticks.jsonl) cut back to the rows before `tick`: a resume from a mid-day checkpoint lives the ticks after it again, and
+    the rows written the first time would be counted twice by every reader. The file is append-only; the last rows are scanned from
+    the end and the file truncated at the first row whose t > tick (the pair's own tick was lived once; nothing to cut when none)"""
+    try:
+        size = os.path.getsize(path)
+    except OSError:
+        return
+    if size == 0:
+        return
+    with open(path, "rb+") as f:
+        back = min(size, 64 << 20)                                     # the last 64 MB: more than a day of rows
+        f.seek(size - back)
+        buf = f.read(back)
+        start = 0 if back == size else buf.index(b"\n") + 1            # the first whole row in the window
+        cut = None
+        pos = start
+        while pos < len(buf):
+            end = buf.find(b"\n", pos)
+            if end < 0:
+                end = len(buf)
+            row = buf[pos:end]
+            try:
+                t = int(json.loads(row)["t"])
+            except Exception:
+                t = None
+            if t is not None and t > tick and cut is None:
+                cut = pos
+            if t is not None and t <= tick:
+                cut = None                                               # an older row after a newer one: only the final run of rows past the tick is cut
+            pos = end + 1
+        if cut is not None:
+            f.truncate(size - back + cut)
+            print(f"the record cut back to the pair's tick {tick} ({size - (size - back + cut)} bytes of rows lived again dropped)", flush=True)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -134,6 +170,8 @@ def main():
     ap.add_argument("--no-eyes", action="store_true")
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--save-every", type=int, default=4000, metavar="N",
+                    help="the pair saved every N waking ticks besides the night's own save (0: the night alone): a fix lands at the next checkpoint, not the next dawn (the owner's word 2026-09-29)")
     ap.add_argument("--page", action="store_true", help="serve the /sim page on http://127.0.0.1:8030/ (tools/sim_page.py)")
     ap.add_argument("--extra", default=None, help="a thing added to the room (body/sim/extras.py: book); the pair must have been migrated to it")
     ap.add_argument("--room", default="a", choices=("a", "b"), help="the room's layout (A133): a, the room of birth; b, its furniture moved")
@@ -160,6 +198,8 @@ def main():
         print(f"the film: frames every {args.film_every} ticks in {args.film}", flush=True)
     day_ticks = int(SIM_CFG.get("wake_ticks", 24000)) + int(SIM_CFG.get("night_ticks", 24000))
     total = args.ticks or int(args.days * day_ticks)
+    if args.resume:
+        _cut_record_tail(os.path.join(args.out, "ticks.jsonl"), int(world.tick))   # the rows lived past the pair's tick are lived again: dropped
     log = open(os.path.join(args.out, "ticks.jsonl"), "a")
     agg = collections.Counter(); walls = collections.defaultdict(list); prev_reading = 0.0
     open_seen = {}                                                        # A102: each act's kind and target by its motion id, for its end
@@ -170,6 +210,8 @@ def main():
         a = time.perf_counter()
         run.step()
         wall = time.perf_counter() - a
+        if args.save_every and not bool(world.night) and k > 0 and int(world.tick) % int(args.save_every) == 0:
+            t_sv = time.perf_counter(); L.save(); print(f"checkpoint: the pair saved at tick {world.tick} ({time.perf_counter() - t_sv:.1f} s)", flush=True)
         if snap is not None:
             snap.take(INV)
             if args.film and int(world.tick) % args.film_every == 0 and snap.room_jpg:
