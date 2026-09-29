@@ -268,6 +268,9 @@ HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
 FETCH_KINDS = ("show", "bring_back", "bring_far", "hand_over", "hide")   # A117: her acts that begin by fetching a toy (parent_motion._fetch)
 LESSON_SETS = frozenset({"hide_told", "show", "set_near", "set_far", "hand_over", "new_word"})   # C115: the sets a reply does not throw away
+CRY_WINDOW, CRY_LASTS = 10, 5    # C120: a cry heard on 5 of the last 10 ticks (0.75 s of 1.5) before a comfort is composed (a wince passes; ours)
+CRY_LONG_WINDOW, CRY_LONG = 60, 30   # C120: a cry heard on 30 of the last 60 ticks (4.5 s of 9) is comforted again whatever the gap (ours)
+COMFORT_GAP = 200                # C120: ticks after a comfort before the next for a shorter cry (30 s; ours: Bell and Ainsworth 1972's tens of seconds)
 LEFT_WHY = ("nowhere to kneel", "out of her reach", "beyond her reach", "cannot reach")   # ... and the motion's words for a toy she cannot get to
 LEFT_MOVED_M = 0.10                           # a left toy that has moved this far is a toy again (something changed: the child, or she, moved it)
 HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
@@ -1955,10 +1958,13 @@ class Conduct:
                 f.queue = []                                # comforted a prone child for 2,000 ticks; her first turn of the day ran
                 return ln, False, None                      # and left it prone, and was never asked again): asked at her first free
                                                             # tick, and again when a turn has ended with it still face down
-        if ev & {"pain", "distress"} and p.present:
+        if "pain" in ev:
+            self.cry_ticks = [x for x in (getattr(self, "cry_ticks", None) or []) if t - x < CRY_LONG_WINDOW] + [int(t)]   # C120: the cry's ticks of late
+        if ev & {"pain", "distress"} and p.present and self._comfort_due(t, ev):
             ln = f.compose("comfort", t, p)
             if ln is not None and f.allowed(ln, t, reply=True)[0]:
                 f.queue = []
+                self.comfort_t = int(t)
                 return ln, False, None
         # 2. being hit by the child's own act: stage 1 "oh!", stage 2 "no." (a reflex she triggered is her defect: no line); a toy
         #    it threw, stage 2: "no." (A89)
@@ -2204,6 +2210,26 @@ class Conduct:
         f.queue = lines[1:]
         f.last_new = t
         return lines[0]
+
+    def _comfort_due(self, t, ev):
+        """C120 (2026-09-29, day 28): A PARENT COMFORTS A CRY THAT LASTS, NOT EVERY WINCE, AND NOT AGAIN AT ONCE. Day 28's first 8,000 ticks
+        under A140 (the arms free) brought 172 pain ticks in short runs; each composed a comfort whose hands take about 100 ticks, so she
+        spent most of the morning comforting (37 lean-ins, 20 attends) and gave no lesson at all (no show, hide or bring). Here a plain
+        pain event asks for comfort once the cry was heard on CRY_LASTS of the last CRY_WINDOW ticks (a wince passes), and not within
+        COMFORT_GAP ticks of her last comfort unless it was heard on CRY_LONG of the last CRY_LONG_WINDOW; distress (face down and crying, the lane's) is answered at once, as before. Constants
+        ours, disclosed (a parent's own pause before the next soothing; Bell and Ainsworth 1972: the promptness of a response to crying
+        is measured in tens of seconds)"""
+        if "distress" in ev:
+            return True
+        ticks = getattr(self, "cry_ticks", None) or []
+        short = sum(1 for x in ticks if t - x < CRY_WINDOW)
+        if short < CRY_LASTS:
+            return False
+        last = getattr(self, "comfort_t", None)
+        if last is not None and t - int(last) < COMFORT_GAP and len(ticks) < CRY_LONG:
+            self.comfort_held = int(getattr(self, "comfort_held", 0)) + 1
+            return False
+        return True
 
     def _reply_line(self, r, t, p):
         f = self.fast

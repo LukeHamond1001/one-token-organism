@@ -6789,9 +6789,9 @@ def test_one_comfort_at_a_time():
         for k in worst:
             n = sum(1 for a in con.acts_open if a[1] == k and a[5] not in C.ENDED)
             worst[k] = max(worst[k], n)
-    assert comforts >= 2, comforts                                                  # the words keep coming
+    assert comforts >= 2, comforts                                                  # the words keep coming (C120: once the cry has lasted, again at its length)
     assert worst["lean_in"] <= 1 and worst["attend"] <= 1, worst                    # the hands one at a time
-    assert int(getattr(con, "comfort_skipped", 0)) >= 1, getattr(con, "comfort_skipped", None)
+    con.comfort_skipped = int(getattr(con, "comfort_skipped", 0))                   # (C120 spaces the comforts, so the hands are rarely asked while on the way)
     print(f"lang 63: {comforts} comfort lines in 90 ticks of pain every second tick; at most {worst['lean_in']} lean-in and {worst['attend']} attend open",
           f"at any tick; {con.comfort_skipped} hands skipped while the last were on the way (one comfort at a time)")
 
@@ -6829,6 +6829,37 @@ def test_the_hide_told():
     assert "show" in kept and "label" not in kept, (kept, s2.line and s2.line.text)
     print(f"lang 64: a hide just done, a reply owed: her next line {s1.line.text!r} (hide_told), its second line queued; across a reply the",
           f"queue keeps the show line and drops the label line ({kept})")
+
+
+def test_comfort_for_a_cry_that_lasts():
+    """lang 65 (C120): a wince is not comforted, a cry is, and not again at once. A pain event on 3 ticks: no comfort line. Pain on 8
+    ticks running: a comfort (the cry heard on 5 of the last 10). Pain on 6 ticks again 60 ticks later: no comfort (within COMFORT_GAP of
+    the last, the cry short; counted as held). Pain on every tick for 70 ticks: a second comfort (the cry on 30 of the last 60). A
+    distress event: comfort at once whatever the gap. Day 28's morning: 172 pain ticks, about 50 comforts of 100 ticks each, no lesson"""
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    _no_sets(con)
+    got = []
+    def live(t0, n, pain_ticks, ev=("pain", None)):
+        out = []
+        for k in range(n):
+            t = t0 + k
+            s = con.tick(t, P(t, events=((ev,) if k in pain_ticks else ())))
+            if s.line is not None and s.line.intent in ("comfort", "turn_over"):   # (distress face down is answered by her turn, A90)
+                out.append(t)
+        return out
+    got += live(0, 30, set(range(0, 3)))
+    assert not got, got                                                 # a wince of 3 ticks: nothing
+    got += live(30, 40, set(range(0, 8)))
+    assert len(got) == 1, got                                           # a cry of 8 ticks: one comfort
+    got += live(70, 40, set(range(0, 6)))
+    assert len(got) == 1 and int(getattr(con, "comfort_held", 0)) >= 1, (got, getattr(con, "comfort_held", None))   # 6 ticks again soon after: held
+    got += live(110, 90, set(range(0, 70)))
+    assert len(got) >= 2, got                                           # a long cry: comforted again
+    n0 = len(got)
+    got += live(200, 20, {0}, ev=("distress", None))
+    assert len(got) == n0 + 1, got                                      # distress: at once
+    print(f"lang 65: a 3-tick wince: no comfort; an 8-tick cry: one; a 6-tick cry 40 ticks later: held ({con.comfort_held}); a 70-tick cry: again;",
+          f"distress: at once (comforts at ticks {got})")
 
 
 def test_distress_owed():
