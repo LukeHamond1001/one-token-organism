@@ -102,7 +102,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # physiology's keys; the born body runs its stream free at every event's end, drawing its words from the life's random stream, and holds
 # the imagined future in its key and its gates, so every section moved). Was: threaded 939403f009b6152ad20ee679, one-thread
 # ec02bfab1b9c968862109499, consts 58c46b2d8c8b.
-digest  sim                   threaded a8db487d3bc61bed02e0982c consts ca9064aa1d5d | --profile sim
-digest  sim                   pinned   473614e4c173b84dba0a128f consts ca9064aa1d5d | --profile sim
-full    sim                   threaded organs b60c3b2f6fd5 store 47844695b93f optim ace3520e52b0 rng 8d76ba0f146b work f7c45ca2d391 cfg ac2db7fa3fd4
-full    sim                   pinned   organs ee54b24a4193 store 69e45fd42480 optim be032b29bcdf rng 8d76ba0f146b work a27c5561cf05 cfg ac2db7fa3fd4
+# Re-taken at A138's triggers (2026-09-28 19:18): the imagination also at every frame kept as new and at a pause of the effectors, so
+# the born body imagines far more often (12% of ticks) and every section moved again. Was: threaded a8db487d3bc61bed02e0982c,
+# one-thread 473614e4c173b84dba0a128f (the event-end trigger alone).
+digest  sim                   threaded 58b14a2405b48f72a5870c6d consts ca9064aa1d5d | --profile sim
+digest  sim                   pinned   ceafc8053f4290bcff977927 consts ca9064aa1d5d | --profile sim
+full    sim                   threaded organs abec9b050c99 store 7c0475dc585a optim 49375a022ba5 rng 9d2490356080 work 8ccd54c8e61f cfg ac2db7fa3fd4
+full    sim                   pinned   organs a23b4db6976e store 6ab5015edba6 optim 7bad9fd3c903 rng 9d2490356080 work db3888e0d007 cfg ac2db7fa3fd4

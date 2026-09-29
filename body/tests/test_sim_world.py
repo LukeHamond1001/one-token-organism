@@ -1479,7 +1479,7 @@ def test_waking_imagination():
     """world 34 (A138, imagine_key and imagine_pav): at a frame-event's end the body runs its stream free from the tape's last rows
     (REM's rollout, awake, `_imagine`), keeps the imagined frames' direction (`_imag`, a unit vector) in its recall key and the
     amygdala's forecast on the imagined states (`_imag_N`) in its gates' bias; both fade with GOAL_TAU. A life of 60 ticks with both
-    on, an event's end forced, imagines once, its key with the imagined future held lies apart from the same key without it, and the imagined
+    on imagines at each frame the store keeps as new and at a forced event's end, its key with the imagined future held lies apart from the same key without it, and the imagined
     valence is a number; with both off nothing is imagined and the attributes stay unset; the night lets them go"""
     from body.core.world import WorldLoop
     from body.life import Life
@@ -1510,7 +1510,7 @@ def test_waking_imagination():
         out[on] = dict(n=n, unit=(im is not None and abs(float(im.norm()) - 1.0) < 0.5), N=N, moved=cos(k_with, k_without),
                        ends=len(getattr(L, "_rec_ends", []) or []))
         if on:
-            assert n == 1 and out[on]["ends"] >= 1, out[on]
+            assert n >= 1 and out[on]["ends"] >= 1, out[on]                # at the frames kept as new, and at the forced end
             assert im is None or im.shape == (L.m.d,), im
             assert N is None or isinstance(N, float), N
             if im is not None:
@@ -1519,7 +1519,7 @@ def test_waking_imagination():
             assert n == 0 and im is None and N is None and out[on]["moved"] > 0.9999, out[on]
         L._frames_night()
         assert getattr(L, "_imag", None) is None and getattr(L, "_imag_N", None) is None
-    print(f"world 34: waking imagination: {out[1]['n']} imagining at an event's end after 60 ticks (a unit future held: {out[1]['unit']},",
+    print(f"world 34: waking imagination: {out[1]['n']} imaginings in 60 ticks (at the frames kept as new and a forced event's end; a unit future held: {out[1]['unit']},",
           f"the key with it at cosine {out[1]['moved']:.3f} to the key without; the imagined valence {out[1]['N']}); the switches off: none",
           f"({out[0]['n']} imaginings, the key unmoved {out[0]['moved']:.4f}); IMAG_SCALE {IMAG_SCALE}; the night lets the future go")
 

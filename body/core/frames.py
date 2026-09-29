@@ -251,6 +251,8 @@ class FramesMixin:
         self._boosts_remap(st.last_remap)                             # 1 - its nearest stored key's cosine (Lisman and Grace 2005's
                                                                       # comparator): the novelty source pays by it next tick, so a frame
                                                                       # like the day's others pays little and the drive habituates
+        self._imagine()                                               # A138: a frame kept as new is a surprising moment: the body looks ahead
+                                                                      # (the mismatch that drives dopamine also drives the forward sweep)
         self._flast_write = (key.clone(), value.clone())
         if getattr(self, "_fstart_armed", False):
             st.mark_start(key, value); self._fstart_armed = False
@@ -374,6 +376,7 @@ class FramesMixin:
         self._record_tick(s if s is not None else 0.0, delta, tag, r)
         self._goal_trace(nxt)                                         # A130: the word it said this tick held for the next keys
         self._imagine_fade()                                          # A138: the imagined future fades
+        self._imagine_pause()                                         # A138: a pause in its own acting is the other moment to think ahead
         self._frame_foresee()
         if self._night_frames_on():
             self._tape_tick()                                         # step R8: the tick taped beside its record (body/core/sleep.py)

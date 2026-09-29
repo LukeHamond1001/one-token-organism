@@ -110,6 +110,8 @@ from .amygdala import episode_entries, night_draw  # noqa: F401  (night_draw: R8
 from .physiology import FRAMES, SLEEP
 
 IMAG_SEED = 3                                # A138: the tape's rows the waking imagination starts from (REM's k: the window's first 3)
+IMAG_PAUSE = 10                              # A138: a pause of this many ticks (1.5 s) with every motor effector at rest is the other moment
+                                             # the body thinks ahead (deliberation at a pause: Redish 2016's vicarious trial and error; ours)
 TAPE_BLOCK = 512                                                         # rows a block of the day's tape holds (a save keeps its last block
                                                                          # whole: at most 511 rows unused, about 4 MB at the G1's sizes)
 
@@ -823,6 +825,19 @@ class SleepMixin:
                               - float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg < 0.0)))
                 self._imag_N = float(sum(Ns) / len(Ns)) if Ns else 0.0
         self._imag_n = int(getattr(self, "_imag_n", 0)) + 1
+
+    def _imagine_pause(self):
+        """A138: the pause trigger. Under a live parent the frames' events rarely end (the surprise's fast average stays above half its
+        slow one while she talks: 0 ends in 1,500 ticks of a copy against 4 in 300 with her still), so the body also thinks ahead when
+        its own motor effectors have all rested IMAG_PAUSE ticks running, once per pause"""
+        if not (int(self.cfg.get("imagine_key", 0)) or int(self.cfg.get("imagine_pav", 0))):
+            return
+        resting = all(int(st_["now"]["act"]) == int(e_.rest_id) for e_, st_ in zip(self.anatomy.motors, self.motor)) if getattr(self, "motor", None) else False
+        run = int(getattr(self, "_rest_run", 0)) + 1 if resting else 0
+        self._rest_run = run
+        if run == IMAG_PAUSE:
+            self._imag_pauses = int(getattr(self, "_imag_pauses", 0)) + 1
+            self._imagine()
 
     def _imagine_fade(self):
         """the imagined future fades with the held word's time constant (called once a tick after the frame's write)"""
