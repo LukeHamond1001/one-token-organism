@@ -447,11 +447,14 @@ class ActTable(nn.Module):
         return u
 
     def logits(self, pred, sharp):
-        """the per-joint readout of the proposal `pred` [d] (None: no proposal, every setting at 0): a list of [K_j], joint by joint"""
+        """the per-joint readout of the proposal `pred` [d] (None: no proposal, every setting at 0): a list of [K_j], joint by joint;
+        `sharp` one sharpness for every joint, or one per joint (A140: a joint's decisiveness is its own)"""
         out = []; off = 0
-        for k in self.factors:
+        per = list(sharp) if isinstance(sharp, (list, tuple)) else None
+        for j, k in enumerate(self.factors):
             R = self.rows[off:off + k]; off += k
-            out.append(float(sharp) * (pred @ R.t()) if pred is not None else torch.zeros(k, device=R.device))
+            s_ = float(per[j]) if per is not None else float(sharp)
+            out.append(s_ * (pred @ R.t()) if pred is not None else torch.zeros(k, device=R.device))
         return out
 
 

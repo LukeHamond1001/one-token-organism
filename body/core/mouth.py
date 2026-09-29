@@ -715,7 +715,7 @@ class MouthMixin:
             if stop is not None:
                 st["stops"][stop] = int(st["stops"].get(stop, 0)) + 1
         st["now"] = {"act": int(act), "acted": bool(acted), "drew": bool(drew), "p_act": float(p_act), "p_choice": float(p_choice),
-                     "digits": dig, "probs": probs, "feat": feat.cpu(), "act_on": act_on, "cost": 0.0, "sharp": float(sharp_e),
+                     "digits": dig, "probs": probs, "feat": feat.cpu(), "act_on": act_on, "cost": 0.0, "sharp": float(sum(sharp_e) / len(sharp_e)) if isinstance(sharp_e, list) else float(sharp_e),
                      "cont": bool(cont), "stop": stop, "reflex": rfx is not None, "world": int(rfx) if rfx is not None else int(act), "int": 0.0}
         # STEP R6h: THE CORD'S PATTERNS (body/core/cord.py): its spinal pattern generator and its born cry, added below the gate to the act
         # this tick (the world adds them to the targets it re-anchors: acts.cord); the gate's draw and the act's eligibility are the gate's
@@ -809,6 +809,28 @@ class MouthMixin:
         s = float(self.m.read_sharp)
         if not getattr(e, "inverse", False):
             return s
+        if int(self.cfg.get("sharp_per_joint", 0)):
+            # A140 (C117, 2026-09-29): EACH JOINT'S DECISIVENESS IS ITS OWN, AND EARNED BY VARIETY. On life day 27 every arm joint sat at a
+            # stop (the left elbow 581 ticks of 600) while the actor sent big steps into the stop: the effector's mean kappa stayed "fair"
+            # on the other joints and on a near-constant act (a 1% sampling variety keeps the chance-corrected kappa high), so the
+            # readout stayed sharp and the fixed point A97 meant to soften held. Here joint j reads at s ** (rel_j x variety_j): rel_j
+            # from its own kappa (inv_kappa[j]) and variety_j the normalized spread of its true settings over the inverse model's
+            # horizon (its confusion's column marginals: 0 for one setting always, 1 for all alike; no new constant: the docstring's own
+            # "a joint whose acts never vary has shown nothing" made literal)
+            kap = st.get("inv_kappa") or []
+            conf = st.get("inv_conf") or []
+            out = []
+            for j in range(len(e.factors)):
+                k_j = float(kap[j]) if j < len(kap) else 0.0
+                rel = max(0.0, min(1.0, (k_j - KAPPA_FAIR) / (KAPPA_ALMOST_PERFECT - KAPPA_FAIR)))
+                var = 0.0
+                if j < len(conf) and conf[j]:
+                    Cj = conf[j]; K = len(Cj)
+                    cols = [sum(Cj[r][c] for r in range(K)) for c in range(K)]; n = sum(cols)
+                    if n > 0 and K > 1:
+                        var = (1.0 - max(cols) / n) / (1.0 - 1.0 / K)
+                out.append(s ** (rel * max(0.0, min(1.0, var))))
+            return out
         kappa = float(st.get("inv_gain", 0.0) or 0.0)
         rel = max(0.0, min(1.0, (kappa - KAPPA_FAIR) / (KAPPA_ALMOST_PERFECT - KAPPA_FAIR)))
         return s ** rel                                                     # A104: the temperature's own (geometric) scale, on kappa's

@@ -483,6 +483,7 @@ SIM_CFG = dict(
                                    # re-find and re-grasp rulers)
     inner_speech=1,                # A137: the inner word (frames._goal_trace: the voice's sure, unsounded top choice held; memory.INNER_P); on from
                                    # dawn 29 (the private-speech ruler with --covert)
+    sharp_per_joint=1,             # A140 (C117): each joint's decisiveness its own, earned by its kappa and its settings' variety (mouth._motor_sharp)
     imagine_key=1, imagine_pav=1,  # A138: waking imagination at each event's end (sleep._imagine: the REM rollout awake; IMAG_SCALE; the
                                    # amygdala's forecast on the imagined future into the gates); on from its dawn (the brain sprint)
     # STEP R8: THE NIGHT OVER FRAMES (SIM_DESIGN.md 7.4 item 2, 8's R8 row, 9's tape; body/core/sleep.py; physiology.py SLEEP): each awake
