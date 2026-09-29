@@ -249,7 +249,7 @@ class DayPlan:
                 c.motion.lesson_dist = LESSON_DIST0 + LESSON_STEP * lvl
                 c.request("set_near", o=o)
                 self.log.append((t, "lesson", "reach", o, lvl, round(c.motion.lesson_dist, 2)))
-            elif "bucket" in seen and o != "bucket" and self.hide_turn:       # A129: the hide game, every other lesson once it grasps the
+            elif "bucket" in seen and o != "bucket" and self.hide_turn and seen[o].on != "hand":   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
                 self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the bucket in
                 c.request("hide", o=o)                                  # its view; its hand into the bucket after is "found" (worth 2)
                 self.log.append((t, "lesson", "hide", o, got))

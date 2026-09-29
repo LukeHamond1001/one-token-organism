@@ -267,6 +267,7 @@ FIELDS = POINTING + ("face",)                 # and her face ("mama" on a tick i
 HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
 FETCH_KINDS = ("show", "bring_back", "bring_far", "hand_over", "hide")   # A117: her acts that begin by fetching a toy (parent_motion._fetch)
+LESSON_SETS = frozenset({"hide_told", "show", "set_near", "set_far", "hand_over", "new_word"})   # C115: the sets a reply does not throw away
 LEFT_WHY = ("nowhere to kneel", "out of her reach", "beyond her reach", "cannot reach")   # ... and the motion's words for a toy she cannot get to
 LEFT_MOVED_M = 0.10                           # a left toy that has moved this far is a toy again (something changed: the child, or she, moved it)
 HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
@@ -502,6 +503,7 @@ INTENTS = {
                                                                                           # its far shoulder, past its reach
     "hand_over": Intent("plain", False, None, (Act("hand_over", "{o}"), EYES)),          # the toy into its hand (the handle rung)
     "hide": Intent("plain", False, None, (Act("hide", "{o}"), LOOK_O, EYES)),            # the hide game (A129): the toy let go into the
+    "hide_told": Intent("plain", False, None, (LOOK_O, EYES)),                          # C115: the hide told at its drop (the bucket lines true then)
                                                                                           # bucket in its view, her look to the bucket, then to it
     "redirect": Intent("plain", False, None, (Act("point", "{o}"), LOOK_O)),
     "ask_where": Intent("plain", True, "gaze", (EYES,)),                 # never a point or a look to it: the ask tests the word
@@ -959,6 +961,7 @@ class Conduct:
                                               # while it moves, acts [id, kind, target, status] of every act not yet reported
                                               # ended (hers, and OUTSIDE's she did not ask for); the last ATTN_KEEP ticks
         self.acts_open = []                   # acts not yet reported ended: [motion id, kind, target, thing, tick, status];
+        self.told_due = None                  # C115: (tick, toy) of a hide just done, told before the reply she owes
         self.touched = set()                  # A111: the open hands-on acts (ids) in which her hold has engaged: from then to
         self.left = {}                        # A117 (C102): the toys she left where they lie, {toy: [x, y] at her refusal}: an
                                               # act of hers refused because she could not get to the toy (nowhere to kneel
@@ -1080,6 +1083,8 @@ class Conduct:
             st = got[a[0]] if a[0] in got else self._status(a, t)
             if st in ENDED:
                 self.ended[a[0]] = st
+                if st == "done" and a[1] == "hide":                          # C115: the drop done: told at once ("the book is in the
+                    self.told_due = (int(t), a[2])                           # bucket."), before the reply she owes (_choose 3b)
                 if st == "refused" and a[1] in FETCH_KINDS and a[2] in getattr(self.motion, "toys", {}):
                     why = str(self.motion.why(a[0]) or "")                  # A117: she could not get to the toy: left where it lies
                     if any(k in why for k in LEFT_WHY):
@@ -1989,10 +1994,22 @@ class Conduct:
             ln = self._trial_line(t, p)
             return (ln, False, None) if ln is not None else None
         # 3. (the meal's line is gone with the charge: A88)
+        # 3b. C115: what she has just done, told at once: the hide's drop, before the reply she owes. Day 26 (the first day with the
+        #     hide in reach): the child streamed her own words back every few ticks and every one was answered ("oh! mama is here.",
+        #     896 lines by midday, 4 in 5 replies), the hide's lines composed before the drop were untrue and refused, and no reply
+        #     ever let a lesson's set resume (4's `queue = []`): the game was played once and never told
+        if self.told_due is not None:
+            td, self.told_due = self.told_due, None
+            o = p.obj(td[1])
+            lines = f.variation_set("hide_told", t, p, o=o) if o is not None else None
+            if lines and f.allowed(lines[0], t, reply=True)[0]:
+                f.queue = lines[1:] + [ln_ for ln_ in f.queue if ln_.intent in LESSON_SETS]
+                return lines[0], False, None
         # 4. the reply owed to the child's turn, after her latency
         if self.reply_due is not None and t >= self.reply_due["tick"]:
             r, self.reply_due = self.reply_due, None
-            f.queue = []                                   # the turn answered; the set it broke into is not resumed
+            f.queue = [ln_ for ln_ in f.queue if ln_.intent in LESSON_SETS]   # the turn answered; the set it broke into is not resumed,
+                                                           # unless it is a lesson's (C115): a parent answers and goes on with the game
             ln = self._reply_line(r, t, p)
             if ln is not None and f.allowed(ln, t, reply=True)[0]:
                 return ln, False, None
@@ -2293,6 +2310,7 @@ class Conduct:
         return dict(fast=self.fast.state(), routine=self.routine, pending=self.pending, reply_due=self.reply_due,
                     no_target_since=self.no_target_since, attn=[dict(e, acts=[list(a) for a in e["acts"]]) for e in self.attn],
                     acts_open=[list(a) for a in self.acts_open], focus_acts=[list(a) for a in self.focus_acts],
+                    told_due=None if self.told_due is None else [int(self.told_due[0]), self.told_due[1]],
                     touched=sorted(int(x) for x in self.touched),
                     left={k: [float(x) for x in v] for k, v in self.left.items()},
                     face_until=self.face_until, probes=[dict(x) for x in self.probes], prompts=[list(x) for x in self.prompts],
@@ -2315,6 +2333,7 @@ class Conduct:
         self.no_target_since = s["no_target_since"]
         self.attn = [_old_entry(e) for e in s["attn"]]     # (an older save's log: fail-closed, _old_entry)
         self.acts_open = [list(a)[:6] for a in s["acts_open"]]
+        td = s.get("told_due"); self.told_due = None if td is None else (int(td[0]), td[1])   # (C115; older saves: none)
         self.touched = set(int(x) for x in s.get("touched", []))
         self.left = {k: [float(x) for x in v] for k, v in s.get("left", {}).items()}   # (A117; older saves: none)
         self.ended = {}

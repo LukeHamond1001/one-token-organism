@@ -756,10 +756,11 @@ def test_the_hide_line():
     assert not ok and "not true" in reason, reason
     ok, reason = TP.check("the duck is in the box.", V2, None, P(0, seen=seen(("duck", "duck", "yellow", "box", True), box)), (), source="fast")
     assert not ok and "containment" in reason, reason
-    fr = TP.FRAMES["hide"]
+    fr = TP.FRAMES["hide_told"]
     assert [f[0] for f in fr] == ["the {o} is in the bucket.", "look. in the bucket. the {o}."] and "bucket" in TP.OPEN_CONTAINERS, fr
+    assert [f[0] for f in TP.FRAMES["hide"]] == ["look. the {o}."], TP.FRAMES["hide"]   # C115: the bucket lines belong to the drop
     print("lang 62: 'the duck is in the bucket.' passes of a duck seen in the bucket, 'not true' of one on the mat; 'in the box' stays containment",
-          "she cannot see; the hide's two frames end on their focus")
+          "she cannot see; the drop's two frames (hide_told) end on their focus; the hide's own line is true as she takes the toy")
 
 
 def test_line_check_truth():
@@ -6793,6 +6794,41 @@ def test_one_comfort_at_a_time():
     assert int(getattr(con, "comfort_skipped", 0)) >= 1, getattr(con, "comfort_skipped", None)
     print(f"lang 63: {comforts} comfort lines in 90 ticks of pain every second tick; at most {worst['lean_in']} lean-in and {worst['attend']} attend open",
           f"at any tick; {con.comfort_skipped} hands skipped while the last were on the way (one comfort at a time)")
+
+
+def test_the_hide_told():
+    """lang 64 (C115): the hide told at its drop, before the reply she owes, and a lesson's set kept across a reply. Life day 26: the
+    child streamed her own words back and every one was answered (896 lines by midday, four in five replies), the hide's bucket lines
+    composed before the drop were untrue and refused, and every reply emptied the queue, so the one hide done was never told. Here a
+    conduct owes a reply (reply_due now) and has a hide just done on the duck, the duck seen in the bucket: her next line is the
+    drop's ("the duck is in the bucket."), its second line queued; a queued show line survives the reply, a queued label line does not"""
+    V2 = set(VOCAB) | {"bucket"}
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    _no_sets(con)
+    if "bucket" not in con.fast.vocab:
+        con.fast.vocab = tuple(con.fast.vocab) + ("bucket",)                # the bucket's word hers (the growth queue admits it)
+    bucket = ("bucket", "bucket", "olive", "mat", True)
+    p = P(0, seen=seen(("duck", "duck", "yellow", "bucket", True), bucket))
+    con.tick(0, p)
+    con.told_due = (1, "duck")
+    con.reply_due = dict(tick=1, kind="echo", word="oh", obj=None)
+    s1 = con.tick(1, p)
+    assert s1.line is not None and s1.line.intent == "hide_told" and "bucket" in s1.line.text, (s1.line and (s1.line.intent, s1.line.text))
+    assert any(ln.intent == "hide_told" for ln in con.fast.queue), [ln.intent for ln in con.fast.queue]   # the second line waits
+    # a lesson's set across a reply
+    con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    _no_sets(con2)
+    p2 = P(0)
+    con2.tick(0, p2)
+    show = TP.Line("look. the duck.", "show", "plain", "duck", "duck", (), "fast")
+    label = TP.Line("a duck.", "label", "plain", "duck", "duck", (), "fast")
+    con2.fast.queue = [show, label]
+    con2.reply_due = dict(tick=1, kind="social", word=None, obj=None)
+    s2 = con2.tick(1, p2)
+    kept = [ln.intent for ln in con2.fast.queue]
+    assert "show" in kept and "label" not in kept, (kept, s2.line and s2.line.text)
+    print(f"lang 64: a hide just done, a reply owed: her next line {s1.line.text!r} (hide_told), its second line queued; across a reply the",
+          f"queue keeps the show line and drops the label line ({kept})")
 
 
 def test_distress_owed():
