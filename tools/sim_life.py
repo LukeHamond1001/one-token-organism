@@ -183,6 +183,8 @@ def main():
                    render_ms=round(1000 * ((0.0 if eyes is None else eyes.timing["render_s"]) - rs), 1),
                    stress=round(float(L.stress), 3), mood=round(float(L.mood), 3), cry=bool(world.crying),
                    pain=None if pain is None else [int(i) for i in np.nonzero(pain)[0]])
+        rec["spinal"] = dict(getattr(world, "_spinal", {}) or {})          # A139's instrument (C117): the cord's events this tick (grasp,
+        rec["tendon_n"] = int(getattr(world, "stats_tendon", 0))           # prone, tendon per effector) and the tendon reflex's joint count so far
         if args.probe_joint is not None:                                   # C113's instrument: one joint against its stops and its gear
             J_ = int(args.probe_joint); d_ = world.d
             rec["pj"] = [round(float(d_.qpos[world.qadr[J_]]), 3), round(float(world.lo[J_]), 3), round(float(world.hi[J_]), 3),
