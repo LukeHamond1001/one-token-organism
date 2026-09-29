@@ -108,7 +108,11 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Checked at A139 (2026-09-28 22:19, branch a139: the tendon organ's inhibition at the cord, a born reflex): the born 300 ticks load no
 # gear to its line, so the digests are unmoved (threaded 58b14a2405b48f72a5870c6d, one-thread ceafc8053f4290bcff977927, the full
 # digests equal); not re-pinned.
-digest  sim                   threaded 58b14a2405b48f72a5870c6d consts ca9064aa1d5d | --profile sim
-digest  sim                   pinned   ceafc8053f4290bcff977927 consts ca9064aa1d5d | --profile sim
-full    sim                   threaded organs abec9b050c99 store 7c0475dc585a optim 49375a022ba5 rng 9d2490356080 work 8ccd54c8e61f cfg ac2db7fa3fd4
-full    sim                   pinned   organs a23b4db6976e store 6ab5015edba6 optim 7bad9fd3c903 rng 9d2490356080 work db3888e0d007 cfg ac2db7fa3fd4
+# Re-pinned at A140 (2026-09-29 01:26, branch a140: sharp_per_joint, a switch of the body declared in physiology's defaults and set 1 by the
+# G1): the cfg digest moved with the new key; the born body's organs, store, optimizers, random streams and work are UNMOVED (the born
+# 300 ticks earn no joint a kappa past "fair", so no readout changes). Was: threaded 58b14a2405b48f72a5870c6d, one-thread
+# ceafc8053f4290bcff977927, consts ca9064aa1d5d, cfg ac2db7fa3fd4.
+digest  sim                   threaded 575117e71e4f31ad8868eee2 consts 39cd08fe698e | --profile sim
+digest  sim                   pinned   cca44630092131e560dcf6c4 consts 39cd08fe698e | --profile sim
+full    sim                   threaded organs abec9b050c99 store 7c0475dc585a optim 49375a022ba5 rng 9d2490356080 work 8ccd54c8e61f cfg ee7b12ced2f9
+full    sim                   pinned   organs a23b4db6976e store 6ab5015edba6 optim 7bad9fd3c903 rng 9d2490356080 work db3888e0d007 cfg ee7b12ced2f9

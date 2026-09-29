@@ -317,6 +317,7 @@ MOTOR = dict(
     # continuation), kappa_j = (p_o - mean chance) / (1 - mean chance) over the same horizon; 0: R6's Cohen's kappa, its chance from
     # the pooled rates (which reads a label following the regime's mode as skill when the acts' rates shift). The sim: 1
     act_inv_chance=0,
+    sharp_per_joint=0,   # A140: each joint's decisiveness its own, earned by its kappa and its settings' variety (mouth._motor_sharp); the G1 sets 1
     # FATIGUE PER EFFECTOR (3.5; section 10's fatigue): each motor effector's acts' cost is its own fatigue, recovering at the body's
     # half-life, read by its own gate and weighed by its own lesson; 0: R5's, every cost added to the body's one fatigue (which would
     # add up nine limbs' costs and silence the voice). The sim: 1
