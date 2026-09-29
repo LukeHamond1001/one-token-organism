@@ -125,7 +125,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--days", type=float, default=2.0)
     ap.add_argument("--ticks", type=int, default=0, help="stop after this many ticks (0: the days)")
-    ap.add_argument("--probe-joint", type=int, default=None, metavar="J",
+    ap.add_argument("--probe-joint", type=str, default=None, metavar="J[,J...]",
                     help="an instrument (C113): the record row gets pj for BODY_JOINTS[J]: [angle, low stop, high stop, the servo's target, its torque, the gear's sensed 10 ms peak load, the pain line]")
     ap.add_argument("--lr0", action="store_true", help="every learning rate 0 (S5b's plumbing)")
     ap.add_argument("--d", type=int, default=512)
@@ -186,11 +186,12 @@ def main():
         rec["acts"] = {k: int(v) for k, v in (getattr(world, "_last_acts", None) or {}).items()}   # C117's instrument: the effectors' flat acts this tick
         rec["spinal"] = dict(getattr(world, "_spinal", {}) or {})          # A139's instrument (C117): the cord's events this tick (grasp,
         rec["tendon_n"] = int(getattr(world, "stats_tendon", 0))           # prone, tendon per effector) and the tendon reflex's joint count so far
-        if args.probe_joint is not None:                                   # C113's instrument: one joint against its stops and its gear
-            J_ = int(args.probe_joint); d_ = world.d
-            rec["pj"] = [round(float(d_.qpos[world.qadr[J_]]), 3), round(float(world.lo[J_]), 3), round(float(world.hi[J_]), 3),
-                         round(float(d_.ctrl[world.aid[J_]]), 3), round(float(d_.qfrc_actuator[world.dof[J_]]), 2),
-                         round(float(world._sensed["bd_peak"][J_]), 2), round(float(world.tau_hold[J_]), 2)]
+        if args.probe_joint is not None:                                   # C113's instrument: joints against their stops and their gears
+            d_ = world.d; pjs = [int(x) for x in str(args.probe_joint).split(",")]
+            rows_ = [[round(float(d_.qpos[world.qadr[J_]]), 3), round(float(world.lo[J_]), 3), round(float(world.hi[J_]), 3),
+                      round(float(d_.ctrl[world.aid[J_]]), 3), round(float(d_.qfrc_actuator[world.dof[J_]]), 2),
+                      round(float(world._sensed["bd_peak"][J_]), 2), round(float(world.tau_hold[J_]), 2)] for J_ in pjs]
+            rec["pj"] = rows_[0] if len(rows_) == 1 else rows_
         if not night:
             ls = lane.last
             rec.update(line=ls.get("line"), ep=None if lane.plan is None else lane.plan.kind, word=INV.get(int(ls.get("word", 0))),
