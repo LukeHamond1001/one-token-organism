@@ -919,13 +919,12 @@ def test_the_hide_with_the_bucket_out_of_reach():
         lane.toys = tuple(o for o in lane.toys if o != "bucket")                    # no bucket she knows of: no hide
         plan._lesson(300, lane)
         assert asked[-1][0] != "hide", asked[-2:]
-        lane.toys = real_toys
+        lane.toys = tuple(real_toys) + (("bucket",) if "bucket" not in set(real_toys) else ())   # the bucket's place known again
         plan.hide_turn = False
-        c.book["got"][toy] = 0                                                       # the handle rung: its lesson sets the turn
-        lane._p = SimpleNamespace(seen=[S(toy, True)], events=[], child_holds=())
-        for k in range(3):
-            plan._lesson(400 + k, lane)
-        assert plan.hide_turn is True, plan.hide_turn
+        c.book["got"][toy] = 2 * DP.K.MASTERED_N                                   # mastered, the hide's turn spent: the handle rung
+        lane._p = SimpleNamespace(seen=[S(toy, True)], events=[], child_holds=())    # (its lesson sets the turn with the bucket at hand)
+        plan._lesson(400, lane)
+        assert asked[-1][0] == "hand_over" and plan.hide_turn is True, (asked[-1], plan.hide_turn)
     finally:
         c.request, lane._p, lane.toys = real_request, real_p, real_toys
     print(f"lane 23 (C152): the hide asked with the bucket seen beyond its reach and with the bucket's place known, none with no bucket; "
