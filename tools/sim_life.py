@@ -244,6 +244,9 @@ def main():
         rec["pbig"] = [[round(float(p_[0] + p_[-1]), 3) for p_ in ((st.get("now") or {}).get("probs") or [])][5:7] for st in L.motor[3:5]]   # C146: each arm's
                                                                                     # actor's probability of a big step (either way) at its wrist pitch and yaw: the
                                                                                     # wrist pain's ruler (big wrist steps precede 40% of it; days 29 to 39: 10.6% to 0.9%)
+        rec["kj"] = [[round(float(k_), 2) for k_ in (st.get("inv_kappa") or [])] for st in L.motor[3:5]]   # C146: each arm's inverse model's
+                                                                                    # kappa per joint (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw): which
+                                                                                    # joints it labels; the arms' mean sat at 0.2 to 0.35 for eleven days, under A104's "fair"
         rec["spinal"] = dict(getattr(world, "_spinal", {}) or {})          # A139's instrument (C117): the cord's events this tick (grasp,
         ferr = getattr(L, "_ferr", None) or {}                              # C137: the body's raw forecasting error per channel, its running
         rec["ferr"] = {k: round(float(v[1]), 4) for k, v in ferr.items()}    # mean (frames._frame_surprise's mu): the learning curve of its
