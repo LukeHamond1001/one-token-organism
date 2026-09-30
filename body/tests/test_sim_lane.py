@@ -762,6 +762,13 @@ def test_floor_play_reaches_the_lesson():
         lessons = [x for x in plan.log[n0:] if x[1] == "lesson"]
         assert 40 <= len(lessons) <= 120, len(lessons)                   # LESSON_SHARE of her offers (0.4 of 200)
         assert all(x[3] in plan.focus for x in lessons), lessons[:3]
+        lane._p = SimpleNamespace(seen=[], events=[], child_holds=(plan.focus[0],))   # C132: the toy in ITS hand, out of her view
+        n0 = len(plan.log)
+        for k in range(120):
+            plan._lesson(1500 + k, lane)
+        held_by_it = [x for x in plan.log[n0:] if x[1] == "lesson" and x[3] == plan.focus[0]]
+        assert not held_by_it and any(x[1] == "lesson" for x in plan.log[n0:]), held_by_it[:2]
+        lane._p = SimpleNamespace(seen=[], events=[])
         peek = sum(1 for k, _kw in asked if k == "peekaboo_hide")
         assert peek > 0, "her peekaboo with her hands free, as before"
         held = plan.focus[0]

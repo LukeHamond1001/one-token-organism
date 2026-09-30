@@ -247,8 +247,9 @@ class DayPlan:
             if not focus:                                               # C121: none before her eyes (day 28's afternoon: she knelt at its
                 known = set(getattr(lane, "toys", ()) or ())            # head looking at its eyes and asked a call six times instead of
                 focus = [o for o in self.focus if o in known and not c.left_where_it_lies(o)]   # a lesson): the toys she knows the place of
-            free = [o for o in focus if o not in seen or seen[o].on != "hand"]   # A109: a toy in its hand is not the one to set out for it
-            focus = free or focus                                       # (her fetch never takes a toy from it, A4)
+            its = set(getattr(p, "child_holds", ()) or ())              # C132 (day 33): a toy in its hand she does not see (C121's known
+            free = [o for o in focus if (o not in seen or seen[o].on != "hand") and o not in its]   # toys) was the lesson's toy 9 times
+            focus = free or focus                                       # in 4,000 ticks, each hand-over refused: never a toy it holds
         if not focus:
             c.request("call")
         else:
