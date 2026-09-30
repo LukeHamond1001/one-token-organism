@@ -252,6 +252,8 @@ PUT_AHEAD_M = 0.35                          # A109: the roll rung's toy set down
                                             # from her kneel beside the child: her knees at HEELS_BACK, the toy a hand beyond them)
 REBASE_TOL_M = 0.02                         # A108: her restored plan drawing her pelvis farther than this from where her body was
 TURN_HEAD_OFFS = (0.55, 0.65, 0.75)          # A136: her kneel at a prone child's head for the roll by its far shoulder, this far from its eyes
+HIDE_REACH_M = 0.55                             # C138: the hide brings the bucket to within this of one of the child's hands (a G1 arm reaches 0.55, lane.arm_reach; ours)
+TP_OPEN_CONTAINERS = frozenset({"bucket"})      # (templates.OPEN_CONTAINERS, named here without the import: the lang package imports this module)
 NEVER_FETCHED = frozenset({"bucket"})          # C119: what she never carries: the hide game's container (day 27: ten shows of it refused at the put, 45 to 50 cm off)
                                             # (ours: the far shoulder's grip in her tall reach from 0.55 to 0.65 m in the rig)
                                             # last drawn is rebased onto the drawn pose (2 cm: under it her drive absorbs the difference)
@@ -2427,7 +2429,7 @@ class ParentMotion:
             return np.asarray(to["grip"], float), np.asarray(to["R"], float).reshape(3, 3)
         if k == "above_toy":
             b = self.toys[to["toy"]]
-            c = d.xpos[b].copy()
+            c = d.xpos[b].copy() if float(to.get("h", 0.0)) > 0.0 else self._grasp_point(to["toy"])   # C138: a pick takes a container by its rim
             return c + np.array([0, 0, 0.01 + to.get("h", 0.0)]), NatR([0, 0, -1.0], bend=True)
         if k in ("toy_at", "palm", "show", "floor", "open"):
             cur = self.carry.get(sd)
@@ -2445,7 +2447,7 @@ class ParentMotion:
             elif k == "floor":
                 xy = np.asarray(to["xy"], float)
                 zf = floor_z(xy)
-                c = np.array([xy[0], xy[1], zf + self.toy_rest.get(cur["toy"] if cur else "", 0.05) + 0.012])
+                c = np.array([xy[0], xy[1], zf + (self._hold_z(cur["toy"]) if cur else 0.05) + 0.012])   # (C138: a container by its rim)
                 R = NatR([0, 0, -1.0], bend=True)
             elif k == "open":
                 c = np.asarray(self._resolve_point(to["at"]), float) + np.asarray(to.get("off", (0, 0, 0)), float)
@@ -3219,7 +3221,7 @@ class ParentMotion:
         """her hand closes on a toy: the toy's weld switched on where it is (no yank), her hand's collision proxy off the toys (4.1)"""
         sd, toy = ph["side"], ph["toy"]
         g, _ = self._grip_now(sd, actual=True)
-        c = self.d.xpos[self.toys[toy]]
+        c = self._grasp_point(toy)                                          # (C138: a container's rim)
         if float(np.linalg.norm(c - g)) > 0.08:
             if ph.get("waited", 0) < K.ARRIVE_WAIT_TICKS:                   # her hand is a body: it may still be on its way (her aim
                 ph["waited"] = ph.get("waited", 0) + 1                      # by sight brings it: _aim_fix)
@@ -3229,7 +3231,7 @@ class ParentMotion:
         self.scene.weld(f"hold_{sd}_{toy}", True)
         hb = self.bm.hand_body[sd]
         Rh = self.d.xmat[hb].reshape(3, 3)
-        self.carry[sd] = dict(toy=toy, off=_lst(Rh.T @ (c - self.d.xpos[hb])))
+        self.carry[sd] = dict(toy=toy, off=_lst(Rh.T @ (self.d.xpos[self.toys[toy]] - self.d.xpos[hb])))   # the toy's centre in her hand's frame
         self.holding[sd] = toy
         return "next"
 
@@ -3241,6 +3243,8 @@ class ParentMotion:
             over = ph.get("over")                                           # C136: a drop into the bucket is measured against the bucket
             if over is not None and over.get("toy") in self.toys:           # where it stands NOW (day 35: three hides refused 12 to 30 cm
                 ph["at"] = _lst(self.d.xpos[self.toys[over["toy"]]][:2])    # off: the child beside it shoved the bucket after the plan)
+            if toy in TP_OPEN_CONTAINERS:                                   # C138: a container held by its rim: its centre is what lands
+                g = self.d.xpos[self.toys[toy]].copy()
             miss = float(np.linalg.norm(g[:2] - np.asarray(ph["at"], float)))   # act was done): her hand not there, she reaches again,
             if miss > PUT_TOL_M:                                            # PUT_RETRIES times; then the act is refused with the miss
                 if ph.get("retries", 0) < PUT_RETRIES:
@@ -4716,8 +4720,8 @@ class ParentMotion:
     def _plan_fetch(self, a, toy):
         if toy in self.holding.values():
             return []
-        if toy in NEVER_FETCHED:                                        # C125: every road to a fetch ends here (her way cleared, the
-            raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")   # nearest toy, a word's show or pick-up)
+        if toy in NEVER_FETCHED and a.get("info", {}).get("carry_ok") != toy:   # C125: every road to a fetch ends here (her way cleared, the
+            raise Refuse(f"the {toy} stays where it stands: she does not carry it (C119)")   # nearest toy, a word's show or pick-up); C138: the hide carries it
         if all(v is not None for v in self.holding.values()):          # both hands full (A95): the toy she needs least set aside first
             other = self.holding[self._near_hand(self.d.xpos[self.toys[toy]])]
             other = other if other is not None else next(v for v in self.holding.values() if v is not None)
@@ -4746,6 +4750,24 @@ class ParentMotion:
         for ph in out:
             ph["grp"] = f"fetch{self.serial}"
         return out
+
+    def _grasp_point(self, toy):
+        """where her hand closes on a toy: its body's origin, or for an open container (the bucket: its origin is its floor plate,
+        extras.add_bucket) the top of the wall nearest her, so she carries it by its rim (C138: her pick of it aimed inside it and
+        missed by 17 to 50 cm, C119)"""
+        c = self.d.xpos[self.toys[toy]].copy()
+        if toy not in TP_OPEN_CONTAINERS:
+            return c
+        Rt = self.d.xmat[self.toys[toy]].reshape(3, 3)
+        her = np.asarray(self.base["at"], float)
+        walls = [Rt @ np.array([sx * X.BUCKET_IN, sy * X.BUCKET_IN, X.BUCKET_WALL + X.BUCKET_H]) for sx, sy in ((1, 0), (-1, 0), (0, 1), (0, -1))]
+        return c + min(walls, key=lambda w: float(np.linalg.norm((c + w)[:2] - her)))
+
+    def _hold_z(self, toy):
+        """how high her grip on a toy sits above the toy's lowest point: its rest height, or a container's rim (C138)"""
+        if toy in TP_OPEN_CONTAINERS:
+            return X.BUCKET_WALL + X.BUCKET_H
+        return float(self.toy_rest.get(toy, 0.05))
 
     def _plan_pick(self, a, toy):
         c = self.d.xpos[self.toys[toy]]
@@ -4998,6 +5020,17 @@ class ParentMotion:
             raise Refuse("no bucket in the room to hide it in")
         if toy == "bucket":
             raise Refuse("the bucket is what hides, not what is hidden")
+        c = self.d.xpos[self.toys["bucket"]]
+        near = min(float(np.linalg.norm(c[:2] - self.child.grasp[x][:2])) for x in "LR")
+        if near > HIDE_REACH_M:                                             # C138: the bucket out of the child's reach (it crawled off, or
+            a["info"]["carry_ok"] = "bucket"                                # the bucket was shoved): she brings the bucket beside it first,
+            if self.child.posture == "front":                               # carried by its rim, set within its reach as a lesson's toy
+                near = self._near(a, where="head", offs=PUT_HEAD_OFFS)      # is (_act_bring_back's road to the put), and the toy let go
+            else:                                                           # into it there
+                xy = self._put_xy()
+                near = self._near(a, need=f"reach:{xy[0]:.3f},{xy[1]:.3f}")
+            return self._fetch(a, toy) + [dict(type="plan", what="fetch", args=dict(toy="bucket"))] + near + \
+                [dict(type="plan", what="put_near", args=dict(toy="bucket")), dict(type="plan", what="drop_in", args=dict(toy=toy))]
         return self._fetch(a, toy) + [dict(type="plan", what="drop_in", args=dict(toy=toy))]
 
     def _plan_drop_in(self, a, toy):
@@ -5086,6 +5119,10 @@ class ParentMotion:
             xy = np.asarray(ch.eyes[:2], float) + ahead * (CRAWL_AHEAD_M + float(self.lesson_dist))   # its eyes and the lesson's distance
         else:                                                               # (tummy time: a person puts the toy just out of reach ahead)
             xy = self._put_xy()
+        if toy not in self.holding.values() and a["info"].get("refetch", 0) < 2:   # C138: a toy set aside on her way here (both hands
+            a["info"]["refetch"] = a["info"].get("refetch", 0) + 1                 # full, a toy where she kneels: _plan_clear_here) is
+            a["info"]["carry_ok"] = toy                                             # picked up again and the put planned anew
+            return [dict(type="plan", what="fetch", args=dict(toy=toy)), dict(type="plan", what="put_near", args=dict(toy=toy))]
         sd, swap = self._giving(toy, np.r_[xy, 0.0])
         if not a.get("re_near") and not self._reachable(sd, dict(k="floor", xy=_lst(xy))):
             # A133 (room b's lesson): the put's place is read from the child's near hand where she kneels NOW, not where she planned
