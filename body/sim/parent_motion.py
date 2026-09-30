@@ -3238,12 +3238,16 @@ class ParentMotion:
         toy = self.holding[sd]
         if toy is not None and ph.get("at") is not None:                     # A125: a toy set down where she meant it (the lesson's
             g, _ = self._grip_now(sd, actual=True)                          # place before a prone child's face landed 33 cm off and the
+            over = ph.get("over")                                           # C136: a drop into the bucket is measured against the bucket
+            if over is not None and over.get("toy") in self.toys:           # where it stands NOW (day 35: three hides refused 12 to 30 cm
+                ph["at"] = _lst(self.d.xpos[self.toys[over["toy"]]][:2])    # off: the child beside it shoved the bucket after the plan)
             miss = float(np.linalg.norm(g[:2] - np.asarray(ph["at"], float)))   # act was done): her hand not there, she reaches again,
             if miss > PUT_TOL_M:                                            # PUT_RETRIES times; then the act is refused with the miss
                 if ph.get("retries", 0) < PUT_RETRIES:
                     ph["retries"] = ph.get("retries", 0) + 1
                     i = self.phases.index(ph)
-                    self.phases.insert(i, dict(type="reach", hands={sd: dict(k="floor", xy=list(ph["at"]))}, via=True,
+                    to = dict(over) if over is not None else dict(k="floor", xy=list(ph["at"]))   # C136: over the bucket as it stands
+                    self.phases.insert(i, dict(type="reach", hands={sd: to}, via=True,
                                                shape={sd: dict(curl=.95, thumb=.85, index=None)}))
                     return "next"
                 return f"the {toy} could not be set down where she meant it ({100 * miss:.0f} cm off, beyond her reach from here)"
@@ -5029,7 +5033,7 @@ class ParentMotion:
         """a toy in her hand brought over the bucket and let go, and her hand drawn up and back (A129)"""
         sh_hold = dict(curl=.95, thumb=.85, index=None)
         return [dict(type="reach", hands={sd: to}, via=True, shape={sd: sh_hold}),
-                dict(type="release", side=sd, at=_lst(xy)),
+                dict(type="release", side=sd, at=_lst(xy), over=dict(to)),          # C136: the release knows what it hangs over
                 dict(type="reach", hands={sd: dict(k="up_from", side=sd)}, shape={sd: dict(curl=.3, thumb=.3, index=None)}, n=3),
                 dict(type="proxy", side=sd, on=True),
                 dict(type="relax", sides=sd)]
