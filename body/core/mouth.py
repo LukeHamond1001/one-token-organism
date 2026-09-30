@@ -658,7 +658,7 @@ class MouthMixin:
             stop = None
             drew = bool(torch.rand(1, generator=self.gen).item() < p_act) if rfx is None else False   # no draw on a reflex's tick
             sharp_e = self._motor_sharp(e, st)                            # A97: its decisiveness earned by its inverse model
-            logits = tab.logits(pred, sharp_e)
+            logits = tab.logits(pred, sharp_e, earned=self._motor_earned(e, st))   # C148: and its proposal's certainty with it
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
             if act_on:                                                    # the striatum disposes: its bias on each joint's proposal
                 a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.get_submodule(e.actor)(self._z_now))
@@ -794,7 +794,15 @@ class MouthMixin:
         return int_t
 
     def _motor_sharp(self, e, st):
-        """A97 (the lead, 2026-09-26): A LATER EFFECTOR'S DECISIVENESS IS EARNED. Its proposal (act_pred's forecast of its own next act)
+        return self._motor_read(e, st)[0]
+
+    def _motor_earned(self, e, st):
+        """C148: the per-joint exponents that earned the sharpness (rel x variety; rel alone without sharp_per_joint; 1 for an effector
+        without an inverse model), for ActTable.logits' `earned` when sharp_earned_norm is on; None when it is off"""
+        return self._motor_read(e, st)[1] if int(self._motor_const("sharp_earned_norm")) else None
+
+    def _motor_read(self, e, st):
+        """-> (sharpness, earned exponents), each one for every joint or one per joint. A97 (the lead, 2026-09-26): A LATER EFFECTOR'S DECISIVENESS IS EARNED. Its proposal (act_pred's forecast of its own next act)
         is read at 1 + (the mouth's sharpness - 1) x its inverse model's reliability (st["inv_gain"]: the joints' mean kappa, 0 until 64
         acts and 0 whenever its acts have stopped varying, body/core/timing.py), so a limb whose cortex has not yet shown that it knows
         what its acts do proposes softly (sharpness 1: the forecast's own spread, the cord's patterns and the born biases weigh against
@@ -808,7 +816,7 @@ class MouthMixin:
         (C82). No new constant: 1 is the readout's own scale."""
         s = float(self.m.read_sharp)
         if not getattr(e, "inverse", False):
-            return s
+            return s, 1.0
         if int(self.cfg.get("sharp_per_joint", 0)):
             # A140 (C117, 2026-09-29): EACH JOINT'S DECISIVENESS IS ITS OWN, AND EARNED BY VARIETY. On life day 27 every arm joint sat at a
             # stop (the left elbow 581 ticks of 600) while the actor sent big steps into the stop: the effector's mean kappa stayed "fair"
@@ -830,10 +838,11 @@ class MouthMixin:
                     if n > 0 and K > 1:
                         var = (1.0 - max(cols) / n) / (1.0 - 1.0 / K)
                 out.append(s ** (rel * max(0.0, min(1.0, var))))
-            return out
+            g_ = [math.log(o_) / math.log(s) if s > 1.0 else 1.0 for o_ in out]          # C148: the exponents that earned each sharpness
+            return out, g_
         kappa = float(st.get("inv_gain", 0.0) or 0.0)
         rel = max(0.0, min(1.0, (kappa - KAPPA_FAIR) / (KAPPA_ALMOST_PERFECT - KAPPA_FAIR)))
-        return s ** rel                                                     # A104: the temperature's own (geometric) scale, on kappa's
+        return (s ** rel, rel) if True else None                                                      # A104: the temperature's own (geometric) scale, on kappa's
                                                                             # established one: nothing below "fair" agreement, the
                                                                             # mouth's at "almost perfect" (Landis and Koch 1977). A97's
                                                                             # 1 + (s - 1) kappa gave sharpness 3-5 at kappa 0.1 ("slight"),

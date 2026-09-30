@@ -691,7 +691,7 @@ class SleepMixin:
             pred = e.propose(self, C)
             if pred is None:
                 return int(e.rest_id)
-            logits = tab.logits(pred, self._motor_sharp(e, self.motor[j]))
+            logits = tab.logits(pred, self._motor_sharp(e, self.motor[j]), earned=self._motor_earned(e, self.motor[j]))   # C148
             if e.reserved:
                 logits[0] = logits[0].clone(); logits[0][list(e.reserved)] = float("-inf")
             if rt > 0:

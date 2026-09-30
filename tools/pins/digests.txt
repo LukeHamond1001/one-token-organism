@@ -112,7 +112,11 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # G1): the cfg digest moved with the new key; the born body's organs, store, optimizers, random streams and work are UNMOVED (the born
 # 300 ticks earn no joint a kappa past "fair", so no readout changes). Was: threaded 58b14a2405b48f72a5870c6d, one-thread
 # ceafc8053f4290bcff977927, consts ca9064aa1d5d, cfg ac2db7fa3fd4.
-digest  sim                   threaded 575117e71e4f31ad8868eee2 consts 39cd08fe698e | --profile sim
-digest  sim                   pinned   cca44630092131e560dcf6c4 consts 39cd08fe698e | --profile sim
-full    sim                   threaded organs abec9b050c99 store 7c0475dc585a optim 49375a022ba5 rng 9d2490356080 work 8ccd54c8e61f cfg ee7b12ced2f9
-full    sim                   pinned   organs a23b4db6976e store 6ab5015edba6 optim 7bad9fd3c903 rng 9d2490356080 work db3888e0d007 cfg ee7b12ced2f9
+# Re-pinned at C148 (2026-09-30 13:52, on branch t148: the proposal's certainty earned by the same exponent as its sharpness, SIM_CFG
+# sharp_earned_norm 1; in the profile's 300 ticks no joint has earned anything, so every limb draws from its unit forecast's cosines and the
+# whole state moves; the language default digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 575117e71e4f31ad8868eee2, one-thread
+# cca44630092131e560dcf6c4, consts 39cd08fe698e.
+digest  sim                   threaded 520ee0e841d062f08144e5d4 consts ae63f448455e | --profile sim
+digest  sim                   pinned   be470a576af9b14714c9130e consts ae63f448455e | --profile sim
+full    sim                   threaded organs 502b863d38e1 store 41cd44709380 optim 17ddea39a7d8 rng 9d2490356080 work df6b916cf56b cfg 70c7b962da72
+full    sim                   pinned   organs 8d77ee23c195 store 63bb8b7bc1e1 optim b762c374d53e rng 9d2490356080 work fecb94e11e2d cfg 70c7b962da72

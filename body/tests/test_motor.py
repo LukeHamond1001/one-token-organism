@@ -1437,6 +1437,28 @@ MOTOR_TESTS = [test_the_voice_at_any_place, test_movement_units, test_the_kappa_
                test_the_born_codes, test_orienting_and_the_vor, test_the_g1_anatomy, test_the_day_saved, test_earned_decisiveness, test_moments_aligned]
 
 
+
+def test_the_earned_certainty():
+    """motor (C148, 2026-09-30): a joint that has shown nothing draws from the unit forecast's cosines, however sure the forecast of its
+    own habit. An ActTable of three joints of five; the proposal 8 x a setting's own row (a habit's certain forecast): read with every
+    exponent earned (1) at sharpness 1 the habit's setting takes over 0.99; with nothing earned (0) under 0.5 and each logit within
+    -1..1; with no `earned` given the readout is the old one exactly; half earned lies between"""
+    import torch as _t
+    from body.model import ActTable
+    tab = ActTable([5, 5, 5], 32, _t.Generator().manual_seed(3))
+    pred = 8.0 * tab.rows[4].clone()                        # joint 0's setting 4, the forecast sure of it
+    full = tab.logits(pred, 1.0, earned=[1.0, 1.0, 1.0]); old = tab.logits(pred, 1.0)
+    assert all(_t.allclose(a, b, atol=1e-5) for a, b in zip(full, old)), "earned 1 must read as before"
+    p_full = _t.softmax(full[0], -1)[4].item()
+    none = tab.logits(pred, 1.0, earned=[0.0, 0.0, 0.0])
+    p_none = _t.softmax(none[0], -1)[4].item()
+    assert p_full > 0.99 and p_none < 0.5, (p_full, p_none)
+    assert all(float(lg.abs().max()) <= 1.0 + 1e-6 for lg in none), [float(lg.abs().max()) for lg in none]
+    half = _t.softmax(tab.logits(pred, 1.0, earned=[0.5, 0.5, 0.5])[0], -1)[4].item()
+    assert p_none < half < p_full, (p_none, half, p_full)
+    print(f"motor C148: a sure habit's forecast (norm 8) at sharpness 1: setting 4 drawn at {p_full:.3f} with its certainty earned, "
+          f"{p_none:.3f} with nothing earned (the cosines alone), {half:.3f} at half; the old readout unchanged")
+
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
     for t in MOTOR_TESTS:

@@ -446,15 +446,30 @@ class ActTable(nn.Module):
             off += k
         return u
 
-    def logits(self, pred, sharp):
+    def logits(self, pred, sharp, earned=None):
         """the per-joint readout of the proposal `pred` [d] (None: no proposal, every setting at 0): a list of [K_j], joint by joint;
-        `sharp` one sharpness for every joint, or one per joint (A140: a joint's decisiveness is its own)"""
+        `sharp` one sharpness for every joint, or one per joint (A140: a joint's decisiveness is its own). C148 (2026-09-30): with
+        `earned` (one exponent g_j in 0..1 per joint, the same that earned its sharpness: rel x variety) the proposal's certainty is
+        earned too: logits_j = sharp_j x (pred_hat . R_j) x |pred|^g_j, so at g_j 1 the readout is as before and at g_j 0 it is the
+        unit forecast's cosines (every logit within -1..1, the draw nearly flat). Why: A97 read a joint that has shown nothing at
+        sharpness 1, "the forecast's own spread", but a forecast of the body's own habit is trivially certain (its norm large), so
+        the draw stayed at one setting (life day 40, tick 8,000: the right shoulder yaw at +big 98% of ticks, the left wrist roll 86%,
+        the right shoulder roll 76%, their kappa 0.06 to 0.10, the readout's sharpness 1.0 to 1.5) and neither the actor (its gradient
+        (1 - p) z vanishing) nor the inverse model (no variety to label) could move it"""
         out = []; off = 0
         per = list(sharp) if isinstance(sharp, (list, tuple)) else None
+        if pred is not None and earned is not None:
+            n_ = pred.norm().clamp_min(1e-6); u_ = pred / n_
         for j, k in enumerate(self.factors):
             R = self.rows[off:off + k]; off += k
             s_ = float(per[j]) if per is not None else float(sharp)
-            out.append(s_ * (pred @ R.t()) if pred is not None else torch.zeros(k, device=R.device))
+            if pred is None:
+                out.append(torch.zeros(k, device=R.device))
+            elif earned is not None:
+                g_ = max(0.0, min(1.0, float(earned[j])))
+                out.append(s_ * (u_ @ R.t()) * (n_ ** g_))
+            else:
+                out.append(s_ * (pred @ R.t()))
         return out
 
 
