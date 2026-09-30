@@ -3666,13 +3666,20 @@ class ParentMotion:
             self.base = dict(saved, at=_lst(H), yaw=float(yaw), mode="heels", lean=0.0, spine=0.0, twist=0.0)
             try:
                 tg = self._turn_targets(("shoulder", "hip") if need == "turn_both" else ("shoulder", "torso"))
+                targets = {}
                 for sd in ("R", "L"):
                     to, loc, nl, shape, b, toward = tg[sd]
-                    g, _R = self._resolve_hand(to, sd)
-                    n_world = self.d.xmat[b].reshape(3, 3) @ np.asarray(nl, float)
-                    if not self._reachable_at(sd, g, T2, yaw, "tall", palm=_lst(-unit(n_world)), bend=True):
-                        return False
-                return True
+                    g, R = self._resolve_hand(to, sd)
+                    if float(np.linalg.norm(g[:2] - np.asarray(T2, float)[:2])) > 1.0:
+                        return False                                        # beyond any lean of hers (_reachable_at's bound)
+                    targets[sd] = (g, R, shape)
+                # C144 (2026-09-30): ONE trunk for both grips, as the turn's reach solves it (_plan_turn: both hands from one trunk
+                # pose, _trunk_for). Each grip was checked by a trunk of its own (_reachable_at), so a spot passed where the one lean
+                # that reaches the shoulder leaves the other hand 29 to 32 cm short of the torso's far side, and the turn was refused
+                # at its hold instead of tried from the next spot (life day 38 tick 1,840,101: four refusals in 60 ticks over a prone
+                # child at (0.64, 0.30), the rig at that spot: 29 and 32 cm short from a spot the check had passed)
+                self.base = dict(mode="tall", at=_lst(T2), yaw=float(yaw), lean=0.0, spine=0.0, twist=0.0)
+                return bool(self._solve_trunk(targets, None, step=10)[3])
             finally:
                 self.base = saved
         if need == "pull":                                                  # one trunk reaches both its forearms from her tall kneel
