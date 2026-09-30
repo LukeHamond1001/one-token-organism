@@ -280,6 +280,9 @@ def main():
                                and float(L._last_choice.get("p_top", 0.0)) >= 0.5) else None),   # A137: the inner word (sure, unsounded)
                        onset=None if f is None else int(f.obs.get("onset_periph", [0])[0]),
                        sounds=len(getattr(world.sounds, "last_events", [])))
+            rec["stage"] = int(lane.conduct.stage)                      # C142: her stage (1: the vocal turn smiled; 2: the words her ear accepts, the frowns)
+            wh_ = getattr(L, "_whit", None)                             # C143: the words' forecast on her symbols heard: its top-1 hit rate and the
+            rec["whit"] = None if not wh_ else [round(float(wh_[1]), 4), round(float(wh_[2]), 4)]   # probability it gave the symbol that came
         log.write(json.dumps(rec) + "\n")
         agg["ticks"] += 1; agg["night"] += night; agg["cry"] += rec["cry"]
         agg["pain"] += bool(rec["pain"]); agg["lines"] += bool(rec.get("line")); agg["onset"] += bool(rec.get("onset"))

@@ -1020,6 +1020,18 @@ class Conduct:
     def stage(self):
         return self.fast.stage
 
+    def dawn(self, t):
+        """C142 (2026-09-30): the stage's advance, at a dawn. Stage 2 begins once the child has said STAGE2_WORDS distinct words her
+        ear accepted EXACT_UNTIL times each (right names or echoes, vocal_book): her smile leaves the bare vocal turn (stage 1's +1
+        in a pause while she looks) for the words her ear accepts, and her frowns begin (talk-over, a hit, a throw). Nothing advanced
+        the stage before: life day 38 was the 38th in stage 1, 105 vocal turns a day at +1 the largest positive term of its reward, 'oh'
+        its inner word half the day, eight words said right three times and more. True when the stage moved."""
+        if self.stage == 1 and sum(1 for n in self.vocal_book.values() if n >= K.EXACT_UNTIL) >= K.STAGE2_WORDS:
+            self.fast.stage = 2
+            self.book_log.append((t, "stage", 2, "word-like babble", sorted(self.vocal_book.items(), key=lambda kv: -kv[1])[:8]))
+            return True
+        return False
+
     @property
     def eyes_on_child(self):
         """an everyday ask is pending, or a formal trial holds her still: W2 keeps her head and eyes on the child's eyes, L1 turns

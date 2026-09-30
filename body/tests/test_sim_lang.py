@@ -6922,6 +6922,20 @@ def test_distress_owed():
     print(f"61 a distress event during her line is owed: the turn asked at her first free tick ({got - (t + 1)} ticks later), again",
           f"{again - got} ticks after while it still lies face down, dropped once it does not; the debt saved (A102)")
 
+def test_the_stage_advance():
+    """lang 66 (C142, 2026-09-30): her stage advances at a dawn once the child has said STAGE2_WORDS distinct words her ear accepted
+    EXACT_UNTIL times each (right names or echoes, the vocal book); two such words: stage 1 still; the third: stage 2, logged, and the
+    stage survives a save; a stage-2 conduct never goes back. Life day 38 was the 38th day in stage 1: nothing advanced it"""
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    con.vocal_book = {"duck": K.EXACT_UNTIL, "ball": K.EXACT_UNTIL + 4, "cup": K.EXACT_UNTIL - 1}
+    assert not con.dawn(24000) and con.stage == 1, (con.stage, con.vocal_book)
+    con.vocal_book["mama"] = K.EXACT_UNTIL
+    assert con.dawn(48000) and con.stage == 2 and con.book_log[-1][:3] == (48000, "stage", 2), (con.stage, con.book_log[-1])
+    con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False); con2.load_state(con.state())
+    assert con2.stage == 2 and not con2.dawn(72000) and con2.stage == 2, con2.stage
+    print(f"lang 66 (C142): two words said right {K.EXACT_UNTIL} times: stage 1; the third: stage 2 at the dawn, logged {con.book_log[-1][3]!r}, saved")
+
+
 TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
@@ -6935,7 +6949,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed, test_the_stage_advance]
 
 if __name__ == "__main__":
     t0 = time.time()

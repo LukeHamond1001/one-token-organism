@@ -226,6 +226,9 @@ ASKS_KEEP = 10                        # her everyday asks' last 10 outcomes kept
 SAYS_TIMES = 3                        # says: 3 times over at least 2 life days, never within ECHO_WINDOW of her saying it (4.8)
 SAYS_DAYS = 2
 EXACT_UNTIL = 3                       # an approximation earns a recast and a smile until the exact word is said 3 times (4.6, A27)
+STAGE2_WORDS = 3                      # C142: stage 2 begins at the dawn after the child has said 3 distinct words her ear accepted EXACT_UNTIL
+                                      # times each (right names or echoes, the vocal book); the count is ours, the shift hers: a mother's
+                                      # response leaves bare babble for word-like sounds as they come (Gros-Louis, West and King 2014)
 
 # ------------------------------------------------------------------------ formal trials (4.8, 12, A28; the lead's decision)
 # Understanding is scored only in formal trials, as infant labs score it: intermodal preferential looking (Golinkoff et al.

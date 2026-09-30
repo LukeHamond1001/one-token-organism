@@ -22,6 +22,13 @@ class CortexMixin:
         if who == 0 and getattr(self, "pred_prev", None) is not None:      # the tick's surprise, the rest included: the event's end by the law
             with torch.no_grad():
                 self._surp_tick = float(1.0 - F.cosine_similarity(self.pred_prev, m.E.weight[int(x)], dim=0))
+                if int(x) != self.sil:                       # C143 (2026-09-30), an instrument: the forecast read on the world's symbol that came,
+                    lg_ = m.readout(self.pred_prev)          # its top-1 hit and the probability it gave that symbol, running means over the last
+                    n_, h_, q_ = getattr(self, "_whit", None) or [0, 0.0, 0.0]   # 4,096 heard symbols (the words channel's learning curve;
+                    n_ += 1; a_ = 1.0 / min(float(n_), 4096.0)                   # ferr's cosine distance to an embedding reads about 0.9
+                    h_ += a_ * (float(int(lg_.argmax()) == int(x)) - h_)          # whatever the readout says: the lexicon's directions are
+                    q_ += a_ * (float(torch.softmax(lg_.float(), dim=-1)[int(x)]) - q_)   # near orthogonal, the forecast a mean of them)
+                    self._whit = [n_, h_, q_]
             if str(self.cfg.get("sharp_form", "fixed")) in ("calibrated", "world") and int(x) != self.sil:
                 self._sharp_calibrate(int(x))       # on the world's spoken symbols only: on its quiet ticks the forecast is of the mouth's own next
                                                     # letter, and scored against the rest the gradient was negative whatever the reading (20:50)
