@@ -784,6 +784,20 @@ def test_floor_play_reaches_the_lesson():
         assert lessons2 and all(x[3] == held for x in lessons2), lessons2[:3]
         assert not any(x[2] == "give" for x in lessons2), [x for x in lessons2 if x[2] == "give"][:2]
         assert not any(k == "ask_give" and kw.get("o") == held for k, kw in asked)
+        c.motion.holding = {"L": None, "R": None}
+        worn, fresh_toy = plan.focus[0], plan.focus[1]                   # C141: a toy her smiles have worn out is offered only when no
+        for key in ("got", "lifted", "shook", "hit"):                    # fresh one is at hand
+            c.book.setdefault(key, {})[worn] = 60
+        assert DP._worn(c.book, worn) and not DP._worn(c.book, fresh_toy)
+        lane._p = SimpleNamespace(seen=[], events=[])
+        n0 = len(plan.log)
+        for k in range(60):
+            plan._lesson(1700 + k, lane)
+        on_worn = [x for x in plan.log[n0:] if x[1] == "lesson" and x[3] == worn]
+        assert not on_worn and any(x[1] == "lesson" for x in plan.log[n0:]), on_worn[:2]
+        c.book["got"][worn] = 2 * DP.K.MASTERED_N                        # the counts the give section below relies on, restored
+        for key in ("lifted", "shook", "hit"):
+            c.book[key][worn] = DP.K.MASTERED_N
         c.motion.holding = {"L": None, "R": None}                        # C126: the give asked only of a toy in the child's view and
         plan.focus = [held]                                              # reach (life day 29: 36 gives refused); else the toy into
         gives = {}                                                       # its hand (the handle act)

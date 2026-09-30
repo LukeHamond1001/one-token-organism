@@ -37,6 +37,8 @@ hand_over and roll acts, until her conduct's intents carry them), and the scaffo
 Every length and gap here is 4.7's or ours, disclosed; none is set from a rate of the child's. state() / load_state() carry the
 stream, the day's layout and every counter, so a replay is exact.
 """
+import math
+
 import numpy as np
 
 from . import consts as K
@@ -68,6 +70,18 @@ DOOR_XY, DOOR_NEAR_M = (2.6, -1.5), 1.0   # C131: the room's door to the hall (m
 BIDS_BACK = (3, 40)                    # back early after 3 of its vocal turns in 40 ticks (4.7)
 TASKS_ATTENTION = 0.4                  # her attention at her own tasks (parent_feel: .4)
 BIRTH_TOYS = ("ball", "block", "duck", "cup", "car", "bear", "drum")   # her birth words' toys in the room (lexicon; no bottle: A88)
+
+
+def _worn(book, o):
+    """C141: a toy her smiles have worn out: every act on it that her book pays (got, lifted, shook, hit) has habituated under
+    HABIT_FLOOR (conduct._motor_judgments: the n-th smile is worth w e^(-n/HABIT_TAU)). Day 37: the box alone all day (the duck lay
+    against the wall), 189 lifts and 73 hits of it and 4 smiles: a person brings another toy when the child has had the box for days"""
+    for k in ("got", "lifted", "shook", "hit"):
+        w = K.MOTOR_WORTH.get(k, (0, None))[0]
+        n = int(book.get(k, {}).get(o, 0))
+        if w * math.exp(-n / K.HABIT_TAU) >= K.HABIT_FLOOR:
+            return False
+    return True
 
 
 def _may_give(seen, o):
@@ -139,7 +153,9 @@ class DayPlan:
             newest = known[-1] if known else None                        # keeps offering the new toy (life day 15: the book's acts all in
         k = int(self.rng.integers(2, 4))                                 # the day's first quarter, then out of its reach; no lesson
         rest = [w for w in pool if w != newest]                          # brought it back, her focus drawn from the birth toys alone)
-        draw = self.rng.choice(rest, size=min(k - (1 if newest else 0), len(rest)), replace=False).tolist()
+        fresh = [w for w in rest if lane is None or not _worn(lane.conduct.book, w)]   # C141: the toys her smiles have worn out are
+        src = fresh if len(fresh) >= k else rest                         # drawn only when fewer fresh ones are left than the day takes
+        draw = self.rng.choice(src, size=min(k - (1 if newest else 0), len(src)), replace=False).tolist()
         self.focus = sorted(o for o in draw + ([newest] if newest else []) if o not in TP.OPEN_CONTAINERS)   # C119: the bucket stays where it stands (her grasp and put miss it by 17 to 50 cm): the hide game's container, never a toy of the day
         self.greeted, self.called, self.night_said = None, False, False
         self.next_play = self._scale(WAKE)
@@ -250,6 +266,12 @@ class DayPlan:
             its = set(getattr(p, "child_holds", ()) or ())              # C132 (day 33): a toy in its hand she does not see (C121's known
             free = [o for o in focus if (o not in seen or seen[o].on != "hand") and o not in its]   # toys) was the lesson's toy 9 times
             focus = free or focus                                       # in 4,000 ticks, each hand-over refused: never a toy it holds
+            fresh = [o for o in focus if not _worn(c.book, o)]          # C141: a toy her smiles have worn out is offered only when no
+            if not fresh:                                               # fresh one is at hand; else a fresh toy she knows the place of
+                known = set(getattr(lane, "toys", ()) or ())
+                fresh = [o for o in sorted(known) if o not in TP.OPEN_CONTAINERS and o not in its and not _worn(c.book, o)
+                         and not c.left_where_it_lies(o) and (o not in seen or seen[o].on != "hand")]
+            focus = fresh or focus
         if not focus:
             c.request("call")
         else:
