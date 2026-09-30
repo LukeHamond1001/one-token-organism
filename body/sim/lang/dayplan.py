@@ -369,6 +369,12 @@ class DayPlan:
             att = p.attended()
             if att:
                 c.request("ask_what", o=att[0].id)
+            else:
+                # C150 (2026-09-30): a show block with no new word to show and nothing the child attends is play with a lesson (her
+                # focus toys shown, the lesson's rung, a call), not a kneel in silence. Life day 40's last show block: 1,888 ticks
+                # kneeling 1.5 m from a child on its back, 112 looks at its eyes, no act; every growth word she could show was known
+                self._play(t, lane, "show")
+                return
         self.next_play = t + int(self.rng.integers(*PLAY_GAP))
 
     # ------------------------------------------------------------------ the save

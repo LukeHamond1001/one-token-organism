@@ -854,10 +854,43 @@ def test_the_leave_with_the_child_at_the_door():
     print("lane 21: the away block skipped with the child 0.45 m from the door; entered with it on the mat")
 
 
+
+def test_the_show_block_with_nothing_new():
+    """lane 22 (C150, 2026-09-30): a show block whose growth words are all known and whose child attends nothing is play with a lesson:
+    of 100 offers, lessons and shows of her focus toys (and calls) are asked, none a new word. Life day 40's last show block gave no act
+    in 1,888 ticks"""
+    from types import SimpleNamespace
+    from body.sim.lang import templates as TP
+    w, lane = _world(plan=True, day_ticks=2400)
+    for _k in range(5):
+        w.frame(); w.apply({})
+    c, plan = lane.conduct, lane.plan
+    known = [o for o in (lane.toys or ()) if o not in TP.OPEN_CONTAINERS]
+    plan.focus = known[:2]
+    asked = []
+    real_request, real_p, real_vocab = c.request, lane._p, c.fast.vocab
+    try:
+        c.request = lambda k, **kw: asked.append((k, kw))
+        c.fast.vocab = tuple(sorted(set(c.fast.vocab) | set(TP.GROWTH_WORDS)))    # every growth word known: nothing new to show
+        lane._p = SimpleNamespace(seen=[], events=[], attended=lambda: [])       # the child attends nothing she reads
+        n0 = len(plan.log)
+        for k in range(100):
+            plan._show(1000 + k, lane)
+        kinds = [k for k, _kw in asked]
+        lessons = [x for x in plan.log[n0:] if x[1] == "lesson"]
+        assert not any(k == "new_word" for k in kinds) and not any(k == "ask_what" for k in kinds), kinds[:5]
+        assert lessons and any(k in ("show", "set_near", "hand_over", "call") for k in kinds), (len(lessons), kinds[:6])
+        assert all(x[3] in plan.focus for x in lessons), lessons[:3]
+    finally:
+        c.request, lane._p, c.fast.vocab = real_request, real_p, real_vocab
+    print(f"lane 22 (C150): a show block with every growth word known and nothing attended: {len(lessons)} lessons and "
+          f"{sum(1 for k in kinds if k == 'show')} shows of her focus toys in 100 offers, no new word asked")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
               test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus, test_the_crawl,
-              test_the_find, test_the_find_of_a_rattling_toy, test_floor_play_reaches_the_lesson, test_the_leave_with_the_child_at_the_door]
+              test_the_find, test_the_find_of_a_rattling_toy, test_floor_play_reaches_the_lesson, test_the_leave_with_the_child_at_the_door, test_the_show_block_with_nothing_new]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
