@@ -2010,9 +2010,12 @@ class Conduct:
             if not any(s_.id in TP.OPEN_CONTAINERS for s_ in p.seen) and t - int(td[0]) < TOLD_WAIT:
                 # C124 (day 29): at the drop her eyes are on the child, the bucket out of her view, and the drop's lines were refused
                 # "unseen: 'bucket'" at both of the morning's hides: she looks at the bucket first (once), and tells it when she sees it
-                if not getattr(self, "told_looked", False):
+                if not any(a[1] == "look" and a[2] in TP.OPEN_CONTAINERS and a[5] not in ENDED for a in self.acts_open):
                     self.told_looked = True
                     self._request(Act("look", sorted(TP.OPEN_CONTAINERS)[0]), t, p)
+                return None                                 # C128 (day 30's first hide): the reply she owed was said on the tick of her
+                                                            # look, its own look took her eyes back to the child, and the hide was never
+                                                            # told: she holds her voice, her eyes going to the bucket, until she sees it
             else:
                 self.told_due = None; self.told_looked = False
                 o = p.obj(td[1])
