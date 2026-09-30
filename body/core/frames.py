@@ -109,6 +109,9 @@ def read_event_lines(events, obs):
     return tuple(1.0 if raw[ln.name] and not any(raw[d_] for d_ in ln.distal) else 0.0 for ln in events)
 
 
+FERR_FAST_TAU = 512.0            # C147: the fast forecast-error mean's horizon (ours, an instrument's)
+
+
 class FramesMixin:
     # ---------------- step R7a: the event lines ----------------
     def _event_lines(self, frame=None):
@@ -187,6 +190,11 @@ class FramesMixin:
             n_, mu = st.get(c_.name, [0, 0.0])
             n_ += 1; mu = mu + (float(e) - mu) / min(float(n_), tau)
             st[c_.name] = [n_, mu]
+            ff = getattr(self, "_ferr_fast", None)                     # C147 (2026-09-30), an instrument: the same error over the last
+            if ff is None:                                              # FERR_FAST_TAU ticks, beside the lesson's slow mean (err_tau
+                ff = {}; self._ferr_fast = ff                           # 36,000): what a night did to a channel reads as the dusk's
+            mf = ff.get(c_.name, mu)                                    # value against the next morning's
+            ff[c_.name] = mf + (float(e) - mf) / min(float(n_), FERR_FAST_TAU)
             if mu > 0.0:
                 vals.append(float(e) / mu)
         return (sum(vals) / len(vals)) if vals else None

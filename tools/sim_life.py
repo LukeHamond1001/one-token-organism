@@ -215,6 +215,7 @@ def main():
         world.stats_tendon = _last_count(os.path.join(args.out, "ticks.jsonl"), "tendon_n")   # C125: the tendon reflex's count so far, kept over a resume (an instrument's; the reflex is the world's)
     log = open(os.path.join(args.out, "ticks.jsonl"), "a")
     agg = collections.Counter(); walls = collections.defaultdict(list); prev_reading = 0.0
+    nights_seen = [int(getattr(L, "nights", 0))]                       # C147: the nights whose reports are kept in nights.jsonl
     open_seen = {}                                                        # A102: each act's kind and target by its motion id, for its end
     print(f"built in {time.time() - t_build:.1f} s; living {total} ticks", flush=True)
     t0 = time.time()
@@ -250,6 +251,8 @@ def main():
         rec["spinal"] = dict(getattr(world, "_spinal", {}) or {})          # A139's instrument (C117): the cord's events this tick (grasp,
         ferr = getattr(L, "_ferr", None) or {}                              # C137: the body's raw forecasting error per channel, its running
         rec["ferr"] = {k: round(float(v[1]), 4) for k, v in ferr.items()}    # mean (frames._frame_surprise's mu): the learning curve of its
+        rec["ferr_fast"] = {k: round(float(v), 4) for k, v in (getattr(L, "_ferr_fast", None) or {}).items()}   # C147: the same error over the
+                                                                            # last 512 ticks (ferr's horizon is 36,000): a dusk against the next dawn reads the night
         rec["tendon_n"] = int(getattr(world, "stats_tendon", 0))           # prone, tendon per effector) and the tendon reflex's joint count so far
         if args.probe_joint is not None:                                   # C113's instrument: joints against their stops and their gears
             d_ = world.d; pjs = [int(x) for x in str(args.probe_joint).split(",")]
@@ -304,6 +307,10 @@ def main():
             print(f"tick {world.tick} day {lane.day} {'night' if night else 'day'}: {1000 * d_:.0f} ms a day tick, {1000 * n_:.0f} a night"
                   f" tick; stress {L.stress:.2f} mood {L.mood:.2f}; {dict(agg)}", flush=True)
             log.flush()
+            if int(getattr(L, "nights", 0)) != nights_seen[0] and getattr(L, "last_night", None):   # C147: every night's report kept
+                nights_seen[0] = int(getattr(L, "nights", 0))                                        # (report.json holds only the last):
+                with open(os.path.join(args.out, "nights.jsonl"), "a") as fn:                        # REM's and the store's history
+                    fn.write(json.dumps(dict(L.last_night, saved_at=time.strftime("%Y-%m-%d %H:%M"), tick=int(world.tick)), default=str) + "\n")
             rep = dict(ticks=agg["ticks"], wall_s=round(time.time() - t0, 1), counts=dict(agg),
                        day_tick_ms=round(1000 * float(np.mean(walls["day"])), 1) if walls["day"] else None,
                        night_tick_ms=round(1000 * float(np.mean(walls["night"])), 1) if walls["night"] else None,
