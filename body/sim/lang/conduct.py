@@ -1932,6 +1932,22 @@ class Conduct:
                     self.ledger.exact_count(w, cw.channel) < K.EXACT_UNTIL:
                 out.judgments.append((K.WORTH_APPROX, "approximation", w))
                 kind = "recast"
+            elif cw.exact and not hold and self.stage >= 2 and pd is None:
+                # C145 (2026-09-30): stage 2's rung between babble and a right name. A word her ear accepts, said where it names nothing
+                # she reads it attending to, is echoed WITH a smile of WORTH_WORD, worn per word by the vocal book (as a right name's,
+                # C85): the response follows the word-like sound (Goldstein and Schwade 2008; Gros-Louis, West and King 2014), and a
+                # new word pays fresh. Never while her name ask is open (her face holds through a test). Life day 39, the first in
+                # stage 2: her smiles summed 0.3 over the day (block, duck and mama worn out, no fresh word said in context), her
+                # face taught nothing, and the body's reward was novelty less pain
+                n = self.vocal_book.get(w, 0)
+                worth = K.WORTH_WORD * math.exp(-n / K.HABIT_TAU)
+                if worth >= K.HABIT_FLOOR:
+                    self.vocal_book[w] = n + 1
+                    out.judgments.append((worth, "word", w))
+                    self.book_log.append((t, "word", w, round(worth, 3), n)); del self.book_log[:-200]
+                else:
+                    self.book_log.append((t, "word", w, "habituated", n)); del self.book_log[:-200]
+                kind = "echo"
             elif cw.exact or w in cw.expected:
                 kind = "echo"                                  # heard in context: echoed, no smile
             else:

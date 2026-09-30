@@ -393,6 +393,9 @@ WORTH_APPROX = 1                      # stage 2: an approximation of a word, unt
                                       # its hand or reached toward, A40; her face for "mama"; or the answer to her name ask):
                                       # never looser than the exact word
 WORTH_VOCAL_TURN = 1                  # stage 1: a vocal turn in a pause while looking, at most once per 60 ticks
+WORTH_WORD = 1                        # C145, stage 2: a word her ear accepts, said where it names nothing she reads it attending to, echoed
+                                      # with a smile w e^(-n/10) per word (the vocal book, as a right name's): the response follows the
+                                      # word-like sound (Goldstein and Schwade 2008; Gros-Louis, West and King 2014); a new word pays fresh
 WORTH_SCAFFOLD_GIVE = 1               # a give after the give ask's scaffolding (her point or touch, once the judged trial's window
                                       # has closed unmet), for its release; counted toward nothing in the ledger (4.10; P4 builds
                                       # the ladders)

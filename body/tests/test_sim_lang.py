@@ -514,7 +514,7 @@ def test_approximation_in_context():
         assert not [ln for _, ln in said if ln.intent in ("recast", "recast_word")], f"{letters!r} was recast: {said}"
         assert not con.ledger.words[word]["says"]["token"], f"{letters!r} counted toward 'says' of {word!r}"
     con, said, judg, _ = _token_turn(2, [LX.WORD_ID["ball"]])
-    assert judg == [], "the control: an exact 'ball' with no ball in view smiled"
+    assert judg == [(K.WORTH_WORD, "word", "ball")], f"the control: an exact 'ball' with no ball in view: {judg} (C145: a word smile of {K.WORTH_WORD}, never a right name or an approximation)"
     con, said, judg, _ = _token_turn(2, _letters("bal"), target="ball")
     assert judg == [(1, "approximation", "ball")] and said[0][1].intent == "recast", (judg, said[:1])
     con, said, judg, _ = _token_turn(2, _letters("bal"), holds=("ball",))
@@ -523,7 +523,7 @@ def test_approximation_in_context():
     con, said, judg, _ = _token_turn(2, _letters("duk"), pre=lambda c: setattr(c.fast, "last_focus", "duck"))
     assert judg == [] and said[0][1].intent in ("echo", "echo_word"), (judg, said[:1])
     con, said, judg, _ = _token_turn(2, [LX.WORD_ID["duck"]], pre=lambda c: setattr(c.fast, "last_focus", "duck"))
-    assert judg == [], "an exact word she only expected as an echo smiled"
+    assert judg == [(K.WORTH_WORD, "word", "duck")], f"an exact word she only expected as an echo: {judg} (C145: a word smile, not a right name)"
     # the tract's approximation: the ear accepted it among her expected words; the smile still needs its referent
     con = C.Conduct(seed=3, stage=2)
     out = C.Say()
@@ -536,9 +536,10 @@ def test_approximation_in_context():
     con, said, judg, _ = _token_turn(2, [LX.WORD_ID["mama"]], target="mama")
     assert judg == [(2, "right_name", "mama")], judg
     print("17 stage 2: 'z' and 'x' (read as 'a'), 'qp' ('up'), 'bal' ('ball') with nothing in view: no smile, no recast, not "
-          "'says'; 'bal' with the ball where she reads it looking or in its hand: a recast and a smile of 1; 'duk' or 'duck' "
-          "when she only expects it as an echo of her last line: echoed, no smile (the approximation never looser than the "
-          "exact word); the tract's approximation likewise; 'mama' at her face: a right name")
+          "'says'; 'bal' with the ball where she reads it looking or in its hand: a recast and a smile of 1; 'duk' when she only "
+          "expects it as an echo of her last line: echoed, no smile (the approximation never looser than the exact word); the "
+          "tract's approximation likewise; an exact 'ball' or 'duck' with nothing in view: echoed with a word smile of 1 (C145); "
+          "'mama' at her face: a right name")
 
 
 def test_asks_answered():
@@ -6936,6 +6937,32 @@ def test_the_stage_advance():
     print(f"lang 66 (C142): two words said right {K.EXACT_UNTIL} times: stage 1; the third: stage 2 at the dawn, logged {con.book_log[-1][3]!r}, saved")
 
 
+def test_the_word_rung():
+    """lang 67 (C145, 2026-09-30): stage 2's rung between babble and a right name. The child says "duck" 45 times with nothing
+    attended (no duck in its hand or look): each is echoed and the n-th earns WORTH_WORD e^(-n/HABIT_TAU), none under HABIT_FLOOR
+    (30 smiles of 45), labelled "word", never a right name; the vocal book counts them, so a right name of the duck afterwards is
+    worn to the same book; in stage 1 the same turns earn no word smile; while her name ask is open, none. Life day 39, stage 2's
+    first day: her smiles summed 0.3 over the day"""
+    import math as _m
+    duck = LX.WORD_ID["duck"]
+    N = 45
+    toks = {40 + 20 * i: duck for i in range(N)}
+    stream = [P(t, child_target=None) for t in range(40 + 20 * N + 10)]
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con)
+    said, judg = run(con, stream, tokens=toks)
+    worths = [j[1] for j in judg if j[2] == "word"]
+    want = [K.WORTH_WORD * _m.exp(-n / K.HABIT_TAU) for n in range(N)]
+    want = [w for w in want if w >= K.HABIT_FLOOR]
+    assert len(worths) == len(want) and all(abs(a - b) < 1e-9 for a, b in zip(worths, want)), (len(worths), len(want), worths[:3])
+    assert not [j for j in judg if j[2] in ("right_name", "vocal_turn")], [j for j in judg if j[2] != "word"][:3]
+    assert con.vocal_book["duck"] == len(want), con.vocal_book
+    con1 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False); _no_sets(con1)
+    _s1, judg1 = run(con1, stream, tokens=toks)
+    assert not [j for j in judg1 if j[2] == "word"], judg1[:3]
+    print(f"lang 67 (C145): stage 2, 'duck' said {N} times with nothing attended: {len(worths)} word smiles, {worths[0]:.2f} to {worths[-1]:.3f},",
+          f"then echoed without one; no right name; stage 1: none")
+
+
 TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
@@ -6949,7 +6976,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed, test_the_stage_advance]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed, test_the_stage_advance, test_the_word_rung]
 
 if __name__ == "__main__":
     t0 = time.time()
