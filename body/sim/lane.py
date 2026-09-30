@@ -105,6 +105,8 @@ NEARER_M = 0.01                        # a reach ends nearer when it beats the b
 HEAD_UP_M = 0.08                       # on its front with the head 8 cm above the pelvis, held HEAD_UP_TICKS: "head_up", once in HEAD_UP_GAP
 HEAD_UP_TICKS, HEAD_UP_GAP = 5, 100    # (the plumbing day of 2026-09-26: a thrashing body on its front crossed 8 cm 14 times in 100 ticks)
 ROLL_GAP = 40                          # a half roll counted once in 40 ticks (rocking on its side is one act, not many)
+SIT_HOLD, SIT_GAP = 5, 100             # C134: a sit is the sitting held 5 ticks (0.75 s), counted once in 100 ticks (day 34: "sat" judged 22
+                                       # times in 1,200 ticks, three of them 3 ticks apart, the trunk bobbing up and down on its back; ours)
 CRAWL_M = 0.20                         # A125: on its front, its pelvis carried this far along the floor from where its prone spell began
 CRAWL_GAP = 60                         # (or from the last crawl counted): "crawled", once in this many ticks (ours; a body length is 1.3 m)
 PEEKABOO_ACT = (10, 5)                 # an act begun within 10 ticks of her reveal by a hand that rested the 5 ticks before (A2)
@@ -200,6 +202,7 @@ class ParentLane:
         self.book = {}                                    # her notebook: toy -> the hand's distance at the end of its last BOOK_LAST reaches
         self.side_from = None                             # the lying posture it turned onto its side from (a half roll, once)
         self.last_half_roll = -10 ** 9                    # the last tick a half roll was counted
+        self.sit_run, self.last_sat = 0, -10 ** 9         # C134: ticks sitting so far, the last tick a sit was counted
         self.crawl_from = None                            # A125: its pelvis on the floor plan when its prone spell began, or its last crawl
         self.last_crawl = -10 ** 9                        # the last tick a crawl was counted
         self.head_up = False                              # its head up on its front, this spell
@@ -469,8 +472,9 @@ class ParentLane:
             self.side_from = self.posture                                       # onto its side from its back or front, once in
             if t - self.last_half_roll >= ROLL_GAP:                             # ROLL_GAP (rocking is one act)
                 ev.append(("half_roll", None)); self.last_half_roll = t
-        if post == "sitting" and self.last.get("posture") != "sitting":
-            ev.append(("sat", None))
+        self.sit_run = self.sit_run + 1 if post == "sitting" else 0
+        if self.sit_run == SIT_HOLD and t - self.last_sat >= SIT_GAP:      # C134: held, and once in SIT_GAP (a bob is not a sit)
+            ev.append(("sat", None)); self.last_sat = t
         if post == "front":                                                 # A125 (the crawl rung): its pelvis carried CRAWL_M along the
             pxy = np.asarray(ch.pelvis[:2], float)                          # floor while on its front, from where the spell began (or
             if self.crawl_from is None:                                     # the last crawl counted), once in CRAWL_GAP: "crawled"
@@ -702,6 +706,7 @@ class ParentLane:
                               last_hit=dict(self.last_hit), reach_t=dict(self.reach_t), book={k: list(v) for k, v in self.book.items()},
                               side_from=self.side_from, head_up=self.head_up, reveal_t=self.reveal_t, peekaboo_done=self.peekaboo_done,
                               last_half_roll=self.last_half_roll, head_up_run=self.head_up_run, last_head_up=self.last_head_up,
+                              sit_run=self.sit_run, last_sat=self.last_sat,
                               cry_down=self.cry_down, distressed=self.distressed, touch_run=dict(self.touch_run),
                               got_arm=dict(self.got_arm)))
 
@@ -761,6 +766,7 @@ class ParentLane:
             self.side_from, self.head_up = e["side_from"], bool(e["head_up"])
             self.reveal_t, self.peekaboo_done = int(e["reveal_t"]), int(e["peekaboo_done"])
             self.last_half_roll = int(e.get("last_half_roll", -10 ** 9)); self.head_up_run = int(e.get("head_up_run", 0))
+            self.sit_run, self.last_sat = int(e.get("sit_run", 0)), int(e.get("last_sat", -10 ** 9))
             self.last_head_up = int(e.get("last_head_up", -10 ** 9))
             self.cry_down, self.distressed = int(e.get("cry_down", 0)), bool(e.get("distressed", False))
             self.touch_run = {k: int(v) for k, v in e.get("touch_run", {}).items()}; self.got_arm = {k: bool(v) for k, v in e.get("got_arm", {}).items()}
