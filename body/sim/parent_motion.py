@@ -3583,6 +3583,8 @@ class ParentMotion:
                     need_ok = self._need_ok(need, H, yaw); tries += need is not None
                 if not need_ok:
                     reasons.append((tag, f"the act cannot be done from there ({need})")); break
+                if not self._can_walk_to(stand):                            # C131: a spot she cannot get to is no spot (life day 32)
+                    reasons.append((tag, back, "no path on the floor to her standing spot")); continue
                 self.kneel_reasons = reasons
                 return dict(H=_lst(H), T=_lst(T), T2=_lst(T2), stand=_lst(stand), yaw=float(yaw), where=tag, clear=clear)
             if need_ok is False:
@@ -3605,10 +3607,26 @@ class ParentMotion:
                     need_ok = self._need_ok(need, H, yaw); tries += need is not None
                 if not need_ok:
                     reasons.append((tag, f"the act cannot be done from there ({need})")); break
+                if not self._can_walk_to(stand):                            # C131
+                    reasons.append((tag, "turn", "no path on the floor to her standing spot")); continue
                 self.kneel_reasons = reasons
                 return dict(H=_lst(H), T=_lst(T), T2=_lst(T), stand=_lst(stand), yaw=float(yaw), yaw_down=float(y2), where=tag, clear=[])
         self.kneel_reasons = reasons
         return None
+
+    def _can_walk_to(self, stand):
+        """C131 (life day 32): whether a path on the floor leads from where she is to a spot's standing point (A6's clearances, the
+        toys in the way cleared as a walk would). The spot chooser passed a spot beside the child and the walk to it was refused
+        "no path on the floor" 27 times in a day (the child lay by the doorway, the spot on its far side, the way round it closed by
+        its own clearance and the wall's): a spot she cannot get to is no spot, and the next side is tried"""
+        start = np.asarray(self.base["at"], float)
+        if float(np.linalg.norm(np.asarray(stand, float) - start)) < 0.05:
+            return True
+        try:
+            self._walk_phases0(start, np.asarray(stand, float), 0.0, goal_r=0.35, child=True)
+            return True
+        except Refuse:
+            return False
 
     def _need_ok(self, need, H, yaw):
         """whether the act can be done from a kneeling spot (her pelvis on her heels at H, facing yaw): 'touch:<part>' her near hand

@@ -62,6 +62,9 @@ GREET_BY = 200                         # the greeting at the latest by this tick
 CALL_AFTER_GREET = 60                  # the wake's call this long after the greeting (ours)
 AWAY_CALL = 600                        # her calls from the hall (4.7: about every 600 ticks)
 AWAY_AFTER_PAIN = 100                  # nor within 100 ticks of its pain (4.7)
+DOOR_XY, DOOR_NEAR_M = (2.6, -1.5), 1.0   # C131: the room's door to the hall (make_g1room: the right wall's gap, y -1.95 to -1.05) and how
+                                       # near it the child may lie when she leaves: nearer, she does not go (life day 32: the child crawled
+                                       # into the doorway while she was out and she stood in the hall 5,000 ticks, no path back; ours)
 BIDS_BACK = (3, 40)                    # back early after 3 of its vocal turns in 40 ticks (4.7)
 TASKS_ATTENTION = 0.4                  # her attention at her own tasks (parent_feel: .4)
 BIRTH_TOYS = ("ball", "block", "duck", "cup", "car", "bear", "drum")   # her birth words' toys in the room (lexicon; no bottle: A88)
@@ -207,6 +210,10 @@ class DayPlan:
         if kind == "away":
             if t - self.last_pain < AWAY_AFTER_PAIN or any(k == "distress" for k, _o in lane._p.events):
                 self.log.append((t, "away skipped: its pain or its distress (4.7)"))
+                return
+            cxy = lane.last.get("child_xy")
+            if cxy is not None and float(np.hypot(cxy[0] - DOOR_XY[0], cxy[1] - DOOR_XY[1])) < DOOR_NEAR_M:
+                self.log.append((t, "away skipped: the child at the door (C131)"))
                 return
             c.request("leave"); c.routine = "leave"
             self.away, self.bids, self.next_call = True, [], t + AWAY_CALL

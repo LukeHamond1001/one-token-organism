@@ -807,10 +807,36 @@ def test_floor_play_reaches_the_lesson():
           "her hide turn, comfort gap, cry window and look at the bucket saved and restored")
 
 
+def test_the_leave_with_the_child_at_the_door():
+    """lane 21 (C131): her away block is not entered while the child lies within DOOR_NEAR_M of the room's door (life day 32: it crawled
+    into the doorway while she was out and she stood in the hall 5,000 ticks with no path back); with the child on the mat she leaves"""
+    import mujoco
+    w, lane = _world(plan=True, day_ticks=2400)
+    for _ in range(5):
+        w.frame(); w.apply({})
+    plan = lane.plan
+    c = lane.conduct
+    asked = []
+    real = c.request
+    c.request = lambda k, **kw: asked.append(k)
+    try:
+        lane.last["child_xy"] = [2.2, -1.7]                                 # by the door
+        plan.last_pain = -10 ** 6
+        plan._enter("away", 1000, 1000, lane, w)
+        assert "leave" not in asked and not plan.away and any("child at the door" in str(x) for x in plan.log[-2:]), (asked, plan.log[-2:])
+        lane.last["child_xy"] = [0.3, -0.6]                                 # on the mat
+        plan._enter("away", 1100, 1100, lane, w)
+        assert "leave" in asked and plan.away, (asked, plan.away)
+    finally:
+        c.request = real
+        plan.away = False
+    print("lane 21: the away block skipped with the child 0.45 m from the door; entered with it on the mat")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
               test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus, test_the_crawl,
-              test_the_find, test_the_find_of_a_rattling_toy, test_floor_play_reaches_the_lesson]
+              test_the_find, test_the_find_of_a_rattling_toy, test_floor_play_reaches_the_lesson, test_the_leave_with_the_child_at_the_door]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

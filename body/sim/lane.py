@@ -629,7 +629,8 @@ class ParentLane:
                          events=[list(e) for e in p.events], line=None if out.line is None else out.line.text,
                          heard=[cw.word for cw in out.heard], judged=[list(j) for j in out.judgments], cut=bool(out.cut),
                          face_test=bool(test), reading=self.reading, word=self.word_now, in_view=p.child_in_view,
-                         seen_by_child=p.seen_by_child, present=p.present)
+                         seen_by_child=p.seen_by_child, present=p.present,
+                         child_xy=[float(world.d.qpos[0]), float(world.d.qpos[1])])   # C131: its pelvis on the floor plan (her plan reads it)
         return {SOURCE: (pa.astype(np.float64), mouth)}
 
     def _read_face(self, t, seen):
