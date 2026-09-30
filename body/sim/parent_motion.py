@@ -3669,6 +3669,12 @@ class ParentMotion:
                 return self._pull_pairing() is not None
             finally:
                 self.base = saved
+        if need.startswith("hand:"):                                       # C133: the child's palm (side cs) within her hand's reach from
+            _h, cs, toy = need.split(":", 2)                                # there, as the hand-over reaches it (_plan_hand_over)
+            pt = self.child.grasp[cs] + self.child.palm_n[cs] * 0.04
+            hands = [sd for sd in "LR" if self.holding[sd] is None or self.holding[sd] == toy or toy == "None"]   # a hand that can
+            return any(self._reachable_at(sd, pt, np.asarray(H, float), yaw, "heels", palm=-self.child.palm_n[cs], bend=False)
+                       for sd in hands)                                    # give it: holding it, or free to take it (_giving's swap)
         if need.startswith("touch:") and "|" in need:
             return any(self._need_ok(f"touch:{p_}", H, yaw) for p_ in need.split(":", 1)[1].split("|"))
         if need.startswith("touch:"):
@@ -4825,10 +4831,10 @@ class ParentMotion:
 
     def _act_hand_over(self, a, t):
         toy = self._toy(t)
-        return self._fetch(a, toy) + [dict(type="plan", what="near_free_hand", args={}),
+        return self._fetch(a, toy) + [dict(type="plan", what="near_free_hand", args=dict(toy=toy)),
                                       dict(type="plan", what="hand_over", args=dict(toy=toy))]
 
-    def _plan_near_free_hand(self, a):
+    def _plan_near_free_hand(self, a, toy=None):
         """she comes to the side of the child's free hand (a hand holding a toy is not given another)"""
         free = [x for x in "LR" if not self._hand_full(x)]
         if not free:
@@ -4838,8 +4844,14 @@ class ParentMotion:
             cs = min(free, key=lambda x: float(np.linalg.norm(self.child.grasp[x][:2] - her)))
             if float(np.linalg.norm(self.child.grasp[cs][:2] - her)) < 0.75:
                 return []                                                   # it is within her reach from where she kneels
-        side = free[0] if len(free) == 1 else self.child.face_side()
-        return self._plan_approach(a, where=side)
+        order = free if len(free) == 1 else sorted(free, key=lambda x: x != self.child.face_side())
+        last = None
+        for cs in order:                                                    # C133 (day 33): the spot must put its palm in her reach
+            try:                                                            # (six hand-overs refused "beyond her reach" in 4,000
+                return self._plan_approach(a, where=cs, need=f"hand:{cs}:{toy}")   # ticks: she knelt at its side, its hand lay far); its
+            except Refuse as e:                                             # other free hand's side next
+                last = e
+        raise last
 
     def _plan_hand_over(self, a, toy):
         """the toy brought into the child's near palm along its normal; released by A4's rule (the palm pressed at least 0.3 N and
