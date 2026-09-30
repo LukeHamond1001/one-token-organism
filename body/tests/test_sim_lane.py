@@ -639,6 +639,7 @@ def test_the_find():
     assert lane.last["in_bucket"] == ["duck"] and "duck" in lane.hidden, (lane.last["in_bucket"], lane.hidden)
     assert "hidden" in lane.state() and lane.state()["hidden"] == lane.hidden
     seen_on = {s_.id: s_.on for s_ in lane._p.seen}
+    assert "bucket" in seen_on, ("C129: the bucket seen while a toy lies on its floor plate", sorted(seen_on))
     grasp(evs, judged)
     assert ("found", "duck") in evs, evs
     assert [j for j in judged if j[1] == "found"] == [(2, "found", "duck")], judged

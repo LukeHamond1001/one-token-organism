@@ -253,6 +253,19 @@ class ParentLane:
                                    + np.linalg.norm([0.13, 0.06, 0.0])) for s in ("left", "right")}
 
     # ------------------------------------------------------------------ what she sees
+    def _visible(self, m, d, face, tt, at):
+        """tt in her line of sight from her face: the ray to its body's origin meets it first. An open container's origin is its floor
+        plate (extras.add_bucket), so a toy lying in it took the ray and the bucket went unseen at the moment it held a toy (C129: day
+        30's hides, her look at the bucket done 30 times and the telling refused "unseen: 'bucket'"): for a container the ray goes to
+        the middle of its opening, and she sees it when the ray meets the container or nothing at all (a clear line into its mouth)"""
+        b = self.toy_body[tt]
+        root = int(m.body_rootid[b])
+        if tt in TP.OPEN_CONTAINERS:
+            rim = np.asarray(at, float) + d.xmat[b].reshape(3, 3) @ np.array([0.0, 0.0, X.BUCKET_WALL + X.BUCKET_H])
+            hit = self._ray_first(m, d, face, rim)
+            return hit is None or hit == root
+        return self._ray_first(m, d, face, at) == root
+
     def _ray_first(self, m, d, a, b):
         """the root body a ray from a to b meets first past her own body, or None when it meets nothing before b"""
         v = np.asarray(b, float) - np.asarray(a, float)
@@ -312,7 +325,7 @@ class ParentLane:
         in_view = self._ray_first(m, d, face, d.xpos[m.body("torso_link").id]) == self.g1_root
         ang = PC._angles(face - head, axes)
         seen_by_child = ang is not None and abs(ang[0]) <= K.CAMERA_FIELD_DEG[0] / 2 and abs(ang[1]) <= K.CAMERA_FIELD_DEG[1] / 2
-        visible = [tt for tt in self.toys if self._ray_first(m, d, face, pos[tt]) == int(m.body_rootid[self.toy_body[tt]])]
+        visible = [tt for tt in self.toys if self._visible(m, d, face, tt, pos[tt])]
         things = [(tt, pos[tt]) for tt in visible] + [("mama", face)]
         rd = self.conduct.reader
         target, before = rd.look(head, axes, things)
