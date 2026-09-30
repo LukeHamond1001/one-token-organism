@@ -161,10 +161,19 @@ class CriticsMixin:
                     with torch.no_grad():                        # THE ACTOR'S LESSON: dopamine times the eligibility, the weights forgetting
                         m.actor.weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)
                 if int(self.cfg.get("actor", 0)):
+                    slr_ = float(self.cfg.get("actor_slow_lr", 0.0))
                     for e_, st_ in zip(self.anatomy.motors, getattr(self, "motor", ())):   # each later effector's actor, the same lesson (step R5)
                         if st_["e_actor"] is not None:
                             with torch.no_grad():
-                                m.get_submodule(e_.actor).weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * st_["e_actor"])
+                                fast_ = float(self.cfg.get("actor_lr", 0.02)) * delta * st_["e_actor"]
+                                m.get_submodule(e_.actor).weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(fast_)
+                                if slr_ > 0.0:
+                                    st_["a_upd"][0] += float(fast_.norm())
+                        if slr_ > 0.0 and st_.get("a_tag") is not None and abs(float(delta)) > 1e-9:
+                            with torch.no_grad():                        # A142/C153: the tag captured by the same phasic dopamine
+                                upd = slr_ * delta * st_["a_tag"]        # (mouth._actor_tag_step: the 64-tick trace)
+                                m.get_submodule(e_.actor).weight.add_(upd)
+                                st_["a_upd"][1] += float(upd.norm())
                 if stri and int(self.cfg.get("wm", 0)) and getattr(m, "stri_wm", 0):
                     with torch.no_grad():                        # WORKING MEMORY: latch at a burst, clear at the reward or with age
                         m.wm_tick()
@@ -174,17 +183,6 @@ class CriticsMixin:
                             m.wm_latch(m.striatum_read()); self._z_now = m.stri_in()
                 delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
                 delta_long = float(td_long.detach()); vlong = float(vl_now)
-                slr_ = float(self.cfg.get("actor_slow_lr", 0.0))
-                if int(self.cfg.get("actor", 0)) and slr_ > 0.0:
-                    for e_, st_ in zip(self.anatomy.motors, getattr(self, "motor", ())):   # A142: the long critic's error captures each
-                        if st_.get("a_tag") is not None:                                      # effector's tag (mouth._actor_tag_step)
-                            with torch.no_grad():
-                                w_ = m.get_submodule(e_.actor).weight
-                                upd = slr_ * delta_long * st_["a_tag"]
-                                w_.add_(upd)
-                                st_["a_upd"][1] += float(upd.norm())                          # the slow path's summed norm (a ruler)
-                                if st_["e_actor"] is not None:
-                                    st_["a_upd"][0] += float((float(self.cfg.get("actor_lr", 0.02)) * delta * st_["e_actor"]).norm())   # the fast one's
                 if int(self.cfg.get("vcrit_auto", 0)):
                     self._vrel_update(vlong, r)
                 for b in range(len(gam)):

@@ -1875,8 +1875,8 @@ def test_the_habit_is_dopamines():
 
 
 def test_the_actors_tag():
-    """world (A142, 2026-09-30): the actor's synaptic tag. On a born G1 life the tag begins at the first act's eligibility, decays by
-    vcrit_gamma a tick, adds each act's eligibility; with actor_slow_lr on, 60 ticks of the world loop leave the arms' tags set and the
+    """world (A142/C153, 2026-09-30): the actor's synaptic tag. On a born G1 life the tag begins at the first act's eligibility, decays by
+    1 - 1/tag_reach a tick, adds each act's eligibility; with actor_slow_lr on, 60 ticks of the world loop leave the arms' tags set and the
     slow path's summed update norm above 0 with the actor's weights moved from a life run with it off (the same seed); with it off, no
     tag is kept"""
     from body.core.world import WorldLoop
@@ -1892,7 +1892,7 @@ def test_the_actors_tag():
         if slr > 0:
             st = L.motor[3]; e1 = torch.ones(3, 4)
             L._actor_tag_step(st, e1); assert torch.equal(st["a_tag"], e1)
-            L._actor_tag_step(st, None); g_l = float(cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+            L._actor_tag_step(st, None); g_l = 1.0 - 1.0 / float(cfg.get("tag_reach", 64))
             assert torch.allclose(st["a_tag"], e1 * g_l), st["a_tag"][0]
             L._actor_tag_step(st, e1); assert torch.allclose(st["a_tag"], e1 * (1.0 + g_l))
             st["a_tag"] = None

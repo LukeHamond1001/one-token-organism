@@ -122,7 +122,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A142/C151 (2026-09-30 15:32, on branch t151: the actor's synaptic tag captured by the long critic's error, SIM_CFG actor_slow_lr
 # 1e-4; the language default digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 4d6a6f8c2d1b201c7841f103, one-thread 40d6fdb08910e18c343fa7ce,
 # consts c537271fd70a.
-digest  sim                   threaded 96d2e55dca5b9790c7e42e6f consts 74b1b1c13c03 | --profile sim
-digest  sim                   pinned   dd95d9b07cb170ddff9c0cd0 consts 74b1b1c13c03 | --profile sim
-full    sim                   threaded organs d2c236e60088 store b5dd20e0b4e0 optim 50814bf58e58 rng 6643a03f6652 work a4356bbd01d7 cfg 08b28b5a1c01
-full    sim                   pinned   organs 19c5f2b640bf store aa8954247fd7 optim 8a7a8f88ab02 rng 6643a03f6652 work 665864f78cb8 cfg 08b28b5a1c01
+# Re-pinned at C153 (2026-09-30 18:04, on branch t153: the actor's tag decays at the tag's reach (64 ticks) and is captured by phasic dopamine,
+# SIM_CFG actor_slow_lr 1e-3; the language default digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 96d2e55dca5b9790c7e42e6f, one-thread
+# dd95d9b07cb170ddff9c0cd0, consts 74b1b1c13c03.
+digest  sim                   threaded 016a8876d297b9c181677ef3 consts c9755b913294 | --profile sim
+digest  sim                   pinned   8217248e5cab5fc966f7d96b consts c9755b913294 | --profile sim
+full    sim                   threaded organs 37b4fb3ec6ab store 69a6d356845f optim 6733f81bd686 rng 5c72b73f8367 work 19abb22a1e4e cfg 854522d0bd88
+full    sim                   pinned   organs 4042f2c477c3 store 44bfddf7b0ea optim 37cc3b1d5bee rng 5c72b73f8367 work 38a8243c3a96 cfg 854522d0bd88

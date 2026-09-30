@@ -223,9 +223,9 @@ PHYSIOLOGY = dict(
     # --- the actor and the planner: what to say at a word's start ---
     actor=0,
     actor_lr=0.02,
-    actor_slow_lr=0.0,   # A142 (2026-09-30): the actor's synaptic tag: each later effector's eligibility summed at the ventral critic's horizon
-                         # (vcrit_gamma) and captured by that critic's error each tick (Frey and Morris 1997, as the gate's tag), so an act's
-                         # credit reaches back minutes, not dopamine's 16 ticks; 0 off (the diary); the G1 sets 1e-4 (ours)
+    actor_slow_lr=0.0,   # A142/C153 (2026-09-30): the actor's synaptic tag: each later effector's eligibility summed at the tag's reach
+                         # (1 - 1/tag_reach, 64 ticks) and captured by phasic dopamine each tick (Frey and Morris 1997), so an act's credit
+                         # reaches back a minute, not 16 ticks; 0 off (the diary); the G1 sets 1e-3 (ours)
     actor_beta=1.0,
     actor_forget=36000,
     actor_form="add",   # "chunk" = one act per word, the letters inside not choices; "plan", "select", "add" the earlier forms

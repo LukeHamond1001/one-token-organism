@@ -485,7 +485,8 @@ SIM_CFG = dict(
                                    # dawn 29 (the private-speech ruler with --covert)
     sharp_per_joint=1,             # A140 (C117): each joint's decisiveness its own, earned by its kappa and its settings' variety (mouth._motor_sharp)
     habit_by_credit=1,             # A141 (C149, 2026-09-30): the day's habit lesson weighted by dopamine's credit as the night's is (cortex._habit_weights)
-    actor_slow_lr=1e-4,            # A142 (2026-09-30): the actor's synaptic tag captured by the long critic's error (mouth._actor_tag_step, critics)
+    actor_slow_lr=1e-3,            # A142/C153 (2026-09-30): the actor's 64-tick tag captured by phasic dopamine (mouth._actor_tag_step, critics): at
+                                   # 60 ticks after an act its credit through the tag (1e-3 x 0.39) equals the fast trace's (0.02 x 0.02); ours
     sharp_earned_norm=1,           # C148 (2026-09-30): the proposal's certainty earned by the same exponent (model.ActTable.logits): a joint that has
                                    # shown nothing draws from the cosines alone (day 40: the right shoulder yaw at +big 98% of ticks, kappa 0.06)
     imagine_key=1, imagine_pav=1,  # A138: waking imagination at each event's end (sleep._imagine: the REM rollout awake; IMAG_SCALE; the

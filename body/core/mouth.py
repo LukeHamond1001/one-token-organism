@@ -795,16 +795,22 @@ class MouthMixin:
         return int_t
 
     def _actor_tag_step(self, st, e_new):
-        """A142 (the lead, 2026-09-30): THE ACTOR'S SYNAPTIC TAG. Each later effector's eligibility (the one-hot of its settings less their
-        probabilities, on the striatal input: what the fast lesson credits over dopamine's 16 ticks) is also summed into a tag that decays
-        at the ventral critic's horizon (vcrit_gamma, 1 - 1/1024) and is captured each tick by that critic's error (critics: weight +=
-        actor_slow_lr x delta_long x tag), as the gate's tag is (Frey and Morris 1997's tag and capture). Why: a reach and a grasp take
+        """A142 (the lead, 2026-09-30; C153 the same evening): THE ACTOR'S SYNAPTIC TAG. Each later effector's eligibility (the one-hot of its
+        settings less their probabilities, on the striatal input: what the fast lesson credits over dopamine's 16 ticks) is also summed
+        into a tag that decays at the tag's reach (1 - 1/tag_reach, 64 ticks) and is captured each tick by phasic dopamine (critics:
+        weight += actor_slow_lr x delta x tag), as a tag set by activity is captured by later dopamine (Frey and Morris 1997). Why: a reach and a grasp take
         seconds of coordinated steps and her smile comes after; the fast lesson's credit had faded (0.9375 a tick) before it arrived, so
         the actor learned from pain (dense, a tick after the act) and hardly from her face (life day 40: 533 word smiles, 21 acts on things
         smiled at, the arms' choices unmoved). e_new None: the decay alone. Off (actor_slow_lr 0): nothing kept"""
         if float(self.cfg.get("actor_slow_lr", 0.0)) <= 0.0:
             return
-        g_l = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+        # C153 (2026-09-30, day 42 read at noon): the tag decays at THE TAG'S REACH (1 - 1/tag_reach, 64 ticks: the horizon over which R7d
+        # credits an act with the dopamine that follows) and is captured by PHASIC dopamine (critics: delta), not by the long critic's
+        # error over its 1,024-tick horizon. As first built (A142, dawn 42) the capture was delta_long, a dense drifting signal: whenever
+        # the long outlook dipped it punished whatever the body had done in the last minute, mostly holding its wrists, so the shoulders'
+        # big swings rose from 8% to 52% of ticks by noon, the wrists' pain doubled (12 to 24 a thousand ticks), acts smiled at fell by
+        # two thirds and the reward ran -206 in half a day. This form is the eligibility trace of TD(lambda) at a 64-tick horizon
+        g_l = 1.0 - 1.0 / float(self.cfg.get("tag_reach", 64))
         tag = st.get("a_tag")
         if e_new is None:
             if tag is not None:
