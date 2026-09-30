@@ -72,6 +72,13 @@ TASKS_ATTENTION = 0.4                  # her attention at her own tasks (parent_
 BIRTH_TOYS = ("ball", "block", "duck", "cup", "car", "bear", "drum")   # her birth words' toys in the room (lexicon; no bottle: A88)
 
 
+def _bucket_at_hand(seen, lane):
+    """C152 (2026-09-30): the hide game's bucket is at hand when she sees it or knows its place (lane.toys): since C138 the hide act
+    carries the bucket beside the child when it stands beyond its reach, so C130's gate (the bucket within the child's reach, before the
+    carry existed) only starved the game: life days 38 to 41 ran 0 to 1 hide a day, and no find has ever been judged"""
+    return "bucket" in seen or "bucket" in set(getattr(lane, "toys", ()) or ())
+
+
 def _worn(book, o):
     """C141: a toy her smiles have worn out: every act on it that her book pays (got, lifted, shook, hit) has habituated under
     HABIT_FLOOR (conduct._motor_judgments: the n-th smile is worth w e^(-n/HABIT_TAU)). Day 37: the box alone all day (the duck lay
@@ -295,17 +302,17 @@ class DayPlan:
                 c.motion.lesson_dist = LESSON_DIST0 + LESSON_STEP * lvl
                 c.request("set_near", o=o)
                 self.log.append((t, "lesson", "reach", o, lvl, round(c.motion.lesson_dist, 2)))
-            elif "bucket" in seen and seen["bucket"].child_can_reach and o != "bucket" and self.hide_turn and (o not in seen or seen[o].on != "hand"):   # C130: a hide within its reach only (day 31: four hides 2 m from it)   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
+            elif _bucket_at_hand(seen, lane) and o != "bucket" and self.hide_turn and (o not in seen or seen[o].on != "hand"):   # C152: the bucket seen or its place known (C138 brings it beside the child; C130's gate, within its reach only, predates the carry) (day 31: four hides 2 m from it)   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
                 self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the bucket in
                 c.request("hide", o=o)                                  # its view; its hand into the bucket after is "found" (worth 2)
                 self.log.append((t, "lesson", "hide", o, got))
             elif handled < 3 * K.MASTERED_N or o in held:               # the handle rung: the toy into its hand (C125: and the toy in
                                                                         # her own hand, which she cannot ask the child to give her)
-                self.hide_turn = "bucket" in seen and seen["bucket"].child_can_reach
+                self.hide_turn = _bucket_at_hand(seen, lane)                # C152
                 c.request("hand_over", o=o)
                 self.log.append((t, "lesson", "handle", o, handled))
             else:                                                       # the give rung
-                self.hide_turn = "bucket" in seen and seen["bucket"].child_can_reach
+                self.hide_turn = _bucket_at_hand(seen, lane)                # C152
                 if _may_give(seen, o):
                     c.request("ask_give", o=o)
                     self.log.append((t, "lesson", "give", o))

@@ -887,10 +887,55 @@ def test_the_show_block_with_nothing_new():
           f"{sum(1 for k in kinds if k == 'show')} shows of her focus toys in 100 offers, no new word asked")
 
 
+
+def test_the_hide_with_the_bucket_out_of_reach():
+    """lane 23 (C152, 2026-09-30): the hide rung asked with the bucket seen but beyond the child's reach (C138 brings it), and with the
+    bucket unseen but its place known; not with no bucket at all; the hide turn set after a handle lesson with the bucket at hand.
+    Life days 38 to 41: 0 to 1 hide a day under C130's gate, no find ever"""
+    from types import SimpleNamespace
+    from body.sim.lang import templates as TP
+    w, lane = _world(plan=True, day_ticks=2400)
+    for _k in range(5):
+        w.frame(); w.apply({})
+    c, plan = lane.conduct, lane.plan
+    known = [o for o in (lane.toys or ()) if o not in TP.OPEN_CONTAINERS]
+    toy = known[0]; plan.focus = [toy]
+    asked = []
+    real_request, real_p, real_toys = c.request, lane._p, lane.toys
+    try:
+        c.request = lambda k, **kw: asked.append((k, kw))
+        c.book.setdefault("got", {})[toy] = 2 * DP.K.MASTERED_N            # the reach rung mastered: the hide's turn
+        def S(id_, reach): return SimpleNamespace(id=id_, name=id_, on="floor", child_sees=True, child_can_reach=reach)
+        plan.hide_turn = True
+        lane._p = SimpleNamespace(seen=[S("bucket", False), S(toy, True)], events=[], child_holds=())
+        plan._lesson(100, lane)
+        assert asked and asked[-1][0] == "hide" and asked[-1][1].get("o") == toy, asked[-2:]
+        plan.hide_turn = True
+        lane._p = SimpleNamespace(seen=[S(toy, True)], events=[], child_holds=())    # the bucket unseen, its place known
+        lane.toys = tuple(real_toys) + (("bucket",) if "bucket" not in set(real_toys) else ())   # (the test's room has no bucket body)
+        plan._lesson(200, lane)
+        assert asked[-1][0] == "hide", asked[-2:]
+        plan.hide_turn = True
+        lane.toys = tuple(o for o in lane.toys if o != "bucket")                    # no bucket she knows of: no hide
+        plan._lesson(300, lane)
+        assert asked[-1][0] != "hide", asked[-2:]
+        lane.toys = real_toys
+        plan.hide_turn = False
+        c.book["got"][toy] = 0                                                       # the handle rung: its lesson sets the turn
+        lane._p = SimpleNamespace(seen=[S(toy, True)], events=[], child_holds=())
+        for k in range(3):
+            plan._lesson(400 + k, lane)
+        assert plan.hide_turn is True, plan.hide_turn
+    finally:
+        c.request, lane._p, lane.toys = real_request, real_p, real_toys
+    print(f"lane 23 (C152): the hide asked with the bucket seen beyond its reach and with the bucket's place known, none with no bucket; "
+          f"the hide turn set by a handle lesson with the bucket at hand")
+
+
 LANE_TESTS = [test_the_tables, test_a_line_heard, test_exact_replay_mid_line, test_the_night, test_the_born_reading, test_a_toy_falls,
               test_the_days_layout, test_a_short_day, test_no_meal, test_her_eyes, test_her_lessons, test_smile_brought, test_a_face_down_morning,
               test_the_roll_rung, test_a_toy_she_could_not_get_to, test_the_new_toy_in_her_focus, test_the_crawl,
-              test_the_find, test_the_find_of_a_rattling_toy, test_floor_play_reaches_the_lesson, test_the_leave_with_the_child_at_the_door, test_the_show_block_with_nothing_new]
+              test_the_find, test_the_find_of_a_rattling_toy, test_floor_play_reaches_the_lesson, test_the_leave_with_the_child_at_the_door, test_the_show_block_with_nothing_new, test_the_hide_with_the_bucket_out_of_reach]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
