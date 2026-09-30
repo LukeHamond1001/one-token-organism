@@ -590,6 +590,7 @@ class MouthMixin:
         never saved; body/core/cord.py `_spg_where`). Since A70 (2026-09-25) a save keeps all of it but that cache: life["motor"] its
         reliability, performance means, fatigue and act_inv's pending pairs, the body's day the rest (body/core/persistence.py)"""
         return {"buf": collections.deque(maxlen=96), "g_base": None, "last": None, "acted_last": False, "e_actor": None, "now": None,
+                "a_tag": None, "a_upd": [0.0, 0.0],   # A142: the actor's synaptic tag, and the day's summed update norms (fast, slow: a ruler)
                 "chunk": 0, "sense": None, "fwd": None, "err": None,
                 "inv_conf": ([[[0.0] * int(K) for _ in range(int(K))] for K in e.factors] if e.inverse else None),
                 "inv_kappa": [0.0] * len(e.factors), "inv_gain": 0.0, "inv_n": 0, "inv_last": None,
@@ -793,6 +794,27 @@ class MouthMixin:
                 self._gate_tag = ((g_ * prev) if prev is not None else torch.zeros_like(tag_in)) + (a_tag - p_act) * tag_in
         return int_t
 
+    def _actor_tag_step(self, st, e_new):
+        """A142 (the lead, 2026-09-30): THE ACTOR'S SYNAPTIC TAG. Each later effector's eligibility (the one-hot of its settings less their
+        probabilities, on the striatal input: what the fast lesson credits over dopamine's 16 ticks) is also summed into a tag that decays
+        at the ventral critic's horizon (vcrit_gamma, 1 - 1/1024) and is captured each tick by that critic's error (critics: weight +=
+        actor_slow_lr x delta_long x tag), as the gate's tag is (Frey and Morris 1997's tag and capture). Why: a reach and a grasp take
+        seconds of coordinated steps and her smile comes after; the fast lesson's credit had faded (0.9375 a tick) before it arrived, so
+        the actor learned from pain (dense, a tick after the act) and hardly from her face (life day 40: 533 word smiles, 21 acts on things
+        smiled at, the arms' choices unmoved). e_new None: the decay alone. Off (actor_slow_lr 0): nothing kept"""
+        if float(self.cfg.get("actor_slow_lr", 0.0)) <= 0.0:
+            return
+        g_l = float(self.cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+        tag = st.get("a_tag")
+        if e_new is None:
+            if tag is not None:
+                tag.mul_(g_l)
+            return
+        if tag is None:
+            st["a_tag"] = e_new.clone()                                     # the first act's eligibility begins it
+        else:
+            tag.add_(e_new)                                                 # (the tick's decay came first, above)
+
     def _motor_sharp(self, e, st):
         return self._motor_read(e, st)[0]
 
@@ -863,6 +885,7 @@ class MouthMixin:
             now = st_["now"]
             if tick_tr and st_["e_actor"] is not None:
                 st_["e_actor"] = g_ * st_["e_actor"]
+            self._actor_tag_step(st_, None)                          # A142: the tag decays at the long critic's horizon every tick
             if now["acted"] and now["act_on"] and not now["cont"]:
                 with torch.no_grad():
                     oh = torch.cat([F.one_hot(torch.tensor(a_), int(k_)).to(p_.dtype).to(p_.device) - p_
@@ -870,6 +893,7 @@ class MouthMixin:
                     e_new = torch.outer(oh, self._z_now)
                     ea = st_["e_actor"]
                     st_["e_actor"] = ((1.0 if tick_tr else g_) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
+                    self._actor_tag_step(st_, e_new)                 # A142: and takes this act's eligibility
             if now["acted"] and e_.intrinsic:
                 now["int"] = self._perf_error(e_, st_, now)       # step R6h: its performance error, when it declares one (A41, C61)
             if now["acted"] or now["reflex"]:

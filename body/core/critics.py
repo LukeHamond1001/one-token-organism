@@ -174,6 +174,17 @@ class CriticsMixin:
                             m.wm_latch(m.striatum_read()); self._z_now = m.stri_in()
                 delta_slow = float(td[int(self.cfg["gate_slow_band"])].detach())
                 delta_long = float(td_long.detach()); vlong = float(vl_now)
+                slr_ = float(self.cfg.get("actor_slow_lr", 0.0))
+                if int(self.cfg.get("actor", 0)) and slr_ > 0.0:
+                    for e_, st_ in zip(self.anatomy.motors, getattr(self, "motor", ())):   # A142: the long critic's error captures each
+                        if st_.get("a_tag") is not None:                                      # effector's tag (mouth._actor_tag_step)
+                            with torch.no_grad():
+                                w_ = m.get_submodule(e_.actor).weight
+                                upd = slr_ * delta_long * st_["a_tag"]
+                                w_.add_(upd)
+                                st_["a_upd"][1] += float(upd.norm())                          # the slow path's summed norm (a ruler)
+                                if st_["e_actor"] is not None:
+                                    st_["a_upd"][0] += float((float(self.cfg.get("actor_lr", 0.02)) * delta * st_["e_actor"]).norm())   # the fast one's
                 if int(self.cfg.get("vcrit_auto", 0)):
                     self._vrel_update(vlong, r)
                 for b in range(len(gam)):

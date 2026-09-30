@@ -247,6 +247,8 @@ def main():
                                                                                     # wrist pain's ruler (big wrist steps precede 40% of it; days 29 to 39: 10.6% to 0.9%)
         rec["kj"] = [[round(float(k_), 2) for k_ in (st.get("inv_kappa") or [])] for st in L.motor[3:5]]   # C146: each arm's inverse model's
         rec["habit_w"] = getattr(L, "_habit_w", None)                        # A141 (C149): the last habit lesson's mean weight and its share of
+        rec["actor_upd"] = [[round(float(st.get("a_upd", [0, 0])[0]), 2), round(float(st.get("a_upd", [0, 0])[1]), 2)] for st in L.motor[3:5]]   # A142:
+                                                                            # each arm's actor's summed update norms, the fast lesson's and the tag's
                                                                             # positions under 1 (acts followed by net harm, not cloned)
                                                                                     # kappa per joint (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw): which
                                                                                     # joints it labels; the arms' mean sat at 0.2 to 0.35 for eleven days, under A104's "fair"

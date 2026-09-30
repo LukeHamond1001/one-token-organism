@@ -1873,10 +1873,46 @@ def test_the_habit_is_dopamines():
           f"twenty before {float(wp1[20]):.3f}, the acts after it 1; off: None; a short record: None")
 
 
+
+def test_the_actors_tag():
+    """world (A142, 2026-09-30): the actor's synaptic tag. On a born G1 life the tag begins at the first act's eligibility, decays by
+    vcrit_gamma a tick, adds each act's eligibility; with actor_slow_lr on, 60 ticks of the world loop leave the arms' tags set and the
+    slow path's summed update norm above 0 with the actor's weights moved from a life run with it off (the same seed); with it off, no
+    tag is kept"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    w = G1World(seed=1)
+    out = {}
+    for slr in (1e-4, 0.0):
+        cfg = dict(SIM_CFG, wake_ticks=10 ** 9, actor_slow_lr=slr)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        if slr > 0:
+            st = L.motor[3]; e1 = torch.ones(3, 4)
+            L._actor_tag_step(st, e1); assert torch.equal(st["a_tag"], e1)
+            L._actor_tag_step(st, None); g_l = float(cfg.get("vcrit_gamma", 1.0 - 1.0 / 1024))
+            assert torch.allclose(st["a_tag"], e1 * g_l), st["a_tag"][0]
+            L._actor_tag_step(st, e1); assert torch.allclose(st["a_tag"], e1 * (1.0 + g_l))
+            st["a_tag"] = None
+        run = WorldLoop(L)
+        for _ in range(60):
+            run.step()
+        e = L.anatomy.motors[3]
+        out[slr] = dict(tag=L.motor[3]["a_tag"], upd=list(L.motor[3]["a_upd"]), w=L.m.get_submodule(e.actor).weight.detach().clone())
+    on, off = out[1e-4], out[0.0]
+    assert on["tag"] is not None and off["tag"] is None, (on["tag"] is None, off["tag"])
+    assert on["upd"][1] > 0.0 and off["upd"][1] == 0.0, (on["upd"], off["upd"])
+    assert not torch.allclose(on["w"], off["w"]), "the slow path must move the actor's weights"
+    print(f"world A142: the arm's tag kept and captured over 60 ticks (slow update norm summed {on['upd'][1]:.4f} against the fast lesson's "
+          f"{on['upd'][0]:.4f}); with actor_slow_lr 0 no tag and the weights differ")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
