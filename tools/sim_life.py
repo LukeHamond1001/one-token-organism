@@ -242,6 +242,8 @@ def main():
         rec["acts"] = {k: int(v) for k, v in (getattr(world, "_last_acts", None) or {}).items()}   # C117's instrument: the effectors' flat acts this tick
         rec["ptop"] = [[round(float(p_.max()), 2) for p_ in ((st.get("now") or {}).get("probs") or [])] for st in L.motor]   # C117: each joint's top probability
         rec["spinal"] = dict(getattr(world, "_spinal", {}) or {})          # A139's instrument (C117): the cord's events this tick (grasp,
+        ferr = getattr(L, "_ferr", None) or {}                              # C137: the body's raw forecasting error per channel, its running
+        rec["ferr"] = {k: round(float(v[1]), 4) for k, v in ferr.items()}    # mean (frames._frame_surprise's mu): the learning curve of its
         rec["tendon_n"] = int(getattr(world, "stats_tendon", 0))           # prone, tendon per effector) and the tendon reflex's joint count so far
         if args.probe_joint is not None:                                   # C113's instrument: joints against their stops and their gears
             d_ = world.d; pjs = [int(x) for x in str(args.probe_joint).split(",")]

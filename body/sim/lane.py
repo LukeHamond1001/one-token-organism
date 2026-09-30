@@ -105,6 +105,8 @@ NEARER_M = 0.01                        # a reach ends nearer when it beats the b
 HEAD_UP_M = 0.08                       # on its front with the head 8 cm above the pelvis, held HEAD_UP_TICKS: "head_up", once in HEAD_UP_GAP
 HEAD_UP_TICKS, HEAD_UP_GAP = 5, 100    # (the plumbing day of 2026-09-26: a thrashing body on its front crossed 8 cm 14 times in 100 ticks)
 ROLL_GAP = 40                          # a half roll counted once in 40 ticks (rocking on its side is one act, not many)
+STILL_M, STILL_TICKS = 0.10, 40      # C137: a face-down child is "still" when its pelvis has not moved 10 cm in 40 ticks (6 s); only then is
+                                       # its distress hers to answer with a turn: a crawling child is going somewhere (ours)
 SIT_HOLD, SIT_GAP = 5, 100             # C134: a sit is the sitting held 5 ticks (0.75 s), counted once in 100 ticks (day 34: "sat" judged 22
                                        # times in 1,200 ticks, three of them 3 ticks apart, the trunk bobbing up and down on its back; ours)
 CRAWL_M = 0.20                         # A125: on its front, its pelvis carried this far along the floor from where its prone spell began
@@ -203,6 +205,7 @@ class ParentLane:
         self.side_from = None                             # the lying posture it turned onto its side from (a half roll, once)
         self.last_half_roll = -10 ** 9                    # the last tick a half roll was counted
         self.sit_run, self.last_sat = 0, -10 ** 9         # C134: ticks sitting so far, the last tick a sit was counted
+        self.still_from, self.still_t = None, -10 ** 9    # C137: where and when its prone stillness began
         self.crawl_from = None                            # A125: its pelvis on the floor plan when its prone spell began, or its last crawl
         self.last_crawl = -10 ** 9                        # the last tick a crawl was counted
         self.head_up = False                              # its head up on its front, this spell
@@ -499,8 +502,15 @@ class ParentLane:
         self.cry_down = self.cry_down + 1 if (post == "front" and world.crying) else 0
         if post != "front":
             self.distressed = False
-        if not self.distressed and (self.face_down >= DISTRESS_TICKS or self.cry_down >= CRY_DOWN_TICKS):
-            ev.append(("distress", None)); self.distressed = True           # once a face-down spell (her turn_over answers it)
+        pxy = np.asarray(ch.pelvis[:2], float)
+        moved = float(np.linalg.norm(pxy - self.still_from)) if self.still_from is not None else 0.0
+        if post != "front" or moved > STILL_M:
+            self.still_from = pxy.copy(); self.still_t = t                  # C137: where and when its last prone stillness began
+        still = post == "front" and t - self.still_t >= STILL_TICKS         # face down and not going anywhere for STILL_TICKS
+        if not self.distressed and still and (self.face_down >= DISTRESS_TICKS or self.cry_down >= CRY_DOWN_TICKS):
+            ev.append(("distress", None)); self.distressed = True           # once a face-down spell (her turn_over answers it); C137: not
+                                                                            # to a child crawling under its own power (day 36: 28 turns
+                                                                            # refused at a crawling child; it rolled over itself)
         if world.crying or (in_view and float(world._sensed["true_base_peak"]) > world.f_pain):
             ev.append(("pain", None))                                   # its cry heard, or a blow to its body she sees
         return ev
@@ -707,6 +717,7 @@ class ParentLane:
                               side_from=self.side_from, head_up=self.head_up, reveal_t=self.reveal_t, peekaboo_done=self.peekaboo_done,
                               last_half_roll=self.last_half_roll, head_up_run=self.head_up_run, last_head_up=self.last_head_up,
                               sit_run=self.sit_run, last_sat=self.last_sat,
+                              still_from=None if self.still_from is None else [float(x) for x in self.still_from], still_t=self.still_t,
                               cry_down=self.cry_down, distressed=self.distressed, touch_run=dict(self.touch_run),
                               got_arm=dict(self.got_arm)))
 
@@ -767,6 +778,7 @@ class ParentLane:
             self.reveal_t, self.peekaboo_done = int(e["reveal_t"]), int(e["peekaboo_done"])
             self.last_half_roll = int(e.get("last_half_roll", -10 ** 9)); self.head_up_run = int(e.get("head_up_run", 0))
             self.sit_run, self.last_sat = int(e.get("sit_run", 0)), int(e.get("last_sat", -10 ** 9))
+            sf = e.get("still_from"); self.still_from = None if sf is None else np.asarray(sf, float); self.still_t = int(e.get("still_t", -10 ** 9))
             self.last_head_up = int(e.get("last_head_up", -10 ** 9))
             self.cry_down, self.distressed = int(e.get("cry_down", 0)), bool(e.get("distressed", False))
             self.touch_run = {k: int(v) for k, v in e.get("touch_run", {}).items()}; self.got_arm = {k: bool(v) for k, v in e.get("got_arm", {}).items()}
