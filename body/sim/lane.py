@@ -261,9 +261,15 @@ class ParentLane:
         b = self.toy_body[tt]
         root = int(m.body_rootid[b])
         if tt in TP.OPEN_CONTAINERS:
-            rim = np.asarray(at, float) + d.xmat[b].reshape(3, 3) @ np.array([0.0, 0.0, X.BUCKET_WALL + X.BUCKET_H])
+            Rt = d.xmat[b].reshape(3, 3)
+            rim = np.asarray(at, float) + Rt @ np.array([0.0, 0.0, X.BUCKET_WALL + X.BUCKET_H])
             hit = self._ray_first(m, d, face, rim)
-            return hit is None or hit == root
+            if hit is None or hit == root:
+                return True
+            rel = Rt.T @ (d.xpos[hit] - np.asarray(at, float))         # C130: a toy heaped in the bucket above its rim (day 31's hide
+            return bool(max(abs(rel[0]), abs(rel[1])) <= X.BUCKET_IN + 0.03 and rel[2] < X.BUCKET_H + 0.15)   # of the box on the book
+                                                                        # hidden before) took the ray: a thing lying in the bucket is the
+                                                                        # bucket seen, with what is in it
         return self._ray_first(m, d, face, at) == root
 
     def _ray_first(self, m, d, a, b):

@@ -1815,10 +1815,37 @@ def test_the_tendon_organ():
           "ticks (its target its angle, the shoulder still stepping, the truth's spinal 'tendon'), then the big flexion step passes; under the line, untouched")
 
 
+def test_the_bucket_beside():
+    """world 36 (C130): at a dawn the bucket standing out of the child's reach is set upright within it, beside its shoulders, with the
+    toy lying in it; a bucket within reach stays. Life day 31: four hides played 2 m from the child, never within its reach all day"""
+    import mujoco
+    from body.sim import extras as X
+    w = W.G1World(seed=1, extra=X.add_bucket(xy=(-0.3, -0.45)))
+    m, d = w.m, w.d
+    for _ in range(5):
+        w.frame(); w.apply({})
+    b = m.body("toy_bucket").id; j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]
+    d.qpos[adr:adr + 2] = (-2.0, -0.6); mujoco.mj_forward(m, d)                # the bucket 2 m off, as day 31's
+    jd = m.body("toy_duck").jntadr[0]; a = m.jnt_qposadr[jd]
+    d.qpos[a:a + 3] = d.xpos[b] + np.array([0.0, 0.0, X.BUCKET_WALL + 0.04]); d.qpos[a + 3:a + 7] = [1, 0, 0, 0]
+    for _ in range(30):
+        mujoco.mj_step(m, d)
+    sh = [d.xpos[m.body(f"{s}_shoulder_pitch_link").id][:2] for s in ("left", "right")]
+    far = min(float(np.linalg.norm(d.xpos[b][:2] - p_)) for p_ in sh)
+    assert far > 1.0, far
+    assert w.bucket_beside()
+    near = min(float(np.linalg.norm(d.xpos[b][:2] - p_)) for p_ in sh)
+    duck = float(np.linalg.norm(d.xpos[m.body("toy_duck").id][:2] - d.xpos[b][:2]))
+    assert near <= 0.5 and duck < 0.1, (near, duck)                             # within a G1 arm's reach (0.55), the duck still in it
+    assert abs(float(d.xpos[b][2]) - float(m.qpos0[adr + 2])) < 0.02 and w.tidied[-1][1] == "bucket", (d.xpos[b], w.tidied[-1])
+    assert not w.bucket_beside(), "a bucket within reach stays"
+    print(f"world 36: the bucket {far:.2f} m from the child set {near:.2f} m from its shoulder at dawn, upright, the duck still in it ({duck:.2f} m off its centre); within reach it stays")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

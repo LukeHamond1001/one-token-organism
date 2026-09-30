@@ -494,6 +494,15 @@ def _uncanon(x):
     return x
 
 
+BUCKET_NEAR_M = 0.5                    # C130: the bucket farther than this from the child's chest at dawn is set beside it (ours)
+BUCKET_BESIDE_M = 0.35                 # C130: where it is set: a ring this far round its chest, within a G1 arm's reach (ours)
+
+
+def PM_Child(m, d, g1_set):
+    from body.sim import parent_motion as PM
+    return PM.Child(m, d, g1_set)
+
+
 def _tendon_bodies(m, t):
     """the bodies a tendon passes through: its sites' and wrapping geoms' bodies (a spatial tendon), its joints' (a fixed one)"""
     out = set()
@@ -1075,6 +1084,7 @@ class G1World(SimWorld):
         the world goes on from wherever the night left it, the child carried back onto the mat if it rolled off (A110)"""
         self.carry_to_mat()
         self.tidy_toys()
+        self.bucket_beside()
         self.night = False
         self.dawn_left = DAWN_TICKS
         if self.parent is not None:
@@ -1136,6 +1146,47 @@ class G1World(SimWorld):
         if moved:
             mujoco.mj_forward(m, d)
         return moved
+
+    def bucket_beside(self):
+        """THE BUCKET SET BESIDE THE CHILD AT DAWN (C130, an environment change disclosed; 2026-09-29): the hide game's container stands
+        where it was left (she never carries it, C119), and life day 31's four hides were played 2.0 to 2.3 m from the child, which was
+        never within reach of the bucket all day (its nearest 0.95 m): no hide could be found. Whoever tidies the room overnight sets
+        the bucket within the child's reach at its side: at dawn, a bucket farther than BUCKET_NEAR_M from both its shoulders is set upright on
+        the free point of a ring BUCKET_BESIDE_M round the point between its shoulders nearest one of them (off its body, on the floor she can plan on, clear of the other
+        toys and of nothing solid above), or left where it stands when the ring has none; a toy lying in it stays in it. Logged in
+        `tidied` as ("bucket", from, to). -> whether it was moved"""
+        m, d = self.m, self.d
+        par = self.parent
+        if par is None or "bucket" not in par.toys or "bucket" in par.holding.values():
+            return False
+        b = par.toys["bucket"]
+        sh = [d.xpos[m.body(f"{s}_shoulder_pitch_link").id][:2].copy() for s in ("left", "right")]
+        chest = (sh[0] + sh[1]) / 2.0                                    # between its shoulders: where its arms reach from
+        xy = d.xpos[b][:2].copy()
+        if min(float(np.linalg.norm(xy - p_)) for p_ in sh) <= BUCKET_NEAR_M:
+            return False
+        par.child = PM_Child(m, d, self.scene.g1_set)
+        inside = [k2 for k2, b2 in par.toys.items() if k2 != "bucket" and np.linalg.norm(d.xpos[b2][:2] - xy) < 0.12 and d.xpos[b2][2] < d.xpos[b][2] + 0.25]
+        others = [d.xpos[b2][:2] for k2, b2 in par.toys.items() if k2 != "bucket" and k2 not in inside]
+        cands = []
+        for i in range(12):
+            q = chest + BUCKET_BESIDE_M * np.array([math.cos(2 * math.pi * i / 12), math.sin(2 * math.pi * i / 12)])
+            if par.child.clearance_xy(q) >= 0.12 and all(np.linalg.norm(q - o) >= 0.15 for o in others) and par._in_plan(q) \
+                    and par.plan.dist[par.plan.cell(q)] >= 0.10:
+                cands.append((min(float(np.linalg.norm(q - p_)) for p_ in sh), q))
+        if not cands:
+            return False
+        place = min(cands, key=lambda x: x[0])[1]                        # the free point nearest one of its shoulders
+        shift = place - xy
+        for k2 in ["bucket"] + inside:                                   # the bucket and what lies in it, moved together, upright
+            b2 = par.toys[k2]; j = m.body_jntadr[b2]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
+            d.qpos[adr:adr + 2] += shift; d.qvel[dof:dof + 6] = 0.0
+            if k2 == "bucket":
+                home = m.qpos0[adr:adr + 7]
+                d.qpos[adr + 2] = home[2]; d.qpos[adr + 3:adr + 7] = home[3:7]
+        mujoco.mj_forward(m, d)
+        self.tidied.append((int(self.tick), "bucket", [float(xy[0]), float(xy[1])], [float(place[0]), float(place[1])]))
+        return True
 
     def save_state(self):
         """the whole world as bytes: the physics, the model's run-time fields, the senses' carry, the world's random

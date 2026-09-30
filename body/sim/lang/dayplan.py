@@ -265,17 +265,17 @@ class DayPlan:
                 c.motion.lesson_dist = LESSON_DIST0 + LESSON_STEP * lvl
                 c.request("set_near", o=o)
                 self.log.append((t, "lesson", "reach", o, lvl, round(c.motion.lesson_dist, 2)))
-            elif "bucket" in seen and o != "bucket" and self.hide_turn and (o not in seen or seen[o].on != "hand"):   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
+            elif "bucket" in seen and seen["bucket"].child_can_reach and o != "bucket" and self.hide_turn and (o not in seen or seen[o].on != "hand"):   # C130: a hide within its reach only (day 31: four hides 2 m from it)   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
                 self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the bucket in
                 c.request("hide", o=o)                                  # its view; its hand into the bucket after is "found" (worth 2)
                 self.log.append((t, "lesson", "hide", o, got))
             elif handled < 3 * K.MASTERED_N or o in held:               # the handle rung: the toy into its hand (C125: and the toy in
                                                                         # her own hand, which she cannot ask the child to give her)
-                self.hide_turn = "bucket" in seen
+                self.hide_turn = "bucket" in seen and seen["bucket"].child_can_reach
                 c.request("hand_over", o=o)
                 self.log.append((t, "lesson", "handle", o, handled))
             else:                                                       # the give rung
-                self.hide_turn = "bucket" in seen
+                self.hide_turn = "bucket" in seen and seen["bucket"].child_can_reach
                 if _may_give(seen, o):
                     c.request("ask_give", o=o)
                     self.log.append((t, "lesson", "give", o))
