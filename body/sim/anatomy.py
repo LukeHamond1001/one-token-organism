@@ -484,6 +484,7 @@ SIM_CFG = dict(
     inner_speech=1,                # A137: the inner word (frames._goal_trace: the voice's sure, unsounded top choice held; memory.INNER_P); on from
                                    # dawn 29 (the private-speech ruler with --covert)
     sharp_per_joint=1,             # A140 (C117): each joint's decisiveness its own, earned by its kappa and its settings' variety (mouth._motor_sharp)
+    habit_by_credit=1,             # A141 (C149, 2026-09-30): the day's habit lesson weighted by dopamine's credit as the night's is (cortex._habit_weights)
     sharp_earned_norm=1,           # C148 (2026-09-30): the proposal's certainty earned by the same exponent (model.ActTable.logits): a joint that has
                                    # shown nothing draws from the cosines alone (day 40: the right shoulder yaw at +big 98% of ticks, kappa 0.06)
     imagine_key=1, imagine_pav=1,  # A138: waking imagination at each event's end (sleep._imagine: the REM rollout awake; IMAG_SCALE; the

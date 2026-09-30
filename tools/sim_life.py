@@ -246,6 +246,8 @@ def main():
                                                                                     # actor's probability of a big step (either way) at its wrist pitch and yaw: the
                                                                                     # wrist pain's ruler (big wrist steps precede 40% of it; days 29 to 39: 10.6% to 0.9%)
         rec["kj"] = [[round(float(k_), 2) for k_ in (st.get("inv_kappa") or [])] for st in L.motor[3:5]]   # C146: each arm's inverse model's
+        rec["habit_w"] = getattr(L, "_habit_w", None)                        # A141 (C149): the last habit lesson's mean weight and its share of
+                                                                            # positions under 1 (acts followed by net harm, not cloned)
                                                                                     # kappa per joint (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw): which
                                                                                     # joints it labels; the arms' mean sat at 0.2 to 0.35 for eleven days, under A104's "fair"
         rec["spinal"] = dict(getattr(world, "_spinal", {}) or {})          # A139's instrument (C117): the cord's events this tick (grasp,

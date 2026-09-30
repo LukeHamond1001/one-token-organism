@@ -171,6 +171,27 @@ class CortexMixin:
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
 
+    def _habit_weights(self, T):
+        """A141 (the lead, 2026-09-30; C149): THE DAY'S HABIT IS DOPAMINE'S TO KEEP. act_pred's waking lesson at each of the window's T
+        positions is weighted as the night's replay weights it (amygdala.act_pred_night_weight: clip(1 + G, 0, 1), G dopamine's credit
+        over the following ticks, sleep.credit_after on the day's record at dopamine's own discount and the tag's reach), so an act
+        followed by net harm is not cloned into the body's habit by day either. Until now the day cloned every own act at weight 1,
+        24,000 ticks a day, and only the night's 2,048 dreams un-weighted the harmful ones: the habit forecast learned the body's painful
+        swings as its acts to make (life day 40: three arm joints at one setting on 76 to 98% of ticks, the wrists' pain 130 to 500 ticks
+        a day; C146, C148). The window's positions are the record's last T rows (one of each a tick). Positions near the window's end
+        see a truncated credit, only the harm already come; the windows that follow teach them again with more of it. None when the
+        switch is off, the frames are off, or the record holds fewer than T rows"""
+        if not int(self._motor_const("habit_by_credit")) or not self._frames_on():
+            return None
+        rec = getattr(self, "_rec", None); n = int(getattr(self, "_rec_n", 0))
+        if rec is None or n < int(T) or T < 2:
+            return None
+        from .sleep import credit_after
+        from .physiology import FRAMES
+        g = self._tag_gamma(); reach = int(self.cfg.get("tag_reach", FRAMES["tag_reach"]))
+        G = credit_after(rec[n - int(T):n, 1], g, reach)
+        return (1.0 + G).clamp(0.0, 1.0).to(torch.float32).to(self.dev)
+
     def _window_tensors(self, win=None):
         """THE WINDOW AS TENSORS, PER CHANNEL (step R4): obs, each of the anatomy's channels by name, its field at every position ([T]
         symbols of a symbol channel, [T, size] of a vector channel: the diary's ear [T] and face [T, 2]), and each later effector's acts
@@ -270,8 +291,12 @@ class CortexMixin:
             # opt_pred (body/core/timing.py GatedDescent: one plain step a lesson on this gradient, each element bounded, R6 fix 7), the
             # rest here; act_inv's labels reach act_pred and the correction alone, never the stream (`_timing_loss`)
             mrep = {}
+            wpos_ = self._habit_weights(int(C.shape[0])) if motor_ else None   # A141: the day's habit is dopamine's to keep
+            if wpos_ is not None:
+                self._habit_w = [round(float(wpos_[1:].mean()), 4), round(float((wpos_[1:] < 1.0).float().mean()), 4)]   # the lesson's mean
+                                                                                                # weight and its share of positions under 1 (a ruler)
             for i_ in range(1, len(self.anatomy.motors) + 1):
-                lt_, rt_, lb_ = self._timing_loss(i_, C, obs)
+                lt_, rt_, lb_ = self._timing_loss(i_, C, obs, wpos=wpos_)
                 if lt_ is not None:
                     ll = ll + lt_; mrep[self.anatomy.motors[i_ - 1].name] = rt_
                     if lb_ is not None and rt_["rel"] > 0.0:

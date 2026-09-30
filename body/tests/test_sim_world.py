@@ -1842,10 +1842,41 @@ def test_the_bucket_beside():
     print(f"world 36: the bucket {far:.2f} m from the child set {near:.2f} m from its shoulder at dawn, upright, the duck still in it ({duck:.2f} m off its centre); within reach it stays")
 
 
+
+def test_the_habit_is_dopamines():
+    """world (A141, C149, 2026-09-30): the day's habit lesson weighted by dopamine's credit as the night's is. A born G1 life with a day
+    record of 64 ticks and one dopamine dip of -1 at row 40: the act at position 39 weighs 0 (G = -1), position 38 about 0.06
+    (0.9375 x -1), positions 40 on 1, position 20 under 1 and above 0.5; with the switch off, None; with fewer rows than the window,
+    None; the weights reach the motor lesson (its report unchanged in kind, the mean weight under 1)"""
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    w = G1World(seed=1)
+    for on in (1, 0):
+        cfg = dict(SIM_CFG, wake_ticks=10 ** 9, habit_by_credit=on)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        L._rec = torch.zeros(4096, 4); L._rec_n = 64
+        L._rec[40, 1] = -1.0
+        wp = L._habit_weights(64)
+        if not on:
+            assert wp is None, wp
+            continue
+        assert wp is not None and wp.shape == (64,), None if wp is None else wp.shape
+        g = L._tag_gamma()
+        assert abs(float(wp[39])) < 1e-6 and abs(float(wp[38]) - max(0.0, 1.0 - g)) < 1e-5 and float(wp[40]) == 1.0 and float(wp[63]) == 1.0, wp[36:42].tolist()
+        assert 0.5 < float(wp[20]) < 1.0, float(wp[20])
+        L._rec_n = 32
+        assert L._habit_weights(64) is None
+        wp1, g1 = wp, g
+    print(f"world A141: a dopamine dip of -1 at tick 40 of a 64-tick window: the act before it weighs 0, two before {max(0.0, 1.0 - g1):.3f}, "
+          f"twenty before {float(wp1[20]):.3f}, the acts after it 1; off: None; a short record: None")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

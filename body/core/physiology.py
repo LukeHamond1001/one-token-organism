@@ -318,6 +318,9 @@ MOTOR = dict(
     # the pooled rates (which reads a label following the regime's mode as skill when the acts' rates shift). The sim: 1
     act_inv_chance=0,
     sharp_per_joint=0,   # A140: each joint's decisiveness its own, earned by its kappa and its settings' variety (mouth._motor_sharp); the G1 sets 1
+    habit_by_credit=0,   # A141 (C149): by day act_pred's lesson at each position is weighted clip(1 + G, 0, 1) as the night's replay weights it
+                         # (G dopamine's credit over the following ticks, sleep.credit_after on the day's record): an act followed by net harm
+                         # is not cloned into the habit by day either; the G1 sets 1 (life day 40: the day cloned every act at weight 1)
     sharp_earned_norm=0, # C148: the proposal's certainty (its norm) is earned too: a joint's logits read s^g x cosine x |pred|^g with g its earned
                          # exponent (rel x variety), so a joint that has shown nothing draws from the cosines alone, however sure the forecast of its
                          # own habit; the G1 sets 1 (life day 40: three arm joints at one setting 76 to 98% of ticks under sharpness 1.0 to 1.5)

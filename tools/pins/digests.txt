@@ -116,7 +116,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # sharp_earned_norm 1; in the profile's 300 ticks no joint has earned anything, so every limb draws from its unit forecast's cosines and the
 # whole state moves; the language default digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 575117e71e4f31ad8868eee2, one-thread
 # cca44630092131e560dcf6c4, consts 39cd08fe698e.
-digest  sim                   threaded 520ee0e841d062f08144e5d4 consts ae63f448455e | --profile sim
-digest  sim                   pinned   be470a576af9b14714c9130e consts ae63f448455e | --profile sim
-full    sim                   threaded organs 502b863d38e1 store 41cd44709380 optim 17ddea39a7d8 rng 9d2490356080 work df6b916cf56b cfg 70c7b962da72
-full    sim                   pinned   organs 8d77ee23c195 store 63bb8b7bc1e1 optim b762c374d53e rng 9d2490356080 work fecb94e11e2d cfg 70c7b962da72
+# Re-pinned at A141/C149 (2026-09-30 14:25, on branch t149: the day's habit lesson weighted by dopamine's credit as the night's is, SIM_CFG
+# habit_by_credit 1; the profile's pain ticks un-weight the acts before them and the draws move with the weights; the language default digest
+# 7c54199e3c72cf77d45a8e94 kept). Was: threaded 520ee0e841d062f08144e5d4, one-thread be470a576af9b14714c9130e, consts ae63f448455e.
+digest  sim                   threaded 4d6a6f8c2d1b201c7841f103 consts c537271fd70a | --profile sim
+digest  sim                   pinned   40d6fdb08910e18c343fa7ce consts c537271fd70a | --profile sim
+full    sim                   threaded organs 6b07f95be90b store 48a7e8d8f33f optim b3b2b7ef6c74 rng 104006fa52cf work 100edfc80072 cfg 1a5db26f311d
+full    sim                   pinned   organs 6b41827ff34a store df9655c07c98 optim ddc865cdb60c rng 104006fa52cf work 52c115809a67 cfg 1a5db26f311d
