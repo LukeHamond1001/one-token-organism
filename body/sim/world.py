@@ -1123,8 +1123,9 @@ class G1World(SimWorld):
             xy = d.xpos[b][:2].copy()
             if par.child.clearance_xy(xy) < 0.5 or k in par.holding.values():
                 continue
-            if not covered(xy) and par._toy_spot(xy) is not None:
-                continue
+            left = set(getattr(getattr(getattr(self, "lane", None), "conduct", None), "left", {}) or {})   # C139: a toy she left where it lay
+            if not covered(xy) and par._toy_spot(xy) is not None and k not in left:                    # (her hand could not get to it) is
+                continue                                                                               # put back too
             j = m.body_jntadr[b]; adr = m.jnt_qposadr[j]; dof = m.jnt_dofadr[j]
             home = m.qpos0[adr:adr + 7].copy()
             others = [d.xpos[b2][:2] for k2, b2 in par.toys.items() if k2 != k]

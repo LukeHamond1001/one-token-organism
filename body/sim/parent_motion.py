@@ -252,6 +252,9 @@ PUT_AHEAD_M = 0.35                          # A109: the roll rung's toy set down
                                             # from her kneel beside the child: her knees at HEELS_BACK, the toy a hand beyond them)
 REBASE_TOL_M = 0.02                         # A108: her restored plan drawing her pelvis farther than this from where her body was
 TURN_HEAD_OFFS = (0.55, 0.65, 0.75)          # A136: her kneel at a prone child's head for the roll by its far shoulder, this far from its eyes
+HAND_HIGH_M = 0.06                              # C139: a pick whose hand stopped this far above the toy met something on the way down (the duck against
+                                                # the front wall, day 37: 8 hand-overs refused 11 cm off): the toy is beyond her reach from above, left
+                                                # where it lies (conduct.left), and the morning tidy puts it back (ours)
 HIDE_REACH_M = 0.55                             # C138: the hide brings the bucket to within this of one of the child's hands (a G1 arm reaches 0.55, lane.arm_reach; ours)
 TP_OPEN_CONTAINERS = frozenset({"bucket"})      # (templates.OPEN_CONTAINERS, named here without the import: the lang package imports this module)
 NEVER_FETCHED = frozenset({"bucket"})          # C119: what she never carries: the hide game's container (day 27: ten shows of it refused at the put, 45 to 50 cm off)
@@ -3226,6 +3229,9 @@ class ParentMotion:
             if ph.get("waited", 0) < K.ARRIVE_WAIT_TICKS:                   # her hand is a body: it may still be on its way (her aim
                 ph["waited"] = ph.get("waited", 0) + 1                      # by sight brings it: _aim_fix)
                 return "run"
+            if float(g[2] - c[2]) > HAND_HIGH_M:                            # C139: her hand stopped above it: something in its way
+                return (f"the {toy} was not under her hand ({100 * float(np.linalg.norm(c - g)):.0f} cm off: her hand stopped "
+                        f"{100 * float(g[2] - c[2]):.0f} cm above it): beyond her reach from above")
             return f"the {toy} was not under her hand ({100 * float(np.linalg.norm(c - g)):.0f} cm off)"
         self._proxy(sd, "carry")
         self.scene.weld(f"hold_{sd}_{toy}", True)
