@@ -183,7 +183,7 @@ exact (a saved Conduct restored continues its lines, choices, trials and ledger 
 """
 import json
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace as _replace
 
 import numpy as np
 
@@ -272,6 +272,9 @@ CRY_WINDOW, CRY_LASTS = 10, 5    # C120: a cry heard on 5 of the last 10 ticks (
 CRY_LONG_WINDOW, CRY_LONG = 60, 30   # C120: a cry heard on 30 of the last 60 ticks (4.5 s of 9) is comforted again whatever the gap (ours)
 COMFORT_GAP = 200                # C120: ticks after a comfort before the next for a shorter cry (30 s; ours: Bell and Ainsworth 1972's tens of seconds)
 TOLD_WAIT = 40                   # C124: ticks the drop's telling waits for her eyes to reach the bucket (6 s; ours)
+TOLD_MEMORY = 300                # C135: the telling may speak of the bucket and the toy from her sight of them within 300 ticks (45 s) when
+                                 # the child's body lies between her face and the bucket after the drop (day 34: 3 of 4 hides untold, "unseen:
+                                 # 'bucket'" after the wait): she saw the bucket at her look before the drop and let the toy go into it (ours)
 LEFT_WHY = ("nowhere to kneel", "out of her reach", "beyond her reach", "cannot reach")   # ... and the motion's words for a toy she cannot get to
 LEFT_MOVED_M = 0.10                           # a left toy that has moved this far is a toy again (something changed: the child, or she, moved it)
 HANDS_ON = ("guide", "knee_over", "turn", "pull_to_sit", "prop")   # her acts that move its body: no judgment of its acts while one runs (A90)
@@ -1947,6 +1950,11 @@ class Conduct:
     def _choose(self, t, p, sounding):
         """-> (Line, in_set, "follow_in" | "redirect" | None) by the priorities (4.10), or None."""
         f = self.fast
+        mem = getattr(self, "last_seen", None)
+        if mem is None:
+            mem = self.last_seen = {}
+        for s_ in p.seen:                                            # C135: her last sight of each thing (an instrument of her memory,
+            mem[s_.id] = (int(t), s_)                                # not saved: it spans TOLD_MEMORY ticks)
         if not f.voice_free(t):
             return None
         ev = {k for k, _ in p.events}
@@ -2018,8 +2026,16 @@ class Conduct:
                                                             # told: she holds her voice, her eyes going to the bucket, until she sees it
             else:
                 self.told_due = None; self.told_looked = False
-                o = p.obj(td[1])
-                lines = f.variation_set("hide_told", t, p, o=o) if o is not None else None
+                p_c = p
+                bucket = sorted(TP.OPEN_CONTAINERS)[0]
+                add = []
+                for oid in (td[1], bucket):                          # C135: the toy she let go and the bucket, from her memory when out
+                    if p.obj(oid) is None and oid in mem and t - mem[oid][0] <= TOLD_MEMORY:   # of her sight now (the child between)
+                        add.append(_replace(mem[oid][1], on=bucket) if oid == td[1] else mem[oid][1])   # the toy is in the bucket: she put it there
+                if add:
+                    p_c = _replace(p, seen=tuple(p.seen) + tuple(add))
+                o = p_c.obj(td[1])
+                lines = f.variation_set("hide_told", t, p_c, o=o) if o is not None else None
                 if lines and f.allowed(lines[0], t, reply=True)[0]:
                     f.queue = lines[1:] + [ln_ for ln_ in f.queue if ln_.intent in LESSON_SETS]
                     return lines[0], False, None

@@ -225,6 +225,7 @@ def main():
         wall = time.perf_counter() - a
         if args.save_every and not bool(world.night) and k > 0 and int(world.tick) % int(args.save_every) == 0:
             t_sv = time.perf_counter(); L.save(); print(f"checkpoint: the pair saved at tick {world.tick} ({time.perf_counter() - t_sv:.1f} s)", flush=True)
+            log.flush()                                                # C135: the record flushed at the save (a runner stopped after a night's save lost the day's last 66 rows: the night writes none, the buffer held them)
         if snap is not None:
             snap.take(INV)
             if args.film and int(world.tick) % args.film_every == 0 and snap.room_jpg:

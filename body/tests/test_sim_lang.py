@@ -6820,6 +6820,19 @@ def test_the_hide_told():
     s1 = con.tick(2, P(2, seen=seen(("duck", "duck", "yellow", "bucket", True), bucket)))   # the bucket seen: told
     assert s1.line is not None and s1.line.intent == "hide_told" and "bucket" in s1.line.text, (s1.line and (s1.line.intent, s1.line.text))
     assert any(ln.intent == "hide_told" for ln in con.fast.queue), [ln.intent for ln in con.fast.queue]   # the second line waits
+    # C135: the bucket out of her sight from the drop on (the child between): told from her memory of it at TOLD_WAIT
+    con3 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    _no_sets(con3)
+    if "bucket" not in con3.fast.vocab:
+        con3.fast.vocab = tuple(con3.fast.vocab) + ("bucket",)
+    con3.tick(0, P(0, seen=seen(("duck", "duck", "yellow", "mat", True), bucket)))       # she sees the bucket and the duck
+    con3.told_due = (1, "duck")
+    s3 = None
+    for t in range(1, C.TOLD_WAIT + 3):
+        s3 = con3.tick(t, P(t, seen=()))                                                 # nothing before her eyes after
+        if s3.line is not None:
+            break
+    assert s3.line is not None and s3.line.intent == "hide_told" and "bucket" in s3.line.text, (t, s3.line and (s3.line.intent, s3.line.text), con3.fast.refused[-2:])
     # a lesson's set across a reply
     con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
     _no_sets(con2)
@@ -6832,7 +6845,7 @@ def test_the_hide_told():
     s2 = con2.tick(1, p2)
     kept = [ln.intent for ln in con2.fast.queue]
     assert "show" in kept and "label" not in kept, (kept, s2.line and s2.line.text)
-    print(f"lang 64: a hide just done, a reply owed: her next line {s1.line.text!r} (hide_told), its second line queued; across a reply the",
+    print(f"lang 64: a hide just done, a reply owed: her next line {s1.line.text!r} (hide_told), its second line queued; the bucket out of sight after the drop: told from memory at tick {t} ({s3.line.text!r}); across a reply the",
           f"queue keeps the show line and drops the label line ({kept})")
 
 
