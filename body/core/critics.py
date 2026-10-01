@@ -249,6 +249,14 @@ class CriticsMixin:
                 self._z_prev = self._z_now
         with torch.no_grad():                                    # THE TONIC TRACES advance with this tick's felt reward
             m.r_tr_prev.copy_(m.r_tr); m.r_tr += (float(r) - m.r_tr) / torch.tensor([float(c) for c in m.clocks], device=m.r_tr.device)
+        # A156 (2026-10-01): THE APPETITIVE RATE, for the gates' tonic drive: the same trace of the felt reward's POSITIVE part alone, at
+        # the drive's own clock (gate_tonic_clock), a working attribute (born at 0, not saved: within its clock of a resume it stands
+        # again). The drive followed the net felt-reward rate (r_tr, pain included), so one wrist's pain lowered every effector's
+        # vigor and a reward stream's end (A155) silenced the voice; tonic dopamine encodes the rate of REWARD, the opportunity cost of
+        # time (Niv, Daw, Joel and Dayan 2007), and punishment's hold on acting is another system's (serotonin's inhibition, Boureau
+        # and Dayan 2011: here the amygdala's Pavlovian freeze and the gate's own credit), so the dip is not counted twice
+        ck_ = float(m.clocks[int(self.cfg.get("gate_tonic_clock", 4))])
+        self._r_pos_tr = float(getattr(self, "_r_pos_tr", 0.0)) + (max(0.0, float(r)) - float(getattr(self, "_r_pos_tr", 0.0))) / ck_
         self._dopa = delta
         self._dopa_since_utt = float(getattr(self, "_dopa_since_utt", 0.0)) + max(0.0, float(delta))   # the reward since the last utterance kept
         # THE SYNAPTIC TAG: every act (or rest) leaves a tag on the gate's weights, (act - p) x the gate's input, that

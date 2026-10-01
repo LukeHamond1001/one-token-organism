@@ -1686,6 +1686,40 @@ def test_the_forecasts_scale_is_the_rows():
     print(f"motor A154: a born body's forecast/row scale ratio {born:.2f} (rising toward 1); set to {first:.1f} times the rows' it returns to {last:.2f} within 800 ticks "
           f"({len(rec)} lessons); the helper scales by (rn/pn)^(1/reach) exactly")
 
+
+def test_the_drive_follows_the_appetitive_rate():
+    """motor (A156, 2026-10-01): THE GATES' TONIC DRIVE FOLLOWS THE APPETITIVE RATE. On the limbs body over 300 ticks the working trace the
+    gates' rows carry for the drive is the felt reward's POSITIVE part traced at the drive's clock (gate_tonic_clock's), never the net
+    felt reward: recomputed by hand from the record's felt rewards it matches to 1e-6, it never falls under 0, and each gate row's
+    drive field equals the trace at its tick"""
+    cfg = dict(_CFG1, actor_trace_tick=1)
+    L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
+    m = L.m; ck = float(m.clocks[int(L.cfg.get("gate_tonic_clock", 4))])
+    rows5 = []; rs = []; f = L._feel_and_learn; lv = L._learn_values
+    def spy(*a, **k):
+        out = f(*a, **k)
+        if L.gate_buf:
+            rows5.append((len(rs), float(L.gate_buf[-1][5])))
+        return out
+    def spy_r(r, felt, stri, lv=lv):
+        rs.append(float(r)); return lv(r, felt, stri)
+    L._feel_and_learn = spy; L._learn_values = spy_r
+    for _ in range(300):
+        run.step()
+    tr = 0.0; hand = []
+    for r_ in rs:
+        tr = tr + (max(0.0, r_) - tr) / ck
+        hand.append(tr)
+    assert abs(float(L._r_pos_tr) - hand[-1]) < 1e-6, (float(L._r_pos_tr), hand[-1])
+    assert min(hand) >= 0.0 and float(L._r_pos_tr) >= 0.0
+    net = 0.0
+    for r_ in rs:
+        net = net + (r_ - net) / ck
+    assert abs(float(m.r_tr[int(L.cfg.get("gate_tonic_clock", 4))]) - net) < 1e-5, "the net trace is as before (the critics' and the long value's)"
+    assert len(rows5) >= 100 and all(abs(v - hand[t - 1]) < 1e-5 for t, v in rows5[-50:] if t >= 1), "each gate row carries the appetitive trace at its tick"
+    print(f"motor A156: the drive's trace is the felt reward's positive part at clock {ck:.0f} (final {float(L._r_pos_tr):.4f}, by hand {hand[-1]:.4f}; the net trace {net:+.4f} kept for the critics); "
+          f"{len(rows5)} gate rows carry it")
+
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
     for t in MOTOR_TESTS:

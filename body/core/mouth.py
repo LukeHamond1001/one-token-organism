@@ -972,8 +972,8 @@ class MouthMixin:
             vw = float(self.cfg.get("vcrit_w", 0.0)) * (self._vrel_gain if int(self.cfg.get("vcrit_auto", 0)) else 1.0)
         self._vw_now = vw
         credit = delta + float(self.cfg["gate_slow_w"]) * delta_slow + vw * delta_long
-        r_tr = float(m.r_tr[int(self.cfg.get("gate_tonic_clock", 4))])
-        row = [feat.cpu(), acted, credit, int_t, self.fatigue, r_tr, p_act]   # the felt-reward trace at the tick, for the drive; the probability it acted with
+        r_tr = float(getattr(self, "_r_pos_tr", 0.0))                  # A156: the appetitive rate (the felt reward's positive part traced at the drive's clock, critics.py)
+        row = [feat.cpu(), acted, credit, int_t, self.fatigue, r_tr, p_act]   # the reward-rate trace at the tick, for the drive; the probability it acted with
         if drew is not None and int(self.cfg.get("gate_own_draw", 0)):
             row.append(bool(drew))                                     # the gate's own draw (defect 4)
         self.gate_buf.append(row)

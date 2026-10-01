@@ -169,7 +169,9 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # digest 7c54199e3c72cf77d45a8e94 kept.
 # Re-pinned at A155 (2026-10-01 15:05, on branch t197: the novelty drive pays by learning progress; the sim profile moved, threaded
 # c46edd61.. -> d943902c.., one-thread a18d7804.. -> 9bc7769a.., consts unchanged); the language default digest 7c54199e3c72cf77d45a8e94 kept.
-digest  sim                   threaded d943902c307e7e97fe71bf01 consts b971264b65f1 | --profile sim
-digest  sim                   pinned   9bc7769acf525de13f419c8e consts b971264b65f1 | --profile sim
-full    sim                   threaded organs befd78cd1a31 store 738f53d2ef68 optim cbf807bb0814 rng 6bbbd20c28ba work 741eba8c24ce cfg fb1800a3b452
-full    sim                   pinned   organs 68a6b7d18b8e store b9208ea80a33 optim 985badb4f75c rng 6bbbd20c28ba work 397144c6f66c cfg fb1800a3b452
+# Re-pinned at A156 (2026-10-01 15:44, on branch t198: the gates' tonic drive follows the appetitive rate; the sim profile moved, threaded
+# d943902c.. -> 19b06e5b.., one-thread 9bc7769a.. -> 64a93bc7.., consts unchanged); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
+full    sim                   threaded organs 603e243d590a store 738f53d2ef68 optim cbf807bb0814 rng 6bbbd20c28ba work 74b48552b9a1 cfg fb1800a3b452
+full    sim                   pinned   organs 2bffd91ed336 store b9208ea80a33 optim 985badb4f75c rng 6bbbd20c28ba work cde5b14beebd cfg fb1800a3b452
