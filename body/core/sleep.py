@@ -615,20 +615,20 @@ class SleepMixin:
                 if es and c_.name in es:
                     lc_ = lc_ / es[c_.name]
                 ll = ll + lc_
-        W_ = (1.0 + G).clamp(-1.0, 1.0)                           # act_pred_night_weight, position by position (A150: to -1, the habit unlearns)
+        W_ = G.clamp(-1.0, 1.0); WL_ = (1.0 + G).clamp(0.0, 1.0)  # act_pred_night_weight (A152: the own acts' by dopamine's credit alone) and the labels' (R8's)
         wst = [0, 0, 0]
         for b, L_ in enumerate(lens):
             if L_ < 2:
                 continue
             wb = W_[b, :L_]
-            wst[0] += L_ - 1; wst[1] += int((wb[1:] < 1.0).sum()); wst[2] += int((wb[1:] == 0.0).sum())
+            wst[0] += L_ - 1; wst[1] += int((wb[1:] > 0.0).sum()); wst[2] += int((wb[1:] < 0.0).sum())   # A152: positions taught toward, and against
         for i_ in range(1, len(self.anatomy.motors) + 1):
             tot = None
             for b, L_ in enumerate(lens):
                 if L_ < 2:
                     continue
                 ob = {k_: v_[b, :L_] for k_, v_ in obs.items()}
-                lt, rt, lb = self._timing_loss(i_, C[b, :L_], ob, wpos=W_[b, :L_], night=True)
+                lt, rt, lb = self._timing_loss(i_, C[b, :L_], ob, wpos=W_[b, :L_], night=True, wlab=WL_[b, :L_])
                 if lt is None:
                     continue
                 if lb is not None and rt["rel"] > 0.0:

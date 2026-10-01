@@ -171,14 +171,23 @@ class CortexMixin:
             self.pred_prev = F.normalize(pred, dim=0)
         return C, pred, surp, conf
 
-    def _habit_weights(self, T):
+    def _habit_weights(self, T, labels=False):
         """A141 (the lead, 2026-09-30; C149): THE DAY'S HABIT IS DOPAMINE'S TO KEEP. act_pred's waking lesson at each of the window's T
         positions is weighted as the night's replay weights it (amygdala.act_pred_night_weight: clip(1 + G, -1, 1), G dopamine's credit
         over the following ticks, sleep.credit_after on the day's record at dopamine's own discount and the tag's reach), so an act
         followed by net harm is not cloned into the body's habit by day either. A150 (2026-10-01): AND THE HABIT UNLEARNS. The weight
         runs to -1: an act whose credit is worse than -1 (harm beyond one unit of dopamine over the tag's reach: a pain that
         repeats) is taught AGAINST, its probability pushed down at the lesson's own step ((1 - p) x the weight, bounded, and
-        self-limiting as the act stops being drawn), as positive credit teaches it toward. Why: life day 49's left wrist yaw stood at
+        self-limiting as the act stops being drawn), as positive credit teaches it toward. A152 (2026-10-01, the same morning): THE
+        OWN ACT'S WEIGHT IS DOPAMINE'S CREDIT ALONE, clip(G, -1, 1): no act is cloned for free. Under 1 + G an act whose harm comes at
+        4% of ticks (the wrist's step into its stop on day 50: pain on the act's own tick, G about -1 there, but the holds between
+        cloned at 0.7) kept its forecast at 0.9 through 8,000 ticks of flat pain, the fixed point moved to a lower pain and no
+        further; the free baseline of 1 made any habit cheaper than one unit of pain a reach worth keeping. Corticostriatal and
+        cortical plasticity for action is dopamine-gated: no burst, no potentiation (Reynolds and Wickens 2002; Calabresi et al.
+        2007), so repetition alone makes no habit here; what pays (her smiles, the novelty drive's surprise) is cloned, what costs is
+        taught against, and what does neither leaves the forecast as it was. act_inv's labels, her guidance through its arm, keep the
+        old weight clip(1 + G, 0, 1): guided movement is learned as such (the cerebellum's, by error, not reward) unless it led to
+        net harm. Why: life day 49's left wrist yaw stood at
         its range stop with the pain flickering on half its ticks, and act_pred's forecast of its own act, read at the sharpness its
         reliable inverse model had earned (kappa 0.8, sharpness 8), gave +small, the step into the stop, at 0.98 (the actor's bias
         +0.8 beside it): a habit the clip at 0 could only stop reinforcing on the painful half of its ticks while the other half kept
@@ -198,7 +207,9 @@ class CortexMixin:
         from .physiology import FRAMES
         g = self._tag_gamma(); reach = int(self.cfg.get("tag_reach", FRAMES["tag_reach"]))
         G = credit_of(rec[n - int(T):n, 1], g, reach)             # C156: a position's act is the tick before's draw; its row's dopamine is its first consequence
-        return (1.0 + G).clamp(-1.0, 1.0).to(torch.float32).to(self.dev)   # A150: clip(1 + G, -1, 1), the harm beyond one unlearned
+        if labels:                                                # act_inv's labels (her guidance): learned as such, a net harm beyond one not taught (R8's rule)
+            return (1.0 + G).clamp(0.0, 1.0).to(torch.float32).to(self.dev)
+        return G.clamp(-1.0, 1.0).to(torch.float32).to(self.dev)   # A152: the own acts' weight is dopamine's credit alone, clip(G, -1, 1): no cloning for free
 
     def _window_tensors(self, win=None):
         """THE WINDOW AS TENSORS, PER CHANNEL (step R4): obs, each of the anatomy's channels by name, its field at every position ([T]
@@ -299,12 +310,13 @@ class CortexMixin:
             # opt_pred (body/core/timing.py GatedDescent: one plain step a lesson on this gradient, each element bounded, R6 fix 7), the
             # rest here; act_inv's labels reach act_pred and the correction alone, never the stream (`_timing_loss`)
             mrep = {}
-            wpos_ = self._habit_weights(int(C.shape[0])) if motor_ else None   # A141: the day's habit is dopamine's to keep
+            wpos_ = self._habit_weights(int(C.shape[0])) if motor_ else None   # A141: the day's habit is dopamine's to keep (A152: and to make)
+            wlab_ = self._habit_weights(int(C.shape[0]), labels=True) if motor_ else None   # her guidance's labels at R8's weight
             if wpos_ is not None:
-                self._habit_w = [round(float(wpos_[1:].mean()), 4), round(float((wpos_[1:] < 1.0).float().mean()), 4)]   # the lesson's mean
-                                                                                                # weight and its share of positions under 1 (a ruler)
+                self._habit_w = [round(float(wpos_[1:].mean()), 4), round(float((wpos_[1:] < 0.0).float().mean()), 4)]   # the lesson's mean
+                                                                                                # weight and its share of positions under 0 (a ruler; A152)
             for i_ in range(1, len(self.anatomy.motors) + 1):
-                lt_, rt_, lb_ = self._timing_loss(i_, C, obs, wpos=wpos_)
+                lt_, rt_, lb_ = self._timing_loss(i_, C, obs, wpos=wpos_, wlab=wlab_)
                 if lt_ is not None:
                     ll = ll + lt_; mrep[self.anatomy.motors[i_ - 1].name] = rt_
                     if lb_ is not None and rt_["rel"] > 0.0:

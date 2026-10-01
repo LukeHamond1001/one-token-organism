@@ -424,7 +424,7 @@ class TimingMixin:
             lg[0] = lg[0].clone(); lg[0][list(e.reserved)] = float("-inf")
         return tab.flat([int(x.argmax()) for x in lg])
 
-    def _timing_loss(self, i, C, obs, wpos=None, night=False):
+    def _timing_loss(self, i, C, obs, wpos=None, night=False, wlab=None):
         """THE WAKING LESSON OF LATER EFFECTOR i'S TIMING PART (step R6; body/core/cortex.py `_wake_lesson`), over the window's stream
         C [T, d] (with its gradient) and observations: act_pred's squared error to the target act's row at every position t >= 1, from
         the stream at t-1 and the forward half's error at t, weighted (1 at its own acts; at its rests act_inv's reliability on act_inv's
@@ -464,7 +464,7 @@ class TimingMixin:
         labels meet (their weights' sum passes one), costs a second backward pass through the stream and its moments twice over, and
         its own ratio to the same labels given whole wandered (0.17 to 1.46), the stream's path then depending on the reliability.
         THE NIGHT'S WEIGHT (step R7d, the amygdala's side of R8; SIM_DESIGN.md 7.4 item 2): `wpos` [T], when given, weighs act_pred's error
-        at each position (its own acts' and act_inv's labels' alike): the night replays a window with act_pred's lesson at position t
+        at each position of its own acts, and `wlab` [T] (A152; `wpos` when not given) at act_inv's labels: the night replays a window with act_pred's lesson at position t
         weighted clip(1 + G_t, 0, 1), G_t the replayed dopamine's credit (body/core/amygdala.py `act_pred_night_weight`), so acts followed
         by net harm are not taught as acts to make; the forward half's lesson is not weighted. None (the day's): as before, to the bit.
         `night` (step R8b, the night over frames: body/core/sleep.py): act_pred reads the stream detached at every position, so its
@@ -522,11 +522,11 @@ class TimingMixin:
             if bool(rested[-1]):
                 lab_f[-1] = False                                          # the last rest: its next sense not felt, no label
             w_own = torch.where(lab1, torch.zeros_like(w1), w1)
-        if wpos is not None:
-            err = err * wpos[1:].to(err.dtype)                            # step R7d: the night's weight on act_pred's error (R8's replay)
-        lp = (err * w_own).sum() / float(T - 1)                           # over the positions: the weights absolute
+        err_o = err * wpos[1:].to(err.dtype) if wpos is not None else err   # step R7d: the weight on act_pred's error at its own acts (A152: dopamine's credit)
+        err_l = err * (wlab if wlab is not None else wpos)[1:].to(err.dtype) if (wlab is not None or wpos is not None) else err   # and at act_inv's labels (R8's)
+        lp = (err_o * w_own).sum() / float(T - 1)                         # over the positions: the weights absolute
         n_lab = int(lab_f.sum()) if lab_f is not None else 0
-        lb = (err * lab_f.float()).sum() / float(T - 1) if n_lab else None   # act_inv's labels, every one earned
+        lb = (err_l * lab_f.float()).sum() / float(T - 1) if n_lab else None   # act_inv's labels, every one earned
         loss = lp if lf is None else lp + lf
         s_lab = n_lab / float(T - 1)
         rep = {"pred": round(float(lp.detach()) + (gain * float(lb.detach()) if lb is not None else 0.0), 4), "own": int(own[1:].sum()),

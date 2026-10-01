@@ -159,7 +159,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A151 (2026-10-01 09:28, on branch t191: the actors' synaptic scaling both ways, their forgetting removed; the sim profile
 # moved, threaded e465b724.. -> f7196165.., one-thread 4b3befab.. -> 69ed464f.., consts unchanged); the language default digest
 # 7c54199e3c72cf77d45a8e94 kept (actor off in the diary).
-digest  sim                   threaded f7196165ac5d60db4b75b199 consts b971264b65f1 | --profile sim
-digest  sim                   pinned   69ed464ff522feacf5be59dd consts b971264b65f1 | --profile sim
-full    sim                   threaded organs ab5da5cfb47f store 976143d574e8 optim 6401bd7c6e53 rng 0b084865948e work e41dd01013a8 cfg fb1800a3b452
-full    sim                   pinned   organs db537f844e2d store da56f5828e14 optim fa838cd5fced rng 0b084865948e work 87606e63d414 cfg fb1800a3b452
+# Re-pinned at A152 (2026-10-01 09:58, on branch t193: the own act's habit weight is dopamine's credit alone, clip(G, -1, 1); her labels' at R8's;
+# the sim profile moved, threaded f7196165.. -> 58719145.., one-thread 69ed464f.. -> 6dd3937d.., consts unchanged); the language default
+# digest 7c54199e3c72cf77d45a8e94 kept (no later effector in the diary).
+digest  sim                   threaded 587191456360362cfd78c0a3 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   6dd3937def1397898c31169e consts b971264b65f1 | --profile sim
+full    sim                   threaded organs a2e397fd5872 store 1de520b8ea3b optim 4a8eda87b9e6 rng 72e76a663c4e work 9ad8475d51b6 cfg fb1800a3b452
+full    sim                   pinned   organs f701d54e2bb2 store 1fc482108daa optim bad699514727 rng 72e76a663c4e work 73af4f164bda cfg fb1800a3b452
