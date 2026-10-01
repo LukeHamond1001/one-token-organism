@@ -618,14 +618,15 @@ def test_the_find():
     def grasp(evs, judged):
         """its fist opened, its arm moved, the duck into the open palm (lane 10's road): the duck leaves the bucket for its hand within
         HIDDEN_OUT_TICKS, as a hand reaching in and lifting takes it out"""
-        for _ in range(12):                                                 # (C179: the fist opened, the duck placed at the open palm once and
-            w.frame(); w.apply({"hand_l": opening})                         # left to settle; with the heavier bucket the contact solve shifted
-        to_hand(0.0)                                                        # the hand's rest a hair, and the old road, the elbow bent and the
-        for k in range(5):                                                  # duck placed 2 cm above the palm each tick, let it fall or land on
-            w.frame(); w.apply({})                                          # the rattle under the hand; the find needs no arm move, "got" does)
-            evs += [tuple(e) for e in lane.last["events"]]; judged += [tuple(x) for x in (lane.last.get("judged") or ())]
-        for _ in range(12):                                                 # (the duck bounces on the palm nine ticks before three running touches)
-            w.frame(); w.apply({})
+        jr = m.body("toy_rattle").jntadr[0]; ar = m.jnt_qposadr[jr]; vr = m.jnt_dofadr[jr]
+        d.qpos[ar:ar + 2] = [1.5, 1.5]; d.qvel[vr:vr + 6] = 0.0; mujoco.mj_forward(m, d)   # (C180: the rattle out from under its left hand:
+        for _ in range(6):                                                  # the resting pose lays the hand on it with some bucket masses, and a
+            w.frame(); w.apply({"hand_l": opening})                         # duck let down to the palm meets the rattle, not the hand)
+        for k in range(5):                                                  # the duck pressed to the open palm each tick: at rest the palm faces
+            to_hand(-0.06); w.frame(); w.apply({"hand_l": opening} if k < 2 else {})   # sideways and its thin plate lies 3 cm inside the grasp
+            evs += [tuple(e) for e in lane.last["events"]]; judged += [tuple(x) for x in (lane.last.get("judged") or ())]   # point (a duck set
+        for _ in range(6):                                                  # at the point, or 5 cm out as lane 10's ball is, falls to the floor
+            w.frame(); w.apply({})                                          # beside it, no touch); the find needs no arm move, "got" does
             evs += [tuple(e) for e in lane.last["events"]]; judged += [tuple(x) for x in (lane.last.get("judged") or ())]
 
     w.parent.holding["R"] = "duck"                                          # in her hand, as the lane sees it

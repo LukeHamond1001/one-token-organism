@@ -73,8 +73,10 @@ BUCKET_H = 0.08                                  # m: the wall's height. C179 (2
                                                  # hidden from a child beside it; the child's hand at the bucket rose to 6 cm under the old rim and never over
                                                  # it (days 44 to 48: the search where the toy vanished, the find denied by the wall), so the rim comes down to it
                                               # mat (eyes at 0.1 m prone, 0.35 m sitting, half a metre off: the near wall hides the whole floor)
-BUCKET_MASS = 0.60                               # kg. C179 (2026-10-01): 0.20 until life day 48, when a touch of the child's hand tipped it (it lay on its
-                                                 # side at day 47's tick 22,000, the hides spilled); a weighted base stays up under a hand's push (ours)
+BUCKET_MASS = 0.20                               # kg (a small plastic bucket). C179 (2026-10-01) weighted it to 0.60 against the child's tipping touch
+                                                 # (day 47's tick 22,000: on its side, the hides spilled); C180 the same morning put it back: at 0.60 her
+                                                 # carry of it (C138) sagged, the put landed 39 cm off and she let it fall, and it lay upside down from
+                                                 # day 48's tick 16,000 on, no hide possible; the child's tipping was 2% of the day, the drop all of it
 BUCKET_RGBA = (0.45, 0.55, 0.20, 1.0)            # olive: no colour word of hers, no other kind of it (the box's road: no colour lesson rides in)
 BUCKET_YAW_DEG = 0.0
 
