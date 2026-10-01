@@ -1467,6 +1467,92 @@ def test_the_earned_certainty():
     print(f"motor C148: a sure habit's forecast (norm 8) at sharpness 1: setting 4 drawn at {p_full:.3f} with its certainty earned, "
           f"{p_none:.3f} with nothing earned (the cosines alone), {half:.3f} at half; the old readout unchanged")
 
+
+def test_the_actor_through_the_squashing():
+    """motor (A147, 2026-10-01): THE ACTOR'S ELIGIBILITY GOES THROUGH ITS SQUASHING. On a limbs body with the striatal actor on, the
+    squashing's factor read for an actor is beta x (1 - tanh^2(w . z)) over its rows; with the weights x 10,000 (a unit driven far past
+    its range, as life day 48's were) the factor is under 1e-6 everywhere, no eligibility at all; and on an acted tick the limb's new
+    eligibility is exactly (one-hot - p) x that factor, outer the striatal input (the old (one-hot - p) x z no more)"""
+    import torch.nn.functional as F
+    cfg = dict(_CFG1, actor_trace_tick=1)
+    L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
+    for _ in range(40):
+        run.step()
+    e = L.anatomy.motors[0]; mod = L.m.get_submodule(e.actor); st = L.motor[0]
+    assert L._z_now is not None
+    with torch.no_grad():
+        want = float(cfg.get("actor_beta", 1.0)) * (1.0 - torch.tanh(mod(L._z_now)) ** 2)
+        got = L._actor_squash_grad(mod)
+        assert torch.allclose(got, want, atol=1e-6) and got.shape == (sum(e.factors),) and float(got.max()) > 0.05, (got.shape, float(got.max()))
+        w0 = mod.weight.clone(); mod.weight.mul_(1e4)
+        sat = L._actor_squash_grad(mod); assert float(sat.max()) < 1e-6, float(sat.max())
+        mod.weight.copy_(w0)
+    # the eligibility on an acted tick: e_after - g x e_before = outer((one-hot - p) x factor, z)
+    g_ = float(L.m.gammas()[int(L.cfg["dopamine_band"])]); seen = []; f = L._act_effectors
+
+    def spy(u, stri, gam, tick_tr, f=f, L=L, st=st, mod=mod, seen=seen):
+        ea = None if st["e_actor"] is None else st["e_actor"].clone()
+        out = f(u, stri, gam, tick_tr)
+        now = st["now"]
+        if now["acted"] and now["act_on"] and not now["cont"] and ea is not None:
+            with torch.no_grad():
+                oh = torch.cat([F.one_hot(torch.tensor(a_), int(k_)).to(p_.dtype) - p_ for a_, k_, p_ in zip(now["digits"], e.factors, now["probs"])])
+                want = torch.outer(oh * L._actor_squash_grad(mod), L._z_now)
+                seen.append(bool(torch.allclose(st["e_actor"] - g_ * ea, want, atol=1e-5)))
+        return out
+    L._act_effectors = spy
+    for _ in range(300):
+        run.step()
+    assert len(seen) >= 5 and all(seen), (len(seen), seen[:10])
+    print(f"motor A147: the squashing's factor beta(1 - tanh^2) read over {int(got.numel())} rows (max {float(got.max()):.3f}); at weights x 10,000 "
+          f"under 1e-6; the new eligibility (one-hot - p) x factor outer z on {len(seen)} acted ticks")
+
+
+def test_the_striatum_scales_down():
+    """motor (A147, 2026-10-01): SYNAPTIC SCALING OF THE ACTORS. The limb's and the voice's actors inflated x 1,000 (pre-activations in the
+    thousands, as life day 48's), every learning rate 0: within 1,500 ticks each actor's pre-activation root mean square falls by at
+    least 50 times and comes to rest at its set point 1 (within 0.5 to 1.5, not past it), every row of the limb's shrunk by one and the same factor (the ranking of
+    its settings kept: the pattern is the actor's, the gain the neuron's), the running mean squares kept on the body by actor name; an
+    actor whose drive stands at or under 1 is left exactly as it is"""
+    cfg = dict(_CFG1, **_LR0, actor=1, actor_trace_tick=1)
+    L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
+    for _ in range(20):
+        run.step()
+    e = L.anatomy.motors[0]; mod = L.m.get_submodule(e.actor)
+    while L._z_now is None or float(L._z_now.norm()) == 0.0:                # a striatal input that carries something
+        run.step()
+    with torch.no_grad():                                                   # the actors driven to pre-activations of 2,000 (born at zero,
+        for a_ in (mod, L.m.actor):                                         # inflating them would keep them at zero)
+            a_.weight.normal_(generator=torch.Generator().manual_seed(7))
+            a_.weight.mul_(2000.0 / float((a_(L._z_now) ** 2).mean().sqrt()))
+        raw0 = mod(L._z_now).clone(); v0 = L.m.actor(L._z_now).clone()
+    rms0 = float((raw0 ** 2).mean().sqrt()); vrms0 = float((v0 ** 2).mean().sqrt())
+    assert rms0 > 50.0 and vrms0 > 50.0, (rms0, vrms0)
+    w_start = mod.weight.clone()
+    for _ in range(1500):
+        run.step()
+    ms = getattr(L, "_actor_ms", None); assert ms and "voice" in ms and e.name in ms, ms
+    with torch.no_grad():
+        ratio = (mod.weight / w_start)                                    # one factor over every weight (its learning rate 0)
+        c_ = float(ratio.mean())
+        assert c_ < 0.02 and float((ratio - c_).abs().max()) < 1e-5, (c_, float((ratio - c_).abs().max()))
+        raw1 = mod(L._z_now); v1 = L.m.actor(L._z_now)
+    rms1 = float((raw1 ** 2).mean().sqrt()); vrms1 = float((v1 ** 2).mean().sqrt())
+    assert rms1 < rms0 / 50.0 and 0.5 < rms1 < 1.5 and vrms1 < vrms0 / 50.0 and 0.5 < vrms1 < 1.5, (rms0, rms1, vrms0, vrms1)   # at the set point, not past it
+    # an actor at or under its set point is left alone
+    L2 = _born_limbs(cfg, _limb_world()); run2 = WorldLoop(L2)
+    for _ in range(20):
+        run2.step()
+    m2 = L2.m.get_submodule(L2.anatomy.motors[0].actor)
+    with torch.no_grad():
+        m2.weight.normal_(generator=torch.Generator().manual_seed(8)); m2.weight.mul_(1e-3); w2 = m2.weight.clone()
+    for _ in range(200):
+        run2.step()
+    fg = (1.0 - 1.0 / float(L2.cfg.get("actor_forget", 36000))) ** 200                   # its own forgetting runs on (the lesson's, every tick)
+    assert torch.allclose(m2.weight, w2 * fg, atol=1e-9, rtol=1e-5), "an actor under its set point must not be scaled (its forgetting alone)"
+    print(f"motor A147: the limb's actor scaled from rms {rms0:.0f} to {rms1:.2f} and the voice's from {vrms0:.0f} to {vrms1:.2f} in 1,500 ticks, "
+          f"one factor ({c_:.4f}) over every weight; an actor under the set point untouched")
+
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
     for t in MOTOR_TESTS:

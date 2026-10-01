@@ -145,7 +145,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # sim digests); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 # Re-taken at C177 (2026-10-01 04:37, on branch t175: the show's approach carries the put's reach need): UNCHANGED; the language default
 # digest 7c54199e3c72cf77d45a8e94 kept.
-digest  sim                   threaded 552c51a504830ef77a79927b consts c9755b913294 | --profile sim
-digest  sim                   pinned   253a89b70a53cf7d5a42b057 consts c9755b913294 | --profile sim
-full    sim                   threaded organs 1ac379002f66 store 453b0f99539e optim 4ceaf30496d7 rng 0829ddbd5dd3 work 20d80228a580 cfg fb1800a3b452
-full    sim                   pinned   organs 45d7bc229b37 store 90ce340c4453 optim 924a5e213d66 rng 0829ddbd5dd3 work cb46900cc68c cfg fb1800a3b452
+# Re-pinned at A147 (2026-10-01 07:26, on branch t182: the striatal actors' eligibility through their tanh and their synaptic scaling toward unit
+# drive, critics._actor_scaling and mouth._actor_squash_grad; the sim profile moved, threaded 552c51a5.. -> cdf686b4.., one-thread 253a89b7.. ->
+# 81d01b12.., consts c9755b91.. -> b971264b..); the language default digest 7c54199e3c72cf77d45a8e94 kept (actor off in the diary).
+digest  sim                   threaded cdf686b40343e2c573282892 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   81d01b126fb47036b1538a72 consts b971264b65f1 | --profile sim
+full    sim                   threaded organs fa543527c713 store 9d87aa13568e optim a6aa0c93c1e4 rng 914f5f866b03 work 79e722e50386 cfg fb1800a3b452
+full    sim                   pinned   organs 4b88bd9620db store 6ac6cd88e1ee optim 0d8204e79383 rng 914f5f866b03 work 5a4dea81ccb3 cfg fb1800a3b452

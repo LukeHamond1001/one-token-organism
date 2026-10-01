@@ -18,6 +18,34 @@ class CriticsMixin:
                 return float(self.m.fast_value(self.m.stri_in()))
             return float(self.m.values(self.bands)[int(self.cfg["dopamine_band"])])
 
+    def _actor_scaling(self, m):
+        """A147 (2026-10-01): SYNAPTIC SCALING OF THE STRIATAL ACTORS (Turrigiano 2008; Turrigiano and Nelson 2004): a neuron whose
+        drive runs past its set point scales all its synapses down together, keeping its output in the range where its plasticity
+        works. Each actor's set point is the unit scale of its squashing (the tanh's own: 1, as A97's "1 is the readout's own scale"):
+        while this tick's mean square of its pre-activations (w . z over its settings) stands above 1 the actor's weights are
+        multiplied by (mean square) ** (-1 / (2 x reach)), the reach the synaptic tag's (tag_reach, 64 ticks: the time over which an
+        act's credit is assigned, so the scaling is no faster than the lesson's own memory; ours): the log of the drive decays with
+        that time constant, a drive of 2,000 (its mean square 4 million) loses 11% at the first tick and is back at 1 in some 300
+        ticks, under a minute of life, and stops there (the tick's own drive is the gate, so no lagging mean carries the scaling past
+        the set point: a running mean of 1,024 ticks took the test body from 2,000 to 0.32, and the critics' horizon of 1,024 as the
+        time constant left it at 8 after 1,500 ticks); a drive at or under the set point is left alone (down only: ours; biology's
+        scaling runs both ways, but an actor that has learned little should not be made loud). The gradient through the squashing
+        (mouth._actor_squash_grad) keeps a scaled actor from running up again. A running mean square per actor is kept beside it for
+        the rulers (`_actor_ms`, by actor name, at the same reach; born at 1, not saved)"""
+        if getattr(self, "_z_now", None) is None:
+            return
+        from .physiology import FRAMES
+        H = float(self.cfg.get("tag_reach", FRAMES["tag_reach"])); a_ = 1.0 / H
+        ms = getattr(self, "_actor_ms", None)
+        if ms is None:
+            ms = self._actor_ms = {}
+        with torch.no_grad():
+            for name, mod in [("voice", m.actor)] + [(e_.name, m.get_submodule(e_.actor)) for e_ in self.anatomy.motors]:
+                raw = mod(self._z_now); now_ = float((raw * raw).mean())
+                ms[name] = ms.get(name, 1.0) + a_ * (now_ - ms.get(name, 1.0))
+                if now_ > 1.0:
+                    mod.weight.mul_(float(now_ ** (-0.5 / H)))
+
     def _learn_values(self, r, felt, stri):
         """dopamine: every critic learns from the felt reward; the fast band's error is dopamine; the chain closes; the synaptic tag is captured"""
         m = self.m
@@ -188,6 +216,7 @@ class CriticsMixin:
                                 upd = slr_ * delta * st_["a_tag"]        # (mouth._actor_tag_step: the 64-tick trace)
                                 m.get_submodule(e_.actor).weight.add_(upd)
                                 st_["a_upd"][1] += float(upd.norm())
+                    self._actor_scaling(m)                           # A147: each actor's synapses scaled toward its set point
                 if stri and int(self.cfg.get("wm", 0)) and getattr(m, "stri_wm", 0):
                     with torch.no_grad():                        # WORKING MEMORY: latch at a burst, clear at the reward or with age
                         m.wm_tick()

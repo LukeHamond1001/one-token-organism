@@ -749,7 +749,7 @@ class MouthMixin:
                     self._chooser_credit(nxt, g_act)
                 else:
                     oh = torch.zeros_like(probs); oh[nxt] = 1.0
-                    e_new = torch.outer(oh - probs.detach(), self._z_now)
+                    e_new = torch.outer((oh - probs.detach()) * self._actor_squash_grad(m.actor), self._z_now)   # A147: through the tanh
                     ea = getattr(self, "_e_actor", None)
                     self._e_actor = (g_act * ea if ea is not None else torch.zeros_like(e_new)) + e_new
         if acted:
@@ -877,6 +877,20 @@ class MouthMixin:
                                                                             # and every limb's top probability was back above 0.9 within
                                                                             # half of life day 3, the day's earning gone with the variety
 
+    def _actor_squash_grad(self, actor):
+        """A147 (2026-10-01): THE ACTOR'S ELIGIBILITY GOES THROUGH ITS SQUASHING. The striatum's bias on a logit is beta x tanh(w . z)
+        (`_choose`, `_act_effectors`' readout), so the gradient of the act's log-probability with respect to w is
+        (one-hot - p) x beta x (1 - tanh^2(w . z)) x z; until now the eligibility was (one-hot - p) x z, the squashing's derivative and
+        its gain left out, so a unit driven past its range went on growing: on life day 48 every effector's actor read pre-activations
+        of 2,000 to 11,000 against a range of 1 (the voice's 550), every setting's bias at +-1, a bang-bang policy dopamine could no
+        longer move (the left shoulder's pitch at +small on 85% of its draws, the positional pain 142 onsets a day for five days).
+        The factor per setting, [the actor's rows]; 1 where no striatal input stands"""
+        if getattr(self, "_z_now", None) is None:
+            return 1.0
+        with torch.no_grad():
+            t_ = torch.tanh(actor(self._z_now))
+            return float(self.cfg.get("actor_beta", 1.0)) * (1.0 - t_ * t_)
+
     def _act_effectors(self, u, stri, gam, tick_tr):
         """THE LATER EFFECTORS' ACTS (step R5), each after the voice's, in the anatomy's order: its actor's eligibility (per act, or
         decayed every tick under actor_trace_tick), the one-hot of each joint's setting against that joint's probabilities, on the
@@ -896,6 +910,7 @@ class MouthMixin:
                 with torch.no_grad():
                     oh = torch.cat([F.one_hot(torch.tensor(a_), int(k_)).to(p_.dtype).to(p_.device) - p_
                                     for a_, k_, p_ in zip(now["digits"], e_.factors, now["probs"])])
+                    oh = oh * self._actor_squash_grad(m.get_submodule(e_.actor))   # A147: the gradient through the bias's tanh
                     e_new = torch.outer(oh, self._z_now)
                     ea = st_["e_actor"]
                     st_["e_actor"] = ((1.0 if tick_tr else g_) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
