@@ -398,6 +398,9 @@ class Store:
                         self.EPI.setdefault(sl, []).append((t, q))
 
 
+UNEARNED_SMALL = 2.0   # A144: what a joint's big steps lose in its readout's logits at nothing earned (ours; at a flat readout p(big) 40% -> 8%)
+
+
 class ActTable(nn.Module):
     """A LATER EFFECTOR'S ACTS (the core refactor's step R5, docs/SIM_DESIGN.md 8.4): per-joint alphabets of fixed unit rows, born from
     a generator of their own (the body's seed; never the global random stream) and saved with the body (a buffer: no lesson moves
@@ -467,7 +470,16 @@ class ActTable(nn.Module):
                 out.append(torch.zeros(k, device=R.device))
             elif earned is not None:
                 g_ = max(0.0, min(1.0, float(earned[j] if isinstance(earned, (list, tuple)) else earned)))   # C154: one exponent for every joint (an effector without the per-joint law) or one per joint
-                out.append(s_ * (u_ @ R.t()) * (n_ ** g_))
+                lg_ = s_ * (u_ @ R.t()) * (n_ ** g_)
+                if k >= 3 and UNEARNED_SMALL > 0.0:
+                    # A144 (2026-09-30): AN UNEARNED JOINT EXPLORES SMALL. The settings at the alphabet's two ends (the big steps) lose
+                    # (1 - g_j) x UNEARNED_SMALL from their logits, so a joint that has shown nothing of what its acts do (g_j 0) draws its
+                    # large steps rarely (about 8% of draws at a flat readout against 40%) and a joint that has earned its certainty draws
+                    # as before. A97's sibling: the corticospinal drive to a limb is born weak and grows with use (Martin 2005), and an
+                    # infant's spontaneous movements are low-force. Why: life day 43, the body unfrozen by A143, the left wrist roll
+                    # (kappa 0.08) drew big steps 71% of ticks and the pain rate rose with the freedom (11 to 16 a thousand)
+                    lg_ = lg_.clone(); lg_[0] -= (1.0 - g_) * UNEARNED_SMALL; lg_[k - 1] -= (1.0 - g_) * UNEARNED_SMALL
+                out.append(lg_)
             else:
                 out.append(s_ * (pred @ R.t()))
         return out

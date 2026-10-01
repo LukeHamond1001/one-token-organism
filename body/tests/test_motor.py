@@ -1443,7 +1443,7 @@ def test_the_earned_certainty():
     own habit. An ActTable of three joints of five; the proposal 8 x a setting's own row (a habit's certain forecast): read with every
     exponent earned (1) at sharpness 1 the habit's setting takes over 0.99; with nothing earned (0) under 0.5 and each logit within
     -1..1; with no `earned` given the readout is the old one exactly; half earned lies between"""
-    import torch as _t
+    import torch as _t, math as _m
     from body.model import ActTable
     tab = ActTable([5, 5, 5], 32, _t.Generator().manual_seed(3))
     pred = 8.0 * tab.rows[4].clone()                        # joint 0's setting 4, the forecast sure of it
@@ -1453,9 +1453,14 @@ def test_the_earned_certainty():
     none = tab.logits(pred, 1.0, earned=[0.0, 0.0, 0.0])
     p_none = _t.softmax(none[0], -1)[4].item()
     assert p_full > 0.99 and p_none < 0.5, (p_full, p_none)
-    assert all(float(lg.abs().max()) <= 1.0 + 1e-6 for lg in none), [float(lg.abs().max()) for lg in none]
+    from body.model import UNEARNED_SMALL as _US
+    assert all(float(lg[1:-1].abs().max()) <= 1.0 + 1e-6 and float(lg.abs().max()) <= 1.0 + _US + 1e-6 for lg in none), [float(lg.abs().max()) for lg in none]   # (A144: the ends carry the unearned penalty)
     half = _t.softmax(tab.logits(pred, 1.0, earned=[0.5, 0.5, 0.5])[0], -1)[4].item()
     assert p_none < half < p_full, (p_none, half, p_full)
+    pb0 = [float(_t.softmax(lg, -1)[[0, -1]].sum()) for lg in none]                     # A144: at nothing earned the big steps (the ends) are rare
+    assert all(p_ < 0.12 for p_ in pb0), pb0
+    flat = tab.logits(_t.zeros_like(pred) + 1e-9, 1.0, earned=[0.0, 0.0, 0.0])          # (a flat forecast: p(big) = 2 e^-2 / (2 e^-2 + 3))
+    assert abs(float(_t.softmax(flat[1], -1)[[0, -1]].sum()) - 2 * _m.exp(-2.0) / (2 * _m.exp(-2.0) + 3)) < 1e-3
     sc1 = tab.logits(pred, 1.0, earned=1.0); sc0 = tab.logits(pred, 1.0, earned=0.0)     # C154: one exponent for every joint (an effector
     assert all(_t.allclose(a, b, atol=1e-6) for a, b in zip(sc1, full)) and all(_t.allclose(a, b, atol=1e-6) for a, b in zip(sc0, none)), \
         "a scalar earned must read as the same exponent at every joint"                    # without the per-joint law) must not raise
