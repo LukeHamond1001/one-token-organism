@@ -749,7 +749,7 @@ class MouthMixin:
                     self._chooser_credit(nxt, g_act)
                 else:
                     oh = torch.zeros_like(probs); oh[nxt] = 1.0
-                    e_new = torch.outer((oh - probs.detach()) * self._actor_squash_grad(m.actor), self._z_now)   # A147: through the tanh
+                    e_new = torch.outer((oh - probs.detach()) * self._actor_squash_grad(m.actor), self._actor_input())   # A147: through the tanh; A148: at unit power
                     ea = getattr(self, "_e_actor", None)
                     self._e_actor = (g_act * ea if ea is not None else torch.zeros_like(e_new)) + e_new
         if acted:
@@ -877,6 +877,18 @@ class MouthMixin:
                                                                             # and every limb's top probability was back above 0.9 within
                                                                             # half of life day 3, the day's earning gone with the variety
 
+    def _actor_input(self):
+        """A148 (2026-10-01): THE ACTOR'S LESSON AT THE INPUT'S UNIT POWER. The actor's weights step by lr x dopamine x (one-hot - p) x
+        beta(1 - tanh^2) outer z (A147), so one step moves the bias's pre-activation by lr x dopamine x |z|^2: on the G1's striatal
+        expansion (4,096 units, 1,700 of them active near 3, |z|^2 some 22,000) a single tick of dopamine moved it by hundreds, the
+        bias slammed to its rail at every reward or pain (life day 49's first thousand ticks under A147: the actors' drive, scaled to
+        1 within a minute, read 20 to 50 on the running mean as each lesson threw it back up). The eligibility is taken on z / max(|z|^2,
+        1): the normalized LMS step (Haykin; divisive normalization of the input's power, the gain the RLS critics already carry), so a
+        unit of dopamine moves the pre-activation by at most lr x beta whatever the line's load; the readout w . z is unchanged. The
+        floor 1 is the unit (an empty line, z = 0, learns nothing either way)"""
+        z = self._z_now
+        return z / max(float(torch.dot(z, z)), 1.0)
+
     def _actor_squash_grad(self, actor):
         """A147 (2026-10-01): THE ACTOR'S ELIGIBILITY GOES THROUGH ITS SQUASHING. The striatum's bias on a logit is beta x tanh(w . z)
         (`_choose`, `_act_effectors`' readout), so the gradient of the act's log-probability with respect to w is
@@ -911,7 +923,7 @@ class MouthMixin:
                     oh = torch.cat([F.one_hot(torch.tensor(a_), int(k_)).to(p_.dtype).to(p_.device) - p_
                                     for a_, k_, p_ in zip(now["digits"], e_.factors, now["probs"])])
                     oh = oh * self._actor_squash_grad(m.get_submodule(e_.actor))   # A147: the gradient through the bias's tanh
-                    e_new = torch.outer(oh, self._z_now)
+                    e_new = torch.outer(oh, self._actor_input())                 # A148: on the striatal input at unit power
                     ea = st_["e_actor"]
                     st_["e_actor"] = ((1.0 if tick_tr else g_) * ea if ea is not None else torch.zeros_like(e_new)) + e_new
                     self._actor_tag_step(st_, e_new)                 # A142: and takes this act's eligibility

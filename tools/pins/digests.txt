@@ -148,7 +148,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A147 (2026-10-01 07:26, on branch t182: the striatal actors' eligibility through their tanh and their synaptic scaling toward unit
 # drive, critics._actor_scaling and mouth._actor_squash_grad; the sim profile moved, threaded 552c51a5.. -> cdf686b4.., one-thread 253a89b7.. ->
 # 81d01b12.., consts c9755b91.. -> b971264b..); the language default digest 7c54199e3c72cf77d45a8e94 kept (actor off in the diary).
-digest  sim                   threaded cdf686b40343e2c573282892 consts b971264b65f1 | --profile sim
-digest  sim                   pinned   81d01b126fb47036b1538a72 consts b971264b65f1 | --profile sim
-full    sim                   threaded organs fa543527c713 store 9d87aa13568e optim a6aa0c93c1e4 rng 914f5f866b03 work 79e722e50386 cfg fb1800a3b452
-full    sim                   pinned   organs 4b88bd9620db store 6ac6cd88e1ee optim 0d8204e79383 rng 914f5f866b03 work 5a4dea81ccb3 cfg fb1800a3b452
+# Re-pinned at A148 (2026-10-01 07:45, on branch t185: the actors' eligibility on the striatal input at unit power, mouth._actor_input; the sim
+# profile moved, threaded cdf686b4.. -> 3d880199.., one-thread 81d01b12.. -> efaeac4a.., consts unchanged); the language default digest
+# 7c54199e3c72cf77d45a8e94 kept (actor off in the diary).
+digest  sim                   threaded 3d88019967664ceff73ef862 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   efaeac4af2a0398b1dda6084 consts b971264b65f1 | --profile sim
+full    sim                   threaded organs 522ae266b598 store 948a1a372d17 optim 0e2726c5e75a rng 0730d44b607a work d9bdc4b2e779 cfg fb1800a3b452
+full    sim                   pinned   organs 80e466ba8e1b store c84a06657072 optim 7f7a298c39ce rng 0730d44b607a work 6257ccc5c2e6 cfg fb1800a3b452

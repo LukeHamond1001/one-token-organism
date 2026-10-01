@@ -1472,7 +1472,8 @@ def test_the_actor_through_the_squashing():
     """motor (A147, 2026-10-01): THE ACTOR'S ELIGIBILITY GOES THROUGH ITS SQUASHING. On a limbs body with the striatal actor on, the
     squashing's factor read for an actor is beta x (1 - tanh^2(w . z)) over its rows; with the weights x 10,000 (a unit driven far past
     its range, as life day 48's were) the factor is under 1e-6 everywhere, no eligibility at all; and on an acted tick the limb's new
-    eligibility is exactly (one-hot - p) x that factor, outer the striatal input (the old (one-hot - p) x z no more)"""
+    eligibility is exactly (one-hot - p) x that factor, outer the striatal input at unit power z / max(|z|^2, 1) (A148), so that a unit of
+    lr x dopamine moves the pre-activation by (one-hot - p) x factor, at most beta, whatever the line's load (the old (one-hot - p) x z no more)"""
     import torch.nn.functional as F
     cfg = dict(_CFG1, actor_trace_tick=1)
     L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
@@ -1484,26 +1485,35 @@ def test_the_actor_through_the_squashing():
         want = float(cfg.get("actor_beta", 1.0)) * (1.0 - torch.tanh(mod(L._z_now)) ** 2)
         got = L._actor_squash_grad(mod)
         assert torch.allclose(got, want, atol=1e-6) and got.shape == (sum(e.factors),) and float(got.max()) > 0.05, (got.shape, float(got.max()))
-        w0 = mod.weight.clone(); mod.weight.mul_(1e4)
+        w0 = mod.weight.clone()                                                   # a unit driven far past its range (drive 50 on every row)
+        if float(mod(L._z_now).abs().max()) == 0.0:
+            mod.weight.normal_(generator=torch.Generator().manual_seed(5))
+        mod.weight.mul_(50.0 / float(mod(L._z_now).abs().min().clamp_min(1e-9)))
         sat = L._actor_squash_grad(mod); assert float(sat.max()) < 1e-6, float(sat.max())
         mod.weight.copy_(w0)
     # the eligibility on an acted tick: e_after - g x e_before = outer((one-hot - p) x factor, z)
-    g_ = float(L.m.gammas()[int(L.cfg["dopamine_band"])]); seen = []; f = L._act_effectors
+    g_ = float(L.m.gammas()[int(L.cfg["dopamine_band"])]); seen = []; bounded = []; f = L._act_effectors
 
-    def spy(u, stri, gam, tick_tr, f=f, L=L, st=st, mod=mod, seen=seen):
+    def spy(u, stri, gam, tick_tr, f=f, L=L, st=st, mod=mod, seen=seen, bounded=bounded):
         ea = None if st["e_actor"] is None else st["e_actor"].clone()
         out = f(u, stri, gam, tick_tr)
         now = st["now"]
         if now["acted"] and now["act_on"] and not now["cont"] and ea is not None:
             with torch.no_grad():
                 oh = torch.cat([F.one_hot(torch.tensor(a_), int(k_)).to(p_.dtype) - p_ for a_, k_, p_ in zip(now["digits"], e.factors, now["probs"])])
-                want = torch.outer(oh * L._actor_squash_grad(mod), L._z_now)
-                seen.append(bool(torch.allclose(st["e_actor"] - g_ * ea, want, atol=1e-5)))
+                zn = L._z_now / max(float(torch.dot(L._z_now, L._z_now)), 1.0)          # A148: at the input's unit power
+                want = torch.outer(oh * L._actor_squash_grad(mod), zn)
+                e_new = st["e_actor"] - g_ * ea
+                seen.append(bool(torch.allclose(e_new, want, atol=1e-6)))
+                step = e_new @ L._z_now                                                   # the pre-activation's move per unit lr x dopamine
+                bounded.append(float(step.abs().max()) <= float(L.cfg.get("actor_beta", 1.0)) + 1e-5 and
+                               (float(torch.dot(L._z_now, L._z_now)) < 1.0 or torch.allclose(step, oh * L._actor_squash_grad(mod), atol=1e-5)))
         return out
     L._act_effectors = spy
     for _ in range(300):
         run.step()
     assert len(seen) >= 5 and all(seen), (len(seen), seen[:10])
+    assert all(bounded), "A148: a unit of dopamine must move the pre-activation by (one-hot - p) x factor, at most beta, whatever |z|"
     print(f"motor A147: the squashing's factor beta(1 - tanh^2) read over {int(got.numel())} rows (max {float(got.max()):.3f}); at weights x 10,000 "
           f"under 1e-6; the new eligibility (one-hot - p) x factor outer z on {len(seen)} acted ticks")
 
