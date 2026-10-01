@@ -195,6 +195,10 @@ class FramesMixin:
                 ff = {}; self._ferr_fast = ff                           # 36,000): what a night did to a channel reads as the dusk's
             mf = ff.get(c_.name, mu)                                    # value against the next morning's
             ff[c_.name] = mf + (float(e) - mf) / min(float(n_), FERR_FAST_TAU)
+            fn = getattr(self, "_ferr_now", None)                       # C171 (2026-09-30), an instrument: this tick's error itself, by
+            if fn is None:                                              # channel (the novelty drive's payments read against it: which
+                fn = {}; self._ferr_now = fn                            # channel's surprise the new frame carried)
+            fn[c_.name] = float(e)
             if mu > 0.0:
                 vals.append(float(e) / mu)
         return (sum(vals) / len(vals)) if vals else None

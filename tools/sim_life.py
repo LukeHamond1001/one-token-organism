@@ -57,6 +57,7 @@ class FakeVoice:
 
 
 _ARM_IDX = None
+_NOV_LAST = 0.0
 
 
 def _stops(world, margin=0.02):
@@ -317,6 +318,11 @@ def main():
                        sounds=len(getattr(world.sounds, "last_events", [])))
             rec["stage"] = int(lane.conduct.stage)
             rec["stops"], rec["stopj"] = _stops(world)                   # C160/C161: the arm joints at their range stops, per arm: the count and the mask
+            global _NOV_LAST
+            nov_now = float(rec.get("nov_paid") or 0.0)
+            if nov_now > _NOV_LAST + 1e-9 and getattr(L, "_ferr_now", None):   # C171: a novelty payment this tick: each channel's surprise then
+                rec["nov_ch"] = {k: round(float(v), 4) for k, v in L._ferr_now.items()}
+            _NOV_LAST = nov_now
             if world.tick % 16 == 0:                                        # C165: THE LADDER READ, every 16 ticks: each band's gate (sigmoid of its
                 with torch.no_grad():                                       # Go/NoGo on its own state), its value, and its TD error this tick
                     rec["bands"] = dict(g=[round(float(torch.sigmoid(L.m.band_gate[b](L.bands[b]))), 3) for b in range(len(L.m.clocks))],
