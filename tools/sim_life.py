@@ -372,6 +372,8 @@ def main():
             nov_now = float(rec.get("nov_paid") or 0.0)
             if nov_now > _NOV_LAST + 1e-9 and getattr(L, "_ferr_now", None):   # C171: a novelty payment this tick: each channel's surprise then
                 rec["nov_ch"] = {k: round(float(v), 4) for k, v in L._ferr_now.items()}
+                if hasattr(L, "_ferr_progress"):
+                    rec["nov_p"] = round(float(L._ferr_progress()), 3)        # A155: and the learning progress the payment was scaled by
             _NOV_LAST = nov_now
             if world.tick % 16 == 0 and getattr(L, "_actor_ms", None):        # C183 (2026-10-01): THE ACTORS' DRIVE every 16 ticks: each striatal actor's
                 rec["adrive"] = {k_: round(float(v_) ** 0.5, 2) for k_, v_ in L._actor_ms.items()}   # running root mean square of its pre-activations

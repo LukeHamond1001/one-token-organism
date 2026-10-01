@@ -1527,9 +1527,10 @@ def test_waking_imagination():
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)
-    and nothing for a frame that merged; a life of 60 ticks on the world with no parent's face and every learning rate 0 receives
+    and nothing for a frame that merged; a life of 120 ticks on the world with no parent's face and every learning rate 0 receives
     positive reward on some ticks with the drive and on none without it (pain alone pays, and negative); the switch off, the sources are
-    the two of birth"""
+    the two of birth. A155 (2026-10-01): the payment scaled by learning progress: a newborn's first 60 ticks keep new frames but pay
+    nothing (no past: its fast and slow error means equal), and given a past (the fast error at half the slow mean) the frames pay"""
     from body.core.world import WorldLoop
     from body.life import Life
     from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table, Novelty, NOVELTY_GAIN
@@ -1545,23 +1546,34 @@ def test_the_novelty_drive():
         assert ("novelty" in names) == bool(nov) and names[:2] == ["face", "pain"], names
         L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
         run = WorldLoop(L)
-        pos = 0; novel_writes = 0
+        pos = 0; novel_writes = 0; pos_new = 0
+        for _ in range(60):
+            run.step()
+            r = L._rec[int(L.ticks) - 1] if getattr(L, "_rec", None) is not None and int(L.ticks) >= 1 else None
+            if r is not None and float(r[3]) > 0:
+                pos_new += 1
+        writes_new = int(getattr(L, "_fwrites", 0))
+        if nov:                                                        # A155: a newborn has no past to progress against (its fast and slow error
+            assert pos_new == 0 and writes_new > 0 and L._ferr_progress() == 0.0, (pos_new, writes_new, L._ferr_progress())   # means equal): the new
+            with torch.no_grad():                                      # frames are kept but pay nothing; given a past (the fast error at half the
+                L._ferr_fast = {c_: 0.5 * float(v_[1]) for c_, v_ in L._ferr.items()}   # slow mean: it is learning) they pay
         for _ in range(60):
             run.step()
             r = L._rec[int(L.ticks) - 1] if getattr(L, "_rec", None) is not None and int(L.ticks) >= 1 else None
             if r is not None and float(r[3]) > 0:
                 pos += 1
-        got[nov] = dict(pos=pos, writes=int(getattr(L, "_fwrites", 0)), src=names)
-    assert got[0]["pos"] == 0, got                                     # no face here: nothing pays positive without the drive
-    assert got[1]["pos"] > 0 and got[1]["writes"] > 0, got             # with it, the new frames pay
+        got[nov] = dict(pos=pos, writes=int(getattr(L, "_fwrites", 0)), src=names, pos_new=pos_new)
+    assert got[0]["pos"] == 0 and got[0]["pos_new"] == 0, got         # no face here: nothing pays positive without the drive
+    assert got[1]["pos"] > 0 and got[1]["writes"] > 0, got             # with it, the new frames pay, once the body has a past it is learning against
     assert Novelty("n", clip=NOVELTY_GAIN, signs=(1.0,)).term(5.0) == NOVELTY_GAIN
     # A127b: paid by the mismatch. A source on a life whose store holds one frame: a frame far from it pays near the gain, the same
     # frame again (its nearest key's cosine 1) pays nothing, one half-way pays between; never more than the gain
     from body.model import Store, FastStore
     src = Novelty("n", clip=NOVELTY_GAIN, signs=(1.0,))
     assert isinstance(L.store, FastStore) and hasattr(L.store, "last_sim") and 0.0 <= float(L.store.last_sim) <= 1.0, type(L.store)   # the life's own store records it
-    class _L:                                                          # the least of a life the source reads
-        pass
+    class _L:                                                          # the least of a life the source reads (A155: its progress 1, every surprise new)
+        def _ferr_progress(self):
+            return 1.0
     life = _L(); st = Store(8, cap=64, temp=0.02, device="cpu")
     k0 = torch.zeros(8); k0[0] = 1.0; k1 = torch.zeros(8); k1[1] = 1.0; kh = torch.tensor([1.0, 1.0, 0, 0, 0, 0, 0, 0])
     paid = []
@@ -1572,6 +1584,18 @@ def test_the_novelty_drive():
     assert paid[0] == NOVELTY_GAIN and abs(paid[1] - NOVELTY_GAIN) < 1e-6, paid    # the first two orthogonal to what was there
     assert paid[2] is None or paid[2] == 0.0 or paid[2] < 1e-6, paid              # the same key again: no mismatch, nothing paid
     assert 0.0 < paid[3] < NOVELTY_GAIN and abs(paid[3] - NOVELTY_GAIN * (1.0 - 2 ** -0.5)) < 1e-4, paid   # half-way: cos 0.707
+    # A155: by learning progress. The life's own measure on the means it keeps: a channel whose fast error stands at half its slow mean has
+    # progress 0.5; one whose error holds, 0; one rising, 0; the whole weighed by this tick's errors; no means yet: 1
+    from body.core.frames import FramesMixin as _FM
+    class _P:
+        _ferr_progress = _FM._ferr_progress
+    q = _P(); q._ferr = {"a": [100, 1.0], "b": [100, 2.0], "c": [100, 1.0]}; q._ferr_fast = {"a": 0.5, "b": 2.0, "c": 1.5}; q._ferr_now = {"a": 1.0, "b": 1.0, "c": 2.0}
+    assert abs(q._ferr_progress() - (1.0 * 0.5 + 1.0 * 0.0 + 2.0 * 0.0) / 4.0) < 1e-9, q._ferr_progress()
+    q._ferr_now = {"a": 1.0}; assert abs(q._ferr_progress() - 0.5) < 1e-9
+    q._ferr = {}; q._ferr_fast = {}; assert q._ferr_progress() == 1.0
+    life2 = _L(); life2._ferr_progress = lambda: 0.25; st2 = Store(8, cap=64, temp=0.02, device="cpu"); st2.write(k0, torch.ones(8), 1.0, 2)
+    life2._frame_novel = max(0.0, 1.0 - float(getattr(st2, "last_sim", 0.0)))
+    assert abs(src.felt(None, life2) - NOVELTY_GAIN * 0.25) < 1e-6, "the payment scaled by the progress"
     print(f"world 26: the novelty drive: without it {got[0]['pos']} positive ticks of 60 (sources {got[0]['src']}); with it {got[1]['pos']} positive",
           f"ticks, {got[1]['writes']} frames kept as new, each paying up to {NOVELTY_GAIN} by its mismatch (sources {got[1]['src']}); a store of",
           f"one frame pays {paid[0]:.2f} for a frame orthogonal to it, {paid[2] or 0.0:.2f} for the same frame again, {paid[3]:.3f} for one half-way")

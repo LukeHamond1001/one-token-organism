@@ -203,6 +203,25 @@ class FramesMixin:
                 vals.append(float(e) / mu)
         return (sum(vals) / len(vals)) if vals else None
 
+    def _ferr_progress(self):
+        """A155 (2026-10-01): LEARNING PROGRESS, the share of this tick's surprise the body is in the course of learning away. For each
+        forecasting channel the lesson's slow mean of its error (err_tau, 36,000 ticks) and the fast one (FERR_FAST_TAU, 512) exist
+        already; the channel's progress is clip((slow - fast) / slow, 0, 1), the relative fall of its error of late against its long
+        run (a channel the body is getting better at foreseeing), 0 where the error holds or rises (the unpredictable: her next word,
+        the noise of the vestibular samples). The whole is the mean over the channels weighted by their share of this tick's error
+        (`_ferr_now`), so the surprise a payment rides on is credited only as far as that surprise is of the learnable kind. 1 when
+        no channel has a mean yet (a newborn's first ticks: every surprise new). Curiosity as learning progress (Oudeyer and Kaplan 2007;
+        Schmidhuber 1991), the information-seeking signal for reducible uncertainty and not for noise (Gottlieb et al. 2013)"""
+        st = getattr(self, "_ferr", None) or {}; ff = getattr(self, "_ferr_fast", None) or {}; fn = getattr(self, "_ferr_now", None) or {}
+        tot = 0.0; acc = 0.0
+        for c_, e_ in fn.items():
+            mu = float((st.get(c_) or [0, 0.0])[1]); mf = float(ff.get(c_, mu))
+            if mu <= 0.0 or e_ <= 0.0:
+                continue
+            prog = max(0.0, min(1.0, (mu - mf) / mu))
+            tot += float(e_); acc += float(e_) * prog
+        return (acc / tot) if tot > 0.0 else 1.0
+
     def _frame_settle(self, s):
         """THE EVENT'S END FOR FRAMES (the module's doc): today's settle law on the frame's surprise `s`; True on the first settled tick
         after one that was not"""

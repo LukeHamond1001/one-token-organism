@@ -215,7 +215,13 @@ class Novelty(RewardSource):
     only. On since dawn 24, a switch of the body. A127b (2026-09-28 16:25): PAID BY THE MISMATCH, NOVELTY_GAIN x (1 - the new frame's nearest
     stored key's cosine): the write gate is a quantile and passed a tenth of every day's frames forever (day 24's record: 296 payments in
     3,000 ticks, 1,200 a day against her smiles' 50), so a drive that paid the gain for each could never habituate; the comparator's own
-    mismatch (Lisman and Grace 2005's CA1 signal) is small for a frame like the day's others and full for a new thing"""
+    mismatch (Lisman and Grace 2005's CA1 signal) is small for a frame like the day's others and full for a new thing. A155 (2026-10-01):
+    AND BY LEARNING PROGRESS, NOVELTY_GAIN x the mismatch x the share of the frame's surprise the body is learning away (frames._ferr_progress:
+    per channel the relative fall of its error of late against its long run, the channels weighed by their share of this tick's error).
+    Why: life day 52's sweep read the drive paying on a tenth of the day's ticks, 82% of them at a frame whose surprise was her words (the
+    words channel's error 0.87 and never falling: her next word is unpredictable, not unlearned), and with the habit dopamine's to make
+    (A152) the arms' habits were being shaped by the timing of her speech. The unpredictable pays nothing; what the body is getting
+    better at foreseeing pays in proportion (Oudeyer and Kaplan 2007; Gottlieb et al. 2013)"""
     signs = (1.0,)
 
     def felt(self, frame, life):
@@ -223,9 +229,11 @@ class Novelty(RewardSource):
         if new <= 0.0:
             return None
         life._frame_novel = 0.0
+        prog = float(life._ferr_progress()) if hasattr(life, "_ferr_progress") else 1.0   # A155: by learning progress (body/core/frames.py)
+        self.last_progress = prog                                           # (the runner's record: `nov_p`)
         self.n_paid = int(getattr(self, "n_paid", 0)) + 1                  # the payments counted (the runner's record: `nov`; attribution)
-        self.paid = float(getattr(self, "paid", 0.0)) + NOVELTY_GAIN * new
-        return NOVELTY_GAIN * new                                          # A127b: graded by the mismatch (0 to 1): the gain is its ceiling
+        self.paid = float(getattr(self, "paid", 0.0)) + NOVELTY_GAIN * new * prog
+        return NOVELTY_GAIN * new * prog                                   # A127b: graded by the mismatch (0 to 1); A155: and by the progress (0 to 1)
 
 
 NOVELTY_GAIN = 0.5                     # a new frame's dopamine: a quarter of her smile's rise (+2), half of pain's -1 (ours, disclosed; the

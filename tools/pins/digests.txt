@@ -167,7 +167,9 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A154 (2026-10-01 13:15, on branch t196: the forecast heads held at the act rows' scale after every act_pred step, day and night;
 # the sim profile moved, threaded a93c6a9f.. -> c46edd61.., one-thread 20cfae5c.. -> a18d7804.., consts unchanged); the language default
 # digest 7c54199e3c72cf77d45a8e94 kept.
-digest  sim                   threaded c46edd6133ab2f8ee52fee67 consts b971264b65f1 | --profile sim
-digest  sim                   pinned   a18d78041e3172c3ef23ac95 consts b971264b65f1 | --profile sim
-full    sim                   threaded organs 66f297d70ade store be783cd6ce27 optim 55774b83efdc rng 0ed8b012c963 work 5d4621e257c5 cfg fb1800a3b452
-full    sim                   pinned   organs 45372543d41a store 978996eef168 optim 94843ce9bccd rng 0ed8b012c963 work 622be3431f68 cfg fb1800a3b452
+# Re-pinned at A155 (2026-10-01 15:05, on branch t197: the novelty drive pays by learning progress; the sim profile moved, threaded
+# c46edd61.. -> d943902c.., one-thread a18d7804.. -> 9bc7769a.., consts unchanged); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+digest  sim                   threaded d943902c307e7e97fe71bf01 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   9bc7769acf525de13f419c8e consts b971264b65f1 | --profile sim
+full    sim                   threaded organs befd78cd1a31 store 738f53d2ef68 optim cbf807bb0814 rng 6bbbd20c28ba work 741eba8c24ce cfg fb1800a3b452
+full    sim                   pinned   organs 68a6b7d18b8e store b9208ea80a33 optim 985badb4f75c rng 6bbbd20c28ba work 397144c6f66c cfg fb1800a3b452
