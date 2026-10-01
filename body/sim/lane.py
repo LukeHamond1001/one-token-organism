@@ -98,6 +98,7 @@ HAND_MOVE_MPS = 0.15                   # a hand faster than this is moving
 MOVED_TICKS = 5                        # "got" needs that hand moved, or a reach toward the toy, within the last 5 ticks (its own reach and hold)
 GOT_HOLD = 3                           # and the toy kept in that hand's touch this many ticks running: a hold, not a graze (the plumbing day
 FOUND_WINDOW, FOUND_TOUCHES = 6, 3     # C116: a find: its hand on the hidden toy on 3 of the last 6 ticks (a toy in the bucket rattles; ours)
+BUCKET_NEAR_M = 0.30                   # C174: a hand within this of the bucket's centre is "at the bucket" for the record's bucket_hand ruler (ours)
                                        # of 2026-09-26 counted 15 "got" in 1,500 ticks of babble against the toys beside its hands)
 REACH_BOOK_M = 0.6                     # a movement's end within this of a toy is a reach at it (about the arm's length)
 BOOK_LAST = 10                         # her notebook keeps the child's last 10 reaches a toy
@@ -348,6 +349,14 @@ class ParentLane:
         holds = tuple(tt for tt in self.toys if touch[tt]["child"])
         ch = PM_child(world)
         grasp = {"left": ch.grasp["L"], "right": ch.grasp["R"]}
+        self._bucket_hand = None                                             # C174 (2026-10-01): THE HAND AT THE BUCKET, a ruler: when a hand is
+        bb_ = self.toy_body.get("bucket")                                    # within BUCKET_NEAR_M of the bucket's centre, [its height above the
+        if bb_ is not None:                                                  # rim, its distance in from the rim's edge] for the nearer hand
+            cb = d.xpos[bb_]; rim = float(cb[2]) + X.BUCKET_WALL + X.BUCKET_H
+            near_ = [(float(np.linalg.norm(g[:2] - cb[:2])), g) for g in (ch.grasp["L"], ch.grasp["R"])]   # (negative: outside). After each of
+            dist_, g_ = min(near_, key=lambda x: x[0])                       # day 44's three hides the child's hand lay on the bucket 87 to 92
+            if dist_ <= BUCKET_NEAR_M:                                       # ticks and never on the toy inside: did it reach over the rim?
+                self._bucket_hand = [round(float(g_[2]) - rim, 3), round(X.BUCKET_IN - dist_, 3)]
         reaches = rd.reaches(grasp, [(tt, pos[tt]) for tt in visible], holds)
         her = {tt for tt in (pm.holding or {}).values() if tt is not None}
         in_bucket = set()                                                  # A129: the toys lying inside the bucket (A126), by its own frame
@@ -650,6 +659,7 @@ class ParentLane:
                          face_test=bool(test), reading=self.reading, word=self.word_now, in_view=p.child_in_view,
                          seen_by_child=p.seen_by_child, present=p.present,
                          found=[[o_, s_] for tk_, o_, s_ in self.found_log if tk_ == int(t)],   # C158: this tick's finds, each with whether the hide was in its view
+                         bucket_hand=getattr(self, "_bucket_hand", None), hidden=sorted(self.hidden),   # C174: the nearer hand at the bucket [above the rim, in from its edge]; the toys hidden now
                          child_xy=[float(world.d.qpos[0]), float(world.d.qpos[1])])   # C131: its pelvis on the floor plan (her plan reads it)
         return {SOURCE: (pa.astype(np.float64), mouth)}
 
