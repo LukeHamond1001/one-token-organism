@@ -347,15 +347,15 @@
     <geom type="cylinder" pos="-0.83 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="1.13 1.46 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
     <geom type="cylinder" pos="1.13 2.18 .04" size=".025 .04" material="wood_d" contype="0" conaffinity="0"/>
-    <geom name="table_top" type="mesh" mesh="table_top" pos="0.15 0.95 .40" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom type="box" pos="0.15 0.95 .18" size=".48 .22 .012" material="wood" contype="0" conaffinity="0"/>
-    <geom name="table_leg_lf" type="cylinder" pos="-0.31 0.75 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom name="table_leg_lb" type="cylinder" pos="-0.31 1.15 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom name="table_leg_rf" type="cylinder" pos="0.61 0.75 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom name="table_leg_rb" type="cylinder" pos="0.61 1.15 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
-    <geom type="cylinder" pos="0.4 1 .43" size=".055 .012" material="pot" contype="0" conaffinity="0"/>
-    <geom type="box" pos="-0.07 0.93 .423" euler="0 0 0.20944" size=".11 .08 .012" material="book2" contype="0" conaffinity="0"/>
-    <geom type="box" pos="-0.07 0.93 .443" euler="0 0 0.0698132" size=".1 .075 .009" material="book1" contype="0" conaffinity="0"/>
+    <geom name="table_top" type="mesh" mesh="table_top" pos="-2.0 1.9 .40" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom type="box" pos="-2 1.9 .18" size=".48 .22 .012" material="wood" contype="0" conaffinity="0"/>
+    <geom name="table_leg_lf" type="cylinder" pos="-2.46 1.70 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_lb" type="cylinder" pos="-2.46 2.10 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rf" type="cylinder" pos="-1.54 1.70 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom name="table_leg_rb" type="cylinder" pos="-1.54 2.10 .19" size=".025 .19" material="wood" contype="17" conaffinity="0" priority="2"/>
+    <geom type="cylinder" pos="-1.75 1.95 .43" size=".055 .012" material="pot" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-2.22 1.88 .423" euler="0 0 0.20944" size=".11 .08 .012" material="book2" contype="0" conaffinity="0"/>
+    <geom type="box" pos="-2.22 1.88 .443" euler="0 0 0.0698132" size=".1 .075 .009" material="book1" contype="0" conaffinity="0"/>
     <geom name="shelf" type="box" pos="2.39 0.55 0.42" size="0.195 0.78 0.42" material="shelf" contype="17" conaffinity="0" priority="2" rgba="0 0 0 0"/>
     <geom type="box" pos="2.39 -0.23 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>
     <geom type="box" pos="2.39 0.16 0.42" size="0.195 .014 0.42" material="shelf" contype="0" conaffinity="0"/>

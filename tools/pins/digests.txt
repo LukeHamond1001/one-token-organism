@@ -135,7 +135,9 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # one-thread e3f82db9c5bfac64b09889a0, consts c9755b913294); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 # Re-pinned at A144 (2026-09-30 21:40, on branch t159: an unearned joint explores small, UNEARNED_SMALL 2.0 in ActTable.logits; the language
 # default digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 70242aba83dc89ce3b391683, one-thread e3f82db9c5bfac64b09889a0, consts c9755b913294.
-digest  sim                   threaded 62c2a8ddf72b1c68ca9c5573 consts c9755b913294 | --profile sim
-digest  sim                   pinned   5b494f3c5763d300c222e88a consts c9755b913294 | --profile sim
-full    sim                   threaded organs 149850b6b409 store 98675774428a optim d91fb566cb45 rng 0829ddbd5dd3 work a5f0d9f56bc5 cfg 854522d0bd88
-full    sim                   pinned   organs 03a45bb749ce store bc7f12975b93 optim 070849cb6b96 rng 0829ddbd5dd3 work 8e266e769d3e cfg 854522d0bd88
+# Re-pinned at C169/C170 (2026-09-30 23:09, on branch t165: the coffee table moved to the room's north-west corner, her need tries 6 to 24;
+# the language default digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 62c2a8ddf72b1c68ca9c5573, one-thread 5b494f3c5763d300c222e88a, consts c9755b913294.
+digest  sim                   threaded 708d4362c5cf91944fea33cc consts c9755b913294 | --profile sim
+digest  sim                   pinned   a112c33baed8b89675dabb69 consts c9755b913294 | --profile sim
+full    sim                   threaded organs 149850b6b409 store 98675774428a optim d91fb566cb45 rng 0829ddbd5dd3 work 256b8c12ac29 cfg 854522d0bd88
+full    sim                   pinned   organs 03a45bb749ce store bc7f12975b93 optim 070849cb6b96 rng 0829ddbd5dd3 work 6cd6eb621cb3 cfg 854522d0bd88

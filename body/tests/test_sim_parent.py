@@ -1548,10 +1548,10 @@ def test_the_lure():
     within LURE_MAX_M of its near hand, LURE_CLEAR_M clear of the furniture, and the act says it was a lure. The same act on the mat sets
     the duck beside its hand as before (no lure)"""
     w = W.G1World(seed=1)
-    w.scene.place_on_mat(dict(G.BIRTH), np.eye(3), (0.2, 0.95), settle_s=0.0)    # supine under the table top (x -0.43..0.73, y 0.65..1.25), its
-    w.scene.set_parent(G.born_parent()); w.d.qvel[:] = 0; mujoco.mj_forward(w.m, w.d); w._sense_birth(); w.parent = PM.ParentMotion(w)   # hands under it too
+    w.scene.place_on_mat(dict(G.BIRTH), np.eye(3), (-1.9, 1.9), settle_s=0.0)    # supine under the table top (C169: in the room's north-west corner,
+    w.scene.set_parent(G.born_parent()); w.d.qvel[:] = 0; mujoco.mj_forward(w.m, w.d); w._sense_birth(); w.parent = PM.ParentMotion(w)   # x -2.58..-1.42, y 1.6..2.2), its hands under it too
     pm = w.parent; ch0 = PM.Child(w.m, w.d, w.scene.g1_set)
-    assert 0.65 <= float(ch0.torso[1]) <= 1.25 and all(-0.43 <= float(ch0.grasp[x][0]) <= 0.73 and 0.65 <= float(ch0.grasp[x][1]) <= 1.25 for x in "LR"), (ch0.torso, ch0.grasp)
+    assert 1.6 <= float(ch0.torso[1]) <= 2.2 and all(-2.58 <= float(ch0.grasp[x][0]) <= -1.42 and 1.6 <= float(ch0.grasp[x][1]) <= 2.2 for x in "LR"), (ch0.torso, ch0.grasp)
     _live(w, 3)                                                             # (her view of the child refreshed by a tick before she plans)
     out = T.run(w, [("bring_back", "duck")], 1200)
     a = out["acts"][0]

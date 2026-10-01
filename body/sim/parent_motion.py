@@ -267,7 +267,10 @@ KNEE_ROUTE_M = 0.9                          # A96: a new kneeling spot this near
 KNEE_ROUTE_DEG = 100                        # her knees (up onto the tall kneel, a turn on them, the shuffle) rather than by standing up
                                             # and walking (0.6 m and 25 deg before: the way round a lying child, its side to its head,
                                             # is about 0.8 m and a quarter turn, and a walk there took 70 s of re-planned trips)
-MAX_NEED_TRIES = 6                          # the spots on which an act's need (a trunk solve, a face search) is tried before she
+MAX_NEED_TRIES = 24                         # the spots on which an act's need (a trunk solve, a face search) is tried before she
+                                            # C170 (2026-09-30): 6 until the table left the mat's north (C169): the spots north of a child on
+                                            # the mat, no longer behind furniture, were tried first for a put's reach and spent the six on the
+                                            # far side of the put; the spot beside its hand came twentieth (19 failed reach tries, 2.4 s of planning)
                                             # gives up choosing (a guard on a planning tick's cost, ours)
 MAX_PLANS = 40                              # an act whose plans do not settle in this many is given up (a guard, ours)
 KEEP_ACTS, KEEP_OLD = 64, 1024             # the acts kept whole in her state, and the final statuses of older ones (her state is
