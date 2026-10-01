@@ -317,6 +317,11 @@ def main():
                        sounds=len(getattr(world.sounds, "last_events", [])))
             rec["stage"] = int(lane.conduct.stage)
             rec["stops"], rec["stopj"] = _stops(world)                   # C160/C161: the arm joints at their range stops, per arm: the count and the mask
+            if world.tick % 16 == 0:                                        # C165: THE LADDER READ, every 16 ticks: each band's gate (sigmoid of its
+                with torch.no_grad():                                       # Go/NoGo on its own state), its value, and its TD error this tick
+                    rec["bands"] = dict(g=[round(float(torch.sigmoid(L.m.band_gate[b](L.bands[b]))), 3) for b in range(len(L.m.clocks))],
+                                        v=[round(float(x), 3) for x in L.m.values(L.bands).tolist()],
+                                        td=[round(float(x), 4) for x in (getattr(L, "_td_last", None) or [])])
             if ls.get("found"):
                 rec["found"] = ls["found"]                                  # C158: a find this tick, [toy, whether the child saw the hide]                      # C142: her stage (1: the vocal turn smiled; 2: the words her ear accepts, the frowns)
             wh_ = getattr(L, "_whit", None)                             # C143: the words' forecast on her symbols heard: its top-1 hit rate and the

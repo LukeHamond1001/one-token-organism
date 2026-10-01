@@ -54,6 +54,7 @@ class CriticsMixin:
                 nf = [(gam[b] ** N_) if an_ else 1.0 for b in range(len(gam))]      # THE NIGHT TAKES TIME
                 td = torch.stack([(r + gam[b] * nf[b] * v_now[b].detach() - v_prev_live[b]) if not self._differential[b]
                                   else (r - float(self.rbar) + v_now[b].detach() - v_prev_live[b]) for b in range(len(gam))])
+                self._td_last = [float(x) for x in td.detach().cpu().tolist()]       # C165: the ladder's errors this tick, a ruler's (the record's bands)
                 self.rbar += (1.0 / float(self.cfg["diff_horizon"])) * (r - self.rbar)   # the reward rate, tonic dopamine
                 # THE VENTRAL CRITIC: discounted TD at a definite long horizon over the whole ladder's states (semi-gradient,
                 # the target detached; linear on fixed features, convergent)
