@@ -120,14 +120,23 @@ SERVO_ERR_AT_LIMIT_HAND = 0.1   # the Dex3's joints reach theirs at 0.1 rad (3.3
 SERVO_DAMP_S = 0.04             # damping = 0.04 s x stiffness (3.3; anatomy, ours)
 TONE_TAU_TICKS = 3.0            # at rest the target relaxes to the measured angle with this time constant (3.3; innate, ours)
 PASSIVE_MARGIN = 0.15           # A143 (2026-09-30): THE PASSIVE END-RANGE STIFFNESS. In the last PASSIVE_MARGIN of a joint's range (either end) the
-PASSIVE_FRAC = 0.2              # body's passive tissues push back toward mid-range, rising linearly to PASSIVE_FRAC x the joint's torque limit at
+PASSIVE_FRAC = 1.0              # body's passive tissues push back toward mid-range, rising linearly to PASSIVE_FRAC x the joint's torque limit at
                                 # the stop (both ours; the form: passive elastic joint moments are near zero mid-range and rise steeply toward the
                                 # range ends, Riener and Edrich 1999; a real G1 drives its joints inside software limits with a margin). Why: on
                                 # life day 43 the body lay folded into its range stops (6.5 of the 14 arm joints at a stop on average, the knees, the
                                 # waist and three hip joints too), since the resting target follows the measured angle and nothing pulls a joint
                                 # off a stop once gravity or the floor has pressed it there; a joint at a stop shows its inverse model nothing of
                                 # its acts (kappa near chance), so its readout stays flat and it draws big steps at random (C148). The push is the
-                                # tissue's, not the motor's: it is applied to the joint (qfrc_applied), never read as gear load, pain or heat
+                                # tissue's, not the motor's: it is applied to the joint (qfrc_applied), never read as gear load, pain or heat.
+                                # C163 (the same evening): at 0.2 the push could not hold a DRIVEN joint off its stop (day 43 at tick 15,000: the
+                                # left wrist roll's flat readout commanding big steps into the stop, the target clipped at the range end, the motor
+                                # pushing in at 3 Nm against the tissue's 4.9: the joint 0.01 rad from the hard stop, every act there still blind).
+                                # At 1.0 the tissue's push at the stop equals the motor's limit, so no drive reaches the hard stop: under full drive
+                                # the joint settles where kp x (stop - q) meets the push, about 0.17 rad inside (kp = limit / 0.25 rad), where every
+                                # step still moves it and the gear load stays under the pain line. An infant's muscles cannot push a joint past
+                                # its anatomical limit against the tissue: the ratio is the infant's, the number ours. The hand's joints (Dex3) are
+                                # left out: their tiny inertia under a stiff spring would need a finer physics step, and the fingers were never
+                                # the problem
 PAIN_WEIGHTS = 3.0              # F_pain = 3 x the body's weight from the model file (6.2, A12; innate, ours)
 PAIN_WINDOW_STEPS = 5           # a zone's force for pain: the tick's largest 10 ms mean (A12; innate, ours)
 TOUCH_UNIT_N = 1.0              # touch's log force is log(1 + F / 1 N) (3.4; anatomy, ours)
@@ -568,6 +577,7 @@ class G1World(SimWorld):
             raise ValueError("an actuator does not drive the joint it is named for")
         self.lo, self.hi = m.jnt_range[self.jid, 0].copy(), m.jnt_range[self.jid, 1].copy()
         self.tau_max = m.jnt_actfrcrange[self.jid, 1].copy()             # the model's own limits (3.2), before weakness scales them
+        self.passive_mask = np.array([0.0 if j in G.DEX3 else 1.0 for j in JOINTS])   # A143/C163: the passive end-range push, not at the hand's joints
         self.tau_hold = np.array([G.DEX3[j]["hold"] if j in G.DEX3 else float(t) for j, t in zip(JOINTS, self.tau_max)])   # each joint's
         # pain line (A37, A73): the gear's load it takes before it back-drives: the Dex3's holding figure (A80), else the declared limit
         if not (np.all(m.jnt_actfrclimited[self.jid]) and np.all(self.tau_max > 0) and np.array_equal(m.jnt_actfrcrange[self.jid, 0], -self.tau_max)):
@@ -701,7 +711,7 @@ class G1World(SimWorld):
         s = (q - self.lo) / np.maximum(self.hi - self.lo, 1e-9)
         hi_ = np.clip((s - (1.0 - PASSIVE_MARGIN)) / PASSIVE_MARGIN, 0.0, 1.0)
         lo_ = np.clip((PASSIVE_MARGIN - s) / PASSIVE_MARGIN, 0.0, 1.0)
-        return PASSIVE_FRAC * self.tau_max * (lo_ - hi_)
+        return PASSIVE_FRAC * self.tau_max * self.passive_mask * (lo_ - hi_)
 
     def limits_now(self):
         """the torque limits this tick: the declared limits (the weakness that followed the charge is gone with it, A88)"""

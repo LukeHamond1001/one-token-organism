@@ -1917,7 +1917,8 @@ def test_the_passive_stiffness():
     to 0.19 and their big steps 37% against 5 to 10% off the stop"""
     w = G1World(seed=1)
     lo, hi, tm = w.lo.copy(), w.hi.copy(), w.tau_max.copy()
-    mid = 0.5 * (lo + hi); m_ = W.PASSIVE_MARGIN; f_ = W.PASSIVE_FRAC
+    mid = 0.5 * (lo + hi); m_ = W.PASSIVE_MARGIN; f_ = W.PASSIVE_FRAC; tm = tm * w.passive_mask    # C163: none at the hand's joints
+    assert int(w.passive_mask.sum()) == len(W.JOINTS) - len(G.DEX3) and all(w.passive_mask[i] == 0.0 for i, j in enumerate(W.JOINTS) if j in G.DEX3)
     assert np.allclose(w.passive_torque(mid), 0.0) and np.allclose(w.passive_torque(lo + 0.3 * (hi - lo)), 0.0)
     assert np.allclose(w.passive_torque(lo), f_ * tm) and np.allclose(w.passive_torque(hi), -f_ * tm)
     assert np.allclose(w.passive_torque(hi - 0.5 * m_ * (hi - lo)), -0.5 * f_ * tm, atol=1e-9)
@@ -1925,7 +1926,7 @@ def test_the_passive_stiffness():
     for _ in range(3):
         w.frame(); w.apply({})
     q = w.d.qpos[w.qadr]
-    assert np.all(np.abs(w.d.qfrc_applied[w.dof] - w.passive_torque(q)) <= 0.01 * tm), "the tissue's push must stand at the joints after a tick"   # (one physics step of motion apart)
+    assert np.all(np.abs(w.d.qfrc_applied[w.dof] - w.passive_torque(q)) <= 0.01 * w.tau_max), "the tissue's push must stand at the joints after a tick"   # (one physics step of motion apart)
     at = int(np.sum(((q - lo) / (hi - lo) < 0.02) | ((q - lo) / (hi - lo) > 0.98)))
     print(f"world A143: the passive push {f_:.2f} x the torque limit at a stop, half at mid-margin, none over the middle 70%; applied at the "
           f"{len(w.dof)} joints each step ({at} at a stop three ticks after birth)")

@@ -131,6 +131,8 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-taken at A143 (2026-09-30 20:10, on branch t157: the passive end-range stiffness in the world's physics): UNCHANGED, threaded
 # 70242aba83dc89ce3b391683, one-thread e3f82db9c5bfac64b09889a0, consts c9755b913294 (the profile's 300 supine ticks never carry a joint's
 # angle through the margin past the encoder's step); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+# Re-taken at C163 (2026-09-30 20:22, on branch t158: PASSIVE_FRAC 1.0, the hand's joints left out): UNCHANGED again (threaded 70242aba83dc89ce3b391683,
+# one-thread e3f82db9c5bfac64b09889a0, consts c9755b913294); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded 70242aba83dc89ce3b391683 consts c9755b913294 | --profile sim
 digest  sim                   pinned   e3f82db9c5bfac64b09889a0 consts c9755b913294 | --profile sim
 full    sim                   threaded organs 4907603a9566 store b4217f76a30d optim cc788997d0f1 rng 495b583d7174 work e85059542ce4 cfg 854522d0bd88
