@@ -197,6 +197,7 @@ class CriticsMixin:
                         delta = float(r + float(gam[fb_]) * m.fast_value(self._z_now) - m.fast_value(self._z_prev))
                 else:
                     delta = float(td[int(self.cfg["dopamine_band"])].detach())
+                self._dop_last = float(delta)                   # C186 (2026-10-01): the tick's dopamine, for the record (a ruler)
                 if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":
                     self._chooser_learn(delta)
                 elif int(self.cfg.get("actor", 0)) and getattr(self, "_e_actor", None) is not None:
