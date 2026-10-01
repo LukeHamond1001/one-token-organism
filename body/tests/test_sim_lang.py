@@ -7049,7 +7049,37 @@ def test_the_function_word_not_echoed():
     print(f"lang 71 (C197): 120 function words: {len(texts)} replies, none the word alone or doubled ({texts[0]!r}, {texts[-1]!r}); the duck named when attended; a noun still echoed")
 
 
-TESTS = [test_the_function_word_not_echoed, test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
+def test_the_worn_word_not_echoed():
+    """lang 72 (C198, 2026-10-01): a worn word is not parroted back. The child says "duck" 40 times with nothing attended: her first replies echo
+    it ("duck! duck." as imitation), and once the vocal book holds HABIT_TAU of it (her smile worn) no reply is the bare word any more (the
+    social line); with the duck attended the worn word is answered by naming the thing in view. Life day 54: "mama! mama." 222 lines, the
+    child saying "mama" 703 times"""
+    from body.sim.lang import consts as K
+    duck = LX.WORD_ID["duck"]
+    toks = {40 + 20 * i: duck for i in range(40)}
+    stream = [P(t, child_target=None) for t in range(40 + 20 * 40 + 10)]
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con)
+    said, _j = run(con, stream, tokens=toks)
+    texts = [s[1].text for s in said]
+    def _txt(x):
+        return x.text if hasattr(x, "text") else (x[0] if isinstance(x, tuple) else str(x))
+    parrots = {_txt(TP.fill(f_, w="duck")) for k_ in ("echo", "recast", "echo_word", "recast_word") for f_ in TP.FRAMES[k_]}   # her bare echoes of the word
+    bare = [i for i, x in enumerate(texts) if x in parrots]
+    assert bare and bare[0] < 12, (bare[:5], texts[:5], sorted(parrots))              # a fresh word is echoed as imitation
+    assert int(con.vocal_book.get("duck", 0)) >= int(K.HABIT_TAU), con.vocal_book     # worn by its smiles
+    late = texts[-10:]
+    assert not any(x in parrots for x in late), (late, sorted(parrots))                # a worn word is not parroted
+    con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con2)
+    con2.vocal_book["duck"] = int(K.HABIT_TAU) + 5
+    said2, _j2 = run(con2, [P(t, child_target="duck") for t in range(400)], tokens={40 + 20 * i: duck for i in range(15)})
+    t2 = [s[1].text for s in said2]
+    echoes = {_txt(TP.fill(f_, w="duck")) for k_ in ("echo", "echo_word") for f_ in TP.FRAMES[k_]}   # (a right name's confirm line shares the recast's words: allowed)
+    assert t2 and any("duck" in x for x in t2) and not any(x in echoes for x in t2), t2[:6]
+    print(f"lang 72 (C198): 'duck' said 40 times: echoed as imitation at first (reply {bare[0]}: {texts[bare[0]]!r}), the book at {con.vocal_book.get('duck')}, "
+          f"the last ten replies none the bare word ({late[-1]!r}); worn and attended: named in a line ({t2[0]!r})")
+
+
+TESTS = [test_the_worn_word_not_echoed, test_the_function_word_not_echoed, test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
          test_ear_exact_across_threads, test_approximation_in_context, test_asks_answered, test_cut_words_not_said,

@@ -173,6 +173,8 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # d943902c.. -> 19b06e5b.., one-thread 9bc7769a.. -> 64a93bc7.., consts unchanged); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 # Re-taken at C197 (2026-10-01 16:56, on branch t200: a function word is not recast or echoed by the parent): UNCHANGED (no reply to a
 # function word within the pin's 300 ticks); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+# Re-taken at C198 (2026-10-01 18:45, on branch t201: a worn word is not recast or echoed by the parent): UNCHANGED (no worn word within the
+# pin's 300 ticks); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
 full    sim                   threaded organs 603e243d590a store 738f53d2ef68 optim cbf807bb0814 rng 6bbbd20c28ba work 74b48552b9a1 cfg fb1800a3b452
