@@ -318,6 +318,10 @@ def main():
                        sounds=len(getattr(world.sounds, "last_events", [])))
             rec["stage"] = int(lane.conduct.stage)
             rec["stops"], rec["stopj"] = _stops(world)                   # C160/C161: the arm joints at their range stops, per arm: the count and the mask
+            if world.tick % 16 == 0 and world.parent is not None:          # C176 (2026-10-01): THE TOYS' PLACES every 16 ticks, those within 1.5 m of the
+                ct_ = world.parent.child.torso[:2]                          # child's trunk: the child's drift read against where her toys lie
+                rec["txy"] = {t_: [round(float(world.d.xpos[b_][0]), 2), round(float(world.d.xpos[b_][1]), 2)] for t_, b_ in world.parent.toys.items()
+                              if float(np.linalg.norm(world.d.xpos[b_][:2] - ct_)) <= 1.5}
             global _NOV_LAST
             nov_now = float(rec.get("nov_paid") or 0.0)
             if nov_now > _NOV_LAST + 1e-9 and getattr(L, "_ferr_now", None):   # C171: a novelty payment this tick: each channel's surprise then
