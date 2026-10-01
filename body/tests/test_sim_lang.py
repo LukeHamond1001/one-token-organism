@@ -7027,7 +7027,29 @@ def test_the_grunt_not_echoed():
     print(f"lang 70 (C172): 60 grunts: {len(texts)} replies, none opening with or echoing 'oh' ({texts[0]!r}, {texts[-1]!r}); a word is still echoed")
 
 
-TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
+def test_the_function_word_not_echoed():
+    """lang 71 (C197, 2026-10-01): the child's function word is not parroted back. The child says "the" 30 times with the duck attended and
+    30 times with nothing attended, then "is" the same: none of her replies is the word alone or doubled ("the. the!", "is! is."), the ones
+    with the duck attended name the duck, and a noun ("duck") said with nothing attended is still echoed. Life day 53: a fifth of her replies
+    parroted the child's "the", "a" and "is", her day's speech 53 distinct words to the child's 76"""
+    the = LX.WORD_ID["the"]; is_ = LX.WORD_ID["is"]; duck = LX.WORD_ID["duck"]
+    toks = {40 + 20 * i: (the if i < 60 else is_) for i in range(120)}
+    stream = [P(t, child_target=("duck" if (40 <= t < 640 or 1240 <= t < 1840) else None)) for t in range(40 + 20 * 120 + 10)]
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con)
+    said, _j = run(con, stream, tokens=toks)
+    texts = [s[1].text for s in said]
+    assert texts, "she must reply"
+    ws_ = [[w.strip("!.,?") for w in x.split()] for x in texts]
+    bad = [x for x, w_ in zip(texts, ws_) if set(w_) <= {"the"} or set(w_) <= {"is"} or set(w_) <= {"the", "yes"} or set(w_) <= {"is", "yes"}]
+    assert not bad, bad[:6]
+    assert any("duck" in x for x in texts), texts[:8]
+    con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con2)
+    said2, _j2 = run(con2, [P(t, child_target=None) for t in range(200)], tokens={40: duck, 80: duck, 120: duck})
+    assert any("duck" in s[1].text for s in said2), [s[1].text for s in said2][:5]
+    print(f"lang 71 (C197): 120 function words: {len(texts)} replies, none the word alone or doubled ({texts[0]!r}, {texts[-1]!r}); the duck named when attended; a noun still echoed")
+
+
+TESTS = [test_the_function_word_not_echoed, test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
          test_ear_exact_across_threads, test_approximation_in_context, test_asks_answered, test_cut_words_not_said,

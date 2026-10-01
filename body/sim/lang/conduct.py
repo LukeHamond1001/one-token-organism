@@ -2321,11 +2321,17 @@ class Conduct:
         if r["kind"] == "confirm":
             ln = f.compose("confirm", t, p, o=o) if o is not None else None
             return ln or f.compose("confirm_act", t, p)
-        if r["kind"] in ("recast", "echo") and w is not None and w not in TP.INTERJECTIONS:
+        if r["kind"] in ("recast", "echo") and w is not None and w not in TP.INTERJECTIONS and w not in TP.FUNCTION:
             # C172 (2026-09-30): AN INTERJECTION IS NOT ECHOED. Life day 44: the child said "oh" 2,655 times (42% of its tokens) and she
             # echoed it ("oh! oh.", "oh. oh!": 273 lines) and opened her replies with it ("oh? hi pip.", "oh! mama is here.": 503), so 38%
             # of every word it heard was "oh", its forecast's top word was "oh" on 55% of ticks (the inner word) and it said "oh" the more:
-            # a loop through her, its voice and its memory. Her reply to a grunt is the thing it attends, or its name
+            # a loop through her, its voice and its memory. Her reply to a grunt is the thing it attends, or its name.
+            # C197 (2026-10-01): NOR A FUNCTION WORD. Life day 53: the child's tokens were the function words of her frames (the 466, is 527,
+            # a 517, here 338) and she parroted them ("the. the!" 67 lines, "a. a!" 59, "is! is." 52, "a! a." 45, "is. is!" 43: a fifth of her
+            # replies), so the child heard "the" the more and said it the more, her day's speech held 53 distinct words to its 76, and the
+            # nouns in view (box, rattle, book, bucket, stacker) were the words it never said. A parent expands a word-like sound toward
+            # the thing in view, not back to itself (Goldstein and Schwade 2008; the recast as expansion, Nelson 1977): a function word,
+            # "never a focus word" (templates.FUNCTION), is answered as a grunt is, by the thing it attends or the social line
             ln = f.compose(r["kind"] if noun else r["kind"] + "_word", t, p, o=o, w=w)
             if ln is not None:
                 return ln
