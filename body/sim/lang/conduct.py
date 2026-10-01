@@ -2321,7 +2321,11 @@ class Conduct:
         if r["kind"] == "confirm":
             ln = f.compose("confirm", t, p, o=o) if o is not None else None
             return ln or f.compose("confirm_act", t, p)
-        if r["kind"] in ("recast", "echo") and w is not None:
+        if r["kind"] in ("recast", "echo") and w is not None and w not in TP.INTERJECTIONS:
+            # C172 (2026-09-30): AN INTERJECTION IS NOT ECHOED. Life day 44: the child said "oh" 2,655 times (42% of its tokens) and she
+            # echoed it ("oh! oh.", "oh. oh!": 273 lines) and opened her replies with it ("oh? hi pip.", "oh! mama is here.": 503), so 38%
+            # of every word it heard was "oh", its forecast's top word was "oh" on 55% of ticks (the inner word) and it said "oh" the more:
+            # a loop through her, its voice and its memory. Her reply to a grunt is the thing it attends, or its name
             ln = f.compose(r["kind"] if noun else r["kind"] + "_word", t, p, o=o, w=w)
             if ln is not None:
                 return ln

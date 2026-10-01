@@ -7005,6 +7005,28 @@ def test_the_words_recover():
     print(f"lang 69 (C159): the vocal book at a stage-2 dawn {dict(duck=30, ball=3, cup=1)} -> {want}; the stage advanced first on a stage-1 book, then halved; stage 1 untouched")
 
 
+def test_the_grunt_not_echoed():
+    """lang 70 (C172, 2026-09-30): the child's "oh" is not echoed back and her social reply no longer opens with "oh": the child says "oh" 30
+    times with the duck attended and 30 times with nothing attended; none of her replies echoes the grunt ("oh! oh.") or opens the social reply
+    with it ("oh? hi pip."), the ones with the duck attended name the duck (the object reply "oh! the duck." keeps its measured form); a real
+    word ("duck") said with nothing attended is still echoed. Life day 44: "oh" was 42% of the child's tokens and 38% of every word it heard"""
+    oh = LX.WORD_ID["oh"]; duck = LX.WORD_ID["duck"]
+    toks = {40 + 20 * i: oh for i in range(60)}
+    stream = [P(t, child_target=("duck" if 40 <= t < 640 else None)) for t in range(40 + 20 * 60 + 10)]
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con)
+    said, _j = run(con, stream, tokens=toks)
+    texts = [s[1].text for s in said]
+    assert texts, "she must reply"
+    ws_ = [set(w.strip("!.,?") for w in x.split()) for x in texts]
+    bad = [x for x, w_ in zip(texts, ws_) if w_ <= {"oh"} or (("hi" in w_ or "mama" in w_) and "oh" in w_)]   # the echo of a grunt, the social
+    assert not bad, bad[:5]                                                                          # reply opening with it (the object reply
+    assert any("duck" in x for x in texts), texts[:8]                                                # "oh! the duck." is the peak table's: kept)
+    con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con2)
+    said2, _j2 = run(con2, [P(t, child_target=None) for t in range(200)], tokens={40: duck, 80: duck, 120: duck})
+    assert any("duck" in s[1].text for s in said2), [s[1].text for s in said2][:5]
+    print(f"lang 70 (C172): 60 grunts: {len(texts)} replies, none opening with or echoing 'oh' ({texts[0]!r}, {texts[-1]!r}); a word is still echoed")
+
+
 TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
@@ -7018,7 +7040,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed, test_the_stage_advance, test_the_word_rung, test_the_fetch_by_memory, test_the_words_recover]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed, test_the_stage_advance, test_the_word_rung, test_the_fetch_by_memory, test_the_words_recover, test_the_grunt_not_echoed]
 
 if __name__ == "__main__":
     t0 = time.time()

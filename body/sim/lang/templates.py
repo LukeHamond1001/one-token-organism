@@ -177,7 +177,7 @@ FRAMES = {
     "echo": [F("{w}! the {w}!", "{w}"), F("the {w}! a {w}.", "{w}")],
     "echo_word": [F("{w}! {w}.", "{w}"), F("{w}. {w}!", "{w}")],
     "reply": [F("oh! the {o}.", "{o}"), F("you see the {o}?", "{o}")],
-    "reply_social": [F("oh? hi {n}.", "{n}"), F("oh! mama is here.")],
+    "reply_social": [F("hi {n}!", "{n}"), F("mama is here.")],                # C172
     "narrate_fell": [F("uh oh. the {o} is down.", "down"), F("oh! the {o} is down.", "down")],
     "narrate_on": [F("the {o} is on the {p}.", "{p}")],
     "narrate_rolled": [F("oh! you roll.", "roll"), F("roll! you roll.", "roll")],
@@ -387,6 +387,7 @@ _DEIXIS = ("it", "this", "that")
 _DETS = ("a", "the", "your")
 
 # ------------------------------------------------------------------------------------------- Claude's lines (A14, 4.5)
+INTERJECTIONS = frozenset({"oh", "uh"})   # C172: the child's grunts; never echoed back (life day 44: "oh" 42% of its tokens, 46% of her lines began "oh")
 CLAUDE_INTERJ = (("oh",), ("uh", "oh"), ("look",), ("see",))   # a sentence of one of these alone claims nothing ("oh!",
                                                                  # "uh oh.", "look.", "see?"); never two run together
 NAMEABLE = OBJECT_NOUNS | FIXTURE_NOUNS | CHILD_BODY | HER_FACE | {PARENT_NAME}
