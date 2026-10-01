@@ -366,6 +366,9 @@ def main():
             if nov_now > _NOV_LAST + 1e-9 and getattr(L, "_ferr_now", None):   # C171: a novelty payment this tick: each channel's surprise then
                 rec["nov_ch"] = {k: round(float(v), 4) for k, v in L._ferr_now.items()}
             _NOV_LAST = nov_now
+            if world.tick % 16 == 0 and getattr(L, "_actor_ms", None):        # C183 (2026-10-01): THE ACTORS' DRIVE every 16 ticks: each striatal actor's
+                rec["adrive"] = {k_: round(float(v_) ** 0.5, 2) for k_, v_ in L._actor_ms.items()}   # running root mean square of its pre-activations
+                                                                            # (A147's set point 1; day 48's stood at 550 to 11,000), by actor name
             if world.tick % 16 == 0:                                        # C165: THE LADDER READ, every 16 ticks: each band's gate (sigmoid of its
                 with torch.no_grad():                                       # Go/NoGo on its own state), its value, and its TD error this tick
                     rec["bands"] = dict(g=[round(float(torch.sigmoid(L.m.band_gate[b](L.bands[b]))), 3) for b in range(len(L.m.clocks))],
