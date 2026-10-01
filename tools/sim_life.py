@@ -322,6 +322,10 @@ def main():
                 ct_ = world.parent.child.torso[:2]                          # child's trunk: the child's drift read against where her toys lie
                 rec["txy"] = {t_: [round(float(world.d.xpos[b_][0]), 2), round(float(world.d.xpos[b_][1]), 2)] for t_, b_ in world.parent.toys.items()
                               if float(np.linalg.norm(world.d.xpos[b_][:2] - ct_)) <= 1.5}
+                bb_ = world.parent.toys.get("bucket")
+                if bb_ is not None:                                         # C178 (2026-10-01): THE BUCKET'S POSE: its up axis's z (1 upright, 0 on
+                    rec["bup"] = round(float(world.d.xmat[bb_].reshape(3, 3)[2, 2]), 2)   # its side) and its centre's height; at day 47's tick 22,000 it
+                    rec["bz"] = round(float(world.d.xpos[bb_][2]), 3)      # lay on its side (the child's hand had tipped it): no hide can hold
             global _NOV_LAST
             nov_now = float(rec.get("nov_paid") or 0.0)
             if nov_now > _NOV_LAST + 1e-9 and getattr(L, "_ferr_now", None):   # C171: a novelty payment this tick: each channel's surprise then
