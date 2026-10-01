@@ -48,7 +48,7 @@ memory's latch, the cortex's loss, REM's scorer or anything the parent sees.
 THE NIGHT'S SIDE (R8's to wire; its tests are the amygdala's, 7.4 items 7 and 8): `tag_star` (the tag reaching back, tag*_t = the largest
 g^k tag_(t+k) for k < 64), `episode_entries` (an episode's entry [its mean surprise x (1 + |dopamine|)] x (1 + T_e) over a saved,
 bias-corrected running mean of 64 episodes), `night_draw` (the tagged dreamt first: every episode with T_e >= 1 once, highest first, at most
-half the night; the rest drawn by entry) and `act_pred_night_weight` (act_pred's lesson at a replayed position weighted clip(1 + G, 0, 1),
+half the night; the rest drawn by entry) and `act_pred_night_weight` (act_pred's lesson at a replayed position weighted clip(1 + G, -1, 1),
 G the replayed dopamine's credit: acts followed by net harm are not taught as acts to make)."""
 import math
 
@@ -285,7 +285,8 @@ def night_draw(entries, tags, n, gen):
 
 
 def act_pred_night_weight(G):
-    """act_pred's lesson at a replayed position (7.4 item 2; R8): clip(1 + G, 0, 1), G the replayed dopamine's credit over the next 64
+    """act_pred's lesson at a replayed position (7.4 item 2; R8): clip(1 + G, -1, 1), G the replayed dopamine's credit over the next 64
     ticks: an act followed by net harm (G <= -1) is not taught as an act to make (weighting by the tag, as first written, would have taught
-    the acts that led to a fall)"""
-    return max(0.0, min(1.0, 1.0 + float(G)))
+    the acts that led to a fall), and one followed by harm beyond that (G <= -2) is taught against (A150, 2026-10-01: the habit unlearns,
+    by night as by day; cortex._habit_weights)"""
+    return max(-1.0, min(1.0, 1.0 + float(G)))

@@ -377,7 +377,8 @@ def test_amyg_the_nights_side():
     d_ = night_draw([1.0] * 6, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 4, torch.Generator().manual_seed(0))
     assert d_[:2] == [5, 4]                                           # at most half the night, the highest first
     # act_pred at night
-    assert act_pred_night_weight(-1.5) == 0.0 and act_pred_night_weight(-1.0) == 0.0 and act_pred_night_weight(-0.3) == 0.7 and act_pred_night_weight(0.4) == 1.0
+    assert act_pred_night_weight(-1.5) == -0.5 and act_pred_night_weight(-1.0) == 0.0 and act_pred_night_weight(-0.3) == 0.7 and act_pred_night_weight(0.4) == 1.0 \
+        and act_pred_night_weight(-3.0) == -1.0   # A150: the weight runs to -1 (the habit unlearns)
     from body.tests.test_anatomy import _arm_world, _Timed, _LR0
     torch.manual_seed(0)
     Lt = Life.birth(_Timed(TOK, dict(_LR0)), device="cpu", d=32, layers=1, heads=2, window=16, cfg=dict(_LR0), seed=0, world=_arm_world())
@@ -397,11 +398,12 @@ def test_amyg_the_nights_side():
         total.backward()
         out[tag_] = (float(loss.detach()), tm.pred.weight.grad.clone(), fwd_, float(total.detach()))
     assert out["one"][0] == out["day"][0] and torch.equal(out["one"][1], out["day"][1])
-    assert float(out["harm"][1].abs().max()) == 0.0 and out["harm"][2] == out["day"][2] and out["harm"][2] > 0.0, (out["harm"][2], out["day"][2])
+    assert torch.allclose(out["harm"][1], -out["one"][1], atol=1e-7) and float(out["one"][1].abs().max()) > 0.0 \
+        and out["harm"][2] == out["day"][2] and out["harm"][2] > 0.0, (out["harm"][2], out["day"][2])   # A150: at weight -1 act_pred's gradient is the day's, reversed
     print(f"amyg 7: tag* reaches back (0.52 of a smile 10 ticks before it, 0.28 20 before, none 64 before); {len(eps)} episodes' entries by",
           f"the law over the bias-corrected mean; the tagged first ({firsts}: every T_e >= 1 once, highest first, at most half) and the rest by",
-          f"entry, each of 6 episodes within 3 sigma over {N_} seeded nights; amyg 8: act_pred at night, a window of net harm (G -2, weight 0)",
-          f"gives act_pred exactly no gradient, the forward half's loss unchanged ({out['harm'][2]:.4f}), weight 1 the day's lesson to the bit")
+          f"entry, each of 6 episodes within 3 sigma over {N_} seeded nights; amyg 8: act_pred at night, a window of net harm (G -2, weight -1)",
+          f"gives act_pred the day's gradient reversed (A150: the habit unlearns), the forward half's loss unchanged ({out['harm'][2]:.4f}), weight 1 the day's lesson to the bit")
 
 
 # ---------------- amyg 9 and 10: the orienting gain and amyg_pav (R7e) ----------------

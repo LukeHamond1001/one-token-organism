@@ -615,7 +615,7 @@ class SleepMixin:
                 if es and c_.name in es:
                     lc_ = lc_ / es[c_.name]
                 ll = ll + lc_
-        W_ = (1.0 + G).clamp(0.0, 1.0)                            # act_pred_night_weight, position by position
+        W_ = (1.0 + G).clamp(-1.0, 1.0)                           # act_pred_night_weight, position by position (A150: to -1, the habit unlearns)
         wst = [0, 0, 0]
         for b, L_ in enumerate(lens):
             if L_ < 2:

@@ -173,9 +173,17 @@ class CortexMixin:
 
     def _habit_weights(self, T):
         """A141 (the lead, 2026-09-30; C149): THE DAY'S HABIT IS DOPAMINE'S TO KEEP. act_pred's waking lesson at each of the window's T
-        positions is weighted as the night's replay weights it (amygdala.act_pred_night_weight: clip(1 + G, 0, 1), G dopamine's credit
+        positions is weighted as the night's replay weights it (amygdala.act_pred_night_weight: clip(1 + G, -1, 1), G dopamine's credit
         over the following ticks, sleep.credit_after on the day's record at dopamine's own discount and the tag's reach), so an act
-        followed by net harm is not cloned into the body's habit by day either. Until now the day cloned every own act at weight 1,
+        followed by net harm is not cloned into the body's habit by day either. A150 (2026-10-01): AND THE HABIT UNLEARNS. The weight
+        runs to -1: an act whose credit is worse than -1 (harm beyond one unit of dopamine over the tag's reach: a pain that
+        repeats) is taught AGAINST, its probability pushed down at the lesson's own step ((1 - p) x the weight, bounded, and
+        self-limiting as the act stops being drawn), as positive credit teaches it toward. Why: life day 49's left wrist yaw stood at
+        its range stop with the pain flickering on half its ticks, and act_pred's forecast of its own act, read at the sharpness its
+        reliable inverse model had earned (kappa 0.8, sharpness 8), gave +small, the step into the stop, at 0.98 (the actor's bias
+        +0.8 beside it): a habit the clip at 0 could only stop reinforcing on the painful half of its ticks while the other half kept
+        cloning it, a fixed point no day could leave. The three-factor rule is bidirectional (Fremaux and Gerstner 2016; dopamine-
+        dependent LTD as well as LTP, Shen et al. 2008); the clip at 0 was ours. Until now the day cloned every own act at weight 1,
         24,000 ticks a day, and only the night's 2,048 dreams un-weighted the harmful ones: the habit forecast learned the body's painful
         swings as its acts to make (life day 40: three arm joints at one setting on 76 to 98% of ticks, the wrists' pain 130 to 500 ticks
         a day; C146, C148). The window's positions are the record's last T rows (one of each a tick). Positions near the window's end
@@ -190,7 +198,7 @@ class CortexMixin:
         from .physiology import FRAMES
         g = self._tag_gamma(); reach = int(self.cfg.get("tag_reach", FRAMES["tag_reach"]))
         G = credit_of(rec[n - int(T):n, 1], g, reach)             # C156: a position's act is the tick before's draw; its row's dopamine is its first consequence
-        return (1.0 + G).clamp(0.0, 1.0).to(torch.float32).to(self.dev)
+        return (1.0 + G).clamp(-1.0, 1.0).to(torch.float32).to(self.dev)   # A150: clip(1 + G, -1, 1), the harm beyond one unlearned
 
     def _window_tensors(self, win=None):
         """THE WINDOW AS TENSORS, PER CHANNEL (step R4): obs, each of the anatomy's channels by name, its field at every position ([T]

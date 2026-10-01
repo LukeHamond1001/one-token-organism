@@ -154,6 +154,8 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A149 (2026-10-01 08:05, on branch t187: the sensorimotor striatum, the body's proprioception on the striatum's line at one
 # event's weight; the sim profile moved, threaded 3d880199.. -> e465b724.., one-thread efaeac4a.. -> 4b3befab.., consts unchanged); the
 # language default digest 7c54199e3c72cf77d45a8e94 kept (no proprioceptive channel in the diary; its sense buffers do not exist).
+# Re-taken at A150 (2026-10-01 08:45, on branch t189: the habit lesson's credit weight runs to -1 by day and night, the harm beyond one
+# unlearned): UNCHANGED (no position of the pin's 300 ticks carries a credit under -1); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded e465b7246f625238c9e1386d consts b971264b65f1 | --profile sim
 digest  sim                   pinned   4b3befab7a0e67ae10374391 consts b971264b65f1 | --profile sim
 full    sim                   threaded organs 6abfe28e48ae store 83f437c53005 optim aa5174e6b40d rng 0730d44b607a work f567e8a3c219 cfg fb1800a3b452
