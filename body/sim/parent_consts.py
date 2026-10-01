@@ -283,8 +283,13 @@ SETTLE_LOWER_TICKS = 4          # ... then lowered into the palm over this many 
                                 # fingers met the toy first and the grasp closed on nothing)
 AIM_GAIN = 0.5                  # her aim at a place moves this share of what her real hand still misses there, a tick (ours) ...
 AIM_MAX_M = 0.10                # ... at most this far from the place (ours)
-ARRIVE_WAIT_TICKS = 4           # ticks: her hand not yet on the link as its reach's time ends is waited for this long before the
-                                # hold is refused (0.6 s; ours: her hand is a body, and follows its plan a moment behind)
+ARRIVE_WAIT_TICKS = 14          # ticks: her hand not yet on the link as its reach's time ends is waited for this long before the
+                                # hold is refused (2.1 s; ours: her hand is a body, and follows its plan a moment behind). C166
+                                # (2026-09-30): 4 ticks (0.6 s) until life day 44, when the body unfrozen by A143 began to wriggle under
+                                # her hands: 15 of her 22 turns that day refused "did not arrive on it (13 to 46 cm off: it moved)",
+                                # none done, the child prone a third of the day. Her reach tracks the link each tick (the hand target
+                                # of kind "link" is resolved at the tick's end), so the wait is the chase: a person following a
+                                # wriggling baby's shoulder keeps after it for a couple of seconds before giving up
 HOLD_SHAPE = (0.10, 0.0)        # her hand's (curl, thumb) on the child: open and flat, the fingers along its surface (a curled
                                 # grip's fingers passed 3.6 cm into its torso: the W2 verifier's finding; ours)
 TRUNK_STILL_M = 0.01            # m: her trunk holds still (the report's trunk field, P3) while her chest moves less than this ...
