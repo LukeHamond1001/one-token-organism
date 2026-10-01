@@ -1640,6 +1640,52 @@ def test_teaching_against_is_bounded():
     print(f"motor A153: against an aligned act 1 with a gradient orthogonal to the forecast (along {float(along.abs().max()):.1e}); against an opposed act 0; "
           f"a step turns the cosine {float(c0.mean()):.2f} -> {float(c1.mean()):.2f} and moves the norm by {100*float(((n1 - n0) / n0).abs().max()):.1f}%")
 
+
+def test_the_forecasts_scale_is_the_rows():
+    """motor (A154, 2026-10-01): THE FORECAST HEADS HELD AT THE ACT ROWS' SCALE. On the limbs body, the limb's act_pred head inflated x 10:
+    over the next 800 ticks of waking lessons its forecast's norm comes back to the act rows' (within a factor of 1.5), one factor over
+    every weight of the head and its correction per lesson, the direction kept; a born body's ratio of the two norms stays near 1 (no
+    drift); and the helper alone scales a recorded pair (pn 20, rn 2) by (2 / 20) ** (1 / tag_reach) exactly"""
+    cfg = dict(_CFG1, actor_trace_tick=1)
+    L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
+    e = L.anatomy.motors[0]; tm = L.m.timing[e.name]
+    for _ in range(60):
+        run.step()
+    fs0 = dict(getattr(L, "_fc_scale_last", {}) or {})
+    # the helper alone
+    with torch.no_grad():
+        w0 = tm.pred.weight.clone()
+        L._fc_scale = {e.name: (20.0, 2.0)}
+        L._forecast_scaling()
+        from body.core.physiology import FRAMES
+        f_ = (2.0 / 20.0) ** (1.0 / float(L.cfg.get("tag_reach", FRAMES["tag_reach"])))
+        assert torch.allclose(tm.pred.weight, w0 * f_, atol=1e-7) and not L._fc_scale, "one factor over every weight; the record consumed"
+        tm.pred.weight.copy_(w0)
+    # the ratio on a born body, and after an inflation
+    def ratio():
+        fs = getattr(L, "_fc_scale", None) or {}
+        return None
+    rec = []
+    orig = L._forecast_scaling
+    def spy():
+        fs = dict(getattr(L, "_fc_scale", None) or {})
+        if e.name in fs:
+            rec.append(fs[e.name][0] / max(1e-9, fs[e.name][1]))
+        return orig()
+    L._forecast_scaling = spy
+    for _ in range(100):
+        run.step()
+    born = sum(rec) / max(1, len(rec)); r_now = rec[-1]; rec.clear()         # a newborn's forecast is small against the rows (its ratio under 1,
+    with torch.no_grad():                                                     # rising toward the rows' scale): the head set to ten times the rows'
+        k_ = 10.0 / max(1e-6, r_now); tm.pred.weight.mul_(k_); tm.pred.bias.mul_(k_)
+    for _ in range(800):
+        run.step()
+    assert len(rec) >= 40, len(rec)
+    first, last = rec[0], sum(rec[-5:]) / 5
+    assert first > 5.0 and last < 1.5, (first, last, born)
+    print(f"motor A154: a born body's forecast/row scale ratio {born:.2f} (rising toward 1); set to {first:.1f} times the rows' it returns to {last:.2f} within 800 ticks "
+          f"({len(rec)} lessons); the helper scales by (rn/pn)^(1/reach) exactly")
+
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
     for t in MOTOR_TESTS:

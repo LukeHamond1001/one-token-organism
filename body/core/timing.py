@@ -196,6 +196,35 @@ class TimingMixin:
                         if p_.grad is not None:
                             p_.grad.div_(s_)
         self.opt_pred.step()
+        self._forecast_scaling()                                           # A154: the forecast heads held at the act rows' scale
+
+    def _forecast_scaling(self):
+        """A154 (2026-10-01): THE FORECAST'S SCALE IS THE ACT ROWS'. act_pred's forecast P is read as sharpness x cos(P, row) x |P|^g (C148),
+        and its lesson toward an act pulls P to the act's row, whose norm is the sum of its joints' unit rows (about 2.6 for an arm of
+        seven): the scale the forecasts held for weeks. Nothing else should move that scale, yet two lessons did: the lesson against an
+        act as a distance with its sign turned (the night of day 50: 3,600; A153 bounded it), and A153's own hinge of the cosine, whose
+        gradient is orthogonal to P but whose finite steps lengthen it (|P + e v|^2 = |P|^2 + e^2 |v|^2), with no toward-lesson left under
+        A152 to anchor it except at the acts that paid: the night of day 51 took the heads from 2 to 4 (hands), 6 (left arm), 7 (gaze)
+        and 22 (right arm). After each step of act_pred's optimizer, by day (_timing_step) and in the night's reel (sleep.py), each later
+        effector's head (pred, and its correction cor) is multiplied by (rows' mean norm / P's mean norm over the lesson's positions) **
+        (1 / tag_reach): the scale drifts to the rows' at the tag's reach (64 lessons), both ways, the direction (the forecast's content)
+        untouched. Homeostatic synaptic scaling (Turrigiano 2008), as A147/A151 hold the actors' drive; the set point is the rows' own,
+        no new constant. The measured scales come from _timing_loss (`_fc_scale`, by effector), consumed here"""
+        fs = getattr(self, "_fc_scale", None)
+        if not fs:
+            return
+        from .physiology import FRAMES
+        reach = float(self.cfg.get("tag_reach", FRAMES["tag_reach"]))
+        with torch.no_grad():
+            for name, (pn, rn) in fs.items():
+                if pn > 1e-6 and rn > 1e-6 and name in self.m.timing:
+                    f_ = float((rn / pn) ** (1.0 / reach))
+                    tm = self.m.timing[name]
+                    for mod in (tm.pred, tm.cor):
+                        mod.weight.mul_(f_)
+                        if mod.bias is not None:
+                            mod.bias.mul_(f_)
+        fs.clear()
 
     def _body_sense(self, e):
         """effector e's body sense this tick [sense_n] (float32, detached): its sense channel's observation at the tick's position (the
@@ -545,6 +574,11 @@ class TimingMixin:
         lb = (err_l * lab_f.float()).sum() / float(T - 1) if n_lab else None   # act_inv's labels, every one earned
         loss = lp if lf is None else lp + lf
         s_lab = n_lab / float(T - 1)
+        with torch.no_grad():                                              # A154: the forecast's scale against the act rows' (the lesson's targets), for _forecast_scaling
+            fs = getattr(self, "_fc_scale", None)
+            if fs is None:
+                fs = self._fc_scale = {}
+            fs[e.name] = (float(P.detach().norm(dim=-1).mean()), float(rows.norm(dim=-1).mean()))
         rep = {"pred": round(float(lp.detach()) + (gain * float(lb.detach()) if lb is not None else 0.0), 4), "own": int(own[1:].sum()),
                "demo_w": round(gain, 3),
                "w": float(w1.sum()) / float(T - 1),                       # the lesson's mean label weight

@@ -478,6 +478,7 @@ class SleepMixin:
                 if bool(torch.isfinite(gn)):
                     opt.step()
                     self.opt_pred.step()                          # act_pred, its correction (and the maps): the plain step, never the Adam
+                    self._forecast_scaling()                      # A154: the forecast heads held at the act rows' scale, by night as by day
                 opt.zero_grad(set_to_none=True); self.opt_pred.zero_grad(set_to_none=True)
                 inv_pairs += self._frames_inverse(parts)          # act_inv replayed over the batch's own acts (its own optimizer)
                 for k_ in range(3):
