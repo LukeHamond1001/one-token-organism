@@ -60,6 +60,38 @@ _ARM_IDX = None
 _NOV_LAST = 0.0
 
 
+_SHORT = {"shoulder_pitch": "sh_p", "shoulder_roll": "sh_r", "shoulder_yaw": "sh_y", "elbow": "elb", "wrist_roll": "wr_r", "wrist_pitch": "wr_p", "wrist_yaw": "wr_y"}
+
+
+def _pain_where(world):
+    """C181 (2026-10-01): WHERE THE PAIN IS, a ruler: on a tick of joint pain (a gear's 10 ms load past its hold, the reward's -1), the joints
+    over their hold with the load over it, and both hands' places in the trunk's frame [x forward, y left, z up, m] with their heights off the
+    floor, the trunk's own height last. Why: day 48 read 142 pain onsets (100 on the left arm, 43 on the right), each after ordinary small
+    steps of the arm while on its back, and the record could not say whether the hand lay under the trunk, pressed the floor or met the
+    head; the withdrawal reflex's two ticks (reflexes.py FLEXION: shoulder pitch and elbow -big, the rest held) were read as a drawn pose
+    until this morning. (None, None) on a tick without joint pain. No behaviour, no pin"""
+    s_ = getattr(world, "_sensed", None)
+    if not s_ or "bd_peak" not in s_:
+        return None, None
+    over = np.asarray(s_["bd_peak"]) > world.tau_hold
+    if not bool(np.any(over)):
+        return None, None
+    js = list(W.JOINTS); painj = []
+    for i in np.nonzero(over)[0]:
+        n_ = js[int(i)]; side = "L" if n_.startswith("left") else ("R" if n_.startswith("right") else "")
+        short = next((v for k, v in _SHORT.items() if k in n_), n_[-8:])
+        painj.append([side + short, round(float(s_["bd_peak"][i] / max(1e-9, world.tau_hold[i])), 2)])
+    m, d = world.m, world.d
+    tb = m.body("torso_link").id; tp = d.xpos[tb]; tR = d.xmat[tb].reshape(3, 3)
+    hands = []
+    for nm in ("left_wrist_yaw_link", "right_wrist_yaw_link"):
+        hp = d.xpos[m.body(nm).id]
+        rel = tR.T @ (hp - tp)
+        hands.append([round(float(x), 2) for x in rel] + [round(float(hp[2]), 2)])
+    hands.append(round(float(tp[2]), 2))
+    return painj, hands
+
+
 def _stops(world, margin=0.02):
     """C160 (2026-09-30): THE ARM JOINTS AT THEIR RANGE STOPS, a ruler: for each arm the count of its joints within `margin` of a range end
     (world.lo, world.hi in JOINTS order). Why: at day 42's tick 20,000 six of the fourteen arm joints sat at a stop with the child prone; a
@@ -318,6 +350,9 @@ def main():
                        sounds=len(getattr(world.sounds, "last_events", [])))
             rec["stage"] = int(lane.conduct.stage)
             rec["stops"], rec["stopj"] = _stops(world)                   # C160/C161: the arm joints at their range stops, per arm: the count and the mask
+            pj_, hp_ = _pain_where(world)                                   # C181 (2026-10-01): on a tick of joint pain, the joints over their hold
+            if pj_:                                                         # (with the load over it) and both hands' places in the trunk's frame
+                rec["painj"], rec["handp"] = pj_, hp_                       # with their heights, the trunk's height last
             if world.tick % 16 == 0 and world.parent is not None:          # C176 (2026-10-01): THE TOYS' PLACES every 16 ticks, those within 1.5 m of the
                 ct_ = world.parent.child.torso[:2]                          # child's trunk: the child's drift read against where her toys lie
                 rec["txy"] = {t_: [round(float(world.d.xpos[b_][0]), 2), round(float(world.d.xpos[b_][1]), 2)] for t_, b_ in world.parent.toys.items()
