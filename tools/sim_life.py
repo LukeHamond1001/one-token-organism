@@ -65,7 +65,7 @@ _SHORT = {"shoulder_pitch": "sh_p", "shoulder_roll": "sh_r", "shoulder_yaw": "sh
 
 def _pain_where(world):
     """C181 (2026-10-01): WHERE THE PAIN IS, a ruler: on a tick of joint pain (a gear's 10 ms load past its hold, the reward's -1), the joints
-    over their hold with the load over it, and both hands' places in the trunk's frame [x forward, y left, z up, m] with their heights off the
+    over their hold with the load over it and their place in their range (C184: 0 its low stop, 1 its high), and both hands' places in the trunk's frame [x forward, y left, z up, m] with their heights off the
     floor, the trunk's own height last. Why: day 48 read 142 pain onsets (100 on the left arm, 43 on the right), each after ordinary small
     steps of the arm while on its back, and the record could not say whether the hand lay under the trunk, pressed the floor or met the
     head; the withdrawal reflex's two ticks (reflexes.py FLEXION: shoulder pitch and elbow -big, the rest held) were read as a drawn pose
@@ -80,7 +80,8 @@ def _pain_where(world):
     for i in np.nonzero(over)[0]:
         n_ = js[int(i)]; side = "L" if n_.startswith("left") else ("R" if n_.startswith("right") else "")
         short = next((v for k, v in _SHORT.items() if k in n_), n_[-8:])
-        painj.append([side + short, round(float(s_["bd_peak"][i] / max(1e-9, world.tau_hold[i])), 2)])
+        q_ = float(world.d.qpos[world.qadr[int(i)]]); pos_ = (q_ - float(world.lo[int(i)])) / max(1e-9, float(world.hi[int(i)]) - float(world.lo[int(i)]))
+        painj.append([side + short, round(float(s_["bd_peak"][i] / max(1e-9, world.tau_hold[i])), 2), round(pos_, 2)])   # C184: and where in its range (0 lo, 1 hi)
     m, d = world.m, world.d
     tb = m.body("torso_link").id; tp = d.xpos[tb]; tR = d.xmat[tb].reshape(3, 3)
     hands = []
