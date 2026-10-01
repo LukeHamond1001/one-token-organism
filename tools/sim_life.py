@@ -68,12 +68,14 @@ def _stops(world, margin=0.02):
     if _ARM_IDX is None:
         js = list(W.JOINTS)
         _ARM_IDX = [np.array([js.index(j) for j in dict(G.EFFECTORS)[e]]) for e in ("arm_l", "arm_r")]
-    out = []
+    out = []; masks = []
     for idx in _ARM_IDX:
         q = world.d.qpos[world.qadr[idx]]
         s = (q - world.lo[idx]) / np.maximum(world.hi[idx] - world.lo[idx], 1e-9)
-        out.append(int(np.sum((s < margin) | (s > 1.0 - margin))))
-    return out
+        at = (s < margin) | (s > 1.0 - margin)
+        out.append(int(np.sum(at)))
+        masks.append(int(sum((1 << j) for j, a_ in enumerate(at) if a_)))   # C161: which joints, a 7-bit mask in the effector's joint order
+    return out, masks
 
 
 def build(args):
@@ -314,7 +316,7 @@ def main():
                        onset=None if f is None else int(f.obs.get("onset_periph", [0])[0]),
                        sounds=len(getattr(world.sounds, "last_events", [])))
             rec["stage"] = int(lane.conduct.stage)
-            rec["stops"] = _stops(world)                                 # C160: the arm joints at their range stops, per arm
+            rec["stops"], rec["stopj"] = _stops(world)                   # C160/C161: the arm joints at their range stops, per arm: the count and the mask
             if ls.get("found"):
                 rec["found"] = ls["found"]                                  # C158: a find this tick, [toy, whether the child saw the hide]                      # C142: her stage (1: the vocal turn smiled; 2: the words her ear accepts, the frowns)
             wh_ = getattr(L, "_whit", None)                             # C143: the words' forecast on her symbols heard: its top-1 hit rate and the
