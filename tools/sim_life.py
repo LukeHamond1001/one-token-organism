@@ -128,8 +128,11 @@ def build(args):
     cfg = dict(SIM_CFG, **(LR0 if args.lr0 else {}))
     for kv in args.set:                                                      # a copy's switch (never the life's: its cfg is the tree's)
         k, v = kv.split("=", 1)
-        cur = cfg.get(k, 0)
-        cfg[k] = type(cur)(float(v)) if isinstance(cur, (int, float)) and not isinstance(cur, bool) else v
+        cur = cfg.get(k)
+        if cur is None:                                                      # C190 (2026-10-01): a key the sim's cfg does not carry (the core's default
+            cfg[k] = float(v) if any(c_ in v for c_ in ".eE") else int(v)   # rules it, e.g. actor_lr 0.02) took the int of its value: 0.1 became 0
+        else:
+            cfg[k] = type(cur)(float(v)) if isinstance(cur, (int, float)) and not isinstance(cur, bool) else v
         print(f"cfg {k} = {cfg[k]!r} (--set)", flush=True)
     anat = SimAnatomy(born_table(LX.BIRTH_WORDS), cfg, limits=[float(x) for x in world.tau_max])
     life_path = os.path.join(args.out, "life.pt")
