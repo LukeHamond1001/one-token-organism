@@ -44,6 +44,18 @@ import torch.nn.functional as F
 from .physiology import MOTOR
 
 
+
+def _against(P, rows):
+    """A153 (2026-10-01): TEACHING AGAINST AN ACT, BOUNDED. act_pred's lesson toward an act is the squared distance of its forecast P to
+    the act's row (toward); a negative weight (A150, A152: dopamine's credit against the act) cannot be the same distance with its sign
+    turned, since pushing P away from a row has no end: on the night of life day 50 the reel's 2,048 dreams, half their positions
+    weighted against, drove the forecasts' norm from 2.3 to 3,600 and the readout (sharpness x cos x |P|^g, C148) to a probability of 1
+    on one setting of every joint, the arms frozen at dawn 51. Against is the hinge of the cosine between P and the act's row,
+    relu(cos): the forecast is turned away from the act until it is indifferent to it (cos 0), the gradient orthogonal to P (the norm
+    untouched) and zero past indifference; the association weakened toward nothing, as LTD weakens a trace, never driven negative.
+    [T] per position"""
+    return torch.relu(torch.nn.functional.cosine_similarity(P.float(), rows.float(), dim=-1))
+
 class GatedDescent(torch.optim.Optimizer):
     """ACT_PRED'S PLASTICITY: PLAIN GRADIENT DESCENT, GATED BY THE RELIABILITY OF ITS LABELS (R6 fix 7, the lead's decision of
     2026-09-24 after the R6 verifiers' third finding and their fourth to seventh looks; SIM_DESIGN.md 5.4). Each lesson moves each
@@ -522,8 +534,12 @@ class TimingMixin:
             if bool(rested[-1]):
                 lab_f[-1] = False                                          # the last rest: its next sense not felt, no label
             w_own = torch.where(lab1, torch.zeros_like(w1), w1)
-        err_o = err * wpos[1:].to(err.dtype) if wpos is not None else err   # step R7d: the weight on act_pred's error at its own acts (A152: dopamine's credit)
-        err_l = err * (wlab if wlab is not None else wpos)[1:].to(err.dtype) if (wlab is not None or wpos is not None) else err   # and at act_inv's labels (R8's)
+        if wpos is not None:                                              # step R7d: the weight on act_pred's error at its own acts (A152: dopamine's credit)
+            w_ = wpos[1:].to(err.dtype)
+            err_o = torch.where(w_ >= 0.0, w_ * err, (-w_) * _against(P, rows))   # A153: a negative weight teaches against by the cosine's hinge, not the distance
+        else:
+            err_o = err
+        err_l = err * (wlab if wlab is not None else wpos.clamp_min(0.0))[1:].to(err.dtype) if (wlab is not None or wpos is not None) else err   # and at act_inv's labels (R8's)
         lp = (err_o * w_own).sum() / float(T - 1)                         # over the positions: the weights absolute
         n_lab = int(lab_f.sum()) if lab_f is not None else 0
         lb = (err_l * lab_f.float()).sum() / float(T - 1) if n_lab else None   # act_inv's labels, every one earned

@@ -1612,6 +1612,34 @@ def test_the_striatum_reads_the_body():
     print(f"motor A149: the striatum's sense line of 2 rows (rms {rms:.3f}, 1/sqrt(k) = {want:.3f}); the squashed sense set on {len(seen)} ticks; "
           f"the expansion follows the body state on one line; the earlier rows born as before")
 
+
+def test_teaching_against_is_bounded():
+    """motor (A153, 2026-10-01): the lesson against an act is the hinge of the cosine between the forecast and the act's row: at a forecast
+    aligned with the row the term is 1 and its gradient is orthogonal to the forecast (the norm untouched); at a forecast indifferent or
+    opposed (cos <= 0) the term and its gradient are 0; against never pushes the forecast's norm up, as the distance with its sign turned
+    did (3,600 after one night)"""
+    from body.core.timing import _against
+    g = torch.Generator().manual_seed(1)
+    rows = torch.randn(4, 32, generator=g)
+    P = (rows * 3.0).clone().requires_grad_(True)                                   # aligned, three times the length
+    a = _against(P, rows); assert torch.allclose(a, torch.ones(4), atol=1e-5), a
+    a.sum().backward()
+    along = (P.grad * P).sum(-1) / P.norm(dim=-1)                                   # the gradient's component along P
+    assert float(along.abs().max()) < 1e-4 and float(P.grad.norm()) > 0.0, (along, P.grad.norm())
+    P2 = (-rows).clone().requires_grad_(True); a2 = _against(P2, rows)
+    assert float(a2.abs().max()) == 0.0, a2
+    a2.sum().backward(); assert P2.grad is None or float(P2.grad.abs().max()) == 0.0
+    # a step of descent on against shrinks the cosine and leaves the norm
+    P3 = (rows * 2.0 + 0.3 * torch.randn(4, 32, generator=g)).clone().requires_grad_(True)
+    c0 = torch.nn.functional.cosine_similarity(P3, rows, dim=-1).detach(); n0 = P3.norm(dim=-1).detach()
+    _against(P3, rows).sum().backward()
+    with torch.no_grad():
+        P4 = P3 - 0.5 * P3.grad
+    c1 = torch.nn.functional.cosine_similarity(P4, rows, dim=-1); n1 = P4.norm(dim=-1)
+    assert bool((c1 < c0).all()) and float(((n1 - n0) / n0).abs().max()) < 0.05, (c0, c1, n0, n1)
+    print(f"motor A153: against an aligned act 1 with a gradient orthogonal to the forecast (along {float(along.abs().max()):.1e}); against an opposed act 0; "
+          f"a step turns the cosine {float(c0.mean()):.2f} -> {float(c1.mean()):.2f} and moves the norm by {100*float(((n1 - n0) / n0).abs().max()):.1f}%")
+
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
     for t in MOTOR_TESTS:

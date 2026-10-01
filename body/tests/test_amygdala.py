@@ -400,12 +400,13 @@ def test_amyg_the_nights_side():
         total.backward()
         out[tag_] = (float(loss.detach()), tm.pred.weight.grad.clone(), fwd_, float(total.detach()))
     assert out["one"][0] == out["day"][0] and torch.equal(out["one"][1], out["day"][1])
-    assert torch.allclose(out["harm"][1], -out["one"][1], atol=1e-7) and float(out["one"][1].abs().max()) > 0.0 \
-        and out["harm"][2] == out["day"][2] and out["harm"][2] > 0.0, (out["harm"][2], out["day"][2])   # A150: at weight -1 act_pred's gradient is the day's, reversed
+    assert float(out["harm"][1].abs().max()) > 0.0 and not torch.allclose(out["harm"][1], -out["one"][1], atol=1e-7) \
+        and out["harm"][0] <= 1.0 + 1e-6 and out["harm"][2] == out["day"][2] and out["harm"][2] > 0.0, (out["harm"][0], out["harm"][2], out["day"][2])
+    # A150/A153: at weight -1 act_pred is taught against by the cosine's hinge (bounded by 1 a position, its gradient not the day's reversed), the forward half untouched
     print(f"amyg 7: tag* reaches back (0.52 of a smile 10 ticks before it, 0.28 20 before, none 64 before); {len(eps)} episodes' entries by",
           f"the law over the bias-corrected mean; the tagged first ({firsts}: every T_e >= 1 once, highest first, at most half) and the rest by",
           f"entry, each of 6 episodes within 3 sigma over {N_} seeded nights; amyg 8: act_pred at night, a window of net harm (G -2, weight -1)",
-          f"gives act_pred the day's gradient reversed (A150, A152: the habit is dopamine's), the forward half's loss unchanged ({out['harm'][2]:.4f}), weight 1 the day's lesson to the bit")
+          f"teaches act_pred against by the cosine's hinge (A153; bounded, loss {out['harm'][0]:.3f}), the forward half's loss unchanged ({out['harm'][2]:.4f}), weight 1 the day's lesson to the bit")
 
 
 # ---------------- amyg 9 and 10: the orienting gain and amyg_pav (R7e) ----------------
