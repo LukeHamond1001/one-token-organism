@@ -228,6 +228,7 @@ PHYSIOLOGY = dict(
                          # reaches back a minute, not 16 ticks; 0 off (the diary); the G1 sets 1e-3 (ours)
     actor_beta=1.0,
     actor_forget=36000,
+    value_forget=0,      # A146: the ladder's value heads' forgetting (1 - 1/value_forget a tick; 0 = none, the diary's)
     actor_form="add",   # "chunk" = one act per word, the letters inside not choices; "plan", "select", "add" the earlier forms
     actor_margin=4.0,
     chunk_max=12,   # a word runs as a motor program for at most this many symbols

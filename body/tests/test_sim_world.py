@@ -1932,10 +1932,35 @@ def test_the_passive_stiffness():
           f"{len(w.dof)} joints each step ({at} at a stop three ticks after birth)")
 
 
+def test_the_value_heads_forget():
+    """world (A146, 2026-09-30): the ladder's value heads forget at value_forget. A born G1 life with band 5's head set to 100 on every weight,
+    value_forget 60 for the test: after 60 ticks of the world loop the weights have fallen to about 100 x (1 - 1/60)^60 = 36.6 (within the
+    lesson's own small moves); with value_forget 0 they stand near 100. Day 44: the clock-1,024 head's weights at 651, its value swinging by 50
+    within half a day, its gate shut to 0.20"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    w = G1World(seed=1)
+    out = {}
+    for vf in (60, 0):
+        cfg = dict(SIM_CFG, wake_ticks=10 ** 9, value_forget=vf)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        with torch.no_grad():
+            L.m.value[5].weight.fill_(100.0)
+        run = WorldLoop(L)
+        for _ in range(60):
+            run.step()
+        out[vf] = float(L.m.value[5].weight.detach().abs().mean())
+    assert 20.0 < out[60] < 55.0 and out[0] > 90.0, out
+    print(f"world A146: band 5's head at 100 on every weight: after 60 ticks {out[60]:.1f} at value_forget 60 (36.6 by the decay alone), {out[0]:.1f} with none")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_the_passive_stiffness]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_the_passive_stiffness, test_the_value_heads_forget]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

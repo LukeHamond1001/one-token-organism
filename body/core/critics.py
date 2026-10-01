@@ -148,6 +148,19 @@ class CriticsMixin:
                 if vf > 0 and not rls:
                     with torch.no_grad():
                         m.vcrit.weight.mul_(1.0 - 1.0 / vf)       # the forgetting head
+                bvf = float(self.cfg.get("value_forget", 0) or 0)
+                if bvf > 0:
+                    # A146 (2026-09-30): THE LADDER'S VALUE HEADS FORGET. Each band's linear value head decays by 1 - 1/value_forget a tick
+                    # (36,000, a day: actor_forget's and fast_rls_forget's constant). Why: the differential heads (the bands at or past the
+                    # differential horizon) read a relative value on states centered on a running mean, so their weights have no scale to
+                    # rest at, and Adam at a fixed step on a near-zero-mean noisy error random-walks them: on life day 44 the clock-1,024
+                    # head's weights stood at 651, its value swung from +102 to -14 with a spread of 50 within half a day, and its gate,
+                    # trained by the sign of that noise, shut to 0.20 (the slow memory updated at a fifth of its clock). A weight that is
+                    # not refreshed by the error decays (the leaky LMS critic; synapses without reinforcement fade); the discounted heads
+                    # (weights 2 to 26) are refreshed every tick and lose nothing they use
+                    with torch.no_grad():
+                        for v_ in m.value:
+                            v_.weight.mul_(1.0 - 1.0 / bvf)
                 # DOPAMINE: the TD error of the band whose discount matches dopamine's (clock 16,
                 # gamma 0.9375): an expected reward fires before it lands, a missed one dips
                 if stri and getattr(self, "_z_prev", None) is not None:

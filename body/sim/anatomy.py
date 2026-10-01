@@ -481,6 +481,8 @@ SIM_CFG = dict(
                                    # (the private-speech ruler, speech_act_reading.py)
     ctx_key=1,                     # A128: the held context as a recall key (memory.query_from, CTX_TAU/CTX_SCALE); on since dawn 24 (the
                                    # re-find and re-grasp rulers)
+    value_forget=36000,            # A146 (2026-09-30): the ladder's value heads forget at a day's constant (critics.py): the differential heads'
+                                   # weights random-walked to 651 and their values swung by 50 within half a day (day 44), shutting their gates
     inner_speech=1,                # A137: the inner word (frames._goal_trace: the voice's sure, unsounded top choice held; memory.INNER_P); on from
                                    # dawn 29 (the private-speech ruler with --covert)
     sharp_per_joint=1,             # A140 (C117): each joint's decisiveness its own, earned by its kappa and its settings' variety (mouth._motor_sharp)
