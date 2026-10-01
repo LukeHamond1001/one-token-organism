@@ -1569,6 +1569,31 @@ def test_the_lure():
           f"{pm.plan.dist[pm.plan.cell(duck)]:.2f} m clear of the furniture, in {a['ticks']} ticks (a lure); on the mat: beside its hand as before")
 
 
+def test_the_set_down_fallback():
+    """parent 32 (C175, 2026-10-01): a hand-over or a show whose kneel spot cannot be found (the child against a wall, in a corner) is planned
+    as a set-down within reach instead of refused: with the kneel search stubbed to fail for a hand's need, hand_over(duck) plans a put_near and
+    says so; with it stubbed to fail for a plain approach, show(duck) does the same; unstubbed, both plan as before. Day 46: 7 of 9 hand-overs
+    and 11 of 11 shows refused with the child off the mat's west edge, no act on a toy smiled in 8,700 ticks"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent; orig = pm._kneel_plan
+    try:
+        pm._kneel_plan = lambda where=None, offs=None, alongs=None, need=None, orig=orig: (None if (need and need.startswith("hand:")) else orig(where, offs, alongs, need))
+        a = dict(kind="hand_over", target="duck", info={})
+        plan = pm._act_hand_over(a, "duck")
+        assert a["info"].get("fallback") == "set_down" and any(p.get("what") == "put_near" for p in plan) and not any(p.get("what") == "near_free_hand" for p in plan), (a["info"], [p.get("what") for p in plan])
+        pm._kneel_plan = lambda where=None, offs=None, alongs=None, need=None, orig=orig: (None if need is None else orig(where, offs, alongs, need))
+        b = dict(kind="show", target="duck", info={})
+        plan2 = pm._act_show(b, "duck")
+        assert b["info"].get("fallback") == "set_down" and any(p.get("what") == "put_near" for p in plan2) and not any(p.get("what") == "show" for p in plan2), (b["info"], [p.get("what") for p in plan2])
+    finally:
+        pm._kneel_plan = orig
+    c = dict(kind="hand_over", target="duck", info={}); plan3 = pm._act_hand_over(c, "duck")
+    d = dict(kind="show", target="duck", info={}); plan4 = pm._act_show(d, "duck")
+    assert not c["info"].get("fallback") and any(p.get("what") == "near_free_hand" for p in plan3) and not d["info"].get("fallback") and any(p.get("what") == "show" for p in plan4)
+    print(f"parent 32 (C175): a hand-over and a show with no kneel spot plan a set-down within reach ({[p.get('what') for p in plan if p.get('what')]}); with spots, as before")
+
+
 PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -1576,7 +1601,7 @@ PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
                 test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
-                test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure]
+                test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

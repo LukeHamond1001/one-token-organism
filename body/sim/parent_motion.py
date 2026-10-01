@@ -4856,6 +4856,9 @@ class ParentMotion:
 
     def _act_show(self, a, t):
         toy = self._toy(t)
+        if self._kneel_plan(None, None, None, None) is None:                  # C175 (2026-10-01): no spot to kneel beside the child (a wall, a
+            a["info"]["fallback"] = "set_down"                              # corner: day 46's west edge): the toy is set down within its
+            return self._act_bring_back(a, t)                               # reach instead (the lure, C168, when that too is out of reach)
         return self._fetch(a, toy) + self._near(a) + [dict(type="plan", what="show", args=dict(toy=toy))]
 
     def _plan_show(self, a, toy):
@@ -4883,6 +4886,15 @@ class ParentMotion:
 
     def _act_hand_over(self, a, t):
         toy = self._toy(t)
+        free = [x for x in "LR" if not self._hand_full(x)]
+        if free and all(self._kneel_plan(cs, None, None, f"hand:{cs}:{toy}") is None for cs in free):
+            # C175 (2026-10-01): A HAND-OVER WITH NO SPOT BECOMES A SET-DOWN. Life day 46: the child scooted off the mat's west edge within a
+            # thousand ticks and lay along the wall and in the corner; 7 of her 9 hand-overs and all 11 shows were refused ("no spot to kneel
+            # beside the child: every side is blocked", her hand 30 to 40 cm short), no act on a toy was smiled in 8,700 ticks. A person who
+            # cannot kneel by the baby's hand puts the toy where the baby can reach it: the set-down (and its lure, C168) plans a spot that
+            # reaches the floor beside the child, not its palm, and the child's own reach completes the lesson
+            a["info"]["fallback"] = "set_down"
+            return self._act_bring_back(a, t)
         return self._fetch(a, toy) + [dict(type="plan", what="near_free_hand", args=dict(toy=toy)),
                                       dict(type="plan", what="hand_over", args=dict(toy=toy))]
 
