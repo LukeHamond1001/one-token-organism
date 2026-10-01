@@ -427,6 +427,16 @@ PUT_HEAD_OFFS = (0.65, 0.75, 0.85)          # A125: her heels' spot from a prone
                                             # before its eyes: 0.4 to 0.6 m from her, within one trunk's reach). Ours
 PUT_TOL_M = 0.10                            # m: a toy set down farther than this from where she meant it is reached for again (a person
 PUT_RETRIES = 2                             # sets a toy where she means it), this many times, then the act is refused. Ours
+LURE_MAX_M = 1.0                            # C168 (2026-09-30): a lesson's toy she cannot set beside the child's hand (no spot she can kneel
+LURE_CLEAR_M = 0.45                         # at reaches the place: life day 44, the child 13,662 ticks under the coffee table, every hand-over
+LURE_EDGE_M = 0.2                           # and show refused) goes instead to the nearest free floor point within LURE_MAX_M of its near hand,
+LURE_MIN_M = 0.25                           # (the lure is taken when no spot she can kneel at reaches the natural place, or that place lies within
+                                            # LURE_EDGE_M of the furniture's footprint: a toy set against the table's lip lands short of where she
+                                            # meant it, 11 cm off at the edge of her reach, and lies out of the child's reach under the lip)
+                                            # LURE_CLEAR_M clear of furniture and walls and at least LURE_MIN_M from the hand, from a spot she
+                                            # can kneel at: the child must move to it (a parent lures a baby out from under the table with a
+                                            # toy; A6 stands: she never moves the child). Ours. The clearance is her own body's: she must be
+                                            # able to kneel right beside the point (at 0.2 the put landed at the edge of her reach, 11 cm off)
 CRAWL_AHEAD_M = 0.15                        # A125 (the crawl rung): a lesson toy set this far before a prone child's eyes, plus her lesson's
                                             # distance: a stretch of its arm forward, then a crawl's length as the ladder rises (ours)
 LIE_DOWN_S = 3.0                            # A124 (C107): her way down from the tall kneel onto her front, and up again, in this (ours:
@@ -5021,8 +5031,38 @@ class ParentMotion:
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS)         # face, so she kneels at its head, where her hand reaches it
         else:                                                             # A133 (room b's lesson): she kneels where her hand reaches the
             xy = self._put_xy()                                           # put's place; a spot beside the child that cannot reach it
-            near = self._near(a, need=f"reach:{xy[0]:.3f},{xy[1]:.3f}")   # (the room of birth's table kept her nearer) is passed over
+            need = f"reach:{xy[0]:.3f},{xy[1]:.3f}"                       # (the room of birth's table kept her nearer) is passed over
+            c_ = self.plan.cell(xy); edge_ = (not self._in_plan(xy)) or float(self.plan.dist[c_]) < LURE_EDGE_M
+            if edge_ or self._kneel_plan(None, None, None, need) is None:   # C168: no spot she can kneel at reaches the put's place (the child
+                xy2 = self._lure_xy()                                     # under the coffee table): the toy goes to the nearest free floor
+                if xy2 is not None:                                       # point in its reach instead, and the child must move to it
+                    a["info"]["put_xy"] = _lst(xy2); a["info"]["lure"] = True
+                    self.stats["lures"] = int(self.stats.get("lures", 0)) + 1; self.stats["lure_xy"] = _lst(xy2)   # (an instrument)
+                    need = f"reach:{xy2[0]:.3f},{xy2[1]:.3f}"
+            near = self._near(a, need=need)
         return self._fetch(a, toy) + near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
+
+    def _lure_xy(self):
+        """C168: the nearest free floor point to the child's near hand (LURE_MIN_M to LURE_MAX_M from it, LURE_CLEAR_M clear of furniture and
+        walls on the floor plan) that some spot she can kneel at reaches; None when none of the nearest LURE_TRIES does"""
+        ch = self.child
+        her = np.asarray(self.base["at"], float)
+        cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
+        hand = np.asarray(ch.grasp[cs][:2], float)
+        c0 = self.plan.cell(hand); r = int(math.ceil(LURE_MAX_M / K.GRID_M))
+        cands = []
+        for i in range(max(0, c0[0] - r), min(self.plan.nx, c0[0] + r + 1)):
+            for j in range(max(0, c0[1] - r), min(self.plan.ny, c0[1] + r + 1)):
+                if self.plan.dist[i, j] < LURE_CLEAR_M:
+                    continue
+                p = self.plan.point((i, j)); d = float(np.linalg.norm(p - hand))
+                if LURE_MIN_M <= d <= LURE_MAX_M:
+                    cands.append((d, p))
+        cands.sort(key=lambda x: x[0])
+        for d, p in cands[:8]:
+            if self._kneel_plan(None, None, None, f"reach:{p[0]:.3f},{p[1]:.3f}") is not None:
+                return p
+        return None
 
     def _act_hide(self, a, t):
         """A129 (the hide game, on the bucket A126): the toy fetched and let go INTO THE TUB in the child's view: she brings it over the
@@ -5131,7 +5171,7 @@ class ParentMotion:
             ahead = -unit(np.r_[ch.len_axis[:2], 0.0])[:2]                   # beside it; the toy goes before its face, CRAWL_AHEAD_M past
             xy = np.asarray(ch.eyes[:2], float) + ahead * (CRAWL_AHEAD_M + float(self.lesson_dist))   # its eyes and the lesson's distance
         else:                                                               # (tummy time: a person puts the toy just out of reach ahead)
-            xy = self._put_xy()
+            xy = np.asarray(a["info"]["put_xy"], float) if a["info"].get("put_xy") else self._put_xy()   # (C168: the lure's place)
         if toy not in self.holding.values() and a["info"].get("refetch", 0) < 2:   # C138: a toy set aside on her way here (both hands
             a["info"]["refetch"] = a["info"].get("refetch", 0) + 1                 # full, a toy where she kneels: _plan_clear_here) is
             a["info"]["carry_ok"] = toy                                             # picked up again and the put planned anew
