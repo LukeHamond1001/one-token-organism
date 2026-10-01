@@ -69,9 +69,12 @@ def add_box(xy=(0.3, -0.4), yaw_deg=0.0):
 
 BUCKET_IN = 0.09                                 # m: the bucket's inner half-width, an 18 cm square (ours: the duck's 7 cm, a G1 hand and a miss fit; A126)
 BUCKET_WALL = 0.005                              # m: the wall's thickness (a thin plastic bucket)
-BUCKET_H = 0.12                                  # m: the wall's height, a bucket's: a 7 cm toy inside lies 5 cm under the rim, hidden from a child on the
+BUCKET_H = 0.08                                  # m: the wall's height. C179 (2026-10-01): 0.12 until life day 48; a 7 cm toy inside lies 1 cm under the rim,
+                                                 # hidden from a child beside it; the child's hand at the bucket rose to 6 cm under the old rim and never over
+                                                 # it (days 44 to 48: the search where the toy vanished, the find denied by the wall), so the rim comes down to it
                                               # mat (eyes at 0.1 m prone, 0.35 m sitting, half a metre off: the near wall hides the whole floor)
-BUCKET_MASS = 0.20                               # kg (a small plastic bucket)
+BUCKET_MASS = 0.60                               # kg. C179 (2026-10-01): 0.20 until life day 48, when a touch of the child's hand tipped it (it lay on its
+                                                 # side at day 47's tick 22,000, the hides spilled); a weighted base stays up under a hand's push (ours)
 BUCKET_RGBA = (0.45, 0.55, 0.20, 1.0)            # olive: no colour word of hers, no other kind of it (the box's road: no colour lesson rides in)
 BUCKET_YAW_DEG = 0.0
 
