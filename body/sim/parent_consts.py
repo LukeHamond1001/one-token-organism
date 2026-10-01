@@ -213,6 +213,11 @@ TURN_LIFT_M = 0.12              # m: the turn's spring target lies this far alon
                                 # 0.12 = 240 N, over the one-hand brief cap it is given) ...
 TURN_OVER_UP = 0.4              # ... its push straight up while the chest faces down, then this much up with the rest toward
                                 # its back, away from her (ours) ...
+TURN_PAST_Z = 0.3               # C167 (2026-09-30): the turn is DONE only once its chest's normal has risen past this beyond its side (0 is its
+                                # side; ours: about 17 deg past, where a body on its side settles rather than tips back), or it lies on its
+                                # back. Until then "past its side" at 0.0 was done, and under A143 (the passive end-range stiffness) the
+                                # child turned from beside its chest lay back prone after her hands slipped at its side: a false done in her
+                                # log, the turn never re-asked (parent 30's second route, read 2026-09-30 22:15)
 TURN_SIDE_Z = 0.3               # ... switched when its chest's normal rises past this (a unit vector's z: face down -1, on its
                                 # side 0; ours). It has turned when it lies on its back, or on its side with its chest past this
 

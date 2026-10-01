@@ -4705,13 +4705,13 @@ class ParentMotion:
         c["ramp"] = min(K.CAP_TWO_BRIEF, K.TURN_RAMP_NPS * c["go_t"] * TICK_S)   # A101: the roll's force built within half a second
         h.cap = min(c["ramp"] / 2, K.CAP_ONE_BRIEF)
         c["posture"] = ch.posture
-        if ch.posture == "back":                                            # onto its back (A101: let go at its side, it fell back;
-            c["state"] = "done"; c["turned"] = True                          # let go past its side, it lay balanced on it)
+        if ch.posture == "back" or chest_z >= K.TURN_PAST_Z:                # onto its back, or past its side by TURN_PAST_Z (C167: at its
+            c["state"] = "done"; c["turned"] = True                          # side alone it tipped back under A143's stiff limbs)
         elif c["go_t"] * TICK_S >= K.TURN_MAX_S:
             deg = math.degrees(math.acos(float(np.clip(-chest_z, -1.0, 1.0))))
-            if deg >= 90.0:                                                 # A136: past its side at her cap's end is the turn done (A101's
-                c["state"] = "done"; c["turned"] = True                      # own word when her hands slip there: it lies balanced on its
-            else:                                                           # side and falls back or is helped over); the head route's two
+            if chest_z >= K.TURN_PAST_Z:                                    # A136/C167: past its side by the margin at her cap's end is the
+                c["state"] = "done"; c["turned"] = True                      # turn done; at its side alone it lies balanced and falls
+            else:                                                           # back (or is helped over); the head route's two
                 c["state"] = (f"stopped: not turned within her caps in {K.TURN_MAX_S:.0f} s (A7, A101; its chest turned {deg:.0f} deg from face down, "
                               "a side is 90): she narrates and helps by the roll's ladder instead")   # hands turn it 106 deg in the 4 s
 
@@ -5276,10 +5276,15 @@ class ParentMotion:
     def _ph_holds_wait(self, a, ph):
         hs = [h for h in self.holds if h.kind == ph["kind"]]
         if not hs:                                                          # her grip slipped before the act began (she is a body:
-            if ph["kind"] == "turn" and float(self.child.torso_R[2, 0]) >= 0.0:   # GRIP_TOL_M, HOLD_SLIP_M); A101: a turn whose hands
+            cz = float(self.child.torso_R[2, 0])
+            if ph["kind"] == "turn" and cz >= K.TURN_PAST_Z:                 # GRIP_TOL_M, HOLD_SLIP_M); A101: a turn whose hands
                 if a is not None:                                           # slipped once it had rolled past its side is done (the far
                     a["why"] = "turned from its front past its side within her caps (A7, A101; her hands slipped as it rolled)"   # links
-                return "done"                                               # roll up and over out of her palms there)
+                return "done"                                               # roll up and over out of her palms there); C167: past it
+            if ph["kind"] == "turn" and cz >= -0.5:                         # by TURN_PAST_Z, else it tips back (A143's stiff limbs): not done
+                deg = math.degrees(math.acos(float(np.clip(-cz, -1.0, 1.0))))
+                return (f"stopped: her hands slipped at its side (A7, A101; its chest turned {deg:.0f} deg from face down, a side is 90, "
+                        f"done is past it): it lay back; the turn is asked again")
             return "her hands lost their hold on it before she began (it slipped from her grip)"
         for h in hs:
             h.ctl["go"] = True                                              # every hand of the act is on: it begins
