@@ -999,7 +999,7 @@ class Organs(nn.Module):
             out.register_buffer(n, b.cpu())
         return out
 
-    def striatum_init(self, k, m, seed=0, wm=0, effectors=None, events=0):
+    def striatum_init(self, k, m, seed=0, wm=0, effectors=None, events=0, sense=0):
         """born: the expansion of a delay line of k events (a heard symbol, an own symbol, or a felt face each) into m
         thresholded units; the rows of the born map are summed over the line's occupied positions (the input is one-hot).
         THE LATER EFFECTORS' BLOCKS (the core refactor's step R5): each later effector of `effectors` (the anatomy's; effector 0 is the
@@ -1056,6 +1056,22 @@ class Organs(nn.Module):
             self.stri_W = torch.cat([self.stri_W, (torch.randn(int(k) * E, int(m), generator=g) / math.sqrt(float(k))).to(dev)])
             self.stri_eline = torch.full((int(k),), -1, dtype=torch.long, device=dev)
             self.stri_eblock = (base, E)                                       # (its first row, the number of lines)
+        # A149 (2026-10-01): THE BODY SENSE'S BLOCK, the sensorimotor striatum: a born row for each number of the later effectors' own
+        # proprioception (their `sense_idx` in the anatomy's `proprio` channels: each joint's position (sin, cos), velocity, effort and
+        # heat; the gaze's), drawn after every other block from the same generator (so every row before is born as it was), at
+        # 1 / sqrt(k): the sense vector, its entries squashed to -1..1 and the whole read at unit norm (striatum_read), weighs in the
+        # expansion as one event of the language line whatever its count of numbers. The vector this tick is `stri_sense`, set by the
+        # senses before the heads read (body/core/senses.py); zero at night. A body that declares no proprioceptive channel (the
+        # diary) has none: its striatum is as before
+        ns_ = int(sense or 0)                                                  # (the buffers exist only on a body with proprioception, so a
+        if ns_:                                                                # body without it, the diary, has its organs exactly as before)
+            Ws_ = (torch.randn(ns_, int(m), generator=g) / math.sqrt(float(k))).to(dev); sv_ = torch.zeros(ns_, device=dev)
+            if "stri_Ws" in self._buffers:
+                self.stri_Ws = Ws_; self.stri_sense = sv_
+            else:
+                self.register_buffer("stri_Ws", Ws_); self.register_buffer("stri_sense", sv_)
+        elif "stri_Ws" in self._buffers:
+            del self._buffers["stri_Ws"]; del self._buffers["stri_sense"]
 
     def striatum_push(self, kind, idx):
         """an event enters the delay line: kind 0 a heard symbol, 1 an own symbol, 2 a felt face (idx 0 warm, 1 cold), 3 a tick
@@ -1120,6 +1136,9 @@ class Organs(nn.Module):
                     z += self.stri_W[p_ * width + e]
             self.striatum_acts(z)
             self.striatum_events(z)                                           # the event lines' (step R7a; none for the diary)
+            Ws_ = getattr(self, "stri_Ws", None)
+            if Ws_ is not None:                                               # A149: the body sense's line at unit norm, one event's weight (none for the diary)
+                z += (self.stri_sense / self.stri_sense.norm().clamp_min(1.0)) @ Ws_
             return torch.relu(z)
 
     def stri_in(self):

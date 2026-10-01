@@ -293,6 +293,9 @@ class NightMixin:
             if int(self.cfg.get("tag_trace", 0)):
                 self._utt_boosts = []; self._utt_tag = 0.0         # defect 6 (tag_trace, R7c): the reach back ends at the night
             self._z_prev = None; self._z_now = None; self._e_actor = None
+            if getattr(self.m, "stri_sense", None) is not None:
+                with torch.no_grad():
+                    self.m.stri_sense.zero_()                      # A149: no body sense on the striatum's line at night
             for i_, st_ in enumerate(getattr(self, "motor", ()), 1):  # the later effectors' working state begins afresh, as the voice's (step R5)
                 if st_.get("inv_batch"):
                     self._inverse_batch(i_)                        # step R6h: act_inv's pairs gathered before dusk, learned at nightfall

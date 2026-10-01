@@ -216,6 +216,10 @@ class SensesMixin:
                 m.striatum_push(0, int(u))
             if self.anatomy.events:
                 self._events_push(u)                               # step R7a: the tick's fired event lines (body/core/frames.py)
+            fr_ = getattr(self.world, "now", None)                 # the frame this tick is lived on (_sense set it)
+            if getattr(m, "stri_Ws", None) is not None and fr_ is not None:   # A149: the body sense this tick, squashed, into the striatum's sense line
+                with torch.no_grad():
+                    m.stri_sense.copy_(torch.tanh(torch.cat([torch.as_tensor(fr_.obs[ch_], dtype=torch.float32)[ix_] for ch_, ix_ in m.stri_sense_src])))
             self._z_now = m.stri_in()
         self._read_world = getattr(self, "_read", None)        # the recall as the world's symbol entered
         return C1, pred1, surp1, conf1, stri

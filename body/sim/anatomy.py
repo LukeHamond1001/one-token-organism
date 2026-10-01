@@ -428,6 +428,7 @@ class SimAnatomy(LanguageAnatomy):
         self.mossy = tuple(mossy)
         self.cerebellar = Cerebellar(off, half, joints=list(CEREB_JOINTS), vor=["yaw", "pitch"])
         self.events = event_lines()                                    # R7a: the born event lines (the module's doc)
+        self.proprio = ("body",)                                       # A149: the body channel is the proprioceptive one (the limbs' and the gaze's own sense)
         self.heading = Heading("imu_torso", acc=(0, 1, 2), gyro=(3, 4, 5), dt=0.15)   # R7f: the heading from the torso's unit (the module's doc)
 
 

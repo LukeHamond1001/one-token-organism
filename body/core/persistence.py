@@ -179,7 +179,8 @@ class PersistenceMixin:
             if widened_:
                 print(f"load: the amygdala's heads widened to {len(am_.heads)} for a reward source that joined after the save (born at zero):", widened_, flush=True)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below
-        st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias", "wm_slot", "wm_on", "wm_age") if k_ in blob["organs"]}   # the striatal input, sized by the life below
+        st_saved = {k_: blob["organs"].pop(k_) for k_ in ("stri_W", "stri_b", "stri_line", "vfast.weight", "vfast.bias", "actor.weight", "actor.bias", "wm_slot", "wm_on", "wm_age",
+                                                          "stri_Ws", "stri_sense") if k_ in blob["organs"]}   # the striatal input, sized by the life below (A149: and its body sense's rows)
         st_saved.update({k_: blob["organs"].pop(k_) for k_ in [k_ for k_ in blob["organs"] if k_ in ("stri_mline", "stri_eline") or k_.startswith("actors.")]})   # the later effectors' (step R5), the event lines' (R7a)
         vc_saved = {k_: blob["organs"].pop(k_) for k_ in ("vc_A", "vc_b", "vc_mu", "vc_var", "vc_n", "vc_form") if k_ in blob["organs"]}   # sized by the life below
         missing = organs.load_state_dict(blob["organs"], strict=False)
@@ -237,6 +238,10 @@ class PersistenceMixin:
                     life.m.actor.weight.copy_(st_saved["actor.weight"].to(device)); life.m.actor.bias.copy_(st_saved["actor.bias"].to(device))
                 if st_saved.get("wm_slot") is not None and st_saved["wm_slot"].shape == life.m.wm_slot.shape:
                     life.m.wm_slot.copy_(st_saved["wm_slot"].to(device)); life.m.wm_on.copy_(st_saved["wm_on"].to(device)); life.m.wm_age.copy_(st_saved["wm_age"].to(device))
+                if st_saved.get("stri_Ws") is not None and getattr(life.m, "stri_Ws", None) is not None and tuple(st_saved["stri_Ws"].shape) == tuple(life.m.stri_Ws.shape):
+                    life.m.stri_Ws.copy_(st_saved["stri_Ws"].to(device))      # A149: the body sense's rows as saved (a pair saved before them keeps the born ones)
+                    if st_saved.get("stri_sense") is not None and st_saved["stri_sense"].shape == life.m.stri_sense.shape:
+                        life.m.stri_sense.copy_(st_saved["stri_sense"].to(device))
                 if st_saved.get("stri_mline") is not None and "stri_mline" in life.m._buffers and st_saved["stri_mline"].shape == life.m.stri_mline.shape:
                     life.m.stri_mline.copy_(st_saved["stri_mline"].to(device))   # the later effectors' lines and actors (step R5)
                 if st_saved.get("stri_eline") is not None and "stri_eline" in life.m._buffers and st_saved["stri_eline"].shape == life.m.stri_eline.shape:

@@ -151,7 +151,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at A148 (2026-10-01 07:45, on branch t185: the actors' eligibility on the striatal input at unit power, mouth._actor_input; the sim
 # profile moved, threaded cdf686b4.. -> 3d880199.., one-thread 81d01b12.. -> efaeac4a.., consts unchanged); the language default digest
 # 7c54199e3c72cf77d45a8e94 kept (actor off in the diary).
-digest  sim                   threaded 3d88019967664ceff73ef862 consts b971264b65f1 | --profile sim
-digest  sim                   pinned   efaeac4af2a0398b1dda6084 consts b971264b65f1 | --profile sim
-full    sim                   threaded organs 522ae266b598 store 948a1a372d17 optim 0e2726c5e75a rng 0730d44b607a work d9bdc4b2e779 cfg fb1800a3b452
-full    sim                   pinned   organs 80e466ba8e1b store c84a06657072 optim 7f7a298c39ce rng 0730d44b607a work 6257ccc5c2e6 cfg fb1800a3b452
+# Re-pinned at A149 (2026-10-01 08:05, on branch t187: the sensorimotor striatum, the body's proprioception on the striatum's line at one
+# event's weight; the sim profile moved, threaded 3d880199.. -> e465b724.., one-thread efaeac4a.. -> 4b3befab.., consts unchanged); the
+# language default digest 7c54199e3c72cf77d45a8e94 kept (no proprioceptive channel in the diary; its sense buffers do not exist).
+digest  sim                   threaded e465b7246f625238c9e1386d consts b971264b65f1 | --profile sim
+digest  sim                   pinned   4b3befab7a0e67ae10374391 consts b971264b65f1 | --profile sim
+full    sim                   threaded organs 6abfe28e48ae store 83f437c53005 optim aa5174e6b40d rng 0730d44b607a work f567e8a3c219 cfg fb1800a3b452
+full    sim                   pinned   organs b0666a40988e store 067588d6fe41 optim 18d7c7d630a9 rng 0730d44b607a work d35c0fa5c354 cfg fb1800a3b452

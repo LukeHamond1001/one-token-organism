@@ -504,6 +504,8 @@ class Anatomy:
     None (the class's: the diary declares none, so its striatum and its life are as they were)"""
     cerebellar = None
     orienting = None                                  # step R6h: the born orienting cues (a list of OrientCue), none by default
+    proprio = ()                                      # A149: the names of its proprioceptive channels (the body's own numbers: joint positions,
+                                                      # velocities, efforts), the striatum's sense line; none by default (the diary)
     events = None                                     # step R7a: the born event lines (a list of EventLine), none by default (the diary's)
     heading = None                                    # step R7f: the heading's source (a Heading), none by default (the diary's)
 

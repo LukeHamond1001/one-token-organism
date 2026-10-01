@@ -179,10 +179,19 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
                     k_, m_ = int(self.cfg["stri_k"]), int(self.cfg["stri_m"])
                     wm_ = int(self.cfg.get("wm", 0))
                     ne_ = len(self.anatomy.events or ())             # step R7a: the event lines' block after the effectors' (none for the diary)
+                    pro_ = tuple(getattr(self.anatomy, "proprio", ()) or ())  # A149: the striatum's sense line: the later effectors' own numbers in the
+                    src_ = []                                                 # proprioceptive channels (the anatomy's `proprio`), each channel's union once
+                    for ch_ in pro_:
+                        ix_ = sorted({int(i_) for e_ in self.anatomy.motors if getattr(e_, "sense", None) == ch_
+                                      for i_ in (e_.sense_idx if e_.sense_idx is not None else range(int(self.anatomy.channel(ch_).size)))})
+                        if ix_:
+                            src_.append((ch_, ix_))
+                    ns_ = sum(len(ix_) for _, ix_ in src_)
                     rows_ = k_ * (2 * organs.vocab + 3) + sum(k_ * sum(int(f_) for f_ in e_.factors) for e_ in self.anatomy.motors) + k_ * ne_   # the language block, then the later effectors' per joint (steps R5, R5b), then the event lines' (R7a)
                     if (organs.stri_W.numel() == 0 or organs.stri_line.numel() != k_ or organs.stri_W.shape[1] != m_ or organs.stri_W.shape[0] != rows_
-                            or organs.vfast.weight.shape[1] != m_ * (1 + wm_)):
-                        organs.striatum_init(k_, m_, seed=seed, wm=wm_, effectors=self.anatomy.effectors, events=ne_)   # born (or re-born at a new size)
+                            or organs.vfast.weight.shape[1] != m_ * (1 + wm_) or int(getattr(organs, "stri_Ws", torch.zeros(0, 0)).shape[0]) != ns_):
+                        organs.striatum_init(k_, m_, seed=seed, wm=wm_, effectors=self.anatomy.effectors, events=ne_, sense=ns_)   # born (or re-born at a new size)
+                    organs.stri_sense_src = [(ch_, torch.tensor(ix_, dtype=torch.long)) for ch_, ix_ in src_]   # A149 (not saved: the anatomy's)
                     kf = m_ * (1 + wm_) + 1
                 else:
                     kf = int(organs.value[fb].weight.shape[1]) + 1

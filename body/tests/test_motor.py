@@ -1563,6 +1563,50 @@ def test_the_striatum_scales_down():
     print(f"motor A147: the limb's actor scaled from rms {rms0:.0f} to {rms1:.2f} and the voice's from {vrms0:.0f} to {vrms1:.2f} in 1,500 ticks, "
           f"one factor ({c_:.4f}) over every weight; an actor under the set point untouched")
 
+
+def test_the_striatum_reads_the_body():
+    """motor (A149, 2026-10-01): THE SENSORIMOTOR STRIATUM. On the limbs body with the striatum on, the striatum carries a born block of
+    rows for the later effectors' own numbers in the anatomy's proprioceptive channels (the limb's two body numbers: 2 rows of m; the grip's
+    touch is not proprioception), drawn at 1 / sqrt(k) and read at unit norm so the sense line weighs one event; each tick the senses set the squashed sense vector (tanh of the frame's
+    numbers at the effectors' sense indices) before the heads read; the expansion differs between two body states on one and the same
+    event line and is the same for the same state; the language block, the thresholds and the effectors' blocks are born exactly as
+    without the sense line (every row before it as it was)"""
+    import math as _m
+    cfg = dict(_CFG1, actor_trace_tick=1)
+    _Limbs.proprio = ("body",)                                                                   # the limbs body declares its proprioceptive channel
+    try:
+        L = _born_limbs(cfg, _limb_world()); m = L.m
+    finally:
+        _Limbs.proprio = ()
+    k_, m_ = int(cfg["stri_k"]), int(cfg["stri_m"])
+    assert tuple(m.stri_Ws.shape) == (2, m_) and m.stri_sense.numel() == 2, (m.stri_Ws.shape, m.stri_sense.shape)   # the limb's two body numbers; the grip's touch is not proprioception
+    assert [(ch, ix.tolist()) for ch, ix in m.stri_sense_src] == [("body", [0, 1])], m.stri_sense_src
+    rms = float(m.stri_Ws.pow(2).mean().sqrt()); want = 1.0 / _m.sqrt(k_)                      # one event's weight at unit norm
+    assert abs(rms - want) / want < 0.1, (rms, want)
+    # the rows before the sense line are born as without it
+    from body.model import Organs as _O
+    seen = []
+    run = WorldLoop(L)
+    for _ in range(30):
+        run.step()
+        f = L.world.now
+        if f is not None:
+            want_v = torch.tanh(torch.as_tensor(f.obs["body"], dtype=torch.float32)[[0, 1]])
+            seen.append(bool(torch.allclose(m.stri_sense, want_v, atol=1e-6)))
+    assert len(seen) >= 20 and all(seen), (len(seen), seen[:5])
+    with torch.no_grad():
+        s0 = m.stri_sense.clone()
+        z_a = m.striatum_read().clone()
+        m.stri_sense.copy_(torch.tensor([0.7, -0.7])); z_b = m.striatum_read().clone()
+        m.stri_sense.copy_(torch.tensor([0.7, -0.7])); z_c = m.striatum_read().clone()
+        m.stri_sense.copy_(s0)
+    assert not torch.allclose(z_a, z_b) and torch.equal(z_b, z_c), "the expansion must follow the body state on one line"
+    # born as before it: a body without a sense line (no proprioceptive channel declared) has the same language, effector and event rows
+    L0 = _born_limbs(cfg, _limb_world()); W1 = L0.m.stri_W.clone(); assert not hasattr(L0.m, "stri_Ws"), "no sense line, no buffer: the organs as before"
+    assert torch.equal(W1, m.stri_W) and torch.equal(L0.m.stri_b, m.stri_b), "the rows before the sense line must be born as they were"
+    print(f"motor A149: the striatum's sense line of 2 rows (rms {rms:.3f}, 1/sqrt(k) = {want:.3f}); the squashed sense set on {len(seen)} ticks; "
+          f"the expansion follows the body state on one line; the earlier rows born as before")
+
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
     for t in MOTOR_TESTS:
