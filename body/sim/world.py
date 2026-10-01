@@ -119,6 +119,15 @@ SERVO_ERR_AT_LIMIT = 0.25       # rad of error at which a servo reaches its torq
 SERVO_ERR_AT_LIMIT_HAND = 0.1   # the Dex3's joints reach theirs at 0.1 rad (3.3; anatomy, ours)
 SERVO_DAMP_S = 0.04             # damping = 0.04 s x stiffness (3.3; anatomy, ours)
 TONE_TAU_TICKS = 3.0            # at rest the target relaxes to the measured angle with this time constant (3.3; innate, ours)
+PASSIVE_MARGIN = 0.15           # A143 (2026-09-30): THE PASSIVE END-RANGE STIFFNESS. In the last PASSIVE_MARGIN of a joint's range (either end) the
+PASSIVE_FRAC = 0.2              # body's passive tissues push back toward mid-range, rising linearly to PASSIVE_FRAC x the joint's torque limit at
+                                # the stop (both ours; the form: passive elastic joint moments are near zero mid-range and rise steeply toward the
+                                # range ends, Riener and Edrich 1999; a real G1 drives its joints inside software limits with a margin). Why: on
+                                # life day 43 the body lay folded into its range stops (6.5 of the 14 arm joints at a stop on average, the knees, the
+                                # waist and three hip joints too), since the resting target follows the measured angle and nothing pulls a joint
+                                # off a stop once gravity or the floor has pressed it there; a joint at a stop shows its inverse model nothing of
+                                # its acts (kappa near chance), so its readout stays flat and it draws big steps at random (C148). The push is the
+                                # tissue's, not the motor's: it is applied to the joint (qfrc_applied), never read as gear load, pain or heat
 PAIN_WEIGHTS = 3.0              # F_pain = 3 x the body's weight from the model file (6.2, A12; innate, ours)
 PAIN_WINDOW_STEPS = 5           # a zone's force for pain: the tick's largest 10 ms mean (A12; innate, ours)
 TOUCH_UNIT_N = 1.0              # touch's log force is log(1 + F / 1 N) (3.4; anatomy, ours)
@@ -686,6 +695,14 @@ class G1World(SimWorld):
             m.actuator_biasprm[a, :] = 0.0; m.actuator_biasprm[a, 1] = -p; m.actuator_biasprm[a, 2] = -v
         self.kp, self.kv = kp, kv
 
+    def passive_torque(self, q):
+        """A143: the passive tissues' torque at every joint for the angles `q` (JOINTS order): zero over the middle of the range, and in the last
+        PASSIVE_MARGIN of the range at either end a push back toward the middle rising linearly to PASSIVE_FRAC x tau_max at the stop"""
+        s = (q - self.lo) / np.maximum(self.hi - self.lo, 1e-9)
+        hi_ = np.clip((s - (1.0 - PASSIVE_MARGIN)) / PASSIVE_MARGIN, 0.0, 1.0)
+        lo_ = np.clip((PASSIVE_MARGIN - s) / PASSIVE_MARGIN, 0.0, 1.0)
+        return PASSIVE_FRAC * self.tau_max * (lo_ - hi_)
+
     def limits_now(self):
         """the torque limits this tick: the declared limits (the weakness that followed the charge is gone with it, A88)"""
         return self.tau_max.copy()
@@ -887,6 +904,7 @@ class G1World(SimWorld):
                     self._below_step(s // W_, own, imu_last, F_last, obs_last, lim)
                 if rest_a is not None:
                     d.ctrl[rest_a] += alpha * (d.qpos[rest_q] - d.ctrl[rest_a])
+                d.qfrc_applied[self.dof] = self.passive_torque(d.qpos[self.qadr])   # A143: the passive end-range stiffness, the tissue's push
                 if par is not None:
                     t0 = time.perf_counter()
                     par.before_step(s)                                  # her segments drawn, her holds' capped springs (L0)

@@ -1909,10 +1909,32 @@ def test_the_actors_tag():
           f"{on['upd'][0]:.4f}); with actor_slow_lr 0 no tag and the weights differ")
 
 
+def test_the_passive_stiffness():
+    """world (A143, 2026-09-30): the passive end-range stiffness. At a joint's low stop the tissue pushes toward the middle at PASSIVE_FRAC x its
+    torque limit, at its high stop the same the other way, half way into the margin half as much, and nothing over the middle 70% of the range;
+    the push is applied to the joints each physics step (qfrc_applied at the body's dofs equals the law for the angles then) and is not the
+    motor's: the sensed gear load reads qfrc_actuator. Day 43: 6.5 of the 14 arm joints at a stop on average, the stop-bound joints' kappa 0.07
+    to 0.19 and their big steps 37% against 5 to 10% off the stop"""
+    w = G1World(seed=1)
+    lo, hi, tm = w.lo.copy(), w.hi.copy(), w.tau_max.copy()
+    mid = 0.5 * (lo + hi); m_ = W.PASSIVE_MARGIN; f_ = W.PASSIVE_FRAC
+    assert np.allclose(w.passive_torque(mid), 0.0) and np.allclose(w.passive_torque(lo + 0.3 * (hi - lo)), 0.0)
+    assert np.allclose(w.passive_torque(lo), f_ * tm) and np.allclose(w.passive_torque(hi), -f_ * tm)
+    assert np.allclose(w.passive_torque(hi - 0.5 * m_ * (hi - lo)), -0.5 * f_ * tm, atol=1e-9)
+    assert np.allclose(w.passive_torque(lo + m_ * (hi - lo)), 0.0, atol=1e-9)
+    for _ in range(3):
+        w.frame(); w.apply({})
+    q = w.d.qpos[w.qadr]
+    assert np.all(np.abs(w.d.qfrc_applied[w.dof] - w.passive_torque(q)) <= 0.01 * tm), "the tissue's push must stand at the joints after a tick"   # (one physics step of motion apart)
+    at = int(np.sum(((q - lo) / (hi - lo) < 0.02) | ((q - lo) / (hi - lo) > 0.98)))
+    print(f"world A143: the passive push {f_:.2f} x the torque limit at a stop, half at mid-margin, none over the middle 70%; applied at the "
+          f"{len(w.dof)} joints each step ({at} at a stop three ticks after birth)")
+
+
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_the_passive_stiffness]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

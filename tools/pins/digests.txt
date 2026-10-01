@@ -128,6 +128,9 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at C156 (2026-09-30 18:52, on branch t154: the act weights' credit begins at the position's own row (sleep.credit_of, k from 0), by day
 # (A141) and by night; SIM_CFG unchanged; the body/core consts digest unchanged (C159's HABIT_KEEP is the lang layer's); the language default
 # digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 016a8876d297b9c181677ef3, one-thread 8217248e5cab5fc966f7d96b, consts c9755b913294.
+# Re-taken at A143 (2026-09-30 20:10, on branch t157: the passive end-range stiffness in the world's physics): UNCHANGED, threaded
+# 70242aba83dc89ce3b391683, one-thread e3f82db9c5bfac64b09889a0, consts c9755b913294 (the profile's 300 supine ticks never carry a joint's
+# angle through the margin past the encoder's step); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded 70242aba83dc89ce3b391683 consts c9755b913294 | --profile sim
 digest  sim                   pinned   e3f82db9c5bfac64b09889a0 consts c9755b913294 | --profile sim
 full    sim                   threaded organs 4907603a9566 store b4217f76a30d optim cc788997d0f1 rng 495b583d7174 work e85059542ce4 cfg 854522d0bd88
