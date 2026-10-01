@@ -156,7 +156,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # language default digest 7c54199e3c72cf77d45a8e94 kept (no proprioceptive channel in the diary; its sense buffers do not exist).
 # Re-taken at A150 (2026-10-01 08:45, on branch t189: the habit lesson's credit weight runs to -1 by day and night, the harm beyond one
 # unlearned): UNCHANGED (no position of the pin's 300 ticks carries a credit under -1); the language default digest 7c54199e3c72cf77d45a8e94 kept.
-digest  sim                   threaded e465b7246f625238c9e1386d consts b971264b65f1 | --profile sim
-digest  sim                   pinned   4b3befab7a0e67ae10374391 consts b971264b65f1 | --profile sim
-full    sim                   threaded organs 6abfe28e48ae store 83f437c53005 optim aa5174e6b40d rng 0730d44b607a work f567e8a3c219 cfg fb1800a3b452
-full    sim                   pinned   organs b0666a40988e store 067588d6fe41 optim 18d7c7d630a9 rng 0730d44b607a work d35c0fa5c354 cfg fb1800a3b452
+# Re-pinned at A151 (2026-10-01 09:28, on branch t191: the actors' synaptic scaling both ways, their forgetting removed; the sim profile
+# moved, threaded e465b724.. -> f7196165.., one-thread 4b3befab.. -> 69ed464f.., consts unchanged); the language default digest
+# 7c54199e3c72cf77d45a8e94 kept (actor off in the diary).
+digest  sim                   threaded f7196165ac5d60db4b75b199 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   69ed464ff522feacf5be59dd consts b971264b65f1 | --profile sim
+full    sim                   threaded organs ab5da5cfb47f store 976143d574e8 optim 6401bd7c6e53 rng 0b084865948e work e41dd01013a8 cfg fb1800a3b452
+full    sim                   pinned   organs db537f844e2d store da56f5828e14 optim fa838cd5fced rng 0b084865948e work 87606e63d414 cfg fb1800a3b452

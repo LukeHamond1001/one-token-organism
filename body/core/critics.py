@@ -28,10 +28,17 @@ class CriticsMixin:
         that time constant, a drive of 2,000 (its mean square 4 million) loses 11% at the first tick and is back at 1 in some 300
         ticks, under a minute of life, and stops there (the tick's own drive is the gate, so no lagging mean carries the scaling past
         the set point: a running mean of 1,024 ticks took the test body from 2,000 to 0.32, and the critics' horizon of 1,024 as the
-        time constant left it at 8 after 1,500 ticks); a drive at or under the set point is left alone (down only: ours; biology's
-        scaling runs both ways, but an actor that has learned little should not be made loud). The gradient through the squashing
-        (mouth._actor_squash_grad) keeps a scaled actor from running up again. A running mean square per actor is kept beside it for
-        the rulers (`_actor_ms`, by actor name, at the same reach; born at 1, not saved)"""
+        time constant left it at 8 after 1,500 ticks). A151 (2026-10-01): AND UP AS WELL AS DOWN. Scaling ran down only through day 49
+        ("an actor that has learned little should not be made loud"), and the actors' forgetting (1 - 1/36,000 a tick, set when a lesson
+        moved a bias by hundreds) shrank every drive by half a day once A148 had bounded the lessons: the ruler read 0.98 at A148's
+        landing and 0.60 at dusk, e^(-t/36,000) exactly, no lesson refilling it; by dusk 51 the actors would have been whispering.
+        Biology's scaling is bidirectional (Turrigiano 2008: synapses scaled up under activity deprivation as down under excess), so a
+        drive under 1 is scaled up at the same reach, and the forgetting, a uniform shrink the scaling would undo each tick, is removed
+        from the actors' lessons (the critics keep theirs). The newborn: an actor born at zero has a drive of exactly 0 and is left
+        at zero until its first lesson; its first lessons are then brought to the unit scale within a minute, a confident early bias
+        the proposal and the gate weigh against (as the saturated actors of days 1 to 48 were at their rails from the first day). The
+        gradient through the squashing (mouth._actor_squash_grad) keeps a scaled actor from running up again. A running mean square
+        per actor is kept beside it for the rulers (`_actor_ms`, by actor name, at the same reach; born at 1, not saved)"""
         if getattr(self, "_z_now", None) is None:
             return
         from .physiology import FRAMES
@@ -43,7 +50,7 @@ class CriticsMixin:
             for name, mod in [("voice", m.actor)] + [(e_.name, m.get_submodule(e_.actor)) for e_ in self.anatomy.motors]:
                 raw = mod(self._z_now); now_ = float((raw * raw).mean())
                 ms[name] = ms.get(name, 1.0) + a_ * (now_ - ms.get(name, 1.0))
-                if now_ > 1.0:
+                if now_ > 0.0:                                                 # A151: both ways; an actor born at zero stays zero until it learns
                     mod.weight.mul_(float(now_ ** (-0.5 / H)))
 
     def _learn_values(self, r, felt, stri):
@@ -202,14 +209,14 @@ class CriticsMixin:
                     self._chooser_learn(delta)
                 elif int(self.cfg.get("actor", 0)) and getattr(self, "_e_actor", None) is not None:
                     with torch.no_grad():                        # THE ACTOR'S LESSON: dopamine times the eligibility, the weights forgetting
-                        m.actor.weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)
+                        m.actor.weight.add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)   # A151: no forgetting (moot under the scaling)
                 if int(self.cfg.get("actor", 0)):
                     slr_ = float(self.cfg.get("actor_slow_lr", 0.0))
                     for e_, st_ in zip(self.anatomy.motors, getattr(self, "motor", ())):   # each later effector's actor, the same lesson (step R5)
                         if st_["e_actor"] is not None:
                             with torch.no_grad():
                                 fast_ = float(self.cfg.get("actor_lr", 0.02)) * delta * st_["e_actor"]
-                                m.get_submodule(e_.actor).weight.mul_(1.0 - 1.0 / float(self.cfg.get("actor_forget", 36000))).add_(fast_)
+                                m.get_submodule(e_.actor).weight.add_(fast_)   # A151: no forgetting (a uniform shrink the scaling undid each tick)
                                 if slr_ > 0.0:
                                     st_["a_upd"][0] += float(fast_.norm())
                         if slr_ > 0.0 and st_.get("a_tag") is not None and abs(float(delta)) > 1e-9:

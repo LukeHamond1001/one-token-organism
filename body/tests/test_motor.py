@@ -1523,7 +1523,7 @@ def test_the_striatum_scales_down():
     thousands, as life day 48's), every learning rate 0: within 1,500 ticks each actor's pre-activation root mean square falls by at
     least 50 times and comes to rest at its set point 1 (within 0.5 to 1.5, not past it), every row of the limb's shrunk by one and the same factor (the ranking of
     its settings kept: the pattern is the actor's, the gain the neuron's), the running mean squares kept on the body by actor name; an
-    actor whose drive stands at or under 1 is left exactly as it is"""
+    actor whose drive stands under 1 is scaled up to it the same way (A151, 2026-10-01), and one born at zero, with no lesson yet, stays at zero"""
     cfg = dict(_CFG1, **_LR0, actor=1, actor_trace_tick=1)
     L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
     for _ in range(20):
@@ -1549,19 +1549,24 @@ def test_the_striatum_scales_down():
         raw1 = mod(L._z_now); v1 = L.m.actor(L._z_now)
     rms1 = float((raw1 ** 2).mean().sqrt()); vrms1 = float((v1 ** 2).mean().sqrt())
     assert rms1 < rms0 / 50.0 and 0.5 < rms1 < 1.5 and vrms1 < vrms0 / 50.0 and 0.5 < vrms1 < 1.5, (rms0, rms1, vrms0, vrms1)   # at the set point, not past it
-    # an actor at or under its set point is left alone
+    # A151: an actor under its set point is scaled UP to it, one factor over every weight; one born at zero stays at zero
     L2 = _born_limbs(cfg, _limb_world()); run2 = WorldLoop(L2)
     for _ in range(20):
         run2.step()
-    m2 = L2.m.get_submodule(L2.anatomy.motors[0].actor)
+    m2 = L2.m.get_submodule(L2.anatomy.motors[0].actor); v2 = L2.m.actor
+    assert float(v2.weight.abs().max()) == 0.0, "the voice's actor is born at zero"
     with torch.no_grad():
-        m2.weight.normal_(generator=torch.Generator().manual_seed(8)); m2.weight.mul_(1e-3); w2 = m2.weight.clone()
-    for _ in range(200):
+        m2.weight.normal_(generator=torch.Generator().manual_seed(8)); m2.weight.mul_(1e-3 / float((m2(L2._z_now) ** 2).mean().sqrt())); w2 = m2.weight.clone()
+        rq0 = float((m2(L2._z_now) ** 2).mean().sqrt())
+    for _ in range(600):
         run2.step()
-    fg = (1.0 - 1.0 / float(L2.cfg.get("actor_forget", 36000))) ** 200                   # its own forgetting runs on (the lesson's, every tick)
-    assert torch.allclose(m2.weight, w2 * fg, atol=1e-9, rtol=1e-5), "an actor under its set point must not be scaled (its forgetting alone)"
-    print(f"motor A147: the limb's actor scaled from rms {rms0:.0f} to {rms1:.2f} and the voice's from {vrms0:.0f} to {vrms1:.2f} in 1,500 ticks, "
-          f"one factor ({c_:.4f}) over every weight; an actor under the set point untouched")
+    with torch.no_grad():
+        ratio2 = m2.weight / w2; c2 = float(ratio2.mean()); rq1 = float((m2(L2._z_now) ** 2).mean().sqrt())
+    assert c2 > 50.0 and float((ratio2 - c2).abs().max()) < 1e-3 * c2, (c2, float((ratio2 - c2).abs().max()))
+    assert 0.5 < rq1 < 1.5, (rq0, rq1)
+    assert float(v2.weight.abs().max()) == 0.0, "an actor at zero (no lesson yet: every learning rate 0) must stay at zero"
+    print(f"motor A147/A151: the limb's actor scaled from rms {rms0:.0f} to {rms1:.2f} and the voice's from {vrms0:.0f} to {vrms1:.2f} in 1,500 ticks, "
+          f"one factor ({c_:.4f}) over every weight; a whisper of rms {rq0:.3f} brought up to {rq1:.2f} in 600 ticks (x{c2:.0f}, one factor); an actor at zero left at zero")
 
 
 def test_the_striatum_reads_the_body():
