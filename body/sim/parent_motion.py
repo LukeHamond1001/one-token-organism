@@ -4859,7 +4859,12 @@ class ParentMotion:
         if self._kneel_plan(None, None, None, None) is None:                  # C175 (2026-10-01): no spot to kneel beside the child (a wall, a
             a["info"]["fallback"] = "set_down"                              # corner: day 46's west edge): the toy is set down within its
             return self._act_bring_back(a, t)                               # reach instead (the lure, C168, when that too is out of reach)
-        return self._fetch(a, toy) + self._near(a) + [dict(type="plan", what="show", args=dict(toy=toy))]
+        if self.child.posture == "front":                                   # C177 (2026-10-01): THE SHOW'S SPOT REACHES ITS PUT. A show ends by
+            near = self._near(a, where="head", offs=PUT_HEAD_OFFS)          # setting the toy down within the child's reach (A100), but its
+        else:                                                               # approach carried no need, so off the mat she knelt where the put
+            xy = self._put_xy()                                             # then lay 48 to 57 cm beyond her reach (day 47: 13 shows, 13 refused
+            near = self._near(a, need=f"reach:{xy[0]:.3f},{xy[1]:.3f}")     # "could not be set down where she meant it"). As bring_back's (A133)
+        return self._fetch(a, toy) + near + [dict(type="plan", what="show", args=dict(toy=toy))]
 
     def _plan_show(self, a, toy):
         sd = [s_ for s_, v in self.holding.items() if v == toy]
