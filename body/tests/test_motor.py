@@ -1456,6 +1456,9 @@ def test_the_earned_certainty():
     assert all(float(lg.abs().max()) <= 1.0 + 1e-6 for lg in none), [float(lg.abs().max()) for lg in none]
     half = _t.softmax(tab.logits(pred, 1.0, earned=[0.5, 0.5, 0.5])[0], -1)[4].item()
     assert p_none < half < p_full, (p_none, half, p_full)
+    sc1 = tab.logits(pred, 1.0, earned=1.0); sc0 = tab.logits(pred, 1.0, earned=0.0)     # C154: one exponent for every joint (an effector
+    assert all(_t.allclose(a, b, atol=1e-6) for a, b in zip(sc1, full)) and all(_t.allclose(a, b, atol=1e-6) for a, b in zip(sc0, none)), \
+        "a scalar earned must read as the same exponent at every joint"                    # without the per-joint law) must not raise
     print(f"motor C148: a sure habit's forecast (norm 8) at sharpness 1: setting 4 drawn at {p_full:.3f} with its certainty earned, "
           f"{p_none:.3f} with nothing earned (the cosines alone), {half:.3f} at half; the old readout unchanged")
 

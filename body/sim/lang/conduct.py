@@ -1026,11 +1026,22 @@ class Conduct:
         in a pause while she looks) for the words her ear accepts, and her frowns begin (talk-over, a hit, a throw). Nothing advanced
         the stage before: life day 38 was the 38th in stage 1, 105 vocal turns a day at +1 the largest positive term of its reward, 'oh'
         its inner word half the day, eight words said right three times and more. True when the stage moved."""
+        moved = False
         if self.stage == 1 and sum(1 for n in self.vocal_book.values() if n >= K.EXACT_UNTIL) >= K.STAGE2_WORDS:
             self.fast.stage = 2
             self.book_log.append((t, "stage", 2, "word-like babble", sorted(self.vocal_book.items(), key=lambda kv: -kv[1])[:8]))
-            return True
-        return False
+            moved = True
+        # C159 (2026-09-30): SPONTANEOUS RECOVERY OF THE WORDS' HABITUATION. Each word's smiles habituate to nothing after about 30 (WORTH_WORD
+        # e^(-n/HABIT_TAU) under HABIT_FLOOR) and the count never fell: the word rung (C145) paid 533 smiles on life day 40, 181 on day 41,
+        # 112 by the middle of day 42, and would have run dry within days, back to stage 2's first-day cliff. Habituation recovers when the
+        # stimulus is withheld (Rankin et al. 2009, characteristic 2: spontaneous recovery; Thompson and Spencer 1966): over the night each
+        # word's count falls to HABIT_KEEP of itself, so the morning pays a worn word a little again and a new word still pays most. The
+        # motor book (got, lifted, shook, hit by toy) is not recovered: it is also her ladder's record of mastery (the rungs), and in
+        # stage 1 the vocal book is the stage's record (C142: three words her ear accepted EXACT_UNTIL times each), so it recovers from stage 2
+        if self.stage >= 2:
+            for w_ in list(self.vocal_book):
+                self.vocal_book[w_] = int(self.vocal_book[w_] * K.HABIT_KEEP)
+        return moved
 
     @property
     def eyes_on_child(self):
@@ -2172,6 +2183,19 @@ class Conduct:
             return self._introduce(kw["word"], t, p, kw.get("o"))
         o = p.obj(kw["o"]) if kw.get("o") else None
         if kw.get("o") and o is None:
+            it_ = INTENTS.get(intent)
+            if it_ is not None and it_.ask is None and it_.acts and it_.acts[0].kind in FETCH_KINDS and self.remembered(kw["o"]):
+                # C157 (2026-09-30): A FETCH OF A TOY SHE KNOWS THE PLACE OF BEGINS WITHOUT A LINE. Her lesson picker falls back to the toys
+                # she knows the place of when none is before her eyes (C121, C141), but every request naming a toy she did not see was
+                # dropped here "unseen" (life days 40 to 42: 13, 12 and 10 lesson requests a day, each costing the play gap of 150 to 300
+                # ticks): the acts of a fetching intent (show, bring_back, bring_far, hand_over, hide) are asked of her motion by the toy's
+                # name (parent_motion._fetch goes to its body; A117 leaves what it cannot get to) and the line is not said (she names
+                # only what is in view, 4.5: her follow-in names the toy once the child attends it); the acts on the naming word have no word
+                for a_ in acts_for(intent, (kw["o"],)):
+                    if a_.during != "focus":
+                        self._request(a_, t, p)
+                self.fast.refused.append((t, intent, f"request: {kw['o']!r} fetched by memory, no line (C157)"))
+                return None
             return self._drop(t, intent, f"unseen: {kw['o']!r}")
         it = INTENTS[intent]
         if intent in ("label", "label_held", "label_colour", "show", "redirect") and o is not None:
@@ -2376,6 +2400,11 @@ class Conduct:
                             until=win_end, trial=tid)
 
     # ------------------------------------------------------------------ save
+    def remembered(self, toy):
+        """C157: a toy she knows the place of though she does not see it now: one of the room's toys (her motion's bodies), not a
+        container (the bucket is never fetched, C119) and not one she left where it lies (A117)"""
+        return toy in getattr(self.motion, "toys", {}) and toy not in TP.OPEN_CONTAINERS and not self.left_where_it_lies(toy)
+
     def left_where_it_lies(self, toy):
         """A117 (C102): whether a toy is one she left where it lies (a fetch of it refused) and it has not moved LEFT_MOVED_M since;
         her lessons and shows pass such a toy over. Cleared at dawn (the room tidied, B8: lane.dawn)"""

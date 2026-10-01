@@ -6963,6 +6963,48 @@ def test_the_word_rung():
           f"then echoed without one; no right name; stage 1: none")
 
 
+def test_the_fetch_by_memory():
+    """lang 68 (C157, 2026-09-30): a lesson's fetch of a toy she knows the place of but does not see begins without a line: the duck out
+    of her view and its body in her room, set_near(duck) asked: no line names it, her motion is asked bring_back duck and the look back to
+    its eyes, and not the naming word's look (no word); with no duck body known: dropped "unseen" as before. Life days 40 to 42: 13, 12
+    and 10 lesson requests a day dropped "unseen" after C121 picked the toys she knows the place of, each costing the play gap"""
+    seen_no_duck = tuple(s for s in TOYS if s.id != "duck")
+    stream = [P(t, seen=seen_no_duck, child_target=None) for t in range(80)]
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con)
+    con.motion.toys = {"duck": 1, "ball": 2}
+    con.request("set_near", o="duck")
+    said, _j = run(con, stream)
+    kinds = [(a[2], a[3]) for a in con.motion.acts]                        # every act asked of her motion (the stub's log)
+    assert ("bring_back", "duck") in kinds and ("look", "child_eyes") in kinds and ("look", "duck") not in kinds, kinds
+    assert not [s for s in said if "duck" in s[1].text], [s[1].text for s in said][:3]
+    assert not [r for r in con.fast.refused if "unseen: 'duck'" in str(r)], con.fast.refused[-3:]
+    assert [r for r in con.fast.refused if "fetched by memory" in str(r)], con.fast.refused[-3:]
+    con2 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False); _no_sets(con2)
+    con2.request("set_near", o="duck")
+    run(con2, stream)
+    kinds2 = [(a[2], a[3]) for a in con2.motion.acts]
+    assert ("bring_back", "duck") not in kinds2 and [r for r in con2.fast.refused if "unseen: 'duck'" in str(r)], (kinds2, con2.fast.refused[-3:])
+    print(f"lang 68 (C157): the duck out of her view, its place known: bring_back asked of her motion without a line; unknown: dropped unseen")
+
+
+def test_the_words_recover():
+    """lang 69 (C159, 2026-09-30): the words' habituation recovers over a night: at a dawn each word's count in the vocal book falls to
+    HABIT_KEEP of itself (30 -> 15: the next day pays smiles from e^(-15/10) down to the floor again; 1 -> 0), the stage's advance
+    judged first and the book untouched in stage 1 (it is that stage's record, C142). Life days 40 to 42: word smiles 533, 181 and 112
+    by the middle of the day, the pool draining"""
+    con = C.Conduct(seed=3, transcriber=Transcriber(None), stage=2, imperfect=False)
+    con.vocal_book = {"duck": 30, "ball": 3, "cup": 1}
+    want = {k: int(v * K.HABIT_KEEP) for k, v in con.vocal_book.items()}
+    assert not con.dawn(48000) and con.vocal_book == want, con.vocal_book
+    con1 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    con1.vocal_book = {"duck": K.EXACT_UNTIL, "ball": K.EXACT_UNTIL, "mama": K.EXACT_UNTIL}
+    assert con1.dawn(48000) and con1.stage == 2 and con1.vocal_book["duck"] == int(K.EXACT_UNTIL * K.HABIT_KEEP), (con1.stage, con1.vocal_book)
+    con0 = C.Conduct(seed=3, transcriber=Transcriber(None), stage=1, imperfect=False)
+    con0.vocal_book = {"duck": 30}
+    assert not con0.dawn(48000) and con0.vocal_book == {"duck": 30}, con0.vocal_book      # stage 1: the book is the stage's record
+    print(f"lang 69 (C159): the vocal book at a stage-2 dawn {dict(duck=30, ball=3, cup=1)} -> {want}; the stage advanced first on a stage-1 book, then halved; stage 1 untouched")
+
+
 TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
@@ -6976,7 +7018,7 @@ TESTS = [test_frames_and_birth_lines, test_line_check_refuses, test_compose_from
          test_trial_protocol, test_trial_chance_and_counterbalance, test_name_trial_foil, test_everyday_asks_teaching_only,
          test_trial_property, test_trial_low_items, test_understood_controlled, test_name_foils_matched,
          test_low_items_ninth, test_trial_one_timeline, test_trial_invariance, test_trial_window_share,
-         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed, test_the_stage_advance, test_the_word_rung]
+         test_trial_carrier_phrase, test_trial_acceptance_a60b, test_trial_levels_no_feedback, test_motor_judgments, test_her_lessons_and_hands, test_vocal_habituation, test_distress_owed, test_the_stage_advance, test_the_word_rung, test_the_fetch_by_memory, test_the_words_recover]
 
 if __name__ == "__main__":
     t0 = time.time()

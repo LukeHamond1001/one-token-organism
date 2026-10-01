@@ -141,6 +141,23 @@ def credit_after(delta, gamma, reach):
     return G
 
 
+def credit_of(delta, gamma, reach):
+    """THE DOPAMINE'S CREDIT OF THE ACT HELD AT EACH TAPE POSITION (C156, 2026-09-30): G_t = the sum over k = 0..reach-1 of gamma^k x
+    delta_(t+k). The position written at tick t carries the act drawn the tick before (cortex._step reads each effector's st["now"],
+    set by the tick before's draw, as the tick's efference copy; the world applied that act between the ticks), so the row's own
+    dopamine is that act's FIRST consequence, not an earlier act's: on life days 41 and 42 the record's big wrist step stood at 0.52 a
+    tick one tick before a pain's onset (base 0.055) and 0.035 on the onset tick. credit_after (k from 1) is the tag's law and stays;
+    the day's habit weights (cortex._habit_weights, A141) and the night's (the reel's G, act_pred_night_weight) read this one"""
+    d = delta.to(torch.float64)
+    T = int(d.numel())
+    G = torch.zeros(T, dtype=torch.float64)
+    for k in range(0, int(reach)):
+        if k >= T:
+            break
+        G[:T - k] += float(gamma) ** k * d[k:]
+    return G
+
+
 def peak_of(tags, a, b, gamma, reach):
     """THE EPISODE'S PEAK (the module's doc): the tick r in [a, min(T, b - 1 + reach)) whose tag discounted from the episode's end,
     gamma^max(0, r - (b - 1)) x tag_r, is the largest (the first of equals): the outcome T_e reached back from; (r, its value)"""
@@ -326,7 +343,7 @@ class SleepMixin:
             if e > a:
                 spans.append((a, e)); a = e
         ent = episode_entries(spans, rec[:, 0].tolist(), rec[:, 1].tolist(), tstar.tolist(), mean, tau=int(self._sleep_const("entry_tau")))
-        G = credit_after(rec[:, 1], g, reach)
+        G = credit_of(rec[:, 1], g, reach)                         # C156: the act's credit begins at its own row (its first consequence)
         reel = dict(self._tape_rows(n), G=G, day=int(self.nights))
         W = int(self.m.window); floor = float(self._sleep_const("peak_floor"))
         ri = len(reels); reels.append(reel)

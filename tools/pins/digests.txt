@@ -125,7 +125,10 @@ lost    served_full_roundtrip pinned   store.S, store.sat
 # Re-pinned at C153 (2026-09-30 18:04, on branch t153: the actor's tag decays at the tag's reach (64 ticks) and is captured by phasic dopamine,
 # SIM_CFG actor_slow_lr 1e-3; the language default digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 96d2e55dca5b9790c7e42e6f, one-thread
 # dd95d9b07cb170ddff9c0cd0, consts 74b1b1c13c03.
-digest  sim                   threaded 016a8876d297b9c181677ef3 consts c9755b913294 | --profile sim
-digest  sim                   pinned   8217248e5cab5fc966f7d96b consts c9755b913294 | --profile sim
-full    sim                   threaded organs 37b4fb3ec6ab store 69a6d356845f optim 6733f81bd686 rng 5c72b73f8367 work 19abb22a1e4e cfg 854522d0bd88
-full    sim                   pinned   organs 4042f2c477c3 store 44bfddf7b0ea optim 37cc3b1d5bee rng 5c72b73f8367 work 38a8243c3a96 cfg 854522d0bd88
+# Re-pinned at C156 (2026-09-30 18:52, on branch t154: the act weights' credit begins at the position's own row (sleep.credit_of, k from 0), by day
+# (A141) and by night; SIM_CFG unchanged; the body/core consts digest unchanged (C159's HABIT_KEEP is the lang layer's); the language default
+# digest 7c54199e3c72cf77d45a8e94 kept). Was: threaded 016a8876d297b9c181677ef3, one-thread 8217248e5cab5fc966f7d96b, consts c9755b913294.
+digest  sim                   threaded 70242aba83dc89ce3b391683 consts c9755b913294 | --profile sim
+digest  sim                   pinned   e3f82db9c5bfac64b09889a0 consts c9755b913294 | --profile sim
+full    sim                   threaded organs 4907603a9566 store b4217f76a30d optim cc788997d0f1 rng 495b583d7174 work e85059542ce4 cfg 854522d0bd88
+full    sim                   pinned   organs 83bf332212f9 store 70364f4d6747 optim f9cb803dd66c rng 495b583d7174 work eda1c7895f3b cfg 854522d0bd88

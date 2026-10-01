@@ -466,7 +466,7 @@ class ActTable(nn.Module):
             if pred is None:
                 out.append(torch.zeros(k, device=R.device))
             elif earned is not None:
-                g_ = max(0.0, min(1.0, float(earned[j])))
+                g_ = max(0.0, min(1.0, float(earned[j] if isinstance(earned, (list, tuple)) else earned)))   # C154: one exponent for every joint (an effector without the per-joint law) or one per joint
                 out.append(s_ * (u_ @ R.t()) * (n_ ** g_))
             else:
                 out.append(s_ * (pred @ R.t()))

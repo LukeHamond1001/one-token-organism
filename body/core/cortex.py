@@ -186,10 +186,10 @@ class CortexMixin:
         rec = getattr(self, "_rec", None); n = int(getattr(self, "_rec_n", 0))
         if rec is None or n < int(T) or T < 2:
             return None
-        from .sleep import credit_after
+        from .sleep import credit_of
         from .physiology import FRAMES
         g = self._tag_gamma(); reach = int(self.cfg.get("tag_reach", FRAMES["tag_reach"]))
-        G = credit_after(rec[n - int(T):n, 1], g, reach)
+        G = credit_of(rec[n - int(T):n, 1], g, reach)             # C156: a position's act is the tick before's draw; its row's dopamine is its first consequence
         return (1.0 + G).clamp(0.0, 1.0).to(torch.float32).to(self.dev)
 
     def _window_tensors(self, win=None):

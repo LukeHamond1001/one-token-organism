@@ -1375,10 +1375,14 @@ def test_a_later_effector():
         assert st_["last"] and "n" in st_["last"], (e_.name, st_["last"])
         assert float(M.m.gates[e_.name].weight.detach().abs().max()) > 0 and float(M.m.actors[e_.name].weight.detach().abs().max()) > 0, e_.name
     # the night rests them; a save keeps them; the loaded body lives on
-    L2 = _born(_Arm(TOK, cfg), cfg); _live(L2, lines=lines, ticks=120)
+    L2 = _born(_Arm(TOK, cfg), cfg)
+    for st_ in L2.motor:
+        st_["a_tag"] = torch.ones(2, 2)                      # C155: A142's tag set before the day (the tag step is off at actor_slow_lr 0,
+    _live(L2, lines=lines, ticks=120)                         # so only the night can end it)
     assert L2.nights == 1 and L2.sleep_pressure == 0, (L2.nights, L2.sleep_pressure)
     for st_ in L2.motor:
         assert len(st_["buf"]) == 0 and st_["e_actor"] is None and st_["now"] is None and not st_["acted_last"]
+        assert st_.get("a_tag") is None, "the night must end the actor's tag (C155)"
     assert int(L2.m.stri_mline.max()) == -1
     import contextlib
     import io

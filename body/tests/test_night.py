@@ -20,7 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, ROOT)   # this tree's body, not a fixed one
 from body.life import Life  # noqa: E402
 from body.core.amygdala import episode_entries, tag_star  # noqa: E402
-from body.core.sleep import TAPE_BLOCK, credit_after, peak_of, tag_star_fast  # noqa: E402
+from body.core.sleep import TAPE_BLOCK, credit_after, credit_of, peak_of, tag_star_fast  # noqa: E402
 from body.core.world import WorldLoop  # noqa: E402
 
 TOK = Tokenizer.from_file("/Users/lukehamond/Projects/project/data/tok_char.json")
@@ -140,13 +140,17 @@ def test_the_episodes():
     tags = rec[:, 2]
     ts_slow = tag_star(tags.tolist(), G, 64); ts_fast = tag_star_fast(tags, G, 64)
     assert ts_fast.tolist() == ts_slow
-    G_ = credit_after(rec[:, 1], G, 64)
+    G_ = credit_of(rec[:, 1], G, 64)                                        # C156: the act's credit from its own row (k from 0)
     for t in (0, 17, 150, n - 30, n - 2, n - 1):
         want = 0.0
-        for k in range(1, 65):
+        for k in range(0, 64):
             if t + k < n:
-                want += G ** (k - 1) * float(rec[t + k, 1])
+                want += G ** k * float(rec[t + k, 1])
         assert abs(float(G_[t]) - want) < 1e-12, (t, float(G_[t]), want)
+    Ga_ = credit_after(rec[:, 1], G, 64)                                    # the tag's law unchanged (k from 1)
+    for t in (0, 17, n - 2):
+        want = sum(G ** (k - 1) * float(rec[t + k, 1]) for k in range(1, 65) if t + k < n)
+        assert abs(float(Ga_[t]) - want) < 1e-12, (t, float(Ga_[t]), want)
     L.cfg["episode_cap"] = 10 ** 9                                          # the first night keeps all (the cap is tried below)
     rep = L.night(); assert not rep.get("error"), rep.get("error")
     E = rep["episodes"]

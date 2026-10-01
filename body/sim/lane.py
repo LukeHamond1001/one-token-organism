@@ -182,6 +182,8 @@ class ParentLane:
         self.released = {}                                # toy -> the tick her hand let it go
         self.hidden = {}                                  # A129: toy -> the tick it lay hidden in the bucket from her hand
         self.hidden_out = {}                              # A129: a hidden toy out of the bucket -> the first tick it was seen out
+        self.hidden_seen = {}                             # C158: toy -> whether the bucket stood before the child's camera as it was hidden
+        self.found_log = []                               # C158: (tick, toy, seen) of the finds, the last 50 (the record's "found")
         self.posture = None                               # its lying posture, back or front, last seen stable
         self.face_down = 0                                # ticks lying face down running
         self.cry_down = 0                                 # ticks lying face down and crying running
@@ -341,6 +343,7 @@ class ParentLane:
         things = [(tt, pos[tt]) for tt in visible] + [("mama", face)]
         rd = self.conduct.reader
         target, before = rd.look(head, axes, things)
+        self._before = before                                              # C158: what stands before the child's camera this tick
         touch = self._contacts(m, d)
         holds = tuple(tt for tt in self.toys if touch[tt]["child"])
         ch = PM_child(world)
@@ -423,11 +426,12 @@ class ParentLane:
         for tt in in_bucket:                                               # a toy is HIDDEN once it lies in the bucket from her hand
             if tt not in self.hidden and (tt in her or t - self.released.get(tt, -10 ** 9) <= HANDOVER_TICKS):
                 self.hidden[tt] = t
+                self.hidden_seen[tt] = bool("bucket" in (getattr(self, "_before", None) or ()))   # C158: hidden in its view, or not
         for tt in list(self.hidden):
             if tt in in_bucket or tt in holds:
                 self.hidden_out.pop(tt, None)
             elif t - self.hidden_out.setdefault(tt, t) >= HIDDEN_OUT_TICKS:   # out of the bucket by other means (a tip, a fall) for
-                self.hidden.pop(tt); self.hidden_out.pop(tt, None)          # HIDDEN_OUT_TICKS with no hand on it: no longer hidden
+                self.hidden.pop(tt); self.hidden_out.pop(tt, None); self.hidden_seen.pop(tt, None)   # HIDDEN_OUT_TICKS with no hand on it: no longer hidden
         for tt in self.toys:                                            # its own reach and hold (A89): the hand moved, or reached for the
             if tt in holds:                                             # toy, as the touch began, and the toy kept in its touch GOT_HOLD ticks
                 run = self.touch_run.get(tt, 0) + 1
@@ -442,6 +446,7 @@ class ParentLane:
                 else:                                                   # shaking it, and no three ticks running): the find is its hand
                     ft = []                                             # on the hidden toy on FOUND_TOUCHES of the last FOUND_WINDOW ticks
                 if tt in self.hidden and (run == GOT_HOLD or len(ft) >= FOUND_TOUCHES):   # A129: its hand on the hidden toy: FOUND
+                    self.found_log.append((int(t), tt, bool(self.hidden_seen.pop(tt, False)))); del self.found_log[:-50]   # C158: the find, witnessed or blind
                     ev.append(("found", tt)); self.hidden.pop(tt); self.found_ticks.pop(tt, None); self.released[tt] = -10 ** 9   # (her release is spent: a found toy still in the bucket is not hidden again; worth 2 in her book; the hand-over window does not apply:
                 if run == GOT_HOLD and self.got_arm.get(tt):            # the toy was in the bucket, not in her hand)
                     ev.append(("got", tt))
@@ -644,6 +649,7 @@ class ParentLane:
                          heard=[cw.word for cw in out.heard], judged=[list(j) for j in out.judgments], cut=bool(out.cut),
                          face_test=bool(test), reading=self.reading, word=self.word_now, in_view=p.child_in_view,
                          seen_by_child=p.seen_by_child, present=p.present,
+                         found=[[o_, s_] for tk_, o_, s_ in self.found_log if tk_ == int(t)],   # C158: this tick's finds, each with whether the hide was in its view
                          child_xy=[float(world.d.qpos[0]), float(world.d.qpos[1])])   # C131: its pelvis on the floor plan (her plan reads it)
         return {SOURCE: (pa.astype(np.float64), mouth)}
 
@@ -708,7 +714,7 @@ class ParentLane:
                     utt=utt, voice_done=self.voice_done, word_now=self.word_now, face_seen=self.face_seen.copy(),
                     reading=self.reading, reading_t=self.reading_t, test_prev=self.test_prev, fp=_pl(self.fp),
                     toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had),
-                    child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released), hidden=dict(self.hidden), found_ticks={k: list(v) for k, v in self.found_ticks.items()},
+                    child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released), hidden=dict(self.hidden), hidden_seen=dict(self.hidden_seen), found_ticks={k: list(v) for k, v in self.found_ticks.items()},
                     posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines,
                     plan=None if self.plan is None else self.plan.state(), day=self.day, day_start=self.day_start,
                     eyes=dict(first=self.first, hand_prev={k: v.tolist() for k, v in self.hand_prev.items()},
@@ -761,6 +767,7 @@ class ParentLane:
         self.toy_z = dict(s["toy_z"]); self.falling = set(s["falling"]); self.child_had = tuple(s["child_had"])
         self.child_held_at = dict(s["child_held_at"]); self.her_had = dict(s["her_had"]); self.released = dict(s["released"])
         self.hidden = dict(s.get("hidden", {}))                         # A129 (a save from before it: nothing hidden)
+        self.hidden_seen = {k: bool(v) for k, v in dict(s.get("hidden_seen", {})).items()}; self.found_log = []   # C158 (older saves: unknown)
         self.found_ticks = {k: [int(x) for x in v] for k, v in dict(s.get("found_ticks", {})).items()}   # C116 (older saves: none)
         self.posture, self.face_down = s["posture"], int(s["face_down"])
         self.last = dict(posture=s["last_posture"])

@@ -416,6 +416,8 @@ MOTOR_WORTH = {                       # event kind -> (its worth, the full act i
 HABIT_TAU = 10.0                      # the n-th smile for the same act and object is worth w e^(-n/10): A2's fall with mastery, its floor
                                       # of 1 removed (the positive circuits of Knox and Stone 2015: a smile that never ends is farmed)
 HABIT_FLOOR = 0.05                    # under it, no smile (logged)
+HABIT_KEEP = 0.5                      # C159: a word's smile count over a night falls to this share of itself (spontaneous recovery of
+                                      # habituation, Rankin et al. 2009; the share ours): a word worn to 30 pays 15 small smiles the next day
 MASTERED_N = 3                        # an approximation earns her smile until the full act has been smiled at 3 times (P3's word rule, EXACT_UNTIL)
 
 assert all(w in BIRTH_WORDS for ws in EXPECT_ROUTINES.values() for w in ws)

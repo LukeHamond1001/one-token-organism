@@ -297,6 +297,7 @@ class NightMixin:
                 if st_.get("inv_batch"):
                     self._inverse_batch(i_)                        # step R6h: act_inv's pairs gathered before dusk, learned at nightfall
                 st_["buf"].clear(); st_["g_base"] = None; st_["e_actor"] = None; st_["acted_last"] = False; st_["now"] = None
+                st_["a_tag"] = None                                # C155: the actor's tag (A142) ends at the night as its fast trace does
                 st_["chunk"] = 0; st_["sense"] = None; st_["fwd"] = None; st_["err"] = None     # step R6: no chunk, no sense or foresight carried over
                 st_["unit"] = None; st_["fatigue"] = 0.0          # step R6h: no unit under way; its own fatigue rested, as the body's
                 st_["cry_t"] = 0                                   # and no cry under way

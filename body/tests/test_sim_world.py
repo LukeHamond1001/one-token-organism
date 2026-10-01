@@ -1844,10 +1844,10 @@ def test_the_bucket_beside():
 
 
 def test_the_habit_is_dopamines():
-    """world (A141, C149, 2026-09-30): the day's habit lesson weighted by dopamine's credit as the night's is. A born G1 life with a day
-    record of 64 ticks and one dopamine dip of -1 at row 40: the act at position 39 weighs 0 (G = -1), position 38 about 0.06
-    (0.9375 x -1), positions 40 on 1, position 20 under 1 and above 0.5; with the switch off, None; with fewer rows than the window,
-    None; the weights reach the motor lesson (its report unchanged in kind, the mean weight under 1)"""
+    """world (A141, C149, 2026-09-30; C156 the same day): the day's habit lesson weighted by dopamine's credit as the night's is. A born
+    G1 life with a day record of 64 ticks and one dopamine dip of -1 at row 40: the act held at position 40 (the tick before's draw,
+    whose first consequence that row is) weighs 0 (G = -1), position 39 about 0.06 (1 - 0.9375), positions 41 on 1, position 20 under
+    1 and above 0.5; with the switch off, None; with fewer rows than the window, None"""
     from body.life import Life
     from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
     w = G1World(seed=1)
@@ -1864,12 +1864,12 @@ def test_the_habit_is_dopamines():
             continue
         assert wp is not None and wp.shape == (64,), None if wp is None else wp.shape
         g = L._tag_gamma()
-        assert abs(float(wp[39])) < 1e-6 and abs(float(wp[38]) - max(0.0, 1.0 - g)) < 1e-5 and float(wp[40]) == 1.0 and float(wp[63]) == 1.0, wp[36:42].tolist()
+        assert abs(float(wp[40])) < 1e-6 and abs(float(wp[39]) - max(0.0, 1.0 - g)) < 1e-5 and float(wp[41]) == 1.0 and float(wp[63]) == 1.0, wp[36:42].tolist()
         assert 0.5 < float(wp[20]) < 1.0, float(wp[20])
         L._rec_n = 32
         assert L._habit_weights(64) is None
         wp1, g1 = wp, g
-    print(f"world A141: a dopamine dip of -1 at tick 40 of a 64-tick window: the act before it weighs 0, two before {max(0.0, 1.0 - g1):.3f}, "
+    print(f"world A141/C156: a dopamine dip of -1 at row 40 of a 64-tick window: the act held at that row weighs 0, the one before {max(0.0, 1.0 - g1):.3f}, "
           f"twenty before {float(wp1[20]):.3f}, the acts after it 1; off: None; a short record: None")
 
 
