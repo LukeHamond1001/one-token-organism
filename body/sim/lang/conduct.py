@@ -2374,6 +2374,18 @@ class Conduct:
             if ln is not None:
                 return ln
         tg = p.target_obj()
+        if tg is None:
+            # C226 (2026-10-02): A GRUNT WITH NOTHING ATTENDED IS ANSWERED WITH A THING IN VIEW. Days 61 to 63: the child on its back
+            # attending nothing said "mama" 1,400 times a day and "hi" 800, and her reply to each was the social line: 'mama is here.' 349
+            # and 'hi pip!' 346 of her 1,345 lines on day 62, half her speech, the same two words back to the two words it said most; the
+            # toys before its eyes (box, ring, ball, bear in its hands and view) went unnamed in those turns. A parent answering a baby's
+            # call names what is there ("the ball!", the recast toward the thing in view: Goldstein and Schwade 2008): the reply takes the
+            # toy it sees when it attends none, one within its reach first (in its hand or where its hands can get to); the social
+            # line when it sees none
+            seen = sorted((o for o in p.seen if getattr(o, "child_sees", False) and o.name in TP.OBJECT_NOUNS),
+                          key=lambda o: (not getattr(o, "child_can_reach", False), o.id))
+            if seen:
+                tg = seen[0]
         return (f.compose("reply", t, p, o=tg) if tg is not None else None) or f.compose("reply_social", t, p)
 
     def _say(self, line, t, p, out, in_set=False):

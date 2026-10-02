@@ -177,7 +177,7 @@ FRAMES = {
     "echo": [F("{w}! the {w}!", "{w}"), F("the {w}! a {w}.", "{w}")],
     "echo_word": [F("{w}! {w}.", "{w}"), F("{w}. {w}!", "{w}")],
     "reply": [F("oh! the {o}.", "{o}"), F("you see the {o}?", "{o}")],
-    "reply_social": [F("hi {n}!", "{n}"), F("mama is here.")],                # C172
+    "reply_social": [F("hi {n}!", "{n}"), F("mama is here."), F("{n}.", "{n}"), F("{n}? mama is here."), F("hi. hi {n}.", "{n}")],   # C172; C226
     "narrate_fell": [F("uh oh. the {o} is down.", "down"), F("oh! the {o} is down.", "down")],
     "narrate_on": [F("the {o} is on the {p}.", "{p}")],
     "narrate_rolled": [F("oh! you roll.", "roll"), F("roll! you roll.", "roll")],
