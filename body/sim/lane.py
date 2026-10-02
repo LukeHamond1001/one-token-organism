@@ -102,8 +102,10 @@ THROW_MPS = 1.0                        # a toy leaving its hand faster than this
 HAND_REST_MPS = 0.05                   # a hand slower than this has come to rest
 HAND_MOVE_MPS = 0.15                   # a hand faster than this is moving
 MOVED_TICKS = 5                        # "got" needs that hand moved, or a reach toward the toy, within the last 5 ticks (its own reach and hold)
-HELD_TICKS = 67                        # C225: a toy kept in its hand this many ticks running (10 s) is "held", once a hold: the holding a shake needs
-                                       # (the cord's grasp habituates at 40 ticks, A162: the holding past it is the cortex's; ours)
+HELD_TICKS = 20                        # C225: a toy kept in its hand this many ticks running is "held", once a hold: the holding a shake needs.
+                                       # C228 (2026-10-02): 3 s, from 10 (67 ticks): day 64 under C225 had holds of 6 to 12 s at most and not
+                                       # one "held", so the smile for holding on never came; a parent says "you've got it" to a baby that holds a
+                                       # rattle a few seconds, and A2's fall with mastery (HABIT_TAU) wears the smile as the holds come (ours)
 GOT_HOLD = 3                           # and the toy kept in that hand's touch this many ticks running: a hold, not a graze (the plumbing day
 FOUND_WINDOW, FOUND_TOUCHES = 6, 3     # C116: a find: its hand on the hidden toy on 3 of the last 6 ticks (a toy in the bucket rattles; ours)
 BUCKET_NEAR_M = 0.30                   # C174: a hand within this of the bucket's centre is "at the bucket" for the record's bucket_hand ruler (ours)
