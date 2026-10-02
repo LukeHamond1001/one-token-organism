@@ -160,8 +160,9 @@ when, in which register, the acts her talk accompanies, and her formal trials of
                of the time (Gros-Louis et al. 2006: mothers answered over 70% of vocalizations within 2 s), and her mirrored
                copies of its arm and hand movements within 1-2 s, at most about 6 a minute (Pawlby 1977). No miss touches a
                judgment: a judged turn is always answered.
-               STAGE 2's TALK-OVER (4.4, 4.6, A13): a turn begun during her line stops her at the word's end, frowns
-               (Say.frown), and is answered "no." (the "no." register), not judged; never for babble that never stops, and
+               STAGE 2's TALK-OVER (4.4, 4.6, A13): a turn begun during her line stops her at the word's end, marks the frown
+               (Say.frown; the face's frown retired at C231), and is answered as a grunt is (C233; "no." until then), not judged;
+               never for babble that never stops, and
                never over a formal trial's sentence (no stop in either stage: she says it whole, 4.8).
                REDIRECTS (4.10): a redirect (the "redirect" intent, or a Claude line naming a toy the child does not attend as
                she reads it) is said only after 40 ticks with no target and while the day's follow-in namings number at least
@@ -1907,7 +1908,7 @@ class Conduct:
         An echo (said within ECHO_WINDOW of her saying the word) is answered as imitation: judged as the word said then would
         be, so it may earn her smile (her method: a parent answers imitation, Goldstein and Schwade 2008), but it counts toward
         nothing in the ledger, neither "says" nor "understood" nor a met ask: a name ask answered by an echo is void. A turn that
-        talked over her in stage 2 is answered "no." and not judged (the frown, 4.4, 4.6). A turn she makes no judgment of she
+        talked over her in stage 2 is answered as a grunt is and not judged (C233; "no." and the frown until C231/C233: 4.4, 4.6). A turn she makes no judgment of she
         misses at MISS_TURN (A52); a judged one she always answers. A turn that ends while her formal trial's sentence or
         window is open is judged by nothing (4.8: her face holds its neutral set until the trial is decided, so nothing the
         child's voice does can move her and void it; P3's eleventh round): it is answered, after the trial, as any turn she
@@ -1924,7 +1925,11 @@ class Conduct:
             self.pending = None
         over = cw.channel == "tract" and self.turn is not None and self.turn.get("over") and self.stage >= 2
         if over:
-            kind, w, obj = "no", None, None
+            # C233 (2026-10-02): A TURN THAT TALKED OVER HER IS ANSWERED, NOT SCOLDED. Until C233 it was answered "no." and nothing else
+            # (its word unanswered): life day 65 to its tick 17,300, "no." 152 of her 787 lines and 'no' the child's fourth word (351 of its
+            # 4,626 tokens), beside the frown C231 retired. She still stops at her word's end and listens (4.6), and the turn is not judged
+            # (no smile for it); its reply is the grunt's (C197, C226): the thing it attends or sees, else the social line
+            kind, obj = "reply", tgt
         elif w is not None:
             right, asked = self._right(w, cw.start, p)
             named = {s.name: s for s in p.attended()}

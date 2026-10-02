@@ -2338,7 +2338,8 @@ def test_claude_shows_and_forms():
 def test_imperfect_parent_and_talk_over():
     """finding 6 (low): A52 was not built (REPLY_AFTER a fixed 3), and stage 2 had no "no." for talking over her (4.4's register
     table). Now her latency is drawn from human switching pauses, she misses a share of the turns she makes no judgment of,
-    she copies its arm and hand movements, and stage 2 answers a talk-over with the frown and "no."."""
+    she copies its arm and hand movements, and stage 2 marks a talk-over (the frown flag; C231 retired the face's frown, C233 the "no.":
+    the turn is answered as a grunt is and not judged)."""
     act = np.array([4, 4, 2, 4, 2, 2, 2, 4, 2, 0])
 
     def talk(stage, nonstop=False):
@@ -2358,8 +2359,8 @@ def test_imperfect_parent_and_talk_over():
     cut = [t for t, s in enumerate(out) if s.cut]
     assert cut and getattr(out[cut[0]], "frown", None) == "talk_over", "stage 2's talk-over: no frown"
     after = [(t, s.line) for t, s in enumerate(out) if s.line is not None and t > cut[0]]
-    assert after and after[0][1].text == "no." and after[0][1].register == "no" and \
-        not [j for s in out for j in s.judgments], after[:1]
+    assert after and after[0][1].text != "no." and after[0][1].register != "no" and \
+        not [j for s in out for j in s.judgments], after[:1]                         # C233: answered as a grunt is, not judged, no "no."
     con, out = talk(1)
     assert [s.frown for s in out if s.cut] == [None] and not [s for s in out if s.line is not None and s.line.text == "no."]
     con, out = talk(2, nonstop=True)
@@ -2450,7 +2451,7 @@ def test_imperfect_parent_and_talk_over():
             last = t
     rate = len(gaps) / (20000 * 0.15 / 60)
     assert 4.0 < rate < 7.0, rate
-    print(f"37 stage 2's talk-over: stopped, the frown and 'no.' (the 'no.' register), the turn not judged; none in stage 1 "
+    print(f"37 stage 2's talk-over: stopped, the frown marked (the face's frown retired at C231), answered as a grunt is (C233; no 'no.'), the turn not judged; none in stage 1 "
           f"or for babble that never stops; her latency {lat.mean():.2f} ticks after the turn's end on average (median "
           f"{np.median(lat):.0f}, {lat.min()} to {lat.max()}; a realized pause of {real.mean():.0f} ms, sd {real.std():.0f}, "
           f"{100 * (lat == 0).mean():.0f}% on the turn-end tick; Gratier et al. 2015's 730), exact from her seed; "
