@@ -102,6 +102,8 @@ THROW_MPS = 1.0                        # a toy leaving its hand faster than this
 HAND_REST_MPS = 0.05                   # a hand slower than this has come to rest
 HAND_MOVE_MPS = 0.15                   # a hand faster than this is moving
 MOVED_TICKS = 5                        # "got" needs that hand moved, or a reach toward the toy, within the last 5 ticks (its own reach and hold)
+HELD_TICKS = 67                        # C225: a toy kept in its hand this many ticks running (10 s) is "held", once a hold: the holding a shake needs
+                                       # (the cord's grasp habituates at 40 ticks, A162: the holding past it is the cortex's; ours)
 GOT_HOLD = 3                           # and the toy kept in that hand's touch this many ticks running: a hold, not a graze (the plumbing day
 FOUND_WINDOW, FOUND_TOUCHES = 6, 3     # C116: a find: its hand on the hidden toy on 3 of the last 6 ticks (a toy in the bucket rattles; ours)
 BUCKET_NEAR_M = 0.30                   # C174: a hand within this of the bucket's centre is "at the bucket" for the record's bucket_hand ruler (ours)
@@ -184,6 +186,7 @@ class ParentLane:
         self.toy_z = {}                                   # toy -> its last height (the fall)
         self.falling = set()                              # toys in a drop already reported
         self.child_had = ()                               # the toys in its hands last tick
+        self.held_run = {}                                # C225: ticks each toy has been in its hands running
         self.child_held_at = {}                           # toy -> the last tick it was in its hands
         self.her_had = {}                                 # her hands' toys last tick
         self.released = {}                                # toy -> the tick her hand let it go
@@ -485,6 +488,7 @@ class ParentLane:
                 ev.append(("gave", tt))
         for tt in holds:
             self.child_held_at[tt] = t
+        self._held(holds, ev)                                                 # C225: a toy lifted off its rest and kept in its hands
         self.child_had = tuple(holds)
         self.her_had = {tt: t for tt in her}
         post = ch.posture
@@ -569,6 +573,17 @@ class ParentLane:
             if last and d < min(last) - NEARER_M:
                 ev.append(("reach_nearer", tt))
             last.append(round(d, 4)); del last[:-BOOK_LAST]
+
+    def _held(self, holds, ev):
+        """C225 (2026-10-02): a toy lifted off its rest (`lifted`, LIFT_M) and kept in its hands HELD_TICKS running is "held", once a hold
+        (the count runs on; it falls to nothing the tick the toy leaves the hand or was never lifted: a toy a resting hand lies on, the born
+        right hand's rattle, is not held). The holding the shake needs, past the cord's grasp (A162's 40 ticks): the cortex's to learn, and
+        her face pays it (MOTOR_WORTH 'held')"""
+        for tt in self.toys:
+            n_ = self.held_run.get(tt, 0) + 1 if tt in holds and tt in self.lifted else 0
+            self.held_run[tt] = n_
+            if n_ == HELD_TICKS:
+                ev.append(("held", tt))
 
     def _toys(self, t, pos, holds, her, touch, ev):
         """the toys as she sees them (A89): each one's speed; where it lay still in no hand; a lift and a shake of one in its hand"""
@@ -740,7 +755,7 @@ class ParentLane:
                     order=self.words.order, dropped=self.words.dropped, withdrawn=self.words.withdrawn),
                     utt=utt, voice_done=self.voice_done, word_now=self.word_now, face_seen=self.face_seen.copy(),
                     reading=self.reading, reading_t=self.reading_t, test_prev=self.test_prev, fp=_pl(self.fp),
-                    toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had),
+                    toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had), held_run=dict(self.held_run),
                     child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released), hidden=dict(self.hidden), hidden_seen=dict(self.hidden_seen), found_ticks={k: list(v) for k, v in self.found_ticks.items()},
                     posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines,
                     off_back=self.off_back, tummy_over=self.tummy_over,   # C217
@@ -793,6 +808,7 @@ class ParentLane:
         self.reading, self.reading_t, self.test_prev = float(s["reading"]), int(s["reading_t"]), bool(s["test_prev"])
         self.fp = dict(s["fp"])
         self.toy_z = dict(s["toy_z"]); self.falling = set(s["falling"]); self.child_had = tuple(s["child_had"])
+        self.held_run = {k: int(v) for k, v in s.get("held_run", {}).items()}   # (C225; older saves: none held)
         self.child_held_at = dict(s["child_held_at"]); self.her_had = dict(s["her_had"]); self.released = dict(s["released"])
         self.hidden = dict(s.get("hidden", {}))                         # A129 (a save from before it: nothing hidden)
         self.hidden_seen = {k: bool(v) for k, v in dict(s.get("hidden_seen", {})).items()}; self.found_log = []   # C158 (older saves: unknown)

@@ -60,6 +60,7 @@ EVENT_KINDS = (
     "pain",          # the child's pain (a thump or a pain event she saw)
     "distress",      # A13's outward signs: face down over 100 ticks, thumps
     "tummy_time_over",   # C216: face down TUMMY_TIME_TICKS running, still or not: she turns it over, no concern
+    "held",              # C225: a toy kept in its hand HELD_TICKS running (10 s), once a hold: the holding the shake needs
     "talk_over",     # the child started sounding during her line
     "lost_toy",      # a toy just fell from its hand
     "arm_raise",     # its arm raised, as she sees it (the side, "left" or "right", as object): she may copy it (A52)

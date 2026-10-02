@@ -372,7 +372,20 @@ def test_her_eyes():
         if seen_at and lane.reading > 0:                                             # (A158: the reading rises the tick she smiles, looked
             break                                                                    # at or not; her en-face conduct is read on the test)
     assert seen_at and lane.reading > 0, (seen_at, lane.reading, lane.feel.log[-6:])
-    assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted", "hit"}, lane.conduct.book   # in a
+    import body.sim.lane as LN_
+    from body.sim.lang import consts as LC, percept as LP
+    assert "held" in LP.EVENT_KINDS and LC.MOTOR_WORTH["held"] == (1, "shook")   # C225: her smile for the hand that holds on (shaping toward the shake)
+    lane.lifted.add("ball"); lane.held_run = {}
+    ev2 = []
+    for _ in range(LN_.HELD_TICKS + 10):                                             # the ball, lifted, kept in its hand HELD_TICKS running:
+        lane._held(("ball", "rattle"), ev2)                                          # "held" once; the rattle its right hand lies on, never
+    assert ev2 == [("held", "ball")], (ev2, lane.held_run)                           # lifted, is not held
+    assert lane.held_run["ball"] == LN_.HELD_TICKS + 10 and lane.held_run["rattle"] == 0
+    lane._held(("rattle",), ev2); assert lane.held_run["ball"] == 0                  # the ball out of its hand: the count falls
+    for _ in range(LN_.HELD_TICKS):                                                  # back in its hand: a new hold, held again
+        lane._held(("ball",), ev2)
+    assert ev2 == [("held", "ball"), ("held", "ball")], ev2
+    assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted", "hit", "held"}, lane.conduct.book   # in a
     st = lane.state()                                                                # raised hand: "lifted" too, as a person would see it
     assert st["eyes"]["hand_prev"]["left"] and st["conduct"]["book"]["got"] == {"ball": 1}
     w2, lane2 = _world()
