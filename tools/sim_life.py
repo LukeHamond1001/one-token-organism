@@ -17,7 +17,7 @@ Birth (seed 1, the born learning rates): the same without --lr0, --out the life'
 """
 import argparse
 import collections
-import json
+import json, math
 import os
 import pickle
 import sys
@@ -387,6 +387,10 @@ def main():
                 rec["found"] = ls["found"]                                  # C158: a find this tick, [toy, whether the child saw the hide]
             if ls.get("bucket_hand") is not None:
                 rec["bh"] = ls["bucket_hand"]; rec["hid"] = ls.get("hidden") or []   # C174: the hand at the bucket [above the rim, in from its edge], the toys hidden                      # C142: her stage (1: the vocal turn smiled; 2: the words her ear accepts, the frowns)
+            rec["gaze"] = [round(math.degrees(float(world.gaze[0])), 1), round(math.degrees(float(world.gaze[1])), 1)]   # C202: the gaze (yaw, pitch; deg)
+            fc_ = None if getattr(world, "now", None) is None else world.now.obs.get("face_periph")
+            if fc_ is not None and float(fc_[0]) > 0:                   # C202: the born face cue's stand-in when it fires (A157): her mouth's
+                rec["fcue"] = [round(math.degrees(float(fc_[1])), 1), round(math.degrees(float(fc_[2])), 1)]   # direction from the fovea's centre (deg)
             wh_ = getattr(L, "_whit", None)                             # C143: the words' forecast on her symbols heard: its top-1 hit rate and the
             rec["whit"] = None if not wh_ else [round(float(wh_[1]), 4), round(float(wh_[2]), 4)]   # probability it gave the symbol that came
         log.write(json.dumps(rec) + "\n")
