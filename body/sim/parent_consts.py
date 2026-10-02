@@ -390,6 +390,8 @@ HIPS_ALONG_M = (0.30, 0.40, 0.20)   # m toward its feet from its trunk's middle,
                                 # far knee lies beyond her reach (W2: 12 cm short). Ours
 GATHER_UP_M = 0.25              # A165: the gathering point for the pull-to-sit, this far above its chest (where one trunk of hers holds both forearms; ours)
 GATHER_MAX_M = 0.40             # A165: a forearm drawn at most this far toward the gathering point in one gather (ours; the guide's pace sets the ticks)
+SIDE_SHOULDER_DZ_M = 0.12       # A170: a child is on its side for the turn when one shoulder stands this much higher than the other (a rocking
+                                # prone child reads 'side' for a tick with its shoulders level, and keeps the face-down grips; ours)
 GATHER_RETRIES = 2              # A166: a gather whose hand did not arrive (the arm moved) is planned again where the arm is, this many times (ours)
 PULL_FEET_M = (0.35, 0.40, 0.45, 0.50, 0.55)   # m beyond its feet (0.70 m from its pelvis along it) where she kneels on her
                                 # heels for the pull-to-sit, facing its head (A9: "she kneels at the G1's feet and holds both

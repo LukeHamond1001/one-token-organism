@@ -434,6 +434,24 @@ def test_the_turn():
           f"its centre of mass rose {g['com_rise_cm']} cm; after: {out['posture_after']}")
 
 
+def test_the_turn_from_its_side():
+    """parent 9b (A170): a child lying on its side is turned onto its back by the brief turn (its upper shoulder and the upper side of
+    its torso pushed toward its back), within her caps; the child ends on its back, or its chest's normal past TURN_PAST_Z"""
+    w = W.G1World(seed=1)
+    T.place_g1(w, "side")
+    for _ in range(10):
+        w.apply({})
+    p0 = w.parent.child.posture
+    assert p0 == "side", (p0, float(w.parent.child.torso_R[2, 0]))
+    out = T.run(w, [("turn", None)], 700)
+    a = out["acts"][0]
+    cz = float(w.parent.child.torso_R[2, 0])
+    print(f"parent 9b: the turn from its side: {a['status']} ('{a['why'][:120]}'), her effort peak {out['effort_peak_N']} N; after:",
+          f"{w.parent.child.posture} (chest z {cz:.2f})")
+    assert out["effort_peak_N"] <= K.CAP_TWO_BRIEF + 1e-6 and out["over_sustained_s"] <= K.BRIEF_S + W.TICK_S, out
+    assert w.parent.child.posture == "back" or cz >= K.TURN_PAST_Z, (a, w.parent.child.posture, cz)
+
+
 def test_toys():
     """parent 10: the block handed into its open left hand (her placed beside it at birth, the block in her near hand): brought to its
     palm, released by A4's rule, never pressed on it past a resting hand's weight for more than 2 steps; a toy the child touches is
@@ -1551,15 +1569,16 @@ def test_the_turn_from_its_head():
             assert a["status"] in ("done", "refused") and a["ticks"] < 300, (route, a)   # hold; her word must then be honest: done only
             if a["status"] == "done":                                       # with the child past its side, else stopped (never a false done)
                 assert ch.posture in ("side", "back") and float(ch.torso_R[2, 0]) > -0.3, (route, ch.posture, float(ch.torso_R[2, 0]))
-            else:
-                assert "slipped at its side" in a["why"] and "chest turned" in a["why"], a["why"]
-        assert used.get("mode") == ("side" if route == "both" else "head"), (route, used)
+            else:                                                           # (A170, 2026-10-02: the hands may also slip before the push,
+                assert any(x in a["why"] for x in ("slipped at its side", "lost their hold", "slipped from her grip")), a["why"]   # since
+        assert used.get("mode") == ("side" if route == "both" else "head"), (route, used)   # the child's grasp changes, A160 to A164, moved
+                                                                                             # the rocking child's hands: honest either way)
         if route == "head":
             assert abs(used["spot"][0] - used["eyes"][0]) > 0.4, used          # her kneel beyond its head, not beside its chest
         got[route] = (a["ticks"], used["spot"], ch.posture, round(float(ch.torso_R[2, 0]), 2))
     out2 = T.run(w, [("turn", "child")], 60)
-    if got["both"][2] in ("side", "back"):                                   # turned: a child not on its front is refused the turn
-        assert out2["acts"][0]["status"] == "refused" and "face down" in out2["acts"][0]["why"], out2["acts"][0]
+    if got["both"][2] == "back":                                             # turned onto its back: the turn is refused (A170: on its side
+        assert out2["acts"][0]["status"] == "refused" and "face down" in out2["acts"][0]["why"], out2["acts"][0]   # it is taken, not refused)
     else:                                                                   # C167: it lay back prone after the slip: the turn is asked again
         assert "face down" not in str(out2["acts"][0]["why"]) or out2["acts"][0]["status"] != "refused", out2["acts"][0]
     print(f"parent 30: a prone child turned from its head by the far shoulder and the torso's far side in {got['head'][0]} ticks (her kneel",

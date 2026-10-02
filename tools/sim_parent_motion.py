@@ -63,6 +63,7 @@ def trunk_deg(w):
 POSTURES = {
     "sit": (np.eye(3), dict(hip_pitch=-1.7, hip_roll=.12, knee=.4, waist_pitch=.35, shoulder_pitch=-.6, shoulder_roll=.2, elbow=.6)),
     "front": (kin.ry(math.pi / 2), dict(G.BIRTH)),
+    "side": (kin.rx(math.pi / 2) @ kin.ry(math.pi / 2), dict(G.BIRTH)),      # A170: on its side (the chest's normal along the floor)
 }
 
 

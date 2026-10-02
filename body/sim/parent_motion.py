@@ -5472,8 +5472,8 @@ class ParentMotion:
         return out
 
     def _act_turn(self, a, t):
-        if self.child.posture != "front":
-            raise Refuse("the brief turn is for the child face down (A7)")
+        if self.child.posture not in ("front", "side"):                     # A170: or on its side
+            raise Refuse("the brief turn is for the child face down or on its side (A7, A170)")
         return [dict(type="plan", what="turn_approach", args={})]
 
     def _plan_turn_approach(self, a):
@@ -5508,7 +5508,17 @@ class ParentMotion:
         toward = unit((her - ch.torso) * [1, 1, 0])
         near = "left" if float(ch.lat[:2] @ toward[:2]) > 0 else "right"
         far = "right" if near == "left" else "left"
-        if "torso" in kinds:                                                 # A136: from its head "toward her" runs along it; the far
+        zs = {s_: float(self.d.xipos[self.m.body(f"{s_}_shoulder_roll_link").id][2]) for s_ in ("left", "right")}
+        if ch.posture == "side" and max(zs.values()) - min(zs.values()) > K.SIDE_SHOULDER_DZ_M:
+            # A170 (2026-10-02): A CHILD ON ITS SIDE IS TURNED ONTO ITS BACK: its UPPER shoulder (the higher of the two) and the upper
+            # side of its torso, pushed toward its back (the chest's normal reversed, along the floor). Life day 60: the child rolled
+            # onto its front and side and lay there 38% of the day; C216/C217's tummy time came due at tick 2,901,200 and the turn was
+            # refused, 'the brief turn is for the child face down (A7)'. From its head the face-down rule took the far side as the
+            # one its face points away from, which on a side-lying child is the LOWER shoulder, and pushed toward the face's side:
+            # that rolls it onto its front. The turn's controller then runs from its side (past TURN_SIDE_Z already) over to its back
+            far = max(zs, key=zs.get)                                        # (a rocking prone child reads 'side' for a tick with its
+            toward = unit(-ch.torso_R[:, 0] * [1, 1, 0])                     # shoulders level: that one keeps the face-down grips)
+        elif "torso" in kinds:                                               # A136: from its head "toward her" runs along it; the far
             toward = unit(-ch.lat * (1 if far == "left" else -1) * [1, 1, 0])   # side is the one her first hand reaches (face_side's other)
             far = "right" if ch.face_side() == "L" else "left"
             toward = unit((self.d.xipos[self.m.body(f"{'left' if far == 'right' else 'right'}_shoulder_roll_link").id]
