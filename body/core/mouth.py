@@ -661,15 +661,19 @@ class MouthMixin:
             sharp_e = self._motor_sharp(e, st)                            # A97: its decisiveness earned by its inverse model
             logits = tab.logits(pred, sharp_e, earned=self._motor_earned(e, st))   # C148: and its proposal's certainty with it
             act_on = bool(int(self.cfg.get("actor", 0)) and stri and getattr(self, "_z_now", None) is not None)
-            if act_on:                                                    # the striatum disposes: its bias on each joint's proposal
-                a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.get_submodule(e.actor)(self._z_now))
-                logits = [lg + b_ for lg, b_ in zip(logits, tab.split(a_bias))]
             if e.orient and int(self._reflex_const("orient")):            # STEP R6h: the born orienting bias (body/core/cord.py; 3.7, A43)
                 ob_ = self._orient_bias(e, frame, tab)
                 if ob_ is not None:
                     logits = [lg + b_ for lg, b_ in zip(logits, ob_)]
+            proposal = logits                                             # A176: the cortex's proposal with the born orienting bias, the
+            if act_on:                                                    # striatum's bias not in it: what a unit under way is held against
+                # the striatum disposes: its bias on each joint's proposal
+                a_bias = float(self.cfg.get("actor_beta", 1.0)) * torch.tanh(m.get_submodule(e.actor)(self._z_now))
+                logits = [lg + b_ for lg, b_ in zip(logits, tab.split(a_bias))]
             if e.reserved:                                                # a one-joint alphabet's reserved acts are never drawn
                 logits[0] = logits[0].clone(); logits[0][list(e.reserved)] = float("-inf")
+                if proposal is not logits:
+                    proposal[0] = proposal[0].clone(); proposal[0][list(e.reserved)] = float("-inf")
             probs = [torch.softmax(lg, -1) for lg in logits]
             if rfx is not None:                                           # THE REFLEX: its act to the world; the effector's own, its rest
                 act = rest; acted = False; p_choice = 0.0
@@ -682,7 +686,15 @@ class MouthMixin:
                     if um_ is None:
                         act = self._best_guess(e, pred)                   # act_pred's best guess, no draw (R6)
                     else:
-                        act = self._unit_hold(e, st, logits, float(um_))  # STEP R6h: the movement unit holds its act (the persistence margin)
+                        act = self._unit_hold(e, st, proposal, float(um_))   # STEP R6h: the movement unit holds its act (the persistence margin);
+                                                                            # A176 (2026-10-02): against the cortex's proposal, not the striatum's
+                                                                            # standing bias (life day 65: the left arm's saturated actor, +-1 on
+                                                                            # every joint, led the held setting by more than log 4 and took every
+                                                                            # unit back to one act within a tick: 75% of the day one posture, the
+                                                                            # arm pinned at its range, no flexion for the pull-to-sit). The striatum
+                                                                            # chose at the unit's start (the draw); mid-unit the program runs unless
+                                                                            # the cortex changes its mind (the basal ganglia select, the brainstem
+                                                                            # and cord carry the unit: Grillner 2006; von Hofsten's units)
                     dig = [int(x_) for x_ in tab.digits(torch.tensor(act)).tolist()]
                     acted = act != rest
                     p_choice = 1.0

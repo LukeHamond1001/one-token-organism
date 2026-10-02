@@ -333,6 +333,53 @@ def test_movement_units():
           "continuation holding its unit's act")
 
 
+def test_the_unit_holds_against_the_proposal():
+    """motor 2b (A176, 2026-10-02): A UNIT UNDER WAY IS HELD AGAINST THE CORTEX'S PROPOSAL, NOT THE STRIATUM'S STANDING BIAS. A limbs body
+    with the striatal actor on and its weights driven to saturation (+-1 on every setting, as life day 65's left arm), act_pred strong,
+    chunk_gate and unit_margin log 4: on every continuation each joint's setting follows the margin rule against the proposal's logits
+    (act_pred's readout at the earned sharpness), and on a good share of them the combined logits (the actor's bias in) would have taken
+    the joint elsewhere: the striatum chose at the unit's start; mid-unit the cortex alone changes the program"""
+    import math as _m
+    cfg = dict(_CFG1, actor_trace_tick=1, chunk_max=8, unit_margin=_m.log(4.0), gate_floor=0.8)   # the squashing test's body, in units
+    L = _born_limbs(cfg, _limb_world()); run = WorldLoop(L)
+    for _ in range(40):
+        run.step()
+    e = L.anatomy.motors[0]; mod = L.m.get_submodule(e.actor); tab = L.m.acts["limb"]
+    assert L._z_now is not None
+    with torch.no_grad():
+        L.m.timing["limb"].pred.weight.mul_(300.0)
+        if float(mod(L._z_now).abs().max()) == 0.0:
+            mod.weight.normal_(generator=torch.Generator().manual_seed(7))
+        mod.weight.mul_(50.0 / float(mod(L._z_now).abs().min().clamp_min(1e-9)))         # the actor at its rails on every setting
+    beta = float(cfg.get("actor_beta", 1.0)); rec = []; f = L._choose_effector
+
+    def spy(i, frame, C1, level, stri, f=f, L=L, rec=rec):
+        st_ = L.motor[i - 1]; held = list(st_["unit"]) if st_["unit"] is not None else None
+        z_ = None if getattr(L, "_z_now", None) is None else L._z_now.clone()
+        out = f(i, frame, C1, level, stri); now = st_["now"]
+        if i == 1 and now["cont"] and now["drew"] and held is not None and z_ is not None:
+            with torch.no_grad():
+                lg = L.m.acts["limb"].logits(L.m.timing["limb"].pred(C1) + (L.m.timing["limb"].cor(st_["err"]) if st_["err"] is not None else 0.0),
+                                             float(now["sharp"]))
+                ab = beta * torch.tanh(mod(z_)); comb = [l_ + b_ for l_, b_ in zip(lg, tab.split(ab))]
+            rec.append((held, [x_.clone() for x_ in lg], comb, list(now["digits"])))
+        return out
+    L._choose_effector = spy
+    for _ in range(400):
+        run.step()
+    assert len(rec) >= 30, len(rec)
+    differ = 0; n_j = 0
+    for held, lg, comb, dig in rec:
+        for j, (l_, c_, h_, a_) in enumerate(zip(lg, comb, held, dig)):
+            b_ = int(l_.argmax()); want = b_ if float(l_[b_]) - float(l_[h_]) > _m.log(4.0) else h_
+            assert a_ == want, (j, h_, a_, want, l_)
+            bc = int(c_.argmax()); want_c = bc if float(c_[bc]) - float(c_[h_]) > _m.log(4.0) else h_
+            differ += int(want_c != want); n_j += 1
+    assert differ >= 0.1 * n_j, (differ, n_j)
+    print(f"motor 2b (A176): {len(rec)} continuations under a saturated actor, every joint held by the margin rule against the proposal;",
+          f"the combined logits would have moved {differ} of {n_j} joint settings elsewhere")
+
+
 def test_the_kappa_correction():
     """motor 3 (step R6h; R6's verifiers, 6d6d246's proposal, 8's R6h row): act_inv's reliability with each label's chance taken from the
     act's own choice. A probe of one joint of five, the acts drawn at known rates whose mode flips (hold 80% <-> +big 80%, every 500
