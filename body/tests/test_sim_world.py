@@ -540,6 +540,46 @@ def _closure(w, hand):
     return float(sum(sg * w.d.qpos[w.qadr[W.JOINTS.index(j)]] for j, sg in R.CLOSING[hand].items()))
 
 
+def test_the_grasp_habituates():
+    """world 9b (A162): a ball kept in the left palm: the grasp fires on every resting tick for GRASP_HOLD_TICKS, then falls silent
+    ('habituated': the hand's own acts rule, the fingers staying where they are) while the pressure is constant; the palm freed for
+    GRASP_RECOVER_TICKS re-arms it in full. The state is the world's and is saved; an older save loads fresh"""
+    w = _ball_in_palm()
+    z = w.zones.index("left_hand_palm")
+    evs = []
+    for _ in range(R.GRASP_HOLD_TICKS + 6):
+        w.frame(); w.apply({})
+        g = w.frame().truth
+        assert g["touch_N"][z] >= R.GRASP_N, g["touch_N"][z]
+        evs.append(g["spinal"].get("hand_l"))
+    assert evs[:R.GRASP_HOLD_TICKS] == ["grasp"] * R.GRASP_HOLD_TICKS and all(e == "habituated" for e in evs[R.GRASP_HOLD_TICKS:]), \
+        (evs[:3], evs[R.GRASP_HOLD_TICKS - 2:])
+    import pickle as _pk
+    st = _pk.loads(w.save_state())
+    assert st["grasp_hab"]["hand_l"][0] == R.GRASP_HOLD_TICKS + 6 and st["grasp_hab"]["hand_l"][1] == 0, st["grasp_hab"]
+    # the pure instrument (no state) still sums the same tick
+    assert R.grasp("hand_l", None, R.GRASP_LOG) == (R.closing_act("hand_l"), "grasp")
+    # the palm freed re-arms it: the reflex's bookkeeping by hand (the ball lifted away is the world's business; here the state's)
+    hab = w._grasp_hab["hand_l"]
+    for k in range(R.GRASP_RECOVER_TICKS):
+        if k == 0:
+            assert R.grasp("hand_l", None, R.GRASP_LOG, hab)[1] == "habituated"   # still pressed: still habituated
+        assert R.grasp("hand_l", None, 0.0, hab) == (None, None)
+    assert hab[1] == R.GRASP_RECOVER_TICKS and hab[0] == 0
+    a_, e_ = R.grasp("hand_l", None, R.GRASP_LOG, hab)
+    assert (a_, e_) == (R.closing_act("hand_l"), "grasp") and hab == [1, 0], (e_, hab)
+    hab[1] = R.GRASP_RECOVER_TICKS - 1; hab[0] = R.GRASP_HOLD_TICKS + 3                    # a shorter gap does not re-arm it
+    assert R.grasp("hand_l", None, R.GRASP_LOG, hab)[1] == "habituated"
+    # a save from before A162 loads fresh
+    w2 = _ball_in_palm(); w2.load_state(w.save_state())                                   # (the same model: the rig's)
+    assert w2._grasp_hab == w._grasp_hab and w2._grasp_hab["hand_l"][0] > R.GRASP_HOLD_TICKS, w2._grasp_hab   # the state travels (hand_l's
+                                                                                                            # count as the checks above left it)
+    st2 = _pk.loads(w2.save_state()); st2.pop("grasp_hab", None); w2.load_state(_pk.dumps(st2, protocol=4))
+    assert w2._grasp_hab == {"hand_l": [0, 0], "hand_r": [0, 0]}, w2._grasp_hab
+    print(f"world 9b: the grasp fired {R.GRASP_HOLD_TICKS} resting ticks on the ball, then habituated under the constant press; the palm free",
+          f"{R.GRASP_RECOVER_TICKS} ticks re-armed it (a shorter gap not); the state saved and an older save loads fresh")
+
+
 def test_letting_go():
     """world 9: A11 (the W1 verifier's first finding): a ball kept in the left palm; at rest the grasp closes the hand on it every
     tick; the hand's own act opening it passes the spinal cord as it was sent (the grasp overridden) and the hand opens while the

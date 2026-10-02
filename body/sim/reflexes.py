@@ -153,9 +153,16 @@ class Reflexes:
 
 
 GRASP_LOG = math.log1p(GRASP_N / W.TOUCH_UNIT_N)                 # the palm's touch (log force) at the grasp's threshold
+GRASP_HOLD_TICKS = 40           # A162: the grasp fires at full strength this long (6 s) under a constant pressure on the palm, then habituates
+                                # (the reflex's response to a sustained, unchanging stimulus wanes: Thompson and Spencer 1966; the palmar grasp
+                                # holds an object placed in a newborn's hand for seconds, not minutes: Twitchell 1965); the span is A4's hand-over
+                                # window (her release once the hand has closed), ours
+GRASP_RECOVER_TICKS = 10        # A162: a palm free of pressure this long (1.5 s) re-arms the grasp in full (the habituated response recovers
+                                # once the stimulus is withdrawn: Thompson and Spencer 1966; ours). Not a touch onset: the grasp's own squeeze
+                                # makes onsets at the palm every tick, so an onset would never let it habituate (measured on the test's ball)
 
 
-def grasp(hand, own, palm_log):
+def grasp(hand, own, palm_log, state=None):
     """THE PALMAR GRASP at the spinal cord (see the module's doc): the hand's own act this tick (`own`, its flat act; None its rest)
     and its palm's touch (the frame's log force) give (the act its servos take, the event): (own, None) when the palm is not
     touched at GRASP_N; else the sum JOINT BY JOINT (A160, 2026-10-01; A35's own principle: the reflex and the descending command meet
@@ -163,11 +170,27 @@ def grasp(hand, own, palm_log):
     other closing joint is stepped at least one big step closed (A82); the event "overridden" when every closing joint was opened by
     the own act (the hand opened as a whole), "grasp" otherwise. Until A160 one closing joint's opening step cancelled the reflex on
     the whole hand, which a hand acting at random does on 95 of 100 ticks (1 - (3/5)^6): life day 55's hand-overs saw the grasp
-    overridden on 481 ticks and firing on 5, the toy set in its palm never held (22 of 27 released unclosed; 303 toys lost in the day)."""
+    overridden on 481 ticks and firing on 5, the toy set in its palm never held (22 of 27 released unclosed; 303 toys lost in the day).
+    HABITUATION (A162, 2026-10-01; `state`: the hand's [ticks pressed running, ticks free running], the world's, saved with it): under a
+    constant pressure the reflex fires in full for GRASP_HOLD_TICKS, then falls silent ((own, "habituated"): the hand's own acts rule the
+    fingers, which stay where they are until an act moves them); a palm free GRASP_RECOVER_TICKS running re-arms it in full. Day 56's
+    first 3,000 ticks under A160 alone: the right hand a
+    fist on nothing (its own fingers pressing its palm) on 42, 88 and 74% of the ticks, holding a toy on 14, 2 and 4% (16 to 25%
+    before): a reflex that never wanes locks the hand; the reflex scaffolds the learned grasp and gives way to it. Without `state`
+    the pure sum of the same tick (the tests' instrument)."""
     if hand not in CLOSING:
         raise ValueError(f"no palmar grasp on {hand!r}")
     if palm_log < GRASP_LOG:
+        if state is not None:
+            state[0] = 0; state[1] += 1
         return own, None
+    if state is not None:
+        if state[1] >= GRASP_RECOVER_TICKS:                          # the palm was free: the reflex in full again
+            state[0] = 0
+        state[1] = 0
+        state[0] += 1
+        if state[0] > GRASP_HOLD_TICKS:
+            return own, "habituated"
     n = len(_JOINTS[hand])
     rest = W.rest_id(n)
     dig = W.act_digits(rest if own is None else own, n)

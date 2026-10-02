@@ -682,6 +682,7 @@ class G1World(SimWorld):
         self._last_acts = {}
         self._spinal = {}; self._vor_quick = 0
         self._tendon = np.zeros(len(JOINTS), int)                          # A139: the tendon organ's inhibition, a countdown per joint
+        self._grasp_hab = {h: [0, 0] for h in self.palm_of_hand}            # A162: the grasp's habituation per hand [ticks pressed, ticks free]
         self.parent = None
         self._sense_birth()
         if parent:                                                      # THE PARENT'S MOTION (W2; body/sim/parent_motion.py): her
@@ -852,10 +853,12 @@ class G1World(SimWorld):
         spinal = {}
         if self.spinal:                                                 # THE SPINAL CORD: the palmar grasp on each hand's own act
             for hand, z in self.palm_of_hand.items():
-                a, ev = R.grasp(hand, acts.get(hand), float(self._sensed["touch_log"][z]))
+                a, ev = R.grasp(hand, acts.get(hand), float(self._sensed["touch_log"][z]),
+                                self._grasp_hab.setdefault(hand, [0, 0]))   # A162: the reflex habituates under a constant pressure
                 if ev is not None:
                     spinal[hand] = ev
-                    acts[hand] = a
+                    if a is not None:                                       # (habituated at rest: no act of the hand's this tick)
+                        acts[hand] = a
             if self.righting:                                           # and the prone pattern: face down, the arms flex under, the
                 spinal.update(R.prone(acts, self._sensed["imu_torso"]))   # trunk yaws toward the side that is up (A92)
         own = self._efference(acts)                                     # the efference copy (the own acts, after the grasp's sum)
@@ -1364,6 +1367,7 @@ class G1World(SimWorld):
                 "sensed": {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in self._sensed.items()},
                 "last_acts": dict(self._last_acts), "rng": self.rng.bit_generator.state, "gaze": self.gaze.copy(), "gaze_v": self.gaze_v.copy(),
                 "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "tendon": self._tendon.copy(), "scene_pose": _pose_state(self.scene.pose),
+                "grasp_hab": {h: list(v) for h, v in self._grasp_hab.items()},   # A162
                 "parent": None if self.parent is None else self.parent.state(),
                 "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
                               "observer": self.observer.state(), "sounds": self.sounds.state(),
@@ -1388,6 +1392,7 @@ class G1World(SimWorld):
         self._last_acts = _canon_acts(st["last_acts"])
         self._spinal = dict(st.get("spinal", {})); self._vor_quick = int(st.get("vor_quick", 0))
         self._tendon = np.asarray(st.get("tendon", np.zeros(len(JOINTS), int)), int).copy()   # (A139; older saves: none)
+        self._grasp_hab = {h: [int(x) for x in st.get("grasp_hab", {}).get(h, [0, 0])] for h in self.palm_of_hand}   # (A162; older saves: fresh)
         self.rng.bit_generator.state = st["rng"]
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()
