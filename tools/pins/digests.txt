@@ -264,3 +264,7 @@ digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b6
 # her aim by the toy, the press, the whole hold): UNCHANGED; the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
+# Re-taken at A172 (2026-10-02 12:08, on branch a172: dopamine's adaptive coding for the actors' lesson, declared by the G1's body): CHANGED as
+# expected (the actors' lesson differs from the first dopamine); the language default digest 7c54199e3c72cf77d45a8e94 KEPT (the diary has no actor).
+digest  sim                   threaded 77dcdca9e395fcef45a88ec7 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   b9e5db5db5cfa94b523a1c0f consts b971264b65f1 | --profile sim

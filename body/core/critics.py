@@ -205,23 +205,43 @@ class CriticsMixin:
                 else:
                     delta = float(td[int(self.cfg["dopamine_band"])].detach())
                 self._dop_last = float(delta)                   # C186 (2026-10-01): the tick's dopamine, for the record (a ruler)
+                delta_a = float(delta)                           # the dopamine the actors learn from
+                if int(self.cfg.get("dopamine_adapt", 0)):
+                    # A172 (2026-10-02): DOPAMINE'S ADAPTIVE CODING FOR THE ACTORS' LESSON. Dopamine neurons scale their phasic response to
+                    # the spread of the rewards at hand, so a burst means "better than usual" in units of the usual (Tobler, Fiorillo and
+                    # Schultz 2005). The actors' step is lr x dopamine x the eligibility at the input's unit power (A148), so a logit moves
+                    # by lr x dopamine a tick at most: on the G1 dopamine's TD error runs at 0.13 RMS (|delta| 0.064 a tick on day 63) and
+                    # lr 0.02 moved a logit by 0.001 a tick; from day 50, when A148 landed, every actor's summed update fell from 6,000 to
+                    # 10,000 a day to 0.5, and over 6,000 ticks of day 64 each actor's weights kept their direction to 0.99998 (cosine):
+                    # the policy frozen at what it had learned by day 49, the striatum's lesson gone from the body for thirteen days. The
+                    # actors' dopamine is delta over its own running root mean square (dopamine_adapt_tau ticks, the fast critic's
+                    # horizon's order; a floor under the RMS so a silent line does not amplify noise without bound); the critics' own TD
+                    # errors, the record's dopamine and the gates are untouched. Born at a mean square of 1 (the unit: the first lessons
+                    # no louder than before); saved with the life (a landing a few times a day would otherwise mute the actors for the tau each time)
+                    tau_ = float(self.cfg.get("dopamine_adapt_tau", 256))
+                    ms_ = float(getattr(self, "_dop_ms", 1.0))
+                    ms_ = ms_ + (float(delta) ** 2 - ms_) / tau_
+                    self._dop_ms = ms_
+                    gain_ = 1.0 / math.sqrt(max(ms_, float(self.cfg.get("dopamine_adapt_floor", 1e-4))))
+                    self._dop_gain = gain_
+                    delta_a = float(delta) * gain_
                 if int(self.cfg.get("actor", 0)) and str(self.cfg.get("actor_form", "add")) == "softmax":
                     self._chooser_learn(delta)
                 elif int(self.cfg.get("actor", 0)) and getattr(self, "_e_actor", None) is not None:
                     with torch.no_grad():                        # THE ACTOR'S LESSON: dopamine times the eligibility, the weights forgetting
-                        m.actor.weight.add_(float(self.cfg.get("actor_lr", 0.02)) * delta * self._e_actor)   # A151: no forgetting (moot under the scaling)
+                        m.actor.weight.add_(float(self.cfg.get("actor_lr", 0.02)) * delta_a * self._e_actor)   # A151: no forgetting (moot under the scaling); A172: adapted
                 if int(self.cfg.get("actor", 0)):
                     slr_ = float(self.cfg.get("actor_slow_lr", 0.0))
                     for e_, st_ in zip(self.anatomy.motors, getattr(self, "motor", ())):   # each later effector's actor, the same lesson (step R5)
                         if st_["e_actor"] is not None:
                             with torch.no_grad():
-                                fast_ = float(self.cfg.get("actor_lr", 0.02)) * delta * st_["e_actor"]
+                                fast_ = float(self.cfg.get("actor_lr", 0.02)) * delta_a * st_["e_actor"]   # (A172: the adapted dopamine)
                                 m.get_submodule(e_.actor).weight.add_(fast_)   # A151: no forgetting (a uniform shrink the scaling undid each tick)
                                 if slr_ > 0.0:
                                     st_["a_upd"][0] += float(fast_.norm())
                         if slr_ > 0.0 and st_.get("a_tag") is not None and abs(float(delta)) > 1e-9:
                             with torch.no_grad():                        # A142/C153: the tag captured by the same phasic dopamine
-                                upd = slr_ * delta * st_["a_tag"]        # (mouth._actor_tag_step: the 64-tick trace)
+                                upd = slr_ * delta_a * st_["a_tag"]      # (mouth._actor_tag_step: the 64-tick trace; A172: adapted)
                                 m.get_submodule(e_.actor).weight.add_(upd)
                                 st_["a_upd"][1] += float(upd.norm())
                     self._actor_scaling(m)                           # A147: each actor's synapses scaled toward its set point

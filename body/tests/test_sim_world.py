@@ -2081,6 +2081,36 @@ def test_the_actors_tag():
           f"{on['upd'][0]:.4f}); with actor_slow_lr 0 no tag and the weights differ")
 
 
+def test_dopamines_adaptive_coding():
+    """world A172 (2026-10-02): the actors' dopamine in units of its own spread. The same born life twice, 60 ticks with the rig's ball on
+    the palm (the grasp's surprise): with dopamine_adapt on (the RMS's tau cut to 8 ticks so it settles within the run) the arm's
+    summed fast update is several times the plain lesson's, the critics' dopamine (the record's) the same in both, and the diary's
+    default has it off"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    from body.core import physiology as PH
+    assert int(PH.PHYSIOLOGY.get("dopamine_adapt", 0)) == 0                       # the diary's default: off
+    out = {}
+    for on in (0, 1):
+        w = _ball_in_palm(settle=False)
+        cfg = dict(SIM_CFG, wake_ticks=10 ** 9, actor_slow_lr=1e-3, dopamine_adapt=on, dopamine_adapt_tau=8)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        dops = []
+        for _ in range(60):
+            run.step()
+            dops.append(float(getattr(L, "_dop_last", 0.0)))
+        out[on] = dict(upd=float(L.motor[3]["a_upd"][0]), dop_rms=float(np.sqrt(np.mean(np.square(dops)))), gain=float(getattr(L, "_dop_gain", 1.0)))
+    assert out[1]["upd"] > 2.5 * max(out[0]["upd"], 1e-12), out                   # (the grasp's surprise comes in the first ticks, the gain still near 1)
+    assert out[1]["gain"] > 5.0, out                                              # settled: 1 / 0.13
+    assert abs(out[1]["dop_rms"] - out[0]["dop_rms"]) < 0.5 * max(out[0]["dop_rms"], 1e-9), out   # the critics' dopamine itself is the same
+    print(f"world A172: the arm actor's summed fast update over 60 born ticks {out[0]['upd']:.5f} plain against {out[1]['upd']:.5f} with dopamine in units of its",
+          f"own RMS (gain {out[1]['gain']:.1f} at the end, the dopamine's RMS {out[1]['dop_rms']:.3f} unchanged); the diary's default off")
+
+
 def test_the_passive_stiffness():
     """world (A143, 2026-09-30): the passive end-range stiffness. At a joint's low stop the tissue pushes toward the middle at PASSIVE_FRAC x its
     torque limit, at its high stop the same the other way, half way into the margin half as much, and nothing over the middle 70% of the range;
@@ -2132,7 +2162,7 @@ def test_the_value_heads_forget():
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_the_dorsal_touch_opens_the_hand, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_the_passive_stiffness, test_the_value_heads_forget]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_dopamines_adaptive_coding, test_the_passive_stiffness, test_the_value_heads_forget]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

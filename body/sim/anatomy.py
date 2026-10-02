@@ -451,6 +451,8 @@ SIM_CFG = dict(
     # pain 0.25% against 3.65%, 11 motor acts judged against 0 in the first 2,000 ticks). Its form, rate and forgetting are the core's
     # (physiology: actor_form 'add', actor_lr 0.02, actor_forget 36000)
     actor=1,
+    dopamine_adapt=1,   # A172 (2026-10-02): the actors learn from dopamine in units of its own spread (Tobler, Fiorillo and Schultz 2005); the
+                        # actors had frozen from day 50 under A148's unit-power step with dopamine at 0.13 RMS and lr 0.02 (0.001 a logit a tick)
     # THE GATES' DRIVES, DISCLOSED (3.5, A41): the tonic drive following the reward rate in every gate, 0.25 + (sum over k < 12 of 0.8^k,
     # the gate's own eligibility window: 4.656) x the felt reward's running mean at the ladder's 256-tick clock (band 4); the performance
     # error at 0.5 on the gates that declare it (the tract's alone); gate_vigor 0, so the reward rate is not counted twice

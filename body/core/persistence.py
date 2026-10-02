@@ -80,6 +80,7 @@ class PersistenceMixin:
                          "sym_freq": self.sym_freq, "perf": {int(k): float(v) for k, v in self.perf.items()}, "last_night": self.last_night, "rbar": float(self.rbar),
                          "feat_mu": (self._feat_mu.cpu() if getattr(self, "_feat_mu", None) is not None else None),
                          "vrel": list(self._vrel), "vrel_gain": float(self._vrel_gain), "vrel_corr": float(self._vrel_corr),
+                         "dop_ms": float(getattr(self, "_dop_ms", 1.0)),            # A172: dopamine's running mean square (the actors' adaptive gain)
                          "vbuf_v": list(self._vbuf_v), "vbuf_r": list(self._vbuf_r), "sharp_cal": float(self.sharp_cal),
                          "frel": list(self._frel), "frel_gain": float(self._frel_gain), "frel_corr": float(self._frel_corr),
                          "fh_A": self._fh_A.clone(), "fh_b": self._fh_b.clone(), "fh_w": self._fh_w.clone(),
@@ -261,6 +262,8 @@ class PersistenceMixin:
                 setattr(life, k, L[k])
         if L.get("feat_mu") is not None:
             life._feat_mu = L["feat_mu"].to(device)                  # the gate's adapted input, its running mean
+        if L.get("dop_ms") is not None:
+            life._dop_ms = float(L["dop_ms"])                        # (A172; an older save: born at 1, re-adapts within the tau)
         if L.get("vrel") is not None:                                # THE THIRTEENTH DEFECT (2026-09-08): the prefrontal voice's evidence was dropped at every load
             life._vrel = [float(v) for v in L["vrel"]]; life._vrel_gain = float(L.get("vrel_gain", 0.0)); life._vrel_corr = float(L.get("vrel_corr", 0.0))
             life._vbuf_v.extend(float(v) for v in (L.get("vbuf_v") or [])); life._vbuf_r.extend(float(v) for v in (L.get("vbuf_r") or []))

@@ -356,6 +356,8 @@ def main():
             rec["stops"], rec["stopj"] = _stops(world)                   # C160/C161: the arm joints at their range stops, per arm: the count and the mask
             if getattr(L, "_dop_last", None) is not None:
                 rec["dop"] = round(float(L._dop_last), 4)                   # C186 (2026-10-01): THE TICK'S DOPAMINE (the actors' lesson signal: the striatal
+                if getattr(L, "_dop_gain", None) is not None:
+                    rec["dopg"] = round(float(L._dop_gain), 3)              # A172: and the actors' adaptive gain on it (1 / its running RMS)
                                                                             # fast critic's TD error, critics._learn_values), to read the credit around pain
             pj_, hp_ = _pain_where(world)                                   # C181 (2026-10-01): on a tick of joint pain, the joints over their hold
             if pj_:                                                         # (with the load over it) and both hands' places in the trunk's frame

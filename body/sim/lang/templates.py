@@ -177,7 +177,10 @@ FRAMES = {
     "echo": [F("{w}! the {w}!", "{w}"), F("the {w}! a {w}.", "{w}")],
     "echo_word": [F("{w}! {w}.", "{w}"), F("{w}. {w}!", "{w}")],
     "reply": [F("oh! the {o}.", "{o}"), F("you see the {o}?", "{o}")],
-    "reply_social": [F("hi {n}!", "{n}"), F("mama is here."), F("{n}.", "{n}"), F("{n}? mama is here."), F("hi. hi {n}.", "{n}")],   # C172; C226
+    "reply_social": [F("hi {n}!", "{n}"), F("mama is here.")],                # C172 (C226's three more frames withdrawn at A172: day 64's first
+                                                                                # 3,000 ticks spoke 241 lines against 172, 78% of them social: five
+                                                                                # frames under the same-line rule let her say the social line
+                                                                                # five times as often; the toy-in-view reply stands)
     "narrate_fell": [F("uh oh. the {o} is down.", "down"), F("oh! the {o} is down.", "down")],
     "narrate_on": [F("the {o} is on the {p}.", "{p}")],
     "narrate_rolled": [F("oh! you roll.", "roll"), F("roll! you roll.", "roll")],

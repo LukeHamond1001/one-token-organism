@@ -228,6 +228,10 @@ PHYSIOLOGY = dict(
                          # reaches back a minute, not 16 ticks; 0 off (the diary); the G1 sets 1e-3 (ours)
     actor_beta=1.0,
     actor_forget=36000,
+    dopamine_adapt=0,     # A172 (2026-10-02): the actors' dopamine over its running RMS (Tobler, Fiorillo and Schultz 2005: adaptive coding); 0 off
+                          # (the diary, which has no actor); the G1 sets 1 (ours)
+    dopamine_adapt_tau=256,     # ... the RMS's horizon, ticks (38 s: the adaptation within a block of trials, Tobler et al. 2005; ours)
+    dopamine_adapt_floor=1e-4,  # ... the mean square's floor (an RMS of 0.01 at least: a silent line amplifies nothing without bound; ours)
     value_forget=0,      # A146: the ladder's value heads' forgetting (1 - 1/value_forget a tick; 0 = none, the diary's)
     actor_form="add",   # "chunk" = one act per word, the letters inside not choices; "plan", "select", "add" the earlier forms
     actor_margin=4.0,
