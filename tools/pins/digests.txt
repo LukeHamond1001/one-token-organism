@@ -281,3 +281,8 @@ digest  sim                   pinned   22de82c91314deadf9dc6eee consts b971264b6
 # main's digests at d6fbb12 unchanged). The language default digest 7c54199e3c72cf77d45a8e94: the diary has no later effector (checked at this landing).
 digest  sim                   threaded f0d1e597f4b104649e101f3e consts 83dc3feffffe | --profile sim
 digest  sim                   pinned   9a6009f59be7e059f3a24590 consts 83dc3feffffe | --profile sim
+# Re-taken at A177 (2026-10-02 15:57, the newborn's traction response): UNCHANGED from A176's (the profile's stub world has no parent, so no
+# hold and no traction); the language default digest 7c54199e3c72cf77d45a8e94 KEPT (checked at A176's landing; A177 touches the sim world and cord alone).
+digest  sim                   threaded f0d1e597f4b104649e101f3e consts 83dc3feffffe | --profile sim
+digest  sim                   pinned   9a6009f59be7e059f3a24590 consts 83dc3feffffe | --profile sim
+
