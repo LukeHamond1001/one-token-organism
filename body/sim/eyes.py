@@ -538,8 +538,8 @@ class Eyes:
             self.timing["code_s"] += time.perf_counter() - t0
             truth = {"images": imgs, "periphery": per, "fovea": fov, "colour_window": cwin, "face_test": face_test(self.m, w.d, w.gaze),
                      "windows": {s: window_corner(s, w.gaze) for s in "LR"}}
-            self._cache = (key, eye_p, eye_f, truth, face_cue(self.m, w.d, w.gaze))      # A157: the born face cue's stand-in
-        _, eye_p, eye_f, truth, cue = self._cache
+            self._cache = (key, eye_p, eye_f, face_cue(self.m, w.d, w.gaze), truth)      # A157: the born face cue's stand-in (the truth
+        _, eye_p, eye_f, cue, truth = self._cache                                         # last: the page reads it there, sim_page.py)
         return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": cue.copy(),
                 "onset_periph": self._onset(truth["periphery"]).copy(), "truth": truth}
 
