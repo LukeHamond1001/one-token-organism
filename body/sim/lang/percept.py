@@ -59,6 +59,7 @@ EVENT_KINDS = (
     "reflex_hit",    # a reflex she triggered struck her (logged as her defect, never frowned at)
     "pain",          # the child's pain (a thump or a pain event she saw)
     "distress",      # A13's outward signs: face down over 100 ticks, thumps
+    "tummy_time_over",   # C216: face down TUMMY_TIME_TICKS running, still or not: she turns it over, no concern
     "talk_over",     # the child started sounding during her line
     "lost_toy",      # a toy just fell from its hand
     "arm_raise",     # its arm raised, as she sees it (the side, "left" or "right", as object): she may copy it (A52)

@@ -2013,7 +2013,7 @@ class Conduct:
         # 1. the child's pain or distress: comfort (never a smile); face down in distress, she turns it over first (A90: a
         #    parent turns a baby stuck on its tummy; the plumbing day of 2026-09-26 found the wrists hurting under its weight there)
         turning = any(a[1] == "turn" and a[5] not in ENDED for a in self.acts_open)
-        if ("distress" in ev or self.distress_due is not None) and p.present and not turning:
+        if ("distress" in ev or "tummy_time_over" in ev or self.distress_due is not None) and p.present and not turning:   # C216: or tummy time over
             ln = f.compose("turn_over", t, p)               # A102: the turn owed from the distress event while it lies face down (life
             if ln is not None and f.allowed(ln, t, reply=True)[0]:   # day 4: the event came while she spoke, so it was lost and she
                 f.queue = []                                # comforted a prone child for 2,000 ticks; her first turn of the day ran

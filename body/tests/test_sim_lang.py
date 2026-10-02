@@ -7049,6 +7049,18 @@ def test_the_function_word_not_echoed():
     print(f"lang 71 (C197): 120 function words: {len(texts)} replies, none the word alone or doubled ({texts[0]!r}, {texts[-1]!r}); the duck named when attended; a noun still echoed")
 
 
+def test_tummy_time_over_turns_it():
+    """lang 76 (C216): the lane's 'tummy_time_over' event (face down TUMMY_TIME_TICKS running, still or not) has her turn the child over
+    as the distress event does, with no distress and no concern"""
+    con = _pair_con()
+    _run_to(con, 200)
+    out = _run_to(con, 6, t0=200, events={200: (("tummy_time_over", None),)})
+    said = [getattr(s.line, "text", s.line) for t, s in out if s.line is not None]
+    acts = [tuple(a[1:3]) for a in con.acts_open]
+    assert ("turn", "child") in acts, (acts, said, con.fast.refused[-3:])
+    print(f"lang 76: tummy time over: her turn of the child opened {acts}, her line {said}")
+
+
 def test_a_held_toy_is_not_fetched():
     """lang 75 (C215): a show, hand-over or new-word request for a toy her motion says the child has is dropped before she goes
     ('she never takes a toy from it', A4); the same request for a toy it does not have proceeds"""

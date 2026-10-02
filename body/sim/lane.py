@@ -85,6 +85,11 @@ HIDDEN_OUT_TICKS = 10                  # A129: a hidden toy out of the bucket wi
                                        # fall; the lane's reading of a hold takes GOT_HOLD ticks to settle: ours)
 GAVE_TICKS = 3                         # a toy come into her hand from its within 3 ticks: "gave" (ours)
 DISTRESS_TICKS = 100                   # face down this many ticks running: distress (A13's "face down over 100 ticks")
+TUMMY_TIME_TICKS = 1200                # C216: face down this many ticks running (3 min), still or not: tummy time is over and she turns it
+                                       # over (tummy time in short sessions for a young infant, the AAP's guidance; ours). Life day 60: the
+                                       # child, rolling onto its front since day 58, lay prone 87% of a motor block, moving, so no
+                                       # distress (C137's stillness) and no turn: it saw the mat, no face and no toy named, and the
+                                       # pull-to-sit is from its back
 CRY_DOWN_TICKS = 10                    # or face down and crying this many ticks running (A90: a parent hears a baby crying on its tummy
                                        # and turns it at once; the second plumbing day waited 100 ticks while its wrists hurt)
 # HER EYES ON ITS ACTS (A89, the teacher's build 2a; percept.EVENT_KINDS): every threshold ours, disclosed
@@ -522,7 +527,9 @@ class ParentLane:
         if post != "front" or moved > STILL_M:
             self.still_from = pxy.copy(); self.still_t = t                  # C137: where and when its last prone stillness began
         still = post == "front" and t - self.still_t >= STILL_TICKS         # face down and not going anywhere for STILL_TICKS
-        if not self.distressed and still and (self.face_down >= DISTRESS_TICKS or self.cry_down >= CRY_DOWN_TICKS):
+        if not self.distressed and self.face_down >= TUMMY_TIME_TICKS:
+            ev.append(("tummy_time_over", None)); self.distressed = True    # C216: tummy time's end, still or not (her turn_over answers
+        if not self.distressed and still and (self.face_down >= DISTRESS_TICKS or self.cry_down >= CRY_DOWN_TICKS):   # it, no concern)
             ev.append(("distress", None)); self.distressed = True           # once a face-down spell (her turn_over answers it); C137: not
                                                                             # to a child crawling under its own power (day 36: 28 turns
                                                                             # refused at a crawling child; it rolled over itself)
