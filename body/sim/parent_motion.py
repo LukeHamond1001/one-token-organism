@@ -5621,10 +5621,22 @@ class ParentMotion:
         if len(hs) < 2:
             raise Refuse("a forearm slipped from her hand before the pull began (A165)")
         for h in hs:
+            cap0 = float(h.cap)                                              # the gather's holding force on this forearm
             h.kind = "pull"
             h.name = f"pull_{h.side}"
             h.ctl = dict(dir=list(dir))
             self._start_ctl(a, h)
+            # A167 (2026-10-01): THE PULL TAKES OVER AT THE GATHER'S FORCE. The pull's controller ramps its cap from 0 (A9: 100 N/s to her
+            # brief cap); handed two forearms held up over its chest, a cap of 0 let them fall from her hands before the ramp could carry
+            # them (a forearm drops 40 cm in two ticks), and life day 57's second pull-to-sit (tick 2,757,977, 258 ticks in) ended 'her
+            # hands lost their hold on it before she began (it slipped from her grip)'. The ramp now begins where the gather's hold stood
+            # (both hands together: twice this hand's cap), and the pull is on at once
+            c = h.ctl
+            c["go"] = True
+            c["ramp"] = min(K.CAP_TWO_BRIEF, 2.0 * cap0)
+            c["go_t"] = int(math.ceil(c["ramp"] / (K.CAP_RAMP_NPS * TICK_S)))
+            h.cap = c["ramp"] / 2
+            h.next = h.point(self.d)
             if self.arms[h.side].get("hold") is not None:
                 self.arms[h.side]["hold"] = h.name
         return [dict(type="holds_wait", kind="pull"),
