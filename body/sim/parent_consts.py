@@ -284,10 +284,14 @@ HAND_FREE_M = 0.01              # m: a hand this near the link it reaches for ha
 SETTLE_ABOVE_M = 0.05           # m: a toy handed into the child's palm is held this far above it first ... (ours)
 SETTLE_TOL_M = 0.015            # m: ... until her real hand is within this of where she means it ...
 SETTLE_TICKS = 6                # ... at most this long (0.9 s) ...
+SETTLE_TOY_TICKS = 24           # C223: ... and this long (3.6 s) when it is the toy she settles over the place (its hang off her grip is aimed out
+                                # by sight before it is lowered; ours)
 SETTLE_LOWER_TICKS = 4          # ... then lowered into the palm over this many ticks (0.6 s; ours: at a physical arm's speed its
                                 # fingers met the toy first and the grasp closed on nothing)
 AIM_GAIN = 0.5                  # her aim at a place moves this share of what her real hand still misses there, a tick (ours) ...
 AIM_MAX_M = 0.10                # ... at most this far from the place (ours)
+AIM_MAX_TOY_M = 0.20            # C223: ... and this far when it is the TOY she aims (a carried toy hangs up to 14 cm off her grip, and her hand's
+                                # rotation error moves it by as much; ours)
 ARRIVE_WAIT_TICKS = 14          # ticks: her hand not yet on the link as its reach's time ends is waited for this long before the
                                 # hold is refused (2.1 s; ours: her hand is a body, and follows its plan a moment behind). C166
                                 # (2026-09-30): 4 ticks (0.6 s) until life day 44, when the body unfrozen by A143 began to wriggle under

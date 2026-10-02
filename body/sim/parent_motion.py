@@ -2253,13 +2253,24 @@ class ParentMotion:
         arrive there, her plan's aim moved each tick by AIM_GAIN of what her hand as the physics has it still misses (her body
         rests and her arm hangs some centimetres off their plan), at most AIM_MAX_M; never while the hand touches the child (it
         would press on); the aim kept with the arm's plan"""
+        cur = self.carry.get(sd)
+        toy_aim = cur is not None and a["to"].get("k") in ("palm", "show")   # (C223: the hand-over's and the show's places, held in the air;
+                                                                              # a set-down's toy comes to rest on the floor short of its plan
+                                                                              # and an aim that kept pushing flung parent 31's duck 1.2 m)
+        key = (a["to"].get("k"), a["to"].get("side"), a["to"].get("toy"), cur["toy"] if cur else None)
+        if "fix" not in a:
+            # C223 (2026-10-02): THE AIM IS KEPT ACROSS THE PHASES OF ONE PLACING. Her hand-over's settle had aimed the block to within 3 cm
+            # of its plan when the lowering reach began a fresh arm spec and started its aim from nothing: the block jumped 20 cm off and the
+            # hand-over's 40 ticks re-aimed it from scratch (the rig, 09:20). A new arm spec for the same place (the same target kind, side,
+            # toy and carried toy) begins where the last one's aim had got to
+            kept = getattr(self, "aim_keep", {}).get(sd)
+            a["fix"] = _lst(kept[1]) if kept is not None and kept[0] == key else (0.0, 0.0, 0.0)
         fix = np.asarray(a.get("fix", (0.0, 0.0, 0.0)), float)
         if not trial:
             k = self.hand_idx[HAND_SEGS[sd]]
             if not self.pain_win[k, -1] > 0.0 and not self.toy_touch.get(sd, False):
                 miss = want - self._grip_now(sd, actual=True)[0]
-                cur = self.carry.get(sd)
-                if cur is not None and a["to"].get("k") in ("palm", "floor", "show", "toy_at"):
+                if toy_aim:
                     # C222 (2026-10-02): SHE SEES WHERE THE TOY IS. A toy she carries hangs from her grip where the weld took it (up to 8 cm
                     # from her grip point, `_ph_grasp`), so a hand placed to its plan puts the toy where her planned hand's ROTATION would,
                     # and her real hand's rotation is off by tens of degrees: day 62's probe, her hand at its plan within 1 mm, the block 10
@@ -2273,9 +2284,13 @@ class ParentMotion:
                 a["miss"] = float(np.linalg.norm(miss))
                 fix = fix + K.AIM_GAIN * miss
                 n = float(np.linalg.norm(fix))
-                if n > K.AIM_MAX_M:
-                    fix = fix * (K.AIM_MAX_M / n)
+                cap = K.AIM_MAX_TOY_M if toy_aim else K.AIM_MAX_M                 # (C223: the toy's miss can be the whole of its hang)
+                if n > cap:
+                    fix = fix * (cap / n)
                 a["fix"] = _lst(fix)
+                if not hasattr(self, "aim_keep"):
+                    self.aim_keep = {}
+                self.aim_keep[sd] = (key, _lst(fix))
         return want + fix
 
     def _hand_now(self, p, sd, a):
@@ -5039,7 +5054,8 @@ class ParentMotion:
         SETTLE_TICKS"""
         miss = self.arms[ph["side"]].get("miss")
         t = ph.get("t", 0) + 1
-        return "done" if (miss is not None and miss <= K.SETTLE_TOL_M) or t >= K.SETTLE_TICKS else "run"
+        limit = K.SETTLE_TOY_TICKS if self.carry.get(ph["side"]) is not None else K.SETTLE_TICKS   # (C223: the toy's miss, C222, settles slower)
+        return "done" if (miss is not None and miss <= K.SETTLE_TOL_M) or t >= limit else "run"
 
     def _ph_handover(self, a, ph):
         """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks. The touch
