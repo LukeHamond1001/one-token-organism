@@ -5050,7 +5050,7 @@ class ParentMotion:
             cs = min(free, key=lambda x: float(np.linalg.norm(self.child.grasp[x][:2] - her)))
             if float(np.linalg.norm(self.child.grasp[cs][:2] - her)) < 0.75:
                 return []                                                   # it is within her reach from where she kneels
-        order = free if len(free) == 1 else sorted(free, key=lambda x: x != self.child.face_side())
+        order = free if len(free) == 1 else self._hands_by_clearance(free, toy, lambda x: x != self.child.face_side())   # C232
         last = None
         for cs in order:                                                    # C133 (day 33): the spot must put its palm in her reach
             try:                                                            # (six hand-overs refused "beyond her reach" in 4,000
@@ -5066,8 +5066,8 @@ class ParentMotion:
         free = [x for x in "LR" if not self._hand_full(x)]
         if not free:
             raise Refuse("both its hands hold something")
-        cs = min(free, key=lambda x: float(np.linalg.norm(self.child.grasp[x][:2] - her)))   # its nearer free hand
-        sd, swap = self._giving(toy, self.child.grasp[cs])
+        cs = self._hands_by_clearance(free, toy, lambda x: float(np.linalg.norm(self.child.grasp[x][:2] - her)))[0]   # C232: a hand clear of
+        sd, swap = self._giving(toy, self.child.grasp[cs])                                                            # the floor first, then the nearer
         if not swap and not self._reachable_at(sd, self.child.grasp[cs] + self.child.palm_n[cs] * 0.04, self.base["at"], self.base["yaw"],
                                                  self.base["mode"] if self.base["mode"] in ("heels", "tall") else "heels",
                                                  palm=-self.child.palm_n[cs], bend=False):
@@ -5133,6 +5133,23 @@ class ParentMotion:
             a["info"]["held"] = False
             return "done"
         return "run"
+
+    def _hand_clear(self, cs, toy):
+        """C232 (2026-10-02): the child's hand stands clear of the floor for this toy: its grasp point higher over the floor than the toy's
+        half-extent along gravity plus HANDOVER_CLEAR_M, so a toy set in the palm hangs in the hand and not on the mat. Day 65's copy
+        (ho_after.py): a cup handed into a hand lying on the mat was 'closed on' (her push 0.3 N on the palm, the fingers past 30 deg)
+        and stood on the mat the tick she let go (0 N on the palm, the grasp fell silent, the fingers opened); on its back the child's
+        left palm faced the floor 2.6 cm up on every tick of 300 and its right lay on its edge 7.6 cm up. A parent puts the toy in the
+        hand that is up. None of the toys given: not clear"""
+        if toy is None or toy not in self.toys:
+            return False
+        g = self.child.grasp[cs]
+        return float(g[2]) - floor_z(g[:2]) >= self._toy_half_along(toy, np.array([0.0, 0.0, 1.0])) + K.HANDOVER_CLEAR_M
+
+    def _hands_by_clearance(self, hands, toy, key):
+        """C232: the child's hands in the order she gives to them: the hands clear of the floor for the toy first (_hand_clear), among them
+        by `key` (the nearer, the face's side: the rules as they were)"""
+        return sorted(hands, key=lambda x: (not self._hand_clear(x, toy), key(x)))
 
     def _hand_full(self, cs):
         """a toy in the child's hand (pressing it from within its fingers' reach, or within 4 cm of its grasp point), as she sees it"""

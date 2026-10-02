@@ -1668,6 +1668,32 @@ def test_the_set_down_fallback():
     print(f"parent 32 (C175): a hand-over and a show with no kneel spot plan a set-down within reach ({[p.get('what') for p in plan if p.get('what')]}); with spots, as before")
 
 
+from body.sim.parent_motion import floor_z  # C232
+
+
+def test_a_hand_clear_of_the_floor():
+    """parent 34 (C232, 2026-10-02): the hand-over goes to the child's hand that is up: with its left grasp point set 2 cm over the floor and
+    its right 20 cm, the duck (half-extent along gravity about 4 cm) is given to the right hand whatever hand is nearer or on the face's
+    side; with both hands up, the old rules order them (the nearer; the face's side); with no toy named, the old rules alone. Day 65's
+    copy: a cup handed into a hand lying on the mat was 'closed on' and stood on the mat the tick she let go"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent; ch = pm.child
+    gL, gR = ch.grasp["L"].copy(), ch.grasp["R"].copy()
+    try:
+        half = pm._toy_half_along("duck", np.array([0.0, 0.0, 1.0]))
+        assert 0.02 < half < 0.08, half
+        ch.grasp["L"] = np.array([gL[0], gL[1], floor_z(gL[:2]) + 0.02]); ch.grasp["R"] = np.array([gR[0], gR[1], floor_z(gR[:2]) + 0.20])
+        assert not pm._hand_clear("L", "duck") and pm._hand_clear("R", "duck")
+        assert pm._hands_by_clearance(["L", "R"], "duck", lambda x: x != "L") == ["R", "L"], "the low hand was preferred"
+        assert pm._hands_by_clearance(["L", "R"], None, lambda x: x != "L") == ["L", "R"], "with no toy the old order stands"
+        ch.grasp["L"] = np.array([gL[0], gL[1], floor_z(gL[:2]) + 0.20])
+        assert pm._hands_by_clearance(["L", "R"], "duck", lambda x: x != "L") == ["L", "R"], "with both hands up the old order stands"
+    finally:
+        ch.grasp["L"], ch.grasp["R"] = gL, gR
+    print(f"parent 34 (C232): the duck (half-extent {half:.3f} m along gravity) goes to the hand that is up; both up or no toy, the old order")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -1675,7 +1701,7 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_interface_does_and_copies, test_her_caps_count_her_body, test_the_contract, test_her_body,
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
                 test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
-                test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback]
+                test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback, test_a_hand_clear_of_the_floor]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
