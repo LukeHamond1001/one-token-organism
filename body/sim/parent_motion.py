@@ -4472,6 +4472,18 @@ class ParentMotion:
                         ph["waited"] = ph.get("waited", 0) + 1              # waits for it a moment), and takes it where it is,
                         return "run"                                        # within a hand's length (her grip holds the less the
                     if miss > K.HOLD_SLIP_M:                                # farther: GRIP_TOL_M)
+                        c_ = ph.get("ctl") or {}
+                        if ph["kind"] == "gather" and int(c_.get("gather_tries", 0)) < K.GATHER_RETRIES:
+                            # A166 (2026-10-01): THE GATHER PLANNED AGAIN WHERE THE ARM IS. Life day 57's first pull-to-sit with the gather
+                            # (tick 2,754,601): her hand reached for the forearm where it lay and the arm moved 31 cm before the hand
+                            # arrived, and the act was refused. A parent reaching for a flailing arm reaches again where it is now: the
+                            # gather's phases are made again from the forearm's present place, up to GATHER_RETRIES times
+                            if a is not None:
+                                a["info"]["gather_retries"] = a["info"].get("gather_retries", 0) + 1
+                            new = self._gather_phases(a, c_["gather_cs"], ph["side"], int(c_.get("gather_tries", 0)) + 1)
+                            i = self.phases.index(ph)
+                            self.phases[i:i + 1] = new
+                            return "next"
                         return f"her {'left' if ph['side'] == 'L' else 'right'} hand did not arrive on it ({100 * miss:.0f} cm off: it moved)"
             ph["engaged"] = True
             he = self.stats.setdefault("holds_engaged", {}); he[ph["kind"]] = he.get(ph["kind"], 0) + 1
@@ -5352,21 +5364,14 @@ class ParentMotion:
             # held the two holds become the pull's (kind 'pull', its controller from the start)
             if any(v is not None for v in self.holding.values()):
                 raise Refuse("her hands are busy: the pull-to-sit takes both (A9, A165)")
-            G = ch.torso + np.array([0, 0, 1.0]) * K.GATHER_UP_M                # the gathering point: above its chest
             order = sorted("LR", key=lambda cs: float(np.linalg.norm(self.d.xpos[bodies[cs]][:2] - np.asarray(self.base["at"], float))))
             used = set()
             for cs in order:                                                 # the nearer forearm first
-                body = bodies[cs]
-                sd = self._near_hand(self.d.xpos[body])
+                sd = self._near_hand(self.d.xpos[bodies[cs]])
                 if sd in used:
                     sd = "L" if sd == "R" else "R"
                 used.add(sd)
-                p0 = self.d.xpos[body] + self.d.xmat[body].reshape(3, 3) @ np.asarray(FOREARM_TOP, float)
-                to_g = G - p0
-                dist = float(np.linalg.norm(to_g))
-                ctl = dict(dir=_lst(unit(to_g) if dist > 1e-6 else np.array([0, 0, 1.0])), dist=min(dist, K.GATHER_MAX_M),
-                           limb="arm_l" if cs == "L" else "arm_r", max=K.CAP_ONE)
-                out += self._hold_phases(a, sd, body, "gather", cap=K.CAP_ONE, local=FOREARM_TOP, normal=UP_LOCAL, ctl=ctl)
+                out += self._gather_phases(a, cs, sd, 0)
                 out.append(dict(type="holds_wait", kind="gather"))
             out.append(dict(type="plan", what="pull_from_gather", args=dict(dir=_lst(dirv))))
             return out
@@ -5595,6 +5600,20 @@ class ParentMotion:
         out.append(dict(type="lean", lean=sol["lean"], spine=sol["spine"], twist=sol["twist"]))
         out.append(dict(type="look_at", target="child_eyes"))
         return out
+
+    def _gather_phases(self, a, cs, sd, tries):
+        """A165/A166: the phases that take forearm cs with hand sd where the forearm lies NOW and draw it toward the gathering point
+        above its chest (a kept hold); `tries` the gathers of this forearm so far (A166: a hand that did not arrive because the arm moved
+        plans again from where the arm is, up to GATHER_RETRIES times)"""
+        ch = self.child
+        body = self.m.body(f"{'left' if cs == 'L' else 'right'}_elbow_link").id
+        G = ch.torso + np.array([0, 0, 1.0]) * K.GATHER_UP_M                    # the gathering point: above its chest
+        p0 = self.d.xpos[body] + self.d.xmat[body].reshape(3, 3) @ np.asarray(FOREARM_TOP, float)
+        to_g = G - p0
+        dist = float(np.linalg.norm(to_g))
+        ctl = dict(dir=_lst(unit(to_g) if dist > 1e-6 else np.array([0, 0, 1.0])), dist=min(dist, K.GATHER_MAX_M),
+                   limb="arm_l" if cs == "L" else "arm_r", max=K.CAP_ONE, gather_cs=cs, gather_tries=int(tries))
+        return self._hold_phases(a, sd, body, "gather", cap=K.CAP_ONE, local=FOREARM_TOP, normal=UP_LOCAL, ctl=ctl)
 
     def _plan_pull_from_gather(self, a, dir=None):
         """A165: both forearms held (the gather's kept holds): they become the pull's holds and the pull runs as from its feet"""
