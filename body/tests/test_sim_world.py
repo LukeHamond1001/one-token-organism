@@ -2288,3 +2288,47 @@ if __name__ == "__main__":
             failed += 1; print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
     print(f"{len(WORLD_TESTS) - failed}/{len(WORLD_TESTS)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+def test_the_traction_response():
+    """world A177: a pull on the left forearm along the arm (the parent's hold read as traction, stubbed at 5 N) flexes the elbow and the
+    shoulder pitch by the cord ('traction' in the spinal events, big flexion steps on both, the other joints as the own act had them);
+    an own step extending the elbow keeps the elbow (the cortex's); no pull, nothing; a steady pull habituates after TRACTION_HOLD_TICKS
+    and a free arm re-arms it; the state is saved with the world. The pure function and a born world with its parent (no hold: {})"""
+    from body.sim import reflexes as R
+    from body.sim import g1scene as G
+    joints = dict(G.EFFECTORS)["arm_l"]; n = len(joints)
+    rest = W.rest_id(n)
+    a, ev = R.traction("arm_l", rest, 5.0)
+    dig = W.act_digits(a, n)
+    assert ev == "traction"
+    for i, j in enumerate(joints):
+        if j in R.FLEXION["arm_l"]:
+            assert W.SETTINGS[dig[i]] * R.FLEXION["arm_l"][j] >= W.STEP_BIG - 1e-9, (j, W.SETTINGS[dig[i]])
+        else:
+            assert dig[i] == W.SETTINGS_PER_JOINT // 2, (j, dig[i])
+    own = list(W.act_digits(rest, n)); ie = joints.index("left_elbow_joint")
+    own[ie] = R._BIG[-R.FLEXION["arm_l"]["left_elbow_joint"]]                   # its own big extension of the elbow
+    a2, ev2 = R.traction("arm_l", W.act_flat(own), 5.0)
+    assert ev2 == "traction" and W.act_digits(a2, n)[ie] == own[ie], "the cortex's extension was not kept"
+    assert R.traction("arm_l", rest, 0.5) == (rest, None)
+    st = [0, 0]; evs = []
+    for _ in range(R.TRACTION_HOLD_TICKS + 3):
+        evs.append(R.traction("arm_l", rest, 5.0, st)[1])
+    assert evs[:R.TRACTION_HOLD_TICKS] == ["traction"] * R.TRACTION_HOLD_TICKS and evs[-1] == "habituated", evs[-4:]
+    for _ in range(R.TRACTION_RECOVER_TICKS):
+        R.traction("arm_l", rest, 0.0, st)
+    assert R.traction("arm_l", rest, 5.0, st)[1] == "traction", "a free arm did not re-arm it"
+    w = W.G1World(seed=1)
+    for _ in range(3):
+        w.frame(); w.apply({})
+    assert w._traction_N() == {}, w._traction_N()
+    w._traction_N = lambda: {"arm_l": 5.0}
+    w.frame(); w.apply({})
+    assert w._spinal.get("arm_l", "").split("+")[0] == "traction", w._spinal
+    d3 = W.act_digits(int(w._last_acts["arm_l"]), n)
+    assert W.SETTINGS[d3[ie]] * R.FLEXION["arm_l"]["left_elbow_joint"] >= W.STEP_BIG - 1e-9, W.SETTINGS[d3[ie]]
+    s5 = W._uncanon(w._capture()) if hasattr(W, "_uncanon") else w._capture()
+    assert "traction_hab" in s5 and s5["traction_hab"]["arm_l"][0] >= 1, s5.get("traction_hab")
+    print("WORLD A177 GREEN: a 5 N pull along the left forearm flexes the elbow and shoulder by the cord ('traction'), the cortex's "
+          "extension kept, nothing under 2 N; habituated after 40 ticks of a steady pull, re-armed after 10 free; saved with the world")
+

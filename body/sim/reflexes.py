@@ -268,6 +268,53 @@ def dorsal_open(hand, own, dorsal_N, palm_other_N, state=None):
     return W.act_flat(dig), "dorsal"
 
 
+TRACTION_N = 2.0                # A177: a steady pull on the forearm along the arm, away from the shoulder, that elicits the traction response (ours:
+                                # the examiner's pull at the wrists is a few newtons; Prechtl and Beintema 1964)
+TRACTION_HOLD_TICKS = 40        # A177: the response holds its flexion this long (6 s) under a steady pull, then habituates (the grasp's A162 bookkeeping)
+TRACTION_RECOVER_TICKS = 10     # A177: an arm free of traction this long (1.5 s) re-arms the response in full
+
+
+def traction(limb, own, pull_N, state=None):
+    """THE TRACTION RESPONSE (A177, 2026-10-02): a newborn pulled by the forearms from supine flexes its elbows and shoulders and takes part
+    in its own pull to sit (Prechtl and Beintema 1964's neurological examination of the newborn; the response is present from birth and
+    wanes over the first months). `pull_N` the pull along the limb away from the shoulder this tick (the world's reading of the parent's
+    holds on the forearm); under TRACTION_N nothing. Composed with the own act as the grasp is (A160): a big flexion step on each of the
+    limb's flexion joints (FLEXION: the shoulder pitch and the elbow) unless its own step extends that joint (the cortex's, kept); the
+    other joints as its own act has them. Habituation as the grasp's (A162): full for TRACTION_HOLD_TICKS under a steady pull, then
+    silent ((own, "habituated"): the arm's own acts rule) until the arm has been free TRACTION_RECOVER_TICKS. Returns (act, event):
+    (own, None) when it does not fire. Life day 65: the pull-to-sit stopped at the guide's cap 4 of 4 times ('the child resisted, or its
+    joint is at its range'), the arm driving into its stops against her; A9 lets the pull rise only with the child's own flexion, which
+    a newborn supplies by this response"""
+    if limb not in FLEXION:
+        raise ValueError(f"no traction response on {limb!r}")
+    if pull_N < TRACTION_N:
+        if state is not None:
+            state[0] = 0; state[1] += 1
+        return own, None
+    if state is not None:
+        if state[1] >= TRACTION_RECOVER_TICKS:
+            state[0] = 0
+        state[1] = 0
+        state[0] += 1
+        if state[0] > TRACTION_HOLD_TICKS:
+            return own, "habituated"
+    n = len(_JOINTS[limb])
+    rest = W.rest_id(n)
+    dig = W.act_digits(rest if own is None else own, n)
+    flexed = 0
+    for i, j in enumerate(_JOINTS[limb]):
+        if j in FLEXION[limb]:
+            step = W.SETTINGS[dig[i]] * FLEXION[limb][j]
+            if step < 0:                                                 # its own step extends this joint: the cortex's, kept
+                continue
+            if step < W.STEP_BIG:
+                dig[i] = _BIG[FLEXION[limb][j]]
+            flexed += 1
+    if flexed == 0:
+        return own, "overridden"
+    return W.act_flat(dig), "traction"
+
+
 def tendon(steps, loaded, state, joints_of):
     """THE TENDON ORGAN'S AUTOGENIC INHIBITION at the spinal cord (A139, C113; the Golgi tendon organ's Ib afferent inhibits the motor
     neurons of the muscle whose tension is excessive: Houk and Henneman 1967; the clasp-knife's road). `loaded`: per joint (JOINTS' order)

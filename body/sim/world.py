@@ -702,6 +702,8 @@ class G1World(SimWorld):
         self._tendon = np.zeros(len(JOINTS), int)                          # A139: the tendon organ's inhibition, a countdown per joint
         self._grasp_hab = {h: [0, 0] for h in self.palm_of_hand}            # A162: the grasp's habituation per hand [ticks pressed, ticks free]
         self._dorsal_hab = {h: [0, 0] for h in self.palm_of_hand}           # A171: the dorsal response's, the same bookkeeping
+        self._traction_hab = {a: [0, 0] for a in ("arm_l", "arm_r")}       # A177: the traction response's, the same bookkeeping
+        self._forearm_body = {"arm_l": int(self.m.body("left_elbow_link").id), "arm_r": int(self.m.body("right_elbow_link").id)}   # A177: the forearm links her pull holds
         self.parent = None
         self._sense_birth()
         if parent:                                                      # THE PARENT'S MOTION (W2; body/sim/parent_motion.py): her
@@ -894,6 +896,12 @@ class G1World(SimWorld):
                         spinal[hand] = ev2 if ev is None else ev + "+" + ev2
                         if a2 is not None:
                             acts[hand] = a2
+            for arm, n_ in self._traction_N().items():                      # A177: THE TRACTION RESPONSE: a pull on the forearm along the arm
+                a3, ev3 = R.traction(arm, acts.get(arm), float(n_), self._traction_hab.setdefault(arm, [0, 0]))   # flexes the elbow and
+                if ev3 is not None:                                         # shoulder (Prechtl): the newborn's part in its own pull to sit
+                    spinal[arm] = ev3 if arm not in spinal else spinal[arm] + "+" + ev3
+                    if a3 is not None:
+                        acts[arm] = a3
             if self.righting:                                           # and the prone pattern: face down, the arms flex under, the
                 spinal.update(R.prone(acts, self._sensed["imu_torso"]))   # trunk yaws toward the side that is up (A92)
         own = self._efference(acts)                                     # the efference copy (the own acts, after the grasp's sum)
@@ -1302,6 +1310,25 @@ class G1World(SimWorld):
         self._restore(st)
 
     # ---------------------------------------------------------------- the senses
+    def _traction_N(self):
+        """A177: the parent's pull on each forearm along the arm, away from the shoulder (N): over her holds on the forearm link, the hold's
+        force projected on the unit from the elbow link to the hand; nothing below zero (a push toward the shoulder is not traction);
+        {} with no parent or no hold"""
+        out = {}
+        if self.parent is None or not getattr(self.parent, "holds", None):
+            return out
+        for arm, b in self._forearm_body.items():
+            n_ = 0.0
+            for h in self.parent.holds:
+                if int(h.body) == b and h.force is not None:
+                    hand = self.d.xpos[self.palm_body[0 if arm == "arm_l" else 1]]
+                    u = hand - self.d.xpos[b]; nu = float(np.linalg.norm(u))
+                    if nu > 1e-6:
+                        n_ += max(0.0, float(np.asarray(h.force, float) @ (u / nu)))
+            if n_ > 0.0:
+                out[arm] = n_
+        return out
+
     def palm_normal(self, h):
         """the unit normal out of a hand's palm (0 left, 1 right), from its palm link's frame (the Dex3's palm faces -y on the left
         hand and +y on the right in the link's frame, as the parent reads it: parent_motion.Child)"""
@@ -1469,6 +1496,7 @@ class G1World(SimWorld):
                 "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "tendon": self._tendon.copy(), "scene_pose": _pose_state(self.scene.pose),
                 "grasp_hab": {h: list(v) for h, v in self._grasp_hab.items()},   # A162
                 "dorsal_hab": {h: list(v) for h, v in self._dorsal_hab.items()},  # A171
+                "traction_hab": {a: list(v) for a, v in self._traction_hab.items()},  # A177
                 "parent": None if self.parent is None else self.parent.state(),
                 "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
                               "vor_slip": ([] if self._vor_slip is None else list(map(float, self._vor_slip))),        # A174 (empty: none)
@@ -1499,6 +1527,7 @@ class G1World(SimWorld):
         self._tendon = np.asarray(st.get("tendon", np.zeros(len(JOINTS), int)), int).copy()   # (A139; older saves: none)
         self._grasp_hab = {h: [int(x) for x in st.get("grasp_hab", {}).get(h, [0, 0])] for h in self.palm_of_hand}   # (A162; older saves: fresh)
         self._dorsal_hab = {h: [int(x) for x in st.get("dorsal_hab", {}).get(h, [0, 0])] for h in self.palm_of_hand}   # (A171; older saves: fresh)
+        self._traction_hab = {a: [int(x) for x in st.get("traction_hab", {}).get(a, [0, 0])] for a in ("arm_l", "arm_r")}   # (A177; older saves: fresh)
         self.rng.bit_generator.state = st["rng"]
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()
