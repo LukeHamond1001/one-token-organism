@@ -85,7 +85,7 @@ HIDDEN_OUT_TICKS = 10                  # A129: a hidden toy out of the bucket wi
                                        # fall; the lane's reading of a hold takes GOT_HOLD ticks to settle: ours)
 GAVE_TICKS = 3                         # a toy come into her hand from its within 3 ticks: "gave" (ours)
 DISTRESS_TICKS = 100                   # face down this many ticks running: distress (A13's "face down over 100 ticks")
-TUMMY_TIME_TICKS = 1200                # C216: face down this many ticks running (3 min), still or not: tummy time is over and she turns it
+TUMMY_TIME_TICKS = 1200                # C216: off its back (its front or its side, C217) this many ticks running (3 min), still or not: tummy time is over and she turns it
                                        # over (tummy time in short sessions for a young infant, the AAP's guidance; ours). Life day 60: the
                                        # child, rolling onto its front since day 58, lay prone 87% of a motor block, moving, so no
                                        # distress (C137's stillness) and no turn: it saw the mat, no face and no toy named, and the
@@ -193,6 +193,8 @@ class ParentLane:
         self.found_log = []                               # C158: (tick, toy, seen) of the finds, the last 50 (the record's "found")
         self.posture = None                               # its lying posture, back or front, last seen stable
         self.face_down = 0                                # ticks lying face down running
+        self.off_back = 0                                 # C217: ticks running off its back (front or side), tummy time's clock
+        self.tummy_over = False                           # C217: tummy time's end told this spell off its back
         self.cry_down = 0                                 # ticks lying face down and crying running
         self.distressed = False                           # distress said of this face-down spell
         self.found_ticks = {}                             # C116: the ticks its hand touched each hidden toy of late
@@ -519,6 +521,9 @@ class ParentLane:
                     break
         self.last["posture"] = post
         self.face_down = self.face_down + 1 if post == "front" else 0
+        self.off_back = self.off_back + 1 if post in ("front", "side") else 0   # C217: ticks running off its back (its front or its side)
+        if post == "back":
+            self.tummy_over = False
         self.cry_down = self.cry_down + 1 if (post == "front" and world.crying) else 0
         if post != "front":
             self.distressed = False
@@ -527,9 +532,10 @@ class ParentLane:
         if post != "front" or moved > STILL_M:
             self.still_from = pxy.copy(); self.still_t = t                  # C137: where and when its last prone stillness began
         still = post == "front" and t - self.still_t >= STILL_TICKS         # face down and not going anywhere for STILL_TICKS
-        if not self.distressed and self.face_down >= TUMMY_TIME_TICKS:
-            ev.append(("tummy_time_over", None)); self.distressed = True    # C216: tummy time's end, still or not (her turn_over answers
-        if not self.distressed and still and (self.face_down >= DISTRESS_TICKS or self.cry_down >= CRY_DOWN_TICKS):   # it, no concern)
+        if not self.tummy_over and self.off_back >= TUMMY_TIME_TICKS:
+            ev.append(("tummy_time_over", None)); self.tummy_over = True    # C216/C217: tummy time's end, still or not, on its front OR its
+                                                                            # side (her turn_over answers it, no concern); once a spell off its back
+        if not self.distressed and still and (self.face_down >= DISTRESS_TICKS or self.cry_down >= CRY_DOWN_TICKS):
             ev.append(("distress", None)); self.distressed = True           # once a face-down spell (her turn_over answers it); C137: not
                                                                             # to a child crawling under its own power (day 36: 28 turns
                                                                             # refused at a crawling child; it rolled over itself)
@@ -706,6 +712,7 @@ class ParentLane:
         self.day += 1
         self.day_start = int(world.tick)
         self.distressed = False; self.face_down = 0; self.cry_down = 0   # A107 (C89): a face-down spell starts anew at waking: a child
+        self.off_back = 0; self.tummy_over = False                       # (C217: and tummy time's clock)
         self.conduct.left = {}                                           # A117: the toys she left where they lay: the room tidied (B8)
         if self.conduct.dawn(int(world.tick)):                           # C142: her stage advances at a dawn (stage 2: the words her ear
             print(f"dawn {self.day}: her stage 2 begins (C142): {self.conduct.book_log[-1][4]}", flush=True)   # accepts smiled, the frowns)
@@ -736,6 +743,7 @@ class ParentLane:
                     toy_z=dict(self.toy_z), falling=sorted(self.falling), child_had=list(self.child_had),
                     child_held_at=dict(self.child_held_at), her_had=dict(self.her_had), released=dict(self.released), hidden=dict(self.hidden), hidden_seen=dict(self.hidden_seen), found_ticks={k: list(v) for k, v in self.found_ticks.items()},
                     posture=self.posture, face_down=self.face_down, last_posture=self.last.get("posture"), n_lines=self.n_lines,
+                    off_back=self.off_back, tummy_over=self.tummy_over,   # C217
                     plan=None if self.plan is None else self.plan.state(), day=self.day, day_start=self.day_start,
                     eyes=dict(first=self.first, hand_prev={k: v.tolist() for k, v in self.hand_prev.items()},
                               hand_speed={k: list(v) for k, v in self.hand_speed.items()}, hand_moved_t=dict(self.hand_moved_t),
@@ -790,6 +798,7 @@ class ParentLane:
         self.hidden_seen = {k: bool(v) for k, v in dict(s.get("hidden_seen", {})).items()}; self.found_log = []   # C158 (older saves: unknown)
         self.found_ticks = {k: [int(x) for x in v] for k, v in dict(s.get("found_ticks", {})).items()}   # C116 (older saves: none)
         self.posture, self.face_down = s["posture"], int(s["face_down"])
+        self.off_back, self.tummy_over = int(s.get("off_back", 0)), bool(s.get("tummy_over", False))   # (C217; older saves: fresh)
         self.last = dict(posture=s["last_posture"])
         e = s.get("eyes")
         if e is not None:

@@ -446,8 +446,10 @@ def test_a_face_down_morning():
     w, lane = _world()
     _run(w, 3)
     lane.distressed = True; lane.face_down = 500; lane.cry_down = 3        # as day 5's dusk left it
+    lane.off_back = 900; lane.tummy_over = True                            # (C217: tummy time's clock and its flag too)
     lane.dusk(w); lane.dawn(w)
     assert lane.distressed is False and lane.face_down == 0 and lane.cry_down == 0, (lane.distressed, lane.face_down, lane.cry_down)
+    assert lane.off_back == 0 and lane.tummy_over is False, (lane.off_back, lane.tummy_over)
     print("13 a face-down spell starts anew at dawn: the distress flag and the face-down count reset with the day (A107)")
 
 def test_the_roll_rung():
