@@ -4531,7 +4531,12 @@ class ParentMotion:
                 Rl = self.d.xmat[h.body].reshape(3, 3)                      # point by a hand's length (the child's own links pushed it
                 g_act = self._grip_now(h.side, actual=True)[0]              # off, or it could not keep up): the grip is gone
                 off = float(np.linalg.norm(g_act - (h.point(self.d) + Rl @ np.asarray(arm["goff"], float))))
-                if h.kind == "turn" and off > K.GRIP_TOL_M:                 # C88 (A103): the turn's hand GRASPS the limb's root: while it
+                if h.kind in ("turn", "gather", "pull") and off > K.GRIP_TOL_M:   # C88 (A103): the turn's hand GRASPS the limb's root: while it
+                    # A168 (2026-10-02): and so do the pull-to-sit's hands on its forearms (A9: 'takes both its forearms'), the gather's
+                    # too. Day 58's second pull with the whole chain (tick 2,804,015): both forearms gathered, the pull begun at the
+                    # gather's force, and both holds lost within a tick ('her hands lost their hold on it before she began'): a live
+                    # child's arm jerks a hand's length in a tick and the hold, a spring with a slip tolerance, counted it slipped,
+                    # where the same sequence runs to her cap on the rig's still child. A grasp around a forearm rides with it
                     hb = self.bm.hand_body[h.side]                          # still touches the held link it keeps its hold where the
                     on = self._hand_clearance_at(h.side, self.d.xpos[hb], self.d.xmat[hb].reshape(3, 3), self._shape_now(h.side),
                                                  held=int(h.body))[0] <= K.HAND_FREE_M
