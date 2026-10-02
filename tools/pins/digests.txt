@@ -212,3 +212,7 @@ digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b6
 # the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
+# Re-taken at A163/C208 (2026-10-01 21:46, on branch t211: the pull-to-sit from beside its hips when its feet are out of her reach): UNCHANGED
+# (no parent in the sim profile); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim

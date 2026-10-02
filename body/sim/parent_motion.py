@@ -3536,10 +3536,23 @@ class ParentMotion:
                 for off in (offs or K.KNEEL_OFF_TRY):
                     for along in (alongs or (K.KNEEL_ALONG_M, 0.0, 0.20, -0.10, 0.30)):
                         out.append((mid + axis * along + lat * off, math.atan2(-lat[1], -lat[0]), sd))
-        if where in (None, "feet"):
+        if where in (None, "feet", "pull"):
             feet = ch.pelvis[:2] + axis * 0.70
-            for off in (offs if where == "feet" and offs else (0.55, 0.65)):
+            for off in (offs if where in ("feet", "pull") and offs else (0.55, 0.65)):
                 out.append((feet + axis * off, math.atan2(-axis[1], -axis[0]), "feet"))
+        if where == "pull":
+            # A163 (2026-10-01): THE PULL-TO-SIT FROM ITS SIDE WHEN ITS FEET ARE OUT OF HER REACH. A9 has her kneel at its feet; on this
+            # body (a 1.3 m G1, its forearms at its hips) one trunk of hers reaches both forearms from there only in a lean her knees
+            # cannot hold, so every pull-to-sit was refused before she went (parent 7 had recorded it; life day 56 tick 2,702,009: 'no
+            # spot she can kneel at lets her do it (pull): her reach'). After the feet's spots, the spots beside its hips on either
+            # side (the near forearm at hand, the far one across its chest), the pull's direction unchanged (up and toward its feet,
+            # in its frame: a sit-up about its hips); a parent of a child too long to reach from its feet kneels beside its hips
+            for sd in sides:
+                sg = 1 if sd == "L" else -1
+                lat = ch.lat[:2] * sg
+                for off in K.KNEEL_OFF_TRY:
+                    for along in (0.0, 0.10, -0.10, 0.20):
+                        out.append((mid + axis * along + lat * off, math.atan2(-lat[1], -lat[0]), sd))
         if where in (None, "head"):
             head = ch.torso[:2] - axis * 0.45
             for off in (offs if where == "head" and offs else (0.60, 0.70)):
@@ -5295,7 +5308,7 @@ class ParentMotion:
         both, PULL_FEET_M); refused, with the reason, where none does (C7)"""
         if self.child.posture != "back":
             raise Refuse("the pull-to-sit is from lying on its back (A9)")
-        return self._near(a, where="feet", offs=K.PULL_FEET_M, need="pull") + [dict(type="plan", what="pull", args={})]
+        return self._near(a, where="pull", offs=K.PULL_FEET_M, need="pull") + [dict(type="plan", what="pull", args={})]   # A163: its feet, then its sides
 
     def _pull_pairing(self):
         """which of her hands takes which of its forearms so that one trunk of hers, kneeling where she is, reaches both (her palm
