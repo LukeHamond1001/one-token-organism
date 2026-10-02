@@ -4461,6 +4461,40 @@ class ParentMotion:
                 deep = max(deep, float(m.geom_size[g, 0]))
         return deep
 
+    def _forearm_hold_args(self, sd, body):
+        """C227 (2026-10-02): WHERE SHE TAKES A FOREARM DEPENDS ON HOW IT LIES. The pull's and the gather's holds took the forearm at its
+        top (FOREARM_HOLD along the elbow link's +z, 'its top as it lies'); on a child whose arm is raised or flung out the link's +z
+        points away from her, and her hand from above onto that face is a pose no trunk of hers reaches: on day 64's copy every kneel
+        spot at 0.34 to 0.95 m from the forearms failed the trunk solve ('no spot she can kneel at lets her do it (pull): her reach',
+        six refusals in two blocks) while the same pull sat the child up at 06:45 with its arms low. -> (local, normal) for the SPOT
+        CHECK's hold targets (_pull_pairing, _gather_reach): the top when a trunk of hers reaches her hand onto it from the spot, else the
+        anchor from her side (`_anchor`, the general grip: a point on the link's surface facing her shoulder) when that is what she
+        reaches; the top when neither solves. The spots are searched twice (_act_pull_to_sit): for the tops alone first, as A163 and A165
+        built it (the rig's gather engages a top the solve calls unreachable), then, when no spot passes, for either grip; the grip each
+        forearm's check solved with is kept (`_pull_grips`, by link) and the hold she then makes takes it (`_forearm_grip`). Her real
+        reach decides, C224 trying again in the block when it falls short. No new constant: the anchor is A25's own mechanism, the solve
+        the plan's own"""
+        grips = getattr(self, "_pull_grips", None)
+        if grips is None:
+            grips = self._pull_grips = {}
+        cands = ((FOREARM_TOP, UP_LOCAL), (None, None)) if getattr(self, "_pull_any", False) else ((FOREARM_TOP, UP_LOCAL),)
+        for local, normal in cands:
+            try:
+                to, _loc, _nl, shape = self._hold_target(sd, body, local, normal)
+                g, R = self._resolve_hand(to, sd)
+                if float(np.linalg.norm(g[:2] - np.asarray(self.base["at"], float)[:2])) <= 1.0 and \
+                        bool(self._solve_trunk({sd: (g, R, shape)}, None, step=10)[3]):
+                    grips[int(body)] = (local, normal)                      # the grip this spot solved with: the hold she then makes
+                    return local, normal
+            except Exception:
+                continue
+        grips[int(body)] = (FOREARM_TOP, UP_LOCAL)
+        return FOREARM_TOP, UP_LOCAL
+
+    def _forearm_grip(self, body):
+        """the grip the spot check solved for this forearm (C227), else the top"""
+        return (getattr(self, "_pull_grips", None) or {}).get(int(body), (FOREARM_TOP, UP_LOCAL))
+
     def _hold_target(self, sd, body, local=None, normal=None):
         """where her hand goes on a G1 link: a point on its surface (along the given normal from `local`, or a ray from her side,
         _anchor) with her open flat hand (HOLD_SHAPE) on it, palm to it, the fingers along her forearm; its grip set so her palm,
@@ -5420,7 +5454,8 @@ class ParentMotion:
         if self.holding[sd] is not None:
             sd = "L" if sd == "R" else "R"
         ctl = dict(dir=_lst(dirv), dist=dist, limb="arm_l" if cs == "L" else "arm_r", max=cap_max)
-        return self._hold_phases(a, sd, body, "guide", cap=cap_max, local=FOREARM_TOP, normal=UP_LOCAL, ctl=ctl) + \
+        loc_, nrm_ = self._forearm_grip(body)                                # C227: the grip the spot solved with
+        return self._hold_phases(a, sd, body, "guide", cap=cap_max, local=loc_, normal=nrm_, ctl=ctl) + \
             [dict(type="plan", what="let_go", args=dict(names=[f"guide_{sd}"])), dict(type="relax", sides=sd)]
 
     def _act_knee_over(self, a, t):
@@ -5444,7 +5479,17 @@ class ParentMotion:
         both, PULL_FEET_M); refused, with the reason, where none does (C7)"""
         if self.child.posture != "back":
             raise Refuse("the pull-to-sit is from lying on its back (A9)")
-        return self._near(a, where="pull", offs=K.PULL_FEET_M, need="pull") + [dict(type="plan", what="pull", args={})]   # A163: its feet, then its sides
+        try:
+            self._pull_any = False                                          # C227: the spots are searched for the forearms' tops first
+            return self._near(a, where="pull", offs=K.PULL_FEET_M, need="pull") + [dict(type="plan", what="pull", args={})]   # A163: its feet, then its sides
+        except Refuse as first:
+            self._pull_any = True                                           # C227: none; then for either grip of each forearm (the top or the
+            try:                                                            # anchor from her side), the grip each spot solved with kept for
+                a["info"]["grip"] = "either"                                # the hold (_pull_grips)
+                return self._near(a, where="pull", offs=K.PULL_FEET_M, need="pull") + [dict(type="plan", what="pull", args={})]
+            except Refuse:
+                self._pull_any = False
+                raise first
 
     def _pull_pairing(self):
         """which of her hands takes which of its forearms so that one trunk of hers, kneeling where she is, reaches both (her palm
@@ -5453,7 +5498,7 @@ class ParentMotion:
         for pair in ((("L", "L"), ("R", "R")), (("R", "L"), ("L", "R"))):
             tg = {}
             for sd, cs in pair:
-                to, _, _, shape = self._hold_target(sd, bodies[cs], FOREARM_TOP, UP_LOCAL)
+                to, _, _, shape = self._hold_target(sd, bodies[cs], *self._forearm_hold_args(sd, bodies[cs]))   # C227
                 tg[sd] = (*self._resolve_hand(to, sd), shape)
             if self._solve_trunk(tg, None)[3]:
                 return pair
@@ -5473,7 +5518,7 @@ class ParentMotion:
             if sd in used:
                 sd = "L" if sd == "R" else "R"
             used.add(sd)
-            to, _loc, _nl, shape = self._hold_target(sd, bodies[cs], FOREARM_TOP, UP_LOCAL)
+            to, _loc, _nl, shape = self._hold_target(sd, bodies[cs], *self._forearm_hold_args(sd, bodies[cs]))   # C227
             g, R = self._resolve_hand(to, sd)
             if float(np.linalg.norm(g[:2] - np.asarray(self.base["at"], float)[:2])) > 1.0:
                 return False
@@ -5517,7 +5562,8 @@ class ParentMotion:
         for sd, cs in pairing:
             body = bodies[cs]
             ctl = dict(dir=_lst(dirv))
-            ph = self._hold_phases(a, sd, body, "pull", cap=0.0, brief=True, local=FOREARM_TOP, normal=UP_LOCAL, ctl=ctl,
+            loc_, nrm_ = self._forearm_grip(body)                            # C227
+            ph = self._hold_phases(a, sd, body, "pull", cap=0.0, brief=True, local=loc_, normal=nrm_, ctl=ctl,
                                    tall_if_needed=False)
             out += ph[:-1]
             out.append(dict(ph[-1], wait=False))
@@ -5762,7 +5808,8 @@ class ParentMotion:
         dist = float(np.linalg.norm(to_g))
         ctl = dict(dir=_lst(unit(to_g) if dist > 1e-6 else np.array([0, 0, 1.0])), dist=min(dist, K.GATHER_MAX_M),
                    limb="arm_l" if cs == "L" else "arm_r", max=K.CAP_ONE, gather_cs=cs, gather_tries=int(tries))
-        return self._hold_phases(a, sd, body, "gather", cap=K.CAP_ONE, local=FOREARM_TOP, normal=UP_LOCAL, ctl=ctl)
+        loc_, nrm_ = self._forearm_grip(body)                                # C227
+        return self._hold_phases(a, sd, body, "gather", cap=K.CAP_ONE, local=loc_, normal=nrm_, ctl=ctl)
 
     def _plan_pull_from_gather(self, a, dir=None):
         """A165: both forearms held (the gather's kept holds): they become the pull's holds and the pull runs as from its feet"""
