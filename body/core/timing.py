@@ -220,7 +220,7 @@ class TimingMixin:
                 if pn > 1e-6 and rn > 1e-6 and name in self.m.timing:
                     f_ = float((rn / pn) ** (1.0 / reach))
                     tm = self.m.timing[name]
-                    for mod in (tm.pred, tm.cor):
+                    for mod in (tm.pred,) + ((tm.cor,) if tm.sense_n else ()):   # cor exists for an effector with a body sense alone
                         mod.weight.mul_(f_)
                         if mod.bias is not None:
                             mod.bias.mul_(f_)

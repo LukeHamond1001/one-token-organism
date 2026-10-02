@@ -745,8 +745,11 @@ class G1World(SimWorld):
                           the born lateral read's angle, + left]
           eye_p 172, eye_f 1,536, onset_periph 3   the eyes (body/sim/eyes.py when attached: the D435's three views, A78, and
                           the born visual onset cue, A43; zeros without them)
-          face_periph 3, face_fovea 1   zeros: no born face detector at birth (C39, the lead's decision of 2026-09-25, option a: the
-                          born route to faces is orienting to her voice and her face brought into view)"""
+          face_periph 3   the born face cue's stand-in (A157; eyes.face_cue): [fired, yaw, pitch], 1 and her mouth's direction from the
+                          fovea's centre while her face lies in an eye's image under A1's conditions but the window's; zeros without the eyes
+          face_fovea 1    zeros: no born face detector on the pixels at birth (C39, the lead's decision of 2026-09-25, option a; its
+                          route to faces, her voice and her face brought into view, measured over days 49 to 55: her face seen on 1
+                          to 3% of ticks, her smiles paying nothing; A157 reversed it)"""
         if self.paused:
             raise RuntimeError("G1World: a frame taken while the world is paused (the night)")
         d, s = self.d, self._sensed

@@ -15,8 +15,11 @@ render has no near-infrared light, which the real imagers also see (a disclosed 
              COLOUR WINDOW: the same 21 deg at the left eye's gaze direction in the colour camera's image (64 px), 8 x 8 cells x
              red-green and blue-yellow ON and OFF (256); what lies outside that camera's field reads nothing: eye_f, 1,536 numbers.
   No depth channel and no stereo algorithm: the body gets both eyes and learns what they share (the owner's decision 4).
-  face_fovea and face_periph read nothing: at birth there is no born face detector (C39, option a); the born template below is an
-  instrument. onset_periph is THE BORN VISUAL ONSET CUE (A43; `_onset`): the grey peripheries' sudden local change, habituating per
+  face_fovea reads nothing: at birth there is no born face detector on the pixels (C39, option a); the born template below is an
+  instrument. face_periph is THE BORN FACE CUE'S STAND-IN (A157; `face_cue`): [fired, yaw, pitch], 1 and her mouth's direction from
+  the fovea's centre (rad, + right / + up) while her face lies in either eye's image under A1's conditions but the fovea's, else
+  zeros: the orienting the newborn has toward a face (CONSPEC, Johnson and Morton 1991) read from the world as the smile's level is
+  (A49's scaffold law), until a born detector on the pixels works; its removal test is A49's. onset_periph is THE BORN VISUAL ONSET CUE (A43; `_onset`): the grey peripheries' sudden local change, habituating per
   place, suppressed while the trunk turns fast; its constants ours or recalled until C49 reads them from their sources. The camera model (A38: exposure,
   Poisson-Gaussian noise, the head's motion blur, the colour camera's rolling rows, gamma) waits for its constants (C45).
 The images themselves go to the frame's truth (the page, the stills, the eye check), never to the body.
@@ -30,8 +33,11 @@ to the frame's truth (`face_test`), where the face channel's gate (the born read
 P3/S5a) and the parent read it.
 THE BORN FACE TEMPLATE (3.4, A1; an instrument since C39's option (a)): CONSPEC's three dark blobs (`face_template`; its constants
 below), read on a grey fovea or a colour render by the tools and the eye tests. Measured on her face of human proportions it rarely
-detected her face (C39), so at birth no born face detector reaches the body: face_fovea and face_periph read nothing, and the born
-route to faces is orienting to sudden change and sound, with the world-truth smile as A49's scaffold.
+detected her face (C39), so at birth no born face detector on the pixels reaches the body: face_fovea reads nothing. From C39's
+option (a) to day 55 the born route to faces was orienting to sudden change and sound with her face brought into the child's line, and
+measured over days 49 to 55 her face passed A1's test on 1 to 3% of ticks and paid nothing (her smiles judged 90 to 155 a day, the
+face's felt reward about 0; a copy read: her face inside the camera field and within the gaze's reach on every tick, the gaze held
+17 deg below her mouth); so A157 fills face_periph from the world as A49 fills the smile: the detector's disclosed stand-in.
 
 NO LAMP AT THE EYES (the W1 verifier's fifth finding). The G1 carries no lamp, so the eyes see by the room's lights alone: the room
 has no headlight (MuJoCo's lamp at the viewing camera), and `Eyes` refuses to render with one on. The room's own indirect light,
@@ -374,6 +380,27 @@ def mouth_geoms(m):
     return _MOUTH_GEOMS[key][1]
 
 
+def _face_front(m, d, eye, mouth, fwd, centre):
+    """A1's conditions on her face from one eye but the window's: "" when it holds, else the first that failed: a ray from the eye to her
+    mouth meets something first ("blocked"), the face turned past FACE_TURN_DEG ("turned away"), its front under FACE_MIN_PX ("too small")"""
+    to = mouth - eye
+    dist = float(np.linalg.norm(to))
+    gid = np.array([-1], dtype=np.int32)
+    hit = mujoco.mj_ray(m, d, eye, to / dist, EYE_GROUPS, 1, -1, gid)
+    if 0 <= hit < dist - RAY_SLACK_M and int(gid[0]) not in mouth_geoms(m):   # something before the mouth (its own surface is at dist;
+        return "blocked"                                                        # her own lips, met first when her face is turned, are
+                                                                                # her mouth: the W1 fix 2's C2 finding)
+    to_eye = eye - centre
+    cos_turn = float(fwd @ to_eye / np.linalg.norm(to_eye))
+    if cos_turn < math.cos(math.radians(FACE_TURN_DEG)):
+        return "turned away"
+    fd = float(np.linalg.norm(to_eye))
+    area = math.pi / 4 * (FACE_FRONT_M[0] * W.EYE_F_PX / fd) * (FACE_FRONT_M[1] * W.EYE_F_PX / fd) * cos_turn
+    if area < FACE_MIN_PX:
+        return "too small"
+    return ""
+
+
 def face_test(m, d, gaze):
     """A1's test for each eye: {side: (passes, why)}; why names the first condition that failed ("" when it passes)"""
     mouth, fwd, centre = mouth_point(m, d)
@@ -387,30 +414,37 @@ def face_test(m, d, gaze):
         x0, y0 = window_corner(side, gaze)
         if not (x0 <= p[0] < x0 + W.FOVEA_PX and y0 <= p[1] < y0 + W.FOVEA_PX):
             out[side] = (False, "not in the fovea"); continue
-        to = mouth - eye
-        dist = float(np.linalg.norm(to))
-        gid = np.array([-1], dtype=np.int32)
-        hit = mujoco.mj_ray(m, d, eye, to / dist, EYE_GROUPS, 1, -1, gid)
-        if 0 <= hit < dist - RAY_SLACK_M and int(gid[0]) not in mouth_geoms(m):   # something before the mouth (its own surface is
-            out[side] = (False, "blocked"); continue                            # at dist; her own lips, met first when her face is
-                                                                                # turned, are her mouth: the W1 fix 2's C2 finding)
-        to_eye = eye - centre
-        cos_turn = float(fwd @ to_eye / np.linalg.norm(to_eye))
-        if cos_turn < math.cos(math.radians(FACE_TURN_DEG)):
-            out[side] = (False, "turned away"); continue
-        fd = float(np.linalg.norm(to_eye))
-        area = math.pi / 4 * (FACE_FRONT_M[0] * W.EYE_F_PX / fd) * (FACE_FRONT_M[1] * W.EYE_F_PX / fd) * cos_turn
-        if area < FACE_MIN_PX:
-            out[side] = (False, "too small"); continue
-        out[side] = (True, "")
+        why = _face_front(m, d, eye, mouth, fwd, centre)
+        out[side] = (not why, why)
     return out
+
+
+def face_cue(m, d, gaze):
+    """THE BORN FACE CUE'S STAND-IN (A157; the frame's face_periph, orienting's face cue: body/core/cord.py, anatomy's OrientCue "face"):
+    [1, yaw, pitch] while the parent's face lies in either eye's image (anywhere in it: the periphery or the window) and A1's conditions
+    but the window's hold from that eye (`_face_front`), yaw and pitch her mouth's direction from the fovea's centre (the gaze that would
+    centre it, `gaze_at`, less the gaze; rad, + right / + up, the cue's declared sense); zeros otherwise. Inside the fovea's zone the cord
+    pulls nothing (OrientCue.zone), so the cue is the newborn's orienting toward a face in the periphery (Goren, Sarty and Wu 1975; Johnson,
+    Dziurawiec, Ellis and Morton 1991: CONSPEC's subcortical route), read from the world as the smile's level is (A49) until a born
+    detector on the pixels works; its removal test is A49's. Never a channel of what she shows: her face's place alone."""
+    mouth, fwd, centre = mouth_point(m, d)
+    for side in "LR":
+        c = m.camera(f"eye_{side}").id
+        p = project(m, d, side, mouth)
+        if p is None or not (0 <= p[0] < G.EYE_W and 0 <= p[1] < G.EYE_H):
+            continue
+        if _face_front(m, d, d.cam_xpos[c].copy(), mouth, fwd, centre):
+            continue
+        ga = gaze_at(m, d, mouth)
+        return np.array([1.0, float(ga[0] - gaze[0]), float(ga[1] - gaze[1])])
+    return np.zeros(3)
 
 
 class Eyes:
     """the G1's three views over a G1World (A38, A42): `render()` the two grey imagers' and the colour camera's native images into one
     buffer with one read-back, `see()` this tick's codes (rendered again only when something they would see has moved: the state, the
     gaze, the scene's run-time fields), `close()` the GL context. Attaching sets the world's `eyes`, so its frames carry eye_p (172)
-    and eye_f (1,536) at the anatomy's sizes, face_fovea and face_periph (zeros: no born face detector at birth, C39 option a),
+    and eye_f (1,536) at the anatomy's sizes, face_fovea (zeros: no born face detector on the pixels, C39 option a) and face_periph (A157: the born face cue read from the world, `face_cue`),
     onset_periph (the born visual onset cue, A43), and A1's face test in the truth."""
 
     def __init__(self, world, shadows="sun", samples=EYE_SAMPLES):
@@ -478,7 +512,7 @@ class Eyes:
         return {"L": img[:, :self.w].copy(), "R": img[:, self.w:2 * self.w].copy(), "C": img[self.h - self.ch:, 2 * self.w:].copy()}
 
     def see(self):
-        """this tick's eyes: {"eye_p": 172, "eye_f": 1,536, "face_fovea": [0], "face_periph": [0, 0, 0], "onset_periph": [0, 0, 0],
+        """this tick's eyes: {"eye_p": 172, "eye_f": 1,536, "face_fovea": [0], "face_periph": the born face cue's stand-in (A157, `face_cue`), "onset_periph": [0, 0, 0],
         "truth": the images, the grey foveae, the colour window and A1's face test}. eye_p: per grey eye its periphery's 7 x 4 cells
         x luminance ON and OFF (56), then the colour camera's 5 x 3 cells x red-green and blue-yellow ON and OFF (60). eye_f: per grey
         eye its fovea's 8 x 8 cells x the born bank's 10 maps (640), then the colour window's 8 x 8 cells x the two opponent axes ON
@@ -504,9 +538,9 @@ class Eyes:
             self.timing["code_s"] += time.perf_counter() - t0
             truth = {"images": imgs, "periphery": per, "fovea": fov, "colour_window": cwin, "face_test": face_test(self.m, w.d, w.gaze),
                      "windows": {s: window_corner(s, w.gaze) for s in "LR"}}
-            self._cache = (key, eye_p, eye_f, truth)
-        _, eye_p, eye_f, truth = self._cache
-        return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": np.zeros(3),
+            self._cache = (key, eye_p, eye_f, truth, face_cue(self.m, w.d, w.gaze))      # A157: the born face cue's stand-in
+        _, eye_p, eye_f, truth, cue = self._cache
+        return {"eye_p": eye_p.copy(), "eye_f": eye_f.copy(), "face_fovea": np.zeros(1), "face_periph": cue.copy(),
                 "onset_periph": self._onset(truth["periphery"]).copy(), "truth": truth}
 
     def _onset(self, per):

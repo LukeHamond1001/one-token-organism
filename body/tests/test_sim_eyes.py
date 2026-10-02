@@ -306,6 +306,42 @@ def _drawn_face(size, cx, cy, polarity=1, bg=0.45, skin=0.75, dark=0.30, H=32, W
     return (np.repeat(img[..., None], 3, -1) * 255).round().astype(np.uint8)
 
 
+def test_the_born_face_cue():
+    """eyes 5b: A157: the born face cue's stand-in (the frame's face_periph) fires with her mouth's direction from the fovea's centre
+    while her face lies in an eye's image under A1's conditions but the window's; blocked, turned away or too small it reads zeros"""
+    w, ey = _world()
+    m, d = w.m, w.d
+    mouth = _face_rig(w, 0.6)                                           # her face at the window's centre: fired, no direction to speak of
+    f = w.frame()
+    fp = f.obs["face_periph"]
+    assert fp[0] == 1.0 and abs(fp[1]) < 0.02 and abs(fp[2]) < 0.02 and f.truth["eyes"]["face_test"]["L"] == (True, ""), fp
+    w.gaze = W.clamp_gaze(w.gaze + [0.4, 0, 0])                         # the window turned 0.4 rad right: her mouth lies left of its centre,
+    fp = w.frame().obs["face_periph"]                                   # out of the fovea; the cue says left (-), the pull the cord makes of it
+    assert fp[0] == 1.0 and -0.45 < fp[1] < -0.35 and abs(fp[2]) < 0.02 and E.face_test(m, d, w.gaze)["L"] == (False, "not in the fovea"), fp
+    assert np.allclose(E.face_cue(m, d, w.gaze), fp)
+    w.gaze = W.clamp_gaze(w.gaze + [-0.4, -0.3, 0])                     # the window turned 0.3 rad down: her mouth lies above (+)
+    fp = w.frame().obs["face_periph"]
+    assert fp[0] == 1.0 and abs(fp[1]) < 0.02 and 0.25 < fp[2] < 0.35, fp
+    _face_rig(w, 0.6, turn_deg=80)                                      # turned away: no face to orient to
+    assert not E.face_cue(m, d, w.gaze).any()
+    _face_rig(w, 3.4)                                                   # too small
+    assert not E.face_cue(m, d, w.gaze).any()
+    mouth = _face_rig(w, 0.6)                                           # a block before her mouth
+    a = m.jnt_qposadr[m.body_jntadr[m.body("toy_block").id]]
+    c = m.camera("eye_L").id
+    d.qpos[a:a + 3] = d.cam_xpos[c] + (mouth - d.cam_xpos[c]) * 0.5; mujoco.mj_forward(m, d)
+    assert not E.face_cue(m, d, w.gaze).any()
+    w.gaze = np.zeros(3); mujoco.mj_forward(m, d)
+    d.qpos[a:a + 3] = [2.0, 2.0, 0.05]; mujoco.mj_forward(m, d)         # the block away; her face where the rig left it, the gaze at rest
+    fp = E.face_cue(m, d, w.gaze)
+    ga = E.gaze_at(m, d, E.mouth_point(m, d)[0])
+    assert fp[0] == 1.0 and np.allclose(fp[1:], ga[:2]), (fp, ga)       # the direction is the gaze that would centre her, less the gaze
+    ey.close()
+    print("eyes 5b: the born face cue's stand-in (A157): her face in the window fires with no direction; the window turned 0.4 rad right",
+          "reads her mouth 0.4 rad left (and the face test fails on the window alone), turned 0.3 rad down reads her 0.3 rad up;",
+          "turned away, too small or behind a block it reads zeros; the direction is gaze_at(her mouth) less the gaze")
+
+
 def test_the_face_template():
     """eyes 8: the born face template (CONSPEC; the W1 verifier's second finding): it fires on a drawn face at each size of its bank
     and at places across the fovea, not on the same face with light blobs (Farroni's polarity) nor on noise; in the world the
@@ -739,7 +775,7 @@ def test_the_visual_onset_cue():
           f"saved with the world")
 
 
-EYE_TESTS = [test_the_visual_onset_cue, test_the_gaze, test_the_vor_exact, test_the_vor_in_the_world, test_the_eyes_render, test_the_face_test,
+EYE_TESTS = [test_the_visual_onset_cue, test_the_gaze, test_the_vor_exact, test_the_vor_in_the_world, test_the_eyes_render, test_the_face_test, test_the_born_face_cue,
              test_the_vor_quick_phase, test_the_face_template, test_exact_replay_with_the_eyes, test_no_lamp_at_the_eyes,
              test_the_parents_face_as_drawn, test_her_face_of_human_proportions, test_her_face_photometry, test_her_expressions,
              test_the_template_on_her_face, test_her_collision, test_her_look]

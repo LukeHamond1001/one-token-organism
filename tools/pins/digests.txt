@@ -179,3 +179,8 @@ digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b6
 digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
 full    sim                   threaded organs 603e243d590a store 738f53d2ef68 optim cbf807bb0814 rng 6bbbd20c28ba work 74b48552b9a1 cfg fb1800a3b452
 full    sim                   pinned   organs 2bffd91ed336 store b9208ea80a33 optim 985badb4f75c rng 6bbbd20c28ba work cde5b14beebd cfg fb1800a3b452
+# Re-taken at A157/C199 (2026-10-01 19:29, on branch t202: the born face cue read from the world into the frame's face_periph, eyes.face_cue;
+# A154's cor scaling for a senseless effector): UNCHANGED (the sim profile's tiny G1 has no eyes, so its face cue stays zeros; the life's moves);
+# the language default digest 7c54199e3c72cf77d45a8e94 kept (no eyes in the diary).
+digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
