@@ -42,9 +42,10 @@ never its fovea's window):
   child_sounding  its tract sounded this tick (the transcriber's own reading replaces it)
 Every threshold here is ours unless a source is named; each is disclosed.
 
-HER FACE (A1, A2, A49): the face test (body/sim/eyes.face_test: A1's four conditions for either eye) passing this tick and the
-last is "seen" (her feelings' input and the reading's gate); the born reading takes 2 x (smile - frown) of the face she shows
-(parent_kin.face_reading) while seen, holds it READING_HOLD ticks out of view, then reads 0. Until the child's own mouth-corner
+HER FACE (A1, A2, A49; A158): the face test (body/sim/eyes.face_test: A1's four conditions for either eye) passing this tick and the
+last is "seen" (her feelings' input: a smile waits for a look); the born reading takes 2 x (smile - frown) of the face she shows
+(parent_kin.face_reading) while she is with the child (present: awake and in the room), looked at or not (A158: her approval reaches it
+as a tone and a touch would), holds it READING_HOLD ticks once she is away, then reads 0. Until the child's own mouth-corner
 reader works this is the world's value, a disclosed scaffold (A49).
 
 THE WORDS CHANNEL (A29): her playback hands each word to the channel as its sound starts (voice/playback.py); a symbol goes out
@@ -647,7 +648,7 @@ class ParentLane:
         fp = self.feel.step(seen, bringing)                 # A96: a smile she brings to its line of sight is held while she does
         self.fp = dict(kin.FACE_NEUTRAL) if self.conduct.still else fp       # a trial's face: its neutral set (4.8)
         world.parent.set_face(self.fp)
-        self._read_face(t, seen)
+        self._read_face(t, seen or p.present)              # A158: her expression reaches the child while she is with it, looked at or not
         # the words channel: a symbol only while she is audible at its nearer ear and the scaffold is on (A29)
         path = EA.paths(mouth, ear_l, ear_r)[0]
         audible = LX.audible(SPEECH_DB, [-20.0 * math.log10(max(float(x), 1e-6)) for x in path])
@@ -663,11 +664,13 @@ class ParentLane:
                          child_xy=[float(world.d.qpos[0]), float(world.d.qpos[1])])   # C131: its pelvis on the floor plan (her plan reads it)
         return {SOURCE: (pa.astype(np.float64), mouth)}
 
-    def _read_face(self, t, seen):
-        """the born reading (A1, A2, A49): 2 x (smile - frown) of the face she shows while seen; held READING_HOLD ticks out of
-        view, then 0; the frame's pair is [the reading, its change]"""
+    def _read_face(self, t, with_it):
+        """the born reading (A1, A2, A49; A158): 2 x (smile - frown) of the face she shows while she is with the child (awake, in the
+        room: Percept.present), looked at or not, as a parent's approving tone and touch reach an infant looking elsewhere (Fernald
+        1993; the reward's carrier read from the world, A49's scaffold); held READING_HOLD ticks once she is away, then 0; the frame's
+        pair is [the reading, its change]. Until A158 (2026-10-01) it read only while the face test held: days 49 to 55 then paid about 0"""
         prev = self.reading
-        if seen:
+        if with_it:
             self.reading = kin.face_reading(self.fp)
             self.reading_t = t
         elif t - self.reading_t > READING_HOLD:

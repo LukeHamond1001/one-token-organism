@@ -740,7 +740,7 @@ class G1World(SimWorld):
           vestibular 24, imu_torso 6 (the torso unit's accelerometer and gyro, the tick's means of the noisy samples)
         and by day only (at night the eyes and ears are off and the parent asleep: those channels absent, quiet):
           words           the words channel's symbol this tick (the parent's word token as its sound ends, or letters), 0 the rest
-          face 2          [2 x (smile - frown) as the child can see it, its change] (A1, A49: the lane's)
+          face 2          [2 x (smile - frown) of the face she shows while with the child, its change] (A1, A49, A158: the lane's)
           ears 1,725      both cochleas and the delay lines (body/sim/ears.py) of the tick's sounds; sound_side [an onset heard,
                           the born lateral read's angle, + left]
           eye_p 172, eye_f 1,536, onset_periph 3   the eyes (body/sim/eyes.py when attached: the D435's three views, A78, and

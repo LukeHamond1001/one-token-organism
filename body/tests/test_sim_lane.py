@@ -134,8 +134,8 @@ def test_the_night():
 
 
 def test_the_born_reading():
-    """lane 5: the born reading (A1, A2, A49): 2 x (smile - frown) of the face she shows while seen; out of view it holds 30 ticks
-    (READING_HOLD), then reads 0; the frame's pair is [the reading, its change]"""
+    """lane 5: the born reading (A1, A2, A49; A158): 2 x (smile - frown) of the face she shows while she is with the child, looked at
+    or not; away it holds 30 ticks (READING_HOLD), then reads 0; the frame's pair is [the reading, its change]"""
     w, lane = _world()
     lane.fp = dict(L.kin.FACE_NEUTRAL, smile=0.5)
     lane._read_face(100, True)
@@ -149,7 +149,11 @@ def test_the_born_reading():
     assert lane.reading == 0.0 and np.allclose(lane.face_seen, [0.0, -r])
     lane._read_face(132, True)
     assert lane.reading == 0.0
-    print(f"lane 5: the born reading {r:.2f} while seen, held {L.READING_HOLD} ticks out of view, then 0 (its change -{r:.2f})")
+    lane.fp = dict(L.kin.FACE_NEUTRAL, smile=0.5)                     # A158: with her, unlooked at, her smile is read the tick she shows it
+    lane._read_face(133, True)
+    assert lane.reading == r and np.allclose(lane.face_seen, [r, r])
+    print(f"lane 5: the born reading {r:.2f} while she is with the child (A158: looked at or not), held {L.READING_HOLD} ticks once away,",
+          f"then 0 (its change -{r:.2f}); shown again, read again")
 
 
 def test_a_toy_falls():
@@ -306,8 +310,8 @@ def test_her_eyes():
         w.frame(); w.apply({})                                                       # the born reading rises: the smile is felt
         if lane.last.get("face_test"):
             seen_at.append(w.tick)
-        if lane.reading > 0:
-            break
+        if seen_at and lane.reading > 0:                                             # (A158: the reading rises the tick she smiles, looked
+            break                                                                    # at or not; her en-face conduct is read on the test)
     assert seen_at and lane.reading > 0, (seen_at, lane.reading, lane.feel.log[-6:])
     assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted", "hit"}, lane.conduct.book   # in a
     st = lane.state()                                                                # raised hand: "lifted" too, as a person would see it

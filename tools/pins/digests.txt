@@ -184,3 +184,7 @@ full    sim                   pinned   organs 2bffd91ed336 store b9208ea80a33 op
 # the language default digest 7c54199e3c72cf77d45a8e94 kept (no eyes in the diary).
 digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
+# Re-taken at A158/C200 (2026-10-01 19:41, on branch t203: her approval reaches the child whether or not it looks; the born reading of her face
+# while she is with it): UNCHANGED (the sim profile has no parent's lane); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
