@@ -7049,6 +7049,31 @@ def test_the_function_word_not_echoed():
     print(f"lang 71 (C197): 120 function words: {len(texts)} replies, none the word alone or doubled ({texts[0]!r}, {texts[-1]!r}); the duck named when attended; a noun still echoed")
 
 
+def test_the_unseen_label_is_a_show():
+    """lang 73 (C201): a requested label of a toy the child cannot see (the block on the sofa in the test's room) becomes her show of
+    it: the show act opened, a show frame said, the request logged; a label of a toy in its view stays a label"""
+    def frames_of(intent, oid):
+        o = [x for x in TOYS if x.id == oid][0]
+        return {TP.key(TP.fill(fr, o=o)[0]) for fr in TP.FRAMES[intent]}
+    con = _pair_con()
+    _run_to(con, 200)                                                    # past the set gap the test room starts under (_no_sets)
+    con.request("label", o="block")
+    out = _run_to(con, 3, t0=200)
+    assert [tuple(a[1:3]) for a in con.acts_open if a[1] == "show"] == [("show", "block")], (con.acts_open, con.fast.refused[-3:])
+    assert any("a show of it instead (C201)" in r[2] for r in con.fast.refused), con.fast.refused[-3:]
+    out += _run_to(con, 12, t0=203)
+    said = [getattr(s.line, 'text', s.line) for t, s in out if s.line is not None]
+    assert said and all(TP.key(ln) in frames_of("show", "block") for ln in said), said
+    con2 = _pair_con()
+    _run_to(con2, 200)
+    con2.request("label", o="duck")
+    out2 = _run_to(con2, 3, t0=200)
+    assert not [a for a in con2.acts_open if a[1] == "show"] and not any("C201" in r[2] for r in con2.fast.refused), (con2.acts_open, con2.fast.refused[-3:])
+    said2 = [getattr(s.line, 'text', s.line) for t, s in out2 + _run_to(con2, 12, t0=203) if s.line is not None]
+    assert said2 and all(TP.key(ln) in frames_of("label", "duck") for ln in said2), said2
+    print(f"lang 73: a label of the block the child cannot see became her show of it {said}; a label of the duck in its view stayed one {said2}")
+
+
 def test_the_worn_word_not_echoed():
     """lang 72 (C198, 2026-10-01): a worn word is not parroted back. The child says "duck" 40 times with nothing attended: her first replies echo
     it ("duck! duck." as imitation), and once the vocal book holds HABIT_TAU of it (her smile worn) no reply is the bare word any more (the

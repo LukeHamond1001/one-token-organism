@@ -188,3 +188,7 @@ digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b6
 # while she is with it): UNCHANGED (the sim profile has no parent's lane); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
+# Re-taken at C201 (2026-10-01 19:59, on branch t204: a label of a toy the child cannot see is her show of it): UNCHANGED (no lane in the sim
+# profile); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim

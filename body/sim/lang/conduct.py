@@ -2198,6 +2198,18 @@ class Conduct:
                 return None
             return self._drop(t, intent, f"unseen: {kw['o']!r}")
         it = INTENTS[intent]
+        if intent in ("label", "label_colour") and o is not None and not o.child_sees and o.on not in ("hand", PARENT_NAME) \
+                and o.id not in p.child_holds:
+            # C201 (2026-10-01): A LABEL OF A TOY THE CHILD CANNOT SEE IS A SHOW OF IT. Life day 55, the child on its back the whole day:
+            # 137 of her planned labels were dropped "not true: the child does not see a X" (the 'you see the X.' frame) and the rest
+            # were said of toys outside its view, teaching nothing; her lines fell back to the social line, and the words it heard
+            # were hers for what it could not see. A parent of a supine infant holds the thing up before its eyes as she names it
+            # (joint attention by showing: Tomasello and Farrar 1986; the show's acts, A4): the intent becomes her show of that toy
+            # (fetched, held beside her face about 40 cm before its eyes, shaken, then set down within its reach), its frames the
+            # show's. The label's lesson budget (SET_PER_OBJECT) and the truth check apply to the show as to any; a toy in a hand is
+            # left to label_held and to her hand-over
+            self.fast.refused.append((t, intent, f"request: {o.id!r} not in the child's view: a show of it instead (C201)"))
+            intent, it = "show", INTENTS["show"]
         if intent in ("label", "label_held", "label_colour", "show", "redirect") and o is not None:
             if intent == "redirect" and t < self.no_target_since + K.REDIRECT_AFTER:
                 return self._drop(t, intent, f"a redirect only after {K.REDIRECT_AFTER} ticks with no target (4.10)")
