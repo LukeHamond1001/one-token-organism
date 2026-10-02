@@ -158,8 +158,12 @@ GRASP_LOG = math.log1p(GRASP_N / W.TOUCH_UNIT_N)                 # the palm's to
 def grasp(hand, own, palm_log):
     """THE PALMAR GRASP at the spinal cord (see the module's doc): the hand's own act this tick (`own`, its flat act; None its rest)
     and its palm's touch (the frame's log force) give (the act its servos take, the event): (own, None) when the palm is not
-    touched at GRASP_N; (own, "overridden") when the own act opens the hand; else (own with each closing joint stepped at least one
-    big step closed, "grasp"; A82)."""
+    touched at GRASP_N; else the sum JOINT BY JOINT (A160, 2026-10-01; A35's own principle: the reflex and the descending command meet
+    at the same motor neurons): each closing joint whose own step opens it keeps that step (the cortex overrides that joint), every
+    other closing joint is stepped at least one big step closed (A82); the event "overridden" when every closing joint was opened by
+    the own act (the hand opened as a whole), "grasp" otherwise. Until A160 one closing joint's opening step cancelled the reflex on
+    the whole hand, which a hand acting at random does on 95 of 100 ticks (1 - (3/5)^6): life day 55's hand-overs saw the grasp
+    overridden on 481 ticks and firing on 5, the toy set in its palm never held (22 of 27 released unclosed; 303 toys lost in the day)."""
     if hand not in CLOSING:
         raise ValueError(f"no palmar grasp on {hand!r}")
     if palm_log < GRASP_LOG:
@@ -167,11 +171,17 @@ def grasp(hand, own, palm_log):
     n = len(_JOINTS[hand])
     rest = W.rest_id(n)
     dig = W.act_digits(rest if own is None else own, n)
-    if own is not None and opens(hand, own):
-        return own, "overridden"
+    closed = 0
     for i, j in enumerate(_JOINTS[hand]):
-        if j in CLOSING[hand] and W.SETTINGS[dig[i]] * CLOSING[hand][j] < W.STEP_BIG:
-            dig[i] = _BIG[CLOSING[hand][j]]
+        if j in CLOSING[hand]:
+            step = W.SETTINGS[dig[i]] * CLOSING[hand][j]
+            if step < 0:                                                 # its own step opens this joint: the cortex's, kept
+                continue
+            if step < W.STEP_BIG:
+                dig[i] = _BIG[CLOSING[hand][j]]
+            closed += 1
+    if closed == 0:
+        return own, "overridden"
     return W.act_flat(dig), "grasp"
 
 
@@ -225,6 +235,11 @@ def prone(acts, imu_torso):
         if changed:
             acts[eff] = W.act_flat(dig); ev[eff] = "prone"
     return ev
+
+
+def opens_all(hand, act):
+    """whether a hand's act steps every closing joint toward open (the hand opened as a whole: the grasp's override, A160)"""
+    return all(W.SETTINGS[k] * CLOSING[hand][j] < 0 for j, k in zip(_JOINTS[hand], W.act_digits(act, len(_JOINTS[hand]))) if j in CLOSING[hand])
 
 
 def opens(hand, act):

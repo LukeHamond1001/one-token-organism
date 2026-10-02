@@ -497,7 +497,14 @@ def test_the_reflexes():
     assert R.grasp("hand_l", None, light) == (None, None) and R.grasp("hand_l", rest_l, light) == (rest_l, None)
     opening = W.act_flat([2, 1, 2, 2, 2, 2, 2])                           # the left thumb_1 opening a small step
     assert R.opens("hand_l", opening) and not R.opens("hand_l", R.closing_act("hand_l"))
-    assert R.grasp("hand_l", opening, touched) == (opening, "overridden")  # the own act of the same tick opens it: the cortex overrides
+    a_, ev_ = R.grasp("hand_l", opening, touched)                         # A160: summed joint by joint: the thumb_1 keeps its own opening
+    assert ev_ == "grasp" and W.act_digits(a_, 7)[1] == 1 and W.act_digits(a_, 7)[2:] == W.act_digits(R.closing_act("hand_l"), 7)[2:], W.act_digits(a_, 7)
+    whole = W.act_flat([2 if j not in R.CLOSING["hand_l"] else (0 if R.CLOSING["hand_l"][j] > 0 else 4) for j in dict(G.EFFECTORS)["hand_l"]])
+    assert R.opens_all("hand_l", whole) and not R.opens_all("hand_l", opening)
+    assert R.grasp("hand_l", whole, touched) == (whole, "overridden")      # every closing joint opened by its own act: the hand opens as a whole
+    half = W.act_flat([2, 0, 0, 0, 2, 2, 2])                               # the thumb opened big, the index opened big, the middle held
+    a_, ev_ = R.grasp("hand_l", half, touched)
+    assert ev_ == "grasp" and W.act_digits(a_, 7)[:4] == [2, 0, 0, 0] and W.act_digits(a_, 7)[4:] == W.act_digits(R.closing_act("hand_l"), 7)[4:], W.act_digits(a_, 7)
     big_close = W.act_flat([2, 4, 4, 0, 0, 0, 0])                         # the own act closing by big steps: kept as it is
     assert R.grasp("hand_l", big_close, touched) == (big_close, "grasp")
     turn = W.act_flat([4, 2, 2, 2, 2, 2, 2])                              # the thumb's rotation (no closing sense): the own setting stays
@@ -980,11 +987,13 @@ def test_the_world_in_the_core():
     opened = 0
     for n, _, got, ev in lived:
         own = n["act"]
-        if R.opens("hand_l", own):
-            opened += 1
-            assert (got, ev) == (own, "overridden"), (own, got, ev)
-        else:
-            assert (got, ev) == R.grasp("hand_l", own, R.GRASP_LOG), (own, got, ev)
+        base = ev.split("+")[0] if ev else ev                           # the tendon organ's event rides on the grasp's (A139)
+        opened += int(R.opens("hand_l", own))
+        if R.opens_all("hand_l", own):                                   # A160: the hand opened as a whole overrides the grasp
+            assert base == "overridden" and ("+tendon" in (ev or "") or got == own), (own, got, ev)
+        else:                                                            # else the grasp is summed joint by joint
+            a_, e_ = R.grasp("hand_l", own, R.GRASP_LOG)
+            assert base == e_ and ("+tendon" in (ev or "") or got == a_), (own, got, ev)
     assert drew >= 5 and opened >= 1, (drew, opened)
     print(f"world 15: the G1's anatomy (SIM_CFG, every learning rate 0) lived 40 ticks through the core's world loop in",
           f"{time.time() - t0:.1f} s with a ball kept in its left palm: one frame and one apply a tick, every channel at its size, every",

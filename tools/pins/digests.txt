@@ -192,3 +192,7 @@ digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b6
 # profile); the language default digest 7c54199e3c72cf77d45a8e94 kept.
 digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
+# Re-taken at A160/C203 (2026-10-01 20:32, on branch t206 off t205: the palmar grasp summed joint by joint; the record's gaze and face cue, C202):
+# UNCHANGED (no palm touch at the grasp's threshold within the sim profile's 300 ticks); the language default digest 7c54199e3c72cf77d45a8e94 kept.
+digest  sim                   threaded 19b06e5b9d8ebb7337a01af7 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b65f1 | --profile sim
