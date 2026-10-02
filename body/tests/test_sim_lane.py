@@ -1042,3 +1042,21 @@ if __name__ == "__main__":
             failed += 1; print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:600])
     print(f"{len(LANE_TESTS) - failed}/{len(LANE_TESTS)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+
+def test_the_talk_over_frown_retired():
+    """lane 11 (C231, 2026-10-02): the talk-over frown is nothing for the babbling child: her feelings keep the smile she had judged, show no
+    frown and lose no mood when talked over; a hit still frowns (stage 2's harm as it was)"""
+    from body.sim import parent_feel as PF
+    f = PF.Feelings(1)
+    for _ in range(3):
+        f.step(False)
+    f.judge(1.0, "act")
+    had = (f.pulse is not None) or (f.queued is not None); M0 = f.M
+    f.talk_over()
+    assert had and ((f.pulse is not None) or (f.queued is not None)), "the talk-over cancelled her smile"
+    assert not f.frown_active() and f.M == M0, (f.frown_active(), f.M, M0)
+    assert not any(e[1] == "frown" for e in f.log), f.log[-4:]
+    f.harm()
+    assert f.frown_active() and f.frown_amp == PF.FEEL["frown_hit"], (f.frown_active(), f.frown_amp)
+    print("LANE 11 GREEN")

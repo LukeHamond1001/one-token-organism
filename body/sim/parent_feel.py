@@ -38,7 +38,14 @@ FEEL = dict(
     reading_hold=30,          # the child's born reading's disclosed hold (A2), which the parent's display respects
     frown_hold=10,            # a frown is held 10 ticks and never waits for a look (A2)
     frown_hit=.5,             # displeasure at a hit: frown intensity .5 (reads -1)
-    frown_talkover=.25,       # stage 2's talk-over: .25 (reads -0.5)
+    frown_talkover=0.0,       # stage 2's talk-over: was .25 (reads -0.5). C231 (2026-10-02): RETIRED FOR THE BABBLING CHILD. Life day 65 to its
+                              # tick 17,300: 504 ticks of negative reward summing -257, 473 of them this frown at -0.5 (about 47 talk-overs,
+                              # each held 10 ticks), against +39 of positive reward in all; the child's overlap with her speech sat at
+                              # chance (473 against 514 expected from its 27% of ticks sounding and her 11% speaking), so 65 days of the
+                              # frown taught no turn-taking and it stood as the largest term in the dopamine's scale (A172 divides every
+                              # smile by it). A parent of a babbling infant does not scold the overlap: she stops and listens (4.6's cut
+                              # and listen stay); turn-taking comes of her contingent pauses (Gratier et al. 2015; Goldstein and Schwade
+                              # 2008). Zero: Feelings.harm at level 0 is nothing (no frown, no smile cancelled, no mood harm). Ours.
     surprise_tau=3.0,         # ticks; surprise is the briefest emotion (under a second)
     habituation=.5,           # a sudden event of a kind seen in the last 200 ticks surprises half as much, again half...
     habit_window=200,
@@ -127,6 +134,8 @@ class Feelings:
     def harm(self, level=None):
         """The child's own act hit the parent above its pain threshold (stage 2), or talked over it (level given)."""
         amp = self.C["frown_hit"] if level is None else level
+        if amp <= 0.0:                                           # C231: a frown of nothing is no frown (the talk-over's, retired)
+            return
         self.frown_t0, self.frown_amp = self.t, max(amp, self.frown_amp if self.frown_active() else 0.0)
         self.pulse, self.queued = None, None                 # a frown ends any smile
         self.M = max(-1.0, self.M - self.C["mood_harm"] * amp)
