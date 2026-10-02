@@ -162,7 +162,7 @@ GRASP_RECOVER_TICKS = 10        # A162: a palm free of pressure this long (1.5 s
                                 # makes onsets at the palm every tick, so an onset would never let it habituate (measured on the test's ball)
 
 
-def grasp(hand, own, palm_log, state=None):
+def grasp(hand, own, palm_log, state=None, onset=0.0):
     """THE PALMAR GRASP at the spinal cord (see the module's doc): the hand's own act this tick (`own`, its flat act; None its rest)
     and its palm's touch (the frame's log force) give (the act its servos take, the event): (own, None) when the palm is not
     touched at GRASP_N; else the sum JOINT BY JOINT (A160, 2026-10-01; A35's own principle: the reflex and the descending command meet
@@ -173,7 +173,11 @@ def grasp(hand, own, palm_log, state=None):
     overridden on 481 ticks and firing on 5, the toy set in its palm never held (22 of 27 released unclosed; 303 toys lost in the day).
     HABITUATION (A162, 2026-10-01; `state`: the hand's [ticks pressed running, ticks free running], the world's, saved with it): under a
     constant pressure the reflex fires in full for GRASP_HOLD_TICKS, then falls silent ((own, "habituated"): the hand's own acts rule the
-    fingers, which stay where they are until an act moves them); a palm free GRASP_RECOVER_TICKS running re-arms it in full. Day 56's
+    fingers, which stay where they are until an act moves them); a palm free GRASP_RECOVER_TICKS running re-arms it in full, and so does
+    a touch ONSET at the palm while it is silent (A164, 2026-10-01: dishabituation by a changed stimulus, Thompson and Spencer 1966; the
+    frame's touch_onset, a rise of the palm's force: a toy pressed into a resting fist. While the reflex fires its own squeeze makes
+    onsets every tick, so an onset counts only once it is silent: day 56's hand-overs into a fist habituated on its own fingers ended
+    'its hand never closed on it' 5 of 7 times). Day 56's
     first 3,000 ticks under A160 alone: the right hand a
     fist on nothing (its own fingers pressing its palm) on 42, 88 and 74% of the ticks, holding a toy on 14, 2 and 4% (16 to 25%
     before): a reflex that never wanes locks the hand; the reflex scaffolds the learned grasp and gives way to it. Without `state`
@@ -188,6 +192,8 @@ def grasp(hand, own, palm_log, state=None):
         if state[1] >= GRASP_RECOVER_TICKS:                          # the palm was free: the reflex in full again
             state[0] = 0
         state[1] = 0
+        if state[0] > GRASP_HOLD_TICKS and float(onset) > 0.0:         # silent, and the palm's force rose: a new press, the reflex in full
+            state[0] = 0
         state[0] += 1
         if state[0] > GRASP_HOLD_TICKS:
             return own, "habituated"

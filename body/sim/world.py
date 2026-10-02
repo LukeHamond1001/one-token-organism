@@ -854,7 +854,8 @@ class G1World(SimWorld):
         if self.spinal:                                                 # THE SPINAL CORD: the palmar grasp on each hand's own act
             for hand, z in self.palm_of_hand.items():
                 a, ev = R.grasp(hand, acts.get(hand), float(self._sensed["touch_log"][z]),
-                                self._grasp_hab.setdefault(hand, [0, 0]))   # A162: the reflex habituates under a constant pressure
+                                self._grasp_hab.setdefault(hand, [0, 0]),   # A162: the reflex habituates under a constant pressure
+                                float(self._sensed["touch_onset"][z]))      # A164: and a new press wakes it
                 if ev is not None:
                     spinal[hand] = ev
                     if a is not None:                                       # (habituated at rest: no act of the hand's this tick)

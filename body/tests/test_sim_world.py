@@ -570,10 +570,13 @@ def test_the_grasp_habituates():
     assert (a_, e_) == (R.closing_act("hand_l"), "grasp") and hab == [1, 0], (e_, hab)
     hab[1] = R.GRASP_RECOVER_TICKS - 1; hab[0] = R.GRASP_HOLD_TICKS + 3                    # a shorter gap does not re-arm it
     assert R.grasp("hand_l", None, R.GRASP_LOG, hab)[1] == "habituated"
+    assert R.grasp("hand_l", None, R.GRASP_LOG, hab, onset=1.0)[1] == "grasp" and hab[0] == 1   # A164: a new press wakes the silent reflex
+    hab[0] = 5
+    assert R.grasp("hand_l", None, R.GRASP_LOG, hab, onset=1.0)[1] == "grasp" and hab[0] == 6   # firing: its own squeeze's onsets count for nothing
     # a save from before A162 loads fresh
     w2 = _ball_in_palm(); w2.load_state(w.save_state())                                   # (the same model: the rig's)
-    assert w2._grasp_hab == w._grasp_hab and w2._grasp_hab["hand_l"][0] > R.GRASP_HOLD_TICKS, w2._grasp_hab   # the state travels (hand_l's
-                                                                                                            # count as the checks above left it)
+    assert w2._grasp_hab == w._grasp_hab and w2._grasp_hab["hand_r"][0] > R.GRASP_HOLD_TICKS, w2._grasp_hab   # the state travels (the right
+                                                                                                            # hand's count untouched by the checks)
     st2 = _pk.loads(w2.save_state()); st2.pop("grasp_hab", None); w2.load_state(_pk.dumps(st2, protocol=4))
     assert w2._grasp_hab == {"hand_l": [0, 0], "hand_r": [0, 0]}, w2._grasp_hab
     print(f"world 9b: the grasp fired {R.GRASP_HOLD_TICKS} resting ticks on the ball, then habituated under the constant press; the palm free",
