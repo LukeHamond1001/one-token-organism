@@ -1873,6 +1873,18 @@ def test_motor_judgments():
     assert s.judgments == [(1, "half_roll", None)], s.judgments
     s = con.tick(87, P(87, seen=TOYS, events=(("lifted", "duck"), ("shook", "duck"), ("hit", "duck"), ("head_up", None))))
     assert [(w, k) for w, k, _o in s.judgments] == [(1, "lifted"), (1, "shook"), (1, "hit"), (1, "head_up")], s.judgments
+    # C234 (2026-10-02): the hold is a skill of its own: 'held' earns 1 on the duck though its shake stands at MASTERED_N in her book
+    # (the life's day 66: the first 'held' ever earned nothing, every toy's shake "mastered" by accidental swings), and wears by its own
+    # count, another toy afresh
+    for t in range(90, 92):
+        con.tick(t, P(t, seen=TOYS, events=(("shook", "duck"),)))
+    assert con.book["shook"]["duck"] >= K.MASTERED_N, con.book["shook"]
+    s = con.tick(92, P(92, seen=TOYS, events=(("held", "duck"),)))
+    assert s.judgments == [(1, "held", "duck")], s.judgments
+    s = con.tick(93, P(93, seen=TOYS, events=(("held", "duck"),)))
+    assert len(s.judgments) == 1 and s.judgments[0][1] == "held" and abs(s.judgments[0][0] - math.exp(-0.1)) < 1e-3, s.judgments
+    s = con.tick(94, P(94, seen=TOYS, events=(("held", "cup"),)))
+    assert s.judgments == [(1, "held", "cup")], s.judgments
     s = con.tick(88, P(88, seen=TOYS, present=False, events=(("got", "block"),)))
     assert s.judgments == [] and "got" in con.book and "block" not in con.book["got"], s.judgments   # away: nothing judged
     s = con.tick(89, P(89, seen=TOYS, events=(("threw", "ball"),)))

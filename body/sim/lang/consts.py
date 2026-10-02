@@ -409,11 +409,17 @@ MOTOR_WORTH = {                       # event kind -> (its worth, the full act i
     "found": (2, None),                                          # a toy she hid in the bucket taken out by its own hand (A129: the hide game)
     "lifted": (1, None), "shook": (1, None), "hit": (1, None),   # a lift; a shake; a hit that sounds (the object's own sound)
     "head_up": (1, None), "peekaboo_act": (1, None),             # its head up on its front; peekaboo answered by an act (A2)
-    "held": (1, "shook"),             # C225 (2026-10-02): shaping toward the shake: a toy kept in its hand HELD_TICKS (10 s; lane) running,
+    "held": (1, None),                # C225 (2026-10-02): shaping toward the shake: a toy kept in its hand HELD_TICKS (10 s; lane) running,
                                       # once a hold, worth 1 until "shook" is mastered on that toy. Days 62 and 63: the hands caught toys
                                       # (A171, C221-C223) and kept them 6 to 12 s at most (6 holds of 40 ticks or more in a day, the
                                       # longest 78): the cord's grasp habituates at 40 ticks (A162) and the babbling hand lets go; the
-                                      # holding is the cortex's to learn, and a parent smiles at the baby that holds on
+                                      # holding is the cortex's to learn, and a parent smiles at the baby that holds on.
+                                      # C234 (2026-10-02): THE HOLD IS A SKILL OF ITS OWN, worn by its own count (A2's fall, HABIT_TAU) and
+                                      # not closed by the shake's mastery. The life's first 'held' (day 66, tick 3,171,265: the block in
+                                      # the left hand, the cord's grasp on it, 20 ticks) earned no smile: the block's shake stood at
+                                      # MASTERED_N (3) in her book from day 65's 22 shakes a day, which were toys swung against a hand
+                                      # they rested on, not shakes of a held toy, so "shook" was mastered on every toy before any was held
+                                      # and the held smile could never pay. A parent smiles at holding on while it is new (per toy, as any act's)
     "reach_nearer": (1, "got"),       # shaping (MacGlashan et al. 2017): a reach that ended nearer the toy than its best of the last
                                       # BOOK_LAST, worth 1 until "got" is mastered on that toy
     "half_roll": (1, "rolled"),       # onto its side, worth 1 until the whole roll is mastered
