@@ -209,6 +209,10 @@ def test_the_days_layout():
     assert d2.sit_due
     d2._sit_or_lesson(1000, ln); d2._sit_or_lesson(1300, ln)
     assert ln.conduct.asked == ["motor_sit", "lesson"], ln.conduct.asked
+    ln.conduct.motion.child.posture = "back"; d2._enter("motor", 4000, 4000, ln, None)
+    d3 = DP.DayPlan(2); d3.load_state(d2.state())                        # C207: the owed pull-to-sit survives a save and a load
+    assert d3.sit_due and d2.state()["sit_due"] is True
+    d2.sit_due = False
     ln.conduct.motion.child.posture = "front"; d2._enter("motor", 5000, 5000, ln, None)
     assert not d2.sit_due
     d2._sit_or_lesson(5000, ln)

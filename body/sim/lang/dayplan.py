@@ -416,6 +416,7 @@ class DayPlan:
                     focus=list(self.focus), next_play=self.next_play, next_call=self.next_call, last_pain=self.last_pain,
                     bids=list(self.bids), night_said=self.night_said, log=[list(x) for x in self.log[-200:]],
                     level=dict(self.level), level_t=dict(self.level_t), got_seen=dict(self.got_seen), roll_turn=bool(self.roll_turn),
+                    sit_due=bool(self.sit_due),                                       # C207: the motor block's owed pull-to-sit survives a resume
                     hide_turn=bool(self.hide_turn))
 
     def load_state(self, s):
@@ -431,6 +432,7 @@ class DayPlan:
         self.level_t = {k: int(v) for k, v in s.get("level_t", {}).items()}
         self.got_seen = {k: int(v) for k, v in s.get("got_seen", {}).items()}
         self.roll_turn = bool(s.get("roll_turn", True))
+        self.sit_due = bool(s.get("sit_due", False))                                 # (C207; older saves: none owed)
         self.hide_turn = bool(s.get("hide_turn", False))               # (C125: lost at each resume before; older saves: none)
 
 
