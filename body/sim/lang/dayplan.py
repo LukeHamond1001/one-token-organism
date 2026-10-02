@@ -57,7 +57,9 @@ BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 
 PLAY_GAP = (150, 300)                  # ticks between her floor play's offers (ours)
 SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times a motor block when her reach or her hold refused it (ours)
 SIT_RETRY_GAP = 200             # C224: ... the next try this many ticks after the refusal (30 s: a parent tries again in a minute; ours)
-SIT_RETRY_WHY = ("cannot reach", "lost their hold", "slipped", "no spot she can kneel", "did not arrive")   # C224: the refusals of a moment, not of the child
+SIT_RETRY_WHY = ("cannot reach", "lost their hold", "slipped", "no spot she can kneel", "did not arrive",
+                 "the guide sat at its cap")   # C224: the refusals of a moment, not of the child; C230: the gather's guide at its cap too (the arm's
+                                               # own push of the moment: day 65's first offer, her spot and hold good under C227, stopped there)
 LESSON_DIST0 = 0.10                    # the reach rung's first distance out from its near hand, m (4.10's ladder, level 1; A90)
 LESSON_STEP = 0.05                     # farther each mastered level (teacher_of_reality.md 2c)
 LESSON_LEVELS = 7                      # up to 0.40 m (about the arm's reach)
