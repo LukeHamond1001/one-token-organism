@@ -463,7 +463,7 @@ SIM_CFG = dict(
     # the born patterns and biases (REFLEX): the spinal pattern generators (their shape and cycles REFLEX's, C54: a movement of 2 ticks'
     # flexion and 3 ticks' extension, the extension returning the flexion's excursion, then a pause, each cycle drawn from the seed,
     # 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry, orienting, the VOR
-    spg=1, cry=1, orient=1, vor=1,
+    spg=1, cry=1, breath=1, orient=1, vor=1,    # A173: the born breath (the tract's tidal cycle below the gate)
     # THE CEREBELLUM ON AT BIRTH (7.5, A44; SimAnatomy.cerebellar, the lead's mossy list): its constants CEREB's, as R6c and its fix
     # settled them and none given here (the rate 0.01 a sub-step; the leak rate / 3, after Smith, Ghazizadeh and Shadmehr 2006; the bound
     # that steps a lesson back onto the limit; each readout held inside its joint's limit this tick; the flocculus's 0.05 a tick; 4,096

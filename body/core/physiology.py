@@ -439,6 +439,17 @@ REFLEX = dict(
     # inspiration 29%). Its expiration ends early when the reservoir runs empty (the tract's breath left at 0: its own physics)
     cry_expire=5,
     cry_inspire=2,
+    # THE BORN BREATH (A173, 2026-10-02; the respiratory rhythm of the brainstem, the pre-Botzinger complex: Smith, Ellenberger, Ballanyi,
+    # Richter and Feldman 1991, Science 254:726): while the tract does not cry, its lungs are driven in a tidal cycle below the gate,
+    # breath_expire ticks pushing at breath_amp of the lungs' range, then breath_inspire ticks drawn back; the own act's lungs step adds to
+    # it as the cry's does (the world's sum under the clip). A newborn breathes 30 to 60 times a minute (Fleming et al. 2011, Lancet
+    # 377:1011: the median 44 at 0 to 3 months), a cycle of 1.4 s: 5 and 5 ticks of 0.15 s. The glottis is not touched: quiet breathing
+    # is silent (the glottis open at the passive rest); a glottis the child's own act presses on an expiration phonates. 1 = on
+    breath=0,
+    breath_expire=5,
+    breath_inspire=5,
+    breath_amp=0.4,      # the lungs' drive on the expiration, a fraction of their range (4.8 cmH2O of the tract's 12 at full drive: above a
+                         # phonation threshold pressure of 2 to 4 cmH2O, under the cry's 0.6; ours)
     # ORIENTING (3.7, A43; Goren 1975, Johnson and Morton 1991: newborns prefer faces; Muir and Field 1979: they turn toward sounds;
     # Johnson 1990: they orient to peripheral visual onsets through the subcortical route): a born bias on the proposals of the joints
     # an effector declares (the gaze's yaw and pitch, the waist's yaw) toward each cue the anatomy declares (a face-like blob in the

@@ -428,6 +428,7 @@ class Life(SensesMixin, MemoryMixin, CortexMixin, MouthMixin, CriticsMixin, Acto
             acts = Acts({e_.name: (acts[e_.name] if e_.name in acts else wa_[e_.name]) for e_ in self.anatomy.effectors})
             acts.cord = {e_.name: tuple(float(x_) for x_ in st_["now"]["cord"]) for e_, st_ in zip(self.anatomy.motors, self.motor)
                          if st_["now"].get("cord") is not None}              # the cord's patterns this tick (body/core/cord.py)
+            acts.crying = any(bool(st_["now"].get("cry")) for st_ in self.motor)   # A173: the cry's step this tick (the breath's is not a cry)
             acts.vor = self._vor_acts()                                      # the VOR's born constants (body/core/cord.py)
         self._bookkeep(u, who, nxt, its_face, felt, ent, p_act, delta, level, r, vlong, delta_long, conf1, surp1, probs)
         return acts

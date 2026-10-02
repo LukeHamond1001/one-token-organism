@@ -856,6 +856,8 @@ class G1World(SimWorld):
         m, d = self.m, self.d
         t_apply = time.perf_counter(); t_phys = 0.0
         cord = dict(getattr(acts, "cord", None) or {})
+        cry_flag = getattr(acts, "crying", None)                       # A173: the body's word on whether the cord's cry stepped (read before
+                                                                        # the acts become a plain dict below)
         if hasattr(acts, "vor"):                                        # the body's own VOR (the core's Acts.vor: empty when it has none)
             vora = dict(acts.vor or {})
         else:                                                           # a plain dict of acts (an instrument's, a test's): the born VOR
@@ -989,7 +991,9 @@ class G1World(SimWorld):
             raise WorldFault(self.tick, f"MuJoCo's warnings {warned}{said}" if warned else f"the tick's end state: {bad}")
         # the voice: the tract sounds this tick (its act, the cord's cry below it), heard with the parent's voice by day
         cv = cord.get(VOICE_NAME)
-        self.crying = cv is not None and bool(np.any(np.asarray(cv, float) != 0.0))    # the born cry sounding (world truth of a sound)
+        self.crying = bool(cry_flag) if cry_flag is not None else \
+            (cv is not None and bool(np.any(np.asarray(cv, float) != 0.0)))    # the born cry sounding (world truth of a sound; A173: the
+                                                                                # breath's steps are not a cry, so the body says which)
         self.tract_raw = np.asarray(self.tract.tick(vdig, cord=cv), float)
         self.tract_pa = self.tract_raw * PA_PER_UNIT
         self.words_out = None if wo is None or int(wo) == 0 else int(wo)

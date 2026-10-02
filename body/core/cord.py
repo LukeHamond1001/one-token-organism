@@ -97,11 +97,43 @@ class CordMixin:
             s_ = self._spg_step(e, where, p_act, dig)
             if s_ is not None:
                 out = s_; st["cord_n"]["spg"] = int(st["cord_n"].get("spg", 0)) + 1
+        crying = False
         if e.cry and int(self._reflex_const("cry")):
             c_ = self._cry_step(e, st, frame, dig)
             if c_ is not None:
                 out = c_ if out is None else [a_ + b_ for a_, b_ in zip(out, c_)]
                 st["cord_n"]["cry"] = int(st["cord_n"].get("cry", 0)) + 1
+                crying = True
+        if e.cry and not crying and int(self._reflex_const("breath")):   # A173: the born breath runs while the tract does not cry
+            b_ = self._breath_step(e, st, frame)
+            if b_ is not None:
+                out = b_ if out is None else [a_ + c2 for a_, c2 in zip(out, b_)]
+                st["cord_n"]["breath"] = int(st["cord_n"].get("breath", 0)) + 1
+        if st.get("now") is not None:
+            st["now"]["cry"] = bool(crying)                                 # (the world's crying flag: the cry's step, never the breath's)
+        return out
+
+    def _breath_step(self, e, st, frame):
+        """A173 (2026-10-02): THE BORN BREATH. The brainstem's respiratory rhythm (the pre-Botzinger complex: Smith et al. 1991) drives the
+        tract's lungs in a tidal cycle below the gate while the tract does not cry: breath_expire ticks pushing at breath_amp of the lungs'
+        range, then breath_inspire ticks drawn back (the reservoir empty on an expiration: breathe in now, as the cry does). Its clock
+        st["breath_t"] is saved with the body's day. Why: on life day 64's copy the tract had sounded on none of 300 ticks (its pressure
+        0 Pa), the voice's inverse model read chance agreement on every articulator (kappa 0.00 to 0.06) for want of any sound to label,
+        and the voice actor sat at one setting on 78 to 91% of its draws: the lungs rested at zero drive, so no act of the glottis could
+        phonate. An infant breathes always, and coos on an expiration when the glottis closes (the vocal play of 6 to 8 weeks); the
+        breath is the brainstem's, the glottis the child's. Nothing of the glottis or the other articulators is touched here"""
+        cy = e.cry
+        E, I = int(self._reflex_const("breath_expire")), int(self._reflex_const("breath_inspire"))
+        amp = float(self._reflex_const("breath_amp"))
+        k = int(st.get("breath_t", 0)) % (E + I)
+        bc_, bi_ = cy["breath"]
+        b_ = frame.obs.get(bc_)
+        if k < E and b_ is not None and float(b_[int(bi_)]) <= 0.0:
+            k = E; st["breath_t"] = (int(st.get("breath_t", 0)) // (E + I)) * (E + I) + E   # the reservoir empty: breathe in now
+        lungs = int(cy["lungs"])
+        out = [0.0] * len(e.factors)
+        out[lungs] = amp if k < E else -amp
+        st["breath_t"] = int(st.get("breath_t", 0)) + 1
         return out
 
     def _spg_phase0(self, i, e):

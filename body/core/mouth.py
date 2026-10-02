@@ -599,7 +599,7 @@ class MouthMixin:
                 # unit's held settings (unit_margin); act_inv's pairs gathered for the next batch (act_inv_every); the cord's patterns'
                 # ticks (logged as reflex) and the born cry's breath clock; C54: its pattern generator's place in its rhythm (none yet)
                 "perf": ([[0.0] * int(K) for K in e.factors] if getattr(e, "intrinsic", False) else None),
-                "fatigue": 0.0, "unit": None, "inv_batch": [], "cord_n": {}, "cry_t": 0, "spg_cyc": None}
+                "fatigue": 0.0, "unit": None, "inv_batch": [], "cord_n": {}, "cry_t": 0, "breath_t": 0, "spg_cyc": None}   # (breath_t: A173)
 
     def _choose_effector(self, i, frame, C1, level, stri):
         """A LATER EFFECTOR'S CHOICE (step R5; effector i > 0, after the voice's, its draws on self.gen after the voice's): whether (its

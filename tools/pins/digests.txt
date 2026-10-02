@@ -268,3 +268,7 @@ digest  sim                   pinned   64a93bc7be6c1889f6e4cba4 consts b971264b6
 # expected (the actors' lesson differs from the first dopamine); the language default digest 7c54199e3c72cf77d45a8e94 KEPT (the diary has no actor).
 digest  sim                   threaded 77dcdca9e395fcef45a88ec7 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   b9e5db5db5cfa94b523a1c0f consts b971264b65f1 | --profile sim
+# Re-taken at A173 (2026-10-02 12:50, on branch a173: the born breath at the cord, the tract's lungs in a tidal cycle): CHANGED as expected (the
+# tract breathes from the first tick); the language default digest 7c54199e3c72cf77d45a8e94 KEPT (no tract in the language body).
+digest  sim                   threaded 9234489de076690862871af2 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   22de82c91314deadf9dc6eee consts b971264b65f1 | --profile sim

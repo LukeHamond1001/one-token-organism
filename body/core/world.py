@@ -109,6 +109,8 @@ class Acts(dict):
         super().__init__(*a, **k)
         self.cord = {}
         self.vor = {}
+        self.crying = None                                                  # A173: whether the cord's cry stepped this tick (None: unknown,
+                                                                            # the world reads the cord's steps as before)
 
 
 class World(abc.ABC):

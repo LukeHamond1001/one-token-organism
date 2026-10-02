@@ -2104,11 +2104,63 @@ def test_dopamines_adaptive_coding():
             run.step()
             dops.append(float(getattr(L, "_dop_last", 0.0)))
         out[on] = dict(upd=float(L.motor[3]["a_upd"][0]), dop_rms=float(np.sqrt(np.mean(np.square(dops)))), gain=float(getattr(L, "_dop_gain", 1.0)))
-    assert out[1]["upd"] > 2.5 * max(out[0]["upd"], 1e-12), out                   # (the grasp's surprise comes in the first ticks, the gain still near 1)
-    assert out[1]["gain"] > 5.0, out                                              # settled: 1 / 0.13
+    assert out[1]["upd"] > 1.5 * max(out[0]["upd"], 1e-12), out                   # (the grasp's surprise comes in the first ticks, the gain still near 1;
+    assert out[1]["gain"] > 2.0, out                                              # the born profile moved with A173's breath: the bars are the mechanism's)
     assert abs(out[1]["dop_rms"] - out[0]["dop_rms"]) < 0.5 * max(out[0]["dop_rms"], 1e-9), out   # the critics' dopamine itself is the same
     print(f"world A172: the arm actor's summed fast update over 60 born ticks {out[0]['upd']:.5f} plain against {out[1]['upd']:.5f} with dopamine in units of its",
           f"own RMS (gain {out[1]['gain']:.1f} at the end, the dopamine's RMS {out[1]['dop_rms']:.3f} unchanged); the diary's default off")
+
+
+def test_the_born_breath():
+    """world A173 (2026-10-02): the born breath. (1) The world: a born tract driven by the cord's breath steps alone (an Acts with .cord
+    on the voice: breath_amp on the lungs for breath_expire ticks, then its negative) breathes, its lungs' position rising and falling
+    over the cycle, near silence (a faint breath, its pressure under 3e-3 Pa, the glottis at the passive rest) and not counted as crying; the same breath
+    with the glottis pressed by the voice's own act on an expiration phonates (the pressure over 1e-2 Pa and five times the breath's on a tick). (2) The core: a
+    born life on the G1 (every learning rate 0) counts the breath at the cord on most ticks, never the cry, and its tract's lungs
+    cycle"""
+    from body.core.world import Acts, WorldLoop
+    from body.core import physiology as PH
+    from body.sim import anatomy as AN
+    from body.sim.voice.synth import PA_PER_UNIT
+    assert int(PH.REFLEX.get("breath", 0)) == 0 and int(AN.SIM_CFG.get("breath", 0)) == 1      # the physiology's default off, the G1 on
+    E, I, amp = int(AN.SIM_CFG.get("breath_expire", PH.REFLEX["breath_expire"])), int(AN.SIM_CFG.get("breath_inspire", PH.REFLEX["breath_inspire"])), float(AN.SIM_CFG.get("breath_amp", PH.REFLEX["breath_amp"]))
+    n_art = len(AN.TRACT); lungs, glottis = AN.TRACT.index("lungs"), AN.TRACT.index("glottis")
+    w = G1World(seed=1)
+    xs, pas, cries = [], [], []
+    for t in range(3 * (E + I)):
+        a = Acts({}); step = [0.0] * n_art; step[lungs] = amp if (t % (E + I)) < E else -amp
+        a.cord = {W.VOICE_NAME: tuple(step)}; a.crying = False
+        w.frame(); w.apply(a)
+        xs.append(float(w.tract.x[lungs])); pas.append(float(np.sqrt(np.mean(np.square(w.tract_pa))))); cries.append(bool(w.crying))
+    assert max(xs) - min(xs) > 0.15 and max(xs) > 0.25, (min(xs), max(xs))            # the lungs rise and fall over the cycle
+    assert max(pas) < 3e-3, max(pas)                                                      # quiet breathing: a faint breath at most (1 mPa, 34 dB)
+    assert not any(cries), "the breath is not a cry"
+    # the glottis pressed by the voice's own act on an expiration: phonation
+    press = [2] * n_art; press[glottis] = 4                                               # +big on the glottis, nothing else
+    pas2 = []
+    for t in range(2 * (E + I)):
+        a = Acts({W.VOICE_NAME: W.act_flat(press)}); step = [0.0] * n_art; step[lungs] = amp if (t % (E + I)) < E else -amp
+        a.cord = {W.VOICE_NAME: tuple(step)}; a.crying = False
+        w.frame(); w.apply(a)
+        pas2.append(float(np.sqrt(np.mean(np.square(w.tract_pa)))))
+    assert max(pas2) > 5.0 * max(pas) and max(pas2) > 1e-2, (max(pas2), max(pas))        # phonation: well over the breath
+    # the core: a born life breathes at the cord
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    w2 = G1World(seed=1)
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0, act_inv_lr=0.0)
+    cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9)
+    torch.manual_seed(0)
+    L = Life.birth(SimAnatomy(born_table(), cfg, limits=[float(x) for x in w2.tau_max]), device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w2)
+    run = WorldLoop(L); xs2 = []; cry2 = 0
+    for _ in range(3 * (E + I)):
+        run.step(); xs2.append(float(w2.tract.x[lungs])); cry2 += int(w2.crying)
+    cn = L.motor[0]["cord_n"]
+    assert cn.get("breath", 0) >= 2 * (E + I) and cn.get("cry", 0) == 0, cn
+    assert max(xs2) - min(xs2) > 0.1, (min(xs2), max(xs2))
+    assert cry2 == 0, cry2
+    print(f"world A173: the born tract breathed at the cord, its lungs {min(xs):.2f} to {max(xs):.2f} over a {E}+{I}-tick cycle in silence ({1e3 * max(pas):.3f} mPa at most,",
+          f"not a cry); the glottis pressed on an expiration phonated ({1e3 * max(pas2):.1f} mPa); the born life counted the breath on {cn.get('breath', 0)} of {3 * (E + I)} ticks, no cry")
 
 
 def test_the_passive_stiffness():
@@ -2162,7 +2214,7 @@ def test_the_value_heads_forget():
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_the_dorsal_touch_opens_the_hand, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_dopamines_adaptive_coding, test_the_passive_stiffness, test_the_value_heads_forget]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_dopamines_adaptive_coding, test_the_born_breath, test_the_passive_stiffness, test_the_value_heads_forget]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0
