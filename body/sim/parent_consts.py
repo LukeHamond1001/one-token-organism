@@ -439,5 +439,9 @@ HANDOVER_PALM_N = 0.3           # the hand-over's release: the child's palm touc
 HANDOVER_CLOSED_DEG = 30.0      # ... and its fingers closed at least 30 deg (A4) ...
 HANDOVER_HOLD_TICKS = 2         # ... for 2 ticks, ...
 HANDOVER_MAX_TICKS = 40         # ... or after 40 ticks (A4)
+HANDOVER_PRESS_M = 0.005        # C222: the toy lowered this much further into the palm a tick (3 cm/s) while she feels no palm on it ... (ours)
+HANDOVER_PRESS_MAX_M = 0.06     # ... at most this far past where she planned it (the uncertainty of her reading of its palm; ours)
+HANDOVER_OUT_M = 0.02           # C222: a toy is within the hand's reach when its centre lies no further out along the palm's normal than its own
+                                # half-extent plus this beyond the grasp point (a fist's knuckles stand 5 to 6 cm out of the face; ours)
 TAKE_BACK_N = 0.3               # taking a toy back: she closes only after the child's palm force stayed under 0.3 N ... (A4)
 TAKE_BACK_TICKS = 2             # ... for 2 ticks

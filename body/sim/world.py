@@ -141,6 +141,8 @@ PAIN_WEIGHTS = 3.0              # F_pain = 3 x the body's weight from the model 
 PAIN_WINDOW_STEPS = 5           # a zone's force for pain: the tick's largest 10 ms mean (A12; innate, ours)
 TOUCH_UNIT_N = 1.0              # touch's log force is log(1 + F / 1 N) (3.4; anatomy, ours)
 HAND_DEPTH_M = 0.03             # A171: a held toy's centre this far before the palm's face (half a small toy; the hand's grasp centre, ours)
+SIDE_COS = 0.64                 # A171: a push counts on a side of the hand when within 50 deg of the palm's normal (ours; across it, the mat
+                                # under a hand lying on its edge, it is no side's)
 WORLD_STREAM = 1                # the world's random stream: SeedSequence(seed, spawn_key=(1,)) (ours)
 
 # ---------------------------------------------------------------- S5a: the world as the G1's anatomy meets it (body/sim/anatomy.py)
@@ -1299,13 +1301,18 @@ class G1World(SimWorld):
                     self._palm_own[h] = float(fn[mine].sum())
             hz = np.where(z >= 0, self.hand_of_zone[np.where(z >= 0, z, 0)], -1)   # A171: THE TWO SIDES OF THE HAND: each contact of one
             for h in (0, 1):                                                        # hand's link with anything not that hand (a toy, the
-                in0, in1 = hz[:, 0] == h, hz[:, 1] == h                             # floor, her hand). Its push on the link is read against
-                sel = in0 ^ in1                                                     # the contact's place from the hand's grasp centre (a
-                if sel.any():                                                       # held toy's: HAND_DEPTH_M before the palm's face): a
-                    into = np.where(in1[sel, None], con.frame[sel, :3], -con.frame[sel, :3])   # push AWAY from it is a thing on the palm's
-                    away = np.einsum("ij,ij->i", into, con.pos[sel] - self.grasp_centre(h)) > 0.0   # face or within the fingers (palmar);
-                    f_ = fn[sel]                                                                # TOWARD it a thing against the back of the
-                    self._sides[h, 0] = float(f_[away].sum()); self._sides[h, 1] = float(f_[~away].sum())   # hand or a fist's knuckles (dorsal)
+                in0, in1 = hz[:, 0] == h, hz[:, 1] == h                             # floor, her hand), read ALONG THE PALM'S NORMAL, both its
+                sel = in0 ^ in1                                                     # push and its place from the hand's grasp centre (a held
+                if sel.any():                                                       # toy's: HAND_DEPTH_M before the palm's face): a push along
+                    into = np.where(in1[sel, None], con.frame[sel, :3], -con.frame[sel, :3])   # the normal AWAY from the centre is a thing on
+                    n_ = self.palm_normal(h)                                        # the palm's side (the face, the fingers' insides: palmar);
+                    a_ = into @ n_                                                  # TOWARD it a thing against the back of the hand or a fist's
+                    s_ = (con.pos[sel] - self.grasp_centre(h)) @ n_                 # knuckles (dorsal); a push ACROSS the normal (the mat under
+                    f_ = fn[sel]                                                    # a hand lying on its edge, the supine child's every hour) is
+                    face = np.abs(a_) >= SIDE_COS                                   # neither and counts for nothing
+                    away = face & (a_ * s_ > 0.0)
+                    toward = face & (a_ * s_ < 0.0)
+                    self._sides[h, 0] = float(f_[away].sum()); self._sides[h, 1] = float(f_[toward].sum())
         if self.parent is not None and self.parent.holds:            # being held is felt (4.2): each capped spring's force on the
             out += self.parent.hold_zone                                # zone of the link it holds, this step's
         return out

@@ -172,7 +172,7 @@ def _ended(lane, world, open_seen):
     for mid, st in (getattr(lane.conduct, "ended", None) or {}).items():
         kind, target = open_seen.pop(mid, ("?", None))
         try:
-            why = str(world.parent.why(mid) or "")[:120]
+            why = str(world.parent.why(mid) or "")[:260]
         except Exception:
             why = ""
         out.append([kind, target, str(st), why])

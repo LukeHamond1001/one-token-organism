@@ -1089,7 +1089,7 @@ def test_the_world_in_the_core():
 
     def apply(acts):
         applied.append(dict(acts)); now = dict(L.motor[ih]["now"])
-        touched = float(w.now.obs["touch"][2 * zi]) >= R.GRASP_LOG     # the frame the tick was lived on
+        touched = float(w._sensed["palm_log"][0]) >= R.GRASP_LOG      # the grasp's stimulus the tick is lived on (A171: the palm's side)
         sizes_ok.append(all(np.size(w.now.obs[k]) == n for k, n in SIZES.items()))
         real_apply(acts)
         w.d.mocap_pos[ball] = _ball_spot(w)                             # the rig keeps the ball on the palm as the arm moves
@@ -1112,8 +1112,10 @@ def test_the_world_in_the_core():
     assert not any(n["reflex"] for n, _, _, _ in lived) and L.motor[ih]["stops"]["reflex"] == 0, L.motor[ih]["stops"]
     drew = sum(n["drew"] for n, _, _, _ in lived)
     opened = 0
-    for n, _, got, ev in lived:
+    for n, t_, got, ev in lived:
         own = n["act"]
+        if not t_:
+            continue                                                    # (A171: a tick the ball's push left the palm's side: no grasp to sum)
         base = ev.split("+")[0] if ev else ev                           # the tendon organ's event rides on the grasp's (A139)
         opened += int(R.opens("hand_l", own))
         if R.opens_all("hand_l", own):                                   # A160: the hand opened as a whole overrides the grasp

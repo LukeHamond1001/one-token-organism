@@ -367,7 +367,8 @@ def test_the_pull_gathers_the_forearms():
           f"holds tried {tries}; her effort peaked at {out['effort_peak_N']} N; its trunk {g['trunk_min_deg']}-{g['trunk_max_deg']} deg from",
           f"vertical, its centre of mass rose {g['com_rise_cm']} cm, its pelvis moved {g['pelvis_travel_cm']} cm")
     assert tries.get("gather", 0) >= 2, (tries, a)
-    assert a["status"] in ("done", "refused") and any(x in a["why"] for x in ("her cap", "sat up", "slipped", "did not arrive", "cannot reach")), a
+    assert a["status"] in ("done", "refused") and any(x in a["why"] for x in ("her cap", "sat up", "slipped", "did not arrive", "cannot reach",
+                                                                              "its cap")), a   # (C222: the gather's guide at its own cap, A10's honest stop)
     assert out["effort_peak_N"] <= K.CAP_TWO_BRIEF + 1e-6 and out["over_sustained_s"] <= K.BRIEF_S + W.TICK_S, out
     assert g["trunk_min_deg"] > 60.0 and g["com_rise_cm"] < 8.0 and g["held"]["pelvis_travel_cm"] < 2.0 and g["pelvis_travel_cm"] < 5.0, g
     # (the pelvis still under the pull itself, A9's principle; the gather of a forearm drawn 40 cm across its chest shifts the whole body
@@ -1589,6 +1590,32 @@ def test_the_turn_from_its_head():
 def _l(x):
     return [float(v) for v in np.asarray(x, float)]
 
+def test_the_toys_extent():
+    """parent 33 (C221, 2026-10-02): a toy's half-extent along a direction is its shapes' support, not a bounding box projected in a rolled
+    frame: the ball (a 6 cm sphere) reads 6 cm along every direction (it read up to 9.8 cm), the ring 1.5 cm along its axis and 6.5 cm
+    across (its mesh's vertices), the block 3.5 cm along a face's normal and 3.5 sqrt 2 along a face's diagonal, and the hand-over's gap
+    for the ball puts its surface 3 mm into the palm"""
+    w = W.G1World(seed=1)
+    pm = w.parent; m, d = w.m, w.d
+    rng = np.random.default_rng(3)
+    for _ in range(12):
+        n = rng.normal(size=3); n /= np.linalg.norm(n)
+        assert abs(pm._toy_half_along("ball", n) - 0.06) < 1e-6, (n, pm._toy_half_along("ball", n))
+    gr = next(g for g in range(m.ngeom) if m.geom_bodyid[g] == pm.toys["ring"] and m.geom_contype[g])
+    Rr = d.geom_xmat[gr].reshape(3, 3)                                           # (the mesh's frame: 0.015 x 0.065 x 0.065)
+    assert abs(pm._toy_half_along("ring", Rr[:, 0]) - 0.015) < 2e-3, pm._toy_half_along("ring", Rr[:, 0])
+    assert abs(pm._toy_half_along("ring", Rr[:, 1]) - 0.065) < 3e-3, pm._toy_half_along("ring", Rr[:, 1])
+    gb = next(g for g in range(m.ngeom) if m.geom_bodyid[g] == pm.toys["block"] and m.geom_contype[g])
+    Rb = d.geom_xmat[gb].reshape(3, 3)
+    assert abs(pm._toy_half_along("block", Rb[:, 2]) - 0.035) < 1e-6
+    assert abs(pm._toy_half_along("block", (Rb[:, 0] + Rb[:, 1]) / math.sqrt(2)) - 0.035 * math.sqrt(2)) < 1e-6
+    gap = pm._toy_half_along("ball", np.array([0, 0, 1.0])) - PM.PALM_GRASP_OUT - 0.003
+    assert abs(gap - 0.041) < 1e-6, gap                                        # the ball's centre 4.1 cm out from the grasp point: pressed 3 mm
+    print(f"parent 33: the ball's half-extent 6.0 cm along every direction (a sphere), the ring {100 * pm._toy_half_along('ring', Rr[:, 0]):.1f} cm along its axis",
+          f"and {100 * pm._toy_half_along('ring', Rr[:, 1]):.1f} across, the block 3.5 cm by a face and {100 * 0.035 * math.sqrt(2):.1f} by a diagonal; the hand-over's",
+          f"gap for the ball {100 * gap:.1f} cm (its surface 3 mm into the palm)")
+
+
 def test_the_lure():
     """parent 31 (C168, 2026-09-30): a child lying on its back under the coffee table (life day 44: 13,662 ticks there, every hand-over and
     show refused for want of a spot she can kneel at): her bring_back of the duck is not refused; the duck is set at a free floor point
@@ -1641,7 +1668,7 @@ def test_the_set_down_fallback():
     print(f"parent 32 (C175): a hand-over and a show with no kneel spot plan a set-down within reach ({[p.get('what') for p in plan if p.get('what')]}); with spots, as before")
 
 
-PARENT_TESTS = [test_the_scene, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
+PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
                 test_her_hands_reach_and_touch, test_exact_replay_across_a_solve,

@@ -607,6 +607,19 @@ _MESH_R = {}
 _G1_SHAPES = {}
 
 
+_MESH_V = {}
+
+
+def _mesh_verts(m, g):
+    """a mesh geom's vertices in the geom's frame (MuJoCo compiles them there), cached by geom (C221)"""
+    key = (id(m), g)
+    if key not in _MESH_V:
+        mid = int(m.geom_dataid[g])
+        adr, num = int(m.mesh_vertadr[mid]), int(m.mesh_vertnum[mid])
+        _MESH_V[key] = np.asarray(m.mesh_vert[adr:adr + num], float)
+    return _MESH_V[key]
+
+
 def _mesh_r(m, g):
     """a mesh geom's radius on the floor plan: its bounding box's half-diagonal in x and y (not the full bounding sphere)"""
     key = (id(m), g)
@@ -2245,6 +2258,18 @@ class ParentMotion:
             k = self.hand_idx[HAND_SEGS[sd]]
             if not self.pain_win[k, -1] > 0.0 and not self.toy_touch.get(sd, False):
                 miss = want - self._grip_now(sd, actual=True)[0]
+                cur = self.carry.get(sd)
+                if cur is not None and a["to"].get("k") in ("palm", "floor", "show", "toy_at"):
+                    # C222 (2026-10-02): SHE SEES WHERE THE TOY IS. A toy she carries hangs from her grip where the weld took it (up to 8 cm
+                    # from her grip point, `_ph_grasp`), so a hand placed to its plan puts the toy where her planned hand's ROTATION would,
+                    # and her real hand's rotation is off by tens of degrees: day 62's probe, her hand at its plan within 1 mm, the block 10
+                    # cm above the palm it was meant for. When the target is the toy's place (the palm, the floor, the show, a toy's spot),
+                    # what she still misses is the toy's miss, read from the toy itself
+                    try:
+                        c_ = np.asarray(self._resolve_hand(a["to"], sd)[0], float)
+                        miss = c_ - self.d.xpos[self.toys[cur["toy"]]]
+                    except Exception:
+                        pass
                 a["miss"] = float(np.linalg.norm(miss))
                 fix = fix + K.AIM_GAIN * miss
                 n = float(np.linalg.norm(fix))
@@ -2538,17 +2563,39 @@ class ParentMotion:
         return [g0, np.array([g0[0], g0[1], max(g0[2], h)]), np.array([g1[0], g1[1], max(g1[2], h)])]
 
     def _toy_half_along(self, toy, n):
-        """a toy's half-extent along a direction: its shapes' bounding boxes projected on it, from its centre"""
+        """a toy's half-extent along a direction, from its centre: the SUPPORT of each of its collision shapes along it (C221, 2026-10-02:
+        a sphere's radius, a capsule's and a cylinder's by their axis, an ellipsoid's by its radii, a box's projection, a mesh's by its
+        vertices). Until C221 it projected each shape's bounding box on the direction in the shape's own frame, which for a sphere rolled
+        to any angle reads up to sqrt(3) times its radius: the hand-over's ball (6 cm) read 8.6 to 9.8 cm and its centre was planned 6.7 cm
+        above the child's palm, so every hand-over of day 62's morning (18 of 18) hovered the toy over an open hand and let it go, 0 N on
+        the palm (the probe on day 62's copy: her hand at its plan within 2 mm, the plan the fault)"""
         m, d = self.m, self.d
         b = self.toys[toy]
         c = d.xpos[b]
+        n = unit(np.asarray(n, float))
         best = 0.0
         for g in range(m.ngeom):
             if m.geom_bodyid[g] != b or not m.geom_contype[g]:
                 continue
             R = d.geom_xmat[g].reshape(3, 3)
-            ext = float(np.abs(R.T @ n) @ m.geom_aabb[g][3:])
-            best = max(best, float((d.geom_xpos[g] + R @ m.geom_aabb[g][:3] - c) @ n) + ext)
+            nl = R.T @ n                                                   # the direction in the shape's frame
+            size = m.geom_size[g]; kind = m.geom_type[g]
+            if kind == mujoco.mjtGeom.mjGEOM_SPHERE:
+                ext = float(size[0])
+            elif kind == mujoco.mjtGeom.mjGEOM_CAPSULE:
+                ext = float(size[0] + size[1] * abs(nl[2]))
+            elif kind == mujoco.mjtGeom.mjGEOM_CYLINDER:
+                ext = float(size[0] * math.sqrt(max(0.0, 1.0 - nl[2] ** 2)) + size[1] * abs(nl[2]))
+            elif kind == mujoco.mjtGeom.mjGEOM_ELLIPSOID:
+                ext = float(np.linalg.norm(np.asarray(size[:3], float) * nl))
+            elif kind == mujoco.mjtGeom.mjGEOM_BOX:
+                ext = float(np.abs(nl) @ size[:3])
+            elif kind == mujoco.mjtGeom.mjGEOM_MESH:
+                V = _mesh_verts(m, g)
+                ext = float((V @ nl).max()) if len(V) else float(np.abs(nl) @ m.geom_aabb[g][3:])
+            else:
+                ext = float(np.abs(nl) @ m.geom_aabb[g][3:])
+            best = max(best, float((d.geom_xpos[g] - c) @ n) + ext)
         return best
 
     def _approach_dir(self, to, sd):
@@ -5001,9 +5048,26 @@ class ParentMotion:
         cs = ph["child"]
         w = self.w
         toy = self.holding[ph["side"]]
-        palm = self._toy_grip(toy, cs, palmar=True) if toy is not None else 0.0   # the child's hand on the toy, as she feels it through it
-        closed = self._closure(cs)
-        ok = palm >= K.HANDOVER_PALM_N and closed >= math.radians(K.HANDOVER_CLOSED_DEG)
+        palm, inside = self._toy_in_hand(toy, cs) if toy is not None else (0.0, False)   # the child's hand on the toy, as she feels it
+        closed = self._closure(cs)                                                        # through it, and the toy within its fingers' reach
+        arm = self.arms.get(ph["side"]) or {}
+        to = arm.get("to") if arm.get("mode") == "at" and isinstance(arm.get("to"), dict) else None
+        if to is not None and to.get("k") == "palm" and toy is not None and self._toy_grip(toy, cs, palmar=True) < K.HANDOVER_PALM_N:
+            # C222 (2026-10-02): THE TOY IS PRESSED INTO THE PALM UNTIL SHE FEELS IT THERE. Her reading of the child's palm (its grasp point
+            # PALM_GRASP_OUT out of the surface) is a model; on day 62's copy the grasp point lay 0.9 to 3.5 cm out of the palm's face and the
+            # ball planned to press 3 mm hung 1 cm clear of it. A person lowers the toy until the baby's hand takes its weight: while the
+            # palm's side carries none of it (a touch on the hand's edge or fingers is not the palm's), the toy goes HANDOVER_PRESS_M further
+            # in a tick, at most HANDOVER_PRESS_MAX_M past her plan
+            if to.get("gap") is None:
+                n_ = self.child.palm_n[to["side"]]
+                to["gap"] = self._toy_half_along(toy, n_) - PALM_GRASP_OUT - 0.003
+            ph.setdefault("gap0", float(to["gap"]))
+            if to["gap"] > ph["gap0"] - K.HANDOVER_PRESS_MAX_M:
+                to["gap"] = float(to["gap"]) - K.HANDOVER_PRESS_M
+                ph["pressed"] = ph.get("pressed", 0.0) + K.HANDOVER_PRESS_M
+        if a is not None and ph.get("pressed"):
+            a["info"]["pressed_m"] = ph["pressed"]
+        ok = palm >= K.HANDOVER_PALM_N and closed >= math.radians(K.HANDOVER_CLOSED_DEG) and inside
         ph["ok"] = ph.get("ok", 0) + 1 if ok else 0
         ph["palm"] = max(ph.get("palm", 0.0), palm)
         t = ph.get("t", 0) + 1
@@ -5021,13 +5085,27 @@ class ParentMotion:
         return "run"
 
     def _hand_full(self, cs):
-        """a toy in the child's hand (on the palm's side of its palm or fingers, or within 4 cm of its grasp point), as she sees it"""
+        """a toy in the child's hand (pressing it from within its fingers' reach, or within 4 cm of its grasp point), as she sees it"""
         for toy, b in self.toys.items():
             if toy in self.holding.values():
                 continue
-            if float(np.linalg.norm(self.d.xpos[b] - self.child.grasp[cs])) < 0.04 or self._toy_grip(toy, cs, palmar=True) > K.HANDOVER_PALM_N:
+            if float(np.linalg.norm(self.d.xpos[b] - self.child.grasp[cs])) < 0.04:
+                return True
+            grip, inside = self._toy_in_hand(toy, cs)
+            if inside and grip > K.HANDOVER_PALM_N:
                 return True
         return False
+
+    def _toy_in_hand(self, toy, cs):
+        """(the toy's whole push on the child's hand, N; whether the toy lies within the hand's reach: its centre no further out along the
+        palm's normal than its own half-extent HANDOVER_OUT_M beyond the grasp point, as she reads it). C222 (2026-10-02): a toy on the
+        knuckles of a fist sits 3 cm and more beyond that (the fist's knuckles stand 5 to 6 cm out of the palm's face); a toy within closed
+        fingers pushes the palm across its plane as the hand turns on it (the rig's block at 62 deg closed, 13 N, read by the palm's side
+        alone as nothing: C219's rule lost the release the tick the hand took it)"""
+        n = self.child.palm_n[cs]
+        depth = float((self.d.xpos[self.toys[toy]] - self.child.grasp[cs]) @ n)
+        inside = depth <= self._toy_half_along(toy, n) + K.HANDOVER_OUT_M
+        return self._toy_grip(toy, cs), inside
 
     def _toy_grip(self, toy, cs, palmar=False):
         """the normal force between a toy and the child's hand (its palm and fingers) now (N): what she feels of its grip through the
@@ -5040,7 +5118,7 @@ class ParentMotion:
         w = self.w
         hand = set(w.groups["hand_l" if cs == "L" else "hand_r"])
         ti = self.toy_names.index(toy)
-        from .world import HAND_DEPTH_M                                     # (the world's one constant; imported here, the world imports her)
+        from .world import HAND_DEPTH_M, SIDE_COS as W_SIDE_COS             # (the world's constants; imported here, the world imports her)
         G = self.child.grasp[cs] + self.child.palm_n[cs] * (HAND_DEPTH_M - PALM_GRASP_OUT)
         f = 0.0
         for i in range(d.ncon):
@@ -5054,8 +5132,11 @@ class ParentMotion:
                 into = -np.array(c.frame[:3])
             else:
                 continue
-            if palmar and float(into @ (np.asarray(c.pos) - G)) <= 0.0:
-                continue
+            if palmar:                                                      # (A171's rule, both along the palm's normal: the push's part and
+                a_ = float(into @ self.child.palm_n[cs])                        # the contact's depth from the grasp centre; a push across the
+                s_ = float((np.asarray(c.pos) - G) @ self.child.palm_n[cs])   # normal is no side's)
+                if abs(a_) < W_SIDE_COS or a_ * s_ <= 0.0:
+                    continue
             f += float(d.efc_force[c.efc_address])
         return f
 
