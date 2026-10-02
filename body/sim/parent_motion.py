@@ -3712,12 +3712,12 @@ class ParentMotion:
                 return bool(self._solve_trunk(targets, None, step=10)[3])
             finally:
                 self.base = saved
-        if need == "pull":                                                  # one trunk reaches both its forearms from her tall kneel
-            saved = self.base
+        if need == "pull":                                                  # one trunk reaches both its forearms from her tall kneel, or
+            saved = self.base                                               # each forearm alone (A169: the gather's reach)
             self.base = dict(mode="tall", at=_lst(np.asarray(H, float) + fwd * HEELS_BACK), yaw=float(yaw), lean=0.0, spine=0.0,
                              twist=0.0)
             try:
-                return self._pull_pairing() is not None
+                return self._pull_pairing() is not None or self._gather_reach()
             finally:
                 self.base = saved
         if need.startswith("hand:"):                                       # C133: the child's palm (side cs) within her hand's reach from
@@ -5346,6 +5346,28 @@ class ParentMotion:
             if self._solve_trunk(tg, None)[3]:
                 return pair
         return None
+
+    def _gather_reach(self):
+        """A169 (2026-10-02): from her tall kneel here, each forearm reachable by a hand of its own from a trunk pose of its own (the
+        gather's requirement, A165: the nearer forearm by the hand nearer it, the other by the other hand). Life day 59's first
+        pull-to-sit (tick 2,838,792) was refused before she went, 'no spot she can kneel at lets her do it (pull): her reach', because
+        the spot check asked for one trunk reaching both forearms at once (the pairing) while the gather, built for the arms it cannot
+        take at once, was never reached: a spot is good for the pull when she can take the forearms one at a time from it"""
+        bodies = {cs: self.m.body(f"{'left' if cs == 'L' else 'right'}_elbow_link").id for cs in "LR"}
+        order = sorted("LR", key=lambda cs: float(np.linalg.norm(self.d.xpos[bodies[cs]][:2] - np.asarray(self.base["at"], float))))
+        used = set()
+        for cs in order:
+            sd = self._near_hand(self.d.xpos[bodies[cs]])
+            if sd in used:
+                sd = "L" if sd == "R" else "R"
+            used.add(sd)
+            to, _loc, _nl, shape = self._hold_target(sd, bodies[cs], FOREARM_TOP, UP_LOCAL)
+            g, R = self._resolve_hand(to, sd)
+            if float(np.linalg.norm(g[:2] - np.asarray(self.base["at"], float)[:2])) > 1.0:
+                return False
+            if not self._solve_trunk({sd: (g, R, shape)}, None, step=10)[3]:
+                return False
+        return True
 
     def _plan_pull(self, a):
         """the pull-to-sit (A9) from its feet: both its forearms held, pulled up and toward its feet (toward her), as a sit-up
