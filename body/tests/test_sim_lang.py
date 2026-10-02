@@ -7049,6 +7049,20 @@ def test_the_function_word_not_echoed():
     print(f"lang 71 (C197): 120 function words: {len(texts)} replies, none the word alone or doubled ({texts[0]!r}, {texts[-1]!r}); the duck named when attended; a noun still echoed")
 
 
+def test_a_held_toy_is_not_fetched():
+    """lang 75 (C215): a show, hand-over or new-word request for a toy her motion says the child has is dropped before she goes
+    ('she never takes a toy from it', A4); the same request for a toy it does not have proceeds"""
+    con = _pair_con()
+    con.motion._child_has = lambda toy: toy == "duck"                      # her motion's knowledge (C118), on the test's stub
+    _run_to(con, 200)
+    con.request("show", o="duck"); con.request("hand_over", o="duck"); con.request("show", o="ball")
+    _run_to(con, 4, t0=200)
+    drops = [r for r in con.fast.refused if "(A4; C215)" in r[2]]
+    assert len(drops) == 2 and all("'duck'" in r[2] for r in drops), con.fast.refused[-4:]
+    assert [tuple(a[1:3]) for a in con.acts_open if a[1] == "show"] == [("show", "ball")], con.acts_open
+    print(f"lang 75: the show and the hand-over of the duck the child has were dropped before she went ({len(drops)}); the show of the ball opened")
+
+
 def test_the_planner_unseen_line_is_a_show():
     """lang 74 (C206): a planner (steer) row 'you see the block.' with the block out of the child's view (the test room's, on the
     sofa) is refused as untrue and becomes her show of the block, once; a row about a toy in its view is said as it was"""

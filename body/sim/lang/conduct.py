@@ -2194,8 +2194,13 @@ class Conduct:
         if intent in TRIAL_INTENTS:                         # said only in its trial (4.8), never requested (Claude's rows too)
             return self._drop(t, intent, "a formal trial's sentence is said only in its trial (probe(): her day plan's, by "
                                          "its stage; 4.8)")
-        if intent == "new_word":
-            return self._introduce(kw["word"], t, p, kw.get("o"))
+        has_ = getattr(self.motion, "_child_has", None)                    # C215 (2026-10-02): A TOY THE CHILD HAS IS NOT FETCHED. Life days
+        it0 = INTENTS.get(intent)                                           # 58 and 59: 12 shows a day refused by her motion at the fetch,
+        fetches = intent == "new_word" or (it0 is not None and it0.acts and it0.acts[0].kind in FETCH_KINDS)   # 'the child has the block:
+        if kw.get("o") and fetches and callable(has_) and has_(kw["o"]):    # she never takes a toy from it (A4)': the toy asked by memory
+            return self._drop(t, intent, f"the child has {kw['o']!r}: she never takes a toy from it (A4; C215)")   # (C157) or for a new
+        if intent == "new_word":                                            # word, her percept not seeing it in the hand; her motion
+            return self._introduce(kw["word"], t, p, kw.get("o"))           # knows (C118), so the request is dropped before she goes
         o = p.obj(kw["o"]) if kw.get("o") else None
         if kw.get("o") and o is None:
             it_ = INTENTS.get(intent)
