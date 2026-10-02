@@ -2163,6 +2163,67 @@ def test_the_born_breath():
           f"not a cry); the glottis pressed on an expiration phonated ({1e3 * max(pas2):.1f} mPa); the born life counted the breath on {cn.get('breath', 0)} of {3 * (E + I)} ticks, no cry")
 
 
+def test_the_vor_teacher():
+    """world A174 (2026-10-02): the retinal slip teaches the VOR. (1) The world: a born G1 turning its trunk (and the cameras on it) by the
+    waist's yaw with the gaze at rest hands the loop below the tick, at each sub-step 0, the last tick's head turn and retinal slip in
+    the fovea's axes (yaw, pitch): the turn grows with the yaw's motion and the slip stays small against it (the born VOR's gain 1 counters
+    the turn); a tick on which the gaze acts hands the pair too, the saccade left out; the slip and turn are saved with the world. (2) The core: a born life on the G1
+    (every learning rate 0 but the cerebellum's own) counts VOR lessons at its flocculus within 60 ticks, where in 64 days of life it had
+    counted none"""
+    from body.core.world import Acts, WorldLoop
+    w = G1World(seed=1)
+    frames = []
+    w.below = lambda sf: (frames.append(sf), None)[1]
+    waist = W.EFFECTOR_REST["waist"]
+    yaw_i = W.JOINTS.index("waist_yaw_joint")
+    wj = [j for n_, js in G.EFFECTORS if n_ == "waist" for j in js]
+    dig = [2] * len(wj); dig[wj.index("waist_yaw_joint")] = 4                      # the waist's yaw, a big step a tick
+    turns, slips = [], []
+    gv_ = [2] * len(W.GAZE_JOINTS); gv_[2] = 4                                         # the eyes converged first (a near fixation: the slip
+    for _ in range(5):                                                                 # a gain-1 VOR leaves is the parallax of a near thing)
+        a = Acts({W.GAZE_NAME: W.act_flat(gv_)}); a.vor = {W.GAZE_NAME: {"axes": [0, 1], "gain": W.VOR_GAIN, "quick": 0.5}}
+        w.frame(); w.apply(a)
+    for t in range(16):
+        a = Acts({"waist": W.act_flat(dig if t < 10 else [2] * len(wj))}); a.vor = {W.GAZE_NAME: {"axes": [0, 1], "gain": W.VOR_GAIN, "quick": 0.5}}
+        w.frame(); w.apply(a)
+    for sf in frames:
+        if sf.sub == 0 and sf.slip is not None:
+            turns.append(np.asarray(sf.turn, float)); slips.append(np.asarray(sf.slip, float))
+    assert len(turns) >= 8, (len(turns), len(frames))
+    T_ = np.array(turns); S_ = np.array(slips)
+    assert np.abs(T_[:, 0]).max() > 0.01, T_[:, 0]                                  # the head turned about the yaw axis
+    assert 0.0 < np.abs(S_).max() < 0.8 * np.abs(T_).max() + 1e-4, (np.abs(S_).max(), np.abs(T_).max())   # the born VOR counters most of it; the near
+                                                                                                        # fixation's parallax leaves some
+    assert w.eye_ipd > 0.03 and w.cam_lever > 0.02, (w.eye_ipd, w.cam_lever)
+    # a tick on which the gaze acts still hands the pair (the saccade is not in the slip), the slip small
+    gd = [2] * len(W.GAZE_JOINTS); gd[0] = 3                                        # the gaze's own axes (yaw, pitch, vergence): a yaw step
+    a = Acts({W.GAZE_NAME: W.act_flat(gd)}); a.vor = {W.GAZE_NAME: {"axes": [0, 1], "gain": W.VOR_GAIN, "quick": 0.5}}
+    w.frame(); w.apply(a)
+    assert w._vor_slip is not None and float(np.abs(w._vor_slip).max()) < 0.02, w._vor_slip
+    frames.clear(); w.frame(); w.apply(Acts({})); w.frame(); w.apply(Acts({}))
+    # the state carries them
+    import pickle as _pk
+    s5 = W._uncanon(_pk.loads(w.save_state())["s5"]); assert "vor_slip" in s5 and "vor_turn" in s5   # (the save's canonical form)
+    w2 = G1World(seed=1); w2.load_state(w.save_state())
+    assert (w2._vor_slip is None) == (w._vor_slip is None)
+    # the core: the flocculus learns
+    from body.life import Life
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    w3 = G1World(seed=1)
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0, act_inv_lr=0.0)
+    cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9)
+    torch.manual_seed(0)
+    L = Life.birth(SimAnatomy(born_table(), cfg, limits=[float(x) for x in w3.tau_max]), device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w3)
+    run = WorldLoop(L)
+    for _ in range(60):
+        run.step()
+    cb = L.m.cereb
+    assert int(cb.n_vor) > 0, int(cb.n_vor)
+    print(f"world A174: the head turned {np.degrees(np.abs(T_[:, 0]).max()):.1f} deg a tick about the yaw axis and the fovea's slip stayed within",
+          f"{np.degrees(np.abs(S_).max()):.2f} deg (the born VOR); a gaze act's tick hands it too; the state carries the pair; a born life's flocculus counted",
+          f"{int(cb.n_vor)} VOR lessons in 60 ticks (none in 64 days before)")
+
+
 def test_the_passive_stiffness():
     """world (A143, 2026-09-30): the passive end-range stiffness. At a joint's low stop the tissue pushes toward the middle at PASSIVE_FRAC x its
     torque limit, at its high stop the same the other way, half way into the margin half as much, and nothing over the middle 70% of the range;
@@ -2214,7 +2275,7 @@ def test_the_value_heads_forget():
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
                test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_the_dorsal_touch_opens_the_hand, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
-               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_dopamines_adaptive_coding, test_the_born_breath, test_the_passive_stiffness, test_the_value_heads_forget]
+               test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_dopamines_adaptive_coding, test_the_born_breath, test_the_vor_teacher, test_the_passive_stiffness, test_the_value_heads_forget]
 
 if __name__ == "__main__":
     t0 = time.time(); failed = 0

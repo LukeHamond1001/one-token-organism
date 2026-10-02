@@ -677,6 +677,14 @@ class G1World(SimWorld):
         self.tract_raw = np.zeros(EA.TICK)                                   # the same in the engine's units (her transcriber's)
         self.crying = False                                                  # the cord's born cry pushed the tract this tick
         self.vor_corr = np.zeros(4)      # the flocculus's gain correction (yaw, pitch) and offset (yaw, pitch), held through a tick
+        self._vor_slip = None; self._vor_turn = None   # A174: the last tick's retinal slip and head turn (yaw, pitch; rad), the flocculus's teacher
+        cl_, cr_, cc_ = m.camera("eye_L").id, m.camera("eye_R").id, m.camera("eye_C").id   # A174: the eyes' separation and the cameras' lever
+        self.eye_ipd = float(np.linalg.norm(m.cam_pos[cl_] - m.cam_pos[cr_]))                # about the trunk's yaw axis (the parallax of a near
+        jy_ = m.joint("waist_yaw_joint").id                                                   # fixation: the slip a gain-1 VOR leaves), as
+        mujoco.mj_forward(m, self.d)                                                          # the born pose stands: the camera's distance from
+        ax_ = np.asarray(self.d.xaxis[jy_], float); ax_ /= max(float(np.linalg.norm(ax_)), 1e-9)   # the yaw axis's line (its anchor and axis
+        dv_ = np.asarray(self.d.cam_xpos[cc_], float) - np.asarray(self.d.xanchor[jy_], float)      # in the world)
+        self.cam_lever = float(np.linalg.norm(dv_ - ax_ * float(dv_ @ ax_)))
         self.night = False
         self.dawn_left = 0
         self.carried = []                                               # A110: the child carried to the mat at a dawn (tick, from, to)
@@ -835,7 +843,10 @@ class G1World(SimWorld):
         ci = self.cereb_idx
         a = self.aid[ci]
         teach = np.clip(self.kp[ci] * (d.ctrl[a] - d.qpos[self.qadr[ci]]) - self.kv[ci] * d.qvel[self.dof[ci]], -lim[ci], lim[ci])
-        sa = self.sub_tick(SubFrame(self.tick, int(sub), mossy.tolist(), teach.tolist(), None, None, lim[ci].tolist()))
+        slip_ = turn_ = None
+        if int(sub) == 0 and self._vor_slip is not None:               # A174: at sub-step 0 the last tick's slip and turn (the flocculus's teacher)
+            slip_, turn_ = list(self._vor_slip), list(self._vor_turn)
+        sa = self.sub_tick(SubFrame(self.tick, int(sub), mossy.tolist(), teach.tolist(), slip_, turn_, lim[ci].tolist()))
         self._below_n += 1
         if sa is None:
             return
@@ -1021,6 +1032,33 @@ class G1World(SimWorld):
         else:
             self._vor_quick = 0
         self.gaze_v = (self.gaze - gaze0) / TICK_S
+        # A174 (2026-10-02): THE RETINAL SLIP TEACHES THE VOR. The flocculus's climbing fibres carry the image's motion left on the retina
+        # after the VOR's counter-turn (Ito 1982; the cerebellum's VOR lesson, body/core/cerebellum.py, learns down its gradient); the
+        # SubFrame has carried None since R6c ('none until the eyes' W3 reopening measures the fovea's slip'), so in 64 days the flocculus
+        # learned nothing (its lesson count 0 against 46.8 million at the limbs: the audit of 13:45). The slip is read kinematically, as
+        # the test head reads it (body/tests/test_cerebellum.py Head: slip = -magnification x the true turn - the counter-shift; the
+        # magnification here the parallax of the fixated distance, 1 + the cameras' lever about the trunk's yaw axis over the vergence's
+        # distance, 1 for a far thing): the head's rotation over the tick in the camera's frame (the gyro's samples, yaw about the camera's y, pitch
+        # about its x) and the gaze windows' shift the VOR made this tick, both counted from after the gaze's own jump (the saccade
+        # is not in the slip: a gaze that acts every tick, as this child's does, would otherwise never teach it); a tick on which the VOR
+        # jumped (its quick phase) teaches nothing and hands None, as the SubFrame's contract says. A thing held still in the fovea is assumed (the room
+        # stands still; her hands and the toys in motion are the noise the lesson averages out)
+        if vg is not None:
+            g_s = clamp_gaze(gaze0 + gaze_step)                          # the gaze after its act, before the VOR
+            yp_, pp_, _q = vor(g_s[0], g_s[1], imu[:, 3:6] @ self.gyro_to_cam.T, m.opt.timestep, gain=(1.0, 1.0), reach=None)
+            perfect_ = np.array([yp_, pp_])                              # where a VOR of gain 1 with no offset would have put the windows:
+            turn_ = -(perfect_ - g_s[:2])                                # the head's turn in the windows' own axes (yaw, pitch) is its negative,
+            shift_ = self.gaze[:2] - g_s[:2]                             # and the slip is what the real counter-shift left of it, the fixated
+            verg_ = float(g_s[2])                                        # thing's parallax included: the cameras ride the trunk's yaw axis at
+            d_fix = self.eye_ipd / (2.0 * math.tan(0.5 * verg_)) if verg_ > 1e-3 else float("inf")   # a lever, so a thing fixated at the
+            mag_ = 1.0 + (self.cam_lever / d_fix if np.isfinite(d_fix) else 0.0)   # vergence's distance moves on the retina by more than
+            if int(self._vor_quick) == 0:                                # the turn (a gain over 1 is asked of the VOR for near things,
+                self._vor_slip = -mag_ * turn_ - shift_; self._vor_turn = turn_   # as of the eye: Viirre et al. 1986). The gaze's own act is
+                                                                         # not in this slip (both counts start after its jump); a quick
+            else:                                                        # phase corrupts the counter-shift and hands None)
+                self._vor_slip = None; self._vor_turn = None
+        else:
+            self._vor_slip = None; self._vor_turn = None
         k = 1.0 - math.exp(-TICK_S / HEAT_TAU_S)                       # the motors' heat: first order toward the tick's load
         self.heat += (HEAT_RISE_C * heat_in / n - self.heat) * k
         if self.dawn_left > 0:                                          # the morning's light returning
@@ -1433,6 +1471,8 @@ class G1World(SimWorld):
                 "dorsal_hab": {h: list(v) for h, v in self._dorsal_hab.items()},  # A171
                 "parent": None if self.parent is None else self.parent.state(),
                 "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
+                              "vor_slip": ([] if self._vor_slip is None else list(map(float, self._vor_slip))),        # A174 (empty: none)
+                              "vor_turn": ([] if self._vor_turn is None else list(map(float, self._vor_turn))),
                               "observer": self.observer.state(), "sounds": self.sounds.state(),
                               "eyes": None if self.eyes is None else self.eyes.state(),
                               "words_out": self.words_out, "tract_pa": self.tract_pa, "tract_raw": self.tract_raw, "crying": self.crying, "night": self.night, "dawn_left": int(self.dawn_left),
@@ -1475,6 +1515,9 @@ class G1World(SimWorld):
             self.eyes.load_state(s5["eyes"])
         self.ears.load_state(s5["ears"])
         self.vor_corr = np.asarray(s5["vor_corr"], float).copy()
+        vs_, vt_ = s5.get("vor_slip"), s5.get("vor_turn")               # (A174; older saves or an empty pair: none)
+        self._vor_slip = None if not vs_ else np.asarray(vs_, float).copy()
+        self._vor_turn = None if not vt_ else np.asarray(vt_, float).copy()
         self.words_out = s5["words_out"]; self.tract_pa = np.asarray(s5["tract_pa"], float).copy()
         self.tract_raw = np.asarray(s5["tract_raw"], float).copy(); self.crying = bool(s5["crying"])
         self.night, self.dawn_left = bool(s5["night"]), int(s5["dawn_left"])

@@ -490,7 +490,9 @@ class ParentLane:
                 ev.append(("gave", tt))
         for tt in holds:
             self.child_held_at[tt] = t
-        self._held(holds, ev)                                                 # C225: a toy lifted off its rest and kept in its hands
+        grasping = {side for side in ("left", "right")                         # C229: the hands whose palmar grasp is engaged (firing or
+                    if str((getattr(world, "_spinal", None) or {}).get(f"hand_{side[0]}", "")).split("+")[0] in ("grasp", "habituated")}   # habituated)
+        self._held(holds, ev, touch=touch, grasping=grasping)                 # C225: a toy lifted off its rest, or in a hand closed on it, and kept
         self.child_had = tuple(holds)
         self.her_had = {tt: t for tt in her}
         post = ch.posture
@@ -576,13 +578,16 @@ class ParentLane:
                 ev.append(("reach_nearer", tt))
             last.append(round(d, 4)); del last[:-BOOK_LAST]
 
-    def _held(self, holds, ev):
+    def _held(self, holds, ev, touch=None, grasping=()):
         """C225 (2026-10-02): a toy lifted off its rest (`lifted`, LIFT_M) and kept in its hands HELD_TICKS running is "held", once a hold
-        (the count runs on; it falls to nothing the tick the toy leaves the hand or was never lifted: a toy a resting hand lies on, the born
-        right hand's rattle, is not held). The holding the shake needs, past the cord's grasp (A162's 40 ticks): the cortex's to learn, and
-        her face pays it (MOTOR_WORTH 'held')"""
+        (the count runs on; it falls to nothing the tick the toy leaves the hand: a toy a resting hand lies on, the born right hand's rattle,
+        is not held). C229 (2026-10-02): OR a toy in a hand whose palmar grasp is engaged on it (the cord's 'grasp' or 'habituated' on that
+        hand, `grasping`; the hand's side from `touch`): day 65's first 3,000 ticks held the bear in a hand on the mat 40% of the time and
+        lifted it never, so the lift alone paid nothing; a parent sees the fingers closed on the rattle, lifted or not. The holding the
+        shake needs, past the cord's grasp (A162's 40 ticks): the cortex's to learn, and her face pays it (MOTOR_WORTH 'held')"""
         for tt in self.toys:
-            n_ = self.held_run.get(tt, 0) + 1 if tt in holds and tt in self.lifted else 0
+            in_hand = tt in holds and (tt in self.lifted or (touch is not None and bool(set(touch.get(tt, {}).get("child", ())) & set(grasping))))
+            n_ = self.held_run.get(tt, 0) + 1 if in_hand else 0
             self.held_run[tt] = n_
             if n_ == HELD_TICKS:
                 ev.append(("held", tt))

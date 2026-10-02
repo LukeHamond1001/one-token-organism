@@ -272,3 +272,7 @@ digest  sim                   pinned   b9e5db5db5cfa94b523a1c0f consts b971264b6
 # tract breathes from the first tick); the language default digest 7c54199e3c72cf77d45a8e94 KEPT (no tract in the language body).
 digest  sim                   threaded 9234489de076690862871af2 consts b971264b65f1 | --profile sim
 digest  sim                   pinned   22de82c91314deadf9dc6eee consts b971264b65f1 | --profile sim
+# Re-taken at A174/C229 (2026-10-02 14:05, on branch a174: the retinal slip teaches the VOR; the held smile counts a closed hand): UNCHANGED
+# from A173's (the pinned born run's flocculus moves nothing the digest sees in 300 ticks); the language default digest 7c54199e3c72cf77d45a8e94 KEPT.
+digest  sim                   threaded 9234489de076690862871af2 consts b971264b65f1 | --profile sim
+digest  sim                   pinned   22de82c91314deadf9dc6eee consts b971264b65f1 | --profile sim

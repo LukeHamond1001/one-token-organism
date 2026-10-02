@@ -385,6 +385,17 @@ def test_her_eyes():
     for _ in range(LN_.HELD_TICKS):                                                  # back in its hand: a new hold, held again
         lane._held(("ball",), ev2)
     assert ev2 == [("held", "ball"), ("held", "ball")], ev2
+    # C229: a toy in a hand whose palmar grasp is engaged counts without a lift (the cord's 'grasp' on that hand); a toy a resting
+    # hand merely lies on (no grasp, no lift) does not
+    lane.lifted.discard("ball"); lane.held_run = {}; ev3 = []
+    touch_ = {"ball": {"child": {"left"}}, "rattle": {"child": {"right"}}}
+    for _ in range(LN_.HELD_TICKS + 2):
+        lane._held(("ball", "rattle"), ev3, touch=touch_, grasping={"left"})
+    assert ev3 == [("held", "ball")] and lane.held_run["rattle"] == 0, (ev3, lane.held_run)
+    lane.held_run = {}; ev4 = []
+    for _ in range(LN_.HELD_TICKS + 2):
+        lane._held(("ball",), ev4, touch=touch_, grasping=set())                    # the hand open on it: not held
+    assert ev4 == [], ev4
     assert lane.conduct.book["got"] == {"ball": 1} and set(lane.conduct.book) <= {"got", "lifted", "hit", "held"}, lane.conduct.book   # in a
     st = lane.state()                                                                # raised hand: "lifted" too, as a person would see it
     assert st["eyes"]["hand_prev"]["left"] and st["conduct"]["book"]["got"] == {"ball": 1}
