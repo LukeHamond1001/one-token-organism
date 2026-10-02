@@ -114,6 +114,7 @@ class DayPlan:
         self.level_t = {}                  # toy -> the tick its level was set
         self.got_seen = {}                 # toy -> the "got" smiles counted at its last lesson
         self.roll_turn = True              # A109: the next reach-rung lesson is the roll rung (once it rolls); they alternate
+        self.sit_due = False               # A161: a motor block entered with the child on its back owes one pull-to-sit (its first offer)
         self.hide_turn = False             # A129: every other lesson on a toy it grasps at will is the hide game (the bucket in the room)
         self.last_pain = -10 ** 9
         self.bids = []                     # its vocal turns heard while she is away (ticks)
@@ -205,7 +206,7 @@ class DayPlan:
             elif self.greeted is not None and not self.called and t >= self.greeted + CALL_AFTER_GREET and not busy:
                 c.request("call"); self.called = True; c.routine = None
         elif kind == "motor" and t >= self.next_play and not busy:
-            self._lesson(t, lane)
+            self._sit_or_lesson(t, lane)
         elif kind == "floor" and t >= self.next_play and not busy:
             self._play(t, lane, kind)
         elif kind == "show" and t >= self.next_play and not busy:
@@ -246,6 +247,8 @@ class DayPlan:
         elif kind in ("floor", "motor", "show", "wind"):
             c.routine = None
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
+            if kind == "motor":
+                self.sit_due = self._lying_on_back(lane)                # A161: the block's first offer is the pull-to-sit
 
     def _away_tick(self, t, t_day, lane, world, kind):
         c = lane.conduct
@@ -257,6 +260,26 @@ class DayPlan:
             return
         if t >= self.next_call and c.fast.voice_free(t):
             c.request("hall_call"); self.next_call = t + AWAY_CALL
+
+    @staticmethod
+    def _lying_on_back(lane):
+        """the child on its back as her motion's model of it reads it (the pull-to-sit is from lying on its back, A9); False when unknown"""
+        ch = getattr(getattr(lane.conduct, "motion", None), "child", None)
+        return getattr(ch, "posture", None) == "back"
+
+    def _sit_or_lesson(self, t, lane):
+        """A161 (2026-10-01): the motor block's first offer, with the child on its back, is the pull-to-sit (motor_sit: her 'up! sit up.'
+        over both forearms taken, the pull growing to her brief cap and rising only with its own flexion, A9; once per block, twice a
+        day); every later offer of the block is her reach-rung lesson (A90). Life days 50 to 56 the child lay on its back the whole day
+        and no one offered it the sit: the pull-to-sit and the prop had stayed closed since birth (NOT_AT_BIRTH)"""
+        if self.sit_due and self._lying_on_back(lane):
+            self.sit_due = False
+            lane.conduct.request("motor_sit")
+            self.log.append((t, "motor_sit"))
+            self.next_play = t + int(self.rng.integers(*PLAY_GAP))
+            return
+        self.sit_due = False
+        self._lesson(t, lane)
 
     def _lesson(self, t, lane):
         """her lesson (A90; the module's doc): the rung the child is nearly at on a focus toy she sees, read from her conduct's book"""

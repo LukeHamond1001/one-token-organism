@@ -185,8 +185,12 @@ KINDS = {
 # repeat, never to the guided act (the conduct judges nothing while her hands move it: HANDS_ON), every guide counted beside First 1
 # (A63). The pull-to-sit and the prop stay closed: 34 kg. Refused when asked, with this reason, and logged. Kept in KINDS (their
 # controllers stay built) so a later decision can open them at a boundary, never silently.
-NOT_AT_BIRTH = ("pull_to_sit", "prop")
-_OPENED = [False]                           # the controllers' own tests open them (opened()); a life never does
+NOT_AT_BIRTH = ()                           # A161 (2026-10-01, the lead's decision at a boundary, as the note above asks): the pull-to-sit and the
+                                            # prop are OPEN. Life day 56: the child on its back for seven days (sitting changes everything it
+                                            # sees: the room, the toys, her face at its eyes' level); the pull rises only with its own flexion
+                                            # (A9: at her brief cap 2 ticks she lays it back), so the posture stays its own to make (A25c);
+                                            # the prop holds a trunk it has brought within 30 deg of vertical. Before A161: ("pull_to_sit", "prop")
+_OPENED = [False]                           # the controllers' own tests open them (opened()); kept for the tests that name it
 
 
 class opened:

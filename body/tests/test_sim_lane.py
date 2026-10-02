@@ -193,6 +193,26 @@ def test_the_days_layout():
         assert 2 <= len(d.focus) <= 3 and set(d.focus) <= set(DP.BIRTH_TOYS)
     d = DP.DayPlan(1, day_ticks=2400); d.lay_out(0)
     assert d.blocks[0][0] == 30 and d.blocks[-1][1] == 2300 and d.episode(2299) != "wind"
+    # A161: a motor block entered with the child on its back owes one pull-to-sit, its first offer; later offers are the lesson
+    class _Ch: posture = "back"
+    class _Mo: child = _Ch()
+    class _Con:
+        def __init__(self): self.motion = _Mo(); self.asked = []; self.routine = None
+        def request(self, intent, **kw): self.asked.append(intent)
+    class _Feel:
+        def set_engagement(self, x): pass
+        def set_wind_down(self, x): pass
+    class _Lane: pass
+    ln = _Lane(); ln.conduct = _Con(); ln.feel = _Feel(); ln._p = None; ln.last = {}
+    d2 = DP.DayPlan(1); d2.lay_out(0); d2._lesson = lambda t, lane: lane.conduct.asked.append("lesson")
+    d2._enter("motor", 1000, 1000, ln, None)
+    assert d2.sit_due
+    d2._sit_or_lesson(1000, ln); d2._sit_or_lesson(1300, ln)
+    assert ln.conduct.asked == ["motor_sit", "lesson"], ln.conduct.asked
+    ln.conduct.motion.child.posture = "front"; d2._enter("motor", 5000, 5000, ln, None)
+    assert not d2.sit_due
+    d2._sit_or_lesson(5000, ln)
+    assert ln.conduct.asked == ["motor_sit", "lesson", "lesson"], ln.conduct.asked
     assert d.episode(2300) == "wind" and d.episode(2370) == "goodnight" and d.episode(10) == "wake"
     print(f"lane 7: 200 days laid out as 4.7 says (away {sorted(counts)} times a day, never first, last or running), filling 300 to",
           "23,000 exactly; a day of 2,400 ticks scales every length")
