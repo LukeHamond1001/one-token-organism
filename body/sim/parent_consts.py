@@ -206,6 +206,9 @@ FOREARM_HOLD = (0.07, 0.0, 0.0) # where she takes a G1 forearm (its elbow link's
 FOREARM_HOLD_N = (0.0, 0.0, 1.0)    # ... her palm on its surface along this normal (the link's +z: its top as it lies; ours)
 ROLL_ARM_M = 0.15               # m: the far arm drawn this far toward her and up across its chest (A8; ours)
 KNEE_OVER_M = 0.15              # m: the far knee drawn this far toward her and up (A8; ours)
+PULL_RISE_DEG = 1.0             # deg a tick: the trunk coming up by this much or more under the pull is a heavy child rising, not one
+                                # resisting at her cap, and the cap's stop (AT_CAP_TICKS) counts no such tick (C235; ours: a tenth of the
+                                # trunk's swing at her hands' pace, GUIDE_SPEED over its length)
 PULL_LEAD_M = 0.30              # m: the pull's spring target lies this far ahead of the held forearm, so its force is set by the
                                 # ramp and her caps, never by how far the spring stretches (HOLD_K x 0.30 = 600 N, over every cap;
                                 # ours)

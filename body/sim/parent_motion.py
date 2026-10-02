@@ -3217,6 +3217,52 @@ class ParentMotion:
         if not ok and a is not None:
             a["info"]["unreached"] = True
 
+    def _trunk_follow(self, a, ph):
+        """C235 (2026-10-02): HER TRUNK FOLLOWS HER HANDS ON THE CHILD. Kneeling and holding it (the gather's kept forearm, the pull's),
+        her lean, spine and twist stood where the reach that took it left them, and a forearm the child moved was held from a trunk
+        pose that no longer reached it: the hand's reach error (its arm's IK from that pose, _arm) grew past HOLD_SLIP_M and the hold
+        was counted slipped, or the next hand's reach was solved against a stale pose. The reach's own re-solve (_trunk_for: about once a
+        second, REPLAN_TICKS, when a target has moved REPLAN_MOVED_M, warm-started near the last answer) runs for the holds alone while a
+        phase holds, whenever a held point has moved: the trunk solved for every hand holding the child, and moved toward it at her
+        trunk's own pace (TRUNK_DEG_PER_S; a parent's trunk goes after the arm she holds, and comes back as she pulls). No new constant"""
+        if self.base["mode"] not in ("heels", "tall"):
+            return
+        pose = self.scene.pose
+        tg = {}
+        for sd in "LR":
+            ar = self.arms[sd]
+            if ar.get("mode") == "hold" and self._hold(ar["hold"]) is not None:
+                g, R, sh = self._hand_now(pose, sd, ar)
+                tg[sd] = (g, R, sh)
+        if not tg:
+            return
+        last = ph.get("follow_at")
+        if last is None or any(sd not in last or float(np.linalg.norm(tg[sd][0] - np.asarray(last[sd], float))) >= K.REPLAN_MOVED_M
+                               for sd in tg):                               # a held point has moved: solved again, near the last answer
+            warm = self.warm.get("trunk") or [self.base.get("lean", 0.0), self.base.get("spine", 0.0), self.base.get("twist", 0.0)]
+            lean, spine, tw, ok = self._solve_trunk(tg, warm, cold=True)    # (a trunk follows nearby; it does not contort anew)
+            self.stats["trunk_follows"] = self.stats.get("trunk_follows", 0) + 1
+            if ok:
+                self.warm["trunk"] = [lean, spine, tw]
+                ph["follow_to"] = [lean, spine, tw]
+            else:                                                           # none reaches within 5 mm: toward the nearest, when it is
+                cur = [self.base.get("lean", 0.0), self.base.get("spine", 0.0), self.base.get("twist", 0.0)]   # nearer than here by
+                if self._trunk_err(tg, lean, spine, tw) + 0.01 < self._trunk_err(tg, *cur):   # a centimetre (her grip fades with
+                    ph["follow_to"] = [lean, spine, tw]                     # the reach error, GRIP_TOL_M to HOLD_SLIP_M)
+            ph["follow_at"] = {sd: _lst(tg[sd][0]) for sd in tg}
+        if "follow_to" in ph:                                               # toward it at her trunk's own pace (TRUNK_DEG_PER_S)
+            step = K.TRUNK_DEG_PER_S * TICK_S
+            for key, v in zip(("lean", "spine", "twist"), ph["follow_to"]):
+                cur = float(self.base.get(key, 0.0))
+                self.base[key] = cur + max(-step, min(step, float(v) - cur))
+
+    def _trunk_err(self, targets, lean, spine, tw):
+        """the largest reach error of her hands over `targets` from this kneeling trunk (the solve's own measure, _solve_trunk)"""
+        b = self.base
+        at = np.asarray(b["at"], float) + self.offset["core"][:2]
+        p = trunk_pose(at, b["yaw"], b["mode"], lean, spine, tw, self._kneel_lift(at, b["yaw"], b["mode"]))
+        return max(float(self._place(p, sd, g, R, sh)) for sd, (g, R, sh) in targets.items())
+
     def _solve_trunk(self, targets, warm=None, max_lean=70, max_spine=45, step=5, cold=False):
         """(lean, spine, twist, ok): her kneeling trunk so that every hand reaches its (grip, R) within 5 mm inside human ranges.
         The search runs over 5 deg steps of lean and spine (and the chest's turn, 0 then +-15 and +-30 deg) from the warm start
@@ -3272,8 +3318,10 @@ class ParentMotion:
                 g0, R0 = self._grip_now(sd, plan=True)
                 to = CARRY if self.holding[sd] is not None else {"k": "relaxed"}
                 g1, _ = self._resolve_hand(to, sd)
-                n = max(n, int(math.ceil(float(np.linalg.norm(g1 - (g0 + self.offset[f"arm_{sd}"] + self.offset["core"])))
-                                         / K.REACH_MPS / TICK_S)))
+                g0o = g0 + self.offset[f"arm_{sd}"] + self.offset["core"]
+                pts = [np.asarray(x, float) for x in self._over_child(g0o, g1)] + [g1]   # C235: timed along its way over the child
+                dist = sum(float(np.linalg.norm(b_ - a_)) for a_, b_ in zip(pts[:-1], pts[1:]))   # (the straight line's time over a
+                n = max(n, int(math.ceil(dist / K.REACH_MPS / TICK_S)))     # sitting child's head was a 0.61 m jump: the fault at the
             ph["n"] = n
             for sd in sides:
                 g0, R0 = self._grip_now(sd, plan=True)
@@ -4554,7 +4602,8 @@ class ParentMotion:
                 ht = self.stats.setdefault("hold_tries", {}); ht[ph["kind"]] = ht.get(ph["kind"], 0) + 1
             e = self.arms[ph["side"]].get("err") or 0.0
             if e > K.HOLD_SLIP_M:                                           # a spring from a hand that is not there would be a force
-                return f"her {'left' if ph['side'] == 'L' else 'right'} hand cannot reach it from here ({100 * e:.0f} cm short)"
+                why = f"her {'left' if ph['side'] == 'L' else 'right'} hand cannot reach it from here ({100 * e:.0f} cm short)"
+                return self._reach_again(a, ph, why)                        # C235: or reached for again where the arm is
             Rb = self.d.xmat[int(ph["body"])].reshape(3, 3)                 # her grip where it arrived, against where the hold wants
             g, _ = self._grip_now(ph["side"], actual=True)                    # it on the link now (the child moves while she reaches:
             want = self.d.xpos[int(ph["body"])] + Rb @ (np.asarray(ph["local"], float) + np.asarray(ph["goff"], float))   # a spring
@@ -4568,19 +4617,8 @@ class ParentMotion:
                         ph["waited"] = ph.get("waited", 0) + 1              # waits for it a moment), and takes it where it is,
                         return "run"                                        # within a hand's length (her grip holds the less the
                     if miss > K.HOLD_SLIP_M:                                # farther: GRIP_TOL_M)
-                        c_ = ph.get("ctl") or {}
-                        if ph["kind"] == "gather" and int(c_.get("gather_tries", 0)) < K.GATHER_RETRIES:
-                            # A166 (2026-10-01): THE GATHER PLANNED AGAIN WHERE THE ARM IS. Life day 57's first pull-to-sit with the gather
-                            # (tick 2,754,601): her hand reached for the forearm where it lay and the arm moved 31 cm before the hand
-                            # arrived, and the act was refused. A parent reaching for a flailing arm reaches again where it is now: the
-                            # gather's phases are made again from the forearm's present place, up to GATHER_RETRIES times
-                            if a is not None:
-                                a["info"]["gather_retries"] = a["info"].get("gather_retries", 0) + 1
-                            new = self._gather_phases(a, c_["gather_cs"], ph["side"], int(c_.get("gather_tries", 0)) + 1)
-                            i = self.phases.index(ph)
-                            self.phases[i:i + 1] = new
-                            return "next"
-                        return f"her {'left' if ph['side'] == 'L' else 'right'} hand did not arrive on it ({100 * miss:.0f} cm off: it moved)"
+                        why = f"her {'left' if ph['side'] == 'L' else 'right'} hand did not arrive on it ({100 * miss:.0f} cm off: it moved)"
+                        return self._reach_again(a, ph, why)                # A166, C235: reached for again where the arm is
             ph["engaged"] = True
             he = self.stats.setdefault("holds_engaged", {}); he[ph["kind"]] = he.get(ph["kind"], 0) + 1
             h = Hold(ph["name"], ph["body"], ph["local"], ph["side"], ph["cap"], ph["brief"], ph["kind"], ph["normal"])
@@ -4597,6 +4635,7 @@ class ParentMotion:
         h = self._hold(ph["name"])
         if h is None:
             return "done"
+        self._trunk_follow(a, ph)                                           # C235: her trunk after her hands on it
         st = h.ctl.get("state", "run")
         if a is not None:
             a["info"]["hold_peak"] = max(a["info"]["hold_peak"], h.peak)
@@ -4615,6 +4654,37 @@ class ParentMotion:
         if st.startswith("stopped"):
             return st
         return "run"
+
+    def _reach_again(self, a, ph, why):
+        """a hand that did not take the forearm it reached for, reaching again where the arm is now; `why` the refusal otherwise.
+        A166 (2026-10-01): THE GATHER PLANNED AGAIN WHERE THE ARM IS. Life day 57's first pull-to-sit with the gather (tick 2,754,601):
+        her hand reached for the forearm where it lay and the arm moved 31 cm before the hand arrived, and the act was refused. A parent
+        reaching for a flailing arm reaches again where it is now: the gather's phases are made again from the forearm's present place,
+        up to GATHER_RETRIES times.
+        C235 (2026-10-02): THE PULL REACHES AGAIN TOO, BY THE GATHER. Day 66 (A176's moving arm): the pull's spot check and its plan both
+        passed (one trunk of hers reached both forearms where they lay), she took the first forearm, and the second hand's hold was
+        refused 'cannot reach it from here (12 to 55 cm short)', twice live and in five of six tries on the dawn copy: a live child's
+        arm moves tens of centimetres in the seconds her reach takes, and the direct take asked both forearms to stay. The forearm she
+        has is kept (its pull hold, not yet begun, made a gather's kept hold) and the other is gathered where it lies now
+        (_plan_pull_regather, A165's phases, the pull from the gather); and the gather's own hand reaching a forearm that lies out of
+        her reach from here tries again as it does for one the arm moved from (A166's retries: the arm comes back)"""
+        c_ = ph.get("ctl") or {}
+        if ph["kind"] == "gather" and int(c_.get("gather_tries", 0)) < K.GATHER_RETRIES and ph in self.phases:
+            if a is not None:
+                a["info"]["gather_retries"] = a["info"].get("gather_retries", 0) + 1
+            new = self._gather_phases(a, c_["gather_cs"], ph["side"], int(c_.get("gather_tries", 0)) + 1)
+            i = self.phases.index(ph)
+            self.phases[i:i + 1] = new
+            return "next"
+        if ph["kind"] == "pull" and ph in self.phases:
+            if a is not None:
+                a["info"]["pull_regather"] = a["info"].get("pull_regather", 0) + 1
+                a["info"]["pull_direct"] = why
+            self.stats["pull_regathers"] = self.stats.get("pull_regathers", 0) + 1
+            i = self.phases.index(ph)
+            self.phases[i:] = [dict(type="plan", what="pull_regather", args={})]   # the rest of the direct take gives way
+            return "next"
+        return why
 
     # ------------------------------------------------------------------ the holds' controllers (every tick)
     def _hold_tick(self):
@@ -4700,9 +4770,19 @@ class ParentMotion:
     _ctl_knee = _ctl_guide
 
     def _ctl_gather(self, h, c):
-        """A165: the guide's path toward the gathering point, then the hold KEPT (the pull takes it over)"""
+        """A165: the guide's path toward the gathering point, then the hold KEPT (the pull takes it over). C235 (2026-10-02): and kept
+        where the arm is when the draw meets its cap (A10's stop at the cap was the guide's: a lesson the child resists is let be), for
+        the gather is a hold first: a parent holding a flailing infant's forearm keeps her hold through its push and brings the arm in
+        as it yields; the draw ends where it got (kept_at_cap), the hold rides with the forearm (its target its point), and the pull
+        takes it over at the gather's force (A167). Day 66's dawn copy: 'stopped: the guide sat at its cap for 2 ticks' ended a
+        pull-to-sit at its first forearm"""
+        if "cap0" not in c:
+            c["cap0"] = float(h.cap)
         self._ctl_guide(h, c)
-        if c["state"] == "done":
+        if c["state"] == "done" or str(c["state"]).startswith("stopped"):
+            if str(c["state"]).startswith("stopped"):
+                h.cap = float(c["cap0"]); c["kept_at_cap"] = True
+                self.stats["gather_kept_at_cap"] = self.stats.get("gather_kept_at_cap", 0) + 1
             c["state"] = "keep"
             h.next = h.point(self.d)
 
@@ -4811,14 +4891,31 @@ class ParentMotion:
                 h.cap = 0.0; h.next = p
                 return
             c["go_t"] = c.get("go_t", 0) + 1
+            if c["go_t"] == 1:
+                c["p0"] = _lst(p)                                           # where the forearm is as the pull begins
             c["ramp"] = min(K.CAP_TWO_BRIEF, K.CAP_RAMP_NPS * c["go_t"] * TICK_S)
             h.cap = c["ramp"] / 2
-            h.next = p + np.asarray(c["dir"], float) * K.PULL_LEAD_M
+            # C235 (2026-10-02): THE PULL AT HER HANDS' PACE. The spring's target stood PULL_LEAD_M ahead of the forearm from the first
+            # tick, so the pull was the ramp's whole force at once on a slack arm: on the rig's still child the forearms flew 20 cm toward
+            # her in two ticks at 30 N, out of her arms' fold from the full lean that had taken them (the hand's reach error 0.21 m,
+            # HOLD_SLIP_M 0.12), the grip faded with it (she is a body) and both holds slipped before 45 N: 'her hands lost their hold on
+            # it before she began' on the rig and the life alike. Her hands pull along the path at the guide's pace (GUIDE_SPEED, A10:
+            # the pull-to-sit is done slowly, a second or two), the force what it takes within the ramp, the target never more than
+            # PULL_LEAD_M ahead of the forearm (the cap sets the force when the child holds back, as before). No new constant
+            # (The direction stays the sit-up's: up, a little toward its feet. A pull along each arm toward her own shoulder was tried on
+            # day 66's copy: from her kneel at its feet that line is nearly level, it straightened the arms toward her and the trunk
+            # never rose at 100 N a hand, where the upward pull had brought it to 39 deg; a force at the hands lifts the trunk about the
+            # hips only through an arm pointing up, which the gather's forearms over its chest give, A165)
+            dirv = np.asarray(c["dir"], float)
+            travelled = float((p - np.asarray(c["p0"], float)) @ dirv)
+            along = min(K.GUIDE_SPEED * c["go_t"] * TICK_S, max(0.0, travelled) + K.PULL_LEAD_M)
+            h.next = np.asarray(c["p0"], float) + dirv * along
             full = c["ramp"] >= K.CAP_TWO_BRIEF - 1e-9 or self.brief_s >= K.BRIEF_S
             eff = sum(float(np.linalg.norm(x.force)) for x in self.holds if x.kind == "pull")
             cap_now = K.CAP_TWO_BRIEF if self.brief_s < K.BRIEF_S else K.CAP_TWO
-            c["top"] = c["top"] + 1 if full and eff >= K.AT_CAP * min(cap_now, c["ramp"]) else 0
-            c["theta"] = ch.trunk_deg
+            rising = ch.trunk_deg <= float(c.get("theta", ch.trunk_deg)) - K.PULL_RISE_DEG   # C235: the trunk still coming up this
+            c["top"] = c["top"] + 1 if full and eff >= K.AT_CAP * min(cap_now, c["ramp"]) and not rising else 0   # tick is not a child
+            c["theta"] = ch.trunk_deg                                       # resisting at her cap (A10's stop), it is a heavy one coming
             if ch.trunk_deg <= K.PROP_MAX_DEG:
                 c["state"] = "done"; c["sat"] = True
             elif c["top"] >= K.AT_CAP_TICKS * 1:
@@ -5601,7 +5698,11 @@ class ParentMotion:
                 deg = math.degrees(math.acos(float(np.clip(-cz, -1.0, 1.0))))
                 return (f"stopped: her hands slipped at its side (A7, A101; its chest turned {deg:.0f} deg from face down, a side is 90, "
                         f"done is past it): it lay back; the turn is asked again")
+            if ph.get("began"):                                             # (C235: said as it was: the pull had begun)
+                return "her hands lost their hold on it (it slipped from her grip: her reach, or the link left her palm)"
             return "her hands lost their hold on it before she began (it slipped from her grip)"
+        self._trunk_follow(a, ph)                                           # C235: her trunk after her hands on it
+        ph["began"] = True
         for h in hs:
             h.ctl["go"] = True                                              # every hand of the act is on: it begins
         for h in hs:
@@ -5613,6 +5714,22 @@ class ParentMotion:
         if all(h.ctl.get("state") == "done" for h in hs):
             if a is not None and any(h.ctl.get("sat") for h in hs):
                 a["why"] = "sat up with its own flexion (A9)"
+            if ph["kind"] == "pull" and any(h.ctl.get("sat") for h in hs) and not ph.get("propped"):
+                # C235 (2026-10-02): SITTING, IT IS HELD SITTING. The pull's end let both forearms go and relaxed; a child sat up by her is
+                # not sitting by itself (day 66's copy: its first sit, trunk 37 deg, fell onto its front as she let go). A parent who has
+                # pulled a child up holds its hands while it sits: the pull's holds become the prop's where they are (A9's prop, by the
+                # forearms: its cap eased as the trunk stays within 20 deg, then hovering, the catch and the gentle laying back as the
+                # prop's), and the act runs on as a prop
+                ph["propped"] = True
+                for h in hs:
+                    h.kind, h.name, h.brief, h.ctl = "prop", f"prop_{h.side}", False, dict(t=0)
+                    self._start_ctl(a, h)
+                    if self.arms[h.side].get("hold") is not None:
+                        self.arms[h.side]["hold"] = h.name
+                self.stats["sits_held"] = self.stats.get("sits_held", 0) + 1
+                i = self.phases.index(ph)
+                self.phases[i:] = [dict(type="holds_wait", kind="prop")]
+                return "next"
             if a is not None and any(h.ctl.get("turned") for h in hs):
                 a["why"] = "turned from its front past its side within her caps (A7, A101)"
             return "done"
@@ -5855,6 +5972,48 @@ class ParentMotion:
         return [dict(type="holds_wait", kind="pull"),
                 dict(type="plan", what="let_go", args=dict(names=[f"pull_{s_}" for s_ in "LR"])),
                 dict(type="relax", sides="LR")]
+
+    def _plan_pull_regather(self, a):
+        """C235: the pull's direct take failed at a hand (the other forearm moved out of her reach, or away from her hand, while she took
+        the first): the forearm she has is kept, its pull hold (not yet begun: cap 0, A9's ramp waits for both hands) made a gather's kept
+        hold (the gather's own force, _start_ctl's: the limb's push x GUIDE_CAP_FACTOR within CAP_ONE), the other forearm gathered where
+        it lies now by her free hand (A165's phases, A166's retries), and the pull run from the gather (A165, A167)"""
+        ch = self.child
+        bodies = {cs: self.m.body(f"{'left' if cs == 'L' else 'right'}_elbow_link").id for cs in "LR"}
+        G = ch.torso + np.array([0, 0, 1.0]) * K.GATHER_UP_M
+        kept_bodies, kept_sides = set(), set()
+        for h in list(self.holds):
+            if h.kind == "pull" and not h.ctl.get("go"):
+                cs = next((c for c in "LR" if bodies[c] == h.body), None)
+                if cs is None:
+                    continue
+                old = h.name
+                h.kind, h.name, h.brief = "gather", f"gather_{h.side}", False
+                p0 = h.point(self.d); to_g = G - p0; dist = float(np.linalg.norm(to_g))
+                h.ctl = dict(dir=_lst(unit(to_g) if dist > 1e-6 else np.array([0, 0, 1.0])), dist=0.0, limb="arm_l" if cs == "L" else "arm_r",
+                             max=K.CAP_ONE, gather_cs=cs, gather_tries=0, t=int(h.ctl.get("t", 0)))
+                self._start_ctl(a, h)                                       # the gather's cap for this forearm
+                h.ctl["state"] = "keep"; h.ctl["cap0"] = float(h.cap); h.ctl["kept_direct"] = True
+                h.next = h.point(self.d)
+                if self.arms[h.side].get("hold") == old:
+                    self.arms[h.side]["hold"] = h.name
+                kept_bodies.add(h.body); kept_sides.add(h.side)
+        if any(v is not None for v in self.holding.values()):
+            raise Refuse("her hands are busy: the pull-to-sit takes both (A9, A165)")
+        order = sorted((cs for cs in "LR" if bodies[cs] not in kept_bodies),
+                       key=lambda cs: float(np.linalg.norm(self.d.xpos[bodies[cs]][:2] - np.asarray(self.base["at"], float))))
+        free = [sd for sd in "LR" if sd not in kept_sides]
+        out = []
+        for cs in order:
+            sd = self._near_hand(self.d.xpos[bodies[cs]])
+            if sd not in free:
+                sd = free[0] if free else sd
+            free = [x for x in free if x != sd]
+            out += self._gather_phases(a, cs, sd, 0)
+            out.append(dict(type="holds_wait", kind="gather"))
+        dirv = unit(np.array([0, 0, 1.0]) + ch.len_axis * 0.5)
+        out.append(dict(type="plan", what="pull_from_gather", args=dict(dir=_lst(dirv))))
+        return out
 
     def _ph_look_at(self, a, ph):
         self.look = dict(target=ph["target"])

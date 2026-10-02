@@ -290,3 +290,4 @@ digest  sim                   pinned   9a6009f59be7e059f3a24590 consts 83dc3feff
 digest  sim                   threaded 5866a4841855be676db69ac1 consts 83dc3feffffe | --profile sim
 digest  sim                   pinned   dd6317bf5f77aecbfa07fe0e consts 83dc3feffffe | --profile sim
 
+C235 (2026-10-02 17:05, the pull reaches again where the arms are, and holds what it has): the sim digests unchanged (threaded 5866a4841855be676db69ac1, one-thread dd6317bf5f77aecbfa07fe0e, consts 83dc3feffffe; the profile's stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
