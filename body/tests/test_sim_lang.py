@@ -7049,6 +7049,28 @@ def test_the_function_word_not_echoed():
     print(f"lang 71 (C197): 120 function words: {len(texts)} replies, none the word alone or doubled ({texts[0]!r}, {texts[-1]!r}); the duck named when attended; a noun still echoed")
 
 
+def test_the_planner_unseen_line_is_a_show():
+    """lang 74 (C206): a planner (steer) row 'you see the block.' with the block out of the child's view (the test room's, on the
+    sofa) is refused as untrue and becomes her show of the block, once; a row about a toy in its view is said as it was"""
+    room = tuple(o for o in TOYS if o.id != "block_red")                 # one block in the room, on the sofa, out of its view
+    con = _pair_con()
+    _run_to(con, 200, seen_=room)
+    assert con.fast.add_steer("you see the block.", "any", 200)[0]
+    out = _run_to(con, 6, t0=200, seen_=room)
+    assert any("a show of it instead (C206)" in r[2] for r in con.fast.refused), con.fast.refused[-3:]
+    assert [tuple(a[1:3]) for a in con.acts_open if a[1] == "show"] == [("show", "block")], con.acts_open
+    n_req = sum(1 for r in con.fast.refused if "(C206)" in r[2])
+    _run_to(con, 30, t0=206, seen_=room)
+    assert sum(1 for r in con.fast.refused if "(C206)" in r[2]) == n_req == 1, [r for r in con.fast.refused if "C206" in r[2]]
+    con2 = _pair_con()
+    _run_to(con2, 200)
+    assert con2.fast.add_steer("you see the duck.", "any", 200)[0]
+    said2 = [getattr(s.line, "text", s.line) for t, s in _run_to(con2, 12, t0=200, target=lambda t, c: "duck") if s.line is not None]   # it attends the duck: a follow-in
+    assert said2 and all("duck" in ln for ln in said2) and not any("C206" in r[2] for r in con2.fast.refused) \
+        and not [a for a in con2.acts_open if a[1] == "show"], (said2, con2.fast.refused[-3:], con2.acts_open)   # named, not shown
+    print(f"lang 74: the planner's 'you see the block.' (unseen) became her show of the block, once ({n_req} request); the duck in its view named, not shown {said2}")
+
+
 def test_the_unseen_label_is_a_show():
     """lang 73 (C201): a requested label of a toy the child cannot see (the block on the sofa in the test's room) becomes her show of
     it: the show act opened, a show frame said, the request logged; a label of a toy in its view stays a label"""

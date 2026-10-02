@@ -652,6 +652,7 @@ class FastLayer:
         self.queue = []                       # a set's later lines, each said 6 ticks after the last one ended
         self.recent = []                      # (tick, kind, object) she saw or heard in the last RECENT ticks
         self.steer = []                       # Claude's lines: [dict(text, situation, uses, tick_from, ttl)]
+        self.show_due = []                    # C206: the toys her planner's refused "you see the X" lines ask her to show instead
         self.refused = []                     # (tick, text, reason): the last REFUSED_KEEP lines the check or a rule refused
         self.last_new = NEVER                 # the tick her last new word's set began (NEW_EVERY, A14)
         self.n_lines = 0
@@ -835,6 +836,18 @@ class FastLayer:
                                recent_events=self.recent)
             if not ok:
                 self.refused.append((t, s["text"], "steer: " + why))
+                if why.startswith("not true: the child does not see a ") and not s.get("shown"):
+                    # C206 (2026-10-01): A PLANNER LINE ABOUT A TOY THE CHILD CANNOT SEE IS A SHOW OF IT. Day 56 to tick 6,000: her
+                    # planner's rows 'you see the car.' (21), 'the book.' (17), 'the bear.' (15), 'the ball.' (15)... were refused as
+                    # untrue at every tick they came due, the child on its back seeing none of them; C201 had turned the template
+                    # labels of unseen toys into shows but these rows take Claude's road. The row's intent becomes her show of that toy
+                    # (once per row: fetched, held before its eyes, named by the show's frames), the row itself kept for a tick it is true
+                    x_ = why.rsplit(" ", 1)[-1]
+                    o_ = next((o for o in p.seen if o.name == x_ and o.on not in ("hand", PARENT_NAME) and o.id not in p.child_holds), None)
+                    if o_ is not None:
+                        s["shown"] = True
+                        self.show_due.append(o_.id)
+                        self.refused.append((t, s["text"], f"steer: {o_.id!r} not in the child's view: a show of it instead (C206)"))
                 continue
             toys = TP.claude_toys(TP.claude_claims(s["text"])[0])
             att = {o.name for o in p.attended()}
@@ -2120,6 +2133,8 @@ class Conduct:
             if got is not None:
                 return got, False, ("redirect" if intent == "redirect" else None)
         ln, kind = f.steer_line(t, p, redirect_ok=t >= self.no_target_since + K.REDIRECT_AFTER)
+        while f.show_due:                                                   # C206: the planner's unseen toys, shown instead
+            self.request("show", o=f.show_due.pop(0))
         if ln is not None and f.allowed(ln, t)[0]:
             return ln, False, kind
         # 9. her idle slot (4.10: at most one line a 40 ticks): a registered noun's never-told foil when due, at its noun's
