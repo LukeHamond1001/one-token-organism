@@ -225,6 +225,28 @@ def test_the_days_layout():
     except AttributeError as e:                                            # (the stubs reach only the block's entry; what follows needs her)
         pass
     assert d2.sit_due and d2.block_i == 1 and any("C220" in str(x) for x in d2.log), (d2.sit_due, d2.block_i, d2.log[-2:])
+    # C224: a pull-to-sit refused at her reach or her hold is owed again in the block, SIT_TRIES_PER_BLOCK tries at most
+    d2.sit_due = False; d2.sit_tries = 1; d2.kind = "motor"; d2.block_i = 1
+    ln.conduct.ended = {7: "refused"}; ln.conduct.motion._act = lambda mid: {"kind": "pull_to_sit", "why": "her left hand cannot reach it from here (64 cm short)"}
+    for _ in range(3):
+        try:
+            d2.tick(5000, 5000, ln, _ty.SimpleNamespace(parent=ln.conduct.motion))
+        except AttributeError:
+            pass
+    assert d2.sit_due and d2.sit_tries == 2 and d2.next_play >= 5000 + DP.SIT_RETRY_GAP, (d2.sit_due, d2.sit_tries, d2.next_play)
+    d2.sit_due = False; d2.sit_tries = DP.SIT_TRIES_PER_BLOCK
+    try:
+        d2.tick(5600, 5600, ln, _ty.SimpleNamespace(parent=ln.conduct.motion))
+    except AttributeError:
+        pass
+    assert not d2.sit_due, "the block's tries are spent"
+    ln.conduct.motion._act = lambda mid: {"kind": "pull_to_sit", "why": "stopped: the pull sat at her cap for 2 ticks"}; d2.sit_tries = 1
+    try:
+        d2.tick(5700, 5700, ln, _ty.SimpleNamespace(parent=ln.conduct.motion))
+    except AttributeError:
+        pass
+    assert not d2.sit_due, "a refusal of the child, not of the moment, is not tried again"
+    d5 = DP.DayPlan(5); d2.sit_tries = 2; d5.load_state(d2.state()); assert d5.sit_tries == 2
     d2.sit_due = False
     ln.conduct.motion.child.posture = "front"; d2._enter("motor", 5000, 5000, ln, None)
     assert not d2.sit_due
