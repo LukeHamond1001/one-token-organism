@@ -4543,7 +4543,7 @@ class ParentMotion:
         c["p0"] = _lst(p)
         c["state"] = "run"
         c["hover"] = 0.0
-        if h.kind in ("guide", "knee"):
+        if h.kind in ("guide", "knee", "gather"):
             dirv = unit(np.asarray(c["dir"], float))
             dist = min(float(c["dist"]), K.GUIDE_SPEED * K.GUIDE_MAX_TICKS * TICK_S)
             c.update(dir=_lst(dirv), dist=dist, n=int(max(2, min(K.GUIDE_MAX_TICKS, math.ceil(dist / K.GUIDE_SPEED / TICK_S - 1e-9)))))
@@ -4585,6 +4585,13 @@ class ParentMotion:
             c["moved"] = float((h.point(self.d) - np.asarray(c["p0"], float)) @ np.asarray(c["dir"], float))
 
     _ctl_knee = _ctl_guide
+
+    def _ctl_gather(self, h, c):
+        """A165: the guide's path toward the gathering point, then the hold KEPT (the pull takes it over)"""
+        self._ctl_guide(h, c)
+        if c["state"] == "done":
+            c["state"] = "keep"
+            h.next = h.point(self.d)
 
     def _limb_push(self, h, dirv, limb):
         """the limb's own push at this pose along dirv at the held point: the largest force there its joints can resist, each at its
@@ -5337,7 +5344,32 @@ class ParentMotion:
         bodies = {cs: self.m.body(f"{'left' if cs == 'L' else 'right'}_elbow_link").id for cs in "LR"}
         pairing = self._pull_pairing()
         if pairing is None:
-            raise Refuse("no trunk of hers reaches both its forearms from here (C7)")
+            # A165 (2026-10-01): THE FOREARMS GATHERED ONE AT A TIME. Life day 56's second motor block (tick 2,708,768): the side spot
+            # passed the reach check, she came, and at the forearms no one trunk of hers reached both (the child's arms lie wherever its
+            # habits leave them, and move in the ticks she takes to come). A parent of a flailing infant takes one forearm, then the
+            # other, brings them together over its chest, and pulls: each forearm is held by the hand nearer it from a trunk pose of its
+            # own (a kept hold: the guide's path, then 'keep'), drawn toward the gathering point above its chest, and once both are
+            # held the two holds become the pull's (kind 'pull', its controller from the start)
+            if any(v is not None for v in self.holding.values()):
+                raise Refuse("her hands are busy: the pull-to-sit takes both (A9, A165)")
+            G = ch.torso + np.array([0, 0, 1.0]) * K.GATHER_UP_M                # the gathering point: above its chest
+            order = sorted("LR", key=lambda cs: float(np.linalg.norm(self.d.xpos[bodies[cs]][:2] - np.asarray(self.base["at"], float))))
+            used = set()
+            for cs in order:                                                 # the nearer forearm first
+                body = bodies[cs]
+                sd = self._near_hand(self.d.xpos[body])
+                if sd in used:
+                    sd = "L" if sd == "R" else "R"
+                used.add(sd)
+                p0 = self.d.xpos[body] + self.d.xmat[body].reshape(3, 3) @ np.asarray(FOREARM_TOP, float)
+                to_g = G - p0
+                dist = float(np.linalg.norm(to_g))
+                ctl = dict(dir=_lst(unit(to_g) if dist > 1e-6 else np.array([0, 0, 1.0])), dist=min(dist, K.GATHER_MAX_M),
+                           limb="arm_l" if cs == "L" else "arm_r", max=K.CAP_ONE)
+                out += self._hold_phases(a, sd, body, "gather", cap=K.CAP_ONE, local=FOREARM_TOP, normal=UP_LOCAL, ctl=ctl)
+                out.append(dict(type="holds_wait", kind="gather"))
+            out.append(dict(type="plan", what="pull_from_gather", args=dict(dir=_lst(dirv))))
+            return out
         for sd, cs in pairing:
             body = bodies[cs]
             ctl = dict(dir=_lst(dirv))
@@ -5369,6 +5401,8 @@ class ParentMotion:
             st = h.ctl.get("state", "run")
             if st.startswith("stopped"):
                 return st
+        if ph["kind"] == "gather" and all(h.ctl.get("state") == "keep" for h in hs):
+            return "done"                                                   # A165: the forearm held and kept; the next phase follows
         if all(h.ctl.get("state") == "done" for h in hs):
             if a is not None and any(h.ctl.get("sat") for h in hs):
                 a["why"] = "sat up with its own flexion (A9)"
@@ -5561,6 +5595,22 @@ class ParentMotion:
         out.append(dict(type="lean", lean=sol["lean"], spine=sol["spine"], twist=sol["twist"]))
         out.append(dict(type="look_at", target="child_eyes"))
         return out
+
+    def _plan_pull_from_gather(self, a, dir=None):
+        """A165: both forearms held (the gather's kept holds): they become the pull's holds and the pull runs as from its feet"""
+        hs = [h for h in self.holds if h.kind == "gather"]
+        if len(hs) < 2:
+            raise Refuse("a forearm slipped from her hand before the pull began (A165)")
+        for h in hs:
+            h.kind = "pull"
+            h.name = f"pull_{h.side}"
+            h.ctl = dict(dir=list(dir))
+            self._start_ctl(a, h)
+            if self.arms[h.side].get("hold") is not None:
+                self.arms[h.side]["hold"] = h.name
+        return [dict(type="holds_wait", kind="pull"),
+                dict(type="plan", what="let_go", args=dict(names=[f"pull_{s_}" for s_ in "LR"])),
+                dict(type="relax", sides="LR")]
 
     def _ph_look_at(self, a, ph):
         self.look = dict(target=ph["target"])

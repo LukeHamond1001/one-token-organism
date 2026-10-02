@@ -348,6 +348,32 @@ def test_the_pull_never_sits_it_up():
           f"pelvis moved {g['pelvis_travel_cm']} cm")
 
 
+def test_the_pull_gathers_the_forearms():
+    """parent 7b (A165): the child's arms apart (one over its head, one out to the side: no trunk of hers takes both forearms at
+    once), the pull-to-sit gathers them one at a time above its chest (two kept holds), then pulls both to her cap and lays it back;
+    its trunk never within 30 deg of vertical from her pull, its pelvis still"""
+    w = W.G1World(seed=1)
+    m, d = w.m, w.d
+    qa = {j: m.jnt_qposadr[m.joint(j).id] for j in ("left_shoulder_pitch_joint", "right_shoulder_roll_joint")}
+    d.qpos[qa["left_shoulder_pitch_joint"]] = -2.2                            # the left arm over its head
+    d.qpos[qa["right_shoulder_roll_joint"]] = -1.3                            # the right arm out to the side
+    mujoco.mj_forward(m, d)
+    lh, rh = d.xpos[m.body("left_elbow_link").id].copy(), d.xpos[m.body("right_elbow_link").id].copy()
+    out = T.run(w, [("pull_to_sit", None)], 1100)
+    a = out["acts"][0]
+    tries = w.parent.stats.get("hold_tries", {})
+    g = out["g1"]
+    print(f"parent 7b: the forearms {np.round(lh, 2).tolist()} and {np.round(rh, 2).tolist()} apart; the act {a['status']}: {a['why'][:120]};",
+          f"holds tried {tries}; her effort peaked at {out['effort_peak_N']} N; its trunk {g['trunk_min_deg']}-{g['trunk_max_deg']} deg from",
+          f"vertical, its centre of mass rose {g['com_rise_cm']} cm, its pelvis moved {g['pelvis_travel_cm']} cm")
+    assert tries.get("gather", 0) >= 2, (tries, a)
+    assert a["status"] in ("done", "refused") and any(x in a["why"] for x in ("her cap", "sat up", "slipped", "did not arrive", "cannot reach")), a
+    assert out["effort_peak_N"] <= K.CAP_TWO_BRIEF + 1e-6 and out["over_sustained_s"] <= K.BRIEF_S + W.TICK_S, out
+    assert g["trunk_min_deg"] > 60.0 and g["com_rise_cm"] < 8.0 and g["held"]["pelvis_travel_cm"] < 2.0 and g["pelvis_travel_cm"] < 5.0, g
+    # (the pelvis still under the pull itself, A9's principle; the gather of a forearm drawn 40 cm across its chest shifts the whole body
+    # a little on the mat, 3 cm measured: 5 cm, ours)
+
+
 @_opened
 def test_the_prop_and_the_catch():
     """parent 8: the prop (A9) holds a trunk placed within 30 deg at her sustained caps; from hovering, the catch engages 2 ticks
