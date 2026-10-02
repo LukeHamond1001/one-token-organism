@@ -285,4 +285,8 @@ digest  sim                   pinned   9a6009f59be7e059f3a24590 consts 83dc3feff
 # hold and no traction); the language default digest 7c54199e3c72cf77d45a8e94 KEPT (checked at A176's landing; A177 touches the sim world and cord alone).
 digest  sim                   threaded f0d1e597f4b104649e101f3e consts 83dc3feffffe | --profile sim
 digest  sim                   pinned   9a6009f59be7e059f3a24590 consts 83dc3feffffe | --profile sim
+# Re-taken at A178 (2026-10-02 16:25, the withdrawal's refractory period): the profile's stub world has pain on two ticks, so the reflex's rest
+# may move the digest; the language default digest 7c54199e3c72cf77d45a8e94 KEPT (no limb in the diary).
+digest  sim                   threaded 5866a4841855be676db69ac1 consts 83dc3feffffe | --profile sim
+digest  sim                   pinned   dd6317bf5f77aecbfa07fe0e consts 83dc3feffffe | --profile sim
 

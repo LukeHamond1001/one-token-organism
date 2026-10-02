@@ -2332,3 +2332,34 @@ def test_the_traction_response():
     print("WORLD A177 GREEN: a 5 N pull along the left forearm flexes the elbow and shoulder by the cord ('traction'), the cortex's "
           "extension kept, nothing under 2 N; habituated after 40 ticks of a steady pull, re-armed after 10 free; saved with the world")
 
+def test_the_withdrawals_rest():
+    """world A178: the withdrawal fires once per episode: with the left wrist's pain on every tick, the arm's reflex runs WITHDRAW_TICKS
+    and then rests through the pain (None) for WITHDRAW_REST_TICKS pain-free ticks before it can fire again; a pain during the rest
+    holds the rest where it is; the other limbs never fire; the counts live in the effector's state"""
+    import types
+    from body.sim import anatomy as AN
+    e = _limbs()["arm_l"]; J = len(W.JOINTS)
+    jw = W.JOINTS.index("left_wrist_pitch_joint")
+    def fr(pain):
+        p = np.zeros(J + 1); p[jw] = 1.0 if pain else 0.0
+        return types.SimpleNamespace(obs={"pain": p})
+    st = {}
+    fired = [e.reflex(fr(True), None, st) is not None for _ in range(AN.WITHDRAW_TICKS + AN.WITHDRAW_REST_TICKS + 6)]
+    assert fired[:AN.WITHDRAW_TICKS] == [True] * AN.WITHDRAW_TICKS and not any(fired[AN.WITHDRAW_TICKS:]), fired
+    assert st["withdraw_rest"] == AN.WITHDRAW_REST_TICKS, st                      # pain every tick: the rest never counts down
+    quiet = [e.reflex(fr(False), None, st) for _ in range(AN.WITHDRAW_REST_TICKS)]
+    assert all(a is None for a in quiet) and st["withdraw_rest"] == 0, st
+    assert e.reflex(fr(True), None, st) is not None, "a rested reflex did not fire"
+    st2 = {}
+    for _ in range(AN.WITHDRAW_TICKS):
+        e.reflex(fr(True), None, st2)
+    for _ in range(AN.WITHDRAW_REST_TICKS // 2):
+        e.reflex(fr(False), None, st2)
+    half = st2["withdraw_rest"]
+    e.reflex(fr(True), None, st2)
+    assert st2["withdraw_rest"] == half and st2.get("withdraw", 0) == 0, st2       # a pain in the rest holds it, fires nothing
+    other = _limbs()["leg_l"]
+    assert other.reflex(fr(True), None, {}) is None
+    print(f"WORLD A178 GREEN: the left arm's withdrawal fires {AN.WITHDRAW_TICKS} ticks on the wrist's pain, then rests {AN.WITHDRAW_REST_TICKS} "
+          "pain-free ticks through continued pain, a pain in the rest holding it; the leg never")
+

@@ -127,6 +127,8 @@ FOVEA_HALF = math.radians(64.0 / 3.0 / 2.0)
 CRY_POSTURE = {0: 0.6, 1: 0.6, 2: 0.6, 3: 0.6}
 # THE WITHDRAWAL'S LENGTH (3.7; body/sim/reflexes.py's WITHDRAW_TICKS: a big flexion step a tick for 2 ticks; innate, ours)
 WITHDRAW_TICKS = 2
+WITHDRAW_REST_TICKS = 10        # A178 (2026-10-02): after a withdrawal has run, the reflex rests this long (1.5 s) and the pain its own
+                                # whip makes does not re-arm it; the rest counts down on pain-free ticks (the grasp's recovery scale, A162; ours)
 # ---------------------------------------------------------------- the cerebellum's interface (7.5, A44; the module's doc)
 # THE G1'S JOINT RANGES (rad, in BODY_JOINTS' order): the model's own, each joint's `range` in Menagerie's g1_with_hands.xml (the file
 # committed in dd8640e and loaded unchanged; 3.2 gives them in degrees), the angle fibres' middles and half-ranges. The cerebellum is
@@ -311,12 +313,24 @@ class Limb(Effector):
         if not self.spg:
             return None
         p_ = frame.obs.get("pain")
-        if p_ is not None and any(float(p_[j]) > 0.0 for j in self.pain_joints):
-            state["withdraw"] = WITHDRAW_TICKS
-        k = int(state.get("withdraw", 0))
+        hurt = p_ is not None and any(float(p_[j]) > 0.0 for j in self.pain_joints)
+        k = int(state.get("withdraw", 0)); rest = int(state.get("withdraw_rest", 0))
+        if k <= 0 and rest > 0 and not hurt:
+            state["withdraw_rest"] = rest - 1                    # A178: the rest counts down on pain-free ticks alone
+        if hurt and k <= 0 and rest <= 0:
+            # A178 (2026-10-02): THE WITHDRAWAL'S REFRACTORY PERIOD. A pain re-arms the reflex only when none is running and its rest has
+            # passed. Until A178 every pain tick reset the count, and day 66's copy (wrist_pain66.py, storm66.py) showed the loop: the
+            # withdrawal's whip drove the resting wrist into its range end, that pain re-armed the withdrawal, and so on; 22 of 22 pain
+            # joint-ticks fell on reflex ticks, the pain 15 to 20 a thousand all day where the frozen arm of day 65 had 1. A reflex that
+            # fires once per episode and recovers in the quiet is the response decrement of habituation (Rankin et al. 2009), the
+            # newborn's flexion withdrawal habituating to a repeated stimulus (Andrews and Fitzgerald 1994); the pain itself is felt as
+            # before (its reward, the critics', the gate's input), only the reflex rests
+            state["withdraw"] = WITHDRAW_TICKS; k = WITHDRAW_TICKS
         if k <= 0:
             return None
         state["withdraw"] = k - 1
+        if k - 1 <= 0:
+            state["withdraw_rest"] = WITHDRAW_REST_TICKS          # A178: the reflex has run: it rests
         a = 0
         for j in range(len(self.factors)):
             sg = self.spg.get(j)
