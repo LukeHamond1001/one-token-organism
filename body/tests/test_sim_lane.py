@@ -212,6 +212,19 @@ def test_the_days_layout():
     ln.conduct.motion.child.posture = "back"; d2._enter("motor", 4000, 4000, ln, None)
     d3 = DP.DayPlan(2); d3.load_state(d2.state())                        # C207: the owed pull-to-sit survives a save and a load
     assert d3.sit_due and d2.state()["sit_due"] is True
+    d2.block_i = 3; d4 = DP.DayPlan(3); d4.load_state(d2.state())          # C220: the block index travels
+    assert d4.block_i == 3 and d2.state()["block_i"] == 3, (d4.block_i, d2.state().get("block_i"))
+    # C220: two motor blocks laid end to end: the second owes its own sit (the kind never changes, so _enter never comes)
+    import types as _ty
+    d2.blocks = [[1000, 4000, "motor", {}], [4000, 8000, "motor", {}]]; d2.kind = "motor"; d2.block_i = 0; d2.sit_due = False; d2.day = 0
+    ln.day = 0; ln._p = _ty.SimpleNamespace(events=[], child_sounding=False); ln.conduct.motion.child.posture = "back"
+    assert d2.block_index(2000) == 0 and d2.block_index(4500) == 1 and d2.block_index(9000) == -1
+    assert d2.episode(4500) == "motor", d2.episode(4500)
+    try:
+        d2.tick(4500, 4500, ln, _ty.SimpleNamespace(parent=ln.conduct.motion))
+    except AttributeError as e:                                            # (the stubs reach only the block's entry; what follows needs her)
+        pass
+    assert d2.sit_due and d2.block_i == 1 and any("C220" in str(x) for x in d2.log), (d2.sit_due, d2.block_i, d2.log[-2:])
     d2.sit_due = False
     ln.conduct.motion.child.posture = "front"; d2._enter("motor", 5000, 5000, ln, None)
     assert not d2.sit_due

@@ -115,6 +115,7 @@ class DayPlan:
         self.got_seen = {}                 # toy -> the "got" smiles counted at its last lesson
         self.roll_turn = True              # A109: the next reach-rung lesson is the roll rung (once it rolls); they alternate
         self.sit_due = False               # A161: a motor block entered with the child on its back owes one pull-to-sit (its first offer)
+        self.block_i = -1                  # C220: the block the day is in (two motor blocks laid end to end are two blocks, each owing a sit)
         self.hide_turn = False             # A129: every other lesson on a toy it grasps at will is the hide game (the bucket in the room)
         self.last_pain = -10 ** 9
         self.bids = []                     # its vocal turns heard while she is away (ticks)
@@ -148,6 +149,7 @@ class DayPlan:
         a, b = self._scale(WAKE), self.day_ticks - self._scale(WIND)
         total = sum(x[1] for x in order)
         t, self.blocks = a, []
+        self.block_i = -1                                                   # (C220: a new day's blocks)
         for i, (kind, n) in enumerate(order):
             e = b if i == len(order) - 1 else t + max(1, int(round(n * (b - a) / total)))
             self.blocks.append([t, e, kind, {}])
@@ -168,6 +170,13 @@ class DayPlan:
         self.greeted, self.called, self.night_said = None, False, False
         self.next_play = self._scale(WAKE)
         self.log.append((day, "laid out", [(s, e, k) for s, e, k, _ in self.blocks], self.focus))
+
+    def block_index(self, t):
+        """the index of the day's block the tick is in, -1 outside every block (wake, wind, goodnight; C220)"""
+        for i, (s, e, _kind, _x) in enumerate(self.blocks):
+            if s <= t < e:
+                return i
+        return -1
 
     def episode(self, t):
         D = self.day_ticks
@@ -191,6 +200,16 @@ class DayPlan:
         if kind != self.kind:
             self._enter(kind, t, t_day, lane, world)
             self.kind = kind
+        bi = self.block_index(t_day)
+        if bi != self.block_i:
+            if self.block_i >= 0 and bi >= 0 and kind == "motor" and self.blocks[bi][2] == "motor" and self.blocks[self.block_i][2] == "motor":
+                # C220 (2026-10-02): A SECOND MOTOR BLOCK LAID AGAINST THE FIRST OWES ITS OWN SIT. Life day 61's plan put two motor blocks end
+                # to end (5927-7566, 7566-9039): one episode as the day runs them (the kind never changed), so the second block's offer never
+                # came; the first's pull was refused at her kneel ('her left hand cannot reach it from here, 38 cm short') and the child,
+                # on its back the whole morning, was offered the sit once in two blocks. A161 owes one a block
+                self.sit_due = self._lying_on_back(lane)
+                self.log.append((t, "motor block two: a sit owed again (C220)" if self.sit_due else "motor block two: the child not on its back"))
+            self.block_i = bi
         if any(k == "pain" for k, _o in p.events):
             self.last_pain = t
         if p.child_sounding and self.away:
@@ -417,6 +436,7 @@ class DayPlan:
                     bids=list(self.bids), night_said=self.night_said, log=[list(x) for x in self.log[-200:]],
                     level=dict(self.level), level_t=dict(self.level_t), got_seen=dict(self.got_seen), roll_turn=bool(self.roll_turn),
                     sit_due=bool(self.sit_due),                                       # C207: the motor block's owed pull-to-sit survives a resume
+                    block_i=int(self.block_i),                                        # C220
                     hide_turn=bool(self.hide_turn))
 
     def load_state(self, s):
@@ -433,6 +453,8 @@ class DayPlan:
         self.got_seen = {k: int(v) for k, v in s.get("got_seen", {}).items()}
         self.roll_turn = bool(s.get("roll_turn", True))
         self.sit_due = bool(s.get("sit_due", False))                                 # (C207; older saves: none owed)
+        self.block_i = int(s.get("block_i", -1))                                     # (C220; older saves: the block re-read at the next tick,
+                                                                                     #  a second motor block owing its sit then)
         self.hide_turn = bool(s.get("hide_turn", False))               # (C125: lost at each resume before; older saves: none)
 
 

@@ -120,6 +120,11 @@ def closing_act(hand):
     return W.act_flat([_BIG[CLOSING[hand][j]] if j in CLOSING[hand] else _MID for j in _JOINTS[hand]])
 
 
+def opening_act(hand):
+    """the hand's opening act (A171): a big opening step on its closing joints, the thumb's rotation held"""
+    return W.act_flat([_BIG[-CLOSING[hand][j]] if j in CLOSING[hand] else _MID for j in _JOINTS[hand]])
+
+
 def limb_zones(zones, limb):
     """the touch zones whose pain withdraws the limb (an arm's includes its hand's)"""
     groups = W.zone_groups(zones)
@@ -212,6 +217,55 @@ def grasp(hand, own, palm_log, state=None, onset=0.0):
     if closed == 0:
         return own, "overridden"
     return W.act_flat(dig), "grasp"
+
+
+DORSAL_N = GRASP_N              # A171: a push on the back of the hand that opens it (the palm's grasp threshold, the one force the skin
+                                # is given a line at; ours)
+
+
+def dorsal_open(hand, own, dorsal_N, palm_other_N, state=None):
+    """THE DORSAL HAND RESPONSE at the spinal cord (A171, 2026-10-02): a touch on the BACK of the hand opens it. Stimulation of the
+    dorsum of the hand or fingers extends the fingers in the newborn (the avoiding response: Twitchell 1965, 'The automatic grasping
+    responses of infants'; a nurse opens a fisted hand by stroking its back), the palmar grasp's opposite number at the same motor
+    neurons. `dorsal_N`: the tick's mean push on the hand's links by things not its own from their back (toward the palm's face: the
+    world's `sides[h, 1]`); `palm_other_N`: the same things' push from the palm's side (toward the back: `sides[h, 0]`; a palm or
+    fingers pressed from that side at GRASP_N is a grasp's, which wins; the hand's own fingers on its palm count for nothing here).
+    -> (the act its servos take, the event): (own, None) when the back is not pushed at DORSAL_N or the palm is pressed; else the sum
+    joint by joint as the grasp's (A160): each closing joint whose own step closes it keeps that step (the cortex's), every other is
+    stepped at least one big step OPEN; the event "dorsal", or (own, None) when the own act closed every joint. HABITUATION as the
+    grasp's (A162; `state` [ticks pushed running, ticks free running], the world's, saved with it): under a constant push it fires in
+    full GRASP_HOLD_TICKS then falls silent ("dorsal_habituated": a hand resting on its back on the mat is not held open for ever),
+    a back free GRASP_RECOVER_TICKS re-arms it. Why: on life days 55 to 61 both of the child's hands lay fisted on nothing (66 to 85
+    deg closed: the grasp, habituated on its own fingers, leaves them where they closed) and her hand-overs set the toy against the
+    knuckles: 16 of 28 'never closed on it' and the 12 'closed' mostly a toy pressed to the back of a fist (the probe on day 61's
+    copy: 0 N on the palm, 1.7 to 7.9 N on the middle finger's back). The hand must open for a toy to reach the palm; this is how"""
+    if hand not in CLOSING:
+        raise ValueError(f"no dorsal response on {hand!r}")
+    if dorsal_N < DORSAL_N or palm_other_N >= GRASP_N:
+        if state is not None:
+            state[0] = 0; state[1] += 1
+        return own, None
+    if state is not None:
+        if state[1] >= GRASP_RECOVER_TICKS:
+            state[0] = 0
+        state[1] = 0
+        state[0] += 1
+        if state[0] > GRASP_HOLD_TICKS:
+            return own, "dorsal_habituated"
+    n = len(_JOINTS[hand])
+    dig = W.act_digits(W.rest_id(n) if own is None else own, n)
+    opened = 0
+    for i, j in enumerate(_JOINTS[hand]):
+        if j in CLOSING[hand]:
+            step = W.SETTINGS[dig[i]] * CLOSING[hand][j]                 # positive: its own step closes this joint (the cortex's, kept)
+            if step > 0:
+                continue
+            if -step < W.STEP_BIG:
+                dig[i] = _BIG[-CLOSING[hand][j]]
+            opened += 1
+    if opened == 0:
+        return own, None
+    return W.act_flat(dig), "dorsal"
 
 
 def tendon(steps, loaded, state, joints_of):

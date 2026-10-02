@@ -523,16 +523,28 @@ def test_the_reflexes():
           f"{e0 - q('left_elbow_joint'):.2f} rad and the shoulder {s0 - q('left_shoulder_pitch_joint'):.2f} rad in two ticks")
 
 
-def _ball_in_palm(side="left", r=0.03):
-    """a rig: a ball kept in the palm (a mocap sphere where the born palm's shape is), and its world"""
+def _ball_spot(w, h=0, r=0.03):
+    """where the rig's ball sits: on the palm's face (A171: its centre HAND_DEPTH_M before the face less 12 mm, pressed into it so the
+    hand's own motion within a tick keeps the contact)"""
+    return w.grasp_centre(h) - w.palm_normal(h) * (W.HAND_DEPTH_M - r + 0.012)
+
+
+def _ball_in_palm(side="left", r=0.03, settle=True):
+    """a rig: a ball kept on the palm's face (a mocap sphere pressed into the born palm; until A171 it sat where the palm link's
+    shape origin is, 4 cm below the hand's edge, and its push came from under the hand), and its world, settled 3 ticks with the
+    ball following the palm"""
     ref = G1World(seed=1)
-    pg = [g for g in range(ref.m.ngeom) if ref.zone_of_geom[g] == ref.zones.index(f"{side}_hand_palm")][0]
-    pp = ref.d.geom_xpos[pg].copy()
+    pp = _ball_spot(ref, 0 if side == "left" else 1, r)
 
     def rig(spec):
         b = spec.worldbody.add_body(name="rig_ball", mocap=True, pos=pp.tolist())
         b.add_geom(name="rig_ball", type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[r, 0, 0], contype=1, conaffinity=1, rgba=[1, 0, 0, 1])
-    return G1World(seed=1, extra=rig)
+    w = G1World(seed=1, extra=rig)
+    ball = w.m.body_mocapid[w.m.body("rig_ball").id]
+    for _ in range(3 if settle else 0):
+        w.d.mocap_pos[ball] = _ball_spot(w, 0 if side == "left" else 1, r)
+        w.frame(); w.apply({})
+    return w
 
 
 def _closure(w, hand):
@@ -545,10 +557,14 @@ def test_the_grasp_habituates():
     ('habituated': the hand's own acts rule, the fingers staying where they are) while the pressure is constant; the palm freed for
     GRASP_RECOVER_TICKS re-arms it in full. The state is the world's and is saved; an older save loads fresh"""
     w = _ball_in_palm()
+    ball = w.m.body_mocapid[w.m.body("rig_ball").id]
     z = w.zones.index("left_hand_palm")
+    w._grasp_hab["hand_l"] = [0, 0]                                          # (the rig's 3 settling ticks pressed it already)
     evs = []
-    for _ in range(R.GRASP_HOLD_TICKS + 6):
-        w.frame(); w.apply({})
+    for k in range(R.GRASP_HOLD_TICKS + 6):
+        if k < R.GRASP_HOLD_TICKS - 8:
+            w.d.mocap_pos[ball] = _ball_spot(w)                            # (the rig keeps the ball on the palm's face, then holds it
+        w.frame(); w.apply({})                                             # still: a ball re-set each tick makes onsets that wake it, A164)
         g = w.frame().truth
         assert g["touch_N"][z] >= R.GRASP_N, g["touch_N"][z]
         evs.append(g["spinal"].get("hand_l"))
@@ -575,12 +591,76 @@ def test_the_grasp_habituates():
     assert R.grasp("hand_l", None, R.GRASP_LOG, hab, onset=1.0)[1] == "grasp" and hab[0] == 6   # firing: its own squeeze's onsets count for nothing
     # a save from before A162 loads fresh
     w2 = _ball_in_palm(); w2.load_state(w.save_state())                                   # (the same model: the rig's)
-    assert w2._grasp_hab == w._grasp_hab and w2._grasp_hab["hand_r"][0] > R.GRASP_HOLD_TICKS, w2._grasp_hab   # the state travels (the right
-                                                                                                            # hand's count untouched by the checks)
+    assert w2._grasp_hab == w._grasp_hab and w2._grasp_hab["hand_l"] == hab, w2._grasp_hab   # the state travels (both hands' counts; the right
+                                                                                           # hand, its edge on the rattle, is pressed on no side: A171)
     st2 = _pk.loads(w2.save_state()); st2.pop("grasp_hab", None); w2.load_state(_pk.dumps(st2, protocol=4))
     assert w2._grasp_hab == {"hand_l": [0, 0], "hand_r": [0, 0]}, w2._grasp_hab
     print(f"world 9b: the grasp fired {R.GRASP_HOLD_TICKS} resting ticks on the ball, then habituated under the constant press; the palm free",
           f"{R.GRASP_RECOVER_TICKS} ticks re-armed it (a shorter gap not); the state saved and an older save loads fresh")
+
+
+def test_the_dorsal_touch_opens_the_hand():
+    """world 9c (A171): the left hand raised and closed into a fist on nothing by its own acts; a ball set against the BACK of the
+    hand: the cord's dorsal response opens it (the event 'dorsal', the closure falling), while a ball on the palm's face is the
+    grasp's alone (no 'dorsal'), and the grasp's stimulus is the palm's SIDE: the hand's back pressed fires no grasp. The response
+    habituates and its state is saved; the pure function sums joint by joint as the grasp's"""
+    w = _ball_in_palm()
+    ball = w.m.body_mocapid[w.m.body("rig_ball").id]
+    pg = [g for g in range(w.m.ngeom) if w.zone_of_geom[g] == w.zones.index("left_hand_palm")][0]
+    far = np.array([3.0, 3.0, 0.5])
+    # the ball on the palm's face: the grasp's, never the dorsal response's
+    for _ in range(3):
+        w.d.mocap_pos[ball] = _ball_spot(w)
+        w.frame(); w.apply({})
+    g = w.frame().truth
+    assert g["spinal"].get("hand_l") == "grasp" and w._sensed["sides"][0, 0] >= R.GRASP_N and w._sensed["sides"][0, 1] < R.DORSAL_N, \
+        (g["spinal"], w._sensed["sides"])
+    # the hand raised off the mat, then a fist on nothing by its own closing acts (the servos keep the fingers where they closed)
+    w.d.mocap_pos[ball] = far
+    for k in range(14):
+        w.frame(); w.apply({"arm_l": R.flexion_act("arm_l")} if k < 3 else ({"hand_l": R.closing_act("hand_l")} if k < 9 else {}))
+    c0 = _closure(w, "hand_l")
+    g = w.frame().truth
+    assert g["spinal"].get("hand_l") is None and c0 > 5.0, (g["spinal"], c0)
+    assert w._sensed["sides"][0].max() < R.DORSAL_N and w._sensed["palm_log"][0] < R.GRASP_LOG, (w._sensed["sides"], w._sensed["palm_log"])
+    # the ball against the back of the hand (the rig follows the hand, 6 mm pressed): the dorsal response opens it
+    def behind():
+        R_ = w.d.geom_xmat[pg].reshape(3, 3); n = w.palm_normal(0)
+        centre = w.d.geom_xpos[pg] + R_ @ w.m.geom_aabb[pg][:3]
+        ext = float(np.abs(R_.T @ n) @ w.m.geom_aabb[pg][3:])
+        return centre - n * (ext + 0.03 - 0.006)
+    evs = []
+    for _ in range(12):
+        w.d.mocap_pos[ball] = behind()
+        w.frame(); w.apply({})
+        evs.append(w.frame().truth["spinal"].get("hand_l"))
+    c1 = _closure(w, "hand_l")
+    assert all(e == "dorsal" for e in evs[1:]), evs
+    assert w._sensed["sides"][0, 1] >= R.DORSAL_N and w._sensed["sides"][0, 0] < R.GRASP_N, w._sensed["sides"]
+    assert w._sensed["palm_log"][0] < R.GRASP_LOG, w._sensed["palm_log"]                 # the back pressed is no grasp stimulus (A171)
+    assert c1 < c0 - 1.0, (c0, c1)
+    # it habituates under the constant push, and the state is saved
+    for _ in range(R.GRASP_HOLD_TICKS):
+        w.d.mocap_pos[ball] = behind()
+        w.frame(); w.apply({})
+    assert w.frame().truth["spinal"].get("hand_l") == "dorsal_habituated", w.frame().truth["spinal"]
+    import pickle as _pk
+    st = _pk.loads(w.save_state())
+    assert st["dorsal_hab"]["hand_l"][0] > R.GRASP_HOLD_TICKS and st["dorsal_hab"]["hand_l"][1] == 0, st["dorsal_hab"]
+    w2 = _ball_in_palm(); w2.load_state(w.save_state()); assert w2._dorsal_hab == w._dorsal_hab
+    st.pop("dorsal_hab"); w2.load_state(_pk.dumps(st, protocol=4)); assert w2._dorsal_hab == {"hand_l": [0, 0], "hand_r": [0, 0]}
+    for k in ("sides", "palm_log", "palm_onset"):                                       # a save from before A171 lacks the hands' sides
+        st["sensed"].pop(k)
+    w2.load_state(_pk.dumps(st, protocol=4)); w2.frame(); w2.apply({})                 # and lives its next tick
+    assert w2._sensed["sides"].shape == (2, 2) and w2._sensed["palm_log"].shape == (2,)
+    # the pure function
+    assert R.dorsal_open("hand_l", None, 1.0, 0.0) == (R.opening_act("hand_l"), "dorsal")
+    assert R.dorsal_open("hand_l", None, 1.0, R.GRASP_N) == (None, None)                 # the palm's side pressed: the grasp's
+    assert R.dorsal_open("hand_l", None, 0.1, 0.0) == (None, None)
+    assert R.dorsal_open("hand_l", R.closing_act("hand_l"), 1.0, 0.0) == (R.closing_act("hand_l"), None)   # the own act closes every joint: kept
+    print(f"world 9c: a fist on nothing in the air ({math.degrees(c0 / 6):.0f} deg a joint) opened to {math.degrees(c1 / 6):.0f} deg by a ball against the",
+          f"back of the hand in 12 ticks (the cord's dorsal response; the back pressed fired no grasp), the ball on the palm the grasp's alone;",
+          f"it habituates in {R.GRASP_HOLD_TICKS}, the state saved")
 
 
 def test_letting_go():
@@ -595,9 +675,11 @@ def test_letting_go():
     opening = W.act_flat([2 if j not in cl else (0 if cl[j] > 0 else 4) for j in dict(G.EFFECTORS)["hand_l"]])   # every closing joint open, big
     assert R.opens("hand_l", opening)
     log = []
+    ball = w.m.body_mocapid[w.m.body("rig_ball").id]
     for phase, act, n in (("rest", None, 8), ("open", opening, 8), ("rest again", None, 6)):
         c0 = _closure(w, "hand_l")
         for _ in range(n):
+            w.d.mocap_pos[ball] = _ball_spot(w)                            # (the rig keeps the ball on the palm's face)
             f = w.frame()
             assert f.obs["touch"][2 * list(w.dex).index(z)] >= R.GRASP_LOG, (phase, f.truth["touch_N"][z])   # the ball in the palm all along
             w.apply({} if act is None else {"hand_l": act})
@@ -612,20 +694,19 @@ def test_letting_go():
     fist = G1World(seed=1)
     close = W.act_flat([2 if j not in cl else (4 if cl[j] > 0 else 0) for j in dict(G.EFFECTORS)["hand_l"]])
     own = []
-    for t in range(12):
-        fist.apply({"hand_l": close} if t < 6 else {})
+    for t in range(15):                                                   # the hand raised off the mat first (A171: the mat under the
+        fist.apply({"arm_l": R.flexion_act("arm_l")} if t < 3 else ({"hand_l": close} if t < 9 else {}))   # hand's edge is no grasp)
         g = fist.frame().truth
-        if t >= 6:
-            own.append((g["spinal"].get("hand_l"), g["touch_N"][z], g["palm_own_N"]["hand_l"]))
-    assert all(ev == "grasp" for ev, _a, _o in own) and own[-1][2] >= R.GRASP_N, own   # the grasp holds it every resting tick, and its
-    # own fingers come to press the palm (the first resting ticks the mat under the hand still touches it: A82's stronger grasp)
-    alone = sum(abs(n_all - n_own) < 1e-9 for _, n_all, n_own in own)  # ticks on which all of the palm's force was its own (under
-                                                                         # Unitree's arm gain the hand rests on the mat: counted, no bar)
+        if t >= 9:
+            own.append((g["spinal"].get("hand_l"), g["touch_N"][z], g["palm_own_N"]["hand_l"], _closure(fist, "hand_l")))
+    assert all(ev is None for ev, _a, _o, _c in own) and all(c > 5.0 for _e, _a, _o, c in own), own   # A171: a fist on nothing in the air is
+    # no grasp (its palm's side pressed by nothing but, at most, its own fingers); the servos keep the fingers where they closed
+    alone = sum(abs(n_all - n_own) < 1e-9 for _, n_all, n_own, _c in own)   # ticks on which all of the palm's force was its own
     print(f"world 9: a ball kept in the left palm: at rest the grasp closed the hand {a1 - a0:.2f} rad in 8 ticks; its own opening act",
           f"passed the spinal cord as sent (the grasp overridden, 8 of 8 ticks) and opened it {b0 - b1:.2f} rad with the ball still in the",
-          f"palm; at rest again it closed {c1 - c0:.2f} rad: letting go is the hand's own act (A11); a fist closed on nothing kept",
-          f"itself closed 6 of 6 resting ticks, its own fingers pressing the palm {own[-1][2]:.1f} N (palm_own_N; all of the palm's",
-          f"force on {alone} of them; with the ball, {ball_own:.1f} N of its own)")
+          f"palm; at rest again it closed {c1 - c0:.2f} rad: letting go is the hand's own act (A11); a fist closed on nothing in the air kept",
+          f"itself closed {len(own)} of {len(own)} resting ticks with no grasp (A171), its own fingers pressing the palm {own[-1][2]:.1f} N (palm_own_N;",
+          f"all of the palm's force on {alone} of them; with the ball, {ball_own:.1f} N of its own)")
 
 
 def test_blind_spots_are_a12s():
@@ -988,6 +1069,8 @@ def test_the_world_in_the_core():
     from body.life import Life
     from body.sim.anatomy import SimAnatomy, SIM_CFG, SIZES, born_table
     w = _ball_in_palm()
+    t_start = w.tick                                                        # (the rig settled 3 ticks with the ball on the palm, A171:
+    w._grasp_hab["hand_l"] = [0, 0]                                         # those ticks pressed it; the 40 below stay under its hold)
     LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
                act_inv_lr=0.0)
     cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9)
@@ -1009,7 +1092,7 @@ def test_the_world_in_the_core():
         touched = float(w.now.obs["touch"][2 * zi]) >= R.GRASP_LOG     # the frame the tick was lived on
         sizes_ok.append(all(np.size(w.now.obs[k]) == n for k, n in SIZES.items()))
         real_apply(acts)
-        w.d.mocap_pos[ball] = w.d.geom_xpos[pg]                         # the rig keeps the ball in the palm as the arm moves
+        w.d.mocap_pos[ball] = _ball_spot(w)                             # the rig keeps the ball on the palm as the arm moves
         lived.append((now, touched, w._last_acts["hand_l"], w._spinal.get("hand_l")))
     w.apply = apply
     run = WorldLoop(L)
@@ -1017,14 +1100,15 @@ def test_the_world_in_the_core():
     for _ in range(40):
         run.step()
     w.apply = real_apply
-    assert (L.ticks, w.tick, len(applied)) == (40, 40, 40), (L.ticks, w.tick, len(applied))
+    assert (L.ticks, w.tick - t_start, len(applied)) == (40, 40, 40), (L.ticks, w.tick - t_start, len(applied))
     assert w._below_n - b0 == 40 * 15, w._below_n - b0
     assert all(sizes_ok)
     names = set(W.EFFECTOR_NAMES)
     assert all(names <= set(x) for x in applied) and all(0 <= x[n] < 5 ** len(W.EFFECTOR_FACTORS[n]) for x in applied for n in names)
     assert all(0 <= int(x["voice"]) < 5 ** 10 for x in applied) and all(0 <= int(x["words"]) < 79 for x in applied)
     moved = sum(int(x[n] != W.EFFECTOR_REST[n]) for x in applied for n in names)
-    assert all(t for _, t, _, _ in lived), [t for _, t, _, _ in lived]  # touched on every tick
+    assert sum(t for _, t, _, _ in lived) >= 38, [t for _, t, _, _ in lived]   # touched on all but at most 2 ticks (the rig's ball re-set on
+                                                                             # the palm's face after each tick: a babbling arm can leave it for one)
     assert not any(n["reflex"] for n, _, _, _ in lived) and L.motor[ih]["stops"]["reflex"] == 0, L.motor[ih]["stops"]
     drew = sum(n["drew"] for n, _, _, _ in lived)
     opened = 0
@@ -1968,9 +2052,9 @@ def test_the_actors_tag():
     from body.core.world import WorldLoop
     from body.life import Life
     from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
-    w = G1World(seed=1)
-    out = {}
-    for slr in (1e-4, 0.0):
+    w = _ball_in_palm(settle=False)                 # (A171: the born hands no longer grasp the mat's and the rattle's push on their edges, so
+    out = {}                                        # 60 born ticks hold no act of the cord's for the arm to be surprised by; the rig's ball on
+    for slr in (1e-4, 0.0):                         # the palm fires the grasp as the born edge push did before)
         cfg = dict(SIM_CFG, wake_ticks=10 ** 9, actor_slow_lr=slr)
         torch.manual_seed(0)
         anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
@@ -2044,7 +2128,7 @@ def test_the_value_heads_forget():
 
 
 WORLD_TESTS = [test_the_scene, test_torque_limits_are_the_models, test_the_servo_law, test_birth_and_touch, test_joint_sense_and_vestibule,
-               test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
+               test_pain, test_no_charge, test_the_reflexes, test_prone_pattern, test_letting_go, test_the_dorsal_touch_opens_the_hand, test_blind_spots_are_a12s, test_exact_replay, test_the_night,
                test_faults, test_the_babbler, test_the_world_in_the_core, test_withdrawal_c22, test_friction_realism,
                test_the_parents_pose_is_saved, test_the_rooms_sounds, test_carried_to_the_mat, test_a_world_migrates_to_the_book, test_the_morning_tidy, test_a_world_with_the_book_migrates_to_the_box, test_the_novelty_drive, test_the_tendon_organ, test_the_bucket_beside, test_the_habit_is_dopamines, test_the_actors_tag, test_the_passive_stiffness, test_the_value_heads_forget]
 

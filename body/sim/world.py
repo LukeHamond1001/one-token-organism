@@ -140,6 +140,7 @@ PASSIVE_FRAC = 1.0              # body's passive tissues push back toward mid-ra
 PAIN_WEIGHTS = 3.0              # F_pain = 3 x the body's weight from the model file (6.2, A12; innate, ours)
 PAIN_WINDOW_STEPS = 5           # a zone's force for pain: the tick's largest 10 ms mean (A12; innate, ours)
 TOUCH_UNIT_N = 1.0              # touch's log force is log(1 + F / 1 N) (3.4; anatomy, ours)
+HAND_DEPTH_M = 0.03             # A171: a held toy's centre this far before the palm's face (half a small toy; the hand's grasp centre, ours)
 WORLD_STREAM = 1                # the world's random stream: SeedSequence(seed, spawn_key=(1,)) (ours)
 
 # ---------------------------------------------------------------- S5a: the world as the G1's anatomy meets it (body/sim/anatomy.py)
@@ -606,6 +607,13 @@ class G1World(SimWorld):
         self.own_hand = np.zeros((2, self.nz + 1), dtype=bool)          # each hand's other links (index nz: no zone), for palm_own_N
         for h, grp in enumerate(("hand_l", "hand_r")):
             self.own_hand[h, [z for z in self.groups[grp] if z != self.palm_zones[h]]] = True
+        self.palm_body = [int(self.zone_body[pz]) for pz in self.palm_zones]   # A171: each palm link, for its normal (out of the palm)
+        self.palm_geom = [int(np.where(self.zone_of_geom == pz)[0][0]) for pz in self.palm_zones]   # A171: each palm's shape, for its face
+        self.hand_of_zone = np.full(self.nz + 1, -1, dtype=np.int64)          # A171: each zone's hand (0 left, 1 right, -1 none; nz: no zone)
+        for h, grp in enumerate(("hand_l", "hand_r")):
+            self.hand_of_zone[list(self.groups[grp])] = h
+        self._sides = np.zeros((2, 2))                                          # A171: this step's push on each hand from things not
+                                                                                # its own: [palmar (toward its back), dorsal (toward its palm)]
         self.spinal = bool(spinal)                                      # the palmar grasp at the spinal cord (off: an instrument's switch)
         self.righting = bool(righting)                                  # the prone pattern at the cord (A92; off: an instrument's switch)
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
@@ -683,6 +691,7 @@ class G1World(SimWorld):
         self._spinal = {}; self._vor_quick = 0
         self._tendon = np.zeros(len(JOINTS), int)                          # A139: the tendon organ's inhibition, a countdown per joint
         self._grasp_hab = {h: [0, 0] for h in self.palm_of_hand}            # A162: the grasp's habituation per hand [ticks pressed, ticks free]
+        self._dorsal_hab = {h: [0, 0] for h in self.palm_of_hand}           # A171: the dorsal response's, the same bookkeeping
         self.parent = None
         self._sense_birth()
         if parent:                                                      # THE PARENT'S MOTION (W2; body/sim/parent_motion.py): her
@@ -853,13 +862,23 @@ class G1World(SimWorld):
         spinal = {}
         if self.spinal:                                                 # THE SPINAL CORD: the palmar grasp on each hand's own act
             for hand, z in self.palm_of_hand.items():
-                a, ev = R.grasp(hand, acts.get(hand), float(self._sensed["touch_log"][z]),
-                                self._grasp_hab.setdefault(hand, [0, 0]),   # A162: the reflex habituates under a constant pressure
-                                float(self._sensed["touch_onset"][z]))      # A164: and a new press wakes it
+                i_h = 0 if hand == "hand_l" else 1
+                a, ev = R.grasp(hand, acts.get(hand), float(self._sensed["palm_log"][i_h]),   # A171: the palm's side (its face and the
+                                self._grasp_hab.setdefault(hand, [0, 0]),   # A162: the reflex habituates under a constant pressure   # fingers'
+                                float(self._sensed["palm_onset"][i_h]))     # A164: and a new press wakes it                           # insides)
                 if ev is not None:
                     spinal[hand] = ev
                     if a is not None:                                       # (habituated at rest: no act of the hand's this tick)
                         acts[hand] = a
+                if ev in (None, "habituated"):                              # A171: the grasp not firing: a push on the back of the hand
+                                                                            # (a toy set against a fist's knuckles) opens it, unless the
+                    a2, ev2 = R.dorsal_open(hand, acts.get(hand), float(self._sensed["sides"][i_h, 1]),   # palm's side is pressed by
+                                            float(self._sensed["sides"][i_h, 0]),                           # anything but its own fingers
+                                            self._dorsal_hab.setdefault(hand, [0, 0]))
+                    if ev2 is not None:
+                        spinal[hand] = ev2 if ev is None else ev + "+" + ev2
+                        if a2 is not None:
+                            acts[hand] = a2
             if self.righting:                                           # and the prone pattern: face down, the arms flex under, the
                 spinal.update(R.prone(acts, self._sensed["imu_torso"]))   # trunk yaws toward the side that is up (A92)
         own = self._efference(acts)                                     # the efference copy (the own acts, after the grasp's sum)
@@ -910,6 +929,7 @@ class G1World(SimWorld):
         obsv = self.observer                                                # (an instrument's: the world's own contact torques)
         heat_in = np.zeros(J)
         own_p = np.zeros(2)                                            # the palms' own-hand force
+        sides = np.zeros((2, 2))                                       # A171: the push on each hand's two sides
         alpha = self.alpha
         below = self.below
         s0 = self._sensed
@@ -938,6 +958,7 @@ class G1World(SimWorld):
                     t_par += time.perf_counter() - t0
                 F[s] = self._zone_forces()
                 own_p += self._palm_own
+                sides += self._sides
                 imu[s] = self._imu_noisy(d.sensordata[self.imu_adr])
                 tq = d.qfrc_actuator[self.dof]
                 heat_in += (tq / self.tau_max) ** 2
@@ -982,7 +1003,7 @@ class G1World(SimWorld):
                                                                             # mouth (body/sim/lane.py)
             heard = self.ears.tick(ear_l, ear_r, sources)
         # the tick's senses
-        self._sense_tick(F, imu, own_p / n, OW, heard, BD, TW)
+        self._sense_tick(F, imu, own_p / n, OW, heard, BD, TW, sides=sides / n)
         vg = vora.get(GAZE_NAME)
         if vg is not None:                                              # THE BODY'S VOR (the core's Acts.vor) with the flocculus's
             gain = (float(vg["gain"]) + self.vor_corr[0], float(vg["gain"]) + self.vor_corr[1])   # correction and offset
@@ -1237,6 +1258,18 @@ class G1World(SimWorld):
         self._restore(st)
 
     # ---------------------------------------------------------------- the senses
+    def palm_normal(self, h):
+        """the unit normal out of a hand's palm (0 left, 1 right), from its palm link's frame (the Dex3's palm faces -y on the left
+        hand and +y on the right in the link's frame, as the parent reads it: parent_motion.Child)"""
+        return self.d.xmat[self.palm_body[h]].reshape(3, 3) @ np.array([0.0, -1.0 if h == 0 else 1.0, 0.0])
+
+    def grasp_centre(self, h):
+        """where a toy held in a hand's grasp sits (A171): HAND_DEPTH_M out from the middle of the palm's face along its normal"""
+        g = self.palm_geom[h]
+        R_ = self.d.geom_xmat[g].reshape(3, 3); n = self.palm_normal(h)
+        aabb = self.m.geom_aabb[g]
+        return self.d.geom_xpos[g] + R_ @ aabb[:3] + n * (float(np.abs(R_.T @ n) @ aabb[3:]) + HAND_DEPTH_M)
+
     def _zone_forces(self):
         """this step's summed normal force on each touch zone (N): every contact touching a G1 zone (self-contact counts on both
         zones; A12's rest blind spots, none as born, felt by neither), plus each of the parent's active holds on a G1 body on
@@ -1244,6 +1277,7 @@ class G1World(SimWorld):
         d, zg, nz = self.d, self.zone_of_geom, self.nz
         out = np.zeros(nz)
         self._palm_own = np.zeros(2)
+        self._sides = np.zeros((2, 2))
         nc = d.ncon
         if nc:
             con = d.contact
@@ -1263,11 +1297,20 @@ class G1World(SimWorld):
                 mine = ((z[:, 0] == pz) & self.own_hand[h][z[:, 1]]) | ((z[:, 1] == pz) & self.own_hand[h][z[:, 0]])
                 if mine.any():
                     self._palm_own[h] = float(fn[mine].sum())
+            hz = np.where(z >= 0, self.hand_of_zone[np.where(z >= 0, z, 0)], -1)   # A171: THE TWO SIDES OF THE HAND: each contact of one
+            for h in (0, 1):                                                        # hand's link with anything not that hand (a toy, the
+                in0, in1 = hz[:, 0] == h, hz[:, 1] == h                             # floor, her hand). Its push on the link is read against
+                sel = in0 ^ in1                                                     # the contact's place from the hand's grasp centre (a
+                if sel.any():                                                       # held toy's: HAND_DEPTH_M before the palm's face): a
+                    into = np.where(in1[sel, None], con.frame[sel, :3], -con.frame[sel, :3])   # push AWAY from it is a thing on the palm's
+                    away = np.einsum("ij,ij->i", into, con.pos[sel] - self.grasp_centre(h)) > 0.0   # face or within the fingers (palmar);
+                    f_ = fn[sel]                                                                # TOWARD it a thing against the back of the
+                    self._sides[h, 0] = float(f_[away].sum()); self._sides[h, 1] = float(f_[~away].sum())   # hand or a fist's knuckles (dorsal)
         if self.parent is not None and self.parent.holds:            # being held is felt (4.2): each capped spring's force on the
             out += self.parent.hold_zone                                # zone of the link it holds, this step's
         return out
 
-    def _sense_tick(self, F, imu, palm_own=None, OW=None, heard=None, BD=None, TW=None):
+    def _sense_tick(self, F, imu, palm_own=None, OW=None, heard=None, BD=None, TW=None, sides=None):
         """the tick's aggregates: touch (the mean force's log per zone, its onset), the IMUs (their noisy samples), the palms' own-hand
         force; THE OBSERVER'S (OW: its 15 samples of 10 ms, each the 43 joints' outside torques and the base's outside force, in the
         pelvis's frame, and torque, from the robot's own sensors: body/sim/observer.py): the tick's mean over each joint's declared
@@ -1288,8 +1331,15 @@ class G1World(SimWorld):
         obs_j = OW[:, :J].mean(axis=0) / self.tau_max
         obs_b = OW[:, J:].mean(axis=0) / self.weight
         vest = self._vestibular(imu)
+        po_ = np.zeros(2) if palm_own is None else np.asarray(palm_own, float)   # A171: THE GRASP'S STIMULUS IS THE PALM'S SIDE: the push on the
+        sd_ = np.zeros((2, 2)) if sides is None else np.asarray(sides, float)    # hand from its palm's side by things not its own (the palm's face,
+        pl = np.log1p((sd_[:, 0] + po_) / TOUCH_UNIT_N)                           # the fingers' insides) plus its own fingers on the palm (A162's
+                                                                                   # fist), never the mat under the back of a palm-up hand
         self._sensed = {"touch_log": lf, "touch_onset": onset, "touch_force": F.mean(axis=0), "vestibular": vest,
                         "peak_force": F.max(axis=0), "palm_own": np.zeros(2) if palm_own is None else np.asarray(palm_own, float).copy(),
+                        "sides": np.zeros((2, 2)) if sides is None else np.asarray(sides, float).copy(),   # A171: the tick's mean push on each hand
+                                                                                                           # from things not its own [palmar, dorsal] (N)
+                        "palm_log": pl, "palm_onset": np.maximum(0.0, pl - s["palm_log"]),               # A171: the grasp's stimulus, the palm's SIDE
                         "obs_j": obs_j, "obs_j_on": np.maximum(0.0, np.abs(obs_j) - np.abs(s["obs_j"])),
                         "obs_b": obs_b, "obs_b_on": np.maximum(0.0, np.abs(obs_b) - np.abs(s["obs_b"])),
                         "obs_peak": np.abs(OW[:, :J]).max(axis=0), "base_peak": float(np.linalg.norm(OW[:, J:J + 3], axis=1).max()),
@@ -1331,7 +1381,7 @@ class G1World(SimWorld):
         tw = np.concatenate([tr[:J], Rp.T @ tr[J:J + 3], tr[J + 3:]])
         lf = np.log1p(F[0] / TOUCH_UNIT_N)
         self._sensed = {"touch_log": lf, "touch_onset": np.zeros(self.nz), "touch_force": F[0].copy(), "vestibular": self._vestibular(imu),
-                        "peak_force": F[0].copy(), "palm_own": self._palm_own.copy(), "obs_j": ob[:J] / self.tau_max, "obs_j_on": np.zeros(J),
+                        "peak_force": F[0].copy(), "palm_own": self._palm_own.copy(), "sides": self._sides.copy(), "palm_log": np.log1p((self._sides[:, 0] + self._palm_own) / TOUCH_UNIT_N), "palm_onset": np.zeros(2), "obs_j": ob[:J] / self.tau_max, "obs_j_on": np.zeros(J),
                         "obs_b": ob[J:] / self.weight, "obs_b_on": np.zeros(6), "obs_peak": np.abs(ob[:J]),
                         "base_peak": float(np.linalg.norm(ob[J:J + 3])), "true_peak": np.abs(tw[:J]),
                         "true_base_peak": float(np.linalg.norm(tw[J:J + 3])), "true_j": tw[:J].copy(), "true_b": tw[J:].copy(),
@@ -1369,6 +1419,7 @@ class G1World(SimWorld):
                 "last_acts": dict(self._last_acts), "rng": self.rng.bit_generator.state, "gaze": self.gaze.copy(), "gaze_v": self.gaze_v.copy(),
                 "spinal": dict(self._spinal), "vor_quick": self._vor_quick, "tendon": self._tendon.copy(), "scene_pose": _pose_state(self.scene.pose),
                 "grasp_hab": {h: list(v) for h, v in self._grasp_hab.items()},   # A162
+                "dorsal_hab": {h: list(v) for h, v in self._dorsal_hab.items()},  # A171
                 "parent": None if self.parent is None else self.parent.state(),
                 "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
                               "observer": self.observer.state(), "sounds": self.sounds.state(),
@@ -1389,11 +1440,14 @@ class G1World(SimWorld):
         self.tick, self.paused = int(st["tick"]), bool(st["paused"])
         self.seed = int(st["seed"])
         self._sensed = {k: (_fresh(v) if isinstance(v, np.ndarray) else v) for k, v in st["sensed"].items()}   # numpy's own dtypes
+        for k, v in (("sides", np.zeros((2, 2))), ("palm_log", np.zeros(2)), ("palm_onset", np.zeros(2))):   # (A171; a save from before it:
+            self._sensed.setdefault(k, v)                                                                     # the hands unpressed this tick)
                                                                         # (a carried array, the night's ears, pickles as a fresh one)
         self._last_acts = _canon_acts(st["last_acts"])
         self._spinal = dict(st.get("spinal", {})); self._vor_quick = int(st.get("vor_quick", 0))
         self._tendon = np.asarray(st.get("tendon", np.zeros(len(JOINTS), int)), int).copy()   # (A139; older saves: none)
         self._grasp_hab = {h: [int(x) for x in st.get("grasp_hab", {}).get(h, [0, 0])] for h in self.palm_of_hand}   # (A162; older saves: fresh)
+        self._dorsal_hab = {h: [int(x) for x in st.get("dorsal_hab", {}).get(h, [0, 0])] for h in self.palm_of_hand}   # (A171; older saves: fresh)
         self.rng.bit_generator.state = st["rng"]
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()

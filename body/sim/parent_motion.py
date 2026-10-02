@@ -4995,11 +4995,13 @@ class ParentMotion:
         return "done" if (miss is not None and miss <= K.SETTLE_TOL_M) or t >= K.SETTLE_TICKS else "run"
 
     def _ph_handover(self, a, ph):
-        """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks"""
+        """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks. The touch
+        is the toy's push on the PALM'S SIDE of its hand (C219, 2026-10-02): on day 61's copy a cup set against the knuckles of a fist
+        (74 deg closed on nothing, the cup 25 cm from its grasp point, 0 N on the palm) was 'closed on it' and released to fall"""
         cs = ph["child"]
         w = self.w
         toy = self.holding[ph["side"]]
-        palm = self._toy_grip(toy, cs) if toy is not None else 0.0          # the child's hand on the toy, as she feels it through it
+        palm = self._toy_grip(toy, cs, palmar=True) if toy is not None else 0.0   # the child's hand on the toy, as she feels it through it
         closed = self._closure(cs)
         ok = palm >= K.HANDOVER_PALM_N and closed >= math.radians(K.HANDOVER_CLOSED_DEG)
         ph["ok"] = ph.get("ok", 0) + 1 if ok else 0
@@ -5019,29 +5021,42 @@ class ParentMotion:
         return "run"
 
     def _hand_full(self, cs):
-        """a toy in the child's hand (touching its palm or fingers, or within 4 cm of its grasp point), as she sees it"""
+        """a toy in the child's hand (on the palm's side of its palm or fingers, or within 4 cm of its grasp point), as she sees it"""
         for toy, b in self.toys.items():
             if toy in self.holding.values():
                 continue
-            if float(np.linalg.norm(self.d.xpos[b] - self.child.grasp[cs])) < 0.04 or self._toy_grip(toy, cs) > K.HANDOVER_PALM_N:
+            if float(np.linalg.norm(self.d.xpos[b] - self.child.grasp[cs])) < 0.04 or self._toy_grip(toy, cs, palmar=True) > K.HANDOVER_PALM_N:
                 return True
         return False
 
-    def _toy_grip(self, toy, cs):
+    def _toy_grip(self, toy, cs, palmar=False):
         """the normal force between a toy and the child's hand (its palm and fingers) now (N): what she feels of its grip through the
-        toy she holds (A4's release reads the toy's own contact, never the palm's whole touch, which a fist closed on itself fills)"""
+        toy she holds (A4's release reads the toy's own contact, never the palm's whole touch, which a fist closed on itself fills).
+        `palmar` (C219): only the pushes from the palm's side, as she reads its hand: a push on a link of the hand directed AWAY from
+        the hand's grasp centre (where a held toy's centre sits: HAND_DEPTH_M before the palm's face, which she reads as its grasp
+        point out from the palm, A4) is the toy on the palm's face or within the fingers; one directed toward it is the toy against
+        the back of the hand or a fist's knuckles (the world's own reading of the two sides, body/sim/world.py A171)"""
         m, d = self.m, self.d
         w = self.w
         hand = set(w.groups["hand_l" if cs == "L" else "hand_r"])
         ti = self.toy_names.index(toy)
+        from .world import HAND_DEPTH_M                                     # (the world's one constant; imported here, the world imports her)
+        G = self.child.grasp[cs] + self.child.palm_n[cs] * (HAND_DEPTH_M - PALM_GRASP_OUT)
         f = 0.0
         for i in range(d.ncon):
             c = d.contact[i]
             g0, g1 = int(c.geom[0]), int(c.geom[1])
             if c.efc_address < 0:
                 continue
-            if (self.toy_of_geom[g0] == ti and w.zone_of_geom[g1] in hand) or (self.toy_of_geom[g1] == ti and w.zone_of_geom[g0] in hand):
-                f += float(d.efc_force[c.efc_address])
+            if self.toy_of_geom[g0] == ti and w.zone_of_geom[g1] in hand:
+                into = np.array(c.frame[:3])                                # the normal, from the toy into the hand's link
+            elif self.toy_of_geom[g1] == ti and w.zone_of_geom[g0] in hand:
+                into = -np.array(c.frame[:3])
+            else:
+                continue
+            if palmar and float(into @ (np.asarray(c.pos) - G)) <= 0.0:
+                continue
+            f += float(d.efc_force[c.efc_address])
         return f
 
     def _closure(self, cs):
