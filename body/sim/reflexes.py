@@ -315,6 +315,50 @@ def traction(limb, own, pull_N, state=None):
     return W.act_flat(dig), "traction"
 
 
+# THE ARMS' RESTING TONE (A185): the born resting posture of each arm's proximal joints, measured on the G1's own geometry (the lead,
+# 2026-10-03; p1/rest_pose_probe.py): the upper arm along the trunk (shoulder pitch 0), a little off it (roll 0.2 rad outward), no
+# turn about its own axis (yaw 0), the elbow flexed past its right angle (-0.7 rad of its flexion sense: the forearm some 130 degrees to
+# the upper arm), which holds the hand before the chest, about 0.3 m before the eye and in its image's middle. Ours, disclosed: the
+# sources give the posture in words (the arms flexed and adducted, the hands before the chest), never in this body's joint angles
+TONE_REST = {"arm_l": {"left_shoulder_pitch_joint": 0.0, "left_shoulder_roll_joint": 0.2, "left_shoulder_yaw_joint": 0.0, "left_elbow_joint": -0.7},
+             "arm_r": {"right_shoulder_pitch_joint": 0.0, "right_shoulder_roll_joint": -0.2, "right_shoulder_yaw_joint": 0.0, "right_elbow_joint": -0.7}}
+TONE_GAIN = 0.3                 # a tick: the tone's step is this share of the joint's distance from its rest (ours): a soft spring, at the
+                                # shoulder's and the elbow's gain (40 N m a rad) 12 N m a rad, three and a half times the gradient of the
+                                # forearm's weight about the elbow (3.4 N m a rad), so a forearm standing near its rest stays standing;
+                                # an own small step held against it moves the joint 0.3 rad, the babble's range about the rest
+TONE_STEP = W.STEP_SMALL        # rad a tick: the tone's pull at its strongest, one small step (ours: the body's smallest own act; 3.6 N m at
+                                # those joints, just over the 3.4 N m the forearm and hand weigh at the elbow lying flat, so the tone can
+                                # lift the forearm off the mat, as the newborn's arm recoil does, and no more)
+
+
+def tone(limb, q):
+    """THE RESTING TONE (A185, 2026-10-03): the tonic stretch reflex holds a limb's resting posture (postural tone: Sherrington 1909;
+    Liddell and Sherrington 1924, the stretch reflex), and the spinal cord's own circuits define equilibrium postures the limb converges
+    to from wherever it is (the convergent force fields of the spinalized frog: Bizzi, Mussa-Ivaldi and Giszter 1991, Science 253:287-291;
+    the equilibrium point as what the cord holds and the descending command shifts: Feldman 1986). The term newborn's resting posture is
+    flexion, the arms flexed and adducted, and an arm drawn out of it springs back (the posture and the arm recoil of the newborn's
+    neurological examination: Amiel-Tison 1968, Arch Dis Child 43:89-93; Dubowitz, Dubowitz and Goldberg 1970, J Pediatr 77:1-10;
+    Ballard et al. 1991, J Pediatr 119:417-423). `q`: the limb's joint angles this tick in its joints' order (the cord's own afferent, the
+    spindles'). Returns one additive step per joint toward the joint's resting angle, TONE_GAIN x its distance from the rest and at
+    most TONE_STEP (a soft spring that saturates: near the rest a gentle pull an own small step outweighs, far from it one small step a
+    tick), 0 on a joint with no declared rest; None for a limb with none. Summed with the limb's own act and the cord's other patterns on every joint, with it or
+    against it (A48, A97's law), below the gate: no efference copy, no credit. WHY: this body's servo re-anchors every target at the
+    measured angle each tick (3.5), so a limb the cortex does not drive has no posture at all and lies where gravity and its last
+    pushes left it; day 76's arms lay wedged beside and behind the trunk (the left shoulder 1.7 rad back, the right arm overhead), the
+    hands 59 to 76 degrees off the eye's axis, in its image on 0.0% and 4.1% of ticks: a body that never sees its own hands has no
+    road to hand regard (White, Castle and Held 1964), to seeing what its own acts do, or to imitation"""
+    rest = TONE_REST.get(limb)
+    if rest is None:
+        return None
+    out = []
+    for i, j in enumerate(_JOINTS[limb]):
+        if j in rest:
+            out.append(min(max(TONE_GAIN * (float(rest[j]) - float(q[i])), -TONE_STEP), TONE_STEP))
+        else:
+            out.append(0.0)
+    return tuple(out)
+
+
 def tendon(steps, loaded, state, joints_of):
     """THE TENDON ORGAN'S AUTOGENIC INHIBITION at the spinal cord (A139, C113; the Golgi tendon organ's Ib afferent inhibits the motor
     neurons of the muscle whose tension is excessive: Houk and Henneman 1967; the clasp-knife's road). `loaded`: per joint (JOINTS' order)

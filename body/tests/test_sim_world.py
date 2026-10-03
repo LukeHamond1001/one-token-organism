@@ -2491,6 +2491,70 @@ def test_the_traction_response():
     print("WORLD A177 GREEN: a 5 N pull along the left forearm flexes the elbow and shoulder by the cord ('traction'), the cortex's "
           "extension kept, nothing under 2 N; habituated after 40 ticks of a steady pull, re-armed after 10 free; saved with the world")
 
+def test_the_resting_tone():
+    """world A185: the arms' resting tone at the cord. The pure function: at the resting posture no step; a joint far from its rest
+    takes TONE_STEP toward it and a joint near it TONE_GAIN x its distance (a soft spring that saturates, never past the rest); a
+    joint with no declared rest (the wrists) takes none; a limb with none returns None. In a born world: over resting ticks (no act
+    of its own) each arm's declared joints close on their resting angles and the hands come into the left eye's image, where with the
+    switch off the arms stay where the birth's settling left them, out of its image; an own small step against the tone still moves
+    the joint its own way (the target the servo receives is the measured angle + the own step + the tone's, half a small step back)"""
+    from body.sim import reflexes as R
+    from body.sim import g1scene as G
+    from body.sim import eyes as EY
+    joints = dict(G.EFFECTORS)["arm_l"]
+    rest = [R.TONE_REST["arm_l"].get(j, 0.3) for j in joints]
+    assert R.tone("arm_l", rest) == tuple(0.0 for _ in joints)
+    far = list(rest); ip = joints.index("left_shoulder_pitch_joint"); ie = joints.index("left_elbow_joint"); iw = joints.index("left_wrist_pitch_joint")
+    far[ip] += 1.0; far[ie] -= 0.01; far[iw] += 1.0
+    st = R.tone("arm_l", far)
+    assert abs(st[ip] + R.TONE_STEP) < 1e-12 and abs(st[ie] - R.TONE_GAIN * 0.01) < 1e-12 and st[iw] == 0.0, st
+    assert R.tone("leg_l", [0.0] * len(dict(G.EFFECTORS)["leg_l"])) is None
+    assert 0.0 < R.TONE_STEP <= W.STEP_SMALL and 0.0 < R.TONE_GAIN <= 1.0
+    def hands_in_view(w):
+        out = []
+        for sd in ("left", "right"):
+            wy = w.m.body(sd + "_wrist_yaw_link").id; Rw = w.d.xmat[wy].reshape(3, 3)
+            g = w.d.xpos[wy] + Rw @ np.array([.13, -.06 if sd == "left" else .06, 0.0])
+            p = EY.project(w.m, w.d, "L", g)
+            out.append(p is not None and 0 <= p[0] < G.EYE_W and 0 <= p[1] < G.EYE_H)
+        return out
+    def dist(w):
+        q = w.d.qpos[w.qadr]
+        return {limb: float(sum(abs(float(q[W.JOINTS.index(j)]) - a) for j, a in rest_.items())) for limb, rest_ in R.TONE_REST.items()}
+    res = {}
+    for on in (True, False):
+        w = G1World(seed=1, parent=False, tone=on)
+        for _ in range(4):
+            w.apply({})
+        d0 = dist(w); seen = [0, 0]                                           # born on its back, the forearms lying flat beside the hips
+        for k in range(220):
+            w.apply({})
+            if k >= 140:
+                hv = hands_in_view(w); seen[0] += int(hv[0]); seen[1] += int(hv[1])
+        res[on] = (d0, dist(w), seen)
+    d0, d1, seen = res[True]; e0, e1, seen_off = res[False]
+    assert all(d0[k] > 1.0 for k in d0), d0                                  # born far from the rest (the elbows open)
+    assert all(d1[k] < 0.5 * d0[k] for k in d0), (d0, d1)                    # the tone brought each arm most of the way
+    assert all(e1[k] > 0.8 * e0[k] for k in e0), (e0, e1)                    # without it they stay where they lay
+    assert min(seen) >= 60 and max(seen_off) == 0, (seen, seen_off)          # and the hands stand in the eye's image
+    # an own small step against the tone still moves the joint its own way
+    w = G1World(seed=1, parent=False, tone=True)
+    for _ in range(200):
+        w.apply({})
+    js = dict(G.EFFECTORS)["arm_l"]; ie_ = W.JOINTS.index("left_elbow_joint")
+    q_el = float(w.d.qpos[w.qadr][ie_])
+    assert abs(q_el - R.TONE_REST["arm_l"]["left_elbow_joint"]) < 0.5, q_el
+    out_ = W.act_flat([3 if j == "left_elbow_joint" else 2 for j in js])     # a small step of extension, the tone pulling to flexion
+    for _ in range(6):
+        w.apply({"arm_l": out_})
+    q_el2 = float(w.d.qpos[w.qadr][ie_])
+    assert q_el2 > q_el + 0.02, (q_el, q_el2)
+    print(f"world A185: the pure tone (rest: 0; far: {R.TONE_STEP:.3f} toward it; near: {R.TONE_GAIN} x the distance; the wrists none); a born world on its back: "
+          f"the summed distance from the rest {d0['arm_l']:.2f}/{d0['arm_r']:.2f} -> {d1['arm_l']:.2f}/{d1['arm_r']:.2f} rad over 220 resting ticks, the hands in the eye's image on "
+          f"{seen[0]}/{seen[1]} of the last 80 (switch off: {e0['arm_l']:.2f}/{e0['arm_r']:.2f} -> {e1['arm_l']:.2f}/{e1['arm_r']:.2f}, {seen_off[0]}/{seen_off[1]}); "
+          f"an own small extension of the elbow against it: {q_el:.2f} -> {q_el2:.2f} rad")
+
+
 def test_the_withdrawals_rest():
     """world A178: the withdrawal fires once per episode: with the left wrist's pain on every tick, the arm's reflex runs WITHDRAW_TICKS
     and then rests through the pain (None) for WITHDRAW_REST_TICKS pain-free ticks before it can fire again; a pain during the rest

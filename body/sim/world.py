@@ -561,7 +561,7 @@ class G1World(SimWorld):
     from it); `extra(spec)` adds an instrument's rig to the scene before it compiles (tests only). Born at construction: the G1 on
     its back on the mat, settled, tick 0."""
 
-    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True, righting=True):
+    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True, righting=True, tone=True):
         global R
         from body.sim import reflexes as R                              # the body's spinal cord (it reads this module's constants)
         _catch_mujoco_warnings()
@@ -618,6 +618,7 @@ class G1World(SimWorld):
                                                                                 # its own: [palmar (toward its back), dorsal (toward its palm)]
         self.spinal = bool(spinal)                                      # the palmar grasp at the spinal cord (off: an instrument's switch)
         self.righting = bool(righting)                                  # the prone pattern at the cord (A92; off: an instrument's switch)
+        self.tone = bool(tone)                                          # the arms' resting tone at the cord (A185; off: an instrument's switch)
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
             raise ValueError("the scene leaves MuJoCo's auto-reset on (A18: <flag autoreset=\"disable\"/>)")
         g1 = self.scene.g1_set
@@ -904,6 +905,12 @@ class G1World(SimWorld):
                         acts[arm] = a3
             if self.righting:                                           # and the prone pattern: face down, the arms flex under, the
                 spinal.update(R.prone(acts, self._sensed["imu_torso"]))   # trunk yaws toward the side that is up (A92)
+        if self.tone:                                                   # A185: THE RESTING TONE: each arm's proximal joints drawn toward
+            q_ = d.qpos[self.qadr]                                      # their born resting angles by a saturating step, summed with the
+            for limb in R.TONE_REST:                                    # cord's other patterns and the own act (reflexes.tone)
+                t_ = R.tone(limb, q_[self.eff_slices[limb]])
+                c_ = cord.get(limb)
+                cord[limb] = t_ if c_ is None else tuple(float(a_) + float(b_) for a_, b_ in zip(c_, t_))
         own = self._efference(acts)                                     # the efference copy (the own acts, after the grasp's sum)
         steps = {}                                                      # every act read before anything moves (a bad act moves nothing)
         for name, js in G.EFFECTORS:
