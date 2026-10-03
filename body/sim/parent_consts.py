@@ -410,6 +410,10 @@ KNEEL_SEG_MPS = 0.8             # m/s: no segment of hers moves faster than this
                                 # and her knee coming down set the pace; with parent_poses.kneel_down's own path, 3.1 s all the way)
 KNEEL_OFF_M = (0.72, 0.78)      # m: her kneeling spot from the G1's torso centre line, beside its chest (A6)
 KNEEL_OFF_TRY = (0.75, 0.72, 0.78, 0.84, 0.90)   # the offsets she tries in turn: A6's range first, then a little further out when the
+PLACE_SPOT_R = (0.50, 0.60, 0.42)   # C260: a put planned anew for a place her side spots cannot reach kneels round the PLACE itself: her
+                                    # pelvis this far from it, facing it, beyond the place from the child first, then round it by 45 deg; a
+                                    # floor point half a metre ahead of a heels kneel is inside the put's reach and clear of her knees (ours:
+                                    # A6's range for a floor reach from the heels)
 STAY_SIDE_M = 1.1               # m: kneeling within this of a supine child's middle, she keeps her side of it for the next approach
                                 # (A112, C96: _beside_now's own distance; a person does not walk round a baby that rolled a little)
                                 # child's arm lies where her knees would go (W2: its arms sink and move out from the birth pose)

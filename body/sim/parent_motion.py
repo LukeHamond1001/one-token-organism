@@ -272,7 +272,7 @@ KNEE_ROUTE_M = 0.9                          # A96: a new kneeling spot this near
 KNEE_ROUTE_DEG = 100                        # her knees (up onto the tall kneel, a turn on them, the shuffle) rather than by standing up
                                             # and walking (0.6 m and 25 deg before: the way round a lying child, its side to its head,
                                             # is about 0.8 m and a quarter turn, and a walk there took 70 s of re-planned trips)
-MAX_NEED_TRIES = 24                         # the spots on which an act's need (a trunk solve, a face search) is tried before she
+MAX_NEED_TRIES = 36                         # the spots on which an act's need (a trunk solve, a face search) is tried before she   # C260: 36, the place's own 24 spots added before the sides'
                                             # C170 (2026-09-30): 6 until the table left the mat's north (C169): the spots north of a child on
                                             # the mat, no longer behind furniture, were tried first for a put's reach and spent the six on the
                                             # far side of the put; the spot beside its hand came twentieth (19 failed reach tries, 2.4 s of planning)
@@ -3821,11 +3821,28 @@ class ParentMotion:
         return best
 
     # ------------------------------------------------------------------ planning: coming to the child (A6)
-    def _spots(self, where=None, offs=None, alongs=None):
+    def _spots(self, where=None, offs=None, alongs=None, need=None):
         """her kneeling spots (her pelvis on her heels, her facing) in the order she tries them: beside its chest on the side it
         faces, then the other side, then at its head and at its feet (A6)"""
         ch = self.child
         out = []
+        if need is not None and str(need).startswith("reach:") and where is None:
+            # C260 (2026-10-03): A PUT'S PLACE HER SIDE SPOTS CANNOT REACH IS KNELT ROUND ITSELF. Day 75's morning under C258 (the spot tested
+            # as the put reaches): five of eight hand-overs refused 'no spot she can kneel at lets her do it (reach:x,y:L)'. The dawn-75
+            # copy's replay (p1/c260_refusal_probe.py): the child on its back with both hands out to one side and the put's place beyond
+            # them, and every spot tried was beside its chest, 1.0 to 1.3 m from the place (the near side's spots blocked by the toys
+            # lying there), where no put reaches; spots round the place itself (PLACE_SPOT_R from it, facing it) reached it with the
+            # child clear. A person setting a toy by the child's far hand kneels by the toy's place, not by the child's chest. For a
+            # re-kneel whose need is a reach (the put's, the bring-back's, the show's) the place's own spots come first: beyond the place
+            # from the child's trunk (facing back over it at the child), then round it by 45 deg; the side spots follow as before
+            xy = np.array([float(v) for v in str(need).split(":")[1].split(",")])
+            away = xy - ch.torso[:2]
+            a0 = math.atan2(away[1], away[0]) if float(np.linalg.norm(away)) > 1e-6 else float(self.base.get("yaw", 0.0))
+            for r_ in K.PLACE_SPOT_R:
+                for da in (0, 45, -45, 90, -90, 135, -135, 180):
+                    ang = a0 + math.radians(da)
+                    H = xy + r_ * np.array([math.cos(ang), math.sin(ang)])
+                    out.append((H, math.atan2(-math.sin(ang), -math.cos(ang)), "place"))
         if ch.posture == "sitting":
             fr = unit(ch.torso_R[:, 0] * [1, 1, 0])[:2]
             lat = np.array([-fr[1], fr[0]])
@@ -3897,7 +3914,7 @@ class ParentMotion:
         reach_cache = {}
         own = {}
         tries = 0
-        for H, yaw, tag in self._spots(where, offs, alongs):
+        for H, yaw, tag in self._spots(where, offs, alongs, need):
             if need is not None and tries >= MAX_NEED_TRIES:
                 reasons.append((tag, f"the act cannot be done from there ({need}): not tried, {MAX_NEED_TRIES} spots were"))
                 continue
@@ -5736,9 +5753,10 @@ class ParentMotion:
             near = self._near(a, need=need)
         return self._fetch(a, toy) + near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
 
-    def _lure_xy(self):
+    def _lure_xy(self, sd=None):
         """C168: the nearest free floor point to the child's near hand (LURE_MIN_M to LURE_MAX_M from it, LURE_CLEAR_M clear of furniture and
-        walls on the floor plan) that some spot she can kneel at reaches; None when none of the nearest LURE_TRIES does"""
+        walls on the floor plan) that some spot she can kneel at reaches; None when none of the nearest LURE_TRIES does. C260: `sd`, the
+        hand that holds the toy (the reach is tested for it, C258)"""
         ch = self.child
         her = np.asarray(self.base["at"], float)
         cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
@@ -5754,7 +5772,7 @@ class ParentMotion:
                     cands.append((d, p))
         cands.sort(key=lambda x: x[0])
         for d, p in cands[:8]:
-            if self._kneel_plan(None, None, None, f"reach:{p[0]:.3f},{p[1]:.3f}") is not None:
+            if self._kneel_plan(None, None, None, f"reach:{p[0]:.3f},{p[1]:.3f}" + (f":{sd}" if sd else "")) is not None:
                 return p
         return None
 
@@ -5878,6 +5896,16 @@ class ParentMotion:
             a["re_near"] = True                                             # (a child that lay down on its front since the plan: her
             need = f"reach:{xy[0]:.3f},{xy[1]:.3f}:{sd}"                    # kneel at its head, the crawl rung's, A125); C258: the hand
                                                                             # that holds the toy is the hand the spot must serve
+            if ch.posture != "front" and not a["info"].get("lure") and self._kneel_plan(None, None, None, need) is None:
+                # C260: no spot reaches the place (it lies between the child and the furniture, or the child fills the room round it):
+                # the toy goes to the nearest free floor point in its reach instead (the lure, C168's rule for the bring-back's start,
+                # now also for the put planned anew), and the child must move to it; where there is none either, the refusal as before
+                xy2 = self._lure_xy(sd)
+                if xy2 is not None:
+                    a["info"]["put_xy"] = _lst(xy2); a["info"]["lure"] = True
+                    self.stats["lures"] = int(self.stats.get("lures", 0)) + 1; self.stats["lure_xy"] = _lst(xy2)
+                    self.stats["puts_lured"] = int(self.stats.get("puts_lured", 0)) + 1
+                    need = f"reach:{xy2[0]:.3f},{xy2[1]:.3f}:{sd}"
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS, need=need) if ch.posture == "front" else self._near(a, need=need)
             return near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
         return swap + self._put_phases(sd, xy, check=True)

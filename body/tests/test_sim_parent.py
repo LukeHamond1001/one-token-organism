@@ -2514,3 +2514,72 @@ def test_the_hands_way_to_rest_comes_down_in_front_of_her():
     assert min(new_d) > min(old_d) + 0.05 and max(new_l) <= PM.MAX_JUMP_M, (new_d, new_l)
     assert via_w is not None and np.linalg.norm(via_w - pm._rest_via(q, sd)) < 1e-9, via_w
     assert via_l is None, (low, path_l)
+
+
+def test_a_puts_place_is_knelt_round_itself():
+    """parent 56 (C260): a re-kneel whose need is a reach ('reach:x,y[:sd]', the put's) tries spots round the PLACE first (PLACE_SPOT_R from it,
+    facing it, beyond it from the child's trunk first, then round it by 45 deg; 24 of them), the side spots after; a need that is no reach,
+    and a reach with a side named (`where`), get the spots as before. On the test world, with the reach test answering only within 0.7 m of
+    the place, the kneel plan's spot is one of the place's; with the place beside the child's chest the plan still finds a spot"""
+    kin = PM.kin; K = PM.K
+    w = W.G1World(seed=1); pm = w.parent; ch = pm.child
+    xy = ch.torso[:2] + np.array([0.9, 0.6]); need = f"reach:{xy[0]:.3f},{xy[1]:.3f}:L"
+    sp = pm._spots(need=need); base = pm._spots()
+    place = [s_ for s_ in sp if s_[2] == "place"]
+    assert len(place) == 24 and [s_[2] for s_ in sp[:24]] == ["place"] * 24 and len(sp) == 24 + len(base), (len(place), len(sp), len(base))
+    assert [tuple(np.round(s_[0], 3)) for s_ in sp[24:]] == [tuple(np.round(s_[0], 3)) for s_ in base]
+    away = xy - ch.torso[:2]; a0 = math.atan2(away[1], away[0])
+    wrap = lambda x: (x + math.pi) % (2 * math.pi) - math.pi                                   # noqa: E731
+    H0, yaw0, _ = place[0]
+    assert abs(float(np.linalg.norm(H0 - xy)) - K.PLACE_SPOT_R[0]) < 2e-3 and abs(wrap(yaw0 - (a0 + math.pi))) < 2e-3, (H0, yaw0, a0)   # (the need names the place to a mm)
+    for H, yaw, _ in place:
+        d = xy - H; assert abs(wrap(math.atan2(d[1], d[0]) - yaw)) < 2e-3, (H, yaw)           # each faces the place
+    assert sorted({round(float(np.linalg.norm(H - xy)), 2) for H, _, _ in place}) == sorted(round(r, 2) for r in K.PLACE_SPOT_R)
+    assert [s_[2] for s_ in pm._spots(need="touch:tummy")] == [s_[2] for s_ in base]
+    assert all(s_[2] != "place" for s_ in pm._spots(where="L", need=need))
+    ok0 = pm._need_ok
+    try:
+        pm._need_ok = lambda need_, H, yaw: float(np.linalg.norm(np.asarray(H) - xy)) < 0.7          # only spots by the place reach it
+        plan = pm._kneel_plan(None, None, None, need)
+    finally:
+        pm._need_ok = ok0
+    assert plan is not None and plan["where"] == "place" and float(np.linalg.norm(np.array(plan["H"]) - xy)) <= max(K.PLAN_SPOT_R if hasattr(K, "PLAN_SPOT_R") else K.PLACE_SPOT_R) + 1e-9, plan
+    xy2 = ch.torso[:2] + ch.lat[:2] * 0.3; need2 = f"reach:{xy2[0]:.3f},{xy2[1]:.3f}"
+    plan2 = pm._kneel_plan(None, None, None, need2)
+    print(f"parent 56 (C260): {len(place)} place spots first at {K.PLACE_SPOT_R} m, the first {np.round(H0, 2).tolist()} beyond the place from the trunk; the plan with only",
+          f"the place's spots reaching: {plan['where']} at {np.round(plan['H'], 2).tolist()}, {float(np.linalg.norm(np.array(plan['H']) - xy)):.2f} m from it;",
+          f"a place beside its chest: {plan2['where'] if plan2 else None}")
+    assert plan2 is not None, pm.kneel_reasons[:5]
+
+
+def test_a_put_with_no_spot_for_its_place_takes_the_lure():
+    """parent 57 (C260): a put planned anew whose place no spot she can kneel at reaches takes the lure (C168's nearest free floor point in
+    the child's reach that a spot reaches, tested for the hand that holds the toy): put_xy and the lure flag set, the approach's need the
+    lure's; with no lure either the approach keeps the place's need (and refuses as before); a put already lured is not lured again"""
+    w = W.G1World(seed=1); pm = w.parent; ch = pm.child
+    toy = next(iter(pm.toys)); sd = "L"
+    saved = (dict(pm.holding), pm._reachable, pm._kneel_plan, pm._lure_xy, pm._giving, dict(pm.stats))
+    lure = ch.grasp["L"][:2] + np.array([0.3, 0.0]); asked = []
+    try:
+        pm.holding = dict(pm.holding, **{sd: toy})
+        pm._giving = lambda toy_, pt: (sd, [])
+        pm._reachable = lambda *a_, **k_: False
+        pm._kneel_plan = lambda where=None, offs=None, alongs=None, need=None: None
+        pm._lure_xy = lambda sd_=None: (asked.append(sd_) or lure)
+        a = dict(info={}, target=toy)
+        ph = pm._plan_put_near(a, toy)
+        need1 = ph[0]["args"]["need"]
+        a2 = dict(info={}, target=toy)
+        pm._lure_xy = lambda sd_=None: None
+        ph2 = pm._plan_put_near(a2, toy)
+        a3 = dict(info=dict(lure=True, put_xy=[float(lure[0]), float(lure[1])]), target=toy); asked3 = []
+        pm._lure_xy = lambda sd_=None: (asked3.append(sd_) or lure)
+        ph3 = pm._plan_put_near(a3, toy)
+    finally:
+        pm.holding, pm._reachable, pm._kneel_plan, pm._lure_xy, pm._giving, pm.stats = saved[0], saved[1], saved[2], saved[3], saved[4], saved[5]
+    print(f"parent 57 (C260): no spot for the place: the lure {np.round(lure, 2).tolist()} taken for hand {asked}, the approach's need {need1};",
+          f"no lure: the need {ph2[0]['args']['need']}; a lured put asked the lure {len(asked3)} times")
+    assert a["info"].get("lure") and np.allclose(a["info"]["put_xy"], lure) and asked == [sd], (a["info"], asked)
+    assert need1 == f"reach:{lure[0]:.3f},{lure[1]:.3f}:{sd}" and ph[0]["what"] == "approach" and ph[-1]["what"] == "put_near", ph
+    assert not a2["info"].get("lure") and ph2[0]["args"]["need"].endswith(f":{sd}") and ph2[0]["args"]["need"] != need1, ph2
+    assert not asked3 and ph3[0]["args"]["need"] == need1, (asked3, ph3)
