@@ -406,8 +406,8 @@ def test_the_prop_and_the_catch():
     assert max(ths) <= K.CATCH_DEG, ths
     # hovering (the easing's last step, set by the instrument): the trunk left to fall; the catch 2 ticks after it passes 35 deg
     for h in hs:
-        h.ctl.update(mode="hover", hover=K.HOVER_M); h.cap = 0.0
-    crossed = caught = None
+        h.ctl.update(mode="hover", hover=K.HOVER_M, alone=-10 ** 6); h.cap = 0.0   # (C238: the instrument's hover; her watch set aside,
+    crossed = caught = None                                                       # this measures the catch's reaction, not the watch)
     for k in range(200):                                                # the resting law lets the trunk sink about 1 deg a second
         _live(w, 1)
         th = pm.child.trunk_deg
@@ -1836,6 +1836,51 @@ def test_the_held_sit_leans_forward_and_the_grasps_slack():
     assert kept and not gone_still and not gone_far, (kept, gone_still, gone_far)
 
 
+@_opened
+def test_the_prop_ends_when_it_sits_by_itself():
+    """parent 39 (C238): hovering over a child that keeps sitting through her watch (the trunk within its line for PROP_WATCH_TICKS), the
+    prop's holds are done and the act ends 'sits by itself' with her hands let go; hovering over one that is still tipping, it goes on"""
+    w = W.G1World(seed=1)
+    pm = w.parent; m = w.m
+    body = m.body("torso_link").id
+    def hover(grasp=False):
+        h = PM.Hold("prop_L", body, [0.0, 0.0, 0.2], "L", 0.0, False, "prop")
+        h.ctl = dict(mode="hover", k=4, steady=0, last_up=-99, best=25.0, ref=PM._lst(h.point(w.d)), head_z=float(pm.child.head[2]),
+                     react=0, alone=0, catches=0, falls=0, t=50, hover=K.HOVER_M, state="run", grasp=grasp)
+        return h
+    th0 = pm.child.trunk_deg
+    try:
+        pm.child.trunk_deg = 20.0
+        h = hover()
+        for _ in range(K.PROP_WATCH_TICKS - 1):
+            pm._ctl_prop(h, h.ctl)
+        early = h.ctl["state"]
+        pm._ctl_prop(h, h.ctl)
+        done_sitting = h.ctl["state"]
+        pm.child.trunk_deg = K.PROP_MAX_DEG + 2.0
+        h2 = hover()
+        for _ in range(K.PROP_WATCH_TICKS + 2):
+            pm._ctl_prop(h2, h2.ctl)
+        state_tipping = h2.ctl["state"]
+    finally:
+        pm.child.trunk_deg = th0
+    assert early == "run" and done_sitting == "done" and state_tipping != "done", (early, done_sitting, state_tipping)
+    saved = (list(pm.holds), list(pm.phases))
+    try:
+        h3 = hover(); h3.ctl["state"] = "done"; h3.ctl["sat_alone"] = True
+        pm.holds = [h3]
+        a = dict(kind="pull_to_sit", target="child", info=dict(hold_peak=0.0, hold_cap=0.0), why="")
+        ph = dict(type="holds_wait", kind="prop", t=3)
+        pm.phases = [ph]
+        r = pm._ph_holds_wait(a, ph)
+        kinds = [p_["type"] for p_ in pm.phases]
+    finally:
+        pm.holds, pm.phases = saved
+    print(f"parent 39 (C238): hovering over a child sitting at 20 deg the prop runs through its watch and is {done_sitting} at {K.PROP_WATCH_TICKS} ticks; over one at",
+          f"{K.PROP_MAX_DEG + 2:.0f} deg it is {state_tipping}; the act then says '{a['why'][:40]}' and its phases run {kinds}")
+    assert r == "next" and "sits by itself" in a["why"] and kinds == ["let_go", "reach", "relax"], (r, a["why"], kinds)
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -1845,7 +1890,8 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
                 test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback, test_a_hand_clear_of_the_floor,
                 test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding,
-                test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack]
+                test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack,
+                test_the_prop_ends_when_it_sits_by_itself]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

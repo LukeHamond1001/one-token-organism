@@ -4903,6 +4903,13 @@ class ParentMotion:
                 c["sat_alone"] = bool(c.get("sat_alone")) or (c["alone"] >= 5 and th <= max_deg)
                 if th < c["best"]:                                          # where it sat most upright: where a catch pushes it
                     c["best"] = th; c["ref"] = _lst(p)                      # back to (a spring settles short of its target)
+                if c["alone"] >= K.PROP_WATCH_TICKS and th <= max_deg:
+                    # C238 (2026-10-02): IT SITS BY ITSELF: THE PROP IS DONE. The prop's hover had no end: her hands 5 cm off a child sitting
+                    # alone for as long as it sat, the act 'running' and the day plan waiting on it (busy), nothing else offered to a sitting
+                    # child. A parent who has eased her hands off a sitting baby watches it a while (the catch hers, PROP_WATCH_TICKS) and
+                    # then goes on to play with it: the act ends 'done' once the trunk has stayed within its line through that watch (the
+                    # catch's watch ends with the act: a baby sitting by itself may fall, and the fall is its own, as any)
+                    c["state"] = "done"
         elif mode == "react":
             c["react"] -= 1
             h.next = p
@@ -5785,6 +5792,13 @@ class ParentMotion:
         if all(h.ctl.get("state") == "done" for h in hs):
             if a is not None and any(h.ctl.get("sat") for h in hs):
                 a["why"] = "sat up with its own flexion (A9)"
+            if ph["kind"] == "prop" and all(h.ctl.get("sat_alone") for h in hs):
+                if a is not None:                                           # C238: it sits by itself; her hands come away and the act ends
+                    a["why"] = "sits by itself: her hands came off and it kept sitting (A9)"
+                self.stats["sits_alone"] = self.stats.get("sits_alone", 0) + 1
+                i = self.phases.index(ph)
+                self.phases[i:] = self._let_go_phases()                     # (the let-go ends with her hands relaxed)
+                return "next"
             if ph["kind"] == "pull" and any(h.ctl.get("sat") for h in hs) and not ph.get("propped"):
                 # C235 (2026-10-02): SITTING, IT IS HELD SITTING. The pull's end let both forearms go and relaxed; a child sat up by her is
                 # not sitting by itself (day 66's copy: its first sit, trunk 37 deg, fell onto its front as she let go). A parent who has

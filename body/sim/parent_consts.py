@@ -233,6 +233,8 @@ PROP_MAX_DEG = 30.0             # the prop engages only with the trunk within th
 PROP_EASE = (1.0, 0.7, 0.4, 0.2)    # the prop's cap steps (x CAP_TWO), then hovering (A9)
 PROP_STEADY_DEG = 20.0          # the trunk within this of vertical ...
 PROP_STEADY_TICKS = 10          # ... for this many ticks steps the cap down (A9)
+PROP_WATCH_TICKS = 200          # C238: hovering over a child that sits by itself, she watches it this long (30 s; ours: a parent spots a new
+                                # sitter half a minute, the catch hers all the while) before the prop is done and she goes on
 HOVER_M = 0.05                  # m: the hovering hands' gap (A9)
 CATCH_DEG = 35.0                # the catch: the trunk past this from vertical ... (A9)
 CATCH_HEAD_MPS = 0.5            # ... or the head dropping faster than this (m/s) (A9)
