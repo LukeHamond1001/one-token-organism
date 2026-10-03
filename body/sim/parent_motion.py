@@ -5039,15 +5039,26 @@ class ParentMotion:
         c["ramp"] = min(K.CAP_TWO_BRIEF, K.TURN_RAMP_NPS * c["go_t"] * TICK_S)   # A101: the roll's force built within half a second
         h.cap = min(c["ramp"] / 2, K.CAP_ONE_BRIEF)
         c["posture"] = ch.posture
+        deg = math.degrees(math.acos(float(np.clip(-chest_z, -1.0, 1.0))))
+        if deg > c.get("best_deg", -1e9) + K.TURN_RISE_DEG:
+            # C241 (2026-10-02): THE TURN'S CLOCK COUNTS NO TICK WHILE THE CHEST STILL TURNS. Day 67: the turn was refused 35 times, 22 of them
+            # 'not turned within her caps in 4 s' (the chest 4 to 22 deg of 90); the dawn-66 copy with the child placed prone (p1/c241_turn2.py):
+            # 3 of 6 turned, one refusal a roll in progress cut at the fourth second (the chest 61 deg and rising, her hands at 75 to 81 N), one
+            # a bodily lift (the near arm propping, 'arm prone', the chest 29 deg). A person rolling a heavy child who is coming over keeps going;
+            # her force is the brief clock's business (A25: the sustained caps after BRIEF_S). The stop is TURN_MAX_S without the chest turning
+            # TURN_RISE_DEG further than its best (as the pull's cap stall counts no tick while the trunk rises, C235), or TURN_TOTAL_S in all
+            c["best_deg"] = deg; c["stall"] = 0
+        else:
+            c["stall"] = c.get("stall", 0) + 1
         if ch.posture == "back" or chest_z >= K.TURN_PAST_Z:                # onto its back, or past its side by TURN_PAST_Z (C167: at its
             c["state"] = "done"; c["turned"] = True                          # side alone it tipped back under A143's stiff limbs)
-        elif c["go_t"] * TICK_S >= K.TURN_MAX_S:
-            deg = math.degrees(math.acos(float(np.clip(-chest_z, -1.0, 1.0))))
+        elif c["stall"] * TICK_S >= K.TURN_MAX_S or c["go_t"] * TICK_S >= K.TURN_TOTAL_S:
             if chest_z >= K.TURN_PAST_Z:                                    # A136/C167: past its side by the margin at her cap's end is the
                 c["state"] = "done"; c["turned"] = True                      # turn done; at its side alone it lies balanced and falls
             else:                                                           # back (or is helped over); the head route's two
-                c["state"] = (f"stopped: not turned within her caps in {K.TURN_MAX_S:.0f} s (A7, A101; its chest turned {deg:.0f} deg from face down, "
-                              "a side is 90): she narrates and helps by the roll's ladder instead")   # hands turn it 106 deg in the 4 s
+                how = (f"no turn for {K.TURN_MAX_S:.0f} s" if c["stall"] * TICK_S >= K.TURN_MAX_S else f"her arms' {K.TURN_TOTAL_S:.0f} s spent")
+                c["state"] = (f"stopped: not turned within her caps in {c['go_t'] * TICK_S:.1f} s ({how}; A7, A101, C241; its chest turned "
+                              f"{deg:.0f} deg from face down, a side is 90): she narrates and helps by the roll's ladder instead")
 
     # ---- toys: fetching, showing, handing over, bringing back, clearing (4.10, A4, A5, A6)
     def _toy(self, t):
@@ -5845,6 +5856,9 @@ class ParentMotion:
                 return "done"                                               # roll up and over out of her palms there); C167: past it
             if ph["kind"] == "turn" and cz >= -0.5:                         # by TURN_PAST_Z, else it tips back (A143's stiff limbs): not done
                 deg = math.degrees(math.acos(float(np.clip(-cz, -1.0, 1.0))))
+                r_ = self._turn_regrip(a, ph, deg)                          # C241: taken on again from its side, once
+                if r_ is not None:
+                    return r_
                 return (f"stopped: her hands slipped at its side (A7, A101; its chest turned {deg:.0f} deg from face down, a side is 90, "
                         f"done is past it): it lay back; the turn is asked again")
             if ph.get("began"):                                             # (C235: said as it was: the pull had begun)
@@ -5857,6 +5871,12 @@ class ParentMotion:
         for h in hs:
             st = h.ctl.get("state", "run")
             if st.startswith("stopped"):
+                if ph["kind"] == "turn":
+                    cz = float(self.child.torso_R[2, 0])
+                    if cz >= -0.5:
+                        r_ = self._turn_regrip(a, ph, math.degrees(math.acos(float(np.clip(-cz, -1.0, 1.0)))))   # C241: from its side, once
+                        if r_ is not None:
+                            return r_
                 return st
         if ph["kind"] == "gather" and all(h.ctl.get("state") == "keep" for h in hs):
             return "done"                                                   # A165: the forearm held and kept; the next phase follows
@@ -5893,6 +5913,22 @@ class ParentMotion:
             a["info"]["hold_peak"] = max([a["info"]["hold_peak"]] + [h.peak for h in hs])
             a["info"]["effort_peak"] = self.effort_peak
         return "run"
+
+    def _turn_regrip(self, a, ph, deg):
+        """C241 (2026-10-02): A TURN THAT HAS BROUGHT THE CHILD TO ITS SIDE AND STOPPED THERE IS TAKEN ON AGAIN FROM ITS SIDE, once an act. On
+        the dawn-66 copy's prone child (p1/c241_turn3.py) her left hand, on the torso's far side, slid off as the body rolled up and over
+        out of its palm, and the far shoulder alone, at 75 to 89 N, held the child balanced on its side at 99 to 101 deg from face down
+        for four seconds (done is TURN_PAST_Z past it); the act was refused and the next turn asked, from its side (A170: the upper
+        shoulder and the upper side of its torso pushed toward its back), turned it onto its back every time. A person who has rolled a
+        child onto its side and lost a hand takes hold again and finishes: her remaining holds let go and the turn's approach is planned
+        anew from where it lies (its side, A170's grips), in the same act. None when it has been done already (then the stop stands)"""
+        if a is None or a["info"].get("turn_regrip"):
+            return None
+        a["info"]["turn_regrip"] = round(float(deg), 1)
+        self.stats["turn_regrips"] = self.stats.get("turn_regrips", 0) + 1
+        i = self.phases.index(ph)
+        self.phases[i:] = self._let_go_phases() + [dict(type="plan", what="turn_approach", args={})]
+        return "next"
 
     def _act_prop(self, a, t):
         if self.child.trunk_deg > K.PROP_MAX_DEG:

@@ -194,6 +194,9 @@ CAP_RAMP_NPS = 100.0            # N/s: a pull or a turn grows its force at this 
                                 # (ours: "a slowly growing force", A7, A9)
 PULL_MAX_S = 4.0                # s: a pull that has not reached her cap in this long (the ramp's 2 s and as long again) is laid back
                                 # (ours: her grip or her arms gave out; she is a body)
+TURN_RISE_DEG = 1.0             # C241: the turn's clock counts no tick where its chest has turned this much further from face down than its best so
+                                # far (as PULL_RISE_DEG for the pull, C235); the stop is TURN_MAX_S without a turn, or TURN_TOTAL_S in all (ours)
+TURN_TOTAL_S = 10.0             # s: the turn's longest effort in all, at the sustained caps after BRIEF_S (the brief clock's law, A25) (ours)
 TURN_MAX_S = 4.0                # s: the turn from its front lasts at most this (A7 gave it 2 s; A101: a person's roll of a heavy child
                                 # takes 3-4 s: the brief caps carry its first 2 s (BRIEF_S), the sustained caps the rest, by her caps'
                                 # own law; ours, disclosed)

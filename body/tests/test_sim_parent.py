@@ -1979,6 +1979,67 @@ def test_the_offer_waits_for_the_toy_at_its_hand():
           f"in 10 ticks, undone off it) and the forty ticks end in A4's release")
 
 
+def test_the_turn_keeps_going_while_it_turns():
+    """parent 41 (C241, 2026-10-02): the turn's clock counts no tick while the chest still turns: driven tick by tick (_ctl_turn on a stub hold,
+    the child's chest set), a chest turning 0.7 deg a tick runs past TURN_MAX_S and is stopped only at TURN_TOTAL_S ('her arms' 10 s spent'); a
+    chest stuck at 30 deg is stopped TURN_MAX_S later ('no turn for 4 s'); a chest past TURN_PAST_Z is done. Day 67: 22 turns refused at the
+    fourth second, the copy's one a roll in progress at 61 deg"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    ch = pm.child
+    R0 = ch.torso_R.copy(); p0 = ch.posture
+
+    class H:
+        cap = 0.0; next = None; brief = True; side = "R"; name = "turn_R"
+        def point(self, d): return np.zeros(3)
+
+    def chest(deg):                                                         # the chest's normal turned `deg` from face down, about the body's axis
+        R = np.eye(3); c_, s_ = math.cos(math.radians(deg)), math.sin(math.radians(deg))
+        R[2, 0] = -c_; R[2, 2] = s_                                          # (only torso_R[2, 0] is read: -1 face down, 0 on its side)
+        return R
+    ticks4, ticks10 = int(round(K.TURN_MAX_S / PM.TICK_S)), int(round(K.TURN_TOTAL_S / PM.TICK_S))
+    try:
+        ch.posture = "front"
+        h = H(); c = dict(go=True, toward=[1.0, 0.0, 0.0])                     # (a) turning 0.7 deg a tick: on past the fourth second
+        for k in range(ticks10 - 1):
+            ch.torso_R = chest(0.7 * k); pm._ctl_turn(h, c)
+            assert c.get("state") is None, (k, c)
+        ch.torso_R = chest(0.7 * ticks10); pm._ctl_turn(h, c)
+        assert str(c.get("state", "")).startswith("stopped") and "her arms' 10 s spent" in c["state"] and c["stall"] == 0, c
+        h = H(); c = dict(go=True, toward=[1.0, 0.0, 0.0])                     # (b) stuck at 30 deg: stopped TURN_MAX_S later
+        ch.torso_R = chest(30.0)
+        for k in range(ticks4 + 1):                                         # (the first tick sets its best; four seconds of stall after it)
+            pm._ctl_turn(h, c)
+        assert str(c.get("state", "")).startswith("stopped") and "no turn for 4 s" in c["state"] and "turned 30 deg" in c["state"], c
+        h = H(); c = dict(go=True, toward=[1.0, 0.0, 0.0])                     # (c) past its side by TURN_PAST_Z: done
+        ch.torso_R = chest(math.degrees(math.acos(-K.TURN_PAST_Z)) + 1.0); pm._ctl_turn(h, c)
+        assert c.get("state") == "done" and c.get("turned"), c
+        class HS(H):                                                        # (d) stopped at its side (99 deg, a hand slipped): taken on again
+            kind = "turn"; ctl = {"state": "stopped: not turned within her caps in 8.0 s (no turn for 4 s)", "go": True}
+            peak = 0.0
+            def point(self, d): return np.zeros(3)
+        hs = HS(); saved_holds = pm.holds; pm.holds = [hs]
+        ch.torso_R = chest(99.0)
+        a = dict(kind="turn", target="child", info={"hold_peak": 0.0}, why=None); ph = dict(type="holds_wait", kind="turn"); pm.phases = [ph]
+        r = pm._ph_holds_wait(a, ph)
+        assert r == "next" and a["info"].get("turn_regrip") == 99.0 and pm.phases[-1] == dict(type="plan", what="turn_approach", args={}) \
+            and pm.phases[0].get("type") == "let_go", (r, a["info"], pm.phases)
+        pm.phases = [ph]; r2 = pm._ph_holds_wait(a, ph)                      # once an act: the second stop stands
+        assert str(r2).startswith("stopped"), r2
+        pm.holds = []; b = dict(kind="turn", target="child", info={"hold_peak": 0.0}, why=None); pm.phases = [ph]
+        r3 = pm._ph_holds_wait(b, ph)                                        # every hand slipped at its side: taken on again as well
+        assert r3 == "next" and b["info"].get("turn_regrip") == 99.0 and pm.phases == [dict(type="plan", what="turn_approach", args={})], (r3, b["info"], pm.phases)
+        ch.torso_R = chest(20.0); c_ = dict(kind="turn", target="child", info={"hold_peak": 0.0}, why=None); pm.phases = [ph]
+        assert str(pm._ph_holds_wait(c_, ph)).startswith("her hands lost their hold"), "slipped face down: no regrip"
+        pm.holds = saved_holds
+    finally:
+        ch.torso_R = R0; ch.posture = p0
+    print(f"parent 41 (C241): a chest turning 0.7 deg a tick runs past {K.TURN_MAX_S:.0f} s to her arms' {K.TURN_TOTAL_S:.0f} s; stuck at 30 deg it is "
+          f"stopped after {K.TURN_MAX_S:.0f} s without a turn; past its side it is done; stopped or slipped at its side (99 deg) it is taken on "
+          f"again from its side, once")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -1989,7 +2050,7 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback, test_a_hand_clear_of_the_floor,
                 test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding,
                 test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack,
-                test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand]
+                test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
