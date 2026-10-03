@@ -526,6 +526,9 @@ FRAMES = dict(
     imagine_key=0,                # A138 (the sim's brain sprint): waking imagination at an event's end (sleep.py _imagine): the imagined
     imagine_pav=0,                # frames' direction in the recall key; the amygdala's forecast on them in the gates' approach-and-avoid bias
                                   # new pays NOVELTY_GAIN; a switch of the body, off at birth, measured on a day copy
+    imagine_vte=0,                # A182 (2026-10-03): vicarious trial and error (sleep.py _vte_think): at each waking imagining a second future
+                                  # from the same moment, the amygdala's forecast weighing the two, the body leaning toward the better one's
+                                  # first acts (timing._timing_propose's _vte_term); needs the amygdala and rem_limbs; off at birth
     competence=0,                 # A181 (2026-10-03): the competence drive, body/sim/anatomy.Competence: at each event's end (frames) the body's
                                   # own acts' consequences becoming foreseeable pays COMPETENCE_GAIN x the event's effort x the progress of the
                                   # own-act forecast error (frames._ferr_own_progress); a switch of the body, off at birth, measured on a day copy

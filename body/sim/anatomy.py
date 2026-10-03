@@ -557,6 +557,8 @@ SIM_CFG = dict(
                                    # shown nothing draws from the cosines alone (day 40: the right shoulder yaw at +big 98% of ticks, kappa 0.06)
     imagine_key=1, imagine_pav=1,  # A138: waking imagination at each event's end (sleep._imagine: the REM rollout awake; IMAG_SCALE; the
                                    # amygdala's forecast on the imagined future into the gates); on from its dawn (the brain sprint)
+    imagine_vte=1,                 # A182: vicarious trial and error: a second imagined future weighed against the first, the lean toward the
+                                   # better one's first acts; on from its landing (2026-10-03, the owner's word for the complete architecture)
     # STEP R8: THE NIGHT OVER FRAMES (SIM_DESIGN.md 7.4 item 2, 8's R8 row, 9's tape; body/core/sleep.py; physiology.py SLEEP): each awake
     # tick taped beside its record, the day cut into episodes at nightfall at the frames' event ends, their entries and windows from the
     # tag reaching back over the day's record, kept across nights up to the episodes' cap

@@ -333,6 +333,7 @@ def main():
                        comp=next((int(getattr(s_, "n_paid", 0)) for s_ in L.anatomy.rewards if s_.name == "competence"), 0),   # A181: the competence drive's payments so far
                        comp_paid=next((round(float(getattr(s_, "paid", 0.0)), 3) for s_ in L.anatomy.rewards if s_.name == "competence"), 0.0),   # and their sum
                        imag=int(getattr(L, "_imag_n", 0)),                          # A138: the waking imaginings so far (an event's end or a pause)
+                       vte=int(getattr(L, "_vte_n", 0)), vte_alt=int(getattr(L, "_vte_alt", 0)), vte_lean=int(getattr(L, "_vte_leans", 0)),   # A182: the futures compared so far, the alternative's wins, the leans left
                        ends=len(getattr(L, "_rec_ends", None) or []),                # the frames' event ends so far this day (R7f's WM latch, A138's trigger)
                        imag_N=(round(float(L._imag_N), 3) if getattr(L, "_imag_N", None) is not None else None),   # the imagined future's valence, fading
                        events=[e[0] for e in ls.get("events", ())], face_test=bool(ls.get("face_test")),

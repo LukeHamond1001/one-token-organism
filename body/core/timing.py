@@ -422,6 +422,8 @@ class TimingMixin:
             p = p + tm.cor(st["err"])
         if self._recall_on():
             p = p + self._recall_term(e, self._frec_now)               # step R7f: the recalled act through its map (body/core/frames.py)
+        if int(self.cfg.get("imagine_vte", 0)):
+            p = p + self._vte_term(e)                                  # A182: the lean toward the better imagined future's first act
         return p
 
     def _timing_foresee(self, i):

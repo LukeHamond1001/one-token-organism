@@ -110,6 +110,8 @@ from .amygdala import episode_entries, night_draw  # noqa: F401  (night_draw: R8
 from .physiology import FRAMES, SLEEP
 
 IMAG_SEED = 3                                # A138: the tape's rows the waking imagination starts from (REM's k: the window's first 3)
+VTE_SCALE = 1.0                              # A182: the lean's size in an effector's proposal at w 1 (two futures a full smile apart): the
+                                             # better future's first act as one efference copy of it (ours; the day copy reads it)
 IMAG_PAUSE = 10                              # A138: a pause of this many ticks (1.5 s) with every motor effector at rest is the other moment
                                              # the body thinks ahead (deliberation at a pause: Redish 2016's vicarious trial and error; ours)
 TAPE_BLOCK = 512                                                         # rows a block of the day's tape holds (a save keeps its last block
@@ -813,7 +815,11 @@ class SleepMixin:
         if rows is None:
             return
         m = self.m; dev = self.dev; L = int(self.cfg.get("rem_steps", 8)); T0 = IMAG_SEED
-        ro = self._rollout(rows, bands0, T0, L, self._rem_temperature(), int(self.cfg.get("rem_limbs", 0)))
+        self._vte_busy = True                                              # (A182: a future is imagined free of the last lean)
+        try:
+            ro = self._rollout(rows, bands0, T0, L, self._rem_temperature(), int(self.cfg.get("rem_limbs", 0)))
+        finally:
+            self._vte_busy = False
         words = self.anatomy.words
         with torch.no_grad():
             if want_key:
@@ -834,16 +840,72 @@ class SleepMixin:
                 if float(V.norm()) > 0.0:
                     self._imag = F.normalize(V.float(), dim=0)
             if want_pav and self._amyg_on():
-                org = self.m.amyg; rho = org.reliability(int(self._amyg_const("amyg_pairs")))
-                Ns = []
-                for j in range(T0, T0 + L):
-                    x = self._amyg_input(ro["Cs"][j], None)
-                    rf = rho * (x @ org.W).clamp_min(0.0)
-                    Ns.append(float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg > 0.0))
-                              - float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg < 0.0)))
-                self._imag_N = float(sum(Ns) / len(Ns)) if Ns else 0.0
+                self._imag_N = self._imag_valence(ro, T0, L)
+        if int(self.cfg.get("imagine_vte", 0)) and self._amyg_on() and ro["macts"]:
+            self._vte_think(rows, bands0, T0, L, ro)                      # A182: and an alternative future weighed against this one
         self._imag_n = int(getattr(self, "_imag_n", 0)) + 1
         self._imag_last_t = int(self.ticks)                                # A180: the last imagining's tick (the ends' gap, frames._frame_end)
+
+    def _imag_valence(self, ro, T0, L):
+        """the amygdala's forecast on an imagined future (`ro`, a rollout): its reliable heads' anticipated good less bad, the mean over
+        the L imagined states (A138's `_imag_N`; no learning)"""
+        org = self.m.amyg; rho = org.reliability(int(self._amyg_const("amyg_pairs")))
+        Ns = []
+        with torch.no_grad():
+            for j in range(T0, T0 + L):
+                x = self._amyg_input(ro["Cs"][j], None)
+                rf = rho * (x @ org.W).clamp_min(0.0)
+                Ns.append(float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg > 0.0))
+                          - float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg < 0.0)))
+        return float(sum(Ns) / len(Ns)) if Ns else 0.0
+
+    def _vte_think(self, rows, bands0, T0, L, ro1):
+        """A182 (2026-10-03, imagine_vte; the owner's word for the complete architecture): VICARIOUS TRIAL AND ERROR. The waking
+        imagination (A138) ran one future, the body's present course, and its valence biased the gates. Here a SECOND future is run
+        from the same moment with its own draws (the same machinery, `_rollout`; the limbs' imagined acts differ where act_pred's
+        proposal is not sure), the amygdala's forecast weighs the two (`_imag_valence`), and for each motor effector whose first
+        imagined act differs between them the body LEANS toward the better future's first act: that act's embedding joins the
+        effector's proposal (`_vte_term`, timing._timing_propose) at VTE_SCALE x w, w the difference of the two valences over her
+        face's full size (the judgment's clip), at most 1, fading with GOAL_TAU as the imagined future does. Two futures with one
+        valence, or one first act, lean nowhere; an amygdala with no reliable head forecasts nothing and nothing leans (the lean is
+        earned as the forecast is). The acts taken under the lean are act_pred's lesson as any act is, so what the comparison
+        prefers the cortex comes to propose on its own. A rat at a choice point looks down one arm and the other while its
+        hippocampus sweeps ahead along each in turn and its striatum values the outcomes, most when the choice is new and hard
+        (Tolman 1939; Johnson and Redish 2007; Redish 2016); choosing by imagined outcomes with a learned model and a learned
+        value is planning (Sutton 1990's Dyna; Daw, Niv and Dayan 2005's model-based controller). Body-general: no effector is named"""
+        self._vte_busy = True
+        try:
+            ro2 = self._rollout(rows, bands0, T0, L, self._rem_temperature(), int(self.cfg.get("rem_limbs", 0)))
+        finally:
+            self._vte_busy = False
+        N1 = self._imag_valence(ro1, T0, L); N2 = self._imag_valence(ro2, T0, L)
+        best, other = (ro1, ro2) if N1 >= N2 else (ro2, ro1)
+        dN = abs(N1 - N2)
+        cap = self.anatomy.rewards[0].clip
+        w = min(1.0, dN / float(cap if cap else 2.0))
+        lean = {}
+        if w > 0.0 and best["macts"] and other["macts"]:
+            for e in best["mot"]:
+                a_b = int(best["macts"][e.name][T0]); a_o = int(other["macts"][e.name][T0])
+                if a_b != a_o:
+                    lean[e.name] = [a_b, float(w)]
+        self._vte = lean or None
+        self._vte_n = int(getattr(self, "_vte_n", 0)) + 1                  # instruments: the comparisons made, those the alternative
+        self._vte_alt = int(getattr(self, "_vte_alt", 0)) + int(N2 > N1)   # won, those that left a lean, and the last difference
+        self._vte_leans = int(getattr(self, "_vte_leans", 0)) + int(bool(lean))
+        self._vte_dn = float(dN)
+
+    def _vte_term(self, e):
+        """A182: the lean in motor effector e's proposal: VTE_SCALE x w x the embedding of the better imagined future's first act (its
+        rows' sum, as its efference copy is), 0 with no lean, and 0 while a future is being imagined (`_vte_busy`)"""
+        v = getattr(self, "_vte", None)
+        if not v or getattr(self, "_vte_busy", False):
+            return 0.0
+        x = v.get(e.name)
+        if x is None:
+            return 0.0
+        with torch.no_grad():
+            return VTE_SCALE * float(x[1]) * self.m.acts[e.name](torch.tensor(int(x[0]), device=self.dev))
 
     def _imagine_pause(self):
         """A138: the pause trigger. Under a live parent the frames' events rarely end (the surprise's fast average stays above half its
@@ -870,6 +932,14 @@ class SleepMixin:
             self._imag_N = float(self._imag_N) * (1.0 - 1.0 / float(GOAL_TAU))
             if abs(self._imag_N) < 1e-4:
                 self._imag_N = None
+        v = getattr(self, "_vte", None)                                    # A182: the lean fades as the imagined future does
+        if v:
+            for k_ in list(v):
+                v[k_][1] = float(v[k_][1]) * (1.0 - 1.0 / float(GOAL_TAU))
+                if v[k_][1] < 1e-3:
+                    del v[k_]
+            if not v:
+                self._vte = None
 
     # ---------------- step R8c: the live, dark night ----------------
     def _twitch_on(self):

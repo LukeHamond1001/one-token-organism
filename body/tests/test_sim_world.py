@@ -1662,6 +1662,93 @@ def test_waking_imagination():
           f"({out[0]['n']} imaginings, the key unmoved {out[0]['moved']:.4f}); IMAG_SCALE {IMAG_SCALE}; the night lets the future go")
 
 
+def test_vicarious_trial_and_error():
+    """world 35 (A182, imagine_vte): at each waking imagining a SECOND future is run from the same moment (two rollouts where A138 ran
+    one), the amygdala's forecast weighs the two, and for each motor effector whose first imagined act differs between them the body
+    leans toward the better future's first act: `_vte` {effector: [the act, w]}, w the valences' difference over her face's clip, at
+    most 1. With the alternative set better by 0.8 (clip 2): the leans are the second future's first acts at w 0.4; the lean's term in
+    the effector's proposal is VTE_SCALE x w x that act's embedding (none for an effector with no lean, none while a future is being
+    imagined); set the other way, the first future's acts; equal valences, no lean. The lean fades with GOAL_TAU and the night lets it
+    go. A newborn's amygdala has no reliable head: both futures forecast 0 and nothing leans. With the switch off one future is run and
+    nothing is kept; the language body has no key"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.core import sleep as SL
+    from body.core.physiology import FRAMES
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    assert int(SIM_CFG["imagine_vte"]) == 1 and int(FRAMES["imagine_vte"]) == 0
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    out = {}
+    for on in (1, 0):
+        w = G1World(seed=1)
+        cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, imagine_key=1, imagine_pav=1, imagine_vte=on)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        for _ in range(60):
+            run.step()
+        ros = []; ro0 = L._rollout
+        def spy_ro(*a_, ro0=ro0, ros=ros, **k_):
+            r = ro0(*a_, **k_); ros.append(r); return r
+        L._rollout = spy_ro
+        L._imagine()                                                       # as it is: a newborn's amygdala, no reliable head
+        out[on] = dict(rollouts=len(ros), vte=getattr(L, "_vte", "unset"), n=int(getattr(L, "_vte_n", 0)))
+        if not on:
+            assert len(ros) == 1 and out[on]["vte"] == "unset" and out[on]["n"] == 0, out[on]
+            continue
+        assert len(ros) == 2 and L._vte is None and L._vte_n >= 1 and L._vte_dn == 0.0, (len(ros), L._vte, L._vte_n, L._vte_dn)
+        alt0 = int(L._vte_alt)
+        T0 = SL.IMAG_SEED; cap = float(L.anatomy.rewards[0].clip)
+        def think(v_first, v_second):
+            ros.clear(); vals = {}
+            def val(ro, T0_, L_, vals=vals, ros=ros):
+                return v_first if ro is ros[0] else v_second
+            L._imag_valence = val
+            L._imagine()
+            return ros[0], ros[1]
+        r1, r2 = think(0.2, 1.0)                                           # the alternative better by 0.8
+        diff = [e for e in L.anatomy.motors if int(r1["macts"][e.name][T0]) != int(r2["macts"][e.name][T0])]
+        same = [e for e in L.anatomy.motors if e not in diff]
+        assert diff, "the two futures imagined the same first act on every effector (no draw differs)"
+        w_ = 0.8 / cap
+        assert L._vte is not None and set(L._vte) == {e.name for e in diff}, (L._vte, [e.name for e in diff])
+        assert all(L._vte[e.name][0] == int(r2["macts"][e.name][T0]) and abs(L._vte[e.name][1] - w_) < 1e-12 for e in diff), L._vte
+        assert L._vte_alt == alt0 + 1 and abs(L._vte_dn - 0.8) < 1e-12
+        C = L._C_last.detach().clone(); e = diff[0]
+        lean = {k: list(v) for k, v in L._vte.items()}
+        p_with = L._timing_propose(e, C).clone()
+        L._vte = None; p_without = L._timing_propose(e, C).clone(); L._vte = {k: list(v) for k, v in lean.items()}
+        want = SL.VTE_SCALE * w_ * L.m.acts[e.name](torch.tensor(lean[e.name][0]))
+        assert float((p_with - p_without - want).abs().max()) < 1e-6, float((p_with - p_without - want).abs().max())
+        L._vte_busy = True; p_busy = L._timing_propose(e, C).clone(); L._vte_busy = False
+        assert float((p_busy - p_without).abs().max()) < 1e-9                # no lean while a future is being imagined
+        if same:
+            q_with = L._timing_propose(same[0], C).clone(); L._vte = None; q_without = L._timing_propose(same[0], C).clone()
+            L._vte = {k: list(v) for k, v in lean.items()}
+            assert float((q_with - q_without).abs().max()) < 1e-9            # an effector with one first act in both futures: no lean
+        L._imagine_fade()
+        assert abs(L._vte[e.name][1] - w_ * (1.0 - 1.0 / float(SL.GOAL_TAU))) < 1e-12, L._vte[e.name]
+        r1, r2 = think(1.0, 0.2)                                           # the present course better: its own first acts
+        diff2 = [e_ for e_ in L.anatomy.motors if int(r1["macts"][e_.name][T0]) != int(r2["macts"][e_.name][T0])]
+        assert all(L._vte[e_.name][0] == int(r1["macts"][e_.name][T0]) for e_ in diff2) and L._vte_alt == alt0 + 1, L._vte
+        think(0.5, 0.5)
+        assert L._vte is None, L._vte                                      # one valence: nothing to choose
+        think(0.2, 1.0)
+        for _ in range(20 * int(SL.GOAL_TAU)):
+            L._imagine_fade()
+        assert L._vte is None                                              # faded
+        think(0.2, 1.0); assert L._vte is not None
+        L._frames_night()
+        assert getattr(L, "_vte", None) is None                            # the night lets it go
+        out[on].update(leans=len(diff), same=len(same), w=w_)
+    print(f"world 35 (A182): vicarious trial and error: {out[1]['rollouts']} futures an imagining (off: {out[0]['rollouts']}); a newborn's amygdala forecasts",
+          f"nothing and nothing leans; the alternative set better by 0.8: {out[1]['leans']} effectors lean toward its first acts at w {out[1]['w']:.2f}",
+          f"({out[1]['same']} with one first act in both: none), the lean's term VTE_SCALE x w x the act's embedding, none while imagining; the course set",
+          "better: its own acts; equal: none; the lean fades with GOAL_TAU and the night lets it go; the language body has no key")
+
+
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)
