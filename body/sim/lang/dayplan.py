@@ -56,6 +56,7 @@ BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 
                                        # each, so the play blocks (drawn, then scaled to the day) carry about a quarter more of the day
 PLAY_GAP = (150, 300)                  # ticks between her floor play's offers (ours)
 SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times a motor block when her reach or her hold refused it (ours)
+SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer is turned onto its back first, this many turns a block (ours)
 SIT_RETRY_GAP = 200             # C224: ... the next try this many ticks after the refusal (30 s: a parent tries again in a minute; ours)
 SIT_RETRY_WHY = ("cannot reach", "lost their hold", "slipped", "no spot she can kneel", "did not arrive",
                  "the guide sat at its cap",
@@ -122,6 +123,7 @@ class DayPlan:
         self.got_seen = {}                 # toy -> the "got" smiles counted at its last lesson
         self.roll_turn = True              # A109: the next reach-rung lesson is the roll rung (once it rolls); they alternate
         self.sit_due = False               # A161: a motor block entered with the child on its back owes one pull-to-sit (its first offer)
+        self.sit_turns = 0                 # C254: the block's turns of a prone child for the sit
         self.block_i = -1                  # C220: the block the day is in (two motor blocks laid end to end are two blocks, each owing a sit)
         self.sit_tries = 0                 # C224: the pull-to-sit's tries this block (a refusal at her reach or her hold is tried again)
         self.hide_turn = False             # A129: every other lesson on a toy it grasps at will is the hide game (the bucket in the room)
@@ -211,13 +213,14 @@ class DayPlan:
         bi = self.block_index(t_day)
         if bi != self.block_i:
             self.sit_tries = 0                                              # (C224: a new block, its tries afresh)
+            self.sit_turns = 0                                              # (C254: and its turn for the sit)
             if self.block_i >= 0 and bi >= 0 and kind == "motor" and self.blocks[bi][2] == "motor" and self.blocks[self.block_i][2] == "motor":
                 # C220 (2026-10-02): A SECOND MOTOR BLOCK LAID AGAINST THE FIRST OWES ITS OWN SIT. Life day 61's plan put two motor blocks end
                 # to end (5927-7566, 7566-9039): one episode as the day runs them (the kind never changed), so the second block's offer never
                 # came; the first's pull was refused at her kneel ('her left hand cannot reach it from here, 38 cm short') and the child,
                 # on its back the whole morning, was offered the sit once in two blocks. A161 owes one a block
-                self.sit_due = self._lying_on_back(lane)
-                self.log.append((t, "motor block two: a sit owed again (C220)" if self.sit_due else "motor block two: the child not on its back"))
+                self.sit_due = True                                         # (C254: owed whatever its posture; a prone child is turned first)
+                self.log.append((t, "motor block two: a sit owed again (C220)" + ("" if self._lying_on_back(lane) else "; the child not on its back: turned over first (C254)")))
             self.block_i = bi
         if any(k == "pain" for k, _o in p.events):
             self.last_pain = t
@@ -294,7 +297,10 @@ class DayPlan:
             c.routine = None
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
             if kind == "motor":
-                self.sit_due = self._lying_on_back(lane)                # A161: the block's first offer is the pull-to-sit
+                self.sit_due = True                                     # A161: the block's first offer is the pull-to-sit; C254: owed
+                self.sit_turns = 0                                      # whatever its posture (a child on its front is turned over first)
+                if not self._lying_on_back(lane):
+                    self.log.append((t, "motor block: the child not on its back: turned over first for the sit (C254)"))
 
     def _away_tick(self, t, t_day, lane, world, kind):
         c = lane.conduct
@@ -306,6 +312,12 @@ class DayPlan:
             return
         if t >= self.next_call and c.fast.voice_free(t):
             c.request("hall_call"); self.next_call = t + AWAY_CALL
+
+    @staticmethod
+    def _posture(lane):
+        """the child's posture as her motion's model of it reads it ('back', 'front', 'side', 'sitting'; None when unknown)"""
+        ch = getattr(getattr(lane.conduct, "motion", None), "child", None)
+        return getattr(ch, "posture", None)
 
     @staticmethod
     def _lying_on_back(lane):
@@ -326,8 +338,19 @@ class DayPlan:
             self.log.append((t, "motor_sit"))
             self.next_play = t + int(self.rng.integers(*PLAY_GAP))
             return
-        self.sit_due = False
-        self._lesson(t, lane)
+        if self.sit_due and self._posture(lane) in ("front", "side") and self.sit_turns < SIT_TURNS_PER_BLOCK:
+            # C254 (2026-10-03): A CHILD ON ITS FRONT IS TURNED ONTO ITS BACK FOR THE SIT. Life days 71 and 72: the child lay on its front
+            # half the day (its rolling: half_roll 142 a day) and both motor blocks found it so at their entry, so no pull-to-sit was
+            # offered at all (days 68 to 72: 3, 3, 1, 0, 0 offers; the sit chain of C235 to C238 unexercised). The block's sit is owed
+            # whatever its posture; at the offer a child on its front or side is turned onto its back first (turn_over: her 'up. up. up!'
+            # and the turn, A7), SIT_TURNS_PER_BLOCK a block, and the sit stays owed while the block runs (offered when it lies on its back,
+            # the lesson meanwhile). A parent sitting a baby up turns it over first
+            self.sit_turns += 1
+            lane.conduct.request("turn_over")
+            self.log.append((t, "motor_sit: the child on its front, turned onto its back first (C254)"))
+            self.next_play = t + SIT_RETRY_GAP
+            return
+        self._lesson(t, lane)                                               # (C254: the sit stays owed while the block runs)
 
     def _lesson(self, t, lane):
         """her lesson (A90; the module's doc): the rung the child is nearly at on a focus toy she sees, read from her conduct's book"""
@@ -467,6 +490,7 @@ class DayPlan:
                     sit_due=bool(self.sit_due),                                       # C207: the motor block's owed pull-to-sit survives a resume
                     block_i=int(self.block_i),                                        # C220
                     sit_tries=int(self.sit_tries),                                    # C224
+                    sit_turns=int(getattr(self, "sit_turns", 0)),                     # C254
                     hide_turn=bool(self.hide_turn))
 
     def load_state(self, s):
@@ -484,6 +508,7 @@ class DayPlan:
         self.roll_turn = bool(s.get("roll_turn", True))
         self.sit_due = bool(s.get("sit_due", False))                                 # (C207; older saves: none owed)
         self.sit_tries = int(s.get("sit_tries", 0))                                  # (C224; older saves: none tried)
+        self.sit_turns = int(s.get("sit_turns", 0))                                  # (C254; older saves: none turned)
         self.block_i = int(s.get("block_i", -1))                                     # (C220; older saves: the block re-read at the next tick,
                                                                                      #  a second motor block owing its sit then)
         self.hide_turn = bool(s.get("hide_turn", False))               # (C125: lost at each resume before; older saves: none)

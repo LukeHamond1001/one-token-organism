@@ -237,8 +237,9 @@ class CriticsMixin:
                             with torch.no_grad():
                                 fast_ = float(self.cfg.get("actor_lr", 0.02)) * delta_a * st_["e_actor"]   # (A172: the adapted dopamine)
                                 m.get_submodule(e_.actor).weight.add_(fast_)   # A151: no forgetting (a uniform shrink the scaling undid each tick)
-                                if slr_ > 0.0:
-                                    st_["a_upd"][0] += float(fast_.norm())
+                                st_["a_upd"][0] += float(fast_.norm())       # (the ruler counted the fast lesson only under a slow rate > 0:
+                                                                             # it read 2 to 3 a day against actors moving 0.05 in cosine a day;
+                                                                             # counted always since 2026-10-03, C254)
                         if slr_ > 0.0 and st_.get("a_tag") is not None and abs(float(delta)) > 1e-9:
                             with torch.no_grad():                        # A142/C153: the tag captured by the same phasic dopamine
                                 upd = slr_ * delta_a * st_["a_tag"]      # (mouth._actor_tag_step: the 64-tick trace; A172: adapted)

@@ -248,10 +248,22 @@ def test_the_days_layout():
     assert not d2.sit_due, "a refusal of the child, not of the moment, is not tried again"
     d5 = DP.DayPlan(5); d2.sit_tries = 2; d5.load_state(d2.state()); assert d5.sit_tries == 2
     d2.sit_due = False
-    ln.conduct.motion.child.posture = "front"; d2._enter("motor", 5000, 5000, ln, None)
-    assert not d2.sit_due
+    # C254: a motor block entered with the child on its front owes the sit still: at the offer it is turned onto its back first (once a
+    # block), the lesson goes on while it lies so, and the sit is offered when it lies on its back; the turn count travels with a save
+    ln.conduct.asked = []; ln.conduct.motion.child.posture = "front"
+    d2._enter("motor", 9000, 9000, ln, None)
+    assert d2.sit_due and d2.sit_turns == 0 and any("C254" in str(x) for x in d2.log[-2:]), (d2.sit_due, d2.log[-2:])
+    d2._sit_or_lesson(9000, ln); d2._sit_or_lesson(9300, ln)
+    assert ln.conduct.asked == ["turn_over", "lesson"] and d2.sit_due and d2.sit_turns == 1, (ln.conduct.asked, d2.sit_due, d2.sit_turns)
+    ln.conduct.motion.child.posture = "back"; d2._sit_or_lesson(9600, ln)
+    assert ln.conduct.asked[-1] == "motor_sit" and not d2.sit_due, ln.conduct.asked
+    d6 = DP.DayPlan(6); d6.load_state(d2.state()); assert d6.sit_turns == 1
+    ln.conduct.asked = []; ln.conduct.motion.child.posture = "side"; d2.sit_due = True; d2.sit_turns = DP.SIT_TURNS_PER_BLOCK
+    d2._sit_or_lesson(9900, ln); assert ln.conduct.asked == ["lesson"] and d2.sit_due, "the block's turn spent: the lesson, the sit still owed"
+    ln.conduct.asked = []; ln.conduct.motion.child.posture = "sitting"; d2._enter("motor", 5000, 5000, ln, None)
+    assert d2.sit_due                                                      # (C254: owed whatever its posture; before: none on its front)
     d2._sit_or_lesson(5000, ln)
-    assert ln.conduct.asked == ["motor_sit", "lesson", "lesson"], ln.conduct.asked
+    assert ln.conduct.asked == ["lesson"] and d2.sit_due, ln.conduct.asked   # a sitting child is neither pulled nor turned: the lesson
     assert d.episode(2300) == "wind" and d.episode(2370) == "goodnight" and d.episode(10) == "wake"
     print(f"lane 7: 200 days laid out as 4.7 says (away {sorted(counts)} times a day, never first, last or running), filling 300 to",
           "23,000 exactly; a day of 2,400 ticks scales every length")
