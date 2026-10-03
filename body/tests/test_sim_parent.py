@@ -2456,3 +2456,61 @@ def test_the_puts_spot_is_tested_as_the_put_reaches():
         pm._reachable = orig; pm.base = saved
         if "_near" in vars(pm): del pm._near
     print("parent 54 (C258): the put's spot need names the holding hand and is tested with the put's own reach test from her heels at the spot")
+
+
+def test_the_hands_way_to_rest_comes_down_in_front_of_her():
+    """parent 55 (C259): the dawn-73 copy's relax replayed on her base (heels at [0.3, -1.65], yaw 1.86, lean 50 to 22 over the move's
+    17 ticks): her right hand lifted over the child on its way back from a reach ([0.12, -0.91, 0.87], the crossing at 0.65 m) came down
+    from right above the hand hanging below the shoulder, through the shoulder (the wrist 5 to 12 cm from it), the swing's axis turned
+    80 deg in a tick and the elbow leapt 0.43 m (the life's 0.49 and 0.64, the act refused by the jump guard). The rest's way now tests
+    its legs against the shoulder (_rest_way): within the forearm's length it runs over the child to a point in front of her (REST_VIA_M,
+    following her trunk) and down from there: (i) the replay's elbow moves under MAX_JUMP_M a tick with the via where the straight
+    descent leapt past it; (ii) _rest_way puts the via on this way and none on a way that comes up from the floor at her side"""
+    kin = PM.kin; K = PM.K
+    w = W.G1World(seed=1); pm = w.parent
+    sd = "R"; i_el = kin.SEGS.index(f"forearm_{sd}"); N = 17; H0 = np.array([0.12, -0.91, 0.87]); LIFT = 0.65
+    base0 = dict(pm.base)
+    def pose(lean):
+        pm.base = dict(base0, mode="heels", at=np.array([0.3, -1.65]), yaw=1.86, lean=float(lean), spine=float(10.0 * lean / 50.0), twist=0.0)
+        return pm._pose(arms=False, look=False)
+    def write(p):
+        s_ = kin.fk(p); pm.written = (np.array([s_[x][0] for x in kin.SEGS]), np.array([PM._mat_to_quat(s_[x][1]) for x in kin.SEGS]))
+    saved = (dict(pm.swivel), pm.written, dict(pm.stats), dict(pm.base), dict(pm.arms[sd]))
+    def run(via_rest):
+        p = pose(50.0); segs = kin.fk(p); cp, cR = segs["chest"]; sh = cp + cR @ kin.OFFSET[f"upper_arm_{sd}"]
+        R0 = cR.copy(); wrist0 = H0 - R0 @ PM.GRIP_LOCAL[sd]
+        pm.swivel[sd] = 0
+        pm._place(p, sd, H0, R0, {}, cont=False)
+        pole = cR @ np.array([-.5, kin.side_sign(sd) * 1.0, -1.0])
+        kin.arm_ik(p, sd, wrist0, kin.axang(PM.unit(wrist0 - sh), math.radians(-60)) @ pole, R0, segs=kin.fk(p)); pm.swivel[sd] = -60; write(p)
+        hp, hR = segs[f"hand_{sd}"]; g1 = hp + hR @ PM.GRIP_LOCAL[sd]
+        end = pm._rest_via(p, sd) if via_rest else g1                                      # the crossing over the child ends above the way's end
+        a = dict(mode="move", to={"k": "relaxed"}, g0=list(H0), path=[list(H0), [float(end[0]), float(end[1]), LIFT]], q0=list(PM._mat_to_quat(R0)),
+                 t=0, n=N, shape0=dict(curl=.4, thumb=.35, index=None), shape1=dict(curl=.35, thumb=.25, index=None), via=None, via_rest=via_rest)
+        leaps = []; dists = []
+        for t in range(1, N + 1):
+            a["t"] = t
+            p = pose(max(22.0, 50.0 - 3.1 * t)); cp, cR = kin.fk(p)["chest"]; sh = cp + cR @ kin.OFFSET[f"upper_arm_{sd}"]
+            grip, R, shape = pm._hand_now(p, sd, a)
+            pm._place(p, sd, grip, R, shape, cont=True)
+            leaps.append(float(np.linalg.norm(kin.fk(p)[f"forearm_{sd}"][0] - pm.written[0][i_el])))
+            dists.append(float(np.linalg.norm((grip - R @ PM.GRIP_LOCAL[sd]) - sh))); write(p)
+        return leaps, dists
+    try:
+        old_l, old_d = run(False); new_l, new_d = run(True)
+        pose(50.0)
+        path_w, via_w, g1_w = pm._rest_way(H0, sd)                                          # (ii) the wiring: the way from above
+        q = pm._pose(arms=False, look=False); segs = kin.fk(q); cp, cR = segs["chest"]; sh = cp + cR @ kin.OFFSET[f"upper_arm_{sd}"]
+        low = sh + cR @ np.array([0.25, -0.35 * kin.side_sign(sd), -0.55])                   # a hand low beside her hip: a short way to hang
+        low[2] = max(low[2], PM.floor_z(low[:2]) + 0.05)
+        path_l, via_l, _ = pm._rest_way(low, sd)
+    finally:
+        pm.swivel, pm.written, pm.stats, pm.base, pm.arms[sd] = saved
+    print(f"parent 55 (C259): the relax replayed over {N} ticks; the straight descent: the wrist {min(old_d):.2f} m from the shoulder at the",
+          f"nearest, the elbow's worst leap {max(old_l):.2f} m; via the front ({K.REST_VIA_M[0]:.2f} ahead, {K.REST_VIA_M[1]:.2f} down): {min(new_d):.2f} m,",
+          f"{max(new_l):.2f} m; _rest_way: from above {'via' if via_w is not None else 'no via'} ({len(path_w)} points over the child), from",
+          f"beside the hip {'via' if via_l is not None else 'no via'}")
+    assert min(old_d) < kin.L_FA and max(old_l) > PM.MAX_JUMP_M, (old_d, old_l)
+    assert min(new_d) > min(old_d) + 0.05 and max(new_l) <= PM.MAX_JUMP_M, (new_d, new_l)
+    assert via_w is not None and np.linalg.norm(via_w - pm._rest_via(q, sd)) < 1e-9, via_w
+    assert via_l is None, (low, path_l)

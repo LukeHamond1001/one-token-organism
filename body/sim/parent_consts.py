@@ -197,6 +197,11 @@ PULL_MAX_S = 4.0                # s: a pull that has not reached her cap in this
 PLAN_LEAN_MAX = 60              # C256: the plan's reach test (_reachable: the put's place, the pick from where she kneels, the turn's grips)
 PLAN_SPINE_MAX = 35             # ... allows this much lean and spine flexion, ten degrees inside her limits (70, 45): a reach planned at the
                                 # edge of her stretch misses by the centimetre the test did not see; a person plans inside it (ours)
+REST_VIA_M = (0.30, 0.25)       # C259: a hand coming to rest whose way would pass within the forearm's length of her shoulder (its way
+                                # lifted over the child comes down from right above the hand hanging below the shoulder) comes down in front
+                                # of her first: through a point this far in front of the shoulder and this far below it, in her chest's frame
+                                # (ours: the forearm's length in front, the hand at the elbow's height: the arm bent at a right angle before it
+                                # hangs, as an arm comes down from a raise)
 SWIVEL_STEP_DEG = 45.0          # C255: her elbow's swing about the shoulder-wrist line moves at most this a tick toward the swing the placing
                                 # chose when the search ran wide (a target moved round her arm, the relax's carried arm): 45 deg on an elbow's
                                 # circle of 0.25 m is 0.2 m a tick, under MAX_JUMP_M; before, 60 to 120 deg flips of 0.3 to 0.6 m (ours)

@@ -386,6 +386,14 @@ def _kneel_u(T):
     return float(np.interp(T, KNEEL_TIME, KNEEL_U))
 
 
+def _seg_dist3(a, b, c):
+    """the distance from point c to the segment a-b (3-D; C259)"""
+    a = np.asarray(a, float); b = np.asarray(b, float); c = np.asarray(c, float)
+    d = b - a
+    t = float(np.clip(((c - a) @ d) / max(float(d @ d), 1e-12), 0.0, 1.0))
+    return float(np.linalg.norm(a + t * d - c))
+
+
 def _seg_dist(p, a, b):
     """a floor point's distance to the segment a-b"""
     p, a, b = (np.asarray(v, float)[:2] for v in (p, a, b))
@@ -2365,6 +2373,8 @@ class ParentMotion:
             pts = [np.asarray(x, float) for x in a.get("path") or [a["g0"]]]
             if a.get("via") is not None:
                 pts.append(g1 + self._approach_dir(a["to"], sd) * K.APPROACH_M)
+            if a.get("via_rest"):                                           # C259: a hand coming to rest comes down in front of her
+                pts.append(self._rest_via(p, sd))
             pts.append(g1)
             grip = _along(pts, u)
             R = _quat_to_mat(_nlerp(q0, _mat_to_quat(R1), u))
@@ -2651,6 +2661,37 @@ class ParentMotion:
             hp, hR = segs[f"hand_{sd}"]
             return hp + hR @ GRIP_LOCAL[sd], hR
         raise ValueError(k)
+
+    def _rest_via(self, p, sd):
+        """the point a hand coming to rest comes down through (C259): REST_VIA_M in front of the shoulder and below it, in her chest's
+        frame at pose p (the via follows her trunk as it comes up under the relax)"""
+        cp, cR = kin.fk(p)["chest"]
+        return cp + cR @ (kin.OFFSET[f"upper_arm_{sd}"] + np.array([K.REST_VIA_M[0], 0.0, -K.REST_VIA_M[1]]))
+
+    def _rest_way(self, g0, sd):
+        """the way a free hand takes from g0 to rest: over the child (C235) to the hand hanging at her side; where that way would pass
+        within the forearm's length of her shoulder it comes down in front of her first, through _rest_via. (path, via or None, g1)
+        C259 (2026-10-03): THE HAND'S WAY TO REST COMES DOWN IN FRONT OF HER. The dawn-73 copy's relax (p1/c259_jump_probe.py; the jump
+        guard's own line, C257): her hand, lifted over the child on its way back from a reach, crossed at the lift's height to right above
+        the hand hanging below the shoulder and came down through the shoulder itself (the wrist 5 to 12 cm from it, her trunk coming up
+        from lean 50 to 22 under it); with the wrist there the line the swing turns about turned 80 degrees in a tick and no swing's elbow
+        lay near the drawn one (the elbow leapt 0.49 and 0.64 m in two ticks, the act refused: 'her body would have jumped 0.64 m in a
+        tick: forearm_R, phase relax', one a day since C255). The wrist cannot pass the shoulder nearer than the folded forearm; an arm
+        coming down from a raise bends at the elbow and the hand comes down in front. Where the straight way (or its lifted one) would pass
+        within L_FA of the shoulder, the way runs over the child to the rest's via and from there to the hanging hand"""
+        q = self._pose(arms=False, look=False)
+        segs = kin.fk(q)
+        cp, cR = segs["chest"]
+        sh = cp + cR @ kin.OFFSET[f"upper_arm_{sd}"]
+        hp, hR = segs[f"hand_{sd}"]
+        g1 = hp + hR @ GRIP_LOCAL[sd]
+        g0 = np.asarray(g0, float)
+        path = [np.asarray(x, float) for x in self._over_child(g0, g1)]
+        pts = path + [g1]
+        if min(_seg_dist3(a_, b_, sh) for a_, b_ in zip(pts[:-1], pts[1:])) >= kin.L_FA:
+            return path, None, g1
+        via = self._rest_via(q, sd)
+        return [np.asarray(x, float) for x in self._over_child(g0, via)], via, g1
 
     def _over_child(self, g0, g1):
         """a hand's way from g0 toward g1 kept over the child: where the straight line passes within 0.25 m (on the floor plan) of
@@ -3463,20 +3504,28 @@ class ParentMotion:
             for sd in sides:
                 g0, R0 = self._grip_now(sd, plan=True)
                 to = CARRY if self.holding[sd] is not None else {"k": "relaxed"}
-                g1, _ = self._resolve_hand(to, sd)
                 g0o = g0 + self.offset[f"arm_{sd}"] + self.offset["core"]
-                pts = [np.asarray(x, float) for x in self._over_child(g0o, g1)] + [g1]   # C235: timed along its way over the child
+                if to is CARRY:
+                    g1, _ = self._resolve_hand(to, sd)
+                    pts = [np.asarray(x, float) for x in self._over_child(g0o, g1)] + [g1]   # C235: timed along its way over the child
+                else:
+                    path, via, g1 = self._rest_way(g0o, sd)                 # C259: a free hand's way to rest, down in front of her
+                    pts = path + ([via] if via is not None else []) + [g1]
                 dist = sum(float(np.linalg.norm(b_ - a_)) for a_, b_ in zip(pts[:-1], pts[1:]))   # (the straight line's time over a
                 n = max(n, int(math.ceil(dist / K.REACH_MPS / TICK_S)))     # sitting child's head was a 0.61 m jump: the fault at the
             ph["n"] = n
             for sd in sides:
                 g0, R0 = self._grip_now(sd, plan=True)
                 to = CARRY if self.holding[sd] is not None else {"k": "relaxed"}
-                g1, _ = self._resolve_hand(to, sd)
-                self.arms[sd] = dict(mode="move", to=to, g0=_lst(g0), path=[_lst(x) for x in self._over_child(g0, g1)], q0=_lst(_mat_to_quat(R0)),
+                if to is CARRY:
+                    g1, _ = self._resolve_hand(to, sd)
+                    path, via = self._over_child(g0, g1), None
+                else:
+                    path, via, g1 = self._rest_way(g0, sd)
+                self.arms[sd] = dict(mode="move", to=to, g0=_lst(g0), path=[_lst(x) for x in path], q0=_lst(_mat_to_quat(R0)),
                                      t=0, n=ph["n"], shape0=self._shape_now(sd),
                                      shape1=dict(curl=.35 if self.holding[sd] is None else .9, thumb=.25 if self.holding[sd] is None else .8,
-                                                 index=None), via=None)
+                                                 index=None), via=None, via_rest=via is not None)
             ph["sides_moving"] = sides
         t += 1
         for sd in ph.get("sides_moving", []):
