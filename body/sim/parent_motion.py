@@ -3247,14 +3247,29 @@ class ParentMotion:
                     # kneeling on her heels who cannot reach the floor beyond rises onto her knees (the pull's own rule, _plan_pull): the reach is
                     # planned anew from the tall kneel, once; short from there too, the release's landing check has it as before
                     b_ = self.base; fw = np.array([math.cos(b_["yaw"]), math.sin(b_["yaw"])])
-                    fresh = {k_: v_ for k_, v_ in ph.items() if k_ not in ("t", "short", "solved_at", "lean_to", "lean_from", "lean_t0", "lean_n", "serial", "n")}
-                    fresh["rose"] = True                                    # (her arms' specs stand where this tick set them: a move not
-                    if a is not None:                                       # yet begun holds the hand where it is while she rises)
-                        a["info"]["rose_for_put"] = True
-                    self.stats["puts_from_tall"] = self.stats.get("puts_from_tall", 0) + 1
-                    i = self.phases.index(ph)
-                    self.phases[i:i + 1] = [dict(type="kneel_down", at=_lst(np.asarray(b_["at"], float) + fw * HEELS_BACK), yaw=b_["yaw"], u0=3.0, u1=2.0), fresh]
-                    return "next"
+                    at_rise = np.asarray(b_["at"], float) + fw * HEELS_BACK
+                    # C256 (2026-10-03): THE RISE ONLY WHERE THE TALL KNEEL REACHES. The dawn-66 copy's ball (p1/c256_setdown_probe2.py): a floor
+                    # point 0.8 m ahead is beyond the tall kneel (its shoulder a head higher: the arm does not reach the far floor) though the
+                    # heels kneel nearly reached it, and C245's rise sent her up to miss by 25 cm. The tall kneel's reach is tested at the rise's
+                    # spot first; where it does not reach, a put is planned anew (the put's re_near: she kneels where the place is in reach, once
+                    # more), and a pick reaches on as it did before C246
+                    tall_ok = all(self._reachable_at(sd, self._resolve_hand(to, sd)[0], at_rise, b_["yaw"], "tall") for sd, to in hands.items())
+                    if tall_ok:
+                        fresh = {k_: v_ for k_, v_ in ph.items() if k_ not in ("t", "short", "solved_at", "lean_to", "lean_from", "lean_t0", "lean_n", "serial", "n")}
+                        fresh["rose"] = True                                # (her arms' specs stand where this tick set them: a move not
+                        if a is not None:                                   # yet begun holds the hand where it is while she rises)
+                            a["info"]["rose_for_put"] = True
+                        self.stats["puts_from_tall"] = self.stats.get("puts_from_tall", 0) + 1
+                        i = self.phases.index(ph)
+                        self.phases[i:i + 1] = [dict(type="kneel_down", at=_lst(at_rise), yaw=b_["yaw"], u0=3.0, u1=2.0), fresh]
+                        return "next"
+                    toy_ = next((self.holding[sd] for sd in hands if self.holding.get(sd) is not None), None)
+                    if ph.get("put_check") and a is not None and toy_ is not None and not a["info"].get("re_near_short"):
+                        a["info"]["re_near_short"] = True; a["re_near"] = False
+                        self.stats["puts_re_near_short"] = self.stats.get("puts_re_near_short", 0) + 1
+                        i = self.phases.index(ph)
+                        self.phases[i:] = [dict(type="plan", what="put_near", args=dict(toy=toy_))]
+                        return "next"
         else:
             if ph.get("solve", True) and self.base["mode"] in ("heels", "tall") and t % K.REPLAN_TICKS == 0:
                 self._trunk_for(a, ph, hands, first=False)
@@ -5244,7 +5259,14 @@ class ParentMotion:
         if self.base["mode"] not in ("heels", "tall"):                      # C252 (2026-10-03): a kneeling reach is asked of a kneeling base; from
             return False                                                    # her feet or the sofa nothing is within a kneel's reach (the life
         g, R = self._resolve_hand(to, sd)                                   # stopped at 3,468,000: C251's set-down planned while she stood,
-        lean, spine, tw, ok = self._solve_trunk({sd: (g, R, dict(curl=.3, thumb=.3, index=None))}, self.warm.get("trunk"))   # P.kneel(mode='stand'))
+        # C256 (2026-10-03): THE PLAN'S REACH IS TESTED INSIDE HER STRETCH. The dawn-66 copy's set-down (p1/c256_setdown_probe2.py): the
+        # plan's test passed a place 0.92 m off at lean 70, spine 40 (her limits), and the reach itself, from the same kneel for the same
+        # place a centimetre higher, found no pose; she rose to the tall kneel (C245), from which a far floor point is farther still, and
+        # let the ball go 25 cm off. A person does not plan a set-down at full stretch: the plan's test allows PLAN_LEAN_MAX and
+        # PLAN_SPINE_MAX (60, 35: ten degrees inside her limits), so a place at the edge sends her to kneel nearer (the put's re_near,
+        # the pick's spot, the turn's re-approach) instead of reaching and missing
+        lean, spine, tw, ok = self._solve_trunk({sd: (g, R, dict(curl=.3, thumb=.3, index=None))}, self.warm.get("trunk"),   # P.kneel(mode='stand'))
+                                                max_lean=K.PLAN_LEAN_MAX, max_spine=K.PLAN_SPINE_MAX)
         return ok
 
     def _toy_spot(self, xy):

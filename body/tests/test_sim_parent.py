@@ -2169,10 +2169,11 @@ def test_a_put_beyond_her_heels_is_made_from_the_tall_kneel():
     _live(w, 3)
     pm = w.parent
     pm.give_toy("R", "block")
-    saved = (pm._solve_trunk, dict(pm.base))
+    saved = (pm._solve_trunk, pm._reachable_at, dict(pm.base))
     try:
         pm.base["mode"] = "heels"
         pm._solve_trunk = lambda *a_, **k_: (70.0, 40.0, 0.0, False)        # no trunk from here reaches it
+        pm._reachable_at = lambda *a_, **k_: True                            # (C256: the tall kneel at the rise's spot reaches it)
         far = np.asarray(pm.base["at"], float) + np.array([math.cos(pm.base["yaw"]), math.sin(pm.base["yaw"])]) * 0.9
         ph = dict(type="reach", hands={"R": dict(k="floor", xy=PM._lst(far))}, via=True, shape={"R": dict(curl=.95, thumb=.85, index=None)}, put_check=True)
         pm.phases = [ph]; a = dict(id=-1, kind="bring_back", target="block", info={}, why=None)
@@ -2185,8 +2186,18 @@ def test_a_put_beyond_her_heels_is_made_from_the_tall_kneel():
         ph3 = dict(type="reach", hands={"R": dict(k="floor", xy=PM._lst(far))}, via=True, shape={"R": dict(curl=.95, thumb=.85, index=None)})
         pm.phases = [ph3]; b = dict(id=-2, kind="clear", target="block", info={}, why=None)
         assert pm._ph_reach(b, ph3) == "run" and not b["info"].get("rose_for_put"), "a set-aside's reach: no rise"
+        # C256: where the tall kneel would not reach it either, no rise: the put is planned anew (re_near allowed again), once; then on short
+        pm._reachable_at = lambda *a_, **k_: False
+        ph4 = dict(type="reach", hands={"R": dict(k="floor", xy=PM._lst(far))}, via=True, shape={"R": dict(curl=.95, thumb=.85, index=None)}, put_check=True)
+        pm.phases = [ph4, dict(type="release", side="R")]; c = dict(id=-3, kind="bring_back", target="block", info={}, why=None, re_near=True)
+        r4 = pm._ph_reach(c, ph4)
+        assert r4 == "next" and pm.phases == [dict(type="plan", what="put_near", args=dict(toy="block"))] and c["info"].get("re_near_short") \
+            and c["re_near"] is False and not c["info"].get("rose_for_put"), (r4, pm.phases, c)
+        ph5 = dict(type="reach", hands={"R": dict(k="floor", xy=PM._lst(far))}, via=True, shape={"R": dict(curl=.95, thumb=.85, index=None)}, put_check=True)
+        pm.phases = [ph5]
+        assert pm._ph_reach(c, ph5) == "run" and ph5.get("short") and pm.phases == [ph5], "planned anew once already: the reach runs on, short"
     finally:
-        pm._solve_trunk, pm.base = saved
+        pm._solve_trunk, pm._reachable_at, pm.base = saved
     print("parent 45 (C245): a lesson's put short from her heels is planned anew from the tall kneel, once; risen or a set-aside, the reach runs on")
 
 
@@ -2198,16 +2209,17 @@ def test_the_pick_rises_and_the_clearing_reaches_round():
     w = W.G1World(seed=1)
     _live(w, 3)
     pm = w.parent
-    saved = (pm._solve_trunk, dict(pm.base))
+    saved = (pm._solve_trunk, pm._reachable_at, dict(pm.base))
     try:
         pm.base["mode"] = "heels"
         pm._solve_trunk = lambda *a_, **k_: (70.0, 40.0, 0.0, False)
+        pm._reachable_at = lambda *a_, **k_: True                            # (C256: the tall kneel at the rise's spot reaches it)
         ph = dict(type="reach", hands={"R": dict(k="above_toy", toy="block", h=0.0)}, via=True, shape={"R": dict(curl=.2, thumb=.3, index=None)}, rise_ok=True)
         pm.phases = [ph]; a = dict(id=-3, kind="show", target="block", info={}, why=None)
         r = pm._ph_reach(a, ph)
         assert r == "next" and a["info"].get("rose_for_put") and pm.phases[0]["type"] == "kneel_down" and pm.phases[1].get("rose"), (r, pm.phases)
     finally:
-        pm._solve_trunk, pm.base = saved
+        pm._solve_trunk, pm._reachable_at, pm.base = saved
     T2 = np.asarray(pm.base["at"], float); yaw = float(pm.base["yaw"]); fwd = np.array([math.cos(yaw), math.sin(yaw)])
     T = T2 + fwd * PM.HEELS_BACK
     orig_clear, orig_reach = pm.child.clearance_xy, pm._reachable_at
@@ -2364,3 +2376,46 @@ if __name__ == "__main__":
         print(f"   ({time.time() - t1:.0f} s)")
     print(f"{len(tests) - failed}/{len(tests)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+
+def test_the_plans_reach_is_tested_inside_her_stretch():
+    """parent 53 (C256, 2026-10-03): the plan's reach test (_reachable: the put's place, the pick from where she kneels, the turn's grips) asks the
+    trunk solve for a pose within PLAN_LEAN_MAX and PLAN_SPINE_MAX (60, 35), ten degrees inside her limits (70, 45), so a place at the edge of her
+    stretch is planned from nearer; and there is a floor place her full stretch reaches that the plan declines. The dawn-66 copy's ball: the
+    plan's test passed at lean 70, spine 40 and the reach itself found no pose, 25 cm off"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    seen = []
+    orig = pm._solve_trunk
+    def spy(targets, warm=None, *a_, **k_):
+        seen.append((k_.get("max_lean", a_[0] if a_ else 70), k_.get("max_spine", a_[1] if len(a_) > 1 else 45)))
+        return orig(targets, warm, *a_, **k_)
+    saved = dict(pm.base)
+    try:
+        pm.base["mode"] = "heels"; pm.base["lean"] = pm.base["spine"] = pm.base["twist"] = 0.0
+        pm._solve_trunk = spy
+        fw = np.array([math.cos(pm.base["yaw"]), math.sin(pm.base["yaw"])])
+        near = np.asarray(pm.base["at"], float) + fw * 0.45
+        assert pm._reachable("R", dict(k="floor", xy=PM._lst(near))) is True, "a place at her knees is within the plan's reach"
+        assert seen and seen[0] == (K.PLAN_LEAN_MAX, K.PLAN_SPINE_MAX), seen[:2]
+        pm._solve_trunk = orig
+        edge = None; n_full = 0
+        for ang in (0.0, -0.5, 0.5, -1.0, 1.0, -1.5, 1.5):                 # places about her (the copy's ball lay 0.46 m ahead and
+            for d_ in np.arange(0.5, 1.0, 0.05):                            # 0.8 m to her right): one her full stretch reaches and the
+                yaw_ = pm.base["yaw"] + ang                                 # plan declines, inside her stretch
+                xy = np.asarray(pm.base["at"], float) + np.array([math.cos(yaw_), math.sin(yaw_)]) * float(d_)
+                sd = "R" if ang <= 0 else "L"
+                g, R = pm._resolve_hand(dict(k="floor", xy=PM._lst(xy)), sd)
+                full = orig({sd: (g, R, dict(curl=.3, thumb=.3, index=None))}, None)[3]
+                if not full:
+                    break
+                n_full += 1
+                if not pm._reachable(sd, dict(k="floor", xy=PM._lst(xy))):
+                    edge = (float(ang), float(d_)); break
+            if edge is not None:
+                break
+        assert n_full > 0 and edge is not None, (n_full, "no place her full stretch reaches that the plan declines")
+    finally:
+        pm._solve_trunk = orig; pm.base = saved
+    print(f"parent 53 (C256): the plan's reach test asks lean <= {K.PLAN_LEAN_MAX}, spine <= {K.PLAN_SPINE_MAX}; a floor place {edge[1]:.2f} m off at {math.degrees(edge[0]):.0f} deg is within her full stretch and planned from nearer")
