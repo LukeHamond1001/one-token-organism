@@ -90,13 +90,18 @@ def _bucket_at_hand(seen, lane):
     return "bucket" in seen or "bucket" in set(getattr(lane, "toys", ()) or ())
 
 
-def _worn(book, o):
+def _lvl_key(o, lvl):
+    """C261: her book's key for a lesson toy's got at the reach rung's level `lvl` (conduct._book_key; level 0: the toy's own name)"""
+    return f"{o}@{int(lvl)}" if int(lvl) > 0 else o
+
+
+def _worn(book, o, lvl=None):
     """C141: a toy her smiles have worn out: every act on it that her book pays (got, lifted, shook, hit) has habituated under
     HABIT_FLOOR (conduct._motor_judgments: the n-th smile is worth w e^(-n/HABIT_TAU)). Day 37: the box alone all day (the duck lay
     against the wall), 189 lifts and 73 hits of it and 4 smiles: a person brings another toy when the child has had the box for days"""
-    for k in ("got", "lifted", "shook", "hit"):
+    for k in ("got", "lifted", "shook", "hit"):                        # (C261: its got read at the reach rung's level it stands at)
         w = K.MOTOR_WORTH.get(k, (0, None))[0]
-        n = int(book.get(k, {}).get(o, 0))
+        n = int(book.get(k, {}).get(_lvl_key(o, lvl or 0) if k == "got" else o, 0))
         if w * math.exp(-n / K.HABIT_TAU) >= K.HABIT_FLOOR:
             return False
     return True
@@ -124,6 +129,7 @@ class DayPlan:
         self.level = {}                    # her lessons (A90): toy -> the reach rung's level
         self.level_t = {}                  # toy -> the tick its level was set
         self.got_seen = {}                 # toy -> the "got" smiles counted at its last lesson
+        self.reach_turn = True             # C261: the next lesson on a toy whose reach ladder is open is a reach lesson (they alternate with the later rungs)
         self.roll_turn = True              # A109: the next reach-rung lesson is the roll rung (once it rolls); they alternate
         self.sit_due = False               # A161: a motor block entered with the child on its back owes one pull-to-sit (its first offer)
         self.sit_turns = 0                 # C254: the block's turns of a prone child for the sit
@@ -370,46 +376,69 @@ class DayPlan:
             its = set(getattr(p, "child_holds", ()) or ())              # C132 (day 33): a toy in its hand she does not see (C121's known
             free = [o for o in focus if (o not in seen or seen[o].on != "hand") and o not in its]   # toys) was the lesson's toy 9 times
             focus = free or focus                                       # in 4,000 ticks, each hand-over refused: never a toy it holds
-            fresh = [o for o in focus if not _worn(c.book, o)]          # C141: a toy her smiles have worn out is offered only when no
+            fresh = [o for o in focus if not _worn(c.book, o, self.level.get(o, 0))]          # C141: a toy her smiles have worn out is offered only when no
             if not fresh:                                               # fresh one is at hand; else a fresh toy she knows the place of
                 known = set(getattr(lane, "toys", ()) or ())
-                fresh = [o for o in sorted(known) if o not in TP.OPEN_CONTAINERS and o not in its and not _worn(c.book, o)
+                fresh = [o for o in sorted(known) if o not in TP.OPEN_CONTAINERS and o not in its and not _worn(c.book, o, self.level.get(o, 0))
                          and not c.left_where_it_lies(o) and (o not in seen or seen[o].on != "hand")]
+            if not fresh:                                               # C261: none pays where it stands: a toy with a farther level
+                fresh = [o for o in focus if int(self.level.get(o, 0)) < LESSON_LEVELS - 1]   # to go (its next reach lesson steps it there)
             focus = fresh or focus
         if not focus:
             c.request("call")
         else:
             o = focus[int(self.rng.integers(len(focus)))]
             book = c.book
-            got = int(book.get("got", {}).get(o, 0))
+            lvl = int(self.level.get(o, 0)); top = LESSON_LEVELS - 1
+            got = sum(int(v) for k_, v in book.get("got", {}).items() if k_ == o or str(k_).startswith(o + "@"))   # her smiles for its got, every level
+            got_lvl = int(book.get("got", {}).get(_lvl_key(o, lvl), 0))     # and at the level it stands at (C261)
+            raw = int(getattr(c, "got_raw", {}).get(o, got))                # every got she saw on it, smiled at or not
             handled = sum(int(book.get(k, {}).get(o, 0)) for k in ("lifted", "shook", "hit"))
             rolled = int(book.get("rolled", {}).get("", 0))
-            if got < 2 * K.MASTERED_N and rolled >= K.MASTERED_N and lane.posture in ("back", "front") and self.roll_turn:
+            # C261 (2026-10-03): THE REACH LADDER STAYS OPEN AND ITS BAR RISES (conduct._book_key's note: day 75's ladder, every toy at her
+            # cap, the levels all back at 0 since days 0 to 43, 17 motor smiles a day). The rung is the toy's while a farther level
+            # remains or the top level's got is not yet mastered twice over; once its first gots are mastered (2 x MASTERED_N, as
+            # before) its reach lessons alternate with the later rungs' (reach_turn). The level steps farther after MASTERED_N smiled
+            # gots at it (mastery, then on: before, after every smiled got), or after any got at a level where her smile is worn out
+            # (nothing left to earn there); back a level after NO_PROGRESS ticks with no got
+            reach_open = lvl < top or got_lvl < 2 * K.MASTERED_N
+            reach_now = got < 2 * K.MASTERED_N or (reach_open and self.reach_turn)
+            if reach_now and rolled >= K.MASTERED_N and lane.posture in ("back", "front") and self.roll_turn:
                 self.roll_turn = False                                  # A109 (C91): the roll rung, every other lesson once it rolls (the
-                c.request("set_far", o=o)                               # roll smiled at MASTERED_N times): the toy set beside its far
-                self.log.append((t, "lesson", "roll", o, rolled))       # shoulder past its reach, so a roll brings it within reach and
-            elif got < 2 * K.MASTERED_N:                                # the toy is the reward (its own "got", worth 2 on that toy)
+                self.reach_turn = False                                 # roll smiled at MASTERED_N times): the toy set beside its far
+                if hasattr(c, "set_level"):                             # shoulder past its reach, so a roll brings it within reach and
+                    c.set_level[o] = lvl                                # the toy is the reward (its own "got", worth 2 on that toy)
+                c.request("set_far", o=o)
+                self.log.append((t, "lesson", "roll", o, rolled))
+            elif reach_now:
                 self.roll_turn = True                                   # the reach and grasp rung
-                lvl = int(self.level.get(o, 0))
-                if got > int(self.got_seen.get(o, 0)):                  # it got the toy since: a level farther
-                    lvl = min(LESSON_LEVELS - 1, lvl + 1); self.level_t[o] = t
-                elif t - int(self.level_t.get(o, t)) > NO_PROGRESS and lvl > 0:   # nothing for a block: a level back
+                self.reach_turn = False
+                seen_ = int(self.got_seen.get(o, raw))
+                worn_here = K.MOTOR_WORTH["got"][0] * math.exp(-got_lvl / K.HABIT_TAU) < K.HABIT_FLOOR
+                if lvl < top and (got_lvl >= K.MASTERED_N or (worn_here and raw > seen_)):
+                    lvl += 1; self.level_t[o] = t                       # mastered here (or nothing left to earn here and it got it): farther
+                elif raw <= seen_ and t - int(self.level_t.get(o, t)) > NO_PROGRESS and lvl > 0:   # nothing for a block: a level back
                     lvl -= 1; self.level_t[o] = t
-                self.level[o] = lvl; self.level_t.setdefault(o, t); self.got_seen[o] = got
+                self.level[o] = lvl; self.level_t.setdefault(o, t); self.got_seen[o] = raw
                 c.motion.lesson_dist = LESSON_DIST0 + LESSON_STEP * lvl
+                if hasattr(c, "set_level"):
+                    c.set_level[o] = lvl
                 c.request("set_near", o=o)
                 self.log.append((t, "lesson", "reach", o, lvl, round(c.motion.lesson_dist, 2)))
             elif _bucket_at_hand(seen, lane) and o != "bucket" and self.hide_turn and (o not in seen or seen[o].on != "hand") \
                     and ("bucket" not in seen or seen["bucket"].child_sees):   # C158: the hide in the child's view (the bucket before its camera when she sees it; unseen, C138 carries it beside the child)   # C152: the bucket seen or its place known (C138 brings it beside the child; C130's gate, within its reach only, predates the carry) (day 31: four hides 2 m from it)   # A129: the hide game, every other lesson once it grasps the toy at will; C115: never on the toy in its hand (her fetch never takes it, A4: day 26 asked three of four hides on the held book, refused)
                 self.hide_turn = False                                  # toy at will (got mastered): the toy let go into the bucket in
+                self.reach_turn = True                                  # C261
                 c.request("hide", o=o)                                  # its view; its hand into the bucket after is "found" (worth 2)
                 self.log.append((t, "lesson", "hide", o, got))
             elif handled < 3 * K.MASTERED_N or o in held:               # the handle rung: the toy into its hand (C125: and the toy in
                                                                         # her own hand, which she cannot ask the child to give her)
+                self.reach_turn = True                                  # C261
                 self.hide_turn = _bucket_at_hand(seen, lane)                # C152
                 c.request("hand_over", o=o)
                 self.log.append((t, "lesson", "handle", o, handled))
             else:                                                       # the give rung
+                self.reach_turn = True                                  # C261
                 self.hide_turn = _bucket_at_hand(seen, lane)                # C152
                 if _may_give(seen, o):
                     c.request("ask_give", o=o)
@@ -494,7 +523,8 @@ class DayPlan:
                     block_i=int(self.block_i),                                        # C220
                     sit_tries=int(self.sit_tries),                                    # C224
                     sit_turns=int(getattr(self, "sit_turns", 0)),                     # C254
-                    hide_turn=bool(self.hide_turn))
+                    hide_turn=bool(self.hide_turn),
+                    reach_turn=bool(self.reach_turn))                                 # C261
 
     def load_state(self, s):
         self.rng.bit_generator.state = s["rng"]
@@ -509,6 +539,7 @@ class DayPlan:
         self.level_t = {k: int(v) for k, v in s.get("level_t", {}).items()}
         self.got_seen = {k: int(v) for k, v in s.get("got_seen", {}).items()}
         self.roll_turn = bool(s.get("roll_turn", True))
+        self.reach_turn = bool(s.get("reach_turn", True))                           # (C261; older saves: a reach lesson first)
         self.sit_due = bool(s.get("sit_due", False))                                 # (C207; older saves: none owed)
         self.sit_tries = int(s.get("sit_tries", 0))                                  # (C224; older saves: none tried)
         self.sit_turns = int(s.get("sit_turns", 0))                                  # (C254; older saves: none turned)

@@ -1948,6 +1948,94 @@ def test_her_lessons_and_hands():
           "pull-to-sit and the prop closed")
 
 
+def test_the_bar_rises():
+    """C261 (the teacher's method): HER BOOK. A got on a lesson toy is counted at the reach rung's level her lesson last set it at
+    (conduct.set_level; level 0 the toy's own name, as before): with the ball's got worn out at level 0 (37 smiles, then none), a got
+    on the ball set a level farther earns 2 afresh under its own key ("ball@1") and falls by its own count; the reach nearer earns
+    again there until the got at that level is mastered; every got she sees is counted (got_raw), smiled at or not; the level and
+    the count go with her save, and a save from before them starts the count at her book's.
+    HER PLAN. With the ball's first gots mastered and its smile worn out at level 0, her reach lesson steps a level farther (0.15 m)
+    and marks the level in her conduct; the next lesson is the later rung's (the give rung here), the one after a reach lesson again;
+    three smiled gots at the level step it farther (0.20); a block with no got steps it back; at the top level with its got mastered
+    twice over the reach rung is closed and every lesson is the later rung's; a toy new to her book has reach lessons only, a level
+    farther after three smiled gots; the turn goes with the plan's save"""
+    from body.sim.lang import dayplan as DP
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con)
+    ws = []
+    for t in range(0, 60):
+        st = con.tick(t, P(t, seen=TOYS, events=(("got", "ball"),)))
+        ws += [j[0] for j in st.judgments if j[1] == "got"]
+    n0 = len(ws)
+    assert con.book["got"]["ball"] == n0 and 30 < n0 < 45 and con.got_raw["ball"] == 60, (n0, con.got_raw)
+    st = con.tick(60, P(60, seen=TOYS, events=(("got", "ball"), ("reach_nearer", "ball"))))
+    assert st.judgments == [], st.judgments                                            # level 0: worn out, and the reach nearer past mastery
+    con.set_level["ball"] = 1
+    st = con.tick(61, P(61, seen=TOYS, events=(("reach_nearer", "ball"),)))
+    assert st.judgments == [(1, "reach_nearer", "ball")], st.judgments                  # a level farther: the approximation earns again
+    st = con.tick(62, P(62, seen=TOYS, events=(("got", "ball"),)))
+    assert st.judgments == [(2, "got", "ball")] and con.book["got"]["ball@1"] == 1 and con.book["got"]["ball"] == n0, (st.judgments, con.book["got"])
+    st = con.tick(63, P(63, seen=TOYS, events=(("got", "ball"),)))
+    assert abs(st.judgments[0][0] - 2 * math.exp(-0.1)) < 1e-3, st.judgments              # its own fall with mastery
+    con.tick(64, P(64, seen=TOYS, events=(("got", "ball"),)))
+    st = con.tick(65, P(65, seen=TOYS, events=(("reach_nearer", "ball"),)))
+    assert st.judgments == [] and con.book_log[-1][3] == "past mastery", (st.judgments, con.book_log[-1])
+    st = con.tick(66, P(66, seen=TOYS, events=(("got", "duck"),)))
+    assert st.judgments == [(2, "got", "duck")] and "duck@1" not in con.book["got"], st.judgments   # another toy: its own level (0)
+    assert con.got_raw["ball"] == 64 and con.got_raw["duck"] == 1, con.got_raw
+    con3 = _perfect(seed=4, transcriber=Transcriber(None)); _no_sets(con3)
+    con3.load_state(con.state())
+    assert con3.set_level == {"ball": 1} and con3.got_raw == con.got_raw and con3.book == con.book
+    old = con.state(); old.pop("got_raw"); old.pop("set_level")
+    con4 = _perfect(seed=4, transcriber=Transcriber(None)); _no_sets(con4)
+    con4.load_state(old)
+    assert con4.set_level == {} and con4.got_raw == {"ball": n0, "duck": 1}, (con4.set_level, con4.got_raw)
+
+    # her plan's lesson, on a stand-in lane (her book, her hands empty, the ball on the mat in its view and reach)
+    class Motion:
+        holding = {"L": None, "R": None}; lesson_dist = 0.10
+    class Con:
+        def __init__(self):
+            self.book = {"got": {"ball": 37}, "lifted": {"ball": 30}, "shook": {"ball": 30}, "hit": {"ball": 30}}
+            self.got_raw = {"ball": 37}; self.set_level = {}; self.motion = Motion(); self.asked = []
+        def left_where_it_lies(self, o): return False
+        def request(self, kind, **kw): self.asked.append((kind, kw.get("o"), round(self.motion.lesson_dist, 2)))
+    class Lane:
+        def __init__(self, con_, toys=("ball",)):
+            self.conduct = con_; self.posture = "sitting"; self.toys = set(toys)
+            self._p = P(0, seen=seen(*[(o, o, "red", "mat", True) for o in toys]))
+    c = Con(); lane = Lane(c)
+    plan = DP.DayPlan(seed=1); plan.focus = ["ball"]; plan.got_seen = {"ball": 3}; plan.level = {"ball": 0}; plan.level_t = {"ball": 0}
+    plan._lesson(100, lane)
+    assert c.asked[-1] == ("set_near", "ball", 0.15) and c.set_level == {"ball": 1} and plan.level["ball"] == 1 and not plan.reach_turn, (c.asked, c.set_level)
+    plan._lesson(400, lane)
+    assert c.asked[-1][0] == "ask_give" and plan.reach_turn, c.asked                     # the later rung's turn (handled mastered: the give)
+    plan._lesson(700, lane)
+    assert c.asked[-1] == ("set_near", "ball", 0.15) and plan.level["ball"] == 1, c.asked   # the reach again, the level kept (no got yet)
+    c.book["got"]["ball@1"] = 3; c.got_raw["ball"] = 40
+    plan._lesson(800, lane); plan._lesson(900, lane)
+    assert c.asked[-1] == ("set_near", "ball", 0.20) and plan.level["ball"] == 2 and c.set_level["ball"] == 2, c.asked   # mastered there: farther
+    plan._lesson(1000, lane); plan._lesson(900 + DP.NO_PROGRESS + 200, lane)
+    assert c.asked[-1] == ("set_near", "ball", 0.15) and plan.level["ball"] == 1, c.asked   # a block with no got: a level back
+    st_ = plan.state(); plan2 = DP.DayPlan(seed=1); plan2.load_state(st_)
+    assert plan2.reach_turn == plan.reach_turn and plan2.level == plan.level
+    top = DP.LESSON_LEVELS - 1
+    plan.level["ball"] = top; c.book["got"][f"ball@{top}"] = 2 * K.MASTERED_N; plan.reach_turn = True
+    n_ = len(c.asked); plan._lesson(5000, lane); plan._lesson(5300, lane)
+    assert all(a_[0] != "set_near" for a_ in c.asked[n_:]), c.asked[n_:]                 # the ladder done: the later rungs only
+    c2 = Con(); c2.book = {}; c2.got_raw = {}; lane2 = Lane(c2, toys=("cup",))
+    plan3 = DP.DayPlan(seed=1); plan3.focus = ["cup"]
+    plan3._lesson(10, lane2); plan3._lesson(300, lane2)
+    assert [a_[:1] + a_[2:] for a_ in c2.asked] == [("set_near", 0.10), ("set_near", 0.10)], c2.asked   # a new toy: reach lessons only
+    c2.book = {"got": {"cup": 3}}; c2.got_raw = {"cup": 3}
+    plan3._lesson(600, lane2)
+    assert c2.asked[-1] == ("set_near", "cup", 0.15), c2.asked
+    print(f"C261 the bar rises: her smile for 'got ball' worn out after {n0}; set a level farther it earns 2 afresh ('ball@1'), the reach nearer again until 3 gots",
+          f"there; every got counted ({con.got_raw['ball']}); the level and the count saved (an older save: the count from her book). Her plan: the worn ball's",
+          f"lesson a level farther (0.15), alternating with the give rung; 0.20 after 3 smiled gots there; back after a block with none; closed at the top",
+          f"level mastered; a new toy: reach lessons, farther after 3")
+
+
 def _perfect(**kw):
     """a conduct with her imperfection off (A52; test 37 holds it), so a test isolates another rule. (Before A52 was built, as on
     7447f73, she was always so: the new tests then fail at their own assertions, not at this call.)"""

@@ -439,8 +439,9 @@ def test_her_eyes():
 def test_her_lessons():
     """lane 11 (A90, the teacher's build 2c): her lessons in a short day with a still child. In motor time her plan sets a focus toy
     within its reach ("set_near": her line "here. the X." and her motion's bring_back at lesson_dist 0.10, level 0); the toy comes
-    to rest within reach of a hand as she sees it; a "got" smile on that toy (written into her book here) raises the next lesson
-    on it a level (0.15); her plan's levels survive a save; floor play gives lessons among its offers"""
+    to rest within reach of a hand as she sees it; its "got" on that toy mastered at the level (MASTERED_N smiles, written into her book
+    here; C261: before, any one) raises the next lesson on it a level (0.15); her plan's levels survive a save; floor play gives lessons
+    among its offers"""
     _blocks = DP.BLOCKS                                                  # (these scenarios were drawn under 4.7's own table: the training
     DP.BLOCKS = (("floor", 3, 4000, 5000), ("motor", 2, 1000, 1500), ("show", 1, 1500, 1500), ("away", (2, 4), 400, 1200), ("tasks", 1, 3000, 3000))   # day (2026-09-29) draws another day; the lesson's law is what is tested)
     try:
@@ -466,7 +467,7 @@ def _test_her_lessons_body():
     p = lane._p
     seen = {s.id: s for s in p.seen}
     assert toy in seen and (seen[toy].child_can_reach or seen[toy].on in ("hand", "mama")), (toy, seen.get(toy))
-    lane.conduct.book.setdefault("got", {})[toy] = 1                                # it got the toy once (its own reach): a level up
+    lane.conduct.book.setdefault("got", {})[toy] = DP.K.MASTERED_N if hasattr(DP, "K") else 3   # C261: its got mastered at this level (three smiled): a level up
     lane.plan.focus = [toy]
     lane.plan._lesson(w.tick, lane)
     later = [x for x in lane.plan.log if x[1] == "lesson" and x[2] == "reach" and x[3] == toy and x[0] == w.tick]
@@ -902,7 +903,9 @@ def test_floor_play_reaches_the_lesson():
         worn, fresh_toy = plan.focus[0], plan.focus[1]                   # C141: a toy her smiles have worn out is offered only when no
         for key in ("got", "lifted", "shook", "hit"):                    # fresh one is at hand
             c.book.setdefault(key, {})[worn] = 60
-        assert DP._worn(c.book, worn) and not DP._worn(c.book, fresh_toy)
+        lw = int(plan.level.get(worn, 0))                                # C261: worn at the reach level it stands at too (its got's own key there)
+        c.book["got"][DP._lvl_key(worn, lw)] = 60
+        assert DP._worn(c.book, worn) and DP._worn(c.book, worn, lw) and not DP._worn(c.book, fresh_toy, plan.level.get(fresh_toy, 0))
         lane._p = SimpleNamespace(seen=[], events=[])
         n0 = len(plan.log)
         for k in range(60):

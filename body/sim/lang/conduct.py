@@ -997,6 +997,8 @@ class Conduct:
         self.social_n = 0                     # C239: the social lines she has given to a bare call with nothing in view, and the bare
         self.social_calls = 0                 # calls so answered or let pass (both worn over a night as the vocal book is)
         self.distress_due = None              # A102: the tick of a distress event whose turn she owes while it lies face down (None: none)
+        self.set_level = {}                   # C261: toy -> the reach rung's level her last reach lesson set it at (the day plan's; 0 absent)
+        self.got_raw = {}                     # C261: toy -> every "got" she saw on it, smiled at or not (the day plan's ladder reads it)
         self.book = {}                        # A89: the smiles she has given for each motor act and object, {kind: {object: n}}: the
                                               # n-th is worth w e^(-n/HABIT_TAU) (consts.MOTOR_WORTH, _motor_judgments)
         self.book_log = []                    # (tick, kind, object, the worth given or why not, n): an instrument, the last 200
@@ -1883,9 +1885,12 @@ class Conduct:
             if row is None:
                 continue
             w, full = row
-            key = o or ""
-            if full is not None and self.book.get(full, {}).get(key, 0) >= K.MASTERED_N:
-                self.book_log.append((t, k, o, "past mastery", self.book[full][key])); del self.book_log[:-200]
+            key = self._book_key(k, o)                          # C261: a lesson toy's got (and its reach nearer) by the level it was set at
+            if k == "got" and o:
+                self.got_raw[o] = int(self.got_raw.get(o, 0)) + 1
+            fkey = self._book_key(full, o) if full is not None else None
+            if full is not None and self.book.get(full, {}).get(fkey, 0) >= K.MASTERED_N:
+                self.book_log.append((t, k, o, "past mastery", self.book[full][fkey])); del self.book_log[:-200]
                 continue
             n = self.book.get(k, {}).get(key, 0)
             w2 = w * math.exp(-n / K.HABIT_TAU)
@@ -1896,6 +1901,24 @@ class Conduct:
             out.judgments.append((round(w2, 4), k, o))
             self.confirm_act_due, self.confirm_obj = t, o
             self.book_log.append((t, k, o, round(w2, 3), n)); del self.book_log[:-200]
+
+    def _book_key(self, k, o):
+        """her book's key for act k on object o: the object ("" for none), and for a lesson toy's "got" and its approximation (the reach
+        nearer) the reach rung's level her lesson last set it at, "ball@2" (level 0: the object alone, as before).
+        C261 (2026-10-03): THE BAR RISES. Life day 75's ladder (p1/ladder.py on the pair): every one of the 13 toys stood at her cap for
+        got (37 smiles: 2 e^(-n/10) under HABIT_FLOOR), lifted, shook and hit (30), as did rolled, sat, crawled and head_up; her lesson
+        levels had all fallen back to 0 (their last moves on days 0 to 43: no smiled got, no progress), and day 74 gave 17 motor smiles
+        against 742 for words. The child had learned everything she rewarded at the nearest distance, and her smile had nothing left
+        to pay: habituation to zero (A2) without a rising bar ends the teaching. A got on a toy set a level farther is a new
+        achievement and earns her smile afresh (its own count, its own fall with mastery); the reach nearer earns again at that level
+        until the got there is mastered. Shaping by successive approximations (Skinner 1953); the zone of proximal development
+        (Vygotsky 1978): praise tracks the child's frontier, and a parent who has seen the near reach a hundred times smiles at the far one"""
+        key = o or ""
+        if o and k in ("got", "reach_nearer"):
+            lvl = int(self.set_level.get(o, 0))
+            if lvl > 0:
+                key = f"{o}@{lvl}"
+        return key
 
     def _right(self, w, start, p):
         """is w the right word here (4.3's right name)? -> (right, asked): its referent where she reads the child looking, in
@@ -2530,6 +2553,7 @@ class Conduct:
                     copies=[list(c) for c in self.copies],
                     ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state(),
                     book={k: dict(v) for k, v in self.book.items()}, book_log=[list(x) for x in self.book_log[-200:]],
+                    set_level=dict(self.set_level), got_raw=dict(self.got_raw),                       # C261
                     vocal_book=dict(self.vocal_book), distress_due=self.distress_due,
                     social_n=int(self.social_n), social_calls=int(self.social_calls),
                     confirm_act_due=self.confirm_act_due, confirm_obj=self.confirm_obj)
@@ -2563,6 +2587,9 @@ class Conduct:
         self.reader.load_state(s["reader"])
         self.imperfect = s["imperfect"]
         self.book = {k: dict(v) for k, v in s.get("book", {}).items()}
+        self.set_level = {str(k): int(v) for k, v in (s.get("set_level") or {}).items()}       # C261 (older saves: every toy at level 0)
+        self.got_raw = ({str(k): int(v) for k, v in s["got_raw"].items()} if s.get("got_raw") is not None else   # (older saves: the gots she
+                        {str(o): int(n) for o, n in self.book.get("got", {}).items() if o and "@" not in str(o)})   # smiled at, her book's)
         self.vocal_book = {str(k): int(v) for k, v in (s.get("vocal_book") or {}).items()}   # C85 (a save from before it: none given)
         self.social_n = int(s.get("social_n", 0)); self.social_calls = int(s.get("social_calls", 0))   # C239 (older saves: none)
         self.distress_due = s.get("distress_due")                                            # A102 (a save from before it: none owed)
