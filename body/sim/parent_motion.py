@@ -5226,8 +5226,10 @@ class ParentMotion:
         return any(h.side == sd for h in self.holds)
 
     def _reachable(self, sd, to):
-        g, R = self._resolve_hand(to, sd)
-        lean, spine, tw, ok = self._solve_trunk({sd: (g, R, dict(curl=.3, thumb=.3, index=None))}, self.warm.get("trunk"))
+        if self.base["mode"] not in ("heels", "tall"):                      # C252 (2026-10-03): a kneeling reach is asked of a kneeling base; from
+            return False                                                    # her feet or the sofa nothing is within a kneel's reach (the life
+        g, R = self._resolve_hand(to, sd)                                   # stopped at 3,468,000: C251's set-down planned while she stood,
+        lean, spine, tw, ok = self._solve_trunk({sd: (g, R, dict(curl=.3, thumb=.3, index=None))}, self.warm.get("trunk"))   # P.kneel(mode='stand'))
         return ok
 
     def _toy_spot(self, xy):

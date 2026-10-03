@@ -2309,6 +2309,23 @@ def test_a_hand_over_with_no_spot_on_arrival_becomes_the_set_down():
     print("parent 51 (C251): a hand-over with no spot for the hand on arrival becomes the set-down within reach; another act's 'no spot' is refused as before")
 
 
+def test_a_put_planned_from_her_feet_kneels_first():
+    """parent 52 (C252, 2026-10-03): a lesson's put planned while she stands (C251's set-down from a refused approach, before any kneel) does not
+    ask a kneeling reach of a standing base (the life stopped at tick 3,468,000 on P.kneel(mode='stand') in _reachable): _reachable from her feet is
+    False, and _plan_put_near plans the approach to a spot that reaches the place, then the put"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    pm.give_toy("R", "block")
+    pm.base["mode"] = "stand"                                               # on her feet (the walk's end, before any kneel)
+    assert pm._reachable("R", dict(k="floor", xy=PM._lst(np.asarray(pm.base["at"], float) + np.array([0.5, 0.0])))) is False
+    a = dict(id=-10, kind="hand_over", target="block", info={"fallback": "set_down"}, why=None)
+    plan = pm._plan_put_near(a, "block")
+    whats = [p.get("what") or p.get("type") for p in plan]
+    assert a.get("re_near") and "put_near" in whats and whats[-1] == "put_near", (whats, a)
+    print("parent 52 (C252): a put planned from her feet reaches for no kneel from there: the approach to a reaching spot first, then the put")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -2323,7 +2340,7 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives, test_the_toys_at_its_feet_are_set_aside_before_the_pull,
                 test_a_put_beyond_her_heels_is_made_from_the_tall_kneel, test_the_pick_rises_and_the_clearing_reaches_round,
                 test_the_clearing_never_sets_the_acts_own_toy_aside, test_the_turn_approaches_again_twice,
-                test_a_hand_over_with_no_spot_on_arrival_becomes_the_set_down]
+                test_a_hand_over_with_no_spot_on_arrival_becomes_the_set_down, test_a_put_planned_from_her_feet_kneels_first]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
