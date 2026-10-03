@@ -2481,9 +2481,21 @@ class ParentMotion:
                 # elbow leapt from +120 to -60 degrees in a tick (0.62 m, the jump guard). A second measure of continuity, like with
                 # like: the elbow her LAST swing gives at THIS tick's wrist and shoulder. A swing continuous with EITHER counts as
                 # continuous (the drawn elbow's continuity keeps its say, parent 12 and 13's turns; the last swing's saves the relax)
-                pl0 = kin.axang(axis, math.radians(float(self.swivel[sd]))) @ pole
-                kin.arm_ik(p, sd, wrist, pl0, R, segs=segs)
-                elbow_s = sh + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
+                # C248 (2026-10-03): ONLY WHERE THE WRIST ITSELF HAS MOVED. The dawn-66 copy's show (p1/c248_jump_probe.py): the hand came
+                # 10 cm a tick toward the floor and the natural pole's elbow leapt 32 cm (the pole near the shoulder-wrist line as the trunk
+                # leant) and 63 cm the next tick, the act refused by the jump guard ('her body would have jumped 0.63 m in a tick: forearm',
+                # one or two shows a day); the last swing was 0 and the natural pole IS the last swing at this tick's wrist, so the
+                # like-with-like measure read the flip as continuous. The second measure is the relax's: it counts only where the wrist
+                # has moved at least half as far as the natural elbow leapt (an arm carried along); an elbow leaping past twice the
+                # wrist's step is a flip, and the drawn elbow alone has the say
+                hand0 = self.written[0][kin.SEGS.index(f"hand_{sd}")]
+                el_nat = sh0 + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
+                if float(np.linalg.norm(wrist - hand0)) >= 0.5 * float(np.linalg.norm(el_nat - elbow0)):
+                    pl0 = kin.axang(axis, math.radians(float(self.swivel[sd]))) @ pole
+                    kin.arm_ik(p, sd, wrist, pl0, R, segs=segs)
+                    elbow_s = sh + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
+                else:
+                    self.stats["elbow_flips_held"] = self.stats.get("elbow_flips_held", 0) + 1
             for sw in sws:
                 pl = kin.axang(axis, math.radians(sw)) @ pole
                 e2 = kin.arm_ik(p, sd, wrist, pl, R, segs=segs)
