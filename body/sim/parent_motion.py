@@ -3177,6 +3177,19 @@ class ParentMotion:
                     i = self.phases.index(ph)                               # pull asked again
                     self.phases[i:] = tidy
                     return "next"
+            if a is not None and a.get("kind") == "hand_over" and "no spot" in str(e) and "(hand:" in str(e) \
+                    and a.get("target") in self.holding.values() and not a["info"].get("fallback"):
+                # C251 (2026-10-03): A HAND-OVER WITH NO SPOT FOR THE HAND WHEN SHE GETS THERE BECOMES THE SET-DOWN. C175 made the hand-over
+                # with no spot a set-down within reach at its first plan; the approach planned on arrival (near_free_hand, the child having
+                # moved, on its front 46% of day 71 with its hands under it) refused 'no spot she can kneel at lets her do it (hand:R:box):
+                # her reach (A6)' six times on day 71, the toy already in her hand and the lesson lost. The same fallback from here: the toy
+                # set down within its reach (put_near kneels again where its place is reached), the act saying so
+                a["info"]["fallback"] = "set_down"; a["info"]["no_hand_spot"] = str(e)[:60]
+                a["why"] = f"the {a.get('target')} set down within its reach: no spot she can kneel at puts its hand in her reach (C175, C251)"
+                self.stats["handover_set_down_no_spot"] = self.stats.get("handover_set_down_no_spot", 0) + 1
+                i = self.phases.index(ph)
+                self.phases[i:] = [dict(type="plan", what="put_near", args=dict(toy=a.get("target")))]
+                return "next"
             raise
         i = self.phases.index(ph)
         self.phases[i:i + 1] = new

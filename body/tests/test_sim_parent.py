@@ -2280,6 +2280,35 @@ def test_the_turn_approaches_again_twice():
     print(f"parent 50 (C250): a turn with its grips out of reach on arrival is approached again {K.TURN_REPLANS} times, then planned as it stands")
 
 
+def test_a_hand_over_with_no_spot_on_arrival_becomes_the_set_down():
+    """parent 51 (C251, 2026-10-03): a hand-over whose approach, planned when she gets there, finds no spot that puts the child's hand in her reach
+    ('no spot she can kneel at lets her do it (hand:R:block)') with the toy already in her hand becomes the set-down within reach (put_near; the act
+    says so), as C175 made it at the first plan; a show's or another act's 'no spot' is refused as before. Day 71: six hand-overs refused so"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    pm.give_toy("R", "block")
+    orig = pm._plan_near_free_hand
+    try:
+        def refuse(a_, toy=None):
+            raise PM.Refuse("no spot she can kneel at lets her do it (hand:R:block): her reach (A6)")
+        pm._plan_near_free_hand = refuse
+        a = dict(id=-8, kind="hand_over", target="block", info={"plans": 0}, why=None)
+        ph = dict(type="plan", what="near_free_hand", args=dict(toy="block")); pm.phases = [ph, dict(type="plan", what="hand_over", args=dict(toy="block"))]
+        r = pm._ph_plan(a, ph)
+        assert r == "next" and a["info"].get("fallback") == "set_down" and [p.get("what") for p in pm.phases] == ["put_near"] \
+            and "set down within its reach" in a["why"], (r, a, pm.phases)
+        b = dict(id=-9, kind="show", target="block", info={"plans": 0}, why=None)   # a show's: refused as before
+        ph2 = dict(type="plan", what="near_free_hand", args=dict(toy="block")); pm.phases = [ph2]
+        try:
+            pm._ph_plan(b, ph2); raise AssertionError("not refused")
+        except PM.Refuse as e:
+            assert "no spot" in str(e)
+    finally:
+        pm._plan_near_free_hand = orig
+    print("parent 51 (C251): a hand-over with no spot for the hand on arrival becomes the set-down within reach; another act's 'no spot' is refused as before")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -2293,7 +2322,8 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns,
                 test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives, test_the_toys_at_its_feet_are_set_aside_before_the_pull,
                 test_a_put_beyond_her_heels_is_made_from_the_tall_kneel, test_the_pick_rises_and_the_clearing_reaches_round,
-                test_the_clearing_never_sets_the_acts_own_toy_aside, test_the_turn_approaches_again_twice]
+                test_the_clearing_never_sets_the_acts_own_toy_aside, test_the_turn_approaches_again_twice,
+                test_a_hand_over_with_no_spot_on_arrival_becomes_the_set_down]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
