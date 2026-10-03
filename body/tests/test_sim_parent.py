@@ -2257,6 +2257,29 @@ def test_the_clearing_never_sets_the_acts_own_toy_aside():
     print("parent 49 (C249): with both hands full, the clearing sets aside the toy that is not the act's own, whichever hand holds it")
 
 
+def test_the_turn_approaches_again_twice():
+    """parent 50 (C250, 2026-10-03): a turn whose grips are out of her reach when she gets there is approached again TURN_REPLANS times (the
+    child moved while she came), then planned as it stands. Days 69 to 71: two turns a day refused 'her right hand cannot reach it from here
+    (28 to 37 cm short)' with the one re-approach spent"""
+    w = W.G1World(seed=1)
+    T.place_g1(w, "front")
+    for _ in range(20):
+        w.frame(); w.apply({})
+    pm = w.parent
+    pm.place("tall", pm.child.torso[:2] + pm.child.lat[:2] * 0.9, math.atan2(-pm.child.lat[1], -pm.child.lat[0]))
+    orig = pm._reachable
+    try:
+        pm._reachable = lambda sd, to: False
+        a = dict(id=-7, kind="turn", target="child", info={}, why=None)
+        plans = [pm._plan_turn(a, mode="side") for _ in range(K.TURN_REPLANS)]
+        assert all([p.get("what") for p in pl] == ["turn_approach"] for pl in plans) and a["info"]["turn_retry"] == K.TURN_REPLANS, (plans, a["info"])
+        plan = pm._plan_turn(a, mode="side")                                 # the replans spent: the turn planned as it stands
+        assert any(p.get("type") == "holds_wait" for p in plan), [p.get("type") for p in plan]
+    finally:
+        pm._reachable = orig
+    print(f"parent 50 (C250): a turn with its grips out of reach on arrival is approached again {K.TURN_REPLANS} times, then planned as it stands")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -2270,7 +2293,7 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns,
                 test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives, test_the_toys_at_its_feet_are_set_aside_before_the_pull,
                 test_a_put_beyond_her_heels_is_made_from_the_tall_kneel, test_the_pick_rises_and_the_clearing_reaches_round,
-                test_the_clearing_never_sets_the_acts_own_toy_aside]
+                test_the_clearing_never_sets_the_acts_own_toy_aside, test_the_turn_approaches_again_twice]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

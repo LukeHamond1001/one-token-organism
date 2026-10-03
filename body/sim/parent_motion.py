@@ -6170,11 +6170,13 @@ class ParentMotion:
             holds.append(dict(type="hold", name=f"turn_{sd}", side=sd, body=int(b), local=_lst(loc), normal=_lst(nl), goff=_lst(goff),
                               kind="turn", cap=0.0, brief=True, ctl=dict(toward=_lst(toward)), shape=shape, wait=False))
         out = []
-        if not a["info"].get("turn_retry") and any(not self._reachable(sd, onto[sd]) for sd in onto):
+        if int(a["info"].get("turn_retry") or 0) < K.TURN_REPLANS and any(not self._reachable(sd, onto[sd]) for sd in onto):
             # A136 (C98): the child moved while she came (a rocking child crawls a hand's breadth a second): the grips she planned from
             # the spot are out of her reach from where she now kneels (the rig's misses: 30 to 74 cm short). Once, she approaches again
-            # from where it lies now
-            a["info"]["turn_retry"] = True
+            # from where it lies now. C250 (2026-10-03): TURN_REPLANS times (days 69 to 71: 'her right hand cannot reach it from here (28 to
+            # 37 cm short)' refused two turns a day, the one re-approach spent on a child that went on moving; the hand-over's C247 count)
+            a["info"]["turn_retry"] = int(a["info"].get("turn_retry") or 0) + 1
+            self.stats["turn_re_approach"] = self.stats.get("turn_re_approach", 0) + 1
             return [dict(type="plan", what="turn_approach", args={})]
         if self.base["mode"] == "heels":                                    # up onto the tall kneel: the reach over its back needs it
             b_ = self.base; fw = np.array([math.cos(b_["yaw"]), math.sin(b_["yaw"])])
