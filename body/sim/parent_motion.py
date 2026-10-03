@@ -2026,14 +2026,32 @@ class ParentMotion:
     def _decay_offsets(self):
         """a chain backed off comes back at YIELD_BACK_M_PER_TICK once the child has left it alone for her reaction time (A4: the act
         resumes when the force is gone), and only where it then stays CLEAR_M from the child: she never presses back into it (a
-        hand whose proxy is off, on the child, is left out of that measure: its own guard keeps it outside)"""
+        hand whose proxy is off, on the child, is left out of that measure: its own guard keeps it outside). C242 (2026-10-02): an arm
+        placing a toy on the child (_placing_arm) comes back whatever its clearance: its place is at the child by design, and what it may
+        press there is the toy's business (the hand-over's press and A4's release, C222; the show's and the set-down's places)"""
         todo = [c for c in CHAINS if not self.yielding[c] and self.quiet[c] >= K.REACTION_TICKS and np.any(self.offset[c])]
         for c in todo:
             old = self.offset[c].copy()
             n = float(np.linalg.norm(old)); step = K.YIELD_BACK_M_PER_TICK
             self.offset[c] = np.zeros(3) if n <= step else old * (1 - step / n)
-            if self._chain_clear(c) < K.CLEAR_M:
+            if not self._placing_arm(c) and self._chain_clear(c) < K.CLEAR_M:
                 self.offset[c] = old
+
+    def _placing_arm(self, c):
+        """C242 (2026-10-02): THE ARM THAT PLACES A TOY COMES BACK FROM WHERE THE CHILD PUSHED IT. The dawn-66 copy (p1/c242_arm2.py): through
+        a hand-over's whole hold-out her hand stood 15 cm above the palm it was planned at, its physical hand on its drawn hand within 1 mm
+        and the IK's error 0: her arm's yield offset (A4: where the child pushed her hand as it came, its arm swinging into hers) stood at
+        33 cm and the aim's correction (C222, read from the toy) at its 20 cm cap against it; the offset never came back because the decay
+        asks the chain to stay CLEAR_M from the child, and a hand at the child's palm is at the child. The same stood behind the set-downs
+        landing 18 to 32 cm off and the rig's placed block 7 to 10 cm off. An arm whose hand carries a toy to a place on or by the child (the
+        palm, the show, the floor beside it, the open hand's offer) is such an arm: its offset decays once the child has left it alone (A4's
+        reaction time), its clearance not asked; the toy's press on the child is governed where it is placed"""
+        if c == "core":
+            return False
+        sd = c[-1]
+        a = self.arms.get(sd) or {}
+        to = a.get("to") if isinstance(a.get("to"), dict) else None
+        return self.carry.get(sd) is not None and a.get("mode") in ("at", "move") and to is not None and to.get("k") in ("palm", "show", "floor", "open")
 
     def _chain_clear(self, c):
         """the chain's least distance to the child with her pose as her offsets now make it (a trial pose: her elbows' swing and
@@ -5269,10 +5287,20 @@ class ParentMotion:
             a["info"]["palm_down"] = round(float(self.child.palm_n[cs][2]), 2)                                     # (an instrument: the palm she
             self.stats["handover_palm_down"] = self.stats.get("handover_palm_down", 0) + 1                        # gives to faces the floor)
         sd, swap = self._giving(toy, self.child.grasp[cs])
-        if not swap and not self._reachable_at(sd, self.child.grasp[cs] + self.child.palm_n[cs] * 0.04, self.base["at"], self.base["yaw"],
-                                                 self.base["mode"] if self.base["mode"] in ("heels", "tall") else "heels",
-                                                 palm=-self.child.palm_n[cs], bend=False):
-            raise Refuse("its free hand is beyond her reach from where she kneels")
+        pt, mode = self.child.grasp[cs] + self.child.palm_n[cs] * 0.04, self.base["mode"] if self.base["mode"] in ("heels", "tall") else "heels"
+        if not swap and not self._reachable_at(sd, pt, self.base["at"], self.base["yaw"], mode, palm=-self.child.palm_n[cs], bend=False):
+            # C243 (2026-10-02): THE HAND THAT REACHES GIVES. Day 68 under C240: 3 of 10 hand-overs refused 'its free hand is beyond her reach
+            # from where she kneels' after the approach had let her stay (its need, hand:<side>, is met by EITHER hand of hers that can give:
+            # _need_ok) and the plan then asked the hand nearer the palm alone. Where that hand cannot reach the palm from where she kneels
+            # and her other hand can (free, and holding no child), the toy is passed to it first (the swap, as for a palm on her other side)
+            other = "L" if sd == "R" else "R"
+            if self.holding[other] is None and not self._hold_on(other) and \
+                    self._reachable_at(other, pt, self.base["at"], self.base["yaw"], mode, palm=-self.child.palm_n[cs], bend=False):
+                swap = self._swap_phases(sd, other, toy); sd = other
+                a["info"]["gave_with_other"] = True
+                self.stats["handover_other_hand"] = self.stats.get("handover_other_hand", 0) + 1
+            else:
+                raise Refuse("its free hand is beyond her reach from where she kneels")
         return swap + [dict(type="reach", hands={sd: dict(k="palm", side=cs, lift=K.SETTLE_ABOVE_M)}, via=True,
                             shape={sd: dict(curl=.9, thumb=.8, index=None)}),   # the toy held a little above its palm until her real
                 dict(type="settle", side=sd),                                   # hand is there (she sees it: _aim_fix), then lowered

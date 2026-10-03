@@ -2040,6 +2040,66 @@ def test_the_turn_keeps_going_while_it_turns():
           f"again from its side, once")
 
 
+def test_the_placing_arm_comes_back():
+    """parent 42 (C242, 2026-10-02): an arm whose hand carries a toy to a place on the child (its palm) comes back from where the child pushed it
+    (its yield offset decaying at YIELD_BACK_M_PER_TICK once the child has left it alone REACTION_TICKS) although it is at the child; a bare hand
+    at the child keeps its offset (A4: she never presses back into it); a carrying arm still pressed on (yielding) keeps it too. Day 66's copy: her
+    hand 15 cm above the palm through a whole hold-out, its offset 33 cm against the aim's 20 cm cap"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    saved = (dict(pm.offset), dict(pm.quiet), dict(pm.yielding), dict(pm.carry), dict(pm.arms), pm._chain_clear)
+    try:
+        pm._chain_clear = lambda c: 0.0                                       # at the child, every chain
+        pm.offset = {c: np.zeros(3) for c in PM.CHAINS}; pm.offset["arm_R"] = np.array([0.0, 0.0, 0.30])
+        pm.quiet = {c: K.REACTION_TICKS for c in PM.CHAINS}; pm.yielding = {c: False for c in PM.CHAINS}
+        pm.carry = {"L": None, "R": None}; pm.arms["R"] = dict(mode="at", to=dict(k="palm", side="L"))
+        pm._decay_offsets()                                                 # a bare hand at the child: A4 keeps its offset
+        assert abs(float(pm.offset["arm_R"][2]) - 0.30) < 1e-9, pm.offset["arm_R"]
+        pm.carry["R"] = dict(toy="block", off=[0.0, 0.0, 0.0])              # the same hand carrying a toy to its palm: it comes back
+        pm._decay_offsets()
+        assert abs(float(pm.offset["arm_R"][2]) - (0.30 - K.YIELD_BACK_M_PER_TICK)) < 1e-9, pm.offset["arm_R"]
+        pm.yielding["arm_R"] = True                                          # still pressed on: it stays where the child pushed it
+        before = pm.offset["arm_R"].copy(); pm._decay_offsets()
+        assert np.allclose(pm.offset["arm_R"], before), pm.offset["arm_R"]
+        pm.yielding["arm_R"] = False; pm.arms["R"] = dict(mode="at", to=dict(k="link", body=0))   # a hand on the child's link: not a placing
+        before = pm.offset["arm_R"].copy(); pm._decay_offsets()
+        assert np.allclose(pm.offset["arm_R"], before), pm.offset["arm_R"]
+    finally:
+        pm.offset, pm.quiet, pm.yielding, pm.carry, pm.arms, pm._chain_clear = saved
+    print(f"parent 42 (C242): a carrying arm at the child's palm comes back {100 * K.YIELD_BACK_M_PER_TICK:.0f} cm a tick from where the child pushed it; "
+          f"a bare hand there, or one still pressed on, keeps A4's offset")
+
+
+def test_the_hand_that_reaches_gives():
+    """parent 43 (C243, 2026-10-02): a hand-over planned where the hand holding the toy cannot reach the child's palm from her kneel and her other
+    hand can passes the toy to the other hand first (the swap phases) and gives with it; where neither reaches it is refused as before. Day 68:
+    3 of 10 hand-overs refused 'beyond her reach' after the approach had let her stay on the strength of her other hand"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    pm.give_toy("R", "block")
+    orig = pm._reachable_at
+    try:
+        pm.child.palm_n = {x: np.array([0.0, 0.0, 1.0]) for x in "LR"}
+        pm._reachable_at = lambda sd, *a_, **k_: sd == "L"                   # only her left hand reaches the palm
+        a = dict(kind="hand_over", target="block", info={}, why=None)
+        plan = pm._plan_hand_over(a, "block")
+        kinds = [p.get("type") for p in plan]
+        assert a["info"].get("gave_with_other") and "grasp" in kinds and "release" in kinds and "handover" in kinds, (a["info"], kinds)
+        hand = next(p for p in plan if p.get("type") == "handover")
+        assert hand["side"] == "L", hand
+        pm._reachable_at = lambda sd, *a_, **k_: False                        # neither reaches: refused as before
+        b = dict(kind="hand_over", target="block", info={}, why=None)
+        try:
+            pm._plan_hand_over(b, "block"); raise AssertionError("not refused")
+        except PM.Refuse as e:
+            assert "beyond her reach" in str(e), str(e)
+    finally:
+        pm._reachable_at = orig
+    print("parent 43 (C243): the toy passed to the hand that reaches the palm and given with it; neither reaching, refused as before")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -2050,7 +2110,8 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback, test_a_hand_clear_of_the_floor,
                 test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding,
                 test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack,
-                test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns]
+                test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns,
+                test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
