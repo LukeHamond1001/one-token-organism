@@ -2488,12 +2488,18 @@ class ParentMotion:
                 # like-with-like measure read the flip as continuous. The second measure is the relax's: it counts only where the wrist
                 # has moved at least half as far as the natural elbow leapt (an arm carried along); an elbow leaping past twice the
                 # wrist's step is a flip, and the drawn elbow alone has the say
-                hand0 = self.written[0][kin.SEGS.index(f"hand_{sd}")]
-                el_nat = sh0 + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
-                if float(np.linalg.norm(wrist - hand0)) >= 0.5 * float(np.linalg.norm(el_nat - elbow0)):
-                    pl0 = kin.axang(axis, math.radians(float(self.swivel[sd]))) @ pole
-                    kin.arm_ik(p, sd, wrist, pl0, R, segs=segs)
-                    elbow_s = sh + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
+                # C255 (2026-10-03): WHERE THE LAST SWING'S ELBOW IS ITSELF CONTINUOUS. The dawn-72 copy's relax (p1/c253_relax_probe.py):
+                # her hand coming back from a reach (swivel -90) stepped 12 to 14 cm a tick while the natural elbow leapt more than
+                # twice that (the arm bending), so C248's ratio held the measure off; the drawn elbow alone found every swing more
+                # than MAX_JUMP_M away (the elbow's circle had grown with the bend) and the range excess chose the swing: her elbow
+                # leapt 0.48 m and 0.34 m in two ticks (-90 to -30 to +30), the life's 'jumped 0.62 m in a tick, phase relax'. The
+                # measure is trusted exactly when the last swing's elbow at this tick's wrist lies within MAX_JUMP_M of the drawn elbow
+                # (C248's reach: that elbow had itself leapt 32 cm, so the measure is held off there too, as its ratio did)
+                pl0 = kin.axang(axis, math.radians(float(self.swivel[sd]))) @ pole
+                kin.arm_ik(p, sd, wrist, pl0, R, segs=segs)
+                el_s = sh + p.world_override[f"upper_arm_{sd}"] @ np.array([0, 0, -kin.L_UA])
+                if float(np.linalg.norm(el_s - elbow0)) <= MAX_JUMP_M:
+                    elbow_s = el_s
                 else:
                     self.stats["elbow_flips_held"] = self.stats.get("elbow_flips_held", 0) + 1
             for sw in sws:
@@ -2509,6 +2515,15 @@ class ParentMotion:
                 key = (int(jump > MAX_JUMP_M), ex, jump, abs(sw))            # her elbow never flips across in a tick (more than her
                 if best is None or key < best[0]:                             # pelvis may move) to ease a range: the W2 fix's babble
                     best = (key, pl, sw)                                      # seed 10 at p_rest 0.6 swung it 0.6 m
+            sw_best = best[2]
+            if cont and far0 and abs(sw_best - self.swivel[sd]) > K.SWIVEL_STEP_DEG:
+                # C255 (2026-10-03): and tick to tick her elbow swings round at most SWIVEL_STEP_DEG toward the swing the search chose
+                # (the relax's and the carried arm's wide search: its elbow walked 60 deg a tick, 0.3 to 0.5 m on the elbow's circle; a
+                # person's elbow comes round, it does not flip): the arm's excess for the tick or two of the way is the price
+                sw_best = self.swivel[sd] + math.copysign(K.SWIVEL_STEP_DEG, sw_best - self.swivel[sd])
+                sw_best = max(-120, min(120, sw_best))
+                best = (best[0], kin.axang(axis, math.radians(sw_best)) @ pole, sw_best)
+                self.stats["swivel_stepped"] = self.stats.get("swivel_stepped", 0) + 1
             err = kin.arm_ik(p, sd, wrist, best[1], R, segs=segs)
             if cont:
                 self.swivel[sd] = best[2]

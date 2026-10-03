@@ -194,6 +194,9 @@ CAP_RAMP_NPS = 100.0            # N/s: a pull or a turn grows its force at this 
                                 # (ours: "a slowly growing force", A7, A9)
 PULL_MAX_S = 4.0                # s: a pull that has not reached her cap in this long (the ramp's 2 s and as long again) is laid back
                                 # (ours: her grip or her arms gave out; she is a body)
+SWIVEL_STEP_DEG = 45.0          # C255: her elbow's swing about the shoulder-wrist line moves at most this a tick toward the swing the placing
+                                # chose when the search ran wide (a target moved round her arm, the relax's carried arm): 45 deg on an elbow's
+                                # circle of 0.25 m is 0.2 m a tick, under MAX_JUMP_M; before, 60 to 120 deg flips of 0.3 to 0.6 m (ours)
 TURN_REPLANS = 2                # C250: a turn whose grips lie out of her reach when she gets there (the child moved while she came) is approached
                                 # again from where it lies now, at most this many times (as the hand-over's HANDOVER_REPLANS) (ours)
 TURN_RISE_DEG = 1.0             # C241: the turn's clock counts no tick where its chest has turned this much further from face down than its best so
