@@ -122,6 +122,12 @@ SIT_HOLD, SIT_GAP = 5, 100             # C134: a sit is the sitting held 5 ticks
                                        # times in 1,200 ticks, three of them 3 ticks apart, the trunk bobbing up and down on its back; ours)
 CRAWL_M = 0.20                         # A125: on its front, its pelvis carried this far along the floor from where its prone spell began
 CRAWL_GAP = 60                         # (or from the last crawl counted): "crawled", once in this many ticks (ours; a body length is 1.3 m)
+BEST_LEVELS = 6                        # C262: the rungs of a personal best past an event's base measure, each twice the last (a hold of 20
+                                       # ticks, then 40, 80 ... 1,280; a sit of 5 ticks ... 320, 48 s; its head up 5 ticks ... 320; a crawl of
+                                       # 0.2 m in one prone spell, then 0.4 ... 12.8 m): the event is seen again at each rung reached, marked
+                                       # with the rung (Percept.levels), and her book counts each rung on its own (conduct._book_key). Ours: a
+                                       # doubling is a difference a watcher sees (Weber's law); six doublings span what an infant's first
+                                       # months do
 PEEKABOO_ACT = (10, 5)                 # an act begun within 10 ticks of her reveal by a hand that rested the 5 ticks before (A2)
 READING_HOLD = PF.FEEL["reading_hold"]  # the born reading holds its last value 30 ticks out of view (A2)
 FIXTURE_WORDS = ("mat", "sofa", "window", "table", "shelf", "floor")   # her fixture words that name shapes in the room
@@ -162,6 +168,19 @@ def _pl(x):
     if isinstance(x, (list, tuple)):
         return [_pl(v) for v in x]
     return x
+
+
+def _rung(run, base):
+    """C262: the personal-best rung a run of `run` ticks has just reached over its event's base measure: L (1 to BEST_LEVELS) on the
+    tick run == base x 2^L, else 0. The base event itself (run == base) is the event as it always was"""
+    run, base = int(run), int(base)
+    if base <= 0 or run <= base or run % base:
+        return 0
+    q = run // base
+    if q & (q - 1):
+        return 0
+    L = q.bit_length() - 1
+    return L if 1 <= L <= BEST_LEVELS else 0
 
 
 class ParentLane:
@@ -409,11 +428,13 @@ class ParentLane:
                        child_target=target, child_holds=holds, seen=seen_t, fixtures=frozenset(self.fixtures) if present else frozenset(),
                        events=tuple(events), child_sounding=sounding, child_reaches=tuple(reaches), face_near=near.get("mama"),
                        face_down=self.last.get("posture") == "front",     # A102: face down this tick (her turn's standing reason)
-                       her_hold=bool(pm.holds))                            # A111: her hands on it (a hold of hers engaged)
+                       her_hold=bool(pm.holds),                            # A111: her hands on it (a hold of hers engaged)
+                       levels=dict(getattr(self, "_lv", None) or {}))    # C262
         return PC.check_events(p), mouth, face
 
     def _events(self, world, t, pos, holds, her, ch, in_view, grasp=None, touch=None, reaches=()):
         ev = []
+        self._lv = {}                                                   # C262: the personal-best rung of this tick's events, {(kind, object): rung}
         grasp = grasp or {"left": ch.grasp["L"], "right": ch.grasp["R"]}
         touch = touch or {tt: dict(child=set(), fixture=set(), toys=set()) for tt in self.toys}
         if self.first:                                                  # the first tick: what already lies against its hands it did
@@ -508,18 +529,35 @@ class ParentLane:
         self.sit_run = self.sit_run + 1 if post == "sitting" else 0
         if self.sit_run == SIT_HOLD and t - self.last_sat >= SIT_GAP:      # C134: held, and once in SIT_GAP (a bob is not a sit)
             ev.append(("sat", None)); self.last_sat = t
+        r_ = _rung(self.sit_run, SIT_HOLD)                                  # C262: the sit kept twice as long as the last rung: seen again,
+        if r_:                                                              # a rung higher (a personal best)
+            ev.append(("sat", None)); self._lv[("sat", None)] = r_
         if post == "front":                                                 # A125 (the crawl rung): its pelvis carried CRAWL_M along the
             pxy = np.asarray(ch.pelvis[:2], float)                          # floor while on its front, from where the spell began (or
             if self.crawl_from is None:                                     # the last crawl counted), once in CRAWL_GAP: "crawled"
                 self.crawl_from = pxy
             elif float(np.linalg.norm(pxy - self.crawl_from)) >= CRAWL_M and t - self.last_crawl >= CRAWL_GAP:
                 ev.append(("crawled", None)); self.last_crawl = t; self.crawl_from = pxy
+            if getattr(self, "crawl_spell", None) is None:                  # C262: and the prone spell's whole way, by doublings of CRAWL_M
+                self.crawl_spell = pxy; self.crawl_best = 0
+            far_ = float(np.linalg.norm(pxy - np.asarray(self.crawl_spell, float)))
+            nxt_ = int(getattr(self, "crawl_best", 0)) + 1
+            base_now = ("crawled", None) in ev                               # (a crawl counted this tick carries the rung; else the rung is
+            if nxt_ <= BEST_LEVELS and far_ >= CRAWL_M * 2 ** nxt_ and (base_now or t - self.last_crawl >= CRAWL_GAP):   # seen once in CRAWL_GAP too)
+                self.crawl_best = nxt_
+                if not base_now:
+                    ev.append(("crawled", None)); self.last_crawl = t
+                self._lv[("crawled", None)] = nxt_
         else:
             self.crawl_from = None
+            self.crawl_spell = None; self.crawl_best = 0
         up = post == "front" and float(ch.head[2] - ch.pelvis[2]) > HEAD_UP_M
         self.head_up_run = self.head_up_run + 1 if up else 0
         if self.head_up_run == HEAD_UP_TICKS and t - self.last_head_up >= HEAD_UP_GAP:   # held, once in HEAD_UP_GAP
             ev.append(("head_up", None)); self.last_head_up = t
+        r_ = _rung(self.head_up_run, HEAD_UP_TICKS)                         # C262: its head kept up twice as long as the last rung
+        if r_:
+            ev.append(("head_up", None)); self._lv[("head_up", None)] = r_
         self.head_up = up
         if self.reveal_t <= t <= self.reveal_t + PEEKABOO_ACT[0] and self.peekaboo_done < self.reveal_t:
             for side in ("left", "right"):                              # peekaboo answered by an act (A2): a hand that rested, moving
@@ -591,6 +629,12 @@ class ParentLane:
             self.held_run[tt] = n_
             if n_ == HELD_TICKS:
                 ev.append(("held", tt))
+            r_ = _rung(n_, HELD_TICKS)                                      # C262: the hold kept twice as long as the last rung
+            if r_:
+                ev.append(("held", tt))
+                if getattr(self, "_lv", None) is None:
+                    self._lv = {}
+                self._lv[("held", tt)] = r_
 
     def _toys(self, t, pos, holds, her, touch, ev):
         """the toys as she sees them (A89): each one's speed; where it lay still in no hand; a lift and a shake of one in its hand"""
@@ -691,6 +735,7 @@ class ParentLane:
         self.word_now = int(LX_TO_AN[int(sym)])
         self.last = dict(posture=self.last.get("posture"), target=p.child_target, holds=p.child_holds, seen=len(p.seen), in_bucket=sorted(getattr(self, "_in_bucket", ())),
                          events=[list(e) for e in p.events], line=None if out.line is None else out.line.text,
+                         levels=[[k_, o_, int(L_)] for (k_, o_), L_ in (getattr(p, "levels", None) or {}).items()],   # C262: the events' personal-best rungs
                          heard=[cw.word for cw in out.heard], judged=[list(j) for j in out.judgments], cut=bool(out.cut),
                          face_test=bool(test), reading=self.reading, word=self.word_now, in_view=p.child_in_view,
                          seen_by_child=p.seen_by_child, present=p.present,
@@ -775,6 +820,8 @@ class ParentLane:
                               side_from=self.side_from, head_up=self.head_up, reveal_t=self.reveal_t, peekaboo_done=self.peekaboo_done,
                               last_half_roll=self.last_half_roll, head_up_run=self.head_up_run, last_head_up=self.last_head_up,
                               sit_run=self.sit_run, last_sat=self.last_sat,
+                              crawl_spell=None if getattr(self, "crawl_spell", None) is None else [float(x) for x in self.crawl_spell],   # C262
+                              crawl_best=int(getattr(self, "crawl_best", 0)),
                               still_from=None if self.still_from is None else [float(x) for x in self.still_from], still_t=self.still_t,
                               cry_down=self.cry_down, distressed=self.distressed, touch_run=dict(self.touch_run),
                               got_arm=dict(self.got_arm)))
@@ -839,6 +886,8 @@ class ParentLane:
             self.reveal_t, self.peekaboo_done = int(e["reveal_t"]), int(e["peekaboo_done"])
             self.last_half_roll = int(e.get("last_half_roll", -10 ** 9)); self.head_up_run = int(e.get("head_up_run", 0))
             self.sit_run, self.last_sat = int(e.get("sit_run", 0)), int(e.get("last_sat", -10 ** 9))
+            cs_ = e.get("crawl_spell"); self.crawl_spell = None if cs_ is None else np.asarray(cs_, float)   # (C262; older saves: none)
+            self.crawl_best = int(e.get("crawl_best", 0))
             sf = e.get("still_from"); self.still_from = None if sf is None else np.asarray(sf, float); self.still_t = int(e.get("still_t", -10 ** 9))
             self.last_head_up = int(e.get("last_head_up", -10 ** 9))
             self.cry_down, self.distressed = int(e.get("cry_down", 0)), bool(e.get("distressed", False))

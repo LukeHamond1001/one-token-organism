@@ -110,6 +110,7 @@ class Percept:
     extra: dict = field(default_factory=dict)   # instruments only; the fast layer never reads it
     child_reaches: tuple = ()     # the object ids its hands reach toward, as she sees them (A40)
     face_near: tuple = None       # the ids a look at her face could be read as (Reader.near's "mama"); None: unknown (4.8)
+    levels: dict = field(default_factory=dict)   # C262: {(kind, object id or None): the personal-best rung (1, 2, ...) of this tick's event; absent: the base event}
 
     def obj(self, oid):
         for s in self.seen:

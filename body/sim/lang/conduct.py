@@ -268,6 +268,7 @@ FIELDS = POINTING + ("face",)                 # and her face ("mama" on a tick i
 HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
 FETCH_KINDS = ("show", "bring_back", "bring_far", "hand_over", "hide")   # A117: her acts that begin by fetching a toy (parent_motion._fetch)
+BEST_KINDS = ("held", "sat", "crawled", "head_up")   # C262: the motor events with a measure, counted by their personal-best rung
 LESSON_SETS = frozenset({"hide_told", "show", "set_near", "set_far", "hand_over", "new_word"})   # C115: the sets a reply does not throw away
 CRY_WINDOW, CRY_LASTS = 10, 5    # C120: a cry heard on 5 of the last 10 ticks (0.75 s of 1.5) before a comfort is composed (a wince passes; ours)
 CRY_LONG_WINDOW, CRY_LONG = 60, 30   # C120: a cry heard on 30 of the last 60 ticks (4.5 s of 9) is comforted again whatever the gap (ours)
@@ -1869,6 +1870,7 @@ class Conduct:
         smiled at MASTERED_N times on that object. Habituation to zero: the n-th smile for the same act and object is worth
         w e^(-n/HABIT_TAU), none under HABIT_FLOOR (A2's fall with mastery without its floor: Knox and Stone 2015's positive
         circuits). A new object starts n again. Every judgment, given or withheld, goes to book_log."""
+        self._levels_now = dict(getattr(p, "levels", None) or {})         # C262: the personal-best rungs of this tick's events
         if self.trial is not None or not p.present:
             return
         hands_on = [a[0] for a in self.acts_open if a[1] in HANDS_ON and a[5] not in ENDED]
@@ -1918,6 +1920,15 @@ class Conduct:
             lvl = int(self.set_level.get(o, 0))
             if lvl > 0:
                 key = f"{o}@{lvl}"
+        elif k in BEST_KINDS:
+            # C262 (2026-10-03): A PERSONAL BEST IS A NEW ACHIEVEMENT. The lane sees a hold, a sit, its head up and a crawl again at each
+            # doubling of the event's base measure (body/sim/lane.py BEST_LEVELS; Percept.levels: the rung of this tick's event), and her
+            # book counts each rung on its own: the hold kept 40 ticks earns afresh when the 20-tick hold's smile is worn out, the sit
+            # kept 1.5 s when the first sit's is. C261's rule for the reach, as the general law for what has a measure: her praise
+            # tracks the child's frontier (Vygotsky 1978), and a doubling is a difference a watcher sees (Weber)
+            lvl = int((getattr(self, "_levels_now", None) or {}).get((k, o), 0))
+            if lvl > 0:
+                key = f"{o or ''}@{lvl}"
         return key
 
     def _right(self, w, start, p):

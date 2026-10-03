@@ -2036,6 +2036,54 @@ def test_the_bar_rises():
           f"level mastered; a new toy: reach lessons, farther after 3")
 
 
+def test_a_personal_best_earns_her_smile():
+    """C262 (the teacher's method): the lane sees a hold, a sit, its head up and a crawl again at each doubling of the event's base
+    measure, marked with the rung (lane._rung, Percept.levels), and her book counts each rung on its own. THE RUNG: the tick a run
+    reaches base x 2^L (L 1 to BEST_LEVELS), never the base itself or a run between doublings. THE HOLD in the lane: a toy kept in
+    its hand is "held" at 20 ticks and again at 40, 80 and 160, the later ones marked 1, 2, 3. HER BOOK: with the duck's hold worn
+    out (30 smiles, then none), a hold of the duck a rung longer earns 1 afresh under its own key ("duck@1") and falls by its own
+    count; a sit kept twice as long earns 2 afresh ("@1") when the sit's smile is worn; an event with no rung is counted as before"""
+    from body.sim import lane as LN
+    B = LN.BEST_LEVELS
+    assert [LN._rung(n, 20) for n in (10, 20, 30, 40, 60, 80, 160, 320, 20 * 2 ** B, 20 * 2 ** (B + 1))] == [0, 0, 0, 1, 0, 2, 3, 4, B, 0]
+    assert [LN._rung(n, 5) for n in (5, 10, 15, 20, 25, 40)] == [0, 1, 0, 2, 0, 3]
+    lane = object.__new__(LN.ParentLane)
+    lane.toys = ("duck", "ball"); lane.lifted = {"duck"}; lane.held_run = {}; lane._lv = {}
+    seen_ev = []
+    for n in range(1, 170):
+        ev = []; lane._lv = {}
+        LN.ParentLane._held(lane, ("duck",), ev)
+        if ev:
+            seen_ev.append((n, ev[0], dict(lane._lv)))
+    assert [(n, lv.get(("held", "duck"), 0)) for n, _e, lv in seen_ev] == [(20, 0), (40, 1), (80, 2), (160, 3)], seen_ev
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con)
+    n_h = 0
+    for t in range(0, 50):
+        st = con.tick(t, P(t, seen=TOYS, events=(("held", "duck"),)))
+        n_h += len(st.judgments)
+    assert 25 < n_h < 35 and con.book["held"]["duck"] == n_h, (n_h, con.book["held"])
+    st = con.tick(50, P(50, seen=TOYS, events=(("held", "duck"),)))
+    assert st.judgments == [], st.judgments                                             # the base hold: worn out
+    st = con.tick(51, P(51, seen=TOYS, events=(("held", "duck"),), levels={("held", "duck"): 1}))
+    assert st.judgments == [(1, "held", "duck")] and con.book["held"]["duck@1"] == 1, (st.judgments, con.book["held"])
+    st = con.tick(52, P(52, seen=TOYS, events=(("held", "duck"),), levels={("held", "duck"): 1}))
+    assert abs(st.judgments[0][0] - math.exp(-0.1)) < 1e-3, st.judgments
+    st = con.tick(53, P(53, seen=TOYS, events=(("held", "duck"),), levels={("held", "duck"): 2}))
+    assert st.judgments == [(1, "held", "duck")] and con.book["held"]["duck@2"] == 1, st.judgments
+    for t in range(60, 110):
+        con.tick(t, P(t, seen=TOYS, events=(("sat", None),)))
+    st = con.tick(110, P(110, seen=TOYS, events=(("sat", None),)))
+    assert st.judgments == [] and con.book["sat"][""] > 30, (st.judgments, con.book["sat"])
+    st = con.tick(111, P(111, seen=TOYS, events=(("sat", None),), levels={("sat", None): 1}))
+    assert st.judgments == [(2, "sat", None)] and con.book["sat"]["@1"] == 1, (st.judgments, con.book["sat"])
+    st = con.tick(112, P(112, seen=TOYS, events=(("crawled", None), ("head_up", None)), levels={("crawled", None): 3}))
+    assert [(w_, k_) for w_, k_, _o in st.judgments] == [(2, "crawled"), (1, "head_up")] and con.book["crawled"] == {"@3": 1} and con.book["head_up"] == {"": 1}, (st.judgments, con.book)
+    print(f"C262 a personal best: the rung on the tick a run doubles its base (20: 40, 80, 160 ...), {B} rungs; the lane's hold seen at 20, 40, 80, 160 ticks, the",
+          f"later ones marked 1 to 3; her book: the duck's hold worn out after {n_h}, a rung longer earns 1 afresh ('duck@1') and falls by its own count; a sit",
+          "kept twice as long earns 2 afresh ('@1'); a crawl at rung 3 its own key, an unmarked head-up as before")
+
+
 def _perfect(**kw):
     """a conduct with her imperfection off (A52; test 37 holds it), so a test isolates another rule. (Before A52 was built, as on
     7447f73, she was always so: the new tests then fail at their own assertions, not at this call.)"""
