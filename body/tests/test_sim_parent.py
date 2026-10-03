@@ -2185,6 +2185,44 @@ def test_a_put_beyond_her_heels_is_made_from_the_tall_kneel():
     print("parent 45 (C245): a lesson's put short from her heels is planned anew from the tall kneel, once; risen or a set-aside, the reach runs on")
 
 
+def test_the_pick_rises_and_the_clearing_reaches_round():
+    """parent 46 (C246, 2026-10-03): (1) a pick's reach (above_toy, rise_ok) short from her heels is planned anew from the tall kneel as a put's is
+    (C245); (2) the clearing of a toy in her way has places farther out and behind her kneel: with the six near places barred by the child's
+    clearance, the toy is still set aside (behind or farther out), not refused 'nowhere within her reach to set the X aside'. Day 69: 3 picks
+    'not under her hand: her hand stopped 21 to 37 cm above it', 5 acts refused for no place to set a toy aside"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    saved = (pm._solve_trunk, dict(pm.base))
+    try:
+        pm.base["mode"] = "heels"
+        pm._solve_trunk = lambda *a_, **k_: (70.0, 40.0, 0.0, False)
+        ph = dict(type="reach", hands={"R": dict(k="above_toy", toy="block", h=0.0)}, via=True, shape={"R": dict(curl=.2, thumb=.3, index=None)}, rise_ok=True)
+        pm.phases = [ph]; a = dict(id=-3, kind="show", target="block", info={}, why=None)
+        r = pm._ph_reach(a, ph)
+        assert r == "next" and a["info"].get("rose_for_put") and pm.phases[0]["type"] == "kneel_down" and pm.phases[1].get("rose"), (r, pm.phases)
+    finally:
+        pm._solve_trunk, pm.base = saved
+    T2 = np.asarray(pm.base["at"], float); yaw = float(pm.base["yaw"]); fwd = np.array([math.cos(yaw), math.sin(yaw)])
+    T = T2 + fwd * PM.HEELS_BACK
+    orig_clear, orig_reach = pm.child.clearance_xy, pm._reachable_at
+    try:
+        near = T2 + fwd * 0.3
+        pm.child.clearance_xy = lambda q, near=near: (0.0 if float(np.linalg.norm(np.asarray(q, float) - near)) < 0.55 else 1.0)   # the near places barred
+        pm._reachable_at = lambda *a_, **k_: True
+        toy = next(k for k in pm.toys if k != "bucket")
+        b = dict(id=-4, kind="show", target=toy, info={}, why=None)
+        plan = pm._plan_clear_here(b, [toy], T, T2, yaw)
+        puts = [p for p in plan if p.get("type") == "reach" and isinstance(p.get("hands", {}).get("L", p.get("hands", {}).get("R")), dict)
+                and p["hands"][next(iter(p["hands"]))].get("k") == "floor"]
+        assert puts, plan
+        q = np.asarray(puts[0]["hands"][next(iter(puts[0]["hands"]))]["xy"], float)
+        assert float(np.linalg.norm(q - near)) >= 0.55, (q, near)
+    finally:
+        pm.child.clearance_xy, pm._reachable_at = orig_clear, orig_reach
+    print("parent 46 (C246): a pick short from her heels rises to the tall kneel; the clearing sets a toy aside farther out or behind her when the near places are barred")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -2197,7 +2235,7 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack,
                 test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns,
                 test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives, test_the_toys_at_its_feet_are_set_aside_before_the_pull,
-                test_a_put_beyond_her_heels_is_made_from_the_tall_kneel]
+                test_a_put_beyond_her_heels_is_made_from_the_tall_kneel, test_the_pick_rises_and_the_clearing_reaches_round]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

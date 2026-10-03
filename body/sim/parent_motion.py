@@ -3195,7 +3195,10 @@ class ParentMotion:
                 self.arms[sd]["n"] = ph["n"]
             if ph.get("solve", True) and self.base["mode"] in ("heels", "tall"):
                 self._trunk_for(a, ph, hands, first=True)
-                if ph.get("short") and ph.get("put_check") and self.base["mode"] == "heels" and not ph.get("rose"):
+                if ph.get("short") and (ph.get("put_check") or ph.get("rise_ok")) and self.base["mode"] == "heels" and not ph.get("rose"):
+                    # (C246, 2026-10-03: the pick's reach from her heels rises the same way: day 69's 'the duck was not under her hand (25 cm
+                    # off: her hand stopped 21 cm above it)' and 'the ball ... 48 cm off: her hand stopped 37 cm above it', 3 of the day's
+                    # 15 refused hand-overs and shows; the pick had been planned from her heels, _plan_fetch's 'from where she kneels')
                     # C245 (2026-10-03): A PUT BEYOND HER REACH FROM HER HEELS IS MADE FROM THE TALL KNEEL. The dawn-66 copy (p1/c245_setdown_probe.py,
                     # p1/c245_short_probe.py): the set-down's floor reach ran with her trunk upright (the solve from her heels found no pose inside
                     # human ranges, lean 70 and spine 40 tried, for a place 0.67 to 0.92 m off and to her side), her hand stopped 40 to 50 cm short
@@ -4253,8 +4256,11 @@ class ParentMotion:
             aside = None
             for sg in ((1, -1) if lat > 0 else (-1, 1)):
                 hand = sd
-                for dl, df in ((0.35, 0.35), (0.40, 0.20), (0.30, 0.45), (0.45, 0.30), (0.40, 0.05), (0.50, 0.40)):
-                    q = T2 + left * sg * dl + fwd * df
+                for dl, df in ((0.35, 0.35), (0.40, 0.20), (0.30, 0.45), (0.45, 0.30), (0.40, 0.05), (0.50, 0.40),
+                               (0.55, 0.20), (0.60, 0.00), (0.40, -0.20), (0.50, -0.30)):   # C246: farther out, and behind her kneel (day 69:
+                    q = T2 + left * sg * dl + fwd * df                                     # 5 acts refused 'nowhere within her reach to set the
+                                                                                            # X aside' at a wall or by the child, the six near
+                                                                                            # places all barred; a person reaches round behind)
                     if not (self._in_plan(q) and self.plan.dist[self.plan.cell(q)] > 0.10 and self.child.clearance_xy(q) > 0.25):
                         continue
                     if any(np.linalg.norm(q - x2) < 0.14 for kk, x2 in self._toys_xy(exclude=(k,)).items()) or \
@@ -4294,7 +4300,7 @@ class ParentMotion:
     def _pick_phases(self, sd, toy):
         """her hand onto a toy from above, closing on it, and lifting it"""
         sh_open = dict(curl=.2, thumb=.3, index=None); sh_hold = dict(curl=.95, thumb=.85, index=None)
-        return [dict(type="reach", hands={sd: dict(k="above_toy", toy=toy, h=0.0)}, via=True, shape={sd: sh_open}),
+        return [dict(type="reach", hands={sd: dict(k="above_toy", toy=toy, h=0.0)}, via=True, shape={sd: sh_open}, rise_ok=True),   # (C246)
                 dict(type="grasp", side=sd, toy=toy),
                 dict(type="plan", what="ease_out", args=dict(side=sd)),
                 dict(type="reach", hands={sd: CARRY}, shape={sd: sh_hold})]
