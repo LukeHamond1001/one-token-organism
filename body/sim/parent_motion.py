@@ -5334,6 +5334,16 @@ class ParentMotion:
                 swap = self._swap_phases(sd, other, toy); sd = other
                 a["info"]["gave_with_other"] = True
                 self.stats["handover_other_hand"] = self.stats.get("handover_other_hand", 0) + 1
+            elif a["info"].get("re_hand", 0) < K.HANDOVER_REPLANS:
+                # C247 (2026-10-03): THE PALM BEYOND HER REACH WHEN SHE GETS THERE: SHE KNEELS AGAIN WHERE IT IS. Days 68 to 70: 'its free hand is
+                # beyond her reach from where she kneels' refused 3, 4 and 5 hand-overs a day after C243's other hand, the most frequent refusal of
+                # the act. The spot is chosen for the hand where it lies as the approach is planned and the hand-over planned when the shuffle in
+                # has ended, 10 to 20 s later, and a child's hand moves tens of centimetres in that time (C235's forearms, C240's palm). A person
+                # whose target has moved while she came shifts to it: the approach is planned anew from where the hand lies now, HANDOVER_REPLANS
+                # times in a hand-over (the hold-out's re-kneel, C240, shares the count), then the refusal stands
+                a["info"]["re_hand"] = a["info"].get("re_hand", 0) + 1
+                self.stats["handover_re_hand"] = self.stats.get("handover_re_hand", 0) + 1
+                return [dict(type="plan", what="near_free_hand", args=dict(toy=toy)), dict(type="plan", what="hand_over", args=dict(toy=toy))]
             else:
                 raise Refuse("its free hand is beyond her reach from where she kneels")
         return swap + [dict(type="reach", hands={sd: dict(k="palm", side=cs, lift=K.SETTLE_ABOVE_M)}, via=True,

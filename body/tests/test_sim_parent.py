@@ -2090,15 +2090,19 @@ def test_the_hand_that_reaches_gives():
         assert a["info"].get("gave_with_other") and "grasp" in kinds and "release" in kinds and "handover" in kinds, (a["info"], kinds)
         hand = next(p for p in plan if p.get("type") == "handover")
         assert hand["side"] == "L", hand
-        pm._reachable_at = lambda sd, *a_, **k_: False                        # neither reaches: refused as before
-        b = dict(kind="hand_over", target="block", info={}, why=None)
+        pm._reachable_at = lambda sd, *a_, **k_: False                        # neither reaches: she kneels again where the palm is (C247),
+        b = dict(kind="hand_over", target="block", info={}, why=None)       # HANDOVER_REPLANS times, then refused as before
+        plan3 = pm._plan_hand_over(b, "block")
+        assert b["info"].get("re_hand") == 1 and [p.get("what") for p in plan3] == ["near_free_hand", "hand_over"], (b["info"], plan3)
+        b["info"]["re_hand"] = K.HANDOVER_REPLANS
         try:
             pm._plan_hand_over(b, "block"); raise AssertionError("not refused")
         except PM.Refuse as e:
             assert "beyond her reach" in str(e), str(e)
     finally:
         pm._reachable_at = orig
-    print("parent 43 (C243): the toy passed to the hand that reaches the palm and given with it; neither reaching, refused as before")
+    print("parent 43 (C243, C247): the toy passed to the hand that reaches the palm and given with it; neither reaching, she kneels again where "
+          "the palm is, then refused as before")
 
 
 def test_the_toys_at_its_feet_are_set_aside_before_the_pull():
