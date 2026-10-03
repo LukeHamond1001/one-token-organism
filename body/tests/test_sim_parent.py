@@ -2228,6 +2228,35 @@ def test_the_pick_rises_and_the_clearing_reaches_round():
     print("parent 46 (C246): a pick short from her heels rises to the tall kneel; the clearing sets a toy aside farther out or behind her when the near places are barred")
 
 
+def test_the_clearing_never_sets_the_acts_own_toy_aside():
+    """parent 49 (C249, 2026-10-03): with both hands full and a toy in her way, the clearing sets aside the toy that is NOT the act's own (the
+    show's, the hand-over's), whichever hand holds it; the copy's shows had been refused 'the rattle is not in her hand' after the way was
+    cleared with the shown toy set aside"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    pm.give_toy("L", "rattle"); pm.give_toy("R", "block")
+    T2 = np.asarray(pm.base["at"], float); yaw = float(pm.base["yaw"]); fwd = np.array([math.cos(yaw), math.sin(yaw)]); left = np.array([-fwd[1], fwd[0]])
+    T = T2 + fwd * PM.HEELS_BACK
+    orig_has = pm._child_has
+    try:
+        pm._child_has = lambda k: False
+        toy_in_way = next(k for k in pm.toys if k not in ("rattle", "block", "bucket"))
+        b_ = pm.m.body(f"toy_{toy_in_way}").id; j = pm.m.body_jntadr[b_]; adr = pm.m.jnt_qposadr[j]
+        pm.d.qpos[adr:adr + 2] = T2 + left * 0.2 + fwd * 0.1; mujoco.mj_forward(pm.m, pm.d)        # on her left: the left hand would clear
+        a = dict(id=-5, kind="show", target="rattle", info={}, why=None); pm.phases = [dict(type="plan", what="approach", args={}, grp=1)]
+        plan = pm._plan_clear_here(a, [toy_in_way], T, T2, yaw)
+        aside = next(p for p in plan if p.get("what") == "set_aside")
+        assert aside["args"]["toy"] == "block", (aside, plan)              # the show's rattle kept; the block set aside
+        a2 = dict(id=-6, kind="show", target="block", info={}, why=None); pm.phases = [dict(type="plan", what="approach", args={}, grp=1)]
+        plan2 = pm._plan_clear_here(a2, [toy_in_way], T, T2, yaw)
+        aside2 = next(p for p in plan2 if p.get("what") == "set_aside")
+        assert aside2["args"]["toy"] == "rattle", (aside2, plan2)
+    finally:
+        pm._child_has = orig_has
+    print("parent 49 (C249): with both hands full, the clearing sets aside the toy that is not the act's own, whichever hand holds it")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -2240,7 +2269,8 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack,
                 test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns,
                 test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives, test_the_toys_at_its_feet_are_set_aside_before_the_pull,
-                test_a_put_beyond_her_heels_is_made_from_the_tall_kneel, test_the_pick_rises_and_the_clearing_reaches_round]
+                test_a_put_beyond_her_heels_is_made_from_the_tall_kneel, test_the_pick_rises_and_the_clearing_reaches_round,
+                test_the_clearing_never_sets_the_acts_own_toy_aside]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

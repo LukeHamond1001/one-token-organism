@@ -4263,7 +4263,12 @@ class ParentMotion:
                     me = self.phases[0].get("grp") if self.phases else None
                     if me is not None:                                        # the rest of this approach (its shuffle in) goes with it
                         self.phases = [self.phases[0]] + [q for q in self.phases[1:] if q.get("grp") != me]
-                    return [dict(type="plan", what="set_aside", args=dict(toy=self.holding[sd])),
+                    aside_toy = self.holding[sd]
+                    if aside_toy == a.get("target"):                        # C249 (2026-10-03): never the act's own toy (the show's,
+                        other = self.holding["R" if sd == "L" else "L"]     # the hand-over's): the copy's shows refused 'the rattle is
+                        if other is not None:                                # not in her hand' after the way was cleared with it set
+                            aside_toy = other                                # aside; the other hand's toy goes, and that hand clears
+                    return [dict(type="plan", what="set_aside", args=dict(toy=aside_toy)),
                             dict(type="plan", what="approach", args={})]
             aside = None
             for sg in ((1, -1) if lat > 0 else (-1, 1)):
