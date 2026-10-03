@@ -105,6 +105,7 @@ hold, stop, timer, warm start and her joints' targets as plain numbers (her body
 a world saved while she acts and restored anywhere continues bit for bit (body/tests/test_sim_parent.py)."""
 import heapq
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -3155,7 +3156,16 @@ class ParentMotion:
             a["info"]["plans"] = a["info"].get("plans", 0) + 1
             if a["info"]["plans"] > MAX_PLANS:
                 return f"her plans for it did not settle ({MAX_PLANS} made)"
-        new = getattr(self, "_plan_" + ph["what"])(a, **ph.get("args", {}))
+        try:
+            new = getattr(self, "_plan_" + ph["what"])(a, **ph.get("args", {}))
+        except Refuse as e:
+            if a is not None and a.get("kind") == "pull_to_sit" and "no spot" in str(e):
+                tidy = self._pull_tidy(a)                                   # C244: the pull's approach, planned when she gets there, finds
+                if tidy is not None:                                        # no spot for the toys at its feet: they are set aside and the
+                    i = self.phases.index(ph)                               # pull asked again
+                    self.phases[i:] = tidy
+                    return "next"
+            raise
         i = self.phases.index(ph)
         self.phases[i:i + 1] = new
         return "next"
@@ -3185,6 +3195,23 @@ class ParentMotion:
                 self.arms[sd]["n"] = ph["n"]
             if ph.get("solve", True) and self.base["mode"] in ("heels", "tall"):
                 self._trunk_for(a, ph, hands, first=True)
+                if ph.get("short") and ph.get("put_check") and self.base["mode"] == "heels" and not ph.get("rose"):
+                    # C245 (2026-10-03): A PUT BEYOND HER REACH FROM HER HEELS IS MADE FROM THE TALL KNEEL. The dawn-66 copy (p1/c245_setdown_probe.py,
+                    # p1/c245_short_probe.py): the set-down's floor reach ran with her trunk upright (the solve from her heels found no pose inside
+                    # human ranges, lean 70 and spine 40 tried, for a place 0.67 to 0.92 m off and to her side), her hand stopped 40 to 50 cm short
+                    # and the toy was let go 28 to 50 cm from where she meant it and the act refused (4 of 6; day 68: 4 shows of 16 the same). The
+                    # plan's reach test had passed (the warm solve) or sent her to kneel again once, and the put went ahead from her heels. A person
+                    # kneeling on her heels who cannot reach the floor beyond rises onto her knees (the pull's own rule, _plan_pull): the reach is
+                    # planned anew from the tall kneel, once; short from there too, the release's landing check has it as before
+                    b_ = self.base; fw = np.array([math.cos(b_["yaw"]), math.sin(b_["yaw"])])
+                    fresh = {k_: v_ for k_, v_ in ph.items() if k_ not in ("t", "short", "solved_at", "lean_to", "lean_from", "lean_t0", "lean_n", "serial", "n")}
+                    fresh["rose"] = True                                    # (her arms' specs stand where this tick set them: a move not
+                    if a is not None:                                       # yet begun holds the hand where it is while she rises)
+                        a["info"]["rose_for_put"] = True
+                    self.stats["puts_from_tall"] = self.stats.get("puts_from_tall", 0) + 1
+                    i = self.phases.index(ph)
+                    self.phases[i:i + 1] = [dict(type="kneel_down", at=_lst(np.asarray(b_["at"], float) + fw * HEELS_BACK), yaw=b_["yaw"], u0=3.0, u1=2.0), fresh]
+                    return "next"
         else:
             if ph.get("solve", True) and self.base["mode"] in ("heels", "tall") and t % K.REPLAN_TICKS == 0:
                 self._trunk_for(a, ph, hands, first=False)
@@ -3770,8 +3797,9 @@ class ParentMotion:
                         self.plan.dist[self.plan.cell(T2)] < K.BODY_R_M:
                     reasons.append((tag, back, "furniture at her step back")); continue
                 spots = [T2, T2 + fwd * 0.40 + left * 0.12, T2 + fwd * 0.03 + left * 0.115, T2 + fwd * 0.03 - left * 0.115, stand]
-                if any(np.linalg.norm(xy - q) < 0.15 for xy in toys.values() for q in spots):
-                    reasons.append((tag, back, "a toy where she kneels down")); continue
+                there = sorted(k for k, xy in toys.items() if any(np.linalg.norm(xy - q) < 0.15 for q in spots))
+                if there:
+                    reasons.append((tag, back, f"a toy where she kneels down ({', '.join(there)})")); continue   # (C244: named, for the tidy)
                 if not (all(self._clear_trunk(frame_segs("kneel_down", u, T2, yaw)) >= K.CLEAR_M for u in KNEEL_CHECK_U) and
                         all(self._clear_trunk(frame_segs("kneel", "tall", T2 + (T - T2) * u, yaw)) >= K.CLEAR_M for u in (0.5, 1.0) if back > 0)):
                     reasons.append((tag, back, "kneeling down or shuffling in touches the child")); continue
@@ -3815,8 +3843,9 @@ class ParentMotion:
                     reasons.append((tag, "turn", "furniture where she would stand")); continue
                 l2 = np.array([-f2[1], f2[0]])
                 spots = [T, T + f2 * 0.40 + l2 * 0.12, T + f2 * 0.03 + l2 * 0.115, T + f2 * 0.03 - l2 * 0.115, stand]
-                if any(np.linalg.norm(xy - q) < 0.15 for xy in toys.values() for q in spots):
-                    reasons.append((tag, "turn", "a toy where she kneels down")); continue
+                there = sorted(k for k, xy in toys.items() if any(np.linalg.norm(xy - q) < 0.15 for q in spots))
+                if there:
+                    reasons.append((tag, "turn", f"a toy where she kneels down ({', '.join(there)})")); continue
                 if not (all(self._clear_trunk(frame_segs("kneel_down", u, T, y2)) >= K.CLEAR_M for u in KNEEL_CHECK_U) and
                         all(self._clear_trunk(frame_segs("kneel", "tall", T, yaw + side_turn * a_)) >= K.CLEAR_M for a_ in (math.pi / 4,))):
                     reasons.append((tag, "turn", "kneeling down along it or turning touches the child")); continue
@@ -4322,7 +4351,7 @@ class ParentMotion:
         release checks the toy landed where she meant it (A125's landing check, a lesson's place: PUT_TOL_M); a toy set aside or cleared
         from her way lands where it lands (A133)"""
         sh_hold = dict(curl=.95, thumb=.85, index=None)
-        return [dict(type="reach", hands={sd: dict(k="floor", xy=_lst(xy))}, via=True, shape={sd: sh_hold}),
+        return [dict(type="reach", hands={sd: dict(k="floor", xy=_lst(xy))}, via=True, shape={sd: sh_hold}, put_check=bool(check)),
                 dict(type="release", side=sd, **({"at": _lst(xy)} if check else {})),
                 dict(type="reach", hands={sd: dict(k="up_from", side=sd)}, shape={sd: dict(curl=.3, thumb=.3, index=None)}, n=3),
                 dict(type="proxy", side=sd, on=True),
@@ -5693,14 +5722,18 @@ class ParentMotion:
         toy = self._toy(t)
         return self._fetch(a, toy) + [dict(type="plan", what="set_aside", args=dict(toy=toy))]
 
-    def _plan_set_aside(self, a, toy):
+    def _plan_set_aside(self, a, toy, away_from=None):
+        """the toy in her hand set down beside her, clear of the furniture and the child; C244: `away_from` (x, y, r), a place it must land at
+        least r from (the pull's kneel at its feet: the toys tidied from there must not land there again)"""
         sds = [s_ for s_, v in self.holding.items() if v == toy]
         sd = sds[0]
         b = self.base
         fwd = np.array([math.cos(b["yaw"]), math.sin(b["yaw"])]); left = np.array([-fwd[1], fwd[0]])
         at = np.asarray(b["at"], float)
-        for sg in (1, -1):
-            q = at + left * sg * 0.45 - fwd * 0.05
+        for sg, df in ((1, -0.05), (-1, -0.05), (1, -0.35), (-1, -0.35)):
+            q = at + left * sg * 0.45 + fwd * df
+            if away_from is not None and float(np.linalg.norm(q - np.asarray(away_from[:2], float))) < float(away_from[2]):
+                continue
             if self._in_plan(q) and self.plan.dist[self.plan.cell(q)] > 0.1 and self.child.clearance_xy(q) > 0.3:
                 return self._put_phases(sd, q)
         raise Refuse(f"nowhere to set the {toy} aside")
@@ -5791,7 +5824,47 @@ class ParentMotion:
                 return self._near(a, where="pull", offs=K.PULL_FEET_M, need="pull") + [dict(type="plan", what="pull", args={})]
             except Refuse:
                 self._pull_any = False
+                tidy = self._pull_tidy(a)                                   # C244: the toys at its feet set aside first, then asked again
+                if tidy is not None:
+                    return tidy
                 raise first
+
+    def _pull_tidy(self, a):
+        """C244 (2026-10-03): THE TOYS AT ITS FEET ARE SET ASIDE BEFORE THE PULL. The dawn-66 copy (p1/c244_pull_probe2.py, ten pulls, none
+        sat): every spot at its feet was passed over for 'a toy where she kneels down' (the step back of 0 to 0.3 m) or 'the car is beyond her
+        reach from where she kneels down' (a toy in her knees' way she could not clear from a step further back), and the sides' spots for her
+        reach; day 68's three live pulls refused the same ways and the life has sat the child once in two days. The toys she sets down beside
+        its hands (A90's lesson), lets go after a hand-over (A4) and hides gather at its feet, where the pull's kneel is. A parent makes room
+        before a sit-up game: when no spot is free, the toys lying within PULL_TIDY_M of the point beyond its feet where she kneels are set
+        aside, the nearest first, at most PULL_TIDY_TOYS a pull asked (each fetched and set down beside her away from that point: set_aside's
+        away_from), and the pull is asked again (plan act, as C237's set-aside-first). None when no toy lies there or the tidying is spent: the
+        refusal stands as it was"""
+        if a["info"].get("tidied", 0) >= K.PULL_TIDY_TOYS:
+            return None
+        ch = self.child
+        axis = unit(np.r_[ch.len_axis[:2], 0.0])[:2]
+        feet = ch.pelvis[:2] + axis * 0.70                                  # (the feet's point of the pull's spots, _spots)
+        toys = self._toys_xy()
+        named = []                                                          # the toys the spots' reasons name (the search's own finding)
+        for r_ in self.kneel_reasons or []:
+            msg = str(r_[-1]) if isinstance(r_, (tuple, list)) else str(r_)
+            m_ = re.search(r"a toy where she kneels down \(([^)]*)\)", msg)
+            if m_:
+                named += [x.strip() for x in m_.group(1).split(",")]
+            m_ = re.match(r"the (\w+) is beyond her reach from where she kneels down", msg)
+            if m_:
+                named.append(m_.group(1))
+        cands = [k for k in dict.fromkeys(named) if k in toys] or \
+            [k for d_, k in sorted((float(np.linalg.norm(xy - feet)), k) for k, xy in toys.items()) if d_ <= K.PULL_TIDY_M]
+        cands = [k for k in cands if k not in NEVER_FETCHED and not self._child_has(k)]
+        if not cands:
+            return None
+        toy = min(cands, key=lambda k: float(np.linalg.norm(toys[k] - feet)))
+        a["info"]["tidied"] = a["info"].get("tidied", 0) + 1
+        a["info"].setdefault("tidy", []).append(toy)
+        self.stats["pull_tidies"] = self.stats.get("pull_tidies", 0) + 1
+        return self._fetch(a, toy) + [dict(type="plan", what="set_aside", args=dict(toy=toy, away_from=_lst(np.r_[feet, K.PULL_TIDY_M]))),
+                                      dict(type="plan", what="act", args={})]
 
     def _pull_pairing(self):
         """which of her hands takes which of its forearms so that one trunk of hers, kneeling where she is, reaches both (her palm

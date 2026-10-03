@@ -409,6 +409,9 @@ GATHER_MAX_M = 0.40             # A165: a forearm drawn at most this far toward 
 SIDE_SHOULDER_DZ_M = 0.12       # A170: a child is on its side for the turn when one shoulder stands this much higher than the other (a rocking
                                 # prone child reads 'side' for a tick with its shoulders level, and keeps the face-down grips; ours)
 GATHER_RETRIES = 2              # A166: a gather whose hand did not arrive (the arm moved) is planned again where the arm is, this many times (ours)
+PULL_TIDY_M = 0.70              # C244: toys lying within this of the point beyond its feet where she kneels for the pull are set aside first when no
+                                # spot is free of them (the kneel-down, its knees' way and her step back lie within it; ours) ...
+PULL_TIDY_TOYS = 2              # ... at most this many a pull asked (ours)
 PULL_FEET_M = (0.35, 0.40, 0.45, 0.50, 0.55)   # m beyond its feet (0.70 m from its pelvis along it) where she kneels on her
                                 # heels for the pull-to-sit, facing its head (A9: "she kneels at the G1's feet and holds both
                                 # forearms"), nearest first: her knees about 0.34 m ahead of her heels' spot, so from just beyond

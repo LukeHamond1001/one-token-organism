@@ -2100,6 +2100,91 @@ def test_the_hand_that_reaches_gives():
     print("parent 43 (C243): the toy passed to the hand that reaches the palm and given with it; neither reaching, refused as before")
 
 
+def test_the_toys_at_its_feet_are_set_aside_before_the_pull():
+    """parent 44 (C244, 2026-10-03): a pull-to-sit whose every spot is passed over (the approach refused) with a toy lying within PULL_TIDY_M of the
+    point beyond its feet where she kneels plans the toy fetched and set aside away from that point, then the pull asked again; at most
+    PULL_TIDY_TOYS a pull asked, then the refusal stands; with no toy there the refusal stands at once. Day 68: three pulls refused, the copy's ten,
+    the spots at its feet passed over for the toys lying there"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    ch = pm.child
+    feet = ch.pelvis[:2] + PM.unit(np.r_[ch.len_axis[:2], 0.0])[:2] * 0.70
+    orig_near, orig_toys = pm._near, pm._toys_xy
+    try:
+        def refuse(*a_, **k_):
+            pm.kneel_reasons = [("feet", 0.0, "a toy where she kneels down (car, duck)"), ("feet", 0.3, "the duck is beyond her reach from where she kneels down")]
+            raise PM.Refuse("no spot she can kneel at lets her do it (pull): her reach (A6)")
+        pm._near = refuse
+        pm._toys_xy = lambda exclude=(): {"car": feet + np.array([0.6, 0.3]), "duck": feet + np.array([-0.9, 0.5]), "bear": feet + np.array([1.5, 0.0])}
+        a = dict(kind="pull_to_sit", target="child", info={}, why=None)
+        plan = pm._act_pull_to_sit(a, "child")
+        kinds = [(p.get("type"), p.get("what")) for p in plan]
+        assert a["info"].get("tidied") == 1 and a["info"]["tidy"] == ["car"] and ("plan", "set_aside") in kinds and kinds[-1] == ("plan", "act"), (a["info"], kinds)
+        aside = next(p for p in plan if p.get("what") == "set_aside")
+        assert aside["args"]["toy"] == "car" and abs(aside["args"]["away_from"][2] - K.PULL_TIDY_M) < 1e-9, aside
+        plan2 = pm._act_pull_to_sit(a, "child")                             # the second toy, then the tidying is spent
+        assert a["info"]["tidied"] == 2 and a["info"]["tidy"] == ["car", "car"] or a["info"]["tidy"][-1] in ("car", "duck"), a["info"]
+        try:
+            pm._act_pull_to_sit(a, "child"); raise AssertionError("not refused")
+        except PM.Refuse as e:
+            assert "no spot" in str(e), str(e)
+        def refuse2(*a_, **k_):
+            pm.kneel_reasons = [("feet", 0.0, "the act cannot be done from there (pull)")]
+            raise PM.Refuse("no spot she can kneel at lets her do it (pull): her reach (A6)")
+        pm._near = refuse2
+        pm._toys_xy = lambda exclude=(): {"bear": feet + np.array([1.5, 0.0])}   # no toy at its feet, none named: the refusal stands at once
+        b = dict(kind="pull_to_sit", target="child", info={}, why=None)
+        try:
+            pm._act_pull_to_sit(b, "child"); raise AssertionError("not refused")
+        except PM.Refuse as e:
+            assert "no spot" in str(e) and not b["info"].get("tidied"), (str(e), b["info"])
+        pm._near = orig_near                                                # the approach planned when she gets there (plan approach) refused
+        orig_appr = pm._plan_approach                                        # mid-act: the tidy from there too
+        def appr_refuse(a_, **k_):
+            pm.kneel_reasons = [("feet", 0.0, "a toy where she kneels down (car)")]
+            raise PM.Refuse("no spot she can kneel at lets her do it (pull): her reach (A6)")
+        pm._plan_approach = appr_refuse
+        pm._toys_xy = lambda exclude=(): {"car": feet + np.array([0.6, 0.3])}
+        c = dict(kind="pull_to_sit", target="child", info={"plans": 0}, why=None); ph = dict(type="plan", what="approach", args={}); pm.phases = [ph]
+        r = pm._ph_plan(c, ph)
+        assert r == "next" and c["info"].get("tidied") == 1 and pm.phases[-1] == dict(type="plan", what="act", args={}) and any(p.get("what") == "set_aside" for p in pm.phases), (r, c["info"], pm.phases)
+        pm._plan_approach = orig_appr
+    finally:
+        pm._near, pm._toys_xy = orig_near, orig_toys
+    print(f"parent 44 (C244): with no spot for the pull and toys at its feet (at the ask, or at the approach planned when she gets there), the nearest is fetched and set aside away from the feet ({K.PULL_TIDY_M} m) "
+          f"and the pull asked again, {K.PULL_TIDY_TOYS} toys a pull at most; no toy there, the refusal stands")
+
+
+def test_a_put_beyond_her_heels_is_made_from_the_tall_kneel():
+    """parent 45 (C245, 2026-10-03): a lesson's put (put_check) whose floor reach finds no trunk from her heels (the solve short) is planned anew from
+    the tall kneel, once: the reach replaced by a kneel_down to tall and a fresh reach (rose), her arms carrying meanwhile; a reach already risen,
+    or a set-aside's (no check), runs on short as before. Day 68: 4 shows of 16 'could not be set down where she meant it' (21 to 52 cm)"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    pm.give_toy("R", "block")
+    saved = (pm._solve_trunk, dict(pm.base))
+    try:
+        pm.base["mode"] = "heels"
+        pm._solve_trunk = lambda *a_, **k_: (70.0, 40.0, 0.0, False)        # no trunk from here reaches it
+        far = np.asarray(pm.base["at"], float) + np.array([math.cos(pm.base["yaw"]), math.sin(pm.base["yaw"])]) * 0.9
+        ph = dict(type="reach", hands={"R": dict(k="floor", xy=PM._lst(far))}, via=True, shape={"R": dict(curl=.95, thumb=.85, index=None)}, put_check=True)
+        pm.phases = [ph]; a = dict(id=-1, kind="bring_back", target="block", info={}, why=None)
+        r = pm._ph_reach(a, ph)
+        assert r == "next" and a["info"].get("rose_for_put") and pm.phases[0]["type"] == "kneel_down" and pm.phases[1]["type"] == "reach" \
+            and pm.phases[1].get("rose") and pm.phases[1].get("t", 0) == 0 and pm.arms["R"]["mode"] == "move" and pm.arms["R"].get("t", 0) == 0, (r, a["info"], pm.phases)
+        ph2 = pm.phases[1]; pm.phases = [ph2]
+        r2 = pm._ph_reach(a, ph2)                                            # risen already: the reach runs on, short
+        assert r2 == "run" and ph2.get("short") and pm.phases == [ph2], (r2, ph2.get("short"), pm.phases)
+        ph3 = dict(type="reach", hands={"R": dict(k="floor", xy=PM._lst(far))}, via=True, shape={"R": dict(curl=.95, thumb=.85, index=None)})
+        pm.phases = [ph3]; b = dict(id=-2, kind="clear", target="block", info={}, why=None)
+        assert pm._ph_reach(b, ph3) == "run" and not b["info"].get("rose_for_put"), "a set-aside's reach: no rise"
+    finally:
+        pm._solve_trunk, pm.base = saved
+    print("parent 45 (C245): a lesson's put short from her heels is planned anew from the tall kneel, once; risen or a set-aside, the reach runs on")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -2111,7 +2196,8 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding,
                 test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack,
                 test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand, test_the_turn_keeps_going_while_it_turns,
-                test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives]
+                test_the_placing_arm_comes_back, test_the_hand_that_reaches_gives, test_the_toys_at_its_feet_are_set_aside_before_the_pull,
+                test_a_put_beyond_her_heels_is_made_from_the_tall_kneel]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk
