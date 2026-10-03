@@ -2419,3 +2419,40 @@ def test_the_plans_reach_is_tested_inside_her_stretch():
     finally:
         pm._solve_trunk = orig; pm.base = saved
     print(f"parent 53 (C256): the plan's reach test asks lean <= {K.PLAN_LEAN_MAX}, spine <= {K.PLAN_SPINE_MAX}; a floor place {edge[1]:.2f} m off at {math.degrees(edge[0]):.0f} deg is within her full stretch and planned from nearer")
+
+
+def test_the_puts_spot_is_tested_as_the_put_reaches():
+    """parent 54 (C258, 2026-10-03): the re-kneel's spot need for a put names the hand that holds the toy ('reach:x,y:L'), and the spot's test
+    (_need_ok) is the put's own reach test (_reachable, inside her stretch, the hand as the put resolves it) from her heels at the spot, for
+    that hand alone; a need without a hand tests either. The dawn-73 copy's block: the spot passed by her free right hand, the put in her
+    left 54 cm short"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    pm.give_toy("L", "block")
+    calls = []
+    orig = pm._reachable
+    def spy(sd, to, step=5):
+        calls.append((sd, to.get("k"), tuple(np.round(pm.base["at"], 3)), pm.base["mode"], step)); return sd == "R"   # only her right hand reaches
+    pm._reachable = spy
+    saved = dict(pm.base)
+    try:
+        H = np.asarray(pm.base["at"], float) + np.array([0.3, -0.2]); yaw = float(pm.base["yaw"]) + 0.4
+        assert pm._need_ok("reach:0.100,-0.500:L", H, yaw) is False and calls and all(c[0] == "L" and c[1] == "floor" and c[3] == "heels" and c[4] == 10
+                                                                                         and c[2] == tuple(np.round(H, 3)) for c in calls), calls
+        calls.clear()
+        assert pm._need_ok("reach:0.100,-0.500:R", H, yaw) is True and [c[0] for c in calls] == ["R"], calls
+        calls.clear()
+        assert pm._need_ok("reach:0.100,-0.500", H, yaw) is True and [c[0] for c in calls] == ["L", "R"], calls
+        assert tuple(np.round(pm.base["at"], 3)) == tuple(np.round(saved["at"], 3)) and pm.base["mode"] == saved["mode"], "her base put back"
+        # the put's plan names the holding hand in its need
+        pm._reachable = lambda sd, to, step=5: False
+        a = dict(id=-9, kind="bring_back", target="block", info={}, why=None)
+        pm._near = lambda a_, where=None, offs=None, alongs=None, need=None: [dict(type="plan", what="approach", args=dict(need=need))]
+        out = pm._plan_put_near(a, "block")
+        need = out[0]["args"]["need"]
+        assert out[0]["type"] == "plan" and need.startswith("reach:") and need.endswith(":L") and a.get("re_near"), (out[:1], need)
+    finally:
+        pm._reachable = orig; pm.base = saved
+        if "_near" in vars(pm): del pm._near
+    print("parent 54 (C258): the put's spot need names the holding hand and is tested with the put's own reach test from her heels at the spot")

@@ -3959,8 +3959,22 @@ class ParentMotion:
         if need == "lie":                                                   # A124 (C107): lying on her front from the tall kneel there,
             return self._lie_fit(np.asarray(H, float) + fwd * HEELS_BACK, yaw) is not None   # her face lands before a prone child's eyes
         if need.startswith("reach:"):                                      # A133: her hand reaches a floor point from there (a put's place),
-            xy = np.array([float(v) for v in need.split(":", 1)[1].split(",")])   # from her heels, as a put reaches (an approach ends there)
-            return any(self._reachable_at(sd, np.r_[xy, floor_z(xy) + 0.05], np.asarray(H, float), yaw, "heels") for sd in "LR")
+            parts = need.split(":")                                         # from her heels, as a put reaches (an approach ends there)
+            xy = np.array([float(v) for v in parts[1].split(",")])
+            sides = parts[2] if len(parts) > 2 and parts[2] in ("L", "R") else "LR"   # C258: the put's own hand (the toy's), else either
+            # C258 (2026-10-03): THE SPOT IS TESTED AS THE PUT WILL REACH. The dawn-73 copy's block (p1/c258_setdown_probe.py): the put's
+            # plan declined the place from where she knelt (C256's margin), the re-kneel's spot search passed the very spot she knelt at
+            # (_reachable_at: a palm-down closed hand, her limits, a coarse search), the approach found her there already and stayed, the
+            # put's own solve failed again and the block was let go 54 cm off: three or four set-downs a day so (day 74: seven by its
+            # afternoon). The spot's test is now the put's own (_reachable: the hand as the put resolves it, the toy in it, inside her
+            # stretch), from her heels at the spot, coarsely (step 10), and for the HAND that holds the toy (the second probe: the spot
+            # passed by her free right hand and the put, in her left, fell 54 cm short): a spot that passes is one the put reaches from
+            saved = self.base
+            self.base = dict(saved, at=_lst(np.asarray(H, float)), yaw=float(yaw), mode="heels", lean=0.0, spine=0.0, twist=0.0)
+            try:
+                return any(self._reachable(sd, dict(k="floor", xy=_lst(xy)), step=10) for sd in sides)
+            finally:
+                self.base = saved
         if need in ("turn_both", "turn_shoulder"):
             # A136 (C98, C109): the turn's far grips in her reach from there: both (A101's turn, beside its chest) or the far shoulder
             # alone (the roll by the shoulder from its head): each grip's point and palm from _turn_targets with her base set there
@@ -5268,10 +5282,12 @@ class ParentMotion:
     def _hold_on(self, sd):
         return any(h.side == sd for h in self.holds)
 
-    def _reachable(self, sd, to):
+    def _reachable(self, sd, to, step=5):
         if self.base["mode"] not in ("heels", "tall"):                      # C252 (2026-10-03): a kneeling reach is asked of a kneeling base; from
             return False                                                    # her feet or the sofa nothing is within a kneel's reach (the life
         g, R = self._resolve_hand(to, sd)                                   # stopped at 3,468,000: C251's set-down planned while she stood,
+        if float(np.linalg.norm(np.asarray(g[:2], float) - np.asarray(self.base["at"], float)[:2])) > 1.0:
+            return False                                                    # (C258: beyond any lean of hers, as _reachable_at's bound)
         # C256 (2026-10-03): THE PLAN'S REACH IS TESTED INSIDE HER STRETCH. The dawn-66 copy's set-down (p1/c256_setdown_probe2.py): the
         # plan's test passed a place 0.92 m off at lean 70, spine 40 (her limits), and the reach itself, from the same kneel for the same
         # place a centimetre higher, found no pose; she rose to the tall kneel (C245), from which a far floor point is farther still, and
@@ -5279,7 +5295,7 @@ class ParentMotion:
         # PLAN_SPINE_MAX (60, 35: ten degrees inside her limits), so a place at the edge sends her to kneel nearer (the put's re_near,
         # the pick's spot, the turn's re-approach) instead of reaching and missing
         lean, spine, tw, ok = self._solve_trunk({sd: (g, R, dict(curl=.3, thumb=.3, index=None))}, self.warm.get("trunk"),   # P.kneel(mode='stand'))
-                                                max_lean=K.PLAN_LEAN_MAX, max_spine=K.PLAN_SPINE_MAX)
+                                                max_lean=K.PLAN_LEAN_MAX, max_spine=K.PLAN_SPINE_MAX, step=step)
         return ok
 
     def _toy_spot(self, xy):
@@ -5811,7 +5827,8 @@ class ParentMotion:
             # from; when her hand does not reach it from here (a sitting child's far side, 45 to 67 cm off before the release check
             # refused it) she kneels again where it does (the reach need), once
             a["re_near"] = True                                             # (a child that lay down on its front since the plan: her
-            need = f"reach:{xy[0]:.3f},{xy[1]:.3f}"                         # kneel at its head, the crawl rung's, A125)
+            need = f"reach:{xy[0]:.3f},{xy[1]:.3f}:{sd}"                    # kneel at its head, the crawl rung's, A125); C258: the hand
+                                                                            # that holds the toy is the hand the spot must serve
             near = self._near(a, where="head", offs=PUT_HEAD_OFFS, need=need) if ch.posture == "front" else self._near(a, need=need)
             return near + [dict(type="plan", what="put_near", args=dict(toy=toy))]
         return swap + self._put_phases(sd, xy, check=True)
