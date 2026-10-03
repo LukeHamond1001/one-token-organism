@@ -227,8 +227,8 @@ def _replica_tick(w, acts):
 
 def test_the_servo_law():
     """world 3: the gains from the limits; the limits the declared ones (A88); an act re-anchors, a rest relaxes, bit for bit the law
-    written out by hand (the spinal cord off: the servo law alone)"""
-    w = G1World(seed=1, spinal=False)
+    written out by hand (the spinal cord off, and the arms' resting tone, A185: the servo law alone)"""
+    w = G1World(seed=1, spinal=False, tone=False)
     m = w.m
     kps, kds = W.servo_gains()
     for k, a in enumerate(w.aid):                                        # A39: Unitree's published gains; the Dex3's (A72) its limit
@@ -238,7 +238,7 @@ def test_the_servo_law():
     assert np.array_equal(w.limits_now(), w.tau_max) and np.array_equal(-m.jnt_actfrcrange[w.jid, 0], w.tau_max)   # A88: no weakness
     b = _babbler(3)
     acts = [b.acts() for _ in range(12)] + [{}] * 4 + [{"arm_l": W.act_flat([2, 2, 2, 0, 2, 2, 2])}] + [{}] * 3
-    twin = G1World(seed=1, spinal=False)
+    twin = G1World(seed=1, spinal=False, tone=False)
     for i, a in enumerate(acts):
         q0 = w.d.qpos[w.qadr].copy()
         w.apply(a)
