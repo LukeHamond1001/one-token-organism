@@ -253,6 +253,8 @@ FETCH_OFF_TRY = (0.45, 0.55, 0.65, 0.75, 0.85, 0.95)   # A117 (C102): her kneeli
                                             # kneel's reach carries (_reachable_at's 1.0 m: arm 0.65, trunk 0.35). Ours
 ROLL_BEYOND_M = 0.10                        # A109 (C91): the roll rung's toy set this far past the reach of the arm on its far side: two
                                             # steps of the reach ladder (dayplan.LESSON_STEP), a full roll carries its body about that far
+PUT_TRUNK_CLEAR_M = 0.08                    # C263 (2026-10-03): a lesson's toy lies at least this clear of the child's trunk and legs on the floor
+                                            # plan (ours: a toy's half-width and a little), where its hand hangs over its own body (A185)
 PUT_AHEAD_M = 0.35                          # A109: the roll rung's toy set down this far before her pelvis (where set_near's toy lies
                                             # from her kneel beside the child: her knees at HEELS_BACK, the toy a hand beyond them)
 REBASE_TOL_M = 0.02                         # A108: her restored plan drawing her pelvis farther than this from where her body was
@@ -587,10 +589,12 @@ class Child:
         key = id(m)
         if key not in _G1_SHAPES:
             gs = [g for g in range(m.ngeom) if m.geom_bodyid[g] in g1_set and (m.geom_contype[g] or m.geom_conaffinity[g])]
+            arm = np.array([any(w_ in m.body(int(m.geom_bodyid[g])).name for w_ in ("shoulder", "elbow", "wrist", "hand")) for g in gs], bool)
             _G1_SHAPES[key] = (np.array(gs), np.array([m.geom_rbound[g] if m.geom_type[g] != mujoco.mjtGeom.mjGEOM_MESH else _mesh_r(m, g)
-                                                      for g in gs]))
-        gs, rad = _G1_SHAPES[key]
+                                                      for g in gs]), arm)
+        gs, rad, arm = _G1_SHAPES[key]
         self.foot_pts = np.column_stack([d.geom_xpos[gs], rad])              # (x, y, z, radius) of its collision shapes
+        self.trunk_pts = self.foot_pts[~arm]                                 # C263: the same without its arms and hands (its trunk and legs)
         self.grasp = {}
         self.palm_n = {}
         pg = _G1_PALM_GEOM.get(id(m))
@@ -627,6 +631,12 @@ class Child:
     def clearance_xy(self, xy):
         """the floor-plan distance from a point to its body's shapes (their radii taken off)"""
         d = np.linalg.norm(self.foot_pts[:, :2] - np.asarray(xy)[None, :2], axis=1) - self.foot_pts[:, 3]
+        return float(d.min())
+
+    def trunk_clearance_xy(self, xy):
+        """C263: the floor-plan distance from a point to its trunk's and legs' shapes (the arms and hands left out: a hand's own floor
+        point lies under the hand)"""
+        d = np.linalg.norm(self.trunk_pts[:, :2] - np.asarray(xy)[None, :2], axis=1) - self.trunk_pts[:, 3]
         return float(d.min())
 
 
@@ -5734,7 +5744,18 @@ class ParentMotion:
         her = np.asarray(self.base["at"], float)
         cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
         out = unit((ch.grasp[cs] - ch.torso)[:2] * 1.0)
-        return ch.grasp[cs][:2] + out * float(self.lesson_dist)
+        xy = ch.grasp[cs][:2] + out * float(self.lesson_dist)
+        if ch.posture != "front" and ch.trunk_clearance_xy(xy) < PUT_TRUNK_CLEAR_M:
+            # C263 (2026-10-03, with A185's resting tone): a hand held before its chest has the child's own trunk for its floor, and
+            # 'the floor beside its near hand' was a place on its body. The toy goes on the floor beside its body on that hand's side:
+            # from the hand's floor point out along its side until PUT_TRUNK_CLEAR_M clear of its trunk and legs, then the lesson's
+            # distance on (a person lays the toy beside the baby, on the side of the hand that is to take it)
+            side = ch.lat[:2] * (1.0 if cs == "L" else -1.0)
+            for k in range(60):
+                q = ch.grasp[cs][:2] + side * (0.02 * k)
+                if ch.trunk_clearance_xy(q) >= PUT_TRUNK_CLEAR_M:
+                    xy = q + side * float(self.lesson_dist); break
+        return xy
 
     def _act_bring_back(self, a, t):
         toy = self._toy(t)

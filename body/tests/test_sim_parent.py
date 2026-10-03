@@ -2583,3 +2583,40 @@ def test_a_put_with_no_spot_for_its_place_takes_the_lure():
     assert need1 == f"reach:{lure[0]:.3f},{lure[1]:.3f}:{sd}" and ph[0]["what"] == "approach" and ph[-1]["what"] == "put_near", ph
     assert not a2["info"].get("lure") and ph2[0]["args"]["need"].endswith(f":{sd}") and ph2[0]["args"]["need"] != need1, ph2
     assert not asked3 and ph3[0]["args"]["need"] == need1, (asked3, ph3)
+
+
+def test_a_put_goes_beside_the_body_when_the_hand_hangs_over_it():
+    """parent 58 (C263, with A185's resting tone): 'the floor beside its near hand' for a hand held over its own chest is a place on the
+    child's body; the lesson's toy then goes on the floor beside its body on that hand's side, PUT_TRUNK_CLEAR_M clear of its trunk and
+    legs and the lesson's distance on. A born world: the hands' floor points lie beside the trunk and the put's place is the old one (the
+    hand's floor point + the lesson's distance out from its torso), with the tone and without; its arms then laid across its chest
+    (both arms: the shoulders flexed and adducted, the elbows bent): the old place lies on its trunk, and the put's place is clear of the trunk by
+    PUT_TRUNK_CLEAR_M + the lesson's distance (within a search step), on the near hand's side, no farther than it must be"""
+    import mujoco
+    PM = __import__("body.sim.parent_motion", fromlist=["x"])
+    w = W.G1World(seed=1); pm = w.parent; m, d = w.m, w.d
+    for _ in range(10):
+        w.apply({})
+    def place():
+        ch = pm.child
+        her = np.asarray(pm.base["at"], float)
+        cs = min("LR", key=lambda x: float(np.linalg.norm(ch.grasp[x][:2] - her)))
+        old = ch.grasp[cs][:2] + PM.unit((ch.grasp[cs] - ch.torso)[:2] * 1.0) * float(pm.lesson_dist)
+        xy = np.asarray(pm._put_xy(), float)
+        side = ch.lat[:2] * (1.0 if cs == "L" else -1.0)
+        return cs, old, xy, ch.trunk_clearance_xy(old), ch.trunk_clearance_xy(xy), float((xy - ch.torso[:2]) @ side), ch.posture
+    cs0, old0, xy0, c_old0, c_new0, lat0, post0 = place()
+    assert post0 == "back" and c_old0 >= PM.PUT_TRUNK_CLEAR_M and np.allclose(old0, xy0), (post0, c_old0, old0, xy0)
+    q0 = d.qpos.copy()
+    for side_, sg in (("left", 1.0), ("right", -1.0)):                     # both arms, so whichever hand is nearer her lies over its chest
+        for j, v in ((f"{side_}_shoulder_pitch_joint", -0.9), (f"{side_}_shoulder_roll_joint", -0.35 * sg), (f"{side_}_shoulder_yaw_joint", 0.0), (f"{side_}_elbow_joint", -0.6)):
+            d.qpos[m.jnt_qposadr[m.joint(j).id]] = v
+    mujoco.mj_forward(m, d)
+    pm.child = PM.Child(m, d, pm.scene.g1_set, palm_geom=getattr(w, "palm_geom", None))
+    cs, old, xy, c_old, c_new, lat_, post = place()
+    hz = float(pm.child.grasp[cs][2])
+    d.qpos[:] = q0; mujoco.mj_forward(m, d)
+    print(f"parent 58 (C263): born, its near hand {cs0}'s floor point {c_old0:.2f} m clear of its trunk: the old place kept; the arm laid across its chest (the hand {hz:.2f} m up): "
+          f"the old place {np.round(old, 2).tolist()} is {c_old:+.2f} m from its trunk, the put's place {np.round(xy, 2).tolist()} {c_new:.2f} m clear of it, {lat_:.2f} m out on that hand's side")
+    assert c_old < PM.PUT_TRUNK_CLEAR_M, (cs, c_old)
+    assert PM.PUT_TRUNK_CLEAR_M + float(pm.lesson_dist) - 0.03 <= c_new <= PM.PUT_TRUNK_CLEAR_M + float(pm.lesson_dist) + 0.06 and lat_ > 0.0, (c_new, lat_)
