@@ -1389,7 +1389,8 @@ def test_a_toy_where_she_cannot_kneel():
         b = w.m.body(f"toy_{toy}").id; j = w.m.body_jntadr[b]
         adr = w.m.jnt_qposadr[j]; dof = w.m.jnt_dofadr[j]
         w.d.qpos[adr:adr + 2] = xy; w.d.qvel[dof:dof + 6] = 0
-    put("cup", (0.38, 1.04)); put("ball", (-2.23, -2.18)); put("stacker", (-2.53, -2.22))
+    put("cup", (-2.0, 1.9)); put("ball", (-2.23, -2.18)); put("stacker", (-2.53, -2.22))   # (room a's low table stands at (-2.0, 1.9) since its
+                                                                                          # rearrangement; the cup's old spot (0.38, 1.04) is free floor)
     mujoco.mj_forward(w.m, w.d)
     _live(w, 20)
     xy = {k: w.d.xpos[w.m.body(f"toy_{k}").id][:2].copy() for k in ("cup", "ball", "stacker")}
