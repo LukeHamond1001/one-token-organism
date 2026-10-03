@@ -283,7 +283,7 @@ def test_the_frames():
     def spy_tick(u, delta, r, nxt=None, ft=ft, L=L):
         L._probe = (int(u), float(delta), float(r)); return ft(u, delta, r, nxt)
     L._frame_write = spy_write; L._frame_tick = spy_tick
-    T = 400; mus = {}; hand_s = []; keys_prev = []; probes = []; tots = []
+    T = 400; mus = {}; hand_s = []; hand_ch = []; keys_prev = []; probes = []; tots = []
     for t in range(T):
         ffc = {k: v.clone() for k, v in (L._ffc or {}).items()} if getattr(L, "_ffc", None) else None
         key_before = L._fkey_prev.clone() if getattr(L, "_fkey_prev", None) is not None else None
@@ -300,29 +300,43 @@ def test_the_frames():
         if ffc:
             for name, pr in ffc.items():
                 errs[name] = float(0.5 * ((pr.float() - codes[name].float()) ** 2).sum())
-        vals = []
+        vals = []; chd = {}
         for c in L.anatomy.channels:
             if c.name in errs:
                 n_, mu = mus.get(c.name, [0, 0.0]); n_ += 1; mu = mu + (errs[c.name] - mu) / min(float(n_), 36000.0); mus[c.name] = [n_, mu]
                 vals.append(errs[c.name] / mu)
+                chd[c.name] = errs[c.name] / mu
         s_ = sum(vals) / len(vals) if vals else None
-        hand_s.append(s_)
+        hand_s.append(s_); hand_ch.append(chd)
         rec = L._rec[t]
         assert (float(rec[0]) == float(torch.tensor(s_ if s_ is not None else 0.0, dtype=torch.float32))), (t, float(rec[0]), s_)
         assert float(rec[1]) == float(torch.tensor(delta, dtype=torch.float32)) and float(rec[2]) == 0.0 and float(rec[3]) == float(torch.tensor(r, dtype=torch.float32)), t
     assert L._rec_n == T and hand_s[0] is None and all(x is not None for x in hand_s[1:]), hand_s[:3]
     assert set(mus) == {c.name for c in L.anatomy.channels} and all(abs(L._ferr[k][1] - v[1]) < 1e-12 and L._ferr[k][0] == v[0] for k, v in mus.items())
-    # the settle law replayed over the day
-    fast = slow = None; prev = True; ends = []
-    for t, s_ in enumerate(hand_s):
-        if s_ is None:
+    # the settle law replayed over the day: A180 (2026-10-03), per channel (each channel's surprise over its own mean, 4 and 64 ticks, settled
+    # at half; an end when any channel's settles, ends no closer than 4 ticks); the mean's own law before, which on nine channels ended
+    # nothing in the life (7 to 13 a day)
+    ff, sl, st = {}, {}, {}; ends = []; last_end = -10 ** 9; mean_ends = []; fast = slow = None; prev = True
+    for t, chd in enumerate(hand_ch):
+        if not chd:
             continue
+        ended = False
+        for c_, v_ in chd.items():
+            ff[c_] = v_ if c_ not in ff else 0.75 * ff[c_] + 0.25 * v_; sl[c_] = v_ if c_ not in sl else (1 - 1 / 64) * sl[c_] + (1 / 64) * v_
+            st_ = ff[c_] <= 0.5 * max(1e-6, sl[c_])
+            if st_ and not st.get(c_, True):
+                ended = True
+            st[c_] = st_
+        if ended and t - last_end >= 4:
+            ends.append(t); last_end = t
+        s_ = hand_s[t]
         fast = s_ if fast is None else 0.75 * fast + 0.25 * s_; slow = s_ if slow is None else (1 - 1 / 64) * slow + (1 / 64) * s_
-        st_ = fast <= 0.5 * max(1e-6, slow)
-        if st_ and not prev:
-            ends.append(t)
-        prev = st_
+        m_ = fast <= 0.5 * max(1e-6, slow)
+        if m_ and not prev:
+            mean_ends.append(t)
+        prev = m_
     assert ends == L._rec_ends and len(ends) >= 3, (ends, L._rec_ends)
+    assert len(ends) >= len(mean_ends), (len(ends), len(mean_ends))     # (the per-channel law ends at least as often as the mean's)
     # the write gate replayed
     q = None; warm = []; writes = []
     for t, s_ in enumerate(hand_s):

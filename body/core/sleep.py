@@ -843,6 +843,7 @@ class SleepMixin:
                               - float(sum(float(v) for v, (_, sg) in zip(rf, org.heads) if sg < 0.0)))
                 self._imag_N = float(sum(Ns) / len(Ns)) if Ns else 0.0
         self._imag_n = int(getattr(self, "_imag_n", 0)) + 1
+        self._imag_last_t = int(self.ticks)                                # A180: the last imagining's tick (the ends' gap, frames._frame_end)
 
     def _imagine_pause(self):
         """A138: the pause trigger. Under a live parent the frames' events rarely end (the surprise's fast average stays above half its

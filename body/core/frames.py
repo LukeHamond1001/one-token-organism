@@ -176,7 +176,7 @@ class FramesMixin:
             st = {}; self._ferr = st
         fc = getattr(self, "_ffc", None) or {}
         fw = getattr(self, "_fw_err", None)
-        tau = float(self._frame_const("err_tau")); vals = []
+        tau = float(self._frame_const("err_tau")); vals = []; ch_ = {}
         for i_, c_ in enumerate(self.anatomy.channels):
             if i_ == 0:
                 e = fw
@@ -201,6 +201,8 @@ class FramesMixin:
             fn[c_.name] = float(e)
             if mu > 0.0:
                 vals.append(float(e) / mu)
+                ch_[c_.name] = float(e) / mu
+        self._fs_ch = ch_                                                   # A180: each channel's surprise over its own mean, this tick
         return (sum(vals) / len(vals)) if vals else None
 
     def _ferr_progress(self):
@@ -226,13 +228,42 @@ class FramesMixin:
         """THE EVENT'S END FOR FRAMES (the module's doc): today's settle law on the frame's surprise `s`; True on the first settled tick
         after one that was not"""
         af = 1.0 / max(1.0, float(self.cfg.get("offset_fast", 4))); as_ = 1.0 / max(1.0, float(self.cfg.get("offset_slow", 64)))
-        fast = getattr(self, "_fs_fast", None); slow = getattr(self, "_fs_slow", None)
-        fast = float(s) if fast is None else (1.0 - af) * fast + af * float(s)
-        slow = float(s) if slow is None else (1.0 - as_) * slow + as_ * float(s)
-        self._fs_fast, self._fs_slow = fast, slow
-        settled = fast <= float(self.cfg.get("offset_settle", 0.5)) * max(1e-6, slow)
-        ended = settled and not getattr(self, "_fs_settled", True)
-        self._fs_settled = settled
+        thr = float(self.cfg.get("offset_settle", 0.5))
+        ch = getattr(self, "_fs_ch", None) or {}
+        if len(ch) <= 1:                                                    # one forecasting channel (the language body): the law as it was
+            fast = getattr(self, "_fs_fast", None); slow = getattr(self, "_fs_slow", None)
+            fast = float(s) if fast is None else (1.0 - af) * fast + af * float(s)
+            slow = float(s) if slow is None else (1.0 - as_) * slow + as_ * float(s)
+            self._fs_fast, self._fs_slow = fast, slow
+            settled = fast <= thr * max(1e-6, slow)
+            ended = settled and not getattr(self, "_fs_settled", True)
+            self._fs_settled = settled
+            return ended
+        # A180 (2026-10-03): THE EVENT'S END PER CHANNEL. On the G1 the frame's surprise is a mean over eight channels, and a mean has no
+        # spikes: its fast average never fell to half its slow one (the dawn-73 copy: 0 ends in 1,500 ticks; 7 to 13 a day in the life),
+        # so working memory never latched and the end-triggered imagination never ran. The same law, the same constants, on each
+        # channel's own surprise over its own mean (an event is one modality rising and settling: a sound, a touch, a sight; event
+        # segmentation by transient prediction error, Zacks et al. 2007): an end when any channel's settles, ends no closer than
+        # offset_fast ticks (within the fast window two settlings are one end). The copy: ~2,300 a day. One channel is the law as it was
+        ff = getattr(self, "_fs_fast_ch", None); sl = getattr(self, "_fs_slow_ch", None); st = getattr(self, "_fs_settled_ch", None)
+        if ff is None or sl is None or st is None:
+            ff, sl, st = {}, {}, {}
+            self._fs_fast_ch, self._fs_slow_ch, self._fs_settled_ch = ff, sl, st
+        ended = False
+        for c_, v_ in ch.items():
+            v_ = float(v_)
+            ff[c_] = v_ if c_ not in ff else (1.0 - af) * ff[c_] + af * v_
+            sl[c_] = v_ if c_ not in sl else (1.0 - as_) * sl[c_] + as_ * v_
+            settled = ff[c_] <= thr * max(1e-6, sl[c_])
+            if settled and not st.get(c_, True):
+                ended = True
+            st[c_] = settled
+        self._fs_settled = all(st.values()) if st else True                # (nightfall ends an event still open: _frames_nightfall)
+        if ended:
+            gap = int(max(1.0, float(self.cfg.get("offset_fast", 4))))
+            if int(self.ticks) - int(getattr(self, "_fs_last_end", -10 ** 9)) < gap:
+                return False
+            self._fs_last_end = int(self.ticks)
         return ended
 
     def _frame_end(self):
@@ -245,7 +276,9 @@ class FramesMixin:
         if int(self._frame_const("wm_frames")) and int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
             with torch.no_grad():                                      # R7f: working memory latches at the frames' event end (wm_frames)
                 self.m.wm_latch(self.m.striatum_read())
-        self._imagine()                                                # A138: an event's end is the pause the body thinks ahead in
+        from .sleep import IMAG_PAUSE as _IP                           # A138: an event's end is the pause the body thinks ahead in;
+        if int(self.ticks) - int(getattr(self, "_imag_last_t", -10 ** 9)) >= int(_IP):   # A180: once in IMAG_PAUSE ticks (the pause's
+            self._imagine()                                            # own gap), the ends now coming every second or two
         ends = getattr(self, "_rec_ends", None)
         if ends is None:
             ends = []; self._rec_ends = ends
