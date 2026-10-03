@@ -457,5 +457,12 @@ HANDOVER_PRESS_MAX_M = 0.06     # ... at most this far past where she planned it
 HANDOVER_OUT_M = 0.02           # C222: a toy is within the hand's reach when its centre lies no further out along the palm's normal than its own
 HANDOVER_CLEAR_M = 0.01         # C232: a hand is clear for a toy when its grasp point stands the toy's half-extent along gravity plus this over the floor (ours)
                                 # half-extent plus this beyond the grasp point (a fist's knuckles stand 5 to 6 cm out of the face; ours)
+HANDOVER_AT_M = 0.04            # C240: the offer's press runs only while the toy is within this of its place at the palm (the toy's own miss,
+                                # _aim_fix, less what she has pressed it); off it, she follows the hand (A4's forty ticks run on) ... (ours)
+HANDOVER_FOLLOW_TICKS = 20      # C240: ... and off it this long (3 s) with the hand beyond her reach from where she kneels, she kneels again
+HANDOVER_REPLANS = 2            #       where it is, at most this many times in a hand-over (ours)
+HANDOVER_PALM_RISE_MIN = -0.2   # C240: a palm whose normal's rise is at least this (level, or facing the floor by no more than 12 deg: the toy
+                                # pressed along its normal, the fingers close on it; the born child's palms lie level, rise -0.03) is given to
+                                # before one facing the floor further (the copy's -0.30 and -0.62: the toy pressed onto the back of the hand) (ours)
 TAKE_BACK_N = 0.3               # taking a toy back: she closes only after the child's palm force stayed under 0.3 N ... (A4)
 TAKE_BACK_TICKS = 2             # ... for 2 ticks

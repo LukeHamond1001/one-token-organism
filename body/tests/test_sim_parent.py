@@ -466,10 +466,12 @@ def test_toys():
     never taken (A4). (From the door her hand-over finds a fist: at rest the born hands close on their own within 3 s, C41.)"""
     out = T.sc_hand_over(True)
     a = out["acts"][0]
-    assert a["status"] == "done" and ("closed on it" in a["why"] or "released after 40 ticks" in a["why"]), (a, out["block_to_palm_m"])
+    assert a["status"] == "done" and ("closed on it" in a["why"] or "released after 40 ticks" in a["why"]
+                                      ), (a, out["block_to_palm_m"])
     assert out["probe"]["body_peak_N"] <= K.CAP_ONE and out["probe"]["body_work_J"]["positive_sum"] < 0.1, out["probe"]
     # (she is a body: a toy's first touch off its palm closes the grasp reflex into a fist on nothing, C41, and A4 lets it go after
-    # 40 ticks; either ending is written down)
+    # 40 ticks; either ending is written down. C240: from her placed kneel her arm falls 11 cm short of its plan and the block hangs
+    # 7 to 10 cm off its palm: the forty ticks run on without the press and the block is let go there, the miss written down)
     w = W.G1World(seed=1)
     _live(w, 40)                                                       # the rattle by its right hand: its arm sinks onto it
     pm = w.parent
@@ -1881,6 +1883,102 @@ def test_the_prop_ends_when_it_sits_by_itself():
     assert r == "next" and "sits by itself" in a["why"] and kinds == ["let_go", "reach", "relax"], (r, a["why"], kinds)
 
 
+def test_the_offer_waits_for_the_toy_at_its_hand():
+    """parent 40 (C240, 2026-10-02): the hand-over's press runs only while the toy is at its hand (its miss within HANDOVER_AT_M past what she
+    has pressed). Off it: no press; off it HANDOVER_FOLLOW_TICKS with the hand beyond her reach she
+    kneels again where it is (near_free_hand, hand_over: HANDOVER_REPLANS times); A4's forty ticks run on through the ticks off it and let the toy
+    go where it is, the miss written down. A stretch off the hand undoes the press and
+    holds the count; back at the hand the forty ticks run on to A4's release. Day 66's copy: 6 of 9 hand-overs let go 30 cm from the hand"""
+    w = W.G1World(seed=1)
+    _live(w, 3)
+    pm = w.parent
+    sd, cs = "R", "L"
+    pm.give_toy(sd, "block")
+
+    def fresh(miss):
+        pm.arms[sd] = dict(mode="at", to=dict(k="palm", side=cs), miss=miss, shape1=dict(curl=.9, thumb=.8, index=None))
+        ph = dict(type="handover", side=sd, child=cs, t=0)
+        pm.phases = [ph]
+        return dict(kind="hand_over", target="block", info={}, why=None), ph
+    orig = pm._reachable_at
+    try:
+        pm._reachable_at = lambda *a_, **k_: False
+        a, ph = fresh(0.30)                                                 # 1: off its hand, the hand beyond her reach: kneel again
+        rs = []
+        for _ in range(K.HANDOVER_FOLLOW_TICKS):
+            rs.append(pm._ph_handover(a, ph)); ph["t"] = ph.get("t", 0) + 1   # (the runner's own count of the phase's ticks)
+        assert rs[:-1] == ["run"] * (K.HANDOVER_FOLLOW_TICKS - 1) and rs[-1] == "next", rs
+        assert ph["away"] == K.HANDOVER_FOLLOW_TICKS and not ph.get("pressed") and pm.arms[sd]["to"].get("gap") is None, ph
+        assert a["info"]["re_hand"] == 1 and [p.get("what") for p in pm.phases] == ["near_free_hand", "hand_over"], pm.phases
+        a, ph = fresh(0.30); a["info"]["re_hand"] = K.HANDOVER_REPLANS         # 2: the replans spent: the forty ticks run on, no press, and
+        rs = []                                                             # the toy is let go where it is (A4), the miss written down
+        for _ in range(K.HANDOVER_MAX_TICKS):
+            rs.append(pm._ph_handover(a, ph)); ph["t"] = ph.get("t", 0) + 1
+        assert rs[:-1] == ["run"] * (K.HANDOVER_MAX_TICKS - 1) and rs[-1] == "done" and "released after 40 ticks" in a["why"] \
+            and "30 cm from its place at its palm as she let go, 40 of the ticks off it" in a["why"] and not ph.get("pressed"), (rs[-1], a["why"])
+        pm._reachable_at = lambda *a_, **k_: True
+        a, ph = fresh(0.30)                                                 # 3: within reach yet not brought there: no replan, the forty run on
+        rs = []
+        for _ in range(K.HANDOVER_FOLLOW_TICKS + 2):
+            rs.append(pm._ph_handover(a, ph)); ph["t"] = ph.get("t", 0) + 1
+        assert set(rs) == {"run"} and a["info"].get("re_hand") is None and ph.get("reach_checked"), (rs[-1], a)
+    finally:
+        pm._reachable_at = orig
+    a, ph = fresh(0.01)                                                     # 4: at its hand: the press runs
+    for _ in range(10):
+        assert pm._ph_handover(a, ph) == "run"; ph["t"] = ph.get("t", 0) + 1
+    to = pm.arms[sd]["to"]
+    assert abs(ph["pressed"] - 10 * K.HANDOVER_PRESS_M) < 1e-9 and abs(to["gap"] - (ph["gap0"] - 10 * K.HANDOVER_PRESS_M)) < 1e-9, (ph, to)
+    pm.arms[sd]["miss"] = 0.30                                              # a stretch off it: the press undone, the forty run on
+    for _ in range(5):
+        assert pm._ph_handover(a, ph) == "run"; ph["t"] = ph.get("t", 0) + 1
+    assert ph["pressed"] == 0.0 and to["gap"] == ph["gap0"] and ph["away"] == 5, (ph, to)
+    pm.arms[sd]["miss"] = 0.01                                              # back at the hand: the press again, then A4's release at forty
+    rs = []
+    for _ in range(K.HANDOVER_MAX_TICKS - 15):
+        rs.append(pm._ph_handover(a, ph)); ph["t"] = ph.get("t", 0) + 1
+    assert rs[:-1] == ["run"] * (K.HANDOVER_MAX_TICKS - 16) and rs[-1] == "done" and "released after 40 ticks" in a["why"] \
+        and "as she let go" not in a["why"] and ph["pressed"] > 0, (rs[-3:], a["why"])
+    assert ph["away"] == 5 and a["info"]["away_ticks"] == 5
+    from body.sim.world import HAND_DEPTH_M                                 # (c) her reading of the palm is the world's own (A171)
+    ch_now = PM.Child(w.m, w.d, w.scene.g1_set)                              # (read now, as the world is: hers is the tick's beginning)
+    for cs_, h in (("L", 0), ("R", 1)):
+        G = ch_now.grasp[cs_] + ch_now.palm_n[cs_] * (HAND_DEPTH_M - PM.PALM_GRASP_OUT)
+        assert float(np.linalg.norm(G - w.grasp_centre(h))) < 1e-6 and float(np.linalg.norm(ch_now.palm_n[cs_] - w.palm_normal(h))) < 1e-6, \
+            (cs_, G, w.grasp_centre(h))
+    saved_n = dict(pm.child.palm_n)
+    try:                                                                    # (b') the palm not facing the floor is given to first; one
+        pm.child.palm_n = {"L": np.array([0.0, 0.0, -1.0]), "R": np.array([0.0, 0.0, 1.0])}   # facing the floor last, and still offered to
+        assert pm._hands_for_a_toy(["L", "R"], "block", lambda x: x == "R") == ["R", "L"]
+        pm.child.palm_n = {x: np.array([0.0, 0.0, -1.0]) for x in "LR"}
+        pm._reachable_at = lambda *a_, **k_: True
+        a = dict(kind="hand_over", target="block", info={}, why=None)
+        plan = pm._plan_hand_over(a, "block")
+        assert a["info"].get("palm_down") == -1.0 and any(p.get("type") == "handover" for p in plan), (a["info"], [p.get("type") for p in plan])
+        pm.child.palm_n = {x: np.array([0.0, 0.0, 1.0]) for x in "LR"}
+        b = dict(kind="hand_over", target="block", info={}, why=None)
+        plan2 = pm._plan_hand_over(b, "block")
+        assert b["info"].get("palm_down") is None and any(p.get("type") == "handover" for p in plan2), (b["info"], [p.get("type") for p in plan2])
+    finally:
+        pm.child.palm_n = saved_n; pm._reachable_at = orig
+    saved = (pm._need_ok, pm._plan_approach, pm._beside_now, pm.base["mode"])
+    try:                                                                    # (d) beside it she stays only when a palm is within her reach
+        pm.base["mode"] = "heels"; pm._beside_now = lambda: True
+        pm._need_ok = lambda need, H, yaw: False
+        pm._plan_approach = lambda a_, where=None, offs=None, alongs=None, need=None: [dict(type="marker", where=where, need=need)]
+        c = dict(kind="hand_over", target="block", info={}, why=None)
+        plan3 = pm._plan_near_free_hand(c, "block")
+        assert plan3 and plan3[0].get("type") == "marker" and str(plan3[0]["need"]).startswith("hand:"), plan3
+        pm._need_ok = lambda need, H, yaw: True
+        assert pm._plan_near_free_hand(c, "block") == []
+    finally:
+        pm._need_ok, pm._plan_approach, pm._beside_now, pm.base["mode"] = saved
+    print(f"parent 40 (C240): her palm reading is the world's (both hands, 1e-6); a palm not facing the floor is given to first, one facing it still "
+          f"offered to; beside it she stays only when a palm is within her reach; off its hand the press waits and the forty ticks run on, she kneels "
+          f"again at {K.HANDOVER_FOLLOW_TICKS} ticks off it with the hand beyond her reach; at its hand the press runs ({10 * K.HANDOVER_PRESS_M * 100:.0f} cm "
+          f"in 10 ticks, undone off it) and the forty ticks end in A4's release")
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -1891,7 +1989,7 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback, test_a_hand_clear_of_the_floor,
                 test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding,
                 test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack,
-                test_the_prop_ends_when_it_sits_by_itself]
+                test_the_prop_ends_when_it_sits_by_itself, test_the_offer_waits_for_the_toy_at_its_hand]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

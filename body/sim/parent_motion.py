@@ -543,9 +543,11 @@ class Child:
     """The G1's geometry as the parent sees it (world truth, for her planner only; nothing here reaches the body): its eyes, trunk,
     posture, the side it faces, its footprint on the floor plan, and the named points her hands go to."""
 
-    def __init__(self, m, d, g1_set):
+    def __init__(self, m, d, g1_set, palm_geom=None):
         b = lambda n: m.body(n).id
         c = lambda n: m.camera(n).id
+        if palm_geom is not None:
+            _G1_PALM_GEOM[id(m)] = tuple(int(g) for g in palm_geom)
         self.eye = {sd: d.cam_xpos[c(f"eye_{sd}")].copy() for sd in "LR"}
         self.cam_R = {sd: d.cam_xmat[c(f"eye_{sd}")].reshape(3, 3).copy() for sd in "LR"}
         self.eyes = (self.eye["L"] + self.eye["R"]) / 2
@@ -582,11 +584,24 @@ class Child:
         self.foot_pts = np.column_stack([d.geom_xpos[gs], rad])              # (x, y, z, radius) of its collision shapes
         self.grasp = {}
         self.palm_n = {}
-        for sd, nm in (("L", "left"), ("R", "right")):
+        pg = _G1_PALM_GEOM.get(id(m))
+        for h, (sd, nm) in enumerate((("L", "left"), ("R", "right"))):
             wy = b(f"{nm}_wrist_yaw_link")
             Rw = d.xmat[wy].reshape(3, 3)
-            self.grasp[sd] = d.xpos[wy] + Rw @ np.array([.13, -.06 if sd == "L" else .06, 0.0])
-            self.palm_n[sd] = Rw @ np.array([0, -1.0 if sd == "L" else 1.0, 0])       # out of its palm
+            n = Rw @ np.array([0, -1.0 if sd == "L" else 1.0, 0])             # out of its palm
+            self.palm_n[sd] = n
+            if pg is not None:
+                # C240 (2026-10-02): HER READING OF THE PALM IS THE PALM'S OWN SHAPE. The grasp point had been a fixed offset in the wrist's
+                # frame ([.13, .06, 0], ours), and it lay 4.6 cm across the palm's face and 2.4 cm out of it from the world's own reading
+                # (A171: the palm geom's box, its face a half-extent along the normal, the grasp centre HAND_DEPTH_M before it) on every
+                # tick of the dawn-66 copy: every toy was lowered beside the palm's centre, onto the fingers or the hand's edge, and
+                # pressed there. She sees the hand: its face is read as the world reads it, the grasp point PALM_GRASP_OUT out of it
+                g = pg[h]
+                Rg = d.geom_xmat[g].reshape(3, 3); aabb = m.geom_aabb[g]
+                face = d.geom_xpos[g] + Rg @ aabb[:3] + n * float(np.abs(Rg.T @ n) @ aabb[3:])
+                self.grasp[sd] = face + n * PALM_GRASP_OUT
+            else:
+                self.grasp[sd] = d.xpos[wy] + Rw @ np.array([.13, -.06 if sd == "L" else .06, 0.0])
         self.body = {n: (d.xpos[b(n)].copy(), d.xmat[b(n)].reshape(3, 3).copy()) for n in
                      ("left_elbow_link", "right_elbow_link", "left_wrist_yaw_link", "right_wrist_yaw_link", "left_knee_link",
                       "right_knee_link", "left_shoulder_roll_link", "right_shoulder_roll_link", "left_ankle_roll_link",
@@ -608,6 +623,7 @@ class Child:
 
 _MESH_R = {}
 _G1_SHAPES = {}
+_G1_PALM_GEOM = {}                                                          # C240: each model's palm geoms (the world's, A171), once given
 
 
 _MESH_V = {}
@@ -954,7 +970,7 @@ class ParentMotion:
             low = min(float(d.geom_xpos[g][2] - _half_z(m, d, g)) for g in range(m.ngeom) if m.geom_bodyid[g] == b and m.geom_contype[g])
             self.toy_rest[k] = float(d.xpos[b][2] - low)
         self.hold_zone = np.zeros(world.nz)                                 # this step's hold forces on each touch zone (world)
-        self.child = Child(m, d, sc.g1_set)
+        self.child = Child(m, d, sc.g1_set, palm_geom=getattr(world, "palm_geom", None))   # (C240: the palm geoms the world reads)
         self._pose_cache = None                                             # her base pose for the last base (a cache, not state)
         self.kneel_reasons = []                                             # why the last kneel plan passed over each spot (instrument)
         self._reset()
@@ -1444,7 +1460,7 @@ class ParentMotion:
         self.base = dict(mode=mode, at=_lst(at), yaw=float(yaw), lean=float(lean), spine=float(spine), twist=float(twist))
         self.arms = {sd: dict(mode="relaxed") for sd in "LR"}
         self.phases = []
-        self.child = Child(self.m, self.d, self.scene.g1_set)
+        self.child = Child(self.m, self.d, self.scene.g1_set, palm_geom=getattr(self.w, "palm_geom", None))
         self._put(self._pose())
 
     def _put(self, pose):
@@ -1505,7 +1521,7 @@ class ParentMotion:
         self.still = self._still()                                          # a formal trial holding her still (4.8)
         self.arrived_now = dict(self.arrived); self.arrived = {"L": False, "R": False}   # her hands that met their link last tick
         self.child_prev = self.child_pts                                    # (the calm step's last look: the child as the last tick began)
-        self.child = Child(m, d, self.scene.g1_set)
+        self.child = Child(m, d, self.scene.g1_set, palm_geom=getattr(self.w, "palm_geom", None))
         self.child_pts = self.child.foot_pts[:, :3].copy()
         self._anchor_pressed()                                              # A4: pressed, she is where the child pushed her
         self.push_on = dict(self.yielding)                                  # the chains yielding as this tick begins
@@ -5213,12 +5229,15 @@ class ParentMotion:
         free = [x for x in "LR" if not self._hand_full(x)]
         if not free:
             raise Refuse("both its hands hold something")
+        up = self._hands_for_a_toy(free, toy, lambda x: x != self.child.face_side())   # C232, C240: a palm not facing the floor, open, clear first
         if self.base["mode"] == "heels" and self._beside_now():
-            her = np.asarray(self.base["at"], float)
-            cs = min(free, key=lambda x: float(np.linalg.norm(self.child.grasp[x][:2] - her)))
-            if float(np.linalg.norm(self.child.grasp[cs][:2] - her)) < 0.75:
-                return []                                                   # it is within her reach from where she kneels
-        order = free if len(free) == 1 else self._hands_by_clearance(free, toy, lambda x: x != self.child.face_side())   # C232
+            her = np.asarray(self.base["at"], float); yaw = float(self.base["yaw"])
+            if any(self._need_ok(f"hand:{x}:{toy}", her, yaw) for x in up):
+                return []                                                   # a palm she can give to is within her reach from where she
+                                                                            # kneels (C240: the reach itself, as the spot search asks it;
+                                                                            # day 67: 6 of 16 hand-overs refused 'beyond her reach from
+                                                                            # where she kneels' after a 0.75 m radius had said she stays)
+        order = up
         last = None
         for cs in order:                                                    # C133 (day 33): the spot must put its palm in her reach
             try:                                                            # (six hand-overs refused "beyond her reach" in 4,000
@@ -5234,8 +5253,11 @@ class ParentMotion:
         free = [x for x in "LR" if not self._hand_full(x)]
         if not free:
             raise Refuse("both its hands hold something")
-        cs = self._hands_by_clearance(free, toy, lambda x: float(np.linalg.norm(self.child.grasp[x][:2] - her)))[0]   # C232: a hand clear of
-        sd, swap = self._giving(toy, self.child.grasp[cs])                                                            # the floor first, then the nearer
+        cs = self._hands_for_a_toy(free, toy, lambda x: float(np.linalg.norm(self.child.grasp[x][:2] - her)))[0]   # C232, C240: a palm not facing
+        if not self._palm_up(cs):                                                                                 # the floor, open, clear, near
+            a["info"]["palm_down"] = round(float(self.child.palm_n[cs][2]), 2)                                     # (an instrument: the palm she
+            self.stats["handover_palm_down"] = self.stats.get("handover_palm_down", 0) + 1                        # gives to faces the floor)
+        sd, swap = self._giving(toy, self.child.grasp[cs])
         if not swap and not self._reachable_at(sd, self.child.grasp[cs] + self.child.palm_n[cs] * 0.04, self.base["at"], self.base["yaw"],
                                                  self.base["mode"] if self.base["mode"] in ("heels", "tall") else "heels",
                                                  palm=-self.child.palm_n[cs], bend=False):
@@ -5260,7 +5282,9 @@ class ParentMotion:
         return "done" if (miss is not None and miss <= K.SETTLE_TOL_M) or t >= limit else "run"
 
     def _ph_handover(self, a, ph):
-        """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks. The touch
+        """A4's release: the child's palm touch at least 0.3 N and its fingers closed at least 30 deg for 2 ticks, or 40 ticks with the
+        (C240: the press only with the toy at its hand; off it HANDOVER_FOLLOW_TICKS with the hand beyond her reach she kneels again where it
+        is). The touch
         is the toy's push on the PALM'S SIDE of its hand (C219, 2026-10-02): on day 61's copy a cup set against the knuckles of a fist
         (74 deg closed on nothing, the cup 25 cm from its grasp point, 0 N on the palm) was 'closed on it' and released to fall"""
         cs = ph["child"]
@@ -5270,7 +5294,36 @@ class ParentMotion:
         closed = self._closure(cs)                                                        # through it, and the toy within its fingers' reach
         arm = self.arms.get(ph["side"]) or {}
         to = arm.get("to") if arm.get("mode") == "at" and isinstance(arm.get("to"), dict) else None
-        if to is not None and to.get("k") == "palm" and toy is not None and self._toy_grip(toy, cs, palmar=True) < K.HANDOVER_PALM_N:
+        miss = arm.get("miss")
+        off = toy is not None and to is not None and (miss is None or miss > K.HANDOVER_AT_M + float(ph.get("pressed", 0.0)))
+        if off:
+            # C240 (2026-10-02): THE PRESS WAITS FOR THE TOY AT ITS HAND, AND SHE FOLLOWS A HAND THAT HAS GONE. The hold-out pressed wherever
+            # the toy was: on day 66's copy a block was pressed 6 cm 'into' a palm it never came within 30 cm of (she knelt where the hand had
+            # been, and it had moved), a ball set on a fist's knuckles opened it (A171's dorsal response) and the arm went 35 cm off with the
+            # ball chasing it, its press already at its limit (6 of 9 live hand-overs 'released untaken', the palm never touched). While the
+            # toy is off its place (HANDOVER_AT_M past what she has pressed) the press is undone, and off it HANDOVER_FOLLOW_TICKS with the
+            # hand beyond her reach from where she kneels she kneels again where it is (HANDOVER_REPLANS times: the pull's reach-again,
+            # C235). A4's forty ticks run on through it and let the toy go where it is, by its hand (a let-go at the twentieth tick off and
+            # a set-down within reach were both tried on the copy and withdrawn: the first cut the forty ticks in which a hand came to the
+            # toy, the second was refused by the put's landing check 3 of 3, the toy 18 to 32 cm off: her arm's shortfall, open)
+            ph["away"] = ph.get("away", 0) + 1
+            if a is not None:
+                a["info"]["away_ticks"] = ph["away"]; a["info"]["miss_m"] = None if miss is None else round(float(miss), 3)
+            if ph.get("gap0") is not None and to.get("gap") != ph["gap0"]:
+                to["gap"] = float(ph["gap0"]); ph["pressed"] = 0.0           # the press undone: the toy brought to its plan again
+            if ph["away"] >= K.HANDOVER_FOLLOW_TICKS and a is not None and a["info"].get("re_hand", 0) < K.HANDOVER_REPLANS \
+                    and not ph.get("reach_checked"):
+                ph["reach_checked"] = True                                  # (once a hold-out)
+                mode = self.base["mode"] if self.base["mode"] in ("heels", "tall") else "heels"
+                pt = self.child.grasp[cs] + self.child.palm_n[cs] * 0.04
+                if not self._reachable_at(ph["side"], pt, self.base["at"], self.base["yaw"], mode, palm=-self.child.palm_n[cs], bend=False):
+                    a["info"]["re_hand"] = a["info"].get("re_hand", 0) + 1
+                    self.stats["handover_re_hand"] = self.stats.get("handover_re_hand", 0) + 1
+                    i = self.phases.index(ph)
+                    self.phases[i:] = [dict(type="plan", what="near_free_hand", args=dict(toy=toy)),
+                                       dict(type="plan", what="hand_over", args=dict(toy=toy))]
+                    return "next"
+        if not off and to is not None and to.get("k") == "palm" and toy is not None and self._toy_grip(toy, cs, palmar=True) < K.HANDOVER_PALM_N:
             # C222 (2026-10-02): THE TOY IS PRESSED INTO THE PALM UNTIL SHE FEELS IT THERE. Her reading of the child's palm (its grasp point
             # PALM_GRASP_OUT out of the surface) is a model; on day 62's copy the grasp point lay 0.9 to 3.5 cm out of the palm's face and the
             # ball planned to press 3 mm hung 1 cm clear of it. A person lowers the toy until the baby's hand takes its weight: while the
@@ -5297,7 +5350,9 @@ class ParentMotion:
         if t >= K.HANDOVER_MAX_TICKS:                                       # A4: "a dropped toy is fine, and makes its sound"
             a["why"] = (f"released after 40 ticks (A4): its hand never closed on the {toy} for 2 ticks (its palm on it at most "
                         f"{ph['palm']:.1f} N of 0.3, its fingers now {math.degrees(closed):.0f} deg of 30): the {toy} was let go, not "
-                        f"taken (A4: a dropped toy is fine)")
+                        f"taken (A4: a dropped toy is fine)"
+                        + (f"; the {toy} {100 * miss:.0f} cm from its place at its palm as she let go, {ph['away']} of the ticks off it (C240)"
+                           if off and miss is not None else ""))
             a["info"]["held"] = False
             return "done"
         return "run"
@@ -5318,6 +5373,22 @@ class ParentMotion:
         """C232: the child's hands in the order she gives to them: the hands clear of the floor for the toy first (_hand_clear), among them
         by `key` (the nearer, the face's side: the rules as they were)"""
         return sorted(hands, key=lambda x: (not self._hand_clear(x, toy), key(x)))
+
+    def _palm_up(self, cs):
+        """C240: the child's palm can take a toy pressed into it: its normal level or rising (at least HANDOVER_PALM_RISE_MIN), not facing the
+        floor"""
+        return float(self.child.palm_n[cs][2]) >= K.HANDOVER_PALM_RISE_MIN
+
+    def _hands_for_a_toy(self, hands, toy, key):
+        """C240 (2026-10-02): THE ORDER SHE GIVES A TOY IN: the palms not facing the floor first (_palm_up), among them the open ones (its fingers
+        closed less than HANDOVER_CLOSED_DEG), then clear of the floor (C232), then by `key`. The dawn-66 copy: the two hand-overs to palms facing
+        the floor (their rise -0.62 and -0.30) planned the toy's place under the hand, pressed it onto the back of the hand (A171's dorsal response
+        opened the fist and the arm went off) and let it go there; the two to open palms facing up were closed on; the one to a half-closed palm
+        facing up was let go. Day 67's record: 4 of 7 toys let go were on fists. A preference, not a bar: with every palm facing the floor she
+        offers to the best of them and A4's forty ticks let the toy go by its hand (the set-down tried instead refused 3 of 3 on the copy, its
+        landing 18 to 32 cm off: the put's own fault)"""
+        return sorted(hands, key=lambda x: (not self._palm_up(x), self._closure(x) >= math.radians(K.HANDOVER_CLOSED_DEG),
+                                            not self._hand_clear(x, toy), key(x)))
 
     def _hand_full(self, cs):
         """a toy in the child's hand (pressing it from within its fingers' reach, or within 4 cm of its grasp point), as she sees it"""
