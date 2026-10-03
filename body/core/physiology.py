@@ -336,6 +336,11 @@ MOTOR = dict(
     # half-life, read by its own gate and weighed by its own lesson; 0: R5's, every cost added to the body's one fatigue (which would
     # add up nine limbs' costs and silence the voice). The sim: 1
     own_fatigue=0,
+    # A183 (2026-10-03): THE MOTOR GATES' HOMEOSTASIS (body/core/mouth.py _choose_effector). gate_ceiling 1: a motor effector's gate acts
+    # with probability floor + (1 - 2 floor) sigmoid(z), at most 1 - gate_floor (rest is sampled as activity is); gate_scaling 1: a gate
+    # whose logit stands past logit(1 - gate_floor) has its weights scaled down at the tag's reach (synaptic scaling, as the actors',
+    # A147). 0: R5's gate, floor + (1 - floor) sigmoid(z), unscaled. The sim: 1 and 1
+    gate_ceiling=0, gate_scaling=0,
 )
 
 # THE CEREBELLUM'S SWITCH AND CONSTANTS (the core refactor's step R6c, docs/SIM_DESIGN.md 7.5, A44 and C50; body/core/cerebellum.py):

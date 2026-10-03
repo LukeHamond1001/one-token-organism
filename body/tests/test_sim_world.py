@@ -1749,6 +1749,61 @@ def test_vicarious_trial_and_error():
           "better: its own acts; equal: none; the lean fades with GOAL_TAU and the night lets it go; the language body has no key")
 
 
+def test_the_gates_homeostasis():
+    """world 36 (A183, gate_ceiling and gate_scaling; MOTOR off, SIM_CFG on): THE CEILING: a motor effector's gate acts with probability
+    floor + (1 - 2 floor) sigmoid(z), at most 1 - gate_floor: a gate driven to a logit of +13 acts at 0.95 on its first tick (1.00 with
+    the switch off) and rests on some of its ticks. THE SCALING: that gate's weights are scaled down each tick its logit stands past
+    logit(1 - gate_floor) (2.94), at the tag's reach: within 400 ticks the logit is back at the set point and stays; a gate driven
+    to -13 is brought to -2.94 the same way; a gate inside the range (a logit of 1) is not touched. With both switches off the driven
+    gate keeps its +13 and acts on every tick. The language body's constants are off"""
+    from body.core.world import WorldLoop
+    from body.life import Life
+    from body.core.physiology import MOTOR
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table
+    assert int(SIM_CFG["gate_ceiling"]) == 1 and int(SIM_CFG["gate_scaling"]) == 1 and int(MOTOR["gate_ceiling"]) == 0 and int(MOTOR["gate_scaling"]) == 0
+    LR0 = dict(live_lr=0.0, value_lr=0.0, band_lr=0.0, night_lr=0.0, gate_lr=0.0, gate_adam_lr=0.0, vcrit_lr=0.0, actor_lr=0.0, face_lr=0.0,
+               act_inv_lr=0.0)
+    out = {}
+    for on in (1, 0):
+        w = G1World(seed=1)
+        cfg = dict(SIM_CFG, **LR0, wake_ticks=10 ** 9, gate_ceiling=on, gate_scaling=on)
+        torch.manual_seed(0)
+        anat = SimAnatomy(born_table(), cfg, limits=[float(x) for x in w.tau_max])
+        L = Life.birth(anat, device="cpu", d=32, layers=1, heads=2, window=16, cfg=cfg, seed=0, world=w)
+        run = WorldLoop(L)
+        for _ in range(5):
+            run.step()
+        fl = float(L.cfg["gate_floor"]); zmax = math.log((1.0 - fl) / fl)
+        mots = list(L.anatomy.motors)
+        hi, lo, mid = mots[1], mots[2], mots[3]
+        def drive(e, b):
+            g = L.m.get_submodule(e.gate)
+            with torch.no_grad():
+                g.weight.zero_(); g.bias.fill_(float(b))
+            return g
+        g_hi, g_lo, g_mid = drive(hi, 13.0), drive(lo, -13.0), drive(mid, 1.0)
+        st_hi, st_lo, st_mid = L.motor[1], L.motor[2], L.motor[3]
+        run.step()
+        p_first = float(st_hi["now"]["p_act"])
+        acted = 0; p_max = p_first
+        for _ in range(400):
+            run.step()
+            acted += int(bool(st_hi["now"]["drew"])); p_max = max(p_max, float(st_hi["now"]["p_act"]))
+        out[on] = dict(p_first=p_first, p_max=p_max, acted=acted / 400.0, b_hi=float(g_hi.bias), b_lo=float(g_lo.bias), b_mid=float(g_mid.bias),
+                       w_mid=float(g_mid.weight.abs().sum()), scaled=(int(st_hi.get("gate_scaled", 0)), int(st_lo.get("gate_scaled", 0)), int(st_mid.get("gate_scaled", 0))))
+        if on:
+            assert abs(p_first - (1.0 - fl)) < 1e-3 and p_max <= 1.0 - fl + 1e-9, out[on]           # the ceiling
+            assert acted / 400.0 < 0.99, out[on]                                                    # it rests on some ticks
+            assert zmax - 1e-6 <= out[on]["b_hi"] <= zmax * 1.02 and -zmax * 1.02 <= out[on]["b_lo"] <= -zmax + 1e-6, out[on]   # scaled to the set point
+            assert out[on]["b_mid"] == 1.0 and out[on]["w_mid"] == 0.0 and out[on]["scaled"][2] == 0 and out[on]["scaled"][0] > 50, out[on]   # in range: untouched
+        else:
+            assert abs(p_first - 1.0) < 1e-3 and out[on]["b_hi"] == 13.0 and out[on]["b_lo"] == -13.0 and out[on]["scaled"] == (0, 0, 0), out[on]
+    print(f"world 36 (A183): a gate driven to +13: p_act {out[1]['p_first']:.3f} at once under the ceiling ({out[0]['p_first']:.3f} without), drew on "
+          f"{100 * out[1]['acted']:.0f}% of 400 ticks ({100 * out[0]['acted']:.0f}% without); its logit scaled to {out[1]['b_hi']:.2f} (the set point "
+          f"{math.log(0.95 / 0.05):.2f}) over {out[1]['scaled'][0]} ticks, a gate at -13 to {out[1]['b_lo']:.2f}, a gate at 1 untouched; the switches off: "
+          f"+13 and -13 kept")
+
+
 def test_the_novelty_drive():
     """world 26 (A127, the brain sprint): dopamine to the new. With SIM_CFG novelty 1 the anatomy has a third reward source, Novelty,
     which pays NOVELTY_GAIN on the tick after the store kept a frame as new (a frame the write gate passed and no memory it merged into)

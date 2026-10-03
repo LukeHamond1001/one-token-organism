@@ -506,6 +506,8 @@ SIM_CFG = dict(
     gate_int=0.5, gate_int_form="error", gate_vigor=0.0,
     # R6h's motor effectors (MOTOR): movement units, act_inv batched every 8 ticks with the kappa correction, fatigue per effector
     unit_margin=math.log(4.0), act_inv_every=8, act_inv_chance=1, own_fatigue=1,
+    gate_ceiling=1, gate_scaling=1,   # A183: the motor gates' ceiling (rest sampled as activity is: p <= 1 - gate_floor) and their synaptic
+                                      # scaling (a logit past logit(1 - gate_floor) scaled back at the tag's reach); on from its landing
     # the born patterns and biases (REFLEX): the spinal pattern generators (their shape and cycles REFLEX's, C54: a movement of 2 ticks'
     # flexion and 3 ticks' extension, the extension returning the flexion's excursion, then a pause, each cycle drawn from the seed,
     # 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry, orienting, the VOR

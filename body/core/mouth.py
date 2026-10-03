@@ -631,7 +631,30 @@ class MouthMixin:
             fat_ = float(st["fatigue"]) if int(self._motor_const("own_fatigue")) else self.fatigue   # step R6h: its own fatigue (own_fatigue)
             feat = torch.cat([C1.detach() / math.sqrt(float(m.d)),
                               torch.tensor([fat_ / 10.0, self.mood / 6.0, self.stress / 10.0, sal, level], device=self.dev), own])
-            z = m.get_submodule(e.gate)(feat.unsqueeze(0))[0, 0] / (1.0 + self.stress / 10.0)
+            g_mod = m.get_submodule(e.gate)
+            z_raw = g_mod(feat.unsqueeze(0))[0, 0]
+            if int(self._motor_const("gate_scaling")):
+                # A183 (2026-10-03): THE GATE'S SYNAPTIC SCALING. The dawn-75 copy's read (p1/a182_measure.py): every limb's gate and the
+                # gaze's stood at a logit of +10 to +15 (acting on 97 to 100% of ticks; the voice's at -2.9): past the sigmoid's range its
+                # slope is 1e-5, the three-factor rule's (act - p) is 0 on every sample (no tick of rest to compare), so the gate could
+                # not learn when NOT to act, and the amygdala's freeze before a forecast pain (A71, A138: a logit or less) moved nothing:
+                # 75 days of the wrists' pain (12 ticks a thousand) with no fall. A147's law for the actors, for the gates: a neuron
+                # whose drive runs past its set point scales all its synapses down together (Turrigiano 2008; Turrigiano and Nelson
+                # 2004). The set point is the gate's own floor read the other way: its certainty to act no greater than the floor's
+                # certainty not to stay silent, |z| <= logit(1 - gate_floor) (2.94 at the floor 0.05; no new constant); past it the
+                # gate's weights are multiplied by (z_max / |z|) ** (1 / tag_reach) each tick it is read (the log of the drive decays
+                # at the tag's reach, 64 ticks: +13 is back at 3 in some 300 ticks), down only: a gate within its range is left alone
+                fl0 = float(self.cfg["gate_floor"])
+                if 0.0 < fl0 < 0.5:
+                    zmax = math.log((1.0 - fl0) / fl0); az = abs(float(z_raw))
+                    if az > zmax:
+                        from .physiology import FRAMES as _FR
+                        H_ = float(self.cfg.get("tag_reach", _FR["tag_reach"]))
+                        c_ = float((zmax / az) ** (1.0 / H_))
+                        for p_ in g_mod.parameters():
+                            p_.mul_(c_)
+                        st["gate_scaled"] = int(st.get("gate_scaled", 0)) + 1
+            z = z_raw / (1.0 + self.stress / 10.0)
             if self._amyg_on() and int(self._amyg_const("amyg_pav")) and getattr(self, "_amyg_now", None) is not None:
                 # APPROACH AND AVOID (step R7e, amyg_pav; SIM_DESIGN.md 7.4 item 4): the gate's logit gains beta x clip(N, -c, c), a Go bias
                 # toward good and a freeze toward bad (Guitart-Masip et al. 2012); built and off at birth (physiology.py AMYG)
@@ -650,7 +673,14 @@ class MouthMixin:
                 c_ = float(self._amyg_const("amyg_pav_clip"))
                 z = z + float(self._amyg_const("amyg_pav_beta")) * float(self._amyg_now.get("rho_bad", 0.0)) * max(-c_, min(c_, float(self._imag_N)))
             fl = float(self.cfg["gate_floor"])
-            p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))
+            if int(self._motor_const("gate_ceiling")):
+                # A183: A CEILING SYMMETRIC TO THE FLOOR. Spontaneous activity never stops (the floor); neither does spontaneous rest: the
+                # gate acts with probability floor + (1 - 2 floor) sigmoid(z), at most 1 - floor, so every effector rests on at least a
+                # floor's share of its ticks and the three-factor rule has both choices to compare (the covariance of credit with
+                # acting is undefined at p = 1; a policy that cannot sometimes rest cannot learn when to rest). No new constant
+                p_act = fl + (1.0 - 2.0 * fl) * float(torch.sigmoid(z))
+            else:
+                p_act = fl + (1.0 - fl) * float(torch.sigmoid(z))
             rfx = e.reflex(frame, self, st)                               # its spinal reflex this tick (step R6), or None
             rest = int(e.rest_id)
             going = bool(int(self.cfg.get("chunk_gate", 0))) and bool(st["acted_last"]) and int(st["chunk"]) > 0   # a chunk under way
@@ -1067,7 +1097,8 @@ class MouthMixin:
         # the probability the gate actually acted with (stress divisor and all), carried in the buffer (review 2026-09-06: recomputed
         # here without the divisor, (act - p) was biased with stress); older samples without it fall back to the recomputation
         p = torch.tensor([float(b[6]) if len(b) > 6 else float("nan") for b in buf[:n]], device=self.dev)
-        p = torch.where(torch.isnan(p), (fl + (1.0 - fl) * torch.sigmoid(z)).detach(), p)
+        top_ = (1.0 - 2.0 * fl) if (i and int(self._motor_const("gate_ceiling"))) else (1.0 - fl)   # A183: a motor gate's ceiling
+        p = torch.where(torch.isnan(p), (fl + top_ * torch.sigmoid(z)).detach(), p)
         # THE THREE-FACTOR RULE: credit x (action - p) has expectation cov(credit, acting), what a policy
         # must learn (Go for acts that paid, NoGo for acts that cost); plus vigor: the average credit
         # itself, tonic dopamine setting the rate of acting whatever it did
