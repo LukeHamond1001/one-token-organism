@@ -240,9 +240,16 @@ def test_the_days_layout():
     except AttributeError:
         pass
     assert not d2.sit_due, "the block's tries are spent"
-    ln.conduct.motion._act = lambda mid: {"kind": "pull_to_sit", "why": "stopped: the pull sat at her cap for 2 ticks"}; d2.sit_tries = 1
+    ln.conduct.motion._act = lambda mid: {"kind": "pull_to_sit", "why": "stopped: the pull sat at her cap for 2 ticks; it rises only with its own flexion (A9), laid back gently"}; d2.sit_tries = 1
     try:
         d2.tick(5700, 5700, ln, _ty.SimpleNamespace(parent=ln.conduct.motion))
+    except AttributeError:
+        pass
+    assert d2.sit_due and d2.sit_tries == 2, "C257: a pull that sat at her cap for want of its flexion is tried again (the rung is learned by repetition)"
+    d2.sit_due = False; d2.sit_tries = 1
+    ln.conduct.motion._act = lambda mid: {"kind": "pull_to_sit", "why": "stopped: the trunk fell beyond 40 deg and she laid it back (A9, A25)"}
+    try:
+        d2.tick(5750, 5750, ln, _ty.SimpleNamespace(parent=ln.conduct.motion))
     except AttributeError:
         pass
     assert not d2.sit_due, "a refusal of the child, not of the moment, is not tried again"

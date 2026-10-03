@@ -60,7 +60,10 @@ SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer 
 SIT_RETRY_GAP = 200             # C224: ... the next try this many ticks after the refusal (30 s: a parent tries again in a minute; ours)
 SIT_RETRY_WHY = ("cannot reach", "lost their hold", "slipped", "no spot she can kneel", "did not arrive",
                  "the guide sat at its cap",
-                 "beyond her reach where she kneels", "her hands are busy")   # C224: the refusals of a moment, not of the child; C230: the gather's guide at its cap too
+                 "beyond her reach where she kneels", "her hands are busy",   # C224: the refusals of a moment, not of the child; C230: the gather's guide at its cap too
+                 "sat at her cap")               # C257 (2026-10-03): and the pull that sat at her cap for want of the child's own flexion (A9: she never hauls
+                                                 # it up; day 73's two pulls, the first in two days, both ended so): the sit rung is learned by repetition, and a
+                                                 # parent plays 'up! up!' a few times running; SIT_TRIES_PER_BLOCK a block, SIT_RETRY_GAP apart
                                                # (the arm's own push of the moment: day 65's first offer, her spot and hold good under C227,
                                                # stopped there); C236: a toy in her kneeling footprint she could not clear (day 66, 3,190,004)
 LESSON_DIST0 = 0.10                    # the reach rung's first distance out from its near hand, m (4.10's ladder, level 1; A90)

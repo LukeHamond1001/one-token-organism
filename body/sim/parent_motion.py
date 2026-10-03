@@ -1565,6 +1565,19 @@ class ParentMotion:
         jump = float(mv[0])
         if (jump > MAX_JUMP_M or float(mv.max()) > MAX_LIMB_JUMP_M) and not self.lag:
             self.stats["jumps_refused"] = self.stats.get("jumps_refused", 0) + 1   # never a teleport: a plan that would move
+            seg_i = int(np.argmax(mv)); ph0 = self.phases[0] if self.phases else {}; sd_ = kin.SEGS[seg_i][-1]
+            hi_ = kin.SEGS.index(f"hand_{sd_}") if sd_ in "LR" and f"hand_{sd_}" in kin.SEGS else seg_i
+            dump = dict(t=int(self.w.tick), seg=kin.SEGS[seg_i], mv=round(float(mv.max()), 3), pelvis=round(jump, 3), phase=ph0.get("type"), what=ph0.get("what"),
+                        base=[str(self.base.get("mode")), round(float(self.base.get("lean") or 0), 1), round(float(self.base.get("spine") or 0), 1), round(float(self.base.get("twist") or 0), 1)],
+                        arms={sd: dict(mode=str(self.arms[sd].get("mode")), t=self.arms[sd].get("t"), n=self.arms[sd].get("n"),
+                                       to=str((self.arms[sd].get("to") or {}).get("k") if isinstance(self.arms[sd].get("to"), dict) else self.arms[sd].get("to"))[:24],
+                                       err=round(float(self.arms[sd].get("err") or 0), 3)) for sd in "LR"},
+                        offsets={c: [round(float(x), 3) for x in self.offset[c]] for c in CHAINS}, swivel={k_: float(v_) for k_, v_ in self.swivel.items()},
+                        seg_before=[round(float(x), 3) for x in planned0[0][seg_i]], seg_after=[round(float(x), 3) for x in pos1[seg_i]],
+                        hand_before=[round(float(x), 3) for x in planned0[0][hi_]], hand_after=[round(float(x), 3) for x in pos1[hi_]])
+            self.stats["last_jump"] = dump                                  # C257 (2026-10-03): an instrument: the fault's arm state, kept
+            print(f"jump guard: {dump}", flush=True)                        # and written to the run log (one line a fault), so the next
+                                                                            # relax fault (day 73's 0.60 m forearm_L after C255) can be read
             cur = self._act(self.cur["body"]) if self.cur["body"] is not None else None   # her body faster than a person is a
             if cur is not None:                                                  # bug; the act stops and she stays as she is
                 self._end(cur, "refused", f"her body would have jumped {float(mv.max()):.2f} m in a tick (a planning fault: "
