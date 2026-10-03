@@ -242,12 +242,13 @@ class Competence(RewardSource):
     """COMPETENCE AS REWARD (A181, 2026-10-03, the owner's word for the complete architecture): dopamine for the body's OWN ACTS' consequences
     becoming foreseeable. On the tick after an event's end (the frames', A180) the drive pays COMPETENCE_GAIN x the event's effort (the
     share of its ticks the body acted on: an event it lay still through pays nothing) x the competence progress (frames._ferr_own_progress:
-    per channel the relative fall, of late against the long run, of the forecast error on the ticks the body acted on, the channels
-    counted alike). The novelty drive (A127, A155) pays for the learnable surprise of the WORLD at a new frame;
+    A184: per channel the rise, of late against the long run, of the forward model's SKILL on the ticks the body acted on, its forecast's
+    error against the naive forecast's 'nothing changes', the channels counted alike; A181 paid the fall of the error itself, which a
+    quieter world earns as well as a better model). The novelty drive (A127, A155) pays for the learnable surprise of the WORLD at a new frame;
     this pays for mastery of the body's own doing, whatever the world does: an infant repeats a movement while its effect is becoming
     predictable and drops it once it is (Piaget's circular reactions; competence motivation, White 1959; intrinsically motivated learning
     of own-action consequences, Oudeyer and Kaplan 2007; the sense of agency as forward-model reliability, Blakemore, Wolpert and Frith
-    1998). Progress, never accuracy: a body that lies still foresees itself perfectly and earns nothing; an end the night closed is not
+    1998). Progress, never accuracy and never quiet: a body that lies still foresees itself perfectly and earns nothing; an end the night closed is not
     paid at dawn. Silent otherwise; signs positive only. A switch of the body (competence), measured on a day copy"""
     signs = (1.0,)
 

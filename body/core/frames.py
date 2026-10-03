@@ -186,6 +186,8 @@ class FramesMixin:
                 acted = False
         self._ev_ticks = int(getattr(self, "_ev_ticks", 0)) + 1            # the event's ticks and the ticks it acted on (its effort)
         self._ev_acted = int(getattr(self, "_ev_acted", 0)) + int(acted)
+        cp = getattr(self, "_codes_prev", None)                             # A184: the frame before this one, as the cortex received it (the
+        cp = cp[1] if cp is not None and int(cp[0]) == int(self.ticks) - 1 else {}   # naive forecast 'nothing changes'), when it was last tick's
         for i_, c_ in enumerate(self.anatomy.channels):
             if i_ == 0:
                 e = fw
@@ -216,6 +218,18 @@ class FramesMixin:
                 fo[c_.name] = [no_, muo]
                 mfo = fof.get(c_.name, muo)
                 fof[c_.name] = mfo + (float(e) - mfo) / min(float(no_), FERR_FAST_TAU)
+                if i_ != 0 and c_.name in cp:                               # A184: and, over the same ticks, the error of the naive forecast
+                    with torch.no_grad():                                   # (the frame before, unchanged), the yardstick the forward model's
+                        ep = float(0.5 * ((cp[c_.name].float() - codes[c_.name].float()) ** 2).sum())   # skill is read against (_ferr_own_progress)
+                    sk = getattr(self, "_fskill_own", None)
+                    if sk is None:
+                        sk = {}; self._fskill_own = sk
+                    ns_, em, pm, emf, pmf = sk.get(c_.name, [0, 0.0, 0.0, None, None])
+                    ns_ += 1
+                    em = em + (float(e) - em) / min(float(ns_), tau); pm = pm + (ep - pm) / min(float(ns_), tau)
+                    emf = em if emf is None else emf; pmf = pm if pmf is None else pmf
+                    emf = emf + (float(e) - emf) / min(float(ns_), FERR_FAST_TAU); pmf = pmf + (ep - pmf) / min(float(ns_), FERR_FAST_TAU)
+                    sk[c_.name] = [ns_, em, pm, emf, pmf]
             fn = getattr(self, "_ferr_now", None)                       # C171 (2026-09-30), an instrument: this tick's error itself, by
             if fn is None:                                              # channel (the novelty drive's payments read against it: which
                 fn = {}; self._ferr_now = fn                            # channel's surprise the new frame carried)
@@ -224,6 +238,7 @@ class FramesMixin:
                 vals.append(float(e) / mu)
                 ch_[c_.name] = float(e) / mu
         self._fs_ch = ch_                                                   # A180: each channel's surprise over its own mean, this tick
+        self._codes_prev = (int(self.ticks), codes)                         # A184: kept for the next tick's naive forecast
         return (sum(vals) / len(vals)) if vals else None
 
     def _ferr_progress(self):
@@ -246,20 +261,26 @@ class FramesMixin:
         return (acc / tot) if tot > 0.0 else 1.0
 
     def _ferr_own_progress(self):
-        """A181 (2026-10-03): COMPETENCE, how far the body is learning to foresee ITS OWN ACTS' consequences: _ferr_progress's measure
-        (clip((slow - fast) / slow, 0, 1) a channel) on the means kept over the ticks the body acted on alone (_ferr_own,
-        _ferr_own_fast), the channels counted ALIKE (the plain mean; R7c's law, every channel's forecast teaching about as much as
-        another: weighed by their error's size, her words' and the vestibular's, unforeseeable and large, drowned the body's own
-        channels on the dawn-75 copy); 0 before any channel has two such ticks (a newborn has no competence to grow yet, and is paid
-        nothing). The competence drive (body/sim/anatomy.Competence) pays it at each event's end, scaled by the event's effort.
-        Progress, never accuracy: a body lying still foresees itself perfectly and earns nothing"""
-        fo = getattr(self, "_ferr_own", None) or {}; fof = getattr(self, "_ferr_own_fast", None) or {}
+        """A181, A184 (2026-10-03): COMPETENCE, how far the body is learning to foresee ITS OWN ACTS' consequences. THE MEASURE IS THE RISE
+        OF THE FORWARD MODEL'S SKILL (A184): over the ticks the body acted on, each forecasting channel keeps the mean error of its
+        forecast and the mean error of the naive forecast 'nothing changes' (the frame before, as the cortex received it), both slow
+        (err_tau) and fast (FERR_FAST_TAU); the channel's skill is 1 - forecast error / naive error (a forecaster's skill score against
+        persistence: Murphy 1988), and its progress clip(skill of late - skill over the long run, 0, 1) = clip(slow ratio - fast ratio,
+        0, 1). The channels counted ALIKE (the plain mean; R7c's law); 0 before any channel has two such ticks (a newborn has no
+        competence to grow yet), and her words' channel has no frame before to compare (a symbol heard or not) and is left out. A181
+        paid the fall of the error itself, clip((slow - fast) / slow, 0, 1), and the life's first morning under it showed what that
+        pays: a quieter world (day 76: the eye's error of late a third of its mean since the morning's start, the vestibular's 0.30
+        against 0.52, the scene calmer, and payments of 0.11 to 0.17 an event where the dawn-75 copy had paid 0.013, 53 by the
+        morning's quarter against her face's 21). A calm scene lowers the forecast's error and the naive forecast's alike, so the
+        skill does not move; only foreseeing better what its acts change does. The competence drive (body/sim/anatomy.Competence)
+        pays it at each event's end, scaled by the event's effort. Progress, never accuracy, and never quiet: a body lying still
+        foresees itself perfectly, has no skill to gain over the naive forecast, and earns nothing"""
+        sk = getattr(self, "_fskill_own", None) or {}
         vals = []
-        for c_, (n_, mu) in fo.items():
-            mf = float(fof.get(c_, mu))
-            if mu <= 0.0 or int(n_) < 2:
+        for c_, (n_, em, pm, emf, pmf) in sk.items():
+            if int(n_) < 2 or pm <= 0.0 or pmf is None or pmf <= 0.0:
                 continue
-            vals.append(max(0.0, min(1.0, (mu - mf) / mu)))
+            vals.append(max(0.0, min(1.0, em / pm - emf / pmf)))
         return (sum(vals) / len(vals)) if vals else 0.0
 
     def _frame_settle(self, s):

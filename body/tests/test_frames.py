@@ -844,26 +844,23 @@ if __name__ == "__main__":
 
 
 def test_the_competence_drive():
-    """frames 7 (A181, the competence drive; the switch `competence`, on in SIM_CFG): on the stub world, the body acting as it draws,
+    """frames 7 (A181, A184, the competence drive; the switch `competence`, on in SIM_CFG): on the stub world, the body acting as it draws,
     (i) the frames keep, beside each channel's two error means, the same two means over the ticks the body ACTED on
-    (_ferr_own, _ferr_own_fast: as many samples as acted ticks with an error, never more than the channel's own count); (ii) at each event's
-    end the drive is owed the event's effort (its acted ticks over its ticks, replayed by hand from the acts) and the competence progress
-    (replayed by hand from the own-act means: per channel clip((slow - fast) / slow, 0, 1), the channels alike); (iii) on the next tick
-    the drive pays COMPETENCE_GAIN x effort x progress, counted and summed, and pays nothing before the own-act means exist, nothing for an
-    end the night closed, and nothing on a body that never acts; (iv) the source is the anatomy's last (its amygdala head born at zero on a
-    living body); the language body has no key and no drive"""
+    (_ferr_own, _ferr_own_fast: as many samples as acted ticks with an error, never more than the channel's own count), and for each
+    channel with a frame before (all but her words) the forecast's and the naive forecast's mean errors, slow and fast (_fskill_own);
+    (ii) at each event's end the drive is owed the event's effort (its acted ticks over its ticks, replayed by hand from the acts) and the
+    competence progress (A184: replayed by hand from the skill means: per channel clip(slow forecast/naive - fast forecast/naive, 0, 1),
+    the channels alike); (iii) on the next tick the drive pays COMPETENCE_GAIN x effort x progress, counted and summed, and pays nothing
+    before the skill means exist, nothing for an end the night closed, and nothing on a body that never acts; (iv) the source is the
+    anatomy's last (its amygdala head born at zero on a living body); the language body has no key and no drive; (v) A184: QUIET IS
+    NOT COMPETENCE: the same life with its world a fifth as loud after tick 600 (every channel's error falls of late against its long
+    run, which A181's measure paid) is owed no more progress than the forward model's skill gives: on the measure itself, errors
+    scaled alike (the forecast's and the naive forecast's) are no progress, and a forecast error fallen against the naive one is"""
     from body.sim.anatomy import SIM_CFG, COMPETENCE_GAIN
     assert SIM_CFG["competence"] == 1
     cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=16, night_rounds=1,
                night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0, recall=0, night_frames=0, twitch=0)
     w = _g1_events_world(burst=True); L = _g1(cfg, w)
-    f_frame = w.frame
-    def quiet_frame(f_frame=f_frame, w=w):                               # the world's senses a fifth as loud after tick 600: every channel's
-        fr = f_frame()                                                    # error falls, of late against its long run, so progress is real
-        if w.t > 600:
-            fr.obs = {k: ([0.2 * x for x in v] if isinstance(v, list) and k != "face" else v) for k, v in fr.obs.items()}
-        return fr
-    w.frame = quiet_frame
     src = L.anatomy.rewards[-1]
     assert src.name == "competence" and src.signs == (1.0,) and src.dopamine, [s_.name for s_ in L.anatomy.rewards]
     def _still(L_):
@@ -883,9 +880,9 @@ def test_the_competence_drive():
     pays = []; f0 = src.felt
     def spy_felt(frame, life, f0=f0, pays=pays):
         due = getattr(life, "_comp_due", None)
-        fo = {k: list(v) for k, v in (getattr(life, "_ferr_own", None) or {}).items()}; fof = dict(getattr(life, "_ferr_own_fast", None) or {})
+        sk = {k: list(v) for k, v in (getattr(life, "_fskill_own", None) or {}).items()}
         v = f0(frame, life)
-        pays.append((int(life.ticks), due, v, fo, fof))
+        pays.append((int(life.ticks), due, v, sk, None))
         return v
     src.felt = spy_felt
     acted = []; nights = []
@@ -897,20 +894,22 @@ def test_the_competence_drive():
     assert n_acted > 0, "the stub's body never acted on its own"
     assert fo and all(0 < v[0] <= ff[k][0] for k, v in fo.items()), (fo, {k: v[0] for k, v in ff.items()})
     assert max(v[0] for v in fo.values()) <= n_acted, (max(v[0] for v in fo.values()), n_acted)
+    sk_ = L._fskill_own; names_ = [c_.name for c_ in L.anatomy.channels]
+    assert sk_ and names_[0] not in sk_ and all(0 < v[0] <= fo[k][0] and v[2] > 0.0 for k, v in sk_.items()), (sk_, names_[0])
     # (ii) and (iii) each payment against the hand replay
     paid = [p for p in pays if p[2] is not None]
     assert paid, "the drive never paid"
     by_tick = dict(acted)
-    for tk, due, v, fo_, fof_ in paid:
+    for tk, due, v, sk_p, _ in paid:
         share, prog, t_end = due
         assert tk - t_end == 1, (tk, t_end)
         e_ = next(e for e in ends if e[0] == t_end)
         assert e_[1] > 0 and abs(share - e_[2] / e_[1]) < 1e-12, (share, e_)
         vals_ = []
-        for c_, (nn, mu) in fo_.items():
-            if mu <= 0.0 or nn < 2:
+        for c_, (nn, em, pm, emf, pmf) in sk_p.items():
+            if nn < 2 or pm <= 0.0 or pmf is None or pmf <= 0.0:
                 continue
-            mf = fof_.get(c_, mu); vals_.append(max(0.0, min(1.0, (mu - mf) / mu)))
+            vals_.append(max(0.0, min(1.0, em / pm - emf / pmf)))
         prog_h = sum(vals_) / len(vals_) if vals_ else 0.0
         assert abs(prog - prog_h) < 1e-9 and abs(v - COMPETENCE_GAIN * share * prog) < 1e-12, (prog, prog_h, v)
     assert src.n_paid == len(paid) and abs(src.paid - sum(p[2] for p in paid)) < 1e-9
@@ -934,6 +933,32 @@ def test_the_competence_drive():
         run2.step()
         stills += int(all(int(st_["now"]["act"]) == int(e_.rest_id) for e_, st_ in zip(L2.anatomy.motors, L2.motor)))
     own2 = getattr(L2, "_ferr_own", None) or {}
+    # (v) quiet is not competence: the measure on means set by hand
+    keep_ = L._fskill_own
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.2, 0.4], "b": [600, 0.5, 1.0, 0.1, 0.2]}       # both errors a fifth of late: the skill unmoved
+    assert L._ferr_own_progress() == 0.0, L._ferr_own_progress()
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.5, 2.0], "b": [600, 0.5, 1.0, 0.5, 1.0]}       # a's forecast error halved against the naive one's
+    assert abs(L._ferr_own_progress() - 0.5 * (0.5 - 0.25)) < 1e-12, L._ferr_own_progress()
+    L._fskill_own = {"a": [600, 1.0, 2.0, 1.5, 2.0], "b": [1, 0.5, 1.0, 0.1, 1.0]}         # a skill fallen pays nothing; one sample is none
+    assert L._ferr_own_progress() == 0.0, L._ferr_own_progress()
+    L._fskill_own = keep_
+    # and the same life in a world a fifth as loud after tick 600: A181's measure would have paid the quiet; the skill's does not see it
+    torch.manual_seed(0)
+    w4 = _g1_events_world(burst=True); L4 = _g1(cfg, w4); f_frame = w4.frame
+    def quiet_frame(f_frame=f_frame, w4=w4):
+        fr = f_frame()
+        if w4.t > 600:
+            fr.obs = {k: ([0.2 * x for x in v] if isinstance(v, list) and k != "face" else v) for k, v in fr.obs.items()}
+        return fr
+    w4.frame = quiet_frame
+    run4 = WorldLoop(L4)
+    for t in range(1000):
+        run4.step()
+    fo4 = L4._ferr_own; fof4 = L4._ferr_own_fast
+    old_measure = [max(0.0, min(1.0, (mu - fof4.get(c_, mu)) / mu)) for c_, (nn, mu) in fo4.items() if mu > 0.0 and nn >= 2]
+    old4 = sum(old_measure) / len(old_measure); new4 = L4._ferr_own_progress()
+    assert old4 > 0.1 and new4 < 0.1 * old4, (old4, new4)
+    print(f"frames 7 (A184): a world a fifth as loud after tick 600: A181's measure reads a progress of {old4:.3f}, the skill's {new4:.3f}")
     print(f"frames 7 (A181): {len(ends)} ends in 1,000 ticks, the body acting on {n_acted}; own-act means on {len(fo)} channels (at most {max(v[0] for v in fo.values())} "
           f"samples); {len(paid)} payments, the first at tick {paid[0][0]} (the first end at {first_end}), their sum {src.paid:.4f}, effort {min(p[1][0] for p in paid):.2f}-"
           f"{max(p[1][0] for p in paid):.2f}, progress {min(p[1][1] for p in paid):.3f}-{max(p[1][1] for p in paid):.3f}; a still body (its effectors at rest on "
