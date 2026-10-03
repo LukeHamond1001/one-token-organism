@@ -450,6 +450,13 @@ REFLEX = dict(
     breath_inspire=5,
     breath_amp=0.4,      # the lungs' drive on the expiration, a fraction of their range (4.8 cmH2O of the tract's 12 at full drive: above a
                          # phonation threshold pressure of 2 to 4 cmH2O, under the cry's 0.6; ours)
+    # THE NEWBORN'S EXPIRATORY BRAKING (A179, 2026-10-02): the glottis narrowed through the expiration and opened again on the inspiration,
+    # a step of breath_brake of its range a tick at the cord (the laryngeal adductors' expiratory activity that holds the newborn's lung
+    # volume: Kosch and Stark 1984, J Appl Physiol 57:1126; Harding 1984, Annu Rev Physiol 46:645; the audible grunt and sigh of the
+    # first days), where the anatomy declares the glottis (cry["glottis"]). The own act's glottis step replaces it as the cry's is replaced
+    # (the glottis the child's where it acts). Why: on the day-66 copy the voice's inverse model had had 272,759 pairs and sat at chance on
+    # nine articulators of ten (kappa -0.01 to 0.04): 95% of its acts sounded nothing, so the ears' change labelled nothing. 0 = off
+    breath_brake=0.0,
     # ORIENTING (3.7, A43; Goren 1975, Johnson and Morton 1991: newborns prefer faces; Muir and Field 1979: they turn toward sounds;
     # Johnson 1990: they orient to peripheral visual onsets through the subcortical route): a born bias on the proposals of the joints
     # an effector declares (the gaze's yaw and pitch, the waist's yaw) toward each cue the anatomy declares (a face-like blob in the

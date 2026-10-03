@@ -385,7 +385,7 @@ class SimAnatomy(LanguageAnatomy):
         def idx(js):
             return [PER_JOINT * _joint_index(j) + k for j in js for k in range(PER_JOINT)]
         tract = Tract("voice", [5] * len(TRACT), rest_id=(5 ** len(TRACT) - 1) // 2, sense="ears", inverse=True, fwd_gate=True, n_in=3,
-                      intrinsic=True, cry={"posture": dict(CRY_POSTURE), "lungs": 0, "breath": ("body", BREATH_AT), "pain": "pain"})
+                      intrinsic=True, cry={"posture": dict(CRY_POSTURE), "lungs": 0, "glottis": 1, "breath": ("body", BREATH_AT), "pain": "pain"})   # (A179: the glottis, for the breath's braking)
         voice = VoiceEffector("words", [self.vocab], rest_id=self.sil, end_id=self.space_id, reserved=self.bans, intrinsic=False)
         gaze = Gaze("gaze", [5, 5, 5], rest_id=62, sense="body", sense_idx=list(range(GAZE_AT, GAZE_AT + 6)), fwd_gate=True,
                     orient={0: ("yaw", 1), 1: ("pitch", 1)}, orient_gate=True, vor=[0, 1], n_in=3,
@@ -478,6 +478,11 @@ SIM_CFG = dict(
     # flexion and 3 ticks' extension, the extension returning the flexion's excursion, then a pause, each cycle drawn from the seed,
     # 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry, orienting, the VOR
     spg=1, cry=1, breath=1, orient=1, vor=1,    # A173: the born breath (the tract's tidal cycle below the gate)
+    breath_brake=0.30,   # A179: the newborn's expiratory braking, the glottis narrowed this much of its range a tick through the expiration
+                         # (the tract's position follows its target with its own lag: the glottis reaches 0.55 of its range by the fifth tick,
+                         # just under the cry's 0.6, where its aerodynamics give a soft voicing on the expiration's last ticks, 5 to 7 mPa at
+                         # 1 m against the open breath's 1: the newborn's end-expiratory grunt) and opened again on the inspiration (ours;
+                         # Kosch and Stark 1984; at 0.24 the glottis reaches 0.48 and sounds 1.4 mPa, at 0.4 0.73 and 10 mPa)
     # THE CEREBELLUM ON AT BIRTH (7.5, A44; SimAnatomy.cerebellar, the lead's mossy list): its constants CEREB's, as R6c and its fix
     # settled them and none given here (the rate 0.01 a sub-step; the leak rate / 3, after Smith, Ghazizadeh and Shadmehr 2006; the bound
     # that steps a lesson back onto the limit; each readout held inside its joint's limit this tick; the flocculus's 0.05 a tick; 4,096

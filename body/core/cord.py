@@ -133,6 +133,15 @@ class CordMixin:
         lungs = int(cy["lungs"])
         out = [0.0] * len(e.factors)
         out[lungs] = amp if k < E else -amp
+        brake = float(self._reflex_const("breath_brake"))
+        if brake > 0.0 and cy.get("glottis") is not None:
+            # A179 (2026-10-02): THE NEWBORN'S EXPIRATORY BRAKING. The glottis narrowed through the expiration by brake of its range a tick and
+            # opened again on the inspiration (the laryngeal adductors' expiratory activity that holds the newborn's lung volume, Kosch and Stark
+            # 1984; Harding 1984): the breath sounds as a newborn's does (its grunt and sigh), so the ears hear the articulators at work on most
+            # expirations. Why: on the day-66 copy the voice's inverse model had had 272,759 pairs and sat at chance on nine articulators of ten
+            # (kappa -0.01 to 0.04), 95% of its acts sounding nothing (74 phonated ticks of 1,500 under A173's silent breath). The own act's
+            # glottis step replaces this one as it replaces the cry's (the glottis the child's where it acts)
+            out[int(cy["glottis"])] = brake if k < E else -brake
         st["breath_t"] = int(st.get("breath_t", 0)) + 1
         return out
 

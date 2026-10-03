@@ -2158,6 +2158,23 @@ def test_the_born_breath():
     cn = L.motor[0]["cord_n"]
     assert cn.get("breath", 0) >= 2 * (E + I) and cn.get("cry", 0) == 0, cn
     assert max(xs2) - min(xs2) > 0.1, (min(xs2), max(xs2))
+    # A179 (2026-10-02): the newborn's expiratory braking. The world: the cord's breath with the glottis stepped breath_brake a tick through the
+    # expiration and back on the inspiration narrows the glottis (its position rising over the expiration, open again after the inspiration),
+    # sounds (over 1 mPa: the breath's noise and a soft phonation on the expiration's last ticks), under the cry's level, and is not a cry
+    brake = float(AN.SIM_CFG.get("breath_brake", PH.REFLEX["breath_brake"]))
+    assert float(PH.REFLEX["breath_brake"]) == 0.0 and brake > 0.0
+    w3 = G1World(seed=1)
+    gs, pas3, cries3 = [], [], []
+    for t in range(3 * (E + I)):
+        a = Acts({}); step = [0.0] * n_art; ex = (t % (E + I)) < E
+        step[lungs] = amp if ex else -amp; step[glottis] = brake if ex else -brake
+        a.cord = {W.VOICE_NAME: tuple(step)}; a.crying = False
+        w3.frame(); w3.apply(a)
+        gs.append(float(w3.tract.x[glottis])); pas3.append(float(np.sqrt(np.mean(np.square(w3.tract_pa))))); cries3.append(bool(w3.crying))
+    assert max(gs) > 0.3 and min(gs[E:]) < 0.2, (min(gs), max(gs))                     # the glottis narrowed through the expiration, open again
+    assert max(pas3) > 1e-3 and max(pas3) > 2.0 * max(pas), (max(pas3), max(pas))        # the braked breath sounds, over the silent breath's
+    assert max(pas3) < max(pas2), (max(pas3), max(pas2))                                 # under a glottis pressed shut by the own act
+    assert not any(cries3), "the braked breath is not a cry"
     assert cry2 == 0, cry2
     print(f"world A173: the born tract breathed at the cord, its lungs {min(xs):.2f} to {max(xs):.2f} over a {E}+{I}-tick cycle in silence ({1e3 * max(pas):.3f} mPa at most,",
           f"not a cry); the glottis pressed on an expiration phonated ({1e3 * max(pas2):.1f} mPa); the born life counted the breath on {cn.get('breath', 0)} of {3 * (E + I)} ticks, no cry")
