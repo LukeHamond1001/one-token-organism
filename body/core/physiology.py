@@ -526,6 +526,9 @@ FRAMES = dict(
     imagine_key=0,                # A138 (the sim's brain sprint): waking imagination at an event's end (sleep.py _imagine): the imagined
     imagine_pav=0,                # frames' direction in the recall key; the amygdala's forecast on them in the gates' approach-and-avoid bias
                                   # new pays NOVELTY_GAIN; a switch of the body, off at birth, measured on a day copy
+    competence=0,                 # A181 (2026-10-03): the competence drive, body/sim/anatomy.Competence: at each event's end (frames) the body's
+                                  # own acts' consequences becoming foreseeable pays COMPETENCE_GAIN x the event's effort x the progress of the
+                                  # own-act forecast error (frames._ferr_own_progress); a switch of the body, off at birth, measured on a day copy
     # STEP R7f, THE WORKING-MEMORY LATCH ON THE FRAMES' EVENT ENDS (7.6, 10's "event end"): 1 = working memory (wm) latches the striatal
     # expansion at the frames' event ends (R7b) in place of the utterances' ends; 0 = at the utterances' ends (the language body's).
     # Needs `frames`

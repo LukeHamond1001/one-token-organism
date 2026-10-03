@@ -238,6 +238,36 @@ class Novelty(RewardSource):
         return NOVELTY_GAIN * new * prog                                   # A127b: graded by the mismatch (0 to 1); A155: and by the progress (0 to 1)
 
 
+class Competence(RewardSource):
+    """COMPETENCE AS REWARD (A181, 2026-10-03, the owner's word for the complete architecture): dopamine for the body's OWN ACTS' consequences
+    becoming foreseeable. On the tick after an event's end (the frames', A180) the drive pays COMPETENCE_GAIN x the event's effort (the
+    share of its ticks the body acted on: an event it lay still through pays nothing) x the competence progress (frames._ferr_own_progress:
+    per channel the relative fall, of late against the long run, of the forecast error on the ticks the body acted on, the channels
+    counted alike). The novelty drive (A127, A155) pays for the learnable surprise of the WORLD at a new frame;
+    this pays for mastery of the body's own doing, whatever the world does: an infant repeats a movement while its effect is becoming
+    predictable and drops it once it is (Piaget's circular reactions; competence motivation, White 1959; intrinsically motivated learning
+    of own-action consequences, Oudeyer and Kaplan 2007; the sense of agency as forward-model reliability, Blakemore, Wolpert and Frith
+    1998). Progress, never accuracy: a body that lies still foresees itself perfectly and earns nothing; an end the night closed is not
+    paid at dawn. Silent otherwise; signs positive only. A switch of the body (competence), measured on a day copy"""
+    signs = (1.0,)
+
+    def felt(self, frame, life):
+        due = getattr(life, "_comp_due", None)
+        if due is None:
+            return None
+        life._comp_due = None
+        share, prog, t_ = due
+        if int(getattr(life, "ticks", 0)) - int(t_) > 1 or share <= 0.0 or prog <= 0.0:
+            return None
+        self.last = (float(share), float(prog))                             # (the runner's record: comp_eff, comp_p)
+        self.n_paid = int(getattr(self, "n_paid", 0)) + 1                  # the payments counted (the runner's record: `comp`)
+        v = COMPETENCE_GAIN * float(share) * float(prog)
+        self.paid = float(getattr(self, "paid", 0.0)) + v
+        return v
+
+
+COMPETENCE_GAIN = 0.5                  # an event's competence dopamine at full effort and full progress (A181): the novelty drive's magnitude,
+                                       # a quarter of her smile's rise (ours, disclosed; the magnitude the day copy reads)
 NOVELTY_GAIN = 0.5                     # a new frame's dopamine: a quarter of her smile's rise (+2), half of pain's -1 (ours, disclosed; the
                                        # magnitude the day copy reads)
 
@@ -416,6 +446,8 @@ class SimAnatomy(LanguageAnatomy):
                                                                                      # heads face +/-, pain -); no charge (A88)
         if int((cfg or {}).get("novelty", SIM_CFG.get("novelty", 0))):
             rewards.append(Novelty("novelty", clip=NOVELTY_GAIN, signs=(1.0,)))        # A127: the new pays (+), a switch of the body
+        if int((cfg or {}).get("competence", SIM_CFG.get("competence", 0))):
+            rewards.append(Competence("competence", clip=COMPETENCE_GAIN, signs=(1.0,)))   # A181: mastery of its own doing pays (+), a switch of
         self.channels, self.effectors, self.rewards, self.inner_at = chans, [tract, voice, gaze] + limbs, rewards, 2
         self.orienting = [OrientCue("face", "face_periph", fired=0, yaw=1, pitch=2, sense=1.0, zone=FOVEA_HALF),
                           OrientCue("sound", "sound_side", fired=0, yaw=1, sense=-1.0, side_only=True, onset=True),
@@ -507,6 +539,8 @@ SIM_CFG = dict(
     # latching at the frames' event ends in place of the utterances' (wm_frames)
     recall=1, wm_frames=1,
     novelty=1,                     # A127: the novelty drive (Novelty, NOVELTY_GAIN); on since dawn 24 (2026-09-28 13:56, the owner's all-in word)
+    competence=1,                  # A181: the competence drive (Competence, COMPETENCE_GAIN): the body's own acts' consequences becoming foreseeable
+                                   # pays at each event's end; on from its landing (2026-10-03, the owner's word for the complete architecture)
     goal_key=1,                    # A130: the held word as a recall key (frames._goal_trace, memory.GOAL_TAU/GOAL_SCALE); on since dawn 24
                                    # (the private-speech ruler, speech_act_reading.py)
     ctx_key=1,                     # A128: the held context as a recall key (memory.query_from, CTX_TAU/CTX_SCALE); on since dawn 24 (the

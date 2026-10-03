@@ -177,6 +177,15 @@ class FramesMixin:
         fc = getattr(self, "_ffc", None) or {}
         fw = getattr(self, "_fw_err", None)
         tau = float(self._frame_const("err_tau")); vals = []; ch_ = {}
+        acted = False                                                       # A181: whether the body acted this tick (any motor effector's
+        mot = getattr(self, "motor", None)                                  # act not its rest: the efference copy _frame_value carries)
+        if mot:
+            try:
+                acted = any(int(st_["now"]["act"]) != int(e_.rest_id) for e_, st_ in zip(self.anatomy.motors, mot))
+            except (KeyError, TypeError, AttributeError):
+                acted = False
+        self._ev_ticks = int(getattr(self, "_ev_ticks", 0)) + 1            # the event's ticks and the ticks it acted on (its effort)
+        self._ev_acted = int(getattr(self, "_ev_acted", 0)) + int(acted)
         for i_, c_ in enumerate(self.anatomy.channels):
             if i_ == 0:
                 e = fw
@@ -195,6 +204,18 @@ class FramesMixin:
                 ff = {}; self._ferr_fast = ff                           # 36,000): what a night did to a channel reads as the dusk's
             mf = ff.get(c_.name, mu)                                    # value against the next morning's
             ff[c_.name] = mf + (float(e) - mf) / min(float(n_), FERR_FAST_TAU)
+            if acted:                                                       # A181: the same two means over the ticks the body ACTED on:
+                fo = getattr(self, "_ferr_own", None)                       # its forward model of its own acts' consequences, whose
+                if fo is None:                                              # progress the competence drive pays (_ferr_own_progress;
+                    fo = {}; self._ferr_own = fo                            # body/sim/anatomy.Competence)
+                fof = getattr(self, "_ferr_own_fast", None)
+                if fof is None:
+                    fof = {}; self._ferr_own_fast = fof
+                no_, muo = fo.get(c_.name, [0, 0.0])
+                no_ += 1; muo = muo + (float(e) - muo) / min(float(no_), tau)
+                fo[c_.name] = [no_, muo]
+                mfo = fof.get(c_.name, muo)
+                fof[c_.name] = mfo + (float(e) - mfo) / min(float(no_), FERR_FAST_TAU)
             fn = getattr(self, "_ferr_now", None)                       # C171 (2026-09-30), an instrument: this tick's error itself, by
             if fn is None:                                              # channel (the novelty drive's payments read against it: which
                 fn = {}; self._ferr_now = fn                            # channel's surprise the new frame carried)
@@ -223,6 +244,23 @@ class FramesMixin:
             prog = max(0.0, min(1.0, (mu - mf) / mu))
             tot += float(e_); acc += float(e_) * prog
         return (acc / tot) if tot > 0.0 else 1.0
+
+    def _ferr_own_progress(self):
+        """A181 (2026-10-03): COMPETENCE, how far the body is learning to foresee ITS OWN ACTS' consequences: _ferr_progress's measure
+        (clip((slow - fast) / slow, 0, 1) a channel) on the means kept over the ticks the body acted on alone (_ferr_own,
+        _ferr_own_fast), the channels counted ALIKE (the plain mean; R7c's law, every channel's forecast teaching about as much as
+        another: weighed by their error's size, her words' and the vestibular's, unforeseeable and large, drowned the body's own
+        channels on the dawn-75 copy); 0 before any channel has two such ticks (a newborn has no competence to grow yet, and is paid
+        nothing). The competence drive (body/sim/anatomy.Competence) pays it at each event's end, scaled by the event's effort.
+        Progress, never accuracy: a body lying still foresees itself perfectly and earns nothing"""
+        fo = getattr(self, "_ferr_own", None) or {}; fof = getattr(self, "_ferr_own_fast", None) or {}
+        vals = []
+        for c_, (n_, mu) in fo.items():
+            mf = float(fof.get(c_, mu))
+            if mu <= 0.0 or int(n_) < 2:
+                continue
+            vals.append(max(0.0, min(1.0, (mu - mf) / mu)))
+        return (sum(vals) / len(vals)) if vals else 0.0
 
     def _frame_settle(self, s):
         """THE EVENT'S END FOR FRAMES (the module's doc): today's settle law on the frame's surprise `s`; True on the first settled tick
@@ -273,6 +311,10 @@ class FramesMixin:
         if lw is not None:
             self.store.mark_boundary(*lw)
         self._flast_write = None; self._fstart_armed = True
+        n_ev = int(getattr(self, "_ev_ticks", 0))                          # A181: the event's effort (the share of its ticks the body acted
+        if n_ev > 0:                                                        # on) and the competence progress at its end, due to the drive on
+            self._comp_due = (float(getattr(self, "_ev_acted", 0)) / float(n_ev), float(self._ferr_own_progress()), int(self.ticks))   # the next tick
+        self._ev_ticks = 0; self._ev_acted = 0
         if int(self._frame_const("wm_frames")) and int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
             with torch.no_grad():                                      # R7f: working memory latches at the frames' event end (wm_frames)
                 self.m.wm_latch(self.m.striatum_read())
@@ -475,6 +517,7 @@ class FramesMixin:
         """THE NIGHT ENDS EVERY EVENT (the module's doc; called as the night begins): an event still open ends at nightfall"""
         if not getattr(self, "_fs_settled", True):
             self._frame_end()
+        self._comp_due = None; self._ev_ticks = 0; self._ev_acted = 0       # A181: an end the night closed is not paid at dawn, and the
 
     def _words_store(self):
         """THE STORE'S WORDS ALONE (step R7b), for the words' dreams of a body in frames: a copy of the store without its frames (who 2),

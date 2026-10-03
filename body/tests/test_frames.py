@@ -831,3 +831,107 @@ if __name__ == "__main__":
             failed += 1; print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
     print(f"{len(FRAME_TESTS) - failed}/{len(FRAME_TESTS)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+
+def test_the_competence_drive():
+    """frames 7 (A181, the competence drive; the switch `competence`, on in SIM_CFG): on the stub world, the body acting as it draws,
+    (i) the frames keep, beside each channel's two error means, the same two means over the ticks the body ACTED on
+    (_ferr_own, _ferr_own_fast: as many samples as acted ticks with an error, never more than the channel's own count); (ii) at each event's
+    end the drive is owed the event's effort (its acted ticks over its ticks, replayed by hand from the acts) and the competence progress
+    (replayed by hand from the own-act means: per channel clip((slow - fast) / slow, 0, 1), the channels alike); (iii) on the next tick
+    the drive pays COMPETENCE_GAIN x effort x progress, counted and summed, and pays nothing before the own-act means exist, nothing for an
+    end the night closed, and nothing on a body that never acts; (iv) the source is the anatomy's last (its amygdala head born at zero on a
+    living body); the language body has no key and no drive"""
+    from body.sim.anatomy import SIM_CFG, COMPETENCE_GAIN
+    assert SIM_CFG["competence"] == 1
+    cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=16, night_rounds=1,
+               night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0, recall=0, night_frames=0, twitch=0)
+    w = _g1_events_world(burst=True); L = _g1(cfg, w)
+    f_frame = w.frame
+    def quiet_frame(f_frame=f_frame, w=w):                               # the world's senses a fifth as loud after tick 600: every channel's
+        fr = f_frame()                                                    # error falls, of late against its long run, so progress is real
+        if w.t > 600:
+            fr.obs = {k: ([0.2 * x for x in v] if isinstance(v, list) and k != "face" else v) for k, v in fr.obs.items()}
+        return fr
+    w.frame = quiet_frame
+    src = L.anatomy.rewards[-1]
+    assert src.name == "competence" and src.signs == (1.0,) and src.dopamine, [s_.name for s_ in L.anatomy.rewards]
+    def _still(L_):
+        """every motor effector held at its rest after its own choice (its lesson skipped as on a tick it did not act)"""
+        f = L_._choose_effector
+        def spy(i, frame, C1, level, stri, f=f, L_=L_):
+            out = f(i, frame, C1, level, stri)
+            e_ = L_.anatomy.motors[i - 1]; st = L_.motor[i - 1]
+            st["now"].update(act=int(e_.rest_id), acted=False, world=int(e_.rest_id))
+            return out
+        L_._choose_effector = spy
+    run = WorldLoop(L)
+    ends = []; fe = L._frame_end
+    def spy_end(fe=fe, L=L, ends=ends):
+        ends.append((int(L.ticks), int(getattr(L, "_ev_ticks", 0)), int(getattr(L, "_ev_acted", 0)))); return fe()
+    L._frame_end = spy_end
+    pays = []; f0 = src.felt
+    def spy_felt(frame, life, f0=f0, pays=pays):
+        due = getattr(life, "_comp_due", None)
+        fo = {k: list(v) for k, v in (getattr(life, "_ferr_own", None) or {}).items()}; fof = dict(getattr(life, "_ferr_own_fast", None) or {})
+        v = f0(frame, life)
+        pays.append((int(life.ticks), due, v, fo, fof))
+        return v
+    src.felt = spy_felt
+    acted = []; nights = []
+    for t in range(1000):
+        run.step()
+        acted.append((int(L.ticks), any(int(st_["now"]["act"]) != int(e_.rest_id) for e_, st_ in zip(L.anatomy.motors, L.motor))))
+    # (i) the own-act means
+    fo = L._ferr_own; ff = L._ferr; n_acted = sum(1 for _, a in acted if a)
+    assert n_acted > 0, "the stub's body never acted on its own"
+    assert fo and all(0 < v[0] <= ff[k][0] for k, v in fo.items()), (fo, {k: v[0] for k, v in ff.items()})
+    assert max(v[0] for v in fo.values()) <= n_acted, (max(v[0] for v in fo.values()), n_acted)
+    # (ii) and (iii) each payment against the hand replay
+    paid = [p for p in pays if p[2] is not None]
+    assert paid, "the drive never paid"
+    by_tick = dict(acted)
+    for tk, due, v, fo_, fof_ in paid:
+        share, prog, t_end = due
+        assert tk - t_end == 1, (tk, t_end)
+        e_ = next(e for e in ends if e[0] == t_end)
+        assert e_[1] > 0 and abs(share - e_[2] / e_[1]) < 1e-12, (share, e_)
+        vals_ = []
+        for c_, (nn, mu) in fo_.items():
+            if mu <= 0.0 or nn < 2:
+                continue
+            mf = fof_.get(c_, mu); vals_.append(max(0.0, min(1.0, (mu - mf) / mu)))
+        prog_h = sum(vals_) / len(vals_) if vals_ else 0.0
+        assert abs(prog - prog_h) < 1e-9 and abs(v - COMPETENCE_GAIN * share * prog) < 1e-12, (prog, prog_h, v)
+    assert src.n_paid == len(paid) and abs(src.paid - sum(p[2] for p in paid)) < 1e-9
+    first_end = ends[0][0]
+    assert all(p[2] is None for p in pays if p[0] <= first_end), "paid before any event ended"
+    # the night: an end it closed is not paid at dawn (no payment on a tick whose due is older than one tick)
+    assert all(p[1] is None or p[0] - p[1][2] <= 1 for p in pays if p[2] is not None)
+    # a body that never acts
+    torch.manual_seed(0)
+    w2 = _g1_events_world(burst=True); L2 = _g1(cfg, w2)
+    _still(L2)
+    for i_, st_ in enumerate(L2.motor):                                   # every other effector at rest too
+        pass
+    src2 = L2.anatomy.rewards[-1]; run2 = WorldLoop(L2)
+    f2 = src2.felt; pays2 = []
+    def spy2(frame, life, f2=f2, pays2=pays2):
+        v = f2(frame, life); pays2.append(v); return v
+    src2.felt = spy2
+    stills = 0
+    for t in range(200):
+        run2.step()
+        stills += int(all(int(st_["now"]["act"]) == int(e_.rest_id) for e_, st_ in zip(L2.anatomy.motors, L2.motor)))
+    own2 = getattr(L2, "_ferr_own", None) or {}
+    print(f"frames 7 (A181): {len(ends)} ends in 1,000 ticks, the body acting on {n_acted}; own-act means on {len(fo)} channels (at most {max(v[0] for v in fo.values())} "
+          f"samples); {len(paid)} payments, the first at tick {paid[0][0]} (the first end at {first_end}), their sum {src.paid:.4f}, effort {min(p[1][0] for p in paid):.2f}-"
+          f"{max(p[1][0] for p in paid):.2f}, progress {min(p[1][1] for p in paid):.3f}-{max(p[1][1] for p in paid):.3f}; a still body (its effectors at rest on "
+          f"{stills} of 200 ticks): {sum(1 for v in pays2 if v is not None)} payments, own-act samples {sum(v[0] for v in own2.values())}")
+    # the language body has no key and no drive
+    from body.core.physiology import FRAMES
+    assert int(FRAMES["competence"]) == 0 and int(FRAMES["novelty"]) == 0   # the switch declared beside the novelty's, off at birth (SIM_CFG turns it on)
+    L3 = _lang(dict(night_starts=100000)); assert all(s_.name != "competence" for s_ in L3.anatomy.rewards)
+    # (a still body: its own-act means hold only the other effectors' acts, if any; with every effector at rest it has none and pays nothing)
+    if stills == 200:
+        assert not own2 and not any(v is not None for v in pays2), (own2, pays2[:5])

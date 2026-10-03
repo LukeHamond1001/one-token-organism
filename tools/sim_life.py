@@ -330,6 +330,8 @@ def main():
                        reward=(round(float(L._rec[int(L._rec_n) - 1][3]), 3) if getattr(L, "_rec", None) is not None and int(getattr(L, "_rec_n", 0)) > 0 else 0.0),   # the tick's net reward
                        nov=next((int(getattr(s_, "n_paid", 0)) for s_ in L.anatomy.rewards if s_.name == "novelty"), 0),   # the novelty drive's payments so far (A127)
                        nov_paid=next((round(float(getattr(s_, "paid", 0.0)), 2) for s_ in L.anatomy.rewards if s_.name == "novelty"), 0.0),   # and their sum (A127b)
+                       comp=next((int(getattr(s_, "n_paid", 0)) for s_ in L.anatomy.rewards if s_.name == "competence"), 0),   # A181: the competence drive's payments so far
+                       comp_paid=next((round(float(getattr(s_, "paid", 0.0)), 3) for s_ in L.anatomy.rewards if s_.name == "competence"), 0.0),   # and their sum
                        imag=int(getattr(L, "_imag_n", 0)),                          # A138: the waking imaginings so far (an event's end or a pause)
                        ends=len(getattr(L, "_rec_ends", None) or []),                # the frames' event ends so far this day (R7f's WM latch, A138's trigger)
                        imag_N=(round(float(L._imag_N), 3) if getattr(L, "_imag_N", None) is not None else None),   # the imagined future's valence, fading
