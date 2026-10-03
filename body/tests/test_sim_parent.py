@@ -367,15 +367,18 @@ def test_the_pull_gathers_the_forearms():
           f"holds tried {tries}; her effort peaked at {out['effort_peak_N']} N; its trunk {g['trunk_min_deg']}-{g['trunk_max_deg']} deg from",
           f"vertical, its centre of mass rose {g['com_rise_cm']} cm, its pelvis moved {g['pelvis_travel_cm']} cm")
     assert tries.get("gather", 0) >= 2, (tries, a)
-    assert a["status"] in ("done", "refused") and any(x in a["why"] for x in ("her cap", "sat up", "slipped", "did not arrive", "cannot reach",
-                                                                              "its cap")), a   # (C222: the gather's guide at its own cap, A10's honest stop)
+    assert (a["status"] in ("done", "refused") or (a["status"] == "running" and "sat up" in a["why"])) and \
+        any(x in a["why"] for x in ("her cap", "sat up", "slipped", "did not arrive", "cannot reach", "its cap")), a
+    # (C222: the gather's guide at its own cap, A10's honest stop; C236: sat up, the act runs on as the prop, the child held sitting)
     assert out["effort_peak_N"] <= K.CAP_TWO_BRIEF + 1e-6 and out["over_sustained_s"] <= K.BRIEF_S + W.TICK_S, out
-    assert g["trunk_min_deg"] > K.PROP_MAX_DEG and g["com_rise_cm"] < 15.0 and g["held"]["pelvis_travel_cm"] < 5.0 and g["pelvis_travel_cm"] < 5.0, g
+    assert g["held"]["pelvis_travel_cm"] < 10.0 and g["pelvis_travel_cm"] < 8.0, g
     # (the pelvis still under the pull itself, A9's principle; the gather of a forearm drawn 40 cm across its chest shifts the whole body
-    # a little on the mat, 3 cm measured: 5 cm, ours. C235: the gather's hold kept at its cap, the pull at her hands' pace from the
-    # gather and laid back when her arms give out at PULL_MAX_S: this still child's trunk 83 deg at the least, its centre of mass 1.7 cm
-    # up, its pelvis 3 cm from the hold on; the bounds now A9's principle itself, never within PROP_MAX_DEG by her pull alone, the pelvis
-    # within the gather's shift)
+    # a little on the mat, 3 cm measured: 5 cm, ours. C236: the pull's grasps ride with the forearms and no longer fail under her own
+    # load, so within her caps (200 N brief, both hands) this still child's trunk comes up to 22 deg and is held sitting as the prop:
+    # a parent can bring a passive infant to sitting by its forearms (the pull-to-sit of the newborn exam); its own flexion is what the
+    # smile at 'sat up' is for; the trunk's bound is gone, her caps' stands, and the pelvis's is the sit-up's own tilt (5.8 cm measured
+    # as the still child came to 20 deg and was held sitting: 8 cm, ours; from the first hold on, the gather's 3 cm shift besides: 8.0 cm
+    # measured, 10 cm, ours; a drag along the mat would be more)
 
 
 @_opened
@@ -1736,6 +1739,34 @@ def test_the_pull_reaches_again():
     assert a["status"] in ("done", "refused"), a
 
 
+@_opened
+def test_her_trunk_gives_way_at_its_pace_while_holding():
+    """parent 36 (C236): A4's standoff straightens her kneeling trunk YIELD_LEAN_DEG_PER_TICK a step, up to STANDOFF_STEPS a tick, when
+    the child comes within CLEAR_M of her; with a hold of hers on the child it is one step a tick at TRUNK_DEG_PER_S, her base staying"""
+    w = W.G1World(seed=1)
+    pm = w.parent
+    saved = (dict(pm.base), pm.standoff.copy(), list(pm.holds))
+    pm._standoff_clear = lambda pose, segs: 0.0                             # the child always too near her trunk (the measure, forced)
+    com = np.asarray(pm.child.com[:2], float)
+    near = dict(mode="tall", at=[float(com[0] + 0.7), float(com[1])], yaw=math.pi, lean=60.0, spine=20.0, twist=0.0)   # kneeling tall
+    try:                                                                    # 0.7 m from it, facing it, leaned over it
+        pm.base = dict(pm.base, **near); pm.standoff = np.zeros(2); pm.holds = []
+        pm._standoff(pm._pose())
+        free = (60.0 - pm.base["lean"], 20.0 - pm.base["spine"], float(np.linalg.norm(pm.standoff)))
+        pm.base = dict(pm.base, **near); pm.standoff = np.zeros(2)
+        pm.holds = [PM.Hold("pull_L", w.m.body("left_elbow_link").id, [0.0, 0.0, 0.0], "L", 50.0, True, "pull")]
+        pm._standoff(pm._pose())
+        held = (60.0 - pm.base["lean"], 20.0 - pm.base["spine"], float(np.linalg.norm(pm.standoff)))
+    finally:
+        pm.base, pm.standoff, pm.holds = saved
+        del pm._standoff_clear
+    print(f"parent 36 (C236): pressed within CLEAR_M for a tick, her trunk straightened {free[0]:.1f}/{free[1]:.1f} deg (lean/spine) with her",
+          f"hands free (her base back {100 * free[2]:.1f} cm), {held[0]:.1f}/{held[1]:.1f} deg holding the child (her base back {100 * held[2]:.1f} cm)")
+    step = K.TRUNK_DEG_PER_S * W.TICK_S
+    assert free[0] >= 2 * K.YIELD_LEAN_DEG_PER_TICK - 1e-9, free                # more than one step a tick with her hands free
+    assert abs(held[0] - step) < 1e-9 and abs(held[1] - step) < 1e-9 and held[2] == 0.0, (held, step)
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -1744,7 +1775,7 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
                 test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
                 test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback, test_a_hand_clear_of_the_floor,
-                test_the_pull_reaches_again]
+                test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

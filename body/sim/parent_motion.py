@@ -276,6 +276,9 @@ MAX_NEED_TRIES = 24                         # the spots on which an act's need (
                                             # the mat, no longer behind furniture, were tried first for a put's reach and spent the six on the
                                             # far side of the put; the spot beside its hand came twentieth (19 failed reach tries, 2.4 s of planning)
                                             # gives up choosing (a guard on a planning tick's cost, ours)
+GRASPS = ("gather", "pull")                   # her holds that close a hand around a forearm (A168, C236): they ride with it (the turn's hands
+                                            # lift and push the far side over, A101: their grip's fade with the link's motion is the turn's
+                                            # own dynamics, C167, kept); a sit held after the pull keeps the pull's grasps (ctl 'grasp')
 MAX_PLANS = 40                              # an act whose plans do not settle in this many is given up (a guard, ours)
 KEEP_ACTS, KEEP_OLD = 64, 1024             # the acts kept whole in her state, and the final statuses of older ones (her state is
                                             # captured every tick for the world's fault roll-back, so it stays small)
@@ -1683,7 +1686,8 @@ class ParentMotion:
             self.ymoved[c] += float(np.linalg.norm(step))
             b = self.base
             if c == "core" and b["mode"] in ("heels", "tall") and (b.get("lean") or b.get("spine")):   # pressed on as she leans
-                d_ = K.YIELD_LEAN_DEG_PER_TICK                               # over it, she straightens up away from it (her knees on
+                d_ = K.TRUNK_DEG_PER_S * TICK_S if self.holds else K.YIELD_LEAN_DEG_PER_TICK   # over it, she straightens up away from
+                                                                            # it (C236: at her trunk's pace while she holds the child)
                 b["lean"] = max(0.0, float(b.get("lean", 0.0)) - d_)         # the floor do not back her off: her trunk does)
                 b["spine"] = max(0.0, float(b.get("spine", 0.0)) - d_)
                 b["dirty"] = True
@@ -2072,7 +2076,16 @@ class ParentMotion:
             arm = self.arms.get(h.side, {})
             if arm.get("mode") == "hold" and arm.get("hold") == h.name:     # HER GRIP IS HER HAND: where the physics has put her hand
                 Rl = d.xmat[h.body].reshape(3, 3)                           # off its grip on the held point (her arm could not carry
-                e = float(np.linalg.norm(g - (p + Rl @ np.asarray(arm["goff"], float))))   # the load, or the child pulled away), the
+                if self._grasp(h):                                          # the load, or the child pulled away), the
+                    # C236 (2026-10-02): A GRASP RIDES WITH THE LINK. Her hand is drawn once a tick; a forearm she grasps moves on inside
+                    # the tick (the pull-to-sit's at 0.3 m/s, the child's own flexion flinging it at 1 to 2 m/s: 12 to 29 cm a tick on
+                    # day 66's copy), and the hand-to-grip distance read it as her grip failing: the force faded to nothing within the
+                    # tick and the hold was counted slipped with her reach error 0.0. A hand closed around a forearm goes where the forearm
+                    # goes; what ends a grasp is her reach (the arm's error from her trunk pose, _arm) or her hand pushed off its plan
+                    # (A4's yield): the grasp's grip fades with her reach error alone, the hold tick judging the slip the same way
+                    e = float(arm.get("err") or 0.0)
+                else:
+                    e = float(np.linalg.norm(g - (p + Rl @ np.asarray(arm["goff"], float))))
                 if e > K.GRIP_TOL_M:                                        # grip holds less, and nothing past a hand's length
                     f = f * max(0.0, 1.0 - (e - K.GRIP_TOL_M) / (K.HOLD_SLIP_M - K.GRIP_TOL_M))
             raw.append(f); pts.append(p); grips.append(g.copy())
@@ -3487,16 +3500,31 @@ class ParentMotion:
         segs = self._standoff_chains()
         clr = self._standoff_clear(pose, segs)
         moved = False
+        holding = bool(self.holds)                                          # C236: her hands on the child
         for _ in range(K.STANDOFF_STEPS):
             if clr >= K.CLEAR_M:
                 break
             if b["mode"] in ("heels", "tall") and (b.get("lean") or b.get("spine")):
-                d_ = K.YIELD_LEAN_DEG_PER_TICK
+                # C236 (2026-10-02): HER TRUNK GIVES WAY AT ITS OWN PACE WHILE SHE HOLDS THE CHILD. Pulling it to sit, the child's trunk and
+                # arms come up into her reach's clearance (CLEAR_M) and this back-off straightened her YIELD_LEAN_DEG_PER_TICK a step, up to
+                # STANDOFF_STEPS steps a tick (day 66's copy: 70 to 30 deg in two ticks, 50 to 20 in six); her hands' reach went with it,
+                # the grip faded with the reach error (GRIP_TOL_M to HOLD_SLIP_M) and the child she had brought to 37 deg fell back. A
+                # parent leans back as the child comes up, at her trunk's pace, and lets it come against her hands and arms (her body's
+                # contact yields as the physics has it, _contact_cap): while a hold of hers is on the child the straightening is one step
+                # a tick at TRUNK_DEG_PER_S (the follow's pace, C235) and her base stays
+                d_ = K.TRUNK_DEG_PER_S * TICK_S if holding else K.YIELD_LEAN_DEG_PER_TICK
                 b["lean"] = max(0.0, float(b.get("lean", 0.0)) - d_); b["spine"] = max(0.0, float(b.get("spine", 0.0)) - d_)
                 ph = self.phases[0] if self.phases else None
                 if ph is not None and "lean_to" in ph:                      # her trunk's plan for this reach keeps no more than that
                     ph["lean_to"] = [min(ph["lean_to"][0], b["lean"]), min(ph["lean_to"][1], b["spine"]), ph["lean_to"][2]]
                     ph["lean_from"] = [min(ph["lean_from"][0], b["lean"]), min(ph["lean_from"][1], b["spine"]), ph["lean_from"][2]]
+                if holding:                                                 # C236: the one step; her knees stay under her hands
+                    b["dirty"] = True; moved = True
+                    pose = self._pose()
+                    clr = self._standoff_clear(pose, segs)
+                    break
+            elif holding:
+                break
             else:
                 her = np.asarray(pose.pos[:2], float)
                 v = her - com[:2]; nv = float(np.linalg.norm(v))
@@ -4687,6 +4715,11 @@ class ParentMotion:
         return why
 
     # ------------------------------------------------------------------ the holds' controllers (every tick)
+    def _grasp(self, h):
+        """C236: a hold that is a hand closed around a forearm (the gather's, the pull's, and the sit held after the pull): it rides with
+        the link; its grip fades with her reach alone and slips at her reach or a push-off by the child"""
+        return h.kind in GRASPS or bool(h.ctl.get("grasp"))
+
     def _hold_tick(self):
         for h in list(self.holds):
             c = h.ctl
@@ -4697,6 +4730,12 @@ class ParentMotion:
                 Rl = self.d.xmat[h.body].reshape(3, 3)                      # point by a hand's length (the child's own links pushed it
                 g_act = self._grip_now(h.side, actual=True)[0]              # off, or it could not keep up): the grip is gone
                 off = float(np.linalg.norm(g_act - (h.point(self.d) + Rl @ np.asarray(arm["goff"], float))))
+                if self._grasp(h):                                          # C236: a grasp rides with the link (see the spring's fade): its
+                    # hand is off only where the CHILD pushed it off its plan (A4's yield on that arm); her own arm giving under the pull's
+                    # load is her effort, not a slip (her drive spends its whole strength at SAT_DEG of error: at 90 to 100 N a hand her
+                    # hand sagged 16 to 22 cm below its plan on day 66's copy, the spring on the link carrying the force all the while)
+                    pushed = bool(self.yielding.get(f"arm_{h.side}", False))
+                    off = float(np.linalg.norm(g_act - self._grip_now(h.side)[0])) if pushed else 0.0
                 if h.kind in ("turn", "gather", "pull") and off > K.GRIP_TOL_M:   # C88 (A103): the turn's hand GRASPS the limb's root: while it
                     # A168 (2026-10-02): and so do the pull-to-sit's hands on its forearms (A9: 'takes both its forearms'), the gather's
                     # too. Day 58's second pull with the whole chain (tick 2,804,015): both forearms gathered, the pull begun at the
@@ -5722,7 +5761,7 @@ class ParentMotion:
                 # prop's), and the act runs on as a prop
                 ph["propped"] = True
                 for h in hs:
-                    h.kind, h.name, h.brief, h.ctl = "prop", f"prop_{h.side}", False, dict(t=0)
+                    h.kind, h.name, h.brief, h.ctl = "prop", f"prop_{h.side}", False, dict(t=0, grasp=True)
                     self._start_ctl(a, h)
                     if self.arms[h.side].get("hold") is not None:
                         self.arms[h.side]["hold"] = h.name
