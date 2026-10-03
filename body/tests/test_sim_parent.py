@@ -368,8 +368,9 @@ def test_the_pull_gathers_the_forearms():
           f"vertical, its centre of mass rose {g['com_rise_cm']} cm, its pelvis moved {g['pelvis_travel_cm']} cm")
     assert tries.get("gather", 0) >= 2, (tries, a)
     assert (a["status"] in ("done", "refused") or (a["status"] == "running" and "sat up" in a["why"])) and \
-        any(x in a["why"] for x in ("her cap", "sat up", "slipped", "did not arrive", "cannot reach", "its cap")), a
-    # (C222: the gather's guide at its own cap, A10's honest stop; C236: sat up, the act runs on as the prop, the child held sitting)
+        any(x in a["why"] for x in ("her cap", "sat up", "slipped", "did not arrive", "cannot reach", "its cap", "fell beyond")), a
+    # (C222: the gather's guide at its own cap, A10's honest stop; C236: sat up, the act runs on as the prop, the child held sitting;
+    # C237: or the still child, held sitting by its forearms, sagged past HAND_SIT_MAX_DEG and was laid back)
     assert out["effort_peak_N"] <= K.CAP_TWO_BRIEF + 1e-6 and out["over_sustained_s"] <= K.BRIEF_S + W.TICK_S, out
     assert g["held"]["pelvis_travel_cm"] < 10.0 and g["pelvis_travel_cm"] < 8.0, g
     # (the pelvis still under the pull itself, A9's principle; the gather of a forearm drawn 40 cm across its chest shifts the whole body
@@ -1767,6 +1768,74 @@ def test_her_trunk_gives_way_at_its_pace_while_holding():
     assert abs(held[0] - step) < 1e-9 and abs(held[1] - step) < 1e-9 and held[2] == 0.0, (held, step)
 
 
+@_opened
+def test_the_pull_sets_a_toy_aside_first():
+    """parent 37 (C237): asked to pull the child to sit with a toy in her hand, she plans the toy set aside first and the act again (not
+    'her hands are busy'); with her hands free the plan is the approach"""
+    w = W.G1World(seed=1)
+    pm = w.parent
+    a = dict(kind="pull_to_sit", target="child", info={})
+    saved = dict(pm.holding)
+    try:
+        pm.holding["R"] = "duck"
+        ph = pm._act_pull_to_sit(a, "child")
+        assert [p_["type"] for p_ in ph] == ["plan", "plan"] and ph[0]["what"] == "set_aside" and ph[0]["args"]["toy"] == "duck" \
+            and ph[1]["what"] == "act" and a["info"]["set_aside_first"] == 1, ph
+        pm.holding["R"] = None
+        ph2 = pm._act_pull_to_sit(a, "child")
+    finally:
+        pm.holding.update(saved)
+    print(f"parent 37 (C237): with the duck in her hand the pull plans {[(p_['type'], p_.get('what')) for p_ in ph]}; hands free {[(p_['type'], p_.get('what')) for p_ in ph2]}")
+    assert ph2[0]["type"] == "plan" and ph2[0]["what"] == "approach", ph2
+
+
+@_opened
+def test_the_held_sit_leans_forward_and_the_grasps_slack():
+    """parent 38 (C237): (i) a sit held by the forearms (a grasp prop) is kept with the trunk at 40 deg where the torso prop would lay it
+    back, and laid back past SITTING_DEG; (ii) a grasp a hand's length short of its forearm holds while her trunk is on its way to a
+    pose that reaches it, slips with no trunk coming, and slips past two hands' lengths regardless"""
+    w = W.G1World(seed=1)
+    pm = w.parent; m = w.m
+    body = m.body("left_elbow_link").id
+    def prop(grasp):
+        h = PM.Hold("prop_L", body, [0.0, 0.0, 0.0], "L", 78.0, False, "prop")
+        h.ctl = dict(mode="hold", k=0, steady=0, last_up=-99, best=90.0, ref=PM._lst(h.point(w.d)), head_z=float(pm.child.head[2]),
+                     react=0, alone=0, catches=0, falls=0, t=5, grasp=grasp)
+        h.at_cap_ticks = K.AT_CAP_TICKS
+        return h
+    th0 = pm.child.trunk_deg
+    try:
+        pm.child.trunk_deg = 40.0
+        a_, b_ = prop(False), prop(True)
+        pm._ctl_prop(a_, a_.ctl); pm._ctl_prop(b_, b_.ctl)
+        modes40 = (a_.ctl["mode"], b_.ctl["mode"])
+        pm.child.trunk_deg = K.SITTING_DEG + 1.0
+        c_ = prop(True); pm._ctl_prop(c_, c_.ctl)
+        mode46 = c_.ctl["mode"]
+    finally:
+        pm.child.trunk_deg = th0
+    assert modes40 == ("lay", "hold") and mode46 == "lay", (modes40, mode46)
+    saved = (list(pm.holds), dict(pm.arms["L"]), list(pm.phases), dict(pm.base))
+    def grasp_hold(err, follow_to):
+        h = PM.Hold("pull_L", body, [0.0, 0.0, 0.0], "L", 50.0, True, "pull"); h.ctl = dict(t=1)
+        pm.holds = [h]
+        pm.arms["L"] = dict(mode="hold", hold="pull_L", goff=[0.0, 0.0, 0.0], err=err, shape1=dict(curl=.4, thumb=.35, index=None))
+        pm.phases = [dict(type="holds_wait", kind="pull", t=3, **({"follow_to": follow_to} if follow_to is not None else {}))]
+        pm._hold_tick()
+        return bool(pm.holds)
+    try:
+        b = pm.base; coming = [float(b.get("lean", 0.0)) + 10.0, float(b.get("spine", 0.0)), float(b.get("twist", 0.0))]
+        kept = grasp_hold(1.5 * K.HOLD_SLIP_M, coming)
+        gone_still = grasp_hold(1.5 * K.HOLD_SLIP_M, None)
+        gone_far = grasp_hold(2.5 * K.HOLD_SLIP_M, coming)
+    finally:
+        pm.holds, pm.arms["L"], pm.phases, pm.base = saved
+    print(f"parent 38 (C237): at 40 deg the torso prop {modes40[0]}s, the forearm prop {modes40[1]}s; at {K.SITTING_DEG + 1:.0f} deg the forearm prop",
+          f"{mode46}s; a grasp 1.5 hands short with her trunk coming {'kept' if kept else 'slipped'}, with none {'kept' if gone_still else 'slipped'},",
+          f"2.5 hands short {'kept' if gone_far else 'slipped'}")
+    assert kept and not gone_still and not gone_far, (kept, gone_still, gone_far)
+
+
 PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, test_the_interface, test_attend, test_lean_in, test_the_guide,
                 test_the_turn, test_toys, test_her_pace,
                 test_exact_replay_with_her_acting, test_her_cost, test_her_yield_under_babble, test_getting_up_beside_it,
@@ -1775,7 +1844,8 @@ PARENT_TESTS = [test_the_scene, test_the_toys_extent, test_the_capped_spring, te
                 test_babble, test_replay_across_processes, test_a_stale_base_settles, test_the_way_back_agrees_with_the_drawn_pose,
                 test_she_keeps_her_side, test_a_toy_where_she_cannot_kneel, test_tummy_time, test_the_toy_before_a_prone_face,
                 test_the_hide, test_her_way_in_the_changed_room, test_the_turn_from_its_head, test_the_lure, test_the_set_down_fallback, test_a_hand_clear_of_the_floor,
-                test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding]
+                test_the_pull_reaches_again, test_her_trunk_gives_way_at_its_pace_while_holding,
+                test_the_pull_sets_a_toy_aside_first, test_the_held_sit_leans_forward_and_the_grasps_slack]
 # THE ACTS NOT AT BIRTH, MEASURED AGAIN WHEN THEY OPEN (S5a, the lead): the pull to sit, the prop and the catch are refused at birth
 # (A25c, NOT_AT_BIRTH). Their tests' bounds were measured under the first servo law (a joint's limit at 0.25 rad); under Unitree's
 # published gains (A39) the child is softer and three bounds no longer hold (the pull lifts its centre of mass 3.5 cm with its trunk

@@ -559,7 +559,7 @@ class Child:
         up = self.torso_R[:, 2]
         self.trunk_deg = math.degrees(math.acos(float(np.clip(up[2], -1, 1))))    # the spine from vertical
         fz = float(self.torso_R[2, 0])                                       # the chest's normal, up or down
-        if self.trunk_deg < 45:
+        if self.trunk_deg < K.SITTING_DEG:
             self.posture = "sitting"
         elif fz > 0.6:
             self.posture = "back"
@@ -2086,8 +2086,9 @@ class ParentMotion:
                     e = float(arm.get("err") or 0.0)
                 else:
                     e = float(np.linalg.norm(g - (p + Rl @ np.asarray(arm["goff"], float))))
-                if e > K.GRIP_TOL_M:                                        # grip holds less, and nothing past a hand's length
-                    f = f * max(0.0, 1.0 - (e - K.GRIP_TOL_M) / (K.HOLD_SLIP_M - K.GRIP_TOL_M))
+                lo, hi = (K.HOLD_SLIP_M, 2 * K.HOLD_SLIP_M) if h.kind in GRASPS or h.ctl.get("grasp") else (K.GRIP_TOL_M, K.HOLD_SLIP_M)
+                if e > lo:                                                  # grip holds less, and nothing past a hand's length (C237: a
+                    f = f * max(0.0, 1.0 - (e - lo) / (hi - lo))            # grasp's slack, a hand's length to two, _trunk_coming)
             raw.append(f); pts.append(p); grips.append(g.copy())
         brief = any(h.brief for h in self.holds) and self.brief_s < K.BRIEF_S
         one = K.CAP_ONE_BRIEF if brief else K.CAP_ONE
@@ -4720,6 +4721,17 @@ class ParentMotion:
         the link; its grip fades with her reach alone and slips at her reach or a push-off by the child"""
         return h.kind in GRASPS or bool(h.ctl.get("grasp"))
 
+    def _trunk_coming(self):
+        """C237: her trunk is on its way to a pose that reaches her hands (the follow's solution, C235, not yet reached). A grasp a hand's
+        length short of its forearm while the trunk comes is not slipped (day 66's copy: the right hand 12.8 cm short at the sitting height
+        one tick before her lean would have arrived, the grip faded and the child fell back); past twice that, or with no trunk coming, it is.
+        The slack is of the order of her arm's own give under load (SAT_DEG: 16 to 22 cm at 100 N)"""
+        ph = self.phases[0] if self.phases else None
+        ft = ph.get("follow_to") if ph else None
+        if ft is None:
+            return False
+        return max(abs(float(v) - float(self.base.get(k, 0.0))) for k, v in zip(("lean", "spine", "twist"), ft)) > 1e-6
+
     def _hold_tick(self):
         for h in list(self.holds):
             c = h.ctl
@@ -4749,7 +4761,10 @@ class ParentMotion:
                         arm["goff"] = _lst(Rl.T @ (g_act - h.point(self.d)))   # and slips only once it has left the link
                         off = 0.0
                 e = max(e or 0.0, off)
-            if e is not None and e > K.HOLD_SLIP_M:                         # the held point left her reach: it slipped from her grip
+            slip = e is not None and e > K.HOLD_SLIP_M                      # the held point left her reach: it slipped from her grip
+            if slip and self._grasp(h) and e <= 2 * K.HOLD_SLIP_M and self._trunk_coming():
+                slip = False                                                # C237: a grasp's slack while her trunk is on its way (below)
+            if slip:
                 if h.kind == "prop" and c.get("fall"):
                     self._fall_done(c, "out of her reach: it slipped from her hands")
                 self.holds = [x for x in self.holds if x is not h]
@@ -4847,6 +4862,13 @@ class ParentMotion:
         caps; beyond 30 deg after a catch she lays it back gently"""
         ch = self.child
         th = ch.trunk_deg
+        grasp = self._grasp(h)                                              # C237 (2026-10-02): THE SIT HELD BY THE FOREARMS LEANS FORWARD. The
+        steady_deg = K.PROP_MAX_DEG if grasp else K.PROP_STEADY_DEG         # prop's angles are the torso prop's (hands at its chest and back); a
+        max_deg = K.HAND_SIT_MAX_DEG if grasp else K.PROP_MAX_DEG           # child sat up by its forearms and held by them sits bent forward (a
+        catch_deg = K.SITTING_DEG if grasp else K.CATCH_DEG                 # baby holding a parent's hands): day 66's copy, both held sits sagged
+                                                                            # to 38 to 41 deg at her cap and were laid back from a sitting posture
+                                                                            # ('the trunk fell beyond 30 deg'). Its lines: steady within
+                                                                            # PROP_MAX_DEG, kept within HAND_SIT_MAX_DEG, caught past SITTING_DEG
         vz = (float(ch.head[2]) - c["head_z"]) / TICK_S
         c["head_z"] = float(ch.head[2])
         p = h.point(self.d)
@@ -4856,7 +4878,7 @@ class ParentMotion:
             if th < c["best"]:
                 c["best"] = th; c["ref"] = _lst(p)
             h.next = np.asarray(c["ref"], float)
-            if th <= K.PROP_STEADY_DEG:
+            if th <= steady_deg:
                 c["steady"] += 1
                 if c["steady"] >= K.PROP_STEADY_TICKS:
                     c["steady"] = 0; c["k"] += 1
@@ -4868,17 +4890,17 @@ class ParentMotion:
                 if c["k"] > 0 and c["t"] - c["last_up"] >= K.PROP_STEADY_TICKS:
                     c["k"] -= 1; c["last_up"] = c["t"]
             h.cap = K.PROP_EASE[min(c["k"], len(K.PROP_EASE) - 1)] * K.CAP_TWO / 2
-            if th > K.CATCH_DEG and h.at_cap_ticks >= K.AT_CAP_TICKS:
+            if th > catch_deg and h.at_cap_ticks >= K.AT_CAP_TICKS:
                 c["mode"] = "lay"; c["lay_t"] = 0; c["lay_cap"] = h.cap; c["falls"] += 1
         elif mode == "hover":
             h.next = p
             h.cap = 0.0
-            if th > K.CATCH_DEG or vz < -K.CATCH_HEAD_MPS:
+            if th > catch_deg or vz < -K.CATCH_HEAD_MPS:
                 c["mode"] = "react"; c["react"] = K.REACTION_TICKS
                 c["fall"] = dict(t=int(self.tick), start_deg=round(th, 1), peak_deg=round(th, 1))
             else:
                 c["alone"] += 1
-                c["sat_alone"] = bool(c.get("sat_alone")) or (c["alone"] >= 5 and th <= K.PROP_MAX_DEG)
+                c["sat_alone"] = bool(c.get("sat_alone")) or (c["alone"] >= 5 and th <= max_deg)
                 if th < c["best"]:                                          # where it sat most upright: where a catch pushes it
                     c["best"] = th; c["ref"] = _lst(p)                      # back to (a spring settles short of its target)
         elif mode == "react":
@@ -4893,8 +4915,8 @@ class ParentMotion:
             h.next = np.asarray(c["ref"], float)
             c["catch_t"] += 1
             c["fall"]["peak_deg"] = round(max(c["fall"]["peak_deg"], th), 1)
-            if th <= K.PROP_MAX_DEG:
-                self._fall_done(c, "caught: back within 30 deg")
+            if th <= max_deg:
+                self._fall_done(c, f"caught: back within {max_deg:.0f} deg")
                 c.update(mode="hold", k=0, steady=0, best=th, ref=_lst(p)); h.brief = False
                 h.cap = K.PROP_EASE[0] * K.CAP_TWO / 2
             elif c["catch_t"] * TICK_S >= K.BRIEF_S:                        # her brief effort spent: she lays it back gently
@@ -4906,7 +4928,7 @@ class ParentMotion:
             h.cap = c["lay_cap"] * max(0.0, 1 - c["lay_t"] / n)
             h.next = np.asarray(c["ref"], float)
             if c["lay_t"] >= n:
-                c["state"] = "stopped: the trunk fell beyond 30 deg and she laid it back (A9, A25)"
+                c["state"] = f"stopped: the trunk fell beyond {max_deg:.0f} deg and she laid it back (A9, A25)"
                 h.brief = False
 
     def _fall_done(self, c, how):
@@ -4953,8 +4975,11 @@ class ParentMotion:
             eff = sum(float(np.linalg.norm(x.force)) for x in self.holds if x.kind == "pull")
             cap_now = K.CAP_TWO_BRIEF if self.brief_s < K.BRIEF_S else K.CAP_TWO
             rising = ch.trunk_deg <= float(c.get("theta", ch.trunk_deg)) - K.PULL_RISE_DEG   # C235: the trunk still coming up this
-            c["top"] = c["top"] + 1 if full and eff >= K.AT_CAP * min(cap_now, c["ramp"]) and not rising else 0   # tick is not a child
-            c["theta"] = ch.trunk_deg                                       # resisting at her cap (A10's stop), it is a heavy one coming
+            coming = self._trunk_coming()                                   # tick is not a child resisting at her cap (A10's stop), it is a
+            c["top"] = c["top"] + 1 if full and eff >= K.AT_CAP * min(cap_now, c["ramp"]) and not rising and not coming else 0
+            c["theta"] = ch.trunk_deg                                       # heavy one coming; C237: nor is a tick in which her own trunk is
+                                                                            # still on its way to the pose that reaches her hands (the grasp's
+                                                                            # grip fades with her reach error: the pull is hers to complete)
             if ch.trunk_deg <= K.PROP_MAX_DEG:
                 c["state"] = "done"; c["sat"] = True
             elif c["top"] >= K.AT_CAP_TICKS * 1:
@@ -5632,6 +5657,13 @@ class ParentMotion:
         both, PULL_FEET_M); refused, with the reason, where none does (C7)"""
         if self.child.posture != "back":
             raise Refuse("the pull-to-sit is from lying on its back (A9)")
+        held = [v for v in self.holding.values() if v is not None]
+        if held:
+            # C237 (2026-10-02): A TOY IN HER HAND IS SET ASIDE FIRST. Day 67's second pull-to-sit (tick 3,222,145) was refused 'her hands are
+            # busy: the pull-to-sit takes both' because the toy of the act before was still in her hand; the fetch and the approach set a toy
+            # aside when both hands are needed (A95, A133), and so does the pull: the toy set aside beside her, then the act planned again
+            a["info"]["set_aside_first"] = a["info"].get("set_aside_first", 0) + 1
+            return [dict(type="plan", what="set_aside", args=dict(toy=held[0])), dict(type="plan", what="act", args={})]
         try:
             self._pull_any = False                                          # C227: the spots are searched for the forearms' tops first
             return self._near(a, where="pull", offs=K.PULL_FEET_M, need="pull") + [dict(type="plan", what="pull", args={})]   # A163: its feet, then its sides

@@ -225,6 +225,10 @@ TURN_SIDE_Z = 0.3               # ... switched when its chest's normal rises pas
                                 # side 0; ours). It has turned when it lies on its back, or on its side with its chest past this
 
 # ------------------------------------------------------------------------------------------------------ the prop and the catch (A9)
+SITTING_DEG = 45.0              # the posture 'sitting': the trunk within this of vertical (parent_motion Child.posture; ours), and the catch
+                                # line of a sit held by the forearms (C237)
+HAND_SIT_MAX_DEG = 40.0         # C237: a child sitting held by its forearms leans forward (a baby holding a parent's hands; tripod sitting): the
+                                # held sit is kept with the trunk within this (ours), steadied within PROP_MAX_DEG, caught past SITTING_DEG
 PROP_MAX_DEG = 30.0             # the prop engages only with the trunk within this of vertical (A9)
 PROP_EASE = (1.0, 0.7, 0.4, 0.2)    # the prop's cap steps (x CAP_TWO), then hovering (A9)
 PROP_STEADY_DEG = 20.0          # the trunk within this of vertical ...
