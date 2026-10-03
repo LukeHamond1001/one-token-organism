@@ -7165,7 +7165,30 @@ def test_the_worn_word_not_echoed():
           f"the last ten replies none the bare word ({late[-1]!r}); worn and attended: named in a line ({t2[0]!r})")
 
 
-TESTS = [test_the_worn_word_not_echoed, test_the_function_word_not_echoed, test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
+def test_the_social_line_wears():
+    """C239: her reply to a bare call with nothing in view (the social line, 'hi pip!' / 'mama is here.') wears: every call answered for
+    the first HABIT_TAU lines, then every second, then every third; the calls between go unanswered (no line) and are logged; the counts
+    survive a save"""
+    con = _perfect(seed=4, transcriber=Transcriber(None))
+    _no_sets(con)
+    answered = []
+    for i in range(30):
+        t = 100 * (i + 1)
+        ln = con._social_line(t, P(t, seen=()))
+        answered.append(ln is not None)
+        if i == 0:
+            assert ln is not None, "the first bare call is answered"
+    k10 = int(K.HABIT_TAU)
+    assert all(answered[:k10]) and sum(answered) == 2 * k10 and answered[k10] is False and answered[k10 + 1] is True, answered
+    assert con.social_n == 2 * k10 and con.social_calls == 30, (con.social_n, con.social_calls)
+    assert any("a bare call let pass" in str(x[3]) for x in con.book_log), con.book_log[-2:]
+    con2 = _perfect(seed=4, transcriber=Transcriber(None)); con2.load_state(con.state())
+    assert con2.social_n == con.social_n and con2.social_calls == con.social_calls
+    print(f"lang C239: 30 bare calls with nothing in view: {sum(answered)} answered (the first {k10} every one, then every second), "
+          f"{30 - sum(answered)} let pass; the counts ({con.social_n}, {con.social_calls}) survive a save")
+
+
+TESTS = [test_the_social_line_wears, test_the_worn_word_not_echoed, test_the_function_word_not_echoed, test_frames_and_birth_lines, test_line_check_refuses, test_compose_from_percept, test_variation_sets_and_repeats,
          test_replies_and_judgments, test_talk_over_and_turns, test_new_word_and_night, test_steer, test_transcriber,
          test_ear_rules, test_transcriber_with_ear, test_ledger_standing, test_replay_exact, test_cost, test_ear_templates_exact,
          test_ear_exact_across_threads, test_approximation_in_context, test_asks_answered, test_cut_words_not_said,

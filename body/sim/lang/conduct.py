@@ -994,6 +994,8 @@ class Conduct:
         self.ended = {}                       # the acts her motion reported ended on this tick: {motion id: status}
         self.probes = []                      # formal trials asked for by her day plan (P4): [dict(form, a, b, noun, new, shown)]
         self.vocal_book = {}                  # C85: the smiles she has given for each word said right or echoed, {word: n}
+        self.social_n = 0                     # C239: the social lines she has given to a bare call with nothing in view, and the bare
+        self.social_calls = 0                 # calls so answered or let pass (both worn over a night as the vocal book is)
         self.distress_due = None              # A102: the tick of a distress event whose turn she owes while it lies face down (None: none)
         self.book = {}                        # A89: the smiles she has given for each motor act and object, {kind: {object: n}}: the
                                               # n-th is worth w e^(-n/HABIT_TAU) (consts.MOTOR_WORTH, _motor_judgments)
@@ -1055,6 +1057,7 @@ class Conduct:
         if self.stage >= 2:
             for w_ in list(self.vocal_book):
                 self.vocal_book[w_] = int(self.vocal_book[w_] * K.HABIT_KEEP)
+        self.social_n = int(self.social_n * K.HABIT_KEEP); self.social_calls = int(self.social_calls * K.HABIT_KEEP)   # C239
         return moved
 
     @property
@@ -2391,7 +2394,30 @@ class Conduct:
                           key=lambda o: (not getattr(o, "child_can_reach", False), o.id))
             if seen:
                 tg = seen[0]
-        return (f.compose("reply", t, p, o=tg) if tg is not None else None) or f.compose("reply_social", t, p)
+        if tg is not None:
+            ln = f.compose("reply", t, p, o=tg)
+            if ln is not None:
+                return ln
+        return self._social_line(t, p)
+
+    def _social_line(self, t, p):
+        """C239 (2026-10-02): THE SOCIAL LINE WEARS. Day 67: 'hi pip!' and 'mama is here.' were 440 of her 1,110 lines (day 62: half), her
+        reply to the child's bare call ("mama", "hi": its two most frequent tokens, 1,500 and 1,000 a day) with nothing in view; C226 gave
+        those turns the toy in view, and with none in view the social line stood, 220 times a day the same two sentences back to the two
+        words it says most, the loop C172, C197 and C198 cut for the echo. A parent answers a baby's call, and the hundredth call of the
+        hour less: the social line is given to every k-th bare call, k one more for every HABIT_TAU lines given (the response decrement
+        with repetition, Rankin et al. 2009, as C198's for the echo; both counts fall to HABIT_KEEP of themselves over a night, the
+        morning's call answered again); the calls between go unanswered (she goes on with what she is doing: no line)"""
+        self.social_calls += 1
+        k = 1 + int(self.social_n // K.HABIT_TAU)
+        if self.social_calls % k != 0:
+            self.book_log.append((t, None, None, f"a bare call let pass (C239: every {k}th answered, {self.social_n} social lines given)", 0))
+            del self.book_log[:-200]
+            return None
+        ln = self.fast.compose("reply_social", t, p)
+        if ln is not None:
+            self.social_n += 1
+        return ln
 
     def _say(self, line, t, p, out, in_set=False):
         f = self.fast
@@ -2505,6 +2531,7 @@ class Conduct:
                     ledger=self.ledger.state(), transcriber=None if self.transcriber is None else self.transcriber.state(),
                     book={k: dict(v) for k, v in self.book.items()}, book_log=[list(x) for x in self.book_log[-200:]],
                     vocal_book=dict(self.vocal_book), distress_due=self.distress_due,
+                    social_n=int(self.social_n), social_calls=int(self.social_calls),
                     confirm_act_due=self.confirm_act_due, confirm_obj=self.confirm_obj)
 
     def load_state(self, s):
@@ -2537,6 +2564,7 @@ class Conduct:
         self.imperfect = s["imperfect"]
         self.book = {k: dict(v) for k, v in s.get("book", {}).items()}
         self.vocal_book = {str(k): int(v) for k, v in (s.get("vocal_book") or {}).items()}   # C85 (a save from before it: none given)
+        self.social_n = int(s.get("social_n", 0)); self.social_calls = int(s.get("social_calls", 0))   # C239 (older saves: none)
         self.distress_due = s.get("distress_due")                                            # A102 (a save from before it: none owed)
         self.book_log = [tuple(x) for x in s.get("book_log", ())]
         self.confirm_act_due, self.confirm_obj = s.get("confirm_act_due", NEVER), s.get("confirm_obj")
