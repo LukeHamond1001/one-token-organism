@@ -422,3 +422,70 @@ def opens(hand, act):
         if j in CLOSING[hand] and W.SETTINGS[k] * CLOSING[hand][j] < 0:
             return True
     return False
+
+
+# ---------------------------------------------------------------- A193 (2026-10-04): the standing and the stepping reflexes
+# THE POSITIVE SUPPORTING REACTION AND THE STEPPING REFLEX, born (the owner's word: walking, as fast as it can be had). A newborn held
+# upright with its soles on a surface stiffens its legs and bears weight (the positive supporting reaction: Magnus 1926; Peiper 1963),
+# and, moved forward, steps: a leg in stance whose hip has extended while the other leg stands swings forward and is set down ahead
+# (the stepping reflex; in supported infants a leg's swing begins on its hip's extension with its load taken by the other leg: Pang
+# and Yang 2000, J Physiol 528:389-404; newborn stepping and supine kicking are one pattern: Thelen and Fisher 1982). Both at the cord,
+# below the gate, summed with the own act and the cord's other patterns (A48, A97's law), read from the body's own senses alone: the
+# torso unit's specific force (upright: its long axis carries STAND_UP_G of gravity) and the soles' touch (a sole loaded over SOLE_N).
+# Lying, sitting, or held with its feet off the floor, neither fires: the life on the mat is untouched until it is stood up.
+# Measured on the day-84 copy (p1/upright*.py; the child stood up by an instrument, her hands stood in for by a capped spring at the
+# trunk: 80 N sideways, 40 N m, at most 0.6 of its weight carried): alone it falls in a second with or without them (no balance:
+# that is hers to give and its cerebellum's to learn); held, without them it sinks in 12 s; with the supporting reaction it stands
+# 39 s on 0.9 of its own weight; with the stepping reflex and her hold pacing 0.20 m ahead of its feet at 0.10 m/s it walked 0.64 m
+# in 45 s in 10 steps without sinking. The constants below are ours, from that grid; the joint's own rate (one big step, 0.27 rad a
+# tick) sets the swing's length: 4 ticks of lift, 3 of placing, about a second, as supported infants' steps are.
+STAND_LIMBS = ("waist", "leg_l", "leg_r")
+STAND_UP_G = 8.5                # m/s2 along the torso's long axis: upright within about 30 deg (9.81 cos 30 deg; ours)
+SOLE_N = 20.0                   # N on a sole: loaded (ours: a sixteenth of the body's weight)
+STAND_GAIN, STAND_STEP = 0.3, W.STEP_SMALL      # the supporting reaction's soft spring toward the straight leg (the tone's law, A185)
+STEP_EXT = 0.12                 # rad: the stance hip's extension that starts the swing (ours)
+STEP_LIFT, STEP_PLACE = 4, 3    # ticks: hip and knee flexing (the foot lifted and brought forward), then the knee extending (set down)
+STEP_HIP, STEP_KNEE = -0.9, 1.3 # rad: the swing's hip flexion and knee flexion targets (ours)
+STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, as a share of STEP_HIP
+
+
+def stand(q, imu_torso, soles, state):
+    """THE STANDING AND STEPPING REFLEXES' TICK. `q` {limb: its joints' angles, in the effector's order} for STAND_LIMBS; `imu_torso`
+    the torso unit's tick means [acc 3, gyro 3]; `soles` (left, right) the soles' forces (N); `state` {leg: [phase, ticks]} kept by
+    the world and changed in place -> ({limb: its additive steps}, {limb: "stand" | "step"}); ({}, {}) when the body is not upright
+    on a loaded sole (the legs' phases return to stance)"""
+    az = float(imu_torso[2])
+    if az < STAND_UP_G or max(float(soles[0]), float(soles[1])) < SOLE_N:
+        for k in state:
+            state[k][0], state[k][1] = "stance", 0
+        return {}, {}
+    out, ev = {}, {}
+    out["waist"] = tuple(float(min(max(-float(x), -W.STEP_BIG), W.STEP_BIG)) for x in q["waist"])   # the trunk held over the pelvis
+    ev["waist"] = "stand"
+    for leg, other in (("leg_l", "leg_r"), ("leg_r", "leg_l")):
+        js = _JOINTS[leg]; iq = {j.split("_", 1)[1].replace("_joint", ""): i for i, j in enumerate(js)}
+        st = state[leg]; ql = q[leg]
+        if st[0] == "stance" and float(ql[iq["hip_pitch"]]) > STEP_EXT and state[other][0] == "stance":
+            st[0], st[1] = "swing", 0
+        tgt = {k: 0.0 for k in iq}; cap = {k: STAND_STEP for k in iq}; gain = {k: STAND_GAIN for k in iq}
+        if st[0] == "stance" and state[other][0] == "swing":            # the stance leg stands firm while the other swings
+            for k in ("knee", "hip_pitch", "hip_roll", "ankle_pitch", "ankle_roll"):
+                cap[k] = W.STEP_BIG; gain[k] = 1.0
+        if st[0] == "swing":
+            st[1] += 1
+            if st[1] <= STEP_LIFT:
+                tgt.update(hip_pitch=STEP_HIP, knee=STEP_KNEE)
+            else:
+                tgt.update(hip_pitch=STEP_HIP * STEP_HIP_PLACE, knee=0.05)
+            for k in ("hip_pitch", "knee", "ankle_pitch"):
+                cap[k] = W.STEP_BIG; gain[k] = 1.0
+            ev[leg] = "step"
+            if st[1] >= STEP_LIFT + STEP_PLACE:
+                st[0], st[1] = "stance", 0
+        else:
+            ev[leg] = "stand"
+        steps = [0.0] * len(js)
+        for k, i in iq.items():
+            steps[i] = float(min(max(gain[k] * (tgt[k] - float(ql[i])), -cap[k]), cap[k]))
+        out[leg] = tuple(steps)
+    return out, ev

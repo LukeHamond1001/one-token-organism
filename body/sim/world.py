@@ -564,7 +564,7 @@ class G1World(SimWorld):
     from it); `extra(spec)` adds an instrument's rig to the scene before it compiles (tests only). Born at construction: the G1 on
     its back on the mat, settled, tick 0."""
 
-    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True, righting=True, tone=True):
+    def __init__(self, seed=1, extra=None, xml=G.XML, spinal=True, parent=True, righting=True, tone=True, standing=True):
         global R
         from body.sim import reflexes as R                              # the body's spinal cord (it reads this module's constants)
         _catch_mujoco_warnings()
@@ -608,6 +608,7 @@ class G1World(SimWorld):
         self.body_mass = float(m.body_subtreemass[m.body("pelvis").id])
         self.f_pain = PAIN_WEIGHTS * self.body_mass * float(np.linalg.norm(m.opt.gravity))
         self.palm_zones = [self.zones.index(f"{s}_hand_palm") for s in ("left", "right")]
+        self.sole_zones = [[i for i, z in enumerate(self.zones) if z.startswith(f"{s}_ankle")] for s in ("left", "right")]   # A193: each foot's zones
         self.palm_of_hand = {"hand_l": self.palm_zones[0], "hand_r": self.palm_zones[1]}
         self.own_hand = np.zeros((2, self.nz + 1), dtype=bool)          # each hand's other links (index nz: no zone), for palm_own_N
         for h, grp in enumerate(("hand_l", "hand_r")):
@@ -620,6 +621,8 @@ class G1World(SimWorld):
         self._sides = np.zeros((2, 2))                                          # A171: this step's push on each hand from things not
                                                                                 # its own: [palmar (toward its back), dorsal (toward its palm)]
         self.spinal = bool(spinal)                                      # the palmar grasp at the spinal cord (off: an instrument's switch)
+        self.standing = bool(standing)                                  # A193: the standing and stepping reflexes (off: an instrument's switch)
+        self._stepping = {"leg_l": ["stance", 0], "leg_r": ["stance", 0]}
         self.righting = bool(righting)                                  # the prone pattern at the cord (A92; off: an instrument's switch)
         self.tone = bool(tone)                                          # the arms' resting tone at the cord (A185; off: an instrument's switch)
         if not m.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_AUTORESET:
@@ -915,6 +918,15 @@ class G1World(SimWorld):
                 t_ = R.tone(limb, q_[self.eff_slices[limb]])
                 c_ = cord.get(limb)
                 cord[limb] = t_ if c_ is None else tuple(float(a_) + float(b_) for a_, b_ in zip(c_, t_))
+        if self.standing:                                               # A193: THE STANDING AND STEPPING REFLEXES (reflexes.stand): upright
+            q_ = d.qpos[self.qadr]                                      # on a loaded sole the legs carry the body and, the stance hip
+            tf_ = self._sensed["touch_force"]                           # extended, step; lying or sitting, nothing
+            st_, ev_ = R.stand({n_: q_[self.eff_slices[n_]] for n_ in R.STAND_LIMBS}, self._sensed["imu_torso"],
+                               (float(tf_[self.sole_zones[0]].sum()), float(tf_[self.sole_zones[1]].sum())), self._stepping)
+            for limb, t_ in st_.items():
+                c_ = cord.get(limb)
+                cord[limb] = t_ if c_ is None else tuple(float(a_) + float(b_) for a_, b_ in zip(c_, t_))
+                spinal[limb] = ev_[limb] if limb not in spinal else spinal[limb] + "+" + ev_[limb]
         own = self._efference(acts)                                     # the efference copy (the own acts, after the grasp's sum)
         steps = {}                                                      # every act read before anything moves (a bad act moves nothing)
         for name, js in G.EFFECTORS:
@@ -1522,6 +1534,7 @@ class G1World(SimWorld):
                 "grasp_hab": {h: list(v) for h, v in self._grasp_hab.items()},   # A162
                 "dorsal_hab": {h: list(v) for h, v in self._dorsal_hab.items()},  # A171
                 "traction_hab": {a: list(v) for a, v in self._traction_hab.items()},  # A177
+                "stepping": {k_: [str(v_[0]), int(v_[1])] for k_, v_ in self._stepping.items()},   # A193
                 "parent": None if self.parent is None else (self.parent._state() if fast else self.parent.state()),
                 "s5": ((lambda x: x) if fast else _canon)({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
                               "vor_slip": ([] if self._vor_slip is None else list(map(float, self._vor_slip))),        # A174 (empty: none)
@@ -1554,6 +1567,7 @@ class G1World(SimWorld):
         self._grasp_hab = {h: [int(x) for x in st.get("grasp_hab", {}).get(h, [0, 0])] for h in self.palm_of_hand}   # (A162; older saves: fresh)
         self._dorsal_hab = {h: [int(x) for x in st.get("dorsal_hab", {}).get(h, [0, 0])] for h in self.palm_of_hand}   # (A171; older saves: fresh)
         self._traction_hab = {a: [int(x) for x in st.get("traction_hab", {}).get(a, [0, 0])] for a in ("arm_l", "arm_r")}   # (A177; older saves: fresh)
+        self._stepping = {k_: [str(st.get("stepping", {}).get(k_, ["stance", 0])[0]), int(st.get("stepping", {}).get(k_, ["stance", 0])[1])] for k_ in ("leg_l", "leg_r")}   # (A193; older saves: stance)
         self.rng.bit_generator.state = st["rng"]
         self.gaze = np.asarray(st.get("gaze", np.zeros(3)), float).copy()        # (a save from before the gaze: born at 0)
         self.gaze_v = np.asarray(st.get("gaze_v", np.zeros(3)), float).copy()

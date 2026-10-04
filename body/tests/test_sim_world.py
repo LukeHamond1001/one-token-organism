@@ -2647,3 +2647,32 @@ def test_the_born_saccade():
     print(f"world A186: the born saccade: half the cue's offset on each axis, at most {mx} rad a tick, none inside the fovea's zone or with no cue; the onset cues "
           f"give none; the orienting gain scales it and can turn it away; the eyes alone, under the switch; the world's "
           f"gaze moved {np.round(d_[:2], 3).tolist()} on a cord step of [0.1, -0.05]")
+
+
+def test_the_standing_and_stepping_reflexes():
+    """A193: lying or sitting (not upright, or no sole loaded) the reflexes do nothing and the legs' phases are stance; upright on a
+    loaded sole the legs are drawn straight (a soft step), the waist firmly; a stance hip extended past STEP_EXT with the other leg
+    standing swings (hip and knee flexing by big steps for STEP_LIFT ticks, then the knee extending for STEP_PLACE), the other leg
+    standing firm meanwhile and not swinging; then stance again"""
+    from body.sim import reflexes as R
+    nq = {n: [0.0] * len(R._JOINTS[n]) for n in R.STAND_LIMBS}
+    st = {"leg_l": ["stance", 0], "leg_r": ["stance", 0]}
+    up = [0.0, 0.0, 9.81, 0, 0, 0]
+    assert R.stand(nq, [0.0, 0.0, 2.0, 0, 0, 0], (200.0, 200.0), st) == ({}, {})            # lying
+    assert R.stand(nq, up, (0.0, 5.0), st) == ({}, {})                                       # upright, no sole loaded (sitting, held up)
+    q = {n: list(v) for n, v in nq.items()}
+    iq = {j.split("_", 1)[1].replace("_joint", ""): i for i, j in enumerate(R._JOINTS["leg_l"])}
+    q["leg_l"][iq["knee"]] = 0.5; q["waist"][0] = 0.4
+    out, ev = R.stand(q, up, (150.0, 150.0), st)
+    assert ev == {"waist": "stand", "leg_l": "stand", "leg_r": "stand"}
+    assert abs(out["leg_l"][iq["knee"]] + R.STAND_STEP) < 1e-9 and abs(out["waist"][0] + R.W.STEP_BIG) < 1e-9
+    q = {n: list(v) for n, v in nq.items()}; q["leg_l"][iq["hip_pitch"]] = R.STEP_EXT + 0.05
+    seen = []
+    for k in range(R.STEP_LIFT + R.STEP_PLACE + 1):
+        out, ev = R.stand(q, up, (150.0, 150.0), st)
+        seen.append((ev["leg_l"], ev["leg_r"], round(out["leg_l"][iq["hip_pitch"]], 3), round(out["leg_l"][iq["knee"]], 3)))
+        q["leg_l"][iq["hip_pitch"]] = 0.0                                                   # (the hip no longer extended: no second swing)
+    assert [s[0] for s in seen] == ["step"] * (R.STEP_LIFT + R.STEP_PLACE) + ["stand"] and all(s[1] == "stand" for s in seen)
+    assert seen[0][2] == -R.W.STEP_BIG and seen[0][3] == R.W.STEP_BIG                        # lift: hip and knee flex by a big step
+    assert seen[R.STEP_LIFT][3] == 0.05                                                      # placing: the knee toward straight
+    assert st == {"leg_l": ["stance", 0], "leg_r": ["stance", 0]}

@@ -3707,6 +3707,27 @@ THREE DAYS UNDER THE FACE (days 58 to 60, the first with the reward's carrier de
 
 **C227. Where she takes a forearm depends on how it lies: the pull's spots searched for the tops first, then for either grip** (the lead, 2026-10-02 13:25; the teacher's method, branch c227; lands at the next 1,000-tick save). Day 63's six pull-to-sit offers (C224) were all refused, two 'no spot she can kneel at lets her do it (pull): her reach', and the day-64 copy showed why: the pull's and the gather's holds take the forearm at its TOP (FOREARM_HOLD along the elbow link's +z), and on a child whose arm is raised or flung out that face points away from her, so no trunk of hers reaches her hand onto it from any spot (every spot at 0.34 to 0.95 m from the forearms failed the trunk solve), where the same pull had sat the child up at 06:45 with its arms low. The spot check (`_pull_pairing`, `_gather_reach`) now asks, per forearm, whether a trunk of hers reaches the top from the spot, else the anchor from her side (`_anchor`, the general grip of A25: a point on the link's surface facing her shoulder), and keeps the grip each forearm solved with (`_pull_grips`, by link) for the hold she then makes (`_forearm_grip`); the spots are searched twice (`_act_pull_to_sit`): for the tops alone first, as A163 and A165 built it (the rig's gather engages a top the step-10 solve calls unreachable, and reached 32 cm short of an anchor the solve approved when the spot was chosen by either grip at once), then, when no spot passes, for either grip. On the day-64 copy at tick 3,090,088 (her hands free, the child supine at the mat's middle): 'sat up with its own flexion (A9)', both holds engaged. Parent 7, 7b, 9, 30, 32, 33 green. No new constant; the sim pins untouched (her method).
 
+**A193. The standing and the stepping reflexes, born (2026-10-04).** The owner's word: walking, talking and understanding, as fast as it
+can be had; walking is in. A newborn held upright with its soles on a surface stiffens its legs and bears weight (the positive
+supporting reaction: Magnus 1926; Peiper 1963) and, moved forward, steps: a stance leg whose hip has extended while the other leg
+stands swings forward and is set down ahead (in supported infants the swing begins on the hip's extension with the load taken by
+the other leg: Pang and Yang 2000; newborn stepping and supine kicking one pattern: Thelen and Fisher 1982). Both at the cord
+(body/sim/reflexes.py `stand`; body/sim/world.py apply), below the gate, summed with the own act and the cord's other patterns, read
+from the body's own senses: the torso unit's specific force (upright: STAND_UP_G 8.5 m/s2 along its long axis, about 30 deg) and the
+soles' touch (SOLE_N 20 N). Lying, sitting or held with its feet off the floor neither fires (400 ticks of the day-84 copy on the
+mat: none). Measured on the day-84 copy (p1/upright*.py; the child stood up by an instrument, her hands stood in for by a capped
+spring at the trunk: 80 N sideways, 40 N m, at most 0.6 of its 337 N carried): alone it falls in a second with or without the
+reflexes (no balance: hers to give, its cerebellum's to learn); held and without them it sinks in 12 s; with the supporting reaction
+it stands 39 s on 0.9 of its own weight, its legs' own babble on; with the stepping reflex and the hold pacing 0.20 m ahead of its
+feet at 0.10 m/s it walked 0.64 m in 45 s in 10 steps (the probe's prototype) and 0.52 m in 45 s with the tree's own reflexes
+(p1/upright_tree.py), never sinking. Constants (ours, from the grid): STEP_EXT 0.12 rad, STEP_LIFT 4 and STEP_PLACE 3 ticks,
+STEP_HIP -0.9 and STEP_KNEE 1.3 rad; the supporting reaction's spring is the tone's (A185: gain 0.3, one small step), the stance
+leg and the waist firm (one big step). The legs' phases are in the world's save (older saves: stance). World test
+test_the_standing_and_stepping_reflexes; the tone's and the saccade's tests green. Sim pins unchanged (the stub world has no G1
+cord; A192's), the language default kept. What it is not: balance, or getting up. Her acts that stand it up, hold it and walk it
+(her hands at its trunk within her caps: the measured hold asks 34 to 90 N of lift and 80 N sideways, under CAP_TWO 156 N) are
+the next build; lifting it from the mat (337 N) is beyond her caps as they stand.
+
 **A192. The failed lean is deleted; the idle comparison is switched off (2026-10-04).** The owner's word: delete it, or what is the
 play. (1) A188's relative-weight lean (vte_adapt) is removed from the code and the constants: it valued the state beside the reward
 and quieted the rewarded act (A189); a switch kept in the tree is a switch someone turns on again. (2) A182's comparison of two
@@ -4754,5 +4775,6 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | A189 | A188 switched off in the life (vte_adapt 0): the lean valued the state beside the reward and quieted the rewarded acts | 2026-10-04 | operant: 233 smiles off against 67 on; day-79 copy hits 36 against 8; life day 79 hits 65 against 212; sim pins re-taken |
 | A191 | A strain line on the amygdala's low road (a gear over 0.7 of its pain line), read only by the amygdala; the saved amygdala widened by one input | 2026-10-04 | day-82 copy: anticipated bad against the next 8 ticks' pain r 0.14 with, 0.06 without; sim pins re-taken |
 | A192 | A188's lean (vte_adapt) deleted; A182's idle comparison (imagine_vte) switched off; the imagination kept | 2026-10-04 | about 24 ms a tick saved; sim pins re-taken |
+| A193 | The positive supporting reaction and the stepping reflex at the cord (upright on a loaded sole) | 2026-10-04 | day-84 copy, held by a stand-in for her hands: stands 39 s on 0.9 of its weight; walks 0.52-0.64 m in 45 s; silent on the mat; pins unchanged |
 | C227 | The pull's holds take a forearm at its top; raised or flung out, that face points away from her and no spot reaches it (day 63's six refusals, the copy's every spot failing the trunk solve). | The spot check solves the top first, then the anchor from her side, keeps the grip per forearm for the hold, and searches the spots twice, tops first; the copy's pull sat the child up. Parent tests green. | 2026-10-02 |
 | C228 | Day 64 had holds of 6 to 12 s at most and no 'held' event: the smile for holding on, set at 10 s, never fired. | HELD_TICKS 20 (3 s), the smile then worn by A2's fall with mastery per toy; lane 10 as it was. | 2026-10-02 |
