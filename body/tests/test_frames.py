@@ -847,16 +847,18 @@ def test_the_competence_drive():
     """frames 7 (A181, A184, the competence drive; the switch `competence`, on in SIM_CFG): on the stub world, the body acting as it draws,
     (i) the frames keep, beside each channel's two error means, the same two means over the ticks the body ACTED on
     (_ferr_own, _ferr_own_fast: as many samples as acted ticks with an error, never more than the channel's own count), and for each
-    channel with a frame before (all but her words) the forecast's and the naive forecast's mean errors, slow and fast (_fskill_own);
+    channel with a frame before (all but her words) the forecast's and the naive forecast's mean errors, slow and fast, with the slow
+    means of the naive error's square and of their product (_fskill_own);
     (ii) at each event's end the drive is owed the event's effort (its acted ticks over its ticks, replayed by hand from the acts) and the
-    competence progress (A184: replayed by hand from the skill means: per channel clip(slow forecast/naive - fast forecast/naive, 0, 1),
-    the channels alike); (iii) on the next tick the drive pays COMPETENCE_GAIN x effort x progress, counted and summed, and pays nothing
+    competence progress (A184: replayed by hand from the kept means: per channel the error of late carried to the long run's liveliness by
+    the long-run slope of the forecast's error on the naive forecast's, its fall against the long-run error, the channels alike); (iii) on the next tick the drive pays COMPETENCE_GAIN x effort x progress, counted and summed, and pays nothing
     before the skill means exist, nothing for an end the night closed, and nothing on a body that never acts; (iv) the source is the
     anatomy's last (its amygdala head born at zero on a living body); the language body has no key and no drive; (v) A184: QUIET IS
-    NOT COMPETENCE: the same life with its world a fifth as loud after tick 600 (every channel's error falls of late against its long
-    run, which A181's measure paid) is owed no more progress than the forward model's skill gives: on the measure itself, errors
-    scaled alike (the forecast's and the naive forecast's) are no progress, and a forecast error fallen against the naive one is"""
+    NOT COMPETENCE: on the measure itself, an error that fell (or rose) of late only as far as the world's liveliness did is no
+    progress, an error fallen at equal liveliness is, and with no slope known the measure is A181's; the same life with its world a
+    fifth as loud after tick 600 (every channel's error falls of late against its long run, which A181's measure paid) reads far less"""
     from body.sim.anatomy import SIM_CFG, COMPETENCE_GAIN
+    from body.core.frames import FERR_FAST_TAU as FERR_FAST_TAU_
     assert SIM_CFG["competence"] == 1
     cfg = dict(SIM_CFG, wake_ticks=100000, wake_every=8, gate_every=8, write_floor=1e-30, gate_floor=0.3, night_starts=16, night_rounds=1,
                night_batch=4, rem_dreams=2, rem_steps=2, night_dev="", amyg=0, recall=0, night_frames=0, twitch=0)
@@ -875,7 +877,8 @@ def test_the_competence_drive():
     run = WorldLoop(L)
     ends = []; fe = L._frame_end
     def spy_end(fe=fe, L=L, ends=ends):
-        ends.append((int(L.ticks), int(getattr(L, "_ev_ticks", 0)), int(getattr(L, "_ev_acted", 0)))); return fe()
+        ends.append((int(L.ticks), int(getattr(L, "_ev_ticks", 0)), int(getattr(L, "_ev_acted", 0)),
+                     {k: list(v) for k, v in (getattr(L, "_fskill_own", None) or {}).items()}, dict(getattr(L, "_fbest_own", None) or {}))); return fe()
     L._frame_end = spy_end
     pays = []; f0 = src.felt
     def spy_felt(frame, life, f0=f0, pays=pays):
@@ -905,11 +908,15 @@ def test_the_competence_drive():
         assert tk - t_end == 1, (tk, t_end)
         e_ = next(e for e in ends if e[0] == t_end)
         assert e_[1] > 0 and abs(share - e_[2] / e_[1]) < 1e-12, (share, e_)
-        vals_ = []
-        for c_, (nn, em, pm, emf, pmf) in sk_p.items():
-            if nn < 2 or pm <= 0.0 or pmf is None or pmf <= 0.0:
+        vals_ = []; sk_e, best_e = e_[3], e_[4]                            # the means and the records as the end found them
+        for c_, (nn, em, pm, emf, pmf, pp, epm) in sk_e.items():
+            if nn < 2 or em <= 0.0 or emf is None:
                 continue
-            vals_.append(max(0.0, min(1.0, em / pm - emf / pmf)))
+            if nn < FERR_FAST_TAU_:
+                vals_.append(0.0); continue
+            var_ = pp - pm * pm; b_ = max(0.0, (epm - em * pm) / var_) if var_ > 1e-30 else 0.0
+            eh_ = max(0.0, emf + b_ * (pm - pmf)); bc_ = best_e.get(c_)
+            vals_.append(0.0 if bc_ is None or bc_ <= 0.0 else max(0.0, min(1.0, (bc_ - eh_) / bc_)))
         prog_h = sum(vals_) / len(vals_) if vals_ else 0.0
         assert abs(prog - prog_h) < 1e-9 and abs(v - COMPETENCE_GAIN * share * prog) < 1e-12, (prog, prog_h, v)
     assert src.n_paid == len(paid) and abs(src.paid - sum(p[2] for p in paid)) < 1e-9
@@ -935,12 +942,25 @@ def test_the_competence_drive():
     own2 = getattr(L2, "_ferr_own", None) or {}
     # (v) quiet is not competence: the measure on means set by hand
     keep_ = L._fskill_own
-    L._fskill_own = {"a": [600, 1.0, 2.0, 0.2, 0.4], "b": [600, 0.5, 1.0, 0.1, 0.2]}       # both errors a fifth of late: the skill unmoved
-    assert L._ferr_own_progress() == 0.0, L._ferr_own_progress()
-    L._fskill_own = {"a": [600, 1.0, 2.0, 0.5, 2.0], "b": [600, 0.5, 1.0, 0.5, 1.0]}       # a's forecast error halved against the naive one's
-    assert abs(L._ferr_own_progress() - 0.5 * (0.5 - 0.25)) < 1e-12, L._ferr_own_progress()
-    L._fskill_own = {"a": [600, 1.0, 2.0, 1.5, 2.0], "b": [1, 0.5, 1.0, 0.1, 1.0]}         # a skill fallen pays nothing; one sample is none
-    assert L._ferr_own_progress() == 0.0, L._ferr_own_progress()
+    # (n, e long run, p long run, e of late, p of late, p squared long run, e x p long run); the slope b = (exp - e p) / (pp - p p) = 0.5
+    keep_b = getattr(L, "_fbest_own", None)
+    L._fbest_own = {"a": 1.0}
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.2, 0.4, 5.0, 2.5]}                             # a world a fifth as lively of late and the error a
+    assert abs(L._ferr_own_progress()) < 1e-12, L._ferr_own_progress()                     # fifth with it: 0.2 + 0.5 (2 - 0.4) = 1 = the record: none
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.5, 2.0, 5.0, 2.5]}                             # the error halved at equal liveliness: half below the
+    assert abs(L._ferr_own_progress() - 0.5) < 1e-12 and L._fbest_own["a"] == 1.0          # record; a read without commit moves no record
+    assert abs(L._ferr_own_progress(commit=True) - 0.5) < 1e-12 and abs(L._fbest_own["a"] - 0.5) < 1e-12   # the event's end takes the new low
+    assert L._ferr_own_progress(commit=True) == 0.0                                        # and the same ground is not paid twice
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.8, 2.0, 5.0, 2.5]}                             # back up, then down to where it had been: nothing
+    assert L._ferr_own_progress(commit=True) == 0.0 and abs(L._fbest_own["a"] - 0.5) < 1e-12
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.5, 2.0, 5.0, 2.5]}
+    assert L._ferr_own_progress(commit=True) == 0.0
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.4, 2.0, 5.0, 2.5], "b": [100, 0.5, 1.0, 0.1, 1.0, 2.0, 1.0]}   # a new low on one of two channels, the
+    assert abs(L._ferr_own_progress() - 0.5 * 0.2) < 1e-12, L._ferr_own_progress()         # other's mean of late not yet formed (0): their mean
+    L._fbest_own = {}
+    L._fskill_own = {"a": [600, 1.0, 2.0, 0.4, 2.0, 5.0, 2.5]}                             # no record yet: the first read sets it and pays nothing
+    assert L._ferr_own_progress(commit=True) == 0.0 and abs(L._fbest_own["a"] - 0.4) < 1e-12
+    L._fbest_own = keep_b
     L._fskill_own = keep_
     # and the same life in a world a fifth as loud after tick 600: A181's measure would have paid the quiet; the skill's does not see it
     torch.manual_seed(0)
@@ -958,7 +978,7 @@ def test_the_competence_drive():
     old_measure = [max(0.0, min(1.0, (mu - fof4.get(c_, mu)) / mu)) for c_, (nn, mu) in fo4.items() if mu > 0.0 and nn >= 2]
     old4 = sum(old_measure) / len(old_measure); new4 = L4._ferr_own_progress()
     assert old4 > 0.1 and new4 < 0.1 * old4, (old4, new4)
-    print(f"frames 7 (A184): a world a fifth as loud after tick 600: A181's measure reads a progress of {old4:.3f}, the skill's {new4:.3f}")
+    print(f"frames 7 (A184): a world a fifth as loud after tick 600: A181's measure reads a progress of {old4:.3f}, at equal liveliness {new4:.3f}")
     print(f"frames 7 (A181): {len(ends)} ends in 1,000 ticks, the body acting on {n_acted}; own-act means on {len(fo)} channels (at most {max(v[0] for v in fo.values())} "
           f"samples); {len(paid)} payments, the first at tick {paid[0][0]} (the first end at {first_end}), their sum {src.paid:.4f}, effort {min(p[1][0] for p in paid):.2f}-"
           f"{max(p[1][0] for p in paid):.2f}, progress {min(p[1][1] for p in paid):.3f}-{max(p[1][1] for p in paid):.3f}; a still body (its effectors at rest on "

@@ -224,12 +224,13 @@ class FramesMixin:
                     sk = getattr(self, "_fskill_own", None)
                     if sk is None:
                         sk = {}; self._fskill_own = sk
-                    ns_, em, pm, emf, pmf = sk.get(c_.name, [0, 0.0, 0.0, None, None])
-                    ns_ += 1
-                    em = em + (float(e) - em) / min(float(ns_), tau); pm = pm + (ep - pm) / min(float(ns_), tau)
+                    ns_, em, pm, emf, pmf, pp, epm = sk.get(c_.name, [0, 0.0, 0.0, None, None, 0.0, 0.0])
+                    ns_ += 1; ks_ = 1.0 / min(float(ns_), tau); kf_ = 1.0 / min(float(ns_), FERR_FAST_TAU)
+                    em = em + (float(e) - em) * ks_; pm = pm + (ep - pm) * ks_          # the long run: the two means,
+                    pp = pp + (ep * ep - pp) * ks_; epm = epm + (float(e) * ep - epm) * ks_   # the naive error's square and their product
                     emf = em if emf is None else emf; pmf = pm if pmf is None else pmf
-                    emf = emf + (float(e) - emf) / min(float(ns_), FERR_FAST_TAU); pmf = pmf + (ep - pmf) / min(float(ns_), FERR_FAST_TAU)
-                    sk[c_.name] = [ns_, em, pm, emf, pmf]
+                    emf = emf + (float(e) - emf) * kf_; pmf = pmf + (ep - pmf) * kf_      # of late: the two means
+                    sk[c_.name] = [ns_, em, pm, emf, pmf, pp, epm]
             fn = getattr(self, "_ferr_now", None)                       # C171 (2026-09-30), an instrument: this tick's error itself, by
             if fn is None:                                              # channel (the novelty drive's payments read against it: which
                 fn = {}; self._ferr_now = fn                            # channel's surprise the new frame carried)
@@ -260,27 +261,51 @@ class FramesMixin:
             tot += float(e_); acc += float(e_) * prog
         return (acc / tot) if tot > 0.0 else 1.0
 
-    def _ferr_own_progress(self):
-        """A181, A184 (2026-10-03): COMPETENCE, how far the body is learning to foresee ITS OWN ACTS' consequences. THE MEASURE IS THE RISE
-        OF THE FORWARD MODEL'S SKILL (A184): over the ticks the body acted on, each forecasting channel keeps the mean error of its
-        forecast and the mean error of the naive forecast 'nothing changes' (the frame before, as the cortex received it), both slow
-        (err_tau) and fast (FERR_FAST_TAU); the channel's skill is 1 - forecast error / naive error (a forecaster's skill score against
-        persistence: Murphy 1988), and its progress clip(skill of late - skill over the long run, 0, 1) = clip(slow ratio - fast ratio,
-        0, 1). The channels counted ALIKE (the plain mean; R7c's law); 0 before any channel has two such ticks (a newborn has no
-        competence to grow yet), and her words' channel has no frame before to compare (a symbol heard or not) and is left out. A181
-        paid the fall of the error itself, clip((slow - fast) / slow, 0, 1), and the life's first morning under it showed what that
-        pays: a quieter world (day 76: the eye's error of late a third of its mean since the morning's start, the vestibular's 0.30
-        against 0.52, the scene calmer, and payments of 0.11 to 0.17 an event where the dawn-75 copy had paid 0.013, 53 by the
-        morning's quarter against her face's 21). A calm scene lowers the forecast's error and the naive forecast's alike, so the
-        skill does not move; only foreseeing better what its acts change does. The competence drive (body/sim/anatomy.Competence)
-        pays it at each event's end, scaled by the event's effort. Progress, never accuracy, and never quiet: a body lying still
-        foresees itself perfectly, has no skill to gain over the naive forecast, and earns nothing"""
+    def _ferr_own_progress(self, commit=False):
+        """A181, A184 (2026-10-03): COMPETENCE, how far the body is learning to foresee ITS OWN ACTS' consequences. THE MEASURE IS THE FALL
+        OF ITS FORECAST'S ERROR BELOW THE LOWEST IT HAS EVER BEEN (A184: a personal best, paid once). Over the ticks the body acted on,
+        each forecasting channel with a frame before it (all but her words: a symbol heard or not) keeps the forecast's error e and
+        the error p of the naive forecast 'nothing changes' (the frame before, as the cortex received it: how much the world moved, the
+        tick's difficulty): their long-run means (err_tau) with the long-run slope b of e on p (from the means of p squared and of
+        e x p; never below 0), and their means of late (FERR_FAST_TAU). The error of late is carried to the long run's liveliness,
+        e' = e of late + b x (p long run - p of late), and held against the channel's RECORD, the lowest e' it has reached (kept from
+        the FERR_FAST_TAU-th such tick on, saved with the body's day): the channel's progress is clip((record - e') / record, 0, 1),
+        and with `commit` (the event's end, _frame_end) a lower e' becomes the record, so each new low is paid once. The channels
+        counted ALIKE (the plain mean; R7c's law); 0 before any channel has its record.
+        WHY A RECORD. A181 paid the fall of the error of late against its long run, clip((slow - fast) / slow, 0, 1), and the life's
+        first morning under it showed what that pays: a quieter world and each day's settling (day 76: the eye's error of late a third
+        of its long run, the vestibular's 0.30 against 0.52; 0.11 to 0.17 an event where the dawn-75 copy had paid 0.013; 53 by the
+        morning's quarter against her face's 21). On the dawn-76 copy's log (p1/comp_log.py, 3,000 ticks) that measure paid 10.5 and
+        moved with the world's liveliness of late at -0.90; a skill score against the naive forecast paid 9.9 (the forecast's error
+        has a floor the naive one has not: the eye's periphery 57 times the naive error, so the ratio falls whenever the world
+        livens); the fall at equal liveliness alone 8.0 (-0.87: the eye's and her face's errors fall through a morning whatever
+        moves, the day's own settling); the record paid 0.20, and 0.011 when the same 3,000 ticks were lived a second time (A181's:
+        12.2). A fall that only returns to where the error has been before is no new mastery. The competence drive
+        (body/sim/anatomy.Competence) pays the progress at each event's end, scaled by the event's effort. Progress, never
+        accuracy, never quiet, and never the same ground twice"""
         sk = getattr(self, "_fskill_own", None) or {}
+        best = getattr(self, "_fbest_own", None)
+        if best is None:
+            best = {}
+            if commit:
+                self._fbest_own = best
         vals = []
-        for c_, (n_, em, pm, emf, pmf) in sk.items():
-            if int(n_) < 2 or pm <= 0.0 or pmf is None or pmf <= 0.0:
+        for c_, (n_, em, pm, emf, pmf, pp, epm) in sk.items():
+            if int(n_) < 2 or em <= 0.0 or emf is None:
                 continue
-            vals.append(max(0.0, min(1.0, em / pm - emf / pmf)))
+            if int(n_) < FERR_FAST_TAU:                                     # its mean of late not yet formed: no record, no payment
+                vals.append(0.0); continue
+            var = pp - pm * pm
+            b = max(0.0, (epm - em * pm) / var) if var > 1e-30 else 0.0
+            eh = max(0.0, emf + b * (pm - pmf))
+            bc = best.get(c_)
+            if bc is None:
+                if commit:
+                    best[c_] = eh
+                vals.append(0.0); continue
+            vals.append(max(0.0, min(1.0, (bc - eh) / bc)) if bc > 0.0 else 0.0)
+            if commit and eh < bc:
+                best[c_] = eh
         return (sum(vals) / len(vals)) if vals else 0.0
 
     def _frame_settle(self, s):
@@ -334,7 +359,7 @@ class FramesMixin:
         self._flast_write = None; self._fstart_armed = True
         n_ev = int(getattr(self, "_ev_ticks", 0))                          # A181: the event's effort (the share of its ticks the body acted
         if n_ev > 0:                                                        # on) and the competence progress at its end, due to the drive on
-            self._comp_due = (float(getattr(self, "_ev_acted", 0)) / float(n_ev), float(self._ferr_own_progress()), int(self.ticks))   # the next tick
+            self._comp_due = (float(getattr(self, "_ev_acted", 0)) / float(n_ev), float(self._ferr_own_progress(commit=True)), int(self.ticks))   # the next tick
         self._ev_ticks = 0; self._ev_acted = 0
         if int(self._frame_const("wm_frames")) and int(self.cfg.get("wm", 0)) and getattr(self.m, "stri_wm", 0):
             with torch.no_grad():                                      # R7f: working memory latches at the frames' event end (wm_frames)
