@@ -3707,6 +3707,23 @@ THREE DAYS UNDER THE FACE (days 58 to 60, the first with the reward's carrier de
 
 **C227. Where she takes a forearm depends on how it lies: the pull's spots searched for the tops first, then for either grip** (the lead, 2026-10-02 13:25; the teacher's method, branch c227; lands at the next 1,000-tick save). Day 63's six pull-to-sit offers (C224) were all refused, two 'no spot she can kneel at lets her do it (pull): her reach', and the day-64 copy showed why: the pull's and the gather's holds take the forearm at its TOP (FOREARM_HOLD along the elbow link's +z), and on a child whose arm is raised or flung out that face points away from her, so no trunk of hers reaches her hand onto it from any spot (every spot at 0.34 to 0.95 m from the forearms failed the trunk solve), where the same pull had sat the child up at 06:45 with its arms low. The spot check (`_pull_pairing`, `_gather_reach`) now asks, per forearm, whether a trunk of hers reaches the top from the spot, else the anchor from her side (`_anchor`, the general grip of A25: a point on the link's surface facing her shoulder), and keeps the grip each forearm solved with (`_pull_grips`, by link) for the hold she then makes (`_forearm_grip`); the spots are searched twice (`_act_pull_to_sit`): for the tops alone first, as A163 and A165 built it (the rig's gather engages a top the step-10 solve calls unreachable, and reached 32 cm short of an anchor the solve approved when the spot was chosen by either grip at once), then, when no spot passes, for either grip. On the day-64 copy at tick 3,090,088 (her hands free, the child supine at the mat's middle): 'sat up with its own flexion (A9)', both holds engaged. Parent 7, 7b, 9, 30, 32, 33 green. No new constant; the sim pins untouched (her method).
 
+**A189. A188 is switched off in the life (vte_adapt 0 in SIM_CFG; the code kept, born off) (2026-10-04).** Four readings after A188's
+landing at dawn 79. (1) The reward path's test (p1/operant2.py, the day-78 copy, 6,000 ticks a run, her smile only for one shoulder's
+flexion crossing its own line): with A188 off, the rewarded right arm's crossings rose from 24 to about 42 a thousand ticks within
+the first thousand (the unrewarded run: 23 to 36; the left arm unchanged) and it earned 233 smiles: the actor's lesson from dopamine
+is specific and fast. With A188 on it held the arm above the line (800 of a thousand ticks), crossed it about 10 times a thousand and
+earned 67 smiles: the lean values the state that stands beside the reward (the amygdala's cue value), not the act that earns it,
+and at a weight near a half it outvotes the actor. (2) The day-79 copy, 2,000 ticks from one start: A188 on, hits 8, lifted 2, shook
+0, got 9, reward +14.8; off, hits 36, lifted 23, shook 4, got 8, reward +12.5. (3) Life day 79 against 78: hits 65 against 212,
+shook 13 against 43 (lifted 147 against 89, got 44 against 28, pain 5.5 against 5.2 a thousand). (4) A188's own pair had read the
+other way (lifted 11 against 2): one pair was noise, as its entry said. The planner as built quiets the play her teaching pays for.
+What stands: the imagined valence foretells reward (r 0.32 at 8 ticks); the actor learns a rewarded act within a thousand ticks;
+the long critic foretells nothing (p1/critic_probe.py: r -0.04 to -0.17 with the next 8 to 128 ticks' reward). What the planner
+needs before it is given weight again: a value of the act's consequence, not of the state's company. Sim pins RE-TAKEN (threaded
+c920042799bde8d9a82451b8, one-thread cd18bf0e0e2271bfd5188433, consts e0ecf068e1a2), the language default kept
+7c54199e3c72cf77d45a8e94. Also read: the generalization harness runs on a plain resume (p1/genrun.py, the day-79 copy, 2,000 ticks:
+its own room and body got 9, reach nearer 17; room b got 5, reach nearer 17; body b got 3, reach nearer 21, lifted 7).
+
 **C266. A copy whose mirrored hand is busy is made by her other hand (2026-10-04).** Life day 78's morning under C264 (6,281 ticks):
 26 arm raises of the child, 3 copies done, 2 refused 'her left hand is busy' (she held a toy in the hand the mirror asked for).
 A parent with a rattle in one hand copies the baby's raised arm with the free one: `_act_copy` falls back to her other hand when the
@@ -4702,5 +4719,6 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | A187 | Speed only: the eye draws decimated copies of the G1's visual meshes (physics untouched); the tick-start snapshot kept raw | 2026-10-04 | 297 -> 251 ms a tick on the day-78 copy; images within 0.03/255; pins unchanged |
 | A188 | The planner's lean weighted by relative value: w = dN / (dN + running mean dN) (vte_adapt) | 2026-10-04 | day-78 pair, 3,000 ticks: weight 0.004 -> 0.39, reward +5.3 -> +17.8, pain 17 -> 7, lifted 2 -> 11; sim pins re-taken |
 | C266 | Her copy falls back to her other hand when the mirrored one is busy | 2026-10-04 | day 78: 2 of her first 5 copies refused for a busy hand; pins unchanged |
+| A189 | A188 switched off in the life (vte_adapt 0): the lean valued the state beside the reward and quieted the rewarded acts | 2026-10-04 | operant: 233 smiles off against 67 on; day-79 copy hits 36 against 8; life day 79 hits 65 against 212; sim pins re-taken |
 | C227 | The pull's holds take a forearm at its top; raised or flung out, that face points away from her and no spot reaches it (day 63's six refusals, the copy's every spot failing the trunk solve). | The spot check solves the top first, then the anchor from her side, keeps the grip per forearm for the hold, and searches the spots twice, tops first; the copy's pull sat the child up. Parent tests green. | 2026-10-02 |
 | C228 | Day 64 had holds of 6 to 12 s at most and no 'held' event: the smile for holding on, set at 10 s, never fired. | HELD_TICKS 20 (3 s), the smile then worn by A2's fall with mastery per toy; lane 10 as it was. | 2026-10-02 |
