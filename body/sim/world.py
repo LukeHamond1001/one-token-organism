@@ -934,7 +934,7 @@ class G1World(SimWorld):
         va = acts.get(VOICE_NAME)
         vdig = None if va is None or int(va) == VOICE_REST else act_digits(va, len(AN.TRACT))
         wo = acts.get(WORDS_NAME)
-        start = self._capture()
+        start = self._capture(fast=True)                                # A187: the tick's start kept raw (canonical only if a fault restores it)
         warn0 = [int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))]
         par = self.parent
         t_par = time.perf_counter()
@@ -1009,13 +1009,13 @@ class G1World(SimWorld):
             if par is not None:
                 par.tick_end()
         except mujoco.FatalError as e:
-            self._restore(start)
+            self._restore(self._from_fast(start))
             raise WorldFault(self.tick, f"MuJoCo stopped: {e}")
         warned = {mujoco.mjtWarning(i).name: int(d.warning[i].number) - warn0[i]
                   for i in range(int(mujoco.mjtWarning.mjNWARNING)) if int(d.warning[i].number) != warn0[i]}
         bad = self._unsound()
         if warned or bad:
-            self._restore(start)
+            self._restore(self._from_fast(start))
             said = f" ({MUJOCO_MESSAGES[-1]})" if MUJOCO_MESSAGES and warned else ""
             raise WorldFault(self.tick, f"MuJoCo's warnings {warned}{said}" if warned else f"the tick's end state: {bad}")
         # the voice: the tract sounds this tick (its act, the cord's cry below it), heard with the parent's voice by day
@@ -1494,11 +1494,22 @@ class G1World(SimWorld):
                 "parent": None if self.parent is None else self.parent.truth()}
 
     # ---------------------------------------------------------------- the state
-    def _capture(self):
+    def _from_fast(self, blob):
+        """a tick-start snapshot (`_capture(fast=True)`) as the state `_restore` takes"""
+        st = pickle.loads(blob)
+        st["s5"] = _canon(st["s5"])
+        if st.get("parent") is not None:
+            st["parent"] = sys.modules[type(self.parent).__module__]._canon(st["parent"])
+        return st
+
+    def _capture(self, fast=False):
+        """the world's whole state. fast (A187, 2026-10-04, speed only): the tick's own start, kept in case the physics faults: the
+        same content pickled raw, made canonical only when a fault restores it (`_from_fast`). The canonical form is the save's (equal
+        states, equal bytes); a snapshot that is thrown away a tick later needs none, and making it cost 39 of a 436 ms tick"""
         m, d = self.m, self.d
         phys = np.zeros(mujoco.mj_stateSize(m, STATE_SPEC))
         mujoco.mj_getState(m, d, phys, STATE_SPEC)
-        return {"version": 1, "nstate": int(phys.size), "physics": phys,
+        st = {"version": 1, "nstate": int(phys.size), "physics": phys,
                 "model": {f: getattr(m, f).copy() for f in MUTABLE_MODEL_FIELDS},
                 "tick": self.tick, "paused": self.paused, "seed": self.seed,
                 "sensed": {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in self._sensed.items()},
@@ -1507,8 +1518,8 @@ class G1World(SimWorld):
                 "grasp_hab": {h: list(v) for h, v in self._grasp_hab.items()},   # A162
                 "dorsal_hab": {h: list(v) for h, v in self._dorsal_hab.items()},  # A171
                 "traction_hab": {a: list(v) for a, v in self._traction_hab.items()},  # A177
-                "parent": None if self.parent is None else self.parent.state(),
-                "s5": _canon({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
+                "parent": None if self.parent is None else (self.parent._state() if fast else self.parent.state()),
+                "s5": ((lambda x: x) if fast else _canon)({"heat": self.heat, "tract": self.tract.state(), "ears": self.ears.state(), "vor_corr": self.vor_corr,
                               "vor_slip": ([] if self._vor_slip is None else list(map(float, self._vor_slip))),        # A174 (empty: none)
                               "vor_turn": ([] if self._vor_turn is None else list(map(float, self._vor_turn))),
                               "observer": self.observer.state(), "sounds": self.sounds.state(),
@@ -1518,6 +1529,7 @@ class G1World(SimWorld):
                               "tidied": [[int(t), k, list(a), list(b)] for t, k, a, b in self.tidied],
                               "lane": None if self.lane is None else self.lane.state()}),
                 "warnings": np.array([int(d.warning[i].number) for i in range(int(mujoco.mjtWarning.mjNWARNING))])}
+        return pickle.dumps(st, protocol=4) if fast else st
 
     def _restore(self, st):
         m, d = self.m, self.d

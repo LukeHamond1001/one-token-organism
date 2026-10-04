@@ -26,6 +26,7 @@ import math
 import sys
 from pathlib import Path
 
+import pathlib
 import mujoco
 import numpy as np
 
@@ -143,6 +144,24 @@ def load_model(xml=XML, extra=None):
         torso.add_site(name=f"ear_{sd}", pos=[EAR_XZ[0], sg * EAR_Y, EAR_XZ[1]], size=[.006, 0, 0], group=5)
     if extra is not None:
         extra(spec)
+    # A187 (2026-10-04, speed only): THE EYE'S OWN MESHES. Unitree's visual meshes carry 630,000 triangles (a finger link 30,000) and
+    # the eyes drew them six times a tick (three views, each with the sun's shadow pass): 119 of a 436 ms tick on the day-78 copy.
+    # Each visual geom (no contact, group 2) whose mesh has a decimated copy in assets_vis (tools/make_vis_meshes.py: 12% of the
+    # faces, quadric decimation, kept in git) is drawn from the copy; the collision geoms keep Unitree's files, so the physics is
+    # the same to the bit
+    vis_dir = pathlib.Path(__file__).parent / "assets" / "unitree_g1" / "assets_vis"
+    if vis_dir.is_dir():
+        made = {}
+        for g in spec.geoms:
+            if g.type == mujoco.mjtGeom.mjGEOM_MESH and int(g.contype) == 0 and int(g.conaffinity) == 0 and g.meshname:
+                src = spec.mesh(g.meshname)
+                f = None if src is None or not src.file else vis_dir / pathlib.Path(src.file).name
+                if f is not None and f.is_file():
+                    if g.meshname not in made:
+                        mv = spec.add_mesh(name=g.meshname + "_vis", file=str(f.resolve()))
+                        mv.scale = src.scale; mv.refpos = src.refpos; mv.refquat = src.refquat
+                        made[g.meshname] = mv.name
+                    g.meshname = made[g.meshname]
     m = spec.compile()
     for j, (arm, fl) in MOTORS.items():                  # the motors as the real ones (A79): rotor inertia and friction per joint
         dof = m.jnt_dofadr[m.joint(j).id]
