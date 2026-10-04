@@ -98,7 +98,7 @@ REPLY_PAUSE_MS = (730.0, 543.6, 50.0, 2974.0)   # her switching pause after the 
                                       # (infant then mother) were 135.4 ms shorter than the infants' (their regression), a
                                       # split the paper gives no mean for, so she keeps the pooled figure (her replies, if
                                       # anything, a little slow)
-COPY_GAP_S = 10.0                     # she copies its visible arm and hand movements (a raise, a wave, a shake, an open hand),
+COPY_GAP_S = 4.0                      # she copies its visible arm and hand movements (a raise, a wave, a shake, an open hand),
                                       # mirrored, at most as often as mothers match their infants' acts, about 6 times a minute
                                       # (Pawlby 1977, as cited by Ray and Heyes 2011 and de Klerk et al. 2019): after each copy
                                       # the next waits an exponential gap of mean 10 s
@@ -109,7 +109,7 @@ COPY_KINDS = ("arm_raise", "wave", "shake", "open_hand")   # the movements she c
 # Her spells of distraction during her own tasks (A52) belong to the day plan's own-tasks episode (P4), from the same sources.
 # The day plan's (P4, body/sim/lang/day.py to come): disclosed here with their sources, read by no code of P3's.
 CALLS_UNANSWERED = (3, 720)           # after 3 calls unanswered in 720 ticks she carries on where the child looks (A13)
-IDLE_EVERY = 40                       # idle (watching): at most one line per 40 ticks (4.10; the episodes' idle lines are P4's)
+IDLE_EVERY = 15                       # idle (watching): at most one line per 40 ticks (4.10; the episodes' idle lines are P4's)
 WIND_DOWN_EVERY = 40                  # winding down: at most one line per 40 ticks, no asks, no new toys (4.7)
 BID_ANSWER = 5                        # away: she answers a bid from afar within 5 ticks ("mama is here.") (4.7, 4.10)
 HALL_CALL_EVERY = 600                 # away: she calls from the hall about every 600 ticks (4.7, 4.10)
