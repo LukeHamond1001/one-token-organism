@@ -512,7 +512,7 @@ SIM_CFG = dict(
     # the born patterns and biases (REFLEX): the spinal pattern generators (their shape and cycles REFLEX's, C54: a movement of 2 ticks'
     # flexion and 3 ticks' extension, the extension returning the flexion's excursion, then a pause, each cycle drawn from the seed,
     # 3.56 +- 1.93 s held to 1.0-8.5 s), the born cry, orienting, the VOR
-    spg=1, cry=1, breath=1, orient=1, vor=1,    # A173: the born breath (the tract's tidal cycle below the gate)
+    spg=1, cry=1, breath=1, orient=1, vor=1, orient_saccade=1,   # A173: the born breath (the tract's tidal cycle below the gate)
     breath_brake=0.30,   # A179: the newborn's expiratory braking, the glottis narrowed this much of its range a tick through the expiration
                          # (the tract's position follows its target with its own lag: the glottis reaches 0.55 of its range by the fifth tick,
                          # just under the cry's 0.6, where its aerodynamics give a soft voicing on the expiration's last ticks, 5 to 7 mPa at

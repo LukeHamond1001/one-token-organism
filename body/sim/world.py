@@ -928,6 +928,9 @@ class G1World(SimWorld):
                 self.stats_tendon = getattr(self, "stats_tendon", 0) + len(js)
         a = acts.get(GAZE_NAME)
         gaze_step = np.zeros(3) if a is None else np.array([GAZE_SETTINGS[j][k] for j, k in enumerate(act_digits(a, len(GAZE_JOINTS)))])
+        cg_ = cord.get(GAZE_NAME)                                         # A186: the born saccade, summed with the gaze's own step (the
+        if cg_ is not None:                                               # brainstem's saccade generator: the colliculus's command and the
+            gaze_step = gaze_step + np.asarray(cg_, float)                # cortex's add)
         va = acts.get(VOICE_NAME)
         vdig = None if va is None or int(va) == VOICE_REST else act_digits(va, len(AN.TRACT))
         wo = acts.get(WORDS_NAME)

@@ -109,6 +109,11 @@ class CordMixin:
             if b_ is not None:
                 out = b_ if out is None else [a_ + c2 for a_, c2 in zip(out, b_)]
                 st["cord_n"]["breath"] = int(st["cord_n"].get("breath", 0)) + 1
+        if e.orient and e.vor and int(self._reflex_const("orient")) and int(self._reflex_const("orient_saccade")):
+            sc_ = self._orient_saccade(e, frame)                           # A186: the born saccade toward a cue, on the eyes
+            if sc_ is not None:
+                out = sc_ if out is None else [a_ + b_ for a_, b_ in zip(out, sc_)]
+                st["cord_n"]["saccade"] = int(st["cord_n"].get("saccade", 0)) + 1
         if st.get("now") is not None:
             st["now"]["cry"] = bool(crying)                                 # (the world's crying flag: the cry's step, never the breath's)
         return out
@@ -310,6 +315,41 @@ class CordMixin:
             out[int(j)] = torch.tensor([g * float(d) * float(sg) * self._setting_sign(k, K) for k in range(K)], device=self.dev)
             pulled = True
         return out if pulled else None
+
+    def _orient_saccade(self, e, frame):
+        """A186 (2026-10-03): THE BORN SACCADE TO A FACE. The superior colliculus turns the eyes to a target in the periphery through the
+        brainstem's saccade generator, where its command and the cortex's meet and add (the colliculus's map of the retina gives the
+        turn its direction and size: Wurtz and Albano 1980), as a limb's reflex and the descending command meet at its motor neurons
+        (A35, A48); and a newborn's eyes follow a face-like pattern by a subcortical road before the cortex guides them (Johnson,
+        Dziurawiec, Ellis and Morton 1991; Morton and Johnson 1991's CONSPEC). For an effector that orients AND carries the VOR (the
+        eyes), on each joint it declares for orienting: the offset from the fovea's centre of the first STANDING cue that fires
+        outside the fovea's zone (a cue that is not itself an onset: the G1's born face cue), times orient_saccade_gain (0.5: a
+        newborn's saccades fall short, a target reached in steps of about half the distance: Aslin and Salapatek 1975), at most
+        orient_saccade_max a tick, times the orienting gain (the amygdala's toward or away, 1 at birth). A cord step: summed with the
+        eyes' own act below the gate (an own step against it cancels it: the cortex can hold its gaze), no efference copy, no
+        credit; the born logit bias (`_orient_bias`) stands beside it as it was, for every cue. -> one step per joint, or None.
+        THE ONSET CUES (a sudden change, a sound's side) KEEP THE BIAS ALONE: tried with them on the dawn-76 copy (a new onset
+        leading), the saccade fired on 87% of ticks, the eye chasing each flicker of its own moving hands (now in view, A185), and
+        her face fell from 19% of ticks in the fovea to 2%; a transient everywhere is no target.
+        WHY: life days 75 and 76, read from the record: with her face's cue off-centre the gaze's next step went toward it on 55
+        to 63% of ticks (yaw; 46 to 52% pitch) and away on 36 to 42%, the cue's distance from the fovea 17.7 degrees before and
+        17.6 after; her face in its fovea on 11% of ticks with the cue on 33%. A bias of log 4 on the choice's logits is drowned by
+        76 days of habit and the movement unit's hold; her face is where her smile, her mouth's words and her eyes' direction are"""
+        cues = [c_ for c_ in self._orient_cues(frame) if (c_[1] or c_[2]) and not c_[0].onset]
+        if not cues:
+            return None
+        c, dy, dp, _ = cues[0]
+        o_ = frame.obs.get(c.obs)
+        g = float(self._orient_gain()); k = float(self._reflex_const("orient_saccade_gain")); mx = float(self._reflex_const("orient_saccade_max"))
+        out = [0.0] * len(e.factors); moved = False
+        for j, (ax, sg) in e.orient.items():
+            d = dy if ax == "yaw" else dp
+            idx = c.yaw if ax == "yaw" else c.pitch
+            if not d or idx is None:
+                continue
+            v = float(d) * k * mx if c.side_only else max(-mx, min(mx, k * float(c.sense) * float(o_[int(idx)])))
+            out[int(j)] = g * float(sg) * v; moved = True
+        return out if moved else None
 
     def _vor_acts(self):
         """the VOR's born constants for the world this tick (Acts.vor), per effector that declares it: its axes, the born gain, the quick

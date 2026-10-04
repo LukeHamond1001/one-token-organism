@@ -2586,3 +2586,64 @@ def test_the_withdrawals_rest():
     print(f"WORLD A178 GREEN: the left arm's withdrawal fires {AN.WITHDRAW_TICKS} ticks on the wrist's pain, then rests {AN.WITHDRAW_REST_TICKS} "
           "pain-free ticks through continued pain, a pain in the rest holding it; the leg never")
 
+
+
+def test_the_born_saccade():
+    """world A186 (orient_saccade; REFLEX off, SIM_CFG on): the eyes' born saccade to a face, at the cord. A face cue 0.30 rad right and
+    0.24 rad up of the fovea's centre: the gaze's cord step is +0.15 yaw (half the offset), +0.12 pitch, 0 vergence; a cue 0.60 rad off
+    is capped at orient_saccade_max; a cue inside the fovea's zone on an axis pulls nothing there; no cue, no step; the onset cues (a
+    sound's side, a sudden change) give none, alone or beside a face; the orienting gain scales it (0.5: half; negative: away); the
+    waist (it orients, no VOR) takes none; the switch off: none; and the world adds the step to the gaze's own"""
+    import types
+    from body.core.cord import CordMixin
+    from body.core.physiology import REFLEX
+    from body.sim.anatomy import SimAnatomy, SIM_CFG, born_table, FOVEA_HALF
+    assert int(SIM_CFG["orient_saccade"]) == 1 and int(REFLEX["orient_saccade"]) == 0
+    anat = SimAnatomy(born_table(), dict(SIM_CFG))
+    gaze = next(e for e in anat.motors if e.name == "gaze"); waist = next(e for e in anat.motors if e.name == "waist")
+    k, mx = float(REFLEX["orient_saccade_gain"]), float(REFLEX["orient_saccade_max"])
+
+    class Body(CordMixin):
+        def __init__(self, gain=1.0):
+            self.anatomy = anat; self.cfg = dict(SIM_CFG); self.ticks = 0; self._g = gain
+        def _orient_gain(self):
+            return self._g
+    def step(obs, body=None, e=gaze, last=None):
+        b = body or Body(); b.ticks += 1
+        if last is not None:
+            b._orient_last = dict(last)
+        f = types.SimpleNamespace(obs={**dict(face_periph=[0.0, 0.0, 0.0], sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0]), **obs})
+        return b._orient_saccade(e, f)
+    s = step(dict(face_periph=[1.0, 0.30, 0.24]))
+    assert s is not None and abs(s[0] - 0.15) < 1e-12 and abs(s[1] - 0.12) < 1e-12 and s[2] == 0.0, s
+    s = step(dict(face_periph=[1.0, -0.60, 0.0]))
+    assert abs(s[0] + mx) < 1e-12 and s[1] == 0.0, s
+    s = step(dict(face_periph=[1.0, 0.5 * FOVEA_HALF, 0.30]))
+    assert s[0] == 0.0 and abs(s[1] - 0.15) < 1e-12, s
+    assert step({}) is None and step(dict(face_periph=[1.0, 0.0, 0.0])) is None
+    assert step(dict(sound_side=[1.0, 1.0])) is None and step(dict(onset_periph=[1.0, -0.40, 0.0])) is None   # the onset cues keep the bias alone
+    s = step(dict(face_periph=[1.0, 0.30, 0.0], onset_periph=[1.0, -0.20, 0.0]), last={"face": True})
+    assert abs(s[0] - 0.15) < 1e-12, s                                     # an onset elsewhere does not take the eyes off her face
+    s = step(dict(face_periph=[1.0, 0.30, 0.0]), body=Body(0.5)); assert abs(s[0] - 0.075) < 1e-12, s
+    s = step(dict(face_periph=[1.0, 0.30, 0.0]), body=Body(-0.5)); assert abs(s[0] + 0.075) < 1e-12, s
+    # the cord composes it for the eyes alone, under its switch
+    b = Body(); b.motor = [dict(cord_n={}, now={}) for _ in anat.motors]; b.ticks = 1
+    f = types.SimpleNamespace(obs=dict(face_periph=[1.0, 0.30, 0.10], sound_side=[0.0, 0.0], onset_periph=[0.0, 0.0, 0.0]))
+    ig = anat.motors.index(gaze) + 1; iw = anat.motors.index(waist) + 1
+    c = b._cord(ig, f, 0.5, None, False)
+    assert c is not None and abs(c[0] - 0.15) < 1e-12 and b.motor[ig - 1]["cord_n"]["saccade"] == 1, c
+    b.cfg["orient_saccade"] = 0
+    assert b._cord(ig, f, 0.5, None, False) is None
+    b.cfg["orient_saccade"] = 1
+    assert waist.orient and not waist.vor
+    # the world adds the cord's step to the gaze's own
+    from body.core.world import Acts
+    w = G1World(seed=1, parent=False)
+    g0 = w.gaze.copy()
+    a = Acts(); a.cord = {W.GAZE_NAME: (0.10, -0.05, 0.0)}
+    w.apply(a)
+    d_ = w.gaze - g0
+    assert abs(d_[0] - 0.10) < 0.03 and abs(d_[1] + 0.05) < 0.03, d_      # (the VOR's small counter-turn rides on it)
+    print(f"world A186: the born saccade: half the cue's offset on each axis, at most {mx} rad a tick, none inside the fovea's zone or with no cue; the onset cues "
+          f"give none; the orienting gain scales it and can turn it away; the eyes alone, under the switch; the world's "
+          f"gaze moved {np.round(d_[:2], 3).tolist()} on a cord step of [0.1, -0.05]")

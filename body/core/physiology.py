@@ -472,6 +472,13 @@ REFLEX = dict(
     # so a cue can turn a held unit toward it (its toward-setting gains log 4 and the held away-setting loses log 4: 2 log 4 past the
     # margin) and a proposal the cortex has learned as strongly can outweigh it; never set on a looking rate
     orient_bias=1.3862943611198906,
+    # A186 (2026-10-03): THE BORN SACCADE (body/core/cord.py _orient_saccade): on the eyes (an effector that orients and carries the VOR) a
+    # cord step toward the leading cue, orient_saccade_gain x its offset from the fovea's centre (0.5: newborns' saccades fall short and
+    # reach a target in steps of about half the distance, Aslin and Salapatek 1975), at most orient_saccade_max rad a tick (0.20: the
+    # gaze's big step on the G1, ours), times the orienting gain. 1 = on; off at birth for every body that does not say so
+    orient_saccade=0,
+    orient_saccade_gain=0.5,
+    orient_saccade_max=0.20,
     # THE VOR (3.7, A23; brainstem, present at birth): the gaze's window counter-turns by the torso gyro's rotation in each camera's frame
     # (the world applies it through the tick at its samples of the gyro, as it applies the servo law); the body's born gain and the
     # quick phase's jump back, a fraction of the axis's reach, handed to the world with the tick's acts (Acts.vor); the flocculus's
