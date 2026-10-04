@@ -649,10 +649,26 @@ class ParentLane:
                 z0 = self.toy_rest_z.get(tt)
                 if z0 is not None and float(p_[2]) > z0 + LIFT_M and tt not in self.lifted:
                     ev.append(("lifted", tt)); self.lifted.add(tt)
+                if z0 is not None and tt in self.lifted:                # C262: the lift's own personal best: a toy raised twice as high
+                    lr_ = getattr(self, "lift_rung", None)              # as the last rung (5 cm: 10, 20, 40 ...) is seen lifted again,
+                    if lr_ is None:                                     # marked with its rung, once a hold
+                        lr_ = {}; self.lift_rung = lr_
+                    nx_ = int(lr_.get(tt, 0)) + 1
+                    if nx_ <= BEST_LEVELS and float(p_[2]) > z0 + LIFT_M * 2 ** nx_:
+                        while nx_ < BEST_LEVELS and float(p_[2]) > z0 + LIFT_M * 2 ** (nx_ + 1):
+                            nx_ += 1
+                        lr_[tt] = nx_
+                        if ("lifted", tt) not in ev:
+                            ev.append(("lifted", tt))
+                        if not hasattr(self, "_lv") or self._lv is None:
+                            self._lv = {}
+                        self._lv[("lifted", tt)] = nx_
                 if sp > SHAKE_MPS and last_sp > SHAKE_MPS and t - self.last_shook.get(tt, -10 ** 9) >= SHAKE_GAP:
                     ev.append(("shook", tt)); self.last_shook[tt] = t
             else:
                 self.lifted.discard(tt)
+                if getattr(self, "lift_rung", None):
+                    self.lift_rung.pop(tt, None)
                 if tt not in her and sp < REST_MPS:
                     self.toy_rest_z[tt] = float(p_[2])
 
