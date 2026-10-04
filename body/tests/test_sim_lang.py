@@ -7355,3 +7355,48 @@ if __name__ == "__main__":
             print("ERROR", t.__name__, ":", type(e).__name__, str(e)[:300])
     print(f"{len(TESTS) - failed}/{len(TESTS)} passed in {time.time() - t0:.0f}s")
     sys.exit(1 if failed else 0)
+
+
+def test_her_copy_waits_for_an_ask():
+    """C264: (i) her copying's readers: the lane names the hand that shook a toy ('shake', the side) and the hand that lifted one
+    ('arm_raise', the side) beside 'shook' and 'lifted' (lane._toys, replayed here on the pure rule); (ii) a copy due while an ask is
+    pending (her eyes on the child) is kept and made when the ask ends, if that is within COPY_LATE ticks of its time; later it is
+    dropped and counted; with no ask it is made on its tick, as before"""
+    import types
+    import numpy as np
+    from body.sim.lang import conduct as LC, consts as K
+    def body(eyes):
+        made = []
+        c = types.SimpleNamespace(imperfect=True, copy_next=0, copies=[], imp=np.random.default_rng(0), eyes_on_child=eyes, trial=None,
+                                  _request=lambda a, t, p: made.append((t, a.kind, a.target)))
+        return c, made
+    P_ = lambda ev=(): types.SimpleNamespace(present=True, child_in_view=True, events=tuple(ev))
+    out = types.SimpleNamespace(copy=())
+    # no ask: made on its tick, mirrored
+    c, made = body(False)
+    LC.Conduct._copying(c, 0, P_((("shake", "left"),)), out)
+    due = c.copies[0][0]
+    assert K.COPY_DELAY[0] <= due <= K.COPY_DELAY[1] and c.copies[0][1:] == ("shake", "right"), c.copies
+    for t in range(1, due + 1):
+        LC.Conduct._copying(c, t, P_(), out)
+    assert made == [(due, "copy", "shake:right")], made
+    # an ask pending past its time, ended within COPY_LATE: made then
+    c, made = body(True)
+    LC.Conduct._copying(c, 0, P_((("arm_raise", "right"),)), out)
+    due = c.copies[0][0]
+    for t in range(1, due + K.COPY_LATE - 1):
+        LC.Conduct._copying(c, t, P_(), out)
+    assert not made and len(c.copies) == 1
+    c.eyes_on_child = False
+    LC.Conduct._copying(c, due + K.COPY_LATE - 1, P_(), out)
+    assert made == [(due + K.COPY_LATE - 1, "copy", "arm_raise:left")], made
+    # an ask that outlasts COPY_LATE: dropped, counted
+    c, made = body(True)
+    LC.Conduct._copying(c, 0, P_((("shake", "left"),)), out)
+    due = c.copies[0][0]
+    for t in range(1, due + K.COPY_LATE + 2):
+        LC.Conduct._copying(c, t, P_(), out)
+    c.eyes_on_child = False
+    LC.Conduct._copying(c, due + K.COPY_LATE + 2, P_(), out)
+    assert not made and not c.copies and c.stats_copy_dropped == 1, (made, c.copies)
+    print(f"C264: a copy with no ask made on its tick, mirrored; one held by an ask made when it ends within {K.COPY_LATE} ticks of its time; a later one dropped and counted")

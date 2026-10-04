@@ -1758,6 +1758,12 @@ class Conduct:
         due = [c for c in self.copies if c[0] <= t]
         self.copies = [c for c in self.copies if c[0] > t]
         if self.eyes_on_child or self.trial is not None:
+            # C264 (2026-10-03): a copy due while an ask is pending waits for it, as long as it would still come within
+            # COPY_LATE ticks of its time (3 s after the movement at the latest: the window in which an infant takes an event
+            # for its own act's effect, Watson 1972); later than that it is dropped as before. On the day-77 copy 21 movements
+            # she could copy gave 1 copy: her asks (16 lean-ins) held her hands still through the others' moments
+            self.copies += [c for c in due if t - c[0] < K.COPY_LATE]
+            self.stats_copy_dropped = int(getattr(self, "stats_copy_dropped", 0)) + sum(1 for c in due if t - c[0] >= K.COPY_LATE)
             return
         acts = tuple(Act("copy", f"{kind}:{side}") for _t, kind, side in due)
         for a in acts:

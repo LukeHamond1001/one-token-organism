@@ -38,7 +38,8 @@ never its fovea's window):
                   which are its inside), distress (lying
                   face down DISTRESS_TICKS running, A13's first sign). Not made
                   here: hit_her and reflex_hit (A25c: her body passes no contact to it), and the arm and hand movements her
-                  copying reads (arm_raise, wave, shake, open_hand: A52's copying waits for their readers)
+                  copying reads but two: wave and open_hand wait for their readers; shake (the hand that shook a toy) and arm_raise (the hand that
+                  lifted one) are read since C264
   child_sounding  its tract sounded this tick (the transcriber's own reading replaces it)
 Every threshold here is ours unless a source is named; each is disclosed.
 
@@ -649,6 +650,9 @@ class ParentLane:
                 z0 = self.toy_rest_z.get(tt)
                 if z0 is not None and float(p_[2]) > z0 + LIFT_M and tt not in self.lifted:
                     ev.append(("lifted", tt)); self.lifted.add(tt)
+                    for s_ in sorted((touch or {}).get(tt, {}).get("child", ())):   # C264: a toy lifted is its arm raised, as she sees it
+                        if s_ in ("left", "right") and ("arm_raise", s_) not in ev:   # (A52's reader: 'arm_raise', the side as object)
+                            ev.append(("arm_raise", s_))
                 if z0 is not None and tt in self.lifted:                # C262: the lift's own personal best: a toy raised twice as high
                     lr_ = getattr(self, "lift_rung", None)              # as the last rung (5 cm: 10, 20, 40 ...) is seen lifted again,
                     if lr_ is None:                                     # marked with its rung, once a hold
@@ -665,6 +669,9 @@ class ParentLane:
                         self._lv[("lifted", tt)] = nx_
                 if sp > SHAKE_MPS and last_sp > SHAKE_MPS and t - self.last_shook.get(tt, -10 ** 9) >= SHAKE_GAP:
                     ev.append(("shook", tt)); self.last_shook[tt] = t
+                    for s_ in sorted((touch or {}).get(tt, {}).get("child", ())):   # C264: the hand that shook it, for her copying (A52's
+                        if s_ in ("left", "right") and ("shake", s_) not in ev:       # reader: 'shake', the side as object)
+                            ev.append(("shake", s_))
             else:
                 self.lifted.discard(tt)
                 if getattr(self, "lift_rung", None):

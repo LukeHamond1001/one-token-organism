@@ -103,6 +103,8 @@ COPY_GAP_S = 10.0                     # she copies its visible arm and hand move
                                       # (Pawlby 1977, as cited by Ray and Heyes 2011 and de Klerk et al. 2019): after each copy
                                       # the next waits an exponential gap of mean 10 s
 COPY_DELAY = (7, 13)                  # within 1-2 s of the movement (4.10): uniform in 7..13 ticks
+COPY_LATE = 8                         # C264: a copy held back by a pending ask is still made up to this many ticks past its time (with
+                                      # COPY_DELAY's 7 to 13: at most about 3 s after the movement; Watson 1972's contingency window); ours
 COPY_KINDS = ("arm_raise", "wave", "shake", "open_hand")   # the movements she copies (percept events, the side as object)
 # Her spells of distraction during her own tasks (A52) belong to the day plan's own-tasks episode (P4), from the same sources.
 # The day plan's (P4, body/sim/lang/day.py to come): disclosed here with their sources, read by no code of P3's.
