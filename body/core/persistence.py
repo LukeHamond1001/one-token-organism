@@ -177,6 +177,25 @@ class PersistenceMixin:
                     pad_ = list(t_.shape); pad_[dim_] = int(ref_.shape[dim_] - t_.shape[dim_])
                     blob["organs"][k_] = torch.cat([t_, torch.zeros(pad_, dtype=t_.dtype, device=t_.device)], dim_)
                     widened_.append(k_)
+            # A191: a line that joined the amygdala's low road after the save (its inputs: the stream, the lines, the level LAST):
+            # the new input is born with no evidence, placed before the level in A, b, W and the trace, and after the others in the
+            # running mean and variance (which hold no level); its variance 0 leaves it out of the solve until it has varied
+            A_ = blob["organs"].get("amyg.A")
+            if A_ is not None and A_.shape[0] < am_.A.shape[0]:
+                n0_ = int(A_.shape[0]); k_new = int(am_.A.shape[0]) - n0_
+                def _ins(t_, dim_):
+                    idx_ = [slice(None)] * t_.dim(); idx_[dim_] = slice(0, n0_ - 1); a_ = t_[tuple(idx_)]
+                    idx_[dim_] = slice(n0_ - 1, n0_); l_ = t_[tuple(idx_)]
+                    pad_ = list(t_.shape); pad_[dim_] = k_new
+                    return torch.cat([a_, torch.zeros(pad_, dtype=t_.dtype, device=t_.device), l_], dim_)
+                blob["organs"]["amyg.A"] = _ins(_ins(A_, 0), 1)
+                for kk_ in ("amyg.b", "amyg.W", "amyg.e"):
+                    if kk_ in blob["organs"]:
+                        blob["organs"][kk_] = _ins(blob["organs"][kk_], 0)
+                for kk_ in ("amyg.mu", "amyg.var"):
+                    if kk_ in blob["organs"]:
+                        t_ = blob["organs"][kk_]; blob["organs"][kk_] = torch.cat([t_, torch.zeros(k_new, dtype=t_.dtype, device=t_.device)])
+                print(f"load: the amygdala's inputs widened from {n0_} to {n0_ + k_new} for a line that joined its low road after the save (born with no evidence)", flush=True)
             if widened_:
                 print(f"load: the amygdala's heads widened to {len(am_.heads)} for a reward source that joined after the save (born at zero):", widened_, flush=True)
         vf_saved = {k_: blob["organs"].pop(k_) for k_ in ("vf_A", "vf_b", "vf_mu", "vf_var", "vf_n") if k_ in blob["organs"]}     # the fast head's evidence, sized by the life below

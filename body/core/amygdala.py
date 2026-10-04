@@ -67,7 +67,7 @@ def amygdala_spec(anatomy, cfg):
     heads = [(s.name, float(sg)) for s in anatomy.rewards if s.amyg for sg in s.signs]
     if not heads:
         raise ValueError("the amygdala is switched on (amyg 1) and no reward source of the anatomy reaches it (RewardSource.amyg)")
-    return dict(events=len(anatomy.events or ()), heads=heads, reach=int(c.get("tag_reach", FRAMES["tag_reach"])))
+    return dict(events=len(anatomy.events or ()) + len(getattr(anatomy, "amyg_events", None) or ()), heads=heads, reach=int(c.get("tag_reach", FRAMES["tag_reach"])))
 
 
 class Amygdala(nn.Module):
@@ -202,10 +202,26 @@ class AmygdalaMixin:
             raise ValueError(f"Life: the organs' amygdala ({None if org is None else (org.n_in, org.heads, org.reach)}) is not the one the anatomy "
                              f"declares ({want}; built by Organs(..., amygdala=amygdala_spec(anatomy, cfg)))")
 
+    def _amyg_lines(self, frame=None):
+        """A191: the lines only the amygdala reads (`Anatomy.amyg_events`), read as the shared ones are (`_event_lines`): once a tick
+        from the tick's frame; with no frame the tick last read; () for a body that declares none"""
+        ev = getattr(self.anatomy, "amyg_events", None)
+        if not ev:
+            return ()
+        now_ = getattr(self, "_amyg_lines_now", None)
+        if frame is None:
+            return now_[1] if now_ is not None else tuple(0.0 for _ in ev)
+        if now_ is not None and now_[0] == self.ticks:
+            return now_[1]
+        from .frames import read_event_lines
+        out = read_event_lines(ev, frame.obs)
+        self._amyg_lines_now = (self.ticks, out)
+        return out
+
     def _amyg_input(self, C1, frame):
         """x = [C / sqrt(d), the event lines, 1] (float64, detached): the high road, the low road, the level"""
         d = float(self.m.d)
-        ev = self._event_lines(frame)
+        ev = tuple(self._event_lines(frame)) + tuple(self._amyg_lines(frame))     # A191: and the lines only it reads, after the shared ones
         return torch.cat([C1.detach().to("cpu", torch.float64) / math.sqrt(d), torch.tensor(ev, dtype=torch.float64),
                           torch.ones(1, dtype=torch.float64)])
 

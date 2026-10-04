@@ -483,6 +483,13 @@ class SimAnatomy(LanguageAnatomy):
         self.mossy = tuple(mossy)
         self.cerebellar = Cerebellar(off, half, joints=list(CEREB_JOINTS), vor=["yaw", "pitch"])
         self.events = event_lines()                                    # R7a: the born event lines (the module's doc)
+        # A191 (2026-10-04): THE AMYGDALA'S OWN LOW ROAD FOR STRAIN. A line only the amygdala reads (the nociceptive road to the
+        # central amygdala through the parabrachial nucleus: Bernard and Besson 1990), firing while any gear is loaded over
+        # STRAIN_LINE of its pain line (body/sim/world.py; the frame's "strain"): the warning under the pain line. The amygdala's pain
+        # head forecast the next 8 ticks' pain at r 0.10 (reliability 0.16) from the stream and the 13 lines, of which "pain" fires
+        # only once it hurts; strain stands at 0.82 of the pain line a tick before a pain onset and 0.66 four ticks before
+        # (p1/strain_probe.py). The striatal expansion does not read it (its born rows are laid by the 13)
+        self.amyg_events = [EventLine("strain", "strain", fired=(0,))]
         self.proprio = ("body",)                                       # A149: the body channel is the proprioceptive one (the limbs' and the gaze's own sense)
         self.heading = Heading("imu_torso", acc=(0, 1, 2), gyro=(3, 4, 5), dt=0.15)   # R7f: the heading from the torso's unit (the module's doc)
 

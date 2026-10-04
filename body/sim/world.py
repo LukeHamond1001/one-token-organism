@@ -115,6 +115,9 @@ STEPS_PER_TICK = 75             # 2 ms physics steps, the model's option timeste
 SETTINGS_PER_JOINT = 5          # an act's setting per joint: -big, -small, 0, +small, +big (3.5; ours)
 STEP_SMALL, STEP_BIG = 0.09, 0.27                 # rad a tick, the trunk, arms, hands and legs (3.5; ours)
 SETTINGS = (-STEP_BIG, -STEP_SMALL, 0.0, STEP_SMALL, STEP_BIG)
+STRAIN_LINE = 0.7               # A191: a gear's load over this share of its pain line is strain (the high-threshold mechanoreceptor's and
+                                # the tendon organ's warning under the pain line; ours, measured on the day-82 copy: pain follows within
+                                # 4 ticks in 13.6% of such ticks against 1.4% of the others)
 SERVO_ERR_AT_LIMIT = 0.25       # rad of error at which a servo reaches its torque limit (3.3; anatomy, ours)
 SERVO_ERR_AT_LIMIT_HAND = 0.1   # the Dex3's joints reach theirs at 0.1 rad (3.3; anatomy, ours)
 SERVO_DAMP_S = 0.04             # damping = 0.04 s x stiffness (3.3; anatomy, ours)
@@ -786,7 +789,8 @@ class G1World(SimWorld):
                                 np.stack([s["obs_j"], s["obs_j_on"]], 1).reshape(-1),
                                 np.stack([s["obs_b"], s["obs_b_on"]], 1).reshape(-1)])
         pain = np.concatenate([(s["bd_peak"] > self.tau_hold).astype(np.float64), [float(s["base_peak"] > self.f_pain)]])
-        obs = {"body": body, "touch": touch, "pain": pain, "vestibular": s["vestibular"].copy(), "imu_torso": s["imu_torso"].copy()}
+        strain = np.array([float((s["bd_peak"] / self.tau_hold).max() > STRAIN_LINE)])   # A191: a gear loaded near its pain line
+        obs = {"body": body, "touch": touch, "pain": pain, "strain": strain, "vestibular": s["vestibular"].copy(), "imu_torso": s["imu_torso"].copy()}
         face = 0.0
         if not self.night:
             ln = self.lane

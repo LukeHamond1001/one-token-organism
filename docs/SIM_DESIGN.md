@@ -3707,6 +3707,27 @@ THREE DAYS UNDER THE FACE (days 58 to 60, the first with the reward's carrier de
 
 **C227. Where she takes a forearm depends on how it lies: the pull's spots searched for the tops first, then for either grip** (the lead, 2026-10-02 13:25; the teacher's method, branch c227; lands at the next 1,000-tick save). Day 63's six pull-to-sit offers (C224) were all refused, two 'no spot she can kneel at lets her do it (pull): her reach', and the day-64 copy showed why: the pull's and the gather's holds take the forearm at its TOP (FOREARM_HOLD along the elbow link's +z), and on a child whose arm is raised or flung out that face points away from her, so no trunk of hers reaches her hand onto it from any spot (every spot at 0.34 to 0.95 m from the forearms failed the trunk solve), where the same pull had sat the child up at 06:45 with its arms low. The spot check (`_pull_pairing`, `_gather_reach`) now asks, per forearm, whether a trunk of hers reaches the top from the spot, else the anchor from her side (`_anchor`, the general grip of A25: a point on the link's surface facing her shoulder), and keeps the grip each forearm solved with (`_pull_grips`, by link) for the hold she then makes (`_forearm_grip`); the spots are searched twice (`_act_pull_to_sit`): for the tops alone first, as A163 and A165 built it (the rig's gather engages a top the step-10 solve calls unreachable, and reached 32 cm short of an anchor the solve approved when the spot was chosen by either grip at once), then, when no spot passes, for either grip. On the day-64 copy at tick 3,090,088 (her hands free, the child supine at the mat's middle): 'sat up with its own flexion (A9)', both holds engaged. Parent 7, 7b, 9, 30, 32, 33 green. No new constant; the sim pins untouched (her method).
 
+**A191. The amygdala's own low road for strain (2026-10-04).** The owner's word: find the architecture; keep going. After A189 the
+value the imagination reads was looked at head by head (p1/amyg_probe.py, the mid-day-80 copy): the amygdala's reliabilities face +
+0.19, face - 0.07, pain 0.16, novelty 0.51, competence 0.90; its anticipated bad against the next 8 ticks' pain r 0.10. A planner on
+that value seeks stimulation and does not see pain coming: A190 (an act weighed against not doing it; built on its own branch, not
+landed) got more toys in three pairs of three (18 against 8, 6 against 3, 10 against 7) and more pain in three of three (12 against
+4, 11 against 8, 30 against 21). The pain is the wrists' (their gears loaded over the holding torque), and the low road's "pain" line
+fires only once it hurts. Measured on the day-82 copy (p1/strain_probe.py, 3,000 ticks, 20 pain onsets): the largest gear load over
+its pain line stands at 0.82 a tick before an onset, 0.78 two before, 0.66 four before (0.54 on average); while it is over 0.7 and
+nothing hurts yet, pain follows within 4 ticks in 13.6% of ticks against 1.4% of the others. So: the frame carries "strain" (1 while
+any gear is loaded over STRAIN_LINE 0.7 of its pain line; body/sim/world.py), and the anatomy declares a line only the amygdala
+reads (`Anatomy.amyg_events`; body/core/amygdala.py `_amyg_lines`), after the 13 shared lines and before the level: the warning under
+the pain line (high-threshold mechanoreceptors and the tendon organs fire under the nociceptive threshold; the nociceptive road to
+the central amygdala through the parabrachial nucleus: Bernard and Besson 1990). The striatal expansion does not read it (its born
+rows are laid by the 13). A saved amygdala is widened at the load (body/core/persistence.py): the new input before the level in A,
+b, W and the trace, after the others in the running mean and variance, born with no evidence (526 -> 527 for the G1). Pair on the
+day-82 copy (4,000 ticks each, the second half read): the pain head's weight on the line 0.091; anticipated bad against the pain
+of the next 8, 16 and 64 ticks r 0.14, 0.16, 0.25 with the line and 0.06, 0.08, 0.17 without. STRAIN_LINE is ours (measured as
+above). test_amygdala's law, pairing and language tests green. Sim pins RE-TAKEN (threaded df712925e5aa487456b9f2f7, one-thread
+f3ec41f8df7b5e9ab1d6714a, consts e0ecf068e1a2), the language default kept 7c54199e3c72cf77d45a8e94. The rulers from here: the pain
+head's reliability on the board, pain a thousand ticks, and A190's pairs run again over it.
+
 **A189. A188 is switched off in the life (vte_adapt 0 in SIM_CFG; the code kept, born off) (2026-10-04).** Four readings after A188's
 landing at dawn 79. (1) The reward path's test (p1/operant2.py, the day-78 copy, 6,000 ticks a run, her smile only for one shoulder's
 flexion crossing its own line): with A188 off, the rewarded right arm's crossings rose from 24 to about 42 a thousand ticks within
@@ -4720,5 +4741,6 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | A188 | The planner's lean weighted by relative value: w = dN / (dN + running mean dN) (vte_adapt) | 2026-10-04 | day-78 pair, 3,000 ticks: weight 0.004 -> 0.39, reward +5.3 -> +17.8, pain 17 -> 7, lifted 2 -> 11; sim pins re-taken |
 | C266 | Her copy falls back to her other hand when the mirrored one is busy | 2026-10-04 | day 78: 2 of her first 5 copies refused for a busy hand; pins unchanged |
 | A189 | A188 switched off in the life (vte_adapt 0): the lean valued the state beside the reward and quieted the rewarded acts | 2026-10-04 | operant: 233 smiles off against 67 on; day-79 copy hits 36 against 8; life day 79 hits 65 against 212; sim pins re-taken |
+| A191 | A strain line on the amygdala's low road (a gear over 0.7 of its pain line), read only by the amygdala; the saved amygdala widened by one input | 2026-10-04 | day-82 copy: anticipated bad against the next 8 ticks' pain r 0.14 with, 0.06 without; sim pins re-taken |
 | C227 | The pull's holds take a forearm at its top; raised or flung out, that face points away from her and no spot reaches it (day 63's six refusals, the copy's every spot failing the trunk solve). | The spot check solves the top first, then the anchor from her side, keeps the grip per forearm for the hold, and searches the spots twice, tops first; the copy's pull sat the child up. Parent tests green. | 2026-10-02 |
 | C228 | Day 64 had holds of 6 to 12 s at most and no 'held' event: the smile for holding on, set at 10 s, never fired. | HELD_TICKS 20 (3 s), the smile then worn by A2's fall with mastery per toy; lane 10 as it was. | 2026-10-02 |
