@@ -6738,15 +6738,18 @@ class ParentMotion:
         """her own arm or hand makes the movement the child just made, mirrored as she faces it (P3's A52; target 'kind:side', the
         side hers): 'arm_raise' her arm raised above her shoulder and lowered, 'wave' a wave of that hand, 'shake' that hand
         shaken before her (a toy in it shaken for its sound), 'open_hand' that hand opened out before her, palm up. It asks nothing
-        and earns nothing (her conduct's); a busy hand refuses it"""
+        and earns nothing (her conduct's); a busy hand hands the copy to her other one (C266), both busy refuse it"""
         kind, _, side = str(t or "").partition(":")
         sd = {"left": "L", "right": "R", "L": "L", "R": "R"}.get(side)
         if sd is None or kind not in ("arm_raise", "wave", "shake", "open_hand"):
             raise Refuse(f"no such movement to copy: {t}")
         if kind == "shake" and self.holding[sd] is not None:
             return self._shake_own(sd)
-        sd = self._side_free(sd)
-        sg = kin.side_sign(sd)
+        try:
+            sd = self._side_free(sd)
+        except Refuse:                                                      # C266 (2026-10-03): the mirrored hand busy (a toy in it, a hold on):
+            sd = self._side_free("R" if sd == "L" else "L")                 # her other hand makes the copy (day 78: 2 of her first 5 copies
+        sg = kin.side_sign(sd)                                              # refused 'her left hand is busy'); both busy: refused as before
         if kind == "wave":
             return self._act_wave(a, None, side=sd)
         if kind == "arm_raise":
