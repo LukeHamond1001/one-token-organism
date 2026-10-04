@@ -883,20 +883,6 @@ class SleepMixin:
         dN = abs(N1 - N2)
         cap = self.anatomy.rewards[0].clip
         w = min(1.0, dN / float(cap if cap else 2.0))
-        if int(self.cfg.get("vte_adapt", 0)):
-            # A188 (2026-10-04): THE DIFFERENCE IS READ AGAINST ITS OWN USUAL SIZE. Measured on the day-78 copy (p1/value_probe.py, 342
-            # imaginings): the imagined valence foretells the reward that follows (r 0.32 with the next 8 ticks' reward, 0.24 with the
-            # next 32), so the comparison has a signal; but two imagined futures differ by 0.008 on average (0.05 at most) and the lean
-            # was that over her face's full size, 2: a weight of 0.004, and the planner moved nothing. Value is coded relative to the
-            # values on offer, not on an absolute scale (dopamine's adaptive coding: Tobler, Fiorillo and Schultz 2005; divisive
-            # normalization of value: Louie, Khaw and Glimcher 2013): w = dN / (dN + the running mean of dN), a half at the usual
-            # difference, toward 1 for a difference far above it, toward 0 for one far under. No new constant: the mean runs at the
-            # imagined future's own fading rate (1/GOAL_TAU a comparison)
-            bar = float(getattr(self, "_vte_dn_bar", 0.0)); nb = int(getattr(self, "_vte_dn_n", 0)) + 1
-            g_ = max(1.0 / nb, 1.0 / float(GOAL_TAU))
-            bar = bar + g_ * (dN - bar)
-            self._vte_dn_bar = bar; self._vte_dn_n = nb
-            w = (dN / (dN + bar)) if (dN + bar) > 0.0 else 0.0
         lean = {}
         if w > 0.0 and best["macts"] and other["macts"]:
             for e in best["mot"]:
