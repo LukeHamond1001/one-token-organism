@@ -336,7 +336,8 @@ def main():
                        vte=int(getattr(L, "_vte_n", 0)), vte_alt=int(getattr(L, "_vte_alt", 0)), vte_lean=int(getattr(L, "_vte_leans", 0)),   # A182: the futures compared so far, the alternative's wins, the leans left
                        ends=len(getattr(L, "_rec_ends", None) or []),                # the frames' event ends so far this day (R7f's WM latch, A138's trigger)
                        imag_N=(round(float(L._imag_N), 3) if getattr(L, "_imag_N", None) is not None else None),   # the imagined future's valence, fading
-                       events=[e[0] for e in ls.get("events", ())], ev_lv=(ls.get("levels") or None),   # (C262: a personal best's rung, [kind, object, rung]) face_test=bool(ls.get("face_test")),
+                       events=[e[0] for e in ls.get("events", ())], ev_lv=(ls.get("levels") or None),   # (C262: a personal best's rung, [kind, object, rung])
+                       face_test=bool(ls.get("face_test")),
                        seen_by_child=bool(ls.get("seen_by_child")),
                        gates=[round(float((st.get("now") or {}).get("p_act", 0.0)), 3) for st in L.motor],   # each effector's p_act (her rulers'
                                                                                                              # partner: how much it acts)
