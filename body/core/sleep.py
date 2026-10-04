@@ -705,6 +705,9 @@ class SleepMixin:
         `e.propose`) read out joint by joint at its earned sharpness and drawn at the REM temperature (rt 0: its best guess), as the
         waking choice draws it but with no gate, no striatal bias and no orienting bias: the motor cortex active under REM's atonia
         (Jouvet 1965: the commands made, the muscles still; the twitches that leak through are R8c's). Its rest when it proposes nothing"""
+        f_ = getattr(self, "_vte_force", None)                             # A190: a deliberation's own act for this effector (held through
+        if f_ and e.name in f_:                                            # the imagined window, a movement unit)
+            return int(f_[e.name])
         m = self.m; tab = m.get_submodule(e.organ)
         j = [e_.name for e_ in self.anatomy.motors].index(e.name)
         with torch.no_grad():
@@ -873,6 +876,8 @@ class SleepMixin:
         hippocampus sweeps ahead along each in turn and its striatum values the outcomes, most when the choice is new and hard
         (Tolman 1939; Johnson and Redish 2007; Redish 2016); choosing by imagined outcomes with a learned model and a learned
         value is planning (Sutton 1990's Dyna; Daw, Niv and Dayan 2005's model-based controller). Body-general: no effector is named"""
+        if int(self.cfg.get("vte_act", 0)):
+            return self._vte_act_think(rows, bands0, T0, L, ro1)
         self._vte_busy = True
         try:
             ro2 = self._rollout(rows, bands0, T0, L, self._rem_temperature(), int(self.cfg.get("rem_limbs", 0)))
@@ -894,6 +899,52 @@ class SleepMixin:
         self._vte_alt = int(getattr(self, "_vte_alt", 0)) + int(N2 > N1)   # won, those that left a lean, and the last difference
         self._vte_leans = int(getattr(self, "_vte_leans", 0)) + int(bool(lean))
         self._vte_dn = float(dN)
+
+    def _vte_act_think(self, rows, bands0, T0, L, ro1):
+        """A190 (2026-10-04, vte_act): AN ACT WEIGHED AGAINST NOT DOING IT. A182 weighed two futures drawn alike: they differ in every
+        effector's draws and in the imagined words at once, so their difference says little of any one act, and read at relative
+        size (A188) the lean came to value the state that stands beside reward: the child held the rewarded posture and made the
+        rewarded act a third as often (A189). Measured on the day-79 copy (p1/conting.py): with one arm's imagined act FORCED and
+        everything else at its best guess, the imagined valence of flexing the left shoulder stood above resting it in 94% of 32
+        moments (t 8.5): the life's own lesson (its left hand lifts the toys she smiles at) is in the model as the value of an ACT;
+        a link taught for 3,000 ticks was not (t -0.5): the cortex learns over days, the actor in minutes. So the deliberation takes
+        ONE effector in turn (each in its turn: body-general, no effector named), takes the act the present course proposes for it
+        (ro1's first imagined act; its rest: nothing to weigh), and runs the stream free twice at its best guess (no draws: the
+        difference is the act's alone), the act held through the imagined window as a movement unit against the effector at rest.
+        The advantage adv = N(act) - N(rest) is read against its own usual size with a threshold there: w = max(0, 1 - mean|adv| /
+        |adv|), nothing for a usual difference, a half at twice the usual, toward 1 far above (acting on a difference only where it
+        stands out of its noise; the mean at 1/GOAL_TAU a deliberation). The lean is toward the act when adv > 0 and toward the
+        rest when adv < 0 (`_vte_term`, fading with GOAL_TAU). Choosing among acts by their imagined outcomes under a learned model
+        and value: the model-based controller (Daw, Niv and Dayan 2005), one option against its default as deliberation takes
+        them serially (Redish 2016). No new constant"""
+        mot = list(ro1["mot"])
+        if not mot or not ro1["macts"]:
+            self._vte = None
+            return
+        k_ = int(getattr(self, "_vte_turn", 0)) % len(mot); self._vte_turn = k_ + 1
+        e = mot[k_]
+        a_c = int(ro1["macts"][e.name][T0]); rest = int(e.rest_id)
+        self._vte_n = int(getattr(self, "_vte_n", 0)) + 1
+        if a_c == rest:
+            self._vte = None; self._vte_dn = 0.0
+            return
+        Ns = []
+        self._vte_busy = True
+        try:
+            for a_ in (a_c, rest):
+                self._vte_force = {e.name: int(a_)}
+                Ns.append(self._imag_valence(self._rollout(rows, bands0, T0, L, 0.0, 1), T0, L))
+        finally:
+            self._vte_force = None; self._vte_busy = False
+        adv = float(Ns[0] - Ns[1]); mag = abs(adv)
+        bar = float(getattr(self, "_vte_dn_bar", 0.0)); nb = int(getattr(self, "_vte_dn_n", 0)) + 1
+        bar = bar + max(1.0 / nb, 1.0 / float(GOAL_TAU)) * (mag - bar)
+        self._vte_dn_bar = bar; self._vte_dn_n = nb
+        w = max(0.0, 1.0 - bar / mag) if mag > 0.0 else 0.0
+        self._vte = {e.name: [a_c if adv > 0.0 else rest, float(w)]} if w > 0.0 else None
+        self._vte_alt = int(getattr(self, "_vte_alt", 0)) + int(adv > 0.0)
+        self._vte_leans = int(getattr(self, "_vte_leans", 0)) + int(w > 0.0)
+        self._vte_dn = mag
 
     def _vte_term(self, e):
         """A182: the lean in motor effector e's proposal: VTE_SCALE x w x the embedding of the better imagined future's first act (its

@@ -538,6 +538,7 @@ FRAMES = dict(
     imagine_key=0,                # A138 (the sim's brain sprint): waking imagination at an event's end (sleep.py _imagine): the imagined
     imagine_pav=0,                # frames' direction in the recall key; the amygdala's forecast on them in the gates' approach-and-avoid bias
                                   # new pays NOVELTY_GAIN; a switch of the body, off at birth, measured on a day copy
+    vte_act=0,                    # A190 (2026-10-04): the deliberation weighs one effector's proposed act against its rest (sleep.py _vte_act_think)
     imagine_vte=0,                # A182 (2026-10-03): vicarious trial and error (sleep.py _vte_think): at each waking imagining a second future
                                   # from the same moment, the amygdala's forecast weighing the two, the body leaning toward the better one's
                                   # first acts (timing._timing_propose's _vte_term); needs the amygdala and rem_limbs; off at birth

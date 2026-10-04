@@ -3707,6 +3707,23 @@ THREE DAYS UNDER THE FACE (days 58 to 60, the first with the reward's carrier de
 
 **C227. Where she takes a forearm depends on how it lies: the pull's spots searched for the tops first, then for either grip** (the lead, 2026-10-02 13:25; the teacher's method, branch c227; lands at the next 1,000-tick save). Day 63's six pull-to-sit offers (C224) were all refused, two 'no spot she can kneel at lets her do it (pull): her reach', and the day-64 copy showed why: the pull's and the gather's holds take the forearm at its TOP (FOREARM_HOLD along the elbow link's +z), and on a child whose arm is raised or flung out that face points away from her, so no trunk of hers reaches her hand onto it from any spot (every spot at 0.34 to 0.95 m from the forearms failed the trunk solve), where the same pull had sat the child up at 06:45 with its arms low. The spot check (`_pull_pairing`, `_gather_reach`) now asks, per forearm, whether a trunk of hers reaches the top from the spot, else the anchor from her side (`_anchor`, the general grip of A25: a point on the link's surface facing her shoulder), and keeps the grip each forearm solved with (`_pull_grips`, by link) for the hold she then makes (`_forearm_grip`); the spots are searched twice (`_act_pull_to_sit`): for the tops alone first, as A163 and A165 built it (the rig's gather engages a top the step-10 solve calls unreachable, and reached 32 cm short of an anchor the solve approved when the spot was chosen by either grip at once), then, when no spot passes, for either grip. On the day-64 copy at tick 3,090,088 (her hands free, the child supine at the mat's middle): 'sat up with its own flexion (A9)', both holds engaged. Parent 7, 7b, 9, 30, 32, 33 green. No new constant; the sim pins untouched (her method).
 
+**A190. The deliberation weighs one act against not doing it (2026-10-04; landed after its trial).** A182 weighed two futures drawn
+alike; read at relative size (A188) the lean valued the state beside the reward and was taken out (A189, A192). The day-79 copy
+(p1/conting.py): with one arm's imagined act FORCED and everything else at its best guess, flexing the left shoulder stood above
+resting it in 94% of 32 moments (t 8.5): the life's own lesson is in the model as the value of an ACT (a link taught for 3,000
+ticks was not: the cortex learns over days, the actor in minutes). So under vte_act (sleep.py `_vte_act_think`): one motor effector
+in turn each deliberation; the act the present course proposes for it against its rest, both futures run at their best guess, the
+act held through the imagined window as a movement unit (`_vte_force`); the advantage N(act) - N(rest) read against its own usual
+size with a threshold there, w = max(0, 1 - mean|adv| / |adv|); the lean toward the act or toward the rest (`_vte_term`), fading
+with GOAL_TAU. The model-based controller (Daw, Niv and Dayan 2005), one option against its default (Redish 2016). No new
+constant. ITS FIRST TRIAL, before the amygdala could foresee pain (A191): three pairs, toys got up in three of three (18 against 8,
+6 against 3, 10 against 7), pain up in three of three (12 against 4, 11 against 8, 30 against 21): not landed. ITS SECOND, with
+A191's strain line two life-days old, the rule set beforehand (got not down and pain not up in two pairs): the day-84 copy and a
+mid-day-85 copy, 4,000 ticks each, off against on: pain 18 -> 6 and 13 -> 6; lifted 17 -> 32 and 0 -> 26; got 7 -> 6 and 0 -> 7;
+reward +5.3 -> +19.9 and +9.5 -> +16.7. Landed. Sim pins RE-TAKEN (threaded 4c5b4e02f2e7930c5d2b4ca0, one-thread
+d883bf2c9bd7efd8d0e98116, consts b816e29a1660), the language default kept 7c54199e3c72cf77d45a8e94. The rulers: pain a thousand
+ticks, lifted and got a day, the reward a day.
+
 **C269. The teacher wastes no time: her floor play's gap 30 to 60 ticks, her idle lines every 15, her copies every 4 s (2026-10-04).**
 The owner's word: teach as fast as you can; the teacher not wasting a second. Life day 85's audit (the record, 24,000 day ticks):
 a body act of hers open on 64% of the ticks, her voice sounding on 13%, NEITHER on 33% (6,009 ticks in stretches of 3 s or more);
@@ -4792,5 +4809,6 @@ The nine decisions of the G1 amendment are settled (section 14). These are the e
 | A192 | A188's lean (vte_adapt) deleted; A182's idle comparison (imagine_vte) switched off; the imagination kept | 2026-10-04 | about 24 ms a tick saved; sim pins re-taken |
 | A193 | The positive supporting reaction and the stepping reflex at the cord (upright on a loaded sole) | 2026-10-04 | day-84 copy, held by a stand-in for her hands: stands 39 s on 0.9 of its weight; walks 0.52-0.64 m in 45 s; silent on the mat; pins unchanged |
 | C269 | Her pace: floor play's gap 30-60 ticks (150-300), idle lines every 15 (40), copies every 4 s (10) | 2026-10-04 | day-84 copy: her idle 33% -> 16% of ticks; child lifted 17 -> 23, hit 5 -> 11; pins unchanged |
+| A190 | The deliberation weighs one effector's proposed act against its rest (vte_act); landed after its second trial | 2026-10-04 | with A191's strain line: pain 18 -> 6 and 13 -> 6, lifted 17 -> 32 and 0 -> 26, reward up in both pairs; sim pins re-taken |
 | C227 | The pull's holds take a forearm at its top; raised or flung out, that face points away from her and no spot reaches it (day 63's six refusals, the copy's every spot failing the trunk solve). | The spot check solves the top first, then the anchor from her side, keeps the grip per forearm for the hold, and searches the spots twice, tops first; the copy's pull sat the child up. Parent tests green. | 2026-10-02 |
 | C228 | Day 64 had holds of 6 to 12 s at most and no 'held' event: the smile for holding on, set at 10 s, never fired. | HELD_TICKS 20 (3 s), the smile then worn by A2's fall with mastery per toy; lane 10 as it was. | 2026-10-02 |
