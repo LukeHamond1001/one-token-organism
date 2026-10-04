@@ -442,7 +442,12 @@ def opens(hand, act):
 STAND_LIMBS = ("waist", "leg_l", "leg_r")
 STAND_UP_G = 8.5                # m/s2 along the torso's long axis: upright within about 30 deg (9.81 cos 30 deg; ours)
 SOLE_N = 20.0                   # N on a sole: loaded (ours: a sixteenth of the body's weight)
-STAND_GAIN, STAND_STEP = 0.3, W.STEP_SMALL      # the supporting reaction's soft spring toward the straight leg (the tone's law, A185)
+STAND_GAIN, STAND_STEP = 1.0, W.STEP_BIG        # the supporting reaction is an extensor THRUST: the whole distance to the straight leg,
+                                                # at most one big step a tick. With the tone's soft spring (0.3, one small step) the
+                                                # held child stood but could not rise: led up by the chest within her sustained cap
+                                                # (156 N) it stayed sitting; with the thrust it came from lying to its feet in 9 s
+                                                # on her 100 to 156 N and stood on its own legs with 20 to 45 N of her steadying
+                                                # (p1/raise.py, the day-84 copy)
 STEP_EXT = 0.12                 # rad: the stance hip's extension that starts the swing (ours)
 STEP_LIFT, STEP_PLACE = 4, 3    # ticks: hip and knee flexing (the foot lifted and brought forward), then the knee extending (set down)
 STEP_HIP, STEP_KNEE = -0.9, 1.3 # rad: the swing's hip flexion and knee flexion targets (ours)
@@ -468,6 +473,9 @@ def stand(q, imu_torso, soles, state):
         if st[0] == "stance" and float(ql[iq["hip_pitch"]]) > STEP_EXT and state[other][0] == "stance":
             st[0], st[1] = "swing", 0
         tgt = {k: 0.0 for k in iq}; cap = {k: STAND_STEP for k in iq}; gain = {k: STAND_GAIN for k in iq}
+        if float(ql[iq["hip_pitch"]]) > 0.0:                            # the thrust EXTENDS: a hip already extended (the leg trailing as
+            cap["hip_pitch"] = W.STEP_SMALL; gain["hip_pitch"] = 0.3    # the body passes over its foot) is held softly (the tone's
+                                                                        # spring), or the stance hip could never extend and no step begin
         if st[0] == "stance" and state[other][0] == "swing":            # the stance leg stands firm while the other swings
             for k in ("knee", "hip_pitch", "hip_roll", "ankle_pitch", "ankle_roll"):
                 cap[k] = W.STEP_BIG; gain[k] = 1.0

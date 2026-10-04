@@ -3721,12 +3721,17 @@ reflexes (no balance: hers to give, its cerebellum's to learn); held and without
 it stands 39 s on 0.9 of its own weight, its legs' own babble on; with the stepping reflex and the hold pacing 0.20 m ahead of its
 feet at 0.10 m/s it walked 0.64 m in 45 s in 10 steps (the probe's prototype) and 0.52 m in 45 s with the tree's own reflexes
 (p1/upright_tree.py), never sinking. Constants (ours, from the grid): STEP_EXT 0.12 rad, STEP_LIFT 4 and STEP_PLACE 3 ticks,
-STEP_HIP -0.9 and STEP_KNEE 1.3 rad; the supporting reaction's spring is the tone's (A185: gain 0.3, one small step), the stance
-leg and the waist firm (one big step). The legs' phases are in the world's save (older saves: stance). World test
+STEP_HIP -0.9 and STEP_KNEE 1.3 rad; the supporting reaction is an extensor THRUST (the whole distance to the straight leg, one
+big step a tick at most; a hip already extended is held by the tone's soft spring, so the trailing leg can extend and the step
+begin), the waist firm. With the tone's soft spring in its place the held child stood but could not rise. THE RAISE (p1/raise.py:
+a capped spring at its upper chest led from where it lies to standing height over its feet at 0.15 m/s): at 536 or 340 N it stands
+in 9 s (her peak 264 N); at her sustained cap, 156 N, with the soft spring it comes to sitting and no further; with the thrust it
+comes from lying to its feet in 9 s on 100 to 135 N and stands on its own legs with 15 to 45 N of steadying: inside her caps as
+they stand. With the thrust the supported walk (p1/upright_tree.py) went 0.78 m in 45 s, her share of its weight 0.09. The legs' phases are in the world's save (older saves: stance). World test
 test_the_standing_and_stepping_reflexes; the tone's and the saccade's tests green. Sim pins unchanged (the stub world has no G1
 cord; A192's), the language default kept. What it is not: balance, or getting up. Her acts that stand it up, hold it and walk it
 (her hands at its trunk within her caps: the measured hold asks 34 to 90 N of lift and 80 N sideways, under CAP_TWO 156 N) are
-the next build; lifting it from the mat (337 N) is beyond her caps as they stand.
+the next build.
 
 **A192. The failed lean is deleted; the idle comparison is switched off (2026-10-04).** The owner's word: delete it, or what is the
 play. (1) A188's relative-weight lean (vte_adapt) is removed from the code and the constants: it valued the state beside the reward
