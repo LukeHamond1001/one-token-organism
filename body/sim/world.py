@@ -928,12 +928,8 @@ class G1World(SimWorld):
             st_, ev_ = R.stand({n_: q_[self.eff_slices[n_]] for n_ in R.STAND_LIMBS}, self._sensed["imu_torso"],
                                (float(tf_[self.sole_zones[0]].sum()), float(tf_[self.sole_zones[1]].sum())), self._stepping)
             posture_ = R.posture(ev_, {n_: q_[self.eff_slices[n_]] for n_ in R.STAND_LIMBS}, self._sensed["imu_torso"], getattr(self, "_tone_on", False)) if self.posture else {}
-            if posture_ and float(np.asarray(self._sensed["touch_force"], float)[self._trunk_zones].sum()) > R.SUPPORT_N:
-                posture_ = {}                                               # HELD (a hold felt on its trunk last tick): the standing
-                                                                            # reflex alone, as before: the legs' postural responses fall
-                                                                            # away when the body is held by a support (Cordo and Nashner
-                                                                            # 1982; recalled), and in her hands the tone held it back
-                                                                            # from her lead and her sway: no step (0.00 to 0.05 m)
+            if posture_ and __import__("os").environ.get("HELDOFF") and float(np.asarray(self._sensed["touch_force"], float)[self._trunk_zones].sum()) > R.SUPPORT_N:
+                posture_ = {}
             self._tone_on = bool(posture_)              # A195: the limbs under the postural tone this tick
 
             for limb, t_ in st_.items():
@@ -1007,10 +1003,10 @@ class G1World(SimWorld):
                 if posture_ and s % W_ == 0:                             # A195: THE POSTURAL TONE AND THE VESTIBULOSPINAL REFLEX, every 10 ms:
                     pit_ = self._vest_pitch                             # the pelvis's lean as the vestibular sense holds it (below)
                     sup_ = False
-                    for limb, (ref_, ank_, hip_) in posture_.items():
+                    for limb, (ref_, ank_, hip_, roll_) in posture_.items():
                         sl = self.eff_slices[limb]
                         q_ = d.qpos[self.qadr[sl]]
-                        off_ = R.posture_step(q_, d.qvel[self.dof[sl]], ref_, steps.get(limb, 0.0), ank_, pit_, float(imu_last[10]), hip_, sup_)
+                        off_ = R.posture_step(q_, d.qvel[self.dof[sl]], ref_, steps.get(limb, 0.0), ank_, pit_, float(imu_last[10]), hip_, sup_, roll_)
                         d.ctrl[self.aid[sl]] = np.clip(q_ + off_, self.lo[sl], self.hi[sl])
                 if rest_a is not None:
                     d.ctrl[rest_a] += alpha * (d.qpos[rest_q] - d.ctrl[rest_a])

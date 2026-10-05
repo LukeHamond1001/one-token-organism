@@ -477,6 +477,7 @@ STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, a
 # stood the 30 s of the trial in two of three (16 ticks in the third; 1.2 s without). Constants ours, from that grid.
 POSTURE_UP_G, POSTURE_KNEE = 9.0, 0.5                         # the tone holds a body upright within about 23 deg (9.81 cos 23) on legs within 0.5 rad of straight (ours)
 SUPPORT_N = 5.0                                               # N felt on its trunk's touch zones (torso, pelvis): held (ours)
+STEP_YIELD, POSTURE_ROLL = float(__import__('os').environ.get('YIELD', '0.10')), float(__import__('os').environ.get('ROLLG', '2.0'))   # A196 (ours)
 POSTURE_HIP_EXT = 1.0                                         # x the distance, for a hip extended past its stance angle (ours)
 POSTURE_STIFF, POSTURE_DAMP, POSTURE_MAX = 8.0, 0.05, 1.0     # x the distance to the stance angle; x the joint's speed (s); the step's cap, rad
 STANCE = {"hip_pitch": -0.05, "knee": 0.10, "ankle_pitch": -0.10}   # the stance angles, rad (the rest 0): knees a little bent, leaning forward
@@ -497,24 +498,28 @@ def posture(ev, q=None, imu_torso=None, on=False):
         if not on and q is not None and "knee" in names and float(q[limb][names.index("knee")]) > STANCE["knee"] + POSTURE_KNEE:
             continue                                                    # (a leg still bent is the thrust's)
         out[limb] = ([float(STANCE.get(n, 0.0)) for n in names], names.index("ankle_pitch") if "ankle_pitch" in names else None,
-                     names.index("hip_pitch") if "hip_pitch" in names else None)
+                     names.index("hip_pitch") if "hip_pitch" in names else None,
+                     tuple(names.index(n) for n in ("hip_roll", "ankle_roll") if n in names))
     return out
 
 
-def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False):
+def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False, roll=()):
     """one limb's targets' offsets from its measured angles for the next 10 ms: the tone toward the stance angles, the own act's step on
     top, and at the ankle the vestibular push"""
     g = np.full(len(q), POSTURE_STIFF)
     if hip is not None and float(q[hip]) > float(ref[hip]):             # a hip extended past its stance angle (the leg trailing as the
         g[hip] = POSTURE_HIP_EXT                                        # body passes over its foot) is held softly, or the stance hip
                                                                         # could never extend and no step begin (A193's rule, kept)
-    if supported and ankle is not None and float(q[ankle]) < float(ref[ankle]):   # SUPPORTED (a hold felt on its trunk: SUPPORT_N), an ankle bent past its stance angle (the shank leaning forward
-        g[ankle] = POSTURE_HIP_EXT                                      # over the foot) is held softly too: forward the toes carry
-                                                                        # it and the vestibular push and the step answer; stiff both
-                                                                        # ways it held the body back from her lead and no step began
+    for r_ in roll:                                                     # A196: the legs' sideways joints softly: the weight must pass
+        g[r_] = POSTURE_ROLL                                            # from foot to foot for a step (her sway, its own)
+    yielded = ankle is not None and float(q[ankle]) < float(ref[ankle]) - STEP_YIELD
+    if yielded:                                                         # A196: THE ANKLES YIELD TO A STEP: the shank leaning forward over
+        g[ankle] = POSTURE_HIP_EXT                                      # the foot past STEP_YIELD, the lean is more than the ankles
+                                                                        # answer: they let it go and the step catches it (the ankle and
+                                                                        # stepping strategies: Horak and Nashner 1986; recalled)
     off = np.clip(g * (np.asarray(ref, float) - q) - POSTURE_DAMP * qd, -POSTURE_MAX, POSTURE_MAX) + own
-    if ankle is not None and not supported:                             # (the postural responses of the legs fall away when the body
-        off[ankle] += float(np.clip(VEST_P * pitch + VEST_D * pitch_rate, -VEST_MAX, VEST_MAX))   # holds or is held by a support: Cordo and Nashner 1982; recalled)
+    if ankle is not None and not yielded:
+        off[ankle] += float(np.clip(VEST_P * pitch + VEST_D * pitch_rate, -VEST_MAX, VEST_MAX))
     return off
 
 
