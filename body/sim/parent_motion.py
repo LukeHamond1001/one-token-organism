@@ -5363,7 +5363,7 @@ class ParentMotion:
             F_ = np.sum([np.asarray(x.force, float)[:2] for x in self.holds if x.kind == "stand"], axis=0)
             c["bal_f"] = _lst(np.asarray(c.get("bal_f", F_), float) * 0.85 + 0.15 * F_)   # (smoothed: it sways 100 N either way in her hands tick to tick)
             bal_ = np.asarray(c.get("bal", (0.0, 0.0)), float)
-            st_ = K.BALANCE_GAIN * np.asarray(c["bal_f"], float); sn_ = float(np.linalg.norm(st_))
+            st_ = -K.BALANCE_GAIN * np.asarray(c["bal_f"], float); sn_ = float(np.linalg.norm(st_))
             if sn_ > K.BALANCE_STEP_M:
                 st_ = st_ / sn_ * K.BALANCE_STEP_M
             bal_ = bal_ + st_; bn_ = float(np.linalg.norm(bal_))
