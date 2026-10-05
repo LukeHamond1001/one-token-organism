@@ -335,6 +335,7 @@ A193 (2026-10-04 16:26, the standing and the stepping reflexes): the sim digests
 C269 (2026-10-04 18:35, the teacher's pace): the sim digests unchanged (A192's; the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 A190 (2026-10-04 19:34, an act weighed against not doing it): the sim digests RE-TAKEN (threaded 4c5b4e02f2e7930c5d2b4ca0, one-thread d883bf2c9bd7efd8d0e98116, consts b816e29a1660; before: A192's); the language default kept 7c54199e3c72cf77d45a8e94.
 C270 (2026-10-04 20:30, she names what it did): the sim digests unchanged (A190's; the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
+C277 (2026-10-05 01:20, sat down upright, the carry back to its mat): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 C276 (2026-10-05 00:45, the stand's spot where both grips are reached): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 C275 (2026-10-05 00:15, her turn at a share of its weight): the sim digests unchanged (the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 C274, A194 (2026-10-05 00:10, the held walk: the swing only unloaded, her hands on either side of its chest): the sim digests re-run and unchanged (threaded 4c5b4e02f2e7930c5d2b4ca0, consts b816e29a1660; the stub world has no parent and no G1 cord); the language default kept 7c54199e3c72cf77d45a8e94.

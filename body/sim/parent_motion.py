@@ -5238,6 +5238,9 @@ class ParentMotion:
         now = self._chest_point()
         pz = float(ch.pelvis[2]); th = float(ch.trunk_deg)
         fwd_c = unit(self.d.xmat[h.body].reshape(3, 3)[:, 0] * [1, 1, 0])[:2]             # the way it faces
+        if mode == "lower" and "wdir" in c and "sit_at" not in c:
+            fwd_c = np.asarray(c["wdir"], float)                            # C277: sat down along the walk's way, not the way its trunk
+                                                                            # has swung
         if mode == "walk" and "wdir" in c:
             if h.side == "L":                                               # (once a tick)
                 # C274: SHE WALKS IT BACK TOWARD ITS MAT. Each stand moved it on the way it happened to face, and by day 88's evening
@@ -5256,7 +5259,10 @@ class ParentMotion:
             fwd_c = np.asarray(c["wdir"], float)                            # the walk's way: the way it faced as the walk began (C274: led
                                                                             # the way it faced each tick, it twisted 45 deg either way in
                                                                             # her hands and her lead turned with it)
-        if mode in ("steady", "walk"):                                      # standing, her hands hold its trunk UPRIGHT: each hand's point
+        if mode in ("steady", "walk") or (mode == "lower" and c.get("stood") and "wdir" in c):   # C277: and while she sits it down from
+            # a walk: with her hands following its trunk as it stood, it folded forward at the hips in the lowering's first second
+            # (24 to 50 deg in 17 ticks) and went down onto its front, its wrists under it (the pain after a stand)
+            # standing, her hands hold its trunk UPRIGHT: each hand's point
             yw_ = math.atan2(fwd_c[1], fwd_c[0])                            # where it would be on a trunk standing straight, facing as it
             Rz_ = np.array([[math.cos(yw_), -math.sin(yw_), 0.0], [math.sin(yw_), math.cos(yw_), 0.0], [0.0, 0.0, 1.0]])   # faces (led
             off = Rz_ @ (h.local - np.array([0.0, 0.0, 0.22]))              # by its chest alone it pitched onto its front in the walk)

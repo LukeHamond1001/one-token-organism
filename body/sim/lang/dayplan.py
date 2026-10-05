@@ -59,6 +59,8 @@ PLAY_GAP = (30, 60)                    # ticks between her floor play's offers (
                                        # acted nor spoke on 33% of the day's ticks, 6,009 of them in stretches of 3 s or more
 SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times a motor block when her reach or her hold refused it (ours)
 SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer is turned onto its back first, this many turns a block (ours)
+CARRY_AFTER, CARRY_WINDOW = 2, 1500   # C277: this many of her acts refused for want of a spot to kneel beside it within this many ticks, and
+CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 FLOOR_STAND_GAP = 500           # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
                                 # about 250 ticks, so a third of her floor play is standing and stepping in her hands)
 STAND_AGAIN_GAP = 100           # C268: after a stand done, the next one this many ticks on (15 s of rest; ours)
@@ -246,6 +248,34 @@ class DayPlan:
             self.bids = [b for b in self.bids if b > t - BIDS_BACK[1]] + [t]
         if not hasattr(self, "stood_seen"):
             self.stood_seen = set()
+        # C277 (2026-10-05): A CHILD SHE CANNOT KNEEL BESIDE IS CARRIED BACK TO ITS MAT. Day 89: a stand that slipped left it at the
+        # room's edge by the wall (2.1, -1.0), and for 5,000 ticks her acts were refused 'no spot she can kneel at', 'no spot to kneel
+        # beside the child: every side is blocked' (ten refused against nine done); A110 carried it back only at dawn. A parent picks
+        # the baby up and puts it back on its mat. Her arms cannot carry this body (her caps), so the carry is the world's, as at
+        # dawn (world.carry_to_mat: laid on its back at the mat's centre): after CARRY_AFTER such refusals within CARRY_WINDOW, with
+        # none of her hands on it, no act of hers under way, and her own place clear of the mat. An environment's act, disclosed
+        if not hasattr(self, "blocked_seen"):
+            self.blocked_seen, self.blocked_at = set(), []
+        for mid, st in (getattr(c, "ended", None) or {}).items():
+            if st == "refused" and mid not in self.blocked_seen:
+                self.blocked_seen.add(mid)
+                try:
+                    why_ = str(c.motion._act(mid).get("why", ""))
+                except Exception:
+                    why_ = ""
+                if "no spot" in why_ or "every side is blocked" in why_:
+                    self.blocked_at.append(t)
+        self.blocked_at = [x for x in self.blocked_at if x > t - CARRY_WINDOW]
+        if len(self.blocked_at) >= CARRY_AFTER and kind in ("floor", "motor", "show") and not self.away and not pm.holds and \
+                not any(v is not None for v in pm.holding.values()) and \
+                not any(a[5] not in ("done", "refused", "cancelled") for a in c.acts_open):
+            mat_ = world.m.geom_pos[world.m.geom("mat").id][:2]
+            if float(np.hypot(pm.base["at"][0] - mat_[0], pm.base["at"][1] - mat_[1])) >= CARRY_CLEAR_M:
+                was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
+                if world.carry_to_mat():
+                    self.log.append((t, "carried back to its mat (C277)", was_))
+                    print(f"carried back to its mat at tick {t} from {was_} (C277)", flush=True)
+                self.blocked_at = []
         if kind == "motor" and not self.sit_due and self.sit_tries < SIT_TRIES_PER_BLOCK:
             for mid, st in (getattr(c, "ended", None) or {}).items():
                 try:
@@ -358,8 +388,9 @@ class DayPlan:
         over both forearms taken, the pull growing to her brief cap and rising only with its own flexion, A9; once per block, twice a
         day); every later offer of the block is her reach-rung lesson (A90). Life days 50 to 56 the child lay on its back the whole day
         and no one offered it the sit: the pull-to-sit and the prop had stayed closed since birth (NOT_AT_BIRTH)"""
-        if self.sit_due and self._lying_on_back(lane):
-            self.sit_due = False
+        if self.sit_due and self._lying_on_back(lane) and \
+                not [v for v in getattr(lane.conduct.motion, "holding", {}).values() if v is not None]:   # C277: with a toy in her hand the
+            self.sit_due = False                                            # toy's lesson first (day 89: 'her hands are busy' three times)
             if self.sit_tries == 0:
                 self.sit_tries = 1                                          # (C224: the block's first try)
             lane.conduct.request("motor_sit")
