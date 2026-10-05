@@ -476,6 +476,8 @@ STEP_HIP_PLACE = 0.8            # the hip's target while the foot is set down, a
 # tone alone stands it 10 s and through a 20 N push at gains 6 to 12; with its brain running, tone 8 and the reflex 4 and 0.8
 # stood the 30 s of the trial in two of three (16 ticks in the third; 1.2 s without). Constants ours, from that grid.
 POSTURE_UP_G, POSTURE_KNEE = 9.0, 0.5                         # the tone holds a body upright within about 23 deg (9.81 cos 23) on legs within 0.5 rad of straight (ours)
+SUPPORT_LP = 0.10                                             # the felt hold's smoothing a tick (ours)
+SUPPORT_FULL_N = 30.0                                         # N felt on its trunk at which the tone is gone (ours: the low end of her steadying, 33 to 116 N)
 SUPPORT_N = 5.0                                               # N felt on its trunk's touch zones (torso, pelvis): held (ours)
 STEP_YIELD, POSTURE_ROLL = 0.10, 2.0                                    # A196 (ours): the ankle's yield past its stance angle (rad); the sideways joints' gain
 POSTURE_HIP_EXT = 1.0                                         # x the distance, for a hip extended past its stance angle (ours)
@@ -503,10 +505,10 @@ def posture(ev, q=None, imu_torso=None, on=False):
     return out
 
 
-def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False, roll=()):
+def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=False, roll=(), share=1.0):
     """one limb's targets' offsets from its measured angles for the next 10 ms: the tone toward the stance angles, the own act's step on
     top, and at the ankle the vestibular push"""
-    g = np.full(len(q), POSTURE_STIFF)
+    g = np.full(len(q), 1.0 + (POSTURE_STIFF - 1.0) * float(share))  # (`share`: the tone's share as a hold on its trunk eases)
     if hip is not None and float(q[hip]) > float(ref[hip]):             # a hip extended past its stance angle (the leg trailing as the
         g[hip] = POSTURE_HIP_EXT                                        # body passes over its foot) is held softly, or the stance hip
                                                                         # could never extend and no step begin (A193's rule, kept)
@@ -518,8 +520,8 @@ def posture_step(q, qd, ref, own, ankle, pitch, pitch_rate, hip=None, supported=
                                                                         # answer: they let it go and the step catches it (the ankle and
                                                                         # stepping strategies: Horak and Nashner 1986; recalled)
     off = np.clip(g * (np.asarray(ref, float) - q) - POSTURE_DAMP * qd, -POSTURE_MAX, POSTURE_MAX) + own
-    if ankle is not None and not yielded:
-        off[ankle] += float(np.clip(VEST_P * pitch + VEST_D * pitch_rate, -VEST_MAX, VEST_MAX))
+    if ankle is not None and not yielded and not supported:
+        off[ankle] += float(share) * float(np.clip(VEST_P * pitch + VEST_D * pitch_rate, -VEST_MAX, VEST_MAX))
     return off
 
 

@@ -61,7 +61,8 @@ SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times 
 SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer is turned onto its back first, this many turns a block (ours)
 CARRY_AFTER, CARRY_WINDOW = 2, 1500   # C277: this many of her acts refused for want of a spot to kneel beside it within this many ticks, and
 PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with this many pain ticks, it is laid on its back (the carry); ours
-CARRY_WAIT_TICKS = 8                   # C281: the carry waits this long at most for her hands to come off it (ours)
+CARRY_WAIT_TICKS = 40                  # C281: the carry waits this long at most for her hands to come off it (ours)
+FREE_PELVIS_M, FREE_DEG, FREE_STAND_MAX = 0.62, 35.0, 400   # C287: let go, it stands alone while its pelvis is this high and its trunk within this of upright, this many ticks at most (60 s); ours
 CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 FLOOR_STAND_GAP = 500           # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
@@ -266,10 +267,25 @@ class DayPlan:
         # C281: THE HELD WALK OVER, IT IS CARRIED FROM HER HANDS BACK TO ITS MAT (parent_motion._ctl_stand's carry_due): laid on its
         # back at the mat's centre, or beside the centre where that is clear of where she kneels (CARRY_LAY_CLEAR_M)
         cp_ = getattr(pm, "carry_pending", None)
-        if cp_ is not None and t - int(cp_) > CARRY_WAIT_TICKS:
+        on_ = any(h_.kind == "stand" for h_ in pm.holds) or any(pm.arms[sd_].get("mode") == "hold" for sd_ in "LR")
+        if cp_ is not None and on_ and t - int(cp_) > CARRY_WAIT_TICKS:
             pm.carry_pending = cp_ = None                                   # (her hands did not come off it in time: no carry)
-        if cp_ is not None and not any(h_.kind == "stand" for h_ in pm.holds) and \
-                not any(pm.arms[sd_].get("mode") == "hold" for sd_ in "LR"):
+        free_ = False
+        if cp_ is not None and not on_:
+            # C287: LET GO, IT STANDS AS LONG AS IT CAN. With the postural tone (A195) it stands some seconds alone: her hands off,
+            # the carry waits while it stands (its pelvis FREE_PELVIS_M up, its trunk within FREE_DEG), FREE_STAND_MAX ticks at
+            # most, and takes it as it goes down (she catches it: the world's carry, C281). Standing alone is practised at the
+            # end of every held walk, and her eyes pay the stand's doublings (C284)
+            if getattr(self, "free_from", None) is None:
+                self.free_from = t
+            ch_ = pm.child
+            free_ = float(ch_.pelvis[2]) >= FREE_PELVIS_M and float(ch_.trunk_deg) <= FREE_DEG and t - self.free_from < FREE_STAND_MAX
+            if free_:
+                self.next_play = max(self.next_play, t + 20)                # (her next play waits for the carry)
+        if cp_ is not None and not on_ and not free_:
+            self.log.append((t, "it stood alone (C287)", int(t - (self.free_from if self.free_from is not None else t))))
+            print(f"it stood alone {int(t - (self.free_from if self.free_from is not None else t))} ticks after she let go (C287)", flush=True)
+            self.free_from = None
             mat_ = np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)
             her_ = np.asarray(pm.base["at"], float)[:2]
             spot_ = next((mat_ + np.array(o_) for o_ in ((0.0, 0.0), (0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0), (0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5))

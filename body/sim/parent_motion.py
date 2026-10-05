@@ -5265,7 +5265,7 @@ class ParentMotion:
             fwd_c = np.asarray(c["wdir"], float)                            # the walk's way: the way it faced as the walk began (C274: led
                                                                             # the way it faced each tick, it twisted 45 deg either way in
                                                                             # her hands and her lead turned with it)
-        if mode in ("steady", "walk", "wait") or (mode == "lower" and c.get("stood") and "wdir" in c):   # C277: and while she sits it down from
+        if mode in ("steady", "walk", "wait", "settle") or (mode == "lower" and c.get("stood") and "wdir" in c):   # C277: and while she sits it down from
             # a walk: with her hands following its trunk as it stood, it folded forward at the hips in the lowering's first second
             # (24 to 50 deg in 17 ticks) and went down onto its front, its wrists under it (the pain after a stand)
             # standing, her hands hold its trunk UPRIGHT: each hand's point
@@ -5348,12 +5348,26 @@ class ParentMotion:
             if pz < K.STAND_FALL_M:
                 c["mode"] = "lower"; c["why"] = "it sank while walking"
             elif c["walked"] >= K.WALK_FAR_M or c["walk_t"] >= K.WALK_MAX_TICKS:
-                c["mode"] = "wait"; c["why"] = None
+                c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None
             elif c["walked"] >= float(c.get("far", 0.0)) + 0.02:            # still going: 2 cm more since she last looked
                 c["far"] = float(c["walked"]); c["far_t"] = int(c["walk_t"])
             elif c["walk_t"] - int(c.get("far_t", 0)) >= K.WALK_STALL_TICKS:   # it has stopped stepping: she sits it down while it
-                c["mode"] = "wait"; c["why"] = None   # still stands (the first walk: 0.40 m, then 8 s of
+                c["mode"] = "settle"; c["settle_t"] = 0; c["why"] = None   # still stands (the first walk: 0.40 m, then 8 s of
                                                                             # standing still, then it sank at her cap)
+        elif mode == "settle":
+            # C287: BEFORE SHE LETS GO SHE STANDS IT STILL OVER ITS FEET (SETTLE_TICKS), her hold easing to nothing over the second half:
+            # let go as the walk ended, led ahead of its feet in mid-step, it went down in 1 to 3 ticks
+            lead = near(np.array([feet[0], feet[1], K.STAND_CHEST_M]))
+            c["lead"] = _lst(lead); h.next = lead + off
+            c["settle_t"] = int(c.get("settle_t", 0)) + 1
+            q_ = K.SETTLE_TICKS // 4                                        # a quarter at her full hold, a quarter easing to a light
+            if c["settle_t"] > q_:                                          # touch (LIGHT_N a hand: under what its trunk feels as a
+                h.cap = max(K.LIGHT_N, h.cap * max(0.0, 1.0 - (c["settle_t"] - q_) / float(q_)))   # hold, so its own postural tone takes
+                                                                            # it, A195), then half with her fingertips on it
+            if pz < K.STAND_FALL_M:
+                c["mode"] = "lower"
+            elif c["settle_t"] >= K.SETTLE_TICKS:
+                c["mode"] = "wait"
         elif mode == "wait":
             # C281: THE WALK OVER, SHE CARRIES IT BACK TO ITS MAT AND LAYS IT DOWN. Sat down in her hands it fell: held upright its
             # legs stayed stiff under the standing reflex and she dragged it backwards; leaned back, its legs gave at once and it
@@ -5362,6 +5376,7 @@ class ParentMotion:
             # in C277: her hands come off it as it stands and the day plan's carry lays it on its mat within CARRY_WAIT_TICKS
             lead = near(np.array([feet[0], feet[1], K.STAND_CHEST_M]))
             c["lead"] = _lst(lead); h.next = lead + off
+            h.cap = 0.0; h.next = h.point(self.d)                           # (C287: her hands rest on it without a pull as they come off)
             c["state"] = "done"                                             # her hands come off it standing (it stands a second alone),
             self.carry_pending = int(self.tick)                             # and the day plan's carry lays it on its mat
         elif mode == "lower":
