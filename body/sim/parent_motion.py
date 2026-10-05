@@ -5265,7 +5265,7 @@ class ParentMotion:
             fwd_c = np.asarray(c["wdir"], float)                            # the walk's way: the way it faced as the walk began (C274: led
                                                                             # the way it faced each tick, it twisted 45 deg either way in
                                                                             # her hands and her lead turned with it)
-        if mode in ("steady", "walk") or (mode == "lower" and c.get("stood") and "wdir" in c):   # C277: and while she sits it down from
+        if mode in ("steady", "walk", "wait") or (mode == "lower" and c.get("stood") and "wdir" in c):   # C277: and while she sits it down from
             # a walk: with her hands following its trunk as it stood, it folded forward at the hips in the lowering's first second
             # (24 to 50 deg in 17 ticks) and went down onto its front, its wrists under it (the pain after a stand)
             # standing, her hands hold its trunk UPRIGHT: each hand's point
@@ -5348,12 +5348,22 @@ class ParentMotion:
             if pz < K.STAND_FALL_M:
                 c["mode"] = "lower"; c["why"] = "it sank while walking"
             elif c["walked"] >= K.WALK_FAR_M or c["walk_t"] >= K.WALK_MAX_TICKS:
-                c["mode"] = "lower"; c["why"] = None
+                c["mode"] = "wait"; c["why"] = None
             elif c["walked"] >= float(c.get("far", 0.0)) + 0.02:            # still going: 2 cm more since she last looked
                 c["far"] = float(c["walked"]); c["far_t"] = int(c["walk_t"])
             elif c["walk_t"] - int(c.get("far_t", 0)) >= K.WALK_STALL_TICKS:   # it has stopped stepping: she sits it down while it
-                c["mode"] = "lower"; c["why"] = None                        # still stands (the first walk: 0.40 m, then 8 s of
+                c["mode"] = "wait"; c["why"] = None   # still stands (the first walk: 0.40 m, then 8 s of
                                                                             # standing still, then it sank at her cap)
+        elif mode == "wait":
+            # C281: THE WALK OVER, SHE CARRIES IT BACK TO ITS MAT AND LAYS IT DOWN. Sat down in her hands it fell: held upright its
+            # legs stayed stiff under the standing reflex and she dragged it backwards; leaned back, its legs gave at once and it
+            # dropped faster than her arms follow (a hand lost it in 2 of 3 on the day-91 copy; in the life 5 slips of 9 stands,
+            # each a fall onto its front). Her arms cannot carry this body (her caps), so the carry is the world's, as at dawn and
+            # in C277: her hands come off it as it stands and the day plan's carry lays it on its mat within CARRY_WAIT_TICKS
+            lead = near(np.array([feet[0], feet[1], K.STAND_CHEST_M]))
+            c["lead"] = _lst(lead); h.next = lead + off
+            c["state"] = "done"                                             # her hands come off it standing (it stands a second alone),
+            self.carry_pending = int(self.tick)                             # and the day plan's carry lays it on its mat
         elif mode == "lower":
             # IT IS SAT DOWN AS IT WAS STOOD UP, backwards: its chest led back behind its feet and down to sitting height (lowered
             # straight down it pivoted forward over its stiff legs onto its face: the first copy that stood)

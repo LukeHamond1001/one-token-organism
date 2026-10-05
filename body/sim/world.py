@@ -1141,7 +1141,7 @@ class G1World(SimWorld):
         if self.lane is not None:
             self.lane.dusk(self)
 
-    def carry_to_mat(self):
+    def carry_to_mat(self, to=None):
         """A110 (2026-09-27, C92): a child that has rolled off the mat is carried back onto it in its sleep, as a person carries a
         sleeping baby to its bed: at dawn, before the light, its body is set down at the mat's centre on its back in the birth pose
         (amended 2026-09-27: laid as it lay, on its side, it woke looking at the floor), settled under its servos, its velocities
@@ -1158,12 +1158,12 @@ class G1World(SimWorld):
         supine = float(d.xmat[m.body("torso_link").id].reshape(3, 3)[2, 0]) > 0.6   # its chest's normal up: on its back (the posture
                                                                         # law of parent_motion.Child: fz > 0.6)
         twisted = self._twisted()                                       # A110 amended a fourth time (2026-09-27 23:40, C103): a joint
-        if on_mat and supine and not twisted:                           # at its stop while it sleeps (the dawn-16 pair: the waist yaw
+        if to is None and on_mat and supine and not twisted:            # at its stop while it sleeps (the dawn-16 pair: the waist yaw
             return False                                                # 2.62, the left hip pitch 2.88, the right wrist roll -1.98; it
                                                                         # woke to 176 pain ticks in 500) is laid straight like the rest:
                                                                         # a carer straightens a baby sleeping twisted. On the mat, on
                                                                         # its back, its joints off their stops: left where it lies
-        to = c if not on_mat else xy                                    # (A110 amended 2026-09-27 16:10: a child asleep on its side or
+        to = np.asarray(to, float) if to is not None else (c if not on_mat else xy)   # (C281: or laid where the caller says) (A110 amended 2026-09-27 16:10: a child asleep on its side or
         joints = dict(G.BIRTH, waist_yaw=0.0, waist_roll=0.0, waist_pitch=0.0,   # laid STRAIGHT: the birth's limbs and the waist at
                       ankle_roll=0.0, wrist_pitch=0.0, wrist_yaw=0.0)           # rest, and the joints the birth pose does not name at
                                                                         # the model's rest too (2026-09-28 01:25: the dawn-17 pair's
@@ -1173,6 +1173,8 @@ class G1World(SimWorld):
                                                                         # dawn-13 pair's waist yaw was 2.59 rad, the torso twisted almost
                                                                         # backwards on a supine pelvis, so the laid child read "front";
                                                                         # a person lays a baby straight). Front ON the mat is laid on its
+        for b_ in self.scene.g1_set:                                    # (C281: no hold's force of the tick before goes with it)
+            d.xfrc_applied[b_] = 0.0
         mujoco.mj_forward(m, d)                                         # pose (A110 amended 2026-09-27: a sleeping baby is laid on its
         d.qpos[2] += (.012 + .004) - self.scene.lowest_g1_point()      # back, never on its side or front; life dawn 11 laid it as it
         d.qvel[:] = 0.0                                                 # lay, on its side, and it woke looking at the floor, C94, with

@@ -61,6 +61,8 @@ SIT_TRIES_PER_BLOCK = 3         # C224: the pull-to-sit offered this many times 
 SIT_TURNS_PER_BLOCK = 1         # C254: a child on its front at the sit's offer is turned onto its back first, this many turns a block (ours)
 CARRY_AFTER, CARRY_WINDOW = 2, 1500   # C277: this many of her acts refused for want of a spot to kneel beside it within this many ticks, and
 PRONE_HURT_TICKS, PRONE_HURT_PAIN = 150, 3   # C278: on its front this long with this many pain ticks, it is laid on its back (the carry); ours
+CARRY_WAIT_TICKS = 8                   # C281: the carry waits this long at most for her hands to come off it (ours)
+CARRY_LAY_CLEAR_M = 1.3                # C281: it is laid this far from where she kneels at the least (its body is 1.3 m long); ours
 CARRY_CLEAR_M = 1.0                   # she carries it back to its mat (her own place this far from the mat's centre); ours
 FLOOR_STAND_GAP = 500           # C273: in floor play she stands it up this often when it lies on its back (75 s; ours: a stand takes
                                 # about 250 ticks, so a third of her floor play is standing and stepping in her hands)
@@ -255,6 +257,23 @@ class DayPlan:
         # the baby up and puts it back on its mat. Her arms cannot carry this body (her caps), so the carry is the world's, as at
         # dawn (world.carry_to_mat: laid on its back at the mat's centre): after CARRY_AFTER such refusals within CARRY_WINDOW, with
         # none of her hands on it, no act of hers under way, and her own place clear of the mat. An environment's act, disclosed
+        # C281: THE HELD WALK OVER, IT IS CARRIED FROM HER HANDS BACK TO ITS MAT (parent_motion._ctl_stand's carry_due): laid on its
+        # back at the mat's centre, or beside the centre where that is clear of where she kneels (CARRY_LAY_CLEAR_M)
+        cp_ = getattr(pm, "carry_pending", None)
+        if cp_ is not None and t - int(cp_) > CARRY_WAIT_TICKS:
+            pm.carry_pending = cp_ = None                                   # (her hands did not come off it in time: no carry)
+        if cp_ is not None and not any(h_.kind == "stand" for h_ in pm.holds) and \
+                not any(pm.arms[sd_].get("mode") == "hold" for sd_ in "LR"):
+            mat_ = np.asarray(world.m.geom_pos[world.m.geom("mat").id][:2], float)
+            her_ = np.asarray(pm.base["at"], float)[:2]
+            spot_ = next((mat_ + np.array(o_) for o_ in ((0.0, 0.0), (0.0, 0.5), (0.0, -0.5), (0.5, 0.0), (-0.5, 0.0), (0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5))
+                          if float(np.linalg.norm(mat_ + np.array(o_) - her_)) >= CARRY_LAY_CLEAR_M), None)
+            pm.carry_pending = None
+            if spot_ is not None:
+                was_ = [round(float(x), 2) for x in world.d.qpos[:2]]
+                world.carry_to_mat(to=spot_)
+                self.log.append((t, "the walk over: carried to its mat (C281)", was_))
+                print(f"the walk over: carried to its mat at tick {t} from {was_} (C281)", flush=True)
         if not hasattr(self, "blocked_seen"):
             self.blocked_seen, self.blocked_at = set(), []
         for mid, st in (getattr(c, "ended", None) or {}).items():
