@@ -69,6 +69,10 @@ SIT_RETRY_WHY = ("cannot reach", "lost their hold", "slipped", "no spot she can 
                                                  # parent plays 'up! up!' a few times running; SIT_TRIES_PER_BLOCK a block, SIT_RETRY_GAP apart
                                                # (the arm's own push of the moment: day 65's first offer, her spot and hold good under C227,
                                                # stopped there); C236: a toy in her kneeling footprint she could not clear (day 66, 3,190,004)
+AT_HAND_M = 0.85                       # C272: a toy this near where she kneels is at her hand: taken without getting up (ours: inside
+                                       # her kneeling reach, the plan's stretch about 0.9 m)
+AT_HAND_SHARE = 0.75                   # C272: of her picks among several toys, this share falls on the toys at her hand when some are
+                                       # (ours: a parent on the floor plays with what lies by her and fetches now and then)
 LESSON_DIST0 = 0.10                    # the reach rung's first distance out from its near hand, m (4.10's ladder, level 1; A90)
 LESSON_STEP = 0.05                     # farther each mastered level (teacher_of_reality.md 2c)
 LESSON_LEVELS = 7                      # up to 0.40 m (about the arm's reach)
@@ -396,7 +400,7 @@ class DayPlan:
                          and not c.left_where_it_lies(o) and (o not in seen or seen[o].on != "hand")]
             if not fresh:                                               # C261: none pays where it stands: a toy with a farther level
                 fresh = [o for o in focus if int(self.level.get(o, 0)) < LESSON_LEVELS - 1]   # to go (its next reach lesson steps it there)
-            focus = fresh or focus
+            focus = self._at_hand(lane, fresh or focus)                 # C272: the toys at her hand first
         if not focus:
             c.request("call")
         else:
@@ -462,6 +466,21 @@ class DayPlan:
                                                                         # toy into its hand first, the give asked at a later lesson
         self.next_play = t + int(self.rng.integers(*PLAY_GAP))
 
+    def _at_hand(self, lane, toys):
+        """C272: her pick among several toys falls AT_HAND_SHARE of the time on those within AT_HAND_M of where she kneels (taken
+        without getting up); day 88: each toy shown was fetched from across the room, a get-up, a walk and two kneelings (about
+        200 ticks) a toy, half her ticks in transit"""
+        m = getattr(lane.conduct, "motion", None)
+        base = getattr(m, "base", None)
+        if m is None or not base or len(toys) < 2 or getattr(m, "d", None) is None:
+            return toys
+        at = base["at"]
+        near = [o for o in toys if o in getattr(m, "toys", {}) and
+                float(np.hypot(m.d.xpos[m.toys[o]][0] - at[0], m.d.xpos[m.toys[o]][1] - at[1])) <= AT_HAND_M]
+        if near and len(near) < len(toys) and float(self.rng.random()) < AT_HAND_SHARE:
+            return near
+        return toys
+
     def _play(self, t, lane, kind):
         c, p = lane.conduct, lane._p
         seen = {s.id: s for s in p.seen}
@@ -476,6 +495,7 @@ class DayPlan:
         roll = (roll - LESSON_SHARE) / (1.0 - LESSON_SHARE) if can else roll
         if focus and roll < 0.5:
             free = [o for o in focus if o not in seen or seen[o].on != "hand"] or focus   # A117: never the toy in its hand (her fetch never takes a
+            free = self._at_hand(lane, free)                            # C272: the toys at her hand first
             o = free[int(self.rng.integers(len(free)))]                 # toy from it, A4: life day 13's 4 shows refused for the car)
             c.request("show", o=o)
         elif kind == "floor" and roll < 0.65 and held:                  # C125: her peekaboo needs both her hands (refused "her hands
