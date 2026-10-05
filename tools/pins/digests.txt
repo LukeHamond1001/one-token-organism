@@ -334,3 +334,4 @@ A192 (2026-10-04 13:48, the failed lean deleted, the idle comparison off): the s
 A193 (2026-10-04 16:26, the standing and the stepping reflexes): the sim digests unchanged (A192's: threaded 87dafeaa76c7268adf8d98e3, one-thread 04dd06b3a0f379b5ebf4af07, consts 3af49a7ef34a; the stub world has no G1 cord); the language default kept 7c54199e3c72cf77d45a8e94.
 C269 (2026-10-04 18:35, the teacher's pace): the sim digests unchanged (A192's; the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.
 A190 (2026-10-04 19:34, an act weighed against not doing it): the sim digests RE-TAKEN (threaded 4c5b4e02f2e7930c5d2b4ca0, one-thread d883bf2c9bd7efd8d0e98116, consts b816e29a1660; before: A192's); the language default kept 7c54199e3c72cf77d45a8e94.
+C270 (2026-10-04 20:30, she names what it did): the sim digests unchanged (A190's; the stub world has no parent); the language default kept 7c54199e3c72cf77d45a8e94.

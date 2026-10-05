@@ -520,6 +520,12 @@ INTENTS = {
     "ask_give": Intent("plain", True, "act", (Act("open_hand", "child"), EYES)),    # her hand held out to the child, never
                                                                                      # toward the toy (A51)
     "confirm": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),      # her face ONTO its line of sight as she
+    "confirm_got": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
+    "confirm_held": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
+    "confirm_lifted": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
+    "confirm_shook": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
+    "confirm_hit": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
+    "confirm_reach_nearer": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
     "confirm_act": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),  # smiles, the en-face position (A94: day 1
                                                                                             # saw 3 of 160 smiles from its periphery)
     "recast": Intent("approval", False, None, (LOOK_O, EYES)),
@@ -1908,6 +1914,7 @@ class Conduct:
             self.book.setdefault(k, {})[key] = n + 1
             out.judgments.append((round(w2, 4), k, o))
             self.confirm_act_due, self.confirm_obj = t, o
+            self.confirm_kind = k                                           # C270: which act it was, for her words about it
             self.book_log.append((t, k, o, round(w2, 3), n)); del self.book_log[:-200]
 
     def _book_key(self, k, o):
@@ -2091,7 +2098,16 @@ class Conduct:
             else:
                 f.queue = []                                # her own label set gives way to the "yes!" (its lines were about the act)
                 o = p.obj(self.confirm_obj) if self.confirm_obj else None
-                ln = f.compose("confirm", t, p, o=o) if o is not None else None
+                # C270 (2026-10-04, the owner's word: language enough to understand): SHE NAMES WHAT IT DID, not the thing alone.
+                # Life day 86: 816 lines, nearly all bare labels ('a ball.', 'this is a car.'); her answer to its own act was 'yes!
+                # a ball.' A parent says what the baby just did as it does it ('you got it!', 'shake, shake!'): the verb is heard
+                # at the moment its own body makes the act (the mapping of a verb to an action is learned from such contingent
+                # talk: Tomasello and Kruger 1992). The act's own frames first (the line check holds them to her words and the
+                # truth, as any line), then the thing's, then the bare 'yes!'
+                kf_ = "confirm_" + str(getattr(self, "confirm_kind", "") or "")
+                ln = f.compose(kf_, t, p, o=o) if (o is not None and kf_ in TP.FRAMES) else None
+                if ln is None:
+                    ln = f.compose("confirm", t, p, o=o) if o is not None else None
                 if ln is None:
                     ln = f.compose("confirm_act", t, p)
                 if ln is not None and f.allowed(ln, t, reply=True)[0]:

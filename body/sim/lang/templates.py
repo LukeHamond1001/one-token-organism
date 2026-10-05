@@ -172,6 +172,12 @@ FRAMES = {
     "ask_give": [F("give me the {o}.", "{o}"), F("give mama the {o}.", "{o}"), F("the {o}. give me the {o}.", "{o}")],
     "confirm": [F("yes. the {o}!", "{o}"), F("yes! a {o}.", "{o}"), F("good. the {o}!", "{o}"), F("yes. it is a {o}.", "{o}")],
     "confirm_act": [F("yes! good.", "good"), F("good. good!", "good")],
+    "confirm_got": [F("you got the {o}!", "{o}"), F("yes! you have the {o}.", "{o}"), F("you hold the {o}.", "{o}")],      # C270: her words
+    "confirm_held": [F("you hold the {o}.", "{o}"), F("yes! you have the {o}.", "{o}")],                                 # for its own act
+    "confirm_lifted": [F("the {o} is up.", "up"), F("up. up! the {o}.", "{o}")],
+    "confirm_shook": [F("shake! you shake the {o}.", "{o}"), F("shake. shake! the {o}.", "{o}")],
+    "confirm_hit": [F("bang! the {o}.", "{o}"), F("you hit the {o}!", "{o}")],
+    "confirm_reach_nearer": [F("yes. get the {o}.", "{o}"), F("get it! the {o}.", "{o}")],
     "recast": [F("{w}. yes. the {w}.", "{w}"), F("yes. the {w}!", "{w}")],
     "recast_word": [F("{w}. yes. {w}.", "{w}"), F("yes! {w}.", "{w}")],
     "echo": [F("{w}! the {w}!", "{w}"), F("the {w}! a {w}.", "{w}")],
