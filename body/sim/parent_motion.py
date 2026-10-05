@@ -4106,7 +4106,7 @@ class ParentMotion:
                     if float(np.linalg.norm(g[:2] - T_)) > 1.0:
                         return False
                     targets[sd] = (g, R, shape)
-                return bool(self._solve_trunk(targets, None, step=10)[3]) and bool(self._solve_trunk(targets, None)[3])   # C276: and by the reach's own fine solve
+                return bool(self._solve_trunk(targets, None, step=10)[3])   # (C279: the coarse solve alone; C276's second, fine solve here cost up to 200 s a tick over the spots and the life hung on it)
             finally:
                 self.base = saved
         if need.startswith("hand:"):                                       # C133: the child's palm (side cs) within her hand's reach from
