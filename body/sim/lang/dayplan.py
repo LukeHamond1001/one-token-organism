@@ -352,7 +352,8 @@ class DayPlan:
                 except Exception:
                     pass
         if kind in ("floor", "motor", "show") and t >= getattr(self, "next_ask", 0) and c.pending is None and c.trial is None and \
-                c.fast.voice_free(t) and not pm.holds:
+                c.fast.voice_free(t):                                       # (C289: also while her hands hold it standing: on its feet the
+            # room is in its view, and her voice is free; day 93's first 6,400 ticks: 3 asks, a toy in view of a child on its back 8% of ticks)
             # C283: HER ASKS ON THEIR OWN CADENCE: of a toy the child sees (a focus toy first), 'where is the X?' twice in three,
             # 'what is this?' once; asked over whatever her hands are doing, never while they hold the child
             seen_ = {s_.id: s_ for s_ in p.seen}
