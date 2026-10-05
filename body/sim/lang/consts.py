@@ -412,6 +412,7 @@ WORTH_SCAFFOLD_GIVE = 1               # a give after the give ask's scaffolding 
 MOTOR_WORTH = {                       # event kind -> (its worth, the full act it approximates or None); judged only outside a trial
     "got": (2, None),                 # its own reach and hold: a toy come into its hand after that hand moved or reached toward it,
                                       # never her hand-over (percept "got")
+    "stood": (2, None), "stepped": (2, None),                    # C284: on its feet; a step's length walked (in her hands or alone)
     "rolled": (2, None), "sat": (2, None),                       # a whole roll; sitting (the design's first motor acts)
     "crawled": (2, None),                                        # its pelvis carried 20 cm along the floor on its front (A125: the crawl rung)
     "found": (2, None),                                          # a toy she hid in the bucket taken out by its own hand (A129: the hide game)

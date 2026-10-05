@@ -121,6 +121,10 @@ STILL_M, STILL_TICKS = 0.10, 40      # C137: a face-down child is "still" when i
                                        # its distress hers to answer with a turn: a crawling child is going somewhere (ours)
 SIT_HOLD, SIT_GAP = 5, 100             # C134: a sit is the sitting held 5 ticks (0.75 s), counted once in 100 ticks (day 34: "sat" judged 22
                                        # times in 1,200 ticks, three of them 3 ticks apart, the trunk bobbing up and down on its back; ours)
+STOOD_PELVIS_M, STOOD_HOLD, STOOD_GAP = 0.70, 5, 100   # C284: standing is its pelvis this high with its trunk upright (the sitting posture's
+                                       # line), held 5 ticks: "stood", once in 100 ticks, and again at each doubling of the stand (C262's rungs)
+STEP_M, STEP_GAP, STEP_SETTLE = 0.25, 20, 4            # C284: standing, its pelvis carried this far over the floor from where the stand began or the last
+                                       # step was counted: "stepped", once in 20 ticks, and at each doubling of the stand's whole way (ours)
 CRAWL_M = 0.20                         # A125: on its front, its pelvis carried this far along the floor from where its prone spell began
 CRAWL_GAP = 60                         # (or from the last crawl counted): "crawled", once in this many ticks (ours; a body length is 1.3 m)
 BEST_LEVELS = 6                        # C262: the rungs of a personal best past an event's base measure, each twice the last (a hold of 20
@@ -552,6 +556,35 @@ class ParentLane:
         else:
             self.crawl_from = None
             self.crawl_spell = None; self.crawl_best = 0
+        # C284 (2026-10-05): SHE SEES IT STAND AND STEP. Nothing in her face paid for standing or for a step: the events her eyes
+        # judged ended at sitting and crawling, so 91 days of its acts were shaped lying down, and on its feet its own trunk and leg
+        # acts tip it over within a second (p1_tools/balprobe.py) with no smile to shape them still. "stood": its pelvis
+        # STOOD_PELVIS_M up with its trunk upright, held STOOD_HOLD, once in STOOD_GAP, and at each doubling; "stepped": standing, its
+        # pelvis carried STEP_M over the floor, once in STEP_GAP, and at each doubling of the stand's whole way; in her hands or alone
+        std_ = post == "sitting" and float(ch.pelvis[2]) >= STOOD_PELVIS_M
+        self.stood_run = getattr(self, "stood_run", 0) + 1 if std_ else 0
+        if self.stood_run == STOOD_HOLD and t - getattr(self, "last_stood", -10 ** 9) >= STOOD_GAP:
+            ev.append(("stood", None)); self.last_stood = t
+        r_ = _rung(self.stood_run, STOOD_HOLD)
+        if r_:
+            ev.append(("stood", None)); self._lv[("stood", None)] = r_
+        if std_:
+            pxy = np.asarray(ch.pelvis[:2], float)
+            if getattr(self, "step_from", None) is None:
+                self.step_from = pxy; self.step_spell = pxy; self.step_best = 0; self.step_pend = None
+            pend_ = getattr(self, "step_pend", None)
+            if pend_ is None and float(np.linalg.norm(pxy - self.step_from)) >= STEP_M and t - getattr(self, "last_step", -10 ** 9) >= STEP_GAP:
+                self.step_pend = [int(t), 0]                                # a step's length gone: counted once it still stands STEP_SETTLE
+            nxt_ = int(self.step_best) + 1                                  # on (a fall carries the pelvis that far too)
+            if pend_ is None and nxt_ <= BEST_LEVELS and float(np.linalg.norm(pxy - np.asarray(self.step_spell, float))) >= STEP_M * 2 ** nxt_:
+                self.step_pend = [int(t), nxt_]
+            pend_ = getattr(self, "step_pend", None)
+            if pend_ is not None and t - pend_[0] >= STEP_SETTLE:
+                ev.append(("stepped", None)); self.last_step = t; self.step_from = pxy; self.step_pend = None
+                if pend_[1]:
+                    self.step_best = pend_[1]; self._lv[("stepped", None)] = pend_[1]
+        else:
+            self.step_from = None; self.step_pend = None
         up = post == "front" and float(ch.head[2] - ch.pelvis[2]) > HEAD_UP_M
         self.head_up_run = self.head_up_run + 1 if up else 0
         if self.head_up_run == HEAD_UP_TICKS and t - self.last_head_up >= HEAD_UP_GAP:   # held, once in HEAD_UP_GAP

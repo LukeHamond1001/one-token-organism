@@ -174,6 +174,8 @@ FRAMES = {
     "confirm_act": [F("yes! good.", "good"), F("good. good!", "good")],
     "confirm_got": [F("you got the {o}!", "{o}"), F("yes! you have the {o}.", "{o}"), F("you hold the {o}.", "{o}")],      # C270: her words
     "confirm_held": [F("you hold the {o}.", "{o}"), F("yes! you have the {o}.", "{o}")],                                 # for its own act
+    "confirm_stood": [F("you stand!", "stand"), F("yes! you stand.", "stand"), F("up. you are up!", "up")],     # C284
+    "confirm_stepped": [F("you walk!", "walk"), F("yes! you walk.", "walk"), F("walk. walk!", "walk")],
     "confirm_lifted": [F("the {o} is up.", "up"), F("up. up! the {o}.", "{o}")],
     "confirm_shook": [F("shake! you shake the {o}.", "{o}"), F("shake. shake! the {o}.", "{o}")],
     "confirm_hit": [F("bang! the {o}.", "{o}"), F("you hit the {o}!", "{o}")],

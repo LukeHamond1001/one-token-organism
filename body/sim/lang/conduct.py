@@ -269,7 +269,7 @@ FIELDS = POINTING + ("face",)                 # and her face ("mama" on a tick i
 HANDS = ("left", "right")
 ENDED = ("done", "refused", "cancelled")      # the only statuses that end an act: any other, or none reported, is running
 FETCH_KINDS = ("show", "bring_back", "bring_far", "hand_over", "hide")   # A117: her acts that begin by fetching a toy (parent_motion._fetch)
-BEST_KINDS = ("held", "sat", "crawled", "head_up", "lifted")   # C262: the motor events with a measure, counted by their personal-best rung
+BEST_KINDS = ("held", "sat", "crawled", "head_up", "lifted", "stood", "stepped")   # C262: the motor events with a measure, counted by their personal-best rung
 LESSON_SETS = frozenset({"hide_told", "show", "set_near", "set_far", "hand_over", "new_word"})   # C115: the sets a reply does not throw away
 CRY_WINDOW, CRY_LASTS = 10, 5    # C120: a cry heard on 5 of the last 10 ticks (0.75 s of 1.5) before a comfort is composed (a wince passes; ours)
 CRY_LONG_WINDOW, CRY_LONG = 60, 30   # C120: a cry heard on 30 of the last 60 ticks (4.5 s of 9) is comforted again whatever the gap (ours)
@@ -524,6 +524,8 @@ INTENTS = {
                                                                                      # toward the toy (A51)
     "confirm": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),      # her face ONTO its line of sight as she
     "confirm_got": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
+    "confirm_stood": Intent("approval", False, None, (EYES,)),      # C284: her words for its stand and its step (her hands may be on it:
+    "confirm_stepped": Intent("approval", False, None, (EYES,)),    # no lean)
     "confirm_held": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
     "confirm_lifted": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act
     "confirm_shook": Intent("approval", False, None, (Act("lean_in", "child_line"), EYES)),   # C270: her words for its own act

@@ -52,6 +52,8 @@ EVENT_KINDS = (
     "fell",          # a toy dropped or fell (the object)
     "rolled",        # the child rolled (a whole roll, A8)
     "sat",           # the child came to sit
+    "stood",         # C284: on its feet, its pelvis up and its trunk upright, held (lane.STOOD_*)
+    "stepped",       # C284: standing, its pelvis carried a step's length over the floor (lane.STEP_*)
     "got",           # the child took hold of a toy itself (the object)
     "found",         # the child took a toy she had hidden in the bucket out of it (the object; the hide game, A129)
     "gave",          # the child put a toy in her hand (the object)
